@@ -1,0 +1,179 @@
+[build-system]
+requires = ["setuptools", "wheel"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "claudecodeoptimizer"
+dynamic = ["version"]
+description = "System-wide project management and optimization for Claude Code"
+readme = "README.md"
+license = {text = "MIT"}
+authors = [
+    {name = "Sungur Zahid Erdim", email = "sungurerdim@users.noreply.github.com"}
+]
+maintainers = [
+    {name = "Sungur Zahid Erdim", email = "sungurerdim@users.noreply.github.com"}
+]
+keywords = [
+    "claude-code",
+    "claude",
+    "anthropic",
+    "ai",
+    "automation",
+    "workflow",
+    "optimization",
+    "project-management",
+    "developer-tools",
+    "devtools",
+    "productivity",
+    "code-quality",
+    "security",
+    "security-scanning",
+    "audit",
+    "testing",
+    "linter",
+    "formatter",
+    "ci-cd",
+    "slash-commands",
+    "principles",
+    "best-practices",
+]
+classifiers = [
+    "Development Status :: 3 - Alpha",
+    "Intended Audience :: Developers",
+    "License :: OSI Approved :: MIT License",
+    "Operating System :: OS Independent",
+    "Programming Language :: Python :: 3",
+    "Programming Language :: Python :: 3.8",
+    "Programming Language :: Python :: 3.9",
+    "Programming Language :: Python :: 3.10",
+    "Programming Language :: Python :: 3.11",
+    "Programming Language :: Python :: 3.12",
+    "Topic :: Software Development :: Libraries :: Python Modules",
+    "Topic :: Software Development :: Quality Assurance",
+    "Topic :: Utilities",
+]
+requires-python = ">=3.8"
+dependencies = [
+    "jinja2",
+    "pydantic",
+]
+
+[project.optional-dependencies]
+dev = [
+    "pytest",
+    "pytest-cov",
+    "black",
+    "ruff",
+    "mypy",
+]
+
+[project.urls]
+Homepage = "https://github.com/sungurerdim/ClaudeCodeOptimizer"
+Documentation = "https://github.com/sungurerdim/ClaudeCodeOptimizer#readme"
+Repository = "https://github.com/sungurerdim/ClaudeCodeOptimizer"
+Issues = "https://github.com/sungurerdim/ClaudeCodeOptimizer/issues"
+Changelog = "https://github.com/sungurerdim/ClaudeCodeOptimizer/blob/main/CHANGELOG.md"
+
+# [project.scripts]
+# CLI DISABLED - CCO is Claude Code only
+# cco = "claudecodeoptimizer.cli.main:cli"
+
+[tool.setuptools]
+packages = ["claudecodeoptimizer"]
+
+[tool.setuptools.package-data]
+claudecodeoptimizer = [
+    "templates/**/*",
+    "knowledge/**/*",
+    "schemas/**/*",
+    "assets/**/*",
+    "skills/**/*",
+    "commands/**/*",
+]
+
+[tool.black]
+line-length = 100
+target-version = ['py38', 'py39', 'py310', 'py311']
+include = '\.pyi?$'
+extend-exclude = '''
+/(
+  # directories
+  \.eggs
+  | \.git
+  | \.hg
+  | \.mypy_cache
+  | \.tox
+  | \.venv
+  | build
+  | dist
+)/
+'''
+
+[tool.setuptools.dynamic]
+version = {attr = "claudecodeoptimizer.__version__"}
+
+[tool.ruff]
+line-length = 100
+target-version = "py38"
+
+[tool.ruff.lint]
+select = [
+    "E",   # pycodestyle errors
+    "W",   # pycodestyle warnings
+    "F",   # pyflakes
+    "I",   # isort
+    "B",   # flake8-bugbear
+    "C4",  # flake8-comprehensions
+    "UP",  # pyupgrade
+    "N",   # pep8-naming
+    "ANN", # flake8-annotations
+    "S",   # flake8-bandit (security)
+    "A",   # flake8-builtins
+    "COM", # flake8-commas
+    "T20", # flake8-print
+]
+ignore = [
+    "E501",  # line too long (handled by black)
+    "B008",  # do not perform function calls in argument defaults
+    "C901",  # too complex
+    "T201",  # print found (allowed in CLI tool)
+    "S603",  # subprocess without shell=True
+    "S607",  # starting a process with a partial path
+]
+
+[tool.ruff.lint.per-file-ignores]
+"__init__.py" = ["F401"]  # unused imports in __init__.py
+
+[tool.mypy]
+python_version = "3.8"
+# Strict mode for type safety (P023: Type Safety & Static Analysis)
+disallow_untyped_defs = true
+disallow_incomplete_defs = true
+check_untyped_defs = true
+no_implicit_optional = true
+# Warnings
+warn_return_any = true
+warn_unused_configs = true
+warn_redundant_casts = true
+warn_unused_ignores = true
+warn_no_return = true
+warn_unreachable = true
+# Strictness
+strict_equality = true
+strict_concatenate = true
+
+[[tool.mypy.overrides]]
+module = "tests.*"
+disallow_untyped_defs = false
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+python_files = ["test_*.py"]
+python_classes = ["Test*"]
+python_functions = ["test_*"]
+addopts = "-v --strict-markers --cov=claudecodeoptimizer --cov-report=term-missing"
+markers = [
+    "slow: marks tests as slow (deselect with '-m \"not slow\"')",
+    "integration: marks tests as integration tests",
+]
