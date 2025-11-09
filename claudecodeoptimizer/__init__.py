@@ -1,5 +1,6 @@
 """ClaudeCodeOptimizer - System-wide project management for Claude Code."""
 
+import logging
 import sys
 
 __version__ = "0.1.0"
@@ -11,8 +12,8 @@ if sys.platform == "win32" and hasattr(sys.stdout, "reconfigure"):
     try:
         sys.stdout.reconfigure(encoding="utf-8")
         sys.stderr.reconfigure(encoding="utf-8")
-    except Exception:
-        pass
+    except Exception as e:
+        logging.warning(f"Failed to reconfigure console encoding: {e}. Using default encoding.")
 
 from .config import CCOConfig
 

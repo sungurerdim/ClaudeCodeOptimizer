@@ -14,6 +14,7 @@ Supports:
 """
 
 import json
+import logging
 import os
 import re
 import sys
@@ -707,8 +708,9 @@ class UniversalDetector:
                     try:
                         with open(os.path.join(root, file), encoding="utf-8", errors="ignore") as f:
                             self.file_cache[file] = f.read(2000)  # Cache first 2KB
-                    except Exception:
-                        pass
+                    except (OSError, PermissionError) as e:
+                        logging.debug(f"Skipping file {file}: {e}")
+                        continue
 
     def _count_file_extensions(self) -> Dict[str, int]:
         """Count file extensions in project"""
@@ -724,8 +726,8 @@ class UniversalDetector:
                     ext = Path(file).suffix.lower()
                     if ext:
                         counts[ext] += 1
-        except Exception:
-            pass
+        except (OSError, PermissionError) as e:
+            logging.warning(f"Error walking directory tree: {e}. Returning partial results.")
         return dict(counts)
 
     def _detect_languages(self) -> List[DetectionResult]:
@@ -952,10 +954,11 @@ class UniversalDetector:
                                     if re.search(pattern, content):
                                         matches += 1
                                         break
-                        except Exception:
-                            pass
-        except Exception:
-            pass
+                        except (OSError, PermissionError, UnicodeDecodeError) as e:
+                            logging.debug(f"Skipping file {file}: {e}")
+                            continue
+        except (OSError, PermissionError) as e:
+            logging.warning(f"Error scanning content patterns: {e}. Returning partial results.")
         return matches
 
     def _find_files_matching(self, pattern: str) -> List[str]:
@@ -981,8 +984,10 @@ class UniversalDetector:
                 # Direct file check
                 if self._file_exists(pattern):
                     matches.append(pattern)
-        except Exception:
-            pass
+        except (OSError, PermissionError, re.error) as e:
+            logging.warning(
+                f"Error finding files matching '{pattern}': {e}. Returning partial results."
+            )
         return matches
 
     def _file_exists(self, filename: str) -> bool:

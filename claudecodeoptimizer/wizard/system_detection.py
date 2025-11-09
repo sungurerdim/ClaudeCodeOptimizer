@@ -11,6 +11,7 @@ This information is used to:
 """
 
 import locale
+import logging
 import os
 import platform
 import shutil
@@ -183,8 +184,8 @@ class SystemDetector:
             loc, _ = locale.getlocale()
             if loc:
                 return loc
-        except Exception:
-            pass
+        except (locale.Error, ValueError) as e:
+            logging.debug(f"Failed to detect locale: {e}. Trying environment variables.")
 
         # Fallback to environment variables
         for env_var in ["LC_ALL", "LC_CTYPE", "LANG"]:
@@ -209,8 +210,8 @@ class SystemDetector:
         # Try locale encoding
         try:
             return locale.getpreferredencoding()
-        except Exception:
-            pass
+        except (locale.Error, ValueError) as e:
+            logging.debug(f"Failed to detect preferred encoding: {e}. Using UTF-8 as fallback.")
 
         # Fallback
         return "utf-8"
@@ -237,8 +238,8 @@ class SystemDetector:
                 parts = result.stdout.split()
                 if len(parts) >= 2:
                     return parts[1]
-        except Exception:
-            pass
+        except (subprocess.SubprocessError, subprocess.TimeoutExpired, OSError) as e:
+            logging.debug(f"Failed to detect pip version: {e}")
         return "unknown"
 
     # ========================================================================
@@ -263,8 +264,8 @@ class SystemDetector:
             )
             if result.returncode == 0:
                 return result.stdout.strip()
-        except Exception:
-            pass
+        except (subprocess.SubprocessError, subprocess.TimeoutExpired, OSError) as e:
+            logging.debug(f"Failed to detect git user name: {e}")
         return None
 
     def _detect_git_user_email(self) -> Optional[str]:
@@ -281,8 +282,8 @@ class SystemDetector:
             )
             if result.returncode == 0:
                 return result.stdout.strip()
-        except Exception:
-            pass
+        except (subprocess.SubprocessError, subprocess.TimeoutExpired, OSError) as e:
+            logging.debug(f"Failed to detect git user email: {e}")
         return None
 
     def _is_git_repo(self) -> bool:

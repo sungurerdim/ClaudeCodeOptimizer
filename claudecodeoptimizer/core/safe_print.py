@@ -5,6 +5,7 @@ Ensures proper UTF-8 encoding for emojis and special characters across all platf
 Automatically handles console encoding configuration with error recovery.
 """
 
+import logging
 import sys
 
 
@@ -49,9 +50,9 @@ def configure_utf8_encoding() -> None:
                 errors="replace",
                 line_buffering=True,
             )
-    except Exception:
+    except (AttributeError, OSError) as e:
         # If reconfiguration fails, continue with default encoding
-        pass
+        logging.debug(f"Failed to reconfigure console encoding: {e}. Using default encoding.")
 
 
 def safe_print(*args: object, **kwargs: object) -> None:
