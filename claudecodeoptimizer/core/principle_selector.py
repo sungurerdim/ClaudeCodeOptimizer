@@ -42,7 +42,19 @@ class PrincipleSelector:
         with open(principles_path, encoding="utf-8") as f:
             data = json.load(f)
 
-        return data.get("principles", [])
+        principles = data.get("principles", [])
+
+        # Deduplicate by ID (defense mechanism)
+        seen_ids = set()
+        deduplicated = []
+
+        for principle in principles:
+            pid = principle.get("id")
+            if pid not in seen_ids:
+                seen_ids.add(pid)
+                deduplicated.append(principle)
+
+        return deduplicated
 
     def select_applicable(self) -> List[Dict[str, Any]]:
         """

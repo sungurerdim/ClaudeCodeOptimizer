@@ -12,6 +12,7 @@ from ..schemas.preferences import (
     ProjectIdentity,
 )
 from .analyzer import ProjectAnalyzer
+from .change_manifest import ChangeManifest
 from .constants import (
     DEFAULT_TEST_COVERAGE_TARGET,
     MINIMAL_TEST_COVERAGE_TARGET,
@@ -21,6 +22,7 @@ from .constants import (
 from .principle_selector import PrincipleSelector
 from .registry import ProjectRegistry
 from .utils import print_separator
+from .safe_print import safe_print
 
 
 class ProjectManager:
@@ -31,11 +33,12 @@ class ProjectManager:
         self.config = CCOConfig
         self.registry = ProjectRegistry()
         self.analyzer = ProjectAnalyzer(self.project_root)
+        self.manifest = ChangeManifest(self.project_root)
 
     def initialize(
         self,
         project_name: Optional[str] = None,
-        interactive: bool = False,
+        mode: str = "quick",
     ) -> Dict[str, Any]:
         """
         Initialize CCO for the project.
@@ -49,13 +52,17 @@ class ProjectManager:
 
         Args:
             project_name: Project name (defaults to directory name)
-            interactive: Use interactive wizard for full customization
+            mode: Initialization mode ('quick' or 'interactive')
 
         Returns:
             Initialization result dictionary
         """
+        # Validate mode parameter
+        if mode not in ('quick', 'interactive'):
+            raise ValueError(f"Invalid mode '{mode}'. Must be 'quick' or 'interactive'")
+
         # Interactive mode: Launch full wizard
-        if interactive:
+        if mode == 'interactive':
             return self._initialize_interactive(project_name)
 
         # Quick mode: Full analysis every time
@@ -80,8 +87,8 @@ class ProjectManager:
             project_name = self.project_root.name
 
         # STEP 1: Comprehensive project analysis
-        print(f"\n📊 Analyzing project: {project_name}")
-        print("   This may take a moment...")
+        safe_print(f"\n📊 Analyzing project: {project_name}")
+        safe_print("   This may take a moment...")
 
         analysis = self.analyzer.analyze()
 
@@ -89,13 +96,13 @@ class ProjectManager:
         self._print_analysis_summary(analysis)
 
         # STEP 2: AI creates intelligent preferences
-        print("\n🤖 Creating intelligent preferences...")
+        safe_print("\n🤖 Creating intelligent preferences...")
         preferences = self._create_ai_preferences(project_name, analysis)
 
         # STEP 3: Select applicable principles
-        print("\n📋 Selecting applicable principles...")
+        safe_print("\n📋 Selecting applicable principles...")
         selected_principles = self._select_and_generate_principles(preferences)
-        print(f"   ✓ {len(selected_principles)} principles selected")
+        safe_print(f"   ✓ {len(selected_principles)} principles selected")
 
         # STEP 4: Register/update in global registry
         # Add selected principle IDs to preferences for storage
@@ -118,6 +125,30 @@ class ProjectManager:
         # STEP 7: Print recommendations
         self._print_recommendations(analysis)
 
+        # STEP 8: Track .cco directory and save manifest
+        cco_dir = self.project_root / ".cco"
+        if cco_dir.exists():
+            # Check if we just created it (by checking if changes.json was just created)
+            changes_file = cco_dir / "changes.json"
+            if not changes_file.exists() or len(self.manifest.changes) > 0:
+                # We created the directory during this init
+                # Track it if not already tracked
+                already_tracked = any(
+                    c.type == "directory_created" and c.path == ".cco"
+                    for c in self.manifest.changes
+                )
+                if not already_tracked:
+                    self.manifest.track_directory_created(
+                        cco_dir,
+                        "Created .cco directory for CCO configuration and change tracking"
+                    )
+
+        # Save all tracked changes to manifest
+        self.manifest.save()
+
+        # STEP 9: Print installation summary report
+        self._print_installation_summary()
+
         return {
             "success": True,
             "mode": "quick",
@@ -130,45 +161,45 @@ class ProjectManager:
 
     def _print_analysis_summary(self, analysis: Dict[str, Any]) -> None:
         """Print detailed analysis summary."""
-        print()
+        safe_print()
         print_separator("=", SEPARATOR_WIDTH)
-        print("PROJECT ANALYSIS SUMMARY")
+        safe_print("PROJECT ANALYSIS SUMMARY")
         print_separator("=", SEPARATOR_WIDTH)
 
         # Languages
         if analysis.get("languages"):
-            print("\n📝 Languages Detected:")
+            safe_print("\n📝 Languages Detected:")
             for lang in analysis["languages"][: TOP_ITEMS_DISPLAY["languages"]]:
                 confidence = lang["confidence"]
                 evidence = ", ".join(lang["evidence"][:2])
-                print(f"   • {lang['name']:15} {confidence:5.1f}%  ({evidence})")
+                safe_print(f"   • {lang['name']:15} {confidence:5.1f}%  ({evidence})")
 
         # Primary language
         if analysis.get("primary_language"):
-            print(f"\n🎯 Primary Language: {analysis['primary_language']}")
+            safe_print(f"\n🎯 Primary Language: {analysis['primary_language']}")
 
         # Frameworks
         if analysis.get("frameworks"):
-            print("\n🔧 Frameworks Detected:")
+            safe_print("\n🔧 Frameworks Detected:")
             for fw in analysis["frameworks"][: TOP_ITEMS_DISPLAY["frameworks"]]:
                 confidence = fw["confidence"]
                 evidence = ", ".join(fw["evidence"][:1])
-                print(f"   • {fw['name']:20} {confidence:5.1f}%  ({evidence})")
+                safe_print(f"   • {fw['name']:20} {confidence:5.1f}%  ({evidence})")
 
         # Primary framework
         if analysis.get("primary_framework"):
-            print(f"\n🎯 Primary Framework: {analysis['primary_framework']}")
+            safe_print(f"\n🎯 Primary Framework: {analysis['primary_framework']}")
 
         # Project type
         if analysis.get("project_types"):
-            print("\n📦 Project Type:")
+            safe_print("\n📦 Project Type:")
             for ptype in analysis["project_types"][: TOP_ITEMS_DISPLAY["project_types"]]:
                 confidence = ptype["confidence"]
-                print(f"   • {ptype['type']:15} {confidence:5.1f}%")
+                safe_print(f"   • {ptype['type']:15} {confidence:5.1f}%")
 
         # Tools
         if analysis.get("tools"):
-            print("\n🛠️  Development Tools:")
+            safe_print("\n🛠️  Development Tools:")
             tool_categories = {
                 "Testing": ["pytest", "jest", "mocha", "unittest"],
                 "Linting": ["black", "ruff", "eslint", "prettier", "mypy"],
@@ -180,27 +211,27 @@ class ProjectManager:
             for category, tool_names in tool_categories.items():
                 category_tools = [t for t in analysis["tools"] if t["name"] in tool_names]
                 if category_tools:
-                    print(f"\n   {category}:")
+                    safe_print(f"\n   {category}:")
                     for tool in category_tools[:3]:
                         confidence = tool["confidence"]
-                        print(f"      • {tool['name']:15} {confidence:5.1f}%")
+                        safe_print(f"      • {tool['name']:15} {confidence:5.1f}%")
 
         # Statistics
         if analysis.get("statistics"):
             stats = analysis["statistics"]
-            print("\n📈 Statistics:")
-            print(f"   • Total Files:      {stats.get('total_files', 0)}")
-            print(f"   • Source Files:     {stats.get('source_files', 0)}")
-            print(f"   • Config Files:     {stats.get('config_files', 0)}")
-            print(f"   • Languages Found:  {stats.get('languages_count', 0)}")
-            print(f"   • Frameworks Found: {stats.get('frameworks_count', 0)}")
+            safe_print("\n📈 Statistics:")
+            safe_print(f"   • Total Files:      {stats.get('total_files', 0)}")
+            safe_print(f"   • Source Files:     {stats.get('source_files', 0)}")
+            safe_print(f"   • Config Files:     {stats.get('config_files', 0)}")
+            safe_print(f"   • Languages Found:  {stats.get('languages_count', 0)}")
+            safe_print(f"   • Frameworks Found: {stats.get('frameworks_count', 0)}")
 
         # Feature flags
-        print("\n✨ Features:")
-        print(f"   • Tests:   {'✓' if analysis.get('has_tests') else '✗'}")
-        print(f"   • Docker:  {'✓' if analysis.get('has_docker') else '✗'}")
-        print(f"   • CI/CD:   {'✓' if analysis.get('has_ci_cd') else '✗'}")
-        print(f"   • Git:     {'✓' if analysis.get('has_git') else '✗'}")
+        safe_print("\n✨ Features:")
+        safe_print(f"   • Tests:   {'✓' if analysis.get('has_tests') else '✗'}")
+        safe_print(f"   • Docker:  {'✓' if analysis.get('has_docker') else '✗'}")
+        safe_print(f"   • CI/CD:   {'✓' if analysis.get('has_ci_cd') else '✗'}")
+        safe_print(f"   • Git:     {'✓' if analysis.get('has_git') else '✗'}")
 
         # Confidence
         if analysis.get("confidence_level"):
@@ -210,12 +241,12 @@ class ProjectManager:
                 "low": "🔴",
             }
             emoji = confidence_emoji.get(analysis["confidence_level"], "⚪")
-            print(f"\n{emoji} Analysis Confidence: {analysis['confidence_level'].upper()}")
+            safe_print(f"\n{emoji} Analysis Confidence: {analysis['confidence_level'].upper()}")
 
         # Duration
         if analysis.get("analysis_duration_ms"):
             duration_sec = analysis["analysis_duration_ms"] / 1000
-            print(f"⏱️  Analysis Duration: {duration_sec:.2f}s")
+            safe_print(f"⏱️  Analysis Duration: {duration_sec:.2f}s")
 
         print_separator("=", SEPARATOR_WIDTH)
 
@@ -225,20 +256,137 @@ class ProjectManager:
         commands = analysis.get("commands", [])
 
         if suggestions:
-            print("\n💡 Recommendations:")
+            safe_print("\n💡 Recommendations:")
             for i, suggestion in enumerate(suggestions, 1):
-                print(f"   {i}. {suggestion}")
+                safe_print(f"   {i}. {suggestion}")
 
         if commands:
-            print("\n📋 Available Commands:")
-            print(f"   {len(commands)} CCO commands configured based on your project")
-            print("\n   Run these commands in Claude Code:")
+            safe_print("\n📋 Available Commands:")
+            safe_print(f"   {len(commands)} CCO commands configured based on your project")
+            safe_print("\n   Run these commands in Claude Code:")
             for cmd in commands[: TOP_ITEMS_DISPLAY["commands"]]:
-                print(f"      • /{cmd}")
+                safe_print(f"      • /{cmd}")
             if len(commands) > TOP_ITEMS_DISPLAY["commands"]:
-                print(f"      ... and {len(commands) - TOP_ITEMS_DISPLAY['commands']} more")
+                safe_print(f"      ... and {len(commands) - TOP_ITEMS_DISPLAY['commands']} more")
 
-        print()
+        safe_print()
+
+    def _print_installation_summary(self) -> None:
+        """Print comprehensive installation summary report."""
+        from datetime import datetime
+
+        safe_print()
+        print_separator("=", SEPARATOR_WIDTH)
+        safe_print("   CCO INITIALIZATION COMPLETE")
+        print_separator("=", SEPARATOR_WIDTH)
+        safe_print()
+
+        # Project info
+        safe_print(f"📦 Project: {self.project_root.name}")
+        safe_print(f"📅 Initialized: {datetime.now().strftime('%Y-%m-%d %H:%M:%S')}")
+        safe_print()
+
+        # === INSTALLED COMPONENTS ===
+        safe_print("## 🎯 Installed Components")
+        safe_print()
+
+        # Principles
+        principles_file = self.project_root / "PRINCIPLES.md"
+        if principles_file.exists():
+            try:
+                content = principles_file.read_text(encoding="utf-8")
+
+                # Count by severity
+                critical = content.count("## CRITICAL")
+                high = content.count("## HIGH PRIORITY")
+
+                # Total principles
+                total_principles = content.count("### P")
+
+                safe_print("✓ PRINCIPLES.md")
+                safe_print(f"  └─ {total_principles} active principles")
+                if critical > 0:
+                    safe_print(f"     ├─ {critical} Critical (must follow)")
+                if high > 0:
+                    safe_print(f"     └─ {high} High Priority")
+            except Exception:
+                safe_print("✓ PRINCIPLES.md (created)")
+        else:
+            safe_print("✗ PRINCIPLES.md (not found)")
+
+        safe_print()
+
+        # Commands
+        commands_dir = self.project_root / ".claude" / "commands"
+        if commands_dir.exists():
+            cco_commands = sorted(list(commands_dir.glob("cco-*.md")))
+
+            safe_print(f"✓ Slash Commands ({len(cco_commands)} installed)")
+
+            # Group commands by category
+            audit_cmds = [c for c in cco_commands if "audit" in c.stem or "fix" in c.stem]
+            generate_cmds = [c for c in cco_commands if "generate" in c.stem or "optimize" in c.stem]
+            info_cmds = [c for c in cco_commands if "status" in c.stem or "config" in c.stem]
+
+            if audit_cmds:
+                safe_print("  ├─ Analysis & Audit")
+                for cmd in audit_cmds[:3]:
+                    safe_print(f"  │  └─ /{cmd.stem}")
+
+            if generate_cmds:
+                safe_print("  ├─ Code Generation")
+                for cmd in generate_cmds[:3]:
+                    safe_print(f"  │  └─ /{cmd.stem}")
+
+            if info_cmds:
+                safe_print("  └─ Info & Config")
+                for cmd in info_cmds[:2]:
+                    safe_print(f"     └─ /{cmd.stem}")
+        else:
+            safe_print("✗ Slash Commands (not found)")
+
+        safe_print()
+
+        # Configuration
+        cco_dir = self.project_root / ".cco"
+        if cco_dir.exists():
+            safe_print("✓ Configuration")
+            safe_print("  ├─ .cco/changes.json (change tracking)")
+
+            # Check for backups
+            backup_dir = cco_dir / "backups"
+            if backup_dir.exists() and any(backup_dir.iterdir()):
+                backup_count = len(list(backup_dir.iterdir()))
+                safe_print(f"  └─ .cco/backups/ ({backup_count} backup files)")
+            else:
+                safe_print("  └─ .cco/backups/ (ready)")
+        else:
+            safe_print("✗ Configuration (not found)")
+
+        safe_print()
+        print_separator("-", SEPARATOR_WIDTH)
+        safe_print()
+
+        # Quick Start
+        safe_print("## 🚀 Quick Start")
+        safe_print()
+        safe_print("1. View active principles:     @PRINCIPLES.md")
+        safe_print("2. Check project status:       /cco-status")
+        safe_print("3. Audit your codebase:        /cco-audit")
+        safe_print("4. Fix violations:             /cco-fix")
+        safe_print()
+
+        # Tips
+        safe_print("## 💡 Tips")
+        safe_print()
+        safe_print("• All work must follow active principles (non-negotiable)")
+        safe_print("• Use /cco-status to see current CCO configuration")
+        safe_print("• Use /cco-remove for granular component removal")
+        safe_print("• Re-run /cco-init to update configuration")
+        safe_print()
+
+        print_separator("=", SEPARATOR_WIDTH)
+        safe_print()
 
     def _install_project_statusline(self) -> None:
         """Install statusline from global CCO to project .claude/ directory."""
@@ -281,9 +429,30 @@ class ProjectManager:
 
         # Destination: project .claude/commands/
         project_commands = self.config.get_project_commands_dir(self.project_root)
+
+        # Track .claude directory creation if needed
+        claude_dir = self.project_root / ".claude"
+        claude_dir_created = not claude_dir.exists()
+
+        # Track .claude/commands directory creation if needed
+        commands_dir_created = not project_commands.exists()
+
         project_commands.mkdir(parents=True, exist_ok=True)
 
+        # Track directory creations
+        if claude_dir_created:
+            self.manifest.track_directory_created(
+                claude_dir,
+                "Created .claude directory for project configuration"
+            )
+        if commands_dir_created and not claude_dir_created:  # Only if .claude existed but commands didn't
+            self.manifest.track_directory_created(
+                project_commands,
+                "Created .claude/commands directory for slash commands"
+            )
+
         commands_generated = 0
+        command_names = []  # Track command names for manifest
         symlinks_created = 0
         hardlinks_created = 0
         copies_created = 0
@@ -351,15 +520,20 @@ class ProjectManager:
 
             if linked:
                 commands_generated += 1
+                command_names.append(f"cco-{base_name}")  # Track command name
+
+        # Track commands installation in manifest
+        if command_names:
+            self.manifest.track_commands_installed(command_names)
 
         # Log summary (for user feedback)
         if symlinks_created > 0:
-            print(f"  Symlinked {symlinks_created} commands (auto-update enabled)")
+            safe_print(f"  Symlinked {symlinks_created} commands (auto-update enabled)")
         if hardlinks_created > 0:
-            print(f"  Hardlinked {hardlinks_created} commands (auto-update enabled)")
+            safe_print(f"  Hardlinked {hardlinks_created} commands (auto-update enabled)")
         if copies_created > 0:
-            print(f"  Copied {copies_created} commands (manual update required)")
-            print("  Note: Run 'cco init --force' after pip install -U to update")
+            safe_print(f"  Copied {copies_created} commands (manual update required)")
+            safe_print("  Note: Run 'cco init --force' after pip install -U to update")
 
         return commands_generated
 
@@ -574,5 +748,27 @@ class ProjectManager:
         selector = PrincipleSelector(preferences.model_dump(mode="json"))
         applicable_principles = selector.select_applicable()
         principles_file = self.project_root / "PRINCIPLES.md"
+
+        # Check if file exists before generation (to detect creation vs modification)
+        is_new_file = not principles_file.exists()
+
         selector.generate_principles_md(principles_file)
+
+        # Track file change in manifest
+        if is_new_file:
+            self.manifest.track_file_created(
+                principles_file,
+                f"Created PRINCIPLES.md with {len(applicable_principles)} principles"
+            )
+        else:
+            # File already exists, this is a modification
+            self.manifest.track_file_modified(
+                principles_file,
+                f"Updated PRINCIPLES.md with {len(applicable_principles)} principles"
+            )
+
+        # Track principles addition
+        principle_ids = [p["id"] for p in applicable_principles]
+        self.manifest.track_principles_added(principle_ids)
+
         return applicable_principles
