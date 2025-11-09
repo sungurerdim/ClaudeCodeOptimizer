@@ -6,6 +6,7 @@ Generates PRINCIPLES.md for @mention in Claude Code.
 """
 
 import json
+import shutil
 from datetime import datetime
 from pathlib import Path
 from typing import Any, Dict, List
@@ -429,6 +430,10 @@ class PrincipleSelector:
         # Generate content
         content = self._render_principles_md(by_severity, skipped, stats)
 
+        # Create backup if file exists (before writing)
+        if output_path.exists():
+            self._create_backup(output_path)
+
         # Write file
         output_path.parent.mkdir(parents=True, exist_ok=True)
         output_path.write_text(content, encoding="utf-8")
@@ -608,6 +613,30 @@ class PrincipleSelector:
         lines.append("*Reference with: @PRINCIPLES.md*")
 
         return "\n".join(lines)
+
+    def _create_backup(self, file_path: Path) -> None:
+        """
+        Create timestamped backup of existing file.
+
+        Keeps last 3 backups, deletes older ones.
+        Format: {filename}.backup-YYYYMMDD-HHMMSS
+        """
+        if not file_path.exists():
+            return  # No file to backup
+
+        timestamp = datetime.now().strftime("%Y%m%d-%H%M%S")
+        backup_path = file_path.parent / f"{file_path.name}.backup-{timestamp}"
+
+        # Create backup
+        shutil.copy2(file_path, backup_path)
+
+        # Keep only last 3 backups
+        backup_pattern = f"{file_path.name}.backup-*"
+        backups = sorted(file_path.parent.glob(backup_pattern))
+
+        # Delete old backups (keep last 3)
+        for old_backup in backups[:-3]:
+            old_backup.unlink()
 
 
 # Utility function for easy access
