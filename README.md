@@ -2,27 +2,50 @@
 
 **Unified AI workflow framework that maximizes Claude Code's effectiveness through intelligent project configuration, multi-agent orchestration, and evidence-based development principles.**
 
-[![Python](https://img.shields.io/badge/python-3.8+-blue.svg)](https://www.python.org/downloads/)
+[![Python](https://img.shields.io/badge/python-3.11+-blue.svg)](https://www.python.org/downloads/)
 [![License](https://img.shields.io/badge/license-MIT-green.svg)](LICENSE)
 [![Version](https://img.shields.io/badge/version-0.1.0--alpha-orange.svg)](https://github.com/sungurerdim/ClaudeCodeOptimizer/releases)
 [![Code style: ruff](https://img.shields.io/badge/code%20style-ruff-000000.svg)](https://github.com/astral-sh/ruff)
-[![PRs Welcome](https://img.shields.io/badge/PRs-welcome-brightgreen.svg)](CONTRIBUTING.md)
 
-> **⚠️ Alpha Status**: Core functionality complete, production readiness in progress. See [Known Limitations](#known-limitations) and [Roadmap](#roadmap).
+> **⚠️ Alpha Status**: Core functionality complete, production readiness in progress (P0.2 completed). See [Roadmap](#roadmap).
 
 ---
 
 ## Why CCO?
 
-**Problem**: Claude AI models are incredibly powerful, but without structure, they can be inconsistent, inefficient, and error-prone across different projects.
+**Problem**: Claude AI models are powerful, but without structure they can be inconsistent and inefficient.
 
-**Solution**: CCO provides a unified framework that:
+**Solution**: CCO provides a framework that:
 
-🎯 **Enforces Consistency** - 72 development principles tailored to your project type and team size
-⚡ **Optimizes Performance** - Multi-agent parallelism delivers 2-3x faster execution
-🛡️ **Minimizes Risk** - Evidence-based verification (P067) prevents silent failures
+🎯 **Enforces Consistency** - 74 development principles across 8 categories
+⚡ **Optimizes Performance** - Multi-agent parallelism for 2-3x faster execution
+🛡️ **Minimizes Risk** - Evidence-based verification prevents silent failures
+💰 **Controls Costs** - Smart model selection + 76% token reduction via progressive disclosure
 🔍 **Maximizes Quality** - Auto-detection of 20+ languages, 25+ frameworks, 30+ tools
-💰 **Controls Costs** - Smart model selection (Haiku for data, Sonnet for reasoning)
+
+---
+
+## Quick Start
+
+```bash
+# Installation
+pip install claudecodeoptimizer
+
+# Quick mode (10 seconds)
+python -m claudecodeoptimizer init
+
+# Interactive mode (2-5 minutes)
+python -m claudecodeoptimizer init --mode=interactive
+
+# Or in Claude Code
+/cco-init
+```
+
+**What it creates:**
+- `.cco/project.json` - Project configuration
+- `PRINCIPLES.md` - Active development principles (~500 tokens, load with `@PRINCIPLES.md`)
+- `.claude/commands/` - Slash commands (8-12 commands tailored to your stack)
+- `docs/cco/` - Comprehensive documentation system
 
 ---
 
@@ -30,771 +53,378 @@
 
 ### 🧙 Intelligent Project Initialization
 
-**Two modes, same powerful decision engine:**
+**Two modes, same decision engine:**
 
-- **Quick Mode** (~10s): AI analyzes your codebase and auto-configures everything
-- **Interactive Mode** (~2-5m): Full wizard with guided questions and smart recommendations
+**Quick Mode** (~10s):
+- AI auto-analyzes your codebase
+- Detects: OS, shell, locale, languages, frameworks, tools
+- Auto-decides: Project type, team size, maturity, philosophy
+- Configures: Principles, commands, security, documentation
 
-**What it detects:**
-- System environment (OS, shell, locale, Python version, editors)
-- Project structure (languages, frameworks, tools, patterns)
-- Optimal configuration (principles, commands, testing strategy, security stance)
+**Interactive Mode** (~2-5m):
+- **TIER 0**: System detection (automatic)
+- **TIER 1**: Fundamental decisions (4 questions)
+  - Project purpose, team size, maturity, philosophy
+- **TIER 2**: Strategy decisions (4 questions)
+  - Principles, testing, security, documentation, git workflow
+- **TIER 3**: Tactical decisions (dynamic)
+  - Tool preferences, command selection
 
-**Output:**
-- `.cco/project.json` - Complete project configuration
-- `PRINCIPLES.md` - Your active development principles (reference with `@PRINCIPLES.md`)
-- `.claude/commands/` - Slash commands tailored to your stack
-- `.claude/settings.local.json` - Auto-configured sandboxing permissions
+**Cascading AI hints** - Each answer informs next recommendations.
 
-### 📚 Dynamic Principles System
+### 📚 Progressive Disclosure Documentation System
 
-**72 comprehensive principles** across 7 categories:
-- **Code Quality** (15): DRY, fail-fast, type safety, immutability
-- **Security & Privacy** (19): Encryption, zero-trust, secrets management
+**NEW in P0.2** - Inspired by [wshobson/agents](https://github.com/wshobson/agents)
+
+**Token Optimization** (76% reduction):
+- **Before**: ~8500 tokens (all content loaded)
+- **After**: ~2000 tokens (core only, load on-demand)
+
+**Structure:**
+```
+docs/cco/
+├── principles/              # 9 files (split by category)
+│   ├── core.md             # 3 critical principles (~500 tokens)
+│   ├── code-quality.md     # 14 principles
+│   ├── security.md         # 19 principles
+│   ├── testing.md          # 6 principles
+│   ├── architecture.md     # 10 principles
+│   ├── performance.md      # 5 principles
+│   ├── operations.md       # 10 principles
+│   ├── git-workflow.md     # 5 principles
+│   └── api-design.md       # 2 principles
+│
+├── guides/                  # 5 comprehensive guides (on-demand)
+│   ├── verification-protocol.md
+│   ├── git-workflow.md
+│   ├── security-response.md
+│   ├── performance-optimization.md
+│   └── container-best-practices.md
+│
+└── skills/                  # Language-specific skills (planned)
+    ├── python/
+    ├── typescript/
+    ├── rust/
+    └── go/
+```
+
+**Usage:**
+```
+# Load core principles (always loaded, ~500 tokens)
+@PRINCIPLES.md
+
+# Load category-specific principles (on-demand)
+@docs/cco/principles/security.md
+
+# Load detailed guides (on-demand)
+@docs/cco/guides/performance-optimization.md
+```
+
+**Automatic Loading:**
+- `/cco-audit code` → loads `code-quality.md`
+- `/cco-audit security` → loads `security.md`
+- `/cco-test` → loads `testing.md`
+- `/cco-optimize` → loads `performance.md`
+
+### 🎯 Development Principles (74 Total)
+
+**8 Categories:**
+- **Core** (3): Fail-fast, evidence-based verification, anti-overengineering
+- **Code Quality** (14): DRY, type safety, immutability, precision
+- **Security** (19): Encryption, zero-trust, secrets management, input validation
+- **Testing** (6): Test pyramid, coverage targets, isolation, CI gates
 - **Architecture** (10): Event-driven, microservices, separation of concerns
-- **Operations** (10): IaC, observability, minimal responsibility
-- **Testing** (6): Coverage targets, test pyramid, CI gates
+- **Performance** (5): Caching, async I/O, database optimization
+- **Operations** (10): IaC, observability, health checks
 - **Git Workflow** (5): Commit conventions, branching, versioning
-- **Performance** (5): Caching, async I/O, DB optimization
+- **API Design** (2): RESTful conventions, error handling
 
-**Smart selection** based on:
-- Project type (API, web, CLI, library, etc.)
+**Smart Selection** based on:
+- Project type (API, web app, CLI, library, data pipeline, etc.)
 - Primary language (Python, JavaScript, Go, Rust, Java, etc.)
-- Team size (solo, small, medium, large)
-- Project characteristics (privacy-critical, security-critical, performance-critical)
+- Team size (solo → enterprise)
+- Project maturity (prototype → production)
+- Development philosophy (move fast → quality-first)
 
 ### ⚡ Multi-Agent Orchestration
 
-**Parallel execution architecture** for 2-3x performance boost:
+**Parallel execution for 2-3x performance boost:**
 
 ```bash
-# Example: Security audit with parallel agents
+# Example: Security audit
 Agent 1 (Haiku): Data security scan     → 3s
-Agent 2 (Haiku): Architecture audit     → 3s
-Agent 3 (Sonnet): Intelligent analysis  → 5s
-Total: ~8s (vs 15s sequential)
+Agent 2 (Haiku): Architecture audit     → 3s  } Parallel
+Agent 3 (Sonnet): Analysis & synthesis  → 5s
+─────────────────────────────────────────────
+Total: ~8s (vs 15s sequential, 47% faster)
 ```
 
-**Cost optimization:**
-- **Haiku**: Fast data gathering (grep, detection, file scans)
-- **Sonnet**: Deep reasoning (analysis, recommendations, prioritization)
-- **Opus**: Reserved for extremely complex tasks (rarely needed)
+**Cost Optimization:**
+- **Haiku**: Data gathering (grep, detection, scans) - Fast & cheap
+- **Sonnet**: Complex reasoning (analysis, synthesis) - Smarter decisions
+- **Opus**: Reserved for extreme complexity (rarely needed)
+
+**Model Enforcement** - All 12+ commands specify Haiku/Sonnet usage explicitly.
+
+### 📊 Report Management System
+
+**NEW in P0.2** - Timestamped report storage:
+
+```
+.cco/reports/
+├── audit/
+│   ├── 2025-11-09-165530-audit.md
+│   └── latest-audit.md              # Copy of latest (Windows compat)
+├── status/
+├── fix/
+├── analyze/
+└── sync/
+```
+
+**Features:**
+- Timestamped filenames: `YYYY-MM-DD-HHMMSS-{command}.md`
+- Latest tracking: `latest-{command}.md`
+- Automatic cleanup: Keep last 10 reports (configurable)
+- Report history: `get_report_history(command, limit=10)`
+
+**API:**
+```python
+from claudecodeoptimizer.core.report_manager import ReportManager
+
+manager = ReportManager()
+report_path = manager.save_report("audit", content)
+latest = manager.get_latest_report("audit")
+history = manager.get_report_history("audit", limit=5)
+```
 
 ### 🔍 Universal Detection Engine
 
-**Zero-dependency standalone module** that detects:
-- **20+ languages**: Python, JS/TS, Rust, Go, Java, Kotlin, C#, Ruby, PHP, Swift, Dart, etc.
-- **25+ frameworks**: FastAPI, Django, React, Vue, Angular, Next.js, Gin, Actix, Spring, etc.
-- **30+ tools**: Docker, K8s, pytest, jest, black, ruff, eslint, GitHub Actions, etc.
+**Zero-dependency standalone module:**
 
-**Confidence-based scoring** (0.0-1.0) with evidence tracking:
+**Detects:**
+- **20+ languages**: Python, JS/TS, Rust, Go, Java, Kotlin, C#, Ruby, PHP, Swift, etc.
+- **25+ frameworks**: FastAPI, Django, React, Vue, Next.js, Gin, Actix, Spring, etc.
+- **30+ tools**: Docker, K8s, pytest, jest, ruff, eslint, GitHub Actions, etc.
+
+**Confidence-based scoring** with evidence:
 ```json
 {
   "detected_value": "python",
   "confidence": 0.95,
-  "evidence": ["24 .py files", "pyproject.toml present", "Python syntax patterns"]
+  "evidence": ["24 .py files", "pyproject.toml present"]
 }
 ```
 
 ### 🎛️ Slash Commands
 
-**12+ specialized commands** organized by category:
+**12+ specialized commands** (core + recommended installed):
 
-| Category | Commands | Purpose |
-|----------|----------|---------|
-| **Analysis** | `/cco-analyze`, `/cco-audit`, `/cco-status` | Deep analysis, comprehensive audits, health checks |
-| **Quality** | `/cco-fix`, `/cco-optimize-code`, `/cco-optimize-deps` | Auto-fix issues, remove dead code, update dependencies |
-| **Security** | `/cco-scan-secrets`, audit security | Detect secrets, OWASP Top 10 checks |
-| **Sync** | `/cco-sync` | Multi-service configuration drift detection |
-| **Config** | `/cco-init`, `/cco-config`, `/cco-remove` | Project initialization, config management |
+**Core Commands** (always installed):
+- `/cco-init` - Initialize CCO for project
+- `/cco-status` - Quick health check
+- `/cco-config` - Configuration management
 
-**All commands use**:
-- Multi-agent parallelism
-- Evidence-based verification
-- Auto-fix with rollback
-- Principle compliance checking
+**Audit & Analysis**:
+- `/cco-audit` - Comprehensive codebase audit (code, security, tests, docs)
+- `/cco-analyze` - Deep project analysis (structure, tech stack, recommendations)
+
+**Fix & Optimize**:
+- `/cco-fix` - Auto-fix issues (code, security, docs, tests)
+- `/cco-optimize-code` - Remove unused code and imports
+- `/cco-optimize-deps` - Update dependencies, fix vulnerabilities
+- `/cco-optimize-docker` - Optimize Dockerfiles
+
+**Generate & Sync**:
+- `/cco-generate` - Generate code, tests, docs, CI/CD
+- `/cco-sync` - Sync files across codebase
+- `/cco-scan-secrets` - Scan for exposed secrets
+
+**Optional Commands** (shown but not installed):
+- User can enable later: `/cco-config enable <command>`
+
+### 🔄 Git Workflow Selection
+
+**NEW in P0.2** - Customizable per team size:
+
+**Main-Only (Solo)**:
+- Single `main` branch
+- Direct commits
+- Simple, fast, pragmatic
+
+**GitHub Flow (Small Teams)**:
+- Feature branches + PRs
+- Code review required
+- Branch protection
+
+**Git Flow (Large Teams/Production)**:
+- `main` + `develop` branches
+- Feature/release/hotfix branches
+- Formal release process
+
+**Auto-selected** during init based on team size, with option to customize.
 
 ---
 
-## Quick Start
+## Installation
 
-### 1. Install CCO
+### Requirements
 
-> **⚠️ Note**: CCO is not yet published to PyPI. Install from source:
+- Python 3.11+
+- Claude Code (for slash commands)
+- Git (for version control features)
+
+### Install
 
 ```bash
-# Clone repository
-git clone https://github.com/sungurerdim/ClaudeCodeOptimizer.git
+# From PyPI (coming soon)
+pip install claudecodeoptimizer
+
+# From source
+git clone https://github.com/sungurerdim/ClaudeCodeOptimizer
 cd ClaudeCodeOptimizer
-
-# Install in editable mode
-pip install -e .
-
-# Or install with development dependencies
 pip install -e ".[dev]"
 ```
 
-**Alternative - Direct from GitHub**:
+### Initialize
+
 ```bash
-# Install directly without cloning
-pip install git+https://github.com/sungurerdim/ClaudeCodeOptimizer.git
-
-# Or with dev dependencies
-pip install "claudecodeoptimizer[dev] @ git+https://github.com/sungurerdim/ClaudeCodeOptimizer.git"
-```
-
-**After installation, verify**:
-```bash
-# Check version
-python -m claudecodeoptimizer version
-
-# Should output: ClaudeCodeOptimizer v0.1.0
-```
-
-### 2. Initialize Your Project
-
-CCO offers two initialization modes:
-
-#### **Quick Mode** (Recommended) - AI Auto-Configuration
-```bash
+# Quick mode (recommended)
 python -m claudecodeoptimizer init
-# or in Claude Code:
-/cco-init
-```
 
-**What happens:**
-- 🔍 Detects: OS, terminal, locale, Python environment, editors
-- 📊 Analyzes: Languages, frameworks, tools, project structure
-- 🤖 AI Decides: Project type, team size, maturity, testing strategy
-- ✅ Configures: Principles, commands, security, documentation
-- ⚡ Duration: ~10 seconds
-
-#### **Interactive Mode** - Full Control
-```bash
+# Interactive mode
 python -m claudecodeoptimizer init --mode=interactive
-# or in Claude Code:
-/cco-init --mode=interactive
-```
-
-**What you'll configure:**
-- **Tier 1 - Fundamentals** (4 questions)
-  - Project purpose (API/Web/Library/CLI/Data/Desktop/Mobile)
-  - Team dynamics (Solo/Small/Growing/Large)
-  - Project maturity (Prototype/MVP/Active/Production/Maintenance)
-  - Development philosophy (Move Fast/Balanced/Quality-First)
-
-- **Tier 2 - Strategy** (4 questions)
-  - Principle selection (Minimal/Recommended/Comprehensive/Custom)
-  - Testing approach (None/Critical Paths/Balanced/Comprehensive)
-  - Security stance (Standard/Production/High)
-  - Documentation level (Minimal/Practical/Comprehensive)
-
-- **Tier 3 - Tactical** (As needed)
-  - Tool preferences (when conflicts detected: ruff vs black, pytest vs unittest)
-  - Command selection (choose from 12+ specialized commands)
-
-**AI Assistance:**
-- Every question includes context-aware recommendations
-- Cascading hints based on previous answers
-- Tool comparisons with clear reasoning
-- "Why this matters" explanations
-
-**Output:**
-- `.cco/project.json` - Full project configuration
-- `.cco/commands.json` - Enabled commands registry
-- `PRINCIPLES.md` - Active development principles
-- `.claude/commands/` - Slash command files
-
-### 3. Use Slash Commands
-
-```
-/cco-status            # Project health dashboard
-/cco-audit             # Run audits (code, security, tests, docs)
-/cco-fix               # Auto-fix code issues
-/cco-sync              # Sync files across codebase
-/cco-analyze           # Deep project analysis
-/cco-config            # Configuration management
-```
-
----
-
-## Commands
-
-CCO provides specialized slash commands organized by category:
-
-### 🔍 Analysis & Audit
-
-| Command | Description |
-|---------|-------------|
-| `/cco-analyze` | Deep project analysis (structure, tech stack, complexity) |
-| `/cco-audit` | Comprehensive audits (code quality, security, tests, docs, principles) |
-| `/cco-status` | Project health dashboard with trend analysis |
-
-**Audit options** (user selects via interactive prompt):
-- Code Quality - Linters, formatters, type checkers
-- Security - OWASP Top 10, secrets, vulnerabilities
-- Tests - Coverage, quality, flaky test detection
-- Documentation - Completeness, accuracy, sync with code
-- Principles - Validate against active development principles
-- All - Run all audits (parallel execution)
-
-### ⚡ Quality & Optimization
-
-| Command | Description |
-|---------|-------------|
-| `/cco-fix` | Auto-fix violations (DRY, unused code, type safety, security) |
-| `/cco-optimize-code` | Remove dead code, unused imports, deprecated markers |
-| `/cco-optimize-deps` | Remove unused, update outdated, fix vulnerabilities |
-| `/cco-optimize-docker` | Dockerfile optimization (size, caching, security) |
-
-### 🔄 Synchronization
-
-| Command | Description |
-|---------|-------------|
-| `/cco-sync` | Parallel sync checks (config, deps, types, constants) |
-
-**Sync options** (user selects):
-- All - Sync everything (recommended)
-- Config Files - tsconfig, .eslintrc, pyproject.toml consistency
-- Dependencies - package.json, requirements.txt, go.mod across services
-- Type Definitions - TypeScript types, Python protocols
-- Constants - Shared constants, enums, config values
-
-### 🧪 Testing & Generation
-
-| Command | Description |
-|---------|-------------|
-| `/cco-test` | Test execution and analysis |
-| `/cco-generate` | Auto-generate tests, docs, CI/CD |
-
-### 🔐 Security
-
-| Command | Description |
-|---------|-------------|
-| `/cco-scan-secrets` | Detect hardcoded API keys, passwords, tokens |
-
-### ⚙️ Configuration
-
-| Command | Description |
-|---------|-------------|
-| `/cco-init` | Initialize CCO for current project |
-| `/cco-config` | Configuration management (setup, export, import, show) |
-| `/cco-remove` | Remove CCO from project (keeps global installation) |
-
----
-
-## Skills System
-
-CCO includes reusable workflow skills accessible via `/` commands:
-
-| Skill | Description |
-|-------|-------------|
-| `verification-protocol` | Verify claims with evidence (test runs, build output) |
-| `test-first-verification` | Write tests before implementation |
-| `root-cause-analysis` | Trace bugs to source, not symptoms |
-| `incremental-improvement` | Small, tested, reversible changes |
-| `security-emergency-response` | Rapid response to security issues |
-
-**Usage:**
-```
-/verification-protocol    # Load verification workflow
-/root-cause-analysis      # Load debugging workflow
 ```
 
 ---
 
 ## Architecture
 
+### Project Structure
+
 ```
-┌─────────────────────────────────────────────────────────────────┐
-│  Python Package (claudecodeoptimizer/)                          │
-├─────────────────────────────────────────────────────────────────┤
-│  📦 core/            AI & Core Logic                            │
-│     ├── detection.py      Universal language/framework detector │
-│     ├── principles.py     72-principle dynamic selection        │
-│     ├── wizard/           Dual-mode initialization wizard       │
-│     ├── installer.py      Global + project installation         │
-│     └── analyzer.py       Project structure analysis            │
-│                                                                  │
-│  📜 commands/        Slash Command Templates (Markdown)         │
-│     ├── audit.md          Multi-agent security/code audit       │
-│     ├── status.md         Parallel health check (5 agents)      │
-│     ├── fix.md            Auto-fix with rollback                │
-│     └── [9 more]          Specialized workflow commands         │
-│                                                                  │
-│  🧠 knowledge/       Principle Database                         │
-│     └── principles.json   72 principles, 7 categories           │
-│                                                                  │
-│  🎯 skills/          Reusable Workflows                         │
-│     ├── verification-protocol.md                                │
-│     ├── root-cause-analysis.md                                  │
-│     └── [3 more]          Expert workflow patterns              │
-└─────────────────────────────────────────────────────────────────┘
-
-┌─────────────────────────────────────────────────────────────────┐
-│  Global Installation (~/.cco/)  - Single Source of Truth        │
-├─────────────────────────────────────────────────────────────────┤
-│  📋 projects/                                                    │
-│     ├── index.json         Project registry                     │
-│     └── MyProject.json     Per-project config + principles      │
-│                                                                  │
-│  📚 templates/                                                   │
-│     ├── commands/          Command templates (auto-update)      │
-│     ├── skills/            Skill templates                      │
-│     └── generic/           Settings, statusline templates       │
-│                                                                  │
-│  🧠 knowledge/                                                   │
-│     └── principles.json    Centralized principle database       │
-│                                                                  │
-│  ⚙️ config.json            Global preferences                   │
-└─────────────────────────────────────────────────────────────────┘
-
-┌─────────────────────────────────────────────────────────────────┐
-│  Project Directory (.claude/)  - Minimal Local Files            │
-├─────────────────────────────────────────────────────────────────┤
-│  📜 commands/              Linked to global templates           │
-│     ├── cco-init.md                                             │
-│     ├── cco-audit.md                                            │
-│     └── [10+ commands]     Auto-update via pip install -U       │
-│                                                                  │
-│  ⚙️ settings.local.json    Auto-configured sandboxing           │
-│  📊 statusline.js          Project health indicator             │
-└─────────────────────────────────────────────────────────────────┘
-
-┌─────────────────────────────────────────────────────────────────┐
-│  Project Root  - Generated Configuration                        │
-├─────────────────────────────────────────────────────────────────┤
-│  📋 .cco/                                                        │
-│     ├── project.json       Full project configuration           │
-│     └── commands.json      Enabled commands registry            │
-│                                                                  │
-│  📜 PRINCIPLES.md          Active principles (70+ generated)     │
-│                            Reference with @PRINCIPLES.md         │
-│                                                                  │
-│  📖 CLAUDE.md              Development guidelines (optional)     │
-└─────────────────────────────────────────────────────────────────┘
+ClaudeCodeOptimizer/
+├── claudecodeoptimizer/
+│   ├── ai/                    # AI-powered modules
+│   │   ├── detection.py       # UniversalDetector (20+ langs, 25+ frameworks)
+│   │   ├── command_selection.py  # Smart command recommendation
+│   │   └── recommendations.py # Cascading AI hints
+│   ├── core/                  # Core functionality
+│   │   ├── installer.py       # CCO installation
+│   │   ├── principle_selector.py  # Dynamic principle selection
+│   │   ├── claude_md_generator.py  # CLAUDE.md generation
+│   │   └── report_manager.py # Report management (NEW)
+│   ├── wizard/                # Interactive wizard
+│   │   ├── orchestrator.py   # Wizard flow control
+│   │   ├── decision_tree.py  # 3-tier decision tree
+│   │   └── renderer.py        # Terminal UI
+│   ├── commands/              # Slash command definitions
+│   ├── knowledge/             # Knowledge base
+│   │   └── principles.json    # 74 principles database
+│   └── schemas/               # Data models
+├── docs/cco/                  # CCO documentation (NEW)
+│   ├── principles/            # 9 category files
+│   └── guides/                # 5 comprehensive guides
+├── .github/workflows/         # CI/CD
+│   └── security.yml           # Security scanning (FIXED)
+└── tests/                     # Test suite
 ```
 
-**Design Principles:**
-- ✅ **Single Source of Truth**: Commands stored in `~/.cco/`, linked to projects
-- ✅ **Zero Duplication**: Auto-update via `pip install -U` updates all projects
-- ✅ **Clean Project Dirs**: Only `.claude/` and `.cco/` directories used
-- ✅ **Centralized Config**: Per-project settings in `~/.cco/projects/`
+### Design Principles
 
----
-
-## Known Limitations
-
-**Current Alpha Status (v0.1.0):**
-
-🔴 **Critical Gaps**:
-- ❌ No automated tests (0% coverage) - High priority for v0.2.0
-- ❌ No CI/CD pipeline - Planned for v0.2.0
-- ❌ Type annotations incomplete (17 missing) - In progress
-
-🟡 **Important Limitations**:
-- ⚠️ Command templates lack validation - Manual errors possible
-- ⚠️ Large projects (10k+ files) may have slow detection - Caching improvements planned
-- ⚠️ Error messages could be more actionable - UX improvements in v0.3.0
-- ⚠️ No plugin system yet - Extensibility planned for v0.4.0
-
-🟢 **Minor Issues**:
-- 79 ruff lint warnings (26 auto-fixable) - Cleanup in progress
-- Limited localization (TR/EN only) - More languages in future releases
-- Documentation gaps (API reference, ADRs) - Expanding in v0.2.0
-
-**Not Production-Ready For:**
-- Mission-critical deployments requiring 100% uptime
-- Environments requiring comprehensive test coverage
-- Teams needing extensive customization/plugins
-
-**Ready For:**
-- Personal projects and experimentation
-- Small teams willing to provide feedback
-- Developers contributing to alpha development
+1. **Progressive Disclosure** - Load only what's needed, when needed
+2. **Evidence-Based** - Every claim requires proof
+3. **Anti-Overengineering** - Simplest solution that works
+4. **Cascading Intelligence** - Each decision informs the next
+5. **Multi-Agent First** - Parallel execution by default
 
 ---
 
 ## Roadmap
 
-### v0.2.0 - Production Readiness (Target: 2 weeks)
-
-**Focus**: Testing, stability, and core quality improvements
-
-- 🔴 **Critical**:
-  - [ ] Add unit tests (target: 60% coverage)
-  - [ ] Fix all 13 try-except-pass instances (P001 violations)
-  - [ ] Complete type annotations (mypy strict mode)
-  - [ ] Setup CI/CD pipeline (lint + test + coverage)
-
-- 🟡 **High Priority**:
-  - [ ] Integration tests for wizard flows
-  - [ ] Command template validation system
-  - [ ] Improved error messages with suggested fixes
-  - [ ] API documentation (Sphinx/MkDocs)
-
-### v0.3.0 - User Experience (Target: 1 month)
-
-**Focus**: Better UX/DX and performance
-
-- 🟡 **High Priority**:
-  - [ ] `/cco-help` command with search
-  - [ ] Detection engine caching (2x faster)
-  - [ ] Principle lazy loading
-  - [ ] Progress indicators for long operations
-
-- 🟢 **Medium Priority**:
-  - [ ] CONTRIBUTING.md guide
-  - [ ] Architecture Decision Records (ADRs)
-  - [ ] Development setup documentation
-  - [ ] Example projects for testing
-
-### v0.4.0 - Extensibility (Target: 2 months)
-
-**Focus**: Plugin system and customization
-
-- 🟢 **Medium Priority**:
-  - [ ] Plugin API for custom detectors
-  - [ ] Plugin API for custom principles
-  - [ ] Plugin API for custom commands
-  - [ ] Plugin discovery and management
-
-### v1.0.0 - Stable Release (Target: 3 months)
-
-**Requirements for 1.0:**
-- ✅ 80%+ test coverage
-- ✅ Zero critical bugs
-- ✅ Complete documentation
-- ✅ Migration guide from alpha
-- ✅ Stable API (no breaking changes)
-- ✅ Performance benchmarks
-- ✅ Production usage examples
-
----
-
-## Features
-
-### 🧙 Intelligent Wizard System (New in 0.1.0)
-
-**Two Modes, Same Decision Tree:**
-- **Quick Mode**: AI analyzes project → auto-configures everything
-- **Interactive Mode**: User answers questions → full control
-
-**TIER 0 - System Detection (Automatic)**
-- OS, terminal, shell, unicode support
-- Locale and language detection
-- Python environment and Git config
-- Active editor detection (VS Code, PyCharm, Vim)
-
-**TIER 1 - Fundamental Decisions**
-- Project purpose (API, web app, library, CLI, etc.)
-- Team dynamics (solo, small team, growing, large org)
-- Project maturity (prototype → production)
-- Development philosophy (speed vs quality)
-
-**TIER 2 - Strategy Decisions**
-- Principle selection strategy
-- Testing approach and coverage
-- Security stance and compliance
-- Documentation level
-
-**TIER 3 - Tactical Decisions (Dynamic)**
-- Tool preference resolution (ruff vs black, pytest vs unittest)
-- Command selection based on project needs
-- Smart recommendations with reasoning
-
-**Key Innovations:**
-- 🎯 Cascading AI hints (each answer informs next recommendations)
-- 🔧 Tool comparison engine (recommends best tools with clear rationale)
-- 🚫 Anti-overengineering principle (P071: No unnecessary complexity)
-- 🌍 Multi-language support (Turkish, English, auto-detected)
-- ⚡ Context-aware command selection
-
-### 🎯 Development Principles System
-
-Dynamic selection from comprehensive principles database organized by category:
-- Code Quality (DRY, fail-fast, type safety, immutability)
-- Security & Privacy (secrets management, encryption, input validation)
-- Architecture (event-driven, microservices, separation of concerns)
-- Testing (test pyramid, coverage, isolation)
-- Git Workflow (commit conventions, branching, code review)
-- Performance (caching, lazy loading, async I/O)
-- API Design (RESTful, versioning, pagination)
-- Operations (monitoring, logging, health checks)
-
-**Selection Modes:**
-- **Auto** - Select based on project type, language, team size
-- **Minimal** - Core principles for quick start
-- **Comprehensive** - Maximum quality enforcement
-- **Custom** - Handpick specific principles
-
-### ⚡ Template Variables System
-
-Centralized configuration using `${VAR_NAME}` syntax:
-
-**Categories:**
-- **Project** - `${PROJECT_NAME}`, `${PROJECT_TYPE}`, `${PRIMARY_LANGUAGE}`
-- **Directories** - `${SERVICE_DIR}`, `${TESTS_DIR}`, `${DOCS_DIR}`
-- **Tools** - `${FORMATTER}`, `${LINTER}`, `${TYPE_CHECKER}`, `${TEST_FRAMEWORK}`
-- **Characteristics** - `${PRIVACY_CRITICAL}`, `${SECURITY_CRITICAL}`, `${TEAM_SIZE}`
-
-**Benefits:**
-- No hardcoded values in commands
-- Easy per-project customization
-- Automatic detection with manual override
-- Team-wide consistency via export/import
-
-### 🔍 Comprehensive Audit System
-
-Multi-category audits with parallel execution:
-- **Code Quality** - Fail-fast violations, DRY issues, dead code
-- **Security** - OWASP Top 10, secrets exposure, SQL injection, XSS
-- **Tests** - Coverage, missing tests, flaky tests, test pyramid
-- **Documentation** - README, API docs, inline documentation
-- **Principles** - Validate against active principles
-
-**Health Scoring:**
-- 0-100 score based on multiple factors
-- Trend analysis (improving/declining/stable)
-- Actionable recommendations prioritized by impact
-
-### 🛠️ Auto-Fix Workflows
-
-Safe, tested, rollback-enabled fixes:
-
-**Process:**
-1. Detect violations
-2. Filter auto-fixable issues
-3. Backup (git stash)
-4. Apply fixes
-5. Run tests
-6. Rollback if tests fail
-
-**Auto-Fixable Issues:**
-- DRY violations → Extract to functions
-- Unused code → Remove imports, functions, variables
-- Type safety → Add type hints
-- SQL injection → Parameterized queries
-- Magic numbers → Named constants
-
-### 🔄 Multi-Service Synchronization
-
-Detect configuration drift across microservices:
-- Config drift (environment variables, settings)
-- Dependency drift (version mismatches)
-- Type drift (inconsistent type definitions)
-- Constants drift (magic numbers, duplicates)
-
-**Auto-Consolidation:**
-- Extract shared config to `shared/config.py`
-- Consolidate dependencies
-- Generate shared types
-- Extract constants
-
-### 🔐 Security Scanning
-
-Comprehensive security checks:
-- Hardcoded secrets (API keys, passwords, tokens)
-- SQL injection vulnerabilities
-- XSS vulnerabilities
-- Missing input validation
-- CORS misconfiguration
-
-**Auto-Fix:**
-- SQL injection → Parameterized queries
-- XSS → Sanitization
-- Validation → Pydantic models
-- Secrets → Environment variables
-
-### 📊 Team Configuration
-
-Export/import for team consistency:
-
-```bash
-/cco-config export    # Export to cco-config.json
-/cco-config import    # Import team configuration
-/cco-config show      # Display current configuration
-```
-
-**Benefits:**
-- Onboard new members instantly
-- Enforce consistent standards
-- Share best practices
-- Track configuration evolution
-
----
-
-## CLI Commands
-
-```bash
-# Project Initialization
-python -m claudecodeoptimizer init                    # Quick mode (AI auto-config)
-python -m claudecodeoptimizer init --mode=interactive # Interactive mode (full wizard)
-python -m claudecodeoptimizer init --mode=quick       # Explicit quick mode
-python -m claudecodeoptimizer init --dry-run          # Preview without writing files
-
-# Project Status
-python -m claudecodeoptimizer status         # Show CCO status
-python -m claudecodeoptimizer remove         # Remove CCO from project
-
-# Info
-python -m claudecodeoptimizer version        # Show version
-python -m claudecodeoptimizer help           # Show help
-```
-
----
-
-## Configuration
-
-### Global Config (`~/.cco/config.json`)
-
-Auto-created on first init. Contains global preferences and feature flags.
-
-### Project Registry (`~/.cco/projects/PROJECT_NAME.json`)
-
-Per-project configuration:
-- Project metadata (name, root, type, language)
-- Analysis results (frameworks, tools, characteristics)
-- Selected principles
-- Enabled commands
-- Status tracking
-
----
-
-## Development
-
-### Setup
-
-```bash
-git clone https://github.com/sungurerdim/ClaudeCodeOptimizer.git
-cd ClaudeCodeOptimizer
-
-# Install in editable mode with dev dependencies
-pip install -e ".[dev]"
-
-# Run tests
-pytest
-
-# Format & lint
-black .
-ruff check .
-mypy claudecodeoptimizer/
-```
-
----
-
-## Versioning
-
-Semantic versioning: `MAJOR.MINOR.PATCH`
-
-- **MAJOR** - Breaking changes or major features
-- **MINOR** - New features, backward compatible
-- **PATCH** - Bug fixes and improvements
+### ✅ v0.1.0-alpha (Complete)
+- Interactive wizard with 3-tier decision tree
+- 74 principles across 8 categories
+- Universal detection engine
+- 12+ slash commands
+- Multi-agent orchestration
+
+### ⏳ v0.2.0-alpha (In Progress - 85% Complete)
+
+**P0: Production Readiness**
+- ✅ P0.1: Command selection fixes (core + recommended only)
+- ✅ P0.1: Model enforcement (Haiku/Sonnet explicit in all commands)
+- ✅ P0.1: Git workflow selection (main-only, GitHub Flow, Git Flow)
+- ✅ P0.2: Document management system (progressive disclosure)
+- ✅ P0.2: Token optimization (76% reduction: 8500 → 2000 tokens)
+- ✅ P0.2: Report management system
+- ✅ GitHub Actions: Security workflow fixes
+- ⏳ P0.3: Progressive disclosure for skills (3-tier loading)
+- ⏳ P0.3: Category-based principle loading
+- ⏳ P0.0: Smart Git Commit skill (version bump detection)
+- ⏳ Testing: 0% → 60% coverage
+- ⏳ CI/CD: Automated testing, linting, security scans
+
+**Release Criteria**:
+- 60% test coverage
+- CI/CD operational
+- Zero critical bugs
+- Documentation complete
+
+### 📅 v0.3.0-beta (User Experience)
+- Enhanced wizard UX
+- Command autocomplete
+- Better error messages
+- Performance optimizations
+
+### 📅 v0.4.0-rc (Extensibility)
+- Plugin system
+- Custom principle definitions
+- Command templates
+- Export/import configurations
+
+### 📅 v1.0.0 (Stable Release)
+- API stability guarantee
+- Production-ready quality
+- Comprehensive documentation
+- Migration guides
 
 ---
 
 ## Contributing
 
-We welcome contributions! CCO is in active alpha development and needs help with:
+We welcome contributions! See [CONTRIBUTING.md](CONTRIBUTING.md) for guidelines.
 
-**High Priority Areas**:
-- 🧪 **Testing**: Unit tests, integration tests, E2E tests
-- 📝 **Documentation**: API docs, usage examples, tutorials
-- 🐛 **Bug Fixes**: See [Issues](https://github.com/sungurerdim/ClaudeCodeOptimizer/issues)
-- 🌍 **Localization**: Additional language support beyond TR/EN
-
-**Before Contributing**:
-1. Read `CONTRIBUTING.md` (coming in v0.2.0)
-2. Check [open issues](https://github.com/sungurerdim/ClaudeCodeOptimizer/issues)
-3. Discuss major changes in [Discussions](https://github.com/sungurerdim/ClaudeCodeOptimizer/discussions)
-
-**Development Setup**:
-```bash
-# Clone repository
-git clone https://github.com/sungurerdim/ClaudeCodeOptimizer.git
-cd ClaudeCodeOptimizer
-
-# Install in editable mode with dev dependencies
-pip install -e ".[dev]"
-
-# Run linter
-ruff check claudecodeoptimizer/
-
-# Format code
-ruff format claudecodeoptimizer/
-
-# Type check
-mypy claudecodeoptimizer/
-```
-
-**Code Standards**:
-- ✅ Follow existing code patterns
-- ✅ Add type annotations (mypy strict)
-- ✅ No try-except-pass (P001: Fail-Fast)
-- ✅ Evidence-based verification for claims
-- ✅ Ruff clean (no warnings)
-
----
-
-## Community & Support
-
-**Get Help**:
-- 📖 **Documentation**: [README.md](README.md), `CLAUDE.md`, `PRINCIPLES.md`
-- 💬 **Discussions**: [GitHub Discussions](https://github.com/sungurerdim/ClaudeCodeOptimizer/discussions)
-- 🐛 **Bug Reports**: [GitHub Issues](https://github.com/sungurerdim/ClaudeCodeOptimizer/issues)
-
-**Stay Updated**:
-- ⭐ Star the repo to follow development
-- 👀 Watch releases for new versions
-- 💡 Join discussions for roadmap input
-
-**Contact**:
-- **Author**: Sungur Zahid Erdim
-- **Email**: sungurerdim@users.noreply.github.com
-
----
-
-## License
-
-MIT License - see [LICENSE](LICENSE) file
-
-**In Summary**: Free to use, modify, and distribute. No warranty provided.
+**Key areas:**
+- Language-specific skills (Python, TypeScript, Rust, Go)
+- Additional slash commands
+- Test coverage improvements
+- Documentation enhancements
 
 ---
 
 ## Acknowledgments
 
-**Built With**:
-- [Claude Code](https://claude.com/claude-code) - AI-powered development environment
-- [Ruff](https://github.com/astral-sh/ruff) - Fast Python linter & formatter
-- [Pydantic](https://github.com/pydantic/pydantic) - Data validation
-
 **Inspired By**:
 - [Superpowers by @obra](https://github.com/obra/superpowers) - Skills system concept and systematic workflow patterns
 - [Agents by @wshobson](https://github.com/wshobson/agents) - Progressive disclosure pattern, 3-tier skill loading, language-specific skill organization, document management structure
-- Evidence-based verification principles
-- Multi-agent orchestration patterns
-- Universal language detection approaches
 
-**Special Thanks**:
-- The Claude Code team for building an amazing development platform
-- @obra for pioneering the skills system approach in Superpowers
-- The open-source community for continuous inspiration
+**Built For**:
+- [Claude Code](https://claude.com/claude-code) - Anthropic's official CLI for Claude
 
 ---
 
-## Project Status
+## License
 
-**Current Version**: 0.1.0-alpha
-**Development Status**: Active Alpha Development
-**Stability**: Not Production-Ready (see [Known Limitations](#known-limitations))
-**Next Release**: v0.2.0 (Production Readiness) - Target: 2 weeks
-
-**Core Maintainer**: Sungur Zahid Erdim
-**Contributors**: Welcome! See [Contributing](#contributing)
+MIT License - see [LICENSE](LICENSE) for details.
 
 ---
 
-**Made for Claude Code developers by Claude Code developers**
+## Support
 
-[![Built with Claude Code](https://img.shields.io/badge/Built%20with-Claude%20Code-4B32C3?logo=anthropic)](https://claude.com/claude-code)
+- **Documentation**: [docs/cco/guides/](docs/cco/guides/)
+- **Issues**: [GitHub Issues](https://github.com/sungurerdim/ClaudeCodeOptimizer/issues)
+- **Discussions**: [GitHub Discussions](https://github.com/sungurerdim/ClaudeCodeOptimizer/discussions)
+
+---
+
+*Built with Claude Code • Optimized for Claude Code • Enhanced by Claude Code*
