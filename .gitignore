@@ -185,10 +185,16 @@ cython_debug/
 .cco/*               # CCO project data (except tracked config files)
 !.cco/project.json   # Keep project config in git
 !.cco/commands.json  # Keep commands registry in git
+.cco/reports/        # Generated reports (not committed)
 audit_results.json   # Legacy audit results (pre-reorganization)
 temp/
 temp/*               # Temporary files
 nul                  # Windows null device output
+
+# CCO Documentation (optional - uncomment if you don't want to commit generated docs)
+# docs/cco/          # CCO-generated documentation
+# PRINCIPLES.md      # Generated principles file
+# CLAUDE.md          # Generated Claude Code guide
 
 # Lock files
 *.lock
