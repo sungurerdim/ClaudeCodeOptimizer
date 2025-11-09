@@ -181,10 +181,12 @@ cython_debug/
 .cursorindexingignore
 
 # CCO specific
-.cco/reports/        # Generated reports (audit, status, analyze)
-.cco/cache/          # Cached detection data
+.cco/*               # CCO project data (except tracked config files)
+!.cco/project.json   # Keep project config in git
+!.cco/commands.json  # Keep commands registry in git
 audit_results.json   # Legacy audit results (pre-reorganization)
-temp/                # Temporary files
+temp/*               # Temporary files
+nul                  # Windows null device output
 
 # Lock files
 *.lock
