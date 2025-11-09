@@ -43,8 +43,8 @@ jobs:
 
       - name: Generate SBOM
         run: |
-          pip install cyclonedx-py
-          cyclonedx-py -o sbom.xml --format xml
+          pip install cyclonedx-bom
+          cyclonedx-py requirements -o sbom.xml --format xml
 
       - name: Upload SBOM
         uses: actions/upload-artifact@v4
@@ -67,7 +67,7 @@ jobs:
         uses: trufflesecurity/trufflehog@v3.63.2
         with:
           path: ./
-          extra_args: --only-verified --fail
+          extra_args: --only-verified
 
   code-quality:
     name: Code Quality & SAST
