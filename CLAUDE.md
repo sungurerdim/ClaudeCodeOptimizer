@@ -331,6 +331,44 @@ Error: Function crashes with empty string
 - Haiku: Simple edits <50 lines, grep/search, docs, formatting
 - Sonnet (default): Features, bugs, API endpoints, security fixes
 
+**Cross-Platform Bash Commands:**
+```bash
+# ❌ WRONG: Platform-specific syntax
+cd /d D:\path && git status          # Windows CMD (causes permission errors)
+cd C:\Users && ls                    # Backslashes fail on Linux/macOS
+
+# ✅ CORRECT: Cross-platform alternatives
+git -C "/path/to/dir" status         # Best: Works on all platforms
+git -C "D:/GitHub/project" status    # Windows: Forward slash works in git
+(cd "/path" && git status)           # OK: Subshell (any platform)
+git status                           # Best: Stay in current directory
+
+# Path quoting (all platforms)
+cd "/path/with spaces/dir"           # Always quote paths with spaces
+git -C "/path/with spaces" status    # Quote in all commands
+```
+
+**Cross-Platform Encoding (Test Scripts):**
+```python
+# Universal encoding fix for test scripts (Windows/Linux/macOS)
+import sys, io
+
+# Configure UTF-8 on all platforms
+if hasattr(sys.stdout, 'buffer'):
+    sys.stdout = io.TextIOWrapper(
+        sys.stdout.buffer,
+        encoding='utf-8',
+        errors='replace',
+        line_buffering=True
+    )
+    sys.stderr = io.TextIOWrapper(
+        sys.stderr.buffer,
+        encoding='utf-8',
+        errors='replace',
+        line_buffering=True
+    )
+```
+
 **Grep-First Approach:**
 ```bash
 Grep("pattern", path="file.py", output_mode="files_with_matches")  # Find files
@@ -423,6 +461,322 @@ result3 = Task("analyze db")
 **Pull Requests:**
 - User creates PRs via their preferred method
 - Never auto-create PRs without explicit request
+
+---
+
+## Git Workflow
+
+**Solo developer workflow** - Simple, practical, anti-overengineering
+
+### Branch Strategy: Main-Only
+
+**Simple is better**:
+- ✅ Work directly on `main` branch
+- ✅ Always keep it in working state
+- ✅ No feature branches (solo dev = no need)
+- ✅ Rollback via commit history if needed
+
+**Rationale**: P071 (Anti-Overengineering) - Branch complexity unnecessary for solo projects
+
+---
+
+### Commit Strategy: Grouped & Categorized
+
+**Format**: `type(scope): subject`
+
+**Types**:
+```
+feat:     New feature
+fix:      Bug fix
+docs:     Documentation only
+refactor: Code improvement (no behavior change)
+test:     Add/update tests
+chore:    Build, deps, config
+```
+
+**Scopes** (CCO-specific):
+```
+wizard, installer, detection, principles, commands,
+skills, core, cli, tests, docs, deps, ci
+```
+
+**Examples**:
+```bash
+# Good: Grouped changes, same category
+feat(docs): restructure documentation system
+- Create docs/cco/ structure
+- Move PRINCIPLES.md to docs/cco/
+- Split principles by category
+- Update references in code
+
+# Good: Single logical change
+fix(installer): handle Windows permission errors
+
+# Bad: Multiple unrelated changes
+feat: updates and fixes
+```
+
+**Commit Rules**:
+- ✅ Group related changes in same category
+- ✅ One logical unit per commit
+- ✅ Include related tests + docs
+- ❌ Don't mix different topics/categories
+- ❌ No WIP commits
+- ❌ No failing tests
+
+---
+
+### Push Strategy: Task-Based
+
+**When to push**:
+```bash
+# After each TODO task completes
+git add .
+git commit -m "feat(docs): create docs/cco structure"
+git push origin main
+
+# After grouped changes
+git commit -m "refactor(principles): split by category"
+git push origin main
+```
+
+**Benefits**:
+- 📊 Every change tracked
+- ⏮️ Easy rollback per task
+- 📝 Clear history
+- 🔄 Safe incremental progress
+
+**Never push**:
+- ❌ Failing tests
+- ❌ Syntax errors
+- ❌ Incomplete features
+
+---
+
+### Versioning: Semantic + Milestone-Based
+
+**Format**: `MAJOR.MINOR.PATCH-prerelease`
+
+**Rules**:
+- **MINOR** bump: Every milestone (P0, v0.2.0, v0.3.0, etc.)
+- **MAJOR** bump: Breaking changes or significant architecture changes
+- **PATCH** bump: Bug fixes between milestones
+
+**Current Roadmap**:
+```
+v0.1.0-alpha  ✅ Initial release
+v0.2.0-alpha  ⏳ P0 + Production readiness
+v0.3.0-beta      UX improvements
+v0.4.0-rc        Extensibility
+v1.0.0           Stable release (MAJOR bump)
+```
+
+**When to tag**:
+```bash
+# After milestone complete
+git tag -a v0.2.0-alpha -m "Production Readiness Milestone
+
+Completed:
+- P0: wshobson/agents integration
+- 60% test coverage
+- CI/CD pipeline operational
+- Zero critical bugs
+
+See CHANGELOG.md for details"
+
+git push origin v0.2.0-alpha
+```
+
+**Major Version Triggers** (0.x → 1.x):
+- ✅ API stability guarantee
+- ✅ Production-ready quality
+- ✅ Breaking changes minimized
+- ✅ Migration guide provided
+
+**Major Version Triggers** (1.x → 2.x):
+- ✅ Fundamental architecture change
+- ✅ Breaking API changes
+- ✅ Plugin system overhaul
+- ✅ Must provide upgrade path
+
+---
+
+### Example Workflow
+
+**Daily Work Pattern**:
+
+```bash
+# Morning: Start on TODO task
+# ... work on P0.1 Task 1 (Export/import removal) ...
+
+# Midday: Task 1 complete
+git add claudecodeoptimizer/commands/config.md \
+        claudecodeoptimizer/ai/command_selection.py
+git commit -m "feat(commands): remove export/import functionality
+
+- Remove export/import from config.md
+- Remove export/import rules from command_selection.py
+- Update command descriptions
+- Tests pass
+
+Closes #P0.1-Task1"
+
+git push origin main
+
+# Afternoon: Task 2 complete
+git add claudecodeoptimizer/wizard/orchestrator.py \
+        claudecodeoptimizer/core/installer.py \
+        tests/unit/test_installer.py
+git commit -m "fix(wizard): install only recommended commands
+
+- Filter commands to core + recommended only
+- Update installer to accept command list
+- Add tests for command filtering
+- Verify ~/.claude/commands/ contains only 8-12 commands
+
+Closes #P0.1-Task2"
+
+git push origin main
+
+# End of day: Update TODO
+git add TODO.md
+git commit -m "docs(todo): mark P0.1 tasks 1-2 as complete"
+git push origin main
+```
+
+**Milestone Complete**:
+
+```bash
+# All P0 tasks done, tests pass, ready for v0.2.0
+git tag -a v0.2.0-alpha -m "Production Readiness
+
+- P0 integration complete
+- 60% test coverage achieved
+- CI/CD operational
+- Documentation restructured
+- Token optimization implemented"
+
+git push origin main --tags
+
+# Update CHANGELOG.md
+git add CHANGELOG.md
+git commit -m "docs(changelog): add v0.2.0-alpha release notes"
+git push origin main
+```
+
+---
+
+### Commit Quality Checklist
+
+**Before committing**:
+- [ ] All files in commit are related (same category/topic)
+- [ ] Tests pass (`pytest tests/ -v`)
+- [ ] Linter clean (`ruff check .`)
+- [ ] No debug code or commented blocks
+- [ ] Commit message follows format
+- [ ] Related docs updated
+
+**Verification**:
+```bash
+# Check what's staged
+git status
+git diff --cached
+
+# Verify tests
+pytest tests/ -v
+
+# Verify linting
+ruff check .
+
+# Commit only if all pass
+git commit -m "type(scope): message"
+```
+
+---
+
+### Rollback Strategies
+
+**Undo last commit** (not pushed):
+```bash
+git reset --soft HEAD~1  # Keep changes
+git reset --hard HEAD~1  # Discard changes
+```
+
+**Undo pushed commit** (task-based history makes this easy):
+```bash
+# Find commit to revert
+git log --oneline
+
+# Revert specific commit
+git revert <commit-hash>
+git push origin main
+```
+
+**Rollback to specific task**:
+```bash
+# Each task = 1 commit, easy to identify
+git log --grep="P0.1-Task1"
+git checkout <commit-hash>
+```
+
+---
+
+### .gitignore
+
+```
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+.Python
+venv/
+.pytest_cache/
+htmlcov/
+.coverage
+
+# CCO
+.cco/reports/          # Generated reports
+.cco/cache/            # Cache (future)
+
+# IDE
+.vscode/
+.idea/
+*.swp
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Temp
+*.tmp
+*.log
+```
+
+---
+
+### Best Practices Summary
+
+**DO**:
+- ✅ Commit per TODO task
+- ✅ Group related changes
+- ✅ Push after each task
+- ✅ Tag at milestones
+- ✅ Keep main working
+- ✅ Write clear messages
+
+**DON'T**:
+- ❌ Mix unrelated changes
+- ❌ Commit WIP code
+- ❌ Push failing tests
+- ❌ Create feature branches
+- ❌ Batch multiple tasks
+- ❌ Skip commit messages
+
+**Anti-Overengineering (P071)**:
+- No complex branching (solo dev)
+- No PR reviews (solo dev)
+- No git hooks (unless CI requires)
+- Simple is sufficient
 
 ---
 
