@@ -8,9 +8,27 @@ cost: 1
 
 Keep files synchronized across your codebase: configuration, dependencies, type definitions, and constants.
 
-**Architecture:** Primarily Haiku (fast data operations)
-- **Haiku**: Config sync, type sync, constants - data comparison and updates
-- **Sonnet**: Only for complex dependency conflicts - reasoning about breaking changes
+---
+
+## Architecture & Model Selection
+
+**Primarily Haiku for fast data operations**
+
+**Data Gathering**: Haiku (Explore agent, quick)
+- Fast file scanning for sync targets
+- Pattern detection and comparison
+- Cost-effective data operations
+
+**Analysis & Reasoning**: Sonnet (Plan agent)
+- Complex dependency conflict resolution
+- Reasoning about breaking changes
+- Strategic sync decisions
+
+**Execution Pattern**:
+1. Launch Haiku agents to scan sync targets (parallel)
+2. Compare and detect differences
+3. Use Sonnet for complex conflict resolution
+4. Apply sync operations and generate report
 
 ---
 
