@@ -181,9 +181,10 @@ cython_debug/
 .cursorindexingignore
 
 # CCO specific
-.cco/
-audit_results.json
-temp/
+.cco/reports/        # Generated reports (audit, status, analyze)
+.cco/cache/          # Cached detection data
+audit_results.json   # Legacy audit results (pre-reorganization)
+temp/                # Temporary files
 
 # Lock files
 *.lock
