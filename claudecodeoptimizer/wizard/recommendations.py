@@ -170,6 +170,28 @@ class RecommendationEngine:
 
         return "💡 'Practical' balances usefulness and time investment"
 
+    def recommend_git_workflow(self, context: AnswerContext) -> str:
+        """Recommend Git workflow based on team size and maturity"""
+        team = context.team_size
+        maturity = context.maturity
+
+        # Solo developers
+        if team == "solo":
+            return "💡 Solo developer → 'Main-Only' recommended (simple, fast)"
+
+        # Large teams
+        if team in ["large_org"]:
+            return "💡 Large team → 'Git Flow' recommended (formal process, structured releases)"
+
+        # Small/medium teams
+        if team in ["small_team", "growing_team"]:
+            if maturity in ["production", "mature"]:
+                return "💡 Production system + team → 'Git Flow' for stability"
+            return "💡 Small team → 'GitHub Flow' recommended (balanced approach)"
+
+        # Default
+        return "💡 'GitHub Flow' balances structure and agility for most teams"
+
     # ========================================================================
     # TIER 3: Tactical Decisions
     # ========================================================================
@@ -276,6 +298,7 @@ class RecommendationEngine:
             "testing_approach": self.recommend_testing_approach,
             "security_stance": self.recommend_security_stance,
             "documentation_level": self.recommend_documentation_level,
+            "git_workflow": self.recommend_git_workflow,
         }
 
         generator = generators.get(question_id)
@@ -309,6 +332,7 @@ class RecommendationEngine:
             "testing_approach": "🧪 Testing strategy affects principle selection, CI/CD setup, and quality expectations",
             "security_stance": "🔒 Security needs determine validation strictness, audit requirements, and best practices",
             "documentation_level": "📝 Documentation choices affect time investment and collaboration effectiveness",
+            "git_workflow": "🔀 Git workflow determines branching strategy, code review process, and release management",
         }
 
         return explanations.get(question_id, "")

@@ -374,6 +374,51 @@ TIER2_DOCUMENTATION_LEVEL = DecisionPoint(
     ai_hint_generator=lambda ctx: _rec_engine.recommend_documentation_level(ctx),
 )
 
+TIER2_GIT_WORKFLOW = DecisionPoint(
+    id="git_workflow",
+    tier=2,
+    category="collaboration",
+    question="Which Git workflow do you prefer?",
+    why_this_question="🔀 Git workflow affects team collaboration, code review, and release management",
+    multi_select=False,
+    options=[
+        Option(
+            value="main_only",
+            label="Main-Only (Simple) [RECOMMENDED for Solo]",
+            description="Single branch, direct commits with clear messages",
+            effects="Fast, simple, minimal overhead",
+            time_investment="No extra time",
+            recommended_for=["solo dev", "small teams", "fast iteration"],
+        ),
+        Option(
+            value="github_flow",
+            label="GitHub Flow (Balanced) [RECOMMENDED for Small Teams]",
+            description="Feature branches + Pull requests from main",
+            effects="Branch protection, code review, moderate structure",
+            time_investment="~10-15% overhead",
+            recommended_for=["small-medium teams", "continuous deployment"],
+        ),
+        Option(
+            value="git_flow",
+            label="Git Flow (Professional) [RECOMMENDED for Large Teams]",
+            description="develop + main branches, formal release process",
+            effects="Feature/release/hotfix branches, maximum structure",
+            time_investment="~20-30% overhead",
+            recommended_for=["large teams", "scheduled releases", "complex projects"],
+        ),
+        Option(
+            value="custom",
+            label="Custom",
+            description="I'll define my own workflow",
+            effects="Full control, custom branching strategy",
+            recommended_for=["experienced teams", "specific requirements"],
+        ),
+    ],
+    skip_if=lambda ctx: ctx.get("team_dynamics") == "solo",  # Auto-select for solo devs
+    auto_strategy=lambda ctx: _auto_detect_git_workflow(ctx),
+    ai_hint_generator=lambda ctx: _rec_engine.recommend_git_workflow(ctx) if hasattr(_rec_engine, 'recommend_git_workflow') else "",
+)
+
 
 # ============================================================================
 # TIER 3: Tactical Decisions (Tool Preferences)
@@ -555,6 +600,29 @@ def _auto_detect_documentation_level(ctx: AnswerContext) -> str:
     return "practical"
 
 
+def _auto_detect_git_workflow(ctx: AnswerContext) -> str:
+    """Auto-detect Git workflow based on team size and maturity"""
+    team = ctx.team_size
+    maturity = ctx.maturity
+
+    # Solo developers always use main-only
+    if team == "solo":
+        return "main_only"
+
+    # Large teams benefit from Git Flow
+    if team in ["large_org"]:
+        return "git_flow"
+
+    # Growing/medium teams use GitHub Flow
+    if team in ["small_team", "growing_team"]:
+        if maturity in ["production", "mature"]:
+            return "git_flow"  # More structure for production
+        return "github_flow"
+
+    # Default to GitHub Flow for teams
+    return "github_flow"
+
+
 # ============================================================================
 # Dynamic TIER 3 Builder (Tool Preferences)
 # ============================================================================
@@ -625,6 +693,7 @@ DECISION_TREE_TIER2 = [
     TIER2_TESTING_APPROACH,
     TIER2_SECURITY_STANCE,
     TIER2_DOCUMENTATION_LEVEL,
+    TIER2_GIT_WORKFLOW,
 ]
 
 # TIER3 is dynamically generated
