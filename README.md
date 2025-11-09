@@ -419,6 +419,77 @@ MIT License - see [LICENSE](LICENSE) for details.
 
 ---
 
+## CCO Project Footprint
+
+**"What does CCO actually do to my project?"**
+
+CCO follows a **zero-pollution philosophy** - your project directory stays clean.
+
+### Project Directory Changes
+
+CCO creates/modifies only these files in your project:
+
+```
+your-project/
+├── PRINCIPLES.md          # Generated (optional - can gitignore)
+├── CLAUDE.md              # Generated (optional - can gitignore)
+└── .claude/
+    ├── commands/          # Slash commands (symlinked from ~/.cco/commands/)
+    │   ├── cco-audit.md
+    │   ├── cco-fix.md
+    │   ├── cco-generate.md
+    │   └── ... (8-12 commands total)
+    └── statusline.js      # Project statusline (copied from ~/.cco/)
+```
+
+**That's it!** No `.cco/` directory, no hidden files, no pollution.
+
+### Global Storage (~/.cco/)
+
+All CCO data lives in global storage:
+
+```
+~/.cco/
+├── commands/              # Master command templates
+├── knowledge/             # Principles database
+├── projects/
+│   └── your-project/
+│       ├── backups/       # PRINCIPLES.md, CLAUDE.md backups (last 5)
+│       ├── reports/       # Audit/analyze/fix reports
+│       ├── temp/          # Temporary files
+│       ├── changes.json   # Change tracking
+│       └── registry.json  # Project configuration
+└── statusline.js          # Global statusline template
+```
+
+### What Gets Committed to Git?
+
+**By default** (recommended):
+- ✅ `.claude/commands/` - Slash commands
+- ✅ `.claude/statusline.js` - Statusline
+- ✅ `PRINCIPLES.md` - Development principles (team reference)
+- ✅ `CLAUDE.md` - Project guide (team reference)
+
+**Optional** (uncomment in `.gitignore` if you prefer):
+- ❌ `PRINCIPLES.md` - If you consider it noise
+- ❌ `CLAUDE.md` - If you consider it noise
+
+### Removal
+
+CCO is designed for easy removal:
+
+```bash
+# Remove CCO from project (keeps global installation)
+/cco-remove
+
+# Or manually:
+rm -rf .claude/commands/cco-*.md .claude/statusline.js PRINCIPLES.md CLAUDE.md
+```
+
+**That's literally everything.** No hidden `.cco/` to hunt down, no scattered config files.
+
+---
+
 ## Support
 
 - **Documentation**: [docs/cco/guides/](docs/cco/guides/)
