@@ -369,11 +369,14 @@ type(scope): concise description (max 72 chars)
 - Key change 1 with brief context
 - Key change 2
 - Key change 3
+
+Co-Authored-By: Claude <noreply@anthropic.com>
 ```
 
 **Rules:**
 - ✅ Max 10 lines total, 5 bullets max
-- ❌ No section headers, emojis, or footers
+- ✅ Co-Authored-By footer (GitHub contributor)
+- ❌ No section headers or emojis
 
 **Commit Management:**
 - User manages all git operations via their preferred git client
