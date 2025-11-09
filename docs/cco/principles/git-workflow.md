@@ -36,13 +36,16 @@ type(scope): concise description (max 72 chars)
 - Key change 1 with brief context
 - Key change 2
 - Key change 3
+
+Co-Authored-By: Claude <noreply@anthropic.com>
 ```
 
 **Rules**:
 - ✅ Max 10 lines total, 5 bullets max
 - ✅ One line per bullet
+- ✅ Co-Authored-By footer (GitHub contributor attribution)
 - ❌ No section headers ("Changes:", "Rationale:")
-- ❌ No emojis, decorative elements, or footers
+- ❌ No emojis or decorative elements
 
 **❌ Bad - Too Verbose**:
 ```
@@ -66,6 +69,8 @@ refactor(ci): consolidate tools (P071)
 - Replace Black/Bandit/mypy with Ruff (format+lint+security)
 - Remove tool configs from pyproject.toml
 - Simplify workflow to 3 jobs, 5 steps total
+
+Co-Authored-By: Claude <noreply@anthropic.com>
 ```
 
 **Detailed Guide**: [@docs/cco/guides/git-workflow.md](../guides/git-workflow.md)
