@@ -5,6 +5,7 @@ ALL CHOICES ARE DERIVED FROM SCHEMAS - NO DUPLICATION!
 Conditional logic to skip irrelevant questions based on user answers.
 """
 
+import logging
 from typing import Any, Dict, List
 
 from ..core.constants import (
@@ -1045,8 +1046,9 @@ def get_filtered_questions(answers: Dict[str, Any]) -> List[Dict]:
             try:
                 if q["skip_if"](answers):
                     continue  # Skip this question
-            except Exception:
-                pass  # If skip check fails, ask the question anyway
+            except (KeyError, TypeError, AttributeError) as e:
+                # If skip check fails, ask the question anyway
+                logging.debug(f"Skip condition failed for question '{q.get('id', 'unknown')}': {e}")
 
         filtered.append(q)
 

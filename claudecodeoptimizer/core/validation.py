@@ -5,6 +5,7 @@ Validates code against active principles using pattern matching.
 Supports multiple languages: Python, JavaScript, TypeScript, Go, Rust, Java.
 """
 
+import logging
 import re
 from dataclasses import dataclass
 from pathlib import Path
@@ -159,9 +160,9 @@ class ValidationEngine:
                     )
                     violations.extend(rule_violations)
 
-        except Exception:
+        except (OSError, PermissionError, UnicodeDecodeError) as e:
             # Skip files that can't be read
-            pass
+            logging.debug(f"Skipping file {file_path}: {e}")
 
         return violations
 
