@@ -418,7 +418,8 @@ def ask_multi_choice(
     safe_print()
     safe_print(f"  {c.colorize(prompt, c.BOLD)}")
     safe_print(f"  {c.colorize('Enter numbers to customize selection, or press Enter to use defaults', c.DIM)}")
-    safe_print(f"  {c.colorize('Commands: \"more\" (next page), \"back\" (prev page), \"all\" (show all)', c.DIM)}")
+    commands_text = 'Commands: "more" (next page), "back" (prev page), "all" (show all)'
+    safe_print(f"  {c.colorize(commands_text, c.DIM)}")
     safe_print()
 
     defaults = defaults or []
