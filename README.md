@@ -771,6 +771,7 @@ MIT License - see [LICENSE](LICENSE) file
 
 **Inspired By**:
 - [Superpowers by @obra](https://github.com/obra/superpowers) - Skills system concept and systematic workflow patterns
+- [Agents by @wshobson](https://github.com/wshobson/agents) - Progressive disclosure pattern, 3-tier skill loading, language-specific skill organization, document management structure
 - Evidence-based verification principles
 - Multi-agent orchestration patterns
 - Universal language detection approaches
