@@ -100,9 +100,14 @@ class ChangeManifest:
         Args:
             project_root: Project root directory
         """
+        from ..config import CCOConfig
+
         self.project_root = project_root
-        self.manifest_path = project_root / ".cco" / "changes.json"
-        self.backup_dir = project_root / ".cco" / "backups"
+        self.project_name = project_root.name
+
+        # Use global storage paths
+        self.manifest_path = CCOConfig.get_project_changes_file(self.project_name)
+        self.backup_dir = CCOConfig.get_project_backups_dir(self.project_name)
         self.changes: List[Change] = []
 
         # Load existing manifest

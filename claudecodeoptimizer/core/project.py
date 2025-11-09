@@ -107,6 +107,12 @@ class ProjectManager:
         selected_principles = self._select_and_generate_principles(preferences)
         safe_print(f"   ✓ {len(selected_principles)} principles selected")
 
+        # STEP 3.5: Generate/Update CLAUDE.md
+        safe_print("\n📝 Generating CLAUDE.md...")
+        claude_md_result = self._generate_claude_md(preferences)
+        if claude_md_result["success"]:
+            safe_print(f"   ✓ CLAUDE.md {claude_md_result.get('strategy', 'generated')}")
+
         # STEP 4: Register/update in global registry
         # Add selected principle IDs to preferences for storage
         preferences_dict = preferences.model_dump(mode="json")
@@ -128,25 +134,9 @@ class ProjectManager:
         # STEP 7: Print recommendations
         self._print_recommendations(analysis)
 
-        # STEP 8: Track .cco directory and save manifest
-        cco_dir = self.project_root / ".cco"
-        if cco_dir.exists():
-            # Check if we just created it (by checking if changes.json was just created)
-            changes_file = cco_dir / "changes.json"
-            if not changes_file.exists() or len(self.manifest.changes) > 0:
-                # We created the directory during this init
-                # Track it if not already tracked
-                already_tracked = any(
-                    c.type == "directory_created" and c.path == ".cco"
-                    for c in self.manifest.changes
-                )
-                if not already_tracked:
-                    self.manifest.track_directory_created(
-                        cco_dir,
-                        "Created .cco directory for CCO configuration and change tracking",
-                    )
-
-        # Save all tracked changes to manifest
+        # STEP 8: Save change tracking manifest
+        # Note: Manifest is now stored in global storage (~/.cco/projects/{name}/changes.json)
+        # No .cco/ directory is created in project - zero project pollution
         self.manifest.save()
 
         # STEP 9: Print installation summary report
@@ -352,21 +342,20 @@ class ProjectManager:
 
         safe_print()
 
-        # Configuration
-        cco_dir = self.project_root / ".cco"
-        if cco_dir.exists():
-            safe_print("✓ Configuration")
-            safe_print("  ├─ .cco/changes.json (change tracking)")
+        # Configuration (stored in global storage)
+        project_name = self.project_root.name
+        changes_file = self.config.get_project_changes_file(project_name)
+        backup_dir = self.config.get_project_backups_dir(project_name)
 
-            # Check for backups
-            backup_dir = cco_dir / "backups"
-            if backup_dir.exists() and any(backup_dir.iterdir()):
-                backup_count = len(list(backup_dir.iterdir()))
-                safe_print(f"  └─ .cco/backups/ ({backup_count} backup files)")
-            else:
-                safe_print("  └─ .cco/backups/ (ready)")
+        safe_print("✓ Configuration")
+        safe_print(f"  ├─ ~/.cco/projects/{project_name}/changes.json (change tracking)")
+
+        # Check for backups in global storage
+        if backup_dir.exists() and any(backup_dir.iterdir()):
+            backup_count = len(list(backup_dir.iterdir()))
+            safe_print(f"  └─ ~/.cco/projects/{project_name}/backups/ ({backup_count} backups)")
         else:
-            safe_print("✗ Configuration (not found)")
+            safe_print(f"  └─ ~/.cco/projects/{project_name}/backups/ (ready)")
 
         safe_print()
         print_separator("-", SEPARATOR_WIDTH)
@@ -781,3 +770,30 @@ class ProjectManager:
         self.manifest.track_principles_added(principle_ids)
 
         return applicable_principles
+
+    def _generate_claude_md(self, preferences: CCOPreferences) -> Dict[str, Any]:
+        """Generate or update CLAUDE.md file."""
+        from .claude_md_generator import ClaudeMdGenerator
+
+        claude_md_file = self.project_root / "CLAUDE.md"
+
+        # Check if file exists before generation
+        is_new_file = not claude_md_file.exists()
+
+        # Generate CLAUDE.md
+        generator = ClaudeMdGenerator(preferences.model_dump(mode="json"))
+        result = generator.generate(claude_md_file)
+
+        # Track file change in manifest
+        if is_new_file:
+            self.manifest.track_file_created(
+                claude_md_file,
+                "Created CLAUDE.md with project-specific guidelines",
+            )
+        else:
+            self.manifest.track_file_modified(
+                claude_md_file,
+                f"Updated CLAUDE.md ({result.get('strategy', 'updated')})",
+            )
+
+        return result

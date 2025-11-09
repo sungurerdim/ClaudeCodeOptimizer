@@ -510,14 +510,20 @@ class PrincipleSelector:
                 examples = principle.get("examples", {})
                 if examples:
                     lines.append("**Example**:")
+                    lines.append("```python")
                     if "good" in examples and examples["good"]:
-                        lines.append("```python")
                         lines.append("# ✅ Good")
-                        lines.append(examples["good"][0])
+                        # Decode escaped newlines from JSON (\\n -> actual newline)
+                        good_example = examples["good"][0].replace('\\n', '\n')
+                        for line in good_example.split('\n'):
+                            lines.append(line)
                     if "bad" in examples and examples["bad"]:
                         lines.append("")
                         lines.append("# ❌ Bad")
-                        lines.append(examples["bad"][0])
+                        # Decode escaped newlines from JSON (\\n -> actual newline)
+                        bad_example = examples["bad"][0].replace('\\n', '\n')
+                        for line in bad_example.split('\n'):
+                            lines.append(line)
                     lines.append("```")
                     lines.append("")
 
@@ -773,26 +779,43 @@ class PrincipleSelector:
 
     def _create_backup(self, file_path: Path) -> None:
         """
-        Create timestamped backup of existing file.
+        Create timestamped backup of existing file in global storage.
 
-        Keeps last 3 backups, deletes older ones.
-        Format: {filename}.backup-YYYYMMDD-HHMMSS
+        Keeps last 5 backups, deletes older ones.
+        Format: ~/.cco/projects/{project_name}/backups/{filename}.YYYYMMDD_HHMMSS.backup
+
+        Args:
+            file_path: Path to file to backup (e.g., project_root/PRINCIPLES.md)
         """
         if not file_path.exists():
             return  # No file to backup
 
-        timestamp = datetime.now().strftime("%Y%m%d-%H%M%S")
-        backup_path = file_path.parent / f"{file_path.name}.backup-{timestamp}"
+        # Get project name from file's parent directory
+        project_root = file_path.parent
+        project_name = project_root.name
 
-        # Create backup
+        # Get backup directory from global storage
+        from ..config import CCOConfig
+
+        backup_dir = CCOConfig.get_project_backups_dir(project_name)
+
+        # Create backup directory if it doesn't exist
+        backup_dir.mkdir(parents=True, exist_ok=True)
+
+        # Create timestamped backup
+        timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
+        backup_filename = f"{file_path.name}.{timestamp}.backup"
+        backup_path = backup_dir / backup_filename
+
+        # Copy file to backup
         shutil.copy2(file_path, backup_path)
 
-        # Keep only last 3 backups
-        backup_pattern = f"{file_path.name}.backup-*"
-        backups = sorted(file_path.parent.glob(backup_pattern))
+        # Keep only last 5 backups for this file
+        backup_pattern = f"{file_path.name}.*.backup"
+        backups = sorted(backup_dir.glob(backup_pattern))
 
-        # Delete old backups (keep last 3)
-        for old_backup in backups[:-3]:
+        # Delete old backups (keep last 5)
+        for old_backup in backups[:-5]:
             old_backup.unlink()
 
 

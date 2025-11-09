@@ -114,6 +114,78 @@ def get_project_registry_file(project_name: str) -> Path:
 
 
 # ============================================================================
+# PROJECT-SPECIFIC GLOBAL DATA (Zero project pollution)
+# ============================================================================
+# All project-specific data is stored in ~/.cco/projects/{project_name}/
+# This keeps project directories completely clean - no .cco/ folder in projects.
+
+
+def get_project_data_dir(project_name: str) -> Path:
+    """
+    Get project-specific data directory in global storage.
+
+    Returns: ~/.cco/projects/{project_name}/
+
+    This directory contains all project-specific CCO data:
+    - backups/  (file backups)
+    - reports/  (audit, analyze, fix reports)
+    - temp/     (temporary files and scripts)
+    - changes.json (change tracking manifest)
+    """
+    return get_projects_registry_dir() / project_name
+
+
+def get_project_backups_dir(project_name: str) -> Path:
+    """
+    Get project backups directory in global storage.
+
+    Returns: ~/.cco/projects/{project_name}/backups/
+
+    Stores backups of PRINCIPLES.md, CLAUDE.md, etc.
+    Format: {filename}.YYYYMMDD_HHMMSS.backup
+    Retention: Last 5 backups per file
+    """
+    return get_project_data_dir(project_name) / "backups"
+
+
+def get_project_reports_dir(project_name: str) -> Path:
+    """
+    Get project reports directory in global storage.
+
+    Returns: ~/.cco/projects/{project_name}/reports/
+
+    Subdirectories:
+    - audit/    (audit reports)
+    - analyze/  (analysis reports)
+    - fix/      (fix reports)
+    - sync/     (sync reports)
+    """
+    return get_project_data_dir(project_name) / "reports"
+
+
+def get_project_temp_dir(project_name: str) -> Path:
+    """
+    Get project temp directory in global storage.
+
+    Returns: ~/.cco/projects/{project_name}/temp/
+
+    Stores temporary files, scripts, and working data.
+    """
+    return get_project_data_dir(project_name) / "temp"
+
+
+def get_project_changes_file(project_name: str) -> Path:
+    """
+    Get project change manifest file in global storage.
+
+    Returns: ~/.cco/projects/{project_name}/changes.json
+
+    Tracks all CCO-made changes to the project.
+    """
+    return get_project_data_dir(project_name) / "changes.json"
+
+
+# ============================================================================
 # COMMAND NAMING
 # ============================================================================
 
@@ -277,6 +349,11 @@ class CCOConfig:
     get_project_commands_dir = staticmethod(get_project_commands_dir)
     get_project_hooks_dir = staticmethod(get_project_hooks_dir)
     get_project_registry_file = staticmethod(get_project_registry_file)
+    get_project_data_dir = staticmethod(get_project_data_dir)
+    get_project_backups_dir = staticmethod(get_project_backups_dir)
+    get_project_reports_dir = staticmethod(get_project_reports_dir)
+    get_project_temp_dir = staticmethod(get_project_temp_dir)
+    get_project_changes_file = staticmethod(get_project_changes_file)
     get_command_name = staticmethod(get_command_name)
     is_global_installed = staticmethod(is_global_installed)
     is_project_initialized = staticmethod(is_project_initialized)
