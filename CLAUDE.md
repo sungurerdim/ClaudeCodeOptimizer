@@ -378,6 +378,14 @@ Co-Authored-By: Claude <noreply@anthropic.com>
 - ✅ Co-Authored-By footer (GitHub contributor)
 - ❌ No section headers or emojis
 
+**Pre-Commit Checklist:**
+Before each commit, run these checks locally:
+- `ruff format --check .` - Code formatting
+- `ruff check .` - Linting
+- `pip-audit --desc` - Security vulnerabilities
+- `python -m claudecodeoptimizer scan-secrets` - Exposed secrets
+- `pytest tests/ -v` - All tests pass
+
 **Commit Management:**
 - User manages all git operations via their preferred git client
 - Never suggest git commands or commit messages

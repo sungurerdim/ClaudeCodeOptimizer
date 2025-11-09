@@ -55,7 +55,7 @@ class CCOWizard:
         project_root: Path,
         mode: Literal["interactive", "quick"],
         dry_run: bool = False,
-    ):
+    ) -> None:
         """
         Initialize wizard.
 
@@ -296,7 +296,7 @@ class CCOWizard:
                 # Log detection summary
                 print_info("Project detected:", indent=2)
                 print_info(
-                    f"  Languages: {', '.join([l['detected_value'] for l in self.detection_report.get('languages', [])])}",
+                    f"  Languages: {', '.join([lang['detected_value'] for lang in self.detection_report.get('languages', [])])}",
                     indent=2,
                 )
                 print_info(
@@ -668,9 +668,9 @@ class CCOWizard:
             print_error(f"Command selection failed: {e}", indent=2)
             return False
 
-    def _build_command_registry(self) -> "CommandRegistry":
+    def _build_command_registry(self) -> "CommandRegistry":  # noqa: F821
         """Build command registry from available global commands"""
-        from .. import config as CCOConfig
+        from .. import config as CCOConfig  # noqa: N812
         from ..schemas.commands import CommandMetadata, CommandRegistry
 
         # Get global commands directory
@@ -798,20 +798,26 @@ class CCOWizard:
             raise Exception(f"Command generation failed: {result.get('error')}")
 
     def _generate_principles_md(self) -> None:
-        """Generate PRINCIPLES.md"""
+        """Generate PRINCIPLES.md and category files"""
         from ..core.principle_selector import PrincipleSelector
 
         preferences = self._build_preferences()
         selector = PrincipleSelector(preferences)
+
+        # Generate main PRINCIPLES.md
         output_path = self.project_root / "PRINCIPLES.md"
         selector.generate_principles_md(output_path)
+
+        # Generate category files in docs/cco/principles/
+        docs_path = self.project_root / "docs" / "cco" / "principles"
+        selector.generate_category_files(docs_path)
 
     def _generate_settings_local(self) -> None:
         """Generate .claude/settings.local.json from global template"""
         import json
         from pathlib import Path
 
-        from .. import config as CCOConfig
+        from .. import config as CCOConfig  # noqa: N812
 
         # Try to load from global templates first, fallback to package assets
         templates_dir = CCOConfig.get_templates_dir()
@@ -859,7 +865,7 @@ class CCOWizard:
         import shutil
         from pathlib import Path
 
-        from .. import config as CCOConfig
+        from .. import config as CCOConfig  # noqa: N812
 
         # Try to load from global templates first, fallback to package assets
         templates_dir = CCOConfig.get_templates_dir()

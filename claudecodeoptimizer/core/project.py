@@ -1,10 +1,11 @@
 """Project management for ClaudeCodeOptimizer."""
 
 import json
+import logging
 from pathlib import Path
 from typing import Any, Dict, List, Optional
 
-from .. import config as CCOConfig
+from .. import config as CCOConfig  # noqa: N812
 from ..schemas.preferences import (
     CCOPreferences,
     CodeQualityStandards,
@@ -23,6 +24,8 @@ from .principle_selector import PrincipleSelector
 from .registry import ProjectRegistry
 from .safe_print import safe_print
 from .utils import print_separator
+
+logger = logging.getLogger(__name__)
 
 
 class ProjectManager:
@@ -319,7 +322,7 @@ class ProjectManager:
         # Commands
         commands_dir = self.project_root / ".claude" / "commands"
         if commands_dir.exists():
-            cco_commands = sorted(list(commands_dir.glob("cco-*.md")))
+            cco_commands = sorted(commands_dir.glob("cco-*.md"))
 
             safe_print(f"✓ Slash Commands ({len(cco_commands)} installed)")
 
@@ -518,8 +521,9 @@ class ProjectManager:
                     )
                     copies_created += 1
                     linked = True
-                except Exception:
-                    # Skip this command if everything fails
+                except Exception as e:
+                    # Skip this command if all linking methods fail
+                    logger.debug(f"Failed to link command {command_name}: {e}")
                     continue
 
             if linked:
@@ -601,7 +605,8 @@ class ProjectManager:
                     data = json.loads(registry_file.read_text())
                     if data.get("root") == project_root_str:
                         return data
-                except Exception:
+                except Exception as e:
+                    logger.debug(f"Failed to parse registry file {registry_file}: {e}")
                     continue
 
             return None

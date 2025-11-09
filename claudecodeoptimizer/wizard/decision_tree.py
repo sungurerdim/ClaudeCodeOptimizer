@@ -667,7 +667,7 @@ def build_tier3_tool_decisions(ctx: AnswerContext) -> list:
             why_this_question=f"🔧 Multiple {conflict.category}s detected - choose your preferred tool",
             multi_select=False,
             options=options,
-            auto_strategy=lambda ctx, cat=conflict.category: conflict.recommended,
+            auto_strategy=lambda ctx, conf=conflict: conf.recommended,
             ai_hint_generator=lambda ctx,
             cat=conflict.category,
             tools=conflict.tools: _rec_engine.recommend_tool_preference(cat, tools, ctx),

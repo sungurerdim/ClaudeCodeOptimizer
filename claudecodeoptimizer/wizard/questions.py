@@ -418,7 +418,7 @@ QUESTIONS = [
         "field": "secondary_languages",
         "type": "multi_text",
         "prompt": "Any secondary languages? (comma-separated, or blank)",
-        "ai_hint": lambda report: f"Detected: {', '.join([l['detected_value'] for l in report.get('languages', [])[1:]])}",
+        "ai_hint": lambda report: f"Detected: {', '.join([lang['detected_value'] for lang in report.get('languages', [])[1:]])}",
         "default": default_secondary_languages,
     },
     {

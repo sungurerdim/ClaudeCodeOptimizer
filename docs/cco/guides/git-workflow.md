@@ -286,24 +286,71 @@ git push origin main
 **Before committing**:
 - [ ] All files in commit are related (same category/topic)
 - [ ] Tests pass (`pytest tests/ -v`)
+- [ ] Code formatted (`ruff format --check .`)
 - [ ] Linter clean (`ruff check .`)
+- [ ] No security vulnerabilities (`pip-audit --desc`)
+- [ ] No exposed secrets (`/cco-scan-secrets` or `python -m claudecodeoptimizer scan-secrets`)
 - [ ] No debug code or commented blocks
 - [ ] Commit message follows format
 - [ ] Related docs updated
 
-**Verification**:
+**Verification** (Run all checks):
 ```bash
-# Check what's staged
+# 1. Check what's staged
 git status
 git diff --cached
 
-# Verify tests
-pytest tests/ -v
+# 2. Format check
+ruff format --check .
 
-# Verify linting
+# 3. Linting
 ruff check .
 
-# Commit only if all pass
+# 4. Security: Dependencies
+pip-audit --desc
+
+# 5. Security: Secrets
+python -m claudecodeoptimizer scan-secrets
+
+# 6. Tests
+pytest tests/ -v
+
+# 7. Commit only if ALL pass
+git commit -m "type(scope): message"
+```
+
+**Quick pre-commit script** (optional):
+```bash
+# Save as scripts/pre-commit-check.sh
+#!/bin/bash
+set -e
+
+echo "🔍 Running pre-commit checks..."
+
+echo "✓ Format check..."
+ruff format --check .
+
+echo "✓ Linting..."
+ruff check .
+
+echo "✓ Security: Dependencies..."
+pip-audit --desc
+
+echo "✓ Security: Secrets..."
+python -m claudecodeoptimizer scan-secrets
+
+echo "✓ Tests..."
+pytest tests/ -v
+
+echo "✅ All checks passed! Ready to commit."
+```
+
+**Usage**:
+```bash
+# Run all checks
+bash scripts/pre-commit-check.sh
+
+# If all pass, commit
 git commit -m "type(scope): message"
 ```
 

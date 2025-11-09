@@ -16,7 +16,7 @@ FULL_NAME = "ClaudeCodeOptimizer"
 PACKAGE_NAME = "claudecodeoptimizer"
 
 # Version is imported from __init__.py to maintain single source of truth
-from . import __version__ as VERSION
+from . import __version__ as VERSION  # noqa: E402, N812
 
 # Display names
 DISPLAY_NAME = "Claude Code Optimizer"
@@ -207,7 +207,8 @@ def is_project_initialized(project_root: Path) -> bool:
             data = json.loads(registry_file.read_text())
             if data.get("root") == project_root_str:
                 return True
-        except Exception:
+        except Exception:  # noqa: S112
+            # Silently skip malformed registry files
             continue
 
     return False

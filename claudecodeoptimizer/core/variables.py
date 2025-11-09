@@ -8,7 +8,9 @@ Enables centralized updates across all commands.
 import re
 from dataclasses import dataclass, field
 from pathlib import Path
-from typing import Any, Dict, List, Optional, Set
+from typing import Any, Dict, List, Optional, Set, TypeVar
+
+T = TypeVar("T")
 
 
 @dataclass
@@ -224,15 +226,15 @@ class VariableSubstitutionEngine:
         self.variables = variables or {}
         self.registry = VariableRegistry()
 
-    def set_variable(self, name: str, value: Any) -> None:
+    def set_variable(self, name: str, value: object) -> None:
         """Set a variable value."""
         self.variables[name] = value
 
-    def set_variables(self, variables: Dict[str, Any]) -> None:
+    def set_variables(self, variables: Dict[str, object]) -> None:
         """Set multiple variable values."""
         self.variables.update(variables)
 
-    def get_variable(self, name: str, default: Any = None) -> Any:
+    def get_variable(self, name: str, default: object | None = None) -> object | None:
         """Get a variable value."""
         return self.variables.get(name, default)
 
@@ -251,7 +253,7 @@ class VariableSubstitutionEngine:
             ValueError: If strict=True and variable is undefined
         """
 
-        def replace_variable(match):
+        def replace_variable(match: re.Match) -> str:  # type: ignore[type-arg]
             var_name = match.group(1)
             default_value = match.group(2)
 

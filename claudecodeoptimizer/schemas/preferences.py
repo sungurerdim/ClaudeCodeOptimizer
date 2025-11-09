@@ -953,7 +953,7 @@ class CCOPreferences(BaseModel):
 # ============================================================================
 
 
-def get_literal_choices(literal_type) -> List[str]:
+def get_literal_choices(literal_type: type) -> List[str]:
     """Extract all choices from a Literal type annotation"""
     return list(get_args(literal_type))
 

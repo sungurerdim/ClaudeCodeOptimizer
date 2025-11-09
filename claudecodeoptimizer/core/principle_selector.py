@@ -9,9 +9,11 @@ import json
 import shutil
 from datetime import datetime
 from pathlib import Path
-from typing import Any, Dict, List
+from typing import Any, Dict, List, TypeVar
 
-from .constants import MIN_COVERAGE_PERCENTAGE, TOP_ITEMS_DISPLAY
+from .constants import MIN_COVERAGE_PERCENTAGE
+
+T = TypeVar("T")
 
 
 class PrincipleSelector:
@@ -173,7 +175,7 @@ class PrincipleSelector:
 
         return True
 
-    def _get_nested_value(self, obj: Any, path: str) -> Any:
+    def _get_nested_value(self, obj: dict[str, Any] | object, path: str) -> object | None:
         """
         Get value from nested path.
 
@@ -452,133 +454,150 @@ class PrincipleSelector:
         skipped: List[Dict[str, Any]],
         stats: Dict[str, Any],
     ) -> str:
-        """Render PRINCIPLES.md content"""
-        project_name = (
-            self._get_nested_value(self.preferences, "project_identity.name") or "Unknown Project"
-        )
+        """
+        Render PRINCIPLES.md content in progressive disclosure format.
 
+        New format (P071: Anti-Overengineering):
+        - Core principles only (~500 tokens)
+        - Links to category files for full details
+        - 10x token reduction
+        """
         lines = []
 
         # Header
-        lines.append(f"# Development Principles for {project_name}")
+        lines.append("# Development Principles")
         lines.append("")
-        lines.append(f"**Generated:** {datetime.now().strftime('%Y-%m-%d %H:%M:%S')}")
-        lines.append(
-            f"**Applicable Principles:** {stats['applicable_count']}/{stats['total_principles']}",
-        )
-        lines.append(f"**Coverage:** {stats['coverage_percentage']}%")
+        lines.append(f"**Generated**: {datetime.now().strftime('%Y-%m-%d')}")
+        lines.append(f"**Total Principles**: {stats['total_principles']} (across all categories)")
+        lines.append("**Core Principles**: 3 (always loaded)")
         lines.append("")
         lines.append("---")
         lines.append("")
 
-        # Configuration
-        lines.append("## Your Configuration")
+        # Core principles section
+        lines.append("## Quick Reference (Core Principles - Always Apply)")
         lines.append("")
-        team = self._get_nested_value(self.preferences, "project_identity.team_trajectory")
-        quality = self._get_nested_value(self.preferences, "code_quality.linting_strictness")
-        security = self._get_nested_value(self.preferences, "security.security_stance")
-        coverage = self._get_nested_value(self.preferences, "testing.coverage_target")
-        compliance = self._get_nested_value(
-            self.preferences,
-            "project_identity.compliance_requirements",
-        )
-
-        lines.append(f"- **Team Size:** {team}")
-        lines.append(f"- **Code Quality:** {quality}")
-        lines.append(f"- **Security Stance:** {security}")
-        lines.append(f"- **Test Coverage Target:** {coverage}")
-        lines.append(f"- **Compliance:** {', '.join(compliance) if compliance else 'None'}")
-        lines.append("")
-        lines.append("---")
+        lines.append("These principles are **MANDATORY** and apply to **ALL work, ALWAYS**.")
         lines.append("")
 
-        # Statistics
-        lines.append("## Statistics")
-        lines.append("")
-        lines.append(f"- **Critical:** {stats['by_severity']['critical']} principles")
-        lines.append(f"- **High:** {stats['by_severity']['high']} principles")
-        lines.append(f"- **Medium:** {stats['by_severity']['medium']} principles")
-        lines.append(f"- **Low:** {stats['by_severity']['low']} principles")
-        lines.append("")
-        lines.append("---")
-        lines.append("")
+        # Get core principles (P001, P067, P071)
+        core_principle_ids = ["P001", "P067", "P071"]
+        all_applicable = []
+        for severity_list in by_severity.values():
+            all_applicable.extend(severity_list)
 
-        # Principles by severity
-        severity_labels = {
-            "critical": ("CRITICAL", "⚠️"),
-            "high": ("HIGH PRIORITY", "🔴"),
-            "medium": ("MEDIUM PRIORITY", "🟡"),
-            "low": ("LOW PRIORITY", "🟢"),
-        }
+        for core_id in core_principle_ids:
+            principle = next((p for p in all_applicable if p["id"] == core_id), None)
+            if not principle:
+                # Try loading from all principles if not in applicable
+                principle = next((p for p in self.all_principles if p["id"] == core_id), None)
 
-        for severity_key in ["critical", "high", "medium", "low"]:
-            principles = by_severity.get(severity_key, [])
-            if not principles:
-                continue
-
-            label, emoji = severity_labels[severity_key]
-            lines.append(f"## {label} Principles {emoji}")
-            lines.append("")
-
-            for p in principles:
-                lines.append(f"### {p['id']}: {p['title']}")
+            if principle:
+                lines.append(f"### {principle['id']}: {principle['title']} ⚠️")
                 lines.append("")
-                lines.append(f"**Enforcement:** {p.get('enforcement', 'RECOMMENDED')}")
-                lines.append(
-                    f"**Category:** {p.get('category', 'unknown').replace('_', ' ').title()}",
-                )
-                lines.append("")
-                lines.append(p.get("description", "No description"))
+                lines.append(principle.get("description", ""))
                 lines.append("")
 
-                # Rules
-                rules = p.get("rules", [])
+                # Key rules
+                rules = principle.get("rules", [])
                 if rules:
-                    lines.append("**Check Patterns:**")
-                    for rule in rules[
-                        : TOP_ITEMS_DISPLAY["project_types"]
-                    ]:  # Limit to TOP_ITEMS_DISPLAY
-                        langs = ", ".join(rule.get("languages", []))
-                        lines.append(f"- {rule.get('description', '')} ({langs})")
-                        if "check_pattern" in rule:
-                            lines.append(f"  - Pattern: `{rule['check_pattern']}`")
+                    lines.append("**Key Rules**:")
+                    for rule in rules[:3]:  # Max 3 rules
+                        lines.append(f"- {rule.get('description', '')}")
                     lines.append("")
 
-                # Examples
-                examples = p.get("examples", {})
+                # Example
+                examples = principle.get("examples", {})
                 if examples:
-                    if "bad" in examples and examples["bad"]:
-                        lines.append("**❌ Bad Example:**")
-                        lines.append("```")
-                        lines.append(examples["bad"][0])
-                        lines.append("```")
-                        lines.append("")
-
+                    lines.append("**Example**:")
                     if "good" in examples and examples["good"]:
-                        lines.append("**✅ Good Example:**")
-                        lines.append("```")
+                        lines.append("```python")
+                        lines.append("# ✅ Good")
                         lines.append(examples["good"][0])
-                        lines.append("```")
+                    if "bad" in examples and examples["bad"]:
                         lines.append("")
+                        lines.append("# ❌ Bad")
+                        lines.append(examples["bad"][0])
+                    lines.append("```")
+                    lines.append("")
 
                 lines.append("---")
                 lines.append("")
 
-        # Skipped principles
-        if skipped:
-            lines.append("## Skipped Principles")
-            lines.append("")
-            lines.append("The following principles **do not apply** to your project:")
-            lines.append("")
+        # Category links section
+        lines.append("## Full Principles by Category")
+        lines.append("")
+        lines.append("For detailed principles, see category-specific documents:")
+        lines.append("")
 
-            for p in skipped[: TOP_ITEMS_DISPLAY["principles"]]:  # Limit to TOP_ITEMS_DISPLAY
-                reason = p.get("skip_reason", "Does not match preferences")
-                lines.append(f"- ❌ **{p['id']}: {p['title']}**")
-                lines.append(f"  - Reason: {reason}")
-                lines.append("")
+        # Category metadata from knowledge base
+        category_info = {
+            "core": ("Core Principles", 3, "Always loaded"),
+            "code_quality": (
+                "Code Quality",
+                14,
+                "DRY, type safety, immutability, precision, version management",
+            ),
+            "security_privacy": (
+                "Security & Privacy",
+                19,
+                "Encryption, zero-trust, privacy-first, auth, secrets, input validation",
+            ),
+            "testing": ("Testing", 6, "Test pyramid, coverage, isolation, integration, CI gates"),
+            "architecture": (
+                "Architecture",
+                10,
+                "Event-driven, microservices, separation of concerns, patterns",
+            ),
+            "performance": (
+                "Performance",
+                5,
+                "Caching, async I/O, database optimization, lazy loading",
+            ),
+            "operations": (
+                "Operational Excellence",
+                10,
+                "IaC, observability, health checks, config as code",
+            ),
+            "git_workflow": (
+                "Git Workflow",
+                5,
+                "Commit conventions, branching, PR guidelines, versioning",
+            ),
+            "api_design": ("API Design", 2, "RESTful conventions, versioning, error handling"),
+        }
 
-            lines.append("---")
-            lines.append("")
+        for cat_id, (cat_name, count, description) in category_info.items():
+            filename = cat_id.replace("_", "-")
+            lines.append(
+                f"- **[{cat_name}](docs/cco/principles/{filename}.md)** - {count} principles"
+            )
+            lines.append(f"  - {description}")
+        lines.append("")
+        lines.append("---")
+        lines.append("")
+
+        # Token optimization section
+        lines.append("## Token Optimization")
+        lines.append("")
+        lines.append("**Progressive Disclosure Strategy**:")
+        lines.append("- **Core principles** loaded by default: ~500 tokens")
+        lines.append("- **Category-specific** principles loaded on-demand: ~500-2000 tokens each")
+        lines.append("- **Total available**: ~8000 tokens (all categories)")
+        lines.append("")
+        lines.append("**Reduction**: 16x (8000 → 500 tokens for typical usage)")
+        lines.append("")
+        lines.append(
+            "Category-specific principles load automatically when running relevant commands:"
+        )
+        lines.append("- `/cco-audit code` → loads Code Quality principles")
+        lines.append("- `/cco-audit security` → loads Security principles")
+        lines.append("- `/cco-test` → loads Testing principles")
+        lines.append("- `/cco-analyze` → loads Architecture principles")
+        lines.append("- `/cco-optimize` → loads Performance principles")
+        lines.append("")
+        lines.append("---")
+        lines.append("")
 
         # Usage guide
         lines.append("## Using These Principles")
@@ -587,32 +606,170 @@ class PrincipleSelector:
         lines.append("")
         lines.append("Reference this file in any conversation:")
         lines.append("```")
+        lines.append("@PRINCIPLES.md  # Load core principles")
         lines.append("@PRINCIPLES.md Check if this code follows our principles")
+        lines.append("@PRINCIPLES.md What principle applies to error handling?")
+        lines.append("```")
+        lines.append("")
+        lines.append("For category-specific principles:")
+        lines.append("```")
+        lines.append("@docs/cco/principles/security.md  # Load security principles")
+        lines.append("@docs/cco/principles/testing.md   # Load testing principles")
         lines.append("```")
         lines.append("")
         lines.append("### In Commands")
         lines.append("")
         lines.append("All CCO commands use these principles:")
-        lines.append("- `/cco-audit-code` - Check critical code quality principles")
-        lines.append("- `/cco-audit-principles` - Check all applicable principles")
-        lines.append("- `/cco-fix-code` - Auto-fix violations")
+        lines.append("- `/cco-audit code` - Check code quality principles")
+        lines.append("- `/cco-audit security` - Check security principles")
+        lines.append("- `/cco-audit all` - Check all applicable principles")
+        lines.append("- `/cco-fix` - Auto-fix violations")
         lines.append("")
         lines.append("### Updating Principles")
         lines.append("")
-        lines.append("To update your principles:")
-        lines.append("1. Change preferences: Edit `~/.cco/projects/{project}.json`")
-        lines.append("2. Regenerate: `/cco-generate-principles`")
-        lines.append("3. Review: `git diff .claude/PRINCIPLES.md`")
+        lines.append(
+            "Your principles are customized based on your project configuration. To update:"
+        )
+        lines.append("")
+        lines.append("1. **Change preferences**: Edit `.cco/project.json`")
+        lines.append("2. **Regenerate**: Run `/cco-init` or modify preferences via wizard")
+        lines.append("3. **Review changes**: Check `git diff PRINCIPLES.md`")
         lines.append("")
         lines.append("---")
         lines.append("")
 
         # Footer
-        lines.append("*Auto-generated by ClaudeCodeOptimizer v{cco_version}*")
+        lines.append("*Auto-generated by ClaudeCodeOptimizer*")
         lines.append(f"*Principle Database: {stats['total_principles']} total principles*")
         lines.append("*Reference with: @PRINCIPLES.md*")
 
         return "\n".join(lines)
+
+    def generate_category_files(self, docs_path: Path) -> Dict[str, Any]:
+        """
+        Generate category-specific principle files in docs/cco/principles/
+
+        Args:
+            docs_path: Path to docs/cco/principles/ directory
+
+        Returns:
+            Dictionary with generation stats
+        """
+        # Category metadata
+        categories = {
+            "core": "Core Principles",
+            "code_quality": "Code Quality Principles",
+            "security_privacy": "Security & Privacy Principles",
+            "testing": "Testing Principles",
+            "architecture": "Architecture Principles",
+            "performance": "Performance Principles",
+            "operations": "Operational Excellence Principles",
+            "git_workflow": "Git Workflow Principles",
+            "api_design": "API Design Principles",
+        }
+
+        # Create docs_path if doesn't exist
+        docs_path.mkdir(parents=True, exist_ok=True)
+
+        generated_files = []
+        severity_emoji = {
+            "critical": "🔴",
+            "high": "🟠",
+            "medium": "🟡",
+            "low": "🟢",
+        }
+
+        for category_id, category_name in categories.items():
+            # Get principles for this category
+            if category_id == "core":
+                # Core principles are P001, P067, P071
+                principles = [p for p in self.all_principles if p["id"] in ["P001", "P067", "P071"]]
+            else:
+                principles = [p for p in self.all_principles if p.get("category") == category_id]
+
+            if not principles:
+                continue
+
+            # Sort by ID
+            principles = sorted(principles, key=lambda p: p["id"])
+
+            # Generate file content
+            lines = []
+            lines.append(f"# {category_name}")
+            lines.append("")
+            lines.append(f"**Generated**: {datetime.now().strftime('%Y-%m-%d')}")
+            lines.append(f"**Principle Count**: {len(principles)}")
+            lines.append("")
+            lines.append("---")
+            lines.append("")
+
+            for p in principles:
+                # Principle header
+                emoji = severity_emoji.get(p.get("severity", "low"), "🟢")
+                lines.append(f"### {p['id']}: {p['title']} {emoji}")
+                lines.append("")
+                lines.append(f"**Severity**: {p.get('severity', 'low').title()}")
+                lines.append("")
+                lines.append(p.get("description", ""))
+                lines.append("")
+
+                # Languages (if specified)
+                languages = p.get("applicability", {}).get("languages", [])
+                if languages and languages != ["all"]:
+                    langs_str = ", ".join(languages)
+                    lines.append(f"**Languages**: {langs_str}")
+                    lines.append("")
+
+                # Rules
+                rules = p.get("rules", [])
+                if rules:
+                    lines.append("**Rules**:")
+                    for rule in rules[:5]:  # Max 5 rules
+                        lines.append(f"- {rule.get('description', '')}")
+                    lines.append("")
+
+                # Examples
+                examples = p.get("examples", {})
+                if examples:
+                    if "bad" in examples and examples["bad"]:
+                        lines.append("**❌ Bad**:")
+                        lines.append("```")
+                        lines.append(examples["bad"][0])
+                        lines.append("```")
+                        lines.append("")
+
+                    if "good" in examples and examples["good"]:
+                        lines.append("**✅ Good**:")
+                        lines.append("```")
+                        lines.append(examples["good"][0])
+                        lines.append("```")
+                        lines.append("")
+
+                lines.append("---")
+                lines.append("")
+
+            # Footer
+            lines.append("---")
+            lines.append("")
+            lines.append(
+                "**Loading**: These principles load automatically when running relevant commands"
+            )
+            lines.append("")
+            lines.append(
+                "**Reference**: Use `@PRINCIPLES.md` to load core principles, or reference this file directly"
+            )
+
+            # Write file
+            filename = category_id.replace("_", "-") + ".md"
+            file_path = docs_path / filename
+            file_path.write_text("\n".join(lines), encoding="utf-8")
+            generated_files.append(str(file_path))
+
+        return {
+            "success": True,
+            "generated_files": generated_files,
+            "file_count": len(generated_files),
+        }
 
     def _create_backup(self, file_path: Path) -> None:
         """

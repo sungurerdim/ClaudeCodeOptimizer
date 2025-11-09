@@ -6,7 +6,7 @@ from pathlib import Path
 from typing import Any, Dict, Optional
 
 from .. import __version__
-from .. import config as CCOConfig
+from .. import config as CCOConfig  # noqa: N812
 from .constants import EXECUTABLE_PERMISSION
 
 

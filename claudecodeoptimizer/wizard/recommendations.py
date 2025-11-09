@@ -16,7 +16,7 @@ from .models import AnswerContext
 class RecommendationEngine:
     """Generate AI recommendations based on context"""
 
-    def __init__(self):
+    def __init__(self) -> None:
         """Initialize recommendation engine"""
         pass
 

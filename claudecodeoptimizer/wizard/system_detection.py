@@ -25,7 +25,7 @@ from .models import SystemContext
 class SystemDetector:
     """Detect system environment and context"""
 
-    def __init__(self, project_root: Optional[Path] = None):
+    def __init__(self, project_root: Optional[Path] = None) -> None:
         self.project_root = project_root or Path.cwd()
 
     def detect_all(self) -> SystemContext:

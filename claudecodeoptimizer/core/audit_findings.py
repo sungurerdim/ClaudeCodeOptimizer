@@ -27,7 +27,7 @@ class AuditFinding:
         line: Optional[int] = None,
         principle: Optional[str] = None,
         audits_affected: Optional[List[str]] = None,
-    ):
+    ) -> None:
         self.id = finding_id
         self.category = category
         self.severity = severity
@@ -87,7 +87,7 @@ class AuditFinding:
 class AuditFindingsManager:
     """Manages audit findings storage and retrieval."""
 
-    def __init__(self, project_root: Path):
+    def __init__(self, project_root: Path) -> None:
         self.project_root = project_root
         self.findings_file = project_root / ".cco" / "audit-findings.json"
         self.findings: List[AuditFinding] = []

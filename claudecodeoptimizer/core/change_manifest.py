@@ -37,7 +37,7 @@ class Change:
         reversible: bool = True,
         reverse_action: Optional[str] = None,
         metadata: Optional[Dict[str, Any]] = None,
-    ):
+    ) -> None:
         """
         Initialize change.
 
@@ -93,7 +93,7 @@ class Change:
 class ChangeManifest:
     """Manages CCO change tracking and removal."""
 
-    def __init__(self, project_root: Path):
+    def __init__(self, project_root: Path) -> None:
         """
         Initialize manifest.
 
@@ -173,15 +173,6 @@ class ChangeManifest:
 
     def track_principles_added(self, principle_ids: List[str]) -> None:
         """Track principles addition."""
-        # Group by category for better description
-        categories = set()
-        severities = {"critical": 0, "high": 0, "medium": 0, "low": 0}
-
-        for pid in principle_ids:
-            # Parse metadata if available
-            # For now, simple count
-            pass
-
         description = f"Added {len(principle_ids)} development principles to PRINCIPLES.md"
 
         self.add_change(
