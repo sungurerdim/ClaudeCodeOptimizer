@@ -285,7 +285,12 @@ class CCOWizard:
             if self.mode == "interactive":
                 display_detection_results(self.detection_report)
                 print()
-                pause()
+
+                # Ask user to confirm or adjust analysis
+                if not self._confirm_analysis():
+                    print_warning("Analysis confirmation cancelled", indent=2)
+                    return False
+
             else:  # quick mode
                 # Log detection summary
                 print_info("Project detected:", indent=2)
@@ -308,6 +313,59 @@ class CCOWizard:
         except Exception as e:
             print_error(f"Project detection failed: {e}", indent=2)
             return False
+
+    def _confirm_analysis(self) -> bool:
+        """
+        Ask user to confirm analysis results (Interactive mode only).
+
+        Returns:
+            True if user confirms, False if cancelled
+        """
+        from .terminal_ui import ask_yes_no
+
+        print_info("Analysis complete! Does this look correct?", indent=2)
+        print()
+
+        print_info(f"  Primary Language: {self._get_primary_language_name()}", indent=2)
+        print_info(f"  Frameworks: {self._get_frameworks_summary()}", indent=2)
+        print_info(f"  Project Type: {self._get_project_type_summary()}", indent=2)
+        print()
+
+        print_info("Note: If detection is incorrect, you can:", indent=2)
+        print_info("  1. Continue anyway (AI will adjust recommendations)", indent=2)
+        print_info("  2. Cancel and manually configure (advanced)", indent=2)
+        print()
+
+        confirmed = ask_yes_no("Continue with this analysis?", default=True)
+
+        if confirmed:
+            print_success("Analysis confirmed!", indent=2)
+            return True
+        else:
+            return False
+
+    def _get_primary_language_name(self) -> str:
+        """Get primary language name from detection report"""
+        languages = self.detection_report.get("languages", [])
+        if languages:
+            return languages[0].get("detected_value", "Unknown")
+        return "Unknown"
+
+    def _get_frameworks_summary(self) -> str:
+        """Get frameworks summary"""
+        frameworks = self.detection_report.get("frameworks", [])
+        if frameworks:
+            names = [fw.get("detected_value", "") for fw in frameworks[:3]]  # Top 3
+            return ", ".join(names) if names else "None"
+        return "None"
+
+    def _get_project_type_summary(self) -> str:
+        """Get project type summary"""
+        types = self.detection_report.get("project_types", [])
+        if types:
+            names = [t.get("name", "") for t in types[:2]]  # Top 2
+            return ", ".join(names) if names else "Unknown"
+        return "Unknown"
 
     # ========================================================================
     # Phase 3: Decision Tree (TIER 1-3)
@@ -460,26 +518,64 @@ class CCOWizard:
             from ..core.principle_selector import PrincipleSelector
 
             selector = PrincipleSelector(preferences)
-            applicable = selector.select_applicable()
 
-            self.selected_principles = [p["id"] for p in applicable]
+            # Get all principles and recommended ones
+            all_principles = selector.all_principles
+            recommended = selector.select_applicable()
+            recommended_ids = [p["id"] for p in recommended]
 
             if self.mode == "interactive":
+                # Show all principles with recommended ones pre-selected
+                print_info(
+                    f"We recommend {len(recommended_ids)} principles based on your answers.",
+                    indent=2
+                )
+                print_info("Review and customize the selection below:", indent=2)
+                print()
+
+                # Create principle options for multiselect
+                principle_choices = []
+                for principle in all_principles:
+                    pid = principle["id"]
+                    title = principle.get("title", pid)
+                    severity = principle.get("severity", "medium")
+                    category = principle.get("category", "general")
+
+                    # Format: "P001: Principle Title (severity, category)"
+                    label = f"{pid}: {title}"
+                    description = f"{severity.upper()} - {category}"
+
+                    principle_choices.append({
+                        "id": pid,
+                        "label": label,
+                        "description": description
+                    })
+
+                # Use ask_multi_choice from renderer
+                selected_labels = ask_multi_choice(
+                    "Select principles to apply (recommended are pre-selected):",
+                    [p["label"] for p in principle_choices],
+                    defaults=[p["label"] for p in principle_choices if p["id"] in recommended_ids],
+                    default_label="recommended",
+                    page_size=20  # Show more principles per page
+                )
+
+                # Extract selected IDs
+                self.selected_principles = [
+                    p["id"] for p in principle_choices
+                    if p["label"] in selected_labels
+                ]
+
+                print()
                 print_success(
-                    f"✓ Selected {len(self.selected_principles)} principles", indent=2
-                )
-                print_info("  Based on your answers:", indent=2)
-                print_info(f"    • Team: {self.answer_context.team_size}", indent=2)
-                print_info(f"    • Maturity: {self.answer_context.maturity}", indent=2)
-                print_info(
-                    f"    • Philosophy: {self.answer_context.philosophy}", indent=2
-                )
-                print_info(
-                    f"    • Strategy: {self.answer_context.principle_strategy}", indent=2
+                    f"✓ {len(self.selected_principles)} principles selected", indent=2
                 )
                 print()
                 pause()
-            else:
+
+            else:  # quick mode
+                # Auto-select recommended principles
+                self.selected_principles = recommended_ids
                 print_success(
                     f"✓ Selected {len(self.selected_principles)} principles", indent=2
                 )

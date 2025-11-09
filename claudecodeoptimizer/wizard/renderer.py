@@ -12,6 +12,7 @@ from typing import Any, Dict, List, Optional
 
 from ..core.constants import SEPARATOR_WIDTH, UI_HEADING_LEVEL_SECONDARY
 from ..core.utils import format_confidence
+from ..core.safe_print import safe_print
 
 
 class Colors:
@@ -53,13 +54,13 @@ def print_header(title: str, subtitle: Optional[str] = None, width: int = SEPARA
     """Print a formatted header section"""
     c = Colors
 
-    print()
-    print(c.colorize("=" * width, c.CYAN))
-    print(c.colorize(f"{title:^{width}}", c.BOLD + c.BRIGHT_CYAN))
+    safe_print()
+    safe_print(c.colorize("=" * width, c.CYAN))
+    safe_print(c.colorize(f"{title:^{width}}", c.BOLD + c.BRIGHT_CYAN))
     if subtitle:
-        print(c.colorize(f"{subtitle:^{width}}", c.DIM + c.CYAN))
-    print(c.colorize("=" * width, c.CYAN))
-    print()
+        safe_print(c.colorize(f"{subtitle:^{width}}", c.DIM + c.CYAN))
+    safe_print(c.colorize("=" * width, c.CYAN))
+    safe_print()
 
 
 def print_section(title: str, level: int = 1) -> None:
@@ -67,14 +68,14 @@ def print_section(title: str, level: int = 1) -> None:
     c = Colors
 
     if level == 1:
-        print()
-        print(c.colorize(f"> {title}", c.BOLD + c.BRIGHT_BLUE))
-        print(c.colorize("-" * (len(title) + 3), c.BLUE))
+        safe_print()
+        safe_print(c.colorize(f"> {title}", c.BOLD + c.BRIGHT_BLUE))
+        safe_print(c.colorize("-" * (len(title) + 3), c.BLUE))
     elif level == UI_HEADING_LEVEL_SECONDARY:
-        print()
-        print(c.colorize(f"  {title}", c.BRIGHT_CYAN))
+        safe_print()
+        safe_print(c.colorize(f"  {title}", c.BRIGHT_CYAN))
     else:
-        print(c.colorize(f"    {title}", c.CYAN))
+        safe_print(c.colorize(f"    {title}", c.CYAN))
 
 
 def print_list(items: List[str], bullet: str = "*", indent: int = 2) -> None:
@@ -83,7 +84,7 @@ def print_list(items: List[str], bullet: str = "*", indent: int = 2) -> None:
     prefix = " " * indent
 
     for item in items:
-        print(f"{prefix}{c.colorize(bullet, c.GREEN)} {item}")
+        safe_print(f"{prefix}{c.colorize(bullet, c.GREEN)} {item}")
 
 
 def print_table(
@@ -95,7 +96,7 @@ def print_table(
     c = Colors
 
     if not data:
-        print(c.colorize("  (No data)", c.DIM))
+        safe_print(c.colorize("  (No data)", c.DIM))
         return
 
     # Auto-detect headers if not provided
@@ -120,20 +121,20 @@ def print_table(
     header_row = " | ".join(
         [c.colorize(h[: col_widths[h]].ljust(col_widths[h]), c.BOLD + c.CYAN) for h in headers],
     )
-    print(f"  {header_row}")
+    safe_print(f"  {header_row}")
 
     # Print separator
     separator = "-+-".join(["-" * col_widths[h] for h in headers])
-    print(f"  {c.colorize(separator, c.BLUE)}")
+    safe_print(f"  {c.colorize(separator, c.BLUE)}")
 
     # Print rows
     for row in data:
         row_str = " | ".join(
             [str(row.get(h, ""))[: col_widths[h]].ljust(col_widths[h]) for h in headers],
         )
-        print(f"  {row_str}")
+        safe_print(f"  {row_str}")
 
-    print()
+    safe_print()
 
 
 def print_key_value(key: str, value: Any, indent: int = 2) -> None:
@@ -141,7 +142,7 @@ def print_key_value(key: str, value: Any, indent: int = 2) -> None:
     c = Colors
     prefix = " " * indent
     key_str = c.colorize(f"{key}:", c.BOLD + c.CYAN)
-    print(f"{prefix}{key_str} {value}")
+    safe_print(f"{prefix}{key_str} {value}")
 
 
 def print_progress(
@@ -158,13 +159,13 @@ def print_progress(
     bar = "█" * filled + "░" * (width - filled)
 
     if label:
-        print(
+        safe_print(
             f"\r{label} [{c.colorize(bar, c.GREEN)}] {int(format_confidence(percent, 0))}%",
             end="",
             flush=True,
         )
     else:
-        print(
+        safe_print(
             f"\r[{c.colorize(bar, c.GREEN)}] {int(format_confidence(percent, 0))}%",
             end="",
             flush=True,
@@ -176,7 +177,7 @@ def print_success(message: str, indent: int = 2) -> None:
     c = Colors
     prefix = " " * indent
     icon = c.colorize("[OK]", c.BRIGHT_GREEN)
-    print(f"{prefix}{icon} {c.colorize(message, c.GREEN)}")
+    safe_print(f"{prefix}{icon} {c.colorize(message, c.GREEN)}")
 
 
 def print_warning(message: str, indent: int = 2) -> None:
@@ -184,7 +185,7 @@ def print_warning(message: str, indent: int = 2) -> None:
     c = Colors
     prefix = " " * indent
     icon = c.colorize("[!]", c.BRIGHT_YELLOW)
-    print(f"{prefix}{icon} {c.colorize(message, c.YELLOW)}")
+    safe_print(f"{prefix}{icon} {c.colorize(message, c.YELLOW)}")
 
 
 def print_error(message: str, indent: int = 2) -> None:
@@ -192,7 +193,7 @@ def print_error(message: str, indent: int = 2) -> None:
     c = Colors
     prefix = " " * indent
     icon = c.colorize("[X]", c.RED)
-    print(f"{prefix}{icon} {c.colorize(message, c.RED)}")
+    safe_print(f"{prefix}{icon} {c.colorize(message, c.RED)}")
 
 
 def print_info(message: str, indent: int = 2) -> None:
@@ -200,14 +201,14 @@ def print_info(message: str, indent: int = 2) -> None:
     c = Colors
     prefix = " " * indent
     icon = c.colorize("[i]", c.BRIGHT_CYAN)
-    print(f"{prefix}{icon} {message}")
+    safe_print(f"{prefix}{icon} {message}")
 
 
 def print_dim(message: str, indent: int = 2) -> None:
     """Print a dimmed/muted message"""
     c = Colors
     prefix = " " * indent
-    print(f"{prefix}{c.colorize(message, c.DIM)}")
+    safe_print(f"{prefix}{c.colorize(message, c.DIM)}")
 
 
 def print_box(
@@ -241,7 +242,7 @@ def print_box(
     else:
         top_line = f"{top_left}{horizontal * inner_width}{top_right}"
 
-    print(c.colorize(top_line, c.CYAN))
+    safe_print(c.colorize(top_line, c.CYAN))
 
     # Print content
     for line in content:
@@ -253,20 +254,20 @@ def print_box(
                 if len(current_line) + len(word) + 1 <= inner_width:
                     current_line += word + " "
                 else:
-                    print(
+                    safe_print(
                         c.colorize(f"{vertical} ", c.CYAN)
                         + current_line.ljust(inner_width)
                         + c.colorize(f" {vertical}", c.CYAN),
                     )
                     current_line = word + " "
             if current_line:
-                print(
+                safe_print(
                     c.colorize(f"{vertical} ", c.CYAN)
                     + current_line.ljust(inner_width)
                     + c.colorize(f" {vertical}", c.CYAN),
                 )
         else:
-            print(
+            safe_print(
                 c.colorize(f"{vertical} ", c.CYAN)
                 + line.ljust(inner_width)
                 + c.colorize(f" {vertical}", c.CYAN),
@@ -274,8 +275,8 @@ def print_box(
 
     # Print bottom border
     bottom_line = f"{bottom_left}{horizontal * inner_width}{bottom_right}"
-    print(c.colorize(bottom_line, c.CYAN))
-    print()
+    safe_print(c.colorize(bottom_line, c.CYAN))
+    safe_print()
 
 
 def ask_input(
@@ -304,7 +305,7 @@ def ask_input(
 
             return value
         except (KeyboardInterrupt, EOFError):
-            print()
+            safe_print()
             raise
 
 
@@ -317,26 +318,26 @@ def ask_choice(
     """Ask user to choose from a list"""
     c = Colors
 
-    print()
-    print(f"  {c.colorize(prompt, c.BOLD)}")
-    print()
+    safe_print()
+    safe_print(f"  {c.colorize(prompt, c.BOLD)}")
+    safe_print()
 
     # Print choices
     for i, choice in enumerate(choices, 1):
         if show_numbers:
             num = c.colorize(f"{i}.", c.BRIGHT_BLUE)
             if choice == default:
-                print(f"    {num} {choice} {c.colorize('(default)', c.DIM + c.GREEN)}")
+                safe_print(f"    {num} {choice} {c.colorize('(default)', c.DIM + c.GREEN)}")
             else:
-                print(f"    {num} {choice}")
+                safe_print(f"    {num} {choice}")
         else:
             bullet = c.colorize("•", c.GREEN)
             if choice == default:
-                print(f"    {bullet} {choice} {c.colorize('(default)', c.DIM + c.GREEN)}")
+                safe_print(f"    {bullet} {choice} {c.colorize('(default)', c.DIM + c.GREEN)}")
             else:
-                print(f"    {bullet} {choice}")
+                safe_print(f"    {bullet} {choice}")
 
-    print()
+    safe_print()
 
     # Get input
     while True:
@@ -365,7 +366,7 @@ def ask_choice(
 
             print_warning(f"Invalid choice. Please enter a number between 1 and {len(choices)}.")
         except (KeyboardInterrupt, EOFError):
-            print()
+            safe_print()
             raise
 
 
@@ -397,7 +398,7 @@ def ask_yes_no(
             else:
                 print_warning("Please enter 'y' or 'n'.")
         except (KeyboardInterrupt, EOFError):
-            print()
+            safe_print()
             raise
 
 
@@ -409,14 +410,16 @@ def ask_multi_choice(
     max_selections: Optional[int] = None,
     show_pagination: bool = True,
     page_size: int = 15,
+    default_label: str = "detected",
 ) -> List[str]:
     """Ask user to select multiple items from a list"""
     c = Colors
 
-    print()
-    print(f"  {c.colorize(prompt, c.BOLD)}")
-    print(f"  {c.colorize('(Enter numbers separated by spaces, or comma-separated)', c.DIM)}")
-    print()
+    safe_print()
+    safe_print(f"  {c.colorize(prompt, c.BOLD)}")
+    safe_print(f"  {c.colorize('Enter numbers to customize selection, or press Enter to use defaults', c.DIM)}")
+    safe_print(f"  {c.colorize('Commands: \"more\" (next page), \"back\" (prev page), \"all\" (show all)', c.DIM)}")
+    safe_print()
 
     defaults = defaults or []
 
@@ -438,24 +441,24 @@ def ask_multi_choice(
             checkbox_colored = c.colorize(checkbox, c.GREEN if choice in defaults else c.DIM)
 
             if choice in defaults:
-                print(
-                    f"    {checkbox_colored} {num} {choice} {c.colorize('(detected)', c.DIM + c.GREEN)}",
+                safe_print(
+                    f"    {checkbox_colored} {num} {choice} {c.colorize(f'({default_label})', c.DIM + c.GREEN)}",
                 )
             else:
-                print(f"    {checkbox_colored} {num} {choice}")
+                safe_print(f"    {checkbox_colored} {num} {choice}")
 
         # Show pagination info
         if show_pagination and max_pages > 1:
-            print()
-            print(f"  {c.colorize(f'Showing {start_idx+1}-{end_idx} of {total_choices}', c.DIM)}")
+            safe_print()
+            safe_print(f"  {c.colorize(f'Showing {start_idx+1}-{end_idx} of {total_choices}', c.DIM)}")
             if page < max_pages - 1:
                 more_msg = 'Type "more" to see next page'
-                print(f"  {c.colorize(more_msg, c.DIM)}")
+                safe_print(f"  {c.colorize(more_msg, c.DIM)}")
 
     # Show first page
     show_choices(current_page)
 
-    print()
+    safe_print()
 
     # Get input
     while True:
@@ -472,19 +475,19 @@ def ask_multi_choice(
             # Handle pagination commands
             if value == "more" and current_page < max_pages - 1:
                 current_page += 1
-                print()
+                safe_print()
                 show_choices(current_page)
-                print()
+                safe_print()
                 continue
             elif value == "back" and current_page > 0:
                 current_page -= 1
-                print()
+                safe_print()
                 show_choices(current_page)
-                print()
+                safe_print()
                 continue
             elif value == "all":
                 # Show all choices at once
-                print()
+                safe_print()
                 for i, choice in enumerate(choices, 1):
                     num = c.colorize(f"{i}.", c.BRIGHT_BLUE)
                     checkbox = "[✓]" if choice in defaults else "[ ]"
@@ -492,9 +495,9 @@ def ask_multi_choice(
                         checkbox,
                         c.GREEN if choice in defaults else c.DIM,
                     )
-                    marker = c.colorize("(detected)", c.DIM + c.GREEN) if choice in defaults else ""
-                    print(f"    {checkbox_colored} {num} {choice} {marker}")
-                print()
+                    marker = c.colorize(f"({default_label})", c.DIM + c.GREEN) if choice in defaults else ""
+                    safe_print(f"    {checkbox_colored} {num} {choice} {marker}")
+                safe_print()
                 continue
 
             # Handle default
@@ -522,7 +525,7 @@ def ask_multi_choice(
 
             return selected
         except (KeyboardInterrupt, EOFError):
-            print()
+            safe_print()
             raise
 
 
@@ -537,5 +540,5 @@ def pause(message: str = "Press Enter to continue...") -> None:
     try:
         input(f"\n  {c.colorize(message, c.DIM)}")
     except (KeyboardInterrupt, EOFError):
-        print()
+        safe_print()
         raise
