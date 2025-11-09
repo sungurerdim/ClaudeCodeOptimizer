@@ -344,7 +344,6 @@ class ProjectManager:
 
         # Configuration (stored in global storage)
         project_name = self.project_root.name
-        changes_file = self.config.get_project_changes_file(project_name)
         backup_dir = self.config.get_project_backups_dir(project_name)
 
         safe_print("✓ Configuration")
@@ -664,6 +663,18 @@ class ProjectManager:
             project_name = project_data.get("name")
             files_removed = []
 
+            # STEP 0: Check for backups in global storage
+            backup_info = self._check_backups(project_name)
+            if backup_info.get("has_backups"):
+                safe_print("\n📦 Backup Files Found:")
+                safe_print(f"  Location: ~/.cco/projects/{project_name}/backups/")
+                safe_print(f"  Count: {backup_info['backup_count']} backup file(s)")
+                safe_print("\n  These backups will be preserved in global storage.")
+                safe_print(
+                    f"  To restore: manually copy from ~/.cco/projects/{project_name}/backups/"
+                )
+                safe_print()
+
             # STEP 1: Remove all cco-*.md command files
             project_commands_dir = self.config.get_project_commands_dir(self.project_root)
             if project_commands_dir.exists():
@@ -694,6 +705,20 @@ class ProjectManager:
                 "success": False,
                 "error": str(e),
             }
+
+    def _check_backups(self, project_name: str) -> Dict[str, Any]:
+        """Check for backup files in global storage."""
+        backup_dir = self.config.get_project_backups_dir(project_name)
+
+        if not backup_dir.exists():
+            return {"has_backups": False, "backup_count": 0}
+
+        backup_files = list(backup_dir.glob("*.backup-*"))
+        return {
+            "has_backups": len(backup_files) > 0,
+            "backup_count": len(backup_files),
+            "backup_files": [f.name for f in backup_files],
+        }
 
     def _create_ai_preferences(self, project_name: str, analysis: Dict[str, Any]) -> CCOPreferences:
         """Create intelligent preferences from project analysis (AI-driven quick mode)."""
