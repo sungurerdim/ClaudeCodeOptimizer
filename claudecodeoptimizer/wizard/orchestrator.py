@@ -15,7 +15,6 @@ from pathlib import Path
 from typing import Dict, List, Literal, Optional
 
 from ..ai.detection import UniversalDetector
-from ..core.principle_selector import PrincipleSelector
 from ..schemas.preferences import CCOPreferences
 from .checkpoints import (
     display_completion_summary,
@@ -30,7 +29,7 @@ from .renderer import (
 )
 from .decision_tree import get_all_decisions
 from .models import AnswerContext, DecisionPoint, SystemContext, WizardResult
-from .recommendations import RecommendationEngine, recommend_commands
+from .recommendations import RecommendationEngine
 from .renderer import ask_choice, ask_multi_choice, clear_screen, pause
 from .system_detection import SystemDetector
 
@@ -604,7 +603,7 @@ class CCOWizard:
 
             # Build minimal command registry from global commands
             from ..ai.command_selection import CommandRecommender
-            from ..schemas.commands import CommandRegistry, CommandMetadata
+            from ..schemas.commands import CommandRegistry
 
             registry = self._build_command_registry()
 
