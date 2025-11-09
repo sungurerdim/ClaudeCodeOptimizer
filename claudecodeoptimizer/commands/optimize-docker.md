@@ -28,6 +28,26 @@ Comprehensive Dockerfile optimization across 7 dimensions:
 
 ---
 
+## Architecture & Model Selection
+
+**Data Gathering**: Haiku (Explore agent, quick)
+- Fast Dockerfile scanning
+- Layer analysis and metrics
+- Security baseline checks
+
+**Analysis & Reasoning**: Sonnet (Plan agent)
+- Multi-stage build optimization
+- Security best practices recommendations
+- Strategic Docker improvements
+
+**Execution Pattern**:
+1. Launch Haiku agents to analyze Dockerfiles (parallel)
+2. Calculate image size and layer metrics
+3. Use Sonnet for optimization strategy
+4. Generate Docker optimization report with before/after comparison
+
+---
+
 ## Phase 1: Discover Dockerfiles
 
 Find all Dockerfiles in the project:

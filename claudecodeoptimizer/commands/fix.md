@@ -8,10 +8,31 @@ cost: 3
 
 Automatically fix issues found in audits: code quality, security vulnerabilities, documentation, and flaky tests.
 
-**Architecture:** Hybrid approach for optimal speed + quality
-- **Bash tools**: Code quality fixes (black, ruff, prettier) - instant
-- **Haiku**: Documentation updates - fast data replacement
-- **Sonnet**: Security fixes, flaky tests - reasoning required
+---
+
+## Architecture & Model Selection
+
+**Hybrid approach for optimal speed + quality**
+
+**Data Gathering**: Haiku (Explore agent, quick)
+- Fast file scanning, pattern detection
+- Identify issues to fix across codebase
+- Cost-effective for repetitive operations
+
+**Analysis & Reasoning**: Sonnet (Plan agent)
+- Complex analysis for security fixes
+- Reasoning required for flaky test fixes
+- Synthesis of findings and fix strategies
+
+**Direct Tools**: Bash (instant)
+- Code quality fixes (black, ruff, prettier) - no AI needed
+- Deterministic linting/formatting operations
+
+**Execution Pattern**:
+1. Scan codebase with Haiku agents (parallel)
+2. Apply bash tools for code quality (instant)
+3. Use Sonnet for security and test fixes (reasoning)
+4. Aggregate results and generate report
 
 ---
 

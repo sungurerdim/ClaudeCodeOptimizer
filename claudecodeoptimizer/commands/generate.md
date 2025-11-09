@@ -8,9 +8,27 @@ cost: 3
 
 Generate tests, documentation, CI/CD pipelines, and code from specifications.
 
-**Architecture:** Hybrid Haiku/Sonnet approach for optimal speed + quality
-- **Haiku**: Simple generation (tests, docs) - fast data transformation
-- **Sonnet**: Complex generation (CI/CD, specs) - reasoning required
+---
+
+## Architecture & Model Selection
+
+**Hybrid Haiku/Sonnet approach for optimal speed + quality**
+
+**Data Gathering**: Haiku (Explore agent, quick)
+- Fast scanning for generation targets
+- Template and pattern recognition
+- Cost-effective for simple generation
+
+**Analysis & Reasoning**: Sonnet (Plan agent)
+- Complex CI/CD pipeline generation
+- Code generation from specifications
+- Integration test workflow design
+
+**Execution Pattern**:
+1. Scan codebase with Haiku for generation targets (parallel)
+2. Use Haiku for simple generation (tests, docs)
+3. Use Sonnet for complex generation (CI/CD, integration tests)
+4. Generate files and create summary report
 
 ---
 

@@ -25,6 +25,26 @@ Detect and remove dead code:
 
 ---
 
+## Architecture & Model Selection
+
+**Data Gathering**: Haiku (Explore agent, quick)
+- Fast scanning for unused code and imports
+- Pattern detection for dead code
+- Cost-effective codebase analysis
+
+**Analysis & Reasoning**: Sonnet (Plan agent)
+- Determine safe removal candidates
+- Assess code reachability
+- Strategic cleanup decisions
+
+**Execution Pattern**:
+1. Launch Haiku agents to scan for unused code (parallel)
+2. Analyze with Sonnet for safe removal
+3. Create git backup branch
+4. Apply cleanup and generate report
+
+---
+
 ## Step 1: Git Backup
 
 **CRITICAL:** Create backup before any deletions!

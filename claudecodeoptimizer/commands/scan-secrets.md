@@ -26,6 +26,26 @@ Prevent secret exposure:
 
 ---
 
+## Architecture & Model Selection
+
+**Data Gathering**: Haiku (Explore agent, quick)
+- Fast file scanning for secret patterns
+- Regex-based secret detection
+- Git history scanning
+
+**Analysis & Reasoning**: Sonnet (Plan agent)
+- False positive filtering
+- Risk assessment and severity classification
+- Remediation recommendations
+
+**Execution Pattern**:
+1. Launch Haiku agents to scan codebase and git history (parallel)
+2. Use pattern matching for secret detection
+3. Analyze with Sonnet for false positives and risk assessment
+4. Generate security report with remediation steps
+
+---
+
 ## When to Use
 
 **Use this command:**

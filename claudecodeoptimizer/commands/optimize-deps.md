@@ -27,6 +27,26 @@ Comprehensive dependency optimization across 6 dimensions:
 
 ---
 
+## Architecture & Model Selection
+
+**Data Gathering**: Haiku (Explore agent, quick)
+- Fast dependency tree analysis
+- Scan for unused imports
+- Vulnerability database lookup
+
+**Analysis & Reasoning**: Sonnet (Plan agent)
+- Complex dependency conflict resolution
+- Breaking change assessment
+- Strategic update recommendations
+
+**Execution Pattern**:
+1. Launch Haiku agents for dependency scanning (parallel)
+2. Check security databases for vulnerabilities
+3. Use Sonnet for update strategy and conflict resolution
+4. Generate dependency optimization report
+
+---
+
 ## Phase 1: Discover Dependencies
 
 Find all dependency files in the project:

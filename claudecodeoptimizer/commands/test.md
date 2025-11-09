@@ -4,6 +4,26 @@
 
 ---
 
+## Architecture & Model Selection
+
+**Data Gathering**: Haiku (Explore agent, quick)
+- Fast test framework detection
+- Test file discovery and scanning
+- Quick test execution
+
+**Analysis & Reasoning**: Sonnet (Plan agent)
+- Test failure analysis
+- Coverage gap identification
+- Test strategy recommendations
+
+**Execution Pattern**:
+1. Detect test framework with Haiku
+2. Run tests via bash commands
+3. Analyze failures with Sonnet (if any)
+4. Generate test execution report
+
+---
+
 ## Action
 
 Use the **Task tool** to run tests:

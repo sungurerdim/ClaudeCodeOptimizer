@@ -27,6 +27,26 @@ Comprehensive project analysis:
 
 ---
 
+## Architecture & Model Selection
+
+**Data Gathering**: Haiku (Explore agent, quick)
+- Fast file scanning and structure analysis
+- Tech stack detection and pattern recognition
+- Cost-effective codebase traversal
+
+**Analysis & Reasoning**: Sonnet (Plan agent)
+- Complex architecture analysis
+- Complexity assessment and recommendations
+- Strategic insights and synthesis
+
+**Execution Pattern**:
+1. Launch multiple Haiku agents to scan different aspects (parallel)
+2. Aggregate structural data and metrics
+3. Use Sonnet for deep analysis and recommendations
+4. Generate comprehensive analysis report
+
+---
+
 ## Phase 1: Project Structure Analysis
 
 Detect project organization and architecture:
