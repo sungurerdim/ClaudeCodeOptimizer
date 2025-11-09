@@ -7,7 +7,7 @@
       "id": "code_quality",
       "name": "Code Quality",
       "description": "DRY, fail-fast, type safety, immutability, precision, version management",
-      "principle_count": 15
+      "principle_count": 14
     },
     {
       "id": "architecture",
@@ -37,7 +37,7 @@
       "id": "git_workflow",
       "name": "Git Workflow",
       "description": "Commit conventions, branching, PR guidelines, versioning",
-      "principle_count": 5
+      "principle_count": 6
     },
     {
       "id": "performance",
@@ -4332,14 +4332,70 @@
       }
     },
     {
-      "id": "P071",
-      "number": 71,
-      "title": "No Overengineering - Pragmatic Solutions Only",
-      "category": "code_quality",
-      "severity": "critical",
-      "weight": 10,
-      "description": "Always choose the simplest solution that solves the problem. Avoid premature abstraction, unnecessary patterns, excessive architecture, or solutions built for imaginary future requirements. Every line of code is a liability - write only what is needed now.",
-      "one_line_why": "Simpler code is easier to understand, maintain, debug, and change",
+      "id": "P072",
+      "number": 72,
+      "title": "Concise Commit Messages",
+      "category": "git_workflow",
+      "severity": "medium",
+      "weight": 7,
+      "description": "Commit messages must be compact: max 10 lines total, max 5 bullets in body, no verbosity. Focus on essential changes only.",
+      "one_line_why": "Concise commits are faster to read, easier to scan in history, and reduce noise",
+      "enforcement": "SHOULD - Strong recommendation",
+      "rules": [
+        {
+          "id": "max-total-lines",
+          "description": "Max 10 lines total (subject + body + footer)",
+          "severity": "medium",
+          "languages": [
+            "all"
+          ],
+          "check_pattern": null
+        },
+        {
+          "id": "max-bullets",
+          "description": "Max 5 bullets in body (most important changes only)",
+          "severity": "medium",
+          "languages": [
+            "all"
+          ],
+          "check_pattern": null
+        },
+        {
+          "id": "one-line-bullets",
+          "description": "One line per bullet (no multi-line explanations)",
+          "severity": "low",
+          "languages": [
+            "all"
+          ],
+          "check_pattern": null
+        },
+        {
+          "id": "no-section-headers",
+          "description": "No section headers ('Changes:', 'Rationale:', etc.)",
+          "severity": "low",
+          "languages": [
+            "all"
+          ],
+          "check_pattern": null
+        },
+        {
+          "id": "co-authored-by",
+          "description": "Include Co-Authored-By footer for GitHub attribution",
+          "severity": "low",
+          "languages": [
+            "all"
+          ],
+          "check_pattern": null
+        }
+      ],
+      "examples": {
+        "good": [
+          "refactor(ci): consolidate tools (P071)\n\n- Replace Black/Bandit/mypy with Ruff (format+lint+security)\n- Remove tool configs from pyproject.toml\n- Simplify workflow to 3 jobs, 5 steps total\n\nCo-Authored-By: Claude <noreply@anthropic.com>"
+        ],
+        "bad": [
+          "refactor: eliminate tool redundancy\n\nTool Consolidation (3 tools instead of 5):\n- Replace Black + mypy + Bandit with Ruff\n- Keep pip-audit (CVE scanning)\n...\n\nDependency Changes (pyproject.toml):\n- Remove: black, mypy from dev dependencies\n...\n[15 more lines]"
+        ]
+      },
       "applicability": {
         "project_types": [
           "all"
@@ -4352,75 +4408,36 @@
         ],
         "preference_conditions": []
       },
-      "rules": [
-        {
-          "id": "no-premature-abstraction",
-          "description": "Avoid abstraction before you have 3+ similar use cases",
-          "check_pattern": null,
-          "languages": [
-            "all"
-          ],
-          "severity": "high"
-        },
-        {
-          "id": "no-unused-flexibility",
-          "description": "Remove configuration options, generic parameters, or extensibility hooks that are not currently used",
-          "check_pattern": null,
-          "languages": [
-            "all"
-          ],
-          "severity": "medium"
-        },
-        {
-          "id": "simple-solutions-first",
-          "description": "Try simple approach before complex patterns (no need for Factory, Strategy, Observer for simple cases)",
-          "check_pattern": null,
-          "languages": [
-            "all"
-          ],
-          "severity": "high"
-        }
-      ],
-      "examples": {
-        "bad": [
-          "# Bad: Premature abstraction\nclass AbstractDataProcessorFactory:\n    @abstractmethod\n    def create_processor(self): pass\n\nclass SimpleDataProcessor(AbstractDataProcessorFactory):\n    def create_processor(self): return Processor()\n\n# For just ONE use case!",
-          "# Bad: Over-configured\nclass EmailSender:\n    def __init__(self, smtp_host, port, use_tls, use_ssl, timeout, \n                 retry_count, retry_delay, max_retries, fallback_host):\n        # 9 parameters for a simple email sender",
-          "// Bad: Unnecessary pattern\nclass UserRepositoryFactory {\n  createRepository() {\n    return new UserRepository();\n  }\n}\n// Just use: new UserRepository()"
-        ],
-        "good": [
-          "# Good: Simple and direct\ndef send_email(to: str, subject: str, body: str):\n    \"\"\"Send email via SMTP.\"\"\"\n    smtp.send(to, subject, body)\n\n# Add complexity only when actually needed",
-          "# Good: Extract abstraction when you have multiple cases\ndef process_csv(file): ...\ndef process_json(file): ...\n# After 3rd format, THEN create: DataProcessor interface",
-          "// Good: Start simple\nfunction calculateTotal(items) {\n  return items.reduce((sum, item) => sum + item.price, 0);\n}\n// Clean, direct, no unnecessary classes"
-        ]
-      },
-      "enforcement": "MUST - No exceptions",
-      "impact": {
-        "code_clarity": "high",
-        "maintainability": "high",
-        "development_speed": "high",
-        "team_velocity": "high",
-        "bug_reduction": "medium"
-      },
       "related_principles": [
-        "P002",
-        "P003"
+        "P043",
+        "P044"
       ],
       "anti_patterns": [
-        "Premature abstraction",
-        "Speculative generality",
-        "Architecture astronaut syndrome",
-        "Gold plating",
-        "YAGNI violations (You Arent Gonna Need It)"
+        "Verbose commit messages with section headers",
+        "Multi-line bullet explanations",
+        "Over-documenting trivial changes",
+        "Including code diffs in commit messages"
       ],
-      "when_to_skip": [],
+      "impact": {
+        "code_clarity": "medium",
+        "maintainability": "medium",
+        "team_velocity": "medium",
+        "bug_reduction": "low",
+        "development_speed": "low"
+      },
       "verification": {
         "checklist": [
-          "Every abstraction serves at least 3 concrete use cases",
-          "No unused configuration parameters",
-          "No design patterns applied just in case",
-          "No code written for imaginary future requirements"
+          "Commit message has max 10 lines total",
+          "Body has max 5 bullets",
+          "Each bullet is one line",
+          "No section headers used",
+          "Co-Authored-By footer present (if using Claude Code)"
         ]
-      }
+      },
+      "when_to_skip": [
+        "Initial commit or large migrations (can be longer with justification)",
+        "Release commits (may need changelog)"
+      ]
     }
   ],
   "selection_strategies": {
