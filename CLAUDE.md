@@ -362,6 +362,19 @@ Examples:
 
 ## Git Workflow
 
+**Commit Format (P072: Concise Commit Messages):**
+```
+type(scope): concise description (max 72 chars)
+
+- Key change 1 with brief context
+- Key change 2
+- Key change 3
+```
+
+**Rules:**
+- ✅ Max 10 lines total, 5 bullets max
+- ❌ No section headers, emojis, or footers
+
 **Commit Management:**
 - User manages all git operations via their preferred git client
 - Never suggest git commands or commit messages

@@ -48,19 +48,26 @@ This guide covers the complete Git workflow for CCO projects. Workflow strategy 
 
 ## Commit Strategy
 
-### Format
+### Format (Compact)
+
+**P072: Concise Commit Messages** - Essential info only, no verbosity
 
 ```
-type(scope): subject
+type(scope): concise description (max 72 chars)
 
-- Detailed change 1
-- Detailed change 2
-- Detailed change 3
-
-🤖 Generated with [Claude Code](https://claude.com/claude-code)
-
-Co-Authored-By: Claude <noreply@anthropic.com>
+- Key change 1 with brief context
+- Key change 2
+- Key change 3
+- Impact/benefit if significant
 ```
+
+**Rules**:
+- ✅ Max 10 lines total
+- ✅ Max 5 bullets (most important changes)
+- ✅ One line per bullet
+- ❌ No section headers ("Changes:", "Rationale:")
+- ❌ No emojis or decorative elements
+- ❌ No "Generated with" footers
 
 ### Types
 
@@ -71,6 +78,8 @@ docs:     Documentation only
 refactor: Code improvement (no behavior change)
 test:     Add/update tests
 chore:    Build, deps, config
+style:    Formatting, linting (no logic change)
+perf:     Performance improvement
 ```
 
 ### Scopes (CCO-specific)
@@ -82,18 +91,50 @@ skills, core, cli, tests, docs, deps, ci
 
 ### Examples
 
+**✅ Good - Compact & Informative**:
 ```bash
-# ✅ Good: Grouped changes, same category
+refactor(ci): consolidate tools to prevent overlap (P071)
+
+- Replace Black/Bandit/mypy with Ruff (format+lint+security)
+- Remove tool configs from pyproject.toml
+- Simplify workflow to 3 jobs, 5 steps total
+- Format 25 files with ruff
+```
+
+**✅ Good - Simple Fix**:
+```bash
+fix(ci): use cyclonedx-py environment mode
+
+- Change from requirements to environment mode
+- Fixes "requirements.txt not found" error
+```
+
+**✅ Good - Feature**:
+```bash
 feat(docs): restructure documentation system
-- Create docs/cco/ structure
-- Move PRINCIPLES.md to docs/cco/
-- Split principles by category
-- Update references in code
 
-# ✅ Good: Single logical change
-fix(installer): handle Windows permission errors
+- Create docs/cco/ structure with progressive disclosure
+- Split principles by category (code, security, testing, etc.)
+- Reduce CLAUDE.md from 5000 to 1500 tokens
+```
 
-# ❌ Bad: Multiple unrelated changes
+**❌ Bad - Too Verbose**:
+```bash
+refactor: eliminate tool redundancy
+
+Tool Consolidation (3 tools instead of 5):
+- Replace Black + mypy + Bandit with Ruff (all-in-one)
+- Keep pip-audit (CVE scanning)
+...
+
+Dependency Changes (pyproject.toml):
+- Remove: black, mypy from dev dependencies
+...
+[15 more lines]
+```
+
+**❌ Bad - Too Vague**:
+```bash
 feat: updates and fixes
 ```
 

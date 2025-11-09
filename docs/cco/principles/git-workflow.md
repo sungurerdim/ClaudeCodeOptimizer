@@ -1,7 +1,7 @@
 # Git Workflow Principles
 
 **Generated**: 2025-11-09
-**Principle Count**: 5
+**Principle Count**: 6
 
 ---
 
@@ -20,6 +20,55 @@ git commit -m 'fixed stuff'
 ```
 git commit -m 'fix(api): handle null user_id in /jobs endpoint'
 ```
+
+---
+
+### P072: Concise Commit Messages 🟡
+
+**Severity**: Medium
+
+Commit messages must be compact: max 10 lines, 5 bullets, no verbosity.
+
+**Format**:
+```
+type(scope): concise description (max 72 chars)
+
+- Key change 1 with brief context
+- Key change 2
+- Key change 3
+```
+
+**Rules**:
+- ✅ Max 10 lines total, 5 bullets max
+- ✅ One line per bullet
+- ❌ No section headers ("Changes:", "Rationale:")
+- ❌ No emojis, decorative elements, or footers
+
+**❌ Bad - Too Verbose**:
+```
+refactor: eliminate tool redundancy
+
+Tool Consolidation (3 tools instead of 5):
+- Replace Black + mypy + Bandit with Ruff
+- Keep pip-audit (CVE scanning)
+...
+
+Dependency Changes (pyproject.toml):
+- Remove: black, mypy from dev dependencies
+...
+[15 more lines]
+```
+
+**✅ Good - Compact**:
+```
+refactor(ci): consolidate tools (P071)
+
+- Replace Black/Bandit/mypy with Ruff (format+lint+security)
+- Remove tool configs from pyproject.toml
+- Simplify workflow to 3 jobs, 5 steps total
+```
+
+**Detailed Guide**: [@docs/cco/guides/git-workflow.md](../guides/git-workflow.md)
 
 ---
 
