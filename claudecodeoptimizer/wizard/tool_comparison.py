@@ -162,7 +162,9 @@ class ToolComparator:
             recommended=recommended,
             reason=reasons.get(recommended, "Recommended"),
             alternatives={
-                tool: reasons.get(tool, "Alternative option") for tool in detected if tool != recommended
+                tool: reasons.get(tool, "Alternative option")
+                for tool in detected
+                if tool != recommended
             },
         )
 
@@ -252,9 +254,7 @@ class ToolComparator:
         recommended = cat_info["recommended"]
         reason = cat_info["reasons"].get(recommended, "Recommended")
 
-        detected = [
-            tool for tool in self.detected_tools if tool in cat_info["tools"]
-        ]
+        detected = [tool for tool in self.detected_tools if tool in cat_info["tools"]]
 
         if len(detected) > 1:
             others = [t for t in detected if t != recommended]

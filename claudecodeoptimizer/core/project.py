@@ -21,8 +21,8 @@ from .constants import (
 )
 from .principle_selector import PrincipleSelector
 from .registry import ProjectRegistry
-from .utils import print_separator
 from .safe_print import safe_print
+from .utils import print_separator
 
 
 class ProjectManager:
@@ -58,11 +58,11 @@ class ProjectManager:
             Initialization result dictionary
         """
         # Validate mode parameter
-        if mode not in ('quick', 'interactive'):
+        if mode not in ("quick", "interactive"):
             raise ValueError(f"Invalid mode '{mode}'. Must be 'quick' or 'interactive'")
 
         # Interactive mode: Launch full wizard
-        if mode == 'interactive':
+        if mode == "interactive":
             return self._initialize_interactive(project_name)
 
         # Quick mode: Full analysis every time
@@ -140,7 +140,7 @@ class ProjectManager:
                 if not already_tracked:
                     self.manifest.track_directory_created(
                         cco_dir,
-                        "Created .cco directory for CCO configuration and change tracking"
+                        "Created .cco directory for CCO configuration and change tracking",
                     )
 
         # Save all tracked changes to manifest
@@ -325,7 +325,9 @@ class ProjectManager:
 
             # Group commands by category
             audit_cmds = [c for c in cco_commands if "audit" in c.stem or "fix" in c.stem]
-            generate_cmds = [c for c in cco_commands if "generate" in c.stem or "optimize" in c.stem]
+            generate_cmds = [
+                c for c in cco_commands if "generate" in c.stem or "optimize" in c.stem
+            ]
             info_cmds = [c for c in cco_commands if "status" in c.stem or "config" in c.stem]
 
             if audit_cmds:
@@ -443,12 +445,14 @@ class ProjectManager:
         if claude_dir_created:
             self.manifest.track_directory_created(
                 claude_dir,
-                "Created .claude directory for project configuration"
+                "Created .claude directory for project configuration",
             )
-        if commands_dir_created and not claude_dir_created:  # Only if .claude existed but commands didn't
+        if (
+            commands_dir_created and not claude_dir_created
+        ):  # Only if .claude existed but commands didn't
             self.manifest.track_directory_created(
                 project_commands,
-                "Created .claude/commands directory for slash commands"
+                "Created .claude/commands directory for slash commands",
             )
 
         commands_generated = 0
@@ -758,13 +762,13 @@ class ProjectManager:
         if is_new_file:
             self.manifest.track_file_created(
                 principles_file,
-                f"Created PRINCIPLES.md with {len(applicable_principles)} principles"
+                f"Created PRINCIPLES.md with {len(applicable_principles)} principles",
             )
         else:
             # File already exists, this is a modification
             self.manifest.track_file_modified(
                 principles_file,
-                f"Updated PRINCIPLES.md with {len(applicable_principles)} principles"
+                f"Updated PRINCIPLES.md with {len(applicable_principles)} principles",
             )
 
         # Track principles addition

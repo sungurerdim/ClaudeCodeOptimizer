@@ -6,6 +6,7 @@ from pathlib import Path
 
 # Fix Unicode encoding on all platforms (MUST be first, before any imports that print)
 from .core.safe_print import configure_utf8_encoding
+
 configure_utf8_encoding()
 
 

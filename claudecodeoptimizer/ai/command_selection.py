@@ -376,9 +376,9 @@ class CommandRecommender:
 
         # Always recommend audit-all
         recommended["recommended"].append("cco-audit-all")
-        recommended["reasoning"][
-            "cco-audit-all"
-        ] = "Comprehensive health check (always recommended)"
+        recommended["reasoning"]["cco-audit-all"] = (
+            "Comprehensive health check (always recommended)"
+        )
 
         # Evaluate conditional recommendations
         for rule in self.RECOMMENDATION_RULES:
@@ -408,9 +408,9 @@ class CommandRecommender:
             if is_relevant:
                 # Add to optional (can be enabled if user wants)
                 recommended["optional"].append(cmd.command_id)
-                recommended["reasoning"][
-                    cmd.command_id
-                ] = f"{cmd.description_short} (available for {', '.join(cmd.applicable_project_types[:TOP_ITEMS_DISPLAY['project_types']])})"
+                recommended["reasoning"][cmd.command_id] = (
+                    f"{cmd.description_short} (available for {', '.join(cmd.applicable_project_types[: TOP_ITEMS_DISPLAY['project_types']])})"
+                )
 
         # Filter by project type relevance
         recommended = self._filter_by_project_type(recommended)

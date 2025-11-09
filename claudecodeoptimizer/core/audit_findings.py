@@ -150,7 +150,7 @@ class AuditFindingsManager:
     def _load(self) -> None:
         """Load findings from disk."""
         try:
-            with open(self.findings_file, "r", encoding="utf-8") as f:
+            with open(self.findings_file, encoding="utf-8") as f:
                 data = json.load(f)
 
             self.metadata = {
@@ -163,9 +163,7 @@ class AuditFindingsManager:
                 "stats": data.get("stats", {}),
             }
 
-            self.findings = [
-                AuditFinding.from_dict(f) for f in data.get("findings", [])
-            ]
+            self.findings = [AuditFinding.from_dict(f) for f in data.get("findings", [])]
 
         except Exception:
             # If load fails, start fresh
@@ -192,13 +190,15 @@ class AuditFindingsManager:
         return stats
 
     def get_findings_by_priority(
-        self, priority: Literal["IMMEDIATE", "THIS_WEEK", "THIS_SPRINT", "BACKLOG"]
+        self,
+        priority: Literal["IMMEDIATE", "THIS_WEEK", "THIS_SPRINT", "BACKLOG"],
     ) -> List[AuditFinding]:
         """Get findings by priority tier."""
         return [f for f in self.findings if f.priority_tier == priority]
 
     def get_findings_by_category(
-        self, category: Literal["security", "tests", "code_quality", "documentation", "principles"]
+        self,
+        category: Literal["security", "tests", "code_quality", "documentation", "principles"],
     ) -> List[AuditFinding]:
         """Get findings by category."""
         return [f for f in self.findings if f.category == category]
@@ -252,7 +252,7 @@ class AuditFindingsManager:
             key=lambda f: (
                 priority_order.get(f.priority_tier, 99),
                 severity_order.get(f.severity, 99),
-            )
+            ),
         )
 
         return [f.command for f in findings]

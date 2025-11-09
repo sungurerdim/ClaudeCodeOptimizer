@@ -126,7 +126,7 @@ class ChangeManifest:
                 description=description,
                 path=str(file_path.relative_to(self.project_root)),
                 reverse_action="delete_file",
-            )
+            ),
         )
 
     def track_file_modified(
@@ -157,7 +157,7 @@ class ChangeManifest:
                 if backup_path
                 else None,
                 reverse_action="restore_backup" if backup_path else None,
-            )
+            ),
         )
 
     def track_directory_created(self, dir_path: Path, description: str) -> None:
@@ -168,7 +168,7 @@ class ChangeManifest:
                 description=description,
                 path=str(dir_path.relative_to(self.project_root)),
                 reverse_action="delete_directory",
-            )
+            ),
         )
 
     def track_principles_added(self, principle_ids: List[str]) -> None:
@@ -194,7 +194,7 @@ class ChangeManifest:
                     "count": len(principle_ids),
                     "principle_ids": principle_ids[:10],  # First 10 for display
                 },
-            )
+            ),
         )
 
     def track_commands_installed(self, command_names: List[str]) -> None:
@@ -208,7 +208,7 @@ class ChangeManifest:
                 items=command_names,
                 reverse_action="delete_commands",
                 metadata={"command_names": command_names},
-            )
+            ),
         )
 
     def track_config_created(self, config_type: str, description: str) -> None:
@@ -218,7 +218,7 @@ class ChangeManifest:
                 change_type="config_created",
                 description=description,
                 metadata={"config_type": config_type},
-            )
+            ),
         )
 
     def save(self) -> None:
@@ -244,7 +244,7 @@ class ChangeManifest:
     def _load(self) -> None:
         """Load manifest from disk."""
         try:
-            with open(self.manifest_path, "r", encoding="utf-8") as f:
+            with open(self.manifest_path, encoding="utf-8") as f:
                 data = json.load(f)
 
             self.changes = [Change.from_dict(c) for c in data.get("changes", [])]
@@ -350,7 +350,7 @@ class ChangeManifest:
                     "description": "Remove all CCO slash commands from .claude/commands/",
                     "change_indices": [i for i, _ in command_changes],
                     "safe": True,
-                }
+                },
             )
 
         # Group 2: PRINCIPLES.md
@@ -358,18 +358,14 @@ class ChangeManifest:
             (i, c) for i, c in enumerate(self.changes) if c.path == "PRINCIPLES.md"
         ]
         if principles_changes:
-            count = sum(
-                len(c.items)
-                for _, c in principles_changes
-                if c.type == "principles_added"
-            )
+            count = sum(len(c.items) for _, c in principles_changes if c.type == "principles_added")
             groups.append(
                 {
                     "label": "PRINCIPLES.md",
                     "description": f"Delete PRINCIPLES.md file ({count} principles)",
                     "change_indices": [i for i, _ in principles_changes],
                     "safe": True,
-                }
+                },
             )
 
         # Group 3: Modified Files (with backups)
@@ -386,14 +382,12 @@ class ChangeManifest:
                         "description": f"Restore original file: {change.description}",
                         "change_indices": [i],
                         "safe": True,
-                    }
+                    },
                 )
 
         # Group 4: .cco Directory
         cco_dir_changes = [
-            (i, c)
-            for i, c in enumerate(self.changes)
-            if c.path and c.path.startswith(".cco/")
+            (i, c) for i, c in enumerate(self.changes) if c.path and c.path.startswith(".cco/")
         ]
         if cco_dir_changes:
             groups.append(
@@ -402,7 +396,7 @@ class ChangeManifest:
                     "description": "Remove entire .cco directory (configs, backups, cache)",
                     "change_indices": [i for i, _ in cco_dir_changes],
                     "safe": True,
-                }
+                },
             )
 
         # Group 5: .claude Directory (created by CCO)
@@ -418,7 +412,7 @@ class ChangeManifest:
                     "description": "Remove .claude directory (WARNING: removes ALL slash commands)",
                     "change_indices": [i for i, _ in claude_dir_changes],
                     "safe": False,  # Dangerous
-                }
+                },
             )
 
         return groups

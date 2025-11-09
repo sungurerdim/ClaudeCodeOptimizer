@@ -32,12 +32,7 @@ class ReportManager:
         self.project_root = project_root or Path.cwd()
         self.reports_dir = self.project_root / ".cco" / "reports"
 
-    def save_report(
-        self,
-        command: str,
-        content: str,
-        max_reports: int = 10
-    ) -> Path:
+    def save_report(self, command: str, content: str, max_reports: int = 10) -> Path:
         """
         Save report to .cco/reports/{command}/.
 
@@ -104,22 +99,14 @@ class ReportManager:
 
         # Get all timestamped reports (exclude latest-*.md)
         pattern = f"*-{command}.md"
-        reports = [
-            f for f in command_dir.glob(pattern)
-            if not f.name.startswith("latest-")
-        ]
+        reports = [f for f in command_dir.glob(pattern) if not f.name.startswith("latest-")]
 
         # Sort by modification time (newest first)
         reports.sort(key=lambda f: f.stat().st_mtime, reverse=True)
 
         return reports[:limit]
 
-    def _cleanup_old_reports(
-        self,
-        command_dir: Path,
-        command: str,
-        max_reports: int
-    ) -> None:
+    def _cleanup_old_reports(self, command_dir: Path, command: str, max_reports: int) -> None:
         """
         Delete old reports, keeping only the last N.
 
@@ -130,10 +117,7 @@ class ReportManager:
         """
         # Get all timestamped reports (exclude latest-*.md)
         pattern = f"*-{command}.md"
-        reports = [
-            f for f in command_dir.glob(pattern)
-            if not f.name.startswith("latest-")
-        ]
+        reports = [f for f in command_dir.glob(pattern) if not f.name.startswith("latest-")]
 
         # Sort by modification time (newest first)
         reports.sort(key=lambda f: f.stat().st_mtime, reverse=True)

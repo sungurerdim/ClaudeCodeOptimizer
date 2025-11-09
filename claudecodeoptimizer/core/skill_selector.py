@@ -301,7 +301,7 @@ class SkillSelector:
             lines.append("**Usage:**")
             lines.append("```")
             lines.append("Use Skill tool:")
-            lines.append(f"Skill(\"{skill['name']}\")")
+            lines.append(f'Skill("{skill["name"]}")')
             lines.append("```")
             lines.append("")
             lines.append("---")

@@ -20,17 +20,20 @@ from .checkpoints import (
     display_completion_summary,
     display_detection_results,
 )
+from .decision_tree import get_all_decisions
+from .models import AnswerContext, DecisionPoint, SystemContext, WizardResult
+from .recommendations import RecommendationEngine
 from .renderer import (
+    ask_choice,
+    ask_multi_choice,
+    clear_screen,
+    pause,
     print_error,
     print_header,
     print_info,
     print_success,
     print_warning,
 )
-from .decision_tree import get_all_decisions
-from .models import AnswerContext, DecisionPoint, SystemContext, WizardResult
-from .recommendations import RecommendationEngine
-from .renderer import ask_choice, ask_multi_choice, clear_screen, pause
 from .system_detection import SystemDetector
 
 
@@ -203,9 +206,7 @@ class CCOWizard:
                 "CCO Wizard - Interactive Mode",
                 "We'll ask you questions to configure CCO for your project",
             )
-            print_info(
-                "This wizard guides you through 3 tiers of decisions:", indent=2
-            )
+            print_info("This wizard guides you through 3 tiers of decisions:", indent=2)
             print_info("  • Tier 1: Project fundamentals (purpose, team, maturity)", indent=2)
             print_info("  • Tier 2: Strategy (principles, testing, security)", indent=2)
             print_info("  • Tier 3: Tactical (tool preferences, commands)", indent=2)
@@ -277,7 +278,8 @@ class CCOWizard:
             # Enrich system context with project data
             system_detector = SystemDetector(self.project_root)
             self.system_context = system_detector.enrich_with_project_detection(
-                self.system_context, self.detection_report
+                self.system_context,
+                self.detection_report,
             )
 
             # Display results
@@ -438,17 +440,26 @@ class CCOWizard:
         # Ask question
         if decision.multi_select:
             # Multi-choice
-            choices = [
-                f"{opt.label}\n    {opt.description}" for opt in decision.options
-            ]
+            choices = [f"{opt.label}\n    {opt.description}" for opt in decision.options]
             recommended = decision.get_recommended_option(self.answer_context)
-            defaults = recommended if isinstance(recommended, list) else [recommended] if recommended else []
+            defaults = (
+                recommended
+                if isinstance(recommended, list)
+                else [recommended]
+                if recommended
+                else []
+            )
 
             selected_indices = ask_multi_choice(
                 decision.question,
                 choices,
-                defaults=[choices.index(f"{decision.options[i].label}\n    {decision.options[i].description}")
-                         for i, opt in enumerate(decision.options) if opt.value in defaults],
+                defaults=[
+                    choices.index(
+                        f"{decision.options[i].label}\n    {decision.options[i].description}",
+                    )
+                    for i, opt in enumerate(decision.options)
+                    if opt.value in defaults
+                ],
             )
 
             # Map back to values
@@ -527,7 +538,7 @@ class CCOWizard:
                 # Show all principles with recommended ones pre-selected
                 print_info(
                     f"We recommend {len(recommended_ids)} principles based on your answers.",
-                    indent=2
+                    indent=2,
                 )
                 print_info("Review and customize the selection below:", indent=2)
                 print()
@@ -544,11 +555,9 @@ class CCOWizard:
                     label = f"{pid}: {title}"
                     description = f"{severity.upper()} - {category}"
 
-                    principle_choices.append({
-                        "id": pid,
-                        "label": label,
-                        "description": description
-                    })
+                    principle_choices.append(
+                        {"id": pid, "label": label, "description": description},
+                    )
 
                 # Use ask_multi_choice from renderer
                 selected_labels = ask_multi_choice(
@@ -556,28 +565,23 @@ class CCOWizard:
                     [p["label"] for p in principle_choices],
                     defaults=[p["label"] for p in principle_choices if p["id"] in recommended_ids],
                     default_label="recommended",
-                    page_size=20  # Show more principles per page
+                    page_size=20,  # Show more principles per page
                 )
 
                 # Extract selected IDs
                 self.selected_principles = [
-                    p["id"] for p in principle_choices
-                    if p["label"] in selected_labels
+                    p["id"] for p in principle_choices if p["label"] in selected_labels
                 ]
 
                 print()
-                print_success(
-                    f"✓ {len(self.selected_principles)} principles selected", indent=2
-                )
+                print_success(f"✓ {len(self.selected_principles)} principles selected", indent=2)
                 print()
                 pause()
 
             else:  # quick mode
                 # Auto-select recommended principles
                 self.selected_principles = recommended_ids
-                print_success(
-                    f"✓ Selected {len(self.selected_principles)} principles", indent=2
-                )
+                print_success(f"✓ Selected {len(self.selected_principles)} principles", indent=2)
                 print()
 
             return True
@@ -603,7 +607,6 @@ class CCOWizard:
 
             # Build minimal command registry from global commands
             from ..ai.command_selection import CommandRecommender
-            from ..schemas.commands import CommandRegistry
 
             registry = self._build_command_registry()
 
@@ -640,7 +643,10 @@ class CCOWizard:
                     for cmd in command_recs["optional"][:10]:  # Show first 10
                         print_info(f"    /{cmd}", indent=2)
                     if len(command_recs["optional"]) > 10:
-                        print_info(f"    ... and {len(command_recs['optional']) - 10} more", indent=2)
+                        print_info(
+                            f"    ... and {len(command_recs['optional']) - 10} more",
+                            indent=2,
+                        )
                     print()
 
                 pause()
@@ -650,7 +656,10 @@ class CCOWizard:
                 print_info(f"  Core: {len(command_recs['core'])} commands", indent=2)
                 print_info(f"  Recommended: {len(command_recs['recommended'])} commands", indent=2)
                 if command_recs["optional"]:
-                    print_info(f"  Optional (available): {len(command_recs['optional'])} commands", indent=2)
+                    print_info(
+                        f"  Optional (available): {len(command_recs['optional'])} commands",
+                        indent=2,
+                    )
                 print()
 
             return True
@@ -661,8 +670,8 @@ class CCOWizard:
 
     def _build_command_registry(self) -> "CommandRegistry":
         """Build command registry from available global commands"""
-        from ..schemas.commands import CommandRegistry, CommandMetadata
         from .. import config as CCOConfig
+        from ..schemas.commands import CommandMetadata, CommandRegistry
 
         # Get global commands directory
         global_commands_dir = CCOConfig.get_global_commands_dir()
@@ -671,17 +680,23 @@ class CCOWizard:
         if global_commands_dir.exists():
             for cmd_file in global_commands_dir.glob("*.md"):
                 # Extract command ID from filename
-                command_id = f"cco-{cmd_file.stem}" if not cmd_file.stem.startswith("cco-") else cmd_file.stem
+                command_id = (
+                    f"cco-{cmd_file.stem}"
+                    if not cmd_file.stem.startswith("cco-")
+                    else cmd_file.stem
+                )
 
                 # Create minimal metadata
-                commands.append(CommandMetadata(
-                    command_id=command_id,
-                    display_name=cmd_file.stem.replace("-", " ").title(),
-                    category="general",
-                    description_short=f"{cmd_file.stem} command",
-                    description_long=f"CCO {cmd_file.stem} command",
-                    applicable_project_types=["all"],
-                ))
+                commands.append(
+                    CommandMetadata(
+                        command_id=command_id,
+                        display_name=cmd_file.stem.replace("-", " ").title(),
+                        category="general",
+                        description_short=f"{cmd_file.stem} command",
+                        description_long=f"CCO {cmd_file.stem} command",
+                        applicable_project_types=["all"],
+                    ),
+                )
 
         return CommandRegistry(commands=commands)
 
@@ -699,9 +714,7 @@ class CCOWizard:
         try:
             # Create directories
             (self.project_root / ".cco").mkdir(exist_ok=True)
-            (self.project_root / ".claude" / "commands").mkdir(
-                parents=True, exist_ok=True
-            )
+            (self.project_root / ".claude" / "commands").mkdir(parents=True, exist_ok=True)
 
             # Write project.json
             self._write_project_config()
@@ -713,9 +726,7 @@ class CCOWizard:
 
             # Generate command files
             self._generate_command_files()
-            print_success(
-                f"✓ Generated {len(self.selected_commands)} command files", indent=2
-            )
+            print_success(f"✓ Generated {len(self.selected_commands)} command files", indent=2)
 
             # Generate PRINCIPLES.md
             self._generate_principles_md()
@@ -769,8 +780,7 @@ class CCOWizard:
             "version": __version__,
             "configured_at": datetime.now().isoformat(),
             "commands": [
-                {"id": cmd, "enabled": True, "category": "system"}
-                for cmd in self.selected_commands
+                {"id": cmd, "enabled": True, "category": "system"} for cmd in self.selected_commands
             ],
         }
 
@@ -800,6 +810,7 @@ class CCOWizard:
         """Generate .claude/settings.local.json from global template"""
         import json
         from pathlib import Path
+
         from .. import config as CCOConfig
 
         # Try to load from global templates first, fallback to package assets
@@ -815,7 +826,7 @@ class CCOWizard:
             print_warning(f"Template not found: {template_path}", indent=2)
             return
 
-        with open(template_path, "r", encoding="utf-8") as f:
+        with open(template_path, encoding="utf-8") as f:
             template_content = f.read()
 
         # Replace ${PROJECT_DIR} with actual project path
@@ -831,7 +842,7 @@ class CCOWizard:
 
         if settings_path.exists():
             # Merge with existing settings
-            with open(settings_path, "r", encoding="utf-8") as f:
+            with open(settings_path, encoding="utf-8") as f:
                 existing_settings = json.load(f)
 
             merged_settings = self._merge_settings(existing_settings, new_settings)
@@ -847,6 +858,7 @@ class CCOWizard:
         """Copy statusline.js from global template to .claude/"""
         import shutil
         from pathlib import Path
+
         from .. import config as CCOConfig
 
         # Try to load from global templates first, fallback to package assets
@@ -951,7 +963,7 @@ class CCOWizard:
             },
             "testing": {
                 "coverage_target": self._map_testing_to_coverage(
-                    answers.get("testing_approach", "no_tests")
+                    answers.get("testing_approach", "no_tests"),
                 ),
             },
             "security": {
@@ -962,7 +974,7 @@ class CCOWizard:
             },
             "code_quality": {
                 "linting_strictness": self._map_strategy_to_strictness(
-                    answers.get("principle_strategy", "recommended")
+                    answers.get("principle_strategy", "recommended"),
                 ),
             },
             "selected_principle_ids": self.selected_principles,

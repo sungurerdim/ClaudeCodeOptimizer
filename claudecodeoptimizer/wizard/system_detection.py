@@ -361,7 +361,9 @@ class SystemDetector:
     # ========================================================================
 
     def enrich_with_project_detection(
-        self, context: SystemContext, detection_report: dict
+        self,
+        context: SystemContext,
+        detection_report: dict,
     ) -> SystemContext:
         """
         Enrich SystemContext with data from UniversalDetector.
