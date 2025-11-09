@@ -514,15 +514,15 @@ class PrincipleSelector:
                     if "good" in examples and examples["good"]:
                         lines.append("# ✅ Good")
                         # Decode escaped newlines from JSON (\\n -> actual newline)
-                        good_example = examples["good"][0].replace('\\n', '\n')
-                        for line in good_example.split('\n'):
+                        good_example = examples["good"][0].replace("\\n", "\n")
+                        for line in good_example.split("\n"):
                             lines.append(line)
                     if "bad" in examples and examples["bad"]:
                         lines.append("")
                         lines.append("# ❌ Bad")
                         # Decode escaped newlines from JSON (\\n -> actual newline)
-                        bad_example = examples["bad"][0].replace('\\n', '\n')
-                        for line in bad_example.split('\n'):
+                        bad_example = examples["bad"][0].replace("\\n", "\n")
+                        for line in bad_example.split("\n"):
                             lines.append(line)
                     lines.append("```")
                     lines.append("")
