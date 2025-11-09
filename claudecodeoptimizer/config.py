@@ -226,16 +226,15 @@ def get_all_paths() -> Dict[str, Path]:
 
 
 # ============================================================================
-# CCOConfig Class (backward compatibility wrapper)
+# CCOConfig Class
 # ============================================================================
 
 
 class CCOConfig:
     """
-    Central configuration class - backward compatibility wrapper.
+    Central configuration class for ClaudeCodeOptimizer.
 
-    All actual values are module-level for easy access.
-    This class provides a namespace for compatibility.
+    Provides namespace access to all module-level configuration values.
     """
 
     # Branding

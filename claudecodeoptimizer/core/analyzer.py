@@ -13,6 +13,20 @@ from .constants import (
 )
 from .utils import format_confidence
 
+# Framework Hierarchy: Maps parent frameworks to their sub-dependencies
+# If parent is detected, children are filtered out to avoid clutter
+FRAMEWORK_HIERARCHY = {
+    # Python
+    "fastapi": ["starlette"],  # FastAPI uses Starlette internally
+    "django": ["django-rest-framework"],  # Optional: DRF extends Django
+    # JavaScript/TypeScript
+    "next": ["react"],  # Next.js uses React
+    "nuxt": ["vue"],  # Nuxt uses Vue
+    "express": ["connect"],  # Express uses Connect middleware
+    "nestjs": ["express", "fastapi"],  # NestJS can use Express or Fastify
+    # Others can be added as needed
+}
+
 
 class ProjectAnalyzer:
     """Analyzes projects to detect language, framework, and structure."""
@@ -84,8 +98,14 @@ class ProjectAnalyzer:
         ]
 
     def _process_frameworks(self, report: ProjectAnalysisReport) -> List[Dict[str, Any]]:
-        """Process framework detection results."""
-        return [
+        """
+        Process framework detection results.
+
+        Filters out sub-dependencies based on FRAMEWORK_HIERARCHY.
+        For example, if FastAPI is detected, Starlette is hidden.
+        """
+        # First, collect all detected frameworks
+        all_frameworks = [
             {
                 "name": fw.detected_value,
                 "confidence": format_confidence(fw.confidence, 1),
@@ -93,6 +113,27 @@ class ProjectAnalyzer:
             }
             for fw in report.frameworks
         ]
+
+        # Extract framework names for hierarchy check
+        detected_names = {fw["name"].lower() for fw in all_frameworks}
+
+        # Filter out sub-dependencies
+        filtered_frameworks = []
+        for fw in all_frameworks:
+            fw_name = fw["name"].lower()
+
+            # Check if this framework is a child of any detected parent
+            is_child = False
+            for parent, children in FRAMEWORK_HIERARCHY.items():
+                if parent in detected_names and fw_name in [c.lower() for c in children]:
+                    is_child = True
+                    break
+
+            # Only include if not a child dependency
+            if not is_child:
+                filtered_frameworks.append(fw)
+
+        return filtered_frameworks
 
     def _process_tools(self, report: ProjectAnalysisReport) -> List[Dict[str, Any]]:
         """Process tool detection results."""

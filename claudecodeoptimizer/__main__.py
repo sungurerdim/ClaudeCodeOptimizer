@@ -4,11 +4,9 @@ import argparse
 import sys
 from pathlib import Path
 
-# Fix Unicode encoding on Windows
-if sys.platform == "win32":
-    import codecs
-
-    sys.stdout = codecs.getwriter("utf-8")(sys.stdout.detach())
+# Fix Unicode encoding on all platforms (MUST be first, before any imports that print)
+from .core.safe_print import configure_utf8_encoding
+configure_utf8_encoding()
 
 
 def main() -> None:
@@ -43,12 +41,6 @@ def main() -> None:
                 help="Initialization mode: interactive (full wizard) or quick (AI auto-config)",
             )
             subparser.add_argument(
-                "-i",
-                "--interactive",
-                action="store_true",
-                help="Shortcut for --mode=interactive",
-            )
-            subparser.add_argument(
                 "--dry-run",
                 action="store_true",
                 help="Preview configuration without writing files",
@@ -70,11 +62,10 @@ def main() -> None:
         return
 
     if args.command == "init":
-        # Determine mode
-        mode = "interactive" if args.interactive else args.mode
+        # Use unified wizard with mode from args
+        mode = args.mode
         dry_run = args.dry_run
 
-        # Use new unified wizard
         from .wizard.orchestrator import CCOWizard
 
         try:
