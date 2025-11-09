@@ -599,32 +599,59 @@ class CCOWizard:
             print()
 
         try:
-            # Get recommendations
-            command_recs = recommend_commands(self.answer_context)
+            # Build preferences for CommandRecommender
+            preferences = self._build_preferences()
+
+            # Build minimal command registry from global commands
+            from ..ai.command_selection import CommandRecommender
+            from ..schemas.commands import CommandRegistry, CommandMetadata
+
+            registry = self._build_command_registry()
+
+            # Create recommender and get recommendations
+            recommender = CommandRecommender(CCOPreferences(**preferences), registry)
+            command_recs = recommender.recommend_commands()
+
+            # Install only core + recommended commands (NOT optional)
+            self.selected_commands = command_recs["core"] + command_recs["recommended"]
 
             if self.mode == "interactive":
-                # Show recommendations and let user customize
-                print_info("Recommended commands for your project:", indent=2)
+                # Show what will be installed
+                print_info("Commands to install:", indent=2)
                 print()
 
-                for cmd, reason in command_recs.items():
-                    print_success(f"  /{cmd}", indent=2)
-                    print_info(f"    {reason}", indent=2)
+                print_success("  Core commands:", indent=2)
+                for cmd in command_recs["core"]:
+                    reason = command_recs["reasoning"].get(cmd, "Essential command")
+                    print_success(f"    /{cmd}", indent=2)
+                    print_info(f"      {reason}", indent=2)
                 print()
 
-                # TODO: Allow customization via multiselect
-                # For now, just use all recommendations
-                self.selected_commands = list(command_recs.keys())
+                print_success("  Recommended commands:", indent=2)
+                for cmd in command_recs["recommended"]:
+                    reason = command_recs["reasoning"].get(cmd, "Recommended for your project")
+                    print_success(f"    /{cmd}", indent=2)
+                    print_info(f"      {reason}", indent=2)
+                print()
+
+                # Show optional commands (available but not installed)
+                if command_recs["optional"]:
+                    print_info("Optional commands available (not installed):", indent=2)
+                    print_info("  You can enable these later with /cco-config", indent=2)
+                    for cmd in command_recs["optional"][:10]:  # Show first 10
+                        print_info(f"    /{cmd}", indent=2)
+                    if len(command_recs["optional"]) > 10:
+                        print_info(f"    ... and {len(command_recs['optional']) - 10} more", indent=2)
+                    print()
 
                 pause()
 
             else:  # quick mode
-                self.selected_commands = list(command_recs.keys())
-                print_success(f"✓ Selected {len(self.selected_commands)} commands", indent=2)
-                for cmd in self.selected_commands[:5]:  # Show first 5
-                    print_info(f"    /{cmd}", indent=2)
-                if len(self.selected_commands) > 5:
-                    print_info(f"    ... and {len(self.selected_commands) - 5} more", indent=2)
+                print_success(f"✓ Installing {len(self.selected_commands)} commands", indent=2)
+                print_info(f"  Core: {len(command_recs['core'])} commands", indent=2)
+                print_info(f"  Recommended: {len(command_recs['recommended'])} commands", indent=2)
+                if command_recs["optional"]:
+                    print_info(f"  Optional (available): {len(command_recs['optional'])} commands", indent=2)
                 print()
 
             return True
@@ -632,6 +659,32 @@ class CCOWizard:
         except Exception as e:
             print_error(f"Command selection failed: {e}", indent=2)
             return False
+
+    def _build_command_registry(self) -> "CommandRegistry":
+        """Build command registry from available global commands"""
+        from ..schemas.commands import CommandRegistry, CommandMetadata
+        from .. import config as CCOConfig
+
+        # Get global commands directory
+        global_commands_dir = CCOConfig.get_global_commands_dir()
+
+        commands = []
+        if global_commands_dir.exists():
+            for cmd_file in global_commands_dir.glob("*.md"):
+                # Extract command ID from filename
+                command_id = f"cco-{cmd_file.stem}" if not cmd_file.stem.startswith("cco-") else cmd_file.stem
+
+                # Create minimal metadata
+                commands.append(CommandMetadata(
+                    command_id=command_id,
+                    display_name=cmd_file.stem.replace("-", " ").title(),
+                    category="general",
+                    description_short=f"{cmd_file.stem} command",
+                    description_long=f"CCO {cmd_file.stem} command",
+                    applicable_project_types=["all"],
+                ))
+
+        return CommandRegistry(commands=commands)
 
     # ========================================================================
     # Phase 6: File Generation
