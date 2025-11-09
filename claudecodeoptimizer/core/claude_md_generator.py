@@ -11,6 +11,7 @@ Strategy:
 - If CLAUDE.md exists: Merge template sections + customize
 """
 
+import shutil
 from datetime import datetime
 from pathlib import Path
 from typing import Any, Dict
@@ -65,6 +66,10 @@ class ClaudeMdGenerator:
 
         # Customize based on preferences
         content = self._customize_content(content)
+
+        # Create backup if file exists (before writing)
+        if output_path.exists():
+            self._create_backup(output_path)
 
         # Write file
         output_path.parent.mkdir(parents=True, exist_ok=True)
@@ -257,6 +262,7 @@ class ClaudeMdGenerator:
         - Test-First Development (for TDD projects)
         - Root Cause Analysis (for strict quality)
         - Code Review Guidelines (for teams)
+        - Git Workflow (based on team size and git_workflow preference)
         """
         additions = []
 
@@ -270,9 +276,14 @@ class ClaudeMdGenerator:
             if "Root Cause Analysis" not in content:
                 additions.append(self._get_root_cause_section())
 
-        # Add Code Review section for teams
-        if team_size != "solo":
-            if "Code Review" not in content and "Git Workflow" not in content:
+        # Add Git Workflow section (based on preference)
+        git_workflow = self._get_pref("collaboration.git_workflow", "main_only")
+        if "Git Workflow" not in content:
+            additions.append(self._get_git_workflow_section(git_workflow, team_size))
+
+        # Add Code Review section for teams (if not already covered by Git Flow)
+        if team_size != "solo" and git_workflow != "git_flow":
+            if "Code Review" not in content:
                 additions.append(self._get_code_review_section())
 
         # Append additions before final footer
@@ -352,6 +363,151 @@ Error: Function crashes with empty string
 - One logical change per PR
 - Update documentation
 - Add tests for new features
+
+---"""
+
+    def _create_backup(self, file_path: Path) -> None:
+        """
+        Create timestamped backup of existing file.
+
+        Keeps last 3 backups, deletes older ones.
+        Format: {filename}.backup-YYYYMMDD-HHMMSS
+        """
+        timestamp = datetime.now().strftime("%Y%m%d-%H%M%S")
+        backup_path = file_path.parent / f"{file_path.name}.backup-{timestamp}"
+
+        # Create backup
+        shutil.copy2(file_path, backup_path)
+
+        # Keep only last 3 backups
+        backup_pattern = f"{file_path.name}.backup-*"
+        backups = sorted(file_path.parent.glob(backup_pattern))
+
+        # Delete old backups (keep last 3)
+        for old_backup in backups[:-3]:
+            old_backup.unlink()
+
+    def _get_git_workflow_section(self, workflow_type: str, team_size: str) -> str:
+        """
+        Generate Git Workflow section based on preference.
+
+        Args:
+            workflow_type: main_only, github_flow, git_flow, or custom
+            team_size: Team size for fallback logic
+
+        Returns:
+            Formatted Git Workflow section
+        """
+        # Force main-only for solo devs
+        if team_size == "solo" or workflow_type == "main_only":
+            return self._get_main_only_workflow()
+        elif workflow_type == "github_flow":
+            return self._get_github_flow_workflow()
+        elif workflow_type == "git_flow":
+            return self._get_git_flow_workflow()
+        else:  # custom or unknown
+            return self._get_custom_workflow_template()
+
+    def _get_main_only_workflow(self) -> str:
+        """Get Main-Only workflow (Solo/Small teams)"""
+        return """## Git Workflow
+
+**Branch Strategy: Main-Only (Solo Developer)**
+
+- Single `main` branch
+- No feature branches
+- Direct commits with clear messages
+
+**Commit Strategy**:
+- Format: `type(scope): subject`
+- Types: feat, fix, docs, refactor, test, chore
+- Grouped commits (same category)
+- Push after each completed task
+
+**Versioning**:
+- Minor bump per milestone (v0.2.0, v0.3.0)
+- Major bump for breaking changes
+- Patch bump for bug fixes
+
+---"""
+
+    def _get_github_flow_workflow(self) -> str:
+        """Get GitHub Flow (Small-Medium teams)"""
+        return """## Git Workflow
+
+**Branch Strategy: GitHub Flow**
+
+- `main` - Production-ready code
+- Feature branches: `feature/<name>`
+- Hotfix branches: `hotfix/<issue>`
+
+**Process**:
+1. Create feature branch from main
+2. Make commits with clear messages
+3. Open PR when ready
+4. Code review required
+5. Merge to main after approval
+6. Delete feature branch
+
+**Branch Protection**:
+- Require PR reviews (1-2 reviewers)
+- Run CI checks before merge
+- No direct commits to main
+
+**Versioning**:
+- Tag releases on main
+- Semantic versioning (major.minor.patch)
+
+---"""
+
+    def _get_git_flow_workflow(self) -> str:
+        """Get Git Flow (Large teams/Production)"""
+        return """## Git Workflow
+
+**Branch Strategy: Git Flow**
+
+- `main` - Production releases only
+- `develop` - Integration branch
+- Feature branches: `feature/<name>` (from develop)
+- Release branches: `release/<version>` (from develop)
+- Hotfix branches: `hotfix/<issue>` (from main)
+
+**Process**:
+1. Feature: Branch from develop → PR to develop
+2. Release: Branch from develop → test → merge to main + develop
+3. Hotfix: Branch from main → fix → merge to main + develop
+4. Tag releases on main
+
+**Branch Protection**:
+- main: Require PR + 2 reviewers
+- develop: Require PR + 1 reviewer
+- CI/CD required on all branches
+
+**Release Process**:
+- Create release branch from develop
+- Freeze features, fix bugs only
+- Merge to main, tag version
+- Merge back to develop
+
+---"""
+
+    def _get_custom_workflow_template(self) -> str:
+        """Get Custom workflow template"""
+        return """## Git Workflow
+
+**Branch Strategy: Custom**
+
+[Define your branching strategy here]
+
+**Commit Strategy**:
+- [Define your commit message format]
+- [Define when to commit/push]
+
+**Code Review Process**:
+- [Define your review process]
+
+**Versioning**:
+- [Define your versioning scheme]
 
 ---"""
 
