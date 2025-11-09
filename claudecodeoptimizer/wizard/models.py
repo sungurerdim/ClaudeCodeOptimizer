@@ -229,6 +229,10 @@ class AnswerContext:
     def documentation_level(self) -> str:
         return self.answers.get("documentation_level", "minimal")
 
+    @property
+    def git_workflow(self) -> str:
+        return self.answers.get("git_workflow", "main_only")
+
     def get(self, key: str, default: Any = None) -> Any:
         """Get answer by key with default"""
         return self.answers.get(key, default)
