@@ -15,9 +15,8 @@ These principles are **MANDATORY** and apply to **ALL work, ALWAYS**.
 Errors must cause immediate, visible failure. No silent fallbacks, no swallowed exceptions.
 
 **Key Rules**:
-- No bare `except:` clauses
+- No bare except: clauses
 - No empty catch blocks
-- Always log errors before re-raising
 
 **Example**:
 ```python
@@ -32,55 +31,68 @@ except SpecificError as e:
 try:
     result = risky()
 except:
-    pass  # Silent failure!
+    pass
 ```
 
 ---
 
 ### P067: Evidence-Based Verification ⚠️
 
-Every claim requires proof (command output, test results).
+Never claim completion without command execution proof. All verification requires fresh command output with exit codes
 
 **Key Rules**:
 - Completion claims must include command output
-- Avoid uncertainty language ("should", "appears to", "looks like")
-- Always show exit codes
+- Avoid uncertainty language
 
 **Example**:
-```bash
+```python
 # ✅ Good
 [Runs: pytest]
 [Output: 34/34 passed]
 [Exit code: 0]
 "All tests pass"
 
+[Runs: npm run build]
+[Output: Build successful in 2.3s]
+[Exit code: 0]
+"Build succeeds"
+
 # ❌ Bad
 "Tests should pass now"
 "Build looks correct"
+"Appears to be working"
 ```
 
 ---
 
-### P071: Anti-Overengineering ⚠️
+### P071: No Overengineering - Pragmatic Solutions Only ⚠️
 
-Simplest solution that works. Measure before optimizing.
+Always choose the simplest solution that solves the problem. Avoid premature abstraction, unnecessary patterns, excessive architecture, or solutions built for imaginary future requirements. Every line of code is a liability - write only what is needed now.
 
 **Key Rules**:
 - Avoid abstraction before you have 3+ similar use cases
-- Remove unused configuration options
-- Try simple approach before complex patterns
+- Remove configuration options, generic parameters, or extensibility hooks that are not currently used
+- Try simple approach before complex patterns (no need for Factory, Strategy, Observer for simple cases)
 
 **Example**:
 ```python
-# ✅ Good - Simple and direct
+# ✅ Good
+# Good: Simple and direct
 def send_email(to: str, subject: str, body: str):
     """Send email via SMTP."""
     smtp.send(to, subject, body)
 
-# ❌ Bad - Premature abstraction
+# Add complexity only when actually needed
+
+# ❌ Bad
+# Bad: Premature abstraction
 class AbstractDataProcessorFactory:
     @abstractmethod
     def create_processor(self): pass
+
+class SimpleDataProcessor(AbstractDataProcessorFactory):
+    def create_processor(self): return Processor()
+
 # For just ONE use case!
 ```
 
@@ -90,10 +102,11 @@ class AbstractDataProcessorFactory:
 
 For detailed principles, see category-specific documents:
 
-- **[Core Principles](docs/cco/principles/core.md)** - 3 critical principles (always loaded)
+- **[Core Principles](docs/cco/principles/core.md)** - 3 principles
+  - Always loaded
 - **[Code Quality](docs/cco/principles/code-quality.md)** - 14 principles
   - DRY, type safety, immutability, precision, version management
-- **[Security & Privacy](docs/cco/principles/security.md)** - 19 principles
+- **[Security & Privacy](docs/cco/principles/security-privacy.md)** - 19 principles
   - Encryption, zero-trust, privacy-first, auth, secrets, input validation
 - **[Testing](docs/cco/principles/testing.md)** - 6 principles
   - Test pyramid, coverage, isolation, integration, CI gates
@@ -101,10 +114,10 @@ For detailed principles, see category-specific documents:
   - Event-driven, microservices, separation of concerns, patterns
 - **[Performance](docs/cco/principles/performance.md)** - 5 principles
   - Caching, async I/O, database optimization, lazy loading
-- **[Operations](docs/cco/principles/operations.md)** - 10 principles
+- **[Operational Excellence](docs/cco/principles/operations.md)** - 10 principles
   - IaC, observability, health checks, config as code
-- **[Git Workflow](docs/cco/principles/git-workflow.md)** - 6 principles
-  - Commit conventions, concise messages, branching, PR guidelines, versioning
+- **[Git Workflow](docs/cco/principles/git-workflow.md)** - 5 principles
+  - Commit conventions, branching, PR guidelines, versioning
 - **[API Design](docs/cco/principles/api-design.md)** - 2 principles
   - RESTful conventions, versioning, error handling
 
