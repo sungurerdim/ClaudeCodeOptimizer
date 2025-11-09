@@ -30,16 +30,16 @@ jobs:
         uses: actions/setup-python@v5
         with:
           python-version: '3.11'
+          cache: 'pip'
 
-      - name: Install dependencies and pip-audit
+      - name: Install dependencies
         run: |
           python -m pip install --upgrade pip
           pip install -e ".[dev]"
-          pip install pip-audit
 
       - name: Run pip-audit
-        run: |
-          pip-audit --desc || true
+        run: pip-audit --desc
+        continue-on-error: true  # Don't fail on vulnerabilities yet (informational)
 
       - name: Generate SBOM
         run: |
@@ -81,21 +81,31 @@ jobs:
         uses: actions/setup-python@v5
         with:
           python-version: '3.11'
+          cache: 'pip'
 
       - name: Install dependencies
         run: |
           python -m pip install --upgrade pip
           pip install -e ".[dev]"
+
+      - name: Check code formatting (Black)
+        run: black --check .
+        continue-on-error: true  # Don't fail, just warn
+
+      - name: Run type checker (mypy)
+        run: mypy claudecodeoptimizer/
+        continue-on-error: true  # Don't fail, just warn
+
+      - name: Run linter (Ruff)
+        run: ruff check . --output-format=github
+        continue-on-error: true  # Don't fail, just warn
+
+      - name: Run security linter (Bandit)
+        run: |
           pip install bandit
-
-      - name: Run Ruff (with security rules)
-        run: |
-          ruff check . --select S,B --output-format=github || true
-
-      - name: Run Bandit (security linter)
-        run: |
-          bandit -r claudecodeoptimizer/ -f json -o bandit-report.json || true
-          bandit -r claudecodeoptimizer/ -f screen || true
+          bandit -r claudecodeoptimizer/ -f json -o bandit-report.json
+          bandit -r claudecodeoptimizer/ -f screen
+        continue-on-error: true  # Don't fail, just warn
 
       - name: Upload Bandit report
         uses: actions/upload-artifact@v4
