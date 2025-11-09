@@ -2885,6 +2885,160 @@ cd examples/python-api && /cco-init
 
 ---
 
-**Last Updated**: 2025-11-09
+## ✅ GitHub Actions CI/CD Fixes (COMPLETED - 2025-11-09)
+
+**Priority**: 🔴 CRITICAL - Blocking production readiness
+**Status**: ✅ COMPLETE
+
+### Issue 1: Dependency Vulnerability Scan (SBOM Generation)
+**Problem**: `cyclonedx-py` failing with "requirements.txt not found"
+**Solution**: ✅ FIXED
+- [x] Changed from `requirements` to `environment` mode
+- [x] Removed unsupported `--format` flag
+- [x] Works with pyproject.toml projects
+- **Commits**: c3080e6, 79af6f4
+
+### Issue 2: Secret Scanning (TruffleHog)
+**Problem**: Duplicate `--fail` flag causing errors
+**Solution**: ✅ FIXED
+- [x] Removed duplicate flag from workflow
+- [x] TruffleHog action handles --fail by default
+- **Commit**: 8b877bc
+
+### Issue 3: Tool Redundancy & Workflow Optimization
+**Problem**: Black + Bandit + mypy overlap with Ruff, verbose workflows
+**Solution**: ✅ FIXED (P071: Anti-Overengineering)
+- [x] Consolidated Black/Bandit/mypy → Ruff (3 tools → 1)
+- [x] Simplified workflow from 8 steps to 5 steps
+- [x] Added pip caching for faster builds
+- [x] Replaced `|| true` with `continue-on-error`
+- [x] Removed redundant tool configs from pyproject.toml
+- **Commits**: e3c9e76, dc938b8, 90fd97d
+
+### Issue 4: Code Quality & Formatting
+**Problem**: 25 files with format issues, lint warnings
+**Solution**: ✅ FIXED
+- [x] Formatted all Python files with `ruff format`
+- [x] Added S110, COM812 to ignore rules (intentional patterns)
+- [x] Auto-fixed linting issues with `ruff check --fix`
+- **Commit**: e3c9e76
+
+### New Addition: P072 Concise Commit Messages
+**Goal**: Standardize commit message format across CCO projects
+**Status**: ✅ IMPLEMENTED
+- [x] Added P072 principle (max 10 lines, 5 bullets, Co-Authored-By footer)
+- [x] Updated git-workflow.md with compact examples
+- [x] Added to CLAUDE.md for all CCO users
+- [x] Restored Co-Authored-By footer (GitHub contributor attribution)
+- **Commits**: 1ddd73d, 3219e85
+
+**Final Workflow**:
+```yaml
+dependency-scan: pip-audit + SBOM (cyclonedx-py environment)
+secret-scan: TruffleHog (verified secrets only)
+code-quality: Ruff format + Ruff check (lint + security)
+```
+
+**Outcome**: All CI/CD issues resolved, workflow optimized, P071 & P072 applied
+
+---
+
+## 🔄 `/cco-remove` Backup Restore Feature (USER REQUEST)
+
+**Priority**: 🟡 HIGH - Important UX improvement
+
+### Requirement
+`/cco-remove` command should offer interactive backup restore options for each backed-up document.
+
+### Current Behavior
+- Creates backups but no restore option during removal
+- User must manually restore from `.backup-*` files
+
+### Desired Behavior
+When running `/cco-remove`:
+1. Detect all backup files (*.backup-*)
+2. For each backup, ask user:
+   - **Restore**: Replace current file with backup
+   - **Keep Current**: Leave current file as-is
+   - **Delete All**: Remove current file and all backups
+
+### Implementation
+
+**Files to Modify**:
+- [ ] `claudecodeoptimizer/commands/remove.md` - Add backup restore flow
+- [ ] `claudecodeoptimizer/core/installer.py` - Implement backup detection and restore
+
+**Example Flow**:
+```
+/cco-remove
+
+Found backups:
+1. CLAUDE.md (3 backups)
+   - CLAUDE.md.backup-20251109-143022 (2 hours ago)
+   - CLAUDE.md.backup-20251109-120015 (5 hours ago)
+   - CLAUDE.md.backup-20251108-183045 (1 day ago)
+
+2. PRINCIPLES.md (2 backups)
+   - PRINCIPLES.md.backup-20251109-140500 (3 hours ago)
+   - PRINCIPLES.md.backup-20251108-190022 (1 day ago)
+
+What would you like to do with CLAUDE.md?
+  [1] Restore latest backup (2 hours ago)
+  [2] Choose specific backup to restore
+  [3] Keep current file (delete backups)
+  [4] Delete all (current + backups)
+
+> 1
+
+✓ Restored CLAUDE.md from backup (20251109-143022)
+✓ Deleted old backups
+
+What would you like to do with PRINCIPLES.md?
+  [1] Restore latest backup (3 hours ago)
+  [2] Choose specific backup to restore
+  [3] Keep current file (delete backups)
+  [4] Delete all (current + backups)
+
+> 3
+
+✓ Kept current PRINCIPLES.md
+✓ Deleted 2 backup files
+```
+
+**Implementation Details**:
+```python
+def detect_backups(self, file_path: Path) -> List[Path]:
+    """Detect all backups for a file"""
+    pattern = f"{file_path.name}.backup-*"
+    return sorted(file_path.parent.glob(pattern), reverse=True)
+
+def restore_backup(self, backup_path: Path, target_path: Path) -> None:
+    """Restore a specific backup"""
+    shutil.copy2(backup_path, target_path)
+
+def offer_backup_restore(self, file_path: Path) -> None:
+    """Interactive backup restore flow"""
+    backups = self.detect_backups(file_path)
+    if not backups:
+        return
+
+    # Show options and get user choice
+    # Implement restore logic based on choice
+```
+
+**Verification**:
+```bash
+# Test backup restore flow
+/cco-init  # Create initial setup
+# Make changes to CLAUDE.md
+/cco-init  # Triggers backup
+/cco-remove  # Should show restore options
+```
+
+**Estimated Effort**: 0.5 day
+
+---
+
+**Last Updated**: 2025-11-09 (Added GitHub Actions fixes + Backup restore feature)
 **Maintainer**: Sungur Zahid Erdim
 **Status**: Active Development
