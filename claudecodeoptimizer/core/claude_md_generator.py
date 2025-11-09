@@ -247,7 +247,7 @@ class ClaudeMdGenerator:
 **Team:** {team_label}
 **Quality:** {linting.title()}
 **Testing:** {testing.title()}
-**Generated:** {datetime.now().strftime('%Y-%m-%d')}"""
+**Generated:** {datetime.now().strftime("%Y-%m-%d")}"""
 
     def _add_conditional_sections(
         self,

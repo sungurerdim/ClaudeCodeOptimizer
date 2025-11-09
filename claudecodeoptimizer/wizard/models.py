@@ -95,9 +95,7 @@ class DecisionPoint:
         if self.multi_select:
             if not isinstance(answer, list):
                 return False
-            return all(
-                any(opt.value == val for opt in self.options) for val in answer
-            )
+            return all(any(opt.value == val for opt in self.options) for val in answer)
         else:
             return any(opt.value == answer for opt in self.options)
 
@@ -290,9 +288,7 @@ class ToolComparison:
     tools: List[str]  # Detected tools in this category
     recommended: str  # Recommended tool
     reason: str  # Why this tool is recommended
-    alternatives: Dict[str, str] = field(
-        default_factory=dict
-    )  # Other options with reasons
+    alternatives: Dict[str, str] = field(default_factory=dict)  # Other options with reasons
 
 
 # Type aliases for clarity

@@ -99,7 +99,7 @@ class DocumentDetector:
                         "size": size,
                         "name": md_file.name,
                         "likely_doc": self._is_likely_project_doc(md_file.name),
-                    }
+                    },
                 )
 
             except ValueError:
@@ -218,9 +218,7 @@ class DocumentDetector:
             content = doc_path.read_text(encoding="utf-8")
 
             # Basic checks
-            has_title = bool(
-                [line for line in content.split("\n") if line.strip().startswith("#")]
-            )
+            has_title = bool([line for line in content.split("\n") if line.strip().startswith("#")])
 
             lines = [line.strip() for line in content.split("\n") if line.strip()]
             non_header_lines = [

@@ -1,6 +1,7 @@
 # Security Scanning Workflow
 # P063: Dependency Management - Automated vulnerability scanning
 # P026: Secret Management - Detect hardcoded secrets
+# P071: Anti-Overengineering - Minimal effective tooling
 
 name: Security Scanning
 
@@ -39,7 +40,7 @@ jobs:
 
       - name: Run pip-audit
         run: pip-audit --desc
-        continue-on-error: true  # Don't fail on vulnerabilities yet (informational)
+        continue-on-error: true  # Informational only
 
       - name: Generate SBOM
         run: |
@@ -70,7 +71,7 @@ jobs:
           extra_args: --only-verified
 
   code-quality:
-    name: Code Quality & SAST
+    name: Code Quality
     runs-on: ubuntu-latest
 
     steps:
@@ -88,29 +89,10 @@ jobs:
           python -m pip install --upgrade pip
           pip install -e ".[dev]"
 
-      - name: Check code formatting (Black)
-        run: black --check .
-        continue-on-error: true  # Don't fail, just warn
-
-      - name: Run type checker (mypy)
-        run: mypy claudecodeoptimizer/
-        continue-on-error: true  # Don't fail, just warn
+      - name: Check formatting (Ruff)
+        run: ruff format --check .
+        continue-on-error: true  # Informational only
 
       - name: Run linter (Ruff)
         run: ruff check . --output-format=github
-        continue-on-error: true  # Don't fail, just warn
-
-      - name: Run security linter (Bandit)
-        run: |
-          pip install bandit
-          bandit -r claudecodeoptimizer/ -f json -o bandit-report.json
-          bandit -r claudecodeoptimizer/ -f screen
-        continue-on-error: true  # Don't fail, just warn
-
-      - name: Upload Bandit report
-        uses: actions/upload-artifact@v4
-        if: always()
-        with:
-          name: bandit-report
-          path: bandit-report.json
-          if-no-files-found: warn
+        continue-on-error: true  # Informational only

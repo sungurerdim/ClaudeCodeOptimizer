@@ -17,22 +17,22 @@ Creates:
 import io
 import json
 import sys
-from pathlib import Path
 from datetime import datetime
+from pathlib import Path
 
 # Fix Windows encoding issues
-if hasattr(sys.stdout, 'buffer'):
+if hasattr(sys.stdout, "buffer"):
     sys.stdout = io.TextIOWrapper(
         sys.stdout.buffer,
-        encoding='utf-8',
-        errors='replace',
-        line_buffering=True
+        encoding="utf-8",
+        errors="replace",
+        line_buffering=True,
     )
     sys.stderr = io.TextIOWrapper(
         sys.stderr.buffer,
-        encoding='utf-8',
-        errors='replace',
-        line_buffering=True
+        encoding="utf-8",
+        errors="replace",
+        line_buffering=True,
     )
 
 # Core principles (always loaded, ~500 tokens)
@@ -54,7 +54,7 @@ CATEGORY_FILES = {
 def load_principles():
     """Load principles from knowledge base"""
     principles_file = Path("claudecodeoptimizer/knowledge/principles.json")
-    with open(principles_file, "r", encoding="utf-8") as f:
+    with open(principles_file, encoding="utf-8") as f:
         data = json.load(f)
     return data["principles"], data["categories"]
 
@@ -64,12 +64,10 @@ def render_principle(principle):
     lines = []
 
     # Header
-    severity_emoji = {
-        "critical": "🔴",
-        "high": "🟠",
-        "medium": "🟡",
-        "low": "🟢"
-    }.get(principle.get("severity", "medium"), "")
+    severity_emoji = {"critical": "🔴", "high": "🟠", "medium": "🟡", "low": "🟢"}.get(
+        principle.get("severity", "medium"),
+        "",
+    )
 
     lines.append(f"### {principle['id']}: {principle['title']} {severity_emoji}")
     lines.append("")
@@ -143,7 +141,9 @@ def create_category_file(category_id, category_name, principles, output_dir):
     lines.append("")
     lines.append("**Loading**: These principles load automatically when running relevant commands")
     lines.append("")
-    lines.append("**Reference**: Use `@PRINCIPLES.md` to load core principles, or reference this file directly")
+    lines.append(
+        "**Reference**: Use `@PRINCIPLES.md` to load core principles, or reference this file directly",
+    )
 
     # Write file
     filename = CATEGORY_FILES.get(category_id, f"{category_id}.md")
@@ -243,7 +243,7 @@ def main():
                 category_id,
                 category_name,
                 principles_by_category[category_id],
-                output_dir
+                output_dir,
             )
 
     print("\n✅ Split complete!")

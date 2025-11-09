@@ -63,9 +63,7 @@ dependencies = [
 dev = [
     "pytest",
     "pytest-cov",
-    "black",
     "ruff",
-    "mypy",
 ]
 
 [project.urls]
@@ -92,24 +90,6 @@ claudecodeoptimizer = [
     "commands/**/*",
 ]
 
-[tool.black]
-line-length = 100
-target-version = ['py38', 'py39', 'py310', 'py311']
-include = '\.pyi?$'
-extend-exclude = '''
-/(
-  # directories
-  \.eggs
-  | \.git
-  | \.hg
-  | \.mypy_cache
-  | \.tox
-  | \.venv
-  | build
-  | dist
-)/
-'''
-
 [tool.setuptools.dynamic]
 version = {attr = "claudecodeoptimizer.__version__"}
 
@@ -134,38 +114,18 @@ select = [
     "T20", # flake8-print
 ]
 ignore = [
-    "E501",  # line too long (handled by black)
+    "E501",  # line too long (handled by formatter)
     "B008",  # do not perform function calls in argument defaults
     "C901",  # too complex
     "T201",  # print found (allowed in CLI tool)
     "S603",  # subprocess without shell=True
     "S607",  # starting a process with a partial path
+    "S110",  # try-except-pass (intentional for encoding/IO errors)
+    "COM812",  # trailing comma (conflicts with formatter)
 ]
 
 [tool.ruff.lint.per-file-ignores]
 "__init__.py" = ["F401"]  # unused imports in __init__.py
-
-[tool.mypy]
-python_version = "3.8"
-# Strict mode for type safety (P023: Type Safety & Static Analysis)
-disallow_untyped_defs = true
-disallow_incomplete_defs = true
-check_untyped_defs = true
-no_implicit_optional = true
-# Warnings
-warn_return_any = true
-warn_unused_configs = true
-warn_redundant_casts = true
-warn_unused_ignores = true
-warn_no_return = true
-warn_unreachable = true
-# Strictness
-strict_equality = true
-strict_concatenate = true
-
-[[tool.mypy.overrides]]
-module = "tests.*"
-disallow_untyped_defs = false
 
 [tool.pytest.ini_options]
 testpaths = ["tests"]

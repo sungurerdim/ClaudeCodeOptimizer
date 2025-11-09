@@ -416,7 +416,9 @@ TIER2_GIT_WORKFLOW = DecisionPoint(
     ],
     skip_if=lambda ctx: ctx.get("team_dynamics") == "solo",  # Auto-select for solo devs
     auto_strategy=lambda ctx: _auto_detect_git_workflow(ctx),
-    ai_hint_generator=lambda ctx: _rec_engine.recommend_git_workflow(ctx) if hasattr(_rec_engine, 'recommend_git_workflow') else "",
+    ai_hint_generator=lambda ctx: _rec_engine.recommend_git_workflow(ctx)
+    if hasattr(_rec_engine, "recommend_git_workflow")
+    else "",
 )
 
 
@@ -465,8 +467,7 @@ def _auto_detect_project_purpose(ctx: AnswerContext) -> list:
 
     # Check for library indicators
     if sys.project_root and (
-        (sys.project_root / "setup.py").exists()
-        or (sys.project_root / "pyproject.toml").exists()
+        (sys.project_root / "setup.py").exists() or (sys.project_root / "pyproject.toml").exists()
     ):
         # Check if it's a library (no server dependencies)
         if not any(fw in frameworks for fw in ["fastapi", "flask", "django"]):
@@ -654,7 +655,7 @@ def build_tier3_tool_decisions(ctx: AnswerContext) -> list:
                     label=label,
                     description=description,
                     recommended_for=[conflict.category],
-                )
+                ),
             )
 
         # Create decision point
@@ -667,9 +668,9 @@ def build_tier3_tool_decisions(ctx: AnswerContext) -> list:
             multi_select=False,
             options=options,
             auto_strategy=lambda ctx, cat=conflict.category: conflict.recommended,
-            ai_hint_generator=lambda ctx, cat=conflict.category, tools=conflict.tools: _rec_engine.recommend_tool_preference(
-                cat, tools, ctx
-            ),
+            ai_hint_generator=lambda ctx,
+            cat=conflict.category,
+            tools=conflict.tools: _rec_engine.recommend_tool_preference(cat, tools, ctx),
         )
 
         decisions.append(decision)

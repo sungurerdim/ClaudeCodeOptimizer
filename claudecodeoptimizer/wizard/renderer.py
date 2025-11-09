@@ -11,8 +11,8 @@ import sys
 from typing import Any, Dict, List, Optional
 
 from ..core.constants import SEPARATOR_WIDTH, UI_HEADING_LEVEL_SECONDARY
-from ..core.utils import format_confidence
 from ..core.safe_print import safe_print
+from ..core.utils import format_confidence
 
 
 class Colors:
@@ -417,7 +417,9 @@ def ask_multi_choice(
 
     safe_print()
     safe_print(f"  {c.colorize(prompt, c.BOLD)}")
-    safe_print(f"  {c.colorize('Enter numbers to customize selection, or press Enter to use defaults', c.DIM)}")
+    safe_print(
+        f"  {c.colorize('Enter numbers to customize selection, or press Enter to use defaults', c.DIM)}",
+    )
     commands_text = 'Commands: "more" (next page), "back" (prev page), "all" (show all)'
     safe_print(f"  {c.colorize(commands_text, c.DIM)}")
     safe_print()
@@ -437,7 +439,7 @@ def ask_multi_choice(
         # Print choices with checkbox-style markers
         for i in range(start_idx, end_idx):
             choice = choices[i]
-            num = c.colorize(f"{i+1}.", c.BRIGHT_BLUE)
+            num = c.colorize(f"{i + 1}.", c.BRIGHT_BLUE)
             checkbox = "[✓]" if choice in defaults else "[ ]"
             checkbox_colored = c.colorize(checkbox, c.GREEN if choice in defaults else c.DIM)
 
@@ -451,7 +453,9 @@ def ask_multi_choice(
         # Show pagination info
         if show_pagination and max_pages > 1:
             safe_print()
-            safe_print(f"  {c.colorize(f'Showing {start_idx+1}-{end_idx} of {total_choices}', c.DIM)}")
+            safe_print(
+                f"  {c.colorize(f'Showing {start_idx + 1}-{end_idx} of {total_choices}', c.DIM)}",
+            )
             if page < max_pages - 1:
                 more_msg = 'Type "more" to see next page'
                 safe_print(f"  {c.colorize(more_msg, c.DIM)}")
@@ -496,7 +500,11 @@ def ask_multi_choice(
                         checkbox,
                         c.GREEN if choice in defaults else c.DIM,
                     )
-                    marker = c.colorize(f"({default_label})", c.DIM + c.GREEN) if choice in defaults else ""
+                    marker = (
+                        c.colorize(f"({default_label})", c.DIM + c.GREEN)
+                        if choice in defaults
+                        else ""
+                    )
                     safe_print(f"    {checkbox_colored} {num} {choice} {marker}")
                 safe_print()
                 continue

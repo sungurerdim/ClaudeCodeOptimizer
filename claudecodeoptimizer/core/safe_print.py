@@ -25,24 +25,25 @@ def configure_utf8_encoding() -> None:
         import io
 
         # Only reconfigure if stdout has a buffer (not already wrapped)
-        if hasattr(sys.stdout, 'buffer'):
+        if hasattr(sys.stdout, "buffer"):
             # Set console code page to UTF-8 on platforms that use code pages
             if sys.platform == "win32":
                 import os
+
                 os.system("chcp 65001 >nul 2>&1")
 
             # Reconfigure stdout/stderr with UTF-8 encoding
             sys.stdout = io.TextIOWrapper(
                 sys.stdout.buffer,
-                encoding='utf-8',
-                errors='replace',  # Replace unencodable chars instead of crashing
-                line_buffering=True
+                encoding="utf-8",
+                errors="replace",  # Replace unencodable chars instead of crashing
+                line_buffering=True,
             )
             sys.stderr = io.TextIOWrapper(
                 sys.stderr.buffer,
-                encoding='utf-8',
-                errors='replace',
-                line_buffering=True
+                encoding="utf-8",
+                errors="replace",
+                line_buffering=True,
             )
     except Exception:
         # If reconfiguration fails, continue with default encoding
@@ -83,37 +84,33 @@ def _unicode_to_ascii(text: str) -> str:
     # Emoji replacements
     replacements = {
         # Status indicators
-        '✓': '[OK]',
-        '✗': '[X]',
-        '❌': '[ERROR]',
-        '⚠️': '[WARNING]',
-        '💡': '[TIP]',
-
+        "✓": "[OK]",
+        "✗": "[X]",
+        "❌": "[ERROR]",
+        "⚠️": "[WARNING]",
+        "💡": "[TIP]",
         # Progress indicators
-        '🔧': '[BUILD]',
-        '📊': '[ANALYSIS]',
-        '🎯': '[TARGET]',
-        '🚀': '[LAUNCH]',
-
+        "🔧": "[BUILD]",
+        "📊": "[ANALYSIS]",
+        "🎯": "[TARGET]",
+        "🚀": "[LAUNCH]",
         # Documentation
-        '📋': '[LIST]',
-        '📦': '[PACKAGE]',
-        '📅': '[DATE]',
-        '📝': '[NOTE]',
-
+        "📋": "[LIST]",
+        "📦": "[PACKAGE]",
+        "📅": "[DATE]",
+        "📝": "[NOTE]",
         # Levels
-        '🟢': '[HIGH]',
-        '🟡': '[MEDIUM]',
-        '🔴': '[LOW]',
-        '⚪': '[NONE]',
-
+        "🟢": "[HIGH]",
+        "🟡": "[MEDIUM]",
+        "🔴": "[LOW]",
+        "⚪": "[NONE]",
         # Other common
-        '→': '->',
-        '←': '<-',
-        '↓': 'v',
-        '↑': '^',
-        '•': '*',
-        '…': '...',
+        "→": "->",
+        "←": "<-",
+        "↓": "v",
+        "↑": "^",
+        "•": "*",
+        "…": "...",
     }
 
     result = text
@@ -122,11 +119,11 @@ def _unicode_to_ascii(text: str) -> str:
 
     # Final fallback: encode with 'replace' error handling
     try:
-        result.encode(sys.stdout.encoding or 'utf-8')
+        result.encode(sys.stdout.encoding or "utf-8")
         return result
     except (UnicodeEncodeError, AttributeError):
         # Last resort: ASCII-only
-        return result.encode('ascii', errors='replace').decode('ascii')
+        return result.encode("ascii", errors="replace").decode("ascii")
 
 
-__all__ = ['configure_utf8_encoding', 'safe_print']
+__all__ = ["configure_utf8_encoding", "safe_print"]

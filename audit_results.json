@@ -1,0 +1,409 @@
+{
+  "violations": {
+    "P023": [
+      {
+        "file": "claudecodeoptimizer\\ai\\recommendations.py",
+        "line": 395,
+        "message": "Function without return type annotation",
+        "code": "def _calculate_confidence("
+      },
+      {
+        "file": "claudecodeoptimizer\\ai\\recommendations.py",
+        "line": 1148,
+        "message": "Function without return type annotation",
+        "code": "def filter_recommendations("
+      },
+      {
+        "file": "claudecodeoptimizer\\core\\principles.py",
+        "line": 118,
+        "message": "Function without return type annotation",
+        "code": "def select_principles("
+      },
+      {
+        "file": "claudecodeoptimizer\\core\\principle_selector.py",
+        "line": 430,
+        "message": "Function without return type annotation",
+        "code": "def _render_principles_md("
+      },
+      {
+        "file": "claudecodeoptimizer\\core\\project.py",
+        "line": 28,
+        "message": "Function without return type annotation",
+        "code": "def initialize("
+      },
+      {
+        "file": "claudecodeoptimizer\\core\\registry.py",
+        "line": 19,
+        "message": "Function without return type annotation",
+        "code": "def register_project("
+      },
+      {
+        "file": "claudecodeoptimizer\\core\\registry.py",
+        "line": 205,
+        "message": "Function without return type annotation",
+        "code": "def update_project_analysis("
+      },
+      {
+        "file": "claudecodeoptimizer\\core\\state.py",
+        "line": 166,
+        "message": "Function without return type annotation",
+        "code": "def record_command("
+      },
+      {
+        "file": "claudecodeoptimizer\\core\\state.py",
+        "line": 285,
+        "message": "Function without return type annotation",
+        "code": "def record_audit("
+      },
+      {
+        "file": "claudecodeoptimizer\\core\\validation.py",
+        "line": 74,
+        "message": "Function without return type annotation",
+        "code": "def validate_project("
+      },
+      {
+        "file": "claudecodeoptimizer\\core\\validation.py",
+        "line": 120,
+        "message": "Function without return type annotation",
+        "code": "def validate_file("
+      },
+      {
+        "file": "claudecodeoptimizer\\core\\validation.py",
+        "line": 164,
+        "message": "Function without return type annotation",
+        "code": "def _check_rule("
+      },
+      {
+        "file": "claudecodeoptimizer\\core\\validation.py",
+        "line": 229,
+        "message": "Function without return type annotation",
+        "code": "def _find_code_files("
+      },
+      {
+        "file": "claudecodeoptimizer\\core\\validation.py",
+        "line": 291,
+        "message": "Function without return type annotation",
+        "code": "def _create_validation_result("
+      },
+      {
+        "file": "claudecodeoptimizer\\core\\validation.py",
+        "line": 342,
+        "message": "Function without return type annotation",
+        "code": "def get_violations_by_severity("
+      },
+      {
+        "file": "claudecodeoptimizer\\core\\validation.py",
+        "line": 350,
+        "message": "Function without return type annotation",
+        "code": "def get_violations_by_principle("
+      },
+      {
+        "file": "claudecodeoptimizer\\core\\validation.py",
+        "line": 358,
+        "message": "Function without return type annotation",
+        "code": "def get_violations_by_file("
+      },
+      {
+        "file": "claudecodeoptimizer\\core\\variables.py",
+        "line": 215,
+        "message": "Function without return type annotation",
+        "code": "def replace_variable(match):"
+      },
+      {
+        "file": "claudecodeoptimizer\\core\\variables.py",
+        "line": 358,
+        "message": "Function without return type annotation",
+        "code": "def substitute_in_file("
+      },
+      {
+        "file": "claudecodeoptimizer\\wizard\\checkpoints.py",
+        "line": 184,
+        "message": "Function without return type annotation",
+        "code": "def display_command_selection("
+      },
+      {
+        "file": "claudecodeoptimizer\\wizard\\checkpoints.py",
+        "line": 408,
+        "message": "Function without return type annotation",
+        "code": "def display_completion_summary("
+      },
+      {
+        "file": "claudecodeoptimizer\\wizard\\renderer.py",
+        "line": 86,
+        "message": "Function without return type annotation",
+        "code": "def print_table("
+      },
+      {
+        "file": "claudecodeoptimizer\\wizard\\renderer.py",
+        "line": 146,
+        "message": "Function without return type annotation",
+        "code": "def print_progress("
+      },
+      {
+        "file": "claudecodeoptimizer\\wizard\\renderer.py",
+        "line": 204,
+        "message": "Function without return type annotation",
+        "code": "def print_box("
+      },
+      {
+        "file": "claudecodeoptimizer\\wizard\\renderer.py",
+        "line": 260,
+        "message": "Function without return type annotation",
+        "code": "def ask_input("
+      },
+      {
+        "file": "claudecodeoptimizer\\wizard\\renderer.py",
+        "line": 290,
+        "message": "Function without return type annotation",
+        "code": "def ask_choice("
+      },
+      {
+        "file": "claudecodeoptimizer\\wizard\\renderer.py",
+        "line": 383,
+        "message": "Function without return type annotation",
+        "code": "def ask_multi_choice("
+      },
+      {
+        "file": "audit_cco_comprehensive.py",
+        "line": 48,
+        "message": "Function without return type annotation",
+        "code": "def audit_file(self, file_path: Path):"
+      },
+      {
+        "file": "audit_cco_comprehensive.py",
+        "line": 73,
+        "message": "Function without return type annotation",
+        "code": "def check_p001_fail_fast(self, file: Path, content: str, lines: List[str]):"
+      },
+      {
+        "file": "audit_cco_comprehensive.py",
+        "line": 80,
+        "message": "Function without return type annotation",
+        "code": "def check_p002_dry(self, file: Path, content: str, lines: List[str]):"
+      },
+      {
+        "file": "audit_cco_comprehensive.py",
+        "line": 105,
+        "message": "Function without return type annotation",
+        "code": "def check_p007_immutability(self, file: Path, content: str, lines: List[str]):"
+      },
+      {
+        "file": "audit_cco_comprehensive.py",
+        "line": 114,
+        "message": "Function without return type annotation",
+        "code": "def check_p009_linting(self, file: Path, content: str, lines: List[str]):"
+      },
+      {
+        "file": "audit_cco_comprehensive.py",
+        "line": 123,
+        "message": "Function without return type annotation",
+        "code": "def check_p012_singleton(self, file: Path, content: str, lines: List[str]):"
+      },
+      {
+        "file": "audit_cco_comprehensive.py",
+        "line": 143,
+        "message": "Function without return type annotation",
+        "code": "def check_p020_ttl_cleanup(self, file: Path, content: str, lines: List[str]):"
+      },
+      {
+        "file": "audit_cco_comprehensive.py",
+        "line": 150,
+        "message": "Function without return type annotation",
+        "code": "def check_p023_type_safety(self, file: Path, content: str, lines: List[str]):"
+      },
+      {
+        "file": "audit_cco_comprehensive.py",
+        "line": 166,
+        "message": "Function without return type annotation",
+        "code": "def check_p026_secrets(self, file: Path, content: str, lines: List[str]):"
+      },
+      {
+        "file": "audit_cco_comprehensive.py",
+        "line": 184,
+        "message": "Function without return type annotation",
+        "code": "def check_p053_version_management(self, file: Path, content: str, lines: List[str]):"
+      },
+      {
+        "file": "audit_cco_comprehensive.py",
+        "line": 193,
+        "message": "Function without return type annotation",
+        "code": "def add_violation(self, principle_id: str, file: Path, line: int, message: str, code: str = \"\"):"
+      },
+      {
+        "file": "audit_cco_comprehensive.py",
+        "line": 203,
+        "message": "Function without return type annotation",
+        "code": "def print_results(self):"
+      },
+      {
+        "file": "generate_cco_principles_md.py",
+        "line": 8,
+        "message": "Function without return type annotation",
+        "code": "def generate_principles_md():"
+      },
+      {
+        "file": "install.py",
+        "line": 13,
+        "message": "Function without return type annotation",
+        "code": "def get_scripts_dir():"
+      },
+      {
+        "file": "install.py",
+        "line": 38,
+        "message": "Function without return type annotation",
+        "code": "def is_in_path(directory):"
+      },
+      {
+        "file": "modernize_principles.py",
+        "line": 11,
+        "message": "Function without return type annotation",
+        "code": "def load_principles():"
+      },
+      {
+        "file": "modernize_principles.py",
+        "line": 17,
+        "message": "Function without return type annotation",
+        "code": "def save_principles(data):"
+      },
+      {
+        "file": "modernize_principles.py",
+        "line": 23,
+        "message": "Function without return type annotation",
+        "code": "def create_new_principle_p054():"
+      },
+      {
+        "file": "modernize_principles.py",
+        "line": 87,
+        "message": "Function without return type annotation",
+        "code": "def create_new_principle_p055():"
+      },
+      {
+        "file": "modernize_principles.py",
+        "line": 151,
+        "message": "Function without return type annotation",
+        "code": "def create_new_principle_p056():"
+      },
+      {
+        "file": "modernize_principles.py",
+        "line": 215,
+        "message": "Function without return type annotation",
+        "code": "def create_new_principle_p057():"
+      },
+      {
+        "file": "modernize_principles.py",
+        "line": 279,
+        "message": "Function without return type annotation",
+        "code": "def create_new_principle_p058():"
+      },
+      {
+        "file": "modernize_principles.py",
+        "line": 336,
+        "message": "Function without return type annotation",
+        "code": "def create_new_principle_p059():"
+      },
+      {
+        "file": "modernize_principles.py",
+        "line": 386,
+        "message": "Function without return type annotation",
+        "code": "def create_new_principle_p060():"
+      },
+      {
+        "file": "modernize_principles.py",
+        "line": 443,
+        "message": "Function without return type annotation",
+        "code": "def create_new_principle_p061():"
+      },
+      {
+        "file": "modernize_principles.py",
+        "line": 500,
+        "message": "Function without return type annotation",
+        "code": "def create_new_principle_p062():"
+      },
+      {
+        "file": "modernize_principles.py",
+        "line": 557,
+        "message": "Function without return type annotation",
+        "code": "def create_new_principle_p063():"
+      },
+      {
+        "file": "modernize_principles.py",
+        "line": 614,
+        "message": "Function without return type annotation",
+        "code": "def create_new_principle_p064():"
+      },
+      {
+        "file": "modernize_principles.py",
+        "line": 664,
+        "message": "Function without return type annotation",
+        "code": "def create_new_principle_p065():"
+      },
+      {
+        "file": "modernize_principles.py",
+        "line": 714,
+        "message": "Function without return type annotation",
+        "code": "def main():"
+      },
+      {
+        "file": "regenerate_principles_md.py",
+        "line": 13,
+        "message": "Function without return type annotation",
+        "code": "def regenerate_principles_md():"
+      },
+      {
+        "file": "select_cco_principles.py",
+        "line": 7,
+        "message": "Function without return type annotation",
+        "code": "def select_cco_principles():"
+      },
+      {
+        "file": "update_p009.py",
+        "line": 7,
+        "message": "Function without return type annotation",
+        "code": "def update_p009():"
+      },
+      {
+        "file": "update_p014.py",
+        "line": 7,
+        "message": "Function without return type annotation",
+        "code": "def update_p014():"
+      },
+      {
+        "file": "update_p026.py",
+        "line": 7,
+        "message": "Function without return type annotation",
+        "code": "def update_p026():"
+      },
+      {
+        "file": "update_p033.py",
+        "line": 7,
+        "message": "Function without return type annotation",
+        "code": "def update_p033():"
+      },
+      {
+        "file": "update_p034.py",
+        "line": 7,
+        "message": "Function without return type annotation",
+        "code": "def update_p034():"
+      },
+      {
+        "file": "validate_principles.py",
+        "line": 8,
+        "message": "Function without return type annotation",
+        "code": "def validate_principles():"
+      }
+    ],
+    "P026": [
+      {
+        "file": "update_p026.py",
+        "line": 64,
+        "message": "Hardcoded password",
+        "code": "\"DB_PASSWORD = 'password123'\","
+      }
+    ]
+  },
+  "stats": {
+    "files_checked": 46,
+    "lines_checked": 14861,
+    "violations_found": 66
+  }
+}

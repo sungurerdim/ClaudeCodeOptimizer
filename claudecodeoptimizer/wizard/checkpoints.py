@@ -109,9 +109,7 @@ def display_detection_results(report: Dict[str, Any]) -> None:
                     patterns["file_distribution"].items(),
                     key=lambda x: x[1],
                     reverse=True,
-                )[
-                    :10
-                ]  # Top 10
+                )[:10]  # Top 10
             ]
             print_table(dist_data)
 

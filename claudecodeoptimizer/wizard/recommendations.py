@@ -196,9 +196,7 @@ class RecommendationEngine:
     # TIER 3: Tactical Decisions
     # ========================================================================
 
-    def recommend_tool_preference(
-        self, category: str, tools: list, context: AnswerContext
-    ) -> str:
+    def recommend_tool_preference(self, category: str, tools: list, context: AnswerContext) -> str:
         """Recommend specific tool from competing options"""
         from .tool_comparison import ToolComparator
 
@@ -273,9 +271,7 @@ class RecommendationEngine:
     # Main Recommendation Generator
     # ========================================================================
 
-    def generate_recommendation(
-        self, question_id: str, context: AnswerContext
-    ) -> str:
+    def generate_recommendation(self, question_id: str, context: AnswerContext) -> str:
         """
         Generate contextual recommendation for any question.
 
@@ -315,9 +311,7 @@ class RecommendationEngine:
     # Helper: Explain Why Question Matters
     # ========================================================================
 
-    def explain_question_importance(
-        self, question_id: str, context: AnswerContext
-    ) -> str:
+    def explain_question_importance(self, question_id: str, context: AnswerContext) -> str:
         """
         Explain why we're asking this question given the context.
 
