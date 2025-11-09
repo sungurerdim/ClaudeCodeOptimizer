@@ -773,7 +773,7 @@ class RecommendationEngine:
         secret_mgmt_req = stance_reqs.get("secret_management")
         current_secret_mgmt = security.get("secret_management_tool")
 
-        if secret_mgmt_req == "vault-or-managed" and not current_secret_mgmt:
+        if secret_mgmt_req == "vault-or-managed" and not current_secret_mgmt:  # noqa: S105
             recommendations.append(
                 Recommendation(
                     category="security",

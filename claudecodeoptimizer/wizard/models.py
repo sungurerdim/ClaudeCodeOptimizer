@@ -26,7 +26,7 @@ class Option:
     time_investment: str = ""  # Optional: time/effort indication
     trade_offs: str = ""  # Optional: pros/cons
 
-    def __post_init__(self):
+    def __post_init__(self) -> None:
         """Validate option data"""
         if not self.value or not self.label:
             raise ValueError("Option must have value and label")
@@ -71,13 +71,13 @@ class DecisionPoint:
             return not self.skip_if(context)
         return True
 
-    def get_ai_hint(self, context: Any) -> str:
+    def get_ai_hint(self, context: dict[str, object] | object) -> str:
         """Get contextual AI hint based on previous answers"""
         if self.ai_hint_generator:
             return self.ai_hint_generator(context)
         return ""
 
-    def get_recommended_option(self, context: Any) -> Optional[str]:
+    def get_recommended_option(self, context: dict[str, object] | object) -> Optional[str]:
         """Get AI-recommended option value based on context"""
         if self.auto_strategy:
             result = self.auto_strategy(context)
@@ -86,7 +86,7 @@ class DecisionPoint:
             return result
         return None
 
-    def validate_answer(self, answer: Any) -> bool:
+    def validate_answer(self, answer: object) -> bool:
         """Validate user/AI answer"""
         if self.validator:
             return self.validator(answer)
@@ -231,11 +231,11 @@ class AnswerContext:
     def git_workflow(self) -> str:
         return self.answers.get("git_workflow", "main_only")
 
-    def get(self, key: str, default: Any = None) -> Any:
+    def get(self, key: str, default: object | None = None) -> object | None:
         """Get answer by key with default"""
         return self.answers.get(key, default)
 
-    def set(self, key: str, value: Any) -> None:
+    def set(self, key: str, value: object) -> None:
         """Set answer"""
         self.answers[key] = value
 

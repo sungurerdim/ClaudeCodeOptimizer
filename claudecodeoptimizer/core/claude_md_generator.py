@@ -582,7 +582,7 @@ This file contains the mandatory development principles for this project. **You 
         }
         return mapping.get(team_size, team_size.title())
 
-    def _get_pref(self, path: str, default: Any = None) -> Any:
+    def _get_pref(self, path: str, default: Any = None) -> Any:  # noqa: ANN401
         """Get nested preference value"""
         parts = path.split(".")
         current = self.preferences

@@ -7,7 +7,9 @@ Copies skills to .claude/skills/ for @mention usage.
 
 import shutil
 from pathlib import Path
-from typing import Any, Dict, List
+from typing import Any, Dict, List, TypeVar
+
+T = TypeVar("T")
 
 
 class SkillSelector:
@@ -198,7 +200,7 @@ class SkillSelector:
 
         return True
 
-    def _get_nested_value(self, obj: Any, path: str) -> Any:
+    def _get_nested_value(self, obj: dict[str, Any] | object, path: str) -> object | None:
         """
         Get value from nested path.
 

@@ -137,7 +137,7 @@ def print_table(
     safe_print()
 
 
-def print_key_value(key: str, value: Any, indent: int = 2) -> None:
+def print_key_value(key: str, value: object, indent: int = 2) -> None:
     """Print key-value pair"""
     c = Colors
     prefix = " " * indent
@@ -540,7 +540,10 @@ def ask_multi_choice(
 
 def clear_screen() -> None:
     """Clear the terminal screen"""
-    os.system("cls" if os.name == "nt" else "clear")
+    import subprocess
+
+    cmd = "cls" if os.name == "nt" else "clear"
+    subprocess.run(cmd, shell=True, check=False)  # noqa: S602
 
 
 def pause(message: str = "Press Enter to continue...") -> None:

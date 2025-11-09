@@ -11,7 +11,7 @@ from functools import lru_cache
 from pathlib import Path
 from typing import Any, Dict, List, Optional, Set
 
-from .. import config as CCOConfig
+from .. import config as CCOConfig  # noqa: N812
 from .constants import SERVICE_COUNT_THRESHOLD_LARGE, SERVICE_COUNT_THRESHOLD_MEDIUM
 
 

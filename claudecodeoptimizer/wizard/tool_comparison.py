@@ -121,7 +121,7 @@ class ToolComparator:
         },
     }
 
-    def __init__(self, detected_tools: List[str]):
+    def __init__(self, detected_tools: List[str]) -> None:
         """
         Initialize comparator with detected tools.
 

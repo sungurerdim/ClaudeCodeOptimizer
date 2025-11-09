@@ -6,7 +6,6 @@ Automatically handles console encoding configuration with error recovery.
 """
 
 import sys
-from typing import Any
 
 
 def configure_utf8_encoding() -> None:
@@ -28,9 +27,14 @@ def configure_utf8_encoding() -> None:
         if hasattr(sys.stdout, "buffer"):
             # Set console code page to UTF-8 on platforms that use code pages
             if sys.platform == "win32":
-                import os
+                import subprocess
 
-                os.system("chcp 65001 >nul 2>&1")
+                subprocess.run(
+                    ["chcp", "65001"],
+                    stdout=subprocess.DEVNULL,
+                    stderr=subprocess.DEVNULL,
+                    check=False,
+                )
 
             # Reconfigure stdout/stderr with UTF-8 encoding
             sys.stdout = io.TextIOWrapper(
@@ -50,7 +54,7 @@ def configure_utf8_encoding() -> None:
         pass
 
 
-def safe_print(*args: Any, **kwargs: Any) -> None:
+def safe_print(*args: object, **kwargs: object) -> None:
     """
     Print with automatic error recovery for encoding issues on all platforms.
 

@@ -263,7 +263,7 @@ class CCOWizard:
 
         return answers
 
-    def _ask_question(self, question: Dict[str, Any]) -> Any:
+    def _ask_question(self, question: Dict[str, Any]) -> object:
         """Ask a single question"""
 
         # Get default value
