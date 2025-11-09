@@ -763,7 +763,7 @@ See Step 3B.3 for preference field mapping reference.
 After successful initialization (either mode), verify:
 
 ```bash
-ls .claude/commands/cco-*.md 2>nul | find /c ".md"
+ls .claude/commands/cco-*.md 2>/dev/null | wc -l
 ```
 
 Expected: Should show count of installed CCO commands (12-15)
