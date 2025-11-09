@@ -29,6 +29,432 @@
 
 ---
 
+### P0.0: Smart Git Commit (Hybrid: Skill + CCO Enhancement) (Priority: 🔴 CRITICAL)
+
+**Goal**: Otomatik olarak uncommitted değişiklikleri CLAUDE.md Git Workflow kurallarına uygun şekilde commit eden evrensel bir skill.
+
+**Implementation**: Hybrid Approach
+1. **Primary**: `.claude/skills/commit.md` - Universal skill (tüm projeler)
+2. **Enhancement**: CCO integration - CCO projelerinde gelişmiş özellikler
+
+**Rationale**:
+- ✅ **Evrensel kullanım**: Claude Code olan her projede çalışır
+- ✅ **Akıllı adaptasyon**: CLAUDE.md varsa proje kurallarını kullanır, yoksa generic
+- ✅ **CCO enhancement**: CCO yüklüyse scope detection ve knowledge base desteği
+- ✅ **Export edilebilir**: Skill olarak başka projelere taşınabilir
+- ✅ **Manuel effort elimine**: AI otomatik commit message ve gruplama yapar
+
+---
+
+#### Hybrid Architecture
+
+**Layer 1: Universal Skill** (`.claude/skills/commit.md`)
+```
+Primary implementation - works in ANY project with Claude Code
+- Detects CLAUDE.md → Uses project-specific Git Workflow
+- No CLAUDE.md → Uses conventional commits defaults
+- Basic scope detection from file paths
+- Generic commit message generation
+```
+
+**Layer 2: CCO Enhancement** (Optional, when CCO installed)
+```
+Enhanced features when .cco/project.json exists:
+- CCO-specific scope detection (wizard, core, commands, etc.)
+- CCO knowledge base for better categorization
+- Project identity awareness
+- Principle-aware commit messages
+- Automatic /cco-commit command registration
+```
+
+**Usage**:
+```bash
+# Universal (any project)
+@commit                    # Interactive mode
+@commit --auto             # Auto-commit
+@commit --push             # Commit + push
+
+# CCO projects (enhanced)
+/cco-commit                # Same as @commit but with CCO features
+/cco-commit --auto --push  # Auto-commit and push with CCO intelligence
+```
+
+---
+
+#### Skill Features (Universal)
+
+**1. Otomatik Analiz**:
+```python
+# Uncommitted changes analiz et
+git_status = subprocess.run(['git', 'status', '--porcelain'], capture_output=True)
+changed_files = parse_git_status(git_status.stdout)
+
+# Her dosyayı kategorize et
+for file in changed_files:
+    scope = detect_scope(file)  # wizard, core, docs, tests, etc.
+    change_type = detect_type(file)  # feat, fix, refactor, docs, etc.
+```
+
+**2. Akıllı Gruplama**:
+- Aynı `scope` ve `type` olan dosyaları grupla
+- Her grup için ayrı commit oluştur
+- İlişkisiz değişiklikleri ayır
+
+**3. Conventional Commits**:
+```
+type(scope): subject
+
+- Detailed change 1
+- Detailed change 2
+- Detailed change 3
+
+🤖 Generated with [Claude Code](https://claude.com/claude-code)
+
+Co-Authored-By: Claude <noreply@anthropic.com>
+```
+
+**4. Kullanıcı Onayı**:
+```bash
+# Preview mode (default)
+/cco-commit
+> Found 3 groups of changes:
+>
+> Group 1: feat(wizard) - 3 files
+>   - orchestrator.py
+>   - renderer.py
+>   - init.md
+> Commit message: "refactor(wizard): enhance interactive mode..."
+>
+> Group 2: docs(workflow) - 2 files
+>   - CLAUDE.md
+>   - TODO.md
+> Commit message: "docs(workflow): add Git Workflow strategy..."
+>
+> Create these commits? [y/N]
+```
+
+**5. Flags**:
+```bash
+/cco-commit --auto          # Auto-commit without confirmation
+/cco-commit --push          # Auto-push after committing
+/cco-commit --dry-run       # Show what would be committed
+/cco-commit --group=feat    # Only commit feat changes
+/cco-commit --scope=wizard  # Only commit wizard scope
+```
+
+---
+
+#### Implementation Plan
+
+**Phase 1: Universal Skill** (Works everywhere)
+
+**Files to Create**:
+
+1. **`.claude/skills/commit.md`** (Universal skill - Primary)
+   ```markdown
+   ---
+   name: commit
+   description: Smart git commit with conventional commits and automatic grouping
+   model: sonnet
+   cost: 3
+   ---
+
+   # Smart Git Commit
+
+   Universal git commit helper for any project with Claude Code.
+
+   ## Context Detection
+
+   **Priority 1**: Check for CLAUDE.md
+   ```bash
+   if exists("CLAUDE.md"):
+       workflow_rules = parse_git_workflow_section()
+       scopes = extract_project_scopes()
+   ```
+
+   **Priority 2**: Check for .cco/project.json (CCO enhancement)
+   ```bash
+   elif exists(".cco/project.json"):
+       use_cco_enhancement = True
+       load_cco_knowledge()
+   ```
+
+   **Priority 3**: Generic conventional commits
+   ```bash
+   else:
+       use_generic_conventional_commits()
+   ```
+
+   ## Step 1: Analyze uncommitted changes
+
+   ```bash
+   git status --porcelain
+   ```
+
+   ## Step 2: Group by scope and type
+
+   Use AI to analyze diffs and categorize...
+
+   ## Step 3: Generate commit messages
+
+   Follow detected workflow or conventional commits...
+
+   ## Step 4: Create commits
+
+   Interactive confirmation or auto-commit based on flags...
+   ```
+
+2. **`claudecodeoptimizer/skills/commit_skill.py`** (Skill implementation)
+   ```python
+   class CommitSkill:
+       """Universal git commit skill"""
+
+       def detect_context(self) -> CommitContext:
+           """Detect project context for commit strategy"""
+           if Path("CLAUDE.md").exists():
+               return self._load_claude_md_context()
+           elif Path(".cco/project.json").exists():
+               return self._load_cco_context()
+           else:
+               return self._generic_context()
+
+       def analyze_changes(self) -> List[CommitGroup]:
+           """Analyze git changes and group intelligently"""
+
+       def generate_commit_message(self, group: CommitGroup) -> str:
+           """Generate conventional commit message"""
+   ```
+
+---
+
+**Phase 2: CCO Enhancement** (Optional, better experience in CCO projects)
+
+**Files to Create**:
+
+1. **`claudecodeoptimizer/commands/commit.md`** (CCO wrapper command)
+   ```markdown
+   ---
+   description: CCO-enhanced git commit (wraps @commit skill)
+   cost: 3
+   model: sonnet
+   ---
+
+   # CCO Git Commit
+
+   Enhanced git commit with CCO-specific features.
+
+   This command wraps the universal @commit skill with:
+   - CCO scope detection (wizard, core, commands, etc.)
+   - Project identity awareness
+   - Principle-aware commit messages
+   - CCO knowledge base integration
+
+   ## Implementation
+
+   ```python
+   # Load CCO context
+   from claudecodeoptimizer.core.project import ProjectManager
+
+   pm = ProjectManager(Path.cwd())
+   cco_context = pm.get_commit_context()
+
+   # Invoke universal skill with CCO enhancement
+   invoke_skill("commit", context=cco_context)
+   ```
+   ```
+
+2. **`claudecodeoptimizer/git/cco_commit_enhancer.py`** (CCO-specific logic)
+   ```python
+   class CCOCommitEnhancer:
+       """Enhance commit skill with CCO knowledge"""
+
+       def enhance_scope_detection(self) -> Dict[str, str]:
+           """CCO-specific scope mapping"""
+           return {
+               "claudecodeoptimizer/wizard/": "wizard",
+               "claudecodeoptimizer/core/": "core",
+               "claudecodeoptimizer/commands/": "commands",
+               # ... etc
+           }
+
+       def apply_principles(self, commit_msg: str) -> str:
+           """Enhance commit message with principle awareness"""
+   ```
+
+**Scope Detection Rules**:
+```python
+SCOPE_MAP = {
+    "claudecodeoptimizer/wizard/": "wizard",
+    "claudecodeoptimizer/core/": "core",
+    "claudecodeoptimizer/commands/": "commands",
+    "claudecodeoptimizer/ai/": "ai",
+    "claudecodeoptimizer/schemas/": "schemas",
+    "claudecodeoptimizer/knowledge/": "knowledge",
+    "tests/": "tests",
+    "docs/": "docs",
+    "CLAUDE.md": "docs",
+    "PRINCIPLES.md": "docs",
+    "TODO.md": "docs",
+    "README.md": "docs",
+    ".gitignore": "chore",
+    "pyproject.toml": "deps",
+    "requirements.txt": "deps",
+}
+```
+
+**Type Detection Rules**:
+```python
+TYPE_RULES = [
+    # New files
+    (r"^A\s+", "feat"),  # git status: Added
+
+    # Bug fixes
+    (r"fix|bug|error|issue", "fix"),  # Keywords in diff
+
+    # Refactoring
+    (r"refactor|rename|move|reorganize", "refactor"),
+
+    # Documentation
+    (r"\.(md|txt|rst)$", "docs"),
+
+    # Tests
+    (r"tests?/|_test\.py$", "test"),
+
+    # Default: feature
+    (r".*", "feat"),
+]
+```
+
+---
+
+#### Usage Examples
+
+**Example 1: Auto-commit all changes**
+```bash
+/cco-commit --auto --push
+
+> Analyzing changes...
+> ✓ Created 3 commits
+> ✓ Pushed to origin/main
+>
+> Commits created:
+> - feat(wizard): enhance interactive mode (3 files)
+> - docs(workflow): add Git Workflow strategy (2 files)
+> - fix(core): restore P071 principle (1 file)
+```
+
+**Example 2: Preview before committing**
+```bash
+/cco-commit
+
+> Found 2 groups of changes:
+>
+> Group 1: feat(commands) - 2 files
+>   - commands/audit.md (+45 lines)
+>   - commands/fix.md (+32 lines)
+>
+> Message:
+> feat(commands): add model enforcement to audit and fix
+>
+> - Add Haiku for data gathering in audit
+> - Add Sonnet for analysis in fix
+> - Update command descriptions
+>
+> Group 2: docs(todo) - 1 file
+>   - TODO.md (+150 lines)
+>
+> Message:
+> docs(todo): add P0.1 Task 4 for Git Workflow selection
+>
+> - Add Git Workflow customization plan
+> - Add 3 workflow templates
+>
+> Create these commits? [Y/n] y
+> ✓ Created 2 commits
+```
+
+**Example 3: Dry run**
+```bash
+/cco-commit --dry-run
+
+> [DRY RUN] Would create 1 commit:
+>
+> feat(core): add backup mechanism
+> - Update principle_selector.py
+> - Update claude_md_generator.py
+> - Add timestamp-based backups
+>
+> Files:
+>   M claudecodeoptimizer/core/principle_selector.py
+>   M claudecodeoptimizer/core/claude_md_generator.py
+>
+> [DRY RUN] No changes made.
+```
+
+---
+
+#### User Experience
+
+**Interactive Mode** (default):
+1. Analyze changes
+2. Show grouped commits with preview
+3. Ask for confirmation
+4. Create commits
+5. Ask if push to remote
+
+**Auto Mode** (`--auto`):
+1. Analyze changes
+2. Create commits automatically
+3. Show summary
+
+**Push Mode** (`--auto --push`):
+1. Analyze changes
+2. Create commits
+3. Push to remote
+4. Show summary
+
+---
+
+#### Safety Features
+
+1. **Never commit**:
+   - Files with secrets (`.env`, `credentials.json`, etc.)
+   - Temporary files (`temp/`, `*.tmp`, `*.log`)
+   - Generated files already in .gitignore
+
+2. **Always verify**:
+   - Tests pass (run `pytest` before commit)
+   - No syntax errors (run `ruff check`)
+   - No uncommitted conflicts
+
+3. **Rollback support**:
+   - Save commit hashes for easy revert
+   - Provide rollback command if needed
+
+---
+
+#### Verification
+
+```bash
+# Test with sample changes
+echo "test" > test.txt
+git add test.txt
+
+/cco-commit --dry-run
+# Should show: chore(repo): add test file
+
+# Real commit
+/cco-commit
+# Should prompt and create commit
+
+# Verify
+git log -1 --stat
+```
+
+**Estimated Effort**: 6-8 hours
+
+---
+
 ### P0.1: Mevcut Hataların Düzeltilmesi (Priority: 🔴 CRITICAL)
 
 #### Task 1: Export/Import Kaldırma
