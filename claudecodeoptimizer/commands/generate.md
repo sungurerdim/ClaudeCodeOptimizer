@@ -1,34 +1,29 @@
 ---
 description: Generate code, tests, docs, CI/CD, and more
 category: generation
-cost: 3
+cost: 5
 ---
 
 # CCO Generate Commands
 
 Generate tests, documentation, CI/CD pipelines, and code from specifications.
 
----
+## Prerequisites: Load Required Context
 
-## Architecture & Model Selection
+```python
+from pathlib import Path
 
-**Hybrid Haiku/Sonnet approach for optimal speed + quality**
+print("📚 Loading CCO Context for Generation...\n")
 
-**Data Gathering**: Haiku (Explore agent, quick)
-- Fast scanning for generation targets
-- Template and pattern recognition
-- Cost-effective for simple generation
+# Load CLAUDE.md and PRINCIPLES.md
+for doc_name in ["CLAUDE.md", "PRINCIPLES.md"]:
+    doc_path = Path(doc_name)
+    if doc_path.exists():
+        tokens = len(doc_path.read_text(encoding="utf-8")) // 4
+        print(f"✓ Loaded {doc_name} (~{tokens:,} tokens)")
 
-**Analysis & Reasoning**: Sonnet (Plan agent)
-- Complex CI/CD pipeline generation
-- Code generation from specifications
-- Integration test workflow design
-
-**Execution Pattern**:
-1. Scan codebase with Haiku for generation targets (parallel)
-2. Use Haiku for simple generation (tests, docs)
-3. Use Sonnet for complex generation (CI/CD, integration tests)
-4. Generate files and create summary report
+print()
+```
 
 ---
 
@@ -43,12 +38,12 @@ Generate tests, documentation, CI/CD pipelines, and code from specifications.
     "header": "Generate",
     "multiSelect": true,
     "options": [
-      {"label": "Tests", "description": "Generate unit tests for untested code (Haiku - fast)"},
-      {"label": "Integration Tests", "description": "Generate integration/E2E tests (Sonnet - requires workflow reasoning)"},
-      {"label": "Documentation", "description": "Generate API docs, README, docstrings (Haiku - fast)"},
-      {"label": "CI/CD Pipeline", "description": "Generate GitHub Actions / GitLab CI config (Sonnet - requires architecture reasoning)"},
-      {"label": "From Specs", "description": "Generate code from API specifications (Sonnet - complex)"},
-      {"label": "Custom Principles", "description": "Generate project-specific development principles (Sonnet - requires reasoning)"}
+      {"label": "Tests", "description": "Generate unit tests for untested code"},
+      {"label": "Integration Tests", "description": "Generate integration/E2E tests"},
+      {"label": "Documentation", "description": "Generate API docs, README, docstrings"},
+      {"label": "CI/CD Pipeline", "description": "Generate GitHub Actions / GitLab CI config"},
+      {"label": "From Specs", "description": "Generate code from API specifications (OpenAPI, etc.)"},
+      {"label": "Custom Principles", "description": "Generate project-specific development principles"}
     ]
   }]
 }
@@ -71,28 +66,53 @@ pytest --cov --cov-report=term-missing
 
 ### Step 2: Generate Tests
 
-Use Task tool (Haiku agent - fast pattern-based generation):
+**Use Task tool with explicit model:**
 
+**Test Generation Agent:**
 ```
+Subagent Type: Plan
+Model: sonnet
+Description: Generate comprehensive tests
+
+MUST LOAD FIRST:
+1. @CLAUDE.md (Test-First Development section)
+2. @docs/cco/principles/testing.md
+3. Print: "✓ Loaded 2 docs (~1,900 tokens)"
+
 Task: Generate tests for [file]
-Agent: Explore
-Model: haiku
-Thoroughness: quick
 
-1. Read source file and understand logic
-2. Identify:
-   - Public functions/methods
-   - Edge cases
-   - Error paths
-3. Generate test file with:
-   - Test setup/teardown
-   - Happy path tests
-   - Edge case tests
-   - Error handling tests
-4. Use existing test patterns from codebase
+Steps:
+1. Read source file and understand:
+   - What the code does (business logic)
+   - Input/output contracts
+   - Error conditions
+   - Dependencies
+
+2. Identify test cases:
+   - Public functions/methods (API surface)
+   - Happy path scenarios
+   - Edge cases (empty inputs, boundary values)
+   - Error paths (exceptions, invalid inputs)
+   - Integration points (if applicable)
+
+3. Generate test file following project patterns:
+   - Use existing test framework (pytest, jest, etc.)
+   - Match naming conventions
+   - Include setup/teardown if needed
+   - Add descriptive docstrings
+   - Group related tests in classes
+
+4. Test categories to generate:
+   - Unit tests (isolated, fast)
+   - Integration tests (if function interacts with external systems)
+   - Property-based tests (for complex logic)
+
+Why Sonnet:
+- Requires understanding of code logic
+- Must design comprehensive test coverage
+- Needs to match existing patterns
+- Quality test generation needs reasoning
 ```
-
-**Why Haiku:** Unit test generation is pattern-based transformation - analyze function → generate test cases. Fast execution for large codebases.
 
 ### Output
 
@@ -115,12 +135,11 @@ Thoroughness: quick
 
 ### Step 2: Generate Tests
 
-Use Task tool (Sonnet Plan agent - requires workflow reasoning):
+Use Task tool (Plan agent):
 
 ```
 Task: Generate integration tests
 Agent: Plan
-Model: sonnet
 
 1. Map user workflows (e.g., signup → login → action)
 2. Generate tests for each workflow:
@@ -130,8 +149,6 @@ Model: sonnet
    - Cleanup: Remove test data
 3. Use appropriate framework (pytest, supertest, etc.)
 ```
-
-**Why Sonnet:** Integration tests require understanding complex workflows, data dependencies, and service interactions. Needs reasoning about system architecture.
 
 ### Output
 
@@ -147,13 +164,9 @@ Model: sonnet
 
 ### Generate API Documentation
 
-Use Haiku Explore agent (fast extraction):
-
 ```
 Task: Generate API documentation
-Agent: Explore
-Model: haiku
-Thoroughness: quick
+Agent: Plan
 
 1. Scan for API routes/endpoints
 2. Extract:
@@ -165,39 +178,27 @@ Thoroughness: quick
 4. Generate markdown docs
 ```
 
-**Why Haiku:** API doc generation is data extraction and formatting. No complex reasoning required.
-
 ### Generate README
-
-Use Haiku Explore agent (template filling):
 
 ```
 Task: Generate README
-Agent: Explore
-Model: haiku
-Thoroughness: medium
+Agent: Plan
 
 Sections:
-1. Project name & description (from analysis)
-2. Installation instructions (from dependency files)
-3. Usage examples (from existing code)
-4. API reference (from extracted endpoints)
-5. Development setup (from detected tools)
-6. Contributing guidelines (standard template)
-7. License (detect from LICENSE file)
+1. Project name & description
+2. Installation instructions
+3. Usage examples
+4. API reference
+5. Development setup
+6. Contributing guidelines
+7. License
 ```
 
-**Why Haiku:** README generation is mostly template filling with project-specific data. Fast and straightforward.
-
 ### Generate Docstrings
-
-Use Haiku Explore agent (pattern-based):
 
 ```
 Task: Generate missing docstrings
 Agent: Explore
-Model: haiku
-Thoroughness: quick
 
 For each undocumented function/class:
 1. Analyze code to understand purpose
@@ -209,8 +210,6 @@ For each undocumented function/class:
    - Examples
 3. Use language conventions (Google-style for Python, JSDoc for JS)
 ```
-
-**Why Haiku:** Docstring generation is pattern-based code analysis. Can handle hundreds of functions quickly.
 
 ---
 
@@ -227,32 +226,21 @@ For each undocumented function/class:
 
 ### Generate Pipeline
 
-Use Task tool (Sonnet Plan agent - requires architecture reasoning):
+Use Task tool (Plan agent):
 
 ```
 Task: Generate CI/CD pipeline
 Agent: Plan
-Model: sonnet
 
 Generate workflow with stages:
-1. **Lint**: Run linters/formatters (detect which tools)
-2. **Test**: Run unit + integration tests (detect framework)
-3. **Build**: Build application/package (detect build tool)
-4. **Security**: Run security scans (add appropriate scanners)
-5. **Deploy**: Deploy to staging/production (detect deployment target)
-
-Reasoning required:
-- Which tools to use for each stage
-- Proper job dependencies and ordering
-- Cache strategy for dependencies
-- Matrix builds for multiple versions
-- Environment-specific configurations
-- Secrets management approach
+1. **Lint**: Run linters/formatters
+2. **Test**: Run unit + integration tests
+3. **Build**: Build application/package
+4. **Security**: Run security scans
+5. **Deploy**: Deploy to staging/production (optional)
 
 Format: GitHub Actions (.github/workflows/ci.yml)
 ```
-
-**Why Sonnet:** CI/CD pipeline generation requires understanding project architecture, choosing appropriate tools, and designing optimal workflow structure. Needs reasoning about dependencies and deployment strategy.
 
 ### Output
 
@@ -276,12 +264,9 @@ Format: GitHub Actions (.github/workflows/ci.yml)
 
 ### Generation Process
 
-Use Task tool (Sonnet Plan agent - complex architectural decisions):
-
 ```
 Task: Generate code from spec
 Agent: Plan
-Model: sonnet
 
 1. Read specification file
 2. Generate:
@@ -291,17 +276,7 @@ Model: sonnet
    - Validation logic
 3. Use appropriate code generator (openapi-generator, etc.)
 4. Add tests for generated code
-
-Reasoning required:
-- Choose appropriate client architecture (REST, GraphQL, gRPC)
-- Design error handling strategy
-- Implement authentication/authorization
-- Handle rate limiting and retries
-- Structure generated code for maintainability
-- Generate comprehensive tests
 ```
-
-**Why Sonnet:** Code generation from specs requires architectural decisions about client structure, error handling, auth patterns, and code organization. Complex reasoning required.
 
 ### Output
 
@@ -318,12 +293,9 @@ Reasoning required:
 
 ### Process
 
-Use Task tool (Sonnet Plan agent - requires domain reasoning):
-
 ```
 Task: Generate custom principles
 Agent: Plan
-Model: sonnet
 
 1. Analyze project:
    - Domain (fintech, healthcare, etc.)
@@ -339,16 +311,7 @@ Model: sonnet
    - Applicability rules
    - Good/bad examples
    - Auto-fix availability
-
-Reasoning required:
-- Understand domain-specific requirements (e.g., HIPAA for healthcare)
-- Identify patterns in existing code issues
-- Design principles that address root causes
-- Balance strictness with practicality
-- Consider team maturity and adoption challenges
 ```
-
-**Why Sonnet:** Custom principle generation requires deep understanding of domain constraints, code quality issues, and team dynamics. High-level reasoning essential.
 
 ### Output
 
@@ -368,17 +331,12 @@ GENERATION SUMMARY
 ============================================================
 
 Generated:
-✓ Tests:            25 unit tests (+35% coverage) [Haiku - fast]
-✓ Integration:      8 E2E tests [Sonnet - reasoning]
-✓ Documentation:    README + 50 docstrings [Haiku - fast]
-✓ CI/CD:            GitHub Actions pipeline [Sonnet - architecture]
-✓ Code from Specs:  API client (OpenAPI) [Sonnet - complex]
-✓ Principles:       7 custom principles [Sonnet - reasoning]
-
-Performance:
-- Haiku tasks: 2-3x faster than Sonnet
-- Sonnet tasks: High quality reasoning
-- Total time: ~30-40% faster than all-Sonnet approach
+✓ Tests:            25 unit tests (+35% coverage)
+✓ Integration:      8 E2E tests
+✓ Documentation:    README + 50 docstrings
+✓ CI/CD:            GitHub Actions pipeline
+✓ Code from Specs:  API client (OpenAPI)
+✓ Principles:       7 custom principles
 
 Next Steps:
 1. Review generated code
