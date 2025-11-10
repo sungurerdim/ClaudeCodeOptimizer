@@ -1,1024 +1,131 @@
 # ClaudeCodeOptimizer - TODO & Roadmap
 
-**Last Updated**: 2025-11-10
-**Current Version**: 0.1.0-alpha
+**Last Updated**: 2025-11-10  
+**Current Version**: 0.1.0-alpha  
 **Target**: v0.2.0 Production Readiness (2 weeks)
 
----
-
-## 🎯 Milestone Overview
-
-- [x] **v0.1.0** - Alpha Release (COMPLETE)
-- [ ] **v0.2.0** - Production Readiness (Target: 2 weeks)
-- [ ] **v0.3.0** - User Experience (Target: 1 month)
-- [ ] **v0.4.0** - Extensibility (Target: 2 months)
-- [ ] **v1.0.0** - Stable Release (Target: 3 months)
+**📌 Completed Tasks**: See DONE.md
 
 ---
 
-## 🔥 URGENT: Critical Fixes & wshobson/agents Integration (PRIORITY 0 - Week 0)
+## 🎯 CURRENT SPRINT: Init System Completion & File Generation
 
-**Focus**: Fix existing issues, integrate best practices from wshobson/agents
+**Priority**: 🔴 CRITICAL  
+**Estimated Effort**: 16 hours (Faz 1-2)  
+**Goal**: Complete init system için eksik features ve file generation  
 
-**Release Criteria**:
-- [ ] Export/import removed (cleaner flow)
-- [ ] Command selection fixed (only recommended installed)
-- [ ] Model enforcement in all commands
-- [ ] Document management system implemented
-- [ ] Token optimization (progressive disclosure)
-- [ ] Context-aware init system (team-specific recommendations)
-- [ ] P074: Automated semantic versioning
-- [ ] UI Adapter for Claude Code tool integration
+**Tamamlanma Oranı**: %75 → %95 (hedef)
 
 ---
 
-### P-1: Update README with Recent Changes (Priority: 🔴 URGENT)
+## 🔥 FAZ 1: Kritik Düzeltmeler (P0 - 4 saat)
 
-**Goal**: Sync README.md with latest architectural changes from last 48 hours
+### Task 1.1: Template Dosyaları Oluştur
+**Öncelik**: 🔴 CRITICAL  
+**Süre**: 2 saat
 
-**Context**: Major changes in last 48 hours:
-- Symlink-based knowledge base architecture (15222a6)
-- AI-powered semantic commit system (ce20cb4)
-- Progressive disclosure implementation (e7cfdff)
-- P074 automated versioning (b95819d)
-- Interactive knowledge base selection (4f1e9ba)
-- P073 atomic commits (766dede, 0932804)
+**Sorun**: `.editorconfig` ve `.pre-commit-config.yaml` içerikleri kod içinde hardcoded.
 
-**Analysis Required**:
-
-1. **Review Git History (Last 48 Hours)**:
-   ```bash
-   git log --since="48 hours ago" --oneline --stat
-   git log --since="48 hours ago" --format="%B" | grep -E "^(feat|fix|refactor|docs)"
-   ```
-
-2. **Analyze Current Code Structure**:
-   ```bash
-   # Check new directories/files
-   tree claudecodeoptimizer/skills/
-   tree ~/.cco/knowledge/
-   ls -la .claude/
-
-   # Check key implementations
-   wc -l claudecodeoptimizer/skills/commit_skill.py
-   wc -l claudecodeoptimizer/commands/commit.md
-   grep "Architecture.*Model" claudecodeoptimizer/commands/*.md
-   ```
-
-3. **Identify Outdated README Sections**:
-   - [ ] Check "Progressive Disclosure" section (~line 76-110)
-   - [ ] Check "Core Features" accuracy
-   - [ ] Check architecture diagrams
-   - [ ] Check Quick Start instructions
-   - [ ] Check version numbers and progress percentages
-   - [ ] Check feature lists (74 principles, 25+ commands, etc.)
-
-**Sections to Update**:
-
-#### Section 1: Version & Status
-- [ ] Line 7: Version badge (check if 0.1.0-alpha is still correct)
-- [ ] Line 10: Update progress percentage
-- [ ] Update completion status of P0 tasks
-
-#### Section 2: Progressive Disclosure Documentation
-- [ ] Lines 78-134: Update with symlink architecture
-- [ ] Remove PRINCIPLES.md references (no longer exists, moved to symlinks)
-- [ ] Add knowledge base structure:
-   ```markdown
-   **NEW Architecture** (Symlink-based):
-   ```
-   ~/.cco/knowledge/          # Global source (single source of truth)
-   ├── commands/              # CCO slash commands
-   ├── guides/                # Detailed guides
-   ├── principles/            # Category-based principles
-   ├── agents/                # Custom agent templates
-   └── skills/                # Custom skill templates
-
-   project/.claude/           # Project-local (symlinks)
-   ├── commands/              → symlinked from global
-   ├── guides/                → symlinked (selective)
-   ├── principles/            → symlinked (selective)
-   ├── agents/                → symlinked (selective)
-   └── skills/                → symlinked (selective)
-   ```
-
-#### Section 3: Smart Git Commit Feature
-- [ ] Add new feature section for AI-powered commits:
-   ```markdown
-   ### 🤖 AI-Powered Semantic Commits
-
-   **NEW in P0.0** - Intelligent commit system with semantic analysis
-
-   **Architecture**:
-   - **Skill Layer** (210 lines): Pure git operations utility
-   - **Command Layer** (AI): Semantic analysis & grouping
-
-   **Features**:
-   - AI analyzes changes across all files
-   - Groups related changes logically (not by directory)
-   - Generates high-quality conventional commit messages
-   - Follows P072 (Concise), P073 (Atomic), P074 (Versioning)
-
-   **Quality**:
-   ```
-   Old (Mechanical):
-   - 10+ commits for single feature
-   - Generic: "update 5 files"
-
-   New (AI-Powered):
-   - 1-3 logical commits per feature
-   - Descriptive: "implement AI-powered semantic commit system"
-   ```
-
-   **Usage**:
-   ```bash
-   /cco-commit              # Interactive with AI analysis
-   /cco-commit --auto       # Auto-commit
-   /cco-commit --dry-run    # Preview only
-   ```
-   ```
-
-#### Section 4: Commands List
-- [ ] Update command count and categories
-- [ ] Add new commands:
-   - `/cco-commit` - AI-powered semantic commits
-- [ ] Update model enforcement note
-
-#### Section 5: Principles
-- [ ] Update P072: Concise Commit Messages (already in README)
-- [ ] Add P073: Atomic Commits
-- [ ] Add P074: Automated Semantic Versioning
-- [ ] Update total principle count (74 → verify actual count)
-
-#### Section 6: Architecture Diagrams
-- [ ] Update workflow diagram to show symlink architecture
-- [ ] Add commit workflow diagram
-
-#### Section 7: What's New
-- [ ] Add "Recent Updates" section with last 48h changes:
-   ```markdown
-   ## Recent Updates (2025-11-10)
-
-   ### 🎉 Major Features
-   - **AI-Powered Commits**: Semantic analysis for high-quality commits
-   - **Symlink Architecture**: Zero-duplication knowledge base
-   - **P074 Versioning**: Automated semantic version bumping
-   - **Interactive KB Selection**: Granular guide/agent/skill selection
-
-   ### ✅ Completed
-   - P0.0: Smart Git Commit ✅
-   - P0.1: Fix Existing Issues ✅
-   - P0.8 Task 1: Automated Versioning ✅
-
-   ### 📊 Progress
-   - Production readiness: 95% → 97%
-   - Token optimization: 76% reduction achieved
-   - Symlink architecture: Fully implemented
-   ```
-
-**Implementation Steps**:
-
-1. **Phase 1: Gather Data**
-   ```bash
-   # Run these commands and analyze output
-   git log --since="48 hours ago" --oneline
-   git log --since="48 hours ago" --stat
-   find claudecodeoptimizer -name "*.py" | wc -l
-   find claudecodeoptimizer/commands -name "*.md" | wc -l
-   ls ~/.cco/knowledge/
-   ```
-
-2. **Phase 2: Update README.md**
-   - Update version/status badges
-   - Update progressive disclosure section
-   - Add Smart Commit feature section
-   - Update commands list
-   - Add P073, P074 to principles
-   - Update architecture diagrams
-   - Add "Recent Updates" section
-
-3. **Phase 3: Verify Accuracy**
-   ```bash
-   # Check all references are correct
-   grep -n "PRINCIPLES.md" README.md  # Should not exist
-   grep -n "0.1.0" README.md          # Check version consistency
-   grep -n "74 principles" README.md  # Verify count
-   ```
-
-**Success Criteria**:
-- ✅ README accurately reflects symlink architecture
-- ✅ Smart Commit feature documented
-- ✅ No outdated references (PRINCIPLES.md in root)
-- ✅ Progress percentages updated
-- ✅ All new principles documented
-- ✅ Architecture diagrams updated
-
-**Estimated Effort**: 2-3 hours
-
-**Note**: This is a documentation task requiring analysis of recent commits and code structure. Should be done in a separate session with fresh context.
-
----
-
-### P0.0: Smart Git Commit (Hybrid: Skill + CCO Enhancement) ✅ COMPLETE
-
-**Goal**: Universal skill that automatically commits uncommitted changes following CLAUDE.md Git Workflow rules.
-
-**Implementation**: Hybrid Approach
-1. **Primary**: `.claude/skills/commit.md` - Universal skill (all projects)
-2. **Enhancement**: CCO integration - Enhanced features in CCO projects
-
-**Rationale**:
-- ✅ **Universal usage**: Works in any project with Claude Code
-- ✅ **Smart adaptation**: Uses project rules from CLAUDE.md if present, otherwise generic
-- ✅ **CCO enhancement**: Scope detection and knowledge base support when CCO installed
-- ✅ **Exportable**: Can be moved to other projects as a skill
-- ✅ **Eliminates manual effort**: AI automatically generates commit messages and grouping
-
----
-
-#### Hybrid Architecture
-
-**Layer 1: Universal Skill** (`.claude/skills/commit.md`)
-```
-Primary implementation - works in ANY project with Claude Code
-- Detects CLAUDE.md → Uses project-specific Git Workflow
-- No CLAUDE.md → Uses conventional commits defaults
-- Basic scope detection from file paths
-- Generic commit message generation
-```
-
-**Layer 2: CCO Enhancement** (Optional, when CCO installed)
-```
-Enhanced features when .cco/project.json exists:
-- CCO-specific scope detection (wizard, core, commands, etc.)
-- CCO knowledge base for better categorization
-- Project identity awareness
-- Principle-aware commit messages
-- Automatic /cco-commit command registration
-```
-
-**Usage**:
-```bash
-# Universal (any project)
-@commit                    # Interactive mode
-@commit --auto             # Auto-commit
-@commit --push             # Commit + push
-
-# CCO projects (enhanced)
-/cco-commit                # Same as @commit but with CCO features
-/cco-commit --auto --push  # Auto-commit and push with CCO intelligence
-```
-
----
-
-#### Skill Features (Universal)
-
-**1. Otomatik Analiz**:
-```python
-# Uncommitted changes analiz et
-git_status = subprocess.run(['git', 'status', '--porcelain'], capture_output=True)
-changed_files = parse_git_status(git_status.stdout)
-
-# Categorize each file
-for file in changed_files:
-    scope = detect_scope(file)  # wizard, core, docs, tests, etc.
-    change_type = detect_type(file)  # feat, fix, refactor, docs, etc.
-```
-
-**2. Smart Grouping**:
-- Group files with same `scope` and `type`
-- Create separate commit for each group
-- Separate unrelated changes
-
-**3. Conventional Commits**:
-```
-type(scope): subject
-
-- Detailed change 1
-- Detailed change 2
-- Detailed change 3
-
-🤖 Generated with [Claude Code](https://claude.com/claude-code)
-
-Co-Authored-By: Claude <noreply@anthropic.com>
-```
-
-**4. User Confirmation**:
-```bash
-# Preview mode (default)
-/cco-commit
-> Found 3 groups of changes:
->
-> Group 1: feat(wizard) - 3 files
->   - orchestrator.py
->   - renderer.py
->   - init.md
-> Commit message: "refactor(wizard): enhance interactive mode..."
->
-> Group 2: docs(workflow) - 2 files
->   - CLAUDE.md
->   - TODO.md
-> Commit message: "docs(workflow): add Git Workflow strategy..."
->
-> Create these commits? [y/N]
-```
-
-**5. Flags**:
-```bash
-/cco-commit --auto          # Auto-commit without confirmation
-/cco-commit --push          # Auto-push after committing
-/cco-commit --dry-run       # Show what would be committed
-/cco-commit --group=feat    # Only commit feat changes
-/cco-commit --scope=wizard  # Only commit wizard scope
-```
-
----
-
-#### Implementation Plan
-
-**Phase 1: Universal Skill** (Works everywhere)
-
-**Files to Create**:
-
-1. **`.claude/skills/commit.md`** (Universal skill - Primary)
-   ```markdown
-   ---
-   name: commit
-   description: Smart git commit with conventional commits and automatic grouping
-   model: sonnet
-   cost: 3
-   ---
-
-   # Smart Git Commit
-
-   Universal git commit helper for any project with Claude Code.
-
-   ## Context Detection
-
-   **Priority 1**: Check for CLAUDE.md
-   ```bash
-   if exists("CLAUDE.md"):
-       workflow_rules = parse_git_workflow_section()
-       scopes = extract_project_scopes()
-   ```
-
-   **Priority 2**: Check for .cco/project.json (CCO enhancement)
-   ```bash
-   elif exists(".cco/project.json"):
-       use_cco_enhancement = True
-       load_cco_knowledge()
-   ```
-
-   **Priority 3**: Generic conventional commits
-   ```bash
-   else:
-       use_generic_conventional_commits()
-   ```
-
-   ## Step 1: Analyze uncommitted changes
-
-   ```bash
-   git status --porcelain
-   ```
-
-   ## Step 2: Group by scope and type
-
-   Use AI to analyze diffs and categorize...
-
-   ## Step 3: Generate commit messages
-
-   Follow detected workflow or conventional commits...
-
-   ## Step 4: Create commits
-
-   Interactive confirmation or auto-commit based on flags...
-   ```
-
-2. **`claudecodeoptimizer/skills/commit_skill.py`** (Skill implementation)
-   ```python
-   class CommitSkill:
-       """Universal git commit skill"""
-
-       def detect_context(self) -> CommitContext:
-           """Detect project context for commit strategy"""
-           if Path("CLAUDE.md").exists():
-               return self._load_claude_md_context()
-           elif Path(".cco/project.json").exists():
-               return self._load_cco_context()
-           else:
-               return self._generic_context()
-
-       def analyze_changes(self) -> List[CommitGroup]:
-           """Analyze git changes and group intelligently"""
-
-       def generate_commit_message(self, group: CommitGroup) -> str:
-           """Generate conventional commit message"""
-   ```
-
----
-
-**Phase 2: CCO Enhancement** (Optional, better experience in CCO projects)
-
-**Files to Create**:
-
-1. **`claudecodeoptimizer/commands/commit.md`** (CCO wrapper command)
-   ```markdown
-   ---
-   description: CCO-enhanced git commit (wraps @commit skill)
-   cost: 3
-   model: sonnet
-   ---
-
-   # CCO Git Commit
-
-   Enhanced git commit with CCO-specific features.
-
-   This command wraps the universal @commit skill with:
-   - CCO scope detection (wizard, core, commands, etc.)
-   - Project identity awareness
-   - Principle-aware commit messages
-   - CCO knowledge base integration
-
-   ## Implementation
-
-   ```python
-   # Load CCO context
-   from claudecodeoptimizer.core.project import ProjectManager
-
-   pm = ProjectManager(Path.cwd())
-   cco_context = pm.get_commit_context()
-
-   # Invoke universal skill with CCO enhancement
-   invoke_skill("commit", context=cco_context)
-   ```
-   ```
-
-2. **`claudecodeoptimizer/git/cco_commit_enhancer.py`** (CCO-specific logic)
-   ```python
-   class CCOCommitEnhancer:
-       """Enhance commit skill with CCO knowledge"""
-
-       def enhance_scope_detection(self) -> Dict[str, str]:
-           """CCO-specific scope mapping"""
-           return {
-               "claudecodeoptimizer/wizard/": "wizard",
-               "claudecodeoptimizer/core/": "core",
-               "claudecodeoptimizer/commands/": "commands",
-               # ... etc
-           }
-
-       def apply_principles(self, commit_msg: str) -> str:
-           """Enhance commit message with principle awareness"""
-   ```
-
-**Scope Detection Rules**:
-```python
-SCOPE_MAP = {
-    "claudecodeoptimizer/wizard/": "wizard",
-    "claudecodeoptimizer/core/": "core",
-    "claudecodeoptimizer/commands/": "commands",
-    "claudecodeoptimizer/ai/": "ai",
-    "claudecodeoptimizer/schemas/": "schemas",
-    "claudecodeoptimizer/knowledge/": "knowledge",
-    "tests/": "tests",
-    "docs/": "docs",
-    "CLAUDE.md": "docs",
-    "PRINCIPLES.md": "docs",
-    "TODO.md": "docs",
-    "README.md": "docs",
-    ".gitignore": "chore",
-    "pyproject.toml": "deps",
-    "requirements.txt": "deps",
-}
-```
-
-**Type Detection Rules**:
-```python
-TYPE_RULES = [
-    # New files
-    (r"^A\s+", "feat"),  # git status: Added
-
-    # Bug fixes
-    (r"fix|bug|error|issue", "fix"),  # Keywords in diff
-
-    # Refactoring
-    (r"refactor|rename|move|reorganize", "refactor"),
-
-    # Documentation
-    (r"\.(md|txt|rst)$", "docs"),
-
-    # Tests
-    (r"tests?/|_test\.py$", "test"),
-
-    # Default: feature
-    (r".*", "feat"),
-]
-```
-
----
-
-#### Usage Examples
-
-**Example 1: Auto-commit all changes**
-```bash
-/cco-commit --auto --push
-
-> Analyzing changes...
-> ✓ Created 3 commits
-> ✓ Pushed to origin/main
->
-> Commits created:
-> - feat(wizard): enhance interactive mode (3 files)
-> - docs(workflow): add Git Workflow strategy (2 files)
-> - fix(core): restore P071 principle (1 file)
-```
-
-**Example 2: Preview before committing**
-```bash
-/cco-commit
-
-> Found 2 groups of changes:
->
-> Group 1: feat(commands) - 2 files
->   - commands/audit.md (+45 lines)
->   - commands/fix.md (+32 lines)
->
-> Message:
-> feat(commands): add model enforcement to audit and fix
->
-> - Add Haiku for data gathering in audit
-> - Add Sonnet for analysis in fix
-> - Update command descriptions
->
-> Group 2: docs(todo) - 1 file
->   - TODO.md (+150 lines)
->
-> Message:
-> docs(todo): add P0.1 Task 4 for Git Workflow selection
->
-> - Add Git Workflow customization plan
-> - Add 3 workflow templates
->
-> Create these commits? [Y/n] y
-> ✓ Created 2 commits
-```
-
-**Example 3: Dry run**
-```bash
-/cco-commit --dry-run
-
-> [DRY RUN] Would create 1 commit:
->
-> feat(core): add backup mechanism
-> - Update principle_selector.py
-> - Update claude_md_generator.py
-> - Add timestamp-based backups
->
-> Files:
->   M claudecodeoptimizer/core/principle_selector.py
->   M claudecodeoptimizer/core/claude_md_generator.py
->
-> [DRY RUN] No changes made.
-```
-
----
-
-#### User Experience
-
-**Interactive Mode** (default):
-1. Analyze changes
-2. Show grouped commits with preview
-3. Ask for confirmation
-4. Create commits
-5. Ask if push to remote
-
-**Auto Mode** (`--auto`):
-1. Analyze changes
-2. Create commits automatically
-3. Show summary
-
-**Push Mode** (`--auto --push`):
-1. Analyze changes
-2. Create commits
-3. Push to remote
-4. Show summary
-
----
-
-#### Safety Features
-
-1. **Never commit**:
-   - Files with secrets (`.env`, `credentials.json`, etc.)
-   - Temporary files (`temp/`, `*.tmp`, `*.log`)
-   - Generated files already in .gitignore
-
-2. **Always verify**:
-   - Tests pass (run `pytest` before commit)
-   - No syntax errors (run `ruff check`)
-   - No uncommitted conflicts
-
-3. **Rollback support**:
-   - Save commit hashes for easy revert
-   - Provide rollback command if needed
-
----
-
-#### Verification
-
-```bash
-# Test with sample changes
-echo "test" > test.txt
-git add test.txt
-
-/cco-commit --dry-run
-# Should show: chore(repo): add test file
-
-# Real commit
-/cco-commit
-# Should prompt and create commit
-
-# Verify
-git log -1 --stat
-```
-
-**Estimated Effort**: 6-8 hours
-
----
-
-#### ✅ Completion Status (2025-11-10)
-
-**Implemented**:
-- ✅ Universal skill (`.claude/skills/commit.md`)
-- ✅ Core implementation (`claudecodeoptimizer/skills/commit_skill.py`)
-- ✅ CCO enhancement command (`claudecodeoptimizer/commands/commit.md`)
-- ✅ Context detection (CCO/CLAUDE.md/generic)
-- ✅ Scope detection with CCO-specific mappings
-- ✅ Type detection from diffs and file paths
-- ✅ Atomic commit grouping by (type, scope)
-- ✅ Conventional commit message generation
-- ✅ Safety features (skip secrets, temp files)
-- ✅ Unicode and path parsing fixes for Windows
-- ✅ Principle references (P072, P073, P074)
-
-**Files Created**:
-- `claudecodeoptimizer/skills/commit_skill.py` (497 lines)
-- `claudecodeoptimizer/skills/__init__.py`
-- `claudecodeoptimizer/commands/commit.md` (650 lines)
-- `.claude/skills/commit.md` (173 lines)
-
-**Verified**:
-- ✅ Context detection works correctly
-- ✅ Groups 11 files into 5 atomic commits
-- ✅ Generates P072-compliant messages
-- ✅ Ready for production use
-
----
-
-### P0.1: Fix Existing Issues ✅ COMPLETE
-
-#### Task 1: Remove Export/Import
-
-**Rationale**: Old functions, unnecessary in current structure. `remove + init` is cleaner.
-
-**Files to Modify**:
-- [ ] `claudecodeoptimizer/commands/config.md`
-  - [ ] Remove export subcommand section (lines 52-116)
-  - [ ] Remove import subcommand section (lines 118-192)
-  - [ ] Keep only: setup, show
-  - [ ] Update description to remove export/import mention
-
-- [ ] `claudecodeoptimizer/ai/command_selection.py`
-  - [ ] Remove export rule (lines 272-284)
-  - [ ] Remove import-skills rule (lines 285-296)
-  - [ ] Update RECOMMENDATION_RULES list
-
-**New Workflow**:
-```bash
-# Old: Export/import
-/cco-config export → cco-config.json
-/cco-config import
-
-# New: Remove + Init
-/cco-remove              # Clean removal
-/cco-init                # Fresh setup with current analysis
-```
+**Yapılacaklar**:
+- [ ] `templates/.editorconfig.template` oluştur
+- [ ] `templates/.pre-commit-config.yaml.template` oluştur  
+- [ ] `orchestrator.py`'deki hardcoded içerikleri kaldır, template'lerden oku
 
 **Verification**:
 ```bash
-# Verify commands work
-/cco-config show
-/cco-remove
-/cco-init
+ls templates/.editorconfig.template
+ls templates/.pre-commit-config.yaml.template
+cat .editorconfig  # After init
 ```
-
-**Estimated Effort**: 30 minutes
 
 ---
 
-#### Task 2: Fix Command Selection Mechanism
+### Task 1.2: Quick Mode Optimization  
+**Öncelik**: 🔴 CRITICAL  
+**Süre**: 1 saat
 
-**Problem**: All commands may be loading, only recommended ones should be installed.
+**Sorun**: Quick mode HEPSİ guide/skill/agent'ı seçiyor, recommendation kullanmıyor.
 
-**Files to Check**:
-- [ ] `claudecodeoptimizer/wizard/orchestrator.py`
-  - [ ] Locate command installation logic
-  - [ ] Verify only `core + recommended` are installed
-  - [ ] NOT all commands from registry
-
-**Expected Behavior**:
-```python
-# In wizard/orchestrator.py
-recommendations = recommender.recommend_commands()
-commands_to_install = recommendations["core"] + recommendations["recommended"]
-# Install only these, NOT recommendations["optional"]
-```
-
-**If Fix Needed**:
-- [ ] Update `core/installer.py`
-  - [ ] Modify `link_commands()` to accept command list
-  - [ ] Only link specified commands
-
-- [ ] Show optional commands to user
-  - [ ] Print: "Optional commands available: ..."
-  - [ ] User can enable later with: `/cco-config enable <command>`
-
-**Verification**:
-```bash
-# After init, check ~/.claude/commands/
-ls ~/.claude/commands/ | wc -l
-# Should show ~8-12 commands, NOT all 25+
-
-# Verify only core + recommended
-cat ~/.cco/projects/<PROJECT>.json | jq '.commands'
-```
-
-**Estimated Effort**: 2 hours
+**Yapılacaklar**:
+- [ ] `orchestrator.py` line 609-611 düzelt:
+  ```python
+  # DOĞRU:
+  if self.mode == "quick":
+      self.selected_guides = self._recommend_guides_for_project()
+      self.selected_agents = self._recommend_agents_for_project()  # NEW
+      self.selected_skills = self._recommend_skills_for_project()
+  ```
 
 ---
 
-#### Task 3: Model Enforcement (All Commands)
+### Task 1.3: Agent Recommendation Logic  
+**Öncelik**: 🔴 CRITICAL  
+**Süre**: 1 saat
 
-**Problem**: Model specified in some commands, missing in others.
+**Sorun**: Agent'lar için context-aware recommendation yok.
 
-**Standard Template** to Add:
-```markdown
-## Architecture & Model Selection
-
-**Data Gathering**: Haiku (Explore agent, quick)
-- Fast file scanning, pattern detection
-- Cost-effective for repetitive operations
-
-**Analysis & Reasoning**: Sonnet (Plan agent)
-- Complex analysis and recommendations
-- Synthesis of findings
-
-**Execution Pattern**:
-1. Launch data gathering agents (Haiku) in parallel
-2. Aggregate results with analysis agent (Sonnet)
-3. Generate actionable report
-
-## Implementation
-
-Task("scan for patterns", model="haiku", subagent_type="Explore", thoroughness="quick")
-Task("analyze findings", model="sonnet", subagent_type="Plan")
-```
-
-**Files to Update**:
-- [x] `commands/status.md` - Already has model enforcement
-- [x] `commands/audit.md` - Already has model enforcement
-- [ ] `commands/fix.md` - Add model enforcement
-- [ ] `commands/sync.md` - Add model enforcement
-- [ ] `commands/analyze.md` - Add model enforcement
-- [ ] `commands/optimize-code.md` - Add model enforcement
-- [ ] `commands/optimize-deps.md` - Add model enforcement
-- [ ] `commands/optimize-docker.md` - Add model enforcement
-- [ ] `commands/generate.md` - Add model enforcement
-- [ ] `commands/scan-secrets.md` - Add model enforcement
-- [ ] `commands/test.md` - Add model enforcement
-
-**Template for Each Command**:
-1. Add "Architecture & Model Selection" section
-2. Specify which operations use Haiku (data gathering)
-3. Specify which operations use Sonnet (reasoning)
-4. Add explicit model parameter in Task calls
-
-**Verification**:
-```bash
-# All commands should have model specification
-grep -r "model=" commands/*.md | wc -l
-# Should show multiple matches for each command
-```
-
-**Estimated Effort**: 3 hours
+**Yapılacaklar**:
+- [ ] `orchestrator.py` içinde `_recommend_agents_for_project()` ekle
+- [ ] Interactive mode'da agent selection UI iyileştir (descriptions, numbers)
 
 ---
 
-#### Task 4: Git Workflow Selection & CLAUDE.md Customization
+## 🟡 FAZ 2: Eksik File Generation (P1 - 12 saat)
 
-**Problem**: CLAUDE.md'de tek bir Git Workflow stratejisi var, tüm projelere aynı uygulanıyor.
+### Task 2.1: PR Template + CODEOWNERS + VSCode Settings  
+**Öncelik**: 🟡 HIGH  
+**Süre**: 4 saat
 
-**Goal**: Init sırasında ekip boyutuna göre Git Workflow sorup CLAUDE.md'ye özelleştirilmiş olarak eklemek.
-
-**Decision Tree Integration**:
-- **Conditional Question** (Tier 2): "Git Workflow Preference"
-  - **Condition**: `team_trajectory != "solo"` (sadece team projelerde sor)
-  - **Options**:
-    1. **Main-Only (Simple)** - Solo/Small teams için recommended
-       - Single branch (main)
-       - No feature branches
-       - Direct commits with clear messages
-       - Fast, simple, minimal overhead
-    2. **GitHub Flow (Balanced)** - Small-Medium teams için recommended
-       - Feature branches from main
-       - Pull requests required
-       - Branch protection on main
-       - Moderate structure
-    3. **Git Flow (Professional)** - Large teams için recommended
-       - develop + main branches
-       - Feature, release, hotfix branches
-       - Formal release process
-       - Maximum structure
-    4. **Custom** - User defines their own
-
-**Recommendation Logic**:
-```python
-if team_size == "solo":
-    recommended = "Main-Only (Simple)"
-    auto_select = True  # Don't ask, use recommended
-elif team_size in ["small-2-5", "medium-5-10"]:
-    recommended = "GitHub Flow (Balanced)"
-    ask_question = True
-elif team_size in ["large-10-30", "enterprise-30+"]:
-    recommended = "Git Flow (Professional)"
-    ask_question = True
-```
-
-**Files to Modify**:
-
-1. **`claudecodeoptimizer/wizard/decision_tree.py`**
-   - [ ] Add Tier 2 question: `git_workflow_preference`
-   - [ ] Add conditional logic: `if team_trajectory != "solo"`
-   - [ ] Add 4 options (Main-Only, GitHub Flow, Git Flow, Custom)
-   - [ ] Set recommendation based on team size
-
-2. **`claudecodeoptimizer/core/claude_md_generator.py`**
-   - [ ] **CRITICAL: Add backup mechanism before writing**
-     - [ ] Check if output_path exists
-     - [ ] If exists, create backup: `CLAUDE.md.backup-YYYYMMDD-HHMMSS`
-     - [ ] Keep last 3 backups, delete older ones
-     - [ ] Same pattern as needed for PRINCIPLES.md
-   - [ ] Add `_get_git_workflow_section()` method
-   - [ ] Generate workflow section dynamically based on preference:
-     - Main-Only → Simple strategy (like current CLAUDE.md)
-     - GitHub Flow → Branch + PR strategy
-     - Git Flow → Full develop/main/release strategy
-     - Custom → Basic template + user notes
-   - [ ] Add conditional insertion in `_add_conditional_sections()`
-   - [ ] Check `preferences.collaboration.git_workflow`
-   - [ ] **Verify merge strategy is working correctly**:
-     - [x] Existing sections preserved ✅ (line 108)
-     - [x] New sections added from template ✅ (line 118-125)
-     - [x] Section order maintained ✅ (line 161-186)
-     - [x] User customizations kept ✅ (line 100-103)
-     - **Merge Algorithm** (line 94-128):
-       1. Parse both files into sections (by `## Header`)
-       2. Start with existing sections (user's work preserved)
-       3. Ensure "Development Principles" section has @PRINCIPLES.md
-       4. Add missing sections from template (only if not exist)
-       5. Rebuild: original order first, then new sections
-       6. Result: User's customizations + new CCO features ✅
-
-3. **`claudecodeoptimizer/schemas/preferences.py`**
-   - [ ] Verify `TeamCollaboration.git_workflow` field exists
-   - [ ] Update valid values: `["main-only", "github-flow", "git-flow", "custom"]`
-
-**Git Workflow Templates**:
-
-**Main-Only (Solo/Small)**:
-```markdown
-## Git Workflow
-
-**Branch Strategy: Main-Only (Solo Developer)**
-
-- Single `main` branch
-- No feature branches
-- Direct commits with clear messages
-
-**Commit Strategy**:
-- Format: `type(scope): subject`
-- Types: feat, fix, docs, refactor, test, chore
-- Grouped commits (same category)
-- Push after each completed task
-
-**Versioning**:
-- Minor bump per milestone (v0.2.0, v0.3.0)
-- Major bump for breaking changes
-- Patch bump for bug fixes
-```
-
-**GitHub Flow (Balanced)**:
-```markdown
-## Git Workflow
-
-**Branch Strategy: GitHub Flow**
-
-- `main` - Production-ready code
-- Feature branches: `feature/<name>`
-- Hotfix branches: `hotfix/<issue>`
-
-**Process**:
-1. Create feature branch from main
-2. Make commits with clear messages
-3. Open PR when ready
-4. Code review required
-5. Merge to main after approval
-6. Delete feature branch
-
-**Branch Protection**:
-- Require PR reviews (1-2 reviewers)
-- Run CI checks before merge
-- No direct commits to main
-
-**Versioning**:
-- Tag releases on main
-- Semantic versioning (major.minor.patch)
-```
-
-**Git Flow (Professional)**:
-```markdown
-## Git Workflow
-
-**Branch Strategy: Git Flow**
-
-- `main` - Production releases only
-- `develop` - Integration branch
-- Feature branches: `feature/<name>` (from develop)
-- Release branches: `release/<version>` (from develop)
-- Hotfix branches: `hotfix/<issue>` (from main)
-
-**Process**:
-1. Feature: Branch from develop → PR to develop
-2. Release: Branch from develop → test → merge to main + develop
-3. Hotfix: Branch from main → fix → merge to main + develop
-4. Tag releases on main
-
-**Branch Protection**:
-- main: Require PR + 2 reviewers
-- develop: Require PR + 1 reviewer
-- CI/CD required on all branches
-
-**Release Process**:
-- Create release branch from develop
-- Freeze features, fix bugs only
-- Merge to main, tag version
-- Merge back to develop
-```
-
-**Implementation in claude_md_generator.py**:
-```python
-def _add_conditional_sections(self, content, team_size, linting, testing):
-    # ... existing code ...
-
-    # Add Git Workflow section
-    git_workflow = self._get_pref("collaboration.git_workflow", "main-only")
-    if "Git Workflow" not in content:
-        additions.append(self._get_git_workflow_section(git_workflow, team_size))
-
-    # ... rest of code ...
-
-def _get_git_workflow_section(self, workflow_type: str, team_size: str) -> str:
-    """Generate Git Workflow section based on preference"""
-    if workflow_type == "main-only" or team_size == "solo":
-        return self._get_main_only_workflow()
-    elif workflow_type == "github-flow":
-        return self._get_github_flow_workflow()
-    elif workflow_type == "git-flow":
-        return self._get_git_flow_workflow()
-    else:  # custom
-        return self._get_custom_workflow_template()
-```
-
-**Verification**:
-```bash
-# After init with different team sizes
-cat CLAUDE.md | grep -A 30 "## Git Workflow"
-
-# Solo dev should show: Main-Only
-# Small team should show: GitHub Flow (if selected)
-# Large team should show: Git Flow (if selected)
-```
-
-**Benefits**:
-- ✅ Project-specific Git Workflow
-- ✅ No manual CLAUDE.md editing needed
-- ✅ Scales with team size
-- ✅ Professional workflows for large teams
-- ✅ Simple workflows for solo devs
-- ✅ Consistent with project maturity
-
-**Estimated Effort**: 4 hours
+**Yapılacaklar**:
+- [ ] `templates/pull_request_template.md.template` oluştur
+- [ ] `templates/CODEOWNERS.template` oluştur  
+- [ ] `templates/.vscode-settings.json.template` oluştur
+- [ ] `orchestrator.py` içinde generation methods ekle
 
 ---
+
+### Task 2.2: GitLab CI Support  
+**Öncelik**: 🟡 HIGH  
+**Süre**: 4 saat
+
+**Yapılacaklar**:
+- [ ] `templates/.gitlab-ci.yml.template` oluştur
+- [ ] `_generate_gitlab_ci()` method ekle (dil bazlı)
+- [ ] `ci_provider == "gitlab_ci"` ise generate et
+
+---
+
+### Task 2.3: Progressive Disclosure - Principle Categories  
+**Öncelik**: 🟡 HIGH  
+**Süre**: 4 saat  
+**Token Savings**: 10x (5000 → 500 token)
+
+**Yapılacaklar**:
+- [ ] `~/.cco/knowledge/principles/core.md` (P001, P067, P071-P074)
+- [ ] `~/.cco/knowledge/principles/code-quality.md` (P002-P018)
+- [ ] `~/.cco/knowledge/principles/security.md` (P019-P037)
+- [ ] `~/.cco/knowledge/principles/testing.md` (P038-P043)
+- [ ] `~/.cco/knowledge/principles/architecture.md` (P044-P053)
+- [ ] `~/.cco/knowledge/principles/performance.md` (P054-P058)
+- [ ] `~/.cco/knowledge/principles/operations.md` (P059-P066)
+- [ ] `~/.cco/knowledge/principles/git-workflow.md` (P072-P074)
+- [ ] CLAUDE.md güncelle: Sadece core + category links
+- [ ] Commands'da kategori dosyalarını referans et
+
+---
+
+## 🟢 FAZ 3-4: Advanced Features (P2-P3 - 32 saat)
+
+**Not**: Faz 1-2 tamamlandıktan sonra değerlendirilecek.
+
+- Context Matrix (6h)
+- UI Adapter - Claude Code Rich UI (6h)
+- P074 - Automated Versioning Implementation (4h)
+- Enhanced Decision Points (16h)
+
+---
+
+## 📋 KALAN TASKLAR (v0.2.0 Öncesi)
 
 ### P0.2: Document Management System (Priority: ~~🔴 CRITICAL~~ ✅ MOSTLY SOLVED)
 
