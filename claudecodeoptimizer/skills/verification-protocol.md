@@ -1,35 +1,16 @@
 ---
-name: verification-protocol
-description: Enforces fix → verify → commit loop for principle violations
-version: 1.0.0
-category: enforcement
-applies_to:
-  - audit-principles
-  - audit-security
-  - audit-tests
-  - fix-code
-activation: after_violations_detected
+metadata:
+  name: "Verification Protocol"
+  activation_keywords: ["verify", "verification", "violations", "audit", "fix"]
+  category: "enforcement"
 ---
 
 # Verification Protocol
 
-**Purpose:** Prevent "fix everything, test once" anti-pattern. Enforce incremental verification.
+Enforces fix → verify → commit loop for principle violations. Prevents "fix everything, test once" anti-pattern through incremental verification.
 
----
-
-## When This Skill Activates
-
-This skill activates AFTER any audit command detects violations:
-- `/cco-audit-principles` finds principle violations
-- `/cco-audit-security` finds security issues
-- `/cco-audit-tests` finds coverage gaps
-- `/cco-fix-code` applies auto-fixes
-
-**Trigger:** Command reports `N violations found` where N > 0
-
----
-
-## The Protocol
+<!-- INSTRUCTIONS: Load when activated -->
+## Detailed Instructions
 
 **NEVER fix all violations at once. ALWAYS use this loop:**
 
@@ -86,9 +67,8 @@ After ALL categories fixed:
 "✓ All violations resolved! Project compliant."
 ```
 
----
-
-## Examples
+<!-- RESOURCES: Load on explicit request -->
+## Examples & Resources
 
 ### Example 1: Principle Violations
 
@@ -131,33 +111,6 @@ User: n
 
 Skill:
 "Skipping P002. Moving to next..."
-
-Skill:
-"Principle P019 (Secrets): 3 violations
- - Hardcoded API key in config.py:23
-
-Fix P019 now? (y/n/skip)"
-
-User: y
-<User fixes secrets>
-
-Skill:
-"Verifying P019 fixes..."
-"✓ All P019 violations fixed!"
-"Committing..."
-
-Skill:
-"Fixed: P001 ✓, P019 ✓
- Skipped: P002, P023, P030
-
-Run final verification? (y/n)"
-
-User: y
-
-Skill:
-"Running full audit..."
-"20 violations found (only P002, P023, P030 - as expected)"
-"Session complete. Resume later with /cco-audit-principles"
 ```
 
 ### Example 2: Security Violations
@@ -188,37 +141,11 @@ Skill:
 "✓ No hardcoded secrets found!"
 "Committing..."
 <git commit -m "fix(security): move secrets to environment variables">
-
-Skill:
-"HIGH: Missing cache TTL (5 violations)
- - services/api/cache.py:34
- - services/api/cache.py:67
- - shared/cache.py:89
- - shared/cache.py:112
- - worker/cache.py:45
-
-Fix HIGH cache TTL issues now? (y/n/skip)"
-
-User: y
-<User adds TTL parameters>
-
-Skill:
-"Verifying TTL additions..."
-<Greps for redis.set without ttl parameter>
-"✓ All cache operations have TTL!"
-"Committing..."
-
-Skill:
-"Final security audit..."
-"4 MEDIUM issues remain (encryption recommendations)"
-"All CRITICAL and HIGH issues resolved ✓"
 ```
 
----
+### Anti-Patterns to Prevent
 
-## Anti-Patterns to Prevent
-
-### ❌ WRONG: Batch Fix Everything
+#### ❌ WRONG: Batch Fix Everything
 
 ```
 User: "I'll fix all 23 violations now"
@@ -229,7 +156,7 @@ User: "Which fix broke this? No idea..."
 <Reverts everything, starts over>
 ```
 
-### ✅ RIGHT: Incremental with Verification
+#### ✅ RIGHT: Incremental with Verification
 
 ```
 User: Uses verification protocol
@@ -245,11 +172,9 @@ User: "P019 broke tests, revert ONLY that commit"
 <P001 fixes preserved ✓>
 ```
 
----
+### Integration with Commands
 
-## Integration with Commands
-
-### audit-principles.md
+#### audit-principles.md
 Add after Phase 4 (Reporting):
 
 ```markdown
@@ -267,7 +192,7 @@ The skill will guide user through:
 4. Track progress
 ```
 
-### fix-code.md
+#### fix-code.md
 Add after Phase 3 (Backup):
 
 ```markdown
@@ -286,9 +211,7 @@ The skill will:
 5. Repeat for next category
 ```
 
----
-
-## State Management
+### State Management
 
 The skill tracks progress in `.cco/state/{PROJECT}/verification-session.json`:
 
@@ -324,9 +247,7 @@ Resume interrupted session:
 /cco-continue-verification
 ```
 
----
-
-## Success Metrics
+### Success Metrics
 
 **Before (without skill):**
 - Fix time: 2-3 hours
@@ -340,9 +261,7 @@ Resume interrupted session:
 - Rollback rate: 15% (single category, not all)
 - Frustration: Low (clear progress)
 
----
-
-## When to Skip This Skill
+### When to Skip This Skill
 
 Skip guided remediation if:
 - Only 1-2 violations (overhead not worth it)

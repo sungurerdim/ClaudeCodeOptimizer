@@ -1,23 +1,18 @@
 ---
-name: root-cause-analysis
-description: Analyze WHY violations exist, not just WHERE they are
-version: 1.0.0
-category: analysis
-applies_to:
-  - audit-principles
-  - audit-security
-  - audit-tests
-  - analyze
-activation: after_aggregation
+metadata:
+  name: "Root Cause Analysis"
+  activation_keywords: ["root cause", "why violations", "pattern analysis", "systemic fix"]
+  category: "analysis"
 ---
 
 # Root Cause Analysis
 
-**Purpose:** Fix the pattern, not individual instances. Understand WHY violations exist to prevent recurrence.
+Fix the pattern, not individual instances. Understand WHY violations exist to prevent recurrence.
 
----
+<!-- INSTRUCTIONS: Load when activated -->
+## Detailed Instructions
 
-## When This Skill Activates
+### When This Skill Activates
 
 This skill activates AFTER audit aggregation, BEFORE reporting:
 - `/cco-audit-principles` aggregates violations
@@ -26,22 +21,17 @@ This skill activates AFTER audit aggregation, BEFORE reporting:
 
 **Trigger:** Command finds 3+ violations of same type
 
----
-
-## The Core Principle
+### The Core Principle
 
 **Don't just fix symptoms. Find and fix the root cause.**
 
 Example:
-- ❌ Fix 15 bare except clauses individually
-- ✅ Understand WHY they exist, create systemic fix
+- Don't fix 15 bare except clauses individually
+- Understand WHY they exist, create systemic fix
 
----
+### Analysis Dimensions
 
-## Analysis Dimensions
-
-### 1. Temporal Patterns
-**When were violations introduced?**
+#### 1. Temporal Patterns - When were violations introduced?
 
 ```bash
 for file in <violation_files>; do
@@ -49,13 +39,12 @@ for file in <violation_files>; do
 done
 ```
 
-**Categories:**
+Categories:
 - **LEGACY** (>1 year old): Before team adopted principle
 - **RECENT** (<1 month old): New code, training issue
 - **GRADUAL** (3-12 months): Slow drift, enforcement gaps
 
-### 2. Authorship Patterns
-**Who introduced violations?**
+#### 2. Authorship Patterns - Who introduced violations?
 
 ```bash
 for file in <violation_files>; do
@@ -63,13 +52,12 @@ for file in <violation_files>; do
 done
 ```
 
-**Categories:**
+Categories:
 - **SINGLE AUTHOR**: Training/knowledge issue for one person
 - **MULTIPLE AUTHORS**: Team-wide knowledge gap
 - **EXTERNAL**: Third-party code, dependencies
 
-### 3. Structural Patterns
-**Where do violations cluster?**
+#### 3. Structural Patterns - Where do violations cluster?
 
 ```bash
 # Group by directory
@@ -78,28 +66,26 @@ for violation in <violations>; do
 done | sort | uniq -c
 ```
 
-**Categories:**
+Categories:
 - **SERVICE-SPECIFIC**: Only in services/worker/
 - **CROSS-CUTTING**: In shared/ (affects all services)
 - **COPY-PASTE**: Identical code in multiple files
 
-### 4. Code Age Patterns
-**How old is the violating code?**
+#### 4. Code Age Patterns - How old is the violating code?
 
 ```bash
 git log --follow --format="%ai" -- <file> | tail -1
 ```
 
-**Categories:**
+Categories:
 - **ANCIENT** (>2 years): Original implementation, never refactored
 - **OLD** (6-24 months): Pre-dates current standards
 - **NEW** (<6 months): Recent addition, should comply
 
----
+### Root Cause Classification
 
-## Root Cause Classification
+#### Type 1: Legacy Code
 
-### Type 1: Legacy Code
 **Signature:** Old files (>1 year), before principle adopted
 
 **Example:**
@@ -121,7 +107,8 @@ Root Cause: LEGACY CODE (pre-principle)
 4. Schedule: Migrate legacy code in next sprint
 ```
 
-### Type 2: Training Gap
+#### Type 2: Training Gap
+
 **Signature:** Same author, recent code, multiple violations
 
 **Example:**
@@ -144,7 +131,8 @@ Root Cause: TRAINING GAP (new team member)
 5. Pair programming: Refactor together
 ```
 
-### Type 3: Copy-Paste Pattern
+#### Type 3: Copy-Paste Pattern
+
 **Signature:** Identical code in multiple locations
 
 **Example:**
@@ -168,7 +156,8 @@ Root Cause: COPY-PASTE (developers copied instead of importing)
 5. Document in team wiki: "Common Crypto Functions"
 ```
 
-### Type 4: Missing Template
+#### Type 4: Missing Template
+
 **Signature:** Same violation in multiple services, boilerplate code
 
 **Example:**
@@ -191,7 +180,8 @@ Root Cause: MISSING TEMPLATE (no reusable component)
 5. Add linter rule: Flag @app.route without @rate_limit
 ```
 
-### Type 5: Incomplete Migration
+#### Type 5: Incomplete Migration
+
 **Signature:** Mix of old and new patterns
 
 **Example:**
@@ -214,9 +204,7 @@ Root Cause: INCOMPLETE MIGRATION
 5. Commit: "refactor: complete dataclass migration"
 ```
 
----
-
-## Analysis Report Format
+### Analysis Report Format
 
 ```markdown
 === Root Cause Analysis ===
@@ -282,9 +270,8 @@ Week 3: Training session with Alice
 Week 4: Verify no new violations
 ```
 
----
-
-## Examples
+<!-- RESOURCES: Load on explicit request -->
+## Examples & Resources
 
 ### Example 1: Security Issue Root Cause
 
@@ -441,11 +428,9 @@ Week 3: Test 15 high-value functions
 Week 4: Test remaining 16 functions
 ```
 
----
+### Integration with Commands
 
-## Integration with Commands
-
-### audit-principles.md
+#### audit-principles.md
 Add after Phase 3 (Aggregation), before Phase 4 (Reporting):
 
 ```markdown
@@ -465,11 +450,9 @@ The skill analyzes:
 Returns systemic fixes, not just individual remediation.
 ```
 
----
+### Anti-Patterns to Prevent
 
-## Anti-Patterns to Prevent
-
-### ❌ WRONG: Fix Symptoms Only
+#### WRONG: Fix Symptoms Only
 
 ```
 User: "15 bare except clauses found. I'll fix them."
@@ -481,7 +464,7 @@ Next week:
 User: "Why do these keep appearing?!"
 ```
 
-### ✅ RIGHT: Fix Root Cause
+#### RIGHT: Fix Root Cause
 
 ```
 Skill: "15 bare except clauses found. Analyzing root cause..."
@@ -501,9 +484,7 @@ Next week:
 Alice: "My code was blocked by pre-commit. Found P001 docs, using specific exceptions now ✓"
 ```
 
----
-
-## Success Metrics
+### Success Metrics
 
 **Before (without skill):**
 - Recurrence rate: 60% (violations return)
@@ -515,9 +496,7 @@ Alice: "My code was blocked by pre-commit. Found P001 docs, using specific excep
 - Fix time: 30 minutes (scripts + automation)
 - Learning: High (team understands WHY)
 
----
-
-## When to Skip This Skill
+### When to Skip This Skill
 
 Skip root cause analysis if:
 - <3 violations of same type (not enough data)

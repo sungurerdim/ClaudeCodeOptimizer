@@ -1,22 +1,18 @@
 ---
-name: test-first-verification
-description: Generate characterization tests BEFORE applying code changes
-version: 1.0.0
-category: enforcement
-applies_to:
-  - fix-code
-  - refactor-duplicates
-  - cleanup-dead-code
-activation: before_code_changes
+metadata:
+  name: "Test-First Verification"
+  activation_keywords: ["characterization", "behavior capture", "before refactoring", "before fixing"]
+  category: "enforcement"
 ---
 
 # Test-First Verification
 
-**Purpose:** Prevent silent behavior changes during refactoring. Capture current behavior BEFORE modifying code.
+Capture current behavior BEFORE modifying code to prevent silent breakage during refactoring.
 
----
+<!-- INSTRUCTIONS: Load when activated -->
+## Detailed Instructions
 
-## When This Skill Activates
+### When This Skill Activates
 
 This skill activates BEFORE any code modification command:
 - `/cco-fix-code` applies auto-fixes
@@ -25,9 +21,7 @@ This skill activates BEFORE any code modification command:
 
 **Trigger:** Command identifies code to modify
 
----
-
-## The Core Principle
+### The Core Principle
 
 **Characterization Tests = Tests that assert CURRENT behavior (not ideal, just current)**
 
@@ -36,18 +30,14 @@ Why?
 - Tests verify behavior stays identical
 - If test fails after refactor → behavior changed (may be bug)
 
----
+### The Protocol
 
-## The Protocol
-
-### For Each Function to Modify:
+For each function to modify:
 
 1. **ANALYZE Current Behavior**
-   ```
-   Run function with sample inputs
-   Capture actual outputs
-   Note edge cases (None, empty, exceptions)
-   ```
+   - Run function with sample inputs
+   - Capture actual outputs
+   - Note edge cases (None, empty, exceptions)
 
 2. **GENERATE Characterization Test**
    ```python
@@ -75,9 +65,7 @@ Why?
    ```
 
 4. **APPLY Code Change**
-   ```
-   Perform refactoring/fix/cleanup
-   ```
+   - Perform refactoring/fix/cleanup
 
 5. **RUN Characterization Test Again**
    ```bash
@@ -98,9 +86,8 @@ Why?
    git commit -m "refactor: extract duplicate function (behavior verified)"
    ```
 
----
-
-## Examples
+<!-- RESOURCES: Load on explicit request -->
+## Examples & Resources
 
 ### Example 1: Refactoring Duplicate Code
 
@@ -301,13 +288,11 @@ def calculate_total(items):
 "✓ All tests pass (behavior corrected + optimized)"
 ```
 
----
+### Edge Case Discovery
 
-## Edge Case Discovery
+Characterization tests often discover bugs!
 
-**Bonus benefit:** Characterization tests often discover bugs!
-
-### Common Discoveries:
+**Common Discoveries:**
 
 1. **None handling missing**
    ```python
@@ -339,11 +324,9 @@ def calculate_total(items):
    assert result is None  # Should raise exception instead?
    ```
 
----
+### Integration with Commands
 
-## Integration with Commands
-
-### fix-code.md
+#### fix-code.md
 Add after Phase 2 (Filter Safe Fixes):
 
 ```markdown
@@ -362,7 +345,7 @@ For each function to fix:
 5. If test fails → behavior changed → manual review
 ```
 
-### refactor-duplicates.md
+#### refactor-duplicates.md
 Add at the beginning:
 
 ```markdown
@@ -379,9 +362,7 @@ This ensures:
 - No silent breakage
 ```
 
----
-
-## Test File Naming Convention
+### Test File Naming Convention
 
 ```
 test_characterization_<function_name>.py
@@ -399,11 +380,9 @@ Examples:
 - After 1 sprint: Merge into regular test suite or delete
 - Rationale: Once refactoring is stable, integrate into main tests
 
----
+### Anti-Patterns to Prevent
 
-## Anti-Patterns to Prevent
-
-### ❌ WRONG: Refactor First, Test Later
+#### WRONG: Refactor First, Test Later
 
 ```
 User: "I'll extract this duplicate function"
@@ -415,7 +394,7 @@ User: "Did my refactoring break this? Or was test already broken?"
 <No way to know - no baseline>
 ```
 
-### ✅ RIGHT: Characterization Test First
+#### RIGHT: Characterization Test First
 
 ```
 Skill: "Generating characterization test..."
@@ -427,9 +406,7 @@ Skill: "Updating test to assert correct behavior..."
 <Now refactoring AND bug fix in one step>
 ```
 
----
-
-## Success Metrics
+### Success Metrics
 
 **Before (without skill):**
 - Behavior changes: 30% of refactorings
@@ -441,9 +418,7 @@ Skill: "Updating test to assert correct behavior..."
 - Debugging time: 10 minutes (test shows exact difference)
 - Confidence: High (tests prove behavior unchanged)
 
----
-
-## When to Skip This Skill
+### When to Skip This Skill
 
 Skip characterization tests if:
 - Function is brand new (no "current behavior" to capture)

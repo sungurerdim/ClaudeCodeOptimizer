@@ -25,6 +25,8 @@ class Option:
     effects: str = ""  # What happens if selected
     time_investment: str = ""  # Optional: time/effort indication
     trade_offs: str = ""  # Optional: pros/cons
+    conflicts_with: List[str] = field(default_factory=list)  # Mutually exclusive options
+    requires: List[str] = field(default_factory=list)  # Required dependencies
 
     def __post_init__(self) -> None:
         """Validate option data"""

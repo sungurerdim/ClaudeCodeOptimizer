@@ -35,6 +35,7 @@ from .renderer import (
     print_warning,
 )
 from .system_detection import SystemDetector
+from .ui_adapter import ClaudeCodeUIAdapter
 
 
 class CCOWizard:
@@ -80,6 +81,9 @@ class CCOWizard:
 
         # Engines
         self.rec_engine = RecommendationEngine()
+
+        # UI Adapter (auto-detects Claude Code context)
+        self.ui_adapter = ClaudeCodeUIAdapter()
 
     # ========================================================================
     # Main Execution Flow
@@ -417,77 +421,28 @@ class CCOWizard:
 
     def _ask_user_decision(self, decision: DecisionPoint) -> any:
         """Ask user for decision (Interactive mode)"""
-        clear_screen()
+        # Use UI adapter for context-aware presentation
+        # The adapter handles both Claude Code rich UI and terminal fallback
 
-        # Show tier header
-        tier_names = {
-            1: "Fundamental Decisions",
-            2: "Strategy Decisions",
-            3: "Tactical Decisions",
-        }
-        tier_name = tier_names.get(decision.tier, "Decisions")
-        print_header(f"Tier {decision.tier}: {tier_name}", decision.question)
-        print()
-
-        # Show why this question matters
-        if decision.why_this_question:
-            print_info(decision.why_this_question, indent=2)
+        # Show tier header for terminal mode (UI adapter will handle its own formatting)
+        if self.ui_adapter.mode == "terminal":
+            clear_screen()
+            tier_names = {
+                1: "Fundamental Decisions",
+                2: "Strategy Decisions",
+                3: "Tactical Decisions",
+            }
+            tier_name = tier_names.get(decision.tier, "Decisions")
+            print_header(f"Tier {decision.tier}: {tier_name}", decision.question)
             print()
 
-        # Show AI hint
-        ai_hint = decision.get_ai_hint(self.answer_context)
-        if ai_hint:
-            print_info(ai_hint, indent=2)
-            print()
+            # Show why this question matters
+            if decision.why_this_question:
+                print_info(decision.why_this_question, indent=2)
+                print()
 
-        # Ask question
-        if decision.multi_select:
-            # Multi-choice
-            choices = [f"{opt.label}\n    {opt.description}" for opt in decision.options]
-            recommended = decision.get_recommended_option(self.answer_context)
-            defaults = (
-                recommended
-                if isinstance(recommended, list)
-                else [recommended]
-                if recommended
-                else []
-            )
-
-            selected_indices = ask_multi_choice(
-                decision.question,
-                choices,
-                defaults=[
-                    choices.index(
-                        f"{decision.options[i].label}\n    {decision.options[i].description}",
-                    )
-                    for i, opt in enumerate(decision.options)
-                    if opt.value in defaults
-                ],
-            )
-
-            # Map back to values
-            answer = [decision.options[i].value for i in selected_indices]
-
-        else:
-            # Single choice
-            choices = [opt.label for opt in decision.options]
-            recommended = decision.get_recommended_option(self.answer_context)
-
-            # Find recommended index
-            default_idx = None
-            if recommended:
-                for i, opt in enumerate(decision.options):
-                    if opt.value == recommended:
-                        default_idx = i
-                        break
-
-            selected_idx = ask_choice(
-                decision.question,
-                choices,
-                default=choices[default_idx] if default_idx is not None else None,
-            )
-
-            answer = decision.options[selected_idx].value
+        # Delegate to UI adapter
+        answer = self.ui_adapter.ask_decision(decision, self.answer_context)
 
         return answer
 
