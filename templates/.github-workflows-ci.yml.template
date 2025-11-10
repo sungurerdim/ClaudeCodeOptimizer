@@ -1,0 +1,50 @@
+# CCO-generated CI/CD workflow
+# Configured for: ${PRIMARY_LANGUAGE}
+
+name: CI
+
+on:
+  push:
+    branches: [ ${DEFAULT_BRANCH} ]
+  pull_request:
+    branches: [ ${DEFAULT_BRANCH} ]
+
+jobs:
+  lint:
+    name: Lint & Format Check
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+${LINT_STEPS}
+
+  type-check:
+    name: Type Check
+    runs-on: ubuntu-latest
+    needs: lint
+    steps:
+      - uses: actions/checkout@v4
+
+${TYPE_CHECK_STEPS}
+
+  test:
+    name: Test
+    runs-on: ${{ matrix.os }}
+    needs: lint
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [ubuntu-latest, windows-latest, macos-latest]
+${TEST_MATRIX}
+    steps:
+      - uses: actions/checkout@v4
+
+${TEST_STEPS}
+
+  security:
+    name: Security Scan
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+${SECURITY_STEPS}

@@ -2953,57 +2953,6 @@ mypy --strict claudecodeoptimizer/
 
 ---
 
-#### 5. Code Quality Cleanup (Priority: 🟡 HIGH)
-
-**Status**: ⚠️ 79 ruff warnings (26 auto-fixable)
-
-**Tasks**:
-- [ ] **Auto-fix 26 fixable errors**
-  ```bash
-  ruff check --fix claudecodeoptimizer/
-  ```
-
-  - [ ] COM812 (17): Missing trailing commas - Auto-fix
-  - [ ] F401 (3): Unused imports - Auto-fix
-  - [ ] I001 (3): Unsorted imports - Auto-fix
-  - [ ] UP015 (2): Redundant open modes - Auto-fix
-  - [ ] F811 (1): Redefined while unused - Auto-fix
-
-- [ ] **Manual fixes for remaining errors**
-  - [ ] N812 (6): Lowercase imported as non-lowercase
-    - [ ] Rename imports to follow PEP8
-
-  - [ ] S112 (3): Try-except-continue
-    - [ ] Similar to try-except-pass, add logging
-
-  - [ ] E741 (2): Ambiguous variable name
-    - [ ] Rename `l` → `line`, `O` → `obj`, etc.
-
-  - [ ] B023 (1): Function uses loop variable
-    - [ ] Fix closure issue with proper scoping
-
-  - [ ] E402 (1): Module import not at top
-    - [ ] Reorganize imports
-
-  - [ ] S105 (1): Hardcoded password string
-    - [ ] Use environment variable
-
-  - [ ] S605 (1): Start process with shell
-    - [ ] Use subprocess with shell=False
-
-**Verification**:
-```bash
-# Should show ZERO errors
-ruff check claudecodeoptimizer/
-
-# Code should be formatted
-ruff format claudecodeoptimizer/
-```
-
-**Estimated Effort**: 0.5 days
-
----
-
 ### v0.2.0 Release Checklist
 
 **Before Release**:
@@ -3013,7 +2962,6 @@ ruff format claudecodeoptimizer/
 - [ ] Zero try-except-pass
 - [ ] Type annotations complete
 - [ ] CI/CD green
-- [ ] Ruff clean (0 errors)
 - [ ] Update CHANGELOG.md
 - [ ] Version bump to 0.2.0
 - [ ] Tag release: `git tag v0.2.0`
