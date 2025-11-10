@@ -1,0 +1,252 @@
+{
+  "version": "1.0.0",
+  "skills": [
+    {
+      "name": "cco-audit",
+      "description": "Comprehensive codebase audit (code quality, security, tests, docs, principles)",
+      "category": "audit",
+      "model": "sonnet",
+      "cost": "medium",
+      "estimated_time": "3-5 minutes",
+      "capabilities": [
+        "Code quality analysis (linting, formatting, type checking)",
+        "Security vulnerability scanning (P019-P037)",
+        "Test coverage analysis",
+        "Documentation completeness check",
+        "Principle compliance validation"
+      ],
+      "required_documents": [
+        "CLAUDE.md",
+        "PRINCIPLES.md"
+      ],
+      "optional_documents": [
+        "docs/cco/guides/verification-protocol.md",
+        "docs/cco/guides/security-response.md",
+        "docs/cco/principles/code-quality.md",
+        "docs/cco/principles/security.md",
+        "docs/cco/principles/testing.md"
+      ],
+      "parallel_agents": 3,
+      "token_usage": "~6,000-10,000 tokens"
+    },
+    {
+      "name": "cco-fix",
+      "description": "Auto-fix code quality, security, documentation, and test issues",
+      "category": "quality",
+      "model": "sonnet",
+      "cost": "high",
+      "estimated_time": "5-10 minutes",
+      "capabilities": [
+        "Auto-format code (black, prettier, etc.)",
+        "Fix security vulnerabilities",
+        "Update outdated documentation",
+        "Fix flaky tests"
+      ],
+      "required_documents": [
+        "CLAUDE.md",
+        "PRINCIPLES.md"
+      ],
+      "optional_documents": [
+        "docs/cco/guides/security-response.md",
+        "docs/cco/principles/testing.md"
+      ],
+      "parallel_agents": 1,
+      "token_usage": "~5,000-8,000 tokens"
+    },
+    {
+      "name": "cco-generate",
+      "description": "Generate tests, documentation, CI/CD pipelines, and code",
+      "category": "generation",
+      "model": "sonnet",
+      "cost": "high",
+      "estimated_time": "5-15 minutes",
+      "capabilities": [
+        "Generate unit and integration tests",
+        "Generate API documentation",
+        "Generate README and setup guides",
+        "Generate CI/CD pipeline configs"
+      ],
+      "required_documents": [
+        "CLAUDE.md",
+        "PRINCIPLES.md"
+      ],
+      "optional_documents": [
+        "docs/cco/principles/testing.md"
+      ],
+      "parallel_agents": 1,
+      "token_usage": "~4,000-7,000 tokens"
+    },
+    {
+      "name": "cco-analyze",
+      "description": "Deep project analysis - structure, tech stack, complexity, recommendations",
+      "category": "analysis",
+      "model": "haiku",
+      "cost": "low",
+      "estimated_time": "1-2 minutes",
+      "capabilities": [
+        "Project structure detection (monorepo, microservices, monolith)",
+        "Technology stack identification",
+        "Complexity metrics (LOC, dependencies)",
+        "Architecture pattern detection",
+        "Quality score calculation"
+      ],
+      "required_documents": [
+        "CLAUDE.md",
+        "PRINCIPLES.md"
+      ],
+      "optional_documents": [],
+      "parallel_agents": 0,
+      "token_usage": "~5,000-6,000 tokens"
+    },
+    {
+      "name": "cco-scan-secrets",
+      "description": "Scan for exposed secrets, API keys, passwords, and credentials",
+      "category": "security",
+      "model": "haiku",
+      "cost": "low",
+      "estimated_time": "30 seconds",
+      "capabilities": [
+        "Scan for hardcoded secrets (API keys, passwords, tokens)",
+        "Detect credentials in git history",
+        "Check .env files for exposed secrets",
+        "Validate .gitignore configuration"
+      ],
+      "required_documents": [
+        "CLAUDE.md"
+      ],
+      "optional_documents": [
+        "docs/cco/guides/security-response.md"
+      ],
+      "parallel_agents": 0,
+      "token_usage": "~3,500-4,000 tokens"
+    },
+    {
+      "name": "cco-optimize-deps",
+      "description": "Optimize dependencies - remove unused, update outdated, fix vulnerabilities",
+      "category": "devops",
+      "model": "haiku",
+      "cost": "low",
+      "estimated_time": "2-3 minutes",
+      "capabilities": [
+        "Detect unused dependencies",
+        "Find outdated packages",
+        "Scan for security vulnerabilities (CVEs)",
+        "Suggest lighter alternatives"
+      ],
+      "required_documents": [
+        "CLAUDE.md"
+      ],
+      "optional_documents": [],
+      "parallel_agents": 0,
+      "token_usage": "~3,000-4,000 tokens"
+    },
+    {
+      "name": "cco-optimize-code",
+      "description": "Remove unused code, imports, and deprecated markers",
+      "category": "quality",
+      "model": "haiku",
+      "cost": "low",
+      "estimated_time": "1-2 minutes",
+      "capabilities": [
+        "Remove unused imports",
+        "Detect and remove unused functions/classes",
+        "Remove unreachable code",
+        "Clean up TODO/FIXME markers"
+      ],
+      "required_documents": [
+        "CLAUDE.md"
+      ],
+      "optional_documents": [],
+      "parallel_agents": 0,
+      "token_usage": "~3,000-3,500 tokens"
+    },
+    {
+      "name": "cco-status",
+      "description": "Show CCO initialization status and current configuration",
+      "category": "info",
+      "model": "haiku",
+      "cost": "very_low",
+      "estimated_time": "10 seconds",
+      "capabilities": [
+        "Display project configuration",
+        "Show active principles",
+        "List installed commands",
+        "Check CCO version"
+      ],
+      "required_documents": [],
+      "optional_documents": [],
+      "parallel_agents": 0,
+      "token_usage": "~500-1,000 tokens"
+    }
+  ],
+  "model_guidelines": {
+    "haiku": {
+      "use_for": [
+        "Simple data collection",
+        "Fast scanning and searching",
+        "Straightforward edits (<50 lines)",
+        "Documentation reading",
+        "File pattern matching"
+      ],
+      "advantages": [
+        "2-3x faster than Sonnet",
+        "Lower cost",
+        "Good enough for simple tasks"
+      ],
+      "limitations": [
+        "Less capable reasoning",
+        "May struggle with complex logic",
+        "Not suitable for architectural decisions"
+      ]
+    },
+    "sonnet": {
+      "use_for": [
+        "Complex analysis and reasoning",
+        "Security vulnerability assessment",
+        "Test generation",
+        "Bug fixing with root cause analysis",
+        "Architectural decisions"
+      ],
+      "advantages": [
+        "Deep reasoning capability",
+        "Better pattern recognition",
+        "Context-aware recommendations",
+        "Accurate effort estimation"
+      ],
+      "limitations": [
+        "Slower than Haiku",
+        "Higher cost",
+        "May be overkill for simple tasks"
+      ]
+    },
+    "opus": {
+      "use_for": [
+        "Extremely complex reasoning (rarely needed)",
+        "Novel problem solving",
+        "High-stakes decisions"
+      ],
+      "advantages": [
+        "Highest reasoning capability",
+        "Best for unprecedented challenges"
+      ],
+      "limitations": [
+        "Very slow",
+        "Very expensive",
+        "Usually unnecessary"
+      ]
+    }
+  },
+  "parallel_execution_guide": {
+    "when_to_use": "Tasks with 3+ independent operations or affecting 2+ services",
+    "best_practices": [
+      "Launch all parallel agents in a SINGLE message",
+      "Use Haiku for data gathering (fast)",
+      "Use Sonnet for aggregation (smart)",
+      "Group related tasks to reduce overhead"
+    ],
+    "performance_gains": {
+      "parallel_vs_sequential": "2-3x faster",
+      "example_security_audit": "20 seconds (parallel) vs 45 seconds (sequential)"
+    }
+  }
+}
