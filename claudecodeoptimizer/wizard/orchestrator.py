@@ -911,6 +911,18 @@ class CCOWizard:
                 self._generate_vscode_settings()
                 print_success("✓ Created .vscode/settings.json", indent=2)
 
+            # Generate .env.template (if secrets_management selected)
+            if self.answer_context and self.answer_context.has_answer("secrets_management"):
+                self._generate_env_template()
+                if (self.project_root / ".env.template").exists():
+                    print_success("✓ Created .env.template", indent=2)
+
+            # Generate logging configuration (if logging_level selected)
+            if self.answer_context and self.answer_context.has_answer("logging_level"):
+                self._generate_logging_config()
+                if (self.project_root / "logging.yaml").exists() or (self.project_root / "logger.config.js").exists():
+                    print_success("✓ Created logging configuration", indent=2)
+
             print()
             return True
 
@@ -1192,6 +1204,36 @@ class CCOWizard:
         """Inject selected principle/guide/agent/skill references into CLAUDE.md"""
         additions = []
 
+        # Add error handling strategy if answered
+        if self.answer_context and self.answer_context.has_answer("error_handling"):
+            error_handling = self.answer_context.get("error_handling", "defensive")
+            additions.append("\n### Error Handling Strategy (Project Configuration)\n")
+
+            if error_handling == "defensive":
+                additions.append("**Defensive Programming**: Validate all inputs, check all assumptions, fail gracefully.\n")
+                additions.append("- Validate all function inputs at entry points")
+                additions.append("- Use type hints and runtime type checking")
+                additions.append("- Provide helpful error messages with context")
+                additions.append("- Log errors with full stack traces")
+            elif error_handling == "fail_fast":
+                additions.append("**Fail-Fast**: Errors cause immediate visible failure. No silent fallbacks.\n")
+                additions.append("- Never swallow exceptions without re-raising")
+                additions.append("- Fail immediately on invalid state")
+                additions.append("- Use assertions for invariants")
+                additions.append("- See P001: Fail-Fast Error Handling in CLAUDE.md")
+            elif error_handling == "exception_hierarchy":
+                additions.append("**Exception Hierarchy**: Custom exception types for different error categories.\n")
+                additions.append("- Define custom exception classes per domain")
+                additions.append("- Catch specific exceptions, not generic Exception")
+                additions.append("- Include error context in exception data")
+                additions.append("- Document which exceptions each function can raise")
+            elif error_handling == "result_types":
+                additions.append("**Result Types**: Use Result/Option types instead of exceptions for expected failures.\n")
+                additions.append("- Return Result[T, Error] for operations that can fail")
+                additions.append("- Use Option[T] for nullable values")
+                additions.append("- Reserve exceptions for truly exceptional cases")
+                additions.append("- Chain operations with map/flatMap/and_then")
+
         # Category-specific principles
         if self.selected_principles:
             additions.append("\n### Category-Specific Principles (Project Selected)\n")
@@ -1465,11 +1507,25 @@ class CCOWizard:
         # Get line length from answers (default 88 for Python)
         line_length = "88"
         if self.answer_context:
-            # Could be from a line_length decision point if we add it
-            line_length = self.answer_context.get("line_length", "88")
+            line_length = self.answer_context.get("line_length_preference", "88")
+
+        # Get naming convention guidance
+        naming_guide = ""
+        if self.answer_context and self.answer_context.has_answer("naming_convention"):
+            naming_conv = self.answer_context.get("naming_convention", "language_default")
+            if naming_conv == "snake_case":
+                naming_guide = "\n# Naming: Use snake_case for files and identifiers"
+            elif naming_conv == "camelCase":
+                naming_guide = "\n# Naming: Use camelCase for identifiers"
+            elif naming_conv == "language_default":
+                naming_guide = "\n# Naming: Follow language conventions (Python: snake_case, JS: camelCase)"
 
         # Replace template variables
         content = content.replace("${LINE_LENGTH}", str(line_length))
+
+        # Add naming guidance as comment at the end
+        if naming_guide:
+            content += naming_guide
 
         # Write to project root
         output_path = self.project_root / ".editorconfig"
@@ -1477,9 +1533,27 @@ class CCOWizard:
 
     def _generate_precommit_config(self, hooks: List[str]) -> None:
         """Generate .pre-commit-config.yaml based on selected hooks"""
+
+        # Get linting strictness from principle_strategy
+        strictness = "strict"  # Default
+        if self.answer_context and self.answer_context.has_answer("principle_strategy"):
+            principle_strategy = self.answer_context.get("principle_strategy", "recommended")
+            strictness = self._map_strategy_to_strictness(principle_strategy)
+
+        # Configure ruff args based on strictness
+        if strictness == "pedantic":
+            ruff_args_format = "[--fix, --select=ALL]"
+            ruff_args_lint = "[--select=ALL]"
+        elif strictness == "strict":
+            ruff_args_format = "[--fix]"
+            ruff_args_lint = "[]"
+        else:  # moderate
+            ruff_args_format = "[--fix, --ignore=E501]"  # Ignore line length
+            ruff_args_lint = "[--ignore=E501]"
+
         # Pre-commit hook configurations
         hook_configs = {
-            "format": """  - repo: https://github.com/psf/black
+            "format": f"""  - repo: https://github.com/psf/black
     rev: 24.1.0
     hooks:
       - id: black
@@ -1488,11 +1562,12 @@ class CCOWizard:
     rev: v0.1.15
     hooks:
       - id: ruff
-        args: [--fix]""",
-            "lint": """  - repo: https://github.com/astral-sh/ruff-pre-commit
+        args: {ruff_args_format}""",
+            "lint": f"""  - repo: https://github.com/astral-sh/ruff-pre-commit
     rev: v0.1.15
     hooks:
-      - id: ruff""",
+      - id: ruff
+        args: {ruff_args_lint}""",
             "type_check": """  - repo: https://github.com/pre-commit/mirrors-mypy
     rev: v1.8.0
     hooks:
@@ -1590,36 +1665,61 @@ class CCOWizard:
 
     def _get_language_ci_config(self, language: str) -> dict:
         """Get CI configuration steps for a specific language"""
+        # Get package manager from answer context
+        package_manager = "pip"  # Default
+        if self.answer_context and self.answer_context.has_answer("package_manager"):
+            package_manager = self.answer_context.get("package_manager", "pip")
+
+        # Generate Python install commands based on package manager
+        if language.lower() == "python":
+            if package_manager == "poetry":
+                lint_install = "poetry install"
+                type_install = "poetry install"
+                test_install = "poetry install"
+            elif package_manager == "pdm":
+                lint_install = "pdm install"
+                type_install = "pdm install"
+                test_install = "pdm install"
+            else:  # pip
+                lint_install = "python -m pip install --upgrade pip\n          pip install ruff"
+                type_install = "python -m pip install --upgrade pip\n          pip install -e \".[dev]\""
+                test_install = "python -m pip install --upgrade pip\n          pip install -e \".[dev]\""
+
+        # Generate JavaScript/TypeScript install commands based on package manager
+        if language.lower() in ["javascript", "typescript"]:
+            if package_manager == "yarn":
+                js_install = "yarn install"
+            elif package_manager == "pnpm":
+                js_install = "pnpm install"
+            else:  # npm
+                js_install = "npm ci"
+
         configs = {
             "python": {
-                "lint_steps": """      - uses: actions/setup-python@v5
+                "lint_steps": f"""      - uses: actions/setup-python@v5
         with:
           python-version: '3.12'
       - name: Install dependencies
-        run: |
-          python -m pip install --upgrade pip
-          pip install ruff
+        run: {lint_install}
       - name: Run Ruff lint
         run: ruff check .
       - name: Run Ruff format check
         run: ruff format --check .""",
-                "type_check_steps": """      - uses: actions/setup-python@v5
+                "type_check_steps": f"""      - uses: actions/setup-python@v5
         with:
           python-version: '3.12'
       - name: Install dependencies
         run: |
-          python -m pip install --upgrade pip
-          pip install -e ".[dev]"
+          {type_install}
       - name: Run mypy
         run: mypy --strict .""",
                 "test_matrix": """        python-version: ['3.8', '3.9', '3.10', '3.11', '3.12']""",
-                "test_steps": """      - uses: actions/setup-python@v5
+                "test_steps": f"""      - uses: actions/setup-python@v5
         with:
-          python-version: ${{ matrix.python-version }}
+          python-version: ${{{{ matrix.python-version }}}}
       - name: Install dependencies
         run: |
-          python -m pip install --upgrade pip
-          pip install -e ".[dev]"
+          {test_install}
       - name: Run tests
         run: pytest tests/ --cov --cov-report=xml
       - name: Upload coverage
@@ -1634,26 +1734,26 @@ class CCOWizard:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}"""
             },
             "javascript": {
-                "lint_steps": """      - uses: actions/setup-node@v4
+                "lint_steps": f"""      - uses: actions/setup-node@v4
         with:
           node-version: '20'
       - name: Install dependencies
-        run: npm ci
+        run: {js_install}
       - name: Run ESLint
         run: npm run lint""",
-                "type_check_steps": """      - uses: actions/setup-node@v4
+                "type_check_steps": f"""      - uses: actions/setup-node@v4
         with:
           node-version: '20'
       - name: Install dependencies
-        run: npm ci
+        run: {js_install}
       - name: Type check
         run: npm run type-check""",
                 "test_matrix": """        node-version: ['18', '20', '21']""",
-                "test_steps": """      - uses: actions/setup-node@v4
+                "test_steps": f"""      - uses: actions/setup-node@v4
         with:
-          node-version: ${{ matrix.node-version }}
+          node-version: ${{{{ matrix.node-version }}}}
       - name: Install dependencies
-        run: npm ci
+        run: {js_install}
       - name: Run tests
         run: npm test -- --coverage
       - name: Upload coverage
@@ -1670,26 +1770,26 @@ class CCOWizard:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}"""
             },
             "typescript": {
-                "lint_steps": """      - uses: actions/setup-node@v4
+                "lint_steps": f"""      - uses: actions/setup-node@v4
         with:
           node-version: '20'
       - name: Install dependencies
-        run: npm ci
+        run: {js_install}
       - name: Run ESLint
         run: npm run lint""",
-                "type_check_steps": """      - uses: actions/setup-node@v4
+                "type_check_steps": f"""      - uses: actions/setup-node@v4
         with:
           node-version: '20'
       - name: Install dependencies
-        run: npm ci
+        run: {js_install}
       - name: Type check
         run: npm run type-check || tsc --noEmit""",
                 "test_matrix": """        node-version: ['18', '20', '21']""",
-                "test_steps": """      - uses: actions/setup-node@v4
+                "test_steps": f"""      - uses: actions/setup-node@v4
         with:
-          node-version: ${{ matrix.node-version }}
+          node-version: ${{{{ matrix.node-version }}}}
       - name: Install dependencies
-        run: npm ci
+        run: {js_install}
       - name: Run tests
         run: npm test -- --coverage
       - name: Upload coverage
@@ -1793,23 +1893,64 @@ class CCOWizard:
         # Get testing and documentation requirements
         testing_checklist = ""
         if self.answer_context and self.answer_context.has_answer("testing_approach"):
-            testing_approach = self.answer_context.get("testing_approach", [])
-            if "unit_tests" in testing_approach:
+            testing_approach = self.answer_context.get("testing_approach", "critical_paths")
+            # testing_approach is a single value: no_tests, critical_paths, balanced, comprehensive
+            if testing_approach in ["balanced", "comprehensive"]:
                 testing_checklist += "\n- [ ] Unit test coverage >= 80%"
-            if "integration_tests" in testing_approach:
                 testing_checklist += "\n- [ ] Integration tests added"
-            if "e2e_tests" in testing_approach:
+            if testing_approach == "comprehensive":
                 testing_checklist += "\n- [ ] E2E tests added"
+            elif testing_approach == "critical_paths":
+                testing_checklist += "\n- [ ] Critical path tests added"
 
         documentation_checklist = ""
         review_checklist = ""
+
+        # Use documentation_strategy answer
+        if self.answer_context and self.answer_context.has_answer("documentation_strategy"):
+            doc_strategy = self.answer_context.get("documentation_strategy", "standard")
+            if doc_strategy in ["standard", "comprehensive"]:
+                documentation_checklist += "\n- [ ] Code comments added for complex logic"
+                documentation_checklist += "\n- [ ] README updated if needed"
+            if doc_strategy == "comprehensive":
+                documentation_checklist += "\n- [ ] Architecture documentation updated"
+                documentation_checklist += "\n- [ ] API documentation generated"
+
+        # Use code_review_requirements answer
+        if self.answer_context and self.answer_context.has_answer("code_review_requirements"):
+            review_req = self.answer_context.get("code_review_requirements", "optional")
+            if review_req == "required_one":
+                review_checklist += "\n- [ ] At least 1 reviewer approval required"
+            elif review_req == "required_two":
+                review_checklist += "\n- [ ] At least 2 reviewer approvals required"
+                review_checklist += "\n- [ ] All review comments addressed"
+
+        # Use branch_naming_convention answer
+        if self.answer_context and self.answer_context.has_answer("branch_naming_convention"):
+            branch_naming = self.answer_context.get("branch_naming_convention", "conventional")
+            if branch_naming == "conventional":
+                review_checklist += "\n- [ ] Branch follows naming convention (feature/*, bugfix/*, hotfix/*)"
+            elif branch_naming == "ticket_based":
+                review_checklist += "\n- [ ] Branch name includes ticket number"
 
         # For API projects, add specific checks
         project_types = self.answer_context.get("project_purpose", []) if self.answer_context else []
         if any(pt in project_types for pt in ["api_service", "web_app", "microservice"]):
             documentation_checklist += "\n- [ ] API endpoints documented"
             review_checklist += "\n- [ ] Rate limiting considered"
-            review_checklist += "\n- [ ] Authentication/authorization verified"
+
+            # Use auth_pattern answer if available
+            if self.answer_context and self.answer_context.has_answer("auth_pattern"):
+                auth_pattern = self.answer_context.get("auth_pattern", "jwt")
+                review_checklist += f"\n- [ ] {auth_pattern.upper()} authentication/authorization verified"
+            else:
+                review_checklist += "\n- [ ] Authentication/authorization verified"
+
+            # Use api_docs_tool answer if available
+            if self.answer_context and self.answer_context.has_answer("api_docs_tool"):
+                api_docs = self.answer_context.get("api_docs_tool", "openapi")
+                if api_docs != "none":
+                    documentation_checklist += f"\n- [ ] {api_docs.replace('_', ' ').title()} documentation updated"
 
         # Load template
         template_path = Path(__file__).parent.parent.parent / "templates" / "pull_request_template.md.template"
@@ -1902,10 +2043,8 @@ class CCOWizard:
 
         # Get line length from answers or use default
         line_length = 88
-        if self.answer_context and self.answer_context.has_answer("code_style"):
-            style = self.answer_context.get("code_style", {})
-            if isinstance(style, dict):
-                line_length = style.get("line_length", 88)
+        if self.answer_context:
+            line_length = int(self.answer_context.get("line_length_preference", "88"))
 
         # Get primary language
         primary_language = "python"
@@ -2058,24 +2197,46 @@ class CCOWizard:
 
     def _get_language_gitlab_config(self, language: str) -> dict:
         """Get GitLab CI configuration for a specific language"""
-        
+
+        # Get package manager from answer context
+        package_manager = "pip"  # Default
+        if self.answer_context and self.answer_context.has_answer("package_manager"):
+            package_manager = self.answer_context.get("package_manager", "pip")
+
+        # Generate install commands based on package manager
+        if language.lower() == "python":
+            if package_manager == "poetry":
+                py_install = "poetry install"
+            elif package_manager == "pdm":
+                py_install = "pdm install"
+            else:
+                py_install = "pip install -e \".[dev]\""
+
+        if language.lower() in ["javascript", "typescript"]:
+            if package_manager == "yarn":
+                js_install = "yarn install"
+            elif package_manager == "pnpm":
+                js_install = "pnpm install"
+            else:
+                js_install = "npm ci"
+
         # Simplified configs for GitLab CI
         python_cfg = {
             "cache_variables": 'PIP_CACHE_DIR: "$CI_PROJECT_DIR/.cache/pip"',
             "cache_paths": "paths:\n    - .cache/pip\n    - .venv/",
             "lint_job": "image: python:3.12\n  before_script:\n    - pip install ruff\n  script:\n    - ruff check .\n    - ruff format --check .\n  only:\n    - merge_requests\n    - main",
-            "type_check_job": "image: python:3.12\n  before_script:\n    - pip install -e \".[dev]\"\n  script:\n    - mypy --strict .\n  only:\n    - merge_requests\n    - main",
-            "test_job": "image: python:3.12\n  before_script:\n    - pip install -e \".[dev]\"\n  script:\n    - pytest tests/ --cov\n  only:\n    - merge_requests\n    - main",
+            "type_check_job": f"image: python:3.12\n  before_script:\n    - {py_install}\n  script:\n    - mypy --strict .\n  only:\n    - merge_requests\n    - main",
+            "test_job": f"image: python:3.12\n  before_script:\n    - {py_install}\n  script:\n    - pytest tests/ --cov\n  only:\n    - merge_requests\n    - main",
             "security_job": "image: python:3.12\n  script:\n    - echo 'Security scanning placeholder'\n  allow_failure: true\n  only:\n    - merge_requests\n    - main"
         }
-        
+
         ts_cfg = {
             "cache_variables": 'NPM_CONFIG_CACHE: "$CI_PROJECT_DIR/.npm"',
             "cache_paths": "paths:\n    - .npm\n    - node_modules/",
-            "lint_job": "image: node:20\n  before_script:\n    - npm ci\n  script:\n    - npm run lint\n  only:\n    - merge_requests\n    - main",
-            "type_check_job": "image: node:20\n  before_script:\n    - npm ci\n  script:\n    - npm run type-check\n  only:\n    - merge_requests\n    - main",
-            "test_job": "image: node:20\n  before_script:\n    - npm ci\n  script:\n    - npm test -- --coverage\n  only:\n    - merge_requests\n    - main",
-            "security_job": "image: node:20\n  before_script:\n    - npm ci\n  script:\n    - npm audit\n  allow_failure: true\n  only:\n    - merge_requests\n    - main"
+            "lint_job": f"image: node:20\n  before_script:\n    - {js_install}\n  script:\n    - npm run lint\n  only:\n    - merge_requests\n    - main",
+            "type_check_job": f"image: node:20\n  before_script:\n    - {js_install}\n  script:\n    - npm run type-check\n  only:\n    - merge_requests\n    - main",
+            "test_job": f"image: node:20\n  before_script:\n    - {js_install}\n  script:\n    - npm test -- --coverage\n  only:\n    - merge_requests\n    - main",
+            "security_job": f"image: node:20\n  before_script:\n    - {js_install}\n  script:\n    - npm audit\n  allow_failure: true\n  only:\n    - merge_requests\n    - main"
         }
         
         go_cfg = {
@@ -2106,6 +2267,186 @@ class CCOWizard:
         
         return configs.get(language.lower(), python_cfg)
 
+    def _generate_env_template(self) -> None:
+        """Generate .env.template for secrets management"""
+        from pathlib import Path
+
+        # Only generate if secrets_management answer exists
+        if not self.answer_context or not self.answer_context.has_answer("secrets_management"):
+            return
+
+        secrets_mgmt = self.answer_context.get("secrets_management", "env_files")
+
+        # Only generate for env_files strategy
+        if secrets_mgmt != "env_files":
+            return
+
+        # Check if template already exists
+        env_template_path = self.project_root / ".env.template"
+        if env_template_path.exists():
+            return
+
+        # Generate basic .env.template based on project type
+        project_types = self.answer_context.get("project_purpose", []) if self.answer_context else []
+
+        content_lines = [
+            "# Environment Variables Template",
+            "# Copy this file to .env and fill in your values",
+            "# .env is in .gitignore and should never be committed",
+            "",
+        ]
+
+        # Add common variables
+        content_lines.extend([
+            "# Application",
+            "# APP_ENV=development",
+            "# DEBUG=true",
+            "",
+        ])
+
+        # Add API-specific variables
+        if any(pt in project_types for pt in ["api_service", "web_app", "microservice"]):
+            content_lines.extend([
+                "# API Configuration",
+                "# API_KEY=your_api_key_here",
+                "# API_SECRET=your_api_secret_here",
+                "",
+            ])
+
+            # Add auth-specific variables based on auth_pattern
+            if self.answer_context.has_answer("auth_pattern"):
+                auth_pattern = self.answer_context.get("auth_pattern", "jwt")
+                if auth_pattern == "jwt":
+                    content_lines.extend([
+                        "# JWT Authentication",
+                        "# JWT_SECRET=your_jwt_secret_here",
+                        "# JWT_EXPIRATION=3600",
+                        "",
+                    ])
+                elif auth_pattern == "oauth":
+                    content_lines.extend([
+                        "# OAuth Configuration",
+                        "# OAUTH_CLIENT_ID=your_client_id",
+                        "# OAUTH_CLIENT_SECRET=your_client_secret",
+                        "# OAUTH_CALLBACK_URL=http://localhost:3000/auth/callback",
+                        "",
+                    ])
+
+        # Add database variables for data-heavy projects
+        if any(pt in project_types for pt in ["data_pipeline", "web_app", "api_service"]):
+            content_lines.extend([
+                "# Database",
+                "# DATABASE_URL=postgresql://user:password@localhost:5432/dbname",
+                "",
+            ])
+
+        # Write file
+        env_template_path.write_text("\n".join(content_lines), encoding="utf-8")
+
+        # Also update .gitignore to include .env
+        gitignore_path = self.project_root / ".gitignore"
+        if gitignore_path.exists():
+            gitignore_content = gitignore_path.read_text(encoding="utf-8")
+            if ".env" not in gitignore_content:
+                gitignore_path.write_text(gitignore_content + "\n# Environment variables\n.env\n", encoding="utf-8")
+
+    def _generate_logging_config(self) -> None:
+        """Generate logging configuration file based on logging_level answer"""
+        from pathlib import Path
+
+        # Only generate if logging_level answer exists
+        if not self.answer_context or not self.answer_context.has_answer("logging_level"):
+            return
+
+        logging_level = self.answer_context.get("logging_level", "INFO")
+
+        # Get primary language
+        primary_language = "python"
+        if self.detection_report:
+            primary_language = self.detection_report.get("detected_language", {}).get("primary", "python")
+
+        # Generate language-specific logging config
+        if primary_language == "python":
+            # Generate logging.yaml or logging.json
+            config_path = self.project_root / "logging.yaml"
+            if config_path.exists():
+                return
+
+            content = f"""# Logging Configuration
+version: 1
+disable_existing_loggers: false
+
+formatters:
+  default:
+    format: '%(asctime)s - %(name)s - %(levelname)s - %(message)s'
+  detailed:
+    format: '%(asctime)s - %(name)s - %(levelname)s - %(pathname)s:%(lineno)d - %(message)s'
+
+handlers:
+  console:
+    class: logging.StreamHandler
+    level: {logging_level}
+    formatter: default
+    stream: ext://sys.stdout
+
+  file:
+    class: logging.handlers.RotatingFileHandler
+    level: {logging_level}
+    formatter: detailed
+    filename: app.log
+    maxBytes: 10485760  # 10MB
+    backupCount: 3
+
+root:
+  level: {logging_level}
+  handlers: [console, file]
+
+loggers:
+  __main__:
+    level: {logging_level}
+    handlers: [console, file]
+    propagate: false
+"""
+            config_path.write_text(content, encoding="utf-8")
+
+        elif primary_language in ["javascript", "typescript"]:
+            # Generate winston or pino config
+            config_path = self.project_root / "logger.config.js"
+            if config_path.exists():
+                return
+
+            level_map = {"DEBUG": "debug", "INFO": "info", "WARNING": "warn", "ERROR": "error"}
+            js_level = level_map.get(logging_level, "info")
+
+            content = f"""// Logging Configuration
+const winston = require('winston');
+
+const logger = winston.createLogger({{
+  level: '{js_level}',
+  format: winston.format.combine(
+    winston.format.timestamp(),
+    winston.format.errors({{ stack: true }}),
+    winston.format.splat(),
+    winston.format.json()
+  ),
+  defaultMeta: {{ service: 'app' }},
+  transports: [
+    new winston.transports.Console({{
+      format: winston.format.simple(),
+    }}),
+    new winston.transports.File({{
+      filename: 'error.log',
+      level: 'error'
+    }}),
+    new winston.transports.File({{
+      filename: 'combined.log'
+    }})
+  ]
+}});
+
+module.exports = logger;
+"""
+            config_path.write_text(content, encoding="utf-8")
 
 
 # ============================================================================
