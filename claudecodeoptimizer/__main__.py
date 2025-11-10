@@ -68,14 +68,20 @@ def main() -> None:
         dry_run = args.dry_run
 
         from .wizard.orchestrator import CCOWizard
+        from .core.command_tracker import track_command
 
-        try:
+        # Track command usage
+        @track_command("cco-init")
+        def run_init():
             wizard = CCOWizard(
                 project_root=Path.cwd(),
                 mode=mode,
                 dry_run=dry_run,
             )
-            result = wizard.run()
+            return wizard.run()
+
+        try:
+            result = run_init()
 
             if result.success:
                 if dry_run:
@@ -108,6 +114,8 @@ def main() -> None:
 
     elif args.command == "status":
         from .core.project import ProjectManager
+        from .core.command_tracker import get_command_stats
+        from .core.registry import ProjectRegistry
 
         try:
             manager = ProjectManager(Path.cwd())
@@ -116,6 +124,23 @@ def main() -> None:
             if config_dir.exists():
                 print("✓ CCO is initialized for this project")
                 print(f"  Configuration: {config_dir}")
+
+                # Show command usage statistics
+                registry = ProjectRegistry()
+                project_info = registry.get_by_path(Path.cwd())
+                if project_info:
+                    project_name = project_info.get("name", Path.cwd().name)
+                    try:
+                        stats = get_command_stats(project_name)
+                        if stats["total_commands_run"] > 0:
+                            print()
+                            print("📊 Command Usage Statistics:")
+                            print(f"  Total commands run: {stats['total_commands_run']}")
+                            print(f"  Unique commands: {stats['unique_commands']}")
+                            if stats['most_used_command']:
+                                print(f"  Most used: {stats['most_used_command']}")
+                    except Exception:
+                        pass  # Silently skip if stats not available
             else:
                 print("❌ CCO is not initialized")
                 print()
