@@ -195,8 +195,10 @@ nul                       # Windows null device output
 *.lock
 requirements.txt.lock
 
-# Claude Code - Project-specific configuration (generated from templates)
-.claude/
+# Claude Code - Team vs Personal split
+.claude/settings.local.json   # Personal permission overrides (gitignore)
+# .claude/commands/           # Team slash commands (commit to git)
+# .claude/settings.json       # Default permissions (commit to git)
 
 # User-specific scripts
 *.bat
