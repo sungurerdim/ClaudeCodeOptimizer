@@ -3,7 +3,7 @@
 import json
 import logging
 from pathlib import Path
-from typing import Any, Dict, List, Optional
+from typing import Any, Callable, Dict, List, Optional
 
 from .. import config as CCOConfig  # noqa: N812
 from ..schemas.preferences import (
@@ -128,10 +128,22 @@ class ProjectManager:
         # STEP 5: Install statusline to project
         self._install_project_statusline()
 
-        # STEP 6: Generate generic commands
+        # STEP 6: Install principles symlinks to .claude/principles/
+        self._install_principles_symlinks(selected_principles)
+
+        # STEP 7: Install guides symlinks to .claude/guides/
+        self._install_guides_symlinks(analysis)
+
+        # STEP 8: Install skills symlinks to .claude/skills/
+        self._install_skills_symlinks(analysis)
+
+        # STEP 9: Install agents symlinks to .claude/agents/
+        self._install_agents_symlinks(analysis)
+
+        # STEP 10: Generate generic commands
         commands_generated = self._generate_generic_commands(analysis)
 
-        # STEP 7: Print recommendations
+        # STEP 11: Print recommendations
         self._print_recommendations(analysis)
 
         # STEP 8: Save change tracking manifest
@@ -283,29 +295,26 @@ class ProjectManager:
         safe_print("## 🎯 Installed Components")
         safe_print()
 
-        # Principles
-        principles_file = self.project_root / "PRINCIPLES.md"
-        if principles_file.exists():
+        # CLAUDE.md with principles
+        claude_md_file = self.project_root / "CLAUDE.md"
+        if claude_md_file.exists():
             try:
-                content = principles_file.read_text(encoding="utf-8")
+                content = claude_md_file.read_text(encoding="utf-8")
 
-                # Count by severity
-                critical = content.count("## CRITICAL")
-                high = content.count("## HIGH PRIORITY")
+                # Count core principles (always 3)
+                core_count = content.count("#### P")
 
-                # Total principles
-                total_principles = content.count("### P")
+                # Check if additional principles section exists
+                has_additional = "Additional Principles by Category" in content
 
-                safe_print("✓ PRINCIPLES.md")
-                safe_print(f"  └─ {total_principles} active principles")
-                if critical > 0:
-                    safe_print(f"     ├─ {critical} Critical (must follow)")
-                if high > 0:
-                    safe_print(f"     └─ {high} High Priority")
+                safe_print("✓ CLAUDE.md")
+                safe_print(f"  └─ {core_count} core principles (always loaded)")
+                if has_additional:
+                    safe_print("     └─ Links to 74 principles across 8 categories")
             except Exception:
-                safe_print("✓ PRINCIPLES.md (created)")
+                safe_print("✓ CLAUDE.md (created)")
         else:
-            safe_print("✗ PRINCIPLES.md (not found)")
+            safe_print("✗ CLAUDE.md (not found)")
 
         safe_print()
 
@@ -363,7 +372,7 @@ class ProjectManager:
         # Quick Start
         safe_print("## 🚀 Quick Start")
         safe_print()
-        safe_print("1. View active principles:     @PRINCIPLES.md")
+        safe_print("1. View active principles:     @CLAUDE.md")
         safe_print("2. Check project status:       /cco-status")
         safe_print("3. Audit your codebase:        /cco-audit")
         safe_print("4. Fix violations:             /cco-fix")
@@ -488,9 +497,281 @@ class ProjectManager:
         elif link_type == "copy":
             logger.debug("Statusline copied (manual update required)")
 
+    def _install_principles_symlinks(self, selected_principles: List[Dict[str, Any]]) -> None:
+        """
+        Install principle symlinks based on selected principles.
+
+        Only installs principle categories that are actually selected.
+
+        Args:
+            selected_principles: List of selected principle dictionaries
+        """
+        # Get unique categories from selected principles
+        selected_categories = set()
+        for principle in selected_principles:
+            category = principle.get("category", "")
+            if category:
+                selected_categories.add(category)
+
+        # Install only selected categories
+        def should_include_principle(name: str, parent_dir: str = "") -> bool:
+            return any(cat in name.lower() for cat in selected_categories)
+
+        self._install_knowledge_symlinks("principles", filter_func=should_include_principle)
+
+    def _install_guides_symlinks(self, analysis: Dict[str, Any]) -> None:
+        """
+        Install guide symlinks based on project needs.
+
+        Selects guides based on:
+        - Has CI/CD: Include CI/CD guides
+        - Has Docker: Include container guides
+        - Security stance: Include security guides
+
+        Args:
+            analysis: Project analysis dictionary
+        """
+        def should_include_guide(name: str, parent_dir: str = "") -> bool:
+            name_lower = name.lower()
+            # Always include core guides
+            if any(x in name_lower for x in ['git-workflow', 'verification']):
+                return True
+            # Conditional guides
+            if 'container' in name_lower and analysis.get('has_docker'):
+                return True
+            if 'security' in name_lower:
+                return True
+            if 'performance' in name_lower:
+                return True
+            return False
+
+        self._install_knowledge_symlinks("guides", filter_func=should_include_guide)
+
+    def _install_skills_symlinks(self, analysis: Dict[str, Any]) -> None:
+        """
+        Install skill symlinks based on project language and type.
+
+        Selects skills based on:
+        - Primary language (e.g., Python → python/ skills)
+        - Project type (e.g., API → async patterns)
+        - Tools detected
+
+        Args:
+            analysis: Project analysis dictionary
+        """
+        primary_lang = analysis.get('primary_language', '').lower()
+
+        def should_include_skill(name: str, parent_dir: str = "") -> bool:
+            name_lower = name.lower()
+
+            # Always include general skills (no parent dir)
+            if not parent_dir:
+                return True
+
+            # Language-specific: only include if matches project language
+            parent_lower = parent_dir.lower()
+            if parent_lower == primary_lang:
+                return True
+
+            return False
+
+        self._install_knowledge_symlinks("skills", filter_func=should_include_skill)
+
+    def _install_agents_symlinks(self, analysis: Dict[str, Any]) -> None:
+        """
+        Install agent symlinks (currently just templates).
+
+        Args:
+            analysis: Project analysis dictionary
+        """
+        # For now, just install templates
+        self._install_knowledge_symlinks("agents")
+
+    def _install_knowledge_symlinks(
+        self,
+        category: str,
+        filter_func: Optional[callable] = None
+    ) -> None:
+        """
+        Generic function to install symlinks for a category.
+
+        Args:
+            category: Category name (principles, guides, skills, agents)
+            filter_func: Optional function(name, parent_dir="") -> bool to filter files
+        """
+        import os
+        import sys
+
+        # Source: global directory for this category
+        # Use config helper methods for each category
+        category_methods = {
+            "principles": self.config.get_principles_dir,
+            "guides": self.config.get_guides_dir,
+            "skills": self.config.get_skills_dir,
+            "agents": self.config.get_agents_dir,
+        }
+
+        global_category_dir = category_methods[category]()
+        if not global_category_dir.exists():
+            logger.debug(f"Global {category} directory not found, skipping")
+            return
+
+        # Destination: project .claude/{category} directory
+        project_claude_dir = self.config.get_project_claude_dir(self.project_root)
+        project_category_dir = project_claude_dir / category
+        project_category_dir.mkdir(parents=True, exist_ok=True)
+
+        # Get all .md files from global directory (excluding templates and READMEs)
+        all_global_files = [
+            f
+            for f in global_category_dir.glob("*.md")
+            if not f.name.startswith("_") and not f.name.upper() == "README.MD"
+        ]
+
+        # Apply filter if provided
+        if filter_func:
+            global_files = [f for f in all_global_files if filter_func(f.stem, "")]
+        else:
+            global_files = all_global_files
+
+        # Get subdirectories (for language-specific skills)
+        all_subdirs = [
+            d for d in global_category_dir.iterdir()
+            if d.is_dir() and not d.name.startswith(("_", "."))
+        ]
+
+        # Filter subdirectories if filter_func provided
+        if filter_func:
+            subdirs = [d for d in all_subdirs if filter_func("", d.name)]
+        else:
+            subdirs = all_subdirs
+
+        if not global_files and not subdirs:
+            logger.debug(f"No {category} files found in global directory")
+            return
+
+        # Determine platform-specific linking strategy
+        is_unix = sys.platform in ["linux", "darwin"]
+        linked_count = 0
+
+        # First, link all root-level files
+        for global_file in global_files:
+            project_file = project_category_dir / global_file.name
+
+            # Remove existing file/link if present
+            if project_file.exists() or project_file.is_symlink():
+                project_file.unlink()
+
+            # Try to create link
+            linked = False
+
+            if is_unix:
+                # Unix: Prefer symlink
+                try:
+                    project_file.symlink_to(global_file.absolute())
+                    linked = True
+                except (OSError, NotImplementedError):
+                    pass
+
+            if not linked:
+                # Try hardlink
+                try:
+                    os.link(str(global_file.absolute()), str(project_file.absolute()))
+                    linked = True
+                except (OSError, NotImplementedError):
+                    pass
+
+            if not linked and not is_unix:
+                # Windows fallback: Try symlink
+                try:
+                    project_file.symlink_to(global_file.absolute())
+                    linked = True
+                except (OSError, NotImplementedError):
+                    pass
+
+            if not linked:
+                # Final fallback: Copy file
+                try:
+                    project_file.write_text(
+                        global_file.read_text(encoding="utf-8"),
+                        encoding="utf-8",
+                    )
+                    linked = True
+                except Exception:
+                    continue
+
+            if linked:
+                linked_count += 1
+
+        # Second, link files from subdirectories (e.g., skills/python/, skills/go/)
+        for subdir in subdirs:
+            # Create corresponding subdirectory in project
+            project_subdir = project_category_dir / subdir.name
+            project_subdir.mkdir(parents=True, exist_ok=True)
+
+            # Link all .md files from this subdirectory
+            for global_file in subdir.glob("*.md"):
+                if global_file.name.startswith("_") or global_file.name.upper() == "README.MD":
+                    continue
+
+                # Apply filter if provided
+                if filter_func and not filter_func(global_file.stem, subdir.name):
+                    continue
+
+                project_file = project_subdir / global_file.name
+
+                # Remove existing file/link if present
+                if project_file.exists() or project_file.is_symlink():
+                    project_file.unlink()
+
+                # Try to create link (same logic as root files)
+                linked = False
+
+                if is_unix:
+                    try:
+                        project_file.symlink_to(global_file.absolute())
+                        linked = True
+                    except (OSError, NotImplementedError):
+                        pass
+
+                if not linked:
+                    try:
+                        os.link(str(global_file.absolute()), str(project_file.absolute()))
+                        linked = True
+                    except (OSError, NotImplementedError):
+                        pass
+
+                if not linked and not is_unix:
+                    try:
+                        project_file.symlink_to(global_file.absolute())
+                        linked = True
+                    except (OSError, NotImplementedError):
+                        pass
+
+                if not linked:
+                    try:
+                        project_file.write_text(
+                            global_file.read_text(encoding="utf-8"),
+                            encoding="utf-8",
+                        )
+                        linked = True
+                    except Exception:
+                        continue
+
+                if linked:
+                    linked_count += 1
+
+        logger.debug(f"Linked {linked_count} {category} files to .claude/{category}/")
+
     def _generate_generic_commands(self, analysis: Dict[str, Any]) -> int:
         """
         Generate project commands by linking to global command repository.
+
+        Intelligently selects commands based on project analysis:
+        - Core commands (always included)
+        - Docker commands (if Docker detected)
+        - CI/CD commands (if CI/CD detected)
+        - Testing commands (based on testing needs)
 
         Linking Strategy (platform-aware):
         - Unix/Linux/macOS: symlink > hardlink > copy
@@ -551,7 +832,47 @@ class ProjectManager:
         # Determine platform-specific strategy
         is_unix = sys.platform in ["linux", "darwin"]
 
+        # Define command filter logic
+        def should_include_command(command_name: str) -> bool:
+            """Filter commands based on project analysis."""
+            name_lower = command_name.lower()
+
+            # Core commands (always include)
+            core_commands = {
+                'init', 'config', 'status', 'remove',
+                'analyze', 'audit', 'fix', 'refactor',
+                'test', 'commit', 'sync', 'generate',
+                'implement-feature', 'scan-secrets',
+                'optimize-code', 'optimize-deps',
+                'analyze-complexity', 'analyze-dependencies', 'analyze-structure'
+            }
+            if name_lower in core_commands:
+                return True
+
+            # Documentation commands (always useful)
+            if any(x in name_lower for x in ['generate-docs', 'audit-docs', 'fix-docs']):
+                return True
+
+            # Docker/Container commands (only if Docker detected)
+            if 'docker' in name_lower:
+                return analysis.get('has_docker', False)
+
+            # CI/CD commands (only if CI/CD detected)
+            if any(x in name_lower for x in ['cicd', 'monitoring']):
+                return analysis.get('has_cicd', False)
+
+            # Testing commands (based on test framework detection)
+            if 'test' in name_lower and 'generate' in name_lower:
+                # Include if project has tests or test frameworks
+                return bool(analysis.get('test_frameworks') or analysis.get('has_tests'))
+
+            # Default: exclude
+            return False
+
         for command_file in global_commands_dir.glob("*.md"):
+            # Check if command should be included
+            if not should_include_command(command_file.stem):
+                continue
             # Determine command name with cco- prefix
             # Command: "status.md" → Project: "cco-status.md"
             base_name = command_file.stem  # "status"
@@ -859,30 +1180,16 @@ class ProjectManager:
         )
 
     def _select_and_generate_principles(self, preferences: CCOPreferences) -> List[Dict[str, Any]]:
-        """Select applicable principles and generate PRINCIPLES.md."""
+        """
+        Select applicable principles based on preferences.
+
+        NOTE: Principles are now embedded in CLAUDE.md via symlinks to ~/.cco/principles/.
+        No separate PRINCIPLES.md file is generated.
+        """
         selector = PrincipleSelector(preferences.model_dump(mode="json"))
         applicable_principles = selector.select_applicable()
-        principles_file = self.project_root / "PRINCIPLES.md"
 
-        # Check if file exists before generation (to detect creation vs modification)
-        is_new_file = not principles_file.exists()
-
-        selector.generate_principles_md(principles_file)
-
-        # Track file change in manifest
-        if is_new_file:
-            self.manifest.track_file_created(
-                principles_file,
-                f"Created PRINCIPLES.md with {len(applicable_principles)} principles",
-            )
-        else:
-            # File already exists, this is a modification
-            self.manifest.track_file_modified(
-                principles_file,
-                f"Updated PRINCIPLES.md with {len(applicable_principles)} principles",
-            )
-
-        # Track principles addition
+        # Track principles addition in manifest (no file generation)
         principle_ids = [p["id"] for p in applicable_principles]
         self.manifest.track_principles_added(principle_ids)
 
