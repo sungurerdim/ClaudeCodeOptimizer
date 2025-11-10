@@ -9,6 +9,10 @@ Implements 3-tier loading for skills:
 Pattern from wshobson/agents for token optimization.
 """
 
+**STATUS**: ⚠️ NOT CURRENTLY INTEGRATED
+This module is fully implemented but not yet integrated into the codebase.
+Future integration planned for progressive disclosure for skills.
+
 import re
 from dataclasses import dataclass
 from pathlib import Path

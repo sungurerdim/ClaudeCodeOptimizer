@@ -4,6 +4,10 @@ Audit Findings Manager - CCO
 Stores and manages audit findings for batch fixing.
 """
 
+**STATUS**: ⚠️ NOT CURRENTLY INTEGRATED
+This module is fully implemented but not yet integrated into the codebase.
+Future integration planned for audit findings tracking and prioritization.
+
 import json
 from datetime import datetime
 from pathlib import Path

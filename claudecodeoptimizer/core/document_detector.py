@@ -5,6 +5,10 @@ Detects and validates project documentation files.
 Priority order: README, PROJECT_DETAILS, other .md files.
 """
 
+**STATUS**: ⚠️ NOT CURRENTLY INTEGRATED
+This module is fully implemented but not yet integrated into the codebase.
+Future integration planned for automatic project documentation discovery.
+
 from pathlib import Path
 from typing import Dict, List, Optional
 

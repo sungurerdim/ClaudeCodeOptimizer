@@ -6,6 +6,10 @@ Coordinates complex tasks using multiple specialized agents working in parallel 
 Pattern from wshobson/agents: Complex Task → Specialized Agents → Coordinated Execution
 """
 
+**STATUS**: ⚠️ NOT CURRENTLY INTEGRATED
+This module is fully implemented but not yet integrated into the codebase.
+Future integration planned for multi-agent parallel task orchestration.
+
 from dataclasses import dataclass
 from enum import Enum
 from pathlib import Path
