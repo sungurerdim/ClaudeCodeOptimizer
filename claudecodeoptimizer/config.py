@@ -65,59 +65,44 @@ def get_global_commands_dir() -> Path:
     return get_global_dir() / "commands"
 
 
-def get_knowledge_dir() -> Path:
-    """Get global knowledge base directory (~/.cco/knowledge/)."""
-    return get_global_dir() / "knowledge"
-
-
 def get_principles_dir() -> Path:
     """
-    Get global principles directory (~/.cco/knowledge/principles/).
+    Get global principles directory (~/.cco/principles/).
 
     Category-specific principle files stored globally to avoid duplication
     across projects. Similar to global commands pattern.
     """
-    return get_knowledge_dir() / "principles"
+    return get_global_dir() / "principles"
 
 
 def get_guides_dir() -> Path:
     """
-    Get global guides directory (~/.cco/knowledge/guides/).
+    Get global guides directory (~/.cco/guides/).
 
     Static guide files (verification, git workflow, security, etc.) stored
-    globally to avoid duplication. Loaded via @~/.cco/knowledge/guides/...
+    globally to avoid duplication.
     """
-    return get_knowledge_dir() / "guides"
-
-
-def get_knowledge_commands_dir() -> Path:
-    """
-    Get global knowledge commands directory (~/.cco/knowledge/commands/).
-
-    Slash command templates stored globally. Projects symlink to selected commands
-    in their .claude/commands/ directory.
-    """
-    return get_knowledge_dir() / "commands"
+    return get_global_dir() / "guides"
 
 
 def get_agents_dir() -> Path:
     """
-    Get global agents directory (~/.cco/knowledge/agents/).
+    Get global agents directory (~/.cco/agents/).
 
     Task agent definitions stored globally. Projects symlink to selected agents
     in their .claude/agents/ directory.
     """
-    return get_knowledge_dir() / "agents"
+    return get_global_dir() / "agents"
 
 
 def get_skills_dir() -> Path:
     """
-    Get global skills directory (~/.cco/knowledge/skills/).
+    Get global skills directory (~/.cco/skills/).
 
     Skill definitions stored globally. Projects symlink to selected skills
     in their .claude/skills/ directory.
     """
-    return get_knowledge_dir() / "skills"
+    return get_global_dir() / "skills"
 
 
 def get_projects_registry_dir() -> Path:
@@ -342,7 +327,11 @@ def get_all_paths() -> Dict[str, Path]:
         "global_dir": get_global_dir(),
         "claude_dir": get_claude_dir(),
         "templates_dir": get_templates_dir(),
-        "knowledge_dir": get_knowledge_dir(),
+        "commands_dir": get_global_commands_dir(),
+        "principles_dir": get_principles_dir(),
+        "guides_dir": get_guides_dir(),
+        "skills_dir": get_skills_dir(),
+        "agents_dir": get_agents_dir(),
         "projects_registry_dir": get_projects_registry_dir(),
         "global_config_file": get_global_config_file(),
     }
@@ -391,7 +380,11 @@ class CCOConfig:
     get_global_dir = staticmethod(get_global_dir)
     get_claude_dir = staticmethod(get_claude_dir)
     get_templates_dir = staticmethod(get_templates_dir)
-    get_knowledge_dir = staticmethod(get_knowledge_dir)
+    get_global_commands_dir = staticmethod(get_global_commands_dir)
+    get_principles_dir = staticmethod(get_principles_dir)
+    get_guides_dir = staticmethod(get_guides_dir)
+    get_skills_dir = staticmethod(get_skills_dir)
+    get_agents_dir = staticmethod(get_agents_dir)
     get_projects_registry_dir = staticmethod(get_projects_registry_dir)
     get_global_config_file = staticmethod(get_global_config_file)
     get_registry_index_file = staticmethod(get_registry_index_file)
