@@ -1,8 +1,18 @@
 # Pre-commit hooks configuration
+# CCO-generated configuration
 # See https://pre-commit.com for more information
 
 repos:
 ${HOOKS}
 
-# Run pre-commit with: pre-commit run --all-files
-# Install hooks: pre-commit install
+# Additional hooks (always enabled)
+  - repo: https://github.com/pre-commit/pre-commit-hooks
+    rev: v4.5.0
+    hooks:
+      - id: trailing-whitespace
+      - id: end-of-file-fixer
+      - id: check-yaml
+      - id: check-added-large-files
+        args: ['--maxkb=1000']
+      - id: check-merge-conflict
+      - id: detect-private-key
