@@ -264,8 +264,6 @@ Examples:
 
 ## Git Workflow
 
-**Atomic Commits (P073):** Each commit = one logical change. Group related files, separate unrelated changes.
-
 **Commit Format (P072: Concise Commit Messages):**
 ```
 type(scope): concise description (max 72 chars)
