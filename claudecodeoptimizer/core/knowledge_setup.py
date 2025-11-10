@@ -82,18 +82,24 @@ def setup_global_knowledge(force: bool = False) -> Dict[str, Any]:
 
 def _setup_principles(principles_dir: Path) -> None:
     """
-    Generate principle category files in global directory.
+    Copy principle category files from templates to global directory.
 
-    Reads from principles.json and generates category-specific files.
+    Copies from templates/principles/ to ~/.cco/knowledge/principles/
     """
-    from .principle_selector import PrincipleSelector
+    # Get package templates directory
+    package_dir = Path(__file__).parent.parent
+    source_principles = package_dir.parent / "templates" / "principles"
 
-    # Create selector with empty preferences (we want all principles for global storage)
-    selector = PrincipleSelector({})
+    if not source_principles.exists():
+        raise FileNotFoundError(f"Template principles not found at {source_principles}")
 
-    # Generate category files
+    # Create destination
     principles_dir.mkdir(parents=True, exist_ok=True)
-    selector.generate_category_files(principles_dir)
+
+    # Copy all .md files
+    for principle_file in source_principles.glob("*.md"):
+        dest_file = principles_dir / principle_file.name
+        shutil.copy2(principle_file, dest_file)
 
 
 def _setup_commands(commands_dir: Path) -> None:
