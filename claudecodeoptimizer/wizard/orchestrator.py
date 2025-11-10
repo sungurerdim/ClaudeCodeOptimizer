@@ -888,6 +888,9 @@ class CCOWizard:
                 if ci_provider == "github_actions":
                     self._generate_github_actions_workflow()
                     print_success("✓ Created .github/workflows/ci.yml", indent=2)
+                elif ci_provider == "gitlab_ci":
+                    self._generate_gitlab_ci()
+                    print_success("✓ Created .gitlab-ci.yml", indent=2)
 
             # Generate .github/pull_request_template.md (if team project)
             if self.answer_context and self.answer_context.has_answer("team_dynamics"):
@@ -2004,6 +2007,105 @@ class CCOWizard:
         # Write settings file
         output_path = vscode_dir / "settings.json"
         output_path.write_text(content, encoding="utf-8")
+    def _generate_gitlab_ci(self) -> None:
+        """Generate .gitlab-ci.yml based on project language and tools"""
+        from pathlib import Path
+
+        # Get project language
+        primary_language = "python"
+        if self.detection_report:
+            primary_language = self.detection_report.get("detected_language", {}).get("primary", "python")
+
+        # Get default branch
+        default_branch = "main"
+        if self.system_context and self.system_context.is_git_repo:
+            import subprocess
+            try:
+                result = subprocess.run(
+                    ["git", "symbolic-ref", "refs/remotes/origin/HEAD"],
+                    capture_output=True,
+                    text=True,
+                    check=False
+                )
+                if result.returncode == 0:
+                    default_branch = result.stdout.strip().split("/")[-1]
+            except Exception:
+                pass
+
+        # Language-specific configurations
+        configs = self._get_language_gitlab_config(primary_language)
+
+        # Load template
+        template_path = Path(__file__).parent.parent.parent / "templates" / ".gitlab-ci.yml.template"
+        if not template_path.exists():
+            return
+
+        content = template_path.read_text(encoding="utf-8")
+
+        # Replace template variables
+        content = content.replace("${PRIMARY_LANGUAGE}", primary_language)
+        content = content.replace("${DEFAULT_BRANCH}", default_branch)
+        content = content.replace("${CACHE_VARIABLES}", configs["cache_variables"])
+        content = content.replace("${CACHE_PATHS}", configs["cache_paths"])
+        content = content.replace("${LINT_JOB}", configs["lint_job"])
+        content = content.replace("${TYPE_CHECK_JOB}", configs["type_check_job"])
+        content = content.replace("${TEST_JOB}", configs["test_job"])
+        content = content.replace("${SECURITY_JOB}", configs["security_job"])
+
+        # Write GitLab CI file
+        output_path = self.project_root / ".gitlab-ci.yml"
+        output_path.write_text(content, encoding="utf-8")
+
+    def _get_language_gitlab_config(self, language: str) -> dict:
+        """Get GitLab CI configuration for a specific language"""
+        
+        # Simplified configs for GitLab CI
+        python_cfg = {
+            "cache_variables": 'PIP_CACHE_DIR: "$CI_PROJECT_DIR/.cache/pip"',
+            "cache_paths": "paths:\n    - .cache/pip\n    - .venv/",
+            "lint_job": "image: python:3.12\n  before_script:\n    - pip install ruff\n  script:\n    - ruff check .\n    - ruff format --check .\n  only:\n    - merge_requests\n    - main",
+            "type_check_job": "image: python:3.12\n  before_script:\n    - pip install -e \".[dev]\"\n  script:\n    - mypy --strict .\n  only:\n    - merge_requests\n    - main",
+            "test_job": "image: python:3.12\n  before_script:\n    - pip install -e \".[dev]\"\n  script:\n    - pytest tests/ --cov\n  only:\n    - merge_requests\n    - main",
+            "security_job": "image: python:3.12\n  script:\n    - echo 'Security scanning placeholder'\n  allow_failure: true\n  only:\n    - merge_requests\n    - main"
+        }
+        
+        ts_cfg = {
+            "cache_variables": 'NPM_CONFIG_CACHE: "$CI_PROJECT_DIR/.npm"',
+            "cache_paths": "paths:\n    - .npm\n    - node_modules/",
+            "lint_job": "image: node:20\n  before_script:\n    - npm ci\n  script:\n    - npm run lint\n  only:\n    - merge_requests\n    - main",
+            "type_check_job": "image: node:20\n  before_script:\n    - npm ci\n  script:\n    - npm run type-check\n  only:\n    - merge_requests\n    - main",
+            "test_job": "image: node:20\n  before_script:\n    - npm ci\n  script:\n    - npm test -- --coverage\n  only:\n    - merge_requests\n    - main",
+            "security_job": "image: node:20\n  before_script:\n    - npm ci\n  script:\n    - npm audit\n  allow_failure: true\n  only:\n    - merge_requests\n    - main"
+        }
+        
+        go_cfg = {
+            "cache_variables": 'GOPATH: "$CI_PROJECT_DIR/.go"',
+            "cache_paths": "paths:\n    - .go/pkg/mod/",
+            "lint_job": "image: golangci/golangci-lint:v1.55\n  script:\n    - golangci-lint run ./...\n  only:\n    - merge_requests\n    - main",
+            "type_check_job": "image: golang:1.21\n  script:\n    - go vet ./...\n  only:\n    - merge_requests\n    - main",
+            "test_job": "image: golang:1.21\n  script:\n    - go test -v ./...\n  only:\n    - merge_requests\n    - main",
+            "security_job": "image: golang:1.21\n  script:\n    - echo 'Security scanning placeholder'\n  allow_failure: true\n  only:\n    - merge_requests\n    - main"
+        }
+        
+        rust_cfg = {
+            "cache_variables": 'CARGO_HOME: "$CI_PROJECT_DIR/.cargo"',
+            "cache_paths": "paths:\n    - .cargo\n    - target/",
+            "lint_job": "image: rust:latest\n  before_script:\n    - rustup component add clippy\n  script:\n    - cargo clippy\n  only:\n    - merge_requests\n    - main",
+            "type_check_job": "image: rust:latest\n  script:\n    - cargo check\n  only:\n    - merge_requests\n    - main",
+            "test_job": "image: rust:latest\n  script:\n    - cargo test\n  only:\n    - merge_requests\n    - main",
+            "security_job": "image: rust:latest\n  script:\n    - echo 'Security scanning placeholder'\n  allow_failure: true\n  only:\n    - merge_requests\n    - main"
+        }
+        
+        configs = {
+            "python": python_cfg,
+            "typescript": ts_cfg,
+            "javascript": ts_cfg,
+            "go": go_cfg,
+            "rust": rust_cfg
+        }
+        
+        return configs.get(language.lower(), python_cfg)
+
 
 
 # ============================================================================
