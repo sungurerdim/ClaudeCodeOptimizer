@@ -158,9 +158,7 @@ class ChangeManifest:
                 change_type="file_modified",
                 description=description,
                 path=str(file_path.relative_to(self.project_root)),
-                backup_path=str(backup_path.relative_to(self.project_root))
-                if backup_path
-                else None,
+                backup_path=str(backup_path) if backup_path else None,
                 reverse_action="restore_backup" if backup_path else None,
             ),
         )
@@ -443,7 +441,11 @@ class ChangeManifest:
                 elif change.reverse_action == "restore_backup":
                     # Restore from backup
                     if change.backup_path:
-                        backup_path = self.project_root / change.backup_path
+                        # Support both absolute paths (new) and relative paths (legacy)
+                        backup_path = Path(change.backup_path)
+                        if not backup_path.is_absolute():
+                            backup_path = self.project_root / change.backup_path
+
                         file_path = self.project_root / change.path
                         if backup_path.exists():
                             shutil.copy2(backup_path, file_path)
