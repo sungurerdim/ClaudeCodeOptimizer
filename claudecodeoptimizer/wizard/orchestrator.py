@@ -620,11 +620,15 @@ class CCOWizard:
             # Install only core + recommended commands (NOT optional)
             self.selected_commands = command_recs["core"] + command_recs["recommended"]
 
-            # Auto-select all available guides (knowledge base)
-            from ..core.knowledge_setup import get_available_guides, get_available_agents, get_available_skills
-            self.selected_guides = get_available_guides()
-            self.selected_agents = get_available_agents()
-            self.selected_skills = get_available_skills()
+            # Auto-select all available guides/agents/skills (knowledge base)
+            from ..core.knowledge_setup import get_available_guides, get_available_agents, get_available_skills, get_principle_categories
+
+            # In quick mode: auto-select all
+            # In interactive mode: let user choose
+            if self.mode == "quick":
+                self.selected_guides = get_available_guides()
+                self.selected_agents = get_available_agents()
+                self.selected_skills = get_available_skills()
 
             if self.mode == "interactive":
                 # Show what will be installed
@@ -656,6 +660,80 @@ class CCOWizard:
                             f"    ... and {len(command_recs['optional']) - 10} more",
                             indent=2,
                         )
+                    print()
+
+                pause()
+
+                # Knowledge Base Selection (interactive only)
+                print_heading("Knowledge Base Selection", level=2)
+                print_info("Select which knowledge base components to symlink:", indent=2)
+                print()
+
+                # Guides selection
+                available_guides = get_available_guides()
+                if available_guides:
+                    print_info(f"Available guides ({len(available_guides)}):", indent=2)
+                    for guide in available_guides:
+                        guide_name = guide.replace("-", " ").title()
+                        print_info(f"  • {guide_name}", indent=2)
+                    print()
+
+                    response = input("  Select guides (all/none): ").strip().lower()
+                    if response == "all" or response == "":
+                        self.selected_guides = available_guides
+                        print_success(f"✓ Selected all {len(available_guides)} guides", indent=2)
+                    else:
+                        self.selected_guides = []
+                        print_info("✓ No guides selected", indent=2)
+                    print()
+                else:
+                    self.selected_guides = []
+                    print_info("No guides available", indent=2)
+
+                # Agents selection
+                available_agents = get_available_agents()
+                if available_agents:
+                    print_info(f"Available custom agents ({len(available_agents)}):", indent=2)
+                    for agent in available_agents:
+                        agent_name = agent.replace("-", " ").title()
+                        print_info(f"  • {agent_name}", indent=2)
+                    print()
+
+                    response = input("  Select agents (all/none) [default: none]: ").strip().lower()
+                    if response == "all":
+                        self.selected_agents = available_agents
+                        print_success(f"✓ Selected all {len(available_agents)} agents", indent=2)
+                    else:
+                        self.selected_agents = []
+                        print_info("✓ No agents selected", indent=2)
+                    print()
+                else:
+                    self.selected_agents = []
+                    print_info("No custom agents available yet", indent=2)
+                    print_info("Tip: Create custom agents using templates in ~/.cco/knowledge/agents/", indent=2)
+                    print()
+
+                # Skills selection
+                available_skills = get_available_skills()
+                if available_skills:
+                    print_info(f"Available custom skills ({len(available_skills)}):", indent=2)
+                    for skill in available_skills:
+                        skill_name = skill.replace("-", " ").title()
+                        print_info(f"  • {skill_name}", indent=2)
+                    print()
+
+                    response = input("  Select skills (all/none) [default: none]: ").strip().lower()
+                    if response == "all":
+                        self.selected_skills = available_skills
+                        print_success(f"✓ Selected all {len(available_skills)} skills", indent=2)
+                    else:
+                        self.selected_skills = []
+                        print_info("✓ No skills selected", indent=2)
+                    print()
+                else:
+                    self.selected_skills = []
+                    print_info("No custom skills available yet", indent=2)
+                    print_info("Tip: Create custom skills using templates in ~/.cco/knowledge/skills/", indent=2)
                     print()
 
                 pause()
