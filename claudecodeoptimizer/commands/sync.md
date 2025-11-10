@@ -44,6 +44,7 @@ Keep files synchronized across your codebase: configuration, dependencies, type 
     "multiSelect": true,
     "options": [
       {"label": "All", "description": "Sync everything below (recommended, Haiku - fast)"},
+      {"label": "Knowledge Base", "description": "Recreate CCO knowledge base symlinks (.claude/*)"},
       {"label": "Config Files", "description": "Keep tsconfig, .eslintrc, pyproject.toml in sync (Haiku)"},
       {"label": "Dependencies", "description": "Sync package.json, requirements.txt, go.mod across services (Haiku/Sonnet)"},
       {"label": "Type Definitions", "description": "Sync TypeScript types, Python protocols across modules (Haiku)"},
@@ -58,6 +59,180 @@ Keep files synchronized across your codebase: configuration, dependencies, type 
 ## Sync: All
 
 Run all sync operations below.
+
+---
+
+## Sync: Knowledge Base
+
+**Recreate CCO knowledge base symlinks after upgrade or corruption**
+
+**When to use:**
+- After `pip install --upgrade claudecodeoptimizer`
+- After moving project to different machine
+- Symlinks broken or missing
+- Knowledge base structure changed
+
+### Process
+
+**Step 1: Read project configuration**
+
+```bash
+Read(".cco/project.json")
+```
+
+Extract:
+- `selected_principles`: List of principle IDs
+- `selected_commands`: List of command IDs
+- `selected_guides`: List of guide names (if available)
+- `selected_agents`: List of agent names (if available)
+- `selected_skills`: List of skill names (if available)
+
+**Step 2: Verify global knowledge base**
+
+```bash
+Bash("python -c 'from claudecodeoptimizer.core.knowledge_setup import setup_global_knowledge; setup_global_knowledge()'")
+```
+
+This ensures `~/.cco/knowledge/` exists with latest content.
+
+**Step 3: Clean existing symlinks**
+
+```bash
+# Remove all existing symlinks (Windows/Unix compatible)
+Bash("python -m claudecodeoptimizer.wizard.orchestrator --sync-kb")
+```
+
+Or manually:
+```python
+from pathlib import Path
+import platform
+
+claude_dir = Path(".claude")
+categories = ["commands", "guides", "principles", "agents", "skills"]
+
+for category in categories:
+    category_dir = claude_dir / category
+    if category_dir.exists():
+        for file in category_dir.glob("*.md"):
+            if file.is_symlink() or (platform.system() == "Windows" and file.exists()):
+                file.unlink()
+```
+
+**Step 4: Recreate symlinks**
+
+Use the same logic as wizard initialization:
+- For each selected component (command/guide/principle/agent/skill)
+- Create symlink from `.claude/{category}/{name}.md` → `~/.cco/knowledge/{category}/{name}.md`
+- Cross-platform: Windows uses `mklink`, Unix uses `symlink_to()`
+
+**Step 5: Verify symlinks**
+
+```bash
+# Check that all selected components have working symlinks
+import os
+from pathlib import Path
+
+def verify_symlinks(project_root):
+    claude_dir = project_root / ".claude"
+    broken = []
+
+    for category in ["commands", "guides", "principles", "agents", "skills"]:
+        category_dir = claude_dir / category
+        if not category_dir.exists():
+            continue
+
+        for link in category_dir.glob("*.md"):
+            if link.name == ".gitkeep":
+                continue
+            # Check if link target exists
+            if not link.exists():
+                broken.append(str(link))
+
+    return broken
+
+broken = verify_symlinks(Path.cwd())
+if broken:
+    print(f"⚠️  {len(broken)} broken symlinks:")
+    for link in broken:
+        print(f"  - {link}")
+else:
+    print("✓ All symlinks valid")
+```
+
+**Step 6: Update CLAUDE.md references (optional)**
+
+If knowledge base structure changed, regenerate CLAUDE.md:
+
+```bash
+Bash("python -m claudecodeoptimizer init --regenerate-claude-md")
+```
+
+This re-injects selected component references into CLAUDE.md.
+
+### Example Output
+
+```
+============================================================
+KNOWLEDGE BASE SYNC
+============================================================
+
+Configuration:
+  Principles:  8 selected
+  Commands:    12 selected
+  Guides:      5 selected
+  Agents:      0 selected
+  Skills:      0 selected
+
+Global Knowledge Base:
+  ✓ ~/.cco/knowledge/ exists
+  ✓ 127 principles available
+  ✓ 15 commands available
+  ✓ 5 guides available
+  ✓ 0 agents available
+  ✓ 0 skills available
+
+Symlink Operations:
+  ✓ Removed 25 old symlinks
+  ✓ Created 25 new symlinks
+    - .claude/commands/ (12 files)
+    - .claude/guides/ (5 files)
+    - .claude/principles/ (8 files)
+
+Verification:
+  ✓ All 25 symlinks valid
+  ✓ No broken links
+
+Duration: 0.8s
+============================================================
+```
+
+### Troubleshooting
+
+**Problem: "Permission denied" on Windows**
+
+**Solution:** Enable Developer Mode (no admin required for symlinks)
+1. Settings → Update & Security → For Developers
+2. Enable "Developer Mode"
+3. Retry sync
+
+**Problem: Symlinks show as regular files in git**
+
+**Solution:** Check `.gitignore` has CCO section:
+```gitignore
+# CCO: Symlinked knowledge base
+.claude/commands/*
+.claude/guides/*
+.claude/principles/*
+!.claude/*/.gitkeep
+```
+
+**Problem: "Source file not found"**
+
+**Solution:** Update global knowledge base first:
+```bash
+pip install --upgrade claudecodeoptimizer
+python -c "from claudecodeoptimizer.core.knowledge_setup import setup_global_knowledge; setup_global_knowledge(force=True)"
+```
 
 ---
 
