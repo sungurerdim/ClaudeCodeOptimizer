@@ -603,12 +603,12 @@ class CCOWizard:
             # Auto-select all available guides/agents/skills (knowledge base)
             from ..core.knowledge_setup import get_available_guides, get_available_agents, get_available_skills, get_principle_categories
 
-            # In quick mode: auto-select all
+            # In quick mode: auto-select recommended
             # In interactive mode: let user choose
             if self.mode == "quick":
-                self.selected_guides = get_available_guides()
-                self.selected_agents = get_available_agents()
-                self.selected_skills = get_available_skills()
+                self.selected_guides = self._recommend_guides_for_project()
+                self.selected_agents = self._recommend_agents_for_project()
+                self.selected_skills = self._recommend_skills_for_project()
 
             if self.mode == "interactive":
                 # Show what will be installed
@@ -1397,6 +1397,37 @@ class CCOWizard:
                 recommended.extend(lang_mapping[lang_lower])
 
         return list(set(recommended))  # Remove duplicates
+
+    def _recommend_agents_for_project(self) -> List[str]:
+        """Recommend agents based on project context"""
+        if not self.answer_context:
+            return []
+
+        recommended = []
+        answers = self.answer_context.answers
+        project_types = answers.get("project_purpose", [])
+        maturity = answers.get("project_maturity", "prototype")
+        team_size = answers.get("team_dynamics", "solo")
+
+        # Feature implementation agent: MVP/Production projects
+        if maturity in ["mvp", "production"] and team_size != "solo":
+            recommended.append("feature-implementation")
+
+        # Security audit agent: Production systems or security-critical apps
+        if maturity == "production" or any(
+            pt in project_types for pt in ["api_service", "web_app", "microservice"]
+        ):
+            recommended.append("security-audit")
+
+        # Refactoring agent: Legacy/mature projects
+        if maturity == "legacy":
+            recommended.append("refactoring")
+
+        # Performance optimization agent: Backend services
+        if any(pt in project_types for pt in ["api_service", "microservice", "data_pipeline"]):
+            recommended.append("performance-optimization")
+
+        return recommended
 
     def _generate_editorconfig(self) -> None:
         """Generate .editorconfig from template"""
