@@ -766,6 +766,331 @@ TIER3_LOGGING_LEVEL = DecisionPoint(
     ai_hint_generator=lambda ctx: _generate_logging_level_hint(ctx),
 )
 
+TIER3_BRANCH_NAMING = DecisionPoint(
+    id="branch_naming_convention",
+    tier=3,
+    category="git_workflow",
+    question="What branch naming convention do you want to use?",
+    why_this_question="🔀 Consistent branch names help team collaboration and automation",
+    multi_select=False,
+    options=[
+        Option(
+            value="conventional",
+            label="Conventional (feature/, bugfix/, hotfix/) [RECOMMENDED]",
+            description="Standard prefixes: feature/*, bugfix/*, hotfix/*, release/*",
+            effects="Clear intent, enables automation, works with gitflow",
+            recommended_for=["small_team", "growing_team", "large_org"],
+        ),
+        Option(
+            value="ticket_based",
+            label="Ticket-based (JIRA-123-description)",
+            description="Include ticket number in branch name",
+            effects="Direct traceability to issue tracker",
+            recommended_for=["large_org"],
+        ),
+        Option(
+            value="descriptive",
+            label="Descriptive (fix-auth-bug)",
+            description="Simple descriptive names without prefix",
+            effects="Lightweight, no ceremony",
+            recommended_for=["solo", "small_team"],
+        ),
+        Option(
+            value="freeform",
+            label="Freeform (no convention)",
+            description="No enforced pattern",
+            effects="Maximum flexibility, minimal consistency",
+            recommended_for=["solo", "prototype"],
+        ),
+    ],
+    auto_strategy=lambda ctx: _auto_detect_branch_naming(ctx),
+)
+
+TIER3_NAMING_CONVENTION = DecisionPoint(
+    id="naming_convention",
+    tier=3,
+    category="code_quality",
+    question="What naming convention do you prefer?",
+    why_this_question="📝 Consistent naming improves code readability",
+    multi_select=False,
+    options=[
+        Option(
+            value="language_default",
+            label="Language Default [RECOMMENDED]",
+            description="Python: snake_case, JS/TS: camelCase, Go: mixedCaps",
+            effects="Follows language idioms and community standards",
+            recommended_for=["all"],
+        ),
+        Option(
+            value="snake_case",
+            label="snake_case (Python style)",
+            description="lowercase_with_underscores",
+            effects="Explicit separation, readable",
+            recommended_for=["python", "c"],
+        ),
+        Option(
+            value="camelCase",
+            label="camelCase (JavaScript style)",
+            description="firstWordLowercaseRestCapitalized",
+            effects="Compact, common in OOP",
+            recommended_for=["javascript", "typescript", "java"],
+        ),
+    ],
+    auto_strategy=lambda ctx: "language_default",
+)
+
+TIER3_LINE_LENGTH = DecisionPoint(
+    id="line_length_preference",
+    tier=3,
+    category="code_quality",
+    question="What's your preferred maximum line length?",
+    why_this_question="📏 Line length affects code readability and diff clarity",
+    multi_select=False,
+    options=[
+        Option(
+            value="80",
+            label="80 characters (PEP 8)",
+            description="Traditional standard, fits side-by-side diffs",
+            effects="Forces concise code, works on small screens",
+            recommended_for=["traditional", "narrow_editor"],
+        ),
+        Option(
+            value="88",
+            label="88 characters (Black default) [RECOMMENDED]",
+            description="Black formatter default",
+            effects="Slightly more relaxed than 80, practical",
+            recommended_for=["python", "modern"],
+        ),
+        Option(
+            value="100",
+            label="100 characters",
+            description="Common modern standard",
+            effects="Good balance between readability and flexibility",
+            recommended_for=["modern", "wide_editor"],
+        ),
+        Option(
+            value="120",
+            label="120 characters",
+            description="Relaxed modern standard",
+            effects="More flexibility, requires wider editor",
+            recommended_for=["wide_editor", "large_team"],
+        ),
+    ],
+    auto_strategy=lambda ctx: _auto_detect_line_length(ctx),
+)
+
+TIER3_PACKAGE_MANAGER = DecisionPoint(
+    id="package_manager",
+    tier=3,
+    category="operations",
+    question="Which package manager do you want to use?",
+    why_this_question="📦 Package manager affects dependency management and build speed",
+    multi_select=False,
+    options=[
+        Option(
+            value="pip",
+            label="pip (Python standard) [RECOMMENDED]",
+            description="Standard Python package installer",
+            effects="Simple, widely supported, no lockfile by default",
+            recommended_for=["simple_projects", "beginners"],
+        ),
+        Option(
+            value="poetry",
+            label="poetry",
+            description="Dependency management with lockfile",
+            effects="Deterministic builds, pyproject.toml, virtual env management",
+            recommended_for=["library", "production"],
+        ),
+        Option(
+            value="pdm",
+            label="pdm",
+            description="Modern PEP 582 compliant tool",
+            effects="Fast, PEP 621 compliant, __pypackages__",
+            recommended_for=["modern", "monorepo"],
+        ),
+        Option(
+            value="npm",
+            label="npm (Node.js default)",
+            description="Node Package Manager",
+            effects="Standard for JavaScript/TypeScript",
+            recommended_for=["javascript", "typescript"],
+        ),
+        Option(
+            value="yarn",
+            label="yarn",
+            description="Fast, reliable Node.js dependency manager",
+            effects="Faster than npm, workspaces support",
+            recommended_for=["javascript", "typescript", "monorepo"],
+        ),
+        Option(
+            value="pnpm",
+            label="pnpm",
+            description="Efficient Node.js package manager",
+            effects="Disk space efficient, fast, strict",
+            recommended_for=["javascript", "typescript", "monorepo"],
+        ),
+    ],
+    auto_strategy=lambda ctx: _auto_detect_package_manager(ctx),
+)
+
+TIER3_DOCUMENTATION_STRATEGY = DecisionPoint(
+    id="documentation_strategy",
+    tier=3,
+    category="documentation",
+    question="What documentation strategy do you want?",
+    why_this_question="📚 Documentation level affects maintainability and onboarding",
+    multi_select=False,
+    options=[
+        Option(
+            value="minimal",
+            label="Minimal (README + docstrings)",
+            description="Just the essentials",
+            effects="Low maintenance, quick setup",
+            recommended_for=["prototype", "solo", "small_team"],
+        ),
+        Option(
+            value="standard",
+            label="Standard (+ API docs) [RECOMMENDED]",
+            description="README, docstrings, and generated API docs",
+            effects="Good balance, auto-generated from code",
+            recommended_for=["mvp", "active_dev", "small_team"],
+        ),
+        Option(
+            value="comprehensive",
+            label="Comprehensive (+ guides + examples)",
+            description="Full documentation suite with tutorials",
+            effects="High quality, requires maintenance",
+            recommended_for=["library", "production", "large_org"],
+        ),
+    ],
+    auto_strategy=lambda ctx: _auto_detect_documentation_strategy(ctx),
+)
+
+# Conditional decision points (only shown based on project type)
+
+TIER3_AUTH_PATTERN = DecisionPoint(
+    id="auth_pattern",
+    tier=3,
+    category="security",
+    question="Which authentication pattern do you want to use?",
+    why_this_question="🔐 Auth pattern affects security and user experience",
+    multi_select=False,
+    options=[
+        Option(
+            value="jwt",
+            label="JWT (JSON Web Tokens) [RECOMMENDED]",
+            description="Stateless token-based authentication",
+            effects="Scalable, works with APIs and SPAs",
+            recommended_for=["api_service", "microservice"],
+        ),
+        Option(
+            value="session",
+            label="Session-based",
+            description="Traditional server-side sessions",
+            effects="Stateful, requires session store",
+            recommended_for=["web_app", "monolith"],
+        ),
+        Option(
+            value="oauth",
+            label="OAuth 2.0 / OpenID Connect",
+            description="Delegated authorization",
+            effects="Third-party auth, social login",
+            recommended_for=["web_app", "mobile_app"],
+        ),
+        Option(
+            value="api_key",
+            label="API Key",
+            description="Simple key-based authentication",
+            effects="Simple, good for service-to-service",
+            recommended_for=["api_service", "internal_tool"],
+        ),
+    ],
+    auto_strategy=lambda ctx: _auto_detect_auth_pattern(ctx),
+    skip_if=lambda ctx: not _should_ask_auth_pattern(ctx),
+)
+
+TIER3_API_DOCS_TOOL = DecisionPoint(
+    id="api_docs_tool",
+    tier=3,
+    category="documentation",
+    question="Which API documentation tool do you want?",
+    why_this_question="📖 API docs improve developer experience",
+    multi_select=False,
+    options=[
+        Option(
+            value="openapi",
+            label="OpenAPI / Swagger [RECOMMENDED]",
+            description="Industry-standard REST API documentation",
+            effects="Interactive docs, client generation, validation",
+            recommended_for=["api_service", "rest"],
+        ),
+        Option(
+            value="graphql_schema",
+            label="GraphQL Schema",
+            description="GraphQL introspection and documentation",
+            effects="Self-documenting, interactive playground",
+            recommended_for=["graphql"],
+        ),
+        Option(
+            value="postman",
+            label="Postman Collections",
+            description="API testing and documentation platform",
+            effects="Easy testing, team collaboration",
+            recommended_for=["api_service"],
+        ),
+        Option(
+            value="none",
+            label="None",
+            description="No dedicated API docs tool",
+            effects="Minimal setup, manual documentation",
+            recommended_for=["internal_tool", "prototype"],
+        ),
+    ],
+    auto_strategy=lambda ctx: _auto_detect_api_docs_tool(ctx),
+    skip_if=lambda ctx: not _should_ask_api_docs_tool(ctx),
+)
+
+TIER3_CODE_REVIEW_REQUIREMENTS = DecisionPoint(
+    id="code_review_requirements",
+    tier=3,
+    category="git_workflow",
+    question="What are your code review requirements?",
+    why_this_question="👥 Code review requirements affect code quality and velocity",
+    multi_select=False,
+    options=[
+        Option(
+            value="required_one",
+            label="Required (1 approval) [RECOMMENDED]",
+            description="At least one team member must approve",
+            effects="Balance between quality and speed",
+            recommended_for=["small_team", "growing_team"],
+        ),
+        Option(
+            value="required_two",
+            label="Required (2+ approvals)",
+            description="Multiple reviewers must approve",
+            effects="Higher quality, slower velocity",
+            recommended_for=["large_org", "critical_system"],
+        ),
+        Option(
+            value="optional",
+            label="Optional",
+            description="Reviews encouraged but not required",
+            effects="Faster iteration, relies on trust",
+            recommended_for=["small_team", "prototype"],
+        ),
+        Option(
+            value="none",
+            label="None",
+            description="No review process",
+            effects="Maximum speed, minimal oversight",
+            recommended_for=["solo", "prototype"],
+        ),
+    ],
+    auto_strategy=lambda ctx: _auto_detect_code_review_requirements(ctx),
+    skip_if=lambda ctx: not _should_ask_code_review_requirements(ctx),
+)
+
 # These are generated dynamically based on detected tools
 # See: _build_tier3_tool_decisions() function
 
@@ -1242,6 +1567,158 @@ def _generate_logging_level_hint(ctx: AnswerContext) -> str:
     return "💡 Recommended: INFO - good default for most applications"
 
 
+def _auto_detect_branch_naming(ctx: AnswerContext) -> str:
+    """Auto-detect branch naming convention"""
+    team = ctx.team_size if ctx.has_answer("team_dynamics") else "solo"
+
+    if team in ["growing_team", "large_org"]:
+        return "conventional"
+    elif team == "small_team":
+        return "descriptive"
+    else:
+        return "freeform"
+
+
+def _auto_detect_line_length(ctx: AnswerContext) -> str:
+    """Auto-detect line length preference"""
+    sys = ctx.system
+
+    # Check if Black is used (default 88)
+    if "black" in sys.existing_tools:
+        return "88"
+
+    # Check if Ruff is used (default 88)
+    if "ruff" in sys.existing_tools:
+        return "88"
+
+    # Default
+    return "88"
+
+
+def _auto_detect_package_manager(ctx: AnswerContext) -> str:
+    """Auto-detect package manager from existing files"""
+    sys = ctx.system
+
+    # Check for existing package manager files
+    if sys.project_root:
+        if (sys.project_root / "poetry.lock").exists():
+            return "poetry"
+        if (sys.project_root / "pdm.lock").exists():
+            return "pdm"
+        if (sys.project_root / "package-lock.json").exists():
+            return "npm"
+        if (sys.project_root / "yarn.lock").exists():
+            return "yarn"
+        if (sys.project_root / "pnpm-lock.yaml").exists():
+            return "pnpm"
+
+    # Default based on language
+    detected_lang = sys.detected_language if hasattr(sys, "detected_language") else None
+    if detected_lang:
+        primary = detected_lang.get("primary", "python")
+        if primary == "python":
+            return "pip"
+        elif primary in ["javascript", "typescript"]:
+            return "npm"
+
+    return "pip"
+
+
+def _auto_detect_documentation_strategy(ctx: AnswerContext) -> str:
+    """Auto-detect documentation strategy"""
+    maturity = ctx.maturity if ctx.has_answer("project_maturity") else "mvp"
+    team = ctx.team_size if ctx.has_answer("team_dynamics") else "solo"
+    project_types = ctx.project_types if ctx.has_answer("project_purpose") else []
+
+    # Libraries need comprehensive docs
+    if "library" in project_types:
+        return "comprehensive"
+
+    # Prototypes need minimal
+    if maturity == "prototype":
+        return "minimal"
+
+    # Large teams or production need more docs
+    if team in ["growing_team", "large_org"] or maturity == "production":
+        return "comprehensive"
+
+    # Default
+    return "standard"
+
+
+def _auto_detect_auth_pattern(ctx: AnswerContext) -> str:
+    """Auto-detect authentication pattern"""
+    project_types = ctx.project_types if ctx.has_answer("project_purpose") else []
+
+    if "api_service" in project_types or "microservice" in project_types:
+        return "jwt"
+    elif "web_app" in project_types:
+        return "session"
+    else:
+        return "jwt"
+
+
+def _auto_detect_api_docs_tool(ctx: AnswerContext) -> str:
+    """Auto-detect API documentation tool"""
+    sys = ctx.system
+
+    # Check for existing tools
+    if "fastapi" in sys.existing_tools:
+        return "openapi"  # FastAPI has built-in OpenAPI
+    if "graphql" in sys.existing_tools:
+        return "graphql_schema"
+
+    # Default
+    return "openapi"
+
+
+def _auto_detect_code_review_requirements(ctx: AnswerContext) -> str:
+    """Auto-detect code review requirements"""
+    team = ctx.team_size if ctx.has_answer("team_dynamics") else "solo"
+    maturity = ctx.maturity if ctx.has_answer("project_maturity") else "mvp"
+
+    if team == "solo":
+        return "none"
+    elif team == "small_team":
+        return "optional"
+    elif team == "growing_team":
+        return "required_one"
+    elif team == "large_org" or maturity == "production":
+        return "required_two"
+    else:
+        return "required_one"
+
+
+# Conditional check functions
+
+def _should_ask_auth_pattern(ctx: AnswerContext) -> bool:
+    """Only ask auth pattern for web/API projects"""
+    project_types = ctx.project_types if ctx.has_answer("project_purpose") else []
+
+    auth_relevant_types = [
+        "api_service",
+        "web_app",
+        "microservice",
+        "mobile_app",
+    ]
+
+    return any(pt in project_types for pt in auth_relevant_types)
+
+
+def _should_ask_api_docs_tool(ctx: AnswerContext) -> bool:
+    """Only ask API docs tool for API projects"""
+    project_types = ctx.project_types if ctx.has_answer("project_purpose") else []
+
+    return "api_service" in project_types or "microservice" in project_types
+
+
+def _should_ask_code_review_requirements(ctx: AnswerContext) -> bool:
+    """Only ask code review for team projects"""
+    team = ctx.team_size if ctx.has_answer("team_dynamics") else "solo"
+
+    return team != "solo"
+
+
 # ============================================================================
 # Dynamic TIER 3 Builder (Tool Preferences)
 # ============================================================================
@@ -1249,11 +1726,21 @@ def _generate_logging_level_hint(ctx: AnswerContext) -> str:
 
 def build_tier3_tool_decisions(ctx: AnswerContext) -> list:
     """
-    Build TIER 3 decisions: static decisions + dynamic tool conflicts.
+    Build TIER 3 decisions: static decisions + conditional decisions + dynamic tool conflicts.
 
     Static decisions (always asked):
     - Pre-commit hooks
     - Logging level
+    - Branch naming convention
+    - Naming convention
+    - Line length preference
+    - Package manager
+    - Documentation strategy
+
+    Conditional decisions (only if relevant):
+    - Auth pattern (for web/API projects)
+    - API docs tool (for API projects)
+    - Code review requirements (for team projects)
 
     Dynamic decisions (only if tool conflicts detected):
     - Tool preferences (e.g., ruff vs black)
@@ -1262,7 +1749,22 @@ def build_tier3_tool_decisions(ctx: AnswerContext) -> list:
     decisions = [
         TIER3_PRECOMMIT_HOOKS,
         TIER3_LOGGING_LEVEL,
+        TIER3_BRANCH_NAMING,
+        TIER3_NAMING_CONVENTION,
+        TIER3_LINE_LENGTH,
+        TIER3_PACKAGE_MANAGER,
+        TIER3_DOCUMENTATION_STRATEGY,
     ]
+
+    # Add conditional decisions based on project context
+    if _should_ask_auth_pattern(ctx):
+        decisions.append(TIER3_AUTH_PATTERN)
+
+    if _should_ask_api_docs_tool(ctx):
+        decisions.append(TIER3_API_DOCS_TOOL)
+
+    if _should_ask_code_review_requirements(ctx):
+        decisions.append(TIER3_CODE_REVIEW_REQUIREMENTS)
 
     # Add dynamic tool conflict decisions
     sys = ctx.system
