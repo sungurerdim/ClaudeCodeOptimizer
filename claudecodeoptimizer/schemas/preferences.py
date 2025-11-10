@@ -435,6 +435,7 @@ DuplicationForPerfChoice = Literal["acceptable", "contextual", "never"]
 
 # Collaboration Types
 GitWorkflowChoice = Literal["git-flow", "trunk-based", "github-flow", "gitlab-flow"]
+VersioningStrategyChoice = Literal["auto_semver", "pr_based_semver", "manual_semver", "calver", "no_versioning"]
 CommitConventionChoice = Literal["conventional-enforced", "conventional-suggested", "freeform"]
 PRSizeChoice = Literal["small-200", "medium-500", "large-1000", "no-limit"]
 CodeOwnershipChoice = Literal["strict-codeowners", "team-ownership", "open"]
@@ -858,11 +859,16 @@ class PerformanceVsMaintainability(BaseModel):
 
 
 class TeamCollaboration(BaseModel):
-    """4 customization points - Collaboration"""
+    """5 customization points - Collaboration"""
 
     git_workflow: GitWorkflowChoice = Field(
         default="github-flow",
         description="Git branching strategy",
+    )
+
+    versioning_strategy: VersioningStrategyChoice = Field(
+        default="auto_semver",
+        description="Version bumping strategy (P074: Automated Semantic Versioning)",
     )
 
     commit_convention: CommitConventionChoice = Field(

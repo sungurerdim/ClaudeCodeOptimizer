@@ -1,7 +1,7 @@
 # Git Workflow Principles
 
 **Generated**: 2025-11-09
-**Principle Count**: 6
+**Principle Count**: 7
 
 ---
 
@@ -148,6 +148,50 @@ SemVer: MAJOR.MINOR.PATCH for breaking/features/fixes.
 ```
 # v2.0.0 (breaking), v1.5.0 (feature), v1.4.1 (fix)
 ```
+
+---
+
+### P074: Automated Semantic Versioning 🟡
+
+**Severity**: Medium
+
+Automatically bump version based on conventional commit type. Version bumps are determined by commit message prefix: `feat:` → MINOR, `fix:` → PATCH, `feat!/BREAKING CHANGE:` → MAJOR.
+
+**Enforcement**: RECOMMENDED - Team-dependent (solo: auto, teams: PR-based, large org: manual)
+
+**Why**: Eliminates manual versioning errors and ensures consistent version history aligned with actual changes
+
+**Version Mapping**:
+- `feat:` commits bump MINOR version (1.2.0 → 1.3.0)
+- `fix:` commits bump PATCH (1.2.0 → 1.2.1)
+- `feat!` or `BREAKING CHANGE:` bump MAJOR (1.2.0 → 2.0.0)
+
+**❌ Bad - Manual Versioning**:
+```bash
+# Manual version bumps without systematic approach
+# Version 1.5.0 → 1.6.0 (but was just a bug fix)
+# Inconsistent with change severity
+```
+
+**✅ Good - Automated**:
+```bash
+# Auto-detect from commits since last tag
+git log v1.2.0..HEAD --oneline
+# feat(api): add user endpoint → MINOR bump
+# fix(auth): handle null token → PATCH bump
+
+# Automatic bump: 1.2.0 → 1.3.0 (MINOR)
+# Updates: pyproject.toml, package.json, __init__.py
+# Creates: CHANGELOG.md entry
+# Tags: v1.3.0
+```
+
+**Team-Based Strategies**:
+- **Solo Dev**: Auto-bump on every release (zero overhead)
+- **Small Team**: PR-based bump (reviewer confirms version)
+- **Large Org**: Manual semver with release managers
+
+**Implementation**: Uses `claudecodeoptimizer/core/version_manager.py`
 
 ---
 

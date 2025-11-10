@@ -27,6 +27,38 @@ print()
 
 ---
 
+## Architecture & Model Selection
+
+**Code Generation**: Haiku (fast, cost-effective)
+- Unit test generation
+- Docstring generation
+- Simple code scaffolding
+- Boilerplate code
+
+**Complex Generation**: Sonnet (higher quality)
+- Integration test generation
+- API documentation
+- CI/CD pipeline configuration
+- Complex code from specs
+
+**Execution Pattern**:
+1. Use Haiku for repetitive, pattern-based generation (tests, docs)
+2. Use Sonnet for complex logic and architecture decisions (CI/CD, specs)
+3. Always verify generated code with existing test suite
+
+**Implementation**:
+```python
+# Simple generation (Haiku)
+Task("generate unit tests", model="haiku", subagent_type="Plan")
+Task("generate docstrings", model="haiku", subagent_type="Plan")
+
+# Complex generation (Sonnet)
+Task("generate CI/CD pipeline", model="sonnet", subagent_type="Plan")
+Task("generate code from specifications", model="sonnet", subagent_type="Plan")
+```
+
+---
+
 ## Step 1: Select What to Generate
 
 **Use AskUserQuestion tool**:
