@@ -281,6 +281,11 @@ class ClaudeMdGenerator:
         if "Git Workflow" not in content:
             additions.append(self._get_git_workflow_section(git_workflow, team_size))
 
+        # Add Versioning Strategy section (P074)
+        versioning_strategy = self._get_pref("collaboration.versioning_strategy", "auto_semver")
+        if "Versioning Strategy" not in content and versioning_strategy != "no_versioning":
+            additions.append(self._get_versioning_section(versioning_strategy))
+
         # Add Code Review section for teams (if not already covered by Git Flow)
         if team_size != "solo" and git_workflow != "git_flow":
             if "Code Review" not in content:
@@ -432,22 +437,14 @@ Error: Function crashes with empty string
         """Get Main-Only workflow (Solo/Small teams)"""
         return """## Git Workflow
 
-**Branch Strategy: Main-Only (Solo Developer)**
+**Strategy**: Main-Only (Solo Developer)
 
-- Single `main` branch
-- No feature branches
-- Direct commits with clear messages
-
-**Commit Strategy**:
-- Format: `type(scope): subject`
-- Types: feat, fix, docs, refactor, test, chore
-- Grouped commits (same category)
+**Workflow**:
+- Single `main` branch, direct commits
+- Follow P072 (Concise Commits), P073 (Atomic Commits)
 - Push after each completed task
 
-**Versioning**:
-- Minor bump per milestone (v0.2.0, v0.3.0)
-- Major bump for breaking changes
-- Patch bump for bug fixes
+**Principles**: See `.claude/principles/git-workflow.md`
 
 ---"""
 
@@ -455,28 +452,20 @@ Error: Function crashes with empty string
         """Get GitHub Flow (Small-Medium teams)"""
         return """## Git Workflow
 
-**Branch Strategy: GitHub Flow**
+**Strategy**: GitHub Flow (Feature Branches + PRs)
 
+**Branches**:
 - `main` - Production-ready code
-- Feature branches: `feature/<name>`
-- Hotfix branches: `hotfix/<issue>`
+- `feature/<name>` - Feature branches
+- `hotfix/<issue>` - Hotfix branches
 
 **Process**:
-1. Create feature branch from main
-2. Make commits with clear messages
-3. Open PR when ready
-4. Code review required
-5. Merge to main after approval
-6. Delete feature branch
+1. Branch from main → work → open PR
+2. Code review required (1-2 reviewers)
+3. Merge to main after approval
+4. CI checks must pass
 
-**Branch Protection**:
-- Require PR reviews (1-2 reviewers)
-- Run CI checks before merge
-- No direct commits to main
-
-**Versioning**:
-- Tag releases on main
-- Semantic versioning (major.minor.patch)
+**Principles**: See `.claude/principles/git-workflow.md`
 
 ---"""
 
@@ -484,30 +473,21 @@ Error: Function crashes with empty string
         """Get Git Flow (Large teams/Production)"""
         return """## Git Workflow
 
-**Branch Strategy: Git Flow**
+**Strategy**: Git Flow (develop + main + feature/release/hotfix branches)
 
+**Branches**:
 - `main` - Production releases only
 - `develop` - Integration branch
-- Feature branches: `feature/<name>` (from develop)
-- Release branches: `release/<version>` (from develop)
-- Hotfix branches: `hotfix/<issue>` (from main)
+- `feature/<name>`, `release/<version>`, `hotfix/<issue>`
 
 **Process**:
-1. Feature: Branch from develop → PR to develop
-2. Release: Branch from develop → test → merge to main + develop
-3. Hotfix: Branch from main → fix → merge to main + develop
-4. Tag releases on main
+1. Feature: develop → feature → PR to develop
+2. Release: develop → release → merge to main + develop
+3. Hotfix: main → hotfix → merge to main + develop
 
-**Branch Protection**:
-- main: Require PR + 2 reviewers
-- develop: Require PR + 1 reviewer
-- CI/CD required on all branches
+**Branch Protection**: PRs required, CI/CD on all branches
 
-**Release Process**:
-- Create release branch from develop
-- Freeze features, fix bugs only
-- Merge to main, tag version
-- Merge back to develop
+**Principles**: See `.claude/principles/git-workflow.md`
 
 ---"""
 
@@ -528,6 +508,106 @@ Error: Function crashes with empty string
 
 **Versioning**:
 - [Define your versioning scheme]
+
+---"""
+
+    def _get_versioning_section(self, strategy: str) -> str:
+        """
+        Generate Versioning Strategy section based on preference (P074).
+
+        Args:
+            strategy: auto_semver, pr_based_semver, manual_semver, or calver
+
+        Returns:
+            Formatted Versioning Strategy section
+        """
+        if strategy == "auto_semver":
+            return self._get_auto_semver_section()
+        elif strategy == "pr_based_semver":
+            return self._get_pr_based_semver_section()
+        elif strategy == "manual_semver":
+            return self._get_manual_semver_section()
+        elif strategy == "calver":
+            return self._get_calver_section()
+        else:
+            return ""  # no_versioning or unknown
+
+    def _get_auto_semver_section(self) -> str:
+        """Get Automatic SemVer section"""
+        return """## Versioning Strategy (P074)
+
+**Strategy**: Automated Semantic Versioning
+
+**Usage**:
+```python
+from claudecodeoptimizer.core.version_manager import VersionManager
+vm = VersionManager(Path.cwd())
+vm.auto_bump(update_changelog=True, create_tag=True)
+```
+
+**Trigger**: Before release, after merge to main, or manually
+
+**Principles**: See `.claude/principles/git-workflow.md` (P074)
+
+---"""
+
+    def _get_pr_based_semver_section(self) -> str:
+        """Get PR-Based SemVer section"""
+        return """## Versioning Strategy (P074)
+
+**Strategy**: PR-Based Semantic Versioning (reviewer confirms)
+
+**Workflow**:
+1. PR author suggests version bump in PR description
+2. Reviewer confirms or adjusts
+3. CI/CD auto-bumps on merge
+
+**Manual Bump**:
+```bash
+python -m claudecodeoptimizer.core.version_manager auto_bump --update-changelog --create-tag
+```
+
+**Principles**: See `.claude/principles/git-workflow.md` (P074)
+
+---"""
+
+    def _get_manual_semver_section(self) -> str:
+        """Get Manual SemVer section"""
+        return """## Versioning Strategy (P074)
+
+**Strategy**: Manual Semantic Versioning (release managers control)
+
+**Process**:
+1. Review commits: `git log $(git describe --tags --abbrev=0)..HEAD`
+2. Update version files (pyproject.toml, package.json, etc.)
+3. Update CHANGELOG.md
+4. Create tag: `git tag -a v1.3.0 -m "Release 1.3.0"`
+
+**Helper Tool**:
+```bash
+python -m claudecodeoptimizer.core.version_manager auto_bump --dry-run
+```
+
+**Principles**: See `.claude/principles/git-workflow.md` (P074)
+
+---"""
+
+    def _get_calver_section(self) -> str:
+        """Get Calendar Versioning section"""
+        return """## Versioning Strategy
+
+**Strategy**: Calendar Versioning (CalVer)
+
+**Format**: YYYY.MM.DD or YYYY.MM.PATCH
+
+**Usage**:
+```python
+from datetime import datetime
+version = datetime.now().strftime("%Y.%m.%d")
+# Update version files, create tag
+```
+
+**Best for**: Time-based or marketing-driven releases
 
 ---"""
 

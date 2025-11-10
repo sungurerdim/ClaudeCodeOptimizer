@@ -32,6 +32,43 @@ print()
 
 ---
 
+## Architecture & Model Selection
+
+**Data Gathering**: Haiku (Explore agent, thorough)
+- Project structure scanning
+- Dependency graph analysis
+- File pattern detection
+- Metrics collection
+
+**Analysis & Reasoning**: Sonnet (Plan agent)
+- Complexity analysis and scoring
+- Architecture pattern identification
+- Recommendations synthesis
+- Risk assessment
+
+**Execution Pattern**:
+1. Launch 3-4 parallel Haiku agents for data gathering:
+   - Structure analysis (file tree, service boundaries)
+   - Dependency analysis (imports, package deps)
+   - Metrics collection (LOC, complexity)
+   - Tech stack detection (frameworks, tools)
+2. Aggregate with Sonnet for comprehensive analysis
+3. Generate actionable recommendations
+
+**Implementation**:
+```python
+# Phase 1: Parallel data gathering (Haiku)
+Task("analyze project structure", model="haiku", subagent_type="Explore", thoroughness="thorough")
+Task("analyze dependencies", model="haiku", subagent_type="Explore", thoroughness="thorough")
+Task("collect code metrics", model="haiku", subagent_type="Explore", thoroughness="thorough")
+Task("detect tech stack", model="haiku", subagent_type="Explore", thoroughness="quick")
+
+# Phase 2: Synthesis (Sonnet)
+Task("synthesize analysis and generate report", model="sonnet", subagent_type="Plan")
+```
+
+---
+
 ## Objective
 
 Comprehensive project analysis:

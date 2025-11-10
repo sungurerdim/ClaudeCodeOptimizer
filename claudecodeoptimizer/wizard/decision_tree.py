@@ -421,6 +421,59 @@ TIER2_GIT_WORKFLOW = DecisionPoint(
     else "",
 )
 
+TIER2_VERSIONING_STRATEGY = DecisionPoint(
+    id="versioning_strategy",
+    tier=2,
+    category="collaboration",
+    question="How do you want to manage version bumping?",
+    why_this_question="📦 Versioning strategy affects release management and changelog generation (P074)",
+    multi_select=False,
+    options=[
+        Option(
+            value="auto_semver",
+            label="Automatic SemVer [RECOMMENDED for Solo]",
+            description="Auto-bump version based on commit types (feat: → MINOR, fix: → PATCH)",
+            effects="Zero overhead, automated versioning, CHANGELOG generation",
+            time_investment="0% overhead (fully automated)",
+            recommended_for=["solo dev", "small teams", "CI/CD pipelines"],
+        ),
+        Option(
+            value="pr_based_semver",
+            label="PR-Based SemVer [RECOMMENDED for Small Teams]",
+            description="Version bump suggested in PR, reviewer confirms",
+            effects="Team review of version bumps, manual confirmation",
+            time_investment="~5% overhead (PR review)",
+            recommended_for=["small-medium teams", "peer review culture"],
+        ),
+        Option(
+            value="manual_semver",
+            label="Manual SemVer [RECOMMENDED for Large Orgs]",
+            description="Release managers manually bump versions",
+            effects="Full control, formal release process",
+            time_investment="~10% overhead (release management)",
+            recommended_for=["large teams", "release managers", "formal processes"],
+        ),
+        Option(
+            value="calver",
+            label="Calendar Versioning",
+            description="Version based on date (YYYY.MM.DD or YYYY.MM.PATCH)",
+            effects="Time-based versions, clear release timeline",
+            recommended_for=["scheduled releases", "date-driven projects"],
+        ),
+        Option(
+            value="no_versioning",
+            label="No Versioning",
+            description="Internal tool, no need for versions",
+            effects="No version tracking",
+            recommended_for=["internal tools", "prototypes"],
+        ),
+    ],
+    auto_strategy=lambda ctx: _auto_detect_versioning_strategy(ctx),
+    ai_hint_generator=lambda ctx: _rec_engine.recommend_versioning_strategy(ctx)
+    if hasattr(_rec_engine, "recommend_versioning_strategy")
+    else "",
+)
+
 
 # ============================================================================
 # TIER 3: Tactical Decisions (Tool Preferences)
@@ -624,6 +677,37 @@ def _auto_detect_git_workflow(ctx: AnswerContext) -> str:
     return "github_flow"
 
 
+def _auto_detect_versioning_strategy(ctx: AnswerContext) -> str:
+    """Auto-detect versioning strategy based on team size and project type"""
+    team = ctx.team_size
+    project_types = ctx.get("project_purpose", [])
+    maturity = ctx.maturity
+
+    # No versioning for prototypes or internal tools
+    if maturity == "prototype":
+        return "no_versioning"
+
+    # Libraries and APIs should always have versioning
+    needs_versioning = any(pt in project_types for pt in ["library", "api_backend"])
+
+    # Solo developers benefit from automation
+    if team == "solo":
+        return "auto_semver" if needs_versioning else "no_versioning"
+
+    # Large organizations prefer manual control
+    if team in ["large_org"]:
+        return "manual_semver"
+
+    # Small to medium teams use PR-based review
+    if team in ["small_team", "growing_team"]:
+        if maturity in ["production", "mature"]:
+            return "pr_based_semver"
+        return "auto_semver"  # Auto for active development
+
+    # Default to auto for modern workflows
+    return "auto_semver"
+
+
 # ============================================================================
 # Dynamic TIER 3 Builder (Tool Preferences)
 # ============================================================================
@@ -695,6 +779,7 @@ DECISION_TREE_TIER2 = [
     TIER2_SECURITY_STANCE,
     TIER2_DOCUMENTATION_LEVEL,
     TIER2_GIT_WORKFLOW,
+    TIER2_VERSIONING_STRATEGY,
 ]
 
 # TIER3 is dynamically generated

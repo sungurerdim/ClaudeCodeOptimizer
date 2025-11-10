@@ -1256,6 +1256,10 @@ class CCOWizard:
                     answers.get("principle_strategy", "recommended"),
                 ),
             },
+            "collaboration": {
+                "git_workflow": answers.get("git_workflow", "main_only"),
+                "versioning_strategy": answers.get("versioning_strategy", "auto_semver"),
+            },
             "selected_principle_ids": self.selected_principles,
         }
 
