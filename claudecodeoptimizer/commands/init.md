@@ -83,7 +83,7 @@ if result.success:
     print(f\"[OK] Initialized: {result.system_context.detected_language if result.system_context else 'project'}\")
     print(f\"[OK] Principles: {len(result.selected_principles)}\")
     print(f\"[OK] Commands: {len(result.selected_commands)}\")
-    print(f\"[OK] Check PRINCIPLES.md for details\")
+    print(f\"[OK] Check CLAUDE.md for principles\")
 else:
     print(f\"[ERROR] {result.error}\")
 "
@@ -115,7 +115,7 @@ if result.success:
     print(f\"[OK] Principles: {len(result.selected_principles)}\")
     print(f\"[OK] Commands: {len(result.selected_commands)}\")
     print(f\"[OK] Duration: {result.duration_seconds:.1f}s\")
-    print(f\"[OK] Check PRINCIPLES.md for details\")
+    print(f\"[OK] Check CLAUDE.md for principles\")
 else:
     print(f\"[ERROR] {result.error}\")
 "
@@ -430,7 +430,7 @@ for i, p in enumerate(selected[:10], 1):
 if len(selected) > 10:
     print(f'  ... and {len(selected) - 10} more')
 print('')
-print('Full list will be in PRINCIPLES.md')
+print('Full list will be in CLAUDE.md')
 "
 ```
 
@@ -718,9 +718,6 @@ knowledge_file = Path.home() / '.cco' / 'knowledge' / 'principles.json'
 all_principles = json.loads(knowledge_file.read_text())['principles']
 selected = [p for p in all_principles if p['id'] in final_selected_ids]
 
-# Generate PRINCIPLES.md with selected principles
-pm._write_principles_md(selected)
-
 # Register project
 preferences_dict = preferences.model_dump(mode='json')
 preferences_dict['selected_principle_ids'] = final_selected_ids
@@ -740,7 +737,7 @@ print('[OK] Installation complete!')
 print(f'[OK] Project: {Path.cwd().name}')
 print(f'[OK] Principles: {len(selected)} selected')
 print(f'[OK] Commands: .claude/commands/cco-*.md')
-print(f'[OK] PRINCIPLES.md generated')
+print(f'[OK] CLAUDE.md generated with principles')
 print(f'[OK] Statusline: .claude/statusline.js')
 "
 ```
@@ -769,16 +766,16 @@ ls .claude/commands/cco-*.md 2>/dev/null | wc -l
 Expected: Should show count of installed CCO commands (12-15)
 
 ```bash
-head -30 PRINCIPLES.md
+head -100 CLAUDE.md
 ```
 
-Expected: Should show principle summary and first few principles
+Expected: Should show principle summary and project guidelines
 
 ## Next Steps
 
 After initialization:
 - Run `/cco-status` to see your full configuration
-- Read `PRINCIPLES.md` to understand your active principles
+- Read `CLAUDE.md` to understand your active principles
 - Run `/cco-audit-code` to analyze your code against principles
 
 ## Troubleshooting
@@ -789,7 +786,7 @@ After initialization:
 
 **Permission errors**: Check `.claude/` directory exists and is writable.
 
-**No principles generated**: Check `PRINCIPLES.md` was created. If not, re-run initialization.
+**No principles loaded**: Check `CLAUDE.md` was created/updated. If not, re-run initialization.
 
 </details>
 

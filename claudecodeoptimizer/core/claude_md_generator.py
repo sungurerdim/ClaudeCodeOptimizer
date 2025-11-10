@@ -38,7 +38,7 @@ class ClaudeMdGenerator:
             preferences: User preferences dictionary from CCOPreferences.dict()
         """
         self.preferences = preferences
-        self.template_path = Path(__file__).parent.parent.parent / "CLAUDE.md"
+        self.template_path = Path(__file__).parent.parent.parent / "templates" / "CLAUDE.md.template"
 
     def generate(self, output_path: Path) -> Dict[str, Any]:
         """
@@ -104,7 +104,7 @@ class ClaudeMdGenerator:
         1. Parse both into sections
         2. Keep all existing sections
         3. Add missing sections from template
-        4. Update "Development Principles" section to ensure @PRINCIPLES.md reference
+        4. Update "Development Principles" section with template content if missing
         """
         template_sections = self._parse_sections(template)
         existing_sections = self._parse_sections(existing)
