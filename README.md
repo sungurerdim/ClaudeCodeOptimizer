@@ -7,7 +7,7 @@
 [![Version](https://img.shields.io/badge/version-0.1.0--alpha-orange.svg)](https://github.com/sungurerdim/ClaudeCodeOptimizer/releases)
 [![Code style: ruff](https://img.shields.io/badge/code%20style-ruff-000000.svg)](https://github.com/astral-sh/ruff)
 
-> **⚠️ Alpha Status**: Core functionality complete, production readiness in progress (P0.2 completed). See [Roadmap](#roadmap).
+> **⚠️ Alpha Status**: Core functionality complete, production readiness in progress (P0.1 & P0.2 completed, 95%). See [Roadmap](#roadmap).
 
 ---
 
@@ -42,10 +42,11 @@ python -m claudecodeoptimizer init --mode=interactive
 ```
 
 **What it creates:**
-- `.cco/project.json` - Project configuration
+- `~/.cco/projects/<project>.json` - Global project configuration (zero-pollution)
 - `PRINCIPLES.md` - Active development principles (~500 tokens, load with `@PRINCIPLES.md`)
+- `CLAUDE.md` - Project development guide
 - `.claude/commands/` - Slash commands (8-12 commands tailored to your stack)
-- `docs/cco/` - Comprehensive documentation system
+- `.claude/statusline.js` - Project statusline
 
 ---
 
@@ -348,23 +349,27 @@ ClaudeCodeOptimizer/
 - 12+ slash commands
 - Multi-agent orchestration
 
-### ⏳ v0.2.0-alpha (In Progress - 92% Complete)
+### ⏳ v0.2.0-alpha (In Progress - 95% Complete)
 
 **P0: Production Readiness**
-- ✅ P0.1: Command selection fixes (core + recommended only)
-- ✅ P0.1: Model enforcement (Haiku/Sonnet explicit in all commands)
-- ✅ P0.1: Git workflow selection (main-only, GitHub Flow, Git Flow)
-- ✅ P0.2: Document management system (progressive disclosure)
-- ✅ P0.2: Token optimization (76% reduction: 8500 → 2000 tokens)
-- ✅ P0.2: Report management system
+- ✅ P0.1: ALL TASKS COMPLETE
+  - ✅ Export/import removal (cleaner workflow)
+  - ✅ Command selection fixes (core + recommended only)
+  - ✅ Model enforcement (Haiku/Sonnet explicit in all commands)
+  - ✅ Git workflow selection (main-only, GitHub Flow, Git Flow)
+- ✅ P0.2: DOCUMENT MANAGEMENT COMPLETE
+  - ✅ Progressive disclosure system (docs/cco/)
+  - ✅ Token optimization (76% reduction: 8500 → 2000 tokens)
+  - ✅ Report management system with Windows compatibility
+  - ✅ Principles split by category (9 files)
+  - ✅ On-demand guides (5 comprehensive guides)
 - ✅ GitHub Actions: Security workflow fixes
 - ✅ Code Quality: All ruff checks passed (F841, S110 fixed)
 - ✅ Error Handling: P001 violations fixed (14 try-except-pass instances)
 - ✅ Type Safety: All type annotations complete (ANN checks passed)
 - ✅ Backup Management: /cco-remove backup notification
 - ⏳ P0.3: Progressive disclosure for skills (3-tier loading)
-- ⏳ P0.3: Category-based principle loading
-- ⏳ P0.0: Smart Git Commit skill (version bump detection)
+- ⏳ P0.0: Smart Git Commit skill (universal, works in any project)
 - ⏳ Testing: 0% → 60% coverage
 - ⏳ CI/CD: Automated testing, linting, security scans
 
@@ -384,7 +389,7 @@ ClaudeCodeOptimizer/
 - Plugin system
 - Custom principle definitions
 - Command templates
-- Export/import configurations
+- Advanced workflow customization
 
 ### 📅 v1.0.0 (Stable Release)
 - API stability guarantee
