@@ -205,7 +205,7 @@ class CCOWizard:
     # ========================================================================
 
     def _show_welcome(self) -> None:
-        """Show welcome message"""
+        """Show welcome message and ensure global knowledge base is initialized"""
         clear_screen()
 
         if self.mode == "interactive":
@@ -234,8 +234,29 @@ class CCOWizard:
             print_warning("DRY RUN - No files will be written", indent=2)
         print()
 
+        # Ensure global knowledge base is initialized
+        self._ensure_global_knowledge_base()
+
         if self.mode == "interactive":
             pause()
+
+    def _ensure_global_knowledge_base(self) -> None:
+        """Ensure global knowledge base (~/.cco/knowledge/) is initialized"""
+        from ..core.knowledge_setup import setup_global_knowledge
+
+        try:
+            # Setup global knowledge if not exists
+            result = setup_global_knowledge(force=False)
+
+            if result["actions"] and result["actions"][0] != "Knowledge base already up to date":
+                print_info("✓ Global knowledge base initialized", indent=2)
+                for action in result["actions"]:
+                    print_info(f"  - {action}", indent=2)
+                print()
+        except Exception as e:
+            print_warning(f"Knowledge base setup warning: {e}", indent=2)
+            print_info("Continuing with wizard...", indent=2)
+            print()
 
     # ========================================================================
     # Phase 1: System Detection (TIER 0)
@@ -731,39 +752,46 @@ class CCOWizard:
                     print_info("Tip: Create custom agents using templates in ~/.cco/knowledge/agents/", indent=2)
                     print()
 
-                # Skills selection with language-specific recommendations
+                # Skills selection with workflow-based recommendations
                 available_skills = get_available_skills()
                 if available_skills:
-                    # Recommend skills based on detected languages
+                    # Recommend skills based on project workflow needs
                     recommended_skills = self._recommend_skills_for_project()
 
-                    print_info(f"Available language skills ({len(available_skills)}):", indent=2)
-                    print_info(f"  Recommended for your languages: {len(recommended_skills)}", indent=2)
+                    # Skill descriptions
+                    skill_descriptions = {
+                        "verification-protocol": "Evidence-based fix-verify-commit loop (P067)",
+                        "test-first-verification": "Generate tests before code changes (P035)",
+                        "root-cause-analysis": "Analyze WHY violations exist, not just WHERE",
+                        "incremental-improvement": "Break large tasks into achievable milestones",
+                        "security-emergency-response": "Immediate P0 CRITICAL security remediation",
+                    }
+
+                    print_info(f"Available workflow skills ({len(available_skills)}):", indent=2)
+                    print_info(f"  Recommended for your project: {len(recommended_skills)}", indent=2)
                     print()
 
-                    # Group skills by language
-                    skills_by_lang = {}
-                    for skill in available_skills:
-                        lang = skill.split("/")[0] if "/" in skill else "other"
-                        if lang not in skills_by_lang:
-                            skills_by_lang[lang] = []
-                        skills_by_lang[lang].append(skill)
+                    # Show each skill with description and recommendation
+                    for i, skill in enumerate(available_skills, 1):
+                        # Skip templates and README
+                        if skill.startswith("_") or skill == "README":
+                            continue
 
-                    # Show skills grouped by language
-                    for lang, skills in sorted(skills_by_lang.items()):
-                        print_info(f"  {lang.title()}:", indent=2)
-                        for skill in skills:
-                            skill_name = skill.split("/")[-1].replace("-", " ").title()
-                            is_recommended = skill in recommended_skills
-                            marker = "⭐" if is_recommended else "  "
-                            print_info(f"    {marker} {skill_name}", indent=2)
+                        skill_name = skill.replace("-", " ").title()
+                        description = skill_descriptions.get(skill, "")
+                        is_recommended = skill in recommended_skills
+                        marker = "⭐" if is_recommended else "  "
+
+                        print_info(f"{marker} {i}. {skill_name}", indent=2)
+                        if description:
+                            print_info(f"      {description}", indent=2)
                     print()
 
-                    response = input("  Select skills (all/recommended/none) [default: none]: ").strip().lower()
+                    response = input("  Select skills (all/recommended/none) [default: recommended]: ").strip().lower()
                     if response == "all":
-                        self.selected_skills = available_skills
-                        print_success(f"✓ Selected all {len(available_skills)} skills", indent=2)
-                    elif response == "recommended":
+                        self.selected_skills = [s for s in available_skills if not s.startswith("_") and s != "README"]
+                        print_success(f"✓ Selected all {len(self.selected_skills)} skills", indent=2)
+                    elif response == "" or response == "recommended":
                         self.selected_skills = recommended_skills
                         print_success(f"✓ Selected {len(recommended_skills)} recommended skills", indent=2)
                     else:
@@ -772,7 +800,7 @@ class CCOWizard:
                     print()
                 else:
                     self.selected_skills = []
-                    print_info("No language skills available", indent=2)
+                    print_info("No workflow skills available", indent=2)
                     print()
 
                 pause()
@@ -1406,59 +1434,110 @@ class CCOWizard:
         return mapping.get(strategy, "strict")
 
     def _recommend_guides_for_project(self) -> List[str]:
-        """Recommend guides based on project context"""
+        """
+        Recommend guides based on comprehensive decision tree analysis.
+
+        Maps all 24 decision points to relevant guides.
+        """
         if not self.answer_context:
             return []
 
         recommended = []
         answers = self.answer_context.answers
+
+        # Extract key decisions
         project_types = answers.get("project_purpose", [])
         team_size = answers.get("team_dynamics", "solo")
         maturity = answers.get("project_maturity", "prototype")
+        philosophy = answers.get("development_philosophy", "balanced")
+        testing = answers.get("testing_approach", "balanced")
+        security = answers.get("security_stance", "standard")
+        git_workflow = answers.get("git_workflow", "main_only")
+        error_handling = answers.get("error_handling", "fail_fast")
 
-        # Verification protocol: for all production projects
-        if maturity in ["production", "legacy"] or team_size != "solo":
+        # TIER 1 Mappings: Fundamental Decisions
+
+        # Verification Protocol: for quality-conscious projects
+        if philosophy == "quality_first" or maturity in ["production", "legacy"]:
             recommended.append("verification-protocol")
 
-        # Git workflow: for team projects
-        if team_size in ["small_team", "large_org"]:
+        # For all team projects (non-solo)
+        if team_size != "solo":
+            recommended.append("verification-protocol")
+
+        # Git Workflow Guide: for team projects with structured workflows
+        if team_size in ["small_team", "growing_team", "large_org"]:
             recommended.append("git-workflow")
 
-        # Security response: for API/web apps or production systems
-        if any(pt in project_types for pt in ["api_service", "web_app", "microservice"]) or maturity == "production":
+        # Also for git flow or github flow
+        if git_workflow in ["git_flow", "github_flow"]:
+            if "git-workflow" not in recommended:
+                recommended.append("git-workflow")
+
+        # TIER 2 Mappings: Strategy Decisions
+
+        # Security Response: for production or high security stance
+        if security in ["production", "high"] or maturity == "production":
             recommended.append("security-response")
 
-        # Performance optimization: for backend services
-        if any(pt in project_types for pt in ["api_service", "microservice", "data_pipeline"]):
+        # For web/API projects (security critical)
+        if any(pt in project_types for pt in ["api_service", "web_app", "microservice", "spa"]):
+            if "security-response" not in recommended:
+                recommended.append("security-response")
+
+        # Performance Optimization: for backend services or data pipelines
+        if any(pt in project_types for pt in ["api_service", "microservice", "data_pipeline", "ml_pipeline", "stream_processing"]):
             recommended.append("performance-optimization")
 
-        # Container best practices: for containerized apps
-        if any(pt in project_types for pt in ["microservice", "infrastructure", "data_pipeline"]):
+        # For projects that need retry/resilience
+        if error_handling in ["retry_logic", "graceful_degradation"]:
+            if "performance-optimization" not in recommended:
+                recommended.append("performance-optimization")
+
+        # Container Best Practices: for containerized infrastructure
+        if any(pt in project_types for pt in ["microservice", "infrastructure", "data_pipeline", "ml_pipeline"]):
             recommended.append("container-best-practices")
 
-        return recommended
+        # TIER 3 Mappings: Tactical Decisions
+
+        # Additional test-focused recommendations
+        if testing in ["comprehensive", "balanced"]:
+            if "verification-protocol" not in recommended:
+                recommended.append("verification-protocol")
+
+        return list(set(recommended))  # Remove duplicates
 
     def _recommend_skills_for_project(self) -> List[str]:
-        """Recommend language skills based on detected languages"""
-        if not self.system_context:
+        """Recommend skills based on project context (workflow skills, not language-specific)"""
+        if not self.answer_context:
             return []
 
         recommended = []
-        detected_langs = self.system_context.detected_languages
+        answers = self.answer_context.answers
+        maturity = answers.get("project_maturity", "prototype")
+        philosophy = answers.get("development_philosophy", "balanced")
+        testing = answers.get("testing_approach", "balanced")
+        security = answers.get("security_stance", "standard")
 
-        # Map detected languages to skill categories
-        lang_mapping = {
-            "python": ["python/async-patterns", "python/type-hints-advanced", "python/testing-pytest"],
-            "typescript": ["typescript/advanced-types", "typescript/async-patterns", "typescript/type-safety"],
-            "javascript": ["typescript/async-patterns"],  # JS devs benefit from TS patterns
-            "rust": ["rust/ownership-patterns", "rust/error-handling"],
-            "go": ["go/concurrency-patterns", "go/error-handling"],
-        }
+        # Verification Protocol: for quality-first or production projects
+        if philosophy == "quality_first" or maturity in ["production", "legacy"]:
+            recommended.append("verification-protocol")
 
-        for lang in detected_langs:
-            lang_lower = lang.lower()
-            if lang_lower in lang_mapping:
-                recommended.extend(lang_mapping[lang_lower])
+        # Test-First Verification: for TDD or comprehensive testing
+        if testing in ["comprehensive", "balanced"] and philosophy != "move_fast":
+            recommended.append("test-first-verification")
+
+        # Root Cause Analysis: for strict quality standards
+        if philosophy == "quality_first" or answers.get("code_quality.linting_strictness") in ["strict", "pedantic"]:
+            recommended.append("root-cause-analysis")
+
+        # Incremental Improvement: for large projects or legacy systems
+        if maturity in ["active_dev", "production", "legacy"]:
+            recommended.append("incremental-improvement")
+
+        # Security Emergency Response: for production or high security
+        if security in ["production", "high"] or maturity == "production":
+            recommended.append("security-emergency-response")
 
         return list(set(recommended))  # Remove duplicates
 

@@ -174,13 +174,17 @@ def _setup_agents(agents_dir: Path) -> None:
 
 def _setup_skills(skills_dir: Path) -> None:
     """
-    Copy skill templates from package to global directory.
+    Copy skill files from package to global directory.
 
-    Copies from claudecodeoptimizer/knowledge/skills/ to ~/.cco/knowledge/skills/
+    Copies from claudecodeoptimizer/skills/ to ~/.cco/knowledge/skills/
     """
     # Get package skills directory
     package_dir = Path(__file__).parent.parent
-    source_skills = package_dir / "knowledge" / "skills"
+    source_skills = package_dir / "skills"
+
+    if not source_skills.exists():
+        # Fallback: try knowledge/skills for templates
+        source_skills = package_dir / "knowledge" / "skills"
 
     if not source_skills.exists():
         raise FileNotFoundError(f"Package skills not found at {source_skills}")
@@ -188,7 +192,7 @@ def _setup_skills(skills_dir: Path) -> None:
     # Create destination
     skills_dir.mkdir(parents=True, exist_ok=True)
 
-    # Copy all .md files (templates and README)
+    # Copy all .md files
     for skill_file in source_skills.glob("*.md"):
         dest_file = skills_dir / skill_file.name
         shutil.copy2(skill_file, dest_file)
