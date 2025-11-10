@@ -1,22 +1,18 @@
 ---
-name: incremental-improvement
-description: Break overwhelming tasks into achievable milestones
-version: 1.0.0
-category: planning
-applies_to:
-  - audit-tests
-  - generate-tests
-  - audit-principles
-activation: after_large_gap_detected
+metadata:
+  name: "Incremental Improvement Protocol"
+  activation_keywords: ["overwhelming task", "large gap", "break into milestones", "weekly sprints"]
+  category: "planning"
 ---
 
 # Incremental Improvement Protocol
 
-**Purpose:** Transform overwhelming goals into achievable milestones. Prevent paralysis from "too much to fix".
+Transform overwhelming goals into achievable milestones. Prevent paralysis from "too much to fix".
 
----
+<!-- INSTRUCTIONS: Load when activated -->
+## Detailed Instructions
 
-## When This Skill Activates
+### When This Skill Activates
 
 This skill activates when audit shows LARGE gap:
 - `/cco-audit-tests` finds 20+ untested functions
@@ -25,9 +21,7 @@ This skill activates when audit shows LARGE gap:
 
 **Trigger:** Gap > threshold (configurable, default: 20 items)
 
----
-
-## The Core Principle
+### The Core Principle
 
 **Don't try to fix everything at once. Break into weekly sprints with celebration milestones.**
 
@@ -36,11 +30,9 @@ Why?
 - All-or-nothing approach often becomes nothing
 - Progress > Perfection
 
----
+### The Protocol
 
-## The Protocol
-
-### Step 1: PRIORITIZE by Impact
+#### Step 1: PRIORITIZE by Impact
 
 **For test coverage:**
 ```
@@ -58,7 +50,7 @@ Priority 2 (MEDIUM): Code quality, testing
 Priority 3 (LOW): Style, optimization
 ```
 
-### Step 2: SET Weekly Milestones
+#### Step 2: SET Weekly Milestones
 
 **Formula:**
 ```
@@ -68,7 +60,7 @@ Week 3: P2 → 80% (remaining gap)
 Week 4: Polish + buffer
 ```
 
-### Step 3: TRACK Progress
+#### Step 3: TRACK Progress
 
 Save state in `.cco/state/{PROJECT}/incremental-progress.json`:
 ```json
@@ -95,20 +87,19 @@ Save state in `.cco/state/{PROJECT}/incremental-progress.json`:
 }
 ```
 
-### Step 4: CELEBRATE Milestones
+#### Step 4: CELEBRATE Milestones
 
 After each week:
 ```
-"🎉 Week 1 Complete!"
+"Week 1 Complete!"
 "Critical paths at 100%"
 "Coverage: 64% → 72% (+8%)"
-"Ship-blocking issues resolved ✓"
+"Ship-blocking issues resolved"
 "Ready for Week 2?"
 ```
 
----
-
-## Examples
+<!-- RESOURCES: Load on explicit request -->
+## Examples & Resources
 
 ### Example 1: Test Coverage Gap
 
@@ -171,11 +162,11 @@ Running tests...
 Running coverage...
 Coverage: 64% → 72%
 
-🎉 WEEK 1 COMPLETE!
+WEEK 1 COMPLETE!
 
-Critical paths at 100% ✓
-Coverage increased 8% ✓
-Ship-blocking issues resolved ✓
+Critical paths at 100%
+Coverage increased 8%
+Ship-blocking issues resolved
 
 Ready for Week 2? (y/n)
 ```
@@ -289,7 +280,7 @@ Progress:
   [ ] validate_schema()         - shared/validation.py:123
   [ ] transform_data()          - shared/transforms.py:67
 
-  Week 2 on track ✓
+  Week 2 on track
 
 □ Week 3: Remaining Functions (NOT STARTED)
   - 16 functions queued
@@ -303,17 +294,14 @@ ETA: 2025-01-29 (19 days remaining)
 Continue Week 2? (y/n)
 ```
 
----
+### Milestone Celebration Examples
 
-## Milestone Celebration Examples
+#### Week 1 Complete
 
-### Week 1 Complete
 ```
-┌─────────────────────────────────────┐
-│  🎉 WEEK 1 MILESTONE ACHIEVED! 🎉  │
-└─────────────────────────────────────┘
+WEEK 1 MILESTONE ACHIEVED!
 
-Critical Paths: 100% Tested ✓
+Critical Paths: 100% Tested
 
 Before: 64% coverage (ship-blocking risk)
 After:  72% coverage (safe to deploy)
@@ -332,20 +320,19 @@ Impact:
   • SQL injection attacks prevented
   • Encryption always validated
 
-Team morale: 📈
-Deployment confidence: 📈📈
+Team morale: Up
+Deployment confidence: Up
 
 Next: Week 2 - High-value functions
 Ready? (y/n)
 ```
 
-### Week 2 Complete
-```
-┌─────────────────────────────────────┐
-│  🎉 WEEK 2 MILESTONE ACHIEVED! 🎉  │
-└─────────────────────────────────────┘
+#### Week 2 Complete
 
-High-Value Functions: 80% Tested ✓
+```
+WEEK 2 MILESTONE ACHIEVED!
+
+High-Value Functions: 80% Tested
 
 Before: 72% coverage
 After:  78% coverage
@@ -359,8 +346,8 @@ Functions Protected (12 total):
   ... (8 more)
 
 Progress:
-  Week 1: Critical paths ✓
-  Week 2: High-value logic ✓
+  Week 1: Critical paths
+  Week 2: High-value logic
   Week 3: Remaining functions (in progress)
 
 Total coverage improvement: 64% → 78%
@@ -369,19 +356,18 @@ We're 12% away from 80% goal!
 Almost there! One more week!
 ```
 
-### Final Goal Achieved
+#### Final Goal Achieved
+
 ```
-┌──────────────────────────────────────┐
-│  🎊 80% COVERAGE ACHIEVED! 🎊        │
-│  PROJECT GOAL REACHED! 🏆            │
-└──────────────────────────────────────┘
+80% COVERAGE ACHIEVED!
+PROJECT GOAL REACHED!
 
 Journey:
   Start:  64% (36 untested functions)
   Week 1: 72% (+8%) - Critical paths
   Week 2: 78% (+6%) - High-value
   Week 3: 82% (+4%) - Remaining
-  Final:  82% coverage ✓
+  Final:  82% coverage
 
 Total functions tested: 38
 Total test cases written: 147
@@ -407,14 +393,12 @@ Next goals:
   • Add mutation testing
   • Improve test quality
 
-Congratulations! 🎉
+Congratulations!
 ```
 
----
+### Integration with Commands
 
-## Integration with Commands
-
-### audit-tests.md
+#### audit-tests.md
 Add after reporting, if gap > 20 functions:
 
 ```markdown
@@ -432,7 +416,7 @@ The skill will:
 4. Celebrate achievements
 ```
 
-### audit-principles.md
+#### audit-principles.md
 Add after reporting, if violations > 30:
 
 ```markdown
@@ -446,9 +430,7 @@ Skill("incremental-improvement")
 Break fixes into manageable weekly sprints.
 ```
 
----
-
-## State Management
+### State Management
 
 Track progress in `.cco/state/{PROJECT}/incremental-progress.json`:
 
@@ -505,11 +487,9 @@ Track progress in `.cco/state/{PROJECT}/incremental-progress.json`:
 /cco-continue-improvement
 ```
 
----
+### Anti-Patterns to Prevent
 
-## Anti-Patterns to Prevent
-
-### ❌ WRONG: All-or-Nothing
+#### WRONG: All-or-Nothing
 
 ```
 User: "36 functions to test. I'll do it all this weekend."
@@ -519,21 +499,19 @@ User: "36 functions to test. I'll do it all this weekend."
 Result: 20 tests but no systematic approach
 ```
 
-### ✅ RIGHT: Incremental Progress
+#### RIGHT: Incremental Progress
 
 ```
 Skill: "36 functions. Let's do 5 critical ones this week."
 User: <Works 3 hours, finishes 5>
-Skill: "🎉 Week 1 done! Coverage +8%! Ship-blockers resolved!"
+Skill: "Week 1 done! Coverage +8%! Ship-blockers resolved!"
 User: <Feels accomplished>
 Week 2: <Does 12 more>
 Week 3: <Does remaining 16>
 Result: All 36 tested with sustainable pace
 ```
 
----
-
-## Success Metrics
+### Success Metrics
 
 **Before (without skill):**
 - Completion rate: 30% (give up when overwhelmed)
@@ -545,9 +523,7 @@ Result: All 36 tested with sustainable pace
 - Time to complete: 3-4 weeks (systematic)
 - Team morale: High (celebrate every week)
 
----
-
-## When to Skip This Skill
+### When to Skip This Skill
 
 Skip incremental planning if:
 - Gap is small (<20 items)

@@ -1,21 +1,18 @@
 ---
-name: security-emergency-response
-description: Immediate remediation for P0 CRITICAL security violations
-version: 1.0.0
-category: security
-applies_to:
-  - audit-security
-  - scan-secrets
-activation: on_critical_detection
+metadata:
+  name: "Security Emergency Response"
+  activation_keywords: ["P0 critical", "hardcoded secrets", "exposed keys", "security emergency"]
+  category: "security"
 ---
 
 # Security Emergency Response
 
-**Purpose:** Stop everything when P0 CRITICAL security issue detected. Fix immediately before continuing.
+Stop everything when P0 CRITICAL security issue detected. Fix immediately before continuing.
 
----
+<!-- INSTRUCTIONS: Load when activated -->
+## Detailed Instructions
 
-## When This Skill Activates
+### When This Skill Activates
 
 This skill activates IMMEDIATELY upon detecting P0 CRITICAL security issues:
 - Hardcoded API keys, passwords, tokens
@@ -27,9 +24,7 @@ This skill activates IMMEDIATELY upon detecting P0 CRITICAL security issues:
 
 **Behavior:** INTERRUPT current operation, demand immediate fix
 
----
-
-## The Core Principle
+### The Core Principle
 
 **P0 CRITICAL security issues are deployment blockers. Fix NOW, not later.**
 
@@ -38,11 +33,9 @@ Why?
 - Once in git history, secrets are compromised forever
 - Every second counts
 
----
+### Severity Classification
 
-## Severity Classification
-
-### P0 CRITICAL (Emergency Response)
+#### P0 CRITICAL (Emergency Response)
 **Stop everything. Fix immediately.**
 
 Examples:
@@ -55,7 +48,7 @@ Examples:
 **Response time:** IMMEDIATE (within 5 minutes)
 **Block:** YES (don't continue audit until fixed)
 
-### P1 HIGH (Urgent, Not Emergency)
+#### P1 HIGH (Urgent, Not Emergency)
 **Fix today, but can finish current audit first.**
 
 Examples:
@@ -67,19 +60,17 @@ Examples:
 **Response time:** Within 1 hour
 **Block:** NO (fix after completing audit)
 
-### P2 MEDIUM, P3 LOW
+#### P2 MEDIUM, P3 LOW
 **Fix in normal workflow.**
 
----
+### Emergency Response Protocol
 
-## Emergency Response Protocol
-
-### Phase 1: DETECT & INTERRUPT
+#### Phase 1: DETECT & INTERRUPT
 
 When P0 CRITICAL detected:
 
 ```
-🚨 EMERGENCY: P0 CRITICAL SECURITY VIOLATION DETECTED 🚨
+EMERGENCY: P0 CRITICAL SECURITY VIOLATION DETECTED
 
 services/api/client.py:23
   API_KEY = "sk_live_51H7K9..."
@@ -89,7 +80,7 @@ This appears to be a REAL production API key.
 AUDIT PAUSED. Fix this immediately before continuing.
 ```
 
-### Phase 2: CONFIRM Severity
+#### Phase 2: CONFIRM Severity
 
 Ask user to confirm:
 
@@ -106,7 +97,7 @@ Choice (1/2/3):
 If REAL → Continue emergency response
 If EXAMPLE/TEST → Downgrade to P2, add comment, continue audit
 
-### Phase 3: REVOKE Secret
+#### Phase 3: REVOKE Secret
 
 ```
 IMMEDIATE ACTION REQUIRED:
@@ -135,7 +126,7 @@ Please revoke at: https://dashboard.stripe.com/apikeys
 Type "revoked" when complete:
 ```
 
-### Phase 4: GENERATE New Secret
+#### Phase 4: GENERATE New Secret
 
 ```
 Generating replacement secret...
@@ -159,7 +150,7 @@ Creating fix:
 Apply fix? (y/n)
 ```
 
-### Phase 5: APPLY Fix
+#### Phase 5: APPLY Fix
 
 ```
 Applying emergency fix...
@@ -183,7 +174,7 @@ Applying emergency fix...
 ✓ Created docs/SECRETS.md with key management guide
 ```
 
-### Phase 6: VERIFY Fix
+#### Phase 6: VERIFY Fix
 
 ```
 Verifying secret removal...
@@ -225,7 +216,7 @@ IMPORTANT: This key is compromised. Use the NEW key in .env
 Continue? (y/n)
 ```
 
-### Phase 7: CREATE Prevention
+#### Phase 7: CREATE Prevention
 
 ```
 Adding preventive measures...
@@ -259,22 +250,21 @@ Adding preventive measures...
   - ...
 ```
 
-### Phase 8: RESUME Audit
+#### Phase 8: RESUME Audit
 
 ```
-Emergency resolved ✓
+Emergency resolved
 
-Secret revoked ✓
-Code fixed ✓
-Git history cleaned ✓
-Prevention added ✓
+Secret revoked
+Code fixed
+Git history cleaned
+Prevention added
 
 Resuming security audit...
 ```
 
----
-
-## Examples
+<!-- RESOURCES: Load on explicit request -->
+## Examples & Resources
 
 ### Example 1: Hardcoded API Key
 
@@ -283,7 +273,7 @@ User runs: /cco-audit-security
 
 Scanning services/api/client.py...
 
-🚨 EMERGENCY: P0 CRITICAL DETECTED 🚨
+EMERGENCY: P0 CRITICAL DETECTED
 
 Line 23: API_KEY = "sk_live_51H7K9C8Dk3b..."
 
@@ -322,7 +312,7 @@ User: y
 ✓ .gitignore updated
 ✓ Security docs created
 
-Emergency resolved ✓
+Emergency resolved
 Resuming audit...
 
 Scanning services/worker/...
@@ -335,7 +325,7 @@ User runs: /cco-scan-secrets
 
 Scanning codebase for secrets...
 
-🚨 EMERGENCY: 3 P0 CRITICAL VIOLATIONS 🚨
+EMERGENCY: 3 P0 CRITICAL VIOLATIONS
 
 1. services/api/client.py:23
    API_KEY = "sk_live_..."
@@ -388,7 +378,7 @@ Fixing code...
 ✓ Added DB_PASSWORD to .env.example
 ✓ Updated deployment docs
 
-1/3 resolved ✓
+1/3 resolved
 
 === VIOLATION 2/3: API Key ===
 [Same process...]
@@ -396,7 +386,7 @@ Fixing code...
 === VIOLATION 3/3: JWT Secret ===
 [Same process...]
 
-All 3 emergencies resolved ✓
+All 3 emergencies resolved
 Resuming audit...
 ```
 
@@ -405,7 +395,7 @@ Resuming audit...
 ```
 User runs: /cco-audit-security
 
-🚨 EMERGENCY: P0 CRITICAL DETECTED 🚨
+EMERGENCY: P0 CRITICAL DETECTED
 
 tests/fixtures/api_mock.py:12
   API_KEY = "test_key_abc123"
@@ -427,11 +417,45 @@ User: y
 Continuing audit...
 ```
 
----
+### Secret Detection Patterns
 
-## Integration with Commands
+#### High-Confidence (Always P0)
 
-### audit-security.md
+```python
+SECRET_PATTERNS = {
+    "stripe_live_key": r"sk_live_[A-Za-z0-9]{24,}",
+    "aws_key": r"AKIA[0-9A-Z]{16}",
+    "github_token": r"gh[pousr]_[A-Za-z0-9]{36,}",
+    "jwt_secret": r"(jwt|JWT)_SECRET\s*=\s*['\"][^'\"]{20,}['\"]",
+    "private_key_header": r"-----BEGIN (RSA |)PRIVATE KEY-----",
+    "slack_webhook": r"hooks\.slack\.com/services/T[A-Z0-9]+/B[A-Z0-9]+/[A-Za-z0-9]+",
+}
+```
+
+#### Medium-Confidence (Ask User)
+
+```python
+MAYBE_SECRETS = {
+    "api_key_pattern": r"api[_-]?key\s*=\s*['\"][A-Za-z0-9]{16,}['\"]",
+    "password_pattern": r"password\s*=\s*['\"][^'\"]{8,}['\"]",
+    "secret_pattern": r"secret\s*=\s*['\"][^'\"]{12,}['\"]",
+}
+```
+
+#### Low-Confidence (Ignore in Tests)
+
+```python
+TEST_FIXTURES = [
+    "test_api_key",
+    "password123",
+    "your-api-key-here",
+    "example.com",
+]
+```
+
+### Integration with Commands
+
+#### audit-security.md
 Add at the very beginning (Phase 0):
 
 ```markdown
@@ -450,7 +474,7 @@ The skill will:
 This ensures critical issues handled before time spent on full audit.
 ```
 
-### scan-secrets.md
+#### scan-secrets.md
 Make this the PRIMARY workflow:
 
 ```markdown
@@ -462,75 +486,7 @@ Skill("security-emergency-response")
 No custom logic needed - skill handles everything.
 ```
 
----
-
-## Secret Detection Patterns
-
-### High-Confidence (Always P0)
-
-```python
-SECRET_PATTERNS = {
-    "stripe_live_key": r"sk_live_[A-Za-z0-9]{24,}",
-    "aws_key": r"AKIA[0-9A-Z]{16}",
-    "github_token": r"gh[pousr]_[A-Za-z0-9]{36,}",
-    "jwt_secret": r"(jwt|JWT)_SECRET\s*=\s*['\"][^'\"]{20,}['\"]",
-    "private_key_header": r"-----BEGIN (RSA |)PRIVATE KEY-----",
-    "slack_webhook": r"hooks\.slack\.com/services/T[A-Z0-9]+/B[A-Z0-9]+/[A-Za-z0-9]+",
-}
-```
-
-### Medium-Confidence (Ask User)
-
-```python
-MAYBE_SECRETS = {
-    "api_key_pattern": r"api[_-]?key\s*=\s*['\"][A-Za-z0-9]{16,}['\"]",
-    "password_pattern": r"password\s*=\s*['\"][^'\"]{8,}['\"]",
-    "secret_pattern": r"secret\s*=\s*['\"][^'\"]{12,}['\"]",
-}
-```
-
-### Low-Confidence (Ignore in Tests)
-
-```python
-TEST_FIXTURES = [
-    "test_api_key",
-    "password123",
-    "your-api-key-here",
-    "example.com",
-]
-```
-
----
-
-## Anti-Patterns to Prevent
-
-### ❌ WRONG: Continue Audit with Exposed Secret
-
-```
-Scanner: "Found hardcoded API key"
-<Continues scanning...>
-<Finishes audit 2 minutes later>
-Report: "15 security issues found, including 1 CRITICAL"
-User: "I'll fix them tomorrow"
-<API key exploited overnight>
-```
-
-### ✅ RIGHT: Emergency Stop
-
-```
-Scanner: "Found hardcoded API key"
-🚨 EMERGENCY DETECTED 🚨
-AUDIT PAUSED
-"Fix this NOW before continuing"
-<Guides user through revocation>
-<Verifies fix>
-<Adds prevention>
-"Emergency resolved. Resuming audit..."
-```
-
----
-
-## State Management
+### State Management
 
 Track emergency fixes in `.cco/state/{PROJECT}/security-emergencies.json`:
 
@@ -559,9 +515,33 @@ Track emergency fixes in `.cco/state/{PROJECT}/security-emergencies.json`:
 }
 ```
 
----
+### Anti-Patterns to Prevent
 
-## Success Metrics
+#### WRONG: Continue Audit with Exposed Secret
+
+```
+Scanner: "Found hardcoded API key"
+<Continues scanning...>
+<Finishes audit 2 minutes later>
+Report: "15 security issues found, including 1 CRITICAL"
+User: "I'll fix them tomorrow"
+<API key exploited overnight>
+```
+
+#### RIGHT: Emergency Stop
+
+```
+Scanner: "Found hardcoded API key"
+EMERGENCY DETECTED
+AUDIT PAUSED
+"Fix this NOW before continuing"
+<Guides user through revocation>
+<Verifies fix>
+<Adds prevention>
+"Emergency resolved. Resuming audit..."
+```
+
+### Success Metrics
 
 **Before (without skill):**
 - Detection: Found in audit report (after scan completes)
@@ -573,9 +553,7 @@ Track emergency fixes in `.cco/state/{PROJECT}/security-emergencies.json`:
 - Response time: Minutes (guided fix)
 - Exploitation risk: LOW (revoked before exposure)
 
----
-
-## When to Skip This Skill
+### When to Skip This Skill
 
 Never skip for P0 CRITICAL.
 

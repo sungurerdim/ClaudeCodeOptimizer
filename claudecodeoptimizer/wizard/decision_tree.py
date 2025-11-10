@@ -12,12 +12,15 @@ Structure:
 - TIER 4: System-specific (automatic adaptation)
 """
 
+from .context_matrix import ContextMatrix
 from .models import AnswerContext, DecisionPoint, Option
 from .recommendations import RecommendationEngine
 from .tool_comparison import ToolComparator
+from .validators import validate_no_conflicts
 
-# Initialize recommendation engine
+# Initialize engines
 _rec_engine = RecommendationEngine()
+_context_matrix = ContextMatrix()
 
 
 # ============================================================================
@@ -31,48 +34,100 @@ TIER1_PROJECT_PURPOSE = DecisionPoint(
     question="What type of project is this?",
     why_this_question="🎯 Understanding your project type helps us recommend relevant principles and tools",
     multi_select=True,
+    validator=validate_no_conflicts,
     options=[
+        # Backend Services (1-2)
         Option(
-            value="api_backend",
-            label="API/Backend Service",
-            description="REST/GraphQL API, microservice, backend server",
-            recommended_for=["fastapi", "flask", "django", "express", "spring"],
+            value="api_service",
+            label="API Service",
+            description="Pure backend API (REST/GraphQL/gRPC), no UI",
+            recommended_for=["fastapi", "flask", "express", "spring", "gin"],
             effects="Focus on: API design, performance, security, data validation",
+            conflicts_with=["web_app", "spa"],
         ),
+        Option(
+            value="microservice",
+            label="Microservice",
+            description="Part of distributed system, service mesh",
+            recommended_for=["docker", "kubernetes", "service-mesh"],
+            effects="Focus on: Inter-service communication, resilience, observability",
+            conflicts_with=[],
+        ),
+        # Frontend/Full-Stack (3-4)
         Option(
             value="web_app",
             label="Web Application (Full-Stack)",
-            description="Complete web app with frontend + backend",
+            description="Frontend + backend integrated, monolithic or modular",
             recommended_for=["next", "nuxt", "django", "rails"],
             effects="Focus on: UX, security, performance, SEO",
+            conflicts_with=["api_service", "spa"],
         ),
         Option(
+            value="spa",
+            label="Single Page Application",
+            description="Frontend-only, consumes external API",
+            recommended_for=["react", "vue", "angular", "svelte"],
+            effects="Focus on: Client-side routing, state management, API integration",
+            conflicts_with=["web_app", "api_service"],
+        ),
+        # Libraries & Tools (5-7)
+        Option(
             value="library",
-            label="Library/SDK/Package",
-            description="Reusable code package for other developers",
-            recommended_for=["setup.py", "package.json"],
-            effects="Focus on: Public API clarity, versioning, documentation, backward compatibility",
+            label="Library/SDK",
+            description="Reusable package for developers",
+            recommended_for=["setup.py", "package.json", "cargo.toml"],
+            effects="Focus on: Public API, versioning, semver, documentation",
+            conflicts_with=[],
+        ),
+        Option(
+            value="framework",
+            label="Framework/Platform",
+            description="Opinionated foundation for building applications",
+            recommended_for=["plugin", "extension", "hooks"],
+            effects="Focus on: Plugin system, extensibility, DX, conventions",
+            conflicts_with=[],
         ),
         Option(
             value="cli_tool",
             label="CLI Tool/Utility",
             description="Command-line application or script",
-            recommended_for=["click", "argparse", "commander"],
-            effects="Focus on: User experience, error messages, help text",
+            recommended_for=["click", "argparse", "commander", "cobra"],
+            effects="Focus on: UX, error messages, help text, piping",
+            conflicts_with=[],
         ),
+        # Data & Processing (8-10)
         Option(
             value="data_pipeline",
-            label="Data Pipeline/Processing",
-            description="ETL, data analysis, batch processing",
-            recommended_for=["airflow", "pandas", "spark"],
-            effects="Focus on: Idempotency, error recovery, monitoring, data quality",
+            label="Data Pipeline",
+            description="ETL, batch processing, data transformation",
+            recommended_for=["airflow", "pandas", "spark", "dbt"],
+            effects="Focus on: Idempotency, retry logic, data quality, monitoring",
+            conflicts_with=[],
         ),
+        Option(
+            value="ml_pipeline",
+            label="ML/AI Pipeline",
+            description="Training, inference, MLOps workflows",
+            recommended_for=["pytorch", "tensorflow", "mlflow", "kubeflow"],
+            effects="Focus on: Reproducibility, experiment tracking, model versioning",
+            conflicts_with=[],
+        ),
+        Option(
+            value="stream_processing",
+            label="Stream Processing",
+            description="Real-time data processing (Kafka, Flink, etc.)",
+            recommended_for=["kafka", "flink", "spark-streaming"],
+            effects="Focus on: Low latency, exactly-once semantics, backpressure",
+            conflicts_with=[],
+        ),
+        # Desktop & Mobile (11-12)
         Option(
             value="desktop_app",
             label="Desktop Application",
             description="Native or cross-platform desktop app",
-            recommended_for=["electron", "qt", "tkinter"],
-            effects="Focus on: UX, installers, auto-updates",
+            recommended_for=["electron", "qt", "tkinter", "tauri"],
+            effects="Focus on: UX, installers, auto-updates, native APIs",
+            conflicts_with=[],
         ),
         Option(
             value="mobile_app",
@@ -80,6 +135,24 @@ TIER1_PROJECT_PURPOSE = DecisionPoint(
             description="iOS, Android, or cross-platform mobile",
             recommended_for=["react-native", "flutter", "swift", "kotlin"],
             effects="Focus on: Performance, offline support, app store guidelines",
+            conflicts_with=[],
+        ),
+        # Infrastructure (13-14)
+        Option(
+            value="infrastructure",
+            label="Infrastructure as Code",
+            description="Terraform, Pulumi, CloudFormation modules",
+            recommended_for=["terraform", "pulumi", "cdk"],
+            effects="Focus on: Idempotency, state management, drift detection",
+            conflicts_with=[],
+        ),
+        Option(
+            value="automation",
+            label="Automation/Orchestration",
+            description="CI/CD, deployment automation, workflow orchestration",
+            recommended_for=["github-actions", "gitlab-ci", "jenkins"],
+            effects="Focus on: Reliability, rollback strategies, observability",
+            conflicts_with=[],
         ),
     ],
     auto_strategy=lambda ctx: _auto_detect_project_purpose(ctx),
@@ -300,7 +373,7 @@ TIER2_TESTING_APPROACH = DecisionPoint(
         ),
     ],
     auto_strategy=lambda ctx: _auto_detect_testing_approach(ctx),
-    ai_hint_generator=lambda ctx: _rec_engine.recommend_testing_approach(ctx),
+    ai_hint_generator=lambda ctx: _generate_testing_hint(ctx),
 )
 
 TIER2_SECURITY_STANCE = DecisionPoint(
@@ -416,9 +489,7 @@ TIER2_GIT_WORKFLOW = DecisionPoint(
     ],
     skip_if=lambda ctx: ctx.get("team_dynamics") == "solo",  # Auto-select for solo devs
     auto_strategy=lambda ctx: _auto_detect_git_workflow(ctx),
-    ai_hint_generator=lambda ctx: _rec_engine.recommend_git_workflow(ctx)
-    if hasattr(_rec_engine, "recommend_git_workflow")
-    else "",
+    ai_hint_generator=lambda ctx: _generate_git_workflow_hint(ctx),
 )
 
 TIER2_VERSIONING_STRATEGY = DecisionPoint(
@@ -469,15 +540,231 @@ TIER2_VERSIONING_STRATEGY = DecisionPoint(
         ),
     ],
     auto_strategy=lambda ctx: _auto_detect_versioning_strategy(ctx),
-    ai_hint_generator=lambda ctx: _rec_engine.recommend_versioning_strategy(ctx)
-    if hasattr(_rec_engine, "recommend_versioning_strategy")
-    else "",
+    ai_hint_generator=lambda ctx: _generate_versioning_hint(ctx),
+)
+
+TIER2_CI_PROVIDER = DecisionPoint(
+    id="ci_provider",
+    tier=2,
+    category="infrastructure",
+    question="Which CI/CD provider do you use?",
+    why_this_question="🔄 CI/CD configuration affects automation, testing, and deployment workflows",
+    multi_select=False,
+    options=[
+        Option(
+            value="github_actions",
+            label="GitHub Actions [RECOMMENDED]",
+            description="Native GitHub CI/CD with marketplace integrations",
+            effects="Automated testing, deployment, release workflows",
+            time_investment="~2-4 hours initial setup",
+            recommended_for=["github", "has_git", "small_team", "large_org"],
+        ),
+        Option(
+            value="gitlab_ci",
+            label="GitLab CI",
+            description="GitLab's integrated CI/CD pipeline",
+            effects="Built-in CI/CD, Docker registry, deployment",
+            time_investment="~2-4 hours initial setup",
+            recommended_for=["gitlab", "has_git"],
+        ),
+        Option(
+            value="circle_ci",
+            label="CircleCI",
+            description="Cloud-based CI/CD platform",
+            effects="Fast builds, Docker support, parallelism",
+            recommended_for=["complex builds", "large_org"],
+        ),
+        Option(
+            value="none",
+            label="No CI/CD Yet",
+            description="Will add later or run tests manually",
+            effects="Manual testing and deployment",
+            recommended_for=["prototype", "solo"],
+        ),
+    ],
+    auto_strategy=lambda ctx: _auto_detect_ci_provider(ctx),
+    ai_hint_generator=lambda ctx: _generate_ci_provider_hint(ctx),
+)
+
+TIER2_SECRETS_MANAGEMENT = DecisionPoint(
+    id="secrets_management",
+    tier=2,
+    category="security",
+    question="How do you manage secrets (API keys, passwords)?",
+    why_this_question="🔐 Secrets management affects security posture and deployment complexity",
+    multi_select=False,
+    options=[
+        Option(
+            value="dotenv",
+            label=".env Files [RECOMMENDED for Local]",
+            description="Environment variables in .env files (gitignored)",
+            effects="Simple local development, manual production setup",
+            time_investment="~30 minutes setup",
+            recommended_for=["solo", "small_team", "prototype"],
+        ),
+        Option(
+            value="vault",
+            label="HashiCorp Vault",
+            description="Centralized secrets management with encryption",
+            effects="Secure storage, rotation, audit logging",
+            time_investment="~1-2 days setup",
+            recommended_for=["large_org", "production", "high security"],
+        ),
+        Option(
+            value="cloud_secrets",
+            label="Cloud Provider Secrets",
+            description="AWS Secrets Manager, Azure Key Vault, GCP Secret Manager",
+            effects="Integrated with cloud services, IAM-based access",
+            time_investment="~2-4 hours setup",
+            recommended_for=["cloud deployment", "production"],
+        ),
+        Option(
+            value="none",
+            label="Not Using Secrets Yet",
+            description="Will add when needed",
+            effects="No secrets management",
+            recommended_for=["prototype", "learning"],
+        ),
+    ],
+    auto_strategy=lambda ctx: _auto_detect_secrets_management(ctx),
+    ai_hint_generator=lambda ctx: _generate_secrets_management_hint(ctx),
+)
+
+TIER2_ERROR_HANDLING = DecisionPoint(
+    id="error_handling",
+    tier=2,
+    category="code_quality",
+    question="What's your error handling philosophy?",
+    why_this_question="⚠️ Error handling strategy affects reliability, debugging, and user experience",
+    multi_select=False,
+    options=[
+        Option(
+            value="fail_fast",
+            label="Fail-Fast [RECOMMENDED]",
+            description="Errors crash immediately with clear messages (P001)",
+            effects="No silent failures, easier debugging, explicit error handling",
+            time_investment="No overhead",
+            recommended_for=["production", "quality_first", "team projects"],
+        ),
+        Option(
+            value="graceful_degradation",
+            label="Graceful Degradation",
+            description="Try to continue with fallback behavior",
+            effects="Better UX, harder to debug, potential hidden issues",
+            time_investment="~20% more code",
+            recommended_for=["user-facing apps", "high availability"],
+        ),
+        Option(
+            value="retry_logic",
+            label="Retry with Backoff",
+            description="Automatically retry failed operations",
+            effects="Resilient to transient failures, more complex",
+            time_investment="~15% more code",
+            recommended_for=["distributed systems", "external APIs"],
+        ),
+    ],
+    auto_strategy=lambda ctx: _auto_detect_error_handling(ctx),
+    ai_hint_generator=lambda ctx: _generate_error_handling_hint(ctx),
 )
 
 
 # ============================================================================
 # TIER 3: Tactical Decisions (Tool Preferences)
 # ============================================================================
+
+TIER3_PRECOMMIT_HOOKS = DecisionPoint(
+    id="precommit_hooks",
+    tier=3,
+    category="code_quality",
+    question="Which pre-commit hooks do you want?",
+    why_this_question="🔧 Pre-commit hooks catch issues before they're committed",
+    multi_select=True,
+    options=[
+        Option(
+            value="format",
+            label="Code Formatting",
+            description="Auto-format code (black, prettier, rustfmt)",
+            effects="Consistent code style across team",
+            time_investment="~1 second per commit",
+            recommended_for=["all"],
+        ),
+        Option(
+            value="lint",
+            label="Linting",
+            description="Check code quality (ruff, eslint, clippy)",
+            effects="Catch bugs and style issues early",
+            time_investment="~2-5 seconds per commit",
+            recommended_for=["small_team", "large_org"],
+        ),
+        Option(
+            value="type_check",
+            label="Type Checking",
+            description="Static type validation (mypy, tsc)",
+            effects="Prevent type errors",
+            time_investment="~5-10 seconds per commit",
+            recommended_for=["large_org", "quality_first"],
+        ),
+        Option(
+            value="secrets",
+            label="Secrets Detection",
+            description="Scan for API keys and passwords",
+            effects="Prevent secret leaks",
+            time_investment="~1 second per commit",
+            recommended_for=["all"],
+        ),
+        Option(
+            value="test",
+            label="Run Tests",
+            description="Run unit tests before commit",
+            effects="Ensure tests pass locally",
+            time_investment="~10-60 seconds per commit",
+            recommended_for=["no_ci", "quality_first"],
+        ),
+    ],
+    auto_strategy=lambda ctx: _auto_detect_precommit_hooks(ctx),
+    ai_hint_generator=lambda ctx: _generate_precommit_hooks_hint(ctx),
+)
+
+TIER3_LOGGING_LEVEL = DecisionPoint(
+    id="logging_level",
+    tier=3,
+    category="code_quality",
+    question="What's your default logging level?",
+    why_this_question="📋 Logging level affects debugging capability and log volume",
+    multi_select=False,
+    options=[
+        Option(
+            value="DEBUG",
+            label="DEBUG",
+            description="Detailed diagnostic information",
+            effects="High log volume, useful for development",
+            recommended_for=["prototype", "debugging"],
+        ),
+        Option(
+            value="INFO",
+            label="INFO [RECOMMENDED]",
+            description="General informational messages",
+            effects="Balanced log volume, good for production",
+            recommended_for=["production", "mvp"],
+        ),
+        Option(
+            value="WARNING",
+            label="WARNING",
+            description="Warning messages only",
+            effects="Low log volume, focus on issues",
+            recommended_for=["production", "high_traffic"],
+        ),
+        Option(
+            value="ERROR",
+            label="ERROR",
+            description="Error messages only",
+            effects="Minimal logs, only failures",
+            recommended_for=["production", "minimal"],
+        ),
+    ],
+    auto_strategy=lambda ctx: _auto_detect_logging_level(ctx),
+    ai_hint_generator=lambda ctx: _generate_logging_level_hint(ctx),
+)
 
 # These are generated dynamically based on detected tools
 # See: _build_tier3_tool_decisions() function
@@ -489,9 +776,8 @@ TIER2_VERSIONING_STRATEGY = DecisionPoint(
 
 
 def _auto_detect_project_purpose(ctx: AnswerContext) -> list:
-    """Auto-detect project types from system context"""
+    """Auto-detect with better disambiguation"""
     sys = ctx.system
-    detected = []
 
     # Use UniversalDetector results if available
     if sys.detected_project_types:
@@ -500,23 +786,36 @@ def _auto_detect_project_purpose(ctx: AnswerContext) -> list:
     # Infer from frameworks
     frameworks = [fw.lower() for fw in sys.detected_frameworks]
 
-    if any(fw in frameworks for fw in ["fastapi", "flask", "django-rest", "express"]):
-        detected.append("api_backend")
+    # Check for explicit conflicts and disambiguate
+    has_frontend = any(fw in frameworks for fw in ["react", "vue", "angular", "svelte", "next", "nuxt"])
+    has_backend = any(fw in frameworks for fw in ["fastapi", "flask", "django", "express", "spring", "gin"])
 
-    if any(fw in frameworks for fw in ["react", "vue", "next", "nuxt", "svelte"]):
-        detected.append("web_app")
+    if has_frontend and has_backend:
+        return ["web_app"]  # Full-stack
+    elif has_backend and not has_frontend:
+        return ["api_service"]  # Pure backend
+    elif has_frontend and not has_backend:
+        return ["spa"]  # Pure frontend
 
-    if any(fw in frameworks for fw in ["click", "argparse", "commander"]):
-        detected.append("cli_tool")
+    # Check for other types
+    detected = []
 
-    if any(fw in frameworks for fw in ["airflow", "pandas", "spark"]):
+    if "docker" in frameworks or "kubernetes" in frameworks:
+        detected.append("microservice")
+    if "terraform" in frameworks or "pulumi" in frameworks:
+        detected.append("infrastructure")
+    if "airflow" in frameworks or "spark" in frameworks or "dbt" in frameworks:
         detected.append("data_pipeline")
-
-    if any(fw in frameworks for fw in ["electron", "qt", "tkinter"]):
+    if "pytorch" in frameworks or "tensorflow" in frameworks:
+        detected.append("ml_pipeline")
+    if "kafka" in frameworks or "flink" in frameworks:
+        detected.append("stream_processing")
+    if "electron" in frameworks or "qt" in frameworks:
         detected.append("desktop_app")
-
-    if any(fw in frameworks for fw in ["react-native", "flutter"]):
+    if "react-native" in frameworks or "flutter" in frameworks:
         detected.append("mobile_app")
+    if "click" in frameworks or "argparse" in frameworks or "commander" in frameworks:
+        detected.append("cli_tool")
 
     # Check for library indicators
     if sys.project_root and (
@@ -527,7 +826,7 @@ def _auto_detect_project_purpose(ctx: AnswerContext) -> list:
             detected.append("library")
 
     # Default fallback
-    return detected if detected else ["api_backend"]
+    return detected if detected else ["api_service"]
 
 
 def _auto_detect_team_size(ctx: AnswerContext) -> str:
@@ -626,7 +925,11 @@ def _auto_detect_security_stance(ctx: AnswerContext) -> str:
     maturity = ctx.maturity
 
     # APIs need production security
-    if any(t in project_types for t in ["api_backend", "web_app"]):
+    if any(t in project_types for t in ["api_service", "microservice", "web_app", "spa"]):
+        return "production"
+
+    # Data handling needs production security
+    if any(t in project_types for t in ["data_pipeline", "ml_pipeline", "stream_processing"]):
         return "production"
 
     # Prototypes can be standard
@@ -642,9 +945,13 @@ def _auto_detect_documentation_level(ctx: AnswerContext) -> str:
     project_types = ctx.project_types
     team = ctx.team_size
 
-    # Libraries need comprehensive
-    if "library" in project_types:
+    # Libraries, frameworks, and infrastructure need comprehensive docs
+    if any(t in project_types for t in ["library", "framework", "infrastructure"]):
         return "comprehensive"
+
+    # APIs and services benefit from good documentation
+    if any(t in project_types for t in ["api_service", "microservice"]):
+        return "practical"
 
     # Solo can be minimal
     if team == "solo":
@@ -687,8 +994,11 @@ def _auto_detect_versioning_strategy(ctx: AnswerContext) -> str:
     if maturity == "prototype":
         return "no_versioning"
 
-    # Libraries and APIs should always have versioning
-    needs_versioning = any(pt in project_types for pt in ["library", "api_backend"])
+    # Libraries, APIs, frameworks, and infrastructure should always have versioning
+    needs_versioning = any(
+        pt in project_types
+        for pt in ["library", "framework", "api_service", "microservice", "infrastructure"]
+    )
 
     # Solo developers benefit from automation
     if team == "solo":
@@ -709,21 +1019,255 @@ def _auto_detect_versioning_strategy(ctx: AnswerContext) -> str:
 
 
 # ============================================================================
+# AI Hint Generators (using ContextMatrix)
+# ============================================================================
+
+
+def _generate_testing_hint(ctx: AnswerContext) -> str:
+    """Generate testing approach hint using ContextMatrix"""
+    if not ctx.has_answer("team_dynamics") or not ctx.has_answer("project_maturity"):
+        return ""
+
+    recommendation = _context_matrix.recommend_testing_approach(
+        ctx.team_size, ctx.maturity, ctx.get("development_philosophy", "balanced")
+    )
+
+    return f"💡 Recommended: {recommendation['approach']} (target: {recommendation['coverage_target']}) - {recommendation['reason']}"
+
+
+def _generate_git_workflow_hint(ctx: AnswerContext) -> str:
+    """Generate git workflow hint using ContextMatrix"""
+    if not ctx.has_answer("team_dynamics") or not ctx.has_answer("project_maturity"):
+        return ""
+
+    recommendation = _context_matrix.recommend_git_workflow(
+        ctx.team_size, ctx.maturity, ctx.system.has_ci
+    )
+
+    hint = f"💡 Recommended: {recommendation['workflow']} - {recommendation['reason']}"
+
+    if recommendation.get("alternatives"):
+        alternatives = ", ".join(recommendation["alternatives"].keys())
+        hint += f" (alternatives: {alternatives})"
+
+    return hint
+
+
+def _generate_versioning_hint(ctx: AnswerContext) -> str:
+    """Generate versioning strategy hint using ContextMatrix"""
+    if not ctx.has_answer("team_dynamics") or not ctx.has_answer("project_maturity"):
+        return ""
+
+    recommendation = _context_matrix.recommend_versioning_strategy(
+        ctx.team_size, ctx.maturity, ctx.system.has_ci
+    )
+
+    hint = f"💡 Recommended: {recommendation['strategy']} - {recommendation['reason']}"
+
+    if recommendation.get("alternatives"):
+        alternatives = ", ".join(recommendation["alternatives"].keys())
+        hint += f" (alternatives: {alternatives})"
+
+    return hint
+
+
+def _generate_ci_provider_hint(ctx: AnswerContext) -> str:
+    """Generate CI provider hint"""
+    if ctx.system.has_ci:
+        return "💡 CI/CD already detected in your project"
+
+    if ctx.system.is_git_repo:
+        # Check if GitHub or GitLab based on remote
+        return "💡 Recommended: GitHub Actions (native GitHub integration)"
+
+    return "💡 Add CI/CD later when you're ready for automation"
+
+
+def _generate_secrets_management_hint(ctx: AnswerContext) -> str:
+    """Generate secrets management hint"""
+    if not ctx.has_answer("team_dynamics") or not ctx.has_answer("project_maturity"):
+        return ""
+
+    team = ctx.team_size
+    maturity = ctx.maturity
+
+    if team == "solo" or maturity == "prototype":
+        return "💡 Recommended: .env files - simple and effective for local development"
+    elif team == "small_team" and maturity in ["mvp", "production"]:
+        return "💡 Recommended: .env files with cloud secrets for production deployments"
+    elif team == "large_org" or maturity == "legacy":
+        return "💡 Recommended: HashiCorp Vault or cloud provider secrets for enterprise security"
+
+    return "💡 Recommended: .env files - upgrade to cloud secrets when needed"
+
+
+def _generate_error_handling_hint(ctx: AnswerContext) -> str:
+    """Generate error handling hint"""
+    if not ctx.has_answer("development_philosophy"):
+        return ""
+
+    philosophy = ctx.philosophy
+
+    if philosophy == "quality_first":
+        return "💡 Recommended: Fail-Fast (P001) - catch errors early, debug faster"
+    elif philosophy == "balanced":
+        return "💡 Recommended: Fail-Fast with targeted graceful degradation"
+    else:  # move_fast
+        return "💡 Recommended: Fail-Fast - simple and effective, add complexity only when needed"
+
+
+# ============================================================================
+# Auto-Detection Functions for New Decision Points
+# ============================================================================
+
+
+def _auto_detect_ci_provider(ctx: AnswerContext) -> str:
+    """Auto-detect CI provider"""
+    if ctx.system.has_ci:
+        # Try to detect which provider
+        if (ctx.system.project_root / ".github" / "workflows").exists():
+            return "github_actions"
+        elif (ctx.system.project_root / ".gitlab-ci.yml").exists():
+            return "gitlab_ci"
+        elif (ctx.system.project_root / ".circleci").exists():
+            return "circle_ci"
+
+    # No CI detected - recommend based on git provider
+    if ctx.system.is_git_repo:
+        return "github_actions"  # Default to GitHub Actions
+
+    return "none"
+
+
+def _auto_detect_secrets_management(ctx: AnswerContext) -> str:
+    """Auto-detect secrets management approach"""
+    # Check for .env file
+    if (ctx.system.project_root / ".env").exists() or (
+        ctx.system.project_root / ".env.example"
+    ).exists():
+        return "dotenv"
+
+    # Check for cloud provider secrets
+    project_types = ctx.get("project_purpose", [])
+    if any(
+        pt in project_types for pt in ["microservice", "api_service", "infrastructure"]
+    ):
+        return "cloud_secrets"
+
+    # Default based on team size
+    if ctx.has_answer("team_dynamics"):
+        if ctx.team_size == "large_org":
+            return "vault"
+        elif ctx.team_size == "small_team":
+            return "dotenv"
+
+    return "none"
+
+
+def _auto_detect_error_handling(ctx: AnswerContext) -> str:
+    """Auto-detect error handling philosophy"""
+    # Check development philosophy
+    if ctx.has_answer("development_philosophy"):
+        if ctx.philosophy == "quality_first":
+            return "fail_fast"
+        elif ctx.philosophy == "balanced":
+            return "fail_fast"  # Still prefer fail-fast
+        else:  # move_fast
+            return "fail_fast"  # Simplest approach
+
+    # Check project type
+    project_types = ctx.get("project_purpose", [])
+    if "microservice" in project_types or "distributed_system" in project_types:
+        return "retry_logic"
+
+    if "web_app" in project_types or "mobile_app" in project_types:
+        return "graceful_degradation"
+
+    return "fail_fast"
+
+
+def _auto_detect_precommit_hooks(ctx: AnswerContext) -> list:
+    """Auto-detect recommended pre-commit hooks"""
+    hooks = _context_matrix.recommend_precommit_hooks(
+        ctx.team_size if ctx.has_answer("team_dynamics") else "solo",
+        ctx.system.has_ci,
+    )
+    return hooks
+
+
+def _auto_detect_logging_level(ctx: AnswerContext) -> str:
+    """Auto-detect logging level"""
+    if not ctx.has_answer("project_maturity"):
+        return "INFO"
+
+    maturity = ctx.maturity
+
+    if maturity == "prototype":
+        return "DEBUG"
+    elif maturity in ["mvp", "production"]:
+        return "INFO"
+    elif maturity == "legacy":
+        return "WARNING"
+
+    return "INFO"
+
+
+def _generate_precommit_hooks_hint(ctx: AnswerContext) -> str:
+    """Generate pre-commit hooks hint"""
+    if not ctx.has_answer("team_dynamics"):
+        return ""
+
+    recommended = _context_matrix.recommend_precommit_hooks(
+        ctx.team_size, ctx.system.has_ci
+    )
+
+    hooks_str = ", ".join(recommended)
+    return f"💡 Recommended: {hooks_str}"
+
+
+def _generate_logging_level_hint(ctx: AnswerContext) -> str:
+    """Generate logging level hint"""
+    if not ctx.has_answer("project_maturity"):
+        return ""
+
+    maturity = ctx.maturity
+
+    if maturity == "prototype":
+        return "💡 Recommended: DEBUG - useful for development and troubleshooting"
+    elif maturity in ["mvp", "production"]:
+        return "💡 Recommended: INFO - balanced for production monitoring"
+    elif maturity == "legacy":
+        return "💡 Recommended: WARNING - reduce log volume in mature systems"
+
+    return "💡 Recommended: INFO - good default for most applications"
+
+
+# ============================================================================
 # Dynamic TIER 3 Builder (Tool Preferences)
 # ============================================================================
 
 
 def build_tier3_tool_decisions(ctx: AnswerContext) -> list:
     """
-    Dynamically build TIER 3 decisions based on detected tools.
+    Build TIER 3 decisions: static decisions + dynamic tool conflicts.
 
-    Only ask about tools where conflicts exist (e.g., both ruff and black detected).
+    Static decisions (always asked):
+    - Pre-commit hooks
+    - Logging level
+
+    Dynamic decisions (only if tool conflicts detected):
+    - Tool preferences (e.g., ruff vs black)
     """
+    # Start with static TIER3 decisions
+    decisions = [
+        TIER3_PRECOMMIT_HOOKS,
+        TIER3_LOGGING_LEVEL,
+    ]
+
+    # Add dynamic tool conflict decisions
     sys = ctx.system
     comparator = ToolComparator(sys.existing_tools)
     conflicts = comparator.find_all_conflicts()
-
-    decisions = []
 
     for conflict in conflicts:
         # Build options for this tool category
@@ -780,6 +1324,9 @@ DECISION_TREE_TIER2 = [
     TIER2_DOCUMENTATION_LEVEL,
     TIER2_GIT_WORKFLOW,
     TIER2_VERSIONING_STRATEGY,
+    TIER2_CI_PROVIDER,
+    TIER2_SECRETS_MANAGEMENT,
+    TIER2_ERROR_HANDLING,
 ]
 
 # TIER3 is dynamically generated
