@@ -1,12 +1,12 @@
 """
-Knowledge Setup - Global knowledge base initialization
+Knowledge Setup - Global CCO structure initialization
 
-Ensures ~/.cco/knowledge/ structure exists with:
+Ensures ~/.cco/ structure exists with:
 - commands/ (copied from package)
 - guides/ (copied from package)
-- principles/ (generated from principles.json)
-- agents/ (created empty, user can add custom)
-- skills/ (created empty, user can add custom)
+- principles/ (copied from templates)
+- agents/ (created with templates)
+- skills/ (created with templates)
 """
 
 import shutil
@@ -18,14 +18,14 @@ from .. import config
 
 def setup_global_knowledge(force: bool = False) -> Dict[str, Any]:
     """
-    Initialize global knowledge directory structure.
+    Initialize global CCO directory structure.
 
     Creates:
-    - ~/.cco/knowledge/commands/ (slash commands from package)
-    - ~/.cco/knowledge/guides/ (static guides from package)
-    - ~/.cco/knowledge/principles/ (category files from principles.json)
-    - ~/.cco/knowledge/agents/ (empty, for custom agents)
-    - ~/.cco/knowledge/skills/ (empty, for custom skills)
+    - ~/.cco/commands/ (slash commands from package)
+    - ~/.cco/guides/ (static guides from package)
+    - ~/.cco/principles/ (category files from templates)
+    - ~/.cco/agents/ (with templates, for custom agents)
+    - ~/.cco/skills/ (with templates, for custom skills)
 
     Args:
         force: If True, regenerate even if already exists
@@ -33,8 +33,8 @@ def setup_global_knowledge(force: bool = False) -> Dict[str, Any]:
     Returns:
         Dictionary with setup status
     """
-    knowledge_dir = config.get_knowledge_dir()
-    commands_dir = config.get_knowledge_commands_dir()
+    global_dir = config.get_global_dir()
+    commands_dir = config.get_global_commands_dir()
     guides_dir = config.get_guides_dir()
     principles_dir = config.get_principles_dir()
     agents_dir = config.get_agents_dir()
@@ -42,12 +42,12 @@ def setup_global_knowledge(force: bool = False) -> Dict[str, Any]:
 
     results = {
         "success": True,
-        "knowledge_dir": str(knowledge_dir),
+        "global_dir": str(global_dir),
         "actions": [],
     }
 
-    # Create knowledge base directory
-    knowledge_dir.mkdir(parents=True, exist_ok=True)
+    # Ensure global directory exists
+    global_dir.mkdir(parents=True, exist_ok=True)
 
     # Setup commands/
     if force or not commands_dir.exists() or not list(commands_dir.glob("*.md")):
@@ -106,7 +106,7 @@ def _setup_commands(commands_dir: Path) -> None:
     """
     Copy command files from package to global directory.
 
-    Copies from claudecodeoptimizer/commands/ to ~/.cco/knowledge/commands/
+    Copies from claudecodeoptimizer/commands/ to ~/.cco/commands/
     """
     # Get package commands directory
     package_dir = Path(__file__).parent.parent
@@ -154,7 +154,7 @@ def _setup_agents(agents_dir: Path) -> None:
     """
     Copy agent templates from package to global directory.
 
-    Copies from claudecodeoptimizer/knowledge/agents/ to ~/.cco/knowledge/agents/
+    Copies from claudecodeoptimizer/knowledge/agents/ to ~/.cco/agents/
     """
     # Get package agents directory
     package_dir = Path(__file__).parent.parent
@@ -176,7 +176,9 @@ def _setup_skills(skills_dir: Path) -> None:
     """
     Copy skill files from package to global directory.
 
-    Copies from claudecodeoptimizer/skills/ to ~/.cco/knowledge/skills/
+    Copies from claudecodeoptimizer/skills/ including:
+    - General skills (*.md files in root)
+    - Language-specific skills (subdirectories: python/, go/, rust/, typescript/)
     """
     # Get package skills directory
     package_dir = Path(__file__).parent.parent
@@ -192,10 +194,23 @@ def _setup_skills(skills_dir: Path) -> None:
     # Create destination
     skills_dir.mkdir(parents=True, exist_ok=True)
 
-    # Copy all .md files
+    # Copy all .md files from root (general skills)
     for skill_file in source_skills.glob("*.md"):
         dest_file = skills_dir / skill_file.name
         shutil.copy2(skill_file, dest_file)
+
+    # Copy language-specific skills from subdirectories
+    for lang_dir in source_skills.iterdir():
+        if lang_dir.is_dir() and not lang_dir.name.startswith(("_", ".")):
+            # Skip __pycache__, __init__, etc
+            # Create language subdirectory in destination
+            dest_lang_dir = skills_dir / lang_dir.name
+            dest_lang_dir.mkdir(parents=True, exist_ok=True)
+
+            # Copy all .md files from this language directory
+            for skill_file in lang_dir.glob("*.md"):
+                dest_file = dest_lang_dir / skill_file.name
+                shutil.copy2(skill_file, dest_file)
 
 
 def get_principle_categories() -> list[str]:
