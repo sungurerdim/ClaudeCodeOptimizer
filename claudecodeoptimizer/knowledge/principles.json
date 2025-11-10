@@ -4438,6 +4438,83 @@
         "Initial commit or large migrations (can be longer with justification)",
         "Release commits (may need changelog)"
       ]
+    },
+    {
+      "id": "P073",
+      "number": 73,
+      "title": "Atomic Commits",
+      "category": "git_workflow",
+      "severity": "medium",
+      "weight": 8,
+      "description": "Each commit must contain changes related to a single logical change or category. Never mix unrelated changes in one commit.",
+      "one_line_why": "Atomic commits make git bisect, revert, and code review easier and more effective",
+      "enforcement": "SHOULD - Strong recommendation",
+      "rules": [
+        {
+          "id": "single-logical-change",
+          "description": "One commit = One logical change (feature, fix, refactor, etc.)",
+          "severity": "medium",
+          "languages": ["all"],
+          "check_pattern": null
+        },
+        {
+          "id": "group-related-files",
+          "description": "Group related files by category/purpose",
+          "severity": "medium",
+          "languages": ["all"],
+          "check_pattern": null
+        },
+        {
+          "id": "separate-unrelated",
+          "description": "Separate unrelated changes into multiple commits",
+          "severity": "high",
+          "languages": ["all"],
+          "check_pattern": null
+        }
+      ],
+      "examples": {
+        "good": [
+          "# Commit 1: Bug fix only\ngit commit -m \"fix(auth): handle expired tokens in login\"\n# Modified: auth.py",
+          "# Commit 2: Tests only\ngit commit -m \"test(auth): add tests for token expiration\"\n# Modified: tests/test_auth.py",
+          "# Single commit for tightly coupled changes\ngit commit -m \"fix(auth): handle null user in session middleware\"\n# Modified: auth.py, middleware.py, tests/test_auth.py\n# (All changes address the same logical issue)"
+        ],
+        "bad": [
+          "git commit -m \"fix login bug, add tests, update README, refactor database\"\n# Modified: auth.py, tests/, README.md, db.py (4 unrelated changes)",
+          "# Mix refactor with new feature\ngit commit -m \"refactor db and add caching\""
+        ]
+      },
+      "applicability": {
+        "project_types": ["all"],
+        "languages": ["all"],
+        "contexts": ["all"],
+        "preference_conditions": []
+      },
+      "related_principles": ["P043", "P072"],
+      "anti_patterns": [
+        "Mixing bug fixes with new features",
+        "Combining refactoring with functional changes",
+        "Adding tests, docs, and code in single commit without logical connection",
+        "Kitchen sink commits with multiple unrelated file changes"
+      ],
+      "impact": {
+        "code_clarity": "high",
+        "maintainability": "high",
+        "team_velocity": "medium",
+        "bug_reduction": "medium",
+        "development_speed": "low"
+      },
+      "verification": {
+        "checklist": [
+          "All changed files relate to same logical change",
+          "Unrelated changes are in separate commits",
+          "Commit can be reverted without breaking unrelated features",
+          "Changes can be reviewed as a cohesive unit"
+        ]
+      },
+      "when_to_skip": [
+        "Tightly coupled changes that must be committed together (e.g., interface + implementation)",
+        "Feature with tests (can be single commit if tightly coupled)"
+      ]
     }
   ],
   "selection_strategies": {
