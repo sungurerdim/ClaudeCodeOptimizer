@@ -1,0 +1,328 @@
+{
+  "permissions": {
+    "allow": [
+      "Read(**/*)",
+      "Glob(**/*)",
+      "Write(**/*)",
+      "Edit(**/*)",
+      "Bash(*)",
+      "WebSearch",
+      "WebFetch(*)"
+    ],
+
+    "deny": [
+      "Read(/*)",
+      "Read(C:*)",
+      "Read(D:*)",
+      "Read(E:*)",
+      "Read(../*)",
+      "Read(../../*)",
+
+      "Read(~/.ssh/*)",
+      "Read(~/.aws/*)",
+      "Read(~/.kube/*)",
+      "Read(~/.docker/*)",
+      "Read(~/.gnupg/*)",
+      "Read(~/.bash_history)",
+      "Read(~/.zsh_history)",
+      "Read(~/.bashrc)",
+      "Read(~/.zshrc)",
+
+      "Write(/*)",
+      "Write(C:*)",
+      "Write(D:*)",
+      "Write(E:*)",
+      "Write(../*)",
+      "Write(../../*)",
+
+      "Write(~/.ssh/*)",
+      "Write(~/.aws/*)",
+      "Write(~/.kube/*)",
+      "Write(~/.docker/*)",
+      "Write(~/.gnupg/*)",
+      "Write(~/.bash_history)",
+      "Write(~/.zsh_history)",
+      "Write(~/.bashrc)",
+      "Write(~/.zshrc)",
+
+      "Edit(/*)",
+      "Edit(C:*)",
+      "Edit(D:*)",
+      "Edit(E:*)",
+      "Edit(../*)",
+      "Edit(../../*)",
+
+      "Edit(~/.ssh/*)",
+      "Edit(~/.aws/*)",
+      "Edit(~/.kube/*)",
+      "Edit(~/.docker/*)",
+      "Edit(~/.gnupg/*)",
+      "Edit(~/.bash_history)",
+      "Edit(~/.zsh_history)",
+      "Edit(~/.bashrc)",
+      "Edit(~/.zshrc)",
+
+      "Glob(/*)",
+      "Glob(C:*)",
+      "Glob(D:*)",
+      "Glob(E:*)",
+      "Glob(../*)",
+
+      "Bash(rm -rf /*)",
+      "Bash(rm -rf ~/*)",
+      "Bash(rm -rf /:*)",
+      "Bash(rm -rf $HOME*)",
+      "Bash(rm -rf C:*)",
+      "Bash(rm -rf D:*)",
+      "Bash(rm -rf E:*)",
+      "Bash(rm --no-preserve-root*)",
+
+      "Bash(del /s /q C:*)",
+      "Bash(del /s /q D:*)",
+      "Bash(del /s /q E:*)",
+      "Bash(del /s /q *:*)",
+
+      "Bash(Remove-Item -Recurse -Force C:*)",
+      "Bash(Remove-Item -Recurse -Force D:*)",
+      "Bash(Remove-Item -Recurse -Force E:*)",
+
+      "Bash(format*)",
+      "Bash(mkfs*)",
+      "Bash(fdisk*)",
+      "Bash(parted*)",
+      "Bash(dd if=/dev/zero*)",
+      "Bash(dd if=/dev/random*)",
+      "Bash(dd if=/dev/urandom*)",
+
+      "Bash(> /dev/sd*)",
+      "Bash(> /dev/hd*)",
+      "Bash(> /dev/nvme*)",
+
+      "Bash(chmod -R 777*)",
+      "Bash(chmod 777 /*)",
+      "Bash(chmod -rw-rw-rw-*)",
+      "Bash(chmod -rwxrwxrwx*)",
+
+      "Bash(git push --force*)",
+      "Bash(git push -f *)",
+
+      "Bash(git reset --hard HEAD~*)",
+      "Bash(git reset --hard origin*)",
+
+      "Bash(git clean -fdx*)",
+      "Bash(git clean -fd /*)",
+
+      "Bash(curl * | sh*)",
+      "Bash(curl * | bash*)",
+      "Bash(wget * | sh*)",
+      "Bash(wget * | bash*)",
+      "Bash(curl * | sudo sh*)",
+      "Bash(wget * | sudo bash*)",
+
+      "Bash(:(){ :|:& };:*)",
+
+      "Bash(shutdown*)",
+      "Bash(reboot*)",
+      "Bash(halt*)",
+      "Bash(poweroff*)",
+      "Bash(init 0*)",
+      "Bash(init 6*)",
+      "Bash(telinit 0*)",
+      "Bash(telinit 6*)",
+
+      "Bash(kill -9 1*)",
+      "Bash(killall -9 *)",
+      "Bash(pkill -9 *)",
+
+      "Bash(sudo rm -rf /*)",
+      "Bash(sudo rm -rf ~/*)",
+      "Bash(sudo dd*)",
+      "Bash(sudo mkfs*)",
+      "Bash(sudo fdisk*)",
+      "Bash(sudo chmod -R 777*)",
+
+      "Bash(mv * /dev/null*)",
+      "Bash(cp /dev/zero*)",
+      "Bash(cat /dev/urandom >*)",
+
+      "Bash(docker run --privileged*)",
+      "Bash(docker run -v /var/run/docker.sock*)",
+      "Bash(docker run --cap-add=ALL*)",
+      "Bash(docker run --security-opt apparmor=unconfined*)",
+      "Bash(docker run --security-opt seccomp=unconfined*)",
+
+      "Bash(kubectl run --privileged*)",
+      "Bash(kubectl exec --privileged*)"
+    ],
+
+    "ask": [
+      "Read(~/.claude/*)",
+      "Read(~/.cco/*)",
+      "Read(C:\\Users\\*\\.claude\\*)",
+      "Read(C:\\Users\\*\\.cco\\*)",
+
+      "Write(~/.claude/*)",
+      "Write(~/.cco/*)",
+      "Write(C:\\Users\\*\\.claude\\*)",
+      "Write(C:\\Users\\*\\.cco\\*)",
+
+      "Edit(~/.claude/*)",
+      "Edit(~/.cco/*)",
+      "Edit(C:\\Users\\*\\.claude\\*)",
+      "Edit(C:\\Users\\*\\.cco\\*)",
+
+      "Glob(~/.claude/*)",
+      "Glob(~/.cco/*)",
+
+      "Bash(rm *)",
+      "Bash(rm ../*)",
+      "Bash(del *)",
+      "Bash(Remove-Item*)",
+      "Bash(rmdir*)",
+      "Bash(rd*)",
+
+      "Bash(git rm*)",
+      "Bash(git reset*)",
+      "Bash(git commit*)",
+      "Bash(git push*)",
+      "Bash(git merge*)",
+      "Bash(git rebase*)",
+      "Bash(git cherry-pick*)",
+      "Bash(git branch -d*)",
+      "Bash(git branch -D*)",
+      "Bash(git tag -d*)",
+      "Bash(git remote add*)",
+      "Bash(git remote remove*)",
+      "Bash(git remote set-url*)",
+      "Bash(git config --global*)",
+      "Bash(git config --system*)",
+      "Bash(git filter-branch*)",
+
+      "Bash(pip install*)",
+      "Bash(pip uninstall*)",
+      "Bash(pip download*)",
+
+      "Bash(npm install*)",
+      "Bash(npm uninstall*)",
+      "Bash(npm update*)",
+      "Bash(npm publish*)",
+      "Bash(npm run build*)",
+      "Bash(npm run deploy*)",
+
+      "Bash(poetry install*)",
+      "Bash(poetry add*)",
+      "Bash(poetry remove*)",
+      "Bash(poetry update*)",
+      "Bash(poetry publish*)",
+      "Bash(poetry build*)",
+
+      "Bash(cargo install*)",
+      "Bash(cargo uninstall*)",
+      "Bash(cargo publish*)",
+      "Bash(cargo build --release*)",
+
+      "Bash(yarn install*)",
+      "Bash(yarn add*)",
+      "Bash(yarn remove*)",
+      "Bash(yarn publish*)",
+
+      "Bash(pnpm install*)",
+      "Bash(pnpm add*)",
+      "Bash(pnpm remove*)",
+
+      "Bash(gem install*)",
+      "Bash(gem uninstall*)",
+
+      "Bash(go install*)",
+      "Bash(go get*)",
+
+      "Bash(docker build*)",
+      "Bash(docker run*)",
+      "Bash(docker push*)",
+      "Bash(docker pull*)",
+      "Bash(docker rm*)",
+      "Bash(docker rmi*)",
+      "Bash(docker exec*)",
+      "Bash(docker-compose up*)",
+      "Bash(docker-compose down*)",
+
+      "Bash(kubectl apply*)",
+      "Bash(kubectl delete*)",
+      "Bash(kubectl create*)",
+      "Bash(kubectl patch*)",
+      "Bash(kubectl edit*)",
+
+      "Bash(apt install*)",
+      "Bash(apt remove*)",
+      "Bash(apt purge*)",
+      "Bash(apt update*)",
+      "Bash(apt upgrade*)",
+      "Bash(apt-get install*)",
+      "Bash(apt-get remove*)",
+
+      "Bash(yum install*)",
+      "Bash(yum remove*)",
+      "Bash(yum update*)",
+
+      "Bash(dnf install*)",
+      "Bash(dnf remove*)",
+      "Bash(dnf update*)",
+
+      "Bash(brew install*)",
+      "Bash(brew uninstall*)",
+      "Bash(brew upgrade*)",
+
+      "Bash(choco install*)",
+      "Bash(choco uninstall*)",
+      "Bash(choco upgrade*)",
+
+      "Bash(make install*)",
+      "Bash(make clean*)",
+      "Bash(./configure*)",
+
+      "Bash(curl -O*)",
+      "Bash(curl --output*)",
+      "Bash(wget http*)",
+      "Bash(wget https*)",
+      "Bash(wget ftp*)",
+
+      "Bash(tar -xzf*)",
+      "Bash(tar -xf*)",
+      "Bash(tar -x*)",
+      "Bash(unzip*)",
+      "Bash(7z x*)",
+
+      "Bash(chmod*)",
+      "Bash(chown*)",
+      "Bash(chgrp*)",
+
+      "Bash(systemctl start*)",
+      "Bash(systemctl stop*)",
+      "Bash(systemctl restart*)",
+      "Bash(systemctl enable*)",
+      "Bash(systemctl disable*)",
+      "Bash(systemctl daemon-reload*)",
+
+      "Bash(service*)",
+
+      "Bash(crontab -e*)",
+      "Bash(crontab -r*)",
+      "Bash(at*)",
+
+      "Bash(ssh*)",
+      "Bash(scp*)",
+      "Bash(rsync*)",
+      "Bash(sftp*)",
+
+      "Bash(sudo*)",
+      "Bash(su *)",
+
+      "Bash(mount*)",
+      "Bash(umount*)",
+
+      "Bash(iptables*)",
+      "Bash(ufw*)",
+      "Bash(firewall-cmd*)"
+    ]
+  }
+}

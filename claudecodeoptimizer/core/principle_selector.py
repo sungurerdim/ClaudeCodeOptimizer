@@ -575,10 +575,14 @@ class PrincipleSelector:
 
         for cat_id, (cat_name, count, description) in category_info.items():
             filename = cat_id.replace("_", "-")
-            lines.append(
-                f"- **[{cat_name}](docs/cco/principles/{filename}.md)** - {count} principles"
-            )
+            # Use global path (zero-pollution)
+            global_path = f"~/.cco/knowledge/principles/{filename}.md"
+            lines.append(f"- **[{cat_name}]({global_path})** - {count} principles")
             lines.append(f"  - {description}")
+        lines.append("")
+        lines.append(
+            "**Note**: All category files stored globally in `~/.cco/knowledge/principles/`"
+        )
         lines.append("")
         lines.append("---")
         lines.append("")
@@ -619,8 +623,8 @@ class PrincipleSelector:
         lines.append("")
         lines.append("For category-specific principles:")
         lines.append("```")
-        lines.append("@docs/cco/principles/security.md  # Load security principles")
-        lines.append("@docs/cco/principles/testing.md   # Load testing principles")
+        lines.append("@~/.cco/knowledge/principles/security.md  # Load security principles")
+        lines.append("@~/.cco/knowledge/principles/testing.md   # Load testing principles")
         lines.append("```")
         lines.append("")
         lines.append("### In Commands")
@@ -637,8 +641,8 @@ class PrincipleSelector:
             "Your principles are customized based on your project configuration. To update:"
         )
         lines.append("")
-        lines.append("1. **Change preferences**: Edit `.cco/project.json`")
-        lines.append("2. **Regenerate**: Run `/cco-init` or modify preferences via wizard")
+        lines.append("1. **Change preferences**: Edit `~/.cco/projects/<project-name>.json`")
+        lines.append("2. **Regenerate**: Run `/cco-init` to apply changes")
         lines.append("3. **Review changes**: Check `git diff PRINCIPLES.md`")
         lines.append("")
         lines.append("---")

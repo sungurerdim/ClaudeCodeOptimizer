@@ -388,9 +388,9 @@ python benchmarks/run_all.py
   - P057: Async I/O for Network Operations
   - P058: Resource Pool Management
 
-See: [@docs/cco/principles/performance.md](../principles/performance.md)
+See: [@~/.cco/knowledge/principles/performance.md](../principles/performance.md)
 
 ---
 
 *Part of CCO Documentation System*
-*Load when needed: @docs/cco/guides/performance-optimization.md*
+*Load when needed: @~/.cco/knowledge/guides/performance-optimization.md*

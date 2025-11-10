@@ -229,7 +229,7 @@ Description: Data security audit
 
 CRITICAL - MUST LOAD FIRST:
 1. Load @CLAUDE.md (Security section)
-2. Load @docs/cco/guides/security-response.md
+2. Load @~/.cco/knowledge/guides/security-response.md
 3. Load @docs/cco/principles/security.md
 4. Print confirmation: "✓ Loaded 3 documents (~3,500 tokens)"
 
@@ -257,7 +257,7 @@ Description: Security architecture audit
 
 CRITICAL - MUST LOAD FIRST:
 1. Load @CLAUDE.md (Security section)
-2. Load @docs/cco/guides/security-response.md
+2. Load @~/.cco/knowledge/guides/security-response.md
 3. Load @docs/cco/principles/security.md
 4. Print confirmation: "✓ Loaded 3 documents (~3,500 tokens)"
 

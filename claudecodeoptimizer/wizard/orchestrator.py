@@ -74,6 +74,9 @@ class CCOWizard:
         self.answer_context: Optional[AnswerContext] = None
         self.selected_principles: List[str] = []
         self.selected_commands: List[str] = []
+        self.selected_guides: List[str] = []
+        self.selected_agents: List[str] = []
+        self.selected_skills: List[str] = []
 
         # Engines
         self.rec_engine = RecommendationEngine()
@@ -617,6 +620,12 @@ class CCOWizard:
             # Install only core + recommended commands (NOT optional)
             self.selected_commands = command_recs["core"] + command_recs["recommended"]
 
+            # Auto-select all available guides (knowledge base)
+            from ..core.knowledge_setup import get_available_guides, get_available_agents, get_available_skills
+            self.selected_guides = get_available_guides()
+            self.selected_agents = get_available_agents()
+            self.selected_skills = get_available_skills()
+
             if self.mode == "interactive":
                 # Show what will be installed
                 print_info("Commands to install:", indent=2)
@@ -724,13 +733,13 @@ class CCOWizard:
             self._write_commands_registry()
             print_success("✓ Created .cco/commands.json", indent=2)
 
-            # Generate command files
-            self._generate_command_files()
-            print_success(f"✓ Generated {len(self.selected_commands)} command files", indent=2)
+            # Setup knowledge base symlinks
+            self._setup_knowledge_symlinks()
+            print_success("✓ Created knowledge base symlinks", indent=2)
 
-            # Generate PRINCIPLES.md
-            self._generate_principles_md()
-            print_success("✓ Created PRINCIPLES.md", indent=2)
+            # Update .gitignore for symlinks
+            self._update_gitignore()
+            print_success("✓ Updated .gitignore", indent=2)
 
             # Generate settings.local.json
             self._generate_settings_local()
@@ -797,20 +806,135 @@ class CCOWizard:
         if not result.get("success"):
             raise Exception(f"Command generation failed: {result.get('error')}")
 
-    def _generate_principles_md(self) -> None:
-        """Generate PRINCIPLES.md and category files"""
-        from ..core.principle_selector import PrincipleSelector
+    def _setup_knowledge_symlinks(self) -> None:
+        """
+        Create symlinks in .claude/ to global knowledge base.
 
-        preferences = self._build_preferences()
-        selector = PrincipleSelector(preferences)
+        Symlinks selected commands, guides, principles, agents, skills from
+        ~/.cco/knowledge/ to project .claude/ directory.
+        """
+        import os
+        import platform
+        from .. import config as CCOConfig
+        from ..core.knowledge_setup import setup_global_knowledge
 
-        # Generate main PRINCIPLES.md
-        output_path = self.project_root / "PRINCIPLES.md"
-        selector.generate_principles_md(output_path)
+        # Ensure global knowledge base exists
+        setup_global_knowledge()
 
-        # Generate category files in docs/cco/principles/
-        docs_path = self.project_root / "docs" / "cco" / "principles"
-        selector.generate_category_files(docs_path)
+        # Create .claude subdirectories
+        claude_dir = self.project_root / ".claude"
+        categories = ["commands", "guides", "principles", "agents", "skills"]
+
+        for category in categories:
+            (claude_dir / category).mkdir(parents=True, exist_ok=True)
+            # Create .gitkeep to preserve directory structure
+            (claude_dir / category / ".gitkeep").touch()
+
+        # Get global knowledge directories
+        global_commands_dir = CCOConfig.get_knowledge_commands_dir()
+        global_guides_dir = CCOConfig.get_guides_dir()
+        global_principles_dir = CCOConfig.get_principles_dir()
+        global_agents_dir = CCOConfig.get_agents_dir()
+        global_skills_dir = CCOConfig.get_skills_dir()
+
+        # Map selected items to their source directories
+        symlink_map = []
+
+        # Commands
+        for cmd in self.selected_commands:
+            source = global_commands_dir / f"{cmd}.md"
+            target = claude_dir / "commands" / f"{cmd}.md"
+            symlink_map.append((source, target))
+
+        # Guides
+        for guide in self.selected_guides:
+            source = global_guides_dir / f"{guide}.md"
+            target = claude_dir / "guides" / f"{guide}.md"
+            symlink_map.append((source, target))
+
+        # Principles
+        for principle in self.selected_principles:
+            source = global_principles_dir / f"{principle}.md"
+            target = claude_dir / "principles" / f"{principle}.md"
+            symlink_map.append((source, target))
+
+        # Agents (if any selected)
+        if hasattr(self, 'selected_agents'):
+            for agent in self.selected_agents:
+                source = global_agents_dir / f"{agent}.md"
+                target = claude_dir / "agents" / f"{agent}.md"
+                symlink_map.append((source, target))
+
+        # Skills (if any selected)
+        if hasattr(self, 'selected_skills'):
+            for skill in self.selected_skills:
+                source = global_skills_dir / f"{skill}.md"
+                target = claude_dir / "skills" / f"{skill}.md"
+                symlink_map.append((source, target))
+
+        # Create symlinks
+        for source, target in symlink_map:
+            # Remove existing symlink/file if exists
+            if target.exists() or target.is_symlink():
+                target.unlink()
+
+            # Create symlink (cross-platform)
+            if platform.system() == "Windows":
+                # Windows: use mklink
+                import subprocess
+                subprocess.run(
+                    ["cmd", "/c", "mklink", str(target), str(source)],
+                    check=True,
+                    capture_output=True
+                )
+            else:
+                # Unix: use symlink_to
+                target.symlink_to(source)
+
+    def _update_gitignore(self) -> None:
+        """
+        Update .gitignore to ignore symlinked knowledge base files.
+
+        Adds CCO-specific section to .gitignore to exclude:
+        - .claude/*/  symlinks (except .gitkeep)
+        """
+        gitignore_path = self.project_root / ".gitignore"
+
+        # CCO gitignore section
+        cco_section = """
+# CCO: Symlinked knowledge base (ignore)
+.claude/commands/*
+.claude/guides/*
+.claude/principles/*
+.claude/agents/*
+.claude/skills/*
+
+# Keep directory structure
+!.claude/commands/.gitkeep
+!.claude/guides/.gitkeep
+!.claude/principles/.gitkeep
+!.claude/agents/.gitkeep
+!.claude/skills/.gitkeep
+"""
+
+        # Check if .gitignore exists
+        if gitignore_path.exists():
+            content = gitignore_path.read_text(encoding="utf-8")
+
+            # Check if CCO section already exists
+            if "# CCO: Symlinked knowledge base" in content:
+                # Already exists, skip
+                return
+
+            # Append CCO section
+            if not content.endswith("\n"):
+                content += "\n"
+            content += cco_section
+
+            gitignore_path.write_text(content, encoding="utf-8")
+        else:
+            # Create new .gitignore with CCO section
+            gitignore_path.write_text(cco_section.lstrip(), encoding="utf-8")
 
     def _generate_settings_local(self) -> None:
         """Generate .claude/settings.local.json from global template"""
@@ -886,7 +1010,78 @@ class CCOWizard:
         shutil.copy2(statusline_source, statusline_dest)
 
     def _generate_claude_md(self) -> None:
-        """Generate CLAUDE.md from template with customization"""
+        """Generate CLAUDE.md from template with project-specific references"""
+        import shutil
+        from pathlib import Path
+
+        # Load template
+        template_path = Path(__file__).parent.parent.parent / "templates" / "CLAUDE.md.template"
+        output_path = self.project_root / "CLAUDE.md"
+
+        if not template_path.exists():
+            raise FileNotFoundError(f"CLAUDE.md template not found: {template_path}")
+
+        # Read template
+        content = template_path.read_text(encoding="utf-8")
+
+        # Inject project-specific references
+        content = self._inject_knowledge_references(content)
+
+        # Write to project root
+        output_path.write_text(content, encoding="utf-8")
+
+    def _inject_knowledge_references(self, content: str) -> str:
+        """Inject selected principle/guide/agent/skill references into CLAUDE.md"""
+        additions = []
+
+        # Category-specific principles
+        if self.selected_principles:
+            additions.append("\n### Category-Specific Principles (Project Selected)\n")
+            additions.append("Load these principles based on your task context:\n")
+            for principle in self.selected_principles:
+                additions.append(f"- @.claude/principles/{principle}.md")
+
+        # Detailed guides
+        if self.selected_guides:
+            additions.append("\n### Detailed Guides (Project Selected)\n")
+            additions.append("Load these guides as needed:\n")
+            for guide in self.selected_guides:
+                # Humanize guide name
+                guide_name = guide.replace("-", " ").title()
+                additions.append(f"- **@.claude/guides/{guide}.md** - {guide_name}")
+
+        # Agents
+        if hasattr(self, 'selected_agents') and self.selected_agents:
+            additions.append("\n### Agents (Project Selected)\n")
+            additions.append("Use these specialized agents for complex tasks:\n")
+            for agent in self.selected_agents:
+                agent_name = agent.replace("-", " ").title()
+                additions.append(f"- **@.claude/agents/{agent}.md** - {agent_name}")
+
+        # Skills
+        if hasattr(self, 'selected_skills') and self.selected_skills:
+            additions.append("\n### Skills (Project Selected)\n")
+            additions.append("Available skills via slash commands:\n")
+            for skill in self.selected_skills:
+                skill_name = skill.replace("-", " ").title()
+                additions.append(f"- `/{skill}` - @.claude/skills/{skill}.md - {skill_name}")
+
+        # Insert additions before footer
+        if additions:
+            footer_marker = "\n---\n\n*Part of CCO Documentation System*"
+            if footer_marker in content:
+                content = content.replace(
+                    footer_marker,
+                    "\n\n" + "\n".join(additions) + footer_marker
+                )
+            else:
+                # No footer, append to end
+                content += "\n\n" + "\n".join(additions)
+
+        return content
+
+    def _old_generate_claude_md(self) -> None:
+        """OLD: Generate CLAUDE.md from template with customization"""
         from ..core.claude_md_generator import generate_claude_md
 
         # Build preferences
@@ -935,13 +1130,13 @@ class CCOWizard:
         display_completion_summary(
             commands_installed=len(self.selected_commands),
             principles_configured=len(self.selected_principles),
-            files_created=4,  # project.json, commands.json, PRINCIPLES.md, commands
+            files_created=3,  # project.json, commands.json, CLAUDE.md, commands
             duration_seconds=duration,
         )
 
         print()
         print_info("Next steps:", indent=2)
-        print_info("  1. Review PRINCIPLES.md to understand your principles", indent=2)
+        print_info("  1. Review CLAUDE.md to understand your development guide", indent=2)
         print_info("  2. Run /cco-status to see your configuration", indent=2)
         print_info("  3. Run /cco-audit to analyze your codebase", indent=2)
         print()

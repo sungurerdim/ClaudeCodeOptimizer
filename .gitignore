@@ -186,19 +186,32 @@ cython_debug/
 audit_results.json        # Legacy audit results (if any)
 nul                       # Windows null device output
 
-# CCO Documentation (optional - uncomment if you don't want to commit generated docs)
-# docs/cco/          # CCO-generated documentation
-# PRINCIPLES.md      # Generated principles file
-# CLAUDE.md          # Generated Claude Code guide
-
 # Lock files
 *.lock
 requirements.txt.lock
 
-# Claude Code - Team vs Personal split
-.claude/settings.local.json   # Personal permission overrides (gitignore)
-# .claude/commands/           # Team slash commands (commit to git)
-# .claude/settings.json       # Default permissions (commit to git)
+# Claude Code - Symlinked knowledge base (CCO v3.0+ architecture)
+# Knowledge base symlinks (ignore - sourced from ~/.cco/knowledge/)
+.claude/commands/*
+.claude/guides/*
+.claude/principles/*
+.claude/agents/*
+.claude/skills/*
+
+# Keep directory structure only
+!.claude/commands/.gitkeep
+!.claude/guides/.gitkeep
+!.claude/principles/.gitkeep
+!.claude/agents/.gitkeep
+!.claude/skills/.gitkeep
+
+# Personal overrides (ignore)
+.claude/settings.local.json
+.claude/statusline.js
+.claude/usage_sessions/
+
+# Team settings (commit to git - but excluded due to wildcard above)
+!.claude/settings.json
 
 # User-specific scripts
 *.bat

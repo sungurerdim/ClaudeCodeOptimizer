@@ -521,9 +521,9 @@ syncPolicy:
   - P062: Automated Health Checks
   - P063: Config-as-Code
 
-See: [@docs/cco/principles/operations.md](../principles/operations.md)
+See: [@~/.cco/knowledge/principles/operations.md](../principles/operations.md)
 
 ---
 
 *Part of CCO Documentation System*
-*Load when needed: @docs/cco/guides/container-best-practices.md*
+*Load when needed: @~/.cco/knowledge/guides/container-best-practices.md*

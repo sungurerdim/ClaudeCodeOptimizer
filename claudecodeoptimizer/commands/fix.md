@@ -184,7 +184,7 @@ Description: Fix security vulnerabilities
 
 MUST LOAD FIRST:
 1. @CLAUDE.md (Security section)
-2. @docs/cco/guides/security-response.md
+2. @~/.cco/knowledge/guides/security-response.md
 3. @docs/cco/principles/security.md
 4. Print: "✓ Loaded 3 docs (~3,500 tokens)"
 

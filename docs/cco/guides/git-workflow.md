@@ -411,9 +411,9 @@ git checkout <commit-hash>
 - **P071**: Anti-Overengineering (Branch strategy)
 - **P067**: Evidence-Based Verification (Commit verification)
 
-See: [@docs/cco/principles/git-workflow.md](../principles/git-workflow.md)
+See: [@~/.cco/knowledge/principles/git-workflow.md](../principles/git-workflow.md)
 
 ---
 
 *Part of CCO Documentation System*
-*Load when needed: @docs/cco/guides/git-workflow.md*
+*Load when needed: @~/.cco/knowledge/guides/git-workflow.md*

@@ -70,6 +70,56 @@ def get_knowledge_dir() -> Path:
     return get_global_dir() / "knowledge"
 
 
+def get_principles_dir() -> Path:
+    """
+    Get global principles directory (~/.cco/knowledge/principles/).
+
+    Category-specific principle files stored globally to avoid duplication
+    across projects. Similar to global commands pattern.
+    """
+    return get_knowledge_dir() / "principles"
+
+
+def get_guides_dir() -> Path:
+    """
+    Get global guides directory (~/.cco/knowledge/guides/).
+
+    Static guide files (verification, git workflow, security, etc.) stored
+    globally to avoid duplication. Loaded via @~/.cco/knowledge/guides/...
+    """
+    return get_knowledge_dir() / "guides"
+
+
+def get_knowledge_commands_dir() -> Path:
+    """
+    Get global knowledge commands directory (~/.cco/knowledge/commands/).
+
+    Slash command templates stored globally. Projects symlink to selected commands
+    in their .claude/commands/ directory.
+    """
+    return get_knowledge_dir() / "commands"
+
+
+def get_agents_dir() -> Path:
+    """
+    Get global agents directory (~/.cco/knowledge/agents/).
+
+    Task agent definitions stored globally. Projects symlink to selected agents
+    in their .claude/agents/ directory.
+    """
+    return get_knowledge_dir() / "agents"
+
+
+def get_skills_dir() -> Path:
+    """
+    Get global skills directory (~/.cco/knowledge/skills/).
+
+    Skill definitions stored globally. Projects symlink to selected skills
+    in their .claude/skills/ directory.
+    """
+    return get_knowledge_dir() / "skills"
+
+
 def get_projects_registry_dir() -> Path:
     """Get central projects registry (~/.cco/projects/)."""
     return get_global_dir() / "projects"
