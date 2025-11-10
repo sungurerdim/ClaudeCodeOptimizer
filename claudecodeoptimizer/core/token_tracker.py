@@ -5,6 +5,10 @@ This module provides utilities to track and report token usage
 during command execution, supporting progressive disclosure optimization.
 """
 
+**STATUS**: ⚠️ NOT CURRENTLY INTEGRATED
+This module is fully implemented but not yet integrated into the codebase.
+Future integration planned for token usage optimization and tracking.
+
 import json
 from pathlib import Path
 from typing import Dict, List, Optional, Tuple

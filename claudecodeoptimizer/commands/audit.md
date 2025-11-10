@@ -43,7 +43,26 @@ Run comprehensive audits on your codebase: code quality, security, tests, docume
 
 **CRITICAL**: Before running any audit, load and verify required documents.
 
-### 1. Load Core Documents with Category-Based Loader
+### 1. Auto-Load Relevant Principles (Progressive Disclosure)
+
+The following principles are automatically loaded for audit commands:
+
+**Core Principles** (Always loaded from CLAUDE.md):
+- P001: Fail-Fast Error Handling
+- P067: Evidence-Based Verification
+- P071: No Overengineering
+
+**Additional Principles for This Command**:
+Automatically loaded from `~/.cco/knowledge/principles/`:
+- All principles from `code_quality.md`
+- All principles from `security_privacy.md`
+- All principles from `testing.md`
+
+This gives you ~40 relevant principles instead of all 74, saving 60% tokens.
+
+### 2. Load Core Documents with Category-Based Loader (Manual Alternative)
+
+If you need to manually load principles:
 
 ```python
 import sys

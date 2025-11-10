@@ -7,6 +7,10 @@ Manages command output reports with:
 - Automatic cleanup of old reports (configurable)
 """
 
+**STATUS**: ⚠️ NOT CURRENTLY INTEGRATED
+This module is fully implemented but not yet integrated into the codebase.
+Future integration planned for audit report history and trend analysis.
+
 import shutil
 from datetime import datetime
 from pathlib import Path

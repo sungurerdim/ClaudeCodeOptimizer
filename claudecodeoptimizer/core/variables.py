@@ -5,6 +5,10 @@ Provides variable substitution in commands to eliminate hardcoded values.
 Enables centralized updates across all commands.
 """
 
+**STATUS**: ⚠️ NOT CURRENTLY INTEGRATED
+This module is fully implemented but not yet integrated into the codebase.
+Future integration planned for template variable substitution for file generation.
+
 import re
 from dataclasses import dataclass, field
 from pathlib import Path

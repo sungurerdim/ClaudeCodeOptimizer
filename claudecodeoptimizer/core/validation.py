@@ -5,6 +5,10 @@ Validates code against active principles using pattern matching.
 Supports multiple languages: Python, JavaScript, TypeScript, Go, Rust, Java.
 """
 
+**STATUS**: ⚠️ NOT CURRENTLY INTEGRATED
+This module is fully implemented but not yet integrated into the codebase.
+Future integration planned for code validation engine for audit commands.
+
 import logging
 import re
 from dataclasses import dataclass

@@ -2,6 +2,10 @@
 
 Tracks sessions, command usage, and audit history for projects.
 All state is stored in global registry (~/.cco/projects/PROJECT_NAME.json).
+
+**STATUS**: ⚠️ NOT CURRENTLY INTEGRATED
+This module is fully implemented but not yet integrated into commands.
+Future integration planned for command usage statistics and audit history tracking.
 """
 
 import json

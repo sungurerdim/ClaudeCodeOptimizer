@@ -5,6 +5,10 @@ Selects applicable skills based on user preferences.
 Copies skills to .claude/skills/ for @mention usage.
 """
 
+**STATUS**: ⚠️ NOT CURRENTLY INTEGRATED
+This module is fully implemented but not yet integrated into the codebase.
+Future integration planned for dynamic skill selection based on project needs.
+
 import shutil
 from pathlib import Path
 from typing import Any, Dict, List, TypeVar

@@ -10,6 +10,10 @@ After: ~1000 tokens (core only, guides on-demand)
 Pattern from wshobson/agents for progressive disclosure.
 """
 
+**STATUS**: ⚠️ NOT CURRENTLY INTEGRATED
+This module is fully implemented but not yet integrated into the codebase.
+Future integration planned for progressive disclosure for guides.
+
 from pathlib import Path
 from typing import Dict, List, Optional
 
