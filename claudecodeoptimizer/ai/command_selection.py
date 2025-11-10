@@ -269,31 +269,6 @@ class CommandRecommender:
             "reasoning": "Self-optimize CCO configuration based on usage patterns",
             "priority": "low",
         },
-        # Export/Import
-        {
-            "command_id": "cco-export",
-            "conditions": [
-                (
-                    "project_identity.team_trajectory",
-                    "in",
-                    ["medium-5-10", "medium-10-20", "large-20-50"],
-                ),
-            ],
-            "reasoning": "Export CCO config for sharing across projects/teams",
-            "priority": "low",
-        },
-        {
-            "command_id": "cco-import-skills",
-            "conditions": [
-                (
-                    "project_identity.team_trajectory",
-                    "in",
-                    ["medium-5-10", "medium-10-20", "large-20-50"],
-                ),
-            ],
-            "reasoning": "Import custom skills and commands",
-            "priority": "low",
-        },
         # Implementation verification
         {
             "command_id": "cco-verify-implementation",
