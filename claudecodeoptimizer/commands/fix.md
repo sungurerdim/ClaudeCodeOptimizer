@@ -1,38 +1,42 @@
 ---
 description: Auto-fix issues (code, security, docs, tests)
 category: quality
-cost: 3
+cost: 4
 ---
 
 # CCO Fix Commands
 
 Automatically fix issues found in audits: code quality, security vulnerabilities, documentation, and flaky tests.
 
----
+## Prerequisites: Load Required Context
 
-## Architecture & Model Selection
+**CRITICAL**: Before running any fix, load and verify required documents.
 
-**Hybrid approach for optimal speed + quality**
+```python
+from pathlib import Path
 
-**Data Gathering**: Haiku (Explore agent, quick)
-- Fast file scanning, pattern detection
-- Identify issues to fix across codebase
-- Cost-effective for repetitive operations
+print("📚 Loading CCO Context for Fixes...\n")
 
-**Analysis & Reasoning**: Sonnet (Plan agent)
-- Complex analysis for security fixes
-- Reasoning required for flaky test fixes
-- Synthesis of findings and fix strategies
+# Load core documents
+loaded_docs = []
 
-**Direct Tools**: Bash (instant)
-- Code quality fixes (black, ruff, prettier) - no AI needed
-- Deterministic linting/formatting operations
+# CLAUDE.md
+claude_md = Path("CLAUDE.md")
+if claude_md.exists():
+    tokens = len(claude_md.read_text(encoding="utf-8")) // 4
+    loaded_docs.append(("CLAUDE.md", tokens))
+    print(f"✓ Loaded CLAUDE.md (~{tokens:,} tokens)")
 
-**Execution Pattern**:
-1. Scan codebase with Haiku agents (parallel)
-2. Apply bash tools for code quality (instant)
-3. Use Sonnet for security and test fixes (reasoning)
-4. Aggregate results and generate report
+# PRINCIPLES.md
+principles_md = Path("PRINCIPLES.md")
+if principles_md.exists():
+    tokens = len(principles_md.read_text(encoding="utf-8")) // 4
+    loaded_docs.append(("PRINCIPLES.md", tokens))
+    print(f"✓ Loaded PRINCIPLES.md (~{tokens:,} tokens)")
+
+total_tokens = sum(t for _, t in loaded_docs)
+print(f"\n📊 Core context: ~{total_tokens:,} tokens\n")
+```
 
 ---
 
@@ -47,10 +51,10 @@ Automatically fix issues found in audits: code quality, security vulnerabilities
     "header": "Fix Selection",
     "multiSelect": true,
     "options": [
-      {"label": "Code Quality", "description": "Auto-fix formatting, linting, type errors (bash tools - instant)"},
-      {"label": "Security", "description": "Fix security vulnerabilities and remove hardcoded secrets (Sonnet - reasoning)"},
-      {"label": "Documentation", "description": "Update outdated docs, add missing docstrings (Haiku - fast)"},
-      {"label": "Flaky Tests", "description": "Fix non-deterministic tests and race conditions (Sonnet - analysis)"}
+      {"label": "Code Quality", "description": "Auto-fix formatting, linting, type errors (black, ruff, prettier, etc.)"},
+      {"label": "Security", "description": "Fix security vulnerabilities and remove hardcoded secrets"},
+      {"label": "Documentation", "description": "Update outdated docs, add missing docstrings"},
+      {"label": "Flaky Tests", "description": "Fix non-deterministic tests and race conditions"}
     ]
   }]
 }
@@ -75,8 +79,6 @@ All fixes follow this pattern:
 ## Fix: Code Quality
 
 **Auto-fix formatting, linting, and type errors**
-
-**Method:** Bash tools (no AI agents - instant execution)
 
 ### Safety Backup
 
@@ -111,8 +113,6 @@ goimports -w .
 rustfmt --edition 2021 .
 ```
 
-**Why Bash Tools:** Code quality fixes are deterministic transformations. No AI reasoning needed - use native tools for instant execution.
-
 ### Verify Changes
 
 ```bash
@@ -141,8 +141,6 @@ fi
 ## Fix: Security
 
 **Fix security vulnerabilities and remove secrets**
-
-**Method:** Sonnet Plan agent (reasoning required for security decisions)
 
 ### Safety Backup
 
@@ -176,28 +174,41 @@ git checkout -b cco-fix-security-backup-$(date +%s)
 
 ### Implementation
 
-Use Task tool (Sonnet Plan agent):
+**Use Task tool with explicit model selection:**
 
+**Security Fix Agent:**
 ```
-Task: Fix security vulnerabilities
-Agent: Plan
+Subagent Type: Plan
 Model: sonnet
-Thoroughness: high
+Description: Fix security vulnerabilities
 
-1. Scan for vulnerabilities (use audit-security results)
-2. Apply fixes category by category
-3. Verify each fix doesn't break functionality
-4. Run security audit again to confirm fixes
+MUST LOAD FIRST:
+1. @CLAUDE.md (Security section)
+2. @docs/cco/guides/security-response.md
+3. @docs/cco/principles/security.md
+4. Print: "✓ Loaded 3 docs (~3,500 tokens)"
 
-Reasoning required:
-- Identify appropriate fix for each vulnerability type
-- Ensure fixes don't break existing functionality
-- Design secure alternatives (env vars, parameterized queries)
-- Balance security improvements with code maintainability
-- Understand attack vectors and proper mitigations
+Task: Fix security vulnerabilities systematically
+
+Steps:
+1. Load audit findings (if available from /cco-audit security)
+2. Categorize vulnerabilities by type:
+   - Hardcoded secrets → Move to environment variables
+   - SQL injection → Use parameterized queries
+   - XSS → Add output escaping
+   - Missing HTTPS → Update config
+3. Apply fixes category by category (not one-by-one)
+4. Verify each fix doesn't break functionality:
+   - Run relevant tests after each category
+   - Check that code still compiles/runs
+5. Run security audit again to confirm fixes
+
+Why Sonnet:
+- Complex security fixes require reasoning
+- Need to understand attack vectors
+- Must preserve functionality while hardening
+- Requires careful testing strategy
 ```
-
-**Why Sonnet:** Security fixes require understanding vulnerabilities, attack vectors, and secure coding patterns. Wrong fixes can introduce new vulnerabilities or break functionality.
 
 ### Verify
 
@@ -216,8 +227,6 @@ pytest
 ## Fix: Documentation
 
 **Update outdated docs and add missing docstrings**
-
-**Method:** Haiku Explore agent (fast data updates)
 
 ### Safety Backup
 
@@ -248,23 +257,36 @@ git checkout -b cco-fix-docs-backup-$(date +%s)
 
 ### Implementation
 
-Use Task tool (Haiku Explore agent):
+**Use Task tool with model selection:**
 
+**Documentation Fix Agent:**
 ```
-Task: Fix documentation issues
-Agent: Explore
+Subagent Type: Plan
 Model: haiku
-Thoroughness: quick
+Description: Fix documentation issues
+
+MUST LOAD FIRST:
+1. @CLAUDE.md (Documentation section)
+2. @docs/cco/principles/code-quality.md (Docstring principles)
+3. Print: "✓ Loaded 2 docs (~2,100 tokens)"
+
+Task: Fix documentation issues systematically
 
 For each doc issue found in audit:
-1. Read current documentation
-2. Read corresponding code
-3. Update documentation to match code
-4. Verify examples work
-5. Check links are valid
-```
+1. Read current documentation (README, docstrings, API docs)
+2. Read corresponding code implementation
+3. Update documentation to match actual code behavior
+4. Verify code examples work (run them if possible)
+5. Check all links are valid (no 404s)
+6. Update outdated version references
+7. Fix formatting issues
 
-**Why Haiku:** Documentation fixes are mostly data updates - read code, update docs to match. No complex reasoning required, fast execution for many doc updates.
+Why Haiku:
+- Documentation fixes are straightforward
+- Mostly reading and writing text
+- No complex reasoning required
+- Faster and cheaper for simple edits
+```
 
 ### Verify
 
@@ -281,8 +303,6 @@ pytest --doctest-modules
 ## Fix: Flaky Tests
 
 **Fix non-deterministic and unreliable tests**
-
-**Method:** Sonnet Explore agent (root cause analysis required)
 
 ### Safety Backup
 
@@ -314,29 +334,51 @@ git checkout -b cco-fix-tests-backup-$(date +%s)
 
 ### Implementation
 
-Use Task tool (Sonnet Explore agent):
+**Use Task tool with model selection:**
 
+**Flaky Test Fix Agent:**
 ```
-Task: Fix flaky tests
-Agent: Explore
+Subagent Type: Explore
 Model: sonnet
-Thoroughness: high
+Description: Fix flaky tests
+
+MUST LOAD FIRST:
+1. @CLAUDE.md (Testing section)
+2. @docs/cco/principles/testing.md
+3. Print: "✓ Loaded 2 docs (~1,900 tokens)"
+
+Task: Fix flaky tests systematically
 
 For each flaky test (from audit):
-1. Identify root cause (timing, randomness, state, etc.)
-2. Apply appropriate fix pattern
-3. Run test 10 times to verify stability
-4. Document fix in test comments
+1. Identify root cause by analyzing test code:
+   - Timing issues: Missing waits, race conditions
+   - Randomness: Unseeded random generators
+   - External dependencies: APIs, databases, filesystem
+   - State leakage: Shared mutable state between tests
+   - Order dependencies: Tests passing in one order, failing in another
 
-Reasoning required:
-- Analyze test failures to identify root cause
-- Understand timing/synchronization issues
-- Design proper mocking strategy
-- Ensure fix doesn't mask real bugs
-- Verify test still validates intended behavior
+2. Apply appropriate fix pattern:
+   - Timing: Add explicit waits, use async/await properly
+   - Randomness: Seed random generators with fixed values
+   - External: Mock external dependencies
+   - State: Isolate tests, proper teardown
+   - Order: Make tests independent
+
+3. Verify fix by running test 20 times:
+   - Must pass all 20 runs
+   - If fails even once, fix is incomplete
+
+4. Document fix in test comments:
+   - Explain what was flaky
+   - Why the fix works
+   - How to avoid similar issues
+
+Why Sonnet:
+- Requires deep understanding of test behavior
+- Root cause analysis needs reasoning
+- Must design appropriate fix pattern
+- Complex debugging involved
 ```
-
-**Why Sonnet:** Flaky test fixes require deep analysis of root causes (race conditions, timing issues, state management). Wrong fixes can mask real bugs or create false positives.
 
 ### Verify
 
@@ -366,18 +408,13 @@ Project: ${PROJECT_NAME}
 ============================================================
 
 Fixes Applied:
-✓ Code Quality:    15 issues fixed [Bash tools - instant]
-✓ Security:        3 vulnerabilities patched [Sonnet - reasoning]
-✓ Documentation:   8 docs updated [Haiku - fast]
-✓ Tests:           2 flaky tests fixed [Sonnet - analysis]
+✓ Code Quality:    15 issues fixed
+✓ Security:        3 vulnerabilities patched
+✓ Documentation:   8 docs updated
+✓ Tests:           2 flaky tests fixed
 
 Tests Status:      ✓ All passing
 Git Status:        ✓ Changes committed to fix branch
-
-Performance:
-- Code quality: Instant (bash tools)
-- Documentation: 2-3x faster (Haiku vs Sonnet)
-- Security/Tests: High quality reasoning (Sonnet)
 
 Next Steps:
 1. Review changes: git diff main

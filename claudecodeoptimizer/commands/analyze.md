@@ -13,6 +13,25 @@ Deep analysis of **${PROJECT_NAME}** structure, technology stack, and quality me
 **Primary Language:** ${PRIMARY_LANGUAGE}
 **Services:** ${SERVICES_COUNT}
 
+## Prerequisites: Load Required Context
+
+```python
+from pathlib import Path
+
+print("📚 Loading CCO Context for Analysis...\n")
+
+# Load core documents
+for doc_name in ["CLAUDE.md", "PRINCIPLES.md"]:
+    doc_path = Path(doc_name)
+    if doc_path.exists():
+        tokens = len(doc_path.read_text(encoding="utf-8")) // 4
+        print(f"✓ Loaded {doc_name} (~{tokens:,} tokens)")
+
+print()
+```
+
+---
+
 ## Objective
 
 Comprehensive project analysis:
@@ -25,25 +44,9 @@ Comprehensive project analysis:
 
 **Output:** Complete project analysis report with recommendations.
 
----
-
-## Architecture & Model Selection
-
-**Data Gathering**: Haiku (Explore agent, quick)
-- Fast file scanning and structure analysis
-- Tech stack detection and pattern recognition
-- Cost-effective codebase traversal
-
-**Analysis & Reasoning**: Sonnet (Plan agent)
-- Complex architecture analysis
-- Complexity assessment and recommendations
-- Strategic insights and synthesis
-
-**Execution Pattern**:
-1. Launch multiple Haiku agents to scan different aspects (parallel)
-2. Aggregate structural data and metrics
-3. Use Sonnet for deep analysis and recommendations
-4. Generate comprehensive analysis report
+**Model Selection:**
+- Phase 1-6 (Data Collection): Use Python scripts + Grep/Glob tools (fast, no agent needed)
+- Phase 7 (Recommendations): Use Sonnet Plan agent (intelligent analysis)
 
 ---
 

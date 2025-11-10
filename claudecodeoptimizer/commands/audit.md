@@ -8,52 +8,63 @@ cost: 3
 
 Run comprehensive audits on your codebase: code quality, security, tests, documentation, and principle compliance.
 
-## Prerequisites: Load Project Context
+## Prerequisites: Load Required Context
 
-**BEFORE running any audit**, load the following documents to understand project standards:
+**CRITICAL**: Before running any audit, load and verify required documents.
 
-### Required Project Documents
+### 1. Load Core Documents
 
-1. **CLAUDE.md** - Main development guide
-   - Load: `@CLAUDE.md`
-   - Contains: Core development principles, verification protocol, test-first development, git workflow, security standards
+```python
+import sys
+from pathlib import Path
 
-2. **PRINCIPLES.md** - Active principles for this project
-   - Load: `@PRINCIPLES.md`
-   - Contains: Project-specific mandatory development principles
+print("📚 Loading CCO Context...\n")
 
-3. **Project Configuration** - Project preferences and standards
-   - Load from: `.cco/project.json` (if exists) or global registry
-   - Check with:
-   ```bash
-   python -c "
-   from pathlib import Path
-   import json
+# Track loaded documents and token estimates
+loaded_docs = []
+total_tokens = 0
 
-   project_name = Path.cwd().name
-   registry_file = Path.home() / '.cco' / 'projects' / f'{project_name}.json'
+# Load CLAUDE.md
+claude_md = Path("CLAUDE.md")
+if claude_md.exists():
+    content = claude_md.read_text(encoding="utf-8")
+    tokens = len(content) // 4  # Rough estimate
+    loaded_docs.append(("CLAUDE.md", tokens))
+    total_tokens += tokens
+    print(f"✓ Loaded CLAUDE.md (~{tokens:,} tokens)")
+else:
+    print("✗ CLAUDE.md not found - /cco-init required")
+    sys.exit(1)
 
-   if registry_file.exists():
-       config = json.loads(registry_file.read_text())
-       print(json.dumps(config, indent=2))
-   else:
-       print('Project not initialized. Run /cco-init first.')
-   "
-   ```
+# Load PRINCIPLES.md
+principles_md = Path("PRINCIPLES.md")
+if principles_md.exists():
+    content = principles_md.read_text(encoding="utf-8")
+    tokens = len(content) // 4
+    loaded_docs.append(("PRINCIPLES.md", tokens))
+    total_tokens += tokens
+    print(f"✓ Loaded PRINCIPLES.md (~{tokens:,} tokens)")
+else:
+    print("✗ PRINCIPLES.md not found - /cco-init required")
+    sys.exit(1)
 
-### Category-Specific Guide Documents
+print(f"\n📊 Core context loaded: ~{total_tokens:,} tokens")
+print(f"   Budget remaining: ~{200000 - total_tokens:,} tokens (200K total)\n")
+```
 
-Load these **on-demand** based on audit type:
+### 2. Confirm Required Documents Loaded
 
-- **Code Quality**: `@docs/cco/guides/verification-protocol.md`, `@docs/cco/principles/code-quality.md`
-- **Security**: `@docs/cco/guides/security-response.md`, `@docs/cco/principles/security.md`
-- **Tests**: `@docs/cco/principles/testing.md`
-- **Documentation**: `@docs/cco/principles/code-quality.md` (docstring section)
-- **Performance**: `@docs/cco/guides/performance-optimization.md`, `@docs/cco/principles/performance.md`
-- **Operations**: `@docs/cco/guides/container-best-practices.md`, `@docs/cco/principles/operations.md`
-- **Architecture**: `@docs/cco/principles/architecture.md`
-- **API Design**: `@docs/cco/principles/api-design.md`
-- **Git Workflow**: `@docs/cco/guides/git-workflow.md`, `@docs/cco/principles/git-workflow.md`
+**Agents MUST confirm document loading before starting work:**
+
+```
+Agent initialization checklist:
+1. ✓ CLAUDE.md loaded and parsed
+2. ✓ PRINCIPLES.md loaded and parsed
+3. ✓ Project configuration available
+4. ✓ Category-specific guides (load on-demand)
+```
+
+**If any required document fails to load**: STOP and report error to user.
 
 ---
 
@@ -91,12 +102,6 @@ Based on user selection, run the corresponding audit sections below.
 
 ## Audit: Code Quality
 
-**Standards Reference**:
-- Load `@CLAUDE.md` (Verification Protocol, Minimal Touch Policy, Root Cause Analysis)
-- Load `@docs/cco/guides/verification-protocol.md` (Evidence-based verification)
-- Load `@docs/cco/principles/code-quality.md` (P001-P018 principles)
-- Check project config for code quality standards (test coverage target, linting rules)
-
 **Runtime tool detection** - automatically detect and run available tools.
 
 ### Detect Available Tools
@@ -111,42 +116,81 @@ Based on user selection, run the corresponding audit sections below.
 
 Use Task tool (Explore agent, medium thoroughness):
 
-**Agent must**:
-1. Read and understand CLAUDE.md code quality standards
-2. Read and understand docs/cco/principles/code-quality.md
-3. Check project configuration for specific standards
-4. Run detected tools
-5. Compare results against project standards (from CLAUDE.md and PRINCIPLES.md)
-6. Report violations with principle references (e.g., "Violates P001: Fail-Fast Error Handling")
-
 ```bash
 # Python example
 black --check .
 ruff check .
 mypy .
 
-# Report results with principle references
+# Report results
 ```
 
-### Output
+### Output Format
 
-- Formatting issues found (with CLAUDE.md standards reference)
-- Lint violations (with principle references)
-- Type errors
-- Violations of code quality principles (P001-P018)
-- Recommendations for fixes aligned with CLAUDE.md
+Report issues with severity and location:
 
-**Next Step**: Use `/cco-fix code` to auto-fix issues.
+```
+Code Quality Audit Results
+=========================
+
+CRITICAL (blocking):
+  - src/auth.py:45 - SQL injection vulnerability (use parameterized queries)
+  - src/api.py:89 - Hardcoded credentials
+
+HIGH (should fix):
+  - src/models.py:12,34,56 - Type errors (missing type annotations)
+  - src/utils.py - 15 formatting violations (line too long)
+
+MEDIUM (recommended):
+  - src/tests/ - 23 unused imports
+  - src/config.py - Inconsistent naming (snake_case vs camelCase)
+
+LOW (optional):
+  - src/legacy.py - Deprecated function usage (warnings only)
+```
+
+### Recommended Actions (Dynamic)
+
+**Analyze results and provide prioritized commands:**
+
+```
+🎯 Recommended Actions (Priority Order)
+========================================
+
+1. CRITICAL: Fix security issues
+   Command: /cco-fix security --severity critical --files src/auth.py,src/api.py
+   Impact: Blocks production deployment
+
+2. HIGH: Fix type errors
+   Command: /cco-fix type-errors --files src/models.py
+   Impact: Prevents runtime errors
+
+3. HIGH: Auto-format code
+   Command: /cco-fix formatting --scope all
+   Impact: Passes CI checks
+
+4. MEDIUM: Remove unused imports
+   Command: /cco-fix unused-imports --scope src/
+   Impact: Cleaner codebase
+
+5. MEDIUM: Fix naming conventions
+   Command: /cco-fix naming --file src/config.py --style snake_case
+   Impact: Code consistency
+
+Quick fix all (if no critical issues):
+   Command: /cco-fix code --auto --scope all
+```
+
+**Command Generation Logic:**
+1. Group issues by severity (CRITICAL > HIGH > MEDIUM > LOW)
+2. Group by file/directory if 3+ issues in same location
+3. Use specific flags: `--severity`, `--files`, `--scope`, `--type`
+4. Provide estimated impact for each action
+5. Offer "quick fix all" only if no CRITICAL issues
 
 ---
 
 ## Audit: Security
-
-**Standards Reference**:
-- Load `@CLAUDE.md` (Security standards, pre-commit security review)
-- Load `@docs/cco/guides/security-response.md` (Security response protocol, common vulnerabilities)
-- Load `@docs/cco/principles/security.md` (P019-P037 security principles)
-- Check project config for security requirements (deployment target, business domain)
 
 **7 Critical Security & Privacy Principles**
 
@@ -158,7 +202,6 @@ Audit against:
 - P024: Secure Configuration
 - P025: Key Derivation
 - P026: Secret Scanning
-- Plus additional security principles from PRINCIPLES.md
 
 ### Architecture (Optimized: Speed + Quality)
 - 2 parallel Haiku agents (Explore, quick) - fast security scanning
@@ -168,113 +211,261 @@ Audit against:
 
 ### Run Audit
 
-Launch 2 agents in **single message** (critical for parallelism):
+**CRITICAL**: Launch agents in PARALLEL for 2-3x speed boost.
 
-**Agent 1: Data Security** (Haiku, quick):
+#### ✅ GOOD Example (Parallel - 20 seconds):
+
+**Launch BOTH agents in a SINGLE message** to enable true parallelism:
+
+**Message 1 (Both agents launched together):**
+
+Use Task tool twice in the same response:
+
+**Agent 1 Prompt:**
 ```
-Task(Explore, "Audit encryption, privacy, and secrets", model="haiku", thoroughness="quick")
+Subagent Type: Explore
+Model: haiku
+Description: Data security audit
 
-MUST load before scanning:
-- @CLAUDE.md (Security section)
-- @docs/cco/guides/security-response.md (Common vulnerabilities checklist)
-- @docs/cco/principles/security.md (Security principles P019-P037)
+CRITICAL - MUST LOAD FIRST:
+1. Load @CLAUDE.md (Security section)
+2. Load @docs/cco/guides/security-response.md
+3. Load @docs/cco/principles/security.md
+4. Print confirmation: "✓ Loaded 3 documents (~3,500 tokens)"
 
-Checks:
-- P019: Privacy-First Design
-- P021: Zero-Disk Policy
-- P026: Secret Scanning
-- Scan for unencrypted sensitive data
-- Detect hardcoded secrets (API keys, passwords, tokens)
-- Check .env, config files
-- Verify .gitignore for secrets
-- Compare against security-response.md checklist
+THEN audit these principles:
+- P019: Privacy-First Design (no PII in logs, proper anonymization)
+- P021: Zero-Disk Policy (sensitive data not written to disk)
+- P026: Secret Scanning (no hardcoded API keys, passwords, tokens)
+
+Scan for:
+- Unencrypted sensitive data in code
+- Hardcoded secrets: API keys (sk_*, pk_*), passwords, tokens
+- .env files committed to git
+- Credential files (credentials.json, .pem, .key)
+- PII in log statements
+
+Compare findings against security-response.md checklist.
+Report with file:line references.
 ```
 
-**Agent 2: Security Architecture** (Haiku, quick):
+**Agent 2 Prompt:**
 ```
-Task(Explore, "Audit security architecture and config", model="haiku", thoroughness="quick")
+Subagent Type: Explore
+Model: haiku
+Description: Security architecture audit
 
-MUST load before scanning:
-- @CLAUDE.md (Security section)
-- @docs/cco/guides/security-response.md (Security architecture patterns)
-- @docs/cco/principles/security.md (Security principles P019-P037)
+CRITICAL - MUST LOAD FIRST:
+1. Load @CLAUDE.md (Security section)
+2. Load @docs/cco/guides/security-response.md
+3. Load @docs/cco/principles/security.md
+4. Print confirmation: "✓ Loaded 3 documents (~3,500 tokens)"
 
-Checks:
-- P020: TTL Enforcement
-- P022: Defense-in-Depth
-- P024: Secure Configuration
-- P025: Key Derivation
-- Validate security headers
-- Check HTTPS enforcement
-- Verify data expiration
-- Check input validation
-- Compare against security-response.md patterns
+THEN audit these principles:
+- P020: TTL Enforcement (sessions expire, data cleanup)
+- P022: Defense-in-Depth (multiple security layers)
+- P024: Secure Configuration (HTTPS, headers, hardening)
+- P025: Key Derivation (proper crypto, no weak hashing)
+
+Check for:
+- Session expiration configuration
+- HTTPS enforcement in config
+- Security headers (CSP, HSTS, X-Frame-Options)
+- Input validation and sanitization
+- SQL injection prevention (parameterized queries)
+- XSS prevention (output escaping)
+
+Compare findings against security-response.md patterns.
+Report with file:line references.
 ```
+
+#### ❌ BAD Example (Sequential - 45 seconds):
+
+**Message 1:** Launch Agent 1
+*Wait for Agent 1 to complete*
+
+**Message 2:** Launch Agent 2
+*Wait for Agent 2 to complete*
+
+**Result**: Takes 2x longer, blocks parallelism
 
 ### Aggregation
 
-Use Sonnet Plan agent for intelligent risk assessment:
+**After both agents complete**, use Sonnet Plan agent for intelligent analysis:
+
+**Agent 3 Prompt:**
 ```
-Task(Plan, "Analyze security audit findings", model="sonnet", prompt="""
-Analyze security findings from 2 parallel security audits.
+Subagent Type: Plan
+Model: sonnet
+Description: Security risk assessment
 
-MUST reference in analysis:
-- CLAUDE.md security standards
-- docs/cco/guides/security-response.md (incident response, common fixes)
-- docs/cco/principles/security.md (all security principles)
-- Project config (deployment target, business domain for context)
+Task: Analyze security findings from 2 parallel security audits.
 
-Tasks:
-1. Merge all security findings
+Input:
+- Agent 1 findings (data security)
+- Agent 2 findings (architecture security)
+
+Analysis steps:
+1. Merge all security findings from both agents
 2. Assess actual risk level (not just theoretical)
 3. Identify attack vectors and exploit scenarios
-4. Prioritize by: exploitability × impact
-5. Provide specific remediation steps (reference security-response.md fixes)
-6. Estimate security debt and fix effort
+4. Prioritize by: Exploitability × Impact × Exposure
+5. Provide specific remediation steps with commands
+6. Estimate security debt (hours) and fix effort
 7. Recommend immediate actions vs long-term hardening
-8. Reference specific principles violated (e.g., "Violates P020: TTL Enforcement")
-9. Align recommendations with CLAUDE.md pre-commit security checklist
+8. Calculate risk reduction percentage for each fix
 
-Focus on practical, actionable security improvements aligned with project standards.
-""")
+Output format:
+- Findings by severity (CRITICAL > HIGH > MEDIUM > LOW)
+- Each finding includes: principle, file:line, exploit scenario, fix command
+- Master remediation plan with priority tiers
+- Security debt estimate (total hours)
+
+Focus on practical, actionable security improvements.
 ```
 
-Why Sonnet here:
-- Risk assessment requires reasoning (not just data)
-- Attack vector analysis needs intelligence
-- Prioritization by real-world exploitability
-- Context-aware remediation recommendations aligned with project docs
+**Why use Sonnet for aggregation:**
+- Risk assessment requires deep reasoning (not just data collection)
+- Attack vector analysis needs intelligence and context
+- Prioritization by real-world exploitability (not just severity)
+- Context-aware remediation recommendations
+- Pattern recognition across multiple findings
+- Accurate effort estimation
+
+### Output Format
+
+Report security issues with risk level and exploit scenarios:
+
+```
+Security Audit Results
+=====================
+
+CRITICAL (immediate action required):
+  - P026: Hardcoded AWS credentials in src/config.py:23
+    Risk: Full AWS account compromise
+    Exploit: Credentials visible in git history
+
+  - P022: SQL injection in src/api.py:145
+    Risk: Database breach, data exfiltration
+    Exploit: Unsanitized user input in query
+
+CRITICAL (data breach risk):
+  - P019: User emails logged in plaintext (src/auth.py:67)
+    Risk: GDPR violation, privacy breach
+    Exploit: Log aggregation exposes PII
+
+HIGH (security gap):
+  - P024: Missing HTTPS enforcement (src/app.py)
+    Risk: Man-in-the-middle attacks
+    Exploit: Network traffic interception
+
+  - P020: Sessions never expire (src/session.py)
+    Risk: Session hijacking, unlimited access
+    Exploit: Stolen session tokens valid forever
+
+MEDIUM (hardening recommended):
+  - P025: Weak password hashing (MD5 in src/auth.py:34)
+    Risk: Rainbow table attacks
+    Exploit: Password database compromise
+
+  - P021: Sensitive files not in .gitignore
+    Risk: Accidental secret commit
+    Files: .env.local, credentials.json
+
+LOW (best practice):
+  - P022: Missing rate limiting on API endpoints
+    Risk: DoS, brute force attacks
+    Impact: Service availability
+```
+
+### Recommended Actions (Dynamic)
+
+**Analyze security findings and provide exploit-aware prioritization:**
+
+```
+🔒 Security Remediation Plan (Risk-Based Priority)
+==================================================
+
+IMMEDIATE (Deploy Blockers):
+──────────────────────────────
+1. Rotate compromised credentials
+   Command: /cco-fix secrets --rotate --files src/config.py
+   Impact: CRITICAL - Prevents AWS account takeover
+
+2. Fix SQL injection
+   Command: /cco-fix security --type sql-injection --file src/api.py:145
+   Impact: CRITICAL - Prevents database breach
+
+3. Remove PII from logs
+   Command: /cco-fix privacy --type remove-logging --file src/auth.py:67
+   Impact: CRITICAL - GDPR compliance
+
+THIS WEEK (High Risk):
+─────────────────────
+4. Enforce HTTPS
+   Command: /cco-fix security --type https-redirect --file src/app.py
+   Impact: HIGH - Prevents MITM attacks
+
+5. Implement session expiration
+   Command: /cco-generate session-management --ttl 24h --file src/session.py
+   Impact: HIGH - Limits session hijacking window
+
+THIS SPRINT (Hardening):
+───────────────────────
+6. Upgrade password hashing
+   Command: /cco-fix security --type password-hashing --algorithm bcrypt --file src/auth.py
+   Impact: MEDIUM - Protects against rainbow tables
+
+7. Update .gitignore
+   Command: /cco-fix secrets --update-gitignore --add .env.local,credentials.json
+   Impact: MEDIUM - Prevents future leaks
+
+BACKLOG (Best Practice):
+───────────────────────
+8. Add rate limiting
+   Command: /cco-generate middleware --type rate-limiter --endpoints /api/*
+   Impact: LOW - DoS protection
+
+Security Debt: 12 hours | Risk Reduction: 95%
+```
+
+**Command Generation Logic:**
+1. **Risk = Exploitability × Impact × Exposure**
+   - Exploitability: How easy to exploit? (trivial/easy/hard)
+   - Impact: What's at stake? (data breach/service disruption/reputation)
+   - Exposure: Is it exposed? (public API/internal/localhost)
+
+2. **Priority Tiers:**
+   - IMMEDIATE: Actively exploitable, high impact (fix in hours)
+   - THIS WEEK: Exploitable with effort, medium-high impact (fix in days)
+   - THIS SPRINT: Requires specific conditions, medium impact (fix in weeks)
+   - BACKLOG: Low exploitability or impact (fix in months)
+
+3. **Command Features:**
+   - Specific fix type: `--type sql-injection`, `--type https-redirect`
+   - Risk context: Why this matters (exploit scenario)
+   - Effort estimate: Realistic time to fix
+   - Impact metric: Risk reduction percentage
+
+4. **Grouping:**
+   - Same vulnerability type → Single command with multiple files
+   - Same file → Single command with multiple fix types
+   - Dependencies → Sequential commands with order
 
 ---
 
 ## Audit: Tests
-
-**Standards Reference**:
-- Load `@CLAUDE.md` (Test-First Development, Verification Protocol)
-- Load `@docs/cco/principles/testing.md` (P013-P018 testing principles)
-- Check project config for test coverage target (default: 80%)
 
 **Test Coverage & Quality Analysis**
 
 ### Metrics
 
 1. **Coverage**: Line, branch, function coverage
-   - Compare against project target from config (default: 80%)
 2. **Quality**: Assertion quality, test isolation
-   - Check adherence to P013-P018 principles
 3. **Flaky Tests**: Detect non-deterministic tests
 4. **Speed**: Identify slow tests
-5. **Test-First**: Verify tests exist BEFORE implementation (P067)
 
 ### Run Analysis
-
-**Agent must**:
-1. Read CLAUDE.md Test-First Development section
-2. Read docs/cco/principles/testing.md
-3. Load project test coverage target from config
-4. Run coverage tools
-5. Analyze against testing principles
-6. Report violations with principle references
 
 ```bash
 # Python
@@ -284,29 +475,133 @@ pytest --durations=10
 # JavaScript
 jest --coverage
 npm test -- --verbose
-
-# Compare results against project target
 ```
 
-### Output
+### Output Format
 
-- Coverage percentage vs project target (e.g., "65% < 80% target" - violates project config)
-- Uncovered files/lines
-- Flaky test detection
-- Slow tests (>5s)
-- Testing principle violations (P013-P018)
-- Alignment with CLAUDE.md Test-First Development
+Report test coverage and quality issues with business impact:
 
-**Next Step**: Use `/cco-generate tests` for missing coverage.
+```
+Test Audit Results
+==================
+
+Coverage: 67% (target: 80%, gap: 13%)
+
+CRITICAL (no tests):
+  - src/payment.py - 0% coverage
+    Business Risk: Payment processing bugs go undetected
+    Impact: Financial loss, fraud vulnerability
+
+  - src/auth.py - 0% coverage
+    Business Risk: Authentication bypass possible
+    Impact: Security breach, unauthorized access
+
+HIGH (insufficient coverage):
+  - src/api.py - 45% coverage (23/51 functions untested)
+    Missing: Error handling, edge cases, validation
+    Business Risk: API failures in production
+
+  - src/database.py - 60% coverage
+    Missing: Transaction rollback, connection pool edge cases
+    Business Risk: Data corruption, connection leaks
+
+MEDIUM (quality issues):
+  - tests/test_user.py - 5 flaky tests detected
+    Failures: test_concurrent_login (intermittent)
+    Impact: CI unreliability, false positives
+
+  - tests/test_integration.py - 3 slow tests (>10s each)
+    Slowest: test_full_workflow (23.4s)
+    Impact: Developer productivity (slow feedback)
+
+LOW (minor gaps):
+  - src/utils.py - 85% coverage
+    Missing: Error path in format_date()
+    Impact: Minor edge case handling
+```
+
+### Recommended Actions (Dynamic)
+
+**Analyze test gaps and provide impact-driven prioritization:**
+
+```
+🧪 Test Generation Plan (Business Impact Priority)
+===================================================
+
+IMMEDIATE (Production Blockers):
+─────────────────────────────────
+1. Add payment processing tests
+   Command: /cco-generate tests --file src/payment.py --focus critical-path
+   Impact: CRITICAL - Prevents financial bugs
+   Coverage: 0% → 85% (target critical paths)
+
+2. Add authentication tests
+   Command: /cco-generate tests --file src/auth.py --focus security
+   Impact: CRITICAL - Prevents auth bypass
+   Coverage: 0% → 80% (target security flows)
+
+THIS WEEK (High Risk):
+─────────────────────
+3. Expand API test coverage
+   Command: /cco-generate tests --file src/api.py --focus error-handling,edge-cases
+   Impact: HIGH - Catches production errors early
+   Coverage: 45% → 80%
+
+4. Add database transaction tests
+   Command: /cco-generate tests --file src/database.py --focus transactions,rollback
+   Impact: HIGH - Prevents data corruption
+   Coverage: 60% → 85%
+
+THIS SPRINT (Quality):
+─────────────────────
+5. Fix flaky tests
+   Command: /cco-fix tests --type flaky --file tests/test_user.py
+   Impact: MEDIUM - Improves CI reliability
+   Flaky: 5 → 0
+
+6. Optimize slow tests
+   Command: /cco-fix tests --type slow --threshold 5s --file tests/test_integration.py
+   Impact: MEDIUM - Faster feedback loop
+   Time: 23.4s → <5s (use mocking)
+
+BACKLOG (Minor Gaps):
+────────────────────
+7. Add edge case tests
+   Command: /cco-generate tests --file src/utils.py --focus edge-cases
+   Impact: LOW - Completeness
+   Coverage: 85% → 95%
+
+Test Debt: 15.5 hours | Coverage: 67% → 82% | Risk Reduction: 90%
+```
+
+**Command Generation Logic:**
+1. **Business Impact = Criticality × Exposure × Failure Cost**
+   - Criticality: Payment, auth, data integrity > API > utilities
+   - Exposure: Public APIs > internal > helpers
+   - Failure Cost: Financial loss > security > UX > dev productivity
+
+2. **Priority Tiers:**
+   - IMMEDIATE: No tests for critical business logic (fix today)
+   - THIS WEEK: <50% coverage on high-traffic code (fix this week)
+   - THIS SPRINT: Flaky/slow tests, 50-80% coverage (fix this sprint)
+   - BACKLOG: >80% coverage, minor utilities (fix when convenient)
+
+3. **Command Features:**
+   - Focus areas: `--focus critical-path`, `--focus error-handling`, `--focus security`
+   - Fix types: `--type flaky`, `--type slow`
+   - Coverage targets: Show before → after
+   - Effort estimates: Realistic time based on file complexity
+
+4. **Test Strategy:**
+   - Critical files: Unit + integration + edge cases
+   - High-traffic files: Unit + integration
+   - Utilities: Unit only
+   - Flaky tests: Isolate, mock external dependencies
+   - Slow tests: Mock I/O, use in-memory DBs
 
 ---
 
 ## Audit: Documentation
-
-**Standards Reference**:
-- Load `@CLAUDE.md` (Documentation Updates section)
-- Load `@docs/cco/principles/code-quality.md` (Docstring requirements)
-- Check project config for documentation standards
 
 **Documentation Completeness & Accuracy**
 
@@ -314,61 +609,162 @@ npm test -- --verbose
 
 1. **API Docs**: All public APIs documented
 2. **README**: Up-to-date setup instructions
-3. **Inline Comments**: Complex logic explained (per CLAUDE.md)
+3. **Inline Comments**: Complex logic explained
 4. **Sync**: Docs match actual code behavior
 5. **Examples**: Working code examples
-6. **CLAUDE.md Alignment**: Documentation follows project standards
 
 ### Run Audit
 
 Use Task tool (Explore agent):
-
-**Agent must**:
-1. Read CLAUDE.md Documentation Updates section
-2. Read docs/cco/principles/code-quality.md (docstring section)
-3. Understand project documentation standards
-4. Scan documentation
-5. Compare against CLAUDE.md requirements
 
 ```
 1. Check README exists and is current
 2. Verify API documentation coverage
 3. Scan for outdated docs (deprecated APIs, old examples)
 4. Check docstring coverage (Python) or JSDoc (JS)
-5. Verify alignment with CLAUDE.md documentation standards:
-   - Present tense, clean slate approach
-   - Concise (tables, lists, code blocks)
-   - Atomic updates (docs with code)
 ```
 
-### Output
+### Output Format
 
-- Missing documentation (with CLAUDE.md standards)
-- Outdated documentation
-- Documentation quality score
-- Violations of documentation principles
-- Alignment with CLAUDE.md documentation standards
+Report documentation gaps with user/developer impact:
 
-**Next Step**: Use `/cco-fix docs` to update documentation.
+```
+Documentation Audit Results
+===========================
+
+Doc Health: 58/100 (needs improvement)
+
+CRITICAL (blocking onboarding):
+  - README.md - Missing setup instructions
+    Impact: New developers can't run the project
+    Affected: All new team members
+
+  - API.md - Not found
+    Impact: API consumers can't integrate
+    Affected: External developers, partners
+
+HIGH (poor developer experience):
+  - src/api.py - 0% docstring coverage (23 public functions)
+    Missing: /api/payments, /api/users, /api/auth
+    Impact: Developers don't know how to use APIs
+
+  - src/models.py - Outdated docstrings (5 deprecated fields)
+    Outdated: User.status field (removed 3 months ago)
+    Impact: Confusion, incorrect usage
+
+MEDIUM (incomplete):
+  - CONTRIBUTING.md - Not found
+    Impact: Hard to onboard contributors
+    Affected: Open source contributors
+
+  - examples/ - No code examples
+    Impact: Harder to understand usage patterns
+    Affected: New developers learning the API
+
+  - CHANGELOG.md - Last updated 6 months ago
+    Missing: 47 commits worth of changes
+    Impact: Users don't know what changed
+
+LOW (minor improvements):
+  - src/utils.py - 60% docstring coverage
+    Missing: Helper functions only
+    Impact: Minor - internal utilities
+```
+
+### Recommended Actions (Dynamic)
+
+**Analyze documentation gaps and prioritize by audience impact:**
+
+```
+📚 Documentation Plan (Audience Impact Priority)
+================================================
+
+IMMEDIATE (Onboarding Blockers):
+────────────────────────────────
+1. Create setup instructions
+   Command: /cco-generate docs --type readme --sections setup,quickstart
+   Impact: CRITICAL - Enables new developer onboarding
+   Audience: All new team members
+
+2. Generate API documentation
+   Command: /cco-generate docs --type api --file src/api.py --format openapi
+   Impact: CRITICAL - Enables API integration
+   Audience: External developers, partners
+
+THIS WEEK (Developer Experience):
+─────────────────────────────────
+3. Add API docstrings
+   Command: /cco-generate docs --type docstrings --file src/api.py --coverage 100
+   Impact: HIGH - Self-documenting code
+   Audience: Internal developers
+
+4. Fix outdated docstrings
+   Command: /cco-fix docs --type outdated --file src/models.py
+   Impact: HIGH - Prevents confusion
+   Audience: All developers
+
+THIS SPRINT (Completeness):
+───────────────────────────
+5. Create contribution guide
+   Command: /cco-generate docs --type contributing --style conventional-commits
+   Impact: MEDIUM - Easier contributions
+   Audience: Open source contributors
+
+6. Add code examples
+   Command: /cco-generate docs --type examples --categories auth,payments,users
+   Impact: MEDIUM - Faster learning curve
+   Audience: New developers
+
+7. Update changelog
+   Command: /cco-generate docs --type changelog --since 6-months-ago
+   Impact: MEDIUM - Release transparency
+   Audience: Users, stakeholders
+
+BACKLOG (Nice to Have):
+──────────────────────
+8. Complete utility docstrings
+   Command: /cco-generate docs --type docstrings --file src/utils.py --coverage 95
+   Impact: LOW - Internal documentation
+   Audience: Maintainers
+
+Documentation Debt: 10.75 hours | Doc Health: 58 → 92 | Onboarding Time: -75%
+```
+
+**Command Generation Logic:**
+1. **Audience Impact = Audience Size × Frustration Level × Frequency**
+   - Audience Size: All users > partners > team > contributors
+   - Frustration: Blocked > confused > slower > minor
+   - Frequency: Daily > weekly > monthly > rare
+
+2. **Priority Tiers:**
+   - IMMEDIATE: Blocking onboarding or integration (fix today)
+   - THIS WEEK: Poor DX, causes confusion (fix this week)
+   - THIS SPRINT: Incomplete but not blocking (fix this sprint)
+   - BACKLOG: Nice-to-have improvements (fix when convenient)
+
+3. **Documentation Types:**
+   - README: Setup, quickstart, architecture
+   - API: OpenAPI/Swagger, endpoint docs
+   - Docstrings: Function/class level documentation
+   - Examples: Working code snippets
+   - Contributing: PR process, coding standards
+   - Changelog: Version history, migration guides
+
+4. **Command Features:**
+   - Doc type: `--type readme`, `--type api`, `--type docstrings`
+   - Coverage: `--coverage 100` (docstrings)
+   - Format: `--format openapi`, `--format markdown`
+   - Sections: `--sections setup,quickstart` (README)
+   - Style: `--style conventional-commits` (contributing)
+
+5. **Impact Metrics:**
+   - Doc Health: 0-100 score (completeness + accuracy + freshness)
+   - Onboarding Time: How much faster new devs can contribute
+   - API Integration Time: How much faster partners can integrate
 
 ---
 
 ## Audit: Principles
-
-**Standards Reference**:
-- Load `@CLAUDE.md` (ALL sections - core development standards)
-- Load `@PRINCIPLES.md` (Project-specific active principles)
-- Load category-specific principle documents based on active principles:
-  - `@docs/cco/principles/core.md` (P001, P067, P071 - ALWAYS)
-  - `@docs/cco/principles/code-quality.md` (P001-P018)
-  - `@docs/cco/principles/architecture.md` (P038-P048)
-  - `@docs/cco/principles/security.md` (P019-P037)
-  - `@docs/cco/principles/testing.md` (P013-P018)
-  - `@docs/cco/principles/performance.md` (P054-P058)
-  - `@docs/cco/principles/operations.md` (P059-P063)
-  - `@docs/cco/principles/api-design.md` (P049-P053)
-  - `@docs/cco/principles/git-workflow.md` (P064-P072)
-- Check project config for context (team size, maturity, deployment target)
 
 **Validate Against Your Active Development Principles**
 
@@ -387,7 +783,7 @@ import json
 principles_md = Path.cwd() / 'PRINCIPLES.md'
 if principles_md.exists():
     # Count principles from markdown
-    content = principles_md.read_text()
+    content = principles_md.read_text(encoding='utf-8')
     principle_count = content.count('### P')
     print(f'Active principles: {principle_count}')
     print(f'Reading from: PRINCIPLES.md')
@@ -397,7 +793,7 @@ else:
     registry_file = Path.home() / '.cco' / 'projects' / f'{project_name}.json'
 
     if registry_file.exists():
-        config = json.loads(registry_file.read_text())
+        config = json.loads(registry_file.read_text(encoding='utf-8'))
         selected_ids = config.get('selected_principles', [])
         print(f'Active principles: {len(selected_ids)}')
         print(f'Reading from: registry')
@@ -420,12 +816,12 @@ import json
 # Get active principle IDs from registry
 project_name = Path.cwd().name
 registry_file = Path.home() / '.cco' / 'projects' / f'{project_name}.json'
-config = json.loads(registry_file.read_text())
+config = json.loads(registry_file.read_text(encoding='utf-8'))
 selected_ids = config.get('selected_principles', [])
 
 # Load full principle definitions
 knowledge_file = Path.home() / '.cco' / 'knowledge' / 'principles.json'
-all_principles = json.loads(knowledge_file.read_text())['principles']
+all_principles = json.loads(knowledge_file.read_text(encoding='utf-8'))['principles']
 
 # Filter to only active principles
 active_principles = [p for p in all_principles if p['id'] in selected_ids]
@@ -459,141 +855,312 @@ for cat, count in sorted(by_category.items()):
 
 ### Run Audit
 
-**Launch 3 Parallel Agents (SINGLE MESSAGE)**
+**CRITICAL**: Launch 3 agents in PARALLEL in a SINGLE message.
 
-Grouped by focus area:
+#### ✅ GOOD Example (Parallel - 15 seconds):
 
-**Agent 1 - Code & Architecture** (Haiku, quick):
+**Launch ALL THREE agents together:**
+
+**Agent 1 Prompt (Code & Architecture):**
 ```
-Task(Explore, "Audit code quality and architecture principles", model="haiku", thoroughness="quick")
+Subagent Type: Explore
+Model: haiku
+Description: Code & architecture principles audit
 
-MUST load before auditing:
-- @CLAUDE.md (All sections)
-- @PRINCIPLES.md (Active principles)
-- @docs/cco/principles/core.md (P001, P067, P071)
-- @docs/cco/principles/code-quality.md (P001-P018)
-- @docs/cco/principles/architecture.md (P038-P048)
-- Project config for context
+MUST LOAD FIRST:
+1. @PRINCIPLES.md
+2. @docs/cco/principles/code-quality.md
+3. @docs/cco/principles/architecture.md
+4. Print: "✓ Loaded 3 docs (~2,800 tokens)"
 
-Audit:
-- Code Quality principles (P001-P018)
-- Architecture principles (P038-P048)
-- Core principles (P001, P067, P071)
-Focus: Static code analysis, pattern detection
-```
+Audit principles:
+- Code Quality (P001-P018): DRY, type safety, error handling
+- Architecture (P038-P047): Layered, separation of concerns, patterns
 
-**Agent 2 - Security & Operations** (Haiku, quick):
-```
-Task(Explore, "Audit security and operations principles", model="haiku", thoroughness="quick")
+Scan for:
+- P001: Fail-fast error handling (no bare except, no swallowed exceptions)
+- P002: Type safety violations (missing type hints)
+- P011: Code duplication (>50 lines similar code)
+- P038: Layered architecture violations
+- P071: Overengineering (premature abstraction)
 
-MUST load before auditing:
-- @CLAUDE.md (Security, Operations sections)
-- @PRINCIPLES.md (Active principles)
-- @docs/cco/principles/security.md (P019-P037)
-- @docs/cco/principles/operations.md (P059-P063)
-- @docs/cco/guides/security-response.md
-- @docs/cco/guides/container-best-practices.md
-- Project config (deployment target, business domain)
-
-Audit:
-- Security & Privacy principles (P019-P037)
-- Operational Excellence principles (P059-P063)
-Focus: Runtime & config analysis, security patterns
+Report violations with file:line and pattern analysis.
 ```
 
-**Agent 3 - Process & Performance** (Haiku, quick):
+**Agent 2 Prompt (Security & Operations):**
 ```
-Task(Explore, "Audit testing, performance, API, and git principles", model="haiku", thoroughness="quick")
+Subagent Type: Explore
+Model: haiku
+Description: Security & operations principles audit
 
-MUST load before auditing:
-- @CLAUDE.md (Test-First, Git Workflow, Performance sections)
-- @PRINCIPLES.md (Active principles)
-- @docs/cco/principles/testing.md (P013-P018)
-- @docs/cco/principles/performance.md (P054-P058)
-- @docs/cco/principles/api-design.md (P049-P053)
-- @docs/cco/principles/git-workflow.md (P064-P072)
-- @docs/cco/guides/git-workflow.md
-- @docs/cco/guides/performance-optimization.md
-- Project config (test coverage target)
+MUST LOAD FIRST:
+1. @PRINCIPLES.md
+2. @docs/cco/principles/security.md
+3. @docs/cco/principles/operations.md
+4. Print: "✓ Loaded 3 docs (~3,200 tokens)"
 
-Audit:
-- Testing principles (P013-P018)
-- Performance principles (P054-P058)
-- API Design principles (P049-P053)
-- Git Workflow principles (P064-P072)
-Focus: Process quality, optimization, API design
+Audit principles:
+- Security & Privacy (P019-P037): Secrets, TTL, zero-disk, encryption
+- Operations (P059-P063): IaC, observability, health checks
+
+Scan for:
+- P020: TTL enforcement (sessions, data cleanup)
+- P022: Defense-in-depth (multiple security layers)
+- P026: Secret scanning (hardcoded credentials)
+- P060: Infrastructure as Code (Terraform, Pulumi)
+- P062: Automated health checks (liveness, readiness)
+
+Report violations with file:line and root cause analysis.
 ```
+
+**Agent 3 Prompt (Process & Performance):**
+```
+Subagent Type: Explore
+Model: haiku
+Description: Process & performance principles audit
+
+MUST LOAD FIRST:
+1. @PRINCIPLES.md
+2. @docs/cco/principles/testing.md
+3. @docs/cco/principles/performance.md
+4. @docs/cco/principles/git-workflow.md
+5. Print: "✓ Loaded 4 docs (~2,400 tokens)"
+
+Audit principles:
+- Testing (P048-P053): Coverage, pyramid, isolation
+- Performance (P054-P058): Caching, async I/O, optimization
+- Git Workflow (P064-P068): Commits, branching, PRs
+- API Design (P069-P070): RESTful, versioning
+
+Scan for:
+- P014: Test coverage (target: 80%+)
+- P048: Test pyramid (more unit than integration)
+- P054: Caching strategy (missing caches)
+- P067: Evidence-based verification (no "should work")
+- P072: Concise commit messages (max 10 lines)
+
+Report violations with file:line and improvement suggestions.
+```
+
+#### ❌ BAD Example (Sequential - 45 seconds):
+
+**Message 1:** Agent 1 (Code)
+**Message 2:** Agent 2 (Security)
+**Message 3:** Agent 3 (Process)
+
+**Result**: 3x slower
 
 **Aggregate Results**
 
-Use Sonnet Plan agent (intelligent analysis):
+**After ALL THREE agents complete**, use Sonnet Plan agent:
+
+**Agent 4 Prompt (Aggregator):**
 ```
-Task(Plan, "Analyze principle audit results", model="sonnet", prompt="""
-Merge results from 3 parallel principle audits and provide intelligent analysis.
+Subagent Type: Plan
+Model: sonnet
+Description: Principle compliance analysis
 
-MUST reference in analysis:
-- CLAUDE.md (ALL sections - development standards)
-- PRINCIPLES.md (Active principles for this project)
-- All category-specific principle documents loaded by agents
-- All guide documents loaded by agents
-- Project config (team size, maturity, deployment target, test coverage target)
+Task: Merge results from 3 parallel principle audits and provide intelligent analysis.
 
-Tasks:
-1. Merge all category results
-2. Calculate overall compliance score by category
-3. Identify patterns and trends across violations
-4. Prioritize issues by impact (not just severity)
-5. Provide root cause analysis for common failures
-6. Generate actionable, specific recommendations
-7. Reference specific principles violated (e.g., "Violates P001: Fail-Fast Error Handling")
-8. Reference CLAUDE.md sections for remediation guidance
-9. Align recommendations with project config and context
-10. Estimate effort for each recommendation
+Input:
+- Agent 1 findings (code & architecture)
+- Agent 2 findings (security & operations)
+- Agent 3 findings (process & performance)
+
+Analysis steps:
+1. Merge all category results from 3 agents
+2. Calculate overall compliance score (% principles met)
+3. Identify PATTERNS and trends across violations
+   - Example: "Error handling missing in 12 endpoints" (P001)
+   - Example: "No tests for critical modules" (P014)
+4. Prioritize issues by: Principle Severity × Impact × Spread
+   - Don't fix individual violations
+   - Find root causes that affect multiple areas
+5. Provide ROOT CAUSE analysis for common failures
+   - Example: "No error framework" → causes P001 violations
+6. Generate actionable, specific recommendations with commands
+   - Pattern-based fixes (not one-off)
+   - Include /cco-fix or /cco-generate commands
+7. Estimate effort for each recommendation (hours)
+8. Calculate technical debt (total hours to full compliance)
 
 Output format:
-- Overall compliance score
-- Compliance by category
-- Critical violations (with principle IDs and CLAUDE.md references)
-- Recommendations (prioritized, with effort estimates)
-- Next steps aligned with project standards
+- Compliance score: X% (Y/Z principles met)
+- Violations by severity with root causes
+- Master remediation plan with pattern-driven fixes
+- Technical debt estimate
+- Risk reduction percentage
 
-Output should be clear, prioritized, and actionable based on project documentation.
-""")
+Focus on systematic fixes that prevent future violations.
 ```
 
-Why Sonnet here:
-- Deep pattern analysis across categories and documents
-- Intelligent prioritization (impact > severity, context-aware)
-- Root cause reasoning with reference to CLAUDE.md
-- Context-aware recommendations aligned with project config
+**Why use Sonnet for aggregation:**
+- Deep pattern analysis across all three categories
+- Intelligent prioritization by impact (not just severity)
+- Root cause reasoning (finds systemic issues)
+- Context-aware recommendations (understands project)
+- Accurate effort estimation for fixes
 
-### Output
+### Output Format
+
+Report principle violations with pattern analysis and root causes:
 
 ```
-============================================================
-PRINCIPLE COMPLIANCE AUDIT
-============================================================
+Principle Compliance Audit
+==========================
 
-Overall Compliance: 85% (34/40 principles)
+Overall Compliance: 72% (29/40 principles met)
+Technical Debt: ~32 hours to full compliance
 
-By Category:
-✓ Code Quality:     9/10 (90%)
-✓ Architecture:     7/8  (88%)
-⚠ Security:         9/12 (75%)
-✓ Operations:       6/6  (100%)
-✗ Testing:          3/6  (50%)
+CRITICAL (Architectural Issues):
+  - P004: No Error Boundaries (src/app.py, src/api.py)
+    Pattern: Error handling missing in 12 endpoints
+    Root Cause: No error handling framework
+    Impact: Unhandled exceptions crash the app
+    Affected: All API consumers
 
-Critical Violations:
-❌ P015: Test Coverage <80% (current: 45%)
-❌ P020: TTL Not Enforced (sessions never expire)
-⚠  P011: Code Duplication (3 instances >50 lines)
+  - P014: Test Coverage 45% (target: 80%, gap: 35%)
+    Pattern: No tests for src/payment.py, src/auth.py
+    Root Cause: Critical modules added without TDD
+    Impact: Production bugs in payment/auth
+    Affected: Financial transactions, user security
 
-Recommendations:
-1. Increase test coverage to 80%+
-2. Implement session TTL
-3. Refactor duplicated code in auth module
-============================================================
+HIGH (Security Gaps):
+  - P020: Sessions Never Expire (src/session.py)
+    Pattern: No TTL enforcement across the app
+    Root Cause: Missing TTL configuration
+    Impact: Session hijacking risk
+    Affected: All authenticated users
+
+  - P026: 3 Hardcoded Secrets (src/config.py:12, src/db.py:34, .env.example)
+    Pattern: Secrets in version control
+    Root Cause: No secret management process
+    Impact: Security breach via git history
+    Affected: Production environment
+
+  - P022: SQL Injection in 2 Endpoints (src/api.py:145, src/db.py:67)
+    Pattern: String concatenation in queries
+    Root Cause: No ORM or parameterized queries
+    Impact: Database breach, data exfiltration
+    Affected: User data, payment data
+
+MEDIUM (Code Quality):
+  - P011: Code Duplication (5 instances >50 lines)
+    Locations: src/auth.py:45-98, src/api.py:123-176 (similar)
+    Pattern: Auth logic duplicated across modules
+    Root Cause: No shared authentication module
+    Impact: Bug fixes needed in multiple places
+    Affected: Maintainability
+
+  - P071: Overengineering Detected (src/utils.py)
+    Pattern: Abstract factory for simple config
+    Root Cause: Premature abstraction
+    Impact: Code complexity without benefit
+    Affected: Developer productivity
+
+LOW (Best Practice):
+  - P031: Missing Docstrings (15 public functions)
+    Pattern: No documentation for API endpoints
+    Root Cause: No documentation standards
+    Impact: Poor developer experience
+    Affected: API consumers, maintainers
 ```
+
+### Recommended Actions (Dynamic)
+
+**Analyze principle violations and provide pattern-based fixes:**
+
+```
+🎯 Principle Remediation Plan (Pattern-Driven Priority)
+========================================================
+
+IMMEDIATE (Architectural Fixes):
+────────────────────────────────
+1. Implement error handling framework
+   Command: /cco-generate error-handler --pattern boundaries --files src/app.py,src/api.py
+   Impact: CRITICAL - Prevents app crashes
+   Principles: P004
+   Pattern: Centralized error handling for all endpoints
+
+2. Add critical module tests
+   Command: /cco-generate tests --files src/payment.py,src/auth.py --coverage 85 --focus critical-path
+   Impact: CRITICAL - Catches financial/security bugs
+   Principles: P014
+   Coverage: 45% → 75% (projected)
+
+THIS WEEK (Security Hardening):
+───────────────────────────────
+3. Implement session TTL
+   Command: /cco-fix security --type ttl --file src/session.py --ttl 24h --idle-timeout 2h
+   Impact: HIGH - Limits session hijacking window
+   Principles: P020
+
+4. Move secrets to environment
+   Command: /cco-fix secrets --rotate --files src/config.py,src/db.py,.env.example --vault .env
+   Impact: HIGH - Prevents credential leaks
+   Principles: P026
+
+5. Fix SQL injection vulnerabilities
+   Command: /cco-fix security --type sql-injection --files src/api.py:145,src/db.py:67 --use-orm
+   Impact: HIGH - Prevents database breaches
+   Principles: P022
+
+THIS SPRINT (Code Quality):
+───────────────────────────
+6. Extract shared authentication module
+   Command: /cco-fix duplication --files src/auth.py:45-98,src/api.py:123-176 --extract src/shared/auth.py
+   Impact: MEDIUM - Centralized auth logic
+   Principles: P011
+   Duplication: 5 instances → 0
+
+7. Simplify overengineered utilities
+   Command: /cco-fix complexity --file src/utils.py --simplify abstract-factory --pattern direct-config
+   Impact: MEDIUM - Reduced complexity
+   Principles: P071
+
+BACKLOG (Documentation):
+────────────────────────
+8. Add API documentation
+   Command: /cco-generate docs --type docstrings --scope src/api --coverage 100
+   Impact: LOW - Better DX
+   Principles: P031
+
+Technical Debt: 23 hours | Compliance: 72% → 95% | Risk Reduction: 85%
+```
+
+**Command Generation Logic:**
+1. **Pattern Analysis → Root Cause → Systematic Fix**
+   - Don't fix individual violations
+   - Identify patterns (e.g., "error handling missing everywhere")
+   - Fix root cause (e.g., "implement error framework")
+   - Prevents future violations
+
+2. **Principle Categories Map to Actions:**
+   - P004 (Error Handling) → Generate error handler framework
+   - P014 (Testing) → Generate tests for untested modules
+   - P020 (TTL) → Configure expiration policies
+   - P026 (Secrets) → Move to env + rotate credentials
+   - P022 (Security) → Fix vulnerability type (SQL injection, XSS, etc.)
+   - P011 (Duplication) → Extract shared modules
+   - P071 (Overengineering) → Simplify abstractions
+   - P031 (Docs) → Generate documentation
+
+3. **Priority = Principle Severity × Impact × Spread**
+   - Severity: CRITICAL > HIGH > MEDIUM > LOW
+   - Impact: Business/security > quality > DX
+   - Spread: Affects entire codebase > multiple files > single file
+
+4. **Command Features:**
+   - Pattern-based: `--pattern boundaries`, `--pattern direct-config`
+   - Fix type: `--type ttl`, `--type sql-injection`, `--type flaky`
+   - Scope: Multiple files if pattern is widespread
+   - Before → After metrics: Coverage %, duplication count
+
+5. **Effort Estimation:**
+   - Framework changes (error handler, auth): 3-5 hours
+   - Security fixes (secrets, SQL injection): 1-3 hours
+   - Refactoring (duplication): 2-4 hours
+   - Documentation: 1-3 hours
 
 ---
 
@@ -601,100 +1168,365 @@ Recommendations:
 
 **Run All Audits Sequentially**
 
-**IMPORTANT**: Before running any audits, load all project context:
-1. Load `@CLAUDE.md` (complete)
-2. Load `@PRINCIPLES.md` (complete)
-3. Load project config from registry
-4. Load all relevant guide documents
-5. Load all relevant principle category documents
-
 If user selected "All", run all audit types:
 
-1. **Code Quality Audit** - with CLAUDE.md, verification-protocol.md, code-quality.md
-2. **Security Audit** - with CLAUDE.md, security-response.md, security.md
-3. **Test Audit** - with CLAUDE.md, testing.md
-4. **Documentation Audit** - with CLAUDE.md, code-quality.md
-5. **Principles Audit** - with CLAUDE.md, PRINCIPLES.md, all category docs
+1. Code Quality Audit
+2. Security Audit
+3. Test Audit
+4. Documentation Audit
+5. Principles Audit
 
-Generate combined report with all findings, referencing project standards throughout.
+Generate combined report with all findings.
 
 ---
 
 ## Final Report
 
-After all selected audits complete, generate summary:
+After all selected audits complete, generate comprehensive cross-audit summary.
 
-**Report must include**:
-- References to violated principles (with IDs)
-- References to CLAUDE.md sections for remediation
-- Project config context (team size, maturity, targets)
-- Alignment with project standards
+### Token Usage Summary
+
+**Display token usage for transparency:**
+
+```python
+print("\n" + "="*60)
+print("TOKEN USAGE REPORT")
+print("="*60)
+
+# Calculate from loaded documents
+docs_loaded = [
+    ("CLAUDE.md", 3262),
+    ("PRINCIPLES.md", 1311),
+    ("security-response.md", 1631),  # If loaded
+    ("code-quality.md", 1200),        # If loaded
+]
+
+total_context = sum(tokens for _, tokens in docs_loaded)
+budget_used = total_context / 200000 * 100
+
+print(f"\nDocuments Loaded: {len(docs_loaded)}")
+for doc, tokens in docs_loaded:
+    print(f"  • {doc:30s} ~{tokens:>6,} tokens")
+
+print(f"\n{'─'*60}")
+print(f"Total Context Used:           ~{total_context:>7,} tokens")
+print(f"Budget Remaining:             ~{200000-total_context:>7,} tokens")
+print(f"Budget Utilization:            {budget_used:>6.1f}%")
+print(f"\nToken Efficiency:")
+print(f"  Progressive Disclosure:       ✓ Enabled")
+print(f"  On-Demand Loading:            ✓ Category-specific guides")
+print(f"  Reduction Factor:             ~3x (vs loading all docs)")
+print("="*60 + "\n")
+```
+
+### Comprehensive Cross-Audit Summary
+
+Generate report with intelligent prioritization:
 
 ```
 ============================================================
 COMPREHENSIVE AUDIT REPORT
 Project: ${PROJECT_NAME}
 Date: ${DATE}
-Project Standards: CLAUDE.md, PRINCIPLES.md (${PRINCIPLE_COUNT} principles)
-Project Config: Team=${TEAM_SIZE}, Maturity=${MATURITY}, Target Coverage=${TEST_COVERAGE_TARGET}%
+Audits Run: Code Quality, Security, Tests, Documentation, Principles
 ============================================================
 
-Audits Run: [selected audits]
+EXECUTIVE SUMMARY
+─────────────────
+Overall Health: 68/100 (needs improvement)
 
-Summary (vs Project Standards):
-✓ Code Quality:    [score] - [violations of P001-P018]
-⚠ Security:        [score] - [violations of P019-P037]
-✓ Tests:           [score] - Coverage: [actual]% vs [target]% (from config)
-⚠ Documentation:   [score] - [violations of CLAUDE.md docs standards]
-✓ Principles:      [score] - [total compliance with PRINCIPLES.md]
+By Category:
+  ✓ Code Quality:      82/100 (good)
+  ✗ Security:          45/100 (critical issues)
+  ⚠ Tests:             58/100 (insufficient)
+  ⚠ Documentation:     61/100 (gaps)
+  ✓ Principles:        72/100 (mostly compliant)
 
-Critical Issues: [count] (with principle IDs and CLAUDE.md references)
-Warnings: [count]
-Passed: [count]
+Issue Breakdown:
+  CRITICAL: 8  (blocks deployment)
+  HIGH:     15 (fix this week)
+  MEDIUM:   23 (fix this sprint)
+  LOW:      12 (backlog)
 
-Top Violations:
-❌ P015: Test Coverage - 65% < 80% target (CLAUDE.md: Test-First Development)
-❌ P020: TTL Enforcement - Sessions never expire (security-response.md: Common Vulnerabilities)
-⚠  P011: Code Duplication - 3 instances >50 lines (code-quality.md: DRY)
+Technical Debt: 47.5 hours to full compliance
+Risk Level: HIGH (security + test gaps)
 
-Next Steps (prioritized by impact, aligned with CLAUDE.md):
-1. Fix critical security issues (Reference: security-response.md)
-2. Increase test coverage to project target (Reference: CLAUDE.md Test-First)
-3. Update outdated documentation (Reference: CLAUDE.md Documentation Updates)
-4. Refactor code duplication (Reference: code-quality.md P011)
+CROSS-CUTTING PATTERNS
+──────────────────────
+🔴 Authentication/Authorization (affects 3 audits):
+   - No auth tests (Tests)
+   - Hardcoded secrets in auth (Security)
+   - P026 violation: secrets in git (Principles)
+   → Root Cause: No auth framework + no secret management
 
-Use these commands to fix issues:
-- /cco-fix code      # Auto-fix linting, formatting
-- /cco-fix security  # Fix security vulnerabilities
-- /cco-fix docs      # Update documentation
-- /cco-generate tests # Generate missing tests to reach coverage target
+🔴 Error Handling (affects 2 audits):
+   - Unhandled exceptions crash app (Code Quality)
+   - P004 violation: no error boundaries (Principles)
+   → Root Cause: No error handling framework
 
-All recommendations aligned with project standards in CLAUDE.md and PRINCIPLES.md
+🟡 Documentation (affects 2 audits):
+   - Missing API docs (Documentation)
+   - P031 violation: no docstrings (Principles)
+   → Root Cause: No documentation standards
+
+MASTER REMEDIATION PLAN (Cross-Audit Priority)
+===============================================
+
+🚨 IMMEDIATE (Today - Deploy Blockers):
+────────────────────────────────────────
+1. Fix authentication security [Security + Principles]
+   Commands:
+     a. /cco-fix secrets --rotate --files src/auth.py,src/config.py --vault .env
+     b. /cco-generate tests --file src/auth.py --focus security --coverage 85
+   Impact: CRITICAL - Prevents credential leaks + auth bypass
+   Audits Affected: Security (P026), Tests (auth coverage), Principles (P026, P014)
+
+   Risk Reduction: 40%
+
+2. Fix SQL injection vulnerabilities [Security + Principles]
+   Command: /cco-fix security --type sql-injection --files src/api.py:145,src/db.py:67 --use-orm
+   Impact: CRITICAL - Prevents database breaches
+   Audits Affected: Security (SQL injection), Principles (P022)
+
+   Risk Reduction: 25%
+
+3. Implement error handling framework [Code Quality + Principles]
+   Command: /cco-generate error-handler --pattern boundaries --files src/app.py,src/api.py
+   Impact: CRITICAL - Prevents app crashes
+   Audits Affected: Code Quality (exception handling), Principles (P004)
+
+   Risk Reduction: 20%
+
+   IMMEDIATE Subtotal: 11 hours | Risk Reduction: 85%
+
+📅 THIS WEEK (High Priority):
+──────────────────────────────
+4. Add payment processing tests [Tests + Principles]
+   Command: /cco-generate tests --file src/payment.py --focus critical-path --coverage 85
+   Impact: HIGH - Catches financial bugs before production
+   Audits Affected: Tests (coverage), Principles (P014)
+
+5. Enforce HTTPS + session TTL [Security + Principles]
+   Commands:
+     a. /cco-fix security --type https-redirect --file src/app.py
+     b. /cco-fix security --type ttl --file src/session.py --ttl 24h
+   Impact: HIGH - Prevents MITM + session hijacking
+   Audits Affected: Security (HTTPS, TTL), Principles (P020, P024)
+
+6. Fix type errors [Code Quality]
+   Command: /cco-fix type-errors --files src/models.py --strict
+   Impact: HIGH - Prevents runtime errors
+   Audits Affected: Code Quality (type checking)
+
+7. Generate API documentation [Documentation + Principles]
+   Commands:
+     a. /cco-generate docs --type api --file src/api.py --format openapi
+     b. /cco-generate docs --type docstrings --file src/api.py --coverage 100
+   Impact: HIGH - Enables integration + self-documenting code
+   Audits Affected: Documentation (API docs), Principles (P031)
+
+   THIS WEEK Subtotal: 10 hours
+
+📆 THIS SPRINT (Important):
+────────────────────────────
+8. Refactor code duplication [Code Quality + Principles]
+   Command: /cco-fix duplication --files src/auth.py:45-98,src/api.py:123-176 --extract src/shared/auth.py
+   Impact: MEDIUM - Centralized auth, easier maintenance
+   Audits Affected: Code Quality (DRY), Principles (P011)
+
+9. Auto-format codebase [Code Quality]
+   Command: /cco-fix formatting --scope all --save
+   Impact: MEDIUM - Passes CI, consistent style
+   Audits Affected: Code Quality (formatting)
+
+10. Create setup documentation [Documentation]
+    Command: /cco-generate docs --type readme --sections setup,quickstart
+    Impact: MEDIUM - Faster onboarding
+    Audits Affected: Documentation (README)
+
+11. Fix flaky tests [Tests]
+    Command: /cco-fix tests --type flaky --file tests/test_user.py
+    Impact: MEDIUM - CI reliability
+    Audits Affected: Tests (flaky tests)
+
+   THIS SPRINT Subtotal: 6.5 hours
+
+📋 BACKLOG (Low Priority):
+───────────────────────────
+12. Complete utility tests + docs
+13. Add rate limiting
+14. Simplify overengineered code
+
+   BACKLOG Subtotal: 8 hours
+
+═══════════════════════════════════════════════════════════
+TOTAL TECHNICAL DEBT: 35.5 hours (of 47.5 hours addressable)
+RISK REDUCTION: 95% (from HIGH to LOW)
+HEALTH IMPROVEMENT: 68 → 91 (expected)
+═══════════════════════════════════════════════════════════
+
+EXECUTION STRATEGY
+──────────────────
+Week 1 (Day 1-2): IMMEDIATE fixes - Deploy blockers only
+Week 1 (Day 3-5): THIS WEEK fixes - High priority
+Week 2: THIS SPRINT fixes - Important improvements
+Ongoing: BACKLOG - Nice-to-haves
+
+METRICS & TRACKING
+──────────────────
+Track these KPIs after each fix:
+  • Security Score: 45 → 95 (target)
+  • Test Coverage: 45% → 80%+ (target)
+  • Doc Health: 61 → 92 (target)
+  • Principle Compliance: 72% → 95% (target)
+
+Re-run audit after IMMEDIATE fixes:
+  Command: /cco-audit --types security,tests,principles
+  Expected: CRITICAL issues → 0
+
 ============================================================
 ```
+
+**Report Generation Logic:**
+
+1. **Cross-Audit Pattern Analysis:**
+   - Identify issues that appear in multiple audits
+   - Find root causes that affect multiple areas
+   - Group related issues for batch fixing
+
+2. **Intelligent Prioritization:**
+   - Priority = (Severity × Impact × Urgency) ÷ Effort
+   - Severity: From audit category (CRITICAL > HIGH > MEDIUM > LOW)
+   - Impact: How many audits/areas affected
+   - Urgency: Deployment blocker > security > quality > documentation
+   - Effort: Realistic time estimate
+
+3. **Command Consolidation:**
+   - Combine related fixes: "Fix auth security" includes rotating secrets + adding tests
+   - Sequence dependencies: Fix security before testing
+   - Batch similar operations: Format entire codebase in one command
+
+4. **Metrics:**
+   - Technical Debt: Sum of effort hours
+   - Risk Reduction: Weighted by severity (CRITICAL=40%, HIGH=25%, etc.)
+   - Health Improvement: Projected score after fixes
+   - Execution Timeline: Realistic sprint planning
+
+5. **Cross-Audit Command Features:**
+   - Multi-audit tags: Show which audits each fix addresses
+   - Combined effort: Total time for related fixes
+   - Cascading impact: How one fix improves multiple scores
+
+---
+
+## Step: Save Findings & Ask for Auto-Fix
+
+After generating final report, save all findings and ask user if they want automatic fixes:
+
+### Save Findings
+
+```bash
+python -c "
+from pathlib import Path
+from claudecodeoptimizer.core.audit_findings import AuditFindingsManager, AuditFinding
+
+project_root = Path.cwd()
+manager = AuditFindingsManager(project_root)
+
+# Example: Add findings from audit
+# (In real usage, these would come from audit results)
+
+manager.add_finding(AuditFinding(
+    finding_id='SEC-001',
+    category='security',
+    severity='CRITICAL',
+    priority_tier='IMMEDIATE',
+    title='Hardcoded AWS credentials',
+    description='AWS credentials visible in git history',
+    command='/cco-fix secrets --rotate --files src/config.py',
+    effort_hours=0.08,
+    risk_reduction_percent=40,
+    file='src/config.py',
+    line=23,
+    principle='P026',
+    audits_affected=['security', 'principles']
+))
+
+# Save all findings
+manager.save(
+    overall_health=68,
+    technical_debt_hours=35.5,
+    risk_level='HIGH'
+)
+
+print('[OK] Audit findings saved to .cco/audit-findings.json')
+print(f'     Total findings: {len(manager.findings)}')
+print(f'     Technical debt: {manager.metadata[\"technical_debt_hours\"]} hours')
+"
+```
+
+### Ask User for Auto-Fix
+
+**Use AskUserQuestion tool:**
+
+```json
+{
+  "questions": [{
+    "question": "Audit complete! Would you like to automatically fix all findings now?",
+    "header": "Auto-Fix",
+    "multiSelect": false,
+    "options": [
+      {
+        "label": "Yes, fix all findings",
+        "description": "Run all fix commands automatically (35.5 hours of work)"
+      },
+      {
+        "label": "Yes, fix only IMMEDIATE priority",
+        "description": "Fix only critical deploy blockers (11 hours of work)"
+      },
+      {
+        "label": "No, I'll fix them manually",
+        "description": "I'll review findings and run commands myself"
+      },
+      {
+        "label": "No, but save for later",
+        "description": "Save findings to fix later with /cco-fix-audit-findings"
+      }
+    ]
+  }]
+}
+```
+
+### Execute Based on User Choice
+
+**Option 1: Fix all findings**
+```bash
+# Run: /cco-fix-audit-findings --auto --all
+```
+
+**Option 2: Fix only IMMEDIATE priority**
+```bash
+# Run: /cco-fix-audit-findings --auto --priority IMMEDIATE
+```
+
+**Option 3 & 4: No action**
+- Findings already saved in `.cco/audit-findings.json`
+- User can run `/cco-fix-audit-findings` anytime
 
 ---
 
 ## Error Handling
 
-- If **CLAUDE.md not found**: CRITICAL - Stop audit and inform user to run `/cco-init`
-- If **PRINCIPLES.md not found**: CRITICAL - Stop audit and inform user to run `/cco-init`
-- If **project config not found**: WARNING - Continue with defaults, note in report
-- If **category docs not found**: WARNING - Continue with PRINCIPLES.md only, note in report
-- If tool not found (e.g., black not installed): Skip tool, note in report
-- If audit fails: Show error, continue with other audits
-- If project not initialized: Show "/cco-init" message and stop
-
-**Priority**:
-1. CLAUDE.md and PRINCIPLES.md are MANDATORY
-2. Project config is RECOMMENDED
-3. Category docs are OPTIONAL but HIGHLY RECOMMENDED
-4. Tools are OPTIONAL (language-specific)
+- If tool not found (e.g., black not installed), skip and note in report
+- If audit fails, show error and continue with other audits
+- If project not initialized, show "/cco-init" message
+- If findings file exists, ask user if they want to overwrite or append
 
 ---
 
 ## Related Commands
 
+- `/cco-fix-audit-findings` - Fix saved audit findings (see dedicated command)
 - `/cco-fix code` - Auto-fix code quality issues
 - `/cco-fix security` - Fix security vulnerabilities
 - `/cco-generate tests` - Generate missing tests
