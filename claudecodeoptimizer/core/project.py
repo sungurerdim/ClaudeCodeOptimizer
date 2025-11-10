@@ -382,19 +382,111 @@ class ProjectManager:
         safe_print()
 
     def _install_project_statusline(self) -> None:
-        """Install statusline from global CCO to project .claude/ directory."""
-        import shutil
+        """
+        Install statusline from global CCO to project .claude/ directory.
+
+        Linking Strategy (platform-aware):
+        - Unix/Linux/macOS: symlink > hardlink > copy
+        - Windows: hardlink > symlink > copy
+
+        Benefits:
+        - pip install -U updates global statusline → all projects auto-update
+        - Single source of truth
+        - Automatic synchronization across projects
+        """
+        import os
+        import sys
+        from datetime import datetime
 
         # Source: global CCO statusline
         global_statusline = self.config.get_global_dir() / "statusline.js"
+
+        if not global_statusline.exists():
+            return
 
         # Destination: project .claude directory
         project_claude_dir = self.config.get_project_claude_dir(self.project_root)
         project_claude_dir.mkdir(parents=True, exist_ok=True)
         project_statusline = project_claude_dir / "statusline.js"
 
-        if global_statusline.exists():
-            shutil.copy2(global_statusline, project_statusline)
+        # Backup existing statusline if it's a real file (not a link) and differs from global
+        if project_statusline.exists() and not project_statusline.is_symlink():
+            try:
+                # Check if current file differs from global template
+                current_content = project_statusline.read_text(encoding="utf-8")
+                global_content = global_statusline.read_text(encoding="utf-8")
+
+                if current_content != global_content:
+                    # File is customized, back it up
+                    project_name = self.project_root.name
+                    backup_dir = self.config.get_project_backups_dir(project_name)
+                    backup_dir.mkdir(parents=True, exist_ok=True)
+
+                    timestamp = datetime.now().strftime("%Y%m%d-%H%M%S")
+                    backup_file = backup_dir / f"statusline.js.backup-{timestamp}"
+                    backup_file.write_text(current_content, encoding="utf-8")
+
+                    logger.info(f"Backed up customized statusline to: {backup_file}")
+                    safe_print(
+                        f"  ℹ️  Custom statusline backed up: ~/.cco/projects/{project_name}/backups/"
+                    )
+            except Exception as e:
+                logger.debug(f"Could not backup statusline: {e}")
+
+        # Remove existing file/link if present
+        if project_statusline.exists() or project_statusline.is_symlink():
+            project_statusline.unlink()
+
+        # Determine platform-specific strategy
+        is_unix = sys.platform in ["linux", "darwin"]
+        linked = False
+        link_type = None
+
+        if is_unix:
+            # Unix/Linux/macOS: Prefer symlink (more flexible)
+            try:
+                project_statusline.symlink_to(global_statusline.absolute())
+                linked = True
+                link_type = "symlink"
+            except (OSError, NotImplementedError):
+                pass
+
+        if not linked:
+            # Try hardlink (works same-volume, no admin on Windows)
+            try:
+                os.link(str(global_statusline.absolute()), str(project_statusline.absolute()))
+                linked = True
+                link_type = "hardlink"
+            except (OSError, NotImplementedError):
+                pass
+
+        if not linked and not is_unix:
+            # Windows fallback: Try symlink (needs Developer Mode/Admin)
+            try:
+                project_statusline.symlink_to(global_statusline.absolute())
+                linked = True
+                link_type = "symlink"
+            except (OSError, NotImplementedError):
+                pass
+
+        if not linked:
+            # Final fallback: Copy file (always works, but no auto-update)
+            try:
+                project_statusline.write_text(
+                    global_statusline.read_text(encoding="utf-8"),
+                    encoding="utf-8",
+                )
+                linked = True
+                link_type = "copy"
+            except Exception:
+                # If even copy fails, silently skip (logged at debug level)
+                return
+
+        # Log result for user feedback (only if verbose/debug mode)
+        if link_type in ["symlink", "hardlink"]:
+            logger.debug(f"Statusline {link_type}ed (auto-update enabled)")
+        elif link_type == "copy":
+            logger.debug("Statusline copied (manual update required)")
 
     def _generate_generic_commands(self, analysis: Dict[str, Any]) -> int:
         """
