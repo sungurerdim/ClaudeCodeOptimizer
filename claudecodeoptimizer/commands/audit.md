@@ -8,6 +8,37 @@ cost: 3
 
 Run comprehensive audits on your codebase: code quality, security, tests, documentation, and principle compliance.
 
+---
+
+## Architecture & Model Selection
+
+**Data Gathering**: Haiku (Explore agent, thorough)
+- File scanning and pattern detection
+- Running linters and type checkers
+- Collecting metrics and violations
+- Cost-effective for repetitive checks
+
+**Analysis & Reasoning**: Sonnet (Plan agent)
+- Violation severity assessment
+- Cross-reference with principles
+- Prioritization and recommendations
+- Comprehensive audit report generation
+
+**Execution Pattern**:
+1. Launch parallel Haiku agents for different audit types:
+   - Code quality checks (linting, formatting, types)
+   - Security scans (secrets, vulnerabilities)
+   - Test analysis (coverage, flaky tests)
+   - Documentation checks (completeness, accuracy)
+2. Aggregate findings with Sonnet
+3. Generate prioritized action items
+
+**Model Requirements**:
+- Haiku for all scanning and collection tasks
+- Sonnet for final analysis and report
+
+---
+
 ## Prerequisites: Load Required Context
 
 **CRITICAL**: Before running any audit, load and verify required documents.
