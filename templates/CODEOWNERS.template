@@ -1,0 +1,33 @@
+# CODEOWNERS
+# CCO-generated code ownership configuration
+# See: https://docs.github.com/en/repositories/managing-your-repositorys-settings-and-features/customizing-your-repository/about-code-owners
+
+# Global owners - review required for all changes
+* 
+
+# Component-specific ownership
+
+
+# Documentation
+*.md 
+docs/ 
+
+# Configuration files
+*.yml 
+*.yaml 
+*.json 
+.github/ 
+
+# CI/CD pipelines
+.github/workflows/ 
+.gitlab-ci.yml 
+
+# Security-sensitive files
+*.env.example 
+.pre-commit-config.yaml 
+
+# Dependencies
+package.json 
+requirements.txt 
+Cargo.toml 
+go.mod 

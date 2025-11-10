@@ -1,0 +1,48 @@
+## Summary
+
+<!-- Brief description of the changes in this PR -->
+
+## Type of Change
+
+- [ ] Bug fix (non-breaking change fixing an issue)
+- [ ] New feature (non-breaking change adding functionality)
+- [ ] Breaking change (fix or feature causing existing functionality to change)
+- [ ] Refactoring (no functional changes)
+- [ ] Documentation update
+- [ ] Performance improvement
+- [ ] Security fix
+
+## Testing
+
+- [ ] All existing tests pass
+- [ ] New tests added for new functionality
+- [ ] Manual testing completed
+${TESTING_CHECKLIST}
+
+## Documentation
+
+- [ ] Code comments added/updated
+- [ ] README updated (if applicable)
+- [ ] API documentation updated (if applicable)
+${DOCUMENTATION_CHECKLIST}
+
+## Review Checklist
+
+- [ ] Code follows project style guidelines
+- [ ] No console.log/print statements left in production code
+- [ ] Error handling implemented properly
+- [ ] Security implications considered
+- [ ] Performance implications considered
+${REVIEW_CHECKLIST}
+
+## Related Issues
+
+<!-- Link related issues using #issue_number -->
+
+## Screenshots/Videos
+
+<!-- If applicable, add screenshots or videos demonstrating the changes -->
+
+## Additional Notes
+
+<!-- Any additional context, concerns, or discussion points -->

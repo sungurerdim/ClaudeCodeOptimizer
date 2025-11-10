@@ -889,6 +889,25 @@ class CCOWizard:
                     self._generate_github_actions_workflow()
                     print_success("✓ Created .github/workflows/ci.yml", indent=2)
 
+            # Generate .github/pull_request_template.md (if team project)
+            if self.answer_context and self.answer_context.has_answer("team_dynamics"):
+                team_dynamics = self.answer_context.get("team_dynamics", "solo")
+                if team_dynamics != "solo":
+                    self._generate_pr_template()
+                    print_success("✓ Created .github/pull_request_template.md", indent=2)
+
+            # Generate .github/CODEOWNERS (if team project)
+            if self.answer_context and self.answer_context.has_answer("team_dynamics"):
+                team_dynamics = self.answer_context.get("team_dynamics", "solo")
+                if team_dynamics != "solo":
+                    self._generate_codeowners()
+                    print_success("✓ Created .github/CODEOWNERS", indent=2)
+
+            # Generate .vscode/settings.json (always, if not exists)
+            if not (self.project_root / ".vscode" / "settings.json").exists():
+                self._generate_vscode_settings()
+                print_success("✓ Created .vscode/settings.json", indent=2)
+
             print()
             return True
 
@@ -1761,6 +1780,230 @@ class CCOWizard:
 
         # Default to python if language not found
         return configs.get(language.lower(), configs["python"])
+
+
+
+    def _generate_pr_template(self) -> None:
+        """Generate .github/pull_request_template.md for team projects"""
+        from pathlib import Path
+
+        # Get testing and documentation requirements
+        testing_checklist = ""
+        if self.answer_context and self.answer_context.has_answer("testing_approach"):
+            testing_approach = self.answer_context.get("testing_approach", [])
+            if "unit_tests" in testing_approach:
+                testing_checklist += "\n- [ ] Unit test coverage >= 80%"
+            if "integration_tests" in testing_approach:
+                testing_checklist += "\n- [ ] Integration tests added"
+            if "e2e_tests" in testing_approach:
+                testing_checklist += "\n- [ ] E2E tests added"
+
+        documentation_checklist = ""
+        review_checklist = ""
+
+        # For API projects, add specific checks
+        project_types = self.answer_context.get("project_purpose", []) if self.answer_context else []
+        if any(pt in project_types for pt in ["api_service", "web_app", "microservice"]):
+            documentation_checklist += "\n- [ ] API endpoints documented"
+            review_checklist += "\n- [ ] Rate limiting considered"
+            review_checklist += "\n- [ ] Authentication/authorization verified"
+
+        # Load template
+        template_path = Path(__file__).parent.parent.parent / "templates" / "pull_request_template.md.template"
+        if not template_path.exists():
+            return
+
+        content = template_path.read_text(encoding="utf-8")
+
+        # Replace template variables
+        content = content.replace("${TESTING_CHECKLIST}", testing_checklist)
+        content = content.replace("${DOCUMENTATION_CHECKLIST}", documentation_checklist)
+        content = content.replace("${REVIEW_CHECKLIST}", review_checklist)
+
+        # Create .github directory
+        github_dir = self.project_root / ".github"
+        github_dir.mkdir(parents=True, exist_ok=True)
+
+        # Write PR template file
+        output_path = github_dir / "pull_request_template.md"
+        output_path.write_text(content, encoding="utf-8")
+
+    def _generate_codeowners(self) -> None:
+        """Generate .github/CODEOWNERS for team projects"""
+        from pathlib import Path
+
+        # Determine team structure from answers
+        team_dynamics = self.answer_context.get("team_dynamics", "solo") if self.answer_context else "solo"
+
+        # Generate ownership patterns based on project structure
+        global_owners = "@team-leads"
+        component_ownership = ""
+        doc_owners = "@docs-team"
+        devops_owners = "@devops-team"
+        security_owners = "@security-team"
+
+        # For small teams, simplify
+        if team_dynamics == "small_team":
+            global_owners = "@core-team"
+            doc_owners = "@core-team"
+            devops_owners = "@core-team"
+            security_owners = "@core-team"
+
+        # Add component-specific ownership based on project type
+        project_types = self.answer_context.get("project_purpose", []) if self.answer_context else []
+        if "api_service" in project_types or "web_app" in project_types:
+            component_ownership = """
+# API/Backend
+/api/ @backend-team
+/src/api/ @backend-team
+
+# Frontend
+/frontend/ @frontend-team
+/src/components/ @frontend-team
+"""
+        elif "data_pipeline" in project_types or "ml_system" in project_types:
+            component_ownership = """
+# Data pipelines
+/pipelines/ @data-team
+/etl/ @data-team
+
+# ML models
+/models/ @ml-team
+"""
+
+        # Load template
+        template_path = Path(__file__).parent.parent.parent / "templates" / "CODEOWNERS.template"
+        if not template_path.exists():
+            return
+
+        content = template_path.read_text(encoding="utf-8")
+
+        # Replace template variables
+        content = content.replace("${GLOBAL_OWNERS}", global_owners)
+        content = content.replace("${COMPONENT_OWNERSHIP}", component_ownership.strip())
+        content = content.replace("${DOC_OWNERS}", doc_owners)
+        content = content.replace("${DEVOPS_OWNERS}", devops_owners)
+        content = content.replace("${SECURITY_OWNERS}", security_owners)
+
+        # Create .github directory
+        github_dir = self.project_root / ".github"
+        github_dir.mkdir(parents=True, exist_ok=True)
+
+        # Write CODEOWNERS file
+        output_path = github_dir / "CODEOWNERS"
+        output_path.write_text(content, encoding="utf-8")
+
+    def _generate_vscode_settings(self) -> None:
+        """Generate .vscode/settings.json with language-specific configurations"""
+        from pathlib import Path
+
+        # Get line length from answers or use default
+        line_length = 88
+        if self.answer_context and self.answer_context.has_answer("code_style"):
+            style = self.answer_context.get("code_style", {})
+            if isinstance(style, dict):
+                line_length = style.get("line_length", 88)
+
+        # Get primary language
+        primary_language = "python"
+        if self.detection_report:
+            primary_language = self.detection_report.get("detected_language", {}).get("primary", "python")
+
+        # Language-specific settings
+        language_settings_map = {
+            "python": """
+  "[python]": {
+    "editor.defaultFormatter": "charliermarsh.ruff",
+    "editor.formatOnSave": true,
+    "editor.codeActionsOnSave": {
+      "source.organizeImports": true,
+      "source.fixAll": true
+    }
+  },
+  "python.linting.enabled": true,
+  "python.linting.ruffEnabled": true,
+  "python.formatting.provider": "none",
+  "python.analysis.typeCheckingMode": "basic",""",
+            "typescript": """
+  "[typescript]": {
+    "editor.defaultFormatter": "esbenp.prettier-vscode",
+    "editor.formatOnSave": true,
+    "editor.codeActionsOnSave": {
+      "source.organizeImports": true,
+      "source.fixAll.eslint": true
+    }
+  },
+  "[typescriptreact]": {
+    "editor.defaultFormatter": "esbenp.prettier-vscode"
+  },
+  "typescript.tsdk": "node_modules/typescript/lib",
+  "typescript.enablePromptUseWorkspaceTsdk": true,""",
+            "javascript": """
+  "[javascript]": {
+    "editor.defaultFormatter": "esbenp.prettier-vscode",
+    "editor.formatOnSave": true,
+    "editor.codeActionsOnSave": {
+      "source.fixAll.eslint": true
+    }
+  },
+  "[javascriptreact]": {
+    "editor.defaultFormatter": "esbenp.prettier-vscode"
+  },""",
+            "go": """
+  "[go]": {
+    "editor.defaultFormatter": "golang.go",
+    "editor.formatOnSave": true,
+    "editor.codeActionsOnSave": {
+      "source.organizeImports": true
+    }
+  },
+  "go.useLanguageServer": true,
+  "go.lintTool": "golangci-lint",
+  "go.lintOnSave": "package",""",
+            "rust": """
+  "[rust]": {
+    "editor.defaultFormatter": "rust-lang.rust-analyzer",
+    "editor.formatOnSave": true
+  },
+  "rust-analyzer.check.command": "clippy",
+  "rust-analyzer.checkOnSave.allTargets": true,"""
+        }
+
+        language_settings = language_settings_map.get(primary_language.lower(), language_settings_map["python"])
+
+        # Testing settings
+        testing_settings = ""
+        if primary_language == "python":
+            testing_settings = """
+  "python.testing.pytestEnabled": true,
+  "python.testing.unittestEnabled": false,
+  "python.testing.pytestArgs": [
+    "tests"
+  ],"""
+        elif primary_language in ["typescript", "javascript"]:
+            testing_settings = """
+  "jest.autoRun": "off",
+  "jest.showCoverageOnLoad": false,"""
+
+        # Load template
+        template_path = Path(__file__).parent.parent.parent / "templates" / ".vscode-settings.json.template"
+        if not template_path.exists():
+            return
+
+        content = template_path.read_text(encoding="utf-8")
+
+        # Replace template variables
+        content = content.replace("${LINE_LENGTH}", str(line_length))
+        content = content.replace("${LANGUAGE_SETTINGS}", language_settings)
+        content = content.replace("${TESTING_SETTINGS}", testing_settings)
+
+        # Create .vscode directory
+        vscode_dir = self.project_root / ".vscode"
+        vscode_dir.mkdir(parents=True, exist_ok=True)
+
+        # Write settings file
+        output_path = vscode_dir / "settings.json"
+        output_path.write_text(content, encoding="utf-8")
 
 
 # ============================================================================
