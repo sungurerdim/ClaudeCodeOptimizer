@@ -1,8 +1,8 @@
 # ClaudeCodeOptimizer - TODO & Roadmap
 
-**Last Updated**: 2025-11-09
+**Last Updated**: 2025-11-10
 **Current Version**: 0.1.0-alpha
-**Target**: v1.0.0 Production Release (3 months)
+**Target**: v0.2.0 Production Readiness (2 weeks)
 
 ---
 
@@ -21,28 +21,31 @@
 **Focus**: Fix existing issues, integrate best practices from wshobson/agents
 
 **Release Criteria**:
-- ✅ Export/import removed (cleaner flow)
-- ✅ Command selection fixed (only recommended installed)
-- ✅ Model enforcement in all commands
-- ✅ Document management system implemented
-- ✅ Token optimization (progressive disclosure)
+- [ ] Export/import removed (cleaner flow)
+- [ ] Command selection fixed (only recommended installed)
+- [ ] Model enforcement in all commands
+- [ ] Document management system implemented
+- [ ] Token optimization (progressive disclosure)
+- [ ] Context-aware init system (team-specific recommendations)
+- [ ] P074: Automated semantic versioning
+- [ ] UI Adapter for Claude Code tool integration
 
 ---
 
 ### P0.0: Smart Git Commit (Hybrid: Skill + CCO Enhancement) (Priority: 🔴 CRITICAL)
 
-**Goal**: Otomatik olarak uncommitted değişiklikleri CLAUDE.md Git Workflow kurallarına uygun şekilde commit eden evrensel bir skill.
+**Goal**: Universal skill that automatically commits uncommitted changes following CLAUDE.md Git Workflow rules.
 
 **Implementation**: Hybrid Approach
-1. **Primary**: `.claude/skills/commit.md` - Universal skill (tüm projeler)
-2. **Enhancement**: CCO integration - CCO projelerinde gelişmiş özellikler
+1. **Primary**: `.claude/skills/commit.md` - Universal skill (all projects)
+2. **Enhancement**: CCO integration - Enhanced features in CCO projects
 
 **Rationale**:
-- ✅ **Evrensel kullanım**: Claude Code olan her projede çalışır
-- ✅ **Akıllı adaptasyon**: CLAUDE.md varsa proje kurallarını kullanır, yoksa generic
-- ✅ **CCO enhancement**: CCO yüklüyse scope detection ve knowledge base desteği
-- ✅ **Export edilebilir**: Skill olarak başka projelere taşınabilir
-- ✅ **Manuel effort elimine**: AI otomatik commit message ve gruplama yapar
+- ✅ **Universal usage**: Works in any project with Claude Code
+- ✅ **Smart adaptation**: Uses project rules from CLAUDE.md if present, otherwise generic
+- ✅ **CCO enhancement**: Scope detection and knowledge base support when CCO installed
+- ✅ **Exportable**: Can be moved to other projects as a skill
+- ✅ **Eliminates manual effort**: AI automatically generates commit messages and grouping
 
 ---
 
@@ -89,16 +92,16 @@ Enhanced features when .cco/project.json exists:
 git_status = subprocess.run(['git', 'status', '--porcelain'], capture_output=True)
 changed_files = parse_git_status(git_status.stdout)
 
-# Her dosyayı kategorize et
+# Categorize each file
 for file in changed_files:
     scope = detect_scope(file)  # wizard, core, docs, tests, etc.
     change_type = detect_type(file)  # feat, fix, refactor, docs, etc.
 ```
 
-**2. Akıllı Gruplama**:
-- Aynı `scope` ve `type` olan dosyaları grupla
-- Her grup için ayrı commit oluştur
-- İlişkisiz değişiklikleri ayır
+**2. Smart Grouping**:
+- Group files with same `scope` and `type`
+- Create separate commit for each group
+- Separate unrelated changes
 
 **3. Conventional Commits**:
 ```
@@ -113,7 +116,7 @@ type(scope): subject
 Co-Authored-By: Claude <noreply@anthropic.com>
 ```
 
-**4. Kullanıcı Onayı**:
+**4. User Confirmation**:
 ```bash
 # Preview mode (default)
 /cco-commit
@@ -455,11 +458,11 @@ git log -1 --stat
 
 ---
 
-### P0.1: Mevcut Hataların Düzeltilmesi (Priority: 🔴 CRITICAL)
+### P0.1: Fix Existing Issues (Priority: 🔴 CRITICAL)
 
-#### Task 1: Export/Import Kaldırma
+#### Task 1: Remove Export/Import
 
-**Rationale**: Eski işlevler, güncel yapıda gereksiz. `remove + init` daha temiz.
+**Rationale**: Old functions, unnecessary in current structure. `remove + init` is cleaner.
 
 **Files to Modify**:
 - [ ] `claudecodeoptimizer/commands/config.md`
@@ -496,9 +499,9 @@ git log -1 --stat
 
 ---
 
-#### Task 2: Komut Seçimi Mekanizması Düzeltme
+#### Task 2: Fix Command Selection Mechanism
 
-**Problem**: Tüm komutlar yükleniyor olabilir, sadece recommended olanlar yüklenmeli.
+**Problem**: All commands may be loading, only recommended ones should be installed.
 
 **Files to Check**:
 - [ ] `claudecodeoptimizer/wizard/orchestrator.py`
@@ -537,9 +540,9 @@ cat ~/.cco/projects/<PROJECT>.json | jq '.commands'
 
 ---
 
-#### Task 3: Model Enforcement (Tüm Komutlarda)
+#### Task 3: Model Enforcement (All Commands)
 
-**Problem**: Bazı komutlarda model belirtilmiş, bazılarında yok.
+**Problem**: Model specified in some commands, missing in others.
 
 **Standard Template** to Add:
 ```markdown
@@ -801,9 +804,11 @@ cat CLAUDE.md | grep -A 30 "## Git Workflow"
 
 ---
 
-### P0.2: Document Management System (Priority: 🔴 CRITICAL)
+### P0.2: Document Management System (Priority: ~~🔴 CRITICAL~~ ✅ MOSTLY SOLVED)
 
-**Problem**: Dokümanlar ve raporlar kök dizinde dağınık halde.
+**Status**: ✅ Symlink-based knowledge base architecture solves most issues
+
+**Problem**: ~~Dokümanlar ve raporlar kök dizinde dağınık halde~~ → Solved with symlink architecture
 
 **Current Issues**:
 - `PRINCIPLES.md`, `CLAUDE.md` → Root directory
@@ -1468,7 +1473,7 @@ cd typescript-project/
 
 ---
 
-### P0.5: Proje Türleri Güncellemesi (Priority: 🟡 HIGH)
+### P0.5: Update Project Types (Priority: 🟡 HIGH)
 
 **Goal**: 7 → 13 unique, overlap-free project types
 
@@ -1616,7 +1621,7 @@ cd fullstack-project/  # Has React + FastAPI
 
 ---
 
-### P0.6: Komut Sayısını Artırma (12 → 25+ komut) (Priority: 🟡 HIGH)
+### P0.6: Expand Commands (12 → 25+ commands) (Priority: 🟡 HIGH)
 
 **Goal**: Expand from 12 to 25+ specialized commands
 
@@ -1922,10 +1927,449 @@ Complex Task → Specialized Agents → Coordinated Execution → Comprehensive 
 
 ---
 
+### P0.8: Context-Aware Init System & Versioning (Priority: 🔴 CRITICAL)
+
+**Goal**: Implement context-aware, team-specific init system with rich UI and automated versioning
+
+**Key Features**:
+- P074: Automated semantic versioning (commit type → version bump)
+- UI Adapter: Claude Code tool integration for rich interactive experience
+- Context Matrix: Team-size/maturity-aware recommendations
+- Enhanced Decisions: Git workflow, pre-commit hooks, CI/CD, code style, etc.
+- Knowledge Base Granularity: Individual selection of guides/agents/skills
+
+---
+
+#### Task 1: P074 - Automated Semantic Versioning
+
+**Goal**: Auto-bump version based on commit type, with team-aware workflows
+
+**Files to Create/Modify**:
+
+- [ ] `claudecodeoptimizer/knowledge/principles.json`
+  - [ ] Add P074 principle definition
+  - [ ] Update total principle count to 74
+  - [ ] Update git-workflow category count to 8
+
+- [ ] `~/.cco/knowledge/principles/git-workflow.md`
+  - [ ] Add P074 section with detailed examples
+
+- [ ] `claudecodeoptimizer/core/version_manager.py` (NEW)
+  ```python
+  class VersionManager:
+      """Manage semantic versioning based on commit types"""
+
+      def detect_bump_type(self, commit_messages: List[str]) -> BumpType:
+          """Detect version bump from commit messages"""
+          # BREAKING CHANGE → MAJOR
+          # feat: → MINOR
+          # fix: → PATCH
+          # other → NO_BUMP
+
+      def bump_version(self, current: str, bump_type: BumpType) -> str:
+          """Calculate new version"""
+
+      def update_version_files(self, new_version: str, files: List[Path]):
+          """Update version in pyproject.toml, package.json, __init__.py"""
+
+      def create_changelog_entry(self, version: str, commits: List[str]) -> str:
+          """Generate CHANGELOG.md entry"""
+
+      def create_git_tag(self, version: str, create: bool = False):
+          """Create git tag (optional)"""
+  ```
+
+- [ ] `claudecodeoptimizer/wizard/decision_tree.py`
+  - [ ] Add `TIER3_VERSIONING_STRATEGY` decision point
+  - [ ] Options: auto_semver, pr_based_semver, manual_semver, calver, no_versioning
+  - [ ] Team-aware recommendations
+  - [ ] Auto-strategy based on team_size
+
+- [ ] `templates/CLAUDE.md.template`
+  - [ ] Add versioning workflow section
+  - [ ] Add P074 reference
+
+**Verification**:
+```bash
+# Test version detection
+echo "feat(core): add new feature" | python -c "from version_manager import detect_bump_type; print(detect_bump_type(['feat(core): add new feature']))"
+# Should output: MINOR
+
+# Test version bump
+python -c "from version_manager import bump_version; print(bump_version('1.2.3', 'MINOR'))"
+# Should output: 1.3.0
+```
+
+**Estimated Effort**: 4 hours
+
+---
+
+#### Task 2: UI Adapter - Claude Code Tool Integration
+
+**Goal**: Replace basic terminal prompts with rich Claude Code UI
+
+**Files to Create**:
+
+- [ ] `claudecodeoptimizer/wizard/ui_adapter.py` (NEW)
+  ```python
+  class ClaudeCodeUIAdapter:
+      """Adapter for Claude Code AskUserQuestion tool"""
+
+      def __init__(self, mode: Literal["terminal", "claude_code"]):
+          self.mode = mode
+
+      def ask_decision(
+          self,
+          decision: DecisionPoint,
+          context: AnswerContext
+      ) -> Any:
+          """Ask user with rich UI"""
+          if self.mode == "claude_code":
+              return self._ask_via_claude_tool(decision, context)
+          else:
+              return self._ask_via_terminal(decision, context)
+
+      def _ask_via_claude_tool(self, decision, context) -> Any:
+          """Use AskUserQuestion with rich formatting"""
+          question = {
+              "question": decision.question,
+              "header": self._format_header(decision, context),
+              "options": self._build_rich_options(decision, context),
+              "multiSelect": decision.multi_select
+          }
+          return ask_user_question(question)
+
+      def _build_rich_options(self, decision, context) -> List[Dict]:
+          """Build options with context-aware descriptions"""
+          options = []
+          for opt in decision.options:
+              is_recommended = self._is_recommended_for_context(opt, context)
+              description = self._build_context_description(opt, context, is_recommended)
+              options.append({
+                  "label": opt.label + (" ⭐" if is_recommended else ""),
+                  "description": description
+              })
+          return options
+
+      def _build_context_description(self, option, context, is_recommended) -> str:
+          """Build rich description with team-specific notes"""
+          parts = [option.description]
+
+          if is_recommended:
+              reason = self._get_recommendation_reason(option, context)
+              parts.append(f"✓ {reason}")
+
+          if hasattr(option, 'trade_offs'):
+              parts.append(f"⚖️ {option.trade_offs}")
+
+          team_note = self._get_team_specific_note(option, context)
+          if team_note:
+              parts.append(f"👥 {team_note}")
+
+          return "\n".join(parts)
+  ```
+
+**Files to Modify**:
+
+- [ ] `claudecodeoptimizer/wizard/orchestrator.py`
+  - [ ] Replace `ask_choice()` / `ask_multi_choice()` calls
+  - [ ] Use `ClaudeCodeUIAdapter` instead
+  - [ ] Detect if running in Claude Code context
+  - [ ] Fallback to terminal mode if not
+
+**Verification**:
+```bash
+# Test in Claude Code
+/cco-init --mode=interactive
+# Should use rich UI with context-aware descriptions
+
+# Test in terminal
+python -m claudecodeoptimizer init --mode=interactive
+# Should fallback to basic terminal UI
+```
+
+**Estimated Effort**: 6 hours
+
+---
+
+#### Task 3: Context Matrix - Team-Aware Recommendations
+
+**Goal**: Multi-factor recommendation engine (team_size × maturity × philosophy)
+
+**Files to Create**:
+
+- [ ] `claudecodeoptimizer/wizard/context_matrix.py` (NEW)
+  ```python
+  class ContextMatrix:
+      """Context-aware recommendation engine"""
+
+      def recommend_versioning_strategy(
+          self,
+          team_size: str,
+          maturity: str,
+          has_ci: bool
+      ) -> Dict:
+          """Recommend versioning based on context"""
+          # Solo dev → auto_semver (zero overhead)
+          # Small team → pr_based_semver (peer review)
+          # Large team → manual_semver (release managers)
+
+      def recommend_principle_intensity(
+          self,
+          team_size: str,
+          maturity: str,
+          philosophy: str
+      ) -> Dict:
+          """Recommend how many principles to apply"""
+          # Score-based system
+          # Returns: intensity, principle_count, categories, reason
+
+      def recommend_precommit_hooks(
+          self,
+          team_size: str,
+          has_ci: bool
+      ) -> List[str]:
+          """Recommend pre-commit hooks based on team"""
+          # Solo → format + secrets
+          # Team → format + lint + secrets
+          # Large team → add type check
+
+      def get_team_specific_note(
+          self,
+          option: Option,
+          context: AnswerContext
+      ) -> str:
+          """Get team-specific note for option"""
+          # Returns notes like:
+          # "✓ Perfect for solo developers"
+          # "⚠️ Overhead for small teams"
+          # "❌ Not recommended for large orgs"
+  ```
+
+**Files to Modify**:
+
+- [ ] `claudecodeoptimizer/wizard/decision_tree.py`
+  - [ ] Update auto_strategy functions to use ContextMatrix
+  - [ ] Update ai_hint_generator to use ContextMatrix
+
+**Verification**:
+```python
+# Test recommendation engine
+matrix = ContextMatrix()
+
+# Solo dev
+rec = matrix.recommend_versioning_strategy("solo", "mvp", False)
+assert rec["strategy"] == "auto_semver"
+
+# Small team
+rec = matrix.recommend_versioning_strategy("small_team", "production", True)
+assert rec["strategy"] == "pr_based_semver"
+
+# Large org
+rec = matrix.recommend_versioning_strategy("large_org", "production", True)
+assert rec["strategy"] == "manual_semver"
+```
+
+**Estimated Effort**: 6 hours
+
+---
+
+#### Task 4: Enhanced Decision Points
+
+**Goal**: Add 10+ new decision points for comprehensive project configuration
+
+**Files to Modify**:
+
+- [ ] `claudecodeoptimizer/wizard/decision_tree.py`
+  - [ ] Add `TIER2_GIT_WORKFLOW` (main-only, github-flow, git-flow)
+  - [ ] Add `TIER3_BRANCH_NAMING` (conventional, jira, github_issue, custom)
+  - [ ] Add `TIER3_PRECOMMIT_HOOKS` (multi-select: format, lint, type, security, test, secrets)
+  - [ ] Add `TIER2_CI_PROVIDER` (github_actions, gitlab_ci, none)
+  - [ ] Add `TIER3_NAMING_CONVENTION` (snake_case, camelCase, PascalCase)
+  - [ ] Add `TIER3_LINE_LENGTH` (79, 88, 100, 120)
+  - [ ] Add `TIER3_PACKAGE_MANAGER` (pip, poetry, pipenv, pdm)
+  - [ ] Add `TIER2_DOCUMENTATION_STRATEGY` (minimal, standard, comprehensive)
+  - [ ] Add `TIER3_AUTH_PATTERN` (jwt, session, oauth, api_key, none) - conditional
+  - [ ] Add `TIER2_SECRETS_MANAGEMENT` (dotenv, vault, cloud, none)
+  - [ ] Add `TIER2_ERROR_HANDLING` (fail_fast, graceful, retry)
+  - [ ] Add `TIER3_LOGGING_LEVEL` (DEBUG, INFO, WARNING, ERROR)
+  - [ ] Add `TIER3_CODE_REVIEW` (optional, required_1, required_2) - conditional
+  - [ ] Add `TIER3_API_DOCS_TOOL` (openapi, graphql, none) - conditional
+
+**Each Decision Point Must Have**:
+- `question`: Clear question
+- `why_this_question`: Context about why this matters
+- `options`: 2-5 options with rich descriptions
+- `team_notes`: Dict with team-size specific notes
+- `trade_offs`: What you gain/lose with each option
+- `workflow`: Step-by-step workflow for option
+- `auto_strategy`: Lambda for quick mode
+- `ai_hint_generator`: Lambda for recommendation reasoning
+
+**Verification**:
+```bash
+# Test all decision points in interactive mode
+/cco-init --mode=interactive
+# Should ask ~20-25 questions total
+
+# Test quick mode uses all auto-strategies
+/cco-init --mode=quick
+# Should auto-decide all questions
+```
+
+**Estimated Effort**: 2 days (16 hours)
+
+---
+
+#### Task 5: Knowledge Base Granular Selection
+
+**Goal**: Individual selection of guides/agents/skills instead of all/none
+
+**Files to Modify**:
+
+- [ ] `claudecodeoptimizer/wizard/orchestrator.py` - `_run_command_selection()`
+  - [ ] Replace simple "all/none" input with multi-select
+  - [ ] Show guide descriptions
+  - [ ] Pre-select recommended guides based on project type
+  - [ ] Same for agents and skills
+
+**Example**:
+```python
+# Current (simple):
+response = input("  Select guides (all/none): ").strip().lower()
+
+# New (rich):
+available_guides = get_available_guides()
+guide_descriptions = {
+    "verification-protocol": "Evidence-based verification workflow",
+    "git-workflow": "Git commit, branching, PR guidelines",
+    "security-response": "Security incident response plan",
+    "performance-optimization": "Performance analysis workflow",
+    "container-best-practices": "Docker/K8s best practices"
+}
+
+# Pre-select based on project type
+recommended_guides = []
+if project_type == "api_backend":
+    recommended_guides = ["security-response", "performance-optimization"]
+elif project_type == "cli_tool":
+    recommended_guides = []  # Minimal
+elif team_size != "solo":
+    recommended_guides = ["git-workflow", "verification-protocol"]
+
+# Use UI adapter for rich selection
+selected_guides = ui_adapter.ask_multi_select(
+    question="Select knowledge base guides to symlink:",
+    options=[
+        {
+            "label": guide,
+            "description": guide_descriptions.get(guide, ""),
+            "recommended": guide in recommended_guides
+        }
+        for guide in available_guides
+    ],
+    defaults=recommended_guides
+)
+```
+
+**Verification**:
+```bash
+# Test guide selection
+/cco-init --mode=interactive
+# At knowledge base step, should show individual guides with descriptions
+# Recommended guides should be pre-selected
+```
+
+**Estimated Effort**: 4 hours
+
+---
+
+#### Task 6: File Generation Enhancements
+
+**Goal**: Generate additional config files based on selections
+
+**Files to Modify**:
+
+- [ ] `claudecodeoptimizer/wizard/orchestrator.py` - `_run_file_generation()`
+  - [ ] Generate `.editorconfig` (if code style selected)
+  - [ ] Generate `.pre-commit-config.yaml` (if pre-commit selected)
+  - [ ] Generate `.github/workflows/ci.yml` (if GitHub Actions selected)
+  - [ ] Generate `.github/pull_request_template.md` (if PR template selected)
+  - [ ] Generate `CODEOWNERS` (if team project)
+  - [ ] Generate `.vscode/settings.json` (IDE preferences)
+
+**Files to Create**:
+
+- [ ] `templates/.editorconfig.template`
+- [ ] `templates/.pre-commit-config.yaml.template`
+- [ ] `templates/github-actions-ci.yml.template`
+- [ ] `templates/pull_request_template.md.template`
+- [ ] `templates/CODEOWNERS.template`
+- [ ] `templates/.vscode-settings.json.template`
+
+**Verification**:
+```bash
+# After init with GitHub Actions + pre-commit
+ls -la .github/workflows/
+ls -la .pre-commit-config.yaml
+
+# Verify content
+cat .github/workflows/ci.yml
+# Should have project-specific configuration
+```
+
+**Estimated Effort**: 6 hours
+
+---
+
+#### Task 7: Quick Mode = Interactive Mode with AI Decisions
+
+**Goal**: Quick mode uses SAME decision tree, AI auto-answers each question
+
+**Current Issue**: Quick mode bypasses some questions
+
+**Fix**:
+
+- [ ] `claudecodeoptimizer/wizard/orchestrator.py`
+  - [ ] Ensure `_run_decision_tree()` executes ALL decisions in both modes
+  - [ ] In quick mode: `_auto_decide()` for each decision
+  - [ ] In interactive mode: `_ask_user_decision()` for each decision
+  - [ ] Same decision flow, different UI
+
+**Verification**:
+```bash
+# Run both modes, compare decisions made
+/cco-init --mode=quick > quick_decisions.txt
+/cco-init --mode=interactive  # Accept all defaults > interactive_decisions.txt
+
+# Should have same number of decisions, same keys
+diff <(cat quick_decisions.txt | grep "AUTO") <(cat interactive_decisions.txt | grep "Question")
+```
+
+**Estimated Effort**: 2 hours
+
+---
+
+## Estimated Total Effort for P0.8
+
+**Task 1 (P074 Versioning)**: 4 hours
+**Task 2 (UI Adapter)**: 6 hours
+**Task 3 (Context Matrix)**: 6 hours
+**Task 4 (Enhanced Decisions)**: 16 hours (2 days)
+**Task 5 (KB Granularity)**: 4 hours
+**Task 6 (File Generation)**: 6 hours
+**Task 7 (Quick Mode Fix)**: 2 hours
+
+**Total**: 44 hours (~5.5 days)
+
+**Priority**: Complete before v0.2.0 release (after P0.1-P0.7)
+
+---
+
 ## Estimated Total Effort for P0
 
 **P0.1**: 0.5 days (Critical fixes)
-**P0.2**: 1 day (Document management)
+**P0.2**: ~~1 day~~ 2 hours (Report management only - rest solved by symlinks)
 **P0.3**: 1 day (Token optimization)
 **P0.4**: 2 days (Language skills)
 **P0.5**: 0.5 days (Project types)
