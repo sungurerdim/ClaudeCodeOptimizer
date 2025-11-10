@@ -380,30 +380,55 @@ class CCOWizard:
     # ========================================================================
 
     def _run_decision_tree(self) -> bool:
-        """Execute decision tree for all tiers"""
+        """
+        Execute decision tree for all tiers.
+
+        IMPORTANT: Both interactive and quick modes execute THE SAME decision points.
+        The only difference is HOW each decision is answered:
+        - Interactive mode: User is prompted for input
+        - Quick mode: AI auto-strategy is used
+
+        This ensures consistency across both modes - same decisions, same order,
+        just different input methods.
+        """
         # Initialize answer context
         self.answer_context = AnswerContext(system=self.system_context)
 
-        # Get all decision points
+        # Get all decision points (TIER 1-3)
         try:
             all_decisions = get_all_decisions(self.answer_context)
         except Exception as e:
             print_error(f"Failed to build decision tree: {e}", indent=2)
             return False
 
-        # Execute each decision
+        # Track execution for verification
+        decisions_executed = 0
+        decisions_skipped = 0
+
+        # Execute each decision (same for both modes)
         for decision in all_decisions:
-            # Check if should ask
+            # Check if should ask (conditional questions may be skipped)
             if not decision.should_ask(self.answer_context.answers):
+                decisions_skipped += 1
                 continue
 
-            # Ask question (mode-dependent)
+            # Ask question (mode-dependent: interactive vs quick)
             try:
                 answer = self._execute_decision(decision)
                 self.answer_context.set(decision.id, answer)
+                decisions_executed += 1
             except Exception as e:
                 print_error(f"Failed to execute decision '{decision.id}': {e}", indent=2)
                 return False
+
+        # Log execution summary for verification
+        if self.mode == "quick":
+            print_info(
+                f"Decision tree complete: {decisions_executed} decisions made, "
+                f"{decisions_skipped} skipped (conditional)",
+                indent=2
+            )
+            print()
 
         return True
 
@@ -856,6 +881,13 @@ class CCOWizard:
                 if hooks:
                     self._generate_precommit_config(hooks)
                     print_success("✓ Created .pre-commit-config.yaml", indent=2)
+
+            # Generate .github/workflows/ci.yml (if GitHub Actions selected)
+            if self.answer_context and self.answer_context.has_answer("ci_provider"):
+                ci_provider = self.answer_context.get("ci_provider")
+                if ci_provider == "github_actions":
+                    self._generate_github_actions_workflow()
+                    print_success("✓ Created .github/workflows/ci.yml", indent=2)
 
             print()
             return True
@@ -1449,6 +1481,255 @@ class CCOWizard:
         # Write to project root
         output_path = self.project_root / ".pre-commit-config.yaml"
         output_path.write_text(content, encoding="utf-8")
+
+    def _generate_github_actions_workflow(self) -> None:
+        """Generate .github/workflows/ci.yml based on project language and tools"""
+        from pathlib import Path
+
+        # Get project language
+        primary_language = "python"  # Default
+        if self.detection_report:
+            primary_language = self.detection_report.get("detected_language", {}).get("primary", "python")
+
+        # Get default branch
+        default_branch = "main"
+        if self.system_context and self.system_context.is_git_repo:
+            # Try to detect default branch
+            import subprocess
+            try:
+                result = subprocess.run(
+                    ["git", "symbolic-ref", "refs/remotes/origin/HEAD"],
+                    capture_output=True,
+                    text=True,
+                    check=False
+                )
+                if result.returncode == 0:
+                    default_branch = result.stdout.strip().split("/")[-1]
+            except Exception:
+                pass  # Keep default
+
+        # Language-specific configurations
+        configs = self._get_language_ci_config(primary_language)
+
+        # Load template
+        template_path = Path(__file__).parent.parent.parent / "templates" / ".github-workflows-ci.yml.template"
+        if not template_path.exists():
+            return
+
+        content = template_path.read_text(encoding="utf-8")
+
+        # Replace template variables
+        content = content.replace("${PRIMARY_LANGUAGE}", primary_language)
+        content = content.replace("${DEFAULT_BRANCH}", default_branch)
+        content = content.replace("${LINT_STEPS}", configs["lint_steps"])
+        content = content.replace("${TYPE_CHECK_STEPS}", configs["type_check_steps"])
+        content = content.replace("${TEST_MATRIX}", configs["test_matrix"])
+        content = content.replace("${TEST_STEPS}", configs["test_steps"])
+        content = content.replace("${SECURITY_STEPS}", configs["security_steps"])
+
+        # Create .github/workflows directory
+        workflows_dir = self.project_root / ".github" / "workflows"
+        workflows_dir.mkdir(parents=True, exist_ok=True)
+
+        # Write workflow file
+        output_path = workflows_dir / "ci.yml"
+        output_path.write_text(content, encoding="utf-8")
+
+    def _get_language_ci_config(self, language: str) -> dict:
+        """Get CI configuration steps for a specific language"""
+        configs = {
+            "python": {
+                "lint_steps": """      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - name: Install dependencies
+        run: |
+          python -m pip install --upgrade pip
+          pip install ruff
+      - name: Run Ruff lint
+        run: ruff check .
+      - name: Run Ruff format check
+        run: ruff format --check .""",
+                "type_check_steps": """      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - name: Install dependencies
+        run: |
+          python -m pip install --upgrade pip
+          pip install -e ".[dev]"
+      - name: Run mypy
+        run: mypy --strict .""",
+                "test_matrix": """        python-version: ['3.8', '3.9', '3.10', '3.11', '3.12']""",
+                "test_steps": """      - uses: actions/setup-python@v5
+        with:
+          python-version: ${{ matrix.python-version }}
+      - name: Install dependencies
+        run: |
+          python -m pip install --upgrade pip
+          pip install -e ".[dev]"
+      - name: Run tests
+        run: pytest tests/ --cov --cov-report=xml
+      - name: Upload coverage
+        if: matrix.os == 'ubuntu-latest' && matrix.python-version == '3.12'
+        uses: codecov/codecov-action@v3""",
+                "security_steps": """      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - name: Run Gitleaks
+        uses: gitleaks/gitleaks-action@v2
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}"""
+            },
+            "javascript": {
+                "lint_steps": """      - uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+      - name: Install dependencies
+        run: npm ci
+      - name: Run ESLint
+        run: npm run lint""",
+                "type_check_steps": """      - uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+      - name: Install dependencies
+        run: npm ci
+      - name: Type check
+        run: npm run type-check""",
+                "test_matrix": """        node-version: ['18', '20', '21']""",
+                "test_steps": """      - uses: actions/setup-node@v4
+        with:
+          node-version: ${{ matrix.node-version }}
+      - name: Install dependencies
+        run: npm ci
+      - name: Run tests
+        run: npm test -- --coverage
+      - name: Upload coverage
+        if: matrix.os == 'ubuntu-latest' && matrix.node-version == '20'
+        uses: codecov/codecov-action@v3""",
+                "security_steps": """      - uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+      - name: Run npm audit
+        run: npm audit
+      - name: Run Gitleaks
+        uses: gitleaks/gitleaks-action@v2
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}"""
+            },
+            "typescript": {
+                "lint_steps": """      - uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+      - name: Install dependencies
+        run: npm ci
+      - name: Run ESLint
+        run: npm run lint""",
+                "type_check_steps": """      - uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+      - name: Install dependencies
+        run: npm ci
+      - name: Type check
+        run: npm run type-check || tsc --noEmit""",
+                "test_matrix": """        node-version: ['18', '20', '21']""",
+                "test_steps": """      - uses: actions/setup-node@v4
+        with:
+          node-version: ${{ matrix.node-version }}
+      - name: Install dependencies
+        run: npm ci
+      - name: Run tests
+        run: npm test -- --coverage
+      - name: Upload coverage
+        if: matrix.os == 'ubuntu-latest' && matrix.node-version == '20'
+        uses: codecov/codecov-action@v3""",
+                "security_steps": """      - uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+      - name: Run npm audit
+        run: npm audit
+      - name: Run Gitleaks
+        uses: gitleaks/gitleaks-action@v2
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}"""
+            },
+            "go": {
+                "lint_steps": """      - uses: actions/setup-go@v5
+        with:
+          go-version: '1.21'
+      - name: Run golangci-lint
+        uses: golangci/golangci-lint-action@v3
+        with:
+          version: latest""",
+                "type_check_steps": """      - uses: actions/setup-go@v5
+        with:
+          go-version: '1.21'
+      - name: Type check (go vet)
+        run: go vet ./...""",
+                "test_matrix": """        go-version: ['1.20', '1.21', '1.22']""",
+                "test_steps": """      - uses: actions/setup-go@v5
+        with:
+          go-version: ${{ matrix.go-version }}
+      - name: Run tests
+        run: go test -v -race -coverprofile=coverage.txt -covermode=atomic ./...
+      - name: Upload coverage
+        if: matrix.os == 'ubuntu-latest' && matrix.go-version == '1.21'
+        uses: codecov/codecov-action@v3""",
+                "security_steps": """      - uses: actions/setup-go@v5
+        with:
+          go-version: '1.21'
+      - name: Run gosec
+        uses: securego/gosec@master
+        with:
+          args: './...'
+      - name: Run Gitleaks
+        uses: gitleaks/gitleaks-action@v2
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}"""
+            },
+            "rust": {
+                "lint_steps": """      - uses: actions-rs/toolchain@v1
+        with:
+          toolchain: stable
+          components: rustfmt, clippy
+      - name: Run rustfmt
+        run: cargo fmt -- --check
+      - name: Run clippy
+        run: cargo clippy -- -D warnings""",
+                "type_check_steps": """      - uses: actions-rs/toolchain@v1
+        with:
+          toolchain: stable
+      - name: Type check (cargo check)
+        run: cargo check --all-features""",
+                "test_matrix": """        rust-version: ['stable', 'beta']""",
+                "test_steps": """      - uses: actions-rs/toolchain@v1
+        with:
+          toolchain: ${{ matrix.rust-version }}
+      - name: Run tests
+        run: cargo test --all-features
+      - name: Generate coverage
+        if: matrix.os == 'ubuntu-latest' && matrix.rust-version == 'stable'
+        run: |
+          cargo install cargo-tarpaulin
+          cargo tarpaulin --out Xml
+      - name: Upload coverage
+        if: matrix.os == 'ubuntu-latest' && matrix.rust-version == 'stable'
+        uses: codecov/codecov-action@v3""",
+                "security_steps": """      - uses: actions-rs/toolchain@v1
+        with:
+          toolchain: stable
+      - name: Run cargo audit
+        uses: actions-rs/audit-check@v1
+        with:
+          token: ${{ secrets.GITHUB_TOKEN }}
+      - name: Run Gitleaks
+        uses: gitleaks/gitleaks-action@v2
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}"""
+            }
+        }
+
+        # Default to python if language not found
+        return configs.get(language.lower(), configs["python"])
 
 
 # ============================================================================
