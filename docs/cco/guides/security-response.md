@@ -297,9 +297,9 @@ pytest tests/security/ -v
 
 - **P019-P037**: Security & Privacy Principles
 
-See: [@docs/cco/principles/security.md](../principles/security.md)
+See: [@~/.cco/knowledge/principles/security.md](../principles/security.md)
 
 ---
 
 *Part of CCO Documentation System*
-*Load when needed: @docs/cco/guides/security-response.md*
+*Load when needed: @~/.cco/knowledge/guides/security-response.md*

@@ -131,9 +131,9 @@ mypy src/
 
 This guide implements **P067: Evidence-Based Verification**
 
-See: [@PRINCIPLES.md](../PRINCIPLES.md) or [@docs/cco/principles/core.md](../principles/core.md)
+See: [@PRINCIPLES.md](../PRINCIPLES.md) or [@~/.cco/knowledge/principles/core.md](../principles/core.md)
 
 ---
 
 *Part of CCO Documentation System*
-*Load when needed: @docs/cco/guides/verification-protocol.md*
+*Load when needed: @~/.cco/knowledge/guides/verification-protocol.md*

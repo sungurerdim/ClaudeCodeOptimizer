@@ -17,19 +17,19 @@ class TokenTracker:
     DOCUMENT_ESTIMATES = {
         "CLAUDE.md": 3262,
         "PRINCIPLES.md": 1311,
-        "docs/cco/guides/verification-protocol.md": 644,
-        "docs/cco/guides/git-workflow.md": 2176,
-        "docs/cco/guides/security-response.md": 1631,
-        "docs/cco/guides/performance-optimization.md": 2093,
-        "docs/cco/guides/container-best-practices.md": 2629,
-        "docs/cco/principles/code-quality.md": 1200,
-        "docs/cco/principles/security.md": 1450,
-        "docs/cco/principles/testing.md": 890,
-        "docs/cco/principles/architecture.md": 1100,
-        "docs/cco/principles/performance.md": 780,
-        "docs/cco/principles/operations.md": 950,
-        "docs/cco/principles/git-workflow.md": 670,
-        "docs/cco/principles/api-design.md": 450,
+        "~/.cco/knowledge/guides/verification-protocol.md": 644,
+        "~/.cco/knowledge/guides/git-workflow.md": 2176,
+        "~/.cco/knowledge/guides/security-response.md": 1631,
+        "~/.cco/knowledge/guides/performance-optimization.md": 2093,
+        "~/.cco/knowledge/guides/container-best-practices.md": 2629,
+        "~/.cco/knowledge/principles/code-quality.md": 1200,
+        "~/.cco/knowledge/principles/security.md": 1450,
+        "~/.cco/knowledge/principles/testing.md": 890,
+        "~/.cco/knowledge/principles/architecture.md": 1100,
+        "~/.cco/knowledge/principles/performance.md": 780,
+        "~/.cco/knowledge/principles/operations.md": 950,
+        "~/.cco/knowledge/principles/git-workflow.md": 670,
+        "~/.cco/knowledge/principles/api-design.md": 450,
     }
 
     # Claude Code token budget
@@ -222,22 +222,28 @@ def track_category_documents(
 
     # Map categories to document paths
     category_docs = {
-        "security": ["docs/cco/guides/security-response.md", "docs/cco/principles/security.md"],
-        "testing": ["docs/cco/principles/testing.md"],
+        "security": [
+            "~/.cco/knowledge/guides/security-response.md",
+            "~/.cco/knowledge/principles/security.md",
+        ],
+        "testing": ["~/.cco/knowledge/principles/testing.md"],
         "code_quality": [
-            "docs/cco/guides/verification-protocol.md",
-            "docs/cco/principles/code-quality.md",
+            "~/.cco/knowledge/guides/verification-protocol.md",
+            "~/.cco/knowledge/principles/code-quality.md",
         ],
         "performance": [
-            "docs/cco/guides/performance-optimization.md",
-            "docs/cco/principles/performance.md",
+            "~/.cco/knowledge/guides/performance-optimization.md",
+            "~/.cco/knowledge/principles/performance.md",
         ],
         "operations": [
-            "docs/cco/guides/container-best-practices.md",
-            "docs/cco/principles/operations.md",
+            "~/.cco/knowledge/guides/container-best-practices.md",
+            "~/.cco/knowledge/principles/operations.md",
         ],
-        "architecture": ["docs/cco/principles/architecture.md"],
-        "git": ["docs/cco/guides/git-workflow.md", "docs/cco/principles/git-workflow.md"],
+        "architecture": ["~/.cco/knowledge/principles/architecture.md"],
+        "git": [
+            "~/.cco/knowledge/guides/git-workflow.md",
+            "~/.cco/knowledge/principles/git-workflow.md",
+        ],
     }
 
     print(f"📖 Loading category-specific guides: {', '.join(categories)}\n")
