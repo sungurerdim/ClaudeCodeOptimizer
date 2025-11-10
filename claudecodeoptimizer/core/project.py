@@ -140,6 +140,9 @@ class ProjectManager:
         # STEP 9: Install agents symlinks to .claude/agents/
         self._install_agents_symlinks(analysis)
 
+        # STEP 9.5: Install settings.json template reference (if not exists)
+        self._install_settings_template()
+
         # STEP 10: Generate generic commands
         commands_generated = self._generate_generic_commands(analysis)
 
@@ -586,6 +589,46 @@ class ProjectManager:
         """
         # For now, just install templates
         self._install_knowledge_symlinks("agents")
+
+    def _install_settings_template(self) -> None:
+        """
+        Create settings.json in .claude/ from global template.
+
+        Only creates if it doesn't exist - never overwrites existing settings.
+        Template uses relative paths only - no absolute path exposure.
+        """
+        import shutil
+
+        # Check if settings.json already exists
+        project_claude_dir = self.config.get_project_claude_dir(self.project_root)
+        settings_file = project_claude_dir / "settings.json"
+
+        # Never overwrite existing settings.json
+        if settings_file.exists():
+            logger.debug("settings.json already exists, skipping template installation")
+            return
+
+        # Get global template
+        templates_dir = self.config.get_templates_dir()
+        template_file = templates_dir / "settings.json.template"
+
+        if not template_file.exists():
+            logger.debug("settings.json.template not found in global templates")
+            return
+
+        # Create .claude directory if needed
+        project_claude_dir.mkdir(parents=True, exist_ok=True)
+
+        # Copy template as-is (no placeholder replacement needed)
+        shutil.copy2(template_file, settings_file)
+
+        # Track in manifest
+        self.manifest.track_file_created(
+            settings_file,
+            "Created settings.json from global template"
+        )
+
+        logger.debug(f"Created settings.json from template at {settings_file}")
 
     def _install_knowledge_symlinks(
         self,
