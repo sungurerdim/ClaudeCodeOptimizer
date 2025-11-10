@@ -620,38 +620,76 @@ class CCOWizard:
                 pause()
 
                 # Knowledge Base Selection (interactive only)
+                if not hasattr(self, 'print_heading'):
+                    from .renderer import print_heading
                 print_heading("Knowledge Base Selection", level=2)
                 print_info("Select which knowledge base components to symlink:", indent=2)
                 print()
 
-                # Guides selection
+                # Guides selection with descriptions
                 available_guides = get_available_guides()
                 if available_guides:
+                    # Guide descriptions
+                    guide_descriptions = {
+                        "verification-protocol": "Evidence-based verification workflow (P067)",
+                        "git-workflow": "Git commit, branching, PR guidelines (P072-P074)",
+                        "security-response": "Security incident response and remediation plan",
+                        "performance-optimization": "Performance analysis and optimization workflow",
+                        "container-best-practices": "Docker/Kubernetes deployment best practices",
+                    }
+
+                    # Recommend guides based on project context
+                    recommended_guides = self._recommend_guides_for_project()
+
                     print_info(f"Available guides ({len(available_guides)}):", indent=2)
-                    for guide in available_guides:
-                        guide_name = guide.replace("-", " ").title()
-                        print_info(f"  • {guide_name}", indent=2)
+                    print_info(f"  Recommended for your project: {len(recommended_guides)}", indent=2)
                     print()
 
-                    response = input("  Select guides (all/none): ").strip().lower()
-                    if response == "all" or response == "":
+                    # Show each guide with description and recommendation
+                    for i, guide in enumerate(available_guides, 1):
+                        guide_name = guide.replace("-", " ").title()
+                        description = guide_descriptions.get(guide, "")
+                        is_recommended = guide in recommended_guides
+                        marker = "⭐" if is_recommended else "  "
+
+                        print_info(f"{marker} {i}. {guide_name}", indent=2)
+                        if description:
+                            print_info(f"      {description}", indent=2)
+                    print()
+
+                    response = input("  Select guides (all/recommended/none or numbers like 1,3,5) [default: recommended]: ").strip().lower()
+                    if response == "all":
                         self.selected_guides = available_guides
                         print_success(f"✓ Selected all {len(available_guides)} guides", indent=2)
-                    else:
+                    elif response == "" or response == "recommended":
+                        self.selected_guides = recommended_guides
+                        print_success(f"✓ Selected {len(recommended_guides)} recommended guides", indent=2)
+                    elif response == "none":
                         self.selected_guides = []
                         print_info("✓ No guides selected", indent=2)
+                    else:
+                        # Parse number selection (e.g., "1,3,5")
+                        try:
+                            indices = [int(x.strip()) - 1 for x in response.split(",")]
+                            self.selected_guides = [
+                                available_guides[i] for i in indices
+                                if 0 <= i < len(available_guides)
+                            ]
+                            print_success(f"✓ Selected {len(self.selected_guides)} guides", indent=2)
+                        except (ValueError, IndexError):
+                            # Fallback to recommended
+                            self.selected_guides = recommended_guides
+                            print_warning("Invalid selection, using recommended", indent=2)
                     print()
                 else:
                     self.selected_guides = []
                     print_info("No guides available", indent=2)
 
-                # Agents selection
+                # Agents selection (simplified for now - agents are advanced use case)
                 available_agents = get_available_agents()
                 if available_agents:
                     print_info(f"Available custom agents ({len(available_agents)}):", indent=2)
-                    for agent in available_agents:
-                        agent_name = agent.replace("-", " ").title()
-                        print_info(f"  • {agent_name}", indent=2)
+                    print_info("  Custom agents are advanced - select only if you created them", indent=2)
                     print()
 
                     response = input("  Select agents (all/none) [default: none]: ").strip().lower()
@@ -660,35 +698,56 @@ class CCOWizard:
                         print_success(f"✓ Selected all {len(available_agents)} agents", indent=2)
                     else:
                         self.selected_agents = []
-                        print_info("✓ No agents selected", indent=2)
+                        print_info("✓ No custom agents selected", indent=2)
                     print()
                 else:
                     self.selected_agents = []
-                    print_info("No custom agents available yet", indent=2)
+                    print_info("No custom agents available", indent=2)
                     print_info("Tip: Create custom agents using templates in ~/.cco/knowledge/agents/", indent=2)
                     print()
 
-                # Skills selection
+                # Skills selection with language-specific recommendations
                 available_skills = get_available_skills()
                 if available_skills:
-                    print_info(f"Available custom skills ({len(available_skills)}):", indent=2)
-                    for skill in available_skills:
-                        skill_name = skill.replace("-", " ").title()
-                        print_info(f"  • {skill_name}", indent=2)
+                    # Recommend skills based on detected languages
+                    recommended_skills = self._recommend_skills_for_project()
+
+                    print_info(f"Available language skills ({len(available_skills)}):", indent=2)
+                    print_info(f"  Recommended for your languages: {len(recommended_skills)}", indent=2)
                     print()
 
-                    response = input("  Select skills (all/none) [default: none]: ").strip().lower()
+                    # Group skills by language
+                    skills_by_lang = {}
+                    for skill in available_skills:
+                        lang = skill.split("/")[0] if "/" in skill else "other"
+                        if lang not in skills_by_lang:
+                            skills_by_lang[lang] = []
+                        skills_by_lang[lang].append(skill)
+
+                    # Show skills grouped by language
+                    for lang, skills in sorted(skills_by_lang.items()):
+                        print_info(f"  {lang.title()}:", indent=2)
+                        for skill in skills:
+                            skill_name = skill.split("/")[-1].replace("-", " ").title()
+                            is_recommended = skill in recommended_skills
+                            marker = "⭐" if is_recommended else "  "
+                            print_info(f"    {marker} {skill_name}", indent=2)
+                    print()
+
+                    response = input("  Select skills (all/recommended/none) [default: none]: ").strip().lower()
                     if response == "all":
                         self.selected_skills = available_skills
                         print_success(f"✓ Selected all {len(available_skills)} skills", indent=2)
+                    elif response == "recommended":
+                        self.selected_skills = recommended_skills
+                        print_success(f"✓ Selected {len(recommended_skills)} recommended skills", indent=2)
                     else:
                         self.selected_skills = []
                         print_info("✓ No skills selected", indent=2)
                     print()
                 else:
                     self.selected_skills = []
-                    print_info("No custom skills available yet", indent=2)
-                    print_info("Tip: Create custom skills using templates in ~/.cco/knowledge/skills/", indent=2)
+                    print_info("No language skills available", indent=2)
                     print()
 
                 pause()
@@ -785,6 +844,18 @@ class CCOWizard:
             # Generate CLAUDE.md
             self._generate_claude_md()
             print_success("✓ Created CLAUDE.md", indent=2)
+
+            # Generate .editorconfig (if not exists)
+            if not (self.project_root / ".editorconfig").exists():
+                self._generate_editorconfig()
+                print_success("✓ Created .editorconfig", indent=2)
+
+            # Generate .pre-commit-config.yaml (if precommit hooks selected)
+            if self.answer_context and self.answer_context.has_answer("precommit_hooks"):
+                hooks = self.answer_context.get("precommit_hooks", [])
+                if hooks:
+                    self._generate_precommit_config(hooks)
+                    print_success("✓ Created .pre-commit-config.yaml", indent=2)
 
             print()
             return True
@@ -1237,6 +1308,147 @@ class CCOWizard:
             "custom": "strict",
         }
         return mapping.get(strategy, "strict")
+
+    def _recommend_guides_for_project(self) -> List[str]:
+        """Recommend guides based on project context"""
+        if not self.answer_context:
+            return []
+
+        recommended = []
+        answers = self.answer_context.answers
+        project_types = answers.get("project_purpose", [])
+        team_size = answers.get("team_dynamics", "solo")
+        maturity = answers.get("project_maturity", "prototype")
+
+        # Verification protocol: for all production projects
+        if maturity in ["production", "legacy"] or team_size != "solo":
+            recommended.append("verification-protocol")
+
+        # Git workflow: for team projects
+        if team_size in ["small_team", "large_org"]:
+            recommended.append("git-workflow")
+
+        # Security response: for API/web apps or production systems
+        if any(pt in project_types for pt in ["api_service", "web_app", "microservice"]) or maturity == "production":
+            recommended.append("security-response")
+
+        # Performance optimization: for backend services
+        if any(pt in project_types for pt in ["api_service", "microservice", "data_pipeline"]):
+            recommended.append("performance-optimization")
+
+        # Container best practices: for containerized apps
+        if any(pt in project_types for pt in ["microservice", "infrastructure", "data_pipeline"]):
+            recommended.append("container-best-practices")
+
+        return recommended
+
+    def _recommend_skills_for_project(self) -> List[str]:
+        """Recommend language skills based on detected languages"""
+        if not self.system_context:
+            return []
+
+        recommended = []
+        detected_langs = self.system_context.detected_languages
+
+        # Map detected languages to skill categories
+        lang_mapping = {
+            "python": ["python/async-patterns", "python/type-hints-advanced", "python/testing-pytest"],
+            "typescript": ["typescript/advanced-types", "typescript/async-patterns", "typescript/type-safety"],
+            "javascript": ["typescript/async-patterns"],  # JS devs benefit from TS patterns
+            "rust": ["rust/ownership-patterns", "rust/error-handling"],
+            "go": ["go/concurrency-patterns", "go/error-handling"],
+        }
+
+        for lang in detected_langs:
+            lang_lower = lang.lower()
+            if lang_lower in lang_mapping:
+                recommended.extend(lang_mapping[lang_lower])
+
+        return list(set(recommended))  # Remove duplicates
+
+    def _generate_editorconfig(self) -> None:
+        """Generate .editorconfig from template"""
+        from pathlib import Path
+
+        # Load template
+        template_path = Path(__file__).parent.parent.parent / "templates" / ".editorconfig.template"
+        if not template_path.exists():
+            return
+
+        content = template_path.read_text(encoding="utf-8")
+
+        # Get line length from answers (default 88 for Python)
+        line_length = "88"
+        if self.answer_context:
+            # Could be from a line_length decision point if we add it
+            line_length = self.answer_context.get("line_length", "88")
+
+        # Replace template variables
+        content = content.replace("${LINE_LENGTH}", str(line_length))
+
+        # Write to project root
+        output_path = self.project_root / ".editorconfig"
+        output_path.write_text(content, encoding="utf-8")
+
+    def _generate_precommit_config(self, hooks: List[str]) -> None:
+        """Generate .pre-commit-config.yaml based on selected hooks"""
+        # Pre-commit hook configurations
+        hook_configs = {
+            "format": """  - repo: https://github.com/psf/black
+    rev: 24.1.0
+    hooks:
+      - id: black
+        language_version: python3.11
+  - repo: https://github.com/astral-sh/ruff-pre-commit
+    rev: v0.1.15
+    hooks:
+      - id: ruff
+        args: [--fix]""",
+            "lint": """  - repo: https://github.com/astral-sh/ruff-pre-commit
+    rev: v0.1.15
+    hooks:
+      - id: ruff""",
+            "type_check": """  - repo: https://github.com/pre-commit/mirrors-mypy
+    rev: v1.8.0
+    hooks:
+      - id: mypy
+        additional_dependencies: [types-all]""",
+            "secrets": """  - repo: https://github.com/gitleaks/gitleaks
+    rev: v8.18.1
+    hooks:
+      - id: gitleaks""",
+            "test": """  - repo: local
+    hooks:
+      - id: pytest
+        name: pytest
+        entry: pytest
+        language: system
+        pass_filenames: false
+        always_run: true""",
+        }
+
+        # Build hooks section
+        hooks_content = []
+        for hook in hooks:
+            if hook in hook_configs:
+                hooks_content.append(hook_configs[hook])
+
+        # Load template
+        from pathlib import Path
+
+        template_path = Path(__file__).parent.parent.parent / "templates" / ".pre-commit-config.yaml.template"
+        if not template_path.exists():
+            return
+
+        content = template_path.read_text(encoding="utf-8")
+
+        # Replace template variables
+        hooks_str = "\n".join(hooks_content)
+        content = content.replace("${HOOKS}", hooks_str)
+
+        # Write to project root
+        output_path = self.project_root / ".pre-commit-config.yaml"
+        output_path.write_text(content, encoding="utf-8")
 
 
 # ============================================================================
