@@ -39,6 +39,7 @@ def setup_global_knowledge(force: bool = False) -> Dict[str, Any]:
     principles_dir = config.get_principles_dir()
     agents_dir = config.get_agents_dir()
     skills_dir = config.get_skills_dir()
+    templates_dir = config.get_templates_dir()
 
     results = {
         "success": True,
@@ -48,6 +49,11 @@ def setup_global_knowledge(force: bool = False) -> Dict[str, Any]:
 
     # Ensure global directory exists
     global_dir.mkdir(parents=True, exist_ok=True)
+
+    # Setup templates/ (for settings.json, etc.)
+    if force or not templates_dir.exists() or not (templates_dir / "settings.json.template").exists():
+        _setup_templates(templates_dir)
+        results["actions"].append("Setup templates directory")
 
     # Setup commands/
     if force or not commands_dir.exists() or not list(commands_dir.glob("*.md")):
@@ -78,6 +84,30 @@ def setup_global_knowledge(force: bool = False) -> Dict[str, Any]:
         results["actions"].append("Knowledge base already up to date")
 
     return results
+
+
+def _setup_templates(templates_dir: Path) -> None:
+    """
+    Copy template files from package to global directory.
+
+    Copies from templates/ to ~/.cco/templates/
+    Includes settings.json.template and other templates.
+    """
+    # Get package templates directory
+    package_dir = Path(__file__).parent.parent
+    source_templates = package_dir.parent / "templates"
+
+    if not source_templates.exists():
+        raise FileNotFoundError(f"Template directory not found at {source_templates}")
+
+    # Create destination
+    templates_dir.mkdir(parents=True, exist_ok=True)
+
+    # Copy settings.json.template
+    settings_template = source_templates / "settings.json.template"
+    if settings_template.exists():
+        dest_file = templates_dir / "settings.json.template"
+        shutil.copy2(settings_template, dest_file)
 
 
 def _setup_principles(principles_dir: Path) -> None:
