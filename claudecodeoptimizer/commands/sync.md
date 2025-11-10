@@ -349,4 +349,4 @@ Next Steps:
 
 - `/cco-audit` - Find inconsistencies
 - `/cco-fix` - Fix issues found
-- `/cco-config export` - Share config across team
+- `/cco-status` - Check project configuration
