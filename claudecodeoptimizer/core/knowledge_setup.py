@@ -91,7 +91,7 @@ def _setup_templates(templates_dir: Path) -> None:
     Copy template files from package to global directory.
 
     Copies from templates/ to ~/.cco/templates/
-    Includes settings.json.template and other templates.
+    Includes settings.json.template, CLAUDE.md.template, CODEOWNERS.template, etc.
     """
     # Get package templates directory
     package_dir = Path(__file__).parent.parent
@@ -103,11 +103,10 @@ def _setup_templates(templates_dir: Path) -> None:
     # Create destination
     templates_dir.mkdir(parents=True, exist_ok=True)
 
-    # Copy settings.json.template
-    settings_template = source_templates / "settings.json.template"
-    if settings_template.exists():
-        dest_file = templates_dir / "settings.json.template"
-        shutil.copy2(settings_template, dest_file)
+    # Copy all .template files (not subdirectories)
+    for template_file in source_templates.glob("*.template"):
+        dest_file = templates_dir / template_file.name
+        shutil.copy2(template_file, dest_file)
 
 
 def _setup_principles(principles_dir: Path) -> None:
