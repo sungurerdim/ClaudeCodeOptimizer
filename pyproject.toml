@@ -57,6 +57,7 @@ requires-python = ">=3.8"
 dependencies = [
     "jinja2",
     "pydantic",
+    "python-frontmatter",
 ]
 
 [project.optional-dependencies]
