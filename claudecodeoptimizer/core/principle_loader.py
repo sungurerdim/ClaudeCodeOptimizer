@@ -19,48 +19,49 @@ from typing import Dict, List, Optional
 
 
 # Command → Principle Category Mapping (using actual category names from principles.json)
+# Note: "universal" category is ALWAYS included automatically for all commands
 COMMAND_PRINCIPLE_MAP: Dict[str, List[str]] = {
-    # Core commands (core only)
-    "cco-init": ["core"],
-    "cco-status": ["core"],
-    "cco-config": ["core"],
-    "cco-remove": ["core"],
+    # Core commands (universal + core only)
+    "cco-init": ["universal", "core"],
+    "cco-status": ["universal", "core"],
+    "cco-config": ["universal", "core"],
+    "cco-remove": ["universal", "core"],
     # Audit commands
-    "cco-audit": ["all"],  # Full audit loads everything
-    "cco-audit-code": ["core", "code_quality"],
-    "cco-audit-security": ["core", "security_privacy"],
-    "cco-audit-tests": ["core", "testing"],
-    "cco-audit-docs": ["core", "code_quality"],
-    "cco-audit-all": ["all"],
+    "cco-audit": ["universal", "all"],  # Full audit loads everything
+    "cco-audit-code": ["universal", "core", "code_quality"],
+    "cco-audit-security": ["universal", "core", "security_privacy"],
+    "cco-audit-tests": ["universal", "core", "testing"],
+    "cco-audit-docs": ["universal", "core", "code_quality"],
+    "cco-audit-all": ["universal", "all"],
     # Analysis commands
-    "cco-analyze": ["core", "architecture", "code_quality"],
-    "cco-analyze-structure": ["core", "architecture"],
-    "cco-analyze-dependencies": ["core", "architecture"],
-    "cco-analyze-complexity": ["core", "code_quality"],
+    "cco-analyze": ["universal", "core", "architecture", "code_quality"],
+    "cco-analyze-structure": ["universal", "core", "architecture"],
+    "cco-analyze-dependencies": ["universal", "core", "architecture"],
+    "cco-analyze-complexity": ["universal", "core", "code_quality"],
     # Fix commands
-    "cco-fix": ["core", "code_quality", "security_privacy"],
-    "cco-fix-code": ["core", "code_quality"],
-    "cco-fix-security": ["core", "security_privacy"],
-    "cco-fix-docs": ["core", "code_quality"],
+    "cco-fix": ["universal", "core", "code_quality", "security_privacy"],
+    "cco-fix-code": ["universal", "core", "code_quality"],
+    "cco-fix-security": ["universal", "core", "security_privacy"],
+    "cco-fix-docs": ["universal", "core", "code_quality"],
     # Optimize commands
-    "cco-optimize": ["core", "performance"],
-    "cco-optimize-code": ["core", "performance", "code_quality"],
-    "cco-optimize-deps": ["core", "performance"],
-    "cco-optimize-docker": ["core", "performance", "operations"],
+    "cco-optimize": ["universal", "core", "performance"],
+    "cco-optimize-code": ["universal", "core", "performance", "code_quality"],
+    "cco-optimize-deps": ["universal", "core", "performance"],
+    "cco-optimize-docker": ["universal", "core", "performance", "operations"],
     # Test commands
-    "cco-test": ["core", "testing"],
-    "cco-generate-tests": ["core", "testing"],
-    "cco-audit-tests": ["core", "testing"],
+    "cco-test": ["universal", "core", "testing"],
+    "cco-generate-tests": ["universal", "core", "testing"],
+    "cco-audit-tests": ["universal", "core", "testing"],
     # Generate commands
-    "cco-generate": ["core", "code_quality"],
-    "cco-generate-docs": ["core", "api_design"],
-    "cco-generate-integration-tests": ["core", "testing"],
+    "cco-generate": ["universal", "core", "code_quality"],
+    "cco-generate-docs": ["universal", "core", "api_design"],
+    "cco-generate-integration-tests": ["universal", "core", "testing"],
     # DevOps commands
-    "cco-scan-secrets": ["core", "security_privacy"],
-    "cco-setup-cicd": ["core", "operations"],
-    "cco-setup-monitoring": ["core", "operations"],
+    "cco-scan-secrets": ["universal", "core", "security_privacy"],
+    "cco-setup-cicd": ["universal", "core", "operations"],
+    "cco-setup-monitoring": ["universal", "core", "operations"],
     # Sync commands
-    "cco-sync": ["core"],
+    "cco-sync": ["universal", "core"],
 }
 
 # Category → Principle ID Mapping (cached)
@@ -97,8 +98,9 @@ def _load_category_mapping() -> Dict[str, List[str]]:
                 mapping[category] = []
             mapping[category].append(principle_id)
 
-    # Add "core" category (P001, P067, P071)
-    mapping["core"] = ["P001", "P067", "P071"]
+    # Add "core" category (now references universal principles)
+    # Core principles are now U001, U002, U011 (Evidence-Based, Fail-Fast, No Overengineering)
+    mapping["core"] = ["U001", "U002", "U011"]
 
     _CATEGORY_TO_IDS = mapping
     return mapping
@@ -165,10 +167,18 @@ class PrincipleLoader:
         Examples:
             >>> loader = PrincipleLoader()
             >>> content = loader.load_for_command("cco-audit-security")
-            # Returns: P001.md + P036.md + ... (~800 tokens)
+            # Returns: U001-U012.md + P001.md + P036.md + ... (~800 tokens)
         """
-        # Get categories for this command
-        categories = COMMAND_PRINCIPLE_MAP.get(command, ["core"])
+        # Try project config first (DYNAMIC)
+        project_config = self._find_project_config()
+        if project_config:
+            overrides = project_config.get("command_overrides", {})
+            if command in overrides:
+                principle_ids = overrides[command].get("principles", [])
+                return self.load_principles(principle_ids)
+
+        # Fallback to COMMAND_PRINCIPLE_MAP (STATIC)
+        categories = COMMAND_PRINCIPLE_MAP.get(command, ["universal", "core"])
 
         # Convert categories to principle IDs
         principle_ids = _resolve_categories_to_ids(categories)
@@ -181,6 +191,16 @@ class PrincipleLoader:
                 principles.append(content)
 
         return "\n\n---\n\n".join(principles)
+
+    def _find_project_config(self) -> Optional[Dict]:
+        """Find .claude/project.json in current working directory."""
+        from pathlib import Path
+        cwd = Path.cwd()
+        config_path = cwd / ".claude" / "project.json"
+        if config_path.exists():
+            import json
+            return json.loads(config_path.read_text())
+        return None
 
     def load_principles(self, principle_ids: List[str]) -> str:
         """
