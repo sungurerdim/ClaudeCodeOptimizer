@@ -1,5 +1,8 @@
 {
-  "statusLine": ".claude/statusline.js",
+  "statusLine": {
+    "type": "command",
+    "command": "node .claude/statusline.js"
+  },
   "permissions": {
     "allow": [
       "Read(**)",
@@ -380,10 +383,6 @@
       "Bash(dd if=:*)",
       "Bash(fdisk:*)",
       "Bash(parted:*)",
-      "Bash(*wget*|*)",
-      "Bash(*curl*|*)",
-      "Bash(*eval*wget*)",
-      "Bash(*eval*curl*)",
       "Bash(chmod -R 777:*)",
       "Bash(chown -R root:*)",
       "Edit(**/.env)",
