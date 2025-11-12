@@ -9,6 +9,9 @@ recursive-include claudecodeoptimizer/templates *
 recursive-include claudecodeoptimizer/knowledge *
 recursive-include claudecodeoptimizer/schemas *
 
+# Include content directory (SSOT for principles, commands, etc.)
+recursive-include content *
+
 # Exclude unwanted files
 global-exclude __pycache__
 global-exclude *.py[co]
