@@ -18,24 +18,24 @@ Enforces fix → verify → commit loop for principle violations. Prevents "fix 
 
 1. **ISOLATE**: Show violations for THIS category only
    ```
-   Example: "P001 (Fail-Fast): 5 violations
+   Example: "U002 (Fail-Fast): 5 violations
    - services/api/main.py:45
    - shared/utils.py:89"
    ```
 
 2. **ASK**: Get user confirmation to fix this category
    ```
-   "Fix P001 violations now? (y/n/skip)"
+   "Fix U002 violations now? (y/n/skip)"
    ```
 
 3. **FIX**: Apply fixes (manual or automated)
    - User edits files OR
-   - Run `/cco-fix-code --principle=P001`
+   - Run `/cco-fix-code --principle=U002`
 
 4. **VERIFY**: Run mini-audit for THIS category only
    ```bash
    # For principles
-   Grep with P001 patterns only
+   Grep with U002 patterns only
 
    # For security
    Scan for specific vulnerability type only
@@ -46,14 +46,14 @@ Enforces fix → verify → commit loop for principle violations. Prevents "fix 
 
 5. **CONFIRM**: Check verification results
    ```
-   ✓ "All P001 violations fixed!"
+   ✓ "All U002 violations fixed!"
    ⚠ "2 violations remain - review needed"
    ```
 
 6. **COMMIT**: Atomic commit for this category
    ```bash
    git add <changed files>
-   git commit -m "fix(P001): replace bare except with specific exceptions"
+   git commit -m "fix(U002): replace bare except with specific exceptions"
    ```
 
 7. **REPEAT**: Move to next violation category
@@ -82,35 +82,35 @@ Skill activates:
 User: y
 
 Skill:
-"Principle P001 (Fail-Fast): 5 violations
+"Principle U002 (Fail-Fast): 5 violations
  - services/api/main.py:45   (bare except)
  - services/api/main.py:89   (silent exception)
  - shared/utils.py:67         (bare except)
  - worker/tasks.py:123        (bare except)
  - worker/tasks.py:234        (silent exception)
 
-Fix P001 now? (y/n/skip)"
+Fix U002 now? (y/n/skip)"
 
 User: y
 <User manually fixes 5 violations>
 
 Skill:
-"Verifying P001 fixes..."
+"Verifying U002 fixes..."
 <Runs grep for bare except patterns>
-"✓ All P001 violations fixed!"
+"✓ All U002 violations fixed!"
 "Committing changes..."
-<git commit -m "fix(P001): replace bare except clauses">
+<git commit -m "fix(U002): replace bare except clauses">
 
 Skill:
-"Principle P002 (DRY): 8 violations
+"Principle U002 (DRY): 8 violations
  - Duplicate encrypt_aes_gcm() in 3 files
 
-Fix P002 now? (y/n/skip)"
+Fix U002 now? (y/n/skip)"
 
 User: n
 
 Skill:
-"Skipping P002. Moving to next..."
+"Skipping U002. Moving to next..."
 ```
 
 ### Example 2: Security Violations
@@ -160,16 +160,16 @@ User: "Which fix broke this? No idea..."
 
 ```
 User: Uses verification protocol
-<Fixes P001 (5 violations in 3 files)>
+<Fixes U002 (5 violations in 3 files)>
 <Verifies - all fixed>
 <Commits>
-<Fixes P019 (3 violations in 2 files)>
+<Fixes P023 (3 violations in 2 files)>
 <Verifies - all fixed>
 <Commits>
-<Tests fail on P019 commit>
-User: "P019 broke tests, revert ONLY that commit"
+<Tests fail on P023 commit>
+User: "P023 broke tests, revert ONLY that commit"
 <git revert HEAD>
-<P001 fixes preserved ✓>
+<U002 fixes preserved ✓>
 ```
 
 ### Integration with Commands
@@ -221,18 +221,18 @@ The skill tracks progress in `.cco/state/{PROJECT}/verification-session.json`:
   "total_violations": 23,
   "categories": [
     {
-      "id": "P001",
+      "id": "U002",
       "violations": 5,
       "status": "fixed",
       "commit": "a3b4c5d"
     },
     {
-      "id": "P002",
+      "id": "U002",
       "violations": 8,
       "status": "skipped"
     },
     {
-      "id": "P019",
+      "id": "P023",
       "violations": 3,
       "status": "fixed",
       "commit": "e6f7g8h"

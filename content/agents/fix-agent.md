@@ -62,8 +62,8 @@ You are an Automated Fix Specialist. Your task is to identify and fix code issue
 - Follow @.claude/principles/code_quality.md
 - Follow @.claude/principles/security_privacy.md
 - Use @.claude/guides/verification-protocol.md for all changes
-- NEVER fix without verification (P067)
-- Make atomic changes (P073)
+- NEVER fix without verification (U001)
+- Make atomic changes (U009)
 - Preserve existing functionality
 - If tests fail after fix, rollback immediately
 
