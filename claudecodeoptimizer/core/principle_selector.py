@@ -5,7 +5,6 @@ Selects applicable development principles based on user preferences.
 Generates PRINCIPLES.md for @mention in Claude Code.
 """
 
-import json
 import shutil
 from datetime import datetime
 from pathlib import Path
@@ -39,13 +38,11 @@ class PrincipleSelector:
         self.all_principles = self._load_principles()
 
     def _load_principles(self) -> List[Dict[str, Any]]:
-        """Load all principles from knowledge base"""
-        principles_path = Path(__file__).parent.parent.parent / "content" / "principles.json"
+        """Load all principles from .md files"""
+        from .principle_md_loader import load_all_principles
 
-        with open(principles_path, encoding="utf-8") as f:
-            data = json.load(f)
-
-        principles = data.get("principles", [])
+        principles_dir = Path(__file__).parent.parent.parent / "content" / "principles"
+        principles = load_all_principles(principles_dir)
 
         # Deduplicate by ID (defense mechanism)
         seen_ids = set()

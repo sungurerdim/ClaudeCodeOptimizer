@@ -23,6 +23,18 @@ def load_principle_from_md(md_file: Path) -> Dict[str, Any]:
     post = frontmatter.load(md_file)
 
     # Frontmatter metadata
+    # Extract description from content (first paragraph) or frontmatter
+    description = post.get("description", "")
+    if not description and post.content:
+        # Get first non-empty line from content
+        lines = [line.strip() for line in post.content.split("\n") if line.strip()]
+        if lines:
+            # Skip markdown headers, get first text line
+            for line in lines:
+                if not line.startswith("#"):
+                    description = line
+                    break
+
     principle_data = {
         "id": post.get("id"),
         "number": post.get("number"),
@@ -32,7 +44,12 @@ def load_principle_from_md(md_file: Path) -> Dict[str, Any]:
         "weight": post.get("weight", 5),
         "enforcement": post.get("enforcement", "SHOULD"),
         "applicability": post.get("applicability", {}),
+        "description": description,
         "content": post.content,  # Markdown content (body)
+        # Backward compatibility fields (for principles.py)
+        "rules": post.get("rules", []),
+        "examples": post.get("examples", {}),
+        "autofix": post.get("autofix", {}),
     }
 
     return principle_data

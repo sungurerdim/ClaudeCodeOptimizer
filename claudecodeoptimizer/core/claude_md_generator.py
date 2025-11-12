@@ -14,7 +14,7 @@ Strategy:
 import shutil
 from datetime import datetime
 from pathlib import Path
-from typing import Any, Dict
+from typing import Any, Dict, List
 
 from .constants import UI_HEADING_LEVEL_SECONDARY
 
@@ -30,15 +30,25 @@ class ClaudeMdGenerator:
     4. Customize based on preferences
     """
 
-    def __init__(self, preferences: Dict[str, Any]) -> None:
+    def __init__(
+        self,
+        preferences: Dict[str, Any],
+        selected_skills: List[str] = None,
+        selected_agents: List[str] = None,
+    ) -> None:
         """
         Initialize generator with user preferences.
 
         Args:
             preferences: User preferences dictionary from CCOPreferences.dict()
+            selected_skills: List of selected skill IDs (optional)
+            selected_agents: List of selected agent IDs (optional)
         """
         self.preferences = preferences
+        self.selected_skills = selected_skills or []
+        self.selected_agents = selected_agents or []
         self.template_path = Path(__file__).parent.parent.parent / "templates" / "CLAUDE.md.template"
+        self.principles_dir = Path(__file__).parent.parent.parent / "content" / "principles"
 
     def generate(self, output_path: Path) -> Dict[str, Any]:
         """
@@ -66,6 +76,15 @@ class ClaudeMdGenerator:
 
         # Customize based on preferences
         content = self._customize_content(content)
+
+        # Inject selected principles into template
+        content = self._inject_principles(content)
+
+        # Inject selected skills into template
+        content = self._inject_skills(content)
+
+        # Inject selected agents into template
+        content = self._inject_agents(content)
 
         # Create backup if file exists (before writing)
         if output_path.exists():
@@ -206,24 +225,25 @@ class ClaudeMdGenerator:
         linting = self._get_pref("code_quality.linting_strictness", "standard")
         testing = self._get_pref("testing.strategy", "balanced")
 
-        # Add preference metadata after header
-        metadata = self._generate_metadata(project_name, team_size, linting, testing)
+        # Add preference metadata after header (if not already present)
+        if "**Project:**" not in content:
+            metadata = self._generate_metadata(project_name, team_size, linting, testing)
 
-        # Insert metadata after first header line
-        lines = content.split("\n")
-        insert_index = 0
+            # Insert metadata after first header line
+            lines = content.split("\n")
+            insert_index = 0
 
-        # Find first ## or --- (end of header)
-        for i, line in enumerate(lines):
-            if i > 0 and (line.startswith("##") or line.startswith("---")):
-                insert_index = i
-                break
+            # Find first ## or --- (end of header)
+            for i, line in enumerate(lines):
+                if i > 0 and (line.startswith("##") or line.startswith("---")):
+                    insert_index = i
+                    break
 
-        # Insert metadata
-        if insert_index > 0:
-            lines.insert(insert_index, "")
-            lines.insert(insert_index + 1, metadata)
-            content = "\n".join(lines)
+            # Insert metadata
+            if insert_index > 0:
+                lines.insert(insert_index, "")
+                lines.insert(insert_index + 1, metadata)
+                content = "\n".join(lines)
 
         # Add conditional sections based on preferences
         content = self._add_conditional_sections(content, team_size, linting, testing)
@@ -681,6 +701,263 @@ This file contains the mandatory development principles for this project. **You 
             "enterprise-30+": "Enterprise (30+)",
         }
         return mapping.get(team_size, team_size.title())
+
+    def _inject_principles(self, content: str) -> str:
+        """
+        Inject selected principles into CLAUDE.md template.
+
+        Replaces content between <!-- CCO_START --> and <!-- CCO_END --> markers
+        with formatted list of selected principles.
+        """
+        # Check if template has markers
+        if "<!-- CCO_START -->" not in content or "<!-- CCO_END -->" not in content:
+            return content
+
+        # Load selected principle IDs
+        selected_ids = self.preferences.get("selected_principle_ids", [])
+        if not selected_ids:
+            # No principles selected, leave template as-is
+            return content
+
+        # Load all principles
+        from .principle_md_loader import load_all_principles
+        if not self.principles_dir.exists():
+            return content
+
+        principles_list = load_all_principles(self.principles_dir)
+        all_principles = {p["id"]: p for p in principles_list}
+
+        # Group selected principles by category
+        categories = {}
+        for pid in selected_ids:
+            principle = all_principles.get(pid)
+            if not principle:
+                continue
+
+            category = principle.get("category", "other")
+            if category not in categories:
+                categories[category] = []
+
+            categories[category].append(principle)
+
+        # Build principles section
+        principles_content = []
+
+        # Get ALL universal principles
+        universal_principles = [p for p in principles_list
+                               if p.get("category") == "universal"]
+
+        principles_content.append("### Core Principles (Always Apply)\n")
+        principles_content.append("**Universal Principles** (apply to ALL projects):\n")
+
+        # Show first 3 universal principles with details
+        for i, principle in enumerate(universal_principles[:3]):
+            principles_content.append(f"\n#### {principle['id']}: {principle['title']}\n")
+            description = principle.get('description', principle.get('one_line_why', ''))
+            principles_content.append(f"{description}\n")
+            principles_content.append(f"**Details**: `.claude/principles/{principle['id']}.md`\n")
+
+        # List remaining universal principles
+        if len(universal_principles) > 3:
+            principles_content.append("\n**Additional Universal Principles:**\n")
+            for principle in universal_principles[3:]:
+                principles_content.append(f"- **{principle['id']}**: {principle['title']} → `.claude/principles/{principle['id']}.md`\n")
+
+        # Add reference to project-specific principles by category
+        principles_content.append("\n### Project-Specific Principles\n")
+        principles_content.append("For detailed principles, see individual files:\n")
+
+        category_names = {
+            "code_quality": "Code Quality",
+            "architecture": "Architecture",
+            "security_privacy": "Security & Privacy",
+            "testing": "Testing",
+            "git_workflow": "Git Workflow",
+            "performance": "Performance",
+            "operations": "Operations",
+            "api_design": "API Design",
+        }
+
+        # Count principles per category (excluding universal)
+        category_counts = {}
+        for pid in selected_ids:
+            principle = all_principles.get(pid)
+            if principle:
+                cat = principle.get("category", "other")
+                # Skip universal principles (already shown above)
+                if cat == "universal":
+                    continue
+                category_counts[cat] = category_counts.get(cat, 0) + 1
+
+        # List categories with individual principle links
+        for cat_id, cat_name in category_names.items():
+            count = category_counts.get(cat_id, 0)
+            if count > 0:
+                # Get principle IDs (excluding universal)
+                cat_principles = [p for p in categories.get(cat_id, [])
+                                 if p.get("category") != "universal"]
+                if cat_principles:
+                    principles_content.append(f"\n**{cat_name}** ({count} selected):\n")
+                    for p in sorted(cat_principles, key=lambda x: x["id"]):
+                        principles_content.append(f"- **{p['id']}**: {p['title']} → `.claude/principles/{p['id']}.md`\n")
+
+        # Count non-universal principles
+        non_universal_count = sum(1 for pid in selected_ids
+                                 if all_principles.get(pid, {}).get("category") != "universal")
+        total_with_universal = len(universal_principles) + non_universal_count
+
+        principles_content.append(f"\n**Total**: {len(universal_principles)} universal + {non_universal_count} project-specific = {total_with_universal} principles\n")
+
+        # Replace content between markers
+        start_marker = "<!-- CCO_START -->"
+        end_marker = "<!-- CCO_END -->"
+
+        start_idx = content.find(start_marker)
+        end_idx = content.find(end_marker)
+
+        if start_idx != -1 and end_idx != -1:
+            before = content[:start_idx + len(start_marker)]
+            after = content[end_idx:]
+            # principles_content already has \n at end of each line, so use empty join
+            injected = "\n" + "".join(principles_content)
+            content = before + injected + after
+
+        return content
+
+    def _inject_skills(self, content: str) -> str:
+        """
+        Inject selected skills into CLAUDE.md template.
+
+        Replaces content between <!-- CCO_SKILLS_START --> and <!-- CCO_SKILLS_END --> markers
+        with formatted list of selected skills.
+        """
+        # Check if template has markers
+        if "<!-- CCO_SKILLS_START -->" not in content or "<!-- CCO_SKILLS_END -->" not in content:
+            return content
+
+        if not self.selected_skills:
+            # No skills selected, remove markers section
+            start_marker = "<!-- CCO_SKILLS_START -->"
+            end_marker = "<!-- CCO_SKILLS_END -->"
+            start_idx = content.find(start_marker)
+            end_idx = content.find(end_marker)
+            if start_idx != -1 and end_idx != -1:
+                # Remove entire section including markers
+                before = content[:start_idx].rstrip()
+                after = content[end_idx + len(end_marker):].lstrip()
+                content = before + "\n\n" + after
+            return content
+
+        # Build skills section
+        skills_content = []
+        skills_content.append("## Available Skills\n")
+        skills_content.append("\n")
+        skills_content.append("**Workflow Skills** (reusable patterns):\n")
+
+        # Separate universal and language-specific skills
+        universal_skills = [s for s in self.selected_skills if "/" not in s]
+        language_skills = [s for s in self.selected_skills if "/" in s]
+
+        # List universal skills
+        if universal_skills:
+            skills_content.append("\n**Universal Skills:**\n")
+            for skill in sorted(universal_skills):
+                skill_name = skill.replace("-", " ").title()
+                skills_content.append(f"- **{skill_name}** → `.claude/skills/{skill}.md`\n")
+
+        # List language-specific skills
+        if language_skills:
+            # Group by language
+            lang_groups = {}
+            for skill in language_skills:
+                lang = skill.split("/")[0]
+                if lang not in lang_groups:
+                    lang_groups[lang] = []
+                lang_groups[lang].append(skill)
+
+            for lang, lang_skill_list in sorted(lang_groups.items()):
+                skills_content.append(f"\n**{lang.title()}-Specific Skills:**\n")
+                for skill in sorted(lang_skill_list):
+                    skill_name = skill.split("/")[1].replace("-", " ").title()
+                    skills_content.append(f"- **{skill_name}** → `.claude/skills/{skill}.md`\n")
+
+        skills_content.append(f"\n**Total**: {len(self.selected_skills)} skills available\n")
+
+        # Replace content between markers
+        start_marker = "<!-- CCO_SKILLS_START -->"
+        end_marker = "<!-- CCO_SKILLS_END -->"
+
+        start_idx = content.find(start_marker)
+        end_idx = content.find(end_marker)
+
+        if start_idx != -1 and end_idx != -1:
+            before = content[:start_idx + len(start_marker)]
+            after = content[end_idx:]
+            injected = "\n" + "".join(skills_content)
+            content = before + injected + after
+
+        return content
+
+    def _inject_agents(self, content: str) -> str:
+        """
+        Inject selected agents into CLAUDE.md template.
+
+        Replaces content between <!-- CCO_AGENTS_START --> and <!-- CCO_AGENTS_END --> markers
+        with formatted list of selected agents.
+        """
+        # Check if template has markers
+        if "<!-- CCO_AGENTS_START -->" not in content or "<!-- CCO_AGENTS_END -->" not in content:
+            return content
+
+        if not self.selected_agents:
+            # No agents selected, remove markers section
+            start_marker = "<!-- CCO_AGENTS_START -->"
+            end_marker = "<!-- CCO_AGENTS_END -->"
+            start_idx = content.find(start_marker)
+            end_idx = content.find(end_marker)
+            if start_idx != -1 and end_idx != -1:
+                # Remove entire section including markers
+                before = content[:start_idx].rstrip()
+                after = content[end_idx + len(end_marker):].lstrip()
+                content = before + "\n\n" + after
+            return content
+
+        # Build agents section
+        agents_content = []
+        agents_content.append("## Available Agents\n")
+        agents_content.append("\n")
+        agents_content.append("**Specialized AI Agents** (autonomous task execution):\n")
+        agents_content.append("\n")
+
+        # List agents with descriptions
+        agent_descriptions = {
+            "audit-agent": "Comprehensive code quality, security, and best practices analysis",
+            "fix-agent": "Automated issue resolution with root cause analysis",
+            "generate-agent": "Code, test, and documentation generation",
+        }
+
+        for agent in sorted(self.selected_agents):
+            agent_name = agent.replace("-", " ").title()
+            description = agent_descriptions.get(agent, "Specialized task automation")
+            agents_content.append(f"- **{agent_name}** → `.claude/agents/{agent}.md`\n")
+            agents_content.append(f"  {description}\n")
+
+        agents_content.append(f"\n**Total**: {len(self.selected_agents)} agents available\n")
+
+        # Replace content between markers
+        start_marker = "<!-- CCO_AGENTS_START -->"
+        end_marker = "<!-- CCO_AGENTS_END -->"
+
+        start_idx = content.find(start_marker)
+        end_idx = content.find(end_marker)
+
+        if start_idx != -1 and end_idx != -1:
+            before = content[:start_idx + len(start_marker)]
+            after = content[end_idx:]
+            injected = "\n" + "".join(agents_content)
+            content = before + injected + after
+
+        return content
 
     def _get_pref(self, path: str, default: Any = None) -> Any:  # noqa: ANN401
         """Get nested preference value"""
