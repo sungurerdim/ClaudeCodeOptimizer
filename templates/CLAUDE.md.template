@@ -7,26 +7,18 @@
 **⚠️ MANDATORY: All work MUST follow these principles ⚠️**
 
 <!-- CCO_START -->
-### Universal Principles (Apply to ALL Projects)
-
-[Universal principles U001-U012 will be inserted here during /cco-init]
+[Principles will be dynamically injected here during initialization]
+<!-- CCO_END -->
 
 ---
 
-### Project-Specific Principles
+<!-- CCO_SKILLS_START -->
+[Skills will be dynamically injected here during initialization]
+<!-- CCO_SKILLS_END -->
 
-[Project-specific principle selection will be inserted here during /cco-init]
-
-**Selected Categories**: [Auto-detected based on your project]
-
-**Note**: Commands like `/cco-audit`, `/cco-fix` automatically load relevant principles.
-
-**References**:
-- Universal principles: Always active (inline above)
-- Project principles: See `.claude/principles/` directory
-- Configuration: `.claude/project.json`
-
-<!-- CCO_END -->
+<!-- CCO_AGENTS_START -->
+[Agents will be dynamically injected here during initialization]
+<!-- CCO_AGENTS_END -->
 
 ---
 
@@ -234,8 +226,8 @@ Examples:
 
 ## Commit Guidelines
 
-**Principles**: Follow P072 (Concise Commits), P073 (Atomic Commits), P074 (Automated Versioning)
-See `.claude/principles/git-workflow.md` for detailed rules.
+**Principles**: Follow applicable development principles
+See `.claude/principles/` for detailed rules.
 
 **Commit Management:**
 - User manages all git operations via their preferred git client
@@ -243,7 +235,7 @@ See `.claude/principles/git-workflow.md` for detailed rules.
 - Never create commits automatically
 - User decides when and how to commit changes
 
-**Note**: Git Workflow and Versioning Strategy sections are dynamically added based on your project's configuration.
+**Note**: Additional workflow sections are dynamically added based on your project's configuration.
 
 ---
 
