@@ -1,7 +1,7 @@
 """
 Principles management system for ClaudeCodeOptimizer.
 
-Loads and manages the 52 development principles.
+Loads and manages the 74 development principles.
 Implements dynamic principle selection based on project characteristics.
 """
 
@@ -56,10 +56,12 @@ class PrinciplesManager:
         Initialize principles manager.
 
         Args:
-            principles_file: Path to principles.json (default: ~/.cco/knowledge/principles.json)
+            principles_file: Path to principles.json (default: content/principles.json from package)
         """
         if principles_file is None:
-            principles_file = CCOConfig.get_knowledge_dir() / "principles.json"
+            # Load from package content/ directory
+            package_dir = Path(__file__).parent.parent
+            principles_file = package_dir.parent / "content" / "principles.json"
 
         self.principles_file = principles_file
         self.principles: Dict[str, Principle] = {}
@@ -392,11 +394,11 @@ def get_principles_manager(principles_file: Optional[str] = None) -> PrinciplesM
     """
     Get cached PrinciplesManager instance (Singleton pattern - P012).
 
-    Expensive resource: Loads ~53 principles from JSON file (~100KB).
+    Expensive resource: Loads ~74 principles from JSON file (~134KB).
     Using @lru_cache ensures only one instance exists per principles_file.
 
     Args:
-        principles_file: Path to principles.json (default: ~/.cco/knowledge/principles.json)
+        principles_file: Path to principles.json (default: content/principles.json from package)
 
     Returns:
         Cached PrinciplesManager instance

@@ -393,25 +393,48 @@ class ProjectManager:
         print_separator("=", SEPARATOR_WIDTH)
         safe_print()
 
+    def _create_link(self, source: Path, destination: Path) -> str:
+        """
+        Create link from destination to source using preference order.
+
+        Tries in order: symlink → hardlink → copy
+        Returns: link type used ("symlink", "hardlink", "copy")
+        """
+        import shutil
+
+        # Remove existing if present
+        if destination.exists() or destination.is_symlink():
+            destination.unlink()
+
+        # Try symlink first (best: auto-updates)
+        try:
+            destination.symlink_to(source.absolute())
+            return "symlink"
+        except (OSError, NotImplementedError):
+            pass
+
+        # Try hardlink (good: same disk, no duplication)
+        try:
+            destination.hardlink_to(source.absolute())
+            return "hardlink"
+        except (OSError, NotImplementedError):
+            pass
+
+        # Fallback to copy (works everywhere)
+        shutil.copy2(source, destination)
+        return "copy"
+
     def _install_project_statusline(self) -> None:
         """
         Install statusline from global CCO to project .claude/ directory.
 
-        Linking Strategy (platform-aware):
-        - Unix/Linux/macOS: symlink > hardlink > copy
-        - Windows: hardlink > symlink > copy
-
-        Benefits:
-        - pip install -U updates global statusline → all projects auto-update
-        - Single source of truth
-        - Automatic synchronization across projects
+        Uses preference order: symlink → hardlink → copy
+        Benefits: pip install -U updates propagate to projects (symlink/hardlink)
         """
-        import os
-        import sys
         from datetime import datetime
 
-        # Source: global CCO statusline
-        global_statusline = self.config.get_global_dir() / "statusline.js"
+        # Source: global CCO statusline (deployed from statusline.js.template)
+        global_statusline = self.config.get_templates_dir() / "statusline.js"
 
         if not global_statusline.exists():
             return
@@ -445,60 +468,9 @@ class ProjectManager:
             except Exception as e:
                 logger.debug(f"Could not backup statusline: {e}")
 
-        # Remove existing file/link if present
-        if project_statusline.exists() or project_statusline.is_symlink():
-            project_statusline.unlink()
-
-        # Determine platform-specific strategy
-        is_unix = sys.platform in ["linux", "darwin"]
-        linked = False
-        link_type = None
-
-        if is_unix:
-            # Unix/Linux/macOS: Prefer symlink (more flexible)
-            try:
-                project_statusline.symlink_to(global_statusline.absolute())
-                linked = True
-                link_type = "symlink"
-            except (OSError, NotImplementedError):
-                pass
-
-        if not linked:
-            # Try hardlink (works same-volume, no admin on Windows)
-            try:
-                os.link(str(global_statusline.absolute()), str(project_statusline.absolute()))
-                linked = True
-                link_type = "hardlink"
-            except (OSError, NotImplementedError):
-                pass
-
-        if not linked and not is_unix:
-            # Windows fallback: Try symlink (needs Developer Mode/Admin)
-            try:
-                project_statusline.symlink_to(global_statusline.absolute())
-                linked = True
-                link_type = "symlink"
-            except (OSError, NotImplementedError):
-                pass
-
-        if not linked:
-            # Final fallback: Copy file (always works, but no auto-update)
-            try:
-                project_statusline.write_text(
-                    global_statusline.read_text(encoding="utf-8"),
-                    encoding="utf-8",
-                )
-                linked = True
-                link_type = "copy"
-            except Exception:
-                # If even copy fails, silently skip (logged at debug level)
-                return
-
-        # Log result for user feedback (only if verbose/debug mode)
-        if link_type in ["symlink", "hardlink"]:
-            logger.debug(f"Statusline {link_type}ed (auto-update enabled)")
-        elif link_type == "copy":
-            logger.debug("Statusline copied (manual update required)")
+        # Create link using preference order
+        link_type = self._create_link(global_statusline, project_statusline)
+        logger.debug(f"Statusline linked via {link_type}")
 
     def _install_principles_symlinks(self, selected_principles: List[Dict[str, Any]]) -> None:
         """
@@ -608,12 +580,12 @@ class ProjectManager:
             logger.debug("settings.json already exists, skipping template installation")
             return
 
-        # Get global template
+        # Get global template (deployed from settings.json.template)
         templates_dir = self.config.get_templates_dir()
-        template_file = templates_dir / "settings.json.template"
+        template_file = templates_dir / "settings.json"
 
         if not template_file.exists():
-            logger.debug("settings.json.template not found in global templates")
+            logger.debug("settings.json not found in global templates")
             return
 
         # Create .claude directory if needed
@@ -636,17 +608,15 @@ class ProjectManager:
         filter_func: Optional[callable] = None
     ) -> None:
         """
-        Generic function to install symlinks for a category.
+        Generic function to install links for a category.
+
+        Uses preference order: symlink → hardlink → copy
 
         Args:
             category: Category name (principles, guides, skills, agents)
             filter_func: Optional function(name, parent_dir="") -> bool to filter files
         """
-        import os
-        import sys
-
         # Source: global directory for this category
-        # Use config helper methods for each category
         category_methods = {
             "principles": self.config.get_principles_dir,
             "guides": self.config.get_guides_dir,
@@ -693,58 +663,13 @@ class ProjectManager:
             logger.debug(f"No {category} files found in global directory")
             return
 
-        # Determine platform-specific linking strategy
-        is_unix = sys.platform in ["linux", "darwin"]
         linked_count = 0
 
         # First, link all root-level files
         for global_file in global_files:
             project_file = project_category_dir / global_file.name
-
-            # Remove existing file/link if present
-            if project_file.exists() or project_file.is_symlink():
-                project_file.unlink()
-
-            # Try to create link
-            linked = False
-
-            if is_unix:
-                # Unix: Prefer symlink
-                try:
-                    project_file.symlink_to(global_file.absolute())
-                    linked = True
-                except (OSError, NotImplementedError):
-                    pass
-
-            if not linked:
-                # Try hardlink
-                try:
-                    os.link(str(global_file.absolute()), str(project_file.absolute()))
-                    linked = True
-                except (OSError, NotImplementedError):
-                    pass
-
-            if not linked and not is_unix:
-                # Windows fallback: Try symlink
-                try:
-                    project_file.symlink_to(global_file.absolute())
-                    linked = True
-                except (OSError, NotImplementedError):
-                    pass
-
-            if not linked:
-                # Final fallback: Copy file
-                try:
-                    project_file.write_text(
-                        global_file.read_text(encoding="utf-8"),
-                        encoding="utf-8",
-                    )
-                    linked = True
-                except Exception:
-                    continue
-
-            if linked:
-                linked_count += 1
+            self._create_link(global_file, project_file)
+            linked_count += 1
 
         # Second, link files from subdirectories (e.g., skills/python/, skills/go/)
         for subdir in subdirs:
@@ -762,49 +687,10 @@ class ProjectManager:
                     continue
 
                 project_file = project_subdir / global_file.name
+                self._create_link(global_file, project_file)
+                linked_count += 1
 
-                # Remove existing file/link if present
-                if project_file.exists() or project_file.is_symlink():
-                    project_file.unlink()
-
-                # Try to create link (same logic as root files)
-                linked = False
-
-                if is_unix:
-                    try:
-                        project_file.symlink_to(global_file.absolute())
-                        linked = True
-                    except (OSError, NotImplementedError):
-                        pass
-
-                if not linked:
-                    try:
-                        os.link(str(global_file.absolute()), str(project_file.absolute()))
-                        linked = True
-                    except (OSError, NotImplementedError):
-                        pass
-
-                if not linked and not is_unix:
-                    try:
-                        project_file.symlink_to(global_file.absolute())
-                        linked = True
-                    except (OSError, NotImplementedError):
-                        pass
-
-                if not linked:
-                    try:
-                        project_file.write_text(
-                            global_file.read_text(encoding="utf-8"),
-                            encoding="utf-8",
-                        )
-                        linked = True
-                    except Exception:
-                        continue
-
-                if linked:
-                    linked_count += 1
-
-        logger.debug(f"Linked {linked_count} {category} files to .claude/{category}/")
+        logger.debug(f"Symlinked {linked_count} {category} files to .claude/{category}/")
 
     def _generate_generic_commands(self, analysis: Dict[str, Any]) -> int:
         """
@@ -816,23 +702,12 @@ class ProjectManager:
         - CI/CD commands (if CI/CD detected)
         - Testing commands (based on testing needs)
 
-        Linking Strategy (platform-aware):
-        - Unix/Linux/macOS: symlink > hardlink > copy
-          (symlink is more flexible, works cross-volume)
-        - Windows: hardlink > symlink > copy
-          (hardlink doesn't require admin, symlink needs Developer Mode)
-
-        Benefits:
-        - pip install -U updates global commands → all projects auto-update
-        - No per-project maintenance needed
-        - Single source of truth
+        Uses preference order: symlink → hardlink → copy
+        Benefits: pip install -U updates global commands → all projects auto-update (symlink/hardlink)
 
         Returns:
             Number of commands generated
         """
-        import os
-        import sys
-
         # Source: global commands (project-agnostic, ready-to-use)
         global_commands_dir = self.config.get_global_commands_dir()
 
@@ -864,16 +739,10 @@ class ProjectManager:
 
         commands_generated = 0
         command_names = []  # Track command names for manifest
-        symlinks_created = 0
-        hardlinks_created = 0
-        copies_created = 0
 
         if not global_commands_dir.exists():
             # Global commands not installed yet
             return 0
-
-        # Determine platform-specific strategy
-        is_unix = sys.platform in ["linux", "darwin"]
 
         # Define command filter logic
         def should_include_command(command_name: str) -> bool:
@@ -922,70 +791,18 @@ class ProjectManager:
             command_name = f"cco-{base_name}.md"
             dest_file = project_commands / command_name
 
-            # Remove existing file if present
-            if dest_file.exists() or dest_file.is_symlink():
-                dest_file.unlink()
-
-            # Try linking strategies in platform-specific order
-            linked = False
-
-            if is_unix:
-                # Unix/Linux/macOS: Prefer symlink (more flexible)
-                try:
-                    dest_file.symlink_to(command_file.absolute())
-                    symlinks_created += 1
-                    linked = True
-                except (OSError, NotImplementedError):
-                    pass
-
-            if not linked:
-                # Try hardlink (works same-volume, no admin on Windows)
-                try:
-                    os.link(str(command_file.absolute()), str(dest_file.absolute()))
-                    hardlinks_created += 1
-                    linked = True
-                except (OSError, NotImplementedError):
-                    pass
-
-            if not linked and not is_unix:
-                # Windows fallback: Try symlink (needs Developer Mode/Admin)
-                try:
-                    dest_file.symlink_to(command_file.absolute())
-                    symlinks_created += 1
-                    linked = True
-                except (OSError, NotImplementedError):
-                    pass
-
-            if not linked:
-                # Final fallback: Copy file (always works, but no auto-update)
-                try:
-                    dest_file.write_text(
-                        command_file.read_text(encoding="utf-8"),
-                        encoding="utf-8",
-                    )
-                    copies_created += 1
-                    linked = True
-                except Exception as e:
-                    # Skip this command if all linking methods fail
-                    logger.debug(f"Failed to link command {command_name}: {e}")
-                    continue
-
-            if linked:
-                commands_generated += 1
-                command_names.append(f"cco-{base_name}")  # Track command name
+            # Create link using preference order
+            self._create_link(command_file, dest_file)
+            commands_generated += 1
+            command_names.append(f"cco-{base_name}")
 
         # Track commands installation in manifest
         if command_names:
             self.manifest.track_commands_installed(command_names)
 
-        # Log summary (for user feedback)
-        if symlinks_created > 0:
-            safe_print(f"  Symlinked {symlinks_created} commands (auto-update enabled)")
-        if hardlinks_created > 0:
-            safe_print(f"  Hardlinked {hardlinks_created} commands (auto-update enabled)")
-        if copies_created > 0:
-            safe_print(f"  Copied {copies_created} commands (manual update required)")
-            safe_print("  Note: Run 'cco init --force' after pip install -U to update")
+        # Log summary
+        if commands_generated > 0:
+            safe_print(f"  Linked {commands_generated} commands (auto-update enabled)")
 
         return commands_generated
 

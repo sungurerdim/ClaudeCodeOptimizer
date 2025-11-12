@@ -576,12 +576,12 @@ class PrincipleSelector:
         for cat_id, (cat_name, count, description) in category_info.items():
             filename = cat_id.replace("_", "-")
             # Use global path (zero-pollution)
-            global_path = f"~/.cco/knowledge/principles/{filename}.md"
+            global_path = f"~/.cco/principles/{filename}.md"
             lines.append(f"- **[{cat_name}]({global_path})** - {count} principles")
             lines.append(f"  - {description}")
         lines.append("")
         lines.append(
-            "**Note**: All category files stored globally in `~/.cco/knowledge/principles/`"
+            "**Note**: All category files stored globally in `~/.cco/principles/`"
         )
         lines.append("")
         lines.append("---")
@@ -623,8 +623,8 @@ class PrincipleSelector:
         lines.append("")
         lines.append("For category-specific principles:")
         lines.append("```")
-        lines.append("@~/.cco/knowledge/principles/security.md  # Load security principles")
-        lines.append("@~/.cco/knowledge/principles/testing.md   # Load testing principles")
+        lines.append("@~/.cco/principles/security.md  # Load security principles")
+        lines.append("@~/.cco/principles/testing.md   # Load testing principles")
         lines.append("```")
         lines.append("")
         lines.append("### In Commands")
@@ -657,10 +657,10 @@ class PrincipleSelector:
 
     def generate_category_files(self, docs_path: Path) -> Dict[str, Any]:
         """
-        Generate category-specific principle files in docs/cco/principles/
+        Generate category-specific principle files in ~/.cco/principles/
 
         Args:
-            docs_path: Path to docs/cco/principles/ directory
+            docs_path: Path to ~/.cco/principles/ directory
 
         Returns:
             Dictionary with generation stats

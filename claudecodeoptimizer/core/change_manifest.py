@@ -441,15 +441,19 @@ class ChangeManifest:
                 elif change.reverse_action == "restore_backup":
                     # Restore from backup
                     if change.backup_path:
-                        # Support both absolute paths (new) and relative paths (legacy)
                         backup_path = Path(change.backup_path)
                         if not backup_path.is_absolute():
-                            backup_path = self.project_root / change.backup_path
+                            raise ValueError(
+                                f"Backup path must be absolute, got: {change.backup_path}\n"
+                                f"This manifest may be from an older CCO version."
+                            )
 
                         file_path = self.project_root / change.path
                         if backup_path.exists():
                             shutil.copy2(backup_path, file_path)
                             removed.append(f"Restored {change.path} from backup")
+                        else:
+                            errors.append(f"Backup not found: {backup_path}")
 
                 elif change.reverse_action == "delete_directory":
                     dir_path = self.project_root / change.path

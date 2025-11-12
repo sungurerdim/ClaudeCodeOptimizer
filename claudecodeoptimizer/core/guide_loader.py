@@ -27,22 +27,17 @@ class GuideLoader:
 
         Args:
             guides_dir: Directory containing guide files
-                       (default: docs/cco/guides/)
+                       (default: ~/.cco/guides/)
         """
         if guides_dir is None:
-            # Try multiple locations
-            candidates = [
-                Path.cwd() / "docs" / "cco" / "guides",
-                Path.cwd() / "guides",
-                Path(__file__).parent.parent.parent / "docs" / "cco" / "guides",
-            ]
-            for candidate in candidates:
-                if candidate.exists():
-                    guides_dir = candidate
-                    break
-            else:
-                # Fallback to first candidate
-                guides_dir = candidates[0]
+            from ..config import CCOConfig
+            guides_dir = CCOConfig.get_guides_dir()
+
+        if not guides_dir.exists():
+            raise FileNotFoundError(
+                f"Guides directory not found: {guides_dir}\n"
+                f"Please ensure CCO is properly installed."
+            )
 
         self.guides_dir = guides_dir
         self._cache: Dict[str, str] = {}

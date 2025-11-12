@@ -1,0 +1,4720 @@
+{
+  "version": "2.1.0",
+  "total_principles": 74,
+  "categories": [
+    {
+      "id": "code_quality",
+      "name": "Code Quality",
+      "description": "DRY, fail-fast, type safety, immutability, precision, version management",
+      "principle_count": 14
+    },
+    {
+      "id": "architecture",
+      "name": "Architecture",
+      "description": "Event-driven, microservices, singleton, separation of concerns, patterns",
+      "principle_count": 10
+    },
+    {
+      "id": "security_privacy",
+      "name": "Security & Privacy",
+      "description": "Encryption, zero-disk, privacy-first, auth, secrets, input validation",
+      "principle_count": 19
+    },
+    {
+      "id": "operations",
+      "name": "Operational Excellence",
+      "description": "Minimal responsibility, config as code, IaC, observability",
+      "principle_count": 10
+    },
+    {
+      "id": "testing",
+      "name": "Testing",
+      "description": "Coverage, isolation, test pyramid, integration, CI gates",
+      "principle_count": 6
+    },
+    {
+      "id": "git_workflow",
+      "name": "Git Workflow",
+      "description": "Commit conventions, branching, PR guidelines, versioning",
+      "principle_count": 8
+    },
+    {
+      "id": "performance",
+      "name": "Performance",
+      "description": "Caching, DB optimization, lazy loading, async I/O",
+      "principle_count": 5
+    },
+    {
+      "id": "api_design",
+      "name": "API Design",
+      "description": "RESTful conventions, versioning, error handling",
+      "principle_count": 2
+    }
+  ],
+  "principles": [
+    {
+      "id": "P001",
+      "number": 1,
+      "title": "Fail-Fast Error Handling",
+      "category": "code_quality",
+      "severity": "critical",
+      "weight": 10,
+      "description": "Errors must cause immediate, visible failure. No silent fallbacks, no swallowed exceptions.",
+      "applicability": {
+        "project_types": [
+          "all"
+        ],
+        "languages": [
+          "all"
+        ],
+        "contexts": [
+          "all"
+        ],
+        "conditions": []
+      },
+      "rules": [
+        {
+          "id": "no-bare-except",
+          "description": "No bare except: clauses",
+          "check_pattern": "except:\\\\s*$",
+          "languages": [
+            "python"
+          ],
+          "severity": "critical"
+        },
+        {
+          "id": "no-silent-catch",
+          "description": "No empty catch blocks",
+          "check_pattern": "catch\\\\s*\\\\([^)]*\\\\)\\\\s*\\\\{\\\\s*\\\\}",
+          "languages": [
+            "javascript",
+            "typescript",
+            "java"
+          ],
+          "severity": "critical"
+        }
+      ],
+      "examples": {
+        "bad": [
+          "try:\\n    result = risky()\\nexcept:\\n    pass"
+        ],
+        "good": [
+          "try:\\n    result = risky()\\nexcept SpecificError as e:\\n    logger.error(f'Failed: {e}')\\n    raise"
+        ]
+      },
+      "autofix": {
+        "available": false,
+        "complexity": "manual"
+      },
+      "enforcement": {
+        "verification_protocol": true,
+        "test_first": true,
+        "root_cause_analysis": true
+      },
+      "incremental_fix": {
+        "priority": "critical",
+        "batch_size": 1
+      },
+      "one_line_why": "Catches bugs early in development before they reach production"
+    },
+    {
+      "id": "P002",
+      "number": 2,
+      "title": "DRY Enforcement",
+      "category": "code_quality",
+      "severity": "high",
+      "weight": 10,
+      "description": "Single source of truth for all data, logic, configuration. Zero duplicate definitions.",
+      "applicability": {
+        "project_types": [
+          "all"
+        ],
+        "languages": [
+          "all"
+        ],
+        "contexts": [
+          "all"
+        ],
+        "conditions": []
+      },
+      "rules": [
+        {
+          "id": "no-duplicate-functions",
+          "description": "No duplicate function definitions",
+          "check_pattern": "def\\\\s+(\\\\w+).*:\\\\s*\\\\n.*def\\\\s+\\\\1",
+          "languages": [
+            "python"
+          ],
+          "severity": "high"
+        },
+        {
+          "id": "no-magic-numbers",
+          "description": "No magic numbers except 0, 1, -1",
+          "check_pattern": "(?<![\\\\w\\\\.])([2-9]|[1-9]\\\\d+)(?![\\\\w\\\\.])",
+          "languages": [
+            "all"
+          ],
+          "severity": "medium"
+        }
+      ],
+      "examples": {
+        "bad": [
+          "MAX_RETRIES = 3  # file1\\nMAX_RETRIES = 3  # file2 - duplicate!"
+        ],
+        "good": [
+          "# shared/constants.py\\nMAX_RETRIES = 3\\n\\n# Other files\\nfrom shared.constants import MAX_RETRIES"
+        ]
+      },
+      "autofix": {
+        "available": true,
+        "complexity": "high"
+      },
+      "enforcement": {
+        "verification_protocol": true,
+        "test_first": true,
+        "root_cause_analysis": true
+      },
+      "incremental_fix": {
+        "priority": "high",
+        "batch_size": 3
+      },
+      "one_line_why": "Eliminates code duplication to reduce bugs and maintenance burden"
+    },
+    {
+      "id": "P003",
+      "number": 3,
+      "title": "Complete Integration Check",
+      "category": "code_quality",
+      "severity": "high",
+      "weight": 8,
+      "description": "Zero orphaned code. Every function called, every import used, every file referenced.",
+      "applicability": {
+        "project_types": [
+          "all"
+        ],
+        "languages": [
+          "all"
+        ],
+        "contexts": [
+          "production"
+        ],
+        "conditions": []
+      },
+      "rules": [
+        {
+          "id": "no-unused-imports",
+          "description": "No unused imports",
+          "check_pattern": "import\\\\s+(\\\\w+)(?!.*\\\\1)",
+          "languages": [
+            "python",
+            "javascript",
+            "typescript"
+          ],
+          "severity": "medium"
+        }
+      ],
+      "examples": {
+        "bad": [
+          "import unused_module  # Never referenced"
+        ],
+        "good": [
+          "from utils import used_func\\nresult = used_func()"
+        ]
+      },
+      "autofix": {
+        "available": true,
+        "complexity": "low"
+      },
+      "enforcement": {
+        "verification_protocol": true,
+        "test_first": false,
+        "root_cause_analysis": true
+      },
+      "incremental_fix": {
+        "priority": "medium",
+        "batch_size": 5
+      },
+      "one_line_why": "Prevents runtime errors by catching type mismatches during development"
+    },
+    {
+      "id": "P004",
+      "number": 4,
+      "title": "No Backward Compatibility Debt",
+      "category": "code_quality",
+      "severity": "high",
+      "weight": 7,
+      "description": "Clean migration - delete old system entirely, no config flags for old/new.",
+      "applicability": {
+        "project_types": [
+          "all"
+        ],
+        "languages": [
+          "all"
+        ],
+        "contexts": [
+          "all"
+        ],
+        "conditions": []
+      },
+      "rules": [
+        {
+          "id": "no-feature-flags-legacy",
+          "description": "No USE_OLD/USE_NEW feature flags",
+          "check_pattern": "USE_OLD|USE_NEW|LEGACY|DEPRECATED",
+          "languages": [
+            "all"
+          ],
+          "severity": "high"
+        }
+      ],
+      "examples": {
+        "bad": [
+          "if USE_NEW_API:\\n    new_func()\\nelse:\\n    old_func()  # Tech debt!"
+        ],
+        "good": [
+          "new_func()  # Old system deleted"
+        ]
+      },
+      "autofix": {
+        "available": false,
+        "complexity": "manual"
+      },
+      "enforcement": {
+        "verification_protocol": true,
+        "test_first": true,
+        "root_cause_analysis": true
+      },
+      "incremental_fix": {
+        "priority": "high",
+        "batch_size": 1
+      },
+      "one_line_why": "Prevents bugs from state changes by making data unchangeable after creation"
+    },
+    {
+      "id": "P005",
+      "number": 5,
+      "title": "Schema-First Validation",
+      "category": "security_privacy",
+      "severity": "critical",
+      "weight": 10,
+      "description": "Use schema-based validation (Pydantic/Joi) for all external inputs.",
+      "applicability": {
+        "project_types": [
+          "api",
+          "web",
+          "ml"
+        ],
+        "languages": [
+          "python",
+          "javascript",
+          "typescript"
+        ],
+        "contexts": [
+          "api_endpoints",
+          "data_processing"
+        ],
+        "conditions": []
+      },
+      "rules": [
+        {
+          "id": "validate-at-entry",
+          "description": "Validate data at API entry points",
+          "check_pattern": "@app\\\\.(post|put|patch).*\\\\ndef\\\\s+\\\\w+\\\\([^)]*\\\\)\\\\s*:(?!.*validate)",
+          "languages": [
+            "python"
+          ],
+          "severity": "critical"
+        }
+      ],
+      "examples": {
+        "bad": [
+          "@app.post('/api')\\ndef create(data: dict):  # No validation!"
+        ],
+        "good": [
+          "@app.post('/api')\\ndef create(data: ResourceSchema):  # Validated"
+        ]
+      },
+      "autofix": {
+        "available": false,
+        "complexity": "manual"
+      },
+      "enforcement": {
+        "verification_protocol": true,
+        "test_first": true,
+        "root_cause_analysis": true
+      },
+      "incremental_fix": {
+        "priority": "critical",
+        "batch_size": 1
+      },
+      "one_line_why": "Reduces ambiguity and edge cases by using exact types instead of loose ones"
+    },
+    {
+      "id": "P006",
+      "number": 6,
+      "title": "Precision in Calculations",
+      "category": "code_quality",
+      "severity": "high",
+      "weight": 7,
+      "description": "Use Decimal for financial, proper float types for scientific, avoid premature rounding.",
+      "applicability": {
+        "project_types": [
+          "all"
+        ],
+        "languages": [
+          "python",
+          "javascript",
+          "java"
+        ],
+        "contexts": [
+          "financial",
+          "scientific"
+        ],
+        "conditions": []
+      },
+      "rules": [
+        {
+          "id": "no-float-for-money",
+          "description": "No float for money calculations",
+          "check_pattern": "float.*cost|price.*float|balance.*float",
+          "languages": [
+            "python"
+          ],
+          "severity": "critical"
+        }
+      ],
+      "examples": {
+        "bad": [
+          "cost = 0.1 + 0.2  # 0.30000000000000004"
+        ],
+        "good": [
+          "from decimal import Decimal\\ncost = Decimal('0.1') + Decimal('0.2')  # 0.3"
+        ]
+      },
+      "autofix": {
+        "available": false,
+        "complexity": "manual"
+      },
+      "enforcement": {
+        "verification_protocol": true,
+        "test_first": true,
+        "root_cause_analysis": true
+      },
+      "incremental_fix": {
+        "priority": "high",
+        "batch_size": 2
+      },
+      "one_line_why": "Makes code self-documenting by using clear, descriptive variable and function names"
+    },
+    {
+      "id": "P007",
+      "number": 7,
+      "title": "Immutability by Default",
+      "category": "code_quality",
+      "severity": "medium",
+      "weight": 6,
+      "description": "Use frozen dataclasses, const by default, minimize mutable state.",
+      "applicability": {
+        "project_types": [
+          "all"
+        ],
+        "languages": [
+          "python",
+          "javascript",
+          "typescript"
+        ],
+        "contexts": [
+          "all"
+        ],
+        "conditions": []
+      },
+      "rules": [
+        {
+          "id": "prefer-frozen-dataclass",
+          "description": "Use frozen=True for dataclasses",
+          "check_pattern": "@dataclass(?!.*frozen=True)",
+          "languages": [
+            "python"
+          ],
+          "severity": "medium"
+        }
+      ],
+      "examples": {
+        "bad": [
+          "@dataclass\\nclass User:  # Mutable"
+        ],
+        "good": [
+          "@dataclass(frozen=True)\\nclass User:  # Immutable"
+        ]
+      },
+      "autofix": {
+        "available": true,
+        "complexity": "low"
+      },
+      "enforcement": {
+        "verification_protocol": true,
+        "test_first": true,
+        "root_cause_analysis": true
+      },
+      "incremental_fix": {
+        "priority": "medium",
+        "batch_size": 5
+      },
+      "one_line_why": "Keeps functions focused on one task making them easier to test and reuse"
+    },
+    {
+      "id": "P008",
+      "number": 8,
+      "title": "Code Review Checklist Compliance",
+      "category": "code_quality",
+      "severity": "medium",
+      "weight": 7,
+      "description": "All PRs must pass mandatory code review checklist (large teams).",
+      "applicability": {
+        "project_types": [
+          "all"
+        ],
+        "languages": [
+          "all"
+        ],
+        "contexts": [
+          "all"
+        ],
+        "conditions": [
+          "team_size > 5"
+        ]
+      },
+      "rules": [],
+      "examples": {
+        "bad": [
+          "# No checklist, reviewers inconsistent"
+        ],
+        "good": [
+          "# PR template with checklist:\\n- [ ] Tests added\\n- [ ] Docs updated"
+        ]
+      },
+      "autofix": {
+        "available": false,
+        "complexity": "manual"
+      },
+      "enforcement": {
+        "verification_protocol": true,
+        "test_first": false,
+        "root_cause_analysis": false
+      },
+      "incremental_fix": {
+        "priority": "medium",
+        "batch_size": 1
+      },
+      "one_line_why": "Prevents tight coupling by hiding implementation details behind clean interfaces"
+    },
+    {
+      "id": "P009",
+      "number": 9,
+      "title": "Linting & SAST Enforcement",
+      "category": "code_quality",
+      "severity": "high",
+      "weight": 8,
+      "description": "Use linters (ruff/eslint) AND SAST tools (Semgrep/CodeQL/Snyk) with strict rules, enforce in CI.",
+      "applicability": {
+        "project_types": [
+          "all"
+        ],
+        "languages": [
+          "all"
+        ],
+        "contexts": [
+          "all"
+        ],
+        "conditions": []
+      },
+      "rules": [
+        {
+          "id": "has-lint-config",
+          "description": "Project has linter configuration",
+          "check_pattern": "pyproject.toml|.pylintrc|.eslintrc|.ruff.toml",
+          "languages": [
+            "all"
+          ],
+          "severity": "medium"
+        },
+        {
+          "id": "sast-scanning",
+          "description": "Use SAST tools (Semgrep, CodeQL, Snyk Code)",
+          "check_pattern": "semgrep|codeql|snyk.?code|sonarqube",
+          "languages": [
+            "all"
+          ],
+          "severity": "high"
+        },
+        {
+          "id": "ci-enforcement",
+          "description": "Linting + SAST enforced in CI pipeline",
+          "check_pattern": "ci|github.?actions|gitlab.?ci|jenkins",
+          "languages": [
+            "all"
+          ],
+          "severity": "high"
+        },
+        {
+          "id": "security-rules",
+          "description": "Enable security-focused rules (bandit, eslint-plugin-security)",
+          "check_pattern": "bandit|security|S[0-9]{3}",
+          "languages": [
+            "python",
+            "javascript",
+            "typescript"
+          ],
+          "severity": "high"
+        }
+      ],
+      "examples": {
+        "bad": [
+          "# No linter config, no SAST",
+          "# Code passes without security checks"
+        ],
+        "good": [
+          "# pyproject.toml - Linting with security",
+          "[tool.ruff.lint]",
+          "select = ['E', 'F', 'W', 'S', 'B']  # Include bandit security rules",
+          "",
+          "# .github/workflows/ci.yml - SAST in CI",
+          "- name: Run Semgrep",
+          "  uses: semgrep/semgrep-action@v1",
+          "  with:",
+          "    config: 'p/security-audit'",
+          "",
+          "- name: Run CodeQL",
+          "  uses: github/codeql-action/analyze@v2",
+          "",
+          "- name: Run Snyk Code",
+          "  run: snyk code test"
+        ]
+      },
+      "autofix": {
+        "available": false,
+        "complexity": "manual"
+      },
+      "enforcement": {
+        "verification_protocol": true,
+        "test_first": false,
+        "root_cause_analysis": true
+      },
+      "incremental_fix": {
+        "priority": "medium",
+        "batch_size": 1
+      },
+      "one_line_why": "Catches security vulnerabilities and code quality issues before production",
+      "standards": [
+        "OWASP SAMM SA1 (Static Analysis)",
+        "NIST SSDF PW.7",
+        "CWE Top 25",
+        "Semgrep Registry",
+        "GitHub CodeQL",
+        "Snyk Code"
+      ]
+    },
+    {
+      "id": "P010",
+      "number": 10,
+      "title": "Performance Profiling Before Optimization",
+      "category": "code_quality",
+      "severity": "low",
+      "weight": 5,
+      "description": "Always profile before optimizing - no premature optimization.",
+      "applicability": {
+        "project_types": [
+          "all"
+        ],
+        "languages": [
+          "all"
+        ],
+        "contexts": [
+          "performance_critical"
+        ],
+        "conditions": []
+      },
+      "rules": [],
+      "examples": {
+        "bad": [
+          "# Optimize without measuring first"
+        ],
+        "good": [
+          "# Profile: python -m cProfile script.py\\n# Then optimize hotspots"
+        ]
+      },
+      "autofix": {
+        "available": false,
+        "complexity": "manual"
+      },
+      "enforcement": {
+        "verification_protocol": false,
+        "test_first": false,
+        "root_cause_analysis": false
+      },
+      "incremental_fix": {
+        "priority": "low",
+        "batch_size": 10
+      },
+      "one_line_why": "Improves code clarity by writing functions that return values instead of modifying state"
+    },
+    {
+      "id": "P011",
+      "number": 11,
+      "title": "Event-Driven Architecture",
+      "category": "architecture",
+      "severity": "critical",
+      "weight": 9,
+      "description": "Use async, event-driven patterns for scalability - communicate via events.",
+      "applicability": {
+        "project_types": [
+          "api",
+          "microservices"
+        ],
+        "languages": [
+          "all"
+        ],
+        "contexts": [
+          "all"
+        ],
+        "conditions": [
+          "services > 2"
+        ]
+      },
+      "rules": [
+        {
+          "id": "no-blocking-calls",
+          "description": "No blocking calls in async functions",
+          "check_pattern": "async def.*\\n.*time\\.sleep|requests\\.get",
+          "languages": [
+            "python"
+          ],
+          "severity": "high"
+        }
+      ],
+      "examples": {
+        "bad": [
+          "@app.post('/api')\\ndef create(data):\\n    result = blocking_call()  # Blocks!"
+        ],
+        "good": [
+          "@app.post('/api')\\nasync def create(data):\\n    queue.enqueue(process_job, data)  # Non-blocking"
+        ]
+      },
+      "autofix": {
+        "available": false,
+        "complexity": "high"
+      },
+      "enforcement": {
+        "verification_protocol": true,
+        "test_first": true,
+        "root_cause_analysis": true
+      },
+      "incremental_fix": {
+        "priority": "critical",
+        "batch_size": 1
+      },
+      "one_line_why": "Prevents resource leaks by ensuring cleanup always happens even when errors occur"
+    },
+    {
+      "id": "P012",
+      "number": 12,
+      "title": "Singleton Pattern for Expensive Resources",
+      "category": "architecture",
+      "severity": "high",
+      "weight": 7,
+      "description": "DB connections, ML models, config must be singleton.",
+      "applicability": {
+        "project_types": [
+          "all"
+        ],
+        "languages": [
+          "all"
+        ],
+        "contexts": [
+          "all"
+        ],
+        "conditions": []
+      },
+      "rules": [
+        {
+          "id": "no-resource-recreation",
+          "description": "No repeated expensive resource creation",
+          "check_pattern": "def.*\\n.*Redis\\\\(|MongoClient\\\\(",
+          "languages": [
+            "python"
+          ],
+          "severity": "high"
+        }
+      ],
+      "examples": {
+        "bad": [
+          "def get_data():\\n    client = Redis()  # Creates new each time!"
+        ],
+        "good": [
+          "@lru_cache(maxsize=1)\\ndef get_redis():\\n    return Redis()  # Singleton"
+        ]
+      },
+      "autofix": {
+        "available": true,
+        "complexity": "medium"
+      },
+      "enforcement": {
+        "verification_protocol": true,
+        "test_first": true,
+        "root_cause_analysis": true
+      },
+      "incremental_fix": {
+        "priority": "high",
+        "batch_size": 2
+      },
+      "one_line_why": "Reduces system coupling by using events instead of direct function calls"
+    },
+    {
+      "id": "P013",
+      "number": 13,
+      "title": "Separation of Concerns",
+      "category": "architecture",
+      "severity": "high",
+      "weight": 7,
+      "description": "Each layer/service has ONE responsibility - no mixing.",
+      "applicability": {
+        "project_types": [
+          "all"
+        ],
+        "languages": [
+          "all"
+        ],
+        "contexts": [
+          "all"
+        ],
+        "conditions": []
+      },
+      "rules": [
+        {
+          "id": "no-business-logic-in-api",
+          "description": "No business logic in API layer",
+          "check_pattern": "@app\\..*\\n.*def.*calculate|process|transform",
+          "languages": [
+            "python"
+          ],
+          "severity": "high"
+        }
+      ],
+      "examples": {
+        "bad": [
+          "@app.post('/api')\\ndef create(data):\\n    result = complex_calc(data)  # Business logic in API!"
+        ],
+        "good": [
+          "@app.post('/api')\\ndef create(data):\\n    return business_layer.process(data)  # Delegated"
+        ]
+      },
+      "autofix": {
+        "available": false,
+        "complexity": "high"
+      },
+      "enforcement": {
+        "verification_protocol": true,
+        "test_first": true,
+        "root_cause_analysis": true
+      },
+      "incremental_fix": {
+        "priority": "high",
+        "batch_size": 1
+      },
+      "one_line_why": "Makes systems scalable by breaking monoliths into independent, deployable services"
+    },
+    {
+      "id": "P014",
+      "number": 14,
+      "title": "Microservices with Service Mesh",
+      "category": "architecture",
+      "severity": "high",
+      "weight": 8,
+      "description": "Use Service Mesh (Istio/Linkerd) for mTLS, traffic management, observability. API Gateway + Event Bus for communication.",
+      "applicability": {
+        "project_types": [
+          "microservices"
+        ],
+        "languages": [
+          "all"
+        ],
+        "contexts": [
+          "all"
+        ],
+        "conditions": [
+          "services > 3"
+        ]
+      },
+      "rules": [
+        {
+          "id": "service-mesh",
+          "description": "Use service mesh for 3+ services (Istio, Linkerd, Consul)",
+          "check_pattern": "istio|linkerd|consul.?connect|service.?mesh",
+          "languages": [
+            "all"
+          ],
+          "severity": "high"
+        },
+        {
+          "id": "mtls-enabled",
+          "description": "Enable mTLS between services",
+          "check_pattern": "mtls|mutual.?tls|peerAuthentication",
+          "languages": [
+            "all"
+          ],
+          "severity": "high"
+        },
+        {
+          "id": "api-gateway",
+          "description": "Use API Gateway for external access",
+          "check_pattern": "gateway|ingress|kong|ambassador",
+          "languages": [
+            "all"
+          ],
+          "severity": "high"
+        },
+        {
+          "id": "event-driven",
+          "description": "Event bus for async communication (Kafka, NATS, RabbitMQ)",
+          "check_pattern": "kafka|nats|rabbitmq|event.?bus",
+          "languages": [
+            "all"
+          ],
+          "severity": "medium"
+        },
+        {
+          "id": "circuit-breaker",
+          "description": "Circuit breaker for resilience",
+          "check_pattern": "circuit.?breaker|destinationRule",
+          "languages": [
+            "all"
+          ],
+          "severity": "medium"
+        }
+      ],
+      "examples": {
+        "bad": [
+          "# Direct service-to-service HTTP calls (no mTLS, no retries)",
+          "response = requests.get('http://service-b:8080/api/users')",
+          "",
+          "# No circuit breaker - cascading failures possible"
+        ],
+        "good": [
+          "# Istio Service Mesh - mTLS + observability",
+          "apiVersion: security.istio.io/v1beta1",
+          "kind: PeerAuthentication",
+          "metadata:",
+          "  name: default",
+          "spec:",
+          "  mtls:",
+          "    mode: STRICT",
+          "",
+          "# Circuit breaker with Istio",
+          "apiVersion: networking.istio.io/v1beta1",
+          "kind: DestinationRule",
+          "metadata:",
+          "  name: service-b",
+          "spec:",
+          "  trafficPolicy:",
+          "    connectionPool:",
+          "      tcp:",
+          "        maxConnections: 100",
+          "    outlierDetection:",
+          "      consecutiveErrors: 5",
+          "      interval: 30s",
+          "",
+          "# Event-driven async communication",
+          "await event_bus.publish('order.created', {",
+          "  'order_id': order.id,",
+          "  'user_id': user.id",
+          "})"
+        ]
+      },
+      "autofix": {
+        "available": false,
+        "complexity": "high"
+      },
+      "enforcement": {
+        "verification_protocol": true,
+        "test_first": true,
+        "root_cause_analysis": true
+      },
+      "incremental_fix": {
+        "priority": "high",
+        "batch_size": 1
+      },
+      "one_line_why": "Provides secure, observable, resilient service-to-service communication with mTLS and traffic management",
+      "standards": [
+        "Service Mesh Interface (SMI)",
+        "Istio Best Practices",
+        "CNCF Service Mesh Landscape",
+        "mTLS (Mutual TLS)",
+        "Circuit Breaker Pattern"
+      ]
+    },
+    {
+      "id": "P015",
+      "number": 15,
+      "title": "CQRS Pattern",
+      "category": "architecture",
+      "severity": "medium",
+      "weight": 6,
+      "description": "Separate Command (write) and Query (read) models for complex domains.",
+      "applicability": {
+        "project_types": [
+          "microservices",
+          "api"
+        ],
+        "languages": [
+          "all"
+        ],
+        "contexts": [
+          "complex_domain"
+        ],
+        "conditions": []
+      },
+      "rules": [],
+      "examples": {
+        "bad": [
+          "# Same model for read and write"
+        ],
+        "good": [
+          "# WriteModel for commands\\n# ReadModel (denormalized) for queries"
+        ]
+      },
+      "autofix": {
+        "available": false,
+        "complexity": "high"
+      },
+      "enforcement": {
+        "verification_protocol": true,
+        "test_first": true,
+        "root_cause_analysis": true
+      },
+      "incremental_fix": {
+        "priority": "medium",
+        "batch_size": 1
+      },
+      "one_line_why": "Catches bugs before merge through peer code review and knowledge sharing"
+    },
+    {
+      "id": "P016",
+      "number": 16,
+      "title": "Dependency Injection",
+      "category": "architecture",
+      "severity": "medium",
+      "weight": 6,
+      "description": "Explicit dependencies via DI, no globals, easier testing.",
+      "applicability": {
+        "project_types": [
+          "all"
+        ],
+        "languages": [
+          "all"
+        ],
+        "contexts": [
+          "all"
+        ],
+        "conditions": []
+      },
+      "rules": [
+        {
+          "id": "no-global-state",
+          "description": "No global variables",
+          "check_pattern": "^global\\\\s+\\\\w+",
+          "languages": [
+            "python"
+          ],
+          "severity": "medium"
+        }
+      ],
+      "examples": {
+        "bad": [
+          "db = Database()  # Global\\ndef query():\\n    return db.execute()"
+        ],
+        "good": [
+          "def query(db: Database):\\n    return db.execute()  # Injected"
+        ]
+      },
+      "autofix": {
+        "available": false,
+        "complexity": "medium"
+      },
+      "enforcement": {
+        "verification_protocol": true,
+        "test_first": true,
+        "root_cause_analysis": true
+      },
+      "incremental_fix": {
+        "priority": "medium",
+        "batch_size": 3
+      },
+      "one_line_why": "Maintains code quality through consistent PR templates and review checklists"
+    },
+    {
+      "id": "P017",
+      "number": 17,
+      "title": "Circuit Breaker Pattern",
+      "category": "architecture",
+      "severity": "medium",
+      "weight": 7,
+      "description": "Fail fast on external failures, prevent cascade failures.",
+      "applicability": {
+        "project_types": [
+          "microservices",
+          "api"
+        ],
+        "languages": [
+          "all"
+        ],
+        "contexts": [
+          "distributed_systems"
+        ],
+        "conditions": []
+      },
+      "rules": [],
+      "examples": {
+        "bad": [
+          "# No circuit breaker, retries forever"
+        ],
+        "good": [
+          "@circuit_breaker(failure_threshold=5, timeout=60)\\ndef call_external_api():"
+        ]
+      },
+      "autofix": {
+        "available": false,
+        "complexity": "medium"
+      },
+      "enforcement": {
+        "verification_protocol": true,
+        "test_first": true,
+        "root_cause_analysis": true
+      },
+      "incremental_fix": {
+        "priority": "medium",
+        "batch_size": 2
+      },
+      "one_line_why": "Enables parallel development through isolated feature branches and clear merge strategy"
+    },
+    {
+      "id": "P018",
+      "number": 18,
+      "title": "API Versioning Strategy",
+      "category": "architecture",
+      "severity": "high",
+      "weight": 9,
+      "description": "Support N and N-1 versions, never break existing clients.",
+      "applicability": {
+        "project_types": [
+          "api",
+          "library"
+        ],
+        "languages": [
+          "all"
+        ],
+        "contexts": [
+          "public_api"
+        ],
+        "conditions": []
+      },
+      "rules": [],
+      "examples": {
+        "bad": [
+          "# No versioning, changes break clients"
+        ],
+        "good": [
+          "/api/v1/resource  # Old version\\n/api/v2/resource  # New version"
+        ]
+      },
+      "autofix": {
+        "available": false,
+        "complexity": "high"
+      },
+      "enforcement": {
+        "verification_protocol": true,
+        "test_first": true,
+        "root_cause_analysis": true
+      },
+      "incremental_fix": {
+        "priority": "high",
+        "batch_size": 1
+      },
+      "one_line_why": "Prevents breaking existing clients by supporting multiple API versions simultaneously"
+    },
+    {
+      "id": "P019",
+      "number": 19,
+      "title": "Privacy-First by Default",
+      "category": "security_privacy",
+      "severity": "critical",
+      "weight": 9,
+      "description": "PII explicitly managed, cleaned from memory after use.",
+      "applicability": {
+        "project_types": [
+          "all"
+        ],
+        "languages": [
+          "all"
+        ],
+        "contexts": [
+          "all"
+        ],
+        "conditions": [
+          "privacy_critical"
+        ]
+      },
+      "rules": [
+        {
+          "id": "no-pii-without-cleanup",
+          "description": "PII variables must have cleanup",
+          "check_pattern": "audio_data|patient_record(?!.*secure_zero|.*del.*gc)",
+          "languages": [
+            "python"
+          ],
+          "severity": "critical"
+        }
+      ],
+      "examples": {
+        "bad": [
+          "data = load_pii()\\nprocess(data)  # Lingers in memory!"
+        ],
+        "good": [
+          "data = load_pii()\\ntry:\\n    process(data)\\nfinally:\\n    secure_zero(data)"
+        ]
+      },
+      "autofix": {
+        "available": false,
+        "complexity": "manual"
+      },
+      "enforcement": {
+        "verification_protocol": true,
+        "test_first": true,
+        "root_cause_analysis": true
+      },
+      "incremental_fix": {
+        "priority": "critical",
+        "batch_size": 1
+      },
+      "one_line_why": "Protects sensitive data by encrypting it at rest and in transit"
+    },
+    {
+      "id": "P020",
+      "number": 20,
+      "title": "TTL-Based Cleanup",
+      "category": "security_privacy",
+      "severity": "high",
+      "weight": 7,
+      "description": "Temporary data auto-expires via TTL - no manual cleanup.",
+      "applicability": {
+        "project_types": [
+          "all"
+        ],
+        "languages": [
+          "all"
+        ],
+        "contexts": [
+          "all"
+        ],
+        "conditions": []
+      },
+      "rules": [
+        {
+          "id": "cache-without-ttl",
+          "description": "Cache sets must have TTL",
+          "check_pattern": "\\\\.set\\\\(|cache_set\\\\((?!.*ttl=)",
+          "languages": [
+            "python"
+          ],
+          "severity": "high"
+        }
+      ],
+      "examples": {
+        "bad": [
+          "redis.set('key', value)  # No TTL, leaks memory!"
+        ],
+        "good": [
+          "redis.setex('key', 3600, value)  # Auto-expires in 1h"
+        ]
+      },
+      "autofix": {
+        "available": true,
+        "complexity": "low"
+      },
+      "enforcement": {
+        "verification_protocol": true,
+        "test_first": true,
+        "root_cause_analysis": true
+      },
+      "incremental_fix": {
+        "priority": "high",
+        "batch_size": 2
+      },
+      "one_line_why": "Maximizes privacy by never writing sensitive data to disk or logs"
+    },
+    {
+      "id": "P021",
+      "number": 21,
+      "title": "Encryption Everywhere",
+      "category": "security_privacy",
+      "severity": "critical",
+      "weight": 10,
+      "description": "All sensitive data at rest MUST be encrypted (AES-256-GCM).",
+      "applicability": {
+        "project_types": [
+          "all"
+        ],
+        "languages": [
+          "all"
+        ],
+        "contexts": [
+          "all"
+        ],
+        "conditions": [
+          "security_critical"
+        ]
+      },
+      "rules": [
+        {
+          "id": "no-plaintext-cache",
+          "description": "No plaintext in cache",
+          "check_pattern": "redis\\.set(?!.*encrypt)",
+          "languages": [
+            "python"
+          ],
+          "severity": "critical"
+        }
+      ],
+      "examples": {
+        "bad": [
+          "redis.set('sensitive', data)  # Plaintext!"
+        ],
+        "good": [
+          "redis.set('sensitive', encrypt_aes_gcm(data))"
+        ]
+      },
+      "autofix": {
+        "available": false,
+        "complexity": "manual"
+      },
+      "enforcement": {
+        "verification_protocol": true,
+        "test_first": true,
+        "root_cause_analysis": true
+      },
+      "incremental_fix": {
+        "priority": "critical",
+        "batch_size": 1
+      },
+      "one_line_why": "Minimizes data collection by only storing what's absolutely necessary for functionality"
+    },
+    {
+      "id": "P022",
+      "number": 22,
+      "title": "Zero Disk Touch",
+      "category": "security_privacy",
+      "severity": "critical",
+      "weight": 9,
+      "description": "Sensitive data never touches filesystem - RAM and secure storage only.",
+      "applicability": {
+        "project_types": [
+          "all"
+        ],
+        "languages": [
+          "all"
+        ],
+        "contexts": [
+          "all"
+        ],
+        "conditions": [
+          "privacy_critical"
+        ]
+      },
+      "rules": [
+        {
+          "id": "no-temp-files-sensitive",
+          "description": "No temp files for sensitive data",
+          "check_pattern": "NamedTemporaryFile|mktemp|/tmp/",
+          "languages": [
+            "python"
+          ],
+          "severity": "critical"
+        }
+      ],
+      "examples": {
+        "bad": [
+          "with open('/tmp/audio.wav', 'wb') as f:  # Disk touch!"
+        ],
+        "good": [
+          "process = subprocess.Popen(['ffmpeg', '-i', 'pipe:0'], stdin=PIPE)  # In-memory"
+        ]
+      },
+      "autofix": {
+        "available": false,
+        "complexity": "high"
+      },
+      "enforcement": {
+        "verification_protocol": true,
+        "test_first": true,
+        "root_cause_analysis": true
+      },
+      "incremental_fix": {
+        "priority": "critical",
+        "batch_size": 1
+      },
+      "one_line_why": "Protects user privacy by anonymizing data before collection and storage"
+    },
+    {
+      "id": "P023",
+      "number": 23,
+      "title": "Type Safety & Static Analysis",
+      "category": "code_quality",
+      "severity": "high",
+      "weight": 9,
+      "description": "All code MUST have type annotations, pass mypy/pyright strict mode.",
+      "applicability": {
+        "project_types": [
+          "all"
+        ],
+        "languages": [
+          "python",
+          "typescript"
+        ],
+        "contexts": [
+          "all"
+        ],
+        "conditions": []
+      },
+      "rules": [
+        {
+          "id": "missing-type-hints",
+          "description": "Functions without type hints",
+          "check_pattern": "^def .*\\\\([^)]*\\\\)\\\\s*:(?!.*->)",
+          "languages": [
+            "python"
+          ],
+          "severity": "high"
+        }
+      ],
+      "examples": {
+        "bad": [
+          "def calculate(x, y):  # No types!"
+        ],
+        "good": [
+          "def calculate(x: int, y: int) -> int:"
+        ]
+      },
+      "autofix": {
+        "available": false,
+        "complexity": "manual"
+      },
+      "enforcement": {
+        "verification_protocol": true,
+        "test_first": false,
+        "root_cause_analysis": true
+      },
+      "incremental_fix": {
+        "priority": "high",
+        "batch_size": 5
+      },
+      "one_line_why": "Adds security layer by validating all external input before processing"
+    },
+    {
+      "id": "P024",
+      "number": 24,
+      "title": "Authentication & Authorization",
+      "category": "security_privacy",
+      "severity": "critical",
+      "weight": 10,
+      "description": "OAuth2 + RBAC, verify permissions on every request.",
+      "applicability": {
+        "project_types": [
+          "api",
+          "web"
+        ],
+        "languages": [
+          "all"
+        ],
+        "contexts": [
+          "api_endpoints"
+        ],
+        "conditions": []
+      },
+      "rules": [],
+      "examples": {
+        "bad": [
+          "@app.get('/admin')\\ndef admin():  # No auth check!"
+        ],
+        "good": [
+          "@app.get('/admin')\\n@require_role('admin')\\ndef admin():"
+        ]
+      },
+      "autofix": {
+        "available": false,
+        "complexity": "high"
+      },
+      "enforcement": {
+        "verification_protocol": true,
+        "test_first": true,
+        "root_cause_analysis": true
+      },
+      "incremental_fix": {
+        "priority": "critical",
+        "batch_size": 1
+      },
+      "one_line_why": "Prevents unauthorized access through proper authentication and session management"
+    },
+    {
+      "id": "P025",
+      "number": 25,
+      "title": "SQL Injection Prevention",
+      "category": "security_privacy",
+      "severity": "critical",
+      "weight": 10,
+      "description": "Always use parameterized queries, never string concatenation.",
+      "applicability": {
+        "project_types": [
+          "all"
+        ],
+        "languages": [
+          "all"
+        ],
+        "contexts": [
+          "database"
+        ],
+        "conditions": []
+      },
+      "rules": [
+        {
+          "id": "no-string-concat-sql",
+          "description": "No string concatenation in SQL",
+          "check_pattern": "execute\\\\(.*f['\\\"]|execute\\\\(.*\\\\+",
+          "languages": [
+            "python"
+          ],
+          "severity": "critical"
+        }
+      ],
+      "examples": {
+        "bad": [
+          "cursor.execute(f'SELECT * FROM users WHERE id={user_id}')  # SQL injection!"
+        ],
+        "good": [
+          "cursor.execute('SELECT * FROM users WHERE id=%s', (user_id,))  # Parameterized"
+        ]
+      },
+      "autofix": {
+        "available": true,
+        "complexity": "medium"
+      },
+      "enforcement": {
+        "verification_protocol": true,
+        "test_first": true,
+        "root_cause_analysis": true
+      },
+      "incremental_fix": {
+        "priority": "critical",
+        "batch_size": 1
+      },
+      "one_line_why": "Prevents credential leaks by storing secrets outside code in secure vaults"
+    },
+    {
+      "id": "P026",
+      "number": 26,
+      "title": "Secret Management with Rotation",
+      "category": "security_privacy",
+      "severity": "critical",
+      "weight": 10,
+      "description": "Use secret managers (Vault, AWS/Azure/GCP), never hardcode. Implement rotation policies and audit logging.",
+      "applicability": {
+        "project_types": [
+          "all"
+        ],
+        "languages": [
+          "all"
+        ],
+        "contexts": [
+          "all"
+        ],
+        "conditions": []
+      },
+      "rules": [
+        {
+          "id": "no-hardcoded-secrets",
+          "description": "No hardcoded API keys/passwords/tokens",
+          "check_pattern": "api_key.*=.*['\\\"][a-zA-Z0-9]{20,}|password.*=.*['\\\"]",
+          "languages": [
+            "all"
+          ],
+          "severity": "critical"
+        },
+        {
+          "id": "use-secret-manager",
+          "description": "Use secret manager (Vault, AWS Secrets Manager, etc.)",
+          "check_pattern": "vault|secretmanager|keyvault|sealed.?secret",
+          "languages": [
+            "all"
+          ],
+          "severity": "high"
+        },
+        {
+          "id": "secret-rotation",
+          "description": "Implement secret rotation (30-90 days)",
+          "check_pattern": "rotate|rotation.?policy",
+          "languages": [
+            "all"
+          ],
+          "severity": "high"
+        },
+        {
+          "id": "secret-audit-logging",
+          "description": "Audit all secret access",
+          "check_pattern": "audit|access.?log",
+          "languages": [
+            "all"
+          ],
+          "severity": "medium"
+        },
+        {
+          "id": "no-secrets-in-git",
+          "description": "Never commit secrets to git",
+          "check_pattern": "git.?secret|gitleaks|trufflehog",
+          "languages": [
+            "all"
+          ],
+          "severity": "critical"
+        }
+      ],
+      "examples": {
+        "bad": [
+          "# Hardcoded secret (CRITICAL violation)",
+          "API_KEY = '<hardcoded-api-key-value>'",
+          "DB_PASSWORD = '<hardcoded-password-value>'",
+          "",
+          "# Plain env var without rotation",
+          "SECRET = os.getenv('SECRET')  # No rotation policy"
+        ],
+        "good": [
+          "# HashiCorp Vault",
+          "import hvac",
+          "client = hvac.Client(url='https://vault.example.com')",
+          "secret = client.secrets.kv.v2.read_secret_version(path='myapp/config')",
+          "API_KEY = secret['data']['data']['api_key']",
+          "",
+          "# AWS Secrets Manager with rotation",
+          "import boto3",
+          "client = boto3.client('secretsmanager')",
+          "secret = client.get_secret_value(SecretId='prod/api/key')",
+          "",
+          "# Kubernetes Sealed Secrets",
+          "apiVersion: bitnami.com/v1alpha1",
+          "kind: SealedSecret",
+          "metadata:",
+          "  name: mysecret",
+          "spec:",
+          "  encryptedData:",
+          "    password: AgBy3i4OJSWK+PiTySYZZA9rO43cGDEq..."
+        ]
+      },
+      "autofix": {
+        "available": false,
+        "complexity": "manual"
+      },
+      "enforcement": {
+        "verification_protocol": true,
+        "test_first": false,
+        "root_cause_analysis": true
+      },
+      "incremental_fix": {
+        "priority": "critical",
+        "batch_size": 1
+      },
+      "one_line_why": "Prevents credential leaks and enables rotation without code changes",
+      "standards": [
+        "NIST SP 800-57 (Key Management)",
+        "OWASP ASVS V2 (Authentication)",
+        "CIS Kubernetes Benchmark 5.4",
+        "HashiCorp Vault",
+        "AWS Secrets Manager",
+        "Sealed Secrets (Kubernetes)"
+      ]
+    },
+    {
+      "id": "P027",
+      "number": 27,
+      "title": "Rate Limiting & Throttling",
+      "category": "security_privacy",
+      "severity": "high",
+      "weight": 8,
+      "description": "Prevent abuse with rate limiting on all public endpoints.",
+      "applicability": {
+        "project_types": [
+          "api",
+          "web"
+        ],
+        "languages": [
+          "all"
+        ],
+        "contexts": [
+          "api_endpoints"
+        ],
+        "conditions": []
+      },
+      "rules": [],
+      "examples": {
+        "bad": [
+          "@app.post('/api')  # No rate limiting"
+        ],
+        "good": [
+          "@limiter.limit('100/minute')\\n@app.post('/api')"
+        ]
+      },
+      "autofix": {
+        "available": false,
+        "complexity": "medium"
+      },
+      "enforcement": {
+        "verification_protocol": true,
+        "test_first": true,
+        "root_cause_analysis": true
+      },
+      "incremental_fix": {
+        "priority": "high",
+        "batch_size": 2
+      },
+      "one_line_why": "Prevents injection attacks by using parameterized queries instead of string concatenation"
+    },
+    {
+      "id": "P028",
+      "number": 28,
+      "title": "CORS Policy",
+      "category": "security_privacy",
+      "severity": "high",
+      "weight": 7,
+      "description": "Principle of least privilege - only allow required origins.",
+      "applicability": {
+        "project_types": [
+          "api",
+          "web"
+        ],
+        "languages": [
+          "all"
+        ],
+        "contexts": [
+          "api"
+        ],
+        "conditions": []
+      },
+      "rules": [],
+      "examples": {
+        "bad": [
+          "CORS(app, origins='*')  # Allows anyone!"
+        ],
+        "good": [
+          "CORS(app, origins=['https://example.com'])"
+        ]
+      },
+      "autofix": {
+        "available": false,
+        "complexity": "low"
+      },
+      "enforcement": {
+        "verification_protocol": true,
+        "test_first": true,
+        "root_cause_analysis": true
+      },
+      "incremental_fix": {
+        "priority": "high",
+        "batch_size": 1
+      },
+      "one_line_why": "Protects APIs from abuse through rate limiting and request throttling"
+    },
+    {
+      "id": "P029",
+      "number": 29,
+      "title": "Input Sanitization (XSS Prevention)",
+      "category": "security_privacy",
+      "severity": "critical",
+      "weight": 9,
+      "description": "Escape/sanitize all user input before rendering.",
+      "applicability": {
+        "project_types": [
+          "web"
+        ],
+        "languages": [
+          "javascript",
+          "typescript",
+          "python"
+        ],
+        "contexts": [
+          "web_frontend"
+        ],
+        "conditions": []
+      },
+      "rules": [],
+      "examples": {
+        "bad": [
+          "innerHTML = user_input  # XSS!"
+        ],
+        "good": [
+          "textContent = user_input  # Safe"
+        ]
+      },
+      "autofix": {
+        "available": false,
+        "complexity": "medium"
+      },
+      "enforcement": {
+        "verification_protocol": true,
+        "test_first": true,
+        "root_cause_analysis": true
+      },
+      "incremental_fix": {
+        "priority": "critical",
+        "batch_size": 1
+      },
+      "one_line_why": "Prevents XSS attacks by sanitizing all user input before display"
+    },
+    {
+      "id": "P030",
+      "number": 30,
+      "title": "Audit Logging",
+      "category": "security_privacy",
+      "severity": "high",
+      "weight": 8,
+      "description": "Log all security events (auth, access, changes) for audit trail.",
+      "applicability": {
+        "project_types": [
+          "all"
+        ],
+        "languages": [
+          "all"
+        ],
+        "contexts": [
+          "all"
+        ],
+        "conditions": [
+          "security_critical"
+        ]
+      },
+      "rules": [],
+      "examples": {
+        "bad": [
+          "# No logging for sensitive operations"
+        ],
+        "good": [
+          "audit_logger.info('User {user_id} accessed resource {resource_id}')"
+        ]
+      },
+      "autofix": {
+        "available": false,
+        "complexity": "medium"
+      },
+      "enforcement": {
+        "verification_protocol": true,
+        "test_first": false,
+        "root_cause_analysis": true
+      },
+      "incremental_fix": {
+        "priority": "high",
+        "batch_size": 2
+      },
+      "one_line_why": "Enables security incident investigation through comprehensive audit logging"
+    },
+    {
+      "id": "P031",
+      "number": 31,
+      "title": "Minimal Responsibility (Zero Maintenance)",
+      "category": "operations",
+      "severity": "high",
+      "weight": 8,
+      "description": "Manual admin tasks = 0. Every process auto-manages lifecycle.",
+      "applicability": {
+        "project_types": [
+          "all"
+        ],
+        "languages": [
+          "all"
+        ],
+        "contexts": [
+          "all"
+        ],
+        "conditions": []
+      },
+      "rules": [],
+      "examples": {
+        "bad": [
+          "# Cron job: python cleanup.py  # Manual!"
+        ],
+        "good": [
+          "redis.setex(key, ttl, value)  # Auto-expires"
+        ]
+      },
+      "autofix": {
+        "available": false,
+        "complexity": "manual"
+      },
+      "enforcement": {
+        "verification_protocol": true,
+        "test_first": true,
+        "root_cause_analysis": true
+      },
+      "incremental_fix": {
+        "priority": "high",
+        "batch_size": 2
+      },
+      "one_line_why": "Reduces operational burden by automating all manual maintenance tasks"
+    },
+    {
+      "id": "P032",
+      "number": 32,
+      "title": "Configuration as Code",
+      "category": "operations",
+      "severity": "high",
+      "weight": 8,
+      "description": "All config versioned, validated, environment-aware, never hardcoded.",
+      "applicability": {
+        "project_types": [
+          "all"
+        ],
+        "languages": [
+          "all"
+        ],
+        "contexts": [
+          "all"
+        ],
+        "conditions": []
+      },
+      "rules": [
+        {
+          "id": "no-hardcoded-config",
+          "description": "No hardcoded IPs/hosts",
+          "check_pattern": "[0-9]{1,3}\\\\.[0-9]{1,3}\\\\.[0-9]{1,3}\\\\.[0-9]{1,3}",
+          "languages": [
+            "all"
+          ],
+          "severity": "high"
+        }
+      ],
+      "examples": {
+        "bad": [
+          "DB_HOST = 'localhost'  # Hardcoded!"
+        ],
+        "good": [
+          "class Settings(BaseSettings):\\n    DB_HOST: str = Field(..., env='DB_HOST')"
+        ]
+      },
+      "autofix": {
+        "available": false,
+        "complexity": "medium"
+      },
+      "enforcement": {
+        "verification_protocol": true,
+        "test_first": false,
+        "root_cause_analysis": true
+      },
+      "incremental_fix": {
+        "priority": "high",
+        "batch_size": 3
+      },
+      "one_line_why": "Makes configuration reproducible by versioning all config files in git"
+    },
+    {
+      "id": "P033",
+      "number": 33,
+      "title": "Infrastructure as Code + GitOps",
+      "category": "operations",
+      "severity": "high",
+      "weight": 8,
+      "description": "IaC (Terraform/Pulumi) + GitOps (ArgoCD/Flux) for declarative, version-controlled infrastructure with automated reconciliation.",
+      "applicability": {
+        "project_types": [
+          "all"
+        ],
+        "languages": [
+          "all"
+        ],
+        "contexts": [
+          "all"
+        ],
+        "conditions": [
+          "team_size > 2"
+        ]
+      },
+      "rules": [
+        {
+          "id": "iac-versioned",
+          "description": "Infrastructure code versioned in Git",
+          "check_pattern": "terraform|pulumi|cloudformation|bicep",
+          "languages": [
+            "all"
+          ],
+          "severity": "high"
+        },
+        {
+          "id": "gitops-deployment",
+          "description": "Use GitOps for deployments (ArgoCD, Flux)",
+          "check_pattern": "argocd|flux|gitops",
+          "languages": [
+            "all"
+          ],
+          "severity": "medium"
+        },
+        {
+          "id": "declarative-config",
+          "description": "Declarative K8s manifests (no imperative kubectl)",
+          "check_pattern": "apiVersion|kind:|deployment\\.yaml",
+          "languages": [
+            "yaml"
+          ],
+          "severity": "high"
+        },
+        {
+          "id": "drift-detection",
+          "description": "Detect and reconcile infrastructure drift",
+          "check_pattern": "reconcile|drift|state",
+          "languages": [
+            "all"
+          ],
+          "severity": "medium"
+        }
+      ],
+      "examples": {
+        "bad": [
+          "# Manual kubectl apply",
+          "kubectl apply -f deployment.yaml",
+          "",
+          "# No version control",
+          "# Infrastructure changes made via console/CLI"
+        ],
+        "good": [
+          "# IaC - Terraform",
+          "resource \"aws_eks_cluster\" \"main\" {",
+          "  name     = var.cluster_name",
+          "  role_arn = aws_iam_role.cluster.arn",
+          "}",
+          "",
+          "# GitOps - ArgoCD Application",
+          "apiVersion: argoproj.io/v1alpha1",
+          "kind: Application",
+          "metadata:",
+          "  name: myapp",
+          "spec:",
+          "  source:",
+          "    repoURL: https://github.com/org/repo",
+          "    targetRevision: HEAD",
+          "    path: k8s/",
+          "  destination:",
+          "    server: https://kubernetes.default.svc",
+          "    namespace: production",
+          "  syncPolicy:",
+          "    automated:",
+          "      prune: true",
+          "      selfHeal: true"
+        ]
+      },
+      "autofix": {
+        "available": false,
+        "complexity": "high"
+      },
+      "enforcement": {
+        "verification_protocol": true,
+        "test_first": false,
+        "root_cause_analysis": true
+      },
+      "incremental_fix": {
+        "priority": "medium",
+        "batch_size": 1
+      },
+      "one_line_why": "Enables reproducible infrastructure with Git as single source of truth and automated drift correction",
+      "standards": [
+        "OpenGitOps Principles v1.0",
+        "CNCF GitOps Working Group",
+        "HashiCorp Terraform Best Practices",
+        "ArgoCD",
+        "Flux CD",
+        "Atlantis (Terraform automation)"
+      ]
+    },
+    {
+      "id": "P034",
+      "number": 34,
+      "title": "Observability with OpenTelemetry",
+      "category": "operations",
+      "severity": "high",
+      "weight": 9,
+      "description": "Use OpenTelemetry (OTel) for unified metrics, traces, logs, and profiles. Vendor-neutral instrumentation.",
+      "applicability": {
+        "project_types": [
+          "api",
+          "microservices"
+        ],
+        "languages": [
+          "all"
+        ],
+        "contexts": [
+          "all"
+        ],
+        "conditions": []
+      },
+      "rules": [
+        {
+          "id": "otel-instrumentation",
+          "description": "Use OpenTelemetry SDK for all instrumentation",
+          "check_pattern": "opentelemetry|otel",
+          "languages": [
+            "all"
+          ],
+          "severity": "high"
+        },
+        {
+          "id": "structured-logs",
+          "description": "Structured JSON logs with trace context",
+          "check_pattern": "json.+log|structlog",
+          "languages": [
+            "all"
+          ],
+          "severity": "high"
+        },
+        {
+          "id": "distributed-tracing",
+          "description": "Distributed tracing with W3C Trace Context",
+          "check_pattern": "trace|span|w3c.?trace.?context",
+          "languages": [
+            "all"
+          ],
+          "severity": "high"
+        },
+        {
+          "id": "metrics-collection",
+          "description": "RED metrics (Rate, Errors, Duration) for services",
+          "check_pattern": "metrics|prometheus|counter|histogram",
+          "languages": [
+            "all"
+          ],
+          "severity": "medium"
+        }
+      ],
+      "examples": {
+        "bad": [
+          "# No instrumentation, plain text logs",
+          "print('User logged in')",
+          "# No trace context propagation"
+        ],
+        "good": [
+          "# OpenTelemetry instrumentation",
+          "from opentelemetry import trace, metrics",
+          "tracer = trace.get_tracer(__name__)",
+          "meter = metrics.get_meter(__name__)",
+          "",
+          "with tracer.start_as_current_span('process_request') as span:",
+          "    span.set_attribute('user.id', user_id)",
+          "    request_counter.add(1, {'endpoint': '/api/users'})",
+          "    logger.info('Request processed', extra={'trace_id': span.get_span_context().trace_id})"
+        ]
+      },
+      "autofix": {
+        "available": false,
+        "complexity": "medium"
+      },
+      "enforcement": {
+        "verification_protocol": true,
+        "test_first": true,
+        "root_cause_analysis": true
+      },
+      "incremental_fix": {
+        "priority": "high",
+        "batch_size": 2
+      },
+      "one_line_why": "Enables fast debugging through centralized, structured, searchable logs",
+      "standards": [
+        "OpenTelemetry 1.0+",
+        "W3C Trace Context",
+        "Prometheus Exposition Format",
+        "OTLP (OpenTelemetry Protocol)"
+      ]
+    },
+    {
+      "id": "P035",
+      "number": 35,
+      "title": "Health Checks & Readiness Probes",
+      "category": "operations",
+      "severity": "high",
+      "weight": 8,
+      "description": "Kubernetes-compatible health endpoints, dependency checks.",
+      "applicability": {
+        "project_types": [
+          "api",
+          "microservices"
+        ],
+        "languages": [
+          "all"
+        ],
+        "contexts": [
+          "all"
+        ],
+        "conditions": []
+      },
+      "rules": [],
+      "examples": {
+        "bad": [
+          "# No health endpoint"
+        ],
+        "good": [
+          "@app.get('/health')\\ndef health():\\n    return {'status': 'healthy', 'dependencies': check_deps()}"
+        ]
+      },
+      "autofix": {
+        "available": false,
+        "complexity": "low"
+      },
+      "enforcement": {
+        "verification_protocol": true,
+        "test_first": true,
+        "root_cause_analysis": true
+      },
+      "incremental_fix": {
+        "priority": "high",
+        "batch_size": 2
+      },
+      "one_line_why": "Detects anomalies early through comprehensive metrics and alerting"
+    },
+    {
+      "id": "P036",
+      "number": 36,
+      "title": "Graceful Shutdown",
+      "category": "operations",
+      "severity": "medium",
+      "weight": 7,
+      "description": "Handle SIGTERM, finish in-flight requests before exit.",
+      "applicability": {
+        "project_types": [
+          "api",
+          "microservices"
+        ],
+        "languages": [
+          "all"
+        ],
+        "contexts": [
+          "all"
+        ],
+        "conditions": []
+      },
+      "rules": [],
+      "examples": {
+        "bad": [
+          "# No signal handling, abrupt termination"
+        ],
+        "good": [
+          "signal.signal(signal.SIGTERM, graceful_shutdown)"
+        ]
+      },
+      "autofix": {
+        "available": false,
+        "complexity": "medium"
+      },
+      "enforcement": {
+        "verification_protocol": true,
+        "test_first": true,
+        "root_cause_analysis": true
+      },
+      "incremental_fix": {
+        "priority": "medium",
+        "batch_size": 2
+      },
+      "one_line_why": "Enables quick problem diagnosis through distributed request tracing"
+    },
+    {
+      "id": "P037",
+      "number": 37,
+      "title": "Test Coverage Targets",
+      "category": "testing",
+      "severity": "high",
+      "weight": 8,
+      "description": "Minimum 80% line coverage, 100% for critical paths.",
+      "applicability": {
+        "project_types": [
+          "all"
+        ],
+        "languages": [
+          "all"
+        ],
+        "contexts": [
+          "all"
+        ],
+        "conditions": []
+      },
+      "rules": [],
+      "examples": {
+        "bad": [
+          "# 30% coverage"
+        ],
+        "good": [
+          "# pytest-cov shows 85% coverage"
+        ]
+      },
+      "autofix": {
+        "available": false,
+        "complexity": "manual"
+      },
+      "enforcement": {
+        "verification_protocol": true,
+        "test_first": true,
+        "root_cause_analysis": true
+      },
+      "incremental_fix": {
+        "priority": "high",
+        "batch_size": 5
+      },
+      "one_line_why": "Catches integration issues early by running full test suite on every commit"
+    },
+    {
+      "id": "P038",
+      "number": 38,
+      "title": "Test Isolation",
+      "category": "testing",
+      "severity": "high",
+      "weight": 7,
+      "description": "No shared state between tests, each test independent.",
+      "applicability": {
+        "project_types": [
+          "all"
+        ],
+        "languages": [
+          "all"
+        ],
+        "contexts": [
+          "all"
+        ],
+        "conditions": []
+      },
+      "rules": [],
+      "examples": {
+        "bad": [
+          "global_state = {}  # Shared between tests!"
+        ],
+        "good": [
+          "@pytest.fixture\\ndef state():\\n    return {}  # Fresh per test"
+        ]
+      },
+      "autofix": {
+        "available": false,
+        "complexity": "medium"
+      },
+      "enforcement": {
+        "verification_protocol": true,
+        "test_first": true,
+        "root_cause_analysis": true
+      },
+      "incremental_fix": {
+        "priority": "high",
+        "batch_size": 3
+      },
+      "one_line_why": "Ensures quality by blocking deploys when tests fail or coverage drops"
+    },
+    {
+      "id": "P039",
+      "number": 39,
+      "title": "Integration Tests for Critical Paths",
+      "category": "testing",
+      "severity": "high",
+      "weight": 8,
+      "description": "Test service-to-service workflows end-to-end.",
+      "applicability": {
+        "project_types": [
+          "api",
+          "microservices"
+        ],
+        "languages": [
+          "all"
+        ],
+        "contexts": [
+          "all"
+        ],
+        "conditions": []
+      },
+      "rules": [],
+      "examples": {
+        "bad": [
+          "# Only unit tests, no integration"
+        ],
+        "good": [
+          "def test_job_workflow():\\n    # POST /jobs -> Queue -> Worker -> Result"
+        ]
+      },
+      "autofix": {
+        "available": false,
+        "complexity": "high"
+      },
+      "enforcement": {
+        "verification_protocol": true,
+        "test_first": true,
+        "root_cause_analysis": true
+      },
+      "incremental_fix": {
+        "priority": "high",
+        "batch_size": 2
+      },
+      "one_line_why": "Validates production health by running smoke tests after every deployment"
+    },
+    {
+      "id": "P040",
+      "number": 40,
+      "title": "Test Pyramid",
+      "category": "testing",
+      "severity": "medium",
+      "weight": 6,
+      "description": "70% unit, 20% integration, 10% e2e - fast feedback loop.",
+      "applicability": {
+        "project_types": [
+          "all"
+        ],
+        "languages": [
+          "all"
+        ],
+        "contexts": [
+          "all"
+        ],
+        "conditions": []
+      },
+      "rules": [],
+      "examples": {
+        "bad": [
+          "# 90% e2e tests (slow!)"
+        ],
+        "good": [
+          "# 70% unit (fast), 20% integration, 10% e2e"
+        ]
+      },
+      "autofix": {
+        "available": false,
+        "complexity": "manual"
+      },
+      "enforcement": {
+        "verification_protocol": true,
+        "test_first": true,
+        "root_cause_analysis": true
+      },
+      "incremental_fix": {
+        "priority": "medium",
+        "batch_size": 5
+      },
+      "one_line_why": "Prevents bugs through isolated unit tests that don't depend on external systems"
+    },
+    {
+      "id": "P041",
+      "number": 41,
+      "title": "CI Gates",
+      "category": "testing",
+      "severity": "high",
+      "weight": 8,
+      "description": "All PRs must pass CI (lint, test, coverage) before merge.",
+      "applicability": {
+        "project_types": [
+          "all"
+        ],
+        "languages": [
+          "all"
+        ],
+        "contexts": [
+          "all"
+        ],
+        "conditions": [
+          "team_size > 1"
+        ]
+      },
+      "rules": [],
+      "examples": {
+        "bad": [
+          "# No CI, manual testing"
+        ],
+        "good": [
+          "# GitHub Actions: lint -> test -> coverage check"
+        ]
+      },
+      "autofix": {
+        "available": false,
+        "complexity": "medium"
+      },
+      "enforcement": {
+        "verification_protocol": true,
+        "test_first": false,
+        "root_cause_analysis": true
+      },
+      "incremental_fix": {
+        "priority": "high",
+        "batch_size": 1
+      },
+      "one_line_why": "Balances test coverage through unit, integration, and E2E testing pyramid"
+    },
+    {
+      "id": "P042",
+      "number": 42,
+      "title": "Property-Based Testing",
+      "category": "testing",
+      "severity": "low",
+      "weight": 5,
+      "description": "Use Hypothesis/QuickCheck for complex logic, edge cases.",
+      "applicability": {
+        "project_types": [
+          "all"
+        ],
+        "languages": [
+          "python",
+          "haskell"
+        ],
+        "contexts": [
+          "complex_logic"
+        ],
+        "conditions": []
+      },
+      "rules": [],
+      "examples": {
+        "bad": [
+          "# Only example-based tests"
+        ],
+        "good": [
+          "@given(st.integers())\\ndef test_property(x):\\n    assert reverse(reverse(x)) == x"
+        ]
+      },
+      "autofix": {
+        "available": false,
+        "complexity": "high"
+      },
+      "enforcement": {
+        "verification_protocol": true,
+        "test_first": true,
+        "root_cause_analysis": true
+      },
+      "incremental_fix": {
+        "priority": "low",
+        "batch_size": 5
+      },
+      "one_line_why": "Catches regressions through integration tests that verify component interactions"
+    },
+    {
+      "id": "P043",
+      "number": 43,
+      "title": "Commit Message Conventions",
+      "category": "git_workflow",
+      "severity": "medium",
+      "weight": 6,
+      "description": "Use Conventional Commits: feat/fix/docs/refactor/test.",
+      "applicability": {
+        "project_types": [
+          "all"
+        ],
+        "languages": [
+          "all"
+        ],
+        "contexts": [
+          "all"
+        ],
+        "conditions": [
+          "team_size > 1"
+        ]
+      },
+      "rules": [],
+      "examples": {
+        "bad": [
+          "git commit -m 'fixed stuff'"
+        ],
+        "good": [
+          "git commit -m 'fix(api): handle null user_id in /jobs endpoint'"
+        ]
+      },
+      "autofix": {
+        "available": false,
+        "complexity": "low"
+      },
+      "enforcement": {
+        "verification_protocol": true,
+        "test_first": false,
+        "root_cause_analysis": true
+      },
+      "incremental_fix": {
+        "priority": "medium",
+        "batch_size": 10
+      },
+      "one_line_why": "Validates user workflows through end-to-end tests of complete system flows"
+    },
+    {
+      "id": "P044",
+      "number": 44,
+      "title": "Branching Strategy",
+      "category": "git_workflow",
+      "severity": "medium",
+      "weight": 6,
+      "description": "Git Flow for releases, Trunk-Based for CI/CD.",
+      "applicability": {
+        "project_types": [
+          "all"
+        ],
+        "languages": [
+          "all"
+        ],
+        "contexts": [
+          "all"
+        ],
+        "conditions": [
+          "team_size > 2"
+        ]
+      },
+      "rules": [],
+      "examples": {
+        "bad": [
+          "# Everyone commits to main"
+        ],
+        "good": [
+          "# Feature branches -> main (with CI/CD)"
+        ]
+      },
+      "autofix": {
+        "available": false,
+        "complexity": "manual"
+      },
+      "enforcement": {
+        "verification_protocol": true,
+        "test_first": false,
+        "root_cause_analysis": true
+      },
+      "incremental_fix": {
+        "priority": "medium",
+        "batch_size": 1
+      },
+      "one_line_why": "Improves test quality by verifying tests actually catch bugs through mutation testing"
+    },
+    {
+      "id": "P045",
+      "number": 45,
+      "title": "PR Guidelines",
+      "category": "git_workflow",
+      "severity": "medium",
+      "weight": 7,
+      "description": "PR template with description, tests, breaking changes checklist.",
+      "applicability": {
+        "project_types": [
+          "all"
+        ],
+        "languages": [
+          "all"
+        ],
+        "contexts": [
+          "all"
+        ],
+        "conditions": [
+          "team_size > 1"
+        ]
+      },
+      "rules": [],
+      "examples": {
+        "bad": [
+          "# No PR template, inconsistent reviews"
+        ],
+        "good": [
+          "# .github/pull_request_template.md with checklist"
+        ]
+      },
+      "autofix": {
+        "available": false,
+        "complexity": "low"
+      },
+      "enforcement": {
+        "verification_protocol": true,
+        "test_first": false,
+        "root_cause_analysis": false
+      },
+      "incremental_fix": {
+        "priority": "medium",
+        "batch_size": 1
+      },
+      "one_line_why": "Maintains consistency through conventional commit messages and automated changelog"
+    },
+    {
+      "id": "P046",
+      "number": 46,
+      "title": "Rebase vs Merge Strategy",
+      "category": "git_workflow",
+      "severity": "low",
+      "weight": 5,
+      "description": "Rebase feature branches, merge to main (clean history).",
+      "applicability": {
+        "project_types": [
+          "all"
+        ],
+        "languages": [
+          "all"
+        ],
+        "contexts": [
+          "all"
+        ],
+        "conditions": [
+          "team_size > 2"
+        ]
+      },
+      "rules": [],
+      "examples": {
+        "bad": [
+          "# Merge commits everywhere, messy history"
+        ],
+        "good": [
+          "git rebase main  # Clean feature branch\\ngit merge --no-ff feature  # To main"
+        ]
+      },
+      "autofix": {
+        "available": false,
+        "complexity": "low"
+      },
+      "enforcement": {
+        "verification_protocol": true,
+        "test_first": false,
+        "root_cause_analysis": true
+      },
+      "incremental_fix": {
+        "priority": "low",
+        "batch_size": 10
+      },
+      "one_line_why": "Documents changes clearly through structured PR descriptions and review comments"
+    },
+    {
+      "id": "P047",
+      "number": 47,
+      "title": "Semantic Versioning",
+      "category": "git_workflow",
+      "severity": "medium",
+      "weight": 7,
+      "description": "SemVer: MAJOR.MINOR.PATCH for breaking/features/fixes.",
+      "applicability": {
+        "project_types": [
+          "library",
+          "api"
+        ],
+        "languages": [
+          "all"
+        ],
+        "contexts": [
+          "all"
+        ],
+        "conditions": []
+      },
+      "rules": [],
+      "examples": {
+        "bad": [
+          "# Random version numbers"
+        ],
+        "good": [
+          "# v2.0.0 (breaking), v1.5.0 (feature), v1.4.1 (fix)"
+        ]
+      },
+      "autofix": {
+        "available": false,
+        "complexity": "low"
+      },
+      "enforcement": {
+        "verification_protocol": true,
+        "test_first": false,
+        "root_cause_analysis": true
+      },
+      "incremental_fix": {
+        "priority": "medium",
+        "batch_size": 1
+      },
+      "one_line_why": "Communicates change impact through semantic versioning of breaking changes and features"
+    },
+    {
+      "id": "P048",
+      "number": 48,
+      "title": "Caching Strategy",
+      "category": "performance",
+      "severity": "medium",
+      "weight": 7,
+      "description": "Redis + CDN, appropriate TTL, cache invalidation.",
+      "applicability": {
+        "project_types": [
+          "api",
+          "web"
+        ],
+        "languages": [
+          "all"
+        ],
+        "contexts": [
+          "performance_critical"
+        ],
+        "conditions": []
+      },
+      "rules": [],
+      "examples": {
+        "bad": [
+          "# No caching, DB hit every time"
+        ],
+        "good": [
+          "@cache(ttl=3600)\\ndef expensive_query():"
+        ]
+      },
+      "autofix": {
+        "available": false,
+        "complexity": "medium"
+      },
+      "enforcement": {
+        "verification_protocol": true,
+        "test_first": true,
+        "root_cause_analysis": true
+      },
+      "incremental_fix": {
+        "priority": "medium",
+        "batch_size": 3
+      },
+      "one_line_why": "Speeds up repeated requests through intelligent caching at multiple system layers"
+    },
+    {
+      "id": "P049",
+      "number": 49,
+      "title": "Database Query Optimization",
+      "category": "performance",
+      "severity": "high",
+      "weight": 8,
+      "description": "Proper indexing, N+1 prevention, query analysis.",
+      "applicability": {
+        "project_types": [
+          "all"
+        ],
+        "languages": [
+          "all"
+        ],
+        "contexts": [
+          "database"
+        ],
+        "conditions": []
+      },
+      "rules": [],
+      "examples": {
+        "bad": [
+          "SELECT * FROM large_table  # No index, full scan"
+        ],
+        "good": [
+          "CREATE INDEX idx_user_id ON jobs(user_id)  # Indexed query"
+        ]
+      },
+      "autofix": {
+        "available": false,
+        "complexity": "high"
+      },
+      "enforcement": {
+        "verification_protocol": true,
+        "test_first": true,
+        "root_cause_analysis": true
+      },
+      "incremental_fix": {
+        "priority": "high",
+        "batch_size": 2
+      },
+      "one_line_why": "Prevents slow queries through proper database indexing and query optimization"
+    },
+    {
+      "id": "P050",
+      "number": 50,
+      "title": "Lazy Loading & Pagination",
+      "category": "performance",
+      "severity": "medium",
+      "weight": 6,
+      "description": "Don't load all data at once, paginate large result sets.",
+      "applicability": {
+        "project_types": [
+          "api",
+          "web"
+        ],
+        "languages": [
+          "all"
+        ],
+        "contexts": [
+          "all"
+        ],
+        "conditions": []
+      },
+      "rules": [],
+      "examples": {
+        "bad": [
+          "SELECT * FROM users  # Returns 1M rows!"
+        ],
+        "good": [
+          "SELECT * FROM users LIMIT 100 OFFSET 0  # Paginated"
+        ]
+      },
+      "autofix": {
+        "available": false,
+        "complexity": "medium"
+      },
+      "enforcement": {
+        "verification_protocol": true,
+        "test_first": true,
+        "root_cause_analysis": true
+      },
+      "incremental_fix": {
+        "priority": "medium",
+        "batch_size": 3
+      },
+      "one_line_why": "Reduces memory usage by loading data only when needed instead of upfront"
+    },
+    {
+      "id": "P051",
+      "number": 51,
+      "title": "Async I/O (Non-Blocking Operations)",
+      "category": "performance",
+      "severity": "high",
+      "weight": 8,
+      "description": "Use async/await for I/O-bound operations, no blocking calls.",
+      "applicability": {
+        "project_types": [
+          "api",
+          "web"
+        ],
+        "languages": [
+          "python",
+          "javascript",
+          "typescript"
+        ],
+        "contexts": [
+          "all"
+        ],
+        "conditions": []
+      },
+      "rules": [],
+      "examples": {
+        "bad": [
+          "response = requests.get(url)  # Blocks!"
+        ],
+        "good": [
+          "response = await http_client.get(url)  # Async"
+        ]
+      },
+      "autofix": {
+        "available": false,
+        "complexity": "medium"
+      },
+      "enforcement": {
+        "verification_protocol": true,
+        "test_first": true,
+        "root_cause_analysis": true
+      },
+      "incremental_fix": {
+        "priority": "high",
+        "batch_size": 2
+      },
+      "one_line_why": "Improves responsiveness through non-blocking async operations for I/O tasks"
+    },
+    {
+      "id": "P052",
+      "number": 52,
+      "title": "RESTful API Conventions",
+      "category": "api_design",
+      "severity": "medium",
+      "weight": 7,
+      "description": "Resource-based URLs, proper HTTP verbs, status codes.",
+      "applicability": {
+        "project_types": [
+          "api"
+        ],
+        "languages": [
+          "all"
+        ],
+        "contexts": [
+          "api"
+        ],
+        "conditions": []
+      },
+      "rules": [],
+      "examples": {
+        "bad": [
+          "/getUser?id=123  # Not RESTful"
+        ],
+        "good": [
+          "GET /users/123  # RESTful"
+        ]
+      },
+      "autofix": {
+        "available": false,
+        "complexity": "high"
+      },
+      "enforcement": {
+        "verification_protocol": true,
+        "test_first": true,
+        "root_cause_analysis": true
+      },
+      "incremental_fix": {
+        "priority": "medium",
+        "batch_size": 2
+      },
+      "one_line_why": "Makes APIs intuitive through RESTful conventions and proper HTTP verbs"
+    },
+    {
+      "id": "P053",
+      "number": 53,
+      "title": "Centralized Version Management",
+      "category": "code_quality",
+      "severity": "high",
+      "weight": 8,
+      "description": "Single source of truth for version number - no fallbacks, fail-fast on import errors.",
+      "applicability": {
+        "project_types": [
+          "all"
+        ],
+        "languages": [
+          "python",
+          "javascript",
+          "typescript",
+          "go",
+          "rust"
+        ],
+        "contexts": [
+          "all"
+        ],
+        "preference_conditions": [
+          {
+            "path": "code_quality.linting_strictness",
+            "operator": "in",
+            "values": [
+              "strict",
+              "pedantic",
+              "paranoid"
+            ]
+          }
+        ]
+      },
+      "rules": [
+        {
+          "description": "Version defined in single location (__init__.py, package.json, Cargo.toml)",
+          "languages": [
+            "python",
+            "javascript",
+            "rust"
+          ],
+          "check_pattern": "^(__version__|\"version\")\\s*=\\s*['\"]\\d+\\.\\d+\\.\\d+['\"]",
+          "severity": "high"
+        },
+        {
+          "description": "All modules import version from central source",
+          "languages": [
+            "python"
+          ],
+          "check_pattern": "from \\.+ import __version__",
+          "severity": "high"
+        },
+        {
+          "description": "No version fallbacks - fail hard on import error",
+          "languages": [
+            "all"
+          ],
+          "check_pattern": "(?!.*except.*__version__|.*getattr.*__version__|.*default.*version)",
+          "severity": "critical"
+        }
+      ],
+      "examples": {
+        "bad": [
+          "# Multiple version definitions\n__version__ = '1.0.0'\n# In another file:\nVERSION = '1.0.0'\n\n# Fallback pattern (anti-pattern)\ntry:\n    from . import __version__\nexcept:\n    __version__ = '0.0.0'"
+        ],
+        "good": [
+          "# __init__.py - single source\n__version__ = '1.0.0'\n\n# Other modules\nfrom .. import __version__\n\n# pyproject.toml\n[tool.setuptools.dynamic]\nversion = {attr = 'package.__version__'}"
+        ]
+      },
+      "autofix": {
+        "available": true,
+        "complexity": "medium",
+        "steps": [
+          "Identify all hardcoded version strings",
+          "Create/update central version file",
+          "Replace hardcoded versions with imports",
+          "Remove fallback patterns",
+          "Update build configuration"
+        ]
+      },
+      "enforcement": {
+        "verification_protocol": true,
+        "test_first": false,
+        "root_cause_analysis": true
+      },
+      "incremental_fix": {
+        "priority": "high",
+        "batch_size": 1
+      },
+      "one_line_why": "Prevents version conflicts by centralizing version definition in single source file"
+    },
+    {
+      "id": "P054",
+      "number": 54,
+      "title": "Supply Chain Security",
+      "category": "security_privacy",
+      "severity": "critical",
+      "weight": 10,
+      "description": "Verify software supply chain integrity through SBOM, provenance, and attestations",
+      "applicability": {
+        "project_types": [
+          "all"
+        ],
+        "languages": [
+          "all"
+        ],
+        "contexts": [
+          "all"
+        ],
+        "conditions": []
+      },
+      "rules": [
+        {
+          "id": "sbom-generation",
+          "description": "Generate SBOM for all releases",
+          "check_pattern": "sbom|cyclonedx|spdx",
+          "languages": [
+            "all"
+          ],
+          "severity": "critical"
+        },
+        {
+          "id": "artifact-signing",
+          "description": "Sign artifacts with Sigstore/cosign",
+          "check_pattern": "cosign|sigstore",
+          "languages": [
+            "all"
+          ],
+          "severity": "critical"
+        },
+        {
+          "id": "dependency-lockfile",
+          "description": "Use dependency lockfiles",
+          "check_pattern": "requirements\\.txt\\.lock|package-lock\\.json|Cargo\\.lock|go\\.sum",
+          "languages": [
+            "python",
+            "javascript",
+            "rust",
+            "go"
+          ],
+          "severity": "high"
+        }
+      ],
+      "examples": {
+        "bad": [
+          "# No SBOM, unsigned artifacts, no lockfiles"
+        ],
+        "good": [
+          "# Generate SBOM: cyclonedx-py\\n# Sign: cosign sign image\\n# Use: requirements.txt.lock"
+        ]
+      },
+      "autofix": {
+        "available": false,
+        "complexity": "manual"
+      },
+      "enforcement": {
+        "verification_protocol": true,
+        "test_first": false,
+        "root_cause_analysis": true
+      },
+      "incremental_fix": {
+        "priority": "critical",
+        "batch_size": 1
+      },
+      "one_line_why": "Prevents supply chain attacks by verifying artifact integrity and dependency provenance",
+      "standards": [
+        "SLSA",
+        "NIST SSDF PO.3",
+        "EO 14028",
+        "SPDX 3.0",
+        "CycloneDX 1.5"
+      ]
+    },
+    {
+      "id": "P055",
+      "number": 55,
+      "title": "AI/ML Security",
+      "category": "security_privacy",
+      "severity": "critical",
+      "weight": 10,
+      "description": "Protect AI/ML systems from prompt injection, model poisoning, and data leakage",
+      "applicability": {
+        "project_types": [
+          "ml",
+          "api",
+          "all"
+        ],
+        "languages": [
+          "python",
+          "all"
+        ],
+        "contexts": [
+          "llm",
+          "ai"
+        ],
+        "conditions": []
+      },
+      "rules": [
+        {
+          "id": "prompt-validation",
+          "description": "Validate and sanitize prompts",
+          "check_pattern": "(?!.*sanitize.*prompt|.*validate.*input)",
+          "languages": [
+            "python"
+          ],
+          "severity": "critical"
+        },
+        {
+          "id": "output-sanitization",
+          "description": "Sanitize model outputs",
+          "check_pattern": "(?!.*sanitize.*output)",
+          "languages": [
+            "python"
+          ],
+          "severity": "critical"
+        },
+        {
+          "id": "model-signing",
+          "description": "Sign and verify models",
+          "check_pattern": "model\\.save|torch\\.save(?!.*sign|.*verify)",
+          "languages": [
+            "python"
+          ],
+          "severity": "high"
+        }
+      ],
+      "examples": {
+        "bad": [
+          "# Direct prompt to LLM\\nresponse = llm(user_input)  # No validation!"
+        ],
+        "good": [
+          "# Validate input\\nif not is_safe_prompt(user_input):\\n    raise ValueError\\nresponse = llm(user_input)"
+        ]
+      },
+      "autofix": {
+        "available": false,
+        "complexity": "high"
+      },
+      "enforcement": {
+        "verification_protocol": true,
+        "test_first": true,
+        "root_cause_analysis": true
+      },
+      "incremental_fix": {
+        "priority": "critical",
+        "batch_size": 1
+      },
+      "one_line_why": "Prevents AI-specific attacks like prompt injection and model poisoning",
+      "standards": [
+        "OWASP LLM Top 10:2025",
+        "NIST AI RMF",
+        "MITRE ATLAS"
+      ]
+    },
+    {
+      "id": "P056",
+      "number": 56,
+      "title": "Container Security",
+      "category": "security_privacy",
+      "severity": "high",
+      "weight": 9,
+      "description": "Secure container images and runtime with minimal attack surface",
+      "applicability": {
+        "project_types": [
+          "all"
+        ],
+        "languages": [
+          "all"
+        ],
+        "contexts": [
+          "docker",
+          "containers"
+        ],
+        "conditions": [
+          "has_containers"
+        ]
+      },
+      "rules": [
+        {
+          "id": "minimal-base-image",
+          "description": "Use distroless or minimal base images",
+          "check_pattern": "FROM.*alpine|FROM.*distroless|FROM scratch",
+          "languages": [
+            "dockerfile"
+          ],
+          "severity": "high"
+        },
+        {
+          "id": "non-root-user",
+          "description": "Run containers as non-root",
+          "check_pattern": "USER [^r]",
+          "languages": [
+            "dockerfile"
+          ],
+          "severity": "critical"
+        },
+        {
+          "id": "image-scanning",
+          "description": "Scan images for CVEs",
+          "check_pattern": "trivy|grype|snyk",
+          "languages": [
+            "all"
+          ],
+          "severity": "high"
+        }
+      ],
+      "examples": {
+        "bad": [
+          "FROM ubuntu:latest\\nRUN apt-get install...  # Root user, full OS"
+        ],
+        "good": [
+          "FROM gcr.io/distroless/python3\\nUSER 1000:1000  # Non-root, minimal"
+        ]
+      },
+      "autofix": {
+        "available": true,
+        "complexity": "medium"
+      },
+      "enforcement": {
+        "verification_protocol": true,
+        "test_first": false,
+        "root_cause_analysis": true
+      },
+      "incremental_fix": {
+        "priority": "high",
+        "batch_size": 2
+      },
+      "one_line_why": "Reduces container attack surface through minimal images and runtime restrictions",
+      "standards": [
+        "CIS Docker Benchmark",
+        "NSA K8s Hardening Guide"
+      ]
+    },
+    {
+      "id": "P057",
+      "number": 57,
+      "title": "Kubernetes Security",
+      "category": "security_privacy",
+      "severity": "high",
+      "weight": 9,
+      "description": "Harden Kubernetes clusters with RBAC, network policies, and admission control",
+      "applicability": {
+        "project_types": [
+          "all"
+        ],
+        "languages": [
+          "all"
+        ],
+        "contexts": [
+          "kubernetes"
+        ],
+        "conditions": [
+          "has_containers"
+        ]
+      },
+      "rules": [
+        {
+          "id": "rbac-enabled",
+          "description": "Use RBAC with least privilege",
+          "check_pattern": "kind:\\s*Role|kind:\\s*ClusterRole",
+          "languages": [
+            "yaml"
+          ],
+          "severity": "critical"
+        },
+        {
+          "id": "network-policies",
+          "description": "Define network policies",
+          "check_pattern": "kind:\\s*NetworkPolicy",
+          "languages": [
+            "yaml"
+          ],
+          "severity": "high"
+        },
+        {
+          "id": "pod-security",
+          "description": "Use Pod Security Standards (restricted)",
+          "check_pattern": "securityContext:|runAsNonRoot: true",
+          "languages": [
+            "yaml"
+          ],
+          "severity": "critical"
+        }
+      ],
+      "examples": {
+        "bad": [
+          "# No RBAC, no network policies, root containers"
+        ],
+        "good": [
+          "apiVersion: policy/v1\\nkind: PodSecurityPolicy\\nspec:\\n  runAsUser:\\n    rule: MustRunAsNonRoot"
+        ]
+      },
+      "autofix": {
+        "available": false,
+        "complexity": "high"
+      },
+      "enforcement": {
+        "verification_protocol": true,
+        "test_first": false,
+        "root_cause_analysis": true
+      },
+      "incremental_fix": {
+        "priority": "high",
+        "batch_size": 1
+      },
+      "one_line_why": "Hardens Kubernetes against attacks through defense-in-depth controls",
+      "standards": [
+        "NSA/CISA K8s Hardening Guide",
+        "CIS K8s Benchmark"
+      ]
+    },
+    {
+      "id": "P058",
+      "number": 58,
+      "title": "Zero Trust Architecture",
+      "category": "security_privacy",
+      "severity": "high",
+      "weight": 9,
+      "description": "Never trust, always verify - authenticate and authorize every request",
+      "applicability": {
+        "project_types": [
+          "microservices",
+          "api"
+        ],
+        "languages": [
+          "all"
+        ],
+        "contexts": [
+          "all"
+        ],
+        "conditions": [
+          "services > 2"
+        ]
+      },
+      "rules": [
+        {
+          "id": "no-implicit-trust",
+          "description": "No trust based on network location",
+          "check_pattern": "(?!.*verify|.*authenticate)",
+          "languages": [
+            "all"
+          ],
+          "severity": "critical"
+        },
+        {
+          "id": "mtls-required",
+          "description": "Use mTLS for service-to-service",
+          "check_pattern": "mtls|mutual.*tls",
+          "languages": [
+            "all"
+          ],
+          "severity": "high"
+        }
+      ],
+      "examples": {
+        "bad": [
+          "if request.from_internal_network:\\n    allow()  # Implicit trust!"
+        ],
+        "good": [
+          "token = verify_jwt(request.headers['Authorization'])\\nif has_permission(token, resource):\\n    allow()"
+        ]
+      },
+      "autofix": {
+        "available": false,
+        "complexity": "high"
+      },
+      "enforcement": {
+        "verification_protocol": true,
+        "test_first": true,
+        "root_cause_analysis": true
+      },
+      "incremental_fix": {
+        "priority": "high",
+        "batch_size": 1
+      },
+      "one_line_why": "Eliminates implicit trust by verifying every access request regardless of source",
+      "standards": [
+        "NIST SP 800-207",
+        "BeyondCorp"
+      ]
+    },
+    {
+      "id": "P059",
+      "number": 59,
+      "title": "GitOps Practices",
+      "category": "operations",
+      "severity": "medium",
+      "weight": 7,
+      "description": "Infrastructure and application deployment through Git-based workflows",
+      "applicability": {
+        "project_types": [
+          "all"
+        ],
+        "languages": [
+          "all"
+        ],
+        "contexts": [
+          "kubernetes",
+          "infrastructure"
+        ],
+        "conditions": []
+      },
+      "rules": [
+        {
+          "id": "git-as-truth",
+          "description": "Git is single source of truth",
+          "check_pattern": "argocd|flux|atlantis",
+          "languages": [
+            "all"
+          ],
+          "severity": "medium"
+        }
+      ],
+      "examples": {
+        "bad": [
+          "kubectl apply -f manifest.yaml  # Manual apply"
+        ],
+        "good": [
+          "# Commit to Git, ArgoCD auto-syncs"
+        ]
+      },
+      "autofix": {
+        "available": false,
+        "complexity": "medium"
+      },
+      "enforcement": {
+        "verification_protocol": true,
+        "test_first": false,
+        "root_cause_analysis": false
+      },
+      "incremental_fix": {
+        "priority": "medium",
+        "batch_size": 5
+      },
+      "one_line_why": "Makes infrastructure changes auditable and reversible through Git history",
+      "standards": [
+        "OpenGitOps"
+      ]
+    },
+    {
+      "id": "P060",
+      "number": 60,
+      "title": "Incident Response Readiness",
+      "category": "operations",
+      "severity": "high",
+      "weight": 8,
+      "description": "Prepare for security incidents with runbooks, logging, and recovery procedures",
+      "applicability": {
+        "project_types": [
+          "all"
+        ],
+        "languages": [
+          "all"
+        ],
+        "contexts": [
+          "production"
+        ],
+        "conditions": []
+      },
+      "rules": [
+        {
+          "id": "incident-plan",
+          "description": "Document incident response plan",
+          "check_pattern": "incident.*response|IR.*plan",
+          "languages": [
+            "all"
+          ],
+          "severity": "high"
+        },
+        {
+          "id": "security-logging",
+          "description": "Log security events for SIEM",
+          "check_pattern": "siem|security.*log",
+          "languages": [
+            "all"
+          ],
+          "severity": "critical"
+        }
+      ],
+      "examples": {
+        "bad": [
+          "# No incident plan, minimal logging"
+        ],
+        "good": [
+          "# docs/incident-response.md exists\\n# Security logs to SIEM\\n# DR tested quarterly"
+        ]
+      },
+      "autofix": {
+        "available": false,
+        "complexity": "manual"
+      },
+      "enforcement": {
+        "verification_protocol": true,
+        "test_first": false,
+        "root_cause_analysis": true
+      },
+      "incremental_fix": {
+        "priority": "high",
+        "batch_size": 1
+      },
+      "one_line_why": "Reduces incident impact through prepared response procedures and logging",
+      "standards": [
+        "NIST SP 800-61",
+        "ISO 27035"
+      ]
+    },
+    {
+      "id": "P061",
+      "number": 61,
+      "title": "Privacy Compliance",
+      "category": "security_privacy",
+      "severity": "high",
+      "weight": 9,
+      "description": "Comply with GDPR, CCPA, and other privacy regulations",
+      "applicability": {
+        "project_types": [
+          "all"
+        ],
+        "languages": [
+          "all"
+        ],
+        "contexts": [
+          "all"
+        ],
+        "conditions": []
+      },
+      "rules": [
+        {
+          "id": "data-minimization",
+          "description": "Collect only necessary data",
+          "check_pattern": "(?!.*minimize|.*necessary)",
+          "languages": [
+            "all"
+          ],
+          "severity": "high"
+        },
+        {
+          "id": "right-to-deletion",
+          "description": "Support automated data deletion",
+          "check_pattern": "delete.*user.*data|gdpr.*delete",
+          "languages": [
+            "all"
+          ],
+          "severity": "critical"
+        }
+      ],
+      "examples": {
+        "bad": [
+          "# Collect everything, no deletion support"
+        ],
+        "good": [
+          "@app.delete('/user/{id}/data')\\ndef delete_user_data(id):\\n    # GDPR Article 17"
+        ]
+      },
+      "autofix": {
+        "available": false,
+        "complexity": "high"
+      },
+      "enforcement": {
+        "verification_protocol": true,
+        "test_first": false,
+        "root_cause_analysis": true
+      },
+      "incremental_fix": {
+        "priority": "high",
+        "batch_size": 1
+      },
+      "one_line_why": "Avoids regulatory fines through comprehensive privacy compliance",
+      "standards": [
+        "GDPR",
+        "CCPA",
+        "PIPEDA"
+      ]
+    },
+    {
+      "id": "P062",
+      "number": 62,
+      "title": "API Security Best Practices",
+      "category": "api_design",
+      "severity": "high",
+      "weight": 8,
+      "description": "Secure APIs against OWASP API Security Top 10 threats",
+      "applicability": {
+        "project_types": [
+          "api",
+          "web"
+        ],
+        "languages": [
+          "all"
+        ],
+        "contexts": [
+          "api_endpoints"
+        ],
+        "conditions": []
+      },
+      "rules": [
+        {
+          "id": "api-authentication",
+          "description": "Require authentication on all endpoints",
+          "check_pattern": "@app\\.(get|post|put|delete)(?!.*@require_auth|.*@authenticated)",
+          "languages": [
+            "python"
+          ],
+          "severity": "critical"
+        },
+        {
+          "id": "api-rate-limiting",
+          "description": "Rate limit per user/IP",
+          "check_pattern": "@limiter\\.limit",
+          "languages": [
+            "python"
+          ],
+          "severity": "high"
+        }
+      ],
+      "examples": {
+        "bad": [
+          "@app.post('/api/transfer')\\ndef transfer(amount):  # No auth!"
+        ],
+        "good": [
+          "@app.post('/api/transfer')\\n@require_auth\\n@limiter.limit('10/minute')\\ndef transfer(amount):"
+        ]
+      },
+      "autofix": {
+        "available": false,
+        "complexity": "medium"
+      },
+      "enforcement": {
+        "verification_protocol": true,
+        "test_first": true,
+        "root_cause_analysis": true
+      },
+      "incremental_fix": {
+        "priority": "high",
+        "batch_size": 2
+      },
+      "one_line_why": "Prevents API-specific attacks through defense-in-depth security controls",
+      "standards": [
+        "OWASP API Security Top 10:2023"
+      ]
+    },
+    {
+      "id": "P063",
+      "number": 63,
+      "title": "Dependency Management",
+      "category": "security_privacy",
+      "severity": "high",
+      "weight": 8,
+      "description": "Keep dependencies updated and scan for vulnerabilities",
+      "applicability": {
+        "project_types": [
+          "all"
+        ],
+        "languages": [
+          "all"
+        ],
+        "contexts": [
+          "all"
+        ],
+        "conditions": []
+      },
+      "rules": [
+        {
+          "id": "automated-updates",
+          "description": "Use Dependabot or Renovate",
+          "check_pattern": "\\.github/dependabot\\.yml|renovate\\.json",
+          "languages": [
+            "all"
+          ],
+          "severity": "high"
+        },
+        {
+          "id": "cve-scanning",
+          "description": "Scan dependencies in CI",
+          "check_pattern": "snyk|npm audit|pip.*check",
+          "languages": [
+            "all"
+          ],
+          "severity": "critical"
+        }
+      ],
+      "examples": {
+        "bad": [
+          "# Dependencies never updated, no scanning"
+        ],
+        "good": [
+          "# .github/dependabot.yml exists\\n# CI: snyk test || exit 1"
+        ]
+      },
+      "autofix": {
+        "available": true,
+        "complexity": "low"
+      },
+      "enforcement": {
+        "verification_protocol": true,
+        "test_first": false,
+        "root_cause_analysis": true
+      },
+      "incremental_fix": {
+        "priority": "high",
+        "batch_size": 5
+      },
+      "one_line_why": "Prevents exploitation of known vulnerabilities through proactive dependency management",
+      "standards": [
+        "NIST SSDF PO.1.3",
+        "OWASP A06:2021"
+      ]
+    },
+    {
+      "id": "P064",
+      "number": 64,
+      "title": "Continuous Profiling",
+      "category": "performance",
+      "severity": "medium",
+      "weight": 6,
+      "description": "Use continuous profiling to identify performance bottlenecks in production",
+      "applicability": {
+        "project_types": [
+          "all"
+        ],
+        "languages": [
+          "python",
+          "go",
+          "rust"
+        ],
+        "contexts": [
+          "performance_critical"
+        ],
+        "conditions": []
+      },
+      "rules": [
+        {
+          "id": "profiling-enabled",
+          "description": "Enable continuous profiling",
+          "check_pattern": "pyroscope|pprof|ebpf.*profile",
+          "languages": [
+            "all"
+          ],
+          "severity": "medium"
+        }
+      ],
+      "examples": {
+        "bad": [
+          "# No profiling in production"
+        ],
+        "good": [
+          "# Pyroscope agent enabled\\n# CPU, memory, I/O profiles collected"
+        ]
+      },
+      "autofix": {
+        "available": false,
+        "complexity": "medium"
+      },
+      "enforcement": {
+        "verification_protocol": false,
+        "test_first": false,
+        "root_cause_analysis": false
+      },
+      "incremental_fix": {
+        "priority": "medium",
+        "batch_size": 5
+      },
+      "one_line_why": "Identifies production performance issues through always-on profiling",
+      "standards": [
+        "OpenTelemetry Profiling"
+      ]
+    },
+    {
+      "id": "P065",
+      "number": 65,
+      "title": "Compliance as Code",
+      "category": "operations",
+      "severity": "medium",
+      "weight": 7,
+      "description": "Automate compliance checks through policy as code",
+      "applicability": {
+        "project_types": [
+          "all"
+        ],
+        "languages": [
+          "all"
+        ],
+        "contexts": [
+          "all"
+        ],
+        "conditions": []
+      },
+      "rules": [
+        {
+          "id": "policy-as-code",
+          "description": "Use OPA/Kyverno for policies",
+          "check_pattern": "opa|kyverno|sentinel",
+          "languages": [
+            "all"
+          ],
+          "severity": "medium"
+        }
+      ],
+      "examples": {
+        "bad": [
+          "# Manual compliance checks"
+        ],
+        "good": [
+          "# policies/require-labels.rego\\n# Automated compliance reports"
+        ]
+      },
+      "autofix": {
+        "available": false,
+        "complexity": "medium"
+      },
+      "enforcement": {
+        "verification_protocol": true,
+        "test_first": false,
+        "root_cause_analysis": false
+      },
+      "incremental_fix": {
+        "priority": "medium",
+        "batch_size": 5
+      },
+      "one_line_why": "Makes compliance auditable and enforceable through automated policy checks",
+      "standards": [
+        "SOC 2",
+        "ISO 27001",
+        "PCI DSS"
+      ]
+    },
+    {
+      "id": "P066",
+      "number": 66,
+      "title": "Agent Orchestration Patterns",
+      "category": "architecture",
+      "severity": "high",
+      "weight": 8,
+      "description": "Optimize AI agent execution through parallel processing, appropriate model selection, and cost-effective workflows",
+      "applicability": {
+        "project_types": [
+          "all"
+        ],
+        "languages": [
+          "all"
+        ],
+        "contexts": [
+          "all"
+        ],
+        "conditions": []
+      },
+      "rules": [
+        {
+          "id": "parallel-agents",
+          "description": "Launch parallel agents in single message",
+          "check_pattern": "Task.*Task.*in single message|parallel.*agent",
+          "languages": [
+            "all"
+          ],
+          "severity": "medium"
+        },
+        {
+          "id": "model-selection",
+          "description": "Use appropriate model for task complexity",
+          "check_pattern": "model.*haiku.*simple|model.*sonnet.*complex",
+          "languages": [
+            "all"
+          ],
+          "severity": "medium"
+        },
+        {
+          "id": "cost-optimization",
+          "description": "Optimize for cost and performance",
+          "check_pattern": "lru_cache|@cache|memoize",
+          "languages": [
+            "all"
+          ],
+          "severity": "low"
+        }
+      ],
+      "examples": {
+        "bad": [
+          "# Sequential agent launches (slow)\\nagent1 = Task(\"search files\")\\n# Wait for agent1...\\nagent2 = Task(\"analyze data\")\\n\\n# Wrong model selection\\nTask(\"simple grep\", model=\"opus\")  # Expensive!"
+        ],
+        "good": [
+          "# Parallel agents in SINGLE message\\nTask(\"search files\", model=\"haiku\")\\nTask(\"analyze data\", model=\"haiku\")\\n# Both run simultaneously\\n\\n# Appropriate model selection\\nTask(\"simple grep\", model=\"haiku\")\\nTask(\"complex analysis\", model=\"sonnet\")"
+        ]
+      },
+      "autofix": {
+        "available": false,
+        "complexity": "medium"
+      },
+      "enforcement": {
+        "verification_protocol": true,
+        "test_first": false,
+        "root_cause_analysis": false
+      },
+      "incremental_fix": {
+        "priority": "medium",
+        "batch_size": 10
+      },
+      "one_line_why": "Maximizes performance and minimizes cost through intelligent agent orchestration",
+      "standards": [
+        "Agentic AI Patterns",
+        "Cost Optimization",
+        "Parallel Processing"
+      ]
+    },
+    {
+      "id": "P067",
+      "number": 67,
+      "title": "Evidence-Based Verification",
+      "category": "code_quality",
+      "severity": "critical",
+      "weight": 10,
+      "description": "Never claim completion without command execution proof. All verification requires fresh command output with exit codes",
+      "applicability": {
+        "project_types": [
+          "all"
+        ],
+        "languages": [
+          "all"
+        ],
+        "contexts": [
+          "all"
+        ],
+        "conditions": []
+      },
+      "rules": [
+        {
+          "id": "command-output-required",
+          "description": "Completion claims must include command output",
+          "check_pattern": "\\[Runs.*\\].*\\[Shows:.*\\]",
+          "languages": [
+            "all"
+          ],
+          "severity": "critical"
+        },
+        {
+          "id": "no-uncertainty",
+          "description": "Avoid uncertainty language",
+          "check_pattern": "(?!.*should work|looks correct|appears to|seems like)",
+          "languages": [
+            "all"
+          ],
+          "severity": "high"
+        }
+      ],
+      "examples": {
+        "bad": [
+          "\"Tests should pass now\"\\n\"Build looks correct\"\\n\"Appears to be working\""
+        ],
+        "good": [
+          "[Runs: pytest]\\n[Output: 34/34 passed]\\n[Exit code: 0]\\n\"All tests pass\"\\n\\n[Runs: npm run build]\\n[Output: Build successful in 2.3s]\\n[Exit code: 0]\\n\"Build succeeds\""
+        ]
+      },
+      "autofix": {
+        "available": false,
+        "complexity": "low"
+      },
+      "enforcement": {
+        "verification_protocol": true,
+        "test_first": true,
+        "root_cause_analysis": false
+      },
+      "incremental_fix": {
+        "priority": "critical",
+        "batch_size": 1
+      },
+      "one_line_why": "Ensures all claims are backed by objective evidence, preventing false confidence",
+      "standards": [
+        "DevOps Research and Assessment (DORA) Metrics",
+        "Continuous Verification",
+        "Test-Driven Development (TDD)"
+      ]
+    },
+    {
+      "id": "P068",
+      "number": 68,
+      "title": "Grep-First Search Strategy",
+      "category": "code_quality",
+      "severity": "medium",
+      "weight": 6,
+      "description": "Optimize file operations using grep-first approach: files_with_matches → content → targeted Read with offset+limit",
+      "applicability": {
+        "project_types": [
+          "all"
+        ],
+        "languages": [
+          "all"
+        ],
+        "contexts": [
+          "all"
+        ],
+        "conditions": []
+      },
+      "rules": [
+        {
+          "id": "grep-before-read",
+          "description": "Use Grep before Read for unknown locations",
+          "check_pattern": "Grep.*files_with_matches.*Read",
+          "languages": [
+            "all"
+          ],
+          "severity": "medium"
+        },
+        {
+          "id": "offset-limit-large-files",
+          "description": "Use offset+limit for large files >500 lines",
+          "check_pattern": "Read.*offset.*limit",
+          "languages": [
+            "all"
+          ],
+          "severity": "medium"
+        }
+      ],
+      "examples": {
+        "bad": [
+          "# Read entire 5000-line file\\ncontent = Read(\"largefile.py\")\\n\\n# No grep, blindly reading files\\nRead(\"file1.py\")\\nRead(\"file2.py\")\\nRead(\"file3.py\")"
+        ],
+        "good": [
+          "# Grep-first approach\\nfiles = Grep(\"pattern\", output_mode=\"files_with_matches\")\\ncontext = Grep(\"pattern\", path=files[0], output_mode=\"content\", -C=5)\\n\\n# Targeted read with offset+limit\\nRead(\"largefile.py\", offset=100, limit=50)"
+        ]
+      },
+      "autofix": {
+        "available": false,
+        "complexity": "low"
+      },
+      "enforcement": {
+        "verification_protocol": false,
+        "test_first": false,
+        "root_cause_analysis": false
+      },
+      "incremental_fix": {
+        "priority": "low",
+        "batch_size": 20
+      },
+      "one_line_why": "Minimizes token usage and improves performance through strategic file access",
+      "standards": [
+        "Performance Optimization",
+        "Resource Management",
+        "Token Efficiency"
+      ]
+    },
+    {
+      "id": "P069",
+      "number": 69,
+      "title": "Incremental Safety Patterns",
+      "category": "operations",
+      "severity": "high",
+      "weight": 8,
+      "description": "Implement safety checkpoints (git stash, backups, tests) before and after changes with automatic rollback on failure",
+      "applicability": {
+        "project_types": [
+          "all"
+        ],
+        "languages": [
+          "all"
+        ],
+        "contexts": [
+          "all"
+        ],
+        "conditions": []
+      },
+      "rules": [
+        {
+          "id": "backup-before-changes",
+          "description": "Git stash before risky changes",
+          "check_pattern": "git stash|git branch.*backup",
+          "languages": [
+            "all"
+          ],
+          "severity": "high"
+        },
+        {
+          "id": "test-after-change",
+          "description": "Test after every change",
+          "check_pattern": "pytest|npm test|go test",
+          "languages": [
+            "all"
+          ],
+          "severity": "high"
+        },
+        {
+          "id": "automatic-rollback",
+          "description": "Automatic rollback on failure",
+          "check_pattern": "rollback|git reset|restore",
+          "languages": [
+            "all"
+          ],
+          "severity": "medium"
+        }
+      ],
+      "examples": {
+        "bad": [
+          "# Make breaking changes directly\\nrefactor_everything()\\n# No backup, no tests, no rollback"
+        ],
+        "good": [
+          "# Safety-first approach\\ngit stash\\ngit checkout -b refactor-backup\\n\\nrefactor_module()\\npytest tests/\\n\\nif tests_fail:\\n    git reset --hard"
+        ]
+      },
+      "autofix": {
+        "available": false,
+        "complexity": "medium"
+      },
+      "enforcement": {
+        "verification_protocol": true,
+        "test_first": true,
+        "root_cause_analysis": false
+      },
+      "incremental_fix": {
+        "priority": "high",
+        "batch_size": 5
+      },
+      "one_line_why": "Prevents data loss and enables quick recovery through systematic safety checkpoints",
+      "standards": [
+        "Continuous Integration",
+        "Fail-Safe Patterns",
+        "GitOps"
+      ]
+    },
+    {
+      "id": "P070",
+      "number": 70,
+      "title": "Context Window Management",
+      "category": "architecture",
+      "severity": "medium",
+      "weight": 6,
+      "description": "Optimize AI context usage through model selection, targeted reads, and query format standardization",
+      "applicability": {
+        "project_types": [
+          "all"
+        ],
+        "languages": [
+          "all"
+        ],
+        "contexts": [
+          "all"
+        ],
+        "conditions": []
+      },
+      "rules": [
+        {
+          "id": "query-format",
+          "description": "Use query format [file:line] → [action]",
+          "check_pattern": "\\w+\\.\\w+:\\d+.*→",
+          "languages": [
+            "all"
+          ],
+          "severity": "low"
+        },
+        {
+          "id": "model-by-complexity",
+          "description": "Select model by task complexity",
+          "check_pattern": "haiku.*simple|sonnet.*complex",
+          "languages": [
+            "all"
+          ],
+          "severity": "medium"
+        },
+        {
+          "id": "parallel-ops",
+          "description": "Parallel independent operations",
+          "check_pattern": "parallel|concurrent|async",
+          "languages": [
+            "all"
+          ],
+          "severity": "low"
+        }
+      ],
+      "examples": {
+        "bad": [
+          "# Vague request\\n\"Fix authentication bugs\"\\n\\n# Reading full files unnecessarily\\nRead(\"auth.py\")  # 800 lines\\nRead(\"api.py\")   # 1200 lines\\n\\n# Sequential dependent ops\\nresult1 = operation1()\\nresult2 = operation2()"
+        ],
+        "good": [
+          "# Specific query format\\n\"auth.py:127-145 → Add JWT refresh token support\"\\n\\n# Targeted reads\\nRead(\"auth.py\", offset=120, limit=30)\\n\\n# Parallel independent ops (in single message)\\nTask(\"analyze module1\", model=\"haiku\")\\nTask(\"analyze module2\", model=\"haiku\")"
+        ]
+      },
+      "autofix": {
+        "available": false,
+        "complexity": "low"
+      },
+      "enforcement": {
+        "verification_protocol": false,
+        "test_first": false,
+        "root_cause_analysis": false
+      },
+      "incremental_fix": {
+        "priority": "low",
+        "batch_size": 20
+      },
+      "one_line_why": "Maximizes context efficiency through structured requests and optimized model usage",
+      "standards": [
+        "Token Optimization",
+        "Cost Efficiency",
+        "Query Optimization"
+      ]
+    },
+    {
+      "id": "P071",
+      "number": 71,
+      "title": "No Overengineering - Pragmatic Solutions Only",
+      "category": "code_quality",
+      "severity": "critical",
+      "weight": 10,
+      "description": "Always choose the simplest solution that solves the problem. Avoid premature abstraction, unnecessary patterns, excessive architecture, or solutions built for imaginary future requirements. Every line of code is a liability - write only what is needed now.",
+      "one_line_why": "Simpler code is easier to understand, maintain, debug, and change",
+      "applicability": {
+        "project_types": [
+          "all"
+        ],
+        "languages": [
+          "all"
+        ],
+        "contexts": [
+          "all"
+        ],
+        "preference_conditions": []
+      },
+      "rules": [
+        {
+          "id": "no-premature-abstraction",
+          "description": "Avoid abstraction before you have 3+ similar use cases",
+          "check_pattern": null,
+          "languages": [
+            "all"
+          ],
+          "severity": "high"
+        },
+        {
+          "id": "no-unused-flexibility",
+          "description": "Remove configuration options, generic parameters, or extensibility hooks that are not currently used",
+          "check_pattern": null,
+          "languages": [
+            "all"
+          ],
+          "severity": "medium"
+        },
+        {
+          "id": "simple-solutions-first",
+          "description": "Try simple approach before complex patterns (no need for Factory, Strategy, Observer for simple cases)",
+          "check_pattern": null,
+          "languages": [
+            "all"
+          ],
+          "severity": "high"
+        }
+      ],
+      "examples": {
+        "bad": [
+          "# Bad: Premature abstraction\nclass AbstractDataProcessorFactory:\n    @abstractmethod\n    def create_processor(self): pass\n\nclass SimpleDataProcessor(AbstractDataProcessorFactory):\n    def create_processor(self): return Processor()\n\n# For just ONE use case!",
+          "# Bad: Over-configured\nclass EmailSender:\n    def __init__(self, smtp_host, port, use_tls, use_ssl, timeout, \n                 retry_count, retry_delay, max_retries, fallback_host):\n        # 9 parameters for a simple email sender",
+          "// Bad: Unnecessary pattern\nclass UserRepositoryFactory {\n  createRepository() {\n    return new UserRepository();\n  }\n}\n// Just use: new UserRepository()"
+        ],
+        "good": [
+          "# Good: Simple and direct\ndef send_email(to: str, subject: str, body: str):\n    \"\"\"Send email via SMTP.\"\"\"\n    smtp.send(to, subject, body)\n\n# Add complexity only when actually needed",
+          "# Good: Extract abstraction when you have multiple cases\ndef process_csv(file): ...\ndef process_json(file): ...\n# After 3rd format, THEN create: DataProcessor interface",
+          "// Good: Start simple\nfunction calculateTotal(items) {\n  return items.reduce((sum, item) => sum + item.price, 0);\n}\n// Clean, direct, no unnecessary classes"
+        ]
+      },
+      "enforcement": "MUST - No exceptions",
+      "impact": {
+        "code_clarity": "high",
+        "maintainability": "high",
+        "development_speed": "high",
+        "team_velocity": "high",
+        "bug_reduction": "medium"
+      },
+      "related_principles": [
+        "P002",
+        "P003"
+      ],
+      "anti_patterns": [
+        "Premature abstraction",
+        "Speculative generality",
+        "Architecture astronaut syndrome",
+        "Gold plating",
+        "YAGNI violations (You Aren't Gonna Need It)"
+      ],
+      "when_to_skip": [],
+      "verification": {
+        "checklist": [
+          "Every abstraction serves at least 3 concrete use cases",
+          "No unused configuration parameters",
+          "No design patterns applied \"just in case\"",
+          "No code written for imaginary future requirements"
+        ]
+      }
+    },
+    {
+      "id": "P072",
+      "number": 72,
+      "title": "Concise Commit Messages",
+      "category": "git_workflow",
+      "severity": "medium",
+      "weight": 7,
+      "description": "Commit messages must be compact: max 10 lines total, max 5 bullets in body, no verbosity. Focus on essential changes only.",
+      "one_line_why": "Concise commits are faster to read, easier to scan in history, and reduce noise",
+      "enforcement": "SHOULD - Strong recommendation",
+      "rules": [
+        {
+          "id": "max-total-lines",
+          "description": "Max 10 lines total (subject + body + footer)",
+          "severity": "medium",
+          "languages": [
+            "all"
+          ],
+          "check_pattern": null
+        },
+        {
+          "id": "max-bullets",
+          "description": "Max 5 bullets in body (most important changes only)",
+          "severity": "medium",
+          "languages": [
+            "all"
+          ],
+          "check_pattern": null
+        },
+        {
+          "id": "one-line-bullets",
+          "description": "One line per bullet (no multi-line explanations)",
+          "severity": "low",
+          "languages": [
+            "all"
+          ],
+          "check_pattern": null
+        },
+        {
+          "id": "no-section-headers",
+          "description": "No section headers ('Changes:', 'Rationale:', etc.)",
+          "severity": "low",
+          "languages": [
+            "all"
+          ],
+          "check_pattern": null
+        },
+        {
+          "id": "co-authored-by",
+          "description": "Include Co-Authored-By footer for GitHub attribution",
+          "severity": "low",
+          "languages": [
+            "all"
+          ],
+          "check_pattern": null
+        }
+      ],
+      "examples": {
+        "good": [
+          "refactor(ci): consolidate tools (P071)\n\n- Replace Black/Bandit/mypy with Ruff (format+lint+security)\n- Remove tool configs from pyproject.toml\n- Simplify workflow to 3 jobs, 5 steps total\n\nCo-Authored-By: Claude <noreply@anthropic.com>"
+        ],
+        "bad": [
+          "refactor: eliminate tool redundancy\n\nTool Consolidation (3 tools instead of 5):\n- Replace Black + mypy + Bandit with Ruff\n- Keep pip-audit (CVE scanning)\n...\n\nDependency Changes (pyproject.toml):\n- Remove: black, mypy from dev dependencies\n...\n[15 more lines]"
+        ]
+      },
+      "applicability": {
+        "project_types": [
+          "all"
+        ],
+        "languages": [
+          "all"
+        ],
+        "contexts": [
+          "all"
+        ],
+        "preference_conditions": []
+      },
+      "related_principles": [
+        "P043",
+        "P044"
+      ],
+      "anti_patterns": [
+        "Verbose commit messages with section headers",
+        "Multi-line bullet explanations",
+        "Over-documenting trivial changes",
+        "Including code diffs in commit messages"
+      ],
+      "impact": {
+        "code_clarity": "medium",
+        "maintainability": "medium",
+        "team_velocity": "medium",
+        "bug_reduction": "low",
+        "development_speed": "low"
+      },
+      "verification": {
+        "checklist": [
+          "Commit message has max 10 lines total",
+          "Body has max 5 bullets",
+          "Each bullet is one line",
+          "No section headers used",
+          "Co-Authored-By footer present (if using Claude Code)"
+        ]
+      },
+      "when_to_skip": [
+        "Initial commit or large migrations (can be longer with justification)",
+        "Release commits (may need changelog)"
+      ]
+    },
+    {
+      "id": "P073",
+      "number": 73,
+      "title": "Atomic Commits",
+      "category": "git_workflow",
+      "severity": "medium",
+      "weight": 8,
+      "description": "Each commit must contain changes related to a single logical change or category. Never mix unrelated changes in one commit.",
+      "one_line_why": "Atomic commits make git bisect, revert, and code review easier and more effective",
+      "enforcement": "SHOULD - Strong recommendation",
+      "rules": [
+        {
+          "id": "single-logical-change",
+          "description": "One commit = One logical change (feature, fix, refactor, etc.)",
+          "severity": "medium",
+          "languages": ["all"],
+          "check_pattern": null
+        },
+        {
+          "id": "group-related-files",
+          "description": "Group related files by category/purpose",
+          "severity": "medium",
+          "languages": ["all"],
+          "check_pattern": null
+        },
+        {
+          "id": "separate-unrelated",
+          "description": "Separate unrelated changes into multiple commits",
+          "severity": "high",
+          "languages": ["all"],
+          "check_pattern": null
+        }
+      ],
+      "examples": {
+        "good": [
+          "# Commit 1: Bug fix only\ngit commit -m \"fix(auth): handle expired tokens in login\"\n# Modified: auth.py",
+          "# Commit 2: Tests only\ngit commit -m \"test(auth): add tests for token expiration\"\n# Modified: tests/test_auth.py",
+          "# Single commit for tightly coupled changes\ngit commit -m \"fix(auth): handle null user in session middleware\"\n# Modified: auth.py, middleware.py, tests/test_auth.py\n# (All changes address the same logical issue)"
+        ],
+        "bad": [
+          "git commit -m \"fix login bug, add tests, update README, refactor database\"\n# Modified: auth.py, tests/, README.md, db.py (4 unrelated changes)",
+          "# Mix refactor with new feature\ngit commit -m \"refactor db and add caching\""
+        ]
+      },
+      "applicability": {
+        "project_types": ["all"],
+        "languages": ["all"],
+        "contexts": ["all"],
+        "preference_conditions": []
+      },
+      "related_principles": ["P043", "P072"],
+      "anti_patterns": [
+        "Mixing bug fixes with new features",
+        "Combining refactoring with functional changes",
+        "Adding tests, docs, and code in single commit without logical connection",
+        "Kitchen sink commits with multiple unrelated file changes"
+      ],
+      "impact": {
+        "code_clarity": "high",
+        "maintainability": "high",
+        "team_velocity": "medium",
+        "bug_reduction": "medium",
+        "development_speed": "low"
+      },
+      "verification": {
+        "checklist": [
+          "All changed files relate to same logical change",
+          "Unrelated changes are in separate commits",
+          "Commit can be reverted without breaking unrelated features",
+          "Changes can be reviewed as a cohesive unit"
+        ]
+      },
+      "when_to_skip": [
+        "Tightly coupled changes that must be committed together (e.g., interface + implementation)",
+        "Feature with tests (can be single commit if tightly coupled)"
+      ]
+    },
+    {
+      "id": "P074",
+      "number": 74,
+      "title": "Automated Semantic Versioning",
+      "category": "git_workflow",
+      "severity": "medium",
+      "weight": 9,
+      "description": "Automatically bump version based on conventional commit type following Semantic Versioning (SemVer). Version bumps are determined by commit message prefix: feat: → MINOR, fix: → PATCH, feat!/BREAKING CHANGE: → MAJOR.",
+      "one_line_why": "Eliminates manual versioning errors and ensures consistent version history aligned with actual changes",
+      "enforcement": "RECOMMENDED - Team-dependent (solo: auto, teams: PR-based, large org: manual)",
+      "rules": [
+        {
+          "id": "commit-type-to-version-mapping",
+          "description": "feat: commits bump MINOR version (1.2.0 → 1.3.0), fix: commits bump PATCH (1.2.0 → 1.2.1), feat!/BREAKING CHANGE: bump MAJOR (1.2.0 → 2.0.0)",
+          "severity": "high",
+          "languages": ["all"],
+          "check_pattern": null
+        },
+        {
+          "id": "version-file-update",
+          "description": "Automatically update version in all relevant files (pyproject.toml, package.json, __init__.py, etc.)",
+          "severity": "high",
+          "languages": ["all"],
+          "check_pattern": null
+        },
+        {
+          "id": "changelog-generation",
+          "description": "Optionally auto-update CHANGELOG.md with commit messages grouped by type",
+          "severity": "low",
+          "languages": ["all"],
+          "check_pattern": null
+        },
+        {
+          "id": "git-tag-creation",
+          "description": "Optionally create git tag (v1.2.3) for new version",
+          "severity": "low",
+          "languages": ["all"],
+          "check_pattern": null
+        },
+        {
+          "id": "team-awareness",
+          "description": "Strategy varies by team: solo dev (auto on commit), small team (PR approval), large org (manual release)",
+          "severity": "medium",
+          "languages": ["all"],
+          "check_pattern": null
+        }
+      ],
+      "examples": {
+        "good": [
+          "# Solo dev - automatic\ngit commit -m \"feat(api): add user registration\"\n→ Version auto-bumps: 1.2.0 → 1.3.0\n→ pyproject.toml updated\n→ Git tag v1.3.0 created",
+          "# Small team - PR-based\nPR: feat(auth): add JWT refresh tokens\n→ Reviewer confirms MINOR bump\n→ On merge: version bumps 1.2.0 → 1.3.0\n→ CHANGELOG.md updated from PR description",
+          "# Large org - manual\nRelease manager reviews sprint commits\n→ Manually bumps version for release\n→ Creates release branch\n→ Merges to main with tag"
+        ],
+        "bad": [
+          "# Inconsistent versioning\n1.2.0 → 1.2.5 (random jump)\n1.2.5 → 1.4.0 (skipped 1.3.x)\n1.4.0 → 2.0.0 (no BREAKING CHANGE marker)",
+          "# Wrong bump type\nfeat(api): add field → 1.2.0 → 1.2.1 (should be MINOR)\nfix(bug): patch → 1.2.0 → 1.3.0 (should be PATCH)"
+        ]
+      },
+      "applicability": {
+        "project_types": ["library", "api_backend", "cli_tool", "framework"],
+        "languages": ["all"],
+        "contexts": ["versioned_releases"],
+        "preference_conditions": [
+          {
+            "field": "team_size",
+            "operator": "in",
+            "value": ["solo", "small_team"]
+          }
+        ]
+      },
+      "related_principles": ["P043", "P047", "P072", "P073"],
+      "anti_patterns": [
+        "Manual version bumps without checking commit history",
+        "Version bumps that don't match actual changes (e.g., PATCH for breaking change)",
+        "Forgetting to update all version files consistently",
+        "No CHANGELOG.md updates alongside version bumps",
+        "Using automated versioning in large orgs without coordination"
+      ],
+      "impact": {
+        "code_clarity": "medium",
+        "maintainability": "high",
+        "team_velocity": "high",
+        "bug_reduction": "low",
+        "development_speed": "high"
+      },
+      "verification": {
+        "checklist": [
+          "Version bump matches commit type (feat: → MINOR, fix: → PATCH, BREAKING: → MAJOR)",
+          "All version files updated consistently",
+          "CHANGELOG.md updated (if enabled)",
+          "Git tag created (if enabled)",
+          "Team coordination strategy followed (auto/PR/manual)"
+        ]
+      },
+      "configuration_options": {
+        "versioning_strategy": {
+          "solo": "auto_semver",
+          "small_team": "pr_based_semver",
+          "growing_team": "manual_semver",
+          "large_org": "manual_semver"
+        },
+        "auto_tag": "boolean (default: false for teams, true for solo)",
+        "auto_changelog": "boolean (default: false)",
+        "version_files": ["pyproject.toml", "package.json", "__init__.py", "Cargo.toml", "go.mod"]
+      },
+      "when_to_skip": [
+        "Internal projects with no releases",
+        "Prototypes without version requirements",
+        "Large organizations with complex release processes (use manual)"
+      ],
+      "workflows": {
+        "auto_semver": "Commit → Detect type → Bump version → Update files → Create tag → Done",
+        "pr_based_semver": "Commit → PR → Reviewer confirms bump → Merge → Auto-update → Tag",
+        "manual_semver": "Accumulate commits → Release manager decides → Manual bump → Tag → Deploy"
+      }
+    }
+  ],
+  "selection_strategies": {
+    "auto": {
+      "description": "Select principles based on project characteristics",
+      "rules": [
+        {
+          "condition": "project.type == 'api'",
+          "include": [
+            "P001",
+            "P005",
+            "P011",
+            "P018",
+            "P024",
+            "P025",
+            "P026",
+            "P027",
+            "P028",
+            "P052"
+          ]
+        },
+        {
+          "condition": "project.characteristics.privacy_critical == true",
+          "include": [
+            "P019",
+            "P020",
+            "P021",
+            "P022"
+          ]
+        },
+        {
+          "condition": "project.characteristics.security_critical == true",
+          "include": [
+            "P001",
+            "P005",
+            "P024",
+            "P025",
+            "P026",
+            "P030"
+          ]
+        },
+        {
+          "condition": "project.team.size == 'large'",
+          "include": [
+            "P008",
+            "P041",
+            "P043",
+            "P044",
+            "P045"
+          ]
+        },
+        {
+          "condition": "project.detection.containers.runtime != null",
+          "include": [
+            "P033",
+            "P034",
+            "P035",
+            "P036"
+          ]
+        }
+      ]
+    },
+    "minimal": {
+      "description": "Core principles only (15 principles)",
+      "include": [
+        "P001",
+        "P002",
+        "P003",
+        "P005",
+        "P006",
+        "P023",
+        "P026",
+        "P031",
+        "P032",
+        "P037",
+        "P038",
+        "P041",
+        "P048",
+        "P049",
+        "P051"
+      ]
+    },
+    "comprehensive": {
+      "description": "All principles (52 principles)",
+      "include": "all"
+    }
+  }
+}

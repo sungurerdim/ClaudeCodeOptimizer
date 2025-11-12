@@ -64,14 +64,14 @@ class AbstractDataProcessorFactory:
 
 For detailed principles in specific areas, see:
 
-- **[Code Quality](~/.cco/knowledge/principles/code_quality.md)** - DRY, type safety, immutability (14 principles)
-- **[Security & Privacy](~/.cco/knowledge/principles/security_privacy.md)** - Encryption, auth, secrets management (19 principles)
-- **[Architecture](~/.cco/knowledge/principles/architecture.md)** - Event-driven, microservices, patterns (10 principles)
-- **[Testing](~/.cco/knowledge/principles/testing.md)** - Coverage, isolation, CI gates (6 principles)
-- **[Git Workflow](~/.cco/knowledge/principles/git_workflow.md)** - Commits, branching, versioning (8 principles)
-- **[Performance](~/.cco/knowledge/principles/performance.md)** - Caching, optimization, async I/O (5 principles)
-- **[Operations](~/.cco/knowledge/principles/operations.md)** - Config as code, IaC, observability (10 principles)
-- **[API Design](~/.cco/knowledge/principles/api_design.md)** - RESTful, versioning, errors (2 principles)
+- **[Code Quality](~/.cco/principles/code_quality.md)** - DRY, type safety, immutability (14 principles)
+- **[Security & Privacy](~/.cco/principles/security_privacy.md)** - Encryption, auth, secrets management (19 principles)
+- **[Architecture](~/.cco/principles/architecture.md)** - Event-driven, microservices, patterns (10 principles)
+- **[Testing](~/.cco/principles/testing.md)** - Coverage, isolation, CI gates (6 principles)
+- **[Git Workflow](~/.cco/principles/git_workflow.md)** - Commits, branching, versioning (8 principles)
+- **[Performance](~/.cco/principles/performance.md)** - Caching, optimization, async I/O (5 principles)
+- **[Operations](~/.cco/principles/operations.md)** - Config as code, IaC, observability (10 principles)
+- **[API Design](~/.cco/principles/api_design.md)** - RESTful, versioning, errors (2 principles)
 
 **Total: 74 principles across 8 categories**
 
