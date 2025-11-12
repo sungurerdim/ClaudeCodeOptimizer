@@ -64,16 +64,18 @@ class AbstractDataProcessorFactory:
 
 For detailed principles in specific areas, see:
 
-- **[Code Quality](~/.cco/principles/code_quality.md)** - DRY, type safety, immutability (14 principles)
-- **[Security & Privacy](~/.cco/principles/security_privacy.md)** - Encryption, auth, secrets management (19 principles)
-- **[Architecture](~/.cco/principles/architecture.md)** - Event-driven, microservices, patterns (10 principles)
-- **[Testing](~/.cco/principles/testing.md)** - Coverage, isolation, CI gates (6 principles)
-- **[Git Workflow](~/.cco/principles/git_workflow.md)** - Commits, branching, versioning (8 principles)
-- **[Performance](~/.cco/principles/performance.md)** - Caching, optimization, async I/O (5 principles)
-- **[Operations](~/.cco/principles/operations.md)** - Config as code, IaC, observability (10 principles)
-- **[API Design](~/.cco/principles/api_design.md)** - RESTful, versioning, errors (2 principles)
+**Individual principle files in `.claude/principles/`:**
+- P001-P014: Code Quality principles
+- P015-P024: Architecture principles
+- P025-P043: Security & Privacy principles
+- P044-P049: Testing principles
+- P050-P057: Git Workflow principles
+- P058-P062: Performance principles
+- P063-P072: Operations principles
+- P073-P074: API Design principles
 
-**Total: 74 principles across 8 categories**
+**Total: 74 individual principle files**
+**Note**: Only applicable principles are symlinked to your project
 
 ---
 
