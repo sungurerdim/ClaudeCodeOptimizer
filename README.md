@@ -17,7 +17,7 @@
 
 Unlike generic linters or static templates, CCO:
 - 🎯 **Analyzes your project** - AI reads your code, docs, git history to understand context
-- 🤖 **Selects only what's needed** - From 74 principles, only 30-50 applicable ones are loaded
+- 🤖 **Selects only what's needed** - From 81 principles (12 universal + 69 project-specific), only applicable ones are loaded
 - 🔄 **Adapts to your stack** - FastAPI project gets different principles than a CLI tool
 - 🧹 **Zero waste** - No unused commands, no irrelevant principles, no boilerplate
 
@@ -71,7 +71,7 @@ Unlike generic linters or static templates, CCO:
 
 | Tool | Primary Focus | CCO's Position |
 |------|---------------|----------------|
-| **[claude-code-agents](https://github.com/wshobson/agents)** | Agent library, progressive disclosure pattern | CCO adds: project configuration, 74 industry principles, unified command system, semantic commits |
+| **[claude-code-agents](https://github.com/wshobson/agents)** | Agent library, progressive disclosure pattern | CCO adds: project configuration, 81 industry principles (12 universal + 69 project-specific), unified command system, semantic commits |
 | **[superpowers](https://github.com/obra/superpowers)** | Skill system for Claude | CCO adds: AI detection engine, audit/fix/generate workflows, git integration, zero-config init |
 | **Manual .claude/ setup** | DIY configuration files | CCO automates: detection, principle selection, command deployment, template generation, conflict resolution |
 | **Generic linters/formatters** | Code style enforcement | CCO adds: AI-powered analysis, cross-file reasoning, semantic understanding, guided fixes |
@@ -287,9 +287,11 @@ Unlock full CCO capabilities:
 - Claude Code UI integration for all user interactions
 
 **📋 Individual Principle Files** (Complete)
-- 74 principles split into individual files
-- Category-based organization (8 categories)
-- Projects symlink only applicable principles
+- 81 total principles: 12 universal (always included) + 69 project-specific
+- Universal principles (U001-U012): Inline in CLAUDE.md (~1,200 tokens)
+- Project principles (P001-P069): Dynamic loading by commands (~1,500 tokens on-demand)
+- Category-based organization (8 categories + universal)
+- **Hybrid approach**: 46% token reduction (2,700 tokens vs 5,000)
 - CLAUDE.md references local symlinks (which point to global files)
 - Eliminated `PRINCIPLES.md` - deprecated completely
 
