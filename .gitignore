@@ -217,4 +217,4 @@ requirements.txt.lock
 *.bat
 
 # VS Code
-.vscode/
+.vscode/content/principles_backup/
