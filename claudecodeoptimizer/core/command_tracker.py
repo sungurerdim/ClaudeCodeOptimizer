@@ -38,7 +38,8 @@ def track_command(command_name: str) -> Callable:
 
             # Check if this is a CCO project
             registry = ProjectRegistry()
-            project_info = registry.get_by_path(project_root)
+            project_name = project_root.name
+            project_info = registry.get_project(project_name)
 
             if not project_info:
                 # Not a CCO project, skip tracking
@@ -61,12 +62,11 @@ def track_command(command_name: str) -> Callable:
                 raise
             finally:
                 # Record command usage
-                duration = time.time() - start_time
+                duration_ms = int((time.time() - start_time) * 1000)
                 tracker.record_command(
                     command=command_name,
-                    duration_seconds=duration,
-                    success=(error is None),
-                    error=error
+                    duration_ms=duration_ms,
+                    success=(error is None)
                 )
 
         return wrapper
