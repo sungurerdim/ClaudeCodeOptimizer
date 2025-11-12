@@ -40,7 +40,7 @@ class PrincipleSelector:
 
     def _load_principles(self) -> List[Dict[str, Any]]:
         """Load all principles from knowledge base"""
-        principles_path = Path(__file__).parent.parent / "knowledge" / "principles.json"
+        principles_path = Path(__file__).parent.parent.parent / "content" / "principles.json"
 
         with open(principles_path, encoding="utf-8") as f:
             data = json.load(f)
