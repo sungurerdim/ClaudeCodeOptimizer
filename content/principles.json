@@ -1,12 +1,18 @@
 {
   "version": "2.1.0",
-  "total_principles": 74,
+  "total_principles": 81,
   "categories": [
+    {
+      "id": "universal",
+      "name": "Universal Principles",
+      "description": "Core principles that apply to ALL projects without exception",
+      "principle_count": 12
+    },
     {
       "id": "code_quality",
       "name": "Code Quality",
       "description": "DRY, fail-fast, type safety, immutability, precision, version management",
-      "principle_count": 14
+      "principle_count": 11
     },
     {
       "id": "architecture",
@@ -36,7 +42,7 @@
       "id": "git_workflow",
       "name": "Git Workflow",
       "description": "Commit conventions, branching, PR guidelines, versioning",
-      "principle_count": 8
+      "principle_count": 6
     },
     {
       "id": "performance",
@@ -53,10 +59,31 @@
   ],
   "principles": [
     {
-      "id": "P001",
+      "id": "U001",
       "number": 1,
+      "title": "Evidence-Based Verification",
+      "category": "universal",
+      "severity": "critical",
+      "weight": 10,
+      "description": "Never claim completion without command execution proof. All verification requires fresh command output with exit codes.",
+      "applicability": {
+        "project_types": [
+          "all"
+        ],
+        "languages": [
+          "all"
+        ],
+        "contexts": [
+          "all"
+        ],
+        "conditions": []
+      }
+    },
+    {
+      "id": "U002",
+      "number": 2,
       "title": "Fail-Fast Error Handling",
-      "category": "code_quality",
+      "category": "universal",
       "severity": "critical",
       "weight": 10,
       "description": "Errors must cause immediate, visible failure. No silent fallbacks, no swallowed exceptions.",
@@ -71,55 +98,221 @@
           "all"
         ],
         "conditions": []
-      },
-      "rules": [
-        {
-          "id": "no-bare-except",
-          "description": "No bare except: clauses",
-          "check_pattern": "except:\\\\s*$",
-          "languages": [
-            "python"
-          ],
-          "severity": "critical"
-        },
-        {
-          "id": "no-silent-catch",
-          "description": "No empty catch blocks",
-          "check_pattern": "catch\\\\s*\\\\([^)]*\\\\)\\\\s*\\\\{\\\\s*\\\\}",
-          "languages": [
-            "javascript",
-            "typescript",
-            "java"
-          ],
-          "severity": "critical"
-        }
-      ],
-      "examples": {
-        "bad": [
-          "try:\\n    result = risky()\\nexcept:\\n    pass"
-        ],
-        "good": [
-          "try:\\n    result = risky()\\nexcept SpecificError as e:\\n    logger.error(f'Failed: {e}')\\n    raise"
-        ]
-      },
-      "autofix": {
-        "available": false,
-        "complexity": "manual"
-      },
-      "enforcement": {
-        "verification_protocol": true,
-        "test_first": true,
-        "root_cause_analysis": true
-      },
-      "incremental_fix": {
-        "priority": "critical",
-        "batch_size": 1
-      },
-      "one_line_why": "Catches bugs early in development before they reach production"
+      }
     },
     {
-      "id": "P002",
-      "number": 2,
+      "id": "U003",
+      "number": 3,
+      "title": "Test-First Development",
+      "category": "universal",
+      "severity": "high",
+      "weight": 9,
+      "description": "Write failing test FIRST, then implement feature, then verify test passes.",
+      "applicability": {
+        "project_types": [
+          "all"
+        ],
+        "languages": [
+          "all"
+        ],
+        "contexts": [
+          "all"
+        ],
+        "conditions": []
+      }
+    },
+    {
+      "id": "U004",
+      "number": 4,
+      "title": "Root Cause Analysis",
+      "category": "universal",
+      "severity": "high",
+      "weight": 9,
+      "description": "When debugging, always trace to source. Fix at source, not symptom.",
+      "applicability": {
+        "project_types": [
+          "all"
+        ],
+        "languages": [
+          "all"
+        ],
+        "contexts": [
+          "all"
+        ],
+        "conditions": []
+      }
+    },
+    {
+      "id": "U005",
+      "number": 5,
+      "title": "Minimal Touch Policy",
+      "category": "universal",
+      "severity": "high",
+      "weight": 8,
+      "description": "Edit only required files. No \"drive-by improvements\", no scope creep.",
+      "applicability": {
+        "project_types": [
+          "all"
+        ],
+        "languages": [
+          "all"
+        ],
+        "contexts": [
+          "all"
+        ],
+        "conditions": []
+      }
+    },
+    {
+      "id": "U006",
+      "number": 6,
+      "title": "Model Selection Strategy",
+      "category": "universal",
+      "severity": "medium",
+      "weight": 7,
+      "description": "Strategic model selection for cost and performance optimization.",
+      "applicability": {
+        "project_types": [
+          "all"
+        ],
+        "languages": [
+          "all"
+        ],
+        "contexts": [
+          "all"
+        ],
+        "conditions": []
+      }
+    },
+    {
+      "id": "U007",
+      "number": 7,
+      "title": "Token Optimization",
+      "category": "universal",
+      "severity": "medium",
+      "weight": 7,
+      "description": "Minimize token usage through grep-first approach and targeted reads.",
+      "applicability": {
+        "project_types": [
+          "all"
+        ],
+        "languages": [
+          "all"
+        ],
+        "contexts": [
+          "all"
+        ],
+        "conditions": []
+      }
+    },
+    {
+      "id": "U008",
+      "number": 8,
+      "title": "Complete Action Reporting",
+      "category": "universal",
+      "severity": "critical",
+      "weight": 10,
+      "description": "Every action must be explicitly reported to the user. No hidden operations.",
+      "applicability": {
+        "project_types": [
+          "all"
+        ],
+        "languages": [
+          "all"
+        ],
+        "contexts": [
+          "all"
+        ],
+        "conditions": []
+      }
+    },
+    {
+      "id": "U009",
+      "number": 9,
+      "title": "Atomic Commits",
+      "category": "universal",
+      "severity": "medium",
+      "weight": 8,
+      "description": "Each commit contains changes related to a single logical change. Never mix unrelated changes.",
+      "applicability": {
+        "project_types": [
+          "all"
+        ],
+        "languages": [
+          "all"
+        ],
+        "contexts": [
+          "all"
+        ],
+        "conditions": []
+      }
+    },
+    {
+      "id": "U010",
+      "number": 10,
+      "title": "Concise Commit Messages",
+      "category": "universal",
+      "severity": "medium",
+      "weight": 7,
+      "description": "Commit messages must be compact: max 10 lines total, max 5 bullets in body.",
+      "applicability": {
+        "project_types": [
+          "all"
+        ],
+        "languages": [
+          "all"
+        ],
+        "contexts": [
+          "all"
+        ],
+        "conditions": []
+      }
+    },
+    {
+      "id": "U011",
+      "number": 11,
+      "title": "No Overengineering",
+      "category": "universal",
+      "severity": "critical",
+      "weight": 10,
+      "description": "Always choose the simplest solution that solves the problem. Avoid premature abstraction, unnecessary patterns, excessive architecture.",
+      "applicability": {
+        "project_types": [
+          "all"
+        ],
+        "languages": [
+          "all"
+        ],
+        "contexts": [
+          "all"
+        ],
+        "conditions": []
+      }
+    },
+    {
+      "id": "U012",
+      "number": 12,
+      "title": "Cross-Platform Bash Commands",
+      "category": "universal",
+      "severity": "high",
+      "weight": 8,
+      "description": "Use cross-platform compatible bash commands and path handling.",
+      "applicability": {
+        "project_types": [
+          "all"
+        ],
+        "languages": [
+          "all"
+        ],
+        "contexts": [
+          "all"
+        ],
+        "conditions": []
+      }
+    },
+    {
+      "id": "P001",
+      "number": 1,
       "title": "DRY Enforcement",
       "category": "code_quality",
       "severity": "high",
@@ -181,8 +374,8 @@
       "one_line_why": "Eliminates code duplication to reduce bugs and maintenance burden"
     },
     {
-      "id": "P003",
-      "number": 3,
+      "id": "P002",
+      "number": 2,
       "title": "Complete Integration Check",
       "category": "code_quality",
       "severity": "high",
@@ -237,8 +430,8 @@
       "one_line_why": "Prevents runtime errors by catching type mismatches during development"
     },
     {
-      "id": "P004",
-      "number": 4,
+      "id": "P003",
+      "number": 3,
       "title": "No Backward Compatibility Debt",
       "category": "code_quality",
       "severity": "high",
@@ -291,8 +484,8 @@
       "one_line_why": "Prevents bugs from state changes by making data unchangeable after creation"
     },
     {
-      "id": "P005",
-      "number": 5,
+      "id": "P022",
+      "number": 22,
       "title": "Schema-First Validation",
       "category": "security_privacy",
       "severity": "critical",
@@ -350,8 +543,8 @@
       "one_line_why": "Reduces ambiguity and edge cases by using exact types instead of loose ones"
     },
     {
-      "id": "P006",
-      "number": 6,
+      "id": "P004",
+      "number": 4,
       "title": "Precision in Calculations",
       "category": "code_quality",
       "severity": "high",
@@ -407,8 +600,8 @@
       "one_line_why": "Makes code self-documenting by using clear, descriptive variable and function names"
     },
     {
-      "id": "P007",
-      "number": 7,
+      "id": "P005",
+      "number": 5,
       "title": "Immutability by Default",
       "category": "code_quality",
       "severity": "medium",
@@ -463,8 +656,8 @@
       "one_line_why": "Keeps functions focused on one task making them easier to test and reuse"
     },
     {
-      "id": "P008",
-      "number": 8,
+      "id": "P006",
+      "number": 6,
       "title": "Code Review Checklist Compliance",
       "category": "code_quality",
       "severity": "medium",
@@ -509,8 +702,8 @@
       "one_line_why": "Prevents tight coupling by hiding implementation details behind clean interfaces"
     },
     {
-      "id": "P009",
-      "number": 9,
+      "id": "P007",
+      "number": 7,
       "title": "Linting & SAST Enforcement",
       "category": "code_quality",
       "severity": "high",
@@ -615,8 +808,8 @@
       ]
     },
     {
-      "id": "P010",
-      "number": 10,
+      "id": "P008",
+      "number": 8,
       "title": "Performance Profiling Before Optimization",
       "category": "code_quality",
       "severity": "low",
@@ -659,8 +852,8 @@
       "one_line_why": "Improves code clarity by writing functions that return values instead of modifying state"
     },
     {
-      "id": "P011",
-      "number": 11,
+      "id": "P012",
+      "number": 12,
       "title": "Event-Driven Architecture",
       "category": "architecture",
       "severity": "critical",
@@ -716,8 +909,8 @@
       "one_line_why": "Prevents resource leaks by ensuring cleanup always happens even when errors occur"
     },
     {
-      "id": "P012",
-      "number": 12,
+      "id": "P013",
+      "number": 13,
       "title": "Singleton Pattern for Expensive Resources",
       "category": "architecture",
       "severity": "high",
@@ -770,8 +963,8 @@
       "one_line_why": "Reduces system coupling by using events instead of direct function calls"
     },
     {
-      "id": "P013",
-      "number": 13,
+      "id": "P014",
+      "number": 14,
       "title": "Separation of Concerns",
       "category": "architecture",
       "severity": "high",
@@ -824,8 +1017,8 @@
       "one_line_why": "Makes systems scalable by breaking monoliths into independent, deployable services"
     },
     {
-      "id": "P014",
-      "number": 14,
+      "id": "P015",
+      "number": 15,
       "title": "Microservices with Service Mesh",
       "category": "architecture",
       "severity": "high",
@@ -953,8 +1146,8 @@
       ]
     },
     {
-      "id": "P015",
-      "number": 15,
+      "id": "P016",
+      "number": 16,
       "title": "CQRS Pattern",
       "category": "architecture",
       "severity": "medium",
@@ -998,8 +1191,8 @@
       "one_line_why": "Catches bugs before merge through peer code review and knowledge sharing"
     },
     {
-      "id": "P016",
-      "number": 16,
+      "id": "P017",
+      "number": 17,
       "title": "Dependency Injection",
       "category": "architecture",
       "severity": "medium",
@@ -1052,8 +1245,8 @@
       "one_line_why": "Maintains code quality through consistent PR templates and review checklists"
     },
     {
-      "id": "P017",
-      "number": 17,
+      "id": "P018",
+      "number": 18,
       "title": "Circuit Breaker Pattern",
       "category": "architecture",
       "severity": "medium",
@@ -1097,8 +1290,8 @@
       "one_line_why": "Enables parallel development through isolated feature branches and clear merge strategy"
     },
     {
-      "id": "P018",
-      "number": 18,
+      "id": "P019",
+      "number": 19,
       "title": "API Versioning Strategy",
       "category": "architecture",
       "severity": "high",
@@ -1142,8 +1335,8 @@
       "one_line_why": "Prevents breaking existing clients by supporting multiple API versions simultaneously"
     },
     {
-      "id": "P019",
-      "number": 19,
+      "id": "P023",
+      "number": 23,
       "title": "Privacy-First by Default",
       "category": "security_privacy",
       "severity": "critical",
@@ -1198,8 +1391,8 @@
       "one_line_why": "Protects sensitive data by encrypting it at rest and in transit"
     },
     {
-      "id": "P020",
-      "number": 20,
+      "id": "P024",
+      "number": 24,
       "title": "TTL-Based Cleanup",
       "category": "security_privacy",
       "severity": "high",
@@ -1252,8 +1445,8 @@
       "one_line_why": "Maximizes privacy by never writing sensitive data to disk or logs"
     },
     {
-      "id": "P021",
-      "number": 21,
+      "id": "P025",
+      "number": 25,
       "title": "Encryption Everywhere",
       "category": "security_privacy",
       "severity": "critical",
@@ -1308,8 +1501,8 @@
       "one_line_why": "Minimizes data collection by only storing what's absolutely necessary for functionality"
     },
     {
-      "id": "P022",
-      "number": 22,
+      "id": "P026",
+      "number": 26,
       "title": "Zero Disk Touch",
       "category": "security_privacy",
       "severity": "critical",
@@ -1364,8 +1557,8 @@
       "one_line_why": "Protects user privacy by anonymizing data before collection and storage"
     },
     {
-      "id": "P023",
-      "number": 23,
+      "id": "P009",
+      "number": 9,
       "title": "Type Safety & Static Analysis",
       "category": "code_quality",
       "severity": "high",
@@ -1419,8 +1612,8 @@
       "one_line_why": "Adds security layer by validating all external input before processing"
     },
     {
-      "id": "P024",
-      "number": 24,
+      "id": "P027",
+      "number": 27,
       "title": "Authentication & Authorization",
       "category": "security_privacy",
       "severity": "critical",
@@ -1464,8 +1657,8 @@
       "one_line_why": "Prevents unauthorized access through proper authentication and session management"
     },
     {
-      "id": "P025",
-      "number": 25,
+      "id": "P028",
+      "number": 28,
       "title": "SQL Injection Prevention",
       "category": "security_privacy",
       "severity": "critical",
@@ -1518,8 +1711,8 @@
       "one_line_why": "Prevents credential leaks by storing secrets outside code in secure vaults"
     },
     {
-      "id": "P026",
-      "number": 26,
+      "id": "P029",
+      "number": 29,
       "title": "Secret Management with Rotation",
       "category": "security_privacy",
       "severity": "critical",
@@ -1639,8 +1832,8 @@
       ]
     },
     {
-      "id": "P027",
-      "number": 27,
+      "id": "P030",
+      "number": 30,
       "title": "Rate Limiting & Throttling",
       "category": "security_privacy",
       "severity": "high",
@@ -1684,8 +1877,8 @@
       "one_line_why": "Prevents injection attacks by using parameterized queries instead of string concatenation"
     },
     {
-      "id": "P028",
-      "number": 28,
+      "id": "P031",
+      "number": 31,
       "title": "CORS Policy",
       "category": "security_privacy",
       "severity": "high",
@@ -1729,8 +1922,8 @@
       "one_line_why": "Protects APIs from abuse through rate limiting and request throttling"
     },
     {
-      "id": "P029",
-      "number": 29,
+      "id": "P032",
+      "number": 32,
       "title": "Input Sanitization (XSS Prevention)",
       "category": "security_privacy",
       "severity": "critical",
@@ -1775,8 +1968,8 @@
       "one_line_why": "Prevents XSS attacks by sanitizing all user input before display"
     },
     {
-      "id": "P030",
-      "number": 30,
+      "id": "P033",
+      "number": 33,
       "title": "Audit Logging",
       "category": "security_privacy",
       "severity": "high",
@@ -1821,8 +2014,8 @@
       "one_line_why": "Enables security incident investigation through comprehensive audit logging"
     },
     {
-      "id": "P031",
-      "number": 31,
+      "id": "P058",
+      "number": 58,
       "title": "Minimal Responsibility (Zero Maintenance)",
       "category": "operations",
       "severity": "high",
@@ -1865,8 +2058,8 @@
       "one_line_why": "Reduces operational burden by automating all manual maintenance tasks"
     },
     {
-      "id": "P032",
-      "number": 32,
+      "id": "P059",
+      "number": 59,
       "title": "Configuration as Code",
       "category": "operations",
       "severity": "high",
@@ -1919,8 +2112,8 @@
       "one_line_why": "Makes configuration reproducible by versioning all config files in git"
     },
     {
-      "id": "P033",
-      "number": 33,
+      "id": "P060",
+      "number": 60,
       "title": "Infrastructure as Code + GitOps",
       "category": "operations",
       "severity": "high",
@@ -2036,8 +2229,8 @@
       ]
     },
     {
-      "id": "P034",
-      "number": 34,
+      "id": "P061",
+      "number": 61,
       "title": "Observability with OpenTelemetry",
       "category": "operations",
       "severity": "high",
@@ -2134,8 +2327,8 @@
       ]
     },
     {
-      "id": "P035",
-      "number": 35,
+      "id": "P062",
+      "number": 62,
       "title": "Health Checks & Readiness Probes",
       "category": "operations",
       "severity": "high",
@@ -2179,8 +2372,8 @@
       "one_line_why": "Detects anomalies early through comprehensive metrics and alerting"
     },
     {
-      "id": "P036",
-      "number": 36,
+      "id": "P063",
+      "number": 63,
       "title": "Graceful Shutdown",
       "category": "operations",
       "severity": "medium",
@@ -2224,8 +2417,8 @@
       "one_line_why": "Enables quick problem diagnosis through distributed request tracing"
     },
     {
-      "id": "P037",
-      "number": 37,
+      "id": "P041",
+      "number": 41,
       "title": "Test Coverage Targets",
       "category": "testing",
       "severity": "high",
@@ -2268,8 +2461,8 @@
       "one_line_why": "Catches integration issues early by running full test suite on every commit"
     },
     {
-      "id": "P038",
-      "number": 38,
+      "id": "P042",
+      "number": 42,
       "title": "Test Isolation",
       "category": "testing",
       "severity": "high",
@@ -2312,8 +2505,8 @@
       "one_line_why": "Ensures quality by blocking deploys when tests fail or coverage drops"
     },
     {
-      "id": "P039",
-      "number": 39,
+      "id": "P043",
+      "number": 43,
       "title": "Integration Tests for Critical Paths",
       "category": "testing",
       "severity": "high",
@@ -2357,8 +2550,8 @@
       "one_line_why": "Validates production health by running smoke tests after every deployment"
     },
     {
-      "id": "P040",
-      "number": 40,
+      "id": "P044",
+      "number": 44,
       "title": "Test Pyramid",
       "category": "testing",
       "severity": "medium",
@@ -2401,8 +2594,8 @@
       "one_line_why": "Prevents bugs through isolated unit tests that don't depend on external systems"
     },
     {
-      "id": "P041",
-      "number": 41,
+      "id": "P045",
+      "number": 45,
       "title": "CI Gates",
       "category": "testing",
       "severity": "high",
@@ -2447,8 +2640,8 @@
       "one_line_why": "Balances test coverage through unit, integration, and E2E testing pyramid"
     },
     {
-      "id": "P042",
-      "number": 42,
+      "id": "P046",
+      "number": 46,
       "title": "Property-Based Testing",
       "category": "testing",
       "severity": "low",
@@ -2492,8 +2685,8 @@
       "one_line_why": "Catches regressions through integration tests that verify component interactions"
     },
     {
-      "id": "P043",
-      "number": 43,
+      "id": "P047",
+      "number": 47,
       "title": "Commit Message Conventions",
       "category": "git_workflow",
       "severity": "medium",
@@ -2538,8 +2731,8 @@
       "one_line_why": "Validates user workflows through end-to-end tests of complete system flows"
     },
     {
-      "id": "P044",
-      "number": 44,
+      "id": "P048",
+      "number": 48,
       "title": "Branching Strategy",
       "category": "git_workflow",
       "severity": "medium",
@@ -2584,8 +2777,8 @@
       "one_line_why": "Improves test quality by verifying tests actually catch bugs through mutation testing"
     },
     {
-      "id": "P045",
-      "number": 45,
+      "id": "P049",
+      "number": 49,
       "title": "PR Guidelines",
       "category": "git_workflow",
       "severity": "medium",
@@ -2630,8 +2823,8 @@
       "one_line_why": "Maintains consistency through conventional commit messages and automated changelog"
     },
     {
-      "id": "P046",
-      "number": 46,
+      "id": "P050",
+      "number": 50,
       "title": "Rebase vs Merge Strategy",
       "category": "git_workflow",
       "severity": "low",
@@ -2676,8 +2869,8 @@
       "one_line_why": "Documents changes clearly through structured PR descriptions and review comments"
     },
     {
-      "id": "P047",
-      "number": 47,
+      "id": "P051",
+      "number": 51,
       "title": "Semantic Versioning",
       "category": "git_workflow",
       "severity": "medium",
@@ -2721,8 +2914,8 @@
       "one_line_why": "Communicates change impact through semantic versioning of breaking changes and features"
     },
     {
-      "id": "P048",
-      "number": 48,
+      "id": "P053",
+      "number": 53,
       "title": "Caching Strategy",
       "category": "performance",
       "severity": "medium",
@@ -2766,8 +2959,8 @@
       "one_line_why": "Speeds up repeated requests through intelligent caching at multiple system layers"
     },
     {
-      "id": "P049",
-      "number": 49,
+      "id": "P054",
+      "number": 54,
       "title": "Database Query Optimization",
       "category": "performance",
       "severity": "high",
@@ -2810,8 +3003,8 @@
       "one_line_why": "Prevents slow queries through proper database indexing and query optimization"
     },
     {
-      "id": "P050",
-      "number": 50,
+      "id": "P055",
+      "number": 55,
       "title": "Lazy Loading & Pagination",
       "category": "performance",
       "severity": "medium",
@@ -2855,8 +3048,8 @@
       "one_line_why": "Reduces memory usage by loading data only when needed instead of upfront"
     },
     {
-      "id": "P051",
-      "number": 51,
+      "id": "P056",
+      "number": 56,
       "title": "Async I/O (Non-Blocking Operations)",
       "category": "performance",
       "severity": "high",
@@ -2902,8 +3095,8 @@
       "one_line_why": "Improves responsiveness through non-blocking async operations for I/O tasks"
     },
     {
-      "id": "P052",
-      "number": 52,
+      "id": "P068",
+      "number": 68,
       "title": "RESTful API Conventions",
       "category": "api_design",
       "severity": "medium",
@@ -2946,8 +3139,8 @@
       "one_line_why": "Makes APIs intuitive through RESTful conventions and proper HTTP verbs"
     },
     {
-      "id": "P053",
-      "number": 53,
+      "id": "P010",
+      "number": 10,
       "title": "Centralized Version Management",
       "category": "code_quality",
       "severity": "high",
@@ -3038,8 +3231,8 @@
       "one_line_why": "Prevents version conflicts by centralizing version definition in single source file"
     },
     {
-      "id": "P054",
-      "number": 54,
+      "id": "P034",
+      "number": 34,
       "title": "Supply Chain Security",
       "category": "security_privacy",
       "severity": "critical",
@@ -3120,8 +3313,8 @@
       ]
     },
     {
-      "id": "P055",
-      "number": 55,
+      "id": "P035",
+      "number": 35,
       "title": "AI/ML Security",
       "category": "security_privacy",
       "severity": "critical",
@@ -3201,8 +3394,8 @@
       ]
     },
     {
-      "id": "P056",
-      "number": 56,
+      "id": "P036",
+      "number": 36,
       "title": "Container Security",
       "category": "security_privacy",
       "severity": "high",
@@ -3280,8 +3473,8 @@
       ]
     },
     {
-      "id": "P057",
-      "number": 57,
+      "id": "P037",
+      "number": 37,
       "title": "Kubernetes Security",
       "category": "security_privacy",
       "severity": "high",
@@ -3358,8 +3551,8 @@
       ]
     },
     {
-      "id": "P058",
-      "number": 58,
+      "id": "P038",
+      "number": 38,
       "title": "Zero Trust Architecture",
       "category": "security_privacy",
       "severity": "high",
@@ -3428,8 +3621,8 @@
       ]
     },
     {
-      "id": "P059",
-      "number": 59,
+      "id": "P064",
+      "number": 64,
       "title": "GitOps Practices",
       "category": "operations",
       "severity": "medium",
@@ -3486,8 +3679,8 @@
       ]
     },
     {
-      "id": "P060",
-      "number": 60,
+      "id": "P065",
+      "number": 65,
       "title": "Incident Response Readiness",
       "category": "operations",
       "severity": "high",
@@ -3553,8 +3746,8 @@
       ]
     },
     {
-      "id": "P061",
-      "number": 61,
+      "id": "P039",
+      "number": 39,
       "title": "Privacy Compliance",
       "category": "security_privacy",
       "severity": "high",
@@ -3621,8 +3814,8 @@
       ]
     },
     {
-      "id": "P062",
-      "number": 62,
+      "id": "P069",
+      "number": 69,
       "title": "API Security Best Practices",
       "category": "api_design",
       "severity": "high",
@@ -3688,8 +3881,8 @@
       ]
     },
     {
-      "id": "P063",
-      "number": 63,
+      "id": "P040",
+      "number": 40,
       "title": "Dependency Management",
       "category": "security_privacy",
       "severity": "high",
@@ -3755,8 +3948,8 @@
       ]
     },
     {
-      "id": "P064",
-      "number": 64,
+      "id": "P057",
+      "number": 57,
       "title": "Continuous Profiling",
       "category": "performance",
       "severity": "medium",
@@ -3814,8 +4007,8 @@
       ]
     },
     {
-      "id": "P065",
-      "number": 65,
+      "id": "P066",
+      "number": 66,
       "title": "Compliance as Code",
       "category": "operations",
       "severity": "medium",
@@ -3873,8 +4066,8 @@
       ]
     },
     {
-      "id": "P066",
-      "number": 66,
+      "id": "P020",
+      "number": 20,
       "title": "Agent Orchestration Patterns",
       "category": "architecture",
       "severity": "high",
@@ -3950,76 +4143,8 @@
       ]
     },
     {
-      "id": "P067",
-      "number": 67,
-      "title": "Evidence-Based Verification",
-      "category": "code_quality",
-      "severity": "critical",
-      "weight": 10,
-      "description": "Never claim completion without command execution proof. All verification requires fresh command output with exit codes",
-      "applicability": {
-        "project_types": [
-          "all"
-        ],
-        "languages": [
-          "all"
-        ],
-        "contexts": [
-          "all"
-        ],
-        "conditions": []
-      },
-      "rules": [
-        {
-          "id": "command-output-required",
-          "description": "Completion claims must include command output",
-          "check_pattern": "\\[Runs.*\\].*\\[Shows:.*\\]",
-          "languages": [
-            "all"
-          ],
-          "severity": "critical"
-        },
-        {
-          "id": "no-uncertainty",
-          "description": "Avoid uncertainty language",
-          "check_pattern": "(?!.*should work|looks correct|appears to|seems like)",
-          "languages": [
-            "all"
-          ],
-          "severity": "high"
-        }
-      ],
-      "examples": {
-        "bad": [
-          "\"Tests should pass now\"\\n\"Build looks correct\"\\n\"Appears to be working\""
-        ],
-        "good": [
-          "[Runs: pytest]\\n[Output: 34/34 passed]\\n[Exit code: 0]\\n\"All tests pass\"\\n\\n[Runs: npm run build]\\n[Output: Build successful in 2.3s]\\n[Exit code: 0]\\n\"Build succeeds\""
-        ]
-      },
-      "autofix": {
-        "available": false,
-        "complexity": "low"
-      },
-      "enforcement": {
-        "verification_protocol": true,
-        "test_first": true,
-        "root_cause_analysis": false
-      },
-      "incremental_fix": {
-        "priority": "critical",
-        "batch_size": 1
-      },
-      "one_line_why": "Ensures all claims are backed by objective evidence, preventing false confidence",
-      "standards": [
-        "DevOps Research and Assessment (DORA) Metrics",
-        "Continuous Verification",
-        "Test-Driven Development (TDD)"
-      ]
-    },
-    {
-      "id": "P068",
-      "number": 68,
+      "id": "P011",
+      "number": 11,
       "title": "Grep-First Search Strategy",
       "category": "code_quality",
       "severity": "medium",
@@ -4086,8 +4211,8 @@
       ]
     },
     {
-      "id": "P069",
-      "number": 69,
+      "id": "P067",
+      "number": 67,
       "title": "Incremental Safety Patterns",
       "category": "operations",
       "severity": "high",
@@ -4163,8 +4288,8 @@
       ]
     },
     {
-      "id": "P070",
-      "number": 70,
+      "id": "P021",
+      "number": 21,
       "title": "Context Window Management",
       "category": "architecture",
       "severity": "medium",
@@ -4240,284 +4365,8 @@
       ]
     },
     {
-      "id": "P071",
-      "number": 71,
-      "title": "No Overengineering - Pragmatic Solutions Only",
-      "category": "code_quality",
-      "severity": "critical",
-      "weight": 10,
-      "description": "Always choose the simplest solution that solves the problem. Avoid premature abstraction, unnecessary patterns, excessive architecture, or solutions built for imaginary future requirements. Every line of code is a liability - write only what is needed now.",
-      "one_line_why": "Simpler code is easier to understand, maintain, debug, and change",
-      "applicability": {
-        "project_types": [
-          "all"
-        ],
-        "languages": [
-          "all"
-        ],
-        "contexts": [
-          "all"
-        ],
-        "preference_conditions": []
-      },
-      "rules": [
-        {
-          "id": "no-premature-abstraction",
-          "description": "Avoid abstraction before you have 3+ similar use cases",
-          "check_pattern": null,
-          "languages": [
-            "all"
-          ],
-          "severity": "high"
-        },
-        {
-          "id": "no-unused-flexibility",
-          "description": "Remove configuration options, generic parameters, or extensibility hooks that are not currently used",
-          "check_pattern": null,
-          "languages": [
-            "all"
-          ],
-          "severity": "medium"
-        },
-        {
-          "id": "simple-solutions-first",
-          "description": "Try simple approach before complex patterns (no need for Factory, Strategy, Observer for simple cases)",
-          "check_pattern": null,
-          "languages": [
-            "all"
-          ],
-          "severity": "high"
-        }
-      ],
-      "examples": {
-        "bad": [
-          "# Bad: Premature abstraction\nclass AbstractDataProcessorFactory:\n    @abstractmethod\n    def create_processor(self): pass\n\nclass SimpleDataProcessor(AbstractDataProcessorFactory):\n    def create_processor(self): return Processor()\n\n# For just ONE use case!",
-          "# Bad: Over-configured\nclass EmailSender:\n    def __init__(self, smtp_host, port, use_tls, use_ssl, timeout, \n                 retry_count, retry_delay, max_retries, fallback_host):\n        # 9 parameters for a simple email sender",
-          "// Bad: Unnecessary pattern\nclass UserRepositoryFactory {\n  createRepository() {\n    return new UserRepository();\n  }\n}\n// Just use: new UserRepository()"
-        ],
-        "good": [
-          "# Good: Simple and direct\ndef send_email(to: str, subject: str, body: str):\n    \"\"\"Send email via SMTP.\"\"\"\n    smtp.send(to, subject, body)\n\n# Add complexity only when actually needed",
-          "# Good: Extract abstraction when you have multiple cases\ndef process_csv(file): ...\ndef process_json(file): ...\n# After 3rd format, THEN create: DataProcessor interface",
-          "// Good: Start simple\nfunction calculateTotal(items) {\n  return items.reduce((sum, item) => sum + item.price, 0);\n}\n// Clean, direct, no unnecessary classes"
-        ]
-      },
-      "enforcement": "MUST - No exceptions",
-      "impact": {
-        "code_clarity": "high",
-        "maintainability": "high",
-        "development_speed": "high",
-        "team_velocity": "high",
-        "bug_reduction": "medium"
-      },
-      "related_principles": [
-        "P002",
-        "P003"
-      ],
-      "anti_patterns": [
-        "Premature abstraction",
-        "Speculative generality",
-        "Architecture astronaut syndrome",
-        "Gold plating",
-        "YAGNI violations (You Aren't Gonna Need It)"
-      ],
-      "when_to_skip": [],
-      "verification": {
-        "checklist": [
-          "Every abstraction serves at least 3 concrete use cases",
-          "No unused configuration parameters",
-          "No design patterns applied \"just in case\"",
-          "No code written for imaginary future requirements"
-        ]
-      }
-    },
-    {
-      "id": "P072",
-      "number": 72,
-      "title": "Concise Commit Messages",
-      "category": "git_workflow",
-      "severity": "medium",
-      "weight": 7,
-      "description": "Commit messages must be compact: max 10 lines total, max 5 bullets in body, no verbosity. Focus on essential changes only.",
-      "one_line_why": "Concise commits are faster to read, easier to scan in history, and reduce noise",
-      "enforcement": "SHOULD - Strong recommendation",
-      "rules": [
-        {
-          "id": "max-total-lines",
-          "description": "Max 10 lines total (subject + body + footer)",
-          "severity": "medium",
-          "languages": [
-            "all"
-          ],
-          "check_pattern": null
-        },
-        {
-          "id": "max-bullets",
-          "description": "Max 5 bullets in body (most important changes only)",
-          "severity": "medium",
-          "languages": [
-            "all"
-          ],
-          "check_pattern": null
-        },
-        {
-          "id": "one-line-bullets",
-          "description": "One line per bullet (no multi-line explanations)",
-          "severity": "low",
-          "languages": [
-            "all"
-          ],
-          "check_pattern": null
-        },
-        {
-          "id": "no-section-headers",
-          "description": "No section headers ('Changes:', 'Rationale:', etc.)",
-          "severity": "low",
-          "languages": [
-            "all"
-          ],
-          "check_pattern": null
-        },
-        {
-          "id": "co-authored-by",
-          "description": "Include Co-Authored-By footer for GitHub attribution",
-          "severity": "low",
-          "languages": [
-            "all"
-          ],
-          "check_pattern": null
-        }
-      ],
-      "examples": {
-        "good": [
-          "refactor(ci): consolidate tools (P071)\n\n- Replace Black/Bandit/mypy with Ruff (format+lint+security)\n- Remove tool configs from pyproject.toml\n- Simplify workflow to 3 jobs, 5 steps total\n\nCo-Authored-By: Claude <noreply@anthropic.com>"
-        ],
-        "bad": [
-          "refactor: eliminate tool redundancy\n\nTool Consolidation (3 tools instead of 5):\n- Replace Black + mypy + Bandit with Ruff\n- Keep pip-audit (CVE scanning)\n...\n\nDependency Changes (pyproject.toml):\n- Remove: black, mypy from dev dependencies\n...\n[15 more lines]"
-        ]
-      },
-      "applicability": {
-        "project_types": [
-          "all"
-        ],
-        "languages": [
-          "all"
-        ],
-        "contexts": [
-          "all"
-        ],
-        "preference_conditions": []
-      },
-      "related_principles": [
-        "P043",
-        "P044"
-      ],
-      "anti_patterns": [
-        "Verbose commit messages with section headers",
-        "Multi-line bullet explanations",
-        "Over-documenting trivial changes",
-        "Including code diffs in commit messages"
-      ],
-      "impact": {
-        "code_clarity": "medium",
-        "maintainability": "medium",
-        "team_velocity": "medium",
-        "bug_reduction": "low",
-        "development_speed": "low"
-      },
-      "verification": {
-        "checklist": [
-          "Commit message has max 10 lines total",
-          "Body has max 5 bullets",
-          "Each bullet is one line",
-          "No section headers used",
-          "Co-Authored-By footer present (if using Claude Code)"
-        ]
-      },
-      "when_to_skip": [
-        "Initial commit or large migrations (can be longer with justification)",
-        "Release commits (may need changelog)"
-      ]
-    },
-    {
-      "id": "P073",
-      "number": 73,
-      "title": "Atomic Commits",
-      "category": "git_workflow",
-      "severity": "medium",
-      "weight": 8,
-      "description": "Each commit must contain changes related to a single logical change or category. Never mix unrelated changes in one commit.",
-      "one_line_why": "Atomic commits make git bisect, revert, and code review easier and more effective",
-      "enforcement": "SHOULD - Strong recommendation",
-      "rules": [
-        {
-          "id": "single-logical-change",
-          "description": "One commit = One logical change (feature, fix, refactor, etc.)",
-          "severity": "medium",
-          "languages": ["all"],
-          "check_pattern": null
-        },
-        {
-          "id": "group-related-files",
-          "description": "Group related files by category/purpose",
-          "severity": "medium",
-          "languages": ["all"],
-          "check_pattern": null
-        },
-        {
-          "id": "separate-unrelated",
-          "description": "Separate unrelated changes into multiple commits",
-          "severity": "high",
-          "languages": ["all"],
-          "check_pattern": null
-        }
-      ],
-      "examples": {
-        "good": [
-          "# Commit 1: Bug fix only\ngit commit -m \"fix(auth): handle expired tokens in login\"\n# Modified: auth.py",
-          "# Commit 2: Tests only\ngit commit -m \"test(auth): add tests for token expiration\"\n# Modified: tests/test_auth.py",
-          "# Single commit for tightly coupled changes\ngit commit -m \"fix(auth): handle null user in session middleware\"\n# Modified: auth.py, middleware.py, tests/test_auth.py\n# (All changes address the same logical issue)"
-        ],
-        "bad": [
-          "git commit -m \"fix login bug, add tests, update README, refactor database\"\n# Modified: auth.py, tests/, README.md, db.py (4 unrelated changes)",
-          "# Mix refactor with new feature\ngit commit -m \"refactor db and add caching\""
-        ]
-      },
-      "applicability": {
-        "project_types": ["all"],
-        "languages": ["all"],
-        "contexts": ["all"],
-        "preference_conditions": []
-      },
-      "related_principles": ["P043", "P072"],
-      "anti_patterns": [
-        "Mixing bug fixes with new features",
-        "Combining refactoring with functional changes",
-        "Adding tests, docs, and code in single commit without logical connection",
-        "Kitchen sink commits with multiple unrelated file changes"
-      ],
-      "impact": {
-        "code_clarity": "high",
-        "maintainability": "high",
-        "team_velocity": "medium",
-        "bug_reduction": "medium",
-        "development_speed": "low"
-      },
-      "verification": {
-        "checklist": [
-          "All changed files relate to same logical change",
-          "Unrelated changes are in separate commits",
-          "Commit can be reverted without breaking unrelated features",
-          "Changes can be reviewed as a cohesive unit"
-        ]
-      },
-      "when_to_skip": [
-        "Tightly coupled changes that must be committed together (e.g., interface + implementation)",
-        "Feature with tests (can be single commit if tightly coupled)"
-      ]
-    },
-    {
-      "id": "P074",
-      "number": 74,
+      "id": "P052",
+      "number": 52,
       "title": "Automated Semantic Versioning",
       "category": "git_workflow",
       "severity": "medium",
@@ -4530,35 +4379,45 @@
           "id": "commit-type-to-version-mapping",
           "description": "feat: commits bump MINOR version (1.2.0 → 1.3.0), fix: commits bump PATCH (1.2.0 → 1.2.1), feat!/BREAKING CHANGE: bump MAJOR (1.2.0 → 2.0.0)",
           "severity": "high",
-          "languages": ["all"],
+          "languages": [
+            "all"
+          ],
           "check_pattern": null
         },
         {
           "id": "version-file-update",
           "description": "Automatically update version in all relevant files (pyproject.toml, package.json, __init__.py, etc.)",
           "severity": "high",
-          "languages": ["all"],
+          "languages": [
+            "all"
+          ],
           "check_pattern": null
         },
         {
           "id": "changelog-generation",
           "description": "Optionally auto-update CHANGELOG.md with commit messages grouped by type",
           "severity": "low",
-          "languages": ["all"],
+          "languages": [
+            "all"
+          ],
           "check_pattern": null
         },
         {
           "id": "git-tag-creation",
           "description": "Optionally create git tag (v1.2.3) for new version",
           "severity": "low",
-          "languages": ["all"],
+          "languages": [
+            "all"
+          ],
           "check_pattern": null
         },
         {
           "id": "team-awareness",
           "description": "Strategy varies by team: solo dev (auto on commit), small team (PR approval), large org (manual release)",
           "severity": "medium",
-          "languages": ["all"],
+          "languages": [
+            "all"
+          ],
           "check_pattern": null
         }
       ],
@@ -4574,18 +4433,35 @@
         ]
       },
       "applicability": {
-        "project_types": ["library", "api_backend", "cli_tool", "framework"],
-        "languages": ["all"],
-        "contexts": ["versioned_releases"],
+        "project_types": [
+          "library",
+          "api_backend",
+          "cli_tool",
+          "framework"
+        ],
+        "languages": [
+          "all"
+        ],
+        "contexts": [
+          "versioned_releases"
+        ],
         "preference_conditions": [
           {
             "field": "team_size",
             "operator": "in",
-            "value": ["solo", "small_team"]
+            "value": [
+              "solo",
+              "small_team"
+            ]
           }
         ]
       },
-      "related_principles": ["P043", "P047", "P072", "P073"],
+      "related_principles": [
+        "P043",
+        "P047",
+        "P072",
+        "P073"
+      ],
       "anti_patterns": [
         "Manual version bumps without checking commit history",
         "Version bumps that don't match actual changes (e.g., PATCH for breaking change)",
@@ -4618,7 +4494,13 @@
         },
         "auto_tag": "boolean (default: false for teams, true for solo)",
         "auto_changelog": "boolean (default: false)",
-        "version_files": ["pyproject.toml", "package.json", "__init__.py", "Cargo.toml", "go.mod"]
+        "version_files": [
+          "pyproject.toml",
+          "package.json",
+          "__init__.py",
+          "Cargo.toml",
+          "go.mod"
+        ]
       },
       "when_to_skip": [
         "Internal projects with no releases",
