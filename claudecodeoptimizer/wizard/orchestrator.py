@@ -1252,16 +1252,15 @@ class CCOWizard:
 
     def _build_selected_principles_dict(self) -> Dict[str, List[str]]:
         """Build selected principles dictionary by category."""
-        import json
         from pathlib import Path
+        from ..core.principle_md_loader import load_all_principles
 
         # Load all principles to get universal count dynamically
-        principles_json = Path(__file__).parent.parent.parent / "content" / "principles.json"
-        with open(principles_json, encoding="utf-8") as f:
-            data = json.load(f)
+        principles_dir = Path(__file__).parent.parent.parent / "content" / "principles"
+        principles_list = load_all_principles(principles_dir)
 
         # Get all universal principles dynamically
-        universal_ids = [p["id"] for p in data.get("principles", [])
+        universal_ids = [p["id"] for p in principles_list
                         if p.get("category") == "universal"]
 
         principles_dict = {
@@ -1270,8 +1269,8 @@ class CCOWizard:
 
         # Group project-specific principles by category
         if self.selected_principles:
-            # Categorize based on actual category from principles.json
-            all_principles = {p["id"]: p for p in data.get("principles", [])}
+            # Categorize based on actual category from .md files
+            all_principles = {p["id"]: p for p in principles_list}
 
             for pid in self.selected_principles:
                 if pid.startswith('U'):  # Skip universal (already added)

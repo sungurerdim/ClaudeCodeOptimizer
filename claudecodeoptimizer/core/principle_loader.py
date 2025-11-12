@@ -4,21 +4,20 @@ Principle Loader - Individual Principle Loading System
 Maps commands to specific principle IDs for token optimization.
 Only loads relevant principles for each command.
 
-Before: ~5000 tokens (all 74 principles)
+Before: ~5000 tokens (all 81 principles)
 After: ~200-800 tokens (3-10 specific principles)
 
 Architecture:
 - Individual principle files (P001.md, P002.md, ...)
 - Direct principle ID loading
-- Category-to-ID mapping for backward compatibility
+- Category-to-ID mapping from .md frontmatter
 """
 
-import json
 from pathlib import Path
 from typing import Dict, List, Optional
 
 
-# Command → Principle Category Mapping (using actual category names from principles.json)
+# Command → Principle Category Mapping (using actual category names from .md frontmatter)
 # Note: "universal" category is ALWAYS included automatically for all commands
 COMMAND_PRINCIPLE_MAP: Dict[str, List[str]] = {
     # Core commands (universal + core only)
@@ -69,34 +68,25 @@ _CATEGORY_TO_IDS: Optional[Dict[str, List[str]]] = None
 
 
 def _load_category_mapping() -> Dict[str, List[str]]:
-    """Load category to principle ID mapping from principles.json"""
+    """Load category to principle ID mapping from .md files"""
     global _CATEGORY_TO_IDS
 
     if _CATEGORY_TO_IDS is not None:
         return _CATEGORY_TO_IDS
 
-    # Load from content/principles.json
+    # Load from content/principles/ directory
     package_dir = Path(__file__).parent.parent
-    principles_json = package_dir.parent / "content" / "principles.json"
+    principles_dir = package_dir.parent / "content" / "principles"
 
-    if not principles_json.exists():
+    if not principles_dir.exists():
         # Fallback: return empty mapping
         _CATEGORY_TO_IDS = {}
         return _CATEGORY_TO_IDS
 
-    with open(principles_json, encoding="utf-8") as f:
-        data = json.load(f)
+    # Use principle_md_loader to get category mapping
+    from .principle_md_loader import get_category_mapping
 
-    # Group principles by category
-    mapping: Dict[str, List[str]] = {}
-    for principle in data.get("principles", []):
-        category = principle.get("category", "general")
-        principle_id = principle.get("id", "")
-
-        if principle_id:
-            if category not in mapping:
-                mapping[category] = []
-            mapping[category].append(principle_id)
+    mapping = get_category_mapping(principles_dir)
 
     # Add "core" category (now references universal principles)
     # Core principles are now U001, U002, U011 (Evidence-Based, Fail-Fast, No Overengineering)

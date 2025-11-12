@@ -1,11 +1,10 @@
 """
 Principles management system for ClaudeCodeOptimizer.
 
-Loads and manages the 74 development principles.
+Loads and manages the 81 development principles from .md files.
 Implements dynamic principle selection based on project characteristics.
 """
 
-import json
 from dataclasses import dataclass
 from functools import lru_cache
 from pathlib import Path
@@ -51,38 +50,51 @@ class ProjectCharacteristics:
 class PrinciplesManager:
     """Manages loading and selection of development principles."""
 
-    def __init__(self, principles_file: Optional[Path] = None) -> None:
+    def __init__(self, principles_dir: Optional[Path] = None) -> None:
         """
         Initialize principles manager.
 
         Args:
-            principles_file: Path to principles.json (default: content/principles.json from package)
+            principles_dir: Path to principles directory (default: content/principles/ from package)
         """
-        if principles_file is None:
+        if principles_dir is None:
             # Load from package content/ directory
             package_dir = Path(__file__).parent.parent
-            principles_file = package_dir.parent / "content" / "principles.json"
+            principles_dir = package_dir.parent / "content" / "principles"
 
-        self.principles_file = principles_file
+        self.principles_dir = principles_dir
         self.principles: Dict[str, Principle] = {}
         self.categories: List[Dict[str, Any]] = []
         self.selection_strategies: Dict[str, Any] = {}
-        self.version: str = "unknown"
+        self.version: str = "2.0"  # Hardcoded version for now
 
-        if self.principles_file.exists():
+        if self.principles_dir.exists():
             self._load_principles()
 
     def _load_principles(self) -> None:
-        """Load principles from JSON file."""
+        """Load principles from .md files."""
         try:
-            data = json.loads(self.principles_file.read_text(encoding="utf-8"))
+            from .principle_md_loader import load_all_principles
 
-            self.version = data.get("version", "unknown")
-            self.categories = data.get("categories", [])
-            self.selection_strategies = data.get("selection_strategies", {})
+            # Load all principles from .md files
+            principles_list = load_all_principles(self.principles_dir)
+
+            # Build categories from loaded principles
+            categories_set = set()
+            for principle_data in principles_list:
+                categories_set.add(principle_data["category"])
+
+            # Create category list (simplified, no metadata)
+            self.categories = [{"id": cat, "name": cat} for cat in sorted(categories_set)]
+
+            # Hardcoded selection strategies (TODO: move to config file)
+            self.selection_strategies = {
+                "minimal": {"include": ["U001", "U002", "U003", "P001"]},
+                "auto": {"rules": []},  # Auto selection based on characteristics
+            }
 
             # Load all principles
-            for principle_data in data.get("principles", []):
+            for principle_data in principles_list:
                 principle = Principle(
                     id=principle_data["id"],
                     number=principle_data["number"],
@@ -390,20 +402,20 @@ def create_characteristics_from_analysis(analysis: Dict[str, Any]) -> ProjectCha
 
 
 @lru_cache(maxsize=1)
-def get_principles_manager(principles_file: Optional[str] = None) -> PrinciplesManager:
+def get_principles_manager(principles_dir: Optional[str] = None) -> PrinciplesManager:
     """
     Get cached PrinciplesManager instance (Singleton pattern - P012).
 
-    Expensive resource: Loads ~74 principles from JSON file (~134KB).
-    Using @lru_cache ensures only one instance exists per principles_file.
+    Expensive resource: Loads ~81 principles from .md files.
+    Using @lru_cache ensures only one instance exists per principles_dir.
 
     Args:
-        principles_file: Path to principles.json (default: content/principles.json from package)
+        principles_dir: Path to principles directory (default: content/principles/ from package)
 
     Returns:
         Cached PrinciplesManager instance
     """
-    path = Path(principles_file) if principles_file else None
+    path = Path(principles_dir) if principles_dir else None
     return PrinciplesManager(path)
 
 
