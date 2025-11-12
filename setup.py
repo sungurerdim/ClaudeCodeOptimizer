@@ -16,38 +16,31 @@ class PostInstallCommand(install):
         self._install_global_commands()
 
     def _install_global_commands(self) -> None:
-        """Install global CCO commands to ~/.claude/commands/"""
+        """Setup global CCO structure (~/.cco/)"""
         try:
-            from claudecodeoptimizer.core.constants import SEPARATOR_WIDTH
-
-            print("\n" + "=" * SEPARATOR_WIDTH)
-            print("Installing CCO global commands...")
-            print("=" * SEPARATOR_WIDTH)
+            print("\n" + "=" * 60)
+            print("ClaudeCodeOptimizer Post-Install Setup")
+            print("=" * 60)
 
             # Import after installation
-            from claudecodeoptimizer.commands_loader import get_command_list, get_slash_commands
-            from claudecodeoptimizer.core.installer import GlobalInstaller
+            from claudecodeoptimizer.core.knowledge_setup import setup_global_knowledge
 
-            installer = GlobalInstaller()
-            result = installer.install()
+            # Setup global ~/.cco/ structure
+            result = setup_global_knowledge(force=False)
 
             if result.get("success"):
-                print("\n[OK] CCO global commands installed successfully!")
-                print("     Location: ~/.claude/commands/")
-                print(f"     Commands: {get_command_list()}")
-                print(f"\n     Restart Claude Code to use: {get_slash_commands()}")
+                print(f"\n✓ Global CCO directory: {result['global_dir']}")
+                for action in result.get("actions", []):
+                    print(f"  • {action}")
+                print("\n✓ CCO is ready! Run 'python -m claudecodeoptimizer init' in your project.")
             else:
-                print("\n[!] Warning: Could not install global commands")
-                print(f"    Error: {result.get('error', 'Unknown error')}")
-                print("\n    You can manually install later with: cco install --force")
+                print("\n⚠ Warning: Global setup completed with warnings")
 
         except Exception as e:
-            print(f"\n[!] Warning: Could not install global commands: {e}")
-            print("    You can manually install later with: cco install --force")
+            print(f"\n⚠ Warning: CCO post-install setup failed: {e}")
+            print("You can manually run setup later with: python -m claudecodeoptimizer init")
 
-        from claudecodeoptimizer.core.constants import SEPARATOR_WIDTH
-
-        print("=" * SEPARATOR_WIDTH + "\n")
+        print("=" * 60 + "\n")
 
 
 class PostDevelopCommand(develop):
@@ -61,36 +54,31 @@ class PostDevelopCommand(develop):
         self._install_global_commands()
 
     def _install_global_commands(self) -> None:
-        """Install global CCO commands to ~/.claude/commands/"""
+        """Setup global CCO structure (~/.cco/) in editable mode"""
         try:
             print("\n" + "=" * 60)
-            print("Installing CCO global commands (editable mode)...")
+            print("ClaudeCodeOptimizer Post-Install Setup (editable mode)")
             print("=" * 60)
 
             # Import after installation
-            from claudecodeoptimizer.commands_loader import get_command_list, get_slash_commands
-            from claudecodeoptimizer.core.installer import GlobalInstaller
+            from claudecodeoptimizer.core.knowledge_setup import setup_global_knowledge
 
-            installer = GlobalInstaller()
-            result = installer.install()
+            # Setup global ~/.cco/ structure
+            result = setup_global_knowledge(force=False)
 
             if result.get("success"):
-                print("\n[OK] CCO global commands installed successfully!")
-                print("     Location: ~/.claude/commands/")
-                print(f"     Commands: {get_command_list()}")
-                print(f"\n     Restart Claude Code to use: {get_slash_commands()}")
+                print(f"\n✓ Global CCO directory: {result['global_dir']}")
+                for action in result.get("actions", []):
+                    print(f"  • {action}")
+                print("\n✓ CCO is ready! Run 'python -m claudecodeoptimizer init' in your project.")
             else:
-                print("\n[!] Warning: Could not install global commands")
-                print(f"    Error: {result.get('error', 'Unknown error')}")
-                print("\n    You can manually install later with: cco install --force")
+                print("\n⚠ Warning: Global setup completed with warnings")
 
         except Exception as e:
-            print(f"\n[!] Warning: Could not install global commands: {e}")
-            print("    You can manually install later with: cco install --force")
+            print(f"\n⚠ Warning: CCO post-install setup failed: {e}")
+            print("You can manually run setup later with: python -m claudecodeoptimizer init")
 
-        from claudecodeoptimizer.core.constants import SEPARATOR_WIDTH
-
-        print("=" * SEPARATOR_WIDTH + "\n")
+        print("=" * 60 + "\n")
 
 
 # Use pyproject.toml for package configuration
