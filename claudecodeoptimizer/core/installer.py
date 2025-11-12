@@ -110,13 +110,15 @@ class GlobalInstaller:
 
     def _install_commands(self) -> None:
         """
-        Install all command templates to ~/.cco/commands/.
+        Install command templates to appropriate locations.
 
-        Copies all 28 commands from package to global directory.
-        Projects will symlink to selected commands during init (intelligent selection).
+        NEW ARCHITECTURE (v3.1):
+        - ALL commands → ~/.cco/commands/ (28 commands)
+        - ONLY init.md and remove.md → ~/.claude/commands/ (global availability)
 
-        This includes init.md and remove.md which are available as templates
-        but will be intelligently selected per-project based on needs.
+        Rationale:
+        - Projects symlink selected commands from ~/.cco/commands/ during init
+        - init and remove must be globally available before project initialization
         """
         package_root = Path(__file__).parent.parent
         package_commands = package_root / "commands"
@@ -124,7 +126,7 @@ class GlobalInstaller:
         if not package_commands.exists():
             return
 
-        # Clean old commands (from previous installs)
+        # 1. Install ALL commands to ~/.cco/commands/ (template storage)
         global_commands_dir = self.config.get_global_commands_dir()
         if global_commands_dir.exists():
             for old_file in global_commands_dir.glob("*.md"):
@@ -132,10 +134,19 @@ class GlobalInstaller:
 
         global_commands_dir.mkdir(parents=True, exist_ok=True)
 
-        # Install all commands to global CCO storage as templates
         for command_file in package_commands.glob("*.md"):
             dest_file = global_commands_dir / command_file.name
             dest_file.write_text(command_file.read_text(encoding="utf-8"), encoding="utf-8")
+
+        # 2. Install ONLY init.md and remove.md to ~/.claude/commands/ (global availability)
+        claude_commands_dir = Path.home() / ".claude" / "commands"
+        claude_commands_dir.mkdir(parents=True, exist_ok=True)
+
+        for global_command in ["init.md", "remove.md"]:
+            source_file = global_commands_dir / global_command
+            if source_file.exists():
+                dest_file = claude_commands_dir / f"cco-{global_command}"
+                dest_file.write_text(source_file.read_text(encoding="utf-8"), encoding="utf-8")
 
 
     def _install_statusline(self) -> None:

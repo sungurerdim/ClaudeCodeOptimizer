@@ -1,7 +1,7 @@
 ---
 description: Initialize CCO for this project with auto-detection and AI-powered configuration
 cost: 2
-principles: ['P001', 'P067', 'P071']
+principles: ['U001', 'U002', 'U011']
 ---
 
 # CCO Project Initialization
