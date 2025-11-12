@@ -1,5 +1,5 @@
 """
-CCO 2.5 Universal Recommendation Engine
+CCO Universal Recommendation Engine
 
 100% rule-based and data-driven recommendation system.
 Works across all domains, scales, and technology stacks.
@@ -486,7 +486,7 @@ class RecommendationEngine:
                         f"Current domain: {identity.get('domain', 'general')}",
                     ],
                     citations=[
-                        "CCO 2.5 domain classification system",
+                        "CCO domain classification system",
                     ],
                     implementation_notes="Add domain tag in .cco/manifest.json",
                     estimated_effort="5m",
@@ -512,7 +512,7 @@ class RecommendationEngine:
                         f"Deployment frequency: {identity.get('deployment_frequency', 'unknown')}",
                     ],
                     citations=[
-                        "CCO 2.5 scale classification",
+                        "CCO scale classification",
                     ],
                     implementation_notes="Add scale to .cco/manifest.json based on team size and deployment needs",
                     estimated_effort="10m",

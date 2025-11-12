@@ -17,7 +17,7 @@ def main() -> None:
     Commands are dynamically loaded from .md templates.
     Single source of truth: templates/global/cco-*.md files.
     """
-    from .commands_loader import get_slash_commands, load_global_commands
+    from .commands_loader import get_slash_commands
 
     parser = argparse.ArgumentParser(
         prog="claudecodeoptimizer",
@@ -26,28 +26,23 @@ def main() -> None:
 
     subparsers = parser.add_subparsers(dest="command", help="Available commands")
 
-    # Load commands dynamically from templates
-    available_commands = load_global_commands()
+    # Main commands
+    init_parser = subparsers.add_parser("init", help="Initialize CCO for this project with AI-powered configuration")
+    init_parser.add_argument(
+        "--mode",
+        choices=["interactive", "quick"],
+        default="quick",
+        help="Initialization mode: interactive (full wizard) or quick (AI auto-config)",
+    )
+    init_parser.add_argument(
+        "--dry-run",
+        action="store_true",
+        help="Preview configuration without writing files",
+    )
 
-    # Create CLI parsers from template metadata
-    for cmd_name, cmd_info in available_commands.items():
-        subparser = subparsers.add_parser(cmd_name, help=cmd_info["description"])
+    subparsers.add_parser("remove", help="Remove CCO from current project (keeps global installation)")
 
-        # Add command-specific arguments
-        if cmd_name == "init":
-            subparser.add_argument(
-                "--mode",
-                choices=["interactive", "quick"],
-                default="quick",
-                help="Initialization mode: interactive (full wizard) or quick (AI auto-config)",
-            )
-            subparser.add_argument(
-                "--dry-run",
-                action="store_true",
-                help="Preview configuration without writing files",
-            )
-
-    # Utility commands (not slash commands, CLI-only)
+    # Utility commands
     subparsers.add_parser("status", help="Show CCO status for current project")
     subparsers.add_parser("version", help="Show CCO version")
 
@@ -125,12 +120,12 @@ def main() -> None:
                 print("✓ CCO is initialized for this project")
                 print(f"  Configuration: {config_dir}")
 
-                # Show command usage statistics
-                registry = ProjectRegistry()
-                project_info = registry.get_by_path(Path.cwd())
-                if project_info:
-                    project_name = project_info.get("name", Path.cwd().name)
-                    try:
+                # Show command usage statistics (if available)
+                try:
+                    registry = ProjectRegistry()
+                    project_name = Path.cwd().name
+                    project_info = registry.get_project(project_name)
+                    if project_info:
                         stats = get_command_stats(project_name)
                         if stats["total_commands_run"] > 0:
                             print()
@@ -139,8 +134,8 @@ def main() -> None:
                             print(f"  Unique commands: {stats['unique_commands']}")
                             if stats['most_used_command']:
                                 print(f"  Most used: {stats['most_used_command']}")
-                    except Exception:
-                        pass  # Silently skip if stats not available
+                except Exception:
+                    pass  # Silently skip if stats not available
             else:
                 print("❌ CCO is not initialized")
                 print()

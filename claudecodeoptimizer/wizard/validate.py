@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 """
-Validation script for CCO 2.5 Wizard
+Validation script for CCO Wizard
 
 Checks:
 1. All 4 core files exist
@@ -220,8 +220,10 @@ def check_line_counts() -> None:
 
 def main() -> int:
     """Run all checks"""
+    from .. import __version__
+
     print("=" * 60)
-    print("CCO 2.5 Wizard Validation")
+    print(f"CCO {__version__} Wizard Validation")
     print("=" * 60)
     print()
 

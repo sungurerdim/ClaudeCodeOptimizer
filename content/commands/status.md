@@ -327,8 +327,8 @@ if [ -d ".claude" ]; then
     fi
     
     # Check configuration
-    if [ -f ".claude/settings.local.json" ]; then
-        echo "✓ Configuration: Valid (settings.local.json)"
+    if [ -f ".claude/settings.json" ]; then
+        echo "✓ Configuration: Valid (settings.json)"
     fi
 else
     echo "⚠ .claude directory not found"

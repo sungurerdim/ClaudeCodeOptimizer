@@ -1,5 +1,5 @@
 """
-Universal Command Schema - CCO 2.5
+Universal Command Schema - CCO
 
 Command metadata and selection logic - 100% generic.
 No project-specific data; all specialization via tagging and templates.

@@ -1,5 +1,5 @@
 """
-Confirmation and Preview Screens - CCO 2.5 Wizard
+Confirmation and Preview Screens - CCO Wizard
 
 Checkpoint functions for user confirmation at key decision points:
 1. Detection results review
@@ -426,25 +426,43 @@ def display_completion_summary(
     principles_configured: int,
     files_created: int,
     duration_seconds: float,
+    guides_installed: int = 0,
+    skills_installed: int = 0,
+    agents_installed: int = 0,
 ) -> None:
     """Display completion summary"""
+    from .. import __version__
 
     print_header(
-        "CCO 2.5 Initialization Complete!",
+        f"CCO {__version__} Initialization Complete!",
         f"Setup completed in {duration_seconds:.1f} seconds",
     )
 
+    # Build summary lines
+    summary_lines = [
+        f"+ {commands_installed} commands installed",
+        f"+ {principles_configured} principles configured",
+    ]
+
+    # Add optional items only if > 0
+    if guides_installed > 0:
+        summary_lines.append(f"+ {guides_installed} guides linked")
+    if skills_installed > 0:
+        summary_lines.append(f"+ {skills_installed} skills linked")
+    if agents_installed > 0:
+        summary_lines.append(f"+ {agents_installed} agents linked")
+
+    summary_lines.extend([
+        f"+ {files_created} files created",
+        "",
+        "Next steps:",
+        "1. Restart Claude Code to load new commands",
+        "2. Run /cco-status to verify installation",
+        "3. Run /cco-help to see all available commands",
+    ])
+
     print_box(
-        [
-            f"+ {commands_installed} commands installed",
-            f"+ {principles_configured} principles configured",
-            f"+ {files_created} files created",
-            "",
-            "Next steps:",
-            "1. Restart Claude Code to load new commands",
-            "2. Run /cco-status to verify installation",
-            "3. Run /cco-help to see all available commands",
-        ],
+        summary_lines,
         title="Success",
         style="double",
     )

@@ -1,5 +1,5 @@
 """
-Universal Preference Schema - CCO 2.5
+Universal Preference Schema - CCO
 
 SINGLE SOURCE OF TRUTH for all choices.
 All question choices are derived from Literal types here.

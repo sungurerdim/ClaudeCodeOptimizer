@@ -1,5 +1,5 @@
 """
-Universal Project Detection Engine - CCO 2.5
+Universal Project Detection Engine - CCO
 
 Detects languages, frameworks, tools, and project patterns.
 100% generic - zero hardcoded project assumptions.
