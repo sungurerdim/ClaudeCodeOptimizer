@@ -122,9 +122,10 @@ def _setup_templates(templates_dir: Path) -> None:
 
 def _setup_principles(principles_dir: Path) -> None:
     """
-    Copy principle category files from content to global directory.
+    Copy individual principle files from content to global directory.
 
-    Copies from content/principles/ to ~/.cco/principles/
+    Copies 74 individual principle files (P001.md - P074.md) from
+    content/principles/ to ~/.cco/principles/
     """
     # Get content directory
     package_dir = Path(__file__).parent.parent

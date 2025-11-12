@@ -1,20 +1,24 @@
 """
-Principle Loader - Category-Based Loading System
+Principle Loader - Individual Principle Loading System
 
-Maps commands to principle categories for token optimization.
+Maps commands to specific principle IDs for token optimization.
 Only loads relevant principles for each command.
 
 Before: ~5000 tokens (all 74 principles)
-After: ~500-1500 tokens (core + relevant categories)
+After: ~200-800 tokens (3-10 specific principles)
 
-Pattern from wshobson/agents for progressive disclosure.
+Architecture:
+- Individual principle files (P001.md, P002.md, ...)
+- Direct principle ID loading
+- Category-to-ID mapping for backward compatibility
 """
 
+import json
 from pathlib import Path
 from typing import Dict, List, Optional
 
 
-# Command → Principle Category Mapping
+# Command → Principle Category Mapping (using actual category names from principles.json)
 COMMAND_PRINCIPLE_MAP: Dict[str, List[str]] = {
     # Core commands (core only)
     "cco-init": ["core"],
@@ -23,24 +27,24 @@ COMMAND_PRINCIPLE_MAP: Dict[str, List[str]] = {
     "cco-remove": ["core"],
     # Audit commands
     "cco-audit": ["all"],  # Full audit loads everything
-    "cco-audit-code": ["core", "code-quality"],
-    "cco-audit-security": ["core", "security"],
+    "cco-audit-code": ["core", "code_quality"],
+    "cco-audit-security": ["core", "security_privacy"],
     "cco-audit-tests": ["core", "testing"],
-    "cco-audit-docs": ["core", "code-quality"],
+    "cco-audit-docs": ["core", "code_quality"],
     "cco-audit-all": ["all"],
     # Analysis commands
-    "cco-analyze": ["core", "architecture", "code-quality"],
+    "cco-analyze": ["core", "architecture", "code_quality"],
     "cco-analyze-structure": ["core", "architecture"],
     "cco-analyze-dependencies": ["core", "architecture"],
-    "cco-analyze-complexity": ["core", "code-quality"],
+    "cco-analyze-complexity": ["core", "code_quality"],
     # Fix commands
-    "cco-fix": ["core", "code-quality", "security"],
-    "cco-fix-code": ["core", "code-quality"],
-    "cco-fix-security": ["core", "security"],
-    "cco-fix-docs": ["core", "code-quality"],
+    "cco-fix": ["core", "code_quality", "security_privacy"],
+    "cco-fix-code": ["core", "code_quality"],
+    "cco-fix-security": ["core", "security_privacy"],
+    "cco-fix-docs": ["core", "code_quality"],
     # Optimize commands
     "cco-optimize": ["core", "performance"],
-    "cco-optimize-code": ["core", "performance", "code-quality"],
+    "cco-optimize-code": ["core", "performance", "code_quality"],
     "cco-optimize-deps": ["core", "performance"],
     "cco-optimize-docker": ["core", "performance", "operations"],
     # Test commands
@@ -48,16 +52,80 @@ COMMAND_PRINCIPLE_MAP: Dict[str, List[str]] = {
     "cco-generate-tests": ["core", "testing"],
     "cco-audit-tests": ["core", "testing"],
     # Generate commands
-    "cco-generate": ["core", "code-quality"],
-    "cco-generate-docs": ["core", "api-design"],
+    "cco-generate": ["core", "code_quality"],
+    "cco-generate-docs": ["core", "api_design"],
     "cco-generate-integration-tests": ["core", "testing"],
     # DevOps commands
-    "cco-scan-secrets": ["core", "security"],
+    "cco-scan-secrets": ["core", "security_privacy"],
     "cco-setup-cicd": ["core", "operations"],
     "cco-setup-monitoring": ["core", "operations"],
     # Sync commands
     "cco-sync": ["core"],
 }
+
+# Category → Principle ID Mapping (cached)
+_CATEGORY_TO_IDS: Optional[Dict[str, List[str]]] = None
+
+
+def _load_category_mapping() -> Dict[str, List[str]]:
+    """Load category to principle ID mapping from principles.json"""
+    global _CATEGORY_TO_IDS
+
+    if _CATEGORY_TO_IDS is not None:
+        return _CATEGORY_TO_IDS
+
+    # Load from content/principles.json
+    package_dir = Path(__file__).parent.parent
+    principles_json = package_dir.parent / "content" / "principles.json"
+
+    if not principles_json.exists():
+        # Fallback: return empty mapping
+        _CATEGORY_TO_IDS = {}
+        return _CATEGORY_TO_IDS
+
+    with open(principles_json, encoding="utf-8") as f:
+        data = json.load(f)
+
+    # Group principles by category
+    mapping: Dict[str, List[str]] = {}
+    for principle in data.get("principles", []):
+        category = principle.get("category", "general")
+        principle_id = principle.get("id", "")
+
+        if principle_id:
+            if category not in mapping:
+                mapping[category] = []
+            mapping[category].append(principle_id)
+
+    # Add "core" category (P001, P067, P071)
+    mapping["core"] = ["P001", "P067", "P071"]
+
+    _CATEGORY_TO_IDS = mapping
+    return mapping
+
+
+def _resolve_categories_to_ids(categories: List[str]) -> List[str]:
+    """Convert category names to principle IDs"""
+    mapping = _load_category_mapping()
+    principle_ids = []
+
+    for category in categories:
+        if category == "all":
+            # Return all principle IDs
+            for cat_ids in mapping.values():
+                principle_ids.extend(cat_ids)
+        elif category in mapping:
+            principle_ids.extend(mapping[category])
+
+    # Remove duplicates while preserving order
+    seen = set()
+    unique_ids = []
+    for pid in principle_ids:
+        if pid not in seen:
+            seen.add(pid)
+            unique_ids.append(pid)
+
+    return unique_ids
 
 
 class PrincipleLoader:
@@ -97,27 +165,128 @@ class PrincipleLoader:
         Examples:
             >>> loader = PrincipleLoader()
             >>> content = loader.load_for_command("cco-audit-security")
-            # Returns: core.md + security.md (~1500 tokens)
+            # Returns: P001.md + P036.md + ... (~800 tokens)
         """
         # Get categories for this command
         categories = COMMAND_PRINCIPLE_MAP.get(command, ["core"])
 
-        # Handle "all" special case
-        if "all" in categories:
-            return self.load_all_principles()
+        # Convert categories to principle IDs
+        principle_ids = _resolve_categories_to_ids(categories)
 
-        # Load each category
+        # Load each principle
         principles = []
-        for category in categories:
-            content = self.load_category(category)
+        for principle_id in principle_ids:
+            content = self.load_principle(principle_id)
             if content:
                 principles.append(content)
 
         return "\n\n---\n\n".join(principles)
 
+    def load_principles(self, principle_ids: List[str]) -> str:
+        """
+        Load multiple principles by their IDs directly.
+
+        Args:
+            principle_ids: List of principle IDs (e.g., ["P001", "P036", "P067"])
+
+        Returns:
+            Combined principle content
+
+        Examples:
+            >>> loader = PrincipleLoader()
+            >>> content = loader.load_principles(["P001", "P036", "P067"])
+            # Returns: Content of P001.md + P036.md + P067.md
+        """
+        principles = []
+        for principle_id in principle_ids:
+            content = self.load_principle(principle_id)
+            if content:
+                principles.append(content)
+
+        return "\n\n---\n\n".join(principles)
+
+    def load_from_frontmatter(self, command_file: Path) -> str:
+        """
+        Load principles specified in command file frontmatter.
+
+        Args:
+            command_file: Path to command markdown file
+
+        Returns:
+            Combined principle content
+
+        Examples:
+            >>> loader = PrincipleLoader()
+            >>> cmd_file = Path("content/commands/audit.md")
+            >>> content = loader.load_from_frontmatter(cmd_file)
+            # Reads principles: [...] from frontmatter and loads them
+        """
+        import re
+
+        if not command_file.exists():
+            return ""
+
+        content = command_file.read_text(encoding="utf-8")
+
+        # Extract frontmatter
+        if not content.startswith("---"):
+            return ""
+
+        parts = content.split("---", 2)
+        if len(parts) < 3:
+            return ""
+
+        frontmatter = parts[1]
+
+        # Find principles line
+        match = re.search(r"principles:\s*\[(.*?)\]", frontmatter, re.DOTALL)
+        if not match:
+            return ""
+
+        # Parse principle IDs
+        principles_str = match.group(1)
+        principle_ids = [
+            pid.strip().strip("'\"")
+            for pid in principles_str.split(",")
+            if pid.strip()
+        ]
+
+        return self.load_principles(principle_ids)
+
+    def load_principle(self, principle_id: str) -> str:
+        """
+        Load a specific principle by ID.
+
+        Args:
+            principle_id: Principle ID (e.g., "P001", "P036")
+
+        Returns:
+            Principle file content
+
+        Examples:
+            >>> loader = PrincipleLoader()
+            >>> content = loader.load_principle("P001")
+            # Returns: Content of P001.md
+        """
+        # Check cache
+        if principle_id in self._cache:
+            return self._cache[principle_id]
+
+        # Read principle file
+        principle_file = self.principles_dir / f"{principle_id}.md"
+
+        if not principle_file.exists():
+            return ""
+
+        content = principle_file.read_text(encoding="utf-8")
+        self._cache[principle_id] = content
+        return content
+
     def load_category(self, category: str) -> str:
         """
-        Load a specific principle category.
+        Load a specific principle category (DEPRECATED - use load_principle).
+
+        This method is kept for backward compatibility.
 
         Args:
             category: Category name (e.g., "core", "security", "code-quality")
