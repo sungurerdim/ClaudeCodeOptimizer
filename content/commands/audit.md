@@ -2,6 +2,7 @@
 description: Comprehensive audit (code, security, tests, docs, principles, all)
 category: audit
 cost: 3
+principles: ['P001', 'P002', 'P003', 'P004', 'P006', 'P007', 'P008', 'P009', 'P010', 'P023', 'P053', 'P067', 'P068', 'P071', 'P005', 'P019', 'P020', 'P021', 'P022', 'P024', 'P025', 'P026', 'P027', 'P028', 'P029', 'P030', 'P054', 'P055', 'P056', 'P057', 'P058', 'P061', 'P063', 'P011', 'P012', 'P013', 'P014', 'P015', 'P016', 'P017', 'P018', 'P066', 'P070', 'P031', 'P032', 'P033', 'P034', 'P035', 'P036', 'P059', 'P060', 'P065', 'P069', 'P037', 'P038', 'P039', 'P040', 'P041', 'P042', 'P043', 'P044', 'P045', 'P046', 'P047', 'P072', 'P073', 'P074', 'P048', 'P049', 'P050', 'P051', 'P064', 'P052', 'P062']
 ---
 
 # CCO Audit Commands
@@ -57,6 +58,83 @@ Automatically loaded from `~/.cco/principles/`:
 - All principles from `code_quality.md`
 - All principles from `security_privacy.md`
 - All principles from `testing.md`
+
+
+Automatically loaded from `~/.cco/principles/`:
+- P001
+- P002
+- P003
+- P004
+- P006
+- P007
+- P008
+- P009
+- P010
+- P023
+- P053
+- P067
+- P068
+- P071
+- P005
+- P019
+- P020
+- P021
+- P022
+- P024
+- P025
+- P026
+- P027
+- P028
+- P029
+- P030
+- P054
+- P055
+- P056
+- P057
+- P058
+- P061
+- P063
+- P011
+- P012
+- P013
+- P014
+- P015
+- P016
+- P017
+- P018
+- P066
+- P070
+- P031
+- P032
+- P033
+- P034
+- P035
+- P036
+- P059
+- P060
+- P065
+- P069
+- P037
+- P038
+- P039
+- P040
+- P041
+- P042
+- P043
+- P044
+- P045
+- P046
+- P047
+- P072
+- P073
+- P074
+- P048
+- P049
+- P050
+- P051
+- P064
+- P052
+- P062
 
 This gives you ~40 relevant principles instead of all 74, saving 60% tokens.
 

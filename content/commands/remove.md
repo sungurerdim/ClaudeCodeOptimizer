@@ -1,6 +1,7 @@
 ---
 description: Remove CCO from current project (keeps global installation)
 cost: 0
+principles: ['P001', 'P067', 'P071']
 ---
 
 # CCO Project Removal
