@@ -59,11 +59,20 @@ function getGitInfo() {
   const branch = execCommand('git rev-parse --abbrev-ref HEAD');
   if (!branch) return null;
 
-  const unstagedCount = execCommand('git diff --name-only | wc -l');
-  const stagedCount = execCommand('git diff --cached --name-only | wc -l');
-  const untrackedCount = execCommand('git ls-files --others --exclude-standard | wc -l');
+  // Get file status with detailed breakdown (cross-platform: no wc -l)
+  const modifiedFiles = execCommand('git diff --name-only --diff-filter=M');
+  const modifiedCount = modifiedFiles ? modifiedFiles.split('\n').filter(x => x.trim()).length : 0;
 
-  const totalChanges = parseInt(unstagedCount || 0) + parseInt(stagedCount || 0) + parseInt(untrackedCount || 0);
+  const deletedFiles = execCommand('git diff --name-only --diff-filter=D');
+  const deletedCount = deletedFiles ? deletedFiles.split('\n').filter(x => x.trim()).length : 0;
+
+  const untrackedFiles = execCommand('git ls-files --others --exclude-standard');
+  const untrackedCount = untrackedFiles ? untrackedFiles.split('\n').filter(x => x.trim()).length : 0;
+
+  const stagedFiles = execCommand('git diff --cached --name-only');
+  const stagedCount = stagedFiles ? stagedFiles.split('\n').filter(x => x.trim()).length : 0;
+
+  const totalChanges = modifiedCount + deletedCount + untrackedCount + stagedCount;
   const hasChanges = totalChanges > 0;
 
   const lastCommit = execCommand('git log -1 --format="%ar"');
@@ -98,15 +107,75 @@ function getGitInfo() {
     unpushedCount = parseInt(unpushedResult || 0);
   }
 
+  // Get line stats for UNSTAGED changes (ready to stage)
+  let unstagedLinesAdded = 0;
+  let unstagedLinesRemoved = 0;
+  const unstagedDiffStats = execCommand('git diff --numstat');
+  if (unstagedDiffStats) {
+    const lines = unstagedDiffStats.split('\n').filter(l => l.trim());
+    for (const line of lines) {
+      const parts = line.split(/\s+/);
+      if (parts.length >= 2) {
+        const added = parseInt(parts[0]) || 0;
+        const removed = parseInt(parts[1]) || 0;
+        unstagedLinesAdded += added;
+        unstagedLinesRemoved += removed;
+      }
+    }
+  }
+
+  // Get line stats for STAGED changes (ready to commit)
+  let stagedLinesAdded = 0;
+  let stagedLinesRemoved = 0;
+  const stagedDiffStats = execCommand('git diff --cached --numstat');
+  if (stagedDiffStats) {
+    const lines = stagedDiffStats.split('\n').filter(l => l.trim());
+    for (const line of lines) {
+      const parts = line.split(/\s+/);
+      if (parts.length >= 2) {
+        const added = parseInt(parts[0]) || 0;
+        const removed = parseInt(parts[1]) || 0;
+        stagedLinesAdded += added;
+        stagedLinesRemoved += removed;
+      }
+    }
+  }
+
+  // Get line stats for UNPUSHED commits (ready to push)
+  let unpushedLinesAdded = 0;
+  let unpushedLinesRemoved = 0;
+  if (trackingBranch) {
+    const unpushedDiffStats = execCommand('git diff @{u}..HEAD --numstat');
+    if (unpushedDiffStats) {
+      const lines = unpushedDiffStats.split('\n').filter(l => l.trim());
+      for (const line of lines) {
+        const parts = line.split(/\s+/);
+        if (parts.length >= 2) {
+          const added = parseInt(parts[0]) || 0;
+          const removed = parseInt(parts[1]) || 0;
+          unpushedLinesAdded += added;
+          unpushedLinesRemoved += removed;
+        }
+      }
+    }
+  }
+
   return {
     branch,
     repoName,
     hasChanges,
     changedFiles: totalChanges,
-    stagedFiles: parseInt(stagedCount || 0),
-    unstagedFiles: parseInt(unstagedCount || 0),
+    modifiedFiles: parseInt(modifiedCount || 0),
+    deletedFiles: parseInt(deletedCount || 0),
     untrackedFiles: parseInt(untrackedCount || 0),
+    unstagedLinesAdded,
+    unstagedLinesRemoved,
+    stagedFiles: parseInt(stagedCount || 0),
+    stagedLinesAdded,
+    stagedLinesRemoved,
     unpushedCommits: unpushedCount,
+    unpushedLinesAdded,
+    unpushedLinesRemoved,
     lastCommit: lastCommit || 'unknown'
   };
 }
@@ -372,9 +441,6 @@ function formatMetricsForStatusline(inputData, metrics, telemetryData) {
     maximumFractionDigits: 2
   });
 
-  const linesAdded = inputData.cost?.total_lines_added || 0;
-  const linesRemoved = inputData.cost?.total_lines_removed || 0;
-
   // Model context limit (define early)
   const contextTotal = 200000;
 
@@ -505,40 +571,40 @@ function formatMetricsForStatusline(inputData, metrics, telemetryData) {
     }
   }
 
-  // Build status lines based on config (OPTIMIZED UX - 2 LINE LAYOUT)
+  // Build status lines based on config (OPTIMIZED UX - 3 LINE LAYOUT)
   const lines = [];
 
-  // === LINE 1: CC Version + Model + User@hostname + Directory ===
+  // === LINE 1: User@hostname | CC Version | Model ===
   const line1Parts = [];
 
-  // Claude Code version (first, dim gray for subtle display)
-  const claudeVersion = execCommand('claude --version');
-  if (claudeVersion && statuslineConfig.show_claude_version !== false) {
-    const versionMatch = claudeVersion.match(/(\d+\.\d+\.\d+)/);
-    if (versionMatch) {
-      const versionDisplay = colorize(`CC ${versionMatch[1]}`, 'gray', colorEnabled);
-      line1Parts.push(versionDisplay);
-    }
-  }
-
-  // Model name (bold + bright for extra visibility) - RIGHT AFTER CC VERSION
-  const modelDisplay = colorize(model, 'magenta', colorEnabled);
-  line1Parts.push(modelDisplay);
-
-  // User@hostname
+  // User@hostname (first)
   if (statuslineConfig.show_user !== false) {
     line1Parts.push(colorize(`${username}@${hostname}`, 'cyan', colorEnabled));
   }
 
-  // Full directory path
-  if (statuslineConfig.show_directory !== false) {
-    line1Parts.push(colorize(fullPath, 'blue', colorEnabled));
+  // Claude Code version
+  const claudeVersion = execCommand('claude --version');
+  if (claudeVersion && statuslineConfig.show_claude_version !== false) {
+    const versionMatch = claudeVersion.match(/(\d+\.\d+\.\d+)/);
+    if (versionMatch) {
+      const versionDisplay = colorize(`CC ${versionMatch[1]}`, 'yellow', colorEnabled);
+      line1Parts.push(versionDisplay);
+    }
   }
+
+  // Model name (bold + bright for extra visibility)
+  const modelDisplay = colorize(model, 'magenta', colorEnabled);
+  line1Parts.push(modelDisplay);
 
   lines.push(line1Parts.join(' | '));
 
-  // === LINE 2: Git Repo:Branch + Git Status (ALWAYS VISIBLE) + Lines Changed ===
+  // === LINE 2: Directory | Repo:Branch ===
   const line2Parts = [];
+
+  // Full directory path
+  if (statuslineConfig.show_directory !== false) {
+    line2Parts.push(colorize(fullPath, 'white', colorEnabled));
+  }
 
   // Git repo:branch
   if (metrics.git && statuslineConfig.show_git_info !== false) {
@@ -546,35 +612,33 @@ function formatMetricsForStatusline(inputData, metrics, telemetryData) {
       ? colorize(`${metrics.git.repoName}:${metrics.git.branch}`, 'green', colorEnabled)
       : colorize(metrics.git.branch, 'green', colorEnabled);
     line2Parts.push(repoDisplay);
-
-    // Git status details (ALWAYS show, even if 0)
-    const gitStatusParts = [];
-
-    const stagedCount = metrics.git.stagedFiles || 0;
-    const unstagedCount = metrics.git.unstagedFiles || 0;
-    const unpushedCount = metrics.git.unpushedCommits || 0;
-
-    const stagedColor = stagedCount > 0 ? 'green' : 'gray';
-    const unstagedColor = unstagedCount > 0 ? 'yellow' : 'gray';
-    const unpushedColor = unpushedCount > 0 ? 'cyan' : 'gray';
-
-    gitStatusParts.push(colorize(`Staged: ${stagedCount}`, stagedColor, colorEnabled));
-    gitStatusParts.push(colorize(`Unstaged: ${unstagedCount}`, unstagedColor, colorEnabled));
-    gitStatusParts.push(colorize(`Unpushed: ${unpushedCount}`, unpushedColor, colorEnabled));
-
-    line2Parts.push(gitStatusParts.join(', '));
   }
 
-  // Lines changed (only show if > 0)
-  if (linesAdded > 0 || linesRemoved > 0) {
-    const addDisplay = colorize(`+${linesAdded}`, 'green', colorEnabled);
-    const removeDisplay = colorize(`-${linesRemoved}`, 'red', colorEnabled);
-    line2Parts.push(`Lines: ${addDisplay}/${removeDisplay}`);
+  lines.push(line2Parts.join(' | '));
+
+  // === LINE 3: Ready to Stage (unstaged changes) ===
+  const line3Parts = [];
+
+  if (metrics.git && statuslineConfig.show_git_info !== false) {
+    const modifiedCount = metrics.git.modifiedFiles || 0;
+    const newCount = metrics.git.untrackedFiles || 0;
+    const deletedCount = metrics.git.deletedFiles || 0;
+    const unstagedAdded = metrics.git.unstagedLinesAdded || 0;
+    const unstagedRemoved = metrics.git.unstagedLinesRemoved || 0;
+
+    // Color-coded parts: modified=yellow, new=green, deleted=red
+    const modPart = colorize(`${modifiedCount} (mod)`, 'yellow', colorEnabled);
+    const newPart = colorize(`${newCount} (new)`, 'green', colorEnabled);
+    const delPart = colorize(`${deletedCount} (del)`, 'red', colorEnabled);
+    const addDisplay = colorize(`+${unstagedAdded}`, 'green', colorEnabled);
+    const removeDisplay = colorize(`-${unstagedRemoved}`, 'red', colorEnabled);
+
+    line3Parts.push(`Ready to Stage: ${modPart} + ${newPart} + ${delPart} (${addDisplay}/${removeDisplay})`);
   }
 
   // Docker status (inline if enabled)
   if (metrics.docker && statuslineConfig.show_docker_status === true) {
-    line2Parts.push(`Docker: ${metrics.docker.running}/${metrics.docker.total}`);
+    line3Parts.push(`Docker: ${metrics.docker.running}/${metrics.docker.total}`);
   }
 
   // Test results (inline if enabled)
@@ -582,7 +646,7 @@ function formatMetricsForStatusline(inputData, metrics, telemetryData) {
     const testStr = metrics.tests.passed !== null
       ? `Tests: ${metrics.tests.passed}/${metrics.tests.total}`
       : `Tests: ${metrics.tests.total}`;
-    line2Parts.push(testStr);
+    line3Parts.push(testStr);
   }
 
   // CCO status (if enabled and active)
@@ -619,11 +683,40 @@ function formatMetricsForStatusline(inputData, metrics, telemetryData) {
     }
 
     if (ccoParts.length > 0) {
-      line2Parts.push(`CCO: ${ccoParts.join(' ')}`);
+      line3Parts.push(`CCO: ${ccoParts.join(' ')}`);
     }
   }
 
-  lines.push(line2Parts.join(' | '));
+  lines.push(line3Parts.join(', '));
+
+  // === LINE 4: Ready for Commit and Ready to Push ===
+  const line4Parts = [];
+
+  if (metrics.git && statuslineConfig.show_git_info !== false) {
+    const stagedCount = metrics.git.stagedFiles || 0;
+    const stagedAdded = metrics.git.stagedLinesAdded || 0;
+    const stagedRemoved = metrics.git.stagedLinesRemoved || 0;
+    const unpushedCount = metrics.git.unpushedCommits || 0;
+    const unpushedAdded = metrics.git.unpushedLinesAdded || 0;
+    const unpushedRemoved = metrics.git.unpushedLinesRemoved || 0;
+
+    const stagedColor = stagedCount > 0 ? 'blue' : 'gray';
+    const unpushedColor = unpushedCount > 0 ? 'magenta' : 'gray';
+
+    // Ready to Commit (blue when >0)
+    const stagedAddDisplay = colorize(`+${stagedAdded}`, 'green', colorEnabled);
+    const stagedRemoveDisplay = colorize(`-${stagedRemoved}`, 'red', colorEnabled);
+    line4Parts.push(colorize(`Ready to Commit: ${stagedCount} (${stagedAddDisplay}/${stagedRemoveDisplay})`, stagedColor, colorEnabled));
+
+    // Ready to Push (magenta when >0)
+    const unpushedAddDisplay = colorize(`+${unpushedAdded}`, 'green', colorEnabled);
+    const unpushedRemoveDisplay = colorize(`-${unpushedRemoved}`, 'red', colorEnabled);
+    line4Parts.push(colorize(`Ready to Push: ${unpushedCount} (${unpushedAddDisplay}/${unpushedRemoveDisplay})`, unpushedColor, colorEnabled));
+  }
+
+  if (line4Parts.length > 0) {
+    lines.push(line4Parts.join(', '));
+  }
 
   return lines.join('\n');
 }
