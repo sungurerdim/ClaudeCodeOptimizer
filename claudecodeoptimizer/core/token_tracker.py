@@ -21,19 +21,19 @@ class TokenTracker:
     DOCUMENT_ESTIMATES = {
         "CLAUDE.md": 3262,
         "PRINCIPLES.md": 1311,
-        "~/.cco/knowledge/guides/verification-protocol.md": 644,
-        "~/.cco/knowledge/guides/git-workflow.md": 2176,
-        "~/.cco/knowledge/guides/security-response.md": 1631,
-        "~/.cco/knowledge/guides/performance-optimization.md": 2093,
-        "~/.cco/knowledge/guides/container-best-practices.md": 2629,
-        "~/.cco/knowledge/principles/code-quality.md": 1200,
-        "~/.cco/knowledge/principles/security.md": 1450,
-        "~/.cco/knowledge/principles/testing.md": 890,
-        "~/.cco/knowledge/principles/architecture.md": 1100,
-        "~/.cco/knowledge/principles/performance.md": 780,
-        "~/.cco/knowledge/principles/operations.md": 950,
-        "~/.cco/knowledge/principles/git-workflow.md": 670,
-        "~/.cco/knowledge/principles/api-design.md": 450,
+        "~/.cco/guides/verification-protocol.md": 644,
+        "~/.cco/guides/git-workflow.md": 2176,
+        "~/.cco/guides/security-response.md": 1631,
+        "~/.cco/guides/performance-optimization.md": 2093,
+        "~/.cco/guides/container-best-practices.md": 2629,
+        "~/.cco/principles/code-quality.md": 1200,
+        "~/.cco/principles/security.md": 1450,
+        "~/.cco/principles/testing.md": 890,
+        "~/.cco/principles/architecture.md": 1100,
+        "~/.cco/principles/performance.md": 780,
+        "~/.cco/principles/operations.md": 950,
+        "~/.cco/principles/git-workflow.md": 670,
+        "~/.cco/principles/api-design.md": 450,
     }
 
     # Claude Code token budget
@@ -227,26 +227,26 @@ def track_category_documents(
     # Map categories to document paths
     category_docs = {
         "security": [
-            "~/.cco/knowledge/guides/security-response.md",
-            "~/.cco/knowledge/principles/security.md",
+            "~/.cco/guides/security-response.md",
+            "~/.cco/principles/security.md",
         ],
-        "testing": ["~/.cco/knowledge/principles/testing.md"],
+        "testing": ["~/.cco/principles/testing.md"],
         "code_quality": [
-            "~/.cco/knowledge/guides/verification-protocol.md",
-            "~/.cco/knowledge/principles/code-quality.md",
+            "~/.cco/guides/verification-protocol.md",
+            "~/.cco/principles/code-quality.md",
         ],
         "performance": [
-            "~/.cco/knowledge/guides/performance-optimization.md",
-            "~/.cco/knowledge/principles/performance.md",
+            "~/.cco/guides/performance-optimization.md",
+            "~/.cco/principles/performance.md",
         ],
         "operations": [
-            "~/.cco/knowledge/guides/container-best-practices.md",
-            "~/.cco/knowledge/principles/operations.md",
+            "~/.cco/guides/container-best-practices.md",
+            "~/.cco/principles/operations.md",
         ],
-        "architecture": ["~/.cco/knowledge/principles/architecture.md"],
+        "architecture": ["~/.cco/principles/architecture.md"],
         "git": [
-            "~/.cco/knowledge/guides/git-workflow.md",
-            "~/.cco/knowledge/principles/git-workflow.md",
+            "~/.cco/guides/git-workflow.md",
+            "~/.cco/principles/git-workflow.md",
         ],
     }
 

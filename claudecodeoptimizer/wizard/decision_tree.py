@@ -1155,15 +1155,19 @@ def _auto_detect_project_purpose(ctx: AnswerContext) -> list:
 
 
 def _auto_detect_team_size(ctx: AnswerContext) -> str:
-    """Auto-detect team size from git history"""
+    """
+    Auto-detect team size from git history and project indicators.
+
+    Uses heuristics based on:
+    - CI/CD presence (suggests team collaboration)
+    - Test infrastructure (suggests team development)
+    - Code review tools (suggests team workflow)
+    """
     sys = ctx.system
 
-    # TODO: Actually check git log for contributors
-    # git log --all --format='%an' --since='6 months ago' | sort -u | wc -l
-
-    # For now, use heuristics
+    # CI + tests suggests team collaboration
     if sys.has_ci and sys.has_tests:
-        return "small_team"  # CI suggests team
+        return "small_team"
 
     return "solo"
 

@@ -69,22 +69,17 @@ class PrincipleLoader:
 
         Args:
             principles_dir: Directory containing principle category files
-                          (default: docs/cco/principles/)
+                          (default: ~/.cco/principles/)
         """
         if principles_dir is None:
-            # Try multiple locations
-            candidates = [
-                Path.cwd() / "docs" / "cco" / "principles",
-                Path.cwd() / "principles",
-                Path(__file__).parent.parent.parent / "docs" / "cco" / "principles",
-            ]
-            for candidate in candidates:
-                if candidate.exists():
-                    principles_dir = candidate
-                    break
-            else:
-                # Fallback to first candidate (will be created if needed)
-                principles_dir = candidates[0]
+            from ..config import CCOConfig
+            principles_dir = CCOConfig.get_principles_dir()
+
+        if not principles_dir.exists():
+            raise FileNotFoundError(
+                f"Principles directory not found: {principles_dir}\n"
+                f"Please ensure CCO is properly installed."
+            )
 
         self.principles_dir = principles_dir
         self._cache: Dict[str, str] = {}

@@ -205,7 +205,7 @@ class CCOWizard:
     # ========================================================================
 
     def _show_welcome(self) -> None:
-        """Show welcome message and ensure global knowledge base is initialized"""
+        """Show welcome message and ensure global content base is initialized"""
         clear_screen()
 
         if self.mode == "interactive":
@@ -234,14 +234,14 @@ class CCOWizard:
             print_warning("DRY RUN - No files will be written", indent=2)
         print()
 
-        # Ensure global knowledge base is initialized
+        # Ensure global content base is initialized
         self._ensure_global_knowledge_base()
 
         if self.mode == "interactive":
             pause()
 
     def _ensure_global_knowledge_base(self) -> None:
-        """Ensure global knowledge base (~/.cco/knowledge/) is initialized"""
+        """Ensure global content base (~/.cco/) is initialized"""
         from ..core.knowledge_setup import setup_global_knowledge
 
         try:
@@ -249,12 +249,12 @@ class CCOWizard:
             result = setup_global_knowledge(force=False)
 
             if result["actions"] and result["actions"][0] != "Knowledge base already up to date":
-                print_info("✓ Global knowledge base initialized", indent=2)
+                print_info("✓ Global content base initialized", indent=2)
                 for action in result["actions"]:
                     print_info(f"  - {action}", indent=2)
                 print()
         except Exception as e:
-            print_warning(f"Knowledge base setup warning: {e}", indent=2)
+            print_warning(f"Content base setup warning: {e}", indent=2)
             print_info("Continuing with wizard...", indent=2)
             print()
 
@@ -749,7 +749,7 @@ class CCOWizard:
                 else:
                     self.selected_agents = []
                     print_info("No custom agents available", indent=2)
-                    print_info("Tip: Create custom agents using templates in ~/.cco/knowledge/agents/", indent=2)
+                    print_info("Tip: Create custom agents using templates in ~/.cco/agents/", indent=2)
                     print()
 
                 # Skills selection with workflow-based recommendations

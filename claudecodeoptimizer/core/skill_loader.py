@@ -38,21 +38,17 @@ class SkillLoader:
         Initialize skill loader.
 
         Args:
-            skills_dir: Base directory for skills (default: project root/skills/)
+            skills_dir: Base directory for skills (default: ~/.cco/skills/)
         """
         if skills_dir is None:
-            # Try multiple locations
-            candidates = [
-                Path.cwd() / "claudecodeoptimizer" / "skills",
-                Path.cwd() / "skills",
-                Path(__file__).parent.parent / "skills",
-            ]
-            for candidate in candidates:
-                if candidate.exists():
-                    skills_dir = candidate
-                    break
-            else:
-                skills_dir = candidates[0]  # Use first as default
+            from ..config import CCOConfig
+            skills_dir = CCOConfig.get_skills_dir()
+
+        if not skills_dir.exists():
+            raise FileNotFoundError(
+                f"Skills directory not found: {skills_dir}\n"
+                f"Please ensure CCO is properly installed."
+            )
 
         self.skills_dir = skills_dir
         self._metadata_cache: Dict[str, SkillMetadata] = {}

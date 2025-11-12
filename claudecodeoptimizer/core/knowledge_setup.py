@@ -2,11 +2,13 @@
 Knowledge Setup - Global CCO structure initialization
 
 Ensures ~/.cco/ structure exists with:
-- commands/ (copied from package)
-- guides/ (copied from package)
-- principles/ (copied from templates)
-- agents/ (created with templates)
-- skills/ (created with templates)
+- commands/ (copied from content/)
+- guides/ (copied from content/)
+- principles/ (copied from content/)
+- agents/ (copied from content/)
+- skills/ (copied from content/)
+
+All content now lives in single content/ directory (single source of truth).
 """
 
 import shutil
@@ -21,11 +23,13 @@ def setup_global_knowledge(force: bool = False) -> Dict[str, Any]:
     Initialize global CCO directory structure.
 
     Creates:
-    - ~/.cco/commands/ (slash commands from package)
-    - ~/.cco/guides/ (static guides from package)
-    - ~/.cco/principles/ (category files from templates)
-    - ~/.cco/agents/ (with templates, for custom agents)
-    - ~/.cco/skills/ (with templates, for custom skills)
+    - ~/.cco/commands/ (slash commands from content/commands/)
+    - ~/.cco/guides/ (static guides from content/guides/)
+    - ~/.cco/principles/ (category files from content/principles/)
+    - ~/.cco/agents/ (agent templates from content/agents/)
+    - ~/.cco/skills/ (skills from content/skills/)
+
+    All content copied from single content/ directory (single source of truth).
 
     Args:
         force: If True, regenerate even if already exists
@@ -50,10 +54,10 @@ def setup_global_knowledge(force: bool = False) -> Dict[str, Any]:
     # Ensure global directory exists
     global_dir.mkdir(parents=True, exist_ok=True)
 
-    # Setup templates/ (for settings.json, etc.)
-    if force or not templates_dir.exists() or not (templates_dir / "settings.json.template").exists():
+    # Setup templates/ (deploy with .template extensions removed)
+    if force or not templates_dir.exists() or not (templates_dir / "settings.json").exists():
         _setup_templates(templates_dir)
-        results["actions"].append("Setup templates directory")
+        results["actions"].append("Deployed template files")
 
     # Setup commands/
     if force or not commands_dir.exists() or not list(commands_dir.glob("*.md")):
@@ -88,10 +92,15 @@ def setup_global_knowledge(force: bool = False) -> Dict[str, Any]:
 
 def _setup_templates(templates_dir: Path) -> None:
     """
-    Copy template files from package to global directory.
+    Deploy template files from package to global directory.
 
-    Copies from templates/ to ~/.cco/templates/
-    Includes settings.json.template, CLAUDE.md.template, CODEOWNERS.template, etc.
+    Templates are deployed with .template extension REMOVED:
+    - statusline.js.template → ~/.cco/templates/statusline.js
+    - settings.json.template → ~/.cco/templates/settings.json
+    - CLAUDE.md.template → ~/.cco/templates/CLAUDE.md
+    - etc.
+
+    Projects will link directly to these deployed files (without .template extension).
     """
     # Get package templates directory
     package_dir = Path(__file__).parent.parent
@@ -103,24 +112,26 @@ def _setup_templates(templates_dir: Path) -> None:
     # Create destination
     templates_dir.mkdir(parents=True, exist_ok=True)
 
-    # Copy all .template files (not subdirectories)
+    # Deploy all .template files (remove .template extension)
     for template_file in source_templates.glob("*.template"):
-        dest_file = templates_dir / template_file.name
+        # Remove .template extension for deployment
+        dest_name = template_file.name.replace(".template", "")
+        dest_file = templates_dir / dest_name
         shutil.copy2(template_file, dest_file)
 
 
 def _setup_principles(principles_dir: Path) -> None:
     """
-    Copy principle category files from templates to global directory.
+    Copy principle category files from content to global directory.
 
-    Copies from templates/principles/ to ~/.cco/knowledge/principles/
+    Copies from content/principles/ to ~/.cco/principles/
     """
-    # Get package templates directory
+    # Get content directory
     package_dir = Path(__file__).parent.parent
-    source_principles = package_dir.parent / "templates" / "principles"
+    source_principles = package_dir.parent / "content" / "principles"
 
     if not source_principles.exists():
-        raise FileNotFoundError(f"Template principles not found at {source_principles}")
+        raise FileNotFoundError(f"Content principles not found at {source_principles}")
 
     # Create destination
     principles_dir.mkdir(parents=True, exist_ok=True)
@@ -133,16 +144,16 @@ def _setup_principles(principles_dir: Path) -> None:
 
 def _setup_commands(commands_dir: Path) -> None:
     """
-    Copy command files from package to global directory.
+    Copy command files from content to global directory.
 
-    Copies from claudecodeoptimizer/commands/ to ~/.cco/commands/
+    Copies from content/commands/ to ~/.cco/commands/
     """
-    # Get package commands directory
+    # Get content directory
     package_dir = Path(__file__).parent.parent
-    source_commands = package_dir / "commands"
+    source_commands = package_dir.parent / "content" / "commands"
 
     if not source_commands.exists():
-        raise FileNotFoundError(f"Package commands not found at {source_commands}")
+        raise FileNotFoundError(f"Content commands not found at {source_commands}")
 
     # Create destination
     commands_dir.mkdir(parents=True, exist_ok=True)
@@ -155,20 +166,16 @@ def _setup_commands(commands_dir: Path) -> None:
 
 def _setup_guides(guides_dir: Path) -> None:
     """
-    Copy guide files from package to global directory.
+    Copy guide files from content to global directory.
 
-    Copies from claudecodeoptimizer/docs/cco/guides/ to ~/.cco/knowledge/guides/
+    Copies from content/guides/ to ~/.cco/guides/
     """
-    # Get package guides directory
+    # Get content directory
     package_dir = Path(__file__).parent.parent
-    source_guides = package_dir.parent / "docs" / "cco" / "guides"
+    source_guides = package_dir.parent / "content" / "guides"
 
     if not source_guides.exists():
-        # Fallback: try package internal location
-        source_guides = package_dir / "docs" / "cco" / "guides"
-
-    if not source_guides.exists():
-        raise FileNotFoundError(f"Package guides not found at {source_guides}")
+        raise FileNotFoundError(f"Content guides not found at {source_guides}")
 
     # Create destination
     guides_dir.mkdir(parents=True, exist_ok=True)
@@ -181,16 +188,16 @@ def _setup_guides(guides_dir: Path) -> None:
 
 def _setup_agents(agents_dir: Path) -> None:
     """
-    Copy agent templates from package to global directory.
+    Copy agent templates from content to global directory.
 
-    Copies from claudecodeoptimizer/knowledge/agents/ to ~/.cco/agents/
+    Copies from content/agents/ to ~/.cco/agents/
     """
-    # Get package agents directory
+    # Get content directory
     package_dir = Path(__file__).parent.parent
-    source_agents = package_dir / "knowledge" / "agents"
+    source_agents = package_dir.parent / "content" / "agents"
 
     if not source_agents.exists():
-        raise FileNotFoundError(f"Package agents not found at {source_agents}")
+        raise FileNotFoundError(f"Content agents not found at {source_agents}")
 
     # Create destination
     agents_dir.mkdir(parents=True, exist_ok=True)
@@ -203,22 +210,19 @@ def _setup_agents(agents_dir: Path) -> None:
 
 def _setup_skills(skills_dir: Path) -> None:
     """
-    Copy skill files from package to global directory.
+    Copy skill files from content to global directory.
 
-    Copies from claudecodeoptimizer/skills/ including:
+    Copies from content/skills/ including:
     - General skills (*.md files in root)
     - Language-specific skills (subdirectories: python/, go/, rust/, typescript/)
+    - Skill registry and Python integration code
     """
-    # Get package skills directory
+    # Get content directory
     package_dir = Path(__file__).parent.parent
-    source_skills = package_dir / "skills"
+    source_skills = package_dir.parent / "content" / "skills"
 
     if not source_skills.exists():
-        # Fallback: try knowledge/skills for templates
-        source_skills = package_dir / "knowledge" / "skills"
-
-    if not source_skills.exists():
-        raise FileNotFoundError(f"Package skills not found at {source_skills}")
+        raise FileNotFoundError(f"Content skills not found at {source_skills}")
 
     # Create destination
     skills_dir.mkdir(parents=True, exist_ok=True)
@@ -269,7 +273,7 @@ def get_available_commands() -> list[str]:
     Returns:
         List of command filenames without extension (e.g., ['audit', 'fix', ...])
     """
-    commands_dir = config.get_knowledge_commands_dir()
+    commands_dir = config.get_global_commands_dir()
     if not commands_dir.exists():
         return []
 
