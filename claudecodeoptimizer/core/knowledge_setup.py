@@ -98,6 +98,7 @@ def _setup_templates(templates_dir: Path) -> None:
     - statusline.js.template → ~/.cco/templates/statusline.js
     - settings.json.template → ~/.cco/templates/settings.json
     - CLAUDE.md.template → ~/.cco/templates/CLAUDE.md
+    - universal_principles.md → ~/.cco/templates/universal_principles.md (no .template)
     - etc.
 
     Projects will link directly to these deployed files (without .template extension).
@@ -119,13 +120,21 @@ def _setup_templates(templates_dir: Path) -> None:
         dest_file = templates_dir / dest_name
         shutil.copy2(template_file, dest_file)
 
+    # Deploy non-template files (e.g., universal_principles.md)
+    for template_file in source_templates.glob("*.md"):
+        if not template_file.name.endswith(".template"):
+            dest_file = templates_dir / template_file.name
+            shutil.copy2(template_file, dest_file)
+
 
 def _setup_principles(principles_dir: Path) -> None:
     """
     Copy individual principle files from content to global directory.
 
-    Copies 74 individual principle files (P001.md - P074.md) from
-    content/principles/ to ~/.cco/principles/
+    Copies 81 individual principle files:
+    - U001-U012.md (12 universal principles - always included)
+    - P001-P069.md (69 project-specific principles - AI-selected)
+    from content/principles/ to ~/.cco/principles/
     """
     # Get content directory
     package_dir = Path(__file__).parent.parent

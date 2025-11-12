@@ -959,23 +959,45 @@ class CCOWizard:
             return False
 
     def _write_project_config(self) -> None:
-        """Write .cco/project.json"""
-        config_path = self.project_root / ".cco" / "project.json"
+        """Write .claude/project.json (NEW ARCHITECTURE v3.1)"""
+        # NEW: Write to .claude/project.json instead of .cco/project.json
+        config_path = self.project_root / ".claude" / "project.json"
 
-        preferences = self._build_preferences()
-        config = preferences.dict()
         from .. import __version__
+        from ..schemas.project_config import ProjectConfig, DetectionInfo
 
-        config["cco"] = {
-            "version": __version__,
-            "configured_at": datetime.now().isoformat(),
-            "mode": self.mode,
-            "principle_count": len(self.selected_principles),
-            "command_count": len(self.selected_commands),
-        }
+        # Build detection info
+        detection_info = DetectionInfo(
+            project_type=getattr(self.system_context, 'detected_language', 'unknown') if self.system_context else 'unknown',
+            languages=getattr(self.system_context, 'languages', []) if self.system_context else [],
+            frameworks=[],
+            team_size="solo",
+            maturity="development",
+            security_level="standard",
+            philosophy="balanced"
+        )
 
+        # Build project config
+        project_config = ProjectConfig(
+            project_name=self.project_root.name,
+            project_root=str(self.project_root),
+            initialized_at=datetime.now().isoformat(),
+            wizard_mode=self.mode,
+            cco_version=__version__,
+            detection=detection_info,
+            selected_principles=self._build_selected_principles_dict(),
+            command_overrides={},
+            selected_commands=self.selected_commands,
+            selected_guides=self.selected_guides if hasattr(self, 'selected_guides') else [],
+            selected_skills=self.selected_skills if hasattr(self, 'selected_skills') else [],
+            selected_agents=self.selected_agents if hasattr(self, 'selected_agents') else [],
+            preferences={}
+        )
+
+        # Save to .claude/project.json
+        config_path.parent.mkdir(parents=True, exist_ok=True)
         with open(config_path, "w", encoding="utf-8") as f:
-            json.dump(config, f, indent=2)
+            json.dump(project_config.model_dump(), f, indent=2)
 
     def _write_commands_registry(self) -> None:
         """Write .cco/commands.json"""
@@ -1051,10 +1073,21 @@ class CCOWizard:
             symlink_map.append((source, target))
 
         # Principles
+        # FIRST: Always symlink ALL universal principles (U001-U012)
+        for u_num in range(1, 13):  # U001 through U012
+            u_id = f"U{u_num:03d}"
+            source = global_principles_dir / f"{u_id}.md"
+            target = claude_dir / "principles" / f"{u_id}.md"
+            if source.exists():
+                symlink_map.append((source, target))
+
+        # SECOND: Symlink only AI-selected project-specific principles (P001-P069)
         for principle in self.selected_principles:
-            source = global_principles_dir / f"{principle}.md"
-            target = claude_dir / "principles" / f"{principle}.md"
-            symlink_map.append((source, target))
+            # Skip if it's a universal principle (already linked above)
+            if not principle.startswith('U'):
+                source = global_principles_dir / f"{principle}.md"
+                target = claude_dir / "principles" / f"{principle}.md"
+                symlink_map.append((source, target))
 
         # Agents (if any selected)
         if hasattr(self, 'selected_agents'):
@@ -1208,25 +1241,48 @@ class CCOWizard:
         shutil.copy2(statusline_source, statusline_dest)
 
     def _generate_claude_md(self) -> None:
-        """Generate CLAUDE.md from template with project-specific references"""
-        import shutil
+        """Generate CLAUDE.md using hybrid approach (universal inline + project reference)"""
         from pathlib import Path
+        from .. import config as CCOConfig
+        from ..core.hybrid_claude_md_generator import generate_hybrid_claude_md
 
-        # Load template
-        template_path = Path(__file__).parent.parent.parent / "templates" / "CLAUDE.md.template"
-        output_path = self.project_root / "CLAUDE.md"
+        # Build project config for CLAUDE.md generation
+        project_config = {
+            "project_name": self.project_root.name,
+            "project_root": str(self.project_root),
+            "selected_principles": self._build_selected_principles_dict(),
+        }
 
-        if not template_path.exists():
-            raise FileNotFoundError(f"CLAUDE.md template not found: {template_path}")
+        # Get CCO directory
+        cco_dir = CCOConfig.get_global_dir()
 
-        # Read template
-        content = template_path.read_text(encoding="utf-8")
-
-        # Inject project-specific references
-        content = self._inject_knowledge_references(content)
+        # Generate hybrid CLAUDE.md
+        content = generate_hybrid_claude_md(
+            project_root=self.project_root,
+            project_config=project_config,
+            cco_dir=cco_dir
+        )
 
         # Write to project root
+        output_path = self.project_root / "CLAUDE.md"
         output_path.write_text(content, encoding="utf-8")
+
+    def _build_selected_principles_dict(self) -> Dict[str, List[str]]:
+        """Build selected principles dictionary by category."""
+        # Always include all universal principles
+        principles_dict = {
+            "universal": [f"U{i:03d}" for i in range(1, 13)]  # U001-U012
+        }
+
+        # Group project-specific principles by category
+        # For now, put all selected principles in a general category
+        # (Real implementation would categorize them properly)
+        if self.selected_principles:
+            principles_dict["project_selected"] = [
+                p for p in self.selected_principles if p.startswith('P')
+            ]
+
+        return principles_dict
 
     def _inject_knowledge_references(self, content: str) -> str:
         """Inject selected principle/guide/agent/skill references into CLAUDE.md"""
