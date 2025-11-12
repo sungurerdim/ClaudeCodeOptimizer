@@ -1,4 +1,4 @@
-# CCO 2.5 Interactive Wizard
+# CCO Interactive Wizard
 
 Production-ready wizard for initializing CCO in any project.
 
@@ -285,7 +285,7 @@ project/
 │   │   ├── cco-help.md
 │   │   ├── cco-status.md
 │   │   └── ...                   # 8-20 commands
-│   └── settings.local.json       # Permissions
+│   └── settings.json             # Permissions
 └── PRINCIPLES.md                 # Development principles
 ```
 
@@ -397,7 +397,7 @@ No need for:
 
 ## License
 
-Part of CCO 2.5 system. Same license as parent project.
+Part of CCO system. Same license as parent project.
 
 ---
 

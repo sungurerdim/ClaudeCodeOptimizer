@@ -107,16 +107,17 @@ class ProjectManager:
         selected_principles = self._select_and_generate_principles(preferences)
         safe_print(f"   ✓ {len(selected_principles)} principles selected")
 
+        # Add selected principle IDs to preferences BEFORE generating CLAUDE.md
+        preferences_dict = preferences.model_dump(mode="json")
+        preferences_dict["selected_principle_ids"] = [p["id"] for p in selected_principles]
+
         # STEP 3.5: Generate/Update CLAUDE.md
         safe_print("\n📝 Generating CLAUDE.md...")
-        claude_md_result = self._generate_claude_md(preferences)
+        claude_md_result = self._generate_claude_md(preferences_dict)
         if claude_md_result["success"]:
             safe_print(f"   ✓ CLAUDE.md {claude_md_result.get('strategy', 'generated')}")
 
         # STEP 4: Register/update in global registry
-        # Add selected principle IDs to preferences for storage
-        preferences_dict = preferences.model_dump(mode="json")
-        preferences_dict["selected_principle_ids"] = [p["id"] for p in selected_principles]
 
         self.registry.register_project(
             project_name=project_name,
@@ -162,7 +163,7 @@ class ProjectManager:
             "mode": "quick",
             "project_name": project_name,
             "analysis": analysis,
-            "preferences": preferences.model_dump(mode="json"),
+            "preferences": preferences_dict,
             "selected_principles": [p["id"] for p in selected_principles],
             "commands_generated": commands_generated,
         }
@@ -1055,7 +1056,7 @@ class ProjectManager:
 
         return applicable_principles
 
-    def _generate_claude_md(self, preferences: CCOPreferences) -> Dict[str, Any]:
+    def _generate_claude_md(self, preferences: Dict[str, Any]) -> Dict[str, Any]:
         """Generate or update CLAUDE.md file."""
         from .claude_md_generator import ClaudeMdGenerator
 
@@ -1064,8 +1065,8 @@ class ProjectManager:
         # Check if file exists before generation
         is_new_file = not claude_md_file.exists()
 
-        # Generate CLAUDE.md
-        generator = ClaudeMdGenerator(preferences.model_dump(mode="json"))
+        # Generate CLAUDE.md (preferences is already a dict)
+        generator = ClaudeMdGenerator(preferences)
         result = generator.generate(claude_md_file)
 
         # Track file change in manifest
