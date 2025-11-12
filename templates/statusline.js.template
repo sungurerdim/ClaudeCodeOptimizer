@@ -627,13 +627,14 @@ function formatMetricsForStatusline(inputData, metrics, telemetryData) {
     const unstagedRemoved = metrics.git.unstagedLinesRemoved || 0;
 
     // Color-coded parts: modified=yellow, new=green, deleted=red
-    const modPart = colorize(`${modifiedCount} (mod)`, 'yellow', colorEnabled);
-    const newPart = colorize(`${newCount} (new)`, 'green', colorEnabled);
-    const delPart = colorize(`${deletedCount} (del)`, 'red', colorEnabled);
+    const modPart = colorize(modifiedCount, 'yellow', colorEnabled) + colorize(' (mod)', 'gray', colorEnabled);
+    const newPart = colorize(newCount, 'green', colorEnabled) + colorize(' (new)', 'gray', colorEnabled);
+    const delPart = colorize(deletedCount, 'red', colorEnabled) + colorize(' (del)', 'gray', colorEnabled);
     const addDisplay = colorize(`+${unstagedAdded}`, 'green', colorEnabled);
     const removeDisplay = colorize(`-${unstagedRemoved}`, 'red', colorEnabled);
 
-    line3Parts.push(`Ready to Stage: ${modPart} + ${newPart} + ${delPart} (${addDisplay}/${removeDisplay})`);
+    const lineDisplay = `${addDisplay}${colorize('/', 'gray', colorEnabled)}${removeDisplay}`;
+    line3Parts.push(`Ready to Stage: ${modPart} + ${newPart} + ${delPart} ${colorize('(', 'gray', colorEnabled)}${lineDisplay}${colorize(')', 'gray', colorEnabled)}`);
   }
 
   // Docker status (inline if enabled)
@@ -706,12 +707,18 @@ function formatMetricsForStatusline(inputData, metrics, telemetryData) {
     // Ready to Commit (blue when >0)
     const stagedAddDisplay = colorize(`+${stagedAdded}`, 'green', colorEnabled);
     const stagedRemoveDisplay = colorize(`-${stagedRemoved}`, 'red', colorEnabled);
-    line4Parts.push(colorize(`Ready to Commit: ${stagedCount} (${stagedAddDisplay}/${stagedRemoveDisplay})`, stagedColor, colorEnabled));
+    const stagedLineDisplay = `${stagedAddDisplay}${colorize('/', 'gray', colorEnabled)}${stagedRemoveDisplay}`;
+    const commitLabel = colorize('Ready to Commit:', stagedColor, colorEnabled);
+    const commitCount = colorize(stagedCount, stagedColor, colorEnabled);
+    line4Parts.push(`${commitLabel} ${commitCount} ${colorize('(', 'gray', colorEnabled)}${stagedLineDisplay}${colorize(')', 'gray', colorEnabled)}`);
 
     // Ready to Push (magenta when >0)
     const unpushedAddDisplay = colorize(`+${unpushedAdded}`, 'green', colorEnabled);
     const unpushedRemoveDisplay = colorize(`-${unpushedRemoved}`, 'red', colorEnabled);
-    line4Parts.push(colorize(`Ready to Push: ${unpushedCount} (${unpushedAddDisplay}/${unpushedRemoveDisplay})`, unpushedColor, colorEnabled));
+    const unpushedLineDisplay = `${unpushedAddDisplay}${colorize('/', 'gray', colorEnabled)}${unpushedRemoveDisplay}`;
+    const pushLabel = colorize('Ready to Push:', unpushedColor, colorEnabled);
+    const pushCount = colorize(unpushedCount, unpushedColor, colorEnabled);
+    line4Parts.push(`${pushLabel} ${pushCount} ${colorize('(', 'gray', colorEnabled)}${unpushedLineDisplay}${colorize(')', 'gray', colorEnabled)}`);
   }
 
   if (line4Parts.length > 0) {
