@@ -6,76 +6,27 @@
 
 **⚠️ MANDATORY: All work MUST follow these principles ⚠️**
 
-### Core Principles (Always Apply)
+<!-- CCO_START -->
+### Universal Principles (Apply to ALL Projects)
 
-#### P001: Fail-Fast Error Handling
-
-Errors must cause immediate, visible failure. No silent fallbacks, no swallowed exceptions.
-
-**Example**:
-```python
-# ✅ Good
-try:
-    result = risky()
-except SpecificError as e:
-    logger.error(f'Failed: {e}')
-    raise
-
-# ❌ Bad
-try:
-    result = risky()
-except:
-    pass
-```
+[Universal principles U001-U012 will be inserted here during /cco-init]
 
 ---
 
-#### P067: Evidence-Based Verification
+### Project-Specific Principles
 
-Never claim completion without command execution proof. All verification requires fresh command output with exit codes.
+[Project-specific principle selection will be inserted here during /cco-init]
 
-**Example**:
-```
-✅ [Runs: pytest] [Output: 34/34 passed] [Exit: 0] "All tests pass"
-❌ "Tests should pass now"
-```
+**Selected Categories**: [Auto-detected based on your project]
 
----
+**Note**: Commands like `/cco-audit`, `/cco-fix` automatically load relevant principles.
 
-#### P071: No Overengineering
+**References**:
+- Universal principles: Always active (inline above)
+- Project principles: See `.claude/principles/` directory
+- Configuration: `.claude/project.json`
 
-Always choose the simplest solution that solves the problem. Avoid premature abstraction, unnecessary patterns, excessive architecture. Every line of code is a liability - write only what is needed now.
-
-**Example**:
-```python
-# ✅ Good: Simple and direct
-def send_email(to: str, subject: str, body: str):
-    smtp.send(to, subject, body)
-
-# ❌ Bad: Premature abstraction
-class AbstractDataProcessorFactory:
-    @abstractmethod
-    def create_processor(self): pass
-```
-
----
-
-### Additional Principles by Category
-
-For detailed principles in specific areas, see:
-
-**Individual principle files in `.claude/principles/`:**
-- P001-P014: Code Quality principles
-- P015-P024: Architecture principles
-- P025-P043: Security & Privacy principles
-- P044-P049: Testing principles
-- P050-P057: Git Workflow principles
-- P058-P062: Performance principles
-- P063-P072: Operations principles
-- P073-P074: API Design principles
-
-**Total: 74 individual principle files**
-**Note**: Only applicable principles are symlinked to your project during `/cco-init`
+<!-- CCO_END -->
 
 ---
 
