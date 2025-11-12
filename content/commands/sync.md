@@ -2,6 +2,7 @@
 description: Sync files across codebase (config, deps, types, constants)
 category: sync
 cost: 1
+principles: ['P001', 'P067', 'P071']
 ---
 
 # CCO Sync Commands

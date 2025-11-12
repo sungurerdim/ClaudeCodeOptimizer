@@ -2,6 +2,7 @@
 description: Generate code, tests, docs, CI/CD, and more
 category: generation
 cost: 5
+principles: ['P001', 'P067', 'P071', 'P002', 'P003', 'P004', 'P006', 'P007', 'P008', 'P009', 'P010', 'P023', 'P053', 'P068']
 ---
 
 # CCO Generate Commands

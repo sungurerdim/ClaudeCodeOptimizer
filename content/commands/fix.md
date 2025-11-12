@@ -2,6 +2,7 @@
 description: Auto-fix issues (code, security, docs, tests)
 category: quality
 cost: 4
+principles: ['P001', 'P067', 'P071', 'P002', 'P003', 'P004', 'P006', 'P007', 'P008', 'P009', 'P010', 'P023', 'P053', 'P068', 'P005', 'P019', 'P020', 'P021', 'P022', 'P024', 'P025', 'P026', 'P027', 'P028', 'P029', 'P030', 'P054', 'P055', 'P056', 'P057', 'P058', 'P061', 'P063']
 ---
 
 # CCO Fix Commands
