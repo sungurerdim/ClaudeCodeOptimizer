@@ -1,5 +1,5 @@
 """
-Universal Command Recommender - CCO 2.5
+Universal Command Recommender - CCO
 
 Rule-based command selection system.
 100% generic - works for any project without hardcoding.

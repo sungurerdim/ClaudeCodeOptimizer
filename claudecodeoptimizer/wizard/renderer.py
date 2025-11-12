@@ -1,5 +1,5 @@
 """
-CLI Rendering Utilities - CCO 2.5 Wizard
+CLI Rendering Utilities - CCO Wizard
 
 Simple text-based UI components using pure stdlib.
 No external dependencies (rich, questionary, etc.)

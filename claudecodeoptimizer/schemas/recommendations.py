@@ -1,5 +1,5 @@
 """
-Universal Recommendation Schema - CCO 2.5
+Universal Recommendation Schema - CCO
 
 AI-generated recommendations based on project analysis.
 100% generic - works for any project without hardcoded assumptions.

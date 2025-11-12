@@ -866,17 +866,12 @@ class CCOWizard:
             print()
 
         try:
-            # Create directories
-            (self.project_root / ".cco").mkdir(exist_ok=True)
+            # Create .claude directory structure
             (self.project_root / ".claude" / "commands").mkdir(parents=True, exist_ok=True)
 
-            # Write project.json
+            # Write project.json to .claude directory
             self._write_project_config()
-            print_success("✓ Created .cco/project.json", indent=2)
-
-            # Write commands.json
-            self._write_commands_registry()
-            print_success("✓ Created .cco/commands.json", indent=2)
+            print_success("✓ Created .claude/project.json", indent=2)
 
             # Setup knowledge base symlinks
             self._setup_knowledge_symlinks()
@@ -886,9 +881,9 @@ class CCOWizard:
             self._update_gitignore()
             print_success("✓ Updated .gitignore", indent=2)
 
-            # Generate settings.local.json
-            self._generate_settings_local()
-            print_success("✓ Created .claude/settings.local.json", indent=2)
+            # Generate settings.json
+            self._generate_settings()
+            print_success("✓ Created .claude/settings.json", indent=2)
 
             # Copy statusline.js template
             self._copy_statusline()
@@ -999,22 +994,6 @@ class CCOWizard:
         with open(config_path, "w", encoding="utf-8") as f:
             json.dump(project_config.model_dump(), f, indent=2)
 
-    def _write_commands_registry(self) -> None:
-        """Write .cco/commands.json"""
-        registry_path = self.project_root / ".cco" / "commands.json"
-
-        from .. import __version__
-
-        registry = {
-            "version": __version__,
-            "configured_at": datetime.now().isoformat(),
-            "commands": [
-                {"id": cmd, "enabled": True, "category": "system"} for cmd in self.selected_commands
-            ],
-        }
-
-        with open(registry_path, "w", encoding="utf-8") as f:
-            json.dump(registry, f, indent=2)
 
     def _generate_command_files(self) -> None:
         """Generate command files from templates"""
@@ -1051,7 +1030,7 @@ class CCOWizard:
             (claude_dir / category / ".gitkeep").touch()
 
         # Get global knowledge directories
-        global_commands_dir = CCOConfig.get_knowledge_commands_dir()
+        global_commands_dir = CCOConfig.get_global_commands_dir()
         global_guides_dir = CCOConfig.get_guides_dir()
         global_principles_dir = CCOConfig.get_principles_dir()
         global_agents_dir = CCOConfig.get_agents_dir()
@@ -1105,6 +1084,9 @@ class CCOWizard:
 
         # Create symlinks
         for source, target in symlink_map:
+            # Ensure parent directory exists (for language-specific skills like python/*)
+            target.parent.mkdir(parents=True, exist_ok=True)
+
             # Remove existing symlink/file if exists
             if target.exists() or target.is_symlink():
                 target.unlink()
@@ -1167,8 +1149,8 @@ class CCOWizard:
             # Create new .gitignore with CCO section
             gitignore_path.write_text(cco_section.lstrip(), encoding="utf-8")
 
-    def _generate_settings_local(self) -> None:
-        """Generate .claude/settings.local.json from global template"""
+    def _generate_settings(self) -> None:
+        """Generate .claude/settings.json from global template"""
         import json
         from pathlib import Path
 
@@ -1176,12 +1158,12 @@ class CCOWizard:
 
         # Try to load from global templates first, fallback to package assets
         templates_dir = CCOConfig.get_templates_dir()
-        template_path = templates_dir / "generic" / "settings.local.template.json"
+        template_path = templates_dir / "settings.json.template"
 
         if not template_path.exists():
             # Fallback to package assets
             package_root = Path(__file__).parent.parent
-            template_path = package_root / "assets" / "settings.local.template.json"
+            template_path = package_root / "assets" / "settings.json.template"
 
         if not template_path.exists():
             print_warning(f"Template not found: {template_path}", indent=2)
@@ -1198,8 +1180,8 @@ class CCOWizard:
         # Parse as JSON
         new_settings = json.loads(settings_content)
 
-        # Check if .claude/settings.local.json already exists
-        settings_path = self.project_root / ".claude" / "settings.local.json"
+        # Check if .claude/settings.json already exists
+        settings_path = self.project_root / ".claude" / "settings.json"
 
         if settings_path.exists():
             # Merge with existing settings
@@ -1241,46 +1223,66 @@ class CCOWizard:
         shutil.copy2(statusline_source, statusline_dest)
 
     def _generate_claude_md(self) -> None:
-        """Generate CLAUDE.md using hybrid approach (universal inline + project reference)"""
-        from pathlib import Path
-        from .. import config as CCOConfig
-        from ..core.hybrid_claude_md_generator import generate_hybrid_claude_md
+        """Generate CLAUDE.md using ClaudeMdGenerator with full principle injection"""
+        from ..core.claude_md_generator import ClaudeMdGenerator
 
-        # Build project config for CLAUDE.md generation
-        project_config = {
-            "project_name": self.project_root.name,
-            "project_root": str(self.project_root),
-            "selected_principles": self._build_selected_principles_dict(),
+        # Build preferences dict with selected principles
+        preferences_dict = {
+            "project_identity": {
+                "name": self.project_root.name,
+                "team_trajectory": self.answer_context.get("team_dynamics", "solo") if self.answer_context else "solo",
+            },
+            "code_quality": {
+                "linting_strictness": "strict",  # Default
+            },
+            "testing": {
+                "strategy": "balanced",  # Default
+            },
+            "selected_principle_ids": self.selected_principles if self.selected_principles else []
         }
 
-        # Get CCO directory
-        cco_dir = CCOConfig.get_global_dir()
-
-        # Generate hybrid CLAUDE.md
-        content = generate_hybrid_claude_md(
-            project_root=self.project_root,
-            project_config=project_config,
-            cco_dir=cco_dir
-        )
-
-        # Write to project root
+        # Generate CLAUDE.md
         output_path = self.project_root / "CLAUDE.md"
-        output_path.write_text(content, encoding="utf-8")
+        generator = ClaudeMdGenerator(
+            preferences_dict,
+            selected_skills=self.selected_skills if hasattr(self, 'selected_skills') else [],
+            selected_agents=self.selected_agents if hasattr(self, 'selected_agents') else [],
+        )
+        generator.generate(output_path)
 
     def _build_selected_principles_dict(self) -> Dict[str, List[str]]:
         """Build selected principles dictionary by category."""
-        # Always include all universal principles
+        import json
+        from pathlib import Path
+
+        # Load all principles to get universal count dynamically
+        principles_json = Path(__file__).parent.parent.parent / "content" / "principles.json"
+        with open(principles_json, encoding="utf-8") as f:
+            data = json.load(f)
+
+        # Get all universal principles dynamically
+        universal_ids = [p["id"] for p in data.get("principles", [])
+                        if p.get("category") == "universal"]
+
         principles_dict = {
-            "universal": [f"U{i:03d}" for i in range(1, 13)]  # U001-U012
+            "universal": universal_ids
         }
 
         # Group project-specific principles by category
-        # For now, put all selected principles in a general category
-        # (Real implementation would categorize them properly)
         if self.selected_principles:
-            principles_dict["project_selected"] = [
-                p for p in self.selected_principles if p.startswith('P')
-            ]
+            # Categorize based on actual category from principles.json
+            all_principles = {p["id"]: p for p in data.get("principles", [])}
+
+            for pid in self.selected_principles:
+                if pid.startswith('U'):  # Skip universal (already added)
+                    continue
+
+                principle = all_principles.get(pid)
+                if principle:
+                    category = principle.get("category", "other")
+                    if category not in principles_dict:
+                        principles_dict[category] = []
+                    principles_dict[category].append(pid)
 
         return principles_dict
 
@@ -1411,11 +1413,21 @@ class CCOWizard:
         print_header("✅ CCO Configuration Complete!", "Your project is ready")
         print()
 
+        # Count major files created (CLAUDE.md, settings.json, project.json, statusline.js, .gitignore update)
+        files_count = 3  # CLAUDE.md, settings.json, project.json
+        if (self.project_root / ".claude" / "statusline.js").exists():
+            files_count += 1
+        if (self.project_root / ".gitignore").exists():
+            files_count += 1  # Modified .gitignore
+
         display_completion_summary(
             commands_installed=len(self.selected_commands),
             principles_configured=len(self.selected_principles),
-            files_created=3,  # project.json, commands.json, CLAUDE.md, commands
+            files_created=files_count,
             duration_seconds=duration,
+            guides_installed=len(self.selected_guides) if hasattr(self, 'selected_guides') else 0,
+            skills_installed=len(self.selected_skills) if hasattr(self, 'selected_skills') else 0,
+            agents_installed=len(self.selected_agents) if hasattr(self, 'selected_agents') else 0,
         )
 
         print()
@@ -1431,17 +1443,48 @@ class CCOWizard:
 
     def _build_preferences(self) -> Dict:
         """Build CCOPreferences object from answers"""
-        # This is a simplified version
-        # TODO: Map all answers to proper CCOPreferences schema
+        # Map answers to proper CCOPreferences schema
 
         answers = self.answer_context.answers
+
+        # Get primary language from system context
+        primary_language = (
+            self.system_context.detected_language
+            if self.system_context and hasattr(self.system_context, 'detected_language')
+            else 'python'
+        )
+
+        # Map git_workflow values
+        git_workflow_mapping = {
+            "main_only": "trunk-based",
+            "trunk_based": "trunk-based",
+            "git_flow": "git-flow",
+            "github_flow": "github-flow",
+            "gitlab_flow": "gitlab-flow",
+        }
+
+        # Map security_stance values
+        security_mapping = {
+            "production": "strict",
+            "high": "very-strict",
+            "standard": "balanced",
+            "basic": "pragmatic",
+        }
+
+        # Map documentation_level values
+        doc_mapping = {
+            "comprehensive": "extensive",
+            "standard": "concise",
+            "minimal": "minimal",
+        }
 
         return {
             "project_identity": {
                 "name": self.project_root.name,
                 "types": answers.get("project_purpose", []),
+                "primary_language": primary_language,
                 "team_trajectory": answers.get("team_dynamics", "solo"),
-                "project_maturity": answers.get("project_maturity", "prototype"),
+                "project_maturity": answers.get("project_maturity", "active-dev"),
             },
             "development_style": {
                 "code_philosophy": answers.get("development_philosophy", "balanced"),
@@ -1452,10 +1495,16 @@ class CCOWizard:
                 ),
             },
             "security": {
-                "security_stance": answers.get("security_stance", "standard"),
+                "security_stance": security_mapping.get(
+                    answers.get("security_stance", "standard"),
+                    "balanced"
+                ),
             },
             "documentation": {
-                "verbosity": answers.get("documentation_level", "minimal"),
+                "verbosity": doc_mapping.get(
+                    answers.get("documentation_level", "minimal"),
+                    "minimal"
+                ),
             },
             "code_quality": {
                 "linting_strictness": self._map_strategy_to_strictness(
@@ -1463,7 +1512,10 @@ class CCOWizard:
                 ),
             },
             "collaboration": {
-                "git_workflow": answers.get("git_workflow", "main_only"),
+                "git_workflow": git_workflow_mapping.get(
+                    answers.get("git_workflow", "main_only"),
+                    "trunk-based"
+                ),
                 "versioning_strategy": answers.get("versioning_strategy", "auto_semver"),
             },
             "selected_principle_ids": self.selected_principles,
@@ -1564,69 +1616,57 @@ class CCOWizard:
         return list(set(recommended))  # Remove duplicates
 
     def _recommend_skills_for_project(self) -> List[str]:
-        """Recommend skills based on project context (workflow skills, not language-specific)"""
-        if not self.answer_context:
-            return []
+        """Add all universal skills + language-specific skills to project"""
+        # Universal skills - always included in every project
+        universal_skills = [
+            "verification-protocol",
+            "test-first-verification",
+            "root-cause-analysis",
+            "incremental-improvement",
+            "security-emergency-response",
+        ]
 
-        recommended = []
-        answers = self.answer_context.answers
-        maturity = answers.get("project_maturity", "prototype")
-        philosophy = answers.get("development_philosophy", "balanced")
-        testing = answers.get("testing_approach", "balanced")
-        security = answers.get("security_stance", "standard")
+        # Language-specific skills - add if language detected
+        language_specific_skills = []
 
-        # Verification Protocol: for quality-first or production projects
-        if philosophy == "quality_first" or maturity in ["production", "legacy"]:
-            recommended.append("verification-protocol")
+        # Get detected languages from system context
+        if self.system_context and hasattr(self.system_context, 'detected_languages'):
+            detected_languages = self.system_context.detected_languages
 
-        # Test-First Verification: for TDD or comprehensive testing
-        if testing in ["comprehensive", "balanced"] and philosophy != "move_fast":
-            recommended.append("test-first-verification")
+            # Add language-specific skills
+            if 'python' in [lang.lower() for lang in detected_languages]:
+                language_specific_skills.extend([
+                    "python/async-patterns",
+                    "python/packaging-modern",
+                    "python/performance",
+                    "python/testing-pytest",
+                    "python/type-hints-advanced",
+                ])
 
-        # Root Cause Analysis: for strict quality standards
-        if philosophy == "quality_first" or answers.get("code_quality.linting_strictness") in ["strict", "pedantic"]:
-            recommended.append("root-cause-analysis")
+            if 'go' in [lang.lower() for lang in detected_languages]:
+                # Go-specific skills (when available)
+                pass
 
-        # Incremental Improvement: for large projects or legacy systems
-        if maturity in ["active_dev", "production", "legacy"]:
-            recommended.append("incremental-improvement")
+            if 'rust' in [lang.lower() for lang in detected_languages]:
+                # Rust-specific skills (when available)
+                pass
 
-        # Security Emergency Response: for production or high security
-        if security in ["production", "high"] or maturity == "production":
-            recommended.append("security-emergency-response")
+            if any(lang.lower() in ['typescript', 'javascript'] for lang in detected_languages):
+                # TypeScript/JS-specific skills (when available)
+                pass
 
-        return list(set(recommended))  # Remove duplicates
+        return list(set(universal_skills + language_specific_skills))  # Remove duplicates
 
     def _recommend_agents_for_project(self) -> List[str]:
-        """Recommend agents based on project context"""
-        if not self.answer_context:
-            return []
+        """Add all universal agents to every project (always included)"""
+        # Universal agents - always included in every project
+        universal_agents = [
+            "audit-agent",
+            "fix-agent",
+            "generate-agent",
+        ]
 
-        recommended = []
-        answers = self.answer_context.answers
-        project_types = answers.get("project_purpose", [])
-        maturity = answers.get("project_maturity", "prototype")
-        team_size = answers.get("team_dynamics", "solo")
-
-        # Feature implementation agent: MVP/Production projects
-        if maturity in ["mvp", "production"] and team_size != "solo":
-            recommended.append("feature-implementation")
-
-        # Security audit agent: Production systems or security-critical apps
-        if maturity == "production" or any(
-            pt in project_types for pt in ["api_service", "web_app", "microservice"]
-        ):
-            recommended.append("security-audit")
-
-        # Refactoring agent: Legacy/mature projects
-        if maturity == "legacy":
-            recommended.append("refactoring")
-
-        # Performance optimization agent: Backend services
-        if any(pt in project_types for pt in ["api_service", "microservice", "data_pipeline"]):
-            recommended.append("performance-optimization")
-
-        return recommended
+        return universal_agents
 
     def _generate_editorconfig(self) -> None:
         """Generate .editorconfig from template"""
@@ -1821,6 +1861,7 @@ class CCOWizard:
                 test_install = "python -m pip install --upgrade pip\n          pip install -e \".[dev]\""
 
         # Generate JavaScript/TypeScript install commands based on package manager
+        js_install = "npm ci"  # default
         if language.lower() in ["javascript", "typescript"]:
             if package_manager == "yarn":
                 js_install = "yarn install"

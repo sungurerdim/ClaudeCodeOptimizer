@@ -1619,7 +1619,12 @@ def _auto_detect_package_manager(ctx: AnswerContext) -> str:
     # Default based on language
     detected_lang = sys.detected_language if hasattr(sys, "detected_language") else None
     if detected_lang:
-        primary = detected_lang.get("primary", "python")
+        # detected_language can be either a string or a dict
+        if isinstance(detected_lang, dict):
+            primary = detected_lang.get("primary", "python")
+        else:
+            primary = detected_lang  # It's already a string
+
         if primary == "python":
             return "pip"
         elif primary in ["javascript", "typescript"]:
