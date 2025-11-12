@@ -93,7 +93,7 @@ pip install claudecodeoptimizer
 **What gets created:**
 
 **Global Storage (`~/.cco/`)** - Created once during installation:
-- `commands/` - 20+ specialized commands (deployed from content/commands/)
+- `commands/` - 28 specialized commands (deployed from content/commands/)
 - `principles/` - 74 individual principle files (deployed from content/principles/)
 - `guides/` - Comprehensive guides (deployed from content/guides/)
 - `skills/` - Language-specific skills (deployed from content/skills/)
@@ -108,7 +108,7 @@ pip install claudecodeoptimizer
 - `.installed` - Installation marker
 
 **Project Local (`.claude/`)** - Created during `/cco-init`:
-- `commands/` - Links to selected commands (8-15 from 20+, using preference order)
+- `commands/` - Links to selected commands (8-15 from 28 available, using preference order)
 - `principles/` - Links to applicable principles (30-50 from 74, using preference order)
 - `guides/` - Links to relevant guides (using preference order)
 - `skills/` - Links to language skills (using preference order)
@@ -154,7 +154,7 @@ cd /path/to/your/project
 
 **What you'll have after 5 minutes:**
 - ✅ Project configured with applicable principles (30-50 selected from 74 total)
-- ✅ Specialized commands ready to use (8-15 selected from 20+ available)
+- ✅ Specialized commands ready to use (8-15 selected from 28 available)
 - ✅ `CLAUDE.md` generated with project-specific guidance
 - ✅ First audit report showing code quality, security, and test status
 
@@ -331,18 +331,23 @@ The features you'll use immediately to get value from CCO.
 │   ├── performance.md           # 5 principles
 │   ├── security_privacy.md      # 19 principles
 │   └── testing.md               # 6 principles
-├── guides/                       # Comprehensive how-to guides
+├── guides/                       # 5 comprehensive how-to guides
 │   ├── verification-protocol.md
 │   ├── git-workflow.md
 │   ├── security-response.md
-│   └── performance-optimization.md
-├── skills/                       # Language-specific skills
+│   ├── performance-optimization.md
+│   └── container-best-practices.md
+├── skills/                       # Language-specific and cross-language skills
 │   ├── python/                  # async-patterns, packaging, testing, etc.
-│   ├── typescript/
-│   ├── rust/
-│   └── go/
-├── agents/                       # Task-specific agents
-└── commands/                     # 20+ specialized commands
+│   ├── typescript/              # TypeScript-specific skills
+│   ├── rust/                    # Rust-specific skills
+│   ├── go/                      # Go-specific skills
+│   ├── verification-protocol.md      # Cross-language verification skill
+│   ├── root-cause-analysis.md        # Cross-language debugging skill
+│   ├── test-first-verification.md    # Cross-language testing skill
+│   └── incremental-improvement.md    # Cross-language development skill
+├── agents/                       # 3 task-specific agents: audit, fix, generate
+└── commands/                     # 28 specialized commands
 
 project/.claude/                  # Project-specific symlinks
 ├── principles/                   # Symlinks to applicable principles
@@ -429,7 +434,7 @@ Features you'll use regularly after initial setup.
 
 #### 🎛️ Slash Commands
 
-**Specialized commands for development lifecycle:**
+**28 specialized commands for complete development lifecycle:**
 
 **Core Commands** (always installed):
 - `/cco-init` - Initialize CCO for project
@@ -603,7 +608,7 @@ pip install -e ".[dev]"
 **What happens during installation:**
 1. Installs Python package from PyPI
 2. Deploys knowledge base from `content/` to `~/.cco/`:
-   - `commands/` - 20+ command files (from content/commands/)
+   - `commands/` - 28 command files (from content/commands/)
    - `principles/` - 74 principle files (from content/principles/)
    - `guides/` - Comprehensive guides (from content/guides/)
    - `skills/` - Language-specific skills (from content/skills/)
@@ -652,13 +657,13 @@ pip install -e ".[dev]"
 8. Selects git workflow (main-only, GitHub Flow, Git Flow)
 9. Selects documentation level (minimal, standard, comprehensive)
 10. Chooses applicable principles from 74 total (typically 30-50 selected)
-11. Chooses relevant commands from 20+ available (typically 8-15 selected)
+11. Chooses relevant commands from 28 available (typically 8-15 selected)
 12. Chooses relevant guides (verification, security, performance, etc.)
 13. Chooses language-specific skills based on detected languages
 
 **Phase 3: File Generation**
 14. Creates `.claude/` directory structure using preference order (symlink → hardlink → copy):
-    - `.claude/commands/` - Links to selected global commands (8-15 from 20+)
+    - `.claude/commands/` - Links to selected global commands (8-15 from 28 available)
     - `.claude/principles/` - Links to applicable principles (30-50 from 74)
     - `.claude/guides/` - Links to relevant guides
     - `.claude/skills/` - Links to language skills
@@ -838,29 +843,37 @@ This is a **preference order**, not a fallback. CCO tries each method until find
 **Repository (`content/`):**
 ```
 content/                   # Single source of truth (tracked in git)
-├── commands/             # 20+ command source files (*.md)
+├── commands/             # 28 command source files (*.md)
 ├── principles/           # 74 principle source files (*.md, 8 categories)
 ├── guides/               # Comprehensive guide source files (*.md)
-├── skills/               # Language-specific skill source files
+├── skills/               # Language-specific and cross-language skill source files
 │   ├── python/          # async-patterns, packaging, testing, type-hints, performance
-│   ├── typescript/
-│   ├── rust/
-│   └── go/
+│   ├── typescript/      # TypeScript-specific skills
+│   ├── rust/            # Rust-specific skills
+│   ├── go/              # Go-specific skills
+│   ├── verification-protocol.md      # Cross-language verification skill
+│   ├── root-cause-analysis.md        # Cross-language debugging skill
+│   ├── test-first-verification.md    # Cross-language testing skill
+│   └── incremental-improvement.md    # Cross-language development skill
 └── agents/               # Task-specific agent source files
 ```
 
 **Global Storage (`~/.cco/`):**
 ```
 ~/.cco/                   # Deployed from content/ during pip install
-├── commands/             # 20+ commands (deployed from content/commands/)
+├── commands/             # 28 commands (deployed from content/commands/)
 ├── principles/           # 74 principles (deployed from content/principles/)
-├── guides/               # Guides (deployed from content/guides/)
-├── skills/               # Skills (deployed from content/skills/)
-│   ├── python/
-│   ├── typescript/
-│   ├── rust/
-│   └── go/
-├── agents/               # Agents (deployed from content/agents/)
+├── guides/               # 5 comprehensive guides (deployed from content/guides/)
+├── skills/               # Language-specific and cross-language skills (deployed from content/skills/)
+│   ├── python/          # Python-specific skills
+│   ├── typescript/      # TypeScript-specific skills
+│   ├── rust/            # Rust-specific skills
+│   ├── go/              # Go-specific skills
+│   ├── verification-protocol.md      # Cross-language verification skill
+│   ├── root-cause-analysis.md        # Cross-language debugging skill
+│   ├── test-first-verification.md    # Cross-language testing skill
+│   └── incremental-improvement.md    # Cross-language development skill
+├── agents/               # Task-specific agents (deployed from content/agents/)
 ├── templates/            # Template files (deployed from templates/*.template)
 │   ├── CLAUDE.md        # Deployed from CLAUDE.md.template (extension removed)
 │   ├── settings.json    # Deployed from settings.json.template (extension removed)
@@ -937,7 +950,7 @@ ClaudeCodeOptimizer/
 - Interactive wizard with 3-tier decision tree
 - 74 principles across 8 categories
 - Universal detection engine
-- 12+ slash commands
+- 28 slash commands
 - Multi-agent orchestration
 
 ### ⏳ v0.2.0-alpha (In Progress - 95% Complete)
@@ -1060,15 +1073,19 @@ All actual data lives here (deployed from repository during installation):
 
 ```
 ~/.cco/
-├── commands/              # 20+ commands (deployed from content/commands/)
+├── commands/              # 28 commands (deployed from content/commands/)
 ├── principles/            # 74 principles (deployed from content/principles/)
-├── guides/                # Guides (deployed from content/guides/)
-├── skills/                # Skills (deployed from content/skills/)
-│   ├── python/
-│   ├── typescript/
-│   ├── rust/
-│   └── go/
-├── agents/                # Agents (deployed from content/agents/)
+├── guides/                # 5 comprehensive guides (deployed from content/guides/)
+├── skills/                # Language-specific and cross-language skills (deployed from content/skills/)
+│   ├── python/           # Python-specific skills
+│   ├── typescript/       # TypeScript-specific skills
+│   ├── rust/             # Rust-specific skills
+│   ├── go/               # Go-specific skills
+│   ├── verification-protocol.md      # Cross-language verification skill
+│   ├── root-cause-analysis.md        # Cross-language debugging skill
+│   ├── test-first-verification.md    # Cross-language testing skill
+│   └── incremental-improvement.md    # Cross-language development skill
+├── agents/                # 3 task-specific agents: audit, fix, generate (deployed from content/agents/)
 ├── templates/             # Templates (deployed from templates/*.template, extensions removed)
 │   ├── CLAUDE.md         # From CLAUDE.md.template
 │   ├── settings.json     # From settings.json.template
