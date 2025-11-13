@@ -131,9 +131,6 @@ docker scan myapp:latest
 
 # Or use Trivy
 trivy image myapp:latest
-
-# Or CCO command
-/cco-optimize-docker --scan
 ```
 
 **Fix vulnerabilities**:
@@ -494,36 +491,11 @@ syncPolicy:
 
 ---
 
-## CCO Commands
-
-```bash
-# Optimize Dockerfile
-/cco-optimize-docker
-
-# Scan for vulnerabilities
-/cco-optimize-docker --scan
-
-# Generate Kubernetes manifests
-/cco-generate k8s
-
-# Audit container best practices
-/cco-audit ops --focus=containers
-```
-
----
-
 ## Principle References
 
-- **P059-P063**: Operational Excellence Principles
-  - P059: Configuration as Code
-  - P060: Infrastructure as Code + GitOps
-  - P061: Observability with OpenTelemetry
-  - P062: Health Checks & Readiness Probes
-  - P063: Graceful Shutdown
-
-See: [@~/.cco/principles/operations.md](../principles/operations.md)
-
----
-
-*Part of CCO Documentation System*
-*Load when needed: @~/.cco/guides/container-best-practices.md*
+**Operational Excellence Principles:**
+- **P059**: Configuration as Code → `.claude/principles/P059.md`
+- **P060**: Infrastructure as Code + GitOps → `.claude/principles/P060.md`
+- **P061**: Observability with OpenTelemetry → `.claude/principles/P061.md`
+- **P062**: Health Checks & Readiness Probes → `.claude/principles/P062.md`
+- **P063**: Graceful Shutdown → `.claude/principles/P063.md`

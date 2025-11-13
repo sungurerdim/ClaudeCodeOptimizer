@@ -67,11 +67,27 @@ You are a Code Generation Specialist. Your task is to generate high-quality code
    - Expected output: Generation summary report
 
 **Requirements:**
-- Follow @.claude/principles/code_quality.md
-- Follow @.claude/principles/testing.md
-- Follow @.claude/principles/api_design.md (if generating APIs)
-- Use @.claude/guides/verification-protocol.md
-- Generated code must be production-ready (no TODOs)
+
+**Code Quality Principles:**
+- **P001**: DRY Enforcement → `.claude/principles/P001.md`
+- **P002**: Complete Integration Check → `.claude/principles/P002.md`
+- **P007**: Linting & SAST Enforcement → `.claude/principles/P007.md`
+- **P009**: Type Safety & Static Analysis → `.claude/principles/P009.md`
+
+**Testing Principles:**
+- **P041**: Test Coverage Targets → `.claude/principles/P041.md`
+- **P043**: Integration Tests for Critical Paths → `.claude/principles/P043.md`
+- **P045**: CI Gates → `.claude/principles/P045.md`
+
+**API Design Principles** (when generating APIs):
+- **P069**: API Security Best Practices → `.claude/principles/P069.md`
+
+**Universal Principles:**
+- **U001**: Evidence-Based Verification → `.claude/principles/U001.md`
+- **U003**: Test-First Development → `.claude/principles/U003.md`
+
+**Additional Requirements:**
+- Generated code must be production-ready (no TODOs, placeholders, or temporary hacks)
 - Include comprehensive docstrings and comments
 - All generated tests must pass immediately
 

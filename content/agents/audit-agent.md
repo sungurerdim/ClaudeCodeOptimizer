@@ -67,10 +67,35 @@ You are a Code Audit Specialist. Your task is to perform a comprehensive analysi
    - Expected output: Executive summary with prioritized action plan
 
 **Requirements:**
-- Follow @.claude/principles/code_quality.md
-- Follow @.claude/principles/security_privacy.md
-- Follow @.claude/principles/testing.md
-- Use @.claude/guides/verification-protocol.md for evidence-based reporting
+
+**Code Quality Principles:**
+- **P001**: DRY Enforcement → `.claude/principles/P001.md`
+- **P002**: Complete Integration Check → `.claude/principles/P002.md`
+- **P007**: Linting & SAST Enforcement → `.claude/principles/P007.md`
+- **P009**: Type Safety & Static Analysis → `.claude/principles/P009.md`
+- **P010**: Centralized Version Management → `.claude/principles/P010.md`
+
+**Security & Privacy Principles:**
+- **P022**: Schema-First Validation → `.claude/principles/P022.md`
+- **P027**: Authentication & Authorization → `.claude/principles/P027.md`
+- **P028**: SQL Injection Prevention → `.claude/principles/P028.md`
+- **P029**: Secret Management with Rotation → `.claude/principles/P029.md`
+- **P030**: Rate Limiting & Throttling → `.claude/principles/P030.md`
+- **P032**: Input Sanitization (XSS Prevention) → `.claude/principles/P032.md`
+- **P033**: Audit Logging → `.claude/principles/P033.md`
+- **P034**: Supply Chain Security → `.claude/principles/P034.md`
+- **P040**: Dependency Management → `.claude/principles/P040.md`
+
+**Testing Principles:**
+- **P041**: Test Coverage Targets → `.claude/principles/P041.md`
+- **P043**: Integration Tests for Critical Paths → `.claude/principles/P043.md`
+- **P045**: CI Gates → `.claude/principles/P045.md`
+
+**Universal Principles:**
+- **U001**: Evidence-Based Verification → `.claude/principles/U001.md`
+- **U013**: Change Verification Protocol → `.claude/principles/U013.md`
+
+**Additional Requirements:**
 - Provide file:line references for all findings
 - Include confidence scores for automated detections
 

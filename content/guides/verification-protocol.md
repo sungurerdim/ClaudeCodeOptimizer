@@ -127,13 +127,8 @@ mypy src/
 
 ---
 
-## Principle Reference
+## Principle References
 
-This guide implements **U001: Evidence-Based Verification**
-
-See: [@PRINCIPLES.md](../PRINCIPLES.md) or [@~/.cco/principles/core.md](../principles/core.md)
-
----
-
-*Part of CCO Documentation System*
-*Load when needed: @~/.cco/guides/verification-protocol.md*
+**Universal Principles:**
+- **U001**: Evidence-Based Verification → `.claude/principles/U001.md`
+- **U013**: Change Verification Protocol → `.claude/principles/U013.md`

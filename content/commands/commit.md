@@ -287,13 +287,12 @@ Co-Authored-By: Claude <noreply@anthropic.com>
 ```
 
 ```
-feat(principles): add universal principles system
+feat(docs): restructure documentation system
 
-- Add U001-U012 universal principles (always active)
-- Migrate from principles.json to .md frontmatter (SSOT)
-- Add python-frontmatter for metadata parsing
-- Add principle_md_loader module for unified loading
-- Update 6 core files to use new loader
+- Create content/ structure with progressive disclosure
+- Split principles by category (code, security, testing, etc.)
+- Add on-demand loading for guides and specialized content
+- Reduce CLAUDE.md token footprint significantly
 
 Co-Authored-By: Claude <noreply@anthropic.com>
 ```

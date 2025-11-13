@@ -88,7 +88,7 @@ Use for comprehensive analysis:
 sandbox_config = {
     "allowed_paths": [
         os.getcwd(),  # Current project
-        "~/.cco/",    # CCO data
+        "~/.config/myapp/",    # App data directory
     ],
     "blocked_paths": [
         "/etc/",      # System config
@@ -289,17 +289,27 @@ pytest tests/security/ -v
 2. Update security policies
 3. Improve detection mechanisms
 4. Team training on lessons learned
-5. Update CCO security principles if needed
+5. Update project security principles if needed
 
 ---
 
 ## Principle References
 
-- **P019-P037**: Security & Privacy Principles
-
-See: [@~/.cco/principles/security.md](../principles/security.md)
-
----
-
-*Part of CCO Documentation System*
-*Load when needed: @~/.cco/guides/security-response.md*
+**Security & Privacy Principles:**
+- **P022**: Schema-First Validation → `.claude/principles/P022.md`
+- **P023**: Privacy-First by Default → `.claude/principles/P023.md`
+- **P025**: Encryption Everywhere → `.claude/principles/P025.md`
+- **P026**: Zero Disk Touch → `.claude/principles/P026.md`
+- **P027**: Authentication & Authorization → `.claude/principles/P027.md`
+- **P028**: SQL Injection Prevention → `.claude/principles/P028.md`
+- **P029**: Secret Management with Rotation → `.claude/principles/P029.md`
+- **P030**: Rate Limiting & Throttling → `.claude/principles/P030.md`
+- **P032**: Input Sanitization (XSS Prevention) → `.claude/principles/P032.md`
+- **P033**: Audit Logging → `.claude/principles/P033.md`
+- **P034**: Supply Chain Security → `.claude/principles/P034.md`
+- **P035**: AI/ML Security → `.claude/principles/P035.md`
+- **P036**: Container Security → `.claude/principles/P036.md`
+- **P037**: Kubernetes Security → `.claude/principles/P037.md`
+- **P038**: Zero Trust Architecture → `.claude/principles/P038.md`
+- **P039**: Privacy Compliance → `.claude/principles/P039.md`
+- **P040**: Dependency Management → `.claude/principles/P040.md`
