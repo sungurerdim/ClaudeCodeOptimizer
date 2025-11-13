@@ -120,14 +120,12 @@ pip install claudecodeoptimizer
 - `agents/` - Task-specific agent definitions (deployed from content/agents/)
 - `templates/` - Optional template files (reference only, not auto-deployed):
   - `settings.json.template` - Claude Code settings example
-  - `statusline.js.template` - Status line script example
   - Other project templates (.editorconfig, .pre-commit-config.yaml, etc.)
 - `projects/` - Project registries directory
 - `config.json` - Global CCO configuration
 - `.installed` - Installation marker
 
 **Project Local (`.claude/`)** - Created during `/cco-init`:
-- `project.json` - AI selections, detection results, command overrides (runtime config)
 - `principles/` - Links to principles (using preference order):
   - All universal principles (U001-U014, 14 files, always included)
   - Selected project principles (P001-P069, 20-40 files, AI-selected)
@@ -137,15 +135,6 @@ pip install claudecodeoptimizer
 - `agents/` - Links to task agents (if any)
 - `CLAUDE.md` (in project root) - Minimal guide with principle references
 
-**Project Configuration (`.claude/project.json`)** - Runtime config:
-- Detection results (languages, frameworks, tools, team size, maturity, security level)
-- Selected principles (universal + project-specific)
-- Command overrides (dynamic principle loading per command)
-- Selected commands, guides, skills, agents
-- Wizard mode used (quick/interactive)
-- Initialization timestamp
-
-**Zero pollution philosophy:** All data lives in `~/.cco/`, projects only contain links + minimal config. Global `~/.claude/` has only 2 CCO commands (init/remove).
 
 ---
 
@@ -180,7 +169,6 @@ cd /path/to/your/project
   - Project-specific principles (P001-P069, 20-40 AI-selected)
 - ✅ Specialized commands ready to use (8-15 selected from 28 available)
 - ✅ `CLAUDE.md` with minimal principle references (existing content preserved)
-- ✅ `.claude/project.json` storing AI selections (runtime dynamic loading)
 - ✅ First audit report showing code quality, security, and test status
 
 **Typical output:** "Found 12 code quality issues, 3 security concerns, test coverage at 45%"
@@ -336,7 +324,6 @@ The features you'll use immediately to get value from CCO.
 └── commands/                    # 28 specialized commands
 
 project/.claude/                 # Project-specific configuration
-├── project.json                 # AI selections + runtime config (KEY FILE)
 ├── principles/                  # Symlinks to selected principles
 │   ├── U001.md → ~/.cco/principles/U001.md  # Universal (all)
 │   ├── U002.md → ~/.cco/principles/U002.md  # Universal (all)
@@ -351,24 +338,6 @@ project/.claude/                 # Project-specific configuration
 ```
 
 **Dynamic Loading (NEW)**:
-
-Commands read `.claude/project.json` at runtime to load only needed principles:
-
-```json
-{
-  "selected_principles": {
-    "universal": ["U001", "U002", "...", "U012"],
-    "code_quality": ["P002", "P003", "P004"],
-    "security_privacy": ["P036", "P037", "P038"]
-  },
-  "command_overrides": {
-    "cco-audit-security": {
-      "principles": ["U001", "P036", "P037", "P038"],
-      "reason": "Standard API security - core validations only"
-    }
-  }
-}
-```
 
 **CLAUDE.md Format (Minimal)**:
 ```markdown
@@ -433,7 +402,6 @@ Follow the principles in `.claude/principles/`:
 **Result**:
 - All universal principles (U001-U0XX) symlinked automatically
 - Only applicable project principles (typically 20-40 from 74) symlinked
-- Selections saved to `.claude/project.json` for runtime dynamic loading
 
 ---
 
@@ -638,7 +606,7 @@ pip install -e ".[dev]"
 
 **What happens during installation:**
 1. Installs Python package from PyPI
-2. Deploys knowledge base from `content/` to `~/.cco/`:
+2. Deploys principles, guides, commands, and skills from `content/` to `~/.cco/`:
    - `commands/` - 28 command files (from content/commands/)
    - `principles/` - 74 principle files (from content/principles/)
    - `guides/` - Comprehensive guides (from content/guides/)
@@ -646,7 +614,6 @@ pip install -e ".[dev]"
    - `agents/` - Task-specific agents (from content/agents/)
    - `templates/` - Optional template files (reference only):
      - `settings.json.template` - Claude Code settings example
-     - `statusline.js.template` - Status line script example
      - Other project templates (.editorconfig, .pre-commit-config.yaml, etc.)
    - `projects/` - Project registry directory (empty initially)
 3. Creates `config.json` with global configuration
@@ -693,7 +660,6 @@ pip install -e ".[dev]"
 
 **Phase 3: File Generation**
 14. Creates `.claude/` directory structure using preference order (symlink → hardlink → copy):
-    - `.claude/project.json` - AI selections + runtime config (NEW)
     - `.claude/principles/` - Links to principles:
       - All universal principles (U001-U014, 14 files, always)
       - Selected project principles (P001-P069, 20-40 files, AI-selected)
@@ -701,12 +667,11 @@ pip install -e ".[dev]"
     - `.claude/guides/` - Links to relevant guides
     - `.claude/skills/` - Links to language skills
     - `.claude/agents/` - Links to task agents (if any)
-    - `.claude/statusline.js` - Link to ~/.cco/templates/statusline.js
 15. Generates/updates `CLAUDE.md`:
     - If no existing CLAUDE.md: Creates minimal guide with principle references
     - If existing CLAUDE.md: Appends CCO section (preserves existing content)
     - No user approval needed (append-only, uninstall-safe)
-16. Optionally copies `settings.json` from ~/.cco/templates/settings.json (always copied, not linked)
+16. Reference: see `~/.cco/templates/settings.json.template` for Claude Code settings example (optional, not deployed)
 17. Updates `.gitignore` to exclude CCO-generated temp files (if applicable)
 
 **Phase 4: Registration**
@@ -843,9 +808,8 @@ pip install --force-reinstall claudecodeoptimizer
 ### Core Design Principles
 
 1. **Zero Pollution** - Global storage with local links, no project-specific CCO files
-2. **Single Source of Truth** - All knowledge in `content/` (repo), deployed to `~/.cco/` (global), projects reference via links
-3. **Progressive Disclosure** - Load only applicable principles/guides, not entire knowledge base
-4. **Dynamic Loading** - Commands read `.claude/project.json` at runtime for project-specific principle loading
+2. **Single Source of Truth** - All principles, guides, commands, and skills in `content/` (repo), deployed to `~/.cco/` (global), projects reference via links
+3. **Progressive Disclosure** - Load only applicable principles/guides, not entire principle set
 5. **Two-Tier Principles** - Universal (U001-U014, always) + Project-specific (P001-P069, AI-selected)
 6. **Minimal CLAUDE.md** - Reference-based, not template-driven; existing content preserved
 7. **Evidence-Based** - AI detection with confidence scores and evidence trails
@@ -923,8 +887,7 @@ content/                   # Single source of truth (tracked in git)
 │   └── incremental-improvement.md    # Cross-language development skill
 ├── agents/               # Task-specific agents (deployed from content/agents/)
 ├── templates/            # Template files (deployed from templates/*.template)
-│   ├── settings.json    # Deployed from settings.json.template (extension removed)
-│   ├── statusline.js    # Deployed from statusline.js.template (extension removed)
+│   ├── settings.json.template    # Optional template reference (not deployed)
 │   └── *.template files for projects (editorconfig, pre-commit, etc.)
 ├── projects/             # Project registries (<project>.json)
 ├── config.json           # Global CCO configuration
@@ -934,7 +897,6 @@ content/                   # Single source of truth (tracked in git)
 **Project Structure (`.claude/`):**
 ```
 project/.claude/          # Linked from global (using preference order)
-├── project.json         # AI selections + runtime config (KEY FILE)
 ├── principles/          # Links to selected principles
 │   ├── U001.md → ~/.cco/principles/U001.md (universal, always)
 │   ├── U002.md → ~/.cco/principles/U002.md (universal, always)
@@ -951,8 +913,7 @@ project/.claude/          # Linked from global (using preference order)
 │   └── python/
 │       └── testing-pytest.md → ~/.cco/skills/python/testing-pytest.md
 ├── agents/              # Links to task agents (if any)
-├── statusline.js → ~/.cco/templates/statusline.js
-└── settings.json        # Copy of ~/.cco/templates/settings.json (not linked)
+└── settings.json.template    # Optional template reference (example configuration)
 
 project/CLAUDE.md        # Minimal guide with principle references
 ```
@@ -961,9 +922,7 @@ project/CLAUDE.md        # Minimal guide with principle references
 - All links use preference order (symlink → hardlink → copy)
 - Universal principles (U001-U014) always linked to every project
 - Project principles (P001-P069) only selected ones linked (AI-selected)
-- `.claude/project.json` stores AI selections for runtime dynamic loading
-- `settings.json` is always copied (not linked) to allow project-specific customization
-- `statusline.js` is linked for auto-updates when CCO is upgraded
+- `settings.json.template` is optional template reference (not deployed to projects)
 - `CLAUDE.md` is minimal with references, not template-based (existing content preserved)
 
 **Source Code:**
@@ -976,7 +935,7 @@ ClaudeCodeOptimizer/
 │   │   └── recommendations.py # Cascading decision recommendations
 │   ├── core/                  # Core installation & generation logic
 │   │   ├── installer.py       # Global CCO installation
-│   │   ├── knowledge_setup.py # Knowledge base deployment
+│   │   ├── content_deployer.py # Content deployment (principles, guides, commands, skills)
 │   │   ├── claude_md_generator.py  # Template-based CLAUDE.md generation
 │   │   ├── principle_selector.py   # Dynamic principle selection
 │   │   ├── linking.py         # Symlink/hardlink/copy management
@@ -1025,8 +984,7 @@ ClaudeCodeOptimizer/
   - ✅ python-frontmatter library integration for metadata parsing
   - ✅ principle_md_loader module for unified loading
   - ✅ 6 core files refactored (principles.py, loader, selector, generator, orchestrator)
-  - ✅ Template updates (CLAUDE.md.template, settings.json.template, statusline.js.template)
-  - ✅ Statusline enhancements (semantic colors, cross-platform compatibility)
+  - ✅ Template updates (CLAUDE.md.template)
 - ✅ GitHub Actions: Security workflow fixes
 - ✅ Code Quality: All ruff checks passed (F841, S110 fixed)
 - ✅ Error Handling: P001 violations fixed (14 try-except-pass instances)
@@ -1106,7 +1064,6 @@ CCO creates only `.claude/` directory with links (using preference order):
 your-project/
 ├── CLAUDE.md              # Minimal guide with principle references
 └── .claude/
-    ├── project.json       # AI selections + runtime config (KEY FILE)
     ├── principles/        # Links to ~/.cco/principles/
     │   ├── U001.md → ~/.cco/principles/U001.md (universal, always)
     │   ├── U002.md → ~/.cco/principles/U002.md (universal, always)
@@ -1125,14 +1082,12 @@ your-project/
     │   └── python/
     │       └── testing-pytest.md → ~/.cco/skills/python/testing-pytest.md
     ├── agents/            # Links to ~/.cco/agents/ (if any)
-    ├── statusline.js → ~/.cco/templates/statusline.js
-    └── settings.json      # Copy (not link) of ~/.cco/templates/settings.json
+    └── settings.json.template    # Optional template reference
 ```
 
 **That's it!**
 - No `.cco/` directory in project root
-- Minimal duplication (only settings.json copied)
-- Dynamic loading via project.json
+- Zero duplication (all files linked, no copies deployed)
 - Global `~/.claude/` has only 2 CCO commands (init/remove)
 - Zero pollution philosophy maintained
 
@@ -1158,8 +1113,7 @@ All actual data lives here (deployed from repository during installation):
 │   └── incremental-improvement.md    # Cross-language development skill
 ├── agents/                # 3 task-specific agents: audit, fix, generate (deployed from content/agents/)
 ├── templates/             # Templates (deployed from templates/*.template, extensions removed)
-│   ├── settings.json     # From settings.json.template
-│   ├── statusline.js     # From statusline.js.template
+│   ├── settings.json.template     # Optional template reference
 │   └── ... (other project templates)
 ├── projects/              # Project registries
 │   └── MyProject.json    # Configuration, detection results, selections, command overrides
@@ -1170,23 +1124,13 @@ All actual data lives here (deployed from repository during installation):
 ### What Gets Committed to Git?
 
 **Recommended** (team collaboration):
-- ✅ `.claude/project.json` - Runtime config (team uses same AI selections)
 - ✅ `.claude/commands/` - Links (team sees which commands are active)
 - ✅ `.claude/principles/` - Links (team follows same principles: U*.md + selected P*.md)
 - ✅ `.claude/guides/` - Links (team uses same guides)
 - ✅ `.claude/skills/` - Links (team uses same skills)
-- ✅ `.claude/statusline.js` - Link (team uses same statusline)
 - ✅ `CLAUDE.md` - Project guide (team reference)
-- ✅ `.claude/settings.json` - Optional (shared permissions)
+- [Optional] `settings.json.template` - Example configuration (not auto-deployed)
 
-**Why commit links + project.json?**
-- Team members see which principles/commands are active
-- Everyone runs `/cco-init` and `pip install claudecodeoptimizer` to create their own `~/.cco/` structure
-- Links point to their own global storage (using preference order on their OS)
-- `project.json` ensures everyone uses same AI-selected configuration
-- Commands dynamically load same principles at runtime
-- Consistent configuration across team
-- Works with symlinks, hardlinks, or copies depending on each team member's OS
 
 **Optional** (add to `.gitignore` if preferred):
 - ❌ `.claude/` - If you want CCO to be personal preference only
@@ -1203,18 +1147,16 @@ CCO is designed for easy, clean removal:
 
 **What `/cco-remove` does:**
 1. Removes all CCO-created links:
-   - `.claude/project.json` (runtime config)
    - `.claude/commands/cco-*.md` (symlinks/hardlinks/copies)
    - `.claude/principles/` (all linked principle files: U*.md + P*.md)
    - `.claude/guides/` (all linked guide files)
    - `.claude/skills/` (all linked skill files)
    - `.claude/agents/` (all linked agent files, if any)
-   - `.claude/statusline.js` (link to template)
 2. Optionally removes CCO section from `CLAUDE.md`:
    - Removes content between `<!-- CCO_START -->` and `<!-- CCO_END -->`
    - Preserves existing project-specific content
    - Asks for confirmation
-3. Optionally removes `.claude/settings.json` (if CCO-generated, asks for confirmation)
+3. Does not remove user-customized `.claude/settings.json` if present (created manually)
 4. Removes project registry from `~/.cco/projects/<project>.json`
 5. Displays removal summary
 6. Keeps global `~/.cco/` intact (ready for other projects)
@@ -1227,14 +1169,12 @@ CCO is designed for easy, clean removal:
 **Option 2: Manual Project Removal**
 ```bash
 # Remove all CCO links and files
-rm .claude/project.json                 # Remove runtime config
 rm -rf .claude/commands/cco-*.md       # Remove command links
 rm -rf .claude/principles/              # Remove principle links (U*.md + P*.md)
 rm -rf .claude/guides/                  # Remove guide links
 rm -rf .claude/skills/                  # Remove skill links
 rm -rf .claude/agents/                  # Remove agent links (if any)
-rm .claude/statusline.js                # Remove statusline link
-rm .claude/settings.json                # Optional: only if CCO-generated
+# rm .claude/settings.json                # Only if you created it manually
 
 # Remove CCO section from CLAUDE.md (optional)
 # Manually delete lines between <!-- CCO_START --> and <!-- CCO_END -->
