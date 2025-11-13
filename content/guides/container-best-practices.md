@@ -515,11 +515,11 @@ syncPolicy:
 ## Principle References
 
 - **P059-P063**: Operational Excellence Principles
-  - P059: Minimal Host Responsibility (containers)
-  - P060: Infrastructure as Code
-  - P061: Observability & Monitoring
-  - P062: Automated Health Checks
-  - P063: Config-as-Code
+  - P059: Configuration as Code
+  - P060: Infrastructure as Code + GitOps
+  - P061: Observability with OpenTelemetry
+  - P062: Health Checks & Readiness Probes
+  - P063: Graceful Shutdown
 
 See: [@~/.cco/principles/operations.md](../principles/operations.md)
 

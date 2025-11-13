@@ -20,7 +20,7 @@ This guide covers the complete Git workflow for CCO projects. Workflow strategy 
 - ✅ No feature branches (solo dev = no need)
 - ✅ Rollback via commit history if needed
 
-**Rationale**: P071 (Anti-Overengineering) - Branch complexity unnecessary for solo projects
+**Rationale**: U011 (No Overengineering) - Branch complexity unnecessary for solo projects
 
 ### GitHub Flow (Small Teams)
 
@@ -50,7 +50,7 @@ This guide covers the complete Git workflow for CCO projects. Workflow strategy 
 
 ### Format (Compact)
 
-**P072: Concise Commit Messages** - Essential info only, no verbosity
+**U010: Concise Commit Messages** - Essential info only, no verbosity
 
 ```
 type(scope): concise description (max 72 chars)
@@ -93,7 +93,7 @@ skills, core, cli, tests, docs, deps, ci
 
 **✅ Good - Compact & Informative**:
 ```bash
-refactor(ci): consolidate tools to prevent overlap (P071)
+refactor(ci): consolidate tools to prevent overlap (U011)
 
 - Replace Black/Bandit/mypy with Ruff (format+lint+security)
 - Remove tool configs from pyproject.toml
@@ -408,8 +408,8 @@ git checkout <commit-hash>
 
 ## Principle References
 
-- **P071**: Anti-Overengineering (Branch strategy)
-- **P067**: Evidence-Based Verification (Commit verification)
+- **U011**: No Overengineering (Branch strategy)
+- **U001**: Evidence-Based Verification (Commit verification)
 
 See: [@~/.cco/principles/git-workflow.md](../principles/git-workflow.md)
 
