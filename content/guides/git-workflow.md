@@ -269,11 +269,6 @@ git commit -m "fix(wizard): install only recommended commands
 Closes #P0.1-Task2"
 
 git push origin main
-
-# End of day: Update TODO
-git add TODO.md
-git commit -m "docs(todo): mark P0.1 tasks 1-2 as complete"
-git push origin main
 ```
 
 ---

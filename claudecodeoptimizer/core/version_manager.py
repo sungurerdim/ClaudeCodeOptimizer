@@ -253,13 +253,12 @@ class VersionManager:
             # No tags yet
             return "0.0.0", []
 
-    def auto_bump(self, create_tag: bool = False, **kwargs) -> Optional[str]:
+    def auto_bump(self, create_tag: bool = False) -> Optional[str]:
         """
         Automatically bump version based on commits since last tag.
 
         Args:
             create_tag: If True, create git tag
-            **kwargs: Ignored (for backward compatibility)
 
         Returns:
             New version string, or None if no bump needed

@@ -273,43 +273,6 @@ class PrincipleLoader:
         self._cache[principle_id] = content
         return content
 
-    def load_category(self, category: str) -> str:
-        """
-        Load a specific principle category (DEPRECATED - use load_principle).
-
-        This method is kept for backward compatibility.
-
-        Args:
-            category: Category name (e.g., "core", "security", "code-quality")
-
-        Returns:
-            Category principle content
-
-        Token estimates:
-            - core: ~500 tokens
-            - code-quality: ~1400 tokens
-            - security: ~1900 tokens
-            - testing: ~600 tokens
-            - architecture: ~1100 tokens
-            - performance: ~500 tokens
-            - operations: ~1100 tokens
-            - git-workflow: ~500 tokens
-            - api-design: ~300 tokens
-        """
-        # Check cache
-        if category in self._cache:
-            return self._cache[category]
-
-        # Load from file
-        category_file = self.principles_dir / f"{category}.md"
-
-        if not category_file.exists():
-            return ""
-
-        content = category_file.read_text(encoding="utf-8")
-        self._cache[category] = content
-        return content
-
     def load_all_principles(self) -> str:
         """
         Load all principle categories.
