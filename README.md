@@ -112,9 +112,9 @@ pip install claudecodeoptimizer
 
 **Global CCO Storage (`~/.cco/`)** - Created once during installation:
 - `commands/` - 28 specialized commands (deployed from content/commands/)
-- `principles/` - Individual principle files (deployed from content/principles/):
-  - `U001.md - U0XX.md` - Universal principles (~12 files, auto-included in all projects)
-  - `P001.md - P074.md` - Project-specific principles (74 files, AI-selected per project)
+- `principles/` - Individual principle files with frontmatter (deployed from content/principles/):
+  - `U001.md - U012.md` - Universal principles (12 files, auto-included in all projects)
+  - `P001.md - P069.md` - Project-specific principles (69 files, AI-selected per project)
 - `guides/` - Comprehensive guides (deployed from content/guides/)
 - `skills/` - Language-specific skills (deployed from content/skills/)
 - `agents/` - Task-specific agent definitions (deployed from content/agents/)
@@ -129,8 +129,8 @@ pip install claudecodeoptimizer
 **Project Local (`.claude/`)** - Created during `/cco-init`:
 - `project.json` - AI selections, detection results, command overrides (runtime config)
 - `principles/` - Links to principles (using preference order):
-  - All universal principles (U001-U0XX, ~12 files, always included)
-  - Selected project principles (P001-P074, 20-40 files, AI-selected)
+  - All universal principles (U001-U012, 12 files, always included)
+  - Selected project principles (P001-P069, 20-40 files, AI-selected)
 - `commands/` - Links to selected commands (8-15 from 28 available)
 - `guides/` - Links to relevant guides
 - `skills/` - Links to language skills
@@ -178,8 +178,8 @@ cd /path/to/your/project
 
 **What you'll have after 5 minutes:**
 - ✅ Project configured with principles:
-  - Universal principles (U001-U0XX, ~12 always included)
-  - Project-specific principles (P001-P074, 20-40 AI-selected)
+  - Universal principles (U001-U012, 12 always included)
+  - Project-specific principles (P001-P069, 20-40 AI-selected)
 - ✅ Specialized commands ready to use (8-15 selected from 28 available)
 - ✅ `CLAUDE.md` with minimal principle references (existing content preserved)
 - ✅ `.claude/project.json` storing AI selections (runtime dynamic loading)
@@ -355,11 +355,11 @@ The features you'll use immediately to get value from CCO.
 └── cco-remove.md                # Remove CCO
 
 ~/.cco/                          # All CCO data (single source of truth)
-├── principles/                  # Individual principle files
-│   ├── U001.md - U0XX.md       # Universal principles (~12 files)
+├── principles/                  # Individual principle files with frontmatter
+│   ├── U001.md - U012.md       # Universal principles (12 files)
 │   │                            # Always included in every project
 │   │                            # Model selection, verification, token optimization, etc.
-│   └── P001.md - P074.md       # Project-specific principles (74 files)
+│   └── P001.md - P069.md       # Project-specific principles (69 files)
 │                                # AI-selected per project (typically 20-40 selected)
 │                                # Categories: code quality, security, architecture, etc.
 ├── guides/                      # 5 comprehensive how-to guides
@@ -423,8 +423,8 @@ Commands read `.claude/project.json` at runtime to load only needed principles:
 ## Development Principles & Guidelines
 
 Follow the principles in `.claude/principles/`:
-- Universal principles (U001-U0XX): Apply to all projects
-- Project-specific principles (P001-P074): Selected for this project
+- Universal principles (U001-U012): Apply to all projects
+- Project-specific principles (P001-P069): Selected for this project
 
 <!-- CCO_END -->
 ```
@@ -455,7 +455,7 @@ Follow the principles in `.claude/principles/`:
 - No overengineering
 - Fail-fast error handling
 
-**Project-Specific Principles (P001-P074, 74 files, AI-selected)**:
+**Project-Specific Principles (P001-P069, 69 files, AI-selected)**:
 - **API Design** (2): RESTful conventions, error handling
 - **Architecture** (10): Event-driven, microservices, separation of concerns, SOLID principles
 - **Code Quality** (14): DRY, type safety, immutability, precision, documentation
@@ -741,8 +741,8 @@ pip install -e ".[dev]"
 14. Creates `.claude/` directory structure using preference order (symlink → hardlink → copy):
     - `.claude/project.json` - AI selections + runtime config (NEW)
     - `.claude/principles/` - Links to principles:
-      - All universal principles (U001-U0XX, ~12 files, always)
-      - Selected project principles (P001-P074, 20-40 files, AI-selected)
+      - All universal principles (U001-U012, 12 files, always)
+      - Selected project principles (P001-P069, 20-40 files, AI-selected)
     - `.claude/commands/` - Links to selected global commands (8-15 from 28 available)
     - `.claude/guides/` - Links to relevant guides
     - `.claude/skills/` - Links to language skills
@@ -892,7 +892,7 @@ pip install --force-reinstall claudecodeoptimizer
 2. **Single Source of Truth** - All knowledge in `content/` (repo), deployed to `~/.cco/` (global), projects reference via links
 3. **Progressive Disclosure** - Load only applicable principles/guides, not entire knowledge base
 4. **Dynamic Loading** - Commands read `.claude/project.json` at runtime for project-specific principle loading
-5. **Two-Tier Principles** - Universal (U001-U0XX, always) + Project-specific (P001-P074, AI-selected)
+5. **Two-Tier Principles** - Universal (U001-U012, always) + Project-specific (P001-P069, AI-selected)
 6. **Minimal CLAUDE.md** - Reference-based, not template-driven; existing content preserved
 7. **Evidence-Based** - AI detection with confidence scores and evidence trails
 8. **Anti-Overengineering** - Simplest solution that works, no premature abstraction
@@ -927,9 +927,9 @@ This is a **preference order**, not a fallback. CCO tries each method until find
 ```
 content/                   # Single source of truth (tracked in git)
 ├── commands/             # 28 command source files (*.md)
-├── principles/           # Principle source files (*.md)
-│   ├── U001.md - U0XX.md    # Universal principles (~12 files)
-│   └── P001.md - P074.md    # Project-specific principles (74 files)
+├── principles/           # Principle source files (*.md with frontmatter)
+│   ├── U001.md - U012.md    # Universal principles (12 files)
+│   └── P001.md - P069.md    # Project-specific principles (69 files)
 ├── guides/               # Comprehensive guide source files (*.md)
 ├── skills/               # Language-specific and cross-language skill source files
 │   ├── python/          # async-patterns, packaging, testing, type-hints, performance
@@ -954,9 +954,9 @@ content/                   # Single source of truth (tracked in git)
 ```
 ~/.cco/                   # Deployed from content/ during pip install
 ├── commands/             # 28 commands (deployed from content/commands/)
-├── principles/           # Individual principle files (deployed from content/principles/)
-│   ├── U001.md - U0XX.md    # Universal principles (~12 files)
-│   └── P001.md - P074.md    # Project-specific principles (74 files)
+├── principles/           # Individual principle files with frontmatter (deployed from content/principles/)
+│   ├── U001.md - U012.md    # Universal principles (12 files)
+│   └── P001.md - P069.md    # Project-specific principles (69 files)
 ├── guides/               # 5 comprehensive guides (deployed from content/guides/)
 ├── skills/               # Language-specific and cross-language skills (deployed from content/skills/)
 │   ├── python/          # Python-specific skills
@@ -1005,8 +1005,8 @@ project/CLAUDE.md        # Minimal guide with principle references
 
 **Key Points:**
 - All links use preference order (symlink → hardlink → copy)
-- Universal principles (U001-U0XX) always linked to every project
-- Project principles (P001-P074) only selected ones linked (AI-selected)
+- Universal principles (U001-U012) always linked to every project
+- Project principles (P001-P069) only selected ones linked (AI-selected)
 - `.claude/project.json` stores AI selections for runtime dynamic loading
 - `settings.json` is always copied (not linked) to allow project-specific customization
 - `statusline.js` is linked for auto-updates when CCO is upgraded
@@ -1034,13 +1034,9 @@ ClaudeCodeOptimizer/
 │   │   ├── system_detection.py   # OS/shell/locale detection
 │   │   ├── ui_adapter.py     # Claude Code UI integration
 │   │   └── renderer.py        # Terminal UI fallback
-│   ├── knowledge/             # Knowledge base source
-│   │   ├── principles.json   # 74 principles metadata
-│   │   ├── agents/           # Agent definitions
-│   │   └── skills/           # Skill definitions
-│   ├── commands/              # Command source files
 │   ├── schemas/               # Data models (Pydantic)
-│   └── skills/                # Language-specific skills source
+│   │   └── project_config.py  # Project configuration schema
+│   └── install_hook.py        # Post-install hook for pip install
 └── tests/                     # Test suite (in progress)
 ```
 
@@ -1050,7 +1046,7 @@ ClaudeCodeOptimizer/
 
 ### ✅ v0.1.0-alpha (Complete)
 - Interactive wizard with 3-tier decision tree
-- 74 principles across 8 categories
+- 81 principles (12 universal + 69 project-specific) across 9 categories
 - Universal detection engine
 - 28 slash commands
 - Multi-agent orchestration
@@ -1069,13 +1065,21 @@ ClaudeCodeOptimizer/
   - ✅ Report management system with Windows compatibility
   - ✅ Principles split by category (9 files)
   - ✅ On-demand guides (5 comprehensive guides)
+- ✅ P0.3: PRINCIPLE LOADING REFACTOR COMPLETE
+  - ✅ Single Source of Truth (SSOT): .md files with frontmatter (principles.json removed)
+  - ✅ Universal principles system (U001-U012) always active
+  - ✅ python-frontmatter library integration for metadata parsing
+  - ✅ principle_md_loader module for unified loading
+  - ✅ 6 core files refactored (principles.py, loader, selector, generator, orchestrator)
+  - ✅ Template updates (CLAUDE.md.template, settings.json.template, statusline.js.template)
+  - ✅ Statusline enhancements (semantic colors, cross-platform compatibility)
 - ✅ GitHub Actions: Security workflow fixes
 - ✅ Code Quality: All ruff checks passed (F841, S110 fixed)
 - ✅ Error Handling: P001 violations fixed (14 try-except-pass instances)
 - ✅ Type Safety: All type annotations complete (ANN checks passed)
 - ✅ Backup Management: /cco-remove backup notification
-- ⏳ P0.3: Progressive disclosure for skills (3-tier loading)
-- ⏳ P0.0: Smart Git Commit skill (universal, works in any project)
+- ⏳ P0.4: Progressive disclosure for skills (3-tier loading)
+- ⏳ P0.5: Smart Git Commit skill (universal, works in any project)
 - ⏳ Testing: 0% → 60% coverage
 - ⏳ CI/CD: Automated testing, linting, security scans
 
@@ -1185,9 +1189,9 @@ All actual data lives here (deployed from repository during installation):
 ```
 ~/.cco/
 ├── commands/              # 28 commands (deployed from content/commands/)
-├── principles/            # Individual principle files (deployed from content/principles/)
-│   ├── U001.md - U0XX.md     # Universal principles (~12 files)
-│   └── P001.md - P074.md     # Project-specific principles (74 files)
+├── principles/            # Individual principle files with frontmatter (deployed from content/principles/)
+│   ├── U001.md - U012.md     # Universal principles (12 files)
+│   └── P001.md - P069.md     # Project-specific principles (69 files)
 ├── guides/                # 5 comprehensive guides (deployed from content/guides/)
 ├── skills/                # Language-specific and cross-language skills (deployed from content/skills/)
 │   ├── python/           # Python-specific skills
@@ -1336,7 +1340,7 @@ CCO aims to solve common challenges in AI-assisted development:
 **Quality & Reliability:**
 - Evidence-based verification prevents silent failures
 - Anti-overengineering principles prevent bloat
-- Comprehensive principle coverage (74 principles, 8 categories)
+- Comprehensive principle coverage (81 principles: 12 universal + 69 project-specific, 9 categories)
 - Progressive disclosure minimizes token waste
 
 **Team Collaboration:**
