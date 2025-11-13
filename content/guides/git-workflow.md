@@ -281,7 +281,7 @@ git push origin main
 - [ ] Code formatted (`ruff format --check .`)
 - [ ] Linter clean (`ruff check .`)
 - [ ] No security vulnerabilities (`pip-audit --desc`)
-- [ ] No exposed secrets (`/cco-scan-secrets` or `python -m claudecodeoptimizer scan-secrets`)
+- [ ] No exposed secrets (`gitleaks detect --source . --verbose` or `/cco-scan-secrets` in Claude Code)
 - [ ] No debug code or commented blocks
 - [ ] Commit message follows format
 - [ ] Related docs updated
@@ -301,8 +301,8 @@ ruff check .
 # 4. Security: Dependencies
 pip-audit --desc
 
-# 5. Security: Secrets
-python -m claudecodeoptimizer scan-secrets
+# 5. Security: Secrets (requires gitleaks: https://github.com/gitleaks/gitleaks)
+gitleaks detect --source . --verbose
 
 # 6. Tests
 pytest tests/ -v
@@ -329,7 +329,7 @@ echo "✓ Security: Dependencies..."
 pip-audit --desc
 
 echo "✓ Security: Secrets..."
-python -m claudecodeoptimizer scan-secrets
+gitleaks detect --source . --verbose
 
 echo "✓ Tests..."
 pytest tests/ -v
