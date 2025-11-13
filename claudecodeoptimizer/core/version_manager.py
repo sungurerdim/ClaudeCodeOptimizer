@@ -17,6 +17,7 @@ from typing import List, Optional, Tuple
 
 class BumpType(Enum):
     """Version bump types"""
+
     MAJOR = "major"
     MINOR = "minor"
     PATCH = "patch"
@@ -30,7 +31,7 @@ class VersionManager:
     Implements P052: Automated Semantic Versioning
     """
 
-    def __init__(self, project_root: Path):
+    def __init__(self, project_root: Path) -> None:
         self.project_root = project_root
 
     def detect_bump_type(self, commit_messages: List[str]) -> BumpType:
@@ -139,7 +140,7 @@ class VersionManager:
 
         return version_files
 
-    def update_version_files(self, new_version: str, files: Optional[List[Path]] = None):
+    def update_version_files(self, new_version: str, files: Optional[List[Path]] = None) -> None:
         """
         Update version in all relevant files.
 
@@ -153,32 +154,22 @@ class VersionManager:
         for file_path in files:
             self._update_version_in_file(file_path, new_version)
 
-    def _update_version_in_file(self, file_path: Path, new_version: str):
+    def _update_version_in_file(self, file_path: Path, new_version: str) -> None:
         """Update version in a specific file"""
         content = file_path.read_text(encoding="utf-8")
 
         if file_path.name == "pyproject.toml":
             # Update: version = "1.2.3"
-            content = re.sub(
-                r'version\s*=\s*"[^"]*"',
-                f'version = "{new_version}"',
-                content
-            )
+            content = re.sub(r'version\s*=\s*"[^"]*"', f'version = "{new_version}"', content)
 
         elif file_path.name == "package.json":
             # Update: "version": "1.2.3"
-            content = re.sub(
-                r'"version"\s*:\s*"[^"]*"',
-                f'"version": "{new_version}"',
-                content
-            )
+            content = re.sub(r'"version"\s*:\s*"[^"]*"', f'"version": "{new_version}"', content)
 
         elif file_path.name == "__init__.py":
             # Update: __version__ = "1.2.3"
             content = re.sub(
-                r'__version__\s*=\s*["\'][^"\']*["\']',
-                f'__version__ = "{new_version}"',
-                content
+                r'__version__\s*=\s*["\'][^"\']*["\']', f'__version__ = "{new_version}"', content
             )
 
         elif file_path.name == "Cargo.toml":
@@ -187,7 +178,7 @@ class VersionManager:
                 r'version\s*=\s*"[^"]*"',
                 f'version = "{new_version}"',
                 content,
-                count=1  # Only first occurrence (package version, not dependencies)
+                count=1,  # Only first occurrence (package version, not dependencies)
             )
 
         elif file_path.name == "version.txt":
@@ -197,10 +188,7 @@ class VersionManager:
         file_path.write_text(content, encoding="utf-8")
 
     def create_changelog_entry(
-        self,
-        version: str,
-        commits: List[str],
-        date: Optional[str] = None
+        self, version: str, commits: List[str], date: Optional[str] = None
     ) -> str:
         """
         Generate CHANGELOG.md entry from commits.
@@ -285,7 +273,7 @@ class VersionManager:
 
         return msg
 
-    def update_changelog(self, version: str, commits: List[str]):
+    def update_changelog(self, version: str, commits: List[str]) -> None:
         """
         Update CHANGELOG.md with new version entry.
 
@@ -313,7 +301,13 @@ class VersionManager:
 
             if insert_index > 0:
                 # Insert before first version
-                updated = "\n".join(lines[:insert_index]) + "\n\n" + new_entry + "\n" + "\n".join(lines[insert_index:])
+                updated = (
+                    "\n".join(lines[:insert_index])
+                    + "\n\n"
+                    + new_entry
+                    + "\n"
+                    + "\n".join(lines[insert_index:])
+                )
             else:
                 # No versions yet, append to end
                 updated = existing + "\n\n" + new_entry
@@ -344,11 +338,11 @@ class VersionManager:
                     cwd=self.project_root,
                     check=True,
                     capture_output=True,
-                    text=True
+                    text=True,
                 )
                 return tag_name
             except subprocess.CalledProcessError as e:
-                raise RuntimeError(f"Failed to create git tag: {e.stderr}")
+                raise RuntimeError(f"Failed to create git tag: {e.stderr}") from e
 
         return tag_name
 
@@ -366,7 +360,7 @@ class VersionManager:
                 cwd=self.project_root,
                 capture_output=True,
                 text=True,
-                check=True
+                check=True,
             )
             last_tag = result.stdout.strip()
 
@@ -376,7 +370,7 @@ class VersionManager:
                 cwd=self.project_root,
                 capture_output=True,
                 text=True,
-                check=True
+                check=True,
             )
             commits = [line.strip() for line in result.stdout.strip().split("\n") if line.strip()]
 
@@ -390,11 +384,7 @@ class VersionManager:
             # No tags yet
             return "0.0.0", []
 
-    def auto_bump(
-        self,
-        update_changelog: bool = False,
-        create_tag: bool = False
-    ) -> Optional[str]:
+    def auto_bump(self, update_changelog: bool = False, create_tag: bool = False) -> Optional[str]:
         """
         Automatically bump version based on commits since last tag.
 
@@ -426,12 +416,12 @@ class VersionManager:
 
         # Update version files
         self.update_version_files(new_version)
-        print(f"✓ Updated version files")
+        print("✓ Updated version files")
 
         # Update changelog
         if update_changelog:
             self.update_changelog(new_version, commits)
-            print(f"✓ Updated CHANGELOG.md")
+            print("✓ Updated CHANGELOG.md")
 
         # Create tag
         if create_tag:

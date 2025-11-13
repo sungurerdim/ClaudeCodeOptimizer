@@ -9,16 +9,12 @@ This is the new generator for the dynamic architecture.
 See claude_md_generator.py for legacy implementation.
 """
 
-from pathlib import Path
-from typing import Dict, List, Optional
 import re
+from pathlib import Path
+from typing import Dict, List
 
 
-def generate_hybrid_claude_md(
-    project_root: Path,
-    project_config: Dict,
-    cco_dir: Path
-) -> str:
+def generate_hybrid_claude_md(project_root: Path, project_config: Dict, cco_dir: Path) -> str:
     """
     Generate hybrid CLAUDE.md with universal inline + project reference.
 
@@ -37,7 +33,7 @@ def generate_hybrid_claude_md(
     claude_md_path = project_root / "CLAUDE.md"
     existing_content = None
     if claude_md_path.exists():
-        existing_content = claude_md_path.read_text(encoding='utf-8')
+        existing_content = claude_md_path.read_text(encoding="utf-8")
 
     # Generate CCO section
     cco_section = _generate_cco_section(project_config, universal_template)
@@ -92,6 +88,7 @@ def _generate_cco_section(project_config: Dict, universal_template: str) -> str:
 
     # Get available principle count dynamically
     from ..config import get_principles_dir
+
     principles_dir = get_principles_dir()
     available_project_principles = len(list(principles_dir.glob("P*.md")))
 
@@ -139,7 +136,7 @@ def _generate_category_list(selected_principles: Dict[str, List[str]]) -> str:
         "git_workflow": "Git Workflow",
         "performance": "Performance",
         "operations": "Operations",
-        "api_design": "API Design"
+        "api_design": "API Design",
     }
 
     lines = []
@@ -157,7 +154,7 @@ def _generate_category_list(selected_principles: Dict[str, List[str]]) -> str:
 
 def _update_cco_section(existing_content: str, new_cco_section: str) -> str:
     """Update existing CCO section in CLAUDE.md."""
-    pattern = r'<!-- CCO_START -->.*?<!-- CCO_END -->'
+    pattern = r"<!-- CCO_START -->.*?<!-- CCO_END -->"
     return re.sub(pattern, new_cco_section.strip(), existing_content, flags=re.DOTALL)
 
 
@@ -174,17 +171,17 @@ def remove_cco_section(claude_md_path: Path) -> bool:
     if not claude_md_path.exists():
         return False
 
-    content = claude_md_path.read_text(encoding='utf-8')
+    content = claude_md_path.read_text(encoding="utf-8")
 
     if "<!-- CCO_START -->" not in content:
         return False
 
     # Remove content between markers
-    pattern = r'\n*---\n*<!-- CCO_START -->.*?<!-- CCO_END -->\n*'
-    updated_content = re.sub(pattern, '', content, flags=re.DOTALL)
+    pattern = r"\n*---\n*<!-- CCO_START -->.*?<!-- CCO_END -->\n*"
+    updated_content = re.sub(pattern, "", content, flags=re.DOTALL)
 
     # Clean up multiple blank lines
-    updated_content = re.sub(r'\n{3,}', '\n\n', updated_content)
+    updated_content = re.sub(r"\n{3,}", "\n\n", updated_content)
 
-    claude_md_path.write_text(updated_content.strip() + '\n', encoding='utf-8')
+    claude_md_path.write_text(updated_content.strip() + "\n", encoding="utf-8")
     return True

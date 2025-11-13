@@ -24,7 +24,7 @@ __all__ = ["CCOConfig", "__version__"]
 _setup_checked = False
 
 
-def _ensure_global_setup():
+def _ensure_global_setup() -> None:
     """
     Ensure ~/.cco/ exists with all content, setup if needed.
 

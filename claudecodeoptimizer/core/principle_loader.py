@@ -18,7 +18,6 @@ Architecture:
 from pathlib import Path
 from typing import Dict, List, Optional
 
-
 # Command → Principle Category Mapping (using actual category names from .md frontmatter)
 # Note: "universal" category is ALWAYS included automatically for all commands
 COMMAND_PRINCIPLE_MAP: Dict[str, List[str]] = {
@@ -52,7 +51,6 @@ COMMAND_PRINCIPLE_MAP: Dict[str, List[str]] = {
     # Test commands
     "cco-test": ["universal", "core", "testing"],
     "cco-generate-tests": ["universal", "core", "testing"],
-    "cco-audit-tests": ["universal", "core", "testing"],
     # Generate commands
     "cco-generate": ["universal", "core", "code_quality"],
     "cco-generate-docs": ["universal", "core", "api_design"],
@@ -135,6 +133,7 @@ class PrincipleLoader:
         """
         if principles_dir is None:
             from ..config import CCOConfig
+
             principles_dir = CCOConfig.get_principles_dir()
 
         if not principles_dir.exists():
@@ -240,9 +239,7 @@ class PrincipleLoader:
         # Parse principle IDs
         principles_str = match.group(1)
         principle_ids = [
-            pid.strip().strip("'\"")
-            for pid in principles_str.split(",")
-            if pid.strip()
+            pid.strip().strip("'\"") for pid in principles_str.split(",") if pid.strip()
         ]
 
         return self.load_principles(principle_ids)
@@ -371,7 +368,7 @@ class PrincipleLoader:
             - git-workflow: 500
             - api-design: 300
         """
-        CATEGORY_TOKENS = {
+        category_tokens = {
             "core": 500,
             "code-quality": 1400,
             "security": 1900,
@@ -386,9 +383,9 @@ class PrincipleLoader:
         categories = self.get_categories_for_command(command)
 
         if "all" in categories:
-            return sum(CATEGORY_TOKENS.values())
+            return sum(category_tokens.values())
 
-        return sum(CATEGORY_TOKENS.get(cat, 500) for cat in categories)
+        return sum(category_tokens.get(cat, 500) for cat in categories)
 
     def clear_cache(self) -> None:
         """Clear principle cache."""

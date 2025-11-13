@@ -14,6 +14,7 @@ from typing import List, Optional
 @dataclass
 class GitFile:
     """Represents a git file change"""
+
     status: str  # M, A, D, R, ??
     path: str
 
@@ -21,6 +22,7 @@ class GitFile:
 @dataclass
 class CommitProposal:
     """AI-proposed commit"""
+
     type: str  # feat, fix, docs, etc.
     scope: str  # wizard, core, skills, etc.
     subject: str  # Short description
@@ -36,7 +38,7 @@ class GitCommitHelper:
     Semantic analysis done by AI in command layer.
     """
 
-    def __init__(self, project_root: Path):
+    def __init__(self, project_root: Path) -> None:
         """
         Initialize git helper.
 
@@ -57,7 +59,7 @@ class GitCommitHelper:
             cwd=self.project_root,
             capture_output=True,
             text=True,
-            check=True
+            check=True,
         )
 
         files = []
@@ -94,7 +96,7 @@ class GitCommitHelper:
             text=True,
             encoding="utf-8",
             errors="ignore",
-            timeout=10
+            timeout=10,
         )
 
         return result.stdout
@@ -125,11 +127,7 @@ class GitCommitHelper:
             True if successful
         """
         try:
-            subprocess.run(
-                ["git", "add"] + file_paths,
-                cwd=self.project_root,
-                check=True
-            )
+            subprocess.run(["git", "add"] + file_paths, cwd=self.project_root, check=True)
             return True
         except subprocess.CalledProcessError:
             return False
@@ -145,11 +143,7 @@ class GitCommitHelper:
             Commit hash (short) or None if failed
         """
         try:
-            subprocess.run(
-                ["git", "commit", "-m", message],
-                cwd=self.project_root,
-                check=True
-            )
+            subprocess.run(["git", "commit", "-m", message], cwd=self.project_root, check=True)
 
             # Get commit hash
             result = subprocess.run(
@@ -157,7 +151,7 @@ class GitCommitHelper:
                 cwd=self.project_root,
                 capture_output=True,
                 text=True,
-                check=True
+                check=True,
             )
             return result.stdout.strip()[:7]
 
@@ -172,11 +166,7 @@ class GitCommitHelper:
             True if successful
         """
         try:
-            subprocess.run(
-                ["git", "push"],
-                cwd=self.project_root,
-                check=True
-            )
+            subprocess.run(["git", "push"], cwd=self.project_root, check=True)
             return True
         except subprocess.CalledProcessError:
             return False

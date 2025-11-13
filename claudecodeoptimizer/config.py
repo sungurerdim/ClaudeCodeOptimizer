@@ -105,8 +105,6 @@ def get_skills_dir() -> Path:
     return get_global_dir() / "skills"
 
 
-
-
 # ============================================================================
 # PROJECT-LOCAL PATH HELPERS (Claude Code directories only)
 # ============================================================================

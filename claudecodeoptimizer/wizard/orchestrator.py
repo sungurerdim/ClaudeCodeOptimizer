@@ -8,9 +8,7 @@ Executes the same decision tree in two modes:
 Both modes produce identical WizardResult structures.
 """
 
-import json
 import time
-from datetime import datetime
 from pathlib import Path
 from typing import Dict, List, Literal, Optional
 
@@ -24,7 +22,6 @@ from .decision_tree import get_all_decisions
 from .models import AnswerContext, DecisionPoint, SystemContext, WizardResult
 from .recommendations import RecommendationEngine
 from .renderer import (
-    ask_choice,
     ask_multi_choice,
     clear_screen,
     pause,
@@ -447,7 +444,7 @@ class CCOWizard:
             print_info(
                 f"Decision tree complete: {decisions_executed} decisions made, "
                 f"{decisions_skipped} skipped (conditional)",
-                indent=2
+                indent=2,
             )
             print()
 
@@ -622,7 +619,11 @@ class CCOWizard:
             self.selected_commands = command_recs["core"] + command_recs["recommended"]
 
             # Auto-select all available guides/agents/skills (knowledge base)
-            from ..core.knowledge_setup import get_available_guides, get_available_agents, get_available_skills, get_principle_categories
+            from ..core.knowledge_setup import (
+                get_available_agents,
+                get_available_guides,
+                get_available_skills,
+            )
 
             # In quick mode: auto-select recommended
             # In interactive mode: let user choose
@@ -666,7 +667,7 @@ class CCOWizard:
                 pause()
 
                 # Knowledge Base Selection (interactive only)
-                if not hasattr(self, 'print_heading'):
+                if not hasattr(self, "print_heading"):
                     from .renderer import print_heading
                 print_heading("Knowledge Base Selection", level=2)
                 print_info("Select which knowledge base components to symlink:", indent=2)
@@ -688,7 +689,9 @@ class CCOWizard:
                     recommended_guides = self._recommend_guides_for_project()
 
                     print_info(f"Available guides ({len(available_guides)}):", indent=2)
-                    print_info(f"  Recommended for your project: {len(recommended_guides)}", indent=2)
+                    print_info(
+                        f"  Recommended for your project: {len(recommended_guides)}", indent=2
+                    )
                     print()
 
                     # Show each guide with description and recommendation
@@ -703,13 +706,21 @@ class CCOWizard:
                             print_info(f"      {description}", indent=2)
                     print()
 
-                    response = input("  Select guides (all/recommended/none or numbers like 1,3,5) [default: recommended]: ").strip().lower()
+                    response = (
+                        input(
+                            "  Select guides (all/recommended/none or numbers like 1,3,5) [default: recommended]: "
+                        )
+                        .strip()
+                        .lower()
+                    )
                     if response == "all":
                         self.selected_guides = available_guides
                         print_success(f"✓ Selected all {len(available_guides)} guides", indent=2)
                     elif response == "" or response == "recommended":
                         self.selected_guides = recommended_guides
-                        print_success(f"✓ Selected {len(recommended_guides)} recommended guides", indent=2)
+                        print_success(
+                            f"✓ Selected {len(recommended_guides)} recommended guides", indent=2
+                        )
                     elif response == "none":
                         self.selected_guides = []
                         print_info("✓ No guides selected", indent=2)
@@ -718,10 +729,13 @@ class CCOWizard:
                         try:
                             indices = [int(x.strip()) - 1 for x in response.split(",")]
                             self.selected_guides = [
-                                available_guides[i] for i in indices
+                                available_guides[i]
+                                for i in indices
                                 if 0 <= i < len(available_guides)
                             ]
-                            print_success(f"✓ Selected {len(self.selected_guides)} guides", indent=2)
+                            print_success(
+                                f"✓ Selected {len(self.selected_guides)} guides", indent=2
+                            )
                         except (ValueError, IndexError):
                             # Fallback to recommended
                             self.selected_guides = recommended_guides
@@ -735,7 +749,9 @@ class CCOWizard:
                 available_agents = get_available_agents()
                 if available_agents:
                     print_info(f"Available custom agents ({len(available_agents)}):", indent=2)
-                    print_info("  Custom agents are advanced - select only if you created them", indent=2)
+                    print_info(
+                        "  Custom agents are advanced - select only if you created them", indent=2
+                    )
                     print()
 
                     response = input("  Select agents (all/none) [default: none]: ").strip().lower()
@@ -749,7 +765,9 @@ class CCOWizard:
                 else:
                     self.selected_agents = []
                     print_info("No custom agents available", indent=2)
-                    print_info("Tip: Create custom agents using templates in ~/.cco/agents/", indent=2)
+                    print_info(
+                        "Tip: Create custom agents using templates in ~/.cco/agents/", indent=2
+                    )
                     print()
 
                 # Skills selection with workflow-based recommendations
@@ -768,7 +786,9 @@ class CCOWizard:
                     }
 
                     print_info(f"Available workflow skills ({len(available_skills)}):", indent=2)
-                    print_info(f"  Recommended for your project: {len(recommended_skills)}", indent=2)
+                    print_info(
+                        f"  Recommended for your project: {len(recommended_skills)}", indent=2
+                    )
                     print()
 
                     # Show each skill with description and recommendation
@@ -787,13 +807,23 @@ class CCOWizard:
                             print_info(f"      {description}", indent=2)
                     print()
 
-                    response = input("  Select skills (all/recommended/none) [default: recommended]: ").strip().lower()
+                    response = (
+                        input("  Select skills (all/recommended/none) [default: recommended]: ")
+                        .strip()
+                        .lower()
+                    )
                     if response == "all":
-                        self.selected_skills = [s for s in available_skills if not s.startswith("_") and s != "README"]
-                        print_success(f"✓ Selected all {len(self.selected_skills)} skills", indent=2)
+                        self.selected_skills = [
+                            s for s in available_skills if not s.startswith("_") and s != "README"
+                        ]
+                        print_success(
+                            f"✓ Selected all {len(self.selected_skills)} skills", indent=2
+                        )
                     elif response == "" or response == "recommended":
                         self.selected_skills = recommended_skills
-                        print_success(f"✓ Selected {len(recommended_skills)} recommended skills", indent=2)
+                        print_success(
+                            f"✓ Selected {len(recommended_skills)} recommended skills", indent=2
+                        )
                     else:
                         self.selected_skills = []
                         print_info("✓ No skills selected", indent=2)
@@ -908,9 +938,9 @@ class CCOWizard:
         Symlinks selected commands, guides, principles, agents, skills from
         ~/.cco/knowledge/ to project .claude/ directory.
         """
-        import os
         import platform
-        from .. import config as CCOConfig
+
+        from .. import config
         from ..core.knowledge_setup import setup_global_knowledge
 
         # Ensure global knowledge base exists
@@ -926,11 +956,11 @@ class CCOWizard:
             (claude_dir / category / ".gitkeep").touch()
 
         # Get global knowledge directories
-        global_commands_dir = CCOConfig.get_global_commands_dir()
-        global_guides_dir = CCOConfig.get_guides_dir()
-        global_principles_dir = CCOConfig.get_principles_dir()
-        global_agents_dir = CCOConfig.get_agents_dir()
-        global_skills_dir = CCOConfig.get_skills_dir()
+        global_commands_dir = config.get_global_commands_dir()
+        global_guides_dir = config.get_guides_dir()
+        global_principles_dir = config.get_principles_dir()
+        global_agents_dir = config.get_agents_dir()
+        global_skills_dir = config.get_skills_dir()
 
         # Map selected items to their source directories
         symlink_map = []
@@ -958,20 +988,20 @@ class CCOWizard:
         # SECOND: Symlink only AI-selected project-specific principles (P001-P069)
         for principle in self.selected_principles:
             # Skip if it's a universal principle (already linked above)
-            if not principle.startswith('U'):
+            if not principle.startswith("U"):
                 source = global_principles_dir / f"{principle}.md"
                 target = claude_dir / "principles" / f"{principle}.md"
                 symlink_map.append((source, target))
 
         # Agents (if any selected)
-        if hasattr(self, 'selected_agents'):
+        if hasattr(self, "selected_agents"):
             for agent in self.selected_agents:
                 source = global_agents_dir / f"{agent}.md"
                 target = claude_dir / "agents" / f"{agent}.md"
                 symlink_map.append((source, target))
 
         # Skills (if any selected)
-        if hasattr(self, 'selected_skills'):
+        if hasattr(self, "selected_skills"):
             for skill in self.selected_skills:
                 source = global_skills_dir / f"{skill}.md"
                 target = claude_dir / "skills" / f"{skill}.md"
@@ -990,10 +1020,11 @@ class CCOWizard:
             if platform.system() == "Windows":
                 # Windows: use mklink
                 import subprocess
+
                 subprocess.run(
                     ["cmd", "/c", "mklink", str(target), str(source)],
                     check=True,
-                    capture_output=True
+                    capture_output=True,
                 )
             else:
                 # Unix: use symlink_to
@@ -1052,7 +1083,9 @@ class CCOWizard:
         preferences_dict = {
             "project_identity": {
                 "name": self.project_root.name,
-                "team_trajectory": self.answer_context.get("team_dynamics", "solo") if self.answer_context else "solo",
+                "team_trajectory": self.answer_context.get("team_dynamics", "solo")
+                if self.answer_context
+                else "solo",
             },
             "code_quality": {
                 "linting_strictness": "strict",  # Default
@@ -1060,21 +1093,22 @@ class CCOWizard:
             "testing": {
                 "strategy": "balanced",  # Default
             },
-            "selected_principle_ids": self.selected_principles if self.selected_principles else []
+            "selected_principle_ids": self.selected_principles if self.selected_principles else [],
         }
 
         # Generate CLAUDE.md
         output_path = self.project_root / "CLAUDE.md"
         generator = ClaudeMdGenerator(
             preferences_dict,
-            selected_skills=self.selected_skills if hasattr(self, 'selected_skills') else [],
-            selected_agents=self.selected_agents if hasattr(self, 'selected_agents') else [],
+            selected_skills=self.selected_skills if hasattr(self, "selected_skills") else [],
+            selected_agents=self.selected_agents if hasattr(self, "selected_agents") else [],
         )
         generator.generate(output_path)
 
     def _build_selected_principles_dict(self) -> Dict[str, List[str]]:
         """Build selected principles dictionary by category."""
         from pathlib import Path
+
         from ..core.principle_md_loader import load_all_principles
 
         # Load all principles to get universal count dynamically
@@ -1082,12 +1116,9 @@ class CCOWizard:
         principles_list = load_all_principles(principles_dir)
 
         # Get all universal principles dynamically
-        universal_ids = [p["id"] for p in principles_list
-                        if p.get("category") == "universal"]
+        universal_ids = [p["id"] for p in principles_list if p.get("category") == "universal"]
 
-        principles_dict = {
-            "universal": universal_ids
-        }
+        principles_dict = {"universal": universal_ids}
 
         # Group project-specific principles by category
         if self.selected_principles:
@@ -1095,7 +1126,7 @@ class CCOWizard:
             all_principles = {p["id"]: p for p in principles_list}
 
             for pid in self.selected_principles:
-                if pid.startswith('U'):  # Skip universal (already added)
+                if pid.startswith("U"):  # Skip universal (already added)
                     continue
 
                 principle = all_principles.get(pid)
@@ -1117,25 +1148,33 @@ class CCOWizard:
             additions.append("\n### Error Handling Strategy (Project Configuration)\n")
 
             if error_handling == "defensive":
-                additions.append("**Defensive Programming**: Validate all inputs, check all assumptions, fail gracefully.\n")
+                additions.append(
+                    "**Defensive Programming**: Validate all inputs, check all assumptions, fail gracefully.\n"
+                )
                 additions.append("- Validate all function inputs at entry points")
                 additions.append("- Use type hints and runtime type checking")
                 additions.append("- Provide helpful error messages with context")
                 additions.append("- Log errors with full stack traces")
             elif error_handling == "fail_fast":
-                additions.append("**Fail-Fast**: Errors cause immediate visible failure. No silent fallbacks.\n")
+                additions.append(
+                    "**Fail-Fast**: Errors cause immediate visible failure. No silent fallbacks.\n"
+                )
                 additions.append("- Never swallow exceptions without re-raising")
                 additions.append("- Fail immediately on invalid state")
                 additions.append("- Use assertions for invariants")
                 additions.append("- See P001: Fail-Fast Error Handling in CLAUDE.md")
             elif error_handling == "exception_hierarchy":
-                additions.append("**Exception Hierarchy**: Custom exception types for different error categories.\n")
+                additions.append(
+                    "**Exception Hierarchy**: Custom exception types for different error categories.\n"
+                )
                 additions.append("- Define custom exception classes per domain")
                 additions.append("- Catch specific exceptions, not generic Exception")
                 additions.append("- Include error context in exception data")
                 additions.append("- Document which exceptions each function can raise")
             elif error_handling == "result_types":
-                additions.append("**Result Types**: Use Result/Option types instead of exceptions for expected failures.\n")
+                additions.append(
+                    "**Result Types**: Use Result/Option types instead of exceptions for expected failures.\n"
+                )
                 additions.append("- Return Result[T, Error] for operations that can fail")
                 additions.append("- Use Option[T] for nullable values")
                 additions.append("- Reserve exceptions for truly exceptional cases")
@@ -1158,7 +1197,7 @@ class CCOWizard:
                 additions.append(f"- **@.claude/guides/{guide}.md** - {guide_name}")
 
         # Agents
-        if hasattr(self, 'selected_agents') and self.selected_agents:
+        if hasattr(self, "selected_agents") and self.selected_agents:
             additions.append("\n### Agents (Project Selected)\n")
             additions.append("Use these specialized agents for complex tasks:\n")
             for agent in self.selected_agents:
@@ -1166,7 +1205,7 @@ class CCOWizard:
                 additions.append(f"- **@.claude/agents/{agent}.md** - {agent_name}")
 
         # Skills
-        if hasattr(self, 'selected_skills') and self.selected_skills:
+        if hasattr(self, "selected_skills") and self.selected_skills:
             additions.append("\n### Skills (Project Selected)\n")
             additions.append("Available skills via slash commands:\n")
             for skill in self.selected_skills:
@@ -1178,8 +1217,7 @@ class CCOWizard:
             footer_marker = "\n---\n\n*Part of CCO Documentation System*"
             if footer_marker in content:
                 content = content.replace(
-                    footer_marker,
-                    "\n\n" + "\n".join(additions) + footer_marker
+                    footer_marker, "\n\n" + "\n".join(additions) + footer_marker
                 )
             else:
                 # No footer, append to end
@@ -1225,9 +1263,9 @@ class CCOWizard:
             principles_configured=len(self.selected_principles),
             files_created=files_count,
             duration_seconds=duration,
-            guides_installed=len(self.selected_guides) if hasattr(self, 'selected_guides') else 0,
-            skills_installed=len(self.selected_skills) if hasattr(self, 'selected_skills') else 0,
-            agents_installed=len(self.selected_agents) if hasattr(self, 'selected_agents') else 0,
+            guides_installed=len(self.selected_guides) if hasattr(self, "selected_guides") else 0,
+            skills_installed=len(self.selected_skills) if hasattr(self, "selected_skills") else 0,
+            agents_installed=len(self.selected_agents) if hasattr(self, "selected_agents") else 0,
         )
 
         print()
@@ -1250,8 +1288,8 @@ class CCOWizard:
         # Get primary language from system context
         primary_language = (
             self.system_context.detected_language
-            if self.system_context and hasattr(self.system_context, 'detected_language')
-            else 'python'
+            if self.system_context and hasattr(self.system_context, "detected_language")
+            else "python"
         )
 
         # Map git_workflow values
@@ -1296,14 +1334,12 @@ class CCOWizard:
             },
             "security": {
                 "security_stance": security_mapping.get(
-                    answers.get("security_stance", "standard"),
-                    "balanced"
+                    answers.get("security_stance", "standard"), "balanced"
                 ),
             },
             "documentation": {
                 "verbosity": doc_mapping.get(
-                    answers.get("documentation_level", "minimal"),
-                    "minimal"
+                    answers.get("documentation_level", "minimal"), "minimal"
                 ),
             },
             "code_quality": {
@@ -1313,8 +1349,7 @@ class CCOWizard:
             },
             "collaboration": {
                 "git_workflow": git_workflow_mapping.get(
-                    answers.get("git_workflow", "main_only"),
-                    "trunk-based"
+                    answers.get("git_workflow", "main_only"), "trunk-based"
                 ),
                 "versioning_strategy": answers.get("versioning_strategy", "auto_semver"),
             },
@@ -1394,7 +1429,16 @@ class CCOWizard:
                 recommended.append("security-response")
 
         # Performance Optimization: for backend services or data pipelines
-        if any(pt in project_types for pt in ["api_service", "microservice", "data_pipeline", "ml_pipeline", "stream_processing"]):
+        if any(
+            pt in project_types
+            for pt in [
+                "api_service",
+                "microservice",
+                "data_pipeline",
+                "ml_pipeline",
+                "stream_processing",
+            ]
+        ):
             recommended.append("performance-optimization")
 
         # For projects that need retry/resilience
@@ -1403,7 +1447,10 @@ class CCOWizard:
                 recommended.append("performance-optimization")
 
         # Container Best Practices: for containerized infrastructure
-        if any(pt in project_types for pt in ["microservice", "infrastructure", "data_pipeline", "ml_pipeline"]):
+        if any(
+            pt in project_types
+            for pt in ["microservice", "infrastructure", "data_pipeline", "ml_pipeline"]
+        ):
             recommended.append("container-best-practices")
 
         # TIER 3 Mappings: Tactical Decisions
@@ -1430,28 +1477,30 @@ class CCOWizard:
         language_specific_skills = []
 
         # Get detected languages from system context
-        if self.system_context and hasattr(self.system_context, 'detected_languages'):
+        if self.system_context and hasattr(self.system_context, "detected_languages"):
             detected_languages = self.system_context.detected_languages
 
             # Add language-specific skills
-            if 'python' in [lang.lower() for lang in detected_languages]:
-                language_specific_skills.extend([
-                    "python/async-patterns",
-                    "python/packaging-modern",
-                    "python/performance",
-                    "python/testing-pytest",
-                    "python/type-hints-advanced",
-                ])
+            if "python" in [lang.lower() for lang in detected_languages]:
+                language_specific_skills.extend(
+                    [
+                        "python/async-patterns",
+                        "python/packaging-modern",
+                        "python/performance",
+                        "python/testing-pytest",
+                        "python/type-hints-advanced",
+                    ]
+                )
 
-            if 'go' in [lang.lower() for lang in detected_languages]:
+            if "go" in [lang.lower() for lang in detected_languages]:
                 # Go-specific skills (when available)
                 pass
 
-            if 'rust' in [lang.lower() for lang in detected_languages]:
+            if "rust" in [lang.lower() for lang in detected_languages]:
                 # Rust-specific skills (when available)
                 pass
 
-            if any(lang.lower() in ['typescript', 'javascript'] for lang in detected_languages):
+            if any(lang.lower() in ["typescript", "javascript"] for lang in detected_languages):
                 # TypeScript/JS-specific skills (when available)
                 pass
 

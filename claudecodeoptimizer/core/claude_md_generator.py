@@ -47,7 +47,9 @@ class ClaudeMdGenerator:
         self.preferences = preferences
         self.selected_skills = selected_skills or []
         self.selected_agents = selected_agents or []
-        self.template_path = Path(__file__).parent.parent.parent / "templates" / "CLAUDE.md.template"
+        self.template_path = (
+            Path(__file__).parent.parent.parent / "templates" / "CLAUDE.md.template"
+        )
         self.principles_dir = Path(__file__).parent.parent.parent / "content" / "principles"
 
     def generate(self, output_path: Path) -> Dict[str, Any]:
@@ -721,6 +723,7 @@ This file contains the mandatory development principles for this project. **You 
 
         # Load all principles
         from .principle_md_loader import load_all_principles
+
         if not self.principles_dir.exists():
             return content
 
@@ -744,16 +747,15 @@ This file contains the mandatory development principles for this project. **You 
         principles_content = []
 
         # Get ALL universal principles
-        universal_principles = [p for p in principles_list
-                               if p.get("category") == "universal"]
+        universal_principles = [p for p in principles_list if p.get("category") == "universal"]
 
         principles_content.append("### Core Principles (Always Apply)\n")
         principles_content.append("**Universal Principles** (apply to ALL projects):\n")
 
         # Show first 3 universal principles with details
-        for i, principle in enumerate(universal_principles[:3]):
+        for _i, principle in enumerate(universal_principles[:3]):
             principles_content.append(f"\n#### {principle['id']}: {principle['title']}\n")
-            description = principle.get('description', principle.get('one_line_why', ''))
+            description = principle.get("description", principle.get("one_line_why", ""))
             principles_content.append(f"{description}\n")
             principles_content.append(f"**Details**: `.claude/principles/{principle['id']}.md`\n")
 
@@ -761,7 +763,9 @@ This file contains the mandatory development principles for this project. **You 
         if len(universal_principles) > 3:
             principles_content.append("\n**Additional Universal Principles:**\n")
             for principle in universal_principles[3:]:
-                principles_content.append(f"- **{principle['id']}**: {principle['title']} → `.claude/principles/{principle['id']}.md`\n")
+                principles_content.append(
+                    f"- **{principle['id']}**: {principle['title']} → `.claude/principles/{principle['id']}.md`\n"
+                )
 
         # Add reference to project-specific principles by category
         principles_content.append("\n### Project-Specific Principles\n")
@@ -794,17 +798,15 @@ This file contains the mandatory development principles for this project. **You 
             count = category_counts.get(cat_id, 0)
             if count > 0:
                 # Get principle IDs (excluding universal)
-                cat_principles = [p for p in categories.get(cat_id, [])
-                                 if p.get("category") != "universal"]
+                cat_principles = [
+                    p for p in categories.get(cat_id, []) if p.get("category") != "universal"
+                ]
                 if cat_principles:
                     principles_content.append(f"\n**{cat_name}** ({count} selected):\n")
                     for p in sorted(cat_principles, key=lambda x: x["id"]):
-                        principles_content.append(f"- **{p['id']}**: {p['title']} → `.claude/principles/{p['id']}.md`\n")
-
-        # Count non-universal principles
-        non_universal_count = sum(1 for pid in selected_ids
-                                 if all_principles.get(pid, {}).get("category") != "universal")
-        total_with_universal = len(universal_principles) + non_universal_count
+                        principles_content.append(
+                            f"- **{p['id']}**: {p['title']} → `.claude/principles/{p['id']}.md`\n"
+                        )
 
         # Note: Total counts maintained in README.md only (avoid hardcoding in generated files)
 
@@ -816,7 +818,7 @@ This file contains the mandatory development principles for this project. **You 
         end_idx = content.find(end_marker)
 
         if start_idx != -1 and end_idx != -1:
-            before = content[:start_idx + len(start_marker)]
+            before = content[: start_idx + len(start_marker)]
             after = content[end_idx:]
             # principles_content already has \n at end of each line, so use empty join
             injected = "\n" + "".join(principles_content)
@@ -844,7 +846,7 @@ This file contains the mandatory development principles for this project. **You 
             if start_idx != -1 and end_idx != -1:
                 # Remove entire section including markers
                 before = content[:start_idx].rstrip()
-                after = content[end_idx + len(end_marker):].lstrip()
+                after = content[end_idx + len(end_marker) :].lstrip()
                 content = before + "\n\n" + after
             return content
 
@@ -891,7 +893,7 @@ This file contains the mandatory development principles for this project. **You 
         end_idx = content.find(end_marker)
 
         if start_idx != -1 and end_idx != -1:
-            before = content[:start_idx + len(start_marker)]
+            before = content[: start_idx + len(start_marker)]
             after = content[end_idx:]
             injected = "\n" + "".join(skills_content)
             content = before + injected + after
@@ -918,7 +920,7 @@ This file contains the mandatory development principles for this project. **You 
             if start_idx != -1 and end_idx != -1:
                 # Remove entire section including markers
                 before = content[:start_idx].rstrip()
-                after = content[end_idx + len(end_marker):].lstrip()
+                after = content[end_idx + len(end_marker) :].lstrip()
                 content = before + "\n\n" + after
             return content
 
@@ -952,7 +954,7 @@ This file contains the mandatory development principles for this project. **You 
         end_idx = content.find(end_marker)
 
         if start_idx != -1 and end_idx != -1:
-            before = content[:start_idx + len(start_marker)]
+            before = content[: start_idx + len(start_marker)]
             after = content[end_idx:]
             injected = "\n" + "".join(agents_content)
             content = before + injected + after

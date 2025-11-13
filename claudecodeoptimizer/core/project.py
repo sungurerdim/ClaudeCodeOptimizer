@@ -1,9 +1,8 @@
 """Project management for ClaudeCodeOptimizer."""
 
-import json
 import logging
 from pathlib import Path
-from typing import Any, Callable, Dict, List, Optional
+from typing import Any, Dict, List, Optional
 
 from .. import config as CCOConfig  # noqa: N812
 from ..schemas.preferences import (
@@ -435,17 +434,18 @@ class ProjectManager:
         Args:
             analysis: Project analysis dictionary
         """
+
         def should_include_guide(name: str, parent_dir: str = "") -> bool:
             name_lower = name.lower()
             # Always include core guides
-            if any(x in name_lower for x in ['git-workflow', 'verification']):
+            if any(x in name_lower for x in ["git-workflow", "verification"]):
                 return True
             # Conditional guides
-            if 'container' in name_lower and analysis.get('has_docker'):
+            if "container" in name_lower and analysis.get("has_docker"):
                 return True
-            if 'security' in name_lower:
+            if "security" in name_lower:
                 return True
-            if 'performance' in name_lower:
+            if "performance" in name_lower:
                 return True
             return False
 
@@ -463,11 +463,9 @@ class ProjectManager:
         Args:
             analysis: Project analysis dictionary
         """
-        primary_lang = analysis.get('primary_language', '').lower()
+        primary_lang = analysis.get("primary_language", "").lower()
 
         def should_include_skill(name: str, parent_dir: str = "") -> bool:
-            name_lower = name.lower()
-
             # Always include general skills (no parent dir)
             if not parent_dir:
                 return True
@@ -525,16 +523,13 @@ class ProjectManager:
 
         # Track in manifest
         self.manifest.track_file_created(
-            settings_file,
-            "Created settings.json from global template"
+            settings_file, "Created settings.json from global template"
         )
 
         logger.debug(f"Created settings.json from template at {settings_file}")
 
     def _install_knowledge_symlinks(
-        self,
-        category: str,
-        filter_func: Optional[callable] = None
+        self, category: str, filter_func: Optional[callable] = None
     ) -> None:
         """
         Generic function to install links for a category.
@@ -578,7 +573,8 @@ class ProjectManager:
 
         # Get subdirectories (for language-specific skills)
         all_subdirs = [
-            d for d in global_category_dir.iterdir()
+            d
+            for d in global_category_dir.iterdir()
             if d.is_dir() and not d.name.startswith(("_", "."))
         ]
 
@@ -680,32 +676,45 @@ class ProjectManager:
 
             # Core commands (always include)
             core_commands = {
-                'init', 'config', 'status', 'remove',
-                'analyze', 'audit', 'fix', 'refactor',
-                'test', 'commit', 'sync', 'generate',
-                'implement-feature', 'scan-secrets',
-                'optimize-code', 'optimize-deps',
-                'analyze-complexity', 'analyze-dependencies', 'analyze-structure'
+                "init",
+                "config",
+                "status",
+                "remove",
+                "analyze",
+                "audit",
+                "fix",
+                "refactor",
+                "test",
+                "commit",
+                "sync",
+                "generate",
+                "implement-feature",
+                "scan-secrets",
+                "optimize-code",
+                "optimize-deps",
+                "analyze-complexity",
+                "analyze-dependencies",
+                "analyze-structure",
             }
             if name_lower in core_commands:
                 return True
 
             # Documentation commands (always useful)
-            if any(x in name_lower for x in ['generate-docs', 'audit-docs', 'fix-docs']):
+            if any(x in name_lower for x in ["generate-docs", "audit-docs", "fix-docs"]):
                 return True
 
             # Docker/Container commands (only if Docker detected)
-            if 'docker' in name_lower:
-                return analysis.get('has_docker', False)
+            if "docker" in name_lower:
+                return analysis.get("has_docker", False)
 
             # CI/CD commands (only if CI/CD detected)
-            if any(x in name_lower for x in ['cicd', 'monitoring']):
-                return analysis.get('has_cicd', False)
+            if any(x in name_lower for x in ["cicd", "monitoring"]):
+                return analysis.get("has_cicd", False)
 
             # Testing commands (based on test framework detection)
-            if 'test' in name_lower and 'generate' in name_lower:
+            if "test" in name_lower and "generate" in name_lower:
                 # Include if project has tests or test frameworks
-                return bool(analysis.get('test_frameworks') or analysis.get('has_tests'))
+                return bool(analysis.get("test_frameworks") or analysis.get("has_tests"))
 
             # Default: exclude
             return False
@@ -750,10 +759,14 @@ class ProjectManager:
         result = wizard.run()
 
         # Handle both old (bool) and new (WizardResult) return types
-        success = result.success if hasattr(result, 'success') else result
+        success = result.success if hasattr(result, "success") else result
 
         if not success:
-            error_msg = result.error if hasattr(result, 'error') else "Interactive wizard was cancelled or failed"
+            error_msg = (
+                result.error
+                if hasattr(result, "error")
+                else "Interactive wizard was cancelled or failed"
+            )
             return {
                 "success": False,
                 "error": error_msg,
