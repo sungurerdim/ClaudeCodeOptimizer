@@ -348,9 +348,10 @@ Agent: Plan
 
 ### Output
 
-- `custom-principles.json` in project root
-- Formatted for CCO principle system
-- Can be imported to CCO
+- `custom-principles/` directory in project root
+- Individual .md files with frontmatter (C001.md, C002.md, etc.)
+- Formatted for CCO principle system (compatible with .md loader)
+- Can be symlinked to .claude/principles/ for integration
 
 ---
 

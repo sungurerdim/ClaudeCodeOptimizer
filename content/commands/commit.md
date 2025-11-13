@@ -127,7 +127,7 @@ Commit 1: feat(wizard): add versioning strategy selection
 - Add versioning_strategy field to preferences schema
 - Update orchestrator to map versioning answers to preferences
 - Implement VersionManager for automated version detection
-- Add P074 automated versioning principle
+- Add P052 automated versioning principle
 - Mark P0.8 Task 1 complete in TODO.md
 ```
 
@@ -287,13 +287,13 @@ Co-Authored-By: Claude <noreply@anthropic.com>
 ```
 
 ```
-feat(principles): add P074 automated semantic versioning
+feat(principles): add universal principles system
 
-- Add P074 to principles.json with TIER2 activation
-- Add version mapping examples (feat→MINOR, fix→PATCH)
-- Update git-workflow.md with P074 documentation
-- Add VersionManager class for commit-type detection
-- Add TIER2_VERSIONING_STRATEGY to decision tree
+- Add U001-U012 universal principles (always active)
+- Migrate from principles.json to .md frontmatter (SSOT)
+- Add python-frontmatter for metadata parsing
+- Add principle_md_loader module for unified loading
+- Update 6 core files to use new loader
 
 Co-Authored-By: Claude <noreply@anthropic.com>
 ```
