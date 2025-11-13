@@ -9,7 +9,6 @@ Automatically bump version based on conventional commit types:
 
 import re
 import subprocess
-from datetime import datetime
 from enum import Enum
 from pathlib import Path
 from typing import List, Optional, Tuple
