@@ -129,7 +129,7 @@ mypy src/
 
 ## Principle Reference
 
-This guide implements **P067: Evidence-Based Verification**
+This guide implements **U001: Evidence-Based Verification**
 
 See: [@PRINCIPLES.md](../PRINCIPLES.md) or [@~/.cco/principles/core.md](../principles/core.md)
 

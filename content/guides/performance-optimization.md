@@ -323,7 +323,7 @@ def test_query_performance():
 
 **During optimization**:
 - [ ] Focus on measured bottleneck (not hunches)
-- [ ] Keep code readable (P071: Anti-Overengineering)
+- [ ] Keep code readable (U011: No Overengineering)
 - [ ] Verify correctness (all tests pass)
 - [ ] Benchmark improvements
 
@@ -381,12 +381,11 @@ python benchmarks/run_all.py
 
 ## Principle References
 
-- **P054-P058**: Performance Principles
-  - P054: Caching Strategy
-  - P055: Database Query Optimization
-  - P056: Lazy Loading & Deferred Execution
-  - P057: Async I/O for Network Operations
-  - P058: Resource Pool Management
+- **P053-P056**: Performance Principles
+  - P053: Caching Strategy
+  - P054: Database Query Optimization
+  - P055: Lazy Loading & Pagination
+  - P056: Async I/O (Non-Blocking Operations)
 
 See: [@~/.cco/principles/performance.md](../principles/performance.md)
 
