@@ -403,9 +403,9 @@ content = loader.load_from_frontmatter(cmd_file)
 ## See Also
 
 - [README.md](../README.md) - Project overview
-- [content/principles.json](../content/principles.json) - Principle metadata
-- [content/principles/](../content/principles/) - Individual principle files
-- [claudecodeoptimizer/core/principle_loader.py](../claudecodeoptimizer/core/principle_loader.py) - Loader implementation
+- [content/principles/](../content/principles/) - Individual principle files with frontmatter (SSOT)
+- [claudecodeoptimizer/core/principle_md_loader.py](../claudecodeoptimizer/core/principle_md_loader.py) - Frontmatter loader implementation
+- [claudecodeoptimizer/core/principle_loader.py](../claudecodeoptimizer/core/principle_loader.py) - Principle loading system
 
 ---
 
