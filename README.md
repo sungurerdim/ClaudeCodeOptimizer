@@ -129,7 +129,7 @@ pip install claudecodeoptimizer
 **Project Local (`.claude/`)** - Created during `/cco-init`:
 - `project.json` - AI selections, detection results, command overrides (runtime config)
 - `principles/` - Links to principles (using preference order):
-  - All universal principles (U001-U012, 12 files, always included)
+  - All universal principles (U001-U014, 14 files, always included)
   - Selected project principles (P001-P069, 20-40 files, AI-selected)
 - `commands/` - Links to selected commands (8-15 from 28 available)
 - `guides/` - Links to relevant guides
@@ -178,7 +178,7 @@ cd /path/to/your/project
 
 **What you'll have after 5 minutes:**
 - ✅ Project configured with principles:
-  - Universal principles (U001-U012, 12 always included)
+  - Universal principles (U001-U014, 14 always included)
   - Project-specific principles (P001-P069, 20-40 AI-selected)
 - ✅ Specialized commands ready to use (8-15 selected from 28 available)
 - ✅ `CLAUDE.md` with minimal principle references (existing content preserved)
@@ -264,49 +264,6 @@ Unlock full CCO capabilities:
 **Week 3:** Explore Level 3 for team collaboration and automation
 
 **By Week 4:** CCO is integral to your development process, quality metrics improving measurably.
-
----
-
-## Recent Updates (2025-11-12)
-
-### 🎉 Major Architecture Changes
-
-**🏗️ Content-Based Architecture** (Complete)
-- Single source of truth: All knowledge in `content/` directory (repo)
-- Global `~/.cco/` storage deployed from `content/` during installation
-- Project-specific links using preference order (symlink → hardlink → copy)
-- Template-driven `CLAUDE.md` generation with intelligent merging
-- Each principle in separate file for granular loading
-- Template deployment: `*.template` files deployed with extension removed
-
-**🤖 AI-Powered Initialization** (Complete)
-- Two modes: Quick (auto-detect) and Interactive (user-confirmed)
-- Unified detection engine: OS, shell, locale, languages, frameworks, tools
-- Cascading decision tree: System → Project → Stack → Strategy
-- Smart recommendations based on detection results + git history
-- Claude Code UI integration for all user interactions
-
-**📋 Individual Principle Files** (Complete)
-- 83 total principles: 14 universal (always included) + 69 project-specific
-- Universal principles (U001-U014): Inline in CLAUDE.md (~1,200 tokens)
-- Project principles (P001-P069): Dynamic loading by commands (~1,500 tokens on-demand)
-- Category-based organization (8 categories + universal)
-- **Hybrid approach**: 46% token reduction (2,700 tokens vs 5,000)
-- CLAUDE.md references local symlinks (which point to global files)
-- Eliminated `PRINCIPLES.md` - deprecated completely
-
-### ✅ Completed Milestones
-- **Template System**: CLAUDE.md generation with merge capability
-- **Symlink Architecture**: Global storage + local linking (symlink/hardlink/copy)
-- **Progressive Disclosure**: Principle-level granularity
-- **Detection Engine**: Comprehensive AI-powered project analysis
-- **Wizard System**: Unified quick/interactive modes with Claude UI
-
-### 📊 Current Status
-- Template architecture: **100% Complete**
-- Detection engine: **100% Complete**
-- Progressive disclosure: **100% Complete** (principle-level granularity)
-- Test coverage: **0%** → Target 60% (next priority)
 
 ---
 
@@ -423,7 +380,7 @@ Commands read `.claude/project.json` at runtime to load only needed principles:
 ## Development Principles & Guidelines
 
 Follow the principles in `.claude/principles/`:
-- Universal principles (U001-U012): Apply to all projects
+- Universal principles (U001-U014): Apply to all projects
 - Project-specific principles (P001-P069): Selected for this project
 
 <!-- CCO_END -->
@@ -732,7 +689,7 @@ pip install -e ".[dev]"
 7. Selects security level (basic, standard, strict, paranoid)
 8. Selects git workflow (main-only, GitHub Flow, Git Flow)
 9. Selects documentation level (minimal, standard, comprehensive)
-10. Chooses applicable principles from 74 total (typically 30-50 selected)
+10. Chooses applicable principles from 83 total (typically 30-50 selected)
 11. Chooses relevant commands from 28 available (typically 8-15 selected)
 12. Chooses relevant guides (verification, security, performance, etc.)
 13. Chooses language-specific skills based on detected languages
@@ -741,7 +698,7 @@ pip install -e ".[dev]"
 14. Creates `.claude/` directory structure using preference order (symlink → hardlink → copy):
     - `.claude/project.json` - AI selections + runtime config (NEW)
     - `.claude/principles/` - Links to principles:
-      - All universal principles (U001-U012, 12 files, always)
+      - All universal principles (U001-U014, 14 files, always)
       - Selected project principles (P001-P069, 20-40 files, AI-selected)
     - `.claude/commands/` - Links to selected global commands (8-15 from 28 available)
     - `.claude/guides/` - Links to relevant guides
@@ -892,7 +849,7 @@ pip install --force-reinstall claudecodeoptimizer
 2. **Single Source of Truth** - All knowledge in `content/` (repo), deployed to `~/.cco/` (global), projects reference via links
 3. **Progressive Disclosure** - Load only applicable principles/guides, not entire knowledge base
 4. **Dynamic Loading** - Commands read `.claude/project.json` at runtime for project-specific principle loading
-5. **Two-Tier Principles** - Universal (U001-U012, always) + Project-specific (P001-P069, AI-selected)
+5. **Two-Tier Principles** - Universal (U001-U014, always) + Project-specific (P001-P069, AI-selected)
 6. **Minimal CLAUDE.md** - Reference-based, not template-driven; existing content preserved
 7. **Evidence-Based** - AI detection with confidence scores and evidence trails
 8. **Anti-Overengineering** - Simplest solution that works, no premature abstraction
@@ -1005,7 +962,7 @@ project/CLAUDE.md        # Minimal guide with principle references
 
 **Key Points:**
 - All links use preference order (symlink → hardlink → copy)
-- Universal principles (U001-U012) always linked to every project
+- Universal principles (U001-U014) always linked to every project
 - Project principles (P001-P069) only selected ones linked (AI-selected)
 - `.claude/project.json` stores AI selections for runtime dynamic loading
 - `settings.json` is always copied (not linked) to allow project-specific customization
@@ -1067,7 +1024,7 @@ ClaudeCodeOptimizer/
   - ✅ On-demand guides (5 comprehensive guides)
 - ✅ P0.3: PRINCIPLE LOADING REFACTOR COMPLETE
   - ✅ Single Source of Truth (SSOT): .md files with frontmatter (principles.json removed)
-  - ✅ Universal principles system (U001-U012) always active
+  - ✅ Universal principles system (U001-U014) always active
   - ✅ python-frontmatter library integration for metadata parsing
   - ✅ principle_md_loader module for unified loading
   - ✅ 6 core files refactored (principles.py, loader, selector, generator, orchestrator)
