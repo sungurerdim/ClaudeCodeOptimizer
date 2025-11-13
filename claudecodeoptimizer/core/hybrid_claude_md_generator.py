@@ -110,8 +110,6 @@ def _generate_cco_section(project_config: Dict, universal_template: str) -> str:
 
 This project uses **{project_count}** selected principles from {available_project_principles} available.
 
-Commands load them dynamically based on `.claude/project.json`.
-
 **Selected Categories**:
 {category_list}
 
@@ -120,7 +118,6 @@ Commands load them dynamically based on `.claude/project.json`.
 **References**:
 - Universal principles: Always active (inline above)
 - Project principles: See `.claude/principles/` directory
-- Configuration: `.claude/project.json`
 
 <!-- CCO_END -->
 """

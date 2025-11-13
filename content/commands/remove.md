@@ -14,19 +14,12 @@ Remove CCO from the current project only (NEW ARCHITECTURE v3.1). This does **NO
 ## Step 1: Check if Project is Initialized
 
 ```bash
-ls .claude/project.json 2>/dev/null && echo "[OK] CCO is initialized" || echo "[!] CCO not found in this project"
+ls .claude/principles/U001.md 2>/dev/null && echo "[OK] CCO is initialized" || echo "[!] CCO not found in this project"
 ```
 
 If not initialized, stop - nothing to remove.
 
-## Step 2: Remove Project Configuration
-
-```bash
-rm -f .claude/project.json
-echo "[OK] Removed .claude/project.json"
-```
-
-## Step 3: Remove Principle Symlinks
+## Step 2: Remove Principle Symlinks
 
 Remove ALL principle symlinks (universal + project-specific):
 
@@ -126,11 +119,10 @@ echo "[OK] Cleaned up empty directories"
 
 ## What Gets Removed
 
-From current project (NEW ARCHITECTURE):
-- `.claude/project.json` (project configuration)
+From current project:
 - All U*.md and P*.md symlinks from `.claude/principles/`
 - All `cco-*.md` symlinks from `.claude/commands/`
-- Guide/skill/agent symlinks
+- Guide/skill/agent symlinks from `.claude/guides/`, `.claude/skills/`, `.claude/agents/`
 - Optionally: CCO section from CLAUDE.md
 
 ## What Stays Untouched
