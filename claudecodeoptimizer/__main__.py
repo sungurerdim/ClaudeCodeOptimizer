@@ -63,20 +63,14 @@ def main() -> None:
         dry_run = args.dry_run
 
         from .wizard.orchestrator import CCOWizard
-        from .core.command_tracker import track_command
 
-        # Track command usage
-        @track_command("cco-init")
-        def run_init():
+        try:
             wizard = CCOWizard(
                 project_root=Path.cwd(),
                 mode=mode,
                 dry_run=dry_run,
             )
-            return wizard.run()
-
-        try:
-            result = run_init()
+            result = wizard.run()
 
             if result.success:
                 if dry_run:
@@ -108,34 +102,15 @@ def main() -> None:
             sys.exit(1)
 
     elif args.command == "status":
-        from .core.project import ProjectManager
-        from .core.command_tracker import get_command_stats
-        from .core.registry import ProjectRegistry
-
         try:
-            manager = ProjectManager(Path.cwd())
             # Check if initialized
             config_dir = Path.cwd() / ".claude"
-            if config_dir.exists():
+            claude_md = Path.cwd() / "CLAUDE.md"
+
+            if config_dir.exists() and claude_md.exists():
                 print("✓ CCO is initialized for this project")
                 print(f"  Configuration: {config_dir}")
-
-                # Show command usage statistics (if available)
-                try:
-                    registry = ProjectRegistry()
-                    project_name = Path.cwd().name
-                    project_info = registry.get_project(project_name)
-                    if project_info:
-                        stats = get_command_stats(project_name)
-                        if stats["total_commands_run"] > 0:
-                            print()
-                            print("📊 Command Usage Statistics:")
-                            print(f"  Total commands run: {stats['total_commands_run']}")
-                            print(f"  Unique commands: {stats['unique_commands']}")
-                            if stats['most_used_command']:
-                                print(f"  Most used: {stats['most_used_command']}")
-                except Exception:
-                    pass  # Silently skip if stats not available
+                print(f"  Guide: {claude_md}")
             else:
                 print("❌ CCO is not initialized")
                 print()
