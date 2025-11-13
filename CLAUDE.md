@@ -239,7 +239,7 @@ Error: Function crashes with empty string
 ```python
 from claudecodeoptimizer.core.version_manager import VersionManager
 vm = VersionManager(Path.cwd())
-vm.auto_bump(update_changelog=True, create_tag=True)
+vm.auto_bump(create_tag=True)
 ```
 
 **Trigger**: Before release, after merge to main, or manually
