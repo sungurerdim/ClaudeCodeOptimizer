@@ -512,14 +512,14 @@ TIER2_VERSIONING_STRATEGY = DecisionPoint(
     tier=2,
     category="collaboration",
     question="How do you want to manage version bumping?",
-    why_this_question="📦 Versioning strategy affects release management and changelog generation (P052)",
+    why_this_question="📦 Versioning strategy affects release management and version tagging (P052)",
     multi_select=False,
     options=[
         Option(
             value="auto_semver",
             label="Automatic SemVer [RECOMMENDED for Solo]",
             description="Auto-bump version based on commit types (feat: → MINOR, fix: → PATCH)",
-            effects="Zero overhead, automated versioning, CHANGELOG generation",
+            effects="Zero overhead, automated versioning, release tagging",
             time_investment="0% overhead (fully automated)",
             recommended_for=["solo dev", "small teams", "CI/CD pipelines"],
         ),

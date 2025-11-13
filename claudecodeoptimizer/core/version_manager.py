@@ -187,137 +187,6 @@ class VersionManager:
 
         file_path.write_text(content, encoding="utf-8")
 
-    def create_changelog_entry(
-        self, version: str, commits: List[str], date: Optional[str] = None
-    ) -> str:
-        """
-        Generate CHANGELOG.md entry from commits.
-
-        Args:
-            version: Version number (e.g., "1.3.0")
-            commits: List of commit messages since last version
-            date: Release date (defaults to today)
-
-        Returns:
-            Formatted changelog entry
-        """
-        if date is None:
-            date = datetime.now().strftime("%Y-%m-%d")
-
-        # Group commits by type
-        breaking = []
-        features = []
-        fixes = []
-        other = []
-
-        for commit in commits:
-            msg = commit.strip()
-
-            if self._is_breaking_change(msg):
-                breaking.append(self._format_commit_message(msg))
-            elif msg.startswith("feat:") or msg.startswith("feat("):
-                features.append(self._format_commit_message(msg))
-            elif msg.startswith("fix:") or msg.startswith("fix("):
-                fixes.append(self._format_commit_message(msg))
-            else:
-                other.append(self._format_commit_message(msg))
-
-        # Build changelog entry
-        lines = [
-            f"## [{version}] - {date}",
-            "",
-        ]
-
-        if breaking:
-            lines.append("### ⚠️ BREAKING CHANGES")
-            lines.append("")
-            for item in breaking:
-                lines.append(f"- {item}")
-            lines.append("")
-
-        if features:
-            lines.append("### ✨ Features")
-            lines.append("")
-            for item in features:
-                lines.append(f"- {item}")
-            lines.append("")
-
-        if fixes:
-            lines.append("### 🐛 Bug Fixes")
-            lines.append("")
-            for item in fixes:
-                lines.append(f"- {item}")
-            lines.append("")
-
-        if other:
-            lines.append("### 🔧 Other Changes")
-            lines.append("")
-            for item in other:
-                lines.append(f"- {item}")
-            lines.append("")
-
-        return "\n".join(lines)
-
-    def _format_commit_message(self, msg: str) -> str:
-        """
-        Format commit message for changelog.
-
-        Removes commit type prefix and formats nicely.
-        """
-        # Remove type prefix: "feat(scope): message" → "scope: message"
-        msg = re.sub(r"^(feat|fix|docs|refactor|test|chore)(\([^)]+\))?\s*!?:\s*", "", msg)
-
-        # Capitalize first letter
-        if msg:
-            msg = msg[0].upper() + msg[1:]
-
-        return msg
-
-    def update_changelog(self, version: str, commits: List[str]) -> None:
-        """
-        Update CHANGELOG.md with new version entry.
-
-        Args:
-            version: New version number
-            commits: Commits since last version
-        """
-        changelog_path = self.project_root / "CHANGELOG.md"
-
-        # Generate new entry
-        new_entry = self.create_changelog_entry(version, commits)
-
-        if changelog_path.exists():
-            # Prepend to existing changelog
-            existing = changelog_path.read_text(encoding="utf-8")
-
-            # Find insertion point (after header, before first version)
-            lines = existing.split("\n")
-            insert_index = 0
-
-            for i, line in enumerate(lines):
-                if line.startswith("## ["):
-                    insert_index = i
-                    break
-
-            if insert_index > 0:
-                # Insert before first version
-                updated = (
-                    "\n".join(lines[:insert_index])
-                    + "\n\n"
-                    + new_entry
-                    + "\n"
-                    + "\n".join(lines[insert_index:])
-                )
-            else:
-                # No versions yet, append to end
-                updated = existing + "\n\n" + new_entry
-
-            changelog_path.write_text(updated, encoding="utf-8")
-        else:
-            # Create new changelog
-            content = f"# Changelog\n\nAll notable changes to this project will be documented in this file.\n\n{new_entry}\n"
-            changelog_path.write_text(content, encoding="utf-8")
-
     def create_git_tag(self, version: str, create: bool = False) -> Optional[str]:
         """
         Create git tag for version.
@@ -384,13 +253,13 @@ class VersionManager:
             # No tags yet
             return "0.0.0", []
 
-    def auto_bump(self, update_changelog: bool = False, create_tag: bool = False) -> Optional[str]:
+    def auto_bump(self, create_tag: bool = False, **kwargs) -> Optional[str]:
         """
         Automatically bump version based on commits since last tag.
 
         Args:
-            update_changelog: If True, update CHANGELOG.md
             create_tag: If True, create git tag
+            **kwargs: Ignored (for backward compatibility)
 
         Returns:
             New version string, or None if no bump needed
@@ -417,11 +286,6 @@ class VersionManager:
         # Update version files
         self.update_version_files(new_version)
         print("✓ Updated version files")
-
-        # Update changelog
-        if update_changelog:
-            self.update_changelog(new_version, commits)
-            print("✓ Updated CHANGELOG.md")
 
         # Create tag
         if create_tag:

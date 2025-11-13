@@ -332,7 +332,7 @@ Agent: Plan
 Model: sonnet
 
 For each flagged major version conflict:
-1. Check for breaking changes in changelog
+1. Check for breaking changes in release notes
 2. Assess impact on existing code
 3. Recommend upgrade path or pin version
 4. Generate migration guide if needed

@@ -564,7 +564,7 @@ Error: Function crashes with empty string
 ```python
 from claudecodeoptimizer.core.version_manager import VersionManager
 vm = VersionManager(Path.cwd())
-vm.auto_bump(update_changelog=True, create_tag=True)
+vm.auto_bump(create_tag=True)
 ```
 
 **Trigger**: Before release, after merge to main, or manually
@@ -586,7 +586,7 @@ vm.auto_bump(update_changelog=True, create_tag=True)
 
 **Manual Bump**:
 ```bash
-python -m claudecodeoptimizer.core.version_manager auto_bump --update-changelog --create-tag
+python -m claudecodeoptimizer.core.version_manager auto_bump --create-tag
 ```
 
 **Principles**: See `.claude/principles/git-workflow.md` (P052)
@@ -602,8 +602,7 @@ python -m claudecodeoptimizer.core.version_manager auto_bump --update-changelog 
 **Process**:
 1. Review commits: `git log $(git describe --tags --abbrev=0)..HEAD`
 2. Update version files (pyproject.toml, package.json, etc.)
-3. Update CHANGELOG.md
-4. Create tag: `git tag -a v1.3.0 -m "Release 1.3.0"`
+3. Create tag: `git tag -a v1.3.0 -m "Release 1.3.0"`
 
 **Helper Tool**:
 ```bash

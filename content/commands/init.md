@@ -890,7 +890,6 @@ After initialization:
 - ❌ api_doc_format (default)
 - ❌ architecture_doc_maintenance (default)
 - ❌ code_example_coverage (default)
-- ❌ changelog_detail_level (default)
 - ❌ readme_sections (default)
 - ❌ doc_versioning (default)
 

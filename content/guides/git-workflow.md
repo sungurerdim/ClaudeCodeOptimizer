@@ -214,9 +214,7 @@ Completed:
 - P0: wshobson/agents integration
 - 60% test coverage
 - CI/CD pipeline operational
-- Zero critical bugs
-
-See CHANGELOG.md for details"
+- Zero critical bugs"
 
 git push origin v0.2.0-alpha
 ```

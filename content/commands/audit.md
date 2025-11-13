@@ -819,10 +819,6 @@ MEDIUM (incomplete):
     Impact: Harder to understand usage patterns
     Affected: New developers learning the API
 
-  - CHANGELOG.md - Last updated 6 months ago
-    Missing: 47 commits worth of changes
-    Impact: Users don't know what changed
-
 LOW (minor improvements):
   - src/utils.py - 60% docstring coverage
     Missing: Helper functions only
@@ -873,11 +869,6 @@ THIS SPRINT (Completeness):
    Impact: MEDIUM - Faster learning curve
    Audience: New developers
 
-7. Update changelog
-   Command: /cco-generate docs --type changelog --since 6-months-ago
-   Impact: MEDIUM - Release transparency
-   Audience: Users, stakeholders
-
 BACKLOG (Nice to Have):
 ──────────────────────
 8. Complete utility docstrings
@@ -906,7 +897,6 @@ Documentation Debt: 10.75 hours | Doc Health: 58 → 92 | Onboarding Time: -75%
    - Docstrings: Function/class level documentation
    - Examples: Working code snippets
    - Contributing: PR process, coding standards
-   - Changelog: Version history, migration guides
 
 4. **Command Features:**
    - Doc type: `--type readme`, `--type api`, `--type docstrings`
