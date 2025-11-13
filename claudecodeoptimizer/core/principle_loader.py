@@ -4,8 +4,10 @@ Principle Loader - Individual Principle Loading System
 Maps commands to specific principle IDs for token optimization.
 Only loads relevant principles for each command.
 
-Before: ~5000 tokens (all 81 principles)
+Before: ~5000 tokens (all principles loaded)
 After: ~200-800 tokens (3-10 specific principles)
+
+See README.md for current principle counts.
 
 Architecture:
 - Individual principle files (P001.md, P002.md, ...)
@@ -159,15 +161,7 @@ class PrincipleLoader:
             >>> content = loader.load_for_command("cco-audit-security")
             # Returns: U001-U012.md + P001.md + P036.md + ... (~800 tokens)
         """
-        # Try project config first (DYNAMIC)
-        project_config = self._find_project_config()
-        if project_config:
-            overrides = project_config.get("command_overrides", {})
-            if command in overrides:
-                principle_ids = overrides[command].get("principles", [])
-                return self.load_principles(principle_ids)
-
-        # Fallback to COMMAND_PRINCIPLE_MAP (STATIC)
+        # Use COMMAND_PRINCIPLE_MAP (STATIC)
         categories = COMMAND_PRINCIPLE_MAP.get(command, ["universal", "core"])
 
         # Convert categories to principle IDs
@@ -181,16 +175,6 @@ class PrincipleLoader:
                 principles.append(content)
 
         return "\n\n---\n\n".join(principles)
-
-    def _find_project_config(self) -> Optional[Dict]:
-        """Find .claude/project.json in current working directory."""
-        from pathlib import Path
-        cwd = Path.cwd()
-        config_path = cwd / ".claude" / "project.json"
-        if config_path.exists():
-            import json
-            return json.loads(config_path.read_text())
-        return None
 
     def load_principles(self, principle_ids: List[str]) -> str:
         """

@@ -806,7 +806,7 @@ This file contains the mandatory development principles for this project. **You 
                                  if all_principles.get(pid, {}).get("category") != "universal")
         total_with_universal = len(universal_principles) + non_universal_count
 
-        principles_content.append(f"\n**Total**: {len(universal_principles)} universal + {non_universal_count} project-specific = {total_with_universal} principles\n")
+        # Note: Total counts maintained in README.md only (avoid hardcoding in generated files)
 
         # Replace content between markers
         start_marker = "<!-- CCO_START -->"
@@ -881,7 +881,7 @@ This file contains the mandatory development principles for this project. **You 
                     skill_name = skill.split("/")[1].replace("-", " ").title()
                     skills_content.append(f"- **{skill_name}** → `.claude/skills/{skill}.md`\n")
 
-        skills_content.append(f"\n**Total**: {len(self.selected_skills)} skills available\n")
+        # Note: Total counts maintained in README.md only
 
         # Replace content between markers
         start_marker = "<!-- CCO_SKILLS_START -->"
@@ -942,7 +942,7 @@ This file contains the mandatory development principles for this project. **You 
             agents_content.append(f"- **{agent_name}** → `.claude/agents/{agent}.md`\n")
             agents_content.append(f"  {description}\n")
 
-        agents_content.append(f"\n**Total**: {len(self.selected_agents)} agents available\n")
+        # Note: Total counts maintained in README.md only
 
         # Replace content between markers
         start_marker = "<!-- CCO_AGENTS_START -->"

@@ -1,8 +1,10 @@
 """
 Principles management system for ClaudeCodeOptimizer.
 
-Loads and manages the 81 development principles from .md files.
+Loads and manages development principles from .md files.
 Implements dynamic principle selection based on project characteristics.
+
+See README.md for current principle counts.
 """
 
 from dataclasses import dataclass
@@ -406,7 +408,7 @@ def get_principles_manager(principles_dir: Optional[str] = None) -> PrinciplesMa
     """
     Get cached PrinciplesManager instance (Singleton pattern - P012).
 
-    Expensive resource: Loads ~81 principles from .md files.
+    Expensive resource: Loads all principles from .md files.
     Using @lru_cache ensures only one instance exists per principles_dir.
 
     Args:

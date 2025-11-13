@@ -54,38 +54,36 @@ def setup_global_knowledge(force: bool = False) -> Dict[str, Any]:
     # Ensure global directory exists
     global_dir.mkdir(parents=True, exist_ok=True)
 
+    # ALWAYS regenerate content on pip install to ensure freshness
+    # This prevents stale files from lingering after updates
+
     # Setup templates/ (deploy with .template extensions removed)
-    if force or not templates_dir.exists() or not (templates_dir / "settings.json").exists():
-        _setup_templates(templates_dir)
-        results["actions"].append("Deployed template files")
+    _setup_templates(templates_dir)
+    results["actions"].append("Deployed template files")
 
     # Setup commands/
-    if force or not commands_dir.exists() or not list(commands_dir.glob("*.md")):
-        _setup_commands(commands_dir)
-        results["actions"].append("Copied command files")
+    _setup_commands(commands_dir)
+    results["actions"].append("Copied command files")
 
     # Setup guides/
-    if force or not guides_dir.exists() or not list(guides_dir.glob("*.md")):
-        _setup_guides(guides_dir)
-        results["actions"].append("Copied guide files")
+    _setup_guides(guides_dir)
+    results["actions"].append("Copied guide files")
 
     # Setup principles/
-    if force or not principles_dir.exists() or not list(principles_dir.glob("*.md")):
-        _setup_principles(principles_dir)
-        results["actions"].append("Generated principles category files")
+    _setup_principles(principles_dir)
+    results["actions"].append("Generated principles files")
 
     # Setup agents/ (with templates)
-    if force or not agents_dir.exists() or not (agents_dir / "README.md").exists():
-        _setup_agents(agents_dir)
-        results["actions"].append("Setup agents directory with templates")
+    _setup_agents(agents_dir)
+    results["actions"].append("Setup agents directory")
 
     # Setup skills/ (with templates)
-    if force or not skills_dir.exists() or not (skills_dir / "README.md").exists():
-        _setup_skills(skills_dir)
-        results["actions"].append("Setup skills directory with templates")
+    _setup_skills(skills_dir)
+    results["actions"].append("Setup skills directory")
 
-    if not results["actions"]:
-        results["actions"].append("Knowledge base already up to date")
+    # Setup ~/.claude/ symlinks for universal agents (Claude Code integration)
+    _setup_claude_home_links()
+    results["actions"].append("Setup ~/.claude/ symlinks for universal agents")
 
     return results
 
@@ -102,6 +100,8 @@ def _setup_templates(templates_dir: Path) -> None:
     - etc.
 
     Projects will link directly to these deployed files (without .template extension).
+
+    IMPORTANT: Removes entire directory first to ensure clean slate.
     """
     # Get package templates directory
     package_dir = Path(__file__).parent.parent
@@ -110,7 +110,11 @@ def _setup_templates(templates_dir: Path) -> None:
     if not source_templates.exists():
         raise FileNotFoundError(f"Template directory not found at {source_templates}")
 
-    # Create destination
+    # CLEANUP: Remove entire directory for clean slate
+    if templates_dir.exists():
+        shutil.rmtree(templates_dir)
+
+    # Create fresh directory
     templates_dir.mkdir(parents=True, exist_ok=True)
 
     # Deploy all .template files (remove .template extension)
@@ -131,10 +135,14 @@ def _setup_principles(principles_dir: Path) -> None:
     """
     Copy individual principle files from content to global directory.
 
-    Copies 81 individual principle files:
-    - U001-U012.md (12 universal principles - always included)
-    - P001-P069.md (69 project-specific principles - AI-selected)
+    Copies all principle files:
+    - U*.md (universal principles - always included)
+    - P*.md (project-specific principles - AI-selected)
     from content/principles/ to ~/.cco/principles/
+
+    IMPORTANT: Removes entire directory first to ensure clean slate.
+
+    See README.md for current principle counts.
     """
     # Get content directory
     package_dir = Path(__file__).parent.parent
@@ -143,7 +151,11 @@ def _setup_principles(principles_dir: Path) -> None:
     if not source_principles.exists():
         raise FileNotFoundError(f"Content principles not found at {source_principles}")
 
-    # Create destination
+    # CLEANUP: Remove entire directory for clean slate
+    if principles_dir.exists():
+        shutil.rmtree(principles_dir)
+
+    # Create fresh directory
     principles_dir.mkdir(parents=True, exist_ok=True)
 
     # Copy all .md files
@@ -157,6 +169,8 @@ def _setup_commands(commands_dir: Path) -> None:
     Copy command files from content to global directory.
 
     Copies from content/commands/ to ~/.cco/commands/
+
+    IMPORTANT: Removes entire directory first to ensure clean slate.
     """
     # Get content directory
     package_dir = Path(__file__).parent.parent
@@ -165,7 +179,11 @@ def _setup_commands(commands_dir: Path) -> None:
     if not source_commands.exists():
         raise FileNotFoundError(f"Content commands not found at {source_commands}")
 
-    # Create destination
+    # CLEANUP: Remove entire directory for clean slate
+    if commands_dir.exists():
+        shutil.rmtree(commands_dir)
+
+    # Create fresh directory
     commands_dir.mkdir(parents=True, exist_ok=True)
 
     # Copy all .md files
@@ -179,6 +197,8 @@ def _setup_guides(guides_dir: Path) -> None:
     Copy guide files from content to global directory.
 
     Copies from content/guides/ to ~/.cco/guides/
+
+    IMPORTANT: Removes entire directory first to ensure clean slate.
     """
     # Get content directory
     package_dir = Path(__file__).parent.parent
@@ -187,7 +207,11 @@ def _setup_guides(guides_dir: Path) -> None:
     if not source_guides.exists():
         raise FileNotFoundError(f"Content guides not found at {source_guides}")
 
-    # Create destination
+    # CLEANUP: Remove entire directory for clean slate
+    if guides_dir.exists():
+        shutil.rmtree(guides_dir)
+
+    # Create fresh directory
     guides_dir.mkdir(parents=True, exist_ok=True)
 
     # Copy all .md files
@@ -201,6 +225,8 @@ def _setup_agents(agents_dir: Path) -> None:
     Copy agent templates from content to global directory.
 
     Copies from content/agents/ to ~/.cco/agents/
+
+    IMPORTANT: Removes entire directory first to ensure clean slate.
     """
     # Get content directory
     package_dir = Path(__file__).parent.parent
@@ -209,7 +235,11 @@ def _setup_agents(agents_dir: Path) -> None:
     if not source_agents.exists():
         raise FileNotFoundError(f"Content agents not found at {source_agents}")
 
-    # Create destination
+    # CLEANUP: Remove entire directory for clean slate
+    if agents_dir.exists():
+        shutil.rmtree(agents_dir)
+
+    # Create fresh directory
     agents_dir.mkdir(parents=True, exist_ok=True)
 
     # Copy all .md files (templates and README)
@@ -226,6 +256,8 @@ def _setup_skills(skills_dir: Path) -> None:
     - General skills (*.md files in root)
     - Language-specific skills (subdirectories: python/, go/, rust/, typescript/)
     - Skill registry and Python integration code
+
+    IMPORTANT: Removes entire directory first to ensure clean slate.
     """
     # Get content directory
     package_dir = Path(__file__).parent.parent
@@ -234,7 +266,11 @@ def _setup_skills(skills_dir: Path) -> None:
     if not source_skills.exists():
         raise FileNotFoundError(f"Content skills not found at {source_skills}")
 
-    # Create destination
+    # CLEANUP: Remove entire directory for clean slate
+    if skills_dir.exists():
+        shutil.rmtree(skills_dir)
+
+    # Create fresh directory
     skills_dir.mkdir(parents=True, exist_ok=True)
 
     # Copy all .md files from root (general skills)
@@ -256,24 +292,91 @@ def _setup_skills(skills_dir: Path) -> None:
                 shutil.copy2(skill_file, dest_file)
 
 
+def _setup_claude_home_links() -> None:
+    """
+    Setup symlinks in ~/.claude/ for universal/global content.
+
+    Creates links for:
+    - ~/.claude/agents/ → symlinks to all agents from ~/.cco/agents/
+
+    This enables Claude Code to automatically discover and use CCO agents
+    without per-project configuration.
+    """
+    import os
+    import platform
+
+    from .. import config
+
+    claude_dir = config.get_claude_dir()
+    cco_agents_dir = config.get_agents_dir()
+
+    # Only proceed if CCO agents exist
+    if not cco_agents_dir.exists():
+        return
+
+    # Create ~/.claude/agents/ directory
+    claude_agents_dir = claude_dir / "agents"
+    claude_agents_dir.mkdir(parents=True, exist_ok=True)
+
+    # Link all agent files from ~/.cco/agents/ to ~/.claude/agents/
+    for agent_file in cco_agents_dir.glob("*.md"):
+        # Skip templates and README
+        if agent_file.name.startswith("_template") or agent_file.name == "README.md":
+            continue
+
+        source = agent_file
+        target = claude_agents_dir / agent_file.name
+
+        # Remove existing symlink/file if exists
+        if target.exists() or target.is_symlink():
+            target.unlink()
+
+        # Create symlink (cross-platform)
+        try:
+            if platform.system() == "Windows":
+                # Windows: use mklink
+                import subprocess
+                subprocess.run(
+                    ["cmd", "/c", "mklink", str(target), str(source)],
+                    check=True,
+                    capture_output=True
+                )
+            else:
+                # Unix: use symlink_to
+                target.symlink_to(source)
+        except Exception:
+            # If symlink fails, copy the file instead (fallback)
+            shutil.copy2(source, target)
+
+
 def get_principle_categories() -> list[str]:
     """
-    Get list of available principle categories.
+    Get list of available principle categories dynamically from principle files.
 
     Returns:
-        List of category IDs (e.g., ['core', 'security', 'testing'])
+        List of category IDs found in principle files (e.g., ['code_quality', 'security_privacy', 'testing'])
     """
-    return [
-        "core",
-        "code_quality",
-        "security",
-        "testing",
-        "architecture",
-        "performance",
-        "operations",
-        "git_workflow",
-        "api_design",
-    ]
+    import re
+
+    principles_dir = config.get_principles_dir()
+    if not principles_dir.exists():
+        return []
+
+    categories = set()
+
+    # Scan all P*.md files to extract unique categories
+    for p_file in principles_dir.glob("P*.md"):
+        try:
+            content = p_file.read_text(encoding='utf-8')
+            # Look for category: line in frontmatter
+            match = re.search(r'category:\s*([^\n]+)', content)
+            if match:
+                cat = match.group(1).strip()
+                categories.add(cat)
+        except Exception:
+            continue  # Skip malformed files
+
+    return sorted(categories)
 
 
 def get_available_commands() -> list[str]:
