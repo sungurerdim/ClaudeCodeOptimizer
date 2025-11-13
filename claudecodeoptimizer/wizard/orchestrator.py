@@ -677,8 +677,8 @@ class CCOWizard:
                 if available_guides:
                     # Guide descriptions
                     guide_descriptions = {
-                        "verification-protocol": "Evidence-based verification workflow (P067)",
-                        "git-workflow": "Git commit, branching, PR guidelines (P072-P074)",
+                        "verification-protocol": "Evidence-based verification workflow (U001)",
+                        "git-workflow": "Git commit, branching, PR guidelines (U009, U010)",
                         "security-response": "Security incident response and remediation plan",
                         "performance-optimization": "Performance analysis and optimization workflow",
                         "container-best-practices": "Docker/Kubernetes deployment best practices",
@@ -760,8 +760,8 @@ class CCOWizard:
 
                     # Skill descriptions
                     skill_descriptions = {
-                        "verification-protocol": "Evidence-based fix-verify-commit loop (P067)",
-                        "test-first-verification": "Generate tests before code changes (P035)",
+                        "verification-protocol": "Evidence-based fix-verify-commit loop (U001)",
+                        "test-first-verification": "Generate tests before code changes (U003)",
                         "root-cause-analysis": "Analyze WHY violations exist, not just WHERE",
                         "incremental-improvement": "Break large tasks into achievable milestones",
                         "security-emergency-response": "Immediate P0 CRITICAL security remediation",

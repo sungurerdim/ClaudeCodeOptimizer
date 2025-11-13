@@ -1,5 +1,5 @@
 """
-Version Manager - Automated Semantic Versioning (P074)
+Version Manager - Automated Semantic Versioning (P052)
 
 Automatically bump version based on conventional commit types:
 - feat: → MINOR (1.2.0 → 1.3.0)
@@ -27,7 +27,7 @@ class VersionManager:
     """
     Manage semantic versioning based on commit types.
 
-    Implements P074: Automated Semantic Versioning
+    Implements P052: Automated Semantic Versioning
     """
 
     def __init__(self, project_root: Path):

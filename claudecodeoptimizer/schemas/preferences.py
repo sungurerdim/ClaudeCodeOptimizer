@@ -868,7 +868,7 @@ class TeamCollaboration(BaseModel):
 
     versioning_strategy: VersioningStrategyChoice = Field(
         default="auto_semver",
-        description="Version bumping strategy (P074: Automated Semantic Versioning)",
+        description="Version bumping strategy (P052: Automated Semantic Versioning)",
     )
 
     commit_convention: CommitConventionChoice = Field(

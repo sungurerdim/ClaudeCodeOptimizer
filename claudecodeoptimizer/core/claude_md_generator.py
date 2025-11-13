@@ -301,7 +301,7 @@ class ClaudeMdGenerator:
         if "Git Workflow" not in content:
             additions.append(self._get_git_workflow_section(git_workflow, team_size))
 
-        # Add Versioning Strategy section (P074)
+        # Add Versioning Strategy section (P052)
         versioning_strategy = self._get_pref("collaboration.versioning_strategy", "auto_semver")
         if "Versioning Strategy" not in content and versioning_strategy != "no_versioning":
             additions.append(self._get_versioning_section(versioning_strategy))
@@ -461,7 +461,7 @@ Error: Function crashes with empty string
 
 **Workflow**:
 - Single `main` branch, direct commits
-- Follow P072 (Concise Commits), P073 (Atomic Commits)
+- Follow U010 (Concise Commits), U009 (Atomic Commits)
 - Push after each completed task
 
 **Principles**: See `.claude/principles/git-workflow.md`
@@ -533,7 +533,7 @@ Error: Function crashes with empty string
 
     def _get_versioning_section(self, strategy: str) -> str:
         """
-        Generate Versioning Strategy section based on preference (P074).
+        Generate Versioning Strategy section based on preference (P052).
 
         Args:
             strategy: auto_semver, pr_based_semver, manual_semver, or calver
@@ -554,7 +554,7 @@ Error: Function crashes with empty string
 
     def _get_auto_semver_section(self) -> str:
         """Get Automatic SemVer section"""
-        return """## Versioning Strategy (P074)
+        return """## Versioning Strategy (P052)
 
 **Strategy**: Automated Semantic Versioning
 
@@ -567,13 +567,13 @@ vm.auto_bump(update_changelog=True, create_tag=True)
 
 **Trigger**: Before release, after merge to main, or manually
 
-**Principles**: See `.claude/principles/git-workflow.md` (P074)
+**Principles**: See `.claude/principles/git-workflow.md` (P052)
 
 ---"""
 
     def _get_pr_based_semver_section(self) -> str:
         """Get PR-Based SemVer section"""
-        return """## Versioning Strategy (P074)
+        return """## Versioning Strategy (P052)
 
 **Strategy**: PR-Based Semantic Versioning (reviewer confirms)
 
@@ -587,13 +587,13 @@ vm.auto_bump(update_changelog=True, create_tag=True)
 python -m claudecodeoptimizer.core.version_manager auto_bump --update-changelog --create-tag
 ```
 
-**Principles**: See `.claude/principles/git-workflow.md` (P074)
+**Principles**: See `.claude/principles/git-workflow.md` (P052)
 
 ---"""
 
     def _get_manual_semver_section(self) -> str:
         """Get Manual SemVer section"""
-        return """## Versioning Strategy (P074)
+        return """## Versioning Strategy (P052)
 
 **Strategy**: Manual Semantic Versioning (release managers control)
 
@@ -608,7 +608,7 @@ python -m claudecodeoptimizer.core.version_manager auto_bump --update-changelog 
 python -m claudecodeoptimizer.core.version_manager auto_bump --dry-run
 ```
 
-**Principles**: See `.claude/principles/git-workflow.md` (P074)
+**Principles**: See `.claude/principles/git-workflow.md` (P052)
 
 ---"""
 

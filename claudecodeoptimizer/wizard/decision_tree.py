@@ -497,7 +497,7 @@ TIER2_VERSIONING_STRATEGY = DecisionPoint(
     tier=2,
     category="collaboration",
     question="How do you want to manage version bumping?",
-    why_this_question="📦 Versioning strategy affects release management and changelog generation (P074)",
+    why_this_question="📦 Versioning strategy affects release management and changelog generation (P052)",
     multi_select=False,
     options=[
         Option(
