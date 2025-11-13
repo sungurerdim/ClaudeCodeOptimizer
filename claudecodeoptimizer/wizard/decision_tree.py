@@ -12,7 +12,7 @@ Structure:
 - TIER 4: System-specific (automatic adaptation)
 """
 
-from .context_matrix import ContextMatrix
+from .context_matrix import ContextMatrix, _get_available_principle_count
 from .models import AnswerContext, DecisionPoint, Option
 from .recommendations import RecommendationEngine
 from .tool_comparison import ToolComparator
@@ -21,6 +21,48 @@ from .validators import validate_no_conflicts
 # Initialize engines
 _rec_engine = RecommendationEngine()
 _context_matrix = ContextMatrix()
+
+
+def _get_principle_strategy_options():
+    """Generate principle strategy options dynamically based on available principles."""
+    total = _get_available_principle_count()
+
+    minimal_min = max(10, int(total * 0.15))
+    minimal_max = max(12, int(total * 0.18))
+
+    comprehensive_min = max(40, int(total * 0.6))
+    comprehensive_max = max(45, int(total * 0.65))
+
+    return [
+        Option(
+            value="recommended",
+            label="Recommended/Balanced",
+            description="AI-selected principles based on your project needs",
+            effects=f"~{int(total * 0.35)}-{int(total * 0.45)} principles (AI-selected), balanced strictness",
+            recommended_for=["most projects", "balanced approach"],
+        ),
+        Option(
+            value="minimal",
+            label="Minimal/Pragmatic",
+            description="Only critical must-haves, maximum flexibility",
+            effects=f"~{minimal_min}-{minimal_max} principles, low strictness, fast iteration",
+            recommended_for=["prototypes", "learning", "fast iteration"],
+        ),
+        Option(
+            value="comprehensive",
+            label="Comprehensive/Strict",
+            description="Full quality enforcement, all best practices",
+            effects=f"~{comprehensive_min}-{comprehensive_max} principles, high strictness, maximum quality",
+            recommended_for=["team projects", "production systems", "compliance"],
+        ),
+        Option(
+            value="custom",
+            label="Custom Selection",
+            description="I'll review and choose each principle individually",
+            effects="Variable (your choice), you control everything",
+            recommended_for=["specific requirements", "experienced users"],
+        ),
+    ]
 
 
 # ============================================================================
@@ -301,36 +343,7 @@ TIER2_PRINCIPLE_STRATEGY = DecisionPoint(
     question="How should we select development principles?",
     why_this_question="📋 This determines how many principles to enforce (minimal, balanced, or comprehensive)",
     multi_select=False,
-    options=[
-        Option(
-            value="recommended",
-            label="Recommended Preset ⭐",
-            description="Smart selection based on your project type",
-            effects="~20-25 principles, medium strictness, AI-optimized for your context",
-            recommended_for=["most projects", "balanced approach"],
-        ),
-        Option(
-            value="minimal",
-            label="Minimal/Pragmatic",
-            description="Only critical must-haves, maximum flexibility",
-            effects="~10-12 principles, low strictness, fast iteration",
-            recommended_for=["prototypes", "learning", "fast iteration"],
-        ),
-        Option(
-            value="comprehensive",
-            label="Comprehensive/Strict",
-            description="Full quality enforcement, all best practices",
-            effects="~40-45 principles, high strictness, maximum quality",
-            recommended_for=["team projects", "production systems", "compliance"],
-        ),
-        Option(
-            value="custom",
-            label="Custom Selection",
-            description="I'll review and choose each principle individually",
-            effects="You decide exactly which principles apply",
-            recommended_for=["advanced users", "specific requirements"],
-        ),
-    ],
+    options=_get_principle_strategy_options(),  # Dynamic generation based on available principles
     auto_strategy=lambda ctx: _auto_select_principle_strategy(ctx),
     ai_hint_generator=lambda ctx: _rec_engine.recommend_principle_strategy(ctx),
 )

@@ -7,8 +7,19 @@ Pattern from CCO P0.8: Context-aware configuration
 """
 
 from typing import Dict, List
+from pathlib import Path
 
 from .models import AnswerContext, Option
+from .. import config
+
+
+def _get_available_principle_count() -> int:
+    """Get total available principles dynamically from global directory."""
+    principles_dir = config.get_principles_dir()
+    if not principles_dir.exists():
+        return 0
+    # Count all P*.md files (project-specific principles)
+    return len(list(principles_dir.glob("P*.md")))
 
 
 class ContextMatrix:
@@ -120,29 +131,34 @@ class ContextMatrix:
         # Clamp to 1-10
         score = max(1, min(10, score))
 
+        # Get total available principles dynamically
+        total_available = _get_available_principle_count()
+
         # Map score to intensity level and principle categories
+        # Principle count ranges scale with total available
+        # NOTE: Categories will be dynamically filtered based on principle weight, not hardcoded lists
         if score <= 3:
             intensity = "minimal"
-            categories = ["core"]
-            principle_count = "5-10"
+            categories = []  # Will be filtered by weight (≥10)
+            count_min = max(5, int(total_available * 0.07))  # ~7% of total
+            count_max = max(10, int(total_available * 0.15))  # ~15% of total
+            principle_count = f"{count_min}-{count_max}"
         elif score <= 6:
             intensity = "recommended"
-            categories = ["core", "code-quality", "security"]
-            principle_count = "20-30"
+            categories = []  # Will be filtered by weight (≥9)
+            count_min = max(15, int(total_available * 0.25))  # ~25% of total
+            count_max = max(30, int(total_available * 0.45))  # ~45% of total
+            principle_count = f"{count_min}-{count_max}"
         elif score <= 8:
             intensity = "comprehensive"
-            categories = [
-                "core",
-                "code-quality",
-                "security",
-                "testing",
-                "architecture",
-            ]
-            principle_count = "40-50"
+            categories = []  # Will be filtered by weight (≥8)
+            count_min = max(35, int(total_available * 0.55))  # ~55% of total
+            count_max = max(50, int(total_available * 0.75))  # ~75% of total
+            principle_count = f"{count_min}-{count_max}"
         else:
             intensity = "maximum"
-            categories = ["all"]
-            principle_count = "70+"
+            categories = []  # Will include all principles (weight ≥5)
+            principle_count = f"{total_available}+"
 
         return {
             "intensity": intensity,

@@ -234,21 +234,24 @@ class PrincipleSelector:
 
         Filters based on strictness:
         - paranoid/pedantic: All principles (weight >= 5)
-        - strict: Core + important (weight >= 8) → ~27 principles
-        - standard: Essential (weight >= 9) → ~14 principles
-        - moderate/relaxed: Critical only (weight >= 10) → ~7 principles
+        - strict: Core + important (weight >= 8) → ~40% of total
+        - standard: Essential (weight >= 9) → ~20% of total
+        - moderate/relaxed: Critical only (weight >= 10) → ~10% of total
+
+        Weight thresholds are fixed, but resulting count scales with available principles.
         """
         weight = principle.get("weight", 5)
         strictness = self._get_nested_value(self.preferences, "code_quality.linting_strictness")
 
         # Map strictness to minimum weight threshold
+        # NOTE: Thresholds are fixed, but available principles may vary
         weight_thresholds = {
-            "paranoid": 5,  # All principles (53)
-            "pedantic": 6,  # Most principles (50)
-            "strict": 8,  # Core + important (~27)
-            "standard": 9,  # Essential (~14)
-            "moderate": 10,  # Critical only (~7)
-            "relaxed": 10,  # Critical only (~7)
+            "paranoid": 5,  # All principles
+            "pedantic": 6,  # Most principles
+            "strict": 8,  # Core + important
+            "standard": 9,  # Essential
+            "moderate": 10,  # Critical only
+            "relaxed": 10,  # Critical only
         }
 
         min_weight = weight_thresholds.get(strictness, 9)
