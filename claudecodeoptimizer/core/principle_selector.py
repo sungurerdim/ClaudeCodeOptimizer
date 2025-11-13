@@ -203,7 +203,7 @@ class PrincipleSelector:
         team_size = self._get_nested_value(self.preferences, "project_identity.team_trajectory")
 
         # Some principles don't apply to solo devs
-        team_only_ids = ["P015", "P016", "P017", "P018"]  # Code review, PR guidelines, etc.
+        team_only_ids = ["P015", "P016", "P017", "P018"]  # Complex architecture patterns (microservices, CQRS, etc.)
         if principle["id"] in team_only_ids and team_size == "solo":
             return False
 
@@ -454,7 +454,7 @@ class PrincipleSelector:
         """
         Render PRINCIPLES.md content in progressive disclosure format.
 
-        New format (P071: Anti-Overengineering):
+        New format (U011: No Overengineering):
         - Core principles only (~500 tokens)
         - Links to category files for full details
         - 10x token reduction
@@ -477,8 +477,8 @@ class PrincipleSelector:
         lines.append("These principles are **MANDATORY** and apply to **ALL work, ALWAYS**.")
         lines.append("")
 
-        # Get core principles (P001, P067, P071)
-        core_principle_ids = ["P001", "P067", "P071"]
+        # Get core universal principles (fail-fast, evidence-based, no overengineering)
+        core_principle_ids = ["U002", "U001", "U011"]
         all_applicable = []
         for severity_list in by_severity.values():
             all_applicable.extend(severity_list)
@@ -689,8 +689,8 @@ class PrincipleSelector:
         for category_id, category_name in categories.items():
             # Get principles for this category
             if category_id == "core":
-                # Core principles are P001, P067, P071
-                principles = [p for p in self.all_principles if p["id"] in ["P001", "P067", "P071"]]
+                # Core universal principles: fail-fast, evidence-based, no overengineering
+                principles = [p for p in self.all_principles if p["id"] in ["U002", "U001", "U011"]]
             else:
                 principles = [p for p in self.all_principles if p.get("category") == category_id]
 

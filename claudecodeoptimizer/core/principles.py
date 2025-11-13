@@ -174,7 +174,7 @@ class PrinciplesManager:
         """
         Automatically select principles based on project characteristics.
 
-        This implements the "auto" selection strategy from principles.json.
+        This implements the "auto" selection strategy from principle frontmatter.
         """
         selected = set()
 
