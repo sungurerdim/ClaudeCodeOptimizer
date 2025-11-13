@@ -161,13 +161,12 @@ User confirms before applying
 - import_organization
 - line_length_limit
 
-### 4. Documentation Preferences (8 questions)
+### 4. Documentation Preferences (7 questions)
 
 - verbosity
 - target_audience
 - documentation_style
 - inline_documentation
-- changelog_detail
 - architecture_diagrams
 - api_documentation
 - readme_length

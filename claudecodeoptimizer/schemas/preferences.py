@@ -298,7 +298,6 @@ DocVerbosityChoice = Literal["extensive", "concise", "minimal"]
 DocAudienceChoice = Literal["beginners", "intermediate", "experts"]
 DocStyleChoice = Literal["tutorial-driven", "reference-manual", "example-heavy", "hybrid"]
 InlineDocChoice = Literal["every-function", "public-api", "complex-only"]
-ChangelogChoice = Literal["granular", "notable-changes", "major-only"]
 ArchitectureDiagramsChoice = Literal["required", "complex-areas", "optional"]
 APIDocChoice = Literal["openapi-spec", "markdown", "code-comments"]
 ReadmeLengthChoice = Literal["comprehensive", "concise", "minimal"]
@@ -715,7 +714,7 @@ class CodeQualityStandards(BaseModel):
 
 
 class DocumentationPreferences(BaseModel):
-    """8 customization points - Documentation"""
+    """7 customization points - Documentation"""
 
     verbosity: DocVerbosityChoice = Field(
         default="concise",
@@ -735,11 +734,6 @@ class DocumentationPreferences(BaseModel):
     inline_documentation: InlineDocChoice = Field(
         default="public-api",
         description="Inline docstring coverage",
-    )
-
-    changelog_detail: ChangelogChoice = Field(
-        default="notable-changes",
-        description="Changelog detail level",
     )
 
     architecture_diagrams: ArchitectureDiagramsChoice = Field(
@@ -1007,7 +1001,6 @@ __all__ = [
     "DocAudienceChoice",
     "DocStyleChoice",
     "InlineDocChoice",
-    "ChangelogChoice",
     "ArchitectureDiagramsChoice",
     "APIDocChoice",
     "ReadmeLengthChoice",

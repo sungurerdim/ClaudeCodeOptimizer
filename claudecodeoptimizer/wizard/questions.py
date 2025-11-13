@@ -22,7 +22,6 @@ from ..schemas.preferences import (
     BreakingChangesChoice,
     BusinessDomainChoice,
     CachingStrategyChoice,
-    ChangelogChoice,
     CICDTriggerChoice,
     CodeCommentChoice,
     CodeOwnershipChoice,
@@ -145,7 +144,7 @@ def should_ask_question(question_id: str, answers: Dict[str, Any]) -> bool:
             return True
 
     # Documentation questions - skip if minimal docs preference
-    if question_id in ["architecture_diagrams", "changelog_detail"]:
+    if question_id in ["architecture_diagrams"]:
         verbosity = answers.get("verbosity", "concise")
         if verbosity == "minimal":
             return False
@@ -703,16 +702,6 @@ QUESTIONS = [
         "choices": get_literal_choices(InlineDocChoice),  # ← FROM SCHEMA!
         "ai_hint": no_hint,
         "default": lambda report: "public-api",
-    },
-    {
-        "category": "documentation",
-        "field": "changelog_detail",
-        "type": "choice",
-        "prompt": "What is your changelog detail level?",
-        "choices": get_literal_choices(ChangelogChoice),  # ← FROM SCHEMA!
-        "ai_hint": no_hint,
-        "default": lambda report: "notable-changes",
-        "skip_if": lambda answers: answers.get("verbosity") == "minimal",
     },
     {
         "category": "documentation",

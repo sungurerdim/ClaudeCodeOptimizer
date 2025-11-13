@@ -78,7 +78,6 @@ essential_docs = {
     'README.md': (project_root / 'README.md').exists(),
     'CONTRIBUTING.md': (project_root / 'CONTRIBUTING.md').exists(),
     'LICENSE': any((project_root / name).exists() for name in ['LICENSE', 'LICENSE.md', 'LICENSE.txt']),
-    'CHANGELOG.md': (project_root / 'CHANGELOG.md').exists(),
     'docs/ directory': (project_root / 'docs').exists(),
 }
 
@@ -317,7 +316,6 @@ Essential Documentation:
   ✓ README.md
   ✗ CONTRIBUTING.md
   ✓ LICENSE
-  ✓ CHANGELOG.md
   ✓ docs/ directory
 
 === Docstring Coverage ===
