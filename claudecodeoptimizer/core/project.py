@@ -13,7 +13,6 @@ from ..schemas.preferences import (
     ProjectIdentity,
 )
 from .analyzer import ProjectAnalyzer
-from .change_manifest import ChangeManifest
 from .constants import (
     DEFAULT_TEST_COVERAGE_TARGET,
     MINIMAL_TEST_COVERAGE_TARGET,
@@ -21,7 +20,6 @@ from .constants import (
     TOP_ITEMS_DISPLAY,
 )
 from .principle_selector import PrincipleSelector
-from .registry import ProjectRegistry
 from .safe_print import safe_print
 from .utils import print_separator
 
@@ -34,9 +32,7 @@ class ProjectManager:
     def __init__(self, project_root: Path) -> None:
         self.project_root = project_root.absolute()
         self.config = CCOConfig
-        self.registry = ProjectRegistry()
         self.analyzer = ProjectAnalyzer(self.project_root)
-        self.manifest = ChangeManifest(self.project_root)
 
     def initialize(
         self,
@@ -80,9 +76,7 @@ class ProjectManager:
         2. AI creates intelligent preferences (instead of user answering 58 questions)
         3. Select applicable principles based on preferences
         4. Generate PRINCIPLES.md
-        5. Register in global registry
-        6. Install statusline
-        7. Generate generic commands
+        5. Generate commands
         """
 
         # Determine project name
@@ -117,19 +111,7 @@ class ProjectManager:
         if claude_md_result["success"]:
             safe_print(f"   ✓ CLAUDE.md {claude_md_result.get('strategy', 'generated')}")
 
-        # STEP 4: Register/update in global registry
-
-        self.registry.register_project(
-            project_name=project_name,
-            project_root=self.project_root,
-            analysis=analysis,
-            preferences=preferences_dict,
-        )
-
-        # STEP 5: Install statusline to project
-        self._install_project_statusline()
-
-        # STEP 6: Install principles symlinks to .claude/principles/
+        # STEP 4: Install principles symlinks to .claude/principles/
         self._install_principles_symlinks(selected_principles)
 
         # STEP 7: Install guides symlinks to .claude/guides/
@@ -150,12 +132,7 @@ class ProjectManager:
         # STEP 11: Print recommendations
         self._print_recommendations(analysis)
 
-        # STEP 8: Save change tracking manifest
-        # Note: Manifest is now stored in global storage (~/.cco/projects/{name}/changes.json)
-        # No .cco/ directory is created in project - zero project pollution
-        self.manifest.save()
-
-        # STEP 9: Print installation summary report
+        # STEP 12: Print installation summary report
         self._print_installation_summary()
 
         return {
@@ -314,7 +291,7 @@ class ProjectManager:
                 safe_print("✓ CLAUDE.md")
                 safe_print(f"  └─ {core_count} core principles (always loaded)")
                 if has_additional:
-                    safe_print("     └─ Links to 74 principles across 8 categories")
+                    safe_print("     └─ Links to project-specific principles across 8 categories")
             except Exception:
                 safe_print("✓ CLAUDE.md (created)")
         else:
@@ -360,14 +337,13 @@ class ProjectManager:
         backup_dir = self.config.get_project_backups_dir(project_name)
 
         safe_print("✓ Configuration")
-        safe_print(f"  ├─ ~/.cco/projects/{project_name}/changes.json (change tracking)")
 
         # Check for backups in global storage
         if backup_dir.exists() and any(backup_dir.iterdir()):
             backup_count = len(list(backup_dir.iterdir()))
-            safe_print(f"  └─ ~/.cco/projects/{project_name}/backups/ ({backup_count} backups)")
+            safe_print(f"  └─ ~/.cco/{project_name}/backups/ ({backup_count} backups)")
         else:
-            safe_print(f"  └─ ~/.cco/projects/{project_name}/backups/ (ready)")
+            safe_print(f"  └─ ~/.cco/{project_name}/backups/ (ready)")
 
         safe_print()
         print_separator("-", SEPARATOR_WIDTH)
@@ -424,54 +400,6 @@ class ProjectManager:
         # Fallback to copy (works everywhere)
         shutil.copy2(source, destination)
         return "copy"
-
-    def _install_project_statusline(self) -> None:
-        """
-        Install statusline from global CCO to project .claude/ directory.
-
-        Uses preference order: symlink → hardlink → copy
-        Benefits: pip install -U updates propagate to projects (symlink/hardlink)
-        """
-        from datetime import datetime
-
-        # Source: global CCO statusline (deployed from statusline.js.template)
-        global_statusline = self.config.get_templates_dir() / "statusline.js"
-
-        if not global_statusline.exists():
-            return
-
-        # Destination: project .claude directory
-        project_claude_dir = self.config.get_project_claude_dir(self.project_root)
-        project_claude_dir.mkdir(parents=True, exist_ok=True)
-        project_statusline = project_claude_dir / "statusline.js"
-
-        # Backup existing statusline if it's a real file (not a link) and differs from global
-        if project_statusline.exists() and not project_statusline.is_symlink():
-            try:
-                # Check if current file differs from global template
-                current_content = project_statusline.read_text(encoding="utf-8")
-                global_content = global_statusline.read_text(encoding="utf-8")
-
-                if current_content != global_content:
-                    # File is customized, back it up
-                    project_name = self.project_root.name
-                    backup_dir = self.config.get_project_backups_dir(project_name)
-                    backup_dir.mkdir(parents=True, exist_ok=True)
-
-                    timestamp = datetime.now().strftime("%Y%m%d-%H%M%S")
-                    backup_file = backup_dir / f"statusline.js.backup-{timestamp}"
-                    backup_file.write_text(current_content, encoding="utf-8")
-
-                    logger.info(f"Backed up customized statusline to: {backup_file}")
-                    safe_print(
-                        f"  ℹ️  Custom statusline backed up: ~/.cco/projects/{project_name}/backups/"
-                    )
-            except Exception as e:
-                logger.debug(f"Could not backup statusline: {e}")
-
-        # Create link using preference order
-        link_type = self._create_link(global_statusline, project_statusline)
-        logger.debug(f"Statusline linked via {link_type}")
 
     def _install_principles_symlinks(self, selected_principles: List[Dict[str, Any]]) -> None:
         """
@@ -815,16 +743,20 @@ class ProjectManager:
         Wizard generates commands in .claude/commands/ only (standard Claude Code location).
         All project data stored in global registry.
         """
-        from ..wizard.cli import CCOWizard
+        from ..wizard.orchestrator import CCOWizard
 
-        # Launch wizard
-        wizard = CCOWizard(project_root=str(self.project_root), dry_run=False)
-        success = wizard.run()
+        # Launch unified wizard (interactive mode)
+        wizard = CCOWizard(project_root=self.project_root, mode="interactive", dry_run=False)
+        result = wizard.run()
+
+        # Handle both old (bool) and new (WizardResult) return types
+        success = result.success if hasattr(result, 'success') else result
 
         if not success:
+            error_msg = result.error if hasattr(result, 'error') else "Interactive wizard was cancelled or failed"
             return {
                 "success": False,
-                "error": "Interactive wizard was cancelled or failed",
+                "error": error_msg,
             }
 
         # Wizard generates commands in .claude/commands/
@@ -841,131 +773,26 @@ class ProjectManager:
             "message": "Project initialized with interactive wizard",
         }
 
-    def get_project_config(self) -> Optional[Dict[str, Any]]:
-        """
-        Get project configuration from global registry.
-
-        Note: CCO keeps project directories clean - no local files.
-        Searches global registry by project root path.
-
-        Returns:
-            Project data from ~/.cco/projects/ or None
-        """
-        # Search registry by project root path
-        project_root_str = str(self.project_root.absolute())
-
-        try:
-            registry_dir = self.config.get_projects_registry_dir()
-            if not registry_dir.exists():
-                return None
-
-            # Check all registry files
-            for registry_file in registry_dir.glob("*.json"):
-                if registry_file.name == "index.json":
-                    continue
-                try:
-                    data = json.loads(registry_file.read_text())
-                    if data.get("root") == project_root_str:
-                        return data
-                except Exception as e:
-                    logger.debug(f"Failed to parse registry file {registry_file}: {e}")
-                    continue
-
-            return None
-        except Exception:
-            return None
-
-    def update_project_config(self, updates: Dict[str, Any]) -> Dict[str, Any]:
-        """
-        Update project configuration in global registry.
-
-        Args:
-            updates: Configuration updates
-
-        Returns:
-            Update result
-        """
-        try:
-            project_data = self.get_project_config()
-
-            if not project_data:
-                return {
-                    "success": False,
-                    "error": "Project not initialized",
-                }
-
-            # Merge updates into analysis
-            if "analysis" in project_data:
-                project_data["analysis"].update(updates.get("analysis", {}))
-
-            # Update in registry
-            project_name = project_data.get("name")
-            result = self.registry.update_project_analysis(
-                project_name=project_name,
-                analysis=project_data.get("analysis", {}),
-            )
-
-            return result
-
-        except Exception as e:
-            return {
-                "success": False,
-                "error": str(e),
-            }
-
     def uninitialize(self) -> Dict[str, Any]:
         """
         Remove CCO from project.
 
-        Removes:
-        1. All cco-*.md command files from .claude/commands/
-        2. statusline.js from .claude/ directory
-        3. Project entry from global registry
+        Removes all cco-*.md command files from .claude/commands/
 
         Returns:
             Uninitialization result
         """
         try:
-            # Get project data
-            project_data = self.get_project_config()
-            if not project_data:
-                return {
-                    "success": False,
-                    "error": "Project not initialized",
-                }
-
-            project_name = project_data.get("name")
+            # Get project name from directory
+            project_name = self.project_root.name
             files_removed = []
 
-            # STEP 0: Check for backups in global storage
-            backup_info = self._check_backups(project_name)
-            if backup_info.get("has_backups"):
-                safe_print("\n📦 Backup Files Found:")
-                safe_print(f"  Location: ~/.cco/projects/{project_name}/backups/")
-                safe_print(f"  Count: {backup_info['backup_count']} backup file(s)")
-                safe_print("\n  These backups will be preserved in global storage.")
-                safe_print(
-                    f"  To restore: manually copy from ~/.cco/projects/{project_name}/backups/"
-                )
-                safe_print()
-
-            # STEP 1: Remove all cco-*.md command files
+            # Remove all cco-*.md command files
             project_commands_dir = self.config.get_project_commands_dir(self.project_root)
             if project_commands_dir.exists():
                 for cmd_file in project_commands_dir.glob("cco-*.md"):
                     cmd_file.unlink()
                     files_removed.append(str(cmd_file.relative_to(self.project_root)))
-
-            # STEP 2: Remove statusline.js
-            project_claude_dir = self.config.get_project_claude_dir(self.project_root)
-            statusline_file = project_claude_dir / "statusline.js"
-            if statusline_file.exists():
-                statusline_file.unlink()
-                files_removed.append(str(statusline_file.relative_to(self.project_root)))
-
-            # STEP 3: Unregister from global registry
-            if project_name:
-                self.registry.unregister_project(project_name)
 
             return {
                 "success": True,
@@ -979,20 +806,6 @@ class ProjectManager:
                 "success": False,
                 "error": str(e),
             }
-
-    def _check_backups(self, project_name: str) -> Dict[str, Any]:
-        """Check for backup files in global storage."""
-        backup_dir = self.config.get_project_backups_dir(project_name)
-
-        if not backup_dir.exists():
-            return {"has_backups": False, "backup_count": 0}
-
-        backup_files = list(backup_dir.glob("*.backup-*"))
-        return {
-            "has_backups": len(backup_files) > 0,
-            "backup_count": len(backup_files),
-            "backup_files": [f.name for f in backup_files],
-        }
 
     def _create_ai_preferences(self, project_name: str, analysis: Dict[str, Any]) -> CCOPreferences:
         """Create intelligent preferences from project analysis (AI-driven quick mode)."""

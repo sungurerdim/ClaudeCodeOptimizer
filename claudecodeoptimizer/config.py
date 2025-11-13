@@ -105,26 +105,12 @@ def get_skills_dir() -> Path:
     return get_global_dir() / "skills"
 
 
-def get_projects_registry_dir() -> Path:
-    """Get central projects registry (~/.cco/projects/)."""
-    return get_global_dir() / "projects"
-
-
-def get_global_config_file() -> Path:
-    """Get global config file (~/.cco/config.json)."""
-    return get_global_dir() / "config.json"
-
-
-def get_registry_index_file() -> Path:
-    """Get master registry index file (~/.cco/projects/index.json)."""
-    return get_projects_registry_dir() / "index.json"
 
 
 # ============================================================================
 # PROJECT-LOCAL PATH HELPERS (Claude Code directories only)
 # ============================================================================
 # Note: CCO keeps project directories clean - no CCO-specific files in projects.
-# All project data is stored in global registry (~/.cco/projects/).
 # Only .claude/ directory is used for commands/hooks (standard Claude Code location).
 
 
@@ -143,81 +129,17 @@ def get_project_hooks_dir(project_root: Path) -> Path:
     return get_project_claude_dir(project_root) / "hooks"
 
 
-def get_project_registry_file(project_name: str) -> Path:
-    """Get registry file for a specific project."""
-    return get_projects_registry_dir() / f"{project_name}.json"
-
-
-# ============================================================================
-# PROJECT-SPECIFIC GLOBAL DATA (Zero project pollution)
-# ============================================================================
-# All project-specific data is stored in ~/.cco/projects/{project_name}/
-# This keeps project directories completely clean - no .cco/ folder in projects.
-
-
-def get_project_data_dir(project_name: str) -> Path:
-    """
-    Get project-specific data directory in global storage.
-
-    Returns: ~/.cco/projects/{project_name}/
-
-    This directory contains all project-specific CCO data:
-    - backups/  (file backups)
-    - reports/  (audit, analyze, fix reports)
-    - temp/     (temporary files and scripts)
-    - changes.json (change tracking manifest)
-    """
-    return get_projects_registry_dir() / project_name
-
-
 def get_project_backups_dir(project_name: str) -> Path:
     """
     Get project backups directory in global storage.
 
-    Returns: ~/.cco/projects/{project_name}/backups/
+    Returns: ~/.cco/{project_name}/backups/
 
     Stores backups of PRINCIPLES.md, CLAUDE.md, etc.
     Format: {filename}.YYYYMMDD_HHMMSS.backup
     Retention: Last 5 backups per file
     """
-    return get_project_data_dir(project_name) / "backups"
-
-
-def get_project_reports_dir(project_name: str) -> Path:
-    """
-    Get project reports directory in global storage.
-
-    Returns: ~/.cco/projects/{project_name}/reports/
-
-    Subdirectories:
-    - audit/    (audit reports)
-    - analyze/  (analysis reports)
-    - fix/      (fix reports)
-    - sync/     (sync reports)
-    """
-    return get_project_data_dir(project_name) / "reports"
-
-
-def get_project_temp_dir(project_name: str) -> Path:
-    """
-    Get project temp directory in global storage.
-
-    Returns: ~/.cco/projects/{project_name}/temp/
-
-    Stores temporary files, scripts, and working data.
-    """
-    return get_project_data_dir(project_name) / "temp"
-
-
-def get_project_changes_file(project_name: str) -> Path:
-    """
-    Get project change manifest file in global storage.
-
-    Returns: ~/.cco/projects/{project_name}/changes.json
-
-    Tracks all CCO-made changes to the project.
-    """
-    return get_project_data_dir(project_name) / "changes.json"
+    return get_global_dir() / project_name / "backups"
 
 
 # ============================================================================
@@ -233,8 +155,6 @@ def get_command_name(action: str) -> str:
 # ============================================================================
 # FILE MARKERS & IDENTIFIERS
 # ============================================================================
-
-GLOBAL_MARKER_FILE = ".installed"
 
 # Git ignore patterns - CCO keeps project directories completely clean
 GITIGNORE_PATTERNS = []
@@ -266,59 +186,11 @@ DEFAULT_CONFIG = {
         "global_dir": str(get_global_dir()),
         "claude_dir": str(get_claude_dir()),
     },
-    "preferences": {
-        "auto_update_check": True,
-        "telemetry_enabled": False,
-        "statusline_enabled": True,
-    },
-    "features": {
-        "audit": True,
-        "recommendations": True,
-        "auto_fix": True,
-        "cost_tracking": True,
-    },
 }
 
 # ============================================================================
 # UTILITY FUNCTIONS
 # ============================================================================
-
-
-def is_global_installed() -> bool:
-    """Check if CCO is installed globally."""
-    global_dir = get_global_dir()
-    marker = global_dir / GLOBAL_MARKER_FILE
-    return global_dir.exists() and marker.exists()
-
-
-def is_project_initialized(project_root: Path) -> bool:
-    """
-    Check if project is initialized with CCO.
-
-    Looks up project in global registry by project root path.
-    CCO keeps project directories completely clean - no files added.
-    """
-    import json
-
-    registry_dir = get_projects_registry_dir()
-    if not registry_dir.exists():
-        return False
-
-    project_root_str = str(project_root.absolute())
-
-    # Check all registry files
-    for registry_file in registry_dir.glob("*.json"):
-        if registry_file.name == "index.json":
-            continue
-        try:
-            data = json.loads(registry_file.read_text())
-            if data.get("root") == project_root_str:
-                return True
-        except Exception:  # noqa: S112
-            # Silently skip malformed registry files
-            continue
-
-    return False
 
 
 def get_all_paths() -> Dict[str, Path]:
@@ -332,8 +204,6 @@ def get_all_paths() -> Dict[str, Path]:
         "guides_dir": get_guides_dir(),
         "skills_dir": get_skills_dir(),
         "agents_dir": get_agents_dir(),
-        "projects_registry_dir": get_projects_registry_dir(),
-        "global_config_file": get_global_config_file(),
     }
 
 
@@ -360,7 +230,6 @@ class CCOConfig:
     COMMAND_PREFIX = COMMAND_PREFIX
 
     # File markers
-    GLOBAL_MARKER_FILE = GLOBAL_MARKER_FILE
     GITIGNORE_PATTERNS = GITIGNORE_PATTERNS
 
     # Messages
@@ -385,21 +254,11 @@ class CCOConfig:
     get_guides_dir = staticmethod(get_guides_dir)
     get_skills_dir = staticmethod(get_skills_dir)
     get_agents_dir = staticmethod(get_agents_dir)
-    get_projects_registry_dir = staticmethod(get_projects_registry_dir)
-    get_global_config_file = staticmethod(get_global_config_file)
-    get_registry_index_file = staticmethod(get_registry_index_file)
     get_project_claude_dir = staticmethod(get_project_claude_dir)
     get_project_commands_dir = staticmethod(get_project_commands_dir)
     get_project_hooks_dir = staticmethod(get_project_hooks_dir)
-    get_project_registry_file = staticmethod(get_project_registry_file)
-    get_project_data_dir = staticmethod(get_project_data_dir)
     get_project_backups_dir = staticmethod(get_project_backups_dir)
-    get_project_reports_dir = staticmethod(get_project_reports_dir)
-    get_project_temp_dir = staticmethod(get_project_temp_dir)
-    get_project_changes_file = staticmethod(get_project_changes_file)
     get_command_name = staticmethod(get_command_name)
-    is_global_installed = staticmethod(is_global_installed)
-    is_project_initialized = staticmethod(is_project_initialized)
     get_all_paths = staticmethod(get_all_paths)
 
     @staticmethod
