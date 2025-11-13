@@ -93,10 +93,7 @@ def _setup_templates(templates_dir: Path) -> None:
     Deploy template files from package to global directory.
 
     Templates are deployed with .template extension REMOVED:
-    - statusline.js.template → ~/.cco/templates/statusline.js
-    - settings.json.template → ~/.cco/templates/settings.json
     - CLAUDE.md.template → ~/.cco/templates/CLAUDE.md
-    - universal_principles.md → ~/.cco/templates/universal_principles.md (no .template)
     - etc.
 
     Projects will link directly to these deployed files (without .template extension).
@@ -123,12 +120,6 @@ def _setup_templates(templates_dir: Path) -> None:
         dest_name = template_file.name.replace(".template", "")
         dest_file = templates_dir / dest_name
         shutil.copy2(template_file, dest_file)
-
-    # Deploy non-template files (e.g., universal_principles.md)
-    for template_file in source_templates.glob("*.md"):
-        if not template_file.name.endswith(".template"):
-            dest_file = templates_dir / template_file.name
-            shutil.copy2(template_file, dest_file)
 
 
 def _setup_principles(principles_dir: Path) -> None:

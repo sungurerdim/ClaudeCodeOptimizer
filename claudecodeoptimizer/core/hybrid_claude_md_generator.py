@@ -57,15 +57,28 @@ def generate_hybrid_claude_md(
 
 
 def _load_universal_template(cco_dir: Path) -> str:
-    """Load universal principles template."""
-    template_file = cco_dir / "templates" / "universal_principles.md"
+    """Generate universal principles section dynamically from U*.md files."""
+    from ..config import get_principles_dir
+    from .principle_md_loader import load_all_principles
 
-    if template_file.exists():
-        return template_file.read_text(encoding='utf-8')
+    principles_dir = get_principles_dir()
+    if not principles_dir.exists():
+        return """### Universal Principles
+U001-U014 apply to all projects."""
 
-    # Fallback
-    return """### Universal Principles
-U001-U012 apply to all projects."""
+    # Load all principles and filter universal ones
+    all_principles = load_all_principles(principles_dir)
+    universal_principles = [p for p in all_principles if p.get("category") == "universal"]
+    universal_principles.sort(key=lambda p: p["id"])
+
+    # Generate markdown
+    lines = []
+    for p in universal_principles:
+        lines.append(f"- **{p['id']}**: {p['title']}")
+        if p.get("one_line_why"):
+            lines.append(f"  - {p['one_line_why']}")
+
+    return "\n".join(lines) if lines else "U001-U014 apply to all projects."
 
 
 def _generate_cco_section(project_config: Dict, universal_template: str) -> str:
@@ -76,6 +89,11 @@ def _generate_cco_section(project_config: Dict, universal_template: str) -> str:
     universal_count = len(selected_principles.get("universal", []))
     total_count = sum(len(ids) for ids in selected_principles.values())
     project_count = total_count - universal_count
+
+    # Get available principle count dynamically
+    from ..config import get_principles_dir
+    principles_dir = get_principles_dir()
+    available_project_principles = len(list(principles_dir.glob("P*.md")))
 
     # Generate category list
     category_list = _generate_category_list(selected_principles)
@@ -93,7 +111,7 @@ def _generate_cco_section(project_config: Dict, universal_template: str) -> str:
 
 ### Project-Specific Principles
 
-This project uses **{project_count}** selected principles from 69 available.
+This project uses **{project_count}** selected principles from {available_project_principles} available.
 
 Commands load them dynamically based on `.claude/project.json`.
 
