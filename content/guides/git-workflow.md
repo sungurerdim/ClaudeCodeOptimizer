@@ -6,7 +6,7 @@
 
 ## Overview
 
-This guide covers the complete Git workflow for CCO projects. Workflow strategy varies by team size (configured during `/cco-init`).
+This guide covers Git workflow best practices. Workflow strategy varies by team size (configured during project setup).
 
 ---
 
@@ -82,11 +82,10 @@ style:    Formatting, linting (no logic change)
 perf:     Performance improvement
 ```
 
-### Scopes (CCO-specific)
+### Scopes (Example)
 
 ```
-wizard, installer, detection, principles, commands,
-skills, core, cli, tests, docs, deps, ci
+api, auth, db, ui, core, cli, tests, docs, deps, ci
 ```
 
 ### Examples
@@ -408,12 +407,9 @@ git checkout <commit-hash>
 
 ## Principle References
 
-- **U011**: No Overengineering (Branch strategy)
-- **U001**: Evidence-Based Verification (Commit verification)
-
-See: [@~/.cco/principles/git-workflow.md](../principles/git-workflow.md)
-
----
-
-*Part of CCO Documentation System*
-*Load when needed: @~/.cco/guides/git-workflow.md*
+**Universal Principles:**
+- **U001**: Evidence-Based Verification → `.claude/principles/U001.md`
+- **U009**: Atomic Commits → `.claude/principles/U009.md`
+- **U010**: Concise Commit Messages → `.claude/principles/U010.md`
+- **U011**: No Overengineering → `.claude/principles/U011.md`
+- **U013**: Change Verification Protocol → `.claude/principles/U013.md`

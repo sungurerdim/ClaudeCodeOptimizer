@@ -33,7 +33,7 @@ python -m claudecodeoptimizer init --interactive
 
 This launches the 5-phase wizard:
 1. Project Detection (auto-detect type, languages, frameworks)
-2. Principle Selection (choose from 52 principles)
+2. Principle Selection (choose from available principles: universal + project-specific, see README.md for counts)
 3. Command Generation (select commands to enable)
 4. Workflow Customization (CI/CD, hooks, scripts)
 5. Final Review & Confirmation

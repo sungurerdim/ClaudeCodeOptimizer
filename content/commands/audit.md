@@ -134,7 +134,7 @@ Automatically loaded from `~/.cco/principles/`:
 - P052
 - P062
 
-This gives you 72 relevant principles (out of 81 total: 12 universal + 69 project), optimized for audit tasks.
+This gives you a comprehensive set of relevant principles (universal + project-specific), optimized for audit tasks. See README.md for current counts.
 
 ### 2. Load Core Documents with Category-Based Loader (Manual Alternative)
 

@@ -74,7 +74,7 @@ loader = PrincipleLoader()
 cmd_file = Path("content/commands/audit.md")
 content = loader.load_from_frontmatter(cmd_file)
 # → Reads frontmatter, extracts principle IDs, loads them
-# → 74 principles (audit loads all), ~5,000 tokens
+# → All principles (audit loads all), ~5,000 tokens
 ```
 
 **Use cases:**
@@ -115,7 +115,9 @@ print(content)
 
 ## Principle Organization
 
-### By Category (74 principles total)
+### By Category
+
+**Note**: See README.md for current principle counts.
 
 | Category | Principle IDs | Count | Description |
 |----------|---------------|-------|-------------|
@@ -298,7 +300,7 @@ project/.claude/principles/
 ...
 └── P067.md → ~/.cco/principles/P067.md
 
-(30-50 principles symlinked, not all 74)
+(Subset of principles symlinked, not all - see project config)
 ```
 
 ---
@@ -315,7 +317,7 @@ project/.claude/principles/
 
 ### ❌ Don't
 
-- **Don't load all 74 principles** unless absolutely necessary
+- **Don't load all principles** unless absolutely necessary (audit command only)
 - **Don't bypass the loader** (always use `PrincipleLoader`)
 - **Don't hardcode file paths** (use loader methods)
 - **Don't forget core principles** (P001, P067, P071)

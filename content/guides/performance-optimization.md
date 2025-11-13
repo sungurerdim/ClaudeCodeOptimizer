@@ -198,9 +198,6 @@ def get_stats(data):
 # Profile with cProfile (Python)
 python -m cProfile -o profile.stats main.py
 python -m pstats profile.stats
-
-# Analyze with CCO
-/cco-analyze --focus=performance --path=api/
 ```
 
 **Prioritize**:
@@ -361,35 +358,12 @@ python -m timeit "function_call()"
 python benchmarks/run_all.py
 ```
 
-### CCO Commands
-
-```bash
-# Analyze performance
-/cco-analyze --focus=performance
-
-# Optimize code
-/cco-optimize-code
-
-# Generate performance tests
-/cco-generate tests --type=performance
-
-# Audit performance principles
-/cco-audit performance
-```
-
 ---
 
 ## Principle References
 
-- **P053-P056**: Performance Principles
-  - P053: Caching Strategy
-  - P054: Database Query Optimization
-  - P055: Lazy Loading & Pagination
-  - P056: Async I/O (Non-Blocking Operations)
-
-See: [@~/.cco/principles/performance.md](../principles/performance.md)
-
----
-
-*Part of CCO Documentation System*
-*Load when needed: @~/.cco/guides/performance-optimization.md*
+**Performance Principles:**
+- **P053**: Caching Strategy → `.claude/principles/P053.md`
+- **P054**: Database Query Optimization → `.claude/principles/P054.md`
+- **P055**: Lazy Loading & Pagination → `.claude/principles/P055.md`
+- **P056**: Async I/O (Non-Blocking Operations) → `.claude/principles/P056.md`

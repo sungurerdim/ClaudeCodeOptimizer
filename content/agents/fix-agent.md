@@ -59,11 +59,29 @@ You are an Automated Fix Specialist. Your task is to identify and fix code issue
    - Expected output: Fix summary report
 
 **Requirements:**
-- Follow @.claude/principles/code_quality.md
-- Follow @.claude/principles/security_privacy.md
-- Use @.claude/guides/verification-protocol.md for all changes
-- NEVER fix without verification (U001)
-- Make atomic changes (U009)
+
+**Code Quality Principles:**
+- **P001**: DRY Enforcement → `.claude/principles/P001.md`
+- **P002**: Complete Integration Check → `.claude/principles/P002.md`
+- **P007**: Linting & SAST Enforcement → `.claude/principles/P007.md`
+- **P009**: Type Safety & Static Analysis → `.claude/principles/P009.md`
+
+**Security & Privacy Principles:**
+- **P022**: Schema-First Validation → `.claude/principles/P022.md`
+- **P028**: SQL Injection Prevention → `.claude/principles/P028.md`
+- **P029**: Secret Management with Rotation → `.claude/principles/P029.md`
+- **P032**: Input Sanitization (XSS Prevention) → `.claude/principles/P032.md`
+
+**Universal Principles:**
+- **U001**: Evidence-Based Verification → `.claude/principles/U001.md`
+- **U002**: Fail-Fast Error Handling → `.claude/principles/U002.md`
+- **U005**: Minimal Touch Policy → `.claude/principles/U005.md`
+- **U009**: Atomic Commits → `.claude/principles/U009.md`
+- **U013**: Change Verification Protocol → `.claude/principles/U013.md`
+
+**Additional Requirements:**
+- NEVER fix without evidence-based verification
+- Make atomic changes (one logical fix per commit)
 - Preserve existing functionality
 - If tests fail after fix, rollback immediately
 
