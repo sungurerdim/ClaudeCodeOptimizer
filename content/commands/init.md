@@ -498,15 +498,15 @@ For each category, dynamically generate a multiselect question with ALL principl
     "header": "[CATEGORY_SHORT]",
     "multiSelect": true,
     "options": [
-      {"label": "P001: Fail-Fast Error Handling", "description": "Catch errors early (weight: 10, critical)"},
-      {"label": "P002: DRY Enforcement", "description": "Don't Repeat Yourself (weight: 10, critical)"},
+      {"label": "U002: Fail-Fast Error Handling", "description": "Catch errors early (weight: 10, critical)"},
+      {"label": "P001: DRY Enforcement", "description": "Don't Repeat Yourself (weight: 10, critical)"},
       ... (ALL principles in category)
     ]
   }]
 }
 ```
 
-**Label Format**: `"[ID]: [Title]"` (e.g., `"P019: Privacy-First by Default"`)
+**Label Format**: `"[ID]: [Title]"` (e.g., `"P023: Privacy-First by Default"`)
 
 **Description Format**: `"[one_line_why] (weight: X, [severity])"` (e.g., `"Minimize data collection (weight: 9, critical)"`)
 
@@ -529,18 +529,18 @@ For each category, dynamically generate a multiselect question with ALL principl
     "header": "Security",
     "multiSelect": true,
     "options": [
-      {"label": "P005: Schema-First Validation", "description": "Validate all inputs (weight: 10, critical)"},
-      {"label": "P019: Privacy-First by Default", "description": "Minimize data collection (weight: 9, critical)"},
-      {"label": "P020: TTL-Based Cleanup", "description": "Auto-expire old data (weight: 7, high)"},
-      {"label": "P021: Zero-Disk Logging", "description": "Never log secrets (weight: 8, high)"},
-      {"label": "P022: Defense-in-Depth Security", "description": "Multiple security layers (weight: 9, critical)"},
-      {"label": "P023: Rate Limiting", "description": "Protect against abuse (weight: 7, high)"},
-      {"label": "P024: Secure Configuration Management", "description": "No secrets in code (weight: 9, critical)"},
-      {"label": "P025: Key Derivation Standards", "description": "Proper KDF for passwords (weight: 8, high)"},
-      {"label": "P026: Secret Scanning", "description": "Detect leaked credentials (weight: 8, high)"},
-      {"label": "P027: Input Sanitization", "description": "Prevent injection attacks (weight: 9, critical)"},
-      {"label": "P028: HTTPS Enforcement", "description": "Encrypt network traffic (weight: 8, high)"},
-      {"label": "P029: Audit Logging", "description": "Log security events (weight: 7, high)"}
+      {"label": "P022: Schema-First Validation", "description": "Validate all inputs (weight: 10, critical)"},
+      {"label": "P023: Privacy-First by Default", "description": "Minimize data collection (weight: 9, critical)"},
+      {"label": "P024: TTL-Based Cleanup", "description": "Auto-expire old data (weight: 7, high)"},
+      {"label": "P026: Zero Disk Touch", "description": "Never write secrets to disk (weight: 8, high)"},
+      {"label": "P025: Encryption Everywhere", "description": "Encrypt sensitive data (weight: 9, critical)"},
+      {"label": "P030: Rate Limiting & Throttling", "description": "Protect against abuse (weight: 7, high)"},
+      {"label": "P029: Secret Management with Rotation", "description": "No secrets in code (weight: 9, critical)"},
+      {"label": "P028: SQL Injection Prevention", "description": "Parameterized queries (weight: 9, critical)"},
+      {"label": "P034: Supply Chain Security", "description": "Verify dependencies (weight: 8, high)"},
+      {"label": "P032: Input Sanitization (XSS Prevention)", "description": "Prevent injection attacks (weight: 9, critical)"},
+      {"label": "P027: Authentication & Authorization", "description": "Proper access control (weight: 9, critical)"},
+      {"label": "P033: Audit Logging", "description": "Log security events (weight: 7, high)"}
     ]
   }]
 }
@@ -555,17 +555,17 @@ For each category, dynamically generate a multiselect question with ALL principl
     "header": "Code Quality",
     "multiSelect": true,
     "options": [
-      {"label": "P001: Fail-Fast Error Handling", "description": "Catch errors early (weight: 10, critical)"},
-      {"label": "P002: DRY Enforcement", "description": "Don't Repeat Yourself (weight: 10, critical)"},
-      {"label": "P003: Complete Integration Check", "description": "Test all integrations (weight: 8, high)"},
-      {"label": "P004: Type Safety", "description": "Use type hints (weight: 9, critical)"},
-      {"label": "P006: Immutability Preference", "description": "Prefer immutable data (weight: 7, high)"},
-      {"label": "P007: Code Documentation", "description": "Document public APIs (weight: 8, high)"},
-      {"label": "P008: Consistent Naming", "description": "Follow naming conventions (weight: 7, high)"},
-      {"label": "P009: Function Length Limits", "description": "Keep functions small (weight: 6, medium)"},
-      {"label": "P010: Cyclomatic Complexity", "description": "Limit complexity (weight: 7, high)"},
-      {"label": "P053: Code Review Standards", "description": "Enforce reviews (weight: 8, high)"},
-      {"label": "P054: Linting Enforcement", "description": "Enforce linting (weight: 7, high)"}
+      {"label": "U002: Fail-Fast Error Handling", "description": "Catch errors early (weight: 10, critical)"},
+      {"label": "P001: DRY Enforcement", "description": "Don't Repeat Yourself (weight: 10, critical)"},
+      {"label": "P002: Complete Integration Check", "description": "Test all integrations (weight: 8, high)"},
+      {"label": "P009: Type Safety & Static Analysis", "description": "Use type hints (weight: 9, critical)"},
+      {"label": "P005: Immutability by Default", "description": "Prefer immutable data (weight: 7, high)"},
+      {"label": "P014: Separation of Concerns", "description": "Single responsibility (weight: 8, high)"},
+      {"label": "P010: Centralized Version Management", "description": "SSOT for versions (weight: 7, high)"},
+      {"label": "U011: No Overengineering", "description": "Keep it simple (weight: 9, critical)"},
+      {"label": "U005: Minimal Touch Policy", "description": "Only change what's needed (weight: 7, high)"},
+      {"label": "P006: Code Review Checklist Compliance", "description": "Enforce reviews (weight: 8, high)"},
+      {"label": "P007: Linting & SAST Enforcement", "description": "Enforce linting (weight: 7, high)"}
     ]
   }]
 }
@@ -713,10 +713,13 @@ pm = ProjectManager(Path.cwd())
 # Replace 'FINAL_SELECTED_IDS' with actual list from category questions
 final_selected_ids = ['FINAL_SELECTED_IDS']  # ← Replace with actual list
 
-# Load full principle definitions for selected IDs
-import json
-knowledge_file = Path.home() / '.cco' / 'knowledge' / 'principles.json'
-all_principles = json.loads(knowledge_file.read_text())['principles']
+# Load full principle definitions for selected IDs from .md files
+from claudecodeoptimizer.core.principles import get_principles_manager
+principles_manager = get_principles_manager()
+all_principles = [
+    {'id': p.id, 'title': p.title, 'category': p.category}
+    for p in principles_manager.get_all_principles()
+]
 selected = [p for p in all_principles if p['id'] in final_selected_ids]
 
 # Register project
