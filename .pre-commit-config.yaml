@@ -1,26 +1,26 @@
-# Pre-commit hooks configuration
-# CCO-generated configuration
-# See https://pre-commit.com for more information
+# Pre-commit hooks for ClaudeCodeOptimizer
+# Install: pip install pre-commit && pre-commit install
+# Usage: Runs automatically on git commit
+# Skip: git commit --no-verify
 
 repos:
-  - repo: https://github.com/psf/black
-    rev: 24.1.0
-    hooks:
-      - id: black
-        language_version: python3.11
+  # Ruff - Fast Python linter & formatter (replaces black, flake8, isort)
   - repo: https://github.com/astral-sh/ruff-pre-commit
-    rev: v0.1.15
+    rev: v0.6.9
     hooks:
       - id: ruff
         args: [--fix]
+      - id: ruff-format
+
+  # Gitleaks - Secret scanning
   - repo: https://github.com/gitleaks/gitleaks
-    rev: v8.18.1
+    rev: v8.18.4
     hooks:
       - id: gitleaks
 
-# Additional hooks (always enabled)
+  # Standard pre-commit hooks
   - repo: https://github.com/pre-commit/pre-commit-hooks
-    rev: v4.5.0
+    rev: v4.6.0
     hooks:
       - id: trailing-whitespace
       - id: end-of-file-fixer

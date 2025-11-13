@@ -4,9 +4,10 @@ include LICENSE
 include pyproject.toml
 
 # Include package data
-recursive-include claudecodeoptimizer/templates *
-recursive-include claudecodeoptimizer/knowledge *
 recursive-include claudecodeoptimizer/schemas *
+
+# Include templates directory (reference templates for users)
+recursive-include templates *.template
 
 # Include content directory (SSOT for principles, commands, etc.)
 recursive-include content *

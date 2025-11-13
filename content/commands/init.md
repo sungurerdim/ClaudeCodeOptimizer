@@ -733,8 +733,7 @@ pm.registry.register_project(
     preferences=preferences_dict,
 )
 
-# Install statusline and commands
-pm._install_project_statusline()
+# Generate generic commands
 pm._generate_generic_commands(analysis)
 
 print('[OK] Installation complete!')
@@ -742,7 +741,6 @@ print(f'[OK] Project: {Path.cwd().name}')
 print(f'[OK] Principles: {len(selected)} selected')
 print(f'[OK] Commands: .claude/commands/cco-*.md')
 print(f'[OK] CLAUDE.md generated with principles')
-print(f'[OK] Statusline: .claude/statusline.js')
 "
 ```
 
