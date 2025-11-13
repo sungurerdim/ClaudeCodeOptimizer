@@ -435,7 +435,9 @@ DuplicationForPerfChoice = Literal["acceptable", "contextual", "never"]
 
 # Collaboration Types
 GitWorkflowChoice = Literal["git-flow", "trunk-based", "github-flow", "gitlab-flow"]
-VersioningStrategyChoice = Literal["auto_semver", "pr_based_semver", "manual_semver", "calver", "no_versioning"]
+VersioningStrategyChoice = Literal[
+    "auto_semver", "pr_based_semver", "manual_semver", "calver", "no_versioning"
+]
 CommitConventionChoice = Literal["conventional-enforced", "conventional-suggested", "freeform"]
 PRSizeChoice = Literal["small-200", "medium-500", "large-1000", "no-limit"]
 CodeOwnershipChoice = Literal["strict-codeowners", "team-ownership", "open"]

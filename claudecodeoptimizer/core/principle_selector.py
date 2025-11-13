@@ -203,7 +203,12 @@ class PrincipleSelector:
         team_size = self._get_nested_value(self.preferences, "project_identity.team_trajectory")
 
         # Some principles don't apply to solo devs
-        team_only_ids = ["P015", "P016", "P017", "P018"]  # Complex architecture patterns (microservices, CQRS, etc.)
+        team_only_ids = [
+            "P015",
+            "P016",
+            "P017",
+            "P018",
+        ]  # Complex architecture patterns (microservices, CQRS, etc.)
         if principle["id"] in team_only_ids and team_size == "solo":
             return False
 
@@ -580,9 +585,7 @@ class PrincipleSelector:
             lines.append(f"- **[{cat_name}]({global_path})** - {count} principles")
             lines.append(f"  - {description}")
         lines.append("")
-        lines.append(
-            "**Note**: All category files stored globally in `~/.cco/principles/`"
-        )
+        lines.append("**Note**: All category files stored globally in `~/.cco/principles/`")
         lines.append("")
         lines.append("---")
         lines.append("")

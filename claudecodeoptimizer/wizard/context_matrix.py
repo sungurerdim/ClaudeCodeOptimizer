@@ -7,10 +7,9 @@ Pattern from CCO P0.8: Context-aware configuration
 """
 
 from typing import Dict, List
-from pathlib import Path
 
-from .models import AnswerContext, Option
 from .. import config
+from .models import AnswerContext, Option
 
 
 def _get_available_principle_count() -> int:
@@ -25,9 +24,7 @@ def _get_available_principle_count() -> int:
 class ContextMatrix:
     """Context-aware recommendation engine for wizard decisions"""
 
-    def recommend_versioning_strategy(
-        self, team_size: str, maturity: str, has_ci: bool
-    ) -> Dict:
+    def recommend_versioning_strategy(self, team_size: str, maturity: str, has_ci: bool) -> Dict:
         """
         Recommend versioning strategy based on context.
 
@@ -87,9 +84,7 @@ class ContextMatrix:
             "alternatives": {},
         }
 
-    def recommend_principle_intensity(
-        self, team_size: str, maturity: str, philosophy: str
-    ) -> Dict:
+    def recommend_principle_intensity(self, team_size: str, maturity: str, philosophy: str) -> Dict:
         """
         Recommend how many principles to apply.
 
@@ -234,9 +229,7 @@ class ContextMatrix:
 
         return hooks
 
-    def recommend_git_workflow(
-        self, team_size: str, maturity: str, has_ci: bool
-    ) -> Dict:
+    def recommend_git_workflow(self, team_size: str, maturity: str, has_ci: bool) -> Dict:
         """
         Recommend git workflow based on context.
 
@@ -304,9 +297,7 @@ class ContextMatrix:
             "alternatives": {},
         }
 
-    def recommend_testing_approach(
-        self, team_size: str, maturity: str, philosophy: str
-    ) -> Dict:
+    def recommend_testing_approach(self, team_size: str, maturity: str, philosophy: str) -> Dict:
         """
         Recommend testing approach based on context.
 
@@ -402,9 +393,7 @@ class ContextMatrix:
         }
         return mapping.get(team_size, team_size)
 
-    def get_maturity_specific_note(
-        self, option: Option, context: AnswerContext
-    ) -> str:
+    def get_maturity_specific_note(self, option: Option, context: AnswerContext) -> str:
         """Get maturity-specific note for an option"""
         if not context.has_answer("project_maturity"):
             return ""
@@ -429,9 +418,7 @@ class ContextMatrix:
 
         return ""
 
-    def get_philosophy_specific_note(
-        self, option: Option, context: AnswerContext
-    ) -> str:
+    def get_philosophy_specific_note(self, option: Option, context: AnswerContext) -> str:
         """Get philosophy-specific note for an option"""
         if not context.has_answer("development_philosophy"):
             return ""
@@ -452,9 +439,7 @@ class ContextMatrix:
 
         return ""
 
-    def calculate_recommendation_score(
-        self, option: Option, context: AnswerContext
-    ) -> int:
+    def calculate_recommendation_score(self, option: Option, context: AnswerContext) -> int:
         """
         Calculate recommendation score for an option (0-100).
 

@@ -27,7 +27,9 @@ def main() -> None:
     subparsers = parser.add_subparsers(dest="command", help="Available commands")
 
     # Main commands
-    init_parser = subparsers.add_parser("init", help="Initialize CCO for this project with AI-powered configuration")
+    init_parser = subparsers.add_parser(
+        "init", help="Initialize CCO for this project with AI-powered configuration"
+    )
     init_parser.add_argument(
         "--mode",
         choices=["interactive", "quick"],
@@ -40,7 +42,9 @@ def main() -> None:
         help="Preview configuration without writing files",
     )
 
-    subparsers.add_parser("remove", help="Remove CCO from current project (keeps global installation)")
+    subparsers.add_parser(
+        "remove", help="Remove CCO from current project (keeps global installation)"
+    )
 
     # Utility commands
     subparsers.add_parser("status", help="Show CCO status for current project")

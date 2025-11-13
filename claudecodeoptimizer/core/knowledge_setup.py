@@ -293,7 +293,6 @@ def _setup_claude_home_links() -> None:
     This enables Claude Code to automatically discover and use CCO agents
     without per-project configuration.
     """
-    import os
     import platform
 
     from .. import config
@@ -327,10 +326,11 @@ def _setup_claude_home_links() -> None:
             if platform.system() == "Windows":
                 # Windows: use mklink
                 import subprocess
+
                 subprocess.run(
                     ["cmd", "/c", "mklink", str(target), str(source)],
                     check=True,
-                    capture_output=True
+                    capture_output=True,
                 )
             else:
                 # Unix: use symlink_to
@@ -358,14 +358,18 @@ def get_principle_categories() -> list[str]:
     # Scan all P*.md files to extract unique categories
     for p_file in principles_dir.glob("P*.md"):
         try:
-            content = p_file.read_text(encoding='utf-8')
+            content = p_file.read_text(encoding="utf-8")
             # Look for category: line in frontmatter
-            match = re.search(r'category:\s*([^\n]+)', content)
+            match = re.search(r"category:\s*([^\n]+)", content)
             if match:
                 cat = match.group(1).strip()
                 categories.add(cat)
-        except Exception:
-            continue  # Skip malformed files
+        except Exception as e:
+            # Skip malformed files - log and continue
+            import logging
+
+            logging.debug(f"Failed to parse principle file {p_file}: {e}")
+            continue
 
     return sorted(categories)
 
@@ -410,7 +414,8 @@ def get_available_agents() -> list[str]:
         return []
 
     return [
-        f.stem for f in agents_dir.glob("*.md")
+        f.stem
+        for f in agents_dir.glob("*.md")
         if f.name != "README.md" and not f.name.startswith("_template")
     ]
 
@@ -427,6 +432,7 @@ def get_available_skills() -> list[str]:
         return []
 
     return [
-        f.stem for f in skills_dir.glob("*.md")
+        f.stem
+        for f in skills_dir.glob("*.md")
         if f.name != "README.md" and not f.name.startswith("_template")
     ]

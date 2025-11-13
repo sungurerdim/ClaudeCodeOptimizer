@@ -452,14 +452,16 @@ def display_completion_summary(
     if agents_installed > 0:
         summary_lines.append(f"+ {agents_installed} agents linked")
 
-    summary_lines.extend([
-        f"+ {files_created} files created",
-        "",
-        "Next steps:",
-        "1. Restart Claude Code to load new commands",
-        "2. Run /cco-status to verify installation",
-        "3. Run /cco-help to see all available commands",
-    ])
+    summary_lines.extend(
+        [
+            f"+ {files_created} files created",
+            "",
+            "Next steps:",
+            "1. Restart Claude Code to load new commands",
+            "2. Run /cco-status to verify installation",
+            "3. Run /cco-help to see all available commands",
+        ]
+    )
 
     print_box(
         summary_lines,

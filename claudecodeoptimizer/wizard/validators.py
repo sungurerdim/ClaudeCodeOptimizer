@@ -43,12 +43,9 @@ def validate_no_conflicts(selected: List[str], options: List[Option]) -> bool:
             conflicting = set(conflicts_map[sel]) & set(selected)
             if conflicting:
                 # Find option labels for better error message
-                sel_label = next(
-                    (opt.label for opt in options if opt.value == sel), sel
-                )
+                sel_label = next((opt.label for opt in options if opt.value == sel), sel)
                 conflict_labels = [
-                    next((opt.label for opt in options if opt.value == c), c)
-                    for c in conflicting
+                    next((opt.label for opt in options if opt.value == c), c) for c in conflicting
                 ]
 
                 raise ValueError(
@@ -59,9 +56,7 @@ def validate_no_conflicts(selected: List[str], options: List[Option]) -> bool:
     return True
 
 
-def validate_required_dependencies(
-    selected: List[str], options: List[Option]
-) -> bool:
+def validate_required_dependencies(selected: List[str], options: List[Option]) -> bool:
     """
     Validate that required dependencies are met.
 
@@ -93,17 +88,12 @@ def validate_required_dependencies(
             required = dependencies_map[sel]
             missing = set(required) - set(selected)
             if missing:
-                sel_label = next(
-                    (opt.label for opt in options if opt.value == sel), sel
-                )
+                sel_label = next((opt.label for opt in options if opt.value == sel), sel)
                 missing_labels = [
-                    next((opt.label for opt in options if opt.value == m), m)
-                    for m in missing
+                    next((opt.label for opt in options if opt.value == m), m) for m in missing
                 ]
 
-                raise ValueError(
-                    f"'{sel_label}' requires {missing_labels} to be selected"
-                )
+                raise ValueError(f"'{sel_label}' requires {missing_labels} to be selected")
 
     return True
 

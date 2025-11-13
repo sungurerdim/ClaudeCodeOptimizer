@@ -8,7 +8,7 @@ Pattern from CCO P0.8: Context-aware UI adaptation
 """
 
 import os
-from typing import Any, Dict, List, Literal, Optional
+from typing import Dict, List, Literal, Optional, Union
 
 from .models import AnswerContext, DecisionPoint, Option
 
@@ -16,7 +16,7 @@ from .models import AnswerContext, DecisionPoint, Option
 class ClaudeCodeUIAdapter:
     """Adapter for Claude Code AskUserQuestion tool"""
 
-    def __init__(self, mode: Optional[Literal["terminal", "claude_code"]] = None):
+    def __init__(self, mode: Optional[Literal["terminal", "claude_code"]] = None) -> None:
         """
         Initialize UI adapter.
 
@@ -51,7 +51,7 @@ class ClaudeCodeUIAdapter:
 
     def ask_decision(
         self, decision: DecisionPoint, context: AnswerContext
-    ) -> Any:
+    ) -> Union[str, List[str]]:
         """
         Ask user with context-aware UI.
 
@@ -69,7 +69,7 @@ class ClaudeCodeUIAdapter:
 
     def _ask_via_claude_tool(
         self, decision: DecisionPoint, context: AnswerContext
-    ) -> Any:
+    ) -> Union[str, List[str]]:
         """
         Use AskUserQuestion tool with rich formatting.
 
@@ -105,7 +105,7 @@ class ClaudeCodeUIAdapter:
 
     def _ask_via_terminal(
         self, decision: DecisionPoint, context: AnswerContext
-    ) -> Any:
+    ) -> Union[str, List[str]]:
         """
         Fallback to basic terminal UI.
 
@@ -145,9 +145,7 @@ class ClaudeCodeUIAdapter:
                 "\nEnter selections (comma-separated, e.g., '1,3,4') or press Enter for recommended:"
             )
         else:
-            print("\nEnter selection (1-{}) or press Enter for recommended:".format(
-                len(decision.options)
-            ))
+            print(f"\nEnter selection (1-{len(decision.options)}) or press Enter for recommended:")
 
         while True:
             user_input = input("> ").strip()
@@ -163,9 +161,7 @@ class ClaudeCodeUIAdapter:
                     # Parse comma-separated indices
                     indices = [int(x.strip()) - 1 for x in user_input.split(",")]
                     selected = [
-                        decision.options[i].value
-                        for i in indices
-                        if 0 <= i < len(decision.options)
+                        decision.options[i].value for i in indices if 0 <= i < len(decision.options)
                     ]
                     if selected and decision.validate_answer(selected):
                         return selected
@@ -214,9 +210,7 @@ class ClaudeCodeUIAdapter:
         options = []
         for opt in decision.options:
             is_recommended = self._is_recommended_for_context(opt, context)
-            description = self._build_context_description(
-                opt, context, is_recommended
-            )
+            description = self._build_context_description(opt, context, is_recommended)
 
             label = opt.label
             if is_recommended:
@@ -267,9 +261,7 @@ class ClaudeCodeUIAdapter:
 
         return "\n".join(parts)
 
-    def _is_recommended_for_context(
-        self, option: Option, context: AnswerContext
-    ) -> bool:
+    def _is_recommended_for_context(self, option: Option, context: AnswerContext) -> bool:
         """
         Check if option is recommended for current context.
 
@@ -329,9 +321,7 @@ class ClaudeCodeUIAdapter:
 
         return tags
 
-    def _get_recommendation_reason(
-        self, option: Option, context: AnswerContext
-    ) -> str:
+    def _get_recommendation_reason(self, option: Option, context: AnswerContext) -> str:
         """
         Get reason why option is recommended.
 

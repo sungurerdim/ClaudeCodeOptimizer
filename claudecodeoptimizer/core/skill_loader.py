@@ -7,11 +7,11 @@ Implements 3-tier loading for skills:
 - Tier 3: + Examples & Resources (~500 tokens)
 
 Pattern from wshobson/agents for token optimization.
-"""
 
 **STATUS**: ⚠️ NOT CURRENTLY INTEGRATED
 This module is fully implemented but not yet integrated into the codebase.
 Future integration planned for progressive disclosure for skills.
+"""
 
 import re
 from dataclasses import dataclass
@@ -42,6 +42,7 @@ class SkillLoader:
         """
         if skills_dir is None:
             from ..config import CCOConfig
+
             skills_dir = CCOConfig.get_skills_dir()
 
         if not skills_dir.exists():
@@ -80,25 +81,16 @@ class SkillLoader:
             # Parse YAML-style metadata
             metadata_text = metadata_match.group(1)
             name_match = re.search(r'name:\s*["\']?([^"\'\n]+)["\']?', metadata_text)
-            keywords_match = re.search(
-                r"activation_keywords:\s*\[(.*?)\]", metadata_text
-            )
-            category_match = re.search(
-                r'category:\s*["\']?([^"\'\n]+)["\']?', metadata_text
-            )
+            keywords_match = re.search(r"activation_keywords:\s*\[(.*?)\]", metadata_text)
+            category_match = re.search(r'category:\s*["\']?([^"\'\n]+)["\']?', metadata_text)
 
             name = name_match.group(1).strip() if name_match else skill_path.stem
             keywords = (
-                [
-                    k.strip().strip('"').strip("'")
-                    for k in keywords_match.group(1).split(",")
-                ]
+                [k.strip().strip('"').strip("'") for k in keywords_match.group(1).split(",")]
                 if keywords_match
                 else []
             )
-            category = (
-                category_match.group(1).strip() if category_match else "general"
-            )
+            category = category_match.group(1).strip() if category_match else "general"
         else:
             # Fallback: use filename
             name = skill_path.stem.replace("-", " ").title()
@@ -109,9 +101,7 @@ class SkillLoader:
         summary_match = re.search(
             r"^---.*?---\s*\n+#[^\n]+\s*\n+(.*?)(?:\n\n|\n#)", content, re.DOTALL
         )
-        summary = (
-            summary_match.group(1).strip()[:200] if summary_match else "No summary"
-        )
+        summary = summary_match.group(1).strip()[:200] if summary_match else "No summary"
 
         metadata = SkillMetadata(
             name=name, activation_keywords=keywords, category=category, summary=summary
@@ -151,9 +141,7 @@ class SkillLoader:
                 re.DOTALL,
             )
 
-        instructions = (
-            instructions_match.group(1).strip() if instructions_match else ""
-        )
+        instructions = instructions_match.group(1).strip() if instructions_match else ""
         self._instructions_cache[cache_key] = instructions
         return instructions
 
@@ -174,9 +162,7 @@ class SkillLoader:
         content = skill_path.read_text(encoding="utf-8")
 
         # Extract content after <!-- RESOURCES --> marker or ## Examples & Resources
-        resources_match = re.search(
-            r"<!-- RESOURCES:.*?-->\s*\n(.*?)$", content, re.DOTALL
-        )
+        resources_match = re.search(r"<!-- RESOURCES:.*?-->\s*\n(.*?)$", content, re.DOTALL)
 
         if not resources_match:
             # Fallback: look for ## Examples or ## Resources sections
@@ -202,10 +188,7 @@ class SkillLoader:
         metadata = self.load_skill_metadata(skill_path)
         context_lower = context.lower()
 
-        return any(
-            keyword.lower() in context_lower
-            for keyword in metadata.activation_keywords
-        )
+        return any(keyword.lower() in context_lower for keyword in metadata.activation_keywords)
 
     def discover_skills(self, category: Optional[str] = None) -> List[Path]:
         """

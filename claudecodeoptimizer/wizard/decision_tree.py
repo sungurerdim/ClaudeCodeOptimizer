@@ -12,6 +12,8 @@ Structure:
 - TIER 4: System-specific (automatic adaptation)
 """
 
+from typing import List
+
 from .context_matrix import ContextMatrix, _get_available_principle_count
 from .models import AnswerContext, DecisionPoint, Option
 from .recommendations import RecommendationEngine
@@ -23,7 +25,7 @@ _rec_engine = RecommendationEngine()
 _context_matrix = ContextMatrix()
 
 
-def _get_principle_strategy_options():
+def _get_principle_strategy_options() -> List[Option]:
     """Generate principle strategy options dynamically based on available principles."""
     total = _get_available_principle_count()
 
@@ -1125,8 +1127,12 @@ def _auto_detect_project_purpose(ctx: AnswerContext) -> list:
     frameworks = [fw.lower() for fw in sys.detected_frameworks]
 
     # Check for explicit conflicts and disambiguate
-    has_frontend = any(fw in frameworks for fw in ["react", "vue", "angular", "svelte", "next", "nuxt"])
-    has_backend = any(fw in frameworks for fw in ["fastapi", "flask", "django", "express", "spring", "gin"])
+    has_frontend = any(
+        fw in frameworks for fw in ["react", "vue", "angular", "svelte", "next", "nuxt"]
+    )
+    has_backend = any(
+        fw in frameworks for fw in ["fastapi", "flask", "django", "express", "spring", "gin"]
+    )
 
     if has_frontend and has_backend:
         return ["web_app"]  # Full-stack
@@ -1491,9 +1497,7 @@ def _auto_detect_secrets_management(ctx: AnswerContext) -> str:
 
     # Check for cloud provider secrets
     project_types = ctx.get("project_purpose", [])
-    if any(
-        pt in project_types for pt in ["microservice", "api_service", "infrastructure"]
-    ):
+    if any(pt in project_types for pt in ["microservice", "api_service", "infrastructure"]):
         return "cloud_secrets"
 
     # Default based on team size
@@ -1559,9 +1563,7 @@ def _generate_precommit_hooks_hint(ctx: AnswerContext) -> str:
     if not ctx.has_answer("team_dynamics"):
         return ""
 
-    recommended = _context_matrix.recommend_precommit_hooks(
-        ctx.team_size, ctx.system.has_ci
-    )
+    recommended = _context_matrix.recommend_precommit_hooks(ctx.team_size, ctx.system.has_ci)
 
     hooks_str = ", ".join(recommended)
     return f"💡 Recommended: {hooks_str}"
@@ -1712,6 +1714,7 @@ def _auto_detect_code_review_requirements(ctx: AnswerContext) -> str:
 
 
 # Conditional check functions
+
 
 def _should_ask_auth_pattern(ctx: AnswerContext) -> bool:
     """Only ask auth pattern for web/API projects"""

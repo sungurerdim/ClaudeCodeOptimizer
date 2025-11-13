@@ -5,11 +5,8 @@ Automatically sets up ~/.cco/ structure after pip install.
 This ensures global CCO content is ready before any project init.
 """
 
-import sys
-from pathlib import Path
 
-
-def post_install():
+def post_install() -> None:
     """
     Post-install hook - sets up ~/.cco/ structure.
 
