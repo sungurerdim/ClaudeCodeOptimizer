@@ -74,9 +74,9 @@ Repository = "https://github.com/sungurerdim/ClaudeCodeOptimizer"
 Issues = "https://github.com/sungurerdim/ClaudeCodeOptimizer/issues"
 Changelog = "https://github.com/sungurerdim/ClaudeCodeOptimizer/blob/main/CHANGELOG.md"
 
-# [project.scripts]
-# CLI DISABLED - CCO is Claude Code only
-# cco = "claudecodeoptimizer.cli.main:cli"
+[project.scripts]
+# Post-install setup command (run manually after pip install)
+cco-setup = "claudecodeoptimizer.install_hook:post_install"
 
 [tool.setuptools]
 packages = ["claudecodeoptimizer"]
