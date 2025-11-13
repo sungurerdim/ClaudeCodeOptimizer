@@ -186,6 +186,16 @@ cython_debug/
 audit_results.json        # Legacy audit results (if any)
 nul                       # Windows null device output
 
+# Backup files and directories
+*.backup
+*.backup_*
+.claude.backup_*
+CLAUDE.md.backup_*
+
+# Temporary files
+TODO.md
+*.tmp
+
 # Lock files
 *.lock
 requirements.txt.lock
