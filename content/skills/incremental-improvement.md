@@ -209,11 +209,11 @@ Target: 0 violations
 Categories: 8 principles
 
 WEEK 1: Critical Security Issues (P0)
-Principles: P023 (Secrets), P058 (Encryption), P064 (Zero Disk)
+Principles: P029 (Secret Management), P025 (Encryption), P026 (Zero Disk Touch)
 Violations to fix:
-  [ ] P023: 3 hardcoded secrets
-  [ ] P058: 5 missing encryption
-  [ ] P064: 2 disk writes with sensitive data
+  [ ] P029: 3 hardcoded secrets
+  [ ] P025: 5 missing encryption
+  [ ] P026: 2 disk writes with sensitive data
 
 Total: 10 violations
 Impact: All P0 CRITICAL resolved
@@ -221,10 +221,10 @@ Estimated effort: 2 hours
 Priority: BLOCKING DEPLOYMENT
 
 WEEK 2: High-Impact Quality (P1)
-Principles: U002 (Fail-Fast), U002 (DRY), P009 (Type Safety)
+Principles: U002 (Fail-Fast), P001 (DRY), P009 (Type Safety)
 Violations to fix:
   [ ] U002: 8 bare except clauses
-  [ ] U002: 6 duplicate functions
+  [ ] P001: 6 duplicate functions
   [ ] P009: 12 missing type hints
 
 Total: 26 violations
