@@ -76,7 +76,6 @@ print()
 # Check for essential docs
 essential_docs = {
     'README.md': (project_root / 'README.md').exists(),
-    'CONTRIBUTING.md': (project_root / 'CONTRIBUTING.md').exists(),
     'LICENSE': any((project_root / name).exists() for name in ['LICENSE', 'LICENSE.md', 'LICENSE.txt']),
     'docs/ directory': (project_root / 'docs').exists(),
 }
@@ -314,7 +313,6 @@ Documentation Files: 23
 
 Essential Documentation:
   ✓ README.md
-  ✗ CONTRIBUTING.md
   ✓ LICENSE
   ✓ docs/ directory
 
@@ -342,9 +340,8 @@ Documentation Quality Score: 68/100
 
 === Recommendations ===
 
-1. Create CONTRIBUTING.md with project overview
-2. Fix 3 documentation drift issues
-3. Fix 4 invalid code examples
+1. Fix 3 documentation drift issues
+2. Fix 4 invalid code examples
 ```
 
 ---

@@ -80,7 +80,6 @@ Analyze the changes above and create commit proposals following these rules:
 2. **Identify related changes**
    - Files changed together for same feature → same commit
    - Documentation updates for feature → include in feature commit
-   - TODO.md updates → include in relevant feature commit
 
 3. **Follow conventional commits**
    - `feat(scope):` - New features
@@ -117,7 +116,6 @@ Given these changes:
 [M ] schemas/preferences.py
 [A ] core/version_manager.py
 [M ] docs/principles/git-workflow.md
-[M ] TODO.md
 ```
 
 **Good grouping:**
@@ -128,7 +126,6 @@ Commit 1: feat(wizard): add versioning strategy selection
 - Update orchestrator to map versioning answers to preferences
 - Implement VersionManager for automated version detection
 - Add P052 automated versioning principle
-- Mark P0.8 Task 1 complete in TODO.md
 ```
 
 **Bad grouping:**
@@ -144,9 +141,6 @@ Commit 3: feat(core): add version manager
 
 Commit 4: docs(docs): update git-workflow
 - Update git-workflow.md
-
-Commit 5: docs(repo): update TODO
-- Update TODO.md
 ```
 
 ---
@@ -305,11 +299,6 @@ feat(claudecodeoptimizer): update 5 files
 - Add commit.md
 - Add __init__.py
 - Add commit_skill.py
-```
-
-```
-docs(repo): update TODO.md
-- Update TODO
 ```
 
 ---
