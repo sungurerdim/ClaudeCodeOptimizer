@@ -118,9 +118,9 @@ pip install claudecodeoptimizer
 - `guides/` - Comprehensive guides (deployed from content/guides/)
 - `skills/` - Language-specific skills (deployed from content/skills/)
 - `agents/` - Task-specific agent definitions (deployed from content/agents/)
-- `templates/` - Template files (deployed from templates/*.template, extensions removed):
-  - `settings.json` - Claude Code settings template
-  - `statusline.js` - Status line script
+- `templates/` - Optional template files (reference only, not auto-deployed):
+  - `settings.json.template` - Claude Code settings example
+  - `statusline.js.template` - Status line script example
   - Other project templates (.editorconfig, .pre-commit-config.yaml, etc.)
 - `projects/` - Project registries directory
 - `config.json` - Global CCO configuration
@@ -135,8 +135,6 @@ pip install claudecodeoptimizer
 - `guides/` - Links to relevant guides
 - `skills/` - Links to language skills
 - `agents/` - Links to task agents (if any)
-- `statusline.js` - Link to ~/.cco/templates/statusline.js
-- `settings.json` - Copy of ~/.cco/templates/settings.json (always copied, not linked)
 - `CLAUDE.md` (in project root) - Minimal guide with principle references
 
 **Project Configuration (`.claude/project.json`)** - Runtime config:
@@ -646,11 +644,10 @@ pip install -e ".[dev]"
    - `guides/` - Comprehensive guides (from content/guides/)
    - `skills/` - Language-specific skills (from content/skills/)
    - `agents/` - Task-specific agents (from content/agents/)
-   - `templates/` - Deployed template files (from templates/*.template, extensions removed):
-     - `CLAUDE.md` (from CLAUDE.md.template)
-     - `settings.json` (from settings.json.template)
-     - `statusline.js` (from statusline.js.template)
-     - Other project templates (editorconfig, pre-commit, etc.)
+   - `templates/` - Optional template files (reference only):
+     - `settings.json.template` - Claude Code settings example
+     - `statusline.js.template` - Status line script example
+     - Other project templates (.editorconfig, .pre-commit-config.yaml, etc.)
    - `projects/` - Project registry directory (empty initially)
 3. Creates `config.json` with global configuration
 4. Creates `.installed` marker file
