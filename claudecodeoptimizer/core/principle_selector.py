@@ -104,10 +104,14 @@ class PrincipleSelector:
 
         applicability = principle.get("applicability", {})
 
-        # Always applicable principles
-        if applicability.get("project_types") == ["all"]:
-            # Still check preference conditions
-            pass
+        # Check project type matching
+        project_types = applicability.get("project_types", ["all"])
+        if project_types != ["all"]:
+            # Get detected project types from preferences
+            detected_types = self._get_nested_value(self.preferences, "project_identity.types") or []
+            # Check if any detected type matches required types
+            if not any(dtype in project_types for dtype in detected_types):
+                return False
 
         # Check preference-based conditions
         conditions = applicability.get("preference_conditions", [])
@@ -273,14 +277,31 @@ class PrincipleSelector:
         category = principle.get("category", "")
 
         # Git workflow principles - less relevant for solo devs
-        if category == "project-specific":
+        # NOTE: Only filter git-workflow related principles, not all project-specific
+        git_workflow_principles = [
+            "P_BRANCHING_STRATEGY",
+            "P_PR_GUIDELINES",
+            "P_REBASE_VS_MERGE_STRATEGY",
+            "P_COMMIT_MESSAGE_CONVENTIONS",
+        ]
+        if category == "project-specific" and principle["id"] in git_workflow_principles:
             team_size = self._get_nested_value(self.preferences, "project_identity.team_trajectory")
             if team_size == "solo":
-                # Only keep essential git principles for solo
-                return principle["id"] in ["P_COMMIT_MESSAGE_CONVENTIONS"]  # Keep commit messages principle for solo devs
+                # Only keep essential git principles for solo devs
+                return principle["id"] in ["P_COMMIT_MESSAGE_CONVENTIONS"]
 
         # Operations principles - less relevant for early stage
-        if category == "project-specific":
+        # NOTE: Only filter non-critical operations, keep critical principles
+        operations_principles = [
+            "P_CONFIGURATION_AS_CODE",
+            "P_GITOPS_PRACTICES",
+            "P_GRACEFUL_SHUTDOWN",
+            "P_HEALTH_CHECKS",
+            "P_IAC_GITOPS",
+            "P_INCIDENT_RESPONSE_READINESS",
+            "P_OBSERVABILITY_WITH_OTEL",
+        ]
+        if category == "project-specific" and principle["id"] in operations_principles:
             maturity = self._get_nested_value(self.preferences, "project_identity.project_maturity")
             if maturity in ["prototype", "mvp"]:
                 # Only keep critical operations principles
