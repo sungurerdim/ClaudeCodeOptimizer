@@ -260,9 +260,7 @@ class CCOWizard:
                 "We'll ask you questions to configure CCO for your project",
             )
             print_info("This wizard guides you through 3 tiers of decisions:", indent=2)
-            print_info(
-                "  • Tier 1: Project fundamentals (purpose, team, maturity)", indent=2
-            )
+            print_info("  • Tier 1: Project fundamentals (purpose, team, maturity)", indent=2)
             print_info("  • Tier 2: Strategy (principles, testing, security)", indent=2)
             print_info("  • Tier 3: Tactical (tool preferences, commands)", indent=2)
         else:  # quick
@@ -270,9 +268,7 @@ class CCOWizard:
                 "CCO Wizard - Quick Mode",
                 "AI will automatically configure CCO based on your project",
             )
-            print_info(
-                "Quick mode analyzes your project and makes smart decisions:", indent=2
-            )
+            print_info("Quick mode analyzes your project and makes smart decisions:", indent=2)
             print_info("  • Detect project structure and tools", indent=2)
             print_info("  • Select appropriate principles and practices", indent=2)
             print_info("  • Configure commands based on your needs", indent=2)
@@ -298,10 +294,7 @@ class CCOWizard:
             # Setup global knowledge if not exists
             result = setup_global_knowledge(force=False)
 
-            if (
-                result["actions"]
-                and result["actions"][0] != "Knowledge base already up to date"
-            ):
+            if result["actions"] and result["actions"][0] != "Knowledge base already up to date":
                 print_info("✓ Global content base initialized", indent=2)
                 for action in result["actions"]:
                     print_info(f"  - {action}", indent=2)
@@ -329,12 +322,8 @@ class CCOWizard:
             if self.mode == "interactive":
                 print_success(f"✓ OS: {self.system_context.os_type}", indent=2)
                 print_success(f"✓ Shell: {self.system_context.shell_type}", indent=2)
-                print_success(
-                    f"✓ Python: {self.system_context.python_version}", indent=2
-                )
-                print_success(
-                    f"✓ Locale: {self.system_context.detected_language}", indent=2
-                )
+                print_success(f"✓ Python: {self.system_context.python_version}", indent=2)
+                print_success(f"✓ Locale: {self.system_context.detected_language}", indent=2)
                 print()
                 pause()
 
@@ -496,9 +485,7 @@ class CCOWizard:
                 self.answer_context.set(decision.id, answer)
                 decisions_executed += 1
             except Exception as e:
-                print_error(
-                    f"Failed to execute decision '{decision.id}': {e}", indent=2
-                )
+                print_error(f"Failed to execute decision '{decision.id}': {e}", indent=2)
                 return False
 
         # Log execution summary for verification
@@ -580,9 +567,7 @@ class CCOWizard:
         """Select principles based on answers"""
         if self.mode == "interactive":
             clear_screen()
-            print_header(
-                "Phase 4: Principle Selection", "Selecting development principles..."
-            )
+            print_header("Phase 4: Principle Selection", "Selecting development principles...")
             print()
 
         try:
@@ -628,11 +613,7 @@ class CCOWizard:
                 selected_labels = ask_multi_choice(
                     "Select principles to apply (recommended are pre-selected):",
                     [p["label"] for p in principle_choices],
-                    defaults=[
-                        p["label"]
-                        for p in principle_choices
-                        if p["id"] in recommended_ids
-                    ],
+                    defaults=[p["label"] for p in principle_choices if p["id"] in recommended_ids],
                     default_label="recommended",
                     page_size=20,  # Show more principles per page
                 )
@@ -643,18 +624,14 @@ class CCOWizard:
                 ]
 
                 print()
-                print_success(
-                    f"✓ {len(self.selected_principles)} principles selected", indent=2
-                )
+                print_success(f"✓ {len(self.selected_principles)} principles selected", indent=2)
                 print()
                 pause()
 
             else:  # quick mode
                 # Auto-select recommended principles
                 self.selected_principles = recommended_ids
-                print_success(
-                    f"✓ Selected {len(self.selected_principles)} principles", indent=2
-                )
+                print_success(f"✓ Selected {len(self.selected_principles)} principles", indent=2)
                 print()
 
             return True
@@ -718,9 +695,7 @@ class CCOWizard:
 
                 print_success("  Recommended commands:", indent=2)
                 for cmd in command_recs["recommended"]:
-                    reason = command_recs["reasoning"].get(
-                        cmd, "Recommended for your project"
-                    )
+                    reason = command_recs["reasoning"].get(cmd, "Recommended for your project")
                     print_success(f"    /{cmd}", indent=2)
                     print_info(f"      {reason}", indent=2)
                 print()
@@ -728,9 +703,7 @@ class CCOWizard:
                 # Show optional commands (available but not installed)
                 if command_recs["optional"]:
                     print_info("Optional commands available (not installed):", indent=2)
-                    print_info(
-                        "  You can enable these later with /cco-config", indent=2
-                    )
+                    print_info("  You can enable these later with /cco-config", indent=2)
                     for cmd in command_recs["optional"][:10]:  # Show first 10
                         print_info(f"    /{cmd}", indent=2)
                     if len(command_recs["optional"]) > 10:
@@ -746,9 +719,7 @@ class CCOWizard:
                 if not hasattr(self, "print_heading"):
                     from .renderer import print_heading
                 print_heading("Knowledge Base Selection", level=2)
-                print_info(
-                    "Select which knowledge base components to symlink:", indent=2
-                )
+                print_info("Select which knowledge base components to symlink:", indent=2)
                 print()
 
                 # Guides selection with descriptions
@@ -794,9 +765,7 @@ class CCOWizard:
                     )
                     if response == "all":
                         self.selected_guides = available_guides
-                        print_success(
-                            f"✓ Selected all {len(available_guides)} guides", indent=2
-                        )
+                        print_success(f"✓ Selected all {len(available_guides)} guides", indent=2)
                     elif response == "" or response == "recommended":
                         self.selected_guides = recommended_guides
                         print_success(
@@ -822,9 +791,7 @@ class CCOWizard:
                         except (ValueError, IndexError):
                             # Fallback to recommended
                             self.selected_guides = recommended_guides
-                            print_warning(
-                                "Invalid selection, using recommended", indent=2
-                            )
+                            print_warning("Invalid selection, using recommended", indent=2)
                     print()
                 else:
                     self.selected_guides = []
@@ -833,25 +800,17 @@ class CCOWizard:
                 # Agents selection (simplified for now - agents are advanced use case)
                 available_agents = get_available_agents()
                 if available_agents:
-                    print_info(
-                        f"Available custom agents ({len(available_agents)}):", indent=2
-                    )
+                    print_info(f"Available custom agents ({len(available_agents)}):", indent=2)
                     print_info(
                         "  Custom agents are advanced - select only if you created them",
                         indent=2,
                     )
                     print()
 
-                    response = (
-                        input("  Select agents (all/none) [default: none]: ")
-                        .strip()
-                        .lower()
-                    )
+                    response = input("  Select agents (all/none) [default: none]: ").strip().lower()
                     if response == "all":
                         self.selected_agents = available_agents
-                        print_success(
-                            f"✓ Selected all {len(available_agents)} agents", indent=2
-                        )
+                        print_success(f"✓ Selected all {len(available_agents)} agents", indent=2)
                     else:
                         self.selected_agents = []
                         print_info("✓ No custom agents selected", indent=2)
@@ -907,17 +866,13 @@ class CCOWizard:
                     print()
 
                     response = (
-                        input(
-                            "  Select skills (all/recommended/none) [default: recommended]: "
-                        )
+                        input("  Select skills (all/recommended/none) [default: recommended]: ")
                         .strip()
                         .lower()
                     )
                     if response == "all":
                         self.selected_skills = [
-                            s
-                            for s in available_skills
-                            if not s.startswith("_") and s != "README"
+                            s for s in available_skills if not s.startswith("_") and s != "README"
                         ]
                         print_success(
                             f"✓ Selected all {len(self.selected_skills)} skills",
@@ -941,9 +896,7 @@ class CCOWizard:
                 pause()
 
             else:  # quick mode
-                print_success(
-                    f"✓ Installing {len(self.selected_commands)} commands", indent=2
-                )
+                print_success(f"✓ Installing {len(self.selected_commands)} commands", indent=2)
                 print_info(f"  Core: {len(command_recs['core'])} commands", indent=2)
                 print_info(
                     f"  Recommended: {len(command_recs['recommended'])} commands",
@@ -1007,9 +960,7 @@ class CCOWizard:
 
         try:
             # Create .claude directory structure
-            (self.project_root / ".claude" / "commands").mkdir(
-                parents=True, exist_ok=True
-            )
+            (self.project_root / ".claude" / "commands").mkdir(parents=True, exist_ok=True)
 
             # Setup knowledge base symlinks
             self._setup_knowledge_symlinks()
@@ -1216,12 +1167,8 @@ class CCOWizard:
         output_path = self.project_root / "CLAUDE.md"
         generator = ClaudeMdGenerator(
             preferences_dict,
-            selected_skills=(
-                self.selected_skills if hasattr(self, "selected_skills") else []
-            ),
-            selected_agents=(
-                self.selected_agents if hasattr(self, "selected_agents") else []
-            ),
+            selected_skills=(self.selected_skills if hasattr(self, "selected_skills") else []),
+            selected_agents=(self.selected_agents if hasattr(self, "selected_agents") else []),
         )
         generator.generate(output_path)
 
@@ -1236,9 +1183,7 @@ class CCOWizard:
         principles_list = load_all_principles(principles_dir)
 
         # Get all universal principles dynamically
-        universal_ids = [
-            p["id"] for p in principles_list if p.get("category") == "universal"
-        ]
+        universal_ids = [p["id"] for p in principles_list if p.get("category") == "universal"]
 
         principles_dict = {"universal": universal_ids}
 
@@ -1297,9 +1242,7 @@ class CCOWizard:
                 additions.append(
                     "**Result Types**: Use Result/Option types instead of exceptions for expected failures.\n"
                 )
-                additions.append(
-                    "- Return Result[T, Error] for operations that can fail"
-                )
+                additions.append("- Return Result[T, Error] for operations that can fail")
                 additions.append("- Use Option[T] for nullable values")
                 additions.append("- Reserve exceptions for truly exceptional cases")
                 additions.append("- Chain operations with map/flatMap/and_then")
@@ -1334,9 +1277,7 @@ class CCOWizard:
             additions.append("Available skills via slash commands:\n")
             for skill in self.selected_skills:
                 skill_name = skill.replace("-", " ").title()
-                additions.append(
-                    f"- `/{skill}` - @.claude/skills/{skill}.md - {skill_name}"
-                )
+                additions.append(f"- `/{skill}` - @.claude/skills/{skill}.md - {skill_name}")
 
         # Insert additions before footer
         if additions:
@@ -1389,22 +1330,14 @@ class CCOWizard:
             principles_configured=len(self.selected_principles),
             files_created=files_count,
             duration_seconds=duration,
-            guides_installed=(
-                len(self.selected_guides) if hasattr(self, "selected_guides") else 0
-            ),
-            skills_installed=(
-                len(self.selected_skills) if hasattr(self, "selected_skills") else 0
-            ),
-            agents_installed=(
-                len(self.selected_agents) if hasattr(self, "selected_agents") else 0
-            ),
+            guides_installed=(len(self.selected_guides) if hasattr(self, "selected_guides") else 0),
+            skills_installed=(len(self.selected_skills) if hasattr(self, "selected_skills") else 0),
+            agents_installed=(len(self.selected_agents) if hasattr(self, "selected_agents") else 0),
         )
 
         print()
         print_info("Next steps:", indent=2)
-        print_info(
-            "  1. Review CLAUDE.md to understand your development guide", indent=2
-        )
+        print_info("  1. Review CLAUDE.md to understand your development guide", indent=2)
         print_info("  2. Run /cco-status to see your configuration", indent=2)
         print_info("  3. Run /cco-audit to analyze your codebase", indent=2)
         print()
@@ -1485,9 +1418,7 @@ class CCOWizard:
                 "git_workflow": git_workflow_mapping.get(
                     answers.get("git_workflow", "main_only"), "trunk-based"
                 ),
-                "versioning_strategy": answers.get(
-                    "versioning_strategy", "auto_semver"
-                ),
+                "versioning_strategy": answers.get("versioning_strategy", "auto_semver"),
             },
             "selected_principle_ids": self.selected_principles,
         }
@@ -1560,9 +1491,7 @@ class CCOWizard:
             recommended.append("security-response")
 
         # For web/API projects (security critical)
-        if any(
-            pt in project_types for pt in ["backend", "web-app", "microservice", "spa"]
-        ):
+        if any(pt in project_types for pt in ["backend", "web-app", "microservice", "spa"]):
             if "security-response" not in recommended:
                 recommended.append("security-response")
 
@@ -1585,10 +1514,7 @@ class CCOWizard:
                 recommended.append("performance-optimization")
 
         # Container Best Practices: for containerized infrastructure
-        if any(
-            pt in project_types
-            for pt in ["microservice", "devtools", "data-pipeline", "ml"]
-        ):
+        if any(pt in project_types for pt in ["microservice", "devtools", "data-pipeline", "ml"]):
             recommended.append("container-best-practices")
 
         # TIER 3 Mappings: Tactical Decisions
@@ -1638,16 +1564,11 @@ class CCOWizard:
                 # Rust-specific skills (when available)
                 pass
 
-            if any(
-                lang.lower() in ["typescript", "javascript"]
-                for lang in detected_languages
-            ):
+            if any(lang.lower() in ["typescript", "javascript"] for lang in detected_languages):
                 # TypeScript/JS-specific skills (when available)
                 pass
 
-        return list(
-            set(universal_skills + language_specific_skills)
-        )  # Remove duplicates
+        return list(set(universal_skills + language_specific_skills))  # Remove duplicates
 
     def _recommend_agents_for_project(self) -> List[str]:
         """Add all universal agents to every project (always included)"""
