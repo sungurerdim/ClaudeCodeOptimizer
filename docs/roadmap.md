@@ -4,7 +4,7 @@
 
 ### ✅ v0.1.0-alpha (Complete)
 - Interactive wizard with 4-tier decision tree (TIER 0-3)
-- 83 principles (14 universal + 69 project-specific) across 9 categories
+- 95 principles (19 universal + 64 project-specific + 12 Claude guidelines) with semantic IDs
 - Universal detection engine
 - 28 slash commands
 - Multi-agent orchestration
@@ -25,7 +25,7 @@
   - ✅ On-demand guides (5 comprehensive guides)
 - ✅ P0.3: PRINCIPLE LOADING REFACTOR COMPLETE
   - ✅ Single Source of Truth (SSOT): .md files with frontmatter (principles.json removed)
-  - ✅ Universal principles system (U001-U014) always active
+  - ✅ Universal principles system (U_*) always active
   - ✅ python-frontmatter library integration for metadata parsing
   - ✅ principle_md_loader module for unified loading
   - ✅ 6 core files refactored (principles.py, loader, selector, generator, orchestrator)
@@ -84,7 +84,7 @@ CCO aims to solve common challenges in AI-assisted development:
 ### Quality & Reliability
 - Evidence-based verification prevents silent failures
 - Anti-overengineering principles prevent bloat
-- Comprehensive principle coverage (83 principles: 14 universal + 69 project-specific, 9 categories)
+- Comprehensive principle coverage (95 principles: 19 universal + 64 project-specific + 12 Claude guidelines)
 - Progressive disclosure minimizes token waste
 
 ### Team Collaboration

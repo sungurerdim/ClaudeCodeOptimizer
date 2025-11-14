@@ -29,8 +29,8 @@ cd /path/to/your/project
 
 **What you'll have after 5 minutes:**
 - ✅ Project configured with principles:
-  - Universal principles (U001-U014, 14 always included)
-  - Project-specific principles (P001-P069, 20-40 AI-selected)
+  - Universal principles (19 always included)
+  - Project-specific principles (5-20 AI-selected from 24 total)
 - ✅ Slash commands ready to use (8-15 selected from 28 available)
 
 > **See**: [Features → Slash Commands](features.md#slash-commands) for complete command list

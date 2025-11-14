@@ -10,7 +10,7 @@ CCO creates only `.claude/` directory with links using [preference order](archit
 
 **What gets created in your project:**
 - `CLAUDE.md` - Minimal guide with principle references
-- `.claude/principles/` - Links to 34-54 selected principles (14 universal + 20-40 project-specific)
+- `.claude/principles/` - Links to 24-44 selected principles (19 universal + 5-25 project-specific)
 - `.claude/commands/` - Links to 8-15 selected commands
 - `.claude/guides/` - Links to relevant guides
 - `.claude/skills/` - Links to language-specific skills
@@ -25,7 +25,7 @@ CCO creates only `.claude/` directory with links using [preference order](archit
 All actual CCO data lives in global storage (one-time installation):
 
 **Contains:**
-- 83 principles (14 universal U001-U014 + 69 project-specific P001-P069)
+- 95 principles (19 universal + 64 project-specific + 12 Claude guidelines)
 - 28 slash commands
 - 5 comprehensive guides
 - 23 skills (18 language-specific + 5 cross-language)
@@ -38,7 +38,7 @@ All actual CCO data lives in global storage (one-time installation):
 
 **Recommended** (team collaboration):
 - ✅ `.claude/commands/` - Links (team sees which commands are active)
-- ✅ `.claude/principles/` - Links (team follows same principles: U*.md + selected P*.md)
+- ✅ `.claude/principles/` - Links (team follows same principles: all universal + selected project-specific)
 - ✅ `.claude/guides/` - Links (team uses same guides)
 - ✅ `.claude/skills/` - Links (team uses same skills)
 - ✅ `CLAUDE.md` - Project guide (team reference)
@@ -61,7 +61,7 @@ CCO is designed for easy, clean removal:
 **What `/cco-remove` does:**
 1. Removes all CCO-created links:
    - `.claude/commands/cco-*.md` (symlinks/hardlinks/copies)
-   - `.claude/principles/` (all linked principle files: U*.md + P*.md)
+   - `.claude/principles/` (all linked principle files: universal + project-specific)
    - `.claude/guides/` (all linked guide files)
    - `.claude/skills/` (all linked skill files)
    - `.claude/agents/` (all linked agent files, if any)
@@ -84,7 +84,7 @@ CCO is designed for easy, clean removal:
 ```bash
 # Remove all CCO links and files
 rm -rf .claude/commands/cco-*.md       # Remove command links
-rm -rf .claude/principles/              # Remove principle links (U*.md + P*.md)
+rm -rf .claude/principles/              # Remove principle links (universal + project-specific)
 rm -rf .claude/guides/                  # Remove guide links
 rm -rf .claude/skills/                  # Remove skill links
 rm -rf .claude/agents/                  # Remove agent links (if any)
