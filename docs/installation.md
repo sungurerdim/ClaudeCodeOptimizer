@@ -25,7 +25,7 @@ pip install -e ".[dev]"
 1. Installs Python package from PyPI
 2. Deploys principles, guides, commands, and skills from `content/` to `~/.cco/`:
    - `commands/` - 28 command files (from content/commands/)
-   - `principles/` - 83 principle files (14 universal + 69 project-specific) (from content/principles/)
+   - `principles/` - 95 principle files (19 universal + 64 project-specific + 12 Claude guidelines) (from content/principles/)
    - `guides/` - 5 comprehensive guides (from content/guides/)
    - `skills/` - 23 skill files (18 language-specific + 5 cross-language) (from content/skills/)
    - `agents/` - 3 task-specific agents (from content/agents/)
@@ -76,7 +76,7 @@ Interactive mode: user confirms; Quick mode: auto-decided
 7. Selects security level (basic, standard, strict, paranoid)
 8. Selects git workflow (main-only, GitHub Flow, Git Flow)
 9. Selects documentation level (minimal, standard, comprehensive)
-10. Chooses applicable principles from 83 total (14 universal always + 20-40 project-specific = 34-54 total)
+10. Chooses applicable principles from 95 total (19 universal always + 5-25 project-specific = 24-44 total selected)
 11. Chooses relevant commands from 28 available (typically 8-15 selected)
 12. Chooses relevant guides (verification, security, performance, etc.)
 13. Chooses language-specific skills based on detected languages
@@ -85,8 +85,8 @@ Interactive mode: user confirms; Quick mode: auto-decided
 
 14. Creates `.claude/` directory structure using preference order (symlink → hardlink → copy):
     - `.claude/principles/` - Links to principles:
-      - All universal principles (U001-U014, 14 files, always)
-      - Selected project principles (P001-P069, 20-40 files, AI-selected)
+      - All universal principles (19 files, always)
+      - Selected project principles (5-20 files, AI-selected)
     - `.claude/commands/` - Links to selected global commands (8-15 from 28 available)
     - `.claude/guides/` - Links to relevant guides
     - `.claude/skills/` - Links to language skills

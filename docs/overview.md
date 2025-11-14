@@ -6,11 +6,11 @@
 
 Unlike generic linters or static templates, CCO:
 - 🎯 **Analyzes your project** - AI reads your code, docs, git history to understand context
-- 🤖 **Selects only what's needed** - From 83 principles (14 universal + 69 project-specific), only applicable ones are loaded
+- 🤖 **Selects only what's needed** - From 95 principles (19 universal + 64 project-specific + 12 Claude guidelines), only applicable ones are loaded
 - 🔄 **Adapts to your stack** - FastAPI project gets different principles than a CLI tool
 - 🧹 **Zero pollution** - No unused commands, no irrelevant principles, no boilerplate
 
-**Example**: A security-focused web API gets P025-P043 (security principles) + P015-P024 (architecture), while a simple CLI tool gets just P001-P014 (code quality) + P044-P049 (testing). Same CCO, completely different configuration.
+**Example**: A security-focused web API gets all 19 universal + 14 security/privacy project-specific principles, while a simple CLI tool gets 19 universal + 3-5 code quality principles. Same CCO, completely different configuration.
 
 ---
 

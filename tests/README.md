@@ -54,7 +54,7 @@ pytest --cov=claudecodeoptimizer --cov-report=html
 
 ## Test Principles
 
-- **P067: Evidence-Based Verification** - All tests must verify with actual command output
+- **P_INCREMENTAL_SAFETY_PATTERNS: Evidence-Based Verification** - All tests must verify with actual command output
 - **P001: Fail-Fast** - Tests fail loudly, no silent failures
 - **Isolation** - Each test is independent
 - **Deterministic** - Same input always produces same output

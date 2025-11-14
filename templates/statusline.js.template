@@ -1,16 +1,13 @@
 #!/usr/bin/env node
 
-// Claude Code Statusline - Enhanced Metrics System
-// Collects and displays: cost, context, git, docker, test results, system info
+// Claude Code Statusline - Simplified
+// Displays: git status, CCO compliance
 
 const fs = require('fs');
 const path = require('path');
 const { execSync } = require('child_process');
 const os = require('os');
 
-const SESSIONS_DIR = path.join(__dirname, 'usage_sessions');
-const BASELINE_FILE = path.join(SESSIONS_DIR, '_baseline.json');
-const METRICS_FILE = path.join(SESSIONS_DIR, '_metrics.json');
 const CCO_CONFIG_FILE = path.join(__dirname, 'cco.json');
 const CCO_STATE_DIR = path.join(__dirname, '..', '.cco', 'state');
 
@@ -37,10 +34,7 @@ function colorize(text, color, enabled = true) {
   return `${COLORS[color] || ''}${text}${COLORS.reset}`;
 }
 
-// Cache for expensive operations (5 minutes TTL)
-const CACHE_TTL_MS = 5 * 60 * 1000;
-let metricsCache = null;
-let cacheTimestamp = 0;
+// No caching - git info is fast enough
 
 function execCommand(command, options = {}) {
   try {
@@ -52,6 +46,27 @@ function execCommand(command, options = {}) {
     }).trim();
   } catch (e) {
     return null;
+  }
+}
+
+// Helper: Count lines in a file from git (cross-platform)
+function countLinesInGitFile(fileRef) {
+  const content = execCommand(`git show "${fileRef}"`);
+  if (!content) return 0;
+  // Count newlines + 1 (if content exists and doesn't end with newline)
+  const lines = content.split('\n').length;
+  return lines;
+}
+
+// Helper: Count lines in a working tree file (cross-platform)
+function countLinesInFile(filePath) {
+  try {
+    const content = fs.readFileSync(filePath, 'utf-8');
+    if (!content) return 0;
+    const lines = content.split('\n').length;
+    return lines;
+  } catch (e) {
+    return 0;
   }
 }
 
@@ -110,6 +125,8 @@ function getGitInfo() {
   // Get line stats for UNSTAGED changes (ready to stage)
   let unstagedLinesAdded = 0;
   let unstagedLinesRemoved = 0;
+
+  // 1. Count lines in MODIFIED files
   const unstagedDiffStats = execCommand('git diff --numstat');
   if (unstagedDiffStats) {
     const lines = unstagedDiffStats.split('\n').filter(l => l.trim());
@@ -124,9 +141,35 @@ function getGitInfo() {
     }
   }
 
+  // 2. Count lines in DELETED files (all lines are deletions)
+  if (deletedFiles) {
+    const deletedFileList = deletedFiles.split('\n').filter(x => x.trim());
+    for (const file of deletedFileList) {
+      // Get line count from HEAD (last committed version)
+      const lineCount = countLinesInGitFile(`HEAD:${file}`);
+      if (lineCount > 0) {
+        unstagedLinesRemoved += lineCount;
+      }
+    }
+  }
+
+  // 3. Count lines in NEW/UNTRACKED files (all lines are additions)
+  if (untrackedFiles) {
+    const untrackedFileList = untrackedFiles.split('\n').filter(x => x.trim());
+    for (const file of untrackedFileList) {
+      // Get line count from working tree
+      const lineCount = countLinesInFile(file);
+      if (lineCount > 0) {
+        unstagedLinesAdded += lineCount;
+      }
+    }
+  }
+
   // Get line stats for STAGED changes (ready to commit)
   let stagedLinesAdded = 0;
   let stagedLinesRemoved = 0;
+
+  // 1. Count lines in MODIFIED staged files
   const stagedDiffStats = execCommand('git diff --cached --numstat');
   if (stagedDiffStats) {
     const lines = stagedDiffStats.split('\n').filter(l => l.trim());
@@ -141,10 +184,37 @@ function getGitInfo() {
     }
   }
 
+  // 2. Count lines in STAGED DELETED files (all lines are deletions)
+  const stagedDeletedFiles = execCommand('git diff --cached --name-only --diff-filter=D');
+  if (stagedDeletedFiles) {
+    const stagedDeletedFileList = stagedDeletedFiles.split('\n').filter(x => x.trim());
+    for (const file of stagedDeletedFileList) {
+      // Get line count from HEAD (last committed version)
+      const lineCount = countLinesInGitFile(`HEAD:${file}`);
+      if (lineCount > 0) {
+        stagedLinesRemoved += lineCount;
+      }
+    }
+  }
+
+  // 3. Count lines in STAGED NEW files (all lines are additions)
+  const stagedNewFiles = execCommand('git diff --cached --name-only --diff-filter=A');
+  if (stagedNewFiles) {
+    const stagedNewFileList = stagedNewFiles.split('\n').filter(x => x.trim());
+    for (const file of stagedNewFileList) {
+      // Get line count from index (staged version)
+      const lineCount = countLinesInGitFile(`:${file}`);
+      if (lineCount > 0) {
+        stagedLinesAdded += lineCount;
+      }
+    }
+  }
+
   // Get line stats for UNPUSHED commits (ready to push)
   let unpushedLinesAdded = 0;
   let unpushedLinesRemoved = 0;
   if (trackingBranch) {
+    // 1. Count lines in MODIFIED files in unpushed commits
     const unpushedDiffStats = execCommand('git diff @{u}..HEAD --numstat');
     if (unpushedDiffStats) {
       const lines = unpushedDiffStats.split('\n').filter(l => l.trim());
@@ -155,6 +225,32 @@ function getGitInfo() {
           const removed = parseInt(parts[1]) || 0;
           unpushedLinesAdded += added;
           unpushedLinesRemoved += removed;
+        }
+      }
+    }
+
+    // 2. Count lines in DELETED files in unpushed commits (all lines are deletions)
+    const unpushedDeletedFiles = execCommand('git diff @{u}..HEAD --name-only --diff-filter=D');
+    if (unpushedDeletedFiles) {
+      const unpushedDeletedFileList = unpushedDeletedFiles.split('\n').filter(x => x.trim());
+      for (const file of unpushedDeletedFileList) {
+        // Get line count from remote tracking branch
+        const lineCount = countLinesInGitFile(`@{u}:${file}`);
+        if (lineCount > 0) {
+          unpushedLinesRemoved += lineCount;
+        }
+      }
+    }
+
+    // 3. Count lines in NEW files in unpushed commits (all lines are additions)
+    const unpushedNewFiles = execCommand('git diff @{u}..HEAD --name-only --diff-filter=A');
+    if (unpushedNewFiles) {
+      const unpushedNewFileList = unpushedNewFiles.split('\n').filter(x => x.trim());
+      for (const file of unpushedNewFileList) {
+        // Get line count from HEAD (current version)
+        const lineCount = countLinesInGitFile(`HEAD:${file}`);
+        if (lineCount > 0) {
+          unpushedLinesAdded += lineCount;
         }
       }
     }
@@ -180,87 +276,7 @@ function getGitInfo() {
   };
 }
 
-function getDockerInfo() {
-  // Check if docker is available
-  const dockerVersion = execCommand('docker --version');
-  if (!dockerVersion) return null;
-
-  // Get running containers
-  const runningContainers = execCommand('docker ps --format "{{.ID}}"');
-  const totalContainers = execCommand('docker ps -a --format "{{.ID}}"');
-
-  const running = runningContainers ? runningContainers.split('\n').filter(x => x).length : 0;
-  const total = totalContainers ? totalContainers.split('\n').filter(x => x).length : 0;
-
-  return {
-    available: true,
-    running,
-    total
-  };
-}
-
-function getTestInfo() {
-  // Try pytest first (Python)
-  let pytestResult = execCommand('pytest --collect-only -q 2>&1 | tail -1');
-  if (pytestResult && pytestResult.includes('test')) {
-    const match = pytestResult.match(/(\d+)\s+test/);
-    if (match) {
-      return {
-        framework: 'pytest',
-        total: parseInt(match[1]),
-        passed: null, // Need to run tests to get this
-        available: true
-      };
-    }
-  }
-
-  // Try npm test (JavaScript)
-  const packageJson = path.join(process.cwd(), 'package.json');
-  if (fs.existsSync(packageJson)) {
-    return {
-      framework: 'npm',
-      available: true,
-      total: null,
-      passed: null
-    };
-  }
-
-  return null;
-}
-
-function getSystemInfo() {
-  const os = process.platform;
-  const osMap = {
-    'win32': 'Windows',
-    'darwin': 'macOS',
-    'linux': 'Linux'
-  };
-
-  // Get OS version
-  let osVersion = 'unknown';
-  if (os === 'win32') {
-    osVersion = execCommand('wmic os get Caption /value | findstr Caption');
-    if (osVersion) {
-      osVersion = osVersion.replace('Caption=', '').trim();
-    }
-  } else if (os === 'darwin') {
-    osVersion = execCommand('sw_vers -productVersion');
-  } else if (os === 'linux') {
-    osVersion = execCommand('lsb_release -d -s') || execCommand('cat /etc/os-release | grep PRETTY_NAME') || 'Linux';
-  }
-
-  // Get terminal info
-  const termProgram = process.env.TERM_PROGRAM || process.env.TERMINAL_EMULATOR || 'unknown';
-  const termVersion = process.env.TERM_PROGRAM_VERSION || '';
-
-  return {
-    os: osMap[os] || os,
-    osVersion,
-    terminal: termProgram,
-    terminalVersion: termVersion,
-    nodeVersion: process.version
-  };
-}
+// Removed: getDockerInfo, getTestInfo, getSystemInfo - not used in default display
 
 function getCCOState() {
   // Try to get CCO state from state manager
@@ -345,31 +361,7 @@ function getCCOState() {
   }
 }
 
-function getProjectInfo() {
-  if (!fs.existsSync(CCO_CONFIG_FILE)) {
-    return {
-      name: path.basename(process.cwd()),
-      path: process.cwd()
-    };
-  }
-
-  try {
-    const ccoConfig = JSON.parse(fs.readFileSync(CCO_CONFIG_FILE, 'utf-8'));
-    const project = ccoConfig.project || {};
-    return {
-      name: project.name || 'unknown',
-      type: project.type || 'unknown',
-      language: ccoConfig.detection?.primary_language || 'unknown',
-      path: project.project_root || process.cwd(),
-      services: project.structure?.services || []
-    };
-  } catch (e) {
-    return {
-      name: path.basename(process.cwd()),
-      path: process.cwd()
-    };
-  }
-}
+// Removed: getProjectInfo - not used
 
 function getUserConfig() {
   if (!fs.existsSync(CCO_CONFIG_FILE)) {
@@ -384,42 +376,15 @@ function getUserConfig() {
   }
 }
 
+// Simplified: No caching, no file writes - just collect what we need
 function collectMetrics() {
-  const now = Date.now();
-
-  // Return cached metrics if still valid
-  if (metricsCache && (now - cacheTimestamp) < CACHE_TTL_MS) {
-    return metricsCache;
-  }
-
   const config = getUserConfig();
   const statuslineConfig = config.statusline || {};
 
-  const metrics = {
-    timestamp: new Date().toISOString(),
-    project: getProjectInfo(),
-    system: getSystemInfo(),
+  return {
     git: statuslineConfig.show_git_info !== false ? getGitInfo() : null,
-    docker: statuslineConfig.show_docker_status !== false ? getDockerInfo() : null,
-    tests: statuslineConfig.show_test_results !== false ? getTestInfo() : null,
     cco: statuslineConfig.show_cco_stats !== false ? getCCOState() : null
   };
-
-  // Cache the result
-  metricsCache = metrics;
-  cacheTimestamp = now;
-
-  // Save to file for persistence
-  try {
-    if (!fs.existsSync(SESSIONS_DIR)) {
-      fs.mkdirSync(SESSIONS_DIR, { recursive: true });
-    }
-    fs.writeFileSync(METRICS_FILE, JSON.stringify(metrics, null, 2));
-  } catch (e) {
-    // Ignore write errors
-  }
-
-  return metrics;
 }
 
 function formatMetricsForStatusline(inputData, metrics, telemetryData) {
@@ -428,130 +393,9 @@ function formatMetricsForStatusline(inputData, metrics, telemetryData) {
   const colorEnabled = statuslineConfig.color_enabled !== false;
 
   // Parse input data from Claude Code
-  const sessionId = inputData.session_id || 'unknown';
-  const sessionCost = parseFloat(inputData.cost?.total_cost_usd || 0);
   const model = inputData.model?.display_name || 'Unknown';
 
-  // Duration with 2 decimals and thousand separator
-  const durationSec = inputData.cost?.total_duration_ms
-    ? (inputData.cost.total_duration_ms / 1000)
-    : 0;
-  const durationStr = durationSec.toLocaleString('en-US', {
-    minimumFractionDigits: 2,
-    maximumFractionDigits: 2
-  });
-
-  // Model context limit (define early)
-  const contextTotal = 200000;
-
-  // Calculate context usage (Try multiple sources: compact warning, stdin, telemetry, cost estimation)
-  let inputTokens = inputData.cost?.total_tokens_input || 0;
-  let outputTokens = inputData.cost?.total_tokens_output || 0;
-
-  // If telemetry available, use it as fallback/supplement
-  if (telemetryData) {
-    inputTokens = telemetryData.tokens?.input || inputTokens;
-    outputTokens = telemetryData.tokens?.output || outputTokens;
-  }
-
-  let contextUsed = (inputTokens + outputTokens) ||
-                    inputData.cost?.total_tokens_used ||
-                    inputData.context?.total_tokens ||
-                    0;
-
-  // Check if we have compact warning with real context percentage
-  const compactContextPct = telemetryData?.compact_context_remaining_pct;
-  if (compactContextPct !== null && compactContextPct !== undefined) {
-    // Compact warning has REAL context data! Use it
-    const remainingPct = compactContextPct / 100;
-    const usedPct = 1 - remainingPct;
-    contextUsed = Math.floor(contextTotal * usedPct);
-  }
-
-  // Data source indicator
-  let dataSource = '';
-  let isEstimated = false;
-  let totalTokensUsed = 0;  // For display purposes (cumulative)
-
-  // If we have compact warning, that's the most accurate source!
-  if (compactContextPct !== null && compactContextPct !== undefined) {
-    dataSource = '[compact]';
-    isEstimated = false;  // This is REAL data from Claude Code
-  }
-  // If no token data, we can't reliably estimate context window from cost
-  // Cost is cumulative but context window is capped at 200k with auto-cleanup
-  else if (contextUsed === 0 && sessionCost > 0) {
-    // Calculate total tokens used (cumulative, not current context)
-    // Sonnet 4.5 pricing: $3/MTok input, $15/MTok output, $0.30/MTok cache read
-    //
-    // Real-world observation: $0.2770 for ~186k tokens = $1.49/MTok average
-    // This suggests HEAVY cache read usage (80%+)
-    //
-    // Calibrated assumption: 80% cache read, 15% input, 5% output
-    // Average: (0.80 * $0.30 + 0.15 * $3 + 0.05 * $15) = $0.24 + $0.45 + $0.75 = $1.44/MTok
-    const avgCostPerToken = 1.44 / 1000000;
-    totalTokensUsed = Math.floor(sessionCost / avgCostPerToken);
-
-    // For long sessions, assume context is near capacity
-    // This is rough heuristic: if session is long and costly, context is probably 70-90% full
-    if (durationSec > 3600) {  // > 1 hour
-      contextUsed = Math.floor(contextTotal * 0.75);  // Assume 75% full for long sessions
-      dataSource = '[heuristic]';
-    } else {
-      // For short sessions, total might be close to current context
-      contextUsed = Math.min(totalTokensUsed, contextTotal * 0.95);  // Cap at 95% to be safe
-      dataSource = '[estimated]';
-    }
-    isEstimated = true;
-  } else if (contextUsed > 0) {
-    dataSource = telemetryData?.tokens?.total > 0 ? '[telemetry]' : '[live]';
-  } else {
-    // New session or no data yet
-    if (sessionCost === 0 && durationSec < 10) {
-      dataSource = '[new session]';
-    } else {
-      dataSource = '[no token data]';
-    }
-  }
-  const contextRemaining = contextTotal - contextUsed;
-  const contextPct = ((contextRemaining / contextTotal) * 100).toFixed(1);
-  const contextColor = contextPct > 50 ? 'green' : contextPct > 20 ? 'yellow' : 'red';
-
-  // Time estimate (based on remaining tokens)
-  const estimatedMinutes = Math.floor(contextRemaining / 1000);
-  const hours = Math.floor(estimatedMinutes / 60);
-  const minutes = estimatedMinutes % 60;
-  const timeRemaining = hours > 0 ? `${hours}h ${minutes}m` : `${minutes}m`;
-
-  // Calculate grand total cost (FIX: Don't double-count current session)
-  let baseline = { archivedCost: 0 };
-  if (fs.existsSync(BASELINE_FILE)) {
-    try {
-      baseline = JSON.parse(fs.readFileSync(BASELINE_FILE, 'utf-8'));
-    } catch (e) {}
-  }
-
-  let grandTotal = baseline.archivedCost || 0;
-  const sessionFiles = fs.readdirSync(SESSIONS_DIR).filter(f =>
-    f.endsWith('.json') &&
-    f !== '_baseline.json' &&
-    f !== '_metrics.json' &&
-    f !== `${sessionId}.json`  // Exclude current session to avoid double-counting
-  );
-
-  for (const file of sessionFiles) {
-    try {
-      const filePath = path.join(SESSIONS_DIR, file);
-      const session = JSON.parse(fs.readFileSync(filePath, 'utf-8'));
-      grandTotal += parseFloat(session.cost || 0);
-    } catch (e) {}
-  }
-
-  // Add current session to grand total
-  grandTotal += sessionCost;
-
-  const sessionCostStr = sessionCost.toFixed(4);
-  const grandTotalStr = grandTotal.toFixed(4);
+  // No context tracking - Claude Code handles compact warnings automatically
 
   // Get user@hostname
   const username = os.userInfo().username || 'unknown';
@@ -637,18 +481,7 @@ function formatMetricsForStatusline(inputData, metrics, telemetryData) {
     line3Parts.push(`Ready to Stage: ${modPart} + ${newPart} + ${delPart} ${colorize('(', 'gray', colorEnabled)}${lineDisplay}${colorize(')', 'gray', colorEnabled)}`);
   }
 
-  // Docker status (inline if enabled)
-  if (metrics.docker && statuslineConfig.show_docker_status === true) {
-    line3Parts.push(`Docker: ${metrics.docker.running}/${metrics.docker.total}`);
-  }
-
-  // Test results (inline if enabled)
-  if (metrics.tests && statuslineConfig.show_test_results === true && metrics.tests.total) {
-    const testStr = metrics.tests.passed !== null
-      ? `Tests: ${metrics.tests.passed}/${metrics.tests.total}`
-      : `Tests: ${metrics.tests.total}`;
-    line3Parts.push(testStr);
-  }
+  // Removed: Docker and Test status - not used in default display
 
   // CCO status (if enabled and active)
   if (metrics.cco && metrics.cco.enabled) {
@@ -733,64 +566,11 @@ try {
   const input = fs.readFileSync(0, 'utf-8');
   const data = JSON.parse(input);
 
-  // Collect metrics (cached for 5 minutes)
+  // Collect only what we need - no caching, no telemetry
   const metrics = collectMetrics();
 
-  // Write current telemetry data for this session
-  const telemetryDir = path.join(SESSIONS_DIR, 'telemetry');
-  if (!fs.existsSync(telemetryDir)) {
-    fs.mkdirSync(telemetryDir, { recursive: true });
-  }
-
-  // Check for compact message in stdin to get real context percentage
-  let compactContextPercent = null;
-  if (data.compact_warning) {
-    // Parse: "Context left until auto-compact: 7%"
-    const match = data.compact_warning.match(/(\d+)%/);
-    if (match) {
-      compactContextPercent = parseFloat(match[1]);
-    }
-  }
-
-  const currentTelemetry = {
-    session_id: data.session_id,
-    timestamp: new Date().toISOString(),
-    tokens: {
-      input: data.cost?.total_tokens_input || 0,
-      output: data.cost?.total_tokens_output || 0,
-      total: (data.cost?.total_tokens_input || 0) + (data.cost?.total_tokens_output || 0)
-    },
-    cost: data.cost?.total_cost_usd || 0,
-    duration_ms: data.cost?.total_duration_ms || 0,
-    lines: {
-      added: data.cost?.total_lines_added || 0,
-      removed: data.cost?.total_lines_removed || 0
-    },
-    model: data.model?.display_name || 'Unknown',
-    compact_context_remaining_pct: compactContextPercent,
-    raw_data: {
-      has_cost_tokens_input: !!data.cost?.total_tokens_input,
-      has_cost_tokens_output: !!data.cost?.total_tokens_output,
-      has_cost_tokens_used: !!data.cost?.total_tokens_used,
-      has_context_total_tokens: !!data.context?.total_tokens,
-      cost_data_keys: Object.keys(data.cost || {}),
-      context_data_keys: Object.keys(data.context || {}),
-      has_compact_warning: !!data.compact_warning
-    }
-  };
-
-  try {
-    const telemetryFile = path.join(telemetryDir, `${data.session_id}.json`);
-    fs.writeFileSync(telemetryFile, JSON.stringify(currentTelemetry, null, 2));
-  } catch (e) {
-    // Ignore telemetry write errors
-  }
-
-  // Try to get real-time telemetry data if available
-  let telemetryData = currentTelemetry;
-
   // Format and output
-  const output = formatMetricsForStatusline(data, metrics, telemetryData);
+  const output = formatMetricsForStatusline(data, metrics, null);
   console.log(output);
 
 } catch (error) {

@@ -41,8 +41,8 @@ The features you'll use immediately to get value from CCO.
 CCO uses a global storage model with local project links. All CCO data lives in `~/.cco/` (commands, principles, guides, skills, agents), and projects reference only what they need via symlinks in `.claude/`.
 
 **Architecture Overview:**
-- **Global storage** (`~/.cco/`): 83 principles (14 universal + 69 project-specific), 28 commands, 5 guides, 23 skills, 3 agents
-- **Project local** (`.claude/`): Symlinks to selected principles (34-54), commands (8-15), and relevant guides/skills
+- **Global storage** (`~/.cco/`): 95 principles (19 universal + 64 project-specific + 12 Claude guidelines), 28 commands, 5 guides, 23 skills, 3 agents
+- **Project local** (`.claude/`): Symlinks to selected principles (24-44 total), commands (8-15), and relevant guides/skills
 - **Zero pollution**: Projects contain only links, no duplicated files
 
 > **See**: [Architecture → Directory Structure](architecture.md#directory-structure) for complete directory trees
@@ -57,16 +57,16 @@ CCO uses a global storage model with local project links. All CCO data lives in 
 ## Development Principles & Guidelines
 
 Follow the principles in `.claude/principles/`:
-- Universal principles (U001-U014): Apply to all projects
-- Project-specific principles (P001-P069): Selected for this project
+- Universal principles (19 total): Apply to all projects
+- Project-specific principles (24 total): Selected for this project
 
 <!-- CCO_END -->
 ```
 
 **Token Efficiency:**
-- **Init time**: AI selects only needed principles (e.g., 32 out of 74)
+- **Init time**: AI selects only needed principles (e.g., 25 out of 43)
 - **Runtime**: Commands load only selected principles (no waste)
-- **Example**: `/cco-audit-security` on simple CLI tool → loads 4 principles (U001 + 3 security), not all 19
+- **Example**: `/cco-audit-security` on simple CLI tool → loads 4 principles (U_EVIDENCE_BASED + 3 security), not all
 - **Result**: 80%+ token optimization maintained throughout lifecycle
 
 ---
@@ -75,7 +75,7 @@ Follow the principles in `.claude/principles/`:
 
 **Two-Tier Architecture:**
 
-**Universal Principles (U001-U014, 14 files)**:
+**Universal Principles (19 total)**:
 - Always included in every project
 - Model selection strategy (Haiku/Sonnet/Opus)
 - Evidence-based verification protocol
@@ -88,16 +88,19 @@ Follow the principles in `.claude/principles/`:
 - Git workflow (atomic commits, semantic versioning)
 - No overengineering
 - Fail-fast error handling
+- DRY enforcement
+- Complete integration check
+- SQL injection prevention
+- Secret management with rotation
+- Dependency management
 
-**Project-Specific Principles (P001-P069, 69 files, AI-selected)**:
-- **API Design** (2): RESTful conventions, error handling
-- **Architecture** (10): Event-driven, microservices, separation of concerns, SOLID principles
-- **Code Quality** (14): DRY, type safety, immutability, precision, documentation
-- **Git Workflow** (8): Branch strategy, code review, PR templates
-- **Operations** (10): IaC, observability, health checks, deployment automation
-- **Performance** (5): Caching, async I/O, database optimization, profiling
-- **Security & Privacy** (19): Encryption, zero-trust, secrets management, input validation, OWASP
-- **Testing** (6): Test pyramid, coverage targets, isolation, CI gates
+**Project-Specific Principles (24 total, AI-selected)**:
+- **API Design** (1): API security best practices
+- **Architecture** (1): Event-driven architecture
+- **Code Quality** (3): Linting & SAST, type safety, version management
+- **Performance** (2): Database optimization, async I/O
+- **Security & Privacy** (14): Encryption, zero-trust, rate limiting, input validation, audit logging, container & K8s security
+- **Testing** (3): Coverage targets, integration tests, CI gates
 
 **Smart Selection Algorithm:**
 - **Project type**: API, web app, CLI, library, data pipeline, embedded, ML/AI, mobile
@@ -110,8 +113,8 @@ Follow the principles in `.claude/principles/`:
 - **Stack characteristics**: Detected tools, test frameworks, CI/CD systems
 
 **Result**:
-- All universal principles (U001-U014) symlinked automatically
-- Only applicable project principles (typically 20-40 from 69) symlinked
+- All universal principles (19 total) symlinked automatically
+- Only applicable project principles (typically 5-20 from 24) symlinked
 
 ---
 

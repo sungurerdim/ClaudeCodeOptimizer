@@ -5,7 +5,7 @@
 1. **Zero Pollution** - Global storage with local links, no project-specific CCO files
 2. **Single Source of Truth** - All principles, guides, commands, and skills in `content/` (repo), deployed to `~/.cco/` (global), projects reference via links
 3. **Progressive Disclosure** - Load only applicable principles/guides, not entire principle set
-5. **Two-Tier Principles** - Universal (U001-U014, always) + Project-specific (P001-P069, AI-selected)
+5. **Two-Tier Principles** - Universal (19 principles, always) + Project-specific (64 principles, AI-selected)
 6. **Minimal CLAUDE.md** - Reference-based, not template-driven; existing content preserved
 7. **Evidence-Based** - AI detection with confidence scores and evidence trails
 8. **Anti-Overengineering** - Simplest solution that works, no premature abstraction
@@ -41,8 +41,8 @@ This is a **preference order**, not a fallback. CCO tries each method until find
 content/                   # Single source of truth (tracked in git)
 ├── commands/             # 28 command source files (*.md)
 ├── principles/           # Principle source files (*.md with frontmatter)
-│   ├── U001.md - U014.md    # Universal principles (14 files)
-│   └── P001.md - P069.md    # Project-specific principles (69 files)
+│   ├── U_*.md               # Universal principles (19 files)
+│   └── P_*.md               # Project-specific principles (24 files)
 ├── guides/               # 5 comprehensive guide source files (*.md)
 │   ├── verification-protocol.md
 │   ├── git-workflow.md
@@ -74,8 +74,8 @@ content/                   # Single source of truth (tracked in git)
 ~/.cco/                   # Deployed from content/ during pip install
 ├── commands/             # 28 commands (deployed from content/commands/)
 ├── principles/           # Individual principle files with frontmatter (deployed from content/principles/)
-│   ├── U001.md - U014.md    # Universal principles (14 files)
-│   └── P001.md - P069.md    # Project-specific principles (69 files)
+│   ├── U_*.md               # Universal principles (19 files)
+│   └── P_*.md               # Project-specific principles (24 files)
 ├── guides/               # 5 comprehensive guides (deployed from content/guides/)
 ├── skills/               # Language-specific (18) and cross-language (5) skills (deployed from content/skills/)
 │   ├── python/          # 5 Python-specific skills
@@ -100,12 +100,12 @@ content/                   # Single source of truth (tracked in git)
 ```
 project/.claude/          # Linked from global (using preference order)
 ├── principles/          # Links to selected principles
-│   ├── U001.md → ~/.cco/principles/U001.md (universal, always)
-│   ├── U002.md → ~/.cco/principles/U002.md (universal, always)
-│   ├── ... (14 universal, all included)
-│   ├── P001.md → ~/.cco/principles/P001.md (selected)
-│   ├── P036.md → ~/.cco/principles/P036.md (selected)
-│   └── ... (20-40 selected from 69 project-specific)
+│   ├── U_EVIDENCE_BASED.md → ~/.cco/principles/U_EVIDENCE_BASED.md (universal, always)
+│   ├── U_FAIL_FAST.md → ~/.cco/principles/U_FAIL_FAST.md (universal, always)
+│   ├── ... (19 universal, all included)
+│   ├── P_LINTING_SAST.md → ~/.cco/principles/P_LINTING_SAST.md (selected)
+│   ├── P_CONTAINER_SECURITY.md → ~/.cco/principles/P_CONTAINER_SECURITY.md (selected)
+│   └── ... (10-20 selected from 64 project-specific)
 ├── commands/            # Links to selected global commands
 │   ├── cco-audit.md → ~/.cco/commands/audit.md
 │   └── ... (8-15 selected commands)
@@ -122,8 +122,8 @@ project/CLAUDE.md        # Minimal guide with principle references
 
 **Key Points:**
 - All links use preference order (symlink → hardlink → copy)
-- Universal principles (U001-U014) always linked to every project
-- Project principles (P001-P069) only selected ones linked (AI-selected)
+- Universal principles (19 total) always linked to every project
+- Project principles (24 total) only selected ones linked (AI-selected)
 - `settings.json.template` is optional template reference (not deployed to projects)
 - `CLAUDE.md` is minimal with references, not template-based (existing content preserved)
 
