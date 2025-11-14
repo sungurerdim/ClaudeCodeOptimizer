@@ -82,6 +82,50 @@
 - **Generate Agent** → `.claude/agents/generate-agent.md`
 <!-- CCO_AGENTS_END -->
 
+## Available Commands
+
+<!-- CCO_COMMANDS_START -->
+- `/cco-analyze` - Deep project analysis - structure, tech stack, complexity, recommendations
+- `/cco-analyze-complexity` - Cyclomatic complexity, code smells, refactoring candidates
+- `/cco-analyze-dependencies` - Dependency graph, circular deps, unused deps
+- `/cco-analyze-structure` - Analyze codebase structure and architectural patterns
+- `/cco-audit-architecture` - Architectural patterns, design principles compliance audit
+- `/cco-audit-code-quality` - Code quality, linting, type safety, duplication audit
+- `/cco-audit-comprehensive` - Comprehensive audit (code, security, tests, docs, principles, all)
+- `/cco-audit-docs` - Documentation completeness, accuracy, drift
+- `/cco-audit-performance` - Performance bottlenecks, optimization opportunities audit
+- `/cco-audit-security` - Security vulnerabilities, privacy violations, credential leaks audit
+- `/cco-audit-testing` - Test coverage, test quality, flaky tests, CI/CD audit
+- `/cco-audit-tests` - Test quality, coverage gaps, flaky tests
+- `/cco-commit` - Smart git commit with AI-powered semantic analysis and grouping
+- `/cco-config` - CCO configuration management (setup, show)
+- `/cco-fix` - Auto-fix issues (code, security, docs, tests)
+- `/cco-fix-docs` - Fix documentation inconsistencies
+- `/cco-generate` - Generate code, tests, docs, CI/CD, and more
+- `/cco-generate-docs` - Auto-generate API docs, README sections
+- `/cco-generate-integration-tests` - Generate integration tests for service interactions
+- `/cco-generate-tests` - Auto-generate unit tests for untested code
+- `/cco-implement-feature` - Full workflow - architect, code, test, doc, review
+- `/cco-init` - Initialize CCO for this project with auto-detection and AI-powered configuration
+- `/cco-optimize-code` - Remove unused code, imports, and deprecated markers
+- `/cco-optimize-deps` - Optimize dependencies - remove unused, update outdated, fix vulnerabilities
+- `/cco-optimize-docker` - Optimize Dockerfiles for faster builds, smaller images, and better security
+- `/cco-refactor` - Guided refactoring with safety checks
+- `/cco-remove` - Remove CCO from current project (keeps global installation)
+- `/cco-scan-secrets` - Scan for exposed secrets - API keys, passwords, tokens in code
+- `/cco-setup-cicd` - Generate GitHub Actions, GitLab CI configs
+- `/cco-setup-monitoring` - Observability stack setup (Prometheus, Grafana)
+- `/cco-status` - Quick health check - git status, dependencies, tests, documentation, and CCO system
+- `/cco-sync` - Sync files across codebase (config, deps, types, constants)
+- `/cco-test` - Run tests with automatic framework detection
+<!-- CCO_COMMANDS_END -->
+
+## Available Guides
+
+<!-- CCO_GUIDES_START -->
+- **Security Emergency Response** → `.claude/guides/security-response.md`
+<!-- CCO_GUIDES_END -->
+
 ## Claude Guidelines
 
 <!-- CCO_CLAUDE_START -->

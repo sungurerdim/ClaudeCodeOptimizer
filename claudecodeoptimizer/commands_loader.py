@@ -34,17 +34,17 @@ def load_global_commands() -> Dict[str, Dict[str, Any]]:
     """
     Load all CLI commands from commands directory.
 
-    Single source of truth: claudecodeoptimizer/commands/*.md
+    Single source of truth: content/commands/*.md
     Returns dict: {command_name: {description, file}}
     """
-    commands_dir = Path(__file__).parent / "commands"
+    commands_dir = Path(__file__).parent.parent / "content" / "commands"
     commands = {}
 
     if not commands_dir.exists():
         return commands
 
     # Only load init and remove (global slash commands)
-    for command_name in ["init", "remove"]:
+    for command_name in ["cco-init", "cco-remove"]:
         md_file = commands_dir / f"{command_name}.md"
         if not md_file.exists():
             continue
@@ -67,7 +67,7 @@ def get_command_list() -> str:
     if not commands:
         return "cco-init.md, cco-remove.md"
 
-    return ", ".join(f"cco-{name}.md" for name in sorted(commands.keys()))
+    return ", ".join(f"{name}.md" for name in sorted(commands.keys()))
 
 
 def get_slash_commands() -> str:
@@ -76,4 +76,4 @@ def get_slash_commands() -> str:
     if not commands:
         return "/cco-init, /cco-remove"
 
-    return ", ".join(f"/cco-{name}" for name in sorted(commands.keys()))
+    return ", ".join(f"/{name}" for name in sorted(commands.keys()))
