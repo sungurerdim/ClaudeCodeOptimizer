@@ -86,6 +86,55 @@ class CCOWizard:
     # Main Execution Flow
     # ========================================================================
 
+    @staticmethod
+    def uninitialize(project_root: Path) -> Dict:
+        """
+        Remove CCO from project.
+
+        This is a static method that doesn't require wizard initialization.
+
+        Args:
+            project_root: Path to project root directory
+
+        Returns:
+            Dict with:
+                - success (bool): True if successful
+                - project_name (str): Name of project
+                - files_removed (list): List of removed files
+                - message (str): Success message
+                OR
+                - success (bool): False if failed
+                - error (str): Error message
+        """
+        from .. import config as CCOConfig
+
+        try:
+            project_name = project_root.name
+            files_removed = []
+
+            # Remove all cco-*.md command files
+            project_commands_dir = CCOConfig.get_project_commands_dir(project_root)
+            if project_commands_dir.exists():
+                for cmd_file in project_commands_dir.glob("cco-*.md"):
+                    cmd_file.unlink()
+                    files_removed.append(str(cmd_file.relative_to(project_root)))
+
+            return {
+                "success": True,
+                "project_name": project_name,
+                "files_removed": files_removed,
+                "message": f"CCO uninitialized. Removed {len(files_removed)} files.",
+            }
+
+        except Exception as e:
+            import logging
+
+            logging.exception("Uninitialize failed")
+            return {
+                "success": False,
+                "error": str(e),
+            }
+
     def run(self) -> WizardResult:
         """
         Run complete wizard flow.
@@ -1292,7 +1341,7 @@ class CCOWizard:
             else "python"
         )
 
-        # Map git_workflow values
+        # Map git_workflow values (still needed for internal->schema conversion)
         git_workflow_mapping = {
             "main_only": "trunk-based",
             "trunk_based": "trunk-based",
@@ -1409,7 +1458,7 @@ class CCOWizard:
             recommended.append("verification-protocol")
 
         # Git Workflow Guide: for team projects with structured workflows
-        if team_size in ["small_team", "growing_team", "large_org"]:
+        if team_size in ["small-2-5", "medium-10-20", "large-20-50"]:
             recommended.append("git-workflow")
 
         # Also for git flow or github flow
@@ -1424,7 +1473,7 @@ class CCOWizard:
             recommended.append("security-response")
 
         # For web/API projects (security critical)
-        if any(pt in project_types for pt in ["api_service", "web_app", "microservice", "spa"]):
+        if any(pt in project_types for pt in ["backend", "web-app", "microservice", "spa"]):
             if "security-response" not in recommended:
                 recommended.append("security-response")
 
@@ -1432,11 +1481,11 @@ class CCOWizard:
         if any(
             pt in project_types
             for pt in [
-                "api_service",
+                "backend",
                 "microservice",
-                "data_pipeline",
-                "ml_pipeline",
-                "stream_processing",
+                "data-pipeline",
+                "ml",
+                "analytics",
             ]
         ):
             recommended.append("performance-optimization")
@@ -1449,7 +1498,7 @@ class CCOWizard:
         # Container Best Practices: for containerized infrastructure
         if any(
             pt in project_types
-            for pt in ["microservice", "infrastructure", "data_pipeline", "ml_pipeline"]
+            for pt in ["microservice", "devtools", "data-pipeline", "ml"]
         ):
             recommended.append("container-best-practices")
 
