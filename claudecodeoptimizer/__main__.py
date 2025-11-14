@@ -126,11 +126,10 @@ def main() -> None:
             sys.exit(1)
 
     elif args.command == "remove":
-        from .core.project import ProjectManager
+        from .wizard.orchestrator import CCOWizard
 
         try:
-            manager = ProjectManager(Path.cwd())
-            result = manager.uninitialize()
+            result = CCOWizard.uninitialize(Path.cwd())
 
             if result["success"]:
                 print("\n✓ All CCO files removed successfully!")
