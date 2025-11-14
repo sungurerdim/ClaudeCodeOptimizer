@@ -5,7 +5,7 @@ category: api_design
 severity: high
 weight: 8
 applicability:
-  project_types: ['api', 'web']
+  project_types: ['api', 'web', 'microservice']
   languages: ['all']
 ---
 
