@@ -82,12 +82,12 @@ TIER1_PROJECT_PURPOSE = DecisionPoint(
     options=[
         # Backend Services (1-2)
         Option(
-            value="api_service",
+            value="backend",
             label="API Service",
             description="Pure backend API (REST/GraphQL/gRPC), no UI",
             recommended_for=["fastapi", "flask", "express", "spring", "gin"],
             effects="Focus on: API design, performance, security, data validation",
-            conflicts_with=["web_app", "spa"],
+            conflicts_with=["web-app", "spa"],
         ),
         Option(
             value="microservice",
@@ -99,12 +99,12 @@ TIER1_PROJECT_PURPOSE = DecisionPoint(
         ),
         # Frontend/Full-Stack (3-4)
         Option(
-            value="web_app",
+            value="web-app",
             label="Web Application (Full-Stack)",
             description="Frontend + backend integrated, monolithic or modular",
             recommended_for=["next", "nuxt", "django", "rails"],
             effects="Focus on: UX, security, performance, SEO",
-            conflicts_with=["api_service", "spa"],
+            conflicts_with=["backend", "spa"],
         ),
         Option(
             value="spa",
@@ -112,7 +112,7 @@ TIER1_PROJECT_PURPOSE = DecisionPoint(
             description="Frontend-only, consumes external API",
             recommended_for=["react", "vue", "angular", "svelte"],
             effects="Focus on: Client-side routing, state management, API integration",
-            conflicts_with=["web_app", "api_service"],
+            conflicts_with=["web-app", "backend"],
         ),
         # Libraries & Tools (5-7)
         Option(
@@ -132,7 +132,7 @@ TIER1_PROJECT_PURPOSE = DecisionPoint(
             conflicts_with=[],
         ),
         Option(
-            value="cli_tool",
+            value="cli",
             label="CLI Tool/Utility",
             description="Command-line application or script",
             recommended_for=["click", "argparse", "commander", "cobra"],
@@ -141,7 +141,7 @@ TIER1_PROJECT_PURPOSE = DecisionPoint(
         ),
         # Data & Processing (8-10)
         Option(
-            value="data_pipeline",
+            value="data-pipeline",
             label="Data Pipeline",
             description="ETL, batch processing, data transformation",
             recommended_for=["airflow", "pandas", "spark", "dbt"],
@@ -149,7 +149,7 @@ TIER1_PROJECT_PURPOSE = DecisionPoint(
             conflicts_with=[],
         ),
         Option(
-            value="ml_pipeline",
+            value="ml",
             label="ML/AI Pipeline",
             description="Training, inference, MLOps workflows",
             recommended_for=["pytorch", "tensorflow", "mlflow", "kubeflow"],
@@ -157,7 +157,7 @@ TIER1_PROJECT_PURPOSE = DecisionPoint(
             conflicts_with=[],
         ),
         Option(
-            value="stream_processing",
+            value="analytics",
             label="Stream Processing",
             description="Real-time data processing (Kafka, Flink, etc.)",
             recommended_for=["kafka", "flink", "spark-streaming"],
@@ -166,7 +166,7 @@ TIER1_PROJECT_PURPOSE = DecisionPoint(
         ),
         # Desktop & Mobile (11-12)
         Option(
-            value="desktop_app",
+            value="desktop",
             label="Desktop Application",
             description="Native or cross-platform desktop app",
             recommended_for=["electron", "qt", "tkinter", "tauri"],
@@ -174,7 +174,7 @@ TIER1_PROJECT_PURPOSE = DecisionPoint(
             conflicts_with=[],
         ),
         Option(
-            value="mobile_app",
+            value="mobile",
             label="Mobile Application",
             description="iOS, Android, or cross-platform mobile",
             recommended_for=["react-native", "flutter", "swift", "kotlin"],
@@ -183,7 +183,7 @@ TIER1_PROJECT_PURPOSE = DecisionPoint(
         ),
         # Infrastructure (13-14)
         Option(
-            value="infrastructure",
+            value="devtools",
             label="Infrastructure as Code",
             description="Terraform, Pulumi, CloudFormation modules",
             recommended_for=["terraform", "pulumi", "cdk"],
@@ -218,19 +218,19 @@ TIER1_TEAM_DYNAMICS = DecisionPoint(
             effects="Simpler workflows, skip team practices, faster decisions",
         ),
         Option(
-            value="small_team",
+            value="small-2-5",
             label="Small Team (2-5)",
             description="Close-knit team, frequent communication",
             effects="Lightweight collaboration, code review, shared ownership",
         ),
         Option(
-            value="growing_team",
+            value="medium-10-20",
             label="Growing Team (6-20)",
             description="Multiple sub-teams or areas",
             effects="More structure, ownership areas, formal processes",
         ),
         Option(
-            value="large_org",
+            value="large-20-50",
             label="Large Organization (20+)",
             description="Multiple teams, formal processes",
             effects="Strict governance, compliance, architectural review",
@@ -1135,9 +1135,9 @@ def _auto_detect_project_purpose(ctx: AnswerContext) -> list:
     )
 
     if has_frontend and has_backend:
-        return ["web_app"]  # Full-stack
+        return ["web-app"]  # Full-stack
     elif has_backend and not has_frontend:
-        return ["api_service"]  # Pure backend
+        return ["backend"]  # Pure backend
     elif has_frontend and not has_backend:
         return ["spa"]  # Pure frontend
 
@@ -1147,19 +1147,19 @@ def _auto_detect_project_purpose(ctx: AnswerContext) -> list:
     if "docker" in frameworks or "kubernetes" in frameworks:
         detected.append("microservice")
     if "terraform" in frameworks or "pulumi" in frameworks:
-        detected.append("infrastructure")
+        detected.append("devtools")
     if "airflow" in frameworks or "spark" in frameworks or "dbt" in frameworks:
-        detected.append("data_pipeline")
+        detected.append("data-pipeline")
     if "pytorch" in frameworks or "tensorflow" in frameworks:
-        detected.append("ml_pipeline")
+        detected.append("ml")
     if "kafka" in frameworks or "flink" in frameworks:
-        detected.append("stream_processing")
+        detected.append("analytics")
     if "electron" in frameworks or "qt" in frameworks:
-        detected.append("desktop_app")
+        detected.append("desktop")
     if "react-native" in frameworks or "flutter" in frameworks:
-        detected.append("mobile_app")
+        detected.append("mobile")
     if "click" in frameworks or "argparse" in frameworks or "commander" in frameworks:
-        detected.append("cli_tool")
+        detected.append("cli")
 
     # Check for library indicators
     if sys.project_root and (
@@ -1170,7 +1170,7 @@ def _auto_detect_project_purpose(ctx: AnswerContext) -> list:
             detected.append("library")
 
     # Default fallback
-    return detected if detected else ["api_service"]
+    return detected if detected else ["backend"]
 
 
 def _auto_detect_team_size(ctx: AnswerContext) -> str:
@@ -1186,7 +1186,7 @@ def _auto_detect_team_size(ctx: AnswerContext) -> str:
 
     # CI + tests suggests team collaboration
     if sys.has_ci and sys.has_tests:
-        return "small_team"
+        return "small-2-5"
 
     return "solo"
 
