@@ -1,0 +1,37 @@
+---
+id: P_CONFIGURATION_AS_CODE
+title: Configuration as Code
+category: project-specific
+severity: high
+weight: 8
+applicability:
+  project_types: ['all']
+  languages: ['all']
+---
+
+# P_CONFIGURATION_AS_CODE: Configuration as Code 🔴
+
+**Severity**: High
+
+All config versioned, validated, environment-aware, never hardcoded.
+
+**Why**: Makes configuration reproducible by versioning all config files in git
+
+**Enforcement**: Skills required - verification_protocol, root_cause_analysis
+
+**Project Types**: all
+**Languages**: all
+
+**Rules**:
+- **No Hardcoded Config**: No hardcoded IPs/hosts
+
+**❌ Bad**:
+```
+DB_HOST = 'localhost'  # Hardcoded!
+```
+
+**✅ Good**:
+```
+class Settings(BaseSettings):
+    DB_HOST: str = Field(..., env='DB_HOST')
+```

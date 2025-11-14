@@ -1,0 +1,34 @@
+---
+id: P_INTEGRATION_TESTS
+title: Integration Tests for Critical Paths
+category: testing
+severity: high
+weight: 8
+applicability:
+  project_types: ['api', 'microservices']
+  languages: ['all']
+---
+
+# P_INTEGRATION_TESTS: Integration Tests for Critical Paths 🔴
+
+**Severity**: High
+
+Test service-to-service workflows end-to-end.
+
+**Why**: Validates production health by running smoke tests after every deployment
+
+**Enforcement**: Skills required - verification_protocol, test_first, root_cause_analysis
+
+**Project Types**: api, microservices
+**Languages**: all
+
+**❌ Bad**:
+```
+# Only unit tests, no integration
+```
+
+**✅ Good**:
+```
+def test_job_workflow():
+    # POST /jobs -> Queue -> Worker -> Result
+```

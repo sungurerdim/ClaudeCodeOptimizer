@@ -1,0 +1,65 @@
+---
+id: P_IAC_GITOPS
+title: Infrastructure as Code + GitOps
+category: project-specific
+severity: high
+weight: 8
+applicability:
+  project_types: ['all']
+  languages: ['all']
+---
+
+# P_IAC_GITOPS: Infrastructure as Code + GitOps 🔴
+
+**Severity**: High
+
+IaC (Terraform/Pulumi) + GitOps (ArgoCD/Flux) for declarative, version-controlled infrastructure with automated reconciliation.
+
+**Why**: Enables reproducible infrastructure with Git as single source of truth and automated drift correction
+
+**Enforcement**: Skills required - verification_protocol, root_cause_analysis
+
+**Project Types**: all
+**Languages**: all
+
+**Rules**:
+- **Iac Versioned**: Infrastructure code versioned in Git
+- **Gitops Deployment**: Use GitOps for deployments (ArgoCD, Flux)
+- **Declarative Config**: Declarative K8s manifests (no imperative kubectl)
+- **Drift Detection**: Detect and reconcile infrastructure drift
+
+**❌ Bad**:
+```
+# Manual kubectl apply
+kubectl apply -f deployment.yaml
+
+# No version control
+# Infrastructure changes made via console/CLI
+```
+
+**✅ Good**:
+```
+# IaC - Terraform
+resource "aws_eks_cluster" "main" {
+name     = var.cluster_name
+role_arn = aws_iam_role.cluster.arn
+}
+
+# GitOps - ArgoCD Application
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+name: myapp
+spec:
+source:
+repoURL: https://github.com/org/repo
+targetRevision: HEAD
+path: k8s/
+destination:
+server: https://kubernetes.default.svc
+namespace: production
+syncPolicy:
+automated:
+prune: true
+selfHeal: true
+```

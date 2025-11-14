@@ -1,0 +1,42 @@
+---
+id: P_AI_ML_SECURITY
+title: AI/ML Security
+category: security_privacy
+severity: critical
+weight: 10
+applicability:
+  project_types: ['ml', 'api', 'all']
+  languages: ['python', 'all']
+---
+
+# P_AI_ML_SECURITY: AI/ML Security 🔴
+
+**Severity**: Critical
+
+Protect AI/ML systems from prompt injection, model poisoning, and data leakage
+
+**Why**: Prevents AI-specific attacks like prompt injection and model poisoning
+
+**Enforcement**: Skills required - verification_protocol, test_first, root_cause_analysis
+
+**Project Types**: ml, api, all
+**Languages**: python, all
+
+**Rules**:
+- **Prompt Validation**: Validate and sanitize prompts
+- **Output Sanitization**: Sanitize model outputs
+- **Model Signing**: Sign and verify models
+
+**❌ Bad**:
+```
+# Direct prompt to LLM
+response = llm(user_input)  # No validation!
+```
+
+**✅ Good**:
+```
+# Validate input
+if not is_safe_prompt(user_input):
+    raise ValueError
+response = llm(user_input)
+```
