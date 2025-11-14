@@ -1187,12 +1187,8 @@ class CCOWizard:
         commands = []
         if global_commands_dir.exists():
             for cmd_file in global_commands_dir.glob("*.md"):
-                # Extract command ID from filename
-                command_id = (
-                    f"cco-{cmd_file.stem}"
-                    if not cmd_file.stem.startswith("cco-")
-                    else cmd_file.stem
-                )
+                # Extract command ID from filename (already has cco- prefix)
+                command_id = cmd_file.stem
 
                 # Create minimal metadata
                 commands.append(
@@ -1331,7 +1327,7 @@ class CCOWizard:
                 target = claude_dir / "skills" / f"{skill}.md"
                 symlink_map.append((source, target))
 
-        # Create symlinks
+        # Create symlinks with fallback: symlink -> hardlink -> copy
         for source, target in symlink_map:
             # Ensure parent directory exists (for language-specific skills like python/*)
             target.parent.mkdir(parents=True, exist_ok=True)
@@ -1340,19 +1336,43 @@ class CCOWizard:
             if target.exists() or target.is_symlink():
                 target.unlink()
 
-            # Create symlink (cross-platform)
-            if platform.system() == "Windows":
-                # Windows: use mklink
-                import subprocess
+            # Try symlink -> hardlink -> copy (cross-platform fallback)
+            link_created = False
 
-                subprocess.run(
-                    ["cmd", "/c", "mklink", str(target), str(source)],
-                    check=True,
-                    capture_output=True,
-                )
+            # 1. Try symlink first (best option)
+            if platform.system() == "Windows":
+                # Windows: try mklink (requires Developer Mode or admin)
+                import subprocess
+                try:
+                    subprocess.run(
+                        ["cmd", "/c", "mklink", str(target), str(source)],
+                        check=True,
+                        capture_output=True,
+                    )
+                    link_created = True
+                except subprocess.CalledProcessError:
+                    pass  # Fall through to hardlink
             else:
                 # Unix: use symlink_to
-                target.symlink_to(source)
+                try:
+                    target.symlink_to(source)
+                    link_created = True
+                except OSError:
+                    pass  # Fall through to hardlink
+
+            # 2. Try hardlink if symlink failed
+            if not link_created:
+                try:
+                    import os
+                    os.link(source, target)
+                    link_created = True
+                except (OSError, NotImplementedError):
+                    pass  # Fall through to copy
+
+            # 3. Fall back to hard copy if both symlink and hardlink failed
+            if not link_created:
+                import shutil
+                shutil.copy2(source, target)
 
     def _update_gitignore(self) -> None:
         """
