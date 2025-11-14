@@ -1450,6 +1450,13 @@ class CCOWizard:
             "minimal": "minimal",
         }
 
+        # Map development_philosophy values
+        philosophy_mapping = {
+            "move_fast": "progressive",
+            "quality_first": "conservative",
+            "balanced": "balanced",
+        }
+
         return {
             "project_identity": {
                 "name": self.project_root.name,
@@ -1459,7 +1466,9 @@ class CCOWizard:
                 "project_maturity": answers.get("project_maturity", "active-dev"),
             },
             "development_style": {
-                "code_philosophy": answers.get("development_philosophy", "balanced"),
+                "code_philosophy": philosophy_mapping.get(
+                    answers.get("development_philosophy", "balanced"), "balanced"
+                ),
             },
             "testing": {
                 "coverage_target": self._map_testing_to_coverage(
