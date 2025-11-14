@@ -32,10 +32,10 @@ CCO analyzes your project and automatically configures Claude Code with producti
 **In 10 seconds:**
 ```bash
 pip install claudecodeoptimizer
-/cco-init  # AI detects your stack → deploys 34-54 principles + 8-15 commands
+/cco-init  # AI detects your stack → deploys 30-95 principles + 8-15 commands
 ```
 
-**How it works:** Detects your stack (Python? FastAPI? React?) → Selects applicable principles from 83 standards → Deploys slash commands → Zero pollution (symlinks only).
+**How it works:** Detects your stack (Python? FastAPI? React?) → Selects applicable principles from 95 standards → Deploys slash commands → Zero pollution (symlinks only).
 
 **Example:** FastAPI security project gets 40 principles (security + architecture). CLI tool gets 25 (code quality + testing). Same CCO, different configuration.
 
@@ -89,9 +89,10 @@ cd /path/to/your/project
 
 After running `/cco-init`, your project has:
 
-### ✅ **Intelligent Principles** (34-54 per project)
-- **14 Universal** (always): Evidence-based verification, fail-fast errors, test-first development, atomic commits, token optimization
-- **20-40 Project-Specific** (AI-selected): Security (19), architecture (10), performance (5), API design (2), testing (6)
+### ✅ **Intelligent Principles** (30-95 per project from 95 total)
+- **19 Universal** (always): Evidence-based verification, fail-fast errors, test-first development, DRY, atomic commits, SQL injection prevention, secret rotation
+- **10-64 Project-Specific** (AI-selected from 64): Security (18), architecture (10), performance (5), API design (2), testing (6), code quality (3), git workflow (6), operations (10)
+- **12 Claude Guidelines** (context-specific): No unnecessary files, prefer editing, production-grade code, minimal touch, model selection
 
 ### ✅ **Slash Commands** (8-15 per project)
 | Command | Purpose |
@@ -143,7 +144,7 @@ pip install -e ".[dev]"
 
 **Global (`~/.cco/`):**
 - 28 slash commands
-- 83 principles (14 universal + 69 project-specific)
+- 95 principles (19 universal + 64 project-specific + 12 Claude guidelines)
 - 5 comprehensive guides
 - 23 skills (18 language-specific + 5 cross-language)
 - 3 task agents (audit, fix, generate)
@@ -169,12 +170,12 @@ pip install -e ".[dev]"
 - Decides: Project type, testing strategy, security level, git workflow
 
 ### 📚 **Progressive Disclosure System**
-- Loads only applicable principles (not all 83)
+- Loads only applicable principles (not all 95)
 - Example: Simple CLI tool → 25 principles, FastAPI API → 45 principles
 - **80%+ token savings** throughout project lifecycle
 - Dynamic loading per command
 
-### 🎯 **83 Industry Principles**
+### 🎯 **95 Industry Principles**
 | Category | Count | Examples |
 |----------|-------|----------|
 | Universal | 14 | Model selection, verification, token optimization, atomic commits |
@@ -225,7 +226,7 @@ Total: ~8s (vs 20s sequential, 60% faster)
 |---------|----------------|-------------|-----|
 | Setup Time | Hours/30-60 min | 10-15 min | **10 seconds** |
 | Auto-Detection | None | Partial | **Full stack detection** |
-| Standards | Style only | Limited | **83 principles** (quality, security, architecture) |
+| Standards | Style only | Limited | **95 principles** (quality, security, architecture) |
 | AI Integration | None | Basic | **Multi-agent orchestration** |
 | Project Pollution | Config files | Varies | **Zero** (symlinks) |
 | Claude Code Native | External tools | Plugins | **Built-in** slash commands |

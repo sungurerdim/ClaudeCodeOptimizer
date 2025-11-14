@@ -1,7 +1,7 @@
 # Security Scanning Workflow
-# P063: Dependency Management - Automated vulnerability scanning
-# P026: Secret Management - Detect hardcoded secrets
-# P071: Anti-Overengineering - Minimal effective tooling
+# U_DEPENDENCY_MANAGEMENT: Automated vulnerability scanning
+# U_SECRET_ROTATION: Detect hardcoded secrets
+# U_NO_OVERENGINEERING: Minimal effective tooling
 
 name: Security Scanning
 
