@@ -1,7 +1,7 @@
 ---
 id: P_SECRET_ROTATION
 title: Secret Management with Rotation
-category: project-specific
+category: security_privacy
 severity: critical
 weight: 10
 applicability:

@@ -1,7 +1,7 @@
 ---
 id: P_SQL_INJECTION
 title: SQL Injection Prevention
-category: project-specific
+category: security_privacy
 severity: critical
 weight: 10
 applicability:
