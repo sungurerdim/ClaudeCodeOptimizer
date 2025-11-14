@@ -8,9 +8,17 @@
 
 **Shift-left security approach:** Integrate security analysis into the development loop, not as a final gate.
 
+**Related Principles:**
+- **U_FAIL_FAST**: Detect security issues early
+- **U_EVIDENCE_BASED**: Verify security with tools and audits
+
 ---
 
 ## Pre-Commit Security Review
+
+**Related Principles:**
+- **P_AUDIT_LOGGING**: Log all security events
+- **P_SUPPLY_CHAIN_SECURITY**: Scan dependencies
 
 **Always scan before commits:**
 
@@ -73,6 +81,10 @@ Use for comprehensive analysis:
 
 ## Native Sandboxing
 
+**Related Principles:**
+- **P_ZERO_TRUST**: Never trust, always verify
+- **P_PRIVACY_COMPLIANCE**: Protect sensitive data
+
 **Two essential isolation mechanisms (both required):**
 
 ### 1. Filesystem Isolation
@@ -134,6 +146,9 @@ def check_domain(domain: str) -> bool:
 
 ### SQL Injection
 
+**Related Principles:**
+- **U_SQL_INJECTION**: Always use parameterized queries
+
 **❌ Vulnerable**:
 ```python
 # Bad: String concatenation
@@ -149,6 +164,9 @@ db.execute(query, (user_id,))
 ```
 
 ### XSS (Cross-Site Scripting)
+
+**Related Principles:**
+- **P_XSS_PREVENTION**: Sanitize all user input
 
 **❌ Vulnerable**:
 ```javascript
@@ -167,6 +185,9 @@ element.innerHTML = DOMPurify.sanitize(userInput);
 
 ### Authentication Bypass
 
+**Related Principles:**
+- **P_AUTH_AUTHZ**: Enforce authentication and authorization
+
 **❌ Vulnerable**:
 ```python
 # Bad: Client-side auth check only
@@ -184,6 +205,10 @@ if user.role == "admin":
 ```
 
 ### Sensitive Data Exposure
+
+**Related Principles:**
+- **P_SECRET_ROTATION**: Never hardcode secrets, rotate regularly
+- **P_ENCRYPTION_AT_REST**: Encrypt sensitive data
 
 **❌ Vulnerable**:
 ```python
@@ -208,6 +233,10 @@ API_KEY = get_secret("api_key")
 
 ## Security Checklist
 
+**Related Principles:**
+- **P_RATE_LIMITING**: Prevent abuse with rate limiting
+- **P_AUDIT_LOGGING**: Log security-relevant events
+
 **Before deploying**:
 - [ ] No hardcoded secrets (scan with `/cco-scan-secrets`)
 - [ ] All inputs validated and sanitized
@@ -225,6 +254,10 @@ API_KEY = get_secret("api_key")
 ## Incident Response Plan
 
 ### 1. Detection
+
+**Related Principles:**
+- **P_INCIDENT_RESPONSE_READINESS**: Have response plan ready
+- **U_ROOT_CAUSE_ANALYSIS**: Identify root cause of incidents
 
 **Indicators**:
 - Vulnerability scanner alerts
@@ -295,21 +328,29 @@ pytest tests/security/ -v
 
 ## Principle References
 
+This guide incorporates the following CCO principles:
+
+**Universal Principles:**
+- **U_FAIL_FAST**: Fail-Fast Error Handling → `.claude/principles/U_FAIL_FAST.md`
+- **U_ROOT_CAUSE_ANALYSIS**: Root Cause Analysis → `.claude/principles/U_ROOT_CAUSE_ANALYSIS.md`
+- **U_EVIDENCE_BASED**: Evidence-Based Verification → `.claude/principles/U_EVIDENCE_BASED.md`
+- **P_SECRET_ROTATION**: Secret Management with Rotation → `.claude/principles/P_SECRET_ROTATION.md`
+- **U_SQL_INJECTION**: SQL Injection Prevention → `.claude/principles/U_SQL_INJECTION.md`
+- **U_DEPENDENCY_MANAGEMENT**: Dependency Management → `.claude/principles/U_DEPENDENCY_MANAGEMENT.md`
+
 **Security & Privacy Principles:**
-- **P022**: Schema-First Validation → `.claude/principles/P022.md`
-- **P023**: Privacy-First by Default → `.claude/principles/P023.md`
-- **P025**: Encryption Everywhere → `.claude/principles/P025.md`
-- **P026**: Zero Disk Touch → `.claude/principles/P026.md`
-- **P027**: Authentication & Authorization → `.claude/principles/P027.md`
-- **P028**: SQL Injection Prevention → `.claude/principles/P028.md`
-- **P029**: Secret Management with Rotation → `.claude/principles/P029.md`
-- **P030**: Rate Limiting & Throttling → `.claude/principles/P030.md`
-- **P032**: Input Sanitization (XSS Prevention) → `.claude/principles/P032.md`
-- **P033**: Audit Logging → `.claude/principles/P033.md`
-- **P034**: Supply Chain Security → `.claude/principles/P034.md`
-- **P035**: AI/ML Security → `.claude/principles/P035.md`
-- **P036**: Container Security → `.claude/principles/P036.md`
-- **P037**: Kubernetes Security → `.claude/principles/P037.md`
-- **P038**: Zero Trust Architecture → `.claude/principles/P038.md`
-- **P039**: Privacy Compliance → `.claude/principles/P039.md`
-- **P040**: Dependency Management → `.claude/principles/P040.md`
+- **P_SCHEMA_VALIDATION**: Schema-First Validation → `.claude/principles/P_SCHEMA_VALIDATION.md`
+- **P_PRIVACY_FIRST**: Privacy-First by Default → `.claude/principles/P_PRIVACY_FIRST.md`
+- **P_ENCRYPTION_AT_REST**: Encryption at Rest → `.claude/principles/P_ENCRYPTION_AT_REST.md`
+- **P_ZERO_DISK_TOUCH**: Zero Disk Touch → `.claude/principles/P_ZERO_DISK_TOUCH.md`
+- **P_AUTH_AUTHZ**: Authentication & Authorization → `.claude/principles/P_AUTH_AUTHZ.md`
+- **P_RATE_LIMITING**: Rate Limiting & Throttling → `.claude/principles/P_RATE_LIMITING.md`
+- **P_XSS_PREVENTION**: Input Sanitization (XSS Prevention) → `.claude/principles/P_XSS_PREVENTION.md`
+- **P_AUDIT_LOGGING**: Audit Logging → `.claude/principles/P_AUDIT_LOGGING.md`
+- **P_SUPPLY_CHAIN_SECURITY**: Supply Chain Security → `.claude/principles/P_SUPPLY_CHAIN_SECURITY.md`
+- **P_AI_ML_SECURITY**: AI/ML Security → `.claude/principles/P_AI_ML_SECURITY.md`
+- **P_CONTAINER_SECURITY**: Container Security → `.claude/principles/P_CONTAINER_SECURITY.md`
+- **P_K8S_SECURITY**: Kubernetes Security → `.claude/principles/P_K8S_SECURITY.md`
+- **P_ZERO_TRUST**: Zero Trust Architecture → `.claude/principles/P_ZERO_TRUST.md`
+- **P_PRIVACY_COMPLIANCE**: Privacy Compliance → `.claude/principles/P_PRIVACY_COMPLIANCE.md`
+- **P_INCIDENT_RESPONSE_READINESS**: Incident Response Readiness → `.claude/principles/P_INCIDENT_RESPONSE_READINESS.md`

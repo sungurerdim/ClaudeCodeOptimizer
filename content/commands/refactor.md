@@ -3,6 +3,13 @@ id: cco-refactor
 description: Guided refactoring with safety checks
 category: feature
 priority: normal
+principles:
+  - 'U_MINIMAL_TOUCH'
+  - 'U_CHANGE_VERIFICATION'
+  - 'U_TEST_FIRST'
+  - 'U_EVIDENCE_BASED'
+  - 'C_FOLLOW_PATTERNS'
+  - 'U_NO_OVERENGINEERING'
 ---
 
 # Refactor Code

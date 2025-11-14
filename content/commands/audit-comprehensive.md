@@ -1,11 +1,18 @@
 ---
 description: Comprehensive audit (code, security, tests, docs, principles, all)
 category: audit
-cost: 3
-principles: ['U001', 'U002', 'U009', 'U010', 'U011', 'P001', 'P002', 'P003', 'P004', 'P005', 'P006', 'P007', 'P008', 'P009', 'P010', 'P011', 'P012', 'P013', 'P014', 'P015', 'P016', 'P017', 'P018', 'P019', 'P020', 'P021', 'P022', 'P023', 'P024', 'P025', 'P026', 'P027', 'P028', 'P029', 'P030', 'P031', 'P032', 'P033', 'P034', 'P035', 'P036', 'P037', 'P038', 'P039', 'P040', 'P041', 'P042', 'P043', 'P044', 'P045', 'P046', 'P047', 'P048', 'P049', 'P050', 'P051', 'P052', 'P053', 'P054', 'P055', 'P056', 'P057', 'P058', 'P059', 'P060', 'P061', 'P062', 'P063', 'P064', 'P065', 'P066', 'P067', 'P068', 'P069']
+cost: 5
+principles: ['U_EVIDENCE_BASED', 'U_FAIL_FAST', 'U_ATOMIC_COMMITS', 'U_CONCISE_COMMITS', 'U_NO_OVERENGINEERING', 'U_DRY', 'U_INTEGRATION_CHECK', 'P_NO_BACKWARD_COMPAT_DEBT', 'P_PRECISION_IN_CALCS', 'P_IMMUTABILITY_BY_DEFAULT', 'P_CODE_REVIEW_CHECKLIST_COMPLIANCE', 'P_LINTING_SAST', 'P_PERFORMANCE_PROFILE_BEFORE_OPTIMIZE', 'P_TYPE_SAFETY', 'P_VERSION_MANAGEMENT', 'C_GREP_FIRST_SEARCH_STRATEGY', 'P_EVENT_DRIVEN', 'P_SINGLETON_EXPENSIVE_RESOURCES', 'P_SEPARATION_OF_CONCERNS', 'P_MICROSERVICES_SERVICE_MESH', 'P_CQRS_PATTERN', 'P_DEPENDENCY_INJECTION', 'P_CIRCUIT_BREAKER_PATTERN', 'P_API_VERSIONING_STRATEGY', 'C_AGENT_ORCHESTRATION_PATTERNS', 'C_CONTEXT_WINDOW_MGMT', 'P_SCHEMA_VALIDATION', 'P_PRIVACY_FIRST', 'P_TTL_BASED_CLEANUP', 'P_ENCRYPTION_AT_REST', 'P_ZERO_DISK_TOUCH', 'P_AUTH_AUTHZ', 'P_SQL_INJECTION', 'P_SECRET_ROTATION', 'P_RATE_LIMITING', 'P_CORS_POLICY', 'P_XSS_PREVENTION', 'P_AUDIT_LOGGING', 'P_SUPPLY_CHAIN_SECURITY', 'P_AI_ML_SECURITY', 'P_CONTAINER_SECURITY', 'P_K8S_SECURITY', 'P_ZERO_TRUST', 'P_PRIVACY_COMPLIANCE', 'U_DEPENDENCY_MANAGEMENT', 'P_TEST_COVERAGE', 'P_TEST_ISOLATION', 'P_INTEGRATION_TESTS', 'P_TEST_PYRAMID', 'P_CI_GATES', 'P_PROPERTY_TESTING', 'P_COMMIT_MESSAGE_CONVENTIONS', 'P_BRANCHING_STRATEGY', 'P_PR_GUIDELINES', 'P_REBASE_VS_MERGE_STRATEGY', 'P_SEMANTIC_VERSIONING', 'P_AUTO_VERSIONING', 'P_CACHING_STRATEGY', 'P_DB_OPTIMIZATION', 'P_LAZY_LOADING', 'P_ASYNC_IO', 'P_CONTINUOUS_PROFILING', 'P_MINIMAL_RESPONSIBILITY', 'P_CONFIGURATION_AS_CODE', 'P_IAC_GITOPS', 'P_OBSERVABILITY_WITH_OTEL', 'P_HEALTH_CHECKS', 'P_GRACEFUL_SHUTDOWN', 'P_GITOPS_PRACTICES', 'P_INCIDENT_RESPONSE_READINESS', 'P_RESTFUL_API_CONVENTIONS', 'P_API_SECURITY']
 ---
 
-# CCO Audit Commands
+# cco-audit-comprehensive - Comprehensive Audit (All Categories)
+
+> **NOTE**: This is the comprehensive audit that covers everything. For faster, focused audits, consider using:
+> - `/cco-audit-security` - Security vulnerabilities and privacy violations only
+> - `/cco-audit-performance` - Performance bottlenecks only
+> - `/cco-audit-architecture` - Architectural patterns only
+> - `/cco-audit-testing` - Test coverage and quality only
+> - `/cco-audit-code-quality` - Code quality and linting only
 
 Run comprehensive audits on your codebase: code quality, security, tests, documentation, and principle compliance.
 
@@ -49,9 +56,9 @@ Run comprehensive audits on your codebase: code quality, security, tests, docume
 The following principles are automatically loaded for audit commands:
 
 **Core Principles** (Always loaded from CLAUDE.md):
-- U002: Fail-Fast Error Handling
-- U001: Evidence-Based Verification
-- U011: No Overengineering
+- U_FAIL_FAST: Fail-Fast Error Handling
+- U_EVIDENCE_BASED: Evidence-Based Verification
+- U_NO_OVERENGINEERING: No Overengineering
 
 **Additional Principles for This Command**:
 Automatically loaded from `~/.cco/principles/`:
@@ -61,78 +68,78 @@ Automatically loaded from `~/.cco/principles/`:
 
 
 Automatically loaded from `~/.cco/principles/`:
-- P001
-- P002
-- P003
-- P004
-- P006
-- P007
-- P008
-- P009
-- P010
-- P023
-- P053
-- P067
-- P068
-- U011
-- P005
-- P019
-- P020
-- P021
-- P022
-- P024
-- P025
-- P026
-- P027
-- P028
-- P029
-- P030
-- P054
-- P055
-- P056
-- P057
-- P058
-- P061
-- P063
-- P011
-- P012
-- P013
-- P014
-- P015
-- P016
-- P017
-- P018
-- P066
-- P031
-- P032
-- P033
-- P034
-- P035
-- P036
-- P059
-- P060
-- P065
-- P069
-- P037
-- P038
-- P039
-- P040
-- P041
-- P042
-- P043
-- P044
-- P045
-- P046
-- P047
-- U010
-- U009
-- P048
-- P049
-- P050
-- P051
-- P064
-- P052
-- P062
+- U_DRY
+- U_INTEGRATION_CHECK
+- P_NO_BACKWARD_COMPAT_DEBT
+- P_PRECISION_IN_CALCS
+- P_CODE_REVIEW_CHECKLIST_COMPLIANCE
+- P_LINTING_SAST
+- P_PERFORMANCE_PROFILE_BEFORE_OPTIMIZE
+- P_TYPE_SAFETY
+- P_VERSION_MANAGEMENT
+- P_PRIVACY_FIRST
+- P_CACHING_STRATEGY
+- P_DISTRIBUTED_CACHING
+- P_RESTFUL_API_CONVENTIONS
+- U_NO_OVERENGINEERING
+- P_IMMUTABILITY_BY_DEFAULT
+- P_API_VERSIONING_STRATEGY
+- C_AGENT_ORCHESTRATION_PATTERNS
+- C_CONTEXT_WINDOW_MGMT
+- P_SCHEMA_VALIDATION
+- P_TTL_BASED_CLEANUP
+- P_ENCRYPTION_AT_REST
+- P_ZERO_DISK_TOUCH
+- P_AUTH_AUTHZ
+- P_SQL_INJECTION
+- P_SECRET_ROTATION
+- P_RATE_LIMITING
+- P_DB_OPTIMIZATION
+- P_LAZY_LOADING
+- P_ASYNC_IO
+- P_CONTINUOUS_PROFILING
+- P_MINIMAL_RESPONSIBILITY
+- P_OBSERVABILITY_WITH_OTEL
+- P_GRACEFUL_SHUTDOWN
+- C_GREP_FIRST_SEARCH_STRATEGY
+- P_EVENT_DRIVEN
+- P_SINGLETON_EXPENSIVE_RESOURCES
+- P_SEPARATION_OF_CONCERNS
+- P_MICROSERVICES_SERVICE_MESH
+- P_CQRS_PATTERN
+- P_DEPENDENCY_INJECTION
+- P_CIRCUIT_BREAKER_PATTERN
+- P_CHANGE_DATA_CAPTURE
+- P_CORS_POLICY
+- P_XSS_PREVENTION
+- P_AUDIT_LOGGING
+- P_SUPPLY_CHAIN_SECURITY
+- P_AI_ML_SECURITY
+- P_CONTAINER_SECURITY
+- P_CONFIGURATION_AS_CODE
+- P_IAC_GITOPS
+- P_INCIDENT_RESPONSE_READINESS
+- P_API_SECURITY
+- P_K8S_SECURITY
+- P_ZERO_TRUST
+- P_PRIVACY_COMPLIANCE
+- U_DEPENDENCY_MANAGEMENT
+- P_TEST_COVERAGE
+- P_TEST_ISOLATION
+- P_INTEGRATION_TESTS
+- P_TEST_PYRAMID
+- P_CI_GATES
+- P_PROPERTY_TESTING
+- P_COMMIT_MESSAGE_CONVENTIONS
+- U_CONCISE_COMMITS
+- U_ATOMIC_COMMITS
+- P_BRANCHING_STRATEGY
+- P_PR_GUIDELINES
+- P_REBASE_VS_MERGE_STRATEGY
+- P_SEMANTIC_VERSIONING
+- P_GITOPS_PRACTICES
+- P_AUTO_VERSIONING
+- P_HEALTH_CHECKS
 
 This gives you a comprehensive set of relevant principles (universal + project-specific), optimized for audit tasks. See README.md for current counts.
 
@@ -353,13 +360,13 @@ Quick fix all (if no critical issues):
 **7 Critical Security & Privacy Principles**
 
 Audit against:
-- P023: Privacy-First by Default
-- P024: TTL-Based Cleanup
-- P026: Zero Disk Touch
-- P038: Zero Trust Architecture
-- P027: Authentication & Authorization
-- P025: Encryption Everywhere
-- P029: Secret Management with Rotation
+- P_PRIVACY_FIRST: Privacy-First by Default
+- P_TTL_BASED_CLEANUP: TTL-Based Cleanup
+- P_ZERO_DISK_TOUCH: Zero Disk Touch
+- P_ZERO_TRUST: Zero Trust Architecture
+- P_AUTH_AUTHZ: Authentication & Authorization
+- P_ENCRYPTION_AT_REST: Encryption Everywhere
+- P_SECRET_ROTATION: Secret Management with Rotation
 
 ### Architecture (Optimized: Speed + Quality)
 - 2 parallel Haiku agents (Explore, quick) - fast security scanning
@@ -392,9 +399,9 @@ CRITICAL - MUST LOAD FIRST:
 4. Print confirmation: "✓ Loaded 3 documents (~3,500 tokens)"
 
 THEN audit these principles:
-- P023: Privacy-First by Default (no PII in logs, proper anonymization)
-- P026: Zero Disk Touch (sensitive data not written to disk)
-- P029: Secret Management (no hardcoded API keys, passwords, tokens)
+- P_PRIVACY_FIRST: Privacy-First by Default (no PII in logs, proper anonymization)
+- P_ZERO_DISK_TOUCH: Zero Disk Touch (sensitive data not written to disk)
+- P_SECRET_ROTATION: Secret Management (no hardcoded API keys, passwords, tokens)
 
 Scan for:
 - Unencrypted sensitive data in code
@@ -420,10 +427,10 @@ CRITICAL - MUST LOAD FIRST:
 4. Print confirmation: "✓ Loaded 3 documents (~3,500 tokens)"
 
 THEN audit these principles:
-- P024: TTL-Based Cleanup (sessions expire, data cleanup)
-- P038: Zero Trust Architecture (multiple security layers)
-- P027: Authentication & Authorization (HTTPS, headers, hardening)
-- P025: Encryption Everywhere (proper crypto, no weak hashing)
+- P_TTL_BASED_CLEANUP: TTL-Based Cleanup (sessions expire, data cleanup)
+- P_ZERO_TRUST: Zero Trust Architecture (multiple security layers)
+- P_AUTH_AUTHZ: Authentication & Authorization (HTTPS, headers, hardening)
+- P_ENCRYPTION_AT_REST: Encryption Everywhere (proper crypto, no weak hashing)
 
 Check for:
 - Session expiration configuration
@@ -499,39 +506,39 @@ Security Audit Results
 =====================
 
 CRITICAL (immediate action required):
-  - P029: Hardcoded AWS credentials in src/config.py:23
+  - P_SECRET_ROTATION: Hardcoded AWS credentials in src/config.py:23
     Risk: Full AWS account compromise
     Exploit: Credentials visible in git history
 
-  - P028: SQL injection in src/api.py:145
+  - P_SQL_INJECTION: SQL injection in src/api.py:145
     Risk: Database breach, data exfiltration
     Exploit: Unsanitized user input in query
 
 CRITICAL (data breach risk):
-  - P023: User emails logged in plaintext (src/auth.py:67)
+  - P_PRIVACY_FIRST: User emails logged in plaintext (src/auth.py:67)
     Risk: GDPR violation, privacy breach
     Exploit: Log aggregation exposes PII
 
 HIGH (security gap):
-  - P027: Missing HTTPS enforcement (src/app.py)
+  - P_AUTH_AUTHZ: Missing HTTPS enforcement (src/app.py)
     Risk: Man-in-the-middle attacks
     Exploit: Network traffic interception
 
-  - P024: Sessions never expire (src/session.py)
+  - P_TTL_BASED_CLEANUP: Sessions never expire (src/session.py)
     Risk: Session hijacking, unlimited access
     Exploit: Stolen session tokens valid forever
 
 MEDIUM (hardening recommended):
-  - P025: Weak password hashing (MD5 in src/auth.py:34)
+  - P_ENCRYPTION_AT_REST: Weak password hashing (MD5 in src/auth.py:34)
     Risk: Rainbow table attacks
     Exploit: Password database compromise
 
-  - P026: Sensitive files not in .gitignore
+  - P_ZERO_DISK_TOUCH: Sensitive files not in .gitignore
     Risk: Accidental secret commit
     Files: .env.local, credentials.json
 
 LOW (best practice):
-  - P030: Missing rate limiting on API endpoints
+  - P_RATE_LIMITING: Missing rate limiting on API endpoints
     Risk: DoS, brute force attacks
     Impact: Service availability
 ```
@@ -1031,15 +1038,15 @@ MUST LOAD FIRST:
 4. Print: "✓ Loaded 3 docs (~2,800 tokens)"
 
 Audit principles:
-- Code Quality (P001-P018): DRY, type safety, error handling
-- Architecture (P038-P047): Layered, separation of concerns, patterns
+- Code Quality (U_DRY-P018): DRY, type safety, error handling
+- Architecture (P_ZERO_TRUST-P047): Layered, separation of concerns, patterns
 
 Scan for:
-- U002: Fail-fast error handling (no bare except, no swallowed exceptions)
-- P009: Type safety violations (missing type hints)
-- P001: Code duplication (>50 lines similar code)
-- P014: Layered architecture violations (separation of concerns)
-- U011: Overengineering (premature abstraction)
+- U_FAIL_FAST: Fail-fast error handling (no bare except, no swallowed exceptions)
+- P_TYPE_SAFETY: Type safety violations (missing type hints)
+- U_DRY: Code duplication (>50 lines similar code)
+- P_SEPARATION_OF_CONCERNS: Layered architecture violations (separation of concerns)
+- U_NO_OVERENGINEERING: Overengineering (premature abstraction)
 
 Report violations with file:line and pattern analysis.
 ```
@@ -1057,15 +1064,15 @@ MUST LOAD FIRST:
 4. Print: "✓ Loaded 3 docs (~3,200 tokens)"
 
 Audit principles:
-- Security & Privacy (P019-P037): Secrets, TTL, zero-disk, encryption
-- Operations (P059-P063): IaC, observability, health checks
+- Security & Privacy: Secrets, TTL, zero-disk, encryption
+- Operations: IaC, observability, health checks
 
 Scan for:
-- P024: TTL enforcement (sessions, data cleanup)
-- P038: Defense-in-depth (multiple security layers)
-- P029: Secret scanning (hardcoded credentials)
-- P060: Infrastructure as Code (Terraform, Pulumi)
-- P062: Automated health checks (liveness, readiness)
+- P_TTL_BASED_CLEANUP: TTL enforcement (sessions, data cleanup)
+- P_ZERO_TRUST: Defense-in-depth (multiple security layers)
+- P_SECRET_ROTATION: Secret scanning (hardcoded credentials)
+- P_IAC_GITOPS: Infrastructure as Code (Terraform, Pulumi)
+- P_HEALTH_CHECKS: Automated health checks (liveness, readiness)
 
 Report violations with file:line and root cause analysis.
 ```
@@ -1084,17 +1091,17 @@ MUST LOAD FIRST:
 5. Print: "✓ Loaded 4 docs (~2,400 tokens)"
 
 Audit principles:
-- Testing (P048-P053): Coverage, pyramid, isolation
-- Performance (P054-P058): Caching, async I/O, optimization
-- Git Workflow (P064-P068): Commits, branching, PRs
-- API Design (P069-P070): RESTful, versioning
+- Testing: Coverage, pyramid, isolation
+- Performance: Caching, async I/O, optimization
+- Git Workflow: Commits, branching, PRs
+- API Design: RESTful, versioning
 
 Scan for:
-- P041: Test coverage (target: 80%+)
-- P044: Test pyramid (more unit than integration)
-- P053: Caching strategy (missing caches)
-- U001: Evidence-based verification (no "should work")
-- U010: Concise commit messages (max 10 lines)
+- P_TEST_COVERAGE: Test coverage (target: 80%+)
+- P_TEST_PYRAMID: Test pyramid (more unit than integration)
+- P_CACHING_STRATEGY: Caching strategy (missing caches)
+- U_EVIDENCE_BASED: Evidence-based verification (no "should work")
+- U_CONCISE_COMMITS: Concise commit messages (max 10 lines)
 
 Report violations with file:line and improvement suggestions.
 ```
@@ -1128,13 +1135,13 @@ Analysis steps:
 1. Merge all category results from 3 agents
 2. Calculate overall compliance score (% principles met)
 3. Identify PATTERNS and trends across violations
-   - Example: "Error handling missing in 12 endpoints" (P001)
+   - Example: "Error handling missing in 12 endpoints" (U_DRY)
    - Example: "No tests for critical modules" (P014)
 4. Prioritize issues by: Principle Severity × Impact × Spread
    - Don't fix individual violations
    - Find root causes that affect multiple areas
 5. Provide ROOT CAUSE analysis for common failures
-   - Example: "No error framework" → causes P001 violations
+   - Example: "No error framework" → causes U_DRY violations
 6. Generate actionable, specific recommendations with commands
    - Pattern-based fixes (not one-off)
    - Include /cco-fix or /cco-generate commands
@@ -1170,46 +1177,46 @@ Overall Compliance: 72% (29/40 principles met)
 Technical Debt: ~32 hours to full compliance
 
 CRITICAL (Architectural Issues):
-  - U002: No Error Boundaries (src/app.py, src/api.py)
+  - U_FAIL_FAST: No Error Boundaries (src/app.py, src/api.py)
     Pattern: Error handling missing in 12 endpoints
     Root Cause: No error handling framework
     Impact: Unhandled exceptions crash the app
     Affected: All API consumers
 
-  - P041: Test Coverage 45% (target: 80%, gap: 35%)
+  - P_TEST_COVERAGE: Test Coverage 45% (target: 80%, gap: 35%)
     Pattern: No tests for src/payment.py, src/auth.py
     Root Cause: Critical modules added without TDD
     Impact: Production bugs in payment/auth
     Affected: Financial transactions, user security
 
 HIGH (Security Gaps):
-  - P024: Sessions Never Expire (src/session.py)
+  - P_TTL_BASED_CLEANUP: Sessions Never Expire (src/session.py)
     Pattern: No TTL enforcement across the app
     Root Cause: Missing TTL configuration
     Impact: Session hijacking risk
     Affected: All authenticated users
 
-  - P029: 3 Hardcoded Secrets (src/config.py:12, src/db.py:34, .env.example)
+  - P_SECRET_ROTATION: 3 Hardcoded Secrets (src/config.py:12, src/db.py:34, .env.example)
     Pattern: Secrets in version control
     Root Cause: No secret management process
     Impact: Security breach via git history
     Affected: Production environment
 
-  - P028: SQL Injection in 2 Endpoints (src/api.py:145, src/db.py:67)
+  - P_SQL_INJECTION: SQL Injection in 2 Endpoints (src/api.py:145, src/db.py:67)
     Pattern: String concatenation in queries
     Root Cause: No ORM or parameterized queries
     Impact: Database breach, data exfiltration
     Affected: User data, payment data
 
 MEDIUM (Code Quality):
-  - P001: Code Duplication (5 instances >50 lines)
+  - U_DRY: Code Duplication (5 instances >50 lines)
     Locations: src/auth.py:45-98, src/api.py:123-176 (similar)
     Pattern: Auth logic duplicated across modules
     Root Cause: No shared authentication module
     Impact: Bug fixes needed in multiple places
     Affected: Maintainability
 
-  - U011: Overengineering Detected (src/utils.py)
+  - U_NO_OVERENGINEERING: Overengineering Detected (src/utils.py)
     Pattern: Abstract factory for simple config
     Root Cause: Premature abstraction
     Impact: Code complexity without benefit
@@ -1236,13 +1243,13 @@ IMMEDIATE (Architectural Fixes):
 1. Implement error handling framework
    Command: /cco-generate error-handler --pattern boundaries --files src/app.py,src/api.py
    Impact: CRITICAL - Prevents app crashes
-   Principles: P004
+   Principles: P_PRECISION_IN_CALCS
    Pattern: Centralized error handling for all endpoints
 
 2. Add critical module tests
    Command: /cco-generate tests --files src/payment.py,src/auth.py --coverage 85 --focus critical-path
    Impact: CRITICAL - Catches financial/security bugs
-   Principles: P014
+   Principles: P_SEPARATION_OF_CONCERNS
    Coverage: 45% → 75% (projected)
 
 THIS WEEK (Security Hardening):
@@ -1250,37 +1257,37 @@ THIS WEEK (Security Hardening):
 3. Implement session TTL
    Command: /cco-fix security --type ttl --file src/session.py --ttl 24h --idle-timeout 2h
    Impact: HIGH - Limits session hijacking window
-   Principles: P020
+   Principles: C_AGENT_ORCHESTRATION_PATTERNS
 
 4. Move secrets to environment
    Command: /cco-fix secrets --rotate --files src/config.py,src/db.py,.env.example --vault .env
    Impact: HIGH - Prevents credential leaks
-   Principles: P026
+   Principles: P_ZERO_DISK_TOUCH
 
 5. Fix SQL injection vulnerabilities
    Command: /cco-fix security --type sql-injection --files src/api.py:145,src/db.py:67 --use-orm
    Impact: HIGH - Prevents database breaches
-   Principles: P022
+   Principles: P_SCHEMA_VALIDATION
 
 THIS SPRINT (Code Quality):
 ───────────────────────────
 6. Extract shared authentication module
    Command: /cco-fix duplication --files src/auth.py:45-98,src/api.py:123-176 --extract src/shared/auth.py
    Impact: MEDIUM - Centralized auth logic
-   Principles: P011
+   Principles: C_GREP_FIRST_SEARCH_STRATEGY
    Duplication: 5 instances → 0
 
 7. Simplify overengineered utilities
    Command: /cco-fix complexity --file src/utils.py --simplify abstract-factory --pattern direct-config
    Impact: MEDIUM - Reduced complexity
-   Principles: U011
+   Principles: U_NO_OVERENGINEERING
 
 BACKLOG (Documentation):
 ────────────────────────
 8. Add API documentation
    Command: /cco-generate docs --type docstrings --scope src/api --coverage 100
    Impact: LOW - Better DX
-   Principles: P031
+   Principles: P_CORS_POLICY
 
 Technical Debt: 23 hours | Compliance: 72% → 95% | Risk Reduction: 85%
 ```
@@ -1293,14 +1300,14 @@ Technical Debt: 23 hours | Compliance: 72% → 95% | Risk Reduction: 85%
    - Prevents future violations
 
 2. **Principle Categories Map to Actions:**
-   - P004 (Error Handling) → Generate error handler framework
-   - P014 (Testing) → Generate tests for untested modules
-   - P020 (TTL) → Configure expiration policies
-   - P026 (Secrets) → Move to env + rotate credentials
-   - P022 (Security) → Fix vulnerability type (SQL injection, XSS, etc.)
-   - P011 (Duplication) → Extract shared modules
-   - U011 (Overengineering) → Simplify abstractions
-   - P031 (Docs) → Generate documentation
+   - P_PRECISION_IN_CALCS (Error Handling) → Generate error handler framework
+   - P_SEPARATION_OF_CONCERNS (Testing) → Generate tests for untested modules
+   - C_AGENT_ORCHESTRATION_PATTERNS (TTL) → Configure expiration policies
+   - P_ZERO_DISK_TOUCH (Secrets) → Move to env + rotate credentials
+   - P_SCHEMA_VALIDATION (Security) → Fix vulnerability type (SQL injection, XSS, etc.)
+   - C_GREP_FIRST_SEARCH_STRATEGY (Duplication) → Extract shared modules
+   - U_NO_OVERENGINEERING (Overengineering) → Simplify abstractions
+   - P_CORS_POLICY (Docs) → Generate documentation
 
 3. **Priority = Principle Severity × Impact × Spread**
    - Severity: CRITICAL > HIGH > MEDIUM > LOW
@@ -1413,17 +1420,17 @@ CROSS-CUTTING PATTERNS
 🔴 Authentication/Authorization (affects 3 audits):
    - No auth tests (Tests)
    - Hardcoded secrets in auth (Security)
-   - P026 violation: secrets in git (Principles)
+   - P_ZERO_DISK_TOUCH violation: secrets in git (Principles)
    → Root Cause: No auth framework + no secret management
 
 🔴 Error Handling (affects 2 audits):
    - Unhandled exceptions crash app (Code Quality)
-   - P004 violation: no error boundaries (Principles)
+   - P_PRECISION_IN_CALCS violation: no error boundaries (Principles)
    → Root Cause: No error handling framework
 
 🟡 Documentation (affects 2 audits):
    - Missing API docs (Documentation)
-   - P031 violation: no docstrings (Principles)
+   - P_CORS_POLICY violation: no docstrings (Principles)
    → Root Cause: No documentation standards
 
 MASTER REMEDIATION PLAN (Cross-Audit Priority)
@@ -1436,21 +1443,21 @@ MASTER REMEDIATION PLAN (Cross-Audit Priority)
      a. /cco-fix secrets --rotate --files src/auth.py,src/config.py --vault .env
      b. /cco-generate tests --file src/auth.py --focus security --coverage 85
    Impact: CRITICAL - Prevents credential leaks + auth bypass
-   Audits Affected: Security (P026), Tests (auth coverage), Principles (P026, P014)
+   Audits Affected: Security (P_ZERO_DISK_TOUCH), Tests (auth coverage), Principles (P_ZERO_DISK_TOUCH, P_SEPARATION_OF_CONCERNS)
 
    Risk Reduction: 40%
 
 2. Fix SQL injection vulnerabilities [Security + Principles]
    Command: /cco-fix security --type sql-injection --files src/api.py:145,src/db.py:67 --use-orm
    Impact: CRITICAL - Prevents database breaches
-   Audits Affected: Security (SQL injection), Principles (P022)
+   Audits Affected: Security (SQL injection), Principles (P_SCHEMA_VALIDATION)
 
    Risk Reduction: 25%
 
 3. Implement error handling framework [Code Quality + Principles]
    Command: /cco-generate error-handler --pattern boundaries --files src/app.py,src/api.py
    Impact: CRITICAL - Prevents app crashes
-   Audits Affected: Code Quality (exception handling), Principles (P004)
+   Audits Affected: Code Quality (exception handling), Principles (P_PRECISION_IN_CALCS)
 
    Risk Reduction: 20%
 
@@ -1461,14 +1468,14 @@ MASTER REMEDIATION PLAN (Cross-Audit Priority)
 4. Add payment processing tests [Tests + Principles]
    Command: /cco-generate tests --file src/payment.py --focus critical-path --coverage 85
    Impact: HIGH - Catches financial bugs before production
-   Audits Affected: Tests (coverage), Principles (P014)
+   Audits Affected: Tests (coverage), Principles (P_SEPARATION_OF_CONCERNS)
 
 5. Enforce HTTPS + session TTL [Security + Principles]
    Commands:
      a. /cco-fix security --type https-redirect --file src/app.py
      b. /cco-fix security --type ttl --file src/session.py --ttl 24h
    Impact: HIGH - Prevents MITM + session hijacking
-   Audits Affected: Security (HTTPS, TTL), Principles (P020, P024)
+   Audits Affected: Security (HTTPS, TTL), Principles (C_AGENT_ORCHESTRATION_PATTERNS, P_TTL_BASED_CLEANUP)
 
 6. Fix type errors [Code Quality]
    Command: /cco-fix type-errors --files src/models.py --strict
@@ -1480,7 +1487,7 @@ MASTER REMEDIATION PLAN (Cross-Audit Priority)
      a. /cco-generate docs --type api --file src/api.py --format openapi
      b. /cco-generate docs --type docstrings --file src/api.py --coverage 100
    Impact: HIGH - Enables integration + self-documenting code
-   Audits Affected: Documentation (API docs), Principles (P031)
+   Audits Affected: Documentation (API docs), Principles (P_CORS_POLICY)
 
    THIS WEEK Subtotal: 10 hours
 
@@ -1489,7 +1496,7 @@ MASTER REMEDIATION PLAN (Cross-Audit Priority)
 8. Refactor code duplication [Code Quality + Principles]
    Command: /cco-fix duplication --files src/auth.py:45-98,src/api.py:123-176 --extract src/shared/auth.py
    Impact: MEDIUM - Centralized auth, easier maintenance
-   Audits Affected: Code Quality (DRY), Principles (P011)
+   Audits Affected: Code Quality (DRY), Principles (C_GREP_FIRST_SEARCH_STRATEGY)
 
 9. Auto-format codebase [Code Quality]
    Command: /cco-fix formatting --scope all --save
@@ -1605,7 +1612,7 @@ manager.add_finding(AuditFinding(
     risk_reduction_percent=40,
     file='src/config.py',
     line=23,
-    principle='P026',
+    principle='P_ZERO_DISK_TOUCH',
     audits_affected=['security', 'principles']
 ))
 

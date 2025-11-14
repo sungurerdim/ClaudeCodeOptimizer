@@ -3,6 +3,12 @@ id: cco-setup-cicd
 description: Generate GitHub Actions, GitLab CI configs
 category: devops
 priority: normal
+principles:
+  - 'P_CI_GATES'
+  - 'C_PRODUCTION_GRADE'
+  - 'P_SUPPLY_CHAIN_SECURITY'
+  - 'C_FOLLOW_PATTERNS'
+  - 'U_TEST_FIRST'
 ---
 
 # Setup CI/CD

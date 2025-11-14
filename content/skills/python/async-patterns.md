@@ -3,6 +3,7 @@ metadata:
   name: "Python Async Patterns"
   activation_keywords: ["async", "await", "asyncio", "coroutine", "concurrent"]
   category: "language-python"
+principles: ['P_ASYNC_IO', 'U_FAIL_FAST', 'P_GRACEFUL_SHUTDOWN', 'U_EVIDENCE_BASED']
 ---
 
 # Python Async Patterns

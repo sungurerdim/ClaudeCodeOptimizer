@@ -3,6 +3,12 @@ id: cco-generate-tests
 description: Auto-generate unit tests for untested code
 category: testing
 priority: normal
+principles:
+  - 'U_TEST_FIRST'
+  - 'P_TEST_COVERAGE'
+  - 'C_PRODUCTION_GRADE'
+  - 'C_FOLLOW_PATTERNS'
+  - 'P_CI_GATES'
 ---
 
 # Generate Unit Tests

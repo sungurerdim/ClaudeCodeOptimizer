@@ -3,6 +3,7 @@ metadata:
   name: "Security Emergency Response"
   activation_keywords: ["P0 critical", "hardcoded secrets", "exposed keys", "security emergency"]
   category: "security"
+principles: ['U_FAIL_FAST', 'P_SECRET_ROTATION', 'P_AUDIT_LOGGING', 'P_AUTH_AUTHZ', 'P_SUPPLY_CHAIN_SECURITY', 'P_ZERO_DISK_TOUCH']
 ---
 
 # Security Emergency Response

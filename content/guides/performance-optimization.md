@@ -8,6 +8,10 @@
 
 **Proactive performance engineering:** Analyze code continuously rather than waiting for production issues.
 
+**Related Principles:**
+- **U_EVIDENCE_BASED**: Measure before claiming performance improvements
+- **P_PERFORMANCE_PROFILE_BEFORE_OPTIMIZE**: Profile before optimizing
+
 ---
 
 ## Common Performance Bottlenecks
@@ -42,6 +46,9 @@ def find_duplicates(items):
 **Impact**: 100x faster for 1000 items
 
 ### 2. N+1 Query Problem
+
+**Related Principles:**
+- **P_DB_OPTIMIZATION**: Optimize database queries
 
 **Problem**: Database calls inside loops
 
@@ -87,6 +94,9 @@ SELECT * FROM users WHERE email = 'user@example.com';
 **Impact**: 1000x faster queries
 
 ### 4. Missing Caching
+
+**Related Principles:**
+- **P_CACHING_STRATEGY**: Implement strategic caching
 
 **Problem**: Repeated operations without caching
 
@@ -193,6 +203,11 @@ def get_stats(data):
 
 ### 1. Focus on Critical Paths
 
+**Related Principles:**
+- **P_CONTINUOUS_PROFILING**: Continuous performance monitoring
+- **P_OBSERVABILITY_WITH_OTEL**: Monitor with OpenTelemetry
+- **U_MINIMAL_TOUCH**: Focus on actual bottlenecks, not hunches
+
 **Identify hotspots**:
 ```bash
 # Profile with cProfile (Python)
@@ -207,6 +222,10 @@ python -m pstats profile.stats
 - Memory allocations >100MB per operation
 
 ### 2. Measure Before Optimizing
+
+**Related Principles:**
+- **U_EVIDENCE_BASED**: Establish baseline metrics
+- **P_PERFORMANCE_PROFILE_BEFORE_OPTIMIZE**: Never optimize without profiling
 
 **Benchmark baseline**:
 ```python
@@ -234,6 +253,11 @@ benchmark(fast_function, data)
 - **Production**: New Relic, Datadog, Sentry Performance
 
 ### 3. Implement & Test
+
+**Related Principles:**
+- **U_CHANGE_VERIFICATION**: Verify improvements with benchmarks
+- **U_TEST_FIRST**: Write performance tests first
+- **U_NO_OVERENGINEERING**: Keep optimizations simple and readable
 
 **Process**:
 1. Identify bottleneck (profiling)
@@ -305,6 +329,10 @@ def test_query_performance():
 
 ### Async I/O
 
+**Related Principles:**
+- **P_ASYNC_IO**: Use non-blocking I/O operations
+- **P_LAZY_LOADING**: Load data only when needed
+
 - **Sequential → Parallel**: N×faster (N = concurrent ops)
 - **Blocking → Non-blocking**: 2-10x throughput
 
@@ -320,7 +348,7 @@ def test_query_performance():
 
 **During optimization**:
 - [ ] Focus on measured bottleneck (not hunches)
-- [ ] Keep code readable (U011: No Overengineering)
+- [ ] Keep code readable (U_NO_OVERENGINEERING: No Overengineering)
 - [ ] Verify correctness (all tests pass)
 - [ ] Benchmark improvements
 
@@ -362,8 +390,23 @@ python benchmarks/run_all.py
 
 ## Principle References
 
+This guide incorporates the following CCO principles:
+
+**Universal Principles:**
+- **U_EVIDENCE_BASED**: Evidence-Based Verification → `.claude/principles/U_EVIDENCE_BASED.md`
+- **U_NO_OVERENGINEERING**: No Overengineering → `.claude/principles/U_NO_OVERENGINEERING.md`
+- **U_MINIMAL_TOUCH**: Minimal Touch Policy → `.claude/principles/U_MINIMAL_TOUCH.md`
+- **U_CHANGE_VERIFICATION**: Change Verification Protocol → `.claude/principles/U_CHANGE_VERIFICATION.md`
+- **U_TEST_FIRST**: Test-First Development → `.claude/principles/U_TEST_FIRST.md`
+
 **Performance Principles:**
-- **P053**: Caching Strategy → `.claude/principles/P053.md`
-- **P054**: Database Query Optimization → `.claude/principles/P054.md`
-- **P055**: Lazy Loading & Pagination → `.claude/principles/P055.md`
-- **P056**: Async I/O (Non-Blocking Operations) → `.claude/principles/P056.md`
+- **P_PERFORMANCE_PROFILE_BEFORE_OPTIMIZE**: Profile Before Optimizing → `.claude/principles/P_PERFORMANCE_PROFILE_BEFORE_OPTIMIZE.md`
+- **P_CONTINUOUS_PROFILING**: Continuous Profiling → `.claude/principles/P_CONTINUOUS_PROFILING.md`
+- **P_CACHING_STRATEGY**: Caching Strategy → `.claude/principles/P_CACHING_STRATEGY.md`
+- **P_DB_OPTIMIZATION**: Database Query Optimization → `.claude/principles/P_DB_OPTIMIZATION.md`
+- **P_LAZY_LOADING**: Lazy Loading → `.claude/principles/P_LAZY_LOADING.md`
+- **P_ASYNC_IO**: Async I/O (Non-Blocking Operations) → `.claude/principles/P_ASYNC_IO.md`
+
+**Observability:**
+- **P_OBSERVABILITY_WITH_OTEL**: Observability with OpenTelemetry → `.claude/principles/P_OBSERVABILITY_WITH_OTEL.md`
+- **P_HEALTH_CHECKS**: Health Check Implementation → `.claude/principles/P_HEALTH_CHECKS.md`

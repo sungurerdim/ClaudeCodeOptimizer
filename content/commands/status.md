@@ -6,6 +6,11 @@ category: bootstrap
 priority: high
 version: 1.0.0
 author: Claude Code
+principles:
+  - 'U_EVIDENCE_BASED'
+  - 'U_COMPLETE_REPORTING'
+  - 'U_DEPENDENCY_MANAGEMENT'
+  - 'U_INTEGRATION_CHECK'
 ---
 
 # Project Status Check

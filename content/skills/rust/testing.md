@@ -3,6 +3,7 @@ metadata:
   name: "Rust Testing Strategies"
   activation_keywords: ["test", "unit test", "integration", "benchmark", "cargo"]
   category: "language-rust"
+principles: ['U_TEST_FIRST', 'U_EVIDENCE_BASED', 'P_TEST_COVERAGE', 'P_TEST_PYRAMID', 'P_CI_GATES', 'P_PROPERTY_TESTING']
 ---
 
 # Rust Testing Strategies

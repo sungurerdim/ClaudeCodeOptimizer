@@ -3,6 +3,7 @@ metadata:
   name: "Testing with Vitest"
   activation_keywords: ["test", "vitest", "mock", "component", "coverage"]
   category: "language-typescript"
+principles: ['U_TEST_FIRST', 'U_EVIDENCE_BASED', 'P_TEST_COVERAGE', 'P_TEST_PYRAMID', 'P_CI_GATES', 'P_TEST_ISOLATION']
 ---
 
 # Testing with Vitest

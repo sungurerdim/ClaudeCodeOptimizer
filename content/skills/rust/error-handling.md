@@ -3,6 +3,7 @@ metadata:
   name: "Rust Error Handling"
   activation_keywords: ["error", "result", "option", "unwrap", "propagate"]
   category: "language-rust"
+principles: ['U_FAIL_FAST', 'U_ROOT_CAUSE_ANALYSIS', 'P_TYPE_SAFETY', 'U_EVIDENCE_BASED']
 ---
 
 # Rust Error Handling

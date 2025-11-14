@@ -3,6 +3,7 @@ metadata:
   name: "Go Concurrency Patterns"
   activation_keywords: ["goroutine", "channel", "select", "concurrent", "sync"]
   category: "language-go"
+principles: ['P_ASYNC_IO', 'U_FAIL_FAST', 'P_GRACEFUL_SHUTDOWN', 'P_RATE_LIMITING', 'U_EVIDENCE_BASED']
 ---
 
 # Go Concurrency Patterns

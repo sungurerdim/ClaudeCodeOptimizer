@@ -3,6 +3,13 @@ id: cco-implement-feature
 description: Full workflow - architect, code, test, doc, review
 category: feature
 priority: high
+principles:
+  - 'U_TEST_FIRST'
+  - 'C_PRODUCTION_GRADE'
+  - 'C_FOLLOW_PATTERNS'
+  - 'U_CHANGE_VERIFICATION'
+  - 'U_NO_OVERENGINEERING'
+  - 'U_INTEGRATION_CHECK'
 ---
 
 # Implement Feature

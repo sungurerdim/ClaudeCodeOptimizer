@@ -3,6 +3,13 @@ id: cco-scan-secrets
 description: Scan for exposed secrets - API keys, passwords, tokens in code
 category: security
 priority: critical
+principles:
+  - 'P_SECRET_ROTATION'
+  - 'P_AUDIT_LOGGING'
+  - 'P_SUPPLY_CHAIN_SECURITY'
+  - 'U_EVIDENCE_BASED'
+  - 'U_COMPLETE_REPORTING'
+  - 'U_FAIL_FAST'
 ---
 
 # Scan for Exposed Secrets

@@ -3,6 +3,7 @@ metadata:
   name: "Incremental Improvement Protocol"
   activation_keywords: ["overwhelming task", "large gap", "break into milestones", "weekly sprints"]
   category: "planning"
+principles: ['U_EVIDENCE_BASED', 'U_TEST_FIRST', 'U_NO_OVERENGINEERING', 'U_COMPLETE_REPORTING', 'U_EXPLICIT_COMPLETION']
 ---
 
 # Incremental Improvement Protocol
@@ -209,11 +210,11 @@ Target: 0 violations
 Categories: 8 principles
 
 WEEK 1: Critical Security Issues (P0)
-Principles: P029 (Secret Management), P025 (Encryption), P026 (Zero Disk Touch)
+Principles: P_SECRET_ROTATION (Secret Management), P_ENCRYPTION_AT_REST (Encryption), P_ZERO_DISK_TOUCH (Zero Disk Touch)
 Violations to fix:
-  [ ] P029: 3 hardcoded secrets
-  [ ] P025: 5 missing encryption
-  [ ] P026: 2 disk writes with sensitive data
+  [ ] P_SECRET_ROTATION: 3 hardcoded secrets
+  [ ] P_ENCRYPTION_AT_REST: 5 missing encryption
+  [ ] P_ZERO_DISK_TOUCH: 2 disk writes with sensitive data
 
 Total: 10 violations
 Impact: All P0 CRITICAL resolved
@@ -221,21 +222,20 @@ Estimated effort: 2 hours
 Priority: BLOCKING DEPLOYMENT
 
 WEEK 2: High-Impact Quality (P1)
-Principles: U002 (Fail-Fast), P001 (DRY), P009 (Type Safety)
+Principles: U_FAIL_FAST (Fail-Fast), U_DRY (DRY), P_TYPE_SAFETY (Type Safety)
 Violations to fix:
-  [ ] U002: 8 bare except clauses
-  [ ] P001: 6 duplicate functions
-  [ ] P009: 12 missing type hints
+  [ ] U_FAIL_FAST: 8 bare except clauses
+  [ ] U_DRY: 6 duplicate functions
+  [ ] P_TYPE_SAFETY: 12 missing type hints
 
 Total: 26 violations
 Impact: All P1 HIGH resolved
 Estimated effort: 4 hours
 
 WEEK 3: Code Quality (P2)
-Principles: P002 (Integration), P004 (Precision)
+Principles: U_INTEGRATION_CHECK (Integration)
 Violations to fix:
-  [ ] P002: 7 integration tests missing
-  [ ] P004: 4 float comparison issues
+  [ ] U_INTEGRATION_CHECK: 7 integration tests missing
 
 Total: 11 violations
 Impact: All P2 MEDIUM resolved

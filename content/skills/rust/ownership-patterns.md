@@ -3,6 +3,7 @@ metadata:
   name: "Rust Ownership Patterns"
   activation_keywords: ["ownership", "borrow", "lifetime", "reference", "move"]
   category: "language-rust"
+principles: ['P_TYPE_SAFETY', 'U_FAIL_FAST', 'U_DRY', 'U_NO_OVERENGINEERING']
 ---
 
 # Rust Ownership Patterns

@@ -16,6 +16,10 @@ Best practices for containerized applications using Docker and Kubernetes.
 
 **Purpose**: Smaller images, faster deployments
 
+**Related Principles:**
+- **P_CONTAINER_SECURITY**: Minimize attack surface by excluding build dependencies
+- **U_MINIMAL_TOUCH**: Include only what's necessary for production
+
 **❌ Bad** - Single stage (large image):
 ```dockerfile
 FROM python:3.11
@@ -46,6 +50,10 @@ CMD ["python", "app.py"]
 ```
 
 ### Minimal Base Images
+
+**Related Principles:**
+- **P_CONTAINER_SECURITY**: Use minimal base images to reduce vulnerabilities
+- **P_SUPPLY_CHAIN_SECURITY**: Verify base image provenance
 
 **Options**:
 ```dockerfile
@@ -95,6 +103,11 @@ CMD ["python", "app.py"]
 
 ### Security Hardening
 
+**Related Principles:**
+- **P_CONTAINER_SECURITY**: Run as non-root user
+- **P_ZERO_DISK_TOUCH**: Read-only filesystem prevents unauthorized writes
+- **P_PRIVACY_FIRST**: Isolate application from system files
+
 **Non-root user**:
 ```dockerfile
 FROM python:3.11-slim
@@ -124,6 +137,11 @@ services:
 
 ### Dependency Scanning
 
+**Related Principles:**
+- **P_SUPPLY_CHAIN_SECURITY**: Scan for vulnerabilities in dependencies
+- **U_DEPENDENCY_MANAGEMENT**: Keep dependencies updated and secure
+- **U_EVIDENCE_BASED**: Verify security before deployment
+
 **Scan before deployment**:
 ```bash
 # Scan for vulnerabilities
@@ -150,6 +168,10 @@ RUN apt-get update && \
 ## Kubernetes Patterns
 
 ### Declarative Manifests
+
+**Related Principles:**
+- **P_CONFIGURATION_AS_CODE**: Infrastructure as code, not commands
+- **P_IAC_GITOPS**: Version-controlled, auditable infrastructure
 
 **❌ Bad** - Imperative commands:
 ```bash
@@ -214,6 +236,11 @@ spec:
 - **CPU**: Throttled if exceeded (pod slowed)
 
 ### Health Checks
+
+**Related Principles:**
+- **P_HEALTH_CHECKS**: Implement comprehensive health endpoints
+- **P_GRACEFUL_SHUTDOWN**: Ensure clean startup and shutdown
+- **P_OBSERVABILITY_WITH_OTEL**: Monitor application health
 
 **Three types**:
 
@@ -285,6 +312,11 @@ def startup():
 
 ### ConfigMaps & Secrets
 
+**Related Principles:**
+- **P_CONFIGURATION_AS_CODE**: Externalize all configuration
+- **P_ENCRYPTION_AT_REST**: Encrypt sensitive secrets
+- **P_SECRET_ROTATION**: Rotate secrets regularly
+
 **Never hardcode configuration**:
 
 **❌ Bad**:
@@ -342,6 +374,11 @@ spec:
 
 ### Pod Security Policies
 
+**Related Principles:**
+- **P_K8S_SECURITY**: Enforce Kubernetes security best practices
+- **P_ZERO_TRUST**: Assume zero trust, verify everything
+- **P_AUDIT_LOGGING**: Log security policy violations
+
 **Enforce security standards**:
 
 ```yaml
@@ -380,6 +417,11 @@ spec:
 ## GitOps Workflow
 
 ### Infrastructure as Code
+
+**Related Principles:**
+- **P_IAC_GITOPS**: Infrastructure as code with GitOps workflow
+- **P_CONFIGURATION_AS_CODE**: All infrastructure in version control
+- **U_CHANGE_VERIFICATION**: Auditable, reviewable changes
 
 **Benefits**:
 - Version controlled
@@ -493,9 +535,29 @@ syncPolicy:
 
 ## Principle References
 
-**Operational Excellence Principles:**
-- **P059**: Configuration as Code → `.claude/principles/P059.md`
-- **P060**: Infrastructure as Code + GitOps → `.claude/principles/P060.md`
-- **P061**: Observability with OpenTelemetry → `.claude/principles/P061.md`
-- **P062**: Health Checks & Readiness Probes → `.claude/principles/P062.md`
-- **P063**: Graceful Shutdown → `.claude/principles/P063.md`
+This guide incorporates the following CCO principles:
+
+**Security:**
+- **P_CONTAINER_SECURITY**: Container Security → `.claude/principles/P_CONTAINER_SECURITY.md`
+- **P_SUPPLY_CHAIN_SECURITY**: Supply Chain Security → `.claude/principles/P_SUPPLY_CHAIN_SECURITY.md`
+- **P_K8S_SECURITY**: Kubernetes Security → `.claude/principles/P_K8S_SECURITY.md`
+- **P_ZERO_TRUST**: Zero Trust Architecture → `.claude/principles/P_ZERO_TRUST.md`
+- **P_ENCRYPTION_AT_REST**: Encryption at Rest → `.claude/principles/P_ENCRYPTION_AT_REST.md`
+- **P_PRIVACY_FIRST**: Privacy-First by Default → `.claude/principles/P_PRIVACY_FIRST.md`
+- **P_AUDIT_LOGGING**: Audit Logging → `.claude/principles/P_AUDIT_LOGGING.md`
+
+**Configuration & Infrastructure:**
+- **P_CONFIGURATION_AS_CODE**: Configuration as Code → `.claude/principles/P_CONFIGURATION_AS_CODE.md`
+- **P_IAC_GITOPS**: Infrastructure as Code with GitOps → `.claude/principles/P_IAC_GITOPS.md`
+
+**Operations:**
+- **P_HEALTH_CHECKS**: Health Check Implementation → `.claude/principles/P_HEALTH_CHECKS.md`
+- **P_GRACEFUL_SHUTDOWN**: Graceful Shutdown → `.claude/principles/P_GRACEFUL_SHUTDOWN.md`
+- **P_OBSERVABILITY_WITH_OTEL**: Observability with OpenTelemetry → `.claude/principles/P_OBSERVABILITY_WITH_OTEL.md`
+
+**Universal:**
+- **U_MINIMAL_TOUCH**: Minimal Touch Policy → `.claude/principles/U_MINIMAL_TOUCH.md`
+- **U_EVIDENCE_BASED**: Evidence-Based Verification → `.claude/principles/U_EVIDENCE_BASED.md`
+- **U_DEPENDENCY_MANAGEMENT**: Dependency Management → `.claude/principles/U_DEPENDENCY_MANAGEMENT.md`
+- **P_SECRET_ROTATION**: Secret Management with Rotation → `.claude/principles/P_SECRET_ROTATION.md`
+- **U_CHANGE_VERIFICATION**: Change Verification Protocol → `.claude/principles/U_CHANGE_VERIFICATION.md`

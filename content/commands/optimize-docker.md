@@ -3,6 +3,12 @@ id: cco-optimize-docker
 description: Optimize Dockerfiles for faster builds, smaller images, and better security
 category: devops
 priority: high
+principles:
+  - 'P_CONTAINER_SECURITY'
+  - 'U_EVIDENCE_BASED'
+  - 'C_PRODUCTION_GRADE'
+  - 'U_CHANGE_VERIFICATION'
+  - 'P_SUPPLY_CHAIN_SECURITY'
 ---
 
 # Optimize Docker - Dockerfile Best Practices & Optimization

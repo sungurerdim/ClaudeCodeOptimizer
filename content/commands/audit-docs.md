@@ -3,6 +3,11 @@ id: cco-audit-docs
 description: Documentation completeness, accuracy, drift
 category: documentation
 priority: normal
+principles:
+  - 'U_EVIDENCE_BASED'
+  - 'U_COMPLETE_REPORTING'
+  - 'C_NO_PROACTIVE_DOCS'
+  - 'U_ROOT_CAUSE_ANALYSIS'
 ---
 
 # Audit Documentation

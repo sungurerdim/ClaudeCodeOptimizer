@@ -3,6 +3,12 @@ id: cco-audit-tests
 description: Test quality, coverage gaps, flaky tests
 category: testing
 priority: normal
+principles:
+  - 'U_TEST_FIRST'
+  - 'U_EVIDENCE_BASED'
+  - 'P_TEST_COVERAGE'
+  - 'P_CI_GATES'
+  - 'U_COMPLETE_REPORTING'
 ---
 
 # Audit Test Suite

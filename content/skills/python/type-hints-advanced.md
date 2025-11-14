@@ -3,6 +3,7 @@ metadata:
   name: "Advanced Python Type Hints"
   activation_keywords: ["type", "typing", "generic", "protocol", "typevar"]
   category: "language-python"
+principles: ['P_TYPE_SAFETY', 'P_LINTING_SAST', 'U_FAIL_FAST', 'U_DRY']
 ---
 
 # Advanced Python Type Hints

@@ -3,6 +3,7 @@ metadata:
   name: "Go Testing Strategies"
   activation_keywords: ["test", "table driven", "subtest", "testing", "benchmark"]
   category: "language-go"
+principles: ['U_TEST_FIRST', 'U_EVIDENCE_BASED', 'P_TEST_COVERAGE', 'P_TEST_PYRAMID', 'P_CI_GATES', 'P_TEST_ISOLATION']
 ---
 
 # Go Testing Strategies

@@ -3,6 +3,7 @@ metadata:
   name: "Advanced TypeScript Types"
   activation_keywords: ["type", "conditional", "mapped", "utility", "template"]
   category: "language-typescript"
+principles: ['P_TYPE_SAFETY', 'P_LINTING_SAST', 'U_DRY', 'U_NO_OVERENGINEERING']
 ---
 
 # Advanced TypeScript Types

@@ -6,6 +6,11 @@
 
 ## The Rule
 
+**Related Principles:**
+- **U_EVIDENCE_BASED**: Evidence-based verification is mandatory
+- **U_CHANGE_VERIFICATION**: Verify all changes before claiming completion
+- **U_EXPLICIT_COMPLETION**: Define and verify completion criteria
+
 **BEFORE claiming any work is complete:**
 
 1. **IDENTIFY**: What command proves this claim?
@@ -49,6 +54,10 @@
 
 ## Language to Avoid
 
+**Related Principles:**
+- **U_COMPLETE_REPORTING**: Report actual results, not assumptions
+- **U_NO_OVERENGINEERING**: Simple, direct verification
+
 **Never use**:
 - "should work"
 - "looks correct"
@@ -68,6 +77,10 @@
 ## Application Examples
 
 ### Code Changes
+
+**Related Principles:**
+- **U_TEST_FIRST**: Write tests to verify behavior
+- **U_ATOMIC_COMMITS**: Commit only verified changes
 
 ```bash
 # After implementing a feature
@@ -101,6 +114,11 @@ python -m py_compile module.py
 
 ### Quality Checks
 
+**Related Principles:**
+- **P_TEST_COVERAGE**: Verify test coverage targets
+- **P_LINTING_SAST**: Enforce linting and static analysis
+- **P_CI_GATES**: Same checks as CI pipeline
+
 ```bash
 # After code cleanup
 ruff check .
@@ -119,6 +137,11 @@ mypy src/
 
 ## Why This Matters
 
+**Related Principles:**
+- **U_INTEGRATION_CHECK**: Verify integration with full system
+- **P_TEST_PYRAMID**: Balance unit, integration, and end-to-end tests
+- **U_MINIMAL_TOUCH**: Focus verification on what changed
+
 1. **Trust**: Verifiable claims build confidence
 2. **Debugging**: If something breaks, you have proof it worked before
 3. **Accountability**: Evidence shows work was actually done
@@ -129,6 +152,21 @@ mypy src/
 
 ## Principle References
 
+This guide incorporates the following CCO principles:
+
 **Universal Principles:**
-- **U001**: Evidence-Based Verification → `.claude/principles/U001.md`
-- **U013**: Change Verification Protocol → `.claude/principles/U013.md`
+- **U_EVIDENCE_BASED**: Evidence-Based Verification → `.claude/principles/U_EVIDENCE_BASED.md`
+- **U_CHANGE_VERIFICATION**: Change Verification Protocol → `.claude/principles/U_CHANGE_VERIFICATION.md`
+- **U_TEST_FIRST**: Test-First Development → `.claude/principles/U_TEST_FIRST.md`
+- **U_ATOMIC_COMMITS**: Atomic Commits → `.claude/principles/U_ATOMIC_COMMITS.md`
+- **U_INTEGRATION_CHECK**: Complete Integration Check → `.claude/principles/U_INTEGRATION_CHECK.md`
+- **U_COMPLETE_REPORTING**: Complete Action Reporting → `.claude/principles/U_COMPLETE_REPORTING.md`
+- **U_EXPLICIT_COMPLETION**: Explicit Completion Criteria → `.claude/principles/U_EXPLICIT_COMPLETION.md`
+- **U_NO_OVERENGINEERING**: No Overengineering → `.claude/principles/U_NO_OVERENGINEERING.md`
+- **U_MINIMAL_TOUCH**: Minimal Touch Policy → `.claude/principles/U_MINIMAL_TOUCH.md`
+
+**Testing & Quality Principles:**
+- **P_TEST_COVERAGE**: Test Coverage Targets → `.claude/principles/P_TEST_COVERAGE.md`
+- **P_TEST_PYRAMID**: Test Pyramid → `.claude/principles/P_TEST_PYRAMID.md`
+- **P_CI_GATES**: CI Gates → `.claude/principles/P_CI_GATES.md`
+- **P_LINTING_SAST**: Linting & SAST Enforcement → `.claude/principles/P_LINTING_SAST.md`

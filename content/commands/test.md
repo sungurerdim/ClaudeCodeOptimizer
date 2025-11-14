@@ -2,7 +2,7 @@
 description: Run tests with automatic framework detection
 category: testing
 cost: 2
-principles: ['U001', 'U002', 'U011', 'P048', 'P049', 'P050', 'P051', 'P053', 'P054']
+principles: ['U_EVIDENCE_BASED', 'U_FAIL_FAST', 'U_TEST_FIRST', 'U_NO_OVERENGINEERING', 'P_TEST_COVERAGE', 'P_INTEGRATION_TESTS', 'P_TEST_PYRAMID', 'P_TEST_ISOLATION', 'P_CI_GATES']
 ---
 
 # cco-test - Run Tests

@@ -3,6 +3,12 @@ id: cco-analyze
 description: Deep project analysis - structure, tech stack, complexity, recommendations
 category: bootstrap
 priority: medium
+principles:
+  - 'U_EVIDENCE_BASED'
+  - 'U_ROOT_CAUSE_ANALYSIS'
+  - 'P_LINTING_SAST'
+  - 'P_TYPE_SAFETY'
+  - 'U_COMPLETE_REPORTING'
 ---
 
 # CCO Project Analysis

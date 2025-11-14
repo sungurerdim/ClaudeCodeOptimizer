@@ -3,6 +3,7 @@ metadata:
   name: "Verification Protocol"
   activation_keywords: ["verify", "verification", "violations", "audit", "fix"]
   category: "enforcement"
+principles: ['U_CHANGE_VERIFICATION', 'U_EVIDENCE_BASED', 'U_TEST_FIRST', 'U_ATOMIC_COMMITS', 'U_EXPLICIT_COMPLETION', 'U_COMPLETE_REPORTING']
 ---
 
 # Verification Protocol
@@ -18,24 +19,24 @@ Enforces fix → verify → commit loop for principle violations. Prevents "fix 
 
 1. **ISOLATE**: Show violations for THIS category only
    ```
-   Example: "U002 (Fail-Fast): 5 violations
+   Example: "U_FAIL_FAST (Fail-Fast): 5 violations
    - services/api/main.py:45
    - shared/utils.py:89"
    ```
 
 2. **ASK**: Get user confirmation to fix this category
    ```
-   "Fix U002 violations now? (y/n/skip)"
+   "Fix U_FAIL_FAST violations now? (y/n/skip)"
    ```
 
 3. **FIX**: Apply fixes (manual or automated)
    - User edits files OR
-   - Run `/cco-fix-code --principle=U002`
+   - Run `/cco-fix-code --principle=U_FAIL_FAST`
 
 4. **VERIFY**: Run mini-audit for THIS category only
    ```bash
    # For principles
-   Grep with U002 patterns only
+   Grep with U_FAIL_FAST patterns only
 
    # For security
    Scan for specific vulnerability type only
@@ -46,14 +47,14 @@ Enforces fix → verify → commit loop for principle violations. Prevents "fix 
 
 5. **CONFIRM**: Check verification results
    ```
-   ✓ "All U002 violations fixed!"
+   ✓ "All U_FAIL_FAST violations fixed!"
    ⚠ "2 violations remain - review needed"
    ```
 
 6. **COMMIT**: Atomic commit for this category
    ```bash
    git add <changed files>
-   git commit -m "fix(U002): replace bare except with specific exceptions"
+   git commit -m "fix(U_FAIL_FAST): replace bare except with specific exceptions"
    ```
 
 7. **REPEAT**: Move to next violation category
@@ -82,35 +83,35 @@ Skill activates:
 User: y
 
 Skill:
-"Principle U002 (Fail-Fast): 5 violations
+"Principle U_FAIL_FAST (Fail-Fast): 5 violations
  - services/api/main.py:45   (bare except)
  - services/api/main.py:89   (silent exception)
  - shared/utils.py:67         (bare except)
  - worker/tasks.py:123        (bare except)
  - worker/tasks.py:234        (silent exception)
 
-Fix U002 now? (y/n/skip)"
+Fix U_FAIL_FAST now? (y/n/skip)"
 
 User: y
 <User manually fixes 5 violations>
 
 Skill:
-"Verifying U002 fixes..."
+"Verifying U_FAIL_FAST fixes..."
 <Runs grep for bare except patterns>
-"✓ All U002 violations fixed!"
+"✓ All U_FAIL_FAST violations fixed!"
 "Committing changes..."
-<git commit -m "fix(U002): replace bare except clauses">
+<git commit -m "fix(U_FAIL_FAST): replace bare except clauses">
 
 Skill:
-"Principle U002 (DRY): 8 violations
+"Principle U_FAIL_FAST (DRY): 8 violations
  - Duplicate encrypt_aes_gcm() in 3 files
 
-Fix U002 now? (y/n/skip)"
+Fix U_FAIL_FAST now? (y/n/skip)"
 
 User: n
 
 Skill:
-"Skipping U002. Moving to next..."
+"Skipping U_FAIL_FAST. Moving to next..."
 ```
 
 ### Example 2: Security Violations
@@ -160,16 +161,16 @@ User: "Which fix broke this? No idea..."
 
 ```
 User: Uses verification protocol
-<Fixes U002 (5 violations in 3 files)>
+<Fixes U_FAIL_FAST (5 violations in 3 files)>
 <Verifies - all fixed>
 <Commits>
-<Fixes P023 (3 violations in 2 files)>
+<Fixes P_PRIVACY_FIRST (3 violations in 2 files)>
 <Verifies - all fixed>
 <Commits>
-<Tests fail on P023 commit>
-User: "P023 broke tests, revert ONLY that commit"
+<Tests fail on P_PRIVACY_FIRST commit>
+User: "P_PRIVACY_FIRST broke tests, revert ONLY that commit"
 <git revert HEAD>
-<U002 fixes preserved ✓>
+<U_FAIL_FAST fixes preserved ✓>
 ```
 
 ### Integration with Commands
@@ -221,18 +222,18 @@ The skill tracks progress in `.cco/state/{PROJECT}/verification-session.json`:
   "total_violations": 23,
   "categories": [
     {
-      "id": "U002",
+      "id": "U_FAIL_FAST",
       "violations": 5,
       "status": "fixed",
       "commit": "a3b4c5d"
     },
     {
-      "id": "U002",
+      "id": "U_FAIL_FAST",
       "violations": 8,
       "status": "skipped"
     },
     {
-      "id": "P023",
+      "id": "P_PRIVACY_FIRST",
       "violations": 3,
       "status": "fixed",
       "commit": "e6f7g8h"

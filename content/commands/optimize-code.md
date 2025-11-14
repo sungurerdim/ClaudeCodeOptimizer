@@ -3,6 +3,12 @@ id: cco-cleanup-dead-code
 description: Remove unused code, imports, and deprecated markers
 category: quality
 priority: medium
+principles:
+  - 'U_MINIMAL_TOUCH'
+  - 'U_CHANGE_VERIFICATION'
+  - 'U_TEST_FIRST'
+  - 'U_EVIDENCE_BASED'
+  - 'C_PREFER_EDITING'
 ---
 
 # Cleanup Dead Code

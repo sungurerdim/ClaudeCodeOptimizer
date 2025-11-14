@@ -3,6 +3,7 @@ metadata:
   name: "Test-First Verification"
   activation_keywords: ["characterization", "behavior capture", "before refactoring", "before fixing"]
   category: "enforcement"
+principles: ['U_TEST_FIRST', 'U_EVIDENCE_BASED', 'U_CHANGE_VERIFICATION', 'P_TEST_COVERAGE', 'U_INTEGRATION_CHECK']
 ---
 
 # Test-First Verification

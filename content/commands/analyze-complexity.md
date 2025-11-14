@@ -3,6 +3,12 @@ id: cco-analyze-complexity
 description: Cyclomatic complexity, code smells, refactoring candidates
 category: analysis
 priority: normal
+principles:
+  - 'U_EVIDENCE_BASED'
+  - 'U_ROOT_CAUSE_ANALYSIS'
+  - 'P_LINTING_SAST'
+  - 'U_NO_OVERENGINEERING'
+  - 'U_COMPLETE_REPORTING'
 ---
 
 # Analyze Code Complexity
