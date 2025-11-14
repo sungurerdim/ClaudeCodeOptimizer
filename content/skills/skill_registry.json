@@ -10,7 +10,7 @@
       "estimated_time": "3-5 minutes",
       "capabilities": [
         "Code quality analysis (linting, formatting, type checking)",
-        "Security vulnerability scanning (P023-P054)",
+        "Security vulnerability scanning (privacy, encryption, auth, etc.)",
         "Test coverage analysis",
         "Documentation completeness check",
         "Principle compliance validation"

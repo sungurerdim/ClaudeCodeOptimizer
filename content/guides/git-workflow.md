@@ -20,13 +20,19 @@ This guide covers Git workflow best practices. Workflow strategy varies by team 
 - ✅ No feature branches (solo dev = no need)
 - ✅ Rollback via commit history if needed
 
-**Rationale**: U011 (No Overengineering) - Branch complexity unnecessary for solo projects
+**Related Principles:**
+- **U_NO_OVERENGINEERING**: Branch complexity unnecessary for solo projects
+- **U_MINIMAL_TOUCH**: Simplest workflow that works
 
 ### GitHub Flow (Small Teams)
 
 - `main` - Production-ready code
 - Feature branches: `feature/<name>`
 - Hotfix branches: `hotfix/<issue>`
+
+**Related Principles:**
+- **P_BRANCHING_STRATEGY**: Feature branch workflow for collaboration
+- **P_PR_GUIDELINES**: Pull request review process
 
 **Process**:
 1. Create feature branch from main
@@ -50,7 +56,10 @@ This guide covers Git workflow best practices. Workflow strategy varies by team 
 
 ### Format (Compact)
 
-**U010: Concise Commit Messages** - Essential info only, no verbosity
+**Related Principles:**
+- **U_CONCISE_COMMITS**: Essential info only, no verbosity
+- **U_ATOMIC_COMMITS**: One logical unit per commit
+- **P_COMMIT_MESSAGE_CONVENTIONS**: Structured commit format
 
 ```
 type(scope): concise description (max 72 chars)
@@ -92,7 +101,7 @@ api, auth, db, ui, core, cli, tests, docs, deps, ci
 
 **✅ Good - Compact & Informative**:
 ```bash
-refactor(ci): consolidate tools to prevent overlap (U011)
+refactor(ci): consolidate tools to prevent overlap (U_NO_OVERENGINEERING)
 
 - Replace Black/Bandit/mypy with Ruff (format+lint+security)
 - Remove tool configs from pyproject.toml
@@ -145,6 +154,10 @@ feat: updates and fixes
 
 ### Commit Rules
 
+**Related Principles:**
+- **U_ATOMIC_COMMITS**: Group related changes together
+- **U_CHANGE_VERIFICATION**: Verify tests pass before committing
+
 - ✅ Group related changes in same category
 - ✅ One logical unit per commit
 - ✅ Include related tests + docs
@@ -183,6 +196,10 @@ git push origin main
 ---
 
 ## Versioning
+
+**Related Principles:**
+- **P_SEMANTIC_VERSIONING**: Follow semantic versioning conventions
+- **P_AUTO_VERSIONING**: Automate version bumping
 
 ### Format
 
@@ -275,6 +292,12 @@ git push origin main
 
 ## Commit Quality Checklist
 
+**Related Principles:**
+- **U_CHANGE_VERIFICATION**: Verify all changes before committing
+- **U_EVIDENCE_BASED**: Run commands to prove quality
+- **P_CI_GATES**: Same checks as CI pipeline
+- **C_NO_GIT_SUGGESTIONS**: Avoid unsolicited git advice
+
 **Before committing**:
 - [ ] All files in commit are related (same category/topic)
 - [ ] Tests pass (`pytest tests/ -v`)
@@ -359,6 +382,9 @@ git reset --hard HEAD~1  # Discard changes
 
 ### Undo Pushed Commit
 
+**Related Principles:**
+- **P_REBASE_VS_MERGE_STRATEGY**: Use revert for public history
+
 ```bash
 # Find commit to revert
 git log --oneline
@@ -400,9 +426,24 @@ git checkout <commit-hash>
 
 ## Principle References
 
+This guide incorporates the following CCO principles:
+
 **Universal Principles:**
-- **U001**: Evidence-Based Verification → `.claude/principles/U001.md`
-- **U009**: Atomic Commits → `.claude/principles/U009.md`
-- **U010**: Concise Commit Messages → `.claude/principles/U010.md`
-- **U011**: No Overengineering → `.claude/principles/U011.md`
-- **U013**: Change Verification Protocol → `.claude/principles/U013.md`
+- **U_EVIDENCE_BASED**: Evidence-Based Verification → `.claude/principles/U_EVIDENCE_BASED.md`
+- **U_ATOMIC_COMMITS**: Atomic Commits → `.claude/principles/U_ATOMIC_COMMITS.md`
+- **U_CONCISE_COMMITS**: Concise Commit Messages → `.claude/principles/U_CONCISE_COMMITS.md`
+- **U_NO_OVERENGINEERING**: No Overengineering → `.claude/principles/U_NO_OVERENGINEERING.md`
+- **U_CHANGE_VERIFICATION**: Change Verification Protocol → `.claude/principles/U_CHANGE_VERIFICATION.md`
+- **U_MINIMAL_TOUCH**: Minimal Touch Policy → `.claude/principles/U_MINIMAL_TOUCH.md`
+
+**Project-Specific Principles:**
+- **P_COMMIT_MESSAGE_CONVENTIONS**: Commit Message Conventions → `.claude/principles/P_COMMIT_MESSAGE_CONVENTIONS.md`
+- **P_BRANCHING_STRATEGY**: Branching Strategy → `.claude/principles/P_BRANCHING_STRATEGY.md`
+- **P_PR_GUIDELINES**: Pull Request Guidelines → `.claude/principles/P_PR_GUIDELINES.md`
+- **P_REBASE_VS_MERGE_STRATEGY**: Rebase vs Merge Strategy → `.claude/principles/P_REBASE_VS_MERGE_STRATEGY.md`
+- **P_SEMANTIC_VERSIONING**: Semantic Versioning → `.claude/principles/P_SEMANTIC_VERSIONING.md`
+- **P_AUTO_VERSIONING**: Auto Versioning → `.claude/principles/P_AUTO_VERSIONING.md`
+- **P_CI_GATES**: CI Gates → `.claude/principles/P_CI_GATES.md`
+
+**Claude Guidelines:**
+- **C_NO_GIT_SUGGESTIONS**: No Git Commit Suggestions → `.claude/principles/C_NO_GIT_SUGGESTIONS.md`

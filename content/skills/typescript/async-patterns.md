@@ -3,6 +3,7 @@ metadata:
   name: "TypeScript Async Patterns"
   activation_keywords: ["async", "promise", "await", "concurrent", "error"]
   category: "language-typescript"
+principles: ['P_ASYNC_IO', 'U_FAIL_FAST', 'P_GRACEFUL_SHUTDOWN', 'U_EVIDENCE_BASED', 'P_CIRCUIT_BREAKER_PATTERN']
 ---
 
 # TypeScript Async Patterns

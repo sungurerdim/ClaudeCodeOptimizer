@@ -3,6 +3,7 @@ metadata:
   name: "Go Error Handling"
   activation_keywords: ["error", "wrap", "sentinel", "errors", "fmt"]
   category: "language-go"
+principles: ['U_FAIL_FAST', 'U_ROOT_CAUSE_ANALYSIS', 'P_AUDIT_LOGGING', 'U_EVIDENCE_BASED']
 ---
 
 # Go Error Handling

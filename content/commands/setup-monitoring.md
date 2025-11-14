@@ -3,6 +3,12 @@ id: cco-setup-monitoring
 description: Observability stack setup (Prometheus, Grafana)
 category: devops
 priority: normal
+principles:
+  - 'P_AUDIT_LOGGING'
+  - 'C_PRODUCTION_GRADE'
+  - 'U_EVIDENCE_BASED'
+  - 'C_FOLLOW_PATTERNS'
+  - 'P_CONTAINER_SECURITY'
 ---
 
 # Setup Monitoring

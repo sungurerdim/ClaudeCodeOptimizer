@@ -3,6 +3,12 @@ id: cco-analyze-structure
 description: Analyze codebase structure and architectural patterns
 category: analysis
 priority: normal
+principles:
+  - 'U_EVIDENCE_BASED'
+  - 'U_ROOT_CAUSE_ANALYSIS'
+  - 'C_FOLLOW_PATTERNS'
+  - 'U_NO_OVERENGINEERING'
+  - 'U_COMPLETE_REPORTING'
 ---
 
 # Analyze Codebase Structure

@@ -1,7 +1,7 @@
 ---
 description: Initialize CCO for this project with auto-detection and AI-powered configuration
 cost: 2
-principles: ['U001', 'U002', 'U011']
+principles: ['U_EVIDENCE_BASED', 'U_FAIL_FAST', 'U_NO_OVERENGINEERING']
 ---
 
 # CCO Project Initialization
@@ -498,15 +498,15 @@ For each category, dynamically generate a multiselect question with ALL principl
     "header": "[CATEGORY_SHORT]",
     "multiSelect": true,
     "options": [
-      {"label": "U002: Fail-Fast Error Handling", "description": "Catch errors early (weight: 10, critical)"},
-      {"label": "P001: DRY Enforcement", "description": "Don't Repeat Yourself (weight: 10, critical)"},
+      {"label": "U_FAIL_FAST: Fail-Fast Error Handling", "description": "Catch errors early (weight: 10, critical)"},
+      {"label": "U_DRY: DRY Enforcement", "description": "Don't Repeat Yourself (weight: 10, critical)"},
       ... (ALL principles in category)
     ]
   }]
 }
 ```
 
-**Label Format**: `"[ID]: [Title]"` (e.g., `"P023: Privacy-First by Default"`)
+**Label Format**: `"[ID]: [Title]"` (e.g., `"P_PRIVACY_FIRST: Privacy-First by Default"`)
 
 **Description Format**: `"[one_line_why] (weight: X, [severity])"` (e.g., `"Minimize data collection (weight: 9, critical)"`)
 
@@ -529,18 +529,18 @@ For each category, dynamically generate a multiselect question with ALL principl
     "header": "Security",
     "multiSelect": true,
     "options": [
-      {"label": "P022: Schema-First Validation", "description": "Validate all inputs (weight: 10, critical)"},
-      {"label": "P023: Privacy-First by Default", "description": "Minimize data collection (weight: 9, critical)"},
-      {"label": "P024: TTL-Based Cleanup", "description": "Auto-expire old data (weight: 7, high)"},
-      {"label": "P026: Zero Disk Touch", "description": "Never write secrets to disk (weight: 8, high)"},
-      {"label": "P025: Encryption Everywhere", "description": "Encrypt sensitive data (weight: 9, critical)"},
-      {"label": "P030: Rate Limiting & Throttling", "description": "Protect against abuse (weight: 7, high)"},
-      {"label": "P029: Secret Management with Rotation", "description": "No secrets in code (weight: 9, critical)"},
-      {"label": "P028: SQL Injection Prevention", "description": "Parameterized queries (weight: 9, critical)"},
-      {"label": "P034: Supply Chain Security", "description": "Verify dependencies (weight: 8, high)"},
-      {"label": "P032: Input Sanitization (XSS Prevention)", "description": "Prevent injection attacks (weight: 9, critical)"},
-      {"label": "P027: Authentication & Authorization", "description": "Proper access control (weight: 9, critical)"},
-      {"label": "P033: Audit Logging", "description": "Log security events (weight: 7, high)"}
+      {"label": "P_SCHEMA_VALIDATION: Schema-First Validation", "description": "Validate all inputs (weight: 10, critical)"},
+      {"label": "P_PRIVACY_FIRST: Privacy-First by Default", "description": "Minimize data collection (weight: 9, critical)"},
+      {"label": "P_TTL_BASED_CLEANUP: TTL-Based Cleanup", "description": "Auto-expire old data (weight: 7, high)"},
+      {"label": "P_ZERO_DISK_TOUCH: Zero Disk Touch", "description": "Never write secrets to disk (weight: 8, high)"},
+      {"label": "P_ENCRYPTION_AT_REST: Encryption Everywhere", "description": "Encrypt sensitive data (weight: 9, critical)"},
+      {"label": "P_RATE_LIMITING: Rate Limiting & Throttling", "description": "Protect against abuse (weight: 7, high)"},
+      {"label": "P_SECRET_ROTATION: Secret Management with Rotation", "description": "No secrets in code (weight: 9, critical)"},
+      {"label": "P_SQL_INJECTION: SQL Injection Prevention", "description": "Parameterized queries (weight: 9, critical)"},
+      {"label": "P_SUPPLY_CHAIN_SECURITY: Supply Chain Security", "description": "Verify dependencies (weight: 8, high)"},
+      {"label": "P_XSS_PREVENTION: Input Sanitization (XSS Prevention)", "description": "Prevent injection attacks (weight: 9, critical)"},
+      {"label": "P_AUTH_AUTHZ: Authentication & Authorization", "description": "Proper access control (weight: 9, critical)"},
+      {"label": "P_AUDIT_LOGGING: Audit Logging", "description": "Log security events (weight: 7, high)"}
     ]
   }]
 }
@@ -555,17 +555,17 @@ For each category, dynamically generate a multiselect question with ALL principl
     "header": "Code Quality",
     "multiSelect": true,
     "options": [
-      {"label": "U002: Fail-Fast Error Handling", "description": "Catch errors early (weight: 10, critical)"},
-      {"label": "P001: DRY Enforcement", "description": "Don't Repeat Yourself (weight: 10, critical)"},
-      {"label": "P002: Complete Integration Check", "description": "Test all integrations (weight: 8, high)"},
-      {"label": "P009: Type Safety & Static Analysis", "description": "Use type hints (weight: 9, critical)"},
-      {"label": "P005: Immutability by Default", "description": "Prefer immutable data (weight: 7, high)"},
-      {"label": "P014: Separation of Concerns", "description": "Single responsibility (weight: 8, high)"},
-      {"label": "P010: Centralized Version Management", "description": "SSOT for versions (weight: 7, high)"},
-      {"label": "U011: No Overengineering", "description": "Keep it simple (weight: 9, critical)"},
-      {"label": "U005: Minimal Touch Policy", "description": "Only change what's needed (weight: 7, high)"},
-      {"label": "P006: Code Review Checklist Compliance", "description": "Enforce reviews (weight: 8, high)"},
-      {"label": "P007: Linting & SAST Enforcement", "description": "Enforce linting (weight: 7, high)"}
+      {"label": "U_FAIL_FAST: Fail-Fast Error Handling", "description": "Catch errors early (weight: 10, critical)"},
+      {"label": "U_DRY: DRY Enforcement", "description": "Don't Repeat Yourself (weight: 10, critical)"},
+      {"label": "U_INTEGRATION_CHECK: Complete Integration Check", "description": "Test all integrations (weight: 8, high)"},
+      {"label": "P_TYPE_SAFETY: Type Safety & Static Analysis", "description": "Use type hints (weight: 9, critical)"},
+      {"label": "P_IMMUTABILITY_BY_DEFAULT: Immutability by Default", "description": "Prefer immutable data (weight: 7, high)"},
+      {"label": "P_SEPARATION_OF_CONCERNS: Separation of Concerns", "description": "Single responsibility (weight: 8, high)"},
+      {"label": "P_VERSION_MANAGEMENT: Centralized Version Management", "description": "SSOT for versions (weight: 7, high)"},
+      {"label": "U_NO_OVERENGINEERING: No Overengineering", "description": "Keep it simple (weight: 9, critical)"},
+      {"label": "U_MINIMAL_TOUCH: Minimal Touch Policy", "description": "Only change what's needed (weight: 7, high)"},
+      {"label": "P_CODE_REVIEW_CHECKLIST_COMPLIANCE: Code Review Checklist Compliance", "description": "Enforce reviews (weight: 8, high)"},
+      {"label": "P_LINTING_SAST: Linting & SAST Enforcement", "description": "Enforce linting (weight: 7, high)"}
     ]
   }]
 }
@@ -585,7 +585,7 @@ python -c "
 # Example structure of collected answers:
 # category_answers = {
 #     'security_privacy': ['P019: Privacy-First by Default', 'P020: TTL-Based Cleanup', ...],
-#     'code_quality': ['P001: Fail-Fast Error Handling', 'P002: DRY Enforcement', ...],
+#     'code_quality': ['U_DRY: Fail-Fast Error Handling', 'U_INTEGRATION_CHECK: DRY Enforcement', ...],
 #     ...
 # }
 
@@ -753,7 +753,7 @@ print(f'[OK] CLAUDE.md generated with principles')
 
 **From Category Multiselect Questions (Step 3B.3a-3b):**
 - `'FINAL_SELECTED_IDS'` → Replace with list of principle IDs collected from all 8 category questions
-  Example: `['P001', 'P002', 'P019', 'P020', ...]`
+  Example: `['U_DRY', 'U_INTEGRATION_CHECK', 'P019', 'P020', ...]`
 
 See Step 3B.3 for preference field mapping reference.
 

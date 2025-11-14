@@ -68,32 +68,32 @@ You are a Code Audit Specialist. Your task is to perform a comprehensive analysi
 
 **Requirements:**
 
+**Universal Principles:**
+- **U_EVIDENCE_BASED**: Evidence-Based Verification → `.claude/principles/U_EVIDENCE_BASED.md`
+- **U_CHANGE_VERIFICATION**: Change Verification Protocol → `.claude/principles/U_CHANGE_VERIFICATION.md`
+- **U_DRY**: DRY Enforcement → `.claude/principles/U_DRY.md`
+- **U_INTEGRATION_CHECK**: Complete Integration Check → `.claude/principles/U_INTEGRATION_CHECK.md`
+- **P_SQL_INJECTION**: SQL Injection Prevention → `.claude/principles/P_SQL_INJECTION.md`
+- **P_SECRET_ROTATION**: Secret Management with Rotation → `.claude/principles/P_SECRET_ROTATION.md`
+- **U_DEPENDENCY_MANAGEMENT**: Dependency Management → `.claude/principles/U_DEPENDENCY_MANAGEMENT.md`
+
 **Code Quality Principles:**
-- **P001**: DRY Enforcement → `.claude/principles/P001.md`
-- **P002**: Complete Integration Check → `.claude/principles/P002.md`
-- **P007**: Linting & SAST Enforcement → `.claude/principles/P007.md`
-- **P009**: Type Safety & Static Analysis → `.claude/principles/P009.md`
-- **P010**: Centralized Version Management → `.claude/principles/P010.md`
+- **P_LINTING_SAST**: Linting & SAST Enforcement → `.claude/principles/P_LINTING_SAST.md`
+- **P_TYPE_SAFETY**: Type Safety & Static Analysis → `.claude/principles/P_TYPE_SAFETY.md`
+- **P_VERSION_MANAGEMENT**: Centralized Version Management → `.claude/principles/P_VERSION_MANAGEMENT.md`
 
 **Security & Privacy Principles:**
-- **P022**: Schema-First Validation → `.claude/principles/P022.md`
-- **P027**: Authentication & Authorization → `.claude/principles/P027.md`
-- **P028**: SQL Injection Prevention → `.claude/principles/P028.md`
-- **P029**: Secret Management with Rotation → `.claude/principles/P029.md`
-- **P030**: Rate Limiting & Throttling → `.claude/principles/P030.md`
-- **P032**: Input Sanitization (XSS Prevention) → `.claude/principles/P032.md`
-- **P033**: Audit Logging → `.claude/principles/P033.md`
-- **P034**: Supply Chain Security → `.claude/principles/P034.md`
-- **P040**: Dependency Management → `.claude/principles/P040.md`
+- **P_SCHEMA_VALIDATION**: Schema-First Validation → `.claude/principles/P_SCHEMA_VALIDATION.md`
+- **P_AUTH_AUTHZ**: Authentication & Authorization → `.claude/principles/P_AUTH_AUTHZ.md`
+- **P_RATE_LIMITING**: Rate Limiting & Throttling → `.claude/principles/P_RATE_LIMITING.md`
+- **P_XSS_PREVENTION**: Input Sanitization (XSS Prevention) → `.claude/principles/P_XSS_PREVENTION.md`
+- **P_AUDIT_LOGGING**: Audit Logging → `.claude/principles/P_AUDIT_LOGGING.md`
+- **P_SUPPLY_CHAIN_SECURITY**: Supply Chain Security → `.claude/principles/P_SUPPLY_CHAIN_SECURITY.md`
 
 **Testing Principles:**
-- **P041**: Test Coverage Targets → `.claude/principles/P041.md`
-- **P043**: Integration Tests for Critical Paths → `.claude/principles/P043.md`
-- **P045**: CI Gates → `.claude/principles/P045.md`
-
-**Universal Principles:**
-- **U001**: Evidence-Based Verification → `.claude/principles/U001.md`
-- **U013**: Change Verification Protocol → `.claude/principles/U013.md`
+- **P_TEST_COVERAGE**: Test Coverage Targets → `.claude/principles/P_TEST_COVERAGE.md`
+- **P_INTEGRATION_TESTS**: Integration Tests for Critical Paths → `.claude/principles/P_INTEGRATION_TESTS.md`
+- **P_CI_GATES**: CI Gates → `.claude/principles/P_CI_GATES.md`
 
 **Additional Requirements:**
 - Provide file:line references for all findings

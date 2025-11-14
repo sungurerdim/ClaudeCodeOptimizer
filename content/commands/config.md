@@ -4,6 +4,11 @@ category: core
 subcommands:
   - setup: Interactive configuration wizard
   - show: Display current configuration
+principles:
+  - 'P_SCHEMA_VALIDATION'
+  - 'U_EVIDENCE_BASED'
+  - 'U_CHANGE_VERIFICATION'
+  - 'C_MINIMAL_TOUCH'
 ---
 
 # CCO Configuration Management

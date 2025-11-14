@@ -2,7 +2,7 @@
 description: Generate code, tests, docs, CI/CD, and more
 category: generation
 cost: 5
-principles: ['U001', 'U002', 'U011', 'P001', 'P002', 'P003', 'P004', 'P005', 'P006', 'P007', 'P008', 'P009', 'P010', 'P011']
+principles: ['U_EVIDENCE_BASED', 'U_FAIL_FAST', 'U_NO_OVERENGINEERING', 'U_DRY', 'U_INTEGRATION_CHECK', 'P_NO_BACKWARD_COMPAT_DEBT', 'P_PRECISION_IN_CALCS', 'P_IMMUTABILITY_BY_DEFAULT', 'P_CODE_REVIEW_CHECKLIST_COMPLIANCE', 'P_LINTING_SAST', 'P_PERFORMANCE_PROFILE_BEFORE_OPTIMIZE', 'P_TYPE_SAFETY', 'P_VERSION_MANAGEMENT', 'C_GREP_FIRST_SEARCH_STRATEGY']
 ---
 
 # CCO Generate Commands
@@ -349,7 +349,7 @@ Agent: Plan
 ### Output
 
 - `custom-principles/` directory in project root
-- Individual .md files with frontmatter (C001.md, C002.md, etc.)
+- Individual .md files with frontmatter (C_CUSTOM_001.md, C_CUSTOM_002.md, etc.)
 - Formatted for CCO principle system (compatible with .md loader)
 - Can be symlinked to .claude/principles/ for integration
 

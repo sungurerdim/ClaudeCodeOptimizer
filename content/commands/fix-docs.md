@@ -3,6 +3,11 @@ id: cco-fix-docs
 description: Fix documentation inconsistencies
 category: documentation
 priority: normal
+principles:
+  - 'U_MINIMAL_TOUCH'
+  - 'U_CHANGE_VERIFICATION'
+  - 'U_EVIDENCE_BASED'
+  - 'C_PREFER_EDITING'
 ---
 
 # Fix Documentation

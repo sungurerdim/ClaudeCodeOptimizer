@@ -3,6 +3,12 @@ id: cco-generate-integration-tests
 description: Generate integration tests for service interactions
 category: testing
 priority: normal
+principles:
+  - 'U_TEST_FIRST'
+  - 'P_INTEGRATION_TESTS'
+  - 'C_PRODUCTION_GRADE'
+  - 'P_TEST_COVERAGE'
+  - 'C_FOLLOW_PATTERNS'
 ---
 
 # Generate Integration Tests

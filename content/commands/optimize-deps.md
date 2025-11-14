@@ -3,6 +3,12 @@ id: cco-optimize-deps
 description: Optimize dependencies - remove unused, update outdated, fix vulnerabilities
 category: devops
 priority: high
+principles:
+  - 'U_DEPENDENCY_MANAGEMENT'
+  - 'P_SUPPLY_CHAIN_SECURITY'
+  - 'U_EVIDENCE_BASED'
+  - 'U_CHANGE_VERIFICATION'
+  - 'U_MINIMAL_TOUCH'
 ---
 
 # Optimize Dependencies - Dependency Management & Security

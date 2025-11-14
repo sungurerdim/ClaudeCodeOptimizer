@@ -3,6 +3,12 @@ id: cco-generate-docs
 description: Auto-generate API docs, README sections
 category: documentation
 priority: normal
+principles:
+  - 'C_PRODUCTION_GRADE'
+  - 'C_FOLLOW_PATTERNS'
+  - 'U_NO_OVERENGINEERING'
+  - 'C_NO_PROACTIVE_DOCS'
+  - 'U_COMPLETE_REPORTING'
 ---
 
 # Generate Documentation

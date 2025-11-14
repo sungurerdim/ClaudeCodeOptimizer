@@ -3,6 +3,11 @@ id: cco-commit
 description: Smart git commit with AI-powered semantic analysis and grouping
 category: tools
 priority: high
+principles:
+  - 'U_ATOMIC_COMMITS'
+  - 'U_CONCISE_COMMITS'
+  - 'C_NO_GIT_SUGGESTIONS'
+  - 'U_CHANGE_VERIFICATION'
 ---
 
 # CCO Smart Git Commit

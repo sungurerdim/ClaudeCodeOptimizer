@@ -3,6 +3,7 @@ metadata:
   name: "Root Cause Analysis"
   activation_keywords: ["root cause", "why violations", "pattern analysis", "systemic fix"]
   category: "analysis"
+principles: ['U_ROOT_CAUSE_ANALYSIS', 'U_EVIDENCE_BASED', 'U_FAIL_FAST', 'U_DRY', 'U_COMPLETE_REPORTING', 'U_CHANGE_VERIFICATION']
 ---
 
 # Root Cause Analysis
@@ -94,14 +95,14 @@ Categories:
 Analysis:
 - 12/15 in files >1 year old
 - 0/15 in files <6 months old
-- Pattern: All added before 2024-01-01 (U002 adoption date)
+- Pattern: All added before 2024-01-01 (U_FAIL_FAST adoption date)
 
 Root Cause: LEGACY CODE (pre-principle)
 ```
 
 **Systemic Fix:**
 ```
-1. Create migration script: /cco-migrate-legacy --principle=U002
+1. Create migration script: /cco-migrate-legacy --principle=U_FAIL_FAST
 2. Auto-fix all legacy violations in one pass
 3. Add pre-commit hook to prevent new violations
 4. Schedule: Migrate legacy code in next sprint
@@ -125,7 +126,7 @@ Root Cause: TRAINING GAP (new team member)
 **Systemic Fix:**
 ```
 1. Schedule 1-on-1 with Alice
-2. Share DRY principle (U002) documentation
+2. Share DRY principle (U_FAIL_FAST) documentation
 3. Code review: Show how to extract to shared module
 4. Provide IDE snippet for common patterns
 5. Pair programming: Refactor together
@@ -233,7 +234,7 @@ ROOT CAUSES:
 
 1. PRIMARY: Legacy Code (80% of violations)
    - Files last modified >1 year ago
-   - Before team adopted U002 principle
+   - Before team adopted U_FAIL_FAST principle
    - Evidence: git log shows all files from 2023
 
 2. SECONDARY: Training Gap (20% of violations)
@@ -244,14 +245,14 @@ ROOT CAUSES:
 SYSTEMIC FIXES:
 
 Priority 1 (Legacy Code):
-[ ] Create migration script: /cco-migrate-legacy --principle=U002
+[ ] Create migration script: /cco-migrate-legacy --principle=U_FAIL_FAST
 [ ] Run script in next sprint
 [ ] Auto-fix 12 legacy violations
 [ ] Estimated time: 2 hours
 
 Priority 2 (Training Gap):
 [ ] Schedule 1-on-1 with Alice
-[ ] Share U002 documentation
+[ ] Share U_FAIL_FAST documentation
 [ ] Code review session
 [ ] Estimated time: 1 hour
 
@@ -259,7 +260,7 @@ PREVENTIVE MEASURES:
 
 1. Add pre-commit hook: Block new bare except clauses
 2. Add IDE snippet: Proper exception handling template
-3. Update onboarding docs: Include U002 principle
+3. Update onboarding docs: Include U_FAIL_FAST principle
 4. Schedule quarterly principle refresher training
 
 TIMELINE:
@@ -284,7 +285,7 @@ Skill activates:
 
 === Root Cause Analysis ===
 
-Violation Type: Hardcoded Secrets (P023)
+Violation Type: Hardcoded Secrets (P_PRIVACY_FIRST)
 Total Count: 15 violations
 
 ANALYSIS:
@@ -470,7 +471,7 @@ User: "Why do these keep appearing?!"
 Skill: "15 bare except clauses found. Analyzing root cause..."
 Skill: "80% are legacy code (>1 year old). Fix with migration script?"
 User: "Yes"
-Skill: "Running /cco-migrate-legacy --principle=U002..."
+Skill: "Running /cco-migrate-legacy --principle=U_FAIL_FAST..."
 Skill: "✓ 12 legacy violations fixed in 30 seconds"
 Skill: "Remaining 3 are recent. Analyzing authorship..."
 Skill: "All by alice@company.com (new team member). Schedule training?"
@@ -481,7 +482,7 @@ Skill: "✓ Pre-commit hook added"
 
 Next week:
 "0 new bare except clauses" (pre-commit hook blocks them)
-Alice: "My code was blocked by pre-commit. Found U002 docs, using specific exceptions now ✓"
+Alice: "My code was blocked by pre-commit. Found U_FAIL_FAST docs, using specific exceptions now ✓"
 ```
 
 ### Success Metrics

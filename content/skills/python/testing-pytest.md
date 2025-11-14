@@ -3,6 +3,7 @@ metadata:
   name: "Pytest Testing Patterns"
   activation_keywords: ["test", "pytest", "fixture", "mock", "parametrize"]
   category: "language-python"
+principles: ['U_TEST_FIRST', 'U_EVIDENCE_BASED', 'P_TEST_COVERAGE', 'P_TEST_PYRAMID', 'P_CI_GATES', 'P_TEST_ISOLATION']
 ---
 
 # Pytest Testing Patterns

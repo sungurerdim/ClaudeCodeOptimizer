@@ -3,6 +3,7 @@ metadata:
   name: "Node.js Performance Optimization"
   activation_keywords: ["performance", "v8", "event loop", "memory", "optimization"]
   category: "language-typescript"
+principles: ['U_EVIDENCE_BASED', 'P_PERFORMANCE_PROFILE_BEFORE_OPTIMIZE', 'P_CONTINUOUS_PROFILING', 'P_CACHING_STRATEGY', 'U_NO_OVERENGINEERING']
 ---
 
 # Node.js Performance Optimization

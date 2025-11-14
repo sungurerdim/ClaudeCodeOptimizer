@@ -68,23 +68,28 @@ You are a Code Generation Specialist. Your task is to generate high-quality code
 
 **Requirements:**
 
+**Universal Principles:**
+- **U_EVIDENCE_BASED**: Evidence-Based Verification → `.claude/principles/U_EVIDENCE_BASED.md`
+- **U_TEST_FIRST**: Test-First Development → `.claude/principles/U_TEST_FIRST.md`
+- **U_NO_OVERENGINEERING**: No Overengineering → `.claude/principles/U_NO_OVERENGINEERING.md`
+- **U_DRY**: DRY Enforcement → `.claude/principles/U_DRY.md`
+- **U_INTEGRATION_CHECK**: Complete Integration Check → `.claude/principles/U_INTEGRATION_CHECK.md`
+
+**Claude Guidelines:**
+- **C_PRODUCTION_GRADE**: Production-Grade Code Only → `.claude/principles/C_PRODUCTION_GRADE.md`
+- **C_FOLLOW_PATTERNS**: Follow Existing Patterns → `.claude/principles/C_FOLLOW_PATTERNS.md`
+
 **Code Quality Principles:**
-- **P001**: DRY Enforcement → `.claude/principles/P001.md`
-- **P002**: Complete Integration Check → `.claude/principles/P002.md`
-- **P007**: Linting & SAST Enforcement → `.claude/principles/P007.md`
-- **P009**: Type Safety & Static Analysis → `.claude/principles/P009.md`
+- **P_LINTING_SAST**: Linting & SAST Enforcement → `.claude/principles/P_LINTING_SAST.md`
+- **P_TYPE_SAFETY**: Type Safety & Static Analysis → `.claude/principles/P_TYPE_SAFETY.md`
 
 **Testing Principles:**
-- **P041**: Test Coverage Targets → `.claude/principles/P041.md`
-- **P043**: Integration Tests for Critical Paths → `.claude/principles/P043.md`
-- **P045**: CI Gates → `.claude/principles/P045.md`
+- **P_TEST_COVERAGE**: Test Coverage Targets → `.claude/principles/P_TEST_COVERAGE.md`
+- **P_INTEGRATION_TESTS**: Integration Tests for Critical Paths → `.claude/principles/P_INTEGRATION_TESTS.md`
+- **P_CI_GATES**: CI Gates → `.claude/principles/P_CI_GATES.md`
 
 **API Design Principles** (when generating APIs):
-- **P069**: API Security Best Practices → `.claude/principles/P069.md`
-
-**Universal Principles:**
-- **U001**: Evidence-Based Verification → `.claude/principles/U001.md`
-- **U003**: Test-First Development → `.claude/principles/U003.md`
+- **P_API_SECURITY**: API Security Best Practices → `.claude/principles/P_API_SECURITY.md`
 
 **Additional Requirements:**
 - Generated code must be production-ready (no TODOs, placeholders, or temporary hacks)

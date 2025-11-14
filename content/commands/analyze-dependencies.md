@@ -3,6 +3,12 @@ id: cco-analyze-dependencies
 description: Dependency graph, circular deps, unused deps
 category: analysis
 priority: normal
+principles:
+  - 'U_EVIDENCE_BASED'
+  - 'U_DEPENDENCY_MANAGEMENT'
+  - 'P_SUPPLY_CHAIN_SECURITY'
+  - 'U_COMPLETE_REPORTING'
+  - 'U_ROOT_CAUSE_ANALYSIS'
 ---
 
 # Analyze Dependencies

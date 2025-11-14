@@ -3,6 +3,7 @@ metadata:
   name: "Async Programming with Tokio"
   activation_keywords: ["async", "tokio", "runtime", "future", "concurrent"]
   category: "language-rust"
+principles: ['P_ASYNC_IO', 'U_FAIL_FAST', 'P_GRACEFUL_SHUTDOWN', 'U_EVIDENCE_BASED']
 ---
 
 # Async Programming with Tokio

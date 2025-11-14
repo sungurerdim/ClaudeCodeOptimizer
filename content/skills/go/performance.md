@@ -3,6 +3,7 @@ metadata:
   name: "Go Performance Optimization"
   activation_keywords: ["performance", "pprof", "profiling", "memory", "goroutine"]
   category: "language-go"
+principles: ['U_EVIDENCE_BASED', 'P_PERFORMANCE_PROFILE_BEFORE_OPTIMIZE', 'P_CONTINUOUS_PROFILING', 'U_NO_OVERENGINEERING', 'P_CACHING_STRATEGY']
 ---
 
 # Go Performance Optimization

@@ -3,6 +3,7 @@ metadata:
   name: "TypeScript Type Safety"
   activation_keywords: ["strict", "type guard", "discriminated union", "narrowing"]
   category: "language-typescript"
+principles: ['P_TYPE_SAFETY', 'P_LINTING_SAST', 'U_FAIL_FAST', 'U_EVIDENCE_BASED']
 ---
 
 # TypeScript Type Safety

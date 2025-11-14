@@ -3,6 +3,7 @@ metadata:
   name: "Modern Python Packaging"
   activation_keywords: ["package", "pyproject", "uv", "poetry", "publish"]
   category: "language-python"
+principles: ['U_DEPENDENCY_MANAGEMENT', 'P_SUPPLY_CHAIN_SECURITY', 'P_SEMANTIC_VERSIONING', 'P_VERSION_MANAGEMENT']
 ---
 
 # Modern Python Packaging

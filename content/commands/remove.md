@@ -1,7 +1,7 @@
 ---
 description: Remove CCO from current project (keeps global installation)
 cost: 0
-principles: ['U001', 'U002', 'U011']
+principles: ['U_EVIDENCE_BASED', 'U_FAIL_FAST', 'U_NO_OVERENGINEERING']
 ---
 
 # CCO Project Removal
@@ -14,7 +14,7 @@ Remove CCO from the current project only (NEW ARCHITECTURE v3.1). This does **NO
 ## Step 1: Check if Project is Initialized
 
 ```bash
-ls .claude/principles/U001.md 2>/dev/null && echo "[OK] CCO is initialized" || echo "[!] CCO not found in this project"
+ls .claude/principles/U_EVIDENCE_BASED.md 2>/dev/null && echo "[OK] CCO is initialized" || echo "[!] CCO not found in this project"
 ```
 
 If not initialized, stop - nothing to remove.
@@ -24,10 +24,10 @@ If not initialized, stop - nothing to remove.
 Remove ALL principle symlinks (universal + project-specific):
 
 ```bash
-# Remove universal principles (U001-U012)
-rm -f .claude/principles/U*.md
+# Remove universal principles (U_*)
+rm -f .claude/principles/U_*.md
 
-# Remove project-specific principles (P001-P069)
+# Remove project-specific principles (P_*)
 rm -f .claude/principles/P*.md
 
 echo "[OK] Removed all principle symlinks"
