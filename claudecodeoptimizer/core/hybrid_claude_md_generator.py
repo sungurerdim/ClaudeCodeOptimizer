@@ -60,7 +60,7 @@ def _load_universal_template(cco_dir: Path) -> str:
     principles_dir = get_principles_dir()
     if not principles_dir.exists():
         return """### Universal Principles
-U001-U014 apply to all projects."""
+U_* principles apply to all projects."""
 
     # Load all principles and filter universal ones
     all_principles = load_all_principles(principles_dir)
@@ -74,7 +74,7 @@ U001-U014 apply to all projects."""
         if p.get("one_line_why"):
             lines.append(f"  - {p['one_line_why']}")
 
-    return "\n".join(lines) if lines else "U001-U014 apply to all projects."
+    return "\n".join(lines) if lines else "U_* principles apply to all projects."
 
 
 def _generate_cco_section(project_config: Dict, universal_template: str) -> str:
@@ -130,9 +130,9 @@ def _generate_category_list(selected_principles: Dict[str, List[str]]) -> str:
         "architecture": "Architecture",
         "security_privacy": "Security & Privacy",
         "testing": "Testing",
-        "git_workflow": "Git Workflow",
+        "project-specific": "Git Workflow",
         "performance": "Performance",
-        "operations": "Operations",
+        "project-specific": "Operations",
         "api_design": "API Design",
     }
 

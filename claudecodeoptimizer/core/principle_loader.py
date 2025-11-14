@@ -10,7 +10,7 @@ After: ~200-800 tokens (3-10 specific principles)
 See README.md for current principle counts.
 
 Architecture:
-- Individual principle files (P001.md, P002.md, ...)
+- Individual principle files (U_DRY.md, U_INTEGRATION_CHECK.md, P_LINTING_SAST.md, ...)
 - Direct principle ID loading
 - Category-to-ID mapping from .md frontmatter
 """
@@ -47,7 +47,7 @@ COMMAND_PRINCIPLE_MAP: Dict[str, List[str]] = {
     "cco-optimize": ["universal", "core", "performance"],
     "cco-optimize-code": ["universal", "core", "performance", "code_quality"],
     "cco-optimize-deps": ["universal", "core", "performance"],
-    "cco-optimize-docker": ["universal", "core", "performance", "operations"],
+    "cco-optimize-docker": ["universal", "core", "performance", "project-specific"],
     # Test commands
     "cco-test": ["universal", "core", "testing"],
     "cco-generate-tests": ["universal", "core", "testing"],
@@ -57,8 +57,8 @@ COMMAND_PRINCIPLE_MAP: Dict[str, List[str]] = {
     "cco-generate-integration-tests": ["universal", "core", "testing"],
     # DevOps commands
     "cco-scan-secrets": ["universal", "core", "security_privacy"],
-    "cco-setup-cicd": ["universal", "core", "operations"],
-    "cco-setup-monitoring": ["universal", "core", "operations"],
+    "cco-setup-cicd": ["universal", "core", "project-specific"],
+    "cco-setup-monitoring": ["universal", "core", "project-specific"],
     # Sync commands
     "cco-sync": ["universal", "core"],
 }
@@ -89,8 +89,8 @@ def _load_category_mapping() -> Dict[str, List[str]]:
     mapping = get_category_mapping(principles_dir)
 
     # Add "core" category (now references universal principles)
-    # Core principles are now U001, U002, U011 (Evidence-Based, Fail-Fast, No Overengineering)
-    mapping["core"] = ["U001", "U002", "U011"]
+    # Core principles are now U_EVIDENCE_BASED, U_FAIL_FAST, U_NO_OVERENGINEERING
+    mapping["core"] = ["U_EVIDENCE_BASED", "U_FAIL_FAST", "U_NO_OVERENGINEERING"]
 
     _CATEGORY_TO_IDS = mapping
     return mapping
@@ -158,7 +158,7 @@ class PrincipleLoader:
         Examples:
             >>> loader = PrincipleLoader()
             >>> content = loader.load_for_command("cco-audit-security")
-            # Returns: U001-U012.md + P001.md + P036.md + ... (~800 tokens)
+            # Returns: U_*.md + P_*.md + C_*.md files (~800 tokens)
         """
         # Use COMMAND_PRINCIPLE_MAP (STATIC)
         categories = COMMAND_PRINCIPLE_MAP.get(command, ["universal", "core"])
@@ -180,15 +180,15 @@ class PrincipleLoader:
         Load multiple principles by their IDs directly.
 
         Args:
-            principle_ids: List of principle IDs (e.g., ["P001", "P036", "P067"])
+            principle_ids: List of principle IDs (e.g., ["U_DRY", "P_CONTAINER_SECURITY", "P_API_SECURITY"])
 
         Returns:
             Combined principle content
 
         Examples:
             >>> loader = PrincipleLoader()
-            >>> content = loader.load_principles(["P001", "P036", "P067"])
-            # Returns: Content of P001.md + P036.md + P067.md
+            >>> content = loader.load_principles(["U_DRY", "P_CONTAINER_SECURITY", "P_API_SECURITY"])
+            # Returns: Content of U_DRY.md + P_CONTAINER_SECURITY.md + P_API_SECURITY.md
         """
         principles = []
         for principle_id in principle_ids:
@@ -249,15 +249,15 @@ class PrincipleLoader:
         Load a specific principle by ID.
 
         Args:
-            principle_id: Principle ID (e.g., "P001", "P036")
+            principle_id: Principle ID (e.g., "U_DRY", "P_CONTAINER_SECURITY")
 
         Returns:
             Principle file content
 
         Examples:
             >>> loader = PrincipleLoader()
-            >>> content = loader.load_principle("P001")
-            # Returns: Content of P001.md
+            >>> content = loader.load_principle("U_DRY")
+            # Returns: Content of U_DRY.md
         """
         # Check cache
         if principle_id in self._cache:
@@ -338,7 +338,7 @@ class PrincipleLoader:
             "testing": 600,
             "architecture": 1100,
             "performance": 500,
-            "operations": 1100,
+            "project-specific": 1100,
             "git-workflow": 500,
             "api-design": 300,
         }

@@ -1,7 +1,7 @@
 """
 Utility functions for ClaudeCodeOptimizer.
 
-Common helper functions to reduce code duplication (P002 - DRY Enforcement).
+Common helper functions to reduce code duplication (U_DRY - DRY Enforcement).
 """
 
 from typing import Optional

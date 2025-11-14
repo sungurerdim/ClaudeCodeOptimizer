@@ -2,7 +2,7 @@
 Constants for ClaudeCodeOptimizer.
 
 Centralized location for all magic numbers and configuration values.
-Follows P002 (DRY Enforcement) - single source of truth.
+Follows U_DRY (DRY Enforcement) - single source of truth.
 """
 
 # File Permissions
@@ -15,7 +15,7 @@ DEFAULT_PAGE_SIZE = 15  # Default number of items per page in wizard
 SERVICE_COUNT_THRESHOLD_MEDIUM = 2  # Threshold for medium-sized service architecture
 SERVICE_COUNT_THRESHOLD_LARGE = 3  # Threshold for large-sized service architecture
 
-# Display Limits (P002 - DRY Enforcement)
+# Display Limits (U_DRY - DRY Enforcement)
 TOP_ITEMS_DISPLAY = {
     "languages": 10,
     "frameworks": 10,
@@ -55,7 +55,7 @@ MAX_DISPLAY_LINES = 50  # Maximum lines to display in output before truncating
 DEFAULT_TERMINAL_WIDTH = 80  # Default terminal width for formatting
 SEPARATOR_WIDTH = 80  # Width of separator lines in console output (standardized to 80)
 
-# Detection Confidence Thresholds (P002 - DRY Enforcement)
+# Detection Confidence Thresholds (U_DRY - DRY Enforcement)
 DETECTION_CONFIDENCE_LOW = 0.3  # Low confidence threshold for detection
 DETECTION_CONFIDENCE_MEDIUM = 0.4  # Medium confidence threshold
 DETECTION_CONFIDENCE_STANDARD = 0.5  # Standard confidence threshold
