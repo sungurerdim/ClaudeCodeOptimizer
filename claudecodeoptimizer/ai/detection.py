@@ -638,7 +638,7 @@ class UniversalDetector:
         },
         "library": {
             "frameworks": [],
-            "files": ["setup.py", "package.json", "Cargo.toml"],
+            "files": ["setup.py", "pyproject.toml", "package.json", "Cargo.toml"],
             "patterns": [r"library", r"module", r"package"],
         },
         "mobile": {
