@@ -1,0 +1,33 @@
+---
+id: P_ASYNC_IO
+title: Async I/O (Non-Blocking Operations)
+category: performance
+severity: high
+weight: 8
+applicability:
+  project_types: ['api', 'web']
+  languages: ['python', 'javascript', 'typescript']
+---
+
+# P_ASYNC_IO: Async I/O (Non-Blocking Operations) 🔴
+
+**Severity**: High
+
+Use async/await for I/O-bound operations, no blocking calls.
+
+**Why**: Improves responsiveness through non-blocking async operations for I/O tasks
+
+**Enforcement**: Skills required - verification_protocol, test_first, root_cause_analysis
+
+**Project Types**: api, web
+**Languages**: python, javascript, typescript
+
+**❌ Bad**:
+```
+response = requests.get(url)  # Blocks!
+```
+
+**✅ Good**:
+```
+response = await http_client.get(url)  # Async
+```

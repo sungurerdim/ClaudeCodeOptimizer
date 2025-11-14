@@ -1,0 +1,36 @@
+---
+id: P_GITOPS_PRACTICES
+title: GitOps Practices
+category: project-specific
+severity: medium
+weight: 7
+applicability:
+  project_types: ['all']
+  languages: ['all']
+---
+
+# P_GITOPS_PRACTICES: GitOps Practices 🟡
+
+**Severity**: Medium
+
+Infrastructure and application deployment through Git-based workflows
+
+**Why**: Makes infrastructure changes auditable and reversible through Git history
+
+**Enforcement**: Skills required - verification_protocol
+
+**Project Types**: all
+**Languages**: all
+
+**Rules**:
+- **Git As Truth**: Git is single source of truth
+
+**❌ Bad**:
+```
+kubectl apply -f manifest.yaml  # Manual apply
+```
+
+**✅ Good**:
+```
+# Commit to Git, ArgoCD auto-syncs
+```

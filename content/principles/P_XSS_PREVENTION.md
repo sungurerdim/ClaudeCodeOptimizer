@@ -1,0 +1,33 @@
+---
+id: P_XSS_PREVENTION
+title: Input Sanitization (XSS Prevention)
+category: security_privacy
+severity: critical
+weight: 9
+applicability:
+  project_types: ['web']
+  languages: ['javascript', 'typescript', 'python']
+---
+
+# P_XSS_PREVENTION: Input Sanitization (XSS Prevention) 🔴
+
+**Severity**: Critical
+
+Escape/sanitize all user input before rendering.
+
+**Why**: Prevents XSS attacks by sanitizing all user input before display
+
+**Enforcement**: Skills required - verification_protocol, test_first, root_cause_analysis
+
+**Project Types**: web
+**Languages**: javascript, typescript, python
+
+**❌ Bad**:
+```
+innerHTML = user_input  # XSS!
+```
+
+**✅ Good**:
+```
+textContent = user_input  # Safe
+```

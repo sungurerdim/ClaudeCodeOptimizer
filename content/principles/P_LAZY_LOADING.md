@@ -1,0 +1,33 @@
+---
+id: P_LAZY_LOADING
+title: Lazy Loading & Pagination
+category: performance
+severity: medium
+weight: 6
+applicability:
+  project_types: ['api', 'web']
+  languages: ['all']
+---
+
+# P_LAZY_LOADING: Lazy Loading & Pagination 🟡
+
+**Severity**: Medium
+
+Don't load all data at once, paginate large result sets.
+
+**Why**: Reduces memory usage by loading data only when needed instead of upfront
+
+**Enforcement**: Skills required - verification_protocol, test_first, root_cause_analysis
+
+**Project Types**: api, web
+**Languages**: all
+
+**❌ Bad**:
+```
+SELECT * FROM users  # Returns 1M rows!
+```
+
+**✅ Good**:
+```
+SELECT * FROM users LIMIT 100 OFFSET 0  # Paginated
+```
