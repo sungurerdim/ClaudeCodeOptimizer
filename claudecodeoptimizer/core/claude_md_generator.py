@@ -229,7 +229,7 @@ class ClaudeMdGenerator:
         if "Git Workflow" not in content:
             additions.append(self._get_git_workflow_section(git_workflow, team_size))
 
-        # Add Versioning Strategy section (P052)
+        # Add Versioning Strategy section (automated semantic versioning)
         versioning_strategy = self._get_pref("collaboration.versioning_strategy", "auto_semver")
         if "Versioning Strategy" not in content and versioning_strategy != "no_versioning":
             additions.append(self._get_versioning_section(versioning_strategy))
@@ -389,7 +389,7 @@ Error: Function crashes with empty string
 
 **Workflow**:
 - Single `main` branch, direct commits
-- Follow U010 (Concise Commits), U009 (Atomic Commits)
+- Follow U_CONCISE_COMMITS, U_ATOMIC_COMMITS
 - Push after each completed task
 
 **Principles**: See `.claude/principles/git-workflow.md`
@@ -461,7 +461,7 @@ Error: Function crashes with empty string
 
     def _get_versioning_section(self, strategy: str) -> str:
         """
-        Generate Versioning Strategy section based on preference (P052).
+        Generate Versioning Strategy section based on preference (automated semantic versioning).
 
         Args:
             strategy: auto_semver, pr_based_semver, manual_semver, or calver
@@ -482,7 +482,7 @@ Error: Function crashes with empty string
 
     def _get_auto_semver_section(self) -> str:
         """Get Automatic SemVer section"""
-        return """## Versioning Strategy (P052)
+        return """## Versioning Strategy
 
 **Strategy**: Automated Semantic Versioning
 
@@ -495,13 +495,13 @@ vm.auto_bump(create_tag=True)
 
 **Trigger**: Before release, after merge to main, or manually
 
-**Principles**: See `.claude/principles/git-workflow.md` (P052)
+**Principles**: See `.claude/principles/git-workflow.md`
 
 ---"""
 
     def _get_pr_based_semver_section(self) -> str:
         """Get PR-Based SemVer section"""
-        return """## Versioning Strategy (P052)
+        return """## Versioning Strategy
 
 **Strategy**: PR-Based Semantic Versioning (reviewer confirms)
 
@@ -515,13 +515,13 @@ vm.auto_bump(create_tag=True)
 python -m claudecodeoptimizer.core.version_manager auto_bump --create-tag
 ```
 
-**Principles**: See `.claude/principles/git-workflow.md` (P052)
+**Principles**: See `.claude/principles/git-workflow.md`
 
 ---"""
 
     def _get_manual_semver_section(self) -> str:
         """Get Manual SemVer section"""
-        return """## Versioning Strategy (P052)
+        return """## Versioning Strategy
 
 **Strategy**: Manual Semantic Versioning (release managers control)
 
@@ -535,7 +535,7 @@ python -m claudecodeoptimizer.core.version_manager auto_bump --create-tag
 python -m claudecodeoptimizer.core.version_manager auto_bump --dry-run
 ```
 
-**Principles**: See `.claude/principles/git-workflow.md` (P052)
+**Principles**: See `.claude/principles/git-workflow.md`
 
 ---"""
 
@@ -623,9 +623,9 @@ version = datetime.now().strftime("%Y.%m.%d")
             "architecture": "Architecture",
             "security_privacy": "Security & Privacy",
             "testing": "Testing",
-            "git_workflow": "Git Workflow",
+            "project-specific": "Git Workflow",
             "performance": "Performance",
-            "operations": "Operations",
+            "project-specific": "Operations",
             "api_design": "API Design",
         }
 
@@ -763,9 +763,9 @@ version = datetime.now().strftime("%Y.%m.%d")
         Inject Claude-specific guidelines into CLAUDE.md.
 
         Replaces content between <!-- CCO_CLAUDE_START --> and <!-- CCO_CLAUDE_END --> markers
-        with all Claude principles (C001-C012).
+        with all Claude principles (C_*).
         """
-        # Load Claude principles (C001-C012)
+        # Load Claude principles (C_*)
         from .principle_md_loader import load_all_principles
 
         if not self.principles_dir.exists():

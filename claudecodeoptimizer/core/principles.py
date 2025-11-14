@@ -90,7 +90,7 @@ class PrinciplesManager:
 
             # Hardcoded selection strategies (TODO: move to config file)
             self.selection_strategies = {
-                "minimal": {"include": ["U001", "U002", "U003", "P001"]},
+                "minimal": {"include": ["U_EVIDENCE_BASED", "U_FAIL_FAST", "U_TEST_FIRST", "U_DRY"]},
                 "auto": {"rules": []},  # Auto selection based on characteristics
             }
 
@@ -405,7 +405,7 @@ def create_characteristics_from_analysis(analysis: Dict[str, Any]) -> ProjectCha
 @lru_cache(maxsize=1)
 def get_principles_manager(principles_dir: Optional[str] = None) -> PrinciplesManager:
     """
-    Get cached PrinciplesManager instance (Singleton pattern - P012).
+    Get cached PrinciplesManager instance (Singleton pattern - P_EVENT_DRIVEN).
 
     Expensive resource: Loads all principles from .md files.
     Using @lru_cache ensures only one instance exists per principles_dir.
@@ -424,6 +424,6 @@ __all__ = [
     "Principle",
     "ProjectCharacteristics",
     "PrinciplesManager",
-    "get_principles_manager",  # Singleton factory (P012)
+    "get_principles_manager",  # Singleton factory (P_EVENT_DRIVEN)
     "create_characteristics_from_analysis",
 ]

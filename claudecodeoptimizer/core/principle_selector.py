@@ -204,11 +204,10 @@ class PrincipleSelector:
 
         # Some principles don't apply to solo devs
         team_only_ids = [
-            "P015",
-            "P016",
-            "P017",
-            "P018",
-        ]  # Complex architecture patterns (microservices, CQRS, etc.)
+            "P_MICROSERVICES_SERVICE_MESH",
+            "P_CQRS_PATTERN",
+            "P_CIRCUIT_BREAKER_PATTERN",
+        ]  # Complex architecture patterns
         if principle["id"] in team_only_ids and team_size == "solo":
             return False
 
@@ -224,7 +223,7 @@ class PrincipleSelector:
         stance = self._get_nested_value(self.preferences, "security.security_stance")
 
         # High security principles require strict stance
-        high_security_ids = ["P036", "P037", "P038", "P039"]
+        high_security_ids = ["P_CONTAINER_SECURITY", "P_K8S_SECURITY", "P_ZERO_TRUST", "P_PRIVACY_COMPLIANCE"]
         if principle["id"] in high_security_ids:
             return stance in ["zero-trust", "paranoid", "very-strict", "strict"]
 
@@ -274,14 +273,14 @@ class PrincipleSelector:
         category = principle.get("category", "")
 
         # Git workflow principles - less relevant for solo devs
-        if category == "git_workflow":
+        if category == "project-specific":
             team_size = self._get_nested_value(self.preferences, "project_identity.team_trajectory")
             if team_size == "solo":
                 # Only keep essential git principles for solo
-                return principle["id"] in ["P047"]  # Keep commit messages principle
+                return principle["id"] in ["P_COMMIT_MESSAGE_CONVENTIONS"]  # Keep commit messages principle for solo devs
 
         # Operations principles - less relevant for early stage
-        if category == "operations":
+        if category == "project-specific":
             maturity = self._get_nested_value(self.preferences, "project_identity.project_maturity")
             if maturity in ["prototype", "mvp"]:
                 # Only keep critical operations principles
@@ -293,7 +292,7 @@ class PrincipleSelector:
             team_size = self._get_nested_value(self.preferences, "project_identity.team_trajectory")
             if team_size == "solo":
                 # Exclude complex architecture patterns for solo
-                exclude_for_solo = ["P015", "P016", "P017", "P018", "P019", "P020"]
+                exclude_for_solo = ["P_MICROSERVICES_SERVICE_MESH", "P_CQRS_PATTERN", "P_CIRCUIT_BREAKER_PATTERN"]
                 if principle["id"] in exclude_for_solo:
                     return False
 
@@ -357,19 +356,19 @@ class PrincipleSelector:
         """Determine why a principle was skipped"""
         # Check team size
         team_size = self._get_nested_value(self.preferences, "project_identity.team_trajectory")
-        if principle["id"] in ["P015", "P016", "P017", "P018"] and team_size == "solo":
+        if principle["id"] in ["P_MICROSERVICES_SERVICE_MESH", "P_CQRS_PATTERN", "P_CIRCUIT_BREAKER_PATTERN"] and team_size == "solo":
             return f"Solo developer (team_trajectory = '{team_size}')"
 
         # Check security stance
         stance = self._get_nested_value(self.preferences, "security.security_stance")
         if principle.get("category") == "security_privacy":
-            if principle["id"] in ["P036", "P037", "P038", "P039"]:
+            if principle["id"] in ["P_CONTAINER_SECURITY", "P_K8S_SECURITY", "P_ZERO_TRUST", "P_PRIVACY_COMPLIANCE"]:
                 if stance not in ["zero-trust", "paranoid", "very-strict", "strict"]:
                     return f"Security stance too permissive (security_stance = '{stance}')"
 
         # Check testing coverage
         coverage = self._get_nested_value(self.preferences, "testing.coverage_target")
-        if principle["id"] in ["P035"]:  # Mutation testing
+        if principle["id"] in ["P_PROPERTY_TESTING"]:  # Mutation/property testing
             try:
                 cov_int = int(str(coverage).replace("%", ""))
                 if cov_int < MIN_COVERAGE_PERCENTAGE:
@@ -462,7 +461,7 @@ class PrincipleSelector:
         """
         Render PRINCIPLES.md content in progressive disclosure format.
 
-        New format (U011: No Overengineering):
+        New format (U_NO_OVERENGINEERING):
         - Core principles only (~500 tokens)
         - Links to category files for full details
         - 10x token reduction
@@ -486,7 +485,7 @@ class PrincipleSelector:
         lines.append("")
 
         # Get core universal principles (fail-fast, evidence-based, no overengineering)
-        core_principle_ids = ["U002", "U001", "U011"]
+        core_principle_ids = ["U_FAIL_FAST", "U_EVIDENCE_BASED", "U_NO_OVERENGINEERING"]
         all_applicable = []
         for severity_list in by_severity.values():
             all_applicable.extend(severity_list)
@@ -565,12 +564,12 @@ class PrincipleSelector:
                 5,
                 "Caching, async I/O, database optimization, lazy loading",
             ),
-            "operations": (
+            "project-specific": (
                 "Operational Excellence",
                 10,
                 "IaC, observability, health checks, config as code",
             ),
-            "git_workflow": (
+            "project-specific": (
                 "Git Workflow",
                 5,
                 "Commit conventions, branching, PR guidelines, versioning",
@@ -676,8 +675,8 @@ class PrincipleSelector:
             "testing": "Testing Principles",
             "architecture": "Architecture Principles",
             "performance": "Performance Principles",
-            "operations": "Operational Excellence Principles",
-            "git_workflow": "Git Workflow Principles",
+            "project-specific": "Operational Excellence Principles",
+            "project-specific": "Git Workflow Principles",
             "api_design": "API Design Principles",
         }
 
@@ -696,7 +695,7 @@ class PrincipleSelector:
             # Get principles for this category
             if category_id == "core":
                 # Core universal principles: fail-fast, evidence-based, no overengineering
-                principles = [p for p in self.all_principles if p["id"] in ["U002", "U001", "U011"]]
+                principles = [p for p in self.all_principles if p["id"] in ["U_FAIL_FAST", "U_EVIDENCE_BASED", "U_NO_OVERENGINEERING"]]
             else:
                 principles = [p for p in self.all_principles if p.get("category") == category_id]
 

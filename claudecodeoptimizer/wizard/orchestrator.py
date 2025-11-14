@@ -107,23 +107,90 @@ class CCOWizard:
                 - error (str): Error message
         """
         from ..config import get_project_commands_dir
+        from ..core.hybrid_claude_md_generator import remove_cco_section
 
         try:
             project_name = project_root.name
             files_removed = []
+            claude_dir = project_root / ".claude"
 
-            # Remove all cco-*.md command files
+            # 1. Remove all symlinks in .claude/ subdirectories
+            categories = ["commands", "guides", "principles", "agents", "skills"]
+            for category in categories:
+                category_dir = claude_dir / category
+                if category_dir.exists():
+                    for item in category_dir.iterdir():
+                        # Remove symlinks and regular files (but keep .gitkeep)
+                        if item.name != ".gitkeep":
+                            if item.is_symlink() or item.is_file():
+                                item.unlink()
+                                files_removed.append(str(item.relative_to(project_root)))
+                            elif item.is_dir():
+                                # Remove directories recursively
+                                import shutil
+
+                                shutil.rmtree(item)
+                                files_removed.append(str(item.relative_to(project_root)))
+
+            # 2. Remove all cco-*.md command files from .claude/commands/
             project_commands_dir = get_project_commands_dir(project_root)
             if project_commands_dir.exists():
                 for cmd_file in project_commands_dir.glob("cco-*.md"):
-                    cmd_file.unlink()
-                    files_removed.append(str(cmd_file.relative_to(project_root)))
+                    if cmd_file.exists():  # May have been removed in step 1
+                        cmd_file.unlink()
+                        rel_path = str(cmd_file.relative_to(project_root))
+                        if rel_path not in files_removed:
+                            files_removed.append(rel_path)
+
+            # 3. Clean CCO sections from CLAUDE.md
+            claude_md_path = project_root / "CLAUDE.md"
+            if claude_md_path.exists():
+                if remove_cco_section(claude_md_path):
+                    files_removed.append("CLAUDE.md (CCO sections removed)")
+
+            # 4. Clean CCO section from .gitignore
+            gitignore_path = project_root / ".gitignore"
+            if gitignore_path.exists():
+                content = gitignore_path.read_text(encoding="utf-8")
+                lines = content.splitlines(keepends=True)
+                new_lines = []
+                skip = False
+
+                for line in lines:
+                    # Start of CCO section
+                    if "# CCO: Symlinked knowledge base" in line or "# CCO:" in line:
+                        skip = True
+                        continue
+                    # End of CCO section (next non-CCO comment or content)
+                    elif skip and line.strip() and not line.startswith(".claude/") and not line.startswith("!.claude/"):
+                        skip = False
+
+                    if not skip:
+                        new_lines.append(line)
+
+                # Write back if changed
+                new_content = "".join(new_lines)
+                if new_content != content:
+                    gitignore_path.write_text(new_content, encoding="utf-8")
+                    files_removed.append(".gitignore (CCO section removed)")
+
+            # 5. Remove empty .claude/ subdirectories
+            for category in categories:
+                category_dir = claude_dir / category
+                if category_dir.exists() and not any(category_dir.iterdir()):
+                    category_dir.rmdir()
+                    files_removed.append(str(category_dir.relative_to(project_root)))
+
+            # 6. Remove .claude/ if empty
+            if claude_dir.exists() and not any(claude_dir.iterdir()):
+                claude_dir.rmdir()
+                files_removed.append(str(claude_dir.relative_to(project_root)))
 
             return {
                 "success": True,
                 "project_name": project_name,
                 "files_removed": files_removed,
-                "message": f"CCO uninitialized. Removed {len(files_removed)} files.",
+                "message": f"CCO uninitialized. Removed {len(files_removed)} items.",
             }
 
         except Exception as e:
@@ -601,7 +668,7 @@ class CCOWizard:
                     severity = principle.get("severity", "medium")
                     category = principle.get("category", "general")
 
-                    # Format: "P001: Principle Title (severity, category)"
+                    # Format: "U_DRY: Principle Title (severity, category)"
                     label = f"{pid}: {title}"
                     description = f"{severity.upper()} - {category}"
 
@@ -727,8 +794,8 @@ class CCOWizard:
                 if available_guides:
                     # Guide descriptions
                     guide_descriptions = {
-                        "verification-protocol": "Evidence-based verification workflow (U001)",
-                        "git-workflow": "Git commit, branching, PR guidelines (U009, U010)",
+                        "verification-protocol": "Evidence-based verification workflow (U_EVIDENCE_BASED)",
+                        "git-workflow": "Git commit, branching, PR guidelines (U_ATOMIC_COMMITS, U_CONCISE_COMMITS)",
                         "security-response": "Security incident response and remediation plan",
                         "performance-optimization": "Performance analysis and optimization workflow",
                         "container-best-practices": "Docker/Kubernetes deployment best practices",
@@ -832,8 +899,8 @@ class CCOWizard:
 
                     # Skill descriptions
                     skill_descriptions = {
-                        "verification-protocol": "Evidence-based fix-verify-commit loop (U001)",
-                        "test-first-verification": "Generate tests before code changes (U003)",
+                        "verification-protocol": "Evidence-based fix-verify-commit loop (U_EVIDENCE_BASED)",
+                        "test-first-verification": "Generate tests before code changes (U_TEST_FIRST)",
                         "root-cause-analysis": "Analyze WHY violations exist, not just WHERE",
                         "incremental-improvement": "Break large tasks into achievable milestones",
                         "security-emergency-response": "Immediate P0 CRITICAL security remediation",
@@ -1043,12 +1110,12 @@ class CCOWizard:
         # Principles
         # FIRST: Always symlink ALL universal principles (U*.md - dynamically discovered)
         for u_file in sorted(global_principles_dir.glob("U*.md")):
-            u_id = u_file.stem  # e.g., "U001"
+            u_id = u_file.stem  # e.g., "U_DRY"
             source = u_file
             target = claude_dir / "principles" / f"{u_id}.md"
             symlink_map.append((source, target))
 
-        # SECOND: Symlink only AI-selected project-specific principles (P001-P069)
+        # SECOND: Symlink only AI-selected project-specific principles (P_*)
         for principle in self.selected_principles:
             # Skip if it's a universal principle (already linked above)
             if not principle.startswith("U"):
@@ -1229,7 +1296,7 @@ class CCOWizard:
                 additions.append("- Never swallow exceptions without re-raising")
                 additions.append("- Fail immediately on invalid state")
                 additions.append("- Use assertions for invariants")
-                additions.append("- See P001: Fail-Fast Error Handling in CLAUDE.md")
+                additions.append("- See U_FAIL_FAST: Fail-Fast Error Handling in CLAUDE.md")
             elif error_handling == "exception_hierarchy":
                 additions.append(
                     "**Exception Hierarchy**: Custom exception types for different error categories.\n"

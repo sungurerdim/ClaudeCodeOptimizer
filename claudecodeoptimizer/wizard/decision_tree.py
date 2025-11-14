@@ -512,7 +512,7 @@ TIER2_VERSIONING_STRATEGY = DecisionPoint(
     tier=2,
     category="collaboration",
     question="How do you want to manage version bumping?",
-    why_this_question="📦 Versioning strategy affects release management and version tagging (P052)",
+    why_this_question="📦 Versioning strategy affects release management and version tagging",
     multi_select=False,
     options=[
         Option(
@@ -656,7 +656,7 @@ TIER2_ERROR_HANDLING = DecisionPoint(
         Option(
             value="fail_fast",
             label="Fail-Fast [RECOMMENDED]",
-            description="Errors crash immediately with clear messages (P001)",
+            description="Errors crash immediately with clear messages (U_FAIL_FAST)",
             effects="No silent failures, easier debugging, explicit error handling",
             time_investment="No overhead",
             recommended_for=["production", "quality_first", "team projects"],
@@ -1457,7 +1457,7 @@ def _generate_error_handling_hint(ctx: AnswerContext) -> str:
     philosophy = ctx.philosophy
 
     if philosophy == "quality_first":
-        return "💡 Recommended: Fail-Fast (P001) - catch errors early, debug faster"
+        return "💡 Recommended: Fail-Fast (U_FAIL_FAST) - catch errors early, debug faster"
     elif philosophy == "balanced":
         return "💡 Recommended: Fail-Fast with targeted graceful degradation"
     else:  # move_fast

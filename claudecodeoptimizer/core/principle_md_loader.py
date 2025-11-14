@@ -70,7 +70,7 @@ def load_all_principles(principles_dir: Path) -> List[Dict[str, Any]]:
 
     principles = []
 
-    # Load all .md files (U001-U012, P001-P069)
+    # Load all .md files (U_*, P_*, C_*)
     for md_file in sorted(principles_dir.glob("*.md")):
         principle = load_principle_from_md(md_file)
         principles.append(principle)
@@ -83,7 +83,7 @@ def get_principle_by_id(principle_id: str, principles_dir: Path) -> Optional[Dic
     Get a single principle by ID.
 
     Args:
-        principle_id: Principle ID (e.g., "P001", "U001")
+        principle_id: Principle ID (e.g., "U_DRY", "P_LINTING_SAST")
         principles_dir: Path to principles directory
 
     Returns:

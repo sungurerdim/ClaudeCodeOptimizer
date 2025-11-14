@@ -38,7 +38,7 @@ TOP_ITEMS_DISPLAY = {
     "commands": 10,
 }
 
-# Detection Confidence Thresholds (P002 - DRY Enforcement)
+# Detection Confidence Thresholds (U_DRY - DRY Enforcement)
 DETECTION_CONFIDENCE_LOW = 0.3
 DETECTION_CONFIDENCE_MEDIUM = 0.4
 DETECTION_CONFIDENCE_STANDARD = 0.5
