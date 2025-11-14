@@ -396,7 +396,7 @@ No need for:
 
 ## License
 
-Part of CCO system. Same license as parent project.
+Part of ClaudeCodeOptimizer. Same license as parent project.
 
 ---
 

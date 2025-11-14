@@ -47,9 +47,6 @@ class ClaudeMdGenerator:
         self.preferences = preferences
         self.selected_skills = selected_skills or []
         self.selected_agents = selected_agents or []
-        self.template_path = (
-            Path(__file__).parent.parent.parent / "templates" / "CLAUDE.md.template"
-        )
         self.principles_dir = Path(__file__).parent.parent.parent / "content" / "principles"
 
     def generate(self, output_path: Path) -> Dict[str, Any]:
@@ -57,36 +54,37 @@ class ClaudeMdGenerator:
         Generate or enhance CLAUDE.md file.
 
         Args:
-            output_path: Path to write CLAUDE.md (typically .claude/CLAUDE.md)
+            output_path: Path to write CLAUDE.md
 
         Returns:
             Dictionary with generation results
         """
-        # Load template
-        template_content = self._load_template()
-
         # Check if project already has CLAUDE.md
         existing_content = self._load_existing(output_path)
 
-        # Merge or use template
         if existing_content:
-            content = self._merge_contents(template_content, existing_content)
-            strategy = "merged"
+            # Use existing file as base
+            content = existing_content
+            strategy = "updated"
         else:
-            content = template_content
-            strategy = "template"
+            # Create new file from scratch with markers
+            content = self._create_base_structure()
+            strategy = "created"
 
         # Customize based on preferences
         content = self._customize_content(content)
 
-        # Inject selected principles into template
+        # Inject selected principles
         content = self._inject_principles(content)
 
-        # Inject selected skills into template
+        # Inject selected skills
         content = self._inject_skills(content)
 
-        # Inject selected agents into template
+        # Inject selected agents
         content = self._inject_agents(content)
+
+        # Inject Claude guidelines
+        content = self._inject_claude_guidelines(content)
 
         # Create backup if file exists (before writing)
         if output_path.exists():
@@ -103,113 +101,40 @@ class ClaudeMdGenerator:
             "strategy": strategy,
         }
 
-    def _load_template(self) -> str:
-        """Load CLAUDE.md template from package"""
-        if not self.template_path.exists():
-            # Fallback: Generate minimal template
-            return self._generate_minimal_template()
+    def _create_base_structure(self) -> str:
+        """Create base CLAUDE.md structure with markers"""
+        return """# Claude Code Development Guide
 
-        return self.template_path.read_text(encoding="utf-8")
+## Development Principles
+
+<!-- CCO_PRINCIPLES_START -->
+[Principles will be dynamically injected here]
+<!-- CCO_PRINCIPLES_END -->
+
+## Available Skills
+
+<!-- CCO_SKILLS_START -->
+[Skills will be dynamically injected here]
+<!-- CCO_SKILLS_END -->
+
+## Available Agents
+
+<!-- CCO_AGENTS_START -->
+[Agents will be dynamically injected here]
+<!-- CCO_AGENTS_END -->
+
+## Claude Guidelines
+
+<!-- CCO_CLAUDE_START -->
+[Claude-specific guidelines will be dynamically injected here]
+<!-- CCO_CLAUDE_END -->
+"""
 
     def _load_existing(self, output_path: Path) -> str:
         """Load existing CLAUDE.md if present"""
         if output_path.exists():
             return output_path.read_text(encoding="utf-8")
         return ""
-
-    def _merge_contents(self, template: str, existing: str) -> str:
-        """
-        Intelligently merge template and existing CLAUDE.md.
-
-        Strategy:
-        1. Parse both into sections
-        2. Keep all existing sections
-        3. Add missing sections from template
-        4. Update "Development Principles" section with template content if missing
-        """
-        template_sections = self._parse_sections(template)
-        existing_sections = self._parse_sections(existing)
-
-        # Start with existing content
-        merged_sections = existing_sections.copy()
-
-        # Ensure "Development Principles" section exists with @PRINCIPLES.md reference
-        if "Development Principles" not in merged_sections:
-            if "Development Principles" in template_sections:
-                merged_sections["Development Principles"] = template_sections[
-                    "Development Principles"
-                ]
-
-        # Add missing sections from template (except header)
-        for section_name, section_content in template_sections.items():
-            if section_name == "Header":
-                continue  # Keep existing header
-
-            if section_name not in merged_sections:
-                # This section doesn't exist in project's CLAUDE.md
-                # Add it from template
-                merged_sections[section_name] = section_content
-
-        # Rebuild content
-        return self._rebuild_from_sections(merged_sections, existing_sections)
-
-    def _parse_sections(self, content: str) -> Dict[str, str]:
-        """
-        Parse markdown content into sections.
-
-        Returns dict: {section_name: section_content}
-        """
-        sections = {}
-        lines = content.split("\n")
-
-        current_section = "Header"
-        current_content = []
-
-        for line in lines:
-            # Check if this is a section header (## Something)
-            if line.startswith("## "):
-                # Save previous section
-                if current_content:
-                    sections[current_section] = "\n".join(current_content)
-
-                # Start new section
-                current_section = line[3:].strip()  # Remove "## "
-                current_content = [line]
-            else:
-                current_content.append(line)
-
-        # Save last section
-        if current_content:
-            sections[current_section] = "\n".join(current_content)
-
-        return sections
-
-    def _rebuild_from_sections(
-        self,
-        merged_sections: Dict[str, str],
-        original_order: Dict[str, str],
-    ) -> str:
-        """
-        Rebuild markdown content from sections.
-
-        Maintains original section order, appends new sections at end.
-        """
-        lines = []
-
-        # First, add sections in original order
-        added_sections = set()
-        for section_name in original_order.keys():
-            if section_name in merged_sections:
-                lines.append(merged_sections[section_name])
-                added_sections.add(section_name)
-
-        # Then add new sections (from template) that weren't in original
-        for section_name, section_content in merged_sections.items():
-            if section_name not in added_sections:
-                lines.append("")  # Empty line before new section
-                lines.append(section_content)
-
-        return "\n".join(lines)
 
     def _customize_content(self, content: str) -> str:
         """
@@ -247,8 +172,8 @@ class ClaudeMdGenerator:
                 lines.insert(insert_index + 1, metadata)
                 content = "\n".join(lines)
 
-        # Add conditional sections based on preferences
-        content = self._add_conditional_sections(content, team_size, linting, testing)
+        # Note: Conditional sections removed for simplicity
+        # Users can manually add custom sections to their CLAUDE.md if needed
 
         return content
 
@@ -269,7 +194,8 @@ class ClaudeMdGenerator:
 **Team:** {team_label}
 **Quality:** {linting.title()}
 **Testing:** {testing.title()}
-**Generated:** {datetime.now().strftime("%Y-%m-%d")}"""
+**Generated:** {datetime.now().strftime("%Y-%m-%d")}
+"""
 
     def _add_conditional_sections(
         self,
@@ -632,66 +558,6 @@ version = datetime.now().strftime("%Y.%m.%d")
 
 ---"""
 
-    def _generate_minimal_template(self) -> str:
-        """Generate minimal template if package template not found"""
-        return """# Claude Code Development Guide
-
-**Universal guide for working with Claude Code**
-
----
-
-## Development Principles
-
-**⚠️ MANDATORY: All work MUST follow these principles ⚠️**
-
-```
-@PRINCIPLES.md
-```
-
-This file contains the mandatory development principles for this project. **You MUST**:
-- Follow ALL applicable principles in EVERY task
-- Never deviate from these principles without explicit approval
-- Check compliance before claiming work is complete
-- Reference principles when making decisions
-
-**Usage:**
-```
-@PRINCIPLES.md  # Read at start of every session
-@PRINCIPLES.md Check if this code follows our principles
-@PRINCIPLES.md What principle applies to error handling?
-```
-
-**Compliance is non-negotiable.** These principles are not suggestions - they are requirements.
-
----
-
-## Working Guidelines
-
-### What NOT to Do
-- ❌ No tests/linters/repo scans unless explicitly requested
-- ❌ No TODO markers, debug prints, or dead code
-- ❌ Never create files unless absolutely necessary
-
-### Always Prefer
-- ✅ Edit existing files over creating new ones
-- ✅ Follow existing code patterns
-- ✅ Minimal, surgical changes
-- ✅ Production-grade code from the start
-
----
-
-## Verification Protocol
-
-**BEFORE claiming any work is complete:**
-
-1. **IDENTIFY**: What command proves this claim?
-2. **RUN**: Execute the command
-3. **VERIFY**: Check exit code, count failures
-4. **REPORT**: State claim WITH evidence
-
----
-"""
-
     def _format_team_size(self, team_size: str) -> str:
         """Format team size for display"""
         mapping = {
@@ -705,19 +571,15 @@ This file contains the mandatory development principles for this project. **You 
 
     def _inject_principles(self, content: str) -> str:
         """
-        Inject selected principles into CLAUDE.md template.
+        Inject selected principles into CLAUDE.md.
 
-        Replaces content between <!-- CCO_START --> and <!-- CCO_END --> markers
+        Replaces content between <!-- CCO_PRINCIPLES_START --> and <!-- CCO_PRINCIPLES_END --> markers
         with formatted list of selected principles.
         """
-        # Check if template has markers
-        if "<!-- CCO_START -->" not in content or "<!-- CCO_END -->" not in content:
-            return content
-
         # Load selected principle IDs
         selected_ids = self.preferences.get("selected_principle_ids", [])
         if not selected_ids:
-            # No principles selected, leave template as-is
+            # No principles selected
             return content
 
         # Load all principles
@@ -748,28 +610,14 @@ This file contains the mandatory development principles for this project. **You 
         # Get ALL universal principles
         universal_principles = [p for p in principles_list if p.get("category") == "universal"]
 
-        principles_content.append("### Core Principles (Always Apply)\n")
-        principles_content.append("**Universal Principles** (apply to ALL projects):\n")
-
-        # Show first 3 universal principles with details
-        for _i, principle in enumerate(universal_principles[:3]):
-            principles_content.append(f"\n#### {principle['id']}: {principle['title']}\n")
-            description = principle.get("description", principle.get("one_line_why", ""))
-            principles_content.append(f"{description}\n")
-            principles_content.append(f"**Details**: `.claude/principles/{principle['id']}.md`\n")
-
-        # List remaining universal principles
-        if len(universal_principles) > 3:
-            principles_content.append("\n**Additional Universal Principles:**\n")
-            for principle in universal_principles[3:]:
+        if universal_principles:
+            principles_content.append("**Universal Principles** (apply to all projects):\n")
+            for principle in universal_principles:
                 principles_content.append(
                     f"- **{principle['id']}**: {principle['title']} → `.claude/principles/{principle['id']}.md`\n"
                 )
 
-        # Add reference to project-specific principles by category
-        principles_content.append("\n### Project-Specific Principles\n")
-        principles_content.append("For detailed principles, see individual files:\n")
-
+        # Add project-specific principles by category
         category_names = {
             "code_quality": "Code Quality",
             "architecture": "Architecture",
@@ -781,110 +629,74 @@ This file contains the mandatory development principles for this project. **You 
             "api_design": "API Design",
         }
 
-        # Count principles per category (excluding universal)
-        category_counts = {}
-        for pid in selected_ids:
-            principle = all_principles.get(pid)
-            if principle:
-                cat = principle.get("category", "other")
-                # Skip universal principles (already shown above)
-                if cat == "universal":
-                    continue
-                category_counts[cat] = category_counts.get(cat, 0) + 1
-
         # List categories with individual principle links
+        has_project_specific = False
         for cat_id, cat_name in category_names.items():
-            count = category_counts.get(cat_id, 0)
-            if count > 0:
-                # Get principle IDs (excluding universal)
-                cat_principles = [
-                    p for p in categories.get(cat_id, []) if p.get("category") != "universal"
-                ]
-                if cat_principles:
-                    principles_content.append(f"\n**{cat_name}** ({count} selected):\n")
-                    for p in sorted(cat_principles, key=lambda x: x["id"]):
-                        principles_content.append(
-                            f"- **{p['id']}**: {p['title']} → `.claude/principles/{p['id']}.md`\n"
-                        )
+            cat_principles = [
+                p for p in categories.get(cat_id, []) if p.get("category") != "universal"
+            ]
+            if cat_principles:
+                if not has_project_specific:
+                    principles_content.append("\n**Project-Specific Principles:**\n")
+                    has_project_specific = True
+                principles_content.append(f"\n*{cat_name}:*\n")
+                for p in sorted(cat_principles, key=lambda x: x["id"]):
+                    principles_content.append(
+                        f"- **{p['id']}**: {p['title']} → `.claude/principles/{p['id']}.md`\n"
+                    )
 
         # Note: Total counts maintained in README.md only (avoid hardcoding in generated files)
 
-        # Replace content between markers
-        start_marker = "<!-- CCO_START -->"
-        end_marker = "<!-- CCO_END -->"
+        # Replace content between markers or append to end
+        start_marker = "<!-- CCO_PRINCIPLES_START -->"
+        end_marker = "<!-- CCO_PRINCIPLES_END -->"
 
         start_idx = content.find(start_marker)
         end_idx = content.find(end_marker)
 
         if start_idx != -1 and end_idx != -1:
+            # Markers exist - inject between them
             before = content[: start_idx + len(start_marker)]
             after = content[end_idx:]
-            # principles_content already has \n at end of each line, so use empty join
             injected = "\n" + "".join(principles_content)
             content = before + injected + after
+        else:
+            # Markers don't exist - append to end of file
+            section = f"\n\n## Development Principles\n\n{start_marker}\n"
+            section += "".join(principles_content)
+            section += end_marker + "\n"
+            content = content.rstrip() + section
 
         return content
 
     def _inject_skills(self, content: str) -> str:
         """
-        Inject selected skills into CLAUDE.md template.
+        Inject selected skills into CLAUDE.md.
 
         Replaces content between <!-- CCO_SKILLS_START --> and <!-- CCO_SKILLS_END --> markers
         with formatted list of selected skills.
         """
-        # Check if template has markers
-        if "<!-- CCO_SKILLS_START -->" not in content or "<!-- CCO_SKILLS_END -->" not in content:
-            return content
-
         if not self.selected_skills:
-            # No skills selected, remove markers section
-            start_marker = "<!-- CCO_SKILLS_START -->"
-            end_marker = "<!-- CCO_SKILLS_END -->"
-            start_idx = content.find(start_marker)
-            end_idx = content.find(end_marker)
-            if start_idx != -1 and end_idx != -1:
-                # Remove entire section including markers
-                before = content[:start_idx].rstrip()
-                after = content[end_idx + len(end_marker) :].lstrip()
-                content = before + "\n\n" + after
+            # No skills selected
             return content
 
-        # Build skills section
+        # Build skills section - single unified list
         skills_content = []
-        skills_content.append("## Available Skills\n")
-        skills_content.append("\n")
-        skills_content.append("**Workflow Skills** (reusable patterns):\n")
 
-        # Separate universal and language-specific skills
-        universal_skills = [s for s in self.selected_skills if "/" not in s]
-        language_skills = [s for s in self.selected_skills if "/" in s]
+        # Sort all skills alphabetically by display name
+        for skill in sorted(self.selected_skills):
+            # Format display name
+            if "/" in skill:
+                # Language-specific: python/async-patterns → Async Patterns (Python)
+                lang, skill_name = skill.split("/", 1)
+                display_name = f"{skill_name.replace('-', ' ').title()} ({lang.title()})"
+            else:
+                # Universal: root-cause-analysis → Root Cause Analysis
+                display_name = skill.replace("-", " ").title()
 
-        # List universal skills
-        if universal_skills:
-            skills_content.append("\n**Universal Skills:**\n")
-            for skill in sorted(universal_skills):
-                skill_name = skill.replace("-", " ").title()
-                skills_content.append(f"- **{skill_name}** → `.claude/skills/{skill}.md`\n")
+            skills_content.append(f"- **{display_name}** → `.claude/skills/{skill}.md`\n")
 
-        # List language-specific skills
-        if language_skills:
-            # Group by language
-            lang_groups = {}
-            for skill in language_skills:
-                lang = skill.split("/")[0]
-                if lang not in lang_groups:
-                    lang_groups[lang] = []
-                lang_groups[lang].append(skill)
-
-            for lang, lang_skill_list in sorted(lang_groups.items()):
-                skills_content.append(f"\n**{lang.title()}-Specific Skills:**\n")
-                for skill in sorted(lang_skill_list):
-                    skill_name = skill.split("/")[1].replace("-", " ").title()
-                    skills_content.append(f"- **{skill_name}** → `.claude/skills/{skill}.md`\n")
-
-        # Note: Total counts maintained in README.md only
-
-        # Replace content between markers
+        # Replace content between markers or append to end
         start_marker = "<!-- CCO_SKILLS_START -->"
         end_marker = "<!-- CCO_SKILLS_END -->"
 
@@ -892,60 +704,39 @@ This file contains the mandatory development principles for this project. **You 
         end_idx = content.find(end_marker)
 
         if start_idx != -1 and end_idx != -1:
+            # Markers exist - inject between them
             before = content[: start_idx + len(start_marker)]
             after = content[end_idx:]
             injected = "\n" + "".join(skills_content)
             content = before + injected + after
+        else:
+            # Markers don't exist - append to end of file
+            section = f"\n\n## Available Skills\n\n{start_marker}\n"
+            section += "".join(skills_content)
+            section += end_marker + "\n"
+            content = content.rstrip() + section
 
         return content
 
     def _inject_agents(self, content: str) -> str:
         """
-        Inject selected agents into CLAUDE.md template.
+        Inject selected agents into CLAUDE.md.
 
         Replaces content between <!-- CCO_AGENTS_START --> and <!-- CCO_AGENTS_END --> markers
         with formatted list of selected agents.
         """
-        # Check if template has markers
-        if "<!-- CCO_AGENTS_START -->" not in content or "<!-- CCO_AGENTS_END -->" not in content:
-            return content
-
         if not self.selected_agents:
-            # No agents selected, remove markers section
-            start_marker = "<!-- CCO_AGENTS_START -->"
-            end_marker = "<!-- CCO_AGENTS_END -->"
-            start_idx = content.find(start_marker)
-            end_idx = content.find(end_marker)
-            if start_idx != -1 and end_idx != -1:
-                # Remove entire section including markers
-                before = content[:start_idx].rstrip()
-                after = content[end_idx + len(end_marker) :].lstrip()
-                content = before + "\n\n" + after
+            # No agents selected
             return content
 
-        # Build agents section
+        # Build agents section - single unified list
         agents_content = []
-        agents_content.append("## Available Agents\n")
-        agents_content.append("\n")
-        agents_content.append("**Specialized AI Agents** (autonomous task execution):\n")
-        agents_content.append("\n")
-
-        # List agents with descriptions
-        agent_descriptions = {
-            "audit-agent": "Comprehensive code quality, security, and best practices analysis",
-            "fix-agent": "Automated issue resolution with root cause analysis",
-            "generate-agent": "Code, test, and documentation generation",
-        }
 
         for agent in sorted(self.selected_agents):
             agent_name = agent.replace("-", " ").title()
-            description = agent_descriptions.get(agent, "Specialized task automation")
             agents_content.append(f"- **{agent_name}** → `.claude/agents/{agent}.md`\n")
-            agents_content.append(f"  {description}\n")
 
-        # Note: Total counts maintained in README.md only
-
-        # Replace content between markers
+        # Replace content between markers or append to end
         start_marker = "<!-- CCO_AGENTS_START -->"
         end_marker = "<!-- CCO_AGENTS_END -->"
 
@@ -953,10 +744,64 @@ This file contains the mandatory development principles for this project. **You 
         end_idx = content.find(end_marker)
 
         if start_idx != -1 and end_idx != -1:
+            # Markers exist - inject between them
             before = content[: start_idx + len(start_marker)]
             after = content[end_idx:]
             injected = "\n" + "".join(agents_content)
             content = before + injected + after
+        else:
+            # Markers don't exist - append to end of file
+            section = f"\n\n## Available Agents\n\n{start_marker}\n"
+            section += "".join(agents_content)
+            section += end_marker + "\n"
+            content = content.rstrip() + section
+
+        return content
+
+    def _inject_claude_guidelines(self, content: str) -> str:
+        """
+        Inject Claude-specific guidelines into CLAUDE.md.
+
+        Replaces content between <!-- CCO_CLAUDE_START --> and <!-- CCO_CLAUDE_END --> markers
+        with all Claude principles (C001-C012).
+        """
+        # Load Claude principles (C001-C012)
+        from .principle_md_loader import load_all_principles
+
+        if not self.principles_dir.exists():
+            return content
+
+        principles_list = load_all_principles(self.principles_dir)
+        claude_principles = [p for p in principles_list if p["id"].startswith("C")]
+
+        if not claude_principles:
+            return content
+
+        # Build Claude guidelines section
+        guidelines_content = []
+        for principle in sorted(claude_principles, key=lambda x: x["id"]):
+            guidelines_content.append(
+                f"- **{principle['id']}**: {principle['title']} → `.claude/principles/{principle['id']}.md`\n"
+            )
+
+        # Check if markers exist
+        start_marker = "<!-- CCO_CLAUDE_START -->"
+        end_marker = "<!-- CCO_CLAUDE_END -->"
+        start_idx = content.find(start_marker)
+        end_idx = content.find(end_marker)
+
+        if start_idx != -1 and end_idx != -1:
+            # Markers exist - inject between them
+            before = content[: start_idx + len(start_marker)]
+            after = content[end_idx:]
+            injected = "\n" + "".join(guidelines_content)
+            content = before + injected + after
+        else:
+            # Markers don't exist - append to end of file
+            section = f"\n\n## Claude Guidelines\n\n{start_marker}\n"
+            section += "".join(guidelines_content)
+            section += end_marker + "\n"
+            content = content.rstrip() + section
 
         return content
 
