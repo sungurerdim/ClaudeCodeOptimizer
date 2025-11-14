@@ -35,37 +35,28 @@
 
 *Architecture:*
 - **P_API_VERSIONING_STRATEGY**: API Versioning Strategy → `.claude/principles/P_API_VERSIONING_STRATEGY.md`
-- **P_EVENT_DRIVEN**: Event-Driven Architecture → `.claude/principles/P_EVENT_DRIVEN.md`
 
 *Security & Privacy:*
-- **P_AI_ML_SECURITY**: AI/ML Security → `.claude/principles/P_AI_ML_SECURITY.md`
 - **P_AUDIT_LOGGING**: Audit Logging → `.claude/principles/P_AUDIT_LOGGING.md`
-- **P_AUTH_AUTHZ**: Authentication & Authorization → `.claude/principles/P_AUTH_AUTHZ.md`
 - **P_CONTAINER_SECURITY**: Container Security → `.claude/principles/P_CONTAINER_SECURITY.md`
 - **P_ENCRYPTION_AT_REST**: Encryption Everywhere → `.claude/principles/P_ENCRYPTION_AT_REST.md`
-- **P_K8S_SECURITY**: Kubernetes Security → `.claude/principles/P_K8S_SECURITY.md`
 - **P_PRIVACY_COMPLIANCE**: Privacy Compliance → `.claude/principles/P_PRIVACY_COMPLIANCE.md`
 - **P_PRIVACY_FIRST**: Privacy-First by Default → `.claude/principles/P_PRIVACY_FIRST.md`
-- **P_RATE_LIMITING**: Rate Limiting & Throttling → `.claude/principles/P_RATE_LIMITING.md`
-- **P_SCHEMA_VALIDATION**: Schema-First Validation → `.claude/principles/P_SCHEMA_VALIDATION.md`
 - **P_SECRET_ROTATION**: Secret Management with Rotation → `.claude/principles/P_SECRET_ROTATION.md`
-- **P_SQL_INJECTION**: SQL Injection Prevention → `.claude/principles/P_SQL_INJECTION.md`
 - **P_SUPPLY_CHAIN_SECURITY**: Supply Chain Security → `.claude/principles/P_SUPPLY_CHAIN_SECURITY.md`
-- **P_XSS_PREVENTION**: Input Sanitization (XSS Prevention) → `.claude/principles/P_XSS_PREVENTION.md`
 - **P_ZERO_DISK_TOUCH**: Zero Disk Touch → `.claude/principles/P_ZERO_DISK_TOUCH.md`
-- **P_ZERO_TRUST**: Zero Trust Architecture → `.claude/principles/P_ZERO_TRUST.md`
 
 *Testing:*
 - **P_CI_GATES**: CI Gates → `.claude/principles/P_CI_GATES.md`
-- **P_INTEGRATION_TESTS**: Integration Tests for Critical Paths → `.claude/principles/P_INTEGRATION_TESTS.md`
 - **P_TEST_COVERAGE**: Test Coverage Targets → `.claude/principles/P_TEST_COVERAGE.md`
 
-*Performance:*
-- **P_ASYNC_IO**: Async I/O (Non-Blocking Operations) → `.claude/principles/P_ASYNC_IO.md`
-- **P_DB_OPTIMIZATION**: Database Query Optimization → `.claude/principles/P_DB_OPTIMIZATION.md`
+*Operations:*
+- **P_AUTO_VERSIONING**: Automated Semantic Versioning → `.claude/principles/P_AUTO_VERSIONING.md`
+- **P_INCREMENTAL_SAFETY_PATTERNS**: Incremental Safety Patterns → `.claude/principles/P_INCREMENTAL_SAFETY_PATTERNS.md`
+- **P_MINIMAL_RESPONSIBILITY**: Minimal Responsibility (Zero Maintenance) → `.claude/principles/P_MINIMAL_RESPONSIBILITY.md`
 
-*API Design:*
-- **P_API_SECURITY**: API Security Best Practices → `.claude/principles/P_API_SECURITY.md`
+*Performance:*
+- **P_DB_OPTIMIZATION**: Database Query Optimization → `.claude/principles/P_DB_OPTIMIZATION.md`
 <!-- CCO_PRINCIPLES_END -->
 
 ## Available Skills
