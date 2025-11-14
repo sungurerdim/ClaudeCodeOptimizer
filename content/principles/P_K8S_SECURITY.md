@@ -5,7 +5,7 @@ category: project-specific
 severity: high
 weight: 9
 applicability:
-  project_types: ['microservices', 'cloud']
+  project_types: ['microservice', 'cloud']
   languages: ['all']
 ---
 
