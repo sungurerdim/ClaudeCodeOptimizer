@@ -86,6 +86,200 @@ class CCOWizard:
     # Main Execution Flow
     # ========================================================================
 
+    def export_questions(self) -> Dict:
+        """
+        Export questions for Claude Code UI interaction.
+
+        Returns dict with:
+        - questions: List of questions in AskUserQuestion format
+        - system_context: Detected system info
+        - project_detection: Detected project info
+        """
+        # Run detection silently (no user interaction needed)
+        # Temporarily switch to quick mode for detection
+        original_mode = self.mode
+        self.mode = 'quick'
+
+        try:
+            if not self._run_system_detection():
+                return {"error": "System detection failed"}
+
+            if not self._run_project_detection():
+                return {"error": "Project detection failed"}
+        finally:
+            # Restore original mode
+            self.mode = original_mode
+
+        # Initialize answer context
+        self.answer_context = AnswerContext(system=self.system_context)
+
+        # Get all decision points
+        from .decision_tree import get_all_decisions
+        all_decisions = get_all_decisions(self.answer_context)
+
+        # Convert to AskUserQuestion format with AI recommendations
+        questions_export = []
+        for decision in all_decisions:
+            # Skip conditional questions for now (we'll handle them in phase 2)
+            if not decision.should_ask({}):
+                continue
+
+            # Get AI recommendation for this question
+            ai_recommendation = decision.get_recommended_option(self.answer_context)
+            ai_hint = decision.get_ai_hint(self.answer_context)
+
+            # Build options with recommendation markers
+            options_with_recommendations = []
+            for opt in decision.options:
+                option_dict = {
+                    "value": opt.value,
+                    "label": opt.label,
+                    "description": opt.description
+                }
+
+                # Mark recommended option
+                if decision.multi_select:
+                    # For multi-select, check if this option is in recommendation list
+                    if isinstance(ai_recommendation, list) and opt.value in ai_recommendation:
+                        option_dict["recommended"] = True
+                        option_dict["label"] = f"⭐ {opt.label}"
+                else:
+                    # For single-select, check if this is the recommended option
+                    if ai_recommendation == opt.value:
+                        option_dict["recommended"] = True
+                        option_dict["label"] = f"⭐ {opt.label}"
+
+                options_with_recommendations.append(option_dict)
+
+            question_data = {
+                "id": decision.id,
+                "tier": decision.tier,
+                "category": decision.category,
+                "question": decision.question,
+                "header": decision.category.replace("_", " ").title()[:12],
+                "multiSelect": decision.multi_select,
+                "options": options_with_recommendations,
+                "why": decision.why_this_question,
+                "ai_recommendation": ai_recommendation,  # Include AI recommendation
+                "ai_hint": ai_hint,  # Include AI reasoning
+            }
+            questions_export.append(question_data)
+
+        return {
+            "questions": questions_export,
+            "system_context": {
+                "os": self.system_context.os_type,
+                "language": self.system_context.detected_language,
+                "is_git": self.system_context.is_git_repo,
+            },
+            "project_detection": {
+                "languages": [lang['detected_value'] for lang in self.detection_report.get('languages', [])],
+                "frameworks": [f['detected_value'] for f in self.detection_report.get('frameworks', [])],
+            }
+        }
+
+    def run_with_answers(self, answers_dict: Dict) -> WizardResult:
+        """
+        Run wizard with pre-collected answers from Claude Code UI.
+
+        Args:
+            answers_dict: Dict mapping question IDs to user answers
+
+        Returns:
+            WizardResult with success status and all data
+        """
+        start_time = time.time()
+
+        # Run in quick mode to avoid interactive prompts
+        original_mode = self.mode
+        self.mode = 'quick'
+
+        try:
+            # System & project detection should already be done in export_questions()
+            # If not, run them now
+            if self.system_context is None:
+                if not self._run_system_detection():
+                    return WizardResult(
+                        success=False,
+                        mode=original_mode,
+                        error="System detection failed"
+                    )
+
+            if self.detection_report is None:
+                if not self._run_project_detection():
+                    return WizardResult(
+                        success=False,
+                        mode=original_mode,
+                        system_context=self.system_context,
+                        error="Project detection failed"
+                    )
+
+            # Initialize answer context with provided answers
+            self.answer_context = AnswerContext(system=self.system_context)
+            for question_id, answer in answers_dict.items():
+                self.answer_context.set(question_id, answer)
+
+            # Continue with principle selection
+            if not self._run_principle_selection():
+                return WizardResult(
+                    success=False,
+                    mode=self.mode,
+                    system_context=self.system_context,
+                    answers=self.answer_context.answers,
+                    error="Principle selection failed",
+                )
+
+            # Command Selection
+            if not self._run_command_selection():
+                return WizardResult(
+                    success=False,
+                    mode=self.mode,
+                    system_context=self.system_context,
+                    answers=self.answer_context.answers,
+                    selected_principles=self.selected_principles,
+                    error="Command selection failed",
+                )
+
+            # File Generation (unless dry-run)
+            if not self.dry_run:
+                if not self._run_file_generation():
+                    return WizardResult(
+                        success=False,
+                        mode=self.mode,
+                        system_context=self.system_context,
+                        answers=self.answer_context.answers,
+                        selected_principles=self.selected_principles,
+                        selected_commands=self.selected_commands,
+                        error="File generation failed",
+                    )
+
+            # Success
+            duration = time.time() - start_time
+            self._show_completion(duration)
+
+            return WizardResult(
+                success=True,
+                mode=original_mode,
+                system_context=self.system_context,
+                answers=self.answer_context.answers,
+                selected_principles=self.selected_principles,
+                selected_commands=self.selected_commands,
+                duration_seconds=duration,
+            )
+
+        except Exception as e:
+            import traceback
+            return WizardResult(
+                success=False,
+                mode=original_mode,
+                system_context=self.system_context,
+                answers=self.answer_context.answers if self.answer_context else {},
+                error=f"Wizard failed: {e}\n{traceback.format_exc()}",
+            )
+        finally:
+            # Restore original mode
+            self.mode = original_mode
+
     @staticmethod
     def uninitialize(project_root: Path) -> Dict:
         """
