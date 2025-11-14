@@ -109,7 +109,7 @@ class PrincipleSelector:
         if project_types != ["all"]:
             # Get detected project types from preferences
             detected_types = self._get_nested_value(self.preferences, "project_identity.types") or []
-            # Check if any detected type matches required types
+            # Check if any detected type matches required types (exact match)
             if not any(dtype in project_types for dtype in detected_types):
                 return False
 
@@ -247,9 +247,15 @@ class PrincipleSelector:
         - moderate/relaxed: Critical only (weight >= 10) → ~10% of total
 
         Weight thresholds are fixed, but resulting count scales with available principles.
+
+        Security Override: If security_stance is strict/very-strict and principle
+        is security-related (severity high/critical), lower threshold to 8.
         """
         weight = principle.get("weight", 5)
+        severity = principle.get("severity", "medium")
+        category = principle.get("category", "")
         strictness = self._get_nested_value(self.preferences, "code_quality.linting_strictness")
+        security_stance = self._get_nested_value(self.preferences, "security.security_stance")
 
         # Map strictness to minimum weight threshold
         # NOTE: Thresholds are fixed, but available principles may vary
@@ -263,6 +269,21 @@ class PrincipleSelector:
         }
 
         min_weight = weight_thresholds.get(strictness, 9)
+
+        # Security override: For API/web projects or high security stance,
+        # lower threshold for security principles to weight >= 8
+        project_types = self._get_nested_value(self.preferences, "project_identity.types") or []
+        is_api_or_web = any(
+            pt in ["api", "web", "web-app", "microservice", "backend", "api_service"]
+            for pt in project_types
+        )
+        is_high_security = security_stance in ["strict", "very-strict", "balanced"]
+
+        if is_api_or_web or is_high_security:
+            is_security = category in ["security_privacy", "api_design"] or severity in ["high", "critical"]
+            if is_security and weight >= 8:
+                return True  # Accept all high+ security principles for APIs/web/microservices
+
         return weight >= min_weight
 
     def _check_category_relevance(self, principle: Dict[str, Any]) -> bool:
