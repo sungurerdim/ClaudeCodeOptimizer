@@ -71,7 +71,9 @@ class TestClaudeMdGeneratorInit:
         assert generator.selected_agents == []
         assert isinstance(generator.principles_dir, Path)
 
-    def test_init_with_skills_and_agents(self, minimal_preferences, sample_skills, sample_agents) -> None:
+    def test_init_with_skills_and_agents(
+        self, minimal_preferences, sample_skills, sample_agents
+    ) -> None:
         """Test initialization with skills and agents"""
         generator = ClaudeMdGenerator(
             minimal_preferences,
@@ -131,7 +133,9 @@ class TestClaudeMdGeneration:
         # Content should have changed (merged/updated)
         assert new_content != existing_content or "TestProject" in new_content
 
-    def test_generate_with_skills(self, minimal_preferences, sample_skills, temp_project_dir) -> None:
+    def test_generate_with_skills(
+        self, minimal_preferences, sample_skills, temp_project_dir
+    ) -> None:
         """Test generation includes selected skills"""
         generator = ClaudeMdGenerator(minimal_preferences, selected_skills=sample_skills)
         output_path = temp_project_dir / "CLAUDE.md"
@@ -142,7 +146,9 @@ class TestClaudeMdGeneration:
         # Should reference skills section
         assert "skill" in content.lower() or "Skills" in content
 
-    def test_generate_with_agents(self, minimal_preferences, sample_agents, temp_project_dir) -> None:
+    def test_generate_with_agents(
+        self, minimal_preferences, sample_agents, temp_project_dir
+    ) -> None:
         """Test generation includes selected agents"""
         generator = ClaudeMdGenerator(minimal_preferences, selected_agents=sample_agents)
         output_path = temp_project_dir / "CLAUDE.md"
@@ -261,7 +267,9 @@ Existing principles
         # Content should be modified (merged)
         assert len(new_content) > 0
 
-    def test_merge_creates_backup_with_timestamp(self, minimal_preferences, temp_project_dir) -> None:
+    def test_merge_creates_backup_with_timestamp(
+        self, minimal_preferences, temp_project_dir
+    ) -> None:
         """Test that backup is created when merging existing file"""
         output_path = temp_project_dir / "CLAUDE.md"
 
@@ -289,7 +297,11 @@ class TestClaudeMdValidation:
         """Test generation with invalid output path"""
         generator = ClaudeMdGenerator(minimal_preferences)
         # Use a path that will fail on Windows and Unix
-        invalid_path = Path("/dev/null/nonexistent/invalid/path/CLAUDE.md") if not os.name == 'nt' else Path("C:\\invalid\\path\\nonexistent\\CLAUDE.md")
+        invalid_path = (
+            Path("/dev/null/nonexistent/invalid/path/CLAUDE.md")
+            if not os.name == "nt"
+            else Path("C:\\invalid\\path\\nonexistent\\CLAUDE.md")
+        )
 
         # Should raise an exception or handle gracefully
         try:
@@ -799,6 +811,7 @@ class TestPreferenceHelpers:
 
     def test_get_pref_object_attribute(self, minimal_preferences) -> None:
         """Test getting preference from object with hasattr"""
+
         class PrefsObject:
             def __init__(self):
                 self.project_name = "ObjectProject"
@@ -811,6 +824,7 @@ class TestPreferenceHelpers:
 
     def test_get_pref_missing_attribute(self, minimal_preferences) -> None:
         """Test getting preference when attribute doesn't exist"""
+
         class PrefsObject:
             pass
 
@@ -909,7 +923,9 @@ class TestSkillsInjection:
         # Should return content unchanged
         assert result == content
 
-    def test_inject_skills_with_selection(self, minimal_preferences, sample_skills, temp_project_dir) -> None:
+    def test_inject_skills_with_selection(
+        self, minimal_preferences, sample_skills, temp_project_dir
+    ) -> None:
         """Test skills injection with selected skills"""
         generator = ClaudeMdGenerator(minimal_preferences, selected_skills=sample_skills)
         content = generator._create_base_structure()
@@ -922,7 +938,9 @@ class TestSkillsInjection:
 
     def test_inject_skills_language_specific(self, minimal_preferences, temp_project_dir) -> None:
         """Test skills injection with language-specific skills"""
-        generator = ClaudeMdGenerator(minimal_preferences, selected_skills=["python/async-patterns"])
+        generator = ClaudeMdGenerator(
+            minimal_preferences, selected_skills=["python/async-patterns"]
+        )
         content = generator._create_base_structure()
 
         result = generator._inject_skills(content)
@@ -942,7 +960,9 @@ class TestSkillsInjection:
 
     def test_inject_skills_without_markers(self, minimal_preferences, temp_project_dir) -> None:
         """Test skills injection when markers don't exist"""
-        generator = ClaudeMdGenerator(minimal_preferences, selected_skills=["python/async-patterns"])
+        generator = ClaudeMdGenerator(
+            minimal_preferences, selected_skills=["python/async-patterns"]
+        )
         content = "# Some content without markers"
 
         result = generator._inject_skills(content)
@@ -964,7 +984,9 @@ class TestAgentsInjection:
         # Should return content unchanged
         assert result == content
 
-    def test_inject_agents_with_selection(self, minimal_preferences, sample_agents, temp_project_dir) -> None:
+    def test_inject_agents_with_selection(
+        self, minimal_preferences, sample_agents, temp_project_dir
+    ) -> None:
         """Test agents injection with selected agents"""
         generator = ClaudeMdGenerator(minimal_preferences, selected_agents=sample_agents)
         content = generator._create_base_structure()
@@ -975,7 +997,9 @@ class TestAgentsInjection:
         assert "<!-- CCO_AGENTS_START -->" in result
         assert "<!-- CCO_AGENTS_END -->" in result
 
-    def test_inject_agents_without_markers(self, minimal_preferences, sample_agents, temp_project_dir) -> None:
+    def test_inject_agents_without_markers(
+        self, minimal_preferences, sample_agents, temp_project_dir
+    ) -> None:
         """Test agents injection when markers don't exist"""
         generator = ClaudeMdGenerator(minimal_preferences, selected_agents=sample_agents)
         content = "# Some content without markers"
@@ -1000,7 +1024,9 @@ class TestClaudeGuidelinesInjection:
         assert "<!-- CCO_CLAUDE_START -->" in result
         assert "<!-- CCO_CLAUDE_END -->" in result
 
-    def test_inject_claude_guidelines_without_markers(self, minimal_preferences, temp_project_dir) -> None:
+    def test_inject_claude_guidelines_without_markers(
+        self, minimal_preferences, temp_project_dir
+    ) -> None:
         """Test Claude guidelines injection without existing markers"""
         generator = ClaudeMdGenerator(minimal_preferences)
         content = "# Some content without markers"
@@ -1010,7 +1036,9 @@ class TestClaudeGuidelinesInjection:
         # Should append Claude guidelines section
         assert "## Claude Guidelines" in result or content in result
 
-    def test_inject_claude_guidelines_nonexistent_dir(self, minimal_preferences, temp_project_dir) -> None:
+    def test_inject_claude_guidelines_nonexistent_dir(
+        self, minimal_preferences, temp_project_dir
+    ) -> None:
         """Test Claude guidelines injection when principles dir doesn't exist"""
         generator = ClaudeMdGenerator(minimal_preferences)
         # Set principles_dir to non-existent path
@@ -1022,7 +1050,9 @@ class TestClaudeGuidelinesInjection:
         # Should return content unchanged
         assert result == content
 
-    def test_inject_claude_guidelines_no_claude_principles(self, minimal_preferences, temp_project_dir) -> None:
+    def test_inject_claude_guidelines_no_claude_principles(
+        self, minimal_preferences, temp_project_dir
+    ) -> None:
         """Test Claude guidelines injection when no C_* principles exist"""
         # Create a temporary principles dir with only non-Claude principles
         principles_dir = temp_project_dir / "principles"
@@ -1079,7 +1109,9 @@ class TestCustomizeContent:
         # Should add metadata
         assert "**Project:**" in result or "TestProject" in result
 
-    def test_customize_content_preserves_existing_metadata(self, minimal_preferences, temp_project_dir) -> None:
+    def test_customize_content_preserves_existing_metadata(
+        self, minimal_preferences, temp_project_dir
+    ) -> None:
         """Test that customize preserves existing metadata"""
         generator = ClaudeMdGenerator(minimal_preferences)
         content = """# Claude Code Development Guide

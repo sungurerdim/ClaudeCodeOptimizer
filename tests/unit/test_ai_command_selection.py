@@ -5,7 +5,6 @@ Tests command selection logic, scoring, ranking, filtering, and error handling.
 Target Coverage: 100%
 """
 
-
 import pytest
 
 from claudecodeoptimizer.ai.command_selection import CommandRecommender
@@ -460,7 +459,9 @@ class TestConditionEvaluation:
         condition = ("project_identity.primary_language", "!=", "javascript")
         assert recommender._evaluate_condition(condition) is True
 
-    def test_evaluate_condition_not_equals_false(self, minimal_preferences, sample_registry) -> None:
+    def test_evaluate_condition_not_equals_false(
+        self, minimal_preferences, sample_registry
+    ) -> None:
         """Test != operator with matching value"""
         recommender = CommandRecommender(minimal_preferences, sample_registry)
 
@@ -621,9 +622,7 @@ class TestRecommendCommands:
         assert "cco-audit-security" in (
             recommendations["recommended"] + recommendations["optional"]
         )
-        assert "cco-scan-secrets" in (
-            recommendations["recommended"] + recommendations["optional"]
-        )
+        assert "cco-scan-secrets" in (recommendations["recommended"] + recommendations["optional"])
 
     def test_recommend_commands_high_testing(
         self, high_testing_preferences, sample_registry
@@ -633,9 +632,7 @@ class TestRecommendCommands:
         recommendations = recommender.recommend_commands()
 
         # Testing commands should be recommended
-        assert "cco-audit-tests" in (
-            recommendations["recommended"] + recommendations["optional"]
-        )
+        assert "cco-audit-tests" in (recommendations["recommended"] + recommendations["optional"])
         assert "cco-generate-tests" in (
             recommendations["recommended"] + recommendations["optional"]
         )
@@ -648,12 +645,8 @@ class TestRecommendCommands:
         recommendations = recommender.recommend_commands()
 
         # Code quality commands should be recommended
-        assert "cco-audit-code" in (
-            recommendations["recommended"] + recommendations["optional"]
-        )
-        assert "cco-fix-code" in (
-            recommendations["recommended"] + recommendations["optional"]
-        )
+        assert "cco-audit-code" in (recommendations["recommended"] + recommendations["optional"])
+        assert "cco-fix-code" in (recommendations["recommended"] + recommendations["optional"])
 
     def test_recommend_commands_extensive_docs(
         self, extensive_docs_preferences, sample_registry
@@ -663,12 +656,8 @@ class TestRecommendCommands:
         recommendations = recommender.recommend_commands()
 
         # Documentation commands should be recommended
-        assert "cco-audit-docs" in (
-            recommendations["recommended"] + recommendations["optional"]
-        )
-        assert "cco-generate-docs" in (
-            recommendations["recommended"] + recommendations["optional"]
-        )
+        assert "cco-audit-docs" in (recommendations["recommended"] + recommendations["optional"])
+        assert "cco-generate-docs" in (recommendations["recommended"] + recommendations["optional"])
 
     def test_recommend_commands_devops(self, devops_preferences, sample_registry) -> None:
         """Test recommendations for DevOps preferences"""
@@ -676,16 +665,10 @@ class TestRecommendCommands:
         recommendations = recommender.recommend_commands()
 
         # DevOps commands should be recommended
-        assert "cco-setup-cicd" in (
-            recommendations["recommended"] + recommendations["optional"]
-        )
-        assert "cco-setup-docker" in (
-            recommendations["recommended"] + recommendations["optional"]
-        )
+        assert "cco-setup-cicd" in (recommendations["recommended"] + recommendations["optional"])
+        assert "cco-setup-docker" in (recommendations["recommended"] + recommendations["optional"])
 
-    def test_recommend_commands_no_duplicates(
-        self, minimal_preferences, sample_registry
-    ) -> None:
+    def test_recommend_commands_no_duplicates(self, minimal_preferences, sample_registry) -> None:
         """Test that recommendations contain no duplicates"""
         recommender = CommandRecommender(minimal_preferences, sample_registry)
         recommendations = recommender.recommend_commands()
@@ -727,7 +710,9 @@ class TestRecommendCommands:
                 assert "all" in cmd.applicable_project_types or any(
                     pt in cmd.applicable_project_types
                     for pt in minimal_preferences.project_identity.types
-                ), f"Command {cmd_id} not applicable to {minimal_preferences.project_identity.types}"
+                ), (
+                    f"Command {cmd_id} not applicable to {minimal_preferences.project_identity.types}"
+                )
 
 
 class TestFilterByProjectType:
@@ -885,9 +870,7 @@ class TestGenerateSelectionSummary:
         assert "recommendation_ratio" in summary
         assert "commands_by_category" in summary
 
-    def test_generate_selection_summary_counts(
-        self, minimal_preferences, sample_registry
-    ) -> None:
+    def test_generate_selection_summary_counts(self, minimal_preferences, sample_registry) -> None:
         """Test that counts are correct"""
         recommender = CommandRecommender(minimal_preferences, sample_registry)
         summary = recommender.generate_selection_summary()
@@ -896,9 +879,7 @@ class TestGenerateSelectionSummary:
         assert summary["core_count"] == len(CommandRecommender.CORE_COMMANDS)
         assert summary["total_recommended"] == summary["core_count"] + summary["recommended_count"]
 
-    def test_generate_selection_summary_ratio(
-        self, minimal_preferences, sample_registry
-    ) -> None:
+    def test_generate_selection_summary_ratio(self, minimal_preferences, sample_registry) -> None:
         """Test that recommendation ratio is calculated correctly"""
         recommender = CommandRecommender(minimal_preferences, sample_registry)
         summary = recommender.generate_selection_summary()
@@ -1057,9 +1038,7 @@ class TestEdgeCases:
 class TestIntegration:
     """Integration tests with realistic scenarios"""
 
-    def test_full_recommendation_workflow(
-        self, high_security_preferences, sample_registry
-    ) -> None:
+    def test_full_recommendation_workflow(self, high_security_preferences, sample_registry) -> None:
         """Test complete recommendation workflow"""
         recommender = CommandRecommender(high_security_preferences, sample_registry)
 
@@ -1071,9 +1050,7 @@ class TestIntegration:
 
         # Explain a recommendation
         if recommendations["recommended"]:
-            explanation = recommender.explain_recommendation(
-                recommendations["recommended"][0]
-            )
+            explanation = recommender.explain_recommendation(recommendations["recommended"][0])
             assert len(explanation) > 0
 
         # Verify consistency
@@ -1104,9 +1081,7 @@ class TestIntegration:
 
         # Should include commands relevant to any of the project types
         all_commands = (
-            recommendations["core"]
-            + recommendations["recommended"]
-            + recommendations["optional"]
+            recommendations["core"] + recommendations["recommended"] + recommendations["optional"]
         )
 
         assert len(all_commands) > 0

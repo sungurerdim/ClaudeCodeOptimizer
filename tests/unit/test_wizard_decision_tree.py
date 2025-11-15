@@ -547,6 +547,7 @@ class TestDocumentationLevelDetection:
     def test_auto_detect_comprehensive_for_library(self, mock_answer_context):
         """Test detects comprehensive docs for libraries"""
         from claudecodeoptimizer.wizard.decision_tree import _auto_detect_documentation_level
+
         mock_answer_context.answers["project_purpose"] = ["library"]
         result = _auto_detect_documentation_level(mock_answer_context)
         assert result == "comprehensive"
@@ -554,6 +555,7 @@ class TestDocumentationLevelDetection:
     def test_auto_detect_practical_for_api(self, mock_answer_context):
         """Test detects practical docs for APIs"""
         from claudecodeoptimizer.wizard.decision_tree import _auto_detect_documentation_level
+
         mock_answer_context.answers["project_purpose"] = ["api_service"]
         result = _auto_detect_documentation_level(mock_answer_context)
         assert result == "practical"
@@ -561,6 +563,7 @@ class TestDocumentationLevelDetection:
     def test_auto_detect_minimal_for_solo(self, mock_answer_context):
         """Test detects minimal docs for solo developers"""
         from claudecodeoptimizer.wizard.decision_tree import _auto_detect_documentation_level
+
         mock_answer_context.answers["team_dynamics"] = "solo"
         mock_answer_context.answers["project_purpose"] = ["cli"]
         result = _auto_detect_documentation_level(mock_answer_context)
@@ -1022,7 +1025,9 @@ class TestGetDecisionsFunctions:
         for i in range(len(DECISION_TREE_TIER1)):
             assert decisions[i].tier == 1
         # Next should be tier 2
-        for i in range(len(DECISION_TREE_TIER1), len(DECISION_TREE_TIER1) + len(DECISION_TREE_TIER2)):
+        for i in range(
+            len(DECISION_TREE_TIER1), len(DECISION_TREE_TIER1) + len(DECISION_TREE_TIER2)
+        ):
             assert decisions[i].tier == 2
 
     def test_get_decisions_by_tier_1(self, mock_answer_context):
@@ -1139,4 +1144,10 @@ class TestEdgeCases:
         """Test versioning strategy handles non-list project types"""
         mock_answer_context.answers["project_purpose"] = "backend"  # String instead of list
         result = _auto_detect_versioning_strategy(mock_answer_context)
-        assert result in ["auto_semver", "manual_semver", "pr_based_semver", "no_versioning", "calver"]
+        assert result in [
+            "auto_semver",
+            "manual_semver",
+            "pr_based_semver",
+            "no_versioning",
+            "calver",
+        ]

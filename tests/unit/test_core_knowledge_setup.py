@@ -214,9 +214,7 @@ class TestSetupTemplates:
         with patch.object(Path, "exists", return_value=True):
             with patch.object(Path, "glob") as mock_glob:
                 # Mock multiple template files
-                mock_templates = [
-                    MagicMock(spec=Path, name=f"file{i}.template") for i in range(3)
-                ]
+                mock_templates = [MagicMock(spec=Path, name=f"file{i}.template") for i in range(3)]
                 for i, mock_template in enumerate(mock_templates):
                     mock_template.name = f"file{i}.template"
                 mock_glob.return_value = mock_templates
@@ -254,9 +252,7 @@ class TestSetupPrinciples:
                 expected_dest = principles_dir / "U_ATOMIC_COMMITS.md"
                 mock_copy2.assert_called_once_with(mock_principle, expected_dest)
 
-    def test_setup_principles_raises_if_source_not_found(
-        self, tmp_path: Path
-    ) -> None:
+    def test_setup_principles_raises_if_source_not_found(self, tmp_path: Path) -> None:
         """Test that FileNotFoundError raised if source principles not found"""
         principles_dir = tmp_path / "principles"
 
@@ -486,9 +482,7 @@ class TestSetupSkills:
                 mock_hidden.name = ".hidden"
                 mock_hidden.is_dir.return_value = True
 
-                with patch.object(
-                    Path, "iterdir", return_value=[mock_pycache, mock_hidden]
-                ):
+                with patch.object(Path, "iterdir", return_value=[mock_pycache, mock_hidden]):
                     knowledge_setup._setup_skills(skills_dir)
 
                     # Neither directory should be processed
@@ -889,9 +883,7 @@ class TestGetAvailableGuides:
     """Test get_available_guides function"""
 
     @patch("claudecodeoptimizer.config.get_guides_dir")
-    def test_get_available_guides_returns_empty_if_not_exists(
-        self, mock_guides_dir: Mock
-    ) -> None:
+    def test_get_available_guides_returns_empty_if_not_exists(self, mock_guides_dir: Mock) -> None:
         """Test returns empty list if guides directory doesn't exist"""
         mock_dir = MagicMock(spec=Path)
         mock_dir.exists.return_value = False
@@ -923,9 +915,7 @@ class TestGetAvailableAgents:
     """Test get_available_agents function"""
 
     @patch("claudecodeoptimizer.config.get_agents_dir")
-    def test_get_available_agents_returns_empty_if_not_exists(
-        self, mock_agents_dir: Mock
-    ) -> None:
+    def test_get_available_agents_returns_empty_if_not_exists(self, mock_agents_dir: Mock) -> None:
         """Test returns empty list if agents directory doesn't exist"""
         mock_dir = MagicMock(spec=Path)
         mock_dir.exists.return_value = False
@@ -959,9 +949,7 @@ class TestGetAvailableSkills:
     """Test get_available_skills function"""
 
     @patch("claudecodeoptimizer.config.get_skills_dir")
-    def test_get_available_skills_returns_empty_if_not_exists(
-        self, mock_skills_dir: Mock
-    ) -> None:
+    def test_get_available_skills_returns_empty_if_not_exists(self, mock_skills_dir: Mock) -> None:
         """Test returns empty list if skills directory doesn't exist"""
         mock_dir = MagicMock(spec=Path)
         mock_dir.exists.return_value = False
@@ -1015,7 +1003,7 @@ class TestErrorHandling:
         # Mock read_text to fail for bad file
         original_read_text = Path.read_text
 
-        def mock_read_text(self: Path, *args: Any, **kwargs: Any) -> str:
+        def mock_read_text(self: Path, *args: Any, **kwargs: Any) -> str:  # noqa: ANN401
             if "BAD" in str(self):
                 raise PermissionError("Cannot read")
             return original_read_text(self, *args, **kwargs)

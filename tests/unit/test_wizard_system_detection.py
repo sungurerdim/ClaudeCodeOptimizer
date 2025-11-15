@@ -207,9 +207,7 @@ class TestTerminalDetection:
         """Test terminal emulator detection for unknown terminal"""
         detector = SystemDetector()
         with patch("sys.platform", "linux"):
-            with patch.dict(
-                os.environ, {"TERM": "unknown", "TERM_PROGRAM": "custom"}, clear=True
-            ):
+            with patch.dict(os.environ, {"TERM": "unknown", "TERM_PROGRAM": "custom"}, clear=True):
                 assert detector._detect_terminal_emulator() == "custom"
 
     def test_detect_terminal_emulator_fallback(self):
@@ -335,9 +333,7 @@ class TestLocaleDetection:
         """Test locale detection from LC_CTYPE environment variable"""
         detector = SystemDetector()
         with patch("locale.getlocale", return_value=(None, None)):
-            with patch.dict(
-                os.environ, {"LC_CTYPE": "fr_FR.UTF-8"}, clear=True
-            ):
+            with patch.dict(os.environ, {"LC_CTYPE": "fr_FR.UTF-8"}, clear=True):
                 assert detector._detect_locale() == "fr_FR"
 
     def test_detect_locale_from_lang(self):
@@ -638,6 +634,7 @@ class TestEditorDetection:
         """Test editor detection for multiple editors"""
         detector = SystemDetector(project_root=tmp_path)
         with patch("shutil.which") as mock_which:
+
             def which_mock(x):
                 if x in ["code", "vim", "nvim"]:
                     return f"/usr/bin/{x}"
@@ -721,9 +718,7 @@ class TestEditorDetection:
     def test_detect_active_editor_visual_ignored_if_editor_set(self):
         """Test VISUAL is ignored if EDITOR is set"""
         detector = SystemDetector()
-        with patch.dict(
-            os.environ, {"EDITOR": "vim", "VISUAL": "code"}, clear=False
-        ):
+        with patch.dict(os.environ, {"EDITOR": "vim", "VISUAL": "code"}, clear=False):
             assert detector._detect_active_editor() == "vim"
 
     def test_detect_active_editor_from_term_program(self):
@@ -781,9 +776,7 @@ class TestEnrichWithProjectDetection:
             ],
         }
 
-        enriched = detector.enrich_with_project_detection(
-            system_context, detection_report
-        )
+        enriched = detector.enrich_with_project_detection(system_context, detection_report)
 
         assert "pytest" in enriched.existing_tools
         assert "black" in enriched.existing_tools
@@ -798,9 +791,7 @@ class TestEnrichWithProjectDetection:
             ],
         }
 
-        enriched = detector.enrich_with_project_detection(
-            system_context, detection_report
-        )
+        enriched = detector.enrich_with_project_detection(system_context, detection_report)
 
         assert "python" in enriched.detected_languages
         assert "javascript" in enriched.detected_languages
@@ -815,9 +806,7 @@ class TestEnrichWithProjectDetection:
             ],
         }
 
-        enriched = detector.enrich_with_project_detection(
-            system_context, detection_report
-        )
+        enriched = detector.enrich_with_project_detection(system_context, detection_report)
 
         assert "django" in enriched.detected_frameworks
         assert "fastapi" in enriched.detected_frameworks
@@ -832,9 +821,7 @@ class TestEnrichWithProjectDetection:
             ],
         }
 
-        enriched = detector.enrich_with_project_detection(
-            system_context, detection_report
-        )
+        enriched = detector.enrich_with_project_detection(system_context, detection_report)
 
         assert "web_app" in enriched.detected_project_types
         assert "api_service" in enriched.detected_project_types
@@ -851,9 +838,7 @@ class TestEnrichWithProjectDetection:
             },
         }
 
-        enriched = detector.enrich_with_project_detection(
-            system_context, detection_report
-        )
+        enriched = detector.enrich_with_project_detection(system_context, detection_report)
 
         assert enriched.file_count == 150
         assert enriched.line_count == 5000
@@ -865,9 +850,7 @@ class TestEnrichWithProjectDetection:
         detector = SystemDetector()
         detection_report: Dict[str, Any] = {}
 
-        enriched = detector.enrich_with_project_detection(
-            system_context, detection_report
-        )
+        enriched = detector.enrich_with_project_detection(system_context, detection_report)
 
         assert enriched.existing_tools == []
         assert enriched.detected_languages == []

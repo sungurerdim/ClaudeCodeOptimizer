@@ -11,7 +11,6 @@ Tests cover:
 - Case sensitivity handling
 """
 
-
 from claudecodeoptimizer.wizard.models import ToolComparison
 from claudecodeoptimizer.wizard.tool_comparison import (
     ToolComparator,
@@ -239,17 +238,28 @@ class TestFindAllConflicts:
 
     def test_find_all_categories_with_conflicts(self):
         """Test finding conflicts across all categories"""
-        comparator = ToolComparator([
-            "ruff", "black",  # formatter
-            "flake8", "pylint",  # linter (ruff also)
-            "pytest", "unittest",  # test_framework
-            "mypy", "pyright",  # type_checker
-            "poetry", "pip-tools",  # dependency_manager
-            "make", "invoke",  # task_runner
-            "coverage", "pytest-cov",  # coverage_tool
-            "sphinx", "mkdocs",  # documentation
-            "setuptools", "hatchling",  # build_system
-        ])
+        comparator = ToolComparator(
+            [
+                "ruff",
+                "black",  # formatter
+                "flake8",
+                "pylint",  # linter (ruff also)
+                "pytest",
+                "unittest",  # test_framework
+                "mypy",
+                "pyright",  # type_checker
+                "poetry",
+                "pip-tools",  # dependency_manager
+                "make",
+                "invoke",  # task_runner
+                "coverage",
+                "pytest-cov",  # coverage_tool
+                "sphinx",
+                "mkdocs",  # documentation
+                "setuptools",
+                "hatchling",  # build_system
+            ]
+        )
         conflicts = comparator.find_all_conflicts()
 
         # Should have conflicts in all categories
@@ -334,10 +344,19 @@ class TestGetRecommendations:
 
     def test_get_recommendations_all_categories(self):
         """Test recommendations for all categories"""
-        comparator = ToolComparator([
-            "black", "flake8", "pytest", "mypy", "poetry",
-            "make", "coverage", "sphinx", "setuptools"
-        ])
+        comparator = ToolComparator(
+            [
+                "black",
+                "flake8",
+                "pytest",
+                "mypy",
+                "poetry",
+                "make",
+                "coverage",
+                "sphinx",
+                "setuptools",
+            ]
+        )
         recs = comparator.get_recommendations()
 
         assert recs["formatter"] == "ruff"
@@ -514,15 +533,30 @@ class TestExplainRecommendation:
 
     def test_explain_all_categories(self):
         """Test explaining all valid categories"""
-        comparator = ToolComparator([
-            "black", "flake8", "pytest", "mypy", "poetry",
-            "make", "coverage", "sphinx", "setuptools"
-        ])
+        comparator = ToolComparator(
+            [
+                "black",
+                "flake8",
+                "pytest",
+                "mypy",
+                "poetry",
+                "make",
+                "coverage",
+                "sphinx",
+                "setuptools",
+            ]
+        )
 
         categories = [
-            "formatter", "linter", "test_framework", "type_checker",
-            "dependency_manager", "task_runner", "coverage_tool",
-            "documentation", "build_system"
+            "formatter",
+            "linter",
+            "test_framework",
+            "type_checker",
+            "dependency_manager",
+            "task_runner",
+            "coverage_tool",
+            "documentation",
+            "build_system",
         ]
 
         for category in categories:
@@ -645,9 +679,15 @@ class TestEdgeCases:
         """Test that TOOL_CATEGORIES has expected structure"""
         comparator = ToolComparator([])
         expected_keys = [
-            "formatter", "linter", "test_framework", "type_checker",
-            "dependency_manager", "task_runner", "coverage_tool",
-            "documentation", "build_system"
+            "formatter",
+            "linter",
+            "test_framework",
+            "type_checker",
+            "dependency_manager",
+            "task_runner",
+            "coverage_tool",
+            "documentation",
+            "build_system",
         ]
 
         for key in expected_keys:

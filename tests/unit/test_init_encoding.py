@@ -35,7 +35,9 @@ class TestWindowsEncodingErrorPath:
                 mock_stderr.reconfigure(encoding="utf-8")
             except Exception as e:
                 # This is what line 16 does
-                warning_msg = f"Failed to reconfigure console encoding: {e}. Using default encoding."
+                warning_msg = (
+                    f"Failed to reconfigure console encoding: {e}. Using default encoding."
+                )
                 mock_logger.warning(warning_msg)
 
             # Verify logging.warning was called
@@ -97,7 +99,9 @@ class TestWindowsEncodingErrorPath:
             try:
                 raise exc
             except Exception as e:
-                warning_msg = f"Failed to reconfigure console encoding: {e}. Using default encoding."
+                warning_msg = (
+                    f"Failed to reconfigure console encoding: {e}. Using default encoding."
+                )
                 mock_logger.warning(warning_msg)
 
             # Each exception should trigger warning

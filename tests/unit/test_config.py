@@ -296,12 +296,14 @@ class TestDefaultConfig:
     def test_default_config_has_version(self):
         """Test DEFAULT_CONFIG contains version."""
         from claudecodeoptimizer.config import DEFAULT_CONFIG
+
         assert "version" in DEFAULT_CONFIG
         assert DEFAULT_CONFIG["version"] == VERSION
 
     def test_default_config_has_brand(self):
         """Test DEFAULT_CONFIG contains brand info."""
         from claudecodeoptimizer.config import DEFAULT_CONFIG
+
         assert "brand" in DEFAULT_CONFIG
         brand = DEFAULT_CONFIG["brand"]
         assert brand["name"] == BRAND_NAME
@@ -311,6 +313,7 @@ class TestDefaultConfig:
     def test_default_config_has_paths(self):
         """Test DEFAULT_CONFIG contains paths."""
         from claudecodeoptimizer.config import DEFAULT_CONFIG
+
         assert "paths" in DEFAULT_CONFIG
         paths = DEFAULT_CONFIG["paths"]
         assert "global_dir" in paths
@@ -331,6 +334,7 @@ class TestMessageConstants:
             MSG_NOT_INSTALLED,
             MSG_PROJECT_INIT_SUCCESS,
         )
+
         assert MSG_GLOBAL_INSTALL_SUCCESS is not None
         assert MSG_PROJECT_INIT_SUCCESS is not None
         assert MSG_ALREADY_INSTALLED is not None
@@ -345,7 +349,10 @@ class TestMessageConstants:
             MSG_GLOBAL_INSTALL_SUCCESS,
             MSG_PROJECT_INIT_SUCCESS,
         )
-        assert DISPLAY_NAME in MSG_GLOBAL_INSTALL_SUCCESS or SHORT_NAME in MSG_GLOBAL_INSTALL_SUCCESS
+
+        assert (
+            DISPLAY_NAME in MSG_GLOBAL_INSTALL_SUCCESS or SHORT_NAME in MSG_GLOBAL_INSTALL_SUCCESS
+        )
         assert SHORT_NAME in MSG_PROJECT_INIT_SUCCESS
 
 
@@ -355,11 +362,13 @@ class TestGitignorePatterns:
     def test_gitignore_patterns_is_list(self):
         """Test GITIGNORE_PATTERNS is a list."""
         from claudecodeoptimizer.config import GITIGNORE_PATTERNS
+
         assert isinstance(GITIGNORE_PATTERNS, list)
 
     def test_gitignore_patterns_empty(self):
         """Test GITIGNORE_PATTERNS is empty (clean project directories)."""
         from claudecodeoptimizer.config import GITIGNORE_PATTERNS
+
         # CCO keeps project directories clean, so should be empty
         assert len(GITIGNORE_PATTERNS) == 0
 
@@ -370,6 +379,7 @@ class TestExports:
     def test_all_exports_exist(self):
         """Test __all__ exports are defined."""
         from claudecodeoptimizer import config
+
         assert hasattr(config, "__all__")
         assert isinstance(config.__all__, list)
 
@@ -377,5 +387,6 @@ class TestExports:
         """Test all exports can be imported."""
         from claudecodeoptimizer import config
         from claudecodeoptimizer.config import __all__
+
         for name in __all__:
             assert hasattr(config, name)

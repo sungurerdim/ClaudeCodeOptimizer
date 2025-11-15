@@ -273,7 +273,9 @@ class TestRecommendationEngineInit:
 
         assert engine.scale_practices == SCALE_RECOMMENDATIONS["startup"]
 
-    def test_init_language_practices_loaded(self, minimal_detection_results: Dict[str, Any]) -> None:
+    def test_init_language_practices_loaded(
+        self, minimal_detection_results: Dict[str, Any]
+    ) -> None:
         """Test language practices are loaded correctly"""
         engine = RecommendationEngine(minimal_detection_results)
 
@@ -461,7 +463,9 @@ class TestRecommendProjectIdentity:
         assert len(scale_rec) == 1
         assert scale_rec[0].priority == "medium"
 
-    def test_complete_identity_no_recommendations(self, complete_detection_results: Dict[str, Any]) -> None:
+    def test_complete_identity_no_recommendations(
+        self, complete_detection_results: Dict[str, Any]
+    ) -> None:
         """Test no recommendations when identity is complete"""
         engine = RecommendationEngine(complete_detection_results)
         recs = engine.recommend_project_identity()
@@ -479,7 +483,9 @@ class TestRecommendCodeQuality:
         recs = engine.recommend_code_quality()
 
         # Should recommend formatter
-        formatter_rec = [r for r in recs if "formatter" in r.title.lower() or "formatting" in r.title.lower()]
+        formatter_rec = [
+            r for r in recs if "formatter" in r.title.lower() or "formatting" in r.title.lower()
+        ]
         assert len(formatter_rec) == 1
         assert formatter_rec[0].priority == "high"
         assert "black" in formatter_rec[0].title.lower()
@@ -528,7 +534,9 @@ class TestRecommendCodeQuality:
         engine = RecommendationEngine(js_results)
         recs = engine.recommend_code_quality()
 
-        formatter_rec = [r for r in recs if "formatter" in r.title.lower() or "prettier" in r.title.lower()]
+        formatter_rec = [
+            r for r in recs if "formatter" in r.title.lower() or "prettier" in r.title.lower()
+        ]
         assert len(formatter_rec) == 1
         assert "prettier" in formatter_rec[0].title.lower()
 
@@ -542,7 +550,13 @@ class TestRecommendTesting:
         recs = engine.recommend_testing()
 
         # Should recommend test framework
-        framework_rec = [r for r in recs if "test" in r.title.lower() and "framework" not in r.description.lower() or "pytest" in r.title.lower()]
+        framework_rec = [
+            r
+            for r in recs
+            if "test" in r.title.lower()
+            and "framework" not in r.description.lower()
+            or "pytest" in r.title.lower()
+        ]
         assert len(framework_rec) >= 1
         # First should be critical priority
         assert any(r.priority == "critical" for r in recs)
@@ -677,7 +691,9 @@ class TestRecommendSecurity:
         assert len(encryption_rec) >= 1
         assert encryption_rec[0].priority == "critical"
 
-    def test_missing_secret_management_paranoid(self, fintech_detection_results: Dict[str, Any]) -> None:
+    def test_missing_secret_management_paranoid(
+        self, fintech_detection_results: Dict[str, Any]
+    ) -> None:
         """Test secret management recommendation for paranoid stance"""
         engine = RecommendationEngine(fintech_detection_results)
         recs = engine.recommend_security()
@@ -780,7 +796,13 @@ class TestRecommendDevOps:
         recs = engine.recommend_devops()
 
         # Should recommend deployment validation strategies
-        deploy_recs = [r for r in recs if "deployment" in r.title.lower() or "canary" in r.title.lower() or "blue-green" in r.title.lower()]
+        deploy_recs = [
+            r
+            for r in recs
+            if "deployment" in r.title.lower()
+            or "canary" in r.title.lower()
+            or "blue-green" in r.title.lower()
+        ]
         assert len(deploy_recs) >= 1
 
     def test_missing_metrics(self) -> None:
@@ -848,7 +870,9 @@ class TestRecommendInfrastructure:
         recs = engine.recommend_infrastructure()
 
         # Should recommend Docker
-        docker_rec = [r for r in recs if "docker" in r.title.lower() or "containerize" in r.title.lower()]
+        docker_rec = [
+            r for r in recs if "docker" in r.title.lower() or "containerize" in r.title.lower()
+        ]
         assert len(docker_rec) >= 1
         assert docker_rec[0].priority == "high"
 
@@ -888,7 +912,9 @@ class TestRecommendInfrastructure:
         recs = engine.recommend_infrastructure()
 
         # Should recommend Kubernetes
-        k8s_rec = [r for r in recs if "kubernetes" in r.title.lower() or "orchestration" in r.title.lower()]
+        k8s_rec = [
+            r for r in recs if "kubernetes" in r.title.lower() or "orchestration" in r.title.lower()
+        ]
         assert len(k8s_rec) >= 1
 
     def test_missing_database_config(self, minimal_detection_results: Dict[str, Any]) -> None:

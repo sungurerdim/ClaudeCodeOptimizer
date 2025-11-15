@@ -151,7 +151,7 @@ description: test description
             # Simulate an exception
             mock_parse.side_effect = Exception("Unexpected error")
 
-            with pytest.raises(Exception):
+            with pytest.raises(Exception):  # noqa: B017
                 parse_frontmatter(content)
 
     def test_parse_frontmatter_whitespace_handling(self):
@@ -211,9 +211,11 @@ description: Remove CCO from current project
             # Patch exists and read_text
             with patch.object(Path, "exists", return_value=True):
                 with patch.object(
-                    Path, "read_text", side_effect=lambda **kwargs: (
+                    Path,
+                    "read_text",
+                    side_effect=lambda **kwargs: (
                         init_content if "init" in str(Path) else remove_content
-                    )
+                    ),
                 ):
                     # Actually test with real paths
                     result = load_global_commands()
@@ -256,7 +258,11 @@ description: Remove CCO from current project (keeps global installation)
         # Mock __file__ to point to temp directory
         import claudecodeoptimizer.commands_loader as commands_loader_module
 
-        with patch.object(commands_loader_module, "__file__", str(tmp_path / "claudecodeoptimizer" / "commands_loader.py")):
+        with patch.object(
+            commands_loader_module,
+            "__file__",
+            str(tmp_path / "claudecodeoptimizer" / "commands_loader.py"),
+        ):
             result = load_global_commands()
 
             # Should successfully load both commands
@@ -271,7 +277,11 @@ description: Remove CCO from current project (keeps global installation)
         # Create module directory but not the commands directory
         import claudecodeoptimizer.commands_loader as commands_loader_module
 
-        with patch.object(commands_loader_module, "__file__", str(tmp_path / "claudecodeoptimizer" / "commands_loader.py")):
+        with patch.object(
+            commands_loader_module,
+            "__file__",
+            str(tmp_path / "claudecodeoptimizer" / "commands_loader.py"),
+        ):
             result = load_global_commands()
 
             # Should return empty dict when directory doesn't exist
@@ -294,7 +304,11 @@ description: Initialize CCO
         # Don't create cco-remove.md
         import claudecodeoptimizer.commands_loader as commands_loader_module
 
-        with patch.object(commands_loader_module, "__file__", str(tmp_path / "claudecodeoptimizer" / "commands_loader.py")):
+        with patch.object(
+            commands_loader_module,
+            "__file__",
+            str(tmp_path / "claudecodeoptimizer" / "commands_loader.py"),
+        ):
             result = load_global_commands()
 
             # Should load only cco-init
@@ -314,7 +328,11 @@ description: Initialize CCO
 
         import claudecodeoptimizer.commands_loader as commands_loader_module
 
-        with patch.object(commands_loader_module, "__file__", str(tmp_path / "claudecodeoptimizer" / "commands_loader.py")):
+        with patch.object(
+            commands_loader_module,
+            "__file__",
+            str(tmp_path / "claudecodeoptimizer" / "commands_loader.py"),
+        ):
             result = load_global_commands()
 
             # Should still work but use default description
@@ -347,9 +365,7 @@ class TestGetCommandList:
 
     def test_get_command_list_no_commands(self):
         """Test command list output with no commands"""
-        with patch(
-            "claudecodeoptimizer.commands_loader.load_global_commands", return_value={}
-        ):
+        with patch("claudecodeoptimizer.commands_loader.load_global_commands", return_value={}):
             result = get_command_list()
 
             # Default fallback
@@ -412,9 +428,7 @@ class TestGetSlashCommands:
 
     def test_get_slash_commands_no_commands(self):
         """Test slash commands output with no commands"""
-        with patch(
-            "claudecodeoptimizer.commands_loader.load_global_commands", return_value={}
-        ):
+        with patch("claudecodeoptimizer.commands_loader.load_global_commands", return_value={}):
             result = get_slash_commands()
 
             # Default fallback

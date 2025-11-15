@@ -53,9 +53,7 @@ class TestConfigureUtf8Encoding:
     @patch("sys.platform", "linux")
     @patch("sys.stdout")
     @patch("sys.stderr")
-    def test_configure_utf8_encoding_linux(
-        self, mock_stderr: Mock, mock_stdout: Mock
-    ) -> None:
+    def test_configure_utf8_encoding_linux(self, mock_stderr: Mock, mock_stdout: Mock) -> None:
         """Test UTF-8 configuration on Linux platform"""
         # Setup mocks
         mock_buffer = MagicMock()
@@ -72,9 +70,7 @@ class TestConfigureUtf8Encoding:
     @patch("sys.platform", "darwin")
     @patch("sys.stdout")
     @patch("sys.stderr")
-    def test_configure_utf8_encoding_macos(
-        self, mock_stderr: Mock, mock_stdout: Mock
-    ) -> None:
+    def test_configure_utf8_encoding_macos(self, mock_stderr: Mock, mock_stdout: Mock) -> None:
         """Test UTF-8 configuration on macOS platform"""
         # Setup mocks
         mock_buffer = MagicMock()
@@ -218,9 +214,7 @@ class TestSafePrint:
         assert "None" in result
 
     @patch("builtins.print", side_effect=UnicodeEncodeError("utf-8", "", 0, 1, "test"))
-    def test_safe_print_unicode_encode_error_recovery(
-        self, mock_print: Mock
-    ) -> None:
+    def test_safe_print_unicode_encode_error_recovery(self, mock_print: Mock) -> None:
         """Test safe_print recovers from UnicodeEncodeError"""
         # First call raises error, second call should succeed
         mock_print.side_effect = [
@@ -440,9 +434,7 @@ class TestSafePrintIntegration:
         assert "Test" in output.getvalue()
 
     @patch("builtins.print")
-    def test_unicode_to_ascii_called_on_encode_error(
-        self, mock_print: Mock
-    ) -> None:
+    def test_unicode_to_ascii_called_on_encode_error(self, mock_print: Mock) -> None:
         """Test _unicode_to_ascii is used when encoding fails"""
         # Setup: print raises UnicodeEncodeError on first call
         mock_print.side_effect = [

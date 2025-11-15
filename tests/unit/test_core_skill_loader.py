@@ -1234,7 +1234,8 @@ metadata:
 # Cache Performance
 
 Testing cache performance.
-""" + ("A" * 10000),  # Large content
+"""
+            + ("A" * 10000),  # Large content
             encoding="utf-8",
         )
 

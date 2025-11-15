@@ -357,9 +357,7 @@ class TestGetVersionFiles:
         vm = VersionManager(temp_dir)
         files = vm.get_version_files()
         # pyproject.toml should come before package.json based on candidates list
-        assert files.index(temp_dir / "pyproject.toml") < files.index(
-            temp_dir / "package.json"
-        )
+        assert files.index(temp_dir / "pyproject.toml") < files.index(temp_dir / "package.json")
 
 
 class TestUpdateVersionInFile:
@@ -534,9 +532,7 @@ class TestCreateGitTag:
     @patch("subprocess.run")
     def test_create_tag_failure(self, mock_run: Mock, temp_dir: Path) -> None:
         """Test tag creation failure"""
-        mock_run.side_effect = subprocess.CalledProcessError(
-            1, "git", stderr="tag already exists"
-        )
+        mock_run.side_effect = subprocess.CalledProcessError(1, "git", stderr="tag already exists")
 
         vm = VersionManager(temp_dir)
         with pytest.raises(RuntimeError, match="Failed to create git tag"):

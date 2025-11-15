@@ -1078,8 +1078,7 @@ class RecommendationEngine:
         scalability_reqs = self.domain_practices.get("scalability_requirements", [])
         assert isinstance(scalability_reqs, list)  # noqa: S101 - Type narrowing for list operations
         needs_k8s = self.scale == "enterprise" or (
-            self.scale == "growth"
-            and "horizontal" in scalability_reqs
+            self.scale == "growth" and "horizontal" in scalability_reqs
         )
         has_k8s = infrastructure.get("orchestration", {}).get("kubernetes", False)
 

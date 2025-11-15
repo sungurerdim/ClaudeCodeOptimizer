@@ -129,6 +129,17 @@ ignore = [
 
 [tool.ruff.lint.per-file-ignores]
 "__init__.py" = ["F401"]  # unused imports in __init__.py
+"tests/**/*.py" = [
+    "S101",    # assert is standard in pytest
+    "ANN001",  # pytest fixtures don't need type hints
+    "ANN201",  # test functions don't need return type hints
+    "ANN202",  # private test functions don't need return type hints
+    "ANN204",  # special methods in tests don't need return type hints
+    "S108",    # hardcoded temp files are OK in tests
+    "B007",    # unused loop control variable in tests
+    "F841",    # unused variable in tests (intentional for testing)
+]
+"tests/conftest.py" = ["ANN001", "ANN201"]  # pytest config doesn't need type hints
 
 [tool.pytest.ini_options]
 testpaths = ["tests"]

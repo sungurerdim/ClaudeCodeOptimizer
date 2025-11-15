@@ -481,6 +481,7 @@ class TestExceptionHandling:
 
     def test_catch_general_exception(self):
         """Test catching general exceptions"""
+
         def failing_function():
             raise Exception("Test error")
 

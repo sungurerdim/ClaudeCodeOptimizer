@@ -329,7 +329,10 @@ class TestPrinciplesManagerSummary:
                 autofix={"available": False},
             ),
         }
-        manager.categories = [{"id": "Universal", "name": "Universal"}, {"id": "Testing", "name": "Testing"}]
+        manager.categories = [
+            {"id": "Universal", "name": "Universal"},
+            {"id": "Testing", "name": "Testing"},
+        ]
         return manager
 
     def test_get_principle_summary_exists(self) -> None:
@@ -806,9 +809,7 @@ class TestApplicability:
     def test_is_applicable_language_mismatch(self) -> None:
         """Test applicability with non-matching language"""
         manager = PrinciplesManager(Path("/tmp/test"))
-        principle = self.create_principle(
-            {"project_types": ["all"], "languages": ["go", "rust"]}
-        )
+        principle = self.create_principle({"project_types": ["all"], "languages": ["go", "rust"]})
         chars = ProjectCharacteristics(
             project_type="api",
             primary_language="python",
@@ -852,9 +853,7 @@ class TestApplicability:
     def test_is_applicable_context_mismatch(self) -> None:
         """Test applicability with non-matching context"""
         manager = PrinciplesManager(Path("/tmp/test"))
-        principle = self.create_principle(
-            {"project_types": ["all"], "contexts": ["api_endpoints"]}
-        )
+        principle = self.create_principle({"project_types": ["all"], "contexts": ["api_endpoints"]})
         chars = ProjectCharacteristics(
             project_type="api",
             primary_language="python",

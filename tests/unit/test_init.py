@@ -14,24 +14,28 @@ class TestVersionInfo:
     def test_version_exists(self):
         """Test __version__ is defined."""
         from claudecodeoptimizer import __version__
+
         assert __version__ is not None
         assert isinstance(__version__, str)
 
     def test_version_format(self):
         """Test __version__ follows semantic versioning."""
         from claudecodeoptimizer import __version__
+
         parts = __version__.split(".")
         assert len(parts) >= 2  # At least major.minor
 
     def test_author_exists(self):
         """Test __author__ is defined."""
         from claudecodeoptimizer import __author__
+
         assert __author__ is not None
         assert isinstance(__author__, str)
 
     def test_license_exists(self):
         """Test __license__ is defined."""
         from claudecodeoptimizer import __license__
+
         assert __license__ is not None
         assert isinstance(__license__, str)
 
@@ -70,7 +74,9 @@ class TestWindowsConsoleEncoding:
                 raise test_exception
             except Exception as e:
                 # This is what line 16 does - log a warning
-                logging.warning(f"Failed to reconfigure console encoding: {e}. Using default encoding.")
+                logging.warning(
+                    f"Failed to reconfigure console encoding: {e}. Using default encoding."
+                )
 
             # Verify warning was logged
             mock_warning.assert_called_once()
@@ -85,16 +91,19 @@ class TestCCOConfigImport:
     def test_ccoconfig_imported(self):
         """Test CCOConfig is imported."""
         from claudecodeoptimizer import CCOConfig
+
         assert CCOConfig is not None
 
     def test_ccoconfig_in_all(self):
         """Test CCOConfig is in __all__."""
         from claudecodeoptimizer import __all__
+
         assert "CCOConfig" in __all__
 
     def test_version_in_all(self):
         """Test __version__ is in __all__."""
         from claudecodeoptimizer import __all__
+
         assert "__version__" in __all__
 
 
@@ -105,6 +114,7 @@ class TestGlobalSetup:
         """Test _ensure_global_setup is called only once."""
         # The function should set _setup_checked to True after first run
         import claudecodeoptimizer
+
         assert claudecodeoptimizer._setup_checked is True
 
     def test_ensure_global_setup_early_return(self):
@@ -113,6 +123,7 @@ class TestGlobalSetup:
         # Mock _setup_checked as True to trigger early return
         import claudecodeoptimizer
         from claudecodeoptimizer import _ensure_global_setup
+
         original_checked = claudecodeoptimizer._setup_checked
         try:
             claudecodeoptimizer._setup_checked = True
@@ -147,7 +158,9 @@ class TestGlobalSetup:
                 mock_principles_dir.exists.return_value = False
 
                 # Mock setup_global_knowledge
-                with patch("claudecodeoptimizer.core.knowledge_setup.setup_global_knowledge") as mock_setup:
+                with patch(
+                    "claudecodeoptimizer.core.knowledge_setup.setup_global_knowledge"
+                ) as mock_setup:
                     # Call the function
                     _ensure_global_setup()
 
@@ -179,7 +192,9 @@ class TestGlobalSetup:
                 # Return a list with < 80 items
                 mock_principles_dir.glob.return_value = [f"file{i}.md" for i in range(70)]
 
-                with patch("claudecodeoptimizer.core.knowledge_setup.setup_global_knowledge") as mock_setup:
+                with patch(
+                    "claudecodeoptimizer.core.knowledge_setup.setup_global_knowledge"
+                ) as mock_setup:
                     _ensure_global_setup()
                     # Should call setup because < 80 files
                     mock_setup.assert_called_once_with(force=False)
@@ -219,6 +234,7 @@ class TestModuleLevelSetup:
         """Test _ensure_global_setup runs on module import."""
         # This test verifies the module-level call to _ensure_global_setup()
         import claudecodeoptimizer
+
         # If we got here, the import succeeded
         assert claudecodeoptimizer._setup_checked is True
 
@@ -226,6 +242,7 @@ class TestModuleLevelSetup:
         """Test import succeeds even if setup fails."""
         # The setup should fail silently and not prevent import
         import claudecodeoptimizer
+
         assert claudecodeoptimizer is not None
 
 
@@ -235,12 +252,14 @@ class TestAllExports:
     def test_all_defined(self):
         """Test __all__ is defined."""
         from claudecodeoptimizer import __all__
+
         assert __all__ is not None
         assert isinstance(__all__, list)
 
     def test_all_contains_expected(self):
         """Test __all__ contains expected exports."""
         from claudecodeoptimizer import __all__
+
         assert "CCOConfig" in __all__
         assert "__version__" in __all__
 
@@ -248,6 +267,7 @@ class TestAllExports:
         """Test all __all__ exports can be imported."""
         import claudecodeoptimizer
         from claudecodeoptimizer import __all__
+
         for name in __all__:
             assert hasattr(claudecodeoptimizer, name)
 
@@ -258,11 +278,13 @@ class TestImportStructure:
     def test_can_import_module(self):
         """Test module can be imported."""
         import claudecodeoptimizer
+
         assert claudecodeoptimizer is not None
 
     def test_can_import_from_module(self):
         """Test can import from module."""
         from claudecodeoptimizer import CCOConfig, __version__
+
         assert CCOConfig is not None
         assert __version__ is not None
 
@@ -270,6 +292,7 @@ class TestImportStructure:
         """Test CCOConfig import from config module works."""
         from claudecodeoptimizer import CCOConfig
         from claudecodeoptimizer.config import CCOConfig as DirectCCOConfig
+
         assert CCOConfig is DirectCCOConfig
 
 
@@ -280,6 +303,7 @@ class TestLoggingConfiguration:
         """Test logging module is imported."""
         # Verify logging is available (used in exception handling)
         import logging
+
         assert logging is not None
 
     def test_logging_warning_on_encoding_error(self):
@@ -300,16 +324,19 @@ class TestSetupCheckedFlag:
     def test_setup_checked_flag_exists(self):
         """Test _setup_checked flag exists."""
         import claudecodeoptimizer
+
         assert hasattr(claudecodeoptimizer, "_setup_checked")
 
     def test_setup_checked_is_boolean(self):
         """Test _setup_checked is boolean."""
         import claudecodeoptimizer
+
         assert isinstance(claudecodeoptimizer._setup_checked, bool)
 
     def test_setup_checked_is_true_after_import(self):
         """Test _setup_checked is True after import."""
         import claudecodeoptimizer
+
         assert claudecodeoptimizer._setup_checked is True
 
 

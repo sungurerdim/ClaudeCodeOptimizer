@@ -439,7 +439,9 @@ class TestRecommendTestingApproach:
 
         assert "Comprehensive" in result
 
-    def test_production_balanced_or_comprehensive(self, minimal_answer_context: AnswerContext) -> None:
+    def test_production_balanced_or_comprehensive(
+        self, minimal_answer_context: AnswerContext
+    ) -> None:
         """Test balanced/comprehensive for production"""
         minimal_answer_context.system.has_tests = True
         minimal_answer_context.answers["project_maturity"] = "production"
@@ -706,7 +708,9 @@ class TestRecommendToolPreference:
         mock_comparator_class.return_value = mock_instance
 
         engine = RecommendationEngine()
-        result = engine.recommend_tool_preference("formatter", ["black", "ruff"], minimal_answer_context)
+        result = engine.recommend_tool_preference(
+            "formatter", ["black", "ruff"], minimal_answer_context
+        )
 
         assert "ruff" in result.lower()
         assert "black" in result.lower() or "You have" in result
@@ -801,7 +805,9 @@ class TestRecommendCommands:
 
         assert "cco-optimize-code" in result
 
-    def test_optimize_code_for_large_line_count(self, minimal_answer_context: AnswerContext) -> None:
+    def test_optimize_code_for_large_line_count(
+        self, minimal_answer_context: AnswerContext
+    ) -> None:
         """Test optimize-code for large codebase by line count"""
         minimal_answer_context.system.line_count = 6000
         engine = RecommendationEngine()
@@ -811,7 +817,14 @@ class TestRecommendCommands:
 
     def test_optimize_deps_for_many_tools(self, minimal_answer_context: AnswerContext) -> None:
         """Test optimize-deps for projects with many tools"""
-        minimal_answer_context.system.existing_tools = ["black", "ruff", "mypy", "pytest", "coverage", "pre-commit"]
+        minimal_answer_context.system.existing_tools = [
+            "black",
+            "ruff",
+            "mypy",
+            "pytest",
+            "coverage",
+            "pre-commit",
+        ]
         engine = RecommendationEngine()
         result = engine.recommend_commands(minimal_answer_context)
 
@@ -825,7 +838,9 @@ class TestRecommendCommands:
 
         assert "cco-generate" in result
 
-    def test_generate_for_comprehensive_testing(self, minimal_answer_context: AnswerContext) -> None:
+    def test_generate_for_comprehensive_testing(
+        self, minimal_answer_context: AnswerContext
+    ) -> None:
         """Test generate recommended for comprehensive testing"""
         minimal_answer_context.answers["testing_approach"] = "comprehensive"
         engine = RecommendationEngine()
@@ -833,7 +848,9 @@ class TestRecommendCommands:
 
         assert "cco-generate" in result
 
-    def test_security_commands_for_production_stance(self, minimal_answer_context: AnswerContext) -> None:
+    def test_security_commands_for_production_stance(
+        self, minimal_answer_context: AnswerContext
+    ) -> None:
         """Test security commands for production stance"""
         minimal_answer_context.answers["security_stance"] = "production"
         engine = RecommendationEngine()
@@ -863,7 +880,9 @@ class TestRecommendCommands:
 class TestGenerateRecommendation:
     """Test generate_recommendation main method"""
 
-    def test_generates_project_purpose_recommendation(self, minimal_answer_context: AnswerContext) -> None:
+    def test_generates_project_purpose_recommendation(
+        self, minimal_answer_context: AnswerContext
+    ) -> None:
         """Test generating project purpose recommendation"""
         engine = RecommendationEngine()
         result = engine.generate_recommendation("project_purpose", minimal_answer_context)
@@ -871,7 +890,9 @@ class TestGenerateRecommendation:
         assert len(result) > 0
         assert isinstance(result, str)
 
-    def test_generates_team_dynamics_recommendation(self, minimal_answer_context: AnswerContext) -> None:
+    def test_generates_team_dynamics_recommendation(
+        self, minimal_answer_context: AnswerContext
+    ) -> None:
         """Test generating team dynamics recommendation"""
         engine = RecommendationEngine()
         result = engine.generate_recommendation("team_dynamics", minimal_answer_context)
@@ -879,7 +900,9 @@ class TestGenerateRecommendation:
         assert len(result) > 0
         assert isinstance(result, str)
 
-    def test_generates_project_maturity_recommendation(self, minimal_answer_context: AnswerContext) -> None:
+    def test_generates_project_maturity_recommendation(
+        self, minimal_answer_context: AnswerContext
+    ) -> None:
         """Test generating project maturity recommendation"""
         engine = RecommendationEngine()
         result = engine.generate_recommendation("project_maturity", minimal_answer_context)
@@ -887,7 +910,9 @@ class TestGenerateRecommendation:
         assert len(result) > 0
         assert isinstance(result, str)
 
-    def test_generates_development_philosophy_recommendation(self, minimal_answer_context: AnswerContext) -> None:
+    def test_generates_development_philosophy_recommendation(
+        self, minimal_answer_context: AnswerContext
+    ) -> None:
         """Test generating development philosophy recommendation"""
         engine = RecommendationEngine()
         result = engine.generate_recommendation("development_philosophy", minimal_answer_context)
@@ -895,7 +920,9 @@ class TestGenerateRecommendation:
         assert len(result) > 0
         assert isinstance(result, str)
 
-    def test_generates_principle_strategy_recommendation(self, minimal_answer_context: AnswerContext) -> None:
+    def test_generates_principle_strategy_recommendation(
+        self, minimal_answer_context: AnswerContext
+    ) -> None:
         """Test generating principle strategy recommendation"""
         engine = RecommendationEngine()
         result = engine.generate_recommendation("principle_strategy", minimal_answer_context)
@@ -903,7 +930,9 @@ class TestGenerateRecommendation:
         assert len(result) > 0
         assert isinstance(result, str)
 
-    def test_generates_testing_approach_recommendation(self, minimal_answer_context: AnswerContext) -> None:
+    def test_generates_testing_approach_recommendation(
+        self, minimal_answer_context: AnswerContext
+    ) -> None:
         """Test generating testing approach recommendation"""
         engine = RecommendationEngine()
         result = engine.generate_recommendation("testing_approach", minimal_answer_context)
@@ -911,7 +940,9 @@ class TestGenerateRecommendation:
         assert len(result) > 0
         assert isinstance(result, str)
 
-    def test_generates_security_stance_recommendation(self, minimal_answer_context: AnswerContext) -> None:
+    def test_generates_security_stance_recommendation(
+        self, minimal_answer_context: AnswerContext
+    ) -> None:
         """Test generating security stance recommendation"""
         engine = RecommendationEngine()
         result = engine.generate_recommendation("security_stance", minimal_answer_context)
@@ -919,7 +950,9 @@ class TestGenerateRecommendation:
         assert len(result) > 0
         assert isinstance(result, str)
 
-    def test_generates_documentation_level_recommendation(self, minimal_answer_context: AnswerContext) -> None:
+    def test_generates_documentation_level_recommendation(
+        self, minimal_answer_context: AnswerContext
+    ) -> None:
         """Test generating documentation level recommendation"""
         engine = RecommendationEngine()
         result = engine.generate_recommendation("documentation_level", minimal_answer_context)
@@ -927,7 +960,9 @@ class TestGenerateRecommendation:
         assert len(result) > 0
         assert isinstance(result, str)
 
-    def test_generates_git_workflow_recommendation(self, minimal_answer_context: AnswerContext) -> None:
+    def test_generates_git_workflow_recommendation(
+        self, minimal_answer_context: AnswerContext
+    ) -> None:
         """Test generating git workflow recommendation"""
         engine = RecommendationEngine()
         result = engine.generate_recommendation("git_workflow", minimal_answer_context)
@@ -947,7 +982,9 @@ class TestGenerateRecommendation:
         engine = RecommendationEngine()
 
         # Patch a recommendation method to raise an exception
-        with patch.object(engine, "recommend_project_purpose", side_effect=ValueError("Test error")):
+        with patch.object(
+            engine, "recommend_project_purpose", side_effect=ValueError("Test error")
+        ):
             result = engine.generate_recommendation("project_purpose", minimal_answer_context)
 
         # Should return error message, not raise
@@ -986,7 +1023,9 @@ class TestExplainQuestionImportance:
     def test_explains_development_philosophy(self, minimal_answer_context: AnswerContext) -> None:
         """Test explaining development philosophy importance"""
         engine = RecommendationEngine()
-        result = engine.explain_question_importance("development_philosophy", minimal_answer_context)
+        result = engine.explain_question_importance(
+            "development_philosophy", minimal_answer_context
+        )
 
         assert len(result) > 0
         assert "approach" in result.lower() or "decision" in result.lower()
@@ -1100,7 +1139,20 @@ class TestEdgeCases:
         result8 = engine.recommend_documentation_level(complete_answer_context)
         result9 = engine.recommend_git_workflow(complete_answer_context)
 
-        assert all(isinstance(r, str) for r in [result1, result2, result3, result4, result5, result6, result7, result8, result9])
+        assert all(
+            isinstance(r, str)
+            for r in [
+                result1,
+                result2,
+                result3,
+                result4,
+                result5,
+                result6,
+                result7,
+                result8,
+                result9,
+            ]
+        )
 
     def test_multiple_project_types(self, minimal_answer_context: AnswerContext) -> None:
         """Test with multiple project types"""
