@@ -540,10 +540,8 @@ def ask_multi_choice(
 
 def clear_screen() -> None:
     """Clear the terminal screen"""
-    import subprocess
-
-    cmd = ["cls"] if os.name == "nt" else ["clear"]
-    subprocess.run(cmd, shell=False, check=False)  # noqa: S603
+    cmd = "cls" if os.name == "nt" else "clear"
+    os.system(cmd)  # noqa: S605 - cmd is hardcoded, safe
 
 
 def pause(message: str = "Press Enter to continue...") -> None:
