@@ -3,18 +3,21 @@
 ## Core Design Principles
 
 1. **Zero Pollution** - Global storage with local links, no project-specific CCO files
-2. **Single Source of Truth** - All principles, guides, commands, and skills in `content/` (repo), deployed to `~/.cco/` (global), projects reference via links
-3. **Progressive Disclosure** - Load only applicable principles/guides, not entire principle set
+2. **Zero State** - No config files, no project registry, completely stateless operation
+3. **Single Source of Truth** - All principles, guides, commands, and skills in `content/` (repo), deployed to `~/.cco/` (global), projects reference via links
+4. **Progressive Disclosure** - Load only applicable principles/guides, not entire principle set
 5. **Two-Tier Principles** - Universal (19 principles, always) + Project-specific (64 principles, AI-selected)
-6. **Minimal CLAUDE.md** - Reference-based, not template-driven; existing content preserved
-7. **Evidence-Based** - AI detection with confidence scores and evidence trails
-8. **Anti-Overengineering** - Simplest solution that works, no premature abstraction
-9. **Multi-Agent First** - Parallel execution by default (Haiku for speed, Sonnet for reasoning)
-10. **Linking Preference Order** - Try symlink → hardlink → copy (systematic preference, not fallback)
-11. **Uninstall Safety** - Broken references ignored by Claude, no errors after CCO removal
-12. **Document Consistency** - All documentation validated for internal consistency and efficiency
-13. **No Version Tracking** - Only project version tracked, no versioning for principles/commands/guides
-14. **No Dead Code** - Zero dead code, placeholders, fallbacks, or backward compatibility layers; always 100% current
+6. **Minimal CLAUDE.md** - Marker-based injection only; existing content NEVER modified
+7. **Clean Install** - Init always removes previous CCO setup first
+8. **Evidence-Based** - AI detection with confidence scores and evidence trails
+9. **Anti-Overengineering** - Simplest solution that works, no premature abstraction
+10. **Multi-Agent First** - Parallel execution by default (Haiku for speed, Sonnet for reasoning)
+11. **Linking Preference Order** - Try symlink → hardlink → copy (systematic preference, not fallback)
+12. **Complete Removal** - Remove command cleans up global + local + CLAUDE.md markers
+13. **Uninstall Safety** - Projects restored to exact pre-CCO state after removal
+14. **Document Consistency** - All documentation validated for internal consistency and efficiency
+15. **No Version Tracking** - Only project version tracked, no versioning for principles/commands/guides
+16. **No Dead Code** - Zero dead code, placeholders, fallbacks, or backward compatibility layers; always 100% current
 
 ## Linking Strategy
 
@@ -75,25 +78,24 @@ content/                   # Single source of truth (tracked in git)
 ├── commands/             # 28 commands (deployed from content/commands/)
 ├── principles/           # Individual principle files with frontmatter (deployed from content/principles/)
 │   ├── U_*.md               # Universal principles (19 files)
-│   └── P_*.md               # Project-specific principles (24 files)
+│   ├── C_*.md               # Claude guidelines (12 files)
+│   └── P_*.md               # Project-specific principles (64 files)
 ├── guides/               # 5 comprehensive guides (deployed from content/guides/)
 ├── skills/               # Language-specific (18) and cross-language (5) skills (deployed from content/skills/)
 │   ├── python/          # 5 Python-specific skills
 │   ├── typescript/      # 5 TypeScript-specific skills
 │   ├── rust/            # 4 Rust-specific skills
 │   ├── go/              # 4 Go-specific skills
-│   ├── verification-protocol.md      # Cross-language verification skill
-│   ├── root-cause-analysis.md        # Cross-language debugging skill
-│   ├── test-first-verification.md    # Cross-language testing skill
-│   ├── incremental-improvement.md    # Cross-language development skill
-│   └── security-emergency-response.md # Cross-language security skill
+│   └── cco-skill-*.md   # Cross-language skills (verification, root-cause, etc.)
 ├── agents/               # 3 task-specific agents (deployed from content/agents/)
-├── templates/            # Template files (deployed from templates/*.template)
-│   ├── settings.json.template    # Optional template reference (not deployed)
-│   └── *.template files for projects (editorconfig, pre-commit, etc.)
-├── projects/             # Project registries (<project>.json)
-├── config.json           # Global CCO configuration
-└── .installed            # Installation marker
+└── templates/            # Template files (deployed from templates/*.template)
+    └── settings.json.template    # Optional settings template
+
+# NO STATE FILES:
+# ❌ No projects/ directory
+# ❌ No config.json file
+# ❌ No project registries
+# ✅ 100% stateless
 ```
 
 **Project Structure (`.claude/`):**
@@ -123,9 +125,11 @@ project/CLAUDE.md        # Minimal guide with principle references
 **Key Points:**
 - All links use preference order (symlink → hardlink → copy)
 - Universal principles (19 total) always linked to every project
-- Project principles (24 total) only selected ones linked (AI-selected)
+- Claude guidelines (12 total) always linked to every project
+- Project principles (64 total) only selected ones linked (AI-selected)
 - `settings.json.template` is optional template reference (not deployed to projects)
-- `CLAUDE.md` is minimal with references, not template-based (existing content preserved)
+- `CLAUDE.md` uses marker-based injection (existing content NEVER modified)
+- **Zero state**: No config files anywhere, selection stored as symlinks
 
 ## Source Code
 
