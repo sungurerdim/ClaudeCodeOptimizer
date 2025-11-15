@@ -925,10 +925,14 @@ class CCOPreferences(BaseModel):
     project_identity: ProjectIdentity
     development_style: DevelopmentStyle = Field(default_factory=lambda: DevelopmentStyle())
     code_quality: CodeQualityStandards = Field(default_factory=lambda: CodeQualityStandards())
-    documentation: DocumentationPreferences = Field(default_factory=lambda: DocumentationPreferences())
+    documentation: DocumentationPreferences = Field(
+        default_factory=lambda: DocumentationPreferences()
+    )
     testing: TestingStrategy = Field(default_factory=lambda: TestingStrategy())
     security: SecurityPosture = Field(default_factory=lambda: SecurityPosture())
-    performance: PerformanceVsMaintainability = Field(default_factory=lambda: PerformanceVsMaintainability())
+    performance: PerformanceVsMaintainability = Field(
+        default_factory=lambda: PerformanceVsMaintainability()
+    )
     collaboration: TeamCollaboration = Field(default_factory=lambda: TeamCollaboration())
     devops: DevOpsAutomation = Field(default_factory=lambda: DevOpsAutomation())
 

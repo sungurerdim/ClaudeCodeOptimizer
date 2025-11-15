@@ -463,9 +463,7 @@ class TestProjectIdentityHints:
         """Scale hint should detect medium codebase"""
         from claudecodeoptimizer.core.constants import MEDIUM_CODEBASE_THRESHOLD
 
-        report = {
-            "codebase_patterns": {"total_files": MEDIUM_CODEBASE_THRESHOLD + 1}
-        }
+        report = {"codebase_patterns": {"total_files": MEDIUM_CODEBASE_THRESHOLD + 1}}
         hint = get_scale_hint(report)
         assert "Medium codebase" in hint or "growth" in hint
 
@@ -473,9 +471,7 @@ class TestProjectIdentityHints:
         """Scale hint should detect small but above threshold codebase"""
         from claudecodeoptimizer.core.constants import SMALL_CODEBASE_THRESHOLD
 
-        report = {
-            "codebase_patterns": {"total_files": SMALL_CODEBASE_THRESHOLD + 1}
-        }
+        report = {"codebase_patterns": {"total_files": SMALL_CODEBASE_THRESHOLD + 1}}
         hint = get_scale_hint(report)
         assert "Small codebase" in hint or "startup" in hint
 

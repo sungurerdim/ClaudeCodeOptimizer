@@ -218,7 +218,7 @@ class TestConfidenceScores:
 
         # Languages should have confidence scores
         for detection in report.languages:
-            assert hasattr(detection, 'confidence')
+            assert hasattr(detection, "confidence")
             assert isinstance(detection.confidence, (int, float))
             assert 0 <= detection.confidence <= 1
 
@@ -323,7 +323,10 @@ class TestErrorHandling:
         # Mock open to raise various errors
         with patch(
             "builtins.open",
-            side_effect=[PermissionError("Access denied"), UnicodeDecodeError("utf-8", b"", 0, 1, "")],
+            side_effect=[
+                PermissionError("Access denied"),
+                UnicodeDecodeError("utf-8", b"", 0, 1, ""),
+            ],
         ):
             matches = detector._check_content_patterns([".py"], [r"import"])
             # Should complete without crashing

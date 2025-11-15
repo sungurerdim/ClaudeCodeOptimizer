@@ -211,6 +211,7 @@ class CCOWizard:
                 if not self._run_system_detection():
                     # Create a minimal SystemContext for the error case
                     from pathlib import Path
+
                     minimal_ctx = SystemContext(
                         os_type="linux",
                         os_version="unknown",
@@ -690,7 +691,9 @@ class CCOWizard:
             self.detection_report = analysis.dict()
 
             # Enrich system context with project data
-            assert self.system_context is not None, "System context must be initialized before enrichment"  # noqa: S101 - Type narrowing after detection
+            assert self.system_context is not None, (  # noqa: S101
+                "System context must be initialized before enrichment"
+            )
             system_detector = SystemDetector(self.project_root)
             self.system_context = system_detector.enrich_with_project_detection(
                 self.system_context,
@@ -1292,6 +1295,7 @@ class CCOWizard:
                 )
 
         from .. import __version__ as cco_version
+
         return CommandRegistry(commands=commands, version=cco_version)
 
     # ========================================================================
@@ -1347,6 +1351,8 @@ class CCOWizard:
 
         Symlinks selected commands, guides, principles, agents, skills from
         ~/.cco/knowledge/ to project .claude/ directory.
+
+        IMPORTANT: Cleans directories before installation to ensure only selected items are present.
         """
         import platform
 
@@ -1365,6 +1371,15 @@ class CCOWizard:
             # Create .gitkeep to preserve directory structure
             (claude_dir / category / ".gitkeep").touch()
 
+        # STEP 1: Clean directories (remove old files from previous init, except .gitkeep)
+        for category in categories:
+            category_dir = claude_dir / category
+            if category_dir.exists():
+                for old_file in category_dir.rglob("*"):
+                    # Keep .gitkeep, remove everything else
+                    if old_file.is_file() and old_file.name != ".gitkeep":
+                        old_file.unlink()
+
         # Get global knowledge directories
         global_commands_dir = config.get_global_commands_dir()
         global_guides_dir = config.get_guides_dir()
@@ -1379,13 +1394,13 @@ class CCOWizard:
         for cmd in self.selected_commands:
             source = global_commands_dir / f"{cmd}.md"
             target = claude_dir / "commands" / f"{cmd}.md"
-            symlink_map.append((source, target))
+            symlink_map.append((source, target, "command"))
 
         # Guides
         for guide in self.selected_guides:
             source = global_guides_dir / f"{guide}.md"
             target = claude_dir / "guides" / f"{guide}.md"
-            symlink_map.append((source, target))
+            symlink_map.append((source, target, "guide"))
 
         # Principles
         # FIRST: Always symlink ALL universal principles (U*.md - dynamically discovered)
@@ -1393,7 +1408,7 @@ class CCOWizard:
             u_id = u_file.stem  # e.g., "U_DRY"
             source = u_file
             target = claude_dir / "principles" / f"{u_id}.md"
-            symlink_map.append((source, target))
+            symlink_map.append((source, target, "principle"))
 
         # SECOND: Symlink only AI-selected project-specific principles (P_*)
         for principle in self.selected_principles:
@@ -1401,30 +1416,37 @@ class CCOWizard:
             if not principle.startswith("U"):
                 source = global_principles_dir / f"{principle}.md"
                 target = claude_dir / "principles" / f"{principle}.md"
-                symlink_map.append((source, target))
+                symlink_map.append((source, target, "principle"))
 
         # Agents (if any selected)
         if hasattr(self, "selected_agents"):
             for agent in self.selected_agents:
                 source = global_agents_dir / f"{agent}.md"
                 target = claude_dir / "agents" / f"{agent}.md"
-                symlink_map.append((source, target))
+                symlink_map.append((source, target, "agent"))
 
         # Skills (if any selected)
         if hasattr(self, "selected_skills"):
             for skill in self.selected_skills:
                 source = global_skills_dir / f"{skill}.md"
                 target = claude_dir / "skills" / f"{skill}.md"
-                symlink_map.append((source, target))
+                symlink_map.append((source, target, "skill"))
 
-        # Create symlinks with fallback: symlink -> hardlink -> copy
-        for source, target in symlink_map:
+        # STEP 2: Create symlinks with fallback (symlink -> hardlink -> copy)
+        # Track installation counts by category
+        installation_counts = {
+            "command": 0,
+            "guide": 0,
+            "principle": 0,
+            "agent": 0,
+            "skill": 0,
+        }
+
+        for source, target, category in symlink_map:
             # Ensure parent directory exists (for language-specific skills like python/*)
             target.parent.mkdir(parents=True, exist_ok=True)
 
-            # Remove existing symlink/file if exists
-            if target.exists() or target.is_symlink():
-                target.unlink()
+            # Note: We already cleaned directories, so no need to unlink here
 
             # Try symlink -> hardlink -> copy (cross-platform fallback)
             link_created = False
@@ -1472,6 +1494,55 @@ class CCOWizard:
                 import shutil
 
                 shutil.copy2(source, target)
+
+            # Count successful installation
+            installation_counts[category] += 1
+
+        # STEP 3: Store installation counts for reporting
+        self.installed_commands_count = installation_counts["command"]
+        self.installed_guides_count = installation_counts["guide"]
+        self.installed_principles_count = installation_counts["principle"]
+        self.installed_agents_count = installation_counts["agent"]
+        self.installed_skills_count = installation_counts["skill"]
+
+        # STEP 4: Validate that installed counts match expected counts
+        expected_commands = len(self.selected_commands)
+        expected_guides = len(self.selected_guides)
+        # For principles: U_* (all) + selected P_*/C_* (non-U)
+        expected_principles = len(list(global_principles_dir.glob("U*.md"))) + len(
+            [p for p in self.selected_principles if not p.startswith("U")]
+        )
+        expected_agents = len(self.selected_agents) if hasattr(self, "selected_agents") else 0
+        expected_skills = len(self.selected_skills) if hasattr(self, "selected_skills") else 0
+
+        # Validation: raise error if mismatch
+        mismatches = []
+        if self.installed_commands_count != expected_commands:
+            mismatches.append(
+                f"Commands: expected {expected_commands}, installed {self.installed_commands_count}"
+            )
+        if self.installed_guides_count != expected_guides:
+            mismatches.append(
+                f"Guides: expected {expected_guides}, installed {self.installed_guides_count}"
+            )
+        if self.installed_principles_count != expected_principles:
+            mismatches.append(
+                f"Principles: expected {expected_principles}, installed {self.installed_principles_count}"
+            )
+        if self.installed_agents_count != expected_agents:
+            mismatches.append(
+                f"Agents: expected {expected_agents}, installed {self.installed_agents_count}"
+            )
+        if self.installed_skills_count != expected_skills:
+            mismatches.append(
+                f"Skills: expected {expected_skills}, installed {self.installed_skills_count}"
+            )
+
+        if mismatches:
+            raise Exception(
+                "Installation validation failed - mismatch between selected and installed:\n"
+                + "\n".join(f"  - {m}" for m in mismatches)
+            )
 
     def _update_gitignore(self) -> None:
         """
@@ -1693,7 +1764,7 @@ class CCOWizard:
     # ========================================================================
 
     def _show_completion(self, duration: float) -> None:
-        """Show completion summary"""
+        """Show completion summary with actual installation counts"""
         if self.mode == "interactive":
             clear_screen()
 
@@ -1705,14 +1776,35 @@ class CCOWizard:
         if (self.project_root / ".gitignore").exists():
             files_count += 1  # Modified .gitignore
 
+        # Use actual installed counts (tracked during installation)
         display_completion_summary(
-            commands_installed=len(self.selected_commands),
-            principles_configured=len(self.selected_principles),
+            commands_installed=(
+                self.installed_commands_count
+                if hasattr(self, "installed_commands_count")
+                else len(self.selected_commands)
+            ),
+            principles_configured=(
+                self.installed_principles_count
+                if hasattr(self, "installed_principles_count")
+                else len(self.selected_principles)
+            ),
             files_created=files_count,
             duration_seconds=duration,
-            guides_installed=(len(self.selected_guides) if hasattr(self, "selected_guides") else 0),
-            skills_installed=(len(self.selected_skills) if hasattr(self, "selected_skills") else 0),
-            agents_installed=(len(self.selected_agents) if hasattr(self, "selected_agents") else 0),
+            guides_installed=(
+                self.installed_guides_count
+                if hasattr(self, "installed_guides_count")
+                else (len(self.selected_guides) if hasattr(self, "selected_guides") else 0)
+            ),
+            skills_installed=(
+                self.installed_skills_count
+                if hasattr(self, "installed_skills_count")
+                else (len(self.selected_skills) if hasattr(self, "selected_skills") else 0)
+            ),
+            agents_installed=(
+                self.installed_agents_count
+                if hasattr(self, "installed_agents_count")
+                else (len(self.selected_agents) if hasattr(self, "selected_agents") else 0)
+            ),
         )
 
         print()

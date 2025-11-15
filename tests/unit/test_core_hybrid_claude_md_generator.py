@@ -867,7 +867,9 @@ More content
 
     @patch("claudecodeoptimizer.core.principle_md_loader.load_all_principles")
     @patch("claudecodeoptimizer.config.get_principles_dir")
-    def test_generate_cco_section_large_principle_count(self, mock_get_dir, mock_load_principles, temp_dir):
+    def test_generate_cco_section_large_principle_count(
+        self, mock_get_dir, mock_load_principles, temp_dir
+    ):
         """Test CCO section with large number of principles"""
         # Setup
         principles_dir = temp_dir / "principles"

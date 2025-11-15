@@ -449,7 +449,10 @@ class TestCoverageGaps:
         assert isinstance(suggestions, list)
         # If the analyzer detects Python, it should suggest formatters
         if results.get("primary_language") == "python":
-            assert any("black" in s.lower() or "ruff" in s.lower() or "format" in s.lower() for s in suggestions)
+            assert any(
+                "black" in s.lower() or "ruff" in s.lower() or "format" in s.lower()
+                for s in suggestions
+            )
 
     def test_suggest_linter_for_javascript(self, temp_project) -> None:
         """Test linter suggestions for JavaScript without linters"""
@@ -488,7 +491,7 @@ class TestCoverageGaps:
         (temp_project / "main.py").write_text("print('hello')", encoding="utf-8")
         (temp_project / "pyproject.toml").write_text(
             '[tool.black]\nline-length = 88\n[tool.ruff]\nline-length = 88\n[tool.mypy]\npython_version = "3.11"',
-            encoding="utf-8"
+            encoding="utf-8",
         )
 
         analyzer = ProjectAnalyzer(temp_project)

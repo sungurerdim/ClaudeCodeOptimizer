@@ -19,9 +19,7 @@ class TestPostInstall:
 
     @patch("claudecodeoptimizer.core.knowledge_setup.setup_global_knowledge")
     @patch("builtins.print")
-    def test_post_install_success(
-        self, mock_print: Mock, mock_setup: Mock
-    ) -> None:
+    def test_post_install_success(self, mock_print: Mock, mock_setup: Mock) -> None:
         """Test successful post-install execution"""
         # Setup mock to return success
         mock_setup.return_value = {
@@ -51,9 +49,7 @@ class TestPostInstall:
 
     @patch("claudecodeoptimizer.core.knowledge_setup.setup_global_knowledge")
     @patch("builtins.print")
-    def test_post_install_with_actions(
-        self, mock_print: Mock, mock_setup: Mock
-    ) -> None:
+    def test_post_install_with_actions(self, mock_print: Mock, mock_setup: Mock) -> None:
         """Test post-install prints all actions"""
         # Setup mock with multiple actions
         mock_setup.return_value = {
@@ -79,9 +75,7 @@ class TestPostInstall:
 
     @patch("claudecodeoptimizer.core.knowledge_setup.setup_global_knowledge")
     @patch("builtins.print")
-    def test_post_install_success_false(
-        self, mock_print: Mock, mock_setup: Mock
-    ) -> None:
+    def test_post_install_success_false(self, mock_print: Mock, mock_setup: Mock) -> None:
         """Test post-install when success is False"""
         # Setup mock to return success=False
         mock_setup.return_value = {
@@ -99,9 +93,7 @@ class TestPostInstall:
 
     @patch("claudecodeoptimizer.core.knowledge_setup.setup_global_knowledge")
     @patch("builtins.print")
-    def test_post_install_no_actions(
-        self, mock_print: Mock, mock_setup: Mock
-    ) -> None:
+    def test_post_install_no_actions(self, mock_print: Mock, mock_setup: Mock) -> None:
         """Test post-install with no actions in result"""
         # Setup mock without actions key
         mock_setup.return_value = {
@@ -118,9 +110,7 @@ class TestPostInstall:
 
     @patch("claudecodeoptimizer.core.knowledge_setup.setup_global_knowledge")
     @patch("builtins.print")
-    def test_post_install_empty_actions(
-        self, mock_print: Mock, mock_setup: Mock
-    ) -> None:
+    def test_post_install_empty_actions(self, mock_print: Mock, mock_setup: Mock) -> None:
         """Test post-install with empty actions list"""
         # Setup mock with empty actions
         mock_setup.return_value = {
@@ -138,9 +128,7 @@ class TestPostInstall:
 
     @patch("claudecodeoptimizer.core.knowledge_setup.setup_global_knowledge")
     @patch("builtins.print")
-    def test_post_install_import_error(
-        self, mock_print: Mock, mock_setup: Mock
-    ) -> None:
+    def test_post_install_import_error(self, mock_print: Mock, mock_setup: Mock) -> None:
         """Test post-install handles ImportError gracefully"""
         # Setup mock to raise ImportError
         mock_setup.side_effect = ImportError("Module not found")
@@ -158,9 +146,7 @@ class TestPostInstall:
 
     @patch("claudecodeoptimizer.core.knowledge_setup.setup_global_knowledge")
     @patch("builtins.print")
-    def test_post_install_generic_exception(
-        self, mock_print: Mock, mock_setup: Mock
-    ) -> None:
+    def test_post_install_generic_exception(self, mock_print: Mock, mock_setup: Mock) -> None:
         """Test post-install handles generic exceptions gracefully"""
         # Setup mock to raise generic exception
         mock_setup.side_effect = Exception("Unexpected error")
@@ -176,9 +162,7 @@ class TestPostInstall:
 
     @patch("claudecodeoptimizer.core.knowledge_setup.setup_global_knowledge")
     @patch("builtins.print")
-    def test_post_install_runtime_error(
-        self, mock_print: Mock, mock_setup: Mock
-    ) -> None:
+    def test_post_install_runtime_error(self, mock_print: Mock, mock_setup: Mock) -> None:
         """Test post-install handles RuntimeError gracefully"""
         # Setup mock to raise RuntimeError
         mock_setup.side_effect = RuntimeError("Runtime issue")
@@ -192,9 +176,7 @@ class TestPostInstall:
 
     @patch("claudecodeoptimizer.core.knowledge_setup.setup_global_knowledge")
     @patch("builtins.print")
-    def test_post_install_permission_error(
-        self, mock_print: Mock, mock_setup: Mock
-    ) -> None:
+    def test_post_install_permission_error(self, mock_print: Mock, mock_setup: Mock) -> None:
         """Test post-install handles PermissionError gracefully"""
         # Setup mock to raise PermissionError
         mock_setup.side_effect = PermissionError("Access denied")
@@ -208,9 +190,7 @@ class TestPostInstall:
 
     @patch("claudecodeoptimizer.core.knowledge_setup.setup_global_knowledge")
     @patch("builtins.print")
-    def test_post_install_file_not_found_error(
-        self, mock_print: Mock, mock_setup: Mock
-    ) -> None:
+    def test_post_install_file_not_found_error(self, mock_print: Mock, mock_setup: Mock) -> None:
         """Test post-install handles FileNotFoundError gracefully"""
         # Setup mock to raise FileNotFoundError
         mock_setup.side_effect = FileNotFoundError("File missing")
@@ -224,9 +204,7 @@ class TestPostInstall:
 
     @patch("claudecodeoptimizer.core.knowledge_setup.setup_global_knowledge")
     @patch("builtins.print")
-    def test_post_install_prints_separators(
-        self, mock_print: Mock, mock_setup: Mock
-    ) -> None:
+    def test_post_install_prints_separators(self, mock_print: Mock, mock_setup: Mock) -> None:
         """Test post-install prints decorative separators"""
         # Setup mock to return success
         mock_setup.return_value = {
@@ -247,9 +225,7 @@ class TestPostInstall:
 
     @patch("claudecodeoptimizer.core.knowledge_setup.setup_global_knowledge")
     @patch("builtins.print")
-    def test_post_install_prints_header(
-        self, mock_print: Mock, mock_setup: Mock
-    ) -> None:
+    def test_post_install_prints_header(self, mock_print: Mock, mock_setup: Mock) -> None:
         """Test post-install prints header"""
         # Setup mock to return success
         mock_setup.return_value = {
@@ -304,9 +280,7 @@ class TestPostInstall:
 
     @patch("claudecodeoptimizer.core.knowledge_setup.setup_global_knowledge")
     @patch("builtins.print")
-    def test_post_install_global_dir_path(
-        self, mock_print: Mock, mock_setup: Mock
-    ) -> None:
+    def test_post_install_global_dir_path(self, mock_print: Mock, mock_setup: Mock) -> None:
         """Test post-install displays global directory path"""
         # Setup mock with specific path
         test_path = "/custom/path/.cco"
@@ -325,9 +299,7 @@ class TestPostInstall:
 
     @patch("claudecodeoptimizer.core.knowledge_setup.setup_global_knowledge")
     @patch("builtins.print")
-    def test_post_install_force_parameter(
-        self, mock_print: Mock, mock_setup: Mock
-    ) -> None:
+    def test_post_install_force_parameter(self, mock_print: Mock, mock_setup: Mock) -> None:
         """Test post-install calls setup_global_knowledge with force=False"""
         # Setup mock
         mock_setup.return_value = {
@@ -363,9 +335,7 @@ class TestPostInstall:
 
     @patch("claudecodeoptimizer.core.knowledge_setup.setup_global_knowledge")
     @patch("builtins.print")
-    def test_post_install_unicode_in_path(
-        self, mock_print: Mock, mock_setup: Mock
-    ) -> None:
+    def test_post_install_unicode_in_path(self, mock_print: Mock, mock_setup: Mock) -> None:
         """Test post-install handles Unicode in global_dir path"""
         # Setup mock with Unicode path
         unicode_path = "/home/user/Тест/.cco"
@@ -383,9 +353,7 @@ class TestPostInstall:
 
     @patch("claudecodeoptimizer.core.knowledge_setup.setup_global_knowledge")
     @patch("builtins.print")
-    def test_post_install_unicode_in_actions(
-        self, mock_print: Mock, mock_setup: Mock
-    ) -> None:
+    def test_post_install_unicode_in_actions(self, mock_print: Mock, mock_setup: Mock) -> None:
         """Test post-install handles Unicode in action messages"""
         # Setup mock with Unicode in actions
         mock_setup.return_value = {
@@ -455,9 +423,7 @@ class TestErrorMessages:
 
     @patch("claudecodeoptimizer.core.knowledge_setup.setup_global_knowledge")
     @patch("builtins.print")
-    def test_error_message_format(
-        self, mock_print: Mock, mock_setup: Mock
-    ) -> None:
+    def test_error_message_format(self, mock_print: Mock, mock_setup: Mock) -> None:
         """Test error message contains useful information"""
         # Setup mock to raise exception
         error_msg = "Custom error message for testing"
@@ -477,9 +443,7 @@ class TestErrorMessages:
 
     @patch("claudecodeoptimizer.core.knowledge_setup.setup_global_knowledge")
     @patch("builtins.print")
-    def test_success_message_format(
-        self, mock_print: Mock, mock_setup: Mock
-    ) -> None:
+    def test_success_message_format(self, mock_print: Mock, mock_setup: Mock) -> None:
         """Test success message contains checkmark and path"""
         # Setup mock
         test_path = "/home/user/.cco"

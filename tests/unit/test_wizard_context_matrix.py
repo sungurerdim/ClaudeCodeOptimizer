@@ -203,7 +203,9 @@ class TestContextMatrixPrincipleIntensity:
             (principles_dir / f"P_TEST_{i}.md").touch()
 
         with patch("claudecodeoptimizer.config.get_principles_dir", return_value=principles_dir):
-            result = matrix.recommend_principle_intensity("small_team", "production", "quality_first")
+            result = matrix.recommend_principle_intensity(
+                "small_team", "production", "quality_first"
+            )
 
             # 5 + 1 (small_team) + 2 (production) + 2 (quality_first) = 10
             assert result["intensity"] == "maximum"
@@ -250,7 +252,9 @@ class TestContextMatrixPrincipleIntensity:
             (principles_dir / f"P_TEST_{i}.md").touch()
 
         with patch("claudecodeoptimizer.config.get_principles_dir", return_value=principles_dir):
-            result = matrix.recommend_principle_intensity("large_org", "production", "quality_first")
+            result = matrix.recommend_principle_intensity(
+                "large_org", "production", "quality_first"
+            )
 
             assert result["intensity"] == "maximum"
             assert result["score"] == 10  # 5 + 3 + 2 + 2 = 12, clamped to 10

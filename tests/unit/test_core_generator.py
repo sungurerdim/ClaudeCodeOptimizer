@@ -288,9 +288,7 @@ class TestReplaceVariables:
         generator = CommandGenerator(temp_dir)
 
         content = "OS: ${OS_TYPE}, Env: ${ENV_TYPE}"
-        project_config = {
-            "environment": {"os": "windows", "container_system": "Docker Compose"}
-        }
+        project_config = {"environment": {"os": "windows", "container_system": "Docker Compose"}}
         enabled_commands = []
 
         result = generator.replace_variables(content, project_config, enabled_commands)
@@ -594,7 +592,10 @@ class TestGenerateAll:
 
         # Setup command registry with one missing template
         registry_data = {
-            "commands": [{"id": "cco-test", "enabled": True}, {"id": "cco-missing", "enabled": True}]
+            "commands": [
+                {"id": "cco-test", "enabled": True},
+                {"id": "cco-missing", "enabled": True},
+            ]
         }
         with open(claude_dir / "commands.json", "w", encoding="utf-8") as f:
             json.dump(registry_data, f)
@@ -719,7 +720,11 @@ class TestIntegration:
         project_config = {
             "project": {"name": "Integration Test", "type": "web_app"},
             "language": {"primary": "python", "file_extension": ".py"},
-            "structure": {"service_dir": "services", "tests_dir": "tests", "services": ["api", "worker"]},
+            "structure": {
+                "service_dir": "services",
+                "tests_dir": "tests",
+                "services": ["api", "worker"],
+            },
             "tools": {
                 "formatter": {"command": "black ."},
                 "linter": {"command": "ruff check ."},

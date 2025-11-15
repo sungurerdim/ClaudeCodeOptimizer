@@ -70,6 +70,7 @@ def _get_principle_strategy_options() -> List[Option]:
 # TIER 1: Fundamental Decisions (Foundation)
 # ============================================================================
 
+
 def _validate_project_purpose(answer: Any) -> bool:  # noqa: ANN401
     """Validate project purpose selections for conflicts"""
     if not isinstance(answer, list):
@@ -1838,7 +1839,11 @@ def build_tier3_tool_decisions(ctx: AnswerContext) -> list:
         def _auto_strategy_for_tool(ctx: Any, conf: Any = conflict) -> str:  # noqa: ANN401  # type: ignore[name-defined]
             return conf.recommended
 
-        def _hint_for_tool(ctx: Any, cat: str = conflict.category, tools: Any = conflict.tools) -> str:  # noqa: ANN401  # type: ignore[name-defined]
+        def _hint_for_tool(
+            ctx: Any,  # noqa: ANN401
+            cat: str = conflict.category,
+            tools: Any = conflict.tools,  # noqa: ANN401
+        ) -> str:  # type: ignore[name-defined]
             return _rec_engine.recommend_tool_preference(cat, tools, ctx)
 
         decision = DecisionPoint(

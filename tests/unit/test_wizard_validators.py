@@ -97,9 +97,7 @@ class TestValidateNoConflicts:
 
     def test_no_conflicts_with_options_lacking_conflicts_field(self, options_no_conflicts):
         """Test validation works when options don't have conflicts_with field"""
-        assert (
-            validate_no_conflicts(["python", "javascript"], options_no_conflicts) is True
-        )
+        assert validate_no_conflicts(["python", "javascript"], options_no_conflicts) is True
 
     def test_empty_selection(self, options_with_conflicts):
         """Test validation passes with empty selection"""
@@ -165,9 +163,7 @@ class TestValidateRequiredDependencies:
     def test_dependencies_met_single(self, options_with_deps):
         """Test validation passes when single dependency met"""
         assert (
-            validate_required_dependencies(
-                ["api_service", "microservice"], options_with_deps
-            )
+            validate_required_dependencies(["api_service", "microservice"], options_with_deps)
             is True
         )
 
@@ -192,9 +188,7 @@ class TestValidateRequiredDependencies:
 
     def test_no_dependencies_required(self, options_with_deps):
         """Test validation passes for options without dependencies"""
-        assert (
-            validate_required_dependencies(["web_app"], options_with_deps) is True
-        )
+        assert validate_required_dependencies(["web_app"], options_with_deps) is True
 
     def test_error_message_includes_labels(self, options_with_deps):
         """Test error message uses human-readable labels"""

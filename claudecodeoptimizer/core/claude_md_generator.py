@@ -148,8 +148,12 @@ class ClaudeMdGenerator:
         """
         # Get preferences - support both nested and flat structures
         project_name = self._get_pref("project_identity.name") or self._get_pref("project_name")
-        team_size = self._get_pref("project_identity.team_trajectory") or self._get_pref("team_size", "solo")
-        linting = self._get_pref("code_quality.linting_strictness") or self._get_pref("quality_level", "standard")
+        team_size = self._get_pref("project_identity.team_trajectory") or self._get_pref(
+            "team_size", "solo"
+        )
+        linting = self._get_pref("code_quality.linting_strictness") or self._get_pref(
+            "quality_level", "standard"
+        )
         testing = self._get_pref("testing.strategy", "balanced")
 
         # Add preference metadata after header (if not already present)
@@ -195,7 +199,7 @@ class ClaudeMdGenerator:
         return f"""**Project:** {project_name}
 **Team:** {team_label}
 **Quality:** {linting.title()}
-**Testing:** {(testing or 'balanced').title()}
+**Testing:** {(testing or "balanced").title()}
 **Generated:** {datetime.now().strftime("%Y-%m-%d")}
 """
 
@@ -637,7 +641,9 @@ version = datetime.now().strftime("%Y.%m.%d")
         for cat_id, cat_name in category_names.items():
             cat_principles_raw = categories.get(cat_id, [])
             cat_principles = [
-                p for p in cat_principles_raw if isinstance(p, dict) and p.get("category") != "universal"
+                p
+                for p in cat_principles_raw
+                if isinstance(p, dict) and p.get("category") != "universal"
             ]
             if cat_principles:
                 if not has_project_specific:

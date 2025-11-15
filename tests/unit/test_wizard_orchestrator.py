@@ -652,9 +652,7 @@ class TestFileGeneration:
 
     @patch("claudecodeoptimizer.wizard.orchestrator.CCOWizard._setup_knowledge_symlinks")
     @patch("claudecodeoptimizer.wizard.orchestrator.print_error")
-    def test_run_file_generation_failure(
-        self, mock_print_error, mock_setup_symlinks, temp_project
-    ):
+    def test_run_file_generation_failure(self, mock_print_error, mock_setup_symlinks, temp_project):
         """Test file generation failure"""
         wizard = CCOWizard(temp_project, mode="quick", dry_run=False)
 
@@ -956,9 +954,7 @@ class TestExportQuestions:
         assert question["ai_recommendation"] == "cli_tool"
 
     @patch("claudecodeoptimizer.wizard.orchestrator.SystemDetector")
-    def test_export_questions_system_detection_failed(
-        self, mock_sys_detector_class, temp_project
-    ):
+    def test_export_questions_system_detection_failed(self, mock_sys_detector_class, temp_project):
         """Test export_questions when system detection fails"""
         wizard = CCOWizard(temp_project, mode="interactive")
 
@@ -1017,9 +1013,7 @@ class TestRunWithAnswers:
         assert "project_purpose" in result.answers
 
     @patch("claudecodeoptimizer.wizard.orchestrator.CCOWizard._run_system_detection")
-    def test_run_with_answers_system_detection_needed(
-        self, mock_sys_detect, temp_project
-    ):
+    def test_run_with_answers_system_detection_needed(self, mock_sys_detect, temp_project):
         """Test run_with_answers when system detection is needed"""
         wizard = CCOWizard(temp_project, mode="interactive")
         # Don't set system_context - it should auto-detect
@@ -1064,7 +1058,9 @@ class TestUninitialize:
         (claude_dir / "principles").mkdir(parents=True)
         (claude_dir / "commands" / "cco-init.md").touch()
         (claude_dir / "principles" / "U_DRY.md").touch()
-        (temp_project / "CLAUDE.md").write_text("# CLAUDE\n<!-- CCO_SECTION -->\nstuff\n<!-- /CCO_SECTION -->")
+        (temp_project / "CLAUDE.md").write_text(
+            "# CLAUDE\n<!-- CCO_SECTION -->\nstuff\n<!-- /CCO_SECTION -->"
+        )
         (temp_project / ".gitignore").write_text("# CCO:\n.claude/commands/*\n")
 
         result = CCOWizard.uninitialize(temp_project)
@@ -1274,9 +1270,7 @@ class TestConvenienceFunctions:
 
         result = run_interactive_wizard(temp_project, dry_run=True)
 
-        mock_wizard_class.assert_called_once_with(
-            temp_project, mode="interactive", dry_run=True
-        )
+        mock_wizard_class.assert_called_once_with(temp_project, mode="interactive", dry_run=True)
         assert result.success is True
 
     @patch("claudecodeoptimizer.wizard.orchestrator.CCOWizard")
@@ -1293,9 +1287,7 @@ class TestConvenienceFunctions:
 
         result = run_quick_wizard(temp_project, dry_run=False)
 
-        mock_wizard_class.assert_called_once_with(
-            temp_project, mode="quick", dry_run=False
-        )
+        mock_wizard_class.assert_called_once_with(temp_project, mode="quick", dry_run=False)
         assert result.success is True
 
 
@@ -1334,9 +1326,7 @@ class TestDisplayMethods:
     @patch("claudecodeoptimizer.wizard.orchestrator.clear_screen")
     @patch("claudecodeoptimizer.wizard.orchestrator.print_header")
     @patch("claudecodeoptimizer.wizard.orchestrator.CCOWizard._ensure_global_knowledge_base")
-    def test_show_welcome_quick(
-        self, mock_ensure_kb, mock_print_header, mock_clear, temp_project
-    ):
+    def test_show_welcome_quick(self, mock_ensure_kb, mock_print_header, mock_clear, temp_project):
         """Test showing welcome message in quick mode (no pause)"""
         wizard = CCOWizard(temp_project, mode="quick")
 
@@ -1348,9 +1338,7 @@ class TestDisplayMethods:
 
     @patch("claudecodeoptimizer.core.knowledge_setup.setup_global_knowledge")
     @patch("claudecodeoptimizer.wizard.orchestrator.print_info")
-    def test_ensure_global_knowledge_base_new(
-        self, mock_print_info, mock_setup, temp_project
-    ):
+    def test_ensure_global_knowledge_base_new(self, mock_print_info, mock_setup, temp_project):
         """Test ensuring global knowledge base when new setup is needed"""
         wizard = CCOWizard(temp_project, mode="quick")
 
@@ -1379,9 +1367,7 @@ class TestDisplayMethods:
 
     @patch("claudecodeoptimizer.wizard.orchestrator.print_header")
     @patch("claudecodeoptimizer.wizard.orchestrator.display_completion_summary")
-    def test_show_completion(
-        self, mock_display_summary, mock_print_header, temp_project
-    ):
+    def test_show_completion(self, mock_display_summary, mock_print_header, temp_project):
         """Test showing completion summary"""
         wizard = CCOWizard(temp_project, mode="quick")
         wizard.selected_commands = ["cco-init", "cco-status"]
@@ -2140,5 +2126,3 @@ class TestSymlinkCreation:
         # Check symlink was created
         target = temp_project / ".claude" / "commands" / "cco-init.md"
         assert target.exists()
-
-

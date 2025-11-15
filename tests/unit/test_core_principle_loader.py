@@ -150,9 +150,7 @@ class TestResolveCategoriestoIds:
             assert "P_LINTING_SAST" in result
             assert "P_TYPE_SAFETY" in result
 
-    def test_resolve_multiple_categories(
-        self, mock_category_mapping: Dict[str, List[str]]
-    ) -> None:
+    def test_resolve_multiple_categories(self, mock_category_mapping: Dict[str, List[str]]) -> None:
         """Test resolving multiple categories"""
         with patch(
             "claudecodeoptimizer.core.principle_loader._load_category_mapping",
@@ -371,7 +369,9 @@ class TestPrincipleLoaderLoadForCommand:
 class TestPrincipleLoaderLoadFromFrontmatter:
     """Test load_from_frontmatter method"""
 
-    def test_load_from_frontmatter_valid_file(self, temp_principles_dir: Path, tmp_path: Path) -> None:
+    def test_load_from_frontmatter_valid_file(
+        self, temp_principles_dir: Path, tmp_path: Path
+    ) -> None:
         """Test loading principles from command file frontmatter"""
         loader = PrincipleLoader(temp_principles_dir)
 
@@ -397,7 +397,9 @@ class TestPrincipleLoaderLoadFromFrontmatter:
         content = loader.load_from_frontmatter(cmd_file)
         assert content == ""
 
-    def test_load_from_frontmatter_nonexistent_file(self, temp_principles_dir: Path, tmp_path: Path) -> None:
+    def test_load_from_frontmatter_nonexistent_file(
+        self, temp_principles_dir: Path, tmp_path: Path
+    ) -> None:
         """Test loading from non-existent file"""
         loader = PrincipleLoader(temp_principles_dir)
 
@@ -458,7 +460,7 @@ class TestPrincipleLoaderLoadFromFrontmatter:
 
         cmd_file = tmp_path / "command.md"
         cmd_file.write_text(
-            '---\nprinciples: ["U_DRY", \'P_LINTING_SAST\']\n---\n\nContent',
+            "---\nprinciples: [\"U_DRY\", 'P_LINTING_SAST']\n---\n\nContent",
             encoding="utf-8",
         )
 

@@ -88,9 +88,7 @@ class TestDisplayDetectionResults:
     @patch("claudecodeoptimizer.wizard.checkpoints.print_header")
     @patch("claudecodeoptimizer.wizard.checkpoints.print_section")
     @patch("claudecodeoptimizer.wizard.checkpoints.print_warning")
-    def test_display_empty_report(
-        self, mock_warning, mock_section, mock_header, minimal_report
-    ):
+    def test_display_empty_report(self, mock_warning, mock_section, mock_header, minimal_report):
         """Test displaying report with no detections"""
         display_detection_results(minimal_report)
 
@@ -103,9 +101,7 @@ class TestDisplayDetectionResults:
     @patch("claudecodeoptimizer.wizard.checkpoints.print_header")
     @patch("claudecodeoptimizer.wizard.checkpoints.print_table")
     @patch("claudecodeoptimizer.wizard.checkpoints.print_list")
-    def test_display_full_report(
-        self, mock_list, mock_table, mock_header, full_report
-    ):
+    def test_display_full_report(self, mock_list, mock_table, mock_header, full_report):
         """Test displaying complete report"""
         display_detection_results(full_report)
 
@@ -181,9 +177,7 @@ class TestDisplayRecommendations:
         assert mock_section.call_count >= 4
 
     @patch("claudecodeoptimizer.wizard.checkpoints.print_key_value")
-    def test_display_identity_recommendations(
-        self, mock_key_value, sample_recommendations
-    ):
+    def test_display_identity_recommendations(self, mock_key_value, sample_recommendations):
         """Test project identity recommendations display"""
         display_recommendations(sample_recommendations)
 
@@ -191,9 +185,7 @@ class TestDisplayRecommendations:
         mock_key_value.assert_called()
 
     @patch("claudecodeoptimizer.wizard.checkpoints.print_info")
-    def test_display_security_recommendations(
-        self, mock_info, sample_recommendations
-    ):
+    def test_display_security_recommendations(self, mock_info, sample_recommendations):
         """Test security recommendations display"""
         display_recommendations(sample_recommendations)
 
@@ -290,9 +282,7 @@ class TestDisplayPreview:
     @patch("claudecodeoptimizer.wizard.checkpoints.print_header")
     @patch("claudecodeoptimizer.wizard.checkpoints.print_section")
     @patch("claudecodeoptimizer.wizard.checkpoints.print_box")
-    def test_display_preview_structure(
-        self, mock_box, mock_section, mock_header, sample_changes
-    ):
+    def test_display_preview_structure(self, mock_box, mock_section, mock_header, sample_changes):
         """Test preview display structure"""
         display_preview(sample_changes, dry_run=False)
 
@@ -596,7 +586,9 @@ class TestIntegrationScenarios:
         """Test complete detection display flow"""
         report = {
             "languages": [{"detected_value": "python", "confidence": 0.95, "evidence": ["*.py"]}],
-            "frameworks": [{"detected_value": "fastapi", "confidence": 0.85, "evidence": ["fastapi"]}],
+            "frameworks": [
+                {"detected_value": "fastapi", "confidence": 0.85, "evidence": ["fastapi"]}
+            ],
             "project_types": [{"detected_value": "api_service", "confidence": 0.90}],
             "tools": [{"detected_value": "pytest", "category": "testing"}],
             "codebase_patterns": {"total_files": 100, "total_lines": 3000},

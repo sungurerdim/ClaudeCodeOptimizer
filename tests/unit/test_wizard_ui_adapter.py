@@ -294,9 +294,7 @@ class TestClaudeCodeUIAdapterTerminal:
             ],
         )
 
-    def test_ask_via_terminal_single_select_valid(
-        self, adapter, sample_decision, answer_context
-    ):
+    def test_ask_via_terminal_single_select_valid(self, adapter, sample_decision, answer_context):
         """Test terminal single select with valid input"""
         with patch("builtins.input", return_value="1"):
             result = adapter._ask_via_terminal(sample_decision, answer_context)
@@ -330,17 +328,13 @@ class TestClaudeCodeUIAdapterTerminal:
             result = adapter._ask_via_terminal(decision, context)
             assert result == ["opt1", "opt3"]
 
-    def test_ask_via_terminal_invalid_then_valid(
-        self, adapter, sample_decision, answer_context
-    ):
+    def test_ask_via_terminal_invalid_then_valid(self, adapter, sample_decision, answer_context):
         """Test terminal with invalid then valid input"""
         with patch("builtins.input", side_effect=["invalid", "99", "1"]):
             result = adapter._ask_via_terminal(sample_decision, answer_context)
             assert result == "opt1"
 
-    def test_ask_via_terminal_empty_input_with_recommendation(
-        self, adapter, system_context
-    ):
+    def test_ask_via_terminal_empty_input_with_recommendation(self, adapter, system_context):
         """Test terminal with empty input uses recommendation"""
         decision = DecisionPoint(
             id="test",
@@ -359,9 +353,7 @@ class TestClaudeCodeUIAdapterTerminal:
             result = adapter._ask_via_terminal(decision, context)
             assert result == "opt2"
 
-    def test_ask_via_terminal_displays_ai_hint(
-        self, adapter, system_context, capsys
-    ):
+    def test_ask_via_terminal_displays_ai_hint(self, adapter, system_context, capsys):
         """Test terminal displays AI hint when available"""
         decision = DecisionPoint(
             id="test",
@@ -687,9 +679,7 @@ class TestClaudeCodeUIAdapterRecommendations:
         reason = adapter._get_recommendation_reason(option, context)
         assert "production" in reason.lower()
 
-    def test_get_team_specific_note_solo_with_large_org_option(
-        self, adapter, system_context
-    ):
+    def test_get_team_specific_note_solo_with_large_org_option(self, adapter, system_context):
         """Test team-specific note warns solo about large org option"""
         context = AnswerContext(
             system=system_context,
@@ -705,9 +695,7 @@ class TestClaudeCodeUIAdapterRecommendations:
         note = adapter._get_team_specific_note(option, context)
         assert "overkill" in note.lower()
 
-    def test_get_team_specific_note_large_org_with_solo_option(
-        self, adapter, system_context
-    ):
+    def test_get_team_specific_note_large_org_with_solo_option(self, adapter, system_context):
         """Test team-specific note warns large org about solo option"""
         context = AnswerContext(
             system=system_context,

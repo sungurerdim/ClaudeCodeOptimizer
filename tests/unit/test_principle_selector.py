@@ -258,7 +258,9 @@ class TestPrincipleSelector:
         assert len(must_principles) >= 1
         assert len(should_principles) >= 1
 
-    def test_security_override_for_api_projects(self, microservice_preferences, monkeypatch) -> None:
+    def test_security_override_for_api_projects(
+        self, microservice_preferences, monkeypatch
+    ) -> None:
         """Test security principle override for API/microservice projects"""
 
         def mock_load_all_principles(path):
@@ -348,8 +350,18 @@ class TestSelectApplicable:
         def mock_load_all_principles(path):
             return [
                 {"id": "U_DRY", "category": "universal", "weight": 10, "severity": "high"},
-                {"id": "P_TYPE_SAFETY", "category": "code_quality", "weight": 8, "severity": "medium"},
-                {"id": "P_API_SECURITY", "category": "security_privacy", "weight": 9, "severity": "high"},
+                {
+                    "id": "P_TYPE_SAFETY",
+                    "category": "code_quality",
+                    "weight": 8,
+                    "severity": "medium",
+                },
+                {
+                    "id": "P_API_SECURITY",
+                    "category": "security_privacy",
+                    "weight": 9,
+                    "severity": "high",
+                },
             ]
 
         monkeypatch.setattr(
@@ -377,7 +389,12 @@ class TestSelectApplicable:
         def mock_load_all_principles(path):
             return [
                 {"id": "P_LOW", "category": "code_quality", "weight": 10, "severity": "low"},
-                {"id": "P_CRITICAL", "category": "code_quality", "weight": 10, "severity": "critical"},
+                {
+                    "id": "P_CRITICAL",
+                    "category": "code_quality",
+                    "weight": 10,
+                    "severity": "critical",
+                },
                 {"id": "P_MEDIUM", "category": "code_quality", "weight": 10, "severity": "medium"},
                 {"id": "P_HIGH", "category": "code_quality", "weight": 10, "severity": "high"},
             ]
@@ -394,7 +411,9 @@ class TestSelectApplicable:
         severities = [p["severity"] for p in applicable]
         assert severities == ["critical", "high", "medium", "low"]
 
-    def test_select_applicable_adds_enforcement_level(self, minimal_preferences, monkeypatch) -> None:
+    def test_select_applicable_adds_enforcement_level(
+        self, minimal_preferences, monkeypatch
+    ) -> None:
         """Test that enforcement level is added based on strictness"""
 
         def mock_load_all_principles(path):
@@ -652,7 +671,9 @@ class TestCheckSeverityMatch:
         principle = {"id": "P_TEST", "weight": 5, "severity": "low", "category": "code_quality"}
         assert selector._check_severity_match(principle) is True
 
-    def test_severity_match_strict_filters_low_weight(self, minimal_preferences, monkeypatch) -> None:
+    def test_severity_match_strict_filters_low_weight(
+        self, minimal_preferences, monkeypatch
+    ) -> None:
         """Test strict mode filters low weight principles"""
 
         def mock_load_all_principles(path):
@@ -677,7 +698,9 @@ class TestCheckSeverityMatch:
         principle = {"id": "P_TEST", "weight": 8, "severity": "high", "category": "code_quality"}
         assert selector._check_severity_match(principle) is True
 
-    def test_severity_match_security_override_api_project(self, minimal_preferences, monkeypatch) -> None:
+    def test_severity_match_security_override_api_project(
+        self, minimal_preferences, monkeypatch
+    ) -> None:
         """Test security override for API projects"""
 
         def mock_load_all_principles(path):
@@ -697,7 +720,12 @@ class TestCheckSeverityMatch:
         selector = PrincipleSelector(preferences)
 
         # Security principle with weight 8 should pass for API projects
-        principle = {"id": "P_SECURITY", "weight": 8, "severity": "high", "category": "security_privacy"}
+        principle = {
+            "id": "P_SECURITY",
+            "weight": 8,
+            "severity": "high",
+            "category": "security_privacy",
+        }
         assert selector._check_severity_match(principle) is True
 
 
@@ -792,7 +820,12 @@ class TestStatistics:
 
         def mock_load_all_principles(path):
             return [
-                {"id": "P_CRITICAL", "category": "code_quality", "weight": 10, "severity": "critical"},
+                {
+                    "id": "P_CRITICAL",
+                    "category": "code_quality",
+                    "weight": 10,
+                    "severity": "critical",
+                },
                 {"id": "P_HIGH", "category": "security_privacy", "weight": 10, "severity": "high"},
                 {"id": "P_MEDIUM", "category": "testing", "weight": 10, "severity": "medium"},
                 {"id": "P_LOW", "category": "code_quality", "weight": 10, "severity": "low"},
@@ -948,7 +981,9 @@ class TestPrinciplesGeneration:
         assert "U_EVIDENCE_BASED" in content
         assert "U_NO_OVERENGINEERING" in content
 
-    def test_generate_principles_creates_backup(self, minimal_preferences, monkeypatch, tmp_path) -> None:
+    def test_generate_principles_creates_backup(
+        self, minimal_preferences, monkeypatch, tmp_path
+    ) -> None:
         """Test that existing file is backed up"""
 
         def mock_load_all_principles(path):
@@ -1092,7 +1127,9 @@ class TestIsApplicable:
 
         assert selector._is_applicable(principle) is False
 
-    def test_is_applicable_preference_condition_fails(self, minimal_preferences, monkeypatch) -> None:
+    def test_is_applicable_preference_condition_fails(
+        self, minimal_preferences, monkeypatch
+    ) -> None:
         """Test principle filtered when preference condition fails"""
 
         def mock_load_all_principles(path):
@@ -1266,7 +1303,9 @@ class TestGetSkipReason:
 class TestEvaluateConditionEdgeCases:
     """Test edge cases in _evaluate_condition()"""
 
-    def test_evaluate_condition_gte_with_invalid_value(self, minimal_preferences, monkeypatch) -> None:
+    def test_evaluate_condition_gte_with_invalid_value(
+        self, minimal_preferences, monkeypatch
+    ) -> None:
         """Test >= operator with invalid value returns False"""
 
         def mock_load_all_principles(path):
@@ -1291,7 +1330,9 @@ class TestEvaluateConditionEdgeCases:
 
         assert selector._evaluate_condition(condition) is False
 
-    def test_evaluate_condition_lte_with_invalid_value(self, minimal_preferences, monkeypatch) -> None:
+    def test_evaluate_condition_lte_with_invalid_value(
+        self, minimal_preferences, monkeypatch
+    ) -> None:
         """Test <= operator with invalid value returns False"""
 
         def mock_load_all_principles(path):
@@ -1359,7 +1400,7 @@ class TestGetNestedValueEdgeCases:
         # Create a mock object with attributes
         class MockObject:
             def __init__(self):
-                self.code_quality = type('obj', (object,), {'linting_strictness': 'strict'})()
+                self.code_quality = type("obj", (object,), {"linting_strictness": "strict"})()
 
         selector = PrincipleSelector(minimal_preferences)
         mock_obj = MockObject()
@@ -1391,7 +1432,9 @@ class TestGetNestedValueEdgeCases:
 class TestUtilityFunctions:
     """Test utility functions"""
 
-    def test_generate_principles_from_preferences(self, minimal_preferences, monkeypatch, tmp_path) -> None:
+    def test_generate_principles_from_preferences(
+        self, minimal_preferences, monkeypatch, tmp_path
+    ) -> None:
         """Test convenience function"""
 
         def mock_load_all_principles(path):

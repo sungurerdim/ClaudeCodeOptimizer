@@ -143,7 +143,9 @@ def main() -> None:
                 print("CCO has been cleanly removed from this project.")
                 print("To reinitialize: python -m claudecodeoptimizer init")
             else:
-                print(f"\n❌ Uninitialization failed: {uninit_result.get('error', 'unknown error')}")
+                print(
+                    f"\n❌ Uninitialization failed: {uninit_result.get('error', 'unknown error')}"
+                )
                 sys.exit(1)
         except Exception as e:
             print(f"\n❌ Error: {e}")

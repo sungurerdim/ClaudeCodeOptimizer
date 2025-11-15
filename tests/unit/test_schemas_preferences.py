@@ -452,7 +452,11 @@ class TestSecurityPosture:
         assert security.security_stance == "balanced"
         assert security.secret_management == ["env-vars"]
         assert set(security.encryption_scope) == {"at-rest-sensitive", "in-transit-external"}
-        assert set(security.audit_logging) == {"authentication", "authorization", "data-modification"}
+        assert set(security.audit_logging) == {
+            "authentication",
+            "authorization",
+            "data-modification",
+        }
         assert security.input_validation == "external-only"
         assert security.dependency_scanning == "every-pr"
 
