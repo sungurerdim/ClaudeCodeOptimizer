@@ -1,211 +1,167 @@
 ---
-description: Remove CCO from current project (keeps global installation)
+description: Complete CCO removal (local + global cleanup)
 cost: 0
-principles: ['U_EVIDENCE_BASED', 'U_FAIL_FAST', 'U_NO_OVERENGINEERING']
+principles: ['U_EVIDENCE_BASED', 'U_FAIL_FAST']
 ---
 
-# CCO Project Removal
+# CCO Complete Removal
 
-Remove CCO from the current project only (NEW ARCHITECTURE v3.1). This does **NOT** affect:
-- Global CCO installation (`~/.cco/`)
-- Other projects using CCO
-- Python package
+Remove CCO from the current project and/or global installation.
 
-## Step 1: Check if Project is Initialized
+**Three removal scopes:**
+- **local**: Remove CCO from current project only (default)
+- **global**: Remove entire `~/.cco/` directory
+- **both**: Complete removal (project + global + ~/.claude/commands/)
 
-```bash
-python -c "from pathlib import Path; p = Path('.claude/principles/U_EVIDENCE_BASED.md'); print('[OK] CCO is initialized' if p.exists() else '[!] CCO not found in this project')"
-```
+## Quick Removal (Local Only)
 
-If not initialized, stop - nothing to remove.
-
-## Step 2: Remove Principle Symlinks
-
-Remove ALL principle symlinks (universal + project-specific):
-
-```bash
-python -c "
-import glob
-from pathlib import Path
-
-# Remove universal principles (U_*)
-removed = 0
-for f in glob.glob('.claude/principles/U_*.md'):
-    Path(f).unlink(missing_ok=True)
-    removed += 1
-
-# Remove project-specific principles (P_*)
-for f in glob.glob('.claude/principles/P*.md'):
-    Path(f).unlink(missing_ok=True)
-    removed += 1
-
-print(f'[OK] Removed {removed} principle symlinks')
-"
-```
-
-## Step 4: Remove Command Symlinks
-
-```bash
-python -c "
-import glob
-from pathlib import Path
-
-removed = 0
-for f in glob.glob('.claude/commands/cco-*.md'):
-    Path(f).unlink(missing_ok=True)
-    removed += 1
-
-print(f'[OK] Removed {removed} command symlinks')
-"
-```
-
-## Step 5: Remove Other Symlinks
-
-```bash
-python -c "
-import glob
-from pathlib import Path
-
-removed = 0
-
-# Guides
-for f in glob.glob('.claude/guides/*.md'):
-    Path(f).unlink(missing_ok=True)
-    removed += 1
-
-# Skills
-for f in glob.glob('.claude/skills/*.md'):
-    Path(f).unlink(missing_ok=True)
-    removed += 1
-
-# Agents
-for f in glob.glob('.claude/agents/*.md'):
-    Path(f).unlink(missing_ok=True)
-    removed += 1
-
-print(f'[OK] Removed {removed} guide/skill/agent symlinks')
-"
-```
-
-## Step 6: Ask About CLAUDE.md Section Removal
-
-**IMPORTANT**: Use AskUserQuestion tool to ask:
-
-```json
-{
-  "questions": [
-    {
-      "question": "Do you want to remove the CCO section from CLAUDE.md?",
-      "header": "CLAUDE.md",
-      "multiSelect": false,
-      "options": [
-        {
-          "label": "Yes, remove it",
-          "description": "Clean removal - CCO section will be deleted from CLAUDE.md"
-        },
-        {
-          "label": "No, keep it",
-          "description": "Uninstall-safe - universal principles will remain accessible (inline in CLAUDE.md)"
-        }
-      ]
-    }
-  ]
-}
-```
-
-**If user chooses "Yes, remove it":**
+Remove CCO from current project:
 
 ```python
 from pathlib import Path
-from claudecodeoptimizer.core.hybrid_claude_md_generator import remove_cco_section
+from claudecodeoptimizer.core.remove import remove_cco
 
-claude_md_path = Path.cwd() / "CLAUDE.md"
-if claude_md_path.exists():
-    success = remove_cco_section(claude_md_path)
-    if success:
-        print("[OK] Removed CCO section from CLAUDE.md")
-    else:
-        print("[!] CCO section not found in CLAUDE.md")
-else:
-    print("[!] CLAUDE.md not found")
+result = remove_cco(
+    project_root=Path.cwd(),
+    scope="local",
+    clean_claude_md=True  # Remove CCO markers from CLAUDE.md
+)
+
+print(f"✓ {result['actions']}")
 ```
 
-**If user chooses "No, keep it":**
+## Complete Removal (Everything)
 
-```bash
-echo "[OK] Keeping CLAUDE.md intact (universal principles remain inline)"
-```
+Remove CCO entirely (project + global):
 
-## Step 7: Optional - Clean Empty Directories
-
-```bash
-python -c "
+```python
 from pathlib import Path
+from claudecodeoptimizer.core.remove import remove_cco
 
-removed = 0
-dirs = [
-    '.claude/principles',
-    '.claude/commands',
-    '.claude/guides',
-    '.claude/skills',
-    '.claude/agents'
-]
+result = remove_cco(
+    project_root=Path.cwd(),
+    scope="both",  # Remove local + global
+    clean_claude_md=True
+)
 
-for d in dirs:
-    p = Path(d)
-    try:
-        if p.exists() and p.is_dir() and not any(p.iterdir()):
-            p.rmdir()
-            removed += 1
-    except:
-        pass  # Directory not empty or doesn't exist
-
-print(f'[OK] Cleaned up {removed} empty directories')
-"
+print(f"✓ Removed: {', '.join(result['actions'])}")
 ```
 
 ## What Gets Removed
 
-From current project:
-- All U*.md and P*.md symlinks from `.claude/principles/`
-- All `cco-*.md` symlinks from `.claude/commands/`
-- Guide/skill/agent symlinks from `.claude/guides/`, `.claude/skills/`, `.claude/agents/`
-- Optionally: CCO section from CLAUDE.md
+### Local Removal (scope="local"):
+- ✓ All CCO symlinks from `.claude/`
+  - `commands/cco-*.md`
+  - `principles/*.md` (all U_*, C_*, P_*)
+  - `guides/cco-*.md`
+  - `skills/cco-*.md`
+  - `agents/cco-*.md`
+- ✓ CCO markers from `CLAUDE.md` (if `clean_claude_md=True`)
+
+### Global Removal (scope="global"):
+- ✓ Entire `~/.cco/` directory
+- ✓ `~/.claude/commands/cco-init.md`
+- ✓ `~/.claude/commands/cco-remove.md`
+
+### Both (scope="both"):
+- ✓ Everything from local + global
 
 ## What Stays Untouched
 
-- Global CCO installation (`~/.cco/`)
-- Python package (use `pip uninstall claudecodeoptimizer` to remove)
-- Other `.claude/` files (settings, hooks, custom files)
-- Your source code (untouched)
-- Other projects using CCO
-- CLAUDE.md content (if user chose to keep it)
+- ✓ Python package (use `pip uninstall claudecodeoptimizer` separately)
+- ✓ Your `.claude/settings.json` and other custom files
+- ✓ All your source code
+- ✓ Git history
+- ✓ Original CLAUDE.md content (outside CCO markers)
+
+## Interactive Mode (Recommended)
+
+Ask user for confirmation:
+
+```python
+from pathlib import Path
+from claudecodeoptimizer.core.remove import CCORemover
+
+# Ask user via AskUserQuestion tool
+answers = AskUserQuestion({
+    "questions": [{
+        "question": "What do you want to remove?",
+        "header": "Removal Scope",
+        "multiSelect": false,
+        "options": [
+            {
+                "label": "Current project only",
+                "description": "Keep CCO installed, remove from this project"
+            },
+            {
+                "label": "Everything (project + global)",
+                "description": "Complete removal - CCO will be uninstalled"
+            }
+        ]
+    }]
+})
+
+scope = "local" if "project only" in answers else "both"
+
+remover = CCORemover(Path.cwd())
+result = remover.remove(scope=scope, clean_claude_md=True)
+
+print(f"✓ Removal complete: {result['actions']}")
+```
+
+## Verification
+
+After removal, verify clean state:
+
+```bash
+# Check local
+ls .claude/commands/cco-*.md  # Should be empty
+
+# Check global (if scope was "global" or "both")
+ls ~/.cco/  # Should not exist
+
+# Check CLAUDE.md
+grep "CCO_PRINCIPLES_START" CLAUDE.md  # Should be empty
+```
+
+## Reinstall Later
+
+To add CCO back:
+
+```bash
+/cco-init
+```
+
+**Note:** No state is saved - you'll reconfigure from scratch (AI auto-detection).
 
 ## Troubleshooting
 
-**If command fails:**
+**If removal fails:**
 
-1. Check if project is initialized:
+1. Check permissions:
    ```bash
-   ls .claude/commands/cco-*.md
+   ls -la .claude/
    ```
 
-2. Check CCO is installed:
-   ```bash
-   python -c "import claudecodeoptimizer"
+2. Manual cleanup:
+   ```python
+   import shutil
+   from pathlib import Path
+
+   # Remove local
+   for file in Path(".claude").rglob("cco-*"):
+       file.unlink(missing_ok=True)
+
+   # Remove global
+   shutil.rmtree(Path.home() / ".cco", ignore_errors=True)
    ```
 
-**Manual cleanup if needed:**
-```bash
-rm .claude/commands/cco-*.md
-rm .claude/statusline.js
-```
+3. Check if CCO is installed:
+   ```bash
+   pip show claudecodeoptimizer
+   ```
 
-## Reinitialize Later
+## See Also
 
-To add CCO back:
-```bash
-python -m claudecodeoptimizer init
-```
-
-Your previous configuration is **NOT** saved - you'll need to reconfigure.
+- `/cco-init` - Reinitialize CCO
+- `/cco-status` - Check CCO installation status
