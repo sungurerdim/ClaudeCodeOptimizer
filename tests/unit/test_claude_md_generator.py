@@ -50,13 +50,13 @@ def web_api_preferences() -> Dict[str, Any]:
 @pytest.fixture
 def sample_skills() -> list[str]:
     """Sample skill IDs"""
-    return ["python/async-patterns", "python/type-hints-advanced"]
+    return ["python/cco-skill-async-patterns", "python/cco-skill-type-hints-advanced"]
 
 
 @pytest.fixture
 def sample_agents() -> list[str]:
     """Sample agent IDs"""
-    return ["audit-agent", "fix-agent"]
+    return ["cco-agent-audit", "cco-agent-fix"]
 
 
 class TestClaudeMdGeneratorInit:
@@ -939,36 +939,38 @@ class TestSkillsInjection:
     def test_inject_skills_language_specific(self, minimal_preferences, temp_project_dir) -> None:
         """Test skills injection with language-specific skills"""
         generator = ClaudeMdGenerator(
-            minimal_preferences, selected_skills=["python/async-patterns"]
+            minimal_preferences, selected_skills=["python/cco-skill-async-patterns"]
         )
         content = generator._create_base_structure()
 
         result = generator._inject_skills(content)
 
         # Should format language-specific skills properly
-        assert "Async Patterns (Python)" in result or "python/async-patterns" in result
+        assert "Async Patterns (Python)" in result or "python/cco-skill-async-patterns" in result
 
     def test_inject_skills_universal(self, minimal_preferences, temp_project_dir) -> None:
         """Test skills injection with universal skills"""
-        generator = ClaudeMdGenerator(minimal_preferences, selected_skills=["root-cause-analysis"])
+        generator = ClaudeMdGenerator(
+            minimal_preferences, selected_skills=["cco-skill-root-cause-analysis"]
+        )
         content = generator._create_base_structure()
 
         result = generator._inject_skills(content)
 
         # Should format universal skills properly
-        assert "Root Cause Analysis" in result or "root-cause-analysis" in result
+        assert "Root Cause Analysis" in result or "cco-skill-root-cause-analysis" in result
 
     def test_inject_skills_without_markers(self, minimal_preferences, temp_project_dir) -> None:
         """Test skills injection when markers don't exist"""
         generator = ClaudeMdGenerator(
-            minimal_preferences, selected_skills=["python/async-patterns"]
+            minimal_preferences, selected_skills=["python/cco-skill-async-patterns"]
         )
         content = "# Some content without markers"
 
         result = generator._inject_skills(content)
 
         # Should append skills section
-        assert "## Available Skills" in result or "python/async-patterns" in result
+        assert "## Available Skills" in result or "python/cco-skill-async-patterns" in result
 
 
 class TestAgentsInjection:

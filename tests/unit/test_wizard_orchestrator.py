@@ -682,7 +682,7 @@ class TestFileGeneration:
         """Test setting up knowledge base symlinks"""
         wizard = CCOWizard(temp_project, mode="quick")
         wizard.selected_commands = ["cco-init", "cco-status"]
-        wizard.selected_guides = ["git-workflow"]
+        wizard.selected_guides = ["cco-git-workflow"]
         wizard.selected_principles = ["P_TEST_COVERAGE"]
         wizard.selected_agents = []
         wizard.selected_skills = []
@@ -698,7 +698,7 @@ class TestFileGeneration:
         # Create mock files
         (mock_commands_dir / "cco-init.md").touch()
         (mock_commands_dir / "cco-status.md").touch()
-        (mock_guides_dir / "git-workflow.md").touch()
+        (mock_guides_dir / "cco-git-workflow.md").touch()
         (mock_principles_dir / "P_TEST_COVERAGE.md").touch()
         (mock_principles_dir / "U_DRY.md").touch()
 
@@ -844,9 +844,9 @@ class TestRecommendations:
 
         guides = wizard._recommend_guides_for_project()
 
-        assert "verification-protocol" in guides
-        assert "security-response" in guides
-        assert "performance-optimization" in guides
+        assert "cco-verification-protocol" in guides
+        assert "cco-security-response" in guides
+        assert "cco-performance-optimization" in guides
 
     def test_recommend_guides_for_team_project(self, temp_project, mock_system_context):
         """Test guide recommendations for team project"""
@@ -859,8 +859,8 @@ class TestRecommendations:
 
         guides = wizard._recommend_guides_for_project()
 
-        assert "verification-protocol" in guides
-        assert "git-workflow" in guides
+        assert "cco-verification-protocol" in guides
+        assert "cco-git-workflow" in guides
 
     def test_recommend_skills_for_project(self, temp_project, mock_system_context):
         """Test skill recommendations"""
@@ -870,11 +870,11 @@ class TestRecommendations:
         skills = wizard._recommend_skills_for_project()
 
         # Universal skills should always be included
-        assert "verification-protocol" in skills
-        assert "test-first-verification" in skills
-        assert "root-cause-analysis" in skills
-        assert "incremental-improvement" in skills
-        assert "security-emergency-response" in skills
+        assert "cco-skill-verification-protocol" in skills
+        assert "cco-skill-test-first-verification" in skills
+        assert "cco-skill-root-cause-analysis" in skills
+        assert "cco-skill-incremental-improvement" in skills
+        assert "cco-skill-security-emergency-response" in skills
 
     def test_recommend_agents_for_project(self, temp_project, mock_system_context):
         """Test agent recommendations"""
@@ -884,9 +884,9 @@ class TestRecommendations:
         agents = wizard._recommend_agents_for_project()
 
         # Universal agents should always be included
-        assert "audit-agent" in agents
-        assert "fix-agent" in agents
-        assert "generate-agent" in agents
+        assert "cco-agent-audit" in agents
+        assert "cco-agent-fix" in agents
+        assert "cco-agent-generate" in agents
 
 
 # ============================================================================
@@ -1372,9 +1372,9 @@ class TestDisplayMethods:
         wizard = CCOWizard(temp_project, mode="quick")
         wizard.selected_commands = ["cco-init", "cco-status"]
         wizard.selected_principles = ["U_DRY"]
-        wizard.selected_guides = ["git-workflow"]
-        wizard.selected_skills = ["verification-protocol"]
-        wizard.selected_agents = ["audit-agent"]
+        wizard.selected_guides = ["cco-git-workflow"]
+        wizard.selected_skills = ["cco-skill-verification-protocol"]
+        wizard.selected_agents = ["cco-agent-audit"]
 
         wizard._show_completion(5.5)
 
@@ -1735,9 +1735,9 @@ class TestRecommendationEdgeCases:
 
         guides = wizard._recommend_guides_for_project()
 
-        assert "security-response" in guides
-        assert "performance-optimization" in guides
-        assert "container-best-practices" in guides
+        assert "cco-security-response" in guides
+        assert "cco-performance-optimization" in guides
+        assert "cco-container-best-practices" in guides
 
     def test_recommend_guides_with_retry_logic(self, temp_project, mock_system_context):
         """Test guide recommendations for retry/resilience patterns"""
@@ -1749,7 +1749,7 @@ class TestRecommendationEdgeCases:
 
         guides = wizard._recommend_guides_for_project()
 
-        assert "performance-optimization" in guides
+        assert "cco-performance-optimization" in guides
 
     def test_recommend_skills_with_detected_languages(self, temp_project):
         """Test skill recommendations with language detection"""
@@ -1781,11 +1781,11 @@ class TestRecommendationEdgeCases:
         skills = wizard._recommend_skills_for_project()
 
         # Should include universal skills
-        assert "verification-protocol" in skills
-        assert "test-first-verification" in skills
+        assert "cco-skill-verification-protocol" in skills
+        assert "cco-skill-test-first-verification" in skills
         # Should include Python-specific skills
-        assert "python/async-patterns" in skills
-        assert "python/type-hints-advanced" in skills
+        assert "python/cco-skill-async-patterns" in skills
+        assert "python/cco-skill-type-hints-advanced" in skills
 
 
 # ============================================================================
@@ -1820,15 +1820,15 @@ class TestInjectKnowledgeReferences:
         wizard.system_context = mock_system_context
         wizard.answer_context = AnswerContext(system=mock_system_context)
         wizard.selected_principles = []
-        wizard.selected_guides = ["git-workflow", "security-response"]
+        wizard.selected_guides = ["cco-git-workflow", "cco-security-response"]
         wizard.selected_skills = []
         wizard.selected_agents = []
 
         content = "# CLAUDE\n\n---\n\n*Part of CCO Documentation System*"
         result = wizard._inject_knowledge_references(content)
 
-        assert "git-workflow.md" in result
-        assert "security-response.md" in result
+        assert "cco-git-workflow.md" in result
+        assert "cco-security-response.md" in result
 
     def test_inject_knowledge_references_with_skills_and_agents(
         self, temp_project, mock_system_context
@@ -1839,14 +1839,14 @@ class TestInjectKnowledgeReferences:
         wizard.answer_context = AnswerContext(system=mock_system_context)
         wizard.selected_principles = []
         wizard.selected_guides = []
-        wizard.selected_skills = ["verification-protocol"]
-        wizard.selected_agents = ["audit-agent"]
+        wizard.selected_skills = ["cco-skill-verification-protocol"]
+        wizard.selected_agents = ["cco-agent-audit"]
 
         content = "# CLAUDE\n\n---\n\n*Part of CCO Documentation System*"
         result = wizard._inject_knowledge_references(content)
 
-        assert "verification-protocol" in result
-        assert "audit-agent" in result
+        assert "cco-verification-protocol" in result or "cco-skill-verification-protocol" in result
+        assert "cco-agent-audit" in result
 
 
 # ============================================================================

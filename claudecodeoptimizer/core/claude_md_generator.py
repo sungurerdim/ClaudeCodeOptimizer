@@ -398,7 +398,7 @@ Error: Function crashes with empty string
 - Follow U_CONCISE_COMMITS, U_ATOMIC_COMMITS
 - Push after each completed task
 
-**Principles**: See `.claude/principles/git-workflow.md`
+**Principles**: See `.claude/guides/cco-git-workflow.md`
 
 ---"""
 
@@ -419,7 +419,7 @@ Error: Function crashes with empty string
 3. Merge to main after approval
 4. CI checks must pass
 
-**Principles**: See `.claude/principles/git-workflow.md`
+**Principles**: See `.claude/guides/cco-git-workflow.md`
 
 ---"""
 
@@ -441,7 +441,7 @@ Error: Function crashes with empty string
 
 **Branch Protection**: PRs required, CI/CD on all branches
 
-**Principles**: See `.claude/principles/git-workflow.md`
+**Principles**: See `.claude/guides/cco-git-workflow.md`
 
 ---"""
 
@@ -501,7 +501,7 @@ vm.auto_bump(create_tag=True)
 
 **Trigger**: Before release, after merge to main, or manually
 
-**Principles**: See `.claude/principles/git-workflow.md`
+**Principles**: See `.claude/guides/cco-git-workflow.md`
 
 ---"""
 
@@ -521,7 +521,7 @@ vm.auto_bump(create_tag=True)
 python -m claudecodeoptimizer.core.version_manager auto_bump --create-tag
 ```
 
-**Principles**: See `.claude/principles/git-workflow.md`
+**Principles**: See `.claude/guides/cco-git-workflow.md`
 
 ---"""
 
@@ -541,7 +541,7 @@ python -m claudecodeoptimizer.core.version_manager auto_bump --create-tag
 python -m claudecodeoptimizer.core.version_manager auto_bump --dry-run
 ```
 
-**Principles**: See `.claude/principles/git-workflow.md`
+**Principles**: See `.claude/guides/cco-git-workflow.md`
 
 ---"""
 
@@ -697,12 +697,15 @@ version = datetime.now().strftime("%Y.%m.%d")
         for skill in sorted(self.selected_skills):
             # Format display name
             if "/" in skill:
-                # Language-specific: python/async-patterns → Async Patterns (Python)
+                # Language-specific: python/cco-skill-async-patterns → Async Patterns (Python)
                 lang, skill_name = skill.split("/", 1)
-                display_name = f"{skill_name.replace('-', ' ').title()} ({lang.title()})"
+                # Remove cco-skill- prefix for display
+                display_skill = skill_name.replace("cco-skill-", "").replace("-", " ").title()
+                display_name = f"{display_skill} ({lang.title()})"
             else:
-                # Universal: root-cause-analysis → Root Cause Analysis
-                display_name = skill.replace("-", " ").title()
+                # Universal: cco-skill-root-cause-analysis → Root Cause Analysis
+                # Remove cco-skill- prefix for display
+                display_name = skill.replace("cco-skill-", "").replace("-", " ").title()
 
             skills_content.append(f"- **{display_name}** → `.claude/skills/{skill}.md`\n")
 

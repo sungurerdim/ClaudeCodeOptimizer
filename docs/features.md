@@ -278,8 +278,8 @@ Total: ~8s (vs 20s sequential, 60% faster)
   "detection_results": { ... },
   "selected_principles": ["code_quality.md", "security_privacy.md", ...],
   "selected_commands": ["cco-audit", "cco-status", ...],
-  "selected_guides": ["verification-protocol.md", ...],
-  "selected_skills": ["python/testing-pytest.md", ...],
+  "selected_guides": ["cco-verification-protocol.md", ...],
+  "selected_skills": ["python/cco-skill-testing-pytest.md", ...],
   "selected_agents": [],
   "settings": {
     "backup_retention": 5,

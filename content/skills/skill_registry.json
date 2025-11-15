@@ -20,8 +20,8 @@
         "PRINCIPLES.md"
       ],
       "optional_documents": [
-        "~/.cco/guides/verification-protocol.md",
-        "~/.cco/guides/security-response.md",
+        "~/.cco/guides/cco-verification-protocol.md",
+        "~/.cco/guides/cco-security-response.md",
         "~/.cco/principles/code-quality.md",
         "~/.cco/principles/security.md",
         "~/.cco/principles/testing.md"
@@ -47,7 +47,7 @@
         "PRINCIPLES.md"
       ],
       "optional_documents": [
-        "~/.cco/guides/security-response.md",
+        "~/.cco/guides/cco-security-response.md",
         "~/.cco/principles/testing.md"
       ],
       "parallel_agents": 1,
@@ -115,7 +115,7 @@
         "CLAUDE.md"
       ],
       "optional_documents": [
-        "~/.cco/guides/security-response.md"
+        "~/.cco/guides/cco-security-response.md"
       ],
       "parallel_agents": 0,
       "token_usage": "~3,500-4,000 tokens"

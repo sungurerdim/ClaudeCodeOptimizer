@@ -330,14 +330,14 @@ class TestSetupGuides:
         with patch.object(Path, "exists", return_value=True):
             with patch.object(Path, "glob") as mock_glob:
                 mock_guide = MagicMock(spec=Path)
-                mock_guide.name = "security-response.md"
+                mock_guide.name = "cco-security-response.md"
                 mock_glob.return_value = [mock_guide]
 
                 knowledge_setup._setup_guides(guides_dir)
 
                 mock_rmtree.assert_called_once_with(guides_dir)
 
-                expected_dest = guides_dir / "security-response.md"
+                expected_dest = guides_dir / "cco-security-response.md"
                 mock_copy2.assert_called_once_with(mock_guide, expected_dest)
 
     def test_setup_guides_raises_if_source_not_found(self, tmp_path: Path) -> None:
@@ -363,14 +363,14 @@ class TestSetupAgents:
         with patch.object(Path, "exists", return_value=True):
             with patch.object(Path, "glob") as mock_glob:
                 mock_agent = MagicMock(spec=Path)
-                mock_agent.name = "audit-agent.md"
+                mock_agent.name = "cco-agent-audit.md"
                 mock_glob.return_value = [mock_agent]
 
                 knowledge_setup._setup_agents(agents_dir)
 
                 mock_rmtree.assert_called_once_with(agents_dir)
 
-                expected_dest = agents_dir / "audit-agent.md"
+                expected_dest = agents_dir / "cco-agent-audit.md"
                 mock_copy2.assert_called_once_with(mock_agent, expected_dest)
 
     def test_setup_agents_raises_if_source_not_found(self, tmp_path: Path) -> None:
@@ -394,7 +394,7 @@ class TestSetupAgents:
                 mock_agents = [
                     MagicMock(spec=Path, name="_template.md"),
                     MagicMock(spec=Path, name="README.md"),
-                    MagicMock(spec=Path, name="audit-agent.md"),
+                    MagicMock(spec=Path, name="cco-agent-audit.md"),
                 ]
                 for mock_agent in mock_agents:
                     pass  # name already set
@@ -421,14 +421,14 @@ class TestSetupSkills:
             with patch.object(Path, "glob") as mock_glob:
                 with patch.object(Path, "iterdir", return_value=[]):
                     mock_skill = MagicMock(spec=Path)
-                    mock_skill.name = "verification-protocol.md"
+                    mock_skill.name = "cco-skill-verification-protocol.md"
                     mock_glob.return_value = [mock_skill]
 
                     knowledge_setup._setup_skills(skills_dir)
 
                     mock_rmtree.assert_called_once_with(skills_dir)
 
-                    expected_dest = skills_dir / "verification-protocol.md"
+                    expected_dest = skills_dir / "cco-skill-verification-protocol.md"
                     mock_copy2.assert_called_once_with(mock_skill, expected_dest)
 
     @patch("shutil.copy2")
@@ -452,7 +452,7 @@ class TestSetupSkills:
                 with patch.object(Path, "iterdir", return_value=[mock_python_dir]):
                     # Mock Python skills
                     mock_python_skill = MagicMock(spec=Path)
-                    mock_python_skill.name = "async-patterns.md"
+                    mock_python_skill.name = "cco-skill-async-patterns.md"
                     mock_python_dir.glob.return_value = [mock_python_skill]
 
                     knowledge_setup._setup_skills(skills_dir)
@@ -901,14 +901,14 @@ class TestGetAvailableGuides:
         guides_dir = tmp_path / "guides"
         guides_dir.mkdir()
 
-        (guides_dir / "security-response.md").touch()
-        (guides_dir / "git-workflow.md").touch()
+        (guides_dir / "cco-security-response.md").touch()
+        (guides_dir / "cco-git-workflow.md").touch()
 
         mock_guides_dir.return_value = guides_dir
 
         result = knowledge_setup.get_available_guides()
 
-        assert sorted(result) == ["git-workflow", "security-response"]
+        assert sorted(result) == ["cco-git-workflow", "cco-security-response"]
 
 
 class TestGetAvailableAgents:
@@ -933,8 +933,8 @@ class TestGetAvailableAgents:
         agents_dir = tmp_path / "agents"
         agents_dir.mkdir()
 
-        (agents_dir / "audit-agent.md").touch()
-        (agents_dir / "fix-agent.md").touch()
+        (agents_dir / "cco-agent-audit.md").touch()
+        (agents_dir / "cco-agent-fix.md").touch()
         (agents_dir / "_template.md").touch()
         (agents_dir / "README.md").touch()
 
@@ -942,7 +942,7 @@ class TestGetAvailableAgents:
 
         result = knowledge_setup.get_available_agents()
 
-        assert sorted(result) == ["audit-agent", "fix-agent"]
+        assert sorted(result) == ["cco-agent-audit", "cco-agent-fix"]
 
 
 class TestGetAvailableSkills:
@@ -967,7 +967,7 @@ class TestGetAvailableSkills:
         skills_dir = tmp_path / "skills"
         skills_dir.mkdir()
 
-        (skills_dir / "verification-protocol.md").touch()
+        (skills_dir / "cco-skill-verification-protocol.md").touch()
         (skills_dir / "test-first.md").touch()
         (skills_dir / "_template.md").touch()
         (skills_dir / "README.md").touch()
@@ -976,7 +976,7 @@ class TestGetAvailableSkills:
 
         result = knowledge_setup.get_available_skills()
 
-        assert sorted(result) == ["test-first", "verification-protocol"]
+        assert sorted(result) == ["cco-skill-verification-protocol", "test-first"]
 
 
 class TestErrorHandling:

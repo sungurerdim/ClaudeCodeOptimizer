@@ -44,22 +44,22 @@ content/                   # Single source of truth (tracked in git)
 │   ├── U_*.md               # Universal principles (19 files)
 │   └── P_*.md               # Project-specific principles (24 files)
 ├── guides/               # 5 comprehensive guide source files (*.md)
-│   ├── verification-protocol.md
-│   ├── git-workflow.md
-│   ├── security-response.md
-│   ├── performance-optimization.md
-│   └── container-best-practices.md
+│   ├── cco-verification-protocol.md
+│   ├── cco-git-workflow.md
+│   ├── cco-security-response.md
+│   ├── cco-performance-optimization.md
+│   └── cco-container-best-practices.md
 ├── skills/               # Language-specific (18) and cross-language (5) skill source files
-│   ├── python/          # 5 skills: async-patterns, packaging, performance, testing-pytest, type-hints-advanced
-│   ├── typescript/      # 5 skills: advanced-types, async-patterns, node-performance, testing-vitest, type-safety
-│   ├── rust/            # 4 skills: async-tokio, error-handling, ownership-patterns, testing
-│   ├── go/              # 4 skills: concurrency-patterns, error-handling, performance, testing-strategies
-│   ├── verification-protocol.md      # Cross-language verification skill
-│   ├── root-cause-analysis.md        # Cross-language debugging skill
-│   ├── test-first-verification.md    # Cross-language testing skill
-│   ├── incremental-improvement.md    # Cross-language development skill
-│   └── security-emergency-response.md # Cross-language security skill
-└── agents/               # 3 task-specific agent source files (audit, fix, generate)
+│   ├── python/          # 5 skills: cco-skill-async-patterns, cco-skill-packaging-modern, cco-skill-performance, cco-skill-testing-pytest, cco-skill-type-hints-advanced
+│   ├── typescript/      # 5 skills: cco-skill-advanced-types, cco-skill-async-patterns, cco-skill-node-performance, cco-skill-testing-vitest, cco-skill-type-safety
+│   ├── rust/            # 4 skills: cco-skill-async-tokio, cco-skill-error-handling, cco-skill-ownership-patterns, cco-skill-testing
+│   ├── go/              # 4 skills: cco-skill-concurrency-patterns, cco-skill-error-handling, cco-skill-performance, cco-skill-testing-strategies
+│   ├── cco-skill-verification-protocol.md      # Cross-language verification skill
+│   ├── cco-skill-root-cause-analysis.md        # Cross-language debugging skill
+│   ├── cco-skill-test-first-verification.md    # Cross-language testing skill
+│   ├── cco-skill-incremental-improvement.md    # Cross-language development skill
+│   └── cco-skill-security-emergency-response.md # Cross-language security skill
+└── agents/               # 3 task-specific agent source files (cco-agent-audit, cco-agent-fix, cco-agent-generate)
 ```
 
 **Global Claude Commands (`~/.claude/commands/`):**
