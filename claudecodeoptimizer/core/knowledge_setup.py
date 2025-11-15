@@ -287,72 +287,41 @@ def _setup_skills(skills_dir: Path) -> None:
 
 def _setup_claude_home_links() -> None:
     """
-    Setup symlinks in ~/.claude/ for universal/global content.
+    Setup files in ~/.claude/ for universal/global access.
 
-    Creates links for:
-    - ~/.claude/agents/ → symlinks to all agents from ~/.cco/agents/
+    Creates:
+    - ~/.claude/commands/cco-init.md (copy from content/commands/)
+    - ~/.claude/commands/cco-remove.md (copy from content/commands/)
 
-    This enables Claude Code to automatically discover and use CCO agents
-    without per-project configuration.
+    These two commands are globally available in ALL Claude Code projects.
     """
-    import platform
 
     from .. import config
 
     claude_dir = config.get_claude_dir()
-    cco_agents_dir = config.get_agents_dir()
+    claude_commands_dir = claude_dir / "commands"
 
-    # Only proceed if CCO agents exist
-    if not cco_agents_dir.exists():
-        return
+    # Create ~/.claude/commands/ directory
+    claude_commands_dir.mkdir(parents=True, exist_ok=True)
 
-    # Create ~/.claude/agents/ directory
-    claude_agents_dir = claude_dir / "agents"
-    claude_agents_dir.mkdir(parents=True, exist_ok=True)
+    # Get source commands from package
+    package_dir = Path(__file__).parent.parent
+    source_commands = package_dir.parent / "content" / "commands"
 
-    # Link all agent files from ~/.cco/agents/ to ~/.claude/agents/
-    for agent_file in cco_agents_dir.glob("*.md"):
-        # Skip templates and README
-        if agent_file.name.startswith("_template") or agent_file.name == "README.md":
-            continue
+    # Copy cco-init.md and cco-remove.md to ~/.claude/commands/
+    for command_name in ["cco-init.md", "cco-remove.md"]:
+        source = source_commands / command_name
+        target = claude_commands_dir / command_name
 
-        source = agent_file.resolve()
-        target = (claude_agents_dir / agent_file.name).resolve()
+        if not source.exists():
+            continue  # Skip if source doesn't exist
 
-        # Path traversal validation
-        if not str(source).startswith(str(cco_agents_dir.resolve())):
-            continue  # Skip files outside expected directory
-        if not str(target).startswith(str(claude_agents_dir.resolve())):
-            continue  # Skip targets outside expected directory
-
-        # Remove existing symlink/file if exists
+        # Remove existing file if exists
         if target.exists() or target.is_symlink():
             target.unlink()
 
-        # Create symlink (cross-platform)
-        try:
-            if platform.system() == "Windows":
-                # Windows: use mklink
-                import subprocess
-
-                # Safe: cmd is built-in Windows command, paths are validated and sanitized above
-                subprocess.run(  # noqa: S603
-                    [  # noqa: S607 - cmd is built-in Windows command
-                        "cmd",
-                        "/c",
-                        "mklink",
-                        str(target),
-                        str(source),
-                    ],
-                    check=True,
-                    capture_output=True,
-                )
-            else:
-                # Unix: use symlink_to
-                target.symlink_to(source)
-        except Exception:
-            # If symlink fails, copy the file instead (fallback)
-            shutil.copy2(source, target)
+        # Copy file (not symlink - these are global commands)
+        shutil.copy2(source, target)
 
 
 def get_principle_categories() -> list[str]:

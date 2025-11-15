@@ -348,7 +348,7 @@ class CCOWizard:
     @staticmethod
     def uninitialize(project_root: Path) -> Dict:
         """
-        Remove CCO from project.
+        Remove CCO from project using CCORemover.
 
         This is a static method that doesn't require wizard initialization.
 
@@ -365,49 +365,17 @@ class CCOWizard:
                 - success (bool): False if failed
                 - error (str): Error message
         """
-        from ..config import get_project_commands_dir
-        from ..core.hybrid_claude_md_generator import remove_cco_section
+        from ..core.remove import CCORemover
 
         try:
             project_name = project_root.name
+
+            # Use CCORemover for clean removal
+            remover = CCORemover(project_root)
+            result = remover.remove(scope="local", clean_claude_md=True)
+
+            # Clean CCO section from .gitignore (not handled by CCORemover)
             files_removed = []
-            claude_dir = project_root / ".claude"
-
-            # 1. Remove all symlinks in .claude/ subdirectories
-            categories = ["commands", "guides", "principles", "agents", "skills"]
-            for category in categories:
-                category_dir = claude_dir / category
-                if category_dir.exists():
-                    for item in category_dir.iterdir():
-                        # Remove symlinks and regular files (but keep .gitkeep)
-                        if item.name != ".gitkeep":
-                            if item.is_symlink() or item.is_file():
-                                item.unlink()
-                                files_removed.append(str(item.relative_to(project_root)))
-                            elif item.is_dir():
-                                # Remove directories recursively
-                                import shutil
-
-                                shutil.rmtree(item)
-                                files_removed.append(str(item.relative_to(project_root)))
-
-            # 2. Remove all cco-*.md command files from .claude/commands/
-            project_commands_dir = get_project_commands_dir(project_root)
-            if project_commands_dir.exists():
-                for cmd_file in project_commands_dir.glob("cco-*.md"):
-                    if cmd_file.exists():  # May have been removed in step 1
-                        cmd_file.unlink()
-                        rel_path = str(cmd_file.relative_to(project_root))
-                        if rel_path not in files_removed:
-                            files_removed.append(rel_path)
-
-            # 3. Clean CCO sections from CLAUDE.md
-            claude_md_path = project_root / "CLAUDE.md"
-            if claude_md_path.exists():
-                if remove_cco_section(claude_md_path):
-                    files_removed.append("CLAUDE.md (CCO sections removed)")
-
-            # 4. Clean CCO section from .gitignore
             gitignore_path = project_root / ".gitignore"
             if gitignore_path.exists():
                 content = gitignore_path.read_text(encoding="utf-8")
@@ -438,23 +406,14 @@ class CCOWizard:
                     gitignore_path.write_text(new_content, encoding="utf-8")
                     files_removed.append(".gitignore (CCO section removed)")
 
-            # 5. Remove empty .claude/ subdirectories
-            for category in categories:
-                category_dir = claude_dir / category
-                if category_dir.exists() and not any(category_dir.iterdir()):
-                    category_dir.rmdir()
-                    files_removed.append(str(category_dir.relative_to(project_root)))
-
-            # 6. Remove .claude/ if empty
-            if claude_dir.exists() and not any(claude_dir.iterdir()):
-                claude_dir.rmdir()
-                files_removed.append(str(claude_dir.relative_to(project_root)))
+            # Add removal actions to files_removed
+            files_removed.extend(result.get("actions", []))
 
             return {
                 "success": True,
                 "project_name": project_name,
                 "files_removed": files_removed,
-                "message": f"CCO uninitialized. Removed {len(files_removed)} items.",
+                "message": f"CCO uninitialized. {', '.join(result.get('actions', []))}",
             }
 
         except Exception as e:
@@ -468,7 +427,9 @@ class CCOWizard:
 
     def run(self) -> WizardResult:
         """
-        Run complete wizard flow.
+        Run complete wizard flow with clean install.
+
+        CRITICAL: Always performs clean install (removes previous CCO first).
 
         Returns:
             WizardResult with success status and all data
@@ -476,6 +437,9 @@ class CCOWizard:
         start_time = time.time()
 
         try:
+            # Step 0: Clean Install - Remove previous CCO setup (if any)
+            self._clean_install()
+
             # Welcome
             self._show_welcome()
 
@@ -586,6 +550,26 @@ class CCOWizard:
                 answers=self.answer_context.answers if self.answer_context else {},
                 error=str(e),
             )
+
+    # ========================================================================
+    # Phase -1: Clean Install
+    # ========================================================================
+
+    def _clean_install(self) -> None:
+        """
+        Clean install: Remove previous CCO setup before initialization.
+
+        CRITICAL: Ensures no conflicts with previous installations.
+        """
+        from ..core.remove import CCORemover
+
+        try:
+            remover = CCORemover(self.project_root)
+            remover.remove(scope="local", clean_claude_md=False)
+            # Silent cleanup - don't show output unless error
+        except Exception:
+            # Ignore errors - may not be initialized yet
+            pass
 
     # ========================================================================
     # Phase 0: Welcome
@@ -1335,16 +1319,6 @@ class CCOWizard:
             print_error(f"File generation failed: {e}", indent=2)
             return False
 
-    def _generate_command_files(self) -> None:
-        """Generate command files from templates"""
-        from ..core.generator import CommandGenerator
-
-        generator = CommandGenerator(self.project_root)
-        result = generator.generate_all()
-
-        if not result.get("success"):
-            raise Exception(f"Command generation failed: {result.get('error')}")
-
     def _setup_knowledge_symlinks(self) -> None:
         """
         Create symlinks in .claude/ to global knowledge base.
@@ -1772,22 +1746,6 @@ class CCOWizard:
                 content += "\n\n" + "\n".join(additions)
 
         return content
-
-    def _old_generate_claude_md(self) -> None:
-        """OLD: Generate CLAUDE.md from template with customization"""
-        from ..core.claude_md_generator import generate_claude_md
-
-        # Build preferences
-        preferences = self._build_preferences()
-
-        # Output path - project root
-        output_path = self.project_root / "CLAUDE.md"
-
-        # Generate
-        result = generate_claude_md(preferences, output_path)
-
-        if not result.get("success"):
-            raise Exception(f"CLAUDE.md generation failed: {result.get('error')}")
 
     # ========================================================================
     # Phase 7: Completion
