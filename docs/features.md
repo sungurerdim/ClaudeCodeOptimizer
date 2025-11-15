@@ -13,12 +13,15 @@ The features you'll use immediately to get value from CCO.
 **Two modes, unified decision engine:**
 
 **Quick Mode** (~10s):
+- **Clean install**: Removes previous CCO setup first (if any)
 - AI auto-analyzes codebase (README, docs, git history, file structure)
 - Detects: OS, shell, locale, languages, frameworks, tools, team size, project maturity
 - Auto-decides: Project type, testing strategy, security level, git workflow
-- Generates: Tailored CLAUDE.md, selected principles/commands/guides/skills/agents
+- Generates: Tailored CLAUDE.md, selected principles/commands/guides/skills/agents as symlinks
+- **No state files created** - completely stateless
 
 **Interactive Mode** (~2-5m):
+- **Clean install**: Removes previous CCO setup first (if any)
 - **TIER 0**: System detection (automatic, shown for confirmation)
 - **TIER 1**: Fundamental decisions
   - Project purpose, team size, maturity level, development philosophy
@@ -33,6 +36,7 @@ The features you'll use immediately to get value from CCO.
 - Claude Code UI integration (AskUserQuestion tool)
 - Cascading recommendations (each answer refines next suggestions)
 - Git history analysis for team size and activity patterns
+- **No state tracking** - selections applied as symlinks immediately
 
 ### 📚 Progressive Disclosure System
 
@@ -44,6 +48,7 @@ CCO uses a global storage model with local project links. All CCO data lives in 
 - **Global storage** (`~/.cco/`): 95 principles (19 universal + 64 project-specific + 12 Claude guidelines), 28 commands, 5 guides, 23 skills, 3 agents
 - **Project local** (`.claude/`): Symlinks to selected principles (24-44 total), commands (8-15), and relevant guides/skills
 - **Zero pollution**: Projects contain only links, no duplicated files
+- **Zero state**: No config files, no project registry - selection stored as symlinks
 
 > **See**: [Architecture → Directory Structure](architecture.md#directory-structure) for complete directory trees
 
@@ -264,35 +269,40 @@ Total: ~8s (vs 20s sequential, 60% faster)
 
 ---
 
-#### 📊 Project Registry System
+#### 🔄 **Stateless Architecture**
 
-**Global project tracking** - `~/.cco/projects/<project-name>.json`
+**Zero state management** - CCO operates without any config files or project registries
 
-**Registry Contents:**
-```json
-{
-  "project_name": "MyProject",
-  "project_root": "/absolute/path/to/project",
-  "initialized_at": "2025-11-12T10:30:00Z",
-  "wizard_mode": "quick",
-  "detection_results": { ... },
-  "selected_principles": ["code_quality.md", "security_privacy.md", ...],
-  "selected_commands": ["cco-audit", "cco-status", ...],
-  "selected_guides": ["cco-verification-protocol.md", ...],
-  "selected_skills": ["python/cco-skill-testing-pytest.md", ...],
-  "selected_agents": [],
-  "settings": {
-    "backup_retention": 5,
-    "report_retention": 10
-  }
-}
-```
+**How It Works:**
+- Selected principles/commands/guides stored as **symlinks in `.claude/`**
+- No `~/.cco/projects/` directory
+- No `~/.cco/config.json` file
+- No project registry whatsoever
+- All project configuration derived from:
+  - Symlink presence in `.claude/`
+  - CLAUDE.md marker content
+  - Live codebase analysis
 
 **Benefits:**
-- Project directory stays clean (zero CCO-specific files)
-- Centralized configuration management
-- Easy project discovery and tracking
-- Backup and report history management
-- Migration support between systems
+- **Zero pollution**: Project directory contains only symlinks
+- **Single source of truth**: Content in `~/.cco/`, links in `.claude/`
+- **No sync issues**: No state to get out of sync
+- **Clean removal**: Delete symlinks, project restored to pre-CCO state
+- **Simple updates**: `pip install -U claudecodeoptimizer` updates all projects instantly
+
+**Example:**
+```bash
+# Project state is determined by what's linked, not what's stored
+.claude/
+├── commands/
+│   └── cco-audit.md -> ~/.cco/commands/cco-audit.md  # ✅ Selected
+├── principles/
+│   ├── U_ATOMIC_COMMITS.md -> ~/.cco/principles/...  # ✅ Selected
+│   └── P_LINTING_SAST.md -> ~/.cco/principles/...    # ✅ Selected
+└── guides/
+    └── cco-security-response.md -> ~/.cco/guides/... # ✅ Selected
+
+# No project registry needed - links ARE the state
+```
 
 ---

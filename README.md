@@ -112,11 +112,12 @@ CCO automatically uses parallel agents for 2-3x speed:
 - **Haiku** for scanning, detection, simple tasks (fast & cheap)
 - **Sonnet** for analysis, synthesis, complex reasoning (smart & thorough)
 
-### ✅ **Zero Project Pollution**
-- All data stored globally (`~/.cco/`)
+### ✅ **Zero Project Pollution & Zero State**
+- All data stored globally (`~/.cco/`) - single source of truth
 - Projects only contain symlinks (`.claude/` → `~/.cco/`)
-- Clean uninstall: remove links, project works without CCO
-- Easy updates: `pip install -U claudecodeoptimizer` updates all projects
+- **No state files, no config, no project registry** - 100% stateless
+- Clean uninstall: remove links, project restored to pre-CCO state
+- Easy updates: `pip install -U claudecodeoptimizer` updates all projects instantly
 
 [→ Full Feature List](docs/features.md) | [→ Architecture](docs/architecture.md)
 
@@ -148,14 +149,16 @@ pip install -e ".[dev]"
 - 5 comprehensive guides
 - 23 skills (18 language-specific + 5 cross-language)
 - 3 task agents (audit, fix, generate)
+- **No state files** - completely stateless
 
 **Global (`~/.claude/commands/`):**
-- `/cco-init` - Initialize CCO in any project
-- `/cco-remove` - Remove CCO from project
+- `/cco-init` - Initialize CCO in any project (auto-detect everything)
+- `/cco-remove` - Complete CCO removal (local + global cleanup)
 
 **Project (`.claude/`):**
 - Symlinks to selected principles, commands, guides, skills
-- `CLAUDE.md` with principle references
+- `CLAUDE.md` with CCO sections (original content preserved via markers)
+- **No CCO-specific files** - only symlinks
 
 [→ Platform-Specific Notes (Windows/Linux/macOS)](docs/installation.md#platform-specific-notes)
 
@@ -166,14 +169,17 @@ pip install -e ".[dev]"
 ### 🧙 **Intelligent Project Initialization**
 - **Quick Mode**: AI auto-detects everything (~10 seconds)
 - **Interactive Mode**: You approve each decision (~2-5 minutes)
-- Detects: Languages, frameworks, tools, team size, maturity level
+- **Clean Install**: Always removes previous CCO setup first
+- Detects: Languages, frameworks, tools, team size, maturity level, git history
 - Decides: Project type, testing strategy, security level, git workflow
+- **100% Stateless**: No config files, no project registry - everything derived from code
 
 ### 📚 **Progressive Disclosure System**
 - Loads only applicable principles (not all 95)
 - Example: Simple CLI tool → 25 principles, FastAPI API → 45 principles
 - **80%+ token savings** throughout project lifecycle
 - Dynamic loading per command
+- **No state tracking** - selection stored as symlinks in `.claude/`
 
 ### 🎯 **95 Industry Principles**
 | Category | Count | Examples |
