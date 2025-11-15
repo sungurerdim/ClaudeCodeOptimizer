@@ -299,3 +299,104 @@ AutoStrategy = Callable[[AnswerContext], DecisionValue]
 AIHintGenerator = Callable[[AnswerContext], str]
 SkipCondition = Callable[[Dict[str, Any]], bool]
 Validator = Callable[[DecisionValue], bool]
+
+
+@dataclass
+class SelectionContext:
+    """
+    SSOT (Single Source of Truth) for entire CCO initialization process.
+
+    This class holds ALL state for initialization:
+    - AI detection results (Phase 1)
+    - User selections: principles, commands, skills, agents, guides (Phase 2)
+    - Execution status: what's been created/updated (Phase 3)
+    - Validation state (Phase 4)
+
+    Usage:
+        1. Create from detection: SelectionContext.from_detection(...)
+        2. Execute steps: create_symlinks(context), generate_claude_md(context)
+        3. Validate: context.is_complete()
+        4. Report: context.to_report()
+    """
+
+    # Phase 1: AI Detection Results
+    project_root: Path
+    mode: Literal["quick", "interactive"]
+    system_context: Optional[SystemContext] = None
+
+    # Phase 2: User Selections
+    selected_principles: List[str] = field(default_factory=list)
+    selected_commands: List[str] = field(default_factory=list)
+    selected_skills: List[str] = field(default_factory=list)
+    selected_agents: List[str] = field(default_factory=list)
+    selected_guides: List[str] = field(default_factory=list)
+    preferences: Dict[str, Any] = field(default_factory=dict)
+
+    # Phase 3: Execution Status (auto-updated during execution)
+    symlinks_created: bool = False
+    claude_md_updated: bool = False
+    gitignore_updated: bool = False
+
+    # Metadata
+    timestamp: str = field(
+        default_factory=lambda: __import__("datetime").datetime.now().isoformat()
+    )
+
+    def mark_symlinks_created(self) -> None:
+        """Mark symlinks creation as complete."""
+        self.symlinks_created = True
+
+    def mark_claude_md_updated(self) -> None:
+        """Mark CLAUDE.md update as complete."""
+        self.claude_md_updated = True
+
+    def mark_gitignore_updated(self) -> None:
+        """Mark .gitignore update as complete."""
+        self.gitignore_updated = True
+
+    def is_complete(self) -> bool:
+        """Check if all execution steps completed successfully."""
+        return all(
+            [
+                self.symlinks_created,
+                self.claude_md_updated,
+                self.gitignore_updated,
+            ]
+        )
+
+    def get_missing_steps(self) -> List[str]:
+        """Get list of incomplete execution steps."""
+        missing = []
+        if not self.symlinks_created:
+            missing.append("symlinks_created")
+        if not self.claude_md_updated:
+            missing.append("claude_md_updated")
+        if not self.gitignore_updated:
+            missing.append("gitignore_updated")
+        return missing
+
+    def get_selected_counts(self) -> Dict[str, int]:
+        """Get counts of selected items."""
+        return {
+            "principles": len(self.selected_principles),
+            "commands": len(self.selected_commands),
+            "skills": len(self.selected_skills),
+            "agents": len(self.selected_agents),
+            "guides": len(self.selected_guides),
+        }
+
+    def to_report(self) -> Dict[str, Any]:
+        """Generate final initialization report."""
+        return {
+            "success": self.is_complete(),
+            "mode": self.mode,
+            "project_root": str(self.project_root),
+            "counts": self.get_selected_counts(),
+            "execution_status": {
+                "symlinks_created": self.symlinks_created,
+                "claude_md_updated": self.claude_md_updated,
+                "gitignore_updated": self.gitignore_updated,
+            },
+            "missing_steps": self.get_missing_steps(),
+            "timestamp": self.timestamp,
+        }
