@@ -1033,7 +1033,8 @@ def get_filtered_questions(answers: Dict[str, Any]) -> List[Dict]:
         # Check if question has skip condition
         if "skip_if" in q:
             try:
-                if q["skip_if"](answers):
+                skip_func = q["skip_if"]
+                if callable(skip_func) and skip_func(answers):
                     continue  # Skip this question
             except (KeyError, TypeError, AttributeError) as e:
                 # If skip check fails, ask the question anyway

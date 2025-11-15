@@ -10,8 +10,8 @@ __license__ = "MIT"
 # Fix Windows console encoding for emoji/Unicode support
 if sys.platform == "win32" and hasattr(sys.stdout, "reconfigure"):
     try:
-        sys.stdout.reconfigure(encoding="utf-8")
-        sys.stderr.reconfigure(encoding="utf-8")
+        sys.stdout.reconfigure(encoding="utf-8")  # type: ignore[union-attr]
+        sys.stderr.reconfigure(encoding="utf-8")  # type: ignore[union-attr]
     except Exception as e:
         logging.warning(f"Failed to reconfigure console encoding: {e}. Using default encoding.")
 
@@ -47,10 +47,10 @@ def _ensure_global_setup() -> None:
             from .core.knowledge_setup import setup_global_knowledge
 
             setup_global_knowledge(force=False)
-    except Exception:
+    except Exception as e:  # noqa: S110
         # Silent fail - don't break package import
         # User can manually run: python -m claudecodeoptimizer.install_hook
-        pass
+        logging.debug(f"Global CCO setup skipped on import: {e}")
 
 
 # Auto-setup on import (pip install → import → auto-setup)

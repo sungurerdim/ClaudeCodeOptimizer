@@ -155,7 +155,7 @@ def get_command_name(action: str) -> str:
 # ============================================================================
 
 # Git ignore patterns - CCO keeps project directories completely clean
-GITIGNORE_PATTERNS = []
+GITIGNORE_PATTERNS: list[str] = []
 
 # ============================================================================
 # DISPLAY STRINGS

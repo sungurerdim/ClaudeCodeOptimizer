@@ -108,9 +108,8 @@ class PrincipleSelector:
         project_types = applicability.get("project_types", ["all"])
         if project_types != ["all"]:
             # Get detected project types from preferences
-            detected_types = (
-                self._get_nested_value(self.preferences, "project_identity.types") or []
-            )
+            detected_types_raw = self._get_nested_value(self.preferences, "project_identity.types")
+            detected_types = detected_types_raw if isinstance(detected_types_raw, list) else []
             # Check if any detected type matches required types (exact match)
             if not any(dtype in project_types for dtype in detected_types):
                 return False
@@ -275,11 +274,13 @@ class PrincipleSelector:
             "relaxed": 10,  # Critical only
         }
 
-        min_weight = weight_thresholds.get(strictness, 9)
+        strictness_str = str(strictness) if strictness is not None else "standard"
+        min_weight = weight_thresholds.get(strictness_str, 9)
 
         # Security override: For API/web projects or high security stance,
         # lower threshold for security principles to weight >= 8
-        project_types = self._get_nested_value(self.preferences, "project_identity.types") or []
+        project_types_raw = self._get_nested_value(self.preferences, "project_identity.types")
+        project_types = project_types_raw if isinstance(project_types_raw, list) else []
         is_api_or_web = any(
             pt in ["api", "web", "web-app", "microservice", "backend", "api_service"]
             for pt in project_types
@@ -371,7 +372,8 @@ class PrincipleSelector:
             "relaxed": "OPTIONAL",
         }
 
-        principle["enforcement"] = enforcement_map.get(strictness, "RECOMMENDED")
+        strictness_str = str(strictness) if strictness is not None else "standard"
+        principle["enforcement"] = enforcement_map.get(strictness_str, "RECOMMENDED")
 
         return principle
 
@@ -462,7 +464,7 @@ class PrincipleSelector:
         }
 
         # Count by category
-        by_category = {}
+        by_category: dict[str, int] = {}
         for p in applicable:
             cat = p.get("category", "unknown")
             by_category[cat] = by_category.get(cat, 0) + 1

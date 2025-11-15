@@ -134,7 +134,7 @@ class ContextMatrix:
         # NOTE: Categories will be dynamically filtered based on principle weight, not hardcoded lists
         if score <= 3:
             intensity = "minimal"
-            categories = []  # Will be filtered by weight (≥10)
+            categories: list[str] = []  # Will be filtered by weight (≥10)
             count_min = max(5, int(total_available * 0.07))  # ~7% of total
             count_max = max(10, int(total_available * 0.15))  # ~15% of total
             principle_count = f"{count_min}-{count_max}"

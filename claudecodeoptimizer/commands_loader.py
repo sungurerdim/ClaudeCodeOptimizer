@@ -38,7 +38,7 @@ def load_global_commands() -> Dict[str, Dict[str, Any]]:
     Returns dict: {command_name: {description, file}}
     """
     commands_dir = Path(__file__).parent.parent / "content" / "commands"
-    commands = {}
+    commands: Dict[str, Dict[str, Any]] = {}
 
     if not commands_dir.exists():
         return commands

@@ -115,12 +115,12 @@ class ProjectAnalyzer:
         ]
 
         # Extract framework names for hierarchy check
-        detected_names = {fw["name"].lower() for fw in all_frameworks}
+        detected_names = {str(fw["name"]).lower() for fw in all_frameworks}
 
         # Filter out sub-dependencies
         filtered_frameworks = []
         for fw in all_frameworks:
-            fw_name = fw["name"].lower()
+            fw_name = str(fw["name"]).lower()
 
             # Check if this framework is a child of any detected parent
             is_child = False
@@ -309,24 +309,22 @@ class ProjectAnalyzer:
 
     def _analyze_structure(self) -> Dict[str, Any]:
         """Analyze project structure."""
-        structure = {
-            "total_files": 0,
-            "total_dirs": 0,
-            "main_directories": [],
-            "config_files": [],
-        }
+        total_files = 0
+        total_dirs = 0
+        main_directories: list[str] = []
+        config_files: list[str] = []
 
         # Count files and directories
         for item in self.project_root.rglob("*"):
             if item.is_file():
-                structure["total_files"] += 1
+                total_files += 1
             elif item.is_dir():
-                structure["total_dirs"] += 1
+                total_dirs += 1
 
         # Find main directories (top-level only)
         for item in self.project_root.iterdir():
             if item.is_dir() and not item.name.startswith("."):
-                structure["main_directories"].append(item.name)
+                main_directories.append(item.name)
 
         # Find config files
         config_patterns = [
@@ -340,7 +338,14 @@ class ProjectAnalyzer:
         for pattern in config_patterns:
             for config_file in self.project_root.glob(pattern):
                 if config_file.is_file():
-                    structure["config_files"].append(config_file.name)
+                    config_files.append(config_file.name)
+
+        structure = {
+            "total_files": total_files,
+            "total_dirs": total_dirs,
+            "main_directories": main_directories,
+            "config_files": config_files,
+        }
 
         return structure
 

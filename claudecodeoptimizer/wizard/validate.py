@@ -17,7 +17,7 @@ from pathlib import Path
 # Import constants
 
 sys.path.insert(0, str(Path(__file__).parent.parent))
-from core.constants import EXPECTED_WIZARD_QUESTIONS
+from ..core.constants import EXPECTED_WIZARD_QUESTIONS
 
 # Fix Windows console encoding
 if sys.platform == "win32":

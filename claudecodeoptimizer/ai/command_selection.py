@@ -7,7 +7,7 @@ Rule-based command selection system.
 
 import sys
 from pathlib import Path
-from typing import Dict, List, Tuple
+from typing import Any, Dict, List, Tuple
 
 sys.path.insert(0, str(Path(__file__).parent.parent))
 
@@ -292,7 +292,7 @@ class CommandRecommender:
         self.preferences = preferences
         self.registry = registry
 
-    def _evaluate_condition(self, condition: Tuple[str, str, any]) -> bool:
+    def _evaluate_condition(self, condition: Tuple[str, str, Any]) -> bool:
         """
         Evaluate a single recommendation condition
 
@@ -305,7 +305,7 @@ class CommandRecommender:
         path, operator, expected = condition
 
         # Navigate nested preference path
-        value = self.preferences
+        value: Any = self.preferences
         for part in path.split("."):
             if hasattr(value, part):
                 value = getattr(value, part)
@@ -332,14 +332,14 @@ class CommandRecommender:
 
         return False
 
-    def recommend_commands(self) -> Dict[str, List[str]]:
+    def recommend_commands(self) -> Dict[str, Any]:
         """
         Generate command recommendations with reasoning
 
         Returns:
             Dictionary with 'core', 'recommended', 'optional' lists and reasoning
         """
-        recommended = {
+        recommended: Dict[str, Any] = {
             "core": self.CORE_COMMANDS.copy(),
             "recommended": [],
             "optional": [],
@@ -357,9 +357,10 @@ class CommandRecommender:
 
         # Evaluate conditional recommendations
         for rule in self.RECOMMENDATION_RULES:
-            command_id = rule["command_id"]
-            conditions = rule["conditions"]
-            reasoning = rule["reasoning"]
+            rule_dict: Dict[str, Any] = rule  # type: ignore
+            command_id: Any = rule_dict["command_id"]
+            conditions: Any = rule_dict["conditions"]
+            reasoning: Any = rule_dict["reasoning"]
             evaluated_from_rules.add(command_id)
 
             # Check if all conditions pass
@@ -397,7 +398,7 @@ class CommandRecommender:
 
         return recommended
 
-    def _filter_by_project_type(self, recommendations: Dict) -> Dict:
+    def _filter_by_project_type(self, recommendations: Dict[str, Any]) -> Dict[str, Any]:
         """
         Filter commands by project type relevance
 
@@ -410,7 +411,8 @@ class CommandRecommender:
         project_types = self.preferences.project_identity.types
 
         filtered_optional = []
-        for cmd_id in recommendations["optional"]:
+        optional_list: Any = recommendations["optional"]
+        for cmd_id in optional_list:
             cmd = self.registry.get_by_id(cmd_id)
             if cmd:
                 # Check if command is relevant to project types
@@ -434,13 +436,17 @@ class CommandRecommender:
         """
         # Find in rules
         for rule in self.RECOMMENDATION_RULES:
-            if rule["command_id"] == command_id:
+            rule_dict: Dict[str, Any] = rule  # type: ignore
+            rule_command_id: Any = rule_dict["command_id"]
+            if rule_command_id == command_id:
                 explanation = [f"**{command_id}** is recommended because:"]
-                explanation.append(f"- {rule['reasoning']}")
+                rule_reasoning: Any = rule_dict["reasoning"]
+                explanation.append(f"- {rule_reasoning}")
 
                 # Add condition details
                 explanation.append("\nConditions met:")
-                for condition in rule["conditions"]:
+                rule_conditions: Any = rule_dict["conditions"]
+                for condition in rule_conditions:
                     path, op, expected = condition
                     explanation.append(f"  * {path} {op} {expected}")
 
@@ -448,7 +454,7 @@ class CommandRecommender:
 
         return f"Command {command_id} - see command metadata for details"
 
-    def generate_selection_summary(self) -> Dict:
+    def generate_selection_summary(self) -> Dict[str, Any]:
         """
         Generate comprehensive selection summary with stats
 
@@ -468,9 +474,9 @@ class CommandRecommender:
             "commands_by_category": self._count_by_category(recs),
         }
 
-    def _count_by_category(self, recommendations: Dict) -> Dict[str, int]:
+    def _count_by_category(self, recommendations: Dict[str, Any]) -> Dict[str, int]:
         """Count commands by category"""
-        counts = {}
+        counts: Dict[str, int] = {}
 
         all_commands = (
             recommendations["core"] + recommendations["recommended"] + recommendations["optional"]

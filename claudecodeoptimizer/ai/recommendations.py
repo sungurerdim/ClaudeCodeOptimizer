@@ -13,7 +13,7 @@ Design principles:
 
 from dataclasses import dataclass, field
 from enum import Enum
-from typing import Any, Dict, List, Optional
+from typing import Any, Dict, List, Optional, cast
 
 from .. import __version__ as cco_version
 
@@ -390,18 +390,34 @@ class RecommendationEngine:
             "python",
         )
 
-        # Lookup tables
-        self.domain_practices = DOMAIN_BEST_PRACTICES.get(
-            self.domain,
-            DOMAIN_BEST_PRACTICES["default"],
+        # Lookup tables - type narrowing for domain
+        domain_key = self.domain if isinstance(self.domain, str) else "default"
+        self.domain_practices: Dict[str, Any] = cast(
+            Dict[str, Any],
+            DOMAIN_BEST_PRACTICES.get(
+                domain_key,
+                DOMAIN_BEST_PRACTICES["default"],
+            ),
         )
-        self.scale_practices = SCALE_RECOMMENDATIONS.get(
-            self.scale,
-            SCALE_RECOMMENDATIONS["startup"],
+
+        # Type narrowing for scale
+        scale_key = self.scale if isinstance(self.scale, str) else "startup"
+        self.scale_practices: Dict[str, Any] = cast(
+            Dict[str, Any],
+            SCALE_RECOMMENDATIONS.get(
+                scale_key,
+                SCALE_RECOMMENDATIONS["startup"],
+            ),
         )
-        self.language_practices = LANGUAGE_BEST_PRACTICES.get(
-            self.language,
-            LANGUAGE_BEST_PRACTICES["python"],
+
+        # Type narrowing for language
+        language_key = self.language if isinstance(self.language, str) else "python"
+        self.language_practices: Dict[str, Any] = cast(
+            Dict[str, Any],
+            LANGUAGE_BEST_PRACTICES.get(
+                language_key,
+                LANGUAGE_BEST_PRACTICES["python"],
+            ),
         )
 
     def _calculate_confidence(
@@ -618,7 +634,8 @@ class RecommendationEngine:
 
         testing = self.detection.get("testing", {})
         current_coverage = testing.get("test_coverage_percent", 0)
-        min_coverage = self.domain_practices.get("test_coverage_min", 80)
+        min_coverage_val = self.domain_practices.get("test_coverage_min", 80)
+        min_coverage = int(min_coverage_val) if isinstance(min_coverage_val, (int, float)) else 80
 
         # Missing test framework
         if not testing.get("test_framework"):
@@ -654,7 +671,7 @@ class RecommendationEngine:
                     category="testing",
                     title=f"Increase test coverage to {min_coverage}%",
                     description=f"Current coverage ({current_coverage}%) below {self.domain} domain standard ({min_coverage}%)",
-                    priority="high" if current_coverage < min_coverage * 0.7 else "medium",
+                    priority="high" if current_coverage < int(min_coverage * 0.7) else "medium",
                     confidence=self._calculate_confidence(True, "strong"),
                     reasoning=[
                         f"{self.domain.title()} projects require {min_coverage}% minimum coverage",
@@ -737,6 +754,7 @@ class RecommendationEngine:
 
         security = self.detection.get("security", {})
         stance = self.domain_practices.get("security_stance", "standard")
+        assert isinstance(stance, str)  # noqa: S101 - Type narrowing for dict lookup
         stance_reqs = SECURITY_STANCE_REQUIREMENTS.get(stance, {})
 
         # Encryption at rest
@@ -762,7 +780,7 @@ class RecommendationEngine:
                         ],
                         citations=[
                             "OWASP cryptographic storage cheatsheet",
-                            f"{', '.join(self.domain_practices.get('compliance_requirements', []))}",
+                            f"{', '.join(str(r) for r in self.domain_practices.get('compliance_requirements', []) or [])}",
                         ],
                         implementation_notes="Use database native encryption or application-level encryption",
                         estimated_effort="1d",
@@ -821,7 +839,7 @@ class RecommendationEngine:
                         ],
                         citations=[
                             "NIST SP 800-63B authentication guidelines",
-                            f"{', '.join(self.domain_practices.get('compliance_requirements', []))}",
+                            f"{', '.join(str(r) for r in self.domain_practices.get('compliance_requirements', []) or [])}",
                         ],
                         implementation_notes="Support TOTP (Google Authenticator) and SMS as backup",
                         estimated_effort="3d",
@@ -893,7 +911,8 @@ class RecommendationEngine:
         recommendations = []
 
         devops = self.detection.get("devops", {})
-        ci_level = self.scale_practices.get("ci_cd")
+        ci_level = self.scale_practices.get("ci_cd", "basic")
+        assert isinstance(ci_level, str)  # noqa: S101 - Type narrowing for string value
 
         # Missing CI/CD
         if not devops.get("ci_cd_platform"):
@@ -924,7 +943,9 @@ class RecommendationEngine:
 
         # Deployment validation
         deploy_validation = self.domain_practices.get("deployment_validation", [])
+        assert isinstance(deploy_validation, list)  # noqa: S101 - Type narrowing for list iteration
         current_validation = devops.get("deployment_strategy", [])
+        assert isinstance(current_validation, list)  # noqa: S101 - Type narrowing for list comparison
 
         for validation in deploy_validation:
             if validation not in current_validation:
@@ -955,8 +976,9 @@ class RecommendationEngine:
         # Monitoring
         monitoring_level = self.domain_practices.get(
             "monitoring_level",
-            self.scale_practices.get("monitoring"),
+            self.scale_practices.get("monitoring", "basic"),
         )
+        assert isinstance(monitoring_level, str)  # noqa: S101 - Type narrowing for dict lookup
         monitoring_reqs = MONITORING_LEVEL_REQUIREMENTS.get(monitoring_level, {})
 
         has_metrics = devops.get("monitoring", {}).get("metrics", False)
@@ -1022,7 +1044,7 @@ class RecommendationEngine:
         recommendations = []
 
         infrastructure = self.detection.get("infrastructure", {})
-        self.scale_practices.get("infrastructure")
+        _ = self.scale_practices.get("infrastructure")
 
         # Containerization
         has_docker = infrastructure.get("containerization", {}).get("docker", False)
@@ -1053,9 +1075,11 @@ class RecommendationEngine:
             )
 
         # Orchestration
+        scalability_reqs = self.domain_practices.get("scalability_requirements", [])
+        assert isinstance(scalability_reqs, list)  # noqa: S101 - Type narrowing for list operations
         needs_k8s = self.scale == "enterprise" or (
             self.scale == "growth"
-            and "horizontal" in self.domain_practices.get("scalability_requirements", [])
+            and "horizontal" in scalability_reqs
         )
         has_k8s = infrastructure.get("orchestration", {}).get("kubernetes", False)
 

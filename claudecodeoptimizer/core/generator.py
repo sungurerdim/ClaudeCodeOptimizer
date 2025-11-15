@@ -5,7 +5,7 @@ from datetime import datetime
 from pathlib import Path
 from typing import Any, Dict, List, Optional
 
-from ..config import CCOConfig
+from .. import config
 
 
 class CommandGenerator:
@@ -13,12 +13,11 @@ class CommandGenerator:
 
     def __init__(self, project_root: Path) -> None:
         self.project_root = project_root.absolute()
-        self.config = CCOConfig
         self.templates_dir = Path(__file__).parent.parent / "templates"
 
     def load_project_config(self) -> Dict[str, Any]:
         """Load project configuration from .cco/project.json."""
-        config_file = self.config.get_project_cco_dir(self.project_root) / "project.json"
+        config_file = config.get_project_claude_dir(self.project_root) / "project.json"
 
         if not config_file.exists():
             raise FileNotFoundError(f"Project config not found: {config_file}")
@@ -28,7 +27,7 @@ class CommandGenerator:
 
     def load_command_registry(self) -> List[str]:
         """Load enabled commands from .cco/commands.json."""
-        registry_file = self.config.get_project_cco_dir(self.project_root) / "commands.json"
+        registry_file = config.get_project_claude_dir(self.project_root) / "commands.json"
 
         if not registry_file.exists():
             raise FileNotFoundError(f"Command registry not found: {registry_file}")
@@ -130,7 +129,7 @@ class CommandGenerator:
         content = self.replace_variables(content, project_config, enabled_commands)
 
         # Write command to project-local .claude/commands/
-        commands_dir = self.config.get_project_claude_dir(self.project_root) / "commands"
+        commands_dir = config.get_project_claude_dir(self.project_root) / "commands"
         commands_dir.mkdir(parents=True, exist_ok=True)
 
         output_path = commands_dir / f"{command_id}.md"
@@ -157,9 +156,9 @@ class CommandGenerator:
                     failed.append(command_id)
 
             # Update command registry with generation timestamp
-            registry_file = self.config.get_project_cco_dir(self.project_root) / "commands.json"
+            registry_file = config.get_project_claude_dir(self.project_root) / "commands.json"
             registry = {
-                "version": self.config.VERSION,
+                "version": config.VERSION,
                 "generated_at": datetime.now().isoformat(),
                 "commands": [
                     {"id": cmd, "enabled": True, "generated_at": datetime.now().isoformat()}
@@ -176,7 +175,7 @@ class CommandGenerator:
                 "failed": len(failed),
                 "failed_commands": failed,
                 "commands_dir": str(
-                    self.config.get_project_claude_dir(self.project_root) / "commands",
+                    config.get_project_claude_dir(self.project_root) / "commands",
                 ),
             }
 

@@ -11,7 +11,7 @@ Examples:
 - poetry vs pip-tools (dependency management)
 """
 
-from typing import Dict, List, Optional
+from typing import Dict, List, Optional, cast
 
 from .models import ToolComparison
 
@@ -153,8 +153,8 @@ class ToolComparator:
             return None  # No conflict
 
         # Build comparison
-        recommended = cat_info["recommended"]
-        reasons = cat_info["reasons"]
+        recommended = cast(str, cat_info["recommended"])
+        reasons = cast(Dict[str, str], cat_info["reasons"])
 
         return ToolComparison(
             category=category,
@@ -201,7 +201,7 @@ class ToolComparator:
             detected = [tool for tool in self.detected_tools if tool in possible_tools]
 
             if detected:
-                recommendations[category] = cat_info["recommended"]
+                recommendations[category] = cast(str, cat_info["recommended"])
 
         return recommendations
 
@@ -232,8 +232,9 @@ class ToolComparator:
 
         # Search across all categories
         for cat_info in self.TOOL_CATEGORIES.values():
-            if tool_lower in cat_info["reasons"]:
-                return cat_info["reasons"][tool_lower]
+            reasons = cast(Dict[str, str], cat_info["reasons"])
+            if tool_lower in reasons:
+                return reasons[tool_lower]
 
         return f"{tool_name} (detected in project)"
 
@@ -251,8 +252,9 @@ class ToolComparator:
             return f"No recommendation available for {category}"
 
         cat_info = self.TOOL_CATEGORIES[category]
-        recommended = cat_info["recommended"]
-        reason = cat_info["reasons"].get(recommended, "Recommended")
+        recommended = cast(str, cat_info["recommended"])
+        reasons = cast(Dict[str, str], cat_info["reasons"])
+        reason = reasons.get(recommended, "Recommended")
 
         detected = [tool for tool in self.detected_tools if tool in cat_info["tools"]]
 

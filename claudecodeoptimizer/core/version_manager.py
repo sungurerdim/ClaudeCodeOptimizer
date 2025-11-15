@@ -201,8 +201,15 @@ class VersionManager:
 
         if create:
             try:
-                subprocess.run(
-                    ["git", "tag", "-a", tag_name, "-m", f"Release {version}"],
+                subprocess.run(  # noqa: S603
+                    [  # noqa: S607 - git is a built-in system command
+                        "git",
+                        "tag",
+                        "-a",
+                        tag_name,
+                        "-m",
+                        f"Release {version}",
+                    ],
                     cwd=self.project_root,
                     check=True,
                     capture_output=True,
@@ -223,8 +230,13 @@ class VersionManager:
         """
         try:
             # Get last tag
-            result = subprocess.run(
-                ["git", "describe", "--tags", "--abbrev=0"],
+            result = subprocess.run(  # noqa: S603
+                [  # noqa: S607 - git is a built-in system command
+                    "git",
+                    "describe",
+                    "--tags",
+                    "--abbrev=0",
+                ],
                 cwd=self.project_root,
                 capture_output=True,
                 text=True,
@@ -233,8 +245,13 @@ class VersionManager:
             last_tag = result.stdout.strip()
 
             # Get commits since last tag
-            result = subprocess.run(
-                ["git", "log", f"{last_tag}..HEAD", "--pretty=format:%s"],
+            result = subprocess.run(  # noqa: S603
+                [  # noqa: S607 - git is a built-in system command
+                    "git",
+                    "log",
+                    f"{last_tag}..HEAD",
+                    "--pretty=format:%s",
+                ],
                 cwd=self.project_root,
                 capture_output=True,
                 text=True,

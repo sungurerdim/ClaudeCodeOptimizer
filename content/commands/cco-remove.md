@@ -14,7 +14,7 @@ Remove CCO from the current project only (NEW ARCHITECTURE v3.1). This does **NO
 ## Step 1: Check if Project is Initialized
 
 ```bash
-ls .claude/principles/U_EVIDENCE_BASED.md 2>/dev/null && echo "[OK] CCO is initialized" || echo "[!] CCO not found in this project"
+python -c "from pathlib import Path; p = Path('.claude/principles/U_EVIDENCE_BASED.md'); print('[OK] CCO is initialized' if p.exists() else '[!] CCO not found in this project')"
 ```
 
 If not initialized, stop - nothing to remove.
@@ -24,35 +24,67 @@ If not initialized, stop - nothing to remove.
 Remove ALL principle symlinks (universal + project-specific):
 
 ```bash
+python -c "
+import glob
+from pathlib import Path
+
 # Remove universal principles (U_*)
-rm -f .claude/principles/U_*.md
+removed = 0
+for f in glob.glob('.claude/principles/U_*.md'):
+    Path(f).unlink(missing_ok=True)
+    removed += 1
 
 # Remove project-specific principles (P_*)
-rm -f .claude/principles/P*.md
+for f in glob.glob('.claude/principles/P*.md'):
+    Path(f).unlink(missing_ok=True)
+    removed += 1
 
-echo "[OK] Removed all principle symlinks"
+print(f'[OK] Removed {removed} principle symlinks')
+"
 ```
 
 ## Step 4: Remove Command Symlinks
 
 ```bash
-rm -f .claude/commands/cco-*.md
-echo "[OK] Removed command symlinks"
+python -c "
+import glob
+from pathlib import Path
+
+removed = 0
+for f in glob.glob('.claude/commands/cco-*.md'):
+    Path(f).unlink(missing_ok=True)
+    removed += 1
+
+print(f'[OK] Removed {removed} command symlinks')
+"
 ```
 
 ## Step 5: Remove Other Symlinks
 
 ```bash
+python -c "
+import glob
+from pathlib import Path
+
+removed = 0
+
 # Guides
-rm -f .claude/guides/*.md 2>/dev/null
+for f in glob.glob('.claude/guides/*.md'):
+    Path(f).unlink(missing_ok=True)
+    removed += 1
 
 # Skills
-rm -f .claude/skills/*.md 2>/dev/null
+for f in glob.glob('.claude/skills/*.md'):
+    Path(f).unlink(missing_ok=True)
+    removed += 1
 
 # Agents
-rm -f .claude/agents/*.md 2>/dev/null
+for f in glob.glob('.claude/agents/*.md'):
+    Path(f).unlink(missing_ok=True)
+    removed += 1
 
-echo "[OK] Removed guide/skill/agent symlinks"
+print(f'[OK] Removed {removed} guide/skill/agent symlinks')
+"
 ```
 
 ## Step 6: Ask About CLAUDE.md Section Removal
@@ -107,14 +139,29 @@ echo "[OK] Keeping CLAUDE.md intact (universal principles remain inline)"
 ## Step 7: Optional - Clean Empty Directories
 
 ```bash
-# Remove empty principle/command/guide directories if desired
-rmdir .claude/principles 2>/dev/null
-rmdir .claude/commands 2>/dev/null
-rmdir .claude/guides 2>/dev/null
-rmdir .claude/skills 2>/dev/null
-rmdir .claude/agents 2>/dev/null
+python -c "
+from pathlib import Path
 
-echo "[OK] Cleaned up empty directories"
+removed = 0
+dirs = [
+    '.claude/principles',
+    '.claude/commands',
+    '.claude/guides',
+    '.claude/skills',
+    '.claude/agents'
+]
+
+for d in dirs:
+    p = Path(d)
+    try:
+        if p.exists() and p.is_dir() and not any(p.iterdir()):
+            p.rmdir()
+            removed += 1
+    except:
+        pass  # Directory not empty or doesn't exist
+
+print(f'[OK] Cleaned up {removed} empty directories')
+"
 ```
 
 ## What Gets Removed

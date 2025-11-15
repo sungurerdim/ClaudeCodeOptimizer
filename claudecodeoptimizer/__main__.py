@@ -3,6 +3,7 @@
 import argparse
 import sys
 from pathlib import Path
+from typing import Any
 
 # Fix Unicode encoding on all platforms (MUST be first, before any imports that print)
 from .core.safe_print import configure_utf8_encoding
@@ -129,20 +130,20 @@ def main() -> None:
         from .wizard.orchestrator import CCOWizard
 
         try:
-            result = CCOWizard.uninitialize(Path.cwd())
+            uninit_result: dict[str, Any] = CCOWizard.uninitialize(Path.cwd())
 
-            if result["success"]:
+            if uninit_result["success"]:
                 print("\n✓ All CCO files removed successfully!")
-                print(f"  Project: {result.get('project_name', 'unknown')}")
-                print(f"  Files removed: {len(result.get('files_removed', []))}")
-                if result.get("files_removed"):
-                    for file in result["files_removed"]:
+                print(f"  Project: {uninit_result.get('project_name', 'unknown')}")
+                print(f"  Files removed: {len(uninit_result.get('files_removed', []))}")
+                if uninit_result.get("files_removed"):
+                    for file in uninit_result["files_removed"]:
                         print(f"    - {file}")
                 print()
                 print("CCO has been cleanly removed from this project.")
                 print("To reinitialize: python -m claudecodeoptimizer init")
             else:
-                print(f"\n❌ Uninitialization failed: {result.get('error', 'unknown error')}")
+                print(f"\n❌ Uninitialization failed: {uninit_result.get('error', 'unknown error')}")
                 sys.exit(1)
         except Exception as e:
             print(f"\n❌ Error: {e}")

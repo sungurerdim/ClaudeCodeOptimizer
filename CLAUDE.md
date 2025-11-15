@@ -50,13 +50,21 @@
 - **P_CI_GATES**: CI Gates → `.claude/principles/P_CI_GATES.md`
 - **P_TEST_COVERAGE**: Test Coverage Targets → `.claude/principles/P_TEST_COVERAGE.md`
 
-*Operations:*
-- **P_AUTO_VERSIONING**: Automated Semantic Versioning → `.claude/principles/P_AUTO_VERSIONING.md`
-- **P_INCREMENTAL_SAFETY_PATTERNS**: Incremental Safety Patterns → `.claude/principles/P_INCREMENTAL_SAFETY_PATTERNS.md`
-- **P_MINIMAL_RESPONSIBILITY**: Minimal Responsibility (Zero Maintenance) → `.claude/principles/P_MINIMAL_RESPONSIBILITY.md`
-
 *Performance:*
 - **P_DB_OPTIMIZATION**: Database Query Optimization → `.claude/principles/P_DB_OPTIMIZATION.md`
+
+*Claude Guidelines:*
+- **C_AGENT_ORCHESTRATION_PATTERNS**: Agent Orchestration Patterns → `.claude/principles/C_AGENT_ORCHESTRATION_PATTERNS.md`
+- **C_BREAKING_CHANGES_APPROVAL**: Breaking Changes Need Approval → `.claude/principles/C_BREAKING_CHANGES_APPROVAL.md`
+- **C_CRITICAL_CHANGES_PROPOSAL**: Critical Changes Require Proposal → `.claude/principles/C_CRITICAL_CHANGES_PROPOSAL.md`
+- **C_CROSS_PLATFORM_BASH**: Cross-Platform Bash Commands → `.claude/principles/C_CROSS_PLATFORM_BASH.md`
+- **C_FOLLOW_PATTERNS**: Follow Existing Patterns → `.claude/principles/C_FOLLOW_PATTERNS.md`
+- **C_MINIMAL_TOUCH**: Minimal Touch Policy → `.claude/principles/C_MINIMAL_TOUCH.md`
+- **C_NO_UNNECESSARY_FILES**: No Unnecessary File Creation → `.claude/principles/C_NO_UNNECESSARY_FILES.md`
+- **C_NO_UNSOLICITED_TESTS**: No Unsolicited Tests or Linters → `.claude/principles/C_NO_UNSOLICITED_TESTS.md`
+- **C_PARALLEL_AGENTS**: Use Parallel Agents for Performance → `.claude/principles/C_PARALLEL_AGENTS.md`
+- **C_PREFER_EDITING**: Prefer Editing Over Creating → `.claude/principles/C_PREFER_EDITING.md`
+- **C_PRODUCTION_GRADE**: Production-Grade Code Only → `.claude/principles/C_PRODUCTION_GRADE.md`
 <!-- CCO_PRINCIPLES_END -->
 
 ## Available Skills

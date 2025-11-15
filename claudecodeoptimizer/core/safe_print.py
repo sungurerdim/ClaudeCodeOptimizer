@@ -7,6 +7,7 @@ Automatically handles console encoding configuration with error recovery.
 
 import logging
 import sys
+from typing import Any
 
 
 def configure_utf8_encoding() -> None:
@@ -30,8 +31,8 @@ def configure_utf8_encoding() -> None:
             if sys.platform == "win32":
                 import subprocess
 
-                subprocess.run(
-                    ["chcp", "65001"],
+                subprocess.run(  # noqa: S603
+                    ["chcp", "65001"],  # noqa: S607 - chcp is built-in Windows command
                     stdout=subprocess.DEVNULL,
                     stderr=subprocess.DEVNULL,
                     check=False,
@@ -55,7 +56,7 @@ def configure_utf8_encoding() -> None:
         logging.debug(f"Failed to reconfigure console encoding: {e}. Using default encoding.")
 
 
-def safe_print(*args: object, **kwargs: object) -> None:
+def safe_print(*args: object, **kwargs: Any) -> None:
     """
     Print with automatic error recovery for encoding issues on all platforms.
 
@@ -71,12 +72,12 @@ def safe_print(*args: object, **kwargs: object) -> None:
         print(*args, **kwargs)
     except UnicodeEncodeError:
         # Convert to ASCII-safe version
-        safe_args = []
+        safe_args: list[str] = []
         for arg in args:
             if isinstance(arg, str):
                 safe_args.append(_unicode_to_ascii(arg))
             else:
-                safe_args.append(arg)
+                safe_args.append(str(arg))
         print(*safe_args, **kwargs)
 
 

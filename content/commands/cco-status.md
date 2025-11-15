@@ -106,28 +106,39 @@ Action items: [prioritized list]
 **Task:** Check working tree, branch, and recent commits.
 
 ```bash
+# Cross-platform Python script for git status
+python -c "
+import subprocess as sp
+import sys
+
+def run_git(cmd):
+    try:
+        return sp.check_output(cmd, shell=True, text=True, stderr=sp.DEVNULL).strip()
+    except:
+        return ''
+
 # 1. Overall git status
-git status --short
+print(run_git('git status --short'))
 
 # 2. Branch info
-git rev-parse --abbrev-ref HEAD
+print(f'Branch: {run_git(\"git rev-parse --abbrev-ref HEAD\")}')
 
 # 3. Commit info
-git log -1 --format="%h %s (%ar)"
+print(f'Last commit: {run_git(\"git log -1 --format=%h %s (%ar)\")}')
 
-# 4. Count changes
-STAGED=$(git diff --cached --name-only | wc -l)
-UNSTAGED=$(git diff --name-only | wc -l)
-UNTRACKED=$(git ls-files --others --exclude-standard | wc -l)
+# 4. Count changes (cross-platform)
+staged = len([l for l in run_git('git diff --cached --name-only').split('\n') if l])
+unstaged = len([l for l in run_git('git diff --name-only').split('\n') if l])
+untracked = len([l for l in run_git('git ls-files --others --exclude-standard').split('\n') if l])
 
-if [ $STAGED -eq 0 ] && [ $UNSTAGED -eq 0 ] && [ $UNTRACKED -eq 0 ]; then
-    echo "✓ Working tree clean"
-else
-    echo "⚠ Changes detected:"
-    [ $STAGED -gt 0 ] && echo "  - $STAGED staged files"
-    [ $UNSTAGED -gt 0 ] && echo "  - $UNSTAGED unstaged changes"
-    [ $UNTRACKED -gt 0 ] && echo "  - $UNTRACKED untracked files"
-fi
+if staged == 0 and unstaged == 0 and untracked == 0:
+    print('✓ Working tree clean')
+else:
+    print('⚠ Changes detected:')
+    if staged > 0: print(f'  - {staged} staged files')
+    if unstaged > 0: print(f'  - {unstaged} unstaged changes')
+    if untracked > 0: print(f'  - {untracked} untracked files')
+"
 ```
 
 
@@ -140,51 +151,65 @@ fi
 **Task:** Detect package manager and check for outdated dependencies.
 
 ```bash
+# Cross-platform Python script for dependency check
+python -c "
+import subprocess as sp
+from pathlib import Path
+
+def run_cmd(cmd):
+    try:
+        return sp.check_output(cmd, shell=True, text=True, stderr=sp.DEVNULL).strip()
+    except:
+        return ''
+
 # 1. Detect dependency system
-if [ -f "pyproject.toml" ]; then
-    # Python project with pyproject.toml
-    echo "### Dependencies (Python)"
-    
+if Path('pyproject.toml').exists():
+    print('### Dependencies (Python)')
+
     # Check if pip is available
-    if command -v pip &> /dev/null; then
-        PYTHON_VERSION=$(python --version 2>&1 | cut -d' ' -f2)
-        echo "Python: $PYTHON_VERSION"
-        
-        # Count packages
-        PKG_COUNT=$(pip list --quiet | wc -l)
-        echo "Packages: $PKG_COUNT installed"
-        
+    py_version = run_cmd('python --version')
+    if py_version:
+        print(f'{py_version}')
+
+        # Count packages (cross-platform)
+        pkg_list = run_cmd('pip list --quiet')
+        pkg_count = len([l for l in pkg_list.split('\n') if l.strip()])
+        print(f'Packages: {pkg_count} installed')
+
         # Check for outdated packages
-        OUTDATED=$(pip list --outdated --quiet 2>/dev/null | wc -l)
-        if [ $OUTDATED -eq 0 ]; then
-            echo "✓ All dependencies up to date"
-        else
-            echo "⚠ $OUTDATED outdated packages"
-            pip list --outdated --quiet | head -5
-        fi
-    else
-        echo "⚠ pip not found - install dependencies"
-    fi
-    
-elif [ -f "package.json" ]; then
-    # Node.js project
-    echo "### Dependencies (Node.js)"
-    
-    if command -v npm &> /dev/null; then
-        NPM_VERSION=$(npm --version)
-        echo "npm: $NPM_VERSION"
-        
-        PKG_COUNT=$(npm list --depth=0 2>/dev/null | tail -1)
-        echo "Packages: $PKG_COUNT"
-        
-        OUTDATED=$(npm outdated 2>/dev/null | tail -n +2 | wc -l)
-        if [ $OUTDATED -eq 0 ]; then
-            echo "✓ All dependencies up to date"
-        else
-            echo "⚠ $OUTDATED outdated packages"
-        fi
-    fi
-fi
+        outdated = run_cmd('pip list --outdated --quiet')
+        outdated_count = len([l for l in outdated.split('\n') if l.strip()])
+        if outdated_count == 0:
+            print('✓ All dependencies up to date')
+        else:
+            print(f'⚠ {outdated_count} outdated packages')
+            # Show first 5
+            for line in outdated.split('\n')[:5]:
+                if line.strip():
+                    print(f'  {line}')
+    else:
+        print('⚠ pip not found - install dependencies')
+
+elif Path('package.json').exists():
+    print('### Dependencies (Node.js)')
+
+    npm_version = run_cmd('npm --version')
+    if npm_version:
+        print(f'npm: {npm_version}')
+
+        # Count packages
+        pkg_list = run_cmd('npm list --depth=0')
+        print(f'Packages: {pkg_list.split(chr(10))[-1] if pkg_list else \"unknown\"}')
+
+        # Check for outdated packages (cross-platform)
+        outdated = run_cmd('npm outdated')
+        outdated_lines = [l for l in outdated.split('\n')[1:] if l.strip()]
+        outdated_count = len(outdated_lines)
+        if outdated_count == 0:
+            print('✓ All dependencies up to date')
+        else:
+            print(f'⚠ {outdated_count} outdated packages')
+"
 ```
 
 
@@ -303,53 +328,59 @@ fi
 **Task:** Verify CCO installation, configuration, and available commands.
 
 ```bash
-echo "### CCO System"
+# Cross-platform Python script for CCO system check
+python -c "
+import glob
+import json
+from pathlib import Path
+from datetime import datetime
 
-ISSUES=0
+print('### CCO System')
+issues = 0
 
 # 1. Check .cco directory
-if [ ! -d ".cco" ]; then
-    echo "✗ CCO not initialized - run: /cco-init"
-    ISSUES=$((ISSUES + 1))
-else
+if not Path('.cco').is_dir():
+    print('✗ CCO not initialized - run: /cco-init')
+    issues += 1
+else:
     # Check core CCO files
-    if [ ! -f ".cco/manifest.json" ]; then
-        echo "✗ Invalid CCO installation (missing manifest)"
-        ISSUES=$((ISSUES + 1))
-    else
-        # Count commands
-        CMD_COUNT=$(find .cco -name "*.md" -type f 2>/dev/null | grep -E "(commands|templates)" | wc -l)
-        echo "✓ Commands: $CMD_COUNT installed"
-    fi
-fi
+    if not Path('.cco/manifest.json').is_file():
+        print('✗ Invalid CCO installation (missing manifest)')
+        issues += 1
+    else:
+        # Count commands (cross-platform)
+        cmd_files = [f for f in glob.glob('.cco/**/*.md', recursive=True)
+                     if 'commands' in f or 'templates' in f]
+        print(f'✓ Commands: {len(cmd_files)} installed')
 
 # 2. Check .claude directory
-if [ -d ".claude" ]; then
+if Path('.claude').is_dir():
     # Count audit commands
-    AUDIT_COUNT=$(ls -1 .claude/commands/*.md 2>/dev/null | wc -l)
-    if [ $AUDIT_COUNT -gt 0 ]; then
-        echo "✓ Audit commands: $AUDIT_COUNT available"
-    fi
-    
+    audit_count = len(glob.glob('.claude/commands/*.md'))
+    if audit_count > 0:
+        print(f'✓ Audit commands: {audit_count} available')
+
     # Check configuration
-    if [ -f ".claude/settings.json" ]; then
-        echo "✓ Configuration: Valid (settings.json)"
-    fi
-else
-    echo "⚠ .claude directory not found"
-    ISSUES=$((ISSUES + 1))
-fi
+    if Path('.claude/settings.json').is_file():
+        print('✓ Configuration: Valid (settings.json)')
+else:
+    print('⚠ .claude directory not found')
+    issues += 1
 
 # 3. Check last audit timestamp
-if [ -f ".cco/state/last-audit.json" ]; then
-    AUDIT_TIME=$(cat .cco/state/last-audit.json | grep -oP '"timestamp": "\K[^"]+' 2>/dev/null)
-    HOURS_AGO=$(( ($(date +%s) - $(date -d "$AUDIT_TIME" +%s)) / 3600 ))
-    echo "✓ Last audit: $HOURS_AGO hours ago"
-fi
+audit_file = Path('.cco/state/last-audit.json')
+if audit_file.is_file():
+    try:
+        data = json.loads(audit_file.read_text())
+        timestamp = datetime.fromisoformat(data['timestamp'].replace('Z', '+00:00'))
+        hours_ago = int((datetime.now().astimezone() - timestamp).total_seconds() / 3600)
+        print(f'✓ Last audit: {hours_ago} hours ago')
+    except:
+        pass
 
-if [ $ISSUES -eq 0 ]; then
-    echo "✓ CCO system healthy"
-fi
+if issues == 0:
+    print('✓ CCO system healthy')
+"
 ```
 
 
@@ -362,53 +393,63 @@ fi
 **After all 5 agents complete**, generate unified summary:
 
 ```bash
-echo ""
-echo "## Summary"
+# Cross-platform Python script for summary aggregation
+python -c "
+import subprocess as sp
+from pathlib import Path
+from datetime import datetime
+
+def run_cmd(cmd):
+    try:
+        result = sp.check_output(cmd, shell=True, text=True, stderr=sp.DEVNULL).strip()
+        return [l for l in result.split('\n') if l.strip()]
+    except:
+        return []
+
+print()
+print('## Summary')
 
 # Aggregate status
-TOTAL_ISSUES=0
+total_issues = 0
 
-# Count specific issues
-if [ $(git diff --name-only | wc -l) -gt 0 ]; then
-    TOTAL_ISSUES=$((TOTAL_ISSUES + 1))
-fi
+# Count specific issues (cross-platform)
+if len(run_cmd('git diff --name-only')) > 0:
+    total_issues += 1
 
-if [ $(pip list --outdated 2>/dev/null | wc -l) -gt 0 ]; then
-    TOTAL_ISSUES=$((TOTAL_ISSUES + 1))
-fi
+if len(run_cmd('pip list --outdated --quiet')) > 0:
+    total_issues += 1
 
-if [ -f "test_results.json" ]; then
-    FAILED=$(cat test_results.json | grep -c "FAILED")
-    if [ $FAILED -gt 0 ]; then
-        TOTAL_ISSUES=$((TOTAL_ISSUES + 1))
-    fi
-fi
+# Check test results
+if Path('test_results.json').exists():
+    try:
+        content = Path('test_results.json').read_text()
+        if 'FAILED' in content:
+            total_issues += 1
+    except:
+        pass
 
 # Overall status
-if [ $TOTAL_ISSUES -eq 0 ]; then
-    echo "Status: ✓ HEALTHY - All systems operational"
-else
-    echo "Status: ⚠ NEEDS ATTENTION - $TOTAL_ISSUES issues found"
-fi
+if total_issues == 0:
+    print('Status: ✓ HEALTHY - All systems operational')
+else:
+    print(f'Status: ⚠ NEEDS ATTENTION - {total_issues} issues found')
 
-echo ""
-echo "### Recommended Actions"
+print()
+print('### Recommended Actions')
 
 # Suggest next steps
-if [ $(git status --short | wc -l) -gt 0 ]; then
-    echo "1. Commit or stash pending changes (git status)"
-fi
+if len(run_cmd('git status --short')) > 0:
+    print('1. Commit or stash pending changes (git status)')
 
-if [ $(pip list --outdated 2>/dev/null | wc -l) -gt 0 ]; then
-    echo "2. Update dependencies (pip install --upgrade -r requirements.txt)"
-fi
+if len(run_cmd('pip list --outdated --quiet')) > 0:
+    print('2. Update dependencies (pip install --upgrade -r requirements.txt)')
 
-if [ -d "tests" ]; then
-    echo "3. Run tests before pushing (pytest or npm test)"
-fi
+if Path('tests').is_dir():
+    print('3. Run tests before pushing (pytest or npm test)')
 
-echo ""
-echo "Last checked: $(date '+%Y-%m-%d %H:%M:%S')"
+print()
+print(f'Last checked: {datetime.now().strftime(\"%Y-%m-%d %H:%M:%S\")}')
+"
 ```
 
 
@@ -843,13 +884,18 @@ fi
 
 **JavaScript/TypeScript:**
 ```bash
-# Jest, Vitest, or Mocha
-if [ -f "jest.config.js" ]; then
-    npm test -- --listTests | wc -l
-    npm test -- --coverage --silent
-elif [ -f "vitest.config.ts" ]; then
-    npm test -- --reporter=json
-fi
+# Jest, Vitest, or Mocha - Cross-platform
+python -c "
+import subprocess as sp
+from pathlib import Path
+
+if Path('jest.config.js').exists():
+    tests = sp.check_output('npm test -- --listTests', shell=True, text=True, stderr=sp.DEVNULL)
+    print(f'Tests: {len([l for l in tests.split(chr(10)) if l.strip()])}')
+    sp.run('npm test -- --coverage --silent', shell=True)
+elif Path('vitest.config.ts').exists():
+    sp.run('npm test -- --reporter=json', shell=True)
+"
 ```
 
 **Go:**
@@ -949,8 +995,21 @@ ls -la | grep -E '(README|CLAUDE|TECHNICAL)'  # Empty
 
 ✅ **CORRECT:** Complete and current documentation
 ```bash
-# All critical docs present and recent
-find . -maxdepth 1 -name "*.md" -mtime -30 | wc -l  # 4+ recent docs
+# All critical docs present and recent - Cross-platform
+python -c "
+import glob
+from pathlib import Path
+from datetime import datetime, timedelta
+
+recent = []
+for f in glob.glob('*.md'):
+    p = Path(f)
+    mtime = datetime.fromtimestamp(p.stat().st_mtime)
+    if datetime.now() - mtime < timedelta(days=30):
+        recent.append(f)
+
+print(f'{len(recent)} recent docs (updated within 30 days)')
+"
 ```
 
 ---

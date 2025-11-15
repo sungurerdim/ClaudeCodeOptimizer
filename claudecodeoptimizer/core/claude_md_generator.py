@@ -33,8 +33,8 @@ class ClaudeMdGenerator:
     def __init__(
         self,
         preferences: Dict[str, Any],
-        selected_skills: List[str] = None,
-        selected_agents: List[str] = None,
+        selected_skills: List[str] | None = None,
+        selected_agents: List[str] | None = None,
     ) -> None:
         """
         Initialize generator with user preferences.
@@ -146,10 +146,10 @@ class ClaudeMdGenerator:
         - Quality standards
         - Testing strategy
         """
-        # Get preferences
-        project_name = self._get_pref("project_identity.name")
-        team_size = self._get_pref("project_identity.team_trajectory", "solo")
-        linting = self._get_pref("code_quality.linting_strictness", "standard")
+        # Get preferences - support both nested and flat structures
+        project_name = self._get_pref("project_identity.name") or self._get_pref("project_name")
+        team_size = self._get_pref("project_identity.team_trajectory") or self._get_pref("team_size", "solo")
+        linting = self._get_pref("code_quality.linting_strictness") or self._get_pref("quality_level", "standard")
         testing = self._get_pref("testing.strategy", "balanced")
 
         # Add preference metadata after header (if not already present)
@@ -188,12 +188,14 @@ class ClaudeMdGenerator:
         if not project_name:
             return ""
 
+        team_size = team_size or "solo"
+        linting = linting or "standard"
         team_label = self._format_team_size(team_size)
 
         return f"""**Project:** {project_name}
 **Team:** {team_label}
 **Quality:** {linting.title()}
-**Testing:** {testing.title()}
+**Testing:** {(testing or 'balanced').title()}
 **Generated:** {datetime.now().strftime("%Y-%m-%d")}
 """
 
@@ -592,7 +594,7 @@ version = datetime.now().strftime("%Y.%m.%d")
         all_principles = {p["id"]: p for p in principles_list}
 
         # Group selected principles by category
-        categories = {}
+        categories: Dict[str, List[Dict[str, Any]]] = {}
         for pid in selected_ids:
             principle = all_principles.get(pid)
             if not principle:
@@ -627,20 +629,22 @@ version = datetime.now().strftime("%Y.%m.%d")
             "performance": "Performance",
             "operations": "Operations",
             "api_design": "API Design",
+            "claude-guidelines": "Claude Guidelines",
         }
 
         # List categories with individual principle links
         has_project_specific = False
         for cat_id, cat_name in category_names.items():
+            cat_principles_raw = categories.get(cat_id, [])
             cat_principles = [
-                p for p in categories.get(cat_id, []) if p.get("category") != "universal"
+                p for p in cat_principles_raw if isinstance(p, dict) and p.get("category") != "universal"
             ]
             if cat_principles:
                 if not has_project_specific:
                     principles_content.append("\n**Project-Specific Principles:**\n")
                     has_project_specific = True
                 principles_content.append(f"\n*{cat_name}:*\n")
-                for p in sorted(cat_principles, key=lambda x: x["id"]):
+                for p in sorted(cat_principles, key=lambda x: str(x.get("id", ""))):
                     principles_content.append(
                         f"- **{p['id']}**: {p['title']} → `.claude/principles/{p['id']}.md`\n"
                     )
@@ -808,7 +812,7 @@ version = datetime.now().strftime("%Y.%m.%d")
     def _get_pref(self, path: str, default: Any = None) -> Any:  # noqa: ANN401
         """Get nested preference value"""
         parts = path.split(".")
-        current = self.preferences
+        current: Any = self.preferences
 
         for part in parts:
             if isinstance(current, dict):
@@ -821,7 +825,7 @@ version = datetime.now().strftime("%Y.%m.%d")
             if current is None:
                 return default
 
-        return current
+        return current if current is not None else default
 
 
 # Utility function
