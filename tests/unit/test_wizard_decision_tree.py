@@ -12,7 +12,7 @@ Tests cover:
 """
 
 from pathlib import Path
-from unittest.mock import MagicMock, Mock, patch
+from unittest.mock import Mock, patch
 
 import pytest
 
@@ -24,10 +24,8 @@ from claudecodeoptimizer.wizard.decision_tree import (
     TIER1_PROJECT_PURPOSE,
     TIER1_TEAM_DYNAMICS,
     TIER2_CI_PROVIDER,
-    TIER2_DOCUMENTATION_LEVEL,
     TIER2_ERROR_HANDLING,
     TIER2_GIT_WORKFLOW,
-    TIER2_PRINCIPLE_STRATEGY,
     TIER2_SECRETS_MANAGEMENT,
     TIER2_SECURITY_STANCE,
     TIER2_TESTING_APPROACH,
@@ -79,7 +77,7 @@ from claudecodeoptimizer.wizard.decision_tree import (
     get_all_decisions,
     get_decisions_by_tier,
 )
-from claudecodeoptimizer.wizard.models import AnswerContext, DecisionPoint, SystemContext
+from claudecodeoptimizer.wizard.models import AnswerContext, SystemContext
 
 
 @pytest.fixture

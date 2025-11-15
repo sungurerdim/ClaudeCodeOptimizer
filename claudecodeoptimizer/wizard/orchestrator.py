@@ -844,7 +844,7 @@ class CCOWizard:
 
         return True
 
-    def _execute_decision(self, decision: DecisionPoint) -> Any:
+    def _execute_decision(self, decision: DecisionPoint) -> Any:  # noqa: ANN401
         """
         Execute a single decision point.
 
@@ -856,7 +856,7 @@ class CCOWizard:
         else:  # quick
             return self._auto_decide(decision)
 
-    def _ask_user_decision(self, decision: DecisionPoint) -> Any:
+    def _ask_user_decision(self, decision: DecisionPoint) -> Any:  # noqa: ANN401
         """Ask user for decision (Interactive mode)"""
         # Use UI adapter for context-aware presentation
         # The adapter handles both Claude Code rich UI and terminal fallback
@@ -884,7 +884,7 @@ class CCOWizard:
 
         return answer
 
-    def _auto_decide(self, decision: DecisionPoint) -> Any:
+    def _auto_decide(self, decision: DecisionPoint) -> Any:  # noqa: ANN401
         """Auto-decide using AI strategy (Quick mode)"""
         assert self.answer_context is not None, "Answer context must be initialized"  # noqa: S101 - Type narrowing after initialization
         answer = decision.get_recommended_option(self.answer_context)

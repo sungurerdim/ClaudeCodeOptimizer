@@ -16,10 +16,9 @@ Tests cover:
 - Error handling and edge cases
 """
 
-import time
 from pathlib import Path
-from typing import Any, Dict, List
-from unittest.mock import ANY, MagicMock, Mock, call, patch
+from typing import Any, Dict
+from unittest.mock import Mock, patch
 
 import pytest
 
@@ -35,7 +34,6 @@ from claudecodeoptimizer.wizard.orchestrator import (
     run_interactive_wizard,
     run_quick_wizard,
 )
-
 
 # ============================================================================
 # Fixtures

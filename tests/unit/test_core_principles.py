@@ -6,10 +6,8 @@ Target Coverage: 90%+
 """
 
 from pathlib import Path
-from typing import Any, Dict, List
-from unittest.mock import MagicMock, Mock, patch
-
-import pytest
+from typing import Any, Dict
+from unittest.mock import Mock, patch
 
 from claudecodeoptimizer.core.constants import (
     SERVICE_COUNT_THRESHOLD_LARGE,

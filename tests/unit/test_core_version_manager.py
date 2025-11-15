@@ -7,7 +7,7 @@ Target Coverage: 100%
 
 import subprocess
 from pathlib import Path
-from unittest.mock import Mock, patch, mock_open
+from unittest.mock import Mock, patch
 
 import pytest
 

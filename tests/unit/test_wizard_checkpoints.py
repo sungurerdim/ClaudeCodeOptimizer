@@ -11,8 +11,8 @@ Tests cover:
 - Error and cancellation displays
 """
 
-from typing import Any, Dict, List
-from unittest.mock import MagicMock, call, patch
+from typing import Any, Dict
+from unittest.mock import patch
 
 import pytest
 
@@ -22,13 +22,13 @@ from claudecodeoptimizer.wizard.checkpoints import (
     confirm_commands,
     confirm_detection,
     confirm_recommendations,
+    display_cancelled,
     display_command_selection,
     display_completion_summary,
     display_detection_results,
     display_error,
     display_preview,
     display_recommendations,
-    display_cancelled,
 )
 
 

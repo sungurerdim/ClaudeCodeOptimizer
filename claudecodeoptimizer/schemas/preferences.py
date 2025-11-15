@@ -955,7 +955,7 @@ class CCOPreferences(BaseModel):
 # ============================================================================
 
 
-def get_literal_choices(literal_type: Any) -> List[str]:
+def get_literal_choices(literal_type: Any) -> List[str]:  # noqa: ANN401
     """Extract all choices from a Literal type annotation"""
     return list(get_args(literal_type))
 

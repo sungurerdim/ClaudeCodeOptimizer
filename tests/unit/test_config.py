@@ -1,33 +1,32 @@
 """Unit tests for claudecodeoptimizer/config.py module."""
 
-import pytest
 from pathlib import Path
-from unittest.mock import patch, MagicMock
+
 from claudecodeoptimizer.config import (
-    CCOConfig,
-    CONFIG,
     BRAND_NAME,
-    FULL_NAME,
-    DISPLAY_NAME,
-    SHORT_NAME,
     CLI_NAME,
-    VERSION,
     COMMAND_PREFIX,
-    get_home_dir,
-    get_global_dir,
-    get_claude_dir,
-    get_templates_dir,
-    get_global_commands_dir,
-    get_principles_dir,
-    get_guides_dir,
+    CONFIG,
+    DISPLAY_NAME,
+    FULL_NAME,
+    SHORT_NAME,
+    VERSION,
+    CCOConfig,
     get_agents_dir,
-    get_skills_dir,
+    get_all_paths,
+    get_claude_dir,
+    get_command_name,
+    get_global_commands_dir,
+    get_global_dir,
+    get_guides_dir,
+    get_home_dir,
+    get_principles_dir,
+    get_project_backups_dir,
     get_project_claude_dir,
     get_project_commands_dir,
     get_project_hooks_dir,
-    get_project_backups_dir,
-    get_command_name,
-    get_all_paths,
+    get_skills_dir,
+    get_templates_dir,
 )
 
 
@@ -324,13 +323,13 @@ class TestMessageConstants:
     def test_message_constants_exist(self):
         """Test message constants are defined."""
         from claudecodeoptimizer.config import (
-            MSG_GLOBAL_INSTALL_SUCCESS,
-            MSG_PROJECT_INIT_SUCCESS,
             MSG_ALREADY_INSTALLED,
-            MSG_NOT_INSTALLED,
-            MSG_NOT_INITIALIZED,
-            MSG_INSTALL_FAILED,
+            MSG_GLOBAL_INSTALL_SUCCESS,
             MSG_INIT_FAILED,
+            MSG_INSTALL_FAILED,
+            MSG_NOT_INITIALIZED,
+            MSG_NOT_INSTALLED,
+            MSG_PROJECT_INIT_SUCCESS,
         )
         assert MSG_GLOBAL_INSTALL_SUCCESS is not None
         assert MSG_PROJECT_INIT_SUCCESS is not None
@@ -376,7 +375,7 @@ class TestExports:
 
     def test_all_exports_importable(self):
         """Test all exports can be imported."""
-        from claudecodeoptimizer.config import __all__
         from claudecodeoptimizer import config
+        from claudecodeoptimizer.config import __all__
         for name in __all__:
             assert hasattr(config, name)

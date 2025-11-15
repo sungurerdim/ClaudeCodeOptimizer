@@ -1,11 +1,11 @@
 """Unit tests for claudecodeoptimizer/__init__.py module."""
 
-import sys
 import logging
-import pytest
+import sys
 from pathlib import Path
-from unittest.mock import patch, MagicMock, call
-from importlib import reload
+from unittest.mock import MagicMock, patch
+
+import pytest
 
 
 class TestVersionInfo:
@@ -110,10 +110,9 @@ class TestGlobalSetup:
     def test_ensure_global_setup_early_return(self):
         """Test _ensure_global_setup returns early if already checked (line 35)."""
         # Import the function
-        from claudecodeoptimizer import _ensure_global_setup
-
         # Mock _setup_checked as True to trigger early return
         import claudecodeoptimizer
+        from claudecodeoptimizer import _ensure_global_setup
         original_checked = claudecodeoptimizer._setup_checked
         try:
             claudecodeoptimizer._setup_checked = True
@@ -126,8 +125,8 @@ class TestGlobalSetup:
 
     def test_ensure_global_setup_triggers_when_no_principles(self):
         """Test _ensure_global_setup triggers setup when principles missing (lines 47-49)."""
-        from claudecodeoptimizer import _ensure_global_setup
         import claudecodeoptimizer
+        from claudecodeoptimizer import _ensure_global_setup
 
         # Save original state
         original_checked = claudecodeoptimizer._setup_checked
@@ -160,8 +159,8 @@ class TestGlobalSetup:
 
     def test_ensure_global_setup_triggers_when_principles_incomplete(self):
         """Test _ensure_global_setup triggers when < 80 principle files (lines 47-49)."""
-        from claudecodeoptimizer import _ensure_global_setup
         import claudecodeoptimizer
+        from claudecodeoptimizer import _ensure_global_setup
 
         original_checked = claudecodeoptimizer._setup_checked
 
@@ -190,8 +189,8 @@ class TestGlobalSetup:
 
     def test_ensure_global_setup_exception_handling(self):
         """Test _ensure_global_setup handles exceptions silently (line 50-53)."""
-        from claudecodeoptimizer import _ensure_global_setup
         import claudecodeoptimizer
+        from claudecodeoptimizer import _ensure_global_setup
 
         original_checked = claudecodeoptimizer._setup_checked
 
@@ -247,8 +246,8 @@ class TestAllExports:
 
     def test_all_exports_importable(self):
         """Test all __all__ exports can be imported."""
-        from claudecodeoptimizer import __all__
         import claudecodeoptimizer
+        from claudecodeoptimizer import __all__
         for name in __all__:
             assert hasattr(claudecodeoptimizer, name)
 
@@ -269,8 +268,8 @@ class TestImportStructure:
 
     def test_config_import_works(self):
         """Test CCOConfig import from config module works."""
-        from claudecodeoptimizer.config import CCOConfig as DirectCCOConfig
         from claudecodeoptimizer import CCOConfig
+        from claudecodeoptimizer.config import CCOConfig as DirectCCOConfig
         assert CCOConfig is DirectCCOConfig
 
 
@@ -279,7 +278,6 @@ class TestLoggingConfiguration:
 
     def test_logging_imported(self):
         """Test logging module is imported."""
-        import claudecodeoptimizer
         # Verify logging is available (used in exception handling)
         import logging
         assert logging is not None

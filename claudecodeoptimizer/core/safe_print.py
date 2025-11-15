@@ -56,7 +56,7 @@ def configure_utf8_encoding() -> None:
         logging.debug(f"Failed to reconfigure console encoding: {e}. Using default encoding.")
 
 
-def safe_print(*args: object, **kwargs: Any) -> None:
+def safe_print(*args: object, **kwargs: Any) -> None:  # noqa: ANN401
     """
     Print with automatic error recovery for encoding issues on all platforms.
 
