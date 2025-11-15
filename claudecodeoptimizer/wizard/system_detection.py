@@ -18,7 +18,7 @@ import shutil
 import subprocess
 import sys
 from pathlib import Path
-from typing import List, Optional
+from typing import List, Literal, Optional
 
 from .models import SystemContext
 
@@ -65,7 +65,7 @@ class SystemDetector:
     # OS Detection
     # ========================================================================
 
-    def _detect_os_type(self) -> str:
+    def _detect_os_type(self) -> Literal["windows", "macos", "linux"]:
         """Detect OS type"""
         system = platform.system().lower()
         if system == "windows":
@@ -227,7 +227,7 @@ class SystemDetector:
     def _detect_pip_version(self) -> str:
         """Get pip version"""
         try:
-            result = subprocess.run(
+            result = subprocess.run(  # noqa: S603
                 [sys.executable, "-m", "pip", "--version"],
                 capture_output=True,
                 text=True,
@@ -256,8 +256,13 @@ class SystemDetector:
             return None
 
         try:
-            result = subprocess.run(
-                ["git", "config", "--global", "user.name"],
+            result = subprocess.run(  # noqa: S603
+                [  # noqa: S607 - git is a built-in system command
+                    "git",
+                    "config",
+                    "--global",
+                    "user.name",
+                ],
                 capture_output=True,
                 text=True,
                 timeout=5,
@@ -274,8 +279,13 @@ class SystemDetector:
             return None
 
         try:
-            result = subprocess.run(
-                ["git", "config", "--global", "user.email"],
+            result = subprocess.run(  # noqa: S603
+                [  # noqa: S607 - git is a built-in system command
+                    "git",
+                    "config",
+                    "--global",
+                    "user.email",
+                ],
                 capture_output=True,
                 text=True,
                 timeout=5,

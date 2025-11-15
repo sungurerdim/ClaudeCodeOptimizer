@@ -7,7 +7,7 @@ All question choices are derived from Literal types here.
 """
 
 from datetime import datetime
-from typing import List, Literal, Optional, get_args
+from typing import Any, List, Literal, Optional, get_args
 
 from pydantic import BaseModel, Field
 
@@ -669,14 +669,14 @@ class CodeQualityStandards(BaseModel):
     )
 
     cyclomatic_complexity_limit: Optional[int] = Field(
-        10,
+        default=10,
         ge=0,
         le=50,
         description="Max cyclomatic complexity (0 = no limit)",
     )
 
     function_length_limit: Optional[int] = Field(
-        50,
+        default=50,
         ge=0,
         le=200,
         description="Max function length in lines (0 = no limit)",
@@ -923,14 +923,14 @@ class CCOPreferences(BaseModel):
     """
 
     project_identity: ProjectIdentity
-    development_style: DevelopmentStyle = Field(default_factory=DevelopmentStyle)
-    code_quality: CodeQualityStandards = Field(default_factory=CodeQualityStandards)
-    documentation: DocumentationPreferences = Field(default_factory=DocumentationPreferences)
-    testing: TestingStrategy = Field(default_factory=TestingStrategy)
-    security: SecurityPosture = Field(default_factory=SecurityPosture)
-    performance: PerformanceVsMaintainability = Field(default_factory=PerformanceVsMaintainability)
-    collaboration: TeamCollaboration = Field(default_factory=TeamCollaboration)
-    devops: DevOpsAutomation = Field(default_factory=DevOpsAutomation)
+    development_style: DevelopmentStyle = Field(default_factory=lambda: DevelopmentStyle())
+    code_quality: CodeQualityStandards = Field(default_factory=lambda: CodeQualityStandards())
+    documentation: DocumentationPreferences = Field(default_factory=lambda: DocumentationPreferences())
+    testing: TestingStrategy = Field(default_factory=lambda: TestingStrategy())
+    security: SecurityPosture = Field(default_factory=lambda: SecurityPosture())
+    performance: PerformanceVsMaintainability = Field(default_factory=lambda: PerformanceVsMaintainability())
+    collaboration: TeamCollaboration = Field(default_factory=lambda: TeamCollaboration())
+    devops: DevOpsAutomation = Field(default_factory=lambda: DevOpsAutomation())
 
     # Principle Selection
     selected_principle_ids: List[str] = Field(
@@ -955,7 +955,7 @@ class CCOPreferences(BaseModel):
 # ============================================================================
 
 
-def get_literal_choices(literal_type: type) -> List[str]:
+def get_literal_choices(literal_type: Any) -> List[str]:
     """Extract all choices from a Literal type annotation"""
     return list(get_args(literal_type))
 

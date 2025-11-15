@@ -81,7 +81,7 @@ class ClaudeCodeUIAdapter:
             User's answer
         """
         # Build question data structure for AskUserQuestion tool
-        question_data = {
+        question_data: Dict[str, Union[str, List[Dict[str, str]], bool]] = {
             "question": decision.question,
             "header": self._format_header(decision, context),
             "options": self._build_rich_options(decision, context),
@@ -96,7 +96,10 @@ class ClaudeCodeUIAdapter:
         print(f"Header: {question_data['header']}")
         print(f"Multi-Select: {question_data['multiSelect']}")
         print("\nOptions:")
-        for i, opt in enumerate(question_data["options"], 1):
+        options_list = question_data["options"]
+        if not isinstance(options_list, list):
+            raise TypeError("options must be a list")  # Type narrowing for mypy
+        for i, opt in enumerate(options_list, 1):
             print(f"{i}. {opt['label']}")
             print(f"   {opt['description']}")
 

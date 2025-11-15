@@ -204,8 +204,20 @@ Grep("print\\(|pprint\\(|pp\\(|console\\.log\\(", output_mode="content", -C=2)
 Find empty or near-empty files:
 
 ```bash
-# Find files with < 5 lines (likely empty)
-find . -name "*.py" -exec wc -l {} \; | awk '$1 < 5 {print $2}'
+# Find files with < 5 lines (likely empty) - Cross-platform Python
+python -c "
+import glob
+from pathlib import Path
+
+print('Files with < 5 lines:')
+for f in glob.glob('**/*.py', recursive=True):
+    try:
+        lines = Path(f).read_text(encoding='utf-8').count('\n')
+        if lines < 5:
+            print(f'  {f} ({lines} lines)')
+    except:
+        pass
+"
 
 # Find empty classes
 Grep("^class \\w+.*:\\s*pass\\s*$", glob="**/*.py", output_mode="content", multiline=true)

@@ -542,8 +542,8 @@ def clear_screen() -> None:
     """Clear the terminal screen"""
     import subprocess
 
-    cmd = "cls" if os.name == "nt" else "clear"
-    subprocess.run(cmd, shell=True, check=False)  # noqa: S602
+    cmd = ["cls"] if os.name == "nt" else ["clear"]
+    subprocess.run(cmd, shell=False, check=False)  # noqa: S603
 
 
 def pause(message: str = "Press Enter to continue...") -> None:

@@ -45,45 +45,47 @@ def setup_global_knowledge(force: bool = False) -> Dict[str, Any]:
     skills_dir = config.get_skills_dir()
     templates_dir = config.get_templates_dir()
 
-    results = {
-        "success": True,
-        "global_dir": str(global_dir),
-        "actions": [],
-    }
-
     # Ensure global directory exists
     global_dir.mkdir(parents=True, exist_ok=True)
 
     # ALWAYS regenerate content on pip install to ensure freshness
     # This prevents stale files from lingering after updates
 
+    actions: list[str] = []
+
     # Setup templates/ (deploy with .template extensions removed)
     _setup_templates(templates_dir)
-    results["actions"].append("Deployed template files")
+    actions.append("Deployed template files")
 
     # Setup commands/
     _setup_commands(commands_dir)
-    results["actions"].append("Copied command files")
+    actions.append("Copied command files")
 
     # Setup guides/
     _setup_guides(guides_dir)
-    results["actions"].append("Copied guide files")
+    actions.append("Copied guide files")
 
     # Setup principles/
     _setup_principles(principles_dir)
-    results["actions"].append("Generated principles files")
+    actions.append("Generated principles files")
 
     # Setup agents/ (with templates)
     _setup_agents(agents_dir)
-    results["actions"].append("Setup agents directory")
+    actions.append("Setup agents directory")
 
     # Setup skills/ (with templates)
     _setup_skills(skills_dir)
-    results["actions"].append("Setup skills directory")
+    actions.append("Setup skills directory")
 
     # Setup ~/.claude/ symlinks for universal agents (Claude Code integration)
     _setup_claude_home_links()
-    results["actions"].append("Setup ~/.claude/ symlinks for universal agents")
+    actions.append("Setup ~/.claude/ symlinks for universal agents")
+
+    results: Dict[str, Any] = {
+        "success": True,
+        "global_dir": str(global_dir),
+        "actions": actions,
+    }
 
     return results
 
@@ -314,8 +316,14 @@ def _setup_claude_home_links() -> None:
         if agent_file.name.startswith("_template") or agent_file.name == "README.md":
             continue
 
-        source = agent_file
-        target = claude_agents_dir / agent_file.name
+        source = agent_file.resolve()
+        target = (claude_agents_dir / agent_file.name).resolve()
+
+        # Path traversal validation
+        if not str(source).startswith(str(cco_agents_dir.resolve())):
+            continue  # Skip files outside expected directory
+        if not str(target).startswith(str(claude_agents_dir.resolve())):
+            continue  # Skip targets outside expected directory
 
         # Remove existing symlink/file if exists
         if target.exists() or target.is_symlink():
@@ -327,8 +335,15 @@ def _setup_claude_home_links() -> None:
                 # Windows: use mklink
                 import subprocess
 
-                subprocess.run(
-                    ["cmd", "/c", "mklink", str(target), str(source)],
+                # Safe: cmd is built-in Windows command, paths are validated and sanitized above
+                subprocess.run(  # noqa: S603
+                    [  # noqa: S607 - cmd is built-in Windows command
+                        "cmd",
+                        "/c",
+                        "mklink",
+                        str(target),
+                        str(source),
+                    ],
                     check=True,
                     capture_output=True,
                 )

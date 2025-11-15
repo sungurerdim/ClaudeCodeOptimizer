@@ -65,6 +65,9 @@ dev = [
     "ruff",
     "mypy",  # Type checking
     "pre-commit",
+    "bandit[toml]",  # Security linter
+    "flake8",  # Code linter (legacy compatibility)
+    "safety",  # Dependency vulnerability scanner
 ]
 
 [project.urls]

@@ -10,9 +10,10 @@ Both modes produce identical WizardResult structures.
 
 import time
 from pathlib import Path
-from typing import Dict, List, Literal, Optional
+from typing import Any, Dict, List, Literal, Optional
 
 from ..ai.detection import UniversalDetector
+from ..schemas.commands import CommandRegistry
 from ..schemas.preferences import CCOPreferences
 from .checkpoints import (
     display_completion_summary,
@@ -111,6 +112,7 @@ class CCOWizard:
             self.mode = original_mode
 
         # Initialize answer context
+        assert self.system_context is not None, "System context must be initialized"  # noqa: S101 - Type narrowing after detection
         self.answer_context = AnswerContext(system=self.system_context)
 
         # Get all decision points
@@ -166,6 +168,9 @@ class CCOWizard:
             }
             questions_export.append(question_data)
 
+        assert self.system_context is not None, "System context must be initialized"  # noqa: S101 - Type narrowing after detection
+        assert self.detection_report is not None, "Detection report must be initialized"  # noqa: S101 - Type narrowing after detection
+
         return {
             "questions": questions_export,
             "system_context": {
@@ -204,26 +209,54 @@ class CCOWizard:
             # If not, run them now
             if self.system_context is None:
                 if not self._run_system_detection():
+                    # Create a minimal SystemContext for the error case
+                    from pathlib import Path
+                    minimal_ctx = SystemContext(
+                        os_type="linux",
+                        os_version="unknown",
+                        os_platform="unknown",
+                        shell_type="unknown",
+                        terminal_emulator="unknown",
+                        color_support=False,
+                        unicode_support=True,
+                        system_locale="en_US",
+                        detected_language="en",
+                        encoding="utf-8",
+                        python_version="unknown",
+                        python_executable="python",
+                        pip_version="unknown",
+                        git_installed=False,
+                        project_root=Path.cwd(),
+                    )
                     return WizardResult(
-                        success=False, mode=original_mode, error="System detection failed"
+                        success=False,
+                        mode=original_mode,
+                        system_context=minimal_ctx,
+                        answers={},
+                        error="System detection failed",
                     )
 
             if self.detection_report is None:
                 if not self._run_project_detection():
+                    assert self.system_context is not None  # noqa: S101 - Type narrowing for error reporting
                     return WizardResult(
                         success=False,
                         mode=original_mode,
                         system_context=self.system_context,
+                        answers={},
                         error="Project detection failed",
                     )
 
             # Initialize answer context with provided answers
+            assert self.system_context is not None, "System context must be initialized"  # noqa: S101 - Type narrowing after detection
             self.answer_context = AnswerContext(system=self.system_context)
             for question_id, answer in answers_dict.items():
                 self.answer_context.set(question_id, answer)
 
             # Continue with principle selection
+            assert self.answer_context is not None  # noqa: S101 - Type narrowing after initialization
             if not self._run_principle_selection():
+                assert self.system_context is not None  # noqa: S101 - Type narrowing for error reporting
                 return WizardResult(
                     success=False,
                     mode=self.mode,
@@ -234,6 +267,7 @@ class CCOWizard:
 
             # Command Selection
             if not self._run_command_selection():
+                assert self.system_context is not None  # noqa: S101 - Type narrowing for error reporting
                 return WizardResult(
                     success=False,
                     mode=self.mode,
@@ -246,6 +280,7 @@ class CCOWizard:
             # File Generation (unless dry-run)
             if not self.dry_run:
                 if not self._run_file_generation():
+                    assert self.system_context is not None  # noqa: S101 - Type narrowing for error reporting
                     return WizardResult(
                         success=False,
                         mode=self.mode,
@@ -260,6 +295,7 @@ class CCOWizard:
             duration = time.time() - start_time
             self._show_completion(duration)
 
+            assert self.system_context is not None  # noqa: S101 - Type narrowing for final result
             return WizardResult(
                 success=True,
                 mode=original_mode,
@@ -272,11 +308,35 @@ class CCOWizard:
 
         except Exception as e:
             import traceback
+            from pathlib import Path
+
+            # Ensure we have a valid SystemContext for error reporting
+            if self.system_context is None:
+                minimal_ctx = SystemContext(
+                    os_type="linux",
+                    os_version="unknown",
+                    os_platform="unknown",
+                    shell_type="unknown",
+                    terminal_emulator="unknown",
+                    color_support=False,
+                    unicode_support=True,
+                    system_locale="en_US",
+                    detected_language="en",
+                    encoding="utf-8",
+                    python_version="unknown",
+                    python_executable="python",
+                    pip_version="unknown",
+                    git_installed=False,
+                    project_root=Path.cwd(),
+                )
+                ctx = minimal_ctx
+            else:
+                ctx = self.system_context
 
             return WizardResult(
                 success=False,
                 mode=original_mode,
-                system_context=self.system_context,
+                system_context=ctx,
                 answers=self.answer_context.answers if self.answer_context else {},
                 error=f"Wizard failed: {e}\n{traceback.format_exc()}",
             )
@@ -420,6 +480,7 @@ class CCOWizard:
 
             # TIER 0: System Detection (automatic, silent)
             if not self._run_system_detection():
+                assert self.system_context is not None  # noqa: S101 - Type narrowing for error reporting
                 return WizardResult(
                     success=False,
                     mode=self.mode,
@@ -430,6 +491,7 @@ class CCOWizard:
 
             # Project Detection (UniversalDetector)
             if not self._run_project_detection():
+                assert self.system_context is not None  # noqa: S101 - Type narrowing for error reporting
                 return WizardResult(
                     success=False,
                     mode=self.mode,
@@ -440,6 +502,7 @@ class CCOWizard:
 
             # Decision Tree (TIER 1-3)
             if not self._run_decision_tree():
+                assert self.system_context is not None  # noqa: S101 - Type narrowing for error reporting
                 return WizardResult(
                     success=False,
                     mode=self.mode,
@@ -449,7 +512,9 @@ class CCOWizard:
                 )
 
             # Principle Selection
+            assert self.answer_context is not None  # noqa: S101 - Type narrowing after decision tree
             if not self._run_principle_selection():
+                assert self.system_context is not None  # noqa: S101 - Type narrowing for error reporting
                 return WizardResult(
                     success=False,
                     mode=self.mode,
@@ -460,6 +525,7 @@ class CCOWizard:
 
             # Command Selection
             if not self._run_command_selection():
+                assert self.system_context is not None  # noqa: S101 - Type narrowing for error reporting
                 return WizardResult(
                     success=False,
                     mode=self.mode,
@@ -472,6 +538,7 @@ class CCOWizard:
             # File Generation (unless dry-run)
             if not self.dry_run:
                 if not self._run_file_generation():
+                    assert self.system_context is not None  # noqa: S101 - Type narrowing for error reporting
                     return WizardResult(
                         success=False,
                         mode=self.mode,
@@ -486,6 +553,7 @@ class CCOWizard:
             duration = time.time() - start_time
             self._show_completion(duration)
 
+            assert self.system_context is not None  # noqa: S101 - Type narrowing for final result
             return WizardResult(
                 success=True,
                 mode=self.mode,
@@ -499,6 +567,7 @@ class CCOWizard:
         except KeyboardInterrupt:
             print("\n")
             print_warning("Wizard cancelled by user", indent=2)
+            assert self.system_context is not None  # noqa: S101 - Type narrowing for error handling
             return WizardResult(
                 success=False,
                 mode=self.mode,
@@ -508,6 +577,7 @@ class CCOWizard:
             )
         except Exception as e:
             print_error(f"Wizard failed: {str(e)}", indent=2)
+            assert self.system_context is not None  # noqa: S101 - Type narrowing for error handling
             return WizardResult(
                 success=False,
                 mode=self.mode,
@@ -620,6 +690,7 @@ class CCOWizard:
             self.detection_report = analysis.dict()
 
             # Enrich system context with project data
+            assert self.system_context is not None, "System context must be initialized before enrichment"  # noqa: S101 - Type narrowing after detection
             system_detector = SystemDetector(self.project_root)
             self.system_context = system_detector.enrich_with_project_detection(
                 self.system_context,
@@ -666,7 +737,7 @@ class CCOWizard:
         Returns:
             True if user confirms, False if cancelled
         """
-        from .terminal_ui import ask_yes_no
+        from .renderer import ask_yes_no
 
         print_info("Analysis complete! Does this look correct?", indent=2)
         print()
@@ -691,6 +762,7 @@ class CCOWizard:
 
     def _get_primary_language_name(self) -> str:
         """Get primary language name from detection report"""
+        assert self.detection_report is not None, "Detection report must be initialized"  # noqa: S101 - Type narrowing after detection
         languages = self.detection_report.get("languages", [])
         if languages:
             return languages[0].get("detected_value", "Unknown")
@@ -698,6 +770,7 @@ class CCOWizard:
 
     def _get_frameworks_summary(self) -> str:
         """Get frameworks summary"""
+        assert self.detection_report is not None, "Detection report must be initialized"  # noqa: S101 - Type narrowing after detection
         frameworks = self.detection_report.get("frameworks", [])
         if frameworks:
             names = [fw.get("detected_value", "") for fw in frameworks[:3]]  # Top 3
@@ -706,6 +779,7 @@ class CCOWizard:
 
     def _get_project_type_summary(self) -> str:
         """Get project type summary"""
+        assert self.detection_report is not None, "Detection report must be initialized"  # noqa: S101 - Type narrowing after detection
         types = self.detection_report.get("project_types", [])
         if types:
             names = [t.get("name", "") for t in types[:2]]  # Top 2
@@ -729,6 +803,7 @@ class CCOWizard:
         just different input methods.
         """
         # Initialize answer context
+        assert self.system_context is not None, "System context must be initialized"  # noqa: S101 - Type narrowing after detection
         self.answer_context = AnswerContext(system=self.system_context)
 
         # Get all decision points (TIER 1-3)
@@ -769,7 +844,7 @@ class CCOWizard:
 
         return True
 
-    def _execute_decision(self, decision: DecisionPoint) -> any:
+    def _execute_decision(self, decision: DecisionPoint) -> Any:
         """
         Execute a single decision point.
 
@@ -781,7 +856,7 @@ class CCOWizard:
         else:  # quick
             return self._auto_decide(decision)
 
-    def _ask_user_decision(self, decision: DecisionPoint) -> any:
+    def _ask_user_decision(self, decision: DecisionPoint) -> Any:
         """Ask user for decision (Interactive mode)"""
         # Use UI adapter for context-aware presentation
         # The adapter handles both Claude Code rich UI and terminal fallback
@@ -804,19 +879,21 @@ class CCOWizard:
                 print()
 
         # Delegate to UI adapter
+        assert self.answer_context is not None, "Answer context must be initialized"  # noqa: S101 - Type narrowing after initialization
         answer = self.ui_adapter.ask_decision(decision, self.answer_context)
 
         return answer
 
-    def _auto_decide(self, decision: DecisionPoint) -> any:
+    def _auto_decide(self, decision: DecisionPoint) -> Any:
         """Auto-decide using AI strategy (Quick mode)"""
+        assert self.answer_context is not None, "Answer context must be initialized"  # noqa: S101 - Type narrowing after initialization
         answer = decision.get_recommended_option(self.answer_context)
 
         # Log decision
         if decision.multi_select:
-            answer_str = ", ".join(answer) if isinstance(answer, list) else answer
+            answer_str = ", ".join(answer) if isinstance(answer, list) else str(answer)
         else:
-            answer_str = answer
+            answer_str = str(answer)
 
         print_info(f"[AUTO] {decision.question}", indent=2)
         print_success(f"       → {answer_str}", indent=2)
@@ -986,9 +1063,7 @@ class CCOWizard:
                 pause()
 
                 # Knowledge Base Selection (interactive only)
-                if not hasattr(self, "print_heading"):
-                    from .renderer import print_heading
-                print_heading("Knowledge Base Selection", level=2)
+                print_header("Knowledge Base Selection", "Select components to symlink")
                 print_info("Select which knowledge base components to symlink:", indent=2)
                 print()
 
@@ -1185,7 +1260,7 @@ class CCOWizard:
             print_error(f"Command selection failed: {e}", indent=2)
             return False
 
-    def _build_command_registry(self) -> "CommandRegistry":  # noqa: F821
+    def _build_command_registry(self) -> CommandRegistry:
         """Build command registry from available global commands"""
         from .. import config as CCOConfig  # noqa: N812
         from ..schemas.commands import CommandMetadata, CommandRegistry
@@ -1208,10 +1283,16 @@ class CCOWizard:
                         description_short=f"{cmd_file.stem} command",
                         description_long=f"CCO {cmd_file.stem} command",
                         applicable_project_types=["all"],
+                        is_core=False,
+                        is_experimental=False,
+                        usage_frequency=0,
+                        success_rate=None,
+                        last_used=None,
                     ),
                 )
 
-        return CommandRegistry(commands=commands)
+        from .. import __version__ as cco_version
+        return CommandRegistry(commands=commands, version=cco_version)
 
     # ========================================================================
     # Phase 6: File Generation
@@ -1354,8 +1435,14 @@ class CCOWizard:
                 import subprocess
 
                 try:
-                    subprocess.run(
-                        ["cmd", "/c", "mklink", str(target), str(source)],
+                    subprocess.run(  # noqa: S603
+                        [  # noqa: S607 - cmd is built-in Windows command
+                            "cmd",
+                            "/c",
+                            "mklink",
+                            str(target),
+                            str(source),
+                        ],
                         check=True,
                         capture_output=True,
                     )
@@ -1596,7 +1683,7 @@ class CCOWizard:
         output_path = self.project_root / "CLAUDE.md"
 
         # Generate
-        result = generate_claude_md(preferences.dict(), output_path)
+        result = generate_claude_md(preferences, output_path)
 
         if not result.get("success"):
             raise Exception(f"CLAUDE.md generation failed: {result.get('error')}")
@@ -1643,6 +1730,7 @@ class CCOWizard:
         """Build CCOPreferences object from answers"""
         # Map answers to proper CCOPreferences schema
 
+        assert self.answer_context is not None, "Answer context must be initialized"  # noqa: S101 - Type narrowing after initialization
         answers = self.answer_context.answers
 
         # Get primary language from system context

@@ -79,7 +79,7 @@ def display_detection_results(report: Dict[str, Any]) -> None:
     # Tools
     print_section("Detected Tools", level=1)
     if report.get("tools"):
-        tools_by_category = {}
+        tools_by_category: dict[str, list[str]] = {}
         for tool in report["tools"]:
             category = tool.get("category", "other")
             if category not in tools_by_category:
@@ -309,7 +309,7 @@ def display_preview(changes: Dict[str, Any], dry_run: bool = False) -> None:
         print()
 
         # Group by category
-        commands_by_category = {}
+        commands_by_category: dict[str, list[str]] = {}
         for cmd_info in commands:
             category = cmd_info.get("category", "other")
             if category not in commands_by_category:

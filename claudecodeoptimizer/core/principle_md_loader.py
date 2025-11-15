@@ -7,7 +7,7 @@ Replaces principles.json - all metadata now lives in .md frontmatter
 from pathlib import Path
 from typing import Any, Dict, List, Optional
 
-import frontmatter
+import frontmatter  # type: ignore[import-untyped]
 
 
 def load_principle_from_md(md_file: Path) -> Dict[str, Any]:

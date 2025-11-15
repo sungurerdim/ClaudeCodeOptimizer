@@ -762,13 +762,13 @@ See Step 3B.3 for preference field mapping reference.
 After successful initialization (either mode), verify:
 
 ```bash
-ls .claude/commands/cco-*.md 2>/dev/null | wc -l
+python -c "import glob; print(f'{len(glob.glob(\".claude/commands/cco-*.md\"))} CCO commands installed')"
 ```
 
 Expected: Should show count of installed CCO commands (12-15)
 
 ```bash
-head -100 CLAUDE.md
+python -c "import pathlib; p=pathlib.Path('CLAUDE.md'); print(p.read_text(encoding='utf-8')[:5000] if p.exists() else 'CLAUDE.md not found')"
 ```
 
 Expected: Should show principle summary and project guidelines

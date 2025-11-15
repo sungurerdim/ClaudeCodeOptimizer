@@ -79,7 +79,7 @@ class DecisionPoint:
             return self.ai_hint_generator(context)
         return ""
 
-    def get_recommended_option(self, context: dict[str, object] | object) -> Optional[str]:
+    def get_recommended_option(self, context: dict[str, object] | object) -> str | list[str] | None:
         """Get AI-recommended option value based on context"""
         if self.auto_strategy:
             result = self.auto_strategy(context)
