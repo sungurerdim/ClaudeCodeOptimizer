@@ -1075,11 +1075,11 @@ class CCOWizard:
                 if available_guides:
                     # Guide descriptions
                     guide_descriptions = {
-                        "verification-protocol": "Evidence-based verification workflow (U_EVIDENCE_BASED)",
-                        "git-workflow": "Git commit, branching, PR guidelines (U_ATOMIC_COMMITS, U_CONCISE_COMMITS)",
-                        "security-response": "Security incident response and remediation plan",
-                        "performance-optimization": "Performance analysis and optimization workflow",
-                        "container-best-practices": "Docker/Kubernetes deployment best practices",
+                        "cco-verification-protocol": "Evidence-based verification workflow (U_EVIDENCE_BASED)",
+                        "cco-git-workflow": "Git commit, branching, PR guidelines (U_ATOMIC_COMMITS, U_CONCISE_COMMITS)",
+                        "cco-security-response": "Security incident response and remediation plan",
+                        "cco-performance-optimization": "Performance analysis and optimization workflow",
+                        "cco-container-best-practices": "Docker/Kubernetes deployment best practices",
                     }
 
                     # Recommend guides based on project context
@@ -1180,11 +1180,11 @@ class CCOWizard:
 
                     # Skill descriptions
                     skill_descriptions = {
-                        "verification-protocol": "Evidence-based fix-verify-commit loop (U_EVIDENCE_BASED)",
-                        "test-first-verification": "Generate tests before code changes (U_TEST_FIRST)",
-                        "root-cause-analysis": "Analyze WHY violations exist, not just WHERE",
-                        "incremental-improvement": "Break large tasks into achievable milestones",
-                        "security-emergency-response": "Immediate P0 CRITICAL security remediation",
+                        "cco-skill-verification-protocol": "Evidence-based fix-verify-commit loop (U_EVIDENCE_BASED)",
+                        "cco-skill-test-first-verification": "Generate tests before code changes (U_TEST_FIRST)",
+                        "cco-skill-root-cause-analysis": "Analyze WHY violations exist, not just WHERE",
+                        "cco-skill-incremental-improvement": "Break large tasks into achievable milestones",
+                        "cco-skill-security-emergency-response": "Immediate P0 CRITICAL security remediation",
                     }
 
                     print_info(
@@ -1371,14 +1371,30 @@ class CCOWizard:
             # Create .gitkeep to preserve directory structure
             (claude_dir / category / ".gitkeep").touch()
 
-        # STEP 1: Clean directories (remove old files from previous init, except .gitkeep)
+        # STEP 1: Clean only CCO-managed files (CRITICAL: Don't delete user's custom files!)
+        # Read list of previously managed files from tracking file
+        managed_file_path = claude_dir / ".cco-managed"
+        previously_managed = set()
+        if managed_file_path.exists():
+            try:
+                content = managed_file_path.read_text(encoding="utf-8")
+                previously_managed = {line.strip() for line in content.splitlines() if line.strip()}
+            except Exception:
+                # If can't read tracking file, skip cleanup (safer than deleting unknown files)
+                pass
+
+        # Remove only files that were installed by CCO in previous init
         for category in categories:
             category_dir = claude_dir / category
             if category_dir.exists():
                 for old_file in category_dir.rglob("*"):
-                    # Keep .gitkeep, remove everything else
                     if old_file.is_file() and old_file.name != ".gitkeep":
-                        old_file.unlink()
+                        # Get relative path from .claude/ directory
+                        relative_path = old_file.relative_to(claude_dir).as_posix()
+
+                        # Only delete if it was managed by CCO
+                        if relative_path in previously_managed:
+                            old_file.unlink()
 
         # Get global knowledge directories
         global_commands_dir = config.get_global_commands_dir()
@@ -1544,6 +1560,17 @@ class CCOWizard:
                 + "\n".join(f"  - {m}" for m in mismatches)
             )
 
+        # STEP 5: Write tracking file (SSOT for CCO-managed files)
+        # List all installed files for future cleanup
+        managed_files = []
+        for _, target, _ in symlink_map:
+            # Store relative path from .claude/ directory
+            relative_path = target.relative_to(claude_dir).as_posix()
+            managed_files.append(relative_path)
+
+        # Write tracking file
+        managed_file_path.write_text("\n".join(sorted(managed_files)) + "\n", encoding="utf-8")
+
     def _update_gitignore(self) -> None:
         """
         Update .gitignore to ignore symlinked knowledge base files.
@@ -1561,6 +1588,9 @@ class CCOWizard:
 .claude/principles/*
 .claude/agents/*
 .claude/skills/*
+
+# CCO: Tracking file (local only, regenerated on each init)
+.claude/.cco-managed
 
 # Keep directory structure
 !.claude/commands/.gitkeep
@@ -1951,31 +1981,31 @@ class CCOWizard:
 
         # Verification Protocol: for quality-conscious projects
         if philosophy == "quality_first" or maturity in ["production", "legacy"]:
-            recommended.append("verification-protocol")
+            recommended.append("cco-verification-protocol")
 
         # For all team projects (non-solo)
         if team_size != "solo":
-            recommended.append("verification-protocol")
+            recommended.append("cco-verification-protocol")
 
         # Git Workflow Guide: for team projects with structured workflows
         if team_size in ["small-2-5", "medium-10-20", "large-20-50"]:
-            recommended.append("git-workflow")
+            recommended.append("cco-git-workflow")
 
         # Also for git flow or github flow
         if git_workflow in ["git_flow", "github_flow"]:
-            if "git-workflow" not in recommended:
-                recommended.append("git-workflow")
+            if "cco-git-workflow" not in recommended:
+                recommended.append("cco-git-workflow")
 
         # TIER 2 Mappings: Strategy Decisions
 
         # Security Response: for production or high security stance
         if security in ["production", "high"] or maturity == "production":
-            recommended.append("security-response")
+            recommended.append("cco-security-response")
 
         # For web/API projects (security critical)
         if any(pt in project_types for pt in ["backend", "web-app", "microservice", "spa"]):
-            if "security-response" not in recommended:
-                recommended.append("security-response")
+            if "cco-security-response" not in recommended:
+                recommended.append("cco-security-response")
 
         # Performance Optimization: for backend services or data pipelines
         if any(
@@ -1988,23 +2018,23 @@ class CCOWizard:
                 "analytics",
             ]
         ):
-            recommended.append("performance-optimization")
+            recommended.append("cco-performance-optimization")
 
         # For projects that need retry/resilience
         if error_handling in ["retry_logic", "graceful_degradation"]:
-            if "performance-optimization" not in recommended:
-                recommended.append("performance-optimization")
+            if "cco-performance-optimization" not in recommended:
+                recommended.append("cco-performance-optimization")
 
         # Container Best Practices: for containerized infrastructure
         if any(pt in project_types for pt in ["microservice", "devtools", "data-pipeline", "ml"]):
-            recommended.append("container-best-practices")
+            recommended.append("cco-container-best-practices")
 
         # TIER 3 Mappings: Tactical Decisions
 
         # Additional test-focused recommendations
         if testing in ["comprehensive", "balanced"]:
-            if "verification-protocol" not in recommended:
-                recommended.append("verification-protocol")
+            if "cco-verification-protocol" not in recommended:
+                recommended.append("cco-verification-protocol")
 
         return list(set(recommended))  # Remove duplicates
 
@@ -2012,11 +2042,11 @@ class CCOWizard:
         """Add all universal skills + language-specific skills to project"""
         # Universal skills - always included in every project
         universal_skills = [
-            "verification-protocol",
-            "test-first-verification",
-            "root-cause-analysis",
-            "incremental-improvement",
-            "security-emergency-response",
+            "cco-skill-verification-protocol",
+            "cco-skill-test-first-verification",
+            "cco-skill-root-cause-analysis",
+            "cco-skill-incremental-improvement",
+            "cco-skill-security-emergency-response",
         ]
 
         # Language-specific skills - add if language detected
@@ -2030,11 +2060,11 @@ class CCOWizard:
             if "python" in [lang.lower() for lang in detected_languages]:
                 language_specific_skills.extend(
                     [
-                        "python/async-patterns",
-                        "python/packaging-modern",
-                        "python/performance",
-                        "python/testing-pytest",
-                        "python/type-hints-advanced",
+                        "python/cco-skill-async-patterns",
+                        "python/cco-skill-packaging-modern",
+                        "python/cco-skill-performance",
+                        "python/cco-skill-testing-pytest",
+                        "python/cco-skill-type-hints-advanced",
                     ]
                 )
 
@@ -2056,9 +2086,9 @@ class CCOWizard:
         """Add all universal agents to every project (always included)"""
         # Universal agents - always included in every project
         universal_agents = [
-            "audit-agent",
-            "fix-agent",
-            "generate-agent",
+            "cco-agent-audit",
+            "cco-agent-fix",
+            "cco-agent-generate",
         ]
 
         return universal_agents

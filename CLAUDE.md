@@ -70,24 +70,24 @@
 ## Available Skills
 
 <!-- CCO_SKILLS_START -->
-- **Incremental Improvement** → `.claude/skills/incremental-improvement.md`
-- **Async Patterns (Python)** → `.claude/skills/python/async-patterns.md`
-- **Packaging Modern (Python)** → `.claude/skills/python/packaging-modern.md`
-- **Performance (Python)** → `.claude/skills/python/performance.md`
-- **Testing Pytest (Python)** → `.claude/skills/python/testing-pytest.md`
-- **Type Hints Advanced (Python)** → `.claude/skills/python/type-hints-advanced.md`
-- **Root Cause Analysis** → `.claude/skills/root-cause-analysis.md`
-- **Security Emergency Response** → `.claude/skills/security-emergency-response.md`
-- **Test First Verification** → `.claude/skills/test-first-verification.md`
-- **Verification Protocol** → `.claude/skills/verification-protocol.md`
+- **Incremental Improvement** → `.claude/skills/cco-skill-incremental-improvement.md`
+- **Async Patterns (Python)** → `.claude/skills/python/cco-skill-async-patterns.md`
+- **Packaging Modern (Python)** → `.claude/skills/python/cco-skill-packaging-modern.md`
+- **Performance (Python)** → `.claude/skills/python/cco-skill-performance.md`
+- **Testing Pytest (Python)** → `.claude/skills/python/cco-skill-testing-pytest.md`
+- **Type Hints Advanced (Python)** → `.claude/skills/python/cco-skill-type-hints-advanced.md`
+- **Root Cause Analysis** → `.claude/skills/cco-skill-root-cause-analysis.md`
+- **Security Emergency Response** → `.claude/skills/cco-skill-security-emergency-response.md`
+- **Test First Verification** → `.claude/skills/cco-skill-test-first-verification.md`
+- **Verification Protocol** → `.claude/skills/cco-skill-verification-protocol.md`
 <!-- CCO_SKILLS_END -->
 
 ## Available Agents
 
 <!-- CCO_AGENTS_START -->
-- **Audit Agent** → `.claude/agents/audit-agent.md`
-- **Fix Agent** → `.claude/agents/fix-agent.md`
-- **Generate Agent** → `.claude/agents/generate-agent.md`
+- **Audit Agent** → `.claude/agents/cco-agent-audit.md`
+- **Fix Agent** → `.claude/agents/cco-agent-fix.md`
+- **Generate Agent** → `.claude/agents/cco-agent-generate.md`
 <!-- CCO_AGENTS_END -->
 
 ## Available Commands
@@ -131,7 +131,7 @@
 ## Available Guides
 
 <!-- CCO_GUIDES_START -->
-- **Security Emergency Response** → `.claude/guides/security-response.md`
+- **Security Emergency Response** → `.claude/guides/cco-security-response.md`
 <!-- CCO_GUIDES_END -->
 
 ## Claude Guidelines
