@@ -981,10 +981,10 @@ class TestPrinciplesGeneration:
         assert "U_EVIDENCE_BASED" in content
         assert "U_NO_OVERENGINEERING" in content
 
-    def test_generate_principles_creates_backup(
+    def test_generate_principles_stateless(
         self, minimal_preferences, monkeypatch, tmp_path
     ) -> None:
-        """Test that existing file is backed up"""
+        """Test that principles file is generated without backup (stateless architecture)"""
 
         def mock_load_all_principles(path):
             return [
@@ -1025,27 +1025,20 @@ class TestPrinciplesGeneration:
             mock_load_all_principles,
         )
 
-        # Mock CCOConfig.get_project_backups_dir
-        def mock_get_backups_dir(project_name):
-            return tmp_path / "backups"
-
-        monkeypatch.setattr(
-            "claudecodeoptimizer.config.CCOConfig.get_project_backups_dir",
-            mock_get_backups_dir,
-        )
-
         # Create existing file
         output_path = tmp_path / "PRINCIPLES.md"
         output_path.write_text("Old content", encoding="utf-8")
 
         selector = PrincipleSelector(minimal_preferences)
-        selector.generate_principles_md(output_path)
+        result = selector.generate_principles_md(output_path)
 
-        # Check backup was created
-        backup_dir = tmp_path / "backups"
-        assert backup_dir.exists()
-        backups = list(backup_dir.glob("PRINCIPLES.md.*.backup"))
-        assert len(backups) > 0
+        # Verify stateless operation (no backup created)
+        assert result["success"] is True
+        assert output_path.exists()
+        # New content should be generated (overwrite without backup)
+        new_content = output_path.read_text(encoding="utf-8")
+        assert "U_FAIL_FAST" in new_content
+        assert "Old content" not in new_content
 
 
 class TestCategoryFileGeneration:

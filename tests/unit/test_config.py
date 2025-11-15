@@ -21,7 +21,6 @@ from claudecodeoptimizer.config import (
     get_guides_dir,
     get_home_dir,
     get_principles_dir,
-    get_project_backups_dir,
     get_project_claude_dir,
     get_project_commands_dir,
     get_project_hooks_dir,
@@ -156,15 +155,6 @@ class TestProjectPathHelpers:
         assert result.name == "hooks"
         assert result.parent.name == ".claude"
 
-    def test_get_project_backups_dir(self):
-        """Test get_project_backups_dir returns ~/.cco/{project}/backups/."""
-        project_name = "my-project"
-        result = get_project_backups_dir(project_name)
-        assert isinstance(result, Path)
-        assert result.name == "backups"
-        assert result.parent.name == "my-project"
-        assert result.parent.parent.name == ".cco"
-
 
 class TestCommandNaming:
     """Test command naming functions."""
@@ -237,7 +227,6 @@ class TestCCOConfigClass:
         assert callable(CCOConfig.get_project_claude_dir)
         assert callable(CCOConfig.get_project_commands_dir)
         assert callable(CCOConfig.get_project_hooks_dir)
-        assert callable(CCOConfig.get_project_backups_dir)
         assert callable(CCOConfig.get_command_name)
         assert callable(CCOConfig.get_all_paths)
 
