@@ -194,6 +194,5 @@ class GitCommitHelper:
         # Build message
         message = f"{subject}\n\n"
         message += "\n".join(body_lines)
-        message += "\n\nCo-Authored-By: Claude <noreply@anthropic.com>"
 
         return message

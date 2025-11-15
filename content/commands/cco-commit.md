@@ -281,8 +281,6 @@ feat(knowledge): add custom agent/skill templates and sync workflow
 - Update knowledge_setup.py to copy templates to global storage
 - Add "Knowledge Base Sync" section to sync.md command
 - Filter template files from available agents/skills lists
-
-Co-Authored-By: Claude <noreply@anthropic.com>
 ```
 
 ```
@@ -292,8 +290,6 @@ feat(docs): restructure documentation system
 - Split principles by category (code, security, testing, etc.)
 - Add on-demand loading for guides and specialized content
 - Reduce CLAUDE.md token footprint significantly
-
-Co-Authored-By: Claude <noreply@anthropic.com>
 ```
 
 ❌ **Bad Examples** (avoid):
