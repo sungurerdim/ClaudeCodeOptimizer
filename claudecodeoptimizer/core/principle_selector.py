@@ -5,7 +5,6 @@ Selects applicable development principles based on user preferences.
 Generates PRINCIPLES.md for @mention in Claude Code.
 """
 
-import shutil
 from datetime import datetime
 from pathlib import Path
 from typing import Any, Dict, List, TypeVar
@@ -503,9 +502,8 @@ class PrincipleSelector:
         # Generate content
         content = self._render_principles_md(by_severity, skipped, stats)
 
-        # Create backup if file exists (before writing)
-        if output_path.exists():
-            self._create_backup(output_path)
+        # REMOVED: Backup creation - No backups needed (file deprecated)
+        # PRINCIPLES.md file itself is deprecated in new architecture
 
         # Write file
         output_path.parent.mkdir(parents=True, exist_ok=True)
@@ -706,13 +704,14 @@ class PrincipleSelector:
         lines.append("")
         lines.append("### Updating Principles")
         lines.append("")
-        lines.append(
-            "Your principles are customized based on your project configuration. To update:"
-        )
+        lines.append("Your principles are based on project detection. To update:")
         lines.append("")
-        lines.append("1. **Change preferences**: Edit `~/.cco/projects/<project-name>.json`")
-        lines.append("2. **Regenerate**: Run `/cco-init` to apply changes")
-        lines.append("3. **Review changes**: Check `git diff PRINCIPLES.md`")
+        lines.append("1. **Regenerate**: Run `/cco-init` (interactive or quick mode)")
+        lines.append("2. **Review changes**: Check `git diff PRINCIPLES.md`")
+        lines.append("")
+        lines.append(
+            "Note: CCO is stateless - no config files to edit. Principles selected based on live codebase analysis."
+        )
         lines.append("")
         lines.append("---")
         lines.append("")
@@ -854,46 +853,8 @@ class PrincipleSelector:
             "file_count": len(generated_files),
         }
 
-    def _create_backup(self, file_path: Path) -> None:
-        """
-        Create timestamped backup of existing file in global storage.
-
-        Keeps last 5 backups, deletes older ones.
-        Format: ~/.cco/projects/{project_name}/backups/{filename}.YYYYMMDD_HHMMSS.backup
-
-        Args:
-            file_path: Path to file to backup (e.g., project_root/PRINCIPLES.md)
-        """
-        if not file_path.exists():
-            return  # No file to backup
-
-        # Get project name from file's parent directory
-        project_root = file_path.parent
-        project_name = project_root.name
-
-        # Get backup directory from global storage
-        from ..config import CCOConfig
-
-        backup_dir = CCOConfig.get_project_backups_dir(project_name)
-
-        # Create backup directory if it doesn't exist
-        backup_dir.mkdir(parents=True, exist_ok=True)
-
-        # Create timestamped backup
-        timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
-        backup_filename = f"{file_path.name}.{timestamp}.backup"
-        backup_path = backup_dir / backup_filename
-
-        # Copy file to backup
-        shutil.copy2(file_path, backup_path)
-
-        # Keep only last 5 backups for this file
-        backup_pattern = f"{file_path.name}.*.backup"
-        backups = sorted(backup_dir.glob(backup_pattern))
-
-        # Delete old backups (keep last 5)
-        for old_backup in backups[:-5]:
-            old_backup.unlink()
+    # REMOVED: _create_backup() - No backups needed with stateless architecture
+    # PRINCIPLES.md file deprecated - using individual principle files in ~/.cco/principles/
 
 
 # Utility function for easy access

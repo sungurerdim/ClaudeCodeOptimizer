@@ -127,17 +127,8 @@ def get_project_hooks_dir(project_root: Path) -> Path:
     return get_project_claude_dir(project_root) / "hooks"
 
 
-def get_project_backups_dir(project_name: str) -> Path:
-    """
-    Get project backups directory in global storage.
-
-    Returns: ~/.cco/{project_name}/backups/
-
-    Stores backups of PRINCIPLES.md, CLAUDE.md, etc.
-    Format: {filename}.YYYYMMDD_HHMMSS.backup
-    Retention: Last 5 backups per file
-    """
-    return get_global_dir() / project_name / "backups"
+# REMOVED: get_project_backups_dir() - No backups needed with stateless architecture
+# Original content never modified, so backups are unnecessary
 
 
 # ============================================================================
@@ -255,7 +246,7 @@ class CCOConfig:
     get_project_claude_dir = staticmethod(get_project_claude_dir)
     get_project_commands_dir = staticmethod(get_project_commands_dir)
     get_project_hooks_dir = staticmethod(get_project_hooks_dir)
-    get_project_backups_dir = staticmethod(get_project_backups_dir)
+    # REMOVED: get_project_backups_dir - No backups with stateless architecture
     get_command_name = staticmethod(get_command_name)
     get_all_paths = staticmethod(get_all_paths)
 
