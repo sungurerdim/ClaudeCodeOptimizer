@@ -3,14 +3,17 @@ Universal Project Detection Engine - CCO
 
 Detects languages, frameworks, tools, and project patterns.
 100% generic - zero hardcoded project assumptions.
-Works with 20+ languages, 25+ frameworks, 30+ tools.
+Works with 23 languages, 32+ frameworks, 20+ project types, 34+ tools.
 
 Supports:
-- Languages: Python, JS, TS, Rust, Go, Java, Kotlin, C#, Ruby, PHP, Swift, Dart,
-             Elixir, Scala, R, Lua, Shell, C, C++, HTML, CSS, Groovy, Haskell
-- Frameworks: FastAPI, Django, Flask, React, Vue, Angular, Express, Next.js, Actix,
-              Gin, Spring, Rails, Laravel, Flutter, RoR, Phoenix, Django, ASP.NET
-- Tools: Docker, K8s, pytest, jest, black, ruff, mypy, eslint, prettier, GitHub Actions
+- Languages (23): Python, JS, TS, Rust, Go, Java, Kotlin, C#, Ruby, PHP, Swift, Dart,
+                  Elixir, Scala, R, Lua, Shell, C, C++, HTML, CSS, Groovy, Haskell
+- Frameworks (32+): FastAPI, Django, Flask, React, Vue, Angular, Express, Next.js, Actix,
+                    Gin, Spring, Rails, Laravel, Flutter, Phoenix, ASP.NET, Svelte, Astro
+- Project Types (20): API, Web, CLI, Library, Mobile, Microservice, Desktop, Data Science,
+                      Machine Learning, DevOps, Blockchain, Game, Embedded, Scraper, Bot,
+                      Plugin, Monorepo, Serverless, Documentation, Testing
+- Tools (34+): Docker, K8s, pytest, jest, black, ruff, mypy, eslint, prettier, GitHub Actions
 """
 
 import json
@@ -619,7 +622,7 @@ class UniversalDetector:
         },
     }
 
-    # Project type patterns
+    # Project type patterns (20+ popular types)
     PROJECT_TYPE_PATTERNS = {
         "api": {
             "frameworks": ["fastapi", "django", "flask", "express", "actix", "gin", "spring"],
@@ -643,13 +646,83 @@ class UniversalDetector:
         },
         "mobile": {
             "frameworks": ["flutter", "react-native"],
-            "files": ["pubspec.yaml", "package.json"],
-            "patterns": [],
+            "files": ["pubspec.yaml", "package.json", "AndroidManifest.xml", "Info.plist"],
+            "patterns": [r"mobile", r"android", r"ios"],
         },
         "microservice": {
             "frameworks": [],
             "files": ["docker-compose.yml", "Dockerfile"],
             "patterns": [r"microservice", r"service"],
+        },
+        "desktop": {
+            "frameworks": [],
+            "files": ["package.json", "tauri.conf.json", "electron-builder.json"],
+            "patterns": [r"electron", r"tauri", r"desktop", r"gui"],
+        },
+        "data-science": {
+            "frameworks": [],
+            "files": ["requirements.txt", "environment.yml", "*.ipynb"],
+            "patterns": [r"jupyter", r"pandas", r"numpy", r"analysis", r"data"],
+        },
+        "machine-learning": {
+            "frameworks": [],
+            "files": ["requirements.txt", "model.py", "train.py"],
+            "patterns": [r"tensorflow", r"pytorch", r"keras", r"scikit-learn", r"model"],
+        },
+        "devops": {
+            "frameworks": [],
+            "files": ["terraform.tf", "ansible.yml", "Vagrantfile"],
+            "patterns": [r"infrastructure", r"terraform", r"ansible", r"provisioning"],
+        },
+        "blockchain": {
+            "frameworks": [],
+            "files": ["truffle-config.js", "hardhat.config.js", "foundry.toml"],
+            "patterns": [r"solidity", r"smart.?contract", r"web3", r"ethereum"],
+        },
+        "game": {
+            "frameworks": [],
+            "files": ["*.unity", "*.uproject", "godot.project"],
+            "patterns": [r"unity", r"unreal", r"godot", r"game"],
+        },
+        "embedded": {
+            "frameworks": [],
+            "files": ["platformio.ini", "*.ino", "CMakeLists.txt"],
+            "patterns": [r"embedded", r"iot", r"firmware", r"arduino", r"esp32"],
+        },
+        "scraper": {
+            "frameworks": [],
+            "files": ["requirements.txt", "package.json"],
+            "patterns": [r"scrapy", r"beautifulsoup", r"selenium", r"puppeteer", r"scraper"],
+        },
+        "bot": {
+            "frameworks": [],
+            "files": ["requirements.txt", "package.json"],
+            "patterns": [r"discord", r"telegram", r"slack.?bot", r"chatbot"],
+        },
+        "plugin": {
+            "frameworks": [],
+            "files": ["plugin.json", "manifest.json", "*.vsix"],
+            "patterns": [r"plugin", r"extension", r"addon"],
+        },
+        "monorepo": {
+            "frameworks": [],
+            "files": ["lerna.json", "pnpm-workspace.yaml", "nx.json", "turbo.json"],
+            "patterns": [r"monorepo", r"workspace", r"packages/"],
+        },
+        "serverless": {
+            "frameworks": [],
+            "files": ["serverless.yml", "template.yaml", "netlify.toml", "vercel.json"],
+            "patterns": [r"lambda", r"function", r"serverless"],
+        },
+        "documentation": {
+            "frameworks": [],
+            "files": ["mkdocs.yml", "docusaurus.config.js", "sphinx.conf"],
+            "patterns": [r"documentation", r"docs", r"sphinx", r"mkdocs"],
+        },
+        "testing": {
+            "frameworks": [],
+            "files": ["pytest.ini", "jest.config.js", "karma.conf.js"],
+            "patterns": [r"test.?framework", r"testing.?suite"],
         },
     }
 
