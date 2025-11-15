@@ -1,3 +1,7 @@
+---
+name: Generate Agent
+---
+
 # Generate Agent
 
 ## Description

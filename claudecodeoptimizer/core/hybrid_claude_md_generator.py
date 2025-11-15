@@ -130,9 +130,9 @@ def _generate_category_list(selected_principles: Dict[str, List[str]]) -> str:
         "architecture": "Architecture",
         "security_privacy": "Security & Privacy",
         "testing": "Testing",
-        "project-specific": "Git Workflow",
+        "git_workflow": "Git Workflow",
         "performance": "Performance",
-        "project-specific": "Operations",
+        "operations": "Operations",
         "api_design": "API Design",
     }
 
