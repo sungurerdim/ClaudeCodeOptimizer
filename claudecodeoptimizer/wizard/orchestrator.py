@@ -20,7 +20,7 @@ from .checkpoints import (
     display_detection_results,
 )
 from .decision_tree import get_all_decisions
-from .models import AnswerContext, DecisionPoint, SystemContext, WizardResult
+from .models import AnswerContext, DecisionPoint, SelectionContext, SystemContext, WizardResult
 from .recommendations import RecommendationEngine
 from .renderer import (
     ask_multi_choice,
@@ -1287,30 +1287,52 @@ class CCOWizard:
     # ========================================================================
 
     def _run_file_generation(self) -> bool:
-        """Generate all configuration files"""
+        """Generate all configuration files using SelectionContext (SSOT)"""
         if self.mode == "interactive":
             clear_screen()
             print_header("Phase 6: File Generation", "Creating configuration files...")
             print()
 
         try:
+            # Phase 1: Build SelectionContext (SSOT for all file generation)
+            context = SelectionContext(
+                project_root=self.project_root,
+                mode=self.mode,
+                system_context=self.system_context,
+                selected_principles=self.selected_principles,
+                selected_commands=self.selected_commands,
+                selected_skills=self.selected_skills,
+                selected_agents=self.selected_agents,
+                selected_guides=self.selected_guides,
+                preferences=self.answer_context.answers if self.answer_context else {},
+            )
+
+            # Phase 2: Execute file generation steps
             # Create .claude directory structure
             (self.project_root / ".claude" / "commands").mkdir(parents=True, exist_ok=True)
 
             # Setup knowledge base symlinks
-            self._setup_knowledge_symlinks()
+            self._setup_knowledge_symlinks_with_context(context)
+            context.mark_symlinks_created()
             print_success("✓ Created knowledge base symlinks", indent=2)
 
             # Update .gitignore for symlinks
-            self._update_gitignore()
+            self._update_gitignore_with_context(context)
+            context.mark_gitignore_updated()
             print_success("✓ Updated .gitignore", indent=2)
 
             # Generate CLAUDE.md
-            self._generate_claude_md()
+            self._generate_claude_md_with_context(context)
+            context.mark_claude_md_updated()
             print_success("✓ Created CLAUDE.md", indent=2)
 
             # REMOVED: All optional file generation (editorconfig, pre-commit, CI/CD, GitHub templates, IDE configs, env, logging)
             # CCO PRINCIPLE: Keep project directories clean - only .claude/ and CLAUDE.md
+
+            # Phase 3: Validate completion
+            if not context.is_complete():
+                missing = context.get_missing_steps()
+                raise Exception(f"File generation incomplete. Missing: {', '.join(missing)}")
 
             print()
             return True
@@ -1318,6 +1340,77 @@ class CCOWizard:
         except Exception as e:
             print_error(f"File generation failed: {e}", indent=2)
             return False
+
+    # ========================================================================
+    # Context-Aware File Generation Methods (SSOT)
+    # ========================================================================
+
+    def _setup_knowledge_symlinks_with_context(self, context: SelectionContext) -> None:
+        """
+        Create symlinks using SelectionContext (SSOT).
+
+        Delegates to existing _setup_knowledge_symlinks() method.
+        """
+        # Delegate to existing method (no changes needed, uses self.selected_*)
+        self._setup_knowledge_symlinks()
+
+    def _update_gitignore_with_context(self, context: SelectionContext) -> None:
+        """
+        Update .gitignore using SelectionContext (SSOT).
+
+        Delegates to existing _update_gitignore() method.
+        """
+        # Delegate to existing method
+        self._update_gitignore()
+
+    def _generate_claude_md_with_context(self, context: SelectionContext) -> None:
+        """
+        Generate CLAUDE.md using SelectionContext (SSOT).
+
+        Uses context.selected_* lists instead of self.selected_*.
+        """
+        from ..core.claude_md_generator import ClaudeMdGenerator
+
+        # Build preferences dict
+        preferences_dict = {
+            "project_identity": {
+                "name": context.project_root.name,
+                "team_trajectory": context.preferences.get("team_dynamics", "solo"),
+            },
+            "code_quality": {
+                "linting_strictness": "strict",
+            },
+            "testing": {
+                "strategy": "balanced",
+            },
+            "selected_principle_ids": context.selected_principles,
+        }
+
+        # SSOT: Read only cco-* prefixed files from .claude/ directory
+        claude_dir = context.project_root / ".claude"
+        actual_skills = [
+            f.stem for f in (claude_dir / "skills").glob("**/*.md") if f.stem.startswith("cco-")
+        ]
+        actual_agents = [
+            f.stem for f in (claude_dir / "agents").glob("*.md") if f.stem.startswith("cco-")
+        ]
+        actual_commands = [f.stem for f in (claude_dir / "commands").glob("cco-*.md")]
+        actual_guides = [f.stem for f in (claude_dir / "guides").glob("cco-*.md")]
+
+        # Generate CLAUDE.md
+        output_path = context.project_root / "CLAUDE.md"
+        generator = ClaudeMdGenerator(
+            preferences_dict,
+            selected_skills=actual_skills,
+            selected_agents=actual_agents,
+            selected_commands=actual_commands,
+            selected_guides=actual_guides,
+        )
+        generator.generate(output_path)
+
+    # ========================================================================
+    # Legacy File Generation Methods (kept for compatibility)
+    # ========================================================================
 
     def _setup_knowledge_symlinks(self) -> None:
         """
@@ -1620,10 +1713,24 @@ class CCOWizard:
 
         # Generate CLAUDE.md
         output_path = self.project_root / "CLAUDE.md"
+
+        # SSOT: Read actual symlinks from .claude/ directory
+        claude_dir = self.project_root / ".claude"
+        actual_skills = [
+            f.stem for f in (claude_dir / "skills").glob("**/*.md") if f.stem.startswith("cco-")
+        ]
+        actual_agents = [
+            f.stem for f in (claude_dir / "agents").glob("*.md") if f.stem.startswith("cco-")
+        ]
+        actual_commands = [f.stem for f in (claude_dir / "commands").glob("cco-*.md")]
+        actual_guides = [f.stem for f in (claude_dir / "guides").glob("cco-*.md")]
+
         generator = ClaudeMdGenerator(
             preferences_dict,
-            selected_skills=(self.selected_skills if hasattr(self, "selected_skills") else []),
-            selected_agents=(self.selected_agents if hasattr(self, "selected_agents") else []),
+            selected_skills=actual_skills,
+            selected_agents=actual_agents,
+            selected_commands=actual_commands,
+            selected_guides=actual_guides,
         )
         generator.generate(output_path)
 
