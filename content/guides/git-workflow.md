@@ -74,7 +74,6 @@ type(scope): concise description (max 72 chars)
 - ✅ Max 10 lines total
 - ✅ Max 5 bullets (most important changes)
 - ✅ One line per bullet
-- ✅ Co-Authored-By footer (GitHub contributor attribution)
 - ❌ No section headers ("Changes:", "Rationale:")
 - ❌ No emojis or decorative elements
 
@@ -107,8 +106,6 @@ refactor(ci): consolidate tools to prevent overlap (U_NO_OVERENGINEERING)
 - Remove tool configs from pyproject.toml
 - Simplify workflow to 3 jobs, 5 steps total
 - Format 25 files with ruff
-
-Co-Authored-By: Claude <noreply@anthropic.com>
 ```
 
 **✅ Good - Simple Fix**:
@@ -117,8 +114,6 @@ fix(ci): use cyclonedx-py environment mode
 
 - Change from requirements to environment mode
 - Fixes "requirements.txt not found" error
-
-Co-Authored-By: Claude <noreply@anthropic.com>
 ```
 
 **✅ Good - Feature**:
@@ -128,8 +123,6 @@ feat(docs): restructure documentation system
 - Create content/ structure with progressive disclosure
 - Split principles by category (code, security, testing, etc.)
 - Reduce CLAUDE.md from 5000 to 1500 tokens
-
-Co-Authored-By: Claude <noreply@anthropic.com>
 ```
 
 **❌ Bad - Too Verbose**:
