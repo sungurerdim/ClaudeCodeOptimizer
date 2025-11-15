@@ -1,3 +1,7 @@
+---
+name: Audit Agent
+---
+
 # Audit Agent
 
 ## Description

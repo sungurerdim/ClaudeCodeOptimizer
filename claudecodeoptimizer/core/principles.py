@@ -90,7 +90,9 @@ class PrinciplesManager:
 
             # Hardcoded selection strategies (TODO: move to config file)
             self.selection_strategies = {
-                "minimal": {"include": ["U_EVIDENCE_BASED", "U_FAIL_FAST", "U_TEST_FIRST", "U_DRY"]},
+                "minimal": {
+                    "include": ["U_EVIDENCE_BASED", "U_FAIL_FAST", "U_TEST_FIRST", "U_DRY"]
+                },
                 "auto": {"rules": []},  # Auto selection based on characteristics
             }
 

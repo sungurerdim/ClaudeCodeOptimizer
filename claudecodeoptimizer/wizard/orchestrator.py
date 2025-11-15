@@ -98,7 +98,7 @@ class CCOWizard:
         # Run detection silently (no user interaction needed)
         # Temporarily switch to quick mode for detection
         original_mode = self.mode
-        self.mode = 'quick'
+        self.mode = "quick"
 
         try:
             if not self._run_system_detection():
@@ -115,6 +115,7 @@ class CCOWizard:
 
         # Get all decision points
         from .decision_tree import get_all_decisions
+
         all_decisions = get_all_decisions(self.answer_context)
 
         # Convert to AskUserQuestion format with AI recommendations
@@ -134,7 +135,7 @@ class CCOWizard:
                 option_dict = {
                     "value": opt.value,
                     "label": opt.label,
-                    "description": opt.description
+                    "description": opt.description,
                 }
 
                 # Mark recommended option
@@ -173,9 +174,13 @@ class CCOWizard:
                 "is_git": self.system_context.is_git_repo,
             },
             "project_detection": {
-                "languages": [lang['detected_value'] for lang in self.detection_report.get('languages', [])],
-                "frameworks": [f['detected_value'] for f in self.detection_report.get('frameworks', [])],
-            }
+                "languages": [
+                    lang["detected_value"] for lang in self.detection_report.get("languages", [])
+                ],
+                "frameworks": [
+                    f["detected_value"] for f in self.detection_report.get("frameworks", [])
+                ],
+            },
         }
 
     def run_with_answers(self, answers_dict: Dict) -> WizardResult:
@@ -192,7 +197,7 @@ class CCOWizard:
 
         # Run in quick mode to avoid interactive prompts
         original_mode = self.mode
-        self.mode = 'quick'
+        self.mode = "quick"
 
         try:
             # System & project detection should already be done in export_questions()
@@ -200,9 +205,7 @@ class CCOWizard:
             if self.system_context is None:
                 if not self._run_system_detection():
                     return WizardResult(
-                        success=False,
-                        mode=original_mode,
-                        error="System detection failed"
+                        success=False, mode=original_mode, error="System detection failed"
                     )
 
             if self.detection_report is None:
@@ -211,7 +214,7 @@ class CCOWizard:
                         success=False,
                         mode=original_mode,
                         system_context=self.system_context,
-                        error="Project detection failed"
+                        error="Project detection failed",
                     )
 
             # Initialize answer context with provided answers
@@ -269,6 +272,7 @@ class CCOWizard:
 
         except Exception as e:
             import traceback
+
             return WizardResult(
                 success=False,
                 mode=original_mode,
@@ -356,7 +360,12 @@ class CCOWizard:
                         skip = True
                         continue
                     # End of CCO section (next non-CCO comment or content)
-                    elif skip and line.strip() and not line.startswith(".claude/") and not line.startswith("!.claude/"):
+                    elif (
+                        skip
+                        and line.strip()
+                        and not line.startswith(".claude/")
+                        and not line.startswith("!.claude/")
+                    ):
                         skip = False
 
                     if not skip:
@@ -1343,6 +1352,7 @@ class CCOWizard:
             if platform.system() == "Windows":
                 # Windows: try mklink (requires Developer Mode or admin)
                 import subprocess
+
                 try:
                     subprocess.run(
                         ["cmd", "/c", "mklink", str(target), str(source)],
@@ -1364,6 +1374,7 @@ class CCOWizard:
             if not link_created:
                 try:
                     import os
+
                     os.link(source, target)
                     link_created = True
                 except (OSError, NotImplementedError):
@@ -1372,6 +1383,7 @@ class CCOWizard:
             # 3. Fall back to hard copy if both symlink and hardlink failed
             if not link_created:
                 import shutil
+
                 shutil.copy2(source, target)
 
     def _update_gitignore(self) -> None:

@@ -108,7 +108,9 @@ class PrincipleSelector:
         project_types = applicability.get("project_types", ["all"])
         if project_types != ["all"]:
             # Get detected project types from preferences
-            detected_types = self._get_nested_value(self.preferences, "project_identity.types") or []
+            detected_types = (
+                self._get_nested_value(self.preferences, "project_identity.types") or []
+            )
             # Check if any detected type matches required types (exact match)
             if not any(dtype in project_types for dtype in detected_types):
                 return False
@@ -227,7 +229,12 @@ class PrincipleSelector:
         stance = self._get_nested_value(self.preferences, "security.security_stance")
 
         # High security principles require strict stance
-        high_security_ids = ["P_CONTAINER_SECURITY", "P_K8S_SECURITY", "P_ZERO_TRUST", "P_PRIVACY_COMPLIANCE"]
+        high_security_ids = [
+            "P_CONTAINER_SECURITY",
+            "P_K8S_SECURITY",
+            "P_ZERO_TRUST",
+            "P_PRIVACY_COMPLIANCE",
+        ]
         if principle["id"] in high_security_ids:
             return stance in ["zero-trust", "paranoid", "very-strict", "strict"]
 
@@ -280,7 +287,10 @@ class PrincipleSelector:
         is_high_security = security_stance in ["strict", "very-strict", "balanced"]
 
         if is_api_or_web or is_high_security:
-            is_security = category in ["security_privacy", "api_design"] or severity in ["high", "critical"]
+            is_security = category in ["security_privacy", "api_design"] or severity in [
+                "high",
+                "critical",
+            ]
             if is_security and weight >= 8:
                 return True  # Accept all high+ security principles for APIs/web/microservices
 
@@ -334,7 +344,11 @@ class PrincipleSelector:
             team_size = self._get_nested_value(self.preferences, "project_identity.team_trajectory")
             if team_size == "solo":
                 # Exclude complex architecture patterns for solo
-                exclude_for_solo = ["P_MICROSERVICES_SERVICE_MESH", "P_CQRS_PATTERN", "P_CIRCUIT_BREAKER_PATTERN"]
+                exclude_for_solo = [
+                    "P_MICROSERVICES_SERVICE_MESH",
+                    "P_CQRS_PATTERN",
+                    "P_CIRCUIT_BREAKER_PATTERN",
+                ]
                 if principle["id"] in exclude_for_solo:
                     return False
 
@@ -398,13 +412,22 @@ class PrincipleSelector:
         """Determine why a principle was skipped"""
         # Check team size
         team_size = self._get_nested_value(self.preferences, "project_identity.team_trajectory")
-        if principle["id"] in ["P_MICROSERVICES_SERVICE_MESH", "P_CQRS_PATTERN", "P_CIRCUIT_BREAKER_PATTERN"] and team_size == "solo":
+        if (
+            principle["id"]
+            in ["P_MICROSERVICES_SERVICE_MESH", "P_CQRS_PATTERN", "P_CIRCUIT_BREAKER_PATTERN"]
+            and team_size == "solo"
+        ):
             return f"Solo developer (team_trajectory = '{team_size}')"
 
         # Check security stance
         stance = self._get_nested_value(self.preferences, "security.security_stance")
         if principle.get("category") == "security_privacy":
-            if principle["id"] in ["P_CONTAINER_SECURITY", "P_K8S_SECURITY", "P_ZERO_TRUST", "P_PRIVACY_COMPLIANCE"]:
+            if principle["id"] in [
+                "P_CONTAINER_SECURITY",
+                "P_K8S_SECURITY",
+                "P_ZERO_TRUST",
+                "P_PRIVACY_COMPLIANCE",
+            ]:
                 if stance not in ["zero-trust", "paranoid", "very-strict", "strict"]:
                     return f"Security stance too permissive (security_stance = '{stance}')"
 
@@ -606,12 +629,12 @@ class PrincipleSelector:
                 5,
                 "Caching, async I/O, database optimization, lazy loading",
             ),
-            "project-specific": (
+            "operations": (
                 "Operational Excellence",
                 10,
                 "IaC, observability, health checks, config as code",
             ),
-            "project-specific": (
+            "git_workflow": (
                 "Git Workflow",
                 5,
                 "Commit conventions, branching, PR guidelines, versioning",
@@ -717,8 +740,8 @@ class PrincipleSelector:
             "testing": "Testing Principles",
             "architecture": "Architecture Principles",
             "performance": "Performance Principles",
-            "project-specific": "Operational Excellence Principles",
-            "project-specific": "Git Workflow Principles",
+            "operations": "Operational Excellence Principles",
+            "git_workflow": "Git Workflow Principles",
             "api_design": "API Design Principles",
         }
 
@@ -737,7 +760,11 @@ class PrincipleSelector:
             # Get principles for this category
             if category_id == "core":
                 # Core universal principles: fail-fast, evidence-based, no overengineering
-                principles = [p for p in self.all_principles if p["id"] in ["U_FAIL_FAST", "U_EVIDENCE_BASED", "U_NO_OVERENGINEERING"]]
+                principles = [
+                    p
+                    for p in self.all_principles
+                    if p["id"] in ["U_FAIL_FAST", "U_EVIDENCE_BASED", "U_NO_OVERENGINEERING"]
+                ]
             else:
                 principles = [p for p in self.all_principles if p.get("category") == category_id]
 
