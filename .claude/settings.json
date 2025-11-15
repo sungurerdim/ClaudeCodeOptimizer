@@ -421,8 +421,6 @@
       "Bash(del:*)",
       "Bash(Remove-Item:*)",
       "Bash(git push:*)",
-      "Bash(git commit:*)",
-      "Bash(git add:*)",
       "Bash(pip install:*)",
       "Bash(npm install:*)",
       "Bash(conda install:*)",
