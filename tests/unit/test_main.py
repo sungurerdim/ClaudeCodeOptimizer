@@ -6,9 +6,8 @@ Target Coverage: 100%
 """
 
 import sys
-from io import StringIO
 from pathlib import Path
-from unittest.mock import MagicMock, Mock, patch
+from unittest.mock import MagicMock, patch
 
 import pytest
 
@@ -614,7 +613,6 @@ class TestMainExecution:
     def test_main_module_execution(self):
         """Test executing the module as __main__"""
         import subprocess
-        import sys
 
         # Run the module as a script
         result = subprocess.run(

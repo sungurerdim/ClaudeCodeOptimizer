@@ -5,21 +5,18 @@ Tests safe printing utilities for cross-platform Unicode support.
 Target Coverage: 90%+
 """
 
-import io
-import logging
 import subprocess
 import sys
+from contextlib import redirect_stderr, redirect_stdout
 from io import StringIO
-from contextlib import redirect_stdout, redirect_stderr
-from typing import Any
-from unittest.mock import MagicMock, Mock, patch, call
+from unittest.mock import MagicMock, Mock, patch
 
 import pytest
 
 from claudecodeoptimizer.core.safe_print import (
+    _unicode_to_ascii,
     configure_utf8_encoding,
     safe_print,
-    _unicode_to_ascii,
 )
 
 

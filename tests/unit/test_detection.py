@@ -5,12 +5,10 @@ Tests project detection, language/framework/tool identification.
 Target Coverage: 95%
 """
 
-import io
 import shutil
-import sys
 import tempfile
 from pathlib import Path
-from unittest.mock import Mock, patch
+from unittest.mock import patch
 
 import pytest
 
@@ -646,7 +644,6 @@ class TestMainCLI:
         with patch("sys.argv", ["detection.py", str(temp_project)]):
             with patch("claudecodeoptimizer.ai.detection.main", return_value=0) as mock_main:
                 # Import and execute the module's __main__ block
-                import importlib
                 import claudecodeoptimizer.ai.detection as detection_module
 
                 # Simulate running as __main__

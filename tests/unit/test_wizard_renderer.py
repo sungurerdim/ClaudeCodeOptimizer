@@ -16,14 +16,11 @@ Tests cover:
 
 import io
 import os
-import subprocess
-import sys
-from typing import Any, Dict, List
-from unittest.mock import MagicMock, patch
+from unittest.mock import patch
 
 import pytest
 
-from claudecodeoptimizer.core.constants import SEPARATOR_WIDTH, UI_HEADING_LEVEL_SECONDARY
+from claudecodeoptimizer.core.constants import UI_HEADING_LEVEL_SECONDARY
 from claudecodeoptimizer.wizard.renderer import (
     Colors,
     ask_choice,
@@ -45,7 +42,6 @@ from claudecodeoptimizer.wizard.renderer import (
     print_table,
     print_warning,
 )
-
 
 # ============================================================================
 # FIXTURES

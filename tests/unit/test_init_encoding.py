@@ -5,10 +5,9 @@ This module specifically tests lines 15-16 which handle encoding configuration e
 """
 
 import sys
-import logging
+from unittest.mock import MagicMock
+
 import pytest
-from unittest.mock import patch, MagicMock
-from importlib import reload
 
 
 class TestWindowsEncodingErrorPath:

@@ -6,8 +6,8 @@ Target Coverage: 100%
 """
 
 from pathlib import Path
-from typing import Any, Dict, List
-from unittest.mock import MagicMock, Mock, patch
+from typing import Dict, List
+from unittest.mock import patch
 
 import pytest
 

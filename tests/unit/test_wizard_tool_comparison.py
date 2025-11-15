@@ -11,7 +11,6 @@ Tests cover:
 - Case sensitivity handling
 """
 
-import pytest
 
 from claudecodeoptimizer.wizard.models import ToolComparison
 from claudecodeoptimizer.wizard.tool_comparison import (

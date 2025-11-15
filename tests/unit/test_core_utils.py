@@ -5,8 +5,8 @@ Tests utility functions for formatting, printing, and common helpers.
 Target Coverage: 100%
 """
 
-from io import StringIO
 from contextlib import redirect_stdout
+from io import StringIO
 
 import pytest
 

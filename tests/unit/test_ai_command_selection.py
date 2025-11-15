@@ -5,8 +5,6 @@ Tests command selection logic, scoring, ranking, filtering, and error handling.
 Target Coverage: 100%
 """
 
-from typing import Any, Dict, List
-from unittest.mock import MagicMock, patch
 
 import pytest
 

@@ -5,10 +5,8 @@ Tests progressive disclosure system for skills with 3-tier loading.
 Target Coverage: 100%
 """
 
-import re
 from pathlib import Path
-from typing import Optional
-from unittest.mock import MagicMock, Mock, patch
+from unittest.mock import patch
 
 import pytest
 

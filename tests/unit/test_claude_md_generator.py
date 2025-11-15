@@ -455,7 +455,6 @@ class TestConditionalSections:
 
     def test_add_conditional_sections_with_footer(self, temp_project_dir) -> None:
         """Test adding conditional sections with footer separator"""
-        from claudecodeoptimizer.core.constants import UI_HEADING_LEVEL_SECONDARY
 
         prefs = {
             "project_name": "FooterProject",

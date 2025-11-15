@@ -5,18 +5,13 @@ Tests global knowledge directory initialization, file copying, and path validati
 Target Coverage: 100%
 """
 
-import platform
-import re
-import shutil
-import subprocess
 from pathlib import Path
-from typing import Any, Dict
-from unittest.mock import MagicMock, Mock, patch, call
+from typing import Any
+from unittest.mock import MagicMock, Mock, patch
 
 import pytest
 
 from claudecodeoptimizer.core import knowledge_setup
-from claudecodeoptimizer import config
 
 
 class TestSetupGlobalKnowledge:

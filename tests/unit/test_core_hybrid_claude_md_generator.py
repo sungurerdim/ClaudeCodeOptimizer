@@ -14,11 +14,7 @@ Tests cover:
 Target Coverage: 90%+
 """
 
-import re
-from pathlib import Path
-from unittest.mock import MagicMock, patch
-
-import pytest
+from unittest.mock import patch
 
 from claudecodeoptimizer.core.hybrid_claude_md_generator import (
     _generate_category_list,

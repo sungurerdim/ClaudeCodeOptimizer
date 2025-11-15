@@ -7,7 +7,6 @@ Target Coverage: 100%
 """
 
 from datetime import datetime
-from typing import Any, List
 
 import pytest
 from pydantic import ValidationError

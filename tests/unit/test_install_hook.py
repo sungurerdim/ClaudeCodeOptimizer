@@ -5,10 +5,9 @@ Tests post-install hook for ClaudeCodeOptimizer package installation.
 Target Coverage: 90%+
 """
 
-from io import StringIO
 from contextlib import redirect_stdout
-from typing import Any, Dict
-from unittest.mock import MagicMock, Mock, patch, call
+from io import StringIO
+from unittest.mock import Mock, patch
 
 import pytest
 
@@ -409,7 +408,6 @@ class TestMainBlock:
     def test_main_block_calls_post_install(self, mock_post_install: Mock) -> None:
         """Test that __main__ block calls post_install"""
         # Import and execute the main block
-        import runpy
 
         with patch("claudecodeoptimizer.install_hook.post_install") as mock_func:
             # This would normally execute the script

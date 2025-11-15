@@ -20,13 +20,11 @@ Target: 80%+ coverage
 
 import locale
 import os
-import platform
-import shutil
 import subprocess
 import sys
 from pathlib import Path
 from typing import Any, Dict
-from unittest.mock import MagicMock, Mock, patch
+from unittest.mock import Mock, patch
 
 import pytest
 
