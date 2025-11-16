@@ -32,10 +32,10 @@ CCO analyzes your project and automatically configures Claude Code with producti
 **In 10 seconds:**
 ```bash
 pip install claudecodeoptimizer
-/cco-init  # AI detects your stack → deploys 30-95 principles + 8-15 commands
+/cco-init  # AI detects your stack → deploys 31-94 principles + 8-15 commands
 ```
 
-**How it works:** Detects your stack (Python? FastAPI? React?) → Selects applicable principles from 95 standards → Deploys slash commands → Zero pollution (symlinks only).
+**How it works:** Detects your stack (Python? FastAPI? React?) → Selects applicable principles from 94 standards → Deploys slash commands → Zero pollution (symlinks only).
 
 **Example:** FastAPI security project gets 40 principles (security + architecture). CLI tool gets 25 (code quality + testing). Same CCO, different configuration.
 
@@ -89,10 +89,10 @@ cd /path/to/your/project
 
 After running `/cco-init`, your project has:
 
-### ✅ **Intelligent Principles** (30-95 per project from 95 total)
-- **19 Universal** (always): Evidence-based verification, fail-fast errors, test-first development, DRY, atomic commits, SQL injection prevention, secret rotation
-- **10-64 Project-Specific** (AI-selected from 64): Security (18), architecture (10), performance (5), API design (2), testing (6), code quality (3), git workflow (6), operations (10)
-- **12 Claude Guidelines** (context-specific): No unnecessary files, prefer editing, production-grade code, minimal touch, model selection
+### ✅ **Intelligent Principles** (31-94 per project from 94 total)
+- **14 Universal** (always): Evidence-based verification, fail-fast errors, test-first development, DRY, atomic commits, minimal touch, change verification
+- **10-63 Project-Specific** (AI-selected from 63): Security (17), architecture (8), code quality (8), testing (6), performance (5), API design (2), infrastructure (17)
+- **17 Claude Guidelines** (always): No unnecessary files, prefer editing, production-grade code, minimal touch, model selection, token optimization, parallel agents
 
 ### ✅ **Slash Commands** (8-15 per project)
 | Command | Purpose |
@@ -105,7 +105,7 @@ After running `/cco-init`, your project has:
 | `/cco-scan-secrets` | Detect exposed secrets |
 | `/cco-status` | Quick health check |
 
-[→ See All 28 Commands](docs/features.md#slash-commands)
+[→ See All 33 Commands](docs/features.md#slash-commands)
 
 ### ✅ **Multi-Agent Orchestration**
 CCO automatically uses parallel agents for 2-3x speed:
@@ -144,8 +144,8 @@ pip install -e ".[dev]"
 ### What Gets Installed
 
 **Global (`~/.cco/`):**
-- 28 slash commands
-- 95 principles (19 universal + 64 project-specific + 12 Claude guidelines)
+- 33 slash commands
+- 94 principles (14 universal + 63 project-specific + 17 Claude guidelines)
 - 5 comprehensive guides
 - 23 skills (18 language-specific + 5 cross-language)
 - 3 task agents (audit, fix, generate)
@@ -175,28 +175,28 @@ pip install -e ".[dev]"
 - **100% Stateless**: No config files, no project registry - everything derived from code
 
 ### 📚 **Progressive Disclosure System**
-- Loads only applicable principles (not all 95)
+- Loads only applicable principles (not all 94)
 - Example: Simple CLI tool → 25 principles, FastAPI API → 45 principles
 - **80%+ token savings** throughout project lifecycle
 - Dynamic loading per command
 - **No state tracking** - selection stored as symlinks in `.claude/`
 
-### 🎯 **95 Industry Principles**
+### 🎯 **94 Industry Principles**
 | Category | Count | Examples |
 |----------|-------|----------|
-| Universal | 14 | Model selection, verification, token optimization, atomic commits |
-| Code Quality | 14 | DRY, type safety, immutability, documentation |
-| Security & Privacy | 19 | Encryption, zero-trust, secrets management, OWASP |
-| Architecture | 10 | Event-driven, microservices, SOLID principles |
-| Testing | 6 | Test pyramid, coverage targets, CI gates |
-| Performance | 5 | Caching, async I/O, database optimization |
-| Git Workflow | 8 | Branch strategy, code review, PR templates |
-| Operations | 10 | IaC, observability, health checks |
-| API Design | 2 | RESTful conventions, error handling |
+| Universal | 14 | Evidence-based verification, fail-fast errors, test-first, DRY, atomic commits |
+| Claude Guidelines | 17 | Token optimization, parallel agents, minimal touch, prefer editing, production-grade |
+| Security & Privacy | 17 | Zero-trust, encryption, secrets management, OWASP, SQL injection prevention |
+| Project Infrastructure | 17 | Git workflow, IaC, observability, health checks, CI/CD |
+| Code Quality | 8 | Type safety, linting enforcement, immutability, code review |
+| Architecture | 8 | Event-driven, microservices, CQRS, dependency injection |
+| Testing | 6 | Test pyramid, coverage targets, CI gates, property testing |
+| Performance | 5 | Caching, async I/O, database optimization, lazy loading |
+| API Design | 2 | RESTful conventions, versioning strategy |
 
 > **See**: [Features → Development Principles](docs/features.md#development-principles) for detailed principle descriptions
 
-### 🎛️ **28 Slash Commands**
+### 🎛️ **33 Slash Commands**
 Commands grouped by workflow:
 - **Core**: init, status, config
 - **Audit**: audit, analyze
@@ -232,7 +232,7 @@ Total: ~8s (vs 20s sequential, 60% faster)
 |---------|----------------|-------------|-----|
 | Setup Time | Hours/30-60 min | 10-15 min | **10 seconds** |
 | Auto-Detection | None | Partial | **Full stack detection** |
-| Standards | Style only | Limited | **95 principles** (quality, security, architecture) |
+| Standards | Style only | Limited | **94 principles** (quality, security, architecture) |
 | AI Integration | None | Basic | **Multi-agent orchestration** |
 | Project Pollution | Config files | Varies | **Zero** (symlinks) |
 | Claude Code Native | External tools | Plugins | **Built-in** slash commands |
