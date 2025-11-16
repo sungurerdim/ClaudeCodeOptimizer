@@ -1,6 +1,6 @@
 ---
-id: C_NO_UNNECESSARY_FILES
-title: No Unnecessary File Creation
+id: C_NO_UNSOLICITED_FILE_CREATION
+title: No Unsolicited File Creation
 category: claude-guidelines
 severity: high
 weight: 8
@@ -9,11 +9,11 @@ applicability:
   languages: ['all']
 ---
 
-# C_NO_UNNECESSARY_FILES: No Unnecessary File Creation 🔴
+# C_NO_UNSOLICITED_FILE_CREATION: No Unsolicited File Creation 🔴
 
 **Severity**: High
 
-Never create files unless absolutely necessary for achieving the task goal. Always prefer editing existing files, and only create new files when genuinely required for new functionality or architectural separation.
+Never create files (especially documentation) unless explicitly requested or genuinely required for new functionality. Always prefer editing existing files. Ask before creating documentation; respect user's file management strategy.
 
 **Enforcement**: MUST
 
@@ -26,30 +26,32 @@ Never create files unless absolutely necessary for achieving the task goal. Alwa
 
 ### The Problem
 
-**Unnecessary file creation causes codebase pollution:**
+**Unsolicited file creation causes codebase pollution and workflow disruption:**
 
-- **Project Clutter** - Unnecessary files (temp files, experimental code, unused utilities) pollute project structure
-- **Review Overhead** - Reviewers must examine every new file; unnecessary files waste review time
-- **False Complexity** - More files suggest more complexity even when functionality is simple
-- **Discoverability Issues** - Developers searching for functionality must check more files
-- **Maintenance Burden** - Every file requires ongoing maintenance, even if barely used
-- **Git History Noise** - Unnecessary files clutter git history and blame logs
+- **Project Clutter** - Unnecessary files pollute project structure
+- **Review Overhead** - Reviewers must examine every new file
+- **Wrong Format/Location** - User may have specific requirements (Markdown vs RST, docs/ vs wiki)
+- **User Control Loss** - User loses control over documentation/file management strategy
+- **Maintenance Burden** - Every file requires ongoing maintenance
+- **Git History Noise** - Unnecessary files clutter git history
 
-### Core Techniques
+---
 
-**1. Before Creating ANY File, Ask These Questions:**
+## Core Techniques
+
+### 1. Before Creating ANY File, Ask:
 
 ```
 ❓ Can I edit an existing file instead?
 ❓ Does similar functionality already exist?
 ❓ Is this genuinely new domain logic?
-❓ Would this file have >50 lines of content?
 ❓ Did the user explicitly request a new file?
+❓ Is this documentation? (Always ask first!)
 
 If any answer is "No" → Don't create the file
 ```
 
-**2. Prefer Editing Existing Files**
+### 2. Prefer Editing Existing Files
 
 ```python
 # Task: Add logging utility
@@ -65,7 +67,7 @@ Grep("logger|logging", output_mode="files_with_matches")
 Edit("src/utils/helpers.py", ...)
 ```
 
-**3. Never Create Temporary/Experimental Files**
+### 3. Never Create Temporary/Experimental Files
 
 ```bash
 # ❌ BAD: Creating temporary files
@@ -79,7 +81,7 @@ Write("scratch.js", trying_something)
 # - Experiment in existing modules
 ```
 
-**4. Don't Create Documentation Files Proactively**
+### 4. Always Ask Before Creating Documentation
 
 ```bash
 # ❌ BAD: Creating docs without request
@@ -88,27 +90,42 @@ Write("CONTRIBUTING.md", guidelines)    # Unsolicited
 Write("docs/API.md", api_documentation) # Unsolicited
 
 # ✅ GOOD: Ask first
-"I've completed the feature. Would you like me to update the README with usage examples?"
+"I've completed the feature. Would you like me to:
+1. Update the existing README with usage examples?
+2. Create API documentation?
+3. Add inline docstrings (no new files)?
+4. Nothing - you'll handle docs"
 ```
 
-**5. Don't Create Configuration Files Unless Required**
+### 5. Inline Documentation is OK (No File Creation)
 
-```bash
-# ❌ BAD: Creating configs "just in case"
-Write(".prettierrc", config)      # User didn't ask
-Write(".eslintignore", patterns)  # Not needed yet
-Write("tsconfig.json", ts_config) # No TypeScript files exist!
+```python
+# ✅ GOOD: Inline docstrings don't create files
+def authenticate_user(username: str, password: str) -> AuthResult:
+    """
+    Authenticate user with credentials.
 
-# ✅ GOOD: Only create when genuinely needed
-# User: "Add TypeScript support"
-Write("tsconfig.json", minimal_config)  # Now justified
+    Args:
+        username: User's email or username
+        password: Plain text password (will be hashed)
+
+    Returns:
+        AuthResult with user data and token
+
+    Raises:
+        AuthenticationError: Invalid credentials
+    """
+    # Implementation...
+
+# ✅ GOOD: Code comments are fine
+# TODO: Add rate limiting (per user request)
 ```
 
 ---
 
-### Implementation Patterns
+## Implementation Patterns
 
-#### ✅ Good: Edit Existing File Instead of Creating New
+### ✅ Good: Edit Existing File Instead of Creating New
 
 ```python
 # Task: Add email validation
@@ -127,7 +144,7 @@ Edit("src/utils/validators.py",
 
 ---
 
-#### ✅ Good: Ask Before Creating Documentation
+### ✅ Good: Ask Before Creating Documentation
 
 ```python
 # After implementing feature:
@@ -142,58 +159,30 @@ Feature complete! The new authentication system is working.
 Would you like me to:
 1. Update the existing README with usage examples?
 2. Create API documentation?
-3. Add inline code comments?
+3. Add inline code comments only?
 """
 ```
 
 ---
 
-#### ❌ Bad: Creating Unnecessary Utility Files
+### ✅ Good: Update Existing Docs When Code Changes
 
 ```python
-# ❌ BAD: Creating single-purpose utility files
-Write("src/utils/date_formatter.py", "def format_date...")  # 1 function
-Write("src/utils/string_helper.py", "def capitalize...")    # 1 function
-Write("src/utils/math_utils.py", "def round_decimal...")    # 1 function
+# User changes auth.py, README already documents auth
 
-# ✅ GOOD: Add to existing utils or create one cohesive file
-Edit("src/utils/formatters.py",
-     old_string="# Formatters",
-     new_string="""# Formatters
+# Update existing README to reflect changes
+Edit("README.md",
+     old_string="## Authentication\n\nBasic auth with username/password",
+     new_string="## Authentication\n\nSupports username/password and OAuth")
 
-def format_date(date):
-    ...
-
-def capitalize(text):
-    ...
-
-def round_decimal(num):
-    ...""")
-```
-
----
-
-#### ❌ Bad: Creating Temporary/Debug Files
-
-```python
-# ❌ BAD: Leaving temporary files
-Write("debug_output.txt", debug_data)
-Write("test_temp.py", experimental_code)
-Write("scratch.md", notes)
-
-# ✅ GOOD: Don't create these files at all
-# - Use logging instead of debug files
-# - Experiment in existing test files
-# - Use comments in code for notes
+# This is maintaining existing docs, not creating new ones
 ```
 
 ---
 
 ## Anti-Patterns
 
-### ❌ Anti-Pattern 1: Creating Files "Just in Case"
-
-**Problem**: Creating files for functionality that might be needed later.
+### ❌ Creating Files "Just in Case"
 
 ```python
 # ❌ BAD: Preemptive file creation
@@ -214,9 +203,7 @@ Write("config/production.yaml", stub_config) # Not deploying yet
 
 ---
 
-### ❌ Anti-Pattern 2: One-Function Files
-
-**Problem**: Creating separate file for every small function.
+### ❌ One-Function Files
 
 ```bash
 # ❌ BAD: Excessive file granularity
@@ -235,9 +222,7 @@ src/utils/formatters.py  # 30 lines, all formatters together
 
 ---
 
-### ❌ Anti-Pattern 3: Unsolicited Documentation Files
-
-**Problem**: Creating documentation the user didn't request.
+### ❌ Unsolicited Documentation Files
 
 ```bash
 # ❌ BAD: Proactive doc creation
@@ -265,7 +250,7 @@ Write("API_DOCS.md", api_reference)
 - [ ] **Can I edit instead?** - Check if existing file can be extended
 - [ ] **Is this truly necessary?** - Could functionality live elsewhere?
 - [ ] **Did user request this?** - Explicit request or implicit requirement?
-- [ ] **>50 lines of content?** - Will file have substantial content?
+- [ ] **Is this documentation?** - ALWAYS ask before creating docs
 
 ### File Types to AVOID Creating
 
@@ -283,11 +268,19 @@ Write("API_DOCS.md", api_reference)
 - [ ] **File size limit** - Existing file would exceed 1000 lines
 - [ ] **Clear separation** - Functionality genuinely unrelated to existing files
 
+### What's OK Without Asking
+
+- [ ] **Inline docstrings** - Function/class documentation in code
+- [ ] **Code comments** - Explaining complex logic in comments
+- [ ] **Type hints** - Adding types to function signatures
+- [ ] **Updating existing docs** - Updating README when code changes
+- [ ] **Commit messages** - Documenting changes in git history
+
 ---
 
 ## Summary
 
-**No Unnecessary File Creation** means never creating files unless absolutely necessary. Always prefer editing existing files, and only create when genuinely required for new functionality, architectural separation, or explicit user request.
+**No Unsolicited File Creation** means never creating files (especially documentation) unless explicitly requested or genuinely required. Always prefer editing existing files, and always ask before creating documentation.
 
 **Core Rules:**
 
@@ -296,3 +289,5 @@ Write("API_DOCS.md", api_reference)
 - **Ask for docs** - Never create documentation files without user request
 - **No temp files** - Never create temporary, debug, or experimental files
 - **Justify creation** - Every new file should be necessary for the task
+- **Inline docs OK** - Docstrings and code comments don't need approval
+- **Respect "no"** - If user declines docs, don't create them
