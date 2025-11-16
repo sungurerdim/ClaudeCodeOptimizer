@@ -31,30 +31,6 @@ Minimize Claude token usage through grep-first approach, targeted reads, and eff
 - **Redundant context** - Re-reading same content multiple times
 - **Poor tool usage** - Using Read when Grep is faster
 
-### Business Value
-- **50% token reduction** - Grep-first approach vs blind reads
-- **Faster execution** - Less token processing = faster responses
-- **Lower costs** - Tokens cost money, optimization saves budget
-- **Better context utilization** - More room for actual code
-- **Improved performance** - Efficient tool usage
-
-### Technical Benefits
-- **Targeted context** - Only load what's needed
-- **Faster searches** - Grep faster than read+search
-- **Scalable workflows** - Works on large codebases
-- **Reduced latency** - Less token processing time
-- **Better debugging** - Clear what context was used
-
-### Industry Evidence
-- **Database optimization** - Index-first approach (similar to grep-first)
-- **Search engines** - Inverted index before full content
-- **IDE performance** - Incremental parsing, not full reparse
-- **Git operations** - `git grep` faster than reading all files
-
----
-
-## How
-
 ### Token Optimization Strategy
 
 **3-Phase Approach:**
@@ -407,16 +383,6 @@ Before reading files, ask:
 
 ---
 
-## Cross-References
-
-**Related Principles:**
-- **C_GREP_FIRST_SEARCH_STRATEGY** - Detailed grep-first methodology
-- **C_CONTEXT_WINDOW_MGMT** - Overall context optimization
-- **C_MODEL_SELECTION** - Choose right model for token budget
-- **C_PARALLEL_AGENTS** - Distribute work to optimize tokens
-
----
-
 ## Summary
 
 **Token Optimization** means minimizing Claude token usage through grep-first approach, targeted reads with offset+limit, and efficient tool usage.
@@ -426,7 +392,3 @@ Before reading files, ask:
 - **offset+limit for large files** - Never read >500 lines without limit
 - **files_with_matches → content → Read** - Progressive refinement
 - **Avoid repeated reads** - Read once, reuse result
-
-**Remember**: "A grep today saves 1000 tokens tomorrow."
-
-**Impact**: 50% token reduction, faster execution, lower costs, better performance.

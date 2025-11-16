@@ -36,5 +36,3 @@ redis.setex('key', 3600, value)  # Auto-expires in 1h
 ```
 
 ## Autofix Available
-
-

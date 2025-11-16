@@ -35,34 +35,6 @@ Always follow existing code patterns, naming conventions, architectural decision
 - **Hidden Bugs** - Pattern inconsistencies often indicate misunderstood architecture
 - **Merge Conflicts** - Different styles for same functionality increase conflict likelihood
 
-### Business Value
-
-- **Faster reviews** - Consistent code is predictable; reviews focus on logic, not style
-- **Easier onboarding** - New developers learn one pattern, apply everywhere
-- **Reduced bugs** - Consistent patterns reduce misunderstandings and mistakes
-- **Lower maintenance cost** - Uniform codebase is easier and faster to maintain
-- **Team velocity** - Developers don't waste time debating patterns or fixing inconsistencies
-
-### Technical Benefits
-
-- **Predictable behavior** - Same patterns produce same outcomes; no surprises
-- **Easier refactoring** - Consistent code refactors cleanly with automated tools
-- **Pattern reuse** - Learn once, apply everywhere
-- **Automated tooling** - Linters and formatters work better on consistent code
-- **Clear architectural intent** - Patterns reveal architectural decisions
-
-### Industry Evidence
-
-- **Google Style Guides** - "Consistency with existing code is more important than theoretical perfection"
-- **Linux Kernel** - Patch rejection rate 40% higher for inconsistent style
-- **Code Review Studies** - Inconsistent code takes 2-3x longer to review
-- **Maintenance Research** - Consistent codebases have 50% fewer bugs per KLOC
-- **Developer Surveys** - 85% of developers prefer consistency over "better" inconsistent solutions
-
----
-
-## How
-
 ### Core Techniques
 
 **1. Examine Existing Code First**
@@ -406,24 +378,6 @@ def process_new(items: List[str]) -> Dict[str, int]:  # Match existing
 
 ---
 
-## Cross-References
-
-**Related Principles:**
-
-- **C_PREFER_EDITING** - Editing existing files naturally follows their patterns
-- **C_MINIMAL_TOUCH** - Minimal changes preserve existing patterns
-- **C_PRODUCTION_GRADE** - Following patterns is production-grade practice
-- **U_DRY** - Consistent patterns reduce duplication
-- **C_NO_UNNECESSARY_FILES** - Following file organization patterns prevents unnecessary files
-
-**Workflow Integration:**
-- Use Grep to find existing patterns before coding
-- Use Read to understand current implementation style
-- Follow project's documented conventions (if any)
-- Ask user if pattern choice is unclear
-
----
-
 ## Summary
 
 **Follow Existing Patterns** means matching the codebase's established naming conventions, architectural decisions, error handling, file organization, and coding styles. Consistency trumps personal preference. When in doubt, do what existing code does.
@@ -435,38 +389,3 @@ def process_new(items: List[str]) -> Dict[str, int]:  # Match existing
 - **Framework conventions** - Follow framework patterns, don't fight them
 - **Consistency > perfection** - Matching existing pattern is better than introducing "better" inconsistent pattern
 - **When to diverge** - Only introduce new patterns with explicit team/user agreement
-
-**Remember**: "When in Rome, do as the Romans do. Match existing patterns. Consistency is more valuable than personal preference."
-
-**Impact**: Faster reviews (50%), easier onboarding, reduced bugs, lower maintenance cost, better predictability.
-
----
-
-**Pattern Discovery Workflow:**
-```
-Need to write new code
-  ↓
-Search for similar existing code (Grep/Glob)
-  ↓
-Identify patterns:
-  - Naming conventions
-  - Error handling
-  - File organization
-  - Import style
-  - Documentation style
-  ↓
-Match patterns exactly in new code
-  ↓
-If pattern unclear → Ask user
-If no existing pattern → Choose pattern, document it
-```
-
-**Common Patterns to Match:**
-- ✅ **Naming**: snake_case vs camelCase vs PascalCase
-- ✅ **Imports**: Order and grouping
-- ✅ **Error handling**: try/except style, exception types
-- ✅ **Logging**: logger vs print, log levels
-- ✅ **Returns**: Return values vs exceptions vs Result objects
-- ✅ **Documentation**: Docstring style (Google, NumPy, reStructuredText)
-- ✅ **Testing**: Test structure, assertion style, fixtures
-- ✅ **File organization**: Where files go, naming conventions

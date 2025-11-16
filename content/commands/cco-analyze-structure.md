@@ -20,14 +20,9 @@ Analyze **${PROJECT_NAME}** architectural patterns, directory organization, and 
 
 ## Objective
 
-Understand codebase organization:
-1. Map directory structure and module hierarchy
-2. Identify architectural patterns (MVC, microservices, layered, etc.)
-3. Detect inconsistencies and anti-patterns
-4. Analyze module coupling and cohesion
-5. Provide structural improvement recommendations
+Understand codebase organization: structure, patterns, inconsistencies, and coupling analysis.
 
-**Output:** Comprehensive structure analysis with architectural diagram and recommendations.
+**Output:** Structure analysis with architectural diagram and recommendations.
 
 ---
 
@@ -51,25 +46,9 @@ Understand codebase organization:
 
 ---
 
-## When to Use
-
-**Use this command:**
-- When onboarding to a new codebase
-- Before major refactoring
-- During architecture reviews
-- To understand legacy projects
-- When documentation is outdated
-
-**Especially useful for:**
-- Large codebases (>50 files)
-- Multi-service architectures
-- Projects with unclear organization
-
 ---
 
 ## Phase 1: Directory Tree Analysis
-
-Scan and visualize directory structure:
 
 ```python
 import sys
@@ -167,8 +146,6 @@ print()
 
 ## Phase 2: File Type Distribution
 
-Analyze file types and their distribution:
-
 ```python
 print(f"=== File Type Distribution ===\n")
 
@@ -219,8 +196,6 @@ print()
 ---
 
 ## Phase 3: Detect Architectural Patterns
-
-Identify architectural patterns from structure:
 
 ```python
 print(f"=== Architectural Pattern Detection ===\n")
@@ -300,8 +275,6 @@ else:
 ---
 
 ## Phase 4: Module Organization Analysis
-
-Analyze how code is organized into modules:
 
 ```python
 print(f"=== Module Organization ===\n")
@@ -384,8 +357,6 @@ if issues:
 
 ## Phase 5: Dependency Analysis
 
-Analyze imports and dependencies:
-
 ```python
 print(f"=== Dependency Analysis ===\n")
 
@@ -466,8 +437,6 @@ if extract_fn:
 ---
 
 ## Phase 6: Code Organization Quality
-
-Assess code organization quality:
 
 ```python
 print(f"=== Code Organization Quality ===\n")
@@ -593,8 +562,6 @@ print()
 
 ## Phase 7: Anti-Pattern Detection
 
-Detect common structural anti-patterns:
-
 ```python
 print(f"=== Anti-Pattern Detection ===\n")
 
@@ -673,8 +640,6 @@ else:
 ---
 
 ## Phase 8: Recommendations
-
-Generate actionable recommendations:
 
 ```python
 print(f"=== Recommendations ===\n")
@@ -760,8 +725,6 @@ if not recommendations:
 
 ## Phase 9: Generate Structure Diagram
 
-Create visual architecture diagram:
-
 ```python
 print(f"=== Architecture Diagram ===\n")
 
@@ -810,8 +773,6 @@ print()
 
 ## Phase 10: Export Report
 
-Save analysis to file:
-
 ```python
 print(f"=== Export Report ===\n")
 
@@ -839,139 +800,6 @@ print()
 ```
 
 ---
-
-## Output Example
-
-```
-=== Directory Structure Analysis ===
-
-Project: backend
-
-Directory Tree:
-backend/
-├── src/
-│   ├── api/
-│   │   ├── routes/
-│   │   └── middleware/
-│   ├── services/
-│   │   ├── auth/
-│   │   ├── payment/
-│   │   └── notification/
-│   ├── models/
-│   ├── utils/
-│   └── config/
-├── tests/
-│   ├── unit/
-│   └── integration/
-├── docs/
-└── scripts/
-
-Statistics:
-- Total Directories: 18
-- Total Files: 147
-
-=== File Type Distribution ===
-
-File Types:
-.py             89 (60.5%) ██████████████████████████████
-.json           24 (16.3%) ████████
-.md             12 ( 8.2%) ████
-.yml             8 ( 5.4%) ██
-.txt             6 ( 4.1%) ██
-.env             3 ( 2.0%) █
-.sh              3 ( 2.0%) █
-.toml            2 ( 1.4%)
-
-Primary Language: Python (89 files)
-
-=== Architectural Pattern Detection ===
-
-Detected Patterns:
-- Microservices Architecture (Confidence: HIGH)
-  Evidence: services/ (3 services)
-- API-First / REST (Confidence: MEDIUM)
-  Evidence: api/, routes/
-
-=== Module Organization ===
-
-Modules Found: 8
-
-Top Modules by Size:
- 1. src/services/auth                      12 files,   2340 LOC
- 2. src/services/payment                    8 files,   1567 LOC
- 3. src/api/routes                         15 files,   1234 LOC
- 4. src/models                             18 files,    987 LOC
- 5. src/services/notification               6 files,    876 LOC
-
-=== Dependency Analysis ===
-
-External Dependencies: 23
-
-Most Used External Libraries:
-  fastapi                        (used in 34 files)
-  pydantic                       (used in 28 files)
-  sqlalchemy                     (used in 18 files)
-  pytest                         (used in 15 files)
-  boto3                          (used in 12 files)
-
-Internal Modules: 12
-
-Most Referenced Internal Modules:
-  ..models                       (used in 24 files)
-  ..utils                        (used in 19 files)
-  ..config                       (used in 18 files)
-
-=== Code Organization Quality ===
-
-Directory Depth: 4 levels
-  ✓ Good: Shallow hierarchy (easy to navigate)
-
-Naming Convention:
-  Dominant: snake_case (89.3% consistent)
-  ✓ Good: Consistent naming
-
-Separation of Concerns:
-  ✓ Tests: 2 directories
-  ✓ Config: 1 directories
-  ✓ Docs: 1 directories
-  ✓ Scripts: 1 directories
-  ✓ Source: 1 directories
-
-Organization Quality Score: 87.3/100
-  ✓✓✓ Excellent organization
-
-=== Anti-Pattern Detection ===
-
-Anti-Patterns Found: 1
-
-[MEDIUM] Flat Structure
-  Location: project root
-  Issue: 16 items in root directory
-  Fix: Group related items into subdirectories
-
-=== Recommendations ===
-
-1. [MEDIUM] Structure: Reduce root clutter
-   - Move config files to config/ directory
-   - Group scripts in scripts/
-   - Keep only essential files in root (README, .gitignore, etc.)
-
-=== Architecture Diagram ===
-
-┌─────────────────────────────────────┐
-│             backend                 │
-└─────────────────────────────────────┘
-              │
-              ├── src/ [5f, 6d]
-              ├── tests/ [0f, 2d]
-              ├── docs/ [8f, 0d]
-              ├── scripts/ [4f, 0d]
-              └── config/ [3f, 0d]
-
-=== Export Report ===
-
-Report saved to: structure-analysis-report.json
-```
 
 ---
 

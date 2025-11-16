@@ -34,31 +34,6 @@ Always profile before optimizing. Measure actual performance bottlenecks with pr
 - **Missed Real Issues** - Actual bottlenecks (database queries, API calls) ignored
 - **No Validation** - Can't prove optimization worked without before/after measurements
 
-### Business Value
-
-- **Efficient use of time** - Focus optimization where it matters (90/10 rule: 10% of code is 90% of runtime)
-- **Measurable improvements** - Profiling shows exact performance gains
-- **Cost savings** - Fix real bottlenecks instead of guessing
-- **Better ROI** - Optimize what actually impacts user experience
-
-### Technical Benefits
-
-- **Data-driven decisions** - Profile data shows exactly where time is spent
-- **Quantifiable improvements** - Before/after metrics prove optimization success
-- **Identify surprises** - Profiling reveals unexpected bottlenecks
-- **Avoid premature optimization** - Keep code simple until profiling proves need
-
-### Industry Evidence
-
-- **Donald Knuth** - "Premature optimization is the root of all evil" (97% of time wasted on wrong optimizations)
-- **Performance Research** - 90% of runtime typically in 10% of code (Pareto principle)
-- **Industry Practice** - All major companies (Google, Facebook, Netflix) profile before optimizing
-- **Developer Surveys** - Teams that profile first achieve 5-10x better performance gains per hour invested
-
----
-
-## How
-
 ### Core Techniques
 
 **1. Profile First, Always**
@@ -418,22 +393,6 @@ def sort_items_quick(items):
 
 ---
 
-## Cross-References
-
-**Related Principles:**
-- **P_CONTINUOUS_PROFILING** - Profile production systems continuously
-- **P_DB_OPTIMIZATION** - Profile database queries specifically
-- **U_EVIDENCE_BASED** - Base optimization on profiling evidence
-- **P_TEST_PYRAMID** - Profile test suite speed
-
-**Workflow Integration:**
-- Performance issue reported → Profile → Identify bottleneck → Optimize → Measure
-- Before optimization: Run profiler, get baseline metrics
-- After optimization: Re-profile, compare metrics
-- Production monitoring: Continuous profiling in production
-
----
-
 ## Summary
 
 **Performance Profiling Before Optimization** means always measuring actual bottlenecks with profiling tools before optimizing. Avoid premature optimization based on assumptions.
@@ -444,56 +403,3 @@ def sort_items_quick(items):
 - **Fix biggest bottleneck** - 90% of time in 10% of code (Pareto principle)
 - **Benchmark before/after** - Quantify improvement (2x, 10x speedup)
 - **Production-like workloads** - Profile with realistic data sizes
-
-**Remember**: "Premature optimization is root of all evil. Profile first. Optimize what matters."
-
-**Impact**: 5-10x better ROI on optimization time, avoid wasted effort, measurable improvements.
-
----
-
-**Profiling Tools:**
-- **Python**: `cProfile`, `py-spy`, `line_profiler`, `memory_profiler`
-- **Node.js**: `clinic`, `--prof`, Chrome DevTools
-- **Go**: `pprof`, `trace`
-- **Java**: JProfiler, VisualVM, YourKit
-
-**Quick Profile Commands:**
-```bash
-# Python CPU profile
-python -m cProfile -s cumtime script.py
-
-# Python live profiling (no code changes)
-py-spy top --pid 12345
-
-# Node.js profiling
-node --prof app.js
-node --prof-process isolate-*.log
-
-# Go profiling
-go test -cpuprofile=cpu.prof -memprofile=mem.prof
-go tool pprof cpu.prof
-```
-
-**Profile Analysis Workflow:**
-```
-Performance issue reported
-  ↓
-Profile with realistic workload
-  ↓
-Identify top 3 slowest functions
-  ↓
-Investigate slowest first (80/20 rule)
-  ↓
-Find root cause:
-  - Database queries (N+1, missing index)?
-  - External API calls (need caching)?
-  - Algorithm complexity (use better algorithm)?
-  - Memory allocation (reduce allocations)?
-  ↓
-Optimize root cause
-  ↓
-Benchmark: Before vs After
-  ↓
-Improvement >2x? → Ship it ✅
-Improvement <2x? → Try different optimization
-```

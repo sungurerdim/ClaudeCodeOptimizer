@@ -35,34 +35,6 @@ Write production-ready code from the first line. No TODO markers, debug prints, 
 - **Security Holes** - Placeholder auth checks like "if true" bypass real security
 - **Performance Issues** - Debug code paths (deep logging, assertions) slow production systems
 
-### Business Value
-
-- **Zero technical debt** - No cleanup phase needed; code is production-ready immediately
-- **Always deployable** - Every commit can go to production without cleanup or "hardening"
-- **Reduced bugs** - Complete error handling and edge case coverage from day one
-- **Faster reviews** - No "we'll fix it later" discussions; code is complete
-- **Better security** - No placeholder auth/validation that gets forgotten
-
-### Technical Benefits
-
-- **Complete from start** - All code paths implemented, all errors handled
-- **Proper logging** - Structured logging instead of debug prints
-- **Error resilience** - Comprehensive error handling prevents crashes
-- **Performance ready** - No debug overhead in production builds
-- **Maintainable** - Future developers don't inherit debt or cleanup tasks
-
-### Industry Evidence
-
-- **Google SRE** - "Code should be production-ready before merge; no TODOs in production"
-- **Microsoft DevOps** - Teams with strict quality gates deploy 200x more frequently
-- **Amazon** - "You build it, you run it" culture requires production-grade code from start
-- **Technical Debt Studies** - Every TODO has 70% chance of never being addressed
-- **Production Incident Analysis** - 40% of critical bugs traced to "temporary" code
-
----
-
-## How
-
 ### Core Techniques
 
 **1. Complete Implementations**
@@ -563,24 +535,6 @@ def rate_limit_check(user: User) -> bool:
 
 ---
 
-## Cross-References
-
-**Related Principles:**
-
-- **U_TEST_FIRST** - Write tests first to ensure complete implementations
-- **U_FAIL_FAST** - Proper error handling fails fast with clear errors
-- **U_NO_OVERENGINEERING** - Production-grade doesn't mean over-engineered
-- **C_CROSS_PLATFORM_BASH** - Production code must work on all platforms
-- **P_LINTING_SAST** - Linters catch TODOs, prints, and incomplete code
-
-**Workflow Integration:**
-- Configure linters to fail on TODO/FIXME/HACK comments
-- Pre-commit hooks check for console.log/print statements
-- CI gates require 100% test coverage
-- Code review checklist includes production-grade criteria
-
----
-
 ## Summary
 
 **Production-Grade Code Only** means writing deployment-ready code from the first line: complete implementations, proper error handling, structured logging, no TODOs, and no debug code.
@@ -592,33 +546,3 @@ def rate_limit_check(user: User) -> bool:
 - **Complete error handling** - Handle all error cases with specific exceptions
 - **No placeholders** - No `return True` bypasses or stub implementations
 - **Proper logging** - Structured, searchable logs; no sensitive data
-
-**Remember**: "Every line deployment-ready. No TODOs. No prints. No placeholders. Production-grade from day one."
-
-**Impact**: Zero technical debt, always deployable, reduced bugs, faster reviews, better security, no cleanup phase needed.
-
----
-
-**Quality Gates:**
-```
-Pre-Commit:
-  ✓ No TODO/FIXME/HACK comments
-  ✓ No console.log/print statements
-  ✓ No debugger statements
-  ✓ All tests pass
-  ✓ Linting passes
-
-Code Review:
-  ✓ Complete error handling
-  ✓ Input validation present
-  ✓ Proper logging (no prints)
-  ✓ Type hints/annotations
-  ✓ Documentation complete
-
-CI/CD:
-  ✓ Unit tests pass
-  ✓ Integration tests pass
-  ✓ Security scans pass
-  ✓ Performance acceptable
-  ✓ Cross-platform verified
-```

@@ -32,30 +32,6 @@ Each commit contains changes related to a single logical change. Never mix unrel
 - **Unclear history** - "What did this commit actually do?"
 - **Cherry-pick nightmare** - Can't pick just what you need
 
-### Business Value
-- **90% faster debugging** - Git bisect finds exact breaking commit
-- **50% faster reverts** - Revert specific change without side effects
-- **Better code review** - Reviewers understand each change clearly
-- **Cleaner history** - Project evolution is traceable
-- **Easier releases** - Cherry-pick features to release branches
-
-### Technical Benefits
-- **Git bisect works** - Binary search finds exact breaking commit
-- **Clean reverts** - Revert atomic change without collateral damage
-- **Selective cherry-pick** - Pick individual features
-- **Clear blame** - `git blame` shows what change introduced line
-- **Better diffs** - Each commit is focused, reviewable unit
-
-### Industry Evidence
-- **Linux Kernel** - Strict atomic commit policy
-- **Git Pro Book** - "Make each commit a logically separate changeset"
-- **Google Style Guide** - "One idea per CL"
-- **Conventional Commits** - Enforces atomic semantic commits
-
----
-
-## How
-
 ### Core Principle
 
 **One commit = One complete, self-contained logical change**
@@ -404,32 +380,8 @@ git commit -m "refactor: rename getUserById to fetchUser"
 
 ---
 
-## Cross-References
-
-**Related Principles:**
-- **U_CONCISE_COMMITS** - Clear commit messages for atomic commits
-- **U_MINIMAL_TOUCH** - Fewer files = easier atomic commits
-- **U_TEST_FIRST** - Tests make commits atomic (feature + test together)
-- **U_EVIDENCE_BASED** - Each commit should be verifiable
-
----
-
-## Industry Standards Alignment
-
-- **Linux Kernel** - Strict one change per patch policy
-- **Git Pro Book** - "Make each commit a logically separate changeset"
-- **Conventional Commits** - Semantic versioning with atomic commits
-- **Google Style Guide** - One idea per change list
-- **Trunk-Based Development** - Small, atomic commits to trunk
-
----
-
 ## Summary
 
 **Atomic Commits** means each commit contains ONE complete, self-contained logical change. Never mix unrelated changes in a single commit.
 
 **Core Rule**: One commit = one thing. If you can't describe the commit in one sentence, split it.
-
-**Remember**: "A commit should tell a story. One story. Not an anthology."
-
-**Impact**: 90% faster debugging (git bisect), 50% faster reverts, clearer history.

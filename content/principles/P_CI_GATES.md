@@ -35,33 +35,6 @@ All PRs must pass mandatory CI gates (linting, testing, coverage, security scans
 - **Regression Risk** - Changes break existing functionality without detection
 - **No Accountability** - Can't track when/why quality standards were bypassed
 
-### Business Value
-
-- **Prevent production incidents** - Automated gates catch bugs before deployment (save $millions)
-- **Faster deployment cycles** - Confidence in automated checks enables frequent releases
-- **Reduced review time** - Reviewers focus on logic/design, not style/syntax
-- **Cost savings** - Bugs caught in CI cost 10-100x less than production bugs
-- **Regulatory compliance** - SOC 2, ISO 27001 require automated quality gates
-
-### Technical Benefits
-
-- **Automated quality enforcement** - Linting, testing, coverage checked automatically
-- **Fast feedback** - Developers get results in minutes, not hours/days
-- **Consistent standards** - Same checks run for every PR, every developer
-- **Regression prevention** - Test suite verifies existing functionality preserved
-- **Security baseline** - SAST scans catch vulnerabilities before merge
-
-### Industry Evidence
-
-- **DORA Metrics** - Elite teams have comprehensive automated CI gates (key to high performance)
-- **Google Research** - Projects with CI gates have 70% fewer production bugs
-- **Industry Standard** - 95% of top companies enforce CI gates (lint, test, coverage, security)
-- **Developer Productivity** - CI gates reduce code review time by 40-50% (automate quality checks)
-
----
-
-## How
-
 ### Core Techniques
 
 **1. Linting Gate (Code Quality)**
@@ -583,23 +556,6 @@ jobs:
 
 ---
 
-## Cross-References
-
-**Related Principles:**
-- **P_LINTING_SAST** - Linting and security scanning gates
-- **P_TEST_COVERAGE** - Coverage gate threshold (80%)
-- **P_TEST_PYRAMID** - Testing gate structure
-- **P_TYPE_SAFETY** - Type checking gate
-- **U_CHANGE_VERIFICATION** - Verification protocol before merge
-
-**Workflow Integration:**
-- Developer creates PR → CI gates run automatically
-- All gates must pass (lint, test, coverage, security, build)
-- Branch protection blocks merge if any gate fails
-- Code review required + all gates passed → PR mergeable
-
----
-
 ## Summary
 
 **CI Gates** means all PRs must pass mandatory automated gates (linting, testing, coverage, security scans, build verification) before merge. No bypassing gates, no manual overrides without documented approval.
@@ -610,50 +566,3 @@ jobs:
 - **No bypassing** - No `|| true`, no admin overrides
 - **Fast feedback** - CI completes in <10 minutes
 - **Actionable errors** - Clear messages on gate failures
-
-**Remember**: "CI gates are the last line of defense before production. Never bypass them."
-
-**Impact**: 70% fewer production bugs, consistent code quality, faster code reviews, confident deployments.
-
----
-
-**Example Gate Configuration (Python):**
-
-```yaml
-# .github/workflows/ci.yml
-name: CI Gates
-
-on: [pull_request]
-
-jobs:
-  quality:
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v3
-      - uses: actions/setup-python@v4
-        with:
-          python-version: '3.11'
-      - run: pip install ruff mypy pytest pytest-cov
-      - run: ruff check src/  # Gate 1: Linting
-      - run: mypy src/ --strict  # Gate 2: Type safety
-      - run: pytest tests/ -v  # Gate 3: Tests
-      - run: pytest --cov=src --cov-fail-under=80  # Gate 4: Coverage
-
-  security:
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v3
-      - uses: semgrep/semgrep-action@v1  # Gate 5: Security
-        with:
-          config: p/security-audit
-```
-
-**Branch Protection (GitHub):**
-```
-Settings -> Branches -> main
-✅ Require status checks to pass
-  ✅ quality
-  ✅ security
-✅ Require branches be up to date
-✅ Do not allow bypassing
-```

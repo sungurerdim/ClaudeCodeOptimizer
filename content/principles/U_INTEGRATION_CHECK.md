@@ -31,30 +31,6 @@ Zero orphaned code. Every function called, every import used, every file referen
 - **Runtime surprises** - Integration issues discovered in production
 - **Import hell** - Circular dependencies, missing imports
 
-### Business Value
-- **90% fewer runtime errors** - Catch integration issues at build time
-- **50% faster debugging** - Know all code paths are connected
-- **Smaller bundles** - Remove unused code reduces deployment size
-- **Better reliability** - Verified integrations = predictable behavior
-- **Faster onboarding** - New developers see only code actually used
-
-### Technical Benefits
-- **No dead code** - Every line has purpose
-- **Clear dependencies** - Know what depends on what
-- **Type safety preserved** - Integration verified at compile time
-- **Refactoring confidence** - Know what breaks when changing code
-- **Build-time verification** - Catch issues before deployment
-
-### Industry Evidence
-- **TypeScript**: Strict mode catches integration issues at compile time
-- **Tree shaking**: Requires complete import analysis for dead code elimination
-- **Rust**: Compiler errors on unused code by default
-- **Go**: `unused` linter is standard practice
-
----
-
-## How
-
 ### Core Checks
 
 **Every change MUST verify:**
@@ -324,34 +300,8 @@ jobs:
 
 ---
 
-## Cross-References
-
-**Related Principles:**
-- **U_EVIDENCE_BASED** - Integration checks provide evidence
-- **U_FAIL_FAST** - Integration failures should fail builds immediately
-- **U_TEST_FIRST** - Tests verify integration
-- **P_TEST_COVERAGE** - Coverage metrics show integration gaps
-- **P_LINTING_SAST** - Linters enforce integration checks
-- **P_TYPE_SAFETY** - Type systems verify integration
-
----
-
-## Industry Standards Alignment
-
-- **TypeScript Strict Mode** - Enforces complete integration checking
-- **Rust Compiler** - Errors on unused code by default
-- **Go Build** - Fails on unused imports
-- **Tree Shaking** - Requires integration analysis for dead code elimination
-- **Static Analysis Tools** - Industry standard for integration verification
-
----
-
 ## Summary
 
 **Complete Integration Check** means verifying every function is called, every import is used, and every reference is valid. Zero orphaned code, zero broken integrations.
 
 **Core Rule**: If it's not integrated (called, imported, referenced), remove it or fix the integration.
-
-**Remember**: "Unused code is tech debt. Broken integrations are ticking time bombs."
-
-**Impact**: 90% fewer runtime errors, smaller bundles, clearer codebase, refactoring confidence.

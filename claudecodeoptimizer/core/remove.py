@@ -101,7 +101,6 @@ class CCORemover:
             ("<!-- CCO_AGENTS_START -->", "<!-- CCO_AGENTS_END -->"),
             ("<!-- CCO_COMMANDS_START -->", "<!-- CCO_COMMANDS_END -->"),
             ("<!-- CCO_GUIDES_START -->", "<!-- CCO_GUIDES_END -->"),
-            ("<!-- CCO_CLAUDE_START -->", "<!-- CCO_CLAUDE_END -->"),
         ]
 
         for start, end in markers:

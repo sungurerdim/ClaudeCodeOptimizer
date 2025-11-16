@@ -31,30 +31,6 @@ Keep dependencies updated and scan for vulnerabilities. Lock versions, audit reg
 - **Supply chain attacks** - Malicious packages (event-stream, ua-parser-js)
 - **License violations** - Incompatible licenses create legal risk
 
-### Business Value
-- **80% fewer security incidents** - Proactive vulnerability management
-- **60% lower maintenance costs** - Regular small updates vs big painful ones
-- **Compliance readiness** - Auditable dependency inventory
-- **Reduced legal risk** - License compliance enforced
-- **Faster feature delivery** - Modern dependencies have better APIs
-
-### Technical Benefits
-- **Security** - Vulnerabilities patched before exploitation
-- **Stability** - Lock files ensure reproducible builds
-- **Compatibility** - Regular updates prevent version conflicts
-- **Performance** - Newer versions often faster
-- **Developer experience** - Modern APIs easier to use
-
-### Industry Evidence
-- **Equifax breach (2017)** - Unpatched Apache Struts vulnerability
-- **Log4Shell (2021)** - Affected 93% of enterprise cloud environments
-- **OWASP Top 10** - "Using Components with Known Vulnerabilities" is #6
-- **Sonatype 2023 Report** - 245,000 malicious packages detected
-
----
-
-## How
-
 ### Core Practices
 
 **Every project MUST:**
@@ -390,32 +366,8 @@ echo "dependencies_with_vulnerabilities $(npm audit --json | jq '.metadata.vulne
 
 ---
 
-## Cross-References
-
-**Related Principles:**
-- **P_SUPPLY_CHAIN_SECURITY** - Broader supply chain security practices
-- **U_EVIDENCE_BASED** - Dependency audits provide security evidence
-- **P_CI_GATES** - CI enforces dependency security checks
-- **P_AUDIT_LOGGING** - Log dependency changes for compliance
-
----
-
-## Industry Standards Alignment
-
-- **OWASP Top 10** - A06:2021 Vulnerable and Outdated Components
-- **NIST SSDF** - Secure Software Development Framework (dependency management)
-- **CIS Controls** - Control 2: Inventory and Control of Software Assets
-- **SLSA** - Supply-chain Levels for Software Artifacts (provenance)
-- **SBOM** - Software Bill of Materials (dependency inventory)
-
----
-
 ## Summary
 
 **Dependency Management** means keeping dependencies updated, scanning for vulnerabilities, locking versions, and auditing licenses. Proactive management prevents security incidents and technical debt.
 
 **Core Rule**: Lock versions, scan weekly, update monthly, audit constantly.
-
-**Remember**: "Your security is only as strong as your weakest dependency."
-
-**Impact**: 80% fewer security incidents, 60% lower maintenance costs, compliance readiness.

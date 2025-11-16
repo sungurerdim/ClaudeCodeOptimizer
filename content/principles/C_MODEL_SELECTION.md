@@ -31,30 +31,6 @@ Choose appropriate Claude model (Haiku/Sonnet/Opus) based on task complexity. Op
 - **Performance issues** - Slower models when fast ones suffice
 - **Quality problems** - Insufficient reasoning capacity for complex tasks
 
-### Business Value
-- **70% cost reduction** - Haiku for simple tasks vs always using Opus
-- **3x faster execution** - Haiku completes simple tasks in 1/3 the time
-- **Better quality** - Appropriate model for task complexity
-- **Optimal resource usage** - Right tool for the job
-- **Predictable costs** - Systematic model selection strategy
-
-### Technical Benefits
-- **Fast feedback** - Haiku for quick iterations
-- **Deep reasoning** - Opus for architectural decisions
-- **Balanced performance** - Sonnet for most development work
-- **Parallel efficiency** - Multiple Haiku agents vs one Opus
-- **Cost control** - Budget-conscious development
-
-### Industry Evidence
-- **OpenAI pricing tiers** - GPT-3.5 vs GPT-4 model selection
-- **AWS/GCP model selection** - Right instance type for workload
-- **Netflix Chaos Engineering** - Right tool for testing level
-- **Google SRE** - Appropriate monitoring granularity
-
----
-
-## How
-
 ### Model Capabilities
 
 #### Haiku (Fast, Cost-Effective)
@@ -358,16 +334,6 @@ All models work with all languages, but complexity drives selection:
 
 ---
 
-## Cross-References
-
-**Related Principles:**
-- **C_PARALLEL_AGENTS** - Use multiple Haiku agents for parallelization
-- **C_AGENT_ORCHESTRATION_PATTERNS** - Efficient agent execution patterns
-- **C_CONTEXT_WINDOW_MGMT** - Optimize context for model selection
-- **C_TOKEN_OPTIMIZATION** - Minimize token usage across all models
-
----
-
 ## Summary
 
 **Model Selection Strategy** means choosing the appropriate Claude model (Haiku/Sonnet/Opus) based on task complexity to optimize cost and performance.
@@ -376,7 +342,3 @@ All models work with all languages, but complexity drives selection:
 - **Haiku**: Mechanical, simple, scriptable tasks (fast, cheap)
 - **Sonnet**: Typical development work (default, balanced)
 - **Opus**: Complex reasoning, architecture, novel problems (rare, expensive)
-
-**Remember**: "Right model for the job - not too powerful, not too weak."
-
-**Impact**: 70% cost reduction, 3x faster simple tasks, optimal resource usage.

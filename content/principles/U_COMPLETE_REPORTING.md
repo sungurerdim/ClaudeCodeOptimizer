@@ -63,4 +63,3 @@ When answering questions:
 - **U_EVIDENCE_BASED** (Evidence-Based Verification): Requires verifiable proof
 - **U_COMPLETE_REPORTING** (Complete Action Reporting): Requires precise location references
 - **U_EXPLICIT_COMPLETION** (Explicit Completion Criteria): Together ensure verifiable, locatable results
-

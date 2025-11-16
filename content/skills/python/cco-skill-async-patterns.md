@@ -1,9 +1,16 @@
 ---
+title: Python Async Patterns Skill
+category: performance
+description: asyncio, async/await, concurrency patterns
 metadata:
   name: "Python Async Patterns"
   activation_keywords: ["async", "await", "asyncio", "coroutine", "concurrent"]
   category: "language-python"
+  language: "python"
 principles: ['P_ASYNC_IO', 'U_FAIL_FAST', 'P_GRACEFUL_SHUTDOWN', 'U_EVIDENCE_BASED']
+use_cases:
+  project_purpose: [backend, microservice, data-pipeline, web-app]
+  project_maturity: [active-dev, production]
 ---
 
 # Python Async Patterns
@@ -36,106 +43,13 @@ Master async/await patterns and asyncio best practices for writing concurrent Py
 <!-- RESOURCES: Load on explicit request -->
 ## Examples & Resources
 
-**Basic Async Function:**
-```python
-import asyncio
-
-async def fetch_data(url: str) -> dict:
-    await asyncio.sleep(1)  # Simulated I/O
-    return {"url": url, "data": "..."}
-
-async def main():
-    result = await fetch_data("https://api.example.com")
-    print(result)
-
-asyncio.run(main())
-```
-
-**Concurrent Execution with gather:**
-```python
-async def fetch_multiple():
-    urls = ["url1", "url2", "url3"]
-    results = await asyncio.gather(
-        *[fetch_data(url) for url in urls],
-        return_exceptions=True  # Continue if one fails
-    )
-    return results
-```
-
-**Task Management with create_task:**
-```python
-async def background_tasks():
-    # Start task immediately, don't wait
-    task1 = asyncio.create_task(fetch_data("url1"))
-    task2 = asyncio.create_task(fetch_data("url2"))
-
-    # Do other work here
-    await asyncio.sleep(0.5)
-
-    # Wait for results when needed
-    result1 = await task1
-    result2 = await task2
-```
-
-**Error Handling:**
-```python
-async def safe_fetch(url: str):
-    try:
-        async with asyncio.timeout(5.0):  # Python 3.11+
-            return await fetch_data(url)
-    except asyncio.TimeoutError:
-        return {"error": "timeout"}
-    except Exception as e:
-        return {"error": str(e)}
-```
-
-**Async Context Manager:**
-```python
-class AsyncDatabase:
-    async def __aenter__(self):
-        self.conn = await connect_db()
-        return self
-
-    async def __aexit__(self, exc_type, exc_val, exc_tb):
-        await self.conn.close()
-
-async def use_db():
-    async with AsyncDatabase() as db:
-        await db.query("SELECT * FROM users")
-```
-
-**Testing Async Code (pytest-asyncio):**
-```python
-import pytest
-
-@pytest.mark.asyncio
-async def test_fetch_data():
-    result = await fetch_data("test_url")
-    assert result["url"] == "test_url"
-
-@pytest.fixture
-async def db_connection():
-    conn = await create_connection()
-    yield conn
-    await conn.close()
-```
-
-**Mixing Blocking and Async:**
-```python
-import asyncio
-from concurrent.futures import ThreadPoolExecutor
-
-def blocking_io():
-    # Legacy blocking code
-    time.sleep(2)
-    return "result"
-
-async def async_wrapper():
-    # Run blocking code in thread pool
-    loop = asyncio.get_running_loop()
-    result = await loop.run_in_executor(None, blocking_io)
-    return result
-```
+**Key Examples:**
+- Basic: `async def`, `await`, `asyncio.run()`
+- Concurrency: `asyncio.gather()`, `asyncio.create_task()`
+- Error handling: `asyncio.timeout()`, try/except
+- Async context: `async with AsyncDatabase() as db:`
+- Testing: `@pytest.mark.asyncio` decorator
+- Blocking code: `loop.run_in_executor(None, blocking_func)`
 
 **Performance Tips:**
 - Use `asyncio.TaskGroup()` (Python 3.11+) for structured concurrency

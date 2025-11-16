@@ -34,31 +34,6 @@ Never suggest git commands (add, commit, push) or commit messages unless explici
 - **Premature Commits** - User may want to batch multiple changes before committing
 - **Branch Strategy Ignorance** - AI doesn't know if user is on feature branch, main, or experimental branch
 
-### Business Value
-
-- **Respects user autonomy** - User maintains full control over git workflow
-- **Team alignment** - Doesn't conflict with team's git practices
-- **Flexibility** - User can commit when ready, not when AI suggests
-- **Prevents errors** - Avoids premature commits or wrong branch commits
-
-### Technical Benefits
-
-- **User-controlled timing** - Commits happen when user has verified changes
-- **Proper commit atomicity** - User groups changes logically, not arbitrarily
-- **Branch management** - User commits to correct branch at correct time
-- **Workflow alignment** - Respects project's specific git workflow
-
-### Industry Evidence
-
-- **Developer Surveys** - 90% of developers have specific git workflow preferences
-- **Team Practices** - Git workflows vary: GitFlow, GitHub Flow, trunk-based, etc.
-- **Commit Convention Tools** - Teams use Conventional Commits, signed commits, etc.
-- **Code Review** - Commit timing often tied to PR creation and review readiness
-
----
-
-## How
-
 ### Core Techniques
 
 **1. Never Suggest Git Commands**
@@ -399,23 +374,6 @@ Raises ValueError on invalid format.
 
 ---
 
-## Cross-References
-
-**Related Principles:**
-
-- **C_NO_UNSOLICITED_TESTS** - Similar "ask first" philosophy
-- **C_NO_PROACTIVE_DOCS** - Don't create artifacts without request
-- **U_ATOMIC_COMMITS** - When user DOES commit, make commits atomic
-- **U_CONCISE_COMMITS** - When user requests commit messages, make them concise
-
-**Workflow Integration:**
-- After changes: Report what was done, don't suggest commits
-- If user has `/commit` slash command: Follow that workflow
-- For PR creation: Only when explicitly requested
-- Never assume user's git workflow or branch strategy
-
----
-
 ## Summary
 
 **No Git Commit Suggestions** means never suggesting git commands (add, commit, push) or commit messages unless user explicitly requests them. Report changes clearly, let user control git workflow timing and execution.
@@ -427,45 +385,3 @@ Raises ValueError on invalid format.
 - **Report changes clearly** - List files and describe modifications
 - **Respect user autonomy** - User decides when to commit, not AI
 - **When requested** - Provide full git assistance when user explicitly asks
-
-**Remember**: "Report changes. Let user git. Only assist with git when explicitly requested."
-
-**Impact**: Respects user workflow control, prevents premature commits, aligns with team practices, maintains user autonomy.
-
----
-
-**Valid Git Requests:**
-- ✅ "Commit these changes"
-- ✅ "Create a commit with message X"
-- ✅ "/commit" (documented slash command)
-- ✅ "Push and create PR"
-- ✅ "Help me write a commit message"
-
-**NOT Valid (Report, Don't Suggest):**
-- ❌ User doesn't mention git
-- ❌ "I'll probably commit later" (thinking, not requesting)
-- ❌ Silence after implementation (report changes, no git)
-
----
-
-**Completion Report Template:**
-```
-[Feature/Fix] complete!
-
-Modified files:
-- path/to/file1.py ([description])
-- path/to/file2.py ([description])
-
-Added files:
-- path/to/new_file.py ([description])
-
-Test status: [All passing / Added X tests / etc.]
-
-[Any additional relevant information]
-```
-
-**Don't add:**
-- ❌ "git add ..."
-- ❌ "git commit ..."
-- ❌ "Suggested commit message: ..."
-- ❌ "Next steps: push to remote..."

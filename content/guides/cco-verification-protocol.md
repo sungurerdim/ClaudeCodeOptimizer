@@ -1,3 +1,15 @@
+---
+title: Verification Protocol
+category: quality
+tags: [verification, testing, evidence, quality]
+description: Evidence-based verification workflow for all changes
+use_cases:
+  development_philosophy: [quality_first]
+  project_maturity: [production, legacy, active-dev]
+  team_dynamics: [small-2-5, medium-10-20, large-20-50]
+  testing_approach: [comprehensive, balanced]
+---
+
 # Verification Protocol
 
 **Load on-demand when:** Verification-related tasks, completion checks
@@ -6,10 +18,6 @@
 
 ## The Rule
 
-**Related Principles:**
-- **U_EVIDENCE_BASED**: Evidence-based verification is mandatory
-- **U_CHANGE_VERIFICATION**: Verify all changes before claiming completion
-- **U_EXPLICIT_COMPLETION**: Define and verify completion criteria
 
 **BEFORE claiming any work is complete:**
 
@@ -54,23 +62,9 @@
 
 ## Language to Avoid
 
-**Related Principles:**
-- **U_COMPLETE_REPORTING**: Report actual results, not assumptions
-- **U_NO_OVERENGINEERING**: Simple, direct verification
+Never: "should work", "looks correct", "appears to", "seems", "probably", "might be"
 
-**Never use**:
-- "should work"
-- "looks correct"
-- "appears to"
-- "seems like"
-- "probably"
-- "might be"
-
-**Always show**:
-- Command output
-- Exit codes
-- Actual results
-- Specific counts (e.g., "34/34 passed", not "tests pass")
+Always show: Command output, exit codes, actual results, specific counts
 
 ---
 
@@ -78,9 +72,6 @@
 
 ### Code Changes
 
-**Related Principles:**
-- **U_TEST_FIRST**: Write tests to verify behavior
-- **U_ATOMIC_COMMITS**: Commit only verified changes
 
 ```bash
 # After implementing a feature
@@ -114,10 +105,6 @@ python -m py_compile module.py
 
 ### Quality Checks
 
-**Related Principles:**
-- **P_TEST_COVERAGE**: Verify test coverage targets
-- **P_LINTING_SAST**: Enforce linting and static analysis
-- **P_CI_GATES**: Same checks as CI pipeline
 
 ```bash
 # After code cleanup
@@ -137,36 +124,8 @@ mypy src/
 
 ## Why This Matters
 
-**Related Principles:**
-- **U_INTEGRATION_CHECK**: Verify integration with full system
-- **P_TEST_PYRAMID**: Balance unit, integration, and end-to-end tests
-- **U_MINIMAL_TOUCH**: Focus verification on what changed
-
 1. **Trust**: Verifiable claims build confidence
-2. **Debugging**: If something breaks, you have proof it worked before
-3. **Accountability**: Evidence shows work was actually done
-4. **Reproducibility**: Others can verify your results
+2. **Debugging**: Proof it worked before simplifies troubleshooting
+3. **Accountability**: Evidence shows work was done
+4. **Reproducibility**: Others can verify results
 5. **Learning**: Shows the *how*, not just the *what*
-
----
-
-## Principle References
-
-This guide incorporates the following CCO principles:
-
-**Universal Principles:**
-- **U_EVIDENCE_BASED**: Evidence-Based Verification → `.claude/principles/U_EVIDENCE_BASED.md`
-- **U_CHANGE_VERIFICATION**: Change Verification Protocol → `.claude/principles/U_CHANGE_VERIFICATION.md`
-- **U_TEST_FIRST**: Test-First Development → `.claude/principles/U_TEST_FIRST.md`
-- **U_ATOMIC_COMMITS**: Atomic Commits → `.claude/principles/U_ATOMIC_COMMITS.md`
-- **U_INTEGRATION_CHECK**: Complete Integration Check → `.claude/principles/U_INTEGRATION_CHECK.md`
-- **U_COMPLETE_REPORTING**: Complete Action Reporting → `.claude/principles/U_COMPLETE_REPORTING.md`
-- **U_EXPLICIT_COMPLETION**: Explicit Completion Criteria → `.claude/principles/U_EXPLICIT_COMPLETION.md`
-- **U_NO_OVERENGINEERING**: No Overengineering → `.claude/principles/U_NO_OVERENGINEERING.md`
-- **U_MINIMAL_TOUCH**: Minimal Touch Policy → `.claude/principles/U_MINIMAL_TOUCH.md`
-
-**Testing & Quality Principles:**
-- **P_TEST_COVERAGE**: Test Coverage Targets → `.claude/principles/P_TEST_COVERAGE.md`
-- **P_TEST_PYRAMID**: Test Pyramid → `.claude/principles/P_TEST_PYRAMID.md`
-- **P_CI_GATES**: CI Gates → `.claude/principles/P_CI_GATES.md`
-- **P_LINTING_SAST**: Linting & SAST Enforcement → `.claude/principles/P_LINTING_SAST.md`

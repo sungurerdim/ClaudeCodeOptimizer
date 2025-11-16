@@ -32,30 +32,6 @@ Write clear, focused commit messages. Subject line explains WHAT changed. Body e
 - **Wasted review time** - Reviewers spend time figuring out intent
 - **Lost knowledge** - Future developers can't understand decisions
 
-### Business Value
-- **80% faster code review** - Clear intent = faster approval
-- **50% faster onboarding** - New developers understand history
-- **Better debugging** - `git blame` reveals WHY code exists
-- **Preserved context** - Decisions documented in commit messages
-- **Easier audits** - Compliance requirements met through clear history
-
-### Technical Benefits
-- **Self-documenting code** - Commit messages explain changes
-- **Better `git log`** - Scanning history actually useful
-- **Effective `git blame`** - Understand why line was added
-- **Changelog generation** - Auto-generate from commit messages
-- **Release notes** - Commits describe features/fixes
-
-### Industry Evidence
-- **Conventional Commits** - Standard format for semantic versioning
-- **Linux Kernel** - Strict 50/72 format enforced
-- **Angular Commit Guidelines** - Used by thousands of projects
-- **Semantic Release** - Automates versioning from commit messages
-
----
-
-## How
-
 ### Format: Subject + Body
 
 ```
@@ -340,31 +316,8 @@ npm install --save-dev @commitlint/{cli,config-conventional}
 
 ---
 
-## Cross-References
-
-**Related Principles:**
-- **U_ATOMIC_COMMITS** - Concise messages require atomic commits
-- **U_MINIMAL_TOUCH** - Smaller changes = easier to describe
-- **U_EVIDENCE_BASED** - Commit message claims should match reality
-
----
-
-## Industry Standards Alignment
-
-- **Conventional Commits** - Standardized semantic format
-- **Semantic Versioning** - Commit types drive version bumps
-- **Angular Commit Guidelines** - Industry-standard format
-- **Linux Kernel** - 50/72 rule enforced
-- **Git Best Practices** - Imperative mood, clear subjects
-
----
-
 ## Summary
 
 **Concise Commit Messages** means clear, focused messages that explain WHAT changed (subject) and WHY (body). Follow Conventional Commits format for consistency.
 
 **Core Rule**: Subject = WHAT (50 chars). Body = WHY (72 chars/line). Imperative mood.
-
-**Remember**: "Future you will thank present you for clear commit messages."
-
-**Impact**: 80% faster code review, 50% faster onboarding, preserved project knowledge.

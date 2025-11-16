@@ -32,31 +32,6 @@ When debugging, always trace to source. Fix at source, not symptom.
 - **Recurring bugs** waste time fixing the same issue repeatedly
 - **Cascading failures** occur when root cause spreads to other areas
 
-### Business Value
-- **90% reduction in recurring bugs** (fix once, fixed forever)
-- **70% less debugging time** overall (invest upfront, save massively later)
-- **Prevents escalation** - stop small bugs before they become P0 incidents
-- **Improves reliability** - systems without root causes are stable
-- **Reduces technical debt** - no band-aids piling up
-
-### Technical Benefits
-- **Single source of truth** - fix propagates everywhere automatically
-- **Prevents related bugs** - root cause fix often prevents future similar issues
-- **Cleaner codebase** - no workarounds cluttering logic
-- **Confident deployment** - know issue is truly resolved
-- **Knowledge building** - understanding root causes builds system expertise
-
-### Industry Evidence
-- **Toyota 5 Whys** - Legendary lean manufacturing methodology
-- **Google SRE** - "Focus on root cause, not symptoms" (SRE handbook)
-- **Netflix Chaos Engineering** - Find root causes before they find you
-- **Amazon Root Cause Analysis (RCA)** - Required for all P0/P1 incidents
-- **Microsoft postmortem culture** - "True root cause" mandatory field
-
----
-
-## How
-
 ### The 5 Whys Technique
 
 **Ask "Why?" five times to drill down from symptom to root cause:**
@@ -501,35 +476,6 @@ with UserEventListener(user) as listener:
 
 ---
 
-## Cross-References
-
-**Related Principles:**
-- **U_EVIDENCE_BASED** - Root cause requires evidence, not assumptions
-- **U_FAIL_FAST** - Fast failure helps isolate root cause quickly
-- **U_TEST_FIRST** - TDD helps identify root cause during development
-- **U_INTEGRATION_CHECK** - Integration issues often reveal root causes
-- **P_AUDIT_LOGGING** - Logs enable root cause analysis
-- **P_OBSERVABILITY_WITH_OTEL** - Tracing helps identify root causes
-- **P_CONTINUOUS_PROFILING** - Performance root causes found through profiling
-
-**Enables:**
-- **U_CHANGE_VERIFICATION** - Verifying root cause fix resolves all symptoms
-- **U_DRY** - Fixing root cause once eliminates duplicate symptom fixes
-
----
-
-## Industry Standards Alignment
-
-- **Toyota 5 Whys** - Lean manufacturing root cause methodology
-- **Six Sigma DMAIC** - Define, Measure, Analyze, Improve, Control
-- **ITIL Incident Management** - Root cause analysis required for major incidents
-- **Google SRE Practices** - Postmortem culture with root cause requirement
-- **Amazon COE (Correction of Error)** - 5 Whys mandatory for all incidents
-- **ISO/IEC 27001** - Root cause analysis for security incidents
-- **Kepner-Tregoe Problem Solving** - Systematic root cause identification
-
----
-
 ## Tools and Techniques
 
 ### Python
@@ -608,7 +554,3 @@ log.Printf("Checkpoint: value=%v", value)  // Trace execution
 **Root Cause Analysis** means always tracing from symptom to underlying cause and fixing at the source. Use the 5 Whys technique to drill down systematically.
 
 **Core Rule**: Fix the disease, not the symptoms.
-
-**Remember**: "Band-aids accumulate. Root cause fixes compound."
-
-**Impact**: 90% reduction in recurring bugs, 70% less overall debugging time, permanent solutions instead of temporary patches.

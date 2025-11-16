@@ -35,34 +35,6 @@ Make minimal, surgical changes. Only modify what's strictly necessary to complet
 - **Merge Conflicts** - More changes = higher likelihood of conflicts with other work
 - **Testing Scope Creep** - Unrelated changes expand what needs testing
 
-### Business Value
-
-- **Faster reviews** - Minimal diffs are reviewed 5-10x faster than bloated changes
-- **Lower risk** - Touching only necessary code minimizes bug introduction
-- **Easier rollback** - Focused changes can be reverted cleanly if needed
-- **Faster deployment** - Smaller changes move through CI/CD pipeline faster
-- **Better traceability** - Git blame shows exact reason for each change
-
-### Technical Benefits
-
-- **Clear diff** - Reviewers immediately see what changed and why
-- **Reduced risk** - Working code stays untouched, minimizing regression risk
-- **Surgical precision** - Changes are exact and intentional, not broad-stroke
-- **Easy debugging** - If issues arise, minimal changes = faster root cause identification
-- **Simple rollback** - Focused commits revert cleanly without side effects
-
-### Industry Evidence
-
-- **Code Review Studies** - Diffs >400 lines see 70% drop in defect detection rate
-- **Google Engineering** - "Small CLs" policy: changes should be reviewable in <30 minutes
-- **Linux Kernel** - Linus Torvalds rejects patches that mix functional changes with style fixes
-- **Microsoft DevOps** - Teams with small PRs deploy 60x more frequently
-- **Industry Best Practice** - "One logical change per commit" is universal guideline
-
----
-
-## How
-
 ### Core Techniques
 
 **1. Surgical Edits Only**
@@ -456,24 +428,6 @@ Edit("users.py",
 
 ---
 
-## Cross-References
-
-**Related Principles:**
-
-- **U_MINIMAL_TOUCH** - Universal version of this principle
-- **C_PREFER_EDITING** - Edit files instead of rewriting (naturally minimal)
-- **U_ATOMIC_COMMITS** - One logical change aligns with atomic commits
-- **C_PRODUCTION_GRADE** - Minimal changes reduce risk, maintain production quality
-- **C_FOLLOW_PATTERNS** - Following patterns avoids unnecessary reformatting
-
-**Workflow Integration:**
-- Use Edit tool for surgical changes
-- Use Read with offset/limit to see exact code to change
-- Keep commits focused on single logical change
-- Save refactoring for separate, explicit requests
-
----
-
 ## Summary
 
 **Minimal Touch Policy** means making surgical, targeted changes to only what's strictly necessary. Don't refactor unrelated code, don't fix style, don't rename unless explicitly requested. Small, focused changes are safer, faster to review, and easier to roll back.
@@ -485,22 +439,3 @@ Edit("users.py",
 - **No style fixes** - Ignore style issues unless specifically requested
 - **One logical change** - Fix bug OR add feature OR refactor, not mixed
 - **No "while I'm here"** - Resist opportunistic improvements
-
-**Remember**: "Touch only what's necessary. Small diffs are safe diffs. Every line changed is a line at risk."
-
-**Impact**: 5-10x faster reviews, lower bug risk, easier rollback, clearer git history, faster deployment.
-
----
-
-**Diff Size Guidelines:**
-- ✅ **1-50 lines**: Ideal - fast review, low risk
-- ⚠️ **50-200 lines**: Acceptable - verify all necessary
-- 🔴 **200+ lines**: Too large - likely includes unnecessary changes
-
-**When to Touch More:**
-- ✅ User explicitly requests refactoring
-- ✅ Task genuinely requires broad changes (e.g., rename API across codebase)
-- ✅ Documented standard (e.g., "always update tests with code changes")
-- ❌ "While I'm here" improvements
-- ❌ Opportunistic style fixes
-- ❌ Unrequested optimizations

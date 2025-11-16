@@ -35,33 +35,6 @@ Never create files unless absolutely necessary for achieving the task goal. Alwa
 - **Maintenance Burden** - Every file requires ongoing maintenance, even if barely used
 - **Git History Noise** - Unnecessary files clutter git history and blame logs
 
-### Business Value
-
-- **Cleaner codebase** - Only essential files exist; project structure is minimal and purposeful
-- **Faster reviews** - Fewer unnecessary files = faster code reviews
-- **Better onboarding** - New developers see only necessary files, not clutter
-- **Reduced maintenance** - Fewer files = less to maintain, update, and refactor
-- **Clearer intent** - File creation signals genuine new functionality, not convenience
-
-### Technical Benefits
-
-- **Minimal structure** - Codebase contains only essential files
-- **Edit-first mindset** - Forces consideration of existing solutions before creating
-- **Less fragmentation** - Related functionality stays together in existing files
-- **Simpler navigation** - Fewer files = faster navigation and search
-- **Version control clarity** - Git history shows real growth, not file proliferation
-
-### Industry Evidence
-
-- **Codebase Health Studies** - Projects with strict file creation policies grow 50% slower while delivering same features
-- **Review Efficiency** - Teams report 30% faster code reviews when file creation is minimized
-- **Developer Productivity** - Developers navigate minimal codebases 40% faster
-- **Google/Microsoft Guidelines** - Both emphasize "edit existing over create new" in style guides
-
----
-
-## How
-
 ### Core Techniques
 
 **1. Before Creating ANY File, Ask These Questions:**
@@ -312,24 +285,6 @@ Write("API_DOCS.md", api_reference)
 
 ---
 
-## Cross-References
-
-**Related Principles:**
-
-- **C_PREFER_EDITING** - Always prefer editing over creating
-- **C_NO_PROACTIVE_DOCS** - Specifically addresses documentation files
-- **U_MINIMAL_TOUCH** - Minimize changes, including new file creation
-- **C_GREP_FIRST_SEARCH_STRATEGY** - Search existing before creating
-- **U_DRY** - Creating new files often duplicates existing functionality
-
-**Workflow Integration:**
-- Use Grep/Glob to search before creating
-- Ask user before creating documentation files
-- Prefer Edit tool over Write tool
-- Document in commit why new files were necessary
-
----
-
 ## Summary
 
 **No Unnecessary File Creation** means never creating files unless absolutely necessary. Always prefer editing existing files, and only create when genuinely required for new functionality, architectural separation, or explicit user request.
@@ -341,25 +296,3 @@ Write("API_DOCS.md", api_reference)
 - **Ask for docs** - Never create documentation files without user request
 - **No temp files** - Never create temporary, debug, or experimental files
 - **Justify creation** - Every new file should be necessary for the task
-
-**Remember**: "Every new file is a commitment. Edit existing files. Create only when genuinely necessary."
-
-**Impact**: Cleaner codebase, faster reviews (30%), better onboarding, reduced maintenance burden, clearer intent.
-
----
-
-**Creation Decision Tree:**
-```
-Need to add functionality
-  ↓
-Does similar file exist?
-  Yes → Edit existing file ✅
-  No → ↓
-Is this >50 lines AND new domain?
-  Yes → ↓
-  No → Add to closest existing file ✅
-      ↓
-Did user explicitly request new file?
-  Yes → Create (document why) ✅
-  No → Add to existing file ✅
-```

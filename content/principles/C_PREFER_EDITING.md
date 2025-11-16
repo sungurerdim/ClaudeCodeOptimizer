@@ -35,34 +35,6 @@ Always prefer editing existing files over creating new ones. Search for existing
 - **Navigation Overhead** - More files = more time searching and navigating the codebase
 - **Merge Conflicts** - New files are less likely to conflict, hiding integration issues that edits would surface
 
-### Business Value
-
-- **50-70% reduced codebase growth** - Editing instead of creating slows file proliferation by 50-70%
-- **Faster reviews** - Edits show diff context; reviewers see what changed vs what's new
-- **Better discoverability** - Functionality concentrated in fewer files is easier to find
-- **Reduced onboarding time** - New developers navigate fewer, more cohesive files
-- **Lower maintenance cost** - Fewer files = less complexity = easier maintenance
-
-### Technical Benefits
-
-- **Consistency** - Editing keeps new code consistent with surrounding existing code
-- **Centralization** - Related logic stays together, improving cohesion
-- **Diff clarity** - Edits show clear before/after; new files show only "after"
-- **Test proximity** - Edit test files instead of creating separate test files
-- **Import simplification** - Fewer files = fewer imports = simpler dependency graph
-
-### Industry Evidence
-
-- **Linux Kernel** - Linus Torvalds: "Prefer modifying existing files; new files should be exceptional"
-- **Google Style Guides** - "Add to existing files unless new functionality genuinely warrants new file"
-- **Codebase Growth Studies** - Projects that favor editing grow 60% slower than projects that favor creating
-- **Review Efficiency** - Edits are reviewed 3-5x faster than equivalent new file creation
-- **Developer Productivity** - Developers spend 35% less time navigating codebases with fewer, more cohesive files
-
----
-
-## How
-
 ### Core Techniques
 
 **1. Search for Existing Files First**
@@ -177,7 +149,6 @@ Edit("src/utils/formatters.py",
     except json.JSONDecodeError as e:
         logger.error(f"JSON parse error: {e}")
         raise ValueError(f"Invalid JSON: {e}") from e
-
 
 def format_date(date: datetime, fmt: str = "%Y-%m-%d") -> str:
     \"\"\"Format datetime object as string.\"\"\"
@@ -418,24 +389,6 @@ tests/test_auth.py  # All authentication tests together
 
 ---
 
-## Cross-References
-
-**Related Principles:**
-
-- **U_DRY** - Editing prevents duplication; creating risks duplicate code
-- **C_NO_UNNECESSARY_FILES** - Creating unnecessarily violates this principle
-- **C_FOLLOW_PATTERNS** - Editing naturally follows existing patterns
-- **U_MINIMAL_TOUCH** - Editing changes less than creating
-- **C_GREP_FIRST_SEARCH_STRATEGY** - Search existing files before deciding to create
-
-**Workflow Integration:**
-- Use Grep to find existing files before creating
-- Use Read to understand existing file before editing
-- Use Edit (not Write) to modify existing files
-- Document in commit message why new files were created
-
----
-
 ## Summary
 
 **Prefer Editing Over Creating** means always searching for and editing existing files before creating new ones. Only create new files when editing is genuinely not viable due to size, architectural separation, or new domain concepts.
@@ -447,24 +400,3 @@ tests/test_auth.py  # All authentication tests together
 - **Create sparingly** - Only create when editing truly isn't viable
 - **Document creation** - Explain why new file was necessary
 - **Group cohesively** - Related functionality belongs in same file
-
-**Remember**: "Search first. Edit existing. Create only when necessary. One cohesive file beats many fragmented files."
-
-**Impact**: 50-70% reduced codebase growth, faster reviews (3-5x), better discoverability, lower maintenance cost, simpler navigation.
-
----
-
-**Decision Framework:**
-```
-New functionality needed
-  ↓
-Search for existing similar code (Grep/Glob)
-  Found? → Edit existing file ✅
-  Not found? → ↓
-Check if fits in related file (utils/, models/, etc.)
-  Fits? → Edit related file ✅
-  Doesn't fit? → ↓
-Would new file be >100 lines AND new domain?
-  Yes → Create new file (document why) ✅
-  No → Find closest existing file → Edit it ✅
-```

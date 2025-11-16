@@ -35,31 +35,6 @@ Never run tests, linters, formatters, or repository scans unless explicitly requ
 - **False Urgency** - Failing tests create pressure to fix immediately when user may have planned differently
 - **Configuration Conflicts** - User may have specific test/lint configurations not yet run
 
-### Business Value
-
-- **Respects user time** - User controls when tests run, not interrupted by unsolicited execution
-- **Workflow efficiency** - User can batch testing according to their development rhythm
-- **Resource control** - Expensive test suites (integration, E2E) run only when user decides
-- **Reduced friction** - No surprise failures or lint warnings disrupting flow state
-
-### Technical Benefits
-
-- **User-controlled timing** - Tests run when user is ready to address results
-- **Proper configuration** - User ensures correct test environment before running
-- **Batch efficiency** - User can run multiple test suites together (unit, integration, E2E)
-- **CI/CD alignment** - Local testing aligns with user's CI/CD strategy
-
-### Industry Evidence
-
-- **Developer Productivity Studies** - Unsolicited interruptions reduce productivity by 40-50%
-- **Flow State Research** - Developers need 15-20 minutes to regain focus after interruption
-- **Team Surveys** - 80% of developers prefer explicit control over when tests run
-- **Workflow Optimization** - Successful teams let developers choose testing cadence
-
----
-
-## How
-
 ### Core Techniques
 
 **1. Never Run Tests Unless Explicitly Requested**
@@ -379,23 +354,6 @@ Write("src/login.py", implementation)
 
 ---
 
-## Cross-References
-
-**Related Principles:**
-
-- **C_NO_PROACTIVE_DOCS** - Similar "ask first" philosophy for docs
-- **C_NO_UNNECESSARY_FILES** - Don't create test files without request
-- **U_EVIDENCE_BASED** - When user DOES request tests, provide full evidence
-- **U_TEST_FIRST** - If user wants TDD, they'll request it explicitly
-
-**Workflow Integration:**
-- After changes: Offer testing, don't execute
-- If user has documented workflow: Follow it
-- If tests requested: Run and report full results
-- Never assume user wants specific methodology (TDD, BDD, etc.)
-
----
-
 ## Summary
 
 **No Unsolicited Tests or Linters** means never running tests, linters, formatters, or scans unless user explicitly requests them. Always offer, never assume. Respect user's workflow control and timing preferences.
@@ -407,40 +365,3 @@ Write("src/login.py", implementation)
 - **Never auto-format** - Formatting modifies files; requires permission
 - **Offer, don't execute** - "Would you like me to run tests?" not running tests
 - **Respect documented workflows** - Follow established project testing processes
-
-**Remember**: "User controls when tests run. Offer testing as option. Never surprise with test results or lint warnings."
-
-**Impact**: Respects user time, maintains workflow efficiency, prevents unwanted interruptions, preserves flow state.
-
----
-
-**Testing Decision Tree:**
-```
-Changes complete
-  ↓
-Did user say "run tests" or "verify"?
-  Yes → Run tests ✅
-  No → ↓
-      ↓
-Is testing part of documented workflow?
-  Yes → Run tests ✅
-  No → ↓
-      ↓
-Offer testing
-  "Would you like me to run tests?"
-    User says Yes → Run tests ✅
-    User says No → Don't run ✅
-    No response → Don't run ✅
-```
-
-**Valid User Requests:**
-- ✅ "Run the tests"
-- ✅ "Verify the fix works"
-- ✅ "Check if tests pass"
-- ✅ "Run pytest"
-- ✅ "Lint the code"
-
-**NOT Valid (Offer Instead):**
-- ❌ User doesn't mention testing
-- ❌ "I wonder if tests pass" (thinking, not requesting)
-- ❌ Silence after implementation (offer, don't assume)

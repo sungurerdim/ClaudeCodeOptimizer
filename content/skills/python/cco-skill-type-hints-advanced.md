@@ -1,9 +1,16 @@
 ---
+title: Advanced Python Type Hints Skill
+category: quality
+description: mypy, typing, generics, protocols
 metadata:
   name: "Advanced Python Type Hints"
   activation_keywords: ["type", "typing", "generic", "protocol", "typevar"]
   category: "language-python"
+  language: "python"
 principles: ['P_TYPE_SAFETY', 'P_LINTING_SAST', 'U_FAIL_FAST', 'U_DRY']
+use_cases:
+  development_philosophy: [quality_first, balanced]
+  project_maturity: [active-dev, production, legacy]
 ---
 
 # Advanced Python Type Hints

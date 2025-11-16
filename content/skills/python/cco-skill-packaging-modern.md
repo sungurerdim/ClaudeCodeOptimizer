@@ -1,9 +1,16 @@
 ---
+title: Modern Python Packaging Skill
+category: infrastructure
+description: pyproject.toml, poetry, uv, packaging
 metadata:
   name: "Modern Python Packaging"
   activation_keywords: ["package", "pyproject", "uv", "poetry", "publish"]
   category: "language-python"
+  language: "python"
 principles: ['U_DEPENDENCY_MANAGEMENT', 'P_SUPPLY_CHAIN_SECURITY', 'P_SEMANTIC_VERSIONING', 'P_VERSION_MANAGEMENT']
+use_cases:
+  project_purpose: [library, cli, backend]
+  project_maturity: [active-dev, production]
 ---
 
 # Modern Python Packaging

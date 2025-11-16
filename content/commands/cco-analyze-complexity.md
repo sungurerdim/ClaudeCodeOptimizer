@@ -20,12 +20,7 @@ Analyze **${PROJECT_NAME}** cyclomatic complexity, detect code smells, and ident
 
 ## Objective
 
-Identify complex and problematic code:
-1. Calculate cyclomatic complexity for all functions/methods
-2. Detect code smells (long functions, god classes, etc.)
-3. Identify refactoring candidates
-4. Measure cognitive complexity
-5. Provide specific refactoring recommendations
+Identify complex and problematic code: cyclomatic complexity, code smells, refactoring candidates, and cognitive complexity.
 
 **Output:** Complexity report with prioritized refactoring targets.
 
@@ -52,25 +47,9 @@ Identify complex and problematic code:
 
 ---
 
-## When to Use
-
-**Use this command:**
-- Before major refactoring
-- During code reviews
-- To identify technical debt
-- When code becomes hard to maintain
-- For quality improvement initiatives
-
-**Critical for:**
-- Legacy codebases
-- High-churn files
-- Bug-prone modules
-
 ---
 
 ## Phase 1: Calculate Cyclomatic Complexity
-
-Measure decision point complexity:
 
 ```python
 import sys
@@ -246,8 +225,6 @@ print()
 
 ## Phase 2: Detect Code Smells
 
-Identify common anti-patterns:
-
 ```python
 print(f"=== Code Smell Detection ===\n")
 
@@ -348,8 +325,6 @@ for i, smell in enumerate(priority_smells[:10], 1):
 
 ## Phase 3: Cognitive Complexity
 
-Measure human readability:
-
 ```python
 print(f"=== Cognitive Complexity ===\n")
 
@@ -429,8 +404,6 @@ print()
 
 ## Phase 4: Detect Duplicate Code
 
-Find copy-paste code blocks:
-
 ```python
 print(f"=== Duplicate Code Detection ===\n")
 
@@ -494,8 +467,6 @@ else:
 
 ## Phase 5: Function Length Analysis
 
-Analyze function sizes:
-
 ```python
 print(f"=== Function Length Analysis ===\n")
 
@@ -542,8 +513,6 @@ print()
 ---
 
 ## Phase 6: Class Complexity (OOP)
-
-Analyze class complexity:
 
 ```python
 print(f"=== Class Complexity Analysis ===\n")
@@ -617,8 +586,6 @@ else:
 
 ## Phase 7: Refactoring Priority
 
-Prioritize refactoring targets:
-
 ```python
 print(f"=== Refactoring Priority ===\n")
 
@@ -683,8 +650,6 @@ for i, target in enumerate(refactoring_targets[:15], 1):
 ---
 
 ## Phase 8: Maintainability Index
-
-Calculate overall maintainability:
 
 ```python
 print(f"=== Maintainability Index ===\n")
@@ -756,8 +721,6 @@ if file_maintainability:
 
 ## Phase 9: Generate Recommendations
 
-Actionable improvement plan:
-
 ```python
 print(f"=== Recommendations ===\n")
 
@@ -822,104 +785,6 @@ for i, rec in enumerate(recommendations, 1):
 ```
 
 ---
-
-## Output Example
-
-```
-=== Cyclomatic Complexity Analysis ===
-
-Project: backend
-
-Analyzing 147 Python files...
-
-Functions Analyzed: 523
-Files Analyzed: 89
-
-Most Complex Functions:
- 1. process_payment_transaction        CC=34 [CRITICAL]
-    src/services/payment/processor.py:156 (187 lines)
- 2. validate_user_input                CC=28 [CRITICAL]
-    src/api/validators.py:45 (134 lines)
- 3. generate_report                    CC=22 [CRITICAL]
-    src/reports/generator.py:89 (156 lines)
-
-Most Complex Files:
- 1. src/services/payment/processor.py                  CC=145 (avg=12.1)
- 2. src/api/routes/orders.py                           CC=123 (avg=10.3)
- 3. src/models/User.py                                 CC=98 (avg=8.2)
-
-Complexity Distribution:
-1-5 (Simple)           342 (65.4%) ████████████████████████████████
-6-10 (Moderate)        128 (24.5%) ████████████
-11-20 (Complex)         43 ( 8.2%) ████
-21+ (Very Complex)      10 ( 1.9%) █
-
-=== Code Smell Detection ===
-
-Code Smells Detected: 47
-
-CRITICAL: 8 smells
-  - High Complexity: 8
-HIGH: 23 smells
-  - Long Function: 12
-  - High Complexity: 11
-MEDIUM: 16 smells
-  - Too Many Parameters: 16
-
-Top Priority Smells:
- 1. [CRITICAL] High Complexity
-    Location: src/services/payment/processor.py:156
-    Function: process_payment_transaction (CC=34)
-    Fix: Simplify logic, reduce branching, extract methods
-
- 2. [CRITICAL] High Complexity
-    Location: src/api/validators.py:45
-    Function: validate_user_input (CC=28)
-    Fix: Simplify logic, reduce branching, extract methods
-
-=== Refactoring Priority ===
-
-Refactoring Targets: 67
-
-Top Priority (Start Here):
- 1. process_payment_transaction        (Priority: 18)
-    src/services/payment/processor.py:156
-    Complexity: 34, Lines: 187, Params: 6
-    Actions: Reduce complexity: simplify conditionals, Extract smaller functions, Use parameter object
-
- 2. validate_user_input                (Priority: 17)
-    src/api/validators.py:45
-    Complexity: 28, Lines: 134, Params: 5
-    Actions: Reduce complexity: simplify conditionals, Extract smaller functions
-
-=== Maintainability Index ===
-
-Least Maintainable Files:
- 1. src/services/payment/processor.py                  Score: 18.3 [CRITICAL]
- 2. src/api/routes/orders.py                           Score: 24.7 [CRITICAL]
- 3. src/models/User.py                                 Score: 32.1 [POOR]
-
-Project Maintainability: 56.8/100
-  ✓✓ Good maintainability
-
-=== Recommendations ===
-
-1. [CRITICAL] Refactor 8 high-complexity functions
-   - Start with: process_payment_transaction, validate_user_input, generate_report
-   - Break into smaller functions
-   - Simplify conditionals (use early returns)
-   - Extract complex logic into helper functions
-
-2. [HIGH] Shorten 12 long functions
-   - Target: Keep functions under 50 lines
-   - Extract cohesive blocks into separate functions
-   - Use composition over monolithic functions
-
-3. [HIGH] Fix 47 code smells
-   - Address 8 critical smells first
-   - Use automated refactoring tools where possible
-   - Add tests before refactoring
-```
 
 ---
 

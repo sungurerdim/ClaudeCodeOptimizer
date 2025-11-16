@@ -1,9 +1,16 @@
 ---
+title: Verification Protocol Skill
+category: quality
+description: Evidence-based fix-verify-commit loop for violations
 metadata:
   name: "Verification Protocol"
   activation_keywords: ["verify", "verification", "violations", "audit", "fix"]
   category: "enforcement"
 principles: ['U_CHANGE_VERIFICATION', 'U_EVIDENCE_BASED', 'U_TEST_FIRST', 'U_ATOMIC_COMMITS', 'U_EXPLICIT_COMPLETION', 'U_COMPLETE_REPORTING']
+use_cases:
+  development_philosophy: [quality_first, balanced]
+  project_maturity: [active-dev, production, legacy]
+  testing_approach: [comprehensive, balanced]
 ---
 
 # Verification Protocol
@@ -71,107 +78,22 @@ After ALL categories fixed:
 <!-- RESOURCES: Load on explicit request -->
 ## Examples & Resources
 
-### Example 1: Principle Violations
+### Example Workflow
 
-```
-User runs: /cco-audit-principles
-Output: "23 violations found across 5 principles"
+1. User runs: `/cco-audit-principles`
+2. Skill displays violations by category
+3. For each category: Fix → Verify → Commit (atomic)
+4. Repeat until all resolved
+5. Final audit confirms compliance
 
-Skill activates:
-"23 violations detected. Start guided remediation? (y/n)"
-
-User: y
-
-Skill:
-"Principle U_FAIL_FAST (Fail-Fast): 5 violations
- - services/api/main.py:45   (bare except)
- - services/api/main.py:89   (silent exception)
- - shared/utils.py:67         (bare except)
- - worker/tasks.py:123        (bare except)
- - worker/tasks.py:234        (silent exception)
-
-Fix U_FAIL_FAST now? (y/n/skip)"
-
-User: y
-<User manually fixes 5 violations>
-
-Skill:
-"Verifying U_FAIL_FAST fixes..."
-<Runs grep for bare except patterns>
-"✓ All U_FAIL_FAST violations fixed!"
-"Committing changes..."
-<git commit -m "fix(U_FAIL_FAST): replace bare except clauses">
-
-Skill:
-"Principle U_FAIL_FAST (DRY): 8 violations
- - Duplicate encrypt_aes_gcm() in 3 files
-
-Fix U_FAIL_FAST now? (y/n/skip)"
-
-User: n
-
-Skill:
-"Skipping U_FAIL_FAST. Moving to next..."
-```
-
-### Example 2: Security Violations
-
-```
-User runs: /cco-audit-security
-Output: "12 security issues found (3 CRITICAL)"
-
-Skill activates:
-"12 security issues detected. Guided remediation? (y/n)"
-
-User: y
-
-Skill:
-"CRITICAL: Hardcoded secrets (3 violations)
- - services/api/client.py:23  (API key)
- - shared/config.py:45        (Database password)
- - worker/.env.backup:12      (JWT secret)
-
-Fix CRITICAL secrets now? (y/n/skip)"
-
-User: y
-<User moves to env vars>
-
-Skill:
-"Verifying secret removal..."
-<Runs grep for common secret patterns>
-"✓ No hardcoded secrets found!"
-"Committing..."
-<git commit -m "fix(security): move secrets to environment variables">
-```
+Prevents: Batch fixing all, then tests fail mysteriously
+Enables: Isolated fixes, easy rollback per category
 
 ### Anti-Patterns to Prevent
 
-#### ❌ WRONG: Batch Fix Everything
+❌ WRONG: Batch fix all violations, spend 2 hours, tests fail mysteriously, revert everything
 
-```
-User: "I'll fix all 23 violations now"
-<Spends 2 hours editing 15 files>
-<Runs tests>
-Tests fail: "AssertionError in test_api.py"
-User: "Which fix broke this? No idea..."
-<Reverts everything, starts over>
-```
-
-#### ✅ RIGHT: Incremental with Verification
-
-```
-User: Uses verification protocol
-<Fixes U_FAIL_FAST (5 violations in 3 files)>
-<Verifies - all fixed>
-<Commits>
-<Fixes P_PRIVACY_FIRST (3 violations in 2 files)>
-<Verifies - all fixed>
-<Commits>
-<Tests fail on P_PRIVACY_FIRST commit>
-User: "P_PRIVACY_FIRST broke tests, revert ONLY that commit"
-<git revert HEAD>
-<U_FAIL_FAST fixes preserved ✓>
-```
+✅ RIGHT: Fix one category, verify, commit (atomic). If tests fail, only revert that category
 
 ### Integration with Commands
 
