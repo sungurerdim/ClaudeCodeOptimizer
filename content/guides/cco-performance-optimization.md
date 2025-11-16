@@ -1,3 +1,13 @@
+---
+title: Performance Optimization Guide
+category: performance
+tags: [performance, optimization, backend, profiling]
+description: Performance analysis and optimization workflow
+use_cases:
+  project_purpose: [backend, microservice, data-pipeline, ml, analytics]
+  error_handling: [retry_logic, graceful_degradation]
+---
+
 # Performance Optimization Guide
 
 **Load on-demand when:** Performance tasks, optimization commands
@@ -8,9 +18,6 @@
 
 **Proactive performance engineering:** Analyze code continuously rather than waiting for production issues.
 
-**Related Principles:**
-- **U_EVIDENCE_BASED**: Measure before claiming performance improvements
-- **P_PERFORMANCE_PROFILE_BEFORE_OPTIMIZE**: Profile before optimizing
 
 ---
 
@@ -47,8 +54,6 @@ def find_duplicates(items):
 
 ### 2. N+1 Query Problem
 
-**Related Principles:**
-- **P_DB_OPTIMIZATION**: Optimize database queries
 
 **Problem**: Database calls inside loops
 
@@ -95,8 +100,6 @@ SELECT * FROM users WHERE email = 'user@example.com';
 
 ### 4. Missing Caching
 
-**Related Principles:**
-- **P_CACHING_STRATEGY**: Implement strategic caching
 
 **Problem**: Repeated operations without caching
 
@@ -203,10 +206,6 @@ def get_stats(data):
 
 ### 1. Focus on Critical Paths
 
-**Related Principles:**
-- **P_CONTINUOUS_PROFILING**: Continuous performance monitoring
-- **P_OBSERVABILITY_WITH_OTEL**: Monitor with OpenTelemetry
-- **U_MINIMAL_TOUCH**: Focus on actual bottlenecks, not hunches
 
 **Identify hotspots**:
 ```bash
@@ -223,9 +222,6 @@ python -m pstats profile.stats
 
 ### 2. Measure Before Optimizing
 
-**Related Principles:**
-- **U_EVIDENCE_BASED**: Establish baseline metrics
-- **P_PERFORMANCE_PROFILE_BEFORE_OPTIMIZE**: Never optimize without profiling
 
 **Benchmark baseline**:
 ```python
@@ -254,10 +250,6 @@ benchmark(fast_function, data)
 
 ### 3. Implement & Test
 
-**Related Principles:**
-- **U_CHANGE_VERIFICATION**: Verify improvements with benchmarks
-- **U_TEST_FIRST**: Write performance tests first
-- **U_NO_OVERENGINEERING**: Keep optimizations simple and readable
 
 **Process**:
 1. Identify bottleneck (profiling)
@@ -329,9 +321,6 @@ def test_query_performance():
 
 ### Async I/O
 
-**Related Principles:**
-- **P_ASYNC_IO**: Use non-blocking I/O operations
-- **P_LAZY_LOADING**: Load data only when needed
 
 - **Sequential → Parallel**: N×faster (N = concurrent ops)
 - **Blocking → Non-blocking**: 2-10x throughput

@@ -34,31 +34,6 @@ Use linters (Ruff/ESLint) AND SAST tools (Semgrep/CodeQL/Snyk) with strict rules
 - **Subtle Bugs** - Logic errors (unreachable code, always-true conditions) missed
 - **No Safety Net** - Developers can commit dangerous code without warnings
 
-### Business Value
-
-- **Prevent security incidents** - SAST catches vulnerabilities before deployment (save $millions)
-- **Faster code review** - Linters catch style/quality issues automatically
-- **Lower maintenance cost** - Clean, consistent code easier to maintain
-- **Regulatory compliance** - SAST required for SOC 2, ISO 27001, PCI DSS
-
-### Technical Benefits
-
-- **Early bug detection** - Catch issues in IDE/CI, not production
-- **Automated code review** - Linters enforce standards automatically
-- **Security scanning** - SAST detects vulnerabilities (injection, auth bypass)
-- **Dependency vulnerabilities** - Snyk/Dependabot find vulnerable packages
-
-### Industry Evidence
-
-- **OWASP** - SAST recommended as primary defense against Top 10 vulnerabilities
-- **GitHub Security Report** - Projects with SAST have 70% fewer security incidents
-- **Developer Productivity** - Linting reduces code review time by 30-40%
-- **Industry Standard** - 95% of top companies use linting + SAST in CI
-
----
-
-## How
-
 ### Core Techniques
 
 **1. Python: Ruff + Bandit + Semgrep**
@@ -367,22 +342,6 @@ def safe_query(user_input):
 
 ---
 
-## Cross-References
-
-**Related Principles:**
-- **P_TYPE_SAFETY** - Type checking is form of static analysis
-- **P_CI_GATES** - Linting/SAST as CI gate
-- **C_PRODUCTION_GRADE** - Linted code is production-grade
-- **P_SUPPLY_CHAIN_SECURITY** - SAST scans dependencies too
-
-**Workflow Integration:**
-- Pre-commit hooks run linting locally (instant feedback)
-- CI runs linting + SAST on every PR
-- Block merges if lint/SAST fails
-- Security findings triaged and fixed
-
----
-
 ## Summary
 
 **Linting & SAST Enforcement** means using linters (Ruff/ESLint) AND SAST tools (Semgrep/CodeQL/Snyk) with strict rules enforced in CI to catch security vulnerabilities and code quality issues before production.
@@ -393,31 +352,3 @@ def safe_query(user_input):
 - **CI enforcement** - Build fails on lint/SAST errors
 - **Pre-commit hooks** - Fast local feedback
 - **Fix, don't ignore** - Don't silence warnings
-
-**Remember**: "Linters catch bugs. SAST catches vulnerabilities. Both required in CI."
-
-**Impact**: 70% fewer security incidents, 30-40% faster code reviews, consistent code quality.
-
----
-
-**Quick Setup Commands:**
-
-```bash
-# Python
-pip install ruff bandit
-ruff check src/
-bandit -r src/
-
-# JavaScript
-npm install -D eslint @typescript-eslint/eslint-plugin eslint-plugin-security
-npx eslint src/
-
-# SAST
-npx semgrep --config=p/security-audit src/
-gh codeql database create --language=python codeql-db
-```
-
-**Recommended SAST Rulesets:**
-- Semgrep: `p/security-audit`, `p/owasp-top-ten`, `p/secrets`
-- CodeQL: Enable all security queries
-- Snyk: Severity threshold = high

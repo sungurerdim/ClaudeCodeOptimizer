@@ -10,12 +10,12 @@ Initialize ClaudeCodeOptimizer for the current project with intelligent defaults
 
 **Enhanced with 3-Tier Questioning + Category Review:**
 - **Quick Mode**: Zero questions - AI decides everything (30 sec)
-- **Interactive Mode**: 10-36 questions based on your project context (5-8 min)
-  - Tier 1: 10 critical questions (always)
-  - Tier 2: 10 conditional questions (context-aware)
-  - Tier 3: 8 advanced questions (optional)
-  - **Category Review**: 8 multiselect questions to customize principles by category
-- **Coverage**: 15-42% of 66 configuration fields + full control over all ~53 principles
+- **Interactive Mode**: AI-guided questions based on your project context
+  - Tier 1: Critical project decisions (always asked)
+  - Tier 2: Strategic configuration (context-aware)
+  - Tier 3: Tactical preferences (optional, based on detected tools)
+  - **Category Review**: Multiselect questions to customize principles by category
+- **Coverage**: Full control over all detected principles and configuration
 
 ## Step 1: Check CCO Installation
 
@@ -35,9 +35,66 @@ Then restart Claude Code and run /cco-init again.
 
 Stop execution if not installed.
 
+## Step 1.5: Calculate Question Statistics (for User Info)
+
+Before asking mode, calculate expected question counts:
+
+```bash
+python -c "
+from claudecodeoptimizer.wizard.decision_tree import DECISION_TREE_TIER1, DECISION_TREE_TIER2
+from pathlib import Path
+
+# Fixed tier counts
+tier1_count = len(DECISION_TREE_TIER1)
+tier2_count = len(DECISION_TREE_TIER2)
+
+# TIER3 is dynamic (7 static + 0-3 conditional + 0-N tool conflicts)
+tier3_min = 7  # Static decisions
+tier3_max_estimate = 15  # Rough upper bound
+
+# Category count (dynamic from principles)
+principle_dir = Path('~/.cco/content/principles').expanduser()
+if not principle_dir.exists():
+    # Fallback to local if global not found
+    principle_dir = Path('content/principles')
+
+categories = set()
+if principle_dir.exists():
+    for md_file in principle_dir.glob('[PUC]_*.md'):
+        content = md_file.read_text(encoding='utf-8')
+        for line in content.split('\n'):
+            if line.startswith('category:'):
+                cat = line.split(':', 1)[1].strip()
+                # Exclude meta categories
+                if cat not in ['universal', 'claude-guidelines', 'project-specific']:
+                    categories.add(cat)
+                break
+
+category_count = len(categories)
+
+# Calculate totals
+min_questions = tier1_count + category_count
+max_questions = tier1_count + tier2_count + tier3_max_estimate + category_count
+
+# Time estimation (15-20 sec per question)
+min_time_min = (min_questions * 15) // 60
+max_time_min = (max_questions * 20) // 60
+
+print(f'[INFO] Interactive Mode Statistics:')
+print(f'[INFO]   - Minimum: {min_questions} questions (~{min_time_min} min)')
+print(f'[INFO]   - Maximum: {max_questions} questions (~{max_time_min} min)')
+print(f'[INFO]   - Tier 1 (critical): {tier1_count} questions')
+print(f'[INFO]   - Tier 2 (strategic): {tier2_count} questions')
+print(f'[INFO]   - Tier 3 (tactical): {tier3_min}-{tier3_max_estimate} questions')
+print(f'[INFO]   - Categories: {category_count} principle groups')
+"
+```
+
+Store these values for use in the mode question.
+
 ## Step 2: Ask User for Mode
 
-**CRITICAL**: Use AskUserQuestion tool to ask which mode.
+**CRITICAL**: Use AskUserQuestion tool to ask which mode. Use the calculated statistics from Step 1.5 in the description.
 
 ```json
 {
@@ -49,11 +106,11 @@ Stop execution if not installed.
       "options": [
         {
           "label": "Quick Mode",
-          "description": "AI decides all configuration based on project analysis (30 sec). Zero user input required."
+          "description": "AI decides all configuration based on project analysis (~30 sec). Zero user input required."
         },
         {
           "label": "Interactive Mode",
-          "description": "You approve each step, answer 10-36 questions, and customize all principles by category (5-8 min). Full control, no defaults."
+          "description": "You approve each step and customize principles. Question count varies by project (see statistics above). Full control, no defaults."
         }
       ]
     }
@@ -134,30 +191,18 @@ Done! Show verification and next steps (skip to Step 4).
 ## Interactive Mode Coverage Summary
 
 **Tiered Questioning System + Category Review:**
-- **Tier 1 (Critical)**: 10 questions - ALWAYS asked (15% of 66 fields)
-- **Tier 2 (Conditional)**: 10 questions - Asked based on context (adds 15% coverage)
-- **Tier 3 (Advanced)**: 8 questions - Optional detailed config (adds 12% coverage)
-- **Category Review**: 8 multiselect questions - Full principle customization (100% control)
+- **Tier 1 (Critical)**: Always asked - Fundamental project decisions
+- **Tier 2 (Strategic)**: Context-aware - Asked based on detected project characteristics
+- **Tier 3 (Tactical)**: Dynamic - Varies by detected tools and conflicts
+- **Category Review**: Multiselect questions - Full principle customization by category
 
-**Total Coverage:**
-- Minimum (Tier 1 only): 15% of fields (10/66) + 8 category questions
-- Standard (Tier 1 + relevant Tier 2): 25-30% of fields (17-20/66) + 8 category questions
-- Maximum (All tiers): 42% of fields (28/66) + 8 category questions
+**Smart Approach:**
+- **Not all questions are asked** - Only relevant ones based on your project
+- **Context-aware** - Skips irrelevant questions (e.g., team workflow questions for solo devs)
+- **Dynamic tool detection** - Asks about conflicting tools only if detected
+- **Full transparency** - Every detected principle visible and customizable by category
 
-**Questions Count:**
-- Minimum: 18 questions (10 Tier 1 + 8 category)
-- Standard: 25-28 questions (10 + 7-10 Tier 2 + 8 category)
-- Maximum: 36 questions (10 + 10 + 8 + 8 category)
-
-**Comparison to original:**
-- Original: 8 questions, limited principle visibility = 12% coverage, ~50% of principles shown
-- Current: 18-36 questions = 15-42% field coverage + 100% principle control
-
-**Smart approach:**
-- Not all questions are asked to everyone
-- Context-aware: Only ask relevant questions based on project type, domain, team
-- User control: Advanced mode is optional, not forced
-- **Full transparency**: Every single principle visible and customizable by category
+**Question counts vary by project** - Run Step 1.5 above to see your project's statistics
 
 ---
 
@@ -479,15 +524,17 @@ print('Full list will be in CLAUDE.md')
 
 For each category, dynamically generate a multiselect question with ALL principles in that category.
 
-**Category Display Names:**
+**Category Display Names (Example):**
+
+Categories are dynamically loaded from principle metadata. Common categories include:
 - `code_quality` → "Code Quality"
 - `security_privacy` → "Security & Privacy"
 - `architecture` → "Architecture"
 - `testing` → "Testing"
-- `operations` → "Operations"
-- `git_workflow` → "Git Workflow"
 - `performance` → "Performance"
 - `api_design` → "API Design"
+
+Meta-categories like `universal`, `claude-guidelines`, and `project-specific` are typically excluded from category review.
 
 **Question Format for Each Category:**
 
@@ -510,15 +557,7 @@ For each category, dynamically generate a multiselect question with ALL principl
 
 **Description Format**: `"[one_line_why] (weight: X, [severity])"` (e.g., `"Minimize data collection (weight: 9, critical)"`)
 
-**Question Order**: Sort categories by principle count (largest first):
-1. Security & Privacy (12 principles)
-2. Code Quality (11 principles)
-3. Architecture (8 principles)
-4. Testing (6 principles)
-5. Operations (6 principles)
-6. Git Workflow (5 principles)
-7. Performance (4 principles)
-8. API Design (1 principle)
+**Question Order**: Sort categories by principle count (largest first). Categories are dynamically determined from available principles.
 
 **Example Question 1 - Security & Privacy:**
 
@@ -571,7 +610,7 @@ For each category, dynamically generate a multiselect question with ALL principl
 }
 ```
 
-**Continue for all 8 categories** (architecture, testing, operations, git_workflow, performance, api_design).
+**Continue for all detected categories** (dynamically determined from available principles).
 
 ### Step 3B.3b: Finalize Principle Selection
 
@@ -579,7 +618,7 @@ After all category questions answered, collect and validate final selection:
 
 ```bash
 python -c "
-# Collect answers from all 8 category questions
+# Collect answers from all category questions (dynamic count)
 # Each answer is a list of selected principle labels (format: 'PXXX: Title')
 
 # Example structure of collected answers:
@@ -794,7 +833,9 @@ After initialization:
 
 ---
 
-## Appendix: Field Coverage Breakdown
+## Appendix: Legacy Field Coverage Breakdown (Reference Only)
+
+**Note**: The information below is from a previous full-questionnaire system and may not reflect current wizard implementation. See Step 1.5 for current dynamic statistics.
 
 **Total CCOPreferences Fields**: 66 across 9 categories
 
@@ -928,27 +969,3 @@ After initialization:
 - Most are operational details (infrastructure, advanced testing strategies)
 - Can be configured later via `/cco-config` command
 - Smart defaults based on common best practices
-
----
-
-## Version History
-
-**v2.1 - Category-Based Principle Customization**
-- Added Step 3B.3a: 8 multiselect questions for principle customization by category
-- User now sees and controls ALL 53 principles, grouped by category
-- No more hidden principles - full transparency
-- Pre-selected defaults (user deselects what they don't want)
-- Questions: 18-36 total (was 10-28)
-- Principle control: 100% (was ~50% visibility)
-
-**v2.0 - Enhanced Tiered Questioning**
-- Added Tier 1: 10 critical questions (was 8)
-- Added Tier 2: 10 conditional questions (context-aware)
-- Added Tier 3: 8 advanced questions (optional)
-- Coverage increased: 12% → 39% (3.25x improvement)
-- New fields: deployment_target, compliance_requirements, and 16+ more
-
-**v1.0 - Initial Release**
-- 8 basic questions
-- 12% coverage of CCOPreferences fields
-- Limited principle visibility (~10 shown, rest hidden)

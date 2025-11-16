@@ -1,9 +1,16 @@
 ---
+title: Security Emergency Response Skill
+category: security
+description: Immediate P0 CRITICAL security remediation
 metadata:
   name: "Security Emergency Response"
   activation_keywords: ["P0 critical", "hardcoded secrets", "exposed keys", "security emergency"]
   category: "security"
+  priority: high
 principles: ['U_FAIL_FAST', 'P_SECRET_ROTATION', 'P_AUDIT_LOGGING', 'P_AUTH_AUTHZ', 'P_SUPPLY_CHAIN_SECURITY', 'P_ZERO_DISK_TOUCH']
+use_cases:
+  security_stance: [production, high]
+  project_maturity: [active-dev, production, legacy]
 ---
 
 # Security Emergency Response

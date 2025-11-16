@@ -55,5 +55,3 @@ version = {attr = 'package.__version__'}
 ```
 
 ## Autofix Available
-
-

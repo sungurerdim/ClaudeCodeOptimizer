@@ -40,5 +40,3 @@ USER 1000:1000  # Non-root, minimal
 ```
 
 ## Autofix Available
-
-

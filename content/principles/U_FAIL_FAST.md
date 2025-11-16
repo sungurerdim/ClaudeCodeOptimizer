@@ -32,31 +32,6 @@ Errors must cause immediate, visible failure. No silent fallbacks, no swallowed 
 - **Debugging nightmare** - failures discovered far from actual error location
 - **Data corruption** - continuing execution in invalid state corrupts data
 
-### Business Value
-- **Reduces MTTR** (Mean Time To Recovery) by 80% - immediate visibility
-- **Prevents cascading failures** - stop at first error before domino effect
-- **Saves debugging costs** - fail at error location, not 10 steps later
-- **Protects data integrity** - stop before corrupting databases/files
-- **Improves reliability** - predictable failure behavior builds trust
-
-### Technical Benefits
-- **Clear error boundaries** - know exactly where failure occurred
-- **Simplified debugging** - stack trace points to root cause
-- **No zombie processes** - dead systems don't linger in half-alive state
-- **Predictable behavior** - errors always surface, never hidden
-- **Forces proper error handling** - can't ignore problems
-
-### Industry Evidence
-- **Netflix Chaos Engineering** - "Fail fast, fail often, recover quickly"
-- **Google SRE Handbook** - "Surface errors immediately"
-- **Erlang/Elixir philosophy** - "Let it crash" (supervised recovery)
-- **Rust language design** - `.unwrap()` panics instead of silent None
-- **Database ACID** - Atomicity requires immediate failure on constraint violation
-
----
-
-## How
-
 ### Core Principle
 
 **When an error occurs:**
@@ -256,10 +231,6 @@ func saveUser(user User) error {
 
 ---
 
-## When to Allow Graceful Degradation
-
-**Exceptions to fail-fast** (rare, well-justified cases):
-
 ### ✅ Legitimate Use Cases
 1. **Non-critical optional features**
    ```python
@@ -339,36 +310,6 @@ def critical_operation():
         failures.labels(type='api').inc()
         raise  # Re-raise immediately
 ```
-
----
-
-## Cross-References
-
-**Related Principles:**
-- **U_EVIDENCE_BASED** - Fail-fast provides immediate evidence of failure
-- **U_ROOT_CAUSE_ANALYSIS** - Failing at error location enables root cause analysis
-- **U_TEST_FIRST** - Tests should fail immediately on incorrect behavior
-- **U_INTEGRATION_CHECK** - Integration failures should surface immediately
-- **P_GRACEFUL_SHUTDOWN** - Exception: Allow graceful shutdown on SIGTERM
-- **P_CIRCUIT_BREAKER_PATTERN** - Fail fast on overloaded dependencies
-- **P_HEALTH_CHECKS** - Fail health checks immediately on critical errors
-- **P_AUDIT_LOGGING** - Log failures before terminating
-
-**Contrasts:**
-- **Defensive Programming** - Fail-fast rejects defensive "catch everything" approach
-- **Error Recovery** - Fail-fast prioritizes visibility over automatic recovery
-
----
-
-## Industry Standards Alignment
-
-- **Erlang "Let It Crash" Philosophy** - Supervised recovery from explicit failures
-- **Google SRE Practices** - "Error budgets" require visible failures
-- **Netflix Chaos Engineering** - Intentionally inject failures to test resilience
-- **Rust Language Design** - No null, explicit Result/Option types
-- **12-Factor Apps (Processes)** - "Processes are disposable" (can fail and restart)
-- **Clean Code (Robert Martin)** - "Don't return null, throw exceptions"
-- **Database ACID** - Atomicity requires immediate failure on violation
 
 ---
 
@@ -484,7 +425,3 @@ except NetworkError as e:
 **Fail-Fast Error Handling** means errors cause immediate, visible failure instead of silent continuation. This prevents error accumulation, data corruption, and debugging nightmares.
 
 **Core Rule**: If an operation fails, STOP IMMEDIATELY. Don't log-and-continue, don't return null, don't catch-all exceptions.
-
-**Remember**: "Failing loudly is better than succeeding silently with corrupted data."
-
-**Impact**: 80% reduction in MTTR, prevents cascading failures, eliminates data corruption from invalid state continuation.

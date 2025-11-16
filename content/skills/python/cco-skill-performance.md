@@ -1,9 +1,16 @@
 ---
+title: Python Performance Optimization Skill
+category: performance
+description: Profiling, optimization, bottleneck analysis
 metadata:
   name: "Python Performance Optimization"
   activation_keywords: ["performance", "profiling", "optimization", "cprofile", "memory"]
   category: "language-python"
+  language: "python"
 principles: ['U_EVIDENCE_BASED', 'P_PERFORMANCE_PROFILE_BEFORE_OPTIMIZE', 'P_CONTINUOUS_PROFILING', 'U_NO_OVERENGINEERING']
+use_cases:
+  project_purpose: [backend, data-pipeline, ml, analytics]
+  project_maturity: [active-dev, production]
 ---
 
 # Python Performance Optimization

@@ -35,35 +35,6 @@ Optimize AI context usage through strategic model selection, targeted file reads
 - **Session Fragmentation** - Hitting context limits mid-task forces session restarts and context loss
 - **Poor Scalability** - Inefficient context usage prevents handling larger codebases or complex multi-file tasks
 
-### Business Value
-
-- **60-80% token reduction** - Targeted reads and model selection cut token usage by 60-80% on typical tasks
-- **3-5x faster iterations** - Smaller context enables faster response times and tighter development loops
-- **10x session capacity** - Efficient context management allows 10x more operations within a single session
-- **Cost optimization** - Direct cost savings through reduced token consumption in high-volume environments
-- **Better developer experience** - Faster responses and fewer context limit errors improve workflow satisfaction
-
-### Technical Benefits
-
-- **Precise targeting** - Read exactly what's needed (file:offset:limit) instead of entire files
-- **Parallel efficiency** - Multiple independent operations in single message maximizes throughput
-- **Model optimization** - Use lightweight models (Haiku) for simple tasks, reserve Sonnet/Opus for complex analysis
-- **Query clarity** - Structured [file:line] → [action] format ensures precise intent communication
-- **Context preservation** - Efficient usage keeps sessions alive longer, preserving valuable context
-- **Scalability** - Efficient patterns enable working with larger codebases and more complex tasks
-
-### Industry Evidence
-
-- **Anthropic Best Practices** - Official Claude documentation emphasizes targeted reads and model selection
-- **Token Economics** - Industry research shows 70-80% of context is often redundant or unnecessary
-- **Performance Data** - Benchmarks demonstrate 3-5x response time improvement with optimized context
-- **Cost Analysis** - Production deployments report 60-70% cost reduction through context optimization
-- **Developer Productivity** - Teams report 40-50% faster iteration cycles with structured query formats
-
----
-
-## How
-
 ### Core Techniques
 
 **1. Targeted File Reads**
@@ -421,23 +392,6 @@ Read("large_codebase/module2.py", offset=150, limit=50)
 
 ---
 
-## Cross-References
-
-**Related Principles:**
-
-- **C_TOKEN_OPTIMIZATION** - Broader token usage optimization strategies including context management
-- **C_GREP_FIRST_SEARCH_STRATEGY** - Specific search strategy that optimizes context usage
-- **C_MODEL_SELECTION** - Strategic model selection based on task complexity
-- **C_PARALLEL_AGENTS** - Parallel agent execution for maximum efficiency
-- **U_MINIMAL_TOUCH** - Minimal changes principle extends to minimal context usage
-
-**Workflow Integration:**
-- Use with **Explore agents** for codebase navigation with minimal context
-- Combine with **grep/glob** for efficient file discovery
-- Apply before **Task agent** launches to optimize subtask context
-
----
-
 ## Summary
 
 **Context Window Management** means strategically optimizing how you use the AI's context window through targeted reads, appropriate model selection, parallel operations, and structured queries.
@@ -449,15 +403,3 @@ Read("large_codebase/module2.py", offset=150, limit=50)
 - **Parallelize when possible** - Execute independent operations in single message
 - **Structure queries** - Use `[file:line]` → `[action]` format for clarity
 - **Grep before reading** - Search first, then read targeted results
-
-**Remember**: "Every token counts. Read precisely, execute in parallel, and match the model to the task complexity."
-
-**Impact**: 60-80% token reduction, 3-5x faster responses, 10x session capacity, significantly lower costs, and better quality through focused context usage.
-
----
-
-**Related Workflows:**
-- Before reading files: Use Grep/Glob to discover and locate
-- Before launching agents: Select appropriate model by task complexity
-- When analyzing codebases: Use Explore agents with targeted reads
-- When debugging: Use `file:line` format to pinpoint exact locations

@@ -34,31 +34,6 @@ Maintain minimum 80% line coverage overall, 100% coverage for critical paths (pa
 - **Hidden Logic Errors** - Edge cases and error paths untested, fail in production
 - **Integration Gaps** - Component interactions untested until production
 
-### Business Value
-
-- **Reduced production bugs** - 80%+ coverage correlates with 60% fewer production incidents
-- **Confident deployments** - High coverage enables continuous deployment
-- **Faster development** - Tests catch issues immediately, not after deployment
-- **Lower debugging costs** - Issues caught by tests cheaper to fix than production bugs
-
-### Technical Benefits
-
-- **Refactoring safety** - Tests verify behavior preserved during changes
-- **Regression prevention** - Tests catch when changes break existing functionality
-- **Documentation** - Tests document expected behavior
-- **Code quality signal** - Hard-to-test code often indicates design problems
-
-### Industry Evidence
-
-- **Microsoft Research** - Codebases with >80% coverage have 40-50% fewer production bugs
-- **Google Testing** - Critical path coverage of 100% required for production code
-- **Industry Standard** - 80% coverage baseline, 100% for security/payment code
-- **Developer Productivity** - Teams with high coverage ship 2x faster (confident refactoring)
-
----
-
-## How
-
 ### Core Techniques
 
 **1. Set Coverage Targets and Enforce in CI**
@@ -363,22 +338,6 @@ def test_crypto_refund():
 
 ---
 
-## Cross-References
-
-**Related Principles:**
-- **P_TEST_PYRAMID** - Coverage should follow pyramid ratio
-- **P_TEST_ISOLATION** - Isolated tests improve coverage accuracy
-- **P_CI_GATES** - Coverage checked in CI gates
-- **U_TEST_FIRST** - TDD naturally achieves high coverage
-
-**Workflow Integration:**
-- Write tests for all new code (90%+ coverage)
-- CI fails if coverage drops below 80%
-- Review coverage reports for gaps
-- 100% coverage required for critical paths before merge
-
----
-
 ## Summary
 
 **Test Coverage Targets** means maintaining minimum 80% line coverage overall, 100% for critical paths. Coverage metrics ensure code tested before deployment.
@@ -389,37 +348,3 @@ def test_crypto_refund():
 - **CI enforcement** - Build fails if coverage drops
 - **Quality over quantity** - Coverage with strong assertions
 - **Investigate gaps** - Understand why code isn't covered
-
-**Remember**: "Coverage measures what's tested, not quality of tests. Aim for 80%+ with strong assertions."
-
-**Impact**: 60% fewer production bugs, confident refactoring, faster development, lower debugging costs.
-
----
-
-**Coverage Tools:**
-- **Python**: `pytest --cov=src --cov-report=term`
-- **JavaScript**: `nyc npm test` or `jest --coverage`
-- **Go**: `go test -cover ./...`
-- **Java**: JaCoCo, Cobertura
-
-**Coverage Configuration (Python):**
-```toml
-[tool.coverage.run]
-source = ["src"]
-omit = ["*/tests/*", "*/migrations/*"]
-
-[tool.coverage.report]
-fail_under = 80
-show_missing = true
-skip_covered = false
-
-[tool.coverage.html]
-directory = "htmlcov"
-```
-
-**CI Integration:**
-```yaml
-- run: pytest --cov=src --cov-fail-under=80
-- run: coverage xml
-- uses: codecov/codecov-action@v3
-```

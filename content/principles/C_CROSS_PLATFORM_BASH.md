@@ -35,34 +35,6 @@ Use cross-platform compatible bash commands, path handling, and platform-aware p
 - **Case Sensitivity** - Windows is case-insensitive, Unix is case-sensitive, leading to hidden bugs
 - **Environment Variables** - `$HOME` vs `%USERPROFILE%`, `$PATH` vs `%PATH%` syntax differences
 
-### Business Value
-
-- **40% larger user base** - Windows developers represent ~40% of the market; supporting them expands adoption
-- **Zero friction onboarding** - Cross-platform commands work immediately without setup or troubleshooting
-- **Reduced support burden** - Eliminate platform-specific bug reports and support requests
-- **Team productivity** - Mixed platform teams can collaborate without workflow friction
-- **CI/CD compatibility** - Commands work across all CI environments (GitHub Actions, GitLab, Jenkins)
-
-### Technical Benefits
-
-- **Universal compatibility** - Commands work on Windows, Linux, macOS without modification
-- **Git Bash support** - Windows developers using Git Bash get seamless experience
-- **PowerShell fallback** - Where Git Bash isn't available, commands still work in PowerShell
-- **Path normalization** - Forward slashes work everywhere (even Windows accepts them)
-- **Predictable behavior** - Cross-platform patterns eliminate platform-specific bugs
-
-### Industry Evidence
-
-- **Developer Statistics** - ~40% of developers use Windows (Stack Overflow Developer Survey)
-- **Git Bash Adoption** - 90%+ of Windows developers install Git (includes Git Bash)
-- **Node.js/Python** - Cross-platform package managers normalize path handling
-- **CI/CD Reality** - GitHub Actions, GitLab CI run on Linux; local dev often on Windows/Mac
-- **Open Source Best Practice** - Successful OSS projects prioritize cross-platform compatibility
-
----
-
-## How
-
 ### Core Techniques
 
 **1. Always Use Forward Slashes for Paths**
@@ -412,23 +384,6 @@ git config --global core.eol lf          # Use LF in working directory
 
 ---
 
-## Cross-References
-
-**Related Principles:**
-
-- **C_PRODUCTION_GRADE** - Production code must work on all platforms
-- **U_FAIL_FAST** - Platform-incompatible commands should fail with clear errors
-- **C_FOLLOW_PATTERNS** - Follow project's established cross-platform patterns
-- **U_EVIDENCE_BASED** - Test on all platforms before committing
-
-**Workflow Integration:**
-- Configure Git properly: `core.autocrlf=input`, `core.eol=lf`
-- Use `.editorconfig` to enforce line endings
-- Document Git Bash requirement in README
-- Add CI tests on Windows, Linux, macOS
-
----
-
 ## Summary
 
 **Cross-Platform Bash Commands** means writing commands that work identically on Windows, Linux, and macOS by using forward slashes, Git Bash-compatible commands, and avoiding platform-specific syntax.
@@ -440,27 +395,3 @@ git config --global core.eol lf          # Use LF in working directory
 - **Git Bash commands** - Use ls, cat, grep, find (available on Windows via Git Bash)
 - **Avoid platform-specific** - Never use CMD (dir, type) or PowerShell (Get-*, Set-*)
 - **Configure line endings** - `git config --global core.autocrlf input`
-
-**Remember**: "Forward slashes everywhere. Quote paths with spaces. Use Git Bash commands. Test on Windows."
-
-**Impact**: 40% larger user base (Windows support), zero-friction onboarding, cross-platform CI/CD compatibility, reduced support burden.
-
----
-
-**Quick Reference:**
-
-| ❌ Don't Use | ✅ Use Instead | Why |
-|-------------|---------------|-----|
-| `src\file.py` | `src/file.py` | Forward slashes work everywhere |
-| `dir /s` | `ls -R` | Git Bash provides ls on Windows |
-| `type file.txt` | `cat file.txt` | Git Bash provides cat on Windows |
-| `copy a.txt b.txt` | `cp a.txt b.txt` | Git Bash provides cp on Windows |
-| `del /f file.txt` | `rm -f file.txt` | Git Bash provides rm on Windows |
-| `%USERPROFILE%` | `~` | Tilde works in Git Bash on all platforms |
-| `$env:VAR` | `$VAR` | Bash syntax in Git Bash |
-
-**Windows Developer Setup:**
-1. Install Git for Windows (includes Git Bash)
-2. Configure Git: `git config --global core.autocrlf input`
-3. Use Git Bash terminal (not CMD or PowerShell)
-4. All commands work identically to Linux/macOS

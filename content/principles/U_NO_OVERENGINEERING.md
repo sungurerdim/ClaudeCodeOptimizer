@@ -32,31 +32,6 @@ Always choose the simplest solution that solves the problem. Avoid premature abs
 - **Analysis paralysis** - Perfect solution never ships
 - **YAGNI violations** - "You Aren't Gonna Need It" ignored
 
-### Business Value
-- **50% faster delivery** - Ship simple solutions quickly
-- **75% lower maintenance costs** - Simple code is easy to maintain
-- **Higher agility** - Easy to pivot when requirements change
-- **Reduced risk** - Less code = fewer bugs
-- **Better ROI** - Don't pay for unused features
-
-### Technical Benefits
-- **Easier to understand** - New developers onboard faster
-- **Easier to test** - Fewer edge cases and interactions
-- **Easier to debug** - Shorter stack traces, clearer logic
-- **Easier to change** - Not locked into complex abstractions
-- **Better performance** - Less indirection, less overhead
-
-### Industry Evidence
-- **Kent Beck**: "Make it work, make it right, make it fast" (in that order)
-- **Martin Fowler**: "Any fool can write code that a computer can understand. Good programmers write code that humans can understand."
-- **YAGNI Principle** (XP): Build only what you need right now
-- **KISS Principle**: Keep It Simple, Stupid
-- **Rob Pike** (Go language): "Simplicity is complicated"
-
----
-
-## How
-
 ### Core Questions
 
 Before adding complexity, ask:
@@ -389,35 +364,8 @@ data = Cassandra()  # Cassandra if you need scale
 
 ---
 
-## Cross-References
-
-**Related Principles:**
-- **U_TEST_FIRST** - TDD prevents overengineering (only build what tests require)
-- **U_DRY** - BUT don't DRY too early (duplication is better than wrong abstraction)
-- **U_MINIMAL_TOUCH** - Don't add unnecessary changes
-- **C_PRODUCTION_GRADE** - Simple doesn't mean incomplete
-- **U_INTEGRATION_CHECK** - Simpler systems are easier to integrate
-
----
-
-## Industry Standards Alignment
-
-- **YAGNI** (Extreme Programming) - You Aren't Gonna Need It
-- **KISS** - Keep It Simple, Stupid
-- **Unix Philosophy** - Do one thing well
-- **Agile Principle** - Simplicity—the art of maximizing work not done
-- **Occam's Razor** - Simplest explanation is usually correct
-- **Rule of Three** (Refactoring) - Three strikes and you refactor
-- **Worse is Better** (Richard Gabriel) - Simple beats perfect
-
----
-
 ## Summary
 
 **No Overengineering** means always choosing the simplest solution that solves the current problem. Resist the urge to build frameworks, add abstractions, or future-proof before understanding actual needs.
 
 **Core Rule**: Start simple, add complexity only when absolutely necessary, and always with 3 real examples.
-
-**Remember**: "The best code is no code. The second best is simple code."
-
-**Impact**: 50% faster delivery, 75% lower maintenance costs, higher agility, reduced risk.

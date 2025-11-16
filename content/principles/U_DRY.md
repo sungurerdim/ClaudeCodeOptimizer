@@ -83,5 +83,3 @@ if USE_NEW_API:
 ```
 
 ## Autofix Available
-
-

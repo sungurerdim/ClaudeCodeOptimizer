@@ -33,33 +33,6 @@ Write failing test FIRST, then implement feature, then verify test passes.
 - **Regression bugs** - changes break existing functionality
 - **Over-engineering** - build more than needed
 
-### Business Value
-- **80% fewer production bugs** (IBM research on TDD)
-- **40-50% less debugging time** (Microsoft TDD study)
-- **Better design** - testable code is modular code
-- **Faster onboarding** - tests document expected behavior
-- **Confident refactoring** - tests verify behavior preservation
-- **Lower maintenance costs** - regression prevention
-
-### Technical Benefits
-- **Clarity of requirements** - test forces you to define "done"
-- **Better API design** - writing tests first improves interfaces
-- **Immediate feedback** - know instantly if implementation works
-- **Regression safety** - prevent old bugs from returning
-- **Living documentation** - tests show how code should work
-- **Forces modularity** - untestable code gets refactored
-
-### Industry Evidence
-- **Kent Beck (TDD creator)** - "I'm not a great programmer; I'm just a good programmer with great habits"
-- **Google Testing Blog** - Teams using TDD have 40-90% fewer defects
-- **IBM Research** - TDD reduces defect density by 40-90%
-- **Microsoft Study** - TDD increases initial dev time by 15% but reduces debugging by 50%
-- **ThoughtWorks Tech Radar** - TDD is "Adopt" status
-
----
-
-## How
-
 ### The TDD Cycle (Red-Green-Refactor)
 
 ```
@@ -540,36 +513,6 @@ def calculate_total(items):
 
 ---
 
-## Cross-References
-
-**Related Principles:**
-- **U_EVIDENCE_BASED** - Tests provide evidence of correctness
-- **U_FAIL_FAST** - Tests fail immediately on incorrect behavior
-- **U_ROOT_CAUSE_ANALYSIS** - Failing tests pinpoint exact issue
-- **U_INTEGRATION_CHECK** - Integration tests verify system behavior
-- **P_TEST_COVERAGE** - Measure test completeness (aim 80%+)
-- **P_TEST_PYRAMID** - Balance unit/integration/e2e tests
-- **P_TEST_ISOLATION** - Tests should be independent
-- **P_CI_GATES** - Automated test runs on every commit
-
-**Enables:**
-- **U_NO_OVERENGINEERING** - Tests prevent building unnecessary features
-- **U_CHANGE_VERIFICATION** - Tests verify changes don't break existing functionality
-
----
-
-## Industry Standards Alignment
-
-- **Kent Beck (TDD Creator)** - Original TDD methodology (Red-Green-Refactor)
-- **Uncle Bob (Clean Code)** - "The only way to go fast is to go well"
-- **Martin Fowler** - Refactoring with test safety net
-- **Google Testing Blog** - Advocates for test-first development
-- **XP (Extreme Programming)** - TDD is a core practice
-- **BDD (Behavior-Driven Development)** - Evolution of TDD with Given-When-Then
-- **ISO/IEC 29119 (Software Testing)** - Test design before implementation
-
----
-
 ## Tools and Frameworks
 
 ### Python
@@ -634,7 +577,3 @@ def calculate_total(items):
 **The Cycle: 🔴 RED → 🟢 GREEN → 🔵 REFACTOR → Repeat**
 
 **Core Rule**: No production code without a failing test first.
-
-**Remember**: "If it's not tested first, it's not TDD."
-
-**Impact**: 80% fewer production bugs, 50% less debugging time, confident refactoring, better design.

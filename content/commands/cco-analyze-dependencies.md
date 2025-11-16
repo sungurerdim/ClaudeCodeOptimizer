@@ -20,14 +20,9 @@ Analyze **${PROJECT_NAME}** dependency graph, detect circular dependencies, and 
 
 ## Objective
 
-Comprehensive dependency analysis:
-1. Build complete dependency graph
-2. Detect circular dependencies
-3. Identify unused dependencies
-4. Find outdated packages
-5. Analyze dependency health and security
+Comprehensive dependency analysis: graph, circular dependencies, unused packages, outdated packages, and security health.
 
-**Output:** Dependency report with graph visualization and actionable recommendations.
+**Output:** Dependency report with recommendations.
 
 ---
 
@@ -51,25 +46,9 @@ Comprehensive dependency analysis:
 
 ---
 
-## When to Use
-
-**Use this command:**
-- Before major refactoring
-- When experiencing dependency conflicts
-- During dependency audits
-- To reduce bundle size
-- When cleaning up legacy code
-
-**Critical for:**
-- Microservices with shared dependencies
-- Large monorepos
-- Projects with many dependencies (>20)
-
 ---
 
 ## Phase 1: Parse Package Manifests
-
-Extract dependencies from package files:
 
 ```python
 import sys
@@ -196,8 +175,6 @@ print()
 
 ## Phase 2: Extract Import Statements
 
-Scan source code for actual imports:
-
 ```python
 print(f"=== Import Analysis ===\n")
 
@@ -295,8 +272,6 @@ else:
 
 ## Phase 3: Detect Unused Dependencies
 
-Compare declared vs actual:
-
 ```python
 print(f"=== Unused Dependency Detection ===\n")
 
@@ -363,8 +338,6 @@ else:
 
 ## Phase 4: Build Dependency Graph
 
-Create import dependency graph:
-
 ```python
 print(f"=== Dependency Graph ===\n")
 
@@ -413,8 +386,6 @@ print()
 ---
 
 ## Phase 5: Detect Circular Dependencies
-
-Find circular import chains:
 
 ```python
 print(f"=== Circular Dependency Detection ===\n")
@@ -490,8 +461,6 @@ else:
 
 ## Phase 6: Dependency Health Check
 
-Check for outdated and vulnerable packages:
-
 ```python
 print(f"=== Dependency Health Check ===\n")
 
@@ -552,8 +521,6 @@ print()
 
 ## Phase 7: Dependency Size Analysis
 
-Analyze package sizes and bloat:
-
 ```python
 print(f"=== Dependency Size Analysis ===\n")
 
@@ -590,8 +557,6 @@ print()
 
 ## Phase 8: Transitive Dependencies
 
-Analyze dependency tree depth:
-
 ```python
 print(f"=== Transitive Dependencies ===\n")
 
@@ -627,8 +592,6 @@ print()
 ---
 
 ## Phase 9: Recommendations
-
-Generate actionable recommendations:
 
 ```python
 print(f"=== Recommendations ===\n")
@@ -704,8 +667,6 @@ for i, rec in enumerate(recommendations, 1):
 
 ## Phase 10: Generate Report
 
-Export dependency report:
-
 ```python
 print(f"=== Export Report ===\n")
 
@@ -751,126 +712,6 @@ if unused_deps:
 ```
 
 ---
-
-## Output Example
-
-```
-=== Dependency Manifest Analysis ===
-
-Project: backend
-
-Manifests Found: 2
-  - package.json
-  - package.json (services/auth)
-
-Declared Dependencies:
-  Production: 34
-  Development: 18
-  Optional: 2
-  Total: 54
-
-=== Import Analysis ===
-
-Scanning JavaScript imports...
-Source files: 147
-Unique imports found: 28
-
-=== Unused Dependency Detection ===
-
-Unused Dependencies: 8
-
-Production:
-  - moment (^2.29.1)
-  - lodash (^4.17.21)
-  - axios (^0.27.2)
-
-Development:
-  - @types/jest (^28.1.0)
-  - eslint-plugin-unused-imports (^2.0.0)
-
-Potential Impact:
-  - Remove 8 unused packages
-  - Reduce install time
-  - Smaller node_modules / site-packages
-
-=== Dependency Graph ===
-
-Internal Modules: 89
-Internal Dependencies: 234
-
-Most Connected Modules:
- 1. src/utils/helpers.js                               (imports: 12, imported by: 45)
- 2. src/config/database.js                             (imports: 5, imported by: 38)
- 3. src/models/User.js                                 (imports: 8, imported by: 32)
-
-=== Circular Dependency Detection ===
-
-Circular Dependencies Found: 3
-
-Unique Circular Chains: 2
-
-1. Circular chain (length 3):
-   src/services/auth/AuthService.js →
-   src/services/user/UserService.js →
-   src/models/User.js →
-   src/services/auth/AuthService.js
-
-2. Circular chain (length 2):
-   src/api/routes/orders.js →
-   src/api/routes/customers.js →
-   src/api/routes/orders.js
-
-Impact:
-  - Can cause import errors
-  - Makes code harder to understand
-  - Prevents proper module loading
-  - Blocks tree-shaking optimizations
-
-=== Dependency Health Check ===
-
-Health Issues: 5
-
-[MEDIUM] express (production)
-  Issue: Wildcard version
-  Fix: Pin to specific version
-
-[LOW] dotenv (production)
-  Issue: No version specified
-  Fix: Specify version range
-
-✓ No major health issues detected
-
-For security vulnerabilities, run:
-  npm audit
-  yarn audit
-
-=== Recommendations ===
-
-1. [HIGH] Remove 8 unused dependencies
-   - Remove from manifest files
-   - Run install to update lock files
-   - Test thoroughly after removal
-   # Review unused deps:
-   # moment, lodash, axios, @types/jest, eslint-plugin-unused-imports
-
-2. [CRITICAL] Break 2 circular dependency chains
-   - Extract shared code to separate module
-   - Use dependency injection
-   - Introduce interfaces/protocols
-   - Refactor import structure
-
-3. [MEDIUM] Fix 5 dependency health issues
-   - Pin wildcard versions
-   - Specify version ranges
-   - Run security audit
-   - Update outdated packages
-
-=== Export Report ===
-
-Report saved to: dependency-analysis-report.json
-Removal script: remove-unused-deps.sh
-Review before running!
-```
 
 ---
 

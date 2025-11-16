@@ -36,37 +36,6 @@ Maintain test pyramid ratio: 70% unit tests, 20% integration tests, 10% E2E test
 - **Test Coverage Gaps** - Can't test all edge cases with slow E2E tests
 - **Developer Frustration** - Waiting 20 minutes for test results kills productivity
 
-### Business Value
-
-- **Faster development** - Unit tests run in seconds; instant feedback on changes
-- **Lower CI costs** - Unit tests cheap to run; E2E tests expensive (browsers, databases, services)
-- **Higher confidence** - More test coverage with fast unit tests than slow E2E tests
-- **Easier debugging** - Unit test failures point directly to broken function
-- **Better test coverage** - Can test thousands of edge cases with unit tests
-- **Faster releases** - Quick test suite enables continuous deployment
-
-### Technical Benefits
-
-- **Fast feedback loop** - Unit tests run in <1 second each; test entire codebase in seconds
-- **Isolated testing** - Unit tests test one function at a time; no external dependencies
-- **Deterministic** - Unit tests don't have timing issues, network failures, or flakiness
-- **Easy mocking** - Mock external dependencies (databases, APIs) for unit tests
-- **Test all paths** - Unit tests can cover every code path, including error cases
-- **Refactoring safety** - Comprehensive unit tests catch regressions during refactoring
-
-### Industry Evidence
-
-- **Google Testing Blog** - 70/20/10 pyramid ratio optimal for speed and coverage
-- **Martin Fowler** - "If you get E2E tests wrong, they'll slow your delivery to a crawl"
-- **Test Suite Performance Study** - Projects with inverted pyramid (70% E2E) have 10x slower CI
-- **Developer Productivity** - Teams with proper pyramid ship 2-3x faster than teams with inverted pyramid
-- **Flakiness Research** - E2E tests 15x more likely to be flaky than unit tests
-- **Industry Adoption** - Top-performing teams use 70/20/10 pyramid (Google, Meta, Netflix)
-
----
-
-## How
-
 ### Core Techniques
 
 **1. Unit Tests: 70% of Test Suite**
@@ -568,24 +537,6 @@ test("load user dashboard", async () => {
 
 ---
 
-## Cross-References
-
-**Related Principles:**
-
-- **P_TEST_COVERAGE** - Measure coverage separately for each test type
-- **P_TEST_ISOLATION** - Unit tests must be isolated (no shared state)
-- **P_CI_GATES** - Run different test types at different CI stages
-- **U_TEST_FIRST** - Write unit tests first (TDD), integration/E2E later
-- **P_PERFORMANCE_PROFILE_BEFORE_OPTIMIZE** - Profile test suite speed
-
-**Workflow Integration:**
-- Write unit tests during development (fast feedback)
-- Run integration tests before commit (medium feedback)
-- Run E2E tests in CI before deployment (slow feedback)
-- Measure and report test pyramid ratio in CI
-
----
-
 ## Summary
 
 **Test Pyramid** means maintaining 70% unit tests, 20% integration tests, 10% E2E tests. Unit tests provide fast feedback; integration tests verify component interactions; E2E tests validate critical user flows.
@@ -598,45 +549,3 @@ test("load user dashboard", async () => {
 - **Organize by type** - Separate directories for unit/integration/e2e
 - **Measure ratio** - Track test pyramid metrics in CI
 - **Fix inverted pyramid** - If >30% E2E tests, convert to unit/integration tests
-
-**Remember**: "Fast tests give fast feedback. Unit tests are your safety net. E2E tests are your confidence check."
-
-**Impact**: 10x faster test suite, 3x more test coverage, stable CI, confident deployments, faster development.
-
----
-
-**Test Selection Decision Tree:**
-```
-What are you testing?
-  ↓
-Pure business logic (calculation, validation)?
-  → Unit test (70%) ✅
-  ↓
-Component integration (service + DB)?
-  → Integration test (20%) ✅
-  ↓
-Full user flow through UI?
-  → E2E test (10%) ✅
-  ↓
-Complex edge case or error path?
-  → Unit test (fastest way to test) ✅
-```
-
-**Test Speed Targets:**
-- **Unit tests**: <10 seconds for entire suite
-- **Integration tests**: <1 minute for entire suite
-- **E2E tests**: <5 minutes for critical flows
-- **Total CI time**: <10 minutes (all tests)
-
-**Example Pyramid Metrics:**
-```
-=== Test Pyramid ===
-Unit:        700 (70.0%) - Target: 70% ✅
-Integration: 200 (20.0%) - Target: 20% ✅
-E2E:         100 (10.0%) - Target: 10% ✅
-
-Total runtime: 2m 15s
-- Unit: 8s
-- Integration: 45s
-- E2E: 1m 22s
-```

@@ -1,9 +1,15 @@
 ---
+title: Root Cause Analysis Skill
+category: analysis
+description: Analyze WHY violations exist, not just WHERE
 metadata:
   name: "Root Cause Analysis"
   activation_keywords: ["root cause", "why violations", "pattern analysis", "systemic fix"]
   category: "analysis"
 principles: ['U_ROOT_CAUSE_ANALYSIS', 'U_EVIDENCE_BASED', 'U_FAIL_FAST', 'U_DRY', 'U_COMPLETE_REPORTING', 'U_CHANGE_VERIFICATION']
+use_cases:
+  development_philosophy: [quality_first, balanced]
+  project_maturity: [active-dev, production, legacy]
 ---
 
 # Root Cause Analysis
@@ -274,160 +280,23 @@ Week 4: Verify no new violations
 <!-- RESOURCES: Load on explicit request -->
 ## Examples & Resources
 
-### Example 1: Security Issue Root Cause
+### Example: Security Issue Root Cause
 
-```
-User runs: /cco-audit-security
-Output: "15 hardcoded secrets found"
+15 hardcoded secrets found → Analysis reveals:
+- 53% in .env.backup files (forgotten backups, missing .gitignore)
+- 33% legacy config (>1yr old, pre-env-variables)
+- 13% test fixtures (false positives, safe to ignore)
 
-Skill activates:
-"Analyzing patterns in 15 secret violations..."
+Systemic fix: Add .gitignore, migrate legacy, whitelist tests, add pre-commit hook
 
-=== Root Cause Analysis ===
+### Example: Test Coverage Root Cause
 
-Violation Type: Hardcoded Secrets (P_PRIVACY_FIRST)
-Total Count: 15 violations
+36 untested functions → Analysis reveals:
+- 50% private helpers (team belief: don't test private)
+- 67% legacy code (pre-test mandate)
+- 56% in worker service (async code, harder to test)
 
-ANALYSIS:
-
-Temporal Distribution:
-- LEGACY (>1yr): 11 violations (73%)
-- OLD (6-12mo): 3 violations (20%)
-- RECENT (<6mo): 1 violation (7%)
-
-File Types:
-- .env.backup files: 8 violations (53%)
-- config.py files: 5 violations (33%)
-- test fixtures: 2 violations (13%)
-
-ROOT CAUSES:
-
-1. PRIMARY: .env.backup Files (53%)
-   - Developers created backups with "cp .env .env.backup"
-   - Forgot to add to .gitignore
-   - Evidence: All .env.backup files in git history
-
-2. SECONDARY: Legacy Config (33%)
-   - Before we used environment variables
-   - Hardcoded in config.py
-   - Evidence: All files >1 year old
-
-3. TERTIARY: Test Fixtures (13%)
-   - NOT real secrets (password123, test_api_key)
-   - False positives
-
-SYSTEMIC FIXES:
-
-Priority 1 (Backup Files):
-[ ] Add .env.backup to .gitignore
-[ ] Run: git rm --cached **/.env.backup
-[ ] Add pre-commit hook: Block .env.backup files
-[ ] Documentation: "Never commit .env backups"
-
-Priority 2 (Legacy Config):
-[ ] Run: /cco-migrate-secrets-to-env
-[ ] Create .env.example templates
-[ ] Update deployment docs
-
-Priority 3 (Test Fixtures):
-[ ] Whitelist test_*/ directories in secret scanner
-[ ] Add comment: # nosec (tell scanner to ignore)
-
-PREVENTIVE MEASURES:
-
-1. Pre-commit hook: Scan for new secrets
-2. .gitignore template: Include common secret patterns
-3. Team training: Secret management best practices
-4. CI/CD: Fail build if secrets detected
-
-TIMELINE:
-
-Day 1: Add .gitignore entries + pre-commit hook
-Day 2: Migrate legacy secrets to .env
-Day 3: Update test fixtures (whitelist)
-Day 4: Team training session
-```
-
-### Example 2: Test Coverage Root Cause
-
-```
-User runs: /cco-audit-tests
-Output: "36 functions untested"
-
-Skill activates:
-"Analyzing patterns in 36 untested functions..."
-
-=== Root Cause Analysis ===
-
-Violation Type: Untested Functions
-Total Count: 36 violations
-
-ANALYSIS:
-
-Function Types:
-- Private helpers (_helper_func): 18 functions (50%)
-- Public API: 12 functions (33%)
-- Internal utilities: 6 functions (17%)
-
-Service Distribution:
-- services/worker/: 20 functions (56%)
-- shared/: 10 functions (28%)
-- services/api/: 6 functions (17%)
-
-Code Age:
-- LEGACY (>1yr): 24 functions (67%)
-- RECENT (<6mo): 12 functions (33%)
-
-ROOT CAUSES:
-
-1. PRIMARY: Private Helpers (50%)
-   - Team doesn't test private functions
-   - Belief: "Only test public API"
-   - Evidence: 0 tests for any _* function
-
-2. SECONDARY: Legacy Untested Code (67%)
-   - Old code before test requirements
-   - Never retroactively tested
-   - Evidence: Created before 2024 test mandate
-
-3. TERTIARY: Worker Service Focus (56%)
-   - Most untested code in worker service
-   - Complex async code, hard to test
-   - Evidence: worker/ has 45% coverage, api/ has 85%
-
-SYSTEMIC FIXES:
-
-Priority 1 (Testing Philosophy):
-[Challenge team belief: "We should test private functions if complex"]
-[ ] Team discussion: When to test private vs public
-[ ] Document decision in TESTING.md
-[ ] Update coverage rules: Include private if >10 lines
-
-Priority 2 (Legacy Code):
-[ ] Identify CRITICAL untested functions (payment, auth)
-[ ] Write tests for critical functions first (5 functions)
-[ ] Then high-value functions (15 functions)
-[ ] Then remaining (16 functions)
-
-Priority 3 (Worker Service):
-[ ] Training: Testing async/celery tasks
-[ ] Add test utilities: mock_celery, async_test decorator
-[ ] Pair programming: Test 3 worker functions together
-
-PREVENTIVE MEASURES:
-
-1. Pre-commit hook: Block new functions without tests
-2. Code review checklist: "Tests added?" required
-3. CI/CD: Fail if coverage drops below 80%
-4. Team training: Async testing patterns
-
-TIMELINE:
-
-Week 1: Team discussion + testing guidelines
-Week 2: Test 5 critical functions
-Week 3: Test 15 high-value functions
-Week 4: Test remaining 16 functions
-```
+Systemic fix: Team discussion on test philosophy, test critical functions first, async testing training
 
 ### Integration with Commands
 
@@ -453,53 +322,11 @@ Returns systemic fixes, not just individual remediation.
 
 ### Anti-Patterns to Prevent
 
-#### WRONG: Fix Symptoms Only
+❌ WRONG: Fix 15 bare except clauses individually, next week 10 new ones appear
 
-```
-User: "15 bare except clauses found. I'll fix them."
-<Spends 3 hours editing 15 files>
-<Commits>
-
-Next week:
-"10 new bare except clauses found"
-User: "Why do these keep appearing?!"
-```
-
-#### RIGHT: Fix Root Cause
-
-```
-Skill: "15 bare except clauses found. Analyzing root cause..."
-Skill: "80% are legacy code (>1 year old). Fix with migration script?"
-User: "Yes"
-Skill: "Running /cco-migrate-legacy --principle=U_FAIL_FAST..."
-Skill: "✓ 12 legacy violations fixed in 30 seconds"
-Skill: "Remaining 3 are recent. Analyzing authorship..."
-Skill: "All by alice@company.com (new team member). Schedule training?"
-User: "Yes"
-Skill: "✓ Scheduled 1-on-1 with Alice for next week"
-Skill: "Adding pre-commit hook to prevent new violations..."
-Skill: "✓ Pre-commit hook added"
-
-Next week:
-"0 new bare except clauses" (pre-commit hook blocks them)
-Alice: "My code was blocked by pre-commit. Found U_FAIL_FAST docs, using specific exceptions now ✓"
-```
+✅ RIGHT: Analyze root cause (legacy code → migration script, new dev → training), add pre-commit hook to prevent recurrence
 
 ### Success Metrics
 
-**Before (without skill):**
-- Recurrence rate: 60% (violations return)
-- Fix time: 2-3 hours (individual fixes)
-- Learning: None (same mistakes repeat)
-
-**After (with skill):**
-- Recurrence rate: 10% (systemic fixes prevent)
-- Fix time: 30 minutes (scripts + automation)
-- Learning: High (team understands WHY)
-
-### When to Skip This Skill
-
-Skip root cause analysis if:
-- <3 violations of same type (not enough data)
-- Violations are unrelated (no pattern)
-- User explicitly requests: `/cco-audit-principles --no-root-cause`
+Before: 60% recurrence, 2-3 hour fixes
+After: 10% recurrence, 30 min fixes with prevention

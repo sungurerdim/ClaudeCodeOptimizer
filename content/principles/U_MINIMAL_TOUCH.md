@@ -32,30 +32,6 @@ Edit only required files. No "drive-by improvements", no scope creep.
 - **Merge conflicts** - Touching unrelated files creates conflicts
 - **Harder rollback** - Can't revert targeted fix without reverting extras
 
-### Business Value
-- **Faster reviews** - Smaller, focused changes reviewed quickly
-- **Lower risk** - Fewer changes = fewer bugs
-- **Easier debugging** - When issues arise, smaller diff to investigate
-- **Better velocity** - Small PRs merge faster than large ones
-- **Cleaner history** - Each commit has clear purpose
-
-### Technical Benefits
-- **Surgical changes** - Fix exactly what's broken, nothing more
-- **Easier testing** - Test only what changed
-- **Easier rollback** - Revert specific change without side effects
-- **Reduced conflicts** - Fewer files touched = fewer merge conflicts
-- **Clearer intent** - Change purpose is obvious
-
-### Industry Evidence
-- **Google Engineering Practices** - "Small CLs get reviewed faster"
-- **Linux Kernel Guidelines** - "Do one thing per patch"
-- **GitHub Best Practices** - Small PRs have 10x faster review time
-- **Microsoft Research** - PRs with <400 lines have 70% faster merge time
-
----
-
-## How
-
 ### Core Principle
 
 **Only touch files REQUIRED for the task. Everything else is out of scope.**
@@ -359,33 +335,8 @@ def logout():  # Same file, but NOT REQUIRED for task
 
 ---
 
-## Cross-References
-
-**Related Principles:**
-- **U_ATOMIC_COMMITS** - Each commit = one logical change (applies at commit level)
-- **U_NO_OVERENGINEERING** - Don't build what's not needed (applies at feature level)
-- **U_TEST_FIRST** - Tests for this change, not others
-- **C_MINIMAL_TOUCH** - Claude Code version of this principle
-- **U_DRY** - But don't refactor during unrelated tasks
-
----
-
-## Industry Standards Alignment
-
-- **Google Engineering Practices** - Small CLs get reviewed faster
-- **Linux Kernel Development** - One thing per patch
-- **GitHub Flow** - Feature branches should be focused
-- **Trunk-Based Development** - Small, frequent changes to trunk
-- **Continuous Integration** - Small changes integrate easier
-
----
-
 ## Summary
 
 **Minimal Touch Policy** means editing ONLY files required for the current task. No drive-by improvements, no scope creep, no "while I'm here" changes.
 
 **Core Rule**: If the file isn't required to complete the task, don't touch it.
-
-**Remember**: "The best change is no change. The second best is a small, focused change."
-
-**Impact**: Faster reviews, lower risk, easier rollback, reduced merge conflicts.

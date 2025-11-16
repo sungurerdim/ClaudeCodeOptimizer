@@ -31,30 +31,6 @@ Orchestrate multiple Claude agents efficiently through parallel execution, pipel
 - **No pipeline thinking** - Missing dependencies between agents
 - **Resource waste** - Expensive agents for trivial tasks
 
-### Business Value
-- **5x faster execution** - Smart orchestration vs ad-hoc execution
-- **60% cost reduction** - Right model for each agent
-- **Higher quality** - Complex reasoning when needed
-- **Better scalability** - Orchestration patterns scale to large tasks
-- **Predictable performance** - Systematic approach vs trial-and-error
-
-### Technical Benefits
-- **Optimal parallelism** - Maximum concurrent execution
-- **Pipeline efficiency** - Dependencies handled correctly
-- **Resource optimization** - Right tool for each subtask
-- **Fault isolation** - Agent failures don't cascade
-- **Clear progress tracking** - Understand what's happening when
-
-### Industry Evidence
-- **Kubernetes orchestration** - Container management patterns
-- **Apache Airflow** - Workflow orchestration DAGs
-- **AWS Step Functions** - Serverless workflow coordination
-- **MapReduce** - Data processing orchestration (Google)
-
----
-
-## How
-
 ### Orchestration Patterns
 
 #### Pattern 1: Parallel Fan-Out
@@ -442,16 +418,6 @@ Before orchestrating agents:
 
 ---
 
-## Cross-References
-
-**Related Principles:**
-- **C_PARALLEL_AGENTS** - Detailed parallel execution patterns
-- **C_MODEL_SELECTION** - Choosing appropriate model for each agent
-- **C_TOKEN_OPTIMIZATION** - Optimizing context for agents
-- **C_CONTEXT_WINDOW_MGMT** - Managing context across orchestration
-
----
-
 ## Summary
 
 **Agent Orchestration Patterns** means systematically orchestrating multiple Claude agents through parallel fan-out, sequential pipelines, hierarchical decomposition, and scatter-gather patterns with appropriate model selection.
@@ -461,7 +427,3 @@ Before orchestrating agents:
 - **Pipeline**: Sequential dependencies (respect order)
 - **Hierarchical**: Planning (Opus) → Execution (Sonnet/Haiku)
 - **Scatter-Gather**: Parallel work → Synthesis
-
-**Remember**: "Orchestrate strategically - parallel when possible, sequential when necessary, hierarchical for complexity."
-
-**Impact**: 5x faster execution, 60% cost reduction, optimal resource utilization.

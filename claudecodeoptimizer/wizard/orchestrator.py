@@ -1057,15 +1057,6 @@ class CCOWizard:
                 # Guides selection with descriptions
                 available_guides = get_available_guides()
                 if available_guides:
-                    # Guide descriptions
-                    guide_descriptions = {
-                        "cco-verification-protocol": "Evidence-based verification workflow (U_EVIDENCE_BASED)",
-                        "cco-git-workflow": "Git commit, branching, PR guidelines (U_ATOMIC_COMMITS, U_CONCISE_COMMITS)",
-                        "cco-security-response": "Security incident response and remediation plan",
-                        "cco-performance-optimization": "Performance analysis and optimization workflow",
-                        "cco-container-best-practices": "Docker/Kubernetes deployment best practices",
-                    }
-
                     # Recommend guides based on project context
                     recommended_guides = self._recommend_guides_for_project()
 
@@ -1077,9 +1068,15 @@ class CCOWizard:
                     print()
 
                     # Show each guide with description and recommendation
+                    from .. import config
+                    from ..core.metadata_manager import metadata_manager
+
+                    guides_dir = config.get_guides_dir()
                     for i, guide in enumerate(available_guides, 1):
                         guide_name = guide.replace("-", " ").title()
-                        description = guide_descriptions.get(guide, "")
+                        # Read description from guide file frontmatter
+                        guide_file = guides_dir / f"{guide}.md"
+                        description = metadata_manager.get_description(guide_file)
                         is_recommended = guide in recommended_guides
                         marker = "⭐" if is_recommended else "  "
 
@@ -1162,15 +1159,6 @@ class CCOWizard:
                     # Recommend skills based on project workflow needs
                     recommended_skills = self._recommend_skills_for_project()
 
-                    # Skill descriptions
-                    skill_descriptions = {
-                        "cco-skill-verification-protocol": "Evidence-based fix-verify-commit loop (U_EVIDENCE_BASED)",
-                        "cco-skill-test-first-verification": "Generate tests before code changes (U_TEST_FIRST)",
-                        "cco-skill-root-cause-analysis": "Analyze WHY violations exist, not just WHERE",
-                        "cco-skill-incremental-improvement": "Break large tasks into achievable milestones",
-                        "cco-skill-security-emergency-response": "Immediate P0 CRITICAL security remediation",
-                    }
-
                     print_info(
                         f"Available workflow skills ({len(available_skills)}):",
                         indent=2,
@@ -1182,13 +1170,24 @@ class CCOWizard:
                     print()
 
                     # Show each skill with description and recommendation
+                    from .. import config
+                    from ..core.metadata_manager import metadata_manager
+
+                    skills_dir = config.get_skills_dir()
                     for i, skill in enumerate(available_skills, 1):
                         # Skip templates and README
                         if skill.startswith("_") or skill == "README":
                             continue
 
                         skill_name = skill.replace("-", " ").title()
-                        description = skill_descriptions.get(skill, "")
+                        # Read description from skill file frontmatter (handle nested paths like python/skill.md)
+                        if "/" in skill:
+                            # Language-specific skill (e.g., python/cco-skill-async-patterns)
+                            parts = skill.split("/")
+                            skill_file = skills_dir / parts[0] / f"{parts[1]}.md"
+                        else:
+                            skill_file = skills_dir / f"{skill}.md"
+                        description = metadata_manager.get_description(skill_file)
                         is_recommended = skill in recommended_skills
                         marker = "⭐" if is_recommended else "  "
 
@@ -1891,6 +1890,7 @@ class CCOWizard:
     # Helpers
     # ========================================================================
 
+
     def _build_preferences(self) -> Dict:
         """Build CCOPreferences object from answers"""
         # Map answers to proper CCOPreferences schema
@@ -2000,141 +2000,49 @@ class CCOWizard:
 
     def _recommend_guides_for_project(self) -> List[str]:
         """
-        Recommend guides based on comprehensive decision tree analysis.
+        Recommend guides using centralized RecommendationService.
 
-        Maps all 24 decision points to relevant guides.
+        Delegates to recommendation layer for metadata-based matching.
         """
+        from ..core.recommendation_service import recommendation_service
+
         if not self.answer_context:
             return []
 
-        recommended = []
-        answers = self.answer_context.answers
-
-        # Extract key decisions
-        project_types = answers.get("project_purpose", [])
-        team_size = answers.get("team_dynamics", "solo")
-        maturity = answers.get("project_maturity", "prototype")
-        philosophy = answers.get("development_philosophy", "balanced")
-        testing = answers.get("testing_approach", "balanced")
-        security = answers.get("security_stance", "standard")
-        git_workflow = answers.get("git_workflow", "main_only")
-        error_handling = answers.get("error_handling", "fail_fast")
-
-        # TIER 1 Mappings: Fundamental Decisions
-
-        # Verification Protocol: for quality-conscious projects
-        if philosophy == "quality_first" or maturity in ["production", "legacy"]:
-            recommended.append("cco-verification-protocol")
-
-        # For all team projects (non-solo)
-        if team_size != "solo":
-            recommended.append("cco-verification-protocol")
-
-        # Git Workflow Guide: for team projects with structured workflows
-        if team_size in ["small-2-5", "medium-10-20", "large-20-50"]:
-            recommended.append("cco-git-workflow")
-
-        # Also for git flow or github flow
-        if git_workflow in ["git_flow", "github_flow"]:
-            if "cco-git-workflow" not in recommended:
-                recommended.append("cco-git-workflow")
-
-        # TIER 2 Mappings: Strategy Decisions
-
-        # Security Response: for production or high security stance
-        if security in ["production", "high"] or maturity == "production":
-            recommended.append("cco-security-response")
-
-        # For web/API projects (security critical)
-        if any(pt in project_types for pt in ["backend", "web-app", "microservice", "spa"]):
-            if "cco-security-response" not in recommended:
-                recommended.append("cco-security-response")
-
-        # Performance Optimization: for backend services or data pipelines
-        if any(
-            pt in project_types
-            for pt in [
-                "backend",
-                "microservice",
-                "data-pipeline",
-                "ml",
-                "analytics",
-            ]
-        ):
-            recommended.append("cco-performance-optimization")
-
-        # For projects that need retry/resilience
-        if error_handling in ["retry_logic", "graceful_degradation"]:
-            if "cco-performance-optimization" not in recommended:
-                recommended.append("cco-performance-optimization")
-
-        # Container Best Practices: for containerized infrastructure
-        if any(pt in project_types for pt in ["microservice", "devtools", "data-pipeline", "ml"]):
-            recommended.append("cco-container-best-practices")
-
-        # TIER 3 Mappings: Tactical Decisions
-
-        # Additional test-focused recommendations
-        if testing in ["comprehensive", "balanced"]:
-            if "cco-verification-protocol" not in recommended:
-                recommended.append("cco-verification-protocol")
-
-        return list(set(recommended))  # Remove duplicates
+        return recommendation_service.recommend_guides(self.answer_context.answers)
 
     def _recommend_skills_for_project(self) -> List[str]:
-        """Add all universal skills + language-specific skills to project"""
-        # Universal skills - always included in every project
-        universal_skills = [
-            "cco-skill-verification-protocol",
-            "cco-skill-test-first-verification",
-            "cco-skill-root-cause-analysis",
-            "cco-skill-incremental-improvement",
-            "cco-skill-security-emergency-response",
-        ]
+        """
+        Recommend skills using centralized RecommendationService.
 
-        # Language-specific skills - add if language detected
-        language_specific_skills = []
+        Delegates to recommendation layer for metadata-based matching.
+        """
+        from ..core.recommendation_service import recommendation_service
+
+        if not self.answer_context:
+            return []
 
         # Get detected languages from system context
+        detected_languages = None
         if self.system_context and hasattr(self.system_context, "detected_languages"):
             detected_languages = self.system_context.detected_languages
 
-            # Add language-specific skills
-            if "python" in [lang.lower() for lang in detected_languages]:
-                language_specific_skills.extend(
-                    [
-                        "python/cco-skill-async-patterns",
-                        "python/cco-skill-packaging-modern",
-                        "python/cco-skill-performance",
-                        "python/cco-skill-testing-pytest",
-                        "python/cco-skill-type-hints-advanced",
-                    ]
-                )
-
-            if "go" in [lang.lower() for lang in detected_languages]:
-                # Go-specific skills (when available)
-                pass
-
-            if "rust" in [lang.lower() for lang in detected_languages]:
-                # Rust-specific skills (when available)
-                pass
-
-            if any(lang.lower() in ["typescript", "javascript"] for lang in detected_languages):
-                # TypeScript/JS-specific skills (when available)
-                pass
-
-        return list(set(universal_skills + language_specific_skills))  # Remove duplicates
+        return recommendation_service.recommend_skills(
+            self.answer_context.answers, detected_languages
+        )
 
     def _recommend_agents_for_project(self) -> List[str]:
-        """Add all universal agents to every project (always included)"""
-        # Universal agents - always included in every project
-        universal_agents = [
-            "cco-agent-audit",
-            "cco-agent-fix",
-            "cco-agent-generate",
-        ]
+        """
+        Recommend agents using centralized RecommendationService.
 
-        return universal_agents
+        Delegates to recommendation layer for metadata-based matching.
+        """
+        from ..core.recommendation_service import recommendation_service
+
+        if not self.answer_context:
+            return []
+
+        return recommendation_service.recommend_agents(self.answer_context.answers)
 
 
 # ============================================================================

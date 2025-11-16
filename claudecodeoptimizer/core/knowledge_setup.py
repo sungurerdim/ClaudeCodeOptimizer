@@ -406,17 +406,30 @@ def get_available_agents() -> list[str]:
 
 def get_available_skills() -> list[str]:
     """
-    Get list of available skill files.
+    Get list of available skill files including language-specific ones.
 
     Returns:
-        List of skill filenames without extension (excludes templates and README)
+        List of skill filenames without extension (excludes templates and README).
+        Language-specific skills are returned as "language/skill-name" (e.g., "python/cco-skill-async-patterns")
     """
     skills_dir = config.get_skills_dir()
     if not skills_dir.exists():
         return []
 
-    return [
-        f.stem
-        for f in skills_dir.glob("*.md")
-        if f.name != "README.md" and not f.name.startswith("_template")
-    ]
+    skills = []
+
+    # Root level skills (general/universal)
+    for f in skills_dir.glob("*.md"):
+        if f.name != "README.md" and not f.name.startswith("_template"):
+            skills.append(f.stem)
+
+    # Language-specific skills (nested in subdirectories)
+    for lang_dir in skills_dir.iterdir():
+        if lang_dir.is_dir() and not lang_dir.name.startswith(("_", ".")):
+            # Skip __pycache__, __init__, etc
+            for f in lang_dir.glob("*.md"):
+                if f.name != "README.md" and not f.name.startswith("_template"):
+                    # Return as "language/skill-name"
+                    skills.append(f"{lang_dir.name}/{f.stem}")
+
+    return skills

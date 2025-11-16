@@ -863,30 +863,40 @@ class TestRecommendations:
         assert "cco-git-workflow" in guides
 
     def test_recommend_skills_for_project(self, temp_project, mock_system_context):
-        """Test skill recommendations"""
+        """Test skill recommendations with context"""
         wizard = CCOWizard(temp_project, mode="quick")
         wizard.system_context = mock_system_context
+        wizard.answer_context = AnswerContext(system=mock_system_context)
+
+        # Set answers that match skill use_cases
+        wizard.answer_context.set("development_philosophy", "quality_first")
+        wizard.answer_context.set("project_maturity", "active-dev")
+        wizard.answer_context.set("testing_approach", "balanced")
 
         skills = wizard._recommend_skills_for_project()
 
-        # Universal skills should always be included
-        assert "cco-skill-verification-protocol" in skills
-        assert "cco-skill-test-first-verification" in skills
-        assert "cco-skill-root-cause-analysis" in skills
-        assert "cco-skill-incremental-improvement" in skills
-        assert "cco-skill-security-emergency-response" in skills
+        # Skills matching use_cases should be recommended
+        assert "cco-skill-verification-protocol" in skills  # matches quality_first + balanced
+        assert "cco-skill-test-first-verification" in skills  # matches balanced
+        assert "cco-skill-root-cause-analysis" in skills  # matches quality_first
 
     def test_recommend_agents_for_project(self, temp_project, mock_system_context):
-        """Test agent recommendations"""
+        """Test agent recommendations with context"""
         wizard = CCOWizard(temp_project, mode="quick")
         wizard.system_context = mock_system_context
+        wizard.answer_context = AnswerContext(system=mock_system_context)
+
+        # Set answers that match agent use_cases
+        wizard.answer_context.set("development_philosophy", "quality_first")
+        wizard.answer_context.set("project_maturity", "active-dev")
+        wizard.answer_context.set("testing_approach", "balanced")
 
         agents = wizard._recommend_agents_for_project()
 
-        # Universal agents should always be included
-        assert "cco-agent-audit" in agents
-        assert "cco-agent-fix" in agents
-        assert "cco-agent-generate" in agents
+        # Agents matching use_cases should be recommended
+        assert "cco-agent-audit" in agents  # matches quality_first + active-dev
+        assert "cco-agent-fix" in agents  # matches quality_first + active-dev
+        assert "cco-agent-generate" in agents  # matches balanced
 
 
 # ============================================================================

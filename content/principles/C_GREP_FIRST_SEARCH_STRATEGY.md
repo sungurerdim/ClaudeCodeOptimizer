@@ -35,35 +35,6 @@ Optimize file operations using a three-stage grep-first approach: (1) files_with
 - **Context Pollution** - Irrelevant files clutter context, degrading AI analysis quality
 - **Session Limits** - Inefficient searches hit context limits faster, forcing session restarts
 
-### Business Value
-
-- **90-95% token reduction** - Grep-first approach reduces token usage by 90-95% on search tasks
-- **10-50x faster discovery** - Finding patterns via grep is 10-50x faster than reading files
-- **5-10x more operations** - Efficient searching allows 5-10x more operations per session
-- **Better quality** - Focused context improves AI analysis accuracy and relevance
-- **Cost savings** - Dramatic token reduction directly translates to lower API costs
-
-### Technical Benefits
-
-- **Three-stage efficiency** - files_with_matches → content preview → targeted read optimizes each step
-- **Precision targeting** - Grep identifies exact locations (file:line) before reading
-- **Context preservation** - Minimal token usage preserves context for actual work
-- **Parallel discovery** - Grep can search entire codebase in seconds
-- **Pattern matching** - Regex patterns find complex relationships across files efficiently
-- **Scalability** - Grep-first scales to codebases of any size without context issues
-
-### Industry Evidence
-
-- **Anthropic Guidelines** - Official Claude Code documentation emphasizes grep-before-read strategy
-- **ripgrep Performance** - ripgrep (underlying tool) searches millions of lines in milliseconds
-- **Developer Workflows** - Professional developers universally use grep/ag/rg before file reads
-- **Token Economics** - Production data shows 90%+ token savings with search-first approach
-- **Performance Benchmarks** - Grep-first is 10-100x faster than read-and-search approaches
-
----
-
-## How
-
 ### Core Techniques
 
 **The Three-Stage Grep-First Strategy**
@@ -442,23 +413,6 @@ Grep("authentication",
 
 ---
 
-## Cross-References
-
-**Related Principles:**
-
-- **C_CONTEXT_WINDOW_MGMT** - Grep-first is a core context optimization technique
-- **C_TOKEN_OPTIMIZATION** - Grep-first dramatically reduces token usage
-- **C_MODEL_SELECTION** - Use Haiku for grep tasks, reserve Sonnet for analysis
-- **C_PARALLEL_AGENTS** - Parallel grep operations for multi-pattern searches
-- **U_MINIMAL_TOUCH** - Find exact locations to minimize changes
-
-**Workflow Integration:**
-- Use **Grep** tool for all searches before **Read** tool
-- Combine with **Glob** for file pattern discovery
-- Use with **Task/Explore agents** for codebase analysis
-
----
-
 ## Summary
 
 **Grep-First Search Strategy** means always searching with grep before reading files, using a three-stage approach: (1) discover files with files_with_matches, (2) preview matches with content+context, (3) read precisely with offset+limit.
@@ -470,20 +424,3 @@ Grep("authentication",
 - **Stage 3: Precise Read** - Use Read(offset, limit) for exact sections only
 - **Never read blindly** - Always grep first unless you have exact file:line reference
 - **Context is king** - Always use -C/A/B context lines in content mode
-
-**Remember**: "Grep first, read precisely, edit confidently. Never read files blindly when grep can find your target in milliseconds."
-
-**Impact**: 90-95% token reduction, 10-50x faster discovery, 5-10x more operations per session, preserved context for real work.
-
----
-
-**Three-Stage Workflow:**
-```
-files_with_matches → content with context → Read with offset+limit → Edit
-    (discover)           (preview)              (precise)           (action)
-```
-
-**Token Efficiency:**
-- Blind reading: 5000+ tokens for unknown location
-- Grep-first: 200-500 tokens for same task
-- Savings: 90-95% reduction

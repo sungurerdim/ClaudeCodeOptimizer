@@ -1,9 +1,16 @@
 ---
+title: Pytest Testing Patterns Skill
+category: testing
+description: pytest fixtures, parametrize, test patterns
 metadata:
   name: "Pytest Testing Patterns"
   activation_keywords: ["test", "pytest", "fixture", "mock", "parametrize"]
   category: "language-python"
+  language: "python"
 principles: ['U_TEST_FIRST', 'U_EVIDENCE_BASED', 'P_TEST_COVERAGE', 'P_TEST_PYRAMID', 'P_CI_GATES', 'P_TEST_ISOLATION']
+use_cases:
+  testing_approach: [balanced, comprehensive]
+  project_maturity: [active-dev, production, legacy]
 ---
 
 # Pytest Testing Patterns

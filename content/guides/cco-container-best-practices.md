@@ -1,3 +1,12 @@
+---
+title: Container & Kubernetes Best Practices
+category: infrastructure
+tags: [containers, docker, kubernetes, devops]
+description: Docker/Kubernetes deployment best practices
+use_cases:
+  project_purpose: [microservice, devtools, data-pipeline, ml]
+---
+
 # Container & Kubernetes Best Practices
 
 **Load on-demand when:** Container operations, Docker/K8s tasks
@@ -16,9 +25,6 @@ Best practices for containerized applications using Docker and Kubernetes.
 
 **Purpose**: Smaller images, faster deployments
 
-**Related Principles:**
-- **P_CONTAINER_SECURITY**: Minimize attack surface by excluding build dependencies
-- **U_MINIMAL_TOUCH**: Include only what's necessary for production
 
 **❌ Bad** - Single stage (large image):
 ```dockerfile
@@ -51,9 +57,6 @@ CMD ["python", "app.py"]
 
 ### Minimal Base Images
 
-**Related Principles:**
-- **P_CONTAINER_SECURITY**: Use minimal base images to reduce vulnerabilities
-- **P_SUPPLY_CHAIN_SECURITY**: Verify base image provenance
 
 **Options**:
 ```dockerfile
@@ -103,10 +106,6 @@ CMD ["python", "app.py"]
 
 ### Security Hardening
 
-**Related Principles:**
-- **P_CONTAINER_SECURITY**: Run as non-root user
-- **P_ZERO_DISK_TOUCH**: Read-only filesystem prevents unauthorized writes
-- **P_PRIVACY_FIRST**: Isolate application from system files
 
 **Non-root user**:
 ```dockerfile
@@ -137,10 +136,6 @@ services:
 
 ### Dependency Scanning
 
-**Related Principles:**
-- **P_SUPPLY_CHAIN_SECURITY**: Scan for vulnerabilities in dependencies
-- **U_DEPENDENCY_MANAGEMENT**: Keep dependencies updated and secure
-- **U_EVIDENCE_BASED**: Verify security before deployment
 
 **Scan before deployment**:
 ```bash
@@ -169,9 +164,6 @@ RUN apt-get update && \
 
 ### Declarative Manifests
 
-**Related Principles:**
-- **P_CONFIGURATION_AS_CODE**: Infrastructure as code, not commands
-- **P_IAC_GITOPS**: Version-controlled, auditable infrastructure
 
 **❌ Bad** - Imperative commands:
 ```bash
@@ -237,10 +229,6 @@ spec:
 
 ### Health Checks
 
-**Related Principles:**
-- **P_HEALTH_CHECKS**: Implement comprehensive health endpoints
-- **P_GRACEFUL_SHUTDOWN**: Ensure clean startup and shutdown
-- **P_OBSERVABILITY_WITH_OTEL**: Monitor application health
 
 **Three types**:
 
@@ -312,10 +300,6 @@ def startup():
 
 ### ConfigMaps & Secrets
 
-**Related Principles:**
-- **P_CONFIGURATION_AS_CODE**: Externalize all configuration
-- **P_ENCRYPTION_AT_REST**: Encrypt sensitive secrets
-- **P_SECRET_ROTATION**: Rotate secrets regularly
 
 **Never hardcode configuration**:
 
@@ -418,10 +402,6 @@ spec:
 
 ### Infrastructure as Code
 
-**Related Principles:**
-- **P_IAC_GITOPS**: Infrastructure as code with GitOps workflow
-- **P_CONFIGURATION_AS_CODE**: All infrastructure in version control
-- **U_CHANGE_VERIFICATION**: Auditable, reviewable changes
 
 **Benefits**:
 - Version controlled

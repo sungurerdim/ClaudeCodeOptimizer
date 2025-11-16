@@ -19,14 +19,9 @@ Audit documentation completeness, accuracy, and detect documentation drift in **
 
 ## Objective
 
-Comprehensive documentation analysis:
-1. Check documentation completeness
-2. Detect documentation drift (code changed, docs didn't)
-3. Verify code examples are valid
-4. Assess documentation quality
-5. Identify missing documentation
+Comprehensive documentation analysis: completeness, drift, code examples, quality, and gaps.
 
-**Output:** Documentation audit report with improvement recommendations.
+**Output:** Documentation audit report with recommendations.
 
 ---
 
@@ -37,14 +32,6 @@ Comprehensive documentation analysis:
 **Execution Pattern**: Sequential scanning and validation
 
 ---
-
-## When to Use
-
-**Use this command:**
-- Before releases
-- After major refactoring
-- When onboarding new team members
-- Documentation feels outdated
 
 ---
 
@@ -305,49 +292,6 @@ print()
 ```
 
 ---
-
-## Output Example
-
-```
-=== Documentation Discovery ===
-
-Documentation Files: 23
-  markdown: 18
-  restructured: 3
-  text: 2
-
-Essential Documentation:
-  ✓ README.md
-  ✓ LICENSE
-  ✓ docs/ directory
-
-=== Docstring Coverage ===
-
-Functions: 298/412 documented (72.3%)
-Classes: 45/67 documented (67.2%)
-
-=== Documentation Drift Detection ===
-
-Drift Issues: 3
-  - Missing File Reference: References non-existent file: src/old_module.py
-  - Missing File Reference: References non-existent file: docs/api.md
-
-=== Code Example Validation ===
-
-Code Examples Found: 47
-  Python examples: 28/32 valid
-  ⚠ 4 examples have syntax errors
-
-=== Documentation Quality ===
-
-Documentation Quality Score: 68/100
-  ✓✓ Good
-
-=== Recommendations ===
-
-1. Fix 3 documentation drift issues
-2. Fix 4 invalid code examples
-```
 
 ---
 

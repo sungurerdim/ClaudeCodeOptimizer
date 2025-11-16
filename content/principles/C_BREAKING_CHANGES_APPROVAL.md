@@ -36,37 +36,6 @@ Never make breaking changes without explicit user approval. Always identify, doc
 - **Trust Erosion** - Unannounced breaking changes erode team trust in AI assistance
 - **Time Waste** - Teams spend hours debugging failures from unexpected breaking changes
 
-### Business Value
-
-- **Risk mitigation** - Approval process prevents production outages and data loss
-- **Coordination** - Teams can plan for breaking changes, update dependents synchronously
-- **Trust building** - Transparent proposal process builds confidence in AI assistance
-- **Cost savings** - Planned migrations cost 10x less than emergency fixes
-- **Customer satisfaction** - Coordinated changes prevent service disruptions
-- **Legal compliance** - Some breaking changes require legal review (API contracts, SLAs)
-
-### Technical Benefits
-
-- **Migration planning** - Time to create proper migration scripts and rollback plans
-- **Testing preparation** - Teams can prepare comprehensive test suites for breaking changes
-- **Dependency coordination** - All dependent systems updated together, preventing partial failures
-- **Documentation updates** - Changelogs, API docs, and guides updated before release
-- **Backward compatibility** - Opportunity to implement deprecation periods and compatibility layers
-- **Gradual rollout** - Breaking changes can be feature-flagged and rolled out incrementally
-
-### Industry Evidence
-
-- **Semantic Versioning Spec** - Major version bumps required for breaking changes; industry standard
-- **Google API Guidelines** - Breaking changes require 6-12 month deprecation period minimum
-- **Stripe API** - Never removes features without 36-month notice + migration support
-- **AWS Service Updates** - Breaking changes announced 12+ months in advance with migration tools
-- **GitHub Study** - 78% of production incidents from breaking changes were preventable with approval process
-- **Developer Surveys** - 92% of developers want notification before breaking changes affect their code
-
----
-
-## How
-
 ### Core Techniques
 
 **1. Detect Breaking Changes Before Implementation**
@@ -628,26 +597,6 @@ Proceed with this breaking change? (yes/no)
 
 ---
 
-## Cross-References
-
-**Related Principles:**
-
-- **C_CRITICAL_CHANGES_PROPOSAL** - Similar proposal requirement for critical (non-breaking) changes
-- **C_MINIMAL_TOUCH** - Minimal changes reduce likelihood of accidental breaking changes
-- **U_CHANGE_VERIFICATION** - Verify breaking changes work as expected after approval
-- **U_EVIDENCE_BASED** - Provide evidence of impact before proposing breaking change
-- **C_FOLLOW_PATTERNS** - Follow existing API patterns to avoid breaking changes
-
-**Workflow Integration:**
-- Before any potentially breaking change: analyze impact with Grep
-- Detect breaking changes: use checklist above
-- Propose to user: use proposal template
-- Wait for explicit approval: "yes" required
-- Implement only after approval
-- Verify with testing after implementation
-
----
-
 ## Summary
 
 **Breaking Changes Need Approval** means never removing functions, changing signatures, modifying data formats, or altering APIs without explicit user approval. Always detect, propose with full context, and wait for "yes" before implementing.
@@ -660,50 +609,3 @@ Proceed with this breaking change? (yes/no)
 - **Wait for "yes"** - Explicit approval required; silence ≠ approval
 - **Offer alternatives** - Suggest non-breaking approaches when possible
 - **Gradual deprecation** - Prefer deprecation periods over immediate removal
-
-**Remember**: "Grep first to find impact. Propose with full context. Wait for explicit approval. Never break silently."
-
-**Impact**: Prevents production outages, enables coordination, builds trust, reduces emergency fixes by 10x, saves hours of debugging.
-
----
-
-**Breaking Change Decision Tree:**
-```
-Need to make a change
-  ↓
-Will it break existing code/API/data?
-  No → Implement normally ✅
-  Yes → ↓
-      ↓
-Grep to analyze impact (how many files/APIs affected?)
-  ↓
-Is there a non-breaking alternative?
-  Yes → Propose both options (breaking vs non-breaking)
-  No → Propose breaking change with migration path
-      ↓
-Wait for user approval
-  User says "Yes" → Implement breaking change ✅
-  User says "No" → Don't implement ✅
-  User says "Wait" → Pause and discuss ✅
-  Silence → Don't implement ✅
-```
-
-**Breaking Change Proposal Checklist:**
-- ✅ What's changing (specific functions/APIs/schemas)
-- ✅ Why it's necessary (business/technical justification)
-- ✅ Impact analysis (X files, Y APIs, Z migrations)
-- ✅ Who/what it breaks (internal code, external API, database, config)
-- ✅ Migration path (step-by-step instructions)
-- ✅ Alternatives (non-breaking options if available)
-- ✅ Timeline (implementation + testing + migration period)
-- ✅ Explicit approval question ("Proceed? yes/no")
-
-**Common Breaking Changes:**
-- 🔴 Removing functions/classes/APIs
-- 🔴 Renaming public functions/classes/parameters
-- 🔴 Changing function signatures (parameters, return types)
-- 🔴 Changing data formats (JSON→YAML, API response structure)
-- 🔴 Database schema changes (renames, type changes, constraints)
-- 🔴 Configuration format changes
-- 🔴 Exception type changes
-- 🔴 Behavioral changes (same signature, different behavior)

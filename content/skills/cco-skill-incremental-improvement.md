@@ -1,9 +1,15 @@
 ---
+title: Incremental Improvement Protocol Skill
+category: planning
+description: Break large tasks into achievable milestones
 metadata:
   name: "Incremental Improvement Protocol"
   activation_keywords: ["overwhelming task", "large gap", "break into milestones", "weekly sprints"]
   category: "planning"
 principles: ['U_EVIDENCE_BASED', 'U_TEST_FIRST', 'U_NO_OVERENGINEERING', 'U_COMPLETE_REPORTING', 'U_EXPLICIT_COMPLETION']
+use_cases:
+  project_maturity: [legacy, active-dev]
+  development_philosophy: [balanced, move_fast]
 ---
 
 # Incremental Improvement Protocol

@@ -39,5 +39,3 @@ def get_redis():
 ```
 
 ## Autofix Available
-
-

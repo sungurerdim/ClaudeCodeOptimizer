@@ -30,7 +30,6 @@ class ClaudeMdGenerator:
         "agents": ("<!-- CCO_AGENTS_START -->", "<!-- CCO_AGENTS_END -->"),
         "commands": ("<!-- CCO_COMMANDS_START -->", "<!-- CCO_COMMANDS_END -->"),
         "guides": ("<!-- CCO_GUIDES_START -->", "<!-- CCO_GUIDES_END -->"),
-        "claude": ("<!-- CCO_CLAUDE_START -->", "<!-- CCO_CLAUDE_END -->"),
     }
 
     def __init__(
@@ -179,9 +178,6 @@ class ClaudeMdGenerator:
 
 <!-- CCO_GUIDES_START -->
 <!-- CCO_GUIDES_END -->
-
-<!-- CCO_CLAUDE_START -->
-<!-- CCO_CLAUDE_END -->
 """
 
     def _inject_all_sections(self, content: str) -> str:
@@ -219,8 +215,6 @@ class ClaudeMdGenerator:
             return self._generate_commands_content()
         elif section == "guides":
             return self._generate_guides_content()
-        elif section == "claude":
-            return self._generate_claude_guidelines_content()
         else:
             return f"[{section.title()} content]"
 
@@ -253,24 +247,25 @@ class ClaudeMdGenerator:
         # Universal principles
         universal = self._get_universal_principles()
         if universal:
-            lines.append("**Universal Principles** (apply to all projects):")
+            lines.append(f"<!-- Universal Principles ({len(universal)}) -->")
             for p in sorted(universal):
-                lines.append(
-                    f"- **{p}**: {self._get_principle_title(p)} → `.claude/principles/{p}.md`"
-                )
+                lines.append(f"@.claude/principles/{p}.md")
             lines.append("")
 
         # Project-specific principles
         project_specific = self._get_project_specific_principles()
         if project_specific:
-            lines.append("**Project-Specific Principles:**")
+            lines.append(f"<!-- Project-Specific Principles ({len(project_specific)}) -->")
             for p in sorted(project_specific):
-                lines.append(
-                    f"- **{p}**: {self._get_principle_title(p)} → `.claude/principles/{p}.md`"
-                )
+                lines.append(f"@.claude/principles/{p}.md")
+            lines.append("")
 
-        # Note: Claude guidelines are listed separately in Claude Guidelines section
-        # No need to duplicate them here
+        # Claude guidelines
+        claude_guidelines = self._get_claude_guidelines()
+        if claude_guidelines:
+            lines.append(f"<!-- Claude Guidelines ({len(claude_guidelines)}) -->")
+            for p in sorted(claude_guidelines):
+                lines.append(f"@.claude/principles/{p}.md")
 
         return "\n".join(lines)
 
@@ -279,23 +274,33 @@ class ClaudeMdGenerator:
         lines = ["## Available Skills", ""]
 
         if not self.selected_skills:
-            lines.append("No skills selected for this project.")
+            lines.append("<!-- No skills selected for this project -->")
             return "\n".join(lines)
 
+        # Group skills by type (core vs language-specific)
+        core_skills = []
+        python_skills = []
+
         for skill in self.selected_skills:
-            # Try to read title from metadata.name in frontmatter
-            skill_file = self.project_root / ".claude" / "skills" / f"{skill}.md"
-            # Check both flat and nested structure
-            if not skill_file.exists():
-                skill_file = self.project_root / ".claude" / "skills" / "python" / f"{skill}.md"
+            # Check if skill is in python subdirectory
+            skill_file_python = self.project_root / ".claude" / "skills" / "python" / f"{skill}.md"
+            if skill_file_python.exists():
+                python_skills.append(skill)
+            else:
+                core_skills.append(skill)
 
-            title = self._read_frontmatter_field(skill_file, "name", nested_path="metadata")
+        # Core skills
+        if core_skills:
+            lines.append(f"<!-- Core Skills ({len(core_skills)}) -->")
+            for skill in sorted(core_skills):
+                lines.append(f"@.claude/skills/{skill}.md")
+            lines.append("")
 
-            # Fallback to formatted ID
-            if not title:
-                title = skill.replace("cco-skill-", "").replace("-", " ").title()
-
-            lines.append(f"- **{title}** → `.claude/skills/{skill}.md`")
+        # Python skills
+        if python_skills:
+            lines.append(f"<!-- Python Skills ({len(python_skills)}) -->")
+            for skill in sorted(python_skills):
+                lines.append(f"@.claude/skills/python/{skill}.md")
 
         return "\n".join(lines)
 
@@ -304,19 +309,11 @@ class ClaudeMdGenerator:
         lines = ["## Available Agents", ""]
 
         if not self.selected_agents:
-            lines.append("No agents selected for this project.")
+            lines.append("<!-- No agents selected for this project -->")
             return "\n".join(lines)
 
-        for agent in self.selected_agents:
-            # Try to read name from frontmatter
-            agent_file = self.project_root / ".claude" / "agents" / f"{agent}.md"
-            title = self._read_frontmatter_field(agent_file, "name")
-
-            # Fallback to formatted ID
-            if not title:
-                title = agent.replace("cco-agent-", "").replace("-", " ").title() + " Agent"
-
-            lines.append(f"- **{title}** → `.claude/agents/{agent}.md`")
+        for agent in sorted(self.selected_agents):
+            lines.append(f"@.claude/agents/{agent}.md")
 
         return "\n".join(lines)
 
@@ -347,35 +344,14 @@ class ClaudeMdGenerator:
         lines = ["## Available Guides", ""]
 
         if not self.selected_guides:
-            lines.append("No guides selected for this project.")
+            lines.append("<!-- No guides selected for this project -->")
             return "\n".join(lines)
 
         for guide in sorted(self.selected_guides):
-            # Try to read title from markdown header
-            guide_file = self.project_root / ".claude" / "guides" / f"{guide}.md"
-            title = self._read_markdown_title(guide_file)
-
-            # Fallback to formatted ID
-            if not title:
-                title = guide.replace("cco-", "").replace("-", " ").title()
-            else:
-                # Remove " Guide" suffix if present for consistency
-                title = title.replace(" Guide", "")
-
-            lines.append(f"- **{title}** → `.claude/guides/{guide}.md`")
+            lines.append(f"@.claude/guides/{guide}.md")
 
         return "\n".join(lines)
 
-    def _generate_claude_guidelines_content(self) -> str:
-        """Generate Claude guidelines section content."""
-        lines = ["## Claude Guidelines", ""]
-
-        claude_principles = self._get_claude_guidelines()
-
-        for p in sorted(claude_principles):
-            lines.append(f"- **{p}**: {self._get_principle_title(p)} → `.claude/principles/{p}.md`")
-
-        return "\n".join(lines)
 
     # Helper methods
     def _get_universal_principles(self) -> List[str]:

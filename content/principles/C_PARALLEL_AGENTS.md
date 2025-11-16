@@ -31,31 +31,6 @@ Launch multiple Claude agents in parallel (single message) for 2-5x speedup on i
 - **Resource underutilization** - API can handle concurrent requests
 - **Poor user experience** - Long waits for simple multi-task operations
 
-### Business Value
-- **3-5x faster execution** - Parallel agents vs sequential
-- **Better developer experience** - Rapid feedback on complex tasks
-- **Higher throughput** - More work completed per session
-- **Cost efficiency** - Faster completion = fewer context switches
-- **Improved productivity** - No waiting for sequential operations
-
-### Technical Benefits
-- **True parallelism** - Multiple agents execute simultaneously
-- **Independent progress** - One agent failure doesn't block others
-- **Scalable workflows** - Easily add more parallel agents
-- **Efficient resource usage** - Maximize API throughput
-- **Faster iteration** - Quick feedback loops
-
-### Industry Evidence
-- **MapReduce** - Parallel data processing (Google)
-- **Kubernetes** - Parallel pod deployments
-- **CI/CD pipelines** - Parallel test execution (GitHub Actions, GitLab CI)
-- **Multicore processors** - Parallel thread execution
-- **Async programming** - Concurrent I/O operations
-
----
-
-## How
-
 ### Parallel Execution Strategy
 
 **Critical Rule:** Launch ALL agents in a SINGLE message for true parallelism.
@@ -464,16 +439,6 @@ Task("Design architecture for module C", model="opus")  # $1.50
 
 ---
 
-## Cross-References
-
-**Related Principles:**
-- **C_MODEL_SELECTION** - Choose appropriate model for parallel agents
-- **C_AGENT_ORCHESTRATION_PATTERNS** - Detailed orchestration strategies
-- **C_TOKEN_OPTIMIZATION** - Optimize context for parallel execution
-- **C_CONTEXT_WINDOW_MGMT** - Manage context across multiple agents
-
----
-
 ## Summary
 
 **Parallel Agents** means launching multiple independent Claude agents in a single message for 3-5x faster execution on complex multi-task operations.
@@ -483,7 +448,3 @@ Task("Design architecture for module C", model="opus")  # $1.50
 - **Independent tasks** - No dependencies or shared state modifications
 - **2-10 agents optimal** - Manageable parallelism without coordination overhead
 - **Right model** - Haiku for simple, Sonnet for complex, avoid parallel Opus
-
-**Remember**: "One message with many agents > many messages with one agent each."
-
-**Impact**: 3-5x faster execution, better resource utilization, improved developer experience.

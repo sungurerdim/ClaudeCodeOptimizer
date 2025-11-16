@@ -38,5 +38,3 @@ class User:  # Immutable
 ```
 
 ## Autofix Available
-
-

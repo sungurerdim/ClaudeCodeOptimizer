@@ -21,74 +21,7 @@ Deep analysis of **${PROJECT_NAME}** structure, technology stack, and quality me
 
 ## Prerequisites: Load Required Context
 
-```python
-import sys
-from pathlib import Path
-
-print("📚 Loading CCO Context for Analysis...\n")
-
-# Load core documents
-loaded_docs = []
-total_tokens = 0
-
-# Load CLAUDE.md
-claude_md = Path("CLAUDE.md")
-if claude_md.exists():
-    tokens = len(claude_md.read_text(encoding="utf-8")) // 4
-    loaded_docs.append(("CLAUDE.md", tokens))
-    total_tokens += tokens
-    print(f"✓ Loaded CLAUDE.md (~{tokens:,} tokens)")
-else:
-    print("✗ CLAUDE.md not found - /cco-init required")
-    sys.exit(1)
-
-# Load principles using category-based loader
-from claudecodeoptimizer.core.principle_loader import PrincipleLoader
-
-loader = PrincipleLoader()
-
-# For cco-analyze command
-principles = loader.load_for_command("cco-analyze")
-tokens = loader.estimate_token_count("cco-analyze")
-loaded_docs.append(("Principles (cco-analyze)", tokens))
-total_tokens += tokens
-print(f"✓ Loaded relevant principles (~{tokens:,} tokens)")
-print(f"   Categories: {', '.join(loader.get_categories_for_command('cco-analyze'))}")
-
-print(f"\n📊 Core context loaded: ~{total_tokens:,} tokens")
-print(f"   Budget remaining: ~{200000 - total_tokens:,} tokens (200K total)\n")
-
-print("Token Optimization Summary:")
-print(f"  Before: ~9000 tokens (full CLAUDE.md + PRINCIPLES.md + guides)")
-print(f"  After:  ~{total_tokens:,} tokens (core + category-specific principles)")
-print(f"  Reduction: ~72% savings\n")
-```
-
-### Optional: Load Guides On-Demand
-
-For detailed workflows, load guides when needed:
-
-```python
-from claudecodeoptimizer.core.guide_loader import GuideLoader, get_suggested_guides
-
-guide_loader = GuideLoader()
-suggested = get_suggested_guides("cco-analyze")
-
-print(f"\n📖 Suggested guides for this command:")
-for guide_name in suggested:
-    summary = guide_loader.get_guide_summary(guide_name)
-    tokens = guide_loader.estimate_token_count(guide_name)
-    print(f"   • {guide_name} (~{tokens} tokens)")
-    print(f"     {summary}\n")
-
-# Load when needed:
-# guide_content = guide_loader.load_guide("architecture-patterns")
-
-print("\nToken Optimization Summary:")
-print(f"  Before: CLAUDE.md (~1000) + PRINCIPLES.md (~5000) + Guides (~3000) = ~9000 tokens")
-print(f"  After:  CLAUDE.md (~1000) + Core+Category principles (~1500) + Guides (on-demand) = ~2500 tokens")
-print(f"  Reduction: 72% (9000 → 2500)")
-```
+Load CLAUDE.md and relevant principles for analysis context.
 
 ---
 
@@ -148,8 +81,6 @@ Comprehensive project analysis:
 ---
 
 ## Phase 1: Project Structure Analysis
-
-Detect project organization and architecture:
 
 ```python
 import sys
@@ -273,8 +204,6 @@ analyze_tree(project_root)
 ---
 
 ## Phase 2: Technology Stack Detection
-
-Identify all technologies, frameworks, and tools:
 
 ```python
 print("\n=== Technology Stack Detection ===\n")
@@ -425,8 +354,6 @@ if tech_stack["ci_cd"]:
 
 ## Phase 3: Complexity Metrics
 
-Calculate code complexity metrics:
-
 ```python
 print("\n=== Complexity Metrics ===\n")
 
@@ -540,8 +467,6 @@ if metrics["code_lines"] > 0:
 
 ## Phase 4: Dependency Analysis
 
-Analyze project dependencies:
-
 ```python
 print("\n=== Dependency Analysis ===\n")
 
@@ -606,8 +531,6 @@ elif dependencies["total"] < 5:
 
 ## Phase 5: Architecture Pattern Detection
 
-Identify architecture patterns:
-
 ```python
 print("\n=== Architecture Patterns ===\n")
 
@@ -670,8 +593,6 @@ if not any(patterns.values()):
 ---
 
 ## Phase 6: Quality Metrics
-
-Calculate quality indicators:
 
 ```python
 print("\n=== Quality Metrics ===\n")
@@ -776,8 +697,6 @@ print(f"- Low Complexity: 5/5" if metrics["avg_file_length"] < 300 else "- Low C
 
 ## Phase 7: Recommendations
 
-Provide actionable recommendations:
-
 ```python
 print("\n=== Recommendations ===\n")
 
@@ -838,8 +757,6 @@ print("3. Address high-priority recommendations")
 ---
 
 ## Phase 8: Save Analysis Results
-
-Save analysis to state for tracking:
 
 ```python
 from claudecodeoptimizer.core.state import StateTracker
@@ -910,129 +827,6 @@ Generate shareable report:
 ```
 
 ---
-
-## Output Example
-
-```
-=== Project Structure Analysis ===
-
-Project: backend
-Root: D:\GitHub\backend
-
-Structure Type: Microservices
-Service Count: 5 services
-
-=== Directory Tree ===
-
-├── services/
-│   ├── api/
-│   ├── analyzer/
-│   ├── ledger/
-│   ├── seed/
-│   └── worker/
-├── shared/
-├── tests/
-├── .claude/
-├── .github/
-├── README.md
-├── CLAUDE.md
-├── docker-compose.yml
-
-=== Technology Stack Detection ===
-
-Languages Detected: 2
-- Python
-- JavaScript
-
-=== Frameworks & Libraries ===
-
-Frameworks: 3
-- fastapi
-- celery
-- redis
-
-Databases: 2
-- postgresql
-- redis
-
-CI/CD: 1
-- GitHub Actions
-
-=== Complexity Metrics ===
-
-Total Files: 127
-Total Lines: 15,234
-  Code Lines: 10,500 (69%)
-  Comment Lines: 1,200 (8%)
-  Blank Lines: 3,534 (23%)
-
-Average File Length: 120 lines
-Max File Length: 856 lines
-
-Functions: 250
-Classes: 45
-
-Comment Ratio: 11.43%
-  ✓ Good comment coverage
-
-=== Dependency Analysis ===
-
-Total Dependencies: 42
-  Production: 35
-  Development: 7
-
-Top 10 Production Dependencies:
-1. fastapi
-2. uvicorn
-3. redis
-4. psycopg2-binary
-5. sqlalchemy
-6. celery
-7. pydantic
-8. python-jose
-9. passlib
-10. python-multipart
-
-✓ Low dependency count (good for maintainability)
-
-=== Architecture Patterns ===
-
-Detected Patterns:
-✓ Microservices
-✓ Layered
-✓ Service Layer
-
-=== Quality Metrics ===
-
-Quality Score: 85/100
-
-Grade: A (Excellent)
-
-Score Breakdown:
-- Documentation: 20/20
-- Testing: 22/25
-- Type Safety: 12/15
-- Code Organization: 15/15
-- Dependency Management: 10/10
-- CI/CD: 10/10
-- Low Complexity: 5/5
-
-=== Recommendations ===
-
-1. MEDIUM: Add type hints to functions (currently ~48%)
-2. LOW: Increase test coverage to 90%
-
-✓ Project is well-structured!
-
-Next Steps:
-1. Run /cco-audit-all to validate code quality
-2. Run /cco-fix-code to auto-fix violations
-3. Address high-priority recommendations
-
-✓ Analysis saved to: ~/.cco/projects/backend.json
-
-View results anytime: /cco-status
-```
 
 ---
 

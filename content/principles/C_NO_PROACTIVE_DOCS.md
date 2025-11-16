@@ -35,30 +35,6 @@ Never create documentation files (README.md, CONTRIBUTING.md, API docs, etc.) un
 - **User Control Loss** - User loses control over their documentation strategy
 - **Review Overhead** - Unwanted documentation files add review burden
 
-### Business Value
-
-- **Respect user preferences** - Let users control their documentation approach
-- **Avoid rework** - Don't create docs that need to be deleted or rewritten
-- **Focused effort** - Spend time on requested work, not speculation
-- **Better alignment** - Documentation matches user's exact needs when they request it
-
-### Technical Benefits
-
-- **No conflicting styles** - Avoid clashes with existing documentation patterns
-- **Proper tooling** - User can specify their preferred doc generation tools
-- **Correct structure** - User determines documentation organization
-- **Version alignment** - Documentation created when needed, stays current
-
-### Industry Evidence
-
-- **Developer Surveys** - 65% of developers have specific documentation preferences
-- **Open Source Practice** - Successful projects ask "want docs?" before creating
-- **Team Workflows** - Documentation strategies vary widely; one-size-fits-all fails
-
----
-
-## How
-
 ### Core Techniques
 
 **1. Always Ask Before Creating Documentation**
@@ -393,23 +369,6 @@ Write("docs/api-v2.md", "# API v2 (Planned)")
 
 ---
 
-## Cross-References
-
-**Related Principles:**
-
-- **C_NO_UNNECESSARY_FILES** - Documentation files are often unnecessary
-- **C_PREFER_EDITING** - Edit existing README instead of creating new docs
-- **U_COMPLETE_REPORTING** - Report completion, offer docs, wait for request
-- **C_PRODUCTION_GRADE** - Inline docstrings are production-grade; separate doc files require approval
-
-**Workflow Integration:**
-- After completing feature: Offer to create documentation
-- If README exists: Edit existing, don't overwrite
-- If user says "no" to docs: Respect their decision
-- Inline docs (docstrings, comments) never need approval
-
----
-
 ## Summary
 
 **No Proactive Documentation** means never creating documentation files (README, API docs, guides) unless explicitly requested. Always ask first, respect user's documentation strategy, and only create when user approves.
@@ -421,27 +380,3 @@ Write("docs/api-v2.md", "# API v2 (Planned)")
 - **Edit existing OK** - Updating existing docs is maintenance, not creation
 - **Respect "no"** - If user declines docs, don't create them
 - **Offer, don't assume** - Provide options, let user choose
-
-**Remember**: "Inline docstrings yes. New doc files: ask first. Respect user's documentation strategy."
-
-**Impact**: Respects user preferences, avoids rework, focuses effort on requested work, prevents documentation conflicts.
-
----
-
-**Documentation Decision Tree:**
-```
-Need to document new feature
-  ↓
-Is it inline code docs (docstrings/comments)?
-  Yes → Add without asking ✅
-  No → ↓
-      ↓
-Updating existing doc file?
-  Yes → Edit existing file ✅
-  No → ↓
-      ↓
-Ask user: "Would you like documentation?"
-  User says Yes → Create as requested ✅
-  User says No → Don't create ✅
-  No response → Don't create ✅
-```
