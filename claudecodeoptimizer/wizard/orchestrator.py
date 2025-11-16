@@ -1401,6 +1401,7 @@ class CCOWizard:
         output_path = context.project_root / "CLAUDE.md"
         generator = ClaudeMdGenerator(
             preferences_dict,
+            project_root=context.project_root,
             selected_skills=actual_skills,
             selected_agents=actual_agents,
             selected_commands=actual_commands,
@@ -1493,10 +1494,17 @@ class CCOWizard:
             target = claude_dir / "principles" / f"{u_id}.md"
             symlink_map.append((source, target, "principle"))
 
-        # SECOND: Symlink only AI-selected project-specific principles (P_*)
+        # SECOND: Always symlink ALL Claude guidelines (C*.md - always included)
+        for c_file in sorted(global_principles_dir.glob("C*.md")):
+            c_id = c_file.stem  # e.g., "C_MINIMAL_TOUCH"
+            source = c_file
+            target = claude_dir / "principles" / f"{c_id}.md"
+            symlink_map.append((source, target, "principle"))
+
+        # THIRD: Symlink only AI-selected project-specific principles (P_*)
         for principle in self.selected_principles:
-            # Skip if it's a universal principle (already linked above)
-            if not principle.startswith("U"):
+            # Only P_* principles (U_* and C_* already linked above)
+            if principle.startswith("P"):
                 source = global_principles_dir / f"{principle}.md"
                 target = claude_dir / "principles" / f"{principle}.md"
                 symlink_map.append((source, target, "principle"))
@@ -1591,9 +1599,11 @@ class CCOWizard:
         # STEP 4: Validate that installed counts match expected counts
         expected_commands = len(self.selected_commands)
         expected_guides = len(self.selected_guides)
-        # For principles: U_* (all) + selected P_*/C_* (non-U)
-        expected_principles = len(list(global_principles_dir.glob("U*.md"))) + len(
-            [p for p in self.selected_principles if not p.startswith("U")]
+        # For principles: U_* (all) + C_* (all) + P_* (only selected)
+        expected_principles = (
+            len(list(global_principles_dir.glob("U*.md")))  # Universal - always all
+            + len(list(global_principles_dir.glob("C*.md")))  # Claude - always all
+            + len([p for p in self.selected_principles if p.startswith("P")])  # Project - only selected
         )
         expected_agents = len(self.selected_agents) if hasattr(self, "selected_agents") else 0
         expected_skills = len(self.selected_skills) if hasattr(self, "selected_skills") else 0
@@ -1734,38 +1744,6 @@ class CCOWizard:
         )
         generator.generate(output_path)
 
-    def _build_selected_principles_dict(self) -> Dict[str, List[str]]:
-        """Build selected principles dictionary by category."""
-        from pathlib import Path
-
-        from ..core.principle_md_loader import load_all_principles
-
-        # Load all principles to get universal count dynamically
-        principles_dir = Path(__file__).parent.parent.parent / "content" / "principles"
-        principles_list = load_all_principles(principles_dir)
-
-        # Get all universal principles dynamically
-        universal_ids = [p["id"] for p in principles_list if p.get("category") == "universal"]
-
-        principles_dict = {"universal": universal_ids}
-
-        # Group project-specific principles by category
-        if self.selected_principles:
-            # Categorize based on actual category from .md files
-            all_principles = {p["id"]: p for p in principles_list}
-
-            for pid in self.selected_principles:
-                if pid.startswith("U"):  # Skip universal (already added)
-                    continue
-
-                principle = all_principles.get(pid)
-                if principle:
-                    category = principle.get("category", "other")
-                    if category not in principles_dict:
-                        principles_dict[category] = []
-                    principles_dict[category].append(pid)
-
-        return principles_dict
 
     def _inject_knowledge_references(self, content: str) -> str:
         """Inject selected principle/guide/agent/skill references into CLAUDE.md"""
