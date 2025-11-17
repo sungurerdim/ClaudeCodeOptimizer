@@ -61,47 +61,68 @@ function truncateString(str, maxLength, suffix = '...') {
   return result + suffix + COLORS.reset;
 }
 
-function execCommand(command) {
+function execCommand(command, useShell = false) {
   try {
-    return execSync(command, {
+    const output = execSync(command, {
       encoding: 'utf-8',
       stdio: ['pipe', 'pipe', 'ignore'],
-      timeout: 3000
-    }).trim();
+      timeout: 3000,
+      shell: useShell  // Enable shell for pipes/redirects
+    });
+    // Only trim trailing newline, preserve leading spaces (important for git porcelain)
+    return output.replace(/\n$/, '');
   } catch (e) {
     return null;
   }
 }
 
-// OPTIMIZED: Single git status --porcelain call + aggregated stats
+// OPTIMIZED: Single git status --porcelain call + self-parsed
 function getGitInfo() {
   const branch = execCommand('git rev-parse --abbrev-ref HEAD');
   if (!branch) return null;
 
   // Single porcelain call for all file status
+  // Format: "XY PATH" where X=index(staged), Y=worktree(unstaged)
   const statusOutput = execCommand('git status --porcelain');
 
   let modifiedCount = 0, deletedCount = 0, untrackedCount = 0;
   let stagedModCount = 0, stagedNewCount = 0, stagedDelCount = 0;
+  let conflictCount = 0;
 
   if (statusOutput) {
     const lines = statusOutput.split('\n');
     for (const line of lines) {
-      if (!line.trim()) continue;
-      const staged = line[0];
-      const unstaged = line[1];
+      if (!line || line.length < 2) continue;
 
-      // Unstaged changes
-      if (unstaged === 'M') modifiedCount++;
-      if (unstaged === 'D') deletedCount++;
+      // Git porcelain: "XY PATH" - first 2 chars are status codes
+      const index = line.charAt(0);    // Staged (index) - use charAt for safety
+      const worktree = line.charAt(1); // Unstaged (working tree)
 
-      // Staged changes
-      if (staged === 'M') stagedModCount++;
-      if (staged === 'A') stagedNewCount++;
-      if (staged === 'D') stagedDelCount++;
+      // CONFLICTS (unmerged files) - detect first to avoid double-counting
+      // Conflict patterns: DD, AU, UD, UA, DU, AA, UU (any 'U' or both same)
+      if (index === 'U' || worktree === 'U' ||
+          (index === 'D' && worktree === 'D') ||
+          (index === 'A' && worktree === 'A')) {
+        conflictCount++;
+        continue; // Skip further counting for conflicts
+      }
 
-      // Untracked
-      if (staged === '?' && unstaged === '?') untrackedCount++;
+      // UNTRACKED (both columns are '?')
+      if (index === '?' && worktree === '?') {
+        untrackedCount++;
+        continue;
+      }
+
+      // UNSTAGED (working tree column)
+      if (worktree === 'M') modifiedCount++;
+      if (worktree === 'D') deletedCount++;
+
+      // STAGED (index column) - space means "unchanged in index"
+      if (index === 'M') stagedModCount++;
+      if (index === 'A') stagedNewCount++;
+      if (index === 'D') stagedDelCount++;
+      if (index === 'R') stagedModCount++; // Renamed = modified
+      if (index === 'C') stagedNewCount++;  // Copied = new file
     }
   }
 
@@ -110,12 +131,29 @@ function getGitInfo() {
   const unstagedStats = execCommand('git diff --numstat');
   if (unstagedStats) {
     unstagedStats.split('\n').forEach(line => {
+      if (!line.trim()) return;
       const parts = line.split(/\s+/);
       if (parts.length >= 2) {
-        unstagedAdded += parseInt(parts[0]) || 0;
-        unstagedRemoved += parseInt(parts[1]) || 0;
+        // Binary files show '-' in numstat, parseInt returns NaN, fallback to 0
+        const added = parseInt(parts[0], 10);
+        const removed = parseInt(parts[1], 10);
+        if (!isNaN(added)) unstagedAdded += added;
+        if (!isNaN(removed)) unstagedRemoved += removed;
       }
     });
+  }
+
+  // Count lines in untracked files - optimized with shell
+  // Performance limit: skip if > 500 files (binary/huge files could slow down)
+  if (untrackedCount > 0 && untrackedCount <= 500) {
+    // Use bash -c to ensure proper shell execution
+    const untrackedLines = execCommand('bash -c "git ls-files --others --exclude-standard | xargs cat 2>/dev/null | wc -l"');
+    if (untrackedLines) {
+      const lines = parseInt(untrackedLines, 10);
+      if (!isNaN(lines) && lines > 0) {
+        unstagedAdded += lines;
+      }
+    }
   }
 
   // Aggregated numstat (single call for staged)
@@ -123,10 +161,14 @@ function getGitInfo() {
   const stagedStats = execCommand('git diff --cached --numstat');
   if (stagedStats) {
     stagedStats.split('\n').forEach(line => {
+      if (!line.trim()) return;
       const parts = line.split(/\s+/);
       if (parts.length >= 2) {
-        stagedAdded += parseInt(parts[0]) || 0;
-        stagedRemoved += parseInt(parts[1]) || 0;
+        // Binary files show '-' in numstat, parseInt returns NaN, fallback to 0
+        const added = parseInt(parts[0], 10);
+        const removed = parseInt(parts[1], 10);
+        if (!isNaN(added)) stagedAdded += added;
+        if (!isNaN(removed)) stagedRemoved += removed;
       }
     });
   }
@@ -139,10 +181,7 @@ function getGitInfo() {
     unpushedCount = parseInt(result || 0);
   }
 
-  // Conflicts and stash (single calls)
-  const conflictFiles = execCommand('git diff --name-only --diff-filter=U');
-  const conflictCount = conflictFiles ? conflictFiles.split('\n').filter(x => x.trim()).length : 0;
-
+  // Stash (single call - conflicts already counted from porcelain)
   const stashList = execCommand('git stash list');
   const stashCount = stashList ? stashList.split('\n').filter(x => x.trim()).length : 0;
 
