@@ -47,6 +47,6 @@ def get_data(user_id):
     db.execute(query)
 
     # Hardcoded secret (would be caught by truffleHog)
-    api_key = "sk_live_1234567890"
+    api_key = "sk_test_EXAMPLE_NOT_A_REAL_KEY"
 ```
 **Why wrong**: ---
