@@ -9,7 +9,7 @@ import re
 from pathlib import Path
 from typing import Any, Dict, List, Optional
 
-import yaml
+import yaml  # type: ignore[import-untyped]
 
 
 class MetadataManager:
@@ -81,7 +81,7 @@ class MetadataManager:
 
             # Find first non-heading paragraph
             lines = content.split("\n")
-            paragraph_lines = []
+            paragraph_lines: List[str] = []
             for line in lines:
                 line_stripped = line.strip()
                 # Skip headings and empty lines
@@ -162,7 +162,7 @@ class MetadataManager:
 
         Args:
             available_files: List of file IDs (e.g., ["cco-status", "cco-audit"])
-            files_dir: Directory containing files (e.g., ~/.cco/guides/)
+            files_dir: Directory containing files (e.g., ~/.claude/commands/)
             context_answers: User's answer context
             file_extension: File extension (default: .md)
 

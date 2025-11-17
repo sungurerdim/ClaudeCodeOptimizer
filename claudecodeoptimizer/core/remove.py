@@ -1,172 +1,147 @@
 """
-CCO Removal - Complete cleanup of CCO from project and/or global installation
+CCO Removal - Clean uninstall of CCO from ~/.claude/
 
-Provides clean uninstall with three scopes:
-- local: Remove CCO from current project only
-- global: Remove entire ~/.cco/ directory
-- both: Complete removal (project + global)
+Removes:
+- ~/.claude/commands/cco-*.md
+- ~/.claude/principles/U_*.md, C_*.md, P_*.md
+- ~/.claude/agents/cco-*.md
+- ~/.claude/skills/cco-*.md
+- CCO markers from ~/.claude/CLAUDE.md
 """
 
 import re
-import shutil
 from pathlib import Path
-from typing import Any, Dict, Literal
+from typing import Any, Dict
 
 
 class CCORemover:
-    """Remove CCO from project or globally."""
+    """Remove CCO from global ~/.claude/ directory."""
 
-    def __init__(self, project_root: Path) -> None:
+    def __init__(self) -> None:
+        """Initialize remover."""
+        self.claude_dir = Path.home() / ".claude"
+
+    def remove(self, clean_claude_md: bool = True) -> Dict[str, Any]:
         """
-        Initialize remover.
+        Remove CCO installation from ~/.claude/.
 
         Args:
-            project_root: Project root directory
-        """
-        self.project_root = project_root
-
-    def remove(
-        self,
-        scope: Literal["local", "global", "both"] = "local",
-        clean_claude_md: bool = True,
-    ) -> Dict[str, Any]:
-        """
-        Remove CCO installation.
-
-        Args:
-            scope: "local" (project only), "global" (all CCO), "both"
-            clean_claude_md: Remove CCO markers from CLAUDE.md
+            clean_claude_md: Remove CCO markers from ~/.claude/CLAUDE.md
 
         Returns:
             Removal results
         """
-        results = {"success": True, "actions": []}
+        results: Dict[str, Any] = {"success": True, "actions": []}
 
-        if scope in ["local", "both"]:
-            # Remove local .claude/ CCO files
-            self._remove_local_cco()
-            results["actions"].append("Removed local .claude/ CCO files")
+        # Remove CCO commands
+        self._remove_commands()
+        results["actions"].append("Removed ~/.claude/commands/cco-*.md")
 
-            # Clean CLAUDE.md markers
-            if clean_claude_md:
-                self._clean_claude_md()
-                results["actions"].append("Cleaned CLAUDE.md CCO markers")
+        # Remove CCO principles
+        self._remove_principles()
+        results["actions"].append("Removed ~/.claude/principles/[UCP]_*.md")
 
-        if scope in ["global", "both"]:
-            # Remove global ~/.cco/
-            self._remove_global_cco()
-            results["actions"].append("Removed global ~/.cco/")
+        # Remove CCO agents
+        self._remove_agents()
+        results["actions"].append("Removed ~/.claude/agents/cco-*.md")
 
-            # Remove global ~/.claude/commands/ init/remove
-            self._remove_global_commands()
-            results["actions"].append("Removed ~/.claude/commands/ CCO commands")
+        # Remove CCO skills
+        self._remove_skills()
+        results["actions"].append("Removed ~/.claude/skills/cco-*.md")
+
+        # Clean CLAUDE.md markers
+        if clean_claude_md:
+            self._clean_claude_md()
+            results["actions"].append("Cleaned ~/.claude/CLAUDE.md CCO markers")
 
         return results
 
-    def _remove_local_cco(self) -> None:
-        """Remove all cco-* files from .claude/"""
-        claude_dir = self.project_root / ".claude"
+    def _remove_commands(self) -> None:
+        """Remove all cco-*.md files from ~/.claude/commands/"""
+        commands_dir = self.claude_dir / "commands"
 
-        if not claude_dir.exists():
+        if not commands_dir.exists():
             return
 
-        # Remove CCO files from all subdirectories
-        for pattern in [
-            "commands/cco-*.md",
-            "principles/*.md",
-            "guides/cco-*.md",
-            "skills/cco-*.md",
-            "agents/cco-*.md",
-        ]:
-            for file in claude_dir.glob(pattern):
-                # Only remove if it's a symlink or starts with cco-
-                if file.is_symlink() or file.name.startswith("cco-"):
-                    try:
-                        file.unlink()
-                    except Exception:
-                        pass  # Ignore errors (broken symlinks, etc.)
+        # Remove all cco-*.md files
+        for cmd_file in commands_dir.glob("cco-*.md"):
+            try:
+                cmd_file.unlink()
+            except Exception:
+                pass  # Ignore errors
+
+    def _remove_principles(self) -> None:
+        """Remove all U_*.md, C_*.md, P_*.md files from ~/.claude/principles/"""
+        principles_dir = self.claude_dir / "principles"
+
+        if not principles_dir.exists():
+            return
+
+        # Remove all CCO principle files
+        for pattern in ["U_*.md", "C_*.md", "P_*.md"]:
+            for principle_file in principles_dir.glob(pattern):
+                try:
+                    principle_file.unlink()
+                except Exception:
+                    pass  # Ignore errors
+
+    def _remove_agents(self) -> None:
+        """Remove all cco-*.md files from ~/.claude/agents/"""
+        agents_dir = self.claude_dir / "agents"
+
+        if not agents_dir.exists():
+            return
+
+        # Remove all cco-*.md files
+        for agent_file in agents_dir.glob("cco-*.md"):
+            try:
+                agent_file.unlink()
+            except Exception:
+                pass  # Ignore errors
+
+    def _remove_skills(self) -> None:
+        """Remove all cco-*.md files from ~/.claude/skills/ (including subdirectories)"""
+        skills_dir = self.claude_dir / "skills"
+
+        if not skills_dir.exists():
+            return
+
+        # Remove all cco-*.md files recursively
+        for skill_file in skills_dir.rglob("cco-*.md"):
+            try:
+                skill_file.unlink()
+            except Exception:
+                pass  # Ignore errors
 
     def _clean_claude_md(self) -> None:
-        """Remove CCO markers and content from CLAUDE.md"""
-        claude_md = self.project_root / "CLAUDE.md"
+        """Remove CCO markers and content from ~/.claude/CLAUDE.md"""
+        claude_md = self.claude_dir / "CLAUDE.md"
+
         if not claude_md.exists():
             return
 
         content = claude_md.read_text(encoding="utf-8")
 
-        # Remove all CCO marker sections
-        markers = [
-            ("<!-- CCO_PRINCIPLES_START -->", "<!-- CCO_PRINCIPLES_END -->"),
-            ("<!-- CCO_SKILLS_START -->", "<!-- CCO_SKILLS_END -->"),
-            ("<!-- CCO_AGENTS_START -->", "<!-- CCO_AGENTS_END -->"),
-            ("<!-- CCO_COMMANDS_START -->", "<!-- CCO_COMMANDS_END -->"),
-            ("<!-- CCO_GUIDES_START -->", "<!-- CCO_GUIDES_END -->"),
-        ]
-
-        for start, end in markers:
-            pattern = f"{re.escape(start)}.*?{re.escape(end)}"
-            content = re.sub(pattern, "", content, flags=re.DOTALL)
+        # Remove CCO marker section
+        pattern = r"<!-- CCO_PRINCIPLES_START -->.*?<!-- CCO_PRINCIPLES_END -->\n?"
+        content = re.sub(pattern, "", content, flags=re.DOTALL)
 
         # Clean up extra blank lines (more than 2 consecutive)
         content = re.sub(r"\n{3,}", "\n\n", content)
 
-        # Remove CCO metadata lines if present
-        lines = content.split("\n")
-        cleaned_lines = []
-        for line in lines:
-            # Skip CCO-generated metadata
-            if any(marker in line for marker in ["**Generated:**", "**Quality:**", "**Testing:**"]):
-                # Only skip if it looks like CCO metadata (has date format)
-                if "**Generated:**" in line or line.strip().startswith("**"):
-                    continue
-            cleaned_lines.append(line)
-
-        content = "\n".join(cleaned_lines)
-
         # Write cleaned content
         claude_md.write_text(content.strip() + "\n", encoding="utf-8")
 
-    def _remove_global_cco(self) -> None:
-        """Remove ~/.cco/ directory"""
-        global_cco = Path.home() / ".cco"
-        if global_cco.exists():
-            try:
-                shutil.rmtree(global_cco)
-            except Exception:
-                # Ignore errors (permissions, etc.)
-                pass
 
-    def _remove_global_commands(self) -> None:
-        """Remove ~/.claude/commands/ CCO commands"""
-        global_commands = Path.home() / ".claude" / "commands"
-
-        if not global_commands.exists():
-            return
-
-        for cmd in ["cco-init.md", "cco-remove.md"]:
-            cmd_file = global_commands / cmd
-            if cmd_file.exists():
-                try:
-                    cmd_file.unlink()
-                except Exception:
-                    pass
-
-
-def remove_cco(
-    project_root: Path,
-    scope: Literal["local", "global", "both"] = "local",
-    clean_claude_md: bool = True,
-) -> Dict[str, Any]:
+def remove_cco(clean_claude_md: bool = True) -> Dict[str, Any]:
     """
-    Convenience function to remove CCO.
+    Convenience function to remove CCO from ~/.claude/.
 
     Args:
-        project_root: Project root directory
-        scope: Removal scope
-        clean_claude_md: Clean CLAUDE.md markers
+        clean_claude_md: Clean ~/.claude/CLAUDE.md markers
 
     Returns:
         Removal results
     """
-    remover = CCORemover(project_root)
-    return remover.remove(scope=scope, clean_claude_md=clean_claude_md)
+    remover = CCORemover()
+    return remover.remove(clean_claude_md=clean_claude_md)

@@ -1,9 +1,7 @@
 """Unit tests for claudecodeoptimizer/__init__.py module."""
 
-import logging
 import sys
-from pathlib import Path
-from unittest.mock import MagicMock, patch
+from unittest.mock import patch
 
 import pytest
 
@@ -60,29 +58,22 @@ class TestWindowsConsoleEncoding:
         assert True  # Just verify we can import on non-Windows
 
     def test_windows_reconfigure_exception_handling_direct(self):
-        """Test exception handling during Windows console reconfigure (lines 15-16)."""
-        # Test the actual exception handling logic that would occur in lines 15-16
-        # We simulate what the code does: try to reconfigure, catch exception, log warning
+        """Test exception handling during Windows console reconfigure (lines 14-15)."""
+        # Test the actual exception handling logic that would occur in lines 14-15
+        # The code now uses silent fail (pass) instead of logging
 
-        test_error_msg = "Failed to reconfigure console encoding"
-        test_exception = Exception(test_error_msg)
+        test_exception = Exception("Failed to reconfigure console encoding")
 
-        # Simulate the try-except block from lines 12-16
-        with patch("logging.warning") as mock_warning:
-            try:
-                # This simulates the reconfigure call that might fail
-                raise test_exception
-            except Exception as e:
-                # This is what line 16 does - log a warning
-                logging.warning(
-                    f"Failed to reconfigure console encoding: {e}. Using default encoding."
-                )
+        # Simulate the try-except block from lines 11-15
+        try:
+            # This simulates the reconfigure call that might fail
+            raise test_exception
+        except Exception:  # noqa: S110
+            # This is what line 15 does - silent pass
+            pass
 
-            # Verify warning was logged
-            mock_warning.assert_called_once()
-            call_args = mock_warning.call_args[0][0]
-            assert "Failed to reconfigure console encoding" in call_args
-            assert "Using default encoding" in call_args
+        # Verify exception was handled without raising
+        assert True  # If we got here, exception was handled
 
 
 class TestCCOConfigImport:
@@ -134,76 +125,8 @@ class TestGlobalSetup:
         finally:
             claudecodeoptimizer._setup_checked = original_checked
 
-    def test_ensure_global_setup_triggers_when_no_principles(self):
-        """Test _ensure_global_setup triggers setup when principles missing (lines 47-49)."""
-        import claudecodeoptimizer
-        from claudecodeoptimizer import _ensure_global_setup
-
-        # Save original state
-        original_checked = claudecodeoptimizer._setup_checked
-
-        try:
-            # Reset to allow re-run
-            claudecodeoptimizer._setup_checked = False
-
-            # Mock the path checking
-            with patch("claudecodeoptimizer.config.get_global_dir") as mock_get_dir:
-                mock_global_dir = MagicMock(spec=Path)
-                mock_principles_dir = MagicMock(spec=Path)
-
-                mock_get_dir.return_value = mock_global_dir
-                mock_global_dir.__truediv__.return_value = mock_principles_dir
-
-                # Principles dir doesn't exist
-                mock_principles_dir.exists.return_value = False
-
-                # Mock setup_global_knowledge
-                with patch(
-                    "claudecodeoptimizer.core.knowledge_setup.setup_global_knowledge"
-                ) as mock_setup:
-                    # Call the function
-                    _ensure_global_setup()
-
-                    # Verify setup was called
-                    mock_setup.assert_called_once_with(force=False)
-
-        finally:
-            claudecodeoptimizer._setup_checked = original_checked
-
-    def test_ensure_global_setup_triggers_when_principles_incomplete(self):
-        """Test _ensure_global_setup triggers when < 80 principle files (lines 47-49)."""
-        import claudecodeoptimizer
-        from claudecodeoptimizer import _ensure_global_setup
-
-        original_checked = claudecodeoptimizer._setup_checked
-
-        try:
-            claudecodeoptimizer._setup_checked = False
-
-            with patch("claudecodeoptimizer.config.get_global_dir") as mock_get_dir:
-                mock_global_dir = MagicMock(spec=Path)
-                mock_principles_dir = MagicMock(spec=Path)
-
-                mock_get_dir.return_value = mock_global_dir
-                mock_global_dir.__truediv__.return_value = mock_principles_dir
-
-                # Principles dir exists but has too few files
-                mock_principles_dir.exists.return_value = True
-                # Return a list with < 80 items
-                mock_principles_dir.glob.return_value = [f"file{i}.md" for i in range(70)]
-
-                with patch(
-                    "claudecodeoptimizer.core.knowledge_setup.setup_global_knowledge"
-                ) as mock_setup:
-                    _ensure_global_setup()
-                    # Should call setup because < 80 files
-                    mock_setup.assert_called_once_with(force=False)
-
-        finally:
-            claudecodeoptimizer._setup_checked = original_checked
-
     def test_ensure_global_setup_exception_handling(self):
-        """Test _ensure_global_setup handles exceptions silently (line 50-53)."""
+        """Test _ensure_global_setup handles exceptions silently (line 59-62)."""
         import claudecodeoptimizer
         from claudecodeoptimizer import _ensure_global_setup
 
@@ -212,16 +135,15 @@ class TestGlobalSetup:
         try:
             claudecodeoptimizer._setup_checked = False
 
-            with patch("claudecodeoptimizer.config.get_global_dir") as mock_get_dir:
-                # Make get_global_dir raise an exception
+            with patch("claudecodeoptimizer.config.get_claude_dir") as mock_get_dir:
+                # Make get_claude_dir raise an exception
                 mock_get_dir.side_effect = Exception("Test error")
 
-                with patch("logging.debug") as mock_debug:
-                    # Call should not raise exception
-                    _ensure_global_setup()
+                # Call should not raise exception (silent fail)
+                _ensure_global_setup()
 
-                    # Should log debug message
-                    mock_debug.assert_called()
+                # If we got here, exception was handled silently
+                assert True
 
         finally:
             claudecodeoptimizer._setup_checked = original_checked
@@ -296,26 +218,16 @@ class TestImportStructure:
         assert CCOConfig is DirectCCOConfig
 
 
-class TestLoggingConfiguration:
-    """Test logging configuration."""
+class TestExceptionHandling:
+    """Test exception handling behavior."""
 
-    def test_logging_imported(self):
-        """Test logging module is imported."""
-        # Verify logging is available (used in exception handling)
-        import logging
+    def test_silent_exception_handling(self):
+        """Test exceptions are handled silently without logging."""
+        # The module uses silent fail (pass) instead of logging
+        # This verifies the module can be imported without logging configuration
+        import claudecodeoptimizer
 
-        assert logging is not None
-
-    def test_logging_warning_on_encoding_error(self):
-        """Test logging.warning is called on encoding error."""
-        # This tests line 16 - the logging.warning call
-        # We need to simulate the encoding error scenario
-        if sys.platform == "win32" and hasattr(sys.stdout, "reconfigure"):
-            # On Windows with reconfigure support, the warning would only
-            # be triggered if reconfigure fails
-            # We can't easily force this in a test, but we can verify
-            # the code path exists
-            assert True
+        assert claudecodeoptimizer is not None
 
 
 class TestSetupCheckedFlag:

@@ -34,7 +34,7 @@ def load_global_commands() -> Dict[str, Dict[str, Any]]:
     """
     Load all CLI commands from commands directory.
 
-    Single source of truth: content/commands/*.md
+    Single source of truth: claudecodeoptimizer/content/commands/*.md
     Returns dict: {command_name: {description, file}}
     """
     commands_dir = Path(__file__).parent.parent / "content" / "commands"

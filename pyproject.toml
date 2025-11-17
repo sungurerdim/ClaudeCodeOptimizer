@@ -77,20 +77,15 @@ Repository = "https://github.com/sungurerdim/ClaudeCodeOptimizer"
 Issues = "https://github.com/sungurerdim/ClaudeCodeOptimizer/issues"
 
 [project.scripts]
-# Post-install setup command (run manually after pip install)
 cco-setup = "claudecodeoptimizer.install_hook:post_install"
 
 [tool.setuptools]
-packages = ["claudecodeoptimizer"]
+packages = {find = {}}  # Auto-discover all packages
 
 [tool.setuptools.package-data]
 claudecodeoptimizer = [
-    "templates/**/*",
-    "knowledge/**/*",
+    "content/**/*",
     "schemas/**/*",
-    "assets/**/*",
-    "skills/**/*",
-    "commands/**/*",
 ]
 
 [tool.setuptools.dynamic]

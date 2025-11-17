@@ -1,579 +1,322 @@
 #!/usr/bin/env node
 
-// Claude Code Statusline - Simplified
-// Displays: git status, CCO compliance
+// Claude Code Statusline - High Performance
+// Single-pass git status parsing, minimal file I/O
 
 const fs = require('fs');
 const path = require('path');
 const { execSync } = require('child_process');
 const os = require('os');
 
-const CCO_CONFIG_FILE = path.join(__dirname, 'cco.json');
 const CCO_STATE_DIR = path.join(__dirname, '..', '.cco', 'state');
 
-// ANSI Color codes (Optimized for visibility on dark backgrounds)
+// ANSI Color codes
 const COLORS = {
   reset: '\x1b[0m',
-  bright: '\x1b[1m',
-  dim: '\x1b[2m',
-  // Bright Foreground (90-97) with bold for maximum visibility
-  black: '\x1b[90m',              // Bright black (gray)
-  red: '\x1b[91m',                // Bright red
-  green: '\x1b[92m',              // Bright green
-  yellow: '\x1b[93m',             // Bright yellow
-  blue: '\x1b[1m\x1b[94m',        // BOLD + Bright blue (extra bright!)
-  magenta: '\x1b[1m\x1b[95m',     // BOLD + Bright magenta (extra bright!)
-  cyan: '\x1b[36m',               // Standard cyan (darker, more subtle)
-  white: '\x1b[97m',              // Bright white
-  gray: '\x1b[90m'                // Gray
+  red: '\x1b[91m',
+  green: '\x1b[92m',
+  yellow: '\x1b[93m',
+  blue: '\x1b[1m\x1b[94m',
+  magenta: '\x1b[1m\x1b[95m',
+  cyan: '\x1b[36m',
+  white: '\x1b[97m',
+  gray: '\x1b[90m'
 };
 
-// Helper: colorize text
 function colorize(text, color, enabled = true) {
   if (!enabled) return text;
   return `${COLORS[color] || ''}${text}${COLORS.reset}`;
 }
 
-// No caching - git info is fast enough
+function padString(str, length, align = 'left') {
+  const visibleLength = str.replace(/\x1b\[[0-9;]*m/g, '').length;
+  const paddingNeeded = length - visibleLength;
+  if (paddingNeeded <= 0) return str;
+  const padding = ' '.repeat(paddingNeeded);
+  return align === 'right' ? padding + str : str + padding;
+}
 
-function execCommand(command, options = {}) {
+function getVisibleLength(str) {
+  return str.replace(/\x1b\[[0-9;]*m/g, '').length;
+}
+
+function truncateString(str, maxLength, suffix = '...') {
+  const visibleLength = getVisibleLength(str);
+  if (visibleLength <= maxLength) return str;
+
+  let currentVisible = 0;
+  let result = '';
+  let inAnsiCode = false;
+
+  for (let i = 0; i < str.length; i++) {
+    if (str[i] === '\x1b') inAnsiCode = true;
+    if (!inAnsiCode) {
+      if (currentVisible >= maxLength - suffix.length) break;
+      currentVisible++;
+    }
+    result += str[i];
+    if (inAnsiCode && str[i] === 'm') inAnsiCode = false;
+  }
+
+  return result + suffix + COLORS.reset;
+}
+
+function execCommand(command) {
   try {
     return execSync(command, {
       encoding: 'utf-8',
       stdio: ['pipe', 'pipe', 'ignore'],
-      timeout: 5000,
-      ...options
+      timeout: 3000
     }).trim();
   } catch (e) {
     return null;
   }
 }
 
-// Helper: Count lines in a file from git (cross-platform)
-function countLinesInGitFile(fileRef) {
-  const content = execCommand(`git show "${fileRef}"`);
-  if (!content) return 0;
-  // Count newlines + 1 (if content exists and doesn't end with newline)
-  const lines = content.split('\n').length;
-  return lines;
-}
-
-// Helper: Count lines in a working tree file (cross-platform)
-function countLinesInFile(filePath) {
-  try {
-    const content = fs.readFileSync(filePath, 'utf-8');
-    if (!content) return 0;
-    const lines = content.split('\n').length;
-    return lines;
-  } catch (e) {
-    return 0;
-  }
-}
-
+// OPTIMIZED: Single git status --porcelain call + aggregated stats
 function getGitInfo() {
   const branch = execCommand('git rev-parse --abbrev-ref HEAD');
   if (!branch) return null;
 
-  // Get file status with detailed breakdown (cross-platform: no wc -l)
-  const modifiedFiles = execCommand('git diff --name-only --diff-filter=M');
-  const modifiedCount = modifiedFiles ? modifiedFiles.split('\n').filter(x => x.trim()).length : 0;
+  // Single porcelain call for all file status
+  const statusOutput = execCommand('git status --porcelain');
 
-  const deletedFiles = execCommand('git diff --name-only --diff-filter=D');
-  const deletedCount = deletedFiles ? deletedFiles.split('\n').filter(x => x.trim()).length : 0;
+  let modifiedCount = 0, deletedCount = 0, untrackedCount = 0;
+  let stagedModCount = 0, stagedNewCount = 0, stagedDelCount = 0;
 
-  const untrackedFiles = execCommand('git ls-files --others --exclude-standard');
-  const untrackedCount = untrackedFiles ? untrackedFiles.split('\n').filter(x => x.trim()).length : 0;
+  if (statusOutput) {
+    const lines = statusOutput.split('\n');
+    for (const line of lines) {
+      if (!line.trim()) continue;
+      const staged = line[0];
+      const unstaged = line[1];
 
-  const stagedFiles = execCommand('git diff --cached --name-only');
-  const stagedCount = stagedFiles ? stagedFiles.split('\n').filter(x => x.trim()).length : 0;
+      // Unstaged changes
+      if (unstaged === 'M') modifiedCount++;
+      if (unstaged === 'D') deletedCount++;
 
-  const totalChanges = modifiedCount + deletedCount + untrackedCount + stagedCount;
-  const hasChanges = totalChanges > 0;
+      // Staged changes
+      if (staged === 'M') stagedModCount++;
+      if (staged === 'A') stagedNewCount++;
+      if (staged === 'D') stagedDelCount++;
 
-  const lastCommit = execCommand('git log -1 --format="%ar"');
-
-  // Get repo name from remote URL or directory name
-  const remoteUrl = execCommand('git config --get remote.origin.url');
-  let repoName = null;
-  if (remoteUrl) {
-    const match = remoteUrl.match(/([^/]+?)(\.git)?$/);
-    repoName = match ? match[1] : null;
-  }
-  if (!repoName) {
-    const gitRoot = execCommand('git rev-parse --show-toplevel');
-    repoName = gitRoot ? path.basename(gitRoot) : null;
+      // Untracked
+      if (staged === '?' && unstaged === '?') untrackedCount++;
+    }
   }
 
-  // Get unpushed commits count
-  // Try multiple methods to handle different scenarios:
-  // 1. Remote tracking branch exists (normal case)
-  // 2. No remote or no tracking branch (new repo)
+  // Aggregated numstat (single call for unstaged)
+  let unstagedAdded = 0, unstagedRemoved = 0;
+  const unstagedStats = execCommand('git diff --numstat');
+  if (unstagedStats) {
+    unstagedStats.split('\n').forEach(line => {
+      const parts = line.split(/\s+/);
+      if (parts.length >= 2) {
+        unstagedAdded += parseInt(parts[0]) || 0;
+        unstagedRemoved += parseInt(parts[1]) || 0;
+      }
+    });
+  }
+
+  // Aggregated numstat (single call for staged)
+  let stagedAdded = 0, stagedRemoved = 0;
+  const stagedStats = execCommand('git diff --cached --numstat');
+  if (stagedStats) {
+    stagedStats.split('\n').forEach(line => {
+      const parts = line.split(/\s+/);
+      if (parts.length >= 2) {
+        stagedAdded += parseInt(parts[0]) || 0;
+        stagedRemoved += parseInt(parts[1]) || 0;
+      }
+    });
+  }
+
+  // Unpushed commits (simplified)
   let unpushedCount = 0;
-
-  // Check if remote tracking branch exists
   const trackingBranch = execCommand('git rev-parse --abbrev-ref @{u}');
   if (trackingBranch) {
-    // Remote tracking branch exists, count unpushed commits
-    const unpushedResult = execCommand('git rev-list --count @{u}..HEAD');
-    unpushedCount = parseInt(unpushedResult || 0);
-  } else {
-    // No tracking branch, count all local commits not in any remote
-    const unpushedResult = execCommand('git rev-list --count --branches --not --remotes');
-    unpushedCount = parseInt(unpushedResult || 0);
+    const result = execCommand('git rev-list --count @{u}..HEAD');
+    unpushedCount = parseInt(result || 0);
   }
 
-  // Get line stats for UNSTAGED changes (ready to stage)
-  let unstagedLinesAdded = 0;
-  let unstagedLinesRemoved = 0;
+  // Conflicts and stash (single calls)
+  const conflictFiles = execCommand('git diff --name-only --diff-filter=U');
+  const conflictCount = conflictFiles ? conflictFiles.split('\n').filter(x => x.trim()).length : 0;
 
-  // 1. Count lines in MODIFIED files
-  const unstagedDiffStats = execCommand('git diff --numstat');
-  if (unstagedDiffStats) {
-    const lines = unstagedDiffStats.split('\n').filter(l => l.trim());
-    for (const line of lines) {
-      const parts = line.split(/\s+/);
-      if (parts.length >= 2) {
-        const added = parseInt(parts[0]) || 0;
-        const removed = parseInt(parts[1]) || 0;
-        unstagedLinesAdded += added;
-        unstagedLinesRemoved += removed;
-      }
-    }
-  }
+  const stashList = execCommand('git stash list');
+  const stashCount = stashList ? stashList.split('\n').filter(x => x.trim()).length : 0;
 
-  // 2. Count lines in DELETED files (all lines are deletions)
-  if (deletedFiles) {
-    const deletedFileList = deletedFiles.split('\n').filter(x => x.trim());
-    for (const file of deletedFileList) {
-      // Get line count from HEAD (last committed version)
-      const lineCount = countLinesInGitFile(`HEAD:${file}`);
-      if (lineCount > 0) {
-        unstagedLinesRemoved += lineCount;
-      }
-    }
-  }
-
-  // 3. Count lines in NEW/UNTRACKED files (all lines are additions)
-  if (untrackedFiles) {
-    const untrackedFileList = untrackedFiles.split('\n').filter(x => x.trim());
-    for (const file of untrackedFileList) {
-      // Get line count from working tree
-      const lineCount = countLinesInFile(file);
-      if (lineCount > 0) {
-        unstagedLinesAdded += lineCount;
-      }
-    }
-  }
-
-  // Get line stats for STAGED changes (ready to commit)
-  let stagedLinesAdded = 0;
-  let stagedLinesRemoved = 0;
-
-  // 1. Count lines in MODIFIED staged files
-  const stagedDiffStats = execCommand('git diff --cached --numstat');
-  if (stagedDiffStats) {
-    const lines = stagedDiffStats.split('\n').filter(l => l.trim());
-    for (const line of lines) {
-      const parts = line.split(/\s+/);
-      if (parts.length >= 2) {
-        const added = parseInt(parts[0]) || 0;
-        const removed = parseInt(parts[1]) || 0;
-        stagedLinesAdded += added;
-        stagedLinesRemoved += removed;
-      }
-    }
-  }
-
-  // 2. Count lines in STAGED DELETED files (all lines are deletions)
-  const stagedDeletedFiles = execCommand('git diff --cached --name-only --diff-filter=D');
-  if (stagedDeletedFiles) {
-    const stagedDeletedFileList = stagedDeletedFiles.split('\n').filter(x => x.trim());
-    for (const file of stagedDeletedFileList) {
-      // Get line count from HEAD (last committed version)
-      const lineCount = countLinesInGitFile(`HEAD:${file}`);
-      if (lineCount > 0) {
-        stagedLinesRemoved += lineCount;
-      }
-    }
-  }
-
-  // 3. Count lines in STAGED NEW files (all lines are additions)
-  const stagedNewFiles = execCommand('git diff --cached --name-only --diff-filter=A');
-  if (stagedNewFiles) {
-    const stagedNewFileList = stagedNewFiles.split('\n').filter(x => x.trim());
-    for (const file of stagedNewFileList) {
-      // Get line count from index (staged version)
-      const lineCount = countLinesInGitFile(`:${file}`);
-      if (lineCount > 0) {
-        stagedLinesAdded += lineCount;
-      }
-    }
-  }
-
-  // Get line stats for UNPUSHED commits (ready to push)
-  let unpushedLinesAdded = 0;
-  let unpushedLinesRemoved = 0;
-  if (trackingBranch) {
-    // 1. Count lines in MODIFIED files in unpushed commits
-    const unpushedDiffStats = execCommand('git diff @{u}..HEAD --numstat');
-    if (unpushedDiffStats) {
-      const lines = unpushedDiffStats.split('\n').filter(l => l.trim());
-      for (const line of lines) {
-        const parts = line.split(/\s+/);
-        if (parts.length >= 2) {
-          const added = parseInt(parts[0]) || 0;
-          const removed = parseInt(parts[1]) || 0;
-          unpushedLinesAdded += added;
-          unpushedLinesRemoved += removed;
-        }
-      }
-    }
-
-    // 2. Count lines in DELETED files in unpushed commits (all lines are deletions)
-    const unpushedDeletedFiles = execCommand('git diff @{u}..HEAD --name-only --diff-filter=D');
-    if (unpushedDeletedFiles) {
-      const unpushedDeletedFileList = unpushedDeletedFiles.split('\n').filter(x => x.trim());
-      for (const file of unpushedDeletedFileList) {
-        // Get line count from remote tracking branch
-        const lineCount = countLinesInGitFile(`@{u}:${file}`);
-        if (lineCount > 0) {
-          unpushedLinesRemoved += lineCount;
-        }
-      }
-    }
-
-    // 3. Count lines in NEW files in unpushed commits (all lines are additions)
-    const unpushedNewFiles = execCommand('git diff @{u}..HEAD --name-only --diff-filter=A');
-    if (unpushedNewFiles) {
-      const unpushedNewFileList = unpushedNewFiles.split('\n').filter(x => x.trim());
-      for (const file of unpushedNewFileList) {
-        // Get line count from HEAD (current version)
-        const lineCount = countLinesInGitFile(`HEAD:${file}`);
-        if (lineCount > 0) {
-          unpushedLinesAdded += lineCount;
-        }
-      }
-    }
-  }
+  // Repo name (cache-friendly)
+  let repoName = null;
+  const gitRoot = execCommand('git rev-parse --show-toplevel');
+  if (gitRoot) repoName = path.basename(gitRoot);
 
   return {
     branch,
     repoName,
-    hasChanges,
-    changedFiles: totalChanges,
-    modifiedFiles: parseInt(modifiedCount || 0),
-    deletedFiles: parseInt(deletedCount || 0),
-    untrackedFiles: parseInt(untrackedCount || 0),
-    unstagedLinesAdded,
-    unstagedLinesRemoved,
-    stagedFiles: parseInt(stagedCount || 0),
-    stagedLinesAdded,
-    stagedLinesRemoved,
+    // Unstaged
+    modifiedFiles: modifiedCount,
+    deletedFiles: deletedCount,
+    untrackedFiles: untrackedCount,
+    unstagedAdded,
+    unstagedRemoved,
+    // Staged
+    stagedModifiedFiles: stagedModCount,
+    stagedNewFiles: stagedNewCount,
+    stagedDeletedFiles: stagedDelCount,
+    stagedAdded,
+    stagedRemoved,
+    // Unpushed
     unpushedCommits: unpushedCount,
-    unpushedLinesAdded,
-    unpushedLinesRemoved,
-    lastCommit: lastCommit || 'unknown'
+    // Other
+    conflictCount,
+    stashCount
   };
 }
 
-// Removed: getDockerInfo, getTestInfo, getSystemInfo - not used in default display
-
+// OPTIMIZED: Lazy loading, single file check
 function getCCOState() {
-  // Try to get CCO state from state manager
+  const projectConfigFile = path.join(process.cwd(), '.cco', 'project.json');
+
+  // Fast early exit
+  if (!fs.existsSync(projectConfigFile)) {
+    return { enabled: false };
+  }
+
   try {
-    const currentSessionFile = path.join(CCO_STATE_DIR, 'current_session.json');
-    const auditResultsFile = path.join(CCO_STATE_DIR, 'audit_results.json');
-    const commandHistoryFile = path.join(CCO_STATE_DIR, 'command_history.json');
-    const projectConfigFile = path.join(process.cwd(), '.cco', 'project.json');
-
-    let ccoState = {
-      enabled: false,
-      version: '0.1.0',
-      sessionId: null,
-      commandCount: 0,
-      latestAudit: null,
-      projectType: null,
-      maturity: null,
-      activePrinciples: 0,
-      complianceScore: null
-    };
-
-    // Check if CCO state directory exists
-    if (!fs.existsSync(CCO_STATE_DIR) && !fs.existsSync(projectConfigFile)) {
-      return ccoState;
-    }
-
-    ccoState.enabled = true;
-
-    // Get project configuration
-    if (fs.existsSync(projectConfigFile)) {
-      const projectConfig = JSON.parse(fs.readFileSync(projectConfigFile, 'utf-8'));
-      ccoState.projectType = projectConfig.project_type || null;
-      ccoState.maturity = projectConfig.maturity || null;
-      ccoState.activePrinciples = (projectConfig.active_principles || []).length;
-      ccoState.teamSize = projectConfig.team_size || null;
-    }
-
-    // Get current session
-    if (fs.existsSync(currentSessionFile)) {
-      const session = JSON.parse(fs.readFileSync(currentSessionFile, 'utf-8'));
-      ccoState.sessionId = session.session_id || null;
-    }
-
-    // Get command count from command history
-    if (fs.existsSync(commandHistoryFile)) {
-      const history = JSON.parse(fs.readFileSync(commandHistoryFile, 'utf-8'));
-      const commands = history.commands || {};
-      // Count commands with at least 1 use
-      ccoState.commandCount = Object.values(commands).filter(c => c.total_uses > 0).length;
-    }
-
-    // Get latest audit result with compliance score
-    if (fs.existsSync(auditResultsFile)) {
-      const audits = JSON.parse(fs.readFileSync(auditResultsFile, 'utf-8'));
-      const auditList = audits.audits || [];
-      if (auditList.length > 0) {
-        const latest = auditList[auditList.length - 1];
-        ccoState.latestAudit = latest;
-
-        // Calculate compliance score from audit results
-        if (latest.results) {
-          const total = latest.results.length;
-          const passed = latest.results.filter(r => r.status === 'pass').length;
-          ccoState.complianceScore = total > 0 ? Math.round((passed / total) * 100) : null;
-        }
-      }
-    }
-
-    return ccoState;
-  } catch (e) {
+    const projectConfig = JSON.parse(fs.readFileSync(projectConfigFile, 'utf-8'));
     return {
-      enabled: false,
-      version: '0.1.0',
-      sessionId: null,
-      commandCount: 0,
-      latestAudit: null,
-      projectType: null,
-      maturity: null,
-      activePrinciples: 0,
-      complianceScore: null
+      enabled: true,
+      projectType: projectConfig.project_type || null,
+      maturity: projectConfig.maturity || null,
+      activePrinciples: (projectConfig.active_principles || []).length
     };
-  }
-}
-
-// Removed: getProjectInfo - not used
-
-function getUserConfig() {
-  if (!fs.existsSync(CCO_CONFIG_FILE)) {
-    return { statusline: {} };
-  }
-
-  try {
-    const config = JSON.parse(fs.readFileSync(CCO_CONFIG_FILE, 'utf-8'));
-    return config.preferences || { statusline: {} };
   } catch (e) {
-    return { statusline: {} };
+    return { enabled: false };
   }
 }
 
-// Simplified: No caching, no file writes - just collect what we need
-function collectMetrics() {
-  const config = getUserConfig();
-  const statuslineConfig = config.statusline || {};
+function formatMetricsForStatusline(inputData, git, cco) {
+  const colorEnabled = true;
+  const terminalWidth = process.stdout.columns || 120;
+  // Only truncate if terminal is VERY narrow (< 80 cols)
+  const maxLineWidth = terminalWidth < 80 ? terminalWidth - 5 : terminalWidth;
 
-  return {
-    git: statuslineConfig.show_git_info !== false ? getGitInfo() : null,
-    cco: statuslineConfig.show_cco_stats !== false ? getCCOState() : null
-  };
-}
-
-function formatMetricsForStatusline(inputData, metrics, telemetryData) {
-  const config = getUserConfig();
-  const statuslineConfig = config.statusline || {};
-  const colorEnabled = statuslineConfig.color_enabled !== false;
-
-  // Parse input data from Claude Code
   const model = inputData.model?.display_name || 'Unknown';
-
-  // No context tracking - Claude Code handles compact warnings automatically
-
-  // Get user@hostname
   const username = os.userInfo().username || 'unknown';
   const hostname = os.hostname() || 'unknown';
-
-  // Get full directory path
   const fullPath = inputData.cwd || process.cwd();
 
-  // Get project name from CCO config
-  let projectName = 'unknown';
-  if (fs.existsSync(CCO_CONFIG_FILE)) {
-    try {
-      const ccoConfig = JSON.parse(fs.readFileSync(CCO_CONFIG_FILE, 'utf-8'));
-      projectName = ccoConfig.project?.name || path.basename(fullPath);
-    } catch (e) {
-      projectName = path.basename(fullPath);
-    }
-  }
-
-  // Build status lines based on config (OPTIMIZED UX - 3 LINE LAYOUT)
   const lines = [];
 
-  // === LINE 1: User@hostname | CC Version | Model ===
-  const line1Parts = [];
+  // Line 1: User@hostname | CC Version | Model
+  const line1Parts = [
+    colorize(`${username}@${hostname}`, 'cyan', colorEnabled)
+  ];
 
-  // User@hostname (first)
-  if (statuslineConfig.show_user !== false) {
-    line1Parts.push(colorize(`${username}@${hostname}`, 'cyan', colorEnabled));
-  }
-
-  // Claude Code version
+  // Claude Code version (fast check)
   const claudeVersion = execCommand('claude --version');
-  if (claudeVersion && statuslineConfig.show_claude_version !== false) {
+  if (claudeVersion) {
     const versionMatch = claudeVersion.match(/(\d+\.\d+\.\d+)/);
     if (versionMatch) {
-      const versionDisplay = colorize(`CC ${versionMatch[1]}`, 'yellow', colorEnabled);
-      line1Parts.push(versionDisplay);
+      line1Parts.push(colorize(`CC ${versionMatch[1]}`, 'yellow', colorEnabled));
     }
   }
 
-  // Model name (bold + bright for extra visibility)
-  const modelDisplay = colorize(model, 'magenta', colorEnabled);
-  line1Parts.push(modelDisplay);
-
+  line1Parts.push(colorize(model, 'magenta', colorEnabled));
   lines.push(line1Parts.join(' | '));
 
-  // === LINE 2: Directory | Repo:Branch ===
+  // Line 2: Directory | Repo:Branch
   const line2Parts = [];
+  const pathParts = fullPath.split(/[\\/]/);
+  const displayPath = pathParts.length > 3 && fullPath.length > 50
+    ? '.../' + pathParts.slice(-2).join('/')
+    : fullPath;
+  line2Parts.push(colorize(displayPath, 'white', colorEnabled));
 
-  // Full directory path
-  if (statuslineConfig.show_directory !== false) {
-    line2Parts.push(colorize(fullPath, 'white', colorEnabled));
-  }
-
-  // Git repo:branch
-  if (metrics.git && statuslineConfig.show_git_info !== false) {
-    const repoDisplay = metrics.git.repoName
-      ? colorize(`${metrics.git.repoName}:${metrics.git.branch}`, 'green', colorEnabled)
-      : colorize(metrics.git.branch, 'green', colorEnabled);
+  if (git) {
+    const repoDisplay = git.repoName
+      ? colorize(`${git.repoName}:${git.branch}`, 'green', colorEnabled)
+      : colorize(git.branch, 'green', colorEnabled);
     line2Parts.push(repoDisplay);
   }
-
   lines.push(line2Parts.join(' | '));
 
-  // === LINE 3: Ready to Stage (unstaged changes) ===
-  const line3Parts = [];
-
-  if (metrics.git && statuslineConfig.show_git_info !== false) {
-    const modifiedCount = metrics.git.modifiedFiles || 0;
-    const newCount = metrics.git.untrackedFiles || 0;
-    const deletedCount = metrics.git.deletedFiles || 0;
-    const unstagedAdded = metrics.git.unstagedLinesAdded || 0;
-    const unstagedRemoved = metrics.git.unstagedLinesRemoved || 0;
-
-    // Color-coded parts: modified=yellow, new=green, deleted=red
-    const modPart = colorize(modifiedCount, 'yellow', colorEnabled) + colorize(' (mod)', 'gray', colorEnabled);
-    const newPart = colorize(newCount, 'green', colorEnabled) + colorize(' (new)', 'gray', colorEnabled);
-    const delPart = colorize(deletedCount, 'red', colorEnabled) + colorize(' (del)', 'gray', colorEnabled);
-    const addDisplay = colorize(`+${unstagedAdded}`, 'green', colorEnabled);
-    const removeDisplay = colorize(`-${unstagedRemoved}`, 'red', colorEnabled);
-
-    const lineDisplay = `${addDisplay}${colorize('/', 'gray', colorEnabled)}${removeDisplay}`;
-    line3Parts.push(`Ready to Stage: ${modPart} + ${newPart} + ${delPart} ${colorize('(', 'gray', colorEnabled)}${lineDisplay}${colorize(')', 'gray', colorEnabled)}`);
+  if (!git) {
+    return lines.map(line => truncateString(line, maxLineWidth)).join('\n');
   }
 
-  // Removed: Docker and Test status - not used in default display
+  // Line 3: Ready to Stage
+  const modCount = git.modifiedFiles || 0;
+  const newCount = git.untrackedFiles || 0;
+  const delCount = git.deletedFiles || 0;
 
-  // CCO status (if enabled and active)
-  if (metrics.cco && metrics.cco.enabled) {
+  const modCountStr = padString(colorize(`${modCount}`, 'yellow', colorEnabled), 3, 'right');
+  const newCountStr = padString(colorize(`${newCount}`, 'green', colorEnabled), 3, 'right');
+  const delCountStr = padString(colorize(`${delCount}`, 'red', colorEnabled), 3, 'right');
+
+  const unstagedLine = `Ready to Stage:  ${modCountStr} mod  ${newCountStr} new  ${delCountStr} del  (${colorize(`+${git.unstagedAdded}`, 'green', colorEnabled)}/${colorize(`-${git.unstagedRemoved}`, 'red', colorEnabled)})`;
+
+  // Add CCO status inline
+  if (cco && cco.enabled) {
     const ccoParts = [];
-
-    // Project type and maturity
-    if (metrics.cco.projectType) {
-      ccoParts.push(colorize(metrics.cco.projectType.toUpperCase(), 'magenta', colorEnabled));
+    if (cco.projectType) ccoParts.push(colorize(cco.projectType.toUpperCase(), 'magenta', colorEnabled));
+    if (cco.maturity) {
+      const labels = { prototype: 'PROTO', mvp: 'MVP', active: 'DEV', production: 'PROD', maintenance: 'MAINT' };
+      ccoParts.push(colorize(labels[cco.maturity] || cco.maturity.toUpperCase(), 'cyan', colorEnabled));
     }
-
-    if (metrics.cco.maturity) {
-      const maturityMap = {
-        'prototype': 'PROTO',
-        'mvp': 'MVP',
-        'active': 'DEV',
-        'production': 'PROD',
-        'maintenance': 'MAINT'
-      };
-      const label = maturityMap[metrics.cco.maturity] || metrics.cco.maturity.toUpperCase();
-      ccoParts.push(colorize(label, 'cyan', colorEnabled));
-    }
-
-    // Active principles count
-    if (metrics.cco.activePrinciples > 0) {
-      ccoParts.push(colorize(`${metrics.cco.activePrinciples}P`, 'blue', colorEnabled));
-    }
-
-    // Compliance score (color-coded: >80=green, >60=yellow, <=60=red)
-    if (metrics.cco.complianceScore !== null) {
-      const scoreColor = metrics.cco.complianceScore > 80 ? 'green' :
-                        metrics.cco.complianceScore > 60 ? 'yellow' : 'red';
-      ccoParts.push(colorize(`${metrics.cco.complianceScore}%`, scoreColor, colorEnabled));
-    }
+    if (cco.activePrinciples > 0) ccoParts.push(colorize(`${cco.activePrinciples}P`, 'blue', colorEnabled));
 
     if (ccoParts.length > 0) {
-      line3Parts.push(`CCO: ${ccoParts.join(' ')}`);
+      lines.push(unstagedLine + ' | CCO: ' + ccoParts.join(' '));
+    } else {
+      lines.push(unstagedLine);
     }
+  } else {
+    lines.push(unstagedLine);
   }
 
-  lines.push(line3Parts.join(', '));
+  // Line 4: Ready to Commit
+  const stagedModCount = git.stagedModifiedFiles || 0;
+  const stagedNewCount = git.stagedNewFiles || 0;
+  const stagedDelCount = git.stagedDeletedFiles || 0;
+  const stagedTotal = stagedModCount + stagedNewCount + stagedDelCount;
+  const stagedColor = stagedTotal > 0 ? 'blue' : 'gray';
 
-  // === LINE 4: Ready for Commit and Ready to Push ===
-  const line4Parts = [];
+  const sModCountStr = padString(colorize(`${stagedModCount}`, 'yellow', colorEnabled), 3, 'right');
+  const sNewCountStr = padString(colorize(`${stagedNewCount}`, 'green', colorEnabled), 3, 'right');
+  const sDelCountStr = padString(colorize(`${stagedDelCount}`, 'red', colorEnabled), 3, 'right');
 
-  if (metrics.git && statuslineConfig.show_git_info !== false) {
-    const stagedCount = metrics.git.stagedFiles || 0;
-    const stagedAdded = metrics.git.stagedLinesAdded || 0;
-    const stagedRemoved = metrics.git.stagedLinesRemoved || 0;
-    const unpushedCount = metrics.git.unpushedCommits || 0;
-    const unpushedAdded = metrics.git.unpushedLinesAdded || 0;
-    const unpushedRemoved = metrics.git.unpushedLinesRemoved || 0;
+  const commitLabel = colorize('Ready to Commit:', stagedColor, colorEnabled);
+  lines.push(`${commitLabel} ${sModCountStr} mod  ${sNewCountStr} new  ${sDelCountStr} del  (${colorize(`+${git.stagedAdded}`, 'green', colorEnabled)}/${colorize(`-${git.stagedRemoved}`, 'red', colorEnabled)})`);
 
-    const stagedColor = stagedCount > 0 ? 'blue' : 'gray';
-    const unpushedColor = unpushedCount > 0 ? 'magenta' : 'gray';
+  // Line 5: Ready to Push
+  const unpushedColor = git.unpushedCommits > 0 ? 'magenta' : 'gray';
+  const pushLabel = colorize('Ready to Push:', unpushedColor, colorEnabled);
+  lines.push(`${pushLabel}     ${colorize(`${git.unpushedCommits}`, unpushedColor, colorEnabled)} commits`);
 
-    // Ready to Commit (blue when >0)
-    const stagedAddDisplay = colorize(`+${stagedAdded}`, 'green', colorEnabled);
-    const stagedRemoveDisplay = colorize(`-${stagedRemoved}`, 'red', colorEnabled);
-    const stagedLineDisplay = `${stagedAddDisplay}${colorize('/', 'gray', colorEnabled)}${stagedRemoveDisplay}`;
-    const commitLabel = colorize('Ready to Commit:', stagedColor, colorEnabled);
-    const commitCount = colorize(stagedCount, stagedColor, colorEnabled);
-    line4Parts.push(`${commitLabel} ${commitCount} ${colorize('(', 'gray', colorEnabled)}${stagedLineDisplay}${colorize(')', 'gray', colorEnabled)}`);
+  // Line 6: Conflicts & Stashed
+  const conflictColor = git.conflictCount > 0 ? 'red' : 'gray';
+  const stashColor = git.stashCount > 0 ? 'cyan' : 'gray';
 
-    // Ready to Push (magenta when >0)
-    const unpushedAddDisplay = colorize(`+${unpushedAdded}`, 'green', colorEnabled);
-    const unpushedRemoveDisplay = colorize(`-${unpushedRemoved}`, 'red', colorEnabled);
-    const unpushedLineDisplay = `${unpushedAddDisplay}${colorize('/', 'gray', colorEnabled)}${unpushedRemoveDisplay}`;
-    const pushLabel = colorize('Ready to Push:', unpushedColor, colorEnabled);
-    const pushCount = colorize(unpushedCount, unpushedColor, colorEnabled);
-    line4Parts.push(`${pushLabel} ${pushCount} ${colorize('(', 'gray', colorEnabled)}${unpushedLineDisplay}${colorize(')', 'gray', colorEnabled)}`);
-  }
+  lines.push(
+    `${colorize('Conflicts:', conflictColor, colorEnabled)} ${colorize(`${git.conflictCount}`, conflictColor, colorEnabled)} files  |  ` +
+    `${colorize('Stashed:', stashColor, colorEnabled)} ${colorize(`${git.stashCount}`, stashColor, colorEnabled)} entries`
+  );
 
-  if (line4Parts.length > 0) {
-    lines.push(line4Parts.join(', '));
-  }
-
-  return lines.join('\n');
+  return lines.map(line => truncateString(line, maxLineWidth)).join('\n');
 }
 
-// Main execution
+// Main
 try {
   const input = fs.readFileSync(0, 'utf-8');
   const data = JSON.parse(input);
 
-  // Collect only what we need - no caching, no telemetry
-  const metrics = collectMetrics();
+  const git = getGitInfo();
+  const cco = git ? getCCOState() : { enabled: false };
 
-  // Format and output
-  const output = formatMetricsForStatusline(data, metrics, null);
+  const output = formatMetricsForStatusline(data, git, cco);
   console.log(output);
-
 } catch (error) {
-  // Fallback to minimal output on error
   console.log('[Statusline Error: ' + error.message + ']');
 }

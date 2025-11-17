@@ -56,12 +56,12 @@ class PrinciplesManager:
         Initialize principles manager.
 
         Args:
-            principles_dir: Path to principles directory (default: content/principles/ from package)
+            principles_dir: Path to principles directory (default: claudecodeoptimizer/content/principles/ from package)
         """
         if principles_dir is None:
             # Load from package content/ directory
             package_dir = Path(__file__).parent.parent
-            principles_dir = package_dir.parent / "content" / "principles"
+            principles_dir = package_dir / "content" / "principles"
 
         self.principles_dir = principles_dir
         self.principles: Dict[str, Principle] = {}
@@ -413,7 +413,7 @@ def get_principles_manager(principles_dir: Optional[str] = None) -> PrinciplesMa
     Using @lru_cache ensures only one instance exists per principles_dir.
 
     Args:
-        principles_dir: Path to principles directory (default: content/principles/ from package)
+        principles_dir: Path to principles directory (default: claudecodeoptimizer/content/principles/ from package)
 
     Returns:
         Cached PrinciplesManager instance

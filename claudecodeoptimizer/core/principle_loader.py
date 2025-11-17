@@ -74,9 +74,9 @@ def _load_category_mapping() -> Dict[str, List[str]]:
     if _CATEGORY_TO_IDS is not None:
         return _CATEGORY_TO_IDS
 
-    # Load from content/principles/ directory
+    # Load from claudecodeoptimizer/content/principles/ directory
     package_dir = Path(__file__).parent.parent
-    principles_dir = package_dir.parent / "content" / "principles"
+    principles_dir = package_dir / "content" / "principles"
 
     if not principles_dir.exists():
         # Fallback: return empty mapping
@@ -129,7 +129,7 @@ class PrincipleLoader:
 
         Args:
             principles_dir: Directory containing principle category files
-                          (default: ~/.cco/principles/)
+                          (default: ~/.claude/principles/)
         """
         if principles_dir is None:
             from ..config import CCOConfig
@@ -210,7 +210,7 @@ class PrincipleLoader:
 
         Examples:
             >>> loader = PrincipleLoader()
-            >>> cmd_file = Path("content/commands/audit.md")
+            >>> cmd_file = Path("claudecodeoptimizer/content/commands/audit.md")
             >>> content = loader.load_from_frontmatter(cmd_file)
             # Reads principles: [...] from frontmatter and loads them
         """
