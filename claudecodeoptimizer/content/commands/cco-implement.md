@@ -12,6 +12,70 @@ Implement new features using Test-Driven Development (TDD), automatically select
 
 ## Execution Protocol
 
+### Step 0: Introduction and Confirmation (ALWAYS FIRST)
+
+**Before doing ANYTHING, present this introduction and get user confirmation:**
+
+```markdown
+# Implement Command
+
+**What I do:**
+I implement new features using Test-Driven Development (TDD), automatically selecting appropriate skills based on feature type.
+
+**How it works:**
+1. I analyze your feature request to determine complexity and required skills
+2. I create a detailed implementation plan broken into 5 phases
+3. You select which implementation steps to execute
+4. I implement using TDD (write tests first, then make them pass)
+5. I add security hardening and documentation
+
+**What you'll get:**
+- Complete feature implementation following TDD
+- Architecture design for the feature
+- Comprehensive tests (unit, integration, security) - 100% coverage goal
+- Production-ready code with security hardening
+- API documentation and usage examples
+
+**Phases:**
+1. Architecture Design (plan the feature structure)
+2. Tests First - TDD Red Phase (write failing tests)
+3. Implementation - TDD Green Phase (make tests pass)
+4. Security Hardening (rate limiting, validation, etc.)
+5. Documentation (OpenAPI, security best practices)
+
+**Time estimate:** 10-30 minutes depending on feature complexity
+
+**New code WILL be created** - complete feature implementation with tests.
+```
+
+**Then ask for confirmation using AskUserQuestion:**
+
+```python
+AskUserQuestion({
+  questions: [{
+    question: "Do you want to start implementing the feature?",
+    header: "Start Implement",
+    multiSelect: false,
+    options: [
+      {
+        label: "Yes, start implementation",
+        description: "Analyze feature and begin TDD implementation"
+      },
+      {
+        label: "No, cancel",
+        description: "Exit without implementing anything"
+      }
+    ]
+  }]
+})
+```
+
+**CRITICAL:**
+- If user selects "No, cancel" → EXIT immediately, do NOT proceed
+- If user selects "Yes, start implementation" → Continue to Step 1
+
+---
+
 ### Step 1: Analyze Feature Request
 
 User provides feature description:
@@ -42,47 +106,151 @@ Skills I'll use:
 - cco-skill-database-optimization-caching-profiling (user storage)
 ```
 
-### Step 3: Create Implementation Plan
+### Step 3: Create Implementation Plan and Get User Confirmation
+
+Present implementation plan:
 
 ```markdown
 Implementation Plan (TDD Approach):
 
-Phase 1: Architecture Design (2 min)
-- Design authentication flow
-  * POST /auth/login → access_token + refresh_token
-  * POST /auth/refresh → new access_token
-  * POST /auth/logout → invalidate refresh_token
-- Define JWT payload structure
-- Plan database schema (users, refresh_tokens tables)
+Feature: [feature description]
+Complexity: [Simple/Medium/Complex]
+Skills: [list skills]
 
-Phase 2: Tests First (5 min) - TDD
-- Unit tests for JWT creation/validation
-- Integration tests for auth endpoints
-- Security tests (token expiry, tampering)
-- Edge cases (expired tokens, invalid credentials)
+Phases:
+1. Architecture Design (X min)
+   - [design decisions]
 
-Phase 3: Implementation (10 min)
-- User model + password hashing (bcrypt)
-- JWT token generation/validation
-- Auth endpoints (login, refresh, logout)
-- Middleware for protected routes
+2. Tests First (X min) - TDD Red Phase
+   - [tests to create]
 
-Phase 4: Security Hardening (3 min)
-- Rate limiting on auth endpoints (5 attempts/5min)
-- Brute force protection
-- Secure password requirements (min 8 chars)
-- Token refresh mechanism
+3. Implementation (X min) - TDD Green Phase
+   - [components to implement]
 
-Phase 5: Documentation (2 min)
-- API documentation (OpenAPI)
-- Security best practices
-- Example usage
+4. Security Hardening (X min)
+   - [security measures]
 
-Estimated time: 22 minutes
-Tests created: 25+ tests (100% coverage target)
+5. Documentation (X min)
+   - [documentation to create]
 
-Start implementation? (yes/no)
+Estimated time: XX minutes
+Tests: XX+ tests (100% coverage target)
 ```
+
+**IMPORTANT:** The descriptions below are EXAMPLES based on JWT auth feature. You MUST:
+- Break down the ACTUAL feature into specific implementation steps
+- List each concrete task with its phase in parentheses
+- Provide realistic time estimates for each step
+- Replace example steps with REAL feature-specific steps
+
+**Use AskUserQuestion** to let user select implementation steps (NOT phases, but individual steps):
+
+```python
+AskUserQuestion({
+  questions: [{
+    question: "Which implementation steps should I execute? Select the specific tasks you want:",
+    header: "Implement",
+    multiSelect: true,
+    options: [
+      # Phase 1: Architecture Design - Break into concrete steps
+      {
+        label: "Design authentication flow",
+        description: "(Phase 1: Architecture, 1 min) Design login/refresh/logout endpoints, token flow"
+      },
+      {
+        label: "Define JWT payload structure",
+        description: "(Phase 1: Architecture, 1 min) Define user_id, roles, expiry in JWT claims"
+      },
+      {
+        label: "Plan database schema",
+        description: "(Phase 1: Architecture, 1 min) Design users and refresh_tokens tables"
+      },
+
+      # Phase 2: Tests First (TDD Red Phase) - Break into concrete test files
+      {
+        label: "Write unit tests for JWT operations",
+        description: "(Phase 2: Tests, 2 min) test_create_token, test_validate_token, test_token_expiry, test_token_tampered | 🔴 TDD Red Phase"
+      },
+      {
+        label: "Write integration tests for auth endpoints",
+        description: "(Phase 2: Tests, 2 min) test_login_success, test_login_invalid, test_refresh, test_logout | 🔴 TDD Red Phase"
+      },
+      {
+        label: "Write security tests",
+        description: "(Phase 2: Tests, 1 min) test_rate_limiting, test_brute_force, test_weak_password | 🔴 TDD Red Phase"
+      },
+
+      # Phase 3: Implementation (TDD Green Phase) - Break into concrete files
+      {
+        label: "Implement User model",
+        description: "(Phase 3: Implementation, 2 min) models/user.py - User model with password hashing (bcrypt) | 🟢 TDD Green Phase"
+      },
+      {
+        label: "Implement JWT service",
+        description: "(Phase 3: Implementation, 3 min) services/auth.py - create_token, validate_token, hash_password | 🟢 TDD Green Phase"
+      },
+      {
+        label: "Implement auth endpoints",
+        description: "(Phase 3: Implementation, 3 min) api/auth.py - POST /login, /refresh, /logout | 🟢 TDD Green Phase"
+      },
+      {
+        label: "Implement auth middleware",
+        description: "(Phase 3: Implementation, 2 min) middleware/auth.py - JWT validation decorator @require_auth | 🟢 TDD Green Phase"
+      },
+
+      # Phase 4: Security Hardening - Break into concrete features
+      {
+        label: "Add rate limiting",
+        description: "(Phase 4: Security, 1 min) 5 attempts per 5 minutes on auth endpoints"
+      },
+      {
+        label: "Add brute force protection",
+        description: "(Phase 4: Security, 1 min) Account lockout after failed attempts"
+      },
+      {
+        label: "Add password requirements",
+        description: "(Phase 4: Security, 1 min) Minimum 8 chars, complexity validation"
+      },
+
+      # Phase 5: Documentation - Break into concrete docs
+      {
+        label: "Create OpenAPI documentation",
+        description: "(Phase 5: Documentation, 1 min) Update openapi.yaml with auth endpoints, schemas, examples"
+      },
+      {
+        label: "Document security best practices",
+        description: "(Phase 5: Documentation, 1 min) Add security.md with token storage, rotation, best practices"
+      },
+
+      # Special options
+      {
+        label: "All Steps (Full TDD)",
+        description: "✅ RECOMMENDED: Execute ALL steps above in order (Phases 1-5, complete TDD implementation, production-ready)"
+      },
+      {
+        label: "All Tests Only",
+        description: "🔴 Execute only test-writing steps (Phase 2: all test steps) - TDD Red Phase preparation"
+      },
+      {
+        label: "All Implementation Only",
+        description: "🟢 Execute only implementation steps (Phase 3: all implementation steps) - TDD Green Phase (requires tests written first!)"
+      },
+      {
+        label: "Skip Tests (NOT RECOMMENDED)",
+        description: "⚠️ Execute Architecture + Implementation + Security + Docs, but SKIP Phase 2 (Tests). Pain #4: Biggest mistake!"
+      }
+    ]
+  }]
+})
+```
+
+**IMPORTANT:**
+- If user selects "All Steps (Full TDD)", ignore other selections and execute ALL steps in order
+- If user selects "All Tests Only", execute only Phase 2 steps
+- If user selects "All Implementation Only", execute only Phase 3 steps (warn if tests not written yet)
+- If user selects "Skip Tests", execute all steps EXCEPT Phase 2 (warn about Pain #4)
+- Otherwise, execute ONLY the individually selected steps
+- Steps must be executed in phase order (Phase 1 → Phase 2 → Phase 3 → Phase 4 → Phase 5) even if selected out of order
 
 ### Step 4: Execute TDD Implementation
 
@@ -169,6 +337,8 @@ Task({
 
 ### Step 5: Report Progress and Results
 
+After each phase, report progress and continue automatically if "All Phases" was selected, otherwise ask for confirmation:
+
 ```markdown
 Phase 1 Complete: Architecture Designed ✓
 
@@ -180,40 +350,37 @@ Auth Flow:
 Database Schema:
 - users: id, email, password_hash, created_at
 - refresh_tokens: id, user_id, token_hash, expires_at
+```
 
-Continue to Phase 2 (Tests)? (yes/no)
+**If "All Phases" NOT selected**, use AskUserQuestion for continuation:
 
----
+```python
+AskUserQuestion({
+  questions: [{
+    question: "Phase 1 complete. Ready to continue to Phase 2 (Tests)?",
+    header: "Continue",
+    multiSelect: false,
+    options: [
+      {
+        label: "Yes, continue to Phase 2",
+        description: "Write failing tests (TDD Red Phase)"
+      },
+      {
+        label: "No, stop here",
+        description: "Stop implementation and review results"
+      }
+    ]
+  }]
+})
+```
 
-Phase 2 Complete: Tests Created ✓ (TDD Red Phase)
+Repeat for each phase transition.
 
-Created 25 failing tests:
-✓ tests/unit/test_auth.py (12 unit tests)
-✓ tests/integration/test_auth_api.py (8 integration tests)
-✓ tests/security/test_auth_security.py (5 security tests)
-
-Test results: 25 failed (expected - TDD red phase)
-
-Continue to Phase 3 (Implementation)? (yes/no)
-
----
-
-Phase 3 Complete: Implementation Done ✓ (TDD Green Phase)
-
-Created:
-✓ models/user.py (User model + password hashing)
-✓ services/auth.py (JWT operations)
-✓ api/auth.py (3 endpoints)
-✓ middleware/auth.py (JWT validation)
-
-Test results: 25 passed, 0 failed ✓ (TDD green phase)
-Coverage: 100% ✓
-
-Continue to Phase 4 (Security)? (yes/no)
+**If "All Phases" WAS selected**, continue automatically without asking.
 
 ---
 
-All Phases Complete! ✓
+Final summary after all selected phases complete:
 
 Implementation Summary:
 

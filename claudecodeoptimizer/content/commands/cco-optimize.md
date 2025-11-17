@@ -40,96 +40,279 @@ Identify and fix performance bottlenecks: slow queries, large bundles, dead code
 
 ## Execution Protocol
 
-### Interactive Mode (No Parameters)
+### Step 0: Introduction and Confirmation (ALWAYS FIRST)
 
-1. **Detect optimization opportunities:**
+**Before doing ANYTHING, present this introduction and get user confirmation:**
 
 ```markdown
-Analyzing project for optimization opportunities...
+# Optimize Command
 
-Found potential optimizations:
+**What I do:**
+I identify and fix performance bottlenecks across 6 areas: database queries, Docker images, code quality, dependencies, frontend bundles, and resilience patterns.
 
-🔴 Critical (High Impact):
-□ Database (Pain #5: Performance)
-  - 2 N+1 query patterns (450ms → 25ms possible)
-  - 3 missing indexes (780ms → 15ms possible)
-  - No connection pooling (limits concurrency)
-  Impact: 89% faster queries, 10x concurrent users
+**How it works:**
+1. I analyze your project to find optimization opportunities (N+1 queries, large images, dead code, etc.)
+2. I measure current metrics (query times, image sizes, bundle sizes)
+3. You select which optimizations to apply (individual steps or groups)
+4. I apply optimizations and measure improvements
+5. I report before/after metrics with impact analysis
 
-□ Docker (Pain #5: Build time)
-  - No multi-stage build (image: 1.2GB)
-  - Unnecessary dependencies in image
-  - No layer caching
-  Impact: 1.2GB → 150MB (87% smaller), 8min → 2min build
+**What you'll get:**
+- Database optimizations (N+1 fixes, indexes, caching - 89% faster queries)
+- Docker optimizations (multi-stage builds - 1.2GB → 150MB)
+- Code cleanup (remove dead code - 23% smaller codebase)
+- Dependency updates (security patches, remove unused)
+- Bundle optimizations (code splitting - 450KB → 200KB)
+- Resilience patterns (circuit breakers, retry logic)
 
-🟡 High Priority:
-□ Code (Pain #2: Tech debt)
-  - 45 unused functions (23% dead code)
-  - 200+ unused imports
-  - 5 functions with complexity > 15
-  Impact: 23% smaller codebase, easier maintenance
+**Time estimate:** 10-30 minutes depending on optimizations selected
 
-□ Dependencies (Pain #6: Integration)
-  - 8 outdated packages (security vulnerabilities)
-  - 15 unused dependencies
-  - 3 packages with known CVEs
-  Impact: Security improved, 20% faster installs
-
-🟢 Recommended:
-□ Bundle (Frontend performance)
-  - Bundle size: 450KB (target: <200KB)
-  - No code splitting
-  - No tree shaking
-  Impact: 54% smaller bundle, 2s faster load
-
-□ Performance (Resilience)
-  - No circuit breakers
-  - No retry logic
-  - No request timeout configuration
-  Impact: Better failure handling, fewer cascading failures
-
-Select optimization types: ▯
+**Changes WILL be made to your code** - all optimizations are measured and verified.
 ```
 
-2. **User selects** optimization types
+**Then ask for confirmation using AskUserQuestion:**
 
-3. **Confirm and explain:**
+```python
+AskUserQuestion({
+  questions: [{
+    question: "Do you want to start optimizing the project?",
+    header: "Start Optimize",
+    multiSelect: false,
+    options: [
+      {
+        label: "Yes, start optimization",
+        description: "Analyze and optimize performance bottlenecks"
+      },
+      {
+        label: "No, cancel",
+        description: "Exit without making any changes"
+      }
+    ]
+  }]
+})
+```
+
+**CRITICAL:**
+- If user selects "No, cancel" → EXIT immediately, do NOT proceed
+- If user selects "Yes, start optimization" → Continue to Step 1
+
+---
+
+### Interactive Mode (No Parameters)
+
+1. **Analyze project for real optimization opportunities first**, then **present specific optimization steps using AskUserQuestion**:
+
+**IMPORTANT:** The steps below are EXAMPLES. You MUST:
+- Run actual analysis (Grep for N+1 queries, check Docker image size, count unused functions)
+- Measure real metrics (actual image sizes, actual query times, actual bundle sizes)
+- List EACH specific optimization as a separate option with its category in parentheses
+- Replace ALL example steps with REAL project-specific optimizations
+- Include actual file paths and line numbers
+- Skip options for optimizations not applicable to this project
+
+```python
+AskUserQuestion({
+  questions: [{
+    question: "Which optimization steps should I apply? Select specific optimizations you want:",
+    header: "Optimize",
+    multiSelect: true,
+    options: [
+      # Database optimizations - Each specific fix
+      {
+        label: "Fix N+1 query in api/orders.py:45",
+        description: "(Database, 2 min) get_user_orders() - Add eager loading | 450ms → 25ms | 🔴 CRITICAL"
+      },
+      {
+        label: "Fix N+1 query in api/products.py:67",
+        description: "(Database, 2 min) get_related_products() - Use joinedload | 380ms → 20ms | 🔴 CRITICAL"
+      },
+      {
+        label: "Add index on products(category, price)",
+        description: "(Database, 1 min) Create migration for composite index | 780ms → 15ms | 🔴 CRITICAL"
+      },
+      {
+        label: "Add index on orders(user_id, created_at)",
+        description: "(Database, 1 min) Create migration for composite index | 650ms → 10ms | 🔴 CRITICAL"
+      },
+      {
+        label: "Add Redis caching for get_popular_products()",
+        description: "(Database, 3 min) 1h TTL cache | 50ms → 2ms, saves 48s/min | 🔴 CRITICAL"
+      },
+      {
+        label: "Setup connection pooling",
+        description: "(Database, 2 min) Pool size 20, overflow 10 | 10x concurrency | 🔴 CRITICAL"
+      },
+
+      # Docker optimizations - Each specific improvement
+      {
+        label: "Create multi-stage Dockerfile",
+        description: "(Docker, 3 min) Builder + runtime stages | 1.2GB → 150MB (87% smaller) | 🔴 CRITICAL"
+      },
+      {
+        label: "Create .dockerignore file",
+        description: "(Docker, 1 min) Exclude tests/, .git/, __pycache__ | Faster builds | 🔴 CRITICAL"
+      },
+      {
+        label: "Optimize Docker layer ordering",
+        description: "(Docker, 2 min) Dependencies first, code last | 8min → 2min build (75% faster) | 🔴 CRITICAL"
+      },
+      {
+        label: "Remove dev dependencies from image",
+        description: "(Docker, 1 min) Production-only packages | 200MB → 150MB | 🔴 CRITICAL"
+      },
+
+      # Code optimizations - Each specific cleanup
+      {
+        label: "Remove unused function: utils/old_helpers.py:format_date()",
+        description: "(Code, 1 min) Dead code, no callers found | 🟡 HIGH"
+      },
+      {
+        label: "Remove unused function: services/deprecated.py:old_auth()",
+        description: "(Code, 1 min) Dead code, replaced by new_auth() | 🟡 HIGH"
+      },
+      {
+        label: "Remove all unused imports (200+ imports in 15 files)",
+        description: "(Code, 2 min) Use autoflake | Faster module loading | 🟡 HIGH"
+      },
+      {
+        label: "Refactor calculate_discount() - complexity 18 → 8",
+        description: "(Code, 3 min) services/pricing.py:45 - Extract smaller functions | 🟡 HIGH"
+      },
+      {
+        label: "Refactor process_payment() - complexity 16 → 9",
+        description: "(Code, 3 min) api/payments.py:120 - Simplify control flow | 🟡 HIGH"
+      },
+
+      # Dependencies optimizations - Each specific update
+      {
+        label: "Update requests 2.28.0 → 2.31.0",
+        description: "(Dependencies, 1 min) Security patch for CVE-2023-32681 | 🟡 HIGH"
+      },
+      {
+        label: "Update flask 2.0.1 → 2.3.0",
+        description: "(Dependencies, 1 min) Security patches | 🟡 HIGH"
+      },
+      {
+        label: "Remove unused dependency: beautifulsoup4",
+        description: "(Dependencies, 1 min) Not imported anywhere | 🟡 HIGH"
+      },
+      {
+        label: "Remove unused dependency: pandas",
+        description: "(Dependencies, 1 min) Not imported anywhere, large package | 🟡 HIGH"
+      },
+
+      # Bundle optimizations - Each specific technique
+      {
+        label: "Add code splitting for routes",
+        description: "(Bundle, 3 min) React.lazy() for each route | 450KB → 300KB | 🟢 RECOMMENDED"
+      },
+      {
+        label: "Enable tree shaking",
+        description: "(Bundle, 2 min) Webpack config optimization | 300KB → 200KB | 🟢 RECOMMENDED"
+      },
+      {
+        label: "Add Gzip compression",
+        description: "(Bundle, 1 min) Nginx/server config | 200KB → 60KB transfer | 🟢 RECOMMENDED"
+      },
+
+      # Performance optimizations - Each specific resilience feature
+      {
+        label: "Add circuit breaker for external API",
+        description: "(Performance, 3 min) Prevent cascade failures | 🟢 RECOMMENDED"
+      },
+      {
+        label: "Add retry logic with exponential backoff",
+        description: "(Performance, 2 min) Handle transient failures | 🟢 RECOMMENDED"
+      },
+      {
+        label: "Add request timeout configuration",
+        description: "(Performance, 1 min) Prevent hanging requests | 🟢 RECOMMENDED"
+      },
+
+      # Group options
+      {
+        label: "All Database Optimizations",
+        description: "✅ Apply all 6 database optimizations above (N+1 fixes, indexes, caching, pooling)"
+      },
+      {
+        label: "All Docker Optimizations",
+        description: "✅ Apply all 4 Docker optimizations above (multi-stage, ignore, layers, deps)"
+      },
+      {
+        label: "All Code Optimizations",
+        description: "✅ Apply all 5 code optimizations above (remove dead code, remove imports, refactor complex)"
+      },
+      {
+        label: "All Dependency Optimizations",
+        description: "✅ Apply all 4 dependency optimizations above (updates, removals)"
+      },
+      {
+        label: "All Bundle Optimizations",
+        description: "✅ Apply all 3 bundle optimizations above (splitting, tree shaking, compression)"
+      },
+      {
+        label: "All Performance Optimizations",
+        description: "✅ Apply all 3 performance optimizations above (circuit breaker, retry, timeout)"
+      },
+      {
+        label: "All Optimizations",
+        description: "✅ Apply ALL optimization steps above (comprehensive performance improvement)"
+      }
+    ]
+  }]
+})
+```
+
+**IMPORTANT:**
+- If user selects "All Optimizations", ignore other selections and apply ALL steps
+- If user selects "All [Category] Optimizations", apply all steps in that category
+- Otherwise, apply ONLY the individually selected steps
+- Steps can be executed in parallel when they don't conflict (different files)
+
+2. **Present optimization plan:**
 
 ```markdown
-Selected: Database, Docker, Code
+Selected: [list selected optimizations or "All Optimizations"]
 
-I'll use these skills:
-- cco-skill-database-optimization-caching-profiling
-- cco-skill-kubernetes-security-containers
-- cco-skill-code-quality-refactoring-complexity
+Skills I'll use:
+- [list skills for selected optimizations]
 
 Agent: cco-agent-fix (Sonnet for accuracy)
 
 What I'll optimize:
 
-Database:
+[For each selected optimization, explain what will be done]
+
+Example for Database:
 - Fix get_user_orders() N+1 pattern (eager loading)
 - Add index on products(category, price)
 - Add Redis caching for get_popular_products()
 - Setup connection pooling (size=20)
 - Impact: 450ms → 50ms avg (89% faster)
 
-Docker:
-- Convert to multi-stage build
-- Remove dev dependencies from final image
-- Optimize layer ordering for cache hits
-- Use .dockerignore
-- Impact: 1.2GB → 150MB, 8min → 2min build
+Estimated time: ~[X] minutes
+```
 
-Code:
-- Remove 45 unused functions
-- Remove 200+ unused imports
-- Refactor 5 complex functions (>15 complexity)
-- Impact: 23% less code, better maintainability
+3. **Confirm optimization** using AskUserQuestion:
 
-Estimated time: ~15 minutes
-
-Continue? (yes/no)
+```python
+AskUserQuestion({
+  questions: [{
+    question: "Ready to apply the selected optimizations?",
+    header: "Confirm",
+    multiSelect: false,
+    options: [
+      {
+        label: "Yes, start optimization",
+        description: "Apply all selected optimizations"
+      },
+      {
+        label: "No, cancel",
+        description: "Cancel and return to optimization selection"
+      }
+    ]
+  }]
+})
 ```
 
 4. **Use TodoWrite** to track optimization progress
