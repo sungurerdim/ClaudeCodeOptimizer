@@ -26,7 +26,6 @@ CLI_NAME = "cco"
 # Command prefix
 COMMAND_PREFIX = "cco"
 
-
 # ============================================================================
 # PATH HELPERS
 # ============================================================================
@@ -37,98 +36,45 @@ def get_home_dir() -> Path:
     return Path.home()
 
 
-def get_global_dir() -> Path:
-    """Get global CCO directory (~/.cco/)."""
-    return Path.home() / f".{CLI_NAME}"
-
-
 def get_claude_dir() -> Path:
     """Get Claude directory (~/.claude/)."""
     return Path.home() / ".claude"
 
 
-def get_templates_dir() -> Path:
-    """Get global templates directory (~/.cco/templates/)."""
-    return get_global_dir() / "templates"
-
-
 def get_global_commands_dir() -> Path:
     """
-    Get global commands directory (~/.cco/commands/).
+    Get global commands directory (~/.claude/commands/).
 
-    This stores reusable, project-agnostic commands that are linked to project
-    .claude/commands/ directories. When pip install -U updates these commands,
-    all projects auto-update (via hardlink/symlink).
-
-    Note: These are NOT templates - they're ready-to-use commands with no placeholders.
+    All CCO commands stored globally in Claude Code's standard location.
     """
-    return get_global_dir() / "commands"
+    return get_claude_dir() / "commands"
 
 
 def get_principles_dir() -> Path:
     """
-    Get global principles directory (~/.cco/principles/).
+    Get global principles directory (~/.claude/principles/).
 
-    Category-specific principle files stored globally to avoid duplication
-    across projects. Similar to global commands pattern.
+    All principle files (U_*, C_*, P_*) stored globally.
     """
-    return get_global_dir() / "principles"
-
-
-def get_guides_dir() -> Path:
-    """
-    Get global guides directory (~/.cco/guides/).
-
-    Static guide files (verification, git workflow, security, etc.) stored
-    globally to avoid duplication.
-    """
-    return get_global_dir() / "guides"
+    return get_claude_dir() / "principles"
 
 
 def get_agents_dir() -> Path:
     """
-    Get global agents directory (~/.cco/agents/).
+    Get global agents directory (~/.claude/agents/).
 
-    Task agent definitions stored globally. Projects symlink to selected agents
-    in their .claude/agents/ directory.
+    All CCO agent definitions stored globally.
     """
-    return get_global_dir() / "agents"
+    return get_claude_dir() / "agents"
 
 
 def get_skills_dir() -> Path:
     """
-    Get global skills directory (~/.cco/skills/).
+    Get global skills directory (~/.claude/skills/).
 
-    Skill definitions stored globally. Projects symlink to selected skills
-    in their .claude/skills/ directory.
+    All CCO skill definitions stored globally.
     """
-    return get_global_dir() / "skills"
-
-
-# ============================================================================
-# PROJECT-LOCAL PATH HELPERS (Claude Code directories only)
-# ============================================================================
-# Note: CCO keeps project directories clean - no CCO-specific files in projects.
-# Only .claude/ directory is used for commands/hooks (standard Claude Code location).
-
-
-def get_project_claude_dir(project_root: Path) -> Path:
-    """Get project .claude directory (standard Claude Code location)."""
-    return project_root / ".claude"
-
-
-def get_project_commands_dir(project_root: Path) -> Path:
-    """Get project commands directory (.claude/commands/)."""
-    return get_project_claude_dir(project_root) / "commands"
-
-
-def get_project_hooks_dir(project_root: Path) -> Path:
-    """Get project hooks directory (.claude/hooks/)."""
-    return get_project_claude_dir(project_root) / "hooks"
-
-
-# REMOVED: get_project_backups_dir() - No backups needed with stateless architecture
-# Original content never modified, so backups are unnecessary
+    return get_claude_dir() / "skills"
 
 
 # ============================================================================
@@ -153,12 +99,11 @@ GITIGNORE_PATTERNS: list[str] = []
 # ============================================================================
 
 MSG_GLOBAL_INSTALL_SUCCESS = f"[OK] {DISPLAY_NAME} installed globally"
-MSG_PROJECT_INIT_SUCCESS = f"[OK] Project initialized with {SHORT_NAME}"
+
 MSG_ALREADY_INSTALLED = f"[INFO] {SHORT_NAME} is already installed"
 MSG_NOT_INSTALLED = f"[ERROR] {SHORT_NAME} is not installed. Run: {CLI_NAME} install"
-MSG_NOT_INITIALIZED = "[ERROR] Project not initialized. Run: /cco-init"
+
 MSG_INSTALL_FAILED = f"[ERROR] Failed to install {SHORT_NAME}"
-MSG_INIT_FAILED = "[ERROR] Failed to initialize project"
 
 # ============================================================================
 # DEFAULTS & PREFERENCES
@@ -172,7 +117,6 @@ DEFAULT_CONFIG = {
         "display_name": DISPLAY_NAME,
     },
     "paths": {
-        "global_dir": str(get_global_dir()),
         "claude_dir": str(get_claude_dir()),
     },
 }
@@ -185,12 +129,9 @@ DEFAULT_CONFIG = {
 def get_all_paths() -> Dict[str, Path]:
     """Get dictionary of all configured paths."""
     return {
-        "global_dir": get_global_dir(),
         "claude_dir": get_claude_dir(),
-        "templates_dir": get_templates_dir(),
         "commands_dir": get_global_commands_dir(),
         "principles_dir": get_principles_dir(),
-        "guides_dir": get_guides_dir(),
         "skills_dir": get_skills_dir(),
         "agents_dir": get_agents_dir(),
     }
@@ -223,29 +164,26 @@ class CCOConfig:
 
     # Messages
     MSG_GLOBAL_INSTALL_SUCCESS = MSG_GLOBAL_INSTALL_SUCCESS
-    MSG_PROJECT_INIT_SUCCESS = MSG_PROJECT_INIT_SUCCESS
+
     MSG_ALREADY_INSTALLED = MSG_ALREADY_INSTALLED
     MSG_NOT_INSTALLED = MSG_NOT_INSTALLED
-    MSG_NOT_INITIALIZED = MSG_NOT_INITIALIZED
+
     MSG_INSTALL_FAILED = MSG_INSTALL_FAILED
-    MSG_INIT_FAILED = MSG_INIT_FAILED
 
     # Defaults
     DEFAULT_CONFIG = DEFAULT_CONFIG
 
     # Static methods (delegate to module functions)
     get_home_dir = staticmethod(get_home_dir)
-    get_global_dir = staticmethod(get_global_dir)
+
     get_claude_dir = staticmethod(get_claude_dir)
-    get_templates_dir = staticmethod(get_templates_dir)
+
     get_global_commands_dir = staticmethod(get_global_commands_dir)
     get_principles_dir = staticmethod(get_principles_dir)
-    get_guides_dir = staticmethod(get_guides_dir)
+
     get_skills_dir = staticmethod(get_skills_dir)
     get_agents_dir = staticmethod(get_agents_dir)
-    get_project_claude_dir = staticmethod(get_project_claude_dir)
-    get_project_commands_dir = staticmethod(get_project_commands_dir)
-    get_project_hooks_dir = staticmethod(get_project_hooks_dir)
+
     # REMOVED: get_project_backups_dir - No backups with stateless architecture
     get_command_name = staticmethod(get_command_name)
     get_all_paths = staticmethod(get_all_paths)
@@ -261,7 +199,9 @@ class CCOConfig:
                 "cli_name": CLI_NAME,
                 "version": VERSION,
             },
-            "paths": {k: str(v) for k, v in get_all_paths().items()},
+            "paths": {
+                "claude_dir": str(get_claude_dir()),
+            },
             "commands": {
                 "prefix": COMMAND_PREFIX,
                 "init": get_command_name("init"),

@@ -38,7 +38,7 @@ class SkillLoader:
         Initialize skill loader.
 
         Args:
-            skills_dir: Base directory for skills (default: ~/.cco/skills/)
+            skills_dir: Base directory for skills (default: ~/.claude/skills/)
         """
         if skills_dir is None:
             from ..config import CCOConfig

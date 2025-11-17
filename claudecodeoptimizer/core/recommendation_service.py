@@ -10,14 +10,12 @@ Separation of Concerns:
 - Orchestrator: Only orchestrates, no recommendation logic
 """
 
-from pathlib import Path
 from typing import Any, Dict, List, Optional
 
 from .. import config
 from .knowledge_setup import (
     get_available_agents,
     get_available_commands,
-    get_available_guides,
     get_available_skills,
 )
 from .metadata_manager import metadata_manager
@@ -33,25 +31,6 @@ class RecommendationService:
     def __init__(self) -> None:
         """Initialize recommendation service"""
         self.metadata = metadata_manager
-
-    # ========================================================================
-    # GUIDES
-    # ========================================================================
-
-    def recommend_guides(self, context_answers: Dict[str, Any]) -> List[str]:
-        """
-        Recommend guides based on context answers.
-
-        Uses metadata-based matching from guide frontmatter.
-        """
-        available_guides = get_available_guides()
-        guides_dir = config.get_guides_dir()
-
-        return self.metadata.recommend_files(
-            available_files=available_guides,
-            files_dir=guides_dir,
-            context_answers=context_answers,
-        )
 
     # ========================================================================
     # SKILLS

@@ -17,15 +17,9 @@ from claudecodeoptimizer.config import (
     get_claude_dir,
     get_command_name,
     get_global_commands_dir,
-    get_global_dir,
-    get_guides_dir,
     get_home_dir,
     get_principles_dir,
-    get_project_claude_dir,
-    get_project_commands_dir,
-    get_project_hooks_dir,
     get_skills_dir,
-    get_templates_dir,
 )
 
 
@@ -71,13 +65,6 @@ class TestPathHelpers:
         assert isinstance(result, Path)
         assert result == Path.home()
 
-    def test_get_global_dir(self):
-        """Test get_global_dir returns ~/.cco/."""
-        result = get_global_dir()
-        assert isinstance(result, Path)
-        assert result.name == ".cco"
-        assert result.parent == Path.home()
-
     def test_get_claude_dir(self):
         """Test get_claude_dir returns ~/.claude/."""
         result = get_claude_dir()
@@ -85,74 +72,32 @@ class TestPathHelpers:
         assert result.name == ".claude"
         assert result.parent == Path.home()
 
-    def test_get_templates_dir(self):
-        """Test get_templates_dir returns ~/.cco/templates/."""
-        result = get_templates_dir()
-        assert isinstance(result, Path)
-        assert result.name == "templates"
-        assert result.parent.name == ".cco"
-
     def test_get_global_commands_dir(self):
-        """Test get_global_commands_dir returns ~/.cco/commands/."""
+        """Test get_global_commands_dir returns ~/.claude/commands/."""
         result = get_global_commands_dir()
-        assert isinstance(result, Path)
-        assert result.name == "commands"
-        assert result.parent.name == ".cco"
-
-    def test_get_principles_dir(self):
-        """Test get_principles_dir returns ~/.cco/principles/."""
-        result = get_principles_dir()
-        assert isinstance(result, Path)
-        assert result.name == "principles"
-        assert result.parent.name == ".cco"
-
-    def test_get_guides_dir(self):
-        """Test get_guides_dir returns ~/.cco/guides/."""
-        result = get_guides_dir()
-        assert isinstance(result, Path)
-        assert result.name == "guides"
-        assert result.parent.name == ".cco"
-
-    def test_get_agents_dir(self):
-        """Test get_agents_dir returns ~/.cco/agents/."""
-        result = get_agents_dir()
-        assert isinstance(result, Path)
-        assert result.name == "agents"
-        assert result.parent.name == ".cco"
-
-    def test_get_skills_dir(self):
-        """Test get_skills_dir returns ~/.cco/skills/."""
-        result = get_skills_dir()
-        assert isinstance(result, Path)
-        assert result.name == "skills"
-        assert result.parent.name == ".cco"
-
-
-class TestProjectPathHelpers:
-    """Test project-local path helper functions."""
-
-    def test_get_project_claude_dir(self):
-        """Test get_project_claude_dir returns project/.claude/."""
-        project_root = Path("/path/to/project")
-        result = get_project_claude_dir(project_root)
-        assert isinstance(result, Path)
-        assert result.name == ".claude"
-        assert result.parent == project_root
-
-    def test_get_project_commands_dir(self):
-        """Test get_project_commands_dir returns project/.claude/commands/."""
-        project_root = Path("/path/to/project")
-        result = get_project_commands_dir(project_root)
         assert isinstance(result, Path)
         assert result.name == "commands"
         assert result.parent.name == ".claude"
 
-    def test_get_project_hooks_dir(self):
-        """Test get_project_hooks_dir returns project/.claude/hooks/."""
-        project_root = Path("/path/to/project")
-        result = get_project_hooks_dir(project_root)
+    def test_get_principles_dir(self):
+        """Test get_principles_dir returns ~/.claude/principles/."""
+        result = get_principles_dir()
         assert isinstance(result, Path)
-        assert result.name == "hooks"
+        assert result.name == "principles"
+        assert result.parent.name == ".claude"
+
+    def test_get_agents_dir(self):
+        """Test get_agents_dir returns ~/.claude/agents/."""
+        result = get_agents_dir()
+        assert isinstance(result, Path)
+        assert result.name == "agents"
+        assert result.parent.name == ".claude"
+
+    def test_get_skills_dir(self):
+        """Test get_skills_dir returns ~/.claude/skills/."""
+        result = get_skills_dir()
+        assert isinstance(result, Path)
+        assert result.name == "skills"
         assert result.parent.name == ".claude"
 
 
@@ -183,12 +128,9 @@ class TestUtilityFunctions:
         """Test get_all_paths contains all expected keys."""
         result = get_all_paths()
         expected_keys = {
-            "global_dir",
             "claude_dir",
-            "templates_dir",
             "commands_dir",
             "principles_dir",
-            "guides_dir",
             "skills_dir",
             "agents_dir",
         }
@@ -216,24 +158,17 @@ class TestCCOConfigClass:
     def test_ccoconfig_has_static_methods(self):
         """Test CCOConfig class has static methods."""
         assert callable(CCOConfig.get_home_dir)
-        assert callable(CCOConfig.get_global_dir)
         assert callable(CCOConfig.get_claude_dir)
-        assert callable(CCOConfig.get_templates_dir)
         assert callable(CCOConfig.get_global_commands_dir)
         assert callable(CCOConfig.get_principles_dir)
-        assert callable(CCOConfig.get_guides_dir)
         assert callable(CCOConfig.get_skills_dir)
         assert callable(CCOConfig.get_agents_dir)
-        assert callable(CCOConfig.get_project_claude_dir)
-        assert callable(CCOConfig.get_project_commands_dir)
-        assert callable(CCOConfig.get_project_hooks_dir)
         assert callable(CCOConfig.get_command_name)
         assert callable(CCOConfig.get_all_paths)
 
     def test_ccoconfig_static_methods_work(self):
         """Test CCOConfig static methods return expected values."""
         assert CCOConfig.get_home_dir() == get_home_dir()
-        assert CCOConfig.get_global_dir() == get_global_dir()
         assert CCOConfig.get_claude_dir() == get_claude_dir()
         assert CCOConfig.get_command_name("test") == "/cco-test"
 
@@ -262,7 +197,6 @@ class TestCCOConfigClass:
         paths = result["paths"]
         assert isinstance(paths, dict)
         assert all(isinstance(v, str) for v in paths.values())
-        assert "global_dir" in paths
         assert "claude_dir" in paths
 
     def test_ccoconfig_to_dict_commands(self):
@@ -305,7 +239,6 @@ class TestDefaultConfig:
 
         assert "paths" in DEFAULT_CONFIG
         paths = DEFAULT_CONFIG["paths"]
-        assert "global_dir" in paths
         assert "claude_dir" in paths
 
 
@@ -317,32 +250,22 @@ class TestMessageConstants:
         from claudecodeoptimizer.config import (
             MSG_ALREADY_INSTALLED,
             MSG_GLOBAL_INSTALL_SUCCESS,
-            MSG_INIT_FAILED,
             MSG_INSTALL_FAILED,
-            MSG_NOT_INITIALIZED,
             MSG_NOT_INSTALLED,
-            MSG_PROJECT_INIT_SUCCESS,
         )
 
         assert MSG_GLOBAL_INSTALL_SUCCESS is not None
-        assert MSG_PROJECT_INIT_SUCCESS is not None
         assert MSG_ALREADY_INSTALLED is not None
         assert MSG_NOT_INSTALLED is not None
-        assert MSG_NOT_INITIALIZED is not None
         assert MSG_INSTALL_FAILED is not None
-        assert MSG_INIT_FAILED is not None
 
     def test_message_constants_contain_brand_name(self):
         """Test message constants contain brand name."""
-        from claudecodeoptimizer.config import (
-            MSG_GLOBAL_INSTALL_SUCCESS,
-            MSG_PROJECT_INIT_SUCCESS,
-        )
+        from claudecodeoptimizer.config import MSG_GLOBAL_INSTALL_SUCCESS
 
         assert (
             DISPLAY_NAME in MSG_GLOBAL_INSTALL_SUCCESS or SHORT_NAME in MSG_GLOBAL_INSTALL_SUCCESS
         )
-        assert SHORT_NAME in MSG_PROJECT_INIT_SUCCESS
 
 
 class TestGitignorePatterns:
