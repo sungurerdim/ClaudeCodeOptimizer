@@ -180,15 +180,16 @@ class PrincipleLoader:
         Load multiple principles by their IDs directly.
 
         Args:
-            principle_ids: List of principle IDs (e.g., ["U_DRY", "P_CONTAINER_SECURITY", "P_API_SECURITY"])
+            principle_ids: List of principle IDs
+                (e.g., ["U_DRY", "P_CONTAINER_SECURITY"])
 
         Returns:
             Combined principle content
 
         Examples:
             >>> loader = PrincipleLoader()
-            >>> content = loader.load_principles(["U_DRY", "P_CONTAINER_SECURITY", "P_API_SECURITY"])
-            # Returns: Content of U_DRY.md + P_CONTAINER_SECURITY.md + P_API_SECURITY.md
+            >>> content = loader.load_principles(["U_DRY", "P_API_SECURITY"])
+            # Returns: Content of U_DRY.md + P_API_SECURITY.md
         """
         principles = []
         for principle_id in principle_ids:

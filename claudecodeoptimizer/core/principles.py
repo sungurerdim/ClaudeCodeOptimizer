@@ -7,12 +7,15 @@ Implements dynamic principle selection based on project characteristics.
 See README.md for current principle counts.
 """
 
+import logging
 from dataclasses import dataclass
 from functools import lru_cache
 from pathlib import Path
 from typing import Any, Dict, List, Optional, Set
 
 from .constants import SERVICE_COUNT_THRESHOLD_LARGE, SERVICE_COUNT_THRESHOLD_MEDIUM
+
+logger = logging.getLogger(__name__)
 
 
 @dataclass
@@ -56,7 +59,8 @@ class PrinciplesManager:
         Initialize principles manager.
 
         Args:
-            principles_dir: Path to principles directory (default: claudecodeoptimizer/content/principles/ from package)
+            principles_dir: Path to principles directory
+                (default: claudecodeoptimizer/content/principles/)
         """
         if principles_dir is None:
             # Load from package content/ directory
@@ -114,6 +118,7 @@ class PrinciplesManager:
                 self.principles[principle.id] = principle
 
         except Exception as e:
+            logger.error("Failed to load principles", exc_info=True)
             print(f"[ERROR] Failed to load principles: {e}")
 
     def get_principle(self, principle_id: str) -> Optional[Principle]:
@@ -413,7 +418,8 @@ def get_principles_manager(principles_dir: Optional[str] = None) -> PrinciplesMa
     Using @lru_cache ensures only one instance exists per principles_dir.
 
     Args:
-        principles_dir: Path to principles directory (default: claudecodeoptimizer/content/principles/ from package)
+        principles_dir: Path to principles directory
+            (default: claudecodeoptimizer/content/principles/)
 
     Returns:
         Cached PrinciplesManager instance
