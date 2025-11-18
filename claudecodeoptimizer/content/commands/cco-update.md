@@ -38,14 +38,14 @@ Changes in 0.2.0:
 - Added 3 new skills (AI security enhancements)
 - Improved audit performance (30% faster)
 - Fixed bug in Docker optimization
-- Updated 15 principles
+- Updated principles
 
 What will be updated:
-- CCO package: 0.1.0 → 0.2.0
-- Commands: 11 files synced
-- Skills: 25 files synced (3 new)
-- Principles: 61 files synced (15 updated)
-- Agents: 3 files synced
+- CCO package: [current] → [latest]
+- Commands: [count] files synced
+- Skills: [count] files synced
+- Principles: [count] files synced
+- Agents: [count] files synced
 
 All projects using CCO will get updates automatically.
 
@@ -86,11 +86,11 @@ This syncs all files in ~/.claude/ to latest versions.
 Update Complete! ✓
 
 Updated:
-✓ CCO package: 0.1.0 → 0.2.0
-✓ Commands: 11/11 synced
-✓ Skills: 25/25 synced (3 new)
-✓ Principles: 61/61 synced (15 updated)
-✓ Agents: 3/3 synced
+✓ CCO package: [old_version] → [new_version]
+✓ Commands: [synced]/[total] synced
+✓ Skills: [synced]/[total] synced
+✓ Principles: [synced]/[total] synced
+✓ Agents: [synced]/[total] synced
 
 Changes:
 - New skills:

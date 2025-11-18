@@ -10,7 +10,7 @@ Generate missing tests, documentation, CI/CD configs, and other project componen
 
 ---
 
-## 17 Generation Types
+## Generation Types
 
 ### 🔴 Critical Missing (Pain #4: Biggest mistake)
 
@@ -183,71 +183,142 @@ for func in untested_functions:
     }
 ```
 
+**IMPORTANT - Tab-Based Selection (Single Submit):**
+AskUserQuestion supports **4 questions maximum** with **4 options maximum per question**. Group generation types by category to ensure ALL options are presented:
+
 ```python
-# Generate options dynamically from REAL analysis
-generation_options = []
-
-# Tests - Generate for each file with untested functions
-for file_info in untested_files:
-    generation_options.append({
-        label: f"Unit tests for {file_info.file} ({file_info.function_count} functions)",
-        description: f"(Tests, {file_info.time_estimate}) {', '.join(file_info.functions[:5])}{'...' if len(file_info.functions) > 5 else ''} | 🔴 CRITICAL"
-    })
-
-# Integration tests - Generate for each API module
-for endpoint_group in undocumented_endpoint_groups:
-    generation_options.append({
-        label: f"Integration tests for {endpoint_group.path} endpoints",
-        description: f"(Tests, {endpoint_group.time_estimate}) {endpoint_group.test_summary} | 🔴 CRITICAL"
-    })
-
-# Continue with other categories...
-# Contract tests, OpenAPI, CI/CD, monitoring, etc.
-# Each generated from REAL project analysis
-
-# Example for hardcoded options that were removed:
-# {
-#   label: "Unit tests for api/users.py (5 functions)",
-#   description: "(Tests, 3 min) test_get_user, test_create_user, test_update_user, test_delete_user, test_list_users | 🔴 CRITICAL"
-# },
-# Add group options at the end
-generation_options.extend([
-    {
-        label: "All Unit Tests",
-        description: f"✅ Generate unit tests for all {len(untested_files)} files with untested functions"
-    },
-    {
-        label: "All Integration Tests",
-        description: f"✅ Generate integration tests for all {len(endpoint_groups)} API endpoint groups"
-    },
-    {
-        label: "All Test Components",
-        description: "✅ Generate unit tests + integration tests + fixtures + conftest | Pain #4"
-    },
-    # ... other group options based on what's actually missing
-    {
-        label: "All Components",
-        description: f"✅ Generate ALL {len(generation_options)} components above (comprehensive project setup)"
-    }
-])
+# Analyze project first, then present tab-based selection
+# Count missing components per category from REAL analysis
 
 AskUserQuestion({
-  questions: [{
-    question: "What should I generate? Select specific files/components you need:",
-    header: "Generate",
-    multiSelect: true,
-    options: generation_options
-  }]
+  questions: [
+    {
+      question: "Select Testing components to generate:",
+      header: "🔴 Testing",
+      multiSelect: true,
+      options: [
+        {
+          label: f"Unit + Integration ({test_file_count} files)",
+          description: f"Untested functions, API tests, fixtures | {untested_count} functions | Pain #4"
+        },
+        {
+          label: f"Contract Tests ({contract_count} endpoints)",
+          description: "Pact contracts, provider verification, broker config"
+        },
+        {
+          label: f"Load + Chaos ({perf_count} scenarios)",
+          description: "Locust/k6 load tests, chaos engineering, failure injection"
+        },
+        {
+          label: "All Testing",
+          description: "Generate all testing components (unit, integration, contract, load, chaos)"
+        }
+      ]
+    },
+    {
+      question: "Select Documentation components to generate:",
+      header: "🟡 Docs",
+      multiSelect: true,
+      options: [
+        {
+          label: f"OpenAPI Spec ({endpoint_count} endpoints)",
+          description: "Complete OpenAPI 3.0, Swagger UI, schemas, examples | Pain #7"
+        },
+        {
+          label: f"Docs + ADR ({undoc_count} items)",
+          description: "Docstrings, README sections, Architecture Decision Records"
+        },
+        {
+          label: "Runbooks + Requirements",
+          description: "Operational runbooks, incident response, dependency files"
+        },
+        {
+          label: "All Documentation",
+          description: "Generate all documentation components"
+        }
+      ]
+    },
+    {
+      question: "Select CI/CD & Container components:",
+      header: "🟢 CI/CD",
+      multiSelect: true,
+      options: [
+        {
+          label: "CI/CD Pipeline",
+          description: "GitHub Actions/GitLab CI with quality gates, parallel jobs"
+        },
+        {
+          label: "Pre-commit Hooks",
+          description: ".pre-commit-config.yaml with linting, security, formatting"
+        },
+        {
+          label: "Dockerfile",
+          description: "Multi-stage build, docker-compose, .dockerignore, health checks"
+        },
+        {
+          label: "All CI/CD & Containers",
+          description: "Generate all CI/CD and container components"
+        }
+      ]
+    },
+    {
+      question: "Select Database & Observability components:",
+      header: "🟢 Ops",
+      multiSelect: true,
+      options: [
+        {
+          label: f"Migration + Indexes ({db_issue_count} items)",
+          description: "Migration scripts with rollback, index creation for slow queries"
+        },
+        {
+          label: "Monitoring + SLO",
+          description: "Prometheus metrics, Grafana dashboards, SLO specs, alerts"
+        },
+        {
+          label: "Logging",
+          description: "Structured logging config with correlation IDs, tracing"
+        },
+        {
+          label: "All Components",
+          description: "✅ Generate ALL components across all categories (comprehensive setup)"
+        }
+      ]
+    }
+  ]
 })
 ```
 
-**Note:** All hardcoded examples (api/users.py, /api/posts, etc.) have been removed.
-Options are now generated dynamically from actual project analysis.
+**Note about groupings:** Due to 4×4=16 slot limit with 17 generation types, these related items are grouped:
+- **Load + Chaos** (both performance/resilience testing)
+- **Docs + ADR** (both code documentation)
+- **Runbooks + Requirements** (both operational documentation)
+- **Migration + Indexes** (both database operations)
+- **Monitoring + SLO** (both observability/alerting)
+
+### Selection Processing
+
+**After user submits, calculate and display selection summary:**
+
+```markdown
+## Generation Selection Summary
+
+**Your selections:**
+- 🔴 Testing: [list selected] → [component count] components
+- 🟡 Docs: [list selected] → [component count] components
+- 🟢 CI/CD: [list selected] → [component count] components
+- 🟢 Ops: [list selected] → [component count] components
+
+**Total: {{SELECTED_COUNT}} generation tasks selected**
+
+⚠️ Only selected categories will be generated.
+Categories NOT selected will be skipped entirely.
+```
 
 **IMPORTANT:**
 - If user selects "All Components", ignore other selections and generate ALL
-- If user selects "All [Category] Components", generate all in that category
+- If user selects "All [Category]", generate all components in that category
 - Otherwise, generate ONLY the individually selected items
+- For grouped items (e.g., "Load + Chaos"), generate both components
 - Components can be generated in parallel when they don't conflict
 
 3. **Present generation plan:**

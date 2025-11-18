@@ -35,35 +35,23 @@ Package:
   Version: 0.1.0
 
 Global Directory (~/.claude/):
-- commands/ (11 files)
-  * cco-help.md
-  * cco-status.md
-  * cco-overview.md
-  * cco-audit.md
-  * cco-fix.md
-  * cco-generate.md
-  * cco-optimize.md
-  * cco-commit.md
-  * cco-implement.md
-  * cco-update.md
-  * cco-remove.md
+- commands/ ({{COMMAND_COUNT}} files)
+  * cco-*.md (all commands)
 
-- principles/ (61 files)
-  * 14 C_*.md (Claude guidelines)
-  * 12 U_*.md (Universal principles)
-  * 35 P_*.md (Project principles)
+- principles/ ({{PRINCIPLE_COUNT}} files)
+  * {{C_PRINCIPLE_COUNT}} C_*.md (Claude guidelines)
+  * {{U_PRINCIPLE_COUNT}} U_*.md (Universal principles)
+  * {{P_PRINCIPLE_COUNT}} P_*.md (Project principles)
 
-- skills/ (25 files)
-  * cco-skill-*.md (all 25 skills)
+- skills/ ({{SKILL_COUNT}} files)
+  * cco-skill-*.md (all skills)
 
-- agents/ (3 files)
-  * cco-agent-audit.md
-  * cco-agent-fix.md
-  * cco-agent-generate.md
+- agents/ ({{AGENT_COUNT}} files)
+  * cco-agent-*.md (all agents)
 
 - CLAUDE.md (CCO configuration)
 
-Total: 101 files in ~/.claude/
+Total: [calculate total] files in ~/.claude/
 
 Project Files:
 - NONE (zero-pollution architecture)
@@ -116,10 +104,10 @@ CCO Uninstall Complete ✓
 
 Removed:
 ✓ Package: claudecodeoptimizer (pip)
-✓ Commands: 11 files deleted
-✓ Principles: 61 files deleted
-✓ Skills: 25 files deleted
-✓ Agents: 3 files deleted
+✓ Commands: [count] files deleted
+✓ Principles: [count] files deleted
+✓ Skills: [count] files deleted
+✓ Agents: [count] files deleted
 ✓ Global directory: ~/.claude/ removed
 
 Verified:
@@ -157,10 +145,10 @@ If package not found:
 However, global directory exists: ~/.claude/
 
 This directory contains:
-- 11 command files
-- 61 principle files
-- 25 skill files
-- 3 agent files
+- [count] command files
+- [count] principle files
+- [count] skill files
+- [count] agent files
 
 Delete global directory? (yes/no)
 ```

@@ -1,6 +1,33 @@
 # cco-audit
 
-**Comprehensive issue detection across 17 categories, pain-point priority ordered.**
+**Comprehensive issue detection across {{CATEGORY_COUNT}} categories, pain-point priority ordered.**
+
+---
+
+## Dynamic Value Calculation (CRITICAL)
+
+**ALL placeholder values MUST be calculated at runtime. NEVER use hardcoded numbers.**
+
+### Required Calculations
+
+```bash
+# Calculate these BEFORE presenting any information to user
+CATEGORY_COUNT=$(grep -c "^\d\+\. \*\*--" ~/.claude/commands/cco-audit.md)
+SKILL_COUNT=$(ls ~/.claude/skills/cco-skill-*.md 2>/dev/null | wc -l)
+GRANULAR_CHECK_COUNT=# Sum checks from all categories (Security:15 + Database:10 + Tests:12 + ...)
+```
+
+### Placeholder Reference
+
+| Placeholder | Calculation | Example |
+|-------------|-------------|---------|
+| `{{CATEGORY_COUNT}}` | Count numbered items in "Audit Categories" section | - |
+| `{{SKILL_COUNT}}` | Count files in skills/ directory | - |
+| `{{GRANULAR_CHECK_COUNT}}` | Sum all individual checks | - |
+| `{{SELECTED_COUNT}}` | Count user's selections at runtime | - |
+| `{{CHECK_COUNT}}` | Calculate checks for selected categories | - |
+
+**IMPORTANT:** When displaying counts, always calculate from actual data. Never copy example numbers.
 
 ---
 
@@ -10,7 +37,7 @@ Find security vulnerabilities, technical debt, testing gaps, and other issues us
 
 ---
 
-## 17 Audit Categories (Pain-Point Priority Order)
+## Audit Categories (Pain-Point Priority Order)
 
 ### 🔴 Critical Impact
 
@@ -98,7 +125,7 @@ Find security vulnerabilities, technical debt, testing gaps, and other issues us
 # Audit Command
 
 **What I do:**
-I scan your codebase for issues across 17 categories including security vulnerabilities, technical debt, testing gaps, and performance problems.
+I scan your codebase for issues across {{CATEGORY_COUNT}} categories including security vulnerabilities, technical debt, testing gaps, and performance problems.
 
 **How it works:**
 1. You select which categories to audit (or "All" for comprehensive scan)
@@ -162,7 +189,7 @@ AskUserQuestion({
       },
       {
         label: "Category Level",
-        description: "Choose from 17 categories (Security, Tests, Database, etc.) - Balanced approach"
+        description: "Choose from {{CATEGORY_COUNT}} categories (Security, Tests, Database, etc.) - Balanced approach"
       },
       {
         label: "Granular Level",
@@ -212,7 +239,7 @@ AskUserQuestion({
       },
       {
         label: "Comprehensive Weekly",
-        description: "📋 COMPREHENSIVE (20-30 min) - All 17 categories, complete scan | Weekly/monthly review"
+        description: "📋 COMPREHENSIVE (20-30 min) - All {{CATEGORY_COUNT}} categories, complete scan | Weekly/monthly review"
       }
     ]
   }]
@@ -259,121 +286,217 @@ Production Readiness:
 - Migrations
 
 Comprehensive Weekly:
-- All 17 categories
+- All {{CATEGORY_COUNT}} categories
 ```
 
 ---
 
-### Level 2: Category Level (Current System)
+### Level 2: Category Level (Tab-Based Selection)
 
-**If user selected "Category Level", analyze project first** to get real numbers, then **use AskUserQuestion** to present multiselect UI:
+**Multi-tab single-submit interface using maximum options per question.**
 
-**IMPORTANT - Dynamic Generation Protocol:**
-You MUST analyze the actual project BEFORE presenting options:
-1. Run Glob/Grep to detect tech stack and components
-2. Count REAL issues using audit skills (e.g., grep for SQL injection patterns, count untested functions, scan for CVEs)
-3. Generate descriptions with ACTUAL project data (not example numbers)
-4. Replace ALL placeholder metrics with REAL findings from your analysis
-5. Skip categories not applicable to this project
-
-**Example of dynamic generation (DO NOT use verbatim):**
-```python
-# BEFORE showing AskUserQuestion, analyze:
-security_issues = grep_for_sql_injection() + check_secrets() + scan_dependencies()
-tech_debt_items = count_dead_code() + count_todos() + measure_complexity()
-
-# THEN generate options with REAL data:
-{
-  label: "Security",
-  description: f"🔴 CRITICAL - Found {security_issues} issues: {sql_count} SQL injection risks, {secret_count} hardcoded secrets, {cve_count} CVEs"
-}
-```
+AskUserQuestion supports **4 questions maximum** with **4 options maximum per question**. This structure provides:
+- All categories visible in one interface (tabs)
+- Single submit for all selections
+- "All [group]" option in each tab
+- Dynamic selection count summary
 
 ```python
 AskUserQuestion({
-  questions: [{
-    question: "What should I audit? Select all categories you want to check:",
-    header: "Audit",
-    multiSelect: true,
-    options: [
-      {
-        label: "Security",
-        description: "🔴 CRITICAL - 51% #1 concern: OWASP vulnerabilities, AI security, supply chain (SQL injection, XSS, CSRF, secrets, CVEs)"
-      },
-      {
-        label: "Tech Debt",
-        description: "🔴 CRITICAL - 23% time waste: Dead code, complexity, duplication, TODO comments, anti-patterns"
-      },
-      {
-        label: "AI Security",
-        description: "🔴 CRITICAL - 45% reliability: Prompt injection, hallucination risks, AI output validation, rate limiting"
-      },
-      {
-        label: "Tests",
-        description: "🟡 HIGH - Biggest mistake: Coverage gaps, untested functions, test isolation, pyramid compliance, edge cases"
-      },
-      {
-        label: "Integration",
-        description: "🟡 HIGH - Deployment failures: Import errors, dependency conflicts, outdated deps, circular imports"
-      },
-      {
-        label: "Code Quality",
-        description: "🟢 MEDIUM - Syntax errors, logic bugs, off-by-one, missing error handling, type errors"
-      },
-      {
-        label: "Documentation",
-        description: "🟢 MEDIUM - Pain #7 knowledge gaps: README, API docs, docstrings, documentation drift, ADRs, runbooks"
-      },
-      {
-        label: "Database",
-        description: "🟢 MEDIUM - Pain #5 performance: N+1 queries, missing indexes, connection pooling, migrations"
-      },
-      {
-        label: "Observability",
-        description: "🟢 MEDIUM - Pain #5 debugging time: Structured logging, correlation IDs, metrics, alerts, SLOs, runbooks"
-      },
-      {
-        label: "Monitoring",
-        description: "🟢 MEDIUM - Prometheus/Grafana setup, key metrics, alert rules, dashboards"
-      },
-      {
-        label: "CI/CD",
-        description: "🟢 MEDIUM - Pain #6 deployment: Pipeline quality, gates, deployment strategy, rollback, secret management"
-      },
-      {
-        label: "Containers",
-        description: "🟢 MEDIUM - Dockerfile best practices, vulnerabilities, non-root user, K8s security"
-      },
-      {
-        label: "Supply Chain",
-        description: "🟢 MEDIUM - Pain #1 related: CVEs, SBOM, license compliance, typosquatting, unmaintained packages"
-      },
-      {
-        label: "Migrations",
-        description: "🟢 MEDIUM - Migration strategy, rollback, consistency checks, backup procedures"
-      },
-      {
-        label: "Performance",
-        description: "🟢 MEDIUM - Pain #5 time waste: Response times, query performance, caching, bundle size, circuit breakers"
-      },
-      {
-        label: "Architecture",
-        description: "🟢 MEDIUM - Separation of concerns, coupling, circular dependencies, design patterns"
-      },
-      {
-        label: "Git",
-        description: "🟢 MEDIUM - Pain #5 workflow: Commit quality, branch naming, PR process, semantic versioning, changelog"
-      },
-      {
-        label: "All",
-        description: "✅ Comprehensive scan - Run all 17 audit categories (recommended for initial assessment)"
-      }
-    ]
-  }]
+  questions: [
+    {
+      question: "Select Critical Impact categories:",
+      header: "🔴 Critical",
+      multiSelect: true,
+      options: [
+        {
+          label: "Security",
+          description: "OWASP vulnerabilities, CVEs, secrets, auth/authz | Pain #1"
+        },
+        {
+          label: "Tech Debt",
+          description: "Dead code, complexity, duplication, anti-patterns | Pain #2"
+        },
+        {
+          label: "AI Security",
+          description: "Prompt injection, hallucinations, output validation | Pain #3"
+        },
+        {
+          label: "All Critical",
+          description: "Select all Critical categories above"
+        }
+      ]
+    },
+    {
+      question: "Select High Impact categories:",
+      header: "🟡 High",
+      multiSelect: true,
+      options: [
+        {
+          label: "Tests",
+          description: "Coverage, pyramid, isolation, edge cases | Pain #4"
+        },
+        {
+          label: "Integration",
+          description: "Dependencies, imports, conflicts | Pain #6"
+        },
+        {
+          label: "Code Quality",
+          description: "Syntax errors, logic bugs, type errors, error handling"
+        },
+        {
+          label: "Docs",
+          description: "README, API docs, docstrings, ADRs | Pain #7"
+        }
+      ]
+    },
+    {
+      question: "Select Medium Impact categories (Data & Operations):",
+      header: "🟢 Data/Ops",
+      multiSelect: true,
+      options: [
+        {
+          label: "Database",
+          description: "N+1 queries, indexes, connection pooling | Pain #5"
+        },
+        {
+          label: "Observability",
+          description: "Structured logging, correlation IDs, metrics"
+        },
+        {
+          label: "Monitoring",
+          description: "Dashboards, alerts, Prometheus/Grafana"
+        },
+        {
+          label: "CI/CD",
+          description: "Pipeline, quality gates, deployment | Pain #6"
+        }
+      ]
+    },
+    {
+      question: "Select Medium Impact categories (Infrastructure):",
+      header: "🟢 Infra",
+      multiSelect: true,
+      options: [
+        {
+          label: "Containers + Supply Chain",
+          description: "Dockerfile, CVEs, licenses, SBOM, dependencies"
+        },
+        {
+          label: "Migrations",
+          description: "Strategy, rollback, consistency, backups"
+        },
+        {
+          label: "Performance",
+          description: "Response times, caching, bundle size | Pain #5"
+        },
+        {
+          label: "Architecture + Git",
+          description: "Patterns, coupling, versioning, branching | Pain #5"
+        }
+      ]
+    }
+  ]
 })
 ```
 
-**IMPORTANT:** If user selects "All", ignore all other selections and audit all 17 categories.
+**Note:** Due to 4×4=16 slot limit, these related categories are grouped:
+- **Containers + Supply Chain** (both relate to deployment/dependency security)
+- **Architecture + Git** (both relate to code organization/workflow)
+
+### Selection Processing
+
+**After user submits, calculate and display selection summary:**
+
+```markdown
+## Selection Summary
+
+**Your selections:**
+- 🔴 Critical: [list selected]
+- 🟡 High: [list selected]
+- 🟢 Data/Ops: [list selected]
+- 🟢 Infra: [list selected]
+
+**Total: {{SELECTED_COUNT}} categories selected → {{CHECK_COUNT}} checks will be performed**
+
+⚠️ Only selected categories will be audited.
+Categories NOT selected will be skipped entirely.
+```
+
+### Selection Processing Logic
+
+When processing selections:
+
+```python
+# Expand selections to individual categories
+selected_categories = []
+
+# Critical tab
+if "All Critical" in critical_selections:
+    selected_categories.extend(["security", "tech-debt", "ai-security"])
+else:
+    if "Security" in critical_selections:
+        selected_categories.append("security")
+    if "Tech Debt" in critical_selections:
+        selected_categories.append("tech-debt")
+    if "AI Security" in critical_selections:
+        selected_categories.append("ai-security")
+
+# High tab (all individual)
+if "Tests" in high_selections:
+    selected_categories.append("tests")
+if "Integration" in high_selections:
+    selected_categories.append("integration")
+if "Code Quality" in high_selections:
+    selected_categories.append("code-quality")
+if "Docs" in high_selections:
+    selected_categories.append("docs")
+
+# Data/Ops tab (all individual)
+if "Database" in data_ops_selections:
+    selected_categories.append("database")
+if "Observability" in data_ops_selections:
+    selected_categories.append("observability")
+if "Monitoring" in data_ops_selections:
+    selected_categories.append("monitoring")
+if "CI/CD" in data_ops_selections:
+    selected_categories.append("cicd")
+
+# Infra tab (2 grouped pairs due to slot limit)
+if "Containers + Supply Chain" in infra_selections:
+    selected_categories.extend(["containers", "supply-chain"])
+if "Migrations" in infra_selections:
+    selected_categories.append("migrations")
+if "Performance" in infra_selections:
+    selected_categories.append("performance")
+if "Architecture + Git" in infra_selections:
+    selected_categories.extend(["architecture", "git"])
+
+# Calculate check count dynamically from actual checks in each category
+total_checks = sum(get_check_count(cat) for cat in selected_categories)
+```
+
+### Execution Filter (CRITICAL)
+
+**ONLY audit selected categories. Never run unselected categories:**
+
+```python
+# Example: User selected only Security and Tests
+selected_categories = ["security", "tests"]
+
+# Launch ONLY these agents
+for category in selected_categories:
+    Task({
+        subagent_type: "general-purpose",
+        model: "haiku",
+        prompt: f"Audit {category} category using relevant skills..."
+    })
+
+# CI/CD was NOT selected - NO CI/CD checks will run
+# Database was NOT selected - NO database checks will run
+```
+
+**IMPORTANT:** If no categories are selected, prompt user to select at least one category.
 
 ---
 
@@ -382,7 +505,7 @@ AskUserQuestion({
 **If user selected "Granular Level", use hierarchical selection to stay within 4-option limit:**
 
 **IMPORTANT - Hierarchical Approach (Required for 4-Option Limit):**
-Since AskUserQuestion has a **maximum of 4 options per question**, the 92 granular checks MUST be presented in 2 stages:
+Since AskUserQuestion has a **maximum of 4 options per question**, the granular checks MUST be presented in 2 stages:
 
 **Stage 1:** Select check CATEGORIES (9 categories → 3 questions with 3-4 options each)
 **Stage 2:** For each selected category, select individual checks (max 15 per category → paginated if needed)
@@ -409,7 +532,7 @@ Grep("SELECT|INSERT|UPDATE", output_mode="files_with_matches") → SQL usage
 
 ---
 
-## 📋 Complete Granular Audit Checklist (92 Checks)
+## 📋 Complete Granular Audit Checklist
 
 **This is the MASTER LIST organized into 9 categories for hierarchical selection.**
 
@@ -495,8 +618,8 @@ AskUserQuestion({
         description: f"🟢 MEDIUM - {applicable_counts['debt']}/8 applicable checks (deprecated APIs, coupling)"
       },
       {
-        label: "All 92 Granular Checks",
-        description: "✅ Run ALL checks across all 9 categories"
+        label: "All Granular Checks",
+        description: "✅ Run ALL checks across all categories"
       }
     ]
   }]
@@ -527,25 +650,25 @@ AskUserQuestion({
 
 ---
 
-## 📋 Check Reference by Category (92 Total)
+## 📋 Check Reference by Category
 
-**Security (15 checks):** SQL injection, XSS, CSRF, hardcoded secrets, authentication, authorization, CVE scan, AI prompt injection, SSRF, XXE, path traversal, command injection, insecure deserialization, weak crypto, security headers
+**Security:** SQL injection, XSS, CSRF, hardcoded secrets, authentication, authorization, CVE scan, AI prompt injection, SSRF, XXE, path traversal, command injection, insecure deserialization, weak crypto, security headers
 
-**Database (10 checks):** N+1 queries, missing indexes, slow queries, connection pooling, query optimization, transaction isolation, deadlock detection, migration consistency, raw SQL usage, database credentials
+**Database:** N+1 queries, missing indexes, slow queries, connection pooling, query optimization, transaction isolation, deadlock detection, migration consistency, raw SQL usage, database credentials
 
-**Tests (12 checks):** Coverage analysis, untested functions, test isolation, test pyramid, edge cases, flaky tests, test naming, assertion quality, mock overuse, test data management, integration coverage, e2e coverage
+**Tests:** Coverage analysis, untested functions, test isolation, test pyramid, edge cases, flaky tests, test naming, assertion quality, mock overuse, test data management, integration coverage, e2e coverage
 
-**Code Quality (15 checks):** Dead code, complexity, duplication, type errors, linting, code smells, long functions, long files, deep nesting, magic numbers, TODO comments, commented code, import organization, naming conventions, error handling
+**Code Quality:** Dead code, complexity, duplication, type errors, linting, code smells, long functions, long files, deep nesting, magic numbers, TODO comments, commented code, import organization, naming conventions, error handling
 
-**Performance (10 checks):** Slow queries, large bundles, no caching, circuit breakers, memory leaks, inefficient algorithms, large loops, file I/O, network calls in loops, lazy loading
+**Performance:** Slow queries, large bundles, no caching, circuit breakers, memory leaks, inefficient algorithms, large loops, file I/O, network calls in loops, lazy loading
 
-**Documentation (8 checks):** Missing docstrings, API documentation, README completeness, documentation drift, code comments, examples, ADRs, runbooks
+**Documentation:** Missing docstrings, API documentation, README completeness, documentation drift, code comments, examples, ADRs, runbooks
 
-**CI/CD (8 checks):** Pipeline existence, quality gates, secret management, build optimization, test automation, deployment automation, rollback strategy, environment parity
+**CI/CD:** Pipeline existence, quality gates, secret management, build optimization, test automation, deployment automation, rollback strategy, environment parity
 
-**Containers (6 checks):** Dockerfile best practices, multi-stage builds, non-root user, image size, base image vulnerabilities, layer optimization
+**Containers:** Dockerfile best practices, multi-stage builds, non-root user, image size, base image vulnerabilities, layer optimization
 
-**Tech Debt (8 checks):** Deprecated APIs, legacy code, hard dependencies, tight coupling, god objects, feature envy, data clumps, shotgun surgery
+**Tech Debt:** Deprecated APIs, legacy code, hard dependencies, tight coupling, god objects, feature envy, data clumps, shotgun surgery
 
 ---
 
@@ -570,7 +693,7 @@ AskUserQuestion({
 "Test coverage" → applicable if: tests/ directory found
 "Untested functions" → applicable if: ALWAYS
 
-# And so on for all 92 checks...
+# And so on for all checks...
 ```
 
 ---
@@ -585,7 +708,7 @@ AskUserQuestion({
 
 2. **Stage 1 - Category Selection:**
    - Present 9 categories across 3 questions (3-4 options each)
-   - Include "All 92 Granular Checks" option on last page
+   - Include "All Granular Checks" option on last page
 
 3. **Stage 2 - Individual Check Selection:**
    - For each selected category, present individual checks
@@ -594,7 +717,7 @@ AskUserQuestion({
 
 4. **Execution:**
    - Run only selected checks
-   - If "All 92 Granular Checks" selected, run everything
+   - If "All Granular Checks" selected, run everything
    - If category group selected, run all checks in that category
 
 **Example: User selects "Security Checks" category**
@@ -922,8 +1045,8 @@ AskUserQuestion({
       # FILTERING OPTIONS
       # ========================================
       {
-        label: "Show All 92 Checks",
-        description: "📋 Display ALL 92 checks (including non-applicable ones marked with ⚪)"
+        label: "Show All Checks",
+        description: "📋 Display ALL checks (including non-applicable ones marked with ⚪)"
       },
       {
         label: "Show Only Applicable",
@@ -935,25 +1058,25 @@ AskUserQuestion({
       # ========================================
       {
         label: "All Granular Checks",
-        description: "✅ RUN ALL 92 CHECKS - Comprehensive granular audit (ignores other selections)"
+        description: "✅ RUN ALL CHECKS - Comprehensive granular audit (ignores other selections)"
       }
     ]
   }]
 })
 ```
 
-**Summary of 92 Granular Checks:**
-- Security: 15 checks
-- Database: 10 checks
-- Tests: 12 checks
-- Code Quality: 15 checks
-- Performance: 10 checks
-- Documentation: 8 checks
-- CI/CD: 8 checks
-- Containers: 6 checks
-- Tech Debt: 8 checks
+**Summary of Granular Checks:**
+- Security: [count from list above]
+- Database: [count from list above]
+- Tests: [count from list above]
+- Code Quality: [count from list above]
+- Performance: [count from list above]
+- Documentation: [count from list above]
+- CI/CD: [count from list above]
+- Containers: [count from list above]
+- Tech Debt: [count from list above]
 
-**Total: 92 checks**
+**Total: {{GRANULAR_CHECK_COUNT}} checks** (calculate by summing all category checks above)
 
 ---
 
@@ -987,18 +1110,18 @@ AskUserQuestion({
    ```
 
 2. **Applicability Determination:**
-   - For each of the 92 checks, determine if applicable based on detected_tech
+   - For each check, determine if applicable based on detected_tech
    - Mark with ✅ APPLICABLE or ⚪ NOT APPLICABLE
    - Update description with specific reason
 
 3. **Filtering Options:**
    - Default: Show only applicable checks (recommended)
-   - Optional: "Show All 92 Checks" to see everything
+   - Optional: "Show All Checks" to see everything
 
 4. **User Selection:**
    - Individual checks: Run ONLY selected
    - Category group (e.g., "All Security Checks"): Run all in that category
-   - "All Granular Checks": Run ALL 92 checks
+   - "All Granular Checks": Run ALL checks
 
 **IMPORTANT:**
 - If user selects "All Granular Checks", run ALL checks
@@ -1013,7 +1136,7 @@ AskUserQuestion({
 2. **Present analysis plan and confirm** using AskUserQuestion:
 
 ```markdown
-Selected categories: [list selected categories or "All 17 categories"]
+Selected categories: [list selected categories or "All {{CATEGORY_COUNT}} categories"]
 
 Skills I'll use:
 - [list skills for selected categories]

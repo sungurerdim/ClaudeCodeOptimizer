@@ -102,11 +102,12 @@ AskUserQuestion({
 
 1. **Analyze project for real optimization opportunities first**, then **present specific optimization steps using AskUserQuestion**:
 
-**IMPORTANT - Hierarchical Selection (Required for 4-Option Limit):**
-Since AskUserQuestion has a **maximum of 4 options per question**, optimizations MUST be presented in 2 stages:
-
-**Stage 1:** Select optimization CATEGORIES (6 categories → 2 questions with 3-4 options each)
-**Stage 2:** For each selected category, select individual optimizations (paginated if needed)
+**IMPORTANT - Tab-Based Selection (Single Submit):**
+AskUserQuestion supports **4 questions maximum** with **4 options maximum per question**. This structure provides:
+- All optimization categories visible in one interface (tabs)
+- Single submit for all selections
+- "All [group]" option in each tab
+- Dynamic selection count summary
 
 **Analysis Required First:**
 - Run actual analysis (Grep for N+1 queries, check Docker image size, count unused functions)
@@ -114,60 +115,98 @@ Since AskUserQuestion has a **maximum of 4 options per question**, optimizations
 - Generate options dynamically with REAL data from project analysis
 
 ```python
-# Stage 1: Category Selection (2 pages)
-# Question 1: Critical categories
+# Tab-based category selection (single submit)
 AskUserQuestion({
-  questions: [{
-    question: "Which optimization categories? (Page 1/2 - Critical):",
-    header: "Optimize",
-    multiSelect: true,
-    options: [
-      {
-        label: "Database Optimizations",
-        description: f"🔴 CRITICAL - {db_issue_count} issues: N+1 queries, missing indexes, no caching"
-      },
-      {
-        label: "Docker Optimizations",
-        description: f"🔴 CRITICAL - Image size {current_size}, build time {build_time}"
-      },
-      {
-        label: "Code Optimizations",
-        description: f"🟡 HIGH - {dead_code_count} unused functions, {complex_count} complex functions"
-      },
-      {
-        label: "More categories...",
-        description: "Continue to page 2 for more categories"
-      }
-    ]
-  }]
+  questions: [
+    {
+      question: "Select Critical optimizations (highest impact):",
+      header: "🔴 Critical",
+      multiSelect: true,
+      options: [
+        {
+          label: "Database",
+          description: f"N+1 queries, missing indexes, no caching | {db_issue_count} issues"
+        },
+        {
+          label: "Docker",
+          description: f"Image size {current_size}, build time {build_time}"
+        },
+        {
+          label: "All Critical",
+          description: "Select all Critical optimizations"
+        }
+      ]
+    },
+    {
+      question: "Select High priority optimizations:",
+      header: "🟡 High",
+      multiSelect: true,
+      options: [
+        {
+          label: "Code",
+          description: f"Dead code, complex functions | {dead_code_count} issues"
+        },
+        {
+          label: "Dependencies",
+          description: f"Outdated {outdated_count}, unused {unused_count}"
+        },
+        {
+          label: "All High",
+          description: "Select all High priority optimizations"
+        }
+      ]
+    },
+    {
+      question: "Select Recommended optimizations:",
+      header: "🟢 Recommended",
+      multiSelect: true,
+      options: [
+        {
+          label: "Bundle",
+          description: f"Frontend bundle size: {bundle_size}"
+        },
+        {
+          label: "Performance",
+          description: "Circuit breakers, retry logic, timeouts"
+        },
+        {
+          label: "All Recommended",
+          description: "Select all Recommended optimizations"
+        }
+      ]
+    },
+    {
+      question: "Or select all:",
+      header: "✅ All",
+      multiSelect: true,
+      options: [
+        {
+          label: "All Optimizations",
+          description: "Apply ALL optimization categories (recommended for initial cleanup)"
+        }
+      ]
+    }
+  ]
 })
+```
 
-# Question 2: Remaining categories
-AskUserQuestion({
-  questions: [{
-    question: "Which optimization categories? (Page 2/2):",
-    header: "Optimize",
-    multiSelect: true,
-    options: [
-      {
-        label: "Dependency Optimizations",
-        description: f"🟡 HIGH - {outdated_count} outdated, {unused_count} unused packages"
-      },
-      {
-        label: "Bundle Optimizations",
-        description: f"🟢 RECOMMENDED - Current size: {bundle_size}"
-      },
-      {
-        label: "Performance Optimizations",
-        description: "🟢 RECOMMENDED - Circuit breakers, retry logic, timeouts"
-      },
-      {
-        label: "All Optimizations",
-        description: "✅ Apply ALL optimization categories"
-      }
-    ]
-  }]
-})
+### Selection Processing
+
+**After user submits, calculate and display selection summary:**
+
+```markdown
+## Selection Summary
+
+**Your selections:**
+- 🔴 Critical: [list selected]
+- 🟡 High: [list selected]
+- 🟢 Recommended: [list selected]
+
+**Total: {{SELECTED_COUNT}} optimization categories selected**
+
+⚠️ Only selected categories will be optimized.
+Categories NOT selected will be skipped entirely.
+```
 
 # Stage 2: Individual Optimizations per Category
 # For each selected category, show specific optimizations (paginated if >4)

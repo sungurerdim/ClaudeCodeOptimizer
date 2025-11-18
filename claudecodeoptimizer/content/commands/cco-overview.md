@@ -12,7 +12,7 @@ Analyze project health across all 7 industry pain points (2025 data), compare cu
 
 ## Skills Used
 
-All 26 skills (metadata only for detection - no active loading)
+All {{SKILL_COUNT}} skills (metadata only for detection - no active loading)
 
 ---
 
