@@ -20,16 +20,15 @@ jobs:
           python-version: '3.12'
           cache: 'pip'
 
-      - name: Install Ruff
-        run: pip install ruff
+      - name: Install dependencies
+        run: |
+          pip install -e .
+          pip install ruff mypy
 
       - name: Run Ruff
         run: |
           ruff check .
           ruff format --check .
-
-      - name: Install type checker
-        run: pip install mypy
 
       - name: Run Mypy
         run: mypy claudecodeoptimizer/ --no-error-summary
