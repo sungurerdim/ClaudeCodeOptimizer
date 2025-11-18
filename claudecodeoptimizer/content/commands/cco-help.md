@@ -1,3 +1,12 @@
+---
+name: cco-help
+description: Comprehensive CCO command reference guide organized by pain-point priority with examples and workflows
+action_type: help
+keywords: [help, guide, reference, commands, documentation, usage, examples]
+category: discovery
+pain_points: []
+---
+
 # cco-help
 
 **Comprehensive CCO command guide with pain-point focus.**

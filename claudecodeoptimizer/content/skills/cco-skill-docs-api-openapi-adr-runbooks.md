@@ -39,12 +39,24 @@ Loaded only when skill activates.
 
 ---
 
-## Commands
+## Command Discovery Protocol
 
-- `/cco-generate-openapi-spec` - Generate OpenAPI spec
-- `/cco-generate-adr` - Create ADR
-- `/cco-generate-runbook` - Create runbook
-- `/cco-generate-changelog` - Update changelog
+When this skill is active, find relevant commands by searching `~/.claude/commands/` metadata:
+
+```yaml
+# Search criteria for this skill's domain
+action_types: [audit, fix, generate]
+keywords: [documentation, openapi, swagger, adr, runbook, changelog, docstrings, readme, api docs]
+category: docs
+pain_points: [7]
+```
+
+**How Claude finds commands:**
+1. Grep command files for `keywords:.*doc|openapi|adr` in frontmatter
+2. Match `category: docs`
+3. Present matching commands with their parameters
+
+This ensures commands are always current even when renamed or updated.
 
 ---
 

@@ -1,3 +1,12 @@
+---
+name: changelog_maintenance
+description: Maintain user-facing changelog documenting all releases and changes
+type: project
+severity: medium
+keywords: [changelog, release, documentation, users]
+category: [docs]
+related_skills: []
+---
 # P_CHANGELOG_MAINTENANCE: Changelog Maintenance
 
 **Severity**: High

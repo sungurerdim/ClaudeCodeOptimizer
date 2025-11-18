@@ -1,3 +1,12 @@
+---
+name: model-selection-strategy
+description: Choose appropriate Claude model (Haiku/Sonnet/Opus) based on task complexity to optimize cost and performance
+type: claude
+severity: medium
+keywords: [model selection, cost optimization, Haiku, Sonnet, Opus, task complexity]
+category: [performance, efficiency]
+---
+
 # C_MODEL_SELECTION: Model Selection Strategy
 
 **Severity**: Medium

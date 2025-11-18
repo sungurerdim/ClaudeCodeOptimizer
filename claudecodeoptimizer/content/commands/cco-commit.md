@@ -1,3 +1,12 @@
+---
+name: cco-commit
+description: AI-assisted semantic commit workflow with atomic commit recommendations and conventional commits format
+action_type: commit
+keywords: [commit, git, semantic, atomic, conventional, version control, changelog]
+category: productivity
+pain_points: [5]
+---
+
 # cco-commit
 
 **AI-assisted semantic commit workflow with atomic commit recommendations.**

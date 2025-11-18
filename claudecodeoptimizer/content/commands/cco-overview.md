@@ -1,3 +1,12 @@
+---
+name: cco-overview
+description: Complete project health assessment analyzing all 7 industry pain points with ideal scenario comparison and action plan
+action_type: overview
+keywords: [overview, health, assessment, analysis, project, score, pain points, action plan]
+category: discovery
+pain_points: [1, 2, 3, 4, 5, 6, 7]
+---
+
 # cco-overview
 
 **Complete project health assessment with ideal scenario comparison.**

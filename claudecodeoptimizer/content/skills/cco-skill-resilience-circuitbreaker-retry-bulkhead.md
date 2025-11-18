@@ -1,13 +1,12 @@
 ---
-name: cco-skill-resilience-circuitbreaker-retry-bulkhead
-description: |
-  Resilience patterns for distributed systems: circuit breakers, retry with backoff, bulkhead isolation, graceful degradation, timeout config, dead letter queues.
-  Triggers: resilience, circuit breaker, retry, bulkhead, timeout, cascading failure, fault tolerance, fallback, isolation
-
-applicability:
-  project_types: ['microservice', 'distributed', 'api', 'web']
-  languages: ['all']
-  team_sizes: ['all']
+name: resilience-circuitbreaker-retry-bulkhead
+description: Prevent cascading failures in distributed systems via circuit breakers, retry patterns, and failure isolation. Includes exponential backoff with jitter, bulkhead isolation, graceful degradation chains, timeout configuration, and dead letter queues.
+keywords: [resilience, circuit breaker, retry, bulkhead, timeout, cascading failure, fault tolerance, fallback, isolation, graceful degradation, dead letter queue]
+category: architecture
+related_commands:
+  action_types: [audit, generate, fix]
+  categories: [architecture, infrastructure]
+pain_points: [5, 6, 10]
 ---
 
 # Skill: Resilience - Circuit Breaker, Retry, Bulkhead
@@ -101,3 +100,22 @@ def get_price(id):
 - [ ] Fallback strategy per dependency
 - [ ] Dead letter queue for failures
 - [ ] Monitor: circuit state, retry rates, timeouts, fallback usage
+
+## Command Discovery Protocol
+
+When this skill is active, find relevant commands by searching `~/.claude/commands/` metadata:
+
+```yaml
+# Search criteria for this skill's domain
+action_types: [audit, generate, fix]
+keywords: [resilience, circuit breaker, retry, timeout, fallback, bulkhead]
+category: architecture
+pain_points: [5, 6, 10]
+```
+
+**How Claude finds commands:**
+1. Grep command files for `keywords:.*[pattern]` in frontmatter
+2. Match `category: architecture`
+3. Present matching commands with their parameters
+
+This ensures commands are always current even when renamed or updated.

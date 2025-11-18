@@ -74,11 +74,24 @@ Auto-loads when detecting:
 
 ---
 
-## Related Commands
+## Command Discovery Protocol
 
-- `/cco-audit-cicd` - Analyze pipeline coverage, gate completeness, deployment strategies
-- `/cco-fix-cicd` - Add missing gates, fix failures, optimize build times
-- `/cco-generate-cicd` - Generate GitHub Actions, GitLab CI, Terraform templates
+When this skill is active, find relevant commands by searching `~/.claude/commands/` metadata:
+
+```yaml
+# Search criteria for this skill's domain
+action_types: [audit, fix, generate]
+keywords: [cicd, pipeline, github actions, gitlab ci, deployment, quality gates, terraform]
+category: infrastructure
+pain_points: [6]
+```
+
+**How Claude finds commands:**
+1. Grep command files for `keywords:.*cicd|pipeline|deployment` in frontmatter
+2. Match `category: infrastructure`
+3. Present matching commands with their parameters
+
+This ensures commands are always current even when renamed or updated.
 
 ---
 

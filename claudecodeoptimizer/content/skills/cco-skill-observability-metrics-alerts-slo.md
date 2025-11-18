@@ -1,15 +1,12 @@
 ---
-title: Observability - Metrics, Alerts, SLOs
+name: observability-metrics-slo
+description: Implement OpenTelemetry-based observability with SLO-driven alerting to detect issues before user impact. Includes metrics (Counter, Gauge, Histogram), health checks (liveness, readiness, startup), SLO/SLI/SLA frameworks, error budgets, and Prometheus/Grafana dashboards.
+keywords: [observability, metrics, monitoring, alerts, SLO, SLI, SLA, Prometheus, Grafana, health check, error budget, telemetry, OpenTelemetry, golden signals]
 category: observability
-description: OpenTelemetry metrics, health checks, SLO/SLI/SLA, error budgets, alerting
-metadata:
-  name: "Observability - Metrics, Alerts, SLOs"
-  activation_keywords: ["observability", "metrics", "monitoring", "alerts", "SLO", "SLI", "SLA", "Prometheus", "Grafana", "health check", "error budget", "telemetry", "OpenTelemetry"]
-  category: "observability"
-principles: ['P_OBSERVABILITY_WITH_OTEL', 'P_HEALTH_CHECKS', 'P_ERROR_BUDGETS']
-use_cases:
-  development_philosophy: [quality_first, balanced]
-  project_maturity: [active-dev, production]
+related_commands:
+  action_types: [audit, generate, optimize]
+  categories: [observability]
+pain_points: [9, 10]
 ---
 
 # Observability - Metrics, Alerts, SLOs
@@ -199,3 +196,22 @@ startupProbe:
 - [ ] Error budget remaining displayed
 - [ ] Latency percentiles (p50, p95, p99)
 - [ ] Error rate by endpoint
+
+## Command Discovery Protocol
+
+When this skill is active, find relevant commands by searching `~/.claude/commands/` metadata:
+
+```yaml
+# Search criteria for this skill's domain
+action_types: [audit, generate, optimize]
+keywords: [observability, metrics, SLO, health check, monitoring, alerts]
+category: observability
+pain_points: [9, 10]
+```
+
+**How Claude finds commands:**
+1. Grep command files for `keywords:.*[pattern]` in frontmatter
+2. Match `category: observability`
+3. Present matching commands with their parameters
+
+This ensures commands are always current even when renamed or updated.

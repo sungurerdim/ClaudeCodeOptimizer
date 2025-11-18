@@ -1,3 +1,12 @@
+---
+name: cross-platform-bash
+description: Use cross-platform compatible bash commands, path handling, and patterns for Windows, Linux, and macOS
+type: claude
+severity: high
+keywords: [bash, cross-platform, scripting, path handling, Git Bash, compatibility]
+category: [workflow, quality]
+---
+
 # C_CROSS_PLATFORM_BASH: Cross-Platform Bash Commands
 
 **Severity**: High

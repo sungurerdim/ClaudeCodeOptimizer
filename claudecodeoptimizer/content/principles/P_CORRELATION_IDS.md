@@ -1,3 +1,12 @@
+---
+name: correlation_ids
+description: Trace requests across services using correlation IDs for debugging
+type: project
+severity: high
+keywords: [tracing, observability, correlation-ids, debugging]
+category: [observability]
+related_skills: []
+---
 # P_CORRELATION_IDS: Correlation IDs for Request Tracing
 
 **Severity**: High

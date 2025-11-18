@@ -1,15 +1,12 @@
 ---
-title: Git Workflow, Branching & PR Review
-category: git
-description: Branching strategy, PR guidelines, commit conventions, code review checklists, merge vs rebase
-metadata:
-  name: "Git Workflow, Branching & PR Review"
-  activation_keywords: ["git", "branch", "branching strategy", "feature branch", "trunk-based", "pull request", "PR", "merge request", "code review", "commit", "commit message", "conventional commits", "merge", "rebase", "squash", "cherry-pick", "conflict", "CODEOWNERS", "PR template"]
-  category: "git"
-principles: ['P_BRANCHING_STRATEGY', 'P_PR_GUIDELINES', 'P_COMMIT_MESSAGE_CONVENTIONS', 'P_GIT_COMMIT_QUALITY', 'P_CODE_REVIEW_CHECKLIST_COMPLIANCE', 'P_REBASE_VS_MERGE_STRATEGY']
-use_cases:
-  development_philosophy: [quality_first, balanced, move_fast]
-  project_maturity: [greenfield, active-dev, production]
+name: git-branching-pr-review
+description: Prevent merge conflicts, maintain clean history, ensure PR quality. Includes branching strategies (trunk-based, feature flags), conventional commits, PR templates, code review checklists, and rebase vs merge decision framework.
+keywords: [git, branch, branching strategy, feature branch, trunk-based, pull request, PR, merge request, code review, commit, conventional commits, merge, rebase, squash, cherry-pick, conflict, CODEOWNERS]
+category: quality
+related_commands:
+  action_types: [audit, generate, fix]
+  categories: [quality]
+pain_points: [3, 4]
 ---
 
 # Git Workflow, Branching & PR Review
@@ -71,3 +68,22 @@ Performance: N+1, indexes, loops
 - [ ] PR <400 lines, tests pass
 - [ ] Review: security/quality/perf
 - [ ] Merge: rebase/squash, docs updated
+
+## Command Discovery Protocol
+
+When this skill is active, find relevant commands by searching `~/.claude/commands/` metadata:
+
+```yaml
+# Search criteria for this skill's domain
+action_types: [audit, generate, fix]
+keywords: [git, branch, PR, commit, review, merge, rebase]
+category: quality
+pain_points: [3, 4]
+```
+
+**How Claude finds commands:**
+1. Grep command files for `keywords:.*[pattern]` in frontmatter
+2. Match `category: quality`
+3. Present matching commands with their parameters
+
+This ensures commands are always current even when renamed or updated.

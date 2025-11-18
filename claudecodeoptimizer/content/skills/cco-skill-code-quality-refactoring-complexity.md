@@ -1,7 +1,12 @@
 ---
-name: cco-skill-code-quality-refactoring-complexity
-description: Code quality, refactoring, complexity analysis, technical debt tracking
-triggers: refactor, complexity, code smell, technical debt, maintainability, cyclomatic, cognitive, duplication, SOLID
+name: code-quality-refactoring-complexity
+description: Manage code quality through complexity reduction and technical debt tracking. Includes cyclomatic/cognitive complexity limits, code smell detection, refactoring patterns (Extract Method, Split Class), and debt prioritization with impact/effort analysis.
+keywords: [refactor, complexity, code smell, technical debt, maintainability, cyclomatic, cognitive, duplication, SOLID, clean code]
+category: quality
+related_commands:
+  action_types: [audit, fix, optimize]
+  categories: [quality]
+pain_points: [1, 2, 3]
 ---
 
 # Skill: Code Quality & Refactoring
@@ -78,3 +83,22 @@ Result: Applies Extract Function, creates shared module, updates 5 files
 User: "Prioritize TODO comments"
 Result: Scans codebase, categorizes by impact/effort, generates paydown roadmap
 ```
+
+## Command Discovery Protocol
+
+When this skill is active, find relevant commands by searching `~/.claude/commands/` metadata:
+
+```yaml
+# Search criteria for this skill's domain
+action_types: [audit, fix, optimize]
+keywords: [refactor, complexity, code smell, technical debt, SOLID, clean code]
+category: quality
+pain_points: [1, 2, 3]
+```
+
+**How Claude finds commands:**
+1. Grep command files for `keywords:.*[pattern]` in frontmatter
+2. Match `category: quality`
+3. Present matching commands with their parameters
+
+This ensures commands are always current even when renamed or updated.

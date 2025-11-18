@@ -3,14 +3,14 @@ name: generate-agent
 description: Auto-generate tests, documentation, and boilerplate code following project conventions. Creates unit/integration tests, API documentation, CI/CD configs, and other missing components. Use for /cco-generate command execution.
 tools: Grep, Read, Glob, Bash, Write
 model: sonnet
-category: testing
+category: generate
 metadata:
   priority: medium
-  agent_type: plan
+  agent_type: generate
 skills_loaded: as-needed
 use_cases:
-  testing_approach: [balanced, comprehensive]
-  project_maturity: [active-dev, production]
+  project_maturity: [all]
+  development_philosophy: [all]
 ---
 
 # Agent: Generate

@@ -1,3 +1,12 @@
+---
+name: cyclomatic_complexity_limits
+description: Enforce cyclomatic complexity limits to improve testability and quality
+type: project
+severity: medium
+keywords: [complexity, cyclomatic, quality, metrics]
+category: [quality]
+related_skills: []
+---
 # P_CYCLOMATIC_COMPLEXITY_LIMITS: Cyclomatic Complexity Limits
 
 **Severity**: High

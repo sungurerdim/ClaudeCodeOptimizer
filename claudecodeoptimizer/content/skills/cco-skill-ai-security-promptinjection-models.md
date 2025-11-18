@@ -1,6 +1,12 @@
 ---
 name: ai-ml-security
-description: Protect AI systems from prompt injection, PII leakage, adversarial inputs, and API abuse
+description: Protect AI systems from prompt injection, PII leakage, adversarial inputs, and API abuse through input sanitization, output filtering, rate limiting, and comprehensive audit logging
+keywords: [prompt injection, LLM security, PII protection, adversarial inputs, AI safety, model security, content moderation, rate limiting, token budget]
+category: security
+related_commands:
+  action_types: [audit, fix, generate]
+  categories: [security]
+pain_points: [3, 5, 8]
 ---
 
 # AI/ML Security: Prompt Injection & Model Security
@@ -244,6 +250,27 @@ def secure_query(user_id: str, user_input: str) -> str:
 - [ ] All interactions logged
 - [ ] PII never in logs (use hashes)
 - [ ] Cost tracking per user
+
+---
+
+## Command Discovery Protocol
+
+When this skill is active, find relevant commands by searching `~/.claude/commands/` metadata:
+
+```yaml
+# Search criteria for AI/ML security domain
+action_types: [audit, fix, generate]
+keywords: [prompt injection, LLM security, PII, adversarial, AI safety]
+category: security
+pain_points: [3, 5, 8]
+```
+
+**How Claude finds commands:**
+1. Grep command files for `keywords:.*[pattern]` in frontmatter
+2. Match `category: security`
+3. Present matching commands with their parameters
+
+This ensures commands are always current even when renamed or updated.
 
 ---
 

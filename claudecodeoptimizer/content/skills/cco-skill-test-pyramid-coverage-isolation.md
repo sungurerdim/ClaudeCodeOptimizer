@@ -73,11 +73,24 @@ This skill auto-loads when Claude detects:
 
 ---
 
-## Related Commands
+## Command Discovery Protocol
 
-Once this skill is active, relevant commands become available:
-- `/cco-audit-tests` - Analyze test coverage and pyramid compliance
-- `/cco-generate-tests` - Generate missing unit/integration tests
+When this skill is active, find relevant commands by searching `~/.claude/commands/` metadata:
+
+```yaml
+# Search criteria for this skill's domain
+action_types: [audit, fix, generate]
+keywords: [tests, coverage, unit tests, integration tests, pytest, test pyramid, isolation]
+category: testing
+pain_points: [4]
+```
+
+**How Claude finds commands:**
+1. Grep command files for `keywords:.*test` in frontmatter
+2. Match `category: testing`
+3. Present matching commands with their parameters
+
+This ensures commands are always current even when renamed or updated.
 
 ---
 

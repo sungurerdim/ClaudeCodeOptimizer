@@ -1,3 +1,12 @@
+---
+name: cco-status
+description: CCO installation health check showing available commands, skills, agents, and configuration status
+action_type: status
+keywords: [status, health, check, installation, verify, components, availability]
+category: discovery
+pain_points: []
+---
+
 # cco-status
 
 **CCO installation health check with skill and agent availability.**

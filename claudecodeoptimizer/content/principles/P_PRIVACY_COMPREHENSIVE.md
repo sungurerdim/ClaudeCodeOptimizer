@@ -1,3 +1,13 @@
+---
+name: privacy-comprehensive
+description: Implement comprehensive privacy protection including PII handling, data minimization, and regulatory compliance (GDPR, CCPA, PIPEDA)
+type: project
+severity: critical
+keywords: [privacy, pii, gdpr, ccpa, pipeda, data-minimization, encryption, compliance]
+category: [security, compliance]
+related_skills: []
+---
+
 # P_PRIVACY_COMPREHENSIVE: Comprehensive Privacy Protection
 
 **Severity**: Critical

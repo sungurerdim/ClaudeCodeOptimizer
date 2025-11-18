@@ -1,3 +1,12 @@
+---
+name: code_smell_detection
+description: Identify and refactor code smells to improve maintainability
+type: project
+severity: medium
+keywords: [code-quality, refactoring, smells, detection]
+category: [quality]
+related_skills: []
+---
 # P_CODE_SMELL_DETECTION: Code Smell Detection & Refactoring
 
 **Severity**: High

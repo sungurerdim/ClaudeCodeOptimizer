@@ -1,3 +1,12 @@
+---
+name: canary_releases
+description: Deploy to subset of users to validate changes before full rollout
+type: project
+severity: high
+keywords: [deployment, canary, testing, risk-reduction]
+category: [infrastructure]
+related_skills: []
+---
 # P_CANARY_RELEASES: Canary Release Pattern
 
 **Severity**: High

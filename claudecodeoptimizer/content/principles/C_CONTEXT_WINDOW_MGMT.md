@@ -1,3 +1,12 @@
+---
+name: context-window-management
+description: Optimize context via targeted reads, strategic model selection, parallel operations, and structured queries
+type: claude
+severity: medium
+keywords: [context optimization, token efficiency, targeted reads, model selection, file operations]
+category: [performance, efficiency]
+---
+
 # C_CONTEXT_WINDOW_MGMT: Context Window Management
 
 **Severity**: Medium

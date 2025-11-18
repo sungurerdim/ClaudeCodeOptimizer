@@ -1,3 +1,13 @@
+---
+name: feature-flags
+description: Use feature flags to decouple feature release from deployment
+type: project
+severity: high
+keywords: [deployment, feature-management, continuous-deployment, gradual-rollout, configuration]
+category: [architecture, infrastructure]
+related_skills: []
+---
+
 # P_FEATURE_FLAGS: Feature Flags Strategy
 
 **Severity**: High

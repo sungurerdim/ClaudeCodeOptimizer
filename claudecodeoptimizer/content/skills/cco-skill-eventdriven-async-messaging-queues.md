@@ -1,6 +1,12 @@
 ---
-name: event-driven-architecture
-description: Event-driven architecture with async messaging queues and event sourcing
+name: eventdriven-async-messaging-queues
+description: Decouple services via event-driven patterns, async I/O, and message queues to prevent cascading failures, enable horizontal scaling, and process background jobs reliably. Includes RabbitMQ/Kafka patterns, dead letter queues, event sourcing, and idempotent processing.
+keywords: [event-driven, async, messaging, queue, RabbitMQ, Kafka, event sourcing, pub/sub, dead letter queue, idempotent, EventEmitter]
+category: architecture
+related_commands:
+  action_types: [audit, generate, optimize]
+  categories: [architecture]
+pain_points: [5, 6]
 ---
 
 # Event-Driven Architecture & Async Messaging
@@ -156,3 +162,22 @@ class OrderAggregate {
 - [ ] Idempotent message processing
 - [ ] Circuit breakers for external services
 - [ ] Queue depth monitoring/alerting
+
+## Command Discovery Protocol
+
+When this skill is active, find relevant commands by searching `~/.claude/commands/` metadata:
+
+```yaml
+# Search criteria for this skill's domain
+action_types: [audit, generate, optimize]
+keywords: [event-driven, async, messaging, queue, Kafka, RabbitMQ, event sourcing]
+category: architecture
+pain_points: [5, 6]
+```
+
+**How Claude finds commands:**
+1. Grep command files for `keywords:.*[pattern]` in frontmatter
+2. Match `category: architecture`
+3. Present matching commands with their parameters
+
+This ensures commands are always current even when renamed or updated.

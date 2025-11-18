@@ -1,3 +1,12 @@
+---
+name: cco-remove
+description: Complete CCO uninstall with full transparency showing exactly what will be deleted before confirmation
+action_type: remove
+keywords: [remove, uninstall, delete, cleanup, unset]
+category: management
+pain_points: []
+---
+
 # cco-remove
 
 **Complete CCO uninstall with full transparency and confirmation.**

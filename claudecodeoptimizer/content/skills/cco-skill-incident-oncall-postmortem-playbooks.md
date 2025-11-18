@@ -1,6 +1,12 @@
 ---
 name: incident-response
-description: Incident response, on-call management, postmortem analysis, and runbook playbooks
+description: Minimize incident impact through severity classification, automated detection, on-call rotation, incident playbooks, blameless postmortems, and MTTD/MTTR tracking
+keywords: [incident response, on-call, postmortem, runbook, playbook, severity, MTTD, MTTR, status page, escalation]
+category: observability
+related_commands:
+  action_types: [audit, generate]
+  categories: [observability]
+pain_points: [4, 9, 12]
 ---
 
 # Skill: Incident Response & On-Call Management
@@ -171,3 +177,24 @@ def record_incident(severity, detected_at, resolved_at):
 - [ ] Monthly incident review conducted
 - [ ] False positive rate <10%
 - [ ] Fire drills conducted quarterly
+
+---
+
+## Command Discovery Protocol
+
+When this skill is active, find relevant commands by searching `~/.claude/commands/` metadata:
+
+```yaml
+# Search criteria for incident response domain
+action_types: [audit, generate]
+keywords: [incident, on-call, postmortem, runbook, playbook, MTTD, MTTR]
+category: observability
+pain_points: [4, 9, 12]
+```
+
+**How Claude finds commands:**
+1. Grep command files for `keywords:.*[pattern]` in frontmatter
+2. Match `category: observability`
+3. Present matching commands with their parameters
+
+This ensures commands are always current even when renamed or updated.

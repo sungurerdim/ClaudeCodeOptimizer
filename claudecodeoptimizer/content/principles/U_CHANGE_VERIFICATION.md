@@ -1,3 +1,12 @@
+---
+name: change-verification
+description: Verify all changes before claiming completion, ensure no missed references through systematic verification
+type: universal
+severity: critical
+keywords: [verification, change management, testing, systematic approach]
+category: [quality, workflow]
+---
+
 # U_CHANGE_VERIFICATION: Change Verification Protocol
 
 **Severity**: Critical

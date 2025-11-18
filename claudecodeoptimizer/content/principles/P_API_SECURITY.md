@@ -1,3 +1,12 @@
+---
+name: api_security
+description: Prevent OWASP API Top 10 threats through authentication and input validation
+type: project
+severity: critical
+keywords: [security, api, authentication, rate-limiting, injection]
+category: [security]
+related_skills: []
+---
 # P_API_SECURITY: API Security Best Practices
 
 **Severity**: Critical

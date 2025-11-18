@@ -1,15 +1,12 @@
 ---
-title: Security - OWASP, XSS, SQLi, CSRF
+name: security-owasp-xss-sqli-csrf
+description: Prevent XSS, SQL injection, CSRF, and auth vulnerabilities via secure coding and OWASP compliance. Includes input validation, parameterized queries, CSRF tokens, bcrypt/argon2 password hashing, JWT configuration, and CSP headers.
+keywords: [security, XSS, SQL injection, CSRF, auth, sanitize, escape, validate, injection, OWASP, bcrypt, JWT, rate limiting]
 category: security
-description: XSS, SQL injection, CSRF, auth vulnerability prevention
-metadata:
-  name: "Security - OWASP, XSS, SQLi, CSRF"
-  activation_keywords: ["security", "XSS", "SQL injection", "CSRF", "auth", "sanitize", "escape", "validate", "injection"]
-  category: "security"
-principles: ['P_XSS_PREVENTION', 'P_SQL_INJECTION', 'P_AUTH_AUTHZ', 'P_API_SECURITY', 'P_ZERO_TRUST']
-use_cases:
-  development_philosophy: [quality_first, security_critical]
-  project_maturity: [active-dev, production]
+related_commands:
+  action_types: [audit, fix, generate]
+  categories: [security]
+pain_points: [1, 2, 6]
 ---
 
 # Security - OWASP, XSS, SQLi, CSRF
@@ -79,3 +76,22 @@ def hash_password(password: str) -> str:
 def admin_panel():
     return render_template('admin.html')
 ```
+
+## Command Discovery Protocol
+
+When this skill is active, find relevant commands by searching `~/.claude/commands/` metadata:
+
+```yaml
+# Search criteria for this skill's domain
+action_types: [audit, fix, generate]
+keywords: [security, XSS, injection, CSRF, auth, OWASP, vulnerability]
+category: security
+pain_points: [1, 2, 6]
+```
+
+**How Claude finds commands:**
+1. Grep command files for `keywords:.*[pattern]` in frontmatter
+2. Match `category: security`
+3. Present matching commands with their parameters
+
+This ensures commands are always current even when renamed or updated.

@@ -1,3 +1,12 @@
+---
+name: centralized_logging
+description: Aggregate logs centrally for debugging, monitoring, and compliance
+type: project
+severity: high
+keywords: [logging, observability, monitoring, elk, central]
+category: [observability]
+related_skills: []
+---
 # P_CENTRALIZED_LOGGING: Centralized Logging
 
 **Severity**: High

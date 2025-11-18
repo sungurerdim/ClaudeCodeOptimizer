@@ -1,3 +1,13 @@
+---
+name: dead-letter-queue
+description: Capture and handle failed messages in dead letter queue for analysis and replay
+type: project
+severity: high
+keywords: [messaging, error-handling, reliability, observability, queuing]
+category: [quality, observability, architecture]
+related_skills: []
+---
+
 # P_DEAD_LETTER_QUEUE: Dead Letter Queue Pattern
 
 **Severity**: High

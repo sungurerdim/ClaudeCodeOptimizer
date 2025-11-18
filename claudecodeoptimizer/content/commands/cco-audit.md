@@ -1,3 +1,78 @@
+---
+name: cco-audit
+description: Comprehensive issue detection across multiple categories
+action_type: audit
+parameters:
+  security:
+    keywords: [security, owasp, xss, sqli, csrf, vulnerabilities, cves, secrets, authentication, authorization]
+    category: security
+    pain_points: [1]
+  tech-debt:
+    keywords: [tech debt, dead code, complexity, duplication, anti-patterns, code smells, refactoring]
+    category: quality
+    pain_points: [2]
+  ai-security:
+    keywords: [ai security, prompt injection, hallucinations, model security, llm security, output validation]
+    category: security
+    pain_points: [3]
+  tests:
+    keywords: [tests, coverage, test pyramid, isolation, edge cases, unit tests, integration tests]
+    category: testing
+    pain_points: [4]
+  integration:
+    keywords: [integration, dependencies, imports, conflicts, compatibility, api integration]
+    category: infrastructure
+    pain_points: [6]
+  code-quality:
+    keywords: [code quality, syntax errors, logic bugs, type errors, error handling, linting]
+    category: quality
+    pain_points: [2]
+  docs:
+    keywords: [documentation, readme, api docs, docstrings, adr, changelog]
+    category: docs
+    pain_points: [7]
+  database:
+    keywords: [database, n+1 queries, indexes, connection pooling, query optimization, sql]
+    category: database
+    pain_points: [5]
+  observability:
+    keywords: [observability, logging, structured logging, correlation ids, metrics, tracing]
+    category: observability
+    pain_points: [5]
+  monitoring:
+    keywords: [monitoring, dashboards, alerts, prometheus, grafana, slo, sla]
+    category: observability
+    pain_points: [5]
+  cicd:
+    keywords: [cicd, pipeline, deployment, quality gates, github actions, gitlab ci]
+    category: infrastructure
+    pain_points: [6]
+  containers:
+    keywords: [containers, docker, kubernetes, dockerfile, k8s security, container security]
+    category: infrastructure
+    pain_points: [6]
+  supply-chain:
+    keywords: [supply chain, dependencies, sbom, licenses, cves, vulnerability scanning]
+    category: security
+    pain_points: [1]
+  migrations:
+    keywords: [migrations, database migrations, schema changes, rollback, data migration]
+    category: database
+    pain_points: [5]
+  performance:
+    keywords: [performance, response times, caching, bundle size, optimization, profiling]
+    category: performance
+    pain_points: [5]
+  architecture:
+    keywords: [architecture, patterns, coupling, microservices, design patterns, solid]
+    category: architecture
+    pain_points: [5]
+  git:
+    keywords: [git, versioning, branching, commits, pull requests, code review]
+    category: infrastructure
+    pain_points: [5]
+---
+
 # cco-audit
 
 **Comprehensive issue detection across {{CATEGORY_COUNT}} categories, pain-point priority ordered.**

@@ -1,3 +1,13 @@
+---
+name: test-coverage
+description: Maintain adequate test coverage to prevent regressions and bugs in production
+type: project
+severity: high
+keywords: ["testing", "coverage", "metrics", "regression", "quality"]
+category: ["testing", "quality"]
+related_skills: []
+---
+
 # P_TEST_COVERAGE: Test Coverage Targets
 
 **Severity**: High

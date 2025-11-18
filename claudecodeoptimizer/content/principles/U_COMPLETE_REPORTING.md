@@ -1,3 +1,12 @@
+---
+name: complete-reporting
+description: Every action must be explicitly reported with precise file references for verification and navigation
+type: universal
+severity: critical
+keywords: [reporting, documentation, precision, traceability]
+category: [quality, workflow]
+---
+
 # U_COMPLETE_REPORTING: Complete Action Reporting
 
 **Severity**: Critical

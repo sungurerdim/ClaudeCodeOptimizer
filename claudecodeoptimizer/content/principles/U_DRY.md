@@ -1,3 +1,12 @@
+---
+name: dry-enforcement
+description: Every piece of knowledge must have a single, unambiguous, authoritative representation
+type: universal
+severity: high
+keywords: [DRY principle, code duplication, single source of truth, refactoring]
+category: [quality, maintainability]
+---
+
 # U_DRY: DRY Enforcement & Single Source of Truth
 
 **Severity**: High

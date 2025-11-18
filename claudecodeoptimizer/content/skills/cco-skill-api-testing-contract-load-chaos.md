@@ -1,9 +1,12 @@
 ---
-name: cco-skill-api-testing-contract-load-chaos
-description: Contract, load, chaos, integration testing for APIs
-applicability:
-  project_types: ['api', 'web', 'microservice']
-  languages: ['all']
+name: api-testing
+description: Ensure API reliability and performance through contract tests (Pact), load tests (k6), chaos engineering experiments, and integration tests with testcontainers for real dependencies
+keywords: [contract testing, Pact, load testing, k6, chaos engineering, integration testing, testcontainers, performance testing, API testing]
+category: testing
+related_commands:
+  action_types: [audit, generate]
+  categories: [testing]
+pain_points: [4, 7, 9]
 ---
 
 # Skill: API Testing - Contract, Load, Chaos
@@ -126,3 +129,24 @@ def test_create_user():
 - [ ] Chaos experiments for critical paths
 - [ ] Progressive load: smoke → load → stress
 - [ ] Track metrics: coverage, SLA%, contract failures, p95 latency
+
+---
+
+## Command Discovery Protocol
+
+When this skill is active, find relevant commands by searching `~/.claude/commands/` metadata:
+
+```yaml
+# Search criteria for API testing domain
+action_types: [audit, generate]
+keywords: [contract testing, Pact, load testing, k6, chaos engineering, integration testing]
+category: testing
+pain_points: [4, 7, 9]
+```
+
+**How Claude finds commands:**
+1. Grep command files for `keywords:.*[pattern]` in frontmatter
+2. Match `category: testing`
+3. Present matching commands with their parameters
+
+This ensures commands are always current even when renamed or updated.

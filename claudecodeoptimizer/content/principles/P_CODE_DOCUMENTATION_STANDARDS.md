@@ -1,3 +1,12 @@
+---
+name: code_documentation_standards
+description: Document code through docstrings, comments, and architectural guides
+type: project
+severity: high
+keywords: [documentation, code, docstrings, standards]
+category: [docs]
+related_skills: []
+---
 # P_CODE_DOCUMENTATION_STANDARDS: Code Documentation Standards
 
 **Severity**: High

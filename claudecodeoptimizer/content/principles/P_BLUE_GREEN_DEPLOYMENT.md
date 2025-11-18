@@ -1,3 +1,12 @@
+---
+name: blue_green_deployment
+description: Deploy with zero downtime using blue-green and canary strategies
+type: project
+severity: high
+keywords: [deployment, zero-downtime, blue-green, strategy]
+category: [infrastructure]
+related_skills: []
+---
 # P_BLUE_GREEN_DEPLOYMENT: Blue-Green Deployment Strategy
 
 **Severity**: High

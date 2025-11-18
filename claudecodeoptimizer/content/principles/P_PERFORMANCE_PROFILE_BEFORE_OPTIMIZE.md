@@ -1,3 +1,13 @@
+---
+name: performance-profile-before-optimize
+description: Profile code to identify actual bottlenecks before optimization to avoid premature optimization and wasted effort
+type: project
+severity: low
+keywords: [performance, profiling, optimization, benchmarking, bottleneck-analysis, evidence-based]
+category: [performance, quality]
+related_skills: []
+---
+
 # P_PERFORMANCE_PROFILE_BEFORE_OPTIMIZE: Performance Profiling Before Optimization
 
 **Severity**: Low

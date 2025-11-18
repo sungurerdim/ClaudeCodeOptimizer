@@ -34,11 +34,24 @@ Enable production debugging via structured logs, correlation IDs, tracing, PII m
 
 ---
 
-## Commands
+## Command Discovery Protocol
 
-- `/cco-generate-log-config` - Generate structured logging
-- `/cco-audit-logging-strategy` - Review levels, PII, coverage
-- `/cco-fix-logging-statements` - Convert print/console.log
+When this skill is active, find relevant commands by searching `~/.claude/commands/` metadata:
+
+```yaml
+# Search criteria for this skill's domain
+action_types: [audit, fix, generate]
+keywords: [logging, structured logging, correlation ids, tracing, observability, metrics]
+category: observability
+pain_points: [5]
+```
+
+**How Claude finds commands:**
+1. Grep command files for `keywords:.*logging|observability|correlation` in frontmatter
+2. Match `category: observability`
+3. Present matching commands with their parameters
+
+This ensures commands are always current even when renamed or updated.
 
 ---
 

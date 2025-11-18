@@ -1,3 +1,13 @@
+---
+name: rollback-strategy
+description: Establish clear rollback procedures for safe incident recovery and minimal downtime
+type: project
+severity: critical
+keywords: ["deployment", "rollback", "incidents", "recovery", "procedures"]
+category: ["infrastructure", "docs"]
+related_skills: []
+---
+
 # P_ROLLBACK_STRATEGY: Rollback Strategy and Procedures
 
 **Severity**: Critical
