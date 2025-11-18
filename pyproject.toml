@@ -136,6 +136,21 @@ ignore = [
 ]
 "tests/conftest.py" = ["ANN001", "ANN201"]  # pytest config doesn't need type hints
 
+[tool.mypy]
+python_version = "3.11"
+warn_return_any = true
+warn_unused_configs = true
+disallow_untyped_defs = false
+check_untyped_defs = true
+ignore_missing_imports = false
+
+[[tool.mypy.overrides]]
+module = [
+    "frontmatter",
+    "frontmatter.*",
+]
+ignore_missing_imports = true
+
 [tool.pytest.ini_options]
 testpaths = ["tests"]
 python_files = ["test_*.py"]

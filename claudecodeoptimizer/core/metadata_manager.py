@@ -75,7 +75,7 @@ class MetadataManager:
         """
         frontmatter = self.parse_frontmatter(file_path)
         if "description" in frontmatter:
-            return frontmatter["description"]
+            return str(frontmatter["description"])
 
         # Fallback: extract first paragraph
         try:
@@ -117,7 +117,11 @@ class MetadataManager:
         }
         """
         frontmatter = self.parse_frontmatter(file_path)
-        return frontmatter.get("use_cases", {})
+        use_cases = frontmatter.get("use_cases", {})
+        # Ensure proper type - frontmatter returns Any
+        if isinstance(use_cases, dict):
+            return {str(k): list(v) if isinstance(v, list) else [] for k, v in use_cases.items()}
+        return {}
 
     def matches_context(
         self, use_cases: Dict[str, List[str]], context_answers: Dict[str, Any]
