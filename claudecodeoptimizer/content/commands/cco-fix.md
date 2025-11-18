@@ -185,52 +185,50 @@ for issue in issues:
 
 ### Step 3: Present Fix Plan with AskUserQuestion
 
-**IMPORTANT:** The fixes listed in options below are EXAMPLES. You MUST:
-- Use actual issues from the audit results
-- For simple fixes (single file/change): List as one option
-- For complex fixes (multiple files/changes): Break down into individual steps with category in parentheses
-- List REAL file paths and line numbers (e.g., api/users.py:45)
-- Include actual issue descriptions from the audit
-- Replace example fixes with REAL project-specific fixes
+**IMPORTANT - Dynamic Fix Generation Protocol:**
+You MUST generate fix options from ACTUAL audit results:
+1. Read audit results to get REAL issues found
+2. Categorize each issue as safe or risky using the criteria below
+3. For simple fixes (one file, one change): Create single option
+4. For complex fixes (multiple files/changes): Break into individual steps
+5. Use ACTUAL file paths and line numbers from audit (e.g., <real-file>:<real-line>)
+6. Include REAL issue descriptions from audit findings
+7. Reference ACTUAL skills used in detection
 
-First, present safe fixes using multiselect (simple fixes can be single options, complex fixes should be broken down):
+**Example template for generating options (DO NOT use verbatim):**
+```python
+# From audit results:
+for issue in audit_results:
+    if is_safe_fix(issue):
+        option = {
+            label: f"{issue.fix_type} - {issue.file}:{issue.line}",
+            description: f"{issue.fix_description} | Skill: {issue.skill}"
+        }
+```
+
+First, present safe fixes using multiselect:
 
 ```python
+# Generate options dynamically from REAL audit results
+safe_fix_options = []
+for safe_fix in safe_fixes:
+    safe_fix_options.append({
+        label: f"{safe_fix.type} - {safe_fix.file}:{safe_fix.line}",
+        description: f"{safe_fix.description} | Skill: {safe_fix.skill}"
+    })
+
+# Add group option
+safe_fix_options.append({
+    label: "All Safe Fixes",
+    description: f"✅ Apply all {len(safe_fixes)} safe fixes automatically (recommended)"
+})
+
 AskUserQuestion({
   questions: [{
     question: "Which SAFE fixes should I apply? (These are low-risk and reversible):",
     header: "Safe Fixes",
     multiSelect: true,
-    options: [
-      {
-        label: "SQL injection fix - api/users.py:45",
-        description: "Parameterize query: cur.execute('SELECT * FROM users WHERE id = %s', (id,)) | Skill: cco-skill-security-owasp"
-      },
-      {
-        label: "Externalize API_KEY - config.py:12",
-        description: "Move to environment variable: os.environ['API_KEY'] | Skill: cco-skill-security-owasp"
-      },
-      {
-        label: "AI prompt injection fix - api/chat.py:67",
-        description: "Add input sanitization + output validation | Skill: cco-skill-ai-security-promptinjection"
-      },
-      {
-        label: "Remove unused imports - 15 files",
-        description: "Clean up 200+ unused imports across codebase | Skill: cco-skill-code-quality"
-      },
-      {
-        label: "Fix type hints - services/auth.py",
-        description: "Add missing type hints for 8 functions | Skill: cco-skill-code-quality"
-      },
-      {
-        label: "Add input validation - api/register.py:30",
-        description: "Validate email and username formats | Skill: cco-skill-security-owasp"
-      },
-      {
-        label: "All Safe Fixes",
-        description: "✅ Apply all 6 safe fixes automatically (recommended)"
-      }
-    ]
+    options: safe_fix_options
   }]
 })
 ```
@@ -240,106 +238,47 @@ AskUserQuestion({
 Then, present risky fixes using multiselect (break down complex fixes into individual steps):
 
 ```python
+# Generate risky fix options dynamically from REAL audit results
+risky_fix_options = []
+
+# For each risky fix, determine if it needs breakdown
+for risky_fix in risky_fixes:
+    if risky_fix.is_complex():  # Multiple files or steps
+        # Break down into individual steps
+        for step in risky_fix.steps:
+            risky_fix_options.append({
+                label: f"{step.action}",
+                description: f"({risky_fix.name}, {step.time_estimate}) {step.description} | ⚠️ {step.risk_level}"
+            })
+        # Add group option for this fix
+        risky_fix_options.append({
+            label: f"All {risky_fix.name} Steps",
+            description: f"⚠️ Apply all {len(risky_fix.steps)} {risky_fix.name} steps above"
+        })
+    else:  # Simple risky fix
+        risky_fix_options.append({
+            label: f"{risky_fix.name}",
+            description: f"({risky_fix.category}, {risky_fix.time_estimate}) {risky_fix.description} | ⚠️ {risky_fix.risk_level} | Impact: {risky_fix.impact}"
+        })
+
+# Add master group options
+risky_fix_options.extend([
+    {
+        label: "All Risky Fix Steps",
+        description: f"⚠️ Apply ALL {sum(len(f.steps) if f.is_complex() else 1 for f in risky_fixes)} risky fix steps above - Only if you understand ALL risks and have backups"
+    },
+    {
+        label: "Skip all risky fixes",
+        description: "✅ SAFE CHOICE: Skip all risky fixes for now (review manually later)"
+    }
+])
+
 AskUserQuestion({
   questions: [{
     question: "Which RISKY fix steps should I apply? (These could break functionality - select carefully):",
     header: "Risky Fixes",
     multiSelect: true,
-    options: [
-      # CSRF Protection - Broken down into steps (if this fix involves multiple files)
-      {
-        label: "Add flask-wtf dependency",
-        description: "(CSRF Protection, 1 min) Add to requirements.txt | ⚠️ LOW RISK"
-      },
-      {
-        label: "Add SECRET_KEY to config",
-        description: "(CSRF Protection, 1 min) Add SECRET_KEY env variable | ⚠️ LOW RISK"
-      },
-      {
-        label: "Update all 10 templates with csrf_token",
-        description: "(CSRF Protection, 3 min) Add {{ csrf_token }} to forms | ⚠️ MEDIUM RISK - Forms will break without this"
-      },
-      {
-        label: "Add CSRF validation to 5 form handlers",
-        description: "(CSRF Protection, 2 min) Validate CSRF in POST handlers | ⚠️ MEDIUM RISK"
-      },
-      {
-        label: "Update 8 test files for CSRF",
-        description: "(CSRF Protection, 3 min) Add CSRF tokens to test requests | ⚠️ LOW RISK"
-      },
-      {
-        label: "All CSRF Protection Steps",
-        description: "✅ Apply all 5 CSRF steps above (complete CSRF protection)"
-      },
-
-      # JWT Migration - Broken down into steps (if complex migration)
-      {
-        label: "Install PyJWT dependency",
-        description: "(JWT Migration, 1 min) Add pyjwt to requirements.txt | ⚠️ LOW RISK"
-      },
-      {
-        label: "Create JWT service (services/jwt.py)",
-        description: "(JWT Migration, 3 min) Token creation/validation logic | ⚠️ LOW RISK - New file"
-      },
-      {
-        label: "Replace session auth in /api/auth/login",
-        description: "(JWT Migration, 2 min) Return JWT instead of session | ⚠️ BREAKING - Old clients break"
-      },
-      {
-        label: "Replace session auth in middleware",
-        description: "(JWT Migration, 2 min) Validate JWT instead of session | ⚠️ BREAKING - All users logged out"
-      },
-      {
-        label: "Update all protected endpoints (15 endpoints)",
-        description: "(JWT Migration, 5 min) Use JWT auth decorator | ⚠️ BREAKING"
-      },
-      {
-        label: "Update all tests for JWT auth",
-        description: "(JWT Migration, 4 min) Update 20 test files | ⚠️ MEDIUM RISK"
-      },
-      {
-        label: "All JWT Migration Steps",
-        description: "⚠️ Apply all 6 JWT steps above (complete migration, BREAKING CHANGE)"
-      },
-
-      # Redis Caching - Simpler, might not need breakdown (example of simple fix)
-      {
-        label: "Add Redis caching for popular products",
-        description: "(Redis, 10 min) Add redis-py, implement caching | ⚠️ MEDIUM RISK - Requires Redis server | Impact: 90% faster"
-      },
-
-      # Payment Refactoring - Broken down if complex
-      {
-        label: "Extract payment validation logic",
-        description: "(Payment Refactor, 5 min) services/payment.py:validate_payment() | ⚠️ MEDIUM RISK"
-      },
-      {
-        label: "Extract payment processing logic",
-        description: "(Payment Refactor, 5 min) services/payment.py:process_payment() | ⚠️ MEDIUM RISK"
-      },
-      {
-        label: "Update payment API to use new services",
-        description: "(Payment Refactor, 3 min) api/payments.py - use extracted services | ⚠️ HIGH RISK"
-      },
-      {
-        label: "Update payment tests",
-        description: "(Payment Refactor, 7 min) Refactor 12 payment tests | ⚠️ MEDIUM RISK"
-      },
-      {
-        label: "All Payment Refactoring Steps",
-        description: "⚠️ Apply all 4 payment refactoring steps above"
-      },
-
-      # Group options
-      {
-        label: "All Risky Fix Steps",
-        description: "⚠️ Apply ALL risky fix steps above - Only select if you understand ALL risks and have backups"
-      },
-      {
-        label: "Skip all risky fixes",
-        description: "✅ SAFE CHOICE: Skip all risky fixes for now (you can review them manually later)"
-      }
-    ]
+    options: risky_fix_options
   }]
 })
 ```
@@ -364,11 +303,10 @@ Task({
   subagent_type: "general-purpose",
   model: "sonnet",  # Use Sonnet for accuracy
   prompt: """
-  Apply these safe security fixes:
+  Apply these safe security fixes (from audit results):
 
-  1. api/users.py:45 - Parameterize SQL query
-  2. config.py:12 - Move API_KEY to environment
-  3. api/chat.py:67 - Add AI input sanitization
+  [For each issue selected by user:]
+  [N]. <file>:<line> - [Fix description from audit]
 
   For each fix:
   - Read the file
@@ -385,20 +323,19 @@ Task({
 })
 ```
 
-3. **Report completion:**
+3. **Report completion with REAL results:**
+
+**IMPORTANT - Dynamic Results Reporting:**
+Report ACTUAL changes made, not examples. Use this template:
 
 ```markdown
-Applied 6 safe fixes:
-✓ api/users.py:45 (SQL parameterization)
-✓ api/posts.py:23 (SQL parameterization)
-✓ config.py:12 + .env.example (externalized API_KEY)
-✓ auth.py:5 (externalized PASSWORD)
-✓ api/register.py:30 (added input validation)
-✓ api/chat.py:67 (AI security fix)
+Applied [ACTUAL_COUNT] safe fixes:
+[For each fix actually applied:]
+✓ <real-file>:<real-line> ([specific change made])
 
 Verification:
-✓ grep -r "execute.*%" . → 0 results (no more string interpolation)
-✓ grep -r "API_KEY.*=" config.py → 0 results (no hardcoded key)
+[For each verification run:]
+✓ [actual verification command] → [actual result]
 ✓ All changes follow U_CHANGE_VERIFICATION protocol
 ```
 
@@ -432,34 +369,37 @@ Task({
 
 ### Step 5: Impact Summary
 
+**IMPORTANT - Dynamic Impact Reporting:**
+Generate summary from ACTUAL changes made. Use this template with REAL metrics:
+
 ```markdown
 Fix Summary:
 
 Applied:
-✓ 6 safe fixes (auto-applied)
-✓ 2 risky fixes (user approved)
-✗ 1 risky fix (user skipped)
+✓ [ACTUAL_SAFE_COUNT] safe fixes (auto-applied)
+✓ [ACTUAL_RISKY_COUNT] risky fixes (user approved)
+✗ [SKIPPED_COUNT] fixes (user skipped)
 
 Results:
-- Security score: 45 → 85 (+40 points)
-- Vulnerabilities: 20 → 3 (85% reduction)
-- Files modified: 15
-- Lines changed: +234 / -89
+- Security score: [BEFORE_SCORE] → [AFTER_SCORE] (+[DELTA] points)
+- Vulnerabilities: [BEFORE_COUNT] → [AFTER_COUNT] ([PERCENTAGE]% reduction)
+- Files modified: [ACTUAL_FILE_COUNT]
+- Lines changed: +[ADDED] / -[REMOVED]
 
 Pain Point Impact:
-✓ Addresses Pain #1 (51% security concern)
-✓ Risk reduced: 85%
-✓ Compliance improved: 40 points
+✓ Addresses Pain #[X] ([PAIN_DESCRIPTION])
+✓ Risk reduced: [ACTUAL_PERCENTAGE]%
+✓ [Other actual improvements]
 
 Remaining Issues:
-- 3 vulnerabilities require manual review
-- 1 risky fix skipped (CSRF protection)
+- [List REAL remaining issues]
+- [List REAL skipped fixes]
 
 Next Steps:
-1. Test changes: pytest tests/
+1. Test changes: [actual test command for this project]
 2. Review git diff before committing
 3. Address remaining issues manually
-4. Run /cco-audit --security to verify
+4. Run /cco-audit --[category] to verify
 
 Recommended:
 /cco-commit (generates semantic commit messages)
@@ -485,20 +425,20 @@ Recommended:
 Task({
   subagent_type: "general-purpose",
   model: "sonnet",
-  description: "Fix SQL injection in api/users.py",
-  prompt: "Parameterize SQL query at api/users.py:45..."
+  description: "Fix [issue type] in <file1>",
+  prompt: "[Fix description] at <file1>:<line>..."
 })
 Task({
   subagent_type: "general-purpose",
   model: "sonnet",
-  description: "Fix SQL injection in api/posts.py",
-  prompt: "Parameterize SQL query at api/posts.py:23..."
+  description: "Fix [issue type] in <file2>",
+  prompt: "[Fix description] at <file2>:<line>..."
 })
 Task({
   subagent_type: "general-purpose",
   model: "sonnet",
-  description: "Externalize secrets from config.py",
-  prompt: "Move API_KEY and PASSWORD to environment variables..."
+  description: "Fix [issue type] in <file3>",
+  prompt: "[Fix description] at <file3>:<line>..."
 })
 
 # All run in parallel since they modify different files

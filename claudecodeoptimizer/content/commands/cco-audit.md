@@ -268,11 +268,26 @@ Comprehensive Weekly:
 
 **If user selected "Category Level", analyze project first** to get real numbers, then **use AskUserQuestion** to present multiselect UI:
 
-**IMPORTANT:** The numbers in option descriptions below are EXAMPLES. You MUST:
-- Run Glob/Grep to analyze the actual project
-- Count real issues (e.g., actual number of untested functions, actual CVEs, etc.)
-- Replace example numbers with REAL project-specific data
-- Calculate real percentages based on actual findings
+**IMPORTANT - Dynamic Generation Protocol:**
+You MUST analyze the actual project BEFORE presenting options:
+1. Run Glob/Grep to detect tech stack and components
+2. Count REAL issues using audit skills (e.g., grep for SQL injection patterns, count untested functions, scan for CVEs)
+3. Generate descriptions with ACTUAL project data (not example numbers)
+4. Replace ALL placeholder metrics with REAL findings from your analysis
+5. Skip categories not applicable to this project
+
+**Example of dynamic generation (DO NOT use verbatim):**
+```python
+# BEFORE showing AskUserQuestion, analyze:
+security_issues = grep_for_sql_injection() + check_secrets() + scan_dependencies()
+tech_debt_items = count_dead_code() + count_todos() + measure_complexity()
+
+# THEN generate options with REAL data:
+{
+  label: "Security",
+  description: f"🔴 CRITICAL - Found {security_issues} issues: {sql_count} SQL injection risks, {secret_count} hardcoded secrets, {cve_count} CVEs"
+}
+```
 
 ```python
 AskUserQuestion({
@@ -364,282 +379,234 @@ AskUserQuestion({
 
 ### Level 3: Granular Level (Specific Checks)
 
-**If user selected "Granular Level", present individual checks with multiselect:**
+**If user selected "Granular Level", use hierarchical selection to stay within 4-option limit:**
 
-**IMPORTANT - Sabit Liste Yaklaşımı:**
-1. **Aşağıdaki liste SABİTTİR** - Her projede aynı 92 check gösterilir
-2. **Proje analizi yapılır** - Tech stack detect edilir (Python, Flask, PostgreSQL, React, etc.)
-3. **Smart filtering uygulanır:**
-   - ✅ APPLICABLE: Projeye uygun checkler (yeşil, enabled)
-   - ⚪ NOT APPLICABLE: Projeye uygun olmayan checkler (grayed out, disabled veya gizli)
-4. **Kullanıcı seçer:**
-   - "Show All 92 Checks" → Hepsini göster (applicable + non-applicable)
-   - "Show Only Applicable" → Sadece uygun olanları göster (default)
+**IMPORTANT - Hierarchical Approach (Required for 4-Option Limit):**
+Since AskUserQuestion has a **maximum of 4 options per question**, the 92 granular checks MUST be presented in 2 stages:
 
-**Tech Stack Detection - Analiz et:**
+**Stage 1:** Select check CATEGORIES (9 categories → 3 questions with 3-4 options each)
+**Stage 2:** For each selected category, select individual checks (max 15 per category → paginated if needed)
+
+**Tech Stack Detection (Required First):**
 ```python
-# Proje analizi
+# Analyze project to determine applicable checks
 detected_tech = {
     "languages": [],      # python, javascript, java, go, etc.
     "frameworks": [],     # flask, fastapi, django, react, vue, etc.
     "databases": [],      # postgresql, mysql, mongodb, redis, etc.
     "platforms": [],      # web, mobile, api, desktop, etc.
-    "tools": []          # docker, kubernetes, ci/cd, etc.
+    "tools": []           # docker, kubernetes, ci/cd, etc.
 }
 
-# Glob/Grep ile tespit et
-- Glob("**/*.py") → Python detected
-- Glob("**/requirements.txt") → Check for flask, django, fastapi
-- Glob("**/package.json") → JavaScript detected, check dependencies
-- Glob("**/Dockerfile") → Docker detected
-- Glob("**/*.sql") → SQL usage detected
-- Glob("**/templates/**") → Web templates detected
-- etc.
+# Detection using Glob/Grep
+Glob("**/*.py") → Add "python" to languages
+Glob("**/requirements.txt") → Check for flask, django, fastapi
+Glob("**/package.json") → Add "javascript", check dependencies
+Glob("**/Dockerfile") → Add "docker" to tools
+Glob("**/*.sql") → Add "sql" to databases
+Grep("SELECT|INSERT|UPDATE", output_mode="files_with_matches") → SQL usage
 ```
 
 ---
 
 ## 📋 Complete Granular Audit Checklist (92 Checks)
 
-**This is the MASTER LIST - same for all projects.**
+**This is the MASTER LIST organized into 9 categories for hierarchical selection.**
+
+### Stage 1: Select Check Categories
 
 ```python
-# BEFORE showing options, DETECT tech stack
+# FIRST detect tech stack
 detected_tech = analyze_project()
-# Example result: {"languages": ["python"], "frameworks": ["flask"], "databases": ["postgresql"], "platforms": ["web"], "tools": ["docker"]}
+applicable_counts = count_applicable_checks_per_category(detected_tech)
 
-# THEN show options with applicable markers
+# THEN present CATEGORIES in groups of 3-4 (respecting 4-option limit)
+# Question 1: Critical categories
 AskUserQuestion({
   questions: [{
-    question: "Select specific checks to run (showing X applicable, Y not applicable):",
-    header: "Granular Audit",
+    question: "Which check categories do you want? (Page 1/3 - Critical Impact):",
+    header: "Categories",
     multiSelect: true,
     options: [
-      # ========================================
-      # SECURITY CHECKS (15 checks)
-      # ========================================
       {
-        label: "SQL Injection check",
-        description: "(Security, 1 min) Check for string concatenation in SQL | ✅ APPLICABLE - SQL detected | 🔴 CRITICAL"
-        # Applicable if: databases detected OR sql files found OR ORM imports found
+        label: "Security Checks",
+        description: f"🔴 CRITICAL - {applicable_counts['security']}/15 applicable checks (SQL injection, XSS, CSRF, secrets, CVEs)"
       },
       {
-        label: "XSS vulnerability check",
-        description: "(Security, 1 min) Check for unescaped template variables | ✅ APPLICABLE - Templates detected | 🔴 CRITICAL"
-        # Applicable if: templates/** found OR render_template/render used
+        label: "Database Checks",
+        description: f"🔴 CRITICAL - {applicable_counts['database']}/10 applicable checks (N+1, indexes, slow queries)"
       },
       {
-        label: "CSRF protection check",
-        description: "(Security, 1 min) Verify CSRF tokens on forms | ✅ APPLICABLE - Forms detected | 🔴 CRITICAL"
-        # Applicable if: <form> tags found OR web framework detected
+        label: "Test Checks",
+        description: f"🔴 CRITICAL - {applicable_counts['tests']}/12 applicable checks (coverage, isolation, pyramid)"
       },
       {
-        label: "Hardcoded secrets check",
-        description: "(Security, 1 min) Find API keys, passwords, tokens in code | ✅ APPLICABLE - Always applicable | 🔴 CRITICAL"
-        # Applicable if: ALWAYS (all projects)
-      },
-      {
-        label: "Authentication check",
-        description: "(Security, 2 min) Verify authentication on protected endpoints | ✅ APPLICABLE - API/Web detected | 🔴 CRITICAL"
-        # Applicable if: API endpoints found OR web app detected
-      },
-      {
-        label: "Authorization check",
-        description: "(Security, 2 min) Verify authorization/permissions | ✅ APPLICABLE - API/Web detected | 🔴 CRITICAL"
-        # Applicable if: API endpoints found OR web app detected
-      },
-      {
-        label: "Dependency CVE scan",
-        description: "(Security, 2 min) Check all dependencies for known vulnerabilities | ✅ APPLICABLE - Dependencies detected | 🔴 CRITICAL"
-        # Applicable if: requirements.txt OR package.json OR go.mod found
-      },
-      {
-        label: "AI prompt injection check",
-        description: "(Security, 1 min) Check for AI prompt injection risks | ⚪ NOT APPLICABLE - No AI usage detected | 🔴 CRITICAL"
-        # Applicable if: openai/anthropic/langchain imports found
-      },
-      {
-        label: "SSRF vulnerability check",
-        description: "(Security, 1 min) Check for Server-Side Request Forgery | ✅ APPLICABLE - HTTP requests detected | 🔴 CRITICAL"
-        # Applicable if: requests/http/fetch usage found
-      },
-      {
-        label: "XXE vulnerability check",
-        description: "(Security, 1 min) Check for XML External Entity attacks | ⚪ NOT APPLICABLE - No XML parsing detected | 🔴 CRITICAL"
-        # Applicable if: XML parsing libraries found
-      },
-      {
-        label: "Path traversal check",
-        description: "(Security, 1 min) Check for directory traversal vulnerabilities | ✅ APPLICABLE - File operations detected | 🔴 CRITICAL"
-        # Applicable if: file operations (open, read, write) found
-      },
-      {
-        label: "Command injection check",
-        description: "(Security, 1 min) Check for OS command injection | ✅ APPLICABLE - Shell commands detected | 🔴 CRITICAL"
-        # Applicable if: subprocess/os.system/exec usage found
-      },
-      {
-        label: "Insecure deserialization check",
-        description: "(Security, 1 min) Check for unsafe pickle/yaml.load usage | ✅ APPLICABLE - Serialization detected | 🔴 CRITICAL"
-        # Applicable if: pickle/yaml/json deserialization found
-      },
-      {
-        label: "Weak cryptography check",
-        description: "(Security, 1 min) Check for weak crypto (MD5, SHA1, DES) | ✅ APPLICABLE - Crypto usage detected | 🔴 CRITICAL"
-        # Applicable if: hashlib/crypto imports found
-      },
-      {
-        label: "Security headers check",
-        description: "(Security, 1 min) Check for missing security headers (CSP, HSTS, etc.) | ✅ APPLICABLE - Web app detected | 🟡 HIGH"
-        # Applicable if: web framework detected
-      },
+        label: "More categories...",
+        description: "Continue to page 2 for more categories"
+      }
+    ]
+  }]
+})
 
-      # ========================================
-      # DATABASE CHECKS (10 checks)
-      # ========================================
+# Question 2: High priority categories
+AskUserQuestion({
+  questions: [{
+    question: "Which check categories do you want? (Page 2/3 - High Priority):",
+    header: "Categories",
+    multiSelect: true,
+    options: [
       {
-        label: "N+1 query detection",
-        description: "(Database, 2 min) Find N+1 patterns (loops with queries) | ✅ APPLICABLE - ORM detected | 🔴 CRITICAL"
-        # Applicable if: ORM imports (SQLAlchemy, Django ORM, etc.) found
+        label: "Code Quality Checks",
+        description: f"🟡 HIGH - {applicable_counts['quality']}/15 applicable checks (dead code, complexity, linting)"
       },
       {
-        label: "Missing indexes check",
-        description: "(Database, 2 min) Analyze slow queries for missing indexes | ✅ APPLICABLE - SQL detected | 🔴 CRITICAL"
-        # Applicable if: database detected
+        label: "Performance Checks",
+        description: f"🟡 HIGH - {applicable_counts['performance']}/10 applicable checks (caching, algorithms, memory)"
       },
       {
-        label: "Slow queries check",
-        description: "(Database, 2 min) Find queries taking >100ms | ✅ APPLICABLE - SQL detected | 🔴 CRITICAL"
-        # Applicable if: database detected
+        label: "CI/CD Checks",
+        description: f"🟡 HIGH - {applicable_counts['cicd']}/8 applicable checks (pipeline, gates, automation)"
       },
       {
-        label: "Connection pooling check",
-        description: "(Database, 1 min) Verify database connection pooling | ✅ APPLICABLE - Database detected | 🟡 HIGH"
-        # Applicable if: database connection code found
-      },
-      {
-        label: "Query optimization check",
-        description: "(Database, 2 min) Find inefficient queries (SELECT *, unnecessary JOINs) | ✅ APPLICABLE - SQL detected | 🟡 HIGH"
-        # Applicable if: SQL queries found
-      },
-      {
-        label: "Transaction isolation check",
-        description: "(Database, 1 min) Verify transaction isolation levels | ✅ APPLICABLE - Transactions detected | 🟡 HIGH"
-        # Applicable if: transaction usage found
-      },
-      {
-        label: "Deadlock detection",
-        description: "(Database, 2 min) Check for potential deadlock scenarios | ✅ APPLICABLE - SQL detected | 🟢 MEDIUM"
-        # Applicable if: database detected
-      },
-      {
-        label: "Migration consistency check",
-        description: "(Database, 1 min) Verify migration files are consistent | ✅ APPLICABLE - Migrations detected | 🟡 HIGH"
-        # Applicable if: migrations/ directory found
-      },
-      {
-        label: "Raw SQL usage check",
-        description: "(Database, 1 min) Find raw SQL instead of ORM (security risk) | ✅ APPLICABLE - SQL detected | 🟡 HIGH"
-        # Applicable if: SQL queries found
-      },
-      {
-        label: "Database credentials check",
-        description: "(Database, 1 min) Check for hardcoded database credentials | ✅ APPLICABLE - Database detected | 🔴 CRITICAL"
-        # Applicable if: database connection code found
-      },
+        label: "More categories...",
+        description: "Continue to page 3 for more categories"
+      }
+    ]
+  }]
+})
 
-      # ========================================
-      # TEST CHECKS (12 checks)
-      # ========================================
+# Question 3: Medium priority + All option
+AskUserQuestion({
+  questions: [{
+    question: "Which check categories do you want? (Page 3/3 - Medium Priority):",
+    header: "Categories",
+    multiSelect: true,
+    options: [
       {
-        label: "Test coverage analysis",
-        description: "(Tests, 2 min) Calculate coverage %, find gaps | ✅ APPLICABLE - Tests detected | 🔴 CRITICAL"
-        # Applicable if: tests/ directory found
+        label: "Documentation Checks",
+        description: f"🟢 MEDIUM - {applicable_counts['docs']}/8 applicable checks (docstrings, API docs, README)"
       },
       {
-        label: "Untested functions detection",
-        description: "(Tests, 2 min) List all functions without tests | ✅ APPLICABLE - Always applicable | 🔴 CRITICAL"
-        # Applicable if: ALWAYS
+        label: "Container Checks",
+        description: f"🟢 MEDIUM - {applicable_counts['containers']}/6 applicable checks (Dockerfile, non-root, size)"
       },
       {
-        label: "Test isolation check",
-        description: "(Tests, 1 min) Find tests with external dependencies | ✅ APPLICABLE - Tests detected | 🟡 HIGH"
-        # Applicable if: tests found
+        label: "Tech Debt Checks",
+        description: f"🟢 MEDIUM - {applicable_counts['debt']}/8 applicable checks (deprecated APIs, coupling)"
       },
       {
-        label: "Test pyramid validation",
-        description: "(Tests, 1 min) Verify unit >> integration >> e2e ratio | ✅ APPLICABLE - Tests detected | 🟡 HIGH"
-        # Applicable if: tests found
-      },
-      {
-        label: "Edge case coverage check",
-        description: "(Tests, 1 min) Check for error case testing | ✅ APPLICABLE - Tests detected | 🟡 HIGH"
-        # Applicable if: tests found
-      },
-      {
-        label: "Flaky tests detection",
-        description: "(Tests, 2 min) Find tests that fail intermittently | ✅ APPLICABLE - Tests detected | 🟡 HIGH"
-        # Applicable if: tests found
-      },
-      {
-        label: "Test naming check",
-        description: "(Tests, 1 min) Verify test names are descriptive | ✅ APPLICABLE - Tests detected | 🟢 MEDIUM"
-        # Applicable if: tests found
-      },
-      {
-        label: "Assertion quality check",
-        description: "(Tests, 1 min) Check for weak assertions (assertTrue only) | ✅ APPLICABLE - Tests detected | 🟡 HIGH"
-        # Applicable if: tests found
-      },
-      {
-        label: "Mock overuse check",
-        description: "(Tests, 1 min) Find tests with excessive mocking | ✅ APPLICABLE - Tests detected | 🟢 MEDIUM"
-        # Applicable if: tests found
-      },
-      {
-        label: "Test data management check",
-        description: "(Tests, 1 min) Verify test data setup/teardown | ✅ APPLICABLE - Tests detected | 🟡 HIGH"
-        # Applicable if: tests found
-      },
-      {
-        label: "Integration test coverage",
-        description: "(Tests, 2 min) Check integration test coverage | ✅ APPLICABLE - API detected | 🟡 HIGH"
-        # Applicable if: API endpoints found
-      },
-      {
-        label: "E2E test coverage",
-        description: "(Tests, 2 min) Check end-to-end test coverage | ✅ APPLICABLE - Web app detected | 🟢 MEDIUM"
-        # Applicable if: web frontend detected
-      },
+        label: "All 92 Granular Checks",
+        description: "✅ Run ALL checks across all 9 categories"
+      }
+    ]
+  }]
+})
+```
 
-      # ========================================
-      # CODE QUALITY CHECKS (15 checks)
-      # ========================================
-      {
-        label: "Dead code detection",
-        description: "(Code Quality, 2 min) Find unused functions, imports | ✅ APPLICABLE - Always applicable | 🟡 HIGH"
-        # Applicable if: ALWAYS
-      },
-      {
-        label: "Complexity analysis",
-        description: "(Code Quality, 2 min) Find functions with cyclomatic complexity >10 | ✅ APPLICABLE - Always applicable | 🟡 HIGH"
-        # Applicable if: ALWAYS
-      },
-      {
-        label: "Code duplication check",
-        description: "(Code Quality, 2 min) Find duplicate code blocks (copy-paste) | ✅ APPLICABLE - Always applicable | 🟢 MEDIUM"
-        # Applicable if: ALWAYS
-      },
-      {
-        label: "Type errors check",
-        description: "(Code Quality, 1 min) Run type checker (mypy, TypeScript) | ✅ APPLICABLE - Type hints detected | 🟡 HIGH"
-        # Applicable if: type hints found OR TypeScript detected
-      },
-      {
-        label: "Linting issues check",
-        description: "(Code Quality, 1 min) Run linter (pylint, eslint, etc.) | ✅ APPLICABLE - Always applicable | 🟢 MEDIUM"
-        # Applicable if: ALWAYS
-      },
+### Stage 2: Select Individual Checks per Category
+
+**For each selected category, present individual checks (paginated if >4):**
+
+```python
+# Example: If user selected "Security Checks"
+# Show applicable checks from that category
+security_checks = get_applicable_checks("security", detected_tech)
+
+# If <= 4 checks, show in one question
+# If > 4 checks, paginate (3 checks + "More...")
+AskUserQuestion({
+  questions: [{
+    question: f"Which Security checks to run? ({len(security_checks)} applicable):",
+    header: "Security",
+    multiSelect: true,
+    options: generate_paginated_options(security_checks)
+    # Options generated dynamically with REAL applicability from tech stack detection
+  }]
+})
+```
+
+---
+
+## 📋 Check Reference by Category (92 Total)
+
+**Security (15 checks):** SQL injection, XSS, CSRF, hardcoded secrets, authentication, authorization, CVE scan, AI prompt injection, SSRF, XXE, path traversal, command injection, insecure deserialization, weak crypto, security headers
+
+**Database (10 checks):** N+1 queries, missing indexes, slow queries, connection pooling, query optimization, transaction isolation, deadlock detection, migration consistency, raw SQL usage, database credentials
+
+**Tests (12 checks):** Coverage analysis, untested functions, test isolation, test pyramid, edge cases, flaky tests, test naming, assertion quality, mock overuse, test data management, integration coverage, e2e coverage
+
+**Code Quality (15 checks):** Dead code, complexity, duplication, type errors, linting, code smells, long functions, long files, deep nesting, magic numbers, TODO comments, commented code, import organization, naming conventions, error handling
+
+**Performance (10 checks):** Slow queries, large bundles, no caching, circuit breakers, memory leaks, inefficient algorithms, large loops, file I/O, network calls in loops, lazy loading
+
+**Documentation (8 checks):** Missing docstrings, API documentation, README completeness, documentation drift, code comments, examples, ADRs, runbooks
+
+**CI/CD (8 checks):** Pipeline existence, quality gates, secret management, build optimization, test automation, deployment automation, rollback strategy, environment parity
+
+**Containers (6 checks):** Dockerfile best practices, multi-stage builds, non-root user, image size, base image vulnerabilities, layer optimization
+
+**Tech Debt (8 checks):** Deprecated APIs, legacy code, hard dependencies, tight coupling, god objects, feature envy, data clumps, shotgun surgery
+
+---
+
+## 📝 Applicability Detection Rules
+
+**Dynamic detection - mark checks as applicable based on project analysis:**
+
+```python
+# Security checks applicability
+"SQL Injection" → applicable if: databases detected OR Grep("execute|query") finds results
+"XSS" → applicable if: Glob("**/templates/**") OR Grep("render_template|innerHTML")
+"CSRF" → applicable if: Grep("<form") OR web framework detected
+"Hardcoded secrets" → applicable if: ALWAYS (all projects)
+"AI prompt injection" → applicable if: Grep("openai|anthropic|langchain")
+
+# Database checks applicability
+"N+1 queries" → applicable if: ORM imports detected (SQLAlchemy, Django ORM)
+"Missing indexes" → applicable if: database detected
+"Connection pooling" → applicable if: database connection code found
+
+# Test checks applicability
+"Test coverage" → applicable if: tests/ directory found
+"Untested functions" → applicable if: ALWAYS
+
+# And so on for all 92 checks...
+```
+
+---
+
+## 📝 Implementation Instructions for Level 3
+
+**CRITICAL - Hierarchical Selection Protocol:**
+
+1. **Tech Stack Detection (MUST DO FIRST):**
+   - Use Glob/Grep to detect languages, frameworks, databases, tools
+   - Count applicable checks per category based on detection
+
+2. **Stage 1 - Category Selection:**
+   - Present 9 categories across 3 questions (3-4 options each)
+   - Include "All 92 Granular Checks" option on last page
+
+3. **Stage 2 - Individual Check Selection:**
+   - For each selected category, present individual checks
+   - Paginate if category has >4 applicable checks (3 checks + "More...")
+   - Generate descriptions dynamically with REAL applicability data
+
+4. **Execution:**
+   - Run only selected checks
+   - If "All 92 Granular Checks" selected, run everything
+   - If category group selected, run all checks in that category
+
+**Example: User selects "Security Checks" category**
+→ Show 15 security checks paginated (4 pages × 3-4 options)
+→ Each option shows real applicability from project analysis
+→ User selects specific checks or "All Security Checks"
+
+---
+
+### Common Step for All Levels
+
+2. **Present analysis plan and confirm** using AskUserQuestion:
       {
         label: "Code smells detection",
         description: "(Code Quality, 2 min) Find long parameter lists, god classes, etc. | ✅ APPLICABLE - Always applicable | 🟢 MEDIUM"
@@ -1112,34 +1079,38 @@ Task({
 ```
 
 5. **Present results** with pain-point impact:
+
+**IMPORTANT - Dynamic Results Generation:**
+Generate results from ACTUAL audit findings. Use this template structure but fill with REAL data:
+
 ```markdown
-Security Audit Results:
+[Category] Audit Results:
 
-🔴 Critical (8):
-1. SQL injection in api/users.py:45
-   Skill: cco-skill-security-owasp
-   Risk: Unauthorized data access
-   Fix: Use parameterized query
+🔴 Critical ([REAL_COUNT]):
+1. [REAL_ISSUE_TYPE] in <file>:<line>
+   Skill: [ACTUAL_SKILL_USED]
+   Risk: [REAL_RISK_DESCRIPTION]
+   Fix: [SPECIFIC_FIX_FOR_THIS_CODE]
 
-2. AI prompt injection in api/chat.py:67
-   Skill: cco-skill-ai-security-promptinjection
-   Risk: User control of model behavior
-   Fix: Add input sanitization + output validation
+[... list ALL critical issues found ...]
 
-[... more issues ...]
+🟡 High Priority ([REAL_COUNT]):
+- [REAL_ISSUE_1] in <file>:<line>
+- [REAL_ISSUE_2] in <file>:<line>
+[... list ALL high priority issues ...]
 
-🟡 High Priority (12):
-- No CSRF tokens on 5 forms
-- Missing input validation on 8 endpoints
-- Weak password hashing (MD5 detected)
+🟢 Medium Priority ([REAL_COUNT]):
+[... list ALL medium priority issues ...]
 
 Impact:
-- Addresses Pain #1 (51% security concern)
-- Vulnerabilities found: 20 total
-- Risk level: CRITICAL
+- Addresses Pain #[X] ([PAIN_DESCRIPTION])
+- Vulnerabilities found: [ACTUAL_TOTAL] total
+- Risk level: [CALCULATED_RISK_LEVEL]
 
-➜ Next: /cco-fix --security (auto-fixes 15 issues)
+➜ Next: /cco-fix --[category] (auto-fixes [ACTUAL_AUTO_FIXABLE_COUNT] issues)
 ```
+
+**Never use placeholder examples in actual results - only show what was really found.**
 
 6. **Recommend next action** with specific command
 

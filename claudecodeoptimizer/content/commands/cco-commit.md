@@ -44,24 +44,16 @@ Lines added: 234
 Lines removed: 89
 
 Detected changes:
-- Security fix (api/users.py, api/posts.py)
-- Feature addition (api/chat.py)
-- Test addition (tests/test_api.py, tests/test_chat.py)
-- Documentation (README.md, openapi.yaml)
+- [CHANGE_TYPE_1] ([ACTUAL_FILES])
+- [CHANGE_TYPE_2] ([ACTUAL_FILES])
+- [CHANGE_TYPE_3] ([ACTUAL_FILES])
 
-Recommendation: Split into 3 atomic commits
+Recommendation: Split into [N] atomic commits
 
-Commit 1: Security Fix
-Files: api/users.py, api/posts.py
-Type: fix(security)
-
-Commit 2: Feature Addition
-Files: api/chat.py, tests/test_chat.py
-Type: feat(api)
-
-Commit 3: Documentation
-Files: README.md, openapi.yaml, tests/test_api.py (doc updates)
-Type: docs(api)
+[For each detected change type:]
+Commit [N]: [CHANGE_TYPE]
+Files: [ACTUAL_FILES from analysis]
+Type: [type]([scope])
 
 Proceed with split? (yes/no/customize)
 ```
@@ -79,70 +71,64 @@ BREAKING CHANGE: <description if applicable>
 Refs: #<issue-number>
 ```
 
-**Example:**
+**Example template (generate from ACTUAL changes):**
 ```markdown
-Commit 1 Message:
+Commit [N] Message:
 
-fix(security): parameterize SQL queries to prevent injection
+[type]([scope]): [summary from actual changes]
 
-- Replace string concatenation with parameterized queries
-- Affects endpoints: /users/:id, /posts/:id
-- Addresses 2 critical SQL injection vulnerabilities (OWASP A03)
-- Added input validation for user-supplied IDs
+- [Specific change 1 from analysis]
+- [Specific change 2 from analysis]
+- [Impact description based on actual changes]
 
-Skill used: cco-skill-security-owasp-xss-sqli-csrf
+Skill used: [skill used if applicable]
 
-BREAKING CHANGE: None
-Refs: #security-audit-2025
+BREAKING CHANGE: [None or description]
+Refs: #[issue-number if applicable]
 ```
 
 ### Step 4: Create Commits
 
 ```bash
-# Stage files for commit 1
+# Stage files for commit [N]
 git reset
-git add api/users.py api/posts.py
+git add [ACTUAL_FILES for this commit]
 
-# Create commit 1
+# Create commit [N]
 git commit -m "$(cat <<'EOF'
-fix(security): parameterize SQL queries to prevent injection
+[type]([scope]): [summary from actual changes]
 
-- Replace string concatenation with parameterized queries
-- Affects endpoints: /users/:id, /posts/:id
-- Addresses 2 critical SQL injection vulnerabilities (OWASP A03)
-- Added input validation for user-supplied IDs
+- [Specific change 1]
+- [Specific change 2]
+- [Impact description]
 
-Refs: #security-audit-2025
+Refs: #[issue-number if applicable]
 EOF
 )"
 
-# Repeat for commits 2 and 3
+# Repeat for each atomic commit
 ```
 
 ### Step 5: Summary
 
+**IMPORTANT - Dynamic Summary Generation:**
+Generate summary from ACTUAL commits created. Use this template:
+
 ```markdown
-Created 3 atomic commits:
+Created [N] atomic commits:
 
-✓ fix(security): parameterize SQL queries to prevent injection
-  Files: api/users.py, api/posts.py
-  Lines: +45 / -23
-
-✓ feat(api): add AI chat endpoint with security validation
-  Files: api/chat.py, tests/test_chat.py
-  Lines: +156 / -0
-
-✓ docs(api): document chat endpoint usage
-  Files: README.md, openapi.yaml, tests/test_api.py
-  Lines: +33 / -66
+[For each commit created:]
+✓ [type]([scope]): [summary]
+  Files: [ACTUAL_FILES]
+  Lines: +[ADDED] / -[REMOVED]
 
 Impact:
-- Git workflow score: 68 → 85
+- Git workflow score: [BEFORE] → [AFTER]
 - Addresses Pain #5 (better git practices)
 - Benefits: Easier review, better history, simpler rollbacks
 
 Next:
-- Push: git push origin feature-branch
+- Push: git push origin [ACTUAL_BRANCH]
 - Create PR: gh pr create
 ```
 

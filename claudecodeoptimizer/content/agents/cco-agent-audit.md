@@ -77,21 +77,17 @@ recommendations:
 ```markdown
 # XSS Audit - 7 issues, HIGH risk, 6h fix time
 
-## Critical (3)
-1. **Unescaped input** - `templates/user_profile.html:45`
-   - Vulnerable: `{{ user.bio }}`
-   - Fix: `{{ user.bio | escape }}`
-   - Cmd: `/cco-fix-security-violations --focus=xss`
-
-2. **DOM XSS** - `static/js/search.js:78`
-   - Vulnerable: `innerHTML = params.get('q')`
-   - Fix: `textContent = params.get('q')` or DOMPurify
-   - Cmd: `/cco-fix-security-violations`
+## Critical ([COUNT])
+[For each critical issue found:]
+[N]. **[Issue type]** - `<file>:<line>`
+   - Vulnerable: [actual vulnerable code]
+   - Fix: [recommended fix]
+   - Cmd: `/cco-fix-security-violations --focus=[type]`
 
 ## Remediation
-P0 (2h): Fix critical XSS → `/cco-fix-security-violations --severity=critical`
-P1 (4h): Add CSP headers, fix remaining → `/cco-fix-security-violations`
-Verify: Re-run `/cco-audit-security-xss` (expect 0 issues, +10 score)
+P0 ([TIME]): Fix critical issues → `/cco-fix-security-violations --severity=critical`
+P1 ([TIME]): Fix remaining → `/cco-fix-security-violations`
+Verify: Re-run audit (expect 0 issues, +[SCORE] score)
 ```
 
 **Tools**: Grep, Read, Glob, Bash
