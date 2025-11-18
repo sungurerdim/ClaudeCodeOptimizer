@@ -157,208 +157,92 @@ AskUserQuestion({
 
 2. **Analyze what's missing first**, then **present specific generation steps using AskUserQuestion**:
 
-**IMPORTANT:** The steps below are EXAMPLES. You MUST:
-- Analyze actual project to detect missing components
-- List EACH specific file/component to generate as a separate option
-- Count real gaps (e.g., actual untested functions, actual endpoints without docs)
-- Include actual file paths and function names
-- Replace ALL example steps with REAL project-specific generation tasks
-- Skip options for components that already exist
+**IMPORTANT - Dynamic Generation Options Protocol:**
+You MUST analyze the project BEFORE presenting options:
+1. Detect what EXISTS (tests/, openapi.yaml, Dockerfile, etc.)
+2. Detect what's MISSING (compare to ideal project structure)
+3. For missing components, count specifics:
+   - How many untested functions? (grep for function definitions, check for tests)
+   - How many undocumented endpoints? (find endpoints, check for OpenAPI entries)
+   - Which files need generation? (list actual file paths)
+4. Generate options with REAL counts and ACTUAL file/function names
+5. Skip options for components that already exist
+
+**Example analysis template (DO NOT use verbatim):**
+```python
+# Analysis phase:
+untested_functions = find_functions_without_tests()
+undocumented_endpoints = find_endpoints_without_docs()
+missing_configs = check_for_cicd_dockerfile_etc()
+
+# Then generate options:
+for func in untested_functions:
+    option = {
+        label: f"Unit tests for {func.file} ({len(func.functions)} functions)",
+        description: f"(Tests, {func.estimate}) {', '.join(func.functions[:3])}... | 🔴 CRITICAL"
+    }
+```
 
 ```python
+# Generate options dynamically from REAL analysis
+generation_options = []
+
+# Tests - Generate for each file with untested functions
+for file_info in untested_files:
+    generation_options.append({
+        label: f"Unit tests for {file_info.file} ({file_info.function_count} functions)",
+        description: f"(Tests, {file_info.time_estimate}) {', '.join(file_info.functions[:5])}{'...' if len(file_info.functions) > 5 else ''} | 🔴 CRITICAL"
+    })
+
+# Integration tests - Generate for each API module
+for endpoint_group in undocumented_endpoint_groups:
+    generation_options.append({
+        label: f"Integration tests for {endpoint_group.path} endpoints",
+        description: f"(Tests, {endpoint_group.time_estimate}) {endpoint_group.test_summary} | 🔴 CRITICAL"
+    })
+
+# Continue with other categories...
+# Contract tests, OpenAPI, CI/CD, monitoring, etc.
+# Each generated from REAL project analysis
+
+# Example for hardcoded options that were removed:
+# {
+#   label: "Unit tests for api/users.py (5 functions)",
+#   description: "(Tests, 3 min) test_get_user, test_create_user, test_update_user, test_delete_user, test_list_users | 🔴 CRITICAL"
+# },
+# Add group options at the end
+generation_options.extend([
+    {
+        label: "All Unit Tests",
+        description: f"✅ Generate unit tests for all {len(untested_files)} files with untested functions"
+    },
+    {
+        label: "All Integration Tests",
+        description: f"✅ Generate integration tests for all {len(endpoint_groups)} API endpoint groups"
+    },
+    {
+        label: "All Test Components",
+        description: "✅ Generate unit tests + integration tests + fixtures + conftest | Pain #4"
+    },
+    # ... other group options based on what's actually missing
+    {
+        label: "All Components",
+        description: f"✅ Generate ALL {len(generation_options)} components above (comprehensive project setup)"
+    }
+])
+
 AskUserQuestion({
   questions: [{
     question: "What should I generate? Select specific files/components you need:",
     header: "Generate",
     multiSelect: true,
-    options: [
-      # Tests - Each specific test file
-      {
-        label: "Unit tests for api/users.py (5 functions)",
-        description: "(Tests, 3 min) test_get_user, test_create_user, test_update_user, test_delete_user, test_list_users | 🔴 CRITICAL"
-      },
-      {
-        label: "Unit tests for services/auth.py (8 functions)",
-        description: "(Tests, 4 min) test_hash_password, test_verify_password, test_create_token, test_validate_token, etc. | 🔴 CRITICAL"
-      },
-      {
-        label: "Integration tests for /api/users endpoints",
-        description: "(Tests, 3 min) test_user_crud_flow, test_user_auth, test_user_validation | 🔴 CRITICAL"
-      },
-      {
-        label: "Integration tests for /api/posts endpoints",
-        description: "(Tests, 3 min) test_post_crud_flow, test_post_ownership, test_post_pagination | 🔴 CRITICAL"
-      },
-      {
-        label: "Test fixtures for User model",
-        description: "(Tests, 2 min) user_factory, admin_user, regular_user fixtures | 🔴 CRITICAL"
-      },
-      {
-        label: "Test fixtures for Post model",
-        description: "(Tests, 2 min) post_factory, published_post, draft_post fixtures | 🔴 CRITICAL"
-      },
-      {
-        label: "Generate conftest.py with pytest configuration",
-        description: "(Tests, 2 min) Setup fixtures, database, test client | 🔴 CRITICAL"
-      },
-
-      # Contract Tests - Each endpoint
-      {
-        label: "Pact contract for POST /api/users",
-        description: "(Contract Tests, 2 min) Consumer contract + provider verification | 🔴 CRITICAL"
-      },
-      {
-        label: "Pact contract for GET /api/users/:id",
-        description: "(Contract Tests, 2 min) Consumer contract + provider verification | 🔴 CRITICAL"
-      },
-      {
-        label: "Pact contract for POST /api/auth/login",
-        description: "(Contract Tests, 2 min) Consumer contract + provider verification | 🔴 CRITICAL"
-      },
-
-      # OpenAPI - Each component
-      {
-        label: "OpenAPI spec for /api/users endpoints",
-        description: "(OpenAPI, 3 min) 5 endpoints with request/response schemas | 🟡 HIGH"
-      },
-      {
-        label: "OpenAPI spec for /api/posts endpoints",
-        description: "(OpenAPI, 3 min) 6 endpoints with request/response schemas | 🟡 HIGH"
-      },
-      {
-        label: "OpenAPI spec for /api/auth endpoints",
-        description: "(OpenAPI, 2 min) 3 endpoints with JWT authentication docs | 🟡 HIGH"
-      },
-      {
-        label: "Setup Swagger UI integration",
-        description: "(OpenAPI, 2 min) Add /docs endpoint with interactive UI | 🟡 HIGH"
-      },
-
-      # Load Tests - Each scenario
-      {
-        label: "Load test for user registration flow",
-        description: "(Load Tests, 2 min) Locust scenario, 100 users/sec target | 🟡 HIGH"
-      },
-      {
-        label: "Load test for authentication flow",
-        description: "(Load Tests, 2 min) Locust scenario, login/refresh load | 🟡 HIGH"
-      },
-
-      # CI/CD - Each job
-      {
-        label: "Create .github/workflows/ci.yml",
-        description: "(CI/CD, 3 min) GitHub Actions workflow file | 🟡 HIGH"
-      },
-      {
-        label: "Add linting job (black, ruff, mypy)",
-        description: "(CI/CD, 2 min) Code quality checks | 🟡 HIGH"
-      },
-      {
-        label: "Add testing job (pytest with coverage)",
-        description: "(CI/CD, 2 min) Run tests, generate coverage report | 🟡 HIGH"
-      },
-      {
-        label: "Add security scanning job (bandit, safety)",
-        description: "(CI/CD, 2 min) Vulnerability detection | 🟡 HIGH"
-      },
-      {
-        label: "Add deployment job (staging + production)",
-        description: "(CI/CD, 3 min) Deploy on merge to main | 🟡 HIGH"
-      },
-
-      # Monitoring - Each component
-      {
-        label: "Create Prometheus metrics endpoints",
-        description: "(Monitoring, 3 min) /metrics endpoint with custom metrics | 🟢 RECOMMENDED"
-      },
-      {
-        label: "Create Grafana dashboard JSON",
-        description: "(Monitoring, 3 min) Dashboard for API metrics, errors, latency | 🟢 RECOMMENDED"
-      },
-      {
-        label: "Create alert rules (Prometheus)",
-        description: "(Monitoring, 2 min) Alerts for high error rate, slow queries | 🟢 RECOMMENDED"
-      },
-
-      # Logging
-      {
-        label: "Setup structured logging with correlation IDs",
-        description: "(Logging, 3 min) JSON logging, request tracking | 🟢 RECOMMENDED"
-      },
-
-      # Migrations
-      {
-        label: "Create migration for adding indexes",
-        description: "(Migrations, 2 min) Add 3 indexes with rollback | 🟢 RECOMMENDED"
-      },
-
-      # Dockerfile
-      {
-        label: "Create multi-stage Dockerfile",
-        description: "(Docker, 3 min) Production-ready Dockerfile | 🟢 RECOMMENDED"
-      },
-      {
-        label: "Create docker-compose.yml",
-        description: "(Docker, 2 min) App + database + redis setup | 🟢 RECOMMENDED"
-      },
-
-      # Runbooks
-      {
-        label: "Create deployment runbook",
-        description: "(Runbook, 2 min) Step-by-step deployment guide | 🟢 RECOMMENDED"
-      },
-      {
-        label: "Create incident response runbook",
-        description: "(Runbook, 2 min) How to handle production issues | 🟢 RECOMMENDED"
-      },
-
-      # Pre-commit
-      {
-        label: "Create .pre-commit-config.yaml",
-        description: "(Pre-commit, 2 min) Black, ruff, mypy, bandit hooks | 🟢 RECOMMENDED"
-      },
-
-      # Group options
-      {
-        label: "All Unit Tests",
-        description: "✅ Generate all unit tests above (tests for all untested functions)"
-      },
-      {
-        label: "All Integration Tests",
-        description: "✅ Generate all integration tests above (tests for all endpoints)"
-      },
-      {
-        label: "All Test Components",
-        description: "✅ Generate unit tests + integration tests + fixtures + conftest | Pain #4"
-      },
-      {
-        label: "All Contract Tests",
-        description: "✅ Generate all Pact contracts above"
-      },
-      {
-        label: "All OpenAPI Components",
-        description: "✅ Generate complete OpenAPI spec + Swagger UI | Pain #7"
-      },
-      {
-        label: "All CI/CD Components",
-        description: "✅ Generate complete CI/CD pipeline | Pain #6"
-      },
-      {
-        label: "All Monitoring Components",
-        description: "✅ Generate Prometheus + Grafana + Alerts | Pain #5"
-      },
-      {
-        label: "All Docker Components",
-        description: "✅ Generate Dockerfile + docker-compose"
-      },
-      {
-        label: "All Components",
-        description: "✅ Generate ALL components above (comprehensive project setup)"
-      }
-    ]
+    options: generation_options
   }]
 })
 ```
+
+**Note:** All hardcoded examples (api/users.py, /api/posts, etc.) have been removed.
+Options are now generated dynamically from actual project analysis.
 
 **IMPORTANT:**
 - If user selects "All Components", ignore other selections and generate ALL
@@ -476,53 +360,43 @@ Task({
 
 6. **Present results:**
 
+**IMPORTANT - Dynamic Results Generation:**
+Report ACTUAL files created and metrics. Use this template with REAL data:
+
 ```markdown
 Generation Complete! ✓
 
+[For each category generated, report REAL files:]
 Tests Created:
-✓ tests/unit/ (45 test files, 200+ unit tests)
-  - test_api_users.py (15 tests)
-  - test_api_posts.py (12 tests)
-  - test_services_auth.py (20 tests)
-  - ... (42 more files)
+✓ tests/unit/ ([ACTUAL_COUNT] test files, [ACTUAL_TEST_COUNT]+ unit tests)
+  [List first 3-5 actual files created with real test counts]
+  - ... ([remaining_count] more files)
 
-✓ tests/integration/ (15 API integration tests)
-  - test_user_api.py (5 tests)
-  - test_post_api.py (4 tests)
-  - test_auth_flow.py (6 tests)
+✓ tests/integration/ ([ACTUAL_COUNT] API integration tests)
+  [List actual integration test files created]
 
-✓ tests/fixtures.py (database fixtures)
-✓ tests/conftest.py (pytest configuration)
+✓ tests/fixtures.py (database fixtures) [if created]
+✓ tests/conftest.py (pytest configuration) [if created]
 
-Coverage: 45% → 82% ✓ (Target: 80%+)
-Total tests: 215 tests created
+Coverage: [BEFORE]% → [AFTER]% ✓ (Target: 80%+)
+Total tests: [ACTUAL_COUNT] tests created
 
-Contract Tests:
-✓ tests/contracts/ (15 Pact contract files)
-✓ Contract verification added to CI
-✓ Pactflow broker configured
-
-OpenAPI:
-✓ openapi.yaml (complete specification)
-  - 15 endpoints documented
-  - All request/response schemas
-  - Authentication flows
-  - Example requests/responses
-✓ Swagger UI: http://localhost:8000/docs
-✓ ReDoc: http://localhost:8000/redoc
+[Repeat for other categories that were actually generated]
 
 Impact:
-- Addresses Pain #4 (missing tests = biggest mistake)
-- Addresses Pain #7 (documentation gaps)
-- Testing score: 58 → 85 (+27 points)
-- Documentation score: 62 → 90 (+28 points)
+- Addresses Pain #[X] ([PAIN_DESCRIPTION])
+- Testing score: [BEFORE] → [AFTER] (+[DELTA] points)
+- Documentation score: [BEFORE] → [AFTER] (+[DELTA] points)
+- [Other actual improvements]
 
 Next Steps:
-1. Run tests: pytest tests/ -v
-2. View coverage: pytest --cov=src tests/
-3. View API docs: http://localhost:8000/docs
+1. Run tests: [actual test command for this project]
+2. View coverage: [actual coverage command]
+3. [Other actual next steps based on what was generated]
 4. Commit changes: /cco-commit
 ```
+
+**Never use placeholder examples - only report what was actually generated.**
 
 ### Parametrized Mode (Power Users)
 

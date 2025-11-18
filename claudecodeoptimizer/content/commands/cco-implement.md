@@ -80,169 +80,149 @@ AskUserQuestion({
 
 User provides feature description:
 ```
-/cco-implement "Add user authentication with JWT"
+/cco-implement "[FEATURE_DESCRIPTION]"
 ```
 
-Analyze to determine:
+Analyze the ACTUAL feature request to determine:
 - Feature type (API, frontend, database, etc.)
 - Complexity (simple, medium, complex)
-- Required skills
-- Security considerations
-- Testing needs
+- Required skills (based on keywords in request)
+- Security considerations (if applicable)
+- Testing needs (always TDD)
 
 ### Step 2: Select Skills
 
-Auto-select skills based on feature:
-```markdown
-Analyzing feature: "Add user authentication with JWT"
+Auto-select skills based on feature keywords:
 
-Feature type: Security-critical API feature
-Complexity: Medium
+**IMPORTANT - Dynamic Skill Selection:**
+Analyze the ACTUAL feature request and select appropriate skills:
+
+```markdown
+Analyzing feature: "[ACTUAL_FEATURE_REQUEST]"
+
+Feature type: [DETECTED_TYPE based on keywords]
+Complexity: [CALCULATED: simple/medium/complex]
 
 Skills I'll use:
-- cco-skill-security-owasp-xss-sqli-csrf (auth/security)
-- cco-skill-api-rest-versioning-security (API design)
-- cco-skill-test-pyramid-coverage-isolation (testing)
-- cco-skill-database-optimization-caching-profiling (user storage)
+[List ACTUAL skills selected based on feature keywords - see auto-selection rules below]
 ```
+
+**Auto-selection rules:**
+- Keywords "auth", "login", "JWT", "security" → security skills
+- Keywords "API", "endpoint", "REST" → API skills
+- Keywords "database", "query", "schema" → database skills
+- Keywords "frontend", "UI", "component" → frontend skills
+- Keywords "deploy", "CI/CD", "pipeline" → deployment skills
+- Always include: testing skills (TDD approach)
 
 ### Step 3: Create Implementation Plan and Get User Confirmation
 
 Present implementation plan:
 
+**IMPORTANT - Dynamic Plan Generation:**
+Analyze the ACTUAL feature to create a realistic implementation plan:
+
 ```markdown
 Implementation Plan (TDD Approach):
 
-Feature: [feature description]
-Complexity: [Simple/Medium/Complex]
-Skills: [list skills]
+Feature: [ACTUAL_FEATURE_REQUEST]
+Complexity: [CALCULATED_COMPLEXITY]
+Skills: [SELECTED_SKILLS based on feature]
 
 Phases:
-1. Architecture Design (X min)
-   - [design decisions]
+1. Architecture Design ([TIME] min)
+   - [ACTUAL design decisions for this feature]
 
-2. Tests First (X min) - TDD Red Phase
-   - [tests to create]
+2. Tests First ([TIME] min) - TDD Red Phase
+   - [ACTUAL tests to create based on feature requirements]
 
-3. Implementation (X min) - TDD Green Phase
-   - [components to implement]
+3. Implementation ([TIME] min) - TDD Green Phase
+   - [ACTUAL components to implement]
 
-4. Security Hardening (X min)
-   - [security measures]
+4. Security Hardening ([TIME] min) [if security-critical]
+   - [ACTUAL security measures for this feature]
 
-5. Documentation (X min)
-   - [documentation to create]
+5. Documentation ([TIME] min)
+   - [ACTUAL documentation needed]
 
-Estimated time: XX minutes
-Tests: XX+ tests (100% coverage target)
+Estimated time: [CALCULATED_TOTAL] minutes
+Tests: [ESTIMATED_COUNT]+ tests (100% coverage target)
 ```
 
-**IMPORTANT:** The descriptions below are EXAMPLES based on JWT auth feature. You MUST:
-- Break down the ACTUAL feature into specific implementation steps
-- List each concrete task with its phase in parentheses
-- Provide realistic time estimates for each step
-- Replace example steps with REAL feature-specific steps
+**Then generate AskUserQuestion options from this plan:**
 
 **Use AskUserQuestion** to let user select implementation steps (NOT phases, but individual steps):
 
 ```python
+# Generate implementation step options from ACTUAL feature analysis
+implementation_options = []
+
+# Phase 1: Architecture - generate from actual design decisions
+for design_step in architecture_design_steps:
+    implementation_options.append({
+        label: design_step.name,
+        description: f"(Phase 1: Architecture, {design_step.time}) {design_step.description}"
+    })
+
+# Phase 2: Tests (TDD Red) - generate from actual test requirements
+for test_step in test_creation_steps:
+    implementation_options.append({
+        label: test_step.name,
+        description: f"(Phase 2: Tests, {test_step.time}) {test_step.tests_to_write} | 🔴 TDD Red Phase"
+    })
+
+# Phase 3: Implementation (TDD Green) - generate from actual components
+for impl_step in implementation_steps:
+    implementation_options.append({
+        label: impl_step.name,
+        description: f"(Phase 3: Implementation, {impl_step.time}) {impl_step.file} - {impl_step.description} | 🟢 TDD Green Phase"
+    })
+
+# Phase 4: Security (if applicable) - generate from actual security needs
+for security_step in security_hardening_steps:
+    implementation_options.append({
+        label: security_step.name,
+        description: f"(Phase 4: Security, {security_step.time}) {security_step.description}"
+    })
+
+# Phase 5: Documentation - generate from actual docs needed
+for doc_step in documentation_steps:
+    implementation_options.append({
+        label: doc_step.name,
+        description: f"(Phase 5: Documentation, {doc_step.time}) {doc_step.description}"
+    })
+
+# Add control options
+implementation_options.extend([
+    {
+        label: "All Steps (Full TDD)",
+        description: f"✅ RECOMMENDED: Execute ALL {len(implementation_options)} steps in order (Phases 1-5, complete TDD, production-ready)"
+    },
+    {
+        label: "All Tests Only",
+        description: f"🔴 Execute only {len(test_creation_steps)} test-writing steps (Phase 2) - TDD Red Phase"
+    },
+    {
+        label: "All Implementation Only",
+        description: f"🟢 Execute only {len(implementation_steps)} implementation steps (Phase 3) - TDD Green Phase (requires tests!)"
+    },
+    {
+        label: "Skip Tests (NOT RECOMMENDED)",
+        description: "⚠️ Skip Phase 2 (Tests) - Pain #4: Biggest mistake!"
+    }
+])
+
 AskUserQuestion({
   questions: [{
     question: "Which implementation steps should I execute? Select the specific tasks you want:",
     header: "Implement",
     multiSelect: true,
-    options: [
-      # Phase 1: Architecture Design - Break into concrete steps
-      {
-        label: "Design authentication flow",
-        description: "(Phase 1: Architecture, 1 min) Design login/refresh/logout endpoints, token flow"
-      },
-      {
-        label: "Define JWT payload structure",
-        description: "(Phase 1: Architecture, 1 min) Define user_id, roles, expiry in JWT claims"
-      },
-      {
-        label: "Plan database schema",
-        description: "(Phase 1: Architecture, 1 min) Design users and refresh_tokens tables"
-      },
-
-      # Phase 2: Tests First (TDD Red Phase) - Break into concrete test files
-      {
-        label: "Write unit tests for JWT operations",
-        description: "(Phase 2: Tests, 2 min) test_create_token, test_validate_token, test_token_expiry, test_token_tampered | 🔴 TDD Red Phase"
-      },
-      {
-        label: "Write integration tests for auth endpoints",
-        description: "(Phase 2: Tests, 2 min) test_login_success, test_login_invalid, test_refresh, test_logout | 🔴 TDD Red Phase"
-      },
-      {
-        label: "Write security tests",
-        description: "(Phase 2: Tests, 1 min) test_rate_limiting, test_brute_force, test_weak_password | 🔴 TDD Red Phase"
-      },
-
-      # Phase 3: Implementation (TDD Green Phase) - Break into concrete files
-      {
-        label: "Implement User model",
-        description: "(Phase 3: Implementation, 2 min) models/user.py - User model with password hashing (bcrypt) | 🟢 TDD Green Phase"
-      },
-      {
-        label: "Implement JWT service",
-        description: "(Phase 3: Implementation, 3 min) services/auth.py - create_token, validate_token, hash_password | 🟢 TDD Green Phase"
-      },
-      {
-        label: "Implement auth endpoints",
-        description: "(Phase 3: Implementation, 3 min) api/auth.py - POST /login, /refresh, /logout | 🟢 TDD Green Phase"
-      },
-      {
-        label: "Implement auth middleware",
-        description: "(Phase 3: Implementation, 2 min) middleware/auth.py - JWT validation decorator @require_auth | 🟢 TDD Green Phase"
-      },
-
-      # Phase 4: Security Hardening - Break into concrete features
-      {
-        label: "Add rate limiting",
-        description: "(Phase 4: Security, 1 min) 5 attempts per 5 minutes on auth endpoints"
-      },
-      {
-        label: "Add brute force protection",
-        description: "(Phase 4: Security, 1 min) Account lockout after failed attempts"
-      },
-      {
-        label: "Add password requirements",
-        description: "(Phase 4: Security, 1 min) Minimum 8 chars, complexity validation"
-      },
-
-      # Phase 5: Documentation - Break into concrete docs
-      {
-        label: "Create OpenAPI documentation",
-        description: "(Phase 5: Documentation, 1 min) Update openapi.yaml with auth endpoints, schemas, examples"
-      },
-      {
-        label: "Document security best practices",
-        description: "(Phase 5: Documentation, 1 min) Add security.md with token storage, rotation, best practices"
-      },
-
-      # Special options
-      {
-        label: "All Steps (Full TDD)",
-        description: "✅ RECOMMENDED: Execute ALL steps above in order (Phases 1-5, complete TDD implementation, production-ready)"
-      },
-      {
-        label: "All Tests Only",
-        description: "🔴 Execute only test-writing steps (Phase 2: all test steps) - TDD Red Phase preparation"
-      },
-      {
-        label: "All Implementation Only",
-        description: "🟢 Execute only implementation steps (Phase 3: all implementation steps) - TDD Green Phase (requires tests written first!)"
-      },
-      {
-        label: "Skip Tests (NOT RECOMMENDED)",
-        description: "⚠️ Execute Architecture + Implementation + Security + Docs, but SKIP Phase 2 (Tests). Pain #4: Biggest mistake!"
-      }
-    ]
+    options: implementation_options
   }]
 })
 ```
+
+**Note:** All hardcoded JWT examples removed. Steps generated dynamically from actual feature analysis.
 
 **IMPORTANT:**
 - If user selects "All Steps (Full TDD)", ignore other selections and execute ALL steps in order
@@ -382,37 +362,35 @@ Repeat for each phase transition.
 
 Final summary after all selected phases complete:
 
+**IMPORTANT - Dynamic Summary Generation:**
+Report ACTUAL implementation results. Use this template with REAL data:
+
+```markdown
 Implementation Summary:
 
 Created:
-✓ models/user.py (User model + password hashing)
-✓ services/auth.py (JWT token operations)
-✓ api/auth.py (3 auth endpoints)
-✓ middleware/auth.py (JWT validation)
-✓ tests/ (25 tests, 100% coverage)
-✓ openapi.yaml (updated with auth docs)
+[For each file actually created:]
+✓ <real-file-path> ([actual component description])
 
+[If security features were added:]
 Security Features:
-✓ Bcrypt password hashing (cost factor: 12)
-✓ Rate limiting (5 attempts/5min)
-✓ JWT with HS256 (secret from env)
-✓ Token expiry (access: 15min, refresh: 7days)
-✓ Secure token storage (HTTP-only cookies)
-✓ Password requirements (min 8 chars, complexity)
+[List ACTUAL security features implemented]
 
-Tests: 25 passed, 0 failed (100% coverage)
+Tests: [ACTUAL_PASSED] passed, [ACTUAL_FAILED] failed ([ACTUAL_COVERAGE]% coverage)
 
 Impact:
-- Addresses Pain #1 (51% security concern)
-- Addresses Pain #4 (TDD = tests first, no bugs)
+- Addresses Pain #[X] ([PAIN_DESCRIPTION based on feature type])
+- [Other actual improvements]
 - Feature complete and production-ready ✓
 
 Next Steps:
-1. Run full test suite: pytest tests/
-2. Test manually: http://localhost:8000/auth/login
-3. Review security: /cco-audit --security
+1. Run full test suite: [actual test command for this project]
+2. Test manually: [actual endpoint/URL if applicable]
+3. Review: /cco-audit --[relevant-category]
 4. Commit: /cco-commit
 ```
+
+**Never use hardcoded examples - only report what was actually implemented.**
 
 ---
 
@@ -466,12 +444,13 @@ Both use Sonnet for accuracy.
 ## Example Usage
 
 ```bash
-# Implement new feature
-/cco-implement "Add user authentication with JWT"
+# Implement new feature (provide actual feature description)
+/cco-implement "[Your feature description]"
 
-# Implement with specific guidance
-/cco-implement "Add caching layer using Redis"
-
-# Complex feature
-/cco-implement "Add real-time notifications with WebSockets"
+# Examples of feature types:
+# - "Add user authentication with JWT"
+# - "Add caching layer using Redis"
+# - "Add real-time notifications with WebSockets"
+# - "Add payment processing with Stripe"
+# - "Add email notifications"
 ```
