@@ -45,15 +45,15 @@ Write failing test FIRST, then implement feature, then verify test passes.
 
 ```python
 import pytest
-from auth import authenticate_user
+from auth import <function_name>
 
 def test_authenticate_user_with_valid_credentials():
     # Arrange
     email = "user@example.com"
-    password = "secure_password"
+    password = "<test-password>"
 
     # Act
-    result = authenticate_user(email, password)
+    result = <function_name>(email, password)
 
     # Assert
     assert result.success is True
@@ -62,7 +62,7 @@ def test_authenticate_user_with_valid_credentials():
 
 # Run test - SHOULD FAIL (function doesn't exist yet)
 # $ pytest tests/test_auth.py
-# FAILED - ImportError: cannot import name 'authenticate_user'
+# FAILED - ImportError: cannot import name '<function_name>'
 ```
 
 **Why it must fail:**
@@ -86,7 +86,7 @@ class User:
     email: str
     is_authenticated: bool = False
 
-def authenticate_user(email: str, password: str) -> AuthResult:
+def <function_name>(email: str, password: str) -> AuthResult:
     # Minimal implementation - just pass the test
     if email and password:
         user = User(email=email, is_authenticated=True)
@@ -104,7 +104,7 @@ def authenticate_user(email: str, password: str) -> AuthResult:
 import bcrypt
 from database import get_user_by_email
 
-def authenticate_user(email: str, password: str) -> AuthResult:
+def <function_name>(email: str, password: str) -> AuthResult:
     if not email or not password:
         return AuthResult(success=False)
 
@@ -129,12 +129,12 @@ def authenticate_user(email: str, password: str) -> AuthResult:
 
 ```python
 # ❌ BAD: Write implementation first
-def authenticate_user(email, password):
+def <function_name>(email, password):
     # ... 200 lines of complex logic written without tests
     return result
 
 # Then try to write tests (too late!)
-def test_authenticate_user():
+def test_<function_name>():
     # Hard to test - tightly coupled, tests implementation not behavior
 ```
 
@@ -153,7 +153,7 @@ def test_authenticate_user_implementation():
 
 # ✅ GOOD: Test behavior (robust)
 def test_authenticate_user_behavior():
-    result = authenticate_user("user@test.com", "password")
+    result = <function_name>("user@test.com", "password")
     assert result.success is True  # Tests observable behavior
 ```
 
