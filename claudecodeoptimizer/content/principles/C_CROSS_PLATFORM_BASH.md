@@ -110,6 +110,24 @@ cd ~/project
 python -m black .  # Uses PATH
 ```
 
+### ❌ Redundant CD to Working Directory
+```bash
+# Working directory: D:/GitHub/MyProject
+
+# ❌ BAD: Redundant cd (already there!)
+cd "D:/GitHub/MyProject" && ruff check .
+cd "D:/GitHub/MyProject" && pytest tests/
+cd "D:/GitHub/MyProject" && git status
+
+# ✅ GOOD: Direct execution
+ruff check .
+pytest tests/
+git status
+
+# ✅ GOOD: Absolute paths for other directories
+pytest D:/GitHub/OtherProject/tests/
+```
+
 ---
 
 ## Checklist
@@ -121,3 +139,4 @@ python -m black .  # Uses PATH
 - [ ] Avoid CMD (dir, type, copy, del)
 - [ ] Avoid PowerShell (Get-*, Set-*, Remove-*)
 - [ ] Configure line endings: `git config --global core.autocrlf input`
+- [ ] Never cd to current working directory (execute directly)
