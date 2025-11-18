@@ -1,3 +1,13 @@
+---
+name: error-budgets
+description: Define and track error budgets against service level objectives
+type: project
+severity: high
+keywords: [observability, slo, sli, reliability, incident-management]
+category: [observability, quality]
+related_skills: []
+---
+
 # P_ERROR_BUDGETS: Error Budgets and SLOs
 
 **Severity**: High

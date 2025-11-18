@@ -1,15 +1,12 @@
 ---
-title: Data Migrations, Backup & Versioning
+name: data-migrations-backup-versioning
+description: Execute zero-downtime schema changes, implement comprehensive backup/DR strategies, manage data lifecycle. Includes 5-phase migration approach, PITR backup, soft deletes, GDPR compliance, and online DDL patterns.
+keywords: [migration, database migration, schema change, backup, disaster recovery, zero downtime, rollback, RTO, RPO, GDPR, soft delete, retention]
 category: database
-description: Zero-downtime migrations, backup/DR, schema versioning
-metadata:
-  name: "Data Migrations, Backup & Versioning"
-  activation_keywords: ["migration", "database migration", "schema change", "backup", "disaster recovery", "zero downtime"]
-  category: "database-operations"
-principles: ['P_VERSION_MANAGEMENT', 'P_INCREMENTAL_SAFETY_PATTERNS', 'P_DB_OPTIMIZATION']
-use_cases:
-  development_philosophy: [production_ready]
-  project_maturity: [production]
+related_commands:
+  action_types: [generate, audit, fix]
+  categories: [database]
+pain_points: [7, 8, 10]
 ---
 
 # Data Migrations, Backup & Versioning
@@ -184,3 +181,22 @@ CREATE INDEX CONCURRENTLY idx_users_email ON users(email);
 - [ ] Retention policies documented
 - [ ] GDPR compliance (PII deletion)
 - [ ] Audit logs immutable
+
+## Command Discovery Protocol
+
+When this skill is active, find relevant commands by searching `~/.claude/commands/` metadata:
+
+```yaml
+# Search criteria for this skill's domain
+action_types: [generate, audit, fix]
+keywords: [migration, backup, schema, rollback, disaster recovery, GDPR]
+category: database
+pain_points: [7, 8, 10]
+```
+
+**How Claude finds commands:**
+1. Grep command files for `keywords:.*[pattern]` in frontmatter
+2. Match `category: database`
+3. Present matching commands with their parameters
+
+This ensures commands are always current even when renamed or updated.

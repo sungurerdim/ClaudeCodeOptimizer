@@ -1,15 +1,12 @@
 ---
-title: Developer Experience - Onboarding, Tooling & Parity
-category: devex
-description: Fast onboarding, local/prod parity, reproducible builds, fast feedback
-metadata:
-  name: "Developer Experience - Onboarding, Tooling & Parity"
-  activation_keywords: ["developer experience", "DevEx", "onboarding", "local development", "dev environment", "tooling", "parity"]
-  category: "developer-productivity"
-principles: ['P_CONFIGURATION_AS_CODE', 'P_IAC_GITOPS', 'P_TEST_ISOLATION']
-use_cases:
-  development_philosophy: [quality_first, balanced]
-  project_maturity: [active-dev, production]
+name: devex-onboarding
+description: Optimize developer onboarding (< 1hr to first commit), local/prod parity, reproducible builds, fast feedback loops. Includes Docker Compose setup, one-command setup scripts, pre-commit hooks, hot reload, and seed data generation.
+keywords: [developer experience, DevEx, onboarding, local development, dev environment, tooling, parity, docker-compose, hot reload, pre-commit, reproducible builds]
+category: infrastructure
+related_commands:
+  action_types: [generate, audit, optimize]
+  categories: [infrastructure, quality]
+pain_points: [11, 12]
 ---
 
 # Skill: Developer Experience
@@ -117,3 +114,22 @@ npm test  # Takes 5 minutes
 - [ ] CI pipeline < 10min
 - [ ] README with quick start
 - [ ] IDE config committed (.vscode/)
+
+## Command Discovery Protocol
+
+When this skill is active, find relevant commands by searching `~/.claude/commands/` metadata:
+
+```yaml
+# Search criteria for this skill's domain
+action_types: [generate, audit, optimize]
+keywords: [onboarding, devex, docker, setup, reproducible]
+category: infrastructure
+pain_points: [11, 12]
+```
+
+**How Claude finds commands:**
+1. Grep command files for `keywords:.*[pattern]` in frontmatter
+2. Match `category: infrastructure`
+3. Present matching commands with their parameters
+
+This ensures commands are always current even when renamed or updated.

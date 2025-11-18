@@ -1,3 +1,13 @@
+---
+name: type-safety
+description: Use type annotations and static analysis to catch errors before runtime
+type: project
+severity: high
+keywords: ["types", "type-safety", "static-analysis", "mypy", "quality"]
+category: ["quality"]
+related_skills: []
+---
+
 # P_TYPE_SAFETY: Type Safety & Static Analysis
 
 **Severity**: High

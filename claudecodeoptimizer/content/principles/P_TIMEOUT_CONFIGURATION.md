@@ -1,3 +1,13 @@
+---
+name: timeout-configuration
+description: Configure appropriate timeouts to prevent hung connections and resource exhaustion
+type: project
+severity: high
+keywords: ["timeout", "configuration", "resilience", "resources", "performance"]
+category: ["infrastructure", "performance"]
+related_skills: []
+---
+
 # P_TIMEOUT_CONFIGURATION: Timeout Configuration
 
 **Severity**: High

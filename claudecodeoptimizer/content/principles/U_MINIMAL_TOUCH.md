@@ -1,3 +1,12 @@
+---
+name: minimal-touch
+description: Edit only required files, no drive-by improvements or scope creep
+type: universal
+severity: high
+keywords: [scope control, focused changes, minimal modifications]
+category: [quality, workflow]
+---
+
 # U_MINIMAL_TOUCH: Minimal Touch Policy
 
 **Severity**: High

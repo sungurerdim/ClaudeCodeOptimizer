@@ -1,3 +1,12 @@
+---
+name: breaking-changes-approval
+description: Never make breaking changes without explicit user approval, identify and document with migration path
+type: claude
+severity: critical
+keywords: [breaking changes, approval workflow, migration, API versioning, deprecation]
+category: [quality, workflow]
+---
+
 # C_BREAKING_CHANGES_APPROVAL: Breaking Changes Need Approval
 
 **Severity**: Critical

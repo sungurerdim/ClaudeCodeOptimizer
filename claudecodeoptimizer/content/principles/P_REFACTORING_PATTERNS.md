@@ -1,3 +1,13 @@
+---
+name: refactoring-patterns
+description: Safe refactoring techniques using tests and incremental changes to avoid breaking code
+type: project
+severity: high
+keywords: ["refactoring", "testing", "code-quality", "incremental-changes"]
+category: ["quality", "testing"]
+related_skills: []
+---
+
 # P_REFACTORING_PATTERNS: Refactoring Patterns & Safe Techniques
 
 **Severity**: High

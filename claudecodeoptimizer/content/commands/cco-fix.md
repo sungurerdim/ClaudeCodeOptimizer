@@ -1,3 +1,79 @@
+---
+name: cco-fix
+description: Automated issue resolution with safe/risky categorization
+action_type: fix
+note: Uses same categories as cco-audit - search cco-audit metadata for parameter details
+parameters:
+  security:
+    keywords: [security fix, owasp fix, xss fix, sqli fix, csrf protection, secrets externalize]
+    category: security
+    pain_points: [1]
+  tech-debt:
+    keywords: [tech debt fix, remove dead code, reduce complexity, fix duplication]
+    category: quality
+    pain_points: [2]
+  ai-security:
+    keywords: [ai security fix, prompt injection fix, sanitization, output validation]
+    category: security
+    pain_points: [3]
+  tests:
+    keywords: [fix tests, improve coverage, fix test isolation, add edge cases]
+    category: testing
+    pain_points: [4]
+  integration:
+    keywords: [fix integration, resolve dependencies, fix imports, resolve conflicts]
+    category: infrastructure
+    pain_points: [6]
+  code-quality:
+    keywords: [fix syntax, fix logic bugs, add type hints, improve error handling]
+    category: quality
+    pain_points: [2]
+  docs:
+    keywords: [fix documentation, add docstrings, update readme, create adr]
+    category: docs
+    pain_points: [7]
+  database:
+    keywords: [fix n+1, add indexes, fix connection pooling, optimize queries]
+    category: database
+    pain_points: [5]
+  observability:
+    keywords: [add logging, structured logging, add correlation ids, add metrics]
+    category: observability
+    pain_points: [5]
+  monitoring:
+    keywords: [add dashboards, configure alerts, setup prometheus, setup grafana]
+    category: observability
+    pain_points: [5]
+  cicd:
+    keywords: [fix pipeline, add quality gates, fix deployment, improve cicd]
+    category: infrastructure
+    pain_points: [6]
+  containers:
+    keywords: [fix dockerfile, optimize container, fix k8s config, container security]
+    category: infrastructure
+    pain_points: [6]
+  supply-chain:
+    keywords: [update dependencies, fix vulnerabilities, update licenses, generate sbom]
+    category: security
+    pain_points: [1]
+  migrations:
+    keywords: [fix migration, add rollback, fix schema, data migration fix]
+    category: database
+    pain_points: [5]
+  performance:
+    keywords: [fix performance, add caching, reduce bundle, optimize response]
+    category: performance
+    pain_points: [5]
+  architecture:
+    keywords: [fix architecture, reduce coupling, apply patterns, improve design]
+    category: architecture
+    pain_points: [5]
+  git:
+    keywords: [fix git, improve commits, fix branching, improve pr process]
+    category: infrastructure
+    pain_points: [5]
+---
+
 # cco-fix
 
 **Automated issue resolution with safe/risky categorization and auto-audit dependency.**

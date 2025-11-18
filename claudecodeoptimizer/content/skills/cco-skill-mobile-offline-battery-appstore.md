@@ -1,6 +1,12 @@
 ---
 name: mobile-development
-description: Mobile app development with offline support, battery optimization, and app store best practices
+description: Build offline-first mobile apps with cache-first data layer, battery-efficient location and networking, app store compliance (iOS ATT, Android runtime permissions), and FlatList virtualization
+keywords: [mobile, offline-first, battery optimization, app store, iOS, Android, ATT, AsyncStorage, FlatList, React Native]
+category: performance
+related_commands:
+  action_types: [audit, fix, optimize]
+  categories: [performance]
+pain_points: [1, 6, 11]
 ---
 
 # Skill: Mobile Development
@@ -128,3 +134,24 @@ navigator.geolocation.watchPosition(callback, error, {
 - [ ] iOS: Sign in with Apple (if third-party auth)
 - [ ] Android: Runtime permissions
 - [ ] Android: Target API 33+
+
+---
+
+## Command Discovery Protocol
+
+When this skill is active, find relevant commands by searching `~/.claude/commands/` metadata:
+
+```yaml
+# Search criteria for mobile development domain
+action_types: [audit, fix, optimize]
+keywords: [mobile, offline, battery, app store, iOS, Android, React Native]
+category: performance
+pain_points: [1, 6, 11]
+```
+
+**How Claude finds commands:**
+1. Grep command files for `keywords:.*[pattern]` in frontmatter
+2. Match `category: performance`
+3. Present matching commands with their parameters
+
+This ensures commands are always current even when renamed or updated.

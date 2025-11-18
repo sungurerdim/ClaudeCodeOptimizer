@@ -1,16 +1,14 @@
 ---
-id: U_TEST_FIRST
-title: Test-First Development
-category: universal
+name: test-first-tdd
+description: Write failing tests first, then implement features following the Red-Green-Refactor cycle
+type: project
 severity: high
-weight: 9
-enforcement: SHOULD
-applicability:
-  project_types: ['all']
-  languages: ['all']
+keywords: ["testing", "tdd", "test-driven-development", "red-green-refactor", "quality"]
+category: ["testing", "quality"]
+related_skills: []
 ---
 
-# U_TEST_FIRST: Test-First Development
+# P_TEST_FIRST_TDD: Test-First Development
 
 **Severity**: High
 

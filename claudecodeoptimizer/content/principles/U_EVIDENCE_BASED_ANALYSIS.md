@@ -1,3 +1,12 @@
+---
+name: evidence-based-analysis
+description: Never claim completion without command execution proof, trace to root cause using 5 Whys
+type: universal
+severity: critical
+keywords: [testing, verification, root cause analysis, evidence]
+category: [quality, workflow]
+---
+
 # U_EVIDENCE_BASED_ANALYSIS: Evidence-Based Analysis
 
 **Severity**: Critical

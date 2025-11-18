@@ -1,3 +1,12 @@
+---
+name: follow-existing-patterns
+description: Always follow existing code patterns, naming conventions, architectural decisions, and coding styles for consistency
+type: claude
+severity: high
+keywords: [consistency, code patterns, naming conventions, architecture, code review]
+category: [quality, workflow]
+---
+
 # C_FOLLOW_PATTERNS: Follow Existing Patterns
 
 **Severity**: High

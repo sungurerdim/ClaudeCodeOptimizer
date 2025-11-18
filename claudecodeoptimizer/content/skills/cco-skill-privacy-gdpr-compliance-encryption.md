@@ -1,6 +1,12 @@
 ---
 name: privacy-compliance
-description: Privacy compliance including GDPR, data encryption, and PII protection
+description: Implement GDPR/HIPAA/CCPA compliance through PII encryption, consent management, data subject rights (access, erasure, portability), log sanitization, and retention automation
+keywords: [GDPR, HIPAA, CCPA, PII encryption, consent management, data subject rights, privacy by design, log sanitization, retention policy]
+category: security
+related_commands:
+  action_types: [audit, fix, generate]
+  categories: [security]
+pain_points: [3, 5, 8]
 ---
 
 # Skill: Privacy, GDPR Compliance, Encryption
@@ -114,3 +120,24 @@ accept_all_terms = Column(Boolean)  # Single checkbox
 - [ ] Retention policies automated (Celery task)
 - [ ] Breach response plan tested (72h notification)
 - [ ] Privacy Impact Assessment for new features
+
+---
+
+## Command Discovery Protocol
+
+When this skill is active, find relevant commands by searching `~/.claude/commands/` metadata:
+
+```yaml
+# Search criteria for privacy compliance domain
+action_types: [audit, fix, generate]
+keywords: [GDPR, HIPAA, CCPA, PII, encryption, consent, privacy, data subject rights]
+category: security
+pain_points: [3, 5, 8]
+```
+
+**How Claude finds commands:**
+1. Grep command files for `keywords:.*[pattern]` in frontmatter
+2. Match `category: security`
+3. Present matching commands with their parameters
+
+This ensures commands are always current even when renamed or updated.

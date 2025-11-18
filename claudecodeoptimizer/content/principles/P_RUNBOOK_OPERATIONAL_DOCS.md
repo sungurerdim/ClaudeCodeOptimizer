@@ -1,3 +1,13 @@
+---
+name: runbook-operational-docs
+description: Create clear runbooks and operational documentation for reliable on-call operations
+type: project
+severity: high
+keywords: ["documentation", "runbook", "operations", "procedures", "on-call"]
+category: ["docs", "infrastructure"]
+related_skills: []
+---
+
 # P_RUNBOOK_OPERATIONAL_DOCS: Runbook and Operational Documentation
 
 **Severity**: High

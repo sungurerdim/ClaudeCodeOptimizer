@@ -1,3 +1,34 @@
+---
+name: cco-optimize
+description: Performance optimization across multiple areas
+action_type: optimize
+parameters:
+  code:
+    keywords: [code optimization, dead code removal, complexity reduction, refactoring]
+    category: quality
+    pain_points: [5]
+  deps:
+    keywords: [dependency optimization, update dependencies, remove unused packages, security patches]
+    category: infrastructure
+    pain_points: [5]
+  docker:
+    keywords: [docker optimization, multi-stage build, layer optimization, image size reduction]
+    category: infrastructure
+    pain_points: [5]
+  database:
+    keywords: [database optimization, query optimization, n+1 fix, add indexes, connection pooling, caching]
+    category: database
+    pain_points: [5]
+  bundle:
+    keywords: [bundle optimization, code splitting, tree shaking, compression, frontend performance]
+    category: performance
+    pain_points: [5]
+  performance:
+    keywords: [performance profiling, bottleneck removal, circuit breakers, retry logic, timeouts]
+    category: performance
+    pain_points: [5]
+---
+
 # cco-optimize
 
 **Performance optimization across 6 areas to address Pain #5 (69% waste 8+ hours/week).**

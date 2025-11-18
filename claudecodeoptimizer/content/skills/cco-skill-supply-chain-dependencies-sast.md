@@ -1,6 +1,12 @@
 ---
 name: supply-chain-security
-description: Supply chain security with dependency management and SAST analysis
+description: Implement SBOM generation, vulnerability scanning, SAST with Bandit/Semgrep, license compliance, dependency confusion prevention, and automated patching with Dependabot
+keywords: [SBOM, vulnerability scanning, SAST, Bandit, Semgrep, Trivy, license compliance, dependency confusion, Dependabot, supply chain]
+category: security
+related_commands:
+  action_types: [audit, fix, generate]
+  categories: [security]
+pain_points: [3, 5, 8]
 ---
 
 # Skill: Supply Chain Security & SAST
@@ -145,3 +151,24 @@ npm ls --depth=0
 - [ ] License policy enforced (block GPL/AGPL)
 - [ ] CVE database updated daily
 - [ ] Critical vulnerabilities block deployment
+
+---
+
+## Command Discovery Protocol
+
+When this skill is active, find relevant commands by searching `~/.claude/commands/` metadata:
+
+```yaml
+# Search criteria for supply chain security domain
+action_types: [audit, fix, generate]
+keywords: [SBOM, vulnerability, SAST, Bandit, Semgrep, Trivy, dependency, supply chain]
+category: security
+pain_points: [3, 5, 8]
+```
+
+**How Claude finds commands:**
+1. Grep command files for `keywords:.*[pattern]` in frontmatter
+2. Match `category: security`
+3. Present matching commands with their parameters
+
+This ensures commands are always current even when renamed or updated.

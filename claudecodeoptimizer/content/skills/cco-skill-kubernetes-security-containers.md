@@ -1,6 +1,12 @@
 ---
 name: kubernetes-security
-description: Kubernetes and container security best practices including RBAC, network policies, and pod security
+description: Secure K8s clusters and containers via pod security standards, RBAC, network policies, secrets management, image scanning with Trivy, and runtime monitoring with Falco
+keywords: [kubernetes, container security, RBAC, network policy, pod security, secrets management, Trivy, Falco, distroless, OPA Gatekeeper]
+category: infrastructure
+related_commands:
+  action_types: [audit, fix, generate]
+  categories: [infrastructure, security]
+pain_points: [3, 5, 7]
 ---
 
 # Skill: Kubernetes Security & Container Hardening
@@ -146,3 +152,24 @@ env:
 - [ ] Runtime: Falco installed, alerts for unauthorized processes/privilege escalation
 - [ ] Admission: OPA Gatekeeper blocks privileged pods
 - [ ] Scanning: Trivy in CI/CD, image signing with Cosign
+
+---
+
+## Command Discovery Protocol
+
+When this skill is active, find relevant commands by searching `~/.claude/commands/` metadata:
+
+```yaml
+# Search criteria for Kubernetes security domain
+action_types: [audit, fix, generate]
+keywords: [kubernetes, container, RBAC, network policy, pod security, Trivy, Falco]
+category: infrastructure
+pain_points: [3, 5, 7]
+```
+
+**How Claude finds commands:**
+1. Grep command files for `keywords:.*[pattern]` in frontmatter
+2. Match `category: infrastructure` or `category: security`
+3. Present matching commands with their parameters
+
+This ensures commands are always current even when renamed or updated.

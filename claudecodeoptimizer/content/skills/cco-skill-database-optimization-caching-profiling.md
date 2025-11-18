@@ -1,15 +1,12 @@
 ---
-title: Database Optimization & Caching
+name: database-optimization-caching
+description: Eliminate database bottlenecks through profiling, eager loading, strategic caching, and proper indexing. Includes N+1 detection, Redis caching patterns, connection pooling, EXPLAIN ANALYZE, and index optimization strategies.
+keywords: [database, DB, query, slow query, performance, caching, profiling, N+1, index, optimization, Redis, query performance, database bottleneck, connection pool]
 category: performance
-description: Query optimization, caching strategies, profiling, N+1 detection, indexing
-metadata:
-  name: "Database Optimization & Caching"
-  activation_keywords: ["database", "DB", "query", "slow query", "performance", "caching", "profiling", "N+1", "index", "optimization", "Redis", "query performance", "database bottleneck"]
-  category: "performance"
-principles: ['P_DB_OPTIMIZATION', 'P_CACHING_STRATEGY', 'P_PERFORMANCE_PROFILE_BEFORE_OPTIMIZE', 'P_CONTINUOUS_PROFILING', 'P_LAZY_LOADING']
-use_cases:
-  development_philosophy: [quality_first, balanced]
-  project_maturity: [active-dev, production]
+related_commands:
+  action_types: [audit, optimize, fix]
+  categories: [performance, database]
+pain_points: [7, 8]
 ---
 
 # Database Optimization & Caching
@@ -135,3 +132,22 @@ engine = create_engine(
 - [ ] Check index usage (idx_scan > 0)
 - [ ] Measure response time improvement
 - [ ] Monitor cache hit rate
+
+## Command Discovery Protocol
+
+When this skill is active, find relevant commands by searching `~/.claude/commands/` metadata:
+
+```yaml
+# Search criteria for this skill's domain
+action_types: [audit, optimize, fix]
+keywords: [database, query, N+1, cache, index, performance]
+category: performance
+pain_points: [7, 8]
+```
+
+**How Claude finds commands:**
+1. Grep command files for `keywords:.*[pattern]` in frontmatter
+2. Match `category: performance`
+3. Present matching commands with their parameters
+
+This ensures commands are always current even when renamed or updated.

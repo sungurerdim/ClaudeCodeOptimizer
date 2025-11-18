@@ -1,3 +1,12 @@
+---
+name: cco-update
+description: Update CCO to latest version with automatic sync of all commands, skills, principles, and agents
+action_type: update
+keywords: [update, upgrade, sync, version, latest, install]
+category: management
+pain_points: []
+---
+
 # cco-update
 
 **Update CCO to latest version with automatic sync.**

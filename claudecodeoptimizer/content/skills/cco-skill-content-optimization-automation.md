@@ -690,11 +690,23 @@ for file in large_files:
 
 ---
 
-## Related Commands
+## Command Discovery Protocol
 
-- `/cco-audit-comprehensive` - Identifies verbose files
-- `/cco-analyze-structure` - Analyzes content organization
-- `/cco-status` - Shows current token usage
+When this skill is active, find relevant commands by searching `~/.claude/commands/` metadata:
+
+```yaml
+# Search criteria for this skill's domain
+action_types: [audit, optimize, status]
+keywords: [optimization, token reduction, context window, verbose files, content cleanup]
+category: quality
+pain_points: [5]
+```
+
+**How Claude finds commands:**
+1. Grep command files for `keywords:.*optim|token|context` in frontmatter
+2. Present matching commands with their parameters
+
+This ensures commands are always current even when renamed or updated.
 
 ---
 
@@ -721,7 +733,7 @@ This skill activates when:
 - Large files detected in `.claude/` or `content/`
 - Keywords: "optimize content", "reduce tokens", "context window"
 - Post-addition: New skill/command/principle >5KB created
-- Manual: `/cco-optimize-content` command
+- Manual: `/cco-optimize` command
 
 ---
 

@@ -35,11 +35,24 @@ Prevent breaking changes through semantic versioning and deprecation.
 **Keywords**: version, release, changelog, semver, breaking, deprecation
 **Files**: VERSION, CHANGELOG.md, .releaserc.json
 
-## Commands
+## Command Discovery Protocol
 
-- `/cco-generate-changelog`
-- `/cco-audit-versioning`
-- `/cco-fix-versioning`
+When this skill is active, find relevant commands by searching `~/.claude/commands/` metadata:
+
+```yaml
+# Search criteria for this skill's domain
+action_types: [audit, fix, generate]
+keywords: [versioning, semver, changelog, git, releases, breaking changes, deprecation]
+category: infrastructure
+pain_points: [5]
+```
+
+**How Claude finds commands:**
+1. Grep command files for `keywords:.*version|changelog|semver` in frontmatter
+2. Match `category: infrastructure`
+3. Present matching commands with their parameters
+
+This ensures commands are always current even when renamed or updated.
 
 ## Related Skills
 

@@ -1,3 +1,13 @@
+---
+name: retry-with-backoff
+description: Implement exponential backoff for reliable distributed systems and graceful degradation
+type: project
+severity: critical
+keywords: ["reliability", "backoff", "circuit-breaker", "degradation", "resilience"]
+category: ["infrastructure", "performance"]
+related_skills: []
+---
+
 # P_RETRY_WITH_BACKOFF: Retry with Exponential Backoff
 
 **Severity**: Critical

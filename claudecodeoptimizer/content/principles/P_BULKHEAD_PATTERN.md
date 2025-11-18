@@ -1,3 +1,12 @@
+---
+name: bulkhead_pattern
+description: Isolate failures using thread pools and resource partitioning
+type: project
+severity: high
+keywords: [pattern, resilience, isolation, fault-tolerance, architecture]
+category: [architecture]
+related_skills: []
+---
 # P_BULKHEAD_PATTERN: Bulkhead Pattern
 
 **Severity**: High

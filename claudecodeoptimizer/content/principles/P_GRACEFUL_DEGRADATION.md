@@ -1,3 +1,13 @@
+---
+name: graceful-degradation
+description: Return degraded but functional service instead of complete failure
+type: project
+severity: high
+keywords: [reliability, resilience, circuit-breaker, fallback, availability]
+category: [architecture, quality]
+related_skills: []
+---
+
 # P_GRACEFUL_DEGRADATION: Graceful Degradation
 
 **Severity**: High

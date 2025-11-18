@@ -1,3 +1,12 @@
+---
+name: ci_gates
+description: Enforce quality gates in CI/CD pipelines for code and security standards
+type: project
+severity: high
+keywords: [ci, cd, gates, quality, automation]
+category: [quality]
+related_skills: []
+---
 # P_CI_GATES: CI Gates
 
 **Severity**: High

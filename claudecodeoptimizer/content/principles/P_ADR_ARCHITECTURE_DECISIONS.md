@@ -1,3 +1,12 @@
+---
+name: adr_architecture_decisions
+description: Document architectural decisions and tradeoffs using decision records
+type: project
+severity: high
+keywords: [architecture, documentation, decisions, tradeoffs]
+category: [architecture]
+related_skills: []
+---
 # P_ADR_ARCHITECTURE_DECISIONS: Architecture Decision Records
 
 **Severity**: High

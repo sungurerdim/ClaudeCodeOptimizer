@@ -1,3 +1,12 @@
+---
+name: efficient-file-operations
+description: Optimize file operations via grep-first discovery, content preview, and targeted reads with offset/limit
+type: claude
+severity: medium
+keywords: [file operations, grep-first, token efficiency, search strategy, three-stage discovery]
+category: [efficiency, performance]
+---
+
 # C_EFFICIENT_FILE_OPERATIONS: Efficient File Operations
 
 **Severity**: Medium

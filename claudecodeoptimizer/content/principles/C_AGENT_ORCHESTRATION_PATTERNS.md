@@ -1,3 +1,12 @@
+---
+name: agent-orchestration-patterns
+description: Orchestrate multiple agents via parallel execution, pipelines, and appropriate model selection for optimal cost/performance
+type: claude
+severity: high
+keywords: [orchestration, parallel execution, agent management, cost optimization, workflow]
+category: [workflow, performance]
+---
+
 # C_AGENT_ORCHESTRATION_PATTERNS: Agent Orchestration Patterns
 
 **Severity**: High

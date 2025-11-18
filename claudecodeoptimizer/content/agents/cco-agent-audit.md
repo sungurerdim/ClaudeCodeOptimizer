@@ -40,12 +40,12 @@ use_cases:
 - Scan all domains, calculate weighted score (0-100), grade (A-F)
 - Output: `~/.cco/projects/{name}/status.yml`
 
-**When**: `/cco-audit-security-xss` → Specialized audit
+**When**: `/cco-audit --security` → Specialized audit
 **Then**:
 - Scan specific domain (e.g., XSS: grep templates, API responses)
 - Output: Markdown report with file:line, severity, remediation
 
-**When**: `/cco-audit-*` → Domain-specific
+**When**: `/cco-audit --[category]` → Domain-specific
 **Then**: Load relevant skill, scan patterns:
 - Security: OWASP Top 10, secrets, CVEs, K8s misconfigs, AI prompt injection
 - Testing: Coverage, pyramid (unit:int:e2e), isolation, critical paths
@@ -68,26 +68,30 @@ categories:
   security: {score: 70, status: needs_work, weight: 20}
 gaps:
   - {name: Low coverage, severity: critical, current: 40%, target: 80%,
-     files: [api/routes.py], cmd: /cco-generate-unit-tests, skill: cco-skill-test-pyramid}
+     files: [api/routes.py],
+     cmd_discovery: {action_type: generate, keywords: [tests, coverage], category: testing},
+     skill: cco-skill-test-pyramid}
 recommendations:
-  immediate: [{action: Setup CI/CD, cmd: /cco-generate-cicd-config, hours: 8, impact: +10}]
+  immediate: [{action: Setup CI/CD,
+     cmd_discovery: {action_type: generate, keywords: [cicd, pipeline], category: infrastructure},
+     hours: 8, impact: +10}]
 ```
 
-### `/cco-audit-security-xss` Markdown Report
+### `/cco-audit --security` Markdown Report
 ```markdown
-# XSS Audit - 7 issues, HIGH risk, 6h fix time
+# Security Audit - 7 issues, HIGH risk, 6h fix time
 
 ## Critical ([COUNT])
 [For each critical issue found:]
 [N]. **[Issue type]** - `<file>:<line>`
    - Vulnerable: [actual vulnerable code]
    - Fix: [recommended fix]
-   - Cmd: `/cco-fix-security-violations --focus=[type]`
+   - Cmd: `/cco-fix --security`
 
 ## Remediation
-P0 ([TIME]): Fix critical issues → `/cco-fix-security-violations --severity=critical`
-P1 ([TIME]): Fix remaining → `/cco-fix-security-violations`
-Verify: Re-run audit (expect 0 issues, +[SCORE] score)
+P0 ([TIME]): Fix critical issues → `/cco-fix --security`
+P1 ([TIME]): Fix remaining → `/cco-fix --security`
+Verify: Re-run `/cco-audit --security` (expect 0 issues, +[SCORE] score)
 ```
 
 **Tools**: Grep, Read, Glob, Bash

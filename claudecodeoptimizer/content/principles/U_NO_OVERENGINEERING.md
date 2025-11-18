@@ -1,3 +1,12 @@
+---
+name: no-overengineering
+description: Choose simplest solution, avoid premature abstraction, unnecessary patterns, and excessive architecture
+type: universal
+severity: critical
+keywords: [simplicity, YAGNI, premature optimization, architectural decisions]
+category: [quality, efficiency]
+---
+
 # U_NO_OVERENGINEERING: No Overengineering
 
 **Severity**: Critical

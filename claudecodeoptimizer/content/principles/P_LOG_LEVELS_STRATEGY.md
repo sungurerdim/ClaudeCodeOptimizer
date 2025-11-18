@@ -1,3 +1,13 @@
+---
+name: log-levels-strategy
+description: Use appropriate log levels (DEBUG, INFO, WARN, ERROR, FATAL) to prevent log spam and ensure critical errors remain visible
+type: project
+severity: high
+keywords: [logging, log-levels, observability, debug, info, error, log-spam, alert-fatigue]
+category: [observability, quality]
+related_skills: []
+---
+
 # P_LOG_LEVELS_STRATEGY: Log Levels Strategy
 
 **Severity**: High

@@ -1,15 +1,12 @@
 ---
-title: RESTful API Design & Security
-category: api
-description: REST conventions, versioning, authentication, rate limiting, CORS, schema validation
-metadata:
-  name: "RESTful API Design & Security"
-  activation_keywords: ["API", "REST", "endpoint", "versioning", "API security", "rate limiting", "authentication", "authorization", "CORS", "schema validation", "API gateway", "OpenAPI"]
-  category: "api"
-principles: ['P_RESTFUL_API_CONVENTIONS', 'P_API_VERSIONING_STRATEGY', 'P_API_SECURITY', 'P_CORS_POLICY', 'P_SCHEMA_VALIDATION']
-use_cases:
-  development_philosophy: [quality_first, balanced]
-  project_maturity: [active-dev, production]
+name: api-design-security
+description: Design secure versioned REST APIs with proper HTTP conventions, JWT/OAuth2 authentication, rate limiting per user/IP, CORS whitelisting, and Pydantic schema validation
+keywords: [REST, API, versioning, authentication, JWT, OAuth2, rate limiting, CORS, schema validation, OpenAPI, API gateway]
+category: security
+related_commands:
+  action_types: [audit, fix, generate]
+  categories: [security, quality]
+pain_points: [3, 5, 8]
 ---
 
 # RESTful API Design & Security
@@ -145,3 +142,24 @@ class Order(BaseModel):
 - [ ] Pagination
 - [ ] Errors
 - [ ] Deprecation
+
+---
+
+## Command Discovery Protocol
+
+When this skill is active, find relevant commands by searching `~/.claude/commands/` metadata:
+
+```yaml
+# Search criteria for API design and security domain
+action_types: [audit, fix, generate]
+keywords: [REST, API, versioning, authentication, JWT, OAuth2, rate limiting, CORS]
+category: security
+pain_points: [3, 5, 8]
+```
+
+**How Claude finds commands:**
+1. Grep command files for `keywords:.*[pattern]` in frontmatter
+2. Match `category: security` or `category: quality`
+3. Present matching commands with their parameters
+
+This ensures commands are always current even when renamed or updated.

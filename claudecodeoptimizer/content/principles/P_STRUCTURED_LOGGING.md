@@ -1,3 +1,13 @@
+---
+name: structured-logging
+description: Use JSON structured logging for queryable, parseable logs and faster incident response
+type: project
+severity: critical
+keywords: ["logging", "structured-data", "json", "observability", "debugging"]
+category: ["observability"]
+related_skills: []
+---
+
 # P_STRUCTURED_LOGGING: Structured Logging
 
 **Severity**: Critical

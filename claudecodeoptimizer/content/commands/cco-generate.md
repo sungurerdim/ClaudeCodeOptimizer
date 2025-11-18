@@ -1,3 +1,78 @@
+---
+name: cco-generate
+description: Create missing project components with skill-guided generation
+action_type: generate
+parameters:
+  tests:
+    keywords: [unit tests, integration tests, coverage, pytest, test fixtures, untested functions]
+    category: testing
+    pain_points: [4]
+  contract-tests:
+    keywords: [contract tests, pact, consumer contracts, provider verification, api contracts]
+    category: testing
+    pain_points: [4]
+  load-tests:
+    keywords: [load tests, performance tests, stress tests, locust, k6]
+    category: testing
+    pain_points: [5]
+  chaos-tests:
+    keywords: [chaos tests, resilience tests, failure injection, chaos engineering]
+    category: testing
+    pain_points: [5]
+  openapi:
+    keywords: [openapi, swagger, api documentation, api spec, rest api docs]
+    category: docs
+    pain_points: [7]
+  cicd:
+    keywords: [cicd, pipeline, github actions, gitlab ci, deployment, quality gates]
+    category: infrastructure
+    pain_points: [6]
+  docs:
+    keywords: [documentation, docstrings, readme, code docs, usage examples]
+    category: docs
+    pain_points: [7]
+  adr:
+    keywords: [adr, architecture decision records, design decisions, technical decisions]
+    category: docs
+    pain_points: [7]
+  runbook:
+    keywords: [runbook, operational docs, incident response, deployment procedures]
+    category: docs
+    pain_points: [7]
+  dockerfile:
+    keywords: [dockerfile, docker, containerization, docker-compose, multi-stage build]
+    category: infrastructure
+    pain_points: [6]
+  migration:
+    keywords: [migration, database migration, schema migration, rollback, backup]
+    category: database
+    pain_points: [5]
+  indexes:
+    keywords: [indexes, database indexes, slow queries, query optimization]
+    category: database
+    pain_points: [5]
+  monitoring:
+    keywords: [monitoring, prometheus, grafana, dashboards, metrics]
+    category: observability
+    pain_points: [5]
+  logging:
+    keywords: [logging, structured logging, correlation ids, log config]
+    category: observability
+    pain_points: [5]
+  slo:
+    keywords: [slo, sla, service level objectives, alerts, error budgets]
+    category: observability
+    pain_points: [5]
+  pre-commit:
+    keywords: [pre-commit, git hooks, linting, formatting, code quality]
+    category: infrastructure
+    pain_points: [6]
+  requirements:
+    keywords: [requirements, dependencies, pyproject.toml, package.json]
+    category: infrastructure
+    pain_points: [6]
+---
+
 # cco-generate
 
 **Create missing project components with skill-guided generation.**

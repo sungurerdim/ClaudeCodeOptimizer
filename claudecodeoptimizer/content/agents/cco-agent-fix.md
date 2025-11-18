@@ -3,14 +3,14 @@ name: fix-agent
 description: Automated violation fixing with verification. Applies surgical changes to resolve security, quality, testing, and documentation issues. Use for /cco-fix command execution.
 tools: Grep, Read, Glob, Bash, Edit, Write
 model: sonnet
-category: remediation
+category: fix
 metadata:
   priority: high
-  agent_type: plan
+  agent_type: fix
 skills_loaded: as-needed
 use_cases:
-  project_maturity: [active-dev, production, legacy]
-  development_philosophy: [quality_first, balanced]
+  project_maturity: [all]
+  development_philosophy: [all]
 ---
 
 # Agent: Fix

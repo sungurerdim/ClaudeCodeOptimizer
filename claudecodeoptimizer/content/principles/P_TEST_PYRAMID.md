@@ -1,3 +1,13 @@
+---
+name: test-pyramid
+description: Maintain 70% unit, 20% integration, 10% E2E tests for fast, reliable testing
+type: project
+severity: medium
+keywords: ["testing", "test-pyramid", "unit-tests", "integration", "e2e"]
+category: ["testing", "quality"]
+related_skills: []
+---
+
 # P_TEST_PYRAMID: Test Pyramid
 
 **Severity**: Medium

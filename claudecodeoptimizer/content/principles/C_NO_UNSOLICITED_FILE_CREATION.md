@@ -1,3 +1,12 @@
+---
+name: no-unsolicited-file-creation
+description: Never create files unless explicitly requested or genuinely required, always prefer editing existing files
+type: claude
+severity: high
+keywords: [file creation, minimal touch, scope control, documentation, file organization]
+category: [quality, workflow]
+---
+
 # C_NO_UNSOLICITED_FILE_CREATION: No Unsolicited File Creation
 
 **Severity**: High

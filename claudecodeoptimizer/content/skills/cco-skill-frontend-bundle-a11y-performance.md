@@ -1,6 +1,12 @@
 ---
 name: frontend-optimization
-description: Frontend bundle optimization, accessibility, and performance best practices
+description: Reduce bundle size under 200KB gzipped, ensure WCAG 2.1 AA compliance, achieve Core Web Vitals targets (LCP under 2.5s, FID under 100ms, CLS under 0.1), and enable SPA SEO
+keywords: [bundle size, accessibility, WCAG, Core Web Vitals, LCP, FID, CLS, code splitting, tree shaking, lazy loading, a11y]
+category: performance
+related_commands:
+  action_types: [audit, fix, optimize]
+  categories: [performance, quality]
+pain_points: [1, 6, 11]
 ---
 
 # Frontend: Bundle Size, Accessibility & Performance
@@ -248,3 +254,24 @@ import Chart from 'chart.js'; // Blocks render
 - Core Web Vitals: LCP <2.5s, FID <100ms, CLS <0.1
 - Keyboard navigation functional
 - Mobile/tablet/desktop tested
+
+---
+
+## Command Discovery Protocol
+
+When this skill is active, find relevant commands by searching `~/.claude/commands/` metadata:
+
+```yaml
+# Search criteria for frontend optimization domain
+action_types: [audit, fix, optimize]
+keywords: [bundle, accessibility, WCAG, Core Web Vitals, performance, a11y]
+category: performance
+pain_points: [1, 6, 11]
+```
+
+**How Claude finds commands:**
+1. Grep command files for `keywords:.*[pattern]` in frontmatter
+2. Match `category: performance` or `category: quality`
+3. Present matching commands with their parameters
+
+This ensures commands are always current even when renamed or updated.

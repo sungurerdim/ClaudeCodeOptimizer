@@ -1,6 +1,12 @@
 ---
 name: microservices-architecture
-description: Microservices patterns including CQRS, service mesh, and dependency injection
+description: Implement microservices with CQRS pattern, service mesh, dependency injection, event-driven communication, and saga pattern for distributed transactions in scalable systems
+keywords: [microservices, CQRS, service mesh, dependency injection, event-driven, saga pattern, DDD, bounded context, circuit breaker, Istio]
+category: architecture
+related_commands:
+  action_types: [audit, fix, generate, optimize]
+  categories: [architecture]
+pain_points: [2, 6, 10]
 ---
 
 # Skill: Microservices, CQRS, Service Mesh & DI
@@ -165,3 +171,24 @@ async def create_order(command):
 - [ ] API gateway for unified entry point
 - [ ] Service discovery (Consul/Istio)
 - [ ] No circular service dependencies
+
+---
+
+## Command Discovery Protocol
+
+When this skill is active, find relevant commands by searching `~/.claude/commands/` metadata:
+
+```yaml
+# Search criteria for microservices architecture domain
+action_types: [audit, fix, generate, optimize]
+keywords: [microservices, CQRS, service mesh, DDD, saga, event-driven]
+category: architecture
+pain_points: [2, 6, 10]
+```
+
+**How Claude finds commands:**
+1. Grep command files for `keywords:.*[pattern]` in frontmatter
+2. Match `category: architecture`
+3. Present matching commands with their parameters
+
+This ensures commands are always current even when renamed or updated.

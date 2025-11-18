@@ -1,3 +1,12 @@
+---
+name: api_documentation_openapi
+description: Document APIs using OpenAPI/Swagger for clarity and tool integration
+type: project
+severity: high
+keywords: [documentation, api, openapi, swagger]
+category: [docs]
+related_skills: []
+---
 # P_API_DOCUMENTATION_OPENAPI: API Documentation with OpenAPI/Swagger
 
 **Severity**: High

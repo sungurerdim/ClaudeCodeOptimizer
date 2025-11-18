@@ -1,3 +1,13 @@
+---
+name: technical-debt-tracking
+description: Track and measure technical debt to prevent compound interest effects
+type: project
+severity: high
+keywords: ["technical-debt", "metrics", "management", "quality", "refactoring"]
+category: ["quality"]
+related_skills: []
+---
+
 # P_TECHNICAL_DEBT_TRACKING: Technical Debt Tracking & Management
 
 **Severity**: High

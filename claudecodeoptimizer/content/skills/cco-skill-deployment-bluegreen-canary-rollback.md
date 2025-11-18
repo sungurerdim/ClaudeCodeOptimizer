@@ -1,6 +1,12 @@
 ---
-name: deployment-strategies
-description: Zero-downtime blue-green/canary deployments with rollback and feature flags
+name: deployment-bluegreen-canary-rollback
+description: Zero-downtime deployment strategies with instant rollback capabilities. Includes blue-green (atomic traffic switch), canary (progressive rollout with auto-rollback), feature flags (runtime toggle with kill switch), and backward-compatible migrations.
+keywords: [deployment, blue-green, canary, rollback, feature flag, zero-downtime, traffic switch, progressive rollout, health check, smoke test]
+category: infrastructure
+related_commands:
+  action_types: [audit, generate, optimize]
+  categories: [infrastructure]
+pain_points: [9, 10, 11]
 ---
 
 # Deployment Strategies
@@ -64,3 +70,22 @@ ALTER TABLE users ADD COLUMN verified BOOLEAN DEFAULT FALSE
 - Big-bang deploys
 - Untested rollback
 - Permanent feature flags
+
+## Command Discovery Protocol
+
+When this skill is active, find relevant commands by searching `~/.claude/commands/` metadata:
+
+```yaml
+# Search criteria for this skill's domain
+action_types: [audit, generate, optimize]
+keywords: [deployment, blue-green, canary, rollback, feature flag, zero-downtime]
+category: infrastructure
+pain_points: [9, 10, 11]
+```
+
+**How Claude finds commands:**
+1. Grep command files for `keywords:.*[pattern]` in frontmatter
+2. Match `category: infrastructure`
+3. Present matching commands with their parameters
+
+This ensures commands are always current even when renamed or updated.
