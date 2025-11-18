@@ -4,6 +4,10 @@ Post-install hook for ClaudeCodeOptimizer
 Automatically sets up ~/.claude/ structure after pip install.
 """
 
+import logging
+
+logger = logging.getLogger(__name__)
+
 
 def post_install() -> int:
     """
@@ -26,6 +30,9 @@ def post_install() -> int:
         result = setup_global_knowledge(force=False)
 
         if result.get("success"):
+            logger.info(f"Global CCO directory: {result['claude_dir']}")
+            for action in result.get("actions", []):
+                logger.info(f"  - {action}")
             print(f"\n[OK] Global CCO directory: {result['claude_dir']}")
             for action in result.get("actions", []):
                 print(f"  - {action}")
@@ -35,6 +42,7 @@ def post_install() -> int:
             print("  1. Open/Restart Claude Code")
             print("  2. Try: /cco-help or /cco-status")
         else:
+            logger.warning("Global setup completed with warnings")
             print("\n[WARNING] Global setup completed with warnings")
 
         print("=" * 60 + "\n")
@@ -44,6 +52,7 @@ def post_install() -> int:
 
     except Exception as e:
         # Non-fatal: Don't break pip install if setup fails
+        logger.error("CCO post-install setup failed", exc_info=True)
         print(f"\n[WARNING] CCO post-install setup failed: {e}")
         print("You can manually run setup later")
         print("=" * 60 + "\n")

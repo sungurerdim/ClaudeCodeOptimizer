@@ -1,9 +1,12 @@
 """Dynamic command loader from .md templates."""
 
+import logging
 from pathlib import Path
 from typing import Any, Dict
 
 from .core.constants import MARKDOWN_SECTION_COUNT
+
+logger = logging.getLogger(__name__)
 
 
 def parse_frontmatter(content: str) -> Dict[str, Any]:
@@ -26,7 +29,8 @@ def parse_frontmatter(content: str) -> Dict[str, Any]:
                 result[key.strip()] = value.strip()
 
         return result
-    except Exception:
+    except Exception as e:
+        logger.debug(f"Failed to parse frontmatter: {e}")
         return {}
 
 

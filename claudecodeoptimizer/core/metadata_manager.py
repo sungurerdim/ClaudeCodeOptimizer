@@ -5,11 +5,14 @@ Single Source of Truth for all file metadata parsing and recommendation logic.
 Applies DRY principle: one implementation for guides, skills, agents, commands, principles.
 """
 
+import logging
 import re
 from pathlib import Path
 from typing import Any, Dict, List, Optional
 
 import yaml  # type: ignore[import-untyped]
+
+logger = logging.getLogger(__name__)
 
 
 class MetadataManager:
@@ -58,7 +61,8 @@ class MetadataManager:
             frontmatter = yaml.safe_load(match.group(1))
             return frontmatter or {}
 
-        except Exception:
+        except Exception as e:
+            logger.debug(f"Failed to parse frontmatter from {file_path}: {e}")
             return {}
 
     def get_description(self, file_path: Path) -> str:

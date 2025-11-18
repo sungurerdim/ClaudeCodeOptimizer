@@ -1,6 +1,9 @@
 """ClaudeCodeOptimizer - System-wide project management for Claude Code."""
 
+import logging
 import sys
+
+logger = logging.getLogger(__name__)
 
 __version__ = "0.1.0"
 __author__ = "Sungur Zahid Erdim"
@@ -11,10 +14,11 @@ if sys.platform == "win32" and hasattr(sys.stdout, "reconfigure"):
     try:
         sys.stdout.reconfigure(encoding="utf-8")  # type: ignore[union-attr]
         sys.stderr.reconfigure(encoding="utf-8")  # type: ignore[union-attr]
-    except Exception:  # noqa: S110
+    except Exception as e:  # noqa: S110
+        logger.debug(f"Windows console encoding reconfigure failed: {e}")
         pass  # Silent fail - continue with default encoding
 
-from .config import CCOConfig
+from .config import CCOConfig  # noqa: E402
 
 __all__ = ["CCOConfig", "__version__"]
 
@@ -53,12 +57,16 @@ def _ensure_global_setup() -> None:
 
         if needs_setup:
             # Auto-setup on first import (silent)
+            logger.debug("Auto-setup needed, running setup_global_knowledge")
             from .core.knowledge_setup import setup_global_knowledge
 
-            setup_global_knowledge(force=False)
-    except Exception:  # noqa: S110
+            result = setup_global_knowledge(force=False)
+            if result.get("success"):
+                logger.info(f"Auto-setup completed: {result.get('actions', [])}")
+    except Exception as e:  # noqa: S110
         # Silent fail - don't break package import
         # User can manually run: cco-setup
+        logger.debug(f"Auto-setup failed (non-fatal): {e}")
         pass
 
 
