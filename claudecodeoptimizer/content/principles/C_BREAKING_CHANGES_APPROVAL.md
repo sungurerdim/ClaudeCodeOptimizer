@@ -31,16 +31,16 @@ Grep("process_data", output_mode="files_with_matches")
 # Found: api.py, handlers.py, tests.py, integration.py, workers.py
 
 Grep("process_data", output_mode="content", "-C": 2)
-# 5 files call with format parameter → BREAKING
+# {N} files call with format parameter → BREAKING
 
 # Propose:
 """
 BREAKING CHANGE DETECTED:
 Change: Remove 'format' parameter from process_data()
-Impact: 5 files affected
+Impact: {N} files affected
 Migration:
 1. Remove parameter
-2. Update 5 call sites
+2. Update {N} call sites
 3. Update tests
 Proceed?
 """
@@ -52,7 +52,7 @@ Proceed?
 BREAKING CHANGE PROPOSAL:
 **Change**: Rename User → Account
 **Reason**: Better reflects domain (supports orgs + users)
-**Impact**: 23 files, 45 signatures, 12 queries, 3 API endpoints
+**Impact**: {FILE_COUNT} files, {SIG_COUNT} signatures, {QUERY_COUNT} queries, {ENDPOINT_COUNT} API endpoints
 **Breaking for**: Internal (yes), External API (yes), Database (no)
 **Migration Path**:
 1. Rename internally
@@ -97,12 +97,12 @@ Read("<auth_file>.py")
 # Current: authenticate(username, password, <param1>=None, <param2>=None)
 
 Grep("authenticate\\(", output_mode="content", "-C": 2)
-# 8 call sites, 3 use <param1>, 5 use <param2>
+# {N} call sites, {X} use <param1>, {Y} use <param2>
 
 """
 BREAKING CHANGE PROPOSAL:
 **Simplification**: Remove <param1> and <param2> params
-**Impact**: 8 call sites
+**Impact**: {N} call sites
 **Migration**: Create <new_function1>() and <new_function2>() functions
 Proceed? (yes/no)
 """

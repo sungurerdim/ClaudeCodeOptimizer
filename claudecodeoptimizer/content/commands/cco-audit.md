@@ -1,380 +1,494 @@
 ---
 name: cco-audit
-description: Comprehensive issue detection across multiple categories
+description: Comprehensive codebase audit with full transparency and real-time progress
 action_type: audit
 parameters:
   security:
-    keywords: [security, owasp, xss, sqli, csrf, vulnerabilities, cves, secrets, authentication, authorization]
+    keywords: [security audit, owasp scan, xss check, sqli scan, csrf check, secrets scan, vulnerability scan]
     category: security
     pain_points: [1]
   tech-debt:
-    keywords: [tech debt, dead code, complexity, duplication, anti-patterns, code smells, refactoring]
+    keywords: [tech debt audit, dead code scan, complexity check, duplication scan]
     category: quality
     pain_points: [2]
   ai-security:
-    keywords: [ai security, prompt injection, hallucinations, model security, llm security, output validation]
+    keywords: [ai security audit, prompt injection scan, llm security, ai vulnerability]
     category: security
     pain_points: [3]
   tests:
-    keywords: [tests, coverage, test pyramid, isolation, edge cases, unit tests, integration tests]
+    keywords: [test audit, coverage check, test quality, test isolation, test pyramid]
     category: testing
     pain_points: [4]
   integration:
-    keywords: [integration, dependencies, imports, conflicts, compatibility, api integration]
+    keywords: [integration audit, dependency check, import scan, conflict detection]
     category: infrastructure
     pain_points: [6]
   code-quality:
-    keywords: [code quality, syntax errors, logic bugs, type errors, error handling, linting]
+    keywords: [code quality audit, syntax check, type check, error handling scan]
     category: quality
     pain_points: [2]
   docs:
-    keywords: [documentation, readme, api docs, docstrings, adr, changelog]
+    keywords: [documentation audit, docstring check, api docs scan, readme check]
     category: docs
     pain_points: [7]
   database:
-    keywords: [database, n+1 queries, indexes, connection pooling, query optimization, sql]
+    keywords: [database audit, n+1 scan, index check, query optimization, db performance]
     category: database
     pain_points: [5]
   observability:
-    keywords: [observability, logging, structured logging, correlation ids, metrics, tracing]
+    keywords: [observability audit, logging check, metrics scan, tracing check]
     category: observability
     pain_points: [5]
   monitoring:
-    keywords: [monitoring, dashboards, alerts, prometheus, grafana, slo, sla]
+    keywords: [monitoring audit, dashboard check, alert scan, prometheus check]
     category: observability
     pain_points: [5]
   cicd:
-    keywords: [cicd, pipeline, deployment, quality gates, github actions, gitlab ci]
+    keywords: [cicd audit, pipeline check, quality gates scan, deployment audit]
     category: infrastructure
     pain_points: [6]
   containers:
-    keywords: [containers, docker, kubernetes, dockerfile, k8s security, container security]
+    keywords: [container audit, dockerfile scan, k8s check, container security]
     category: infrastructure
     pain_points: [6]
   supply-chain:
-    keywords: [supply chain, dependencies, sbom, licenses, cves, vulnerability scanning]
+    keywords: [supply chain audit, dependency scan, cve check, sbom scan, license check]
     category: security
     pain_points: [1]
   migrations:
-    keywords: [migrations, database migrations, schema changes, rollback, data migration]
+    keywords: [migration audit, schema check, rollback scan, data migration check]
     category: database
     pain_points: [5]
   performance:
-    keywords: [performance, response times, caching, bundle size, optimization, profiling]
+    keywords: [performance audit, caching check, bundle scan, response time check]
     category: performance
     pain_points: [5]
   architecture:
-    keywords: [architecture, patterns, coupling, microservices, design patterns, solid]
+    keywords: [architecture audit, coupling check, pattern scan, design review]
     category: architecture
     pain_points: [5]
   git:
-    keywords: [git, versioning, branching, commits, pull requests, code review]
+    keywords: [git audit, commit quality, branching check, pr process scan]
     category: infrastructure
     pain_points: [5]
 ---
 
-# cco-audit
+# CCO Audit Command
 
-**Comprehensive issue detection across {{CATEGORY_COUNT}} categories, pain-point priority ordered.**
+**Comprehensive codebase analysis with full transparency, flexible selection, and real-time progress.**
 
 ---
 
-## Dynamic Value Calculation (CRITICAL)
+## Design Principles
 
-**ALL placeholder values MUST be calculated at runtime. NEVER use hardcoded numbers.**
+1. **Full Transparency** - User sees exactly what will run, why, and how long
+2. **Progressive Disclosure** - Simple start, detail on demand
+3. **Zero Surprises** - Pre-flight shows everything before execution
+4. **Real-time Feedback** - Streaming results, not batch output
+5. **Actionable Output** - Every finding has a clear next step
 
-### Required Calculations
+---
 
-```bash
-# Calculate these BEFORE presenting any information to user
-CATEGORY_COUNT=$(grep -c "^\d\+\. \*\*--" ~/.claude/commands/cco-audit.md)
-SKILL_COUNT=$(ls ~/.claude/skills/cco-skill-*.md 2>/dev/null | wc -l)
-GRANULAR_CHECK_COUNT=# Sum checks from all categories (Security:15 + Database:10 + Tests:12 + ...)
+## Execution Flow
+
+```
+/cco-audit
+    │
+    ├─► Mode Selection (Quick/Standard/Full)
+    │
+    ├─► Discovery Phase (tech detection, applicability)
+    │
+    ├─► Selection (based on mode)
+    │
+    ├─► Pre-Flight Summary (confirm before run)
+    │
+    ├─► Execution Dashboard (real-time progress)
+    │
+    ├─► Streaming Results (findings as discovered)
+    │
+    └─► Final Report (prioritized, actionable)
 ```
 
-### Placeholder Reference
-
-| Placeholder | Calculation | Example |
-|-------------|-------------|---------|
-| `{{CATEGORY_COUNT}}` | Count numbered items in "Audit Categories" section | - |
-| `{{SKILL_COUNT}}` | Count files in skills/ directory | - |
-| `{{GRANULAR_CHECK_COUNT}}` | Sum all individual checks | - |
-| `{{SELECTED_COUNT}}` | Count user's selections at runtime | - |
-| `{{CHECK_COUNT}}` | Calculate checks for selected categories | - |
-
-**IMPORTANT:** When displaying counts, always calculate from actual data. Never copy example numbers.
-
 ---
 
-## Purpose
+## Component 1: Mode Selection
 
-Find security vulnerabilities, technical debt, testing gaps, and other issues using specialized skills and parallel agent execution.
-
----
-
-## Audit Categories (Pain-Point Priority Order)
-
-### 🔴 Critical Impact
-
-1. **--security** (Pain #1: 51% top concern)
-   - Skills: `cco-skill-security-owasp-xss-sqli-csrf`, `cco-skill-ai-security-promptinjection-models`, `cco-skill-supply-chain-dependencies-sast`
-   - Checks: SQL injection, XSS, CSRF, secrets, auth/authz, CVEs, AI prompt injection
-
-2. **--tech-debt** (Pain #2: 23% time waste)
-   - Skills: `cco-skill-code-quality-refactoring-complexity`, `cco-skill-content-optimization-automation`
-   - Checks: Dead code, complexity, duplication, TODO comments, anti-patterns
-
-3. **--ai-security** (Pain #3: 45% reliability)
-   - Skills: `cco-skill-ai-security-promptinjection-models`
-   - Checks: Prompt injection, hallucination risks, AI output validation, rate limiting
-
-### 🟡 High Impact
-
-4. **--tests** (Pain #4: Biggest mistake)
-   - Skills: `cco-skill-test-pyramid-coverage-isolation`, `cco-skill-api-testing-contract-load-chaos`
-   - Checks: Coverage, untested critical functions, test isolation, pyramid compliance, edge cases
-
-5. **--integration** (Pain #6: Deployment failures)
-   - Skills: `cco-skill-supply-chain-dependencies-sast`
-   - Checks: Import errors, dependency conflicts, outdated dependencies, circular imports
-
-### 🟢 Medium Impact
-
-6. **--code-quality**
-   - Skills: `cco-skill-code-quality-refactoring-complexity`
-   - Checks: Syntax errors, logic bugs, off-by-one, missing error handling, type errors
-
-7. **--docs** (Pain #7: Knowledge gaps)
-   - Skills: `cco-skill-docs-api-openapi-adr-runbooks`
-   - Checks: README, API docs, docstrings, documentation drift, ADRs, runbooks
-
-8. **--database** (Pain #5: Performance)
-   - Skills: `cco-skill-database-optimization-caching-profiling`, `cco-skill-data-migrations-backup-versioning`
-   - Checks: N+1 queries, missing indexes, connection pooling, migrations
-
-9. **--observability** (Pain #5: Debugging time)
-   - Skills: `cco-skill-observability-metrics-alerts-slo`, `cco-skill-logging-structured-correlation-tracing`, `cco-skill-incident-oncall-postmortem-playbooks`
-   - Checks: Structured logging, correlation IDs, metrics, alerts, SLOs, runbooks
-
-10. **--monitoring**
-    - Skills: `cco-skill-observability-metrics-alerts-slo`
-    - Checks: Prometheus/Grafana, key metrics, alert rules, dashboards
-
-11. **--cicd** (Pain #6: Deployment)
-    - Skills: `cco-skill-cicd-gates-deployment-automation`, `cco-skill-deployment-bluegreen-canary-rollback`
-    - Checks: Pipeline, quality gates, deployment strategy, rollback, secret management
-
-12. **--containers**
-    - Skills: `cco-skill-kubernetes-security-containers`
-    - Checks: Dockerfile best practices, vulnerabilities, non-root user, K8s security
-
-13. **--supply-chain** (Pain #1 related)
-    - Skills: `cco-skill-supply-chain-dependencies-sast`
-    - Checks: CVEs, SBOM, license compliance, typosquatting, unmaintained packages
-
-14. **--migrations**
-    - Skills: `cco-skill-data-migrations-backup-versioning`
-    - Checks: Migration strategy, rollback, consistency checks, backup procedures
-
-15. **--performance** (Pain #5: Time waste)
-    - Skills: `cco-skill-database-optimization-caching-profiling`, `cco-skill-frontend-bundle-a11y-performance`, `cco-skill-resilience-circuitbreaker-retry-bulkhead`
-    - Checks: Response times, query performance, caching, bundle size, circuit breakers
-
-16. **--architecture**
-    - Skills: `cco-skill-microservices-cqrs-mesh-di`, `cco-skill-eventdriven-async-messaging-queues`
-    - Checks: Separation of concerns, coupling, circular dependencies, patterns
-
-17. **--git** (Pain #5: Workflow quality)
-    - Skills: `cco-skill-git-branching-pr-review`, `cco-skill-versioning-semver-changelog-compat`
-    - Checks: Commit quality, branch naming, PR process, semantic versioning, changelog
-
----
-
-## Execution Protocol
-
-### Step 0: Introduction and Confirmation (ALWAYS FIRST)
-
-**Before doing ANYTHING, present this introduction and get user confirmation:**
-
-```markdown
-# Audit Command
-
-**What I do:**
-I scan your codebase for issues across {{CATEGORY_COUNT}} categories including security vulnerabilities, technical debt, testing gaps, and performance problems.
-
-**How it works:**
-1. You select which categories to audit (or "All" for comprehensive scan)
-2. I analyze your project files using specialized skills
-3. I report all issues with severity, file locations, and recommended fixes
-4. Results are saved for /cco-fix to use
-
-**What you'll get:**
-- Detailed list of issues by severity (Critical/High/Medium/Low)
-- Exact file:line references for each issue
-- Risk explanations and fix recommendations
-- Pain-point impact analysis (addresses Pain #1: 51% security concern, Pain #2: 23% tech debt, etc.)
-
-**Time estimate:** 2-10 minutes depending on project size and selected categories
-
-**No changes will be made** - this is analysis only.
-```
-
-**Then ask for confirmation using AskUserQuestion:**
+**Always start here. Let user choose control level.**
 
 ```python
 AskUserQuestion({
   questions: [{
-    question: "Do you want to start the audit?",
-    header: "Start Audit",
-    multiSelect: false,
-    options: [
-      {
-        label: "Yes, start audit",
-        description: "Begin analyzing the codebase for issues"
-      },
-      {
-        label: "No, cancel",
-        description: "Exit without running audit"
-      }
-    ]
-  }]
-})
-```
-
-**CRITICAL:**
-- If user selects "No, cancel" → EXIT immediately, do NOT proceed
-- If user selects "Yes, start audit" → Continue to Step 1
-
----
-
-### Interactive Mode (No Parameters)
-
-**STEP 1: Ask user what level of audit detail they want:**
-
-```python
-AskUserQuestion({
-  questions: [{
-    question: "What level of audit detail do you need?",
-    header: "Audit Level",
+    question: "What level of control do you need?",
+    header: "Audit Mode",
     multiSelect: false,
     options: [
       {
         label: "Quick Presets",
-        description: "Use-case based audit groups (Pre-commit, Pre-deployment, Performance focus, etc.) - Fastest, recommended for specific goals"
+        description: "Use-case based (Pre-commit, Security, etc.) - Fastest start"
       },
       {
-        label: "Category Level",
-        description: "Choose from {{CATEGORY_COUNT}} categories (Security, Tests, Database, etc.) - Balanced approach"
+        label: "Category Mode",
+        description: "Select from 9 category groups - Balanced control"
       },
       {
-        label: "Granular Level",
-        description: "Select specific checks (SQL injection only, N+1 queries only, etc.) - Most detailed control"
+        label: "Full Control",
+        description: "See all {TOTAL_CHECKS} checks, select individually - Maximum control"
       }
     ]
   }]
 })
 ```
 
+**Then proceed to Discovery Phase (same for all modes).**
+
 ---
 
-### Level 1: Quick Presets (Use-Case Based)
+## Component 2: Discovery Phase
 
-**If user selected "Quick Presets", present these preset audit groups:**
+**Run BEFORE showing any selection options. Required for applicability.**
+
+### Step 1: Tech Stack Detection
+
+```python
+# Detect project technologies
+detected = {
+    "languages": [],
+    "frameworks": [],
+    "databases": [],
+    "devops": [],
+    "testing": []
+}
+
+# Detection rules
+if Glob("**/*.py"):
+    detected["languages"].append("Python")
+
+    # Check for frameworks
+    req_content = Read("requirements.txt") or Read("pyproject.toml")
+    if "flask" in req_content.lower():
+        detected["frameworks"].append("Flask")
+    if "django" in req_content.lower():
+        detected["frameworks"].append("Django")
+    if "fastapi" in req_content.lower():
+        detected["frameworks"].append("FastAPI")
+    if "sqlalchemy" in req_content.lower():
+        detected["databases"].append("SQLAlchemy")
+
+if Glob("**/*.js") or Glob("**/*.ts"):
+    detected["languages"].append("JavaScript/TypeScript")
+
+if Glob("**/Dockerfile"):
+    detected["devops"].append("Docker")
+
+if Glob("**/.github/workflows/*.yml"):
+    detected["devops"].append("GitHub Actions")
+
+if Glob("**/pytest.ini") or Glob("**/conftest.py"):
+    detected["testing"].append("pytest")
+```
+
+### Step 2: Calculate Applicability
+
+```python
+# For each check, determine if applicable
+applicable_checks = []
+not_applicable = []
+
+for check in ALL_CHECKS:
+    if check.is_applicable(detected):
+        applicable_checks.append(check)
+    else:
+        not_applicable.append((check, check.reason_not_applicable(detected)))
+```
+
+### Step 3: Display Discovery Results
+
+```markdown
+## Discovery Complete
+
+**Tech Stack:**
+```
+Languages:   Python 3.11
+Frameworks:  Flask 2.3, SQLAlchemy 2.0
+Database:    PostgreSQL
+DevOps:      Docker, GitHub Actions
+Testing:     pytest, coverage
+```
+
+**Applicability:** {APPLICABLE_COUNT}/{TOTAL_CHECKS} checks ({APPLICABILITY_PCT}%)
+
+**Files to scan:** {FILE_COUNT} files in {DIR_COUNT} directories
+```
+
+---
+
+## Component 3: Full Checklist
+
+**Only shown in Full Control Mode. Complete list of all available checks.**
+
+### Check Categories
+
+```markdown
+## All Available Checks ({TOTAL_CHECKS} total)
+
+### 🔴 CRITICAL IMPACT
+
+#### Security (15 checks)
+| #  | Check | Slug | Status | Time |
+|----|-------|------|--------|------|
+| 1  | SQL Injection | sql-injection | ✅ SQLAlchemy | 2m |
+| 2  | XSS | xss | ✅ Jinja templates | 2m |
+| 3  | CSRF | csrf | ⊘ No forms | - |
+| 4  | Hardcoded Secrets | secrets | ✅ Always | 1m |
+| 5  | Auth Bypass | auth-bypass | ✅ Auth found | 2m |
+| 6  | Authz Flaws | authz-flaws | ✅ Routes | 2m |
+| 7  | CVE Scan | cve-scan | ✅ Deps found | 2m |
+| 8  | AI Prompt Injection | ai-injection | ⊘ No AI | - |
+| 9  | SSRF | ssrf | ✅ HTTP calls | 1m |
+| 10 | XXE | xxe | ⊘ No XML | - |
+| 11 | Path Traversal | path-traversal | ✅ File ops | 1m |
+| 12 | Command Injection | cmd-injection | ✅ subprocess | 1m |
+| 13 | Insecure Deserial | deserial | ✅ pickle | 1m |
+| 14 | Weak Crypto | weak-crypto | ✅ crypto | 1m |
+| 15 | Security Headers | sec-headers | ✅ Flask | 1m |
+
+#### Database (10 checks)
+| #  | Check | Slug | Status | Time |
+|----|-------|------|--------|------|
+| 16 | N+1 Queries | n1-queries | ✅ ORM | 3m |
+| 17 | Missing Indexes | missing-indexes | ✅ DB | 2m |
+| 18 | Slow Queries | slow-queries | ✅ Queries | 2m |
+| 19 | Connection Pooling | conn-pooling | ✅ DB conn | 1m |
+| 20 | Query Optimization | query-optim | ✅ Complex | 2m |
+| 21 | Transaction Issues | tx-issues | ✅ TX found | 1m |
+| 22 | Deadlock Risk | deadlock | ✅ Concurrent | 1m |
+| 23 | Migration Safety | migration-safety | ✅ Alembic | 1m |
+| 24 | Raw SQL Risks | raw-sql | ✅ execute() | 1m |
+| 25 | DB Credentials | db-creds | ✅ Always | 1m |
+
+#### Tests (12 checks)
+| #  | Check | Slug | Status | Time |
+|----|-------|------|--------|------|
+| 26 | Coverage Analysis | coverage | ✅ pytest-cov | 2m |
+| 27 | Untested Functions | untested | ✅ Always | 3m |
+| 28 | Test Isolation | isolation | ✅ fixtures | 2m |
+| 29 | Test Pyramid | pyramid | ✅ structure | 1m |
+| 30 | Edge Cases | edge-cases | ✅ Always | 2m |
+| 31 | Flaky Tests | flaky | ✅ patterns | 2m |
+| 32 | Test Naming | test-naming | ✅ Always | 1m |
+| 33 | Assertion Quality | assertions | ✅ Always | 1m |
+| 34 | Mock Overuse | mock-overuse | ✅ mock | 1m |
+| 35 | Test Data Mgmt | test-data | ✅ fixtures | 1m |
+| 36 | Integration Tests | integration | ✅ structure | 1m |
+| 37 | E2E Tests | e2e | ⊘ No e2e | - |
+
+### 🟡 HIGH IMPACT
+
+#### Code Quality (15 checks)
+| #  | Check | Slug | Status | Time |
+|----|-------|------|--------|------|
+| 38 | Dead Code | dead-code | ✅ Always | 2m |
+| 39 | Complexity | complexity | ✅ Always | 2m |
+| 40 | Duplication | duplication | ✅ Always | 2m |
+| 41 | Type Errors | type-errors | ✅ hints | 2m |
+| 42 | Linting | linting | ✅ Always | 1m |
+| 43 | Code Smells | smells | ✅ Always | 2m |
+| 44 | Long Functions | long-funcs | ✅ Always | 1m |
+| 45 | Long Files | long-files | ✅ Always | 1m |
+| 46 | Deep Nesting | deep-nesting | ✅ Always | 1m |
+| 47 | Magic Numbers | magic-nums | ✅ Always | 1m |
+| 48 | TODO Comments | todos | ✅ Always | 1m |
+| 49 | Commented Code | commented | ✅ Always | 1m |
+| 50 | Import Order | imports | ✅ Always | 1m |
+| 51 | Naming | naming | ✅ Always | 1m |
+| 52 | Error Handling | error-handling | ✅ Always | 2m |
+
+#### Performance (10 checks)
+| #  | Check | Slug | Status | Time |
+|----|-------|------|--------|------|
+| 53 | Slow Operations | slow-ops | ✅ Always | 2m |
+| 54 | Bundle Size | bundle | ⊘ No frontend | - |
+| 55 | Missing Cache | no-cache | ✅ Always | 2m |
+| 56 | Circuit Breakers | circuit | ✅ HTTP | 1m |
+| 57 | Memory Leaks | mem-leaks | ✅ Always | 2m |
+| 58 | Bad Algorithms | algorithms | ✅ Always | 2m |
+| 59 | Large Loops | large-loops | ✅ Always | 1m |
+| 60 | File I/O | file-io | ✅ File ops | 1m |
+| 61 | Network in Loops | net-loops | ✅ HTTP | 1m |
+| 62 | Lazy Loading | lazy | ⊘ No frontend | - |
+
+#### CI/CD (8 checks)
+| #  | Check | Slug | Status | Time |
+|----|-------|------|--------|------|
+| 63 | Pipeline Exists | pipeline | ✅ GH Actions | 1m |
+| 64 | Quality Gates | gates | ✅ Pipeline | 1m |
+| 65 | Secret Management | ci-secrets | ✅ Pipeline | 1m |
+| 66 | Build Optimization | build-optim | ✅ Pipeline | 1m |
+| 67 | Test Automation | test-auto | ✅ Pipeline | 1m |
+| 68 | Deploy Automation | deploy-auto | ✅ Pipeline | 1m |
+| 69 | Rollback Strategy | rollback | ✅ Deploy | 1m |
+| 70 | Env Parity | env-parity | ✅ Envs | 1m |
+
+### 🟢 MEDIUM IMPACT
+
+#### Documentation (8 checks)
+| #  | Check | Slug | Status | Time |
+|----|-------|------|--------|------|
+| 71 | Missing Docstrings | docstrings | ✅ Always | 1m |
+| 72 | API Docs | api-docs | ✅ Routes | 1m |
+| 73 | README Quality | readme | ✅ Always | 1m |
+| 74 | Doc Drift | doc-drift | ✅ docs/ | 1m |
+| 75 | Code Comments | comments | ✅ Always | 1m |
+| 76 | Examples | examples | ✅ docs/ | 1m |
+| 77 | ADRs | adrs | ✅ Always | 1m |
+| 78 | Runbooks | runbooks | ✅ Prod app | 1m |
+
+#### Containers (6 checks)
+| #  | Check | Slug | Status | Time |
+|----|-------|------|--------|------|
+| 79 | Dockerfile Best Practices | dockerfile | ✅ Docker | 1m |
+| 80 | Multi-stage Builds | multistage | ✅ Dockerfile | 1m |
+| 81 | Non-root User | nonroot | ✅ Dockerfile | 1m |
+| 82 | Image Size | image-size | ✅ Dockerfile | 1m |
+| 83 | Base Image CVEs | base-cves | ✅ Dockerfile | 2m |
+| 84 | Layer Optimization | layers | ✅ Dockerfile | 1m |
+
+#### Tech Debt (8 checks)
+| #  | Check | Slug | Status | Time |
+|----|-------|------|--------|------|
+| 85 | Deprecated APIs | deprecated | ✅ Always | 2m |
+| 86 | Legacy Code | legacy | ✅ Always | 2m |
+| 87 | Hard Dependencies | hard-deps | ✅ Always | 1m |
+| 88 | Tight Coupling | coupling | ✅ Always | 2m |
+| 89 | God Objects | god-objects | ✅ Classes | 2m |
+| 90 | Feature Envy | feature-envy | ✅ Classes | 1m |
+| 91 | Data Clumps | data-clumps | ✅ Always | 1m |
+| 92 | Shotgun Surgery | shotgun | ✅ Always | 2m |
+
+---
+
+**Summary:** {TOTAL_CHECKS} total, {APPLICABLE_COUNT} applicable (✅), {NA_COUNT} not applicable (⊘)
+```
+
+---
+
+## Component 4: Selection Input
+
+### Quick Presets Mode
 
 ```python
 AskUserQuestion({
   questions: [{
-    question: "Which preset audit would you like to run?",
-    header: "Preset Audits",
+    question: "Select a preset audit:",
+    header: "Presets",
     multiSelect: false,
     options: [
       {
-        label: "Pre-Commit Quick Check",
-        description: "⚡ FAST (2-3 min) - Critical issues only: Syntax errors, linting, secrets, obvious bugs | Perfect before git commit"
+        label: "Pre-Commit",
+        description: "Quick checks (secrets, linting, TODOs) - 5 min"
       },
       {
-        label: "Pre-Deployment Security",
-        description: "🔒 SECURITY (5-7 min) - All security checks: SQL injection, XSS, CSRF, secrets, CVEs, auth/authz | Run before deploying"
+        label: "Security Scan",
+        description: "All security checks - 15 min"
       },
       {
-        label: "Performance Focus",
-        description: "⚡ PERFORMANCE (8-10 min) - N+1 queries, missing indexes, slow code, large bundles, no caching | Optimize before launch"
+        label: "Pre-Deploy",
+        description: "Security + Performance + DB - 25 min"
       },
       {
-        label: "Code Quality Focus",
-        description: "🧹 QUALITY (10-12 min) - Dead code, complexity, duplication, tech debt, code smells | Weekly cleanup"
-      },
-      {
-        label: "Testing Gaps",
-        description: "🧪 TESTS (5-7 min) - Coverage gaps, missing tests, test quality, isolation issues | Improve test suite"
-      },
-      {
-        label: "Production Readiness",
-        description: "🚀 PRODUCTION (15-20 min) - Security + Performance + Observability + CI/CD + Containers | Before going live"
-      },
-      {
-        label: "Comprehensive Weekly",
-        description: "📋 COMPREHENSIVE (20-30 min) - All {{CATEGORY_COUNT}} categories, complete scan | Weekly/monthly review"
+        label: "Full Weekly",
+        description: "All applicable checks - 60+ min"
       }
     ]
   }]
 })
 ```
 
-**Preset Mappings (what gets checked):**
+**Preset Definitions:**
 
-```markdown
-Pre-Commit Quick Check:
-- Syntax errors (grep for common syntax issues)
-- Hardcoded secrets (API keys, passwords)
-- Linting issues (if linter exists)
-- Type errors (if type checker exists)
-- Obvious bugs (null pointer, division by zero)
+```yaml
+presets:
+  # === Quick Single-Purpose ===
+  lint-only:
+    checks: [42]
+    time: "1 min"
+    description: "Linting issues only"
 
-Pre-Deployment Security:
-- All Security category checks
-- All AI Security checks
-- All Supply Chain checks
-- Auth/authz validation
+  types-only:
+    checks: [41]
+    time: "1 min"
+    description: "Type errors only"
 
-Performance Focus:
-- All Database optimization checks
-- All Performance checks
-- Bundle size analysis
-- Code complexity
+  secrets-only:
+    checks: [4, 25]
+    time: "1 min"
+    description: "Hardcoded secrets only"
 
-Code Quality Focus:
-- All Tech Debt checks
-- All Code Quality checks
-- Dead code removal
-- Complexity reduction
+  complexity-only:
+    checks: [39, 44, 45, 46]
+    time: "2 min"
+    description: "Complexity issues only"
 
-Testing Gaps:
-- All Tests category checks
-- Coverage analysis
-- Missing test detection
+  # === Workflow-Based ===
+  pre-commit:
+    checks: [4, 41, 42, 48, 49, 50, 51]
+    time: "3-5 min"
+    description: "Quick checks before commit (secrets, lint, types, TODOs)"
 
-Production Readiness:
-- Security + Performance + Database
-- Observability + Monitoring
-- CI/CD + Containers
-- Migrations
+  pre-push:
+    checks: [1, 2, 4, 5, 6, 16, 17, 41, 42]
+    time: "8-10 min"
+    description: "Thorough check before push (security basics, DB issues, quality)"
 
-Comprehensive Weekly:
-- All {{CATEGORY_COUNT}} categories
+  pre-deploy:
+    categories: [security, database, performance]
+    time: "20-25 min"
+    description: "Production readiness (security, DB, performance)"
+
+  pre-merge:
+    checks: [1-15, 38-52]
+    time: "15-20 min"
+    description: "PR review checks (security + code quality)"
+
+  # === Domain-Focused ===
+  security:
+    checks: [1-15]
+    time: "12-15 min"
+    description: "All security checks"
+
+  database:
+    checks: [16-25]
+    time: "10-12 min"
+    description: "All database checks"
+
+  tests:
+    checks: [26-37]
+    time: "10-12 min"
+    description: "All test quality checks"
+
+  quality:
+    checks: [38-52]
+    time: "12-15 min"
+    description: "All code quality checks"
+
+  performance:
+    checks: [53-62]
+    time: "8-10 min"
+    description: "All performance checks"
+
+  # === Comprehensive ===
+  critical:
+    categories: [security, database, tests]
+    time: "30-35 min"
+    description: "All critical categories"
+
+  weekly:
+    selection: "all"
+    time: "60-90 min"
+    description: "Comprehensive full review"
 ```
 
----
-
-### Level 2: Category Level (Tab-Based Selection)
-
-**Multi-tab single-submit interface using maximum options per question.**
-
-AskUserQuestion supports **4 questions maximum** with **4 options maximum per question**. This structure provides:
-- All categories visible in one interface (tabs)
-- Single submit for all selections
-- "All [group]" option in each tab
-- Dynamic selection count summary
+### Category Mode
 
 ```python
 AskUserQuestion({
@@ -384,22 +498,9 @@ AskUserQuestion({
       header: "🔴 Critical",
       multiSelect: true,
       options: [
-        {
-          label: "Security",
-          description: "OWASP vulnerabilities, CVEs, secrets, auth/authz | Pain #1"
-        },
-        {
-          label: "Tech Debt",
-          description: "Dead code, complexity, duplication, anti-patterns | Pain #2"
-        },
-        {
-          label: "AI Security",
-          description: "Prompt injection, hallucinations, output validation | Pain #3"
-        },
-        {
-          label: "All Critical",
-          description: "Select all Critical categories above"
-        }
+        {label: "Security", description: "Security checks - SQLi, XSS, secrets, CVEs"},
+        {label: "Database", description: "Database checks - N+1, indexes, queries"},
+        {label: "Tests", description: "Test checks - coverage, isolation, pyramid"}
       ]
     },
     {
@@ -407,1068 +508,764 @@ AskUserQuestion({
       header: "🟡 High",
       multiSelect: true,
       options: [
-        {
-          label: "Tests",
-          description: "Coverage, pyramid, isolation, edge cases | Pain #4"
-        },
-        {
-          label: "Integration",
-          description: "Dependencies, imports, conflicts | Pain #6"
-        },
-        {
-          label: "Code Quality",
-          description: "Syntax errors, logic bugs, type errors, error handling"
-        },
-        {
-          label: "Docs",
-          description: "README, API docs, docstrings, ADRs | Pain #7"
-        }
+        {label: "Code Quality", description: "Quality checks - complexity, dead code"},
+        {label: "Performance", description: "Performance checks - caching, algorithms"},
+        {label: "CI/CD", description: "CI/CD checks - pipeline, gates, deploy"}
       ]
     },
     {
-      question: "Select Medium Impact categories (Data & Operations):",
-      header: "🟢 Data/Ops",
+      question: "Select Medium Impact categories:",
+      header: "🟢 Medium",
       multiSelect: true,
       options: [
-        {
-          label: "Database",
-          description: "N+1 queries, indexes, connection pooling | Pain #5"
-        },
-        {
-          label: "Observability",
-          description: "Structured logging, correlation IDs, metrics"
-        },
-        {
-          label: "Monitoring",
-          description: "Dashboards, alerts, Prometheus/Grafana"
-        },
-        {
-          label: "CI/CD",
-          description: "Pipeline, quality gates, deployment | Pain #6"
-        }
-      ]
-    },
-    {
-      question: "Select Medium Impact categories (Infrastructure):",
-      header: "🟢 Infra",
-      multiSelect: true,
-      options: [
-        {
-          label: "Containers + Supply Chain",
-          description: "Dockerfile, CVEs, licenses, SBOM, dependencies"
-        },
-        {
-          label: "Migrations",
-          description: "Strategy, rollback, consistency, backups"
-        },
-        {
-          label: "Performance",
-          description: "Response times, caching, bundle size | Pain #5"
-        },
-        {
-          label: "Architecture + Git",
-          description: "Patterns, coupling, versioning, branching | Pain #5"
-        }
+        {label: "Documentation", description: "Doc checks - docstrings, API docs"},
+        {label: "Containers", description: "Container checks - Dockerfile, security"},
+        {label: "Tech Debt", description: "Debt checks - coupling, legacy code"}
       ]
     }
   ]
 })
 ```
 
-**Note:** Due to 4×4=16 slot limit, these related categories are grouped:
-- **Containers + Supply Chain** (both relate to deployment/dependency security)
-- **Architecture + Git** (both relate to code organization/workflow)
+### Full Control Mode
 
-### Selection Processing
-
-**After user submits, calculate and display selection summary:**
+**Display full checklist (Component 3), then:**
 
 ```markdown
-## Selection Summary
+## Selection Syntax
 
-**Your selections:**
-- 🔴 Critical: [list selected]
-- 🟡 High: [list selected]
-- 🟢 Data/Ops: [list selected]
-- 🟢 Infra: [list selected]
-
-**Total: {{SELECTED_COUNT}} categories selected → {{CHECK_COUNT}} checks will be performed**
-
-⚠️ Only selected categories will be audited.
-Categories NOT selected will be skipped entirely.
+**Simple:**
+```
+all                 All applicable checks
+critical            Security + Database + Tests
+security            All security checks
 ```
 
-### Selection Processing Logic
+**Presets:**
+```
+@pre-commit         Quick pre-commit (5 min)
+@pre-deploy         Pre-deployment (25 min)
+@weekly             Full review (60+ min)
+```
 
-When processing selections:
+**By category:**
+```
+security            Single category
+security,database   Multiple categories
+```
+
+**By number:**
+```
+1,2,4,16            Specific checks
+1-15                Range
+1-15,26-37          Multiple ranges
+```
+
+**By slug:**
+```
+sql-injection       Single check
+n1-queries,xss      Multiple checks
+```
+
+**Exclusions:**
+```
+all -3 -8           All except #3 and #8
+security -csrf      Security except CSRF
+```
+
+**Combined:**
+```
+security,16-25      Category + range
+@critical -8        Preset minus check
+```
+
+---
+
+Enter your selection: _
+```
+
+### Selection Parser
 
 ```python
-# Expand selections to individual categories
-selected_categories = []
+def parse_selection(input_str: str, checks: List[Check]) -> SelectionResult:
+    """Parse flexible selection syntax into check list."""
 
-# Critical tab
-if "All Critical" in critical_selections:
-    selected_categories.extend(["security", "tech-debt", "ai-security"])
-else:
-    if "Security" in critical_selections:
-        selected_categories.append("security")
-    if "Tech Debt" in critical_selections:
-        selected_categories.append("tech-debt")
-    if "AI Security" in critical_selections:
-        selected_categories.append("ai-security")
+    tokens = input_str.lower().split(',')
+    selected = set()
+    excluded = set()
+    errors = []
 
-# High tab (all individual)
-if "Tests" in high_selections:
-    selected_categories.append("tests")
-if "Integration" in high_selections:
-    selected_categories.append("integration")
-if "Code Quality" in high_selections:
-    selected_categories.append("code-quality")
-if "Docs" in high_selections:
-    selected_categories.append("docs")
+    for token in tokens:
+        token = token.strip()
 
-# Data/Ops tab (all individual)
-if "Database" in data_ops_selections:
-    selected_categories.append("database")
-if "Observability" in data_ops_selections:
-    selected_categories.append("observability")
-if "Monitoring" in data_ops_selections:
-    selected_categories.append("monitoring")
-if "CI/CD" in data_ops_selections:
-    selected_categories.append("cicd")
+        # Exclusion
+        if token.startswith('-'):
+            excluded.update(resolve(token[1:], checks))
+            continue
 
-# Infra tab (2 grouped pairs due to slot limit)
-if "Containers + Supply Chain" in infra_selections:
-    selected_categories.extend(["containers", "supply-chain"])
-if "Migrations" in infra_selections:
-    selected_categories.append("migrations")
-if "Performance" in infra_selections:
-    selected_categories.append("performance")
-if "Architecture + Git" in infra_selections:
-    selected_categories.extend(["architecture", "git"])
+        # Preset
+        if token.startswith('@'):
+            preset = PRESETS.get(token[1:])
+            if preset:
+                selected.update(preset.checks)
+            else:
+                errors.append(f"Unknown preset: {token}")
+            continue
 
-# Calculate check count dynamically from actual checks in each category
-total_checks = sum(get_check_count(cat) for cat in selected_categories)
-```
+        # Keywords
+        if token == 'all':
+            selected.update(c.id for c in checks if c.applicable)
+            continue
+        if token == 'critical':
+            selected.update(c.id for c in checks if c.category in ['security', 'database', 'tests'])
+            continue
 
-### Execution Filter (CRITICAL)
+        # Category name
+        if token in CATEGORIES:
+            selected.update(c.id for c in checks if c.category == token)
+            continue
 
-**ONLY audit selected categories. Never run unselected categories:**
+        # Range: 1-15
+        if '-' in token and token[0].isdigit():
+            try:
+                start, end = map(int, token.split('-'))
+                selected.update(range(start, end + 1))
+            except:
+                errors.append(f"Invalid range: {token}")
+            continue
 
-```python
-# Example: User selected only Security and Tests
-selected_categories = ["security", "tests"]
+        # Single number
+        if token.isdigit():
+            num = int(token)
+            if 1 <= num <= TOTAL_CHECKS:
+                selected.add(num)
+            else:
+                errors.append(f"Invalid number: {token}")
+            continue
 
-# Launch ONLY these agents
-for category in selected_categories:
-    Task({
-        subagent_type: "general-purpose",
-        model: "haiku",
-        prompt: f"Audit {category} category using relevant skills..."
-    })
+        # Slug name
+        check = next((c for c in checks if c.slug == token), None)
+        if check:
+            selected.add(check.id)
+        else:
+            errors.append(f"Unknown: {token}")
 
-# CI/CD was NOT selected - NO CI/CD checks will run
-# Database was NOT selected - NO database checks will run
-```
+    # Apply exclusions
+    final = selected - excluded
 
-**IMPORTANT:** If no categories are selected, prompt user to select at least one category.
+    # Filter to applicable only
+    final = {n for n in final if checks[n-1].applicable}
 
----
-
-### Level 3: Granular Level (Specific Checks)
-
-**If user selected "Granular Level", use hierarchical selection to stay within 4-option limit:**
-
-**IMPORTANT - Hierarchical Approach (Required for 4-Option Limit):**
-Since AskUserQuestion has a **maximum of 4 options per question**, the granular checks MUST be presented in 2 stages:
-
-**Stage 1:** Select check CATEGORIES (9 categories → 3 questions with 3-4 options each)
-**Stage 2:** For each selected category, select individual checks (max 15 per category → paginated if needed)
-
-**Tech Stack Detection (Required First):**
-```python
-# Analyze project to determine applicable checks
-detected_tech = {
-    "languages": [],      # python, javascript, java, go, etc.
-    "frameworks": [],     # flask, fastapi, django, react, vue, etc.
-    "databases": [],      # postgresql, mysql, mongodb, redis, etc.
-    "platforms": [],      # web, mobile, api, desktop, etc.
-    "tools": []           # docker, kubernetes, ci/cd, etc.
-}
-
-# Detection using Glob/Grep
-Glob("**/*.py") → Add "python" to languages
-Glob("**/requirements.txt") → Check for flask, django, fastapi
-Glob("**/package.json") → Add "javascript", check dependencies
-Glob("**/Dockerfile") → Add "docker" to tools
-Glob("**/*.sql") → Add "sql" to databases
-Grep("SELECT|INSERT|UPDATE", output_mode="files_with_matches") → SQL usage
+    return SelectionResult(
+        selected=sorted(final),
+        excluded=sorted(excluded),
+        errors=errors
+    )
 ```
 
 ---
 
-## 📋 Complete Granular Audit Checklist
+## Component 5: Pre-Flight Summary
 
-**This is the MASTER LIST organized into 9 categories for hierarchical selection.**
-
-### Stage 1: Select Check Categories
-
-```python
-# FIRST detect tech stack
-detected_tech = analyze_project()
-applicable_counts = count_applicable_checks_per_category(detected_tech)
-
-# THEN present CATEGORIES in groups of 3-4 (respecting 4-option limit)
-# Question 1: Critical categories
-AskUserQuestion({
-  questions: [{
-    question: "Which check categories do you want? (Page 1/3 - Critical Impact):",
-    header: "Categories",
-    multiSelect: true,
-    options: [
-      {
-        label: "Security Checks",
-        description: f"🔴 CRITICAL - {applicable_counts['security']}/15 applicable checks (SQL injection, XSS, CSRF, secrets, CVEs)"
-      },
-      {
-        label: "Database Checks",
-        description: f"🔴 CRITICAL - {applicable_counts['database']}/10 applicable checks (N+1, indexes, slow queries)"
-      },
-      {
-        label: "Test Checks",
-        description: f"🔴 CRITICAL - {applicable_counts['tests']}/12 applicable checks (coverage, isolation, pyramid)"
-      },
-      {
-        label: "More categories...",
-        description: "Continue to page 2 for more categories"
-      }
-    ]
-  }]
-})
-
-# Question 2: High priority categories
-AskUserQuestion({
-  questions: [{
-    question: "Which check categories do you want? (Page 2/3 - High Priority):",
-    header: "Categories",
-    multiSelect: true,
-    options: [
-      {
-        label: "Code Quality Checks",
-        description: f"🟡 HIGH - {applicable_counts['quality']}/15 applicable checks (dead code, complexity, linting)"
-      },
-      {
-        label: "Performance Checks",
-        description: f"🟡 HIGH - {applicable_counts['performance']}/10 applicable checks (caching, algorithms, memory)"
-      },
-      {
-        label: "CI/CD Checks",
-        description: f"🟡 HIGH - {applicable_counts['cicd']}/8 applicable checks (pipeline, gates, automation)"
-      },
-      {
-        label: "More categories...",
-        description: "Continue to page 3 for more categories"
-      }
-    ]
-  }]
-})
-
-# Question 3: Medium priority + All option
-AskUserQuestion({
-  questions: [{
-    question: "Which check categories do you want? (Page 3/3 - Medium Priority):",
-    header: "Categories",
-    multiSelect: true,
-    options: [
-      {
-        label: "Documentation Checks",
-        description: f"🟢 MEDIUM - {applicable_counts['docs']}/8 applicable checks (docstrings, API docs, README)"
-      },
-      {
-        label: "Container Checks",
-        description: f"🟢 MEDIUM - {applicable_counts['containers']}/6 applicable checks (Dockerfile, non-root, size)"
-      },
-      {
-        label: "Tech Debt Checks",
-        description: f"🟢 MEDIUM - {applicable_counts['debt']}/8 applicable checks (deprecated APIs, coupling)"
-      },
-      {
-        label: "All Granular Checks",
-        description: "✅ Run ALL checks across all categories"
-      }
-    ]
-  }]
-})
-```
-
-### Stage 2: Select Individual Checks per Category
-
-**For each selected category, present individual checks (paginated if >4):**
-
-```python
-# Example: If user selected "Security Checks"
-# Show applicable checks from that category
-security_checks = get_applicable_checks("security", detected_tech)
-
-# If <= 4 checks, show in one question
-# If > 4 checks, paginate (3 checks + "More...")
-AskUserQuestion({
-  questions: [{
-    question: f"Which Security checks to run? ({len(security_checks)} applicable):",
-    header: "Security",
-    multiSelect: true,
-    options: generate_paginated_options(security_checks)
-    # Options generated dynamically with REAL applicability from tech stack detection
-  }]
-})
-```
-
----
-
-## 📋 Check Reference by Category
-
-**Security:** SQL injection, XSS, CSRF, hardcoded secrets, authentication, authorization, CVE scan, AI prompt injection, SSRF, XXE, path traversal, command injection, insecure deserialization, weak crypto, security headers
-
-**Database:** N+1 queries, missing indexes, slow queries, connection pooling, query optimization, transaction isolation, deadlock detection, migration consistency, raw SQL usage, database credentials
-
-**Tests:** Coverage analysis, untested functions, test isolation, test pyramid, edge cases, flaky tests, test naming, assertion quality, mock overuse, test data management, integration coverage, e2e coverage
-
-**Code Quality:** Dead code, complexity, duplication, type errors, linting, code smells, long functions, long files, deep nesting, magic numbers, TODO comments, commented code, import organization, naming conventions, error handling
-
-**Performance:** Slow queries, large bundles, no caching, circuit breakers, memory leaks, inefficient algorithms, large loops, file I/O, network calls in loops, lazy loading
-
-**Documentation:** Missing docstrings, API documentation, README completeness, documentation drift, code comments, examples, ADRs, runbooks
-
-**CI/CD:** Pipeline existence, quality gates, secret management, build optimization, test automation, deployment automation, rollback strategy, environment parity
-
-**Containers:** Dockerfile best practices, multi-stage builds, non-root user, image size, base image vulnerabilities, layer optimization
-
-**Tech Debt:** Deprecated APIs, legacy code, hard dependencies, tight coupling, god objects, feature envy, data clumps, shotgun surgery
-
----
-
-## 📝 Applicability Detection Rules
-
-**Dynamic detection - mark checks as applicable based on project analysis:**
-
-```python
-# Security checks applicability
-"SQL Injection" → applicable if: databases detected OR Grep("execute|query") finds results
-"XSS" → applicable if: Glob("**/templates/**") OR Grep("render_template|innerHTML")
-"CSRF" → applicable if: Grep("<form") OR web framework detected
-"Hardcoded secrets" → applicable if: ALWAYS (all projects)
-"AI prompt injection" → applicable if: Grep("openai|anthropic|langchain")
-
-# Database checks applicability
-"N+1 queries" → applicable if: ORM imports detected (SQLAlchemy, Django ORM)
-"Missing indexes" → applicable if: database detected
-"Connection pooling" → applicable if: database connection code found
-
-# Test checks applicability
-"Test coverage" → applicable if: tests/ directory found
-"Untested functions" → applicable if: ALWAYS
-
-# And so on for all checks...
-```
-
----
-
-## 📝 Implementation Instructions for Level 3
-
-**CRITICAL - Hierarchical Selection Protocol:**
-
-1. **Tech Stack Detection (MUST DO FIRST):**
-   - Use Glob/Grep to detect languages, frameworks, databases, tools
-   - Count applicable checks per category based on detection
-
-2. **Stage 1 - Category Selection:**
-   - Present 9 categories across 3 questions (3-4 options each)
-   - Include "All Granular Checks" option on last page
-
-3. **Stage 2 - Individual Check Selection:**
-   - For each selected category, present individual checks
-   - Paginate if category has >4 applicable checks (3 checks + "More...")
-   - Generate descriptions dynamically with REAL applicability data
-
-4. **Execution:**
-   - Run only selected checks
-   - If "All Granular Checks" selected, run everything
-   - If category group selected, run all checks in that category
-
-**Example: User selects "Security Checks" category**
-→ Show 15 security checks paginated (4 pages × 3-4 options)
-→ Each option shows real applicability from project analysis
-→ User selects specific checks or "All Security Checks"
-
----
-
-### Common Step for All Levels
-
-2. **Present analysis plan and confirm** using AskUserQuestion:
-      {
-        label: "Code smells detection",
-        description: "(Code Quality, 2 min) Find long parameter lists, god classes, etc. | ✅ APPLICABLE - Always applicable | 🟢 MEDIUM"
-        # Applicable if: ALWAYS
-      },
-      {
-        label: "Long functions check",
-        description: "(Code Quality, 1 min) Find functions >50 lines | ✅ APPLICABLE - Always applicable | 🟢 MEDIUM"
-        # Applicable if: ALWAYS
-      },
-      {
-        label: "Long files check",
-        description: "(Code Quality, 1 min) Find files >500 lines | ✅ APPLICABLE - Always applicable | 🟢 MEDIUM"
-        # Applicable if: ALWAYS
-      },
-      {
-        label: "Deep nesting check",
-        description: "(Code Quality, 1 min) Find code with >4 nesting levels | ✅ APPLICABLE - Always applicable | 🟡 HIGH"
-        # Applicable if: ALWAYS
-      },
-      {
-        label: "Magic numbers check",
-        description: "(Code Quality, 1 min) Find hardcoded numbers (not 0, 1, -1) | ✅ APPLICABLE - Always applicable | 🟢 MEDIUM"
-        # Applicable if: ALWAYS
-      },
-      {
-        label: "TODO comments check",
-        description: "(Code Quality, 1 min) Find TODO/FIXME/HACK comments | ✅ APPLICABLE - Always applicable | 🟢 MEDIUM"
-        # Applicable if: ALWAYS
-      },
-      {
-        label: "Commented code check",
-        description: "(Code Quality, 1 min) Find large blocks of commented code | ✅ APPLICABLE - Always applicable | 🟢 MEDIUM"
-        # Applicable if: ALWAYS
-      },
-      {
-        label: "Import organization check",
-        description: "(Code Quality, 1 min) Check import ordering and grouping | ✅ APPLICABLE - Always applicable | 🟢 MEDIUM"
-        # Applicable if: ALWAYS
-      },
-      {
-        label: "Naming conventions check",
-        description: "(Code Quality, 1 min) Verify snake_case, camelCase, PascalCase | ✅ APPLICABLE - Always applicable | 🟢 MEDIUM"
-        # Applicable if: ALWAYS
-      },
-      {
-        label: "Error handling check",
-        description: "(Code Quality, 2 min) Find bare except, missing error handling | ✅ APPLICABLE - Always applicable | 🟡 HIGH"
-        # Applicable if: ALWAYS
-      },
-
-      # ========================================
-      # PERFORMANCE CHECKS (10 checks)
-      # ========================================
-      {
-        label: "Slow query detection",
-        description: "(Performance, 2 min) Find queries taking >100ms | ✅ APPLICABLE - Database detected | 🔴 CRITICAL"
-        # Applicable if: database detected
-      },
-      {
-        label: "Large bundle analysis",
-        description: "(Performance, 2 min) Check frontend bundle size | ✅ APPLICABLE - Frontend detected | 🟡 HIGH"
-        # Applicable if: webpack/vite/rollup config found
-      },
-      {
-        label: "No caching check",
-        description: "(Performance, 1 min) Find expensive operations without caching | ✅ APPLICABLE - Always applicable | 🟡 HIGH"
-        # Applicable if: ALWAYS
-      },
-      {
-        label: "Circuit breaker check",
-        description: "(Performance, 1 min) Verify circuit breakers on external calls | ✅ APPLICABLE - API calls detected | 🟢 MEDIUM"
-        # Applicable if: HTTP client usage found
-      },
-      {
-        label: "Memory leak detection",
-        description: "(Performance, 2 min) Find potential memory leaks | ✅ APPLICABLE - Always applicable | 🟡 HIGH"
-        # Applicable if: ALWAYS
-      },
-      {
-        label: "Inefficient algorithms check",
-        description: "(Performance, 2 min) Find O(n²) or worse algorithms | ✅ APPLICABLE - Always applicable | 🟡 HIGH"
-        # Applicable if: ALWAYS
-      },
-      {
-        label: "Large loops check",
-        description: "(Performance, 1 min) Find loops processing >10k items | ✅ APPLICABLE - Always applicable | 🟢 MEDIUM"
-        # Applicable if: ALWAYS
-      },
-      {
-        label: "File I/O optimization check",
-        description: "(Performance, 1 min) Find inefficient file operations | ✅ APPLICABLE - File I/O detected | 🟡 HIGH"
-        # Applicable if: file operations found
-      },
-      {
-        label: "Network calls in loops check",
-        description: "(Performance, 1 min) Find API calls inside loops | ✅ APPLICABLE - HTTP usage detected | 🔴 CRITICAL"
-        # Applicable if: HTTP client usage found
-      },
-      {
-        label: "Lazy loading check",
-        description: "(Performance, 1 min) Verify lazy loading for heavy resources | ✅ APPLICABLE - Frontend detected | 🟢 MEDIUM"
-        # Applicable if: frontend framework detected
-      },
-
-      # ========================================
-      # DOCUMENTATION CHECKS (8 checks)
-      # ========================================
-      {
-        label: "Missing docstrings check",
-        description: "(Documentation, 1 min) Find functions without docstrings | ✅ APPLICABLE - Always applicable | 🟢 MEDIUM"
-        # Applicable if: ALWAYS
-      },
-      {
-        label: "API documentation check",
-        description: "(Documentation, 1 min) Verify OpenAPI/Swagger exists | ✅ APPLICABLE - API detected | 🟡 HIGH"
-        # Applicable if: API endpoints found
-      },
-      {
-        label: "README completeness check",
-        description: "(Documentation, 1 min) Verify README has setup, usage, contributing | ✅ APPLICABLE - Always applicable | 🟢 MEDIUM"
-        # Applicable if: ALWAYS
-      },
-      {
-        label: "Documentation drift check",
-        description: "(Documentation, 2 min) Find code-doc inconsistencies | ✅ APPLICABLE - Docs detected | 🟢 MEDIUM"
-        # Applicable if: docs/ directory found
-      },
-      {
-        label: "Code comments check",
-        description: "(Documentation, 1 min) Check comment quality and relevance | ✅ APPLICABLE - Always applicable | 🟢 MEDIUM"
-        # Applicable if: ALWAYS
-      },
-      {
-        label: "Examples check",
-        description: "(Documentation, 1 min) Verify code examples in docs | ✅ APPLICABLE - Docs detected | 🟢 MEDIUM"
-        # Applicable if: docs/ directory found
-      },
-      {
-        label: "Architecture docs check (ADRs)",
-        description: "(Documentation, 1 min) Check for Architecture Decision Records | ✅ APPLICABLE - Always applicable | 🟢 MEDIUM"
-        # Applicable if: ALWAYS
-      },
-      {
-        label: "Runbooks check",
-        description: "(Documentation, 1 min) Verify operational runbooks exist | ✅ APPLICABLE - Production app | 🟡 HIGH"
-        # Applicable if: production deployment indicators
-      },
-
-      # ========================================
-      # CI/CD CHECKS (8 checks)
-      # ========================================
-      {
-        label: "Pipeline existence check",
-        description: "(CI/CD, 1 min) Verify CI/CD pipeline exists | ✅ APPLICABLE - Always applicable | 🟡 HIGH"
-        # Applicable if: ALWAYS
-      },
-      {
-        label: "Quality gates check",
-        description: "(CI/CD, 1 min) Verify linting, testing in pipeline | ✅ APPLICABLE - Pipeline detected | 🟡 HIGH"
-        # Applicable if: CI config found
-      },
-      {
-        label: "Secret management check",
-        description: "(CI/CD, 1 min) Verify secrets not in pipeline files | ✅ APPLICABLE - Pipeline detected | 🔴 CRITICAL"
-        # Applicable if: CI config found
-      },
-      {
-        label: "Build optimization check",
-        description: "(CI/CD, 1 min) Check for build caching, parallel jobs | ✅ APPLICABLE - Pipeline detected | 🟢 MEDIUM"
-        # Applicable if: CI config found
-      },
-      {
-        label: "Test automation check",
-        description: "(CI/CD, 1 min) Verify tests run automatically | ✅ APPLICABLE - Pipeline detected | 🟡 HIGH"
-        # Applicable if: CI config found
-      },
-      {
-        label: "Deployment automation check",
-        description: "(CI/CD, 1 min) Verify automated deployment | ✅ APPLICABLE - Pipeline detected | 🟡 HIGH"
-        # Applicable if: CI config found
-      },
-      {
-        label: "Rollback strategy check",
-        description: "(CI/CD, 1 min) Verify rollback capability | ✅ APPLICABLE - Deployment detected | 🟡 HIGH"
-        # Applicable if: deployment config found
-      },
-      {
-        label: "Environment parity check",
-        description: "(CI/CD, 1 min) Verify dev/staging/prod consistency | ✅ APPLICABLE - Multiple envs detected | 🟡 HIGH"
-        # Applicable if: multiple environment configs found
-      },
-
-      # ========================================
-      # CONTAINER CHECKS (6 checks)
-      # ========================================
-      {
-        label: "Dockerfile best practices",
-        description: "(Containers, 1 min) Check for anti-patterns | ✅ APPLICABLE - Docker detected | 🟡 HIGH"
-        # Applicable if: Dockerfile found
-      },
-      {
-        label: "Multi-stage builds check",
-        description: "(Containers, 1 min) Verify multi-stage Dockerfile | ✅ APPLICABLE - Docker detected | 🟡 HIGH"
-        # Applicable if: Dockerfile found
-      },
-      {
-        label: "Non-root user check",
-        description: "(Containers, 1 min) Verify container runs as non-root | ✅ APPLICABLE - Docker detected | 🔴 CRITICAL"
-        # Applicable if: Dockerfile found
-      },
-      {
-        label: "Image size check",
-        description: "(Containers, 1 min) Check Docker image size | ✅ APPLICABLE - Docker detected | 🟡 HIGH"
-        # Applicable if: Dockerfile found
-      },
-      {
-        label: "Base image vulnerabilities",
-        description: "(Containers, 2 min) Scan base images for CVEs | ✅ APPLICABLE - Docker detected | 🔴 CRITICAL"
-        # Applicable if: Dockerfile found
-      },
-      {
-        label: "Layer optimization check",
-        description: "(Containers, 1 min) Check layer ordering for caching | ✅ APPLICABLE - Docker detected | 🟢 MEDIUM"
-        # Applicable if: Dockerfile found
-      },
-
-      # ========================================
-      # TECH DEBT CHECKS (8 checks)
-      # ========================================
-      {
-        label: "Deprecated APIs check",
-        description: "(Tech Debt, 2 min) Find usage of deprecated APIs/libraries | ✅ APPLICABLE - Always applicable | 🟡 HIGH"
-        # Applicable if: ALWAYS
-      },
-      {
-        label: "Legacy code detection",
-        description: "(Tech Debt, 2 min) Find old code needing refactoring | ✅ APPLICABLE - Always applicable | 🟢 MEDIUM"
-        # Applicable if: ALWAYS
-      },
-      {
-        label: "Hard dependencies check",
-        description: "(Tech Debt, 1 min) Find tight coupling to external services | ✅ APPLICABLE - Always applicable | 🟡 HIGH"
-        # Applicable if: ALWAYS
-      },
-      {
-        label: "Tight coupling check",
-        description: "(Tech Debt, 2 min) Find modules with high coupling | ✅ APPLICABLE - Always applicable | 🟡 HIGH"
-        # Applicable if: ALWAYS
-      },
-      {
-        label: "God objects detection",
-        description: "(Tech Debt, 2 min) Find classes doing too much | ✅ APPLICABLE - OOP detected | 🟡 HIGH"
-        # Applicable if: classes found
-      },
-      {
-        label: "Feature envy detection",
-        description: "(Tech Debt, 1 min) Find methods using other class data excessively | ✅ APPLICABLE - OOP detected | 🟢 MEDIUM"
-        # Applicable if: classes found
-      },
-      {
-        label: "Data clumps check",
-        description: "(Tech Debt, 1 min) Find repeated parameter groups | ✅ APPLICABLE - Always applicable | 🟢 MEDIUM"
-        # Applicable if: ALWAYS
-      },
-      {
-        label: "Shotgun surgery check",
-        description: "(Tech Debt, 2 min) Find changes requiring edits in many places | ✅ APPLICABLE - Always applicable | 🟢 MEDIUM"
-        # Applicable if: ALWAYS
-      },
-
-      # ========================================
-      # GROUP OPTIONS - Category-wise
-      # ========================================
-      {
-        label: "All Security Checks",
-        description: "✅ Run all 15 security checks (SQL injection, XSS, CSRF, secrets, auth, authz, CVEs, AI, SSRF, XXE, path traversal, command injection, deserialization, weak crypto, headers)"
-      },
-      {
-        label: "All Database Checks",
-        description: "✅ Run all 10 database checks (N+1, indexes, slow queries, pooling, optimization, transactions, deadlocks, migrations, raw SQL, credentials)"
-      },
-      {
-        label: "All Test Checks",
-        description: "✅ Run all 12 test checks (coverage, untested functions, isolation, pyramid, edge cases, flaky tests, naming, assertions, mocks, data management, integration, e2e)"
-      },
-      {
-        label: "All Code Quality Checks",
-        description: "✅ Run all 15 code quality checks (dead code, complexity, duplication, types, linting, smells, long functions/files, nesting, magic numbers, TODOs, commented code, imports, naming, error handling)"
-      },
-      {
-        label: "All Performance Checks",
-        description: "✅ Run all 10 performance checks (slow queries, bundles, caching, circuit breakers, memory leaks, algorithms, loops, file I/O, network calls, lazy loading)"
-      },
-      {
-        label: "All Documentation Checks",
-        description: "✅ Run all 8 documentation checks (docstrings, API docs, README, drift, comments, examples, ADRs, runbooks)"
-      },
-      {
-        label: "All CI/CD Checks",
-        description: "✅ Run all 8 CI/CD checks (pipeline, quality gates, secrets, build optimization, test automation, deployment automation, rollback, environment parity)"
-      },
-      {
-        label: "All Container Checks",
-        description: "✅ Run all 6 container checks (Dockerfile best practices, multi-stage, non-root, image size, base image vulnerabilities, layer optimization)"
-      },
-      {
-        label: "All Tech Debt Checks",
-        description: "✅ Run all 8 tech debt checks (deprecated APIs, legacy code, hard dependencies, tight coupling, god objects, feature envy, data clumps, shotgun surgery)"
-      },
-
-      # ========================================
-      # FILTERING OPTIONS
-      # ========================================
-      {
-        label: "Show All Checks",
-        description: "📋 Display ALL checks (including non-applicable ones marked with ⚪)"
-      },
-      {
-        label: "Show Only Applicable",
-        description: "✅ Display only applicable checks for this project (default, recommended)"
-      },
-
-      # ========================================
-      # MASTER OPTION
-      # ========================================
-      {
-        label: "All Granular Checks",
-        description: "✅ RUN ALL CHECKS - Comprehensive granular audit (ignores other selections)"
-      }
-    ]
-  }]
-})
-```
-
-**Summary of Granular Checks:**
-- Security: [count from list above]
-- Database: [count from list above]
-- Tests: [count from list above]
-- Code Quality: [count from list above]
-- Performance: [count from list above]
-- Documentation: [count from list above]
-- CI/CD: [count from list above]
-- Containers: [count from list above]
-- Tech Debt: [count from list above]
-
-**Total: {{GRANULAR_CHECK_COUNT}} checks** (calculate by summing all category checks above)
-
----
-
-## 📝 Implementation Instructions for Level 3
-
-**CRITICAL - Sabit Liste + Smart Filtering Protocol:**
-
-1. **Tech Stack Detection (MUST DO FIRST):**
-   ```python
-   detected_tech = {
-       "languages": [],
-       "frameworks": [],
-       "databases": [],
-       "platforms": [],
-       "tools": []
-   }
-
-   # Use Glob to detect
-   if Glob("**/*.py").found:
-       detected_tech["languages"].append("python")
-   if Glob("**/requirements.txt").found:
-       # Read and check for flask, django, fastapi
-   if Glob("**/package.json").found:
-       detected_tech["languages"].append("javascript")
-       # Read and check for react, vue, angular
-   if Glob("**/Dockerfile").found:
-       detected_tech["tools"].append("docker")
-   if Glob("**/*.sql").found or Glob("**/migrations/**").found:
-       detected_tech["databases"].append("sql")
-   # etc...
-   ```
-
-2. **Applicability Determination:**
-   - For each check, determine if applicable based on detected_tech
-   - Mark with ✅ APPLICABLE or ⚪ NOT APPLICABLE
-   - Update description with specific reason
-
-3. **Filtering Options:**
-   - Default: Show only applicable checks (recommended)
-   - Optional: "Show All Checks" to see everything
-
-4. **User Selection:**
-   - Individual checks: Run ONLY selected
-   - Category group (e.g., "All Security Checks"): Run all in that category
-   - "All Granular Checks": Run ALL checks
-
-**IMPORTANT:**
-- If user selects "All Granular Checks", run ALL checks
-- If user selects "All [Category] Checks", run all checks in that category
-- Otherwise, run ONLY the individually selected checks
-- Show real data in descriptions (e.g., "Found 23 functions without tests")
-
----
-
-### Common Step for All Levels
-
-2. **Present analysis plan and confirm** using AskUserQuestion:
+**Show EXACTLY what will happen before execution. No surprises.**
 
 ```markdown
-Selected categories: [list selected categories or "All {{CATEGORY_COUNT}} categories"]
+## Pre-Flight Summary
 
-Skills I'll use:
-- [list skills for selected categories]
+### Selection Overview
 
-Agent: cco-agent-audit (Haiku for fast scanning, Sonnet for complex analysis)
+┌─────────────────────────────────────────────────┐
+│ SELECTED: {COUNT} checks                        │
+├─────────────────────────────────────────────────┤
+│ 🔴 Security        {SELECTED}/{CATEGORY_TOTAL} checks    ~{T} min    │
+│    └─ {list of check numbers}                   │
+│                                                 │
+│ 🔴 Database        {SELECTED}/{CATEGORY_TOTAL} checks    ~{T} min    │
+│    └─ {list of check numbers}                   │
+│                                                 │
+│ 🔴 Tests           {SELECTED}/{CATEGORY_TOTAL} checks    ~{T} min    │
+│    └─ {list of check numbers}                   │
+├─────────────────────────────────────────────────┤
+│ Total time: {MIN}-{MAX} minutes                 │
+└─────────────────────────────────────────────────┘
 
-I'll check:
-- [specific checks for each selected category]
-- [estimated file count] files to analyze
-- Estimated time: [X] minutes
+### What's NOT Running
+
+**Not Applicable ({COUNT}):**
+- #{N} {Name} - {Reason}
+- #{N} {Name} - {Reason}
+...
+
+**Manually Excluded ({COUNT}):**
+- #{N} {Name}
+...
+
+**Other Categories ({COUNT}):**
+- Code Quality, Performance, CI/CD, etc.
+
+### Execution Plan
+
+**Phase 1: Setup** (~30s)
+- Load skills: {list}
+- Discover files: {count} files
+- Initialize tools: {list}
+
+**Phase 2: Scanning** (~{TIME} min)
+- {Category}: {count} checks (parallel)
+- {Category}: {count} checks (parallel)
+...
+
+**Phase 3: Synthesis** (~2 min)
+- Aggregate findings
+- Calculate scores
+- Generate report
+
+### Confirmation
 ```
 
 ```python
 AskUserQuestion({
   questions: [{
-    question: "Ready to start the audit with the configuration above?",
+    question: "Ready to start audit?",
     header: "Confirm",
     multiSelect: false,
     options: [
       {
-        label: "Yes, start audit",
-        description: "Begin auditing selected categories"
+        label: "Start Audit",
+        description: f"Run {count} checks (~{time} min)"
       },
       {
-        label: "No, cancel",
-        description: "Cancel and return to category selection"
+        label: "Modify Selection",
+        description: "Change selected checks"
+      },
+      {
+        label: "Cancel",
+        description: "Exit without running"
       }
     ]
   }]
 })
 ```
 
-3. **Use TodoWrite** to track audit progress per category
+---
 
-4. **Launch Task tool** with `cco-agent-audit`:
+## Component 6: Execution Dashboard
+
+**Real-time visibility during execution. Update as progress happens.**
+
+### Initial Display
+
+```markdown
+## Audit Execution
+
+**Started:** {TIME}
+**Selection:** {COUNT} checks ({CATEGORIES})
+
+───────────────────────────────────────────────────
+
+### Phase 1/3: Setup
+⠋ Loading skills...
+```
+
+### Phase 1 Complete
+
+```markdown
+### Phase 1/3: Setup ✓ ({TIME}s)
+
+Skills loaded: {count}
+Files discovered: {count}
+Scanners initialized: {count}
+
+### Phase 2/3: Scanning
+
+Elapsed: {TIME} | Remaining: ~{TIME}
+
+{Category}  ████████░░░░ {PCT}% ({X}/{Y} files)
+{Category}  ████░░░░░░░░ {PCT}% ({X}/{Y} files)
+{Category}  ░░░░░░░░░░░░ 0% (queued)
+
+Current: {action} in {file}
+```
+
+### Streaming Findings
+
+```markdown
+### Findings (Live)
+
+🔴 CRITICAL ({COUNT}):
+├─ {Issue} in {file}:{line}
+└─ {Issue} in {file}:{line}
+
+🟡 HIGH ({COUNT}):
+├─ {Issue} in {file}:{line}
+├─ {Issue} in {file}:{line}
+└─ ... and {N} more
+
+🟢 MEDIUM ({COUNT}):
+└─ {Issue} in {file}:{line}
+```
+
+### Phase 2 Complete
+
+```markdown
+### Phase 2/3: Scanning ✓ ({TIME})
+
+Checks completed: {X}/{Y}
+Files scanned: {count}
+Issues found: {critical} critical, {high} high, {medium} medium
+
+### Phase 3/3: Synthesis
+⠋ Aggregating findings...
+⠋ Calculating scores...
+⠋ Generating report...
+```
+
+### Execution Complete
+
+```markdown
+### Phase 3/3: Synthesis ✓ ({TIME})
+
+───────────────────────────────────────────────────
+
+## Audit Complete
+
+**Duration:** {TOTAL_TIME}
+**Checks run:** {COUNT}
+**Issues found:** {TOTAL} ({critical} critical, {high} high, {medium} medium)
+**Score:** {SCORE}/100 (Grade: {GRADE})
+```
+
+---
+
+## Component 7: Final Report
+
+**Actionable, prioritized results with clear next steps.**
+
+```markdown
+═══════════════════════════════════════════════════════════════
+                         AUDIT REPORT
+═══════════════════════════════════════════════════════════════
+
+## Executive Summary
+
+**Score:** {SCORE}/100 (Grade: {GRADE})
+**Risk Level:** {LEVEL} - {DESCRIPTION}
+
+| Category | Score | Issues | Status |
+|----------|-------|--------|--------|
+| Security | {X}/100 | {N} | {STATUS} |
+| Database | {X}/100 | {N} | {STATUS} |
+| Tests | {X}/100 | {N} | {STATUS} |
+
+**Top Concerns:**
+1. {Issue description}
+2. {Issue description}
+3. {Issue description}
+
+───────────────────────────────────────────────────────────────
+
+## Critical Issues ({COUNT})
+
+### {N}. {Issue Type} - {file}:{line}
+
+**Severity:** 🔴 CRITICAL
+**Category:** {Category}
+**Check:** #{N} {Check Name}
+
+**Vulnerable Code:**
+```{lang}
+# {file}:{line}
+{actual code snippet}
+```
+
+**Risk:** {Explanation of what could go wrong}
+
+**Fix:**
+```{lang}
+{corrected code}
+```
+
+**Command:** `/cco-fix --check={N} --file={file}`
+
+---
+
+[Repeat for each critical issue]
+
+───────────────────────────────────────────────────────────────
+
+## High Priority Issues ({COUNT})
+
+### {N}. {Issue Type} - {file}:{line}
+```{lang}
+{code snippet}
+```
+**Fix:** {Brief fix description}
+**Command:** `/cco-fix --check={N} --file={file}`
+
+[Repeat for each high issue]
+
+───────────────────────────────────────────────────────────────
+
+## Medium Priority Issues ({COUNT})
+
+### {N}. {Issue Type} - {file}:{line}
+**Fix:** {Brief description}
+**Command:** `/cco-fix --check={N} --file={file}`
+
+[Repeat for each medium issue]
+
+───────────────────────────────────────────────────────────────
+
+## Recommended Actions
+
+### P0 - Fix Now (Critical)
+**Issues:** {count} critical vulnerabilities
+**Time:** ~{time}
+**Command:**
+```bash
+/cco-fix --critical
+```
+
+### P1 - Fix This Week (High)
+**Issues:** {count} high priority
+**Time:** ~{time}
+**Command:**
+```bash
+/cco-fix --high
+```
+
+### P2 - Fix This Sprint (Medium)
+**Issues:** {count} medium priority
+**Time:** ~{time}
+**Command:**
+```bash
+/cco-fix --medium
+```
+
+───────────────────────────────────────────────────────────────
+
+## Score Improvement
+
+| Action | Issues | Impact |
+|--------|--------|--------|
+| Fix critical | {N} | +{X} pts |
+| Fix high | {N} | +{X} pts |
+| Fix medium | {N} | +{X} pts |
+| **Total** | **{N}** | **{X} → {Y}** |
+
+───────────────────────────────────────────────────────────────
+
+## Re-run Audit
+
+After fixes, verify:
+```bash
+/cco-audit --checks="{list of check numbers that had issues}"
+```
+
+Expected: 0 issues → Score: {projected}/100
+
+═══════════════════════════════════════════════════════════════
+```
+
+---
+
+## Agent Orchestration
+
+### 6-Aspect Parallel Audit
+
+For comprehensive audits (`--all`, `--preset=weekly`, `--preset=critical`), use 6 specialized parallel agents:
+
 ```python
+# Launch 6 aspect-focused agents in parallel
 Task({
-  subagent_type: "general-purpose",
-  model: "haiku",
-  prompt: """
-  Run security audit using:
-  - cco-skill-security-owasp-xss-sqli-csrf
-  - cco-skill-ai-security-promptinjection-models
-  - cco-skill-supply-chain-dependencies-sast
+    subagent_type: "audit-agent",
+    model: "sonnet",
+    description: "Security audit",
+    prompt: """
+    Focus: Security vulnerabilities
+    Checks: SQL injection, XSS, CSRF, secrets, auth, CVEs
+    Skill: cco-skill-security-owasp
+    Return: Findings with severity, file:line, risk, fix
+    """
+})
 
-  Check for:
-  - SQL injection (grep for string concatenation in queries)
-  - XSS vulnerabilities (unescaped template variables)
-  - Hardcoded secrets (API keys, passwords, tokens)
-  - CSRF protection on forms
-  - Authentication/authorization gaps
-  - Dependency CVEs (check all dependencies)
-  - AI prompt injection risks (if AI features exist)
+Task({
+    subagent_type: "audit-agent",
+    model: "haiku",
+    description: "Performance audit",
+    prompt: """
+    Focus: Performance bottlenecks
+    Checks: N+1 queries, missing indexes, no caching, slow algorithms
+    Skill: cco-skill-database-optimization
+    Return: Findings with impact metrics, file:line, optimization
+    """
+})
 
-  Return detailed report with:
-  - Issue severity (Critical/High/Medium/Low)
-  - File:line references
-  - Explanation of risk
-  - Recommended fix
-  - Skill used for detection
-  """
+Task({
+    subagent_type: "audit-agent",
+    model: "sonnet",
+    description: "Test coverage audit",
+    prompt: """
+    Focus: Testing gaps
+    Checks: Coverage, untested functions, isolation, pyramid
+    Skill: cco-skill-test-pyramid
+    Return: Findings with coverage %, critical untested paths
+    """
+})
+
+Task({
+    subagent_type: "audit-agent",
+    model: "haiku",
+    description: "Code quality audit",
+    prompt: """
+    Focus: Code quality issues
+    Checks: Complexity, dead code, duplication, smells
+    Skill: cco-skill-code-quality
+    Return: Findings with metrics (CC, LOC), file:line, refactor suggestion
+    """
+})
+
+Task({
+    subagent_type: "audit-agent",
+    model: "sonnet",
+    description: "Architecture audit",
+    prompt: """
+    Focus: Architecture concerns
+    Checks: Coupling, patterns, boundaries, dependencies
+    Skill: cco-skill-microservices-cqrs
+    Return: Findings with design issue, impact, restructure suggestion
+    """
+})
+
+Task({
+    subagent_type: "audit-agent",
+    model: "haiku",
+    description: "Documentation audit",
+    prompt: """
+    Focus: Documentation gaps
+    Checks: Docstrings, API docs, README, ADRs
+    Skill: cco-skill-docs-api-openapi
+    Return: Findings with missing doc type, file:line, template
+    """
+})
+
+# Synthesis agent (waits for all 6 to complete)
+Task({
+    subagent_type: "audit-agent",
+    model: "sonnet",
+    description: "Synthesize findings",
+    prompt: """
+    Aggregate all 6 aspect findings:
+    - Deduplicate overlapping issues
+    - Calculate overall score
+    - Prioritize by severity and impact
+    - Generate unified report
+    """
 })
 ```
 
-5. **Present results** with pain-point impact:
+**Benefits of 6-Aspect Approach:**
+- Parallel = faster (6 agents simultaneously vs sequential)
+- Specialized = more accurate (each agent focuses on one domain)
+- Complete = nothing missed (all aspects covered)
 
-**IMPORTANT - Dynamic Results Generation:**
-Generate results from ACTUAL audit findings. Use this template structure but fill with REAL data:
+### Model Selection by Aspect
 
-```markdown
-[Category] Audit Results:
+| Aspect | Model | Rationale |
+|--------|-------|-----------|
+| Security | Sonnet | Semantic analysis, context-aware vulnerability detection |
+| Performance | Haiku | Pattern matching, metrics collection |
+| Testing | Sonnet | Coverage analysis, critical path identification |
+| Quality | Haiku | Metrics calculation, pattern detection |
+| Architecture | Sonnet | Design pattern recognition, coupling analysis |
+| Documentation | Haiku | Presence checks, template matching |
 
-🔴 Critical ([REAL_COUNT]):
-1. [REAL_ISSUE_TYPE] in <file>:<line>
-   Skill: [ACTUAL_SKILL_USED]
-   Risk: [REAL_RISK_DESCRIPTION]
-   Fix: [SPECIFIC_FIX_FOR_THIS_CODE]
+### Single-Category Execution
 
-[... list ALL critical issues found ...]
+For single-category audits (`--preset=security`, `--preset=database`), use direct execution:
 
-🟡 High Priority ([REAL_COUNT]):
-- [REAL_ISSUE_1] in <file>:<line>
-- [REAL_ISSUE_2] in <file>:<line>
-[... list ALL high priority issues ...]
-
-🟢 Medium Priority ([REAL_COUNT]):
-[... list ALL medium priority issues ...]
-
-Impact:
-- Addresses Pain #[X] ([PAIN_DESCRIPTION])
-- Vulnerabilities found: [ACTUAL_TOTAL] total
-- Risk level: [CALCULATED_RISK_LEVEL]
-
-➜ Next: /cco-fix --[category] (auto-fixes [ACTUAL_AUTO_FIXABLE_COUNT] issues)
+```python
+# Single category = one focused agent
+Task({
+    subagent_type: "audit-agent",
+    model: "sonnet",  # or haiku based on category
+    description: f"{category} audit",
+    prompt: generate_category_prompt(category, checks)
+})
 ```
 
-**Never use placeholder examples in actual results - only show what was really found.**
+### Cost Optimization
 
-6. **Recommend next action** with specific command
+```
+6-Aspect Parallel (comprehensive):
+├── 4 Haiku agents: $0.20
+├── 2 Sonnet agents: $0.60
+├── 1 Sonnet synthesis: $0.30
+└── Total: ~$1.10
 
-### Parametrized Mode (Power Users)
+vs All-Sonnet Sequential:
+└── Total: ~$3.50 (3x more expensive, 6x slower)
+```
 
-**Category Level (Original System):**
+---
+
+## CLI Usage
+
+### Interactive (Default)
 ```bash
-# Single category
+/cco-audit
+```
+
+### Parametrized (Power Users)
+
+**Presets:**
+```bash
+/cco-audit --preset=pre-commit
+/cco-audit --preset=security
+/cco-audit --preset=pre-deploy
+/cco-audit --preset=weekly
+```
+
+**Categories:**
+```bash
 /cco-audit --security
-
-# Multiple categories
-/cco-audit --security --tech-debt --tests
-
-# All categories
+/cco-audit --security --database --tests
 /cco-audit --all
 ```
 
-**Preset Level (Use-Case Based):**
+**Specific checks:**
 ```bash
-# Quick presets
-/cco-audit --preset=pre-commit
-/cco-audit --preset=pre-deployment
-/cco-audit --preset=performance
-/cco-audit --preset=quality
-/cco-audit --preset=testing
-/cco-audit --preset=production
-/cco-audit --preset=comprehensive
+/cco-audit --checks="1,2,4,16-25"
+/cco-audit --checks="sql-injection,n1-queries"
 ```
 
-**Granular Level (Specific Checks):**
+**Exclusions:**
 ```bash
-# Single check
-/cco-audit --check=sql-injection
-
-# Multiple checks
-/cco-audit --check=sql-injection --check=xss --check=secrets
-
-# Category group
-/cco-audit --check-group=all-security
-/cco-audit --check-group=all-database
+/cco-audit --all --exclude="3,8,10"
 ```
-
-**Examples:**
-```bash
-# Quick pre-commit check (2-3 min)
-/cco-audit --preset=pre-commit
-
-# Only check for SQL injection and N+1 queries
-/cco-audit --check=sql-injection --check=n1-queries
-
-# Pre-deployment security scan
-/cco-audit --preset=pre-deployment
-
-# All security checks only
-/cco-audit --check-group=all-security
-
-# Traditional category mode
-/cco-audit --security --database --tests
-```
-
-Skip AskUserQuestion, run audit directly with specified parameters.
 
 ---
 
-## Agent Usage
+## Error Handling
 
-**Agent:** `cco-agent-audit` (Haiku for fast scanning, Sonnet for complex analysis)
+### Selection Errors
 
-**Model Selection by Category:**
+```markdown
+## Selection Error
 
-**Haiku (Fast & Cheap - Pattern Matching):**
-- `--integration` → Import errors, dependency conflicts
-- `--supply-chain` → CVE scanning, dependency versions
-- `--git` → Commit quality, branch naming patterns
-- `--containers` → Dockerfile rule checks
+**Input:** `security,99,unknown`
 
-**Sonnet (Accurate - Semantic Analysis):**
-- `--security` → SQL injection, XSS, CSRF (context-aware)
-- `--architecture` → Design patterns, coupling analysis
-- `--tech-debt` → Dead code, complexity (semantic)
-- `--ai-security` → Prompt injection detection
-- `--performance` → Bottleneck identification
-- `--database` → N+1 queries, query optimization
+**Issues:**
+- `99` - Invalid (max: {TOTAL_CHECKS})
+- `unknown` - Check not found
 
-**Parallel Execution Pattern:**
+**Try:**
+- `security` - Category
+- `1-15` - Range
+- `sql-injection` - Slug
+
+Enter selection: _
+```
+
+### Empty Selection
+
+```markdown
+## No Checks Selected
+
+Selection resulted in 0 checks.
+
+**Reason:** All selected checks not applicable
+
+**Try:**
+- `all` - All applicable
+- `@pre-commit` - Quick preset
+- Remove exclusions
+
+Enter selection: _
+```
+
+### Long Execution Warning
+
+```markdown
+## Long Execution
+
+**Selected:** {SELECTED_COUNT} checks (~{TIME_ESTIMATE})
+
+Consider smaller selection:
+- `@critical` - 35 min
+- `@pre-deploy` - 25 min
+
+[Continue] [Smaller Selection]
+```
+
+---
+
+## Output Files
+
+### Save Results
+
 ```python
-# Example: Security audit with parallel agents
-# All scan tasks run in parallel, synthesis runs after
+# Save to project directory
+Write(".cco/audit-{timestamp}.json", results_json)
+Write(".cco/audit-{timestamp}.md", report_markdown)
 
-# Phase 1: Parallel scanning (Haiku - fast & cheap)
-Task({
-  subagent_type: "general-purpose",
-  model: "haiku",
-  description: "Scan SQL injection patterns",
-  prompt: "Grep for string concatenation in SQL queries..."
-})
-Task({
-  subagent_type: "general-purpose",
-  model: "haiku",
-  description: "Scan hardcoded secrets",
-  prompt: "Search for API keys, passwords, tokens..."
-})
-Task({
-  subagent_type: "general-purpose",
-  model: "haiku",
-  description: "Check dependency CVEs",
-  prompt: "Analyze package versions for known vulnerabilities..."
-})
-
-# Phase 2: Synthesis (Sonnet - accurate)
-# Wait for all parallel tasks to complete, then:
-Task({
-  subagent_type: "general-purpose",
-  model: "sonnet",
-  description: "Synthesize audit findings",
-  prompt: "Analyze all findings, calculate severity, generate report..."
-})
-
-# Total time: ~5s (vs 15s sequential)
-# Total cost: $0.30 (vs $1.50 all Sonnet)
+# Latest always available
+Write(".cco/audit-latest.json", results_json)
+Write(".cco/audit-latest.md", report_markdown)
 ```
 
----
+### Results Schema
 
-## Smart Detection
-
-- **No database?** Skip database/migrations audit
-- **No AI features?** Skip AI security audit
-- **No tests?** Report as critical gap
-- **No Docker?** Skip container audit
-- **No CI/CD?** Skip CI/CD audit
-
-Before running audit, check if components exist using Glob/Grep.
-
----
-
-## Output Requirements
-
-For each issue found:
-- **Severity:** 🔴 Critical / 🟡 High / 🟢 Medium / ⚪ Low
-- **Location:** file_path:line_number
-- **Skill Used:** Which skill detected it
-- **Risk:** What could go wrong
-- **Fix:** Specific recommendation
-- **Pain Point:** Which pain point it addresses
-
-Final summary:
-- Total issues by severity
-- Pain points addressed
-- Recommended next command
-- Impact estimate (time saved, risk reduced)
+```json
+{
+  "timestamp": "2025-01-15T14:32:05Z",
+  "duration_seconds": 1588,
+  "selection": {
+    "checks": [1, 2, 4, 16, 17, ...],
+    "categories": ["security", "database", "tests"]
+  },
+  "discovery": {
+    "tech_stack": {...},
+    "files_scanned": "{FILE_COUNT}",
+    "applicable_checks": "{APPLICABLE_COUNT}"
+  },
+  "summary": {
+    "score": 68,
+    "grade": "D",
+    "issues": {
+      "critical": 2,
+      "high": 5,
+      "medium": 3
+    }
+  },
+  "findings": [
+    {
+      "check_id": 1,
+      "check_name": "SQL Injection",
+      "severity": "critical",
+      "file": "{FILE}",
+      "line": "{LINE}",
+      "code": "...",
+      "risk": "...",
+      "fix": "...",
+      "command": "/cco-fix --check={CHECK_ID} --file={FILE}"
+    }
+  ]
+}
+```
 
 ---
 
 ## Success Criteria
 
-- [OK] User selected categories (interactive or parametrized)
-- [OK] Appropriate skills activated for each category
-- [OK] Agent executed with Haiku model
-- [OK] All issues reported with file:line references
-- [OK] Pain-point impact communicated
-- [OK] Next action recommended
-- [OK] Results saved for /cco-fix to use
+- [ ] Mode selection presented
+- [ ] Discovery phase completed
+- [ ] Full checklist shown (Full Control mode)
+- [ ] Selection parsed correctly
+- [ ] Pre-flight summary displayed
+- [ ] User confirmed execution
+- [ ] Execution dashboard showed real-time progress
+- [ ] Findings streamed as discovered
+- [ ] Final report generated with all sections
+- [ ] Results saved to .cco directory
+- [ ] Next action commands provided

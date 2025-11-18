@@ -98,7 +98,7 @@ Read("<auth_module>/session.py", offset=40, limit=50)
 ```python
 # ❌ BAD: Content everywhere (huge)
 Grep("authentication", output_mode="content", "-C": 5)
-# 500 matches across 50 files
+# {MATCH_COUNT} matches across {FILE_COUNT} files
 
 # ✅ GOOD: Discovery first
 Grep("authentication", output_mode="files_with_matches")
