@@ -39,12 +39,12 @@ CCO is a **pain-point driven development assistant** that automatically configur
 **The Challenge:** Development teams face recurring problems: security vulnerabilities slip through, technical debt accumulates (23% of time wasted), tests are missing (biggest mistake), and developers lose 8+ hours/week to inefficiencies.
 
 **CCO's Approach:**
-1. **11 intelligent commands** that address these pain points directly
-2. **26 specialized skills** that auto-activate based on your needs
-3. **3 AI agents** for parallel execution (audit, fix, generate)
+1. **Intelligent commands** that address these pain points directly
+2. **Specialized skills** that auto-activate based on your needs
+3. **AI agents** for parallel execution (audit, fix, generate)
 4. **Zero project pollution** - everything lives in `~/.claude/`, shared across all projects
 
-One command can save you 26 hours/week. One update propagates to all projects instantly.
+One command can save you significant time. One update propagates to all projects instantly.
 
 ---
 
@@ -87,10 +87,10 @@ cco-setup
 
 1. `pip install` → Installs Python package globally
 2. `cco-setup` → Copies content files to `~/.claude/` directory
-   - Creates `~/.claude/commands/` (11 commands)
-   - Creates `~/.claude/principles/` (105 principles)
-   - Creates `~/.claude/skills/` (26 skills)
-   - Creates `~/.claude/agents/` (3 agents)
+   - Creates `~/.claude/commands/` (commands)
+   - Creates `~/.claude/principles/` (principles)
+   - Creates `~/.claude/skills/` (skills)
+   - Creates `~/.claude/agents/` (agents)
    - Generates `~/.claude/CLAUDE.md` (principle markers)
 3. Done! Commands available in all projects immediately via Claude Code
 
@@ -131,7 +131,7 @@ Open any project in Claude Code:
 
 ---
 
-## 11 Core Commands (Pain-Point Priority)
+## Core Commands (Pain-Point Priority)
 
 ### Discovery (Know Your Problems)
 
@@ -146,7 +146,7 @@ Open any project in Claude Code:
 
 **`/cco-status`** - Installation health check
 - Verify CCO setup
-- Show 26 available skills + 3 agents
+- Show available skills and agents
 - Quick start guidance
 
 **`/cco-help`** - Full command reference
@@ -156,17 +156,17 @@ Open any project in Claude Code:
 
 ### Critical Action (Fix Your Problems)
 
-**`/cco-audit`** - Find issues (17 categories)
+**`/cco-audit`** - Find issues ({{CATEGORY_COUNT}} categories)
 - **Pain #1:** `--security` (OWASP, AI security, supply chain)
 - **Pain #2:** `--tech-debt` (dead code, complexity)
 - **Pain #3:** `--ai-security` (prompt injection, hallucinations)
 - **Pain #4:** `--tests` (coverage, pyramid, isolation)
 - **Pain #6:** `--integration` (imports, dependencies)
-- 12 more categories (code-quality, docs, database, observability, monitoring, cicd, containers, supply-chain, migrations, performance, architecture, git)
+- Plus: code-quality, docs, database, observability, monitoring, cicd, containers, supply-chain, migrations, performance, architecture, git
 - **Agent:** cco-agent-audit (Haiku - fast & cheap)
 - **Impact:** Find all issues in 1-2 minutes
 
-**`/cco-fix`** - Auto-fix issues (17 categories)
+**`/cco-fix`** - Auto-fix issues ({{CATEGORY_COUNT}} categories)
 - Same categories as audit
 - Safe fixes auto-applied (parameterize SQL, remove dead code, externalize secrets)
 - Risky fixes require approval (CSRF protection, auth changes)
@@ -221,10 +221,10 @@ Open any project in Claude Code:
 ### Zero Pollution
 
 **Global Storage (`~/.claude/`):**
-- **11 commands** - Core functionality
-- **105 principles** - 8 Claude guidelines + 6 universal + 91 project
-- **26 skills** - Auto-activate on demand
-- **3 agents** - Parallel execution (audit/Haiku, fix/Sonnet, generate/Sonnet)
+- **Commands** - Core functionality
+- **Principles** - Claude guidelines + universal + project
+- **Skills** - Auto-activate on demand
+- **Agents** - Parallel execution (audit/Haiku, fix/Sonnet, generate/Sonnet)
 - **CLAUDE.md** - Principle markers
 
 **Project Storage:**
@@ -238,13 +238,13 @@ Open any project in Claude Code:
 - Clean repositories (CCO leaves no trace)
 - Share setup across unlimited projects
 
-### Progressive Loading (82-87% Context Reduction)
+### Progressive Loading (Significant Context Reduction)
 
-**Always Loaded (14 baseline principles):**
-- 8 Claude Guidelines (C_*): Token optimization, parallel agents, minimal touch, efficient file ops
-- 6 Universal (U_*): Evidence-based verification, DRY, minimal touch, no overengineering
+**Always Loaded (baseline principles):**
+- Claude Guidelines (C_*): Token optimization, parallel agents, minimal touch, efficient file ops
+- Universal (U_*): Evidence-based verification, DRY, minimal touch, no overengineering
 
-**Auto-Activated (26 Skills):**
+**Auto-Activated Skills:**
 Skills load on-demand when Claude detects relevance:
 - **Security (5):** OWASP, AI security, supply chain, K8s, privacy
 - **Testing (2):** Test pyramid, API testing
@@ -423,7 +423,7 @@ Skills auto-activate via Claude's semantic matching. No manual intervention need
 ```bash
 # Verify skills exist
 /cco-status
-# Shows all 26 skills
+# Shows all available skills
 ```
 
 ### Package installation fails

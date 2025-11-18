@@ -22,19 +22,19 @@ ls ~/.claude/
 Expected structure:
 ```
 ~/.claude/
-├── commands/      (11 core commands)
-├── principles/    (105 principles: 8 C_, 6 U_, 91 P_)
-├── skills/        (26 skills)
-├── agents/        (3 agents)
+├── commands/      ({{COMMAND_COUNT}} core commands)
+├── principles/    ({{PRINCIPLE_COUNT}} principles: {{C_PRINCIPLE_COUNT}} C_, {{U_PRINCIPLE_COUNT}} U_, {{P_PRINCIPLE_COUNT}} P_)
+├── skills/        ({{SKILL_COUNT}} skills)
+├── agents/        ({{AGENT_COUNT}} agents)
 └── CLAUDE.md      (principle markers)
 ```
 
 2. **Count components:**
 ```bash
-ls ~/.claude/commands/cco-*.md | wc -l    # Should be 11
-ls ~/.claude/principles/*.md | wc -l       # Should be 105
-ls ~/.claude/skills/cco-skill-*.md | wc -l # Should be 26
-ls ~/.claude/agents/cco-agent-*.md | wc -l # Should be 3
+ls ~/.claude/commands/cco-*.md | wc -l    # Count commands
+ls ~/.claude/principles/*.md | wc -l       # Count principles
+ls ~/.claude/skills/cco-skill-*.md | wc -l # Count skills
+ls ~/.claude/agents/cco-agent-*.md | wc -l # Count agents
 ```
 
 3. **Check CLAUDE.md:**
@@ -56,18 +56,18 @@ Should contain principle markers (U_* and C_*).
 
 ## Components
 
-**Commands (11 core):**
-- Discovery (3): help, status, overview
-- Critical (3): audit, fix, generate
-- Productivity (3): optimize, commit, implement
-- Management (2): update, remove
+**Commands ({{COMMAND_COUNT}} core):**
+- Discovery: help, status, overview
+- Critical: audit, fix, generate
+- Productivity: optimize, commit, implement
+- Management: update, remove
 
-**Principles (105):**
-- 8 Claude Guidelines (C_*) - Always active
-- 6 Universal (U_*) - Always active
-- 91 Project (P_*) - Progressive loading via skills
+**Principles ({{PRINCIPLE_COUNT}}):**
+- {{C_PRINCIPLE_COUNT}} Claude Guidelines (C_*) - Always active
+- {{U_PRINCIPLE_COUNT}} Universal (U_*) - Always active
+- {{P_PRINCIPLE_COUNT}} Project (P_*) - Progressive loading via skills
 
-**Skills (26 - Auto-Activate on Demand):**
+**Skills ({{SKILL_COUNT}} - Auto-Activate on Demand):**
 
 Security (5):
 - cco-skill-security-owasp-xss-sqli-csrf
@@ -118,7 +118,7 @@ Mobile (1):
 DevEx (1):
 - cco-skill-devex-onboarding-tooling-parity
 
-**Agents (3 - Parallel Execution):**
+**Agents ({{AGENT_COUNT}} - Parallel Execution):**
 - cco-agent-audit (Haiku - Fast scanning, 10x cheaper)
 - cco-agent-fix (Sonnet - Accurate fixes, better quality)
 - cco-agent-generate (Sonnet - Code generation, better quality)
@@ -143,12 +143,12 @@ DevEx (1):
 - Global storage: ~/.claude/ (all projects share)
 - Project storage: ZERO files created
 - Updates: One command updates all projects
-- Token efficiency: 25-35K avg (vs 200K old system)
+- Token efficiency: Optimized (significant reduction from old system)
 
 **Progressive Loading:**
-- Always loaded: 14 baseline principles (8 C_ + 6 U_)
-- Auto-activated: 26 skills via semantic matching (load 91 P_ principles on-demand)
-- Context: 82-87% reduction (200K → 25-35K tokens)
+- Always loaded: Baseline principles ({{C_PRINCIPLE_COUNT}} C_ + {{U_PRINCIPLE_COUNT}} U_)
+- Auto-activated: {{SKILL_COUNT}} skills via semantic matching (load {{P_PRINCIPLE_COUNT}} P_ principles on-demand)
+- Context: Significant reduction via progressive loading
 
 **Skill-Based Intelligence:**
 - Claude autonomously loads what's needed
@@ -186,7 +186,7 @@ DevEx (1):
 **Commands not found?**
 ```bash
 ls ~/.claude/commands/cco-*.md
-# If empty or < 11 files, run:
+# If empty or fewer files than expected, run:
 cco-setup
 ```
 
@@ -231,9 +231,9 @@ If components missing:
 [ERROR] Health: Incomplete installation
 
 Missing components:
-- Commands: 8/11 (missing: update, remove, help)
-- Skills: 23/26 (missing: 3 security skills)
-- Agents: 3/3 [OK]
+- Commands: incomplete (missing: update, remove, help)
+- Skills: incomplete (missing: some security skills)
+- Agents: [OK]
 
 Fix: Run cco-setup to repair installation
 ```

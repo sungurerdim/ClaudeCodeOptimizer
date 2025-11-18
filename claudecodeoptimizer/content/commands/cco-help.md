@@ -31,7 +31,7 @@ Show all available CCO commands, organized by pain-point priority, with examples
 
 ---
 
-## 11 Core Commands (Pain-Point Priority Order)
+## Core Commands (Pain-Point Priority Order)
 
 ### Discovery Commands (3)
 
@@ -40,7 +40,7 @@ Show all available CCO commands, organized by pain-point priority, with examples
 
 **`/cco-status`** - Installation health check
 - Verify CCO installation
-- Show available skills (25) and agents (3)
+- Show available skills and agents
 - Check configuration
 - Usage: `/cco-status`
 
@@ -57,9 +57,9 @@ Show all available CCO commands, organized by pain-point priority, with examples
 ### Critical Action Commands (3)
 
 **`/cco-audit`** 🔍 FIND ISSUES
-- Comprehensive issue detection across 17 categories
+- Comprehensive issue detection across {{CATEGORY_COUNT}} categories
 - Pain-point priority ordering
-- Uses: 25 skills + cco-agent-audit (Haiku)
+- Uses: {{SKILL_COUNT}} skills + cco-agent-audit (Haiku)
 - Categories:
   * 🔴 Critical: security, tech-debt, ai-security
   * 🟡 High: tests, integration
@@ -81,8 +81,8 @@ Usage:
 - Automated issue resolution
 - Auto-runs audit if needed
 - Safe/risky categorization
-- Uses: Same 25 skills + cco-agent-fix (Sonnet)
-- Same 17 categories as audit
+- Uses: Same {{SKILL_COUNT}} skills + cco-agent-fix (Sonnet)
+- Same {{CATEGORY_COUNT}} categories as audit
 
 Addresses Pain #1, #2, #3, #4, #5, #6, #7
 
@@ -178,7 +178,7 @@ Usage:
 
 ---
 
-## 25 Skills (Auto-Activate on Demand)
+## Skills (Auto-Activate on Demand)
 
 **Security (5):**
 - security-owasp, ai-security, supply-chain, k8s-security, privacy
@@ -218,7 +218,7 @@ Usage:
 
 ---
 
-## 3 Agents (Parallel Execution)
+## Agents (Parallel Execution)
 
 - **cco-agent-audit** - Fast scanning (Haiku - 10x cheaper)
 - **cco-agent-fix** - Accurate fixes (Sonnet - better quality)
@@ -303,7 +303,7 @@ Usage:
 
 ## Success Criteria
 
-- [OK] All 11 commands documented
+- [OK] All commands documented
 - [OK] Pain-point context provided
 - [OK] Usage examples for each command
 - [OK] Workflow examples provided

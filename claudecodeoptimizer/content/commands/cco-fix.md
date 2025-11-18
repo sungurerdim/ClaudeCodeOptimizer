@@ -10,7 +10,7 @@ Automatically fix issues found by audits. Runs audit first if no recent audit ex
 
 ---
 
-## 17 Fix Categories (Same as Audit)
+## Fix Categories (Same as Audit)
 
 All categories from `/cco-audit`:
 - --security, --tech-debt, --ai-security (🔴 Critical)
@@ -206,7 +206,8 @@ for issue in audit_results:
         }
 ```
 
-First, present safe fixes using multiselect:
+**IMPORTANT - Tab-Based Selection (Single Submit):**
+Present safe and risky fixes together in a single AskUserQuestion with multiple tabs:
 
 ```python
 # Generate options dynamically from REAL audit results
@@ -217,25 +218,90 @@ for safe_fix in safe_fixes:
         description: f"{safe_fix.description} | Skill: {safe_fix.skill}"
     })
 
-# Add group option
+# Add group option for safe fixes
 safe_fix_options.append({
     label: "All Safe Fixes",
-    description: f"✅ Apply all {len(safe_fixes)} safe fixes automatically (recommended)"
+    description: f"✅ Apply all safe fixes automatically (recommended)"
 })
 
+# Tab-based selection - group by category to ensure ALL fixes are shown
+# Since fix counts are dynamic (from audit), group by category for scalability
+
 AskUserQuestion({
-  questions: [{
-    question: "Which SAFE fixes should I apply? (These are low-risk and reversible):",
-    header: "Safe Fixes",
-    multiSelect: true,
-    options: safe_fix_options
-  }]
+  questions: [
+    {
+      question: "Select SAFE fix categories (low-risk, reversible):",
+      header: "✅ Safe",
+      multiSelect: true,
+      options: [
+        {
+          label: f"Security ({safe_security_count} fixes)",
+          description: "Parameterize queries, externalize secrets, add headers"
+        },
+        {
+          label: f"Code Quality ({safe_quality_count} fixes)",
+          description: "Remove dead code, fix imports, add error handling"
+        },
+        {
+          label: f"Other Safe ({safe_other_count} fixes)",
+          description: "Formatting, linting, documentation updates"
+        },
+        {
+          label: "All Safe Fixes",
+          description: f"Apply all {total_safe_count} safe fixes (recommended)"
+        }
+      ]
+    },
+    {
+      question: "Select RISKY fix categories (require confirmation):",
+      header: "⚠️ Risky",
+      multiSelect: true,
+      options: [
+        {
+          label: f"Security ({risky_security_count} fixes)",
+          description: "Auth changes, CSRF protection, encryption"
+        },
+        {
+          label: f"Database ({risky_db_count} fixes)",
+          description: "Schema changes, migrations, indexes"
+        },
+        {
+          label: f"Architecture ({risky_arch_count} fixes)",
+          description: "Refactoring, pattern changes, API updates"
+        },
+        {
+          label: "All Risky Fixes",
+          description: f"⚠️ Select all {total_risky_count} risky fixes (each will need confirmation)"
+        }
+      ]
+    }
+  ]
 })
 ```
 
-**IMPORTANT:** If user selects "All Safe Fixes", ignore other selections and apply all safe fixes.
+### Selection Processing
 
-Then, present risky fixes using multiselect (break down complex fixes into individual steps):
+**After user submits, calculate and display selection summary:**
+
+```markdown
+## Fix Selection Summary
+
+**Your selections:**
+- ✅ Safe: [list selected categories] → [total fix count] fixes
+- ⚠️ Risky: [list selected categories] → [total fix count] fixes
+
+**Total: {{SELECTED_COUNT}} fixes selected**
+
+⚠️ Only selected fix categories will be applied.
+Categories NOT selected will be skipped entirely.
+```
+
+**IMPORTANT:**
+- Group fixes by category to ensure ALL fixes are visible regardless of count
+- If user selects "All Safe Fixes", apply all safe fixes in all categories
+- For risky fixes, always show individual confirmation before applying each fix
+
+For detailed fix selection within a category:
 
 ```python
 # Generate risky fix options dynamically from REAL audit results
