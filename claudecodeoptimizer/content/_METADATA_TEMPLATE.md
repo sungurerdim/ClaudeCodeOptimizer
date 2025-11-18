@@ -38,8 +38,7 @@ principles:
 # TAGS (optional)
 tags: [tag1, tag2, tag3]
 
-# VERSIONING (optional, for commands)
-version: 1.0.0
+# AUTHOR (optional)
 author: "Author Name"
 ---
 ```
@@ -142,7 +141,6 @@ metadata:
   command_id: cco-status
   priority: high
   category: status
-version: 1.0.0
 author: Claude Code
 principles: ['U_EVIDENCE_BASED', 'U_COMPLETE_REPORTING']
 use_cases:

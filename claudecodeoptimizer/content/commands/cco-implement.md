@@ -295,26 +295,24 @@ Task({
   - cco-skill-security-owasp-xss-sqli-csrf
   - cco-skill-api-rest-versioning-security
 
-  1. models/user.py:
-     - User model (id, email, password_hash)
-     - Password hashing with bcrypt (cost factor: 12)
-     - Password validation (min 8 chars, complexity)
+  1. {MODEL_FILE}:
+     - Model definitions and schema
+     - Data validation and constraints
+     - Helper methods
 
-  2. services/auth.py:
-     - create_access_token(user_id) → JWT (15min expiry)
-     - create_refresh_token(user_id) → JWT (7 days expiry)
-     - validate_token(token) → user_id or None
-     - hash_password(password) → hash
-     - verify_password(password, hash) → bool
+  2. {SERVICE_FILE}:
+     - Core business logic
+     - Token/session management
+     - Utility functions
 
-  3. api/auth.py:
-     - POST /auth/login
-     - POST /auth/refresh
-     - POST /auth/logout
+  3. {API_FILE}:
+     - POST {ENDPOINT_1}
+     - POST {ENDPOINT_2}
+     - POST {ENDPOINT_3}
 
-  4. middleware/auth.py:
-     - JWT validation middleware
-     - Protect routes with @require_auth decorator
+  4. {MIDDLEWARE_FILE}:
+     - Request validation middleware
+     - Route protection decorator
 
   Run tests after each component to ensure TDD cycle.
   """
@@ -331,14 +329,14 @@ After each phase, report progress and continue automatically if "All Phases" was
 ```markdown
 Phase 1 Complete: Architecture Designed ✓
 
-Auth Flow:
-- POST /auth/login → access_token (15min) + refresh_token (7days)
-- POST /auth/refresh → new access_token
-- POST /auth/logout → invalidate refresh_token
+Feature Flow:
+- POST {ENDPOINT_1} → {RESPONSE_1}
+- POST {ENDPOINT_2} → {RESPONSE_2}
+- POST {ENDPOINT_3} → {RESPONSE_3}
 
-Database Schema:
-- users: id, email, password_hash, created_at
-- refresh_tokens: id, user_id, token_hash, expires_at
+Data Schema:
+- {TABLE_1}: {FIELDS_1}
+- {TABLE_2}: {FIELDS_2}
 ```
 
 **If "All Phases" NOT selected**, use AskUserQuestion for continuation:

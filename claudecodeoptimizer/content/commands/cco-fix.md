@@ -141,8 +141,8 @@ Fixes that could break functionality:
 
 ```python
 def fix(category):
-    # Check if audit results exist and are recent (<10 min old)
-    if not has_recent_audit(category, max_age=600):
+    # Check if audit results exist and are recent
+    if not has_recent_audit(category):
         print(f"No recent {category} audit found.")
         print(f"Running /cco-audit --{category} first...\n")
 
@@ -230,7 +230,7 @@ AskUserQuestion({
 Checking for recent [category] audit...
 ```
 
-If no recent audit (< 10 minutes):
+If no recent audit:
 ```markdown
 No recent audit found.
 Running /cco-audit --[category] first...
@@ -240,7 +240,7 @@ Running /cco-audit --[category] first...
 
 If recent audit exists:
 ```markdown
-Found recent audit results (5 minutes ago)
+Found recent audit results
 Using existing results...
 ```
 
