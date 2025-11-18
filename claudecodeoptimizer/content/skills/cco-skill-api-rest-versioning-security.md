@@ -66,7 +66,7 @@ async def create(user: UserCreate):
 
 @app.get("/api/v1/users/{id}")
 async def get(id: int):
-    if not (u := db.get_user(id)): raise HTTPException(404)
+    if not (u := db.<function_name>(id)): raise HTTPException(404)
     return u
 ```
 
@@ -78,10 +78,10 @@ import jwt
 
 security = HTTPBearer()
 
-def get_user(cred = Depends(security)):
+def <function_name>(cred = Depends(security)):
     try:
         p = jwt.decode(cred.credentials, SECRET, algorithms=["HS256"])
-        if not (u := db.get_user(p.get("user_id"))):
+        if not (u := db.<function_name>(p.get("user_id"))):
             raise HTTPException(401)
         return u
     except jwt.ExpiredSignatureError:

@@ -108,7 +108,7 @@ $ pytest tests/test_auth.py -v
 tests/test_auth.py::test_login PASSED
 $ echo $?
 0
-Root cause: Session not set (login.py:45)
+Root cause: Session not set (login.py:<line>)
 Fix: Added session['user_id'] = user.id"
 ```
 

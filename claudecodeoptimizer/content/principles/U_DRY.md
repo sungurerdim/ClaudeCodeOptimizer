@@ -54,7 +54,7 @@ cache.set("user_email", "new@example.com")  # Cache - which is truth?
 
 ### ✅ Good - Data
 ```python
-user.email = db.get_user(id).email  # Truth from DB
+user.email = db.<function_name>(id).email  # Truth from DB
 cache.set("user_email", user.email)  # Derived
 ```
 

@@ -45,34 +45,34 @@ Zero orphaned code. Every function called, every import used, every file referen
 #### ✅ Good: Integrated Code
 ```python
 # utils/validator.py
-def validate_email(email: str) -> bool:
+def <function_name>(email: str) -> bool:
     return "@" in email and "." in email
 
-# api/users.py
-from utils.validator import validate_email  # ✅ Imported
+# <user_api_file>.py
+from utils.validator import <function_name>  # ✅ Imported
 
 def register_user(email: str):
-    if not validate_email(email):  # ✅ Called
+    if not <function_name>(email):  # ✅ Called
         raise ValueError("Invalid email")
     # ... save user
 
-# ✅ GOOD: validate_email is imported AND called
+# ✅ GOOD: <function_name> is imported AND called
 ```
 
 #### ❌ Bad: Orphaned Code
 ```python
 # utils/validator.py
-def validate_email(email: str) -> bool:
+def <function_name>(email: str) -> bool:
     return "@" in email and "." in email
 
 def validate_phone(phone: str) -> bool:  # ❌ Nobody calls this
     return len(phone) == 10
 
-# api/users.py
-from utils.validator import validate_email, validate_phone  # ❌ validate_phone unused
+# <user_api_file>.py
+from utils.validator import <function_name>, validate_phone  # ❌ validate_phone unused
 
 def register_user(email: str):
-    if not validate_email(email):
+    if not <function_name>(email):
         raise ValueError("Invalid email")
     # ❌ validate_phone imported but never used
 ```
@@ -233,7 +233,7 @@ def process_order(order):
 import { validateUser } from './validators';
 
 function registerUser(userData) {
-    validateEmail(userData.email);  // ❌ validateEmail doesn't exist!
+    <function_name>(userData.email);  // ❌ <function_name> doesn't exist!
     // Should be: validateUser(userData)
 }
 

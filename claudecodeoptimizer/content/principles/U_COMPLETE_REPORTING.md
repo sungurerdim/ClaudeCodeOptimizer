@@ -31,9 +31,9 @@ Enables user verification and direct navigation to affected code via `file_path:
 
 ### ✅ Good - Precise
 ```
-"Fixed authentication bug in src/auth.py:127"
-"Updated API error handling in api/main.py:89-105"
-"Improved caching in shared/storage.py:200-220"
+"Fixed authentication bug in <auth_file>.py:<line>"
+"Updated API error handling in <api_file>.py:<line_range>"
+"Improved caching in <cache_file>.py:<line_range>"
 ```
 
 ---
@@ -42,16 +42,16 @@ Enables user verification and direct navigation to affected code via `file_path:
 
 **When reporting changes:**
 ```
-✅ "Added JWT refresh token support to shared/auth.py:127-145"
-✅ "Fixed SQL injection in services/api/main.py:89 (parameterized query)"
-✅ "Refactored Redis connection in shared/storage.py:200-220"
+✅ "Added JWT refresh token support to <auth_file>.py:<line>-145"
+✅ "Fixed SQL injection in services/<api_file>.py:89 (parameterized query)"
+✅ "Refactored Redis connection in <cache_file>.py:<line_range>"
 ```
 
 **When answering questions:**
 ```
-✅ "Authentication happens in shared/auth.py:50-80"
-✅ "Rate limiting configured in shared/settings.py:120"
-✅ "DB connection pool managed in shared/core.py:30"
+✅ "Authentication happens in <auth_file>.py:<line_range>"
+✅ "Rate limiting configured in <config_file>.py:<line>"
+✅ "DB connection pool managed in <core_file>.py:<line>"
 ```
 
 ---

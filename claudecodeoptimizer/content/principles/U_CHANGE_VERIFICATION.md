@@ -39,8 +39,8 @@ Task({
 **Create TODOs:**
 ```javascript
 TodoWrite([
-  {content: "Update DEFINITION in api/users.py:45", status: "pending"},
-  {content: "Update CALLERS in services/auth.py:123,156,189", status: "pending"},
+  {content: "Update DEFINITION in <file>:<line>", status: "pending"},
+  {content: "Update CALLERS in <file>:<lines>", status: "pending"},
   {content: "Final verification: grep old name (must be 0)", status: "pending"}
 ])
 ```
@@ -85,7 +85,7 @@ Present critical change points to user for manual verification.
 
 ### ❌ Wrong
 ```
-"Renamed getUserData to fetchUserData in all files."
+"Renamed <old_name> to <new_name> in all files."
 [Missed 2 files, didn't verify]
 ```
 
@@ -94,7 +94,7 @@ Present critical change points to user for manual verification.
 1. Grep found 12 files
 2. Created 12 TODOs
 3. Updated each, verified (0 old refs)
-4. Final: grep -r "getUserData" src/ → 0 results ✓
+4. Final: grep -r "<old_name>" <search_dir>/ → 0 results ✓
 ```
 
 ---

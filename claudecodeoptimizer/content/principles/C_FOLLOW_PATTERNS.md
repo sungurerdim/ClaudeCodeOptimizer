@@ -24,7 +24,7 @@ Grep("@app.route", output_mode="content", "-C": 5)
 
 # Step 2: Match pattern
 @app.route('/api/users')  # Match route style
-def get_users():  # snake_case
+def <old_function_name>():  # snake_case
     try:
         users = db.query_users()
         return jsonify(users)
@@ -38,10 +38,10 @@ def get_users():  # snake_case
 # existing_function(), process_data()
 
 # ❌ BAD: camelCase
-def validateEmail(email):
+def <function_name>(email):
 
 # ✅ GOOD: snake_case
-def validate_email(email):
+def <function_name>(email):
 ```
 
 ### 3. Follow Error Handling
@@ -67,15 +67,15 @@ except SpecificError as e:  # Specific
 ### 4. Replicate File Organization
 ```bash
 # Existing:
-# src/models/user.py, product.py
-# src/services/auth_service.py
-# src/utils/validators.py
+# src/<model_file>.py, product.py
+# <service_dir>/auth_service.py
+# <util_dir>/validators.py
 
 # ❌ BAD: New pattern
 # src/helpers/email_helper.py
 
 # ✅ GOOD: Follow existing
-# src/utils/email_utils.py
+# <util_dir>/email_utils.py
 ```
 
 ### 5. Match Testing Patterns
@@ -86,12 +86,12 @@ except SpecificError as e:  # Specific
 
 # ❌ BAD: Different structure
 def test_payment():
-    assert process_payment(100) == success
+    assert <function_name>(100) == success
 
 # ✅ GOOD: Match pattern
 class TestPayment:
     def test_payment_success(self):
-        result = process_payment(100)
+        result = <function_name>(100)
         assert result.success is True
 ```
 
