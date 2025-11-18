@@ -155,6 +155,121 @@ git add auth/login.py
 git commit -m "fix(auth): correct redirect after login"
 ```
 
+### Technique 3: Ask User Preference
+
+When multiple change types detected in staged changes, ask user:
+
+```python
+AskUserQuestion({
+  "questions": [{
+    "question": "Multiple change types detected. How should I commit?",
+    "header": "Commit style",
+    "options": [
+      {
+        "label": "Single commit",
+        "description": "All changes in one commit with comprehensive message"
+      },
+      {
+        "label": "Atomic commits",
+        "description": "Split into separate commits by change type"
+      }
+    ],
+    "multiSelect": false
+  }]
+})
+```
+
+**When to ask:**
+- Multiple types detected (feat + fix, refactor + docs, etc.)
+
+**When to skip:**
+- Only one change type
+- User explicitly requested single or atomic
+
+### Technique 4: Pre-commit Checks
+
+Run linting/formatting checks before committing to ensure clean commits.
+
+**Detection Priority:**
+1. Check project settings (`.claude/settings.json` → `pre_commit_checks`)
+2. Auto-detect from project files
+3. Ask user on first commit (if nothing detected)
+
+**Auto-detection Table:**
+
+| Config File | Tool | Command |
+|-------------|------|---------|
+| `.pre-commit-config.yaml` | Pre-commit | `pre-commit run --all-files` |
+| `pyproject.toml` + ruff | Ruff | `ruff check .` |
+| `pyproject.toml` + black | Black | `black --check .` |
+| `pyproject.toml` + mypy | Mypy | `mypy .` |
+| `setup.cfg` + flake8 | Flake8 | `flake8 .` |
+| `.eslintrc*` | ESLint | `npx eslint .` |
+| `prettier.config.*` | Prettier | `npx prettier --check .` |
+| `biome.json` | Biome | `npx biome check .` |
+| `Cargo.toml` | Clippy | `cargo clippy` |
+| `rustfmt.toml` | Rustfmt | `cargo fmt --check` |
+| `.golangci.yml` | GolangCI | `golangci-lint run` |
+
+**Implementation:**
+
+```python
+# 1. Check for pre-commit (covers most cases)
+if exists(".pre-commit-config.yaml"):
+    run("pre-commit run --all-files")
+    return
+
+# 2. Auto-detect by language
+detected_checks = []
+
+# Python
+if exists("pyproject.toml"):
+    content = read("pyproject.toml")
+    if "ruff" in content:
+        detected_checks.append("ruff check .")
+    if "black" in content:
+        detected_checks.append("black --check .")
+    if "mypy" in content:
+        detected_checks.append("mypy .")
+
+# JavaScript/TypeScript
+if exists(".eslintrc*") or exists("eslint.config.*"):
+    detected_checks.append("npx eslint .")
+if exists("prettier.config.*") or exists(".prettierrc*"):
+    detected_checks.append("npx prettier --check .")
+
+# Run detected checks
+for check in detected_checks:
+    run(check)
+```
+
+**Ask User (First Time):**
+
+```python
+AskUserQuestion({
+  "questions": [{
+    "question": "No linting tools detected. Run checks before commit?",
+    "header": "Pre-commit",
+    "options": [
+      {
+        "label": "Skip checks",
+        "description": "Commit without running any checks"
+      },
+      {
+        "label": "Setup pre-commit",
+        "description": "I'll configure pre-commit hooks for this project"
+      }
+    ],
+    "multiSelect": false
+  }]
+})
+```
+
+**On Check Failure:**
+- Show errors clearly
+- Ask user: "Fix issues?" or "Commit anyway?"
+- If auto-fixable (black, prettier): offer to auto-fix and re-stage
+
 ---
 
 ## Anti-Patterns
@@ -216,11 +331,13 @@ Updated all 47 call sites for consistency."
 ## Implementation Checklist
 
 ### Before Committing
+- [ ] Run pre-commit checks (linting, formatting)
 - [ ] One logical change per commit
 - [ ] Build and tests pass
 - [ ] Message follows format: `<type>(<scope>): <subject>`
 - [ ] Subject ≤ 50 chars, imperative mood
 - [ ] Body explains WHY with issue reference
+- [ ] If multiple types: Ask user preference (single vs atomic)
 
 ### Before Pushing
 - [ ] Clean history (squash WIP commits)
@@ -238,3 +355,5 @@ Updated all 47 call sites for consistency."
 - **Conventional Commits** - `<type>(<scope>): <subject>`
 - **Complete and revertible** - Build passes, clean revert
 - **Clean history** - Squash WIP before pushing
+- **Ask user** - When multiple types detected, ask single vs atomic preference
+- **Pre-commit checks** - Run linting/formatting before commit
