@@ -39,15 +39,15 @@ class PIIMaskingFormatter(logging.Formatter):
 ```python
 # ❌ BAD: Sensitive data exposed in logs
 logger.info(f"User login: email={user.email}, password={password}, ip={ip_address}")
-# Output: "User login: email=john@example.com, password=EXAMPLE_PASSWORD_123, ip=192.168.1.100"
+# Output: "User login: email=<email>, password=<password-value>, ip=<ip-address>"
 # Problem: Password in logs! Email exposed! Compliance violation!
 
 logger.error(f"Payment failed: credit_card={cc}, user_id={user_id}")
-# Output: "Payment failed: credit_card=XXXX-XXXX-XXXX-9999, user_id=123"
+# Output: "Payment failed: credit_card=<full-cc>, user_id=<user-id>"
 # Problem: Full credit card in logs! PCI-DSS violation! Fines!
 
 logger.debug(f"Auth token: {token}")
-# Output: "Auth token: EXAMPLE_JWT_TOKEN_NOT_REAL"
+# Output: "Auth token: <token-value>"
 ```
 **Why wrong**: ---
 

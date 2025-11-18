@@ -69,7 +69,7 @@ def database():
         yield postgres.get_connection_url()
 
 def test_user_registration_flow(database, cache):
-    response = app.post('/register', json={'email': 'test@example.com', 'password': 'secure123'})
+    response = app.post('/register', json={'email': 'test@example.com', 'password': '<test-password>'})
     assert response.status_code == 201
     user = db.query(User).filter_by(email='test@example.com').first()
     assert user is not None
