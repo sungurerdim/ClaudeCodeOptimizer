@@ -29,19 +29,19 @@ Stage 3: Precise Read (offset+limit)     → Read exact section
 ### Stage 1: Discovery
 ```python
 Grep("JWT.*authenticate", output_mode="files_with_matches")
-# → src/auth/jwt.py, src/middleware/auth.py (~10 tokens)
+# → <auth_module>/<jwt_file>.py, <middleware_module>/<auth_file>.py (~10 tokens)
 ```
 
 ### Stage 2: Preview with Context
 ```python
-Grep("JWT.*authenticate", path="src/auth/jwt.py",
+Grep("JWT.*authenticate", path="<auth_module>/<jwt_file>.py",
      output_mode="content", "-C": 5, "-n": true)
 # → Line 149 with context (~100 tokens)
 ```
 
 ### Stage 3: Precise Read
 ```python
-Read("src/auth/jwt.py", offset=145, limit=20)
+Read("<auth_module>/<jwt_file>.py", offset=145, limit=20)
 # → Lines 145-165 (~50 tokens)
 ```
 
@@ -54,15 +54,15 @@ Read("src/auth/jwt.py", offset=145, limit=20)
 
 # Stage 1: Discovery
 Grep("def.*authenticate", output_mode="files_with_matches")
-# → src/auth/jwt.py (10 tokens)
+# → <auth_module>/<jwt_file>.py (10 tokens)
 
 # Stage 2: Preview
-Grep("def.*authenticate", path="src/auth/jwt.py",
+Grep("def.*authenticate", path="<auth_module>/<jwt_file>.py",
      output_mode="content", "-C": 3, "-n": true)
 # → Line 149 (50 tokens)
 
 # Stage 3: Precise read
-Read("src/auth/jwt.py", offset=145, limit=30)
+Read("<auth_module>/<jwt_file>.py", offset=145, limit=30)
 # → Lines 145-175 (60 tokens)
 
 # Total: ~120 tokens vs 5000+ with full reads (42x better)
@@ -75,14 +75,14 @@ Read("src/auth/jwt.py", offset=145, limit=30)
 ### ❌ Reading Without Searching
 ```python
 # ❌ BAD: Read all (2700 tokens)
-Read("src/auth/login.py")    # 450 lines
-Read("src/auth/session.py")  # 380 lines
-Read("src/auth/jwt.py")      # 520 lines
+Read("<auth_module>/login.py")    # 450 lines
+Read("<auth_module>/session.py")  # 380 lines
+Read("<auth_module>/<jwt_file>.py")      # 520 lines
 
 # ✅ GOOD: Grep first (85 tokens, 97% reduction)
 Grep("SessionManager", output_mode="files_with_matches")
-Grep("SessionManager", path="src/auth/session.py", "-C": 3)
-Read("src/auth/session.py", offset=40, limit=50)
+Grep("SessionManager", path="<auth_module>/session.py", "-C": 3)
+Read("<auth_module>/session.py", offset=40, limit=50)
 ```
 
 ### ❌ Skipping Discovery
@@ -94,7 +94,7 @@ Grep("authentication", output_mode="content", "-C": 5)
 # ✅ GOOD: Discovery first
 Grep("authentication", output_mode="files_with_matches")
 # → 12 files, pick relevant
-Grep("authentication", path="src/auth/jwt.py", "-C": 5)
+Grep("authentication", path="<auth_module>/<jwt_file>.py", "-C": 5)
 ```
 
 ---

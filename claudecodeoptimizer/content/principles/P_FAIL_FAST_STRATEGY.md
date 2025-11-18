@@ -48,7 +48,7 @@ Errors must cause immediate, visible failure. No silent fallbacks, no swallowed 
 ```python
 # Python: Raise immediately, don't catch-and-continue
 def process_user_data(user_id: int) -> User:
-    user = db.get_user(user_id)
+    user = db.<function_name>(user_id)
     if user is None:
         raise ValueError(f"User {user_id} not found")  # FAIL FAST
 
@@ -59,7 +59,7 @@ def process_user_data(user_id: int) -> User:
 
 # ❌ BAD: Silent fallback
 def process_user_data_bad(user_id: int) -> User:
-    user = db.get_user(user_id)
+    user = db.<function_name>(user_id)
     if user is None:
         return User()  # SILENT FAILURE - returns empty user
     # ... continues with potentially invalid data
@@ -109,7 +109,7 @@ func getUserBalanceBad(userID int) float64 {
 #### ✅ Good: JavaScript Promise Rejection
 ```javascript
 // JavaScript: Reject promises immediately
-async function fetchUserData(userId) {
+async function <new_function>(userId) {
     const response = await fetch(`/api/users/${userId}`);
 
     if (!response.ok) {
@@ -318,7 +318,7 @@ def critical_operation():
 ### Python: Raise, Don't Return None
 ```python
 # ✅ Pythonic fail-fast
-def get_user(user_id: int) -> User:
+def <function_name>(user_id: int) -> User:
     user = db.query(User).get(user_id)
     if user is None:
         raise UserNotFoundError(f"User {user_id} not found")
@@ -362,15 +362,15 @@ function processOrder(order: Order): Receipt {
 # Test that invalid input causes immediate failure
 def test_fail_fast_on_invalid_user():
     with pytest.raises(UserNotFoundError):
-        get_user(user_id=99999)  # Should raise, not return None
+        <function_name>(user_id=99999)  # Should raise, not return None
 
 def test_fail_fast_on_invalid_amount():
     with pytest.raises(ValueError, match="Amount must be positive"):
-        process_payment(amount=-10)
+        <function_name>(amount=-10)
 
 # ❌ BAD: Test passes when it should fail
 def test_bad():
-    result = get_user(99999)  # Returns None silently
+    result = <function_name>(99999)  # Returns None silently
     assert result is None  # Test passes but behavior is wrong!
 ```
 

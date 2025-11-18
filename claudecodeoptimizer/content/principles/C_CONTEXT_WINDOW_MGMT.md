@@ -51,7 +51,7 @@ Read("module3.py")
 "Fix the authentication bug"
 
 # ✅ GOOD: Precise
-"auth.py:127-145 → Add JWT refresh token validation"
+"auth.py:<line>-145 → Add JWT refresh token validation"
 "api.py:89 → Extract rate limiting to middleware"
 ```
 

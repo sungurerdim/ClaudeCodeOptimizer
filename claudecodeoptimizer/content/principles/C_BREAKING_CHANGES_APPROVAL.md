@@ -84,17 +84,17 @@ A change is BREAKING if:
 ### ✅ Good: Detect + Propose + Wait
 ```python
 # User: "Simplify authentication API"
-Read("src/auth.py")
-# Current: authenticate(username, password, mfa_code=None, device_id=None)
+Read("<auth_file>.py")
+# Current: authenticate(username, password, <param1>=None, <param2>=None)
 
 Grep("authenticate\\(", output_mode="content", "-C": 2)
-# 8 call sites, 3 use mfa_code, 5 use device_id
+# 8 call sites, 3 use <param1>, 5 use <param2>
 
 """
 BREAKING CHANGE PROPOSAL:
-**Simplification**: Remove mfa_code and device_id params
+**Simplification**: Remove <param1> and <param2> params
 **Impact**: 8 call sites
-**Migration**: Create mfa_verify() and device_register() functions
+**Migration**: Create <new_function1>() and <new_function2>() functions
 Proceed? (yes/no)
 """
 # WAIT for explicit approval
@@ -103,10 +103,10 @@ Proceed? (yes/no)
 ### ✅ Good: Gradual Deprecation
 ```python
 @app.route('/api/users')
-def get_users():
+def <old_function_name>():
     # DEPRECATED: Use /api/v2/users. Removal: v3.0.0
     logger.warning("Deprecated endpoint called")
-    return jsonify(fetch_users()), 200, {
+    return jsonify(<fetch_function>()), 200, {
         'X-Deprecation-Warning': 'Use /api/v2/users. Removal: v3.0.0'
     }
 ```
