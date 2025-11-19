@@ -167,6 +167,10 @@ AskUserQuestion({
     multiSelect: false,
     options: [
       {
+        label: "Quick Overview",
+        description: "Fast health assessment with scores, ideal comparison, and action plan (~5 min)"
+      },
+      {
         label: "Quick Presets",
         description: "Use-case based (Pre-commit, Security, etc.) - Fastest start"
       },
@@ -181,6 +185,90 @@ AskUserQuestion({
     ]
   }]
 })
+```
+
+### Quick Overview Mode
+
+**When user selects "Quick Overview", execute fast health assessment:**
+
+```python
+# Quick Overview bypasses detailed check selection
+# Instead, performs rapid analysis across all 8 areas
+
+def quick_overview():
+    """
+    Fast project health assessment with:
+    - Score calculation (0-100) for each area
+    - Ideal scenario comparison
+    - Prioritized action plan
+    """
+
+    # Analyze 8 areas (pain-point priority order)
+    areas = [
+        ("Security", analyze_security_quick),      # Pain #1
+        ("Tech Debt", analyze_tech_debt_quick),    # Pain #2
+        ("Testing", analyze_testing_quick),        # Pain #4
+        ("Documentation", analyze_docs_quick),     # Pain #7
+        ("Database", analyze_database_quick),      # Pain #5
+        ("CI/CD", analyze_cicd_quick),            # Pain #6
+        ("Observability", analyze_observability_quick),  # Pain #5
+        ("Tech Stack", analyze_stack_appropriateness),   # Fitness
+    ]
+
+    scores = {}
+    for area, analyzer in areas:
+        scores[area] = analyzer()  # Returns 0-100 score
+
+    # Generate report
+    return generate_overview_report(scores)
+```
+
+**Quick Overview Output Format:**
+
+```markdown
+## Project Health Report
+
+**Stack:** {Detected stack}
+**Type:** {Detected project type}
+**Overall Score:** {Average}/100 {Emoji}
+
+### Scores by Area (Pain-Point Ordered)
+
+{Emoji} #1 Security: {Score}/100 ({Status})
+   - {Key findings}
+   ➜ Fix: /cco-audit --security
+
+{Emoji} #2 Tech Debt: {Score}/100 ({Status})
+   - {Key findings}
+   ➜ Fix: /cco-fix --tech-debt
+
+[Repeat for all 8 areas]
+
+### Tech Stack Evaluation
+
+{✅/⚠️/❌} {Framework} - {Assessment}
+{Recommendations for improvements}
+
+### Ideal Scenario Comparison
+
+For {Project Type}:
+- Security: {Current} vs {Target}
+- Testing: {Current} vs {Target}
+- [Other comparisons]
+
+### Action Plan (Prioritized by Pain-Point Impact)
+
+**Phase 1: {Name} ({Time} - {Impact})**
+Command: /cco-audit --{category}
+➜ {What it does}
+➜ Impact: {Score change}
+➜ Addresses Pain #{X}
+
+[Repeat for all phases]
+
+**Projected Score: {Current} → {After}/100 ✅**
+
+Start Phase 1 now? (yes/no/customize)
 ```
 
 **Then proceed to Discovery Phase (same for all modes).**
@@ -1651,6 +1739,13 @@ vs All-Sonnet Sequential:
 ```bash
 /cco-audit
 ```
+
+### Quick Overview (Health Assessment)
+```bash
+/cco-audit --quick
+```
+Fast health assessment with scores, ideal comparison, and action plan (~5 min).
+Replaces the former /cco-overview command.
 
 ### Parametrized (Power Users)
 

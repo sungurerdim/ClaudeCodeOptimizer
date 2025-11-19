@@ -42,7 +42,7 @@ Show all available CCO commands, organized by pain-point priority, with examples
 
 ## Core Commands (Pain-Point Priority Order)
 
-### Discovery Commands (3)
+### Discovery Commands (2)
 
 **`/cco-help`** - This guide
 - Show all commands with examples
@@ -53,19 +53,11 @@ Show all available CCO commands, organized by pain-point priority, with examples
 - Check configuration
 - Usage: `/cco-status`
 
-**`/cco-overview`** ⭐ START HERE
-- Complete project health assessment
-- Tech stack appropriateness evaluation
-- Current vs ideal scenario comparison
-- Prioritized action plan by pain-point impact
-- Addresses: All 7 pain points
-- Usage: `/cco-overview`
-
 ---
 
 ### Critical Action Commands (3)
 
-**`/cco-audit`** 🔍 FIND ISSUES
+**`/cco-audit`** 🔍 FIND ISSUES ⭐ START HERE
 - Comprehensive issue detection across {{CATEGORY_COUNT}} categories
 - Pain-point priority ordering
 - Uses: {{SKILL_COUNT}} skills + cco-agent-audit (Haiku)
@@ -80,6 +72,7 @@ Addresses Pain #1, #2, #3, #4, #5, #6, #7
 
 Usage:
 ```bash
+/cco-audit --quick             # Fast health assessment with scores (~5 min)
 /cco-audit                     # Interactive selection
 /cco-audit --security          # Single category
 /cco-audit --security --tests  # Multiple categories
@@ -128,17 +121,18 @@ Usage:
 ### Productivity Commands (3)
 
 **`/cco-optimize`** ⚡ PERFORMANCE
-- Performance optimization across 6 areas
-- Uses: 6 specialized skills + cco-agent-fix (Sonnet)
-- Types: code, deps, docker, database, bundle, performance
+- Performance optimization with before/after metrics
+- Uses: 4 specialized skills + cco-agent-fix (Sonnet)
+- Types: docker, database, bundle, performance
+- Note: For code cleanup use `/cco-fix --tech-debt`
 
-Addresses Pain #5 (Time waste), Pain #2 (Tech debt)
+Addresses Pain #5 (Time waste)
 
 Usage:
 ```bash
 /cco-optimize                  # Interactive selection
-/cco-optimize --database       # Optimize queries
-/cco-optimize --docker         # Reduce image size
+/cco-optimize --database       # Optimize queries (with metrics)
+/cco-optimize --docker         # Reduce image size (with metrics)
 /cco-optimize --all            # All optimizations
 ```
 
@@ -239,7 +233,7 @@ Usage:
 
 ### New Project Setup
 ```bash
-/cco-overview              # Assess health
+/cco-audit --quick         # Fast health assessment
 /cco-generate --tests --openapi --cicd --dockerfile
 /cco-commit
 ```
@@ -255,7 +249,6 @@ Usage:
 ```bash
 /cco-audit --code-quality --tech-debt
 /cco-fix --tech-debt
-/cco-optimize --code
 /cco-commit
 ```
 
@@ -268,7 +261,7 @@ Usage:
 
 ### Complete Health Check
 ```bash
-/cco-overview              # Full assessment
+/cco-audit --quick         # Fast health assessment
 /cco-audit --all           # Find all issues
 /cco-fix --all             # Fix safe issues
 /cco-generate --all        # Create missing components
@@ -282,7 +275,7 @@ Usage:
 
 - **This guide:** `/cco-help`
 - **Health check:** `/cco-status`
-- **Project assessment:** `/cco-overview`
+- **Project assessment:** `/cco-audit --quick`
 - **GitHub Issues:** https://github.com/sungurerdim/ClaudeCodeOptimizer/issues
 - **Discussions:** https://github.com/sungurerdim/ClaudeCodeOptimizer/discussions
 
@@ -292,12 +285,12 @@ Usage:
 
 | Need | Command |
 |------|---------|
-| Start here | `/cco-overview` |
+| Start here | `/cco-audit --quick` |
 | Find security issues | `/cco-audit --security` |
 | Fix vulnerabilities | `/cco-fix --security` |
 | Generate tests | `/cco-generate --tests` |
 | Speed up queries | `/cco-optimize --database` |
-| Clean up code | `/cco-optimize --code` |
+| Clean up code | `/cco-fix --tech-debt` |
 | Create commits | `/cco-commit` |
 | Implement feature | `/cco-implement "description"` |
 | Full check | `/cco-audit --all` |

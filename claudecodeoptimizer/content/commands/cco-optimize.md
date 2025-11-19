@@ -1,22 +1,14 @@
 ---
 name: cco-optimize
-description: Performance optimization across multiple areas
+description: Performance optimization with before/after metrics measurement
 action_type: optimize
 parameters:
-  code:
-    keywords: [code optimization, dead code removal, complexity reduction, refactoring]
-    category: quality
-    pain_points: [5]
-  deps:
-    keywords: [dependency optimization, update dependencies, remove unused packages, security patches]
-    category: infrastructure
-    pain_points: [5]
   docker:
     keywords: [docker optimization, multi-stage build, layer optimization, image size reduction]
     category: infrastructure
     pain_points: [5]
   database:
-    keywords: [database optimization, query optimization, n+1 fix, add indexes, connection pooling, caching]
+    keywords: [database optimization, query profiling, query time measurement, performance metrics]
     category: database
     pain_points: [5]
   bundle:
@@ -31,41 +23,39 @@ parameters:
 
 # cco-optimize
 
-**Performance optimization across 6 areas to address Pain #5 (significant time waste).**
+**Performance optimization with before/after metrics measurement to address Pain #5 (significant time waste).**
 
 ---
 
 ## Purpose
 
-Identify and fix performance bottlenecks: slow queries, large bundles, dead code, outdated dependencies, bloated Docker images, and inefficient code patterns.
+Measure and improve performance metrics: query times, image sizes, bundle sizes, and response times. Unlike /cco-fix which fixes issues, /cco-optimize focuses on **measuring improvements** with before/after metrics.
+
+**Note:** For code cleanup (dead code, complexity) use `/cco-fix --tech-debt`. For dependency updates use `/cco-fix --supply-chain`.
 
 ---
 
-## 6 Optimization Types
+## 4 Optimization Types
 
-1. **--code** - Remove dead code, reduce complexity
-   - Skill: `cco-skill-code-quality-refactoring-complexity`
-   - Optimizes: Dead code removal, complexity reduction, refactoring
-
-2. **--deps** - Update dependencies, remove unused
-   - Skill: `cco-skill-supply-chain-dependencies-sast`
-   - Optimizes: Dependency updates, unused package removal, security patches
-
-3. **--docker** - Multi-stage builds, layer optimization
+1. **--docker** - Multi-stage builds, layer optimization
    - Skill: `cco-skill-kubernetes-security-containers`
-   - Optimizes: Image size, build time, layer caching
+   - Measures: Image size (MB), build time (seconds), layer count
+   - Optimizes: Multi-stage builds, .dockerignore, layer ordering
 
-4. **--database** - Query optimization, caching
+2. **--database** - Query profiling and optimization
    - Skill: `cco-skill-database-optimization-caching-profiling`
-   - Optimizes: N+1 queries, indexes, connection pooling, caching
+   - Measures: Query execution time (ms), query count, connection pool usage
+   - Optimizes: Query plans, caching strategies, connection pooling
 
-5. **--bundle** - Frontend bundle size reduction
+3. **--bundle** - Frontend bundle size reduction
    - Skill: `cco-skill-frontend-bundle-a11y-performance`
+   - Measures: Bundle size (KB), chunk count, load time
    - Optimizes: Code splitting, tree shaking, compression
 
-6. **--performance** - Profiling, bottleneck removal
+4. **--performance** - Profiling, bottleneck removal
    - Skill: `cco-skill-resilience-circuitbreaker-retry-bulkhead`
-   - Optimizes: Response times, circuit breakers, retry logic
+   - Measures: Response times (ms), error rates, throughput
+   - Optimizes: Circuit breakers, retry logic, timeouts
 
 ---
 
@@ -150,59 +140,25 @@ AskUserQuestion supports **4 questions maximum** with **4 options maximum per qu
 AskUserQuestion({
   questions: [
     {
-      question: "Select Critical optimizations (highest impact):",
-      header: "🔴 Critical",
+      question: "Select optimizations to run (with before/after metrics):",
+      header: "Performance",
       multiSelect: true,
       options: [
-        {
-          label: "Database",
-          description: f"N+1 queries, missing indexes, no caching | {db_issue_count} issues"
-        },
         {
           label: "Docker",
-          description: f"Image size {current_size}, build time {build_time}"
+          description: f"Image size {current_size}, build time {build_time} | Measures: MB, seconds"
         },
         {
-          label: "All Critical",
-          description: "Select all Critical optimizations"
-        }
-      ]
-    },
-    {
-      question: "Select High priority optimizations:",
-      header: "🟡 High",
-      multiSelect: true,
-      options: [
-        {
-          label: "Code",
-          description: f"Dead code, complex functions | {dead_code_count} issues"
+          label: "Database",
+          description: f"Query profiling | {query_count} queries | Measures: ms, count"
         },
-        {
-          label: "Dependencies",
-          description: f"Outdated {outdated_count}, unused {unused_count}"
-        },
-        {
-          label: "All High",
-          description: "Select all High priority optimizations"
-        }
-      ]
-    },
-    {
-      question: "Select Recommended optimizations:",
-      header: "🟢 Recommended",
-      multiSelect: true,
-      options: [
         {
           label: "Bundle",
-          description: f"Frontend bundle size: {bundle_size}"
+          description: f"Frontend bundle size: {bundle_size} | Measures: KB, chunks"
         },
         {
           label: "Performance",
-          description: "Circuit breakers, retry logic, timeouts"
-        },
-        {
-          label: "All Recommended",
-          description: "Select all Recommended optimizations"
+          description: "Response times, circuit breakers | Measures: ms, error rate"
         }
       ]
     },
@@ -213,13 +169,15 @@ AskUserQuestion({
       options: [
         {
           label: "All Optimizations",
-          description: "Apply ALL optimization categories (recommended for initial cleanup)"
+          description: "Run ALL optimizations with full metrics measurement"
         }
       ]
     }
   ]
 })
 ```
+
+**Note:** For code cleanup and dependency updates, use `/cco-fix --tech-debt` and `/cco-fix --supply-chain` respectively.
 
 ### Selection Processing
 
@@ -474,17 +432,23 @@ After optimizations, measure improvements and report.
 ## Example Usage
 
 ```bash
-# Optimize slow database queries
+# Optimize database queries (with before/after metrics)
 /cco-optimize --database
 
-# Reduce Docker image size
+# Reduce Docker image size (with before/after metrics)
 /cco-optimize --docker
 
-# Clean up codebase
-/cco-optimize --code
+# Optimize frontend bundle (with before/after metrics)
+/cco-optimize --bundle
 
-# Comprehensive optimization
+# Comprehensive optimization (all areas)
 /cco-optimize --all
+
+# For code cleanup, use fix instead:
+/cco-fix --tech-debt
+
+# For dependency updates, use fix instead:
+/cco-fix --supply-chain
 ```
 
 ---
@@ -492,5 +456,5 @@ After optimizations, measure improvements and report.
 ## Integration with Other Commands
 
 - **After /cco-audit --performance**: Fix detected issues
-- **After /cco-overview**: Follow optimization recommendations
+- **After /cco-audit --quick**: Follow optimization recommendations
 - **Before deployment**: Optimize before going to production
