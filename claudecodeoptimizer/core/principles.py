@@ -14,6 +14,7 @@ from pathlib import Path
 from typing import Any, Dict, List, Optional, Set
 
 from .constants import SERVICE_COUNT_THRESHOLD_LARGE, SERVICE_COUNT_THRESHOLD_MEDIUM
+from ..config import VERSION
 
 logger = logging.getLogger(__name__)
 
@@ -71,7 +72,7 @@ class PrinciplesManager:
         self.principles: Dict[str, Principle] = {}
         self.categories: List[Dict[str, Any]] = []
         self.selection_strategies: Dict[str, Any] = {}
-        self.version: str = "2.0"  # Hardcoded version for now
+        self.version: str = VERSION
 
         if self.principles_dir.exists():
             self._load_principles()
@@ -118,8 +119,7 @@ class PrinciplesManager:
                 self.principles[principle.id] = principle
 
         except Exception as e:
-            logger.error("Failed to load principles", exc_info=True)
-            print(f"[ERROR] Failed to load principles: {e}")
+            logger.error("Failed to load principles: %s", e, exc_info=True)
 
     def get_principle(self, principle_id: str) -> Optional[Principle]:
         """Get a principle by ID."""
@@ -183,6 +183,42 @@ class PrinciplesManager:
         Automatically select principles based on project characteristics.
 
         This implements the "auto" selection strategy from principle frontmatter.
+
+        Algorithm - 4-Stage Priority Selection:
+        ----------------------------------------
+        Stage 1: Critical Principles (Always Included)
+            - Select all principles with severity="critical"
+            - Filter by project_type match ("all" or exact match)
+            - Apply condition checks (privacy_critical, etc.)
+
+        Stage 2: Strategy Rules (Dynamic Inclusion)
+            - Evaluate rules from selection_strategies["auto"]["rules"]
+            - Each rule has condition string and include list
+            - If condition evaluates true, add all include IDs
+
+        Stage 3: High-Severity Principles (Context-Aware)
+            - Select principles with severity="high"
+            - Must pass _is_applicable() checks:
+              * project_types match
+              * languages match
+              * contexts match
+              * conditions met
+
+        Stage 4: Medium-Severity Principles (Strict Context Match)
+            - Select principles with severity="medium"
+            - Must pass _is_applicable() AND:
+              * contexts="all", OR
+              * At least one principle context matches project contexts
+
+        Returns:
+            Set of principle IDs selected for the project.
+
+        Example:
+            For a privacy-critical API project:
+            - Stage 1: Adds critical principles (e.g., U_EVIDENCE_BASED)
+            - Stage 2: Adds strategy-specific rules
+            - Stage 3: Adds high-severity API principles
+            - Stage 4: Adds medium-severity with matching contexts
         """
         selected = set()
 
@@ -281,15 +317,49 @@ class PrinciplesManager:
 
     def _evaluate_condition(self, condition: str, characteristics: ProjectCharacteristics) -> bool:
         """
-        Evaluate a condition string.
+        Evaluate a condition string against project characteristics.
 
-        Examples:
-        - "project.type == 'api'"
-        - "project.characteristics.privacy_critical == true"
-        - "project.team.size == 'large'"
-        - "project.detection.containers.runtime != null"
-        - "services > 2"
-        - "team_size > 5"
+        Algorithm - Pattern-Based Condition Evaluation:
+        -----------------------------------------------
+        This method uses a pattern-matching approach to evaluate condition strings
+        from principle frontmatter. The evaluation follows a priority order:
+
+        1. Project Type Checks:
+           - "project.type == 'api'" -> checks characteristics.project_type
+           - "project.type == 'microservices'" -> checks characteristics.project_type
+
+        2. Boolean Characteristic Checks:
+           - "privacy_critical == true" or "privacy_critical" -> characteristics.privacy_critical
+           - "security_critical == true" or "security_critical" -> characteristics.security_critical
+           - "performance_critical == true" -> characteristics.performance_critical
+
+        3. Team Size Comparisons:
+           - "team.size == 'large'" or "team_size > 5" -> team_size == "large"
+           - "team.size == 'medium'" -> team_size == "medium"
+           - "team_size > 1" -> team_size in ["small", "medium", "large"]
+           - "team_size > 2" -> team_size in ["medium", "large"]
+
+        4. Services Count:
+           - "services > 2" -> services_count > SERVICE_COUNT_THRESHOLD_MEDIUM
+           - "services > 3" -> services_count > SERVICE_COUNT_THRESHOLD_LARGE
+
+        5. Infrastructure Checks:
+           - "containers.runtime != null" or "has_containers" -> characteristics.has_containers
+
+        Supported Syntax Examples:
+            - "project.type == 'api'"
+            - "project.characteristics.privacy_critical == true"
+            - "project.team.size == 'large'"
+            - "project.detection.containers.runtime != null"
+            - "services > 2"
+            - "team_size > 5"
+
+        Returns:
+            True if condition is met or unrecognized (fail-open), False otherwise.
+
+        Note:
+            Unrecognized conditions default to True (fail-open) to avoid
+            accidentally excluding principles due to parsing limitations.
         """
         try:
             # Simple condition parsing
