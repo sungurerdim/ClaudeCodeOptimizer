@@ -68,38 +68,29 @@ You can create skills for:
    # Select your custom skill when prompted
    ```
 
-2. Or manually link:
+2. Or manually copy:
    ```bash
    # Windows
-   mklink ".claude\skills\my-skill.md" "%USERPROFILE%\.cco\knowledge\skills\my-skill.md"
+   copy my-skill.md "%USERPROFILE%\.claude\skills\"
 
    # Unix/Linux/Mac
-   ln -s ~/.cco/skills/my-skill.md .claude/skills/my-skill.md
+   cp my-skill.md ~/.claude/skills/
    ```
 
-3. Reference in CLAUDE.md:
-   ```markdown
-   ## Skills
+3. Skills auto-activate based on Claude's semantic matching - no manual reference needed.
 
-   Available skills via slash commands:
-   - `/my-custom-skill` - @.claude/skills/my-custom-skill.md - Description
-   ```
-
-4. Invoke via slash command:
-   ```
-   /my-custom-skill
-   ```
+4. Use via Claude Code when relevant to your task.
 
 ## Sharing Skills
 
-Custom skills in `~/.cco/skills/` are:
+Custom skills in `~/.claude/skills/` are:
 - Local to your machine
 - Not included in CCO package
 - Can be shared via git/copy with team
 
 To share:
 1. Copy skill file to team repository
-2. Team members copy to their `~/.cco/skills/`
+2. Team members copy to their `~/.claude/skills/`
 3. Reference in project CLAUDE.md
 
 ---

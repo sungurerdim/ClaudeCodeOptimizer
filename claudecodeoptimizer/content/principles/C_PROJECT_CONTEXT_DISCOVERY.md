@@ -66,17 +66,17 @@ Ask user before running analysis:
 
 ```python
 {
-    question: "Proje dokümantasyonundan context çıkarılsın mı?",
+    question: "Extract context from project documentation?",
     header: "Project Context",
     multiSelect: false,
     options: [
         {
-            label: "Evet (önerilen)",
-            description: "README/CONTRIBUTING'den proje amacı ve konvansiyonları çıkar, analizler hedefe uygun olur"
+            label: "Yes (recommended)",
+            description: "Extract project goals and conventions from README/CONTRIBUTING, analysis aligns with objectives"
         },
         {
-            label: "Hayır",
-            description: "Sadece kod analizi yap (daha hızlı, dokümantasyondan bağımsız)"
+            label: "No",
+            description: "Code analysis only (faster, documentation-independent)"
         }
     ]
 }
@@ -89,7 +89,7 @@ Ask user before running analysis:
 ### Phase 0: Project Context Discovery
 
 ```python
-# Only if user selected "Evet"
+# Only if user selected "Yes"
 if user_wants_context:
     context_result = Task({
         subagent_type: "Explore",
@@ -190,8 +190,8 @@ This principle applies to:
 def verify_context_question(command_content):
     required_patterns = [
         r"Project Context",
-        r"dokümantasyon.*context",
-        r"Evet.*önerilen",
+        r"documentation.*context",
+        r"Yes.*recommended",
     ]
     for pattern in required_patterns:
         if not re.search(pattern, command_content, re.IGNORECASE):
@@ -203,7 +203,7 @@ def verify_context_question(command_content):
 ## Checklist
 
 - [ ] User asked about context discovery (not forced)
-- [ ] "Evet (önerilen)" label guides user
+- [ ] "Yes (recommended)" label guides user
 - [ ] Haiku model used for cost efficiency
 - [ ] MAX 200 token summary enforced
 - [ ] Priority order followed for file discovery

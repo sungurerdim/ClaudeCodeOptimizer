@@ -181,9 +181,8 @@ cython_debug/
 .cursorindexingignore
 
 # CCO specific
-# Note: CCO uses global storage (~/.cco/projects/) - zero project pollution
-# No .cco/ directory is created in projects
-audit_results.json        # Legacy audit results (if any)
+# CCO uses global storage (~/.claude/) - zero project pollution
+# No files created in user projects
 nul                       # Windows null device output
 
 # Backup files and directories
@@ -200,8 +199,8 @@ TODO.md
 *.lock
 requirements.txt.lock
 
-# Claude Code - Symlinked knowledge base (CCO v3.0+ architecture)
-# Knowledge base symlinks (ignore - sourced from ~/.cco/knowledge/)
+# Claude Code - CCO content files
+# These are copied to ~/.claude/ during setup
 .claude/commands/*
 .claude/guides/*
 .claude/principles/*

@@ -169,20 +169,21 @@ Fixes that could break functionality:
 
 ## Auto-Audit Dependency
 
-**Before fixing, check for recent audit:**
+**Before fixing, check for recent audit in conversation context:**
 
 ```python
 def fix(category):
-    # Check if audit results exist and are recent
-    if not has_recent_audit(category):
-        print(f"No recent {category} audit found.")
+    # Check if audit results exist in current conversation
+    # (Zero pollution: no files, only conversation memory)
+    if not has_audit_in_context(category):
+        print(f"No recent {category} audit found in conversation.")
         print(f"Running /cco-audit --{category} first...\n")
 
-        # Run audit
+        # Run audit (results go to conversation context)
         run_audit(category)
 
-    # Get audit results
-    issues = get_audit_results(category)
+    # Get audit results from conversation context
+    issues = get_audit_from_context(category)
 
     if not issues:
         print(f"No issues found in {category} audit.")
@@ -263,24 +264,24 @@ AskUserQuestion({
 ```python
 AskUserQuestion({
   questions: [{
-    question: "Proje dokümantasyonundan context çıkarılsın mı?",
+    question: "Extract context from project documentation?",
     header: "Project Context",
     multiSelect: false,
     options: [
       {
-        label: "Evet (önerilen)",
-        description: "README/CONTRIBUTING'den proje konvansiyonlarını çıkar, düzeltmeler stile uygun olur"
+        label: "Yes (recommended)",
+        description: "Extract project conventions from README/CONTRIBUTING, fixes align with project style"
       },
       {
-        label: "Hayır",
-        description: "Sadece kod düzeltmesi yap (daha hızlı)"
+        label: "No",
+        description: "Code fixes only (faster)"
       }
     ]
   }]
 })
 ```
 
-**If "Evet" selected:**
+**If "Yes" selected:**
 
 ```python
 # Extract project context via Haiku sub-agent

@@ -44,7 +44,104 @@ CCO is a **pain-point driven development assistant** that automatically configur
 3. **AI agents** for parallel execution (audit, fix, generate)
 4. **Zero project pollution** - everything lives in `~/.claude/`, shared across all projects
 
-One command can save you significant time. One update propagates to all projects instantly.
+One update propagates to all projects instantly.
+
+---
+
+## How CCO Works
+
+### Command → Agent → Skill Flow
+
+```
+User runs command          Agent executes           Skills activate
+─────────────────────────────────────────────────────────────────────
+/cco-audit --security  →   audit-agent (Haiku)  →   Security skill
+                           - Pattern matching       - OWASP checks
+                           - Fast scanning          - AI security
+                           - Low cost               - Supply chain
+
+/cco-fix --security    →   fix-agent (Sonnet)   →   Security skill
+                           - Semantic analysis      - Safe fixes
+                           - Code modifications     - Risky approvals
+                           - High accuracy          - Verification
+
+/cco-generate --tests  →   generate-agent       →   Testing skill
+                           (Sonnet)                 - Unit tests
+                           - Quality output         - Integration tests
+                           - Complete code          - Coverage targets
+```
+
+### Data Flow: audit → fix → generate
+
+```
+┌─────────────┐     ┌─────────────┐     ┌─────────────┐
+│   AUDIT     │ ──→ │    FIX      │ ──→ │  GENERATE   │
+│             │     │             │     │             │
+│ • Discover  │     │ • Auto-fix  │     │ • Create    │
+│   issues    │     │   safe      │     │   tests     │
+│ • Classify  │     │ • Request   │     │ • Create    │
+│   severity  │     │   approval  │     │   docs      │
+│ • Report    │     │   for risky │     │ • Fill      │
+│   findings  │     │ • Verify    │     │   gaps      │
+└─────────────┘     └─────────────┘     └─────────────┘
+      │                   │                   │
+      └───────────────────┴───────────────────┘
+                          │
+                    Shared Context:
+                    • Tech stack detection
+                    • Project conventions
+                    • Finding categories
+```
+
+**Flow Details:**
+
+1. **Discovery Phase** (All commands)
+   - Detect tech stack via Glob patterns (`**/*.py`, `**/Dockerfile`)
+   - Identify frameworks (Flask, Django, FastAPI)
+   - Store context for downstream commands
+
+2. **Audit Phase**
+   - Run applicable checks based on flags
+   - Categorize findings by severity (critical/high/medium/low)
+   - Report with file:line references
+
+3. **Fix Phase**
+   - Reuse audit findings (auto-runs audit if needed)
+   - Safe fixes: Apply automatically (parameterize SQL, remove dead code)
+   - Risky fixes: Request user approval (auth changes, CSRF)
+   - Verify each fix
+
+4. **Generate Phase**
+   - Use tech stack context
+   - Follow project conventions
+   - Create missing components (tests, docs, configs)
+
+### Model Selection Rationale
+
+| Agent | Model | Why |
+|-------|-------|-----|
+| audit-agent | Haiku | Pattern matching doesn't need deep reasoning. Fast & cheap for scanning. |
+| fix-agent | Sonnet | Code modifications need semantic understanding. Accuracy > speed. |
+| generate-agent | Sonnet | Quality generation needs balanced reasoning. Good output quality. |
+
+### Skill Auto-Activation
+
+Skills load dynamically based on Claude's semantic understanding:
+
+```
+User: /cco-audit --security
+
+Claude detects:
+- "security" keyword → loads Security skill
+- Python files found → loads Python-specific checks
+- Flask detected → loads web security patterns
+
+Skills activated:
+- cco-skill-security-owasp-xss-sqli-csrf
+- cco-skill-ai-security-promptinjection-models
+```
+
+No manual skill selection needed. Claude matches context to relevant skills automatically.
 
 ---
 
@@ -234,7 +331,7 @@ Open any project in Claude Code:
 - Clean repositories (CCO leaves no trace)
 - Share setup across unlimited projects
 
-### Progressive Loading (Significant Context Reduction)
+### Progressive Loading (On-Demand Context)
 
 **Always Loaded (baseline principles):**
 - Claude Guidelines (C_*): Token optimization, parallel agents, efficient file ops, honest reporting, native tools, project context discovery
@@ -256,7 +353,7 @@ Skills load on-demand when Claude detects relevance:
 - **Mobile:** Offline/battery
 - **DevEx:** Onboarding/tooling
 
-**Context Efficiency:** Significant token reduction through progressive loading and on-demand skill activation
+**Context Efficiency:** Only baseline principles loaded initially. Skills activate when needed, not upfront. This keeps context focused on current task.
 
 ### Key Features
 
@@ -417,6 +514,208 @@ Task(model="haiku", prompt="Scan SQL injection patterns...")
 Task(model="haiku", prompt="Scan hardcoded secrets...")
 Task(model="haiku", prompt="Check dependency CVEs...")
 # All run in parallel → faster execution
+```
+
+---
+
+## Configuration
+
+CCO uses a zero-configuration approach by design. All settings are optimized for production use.
+
+### Storage Locations
+
+| Location | Contents | Purpose |
+|----------|----------|---------|
+| `~/.claude/commands/` | Command files (cco-*.md) | Slash commands for Claude Code |
+| `~/.claude/principles/` | Principle files (U_*, C_*, P_*) | Guidelines and best practices |
+| `~/.claude/skills/` | Skill files (cco-skill-*.md) | Domain-specific knowledge |
+| `~/.claude/agents/` | Agent files (cco-agent-*.md) | Specialized AI agents |
+| `~/.claude/CLAUDE.md` | Principle markers | Links principles to Claude |
+
+### Built-in Defaults
+
+**Thresholds (constants.py):**
+- Test coverage targets: 50% (minimum) → 80% (good) → 90% (excellent)
+- Codebase size: <1000 files (small), <5000 (medium), 5000+ (large)
+- Command timeout: 300 seconds default
+
+**Model Selection:**
+- audit-agent: Haiku (fast scanning)
+- fix-agent: Sonnet (accurate modifications)
+- generate-agent: Sonnet (quality output)
+
+### Customization Options
+
+**Override via Environment Variables:**
+```bash
+# Example: Set custom timeout
+export CCO_TIMEOUT=600
+
+# Example: Set verbose mode
+export CCO_VERBOSE=1
+```
+
+**Override via Command Flags:**
+```bash
+# Specify categories explicitly
+/cco-audit --security --tests
+
+# Run in quick mode
+/cco-overview --quick
+```
+
+### What CCO Does NOT Touch
+
+- **Your project files** - Zero pollution, nothing added to your repo
+- **Claude Code settings** - Works alongside existing Claude configuration
+- **Other tools** - No conflicts with linters, formatters, or CI/CD
+
+### Verifying Configuration
+
+```bash
+# Check CCO installation status
+/cco-status
+
+# Shows:
+# - Installed commands
+# - Available skills
+# - Agent configuration
+# - Version info
+```
+
+---
+
+## End-to-End Example
+
+Here's a complete walkthrough of a security audit on a Flask API project:
+
+### Step 1: Run Security Audit
+
+```bash
+/cco-audit --security
+```
+
+**Sample Output:**
+```
+Phase 1: Tech Stack Detection
+─────────────────────────────
+✓ Python 3.11 detected
+✓ Flask framework found
+✓ SQLAlchemy ORM detected
+✓ PostgreSQL database
+
+Phase 2: Security Scanning
+──────────────────────────
+Scanning for OWASP Top 10 vulnerabilities...
+
+Found 4 issues:
+
+CRITICAL (1):
+• SQL Injection in api/users.py:45
+  db.execute(f"SELECT * FROM users WHERE id = {user_id}")
+  → Use parameterized query
+
+HIGH (2):
+• Hardcoded secret in config.py:12
+  SECRET_KEY = "mysecretkey123"
+  → Move to environment variable
+
+• Missing CSRF protection in api/auth.py:78
+  → Add CSRF token validation
+
+MEDIUM (1):
+• Debug mode enabled in app.py:5
+  DEBUG = True
+  → Disable in production
+
+Summary: 4 issues (1 critical, 2 high, 1 medium)
+```
+
+### Step 2: Auto-Fix Safe Issues
+
+```bash
+/cco-fix --security
+```
+
+**Sample Output:**
+```
+Analyzing 4 security issues...
+
+Safe Fixes (auto-applied):
+──────────────────────────
+✓ api/users.py:45 - Parameterized SQL query
+  Before: db.execute(f"SELECT * FROM users WHERE id = {user_id}")
+  After:  db.execute("SELECT * FROM users WHERE id = :id", {"id": user_id})
+
+✓ config.py:12 - Externalized secret
+  Before: SECRET_KEY = "mysecretkey123"
+  After:  SECRET_KEY = os.environ.get("SECRET_KEY")
+  Note: Add SECRET_KEY to your .env file
+
+Risky Fixes (need approval):
+────────────────────────────
+? api/auth.py:78 - Add CSRF protection
+  This requires adding middleware and updating forms.
+  Apply this fix? [y/n]
+
+Skipped:
+────────
+• app.py:5 - Debug mode
+  Reason: Environment-specific, configure manually
+
+Summary: 2 fixed, 1 needs approval, 1 skipped
+```
+
+### Step 3: Generate Missing Tests
+
+```bash
+/cco-generate --tests
+```
+
+**Sample Output:**
+```
+Analyzing test coverage...
+
+Current coverage: 45%
+Target coverage: 80%
+
+Generating tests for uncovered code:
+────────────────────────────────────
+✓ tests/test_api_users.py - 5 test cases
+  - test_get_user_success
+  - test_get_user_not_found
+  - test_create_user_valid
+  - test_create_user_duplicate_email
+  - test_sql_injection_prevented
+
+✓ tests/test_api_auth.py - 4 test cases
+  - test_login_success
+  - test_login_invalid_password
+  - test_csrf_token_required
+  - test_session_expiry
+
+Created: 2 test files, 9 test cases
+Run: pytest tests/ to verify
+```
+
+### Step 4: Verify Results
+
+```bash
+/cco-audit --security
+```
+
+**Sample Output:**
+```
+Phase 2: Security Scanning
+──────────────────────────
+Found 1 issue:
+
+MEDIUM (1):
+• Debug mode enabled in app.py:5
+  → Disable in production (environment-specific)
+
+Summary: 1 issue (0 critical, 0 high, 1 medium)
+Previously: 4 issues → Now: 1 issue
 ```
 
 ---

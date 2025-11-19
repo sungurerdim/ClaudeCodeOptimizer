@@ -74,3 +74,71 @@ OUTCOMES = {
 
 **Tools**: Read, Write, Edit, Bash, Grep
 **Model**: sonnet (complex), haiku (simple)
+
+---
+
+## Template References
+
+When generating components, load relevant skills for templates:
+
+### Test Generation (Pain #4)
+**Skill**: `cco-skill-test-pyramid-coverage-isolation`
+- Follow test pyramid ratio (70% unit, 20% integration, 10% e2e)
+- Use AAA pattern (Arrange-Act-Assert)
+- Include edge cases and error conditions
+- Generate fixtures for dependencies
+
+### CI/CD Generation (Pain #6)
+**Skill**: `cco-skill-cicd-gates-deployment-automation`
+- Use "CI/CD Templates" section for configs
+- GitHub Actions template for GitHub repos
+- GitLab CI template for GitLab repos
+- Pre-commit config for local quality gates
+- Dockerfile template for containerization
+
+### Documentation Generation (Pain #7)
+**Skill**: `cco-skill-docs-api-openapi-adr-runbooks`
+- Use "Documentation Templates" section
+- README template for project overview
+- ADR template for architecture decisions
+- Runbook template for operational docs
+- Docstring template for code documentation
+
+---
+
+## Template Loading Protocol
+
+```python
+# Load template based on generation type
+def get_template_for_type(gen_type: str) -> str:
+    templates = {
+        "cicd": "cco-skill-cicd-gates-deployment-automation → CI/CD Templates",
+        "docs": "cco-skill-docs-api-openapi-adr-runbooks → Documentation Templates",
+        "tests": "cco-skill-test-pyramid-coverage-isolation → Test Analysis Patterns",
+        "dockerfile": "cco-skill-cicd-gates-deployment-automation → Dockerfile",
+        "readme": "cco-skill-docs-api-openapi-adr-runbooks → README Template",
+        "adr": "cco-skill-docs-api-openapi-adr-runbooks → ADR Template",
+        "runbook": "cco-skill-docs-api-openapi-adr-runbooks → Runbook Template",
+    }
+    return templates.get(gen_type, "")
+
+# Generate from template
+def generate_from_template(template_name: str, context: dict) -> str:
+    # Load skill containing template
+    # Extract template section
+    # Replace placeholders with context
+    # Return generated content
+    pass
+```
+
+---
+
+## Generation Quality Checklist
+
+Before claiming "generated":
+- [ ] File actually exists (verify with Read)
+- [ ] Content follows project conventions
+- [ ] No placeholder text remains (e.g., {PROJECT_NAME})
+- [ ] Syntax valid (lint/typecheck passes)
+- [ ] Tests pass (if generating tests)
+- [ ] Imports correct (no missing dependencies)

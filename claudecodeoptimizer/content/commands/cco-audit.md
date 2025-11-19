@@ -194,24 +194,24 @@ AskUserQuestion({
 ```python
 AskUserQuestion({
   questions: [{
-    question: "Proje dokümantasyonundan context çıkarılsın mı?",
+    question: "Extract context from project documentation?",
     header: "Project Context",
     multiSelect: false,
     options: [
       {
-        label: "Evet (önerilen)",
-        description: "README/CONTRIBUTING'den proje amacı ve konvansiyonları çıkar, analizler hedefe uygun olur"
+        label: "Yes (recommended)",
+        description: "Extract project goals and conventions from README/CONTRIBUTING, analysis aligns with objectives"
       },
       {
-        label: "Hayır",
-        description: "Sadece kod analizi yap (daha hızlı, dokümantasyondan bağımsız)"
+        label: "No",
+        description: "Code analysis only (faster, documentation-independent)"
       }
     ]
   }]
 })
 ```
 
-### If User Selects "Evet"
+### If User Selects "Yes"
 
 ```python
 # Phase 0: Extract project context via Haiku sub-agent
@@ -1049,8 +1049,6 @@ Issues found: {total} ({critical} critical, {high} high, {medium} medium)
 **Checks Run:** {COUNT}
 **Issues Found:** {TOTAL} ({critical} critical, {high} high, {medium} medium)
 **Score:** {SCORE}/100 (Grade: {GRADE})
-
-All findings saved to: .cco/audit-{timestamp}.json
 ```
 
 ---
@@ -1738,62 +1736,6 @@ Consider smaller selection:
 
 ---
 
-## Output Files
-
-### Save Results
-
-```python
-# Save to project directory
-Write(".cco/audit-{timestamp}.json", results_json)
-Write(".cco/audit-{timestamp}.md", report_markdown)
-
-# Latest always available
-Write(".cco/audit-latest.json", results_json)
-Write(".cco/audit-latest.md", report_markdown)
-```
-
-### Results Schema
-
-```json
-{
-  "timestamp": "2025-01-15T14:32:05Z",
-  "duration_seconds": 1588,
-  "selection": {
-    "checks": [1, 2, 4, 16, 17, ...],
-    "categories": ["security", "database", "tests"]
-  },
-  "discovery": {
-    "tech_stack": {...},
-    "files_scanned": "{FILE_COUNT}",
-    "applicable_checks": "{APPLICABLE_COUNT}"
-  },
-  "summary": {
-    "score": 68,
-    "grade": "D",
-    "issues": {
-      "critical": 2,
-      "high": 5,
-      "medium": 3
-    }
-  },
-  "findings": [
-    {
-      "check_id": 1,
-      "check_name": "SQL Injection",
-      "severity": "critical",
-      "file": "{FILE}",
-      "line": "{LINE}",
-      "code": "...",
-      "risk": "...",
-      "fix": "...",
-      "command": "/cco-fix --check={CHECK_ID} --file={FILE}"
-    }
-  ]
-}
-```
-
----
-
 ## Success Criteria
 
 - [ ] Mode selection presented
@@ -1805,5 +1747,4 @@ Write(".cco/audit-latest.md", report_markdown)
 - [ ] Execution dashboard showed real-time progress
 - [ ] Findings streamed as discovered
 - [ ] Final report generated with all sections
-- [ ] Results saved to .cco directory
 - [ ] Next action commands provided

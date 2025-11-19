@@ -68,30 +68,30 @@ You can create agents for:
    # Select your custom agent when prompted
    ```
 
-2. Or manually link:
+2. Or manually copy:
    ```bash
    # Windows
-   mklink ".claude\agents\my-agent.md" "%USERPROFILE%\.cco\knowledge\agents\my-agent.md"
+   copy my-agent.md "%USERPROFILE%\.claude\agents\"
 
    # Unix/Linux/Mac
-   ln -s ~/.cco/agents/my-agent.md .claude/agents/my-agent.md
+   cp my-agent.md ~/.claude/agents/
    ```
 
 3. Reference in CLAUDE.md:
    ```markdown
-   @.claude/agents/my-agent.md
+   @agents/my-agent.md
    ```
 
 ## Sharing Agents
 
-Custom agents in `~/.cco/agents/` are:
+Custom agents in `~/.claude/agents/` are:
 - Local to your machine
 - Not included in CCO package
 - Can be shared via git/copy with team
 
 To share:
 1. Copy agent file to team repository
-2. Team members copy to their `~/.cco/agents/`
+2. Team members copy to their `~/.claude/agents/`
 3. Reference in project CLAUDE.md
 
 ---
