@@ -13,6 +13,9 @@ from claudecodeoptimizer.core.constants import (
     SERVICE_COUNT_THRESHOLD_LARGE,
     SERVICE_COUNT_THRESHOLD_MEDIUM,
 )
+from claudecodeoptimizer.config import VERSION
+import pytest
+
 from claudecodeoptimizer.core.principles import (
     Principle,
     PrinciplesManager,
@@ -95,7 +98,7 @@ class TestPrinciplesManagerInit:
         manager = PrinciplesManager(principles_dir)
 
         assert manager.principles_dir == principles_dir
-        assert manager.version == "2.0"
+        assert manager.version == VERSION
         assert isinstance(manager.principles, dict)
         assert isinstance(manager.categories, list)
         assert isinstance(manager.selection_strategies, dict)
@@ -183,113 +186,98 @@ class TestPrinciplesManagerLoading:
 class TestPrinciplesManagerGetters:
     """Test principle getter methods"""
 
-    def create_test_manager(self) -> PrinciplesManager:
-        """Create a test manager with sample principles"""
-        manager = PrinciplesManager(Path("/tmp/test"))
-        manager.principles = {
-            "U_TEST_1": Principle(
-                id="U_TEST_1",
-                number=1,
-                title="Test 1",
-                category="Universal",
-                severity="critical",
-                weight=10,
-                description="Test",
-                applicability={},
-                rules=[],
-                examples={},
-                autofix={"available": False},
-            ),
-            "U_TEST_2": Principle(
-                id="U_TEST_2",
-                number=2,
-                title="Test 2",
-                category="Testing",
-                severity="high",
-                weight=7,
-                description="Test",
-                applicability={},
-                rules=[{"id": "RULE_1"}],
-                examples={},
-                autofix={"available": True},
-            ),
-            "P_TEST_3": Principle(
-                id="P_TEST_3",
-                number=3,
-                title="Test 3",
-                category="Testing",
-                severity="medium",
-                weight=5,
-                description="Test",
-                applicability={},
-                rules=[],
-                examples={},
-                autofix={"available": False},
-            ),
-        }
-        return manager
+    @pytest.fixture
+    def getter_manager(self, principles_manager_factory) -> PrinciplesManager:
+        """Create a test manager with sample principles for getter tests"""
+        return principles_manager_factory([
+            {
+                "id": "U_TEST_1",
+                "number": 1,
+                "title": "Test 1",
+                "category": "Universal",
+                "severity": "critical",
+                "weight": 10,
+                "description": "Test",
+                "applicability": {},
+                "rules": [],
+                "examples": {},
+                "autofix": {"available": False},
+            },
+            {
+                "id": "U_TEST_2",
+                "number": 2,
+                "title": "Test 2",
+                "category": "Testing",
+                "severity": "high",
+                "weight": 7,
+                "description": "Test",
+                "applicability": {},
+                "rules": [{"id": "RULE_1"}],
+                "examples": {},
+                "autofix": {"available": True},
+            },
+            {
+                "id": "P_TEST_3",
+                "number": 3,
+                "title": "Test 3",
+                "category": "Testing",
+                "severity": "medium",
+                "weight": 5,
+                "description": "Test",
+                "applicability": {},
+                "rules": [],
+                "examples": {},
+                "autofix": {"available": False},
+            },
+        ])
 
-    def test_get_principle_exists(self) -> None:
+    def test_get_principle_exists(self, getter_manager) -> None:
         """Test getting an existing principle"""
-        manager = self.create_test_manager()
-
-        principle = manager.get_principle("U_TEST_1")
+        principle = getter_manager.get_principle("U_TEST_1")
 
         assert principle is not None
         assert principle.id == "U_TEST_1"
         assert principle.title == "Test 1"
 
-    def test_get_principle_not_exists(self) -> None:
+    def test_get_principle_not_exists(self, getter_manager) -> None:
         """Test getting a non-existent principle"""
-        manager = self.create_test_manager()
-
-        principle = manager.get_principle("NONEXISTENT")
+        principle = getter_manager.get_principle("NONEXISTENT")
 
         assert principle is None
 
-    def test_get_all_principles(self) -> None:
+    def test_get_all_principles(self, getter_manager) -> None:
         """Test getting all principles"""
-        manager = self.create_test_manager()
-
-        principles = manager.get_all_principles()
+        principles = getter_manager.get_all_principles()
 
         assert len(principles) == 3
         assert all(isinstance(p, Principle) for p in principles)
 
-    def test_get_principles_by_category(self) -> None:
+    def test_get_principles_by_category(self, getter_manager) -> None:
         """Test getting principles by category"""
-        manager = self.create_test_manager()
-
-        testing_principles = manager.get_principles_by_category("Testing")
+        testing_principles = getter_manager.get_principles_by_category("Testing")
 
         assert len(testing_principles) == 2
         assert all(p.category == "Testing" for p in testing_principles)
 
-    def test_get_principles_by_category_empty(self) -> None:
+    def test_get_principles_by_category_empty(self, getter_manager) -> None:
         """Test getting principles by non-existent category"""
-        manager = self.create_test_manager()
-
-        principles = manager.get_principles_by_category("Nonexistent")
+        principles = getter_manager.get_principles_by_category("Nonexistent")
 
         assert len(principles) == 0
 
-    def test_get_principles_by_severity(self) -> None:
+    def test_get_principles_by_severity(self, getter_manager) -> None:
         """Test getting principles by severity"""
-        manager = self.create_test_manager()
-
-        critical = manager.get_principles_by_severity("critical")
-        high = manager.get_principles_by_severity("high")
-        medium = manager.get_principles_by_severity("medium")
+        critical = getter_manager.get_principles_by_severity("critical")
+        high = getter_manager.get_principles_by_severity("high")
+        medium = getter_manager.get_principles_by_severity("medium")
 
         assert len(critical) == 1
         assert len(high) == 1
         assert len(medium) == 1
 
-    def test_get_autofix_principles(self) -> None:
+    def test_get_autofix_principles(self, getter_manager) -> None:
         """Test getting principles with autofix"""
-        manager = self.create_test_manager()
-
-        autofix = manager.get_autofix_principles()
+        autofix = getter_manager.get_autofix_principles()
 
         assert len(autofix) == 1
         assert autofix[0].id == "U_TEST_2"
@@ -298,48 +286,47 @@ class TestPrinciplesManagerGetters:
 class TestPrinciplesManagerSummary:
     """Test principle summary and statistics"""
 
-    def create_test_manager(self) -> PrinciplesManager:
-        """Create a test manager with sample principles"""
-        manager = PrinciplesManager(Path("/tmp/test"))
-        manager.principles = {
-            "U_TEST_1": Principle(
-                id="U_TEST_1",
-                number=1,
-                title="Test 1",
-                category="Universal",
-                severity="critical",
-                weight=10,
-                description="Critical principle",
-                applicability={},
-                rules=[{"id": "RULE_1"}, {"id": "RULE_2"}],
-                examples={},
-                autofix={"available": True},
-            ),
-            "U_TEST_2": Principle(
-                id="U_TEST_2",
-                number=2,
-                title="Test 2",
-                category="Testing",
-                severity="high",
-                weight=7,
-                description="High priority",
-                applicability={},
-                rules=[],
-                examples={},
-                autofix={"available": False},
-            ),
-        }
-        manager.categories = [
-            {"id": "Universal", "name": "Universal"},
-            {"id": "Testing", "name": "Testing"},
-        ]
-        return manager
+    @pytest.fixture
+    def summary_manager(self, principles_manager_factory) -> PrinciplesManager:
+        """Create a test manager with sample principles for summary tests"""
+        return principles_manager_factory(
+            [
+                {
+                    "id": "U_TEST_1",
+                    "number": 1,
+                    "title": "Test 1",
+                    "category": "Universal",
+                    "severity": "critical",
+                    "weight": 10,
+                    "description": "Critical principle",
+                    "applicability": {},
+                    "rules": [{"id": "RULE_1"}, {"id": "RULE_2"}],
+                    "examples": {},
+                    "autofix": {"available": True},
+                },
+                {
+                    "id": "U_TEST_2",
+                    "number": 2,
+                    "title": "Test 2",
+                    "category": "Testing",
+                    "severity": "high",
+                    "weight": 7,
+                    "description": "High priority",
+                    "applicability": {},
+                    "rules": [],
+                    "examples": {},
+                    "autofix": {"available": False},
+                },
+            ],
+            categories=[
+                {"id": "Universal", "name": "Universal"},
+                {"id": "Testing", "name": "Testing"},
+            ],
+        )
 
-    def test_get_principle_summary_exists(self) -> None:
+    def test_get_principle_summary_exists(self, summary_manager) -> None:
         """Test getting summary for existing principle"""
-        manager = self.create_test_manager()
-
-        summary = manager.get_principle_summary("U_TEST_1")
+        summary = summary_manager.get_principle_summary("U_TEST_1")
 
         assert summary is not None
         assert summary["id"] == "U_TEST_1"
@@ -351,21 +338,17 @@ class TestPrinciplesManagerSummary:
         assert summary["autofix_available"] is True
         assert summary["rules_count"] == 2
 
-    def test_get_principle_summary_not_exists(self) -> None:
+    def test_get_principle_summary_not_exists(self, summary_manager) -> None:
         """Test getting summary for non-existent principle"""
-        manager = self.create_test_manager()
-
-        summary = manager.get_principle_summary("NONEXISTENT")
+        summary = summary_manager.get_principle_summary("NONEXISTENT")
 
         assert summary is None
 
-    def test_get_statistics(self) -> None:
+    def test_get_statistics(self, summary_manager) -> None:
         """Test getting principle statistics"""
-        manager = self.create_test_manager()
+        stats = summary_manager.get_statistics()
 
-        stats = manager.get_statistics()
-
-        assert stats["version"] == "2.0"
+        assert stats["version"] == VERSION
         assert stats["total_principles"] == 2
         assert stats["by_severity"]["critical"] == 1
         assert stats["by_severity"]["high"] == 1
@@ -379,62 +362,62 @@ class TestPrinciplesManagerSummary:
 class TestPrincipleSelection:
     """Test principle selection strategies"""
 
-    def create_test_manager(self) -> PrinciplesManager:
-        """Create a test manager with sample principles"""
-        manager = PrinciplesManager(Path("/tmp/test"))
-        manager.principles = {
-            "U_CRITICAL": Principle(
-                id="U_CRITICAL",
-                number=1,
-                title="Critical",
-                category="Universal",
-                severity="critical",
-                weight=10,
-                description="Critical",
-                applicability={"project_types": ["all"]},
-                rules=[],
-                examples={},
-                autofix={},
-            ),
-            "P_HIGH": Principle(
-                id="P_HIGH",
-                number=2,
-                title="High",
-                category="Project",
-                severity="high",
-                weight=7,
-                description="High",
-                applicability={"project_types": ["api"], "languages": ["python"]},
-                rules=[],
-                examples={},
-                autofix={},
-            ),
-            "P_MEDIUM": Principle(
-                id="P_MEDIUM",
-                number=3,
-                title="Medium",
-                category="Project",
-                severity="medium",
-                weight=5,
-                description="Medium",
-                applicability={
-                    "project_types": ["api"],
-                    "contexts": ["api_endpoints"],
+    @pytest.fixture
+    def selection_manager(self, principles_manager_factory) -> PrinciplesManager:
+        """Create a test manager with sample principles for selection tests"""
+        return principles_manager_factory(
+            [
+                {
+                    "id": "U_CRITICAL",
+                    "number": 1,
+                    "title": "Critical",
+                    "category": "Universal",
+                    "severity": "critical",
+                    "weight": 10,
+                    "description": "Critical",
+                    "applicability": {"project_types": ["all"]},
+                    "rules": [],
+                    "examples": {},
+                    "autofix": {},
                 },
-                rules=[],
-                examples={},
-                autofix={},
-            ),
-        }
-        manager.selection_strategies = {
-            "minimal": {"include": ["U_CRITICAL"]},
-            "auto": {"rules": []},
-        }
-        return manager
+                {
+                    "id": "P_HIGH",
+                    "number": 2,
+                    "title": "High",
+                    "category": "Project",
+                    "severity": "high",
+                    "weight": 7,
+                    "description": "High",
+                    "applicability": {"project_types": ["api"], "languages": ["python"]},
+                    "rules": [],
+                    "examples": {},
+                    "autofix": {},
+                },
+                {
+                    "id": "P_MEDIUM",
+                    "number": 3,
+                    "title": "Medium",
+                    "category": "Project",
+                    "severity": "medium",
+                    "weight": 5,
+                    "description": "Medium",
+                    "applicability": {
+                        "project_types": ["api"],
+                        "contexts": ["api_endpoints"],
+                    },
+                    "rules": [],
+                    "examples": {},
+                    "autofix": {},
+                },
+            ],
+            selection_strategies={
+                "minimal": {"include": ["U_CRITICAL"]},
+                "auto": {"rules": []},
+            },
+        )
 
-    def test_select_principles_comprehensive(self) -> None:
+    def test_select_principles_comprehensive(self, selection_manager) -> None:
         """Test comprehensive selection strategy"""
-        manager = self.create_test_manager()
         chars = ProjectCharacteristics(
             project_type="api",
             primary_language="python",
@@ -448,16 +431,15 @@ class TestPrincipleSelection:
             contexts=["all"],
         )
 
-        selected = manager.select_principles(chars, strategy="comprehensive")
+        selected = selection_manager.select_principles(chars, strategy="comprehensive")
 
         assert len(selected) == 3
         assert "U_CRITICAL" in selected
         assert "P_HIGH" in selected
         assert "P_MEDIUM" in selected
 
-    def test_select_principles_minimal(self) -> None:
+    def test_select_principles_minimal(self, selection_manager) -> None:
         """Test minimal selection strategy"""
-        manager = self.create_test_manager()
         chars = ProjectCharacteristics(
             project_type="api",
             primary_language="python",
@@ -471,13 +453,12 @@ class TestPrincipleSelection:
             contexts=["all"],
         )
 
-        selected = manager.select_principles(chars, strategy="minimal")
+        selected = selection_manager.select_principles(chars, strategy="minimal")
 
         assert "U_CRITICAL" in selected
 
-    def test_select_principles_with_user_preferences(self) -> None:
+    def test_select_principles_with_user_preferences(self, selection_manager) -> None:
         """Test selection with user preferences"""
-        manager = self.create_test_manager()
         chars = ProjectCharacteristics(
             project_type="api",
             primary_language="python",
@@ -491,7 +472,7 @@ class TestPrincipleSelection:
             contexts=["all"],
         )
 
-        selected = manager.select_principles(
+        selected = selection_manager.select_principles(
             chars, strategy="minimal", user_preferences=["P_HIGH", "P_MEDIUM"]
         )
 
@@ -502,75 +483,21 @@ class TestPrincipleSelection:
 class TestAutoSelection:
     """Test automatic principle selection"""
 
-    def create_test_manager(self) -> PrinciplesManager:
-        """Create a test manager with sample principles"""
-        manager = PrinciplesManager(Path("/tmp/test"))
-        manager.principles = {
-            "U_CRITICAL": Principle(
-                id="U_CRITICAL",
-                number=1,
-                title="Critical",
-                category="Universal",
-                severity="critical",
-                weight=10,
-                description="Critical",
-                applicability={"project_types": ["all"]},
-                rules=[],
-                examples={},
-                autofix={},
-            ),
-            "P_HIGH_API": Principle(
-                id="P_HIGH_API",
-                number=2,
-                title="High API",
-                category="Project",
-                severity="high",
-                weight=7,
-                description="High",
-                applicability={"project_types": ["api"], "languages": ["python"]},
-                rules=[],
-                examples={},
-                autofix={},
-            ),
-            "P_MEDIUM_CONTEXT": Principle(
-                id="P_MEDIUM_CONTEXT",
-                number=3,
-                title="Medium Context",
-                category="Project",
-                severity="medium",
-                weight=5,
-                description="Medium",
-                applicability={
-                    "project_types": ["api"],
-                    "contexts": ["api_endpoints"],
-                },
-                rules=[],
-                examples={},
-                autofix={},
-            ),
-            "P_MEDIUM_ALL_CONTEXTS": Principle(
-                id="P_MEDIUM_ALL_CONTEXTS",
-                number=4,
-                title="Medium All Contexts",
-                category="Project",
-                severity="medium",
-                weight=5,
-                description="Medium all contexts",
-                applicability={
-                    "project_types": ["all"],
-                    "contexts": ["all"],
-                },
-                rules=[],
-                examples={},
-                autofix={},
-            ),
-        }
-        manager.selection_strategies = {"auto": {"rules": []}}
-        return manager
+    @pytest.fixture
+    def auto_manager(self, principles_manager_factory) -> PrinciplesManager:
+        """Create a test manager for auto selection tests"""
+        return principles_manager_factory(
+            [
+                {"id": "U_CRITICAL", "number": 1, "title": "Critical", "category": "Universal", "severity": "critical", "weight": 10, "description": "Critical", "applicability": {"project_types": ["all"]}, "rules": [], "examples": {}, "autofix": {}},
+                {"id": "P_HIGH_API", "number": 2, "title": "High API", "category": "Project", "severity": "high", "weight": 7, "description": "High", "applicability": {"project_types": ["api"], "languages": ["python"]}, "rules": [], "examples": {}, "autofix": {}},
+                {"id": "P_MEDIUM_CONTEXT", "number": 3, "title": "Medium Context", "category": "Project", "severity": "medium", "weight": 5, "description": "Medium", "applicability": {"project_types": ["api"], "contexts": ["api_endpoints"]}, "rules": [], "examples": {}, "autofix": {}},
+                {"id": "P_MEDIUM_ALL_CONTEXTS", "number": 4, "title": "Medium All Contexts", "category": "Project", "severity": "medium", "weight": 5, "description": "Medium all contexts", "applicability": {"project_types": ["all"], "contexts": ["all"]}, "rules": [], "examples": {}, "autofix": {}},
+            ],
+            selection_strategies={"auto": {"rules": []}},
+        )
 
-    def test_auto_select_critical(self) -> None:
+    def test_auto_select_critical(self, auto_manager) -> None:
         """Test auto selection includes critical principles"""
-        manager = self.create_test_manager()
         chars = ProjectCharacteristics(
             project_type="api",
             primary_language="python",
@@ -584,13 +511,12 @@ class TestAutoSelection:
             contexts=["api_endpoints"],
         )
 
-        selected = manager.select_principles(chars, strategy="auto")
+        selected = auto_manager.select_principles(chars, strategy="auto")
 
         assert "U_CRITICAL" in selected
 
-    def test_auto_select_high_severity(self) -> None:
+    def test_auto_select_high_severity(self, auto_manager) -> None:
         """Test auto selection includes applicable high severity principles"""
-        manager = self.create_test_manager()
         chars = ProjectCharacteristics(
             project_type="api",
             primary_language="python",
@@ -604,13 +530,12 @@ class TestAutoSelection:
             contexts=["api_endpoints"],
         )
 
-        selected = manager.select_principles(chars, strategy="auto")
+        selected = auto_manager.select_principles(chars, strategy="auto")
 
         assert "P_HIGH_API" in selected
 
-    def test_auto_select_medium_with_context(self) -> None:
+    def test_auto_select_medium_with_context(self, auto_manager) -> None:
         """Test auto selection includes medium severity with matching context"""
-        manager = self.create_test_manager()
         chars = ProjectCharacteristics(
             project_type="api",
             primary_language="python",
@@ -624,13 +549,12 @@ class TestAutoSelection:
             contexts=["api_endpoints"],
         )
 
-        selected = manager.select_principles(chars, strategy="auto")
+        selected = auto_manager.select_principles(chars, strategy="auto")
 
         assert "P_MEDIUM_CONTEXT" in selected
 
-    def test_auto_select_excludes_mismatched_context(self) -> None:
+    def test_auto_select_excludes_mismatched_context(self, auto_manager) -> None:
         """Test auto selection excludes medium severity without matching context"""
-        manager = self.create_test_manager()
         chars = ProjectCharacteristics(
             project_type="api",
             primary_language="python",
@@ -644,13 +568,12 @@ class TestAutoSelection:
             contexts=["database"],  # Different context
         )
 
-        selected = manager.select_principles(chars, strategy="auto")
+        selected = auto_manager.select_principles(chars, strategy="auto")
 
         assert "P_MEDIUM_CONTEXT" not in selected
 
-    def test_auto_select_medium_all_contexts(self) -> None:
+    def test_auto_select_medium_all_contexts(self, auto_manager) -> None:
         """Test auto selection includes medium severity with 'all' contexts"""
-        manager = self.create_test_manager()
         chars = ProjectCharacteristics(
             project_type="api",
             primary_language="python",
@@ -664,15 +587,15 @@ class TestAutoSelection:
             contexts=["database"],
         )
 
-        selected = manager.select_principles(chars, strategy="auto")
+        selected = auto_manager.select_principles(chars, strategy="auto")
 
         assert "P_MEDIUM_ALL_CONTEXTS" in selected
 
-    def test_auto_select_with_strategy_rules(self) -> None:
+    def test_auto_select_with_strategy_rules(self, auto_manager) -> None:
         """Test auto selection with strategy rules"""
-        manager = self.create_test_manager()
+        
         # Add a rule to the auto strategy
-        manager.selection_strategies = {
+        auto_manager.selection_strategies = {
             "auto": {
                 "rules": [
                     {
@@ -695,7 +618,7 @@ class TestAutoSelection:
             contexts=["api_endpoints"],
         )
 
-        selected = manager.select_principles(chars, strategy="auto")
+        selected = auto_manager.select_principles(chars, strategy="auto")
 
         # Should include based on rule
         assert "P_HIGH_API" in selected
