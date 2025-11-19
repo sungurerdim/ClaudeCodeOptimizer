@@ -22,10 +22,10 @@ description: |
 Prevent production incidents through automated quality gates, safe deployment strategies, and infrastructure automation.
 
 **Solves**:
-- **Broken Builds**: 30%+ defects reach production without CI gates
-- **Slow Deployments**: Manual takes 2-8h vs 5-15min automated
-- **Deployment Failures**: 40% fail without automated rollback
-- **Environment Drift**: Manual infrastructure causes "works on my machine" (60%+ teams)
+- **Broken Builds**: Many defects reach production without CI gates
+- **Slow Deployments**: Manual takes hours vs minutes automated
+- **Deployment Failures**: Many fail without automated rollback
+- **Environment Drift**: Manual infrastructure causes "works on my machine" issues
 
 **Impact**: Critical
 
@@ -50,12 +50,12 @@ Prevent production incidents through automated quality gates, safe deployment st
 
 ### P_CANARY_RELEASES
 **Category**: Progressive Deployment
-**Why**: Gradual rollout (5% → 25% → 100%) detects issues early
+**Why**: Gradual rollout in stages detects issues early
 **Triggers**: High-risk deploys, A/B testing, gradual rollout
 
 ### P_ROLLBACK_STRATEGY
 **Category**: Incident Response
-**Why**: Automated rollback <5min prevents prolonged outages
+**Why**: Fast automated rollback prevents prolonged outages
 **Triggers**: Deployment failures, performance degradation, error spikes
 
 ### P_GIT_COMMIT_QUALITY
@@ -115,12 +115,12 @@ Result: Reviews gate completeness (lint, test, coverage, security)
 ```
 User: "Deploy high-risk feature to production?"
 Principles: P_CANARY_RELEASES, P_BLUE_GREEN_DEPLOYMENT
-Result: Recommends canary (5% → 25% → 100%) + automated rollback
+Result: Recommends canary deployment with gradual rollout + automated rollback
 ```
 
 ### Pipeline Failure
 ```
-User: "Pipeline failing - coverage 65%"
+User: "Pipeline failing - coverage below threshold"
 Principle: P_CI_GATES
-Result: Analyzes threshold (80%), identifies gaps, generates tests
+Result: Analyzes threshold, identifies gaps, generates tests
 ```

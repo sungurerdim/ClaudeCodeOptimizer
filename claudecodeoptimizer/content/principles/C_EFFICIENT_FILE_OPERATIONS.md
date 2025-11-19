@@ -17,12 +17,12 @@ Optimize file operations via grep-first: (1) files_with_matches to discover, (2)
 
 ## Why
 
-Reading without searching wastes 90%+ context. Grep-first delivers 90%+ token savings and 10x faster discovery.
+Reading without searching wastes most context. Grep-first delivers significant token savings and faster discovery.
 
 **Problems:**
-- Reading 10 files to find 1 function wastes 90% context
-- Reading 2000-line file for 5-line fix wastes 99.75% tokens
-- Brute-force can consume 10K+ tokens when 100 would suffice
+- Reading many files to find 1 function wastes most context
+- Reading full files for small fixes wastes most tokens
+- Brute-force can consume excessive tokens when few would suffice
 
 **Strategy:**
 ```
@@ -88,7 +88,7 @@ Read("<auth_module>/login.py")    # 450 lines
 Read("<auth_module>/session.py")  # 380 lines
 Read("<auth_module>/<jwt_file>.py")      # 520 lines
 
-# ✅ GOOD: Grep first (85 tokens, 97% reduction)
+# ✅ GOOD: Grep first (significant reduction)
 Grep("SessionManager", output_mode="files_with_matches")
 Grep("SessionManager", path="<auth_module>/session.py", "-C": 3)
 Read("<auth_module>/session.py", offset=40, limit=50)

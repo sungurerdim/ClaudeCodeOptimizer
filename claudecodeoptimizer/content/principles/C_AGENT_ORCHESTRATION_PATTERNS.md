@@ -26,13 +26,13 @@ Poor orchestration wastes resources through sequential bottlenecks, wrong model 
 ### 1. Parallel Fan-Out
 **When**: Independent tasks
 ```python
-# 5 modules in parallel (2 min vs 10 min sequential)
+# 5 modules in parallel (significantly faster than sequential)
 Task("Analyze auth module", model="haiku")
 Task("Analyze payment module", model="haiku")
 Task("Analyze user module", model="haiku")
 Task("Analyze product module", model="haiku")
 Task("Analyze order module", model="haiku")
-# Cost: 5 * $0.10 = $0.50
+# Cost-efficient parallel execution
 ```
 
 ### 2. Sequential Pipeline
@@ -48,12 +48,12 @@ Task("Deploy to staging", model="haiku")
 **When**: Complex task breaks into subtasks
 ```python
 # Strategy (Opus) → Parallel execution (Sonnet)
-Task("Identify top 5 critical modules", model="opus")  # 3 min
+Task("Identify top 5 critical modules", model="opus")  # Planning phase
 # Then parallel:
-Task("Audit auth module", model="sonnet")  # 5 min parallel
+Task("Audit auth module", model="sonnet")  # Execution phase
 Task("Audit payment module", model="sonnet")
 Task("Audit user module", model="sonnet")
-# Time: 8 min (3 + 5), Cost: $2.50
+# Faster execution with optimized cost
 ```
 
 ### 4. Scatter-Gather
@@ -73,26 +73,26 @@ Task("Create action plan from reviews", model="sonnet")
 
 | Model | Speed | Cost | Use For |
 |-------|-------|------|---------|
-| **Haiku** | 3x faster | 10x cheaper | Grep, format, read, simple edits |
+| **Haiku** | Fastest | Cheapest | Grep, format, read, simple edits |
 | **Sonnet** | Balanced | Mid | Features, bugs, code review (default) |
-| **Opus** | Slower | 10x cost | Architecture, complex algorithms |
+| **Opus** | Slowest | Highest | Architecture, complex algorithms |
 
 ---
 
 ## Cost Optimization
 
 ```python
-# ❌ EXPENSIVE: All Opus ($3.90)
-Task("Find Python files", model="opus")    # $1.00
-Task("Read configs", model="opus")         # $0.80
-Task("Analyze architecture", model="opus") # $1.50
-Task("List dependencies", model="opus")    # $0.60
+# ❌ EXPENSIVE: All Opus
+Task("Find Python files", model="opus")    # Expensive for simple task
+Task("Read configs", model="opus")         # Expensive for simple task
+Task("Analyze architecture", model="opus") # Appropriate complexity
+Task("List dependencies", model="opus")    # Expensive for simple task
 
-# ✅ OPTIMIZED: Right model ($1.60, 59% savings)
-Task("Find Python files", model="haiku")   # $0.05
-Task("Read configs", model="haiku")        # $0.03
-Task("Analyze architecture", model="opus") # $1.50
-Task("List dependencies", model="haiku")   # $0.02
+# ✅ OPTIMIZED: Right model (significant savings)
+Task("Find Python files", model="haiku")   # Cheap, fast
+Task("Read configs", model="haiku")        # Cheap, fast
+Task("Analyze architecture", model="opus") # Appropriate complexity
+Task("List dependencies", model="haiku")   # Cheap, fast
 ```
 
 ---

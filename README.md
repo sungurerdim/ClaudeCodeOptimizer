@@ -11,24 +11,24 @@
 
 ## What Problems Does CCO Solve?
 
-### The 7 Critical Pain Points (2025 Industry Data)
+### The 7 Critical Pain Points
 
-| Pain Point | Cost/Impact | CCO Solution |
-|------------|-------------|--------------|
-| **Security (51% #1 concern)** | $500M+ from vulnerabilities | `/cco-audit --security` + auto-fix (OWASP Top 10, AI security, supply chain) |
-| **Technical Debt (23% time waste)** | Developers lose 23% of time | `/cco-fix --tech-debt` removes dead code, reduces complexity |
-| **AI Code Reliability (45%)** | Unreliable AI-generated code | `/cco-audit --ai-security` detects prompt injection, hallucination risks |
-| **Missing Tests (Biggest mistake)** | Production bugs, delays | `/cco-generate --tests` creates unit + integration tests (80%+ coverage) |
-| **Time Waste (69% lose 8+ hours/week)** | $2M annually per enterprise | `/cco-optimize` saves 26 hours/week (queries, builds, dead code) |
+| Pain Point | Impact | CCO Solution |
+|------------|--------|--------------|
+| **Security** | Vulnerabilities in production | `/cco-audit --security` + auto-fix (OWASP Top 10, AI security, supply chain) |
+| **Technical Debt** | Wasted developer time | `/cco-fix --tech-debt` removes dead code, reduces complexity |
+| **AI Code Reliability** | Unreliable AI-generated code | `/cco-audit --ai-security` detects prompt injection, hallucination risks |
+| **Missing Tests** | Production bugs, delays | `/cco-generate --tests` creates unit + integration tests |
+| **Time Waste** | Inefficient workflows | `/cco-optimize` improves queries, builds, removes dead code |
 | **Integration Failures** | Deployment delays, broken builds | `/cco-audit --integration` finds import errors, dependency conflicts |
 | **Documentation Gaps** | Onboarding delays, knowledge loss | `/cco-generate --openapi` creates complete API specs |
 
-**Example Impact:** A typical production API project using CCO can:
-- Fix 8 critical security vulnerabilities in 5 minutes (Pain #1)
-- Remove 23% dead code automatically (Pain #2)
-- Generate 200+ tests achieving 80%+ coverage (Pain #4)
-- Reduce database query time by 89% (450ms → 50ms) (Pain #5)
-- Save 26+ hours/week in debugging and optimization (Pain #5)
+**What CCO Does:**
+- Finds and fixes security vulnerabilities automatically
+- Removes dead code and reduces complexity
+- Generates comprehensive test suites
+- Optimizes database queries and build times
+- Creates complete API documentation
 
 ---
 
@@ -36,7 +36,7 @@
 
 CCO is a **pain-point driven development assistant** that automatically configures Claude Code with production-grade principles and intelligent commands.
 
-**The Challenge:** Development teams face recurring problems: security vulnerabilities slip through, technical debt accumulates (23% of time wasted), tests are missing (biggest mistake), and developers lose 8+ hours/week to inefficiencies.
+**The Challenge:** Development teams face recurring problems: security vulnerabilities slip through, technical debt accumulates, tests are missing, and workflows are inefficient.
 
 **CCO's Approach:**
 1. **Intelligent commands** that address these pain points directly
@@ -101,33 +101,29 @@ Open any project in Claude Code:
 ```bash
 # START HERE: See your project's health + biggest problems
 /cco-overview
-# Output: "Security: 45/100 (8 SQL injections), Testing: 58/100 (45% coverage)"
-# Impact: Know exactly what's costing you time and risk
+# Shows scores for security, testing, code quality, etc.
 
 # Find critical security issues
 /cco-audit --security
-# Output: "8 SQL injections, 2 hardcoded secrets, 3 AI prompt injection risks"
-# Impact: Addresses Pain #1 (51% top concern)
+# Detects SQL injections, hardcoded secrets, AI prompt injection risks
 
 # Auto-fix safe issues
 /cco-fix --security
-# Output: "Fixed 6 safe issues: parameterized queries, externalized secrets"
-# Impact: 45 → 85 security score in 5 minutes
+# Applies safe fixes: parameterized queries, externalized secrets
 
 # Generate missing tests
 /cco-generate --tests
-# Output: "Created 200+ tests, coverage: 45% → 82%"
-# Impact: Addresses Pain #4 (biggest mistake)
+# Creates unit + integration tests for uncovered code
 
 # Get comprehensive help
 /cco-help
 ```
 
-**Result after 15 minutes:**
-- Security: 45 → 85 (+40 points)
-- Testing: 58 → 85 (+27 points)
-- Risk reduced: 85%
-- Time saved: 8+ hours/week going forward
+**Results:**
+- Security issues identified and fixed
+- Test coverage improved
+- Code quality enhanced
+- Time saved on manual review
 
 ---
 
@@ -156,7 +152,7 @@ Open any project in Claude Code:
 
 ### Critical Action (Fix Your Problems)
 
-**`/cco-audit`** - Find issues ({{CATEGORY_COUNT}} categories)
+**`/cco-audit`** - Comprehensive issue detection
 - **Pain #1:** `--security` (OWASP, AI security, supply chain)
 - **Pain #2:** `--tech-debt` (dead code, complexity)
 - **Pain #3:** `--ai-security` (prompt injection, hallucinations)
@@ -166,43 +162,43 @@ Open any project in Claude Code:
 - **Agent:** cco-agent-audit (Haiku - fast & cheap)
 - **Impact:** Find all issues in 1-2 minutes
 
-**`/cco-fix`** - Auto-fix issues ({{CATEGORY_COUNT}} categories)
+**`/cco-fix`** - Auto-fix detected issues
 - Same categories as audit
 - Safe fixes auto-applied (parameterize SQL, remove dead code, externalize secrets)
 - Risky fixes require approval (CSRF protection, auth changes)
 - Auto-runs audit if needed
 - **Agent:** cco-agent-fix (Sonnet - accurate)
-- **Impact:** Fix 6-15 issues automatically in 5 minutes
+- **Impact:** Fix issues automatically
 
-**`/cco-generate`** - Create missing components (17 types)
-- **Pain #4:** `--tests` (unit + integration, 80%+ coverage)
+**`/cco-generate`** - Create missing components
+- **Pain #4:** `--tests` (unit + integration)
 - **Pain #7:** `--openapi` (complete API spec)
 - Also: `--contract-tests`, `--load-tests`, `--chaos-tests`, `--cicd`, `--dockerfile`, `--migration`, `--monitoring`, `--logging`, `--slo`, and more
 - **Agent:** cco-agent-generate (Sonnet - quality)
-- **Impact:** Generate 200+ tests or complete API docs in 10 minutes
+- **Impact:** Generate comprehensive tests and complete API documentation
 
 ### Productivity (Save Time)
 
-**`/cco-optimize`** - Performance optimization (6 types)
-- **Pain #5:** `--database` (N+1 queries, indexes, caching) - 89% faster
-- **Pain #5:** `--docker` (multi-stage builds) - 87% smaller images
-- **Pain #2:** `--code` (remove 23% dead code)
+**`/cco-optimize`** - Performance optimization
+- **Pain #5:** `--database` (N+1 queries, indexes, caching)
+- **Pain #5:** `--docker` (multi-stage builds)
+- **Pain #2:** `--code` (remove dead code)
 - Also: `--deps`, `--bundle`, `--performance`
 - **Agent:** cco-agent-fix (Sonnet)
-- **Impact:** Save 26 hours/week (queries 450ms → 50ms, builds 8min → 2min)
+- **Impact:** Faster queries, smaller images, cleaner codebase
 
 **`/cco-commit`** - Semantic commits
 - AI-generated commit messages
 - Atomic commit recommendations
 - **Pain #5:** Better git workflow
-- **Impact:** 5-10 min saved per commit session
+- **Impact:** Faster, more consistent commits
 
 **`/cco-implement`** - Feature development with TDD
 - Test-Driven Development approach
 - Auto-skill selection based on feature type
-- 100% test coverage target
+- High test coverage target
 - **Pain #1 + #4:** Security-first + tests-first
-- **Impact:** Production-ready features in 20-30 minutes
+- **Impact:** Production-ready features with comprehensive tests
 
 ### Management
 
@@ -241,26 +237,143 @@ Open any project in Claude Code:
 ### Progressive Loading (Significant Context Reduction)
 
 **Always Loaded (baseline principles):**
-- Claude Guidelines (C_*): Token optimization, parallel agents, minimal touch, efficient file ops
+- Claude Guidelines (C_*): Token optimization, parallel agents, efficient file ops, honest reporting, native tools, project context discovery
 - Universal (U_*): Evidence-based verification, DRY, minimal touch, no overengineering
 
 **Auto-Activated Skills:**
 Skills load on-demand when Claude detects relevance:
-- **Security (5):** OWASP, AI security, supply chain, K8s, privacy
-- **Testing (2):** Test pyramid, API testing
-- **Database (2):** Optimization, migrations
-- **Observability (3):** Metrics, logging, incidents
-- **CI/CD (2):** Gates, deployments
-- **Code Quality (2):** Refactoring, content
-- **API (1):** REST versioning & security
-- **Documentation (1):** API/OpenAPI/ADR/runbooks
-- **Git (2):** Branching, versioning
-- **Performance (2):** Frontend, resilience
-- **Architecture (2):** Microservices, event-driven
-- **Mobile (1):** Offline/battery
-- **DevEx (1):** Onboarding/tooling
+- **Security:** OWASP, AI security, supply chain, K8s, privacy
+- **Testing:** Test pyramid, API testing
+- **Database:** Optimization, migrations
+- **Observability:** Metrics, logging, incidents
+- **CI/CD:** Gates, deployments
+- **Code Quality:** Refactoring, content
+- **API:** REST versioning & security
+- **Documentation:** API/OpenAPI/ADR/runbooks
+- **Git:** Branching, versioning
+- **Performance:** Frontend, resilience
+- **Architecture:** Microservices, event-driven
+- **Mobile:** Offline/battery
+- **DevEx:** Onboarding/tooling
 
-**Context Efficiency:** 25-35K tokens avg (vs 200K old system - 82-87% reduction)
+**Context Efficiency:** Significant token reduction through progressive loading and on-demand skill activation
+
+### Key Features
+
+**Project Context Discovery:**
+- Optional analysis of project documentation (README, CONTRIBUTING, ARCHITECTURE)
+- Haiku sub-agent extracts project context without consuming main context
+- Ensures findings/fixes align with project goals and conventions
+
+**Full Control Mode (Audit):**
+- Three modes: Quick Presets, Category Mode, Full Control
+- Full Control shows all available checks with applicability status
+- Individual check selection for maximum precision
+
+**YAML Frontmatter:**
+- All commands/agents include structured metadata
+- Command Discovery Protocol for semantic matching
+- Enables intelligent command recommendations
+
+### Universal Principles for CCO Components
+
+**All commands, skills, agents, and principles MUST follow these rules:**
+
+#### 1. No Hardcoded Examples
+AI models may interpret hardcoded examples as real data and use them literally.
+
+```python
+# ❌ BAD: Hardcoded (AI might use as-is)
+"file": "src/auth/login.py", "line": 45
+
+# ✅ GOOD: Dynamic placeholders
+"file": "{FILE_PATH}", "line": "{LINE_NUMBER}"
+```
+
+#### 2. Native Claude Code Tools for All Interactions
+All user interactions must use native tools (AskUserQuestion, etc.).
+
+```python
+# ❌ BAD: Text-based prompts
+print("Select option (1/2/3): ")
+
+# ✅ GOOD: Native tool
+AskUserQuestion({
+  questions: [{
+    question: "Which checks to run?",
+    header: "Audit",
+    multiSelect: true,
+    options: [...]
+  }]
+})
+```
+
+#### 3. MultiSelect with "All" Option
+Any question with multiple choices must be multiSelect with "All" option.
+
+```python
+options: [
+  {label: "All", description: "Select all options"},
+  {label: "Security", description: "..."},
+  {label: "Testing", description: "..."},
+]
+# If "All" selected → all other options are default selected
+```
+
+#### 4. 100% Honesty - No False Claims
+- Never claim "fixed" unless change verified
+- Never say "impossible" if technically possible
+- Never claim "generated" unless file exists
+- Report exact truth, nothing more or less
+
+```python
+# Accurate outcome categories
+OUTCOMES = {
+    "fixed": "Applied and verified",
+    "needs_decision": "Multiple approaches - user chooses",
+    "needs_review": "Complex - requires human verification",
+    "requires_migration": "DB change - needs migration script",
+    "impossible_external": "Issue in third-party code",
+}
+```
+
+#### 5. Complete Accounting
+Every item must have a disposition. Totals must match.
+
+```python
+# MUST verify: fixed + skipped + cannot_fix = total
+assert len(fixed) + len(skipped) + len(cannot_fix) == total_issues
+```
+
+#### 6. Best UX with Highest Quality
+- Explicit phase transitions (start/complete announcements)
+- Consistent counts (single source of truth)
+- Progressive disclosure (simple start, detail on demand)
+- Real-time feedback (streaming, not batch)
+
+#### 7. Token Optimization
+- Minimize context usage without sacrificing quality
+- Grep before Read
+- Use offset+limit for large files
+- Targeted reads, not full file dumps
+
+#### 8. Unlimited Sub-Agents for Concrete Benefit
+Use as many sub-agents as needed when they provide concrete benefit.
+
+```python
+# Parallel agents for independent tasks
+Task(model="haiku", prompt="Scan security...")
+Task(model="haiku", prompt="Scan testing...")
+Task(model="haiku", prompt="Scan database...")
+# All run in parallel → faster, better results
+```
+
+#### 9. Universal + Claude Principle Compliance
+All components must align with:
+- **U_*** principles (Evidence-based, DRY, Minimal touch, No overengineering)
+- **C_*** principles (Context window, Cross-platform, Efficient file ops, Follow patterns)
+
+---
 
 ### Agent Orchestration & Model Selection
 
@@ -303,93 +416,54 @@ use_cases:                      # CCO extension
 Task(model="haiku", prompt="Scan SQL injection patterns...")
 Task(model="haiku", prompt="Scan hardcoded secrets...")
 Task(model="haiku", prompt="Check dependency CVEs...")
-# All run in parallel → 5s total vs 15s sequential
+# All run in parallel → faster execution
 ```
 
 ---
 
 ## Example Workflows
 
-### New Project Setup (10 minutes)
+### New Project Setup
 ```bash
-/cco-overview              # Assess health: "Missing: tests, CI/CD, API docs"
+/cco-overview              # Assess health and find gaps
 /cco-generate --tests --openapi --cicd --dockerfile
-# Impact: 0% → 80% coverage, complete docs, production-ready
+# Creates tests, docs, CI/CD, containerization
 ```
 
-### Security Hardening (5 minutes)
+### Security Hardening
 ```bash
 /cco-audit --security --ai-security --supply-chain
-# Found: 8 SQL injections, 2 secrets, 3 AI risks, 5 CVEs
+# Finds SQL injections, secrets, AI risks, CVEs
 /cco-fix --security
-# Fixed: 6 safe issues automatically, 2 require approval
-# Impact: Security 45 → 85, vulnerabilities 18 → 2 (89% reduction)
+# Fixes safe issues automatically, flags risky ones for review
 ```
 
-### Performance Optimization (15 minutes)
+### Performance Optimization
 ```bash
 /cco-audit --performance --database
-# Found: 2 N+1 queries (450ms), 3 missing indexes (780ms)
+# Finds N+1 queries, missing indexes
 /cco-optimize --database --docker
-# Impact: Queries 89% faster, image 87% smaller, saves 26h/week
+# Faster queries, smaller images
 ```
 
-### Quality Improvement (20 minutes)
+### Quality Improvement
 ```bash
-/cco-overview              # Tech debt: 62/100 (23% dead code)
 /cco-audit --code-quality --tech-debt --tests
 /cco-fix --tech-debt
 /cco-generate --tests
 /cco-optimize --code
-# Impact: Debt 62 → 85, tests 45% → 82%, codebase -23%
+# Cleaner code, better tests, reduced complexity
 ```
 
-### Complete Health Check (30 minutes)
+### Complete Health Check
 ```bash
-/cco-overview              # Baseline: 56/100
+/cco-overview              # Get baseline scores
 /cco-audit --all           # Find all issues
 /cco-fix --all             # Fix safe issues
 /cco-generate --all        # Create missing components
 /cco-optimize --all        # Performance tuning
 /cco-commit                # Clean commits
-# Impact: 56 → 88/100, saves 26+ hours/week, risk -90%
 ```
-
----
-
-## Measurable Benefits
-
-### Time Savings (Pain #5: 69% waste 8+ hours/week)
-
-| Optimization | Before | After | Saved/Week |
-|-------------|--------|-------|------------|
-| **Database queries** | 450ms avg | 50ms avg | 15h debugging slow queries |
-| **Docker builds** | 8 min | 2 min | 6h in build/deploy cycles |
-| **Dead code navigation** | 3500 lines | 2700 lines | 5h reading unnecessary code |
-| **Manual testing** | 8h | 1h (80% automated) | 7h |
-| **Security reviews** | 4h | 15min (auto-scan) | 3.75h |
-| **Documentation sync** | 3h | 10min (auto-generate) | 2.75h |
-| **Total** | - | - | **26+ hours/week** |
-
-**ROI:** 30 minutes CCO setup → 26 hours/week saved → **52x return on time invested**
-
-### Quality Improvements
-
-| Metric | Typical Before | After CCO | Impact |
-|--------|---------------|-----------|--------|
-| **Security Score** | 45/100 | 85/100 | +40 points, 85% risk reduction |
-| **Test Coverage** | 45% | 82%+ | +37 points, production-ready |
-| **Code Quality** | 62/100 | 85/100 | +23 points, -23% dead code |
-| **Documentation** | 62/100 | 90/100 | +28 points, complete API specs |
-| **Performance** | 65/100 | 90/100 | +25 points, 89% faster queries |
-| **Overall Health** | 56/100 | 88/100 | +32 points |
-
-### Cost Savings
-
-- **Security:** Avoid $500M+ vulnerability costs (Pain #1)
-- **Productivity:** Recover $2M/year in wasted time (Pain #5)
-- **Quality:** Reduce production bugs by 60% (Pain #4)
-- **Agent Cost:** $0.50 vs $2.00 with all Sonnet (75% cheaper)
 
 ---
 
@@ -464,7 +538,7 @@ Contributions welcome! Priority areas:
 - [Claude Code](https://claude.com/claude-code) - Anthropic's official CLI
 
 **Driven by:**
-- 2025 industry pain point data (security 51%, tech debt 23%, time waste 69%)
+- Industry pain point research and developer feedback
 
 ---
 
@@ -476,4 +550,4 @@ MIT License - see [LICENSE](LICENSE) for details.
 
 **Created by Sungur Zahid Erdim** | [Issues](https://github.com/sungurerdim/ClaudeCodeOptimizer/issues) | [Discussions](https://github.com/sungurerdim/ClaudeCodeOptimizer/discussions)
 
-**Impact Summary:** Saves 26+ hours/week. Reduces security risk by 85%. Achieves 80%+ test coverage. Zero project pollution. One command to rule them all.
+**CCO:** Find issues, fix them automatically, generate missing components. Zero project pollution.

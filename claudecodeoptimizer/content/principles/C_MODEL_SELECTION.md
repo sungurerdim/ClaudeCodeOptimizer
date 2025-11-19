@@ -17,7 +17,7 @@ Choose appropriate Claude model (Haiku/Sonnet/Opus) based on task complexity to 
 
 ## Why
 
-Wrong model selection wastes budget or delivers poor quality. Opus for grep costs 10x more, Haiku for architecture produces poor quality.
+Wrong model selection wastes budget or delivers poor quality. Opus for grep is unnecessarily expensive, Haiku for architecture produces poor quality.
 
 ---
 
@@ -25,9 +25,9 @@ Wrong model selection wastes budget or delivers poor quality. Opus for grep cost
 
 | Model | Speed | Cost | Use For |
 |-------|-------|------|---------|
-| **Haiku** | 3x faster | 10x cheaper | Mechanical tasks, data gathering, simple edits |
+| **Haiku** | Fastest | Cheapest | Mechanical tasks, data gathering, simple edits |
 | **Sonnet** | Balanced | Mid | Features, bugs, code review (default) |
-| **Opus** | Slower | 10x cost | Architecture, complex algorithms, deep analysis |
+| **Opus** | Slowest | Highest | Architecture, complex algorithms, deep analysis |
 
 ### Selection Framework
 ```
@@ -91,17 +91,17 @@ Task("Comprehensive security audit", model="opus")
 ## Cost Optimization
 
 ```python
-# ❌ EXPENSIVE: All Opus ($1.80)
-Task("Find Python files", model="opus")      # $0.50
-Task("Read package.json", model="opus")      # $0.30
-Task("Format code", model="opus")            # $0.40
-Task("Run tests", model="opus")              # $0.60
+# ❌ EXPENSIVE: All Opus
+Task("Find Python files", model="opus")      # Expensive for simple task
+Task("Read package.json", model="opus")      # Expensive for simple task
+Task("Format code", model="opus")            # Expensive for simple task
+Task("Run tests", model="opus")              # Expensive for simple task
 
-# ✅ OPTIMIZED: Right model ($0.27, 85% savings)
-Task("Find Python files", model="haiku")     # $0.05
-Task("Read package.json", model="haiku")     # $0.03
-Task("Format code", model="haiku")           # $0.04
-Task("Run tests", model="sonnet")            # $0.15
+# ✅ OPTIMIZED: Right model (significant savings)
+Task("Find Python files", model="haiku")     # Cheap, fast
+Task("Read package.json", model="haiku")     # Cheap, fast
+Task("Format code", model="haiku")           # Cheap, fast
+Task("Run tests", model="sonnet")            # Balanced
 ```
 
 ---
@@ -110,12 +110,12 @@ Task("Run tests", model="sonnet")            # $0.15
 
 ```python
 # Option 1: Sequential Opus (slow, expensive)
-Task("Analyze all 10 modules", model="opus")  # $2.00, 5 min
+Task("Analyze all 10 modules", model="opus")  # Slower, higher cost
 
 # Option 2: Parallel Haiku (fast, cheap)
-Task("Analyze module1", model="haiku")  # $0.05, 30s
+Task("Analyze module1", model="haiku")  # Fast, cheap
 # ... 10 in parallel
-# Total: $0.50, 30 seconds (75% savings, 10x faster)
+# Total: Significantly faster with major cost savings
 ```
 
 ---

@@ -22,6 +22,28 @@ use_cases:
 - TDD-first approach with verification
 - Surgical changes only
 
+---
+
+## Critical UX Principles
+
+1. **100% Honesty** - Only claim "fixed" after verification, never "impossible" if technically possible
+2. **Complete Accounting** - fixed + skipped + cannot-fix = total (must match)
+3. **No Hardcoded Examples** - Use actual code/paths, never fake examples
+4. **Verify Before Claiming** - Read file after edit to confirm change applied
+
+### Outcome Categories
+```python
+OUTCOMES = {
+    "fixed": "Applied and verified",
+    "needs_decision": "Multiple approaches - user chooses",
+    "needs_review": "Complex - requires human verification",
+    "requires_migration": "DB change - needs migration",
+    "impossible_external": "Third-party code",
+}
+```
+
+---
+
 ## Workflow
 
 1. Identify issues from audit, prioritize by severity

@@ -25,7 +25,7 @@ Keep dependencies updated and scan for vulnerabilities. Lock versions, audit reg
 ## Why
 
 ### The Problem
-- **Known vulnerabilities** - 85% of breaches exploit known CVEs
+- **Known vulnerabilities** - most breaches exploit known CVEs
 - **Dependency rot** - Outdated dependencies become unmaintainable
 - **Breaking updates** - Surprise breaking changes in production
 - **Supply chain attacks** - Malicious packages (event-stream, ua-parser-js)

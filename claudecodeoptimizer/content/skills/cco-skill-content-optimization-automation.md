@@ -30,7 +30,7 @@ related_principles:
 # Skill: Content Optimization & Token Efficiency
 
 **Domain**: Claude Code Maintenance & Optimization
-**Purpose**: Proactively identify and optimize verbose Claude Code content (skills, commands, agents, principles, guides, CLAUDE.md) to maximize context window efficiency, achieving 40-70% token reduction while **preserving 100% functionality and professional quality**.
+**Purpose**: Proactively identify and optimize verbose Claude Code content (skills, commands, agents, principles, guides, CLAUDE.md) to maximize context window efficiency, achieving significant token reduction while **preserving 100% functionality and professional quality**.
 
 ---
 
@@ -275,7 +275,7 @@ Report back:
     results = await_all(tasks)
 ```
 
-**Why**: 10x faster than sequential (3h vs 30h for 50 files)
+**Why**: Significantly faster than sequential processing
 
 ### 5. User Approval Workflow
 **Present findings with AskUserQuestion**:
@@ -650,9 +650,9 @@ if len(file) > 10000:
 ```python
 # DON'T process files one-by-one
 for file in large_files:
-    result = optimize_file(file)  # 30 files × 5min = 2.5 hours!
+    result = optimize_file(file)  # Very slow!
 ```
-**Why**: Parallel agents are 10x faster (3h → 20min)
+**Why**: Parallel agents are significantly faster
 
 ---
 
@@ -713,10 +713,10 @@ This ensures commands are always current even when renamed or updated.
 ## Success Metrics
 
 **Target Results**:
-- Token reduction: 60-90% per file
+- Token reduction: significant per file
 - Zero information loss: 100% functionality preserved
-- Batch efficiency: <5 minutes per 10 files
-- Context gain: 5-10x more space for code analysis
+- Batch efficiency: fast parallel processing
+- Context gain: significantly more space for code analysis
 
 **Indicators of Success**:
 - Context warnings eliminated
@@ -745,35 +745,34 @@ This skill activates when:
    → Skill activates automatically
 
 2. Analysis:
-   Scanning 127 content files...
-   Found 45 optimization candidates
-   Potential savings: ~85,000 tokens
+   Scanning content files...
+   Found [N] optimization candidates
+   Potential savings: significant tokens
 
 3. Proposal:
-   TOP 10 HIGH-IMPACT FILES:
-   1. cco-audit-comprehensive.md (14,781 tokens → ~2,956)
-   2. cco-skill-microservices.md (7,207 tokens → ~1,441)
+   TOP HIGH-IMPACT FILES:
+   [List of files with token counts]
    ...
 
-   Optimize all 45 files? [Yes] [Top 10] [Custom]
+   Optimize all [N] files? [Yes] [Top 10] [Custom]
 
 4. Execution:
-   ✓ Backing up 45 files...
+   ✓ Backing up [N] files...
    ✓ Launching 10 parallel agents...
    ✓ Batch 1/5 complete (10 files, 8 min)
    ✓ Batch 2/5 complete (10 files, 7 min)
    ...
 
 5. Validation:
-   ✓ 45/45 metadata preserved
-   ✓ 45/45 sections intact
-   ✓ Average reduction: 73.4%
-   ✓ Token savings: 81,247 tokens
+   ✓ [N]/[N] metadata preserved
+   ✓ [N]/[N] sections intact
+   ✓ Average reduction: [X]%
+   ✓ Token savings: [N] tokens
 
 6. Report:
-   📊 Generated: OPTIMIZATION_REPORT.md
-   ✅ Context: 80% → 31% (2.6x improvement)
-   💾 Backups: .cco/optimization/backups/2025-11-17/
+   Generated: OPTIMIZATION_REPORT.md
+   Context: significantly improved
+   Backups: .cco/optimization/backups/[DATE]/
 ```
 
 ---

@@ -116,7 +116,7 @@ Define ideal scores based on project type:
 
 Generate prioritized action plan:
 1. Critical security fixes (if any)
-2. Test coverage improvements (if < 80%)
+2. Test coverage improvements (if low)
 3. Tech debt cleanup (if high)
 4. Documentation gaps (if significant)
 5. Performance optimizations (if needed)
@@ -213,11 +213,11 @@ Start Phase 1 now? (yes/no/customize)
 
 ## Pain Points Reference
 
-1. **Security (51%)** - $500M+ cost from vulnerabilities
-2. **Tech Debt (23%)** - 23% developer time wasted
-3. **AI Reliability (45%)** - Unreliable AI-generated code
+1. **Security (top concern)** - High cost from vulnerabilities
+2. **Tech Debt** - Significant developer time wasted
+3. **AI Reliability** - Unreliable AI-generated code
 4. **Testing (Biggest Mistake)** - Production bugs, delays
-5. **Time Waste (69%)** - $2M annually per enterprise
+5. **Time Waste** - Significant cost per enterprise
 6. **Integration (Failures)** - Deployment delays
 7. **Documentation (Gaps)** - Onboarding delays
 

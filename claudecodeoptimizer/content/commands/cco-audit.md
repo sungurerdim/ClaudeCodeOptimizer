@@ -86,6 +86,48 @@ parameters:
 3. **Zero Surprises** - Pre-flight shows everything before execution
 4. **Real-time Feedback** - Streaming results, not batch output
 5. **Actionable Output** - Every finding has a clear next step
+6. **100% Honesty** - Report exact truth, no false positives or negatives
+7. **No Hardcoded Examples** - All examples use placeholders, never fake data
+
+---
+
+## CRITICAL: No Hardcoded Examples
+
+**AI models may interpret hardcoded examples as real data and use them literally.**
+
+### Rules
+
+```python
+# ❌ BAD: Hardcoded example (AI might use as-is)
+"file": "src/auth/login.py"
+"line": 45
+"issue": "SQL injection in authenticate()"
+
+# ✅ GOOD: Dynamic placeholders
+"file": "{FILE_PATH}"
+"line": "{LINE_NUMBER}"
+"issue": "{ISSUE_DESCRIPTION}"
+```
+
+### Template Format
+
+All examples in this document use:
+- `{VARIABLE_NAME}` - To be replaced with actual values
+- `{COUNT}`, `{TIME}`, `{PCT}` - Numeric placeholders
+- `{file}`, `{line}`, `{code}` - Context-specific placeholders
+
+### Implementation
+
+```python
+def format_finding(finding: Finding) -> str:
+    """Format finding with REAL data, never hardcoded examples."""
+
+    # ❌ NEVER: Return template as-is
+    # return "SQL Injection in auth.py:45"
+
+    # ✅ ALWAYS: Use actual finding data
+    return f"{finding.issue} in {finding.file}:{finding.line}"
+```
 
 ---
 
@@ -95,6 +137,8 @@ parameters:
 /cco-audit
     │
     ├─► Mode Selection (Quick/Standard/Full)
+    │
+    ├─► Project Context (optional, recommended)
     │
     ├─► Discovery Phase (tech detection, applicability)
     │
@@ -140,6 +184,73 @@ AskUserQuestion({
 ```
 
 **Then proceed to Discovery Phase (same for all modes).**
+
+---
+
+## Component 1.5: Project Context Discovery (Optional)
+
+**Ask user if they want project documentation analyzed for better alignment.**
+
+```python
+AskUserQuestion({
+  questions: [{
+    question: "Proje dokümantasyonundan context çıkarılsın mı?",
+    header: "Project Context",
+    multiSelect: false,
+    options: [
+      {
+        label: "Evet (önerilen)",
+        description: "README/CONTRIBUTING'den proje amacı ve konvansiyonları çıkar, analizler hedefe uygun olur"
+      },
+      {
+        label: "Hayır",
+        description: "Sadece kod analizi yap (daha hızlı, dokümantasyondan bağımsız)"
+      }
+    ]
+  }]
+})
+```
+
+### If User Selects "Evet"
+
+```python
+# Phase 0: Extract project context via Haiku sub-agent
+context_result = Task({
+    subagent_type: "Explore",
+    model: "haiku",
+    prompt: """
+    Extract project context summary (MAX 200 tokens).
+    
+    Search for files in priority order (stop after 3-4 relevant ones):
+    - README.md, README.rst, README.txt
+    - CONTRIBUTING.md, .github/CONTRIBUTING.md
+    - ARCHITECTURE.md, DESIGN.md, docs/architecture.md
+    - docs/ADR/*.md, ROADMAP.md, CHANGELOG.md
+    
+    Return structured summary:
+    
+    ## Project Context
+    
+    **Purpose**: {1-2 sentences}
+    **Goals**: {3 bullets max}
+    **Tech Stack**: {languages, frameworks}
+    **Conventions**: {naming, testing, formatting}
+    **Architecture Notes**: {2 key decisions}
+    
+    If no documentation found: "No project documentation found."
+    """
+})
+
+# Store for use in analysis phases
+project_context = context_result
+```
+
+### Benefits
+
+- **Zero main context cost** - Sub-agent uses separate context
+- **Always fresh** - Extracted each run, no stale data
+- **Better alignment** - Findings match project goals
+- **Convention compliance** - Fixes follow project style
 
 ---
 
@@ -498,6 +609,7 @@ AskUserQuestion({
       header: "🔴 Critical",
       multiSelect: true,
       options: [
+        {label: "All Critical", description: "Select all critical impact categories"},
         {label: "Security", description: "Security checks - SQLi, XSS, secrets, CVEs"},
         {label: "Database", description: "Database checks - N+1, indexes, queries"},
         {label: "Tests", description: "Test checks - coverage, isolation, pyramid"}
@@ -508,6 +620,7 @@ AskUserQuestion({
       header: "🟡 High",
       multiSelect: true,
       options: [
+        {label: "All High", description: "Select all high impact categories"},
         {label: "Code Quality", description: "Quality checks - complexity, dead code"},
         {label: "Performance", description: "Performance checks - caching, algorithms"},
         {label: "CI/CD", description: "CI/CD checks - pipeline, gates, deploy"}
@@ -518,6 +631,7 @@ AskUserQuestion({
       header: "🟢 Medium",
       multiSelect: true,
       options: [
+        {label: "All Medium", description: "Select all medium impact categories"},
         {label: "Documentation", description: "Doc checks - docstrings, API docs"},
         {label: "Containers", description: "Container checks - Dockerfile, security"},
         {label: "Tech Debt", description: "Debt checks - coupling, legacy code"}
@@ -749,9 +863,95 @@ AskUserQuestion({
 
 ---
 
-## Component 6: Execution Dashboard
+## Component 6: State Management & Count Tracking
 
-**Real-time visibility during execution. Update as progress happens.**
+**CRITICAL: All UX issues stem from inconsistent state and count management.**
+
+### Single Source of Truth
+
+```python
+@dataclass
+class AuditState:
+    """Central state object - ONLY source for all counts and status."""
+
+    # Phase tracking
+    current_phase: int = 0  # 0=not started, 1=setup, 2=scanning, 3=synthesis
+    phase_start_times: Dict[int, datetime] = field(default_factory=dict)
+    phase_end_times: Dict[int, datetime] = field(default_factory=dict)
+
+    # Count tracking - NEVER derive these, always update explicitly
+    total_findings: int = 0
+    findings_by_severity: Dict[str, int] = field(default_factory=lambda: {
+        "critical": 0, "high": 0, "medium": 0, "low": 0
+    })
+
+    # Complete accounting - track ALL items
+    all_findings: List[Finding] = field(default_factory=list)
+
+    def add_finding(self, finding: Finding):
+        """Single method to add findings - maintains consistency."""
+        self.all_findings.append(finding)
+        self.total_findings += 1
+        self.findings_by_severity[finding.severity] += 1
+
+    def get_counts_string(self) -> str:
+        """ALWAYS use this for displaying counts - ensures consistency."""
+        return (f"{self.total_findings} issues "
+                f"({self.findings_by_severity['critical']} critical, "
+                f"{self.findings_by_severity['high']} high, "
+                f"{self.findings_by_severity['medium']} medium)")
+
+# Global state - initialized once, used everywhere
+AUDIT_STATE = AuditState()
+```
+
+### Phase State Machine
+
+**RULE: Every phase transition MUST be explicitly announced.**
+
+```python
+def transition_phase(state: AuditState, new_phase: int):
+    """Explicit phase transition with required announcements."""
+
+    old_phase = state.current_phase
+
+    # End current phase
+    if old_phase > 0:
+        state.phase_end_times[old_phase] = datetime.now()
+        duration = state.phase_end_times[old_phase] - state.phase_start_times[old_phase]
+
+        # MUST announce phase completion
+        print(format_phase_complete(old_phase, duration))
+
+    # Start new phase
+    state.current_phase = new_phase
+    state.phase_start_times[new_phase] = datetime.now()
+
+    # MUST announce phase start
+    print(format_phase_start(new_phase))
+
+def format_phase_start(phase: int) -> str:
+    """Format phase start announcement."""
+    phase_names = {1: "Setup", 2: "Scanning", 3: "Synthesis"}
+    return f"""
+───────────────────────────────────────────────────
+### Phase {phase}/3: {phase_names[phase]} ▶ STARTED
+───────────────────────────────────────────────────
+"""
+
+def format_phase_complete(phase: int, duration: timedelta) -> str:
+    """Format phase completion announcement."""
+    phase_names = {1: "Setup", 2: "Scanning", 3: "Synthesis"}
+    return f"""
+### Phase {phase}/3: {phase_names[phase]} ✓ COMPLETE ({format_duration(duration)})
+"""
+```
+
+---
+
+## Component 7: Execution Dashboard
+
+**Real-time visibility with EXPLICIT phase transitions.**
 
 ### Initial Display
 
@@ -762,77 +962,415 @@ AskUserQuestion({
 **Selection:** {COUNT} checks ({CATEGORIES})
 
 ───────────────────────────────────────────────────
+### Phase 1/3: Setup ▶ STARTED
+───────────────────────────────────────────────────
 
-### Phase 1/3: Setup
 ⠋ Loading skills...
+⠋ Discovering files...
+⠋ Initializing scanners...
 ```
 
-### Phase 1 Complete
+### Phase 1 Complete → Phase 2 Start
+
+**CRITICAL: Must show BOTH completion AND start.**
 
 ```markdown
-### Phase 1/3: Setup ✓ ({TIME}s)
+### Phase 1/3: Setup ✓ COMPLETE (12s)
 
 Skills loaded: {count}
 Files discovered: {count}
 Scanners initialized: {count}
 
-### Phase 2/3: Scanning
+───────────────────────────────────────────────────
+### Phase 2/3: Scanning ▶ STARTED
+───────────────────────────────────────────────────
+
+Elapsed: 0:00 | Estimated: ~{TIME}
+
+{Category}  ░░░░░░░░░░░░ 0% (0/{Y} checks)
+{Category}  ░░░░░░░░░░░░ queued
+{Category}  ░░░░░░░░░░░░ queued
+
+Current: Initializing {first_category}...
+```
+
+### During Scanning (Progress Updates)
+
+```markdown
+### Phase 2/3: Scanning (in progress)
 
 Elapsed: {TIME} | Remaining: ~{TIME}
 
-{Category}  ████████░░░░ {PCT}% ({X}/{Y} files)
-{Category}  ████░░░░░░░░ {PCT}% ({X}/{Y} files)
-{Category}  ░░░░░░░░░░░░ 0% (queued)
+Security     ████████████ 100% (15/15 checks) ✓
+Database     ████████░░░░  67% (7/10 checks)
+Tests        ░░░░░░░░░░░░   0% (queued)
 
-Current: {action} in {file}
-```
+Current: Checking {CHECK_NAME} in {FILE_PATH}
 
-### Streaming Findings
-
-```markdown
-### Findings (Live)
+### Findings So Far: {TOTAL}
 
 🔴 CRITICAL ({COUNT}):
-├─ {Issue} in {file}:{line}
-└─ {Issue} in {file}:{line}
+├─ {ISSUE_TYPE} in {FILE_PATH}:{LINE_NUMBER}
+└─ {ISSUE_TYPE} in {FILE_PATH}:{LINE_NUMBER}
 
 🟡 HIGH ({COUNT}):
-├─ {Issue} in {file}:{line}
-├─ {Issue} in {file}:{line}
-└─ ... and {N} more
-
-🟢 MEDIUM ({COUNT}):
-└─ {Issue} in {file}:{line}
+├─ {ISSUE_TYPE} in {FILE_PATH}:{LINE_NUMBER}
+└─ {ISSUE_TYPE} on {TABLE_NAME}.{COLUMN_NAME}
 ```
 
-### Phase 2 Complete
+### Phase 2 Complete → Phase 3 Start
 
 ```markdown
-### Phase 2/3: Scanning ✓ ({TIME})
+### Phase 2/3: Scanning ✓ COMPLETE (8m 32s)
 
 Checks completed: {X}/{Y}
 Files scanned: {count}
-Issues found: {critical} critical, {high} high, {medium} medium
+Issues found: {total} ({critical} critical, {high} high, {medium} medium)
 
-### Phase 3/3: Synthesis
+───────────────────────────────────────────────────
+### Phase 3/3: Synthesis ▶ STARTED
+───────────────────────────────────────────────────
+
 ⠋ Aggregating findings...
 ⠋ Calculating scores...
 ⠋ Generating report...
 ```
 
-### Execution Complete
+### Phase 3 Complete → Audit Complete
 
 ```markdown
-### Phase 3/3: Synthesis ✓ ({TIME})
+### Phase 3/3: Synthesis ✓ COMPLETE (45s)
+
+───────────────────────────────────────────────────
+## Audit Complete
+───────────────────────────────────────────────────
+
+**Total Duration:** {TOTAL_TIME}
+**Checks Run:** {COUNT}
+**Issues Found:** {TOTAL} ({critical} critical, {high} high, {medium} medium)
+**Score:** {SCORE}/100 (Grade: {GRADE})
+
+All findings saved to: .cco/audit-{timestamp}.json
+```
+
+---
+
+## Component 8: Count Consistency Rules
+
+**CRITICAL: These rules prevent the 30+ vs 50+ inconsistency.**
+
+### Rule 1: Single Count Source
+```python
+# ❌ BAD: Deriving counts differently
+print(f"Found {len(critical_findings)} critical")  # One place
+print(f"Critical: {state.critical_count}")          # Another place
+
+# ✅ GOOD: Always use state method
+print(state.get_counts_string())  # SAME everywhere
+```
+
+### Rule 2: No Filtering Without Explanation
+```python
+# ❌ BAD: Silently filter
+displayed = [f for f in findings if f.severity != "low"]
+print(f"Issues: {len(displayed)}")  # User sees 30
+
+# Later...
+print(f"Total: {len(all_findings)}")  # User sees 50 - CONFUSION!
+
+# ✅ GOOD: Explain any filtering
+print(f"Issues: {len(all_findings)} total")
+print(f"  Showing: {len(displayed)} (hiding {len(low)} low-severity)")
+```
+
+### Rule 3: Complete Accounting in Summary
+```markdown
+## Final Count Summary
+
+**Total Issues Found:** 50
+
+By Severity:
+- 🔴 Critical: 5
+- 🟡 High: 12
+- 🟢 Medium: 18
+- ⚪ Low: 15 (not shown in detail)
+
+**Note:** Low-severity issues are counted but not detailed.
+Run with `--include-low` to see all.
+```
+
+### Rule 4: Fix Process Accounting
+
+**When user says "fix all", show complete accounting:**
+
+```markdown
+## Fix Summary
+
+**Total Issues:** 50
+
+### Fixed Successfully: 35
+- 5 critical (100%)
+- 10 high (83%)
+- 15 medium (83%)
+- 5 low (33%)
+
+### Skipped: 10
+- 3 require manual review (complex logic)
+- 4 need user decision (multiple fix options)
+- 3 already fixed by earlier fixes
+
+### Cannot Fix Automatically: 5
+- 2 require database migration
+- 2 need external service configuration
+- 1 requires architectural change
 
 ───────────────────────────────────────────────────
 
-## Audit Complete
+**Verification:** 35 fixed + 10 skipped + 5 cannot-fix = 50 total ✓
+```
 
-**Duration:** {TOTAL_TIME}
-**Checks run:** {COUNT}
-**Issues found:** {TOTAL} ({critical} critical, {high} high, {medium} medium)
-**Score:** {SCORE}/100 (Grade: {GRADE})
+---
+
+## Component 9: Honesty & Accurate Reporting
+
+**CRITICAL PRINCIPLE: Always report the exact truth. No optimistic claims, no false limitations.**
+
+### Core Rules
+
+```python
+# ❌ NEVER: Claim something fixed when not fixed
+"Fixed {ISSUE_TYPE} in {FILE_PATH}:{LINE_NUMBER}"  # But file unchanged
+
+# ✅ ALWAYS: Report actual outcome
+f"Applied fix to {finding.file}:{finding.line} - {fix_description}"
+# Then VERIFY: Read file, confirm change exists
+
+# ❌ NEVER: Say "not possible" when technically possible
+"Cannot fix: Complex regex pattern"  # It's possible, just needs care
+
+# ✅ ALWAYS: Distinguish difficulty from impossibility
+"Requires careful review: Complex regex with edge cases"
+"Recommendation: Manual fix with test coverage"
+
+# ❌ NEVER: Imply fixability when truly impossible
+"Can fix: Database migration needed"  # Can't auto-migrate production
+
+# ✅ ALWAYS: Be clear about actual limitations
+"Requires manual action: Database schema change needs migration"
+"This tool cannot modify production databases"
+```
+
+### Accurate Categorization
+
+```python
+@dataclass
+class FixOutcome:
+    """Strictly accurate outcome categories."""
+
+    # Truly fixed - file modified, verified
+    FIXED = "fixed"
+
+    # Technically possible but needs human decision
+    NEEDS_DECISION = "needs_decision"  # Multiple valid approaches
+    NEEDS_REVIEW = "needs_review"      # Complex, risk of regression
+
+    # Technically possible but outside tool scope
+    REQUIRES_MIGRATION = "requires_migration"   # DB schema change
+    REQUIRES_CONFIG = "requires_config"         # External system config
+    REQUIRES_INFRA = "requires_infra"           # Infrastructure change
+
+    # Truly impossible to auto-fix
+    IMPOSSIBLE_DESIGN = "impossible_design"     # Architectural flaw
+    IMPOSSIBLE_EXTERNAL = "impossible_external" # Third-party code
+    IMPOSSIBLE_RUNTIME = "impossible_runtime"   # Runtime-only issue
+
+def categorize_fix(finding: Finding) -> Tuple[str, str]:
+    """Return accurate category and honest explanation."""
+
+    # Example: Type error in third-party library
+    if finding.file.startswith("node_modules/"):
+        return (FixOutcome.IMPOSSIBLE_EXTERNAL,
+                "Issue in third-party code - update package or report upstream")
+
+    # Example: N+1 query that's actually intentional
+    if finding.check_id == 16 and is_intentional_eager_load(finding):
+        return (FixOutcome.NEEDS_REVIEW,
+                "Pattern appears intentional - verify before changing")
+
+    # Example: Complex regex
+    if finding.check_id == 42 and "regex" in finding.code.lower():
+        return (FixOutcome.NEEDS_DECISION,
+                "Multiple valid regex patterns - choose based on requirements")
+
+    # Default: actually fixable
+    return (FixOutcome.FIXED, "Applied automated fix")
+```
+
+### Honest Reporting Templates
+
+**When truly fixed:**
+```markdown
+✅ **Fixed:** {ISSUE_TYPE} in {FILE_PATH}:{LINE_NUMBER}
+   Applied: {FIX_DESCRIPTION}
+   Verified: File updated, syntax valid
+```
+
+**When needs human decision:**
+```markdown
+⚠️ **Needs Decision:** {ISSUE_TYPE} in {FILE_PATH}:{LINE_NUMBER}
+   Issue: {ISSUE_DESCRIPTION}
+   Options:
+   - Option A: {OPTION_A_DESCRIPTION}
+   - Option B: {OPTION_B_DESCRIPTION}
+   Action: Choose option based on user requirements
+```
+
+**When outside tool scope:**
+```markdown
+🔧 **Requires Manual Action:** {ISSUE_TYPE} on {TABLE_NAME}.{COLUMN_NAME}
+   Issue: {ISSUE_DESCRIPTION}
+   Why not auto-fixed: {REASON}
+   Action: {MANUAL_ACTION_DESCRIPTION}
+```
+
+**When truly impossible:**
+```markdown
+❌ **Cannot Auto-Fix:** {ISSUE_TYPE} in {EXTERNAL_COMPONENT}
+   Issue: {ISSUE_DESCRIPTION}
+   Why impossible: {REASON}
+   Action: {RECOMMENDED_ACTION}
+```
+
+### Verification Requirements
+
+```python
+def report_fix(finding: Finding, outcome: str, explanation: str):
+    """Report fix outcome with verification."""
+
+    if outcome == FixOutcome.FIXED:
+        # MUST verify before claiming fixed
+        file_content = Read(finding.file)
+        if not verify_fix_applied(file_content, finding):
+            raise AssertionError(
+                f"HONESTY VIOLATION: Claimed fixed but change not found in {finding.file}"
+            )
+
+    # Report with accurate category
+    return format_outcome(finding, outcome, explanation)
+```
+
+---
+
+## Component 10: Fix Integration Accounting
+
+**When /cco-fix is called after audit, maintain complete accountability with honest reporting.**
+
+### Fix Request Flow
+
+```python
+@dataclass
+class FixState:
+    """Track all fix outcomes."""
+
+    total_issues: int = 0
+
+    # Dispositions - MUST sum to total_issues
+    fixed: List[Finding] = field(default_factory=list)
+    skipped: List[Tuple[Finding, str]] = field(default_factory=list)  # (finding, reason)
+    cannot_fix: List[Tuple[Finding, str]] = field(default_factory=list)  # (finding, reason)
+
+    def verify_accounting(self) -> bool:
+        """Verify all issues are accounted for."""
+        accounted = len(self.fixed) + len(self.skipped) + len(self.cannot_fix)
+        return accounted == self.total_issues
+
+    def get_summary(self) -> str:
+        """Get complete accounting summary."""
+        assert self.verify_accounting(), "Accounting mismatch!"
+
+        return f"""
+## Fix Summary
+
+**Total Issues:** {self.total_issues}
+
+### ✅ Fixed: {len(self.fixed)}
+{self._format_list(self.fixed)}
+
+### ⏭️ Skipped: {len(self.skipped)}
+{self._format_with_reasons(self.skipped)}
+
+### ❌ Cannot Fix Automatically: {len(self.cannot_fix)}
+{self._format_with_reasons(self.cannot_fix)}
+
+───────────────────────────────────────────────────
+**Verification:** {len(self.fixed)} + {len(self.skipped)} + {len(self.cannot_fix)} = {self.total_issues} ✓
+"""
+```
+
+### "Fix All" Response Template
+
+```markdown
+## Fixing All Issues
+
+**Source:** audit-2025-01-15.json
+**Total Issues:** 50
+
+───────────────────────────────────────────────────
+
+### Analyzing fixability...
+
+**Auto-fixable:** 35 issues
+**Requires review:** 10 issues
+**Cannot auto-fix:** 5 issues
+
+───────────────────────────────────────────────────
+
+### Proceed with auto-fixes?
+
+This will fix 35 of 50 issues automatically.
+The remaining 15 will be listed with reasons.
+
+[Fix 35 Auto-fixable] [Review All First] [Cancel]
+```
+
+### After Fixes Complete
+
+```markdown
+## Fix Complete
+
+### ✅ Fixed Successfully: 35
+
+By severity:
+- 🔴 Critical: 5/5 (100%)
+- 🟡 High: 10/12 (83%)
+- 🟢 Medium: 15/18 (83%)
+- ⚪ Low: 5/15 (33%)
+
+### ⏭️ Skipped: {SKIPPED_COUNT}
+
+| Issue | File | Reason |
+|-------|------|--------|
+| {ISSUE_TYPE} | {FILE_PATH}:{LINE_NUMBER} | {SKIP_REASON} |
+| {ISSUE_TYPE} | {FILE_PATH}:{LINE_NUMBER} | {SKIP_REASON} |
+| ... | ... | ... |
+
+### ❌ Cannot Fix Automatically: {CANNOT_FIX_COUNT}
+
+| Issue | File | Reason | Manual Action |
+|-------|------|--------|---------------|
+| {ISSUE_TYPE} | {FILE_PATH}:{LINE_NUMBER} | {REASON} | {MANUAL_ACTION} |
+| {ISSUE_TYPE} | {FILE_PATH}:{LINE_NUMBER} | {REASON} | {MANUAL_ACTION} |
+| ... | ... | ... | ... |
+
+───────────────────────────────────────────────────
+
+## Next Steps
+
+1. **Review skipped issues:** 10 items need your decision
+2. **Handle manual fixes:** 5 items need manual action
+3. **Re-run audit:** Verify fixes with `/cco-audit --checks="{affected_checks}"`
+
+**Projected Score After Manual Fixes:** [BEFORE] → [AFTER] (+[DELTA] points)
 ```
 
 ---
@@ -1098,13 +1636,13 @@ Task({
 
 ```
 6-Aspect Parallel (comprehensive):
-├── 4 Haiku agents: $0.20
-├── 2 Sonnet agents: $0.60
-├── 1 Sonnet synthesis: $0.30
-└── Total: ~$1.10
+├── Haiku agents: lower cost
+├── Sonnet agents: balanced cost
+├── Sonnet synthesis
+└── Total: cost-efficient
 
 vs All-Sonnet Sequential:
-└── Total: ~$3.50 (3x more expensive, 6x slower)
+└── Total: significantly more expensive and slower
 ```
 
 ---

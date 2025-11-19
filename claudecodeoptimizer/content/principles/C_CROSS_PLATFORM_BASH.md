@@ -17,7 +17,7 @@ Use cross-platform compatible bash commands, path handling, and patterns to ensu
 
 ## Why
 
-Platform-specific commands break workflows for 40% of developers. Path separators (Windows `\` vs Unix `/`), unavailable commands (ls, rm don't exist in CMD), Git Bash vs PowerShell differences, and line endings (CRLF vs LF) cause constant friction.
+Platform-specific commands break workflows for many developers. Path separators (Windows `\` vs Unix `/`), unavailable commands (ls, rm don't exist in CMD), Git Bash vs PowerShell differences, and line endings (CRLF vs LF) cause constant friction.
 
 ---
 

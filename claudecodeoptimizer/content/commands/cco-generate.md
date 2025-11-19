@@ -85,6 +85,29 @@ Generate missing tests, documentation, CI/CD configs, and other project componen
 
 ---
 
+## Critical UX Principles
+
+1. **100% Honesty** - Only claim "generated" if file actually created and verified
+2. **Complete Accounting** - Report: generated + skipped + failed = total requested
+3. **No Hardcoded Examples** - All examples use `{PLACEHOLDERS}`, never fake paths/names
+4. **Phase Tracking** - Explicit start/end for each generation phase
+5. **Consistent Counts** - Same counts shown everywhere (single source of truth)
+
+### Generation Outcome Categories
+
+```python
+OUTCOMES = {
+    "generated": "File created and verified",
+    "skipped_exists": "File already exists - not overwritten",
+    "skipped_conflict": "Would conflict with existing code",
+    "needs_decision": "Multiple valid patterns - user must choose",
+    "failed_deps": "Missing dependencies required first",
+    "failed_template": "No suitable template for this context",
+}
+```
+
+---
+
 ## Generation Types
 
 ### 🔴 Critical Missing (Pain #4: Biggest mistake)
@@ -182,7 +205,7 @@ I create missing project components like tests, documentation, CI/CD configs, an
 4. I report what was created with file paths and line counts
 
 **What you'll get:**
-- Unit and integration tests (increase coverage from 45% → 80%+)
+- Unit and integration tests (significantly increase coverage)
 - API documentation (OpenAPI specs, Swagger UI)
 - CI/CD pipelines (GitHub Actions with quality gates)
 - Infrastructure files (Dockerfile, docker-compose, monitoring configs)
@@ -217,7 +240,56 @@ AskUserQuestion({
 
 **CRITICAL:**
 - If user selects "No, cancel" → EXIT immediately, do NOT proceed
-- If user selects "Yes, start generating" → Continue to Step 1
+- If user selects "Yes, start generating" → Continue to Step 0.5
+
+---
+
+### Step 0.5: Project Context Discovery (Optional)
+
+**Ask user if they want project documentation analyzed for better generation alignment.**
+
+```python
+AskUserQuestion({
+  questions: [{
+    question: "Proje dokümantasyonundan context çıkarılsın mı?",
+    header: "Project Context",
+    multiSelect: false,
+    options: [
+      {
+        label: "Evet (önerilen)",
+        description: "README/CONTRIBUTING'den proje stilini çıkar, üretilen kod stile uygun olur"
+      },
+      {
+        label: "Hayır",
+        description: "Sadece kod üret (daha hızlı)"
+      }
+    ]
+  }]
+})
+```
+
+**If "Evet" selected:**
+
+```python
+# Extract project context via Haiku sub-agent
+context_result = Task({
+    subagent_type: "Explore",
+    model: "haiku",
+    prompt: """
+    Extract project context summary (MAX 200 tokens).
+    Focus on: naming conventions, testing patterns, documentation style.
+
+    Files to check: README.md, CONTRIBUTING.md, ARCHITECTURE.md
+
+    Return: Purpose, Tech Stack, Conventions (naming, testing, doc style)
+    """
+})
+
+# Use context when generating code
+project_context = context_result
+```
+
+**Benefits:** Generated tests/docs follow project conventions and style.
 
 ---
 
@@ -228,7 +300,7 @@ AskUserQuestion({
    - No `openapi.yaml` → Missing API spec
    - No `.github/workflows/` → Missing CI/CD
    - No `Dockerfile` → Missing containerization
-   - Coverage < 80% → Need more tests
+   - Coverage below threshold → Need more tests
 
 2. **Analyze what's missing first**, then **present specific generation steps using AskUserQuestion**:
 
@@ -411,11 +483,11 @@ I'll create:
 [For each selected component, explain what will be generated]
 
 Example for Tests:
-- Unit tests for 45 untested functions
-- Integration tests for 15 API endpoints
-- Test fixtures for 3 database models
-- Estimated: 500+ lines of test code
-- Coverage: 45% → 80%+ (target: 85%)
+- Unit tests for untested functions
+- Integration tests for API endpoints
+- Test fixtures for database models
+- Estimated: significant lines of test code
+- Coverage: significantly increased (target: high coverage)
 
 Time estimate: ~[X] minutes
 Files to create: ~[Y] files
@@ -467,7 +539,7 @@ Task({
      - Follow test pyramid (unit >> integration >> e2e)
      - Use pytest conventions
      - Include fixtures for dependencies
-     - Target 80%+ coverage
+     - Target high coverage
 
   3. For each API endpoint:
      - Generate integration test
@@ -491,7 +563,7 @@ Task({
 
   Follow:
   - P_TEST_PYRAMID (unit >> integration >> e2e)
-  - P_TEST_COVERAGE (80%+ target)
+  - P_TEST_COVERAGE (high coverage target)
   - P_API_DOCUMENTATION_OPENAPI (complete spec)
   - U_NO_OVERENGINEERING (keep it simple)
 
@@ -524,7 +596,7 @@ Tests Created:
 ✓ tests/fixtures.py (database fixtures) [if created]
 ✓ tests/conftest.py (pytest configuration) [if created]
 
-Coverage: [BEFORE]% → [AFTER]% ✓ (Target: 80%+)
+Coverage: [BEFORE]% → [AFTER]% ✓ (Target: high coverage)
 Total tests: [ACTUAL_COUNT] tests created
 
 [Repeat for other categories that were actually generated]
@@ -594,7 +666,7 @@ Task({
 })
 
 # All run in parallel since outputs are independent
-# Total time: ~15s (vs 60s sequential)
+# Total time: significantly faster than sequential
 # All use Sonnet for quality generation
 ```
 
@@ -613,7 +685,7 @@ Task({
 - Edge cases and error conditions
 - Use fixtures for dependencies
 - Descriptive test names
-- Target 80%+ coverage
+- Target high coverage
 
 ### Documentation
 - Clear examples for every endpoint
