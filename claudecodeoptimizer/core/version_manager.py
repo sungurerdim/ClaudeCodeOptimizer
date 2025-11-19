@@ -196,7 +196,14 @@ class VersionManager:
 
         Returns:
             Tag name (e.g., "v1.3.0")
+
+        Raises:
+            ValueError: If version format is invalid
         """
+        # Validate version format before using in git commands
+        if not re.match(r"^\d+\.\d+\.\d+$", version):
+            raise ValueError(f"Invalid version format: {version}")
+
         tag_name = f"v{version}"
 
         if create:
@@ -214,6 +221,7 @@ class VersionManager:
                     check=True,
                     capture_output=True,
                     text=True,
+                    timeout=30,
                 )
                 return tag_name
             except subprocess.CalledProcessError as e:
@@ -241,6 +249,7 @@ class VersionManager:
                 capture_output=True,
                 text=True,
                 check=True,
+                timeout=30,
             )
             last_tag = result.stdout.strip()
 
@@ -256,6 +265,7 @@ class VersionManager:
                 capture_output=True,
                 text=True,
                 check=True,
+                timeout=30,
             )
             commits = [line.strip() for line in result.stdout.strip().split("\n") if line.strip()]
 

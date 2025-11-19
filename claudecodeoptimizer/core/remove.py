@@ -9,9 +9,12 @@ Removes:
 - CCO markers from ~/.claude/CLAUDE.md
 """
 
+import logging
 import re
 from pathlib import Path
 from typing import Any, Dict
+
+logger = logging.getLogger(__name__)
 
 
 class CCORemover:
@@ -67,8 +70,8 @@ class CCORemover:
         for cmd_file in commands_dir.glob("cco-*.md"):
             try:
                 cmd_file.unlink()
-            except Exception:
-                pass  # Ignore errors
+            except Exception as e:
+                logger.debug(f"Skipped removal of {cmd_file}: {e}")
 
     def _remove_principles(self) -> None:
         """Remove all U_*.md, C_*.md, P_*.md files from ~/.claude/principles/"""
@@ -82,8 +85,8 @@ class CCORemover:
             for principle_file in principles_dir.glob(pattern):
                 try:
                     principle_file.unlink()
-                except Exception:
-                    pass  # Ignore errors
+                except Exception as e:
+                    logger.debug(f"Skipped removal of {principle_file}: {e}")
 
     def _remove_agents(self) -> None:
         """Remove all cco-*.md files from ~/.claude/agents/"""
@@ -96,8 +99,8 @@ class CCORemover:
         for agent_file in agents_dir.glob("cco-*.md"):
             try:
                 agent_file.unlink()
-            except Exception:
-                pass  # Ignore errors
+            except Exception as e:
+                logger.debug(f"Skipped removal of {agent_file}: {e}")
 
     def _remove_skills(self) -> None:
         """Remove all cco-*.md files from ~/.claude/skills/ (including subdirectories)"""
@@ -110,8 +113,8 @@ class CCORemover:
         for skill_file in skills_dir.rglob("cco-*.md"):
             try:
                 skill_file.unlink()
-            except Exception:
-                pass  # Ignore errors
+            except Exception as e:
+                logger.debug(f"Skipped removal of {skill_file}: {e}")
 
     def _clean_claude_md(self) -> None:
         """Remove CCO markers and content from ~/.claude/CLAUDE.md"""
