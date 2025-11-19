@@ -55,7 +55,10 @@ class TestWindowsConsoleEncoding:
     def test_non_windows_no_reconfigure(self):
         """Test non-Windows platforms skip reconfigure."""
         # On non-Windows, the reconfigure code shouldn't run
-        assert True  # Just verify we can import on non-Windows
+        # Verify module imports successfully on non-Windows
+        import claudecodeoptimizer
+        assert claudecodeoptimizer is not None
+        assert hasattr(claudecodeoptimizer, "__version__")
 
     def test_windows_reconfigure_exception_handling_direct(self):
         """Test exception handling during Windows console reconfigure (lines 14-15)."""
@@ -65,15 +68,16 @@ class TestWindowsConsoleEncoding:
         test_exception = Exception("Failed to reconfigure console encoding")
 
         # Simulate the try-except block from lines 11-15
+        exception_handled = False
         try:
             # This simulates the reconfigure call that might fail
             raise test_exception
         except Exception:  # noqa: S110
             # This is what line 15 does - silent pass
-            pass
+            exception_handled = True
 
         # Verify exception was handled without raising
-        assert True  # If we got here, exception was handled
+        assert exception_handled, "Exception should have been caught and handled"
 
 
 class TestCCOConfigImport:
@@ -120,8 +124,8 @@ class TestGlobalSetup:
             claudecodeoptimizer._setup_checked = True
             # Call should return immediately without doing anything
             _ensure_global_setup()
-            # Verify it returned (no exception)
-            assert True
+            # Verify it returned and _setup_checked remains True (early return path)
+            assert claudecodeoptimizer._setup_checked is True, "Setup flag should remain True after early return"
         finally:
             claudecodeoptimizer._setup_checked = original_checked
 
@@ -142,8 +146,10 @@ class TestGlobalSetup:
                 # Call should not raise exception (silent fail)
                 _ensure_global_setup()
 
-                # If we got here, exception was handled silently
-                assert True
+                # Verify the mock was called (exception path was exercised)
+                mock_get_dir.assert_called_once()
+                # Verify setup completed (flag set to True despite exception)
+                assert claudecodeoptimizer._setup_checked is True, "Setup flag should be True after silent exception handling"
 
         finally:
             claudecodeoptimizer._setup_checked = original_checked

@@ -3,9 +3,14 @@
 import shutil
 import tempfile
 from pathlib import Path
-from typing import Any, Dict
+from typing import Any, Callable, Dict, List
 
 import pytest
+
+from claudecodeoptimizer.core.principles import (
+    Principle,
+    PrinciplesManager,
+)
 
 
 @pytest.fixture
@@ -46,6 +51,63 @@ def minimal_preferences() -> Dict[str, Any]:
         "test_philosophy": "pragmatic",
         "quality_level": "strict",
     }
+
+
+@pytest.fixture
+def principles_manager_factory() -> Callable[[List[Dict[str, Any]]], PrinciplesManager]:
+    """Factory fixture to create PrinciplesManager with custom principles.
+
+    Usage:
+        def test_example(principles_manager_factory):
+            principles_data = [
+                {
+                    "id": "U_TEST",
+                    "number": 1,
+                    "title": "Test",
+                    "category": "Universal",
+                    "severity": "critical",
+                    "weight": 10,
+                    "description": "Test",
+                    "applicability": {"project_types": ["all"]},
+                    "rules": [],
+                    "examples": {},
+                    "autofix": {"available": False},
+                }
+            ]
+            manager = principles_manager_factory(principles_data)
+    """
+
+    def _create_manager(
+        principles_data: List[Dict[str, Any]],
+        selection_strategies: Dict[str, Any] | None = None,
+        categories: List[Dict[str, str]] | None = None,
+    ) -> PrinciplesManager:
+        manager = PrinciplesManager(Path("/tmp/test"))
+        manager.principles = {}
+        for p_data in principles_data:
+            principle = Principle(
+                id=p_data["id"],
+                number=p_data["number"],
+                title=p_data["title"],
+                category=p_data["category"],
+                severity=p_data["severity"],
+                weight=p_data["weight"],
+                description=p_data["description"],
+                applicability=p_data.get("applicability", {}),
+                rules=p_data.get("rules", []),
+                examples=p_data.get("examples", {}),
+                autofix=p_data.get("autofix", {"available": False}),
+            )
+            manager.principles[p_data["id"]] = principle
+
+        if selection_strategies:
+            manager.selection_strategies = selection_strategies
+        if categories:
+            manager.categories = categories
+
+        return manager
+
+    return _create_manager
 
 
 # Test markers
