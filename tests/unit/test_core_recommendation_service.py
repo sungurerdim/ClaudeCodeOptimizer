@@ -7,7 +7,7 @@ Target Coverage: 100%
 
 from pathlib import Path
 from typing import Any, Dict, List
-from unittest.mock import MagicMock, patch
+from unittest.mock import patch
 
 import pytest
 
@@ -49,7 +49,11 @@ class TestRecommendSkills:
             with patch(
                 "claudecodeoptimizer.core.recommendation_service.get_available_skills"
             ) as mock_skills:
-                mock_skills.return_value = ["cco-skill-testing", "cco-skill-security", "cco-skill-api"]
+                mock_skills.return_value = [
+                    "cco-skill-testing",
+                    "cco-skill-security",
+                    "cco-skill-api",
+                ]
 
                 with patch(
                     "claudecodeoptimizer.core.recommendation_service.config.get_skills_dir"
@@ -227,7 +231,11 @@ class TestRecommendAgents:
             with patch(
                 "claudecodeoptimizer.core.recommendation_service.get_available_agents"
             ) as mock_agents:
-                mock_agents.return_value = ["cco-agent-audit", "cco-agent-fix", "cco-agent-generate"]
+                mock_agents.return_value = [
+                    "cco-agent-audit",
+                    "cco-agent-fix",
+                    "cco-agent-generate",
+                ]
 
                 with patch(
                     "claudecodeoptimizer.core.recommendation_service.config.get_agents_dir"
@@ -398,7 +406,6 @@ class TestRecommendationServiceIntegration:
             ) as mock_agents_dir, patch(
                 "claudecodeoptimizer.core.recommendation_service.config.get_global_commands_dir"
             ) as mock_commands_dir:
-
                 mock_skills.return_value = ["cco-skill-testing"]
                 mock_agents.return_value = ["cco-agent-audit"]
                 mock_commands.return_value = ["cco-status"]
@@ -425,7 +432,7 @@ class TestRecommendationServiceIntegration:
 
         captured_contexts: List[Dict[str, Any]] = []
 
-        def capture_context(**kwargs: Any) -> List[str]:
+        def capture_context(**kwargs: Dict[str, Any]) -> List[str]:
             captured_contexts.append(kwargs.get("context_answers", {}))
             return []
 
@@ -445,7 +452,6 @@ class TestRecommendationServiceIntegration:
             ), patch(
                 "claudecodeoptimizer.core.recommendation_service.config.get_global_commands_dir"
             ):
-
                 mock_skills.return_value = []
                 mock_agents.return_value = []
                 mock_commands.return_value = []

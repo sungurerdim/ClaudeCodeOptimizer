@@ -5,10 +5,9 @@ Tests installation logic for ~/.claude/ structure initialization.
 Target Coverage: 100%
 """
 
-import shutil
 from pathlib import Path
 from typing import Generator
-from unittest.mock import MagicMock, patch
+from unittest.mock import patch
 
 import pytest
 
@@ -39,11 +38,15 @@ def mock_claude_dir(tmp_path: Path) -> Generator[Path, None, None]:
     agents_dir = claude_dir / "agents"
     skills_dir = claude_dir / "skills"
 
-    with patch.object(knowledge_setup.config, 'get_claude_dir', return_value=claude_dir), \
-         patch.object(knowledge_setup.config, 'get_global_commands_dir', return_value=commands_dir), \
-         patch.object(knowledge_setup.config, 'get_principles_dir', return_value=principles_dir), \
-         patch.object(knowledge_setup.config, 'get_agents_dir', return_value=agents_dir), \
-         patch.object(knowledge_setup.config, 'get_skills_dir', return_value=skills_dir):
+    with patch.object(
+        knowledge_setup.config, "get_claude_dir", return_value=claude_dir
+    ), patch.object(
+        knowledge_setup.config, "get_global_commands_dir", return_value=commands_dir
+    ), patch.object(
+        knowledge_setup.config, "get_principles_dir", return_value=principles_dir
+    ), patch.object(
+        knowledge_setup.config, "get_agents_dir", return_value=agents_dir
+    ), patch.object(knowledge_setup.config, "get_skills_dir", return_value=skills_dir):
         yield claude_dir
 
 
@@ -100,9 +103,7 @@ def mock_content_dir(tmp_path: Path) -> Generator[Path, None, None]:
 class TestSetupGlobalKnowledge:
     """Test setup_global_knowledge function"""
 
-    def test_setup_creates_directories(
-        self, mock_claude_dir: Path, mock_content_dir: Path
-    ) -> None:
+    def test_setup_creates_directories(self, mock_claude_dir: Path, mock_content_dir: Path) -> None:
         """Test that setup creates all required directories"""
         # This test verifies directory structure creation
         # The actual setup is tested in integration tests
@@ -153,11 +154,7 @@ class TestSetupCommands:
         commands_dir = mock_claude_dir / "commands"
 
         # Mock package directory
-        with patch.object(
-            knowledge_setup,
-            '_setup_commands',
-            wraps=_setup_commands
-        ):
+        with patch.object(knowledge_setup, "_setup_commands", wraps=_setup_commands):
             # Create minimal test
             commands_dir.mkdir(parents=True, exist_ok=True)
             assert commands_dir.exists()
@@ -179,11 +176,7 @@ class TestSetupCommands:
         mock_file.parent.mkdir(parents=True)
         mock_file.touch()
 
-        with patch.object(
-            knowledge_setup,
-            '__file__',
-            str(mock_file)
-        ):
+        with patch.object(knowledge_setup, "__file__", str(mock_file)):
             _setup_commands(dest_dir)
 
         assert dest_dir.exists()
@@ -208,11 +201,7 @@ class TestSetupCommands:
         mock_file.parent.mkdir(parents=True)
         mock_file.touch()
 
-        with patch.object(
-            knowledge_setup,
-            '__file__',
-            str(mock_file)
-        ):
+        with patch.object(knowledge_setup, "__file__", str(mock_file)):
             _setup_commands(dest_dir)
 
         assert not (dest_dir / "cco-old.md").exists()
@@ -228,11 +217,7 @@ class TestSetupCommands:
         mock_file.parent.mkdir(parents=True)
         mock_file.touch()
 
-        with patch.object(
-            knowledge_setup,
-            '__file__',
-            str(mock_file)
-        ):
+        with patch.object(knowledge_setup, "__file__", str(mock_file)):
             with pytest.raises(FileNotFoundError) as exc_info:
                 _setup_commands(dest_dir)
 
@@ -258,11 +243,7 @@ class TestSetupPrinciples:
         mock_file.parent.mkdir(parents=True)
         mock_file.touch()
 
-        with patch.object(
-            knowledge_setup,
-            '__file__',
-            str(mock_file)
-        ):
+        with patch.object(knowledge_setup, "__file__", str(mock_file)):
             _setup_principles(dest_dir)
 
         assert (dest_dir / "U_TEST.md").exists()
@@ -289,11 +270,7 @@ class TestSetupPrinciples:
         mock_file.parent.mkdir(parents=True)
         mock_file.touch()
 
-        with patch.object(
-            knowledge_setup,
-            '__file__',
-            str(mock_file)
-        ):
+        with patch.object(knowledge_setup, "__file__", str(mock_file)):
             _setup_principles(dest_dir)
 
         assert not (dest_dir / "U_OLD.md").exists()
@@ -310,11 +287,7 @@ class TestSetupPrinciples:
         mock_file.parent.mkdir(parents=True)
         mock_file.touch()
 
-        with patch.object(
-            knowledge_setup,
-            '__file__',
-            str(mock_file)
-        ):
+        with patch.object(knowledge_setup, "__file__", str(mock_file)):
             with pytest.raises(FileNotFoundError) as exc_info:
                 _setup_principles(dest_dir)
 
@@ -339,11 +312,7 @@ class TestSetupAgents:
         mock_file.parent.mkdir(parents=True)
         mock_file.touch()
 
-        with patch.object(
-            knowledge_setup,
-            '__file__',
-            str(mock_file)
-        ):
+        with patch.object(knowledge_setup, "__file__", str(mock_file)):
             _setup_agents(dest_dir)
 
         assert (dest_dir / "cco-agent-audit.md").exists()
@@ -367,11 +336,7 @@ class TestSetupAgents:
         mock_file.parent.mkdir(parents=True)
         mock_file.touch()
 
-        with patch.object(
-            knowledge_setup,
-            '__file__',
-            str(mock_file)
-        ):
+        with patch.object(knowledge_setup, "__file__", str(mock_file)):
             _setup_agents(dest_dir)
 
         assert not (dest_dir / "cco-agent-old.md").exists()
@@ -386,11 +351,7 @@ class TestSetupAgents:
         mock_file.parent.mkdir(parents=True)
         mock_file.touch()
 
-        with patch.object(
-            knowledge_setup,
-            '__file__',
-            str(mock_file)
-        ):
+        with patch.object(knowledge_setup, "__file__", str(mock_file)):
             with pytest.raises(FileNotFoundError) as exc_info:
                 _setup_agents(dest_dir)
 
@@ -414,11 +375,7 @@ class TestSetupSkills:
         mock_file.parent.mkdir(parents=True)
         mock_file.touch()
 
-        with patch.object(
-            knowledge_setup,
-            '__file__',
-            str(mock_file)
-        ):
+        with patch.object(knowledge_setup, "__file__", str(mock_file)):
             _setup_skills(dest_dir)
 
         assert (dest_dir / "cco-skill-testing.md").exists()
@@ -446,11 +403,7 @@ class TestSetupSkills:
         mock_file.parent.mkdir(parents=True)
         mock_file.touch()
 
-        with patch.object(
-            knowledge_setup,
-            '__file__',
-            str(mock_file)
-        ):
+        with patch.object(knowledge_setup, "__file__", str(mock_file)):
             _setup_skills(dest_dir)
 
         assert (dest_dir / "python" / "cco-skill-django.md").exists()
@@ -478,11 +431,7 @@ class TestSetupSkills:
         mock_file.parent.mkdir(parents=True)
         mock_file.touch()
 
-        with patch.object(
-            knowledge_setup,
-            '__file__',
-            str(mock_file)
-        ):
+        with patch.object(knowledge_setup, "__file__", str(mock_file)):
             _setup_skills(dest_dir)
 
         assert not (dest_dir / "cco-skill-old.md").exists()
@@ -511,11 +460,7 @@ class TestSetupSkills:
         mock_file.parent.mkdir(parents=True)
         mock_file.touch()
 
-        with patch.object(
-            knowledge_setup,
-            '__file__',
-            str(mock_file)
-        ):
+        with patch.object(knowledge_setup, "__file__", str(mock_file)):
             _setup_skills(dest_dir)
 
         assert not (dest_dir / "_hidden").exists()
@@ -529,11 +474,7 @@ class TestSetupSkills:
         mock_file.parent.mkdir(parents=True)
         mock_file.touch()
 
-        with patch.object(
-            knowledge_setup,
-            '__file__',
-            str(mock_file)
-        ):
+        with patch.object(knowledge_setup, "__file__", str(mock_file)):
             with pytest.raises(FileNotFoundError) as exc_info:
                 _setup_skills(dest_dir)
 
@@ -797,18 +738,19 @@ class TestKnowledgeSetupIntegration:
         claude_dir = tmp_path / ".claude"
 
         # Mock config to use our directories
-        with patch.object(knowledge_setup.config, 'get_claude_dir', return_value=claude_dir), \
-             patch.object(knowledge_setup.config, 'get_global_commands_dir',
-                         return_value=claude_dir / "commands"), \
-             patch.object(knowledge_setup.config, 'get_principles_dir',
-                         return_value=claude_dir / "principles"), \
-             patch.object(knowledge_setup.config, 'get_agents_dir',
-                         return_value=claude_dir / "agents"), \
-             patch.object(knowledge_setup.config, 'get_skills_dir',
-                         return_value=claude_dir / "skills"), \
-             patch.object(knowledge_setup, '__file__',
-                         str(content_dir.parent / "core" / "knowledge_setup.py")):
-
+        with patch.object(
+            knowledge_setup.config, "get_claude_dir", return_value=claude_dir
+        ), patch.object(
+            knowledge_setup.config, "get_global_commands_dir", return_value=claude_dir / "commands"
+        ), patch.object(
+            knowledge_setup.config, "get_principles_dir", return_value=claude_dir / "principles"
+        ), patch.object(
+            knowledge_setup.config, "get_agents_dir", return_value=claude_dir / "agents"
+        ), patch.object(
+            knowledge_setup.config, "get_skills_dir", return_value=claude_dir / "skills"
+        ), patch.object(
+            knowledge_setup, "__file__", str(content_dir.parent / "core" / "knowledge_setup.py")
+        ):
             result = setup_global_knowledge()
 
         assert result["success"] is True
@@ -841,18 +783,19 @@ class TestKnowledgeSetupIntegration:
         commands_dir.mkdir(parents=True)
         (commands_dir / "user-custom.md").write_text("# User Custom")
 
-        with patch.object(knowledge_setup.config, 'get_claude_dir', return_value=claude_dir), \
-             patch.object(knowledge_setup.config, 'get_global_commands_dir',
-                         return_value=commands_dir), \
-             patch.object(knowledge_setup.config, 'get_principles_dir',
-                         return_value=claude_dir / "principles"), \
-             patch.object(knowledge_setup.config, 'get_agents_dir',
-                         return_value=claude_dir / "agents"), \
-             patch.object(knowledge_setup.config, 'get_skills_dir',
-                         return_value=claude_dir / "skills"), \
-             patch.object(knowledge_setup, '__file__',
-                         str(content_dir.parent / "core" / "knowledge_setup.py")):
-
+        with patch.object(
+            knowledge_setup.config, "get_claude_dir", return_value=claude_dir
+        ), patch.object(
+            knowledge_setup.config, "get_global_commands_dir", return_value=commands_dir
+        ), patch.object(
+            knowledge_setup.config, "get_principles_dir", return_value=claude_dir / "principles"
+        ), patch.object(
+            knowledge_setup.config, "get_agents_dir", return_value=claude_dir / "agents"
+        ), patch.object(
+            knowledge_setup.config, "get_skills_dir", return_value=claude_dir / "skills"
+        ), patch.object(
+            knowledge_setup, "__file__", str(content_dir.parent / "core" / "knowledge_setup.py")
+        ):
             setup_global_knowledge()
 
         # User's file should be preserved

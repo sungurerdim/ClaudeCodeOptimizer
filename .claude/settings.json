@@ -1,7 +1,7 @@
 {
   "statusLine": {
     "type": "command",
-    "command": "node .claude/statusline.js"
+    "command": "node D:/GitHub/ClaudeCodeOptimizer/.claude/statusline.js"
   },
   "permissions": {
     "allow": [

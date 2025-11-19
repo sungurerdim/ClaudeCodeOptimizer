@@ -9,13 +9,13 @@ from pathlib import Path
 from typing import Any, Dict
 from unittest.mock import Mock, patch
 
+import pytest
+
+from claudecodeoptimizer.config import VERSION
 from claudecodeoptimizer.core.constants import (
     SERVICE_COUNT_THRESHOLD_LARGE,
     SERVICE_COUNT_THRESHOLD_MEDIUM,
 )
-from claudecodeoptimizer.config import VERSION
-import pytest
-
 from claudecodeoptimizer.core.principles import (
     Principle,
     PrinciplesManager,
@@ -189,47 +189,49 @@ class TestPrinciplesManagerGetters:
     @pytest.fixture
     def getter_manager(self, principles_manager_factory) -> PrinciplesManager:
         """Create a test manager with sample principles for getter tests"""
-        return principles_manager_factory([
-            {
-                "id": "U_TEST_1",
-                "number": 1,
-                "title": "Test 1",
-                "category": "Universal",
-                "severity": "critical",
-                "weight": 10,
-                "description": "Test",
-                "applicability": {},
-                "rules": [],
-                "examples": {},
-                "autofix": {"available": False},
-            },
-            {
-                "id": "U_TEST_2",
-                "number": 2,
-                "title": "Test 2",
-                "category": "Testing",
-                "severity": "high",
-                "weight": 7,
-                "description": "Test",
-                "applicability": {},
-                "rules": [{"id": "RULE_1"}],
-                "examples": {},
-                "autofix": {"available": True},
-            },
-            {
-                "id": "P_TEST_3",
-                "number": 3,
-                "title": "Test 3",
-                "category": "Testing",
-                "severity": "medium",
-                "weight": 5,
-                "description": "Test",
-                "applicability": {},
-                "rules": [],
-                "examples": {},
-                "autofix": {"available": False},
-            },
-        ])
+        return principles_manager_factory(
+            [
+                {
+                    "id": "U_TEST_1",
+                    "number": 1,
+                    "title": "Test 1",
+                    "category": "Universal",
+                    "severity": "critical",
+                    "weight": 10,
+                    "description": "Test",
+                    "applicability": {},
+                    "rules": [],
+                    "examples": {},
+                    "autofix": {"available": False},
+                },
+                {
+                    "id": "U_TEST_2",
+                    "number": 2,
+                    "title": "Test 2",
+                    "category": "Testing",
+                    "severity": "high",
+                    "weight": 7,
+                    "description": "Test",
+                    "applicability": {},
+                    "rules": [{"id": "RULE_1"}],
+                    "examples": {},
+                    "autofix": {"available": True},
+                },
+                {
+                    "id": "P_TEST_3",
+                    "number": 3,
+                    "title": "Test 3",
+                    "category": "Testing",
+                    "severity": "medium",
+                    "weight": 5,
+                    "description": "Test",
+                    "applicability": {},
+                    "rules": [],
+                    "examples": {},
+                    "autofix": {"available": False},
+                },
+            ]
+        )
 
     def test_get_principle_exists(self, getter_manager) -> None:
         """Test getting an existing principle"""
@@ -488,10 +490,58 @@ class TestAutoSelection:
         """Create a test manager for auto selection tests"""
         return principles_manager_factory(
             [
-                {"id": "U_CRITICAL", "number": 1, "title": "Critical", "category": "Universal", "severity": "critical", "weight": 10, "description": "Critical", "applicability": {"project_types": ["all"]}, "rules": [], "examples": {}, "autofix": {}},
-                {"id": "P_HIGH_API", "number": 2, "title": "High API", "category": "Project", "severity": "high", "weight": 7, "description": "High", "applicability": {"project_types": ["api"], "languages": ["python"]}, "rules": [], "examples": {}, "autofix": {}},
-                {"id": "P_MEDIUM_CONTEXT", "number": 3, "title": "Medium Context", "category": "Project", "severity": "medium", "weight": 5, "description": "Medium", "applicability": {"project_types": ["api"], "contexts": ["api_endpoints"]}, "rules": [], "examples": {}, "autofix": {}},
-                {"id": "P_MEDIUM_ALL_CONTEXTS", "number": 4, "title": "Medium All Contexts", "category": "Project", "severity": "medium", "weight": 5, "description": "Medium all contexts", "applicability": {"project_types": ["all"], "contexts": ["all"]}, "rules": [], "examples": {}, "autofix": {}},
+                {
+                    "id": "U_CRITICAL",
+                    "number": 1,
+                    "title": "Critical",
+                    "category": "Universal",
+                    "severity": "critical",
+                    "weight": 10,
+                    "description": "Critical",
+                    "applicability": {"project_types": ["all"]},
+                    "rules": [],
+                    "examples": {},
+                    "autofix": {},
+                },
+                {
+                    "id": "P_HIGH_API",
+                    "number": 2,
+                    "title": "High API",
+                    "category": "Project",
+                    "severity": "high",
+                    "weight": 7,
+                    "description": "High",
+                    "applicability": {"project_types": ["api"], "languages": ["python"]},
+                    "rules": [],
+                    "examples": {},
+                    "autofix": {},
+                },
+                {
+                    "id": "P_MEDIUM_CONTEXT",
+                    "number": 3,
+                    "title": "Medium Context",
+                    "category": "Project",
+                    "severity": "medium",
+                    "weight": 5,
+                    "description": "Medium",
+                    "applicability": {"project_types": ["api"], "contexts": ["api_endpoints"]},
+                    "rules": [],
+                    "examples": {},
+                    "autofix": {},
+                },
+                {
+                    "id": "P_MEDIUM_ALL_CONTEXTS",
+                    "number": 4,
+                    "title": "Medium All Contexts",
+                    "category": "Project",
+                    "severity": "medium",
+                    "weight": 5,
+                    "description": "Medium all contexts",
+                    "applicability": {"project_types": ["all"], "contexts": ["all"]},
+                    "rules": [],
+                    "examples": {},
+                    "autofix": {},
+                },
             ],
             selection_strategies={"auto": {"rules": []}},
         )
@@ -593,7 +643,7 @@ class TestAutoSelection:
 
     def test_auto_select_with_strategy_rules(self, auto_manager) -> None:
         """Test auto selection with strategy rules"""
-        
+
         # Add a rule to the auto strategy
         auto_manager.selection_strategies = {
             "auto": {
