@@ -739,5 +739,5 @@ Warn user if:
 
 - **After /cco-audit**: Natural next step
 - **Before /cco-commit**: Good to fix before committing
-- **After /cco-overview**: Follow action plan
+- **After /cco-audit --quick**: Follow action plan
 - **With /cco-generate**: Fix existing, generate missing

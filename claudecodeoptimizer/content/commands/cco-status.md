@@ -170,14 +170,14 @@ DevEx (1):
 
 **First time?**
 ```bash
-/cco-overview              # See project health
+/cco-audit --quick         # Fast health assessment
 /cco-audit --security      # Find vulnerabilities
 /cco-fix --security        # Auto-fix issues
 ```
 
 **Want comprehensive check?**
 ```bash
-/cco-overview              # Full assessment
+/cco-audit --quick         # Fast health assessment
 /cco-audit --all           # Find all issues
 /cco-fix --all             # Fix safe issues
 /cco-generate --all        # Create missing components
@@ -228,7 +228,7 @@ pipx reinstall claudecodeoptimizer
 [OK] CCO is ready!
 All components installed and available.
 
-Next: /cco-help (command reference) or /cco-overview (project health)
+Next: /cco-help (command reference) or /cco-audit --quick (project health)
 ```
 
 ---

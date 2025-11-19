@@ -758,6 +758,6 @@ Warn user if:
 ## Integration with Other Commands
 
 - **After /cco-audit --tests**: Generate missing tests
-- **After /cco-overview**: Follow action plan
+- **After /cco-audit --quick**: Follow action plan
 - **With /cco-fix**: Fix existing, generate missing
 - **Before /cco-commit**: Generate then commit
