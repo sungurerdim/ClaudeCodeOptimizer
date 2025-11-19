@@ -17,6 +17,45 @@ skills_loaded: as-needed
 
 ---
 
+## Critical UX Principles
+
+**MUST follow these principles throughout execution:**
+
+1. **Explicit Phase Transitions** - Announce start AND completion of every phase
+2. **Single Source of Truth** - One count object, updated consistently everywhere
+3. **Complete Accounting** - All findings tracked with disposition
+4. **100% Honesty** - Report exact truth, verify before claiming
+5. **No Hardcoded Examples** - Use actual project data, never fake examples
+
+### State Management
+
+```python
+# Central state - ONLY source for counts
+class AuditState:
+    current_phase: int = 0
+    total_findings: int = 0
+    findings_by_severity: Dict[str, int] = {}
+    all_findings: List[Finding] = []
+
+    def add_finding(self, finding):
+        self.all_findings.append(finding)
+        self.total_findings += 1
+        self.findings_by_severity[finding.severity] += 1
+
+    def get_counts_string(self) -> str:
+        """ALWAYS use this - ensures consistency."""
+        return f"{self.total_findings} issues..."
+
+# Phase transitions MUST be explicit
+def transition_phase(state, new_phase):
+    if state.current_phase > 0:
+        print(f"Phase {state.current_phase}/3 ✓ COMPLETE")
+    state.current_phase = new_phase
+    print(f"Phase {new_phase}/3 ▶ STARTED")
+```
+
+---
+
 ## Execution Model
 
 This agent supports three execution phases:

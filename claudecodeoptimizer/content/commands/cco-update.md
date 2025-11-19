@@ -45,7 +45,7 @@ Latest version: 0.2.0
 
 Changes in 0.2.0:
 - Added 3 new skills (AI security enhancements)
-- Improved audit performance (30% faster)
+- Improved audit performance (faster scanning)
 - Fixed bug in Docker optimization
 - Updated principles
 
@@ -109,12 +109,12 @@ Changes:
 
 - Updated principles:
   * P_SECURITY_OWASP (added OWASP Top 10 2024)
-  * P_TEST_COVERAGE (increased target to 85%)
+  * P_TEST_COVERAGE (increased coverage target)
   * ... (13 more)
 
 - Performance improvements:
-  * Audit 30% faster (parallel agent execution)
-  * Generate 20% faster (optimized prompts)
+  * Audit faster (parallel agent execution)
+  * Generate faster (optimized prompts)
 
 All projects now use latest version ✓
 

@@ -21,6 +21,27 @@ use_cases:
 - CI/CD configs
 - Convention-aware code generation
 
+---
+
+## Critical UX Principles
+
+1. **100% Honesty** - Only claim "generated" after file exists and verified
+2. **Complete Accounting** - generated + skipped + failed = total requested
+3. **No Hardcoded Examples** - Use actual project patterns, never fake templates
+4. **Verify Before Claiming** - Read file after write to confirm creation
+
+### Outcome Categories
+```python
+OUTCOMES = {
+    "generated": "File created and verified",
+    "skipped_exists": "Already exists - not overwritten",
+    "needs_decision": "Multiple patterns - user chooses",
+    "failed_deps": "Missing dependencies required",
+}
+```
+
+---
+
 ## Workflow
 1. Read existing code for patterns/conventions
 2. Select template for generation type

@@ -30,11 +30,11 @@ Show all available CCO commands, organized by pain-point priority, with examples
 
 ## Pain Points Addressed
 
-🔴 **#1 Security (51% top concern)** - $500M+ cost from vulnerabilities
-🔴 **#2 Technical Debt (23% time waste)** - Developers lose 23% of time
-🔴 **#3 AI Reliability (45%)** - Unreliable AI-generated code
+🔴 **#1 Security (top concern)** - High cost from vulnerabilities
+🔴 **#2 Technical Debt (significant time waste)** - Developers lose significant time
+🔴 **#3 AI Reliability** - Unreliable AI-generated code
 🟡 **#4 Testing (Biggest mistake)** - Production bugs, delays
-🟡 **#5 Time Waste (69%)** - $2M annually per enterprise (8+ hours/week)
+🟡 **#5 Time Waste** - Significant cost per enterprise
 🟢 **#6 Integration Failures** - Deployment delays, broken builds
 🟢 **#7 Documentation Gaps** - Onboarding delays, knowledge loss
 
@@ -229,7 +229,7 @@ Usage:
 
 ## Agents (Parallel Execution)
 
-- **cco-agent-audit** - Fast scanning (Haiku - 10x cheaper)
+- **cco-agent-audit** - Fast scanning (Haiku - cost-efficient)
 - **cco-agent-fix** - Accurate fixes (Sonnet - better quality)
 - **cco-agent-generate** - Code generation (Sonnet - better quality)
 

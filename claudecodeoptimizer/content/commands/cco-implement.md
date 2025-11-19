@@ -19,6 +19,46 @@ Implement new features using Test-Driven Development (TDD), automatically select
 
 ---
 
+## Critical UX Principles
+
+1. **100% Honesty** - Only claim "implemented" if code works and tests pass
+2. **Complete Accounting** - Report: implemented + skipped + blocked = total planned
+3. **No Hardcoded Examples** - All examples use `{PLACEHOLDERS}`, never fake code
+4. **Phase Tracking** - Explicit start/end for each TDD phase with timestamps
+5. **Consistent Counts** - Same counts shown everywhere (single source of truth)
+
+### Implementation Outcome Categories
+
+```python
+OUTCOMES = {
+    "implemented": "Code written, tests pass, verified working",
+    "tests_written": "TDD red phase complete, implementation pending",
+    "needs_decision": "Multiple implementation approaches - user must choose",
+    "blocked_deps": "Requires other features/modules first",
+    "blocked_design": "Needs architectural clarification",
+    "failed_tests": "Tests written but cannot make pass - needs review",
+}
+```
+
+### Phase State Tracking
+
+```python
+PHASES = {
+    1: {"name": "Architecture Design", "duration": "{TIME}"},
+    2: {"name": "TDD Red Phase", "duration": "{TIME}"},
+    3: {"name": "TDD Green Phase", "duration": "{TIME}"},
+    4: {"name": "Security Hardening", "duration": "{TIME}"},
+    5: {"name": "Documentation", "duration": "{TIME}"},
+}
+
+# MUST announce each phase transition explicitly
+print(f"Phase {N}/5: {PHASES[N]['name']} ▶ STARTED")
+# ... work ...
+print(f"Phase {N}/5: {PHASES[N]['name']} ✓ COMPLETE ({duration})")
+```
+
+---
+
 ## Execution Protocol
 
 ### Step 0: Introduction and Confirmation (ALWAYS FIRST)
@@ -41,7 +81,7 @@ I implement new features using Test-Driven Development (TDD), automatically sele
 **What you'll get:**
 - Complete feature implementation following TDD
 - Architecture design for the feature
-- Comprehensive tests (unit, integration, security) - 100% coverage goal
+- Comprehensive tests (unit, integration, security) - high coverage goal
 - Production-ready code with security hardening
 - API documentation and usage examples
 
@@ -81,7 +121,56 @@ AskUserQuestion({
 
 **CRITICAL:**
 - If user selects "No, cancel" → EXIT immediately, do NOT proceed
-- If user selects "Yes, start implementation" → Continue to Step 1
+- If user selects "Yes, start implementation" → Continue to Step 0.5
+
+---
+
+### Step 0.5: Project Context Discovery (Optional)
+
+**Ask user if they want project documentation analyzed for better implementation alignment.**
+
+```python
+AskUserQuestion({
+  questions: [{
+    question: "Proje dokümantasyonundan context çıkarılsın mı?",
+    header: "Project Context",
+    multiSelect: false,
+    options: [
+      {
+        label: "Evet (önerilen)",
+        description: "README/ARCHITECTURE'dan proje mimarisini çıkar, implementasyon mimari kararlara uygun olur"
+      },
+      {
+        label: "Hayır",
+        description: "Sadece feature implement et (daha hızlı)"
+      }
+    ]
+  }]
+})
+```
+
+**If "Evet" selected:**
+
+```python
+# Extract project context via Haiku sub-agent
+context_result = Task({
+    subagent_type: "Explore",
+    model: "haiku",
+    prompt: """
+    Extract project context summary (MAX 200 tokens).
+    Focus on: architecture decisions, tech stack, coding conventions.
+
+    Files to check: README.md, ARCHITECTURE.md, DESIGN.md, docs/ADR/*.md
+
+    Return: Purpose, Architecture Notes, Tech Stack, Conventions
+    """
+})
+
+# Use context in feature implementation
+project_context = context_result
+```
+
+**Benefits:** Implementation respects existing architecture and integrates properly.
 
 ---
 
@@ -155,7 +244,7 @@ Phases:
    - [ACTUAL documentation needed]
 
 Estimated time: [CALCULATED_TOTAL] minutes
-Tests: [ESTIMATED_COUNT]+ tests (100% coverage target)
+Tests: [ESTIMATED_COUNT]+ tests (high coverage target)
 ```
 
 **Then generate AskUserQuestion options from this plan:**
@@ -440,7 +529,7 @@ Both use Sonnet for accuracy.
 - [OK] Appropriate skills auto-selected
 - [OK] Implementation plan created
 - [OK] TDD approach followed (tests first)
-- [OK] All tests pass with 100% coverage
+- [OK] All tests pass with high coverage
 - [OK] Security hardened
 - [OK] Documentation created
 - [OK] Pain-point impact communicated

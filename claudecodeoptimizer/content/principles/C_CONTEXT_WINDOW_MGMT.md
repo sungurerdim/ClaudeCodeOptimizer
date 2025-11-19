@@ -17,7 +17,7 @@ Optimize context via targeted reads, strategic model selection, parallel operati
 
 ## Why
 
-Inefficient context usage wastes 98% tokens (reading full files when 20 lines needed), slows responses, reduces quality, increases costs.
+Inefficient context usage wastes most tokens (reading full files when few lines needed), slows responses, reduces quality, increases costs.
 
 ---
 

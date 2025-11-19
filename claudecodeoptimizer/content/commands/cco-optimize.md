@@ -31,7 +31,7 @@ parameters:
 
 # cco-optimize
 
-**Performance optimization across 6 areas to address Pain #5 (69% waste 8+ hours/week).**
+**Performance optimization across 6 areas to address Pain #5 (significant time waste).**
 
 ---
 
@@ -89,11 +89,11 @@ I identify and fix performance bottlenecks across 6 areas: database queries, Doc
 5. I report before/after metrics with impact analysis
 
 **What you'll get:**
-- Database optimizations (N+1 fixes, indexes, caching - significant query speedup)
-- Docker optimizations (multi-stage builds - reduced image size)
+- Database optimizations (N+1 fixes, indexes, caching - faster queries)
+- Docker optimizations (multi-stage builds - smaller images)
 - Code cleanup (remove dead code - smaller codebase)
 - Dependency updates (security patches, remove unused)
-- Bundle optimizations (code splitting - reduced bundle size)
+- Bundle optimizations (code splitting - smaller bundles)
 - Resilience patterns (circuit breakers, retry logic)
 
 **Time estimate:** 10-30 minutes depending on optimizations selected
@@ -285,8 +285,8 @@ Example for Database:
 - Fix get_user_orders() N+1 pattern (eager loading)
 - Add index on products(category, price)
 - Add Redis caching for get_popular_products()
-- Setup connection pooling (size=20)
-- Impact: 450ms → 50ms avg (89% faster)
+- Setup connection pooling
+- Impact: significantly faster queries
 
 Estimated time: ~[X] minutes
 ```
@@ -392,10 +392,10 @@ Code Quality:
 - Dead code: [RESULT]
 
 Pain Point Impact:
-✓ Addresses Pain #5 (69% waste 8+ hours/week)
+✓ Addresses Pain #5 (significant time waste)
   - [ACTUAL time savings based on optimizations]
 
-✓ Addresses Pain #2 (23% tech debt)
+✓ Addresses Pain #2 (tech debt)
   - [ACTUAL debt reduction]
 
 Performance score: [BEFORE] → [AFTER] (+[DELTA] points)

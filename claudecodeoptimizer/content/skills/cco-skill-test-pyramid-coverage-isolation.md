@@ -20,10 +20,10 @@ description: |
 Prevent production defects, flaky tests, and inadequate test coverage through comprehensive testing strategies.
 
 **Solves**:
-- **Inadequate Test Coverage**: 60%+ of production bugs occur in untested code paths
-- **Inverted Test Pyramid**: Slow e2e tests dominate, causing 10-30 minute CI runs instead of 2-5 minutes
-- **Flaky Tests**: Non-isolated tests fail randomly, reducing developer trust to <50%
-- **Missing Edge Cases**: Property testing catches 40%+ more bugs than example-based tests alone
+- **Inadequate Test Coverage**: Most production bugs occur in untested code paths
+- **Inverted Test Pyramid**: Slow e2e tests dominate, causing slow CI runs
+- **Flaky Tests**: Non-isolated tests fail randomly, reducing developer trust
+- **Missing Edge Cases**: Property testing catches significantly more bugs than example-based tests alone
 
 **Impact**: Critical
 
@@ -35,22 +35,22 @@ This skill loads the following P_ principles on-demand:
 
 ### P_TEST_PYRAMID
 **Category**: Testing Architecture
-**Why**: Fast unit tests (70%), moderate integration tests (20%), minimal e2e tests (10%)
+**Why**: Fast unit tests (majority), moderate integration tests, minimal e2e tests
 **Triggers when**: Test strategy, CI performance, test suite design
 
 ### P_TEST_COVERAGE
 **Category**: Test Quality
-**Why**: Measure and enforce minimum coverage thresholds (typically 80%+)
+**Why**: Measure and enforce minimum coverage thresholds (high coverage target)
 **Triggers when**: Analyzing test gaps, reviewing PRs, quality gates
 
 ### P_TEST_ISOLATION
 **Category**: Test Reliability
-**Why**: Each test runs independently; no shared state causes 90%+ of flaky tests
+**Why**: Each test runs independently; shared state causes most flaky tests
 **Triggers when**: Debugging flaky tests, test fixtures, parallelization
 
 ### P_PROPERTY_TESTING
 **Category**: Advanced Testing
-**Why**: Generative testing finds edge cases manual tests miss (40%+ additional coverage)
+**Why**: Generative testing finds edge cases manual tests miss (significant additional coverage)
 **Triggers when**: Testing complex algorithms, data validation, invariant checking
 
 ### P_INTEGRATION_TESTS

@@ -253,7 +253,7 @@ function registerUser(userData) {
 - [ ] **CI enforcement** - Build fails on unused imports
 - [ ] **Pre-commit hooks** - Auto-remove unused imports before commit
 - [ ] **Regular audits** - Monthly dead code cleanup
-- [ ] **Test coverage** - 80%+ coverage ensures code is called
+- [ ] **Test coverage** - High coverage ensures code is called
 - [ ] **Dependency graph** - Visualize and verify connections
 - [ ] **Import analysis** - Check all imports resolve correctly
 
@@ -290,13 +290,13 @@ jobs:
 - **Dead code percentage** - % of code never executed (aim for 0%)
 - **Unused import count** - Number of unused imports (aim for 0)
 - **Build success rate** - % of builds that pass integration checks
-- **Coverage** - % of code covered by tests (aim for 80%+)
+- **Coverage** - % of code covered by tests (aim for high coverage)
 
 ### Success Criteria
 - Zero unused imports (enforced by CI)
 - Zero dead functions (detected by coverage + audits)
 - 100% build success rate (all references valid)
-- 80%+ test coverage (ensures code is integrated)
+- High test coverage (ensures code is integrated)
 
 ---
 

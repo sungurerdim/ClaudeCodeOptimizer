@@ -86,6 +86,38 @@ Automatically fix issues found by audits. Runs audit first if no recent audit ex
 
 ---
 
+## Critical UX Principles (Same as Audit)
+
+1. **100% Honesty** - Never claim "fixed" unless verified, never say "impossible" if technically possible
+2. **Complete Accounting** - Every issue must be accounted: fixed + skipped + cannot-fix = total
+3. **No Hardcoded Examples** - All examples use `{PLACEHOLDERS}`, never fake data
+4. **Phase Tracking** - Explicit start/end for each phase with timestamps
+5. **Consistent Counts** - Same numbers shown everywhere (single source of truth)
+
+**See `/cco-audit` for detailed implementation of:**
+- Component 6: State Management & Count Tracking
+- Component 9: Honesty & Accurate Reporting
+- Component 10: Fix Integration Accounting
+
+---
+
+## Fix Outcome Categories
+
+```python
+# Accurate categorization - no false claims
+OUTCOMES = {
+    "fixed": "Applied and verified",
+    "needs_decision": "Multiple valid approaches - user must choose",
+    "needs_review": "Complex change - requires human verification",
+    "requires_migration": "Database change - needs migration script",
+    "requires_config": "External system configuration needed",
+    "impossible_external": "Issue in third-party code",
+    "impossible_design": "Requires architectural change",
+}
+```
+
+---
+
 ## Fix Categories (Same as Audit)
 
 All categories from `/cco-audit`:
@@ -220,7 +252,56 @@ AskUserQuestion({
 
 **CRITICAL:**
 - If user selects "No, cancel" → EXIT immediately, do NOT proceed
-- If user selects "Yes, start fixing" → Continue to Step 1
+- If user selects "Yes, start fixing" → Continue to Step 0.5
+
+---
+
+### Step 0.5: Project Context Discovery (Optional)
+
+**Ask user if they want project documentation analyzed for better fix alignment.**
+
+```python
+AskUserQuestion({
+  questions: [{
+    question: "Proje dokümantasyonundan context çıkarılsın mı?",
+    header: "Project Context",
+    multiSelect: false,
+    options: [
+      {
+        label: "Evet (önerilen)",
+        description: "README/CONTRIBUTING'den proje konvansiyonlarını çıkar, düzeltmeler stile uygun olur"
+      },
+      {
+        label: "Hayır",
+        description: "Sadece kod düzeltmesi yap (daha hızlı)"
+      }
+    ]
+  }]
+})
+```
+
+**If "Evet" selected:**
+
+```python
+# Extract project context via Haiku sub-agent
+context_result = Task({
+    subagent_type: "Explore",
+    model: "haiku",
+    prompt: """
+    Extract project context summary (MAX 200 tokens).
+    Focus on: naming conventions, testing framework, formatting style.
+
+    Files to check: README.md, CONTRIBUTING.md, ARCHITECTURE.md
+
+    Return: Purpose, Tech Stack, Conventions (naming, testing, formatting)
+    """
+})
+
+# Use context when applying fixes
+project_context = context_result
+```
+
+**Benefits:** Fixes follow project conventions (naming style, ORM usage, test patterns).
 
 ---
 
@@ -584,8 +665,8 @@ Task({
 })
 
 # All run in parallel since they modify different files
-# Total time: ~10s (vs 30s sequential)
-# No cost savings (all Sonnet), but 3x faster
+# Total time: significantly faster than sequential
+# No cost savings (all Sonnet), but much faster
 
 # Sequential execution needed when files depend on each other:
 # 1. Update interface definition first

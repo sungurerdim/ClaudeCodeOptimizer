@@ -11,7 +11,7 @@ related_skills: []
 
 **Severity**: Critical
 
-Prevent OWASP API Top 10 threats: broken auth causes 60% of API breaches; lack of rate limiting enables DoS; insufficient input validation leads to injection attacks.
+Prevent OWASP API Top 10 threats: broken auth causes most API breaches; lack of rate limiting enables DoS; insufficient input validation leads to injection attacks.
 
 ---
 
