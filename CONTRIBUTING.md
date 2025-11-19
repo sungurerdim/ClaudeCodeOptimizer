@@ -212,21 +212,14 @@ ClaudeCodeOptimizer/
 │   │   ├── detection.py            # Project type detection
 │   │   └── recommendations.py      # Principle recommendations
 │   └── commands_loader.py   # Command loading
-├── content/                 # Knowledge base (deployed to ~/.cco/)
+├── content/                 # Knowledge base (deployed to ~/.claude/)
 │   ├── commands/            # Slash commands (cco-*.md)
 │   ├── principles/          # Development principles (U_*, P_*, C_*.md)
 │   ├── skills/              # Reusable skills (cco-skill-*.md)
-│   ├── agents/              # Autonomous agents (cco-agent-*.md)
-│   └── guides/              # How-to guides (cco-*.md)
-├── tests/                   # Test suite
-│   ├── unit/                # Unit tests
-│   └── integration/         # Integration tests
-└── .claude/                 # Claude Code integration (symlinks)
-    ├── principles/          # Symlinks to ~/.cco/principles/
-    ├── skills/              # Symlinks to ~/.cco/skills/
-    ├── agents/              # Symlinks to ~/.cco/agents/
-    ├── commands/            # Symlinks to ~/.cco/commands/
-    └── guides/              # Symlinks to ~/.cco/guides/
+│   └── agents/              # Autonomous agents (cco-agent-*.md)
+└── tests/                   # Test suite
+    ├── unit/                # Unit tests
+    └── integration/         # Integration tests
 ```
 
 ## CLAUDE.md Generation

@@ -111,3 +111,230 @@ def calculate_discount(price: Decimal, discount: float, coupon: str = None) -> D
     if price < 0: raise ValueError(f"Invalid: {price}")
     return round(price * (1 - discount / 100), 2)
 ```
+
+---
+
+## Documentation Templates
+
+Use these templates when generating documentation:
+
+### README Template
+
+```markdown
+# {PROJECT_NAME}
+
+{One-line description of what this project does}
+
+[![CI](https://github.com/{owner}/{repo}/actions/workflows/ci.yml/badge.svg)](https://github.com/{owner}/{repo}/actions)
+[![Coverage](https://codecov.io/gh/{owner}/{repo}/branch/main/graph/badge.svg)](https://codecov.io/gh/{owner}/{repo})
+
+## Quick Start
+
+\`\`\`bash
+git clone https://github.com/{owner}/{repo}.git
+cd {repo}
+pip install -e .
+pytest
+\`\`\`
+
+## Features
+
+- **Feature 1**: {Brief description}
+- **Feature 2**: {Brief description}
+- **Feature 3**: {Brief description}
+
+## Installation
+
+\`\`\`bash
+pip install {project-name}
+\`\`\`
+
+## Usage
+
+\`\`\`python
+from {project} import main
+
+result = main.run(param1="value")
+print(result)
+\`\`\`
+
+## API Reference
+
+See [API Documentation](docs/api.md) or run the app and visit `/docs`
+
+## Development
+
+\`\`\`bash
+# Install dev dependencies
+pip install -e .[dev]
+
+# Run tests
+pytest
+
+# Run linting
+ruff check .
+\`\`\`
+
+## Contributing
+
+See [CONTRIBUTING.md](CONTRIBUTING.md)
+
+## License
+
+MIT License - see [LICENSE](LICENSE)
+```
+
+### ADR Template
+
+```markdown
+# ADR {NUMBER}: {TITLE}
+
+**Status**: Proposed | Accepted | Deprecated | Superseded by ADR-{N}
+**Date**: {YYYY-MM-DD}
+**Deciders**: {list of people involved}
+
+## Context
+
+{What is the issue that we're seeing that is motivating this decision or change?}
+
+## Decision
+
+{What is the change that we're proposing and/or doing?}
+
+## Consequences
+
+### Positive
+- {Benefit 1}
+- {Benefit 2}
+
+### Negative
+- {Drawback 1}
+- {Drawback 2}
+
+### Neutral
+- {Trade-off 1}
+
+## Alternatives Considered
+
+### Option A: {Name}
+{Description}
+- Pros: {list}
+- Cons: {list}
+
+### Option B: {Name}
+{Description}
+- Pros: {list}
+- Cons: {list}
+
+## References
+
+- {Link to relevant documentation}
+- {Link to related ADRs}
+```
+
+### Runbook Template
+
+```markdown
+# {SERVICE_NAME} Runbook
+
+**Priority**: P1 (Critical) | P2 (High) | P3 (Medium)
+**Owner**: {team-name}
+**Last Updated**: {YYYY-MM-DD}
+**Review Cycle**: Quarterly
+
+## Overview
+
+{Brief description of the service and its importance}
+
+## Symptoms
+
+- [ ] {Symptom 1 - e.g., "High error rate on /api/users"}
+- [ ] {Symptom 2 - e.g., "Response time > 2s"}
+- [ ] {Symptom 3 - e.g., "Health check failing"}
+
+## Diagnosis
+
+### Quick Health Check
+\`\`\`bash
+curl -s http://localhost:8000/health | jq .
+kubectl get pods -l app={service} -o wide
+\`\`\`
+
+### Log Analysis
+\`\`\`bash
+kubectl logs -l app={service} --tail=100 | grep ERROR
+\`\`\`
+
+### Metrics Check
+- Grafana Dashboard: {link}
+- Key metrics to check: {list}
+
+## Resolution
+
+### Step 1: {Action}
+\`\`\`bash
+{command}
+\`\`\`
+Expected: {what should happen}
+
+### Step 2: {Action}
+\`\`\`bash
+{command}
+\`\`\`
+Expected: {what should happen}
+
+### Step 3: Verify
+\`\`\`bash
+curl -s http://localhost:8000/health
+\`\`\`
+Expected: `{"status": "healthy"}`
+
+## Escalation Path
+
+| Level | Team | Contact | Timeout |
+|-------|------|---------|---------|
+| L1 | On-call | PagerDuty | 15 min |
+| L2 | {Team} | #{slack-channel} | 30 min |
+| L3 | Engineering Lead | @{name} | 2 hours |
+
+## Post-Incident
+
+- [ ] Update this runbook with lessons learned
+- [ ] Create incident report
+- [ ] Schedule post-mortem if P1/P2
+```
+
+### Docstring Template (Python)
+
+```python
+def function_name(param1: str, param2: int, param3: Optional[bool] = None) -> dict:
+    """
+    Brief description of what this function does.
+
+    Longer description if needed, explaining the purpose,
+    algorithm, or any important details.
+
+    Args:
+        param1: Description of param1
+        param2: Description of param2
+        param3: Description of param3. Defaults to None.
+
+    Returns:
+        Description of return value with example:
+        {"key": "value", "count": 42}
+
+    Raises:
+        ValueError: When param1 is empty
+        TypeError: When param2 is not positive
+
+    Examples:
+        >>> function_name("test", 5)
+        {"key": "test", "count": 5}
+
+        >>> function_name("", 5)
+        Traceback (most recent call last):
+            ...
+        ValueError: param1 cannot be empty
+    """
+    pass
+```

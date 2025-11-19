@@ -251,24 +251,24 @@ AskUserQuestion({
 ```python
 AskUserQuestion({
   questions: [{
-    question: "Proje dokümantasyonundan context çıkarılsın mı?",
+    question: "Extract context from project documentation?",
     header: "Project Context",
     multiSelect: false,
     options: [
       {
-        label: "Evet (önerilen)",
-        description: "README/CONTRIBUTING'den proje stilini çıkar, üretilen kod stile uygun olur"
+        label: "Yes (recommended)",
+        description: "Extract project style from README/CONTRIBUTING, generated code aligns with style"
       },
       {
-        label: "Hayır",
-        description: "Sadece kod üret (daha hızlı)"
+        label: "No",
+        description: "Generate code only (faster)"
       }
     ]
   }]
 })
 ```
 
-**If "Evet" selected:**
+**If "Yes" selected:**
 
 ```python
 # Extract project context via Haiku sub-agent

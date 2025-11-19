@@ -132,24 +132,24 @@ AskUserQuestion({
 ```python
 AskUserQuestion({
   questions: [{
-    question: "Proje dokümantasyonundan context çıkarılsın mı?",
+    question: "Extract context from project documentation?",
     header: "Project Context",
     multiSelect: false,
     options: [
       {
-        label: "Evet (önerilen)",
-        description: "README/ARCHITECTURE'dan proje mimarisini çıkar, implementasyon mimari kararlara uygun olur"
+        label: "Yes (recommended)",
+        description: "Extract architecture from README/ARCHITECTURE, implementation aligns with architectural decisions"
       },
       {
-        label: "Hayır",
-        description: "Sadece feature implement et (daha hızlı)"
+        label: "No",
+        description: "Implement feature only (faster)"
       }
     ]
   }]
 })
 ```
 
-**If "Evet" selected:**
+**If "Yes" selected:**
 
 ```python
 # Extract project context via Haiku sub-agent

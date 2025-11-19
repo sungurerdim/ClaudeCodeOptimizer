@@ -558,19 +558,13 @@ def generate_fix_command(finding: Finding) -> str:
     return f"/cco-fix --check={finding.check_id} --file={finding.file}:{finding.line}"
 ```
 
-The audit results are saved in `.cco/audit-latest.json` for `/cco-fix` to consume:
+The audit results are kept in conversation context for `/cco-fix` to consume (zero file pollution).
 
-```json
-{
-  "findings": [
-    {
-      "check_id": "{CHECK_ID}",
-      "file": "{FILE}",
-      "line": "{LINE}",
-      "fix_command": "/cco-fix --check={CHECK_ID} --file={FILE}:{LINE}"
-    }
-  ]
-}
+To fix specific findings, run:
+```bash
+/cco-fix --security
+# or for specific file:
+/cco-fix --check={CHECK_ID} --file={FILE}:{LINE}
 ```
 
 ---
@@ -591,3 +585,71 @@ The audit results are saved in `.cco/audit-latest.json` for `/cco-fix` to consum
 - **Synthesis**: < 2 minutes
 - **Full audit (all checks)**: < 90 minutes
 - **Typical audit**: < 15 minutes
+
+---
+
+## Skill References
+
+When executing audits, load relevant skills for analysis patterns:
+
+### Tech Debt Audit (Pain #2)
+**Skill**: `cco-skill-code-quality-refactoring-complexity`
+- Use "Analysis Patterns" section for bash commands
+- Use "Technical Debt Register Template" for output format
+- Use "Debt Categories" for classification
+
+### Test Coverage Audit (Pain #4)
+**Skill**: `cco-skill-test-pyramid-coverage-isolation`
+- Use "Test Analysis Patterns" for coverage commands
+- Use "Flaky Test Detection" for reliability checks
+- Use "Test Pyramid Analysis" for balance assessment
+
+### Security Audit (Pain #1)
+**Skill**: `cco-skill-security-owasp-xss-sqli-csrf`
+- Check XSS, SQLi, CSRF patterns
+- Use bcrypt/argon2 for password analysis
+- Check JWT configuration
+
+### Performance Audit (Pain #5)
+**Skill**: `cco-skill-database-optimization-caching-profiling`
+- N+1 query detection
+- Index analysis
+- Caching opportunities
+
+### CI/CD Audit (Pain #6)
+**Skill**: `cco-skill-cicd-gates-deployment-automation`
+- Pipeline completeness check
+- Quality gate verification
+- Deployment strategy analysis
+
+### Documentation Audit (Pain #7)
+**Skill**: `cco-skill-docs-api-openapi-adr-runbooks`
+- Docstring coverage
+- API documentation completeness
+- ADR presence
+
+---
+
+## Skill Loading Protocol
+
+```python
+# Load skill based on audit category
+def get_skill_for_category(category: str) -> str:
+    skills = {
+        "tech-debt": "cco-skill-code-quality-refactoring-complexity",
+        "tests": "cco-skill-test-pyramid-coverage-isolation",
+        "security": "cco-skill-security-owasp-xss-sqli-csrf",
+        "database": "cco-skill-database-optimization-caching-profiling",
+        "cicd": "cco-skill-cicd-gates-deployment-automation",
+        "docs": "cco-skill-docs-api-openapi-adr-runbooks",
+    }
+    return skills.get(category, "")
+
+# Execute analysis patterns from skill
+def run_skill_patterns(skill_name: str):
+    # Load skill
+    # Extract "Analysis Patterns" section
+    # Execute bash commands
+    # Return findings
+    pass
+```

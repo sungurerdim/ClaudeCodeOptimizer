@@ -579,11 +579,10 @@ report = f"""
 - Before: {before_usage:.1%} context used by docs
 - After: {after_usage:.1%} context used by docs
 - Available for Code: {code_context:.1%} → {new_code_context:.1%}
-
-See individual file reports in `.cco/optimization/reports/`
 """
 
-Write("OPTIMIZATION_REPORT.md", report)
+# Display report in console (zero file pollution)
+print(report)
 ```
 
 **Why**: Provides transparency, tracks improvements over time
@@ -618,12 +617,12 @@ def check_new_content(file_path):
 
 ### ✅ Good: Backup Before Optimization
 ```python
-# Create backup before optimizing
-backup_dir = f".cco/optimization/backups/{timestamp}/"
-for file in to_optimize:
-    backup_path = f"{backup_dir}/{file.replace('/', '_')}"
-    Bash(f"mkdir -p {os.path.dirname(backup_path)}")
-    Bash(f"cp {file} {backup_path}")
+# Use git for backup (zero file pollution)
+# Git already tracks all changes, no separate backup needed
+Bash("git stash push -m 'Pre-optimization backup'")
+
+# Or for specific files, rely on git history:
+# git show HEAD:path/to/file
 
 # Now safe to optimize
 optimize_files(to_optimize)
@@ -686,7 +685,6 @@ for file in large_files:
 - [ ] Verify principles still load correctly
 - [ ] Check no broken @content/... references
 - [ ] Confirm context window usage improved
-- [ ] Archive report in `.cco/optimization/reports/`
 
 ---
 
@@ -770,9 +768,8 @@ This skill activates when:
    ✓ Token savings: [N] tokens
 
 6. Report:
-   Generated: OPTIMIZATION_REPORT.md
    Context: significantly improved
-   Backups: .cco/optimization/backups/[DATE]/
+   Recovery: git stash pop (if needed)
 ```
 
 ---

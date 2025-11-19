@@ -56,9 +56,9 @@ This directory contains comprehensive integration tests for ClaudeCodeOptimizer.
   - File count validation
 
 **Key Features**:
-- Tests complete global ~/.cco/ structure setup
+- Tests complete global ~/.claude/ structure setup
 - Verifies content copying from package
-- Tests cross-platform symlink creation
+- Tests cross-platform file operations
 - Validates knowledge discovery functions
 
 ---

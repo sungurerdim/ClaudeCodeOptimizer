@@ -1,0 +1,163 @@
+{
+  "metrics": {
+    "total_files": 23,
+    "total_lines": 4480,
+    "avg_file_length": 195,
+    "total_functions": 108,
+    "total_classes": 34,
+    "avg_functions_per_file": 4.7,
+    "avg_classes_per_file": 1.5,
+    "files_over_500_lines": 1,
+    "files_over_300_lines": 4,
+    "files_over_200_lines": 11
+  },
+  "findings": [
+    {
+      "check": "Long Functions",
+      "severity": "high",
+      "file": "D:/GitHub/ClaudeCodeOptimizer/claudecodeoptimizer/core/principles.py",
+      "line": 282,
+      "metric": "66 lines",
+      "issue": "_evaluate_condition() function exceeds 50 line threshold",
+      "fix": "Extract condition evaluation logic into helper functions. Example: _evaluate_project_type(), _evaluate_team_size(), _evaluate_services_count() for better readability and testability"
+    },
+    {
+      "check": "Long Functions",
+      "severity": "medium",
+      "file": "D:/GitHub/ClaudeCodeOptimizer/claudecodeoptimizer/core/principles.py",
+      "line": 181,
+      "metric": "53 lines",
+      "issue": "_auto_select_principles() function slightly exceeds 50 line threshold",
+      "fix": "Consider extracting principle filtering logic into separate methods per severity level (e.g., _select_critical_principles(), _select_high_principles(), _select_medium_principles())"
+    },
+    {
+      "check": "Long Functions",
+      "severity": "medium",
+      "file": "D:/GitHub/ClaudeCodeOptimizer/claudecodeoptimizer/core/knowledge_setup.py",
+      "line": 191,
+      "metric": "59 lines",
+      "issue": "_setup_claude_md() function exceeds 50 line threshold",
+      "fix": "Extract regex replacement logic into _build_marker_section() and _replace_marker_content() helper methods"
+    },
+    {
+      "check": "Long Files",
+      "severity": "critical",
+      "file": "D:/GitHub/ClaudeCodeOptimizer/claudecodeoptimizer/schemas/preferences.py",
+      "line": 1,
+      "metric": "1042 lines",
+      "issue": "preferences.py exceeds 500 line threshold significantly (2x limit)",
+      "fix": "Split into multiple modules: (1) type_definitions.py for Literal types (ProjectTypeChoice, etc.), (2) base_models.py for BaseModel classes, (3) validators.py for validation logic, (4) preferences.py as coordinator"
+    },
+    {
+      "check": "Deep Nesting",
+      "severity": "medium",
+      "file": "D:/GitHub/ClaudeCodeOptimizer/claudecodeoptimizer/core/metadata_manager.py",
+      "line": 88,
+      "metric": "6 levels",
+      "issue": "get_description() has deeply nested if-for-if structure (lines 88-96)",
+      "fix": "Extract paragraph extraction logic: def _extract_first_paragraph(lines: List[str]) -> str; replace nested loops with early returns"
+    },
+    {
+      "check": "Deep Nesting",
+      "severity": "low",
+      "file": "D:/GitHub/ClaudeCodeOptimizer/claudecodeoptimizer/core/principles.py",
+      "line": 98,
+      "metric": "5 levels",
+      "issue": "Dictionary initialization within nested dict/list has 5 levels of indentation",
+      "fix": "While not severe, consider using dataclass initialization or dict comprehension for better readability"
+    },
+    {
+      "check": "Code Duplication",
+      "severity": "medium",
+      "file": "D:/GitHub/ClaudeCodeOptimizer/claudecodeoptimizer/core/knowledge_setup.py",
+      "line": 68,
+      "metric": "4 similar setup functions",
+      "issue": "_setup_commands(), _setup_principles(), _setup_agents(), _setup_skills() have ~70% duplicate code",
+      "fix": "Extract common pattern into _setup_directory(source_dir, dest_dir, file_patterns). Each function becomes: _setup_commands = lambda: _setup_directory(..., 'cco-*.md')"
+    },
+    {
+      "check": "Code Duplication",
+      "severity": "medium",
+      "file": "D:/GitHub/ClaudeCodeOptimizer/claudecodeoptimizer/core/remove.py",
+      "line": 59,
+      "metric": "4 similar removal functions",
+      "issue": "_remove_commands(), _remove_principles(), _remove_agents(), _remove_skills() share nearly identical glob patterns",
+      "fix": "Create _remove_files_by_pattern(directory, patterns) helper; each removal becomes: _remove_commands = lambda: _remove_files_by_pattern(self.claude_dir / 'commands', ['cco-*.md'])"
+    },
+    {
+      "check": "Empty Exception Handlers",
+      "severity": "medium",
+      "file": "D:/GitHub/ClaudeCodeOptimizer/claudecodeoptimizer/core/remove.py",
+      "line": 71,
+      "metric": "4 instances",
+      "issue": "pass statements in except blocks hide errors (lines 71, 86, 100, 114)",
+      "fix": "Replace with: except Exception as e: logger.debug(f'Failed to remove {file}: {e}') or use context manager with specific exception types"
+    },
+    {
+      "check": "Magic Numbers",
+      "severity": "low",
+      "file": "D:/GitHub/ClaudeCodeOptimizer/claudecodeoptimizer/core/principles.py",
+      "line": 332,
+      "metric": "3 hardcoded threshold values",
+      "issue": "Hardcoded service count thresholds (2, 3) should use constants from constants.py",
+      "fix": "Already defined as SERVICE_COUNT_THRESHOLD_MEDIUM=2 and SERVICE_COUNT_THRESHOLD_LARGE=3 in constants.py. Code correctly imports and uses them"
+    },
+    {
+      "check": "Unused Feature",
+      "severity": "low",
+      "file": "D:/GitHub/ClaudeCodeOptimizer/claudecodeoptimizer/core/skill_loader.py",
+      "line": 1,
+      "metric": "236 lines",
+      "issue": "SkillLoader module marked as NOT CURRENTLY INTEGRATED (status line 11)",
+      "fix": "Either integrate into active codebase or move to examples/ directory. Current state creates maintenance burden"
+    },
+    {
+      "check": "Inefficient Loop",
+      "severity": "low",
+      "file": "D:/GitHub/ClaudeCodeOptimizer/claudecodeoptimizer/core/principle_loader.py",
+      "line": 112,
+      "metric": "O(n) set operations",
+      "issue": "Duplicate removal uses set (good) but repeated loop to build list (lines 112-120)",
+      "fix": "Replace with: unique_ids = list(dict.fromkeys(principle_ids)) to preserve order while removing duplicates in one pass"
+    },
+    {
+      "check": "Hardcoded Comment",
+      "severity": "low",
+      "file": "D:/GitHub/ClaudeCodeOptimizer/claudecodeoptimizer/core/principles.py",
+      "line": 95,
+      "metric": "1 instance",
+      "issue": "Hardcoded TODO comment at line 95: 'Hardcoded selection strategies (TODO: move to config file)'",
+      "fix": "Move selection_strategies dict to constants.py or create strategies.yaml configuration file"
+    },
+    {
+      "check": "Missing Docstring",
+      "severity": "low",
+      "file": "D:/GitHub/ClaudeCodeOptimizer/claudecodeoptimizer/core/recommendation_service.py",
+      "line": 31,
+      "metric": "1 instance",
+      "issue": "__init__() method missing docstring in RecommendationService",
+      "fix": "Add: 'Initialize recommendation service with metadata manager'"
+    },
+    {
+      "check": "Type Safety",
+      "severity": "low",
+      "file": "D:/GitHub/ClaudeCodeOptimizer/claudecodeoptimizer/config.py",
+      "line": 95,
+      "metric": "list[str] syntax",
+      "issue": "Uses Python 3.9+ list[str] syntax instead of List[str] for older compatibility",
+      "fix": "Change line 95 from 'list[str]' to 'List[str]' from typing import; affects Python 3.8 compatibility"
+    }
+  ],
+  "summary": {
+    "critical": 1,
+    "high": 1,
+    "medium": 6,
+    "low": 5,
+    "total": 13
+  },
+  "quality_score": {
+    "score": 78,
+    "grade": "B",
+    "assessment": "Good code quality with some refactoring opportunities. Main issues are file size and function length in core modules."
+  }
+}
