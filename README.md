@@ -196,8 +196,8 @@ cco-setup
 Open any project in Claude Code:
 
 ```bash
-# START HERE: See your project's health + biggest problems
-/cco-overview
+# START HERE: Fast health assessment with scores
+/cco-audit --quick
 # Shows scores for security, testing, code quality, etc.
 
 # Find critical security issues
@@ -228,15 +228,6 @@ Open any project in Claude Code:
 
 ### Discovery (Know Your Problems)
 
-**`/cco-overview`** - Complete health assessment
-- Analyzes 8 areas: security, tech debt, testing, docs, database, CI/CD, observability
-- Tech stack evaluation (e.g., "Flask → FastAPI recommended for performance")
-- Current vs ideal comparison
-- Prioritized action plan by impact
-- **Addresses:** All 7 pain points
-- **Time:** 2 minutes
-- **Impact:** Know exactly where you're losing time/risk
-
 **`/cco-status`** - Installation health check
 - Verify CCO setup
 - Show available skills and agents
@@ -249,7 +240,8 @@ Open any project in Claude Code:
 
 ### Critical Action (Fix Your Problems)
 
-**`/cco-audit`** - Comprehensive issue detection
+**`/cco-audit`** - Comprehensive issue detection ⭐ START HERE
+- **Quick mode:** `--quick` (fast health assessment with scores, ~5 min)
 - **Pain #1:** `--security` (OWASP, AI security, supply chain)
 - **Pain #2:** `--tech-debt` (dead code, complexity)
 - **Pain #3:** `--ai-security` (prompt injection, hallucinations)
@@ -276,13 +268,15 @@ Open any project in Claude Code:
 
 ### Productivity (Save Time)
 
-**`/cco-optimize`** - Performance optimization
-- **Pain #5:** `--database` (N+1 queries, indexes, caching)
-- **Pain #5:** `--docker` (multi-stage builds)
-- **Pain #2:** `--code` (remove dead code)
-- Also: `--deps`, `--bundle`, `--performance`
+**`/cco-optimize`** - Performance optimization with metrics
+- **Pain #5:** `--database` (query profiling, execution times)
+- **Pain #5:** `--docker` (image size, build time)
+- **Pain #5:** `--bundle` (frontend bundle size)
+- **Pain #5:** `--performance` (response times, bottlenecks)
+- Measures before/after metrics for all optimizations
 - **Agent:** cco-agent-fix (Sonnet)
-- **Impact:** Faster queries, smaller images, cleaner codebase
+- **Impact:** Faster queries, smaller images, measurable improvements
+- **Note:** For code cleanup use `/cco-fix --tech-debt`
 
 **`/cco-commit`** - Semantic commits
 - AI-generated commit messages
@@ -560,8 +554,8 @@ export CCO_VERBOSE=1
 # Specify categories explicitly
 /cco-audit --security --tests
 
-# Run in quick mode
-/cco-overview --quick
+# Run in quick mode (fast health assessment)
+/cco-audit --quick
 ```
 
 ### What CCO Does NOT Touch
@@ -724,7 +718,7 @@ Previously: 4 issues → Now: 1 issue
 
 ### New Project Setup
 ```bash
-/cco-overview              # Assess health and find gaps
+/cco-audit --quick         # Fast health assessment
 /cco-generate --tests --openapi --cicd --dockerfile
 # Creates tests, docs, CI/CD, containerization
 ```
@@ -742,7 +736,7 @@ Previously: 4 issues → Now: 1 issue
 /cco-audit --performance --database
 # Finds N+1 queries, missing indexes
 /cco-optimize --database --docker
-# Faster queries, smaller images
+# Faster queries, smaller images (with metrics)
 ```
 
 ### Quality Improvement
@@ -750,13 +744,12 @@ Previously: 4 issues → Now: 1 issue
 /cco-audit --code-quality --tech-debt --tests
 /cco-fix --tech-debt
 /cco-generate --tests
-/cco-optimize --code
 # Cleaner code, better tests, reduced complexity
 ```
 
 ### Complete Health Check
 ```bash
-/cco-overview              # Get baseline scores
+/cco-audit --quick         # Get baseline scores
 /cco-audit --all           # Find all issues
 /cco-fix --all             # Fix safe issues
 /cco-generate --all        # Create missing components
