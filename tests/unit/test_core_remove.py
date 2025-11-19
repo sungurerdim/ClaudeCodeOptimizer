@@ -5,6 +5,8 @@ Tests CCORemover class and remove_cco function for clean uninstallation.
 Target Coverage: 100%
 """
 
+from typing import Any, Dict
+
 import pytest
 
 from claudecodeoptimizer.core.remove import CCORemover, remove_cco
@@ -103,7 +105,7 @@ class TestRemoveCommands:
 
         original_unlink = Path.unlink
 
-        def raise_on_cco_test(self, *args, **kwargs) -> None:
+        def raise_on_cco_test(self, *args: tuple[Any, ...], **kwargs: Dict[str, Any]) -> None:
             if "cco-test.md" in str(self):
                 raise PermissionError("Cannot delete")
             return original_unlink(self, *args, **kwargs)

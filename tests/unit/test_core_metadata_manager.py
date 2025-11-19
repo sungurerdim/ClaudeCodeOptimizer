@@ -657,9 +657,7 @@ Content
         available = ["file1"]
         context = {"project_maturity": "production"}
 
-        result = manager.recommend_files(
-            available, self.files_dir, context, file_extension=".txt"
-        )
+        result = manager.recommend_files(available, self.files_dir, context, file_extension=".txt")
 
         assert "file1" in result
 
@@ -729,9 +727,7 @@ Content
                 "development_philosophy": "quality_first",
             }
 
-            result = manager.recommend_files(
-                ["security-audit", "quick-check"], files_dir, context
-            )
+            result = manager.recommend_files(["security-audit", "quick-check"], files_dir, context)
 
             assert "security-audit" in result
             assert "quick-check" not in result
@@ -742,9 +738,7 @@ Content
                 "development_philosophy": "speed_first",
             }
 
-            result = manager.recommend_files(
-                ["security-audit", "quick-check"], files_dir, context
-            )
+            result = manager.recommend_files(["security-audit", "quick-check"], files_dir, context)
 
             assert "security-audit" not in result
             assert "quick-check" in result

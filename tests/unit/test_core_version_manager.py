@@ -527,6 +527,7 @@ class TestCreateGitTag:
             check=True,
             capture_output=True,
             text=True,
+            timeout=30,
         )
 
     @patch("subprocess.run")
