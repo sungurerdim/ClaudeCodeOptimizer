@@ -72,6 +72,19 @@ parameters:
     keywords: [fix git, improve commits, fix branching, improve pr process]
     category: infrastructure
     pain_points: [5]
+  ai-quality:
+    keywords: [fix ai quality, fix hallucination, fix api errors, fix code bloat, fix vibe coding]
+    category: quality
+    pain_points: [3, 8, 9]
+  ai-debt:
+    keywords: [fix ai debt, fix ai generated code, refactor ai code, fix ai technical debt]
+    category: quality
+    pain_points: [2, 3]
+  ai:
+    keywords: [fix ai issues, comprehensive ai fix, ai security and quality fix]
+    category: meta
+    pain_points: [2, 3, 8, 9]
+    meta_flags: [ai-quality, ai-debt, ai-security]
 ---
 
 # cco-fix

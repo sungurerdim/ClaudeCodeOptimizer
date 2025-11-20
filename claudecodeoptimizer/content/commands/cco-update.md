@@ -40,14 +40,13 @@ gh release list --repo sungurerdim/ClaudeCodeOptimizer
 ```markdown
 CCO Update Available
 
-Current version: 0.1.0
-Latest version: 0.2.0
+Current version: {CURRENT_VERSION}
+Latest version: {LATEST_VERSION}
 
-Changes in 0.2.0:
-- Added 3 new skills (AI security enhancements)
-- Improved audit performance (faster scanning)
-- Fixed bug in Docker optimization
-- Updated principles
+Changes in {LATEST_VERSION}:
+- {CHANGE_1}
+- {CHANGE_2}
+- {CHANGE_3}
 
 What will be updated:
 - CCO package: [current] → [latest]
@@ -95,7 +94,7 @@ This syncs all files in ~/.claude/ to latest versions.
 Update Complete! ✓
 
 Updated:
-✓ CCO package: [old_version] → [new_version]
+✓ CCO package: {OLD_VERSION} → {NEW_VERSION}
 ✓ Commands: [synced]/[total] synced
 ✓ Skills: [synced]/[total] synced
 ✓ Principles: [synced]/[total] synced
@@ -120,7 +119,7 @@ All projects now use latest version ✓
 
 Restart Claude Code to activate changes.
 
-Release notes: https://github.com/sungurerdim/ClaudeCodeOptimizer/releases/tag/v0.2.0
+Release notes: https://github.com/sungurerdim/ClaudeCodeOptimizer/releases/tag/v{NEW_VERSION}
 ```
 
 ---

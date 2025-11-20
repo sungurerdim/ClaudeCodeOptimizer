@@ -9,305 +9,261 @@ pain_points: []
 
 # cco-help
 
-**Comprehensive CCO command guide with pain-point focus.**
+**Quick command reference for ClaudeCodeOptimizer**
 
 ---
 
 ## Purpose
 
-Show all available CCO commands, organized by pain-point priority, with examples and use cases.
+Show all available CCO commands with clear examples and common use cases. Maximum clarity, minimum noise.
 
 ---
 
 ## Output Format
 
 ```markdown
-# ClaudeCodeOptimizer (CCO) - Command Reference
+# ClaudeCodeOptimizer - Command Reference
 
-**Production-grade development assistant built on 2025 industry pain points**
-
----
-
-## Pain Points Addressed
-
-🔴 **#1 Security (top concern)** - High cost from vulnerabilities
-🔴 **#2 Technical Debt (significant time waste)** - Developers lose significant time
-🔴 **#3 AI Reliability** - Unreliable AI-generated code
-🟡 **#4 Testing (Biggest mistake)** - Production bugs, delays
-🟡 **#5 Time Waste** - Significant cost per enterprise
-🟢 **#6 Integration Failures** - Deployment delays, broken builds
-🟢 **#7 Documentation Gaps** - Onboarding delays, knowledge loss
+**Production-ready development assistant for Claude Code**
 
 ---
 
-## Core Commands (Pain-Point Priority Order)
+## 🚀 Start Here (First Time?)
 
-### Discovery Commands (2)
-
-**`/cco-help`** - This guide
-- Show all commands with examples
-
-**`/cco-status`** - Installation health check
-- Verify CCO installation
-- Show available skills and agents
-- Check configuration
-- Usage: `/cco-status`
-
----
-
-### Critical Action Commands (3)
-
-**`/cco-audit`** 🔍 FIND ISSUES ⭐ START HERE
-- Comprehensive issue detection across {{CATEGORY_COUNT}} categories
-- Pain-point priority ordering
-- Uses: {{SKILL_COUNT}} skills + cco-agent-audit (Haiku)
-- Categories:
-  * 🔴 Critical: security, tech-debt, ai-security
-  * 🟡 High: tests, integration
-  * 🟢 Medium: code-quality, docs, database, observability,
-              monitoring, cicd, containers, supply-chain,
-              migrations, performance, architecture, git
-
-Addresses Pain #1, #2, #3, #4, #5, #6, #7
-
-Usage:
+**Quick Win (5 minutes):**
 ```bash
-/cco-audit --quick             # Fast health assessment with scores (~5 min)
-/cco-audit                     # Interactive selection
-/cco-audit --security          # Single category
-/cco-audit --security --tests  # Multiple categories
-/cco-audit --all               # Comprehensive scan
+/cco-audit --quick         # See health scores for your project
 ```
 
-**`/cco-fix`** 🔧 AUTO-FIX
-- Automated issue resolution
+**Most Common Flow (10 minutes):**
+```bash
+/cco-audit --security      # Find security issues
+/cco-fix --security        # Auto-fix safe issues
+/cco-generate --tests      # Create missing tests
+```
+
+---
+
+## 📋 All Commands (10)
+
+### Find Issues (2)
+
+**`/cco-audit`** → Find problems in your code
+- **Quick mode:** `--quick` (5 min health check with scores)
+- **Core:** `--security`, `--tech-debt`, `--tests`, `--database`, `--performance`, `--integration`, `--docs`
+- **AI (2025):** `--ai-security`, `--ai-quality`, `--ai-debt`, `--ai` (meta-flag: combines all AI)
+- **Team (2025):** `--code-review`, `--platform`
+- **Infrastructure:** `--ci-cd`, `--containers`, `--supply-chain`
+- **Presets:** `--all` (comprehensive scan)
+- Example: `/cco-audit --security --ai-quality --code-review`
+
+**`/cco-status`** → Check CCO installation health
+- Shows installed commands, skills, agents
+- Verifies configuration
+- Example: `/cco-status`
+
+---
+
+### Fix Issues (2)
+
+**`/cco-fix`** → Auto-fix detected problems
+- **Same categories as audit** (including `--ai`, `--ai-quality`, `--ai-debt`)
+- Safe fixes auto-applied (SQL parameterization, remove dead code, API hallucination removal)
+- Risky fixes require approval (CSRF protection, auth changes)
 - Auto-runs audit if needed
-- Safe/risky categorization
-- Uses: Same {{SKILL_COUNT}} skills + cco-agent-fix (Sonnet)
-- Same {{CATEGORY_COUNT}} categories as audit
+- Example: `/cco-fix --security --ai-quality --tech-debt`
 
-Addresses Pain #1, #2, #3, #4, #5, #6, #7
-
-Usage:
-```bash
-/cco-fix                       # Interactive selection
-/cco-fix --security            # Fix security issues
-/cco-fix --security --tests    # Fix multiple categories
-/cco-fix --all                 # Fix everything
-```
-
-**`/cco-generate`** 📝 CREATE MISSING
-- Generate missing project components
-- 17 generation types
-- Uses: Appropriate skills + cco-agent-generate (Sonnet)
-- Types:
-  * 🔴 Critical: tests, contract-tests
-  * 🟡 High: load-tests, chaos-tests, openapi, cicd
-  * 🟢 Recommended: docs, adr, runbook, dockerfile, migration,
-                    indexes, monitoring, logging, slo, pre-commit, requirements
-
-Addresses Pain #4, #7
-
-Usage:
-```bash
-/cco-generate                  # Interactive selection
-/cco-generate --tests          # Generate tests
-/cco-generate --openapi --cicd # Multiple types
-/cco-generate --all            # Generate all recommended
-```
-
----
-
-### Productivity Commands (3)
-
-**`/cco-optimize`** ⚡ PERFORMANCE
-- Performance optimization with before/after metrics
-- Uses: 4 specialized skills + cco-agent-fix (Sonnet)
-- Types: docker, database, bundle, performance
+**`/cco-optimize`** → Speed up your code with metrics
+- **Types:** `--database` (queries), `--docker` (image size), `--bundle` (frontend), `--performance` (bottlenecks)
+- Shows before/after metrics
 - Note: For code cleanup use `/cco-fix --tech-debt`
+- Example: `/cco-optimize --database`
 
-Addresses Pain #5 (Time waste)
+---
 
-Usage:
-```bash
-/cco-optimize                  # Interactive selection
-/cco-optimize --database       # Optimize queries (with metrics)
-/cco-optimize --docker         # Reduce image size (with metrics)
-/cco-optimize --all            # All optimizations
-```
+### Create Missing Parts (2)
 
-**`/cco-commit`** 📝 SEMANTIC COMMITS
-- AI-assisted commit workflow
-- Semantic commit message generation
+**`/cco-generate`** → Create tests, docs, configs (18 types)
+- **Critical:** `--tests`, `--contract-tests`
+- **High:** `--load-tests`, `--chaos-tests`, `--openapi`, `--cicd`
+- **Team (2025):** `--review-checklist` (PR quality gates, DORA metrics tracking)
+- **Recommended:** `--docs`, `--adr`, `--runbook`, `--dockerfile`, `--migration`, `--indexes`, `--monitoring`, `--logging`, `--slo`, `--pre-commit`, `--requirements`
+- Example: `/cco-generate --tests --openapi --review-checklist`
+
+**`/cco-implement`** → Build new features with TDD
+- Test-Driven Development approach
+- Auto-skill selection based on feature type
+- Example: `/cco-implement "Add JWT authentication"`
+
+---
+
+### Workflow Support (4)
+
+**`/cco-commit`** → Smart git commits
+- AI-generated semantic commit messages
 - Atomic commit recommendations
-- Uses: git skills (no agent - lightweight)
+- Example: `git add . && /cco-commit`
 
-Addresses Pain #5 (Git quality)
+**`/cco-help`** → This guide
+- Quick command reference
+- Example: `/cco-help`
 
-Usage:
+**`/cco-update`** → Update to latest CCO version
+- Updates all commands, skills, agents
+- One update → all projects get it instantly
+- Example: `/cco-update`
+
+**`/cco-remove`** → Clean uninstall (Step 1 of 2)
+- Removes all global CCO files (`~/.claude/`)
+- Must run BEFORE `pip uninstall` (requires package)
+- Example: `/cco-remove` → then `pip uninstall claudecodeoptimizer`
+
+---
+
+## 🎯 Common Tasks
+
+| I want to... | Run this |
+|--------------|----------|
+| **See project health** | `/cco-audit --quick` |
+| **Fix security bugs** | `/cco-audit --security` → `/cco-fix --security` |
+| **Add missing tests** | `/cco-generate --tests` |
+| **Speed up database** | `/cco-optimize --database` |
+| **Clean up code** | `/cco-fix --tech-debt` |
+| **Create API docs** | `/cco-generate --openapi` |
+| **Build new feature** | `/cco-implement "feature description"` |
+| **Make good commits** | `/cco-commit` |
+| **Full health check** | `/cco-audit --all` → `/cco-fix --all` |
+
+---
+
+## 📖 Audit/Fix Categories (14 total)
+
+**🔴 Critical Impact:**
+- **Security** - SQL injection, XSS, CSRF, secrets, CVEs, auth bypass (OWASP 2025)
+- **AI Security** - Prompt injection, PII leakage, broken access control (OWASP A01:2025)
+- **Database** - N+1 queries, missing indexes, slow queries
+- **Tests** - Coverage gaps, isolation issues, pyramid violations
+
+**🟡 High Impact:**
+- **Tech Debt** - Dead code, complexity, duplication, tight coupling
+- **AI Quality** - API hallucinations, code bloat, vibe coding patterns
+- **Performance** - Caching, algorithms, bottlenecks
+- **CI/CD** - Pipeline issues, deployment gates
+- **Supply Chain** - CVE scanning, SBOM, SLSA compliance
+
+**🟢 Medium Impact:**
+- **Documentation** - Missing docstrings, outdated API docs
+- **Code Review** - Commit quality, reviewer diversity, DORA metrics
+- **Platform** - CI/CD maturity, test automation, AI readiness
+- **Containers** - Dockerfile issues, Pod Security, Kubernetes security
+- **Integration** - Import errors, dependency conflicts
+
+**Use with:** `--security`, `--ai-security`, `--database`, `--tests`, `--tech-debt`, `--ai-quality`, `--performance`, `--ci-cd`, `--supply-chain`, `--docs`, `--code-review`, `--platform`, `--containers`, `--integration`
+
+**Meta-flags:** `--ai` (combines --ai-security + --ai-quality + --ai-debt)
+
+---
+
+## 🔧 How CCO Works
+
+**Zero Project Pollution:**
+- All CCO files live in `~/.claude/` (globally shared)
+- Your projects stay clean
+- One update → all projects benefit
+
+**Smart Agent Selection:**
+- **audit-agent** (Haiku) - Fast scanning, cost-efficient
+- **fix-agent** (Sonnet) - Accurate code modifications
+- **generate-agent** (Sonnet) - Quality code generation
+
+**Auto-Activating Skills (30 total - 2025):**
+- Skills load on-demand based on context
+- Security (OWASP 2025), AI quality, code review (DORA), platform engineering, and more
+- No manual skill selection needed
+
+---
+
+## 💡 Typical Workflows
+
+**New Project Setup:**
 ```bash
-git add .
-/cco-commit                    # Analyze and create commits
-```
-
-**`/cco-implement`** 🚀 FEATURE DEVELOPMENT
-- AI-assisted feature implementation
-- TDD approach (tests first)
-- Auto-skill selection
-- Uses: Auto-selected skills + both agents
-
-Addresses Pain #1, #4 (TDD prevents bugs)
-
-Usage:
-```bash
-/cco-implement "Add user authentication with JWT"
-/cco-implement "Add caching layer using Redis"
-```
-
----
-
-### Management Commands (2)
-
-**`/cco-update`** - Update CCO
-- Update to latest version
-- Sync all skills, principles, commands
-- Usage: `/cco-update`
-
-**`/cco-remove`** - Uninstall CCO
-- Complete removal with transparency
-- Shows exactly what will be deleted
-- Confirmation required
-- Usage: `/cco-remove`
-
----
-
-## Skills (Auto-Activate on Demand)
-
-**Security (5):**
-- security-owasp, ai-security, supply-chain, k8s-security, privacy
-
-**Testing (2):**
-- test-pyramid, api-testing
-
-**Database (2):**
-- database-optimization, data-migrations
-
-**Observability (3):**
-- observability, logging, incident-response
-
-**CI/CD (2):**
-- cicd-gates, deployment-strategies
-
-**Code Quality (2):**
-- code-quality, content-optimization
-
-**Documentation (1):**
-- docs-api-adr-runbooks
-
-**Git (2):**
-- git-branching, versioning
-
-**Performance (2):**
-- frontend-performance, resilience
-
-**Architecture (2):**
-- microservices, event-driven
-
-**Mobile (1):**
-- mobile-best-practices
-
-**DevEx (1):**
-- developer-experience
-
----
-
-## Agents (Parallel Execution)
-
-- **cco-agent-audit** - Fast scanning (Haiku - cost-efficient)
-- **cco-agent-fix** - Accurate fixes (Sonnet - better quality)
-- **cco-agent-generate** - Code generation (Sonnet - better quality)
-
----
-
-## Typical Workflows
-
-### New Project Setup
-```bash
-/cco-audit --quick         # Fast health assessment
+/cco-audit --quick                    # Health baseline
 /cco-generate --tests --openapi --cicd --dockerfile
 /cco-commit
 ```
 
-### Security Hardening
+**Security Hardening:**
 ```bash
-/cco-audit --security --ai-security --supply-chain
+/cco-audit --security
 /cco-fix --security
 /cco-commit
 ```
 
-### Quality Improvement
+**Quality Improvement:**
 ```bash
 /cco-audit --code-quality --tech-debt
 /cco-fix --tech-debt
+/cco-generate --tests
 /cco-commit
 ```
 
-### Performance Optimization
+**Performance Tuning:**
 ```bash
 /cco-audit --performance --database
 /cco-optimize --database --docker
 /cco-commit
 ```
 
-### Complete Health Check
+**Complete Health Check:**
 ```bash
-/cco-audit --quick         # Fast health assessment
-/cco-audit --all           # Find all issues
-/cco-fix --all             # Fix safe issues
-/cco-generate --all        # Create missing components
-/cco-optimize --all        # Performance tuning
-/cco-commit                # Semantic commits
+/cco-audit --quick      # See scores
+/cco-audit --all        # Find all issues
+/cco-fix --all          # Fix safe issues
+/cco-generate --all     # Fill gaps
+/cco-optimize --all     # Optimize
+/cco-commit             # Commit changes
 ```
 
 ---
 
-## Getting Help
+## 📚 Pain Points Addressed (12 Total - 2025 Data)
 
-- **This guide:** `/cco-help`
-- **Health check:** `/cco-status`
-- **Project assessment:** `/cco-audit --quick`
+🔴 **#1 Security** - OWASP Top 10 2025, supply chain, CVE scanning
+🔴 **#2 Technical Debt** - Dead code, complexity, coupling, legacy patterns
+🔴 **#3 AI Security** - Prompt injection, PII leakage, broken access control (A01:2025)
+🔴 **#4 Missing Tests** - Coverage gaps, untested critical paths, pyramid violations
+🟡 **#5 Time Waste** - N+1 queries, missing indexes, slow builds
+🟡 **#6 Integration Failures** - Import errors, dependency conflicts, broken builds
+🟢 **#7 Documentation Gaps** - Missing docstrings, outdated API docs, no runbooks
+🟡 **#8 AI Code Quality** - Hallucinated APIs, code bloat, vibe coding
+🟡 **#9 Velocity Loss** - DORA metrics decline, slow feature delivery
+🟢 **#10 AI Readiness Gaps** - Immature CI/CD, missing test automation, poor DX
+🟡 **#11 Code Review Decline** - -27% comment rate (2025), shallow reviews, echo chambers
+🟡 **#12 Team Breakdowns** - Knowledge silos, reviewer diversity issues, high rework rates
+
+---
+
+## 🔗 More Information
+
+- **Installation health:** `/cco-status`
+- **Full documentation:** https://github.com/sungurerdim/ClaudeCodeOptimizer#readme
 - **GitHub Issues:** https://github.com/sungurerdim/ClaudeCodeOptimizer/issues
 - **Discussions:** https://github.com/sungurerdim/ClaudeCodeOptimizer/discussions
 
 ---
 
-## Quick Reference Card
-
-| Need | Command |
-|------|---------|
-| Start here | `/cco-audit --quick` |
-| Find security issues | `/cco-audit --security` |
-| Fix vulnerabilities | `/cco-fix --security` |
-| Generate tests | `/cco-generate --tests` |
-| Speed up queries | `/cco-optimize --database` |
-| Clean up code | `/cco-fix --tech-debt` |
-| Create commits | `/cco-commit` |
-| Implement feature | `/cco-implement "description"` |
-| Full check | `/cco-audit --all` |
-| Help | `/cco-help` |
-
----
-
-**Built for production. Driven by 2025 industry pain points. Optimized for your workflow.**
+**Built for production. Optimized for your workflow. Zero project pollution.**
 ```
 
 ---
 
 ## Success Criteria
 
-- [OK] All commands documented
-- [OK] Pain-point context provided
-- [OK] Usage examples for each command
-- [OK] Workflow examples provided
-- [OK] Skills and agents explained
-- [OK] Quick reference included
+- [OK] All 10 commands documented with clear examples
+- [OK] Pain-point focus maintained
+- [OK] "What do I want to do?" → Command mapping clear
+- [OK] Quick start guide included
+- [OK] Common workflows provided
+- [OK] No placeholders - real numbers only
+- [OK] Action-oriented language
+- [OK] Maximum clarity, minimum noise
