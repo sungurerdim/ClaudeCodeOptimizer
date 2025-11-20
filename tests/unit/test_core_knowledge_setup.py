@@ -38,15 +38,17 @@ def mock_claude_dir(tmp_path: Path) -> Generator[Path, None, None]:
     agents_dir = claude_dir / "agents"
     skills_dir = claude_dir / "skills"
 
-    with patch.object(
-        knowledge_setup.config, "get_claude_dir", return_value=claude_dir
-    ), patch.object(
-        knowledge_setup.config, "get_global_commands_dir", return_value=commands_dir
-    ), patch.object(
-        knowledge_setup.config, "get_principles_dir", return_value=principles_dir
-    ), patch.object(
-        knowledge_setup.config, "get_agents_dir", return_value=agents_dir
-    ), patch.object(knowledge_setup.config, "get_skills_dir", return_value=skills_dir):
+    with (
+        patch.object(knowledge_setup.config, "get_claude_dir", return_value=claude_dir),
+        patch.object(
+            knowledge_setup.config, "get_global_commands_dir", return_value=commands_dir
+        ),
+        patch.object(
+            knowledge_setup.config, "get_principles_dir", return_value=principles_dir
+        ),
+        patch.object(knowledge_setup.config, "get_agents_dir", return_value=agents_dir),
+        patch.object(knowledge_setup.config, "get_skills_dir", return_value=skills_dir),
+    ):
         yield claude_dir
 
 
@@ -103,7 +105,9 @@ def mock_content_dir(tmp_path: Path) -> Generator[Path, None, None]:
 class TestSetupGlobalKnowledge:
     """Test setup_global_knowledge function"""
 
-    def test_setup_creates_directories(self, mock_claude_dir: Path, mock_content_dir: Path) -> None:
+    def test_setup_creates_directories(
+        self, mock_claude_dir: Path, mock_content_dir: Path
+    ) -> None:
         """Test that setup creates all required directories"""
         # This test verifies directory structure creation
         # The actual setup is tested in integration tests
@@ -126,7 +130,9 @@ class TestSetupGlobalKnowledge:
         assert result["success"] is True
         assert "claude_dir" in result
         assert "actions" in result
-        assert len(result["actions"]) == 5  # commands, principles, agents, skills, claude.md
+        assert (
+            len(result["actions"]) == 5
+        )  # commands, principles, agents, skills, claude.md
 
     def test_setup_with_force_flag(self, mock_claude_dir: Path) -> None:
         """Test setup with force=True regenerates files"""
@@ -738,18 +744,35 @@ class TestKnowledgeSetupIntegration:
         claude_dir = tmp_path / ".claude"
 
         # Mock config to use our directories
-        with patch.object(
-            knowledge_setup.config, "get_claude_dir", return_value=claude_dir
-        ), patch.object(
-            knowledge_setup.config, "get_global_commands_dir", return_value=claude_dir / "commands"
-        ), patch.object(
-            knowledge_setup.config, "get_principles_dir", return_value=claude_dir / "principles"
-        ), patch.object(
-            knowledge_setup.config, "get_agents_dir", return_value=claude_dir / "agents"
-        ), patch.object(
-            knowledge_setup.config, "get_skills_dir", return_value=claude_dir / "skills"
-        ), patch.object(
-            knowledge_setup, "__file__", str(content_dir.parent / "core" / "knowledge_setup.py")
+        with (
+            patch.object(
+                knowledge_setup.config, "get_claude_dir", return_value=claude_dir
+            ),
+            patch.object(
+                knowledge_setup.config,
+                "get_global_commands_dir",
+                return_value=claude_dir / "commands",
+            ),
+            patch.object(
+                knowledge_setup.config,
+                "get_principles_dir",
+                return_value=claude_dir / "principles",
+            ),
+            patch.object(
+                knowledge_setup.config,
+                "get_agents_dir",
+                return_value=claude_dir / "agents",
+            ),
+            patch.object(
+                knowledge_setup.config,
+                "get_skills_dir",
+                return_value=claude_dir / "skills",
+            ),
+            patch.object(
+                knowledge_setup,
+                "__file__",
+                str(content_dir.parent / "core" / "knowledge_setup.py"),
+            ),
         ):
             result = setup_global_knowledge()
 
@@ -783,18 +806,35 @@ class TestKnowledgeSetupIntegration:
         commands_dir.mkdir(parents=True)
         (commands_dir / "user-custom.md").write_text("# User Custom")
 
-        with patch.object(
-            knowledge_setup.config, "get_claude_dir", return_value=claude_dir
-        ), patch.object(
-            knowledge_setup.config, "get_global_commands_dir", return_value=commands_dir
-        ), patch.object(
-            knowledge_setup.config, "get_principles_dir", return_value=claude_dir / "principles"
-        ), patch.object(
-            knowledge_setup.config, "get_agents_dir", return_value=claude_dir / "agents"
-        ), patch.object(
-            knowledge_setup.config, "get_skills_dir", return_value=claude_dir / "skills"
-        ), patch.object(
-            knowledge_setup, "__file__", str(content_dir.parent / "core" / "knowledge_setup.py")
+        with (
+            patch.object(
+                knowledge_setup.config, "get_claude_dir", return_value=claude_dir
+            ),
+            patch.object(
+                knowledge_setup.config,
+                "get_global_commands_dir",
+                return_value=commands_dir,
+            ),
+            patch.object(
+                knowledge_setup.config,
+                "get_principles_dir",
+                return_value=claude_dir / "principles",
+            ),
+            patch.object(
+                knowledge_setup.config,
+                "get_agents_dir",
+                return_value=claude_dir / "agents",
+            ),
+            patch.object(
+                knowledge_setup.config,
+                "get_skills_dir",
+                return_value=claude_dir / "skills",
+            ),
+            patch.object(
+                knowledge_setup,
+                "__file__",
+                str(content_dir.parent / "core" / "knowledge_setup.py"),
+            ),
         ):
             setup_global_knowledge()
 

@@ -10,6 +10,65 @@ import sys
 logger = logging.getLogger(__name__)
 
 
+def _show_installation_summary(
+    counts_before: dict[str, int], counts_after: dict[str, int]
+) -> None:
+    """
+    Show detailed before/after comparison of installed files.
+
+    Categories:
+    - New: Files added (0 → N)
+    - Updated: Files overwritten (N → N)
+    - Removed: Files deleted (N → 0)
+    - Unchanged: Files not created (0 → 0)
+    """
+    all_categories = sorted(set(counts_before.keys()) | set(counts_after.keys()))
+
+    new_files = []
+    updated_files = []
+    removed_files = []
+
+    for category in all_categories:
+        before = counts_before.get(category, 0)
+        after = counts_after.get(category, 0)
+
+        if before == 0 and after > 0:
+            # New files
+            new_files.append(f"  + {category.capitalize()}: {after} files")
+        elif before > 0 and after > 0:
+            # Updated files
+            if after != before:
+                updated_files.append(
+                    f"  ↻ {category.capitalize()}: {before} → {after} files"
+                )
+            else:
+                updated_files.append(f"  ↻ {category.capitalize()}: {after} files")
+        elif before > 0 and after == 0:
+            # Removed files
+            removed_files.append(f"  - {category.capitalize()}: {before} files removed")
+
+    # Display results
+    if new_files:
+        print("\n  New:")
+        for line in new_files:
+            print(line)
+
+    if updated_files:
+        print("\n  Updated:")
+        for line in updated_files:
+            print(line)
+
+    if removed_files:
+        print("\n  Removed:")
+        for line in removed_files:
+            print(line)
+
+    # Total summary
+    total_before = sum(counts_before.values())
+    total_after = sum(counts_after.values())
+    print(f"\n  Total: {total_before} → {total_after} files")
+
+
 def post_install() -> int:
     """
     Post-install hook - sets up ~/.claude/ structure.
@@ -67,7 +126,9 @@ def post_install() -> int:
 
             if choice == "d":
                 # Show what will be overwritten
-                from claudecodeoptimizer.core.knowledge_setup import show_installation_diff
+                from claudecodeoptimizer.core.knowledge_setup import (
+                    show_installation_diff,
+                )
 
                 show_installation_diff()
                 print()
@@ -91,6 +152,15 @@ def post_install() -> int:
             print(f"\n[OK] Global CCO directory: {result['claude_dir']}")
             for action in result.get("actions", []):
                 print(f"  - {action}")
+
+            # Show before/after comparison
+            counts_before = result.get("counts_before", {})
+            counts_after = result.get("counts_after", {})
+
+            if counts_before or counts_after:
+                print("\n[FILE SUMMARY]")
+                _show_installation_summary(counts_before, counts_after)
+
             print("\n[OK] CCO is ready!")
             print("  All CCO commands are now available globally in Claude Code.")
             print("\n  Next steps:")
