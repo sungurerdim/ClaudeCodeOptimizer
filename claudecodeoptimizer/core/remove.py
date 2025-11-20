@@ -1,11 +1,11 @@
 """
 CCO Removal - Clean uninstall of CCO from ~/.claude/
 
-Removes:
-- ~/.claude/commands/cco-*.md
-- ~/.claude/principles/U_*.md, C_*.md, P_*.md
+Removes (in consistent order):
 - ~/.claude/agents/cco-*.md
+- ~/.claude/commands/cco-*.md
 - ~/.claude/skills/cco-*.md
+- ~/.claude/principles/U_*.md, C_*.md, P_*.md
 - CCO markers from ~/.claude/CLAUDE.md
 """
 
@@ -16,6 +16,9 @@ from typing import Any
 
 logger = logging.getLogger(__name__)
 
+# Consistent category ordering (same as knowledge_setup.py)
+CATEGORY_ORDER = ["agents", "commands", "skills", "principles", "templates"]
+
 
 class CCORemover:
     """Remove CCO from global ~/.claude/ directory."""
@@ -24,38 +27,98 @@ class CCORemover:
         """Initialize remover."""
         self.claude_dir = Path.home() / ".claude"
 
+    def _get_file_counts(self) -> dict[str, int]:
+        """
+        Get current CCO file counts (in consistent order).
+
+        Returns:
+            Dictionary with counts by category
+        """
+        counts = {}
+
+        # Agents
+        agents_dir = self.claude_dir / "agents"
+        if agents_dir.exists():
+            count = len(list(agents_dir.glob("cco-*.md")))
+            if count > 0:
+                counts["agents"] = count
+
+        # Commands
+        commands_dir = self.claude_dir / "commands"
+        if commands_dir.exists():
+            count = len(list(commands_dir.glob("cco-*.md")))
+            if count > 0:
+                counts["commands"] = count
+
+        # Skills (recursive)
+        skills_dir = self.claude_dir / "skills"
+        if skills_dir.exists():
+            count = len(list(skills_dir.rglob("cco-*.md")))
+            if count > 0:
+                counts["skills"] = count
+
+        # Principles (U_*, C_*, P_*)
+        principles_dir = self.claude_dir / "principles"
+        if principles_dir.exists():
+            count = (
+                len(list(principles_dir.glob("U_*.md")))
+                + len(list(principles_dir.glob("C_*.md")))
+                + len(list(principles_dir.glob("P_*.md")))
+            )
+            if count > 0:
+                counts["principles"] = count
+
+        # Templates (*.cco)
+        if self.claude_dir.exists():
+            count = len(list(self.claude_dir.glob("*.cco")))
+            if count > 0:
+                counts["templates"] = count
+
+        return counts
+
     def remove(self, clean_claude_md: bool = True) -> dict[str, Any]:
         """
-        Remove CCO installation from ~/.claude/.
+        Remove CCO installation from ~/.claude/ (in consistent order).
 
         Args:
             clean_claude_md: Remove CCO markers from ~/.claude/CLAUDE.md
 
         Returns:
-            Removal results
+            Removal results with counts before/after deletion
         """
-        results: dict[str, Any] = {"success": True, "actions": []}
+        results: dict[str, Any] = {"success": True, "actions": [], "counts": {}}
 
-        # Remove CCO commands
-        self._remove_commands()
-        results["actions"].append("Removed ~/.claude/commands/cco-*.md")
+        # Get counts before removal
+        counts_before = self._get_file_counts()
 
-        # Remove CCO principles
-        self._remove_principles()
-        results["actions"].append("Removed ~/.claude/principles/[UCP]_*.md")
-
-        # Remove CCO agents
+        # Remove in consistent order: agents → commands → skills → principles → templates
         self._remove_agents()
         results["actions"].append("Removed ~/.claude/agents/cco-*.md")
 
-        # Remove CCO skills
+        self._remove_commands()
+        results["actions"].append("Removed ~/.claude/commands/cco-*.md")
+
         self._remove_skills()
         results["actions"].append("Removed ~/.claude/skills/cco-*.md")
+
+        self._remove_principles()
+        results["actions"].append("Removed ~/.claude/principles/[UCP]_*.md")
+
+        self._remove_templates()
+        results["actions"].append("Removed ~/.claude/*.cco templates")
 
         # Clean CLAUDE.md markers
         if clean_claude_md:
             self._clean_claude_md()
             results["actions"].append("Cleaned ~/.claude/CLAUDE.md CCO markers")
+
+        # Get counts after removal (should all be 0)
+        counts_after = self._get_file_counts()
+
+        results["counts"] = {
+            "before": counts_before,
+            "after": counts_after,
+        }
 
         return results
 
@@ -115,6 +178,18 @@ class CCORemover:
                 skill_file.unlink()
             except Exception as e:
                 logger.debug(f"Skipped removal of {skill_file}: {e}")
+
+    def _remove_templates(self) -> None:
+        """Remove all *.cco template files from ~/.claude/"""
+        if not self.claude_dir.exists():
+            return
+
+        # Remove all *.cco files
+        for template_file in self.claude_dir.glob("*.cco"):
+            try:
+                template_file.unlink()
+            except Exception as e:
+                logger.debug(f"Skipped removal of {template_file}: {e}")
 
     def _clean_claude_md(self) -> None:
         """Remove CCO markers and content from ~/.claude/CLAUDE.md"""

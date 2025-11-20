@@ -124,7 +124,9 @@ class TestSetupGlobalKnowledge:
         assert result["success"] is True
         assert "claude_dir" in result
         assert "actions" in result
-        assert len(result["actions"]) == 6  # commands, principles, agents, skills, claude.md, templates
+        assert (
+            len(result["actions"]) == 6
+        )  # commands, principles, agents, skills, claude.md, templates
 
     def test_setup_with_force_flag(self, mock_claude_dir: Path) -> None:
         """Test setup with force=True regenerates files"""

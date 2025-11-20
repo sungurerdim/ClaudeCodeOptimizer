@@ -34,48 +34,57 @@ ls ~/.claude/
 ### Step 2: Show What Will Be Deleted
 
 ```markdown
-CCO Uninstall - Preview
+============================================================
+CCO UNINSTALL - PREVIEW
+============================================================
 
 The following will be PERMANENTLY DELETED:
 
-Package:
-- claudecodeoptimizer (installed via pip/pipx/uv)
-  Location: [package location]
-  Version: 0.1.0
+PACKAGE:
+  • claudecodeoptimizer (installed via pip/pipx/uv)
+    Location: {PACKAGE_LOCATION}
+    Version: {VERSION}
 
-Global Directory (~/.claude/):
-- commands/ ({{COMMAND_COUNT}} files)
-  * cco-*.md (all commands)
+------------------------------------------------------------
+GLOBAL DIRECTORY (~/.claude/)
+------------------------------------------------------------
 
-- principles/ ({{PRINCIPLE_COUNT}} files)
-  * {{C_PRINCIPLE_COUNT}} C_*.md (Claude guidelines)
-  * {{U_PRINCIPLE_COUNT}} U_*.md (Universal principles)
-  * {{P_PRINCIPLE_COUNT}} P_*.md (Project principles)
+  • Agents: {AGENT_COUNT} files
+  • Commands: {COMMAND_COUNT} files
+  • Skills: {SKILL_COUNT} files
+  • Principles: {PRINCIPLE_COUNT} files
+    - U_*.md: {U_PRINCIPLE_COUNT} (Universal principles)
+    - C_*.md: {C_PRINCIPLE_COUNT} (Claude guidelines)
+    - P_*.md: {P_PRINCIPLE_COUNT} (Project principles)
+  • Templates: {TEMPLATE_COUNT} files
+    - settings.json.cco (Claude Code configuration)
+    - statusline.js.cco (Status line script)
 
-- skills/ ({{SKILL_COUNT}} files)
-  * cco-skill-*.md (all skills)
+------------------------------------------------------------
+  Total: {TOTAL_COUNT} files in ~/.claude/
+------------------------------------------------------------
 
-- agents/ ({{AGENT_COUNT}} files)
-  * cco-agent-*.md (all agents)
+CLAUDE.MD:
+  • CCO principle markers will be removed from ~/.claude/CLAUDE.md
+  • Your other content in CLAUDE.md will be preserved
 
-- CLAUDE.md (CCO configuration)
+PROJECT FILES:
+  • NONE - Zero-pollution architecture
+  • Your project files are NOT affected
 
-Total: [calculate total] files in ~/.claude/
+WHAT WILL NOT BE DELETED:
+  • Your code and project files
+  • Git history
+  • Other Python packages
+  • IDE configurations
+  • Non-CCO files in ~/.claude/ (preserved)
 
-Project Files:
-- NONE (zero-pollution architecture)
-- Your project files are NOT affected
+============================================================
 
-What will NOT be deleted:
-- Your code and project files
-- Git history
-- Dependencies (Python packages, npm packages, etc.)
-- IDE configurations
-- Other files in ~/.claude/ (if any, non-CCO files preserved)
+Type 'yes-delete-cco' to confirm deletion
+Type 'no' or anything else to cancel
 
-This will reverse the installation completely.
-
-Type 'yes-delete-cco' to confirm (or 'no' to cancel): ▯
+Choice: ▯
 ```
 
 ### Step 3: Confirm Deletion
@@ -109,28 +118,44 @@ rm -rf ~/.claude/
 ### Step 5: Verify Removal
 
 ```markdown
-CCO Uninstall Complete ✓
+============================================================
+CCO UNINSTALL COMPLETE
+============================================================
 
-Removed:
-✓ Package: claudecodeoptimizer (pip)
-✓ Commands: [count] files deleted
-✓ Principles: [count] files deleted
-✓ Skills: [count] files deleted
-✓ Agents: [count] files deleted
-✓ Global directory: ~/.claude/ removed
+REMOVED:
+  ✓ Package: claudecodeoptimizer ({INSTALL_METHOD})
+  ✓ Agents: {AGENT_COUNT} files deleted
+  ✓ Commands: {COMMAND_COUNT} files deleted
+  ✓ Skills: {SKILL_COUNT} files deleted
+  ✓ Principles: {PRINCIPLE_COUNT} files deleted
+  ✓ Templates: {TEMPLATE_COUNT} files deleted
+  ✓ CLAUDE.md: CCO markers removed
 
-Verified:
-✓ pip show claudecodeoptimizer → Not found
-✓ ~/.claude/ → Not found
-✓ Your project files → Intact (0 files touched)
+------------------------------------------------------------
+  Total: {TOTAL_COUNT} files deleted
+------------------------------------------------------------
 
-CCO has been completely removed.
+VERIFIED:
+  ✓ pip show claudecodeoptimizer → Not found
+  ✓ ~/.claude/agents/cco-*.md → 0 files
+  ✓ ~/.claude/commands/cco-*.md → 0 files
+  ✓ ~/.claude/skills/cco-*.md → 0 files
+  ✓ ~/.claude/principles/[UCP]_*.md → 0 files
+  ✓ ~/.claude/*.cco → 0 files
+  ✓ Your project files → Intact (0 files touched)
 
-To reinstall:
-pip install git+https://github.com/sungurerdim/ClaudeCodeOptimizer.git
-cco-setup
+============================================================
 
-Backup (if created): ~/.claude.backup-20250117-143022
+CCO has been completely removed from your system.
+
+TO REINSTALL:
+  pip install git+https://github.com/sungurerdim/ClaudeCodeOptimizer.git
+  cco-setup
+
+BACKUP (if created):
+  ~/.claude.backup-{TIMESTAMP}
+
+============================================================
 ```
 
 ---
@@ -149,24 +174,40 @@ Backup (if created): ~/.claude.backup-20250117-143022
 
 If package not found:
 ```markdown
-[WARNING] CCO package not found
+============================================================
+[WARNING] CCO Package Not Found
+============================================================
+
+The CCO package is not installed via pip/pipx/uv.
 
 However, global directory exists: ~/.claude/
 
-This directory contains:
-- [count] command files
-- [count] principle files
-- [count] skill files
-- [count] agent files
+  Current CCO files:
+    • Agents: {AGENT_COUNT} files
+    • Commands: {COMMAND_COUNT} files
+    • Skills: {SKILL_COUNT} files
+    • Principles: {PRINCIPLE_COUNT} files
+    • Templates: {TEMPLATE_COUNT} files
 
-Delete global directory? (yes/no)
+------------------------------------------------------------
+  Total: {TOTAL_COUNT} CCO files found
+------------------------------------------------------------
+
+Delete global CCO files only? (yes/no)
 ```
 
 If directory not found but package exists:
 ```markdown
-[WARNING] Global directory not found (~/.claude/)
+============================================================
+[WARNING] Global Directory Not Found
+============================================================
 
-However, CCO package is installed.
+Global directory (~/.claude/) does not contain CCO files.
+
+However, CCO package is installed:
+  • Package: claudecodeoptimizer
+  • Location: {PACKAGE_LOCATION}
+  • Version: {VERSION}
 
 Uninstall package only? (yes/no)
 ```
