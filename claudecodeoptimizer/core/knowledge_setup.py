@@ -7,6 +7,8 @@ Creates:
 - ~/.claude/agents/ (all cco-*.md from claudecodeoptimizer/content/agents/)
 - ~/.claude/skills/ (all cco-*.md from claudecodeoptimizer/content/skills/)
 - ~/.claude/CLAUDE.md (with U_* and C_* principle markers)
+- ~/.claude/settings.json.example (Claude Code configuration template)
+- ~/.claude/statusline.js.example (Status line script template)
 """
 
 import shutil
@@ -86,6 +88,43 @@ def show_installation_diff() -> None:
     print(f"Total: {total_files} files will be overwritten")
 
 
+def get_installation_counts() -> Dict[str, int]:
+    """
+    Get current file counts for all CCO categories.
+
+    Returns:
+        Dictionary with counts by category
+        Example: {'commands': 10, 'skills': 26, 'agents': 3, 'principles': 15}
+    """
+    counts = {}
+
+    # Commands
+    commands_dir = config.get_global_commands_dir()
+    if commands_dir.exists():
+        counts["commands"] = len(list(commands_dir.glob("cco-*.md")))
+
+    # Skills (recursive - includes subdirectories)
+    skills_dir = config.get_skills_dir()
+    if skills_dir.exists():
+        counts["skills"] = len(list(skills_dir.rglob("cco-*.md")))
+
+    # Agents
+    agents_dir = config.get_agents_dir()
+    if agents_dir.exists():
+        counts["agents"] = len(list(agents_dir.glob("cco-*.md")))
+
+    # Principles (U_*, C_*, P_*)
+    principles_dir = config.get_principles_dir()
+    if principles_dir.exists():
+        counts["principles"] = (
+            len(list(principles_dir.glob("U_*.md")))
+            + len(list(principles_dir.glob("C_*.md")))
+            + len(list(principles_dir.glob("P_*.md")))
+        )
+
+    return counts
+
+
 def _get_content_dir(subdir: str) -> Path:
     """Get content directory path for a given subdirectory."""
     package_dir = Path(__file__).parent.parent
@@ -139,13 +178,16 @@ def setup_global_knowledge(force: bool = False) -> Dict[str, Any]:
         force: If True, regenerate even if already exists
 
     Returns:
-        Dictionary with setup status
+        Dictionary with setup status including before/after counts
     """
     claude_dir = config.get_claude_dir()
     commands_dir = config.get_global_commands_dir()
     principles_dir = config.get_principles_dir()
     agents_dir = config.get_agents_dir()
     skills_dir = config.get_skills_dir()
+
+    # Capture counts BEFORE setup
+    counts_before = get_installation_counts()
 
     # Ensure base directory exists
     claude_dir.mkdir(parents=True, exist_ok=True)
@@ -169,10 +211,19 @@ def setup_global_knowledge(force: bool = False) -> Dict[str, Any]:
     _setup_claude_md(claude_dir, principles_dir)
     actions.append("Updated ~/.claude/CLAUDE.md with principle markers")
 
+    # Setup global templates as .example files
+    _setup_global_templates(claude_dir)
+    actions.append("Copied template examples (*.example files for user customization)")
+
+    # Capture counts AFTER setup
+    counts_after = get_installation_counts()
+
     results: Dict[str, Any] = {
         "success": True,
         "claude_dir": str(claude_dir),
         "actions": actions,
+        "counts_before": counts_before,
+        "counts_after": counts_after,
     }
 
     return results
@@ -202,7 +253,11 @@ def _setup_principles(principles_dir: Path) -> None:
     """
 
     def is_cco_principle(path: Path) -> bool:
-        return len(path.name) > 1 and path.name[0] in ("U", "C", "P") and path.name[1] == "_"
+        return (
+            len(path.name) > 1
+            and path.name[0] in ("U", "C", "P")
+            and path.name[1] == "_"
+        )
 
     _setup_files(
         source_dir=_get_content_dir("principles"),
@@ -303,7 +358,9 @@ def _setup_claude_md(claude_dir: Path, principles_dir: Path) -> None:
             import re
 
             pattern = r"<!-- CCO_PRINCIPLES_START -->.*?<!-- CCO_PRINCIPLES_END -->\n?"
-            new_content = re.sub(pattern, marker_content, existing_content, flags=re.DOTALL)
+            new_content = re.sub(
+                pattern, marker_content, existing_content, flags=re.DOTALL
+            )
         else:
             # Append marker section
             new_content = existing_content.rstrip() + "\n\n" + marker_content
@@ -368,3 +425,32 @@ def get_available_skills() -> List[str]:
                 skills.append(f"{subdir.name}/{f.stem}")
 
     return skills
+
+
+def _setup_global_templates(claude_dir: Path) -> None:
+    """
+    Copy global template files to ~/.claude/ as .example files.
+
+    User can manually copy/customize these templates:
+    - settings.json.example → settings.json (Claude Code configuration)
+    - statusline.js.example → statusline.js (Status line script)
+
+    Templates are always updated to ensure users have latest examples.
+    """
+    package_dir = Path(__file__).parent.parent
+    templates_dir = package_dir.parent / "templates"
+
+    if not templates_dir.exists():
+        raise FileNotFoundError(f"Templates directory not found at {templates_dir}")
+
+    # Copy templates as .example files (always update to provide latest)
+    templates_to_copy = [
+        ("statusline.js.template", "statusline.js.example"),
+        ("settings.json.template", "settings.json.example"),
+    ]
+
+    for src_name, dest_name in templates_to_copy:
+        src_file = templates_dir / src_name
+        dest_file = claude_dir / dest_name
+        if src_file.exists():
+            shutil.copy2(src_file, dest_file)
