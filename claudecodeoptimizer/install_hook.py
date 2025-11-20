@@ -10,20 +10,34 @@ import sys
 logger = logging.getLogger(__name__)
 
 
-def _show_installation_summary(counts_before: dict[str, int], counts_after: dict[str, int]) -> None:
+def _show_installation_summary(
+    counts_before: dict[str, int], counts_after: dict[str, int], was_already_installed: bool
+) -> None:
     """
     Show detailed before/after comparison of installed files.
 
-    Categories:
+    Categories (consistent order):
+    - Agents → Commands → Skills → Principles
+
+    States:
     - New: Files added (0 → N)
-    - Updated: Files overwritten (N → N)
+    - Re-installed: Files overwritten when already installed (N → N or N → M)
     - Removed: Files deleted (N → 0)
-    - Unchanged: Files not created (0 → 0)
+
+    Args:
+        counts_before: File counts before installation
+        counts_after: File counts after installation
+        was_already_installed: Whether CCO was already installed (shows "Re-installed" instead of "Updated")
     """
-    all_categories = sorted(set(counts_before.keys()) | set(counts_after.keys()))
+    # Use consistent category ordering
+    category_order = ["agents", "commands", "skills", "principles", "templates"]
+    all_categories = sorted(
+        set(counts_before.keys()) | set(counts_after.keys()),
+        key=lambda x: category_order.index(x) if x in category_order else 999,
+    )
 
     new_files = []
-    updated_files = []
+    reinstalled_files = []
     removed_files = []
 
     for category in all_categories:
@@ -34,24 +48,26 @@ def _show_installation_summary(counts_before: dict[str, int], counts_after: dict
             # New files
             new_files.append(f"  + {category.capitalize()}: {after} files")
         elif before > 0 and after > 0:
-            # Updated files
+            # Re-installed files (when already installed)
             if after != before:
-                updated_files.append(f"  ↻ {category.capitalize()}: {before} → {after} files")
+                reinstalled_files.append(f"  ↻ {category.capitalize()}: {before} → {after} files")
             else:
-                updated_files.append(f"  ↻ {category.capitalize()}: {after} files")
+                reinstalled_files.append(f"  ↻ {category.capitalize()}: {after} files")
         elif before > 0 and after == 0:
             # Removed files
             removed_files.append(f"  - {category.capitalize()}: {before} files removed")
 
-    # Display results
+    # Display results with consistent formatting
     if new_files:
         print("\n  New:")
         for line in new_files:
             print(line)
 
-    if updated_files:
-        print("\n  Updated:")
-        for line in updated_files:
+    if reinstalled_files:
+        # Show "Re-installed" if was already installed, otherwise "Updated"
+        section_name = "Re-installed" if was_already_installed else "Updated"
+        print(f"\n  {section_name}:")
+        for line in reinstalled_files:
             print(line)
 
     if removed_files:
@@ -59,10 +75,11 @@ def _show_installation_summary(counts_before: dict[str, int], counts_after: dict
         for line in removed_files:
             print(line)
 
-    # Total summary
+    # Total summary with visual separator
     total_before = sum(counts_before.values())
     total_after = sum(counts_after.values())
-    print(f"\n  Total: {total_before} → {total_after} files")
+    print("\n" + "  " + "-" * 56)
+    print(f"  Total: {total_before} → {total_after} files")
 
 
 def post_install() -> int:
@@ -101,7 +118,7 @@ def post_install() -> int:
         )
 
         print("\n" + "=" * 60)
-        print("ClaudeCodeOptimizer Post-Install Setup")
+        print("ClaudeCodeOptimizer Setup")
         print("=" * 60)
 
         # Check if CCO is already installed
@@ -109,16 +126,17 @@ def post_install() -> int:
 
         if existing and not force:
             # Interactive mode: Ask user before overwriting
-            print("\n[NOTICE] CCO is already installed:")
+            print("\n[NOTICE] CCO is already installed in ~/.claude/")
+            print("\n  Current installation:")
             for category, count in existing.items():
-                print(f"  - {category}: {count} files")
-            print()
-            print("Overwrite existing files?")
-            print("  [y] Yes, overwrite all")
-            print("  [n] No, cancel")
-            print("  [d] Show diff (what will be overwritten)")
-            print()
-            choice = input("Choice [y/n/d]: ").strip().lower()
+                print(f"    • {category.capitalize()}: {count} files")
+            print("\n" + "-" * 60)
+            print("  Overwrite existing files?")
+            print("    [y] Yes, overwrite all")
+            print("    [n] No, cancel")
+            print("    [d] Show diff (what will be overwritten)")
+            print("-" * 60)
+            choice = input("\n  Choice [y/n/d]: ").strip().lower()
 
             if choice == "d":
                 # Show what will be overwritten
@@ -127,44 +145,51 @@ def post_install() -> int:
                 )
 
                 show_installation_diff()
-                print()
-                choice = input("Proceed with overwrite? [y/n]: ").strip().lower()
+                print("\n" + "-" * 60)
+                choice = input("  Proceed with overwrite? [y/n]: ").strip().lower()
+                print("-" * 60)
 
             if choice != "y":
-                print("\n[CANCELLED] Installation cancelled by user")
-                print("To overwrite without asking, run: cco-setup --force")
+                print("\n[CANCELLED] Setup cancelled by user")
+                print("  To overwrite without asking: cco-setup --force")
                 print("=" * 60 + "\n")
                 return 0
             else:
-                print("\n[OK] Proceeding with overwrite...")
+                print("\n[OK] Proceeding with setup...")
 
         # Setup global ~/.claude/ structure
         result = setup_global_knowledge(force=force or bool(existing))
 
         if result.get("success"):
-            logger.info(f"Global CCO directory: {result['claude_dir']}")
+            # Show installation actions
+            print("\n" + "-" * 60)
+            print("INSTALLATION COMPLETE")
+            print("-" * 60)
+            print(f"\n  Location: {result['claude_dir']}")
+            print("\n  Actions performed:")
             for action in result.get("actions", []):
-                logger.info(f"  - {action}")
-            print(f"\n[OK] Global CCO directory: {result['claude_dir']}")
-            for action in result.get("actions", []):
-                print(f"  - {action}")
+                print(f"    • {action}")
 
             # Show before/after comparison
             counts_before = result.get("counts_before", {})
             counts_after = result.get("counts_after", {})
 
             if counts_before or counts_after:
-                print("\n[FILE SUMMARY]")
-                _show_installation_summary(counts_before, counts_after)
+                print("\n" + "-" * 60)
+                print("FILE SUMMARY")
+                print("-" * 60)
+                _show_installation_summary(counts_before, counts_after, bool(existing))
 
-            print("\n[OK] CCO is ready!")
-            print("  All CCO commands are now available globally in Claude Code.")
+            print("\n" + "=" * 60)
+            print("CCO IS READY!")
+            print("=" * 60)
+            print("\n  All CCO commands are now available globally.")
             print("\n  Next steps:")
-            print("  1. Open/Restart Claude Code")
-            print("  2. Try: /cco-help or /cco-status")
+            print("    1. Restart Claude Code (if already open)")
+            print("    2. Try: /cco-help or /cco-status")
         else:
-            logger.warning("Global setup completed with warnings")
-            print("\n[WARNING] Global setup completed with warnings")
+            logger.warning("Setup completed with warnings")
+            print("\n[WARNING] Setup completed with warnings")
 
         print("=" * 60 + "\n")
 
@@ -173,9 +198,12 @@ def post_install() -> int:
 
     except Exception as e:
         # Non-fatal: Don't break pip install if setup fails
-        logger.error("CCO post-install setup failed", exc_info=True)
-        print(f"\n[WARNING] CCO post-install setup failed: {e}")
-        print("You can manually run setup later")
+        logger.error("CCO setup failed", exc_info=True)
+        print("\n" + "=" * 60)
+        print("[ERROR] Setup failed")
+        print("=" * 60)
+        print(f"\n  Error: {e}")
+        print("\n  You can run setup manually with: cco-setup")
         print("=" * 60 + "\n")
         return 1
 

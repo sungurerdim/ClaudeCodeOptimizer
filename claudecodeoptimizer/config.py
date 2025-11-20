@@ -95,17 +95,6 @@ def get_command_name(action: str) -> str:
 GITIGNORE_PATTERNS: list[str] = []
 
 # ============================================================================
-# DISPLAY STRINGS
-# ============================================================================
-
-MSG_GLOBAL_INSTALL_SUCCESS = f"[OK] {DISPLAY_NAME} installed globally"
-
-MSG_ALREADY_INSTALLED = f"[INFO] {SHORT_NAME} is already installed"
-MSG_NOT_INSTALLED = f"[ERROR] {SHORT_NAME} is not installed. Run: {CLI_NAME} install"
-
-MSG_INSTALL_FAILED = f"[ERROR] Failed to install {SHORT_NAME}"
-
-# ============================================================================
 # DEFAULTS & PREFERENCES
 # ============================================================================
 
@@ -161,14 +150,6 @@ class CCOConfig:
 
     # File markers
     GITIGNORE_PATTERNS = GITIGNORE_PATTERNS
-
-    # Messages
-    MSG_GLOBAL_INSTALL_SUCCESS = MSG_GLOBAL_INSTALL_SUCCESS
-
-    MSG_ALREADY_INSTALLED = MSG_ALREADY_INSTALLED
-    MSG_NOT_INSTALLED = MSG_NOT_INSTALLED
-
-    MSG_INSTALL_FAILED = MSG_INSTALL_FAILED
 
     # Defaults
     DEFAULT_CONFIG = DEFAULT_CONFIG

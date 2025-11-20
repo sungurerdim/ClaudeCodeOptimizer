@@ -241,30 +241,7 @@ class TestDefaultConfig:
         assert "claude_dir" in paths
 
 
-class TestMessageConstants:
-    """Test message constants."""
-
-    def test_message_constants_exist(self):
-        """Test message constants are defined."""
-        from claudecodeoptimizer.config import (
-            MSG_ALREADY_INSTALLED,
-            MSG_GLOBAL_INSTALL_SUCCESS,
-            MSG_INSTALL_FAILED,
-            MSG_NOT_INSTALLED,
-        )
-
-        assert MSG_GLOBAL_INSTALL_SUCCESS is not None
-        assert MSG_ALREADY_INSTALLED is not None
-        assert MSG_NOT_INSTALLED is not None
-        assert MSG_INSTALL_FAILED is not None
-
-    def test_message_constants_contain_brand_name(self):
-        """Test message constants contain brand name."""
-        from claudecodeoptimizer.config import MSG_GLOBAL_INSTALL_SUCCESS
-
-        assert (
-            DISPLAY_NAME in MSG_GLOBAL_INSTALL_SUCCESS or SHORT_NAME in MSG_GLOBAL_INSTALL_SUCCESS
-        )
+# Message constants removed - no longer needed (not used anywhere)
 
 
 class TestGitignorePatterns:

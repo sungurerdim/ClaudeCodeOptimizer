@@ -18,28 +18,37 @@ from typing import Any
 
 from .. import config
 
+# Consistent category ordering for all reports
+# Agents → Commands → Skills → Principles → Templates
+CATEGORY_ORDER = ["agents", "commands", "skills", "principles", "templates"]
+
 
 def check_existing_installation() -> dict[str, int] | None:
     """
     Check if CCO is already installed.
 
     Returns:
-        Dictionary with counts of existing files by category, or None if not installed
-        Example: {'commands': 10, 'skills': 26, 'agents': 3, 'principles': 15}
+        Dictionary with counts of existing files by category (in consistent order),
+        or None if not installed.
+        Example: {'agents': 3, 'commands': 10, 'skills': 26, 'principles': 15}
     """
     claude_dir = config.get_claude_dir()
     if not claude_dir.exists():
         return None
 
-    counts = {}
+    # Use consistent ordering
     categories = {
+        "agents": config.get_agents_dir(),
         "commands": config.get_global_commands_dir(),
         "skills": config.get_skills_dir(),
-        "agents": config.get_agents_dir(),
         "principles": config.get_principles_dir(),
+        "templates": config.get_claude_dir(),  # Templates are in ~/.claude/ root
     }
 
-    for category, dir_path in categories.items():
+    # Build counts dict in consistent order
+    counts = {}
+    for category in CATEGORY_ORDER:
+        dir_path = categories[category]
         if dir_path.exists():
             # Count CCO files only
             if category == "principles":
@@ -48,6 +57,9 @@ def check_existing_installation() -> dict[str, int] | None:
                     + len(list(dir_path.glob("C_*.md")))
                     + len(list(dir_path.glob("P_*.md")))
                 )
+            elif category == "templates":
+                # Count template files (*.cco)
+                count = len(list(dir_path.glob("*.cco")))
             else:
                 count = len(list(dir_path.glob("cco-*.md")))
 
@@ -61,67 +73,79 @@ def show_installation_diff() -> None:
     """
     Show what files will be overwritten during installation.
     """
-    print("\n[DIFF] Files that will be overwritten:")
-    print()
+    print("\n" + "=" * 60)
+    print("FILES TO BE OVERWRITTEN")
+    print("=" * 60)
 
-    categories = {
-        "Commands": (config.get_global_commands_dir(), "cco-*.md"),
-        "Skills": (config.get_skills_dir(), "cco-*.md"),
-        "Agents": (config.get_agents_dir(), "cco-*.md"),
-        "Principles (U_*)": (config.get_principles_dir(), "U_*.md"),
-        "Principles (C_*)": (config.get_principles_dir(), "C_*.md"),
-        "Principles (P_*)": (config.get_principles_dir(), "P_*.md"),
-    }
+    # Use consistent ordering: agents → commands → skills → principles → templates
+    categories = [
+        ("Agents", config.get_agents_dir(), "cco-*.md"),
+        ("Commands", config.get_global_commands_dir(), "cco-*.md"),
+        ("Skills", config.get_skills_dir(), "cco-*.md"),
+        ("Principles (U_*)", config.get_principles_dir(), "U_*.md"),
+        ("Principles (C_*)", config.get_principles_dir(), "C_*.md"),
+        ("Principles (P_*)", config.get_principles_dir(), "P_*.md"),
+        ("Templates", config.get_claude_dir(), "*.cco"),
+    ]
 
     total_files = 0
-    for category, (dir_path, pattern) in categories.items():
+    for category, dir_path, pattern in categories:
         if dir_path.exists():
             files = list(dir_path.glob(pattern))
             if files:
-                print(f"  {category}:")
-                for file in sorted(files)[:5]:  # Show first 5
-                    print(f"    - {file.name}")
-                if len(files) > 5:
-                    print(f"    ... and {len(files) - 5} more")
+                print(f"\n  {category}: {len(files)} files")
+                for file in sorted(files)[:3]:  # Show first 3
+                    print(f"    • {file.name}")
+                if len(files) > 3:
+                    print(f"    • ... and {len(files) - 3} more")
                 total_files += len(files)
-                print()
 
-    print(f"Total: {total_files} files will be overwritten")
+    print("\n" + "-" * 60)
+    print(f"  Total: {total_files} files will be overwritten")
+    print("=" * 60)
 
 
 def get_installation_counts() -> dict[str, int]:
     """
-    Get current file counts for all CCO categories.
+    Get current file counts for all CCO categories (in consistent order).
 
     Returns:
-        Dictionary with counts by category
-        Example: {'commands': 10, 'skills': 26, 'agents': 3, 'principles': 15}
+        Dictionary with counts by category in consistent order
+        Example: {'agents': 3, 'commands': 10, 'skills': 26, 'principles': 15}
     """
     counts = {}
 
-    # Commands
-    commands_dir = config.get_global_commands_dir()
-    if commands_dir.exists():
-        counts["commands"] = len(list(commands_dir.glob("cco-*.md")))
+    # Use consistent ordering: agents → commands → skills → principles → templates
+    categories_config = {
+        "agents": config.get_agents_dir(),
+        "commands": config.get_global_commands_dir(),
+        "skills": config.get_skills_dir(),
+        "principles": config.get_principles_dir(),
+        "templates": config.get_claude_dir(),
+    }
 
-    # Skills (recursive - includes subdirectories)
-    skills_dir = config.get_skills_dir()
-    if skills_dir.exists():
-        counts["skills"] = len(list(skills_dir.rglob("cco-*.md")))
+    for category in CATEGORY_ORDER:
+        dir_path = categories_config[category]
+        if dir_path.exists():
+            if category == "skills":
+                # Skills are recursive (includes subdirectories)
+                count = len(list(dir_path.rglob("cco-*.md")))
+            elif category == "principles":
+                # Principles include U_*, C_*, P_*
+                count = (
+                    len(list(dir_path.glob("U_*.md")))
+                    + len(list(dir_path.glob("C_*.md")))
+                    + len(list(dir_path.glob("P_*.md")))
+                )
+            elif category == "templates":
+                # Templates are *.cco files
+                count = len(list(dir_path.glob("*.cco")))
+            else:
+                # Agents and commands
+                count = len(list(dir_path.glob("cco-*.md")))
 
-    # Agents
-    agents_dir = config.get_agents_dir()
-    if agents_dir.exists():
-        counts["agents"] = len(list(agents_dir.glob("cco-*.md")))
-
-    # Principles (U_*, C_*, P_*)
-    principles_dir = config.get_principles_dir()
-    if principles_dir.exists():
-        counts["principles"] = (
-            len(list(principles_dir.glob("U_*.md")))
-            + len(list(principles_dir.glob("C_*.md")))
-            + len(list(principles_dir.glob("P_*.md")))
-        )
+            if count > 0:
+                counts[category] = count
 
     return counts
 
@@ -212,9 +236,9 @@ def setup_global_knowledge(force: bool = False) -> dict[str, Any]:
     _setup_claude_md(claude_dir, principles_dir)
     actions.append("Updated ~/.claude/CLAUDE.md with principle markers")
 
-    # Setup global templates as .example files
+    # Setup global templates as .cco files
     _setup_global_templates(claude_dir)
-    actions.append("Copied template examples (*.example files for user customization)")
+    actions.append("Copied template files (*.cco files for user customization)")
 
     # Capture counts AFTER setup
     counts_after = get_installation_counts()
@@ -424,11 +448,11 @@ def get_available_skills() -> list[str]:
 
 def _setup_global_templates(claude_dir: Path) -> None:
     """
-    Copy global template files to ~/.claude/ as .example files.
+    Copy global template files to ~/.claude/ as .cco files.
 
     User can manually copy/customize these templates:
-    - settings.json.example → settings.json (Claude Code configuration)
-    - statusline.js.example → statusline.js (Status line script)
+    - settings.json.cco → settings.json (Claude Code configuration)
+    - statusline.js.cco → statusline.js (Status line script)
 
     Templates are always updated to ensure users have latest examples.
     """
@@ -438,10 +462,10 @@ def _setup_global_templates(claude_dir: Path) -> None:
     if not templates_dir.exists():
         raise FileNotFoundError(f"Templates directory not found at {templates_dir}")
 
-    # Copy templates as .example files (always update to provide latest)
+    # Copy templates as .cco files (always update to provide latest)
     templates_to_copy = [
-        ("statusline.js.template", "statusline.js.example"),
-        ("settings.json.template", "settings.json.example"),
+        ("statusline.js.template", "statusline.js.cco"),
+        ("settings.json.template", "settings.json.cco"),
     ]
 
     for src_name, dest_name in templates_to_copy:
