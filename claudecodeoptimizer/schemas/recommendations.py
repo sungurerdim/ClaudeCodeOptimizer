@@ -19,8 +19,12 @@ class DetectionResult(BaseModel):
         description="Detection category (language, framework, tool, pattern)",
     )
     detected_value: str = Field(..., description="What was detected")
-    confidence: float = Field(..., ge=0.0, le=1.0, description="Confidence score (0.0-1.0)")
-    evidence: List[str] = Field(default=[], description="Evidence (file paths, patterns found)")
+    confidence: float = Field(
+        ..., ge=0.0, le=1.0, description="Confidence score (0.0-1.0)"
+    )
+    evidence: List[str] = Field(
+        default=[], description="Evidence (file paths, patterns found)"
+    )
 
     class Config:
         json_schema_extra = {
@@ -40,8 +44,12 @@ class Recommendation(BaseModel):
         ...,
         description="Dot-notation path to preference (e.g., 'code_quality.linting_strictness')",
     )
-    recommended_value: Any = Field(..., description="Recommended value (type varies by preference)")
-    confidence: float = Field(..., ge=0.0, le=1.0, description="Recommendation confidence")
+    recommended_value: Any = Field(
+        ..., description="Recommended value (type varies by preference)"
+    )
+    confidence: float = Field(
+        ..., ge=0.0, le=1.0, description="Recommendation confidence"
+    )
     reasoning: str = Field(..., description="Human-readable explanation")
     alternatives: List[Any] = Field(default=[], description="Other valid options")
     detection_basis: List[DetectionResult] = Field(
@@ -76,8 +84,12 @@ class RecommendationBundle(BaseModel):
     devops_recs: List[Recommendation] = Field(default=[])
 
     # Metadata
-    analysis_duration_ms: int = Field(0, description="Time taken to generate recommendations")
-    total_confidence: float = Field(0.0, ge=0.0, le=1.0, description="Average confidence")
+    analysis_duration_ms: int = Field(
+        0, description="Time taken to generate recommendations"
+    )
+    total_confidence: float = Field(
+        0.0, ge=0.0, le=1.0, description="Average confidence"
+    )
     generated_at: str = Field(default_factory=lambda: datetime.now().isoformat())
 
     def calculate_total_confidence(self) -> float:

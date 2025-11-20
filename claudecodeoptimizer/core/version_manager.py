@@ -139,7 +139,9 @@ class VersionManager:
 
         return version_files
 
-    def update_version_files(self, new_version: str, files: Optional[List[Path]] = None) -> None:
+    def update_version_files(
+        self, new_version: str, files: Optional[List[Path]] = None
+    ) -> None:
         """
         Update version in all relevant files.
 
@@ -159,16 +161,22 @@ class VersionManager:
 
         if file_path.name == "pyproject.toml":
             # Update: version = "1.2.3"
-            content = re.sub(r'version\s*=\s*"[^"]*"', f'version = "{new_version}"', content)
+            content = re.sub(
+                r'version\s*=\s*"[^"]*"', f'version = "{new_version}"', content
+            )
 
         elif file_path.name == "package.json":
             # Update: "version": "1.2.3"
-            content = re.sub(r'"version"\s*:\s*"[^"]*"', f'"version": "{new_version}"', content)
+            content = re.sub(
+                r'"version"\s*:\s*"[^"]*"', f'"version": "{new_version}"', content
+            )
 
         elif file_path.name == "__init__.py":
             # Update: __version__ = "1.2.3"
             content = re.sub(
-                r'__version__\s*=\s*["\'][^"\']*["\']', f'__version__ = "{new_version}"', content
+                r'__version__\s*=\s*["\'][^"\']*["\']',
+                f'__version__ = "{new_version}"',
+                content,
             )
 
         elif file_path.name == "Cargo.toml":
@@ -267,7 +275,11 @@ class VersionManager:
                 check=True,
                 timeout=30,
             )
-            commits = [line.strip() for line in result.stdout.strip().split("\n") if line.strip()]
+            commits = [
+                line.strip()
+                for line in result.stdout.strip().split("\n")
+                if line.strip()
+            ]
 
             # Extract version from tag
             version_match = re.search(r"(\d+\.\d+\.\d+)", last_tag)

@@ -63,7 +63,12 @@ def temp_principles_dir(tmp_path: Path) -> Path:
 def mock_category_mapping() -> Dict[str, List[str]]:
     """Mock category to IDs mapping"""
     return {
-        "universal": ["U_DRY", "U_FAIL_FAST", "U_EVIDENCE_BASED", "U_NO_OVERENGINEERING"],
+        "universal": [
+            "U_DRY",
+            "U_FAIL_FAST",
+            "U_EVIDENCE_BASED",
+            "U_NO_OVERENGINEERING",
+        ],
         "core": ["U_EVIDENCE_BASED", "U_FAIL_FAST", "U_NO_OVERENGINEERING"],
         "code_quality": ["P_LINTING_SAST", "P_TYPE_SAFETY"],
         "security_privacy": ["P_API_SECURITY", "P_ENCRYPTION_AT_REST"],
@@ -77,7 +82,9 @@ def mock_category_mapping() -> Dict[str, List[str]]:
 class TestLoadCategoryMapping:
     """Test _load_category_mapping function"""
 
-    def test_load_category_mapping_caches_result(self, temp_principles_dir: Path) -> None:
+    def test_load_category_mapping_caches_result(
+        self, temp_principles_dir: Path
+    ) -> None:
         """Test that category mapping is cached"""
         # Reset cache
         import claudecodeoptimizer.core.principle_loader as loader_module
@@ -111,7 +118,9 @@ class TestLoadCategoryMapping:
             result = _load_category_mapping()
             assert result == {}
 
-    def test_load_category_mapping_adds_core_category(self, temp_principles_dir: Path) -> None:
+    def test_load_category_mapping_adds_core_category(
+        self, temp_principles_dir: Path
+    ) -> None:
         """Test that core category is added with universal principles"""
         # Reset cache
         import claudecodeoptimizer.core.principle_loader as loader_module
@@ -140,7 +149,9 @@ class TestLoadCategoryMapping:
 class TestResolveCategoriestoIds:
     """Test _resolve_categories_to_ids function"""
 
-    def test_resolve_single_category(self, mock_category_mapping: Dict[str, List[str]]) -> None:
+    def test_resolve_single_category(
+        self, mock_category_mapping: Dict[str, List[str]]
+    ) -> None:
         """Test resolving a single category to principle IDs"""
         with patch(
             "claudecodeoptimizer.core.principle_loader._load_category_mapping",
@@ -150,7 +161,9 @@ class TestResolveCategoriestoIds:
             assert "P_LINTING_SAST" in result
             assert "P_TYPE_SAFETY" in result
 
-    def test_resolve_multiple_categories(self, mock_category_mapping: Dict[str, List[str]]) -> None:
+    def test_resolve_multiple_categories(
+        self, mock_category_mapping: Dict[str, List[str]]
+    ) -> None:
         """Test resolving multiple categories"""
         with patch(
             "claudecodeoptimizer.core.principle_loader._load_category_mapping",
@@ -160,7 +173,9 @@ class TestResolveCategoriestoIds:
             assert "P_LINTING_SAST" in result
             assert "P_TEST_COVERAGE" in result
 
-    def test_resolve_all_category(self, mock_category_mapping: Dict[str, List[str]]) -> None:
+    def test_resolve_all_category(
+        self, mock_category_mapping: Dict[str, List[str]]
+    ) -> None:
         """Test resolving 'all' category returns all principles"""
         with patch(
             "claudecodeoptimizer.core.principle_loader._load_category_mapping",
@@ -174,7 +189,9 @@ class TestResolveCategoriestoIds:
             assert "P_API_SECURITY" in result
             assert "P_TEST_COVERAGE" in result
 
-    def test_resolve_removes_duplicates(self, mock_category_mapping: Dict[str, List[str]]) -> None:
+    def test_resolve_removes_duplicates(
+        self, mock_category_mapping: Dict[str, List[str]]
+    ) -> None:
         """Test that duplicate principle IDs are removed"""
         with patch(
             "claudecodeoptimizer.core.principle_loader._load_category_mapping",
@@ -187,7 +204,9 @@ class TestResolveCategoriestoIds:
             assert result.count("U_FAIL_FAST") == 1
             assert result.count("U_EVIDENCE_BASED") == 1
 
-    def test_resolve_preserves_order(self, mock_category_mapping: Dict[str, List[str]]) -> None:
+    def test_resolve_preserves_order(
+        self, mock_category_mapping: Dict[str, List[str]]
+    ) -> None:
         """Test that principle order is preserved"""
         with patch(
             "claudecodeoptimizer.core.principle_loader._load_category_mapping",
@@ -198,7 +217,9 @@ class TestResolveCategoriestoIds:
             # Order should match category mapping
             assert result == ["P_LINTING_SAST", "P_TYPE_SAFETY"]
 
-    def test_resolve_unknown_category(self, mock_category_mapping: Dict[str, List[str]]) -> None:
+    def test_resolve_unknown_category(
+        self, mock_category_mapping: Dict[str, List[str]]
+    ) -> None:
         """Test resolving unknown category returns empty list"""
         with patch(
             "claudecodeoptimizer.core.principle_loader._load_category_mapping",
@@ -207,7 +228,9 @@ class TestResolveCategoriestoIds:
             result = _resolve_categories_to_ids(["unknown_category"])
             assert result == []
 
-    def test_resolve_empty_categories(self, mock_category_mapping: Dict[str, List[str]]) -> None:
+    def test_resolve_empty_categories(
+        self, mock_category_mapping: Dict[str, List[str]]
+    ) -> None:
         """Test resolving empty category list"""
         with patch(
             "claudecodeoptimizer.core.principle_loader._load_category_mapping",
@@ -230,7 +253,9 @@ class TestPrincipleLoaderInit:
         """Test initialization with default directory from config"""
         mock_dir = Path("/mock/principles")
 
-        with patch("claudecodeoptimizer.config.CCOConfig.get_principles_dir") as mock_get:
+        with patch(
+            "claudecodeoptimizer.config.CCOConfig.get_principles_dir"
+        ) as mock_get:
             mock_get.return_value = mock_dir
             with patch.object(Path, "exists", return_value=True):
                 loader = PrincipleLoader()
@@ -570,7 +595,9 @@ class TestPrincipleLoaderEstimateTokenCount:
         loader = PrincipleLoader(temp_principles_dir)
 
         # Mock command with unknown category
-        with patch.object(loader, "get_categories_for_command", return_value=["unknown"]):
+        with patch.object(
+            loader, "get_categories_for_command", return_value=["unknown"]
+        ):
             count = loader.estimate_token_count("test-command")
 
             # Should use default estimate (500)
@@ -601,7 +628,9 @@ class TestLoadPrinciplesForCommand:
 
     def test_convenience_function(self, temp_principles_dir: Path) -> None:
         """Test convenience function loads principles"""
-        with patch("claudecodeoptimizer.config.CCOConfig.get_principles_dir") as mock_get:
+        with patch(
+            "claudecodeoptimizer.config.CCOConfig.get_principles_dir"
+        ) as mock_get:
             mock_get.return_value = temp_principles_dir
 
             with patch(
@@ -631,7 +660,9 @@ class TestCommandPrincipleMap:
     def test_all_commands_have_universal(self) -> None:
         """Test that all commands include universal category"""
         for command, categories in COMMAND_PRINCIPLE_MAP.items():
-            assert "universal" in categories, f"Command {command} missing universal category"
+            assert (
+                "universal" in categories
+            ), f"Command {command} missing universal category"
 
     def test_map_values_are_lists(self) -> None:
         """Test that all map values are lists"""

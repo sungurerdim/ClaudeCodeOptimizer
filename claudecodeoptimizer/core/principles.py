@@ -91,12 +91,19 @@ class PrinciplesManager:
                 categories_set.add(principle_data["category"])
 
             # Create category list (simplified, no metadata)
-            self.categories = [{"id": cat, "name": cat} for cat in sorted(categories_set)]
+            self.categories = [
+                {"id": cat, "name": cat} for cat in sorted(categories_set)
+            ]
 
             # Hardcoded selection strategies (TODO: move to config file)
             self.selection_strategies = {
                 "minimal": {
-                    "include": ["U_EVIDENCE_BASED", "U_FAIL_FAST", "U_TEST_FIRST", "U_DRY"]
+                    "include": [
+                        "U_EVIDENCE_BASED",
+                        "U_FAIL_FAST",
+                        "U_TEST_FIRST",
+                        "U_DRY",
+                    ]
                 },
                 "auto": {"rules": []},  # Auto selection based on characteristics
             }
@@ -178,7 +185,9 @@ class PrinciplesManager:
 
         return list(selected)
 
-    def _auto_select_principles(self, characteristics: ProjectCharacteristics) -> Set[str]:
+    def _auto_select_principles(
+        self, characteristics: ProjectCharacteristics
+    ) -> Set[str]:
         """
         Automatically select principles based on project characteristics.
 
@@ -229,7 +238,10 @@ class PrinciplesManager:
                 project_types = applicability.get("project_types", [])
 
                 # If applicable to all or matches project type
-                if "all" in project_types or characteristics.project_type in project_types:
+                if (
+                    "all" in project_types
+                    or characteristics.project_type in project_types
+                ):
                     if self._check_conditions(principle, characteristics):
                         selected.add(principle.id)
 
@@ -267,7 +279,9 @@ class PrinciplesManager:
 
         return selected
 
-    def _is_applicable(self, principle: Principle, characteristics: ProjectCharacteristics) -> bool:
+    def _is_applicable(
+        self, principle: Principle, characteristics: ProjectCharacteristics
+    ) -> bool:
         """Check if a principle is applicable to the project."""
         applicability = principle.applicability
 
@@ -315,7 +329,9 @@ class PrinciplesManager:
 
         return True
 
-    def _evaluate_condition(self, condition: str, characteristics: ProjectCharacteristics) -> bool:
+    def _evaluate_condition(
+        self, condition: str, characteristics: ProjectCharacteristics
+    ) -> bool:
         """
         Evaluate a condition string against project characteristics.
 
@@ -373,11 +389,17 @@ class PrinciplesManager:
                 return characteristics.project_type == "microservices"
 
             # Privacy critical
-            if "privacy_critical == true" in condition or "privacy_critical" in condition:
+            if (
+                "privacy_critical == true" in condition
+                or "privacy_critical" in condition
+            ):
                 return characteristics.privacy_critical
 
             # Security critical
-            if "security_critical == true" in condition or "security_critical" in condition:
+            if (
+                "security_critical == true" in condition
+                or "security_critical" in condition
+            ):
                 return characteristics.security_critical
 
             # Performance critical
@@ -405,7 +427,10 @@ class PrinciplesManager:
                 return characteristics.services_count > SERVICE_COUNT_THRESHOLD_LARGE
 
             # Containers
-            if "containers.runtime != null" in condition or "has_containers" in condition:
+            if (
+                "containers.runtime != null" in condition
+                or "has_containers" in condition
+            ):
                 return characteristics.has_containers
 
             # Default: true if we don't understand the condition
@@ -417,7 +442,9 @@ class PrinciplesManager:
 
     def get_autofix_principles(self) -> List[Principle]:
         """Get all principles that support auto-fix."""
-        return [p for p in self.principles.values() if p.autofix.get("available", False)]
+        return [
+            p for p in self.principles.values() if p.autofix.get("available", False)
+        ]
 
     def get_principle_summary(self, principle_id: str) -> Optional[Dict[str, Any]]:
         """Get a summary of a principle for display."""
@@ -455,7 +482,9 @@ class PrinciplesManager:
         }
 
 
-def create_characteristics_from_analysis(analysis: Dict[str, Any]) -> ProjectCharacteristics:
+def create_characteristics_from_analysis(
+    analysis: Dict[str, Any],
+) -> ProjectCharacteristics:
     """
     Create ProjectCharacteristics from project analysis data.
 

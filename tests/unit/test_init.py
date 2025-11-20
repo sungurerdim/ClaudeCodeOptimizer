@@ -126,9 +126,9 @@ class TestGlobalSetup:
             # Call should return immediately without doing anything
             _ensure_global_setup()
             # Verify it returned and _setup_checked remains True (early return path)
-            assert claudecodeoptimizer._setup_checked is True, (
-                "Setup flag should remain True after early return"
-            )
+            assert (
+                claudecodeoptimizer._setup_checked is True
+            ), "Setup flag should remain True after early return"
         finally:
             claudecodeoptimizer._setup_checked = original_checked
 
@@ -152,9 +152,9 @@ class TestGlobalSetup:
                 # Verify the mock was called (exception path was exercised)
                 mock_get_dir.assert_called_once()
                 # Verify setup completed (flag set to True despite exception)
-                assert claudecodeoptimizer._setup_checked is True, (
-                    "Setup flag should be True after silent exception handling"
-                )
+                assert (
+                    claudecodeoptimizer._setup_checked is True
+                ), "Setup flag should be True after silent exception handling"
 
         finally:
             claudecodeoptimizer._setup_checked = original_checked

@@ -451,7 +451,10 @@ class TestSecurityPosture:
 
         assert security.security_stance == "balanced"
         assert security.secret_management == ["env-vars"]
-        assert set(security.encryption_scope) == {"at-rest-sensitive", "in-transit-external"}
+        assert set(security.encryption_scope) == {
+            "at-rest-sensitive",
+            "in-transit-external",
+        }
         assert set(security.audit_logging) == {
             "authentication",
             "authorization",
@@ -510,7 +513,12 @@ class TestSecurityPosture:
     def test_multiple_audit_logging_events(self) -> None:
         """Test multiple audit logging events"""
         security = SecurityPosture(
-            audit_logging=["authentication", "authorization", "api-calls", "errors-only"],
+            audit_logging=[
+                "authentication",
+                "authorization",
+                "api-calls",
+                "errors-only",
+            ],
         )
         assert len(security.audit_logging) == 4
 
@@ -930,7 +938,11 @@ class TestCCOPreferences:
                 import_organization="grouped-logical",
                 line_length_limit="100",
             ),
-            selected_principle_ids=["U_ATOMIC_COMMITS", "U_TYPE_SAFETY", "P_TEST_COVERAGE"],
+            selected_principle_ids=[
+                "U_ATOMIC_COMMITS",
+                "U_TYPE_SAFETY",
+                "P_TEST_COVERAGE",
+            ],
         )
 
         # Verify all settings are preserved

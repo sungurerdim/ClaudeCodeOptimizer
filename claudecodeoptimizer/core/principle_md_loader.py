@@ -78,7 +78,9 @@ def load_all_principles(principles_dir: Path) -> List[Dict[str, Any]]:
     return principles
 
 
-def get_principle_by_id(principle_id: str, principles_dir: Path) -> Optional[Dict[str, Any]]:
+def get_principle_by_id(
+    principle_id: str, principles_dir: Path
+) -> Optional[Dict[str, Any]]:
     """
     Get a single principle by ID.
 
@@ -97,7 +99,9 @@ def get_principle_by_id(principle_id: str, principles_dir: Path) -> Optional[Dic
     return load_principle_from_md(md_file)
 
 
-def get_principles_by_category(category: str, principles_dir: Path) -> List[Dict[str, Any]]:
+def get_principles_by_category(
+    category: str, principles_dir: Path
+) -> List[Dict[str, Any]]:
     """
     Get all principles in a category.
 

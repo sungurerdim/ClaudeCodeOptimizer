@@ -66,8 +66,14 @@ Every piece of knowledge must have a single, unambiguous representation.
         assert result["severity"] == "high"
         assert result["weight"] == 10
         assert result["enforcement"] == "MUST"
-        assert result["applicability"] == {"project_types": ["all"], "languages": ["all"]}
-        assert result["description"] == "Every piece of knowledge must have a single representation"
+        assert result["applicability"] == {
+            "project_types": ["all"],
+            "languages": ["all"],
+        }
+        assert (
+            result["description"]
+            == "Every piece of knowledge must have a single representation"
+        )
         assert "U_DRY: DRY Enforcement" in result["content"]
         assert result["rules"] == ["No duplicate functions", "No magic numbers"]
         assert result["examples"] == {"good": "Use constants", "bad": "Hardcode values"}
@@ -126,7 +132,9 @@ Second line in content.
 
         assert result["description"] == "This is from frontmatter"
 
-    def test_load_principle_description_from_content_first_line(self, tmp_path: Path) -> None:
+    def test_load_principle_description_from_content_first_line(
+        self, tmp_path: Path
+    ) -> None:
         """Test description extracted from first non-header line in content"""
         principle_file = tmp_path / "P_DESC_CONTENT.md"
         principle_file.write_text(
@@ -147,7 +155,10 @@ Second paragraph should not be included.
 
         result = load_principle_from_md(principle_file)
 
-        assert result["description"] == "This is the first text line and should be the description."
+        assert (
+            result["description"]
+            == "This is the first text line and should be the description."
+        )
 
     def test_load_principle_description_skips_headers(self, tmp_path: Path) -> None:
         """Test description extraction skips markdown headers"""
@@ -172,7 +183,9 @@ This is the first non-header text.
 
         assert result["description"] == "This is the first non-header text."
 
-    def test_load_principle_description_empty_when_no_content(self, tmp_path: Path) -> None:
+    def test_load_principle_description_empty_when_no_content(
+        self, tmp_path: Path
+    ) -> None:
         """Test description is empty when no content exists"""
         principle_file = tmp_path / "P_NO_CONTENT.md"
         principle_file.write_text(
@@ -189,7 +202,9 @@ category: testing
 
         assert result["description"] == ""
 
-    def test_load_principle_description_empty_when_only_headers(self, tmp_path: Path) -> None:
+    def test_load_principle_description_empty_when_only_headers(
+        self, tmp_path: Path
+    ) -> None:
         """Test description is empty when content contains only headers"""
         principle_file = tmp_path / "P_ONLY_HEADERS.md"
         principle_file.write_text(
@@ -287,7 +302,11 @@ applicability:
 
         result = load_principle_from_md(principle_file)
 
-        assert result["applicability"]["project_types"] == ["web_app", "microservice", "cli"]
+        assert result["applicability"]["project_types"] == [
+            "web_app",
+            "microservice",
+            "cli",
+        ]
         assert result["applicability"]["languages"] == ["python", "javascript", "go"]
         assert result["applicability"]["team_sizes"] == ["solo", "small", "medium"]
         assert result["applicability"]["environments"] == ["dev", "staging", "prod"]
@@ -417,7 +436,9 @@ category: testing
 
         assert result == []
 
-    def test_load_all_principles_nonexistent_directory_raises_error(self, tmp_path: Path) -> None:
+    def test_load_all_principles_nonexistent_directory_raises_error(
+        self, tmp_path: Path
+    ) -> None:
         """Test that non-existent directory raises FileNotFoundError"""
         nonexistent_dir = tmp_path / "nonexistent"
 
@@ -945,7 +966,9 @@ category: testing
 class TestAdditionalEdgeCases:
     """Additional edge case tests for thorough coverage"""
 
-    def test_load_principle_description_extraction_priority(self, tmp_path: Path) -> None:
+    def test_load_principle_description_extraction_priority(
+        self, tmp_path: Path
+    ) -> None:
         """Test that frontmatter description takes priority over content"""
         principle_file = tmp_path / "P_DESC_PRIORITY.md"
         principle_file.write_text(
@@ -1200,7 +1223,9 @@ First line with leading/trailing spaces.
         # Description should have stripped whitespace
         assert result["description"] == "First line with leading/trailing spaces."
 
-    def test_load_principle_multiple_paragraphs_in_description(self, tmp_path: Path) -> None:
+    def test_load_principle_multiple_paragraphs_in_description(
+        self, tmp_path: Path
+    ) -> None:
         """Test that only first paragraph is extracted as description"""
         principle_file = tmp_path / "P_MULTI_PARA.md"
         principle_file.write_text(

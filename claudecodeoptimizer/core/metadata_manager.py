@@ -120,7 +120,10 @@ class MetadataManager:
         use_cases = frontmatter.get("use_cases", {})
         # Ensure proper type - frontmatter returns Any
         if isinstance(use_cases, dict):
-            return {str(k): list(v) if isinstance(v, list) else [] for k, v in use_cases.items()}
+            return {
+                str(k): list(v) if isinstance(v, list) else []
+                for k, v in use_cases.items()
+            }
         return {}
 
     def matches_context(

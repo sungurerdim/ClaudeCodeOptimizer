@@ -20,14 +20,18 @@ class CommandMetadata(BaseModel):
     Tags and relevance criteria allow dynamic recommendation without hardcoding.
     """
 
-    command_id: str = Field(..., description="Command identifier (e.g., 'cco-audit-code')")
+    command_id: str = Field(
+        ..., description="Command identifier (e.g., 'cco-audit-code')"
+    )
     display_name: str = Field(..., description="Human-readable name")
     category: str = Field(
         ...,
         description="Command category (bootstrap, audit, generate, setup, refactor, etc.)",
     )
 
-    description_short: str = Field(..., max_length=80, description="One-line description")
+    description_short: str = Field(
+        ..., max_length=80, description="One-line description"
+    )
     description_long: str = Field(..., description="Detailed explanation")
 
     # Universal recommendation factors (no hardcoded project names)
@@ -68,7 +72,9 @@ class CommandMetadata(BaseModel):
 
     # Usage tracking (for learning)
     usage_frequency: int = Field(0, description="Times this command has been invoked")
-    success_rate: Optional[float] = Field(None, ge=0.0, le=1.0, description="Success rate")
+    success_rate: Optional[float] = Field(
+        None, ge=0.0, le=1.0, description="Success rate"
+    )
     last_used: Optional[str] = Field(None, description="Last invocation timestamp")
 
     class Config:
@@ -122,7 +128,9 @@ class CommandRegistry(BaseModel):
 
     def get_by_id(self, command_id: str) -> Optional[CommandMetadata]:
         """Retrieve command metadata by ID"""
-        return next((cmd for cmd in self.commands if cmd.command_id == command_id), None)
+        return next(
+            (cmd for cmd in self.commands if cmd.command_id == command_id), None
+        )
 
     def get_by_category(self, category: str) -> List[CommandMetadata]:
         """Retrieve all commands in a category"""
@@ -146,7 +154,8 @@ class CommandRegistry(BaseModel):
         return [
             cmd
             for cmd in self.commands
-            if "all" in cmd.applicable_team_sizes or team_size in cmd.applicable_team_sizes
+            if "all" in cmd.applicable_team_sizes
+            or team_size in cmd.applicable_team_sizes
         ]
 
     class Config:

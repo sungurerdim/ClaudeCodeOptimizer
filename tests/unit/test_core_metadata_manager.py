@@ -37,7 +37,8 @@ class TestParseFrontmatter:
         with tempfile.NamedTemporaryFile(
             mode="w", suffix=".md", delete=False, encoding="utf-8"
         ) as f:
-            f.write("""---
+            f.write(
+                """---
 title: Test File
 description: A test description
 category: testing
@@ -47,7 +48,8 @@ tags:
 ---
 
 # Content here
-""")
+"""
+            )
             f.flush()
             path = Path(f.name)
 
@@ -66,7 +68,8 @@ tags:
         with tempfile.NamedTemporaryFile(
             mode="w", suffix=".md", delete=False, encoding="utf-8"
         ) as f:
-            f.write("""---
+            f.write(
+                """---
 title: Skill File
 use_cases:
   project_maturity:
@@ -77,7 +80,8 @@ use_cases:
 ---
 
 Content
-""")
+"""
+            )
             f.flush()
             path = Path(f.name)
 
@@ -116,11 +120,13 @@ Content
         with tempfile.NamedTemporaryFile(
             mode="w", suffix=".md", delete=False, encoding="utf-8"
         ) as f:
-            f.write("""---
+            f.write(
+                """---
 ---
 
 Content
-""")
+"""
+            )
             f.flush()
             path = Path(f.name)
 
@@ -135,7 +141,8 @@ Content
         with tempfile.NamedTemporaryFile(
             mode="w", suffix=".md", delete=False, encoding="utf-8"
         ) as f:
-            f.write("""---
+            f.write(
+                """---
 title: Nested Test
 metadata:
   author: Test Author
@@ -146,7 +153,8 @@ metadata:
 ---
 
 Content
-""")
+"""
+            )
             f.flush()
             path = Path(f.name)
 
@@ -165,12 +173,14 @@ Content
         with tempfile.NamedTemporaryFile(
             mode="w", suffix=".md", delete=False, encoding="utf-8"
         ) as f:
-            f.write("""---
+            f.write(
+                """---
 invalid: yaml: content: [broken
 ---
 
 Content
-""")
+"""
+            )
             f.flush()
             path = Path(f.name)
 
@@ -189,14 +199,16 @@ class TestGetDescription:
         with tempfile.NamedTemporaryFile(
             mode="w", suffix=".md", delete=False, encoding="utf-8"
         ) as f:
-            f.write("""---
+            f.write(
+                """---
 title: Test
 description: This is the description from frontmatter
 ---
 
 # Content
 This is content, not description.
-""")
+"""
+            )
             f.flush()
             path = Path(f.name)
 
@@ -211,7 +223,8 @@ This is content, not description.
         with tempfile.NamedTemporaryFile(
             mode="w", suffix=".md", delete=False, encoding="utf-8"
         ) as f:
-            f.write("""---
+            f.write(
+                """---
 title: Test
 ---
 
@@ -220,7 +233,8 @@ title: Test
 This is the first paragraph that should be used as description.
 
 This is the second paragraph.
-""")
+"""
+            )
             f.flush()
             path = Path(f.name)
 
@@ -236,12 +250,14 @@ This is the second paragraph.
         with tempfile.NamedTemporaryFile(
             mode="w", suffix=".md", delete=False, encoding="utf-8"
         ) as f:
-            f.write(f"""---
+            f.write(
+                f"""---
 title: Test
 ---
 
 {long_text}
-""")
+"""
+            )
             f.flush()
             path = Path(f.name)
 
@@ -277,7 +293,8 @@ title: Test
         with tempfile.NamedTemporaryFile(
             mode="w", suffix=".md", delete=False, encoding="utf-8"
         ) as f:
-            f.write("""---
+            f.write(
+                """---
 title: Test
 ---
 
@@ -286,7 +303,8 @@ title: Test
 ### Heading 3
 
 Actual paragraph content here.
-""")
+"""
+            )
             f.flush()
             path = Path(f.name)
 
@@ -302,7 +320,8 @@ Actual paragraph content here.
         with tempfile.NamedTemporaryFile(
             mode="w", suffix=".md", delete=False, encoding="utf-8"
         ) as f:
-            f.write("""---
+            f.write(
+                """---
 title: Test
 ---
 
@@ -310,7 +329,8 @@ Line one of paragraph.
 Line two of paragraph.
 
 Second paragraph.
-""")
+"""
+            )
             f.flush()
             path = Path(f.name)
 
@@ -331,7 +351,8 @@ class TestGetUseCases:
         with tempfile.NamedTemporaryFile(
             mode="w", suffix=".md", delete=False, encoding="utf-8"
         ) as f:
-            f.write("""---
+            f.write(
+                """---
 title: Test
 use_cases:
   development_philosophy:
@@ -344,7 +365,8 @@ use_cases:
 ---
 
 Content
-""")
+"""
+            )
             f.flush()
             path = Path(f.name)
 
@@ -362,13 +384,15 @@ Content
         with tempfile.NamedTemporaryFile(
             mode="w", suffix=".md", delete=False, encoding="utf-8"
         ) as f:
-            f.write("""---
+            f.write(
+                """---
 title: Test
 description: No use_cases here
 ---
 
 Content
-""")
+"""
+            )
             f.flush()
             path = Path(f.name)
 
@@ -383,13 +407,15 @@ Content
         with tempfile.NamedTemporaryFile(
             mode="w", suffix=".md", delete=False, encoding="utf-8"
         ) as f:
-            f.write("""---
+            f.write(
+                """---
 title: Test
 use_cases: not_a_dict
 ---
 
 Content
-""")
+"""
+            )
             f.flush()
             path = Path(f.name)
 
@@ -404,7 +430,8 @@ Content
         with tempfile.NamedTemporaryFile(
             mode="w", suffix=".md", delete=False, encoding="utf-8"
         ) as f:
-            f.write("""---
+            f.write(
+                """---
 title: Test
 use_cases:
   valid_key:
@@ -413,7 +440,8 @@ use_cases:
 ---
 
 Content
-""")
+"""
+            )
             f.flush()
             path = Path(f.name)
 
@@ -657,7 +685,9 @@ Content
         available = ["file1"]
         context = {"project_maturity": "production"}
 
-        result = manager.recommend_files(available, self.files_dir, context, file_extension=".txt")
+        result = manager.recommend_files(
+            available, self.files_dir, context, file_extension=".txt"
+        )
 
         assert "file1" in result
 
@@ -727,7 +757,9 @@ Content
                 "development_philosophy": "quality_first",
             }
 
-            result = manager.recommend_files(["security-audit", "quick-check"], files_dir, context)
+            result = manager.recommend_files(
+                ["security-audit", "quick-check"], files_dir, context
+            )
 
             assert "security-audit" in result
             assert "quick-check" not in result
@@ -738,7 +770,9 @@ Content
                 "development_philosophy": "speed_first",
             }
 
-            result = manager.recommend_files(["security-audit", "quick-check"], files_dir, context)
+            result = manager.recommend_files(
+                ["security-audit", "quick-check"], files_dir, context
+            )
 
             assert "security-audit" not in result
             assert "quick-check" in result
@@ -753,7 +787,8 @@ Content
         with tempfile.NamedTemporaryFile(
             mode="w", suffix=".md", delete=False, encoding="utf-8"
         ) as f:
-            f.write("""---
+            f.write(
+                """---
 title: Test
 description: Frontmatter description
 ---
@@ -761,7 +796,8 @@ description: Frontmatter description
 # Heading
 
 Content paragraph that would be fallback.
-""")
+"""
+            )
             f.flush()
             path = Path(f.name)
 

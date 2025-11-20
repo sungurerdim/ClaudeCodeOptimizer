@@ -70,7 +70,9 @@ def print_separator(char: str = "=", width: Optional[int] = None) -> None:
     print(char * width)
 
 
-def print_header(title: str, subtitle: Optional[str] = None, width: Optional[int] = None) -> None:
+def print_header(
+    title: str, subtitle: Optional[str] = None, width: Optional[int] = None
+) -> None:
     """
     Print a formatted header with separator lines.
 

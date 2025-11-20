@@ -455,7 +455,8 @@ class TestCommandRegistryIntegration:
         api_cmds = [
             cmd
             for cmd in python_cmds
-            if "api" in cmd.applicable_project_types or "all" in cmd.applicable_project_types
+            if "api" in cmd.applicable_project_types
+            or "all" in cmd.applicable_project_types
         ]
         assert len(api_cmds) == 2
 
