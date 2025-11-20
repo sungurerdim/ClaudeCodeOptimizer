@@ -1,0 +1,487 @@
+# ClaudeCodeOptimizer - Architecture
+
+This document describes CCO's internal architecture, agent orchestration, and design principles.
+
+For installation and usage, see [README.md](README.md).
+
+---
+
+## Table of Contents
+
+- [How CCO Works](#how-cco-works)
+- [Architecture & Benefits](#architecture--benefits)
+- [Agent Orchestration](#agent-orchestration)
+- [Configuration](#configuration)
+- [Universal Principles](#universal-principles)
+
+---
+
+## How CCO Works
+
+### Command → Agent → Skill Flow
+
+```
+User runs command          Agent executes           Skills activate
+─────────────────────────────────────────────────────────────────────
+/cco-audit --security  →   audit-agent (Haiku)  →   Security skill
+                           - Pattern matching       - OWASP checks
+                           - Fast scanning          - AI security
+                           - Low cost               - Supply chain
+
+/cco-fix --security    →   fix-agent (Sonnet)   →   Security skill
+                           - Semantic analysis      - Safe fixes
+                           - Code modifications     - Risky approvals
+                           - High accuracy          - Verification
+
+/cco-generate --tests  →   generate-agent       →   Testing skill
+                           (Sonnet)                 - Unit tests
+                           - Quality output         - Integration tests
+                           - Complete code          - Coverage targets
+```
+
+### Data Flow: audit → fix → generate
+
+```
+┌─────────────┐     ┌─────────────┐     ┌─────────────┐
+│   AUDIT     │ ──→ │    FIX      │ ──→ │  GENERATE   │
+│             │     │             │     │             │
+│ • Discover  │     │ • Auto-fix  │     │ • Create    │
+│   issues    │     │   safe      │     │   tests     │
+│ • Classify  │     │ • Request   │     │ • Create    │
+│   severity  │     │   approval  │     │   docs      │
+│ • Report    │     │   for risky │     │ • Fill      │
+│   findings  │     │ • Verify    │     │   gaps      │
+└─────────────┘     └─────────────┘     └─────────────┘
+      │                   │                   │
+      └───────────────────┴───────────────────┘
+                          │
+                    Shared Context:
+                    • Tech stack detection
+                    • Project conventions
+                    • Finding categories
+```
+
+**Flow Details:**
+
+1. **Discovery Phase** (All commands)
+   - Detect tech stack via Glob patterns (`**/*.py`, `**/Dockerfile`)
+   - Identify frameworks (Flask, Django, FastAPI)
+   - Store context for downstream commands
+
+2. **Audit Phase**
+   - Run applicable checks based on flags
+   - Categorize findings by severity (critical/high/medium/low)
+   - Report with file:line references
+
+3. **Fix Phase**
+   - Reuse audit findings (auto-runs audit if needed)
+   - Safe fixes: Apply automatically (parameterize SQL, remove dead code)
+   - Risky fixes: Request user approval (auth changes, CSRF)
+   - Verify each fix
+
+4. **Generate Phase**
+   - Use tech stack context
+   - Follow project conventions
+   - Create missing components (tests, docs, configs)
+
+### Model Selection Rationale
+
+| Agent | Model | Why |
+|-------|-------|-----|
+| audit-agent | Haiku | Pattern matching doesn't need deep reasoning. Fast & cheap for scanning. |
+| fix-agent | Sonnet | Code modifications need semantic understanding. Accuracy > speed. |
+| generate-agent | Sonnet | Quality generation needs balanced reasoning. Good output quality. |
+
+### Skill Auto-Activation
+
+Skills load dynamically based on Claude's semantic understanding:
+
+```
+User: /cco-audit --security
+
+Claude detects:
+- "security" keyword → loads Security skill
+- Python files found → loads Python-specific checks
+- Flask detected → loads web security patterns
+
+Skills activated:
+- cco-skill-security-owasp-xss-sqli-csrf
+- cco-skill-ai-security-promptinjection-models
+```
+
+No manual skill selection needed. Claude matches context to relevant skills automatically.
+
+---
+
+## Architecture & Benefits
+
+### Zero Pollution
+
+**Global Storage (`~/.claude/`):**
+- **Commands** - Core functionality
+- **Principles** - Claude guidelines + universal + project
+- **Skills** - Auto-activate on demand
+- **Agents** - Parallel execution (audit/Haiku, fix/Sonnet, generate/Sonnet)
+- **CLAUDE.md** - Principle markers
+
+**Project Storage:**
+- **ZERO files created** in your projects
+- All CCO files live globally
+- No `.cco/` or per-project configs
+
+**Benefits:**
+- One update → all projects get it instantly
+- No config drift between projects
+- Clean repositories (CCO leaves no trace)
+- Share setup across unlimited projects
+
+### Progressive Loading (On-Demand Context)
+
+**Always Loaded (baseline principles):**
+- Claude Guidelines (C_*): Token optimization, parallel agents, efficient file ops, honest reporting, native tools, project context discovery
+- Universal (U_*): Evidence-based verification, DRY, minimal touch, no overengineering
+
+**Auto-Activating Skills (26 total):**
+Skills load on-demand when Claude detects relevance:
+- **Security (5):** OWASP, AI security, supply chain, K8s, privacy
+- **Testing (2):** Test pyramid, API testing
+- **Database (2):** Optimization, migrations
+- **Observability (3):** Metrics, logging, incidents
+- **CI/CD (2):** Gates, deployments
+- **Code Quality (2):** Refactoring, content
+- **Documentation (1):** API/OpenAPI/ADR/runbooks
+- **Git (2):** Branching, versioning
+- **Performance (2):** Frontend, resilience
+- **Architecture (2):** Microservices, event-driven
+- **Mobile (1):** Offline/battery
+- **DevEx (1):** Onboarding/tooling
+
+**Context Efficiency:** Only baseline principles loaded initially. Skills activate when needed, not upfront. This keeps context focused on current task.
+
+### Key Features
+
+**Project Context Discovery:**
+- Optional analysis of project documentation (README, CONTRIBUTING, ARCHITECTURE)
+- Haiku sub-agent extracts project context without consuming main context
+- Ensures findings/fixes align with project goals and conventions
+
+**Full Control Mode (Audit):**
+- Three modes: Quick Presets, Category Mode, Full Control
+- Full Control shows all available checks with applicability status
+- Individual check selection for maximum precision
+
+**YAML Frontmatter:**
+- All commands/agents include structured metadata
+- Command Discovery Protocol for semantic matching
+- Enables intelligent command recommendations
+
+---
+
+## Agent Orchestration
+
+### 3 Specialized Agents
+
+- **audit-agent** (Haiku) - Fast scanning, cost-efficient pattern detection
+- **fix-agent** (Sonnet) - Accurate code modifications
+- **generate-agent** (Sonnet) - Quality code generation
+
+### Agent Format
+
+Per SYNTAX.md + CCO extensions:
+
+```yaml
+---
+name: agent-name                # Required (lowercase-with-hyphens)
+description: When to use...     # Required
+tools: Grep, Read, Bash         # Optional (Claude Code spec)
+model: haiku                    # Optional (haiku/sonnet/opus)
+category: analysis              # CCO extension
+metadata:                       # CCO extension
+  priority: high
+  agent_type: scan
+skills_loaded: as-needed        # CCO extension
+use_cases:                      # CCO extension
+  project_maturity: [all]
+---
+```
+
+### Model Selection Strategy
+
+- **Haiku (Fast & Cheap):** Pattern matching, simple scans
+  - Integration checks, dependency scanning
+  - Git workflow quality, container rule checks
+
+- **Sonnet (Accurate):** Semantic analysis, code changes
+  - Security vulnerabilities (SQL injection, XSS)
+  - Architecture analysis, performance optimization
+  - All code generation and fixes
+
+### Parallel Execution Example
+
+```python
+# Security audit with parallel agents
+Task(model="haiku", prompt="Scan SQL injection patterns...")
+Task(model="haiku", prompt="Scan hardcoded secrets...")
+Task(model="haiku", prompt="Check dependency CVEs...")
+# All run in parallel → faster execution
+```
+
+---
+
+## Configuration
+
+CCO uses a zero-configuration approach by design. All settings are optimized for production use.
+
+### Storage Locations
+
+| Location | Contents | Purpose |
+|----------|----------|---------|
+| `~/.claude/commands/` | Command files (cco-*.md) | Slash commands for Claude Code |
+| `~/.claude/principles/` | Principle files (U_*, C_*, P_*) | Guidelines and best practices |
+| `~/.claude/skills/` | Skill files (cco-skill-*.md) | Domain-specific knowledge |
+| `~/.claude/agents/` | Agent files (cco-agent-*.md) | Specialized AI agents |
+| `~/.claude/CLAUDE.md` | Principle markers | Links principles to Claude |
+
+### Built-in Defaults
+
+**Thresholds (constants.py):**
+- Test coverage targets: 50% (minimum) → 80% (good) → 90% (excellent)
+- Codebase size: <1000 files (small), <5000 (medium), 5000+ (large)
+- Command timeout: 300 seconds default
+
+**Model Selection:**
+- audit-agent: Haiku (fast scanning)
+- fix-agent: Sonnet (accurate modifications)
+- generate-agent: Sonnet (quality output)
+
+### Customization Options
+
+**Override via Environment Variables:**
+```bash
+# Example: Set custom timeout
+export CCO_TIMEOUT=600
+
+# Example: Set verbose mode
+export CCO_VERBOSE=1
+```
+
+**Override via Command Flags:**
+```bash
+# Specify categories explicitly
+/cco-audit --security --tests
+
+# Run in quick mode (fast health assessment)
+/cco-audit --quick
+```
+
+### What CCO Does NOT Touch
+
+- **Your project files** - Zero pollution, nothing added to your repo
+- **Claude Code settings** - Works alongside existing Claude configuration
+- **Other tools** - No conflicts with linters, formatters, or CI/CD
+
+### Verifying Configuration
+
+```bash
+# Check CCO installation status
+/cco-status
+
+# Shows:
+# - Installed commands
+# - Available skills
+# - Agent configuration
+# - Version info
+```
+
+---
+
+## Universal Principles
+
+All CCO components (commands, skills, agents, principles) **MUST** follow these rules:
+
+### 1. No Hardcoded Examples
+
+AI models may interpret hardcoded examples as real data and use them literally.
+
+```python
+# ❌ BAD: Hardcoded (AI might use as-is)
+"file": "src/auth/login.py", "line": 45
+
+# ✅ GOOD: Dynamic placeholders
+"file": "{FILE_PATH}", "line": "{LINE_NUMBER}"
+```
+
+### 2. Native Claude Code Tools for All Interactions
+
+All user interactions must use native tools (AskUserQuestion, etc.).
+
+```python
+# ❌ BAD: Text-based prompts
+print("Select option (1/2/3): ")
+
+# ✅ GOOD: Native tool
+AskUserQuestion({
+  questions: [{
+    question: "Which checks to run?",
+    header: "Audit",
+    multiSelect: true,
+    options: [...]
+  }]
+})
+```
+
+### 3. MultiSelect with "All" Option
+
+Any question with multiple choices must be multiSelect with "All" option.
+
+```python
+options: [
+  {label: "All", description: "Select all options"},
+  {label: "Security", description: "..."},
+  {label: "Testing", description: "..."},
+]
+# If "All" selected → all other options are default selected
+```
+
+### 4. 100% Honesty - No False Claims
+
+- Never claim "fixed" unless change verified
+- Never say "impossible" if technically possible
+- Never claim "generated" unless file exists
+- Report exact truth, nothing more or less
+
+```python
+# Accurate outcome categories
+OUTCOMES = {
+    "fixed": "Applied and verified",
+    "needs_decision": "Multiple approaches - user chooses",
+    "needs_review": "Complex - requires human verification",
+    "requires_migration": "DB change - needs migration script",
+    "impossible_external": "Issue in third-party code",
+}
+```
+
+### 5. Complete Accounting
+
+Every item must have a disposition. Totals must match.
+
+```python
+# MUST verify: fixed + skipped + cannot_fix = total
+assert len(fixed) + len(skipped) + len(cannot_fix) == total_issues
+```
+
+### 6. Best UX with Highest Quality
+
+- Explicit phase transitions (start/complete announcements)
+- Consistent counts (single source of truth)
+- Progressive disclosure (simple start, detail on demand)
+- Real-time feedback (streaming, not batch)
+
+### 7. Token Optimization
+
+- Minimize context usage without sacrificing quality
+- Grep before Read
+- Use offset+limit for large files
+- Targeted reads, not full file dumps
+
+### 8. Unlimited Sub-Agents for Concrete Benefit
+
+Use as many sub-agents as needed when they provide concrete benefit.
+
+```python
+# Parallel agents for independent tasks
+Task(model="haiku", prompt="Scan security...")
+Task(model="haiku", prompt="Scan testing...")
+Task(model="haiku", prompt="Scan database...")
+# All run in parallel → faster, better results
+```
+
+### 9. Universal + Claude Principle Compliance
+
+All components must align with:
+- **U_*** principles (Evidence-based, DRY, Minimal touch, No overengineering)
+- **C_*** principles (Context window, Cross-platform, Efficient file ops, Follow patterns)
+
+**Full Principle Documentation:**
+
+See `~/.claude/principles/` for complete details:
+- **U_* (Universal)**: Core development best practices
+- **C_* (Claude Guidelines)**: Claude Code-specific optimizations
+- **P_* (Project-specific)**: Optional per-project overrides
+
+---
+
+## Performance Characteristics
+
+### Typical Execution Times
+
+| Command | Codebase Size | Time | Model Cost |
+|---------|--------------|------|------------|
+| `/cco-audit --quick` | Small (<1K files) | ~10s | $0.01 |
+| `/cco-audit --security` | Medium (<5K files) | ~30s | $0.05 |
+| `/cco-audit --all` | Large (5K+ files) | ~2min | $0.20 |
+| `/cco-fix --security` | 10 issues | ~45s | $0.10 |
+| `/cco-generate --tests` | 5 files | ~60s | $0.15 |
+
+### Optimization Techniques
+
+1. **Parallel Agent Execution**
+   - Independent checks run simultaneously
+   - 3-5x faster than sequential scanning
+
+2. **Progressive Context Loading**
+   - Only load relevant skills when needed
+   - Baseline principles always loaded (~10KB)
+   - Skills load on-demand (5-15KB each)
+
+3. **Efficient File Operations**
+   - Grep before Read (10x token savings)
+   - Targeted reads with offset+limit
+   - Pattern-based file discovery
+
+4. **Model Selection**
+   - Haiku for pattern matching (5x faster, 10x cheaper)
+   - Sonnet for code analysis (balanced)
+   - Opus only when strictly necessary (rare)
+
+---
+
+## Extension Points
+
+CCO is designed for easy extension:
+
+### Adding New Skills
+
+1. Create `~/.claude/skills/cco-skill-your-domain.md`
+2. Follow skill template format
+3. Skills auto-activate via semantic matching
+
+### Adding New Commands
+
+1. Create `~/.claude/commands/cco-your-command.md`
+2. Use YAML frontmatter for metadata
+3. Follow command template format
+
+### Adding New Agents
+
+1. Create `~/.claude/agents/cco-agent-your-purpose.md`
+2. Specify model selection strategy
+3. Define execution patterns
+
+### Adding New Principles
+
+1. Create `~/.claude/principles/P_YOUR_PRINCIPLE.md`
+2. Follow principle template format
+3. Add marker to `~/.claude/CLAUDE.md`
+
+---
+
+## Related Documentation
+
+- [README.md](README.md) - Installation and quick start
+- [CONTRIBUTING.md](CONTRIBUTING.md) - Development guidelines
+- [LICENSE](LICENSE) - MIT License
+
+---
+
+**Created by Sungur Zahid Erdim** | [GitHub](https://github.com/sungurerdim/ClaudeCodeOptimizer)
