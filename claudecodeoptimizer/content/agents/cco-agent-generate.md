@@ -103,6 +103,21 @@ When generating components, load relevant skills for templates:
 - ADR template for architecture decisions
 - Runbook template for operational docs
 - Docstring template for code documentation
+- AI code documentation templates (2025)
+
+### Code Review Checklist Generation (Pain #11, #12)
+**Skill**: `cco-skill-code-review-quality-dora`
+- Review checklist template
+- PR template with quality gates
+- Commit message guidelines
+- DORA metrics tracking setup
+
+### Platform Engineering Generation (Pain #4, #6, #10)
+**Skill**: `cco-skill-platform-cicd-tests-iac`
+- CI/CD maturity assessment template
+- Test automation scaffold
+- IaC boilerplate (Terraform/Pulumi)
+- AI readiness checklist
 
 ---
 
@@ -119,6 +134,8 @@ def get_template_for_type(gen_type: str) -> str:
         "readme": "cco-skill-docs-api-openapi-adr-runbooks → README Template",
         "adr": "cco-skill-docs-api-openapi-adr-runbooks → ADR Template",
         "runbook": "cco-skill-docs-api-openapi-adr-runbooks → Runbook Template",
+        "review-checklist": "cco-skill-code-review-quality-dora → Review Checklist Template",
+        "platform": "cco-skill-platform-cicd-tests-iac → Platform Templates",
     }
     return templates.get(gen_type, "")
 
