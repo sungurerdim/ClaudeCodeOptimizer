@@ -44,7 +44,10 @@ class TestRecommendSkills:
         }
 
         with patch.object(service, "metadata") as mock_metadata:
-            mock_metadata.recommend_files.return_value = ["cco-skill-testing", "cco-skill-security"]
+            mock_metadata.recommend_files.return_value = [
+                "cco-skill-testing",
+                "cco-skill-security",
+            ]
 
             with patch(
                 "claudecodeoptimizer.core.recommendation_service.get_available_skills"
@@ -94,7 +97,9 @@ class TestRecommendSkills:
                 ) as mock_dir:
                     mock_dir.return_value = Path("/mock/skills")
 
-                    result = service.recommend_skills(context_answers, detected_languages)
+                    result = service.recommend_skills(
+                        context_answers, detected_languages
+                    )
 
         assert "cco-skill-testing" in result
         assert "python/cco-skill-async" in result
@@ -126,7 +131,9 @@ class TestRecommendSkills:
                 ) as mock_dir:
                     mock_dir.return_value = Path("/mock/skills")
 
-                    result = service.recommend_skills(context_answers, detected_languages)
+                    result = service.recommend_skills(
+                        context_answers, detected_languages
+                    )
 
         # Should only appear once
         assert result.count("cco-skill-testing") == 1
@@ -209,7 +216,9 @@ class TestRecommendSkills:
                 ) as mock_dir:
                     mock_dir.return_value = Path("/mock/skills")
 
-                    result = service.recommend_skills(context_answers, detected_languages)
+                    result = service.recommend_skills(
+                        context_answers, detected_languages
+                    )
 
         assert "python/cco-skill-async" in result
 
@@ -226,7 +235,10 @@ class TestRecommendAgents:
         }
 
         with patch.object(service, "metadata") as mock_metadata:
-            mock_metadata.recommend_files.return_value = ["cco-agent-audit", "cco-agent-fix"]
+            mock_metadata.recommend_files.return_value = [
+                "cco-agent-audit",
+                "cco-agent-fix",
+            ]
 
             with patch(
                 "claudecodeoptimizer.core.recommendation_service.get_available_agents"
@@ -393,19 +405,26 @@ class TestRecommendationServiceIntegration:
                 ["cco-status"],  # Commands
             ]
 
-            with patch(
-                "claudecodeoptimizer.core.recommendation_service.get_available_skills"
-            ) as mock_skills, patch(
-                "claudecodeoptimizer.core.recommendation_service.get_available_agents"
-            ) as mock_agents, patch(
-                "claudecodeoptimizer.core.recommendation_service.get_available_commands"
-            ) as mock_commands, patch(
-                "claudecodeoptimizer.core.recommendation_service.config.get_skills_dir"
-            ) as mock_skills_dir, patch(
-                "claudecodeoptimizer.core.recommendation_service.config.get_agents_dir"
-            ) as mock_agents_dir, patch(
-                "claudecodeoptimizer.core.recommendation_service.config.get_global_commands_dir"
-            ) as mock_commands_dir:
+            with (
+                patch(
+                    "claudecodeoptimizer.core.recommendation_service.get_available_skills"
+                ) as mock_skills,
+                patch(
+                    "claudecodeoptimizer.core.recommendation_service.get_available_agents"
+                ) as mock_agents,
+                patch(
+                    "claudecodeoptimizer.core.recommendation_service.get_available_commands"
+                ) as mock_commands,
+                patch(
+                    "claudecodeoptimizer.core.recommendation_service.config.get_skills_dir"
+                ) as mock_skills_dir,
+                patch(
+                    "claudecodeoptimizer.core.recommendation_service.config.get_agents_dir"
+                ) as mock_agents_dir,
+                patch(
+                    "claudecodeoptimizer.core.recommendation_service.config.get_global_commands_dir"
+                ) as mock_commands_dir,
+            ):
                 mock_skills.return_value = ["cco-skill-testing"]
                 mock_agents.return_value = ["cco-agent-audit"]
                 mock_commands.return_value = ["cco-status"]
@@ -439,18 +458,25 @@ class TestRecommendationServiceIntegration:
         with patch.object(service, "metadata") as mock_metadata:
             mock_metadata.recommend_files.side_effect = capture_context
 
-            with patch(
-                "claudecodeoptimizer.core.recommendation_service.get_available_skills"
-            ) as mock_skills, patch(
-                "claudecodeoptimizer.core.recommendation_service.get_available_agents"
-            ) as mock_agents, patch(
-                "claudecodeoptimizer.core.recommendation_service.get_available_commands"
-            ) as mock_commands, patch(
-                "claudecodeoptimizer.core.recommendation_service.config.get_skills_dir"
-            ), patch(
-                "claudecodeoptimizer.core.recommendation_service.config.get_agents_dir"
-            ), patch(
-                "claudecodeoptimizer.core.recommendation_service.config.get_global_commands_dir"
+            with (
+                patch(
+                    "claudecodeoptimizer.core.recommendation_service.get_available_skills"
+                ) as mock_skills,
+                patch(
+                    "claudecodeoptimizer.core.recommendation_service.get_available_agents"
+                ) as mock_agents,
+                patch(
+                    "claudecodeoptimizer.core.recommendation_service.get_available_commands"
+                ) as mock_commands,
+                patch(
+                    "claudecodeoptimizer.core.recommendation_service.config.get_skills_dir"
+                ),
+                patch(
+                    "claudecodeoptimizer.core.recommendation_service.config.get_agents_dir"
+                ),
+                patch(
+                    "claudecodeoptimizer.core.recommendation_service.config.get_global_commands_dir"
+                ),
             ):
                 mock_skills.return_value = []
                 mock_agents.return_value = []
@@ -564,7 +590,9 @@ class TestRecommendationServiceEdgeCases:
                     mock_dir.return_value = Path("/mock/skills")
 
                     # Should not raise
-                    result = service.recommend_skills(context_answers, detected_languages)
+                    result = service.recommend_skills(
+                        context_answers, detected_languages
+                    )
 
         assert result == []
 

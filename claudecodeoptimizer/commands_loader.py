@@ -56,7 +56,9 @@ def load_global_commands() -> Dict[str, Dict[str, Any]]:
         metadata = parse_frontmatter(content)
 
         commands[command_name] = {
-            "description": metadata.get("description", f"{command_name.title()} command"),
+            "description": metadata.get(
+                "description", f"{command_name.title()} command"
+            ),
             "file": md_file,
         }
 

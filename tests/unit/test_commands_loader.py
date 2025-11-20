@@ -147,7 +147,9 @@ description: test description
         content = None
 
         # Should not raise exception, returns empty dict
-        with patch("claudecodeoptimizer.commands_loader.parse_frontmatter") as mock_parse:
+        with patch(
+            "claudecodeoptimizer.commands_loader.parse_frontmatter"
+        ) as mock_parse:
             # Simulate an exception
             mock_parse.side_effect = Exception("Unexpected error")
 
@@ -339,7 +341,9 @@ class TestGetCommandList:
 
     def test_get_command_list_no_commands(self):
         """Test command list output with no commands"""
-        with patch("claudecodeoptimizer.commands_loader.load_global_commands", return_value={}):
+        with patch(
+            "claudecodeoptimizer.commands_loader.load_global_commands", return_value={}
+        ):
             result = get_command_list()
 
             # Default fallback
@@ -402,7 +406,9 @@ class TestGetSlashCommands:
 
     def test_get_slash_commands_no_commands(self):
         """Test slash commands output with no commands"""
-        with patch("claudecodeoptimizer.commands_loader.load_global_commands", return_value={}):
+        with patch(
+            "claudecodeoptimizer.commands_loader.load_global_commands", return_value={}
+        ):
             result = get_slash_commands()
 
             # Default fallback
@@ -504,7 +510,9 @@ name: 'single-quoted-name'
     def test_functions_dont_raise_on_missing_files(self):
         """Test that functions handle missing files gracefully"""
         # Even if commands don't exist, should not raise
-        with patch("claudecodeoptimizer.commands_loader.load_global_commands", return_value={}):
+        with patch(
+            "claudecodeoptimizer.commands_loader.load_global_commands", return_value={}
+        ):
             # Should not raise
             cmd_list = get_command_list()
             slash_list = get_slash_commands()

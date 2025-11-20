@@ -390,7 +390,10 @@ class TestPrincipleSelection:
                     "severity": "high",
                     "weight": 7,
                     "description": "High",
-                    "applicability": {"project_types": ["api"], "languages": ["python"]},
+                    "applicability": {
+                        "project_types": ["api"],
+                        "languages": ["python"],
+                    },
                     "rules": [],
                     "examples": {},
                     "autofix": {},
@@ -511,7 +514,10 @@ class TestAutoSelection:
                     "severity": "high",
                     "weight": 7,
                     "description": "High",
-                    "applicability": {"project_types": ["api"], "languages": ["python"]},
+                    "applicability": {
+                        "project_types": ["api"],
+                        "languages": ["python"],
+                    },
                     "rules": [],
                     "examples": {},
                     "autofix": {},
@@ -524,7 +530,10 @@ class TestAutoSelection:
                     "severity": "medium",
                     "weight": 5,
                     "description": "Medium",
-                    "applicability": {"project_types": ["api"], "contexts": ["api_endpoints"]},
+                    "applicability": {
+                        "project_types": ["api"],
+                        "contexts": ["api_endpoints"],
+                    },
                     "rules": [],
                     "examples": {},
                     "autofix": {},
@@ -782,7 +791,9 @@ class TestApplicability:
     def test_is_applicable_language_mismatch(self, tmp_path: Path) -> None:
         """Test applicability with non-matching language"""
         manager = PrinciplesManager(tmp_path)
-        principle = self.create_principle({"project_types": ["all"], "languages": ["go", "rust"]})
+        principle = self.create_principle(
+            {"project_types": ["all"], "languages": ["go", "rust"]}
+        )
         chars = ProjectCharacteristics(
             project_type="api",
             primary_language="python",
@@ -826,7 +837,9 @@ class TestApplicability:
     def test_is_applicable_context_mismatch(self, tmp_path: Path) -> None:
         """Test applicability with non-matching context"""
         manager = PrinciplesManager(tmp_path)
-        principle = self.create_principle({"project_types": ["all"], "contexts": ["api_endpoints"]})
+        principle = self.create_principle(
+            {"project_types": ["all"], "contexts": ["api_endpoints"]}
+        )
         chars = ProjectCharacteristics(
             project_type="api",
             primary_language="python",

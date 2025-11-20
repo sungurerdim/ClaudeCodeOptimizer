@@ -249,7 +249,9 @@ TDDAdherenceChoice = Literal[
 ]
 
 RefactoringChoice = Literal["continuous", "milestone-based", "when-needed", "rarely"]
-BreakingChangesChoice = Literal["never", "deprecation-cycle", "semver-major", "justified"]
+BreakingChangesChoice = Literal[
+    "never", "deprecation-cycle", "semver-major", "justified"
+]
 CodeReviewChoice = Literal["mandatory-all", "critical-only", "optional"]
 PairProgrammingChoice = Literal["always", "complex-tasks", "onboarding", "never"]
 FeatureFlagsChoice = Literal["extensive", "major-features", "experiments", "none"]
@@ -296,7 +298,9 @@ LineLengthChoice = Literal["80", "100", "120", "none"]
 # Documentation Types
 DocVerbosityChoice = Literal["extensive", "concise", "minimal"]
 DocAudienceChoice = Literal["beginners", "intermediate", "experts"]
-DocStyleChoice = Literal["tutorial-driven", "reference-manual", "example-heavy", "hybrid"]
+DocStyleChoice = Literal[
+    "tutorial-driven", "reference-manual", "example-heavy", "hybrid"
+]
 InlineDocChoice = Literal["every-function", "public-api", "complex-only"]
 ArchitectureDiagramsChoice = Literal["required", "complex-areas", "optional"]
 APIDocChoice = Literal["openapi-spec", "markdown", "code-comments"]
@@ -423,10 +427,14 @@ AuditLoggingChoice = Literal[
 ]
 
 InputValidationChoice = Literal["schema-everything", "external-only", "pragmatic"]
-DependencyScanningChoice = Literal["every-commit", "every-pr", "weekly", "monthly", "none"]
+DependencyScanningChoice = Literal[
+    "every-commit", "every-pr", "weekly", "monthly", "none"
+]
 
 # Performance Types
-OptimizationPriorityChoice = Literal["performance-first", "balanced", "maintainability-first"]
+OptimizationPriorityChoice = Literal[
+    "performance-first", "balanced", "maintainability-first"
+]
 CachingStrategyChoice = Literal["aggressive", "selective", "minimal", "none"]
 DatabaseQueriesChoice = Literal["hand-optimized", "orm-with-indexes", "orm-simple"]
 PrematureOptimizationChoice = Literal["allowed", "profile-first", "forbidden"]
@@ -437,7 +445,9 @@ GitWorkflowChoice = Literal["git-flow", "trunk-based", "github-flow", "gitlab-fl
 VersioningStrategyChoice = Literal[
     "auto_semver", "pr_based_semver", "manual_semver", "calver", "no_versioning"
 ]
-CommitConventionChoice = Literal["conventional-enforced", "conventional-suggested", "freeform"]
+CommitConventionChoice = Literal[
+    "conventional-enforced", "conventional-suggested", "freeform"
+]
 PRSizeChoice = Literal["small-200", "medium-500", "large-1000", "no-limit"]
 CodeOwnershipChoice = Literal["strict-codeowners", "team-ownership", "open"]
 
@@ -923,8 +933,12 @@ class CCOPreferences(BaseModel):
     """
 
     project_identity: ProjectIdentity
-    development_style: DevelopmentStyle = Field(default_factory=lambda: DevelopmentStyle())
-    code_quality: CodeQualityStandards = Field(default_factory=lambda: CodeQualityStandards())
+    development_style: DevelopmentStyle = Field(
+        default_factory=lambda: DevelopmentStyle()
+    )
+    code_quality: CodeQualityStandards = Field(
+        default_factory=lambda: CodeQualityStandards()
+    )
     documentation: DocumentationPreferences = Field(
         default_factory=lambda: DocumentationPreferences()
     )
@@ -933,7 +947,9 @@ class CCOPreferences(BaseModel):
     performance: PerformanceVsMaintainability = Field(
         default_factory=lambda: PerformanceVsMaintainability()
     )
-    collaboration: TeamCollaboration = Field(default_factory=lambda: TeamCollaboration())
+    collaboration: TeamCollaboration = Field(
+        default_factory=lambda: TeamCollaboration()
+    )
     devops: DevOpsAutomation = Field(default_factory=lambda: DevOpsAutomation())
 
     # Principle Selection

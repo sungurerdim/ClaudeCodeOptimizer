@@ -67,7 +67,9 @@ CONTENT_SAMPLE_LIMIT = 20  # Maximum files to sample for content detection
 PATTERN_MATCH_LIMIT = 10  # Maximum pattern matches to collect
 
 # Command Parsing
-MARKDOWN_SECTION_COUNT = 3  # Expected sections in command markdown (metadata, description, content)
+MARKDOWN_SECTION_COUNT = (
+    3  # Expected sections in command markdown (metadata, description, content)
+)
 MIN_CLI_ARGS = 2  # Minimum CLI arguments required
 
 # Coverage Requirements

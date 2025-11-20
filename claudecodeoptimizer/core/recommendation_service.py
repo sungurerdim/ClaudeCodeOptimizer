@@ -37,7 +37,9 @@ class RecommendationService:
     # ========================================================================
 
     def recommend_skills(
-        self, context_answers: Dict[str, Any], detected_languages: Optional[List[str]] = None
+        self,
+        context_answers: Dict[str, Any],
+        detected_languages: Optional[List[str]] = None,
     ) -> List[str]:
         """
         Recommend skills based on context + detected languages.
@@ -66,7 +68,9 @@ class RecommendationService:
             for lang in detected_languages:
                 lang_lower = lang.lower()
                 # Get all skills for this language
-                lang_skills = [s for s in available_skills if s.startswith(f"{lang_lower}/")]
+                lang_skills = [
+                    s for s in available_skills if s.startswith(f"{lang_lower}/")
+                ]
 
                 # Metadata-match language skills
                 recommended.extend(

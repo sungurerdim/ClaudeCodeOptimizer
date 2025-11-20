@@ -75,7 +75,9 @@ def main() -> int:
     principles_dir = claude_dir / "principles"
 
     cmd_count = len(list(commands_dir.glob("cco-*.md"))) if commands_dir.exists() else 0
-    principle_count = len(list(principles_dir.glob("*.md"))) if principles_dir.exists() else 0
+    principle_count = (
+        len(list(principles_dir.glob("*.md"))) if principles_dir.exists() else 0
+    )
 
     print(f"\n[OK] Commands: {cmd_count}")
     print(f"[OK] Principles: {principle_count}")
