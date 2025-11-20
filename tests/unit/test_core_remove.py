@@ -5,7 +5,7 @@ Tests CCORemover class and remove_cco function for clean uninstallation.
 Target Coverage: 100%
 """
 
-from typing import Any, Dict
+from typing import Any
 
 import pytest
 
@@ -32,9 +32,7 @@ class TestCCORemover:
 
         assert result["success"] is True
         assert "actions" in result
-        assert (
-            len(result["actions"]) == 5
-        )  # commands, principles, agents, skills, claude.md
+        assert len(result["actions"]) == 5  # commands, principles, agents, skills, claude.md
 
     def test_remove_without_cleaning_claude_md(self, tmp_path, monkeypatch) -> None:
         """Test remove() without cleaning CLAUDE.md"""
@@ -107,9 +105,7 @@ class TestRemoveCommands:
 
         original_unlink = Path.unlink
 
-        def raise_on_cco_test(
-            self, *args: tuple[Any, ...], **kwargs: Dict[str, Any]
-        ) -> None:
+        def raise_on_cco_test(self, *args: tuple[Any, ...], **kwargs: dict[str, Any]) -> None:
             if "cco-test.md" in str(self):
                 raise PermissionError("Cannot delete")
             return original_unlink(self, *args, **kwargs)

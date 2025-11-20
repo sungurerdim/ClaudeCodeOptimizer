@@ -8,7 +8,7 @@ Applies DRY principle: one implementation for guides, skills, agents, commands, 
 import logging
 import re
 from pathlib import Path
-from typing import Any, Dict, List, Optional
+from typing import Any, Optional
 
 import yaml  # type: ignore[import-untyped]
 
@@ -34,7 +34,7 @@ class MetadataManager:
             cls._instance = super().__new__(cls)
         return cls._instance
 
-    def parse_frontmatter(self, file_path: Path) -> Dict[str, Any]:
+    def parse_frontmatter(self, file_path: Path) -> dict[str, Any]:
         """
         Parse frontmatter from markdown file.
 
@@ -85,7 +85,7 @@ class MetadataManager:
 
             # Find first non-heading paragraph
             lines = content.split("\n")
-            paragraph_lines: List[str] = []
+            paragraph_lines: list[str] = []
             for line in lines:
                 line_stripped = line.strip()
                 # Skip headings and empty lines
@@ -103,7 +103,7 @@ class MetadataManager:
 
         return ""
 
-    def get_use_cases(self, file_path: Path) -> Dict[str, List[str]]:
+    def get_use_cases(self, file_path: Path) -> dict[str, list[str]]:
         """
         Get use_cases from frontmatter.
 
@@ -120,14 +120,11 @@ class MetadataManager:
         use_cases = frontmatter.get("use_cases", {})
         # Ensure proper type - frontmatter returns Any
         if isinstance(use_cases, dict):
-            return {
-                str(k): list(v) if isinstance(v, list) else []
-                for k, v in use_cases.items()
-            }
+            return {str(k): list(v) if isinstance(v, list) else [] for k, v in use_cases.items()}
         return {}
 
     def matches_context(
-        self, use_cases: Dict[str, List[str]], context_answers: Dict[str, Any]
+        self, use_cases: dict[str, list[str]], context_answers: dict[str, Any]
     ) -> bool:
         """
         Check if use_cases match context answers.
@@ -163,11 +160,11 @@ class MetadataManager:
 
     def recommend_files(
         self,
-        available_files: List[str],
+        available_files: list[str],
         files_dir: Path,
-        context_answers: Dict[str, Any],
+        context_answers: dict[str, Any],
         file_extension: str = ".md",
-    ) -> List[str]:
+    ) -> list[str]:
         """
         Generic recommendation engine for any file type.
 

@@ -6,7 +6,7 @@ AI-generated recommendations based on project analysis.
 """
 
 from datetime import datetime
-from typing import Any, List
+from typing import Any
 
 from pydantic import BaseModel, Field
 
@@ -19,12 +19,8 @@ class DetectionResult(BaseModel):
         description="Detection category (language, framework, tool, pattern)",
     )
     detected_value: str = Field(..., description="What was detected")
-    confidence: float = Field(
-        ..., ge=0.0, le=1.0, description="Confidence score (0.0-1.0)"
-    )
-    evidence: List[str] = Field(
-        default=[], description="Evidence (file paths, patterns found)"
-    )
+    confidence: float = Field(..., ge=0.0, le=1.0, description="Confidence score (0.0-1.0)")
+    evidence: list[str] = Field(default=[], description="Evidence (file paths, patterns found)")
 
     class Config:
         json_schema_extra = {
@@ -44,15 +40,11 @@ class Recommendation(BaseModel):
         ...,
         description="Dot-notation path to preference (e.g., 'code_quality.linting_strictness')",
     )
-    recommended_value: Any = Field(
-        ..., description="Recommended value (type varies by preference)"
-    )
-    confidence: float = Field(
-        ..., ge=0.0, le=1.0, description="Recommendation confidence"
-    )
+    recommended_value: Any = Field(..., description="Recommended value (type varies by preference)")
+    confidence: float = Field(..., ge=0.0, le=1.0, description="Recommendation confidence")
     reasoning: str = Field(..., description="Human-readable explanation")
-    alternatives: List[Any] = Field(default=[], description="Other valid options")
-    detection_basis: List[DetectionResult] = Field(
+    alternatives: list[Any] = Field(default=[], description="Other valid options")
+    detection_basis: list[DetectionResult] = Field(
         default=[],
         description="Detection results that informed this recommendation",
     )
@@ -73,28 +65,24 @@ class Recommendation(BaseModel):
 class RecommendationBundle(BaseModel):
     """Complete recommendation set - organized by category"""
 
-    project_identity_recs: List[Recommendation] = Field(default=[])
-    development_style_recs: List[Recommendation] = Field(default=[])
-    code_quality_recs: List[Recommendation] = Field(default=[])
-    documentation_recs: List[Recommendation] = Field(default=[])
-    testing_recs: List[Recommendation] = Field(default=[])
-    security_recs: List[Recommendation] = Field(default=[])
-    performance_recs: List[Recommendation] = Field(default=[])
-    collaboration_recs: List[Recommendation] = Field(default=[])
-    devops_recs: List[Recommendation] = Field(default=[])
+    project_identity_recs: list[Recommendation] = Field(default=[])
+    development_style_recs: list[Recommendation] = Field(default=[])
+    code_quality_recs: list[Recommendation] = Field(default=[])
+    documentation_recs: list[Recommendation] = Field(default=[])
+    testing_recs: list[Recommendation] = Field(default=[])
+    security_recs: list[Recommendation] = Field(default=[])
+    performance_recs: list[Recommendation] = Field(default=[])
+    collaboration_recs: list[Recommendation] = Field(default=[])
+    devops_recs: list[Recommendation] = Field(default=[])
 
     # Metadata
-    analysis_duration_ms: int = Field(
-        0, description="Time taken to generate recommendations"
-    )
-    total_confidence: float = Field(
-        0.0, ge=0.0, le=1.0, description="Average confidence"
-    )
+    analysis_duration_ms: int = Field(0, description="Time taken to generate recommendations")
+    total_confidence: float = Field(0.0, ge=0.0, le=1.0, description="Average confidence")
     generated_at: str = Field(default_factory=lambda: datetime.now().isoformat())
 
     def calculate_total_confidence(self) -> float:
         """Calculate average confidence across all recommendations"""
-        all_recs: List[Recommendation] = (
+        all_recs: list[Recommendation] = (
             self.project_identity_recs
             + self.development_style_recs
             + self.code_quality_recs
@@ -116,10 +104,10 @@ class ProjectAnalysisReport(BaseModel):
     """Complete project analysis output - universal format"""
 
     # Detection results by category
-    languages: List[DetectionResult] = Field(default=[])
-    frameworks: List[DetectionResult] = Field(default=[])
-    project_types: List[DetectionResult] = Field(default=[])
-    tools: List[DetectionResult] = Field(default=[])
+    languages: list[DetectionResult] = Field(default=[])
+    frameworks: list[DetectionResult] = Field(default=[])
+    project_types: list[DetectionResult] = Field(default=[])
+    tools: list[DetectionResult] = Field(default=[])
 
     # Codebase patterns (language-agnostic metrics)
     codebase_patterns: dict = Field(

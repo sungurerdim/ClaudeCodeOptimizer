@@ -11,7 +11,7 @@ import logging
 from dataclasses import dataclass
 from functools import lru_cache
 from pathlib import Path
-from typing import Any, Dict, List, Optional, Set
+from typing import Any
 
 from ..config import VERSION
 from .constants import SERVICE_COUNT_THRESHOLD_LARGE, SERVICE_COUNT_THRESHOLD_MEDIUM
@@ -30,10 +30,10 @@ class Principle:
     severity: str
     weight: int
     description: str
-    applicability: Dict[str, Any]
-    rules: List[Dict[str, Any]]
-    examples: Dict[str, List[str]]
-    autofix: Dict[str, Any]
+    applicability: dict[str, Any]
+    rules: list[dict[str, Any]]
+    examples: dict[str, list[str]]
+    autofix: dict[str, Any]
 
 
 @dataclass
@@ -49,13 +49,13 @@ class ProjectCharacteristics:
     performance_critical: bool  # Performance is critical
     has_containers: bool  # Uses Docker/K8s
     has_tests: bool  # Has existing test suite
-    contexts: List[str]  # api_endpoints, database, web_frontend, etc.
+    contexts: list[str]  # api_endpoints, database, web_frontend, etc.
 
 
 class PrinciplesManager:
     """Manages loading and selection of development principles."""
 
-    def __init__(self, principles_dir: Optional[Path] = None) -> None:
+    def __init__(self, principles_dir: Path | None = None) -> None:
         """
         Initialize principles manager.
 
@@ -69,9 +69,9 @@ class PrinciplesManager:
             principles_dir = package_dir / "content" / "principles"
 
         self.principles_dir = principles_dir
-        self.principles: Dict[str, Principle] = {}
-        self.categories: List[Dict[str, Any]] = []
-        self.selection_strategies: Dict[str, Any] = {}
+        self.principles: dict[str, Principle] = {}
+        self.categories: list[dict[str, Any]] = []
+        self.selection_strategies: dict[str, Any] = {}
         self.version: str = VERSION
 
         if self.principles_dir.exists():
@@ -91,9 +91,7 @@ class PrinciplesManager:
                 categories_set.add(principle_data["category"])
 
             # Create category list (simplified, no metadata)
-            self.categories = [
-                {"id": cat, "name": cat} for cat in sorted(categories_set)
-            ]
+            self.categories = [{"id": cat, "name": cat} for cat in sorted(categories_set)]
 
             # Hardcoded selection strategies (TODO: move to config file)
             self.selection_strategies = {
@@ -128,19 +126,19 @@ class PrinciplesManager:
         except Exception as e:
             logger.error("Failed to load principles: %s", e, exc_info=True)
 
-    def get_principle(self, principle_id: str) -> Optional[Principle]:
+    def get_principle(self, principle_id: str) -> Principle | None:
         """Get a principle by ID."""
         return self.principles.get(principle_id)
 
-    def get_all_principles(self) -> List[Principle]:
+    def get_all_principles(self) -> list[Principle]:
         """Get all loaded principles."""
         return list(self.principles.values())
 
-    def get_principles_by_category(self, category: str) -> List[Principle]:
+    def get_principles_by_category(self, category: str) -> list[Principle]:
         """Get all principles in a category."""
         return [p for p in self.principles.values() if p.category == category]
 
-    def get_principles_by_severity(self, severity: str) -> List[Principle]:
+    def get_principles_by_severity(self, severity: str) -> list[Principle]:
         """Get all principles with given severity."""
         return [p for p in self.principles.values() if p.severity == severity]
 
@@ -148,8 +146,8 @@ class PrinciplesManager:
         self,
         characteristics: ProjectCharacteristics,
         strategy: str = "auto",
-        user_preferences: Optional[List[str]] = None,
-    ) -> List[str]:
+        user_preferences: list[str] | None = None,
+    ) -> list[str]:
         """
         Select principles based on project characteristics and strategy.
 
@@ -185,9 +183,7 @@ class PrinciplesManager:
 
         return list(selected)
 
-    def _auto_select_principles(
-        self, characteristics: ProjectCharacteristics
-    ) -> Set[str]:
+    def _auto_select_principles(self, characteristics: ProjectCharacteristics) -> set[str]:
         """
         Automatically select principles based on project characteristics.
 
@@ -238,10 +234,7 @@ class PrinciplesManager:
                 project_types = applicability.get("project_types", [])
 
                 # If applicable to all or matches project type
-                if (
-                    "all" in project_types
-                    or characteristics.project_type in project_types
-                ):
+                if "all" in project_types or characteristics.project_type in project_types:
                     if self._check_conditions(principle, characteristics):
                         selected.add(principle.id)
 
@@ -279,9 +272,7 @@ class PrinciplesManager:
 
         return selected
 
-    def _is_applicable(
-        self, principle: Principle, characteristics: ProjectCharacteristics
-    ) -> bool:
+    def _is_applicable(self, principle: Principle, characteristics: ProjectCharacteristics) -> bool:
         """Check if a principle is applicable to the project."""
         applicability = principle.applicability
 
@@ -329,9 +320,7 @@ class PrinciplesManager:
 
         return True
 
-    def _evaluate_condition(
-        self, condition: str, characteristics: ProjectCharacteristics
-    ) -> bool:
+    def _evaluate_condition(self, condition: str, characteristics: ProjectCharacteristics) -> bool:
         """
         Evaluate a condition string against project characteristics.
 
@@ -389,17 +378,11 @@ class PrinciplesManager:
                 return characteristics.project_type == "microservices"
 
             # Privacy critical
-            if (
-                "privacy_critical == true" in condition
-                or "privacy_critical" in condition
-            ):
+            if "privacy_critical == true" in condition or "privacy_critical" in condition:
                 return characteristics.privacy_critical
 
             # Security critical
-            if (
-                "security_critical == true" in condition
-                or "security_critical" in condition
-            ):
+            if "security_critical == true" in condition or "security_critical" in condition:
                 return characteristics.security_critical
 
             # Performance critical
@@ -427,10 +410,7 @@ class PrinciplesManager:
                 return characteristics.services_count > SERVICE_COUNT_THRESHOLD_LARGE
 
             # Containers
-            if (
-                "containers.runtime != null" in condition
-                or "has_containers" in condition
-            ):
+            if "containers.runtime != null" in condition or "has_containers" in condition:
                 return characteristics.has_containers
 
             # Default: true if we don't understand the condition
@@ -440,13 +420,11 @@ class PrinciplesManager:
             # If we can't evaluate, assume true
             return True
 
-    def get_autofix_principles(self) -> List[Principle]:
+    def get_autofix_principles(self) -> list[Principle]:
         """Get all principles that support auto-fix."""
-        return [
-            p for p in self.principles.values() if p.autofix.get("available", False)
-        ]
+        return [p for p in self.principles.values() if p.autofix.get("available", False)]
 
-    def get_principle_summary(self, principle_id: str) -> Optional[Dict[str, Any]]:
+    def get_principle_summary(self, principle_id: str) -> dict[str, Any] | None:
         """Get a summary of a principle for display."""
         principle = self.get_principle(principle_id)
         if not principle:
@@ -463,7 +441,7 @@ class PrinciplesManager:
             "rules_count": len(principle.rules),
         }
 
-    def get_statistics(self) -> Dict[str, Any]:
+    def get_statistics(self) -> dict[str, Any]:
         """Get statistics about loaded principles."""
         return {
             "version": self.version,
@@ -483,7 +461,7 @@ class PrinciplesManager:
 
 
 def create_characteristics_from_analysis(
-    analysis: Dict[str, Any],
+    analysis: dict[str, Any],
 ) -> ProjectCharacteristics:
     """
     Create ProjectCharacteristics from project analysis data.
@@ -509,7 +487,7 @@ def create_characteristics_from_analysis(
 
 
 @lru_cache(maxsize=1)
-def get_principles_manager(principles_dir: Optional[str] = None) -> PrinciplesManager:
+def get_principles_manager(principles_dir: str | None = None) -> PrinciplesManager:
     """
     Get cached PrinciplesManager instance (Singleton pattern - P_EVENT_DRIVEN).
 

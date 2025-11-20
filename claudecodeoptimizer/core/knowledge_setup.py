@@ -12,13 +12,14 @@ Creates:
 """
 
 import shutil
+from collections.abc import Callable
 from pathlib import Path
-from typing import Any, Callable, Dict, List, Optional
+from typing import Any
 
 from .. import config
 
 
-def check_existing_installation() -> Optional[Dict[str, int]]:
+def check_existing_installation() -> dict[str, int] | None:
     """
     Check if CCO is already installed.
 
@@ -88,7 +89,7 @@ def show_installation_diff() -> None:
     print(f"Total: {total_files} files will be overwritten")
 
 
-def get_installation_counts() -> Dict[str, int]:
+def get_installation_counts() -> dict[str, int]:
     """
     Get current file counts for all CCO categories.
 
@@ -134,10 +135,10 @@ def _get_content_dir(subdir: str) -> Path:
 def _setup_files(
     source_dir: Path,
     dest_dir: Path,
-    cleanup_patterns: List[str],
+    cleanup_patterns: list[str],
     copy_pattern: str,
     recursive_cleanup: bool = False,
-    copy_filter: Optional[Callable[[Path], bool]] = None,
+    copy_filter: Callable[[Path], bool] | None = None,
 ) -> None:
     """
     Generic file setup with cleanup and copy.
@@ -168,7 +169,7 @@ def _setup_files(
             shutil.copy2(src_file, dest_dir / src_file.name)
 
 
-def setup_global_knowledge(force: bool = False) -> Dict[str, Any]:
+def setup_global_knowledge(force: bool = False) -> dict[str, Any]:
     """
     Initialize global ~/.claude/ directory structure for CCO.
 
@@ -192,7 +193,7 @@ def setup_global_knowledge(force: bool = False) -> Dict[str, Any]:
     # Ensure base directory exists
     claude_dir.mkdir(parents=True, exist_ok=True)
 
-    actions: List[str] = []
+    actions: list[str] = []
 
     # Setup all directories
     _setup_commands(commands_dir)
@@ -218,7 +219,7 @@ def setup_global_knowledge(force: bool = False) -> Dict[str, Any]:
     # Capture counts AFTER setup
     counts_after = get_installation_counts()
 
-    results: Dict[str, Any] = {
+    results: dict[str, Any] = {
         "success": True,
         "claude_dir": str(claude_dir),
         "actions": actions,
@@ -253,11 +254,7 @@ def _setup_principles(principles_dir: Path) -> None:
     """
 
     def is_cco_principle(path: Path) -> bool:
-        return (
-            len(path.name) > 1
-            and path.name[0] in ("U", "C", "P")
-            and path.name[1] == "_"
-        )
+        return len(path.name) > 1 and path.name[0] in ("U", "C", "P") and path.name[1] == "_"
 
     _setup_files(
         source_dir=_get_content_dir("principles"),
@@ -358,9 +355,7 @@ def _setup_claude_md(claude_dir: Path, principles_dir: Path) -> None:
             import re
 
             pattern = r"<!-- CCO_PRINCIPLES_START -->.*?<!-- CCO_PRINCIPLES_END -->\n?"
-            new_content = re.sub(
-                pattern, marker_content, existing_content, flags=re.DOTALL
-            )
+            new_content = re.sub(pattern, marker_content, existing_content, flags=re.DOTALL)
         else:
             # Append marker section
             new_content = existing_content.rstrip() + "\n\n" + marker_content
@@ -372,7 +367,7 @@ def _setup_claude_md(claude_dir: Path, principles_dir: Path) -> None:
     claude_md_path.write_text(new_content, encoding="utf-8")
 
 
-def get_available_commands() -> List[str]:
+def get_available_commands() -> list[str]:
     """
     Get list of available CCO command files.
 
@@ -386,7 +381,7 @@ def get_available_commands() -> List[str]:
     return [f.stem for f in commands_dir.glob("cco-*.md")]
 
 
-def get_available_agents() -> List[str]:
+def get_available_agents() -> list[str]:
     """
     Get list of available CCO agent files.
 
@@ -400,7 +395,7 @@ def get_available_agents() -> List[str]:
     return [f.stem for f in agents_dir.glob("cco-*.md")]
 
 
-def get_available_skills() -> List[str]:
+def get_available_skills() -> list[str]:
     """
     Get list of available CCO skill files including language-specific ones.
 

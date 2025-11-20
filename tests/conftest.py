@@ -2,8 +2,9 @@
 
 import shutil
 import tempfile
+from collections.abc import Callable
 from pathlib import Path
-from typing import Any, Callable, Dict, List
+from typing import Any
 
 import pytest
 
@@ -41,7 +42,7 @@ def temp_dir():
 
 
 @pytest.fixture
-def minimal_preferences() -> Dict[str, Any]:
+def minimal_preferences() -> dict[str, Any]:
     """Minimal valid preferences for testing"""
     return {
         "project_name": "TestProject",
@@ -54,7 +55,7 @@ def minimal_preferences() -> Dict[str, Any]:
 
 
 @pytest.fixture
-def principles_manager_factory() -> Callable[[List[Dict[str, Any]]], PrinciplesManager]:
+def principles_manager_factory() -> Callable[[list[dict[str, Any]]], PrinciplesManager]:
     """Factory fixture to create PrinciplesManager with custom principles.
 
     Usage:
@@ -78,9 +79,9 @@ def principles_manager_factory() -> Callable[[List[Dict[str, Any]]], PrinciplesM
     """
 
     def _create_manager(
-        principles_data: List[Dict[str, Any]],
-        selection_strategies: Dict[str, Any] | None = None,
-        categories: List[Dict[str, str]] | None = None,
+        principles_data: list[dict[str, Any]],
+        selection_strategies: dict[str, Any] | None = None,
+        categories: list[dict[str, str]] | None = None,
         tmp_path: Path | None = None,
     ) -> PrinciplesManager:
         # CRITICAL: Use provided tmp_path (pytest fixture) or create in project .tmp

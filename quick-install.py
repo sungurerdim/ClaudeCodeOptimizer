@@ -28,11 +28,6 @@ def main() -> int:
     print("=" * 60)
 
     # Check Python version
-    if sys.version_info < (3, 11):
-        print("\n[ERROR] Python 3.11+ required")
-        print(f"  Current version: {sys.version}")
-        print("\n  Install Python 3.11+ from: https://www.python.org/downloads/")
-        return 1
 
     print(f"\n[OK] Python {sys.version_info.major}.{sys.version_info.minor}")
 
@@ -75,9 +70,7 @@ def main() -> int:
     principles_dir = claude_dir / "principles"
 
     cmd_count = len(list(commands_dir.glob("cco-*.md"))) if commands_dir.exists() else 0
-    principle_count = (
-        len(list(principles_dir.glob("*.md"))) if principles_dir.exists() else 0
-    )
+    principle_count = len(list(principles_dir.glob("*.md"))) if principles_dir.exists() else 0
 
     print(f"\n[OK] Commands: {cmd_count}")
     print(f"[OK] Principles: {principle_count}")

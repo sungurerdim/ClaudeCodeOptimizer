@@ -5,12 +5,12 @@ Replaces principles.json - all metadata now lives in .md frontmatter
 """
 
 from pathlib import Path
-from typing import Any, Dict, List, Optional
+from typing import Any
 
 import frontmatter  # type: ignore[import-untyped]
 
 
-def load_principle_from_md(md_file: Path) -> Dict[str, Any]:
+def load_principle_from_md(md_file: Path) -> dict[str, Any]:
     """
     Load a single principle from .md file with frontmatter.
 
@@ -55,7 +55,7 @@ def load_principle_from_md(md_file: Path) -> Dict[str, Any]:
     return principle_data
 
 
-def load_all_principles(principles_dir: Path) -> List[Dict[str, Any]]:
+def load_all_principles(principles_dir: Path) -> list[dict[str, Any]]:
     """
     Load all principles from a directory of .md files.
 
@@ -78,9 +78,7 @@ def load_all_principles(principles_dir: Path) -> List[Dict[str, Any]]:
     return principles
 
 
-def get_principle_by_id(
-    principle_id: str, principles_dir: Path
-) -> Optional[Dict[str, Any]]:
+def get_principle_by_id(principle_id: str, principles_dir: Path) -> dict[str, Any] | None:
     """
     Get a single principle by ID.
 
@@ -99,9 +97,7 @@ def get_principle_by_id(
     return load_principle_from_md(md_file)
 
 
-def get_principles_by_category(
-    category: str, principles_dir: Path
-) -> List[Dict[str, Any]]:
+def get_principles_by_category(category: str, principles_dir: Path) -> list[dict[str, Any]]:
     """
     Get all principles in a category.
 
@@ -116,7 +112,7 @@ def get_principles_by_category(
     return [p for p in all_principles if p["category"] == category]
 
 
-def get_category_mapping(principles_dir: Path) -> Dict[str, List[str]]:
+def get_category_mapping(principles_dir: Path) -> dict[str, list[str]]:
     """
     Build category-to-principle-IDs mapping.
 
@@ -128,7 +124,7 @@ def get_category_mapping(principles_dir: Path) -> Dict[str, List[str]]:
     """
     all_principles = load_all_principles(principles_dir)
 
-    mapping: Dict[str, List[str]] = {}
+    mapping: dict[str, list[str]] = {}
     for principle in all_principles:
         category = principle["category"]
         principle_id = principle["id"]

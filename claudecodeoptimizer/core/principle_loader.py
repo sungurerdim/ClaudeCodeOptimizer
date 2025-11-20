@@ -16,11 +16,10 @@ Architecture:
 """
 
 from pathlib import Path
-from typing import Dict, List, Optional
 
 # Command → Principle Category Mapping (using actual category names from .md frontmatter)
 # Note: "universal" category is ALWAYS included automatically for all commands
-COMMAND_PRINCIPLE_MAP: Dict[str, List[str]] = {
+COMMAND_PRINCIPLE_MAP: dict[str, list[str]] = {
     # Core commands (universal + core only)
     "cco-status": ["universal", "core"],
     "cco-config": ["universal", "core"],
@@ -63,10 +62,10 @@ COMMAND_PRINCIPLE_MAP: Dict[str, List[str]] = {
 }
 
 # Category → Principle ID Mapping (cached)
-_CATEGORY_TO_IDS: Optional[Dict[str, List[str]]] = None
+_CATEGORY_TO_IDS: dict[str, list[str]] | None = None
 
 
-def _load_category_mapping() -> Dict[str, List[str]]:
+def _load_category_mapping() -> dict[str, list[str]]:
     """Load category to principle ID mapping from .md files"""
     global _CATEGORY_TO_IDS
 
@@ -95,7 +94,7 @@ def _load_category_mapping() -> Dict[str, List[str]]:
     return mapping
 
 
-def _resolve_categories_to_ids(categories: List[str]) -> List[str]:
+def _resolve_categories_to_ids(categories: list[str]) -> list[str]:
     """Convert category names to principle IDs"""
     mapping = _load_category_mapping()
     principle_ids = []
@@ -122,7 +121,7 @@ def _resolve_categories_to_ids(categories: List[str]) -> List[str]:
 class PrincipleLoader:
     """Load principles by category for token optimization"""
 
-    def __init__(self, principles_dir: Optional[Path] = None) -> None:
+    def __init__(self, principles_dir: Path | None = None) -> None:
         """
         Initialize principle loader.
 
@@ -142,7 +141,7 @@ class PrincipleLoader:
             )
 
         self.principles_dir = principles_dir
-        self._cache: Dict[str, str] = {}
+        self._cache: dict[str, str] = {}
 
     def load_for_command(self, command: str) -> str:
         """
@@ -174,7 +173,7 @@ class PrincipleLoader:
 
         return "\n\n---\n\n".join(principles)
 
-    def load_principles(self, principle_ids: List[str]) -> str:
+    def load_principles(self, principle_ids: list[str]) -> str:
         """
         Load multiple principles by their IDs directly.
 
@@ -298,7 +297,7 @@ class PrincipleLoader:
 
         return "\n\n---\n\n".join(all_principles)
 
-    def get_categories_for_command(self, command: str) -> List[str]:
+    def get_categories_for_command(self, command: str) -> list[str]:
         """
         Get principle categories for a command.
 

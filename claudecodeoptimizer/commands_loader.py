@@ -2,14 +2,14 @@
 
 import logging
 from pathlib import Path
-from typing import Any, Dict
+from typing import Any
 
 from .core.constants import MARKDOWN_SECTION_COUNT
 
 logger = logging.getLogger(__name__)
 
 
-def parse_frontmatter(content: str) -> Dict[str, Any]:
+def parse_frontmatter(content: str) -> dict[str, Any]:
     """Parse YAML frontmatter from markdown file."""
     if not content.startswith("---"):
         return {}
@@ -34,7 +34,7 @@ def parse_frontmatter(content: str) -> Dict[str, Any]:
         return {}
 
 
-def load_global_commands() -> Dict[str, Dict[str, Any]]:
+def load_global_commands() -> dict[str, dict[str, Any]]:
     """
     Load all CLI commands from commands directory.
 
@@ -42,7 +42,7 @@ def load_global_commands() -> Dict[str, Dict[str, Any]]:
     Returns dict: {command_name: {description, file}}
     """
     commands_dir = Path(__file__).parent / "content" / "commands"
-    commands: Dict[str, Dict[str, Any]] = {}
+    commands: dict[str, dict[str, Any]] = {}
 
     if not commands_dir.exists():
         return commands
@@ -56,9 +56,7 @@ def load_global_commands() -> Dict[str, Dict[str, Any]]:
         metadata = parse_frontmatter(content)
 
         commands[command_name] = {
-            "description": metadata.get(
-                "description", f"{command_name.title()} command"
-            ),
+            "description": metadata.get("description", f"{command_name.title()} command"),
             "file": md_file,
         }
 

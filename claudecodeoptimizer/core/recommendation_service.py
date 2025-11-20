@@ -10,7 +10,7 @@ Separation of Concerns:
 - Orchestrator: Only orchestrates, no recommendation logic
 """
 
-from typing import Any, Dict, List, Optional
+from typing import Any
 
 from .. import config
 from .knowledge_setup import (
@@ -38,9 +38,9 @@ class RecommendationService:
 
     def recommend_skills(
         self,
-        context_answers: Dict[str, Any],
-        detected_languages: Optional[List[str]] = None,
-    ) -> List[str]:
+        context_answers: dict[str, Any],
+        detected_languages: list[str] | None = None,
+    ) -> list[str]:
         """
         Recommend skills based on context + detected languages.
 
@@ -68,9 +68,7 @@ class RecommendationService:
             for lang in detected_languages:
                 lang_lower = lang.lower()
                 # Get all skills for this language
-                lang_skills = [
-                    s for s in available_skills if s.startswith(f"{lang_lower}/")
-                ]
+                lang_skills = [s for s in available_skills if s.startswith(f"{lang_lower}/")]
 
                 # Metadata-match language skills
                 recommended.extend(
@@ -87,7 +85,7 @@ class RecommendationService:
     # AGENTS
     # ========================================================================
 
-    def recommend_agents(self, context_answers: Dict[str, Any]) -> List[str]:
+    def recommend_agents(self, context_answers: dict[str, Any]) -> list[str]:
         """
         Recommend agents based on context answers.
 
@@ -106,7 +104,7 @@ class RecommendationService:
     # COMMANDS
     # ========================================================================
 
-    def recommend_commands(self, context_answers: Dict[str, Any]) -> List[str]:
+    def recommend_commands(self, context_answers: dict[str, Any]) -> list[str]:
         """
         Recommend commands based on context answers.
 
