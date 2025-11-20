@@ -194,6 +194,7 @@ CLAUDE.md.backup_*
 # Temporary files
 TODO.md
 *.tmp
+.tmp/                # CCO temporary files (sandboxed)
 
 # Lock files
 *.lock
