@@ -83,3 +83,60 @@ Read, Edit, Bash, Grep
 
 ## Model
 **sonnet** (complex), **haiku** (simple)
+
+---
+
+## Skill References
+
+When fixing issues, load relevant skills for fix patterns and verification:
+
+### Security Fixes
+**Skill**: `cco-skill-security-owasp-xss-sqli-csrf`
+- SQL injection fixes (parameterized queries)
+- XSS protection (escaping, CSP headers)
+- CSRF token implementation
+- Access control fixes (OWASP A01:2025)
+
+### AI Security Fixes
+**Skill**: `cco-skill-ai-security-promptinjection-models`
+- Input sanitization for prompt injection
+- Output validation and PII masking
+- Authentication decorator addition
+- Exception handling (fail closed, not open)
+
+### AI Quality Fixes
+**Skill**: `cco-skill-ai-quality-hallucination-bloat`
+- API hallucination fixes (remove non-existent APIs)
+- Code bloat reduction (remove redundant code)
+- Vibe coding refactoring (add comments, simplify)
+- Copy/paste deduplication
+
+### Tech Debt Fixes
+**Skill**: `cco-skill-code-quality-refactoring-complexity`
+- Complexity reduction
+- Dead code removal
+- Duplication elimination
+
+### Database Fixes
+**Skill**: `cco-skill-database-optimization-caching-profiling`
+- N+1 query fixes (eager loading)
+- Index addition
+- Query optimization
+
+### Supply Chain Fixes
+**Skill**: `cco-skill-supply-chain-dependencies-sast`
+- Dependency updates
+- CVE remediation
+- SBOM generation
+
+### Container Fixes
+**Skill**: `cco-skill-kubernetes-security-containers`
+- Dockerfile security fixes
+- Pod Security Admission compliance
+- Image signing setup
+
+### Documentation Fixes
+**Skill**: `cco-skill-docs-api-openapi-adr-runbooks`
+- Docstring addition
+- API documentation generation
+- AI code documentation templates

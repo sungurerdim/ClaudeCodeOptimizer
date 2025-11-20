@@ -627,6 +627,37 @@ When executing audits, load relevant skills for analysis patterns:
 - Docstring coverage
 - API documentation completeness
 - ADR presence
+- AI documentation templates (2025)
+
+### AI Security Audit (Pain #3)
+**Skill**: `cco-skill-ai-security-promptinjection-models`
+- Prompt injection detection
+- AI-generated code access control (OWASP A01:2025)
+- Exception handling (OWASP A10:2025)
+- PII leakage detection
+
+### AI Quality Audit (Pain #3, #8, #9)
+**Skill**: `cco-skill-ai-quality-hallucination-bloat`
+- API hallucination detection
+- Code bloat scoring
+- Vibe coding patterns
+- Copy/paste detection
+- Tool signature identification
+
+### Code Review Audit (Pain #11, #12)
+**Skill**: `cco-skill-code-review-quality-dora`
+- Commit message quality
+- Review time distribution
+- Reviewer diversity
+- Comment density
+- DORA metrics (5 metrics, 2025)
+
+### Platform Engineering Audit (Pain #4, #6, #10)
+**Skill**: `cco-skill-platform-cicd-tests-iac`
+- CI/CD maturity (8 stages)
+- Test automation coverage
+- IaC presence detection
+- AI readiness scoring
 
 ---
 
@@ -642,6 +673,13 @@ def get_skill_for_category(category: str) -> str:
         "database": "cco-skill-database-optimization-caching-profiling",
         "cicd": "cco-skill-cicd-gates-deployment-automation",
         "docs": "cco-skill-docs-api-openapi-adr-runbooks",
+        "ai-security": "cco-skill-ai-security-promptinjection-models",
+        "ai-quality": "cco-skill-ai-quality-hallucination-bloat",
+        "ai-debt": "cco-skill-ai-quality-hallucination-bloat",
+        "code-review": "cco-skill-code-review-quality-dora",
+        "platform": "cco-skill-platform-cicd-tests-iac",
+        "supply-chain": "cco-skill-supply-chain-dependencies-sast",
+        "containers": "cco-skill-kubernetes-security-containers",
     }
     return skills.get(category, "")
 
