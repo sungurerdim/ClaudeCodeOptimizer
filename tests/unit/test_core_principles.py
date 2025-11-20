@@ -6,7 +6,7 @@ Target Coverage: 90%+
 """
 
 from pathlib import Path
-from typing import Any, Dict
+from typing import Any
 from unittest.mock import Mock, patch
 
 import pytest
@@ -686,7 +686,7 @@ class TestAutoSelection:
 class TestApplicability:
     """Test principle applicability checking"""
 
-    def create_principle(self, applicability: Dict[str, Any]) -> Principle:
+    def create_principle(self, applicability: dict[str, Any]) -> Principle:
         """Create a test principle"""
         return Principle(
             id="TEST",
@@ -791,9 +791,7 @@ class TestApplicability:
     def test_is_applicable_language_mismatch(self, tmp_path: Path) -> None:
         """Test applicability with non-matching language"""
         manager = PrinciplesManager(tmp_path)
-        principle = self.create_principle(
-            {"project_types": ["all"], "languages": ["go", "rust"]}
-        )
+        principle = self.create_principle({"project_types": ["all"], "languages": ["go", "rust"]})
         chars = ProjectCharacteristics(
             project_type="api",
             primary_language="python",
@@ -837,9 +835,7 @@ class TestApplicability:
     def test_is_applicable_context_mismatch(self, tmp_path: Path) -> None:
         """Test applicability with non-matching context"""
         manager = PrinciplesManager(tmp_path)
-        principle = self.create_principle(
-            {"project_types": ["all"], "contexts": ["api_endpoints"]}
-        )
+        principle = self.create_principle({"project_types": ["all"], "contexts": ["api_endpoints"]})
         chars = ProjectCharacteristics(
             project_type="api",
             primary_language="python",
@@ -1292,7 +1288,7 @@ class TestCreateCharacteristicsFromAnalysis:
 
     def test_create_characteristics_full_analysis(self) -> None:
         """Test creating characteristics from complete analysis"""
-        analysis: Dict[str, Any] = {
+        analysis: dict[str, Any] = {
             "type": "api",
             "language": "python",
             "team_size": "small",
@@ -1320,7 +1316,7 @@ class TestCreateCharacteristicsFromAnalysis:
 
     def test_create_characteristics_minimal_analysis(self) -> None:
         """Test creating characteristics from minimal analysis"""
-        analysis: Dict[str, Any] = {}
+        analysis: dict[str, Any] = {}
 
         chars = create_characteristics_from_analysis(analysis)
 
@@ -1337,7 +1333,7 @@ class TestCreateCharacteristicsFromAnalysis:
 
     def test_create_characteristics_partial_analysis(self) -> None:
         """Test creating characteristics from partial analysis"""
-        analysis: Dict[str, Any] = {
+        analysis: dict[str, Any] = {
             "type": "web",
             "language": "javascript",
             "containers": {"detected": False},

@@ -6,7 +6,7 @@ Target Coverage: 100%
 """
 
 from pathlib import Path
-from typing import Any, Dict, List
+from typing import Any
 from unittest.mock import patch
 
 import pytest
@@ -38,7 +38,7 @@ class TestRecommendSkills:
     def test_recommend_skills_universal_only(self) -> None:
         """Test recommending universal skills (no language specified)"""
         service = RecommendationService()
-        context_answers: Dict[str, Any] = {
+        context_answers: dict[str, Any] = {
             "project_maturity": "production",
             "team_dynamics": "small-2-5",
         }
@@ -71,7 +71,7 @@ class TestRecommendSkills:
     def test_recommend_skills_with_detected_languages(self) -> None:
         """Test recommending skills with language-specific skills"""
         service = RecommendationService()
-        context_answers: Dict[str, Any] = {"project_maturity": "production"}
+        context_answers: dict[str, Any] = {"project_maturity": "production"}
         detected_languages = ["python", "javascript"]
 
         with patch.object(service, "metadata") as mock_metadata:
@@ -97,9 +97,7 @@ class TestRecommendSkills:
                 ) as mock_dir:
                     mock_dir.return_value = Path("/mock/skills")
 
-                    result = service.recommend_skills(
-                        context_answers, detected_languages
-                    )
+                    result = service.recommend_skills(context_answers, detected_languages)
 
         assert "cco-skill-testing" in result
         assert "python/cco-skill-async" in result
@@ -108,7 +106,7 @@ class TestRecommendSkills:
     def test_recommend_skills_removes_duplicates(self) -> None:
         """Test that duplicate recommendations are removed"""
         service = RecommendationService()
-        context_answers: Dict[str, Any] = {"project_maturity": "production"}
+        context_answers: dict[str, Any] = {"project_maturity": "production"}
         detected_languages = ["python"]
 
         with patch.object(service, "metadata") as mock_metadata:
@@ -131,9 +129,7 @@ class TestRecommendSkills:
                 ) as mock_dir:
                     mock_dir.return_value = Path("/mock/skills")
 
-                    result = service.recommend_skills(
-                        context_answers, detected_languages
-                    )
+                    result = service.recommend_skills(context_answers, detected_languages)
 
         # Should only appear once
         assert result.count("cco-skill-testing") == 1
@@ -141,7 +137,7 @@ class TestRecommendSkills:
     def test_recommend_skills_empty_context(self) -> None:
         """Test recommending skills with empty context"""
         service = RecommendationService()
-        context_answers: Dict[str, Any] = {}
+        context_answers: dict[str, Any] = {}
 
         with patch.object(service, "metadata") as mock_metadata:
             mock_metadata.recommend_files.return_value = []
@@ -163,7 +159,7 @@ class TestRecommendSkills:
     def test_recommend_skills_filters_universal_correctly(self) -> None:
         """Test that universal skills don't have '/' in path"""
         service = RecommendationService()
-        context_answers: Dict[str, Any] = {"project_maturity": "production"}
+        context_answers: dict[str, Any] = {"project_maturity": "production"}
 
         with patch.object(service, "metadata") as mock_metadata:
             mock_metadata.recommend_files.return_value = ["cco-skill-testing"]
@@ -195,7 +191,7 @@ class TestRecommendSkills:
     def test_recommend_skills_language_case_insensitive(self) -> None:
         """Test that language matching is case-insensitive"""
         service = RecommendationService()
-        context_answers: Dict[str, Any] = {"project_maturity": "production"}
+        context_answers: dict[str, Any] = {"project_maturity": "production"}
         detected_languages = ["Python"]  # Uppercase
 
         with patch.object(service, "metadata") as mock_metadata:
@@ -216,9 +212,7 @@ class TestRecommendSkills:
                 ) as mock_dir:
                     mock_dir.return_value = Path("/mock/skills")
 
-                    result = service.recommend_skills(
-                        context_answers, detected_languages
-                    )
+                    result = service.recommend_skills(context_answers, detected_languages)
 
         assert "python/cco-skill-async" in result
 
@@ -229,7 +223,7 @@ class TestRecommendAgents:
     def test_recommend_agents_basic(self) -> None:
         """Test basic agent recommendation"""
         service = RecommendationService()
-        context_answers: Dict[str, Any] = {
+        context_answers: dict[str, Any] = {
             "project_maturity": "production",
             "development_philosophy": "quality_first",
         }
@@ -263,7 +257,7 @@ class TestRecommendAgents:
     def test_recommend_agents_empty_context(self) -> None:
         """Test agent recommendation with empty context"""
         service = RecommendationService()
-        context_answers: Dict[str, Any] = {}
+        context_answers: dict[str, Any] = {}
 
         with patch.object(service, "metadata") as mock_metadata:
             mock_metadata.recommend_files.return_value = []
@@ -285,7 +279,7 @@ class TestRecommendAgents:
     def test_recommend_agents_passes_correct_args(self) -> None:
         """Test that correct arguments are passed to recommend_files"""
         service = RecommendationService()
-        context_answers: Dict[str, Any] = {"project_maturity": "greenfield"}
+        context_answers: dict[str, Any] = {"project_maturity": "greenfield"}
 
         with patch.object(service, "metadata") as mock_metadata:
             mock_metadata.recommend_files.return_value = []
@@ -316,7 +310,7 @@ class TestRecommendCommands:
     def test_recommend_commands_basic(self) -> None:
         """Test basic command recommendation"""
         service = RecommendationService()
-        context_answers: Dict[str, Any] = {
+        context_answers: dict[str, Any] = {
             "project_maturity": "production",
             "team_dynamics": "medium-6-15",
         }
@@ -342,7 +336,7 @@ class TestRecommendCommands:
     def test_recommend_commands_empty_context(self) -> None:
         """Test command recommendation with empty context"""
         service = RecommendationService()
-        context_answers: Dict[str, Any] = {}
+        context_answers: dict[str, Any] = {}
 
         with patch.object(service, "metadata") as mock_metadata:
             mock_metadata.recommend_files.return_value = []
@@ -364,7 +358,7 @@ class TestRecommendCommands:
     def test_recommend_commands_passes_correct_args(self) -> None:
         """Test that correct arguments are passed to recommend_files"""
         service = RecommendationService()
-        context_answers: Dict[str, Any] = {"development_philosophy": "velocity_first"}
+        context_answers: dict[str, Any] = {"development_philosophy": "velocity_first"}
 
         with patch.object(service, "metadata") as mock_metadata:
             mock_metadata.recommend_files.return_value = []
@@ -395,7 +389,7 @@ class TestRecommendationServiceIntegration:
     def test_multiple_recommendations_independence(self) -> None:
         """Test that skills, agents, commands can be recommended independently"""
         service = RecommendationService()
-        context_answers: Dict[str, Any] = {"project_maturity": "production"}
+        context_answers: dict[str, Any] = {"project_maturity": "production"}
 
         with patch.object(service, "metadata") as mock_metadata:
             # Different results for each type
@@ -443,15 +437,15 @@ class TestRecommendationServiceIntegration:
     def test_consistent_context_passing(self) -> None:
         """Test that same context is passed to all recommendation methods"""
         service = RecommendationService()
-        context_answers: Dict[str, Any] = {
+        context_answers: dict[str, Any] = {
             "project_maturity": "production",
             "team_dynamics": "large-16-plus",
             "development_philosophy": "quality_first",
         }
 
-        captured_contexts: List[Dict[str, Any]] = []
+        captured_contexts: list[dict[str, Any]] = []
 
-        def capture_context(**kwargs: Dict[str, Any]) -> List[str]:
+        def capture_context(**kwargs: dict[str, Any]) -> list[str]:
             captured_contexts.append(kwargs.get("context_answers", {}))
             return []
 
@@ -468,12 +462,8 @@ class TestRecommendationServiceIntegration:
                 patch(
                     "claudecodeoptimizer.core.recommendation_service.get_available_commands"
                 ) as mock_commands,
-                patch(
-                    "claudecodeoptimizer.core.recommendation_service.config.get_skills_dir"
-                ),
-                patch(
-                    "claudecodeoptimizer.core.recommendation_service.config.get_agents_dir"
-                ),
+                patch("claudecodeoptimizer.core.recommendation_service.config.get_skills_dir"),
+                patch("claudecodeoptimizer.core.recommendation_service.config.get_agents_dir"),
                 patch(
                     "claudecodeoptimizer.core.recommendation_service.config.get_global_commands_dir"
                 ),
@@ -497,7 +487,7 @@ class TestRecommendationServiceEdgeCases:
     def test_none_detected_languages(self) -> None:
         """Test handling of None detected_languages"""
         service = RecommendationService()
-        context_answers: Dict[str, Any] = {"project_maturity": "production"}
+        context_answers: dict[str, Any] = {"project_maturity": "production"}
 
         with patch.object(service, "metadata") as mock_metadata:
             mock_metadata.recommend_files.return_value = ["cco-skill-testing"]
@@ -522,7 +512,7 @@ class TestRecommendationServiceEdgeCases:
     def test_empty_detected_languages_list(self) -> None:
         """Test handling of empty detected_languages list"""
         service = RecommendationService()
-        context_answers: Dict[str, Any] = {"project_maturity": "production"}
+        context_answers: dict[str, Any] = {"project_maturity": "production"}
 
         with patch.object(service, "metadata") as mock_metadata:
             mock_metadata.recommend_files.return_value = ["cco-skill-testing"]
@@ -547,7 +537,7 @@ class TestRecommendationServiceEdgeCases:
     def test_no_available_files(self) -> None:
         """Test handling when no files are available"""
         service = RecommendationService()
-        context_answers: Dict[str, Any] = {"project_maturity": "production"}
+        context_answers: dict[str, Any] = {"project_maturity": "production"}
 
         with patch.object(service, "metadata") as mock_metadata:
             mock_metadata.recommend_files.return_value = []
@@ -569,7 +559,7 @@ class TestRecommendationServiceEdgeCases:
     def test_special_characters_in_language_name(self) -> None:
         """Test handling of special characters in language names"""
         service = RecommendationService()
-        context_answers: Dict[str, Any] = {"project_maturity": "production"}
+        context_answers: dict[str, Any] = {"project_maturity": "production"}
         detected_languages = ["c++", "c#"]
 
         with patch.object(service, "metadata") as mock_metadata:
@@ -590,9 +580,7 @@ class TestRecommendationServiceEdgeCases:
                     mock_dir.return_value = Path("/mock/skills")
 
                     # Should not raise
-                    result = service.recommend_skills(
-                        context_answers, detected_languages
-                    )
+                    result = service.recommend_skills(context_answers, detected_languages)
 
         assert result == []
 

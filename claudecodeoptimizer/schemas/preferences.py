@@ -7,7 +7,7 @@ All question choices are derived from Literal types here.
 """
 
 from datetime import datetime
-from typing import Any, List, Literal, Optional, get_args
+from typing import Any, Literal, get_args
 
 from pydantic import BaseModel, Field
 
@@ -249,9 +249,7 @@ TDDAdherenceChoice = Literal[
 ]
 
 RefactoringChoice = Literal["continuous", "milestone-based", "when-needed", "rarely"]
-BreakingChangesChoice = Literal[
-    "never", "deprecation-cycle", "semver-major", "justified"
-]
+BreakingChangesChoice = Literal["never", "deprecation-cycle", "semver-major", "justified"]
 CodeReviewChoice = Literal["mandatory-all", "critical-only", "optional"]
 PairProgrammingChoice = Literal["always", "complex-tasks", "onboarding", "never"]
 FeatureFlagsChoice = Literal["extensive", "major-features", "experiments", "none"]
@@ -298,9 +296,7 @@ LineLengthChoice = Literal["80", "100", "120", "none"]
 # Documentation Types
 DocVerbosityChoice = Literal["extensive", "concise", "minimal"]
 DocAudienceChoice = Literal["beginners", "intermediate", "experts"]
-DocStyleChoice = Literal[
-    "tutorial-driven", "reference-manual", "example-heavy", "hybrid"
-]
+DocStyleChoice = Literal["tutorial-driven", "reference-manual", "example-heavy", "hybrid"]
 InlineDocChoice = Literal["every-function", "public-api", "complex-only"]
 ArchitectureDiagramsChoice = Literal["required", "complex-areas", "optional"]
 APIDocChoice = Literal["openapi-spec", "markdown", "code-comments"]
@@ -427,14 +423,10 @@ AuditLoggingChoice = Literal[
 ]
 
 InputValidationChoice = Literal["schema-everything", "external-only", "pragmatic"]
-DependencyScanningChoice = Literal[
-    "every-commit", "every-pr", "weekly", "monthly", "none"
-]
+DependencyScanningChoice = Literal["every-commit", "every-pr", "weekly", "monthly", "none"]
 
 # Performance Types
-OptimizationPriorityChoice = Literal[
-    "performance-first", "balanced", "maintainability-first"
-]
+OptimizationPriorityChoice = Literal["performance-first", "balanced", "maintainability-first"]
 CachingStrategyChoice = Literal["aggressive", "selective", "minimal", "none"]
 DatabaseQueriesChoice = Literal["hand-optimized", "orm-with-indexes", "orm-simple"]
 PrematureOptimizationChoice = Literal["allowed", "profile-first", "forbidden"]
@@ -445,9 +437,7 @@ GitWorkflowChoice = Literal["git-flow", "trunk-based", "github-flow", "gitlab-fl
 VersioningStrategyChoice = Literal[
     "auto_semver", "pr_based_semver", "manual_semver", "calver", "no_versioning"
 ]
-CommitConventionChoice = Literal[
-    "conventional-enforced", "conventional-suggested", "freeform"
-]
+CommitConventionChoice = Literal["conventional-enforced", "conventional-suggested", "freeform"]
 PRSizeChoice = Literal["small-200", "medium-500", "large-1000", "no-limit"]
 CodeOwnershipChoice = Literal["strict-codeowners", "team-ownership", "open"]
 
@@ -568,24 +558,24 @@ class ProjectIdentity(BaseModel):
 
     name: str = Field(..., description="Project name (auto-detected or user-provided)")
 
-    types: List[ProjectTypeChoice] = Field(
+    types: list[ProjectTypeChoice] = Field(
         default=[],
         description="Project types (can be multiple)",
     )
 
     primary_language: str = Field(..., description="Primary programming language")
 
-    secondary_languages: List[str] = Field(
+    secondary_languages: list[str] = Field(
         default=[],
         description="Additional languages",
     )
 
-    frameworks: List[str] = Field(
+    frameworks: list[str] = Field(
         default=[],
         description="Detected frameworks",
     )
 
-    deployment_target: List[DeploymentTargetChoice] = Field(
+    deployment_target: list[DeploymentTargetChoice] = Field(
         default=["cloud-other"],
         description="Where this will be deployed (can be multiple)",
     )
@@ -595,12 +585,12 @@ class ProjectIdentity(BaseModel):
         description="Expected traffic/usage scale",
     )
 
-    business_domain: List[BusinessDomainChoice] = Field(
+    business_domain: list[BusinessDomainChoice] = Field(
         default=["general-purpose"],
         description="Business domain(s)",
     )
 
-    compliance_requirements: List[ComplianceChoice] = Field(
+    compliance_requirements: list[ComplianceChoice] = Field(
         default=["none"],
         description="Regulatory compliance needs",
     )
@@ -678,14 +668,14 @@ class CodeQualityStandards(BaseModel):
         description="Type annotation coverage target",
     )
 
-    cyclomatic_complexity_limit: Optional[int] = Field(
+    cyclomatic_complexity_limit: int | None = Field(
         default=10,
         ge=0,
         le=50,
         description="Max cyclomatic complexity (0 = no limit)",
     )
 
-    function_length_limit: Optional[int] = Field(
+    function_length_limit: int | None = Field(
         default=50,
         ge=0,
         le=200,
@@ -809,17 +799,17 @@ class SecurityPosture(BaseModel):
         description="Overall security approach",
     )
 
-    secret_management: List[SecretManagementChoice] = Field(
+    secret_management: list[SecretManagementChoice] = Field(
         default=["env-vars"],
         description="Secret management methods (can be multiple)",
     )
 
-    encryption_scope: List[EncryptionScopeChoice] = Field(
+    encryption_scope: list[EncryptionScopeChoice] = Field(
         default=["at-rest-sensitive", "in-transit-external"],
         description="Data encryption scope (can be multiple)",
     )
 
-    audit_logging: List[AuditLoggingChoice] = Field(
+    audit_logging: list[AuditLoggingChoice] = Field(
         default=["authentication", "authorization", "data-modification"],
         description="Audit logging events (can be multiple)",
     )
@@ -911,17 +901,17 @@ class DevOpsAutomation(BaseModel):
         description="Rollback approach",
     )
 
-    infrastructure: List[InfrastructureChoice] = Field(
+    infrastructure: list[InfrastructureChoice] = Field(
         default=["docker-compose"],
         description="Infrastructure platforms (can be multiple)",
     )
 
-    monitoring: List[MonitoringChoice] = Field(
+    monitoring: list[MonitoringChoice] = Field(
         default=["prometheus", "grafana"],
         description="Monitoring and observability tools (can be multiple)",
     )
 
-    environment_count: List[EnvironmentChoice] = Field(
+    environment_count: list[EnvironmentChoice] = Field(
         default=["dev", "prod"],
         description="Environments maintained (can be multiple)",
     )
@@ -933,12 +923,8 @@ class CCOPreferences(BaseModel):
     """
 
     project_identity: ProjectIdentity
-    development_style: DevelopmentStyle = Field(
-        default_factory=lambda: DevelopmentStyle()
-    )
-    code_quality: CodeQualityStandards = Field(
-        default_factory=lambda: CodeQualityStandards()
-    )
+    development_style: DevelopmentStyle = Field(default_factory=lambda: DevelopmentStyle())
+    code_quality: CodeQualityStandards = Field(default_factory=lambda: CodeQualityStandards())
     documentation: DocumentationPreferences = Field(
         default_factory=lambda: DocumentationPreferences()
     )
@@ -947,13 +933,11 @@ class CCOPreferences(BaseModel):
     performance: PerformanceVsMaintainability = Field(
         default_factory=lambda: PerformanceVsMaintainability()
     )
-    collaboration: TeamCollaboration = Field(
-        default_factory=lambda: TeamCollaboration()
-    )
+    collaboration: TeamCollaboration = Field(default_factory=lambda: TeamCollaboration())
     devops: DevOpsAutomation = Field(default_factory=lambda: DevOpsAutomation())
 
     # Principle Selection
-    selected_principle_ids: List[str] = Field(
+    selected_principle_ids: list[str] = Field(
         default=[],
         description="User-selected principle IDs (from 53 principles)",
     )
@@ -975,7 +959,7 @@ class CCOPreferences(BaseModel):
 # ============================================================================
 
 
-def get_literal_choices(literal_type: Any) -> List[str]:  # noqa: ANN401
+def get_literal_choices(literal_type: Any) -> list[str]:  # noqa: ANN401
     """Extract all choices from a Literal type annotation"""
     return list(get_args(literal_type))
 

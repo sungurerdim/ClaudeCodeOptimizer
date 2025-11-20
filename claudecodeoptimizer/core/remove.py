@@ -12,7 +12,7 @@ Removes:
 import logging
 import re
 from pathlib import Path
-from typing import Any, Dict
+from typing import Any
 
 logger = logging.getLogger(__name__)
 
@@ -24,7 +24,7 @@ class CCORemover:
         """Initialize remover."""
         self.claude_dir = Path.home() / ".claude"
 
-    def remove(self, clean_claude_md: bool = True) -> Dict[str, Any]:
+    def remove(self, clean_claude_md: bool = True) -> dict[str, Any]:
         """
         Remove CCO installation from ~/.claude/.
 
@@ -34,7 +34,7 @@ class CCORemover:
         Returns:
             Removal results
         """
-        results: Dict[str, Any] = {"success": True, "actions": []}
+        results: dict[str, Any] = {"success": True, "actions": []}
 
         # Remove CCO commands
         self._remove_commands()
@@ -136,7 +136,7 @@ class CCORemover:
         claude_md.write_text(content.strip() + "\n", encoding="utf-8")
 
 
-def remove_cco(clean_claude_md: bool = True) -> Dict[str, Any]:
+def remove_cco(clean_claude_md: bool = True) -> dict[str, Any]:
     """
     Convenience function to remove CCO from ~/.claude/.
 

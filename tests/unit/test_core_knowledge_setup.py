@@ -5,8 +5,8 @@ Tests installation logic for ~/.claude/ structure initialization.
 Target Coverage: 100%
 """
 
+from collections.abc import Generator
 from pathlib import Path
-from typing import Generator
 from unittest.mock import patch
 
 import pytest
@@ -40,12 +40,8 @@ def mock_claude_dir(tmp_path: Path) -> Generator[Path, None, None]:
 
     with (
         patch.object(knowledge_setup.config, "get_claude_dir", return_value=claude_dir),
-        patch.object(
-            knowledge_setup.config, "get_global_commands_dir", return_value=commands_dir
-        ),
-        patch.object(
-            knowledge_setup.config, "get_principles_dir", return_value=principles_dir
-        ),
+        patch.object(knowledge_setup.config, "get_global_commands_dir", return_value=commands_dir),
+        patch.object(knowledge_setup.config, "get_principles_dir", return_value=principles_dir),
         patch.object(knowledge_setup.config, "get_agents_dir", return_value=agents_dir),
         patch.object(knowledge_setup.config, "get_skills_dir", return_value=skills_dir),
     ):
@@ -105,9 +101,7 @@ def mock_content_dir(tmp_path: Path) -> Generator[Path, None, None]:
 class TestSetupGlobalKnowledge:
     """Test setup_global_knowledge function"""
 
-    def test_setup_creates_directories(
-        self, mock_claude_dir: Path, mock_content_dir: Path
-    ) -> None:
+    def test_setup_creates_directories(self, mock_claude_dir: Path, mock_content_dir: Path) -> None:
         """Test that setup creates all required directories"""
         # This test verifies directory structure creation
         # The actual setup is tested in integration tests
@@ -130,9 +124,7 @@ class TestSetupGlobalKnowledge:
         assert result["success"] is True
         assert "claude_dir" in result
         assert "actions" in result
-        assert (
-            len(result["actions"]) == 5
-        )  # commands, principles, agents, skills, claude.md
+        assert len(result["actions"]) == 5  # commands, principles, agents, skills, claude.md
 
     def test_setup_with_force_flag(self, mock_claude_dir: Path) -> None:
         """Test setup with force=True regenerates files"""
@@ -745,9 +737,7 @@ class TestKnowledgeSetupIntegration:
 
         # Mock config to use our directories
         with (
-            patch.object(
-                knowledge_setup.config, "get_claude_dir", return_value=claude_dir
-            ),
+            patch.object(knowledge_setup.config, "get_claude_dir", return_value=claude_dir),
             patch.object(
                 knowledge_setup.config,
                 "get_global_commands_dir",
@@ -807,9 +797,7 @@ class TestKnowledgeSetupIntegration:
         (commands_dir / "user-custom.md").write_text("# User Custom")
 
         with (
-            patch.object(
-                knowledge_setup.config, "get_claude_dir", return_value=claude_dir
-            ),
+            patch.object(knowledge_setup.config, "get_claude_dir", return_value=claude_dir),
             patch.object(
                 knowledge_setup.config,
                 "get_global_commands_dir",

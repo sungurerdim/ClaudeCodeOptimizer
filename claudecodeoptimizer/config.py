@@ -5,7 +5,7 @@ All naming, paths, and branding are managed from this single source of truth.
 """
 
 from pathlib import Path
-from typing import Any, Dict
+from typing import Any
 
 # ============================================================================
 # BRANDING & NAMING (Module-level constants)
@@ -126,7 +126,7 @@ DEFAULT_CONFIG = {
 # ============================================================================
 
 
-def get_all_paths() -> Dict[str, Path]:
+def get_all_paths() -> dict[str, Path]:
     """Get dictionary of all configured paths."""
     return {
         "claude_dir": get_claude_dir(),
@@ -189,7 +189,7 @@ class CCOConfig:
     get_all_paths = staticmethod(get_all_paths)
 
     @staticmethod
-    def to_dict() -> Dict[str, Any]:
+    def to_dict() -> dict[str, Any]:
         """Export config as dictionary."""
         return {
             "branding": {

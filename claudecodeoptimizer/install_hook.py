@@ -10,9 +10,7 @@ import sys
 logger = logging.getLogger(__name__)
 
 
-def _show_installation_summary(
-    counts_before: dict[str, int], counts_after: dict[str, int]
-) -> None:
+def _show_installation_summary(counts_before: dict[str, int], counts_after: dict[str, int]) -> None:
     """
     Show detailed before/after comparison of installed files.
 
@@ -38,9 +36,7 @@ def _show_installation_summary(
         elif before > 0 and after > 0:
             # Updated files
             if after != before:
-                updated_files.append(
-                    f"  ↻ {category.capitalize()}: {before} → {after} files"
-                )
+                updated_files.append(f"  ↻ {category.capitalize()}: {before} → {after} files")
             else:
                 updated_files.append(f"  ↻ {category.capitalize()}: {after} files")
         elif before > 0 and after == 0:

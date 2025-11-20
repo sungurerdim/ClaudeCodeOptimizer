@@ -263,8 +263,7 @@ class TestMessageConstants:
         from claudecodeoptimizer.config import MSG_GLOBAL_INSTALL_SUCCESS
 
         assert (
-            DISPLAY_NAME in MSG_GLOBAL_INSTALL_SUCCESS
-            or SHORT_NAME in MSG_GLOBAL_INSTALL_SUCCESS
+            DISPLAY_NAME in MSG_GLOBAL_INSTALL_SUCCESS or SHORT_NAME in MSG_GLOBAL_INSTALL_SUCCESS
         )
 
 

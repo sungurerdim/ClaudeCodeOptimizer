@@ -4,8 +4,6 @@ Utility functions for ClaudeCodeOptimizer.
 Common helper functions to reduce code duplication (U_DRY - DRY Enforcement).
 """
 
-from typing import Optional
-
 from .constants import CONFIDENCE_SCALE, SEPARATOR_WIDTH
 
 
@@ -51,7 +49,7 @@ def format_confidence_str(value: float, use_int: bool = False) -> str:
     return f"{format_confidence(value, 1)}%"
 
 
-def print_separator(char: str = "=", width: Optional[int] = None) -> None:
+def print_separator(char: str = "=", width: int | None = None) -> None:
     """
     Print a separator line.
 
@@ -70,9 +68,7 @@ def print_separator(char: str = "=", width: Optional[int] = None) -> None:
     print(char * width)
 
 
-def print_header(
-    title: str, subtitle: Optional[str] = None, width: Optional[int] = None
-) -> None:
+def print_header(title: str, subtitle: str | None = None, width: int | None = None) -> None:
     """
     Print a formatted header with separator lines.
 

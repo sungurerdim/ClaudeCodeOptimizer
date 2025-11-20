@@ -11,7 +11,6 @@ import re
 import subprocess
 from enum import Enum
 from pathlib import Path
-from typing import List, Optional, Tuple
 
 
 class BumpType(Enum):
@@ -33,7 +32,7 @@ class VersionManager:
     def __init__(self, project_root: Path) -> None:
         self.project_root = project_root
 
-    def detect_bump_type(self, commit_messages: List[str]) -> BumpType:
+    def detect_bump_type(self, commit_messages: list[str]) -> BumpType:
         """
         Detect version bump type from commit messages.
 
@@ -113,7 +112,7 @@ class VersionManager:
 
         return current
 
-    def get_version_files(self) -> List[Path]:
+    def get_version_files(self) -> list[Path]:
         """
         Find all version files in project.
 
@@ -139,9 +138,7 @@ class VersionManager:
 
         return version_files
 
-    def update_version_files(
-        self, new_version: str, files: Optional[List[Path]] = None
-    ) -> None:
+    def update_version_files(self, new_version: str, files: list[Path] | None = None) -> None:
         """
         Update version in all relevant files.
 
@@ -161,15 +158,11 @@ class VersionManager:
 
         if file_path.name == "pyproject.toml":
             # Update: version = "1.2.3"
-            content = re.sub(
-                r'version\s*=\s*"[^"]*"', f'version = "{new_version}"', content
-            )
+            content = re.sub(r'version\s*=\s*"[^"]*"', f'version = "{new_version}"', content)
 
         elif file_path.name == "package.json":
             # Update: "version": "1.2.3"
-            content = re.sub(
-                r'"version"\s*:\s*"[^"]*"', f'"version": "{new_version}"', content
-            )
+            content = re.sub(r'"version"\s*:\s*"[^"]*"', f'"version": "{new_version}"', content)
 
         elif file_path.name == "__init__.py":
             # Update: __version__ = "1.2.3"
@@ -194,7 +187,7 @@ class VersionManager:
 
         file_path.write_text(content, encoding="utf-8")
 
-    def create_git_tag(self, version: str, create: bool = False) -> Optional[str]:
+    def create_git_tag(self, version: str, create: bool = False) -> str | None:
         """
         Create git tag for version.
 
@@ -237,7 +230,7 @@ class VersionManager:
 
         return tag_name
 
-    def get_commits_since_last_tag(self) -> Tuple[str, List[str]]:
+    def get_commits_since_last_tag(self) -> tuple[str, list[str]]:
         """
         Get commit messages since last version tag.
 
@@ -275,11 +268,7 @@ class VersionManager:
                 check=True,
                 timeout=30,
             )
-            commits = [
-                line.strip()
-                for line in result.stdout.strip().split("\n")
-                if line.strip()
-            ]
+            commits = [line.strip() for line in result.stdout.strip().split("\n") if line.strip()]
 
             # Extract version from tag
             version_match = re.search(r"(\d+\.\d+\.\d+)", last_tag)
@@ -291,7 +280,7 @@ class VersionManager:
             # No tags yet
             return "0.0.0", []
 
-    def auto_bump(self, create_tag: bool = False) -> Optional[str]:
+    def auto_bump(self, create_tag: bool = False) -> str | None:
         """
         Automatically bump version based on commits since last tag.
 

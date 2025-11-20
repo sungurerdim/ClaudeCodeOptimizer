@@ -357,9 +357,7 @@ class TestGetVersionFiles:
         vm = VersionManager(temp_dir)
         files = vm.get_version_files()
         # pyproject.toml should come before package.json based on candidates list
-        assert files.index(temp_dir / "pyproject.toml") < files.index(
-            temp_dir / "package.json"
-        )
+        assert files.index(temp_dir / "pyproject.toml") < files.index(temp_dir / "package.json")
 
 
 class TestUpdateVersionInFile:
@@ -380,9 +378,7 @@ class TestUpdateVersionInFile:
     def test_update_package_json(self, temp_dir: Path) -> None:
         """Test updating version in package.json"""
         file_path = temp_dir / "package.json"
-        file_path.write_text(
-            '{\n  "version": "1.0.0",\n  "name": "test"\n}', encoding="utf-8"
-        )
+        file_path.write_text('{\n  "version": "1.0.0",\n  "name": "test"\n}', encoding="utf-8")
 
         vm = VersionManager(temp_dir)
         vm._update_version_in_file(file_path, "2.0.0")
@@ -394,9 +390,7 @@ class TestUpdateVersionInFile:
     def test_update_init_py(self, temp_dir: Path) -> None:
         """Test updating version in __init__.py"""
         file_path = temp_dir / "__init__.py"
-        file_path.write_text(
-            '__version__ = "1.0.0"\n__author__ = "test"', encoding="utf-8"
-        )
+        file_path.write_text('__version__ = "1.0.0"\n__author__ = "test"', encoding="utf-8")
 
         vm = VersionManager(temp_dir)
         vm._update_version_in_file(file_path, "2.0.0")
@@ -539,18 +533,14 @@ class TestCreateGitTag:
     @patch("subprocess.run")
     def test_create_tag_failure(self, mock_run: Mock, temp_dir: Path) -> None:
         """Test tag creation failure"""
-        mock_run.side_effect = subprocess.CalledProcessError(
-            1, "git", stderr="tag already exists"
-        )
+        mock_run.side_effect = subprocess.CalledProcessError(1, "git", stderr="tag already exists")
 
         vm = VersionManager(temp_dir)
         with pytest.raises(RuntimeError, match="Failed to create git tag"):
             vm.create_git_tag("1.2.3", create=True)
 
     @patch("subprocess.run")
-    def test_create_tag_with_error_message(
-        self, mock_run: Mock, temp_dir: Path
-    ) -> None:
+    def test_create_tag_with_error_message(self, mock_run: Mock, temp_dir: Path) -> None:
         """Test tag creation failure includes error message"""
         error_msg = "fatal: tag 'v1.2.3' already exists"
         mock_run.side_effect = subprocess.CalledProcessError(1, "git", stderr=error_msg)
@@ -569,9 +559,7 @@ class TestGetCommitsSinceLastTag:
         # Mock git describe
         describe_result = Mock(stdout="v1.2.3\n", stderr="", returncode=0)
         # Mock git log
-        log_result = Mock(
-            stdout="feat: new feature\nfix: bug fix\n", stderr="", returncode=0
-        )
+        log_result = Mock(stdout="feat: new feature\nfix: bug fix\n", stderr="", returncode=0)
 
         mock_run.side_effect = [describe_result, log_result]
 
@@ -620,14 +608,10 @@ class TestGetCommitsSinceLastTag:
         assert commits == []
 
     @patch("subprocess.run")
-    def test_get_commits_filters_empty_lines(
-        self, mock_run: Mock, temp_dir: Path
-    ) -> None:
+    def test_get_commits_filters_empty_lines(self, mock_run: Mock, temp_dir: Path) -> None:
         """Test filtering empty lines from commits"""
         describe_result = Mock(stdout="v1.2.3\n", stderr="", returncode=0)
-        log_result = Mock(
-            stdout="feat: feature\n\n\nfix: fix\n", stderr="", returncode=0
-        )
+        log_result = Mock(stdout="feat: feature\n\n\nfix: fix\n", stderr="", returncode=0)
 
         mock_run.side_effect = [describe_result, log_result]
 
@@ -637,14 +621,10 @@ class TestGetCommitsSinceLastTag:
         assert commits == ["feat: feature", "fix: fix"]
 
     @patch("subprocess.run")
-    def test_get_commits_strips_whitespace(
-        self, mock_run: Mock, temp_dir: Path
-    ) -> None:
+    def test_get_commits_strips_whitespace(self, mock_run: Mock, temp_dir: Path) -> None:
         """Test stripping whitespace from commits"""
         describe_result = Mock(stdout="v1.2.3\n", stderr="", returncode=0)
-        log_result = Mock(
-            stdout="  feat: feature  \n\tfix: fix\t\n", stderr="", returncode=0
-        )
+        log_result = Mock(stdout="  feat: feature  \n\tfix: fix\t\n", stderr="", returncode=0)
 
         mock_run.side_effect = [describe_result, log_result]
 
@@ -667,9 +647,7 @@ class TestGetCommitsSinceLastTag:
         assert version == "1.2.3"
 
     @patch("subprocess.run")
-    def test_git_describe_called_correctly(
-        self, mock_run: Mock, temp_dir: Path
-    ) -> None:
+    def test_git_describe_called_correctly(self, mock_run: Mock, temp_dir: Path) -> None:
         """Test git describe is called with correct arguments"""
         describe_result = Mock(stdout="v1.2.3\n", stderr="", returncode=0)
         log_result = Mock(stdout="", stderr="", returncode=0)

@@ -93,7 +93,7 @@ version = {attr = "claudecodeoptimizer.__version__"}
 
 [tool.ruff]
 line-length = 100
-target-version = "py38"
+target-version = "py311"
 
 [tool.ruff.lint]
 select = [

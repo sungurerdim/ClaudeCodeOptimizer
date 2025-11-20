@@ -167,9 +167,7 @@ class TestPrintHeader:
         result = output.getvalue()
         lines = result.strip().split("\n")
         # Check separator lines have correct width
-        separator_lines = [
-            line for line in lines if all(c == "=" for c in line) and line
-        ]
+        separator_lines = [line for line in lines if all(c == "=" for c in line) and line]
         for sep in separator_lines:
             assert len(sep) == 40
 
