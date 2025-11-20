@@ -193,6 +193,186 @@ def query_llm_with_audit(user_id: str, prompt: str) -> str:
 
 ---
 
+### 6. AI-Generated Code Security (2025 OWASP Updates)
+
+**NEW #1 Risk: Broken Access Control (OWASP 2025)**
+
+AI scaffolds often generate endpoints without proper authentication:
+
+```python
+# ❌ BAD: AI-generated code often looks like this
+@app.route('/api/user/<user_id>')
+def get_user(user_id):
+    user = db.query(User).filter_by(id=user_id).first()
+    return jsonify(user.to_dict())
+# Missing: Authentication check!
+
+# ✅ GOOD: Always enforce auth
+@app.route('/api/user/<user_id>')
+@require_auth  # Add this decorator
+def get_user(user_id):
+    # Verify requester has permission
+    if not current_user.can_access_user(user_id):
+        abort(403, "Forbidden")
+    user = db.query(User).filter_by(id=user_id).first()
+    return jsonify(user.to_dict())
+```
+
+**Detection Pattern:**
+```python
+def detect_missing_auth(code: str) -> List[dict]:
+    """Find endpoints without auth checks"""
+    issues = []
+
+    # Find Flask/FastAPI routes
+    routes = re.findall(r'@app\.route\([\'"](.+?)[\'"]\).*?def\s+(\w+)', code, re.DOTALL)
+
+    for route, func_name in routes:
+        # Get function body
+        func_match = re.search(rf'def {func_name}\(.*?\):(.+?)(?=\ndef|\Z)', code, re.DOTALL)
+        if not func_match:
+            continue
+
+        func_body = func_match.group(1)
+
+        # Check for auth indicators
+        has_auth = any(keyword in func_body for keyword in [
+            '@require_auth', '@login_required', 'current_user',
+            'verify_token', 'check_permission', 'authenticate'
+        ])
+
+        # Routes modifying data MUST have auth
+        modifies_data = any(keyword in func_body for keyword in [
+            'db.add', 'db.delete', 'db.update', 'db.commit',
+            '.save()', '.delete()', '.update()'
+        ])
+
+        if modifies_data and not has_auth:
+            issues.append({
+                'type': 'broken_access_control',
+                'route': route,
+                'function': func_name,
+                'severity': 'CRITICAL',
+                'owasp': 'A01:2025',
+                'message': f"Route '{route}' modifies data without authentication"
+            })
+
+    return issues
+```
+
+**Exception Handling (OWASP A10:2025 - NEW)**
+
+AI code often handles exceptions incorrectly:
+
+```python
+# ❌ BAD: AI-generated exception anti-patterns
+try:
+    result = risky_operation()
+except:
+    pass  # Silent failure - security risk!
+
+try:
+    user = authenticate(token)
+except AuthError:
+    return default_user  # Failing open - HIGH RISK!
+
+# ✅ GOOD: Proper exception handling
+try:
+    result = risky_operation()
+except SpecificError as e:
+    logger.error(f"Operation failed: {e}")
+    raise  # Don't swallow errors
+
+try:
+    user = authenticate(token)
+except AuthError as e:
+    logger.warning(f"Auth failed: {e}")
+    abort(401)  # Fail closed, not open!
+```
+
+**Detection Pattern:**
+```python
+def detect_exception_mishandling(code: str) -> List[dict]:
+    """Find OWASP A10:2025 violations"""
+    issues = []
+
+    # Bare except (swallows all errors)
+    bare_excepts = re.findall(r'except:\s+pass', code)
+    for _ in bare_excepts:
+        issues.append({
+            'type': 'bare_except_with_pass',
+            'severity': 'MEDIUM',
+            'owasp': 'A10:2025',
+            'message': 'Silent failure hides errors'
+        })
+
+    # Failing open pattern
+    failing_open = re.findall(r'except.*:\s+return\s+default', code, re.I)
+    for _ in failing_open:
+        issues.append({
+            'type': 'failing_open',
+            'severity': 'HIGH',
+            'owasp': 'A10:2025',
+            'message': 'System fails open on error (security risk)'
+        })
+
+    # No logging in exception handlers
+    try_blocks = re.findall(r'try:(.*?)except.*?:(.*?)(?=\n(?:def|class|\Z))', code, re.DOTALL)
+    for try_body, except_body in try_blocks:
+        if 'log' not in except_body.lower():
+            issues.append({
+                'type': 'no_exception_logging',
+                'severity': 'LOW',
+                'owasp': 'A10:2025',
+                'message': 'Exceptions not logged (blind spots)'
+            })
+
+    return issues
+```
+
+**AI Auth Skipping Pattern (GitHub Octoverse 2025)**
+
+Broken Access Control #1 because AI learns from tutorial code, not production:
+
+```python
+# Tutorial pattern (AI learns this)
+@app.route('/api/post')
+def create_post():
+    post = Post(content=request.json['content'])
+    db.session.add(post)
+    db.session.commit()
+    return {'id': post.id}  # Works! ✅ for tutorial
+
+# Production needs (AI often misses)
+@app.route('/api/post')
+@require_auth  # Missing in AI code!
+def create_post():
+    # ALSO missing: Authorization (who can create?)
+    if not current_user.can_create_post():
+        abort(403)
+
+    post = Post(
+        content=request.json['content'],
+        author_id=current_user.id  # Missing in AI code!
+    )
+    db.session.add(post)
+    db.session.commit()
+    return {'id': post.id}
+```
+
+**Fix Pattern:**
+```python
+def fix_missing_auth(code: str, route: str, func_name: str) -> str:
+    """Add authentication decorator"""
+    # Find function definition
+    pattern = rf'(@app\.route.*?)\ndef {func_name}'
+    replacement = rf'\1\n@require_auth  # Added by CCO\ndef {func_name}'
+
+    return re.sub(pattern, replacement, code)
+```
+
+---
+
 ## Patterns
 
 ### Complete Pipeline
