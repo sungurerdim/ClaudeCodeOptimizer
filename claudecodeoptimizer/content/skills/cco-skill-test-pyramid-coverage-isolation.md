@@ -159,12 +159,14 @@ find . -name "*.py" -path "*/src/*" -o -name "*.py" -path "*/${PROJECT}/*" | \
 pytest --cov=src --cov-report=term-missing --cov-fail-under=80
 
 # List functions and check for tests
+# Create safe temp directory (sandboxed)
+mkdir -p .tmp
 grep -rhn "^def \|^async def " --include="*.py" src/ | \
-  sed 's/.*def \([a-zA-Z_][a-zA-Z0-9_]*\).*/\1/' | sort -u > /tmp/funcs.txt
+  sed 's/.*def \([a-zA-Z_][a-zA-Z0-9_]*\).*/\1/' | sort -u > .tmp/funcs.txt
 grep -rh "def test_" --include="*.py" tests/ | \
-  sed 's/.*def test_\([a-zA-Z_][a-zA-Z0-9_]*\).*/\1/' | sort -u > /tmp/tested.txt
+  sed 's/.*def test_\([a-zA-Z_][a-zA-Z0-9_]*\).*/\1/' | sort -u > .tmp/tested.txt
 echo "Potentially untested functions:"
-comm -23 /tmp/funcs.txt /tmp/tested.txt
+comm -23 .tmp/funcs.txt .tmp/tested.txt
 ```
 
 ### Flaky Test Detection

@@ -1,129 +1,573 @@
 ---
-name: cco-skill-docs-api-openapi-adr-runbooks
-description: |
-  Documentation, API specs (OpenAPI/Swagger), ADRs, runbooks, changelog.
-  Triggers: docs, OpenAPI, ADR, runbook, changelog, docstring, API spec
-  Files: docs/*, CHANGELOG.md, README.md, openapi.yaml, swagger.json
+name: docs-api-openapi-adr-runbooks
+description: Comprehensive documentation including API specs (OpenAPI/Swagger), ADRs, runbooks, changelogs, code docstrings, AI code documentation templates, and automated doc coverage metrics
+keywords: [documentation, docs, OpenAPI, Swagger, ADR, runbook, changelog, docstring, API spec, code documentation, AI documentation, doc coverage, readme]
+category: docs
+related_commands:
+  action_types: [audit, fix, generate]
+  categories: [docs, quality]
+pain_points: [12]
 ---
 
-# Skill: Documentation - API, ADRs, Runbooks
+# Documentation - API, ADRs, Runbooks, Code Docs
+
+Comprehensive documentation strategy with AI code documentation templates and coverage metrics.
+
+---
+
+## Domain
+
+API documentation, architecture decision records, operational runbooks, code documentation.
+
+---
 
 ## Purpose
 
-**Solves**:
-- **Undocumented APIs**: Auto-generate OpenAPI specs (60% of API issues from missing docs)
-- **Lost Context**: ADRs preserve architecture decisions and reasoning
-- **Slow Incident Response**: Runbooks reduce MTTR by 40%
-- **Poor Code Docs**: Docstring standards reduce onboarding delays by 50%+
+**Documentation Gap Crisis (2025):**
+- 76% of developers spend >4 hours/week searching for undocumented info
+- AI-generated code often lacks explanatory comments (35% of AI code)
+- 60% of API issues stem from missing/outdated documentation
+- ADRs reduce decision re-litigation by 40%
+- Runbooks reduce MTTR by 40%
+
+**This Skill Provides:**
+- Automated documentation coverage metrics
+- AI code documentation templates
+- OpenAPI spec generation from code
+- ADR and runbook templates
+- Detection of undocumented functions/classes
 
 ---
 
-## Principles Included
+## Core Techniques
 
-Loads these P_ principles on-demand:
+### 1. Documentation Coverage Assessment
 
-- **P_API_DOCUMENTATION_OPENAPI**: Auto-generate OpenAPI specs from code (REST APIs, GraphQL)
-- **P_CODE_DOCUMENTATION_STANDARDS**: Docstrings, type hints, inline comments (functions, classes)
-- **P_ADR_ARCHITECTURE_DECISIONS**: Preserve decision context, alternatives, consequences (tech choices)
-- **P_CHANGELOG_MAINTENANCE**: Keep a Changelog format for release history (versioning, releases)
-- **P_RUNBOOK_OPERATIONAL_DOCS**: Document symptoms, diagnosis, resolution (incident response)
+**Detect Missing Documentation:**
+```python
+def assess_documentation_coverage(file_path: str) -> dict:
+    """Calculate documentation coverage for Python file"""
+    with open(file_path) as f:
+        tree = ast.parse(f.read())
 
-Loaded only when skill activates.
+    total_functions = 0
+    documented_functions = 0
+    total_classes = 0
+    documented_classes = 0
 
----
+    for node in ast.walk(tree):
+        if isinstance(node, ast.FunctionDef):
+            total_functions += 1
+            if ast.get_docstring(node):
+                documented_functions += 1
 
-## Auto-Activation
+        if isinstance(node, ast.ClassDef):
+            total_classes += 1
+            if ast.get_docstring(node):
+                documented_classes += 1
 
-**Keywords**: documentation, docs, OpenAPI, ADR, runbook, changelog, docstring, API spec, Swagger
-**Files**: `docs/*`, `CHANGELOG.md`, `README.md`, `openapi.yaml`, `swagger.json`
+    function_coverage = (documented_functions / total_functions * 100) if total_functions > 0 else 100
+    class_coverage = (documented_classes / total_classes * 100) if total_classes > 0 else 100
 
----
-
-## Command Discovery Protocol
-
-When this skill is active, find relevant commands by searching `~/.claude/commands/` metadata:
-
-```yaml
-# Search criteria for this skill's domain
-action_types: [audit, fix, generate]
-keywords: [documentation, openapi, swagger, adr, runbook, changelog, docstrings, readme, api docs]
-category: docs
-pain_points: [7]
+    return {
+        'total_functions': total_functions,
+        'documented_functions': documented_functions,
+        'total_classes': total_classes,
+        'documented_classes': total_classes,
+        'function_coverage': function_coverage,
+        'class_coverage': class_coverage,
+        'overall_coverage': (function_coverage + class_coverage) / 2,
+        'grade': (
+            'A' if function_coverage >= 90 else
+            'B' if function_coverage >= 75 else
+            'C' if function_coverage >= 60 else
+            'D' if function_coverage >= 40 else
+            'F'
+        )
+    }
 ```
 
-**How Claude finds commands:**
-1. Grep command files for `keywords:.*doc|openapi|adr` in frontmatter
-2. Match `category: docs`
-3. Present matching commands with their parameters
+**Find Undocumented Functions:**
+```python
+def find_undocumented_functions(file_path: str) -> List[dict]:
+    """List all undocumented functions"""
+    with open(file_path) as f:
+        code = f.read()
+        tree = ast.parse(code)
 
-This ensures commands are always current even when renamed or updated.
+    undocumented = []
+
+    for node in ast.walk(tree):
+        if isinstance(node, ast.FunctionDef):
+            if not ast.get_docstring(node):
+                # Check complexity to prioritize
+                complexity = calculate_complexity(node)
+
+                undocumented.append({
+                    'type': 'missing_docstring',
+                    'function': node.name,
+                    'line': node.lineno,
+                    'complexity': complexity,
+                    'severity': (
+                        'HIGH' if complexity > 10 else
+                        'MEDIUM' if complexity > 5 else
+                        'LOW'
+                    ),
+                    'message': f'Function {node.name} lacks docstring (complexity: {complexity})'
+                })
+
+    return undocumented
+```
 
 ---
 
-## Examples
+### 2. AI Code Documentation Templates
 
-### Example 1: OpenAPI (FastAPI)
+**For Complex AI-Generated Logic:**
 ```python
-from fastapi import FastAPI
-from pydantic import BaseModel
+def process_payment_with_tax(amount: Decimal, user_id: int, tax_rate: float = 0.0) -> PaymentResult:
+    """
+    Process payment including tax calculation and fraud detection.
 
-app = FastAPI(title="User API", version="1.0.0")
+    [AI GENERATED CODE - IMPORTANT NOTES]
+    This function combines payment processing with real-time fraud detection.
+    The fraud check uses a third-party API that may timeout (configured to 3s).
+
+    WHY THIS APPROACH:
+    - Combined transaction ensures atomic payment+fraud check
+    - Tax calculation happens before payment to avoid partial charges
+    - Retry logic handles transient payment gateway failures
+
+    EDGE CASES TO KNOW:
+    - If fraud API times out, payment proceeds (configurable via FRAUD_CHECK_REQUIRED env)
+    - Tax rate of 0.0 is valid for tax-exempt users (don't change to None)
+    - amount must be > 0 but validation happens in Payment model
+
+    Args:
+        amount: Payment amount in USD (must be positive)
+        user_id: User ID for fraud check and audit trail
+        tax_rate: Tax percentage (0.0-1.0). Defaults to 0.0 for tax-exempt.
+
+    Returns:
+        PaymentResult containing:
+            - transaction_id: Unique payment identifier
+            - total_charged: Final amount including tax
+            - fraud_score: 0-100 risk score (>80 = rejected)
+
+    Raises:
+        ValueError: If amount <= 0
+        PaymentGatewayError: If payment fails after 3 retries
+        FraudCheckError: If fraud_score > 80 (FRAUD_CHECK_REQUIRED=true)
+
+    Examples:
+        >>> process_payment_with_tax(Decimal('100.00'), user_id=123, tax_rate=0.08)
+        PaymentResult(transaction_id='txn_...', total_charged=Decimal('108.00'), fraud_score=15)
+    """
+    # [AI NOTE] Fraud check BEFORE payment to avoid refunds
+    fraud_score = check_fraud(user_id, amount)
+    if fraud_score > 80 and os.getenv('FRAUD_CHECK_REQUIRED') == 'true':
+        raise FraudCheckError(f"Fraud score too high: {fraud_score}")
+
+    # [AI NOTE] Tax calculation uses decimal to avoid floating point errors
+    total_amount = amount * (Decimal('1') + Decimal(str(tax_rate)))
+
+    # [AI NOTE] Retry logic: payment gateway has 1% failure rate
+    for attempt in range(3):
+        try:
+            result = payment_gateway.charge(user_id, total_amount)
+            return PaymentResult(
+                transaction_id=result.id,
+                total_charged=total_amount,
+                fraud_score=fraud_score
+            )
+        except TransientError as e:
+            if attempt == 2:  # Last attempt
+                raise PaymentGatewayError("Payment failed after 3 attempts") from e
+            time.sleep(2 ** attempt)  # Exponential backoff
+```
+
+**For Simple AI-Generated Functions:**
+```python
+def calculate_discount(price: Decimal, discount_percentage: float) -> Decimal:
+    """
+    Calculate final price after applying percentage discount.
+
+    Args:
+        price: Original price (must be positive)
+        discount_percentage: Discount as percentage (0-100)
+
+    Returns:
+        Final price after discount, rounded to 2 decimals
+
+    Raises:
+        ValueError: If price < 0 or discount not in 0-100 range
+
+    Examples:
+        >>> calculate_discount(Decimal('100.00'), 20)
+        Decimal('80.00')
+    """
+    if price < 0:
+        raise ValueError(f"Price cannot be negative: {price}")
+    if not 0 <= discount_percentage <= 100:
+        raise ValueError(f"Discount must be 0-100: {discount_percentage}")
+
+    return round(price * (1 - Decimal(str(discount_percentage)) / 100), 2)
+```
+
+---
+
+### 3. OpenAPI/Swagger Generation
+
+**FastAPI Auto-Documentation:**
+```python
+from fastapi import FastAPI, HTTPException
+from pydantic import BaseModel, Field
+
+app = FastAPI(
+    title="User Management API",
+    version="1.0.0",
+    description="API for managing user accounts and permissions",
+    contact={
+        "name": "API Support",
+        "email": "api@example.com",
+    },
+    license_info={
+        "name": "MIT",
+    }
+)
 
 class User(BaseModel):
-    id: int; email: str
+    """User model with validation"""
+    id: int = Field(..., description="Unique user identifier", example=123)
+    email: str = Field(..., description="User email address", example="user@example.com")
+    name: str = Field(..., description="Full name", min_length=1, max_length=100)
+    is_active: bool = Field(default=True, description="Account active status")
 
-@app.get("/users/{user_id}", response_model=User)
-async def get_user(user_id: int):
-    """Retrieve user by ID."""
-    return db.get_user(user_id)
-# Docs: /docs (Swagger) or /redoc
-```
+    class Config:
+        schema_extra = {
+            "example": {
+                "id": 123,
+                "email": "john.doe@example.com",
+                "name": "John Doe",
+                "is_active": True
+            }
+        }
 
-### Example 2: ADR
-```markdown
-# ADR 003: PostgreSQL over MongoDB
-**Status**: Accepted | **Date**: 2024-01-15
-## Context: Need ACID transactions for payments
-## Decision: Use PostgreSQL
-## Consequences: +ACID, +SQL | -Vertical scaling (use replicas)
-## Alternatives: MongoDB (no ACID), MySQL (worse JSON support)
-```
-
-### Example 3: Runbook
-```markdown
-# Database Failover | **P1** | 2024-01-15
-## Symptoms: Connection timeout, health check fail
-## Diagnosis: `pg_isready -h db-primary`
-## Resolution:
-1. Verify: `systemctl status postgresql`
-2. Promote: `pg_ctl promote -D /data`
-3. Update: `kubectl set env deployment/api DATABASE_URL=...`
-## Escalation: L1→L2 DB team→L3 CTO (>2h)
-```
-
-### Example 4: Docstring
-```python
-def calculate_discount(price: Decimal, discount: float, coupon: str = None) -> Decimal:
-    """Calculate final price after discount.
-    Args: price (positive), discount (0-100), coupon (optional)
-    Returns: Final price (2 decimals) | Raises: ValueError
+@app.get(
+    "/users/{user_id}",
+    response_model=User,
+    summary="Get user by ID",
+    description="Retrieve a user's detailed information by their unique ID",
+    responses={
+        200: {"description": "User found", "model": User},
+        404: {"description": "User not found"},
+        500: {"description": "Internal server error"}
+    },
+    tags=["Users"]
+)
+async def get_user(
+    user_id: int = Field(..., description="User ID to retrieve", example=123)
+) -> User:
     """
-    if price < 0: raise ValueError(f"Invalid: {price}")
-    return round(price * (1 - discount / 100), 2)
+    Retrieve user details by ID.
+
+    This endpoint returns complete user information including:
+    - Basic profile (name, email)
+    - Account status (active/inactive)
+    - Internal ID for reference
+
+    **Rate Limit:** 100 requests/minute per IP
+    """
+    user = db.get_user(user_id)
+    if not user:
+        raise HTTPException(status_code=404, detail=f"User {user_id} not found")
+    return user
+
+# Auto-generated docs available at:
+# - Swagger UI: /docs
+# - ReDoc: /redoc
+# - OpenAPI JSON: /openapi.json
+```
+
+**Detection Pattern:**
+```python
+def check_api_documentation(file_path: str) -> dict:
+    """Check if API has proper OpenAPI documentation"""
+    with open(file_path) as f:
+        content = f.read()
+
+    issues = []
+
+    # Check for FastAPI/Flask routes
+    routes = re.findall(r'@app\.(get|post|put|delete)\(["\'](.+?)["\']\)', content)
+
+    for method, path in routes:
+        # Check if route has docstring
+        route_pattern = rf'@app\.{method}\(["\']({re.escape(path)})["\']\).*?def\s+(\w+)'
+        match = re.search(route_pattern, content, re.DOTALL)
+
+        if match:
+            func_name = match.group(2)
+            func_start = match.end()
+
+            # Check for docstring
+            docstring_pattern = rf'def {func_name}.*?:.*?"""(.+?)"""'
+            if not re.search(docstring_pattern, content[func_start:func_start+500], re.DOTALL):
+                issues.append({
+                    'type': 'missing_api_docs',
+                    'route': f'{method.upper()} {path}',
+                    'function': func_name,
+                    'severity': 'MEDIUM',
+                    'message': f'API endpoint {method.upper()} {path} lacks docstring'
+                })
+
+    # Check for response model documentation
+    if 'FastAPI' in content:
+        if 'response_model' not in content:
+            issues.append({
+                'type': 'missing_response_model',
+                'severity': 'LOW',
+                'message': 'FastAPI routes missing response_model (helps auto-generate OpenAPI)'
+            })
+
+    return {
+        'total_routes': len(routes),
+        'undocumented_routes': len(issues),
+        'documentation_coverage': ((len(routes) - len(issues)) / len(routes) * 100) if routes else 100,
+        'issues': issues
+    }
 ```
 
 ---
 
-## Documentation Templates
+### 4. ADR (Architecture Decision Record) Detection
 
-Use these templates when generating documentation:
+**Check for ADRs:**
+```python
+def check_adr_presence() -> dict:
+    """Check if project has ADRs and how current they are"""
+    adr_dirs = ['docs/adr', 'docs/architecture', 'adr', 'architecture']
+    adr_files = []
+
+    for adr_dir in adr_dirs:
+        if os.path.exists(adr_dir):
+            adr_files.extend(glob.glob(f'{adr_dir}/**/*.md', recursive=True))
+
+    if not adr_files:
+        return {
+            'has_adrs': False,
+            'adr_count': 0,
+            'severity': 'MEDIUM',
+            'message': 'No ADRs found - architecture decisions not documented'
+        }
+
+    # Check ADR recency
+    newest_adr = max(os.path.getmtime(f) for f in adr_files)
+    days_since_last = (datetime.now() - datetime.fromtimestamp(newest_adr)).days
+
+    return {
+        'has_adrs': True,
+        'adr_count': len(adr_files),
+        'days_since_last_adr': days_since_last,
+        'stale': days_since_last > 180,  # 6 months
+        'recommendation': (
+            f'Last ADR {days_since_last} days ago - consider documenting recent decisions'
+            if days_since_last > 180 else
+            'ADRs current'
+        )
+    }
+```
+
+---
+
+### 5. Runbook Detection
+
+**Check Operational Documentation:**
+```python
+def check_runbook_presence() -> dict:
+    """Check if project has operational runbooks"""
+    runbook_patterns = [
+        'docs/runbook*.md',
+        'docs/operations/*.md',
+        'runbooks/**/*.md',
+        'ops/**/*.md'
+    ]
+
+    runbook_files = []
+    for pattern in runbook_patterns:
+        runbook_files.extend(glob.glob(pattern, recursive=True))
+
+    if not runbook_files:
+        return {
+            'has_runbooks': False,
+            'severity': 'LOW',
+            'message': 'No runbooks found - incident response may be slow'
+        }
+
+    # Check runbook completeness
+    required_sections = ['Symptoms', 'Diagnosis', 'Resolution', 'Escalation']
+    incomplete_runbooks = []
+
+    for runbook in runbook_files:
+        with open(runbook) as f:
+            content = f.read()
+
+        missing = [s for s in required_sections if s.lower() not in content.lower()]
+        if missing:
+            incomplete_runbooks.append({
+                'file': runbook,
+                'missing_sections': missing
+            })
+
+    return {
+        'has_runbooks': True,
+        'runbook_count': len(runbook_files),
+        'incomplete_count': len(incomplete_runbooks),
+        'incomplete_runbooks': incomplete_runbooks,
+        'completeness': ((len(runbook_files) - len(incomplete_runbooks)) / len(runbook_files) * 100) if runbook_files else 0
+    }
+```
+
+---
+
+## Patterns
+
+### Complete Documentation Audit
+
+```python
+def audit_project_documentation(project_dir: str) -> dict:
+    """Comprehensive documentation assessment"""
+
+    # Code documentation
+    python_files = glob.glob(f'{project_dir}/**/*.py', recursive=True)
+    code_coverage = [assess_documentation_coverage(f) for f in python_files]
+
+    avg_function_coverage = sum(c['function_coverage'] for c in code_coverage) / len(code_coverage) if code_coverage else 0
+    avg_class_coverage = sum(c['class_coverage'] for c in code_coverage) / len(code_coverage) if code_coverage else 0
+
+    # API documentation
+    api_files = [f for f in python_files if 'api' in f or 'routes' in f or 'views' in f]
+    api_docs = [check_api_documentation(f) for f in api_files] if api_files else []
+
+    # README
+    has_readme = os.path.exists(f'{project_dir}/README.md')
+
+    # ADRs
+    adr_status = check_adr_presence()
+
+    # Runbooks
+    runbook_status = check_runbook_presence()
+
+    # CHANGELOG
+    has_changelog = os.path.exists(f'{project_dir}/CHANGELOG.md')
+
+    # Calculate overall score
+    score = 0
+    score += 30 if avg_function_coverage >= 75 else (avg_function_coverage / 75 * 30)
+    score += 20 if has_readme else 0
+    score += 15 if adr_status['has_adrs'] and not adr_status.get('stale') else 0
+    score += 15 if runbook_status['has_runbooks'] else 0
+    score += 10 if has_changelog else 0
+    score += 10 if api_docs and sum(d['documentation_coverage'] for d in api_docs) / len(api_docs) >= 75 else 0
+
+    return {
+        'code_documentation': {
+            'function_coverage': avg_function_coverage,
+            'class_coverage': avg_class_coverage,
+            'files_analyzed': len(python_files)
+        },
+        'api_documentation': {
+            'files_analyzed': len(api_files),
+            'coverage': sum(d['documentation_coverage'] for d in api_docs) / len(api_docs) if api_docs else 0
+        },
+        'readme': {'present': has_readme},
+        'adrs': adr_status,
+        'runbooks': runbook_status,
+        'changelog': {'present': has_changelog},
+        'overall_score': score,
+        'grade': (
+            'A' if score >= 90 else
+            'B' if score >= 75 else
+            'C' if score >= 60 else
+            'D' if score >= 40 else
+            'F'
+        ),
+        'recommendations': generate_doc_recommendations(score, adr_status, runbook_status, has_readme, has_changelog)
+    }
+
+def generate_doc_recommendations(score, adr_status, runbook_status, has_readme, has_changelog) -> List[str]:
+    """Generate prioritized recommendations"""
+    recommendations = []
+
+    if score < 60:
+        recommendations.append('CRITICAL: Documentation below acceptable level (< 60%)')
+
+    if not has_readme:
+        recommendations.append('HIGH: Add README.md with Quick Start and examples')
+
+    if not adr_status['has_adrs']:
+        recommendations.append('MEDIUM: Create ADRs for major architecture decisions')
+
+    if not runbook_status['has_runbooks']:
+        recommendations.append('MEDIUM: Document operational runbooks for common incidents')
+
+    if not has_changelog:
+        recommendations.append('LOW: Add CHANGELOG.md following Keep a Changelog format')
+
+    return recommendations
+```
+
+---
+
+## Templates
+
+### AI-Generated Code Documentation Template
+
+```python
+def {FUNCTION_NAME}({PARAMS}) -> {RETURN_TYPE}:
+    """
+    {BRIEF_DESCRIPTION}
+
+    [AI GENERATED CODE - IMPORTANT NOTES]
+    {WHY_THIS_APPROACH}
+
+    WHY THIS APPROACH:
+    - {REASON_1}
+    - {REASON_2}
+
+    EDGE CASES TO KNOW:
+    - {EDGE_CASE_1}
+    - {EDGE_CASE_2}
+
+    GOTCHAS:
+    - {GOTCHA_1} (e.g., "Tax rate of 0.0 is valid, don't change to None")
+    - {GOTCHA_2}
+
+    Args:
+        {PARAM_1}: {DESCRIPTION}
+        {PARAM_2}: {DESCRIPTION}
+
+    Returns:
+        {RETURN_DESCRIPTION}
+
+    Raises:
+        {EXCEPTION_1}: {WHEN}
+        {EXCEPTION_2}: {WHEN}
+
+    Examples:
+        >>> {FUNCTION_NAME}({EXAMPLE_ARGS})
+        {EXPECTED_OUTPUT}
+    """
+    # [AI NOTE] {INLINE_EXPLANATION_FOR_COMPLEX_LINE}
+    pass
+```
 
 ### README Template
 
 ```markdown
 # {PROJECT_NAME}
 
-{One-line description of what this project does}
+{One-sentence description}
 
 [![CI](https://github.com/{owner}/{repo}/actions/workflows/ci.yml/badge.svg)](https://github.com/{owner}/{repo}/actions)
 [![Coverage](https://codecov.io/gh/{owner}/{repo}/branch/main/graph/badge.svg)](https://codecov.io/gh/{owner}/{repo})
@@ -139,9 +583,8 @@ pytest
 
 ## Features
 
-- **Feature 1**: {Brief description}
-- **Feature 2**: {Brief description}
-- **Feature 3**: {Brief description}
+- **Feature 1**: {Description}
+- **Feature 2**: {Description}
 
 ## Installation
 
@@ -154,34 +597,26 @@ pip install {project-name}
 \`\`\`python
 from {project} import main
 
-result = main.run(param1="value")
-print(result)
+result = main.run()
 \`\`\`
 
-## API Reference
+## Documentation
 
-See [API Documentation](docs/api.md) or run the app and visit `/docs`
+- **API Docs**: /docs (when running server)
+- **Architecture**: See [ADRs](docs/adr/)
+- **Operations**: See [Runbooks](docs/runbooks/)
 
 ## Development
 
 \`\`\`bash
-# Install dev dependencies
 pip install -e .[dev]
-
-# Run tests
 pytest
-
-# Run linting
 ruff check .
 \`\`\`
 
-## Contributing
-
-See [CONTRIBUTING.md](CONTRIBUTING.md)
-
 ## License
 
-MIT License - see [LICENSE](LICENSE)
+MIT - see [LICENSE](LICENSE)
 ```
 
 ### ADR Template
@@ -189,152 +624,136 @@ MIT License - see [LICENSE](LICENSE)
 ```markdown
 # ADR {NUMBER}: {TITLE}
 
-**Status**: Proposed | Accepted | Deprecated | Superseded by ADR-{N}
+**Status**: Proposed | Accepted | Deprecated
 **Date**: {YYYY-MM-DD}
-**Deciders**: {list of people involved}
+**Deciders**: {names}
 
 ## Context
 
-{What is the issue that we're seeing that is motivating this decision or change?}
+{Problem statement}
 
 ## Decision
 
-{What is the change that we're proposing and/or doing?}
+{Solution chosen}
 
 ## Consequences
 
 ### Positive
-- {Benefit 1}
-- {Benefit 2}
+- {Benefit}
 
 ### Negative
-- {Drawback 1}
-- {Drawback 2}
-
-### Neutral
-- {Trade-off 1}
+- {Drawback}
 
 ## Alternatives Considered
 
 ### Option A: {Name}
-{Description}
 - Pros: {list}
 - Cons: {list}
-
-### Option B: {Name}
-{Description}
-- Pros: {list}
-- Cons: {list}
-
-## References
-
-- {Link to relevant documentation}
-- {Link to related ADRs}
 ```
 
 ### Runbook Template
 
 ```markdown
-# {SERVICE_NAME} Runbook
+# {SERVICE} Runbook
 
-**Priority**: P1 (Critical) | P2 (High) | P3 (Medium)
-**Owner**: {team-name}
-**Last Updated**: {YYYY-MM-DD}
-**Review Cycle**: Quarterly
-
-## Overview
-
-{Brief description of the service and its importance}
+**Priority**: P1 | P2 | P3
+**Owner**: {team}
+**Last Updated**: {date}
 
 ## Symptoms
 
-- [ ] {Symptom 1 - e.g., "High error rate on /api/users"}
-- [ ] {Symptom 2 - e.g., "Response time > 2s"}
-- [ ] {Symptom 3 - e.g., "Health check failing"}
+- {Symptom 1}
+- {Symptom 2}
 
 ## Diagnosis
 
-### Quick Health Check
 \`\`\`bash
-curl -s http://localhost:8000/health | jq .
-kubectl get pods -l app={service} -o wide
+{diagnostic command}
 \`\`\`
-
-### Log Analysis
-\`\`\`bash
-kubectl logs -l app={service} --tail=100 | grep ERROR
-\`\`\`
-
-### Metrics Check
-- Grafana Dashboard: {link}
-- Key metrics to check: {list}
 
 ## Resolution
 
-### Step 1: {Action}
+### Step 1
 \`\`\`bash
 {command}
 \`\`\`
-Expected: {what should happen}
 
-### Step 2: {Action}
+### Step 2
 \`\`\`bash
 {command}
 \`\`\`
-Expected: {what should happen}
 
-### Step 3: Verify
-\`\`\`bash
-curl -s http://localhost:8000/health
-\`\`\`
-Expected: `{"status": "healthy"}`
+## Escalation
 
-## Escalation Path
-
-| Level | Team | Contact | Timeout |
-|-------|------|---------|---------|
-| L1 | On-call | PagerDuty | 15 min |
-| L2 | {Team} | #{slack-channel} | 30 min |
-| L3 | Engineering Lead | @{name} | 2 hours |
-
-## Post-Incident
-
-- [ ] Update this runbook with lessons learned
-- [ ] Create incident report
-- [ ] Schedule post-mortem if P1/P2
+| Level | Contact | Timeout |
+|-------|---------|---------|
+| L1 | {team} | 15 min |
+| L2 | {manager} | 30 min |
 ```
 
-### Docstring Template (Python)
+---
 
-```python
-def function_name(param1: str, param2: int, param3: Optional[bool] = None) -> dict:
-    """
-    Brief description of what this function does.
+## Checklist
 
-    Longer description if needed, explaining the purpose,
-    algorithm, or any important details.
+### Code Documentation
+- [ ] Functions have docstrings (target: >75%)
+- [ ] Classes have docstrings (target: >75%)
+- [ ] Complex AI code has WHY explanations
+- [ ] Edge cases documented inline
+- [ ] Type hints present
 
-    Args:
-        param1: Description of param1
-        param2: Description of param2
-        param3: Description of param3. Defaults to None.
+### API Documentation
+- [ ] OpenAPI/Swagger spec generated
+- [ ] All endpoints documented
+- [ ] Request/response examples provided
+- [ ] Error codes documented
+- [ ] Rate limits documented
 
-    Returns:
-        Description of return value with example:
-        {"key": "value", "count": 42}
+### Architecture Documentation
+- [ ] ADRs exist for major decisions
+- [ ] ADRs updated in last 6 months
+- [ ] Decision alternatives documented
+- [ ] Consequences listed
 
-    Raises:
-        ValueError: When param1 is empty
-        TypeError: When param2 is not positive
+### Operational Documentation
+- [ ] Runbooks for common incidents
+- [ ] Runbooks have required sections
+- [ ] Escalation paths defined
+- [ ] Updated in last 6 months
 
-    Examples:
-        >>> function_name("test", 5)
-        {"key": "test", "count": 5}
+### General Documentation
+- [ ] README with Quick Start
+- [ ] CHANGELOG maintained
+- [ ] CONTRIBUTING guide present
+- [ ] LICENSE file present
 
-        >>> function_name("", 5)
-        Traceback (most recent call last):
-            ...
-        ValueError: param1 cannot be empty
-    """
-    pass
+---
+
+## Command Discovery Protocol
+
+When this skill is active, find relevant commands by searching `~/.claude/commands/` metadata:
+
+```yaml
+# Search criteria for documentation domain
+action_types: [audit, fix, generate]
+keywords: [documentation, openapi, swagger, adr, runbook, changelog, docstrings, readme, api docs]
+category: docs
+pain_points: [12]  # Documentation Gaps
 ```
+
+**How Claude finds commands:**
+1. Grep command files for `keywords:.*[pattern]` in frontmatter
+2. Match `category: docs`
+3. Present matching commands with their parameters
+
+This ensures commands are always current even when renamed or updated.
+
+---
+
+## References
+
+- [Google Style Python Docstrings](https://google.github.io/styleguide/pyguide.html#38-comments-and-docstrings)
+- [OpenAPI Specification 3.1](https://spec.openapis.org/oas/v3.1.0)
+- [ADR Template by Michael Nygard](https://github.com/joelparkerhenderson/architecture-decision-record)
+- [Keep a Changelog](https://keepachangelog.com/)
+- [FastAPI Documentation](https://fastapi.tiangolo.com/tutorial/metadata/)
