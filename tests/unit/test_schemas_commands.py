@@ -49,7 +49,7 @@ class TestCommandMetadata:
             applicable_team_sizes=["solo", "small-2-5"],
             applicable_maturity_stages=["active-dev"],
             required_tools=["black", "ruff"],
-            required_commands=["cco-init"],
+            required_commands=["cco-status"],
             is_core=True,
             is_experimental=False,
             usage_frequency=10,

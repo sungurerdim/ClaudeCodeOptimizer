@@ -81,8 +81,30 @@ def principles_manager_factory() -> Callable[[List[Dict[str, Any]]], PrinciplesM
         principles_data: List[Dict[str, Any]],
         selection_strategies: Dict[str, Any] | None = None,
         categories: List[Dict[str, str]] | None = None,
+        tmp_path: Path | None = None,
     ) -> PrinciplesManager:
-        manager = PrinciplesManager(Path("/tmp/test"))
+        # CRITICAL: Use provided tmp_path (pytest fixture) or create in project .tmp
+        # NEVER use system /tmp or global ~/.claude/.tmp/
+        if tmp_path is None:
+            import tempfile
+            from pathlib import Path as PathLib
+
+            project_root = PathLib(__file__).parent.parent
+            tmp_base = project_root / ".tmp" / "pytest"
+            tmp_base.mkdir(parents=True, exist_ok=True)
+            tmp_path = PathLib(tempfile.mkdtemp(dir=tmp_base))
+
+        # Verify tmp_path is safe (within project)
+        project_root = Path(__file__).parent.parent
+        try:
+            tmp_path.resolve().relative_to(project_root)
+        except ValueError as err:
+            raise ValueError(
+                f"Test temp path {tmp_path} is outside project root {project_root}. "
+                f"Use pytest's tmp_path fixture or project .tmp/ only."
+            ) from err
+
+        manager = PrinciplesManager(tmp_path)
         manager.principles = {}
         for p_data in principles_data:
             principle = Principle(

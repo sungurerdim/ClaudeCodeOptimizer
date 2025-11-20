@@ -103,7 +103,7 @@ class TestPrinciplesManagerInit:
         assert isinstance(manager.categories, list)
         assert isinstance(manager.selection_strategies, dict)
 
-    def test_init_without_dir(self) -> None:
+    def test_init_without_dir(self, tmp_path: Path) -> None:
         """Test initialization without providing directory"""
         manager = PrinciplesManager()
 
@@ -693,9 +693,9 @@ class TestApplicability:
             autofix={},
         )
 
-    def test_is_applicable_all_types(self) -> None:
+    def test_is_applicable_all_types(self, tmp_path) -> None:
         """Test applicability with 'all' project types"""
-        manager = PrinciplesManager(Path("/tmp/test"))
+        manager = PrinciplesManager(tmp_path)
         principle = self.create_principle({"project_types": ["all"]})
         chars = ProjectCharacteristics(
             project_type="library",
@@ -714,9 +714,9 @@ class TestApplicability:
 
         assert result is True
 
-    def test_is_applicable_specific_type_match(self) -> None:
+    def test_is_applicable_specific_type_match(self, tmp_path) -> None:
         """Test applicability with specific matching project type"""
-        manager = PrinciplesManager(Path("/tmp/test"))
+        manager = PrinciplesManager(tmp_path)
         principle = self.create_principle({"project_types": ["api", "web"]})
         chars = ProjectCharacteristics(
             project_type="api",
@@ -735,9 +735,9 @@ class TestApplicability:
 
         assert result is True
 
-    def test_is_applicable_specific_type_mismatch(self) -> None:
+    def test_is_applicable_specific_type_mismatch(self, tmp_path) -> None:
         """Test applicability with specific non-matching project type"""
-        manager = PrinciplesManager(Path("/tmp/test"))
+        manager = PrinciplesManager(tmp_path)
         principle = self.create_principle({"project_types": ["api", "web"]})
         chars = ProjectCharacteristics(
             project_type="library",
@@ -756,9 +756,9 @@ class TestApplicability:
 
         assert result is False
 
-    def test_is_applicable_language_match(self) -> None:
+    def test_is_applicable_language_match(self, tmp_path: Path) -> None:
         """Test applicability with matching language"""
-        manager = PrinciplesManager(Path("/tmp/test"))
+        manager = PrinciplesManager(tmp_path)
         principle = self.create_principle(
             {"project_types": ["all"], "languages": ["python", "javascript"]}
         )
@@ -779,9 +779,9 @@ class TestApplicability:
 
         assert result is True
 
-    def test_is_applicable_language_mismatch(self) -> None:
+    def test_is_applicable_language_mismatch(self, tmp_path: Path) -> None:
         """Test applicability with non-matching language"""
-        manager = PrinciplesManager(Path("/tmp/test"))
+        manager = PrinciplesManager(tmp_path)
         principle = self.create_principle({"project_types": ["all"], "languages": ["go", "rust"]})
         chars = ProjectCharacteristics(
             project_type="api",
@@ -800,9 +800,9 @@ class TestApplicability:
 
         assert result is False
 
-    def test_is_applicable_context_match(self) -> None:
+    def test_is_applicable_context_match(self, tmp_path: Path) -> None:
         """Test applicability with matching context"""
-        manager = PrinciplesManager(Path("/tmp/test"))
+        manager = PrinciplesManager(tmp_path)
         principle = self.create_principle(
             {"project_types": ["all"], "contexts": ["api_endpoints", "database"]}
         )
@@ -823,9 +823,9 @@ class TestApplicability:
 
         assert result is True
 
-    def test_is_applicable_context_mismatch(self) -> None:
+    def test_is_applicable_context_mismatch(self, tmp_path: Path) -> None:
         """Test applicability with non-matching context"""
-        manager = PrinciplesManager(Path("/tmp/test"))
+        manager = PrinciplesManager(tmp_path)
         principle = self.create_principle({"project_types": ["all"], "contexts": ["api_endpoints"]})
         chars = ProjectCharacteristics(
             project_type="api",
@@ -844,9 +844,9 @@ class TestApplicability:
 
         assert result is False
 
-    def test_is_applicable_with_conditions(self) -> None:
+    def test_is_applicable_with_conditions(self, tmp_path: Path) -> None:
         """Test applicability with conditions that must be met"""
-        manager = PrinciplesManager(Path("/tmp/test"))
+        manager = PrinciplesManager(tmp_path)
         principle = self.create_principle(
             {
                 "project_types": ["all"],
@@ -879,9 +879,9 @@ class TestApplicability:
 class TestConditionEvaluation:
     """Test condition evaluation logic"""
 
-    def test_evaluate_api_type(self) -> None:
+    def test_evaluate_api_type(self, tmp_path: Path) -> None:
         """Test evaluation of API project type condition"""
-        manager = PrinciplesManager(Path("/tmp/test"))
+        manager = PrinciplesManager(tmp_path)
         chars = ProjectCharacteristics(
             project_type="api",
             primary_language="python",
@@ -899,9 +899,9 @@ class TestConditionEvaluation:
 
         assert result is True
 
-    def test_evaluate_microservices_type(self) -> None:
+    def test_evaluate_microservices_type(self, tmp_path: Path) -> None:
         """Test evaluation of microservices type condition"""
-        manager = PrinciplesManager(Path("/tmp/test"))
+        manager = PrinciplesManager(tmp_path)
         chars = ProjectCharacteristics(
             project_type="microservices",
             primary_language="python",
@@ -919,9 +919,9 @@ class TestConditionEvaluation:
 
         assert result is True
 
-    def test_evaluate_privacy_critical(self) -> None:
+    def test_evaluate_privacy_critical(self, tmp_path: Path) -> None:
         """Test evaluation of privacy critical condition"""
-        manager = PrinciplesManager(Path("/tmp/test"))
+        manager = PrinciplesManager(tmp_path)
         chars = ProjectCharacteristics(
             project_type="api",
             primary_language="python",
@@ -941,9 +941,9 @@ class TestConditionEvaluation:
         result = manager._evaluate_condition("privacy_critical", chars)
         assert result is True
 
-    def test_evaluate_security_critical(self) -> None:
+    def test_evaluate_security_critical(self, tmp_path: Path) -> None:
         """Test evaluation of security critical condition"""
-        manager = PrinciplesManager(Path("/tmp/test"))
+        manager = PrinciplesManager(tmp_path)
         chars = ProjectCharacteristics(
             project_type="api",
             primary_language="python",
@@ -961,9 +961,9 @@ class TestConditionEvaluation:
 
         assert result is True
 
-    def test_evaluate_performance_critical(self) -> None:
+    def test_evaluate_performance_critical(self, tmp_path: Path) -> None:
         """Test evaluation of performance critical condition"""
-        manager = PrinciplesManager(Path("/tmp/test"))
+        manager = PrinciplesManager(tmp_path)
         chars = ProjectCharacteristics(
             project_type="api",
             primary_language="python",
@@ -981,9 +981,9 @@ class TestConditionEvaluation:
 
         assert result is True
 
-    def test_evaluate_team_size_large(self) -> None:
+    def test_evaluate_team_size_large(self, tmp_path: Path) -> None:
         """Test evaluation of large team size condition"""
-        manager = PrinciplesManager(Path("/tmp/test"))
+        manager = PrinciplesManager(tmp_path)
         chars = ProjectCharacteristics(
             project_type="api",
             primary_language="python",
@@ -1003,9 +1003,9 @@ class TestConditionEvaluation:
         result = manager._evaluate_condition("team_size > 5", chars)
         assert result is True
 
-    def test_evaluate_team_size_medium(self) -> None:
+    def test_evaluate_team_size_medium(self, tmp_path: Path) -> None:
         """Test evaluation of medium team size condition"""
-        manager = PrinciplesManager(Path("/tmp/test"))
+        manager = PrinciplesManager(tmp_path)
         chars = ProjectCharacteristics(
             project_type="api",
             primary_language="python",
@@ -1025,9 +1025,9 @@ class TestConditionEvaluation:
         result = manager._evaluate_condition("team_size > 1", chars)
         assert result is True
 
-    def test_evaluate_team_size_small(self) -> None:
+    def test_evaluate_team_size_small(self, tmp_path: Path) -> None:
         """Test evaluation of small team size condition"""
-        manager = PrinciplesManager(Path("/tmp/test"))
+        manager = PrinciplesManager(tmp_path)
         chars = ProjectCharacteristics(
             project_type="api",
             primary_language="python",
@@ -1047,9 +1047,9 @@ class TestConditionEvaluation:
         result = manager._evaluate_condition("team.size > 1", chars)
         assert result is True
 
-    def test_evaluate_team_size_medium_threshold(self) -> None:
+    def test_evaluate_team_size_medium_threshold(self, tmp_path: Path) -> None:
         """Test evaluation of team size > 2 condition"""
-        manager = PrinciplesManager(Path("/tmp/test"))
+        manager = PrinciplesManager(tmp_path)
         chars = ProjectCharacteristics(
             project_type="api",
             primary_language="python",
@@ -1071,9 +1071,9 @@ class TestConditionEvaluation:
         result = manager._evaluate_condition("team_size > 2", chars)
         assert result is False
 
-    def test_evaluate_services_count_medium(self) -> None:
+    def test_evaluate_services_count_medium(self, tmp_path: Path) -> None:
         """Test evaluation of medium services count condition"""
-        manager = PrinciplesManager(Path("/tmp/test"))
+        manager = PrinciplesManager(tmp_path)
         chars = ProjectCharacteristics(
             project_type="microservices",
             primary_language="python",
@@ -1091,9 +1091,9 @@ class TestConditionEvaluation:
 
         assert result is True
 
-    def test_evaluate_services_count_large(self) -> None:
+    def test_evaluate_services_count_large(self, tmp_path: Path) -> None:
         """Test evaluation of large services count condition"""
-        manager = PrinciplesManager(Path("/tmp/test"))
+        manager = PrinciplesManager(tmp_path)
         chars = ProjectCharacteristics(
             project_type="microservices",
             primary_language="python",
@@ -1111,9 +1111,9 @@ class TestConditionEvaluation:
 
         assert result is True
 
-    def test_evaluate_containers(self) -> None:
+    def test_evaluate_containers(self, tmp_path: Path) -> None:
         """Test evaluation of containers condition"""
-        manager = PrinciplesManager(Path("/tmp/test"))
+        manager = PrinciplesManager(tmp_path)
         chars = ProjectCharacteristics(
             project_type="api",
             primary_language="python",
@@ -1133,9 +1133,9 @@ class TestConditionEvaluation:
         result = manager._evaluate_condition("has_containers", chars)
         assert result is True
 
-    def test_evaluate_unknown_condition(self) -> None:
+    def test_evaluate_unknown_condition(self, tmp_path: Path) -> None:
         """Test evaluation of unknown condition defaults to True"""
-        manager = PrinciplesManager(Path("/tmp/test"))
+        manager = PrinciplesManager(tmp_path)
         chars = ProjectCharacteristics(
             project_type="api",
             primary_language="python",
@@ -1153,9 +1153,9 @@ class TestConditionEvaluation:
 
         assert result is True
 
-    def test_evaluate_exception_handling(self) -> None:
+    def test_evaluate_exception_handling(self, tmp_path: Path) -> None:
         """Test evaluation handles exceptions gracefully"""
-        manager = PrinciplesManager(Path("/tmp/test"))
+        manager = PrinciplesManager(tmp_path)
 
         # Create a mock characteristics that will raise an exception when accessed
         class BadCharacteristics:
@@ -1174,9 +1174,9 @@ class TestConditionEvaluation:
 class TestCheckConditions:
     """Test condition checking on principles"""
 
-    def test_check_conditions_no_conditions(self) -> None:
+    def test_check_conditions_no_conditions(self, tmp_path: Path) -> None:
         """Test checking when no conditions are specified"""
-        manager = PrinciplesManager(Path("/tmp/test"))
+        manager = PrinciplesManager(tmp_path)
         principle = Principle(
             id="TEST",
             number=1,
@@ -1207,9 +1207,9 @@ class TestCheckConditions:
 
         assert result is True
 
-    def test_check_conditions_all_pass(self) -> None:
+    def test_check_conditions_all_pass(self, tmp_path: Path) -> None:
         """Test checking when all conditions pass"""
-        manager = PrinciplesManager(Path("/tmp/test"))
+        manager = PrinciplesManager(tmp_path)
         principle = Principle(
             id="TEST",
             number=1,
@@ -1240,9 +1240,9 @@ class TestCheckConditions:
 
         assert result is True
 
-    def test_check_conditions_one_fails(self) -> None:
+    def test_check_conditions_one_fails(self, tmp_path: Path) -> None:
         """Test checking when one condition fails"""
-        manager = PrinciplesManager(Path("/tmp/test"))
+        manager = PrinciplesManager(tmp_path)
         principle = Principle(
             id="TEST",
             number=1,

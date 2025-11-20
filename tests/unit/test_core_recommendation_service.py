@@ -315,7 +315,7 @@ class TestRecommendCommands:
             with patch(
                 "claudecodeoptimizer.core.recommendation_service.get_available_commands"
             ) as mock_commands:
-                mock_commands.return_value = ["cco-audit", "cco-status", "cco-init"]
+                mock_commands.return_value = ["cco-audit", "cco-status", "cco-remove"]
 
                 with patch(
                     "claudecodeoptimizer.core.recommendation_service.config.get_global_commands_dir"

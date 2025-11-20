@@ -28,16 +28,16 @@ class TestParseFrontmatter:
     def test_parse_frontmatter_valid_simple(self):
         """Test parsing valid simple frontmatter"""
         content = """---
-name: cco-init
-description: Initialize CCO for this project
+name: cco-remove
+description: Complete CCO uninstall with full transparency
 ---
 
 # Content here
 """
         result = parse_frontmatter(content)
 
-        assert result["name"] == "cco-init"
-        assert result["description"] == "Initialize CCO for this project"
+        assert result["name"] == "cco-remove"
+        assert result["description"] == "Complete CCO uninstall with full transparency"
 
     def test_parse_frontmatter_valid_complex(self):
         """Test parsing frontmatter with multiple fields"""
@@ -157,16 +157,16 @@ description: test description
     def test_parse_frontmatter_whitespace_handling(self):
         """Test whitespace is stripped from keys and values"""
         content = """---
-  name  :  cco-init
-  description  :  Initialize project
+  name  :  cco-remove
+  description  :  Remove CCO completely
 ---
 
 # Content
 """
         result = parse_frontmatter(content)
 
-        assert result["name"] == "cco-init"
-        assert result["description"] == "Initialize project"
+        assert result["name"] == "cco-remove"
+        assert result["description"] == "Remove CCO completely"
 
 
 class TestLoadGlobalCommands:
@@ -180,16 +180,10 @@ class TestLoadGlobalCommands:
         return commands_dir
 
     def test_load_global_commands_both_files_exist(self, tmp_path):
-        """Test loading when both cco-init and cco-remove exist"""
+        """Test loading when cco-remove exists"""
         commands_dir = tmp_path / "content" / "commands"
         commands_dir.mkdir(parents=True)
 
-        init_content = """---
-description: Initialize CCO for this project
----
-
-# CCO Init
-"""
         remove_content = """---
 description: Remove CCO from current project
 ---
@@ -197,7 +191,6 @@ description: Remove CCO from current project
 # CCO Remove
 """
 
-        (commands_dir / "cco-init.md").write_text(init_content, encoding="utf-8")
         (commands_dir / "cco-remove.md").write_text(remove_content, encoding="utf-8")
 
         with patch("claudecodeoptimizer.commands_loader.Path") as mock_path:
@@ -213,9 +206,7 @@ description: Remove CCO from current project
                 with patch.object(
                     Path,
                     "read_text",
-                    side_effect=lambda **kwargs: (
-                        init_content if "init" in str(Path) else remove_content
-                    ),
+                    side_effect=lambda **kwargs: remove_content,
                 ):
                     # Actually test with real paths
                     result = load_global_commands()
@@ -230,18 +221,6 @@ description: Remove CCO from current project
         content_dir = tmp_path / "content"
         commands_dir = content_dir / "commands"
         commands_dir.mkdir(parents=True)
-
-        # Create cco-init.md
-        init_file = commands_dir / "cco-init.md"
-        init_file.write_text(
-            """---
-description: Initialize CCO for this project with auto-detection
----
-
-# Init Command
-""",
-            encoding="utf-8",
-        )
 
         # Create cco-remove.md
         remove_file = commands_dir / "cco-remove.md"
@@ -265,11 +244,9 @@ description: Remove CCO from current project (keeps global installation)
         ):
             result = load_global_commands()
 
-            # Should successfully load both commands
+            # Should successfully load command
             assert isinstance(result, dict)
-            assert "cco-init" in result
             assert "cco-remove" in result
-            assert "Initialize CCO" in result["cco-init"]["description"]
             assert "Remove CCO" in result["cco-remove"]["description"]
 
     def test_load_global_commands_directory_not_exists(self, tmp_path):
@@ -287,21 +264,20 @@ description: Remove CCO from current project (keeps global installation)
             # Should return empty dict when directory doesn't exist
             assert result == {}
 
-    def test_load_global_commands_only_init_exists(self, tmp_path):
-        """Test loading when only cco-init exists"""
+    def test_load_global_commands_only_remove_exists(self, tmp_path):
+        """Test loading when only cco-remove exists"""
         commands_dir = tmp_path / "content" / "commands"
         commands_dir.mkdir(parents=True)
 
-        init_file = commands_dir / "cco-init.md"
-        init_file.write_text(
+        remove_file = commands_dir / "cco-remove.md"
+        remove_file.write_text(
             """---
-description: Initialize CCO
+description: Remove CCO
 ---
 """,
             encoding="utf-8",
         )
 
-        # Don't create cco-remove.md
         import claudecodeoptimizer.commands_loader as commands_loader_module
 
         with patch.object(
@@ -311,11 +287,9 @@ description: Initialize CCO
         ):
             result = load_global_commands()
 
-            # Should load only cco-init
+            # Should load only cco-remove
             assert isinstance(result, dict)
-            assert "cco-init" in result
-            # cco-remove should not be present (file doesn't exist)
-            assert "cco-remove" not in result
+            assert "cco-remove" in result
 
     def test_load_global_commands_invalid_frontmatter(self, tmp_path):
         """Test loading with invalid frontmatter returns title from filename"""
@@ -323,8 +297,8 @@ description: Initialize CCO
         commands_dir.mkdir(parents=True)
 
         # File with no frontmatter
-        init_file = commands_dir / "cco-init.md"
-        init_file.write_text("# Just content\nNo frontmatter here", encoding="utf-8")
+        remove_file = commands_dir / "cco-remove.md"
+        remove_file.write_text("# Just content\nNo frontmatter here", encoding="utf-8")
 
         import claudecodeoptimizer.commands_loader as commands_loader_module
 
@@ -337,9 +311,9 @@ description: Initialize CCO
 
             # Should still work but use default description
             assert isinstance(result, dict)
-            assert "cco-init" in result
+            assert "cco-remove" in result
             # Should use default description with command name
-            assert "Cco-Init" in result["cco-init"]["description"]
+            assert "Cco-Remove" in result["cco-remove"]["description"]
 
 
 class TestGetCommandList:
@@ -348,8 +322,8 @@ class TestGetCommandList:
     def test_get_command_list_with_commands(self):
         """Test command list output with loaded commands"""
         mock_commands = {
-            "cco-init": {"description": "Init", "file": Path("cco-init.md")},
             "cco-remove": {"description": "Remove", "file": Path("cco-remove.md")},
+            "cco-status": {"description": "Status", "file": Path("cco-status.md")},
         }
 
         with patch(
@@ -358,10 +332,10 @@ class TestGetCommandList:
         ):
             result = get_command_list()
 
-            assert "cco-init.md" in result
             assert "cco-remove.md" in result
+            assert "cco-status.md" in result
             # Should be sorted
-            assert result.index("cco-init") < result.index("cco-remove")
+            assert result.index("cco-remove") < result.index("cco-status")
 
     def test_get_command_list_no_commands(self):
         """Test command list output with no commands"""
@@ -369,12 +343,12 @@ class TestGetCommandList:
             result = get_command_list()
 
             # Default fallback
-            assert result == "cco-init.md, cco-remove.md"
+            assert result == "cco-remove.md"
 
     def test_get_command_list_single_command(self):
         """Test command list with single command"""
         mock_commands = {
-            "cco-init": {"description": "Init", "file": Path("cco-init.md")},
+            "cco-remove": {"description": "Remove", "file": Path("cco-remove.md")},
         }
 
         with patch(
@@ -383,13 +357,13 @@ class TestGetCommandList:
         ):
             result = get_command_list()
 
-            assert result == "cco-init.md"
+            assert result == "cco-remove.md"
 
     def test_get_command_list_sorted_output(self):
         """Test command list is sorted alphabetically"""
         mock_commands = {
             "cco-remove": {"description": "Remove", "file": Path("cco-remove.md")},
-            "cco-init": {"description": "Init", "file": Path("cco-init.md")},
+            "cco-status": {"description": "Status", "file": Path("cco-status.md")},
             "cco-analyze": {"description": "Analyze", "file": Path("cco-analyze.md")},
         }
 
@@ -401,8 +375,8 @@ class TestGetCommandList:
 
             # Should be alphabetically sorted
             assert result.startswith("cco-analyze")
-            assert "cco-init" in result
-            assert result.endswith("cco-remove.md")
+            assert "cco-status" in result
+            assert result.endswith("cco-status.md")
 
 
 class TestGetSlashCommands:
@@ -411,8 +385,8 @@ class TestGetSlashCommands:
     def test_get_slash_commands_with_commands(self):
         """Test slash commands output with loaded commands"""
         mock_commands = {
-            "cco-init": {"description": "Init", "file": Path("cco-init.md")},
             "cco-remove": {"description": "Remove", "file": Path("cco-remove.md")},
+            "cco-status": {"description": "Status", "file": Path("cco-status.md")},
         }
 
         with patch(
@@ -421,8 +395,8 @@ class TestGetSlashCommands:
         ):
             result = get_slash_commands()
 
-            assert "/cco-init" in result
             assert "/cco-remove" in result
+            assert "/cco-status" in result
             # Should NOT have .md extension
             assert ".md" not in result
 
@@ -432,12 +406,12 @@ class TestGetSlashCommands:
             result = get_slash_commands()
 
             # Default fallback
-            assert result == "/cco-init, /cco-remove"
+            assert result == "/cco-remove"
 
     def test_get_slash_commands_single_command(self):
         """Test slash commands with single command"""
         mock_commands = {
-            "cco-init": {"description": "Init", "file": Path("cco-init.md")},
+            "cco-remove": {"description": "Remove", "file": Path("cco-remove.md")},
         }
 
         with patch(
@@ -446,13 +420,13 @@ class TestGetSlashCommands:
         ):
             result = get_slash_commands()
 
-            assert result == "/cco-init"
+            assert result == "/cco-remove"
 
     def test_get_slash_commands_sorted_output(self):
         """Test slash commands are sorted alphabetically"""
         mock_commands = {
             "cco-remove": {"description": "Remove", "file": Path("cco-remove.md")},
-            "cco-init": {"description": "Init", "file": Path("cco-init.md")},
+            "cco-status": {"description": "Status", "file": Path("cco-status.md")},
             "cco-analyze": {"description": "Analyze", "file": Path("cco-analyze.md")},
         }
 
@@ -464,7 +438,7 @@ class TestGetSlashCommands:
 
             # Should be alphabetically sorted
             parts = result.split(", ")
-            assert parts == ["/cco-analyze", "/cco-init", "/cco-remove"]
+            assert parts == ["/cco-analyze", "/cco-remove", "/cco-status"]
 
     def test_get_slash_commands_format(self):
         """Test slash commands have correct format (no .md, has /)"""
@@ -518,14 +492,14 @@ name: 'single-quoted-name'
         assert result["description"] == '"This is a quoted description"'
         assert result["name"] == "'single-quoted-name'"
 
-    def test_load_global_commands_only_loads_init_remove(self):
-        """Test that only cco-init and cco-remove are loaded"""
+    def test_load_global_commands_only_loads_remove(self):
+        """Test that only cco-remove is loaded"""
         # This is the actual behavior - only specific commands are global
         result = load_global_commands()
 
-        # Should only have init and remove (or be empty if files don't exist)
+        # Should only have remove (or be empty if file doesn't exist)
         if result:
-            assert all(key in ["cco-init", "cco-remove"] for key in result.keys())
+            assert all(key in ["cco-remove"] for key in result.keys())
 
     def test_functions_dont_raise_on_missing_files(self):
         """Test that functions handle missing files gracefully"""

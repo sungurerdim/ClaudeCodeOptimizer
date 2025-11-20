@@ -106,7 +106,7 @@ class TestCommandNaming:
 
     def test_get_command_name(self):
         """Test get_command_name generates correct command names."""
-        assert get_command_name("init") == "/cco-init"
+        assert get_command_name("remove") == "/cco-remove"
         assert get_command_name("status") == "/cco-status"
         assert get_command_name("test") == "/cco-test"
 
@@ -204,7 +204,6 @@ class TestCCOConfigClass:
         result = CCOConfig.to_dict()
         commands = result["commands"]
         assert commands["prefix"] == COMMAND_PREFIX
-        assert commands["init"] == "/cco-init"
         assert commands["status"] == "/cco-status"
         assert commands["help"] == "/cco-help"
 

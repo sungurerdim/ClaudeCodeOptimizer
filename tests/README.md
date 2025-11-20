@@ -40,10 +40,10 @@ pytest tests/integration/
 pytest --cov=claudecodeoptimizer --cov-report=html
 ```
 
-## Coverage Goals (v0.2.0)
+## Coverage Goals
 
-**Current**: 0%
-**Target**: 60%
+**Current**: 82%
+**Target**: 85%
 
 **Priority areas**:
 1. Detection engine (ai/detection.py)

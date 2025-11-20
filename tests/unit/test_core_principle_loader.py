@@ -544,7 +544,7 @@ class TestPrincipleLoaderEstimateTokenCount:
     def test_estimate_single_category(self, temp_principles_dir: Path) -> None:
         """Test token estimation for single category"""
         loader = PrincipleLoader(temp_principles_dir)
-        count = loader.estimate_token_count("cco-init")
+        count = loader.estimate_token_count("cco-remove")
 
         # Should estimate tokens for core category
         assert count > 0
@@ -618,9 +618,9 @@ class TestCommandPrincipleMap:
 
     def test_map_has_core_commands(self) -> None:
         """Test that map includes core commands"""
-        assert "cco-init" in COMMAND_PRINCIPLE_MAP
         assert "cco-status" in COMMAND_PRINCIPLE_MAP
         assert "cco-config" in COMMAND_PRINCIPLE_MAP
+        assert "cco-remove" in COMMAND_PRINCIPLE_MAP
 
     def test_map_has_audit_commands(self) -> None:
         """Test that map includes audit commands"""
