@@ -71,6 +71,10 @@ parameters:
     keywords: [requirements, dependencies, pyproject.toml, package.json]
     category: infrastructure
     pain_points: [6]
+  review-checklist:
+    keywords: [review checklist, pr checklist, code review guide, review template, merge checklist]
+    category: docs
+    pain_points: [11, 12]
 ---
 
 # cco-generate
@@ -183,6 +187,16 @@ OUTCOMES = {
 17. **--requirements** - Dependency files
     - Skill: `cco-skill-supply-chain-dependencies-sast`
     - Generates: requirements.txt/pyproject.toml from imports
+
+18. **--review-checklist** - Code review checklist (Pain #11, #12)
+    - Skill: `cco-skill-code-review-quality-ai-guidance`
+    - Generates: AI-aware review checklist template, PR checklist with quality gates
+    - **2025 Critical**: Addresses 27% decline in code review comments
+    - Includes:
+      - General review checklist (security, testing, performance)
+      - AI-specific checks (hallucination detection, bloat prevention)
+      - Context-specific checks (async patterns, resource cleanup)
+      - Review quality metrics (comment density, reviewer diversity)
 
 ---
 
@@ -374,6 +388,10 @@ AskUserQuestion({
         {
           label: f"Docs + ADR ({undoc_count} items)",
           description: "Docstrings, README sections, Architecture Decision Records"
+        },
+        {
+          label: "Review Checklist (AI-aware)",
+          description: "Code review checklist with AI hallucination checks | Pain #11, #12 | 🔴 2025 CRITICAL"
         },
         {
           label: "Runbooks + Requirements",

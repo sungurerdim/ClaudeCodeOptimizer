@@ -71,6 +71,27 @@ parameters:
     keywords: [git audit, commit quality, branching check, pr process scan]
     category: infrastructure
     pain_points: [5]
+  ai-quality:
+    keywords: [ai quality audit, ai hallucination scan, api hallucination check, code bloat scan, vibe coding check, copilot quality]
+    category: quality
+    pain_points: [3, 8, 9]
+  ai-debt:
+    keywords: [ai debt audit, ai generated debt, ai code quality, ai technical debt]
+    category: quality
+    pain_points: [2, 3]
+  code-review:
+    keywords: [code review audit, pr quality check, review quality scan, commit quality check, dora metrics]
+    category: quality
+    pain_points: [11, 12]
+  platform:
+    keywords: [platform audit, cicd maturity, test automation check, iac scan, dx audit, ai readiness]
+    category: infrastructure
+    pain_points: [4, 6, 10]
+  ai:
+    keywords: [ai audit, complete ai scan, ai security and quality, ai comprehensive check]
+    category: meta
+    pain_points: [2, 3, 8, 9]
+    meta_flags: [ai-quality, ai-debt, ai-security]
 ---
 
 # CCO Audit Command
@@ -167,7 +188,7 @@ AskUserQuestion({
     multiSelect: false,
     options: [
       {
-        label: "Quick Overview",
+        label: "Quick Mode",
         description: "Fast health assessment with scores, ideal comparison, and action plan (~5 min)"
       },
       {
@@ -187,15 +208,15 @@ AskUserQuestion({
 })
 ```
 
-### Quick Overview Mode
+### Quick Mode
 
-**When user selects "Quick Overview", execute fast health assessment:**
+**When user selects "Quick Mode" or uses `--quick` flag, execute fast health assessment:**
 
 ```python
-# Quick Overview bypasses detailed check selection
+# Quick mode bypasses detailed check selection
 # Instead, performs rapid analysis across all 8 areas
 
-def quick_overview():
+def quick_assessment():
     """
     Fast project health assessment with:
     - Score calculation (0-100) for each area
@@ -220,10 +241,10 @@ def quick_overview():
         scores[area] = analyzer()  # Returns 0-100 score
 
     # Generate report
-    return generate_overview_report(scores)
+    return generate_quick_report(scores)
 ```
 
-**Quick Overview Output Format:**
+**Quick Mode Output Format:**
 
 ```markdown
 ## Project Health Report
@@ -232,22 +253,59 @@ def quick_overview():
 **Type:** {Detected project type}
 **Overall Score:** {Average}/100 {Emoji}
 
+### Strategic Recommendations
+
+**Platform Maturity:** {Score}/100 {Emoji}
+- CI/CD: {Status} ({Details})
+- Test Automation: {Coverage}%
+- IaC Presence: {Yes/No/Partial}
+- Deployment Frequency: {X}/week
+➜ Improvement: /cco-audit --platform
+
+**AI Readiness:** {Low/Medium/High} {Emoji}
+- Foundation Quality: {Score}/100
+- Test Coverage: {Percentage}%
+- Platform Stability: {DORA Tier}
+- Recommendation: {Action}
+➜ {If Low: "Strengthen foundation before AI adoption"}
+➜ {If Medium: "Ready for limited AI use with oversight"}
+➜ {If High: "AI will amplify your strong foundation"}
+
+**DORA Metrics Overview:**
+1. Deployment Frequency: {X}/week ({Elite/High/Medium/Low})
+2. Lead Time for Changes: {Hours/Days} ({Tier})
+3. MTTR: {Minutes/Hours} ({Tier})
+4. Change Failure Rate: {Percentage}% ({Tier})
+5. Rework Rate (2025): {Percentage}% ({Tier})
+➜ Overall DORA Tier: {Elite/High/Medium/Low}
+➜ Deep Dive: /cco-audit --platform
+
 ### Scores by Area (Pain-Point Ordered)
 
-{Emoji} #1 Security: {Score}/100 ({Status})
+{Emoji} #1 AI Quality Crisis: {Score}/100 ({Status})
+   - {Key findings}
+   ➜ Fix: /cco-audit --ai-quality
+
+{Emoji} #2 AI Tech Debt: {Score}/100 ({Status})
+   - {Key findings}
+   ➜ Fix: /cco-audit --ai-debt
+
+{Emoji} #3 Security: {Score}/100 ({Status})
    - {Key findings}
    ➜ Fix: /cco-audit --security
 
-{Emoji} #2 Tech Debt: {Score}/100 ({Status})
-   - {Key findings}
-   ➜ Fix: /cco-fix --tech-debt
-
-[Repeat for all 8 areas]
+[Repeat for all 12 pain points]
 
 ### Tech Stack Evaluation
 
 {✅/⚠️/❌} {Framework} - {Assessment}
 {Recommendations for improvements}
+
+**AI Code Detection:**
+- Estimated AI-generated code: {Percentage}%
+- AI signatures found: {ChatGPT/Copilot/Claude patterns}
+- Quality score: {AI_Quality_Score}/100
+➜ Detailed analysis: /cco-audit --ai
 
 ### Ideal Scenario Comparison
 
@@ -1608,7 +1666,7 @@ Task({
     prompt: """
     Focus: Security vulnerabilities
     Checks: SQL injection, XSS, CSRF, secrets, auth, CVEs
-    Skill: cco-skill-security-owasp
+    Skill: cco-skill-security-owasp-xss-sqli-csrf
     Return: Findings with severity, file:line, risk, fix
     """
 })
@@ -1620,7 +1678,7 @@ Task({
     prompt: """
     Focus: Performance bottlenecks
     Checks: N+1 queries, missing indexes, no caching, slow algorithms
-    Skill: cco-skill-database-optimization
+    Skill: cco-skill-database-optimization-caching-profiling
     Return: Findings with impact metrics, file:line, optimization
     """
 })
@@ -1632,7 +1690,7 @@ Task({
     prompt: """
     Focus: Testing gaps
     Checks: Coverage, untested functions, isolation, pyramid
-    Skill: cco-skill-test-pyramid
+    Skill: cco-skill-test-pyramid-coverage-isolation
     Return: Findings with coverage %, critical untested paths
     """
 })
@@ -1644,7 +1702,7 @@ Task({
     prompt: """
     Focus: Code quality issues
     Checks: Complexity, dead code, duplication, smells
-    Skill: cco-skill-code-quality
+    Skill: cco-skill-code-quality-refactoring-complexity
     Return: Findings with metrics (CC, LOC), file:line, refactor suggestion
     """
 })
@@ -1656,7 +1714,7 @@ Task({
     prompt: """
     Focus: Architecture concerns
     Checks: Coupling, patterns, boundaries, dependencies
-    Skill: cco-skill-microservices-cqrs
+    Skill: cco-skill-microservices-cqrs-mesh-di
     Return: Findings with design issue, impact, restructure suggestion
     """
 })
@@ -1668,18 +1726,66 @@ Task({
     prompt: """
     Focus: Documentation gaps
     Checks: Docstrings, API docs, README, ADRs
-    Skill: cco-skill-docs-api-openapi
+    Skill: cco-skill-docs-api-openapi-adr-runbooks
     Return: Findings with missing doc type, file:line, template
     """
 })
 
-# Synthesis agent (waits for all 6 to complete)
+Task({
+    subagent_type: "audit-agent",
+    model: "sonnet",
+    description: "AI code quality audit",
+    prompt: """
+    Focus: AI-generated code quality issues
+    Checks: Hallucination, copy/paste patterns, code bloat, vibe coding, model inconsistency
+    Skill: cco-skill-ai-code-quality-verification-debt
+    Return: Findings with AI signature, quality score, file:line, refactoring suggestion
+    """
+})
+
+Task({
+    subagent_type: "audit-agent",
+    model: "haiku",
+    description: "Platform maturity audit",
+    prompt: """
+    Focus: Platform engineering maturity
+    Checks: CI/CD completeness, IaC presence, deployment automation, test automation, DX
+    Skill: cco-skill-platform-engineering-maturity-dx
+    Return: Findings with maturity score, missing capabilities, improvement recommendations
+    """
+})
+
+Task({
+    subagent_type: "audit-agent",
+    model: "haiku",
+    description: "DORA metrics & stability audit",
+    prompt: """
+    Focus: Delivery performance and stability
+    Checks: DORA 5 metrics, rework rate, deployment frequency, change failure rate
+    Skill: cco-skill-dora-metrics-stability-rework
+    Return: Findings with DORA scores, stability trends, rework patterns, git analysis
+    """
+})
+
+Task({
+    subagent_type: "audit-agent",
+    model: "haiku",
+    description: "Code review quality audit",
+    prompt: """
+    Focus: Code review effectiveness
+    Checks: Review depth, comment density, reviewer diversity, review time distribution
+    Skill: cco-skill-code-review-quality-ai-guidance
+    Return: Findings with review quality score, process gaps, AI review patterns
+    """
+})
+
+# Synthesis agent (waits for all 10 to complete)
 Task({
     subagent_type: "audit-agent",
     model: "sonnet",
     description: "Synthesize findings",
     prompt: """
-    Aggregate all 6 aspect findings:
+    Aggregate all 10 aspect findings:
     - Deduplicate overlapping issues
     - Calculate overall score
     - Prioritize by severity and impact

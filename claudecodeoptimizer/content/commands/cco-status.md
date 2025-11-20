@@ -66,7 +66,7 @@ Should contain principle markers (U_* and C_*).
 ## Components
 
 **Commands ({{COMMAND_COUNT}} core):**
-- Discovery: help, status, overview
+- Discovery: help, status
 - Critical: audit, fix, generate
 - Productivity: optimize, commit, implement
 - Management: update, remove
