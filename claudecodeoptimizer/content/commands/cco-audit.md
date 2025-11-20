@@ -92,6 +92,26 @@ parameters:
     category: meta
     pain_points: [2, 3, 8, 9]
     meta_flags: [ai-quality, ai-debt, ai-security]
+  critical:
+    keywords: [critical audit, essential checks, must-fix, high priority scan]
+    category: meta
+    pain_points: [1, 3, 4, 5]
+    meta_flags: [security, ai-security, database, tests]
+  production-ready:
+    keywords: [production ready audit, deploy readiness, pre-deploy check, production checklist]
+    category: meta
+    pain_points: [1, 4, 5, 7]
+    meta_flags: [security, performance, database, tests, docs]
+  code-health:
+    keywords: [code health audit, quality focus, maintainability check, code cleanliness]
+    category: meta
+    pain_points: [2, 4, 7]
+    meta_flags: [tech-debt, code-quality, tests, docs]
+  team-metrics:
+    keywords: [team metrics audit, collaboration check, platform maturity, team performance]
+    category: meta
+    pain_points: [6, 10, 11, 12]
+    meta_flags: [code-review, platform, cicd]
 ---
 
 # CCO Audit Command
@@ -120,9 +140,9 @@ parameters:
 
 ```python
 # ❌ BAD: Hardcoded example (AI might use as-is)
-"file": "src/auth/login.py"
+"file": "src/auth/example.py"   # ← Even "bad" examples should avoid real-looking paths
 "line": 45
-"issue": "SQL injection in authenticate()"
+"issue": "SQL injection in function()"
 
 # ✅ GOOD: Dynamic placeholders
 "file": "{FILE_PATH}"
@@ -144,7 +164,7 @@ def format_finding(finding: Finding) -> str:
     """Format finding with REAL data, never hardcoded examples."""
 
     # ❌ NEVER: Return template as-is
-    # return "SQL Injection in auth.py:45"
+    # return "SQL Injection in {file}:{line}"  # Even in comments, use placeholders
 
     # ✅ ALWAYS: Use actual finding data
     return f"{finding.issue} in {finding.file}:{finding.line}"
@@ -1880,6 +1900,21 @@ Replaces the former /cco-overview command.
 ```bash
 /cco-audit --all --exclude="3,8,10"
 ```
+
+**With Additional Context (Optional Prompt):**
+```bash
+/cco-audit --security "Focus on authentication endpoints"
+/cco-audit --database "Prioritize payment-related queries"
+/cco-audit --all "Check for recent vulnerability patterns from OWASP 2025"
+```
+
+Any text after the flags is treated as additional context/instruction for the audit. This allows you to:
+- Focus analysis on specific areas
+- Provide domain-specific context
+- Reference recent security advisories
+- Guide the audit based on recent changes
+
+The AI will read and incorporate this context when performing the audit.
 
 ---
 

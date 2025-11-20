@@ -30,26 +30,64 @@ Show all available CCO commands with clear examples and common use cases. Maximu
 
 ## 🚀 Start Here (First Time?)
 
-**Quick Win (5 minutes):**
+### 1️⃣ First Command - Quick Health Check
 ```bash
-/cco-audit --quick         # See health scores for your project
+/cco-audit --quick
 ```
+See your project health scores. That's it!
 
-**Most Common Flow (10 minutes):**
+### 2️⃣ Second Command - Find Issues
 ```bash
-/cco-audit --security      # Find security issues
-/cco-fix --security        # Auto-fix safe issues
-/cco-generate --tests      # Create missing tests
+/cco-audit --security
 ```
+Find security issues. Simple!
+
+### 3️⃣ Third Command - Auto-Fix
+```bash
+/cco-fix --security
+```
+Auto-fix safe issues. Watch it work!
+
+### 💡 Pro Move - Add Context
+```bash
+/cco-audit --security "Check API authentication"
+```
+Add quotes after command = focused results!
 
 ---
 
-## 📋 All Commands (10)
+## 🎯 Pro Tip: Optional Prompts
 
-### Find Issues (2)
+**ALL commands support additional context:**
+
+```bash
+/cco-[command] --[flag] "[Your additional context here]"
+```
+
+**What you can do:**
+- Focus on specific areas: `"Check authentication endpoints"`
+- Set constraints: `"Conservative fixes only"`
+- Provide domain context: `"Payment processing is critical"`
+- Reference requirements: `"Follow OWASP 2025 guidelines"`
+
+**Examples:**
+```bash
+/cco-audit --security "Focus on API authentication"
+/cco-fix --tech-debt "High-complexity functions only"
+/cco-generate --tests "Edge cases for payment logic"
+/cco-optimize --database "Payment queries are priority"
+```
+
+**This works with EVERY command and EVERY flag!**
+
+---
+
+## 📋 All Commands
+
+### Find Issues
 
 **`/cco-audit`** → Find problems in your code
-- **Quick mode:** `--quick` (5 min health check with scores)
+- **Quick mode:** `--quick` (health check with scores)
 - **Core:** `--security`, `--tech-debt`, `--tests`, `--database`, `--performance`, `--integration`, `--docs`
 - **AI (2025):** `--ai-security`, `--ai-quality`, `--ai-debt`, `--ai` (meta-flag: combines all AI)
 - **Team (2025):** `--code-review`, `--platform`
@@ -64,7 +102,7 @@ Show all available CCO commands with clear examples and common use cases. Maximu
 
 ---
 
-### Fix Issues (2)
+### Fix Issues
 
 **`/cco-fix`** → Auto-fix detected problems
 - **Same categories as audit** (including `--ai`, `--ai-quality`, `--ai-debt`)
@@ -81,9 +119,9 @@ Show all available CCO commands with clear examples and common use cases. Maximu
 
 ---
 
-### Create Missing Parts (2)
+### Create Missing Parts
 
-**`/cco-generate`** → Create tests, docs, configs (18 types)
+**`/cco-generate`** → Create tests, docs, configs
 - **Critical:** `--tests`, `--contract-tests`
 - **High:** `--load-tests`, `--chaos-tests`, `--openapi`, `--cicd`
 - **Team (2025):** `--review-checklist` (PR quality gates, DORA metrics tracking)
@@ -97,7 +135,7 @@ Show all available CCO commands with clear examples and common use cases. Maximu
 
 ---
 
-### Workflow Support (4)
+### Workflow Support
 
 **`/cco-commit`** → Smart git commits
 - AI-generated semantic commit messages
@@ -136,7 +174,22 @@ Show all available CCO commands with clear examples and common use cases. Maximu
 
 ---
 
-## 📖 Audit/Fix Categories (14 total)
+## 📊 Quick Reference Table
+
+| Command | Primary Use | Optional Prompt Example |
+|---------|-------------|-------------------------|
+| `/cco-audit --quick` | Health check | "Focus on production-critical areas" |
+| `/cco-audit --security` | Security scan | "Prioritize authentication" |
+| `/cco-fix --security` | Auto-fix | "Conservative fixes only" |
+| `/cco-generate --tests` | Create tests | "Edge cases for payments" |
+| `/cco-implement` | New feature | "[Feature] with [tech requirements]" |
+| `/cco-optimize --database` | DB optimization | "Focus on checkout queries" |
+| `/cco-commit` | Smart commit | N/A |
+| `/cco-status` | Health check | N/A |
+
+---
+
+## 📖 Audit/Fix Categories
 
 **🔴 Critical Impact:**
 - **Security** - SQL injection, XSS, CSRF, secrets, CVEs, auth bypass (OWASP 2025)
@@ -160,7 +213,20 @@ Show all available CCO commands with clear examples and common use cases. Maximu
 
 **Use with:** `--security`, `--ai-security`, `--database`, `--tests`, `--tech-debt`, `--ai-quality`, `--performance`, `--ci-cd`, `--supply-chain`, `--docs`, `--code-review`, `--platform`, `--containers`, `--integration`
 
-**Meta-flags:** `--ai` (combines --ai-security + --ai-quality + --ai-debt)
+**Meta-flags (Convenience Shortcuts):**
+- `--ai` → All AI-related (ai-security + ai-quality + ai-debt)
+- `--critical` → Critical impact (security + ai-security + database + tests)
+- `--production-ready` → Pre-deploy essentials (security + performance + database + tests + docs)
+- `--code-health` → Quality focus (tech-debt + code-quality + tests + docs)
+- `--team-metrics` → Team performance (code-review + platform + cicd)
+
+**Examples:**
+```bash
+/cco-audit --critical          # Focus on critical issues only
+/cco-fix --production-ready    # Fix everything needed for deploy
+/cco-audit --code-health       # Assess code quality
+/cco-audit --team-metrics      # Check team collaboration metrics
+```
 
 ---
 
@@ -176,7 +242,7 @@ Show all available CCO commands with clear examples and common use cases. Maximu
 - **fix-agent** (Sonnet) - Accurate code modifications
 - **generate-agent** (Sonnet) - Quality code generation
 
-**Auto-Activating Skills (30 total - 2025):**
+**Auto-Activating Skills:**
 - Skills load on-demand based on context
 - Security (OWASP 2025), AI quality, code review (DORA), platform engineering, and more
 - No manual skill selection needed
@@ -240,6 +306,42 @@ Show all available CCO commands with clear examples and common use cases. Maximu
 🟢 **#10 AI Readiness Gaps** - Immature CI/CD, missing test automation, poor DX
 🟡 **#11 Code Review Decline** - -27% comment rate (2025), shallow reviews, echo chambers
 🟡 **#12 Team Breakdowns** - Knowledge silos, reviewer diversity issues, high rework rates
+
+---
+
+## ❓ Common Questions
+
+**Q: How do I focus a command on specific code?**
+A: Add quoted text after flags: `/cco-audit --security "Focus on auth endpoints"`
+
+**Q: What's the difference between --quick and --all?**
+A:
+- `--quick` = 5min health scores (overview)
+- `--all` = comprehensive scan (detailed findings)
+
+**Q: Do I need to run audit before fix?**
+A: No! `/cco-fix` auto-runs audit if needed.
+
+**Q: Can I use multiple flags?**
+A: Yes! `/cco-audit --security --tech-debt --tests`
+
+**Q: What's the --ai meta-flag?**
+A: Combines `--ai-security + --ai-quality + --ai-debt` (saves typing)
+
+**Q: How do I add optional context?**
+A: Put it in quotes after flags: `/cco-fix --tech-debt "High-complexity functions only"`
+
+**Q: Which commands need quotes for feature description?**
+A: Only `/cco-implement`: `/cco-implement "Add JWT auth"`
+
+**Q: How do I update CCO?**
+A: Run `/cco-update` (updates all commands/skills/agents globally)
+
+**Q: How do I uninstall CCO?**
+A: Two steps: 1) `/cco-remove` (requires package) 2) `pip uninstall claudecodeoptimizer`
+
+**Q: Where are CCO files stored?**
+A: `~/.claude/` (global, shared across all projects - zero project pollution)
 
 ---
 

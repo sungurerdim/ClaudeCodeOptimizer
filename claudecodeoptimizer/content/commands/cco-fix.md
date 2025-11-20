@@ -85,6 +85,26 @@ parameters:
     category: meta
     pain_points: [2, 3, 8, 9]
     meta_flags: [ai-quality, ai-debt, ai-security]
+  critical:
+    keywords: [fix critical, essential fixes, must-fix, high priority fix]
+    category: meta
+    pain_points: [1, 3, 4, 5]
+    meta_flags: [security, ai-security, database, tests]
+  production-ready:
+    keywords: [production fixes, deploy readiness fix, pre-deploy fixes]
+    category: meta
+    pain_points: [1, 4, 5, 7]
+    meta_flags: [security, performance, database, tests, docs]
+  code-health:
+    keywords: [code health fix, quality improvements, maintainability fix]
+    category: meta
+    pain_points: [2, 4, 7]
+    meta_flags: [tech-debt, code-quality, tests, docs]
+  team-metrics:
+    keywords: [team metrics fix, collaboration fix, platform improvements]
+    category: meta
+    pain_points: [6, 10, 11, 12]
+    meta_flags: [code-review, platform, cicd]
 ---
 
 # cco-fix
@@ -744,7 +764,19 @@ Warn user if:
 
 # Fix everything found in recent audit
 /cco-fix --all
+
+# With additional context (optional prompt)
+/cco-fix --security "Prioritize authentication fixes"
+/cco-fix --tech-debt "Focus on high-complexity functions"
+/cco-fix --all "Apply conservative fixes only"
 ```
+
+**Optional Prompt Support:**
+Any text after the flags is treated as additional context for the fix process. The AI will:
+- Prioritize fixes based on your guidance
+- Apply domain-specific conventions
+- Adjust risk assessment based on your context
+- Follow specific fix preferences you mention
 
 ---
 
