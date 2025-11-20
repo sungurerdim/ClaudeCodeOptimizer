@@ -41,17 +41,15 @@ def load_global_commands() -> Dict[str, Dict[str, Any]]:
     Single source of truth: claudecodeoptimizer/content/commands/*.md
     Returns dict: {command_name: {description, file}}
     """
-    commands_dir = Path(__file__).parent.parent / "content" / "commands"
+    commands_dir = Path(__file__).parent / "content" / "commands"
     commands: Dict[str, Dict[str, Any]] = {}
 
     if not commands_dir.exists():
         return commands
 
-    # Only load init and remove (global slash commands)
-    for command_name in ["cco-init", "cco-remove"]:
-        md_file = commands_dir / f"{command_name}.md"
-        if not md_file.exists():
-            continue
+    # Dynamically load ALL cco-*.md command files
+    for md_file in commands_dir.glob("cco-*.md"):
+        command_name = md_file.stem
 
         # Parse metadata from frontmatter
         content = md_file.read_text(encoding="utf-8")
@@ -69,7 +67,7 @@ def get_command_list() -> str:
     """Get formatted list of available global commands for display."""
     commands = load_global_commands()
     if not commands:
-        return "cco-init.md, cco-remove.md"
+        return ""
 
     return ", ".join(f"{name}.md" for name in sorted(commands.keys()))
 
@@ -78,6 +76,6 @@ def get_slash_commands() -> str:
     """Get formatted list of slash commands for display."""
     commands = load_global_commands()
     if not commands:
-        return "/cco-init, /cco-remove"
+        return ""
 
     return ", ".join(f"/{name}" for name in sorted(commands.keys()))

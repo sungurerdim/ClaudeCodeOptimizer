@@ -16,6 +16,76 @@ from typing import Any, Callable, Dict, List, Optional
 from .. import config
 
 
+def check_existing_installation() -> Optional[Dict[str, int]]:
+    """
+    Check if CCO is already installed.
+
+    Returns:
+        Dictionary with counts of existing files by category, or None if not installed
+        Example: {'commands': 10, 'skills': 26, 'agents': 3, 'principles': 15}
+    """
+    claude_dir = config.get_claude_dir()
+    if not claude_dir.exists():
+        return None
+
+    counts = {}
+    categories = {
+        "commands": config.get_global_commands_dir(),
+        "skills": config.get_skills_dir(),
+        "agents": config.get_agents_dir(),
+        "principles": config.get_principles_dir(),
+    }
+
+    for category, dir_path in categories.items():
+        if dir_path.exists():
+            # Count CCO files only
+            if category == "principles":
+                count = (
+                    len(list(dir_path.glob("U_*.md")))
+                    + len(list(dir_path.glob("C_*.md")))
+                    + len(list(dir_path.glob("P_*.md")))
+                )
+            else:
+                count = len(list(dir_path.glob("cco-*.md")))
+
+            if count > 0:
+                counts[category] = count
+
+    return counts if counts else None
+
+
+def show_installation_diff() -> None:
+    """
+    Show what files will be overwritten during installation.
+    """
+    print("\n[DIFF] Files that will be overwritten:")
+    print()
+
+    categories = {
+        "Commands": (config.get_global_commands_dir(), "cco-*.md"),
+        "Skills": (config.get_skills_dir(), "cco-*.md"),
+        "Agents": (config.get_agents_dir(), "cco-*.md"),
+        "Principles (U_*)": (config.get_principles_dir(), "U_*.md"),
+        "Principles (C_*)": (config.get_principles_dir(), "C_*.md"),
+        "Principles (P_*)": (config.get_principles_dir(), "P_*.md"),
+    }
+
+    total_files = 0
+    for category, (dir_path, pattern) in categories.items():
+        if dir_path.exists():
+            files = list(dir_path.glob(pattern))
+            if files:
+                print(f"  {category}:")
+                for file in sorted(files)[:5]:  # Show first 5
+                    print(f"    - {file.name}")
+                if len(files) > 5:
+                    print(f"    ... and {len(files) - 5} more")
+                total_files += len(files)
+                print()
+
+    print(f"Total: {total_files} files will be overwritten")
+
+
 def _get_content_dir(subdir: str) -> Path:
     """Get content directory path for a given subdirectory."""
     package_dir = Path(__file__).parent.parent
