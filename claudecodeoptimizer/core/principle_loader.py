@@ -22,7 +22,6 @@ from typing import Dict, List, Optional
 # Note: "universal" category is ALWAYS included automatically for all commands
 COMMAND_PRINCIPLE_MAP: Dict[str, List[str]] = {
     # Core commands (universal + core only)
-    "cco-init": ["universal", "core"],
     "cco-status": ["universal", "core"],
     "cco-config": ["universal", "core"],
     "cco-remove": ["universal", "core"],
