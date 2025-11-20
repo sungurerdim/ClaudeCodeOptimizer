@@ -77,6 +77,169 @@ One CCO update propagates to all projects instantly.
 
 ---
 
+## CCO Component Design Principles
+
+All CCO components (commands, skills, agents, principles) follow strict design rules to ensure consistency, quality, and optimal Claude Code integration:
+
+### 1. No Hardcoded Examples (Critical)
+**Problem:** AI models cannot distinguish between "example" and "real data"
+
+**Rule:** Use placeholders like `{FILE_PATH}`, `{LINE_NUMBER}`, `{FUNCTION_NAME}` instead of hardcoded examples like `src/auth/login.py:45`
+
+**Why:** Prevents AI from using fictional examples as real data, causing incorrect references and fabricated issues
+
+**Reference:** `C_NO_HARDCODED_EXAMPLES` principle
+
+### 2. Native Tool Interactions (Critical)
+**Problem:** Text-based prompts break UX flow and lack validation
+
+**Rule:** Always use native Claude Code tools (`AskUserQuestion`) for user interactions
+
+**Why:** Provides consistent UI, validation, accessibility, and cross-platform compatibility
+
+**Reference:** `C_NATIVE_TOOL_INTERACTIONS` principle
+
+### 3. MultiSelect with "All" Option (Critical)
+**Problem:** Users waste time clicking individual items
+
+**Rule:** Every `multiSelect` question must include "All" as the first option
+
+**Implementation:** When "All" is selected, treat it as all other options selected
+
+**Why:** Enables efficient bulk selection without repetitive clicking
+
+### 4. 100% Honest Reporting (Critical)
+**Problem:** False claims erode trust and create production incidents
+
+**Rule:** Never claim "fixed/completed" without verification, distinguish technical possibility from impossibility accurately
+
+**Why:** Users make decisions based on reports - inaccuracy causes real damage
+
+**Reference:** `C_HONEST_REPORTING`, `U_EVIDENCE_BASED_ANALYSIS` principles
+
+### 5. Complete Accounting (Critical)
+**Problem:** Losing track of items creates incomplete work
+
+**Rule:** Every item must have a disposition: completed, skipped (reason), failed (reason), or cannot-do (reason)
+
+**Formula:** `total = completed + skipped + failed + cannot-do`
+
+**Why:** Ensures nothing falls through cracks, provides full transparency
+
+**Reference:** `U_COMPLETE_REPORTING` principle
+
+### 6. Optimal UX/DX (High)
+**Problem:** Poor experience reduces adoption and productivity
+
+**Rule:** Design every interaction for clarity, speed, and user satisfaction
+
+**Examples:**
+- Progress tracking: "Phase 2/5 (40% complete)"
+- Clear categorization: Critical/High/Medium
+- Actionable results with file:line references
+- Streaming results for long operations
+
+### 7. Principle Adherence (High)
+**Problem:** Inconsistent behavior across components
+
+**Rule:** All components must follow both Universal (U_*) and Claude-specific (C_*) principles
+
+**Key Principles:**
+- `U_DRY`: Single source of truth
+- `U_MINIMAL_TOUCH`: Edit only required files
+- `U_CHANGE_VERIFICATION`: Verify before claiming
+- `C_AGENT_ORCHESTRATION_PATTERNS`: Parallel execution where beneficial
+- `C_CONTEXT_WINDOW_MGMT`: Token optimization
+
+### 8. Token Efficiency with Quality (High)
+**Problem:** Wasting tokens reduces conversation length and increases costs
+
+**Rule:** Minimize token usage while maximizing output quality
+
+**Techniques:**
+- Grep before Read (discovery → preview → precise read)
+- Use Haiku for simple tasks, Sonnet for development, Opus for architecture
+- Parallel operations where independent
+- Targeted file reads with offset+limit
+
+### 9. Strategic Sub-Agent Use (Medium)
+**Problem:** Sequential operations create bottlenecks
+
+**Rule:** Use sub-agents with appropriate models for parallelizable work
+
+**Examples:**
+- Security audit + Performance audit + Test audit (parallel, 3x faster)
+- Multiple module analysis (parallel Haiku agents)
+- Sequential only when dependencies exist
+
+### 10. Progress Transparency (Medium)
+**Problem:** Long operations feel unresponsive
+
+**Rule:** Display current phase, total phases, percentage, and streaming results for operations >30 seconds
+
+**Format:** `Phase 3/5: Analyzing security patterns... (60% complete)`
+
+### 11. Universal Skill Utilization (Medium)
+**Problem:** Skills created but not used waste effort
+
+**Rule:** Every relevant skill must be utilized by appropriate commands/agents
+
+**Verification:** Each skill should be referenced in at least one command or agent
+
+### 12. Complete Documentation (Medium)
+**Problem:** Users can't discover or use features effectively
+
+**Rule:** All components documented with examples, listed in appropriate indexes
+
+**Locations:**
+- Commands: Listed in `/cco-help` and README
+- Skills: Listed in `/cco-status` and skills/README.md
+- Agents: Referenced in command documentation
+- Principles: Listed in CLAUDE.md markers
+
+### 13. Command Prompt Support (High)
+**Problem:** Users can't provide additional context with commands
+
+**Rule:** All commands must support optional prompt after command
+
+**Format:** `/cco-audit --security "Focus on authentication endpoints"`
+
+**Implementation:** AI reads and treats as additional instruction
+
+### 14. Enhanced Help System (High)
+**Problem:** Users struggle to discover and use features
+
+**Rule:** `/cco-help` must be UX/DX focused, comprehensive, and accessible to all skill levels
+
+**Requirements:**
+- Pain-point organized (not alphabetical)
+- Clear examples for each command
+- Common workflows
+- Beginner-friendly language
+- Quick reference format
+
+### Self-Enforcement
+
+These principles apply to:
+1. **Component definitions** - Templates and existing components must follow rules
+2. **Runtime execution** - AI follows principles when executing commands
+3. **Generated outputs** - All results respect principles (no hardcoded examples in output)
+
+### Verification Checklist
+
+Before finalizing any CCO component:
+- [ ] No hardcoded examples (use placeholders)
+- [ ] Native tools for user interaction (no text prompts)
+- [ ] MultiSelect questions have "All" option
+- [ ] Honest reporting (verify before claiming)
+- [ ] Complete accounting (all items have disposition)
+- [ ] Progress tracking for long operations
+- [ ] Token-optimized implementation
+- [ ] Follows all relevant U_* and C_* principles
+- [ ] Documented in appropriate locations
+- [ ] Supports optional prompt parameter (commands)
+
+
 ## Quick Start
 
 ### Installation
@@ -121,6 +284,8 @@ cco-setup
    - Creates `~/.claude/skills/` (skills)
    - Creates `~/.claude/agents/` (agents)
    - Generates `~/.claude/CLAUDE.md` (principle markers)
+   - Copies `~/.claude/settings.json.example` (optional: Claude Code config template)
+   - Copies `~/.claude/statusline.js.example` (optional: status line script template)
    - If files exist, asks before overwriting (interactive mode)
    - Use `cco-setup --force` to skip confirmation and overwrite
 3. Done! Commands available in all projects immediately via Claude Code
@@ -131,6 +296,39 @@ cco-setup          # Interactive mode (asks before overwriting)
 cco-setup --force  # Force overwrite without asking
 cco-setup --help   # Show usage
 ```
+
+### Optional Configuration
+
+CCO provides template files for Claude Code configuration. **These are completely optional** - CCO works out of the box without them.
+
+**Available Templates:**
+
+1. **`~/.claude/settings.json.example`** - Claude Code settings
+   - Pre-configured permissions for CCO commands
+   - Status line integration
+   - Security safeguards (blocked destructive commands)
+
+2. **`~/.claude/statusline.js.example`** - Enhanced status line
+   - Git status (branch, changes, commits)
+   - CCO project info
+   - Real-time metrics
+
+**How to Use:**
+
+```bash
+# Option 1: Copy and customize
+cp ~/.claude/settings.json.example ~/.claude/settings.json
+cp ~/.claude/statusline.js.example ~/.claude/statusline.js
+# Edit files to match your preferences
+
+# Option 2: Use as reference
+# Keep .example files as reference, manually add desired parts to your existing config
+```
+
+**Important Notes:**
+- CCO **never** overwrites your existing `settings.json` or `statusline.js`
+- `.example` files are updated on every `cco-setup` to provide latest templates
+- You can safely ignore these templates - CCO commands work without them
 
 ### Uninstallation
 
@@ -299,20 +497,20 @@ Scanning for OWASP Top 10 vulnerabilities...
 Found 4 issues:
 
 CRITICAL (1):
-• SQL Injection in api/users.py:45
+• SQL Injection in {FILE_PATH}:{LINE_NUMBER}
   db.execute(f"SELECT * FROM users WHERE id = {user_id}")
   → Use parameterized query
 
 HIGH (2):
-• Hardcoded secret in config.py:12
+• Hardcoded secret in {FILE_PATH}:{LINE_NUMBER}
   SECRET_KEY = "mysecretkey123"
   → Move to environment variable
 
-• Missing CSRF protection in api/auth.py:78
+• Missing CSRF protection in {FILE_PATH}:{LINE_NUMBER}
   → Add CSRF token validation
 
 MEDIUM (1):
-• Debug mode enabled in app.py:5
+• Debug mode enabled in {FILE_PATH}:{LINE_NUMBER}
   DEBUG = True
   → Disable in production
 
@@ -331,24 +529,24 @@ Analyzing 4 security issues...
 
 Safe Fixes (auto-applied):
 ──────────────────────────
-✓ api/users.py:45 - Parameterized SQL query
+✓ {FILE_PATH}:{LINE_NUMBER} - Parameterized SQL query
   Before: db.execute(f"SELECT * FROM users WHERE id = {user_id}")
   After:  db.execute("SELECT * FROM users WHERE id = :id", {"id": user_id})
 
-✓ config.py:12 - Externalized secret
+✓ {FILE_PATH}:{LINE_NUMBER} - Externalized secret
   Before: SECRET_KEY = "mysecretkey123"
   After:  SECRET_KEY = os.environ.get("SECRET_KEY")
   Note: Add SECRET_KEY to your .env file
 
 Risky Fixes (need approval):
 ────────────────────────────
-? api/auth.py:78 - Add CSRF protection
+? {FILE_PATH}:{LINE_NUMBER} - Add CSRF protection
   This requires adding middleware and updating forms.
   Apply this fix? [y/n]
 
 Skipped:
 ────────
-• app.py:5 - Debug mode
+• {FILE_PATH}:{LINE_NUMBER} - Debug mode
   Reason: Environment-specific, configure manually
 
 Summary: 2 fixed, 1 needs approval, 1 skipped
@@ -399,7 +597,7 @@ Phase 2: Security Scanning
 Found 1 issue:
 
 MEDIUM (1):
-• Debug mode enabled in app.py:5
+• Debug mode enabled in {FILE_PATH}:{LINE_NUMBER}
   → Disable in production (environment-specific)
 
 Summary: 1 issue (0 critical, 0 high, 1 medium)

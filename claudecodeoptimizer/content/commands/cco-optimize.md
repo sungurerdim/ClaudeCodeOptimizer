@@ -444,12 +444,24 @@ After optimizations, measure improvements and report.
 # Comprehensive optimization (all areas)
 /cco-optimize --all
 
+# With additional context (optional prompt)
+/cco-optimize --database "Focus on payment queries"
+/cco-optimize --docker "Target size under 100MB"
+/cco-optimize --all "Conservative optimizations only, no breaking changes"
+
 # For code cleanup, use fix instead:
 /cco-fix --tech-debt
 
 # For dependency updates, use fix instead:
 /cco-fix --supply-chain
 ```
+
+**Optional Prompt Support:**
+Any text after the flags is treated as additional context for optimization. The AI will:
+- Prioritize specific areas based on your guidance
+- Apply constraints mentioned (size targets, compatibility)
+- Adjust optimization aggressiveness
+- Focus on domain-specific bottlenecks
 
 ---
 

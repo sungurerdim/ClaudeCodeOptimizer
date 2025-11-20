@@ -549,4 +549,17 @@ Both use Sonnet for accuracy.
 # - "Add real-time notifications with WebSockets"
 # - "Add payment processing with Stripe"
 # - "Add email notifications"
+
+# With additional context (optional prompt)
+/cco-implement "Add JWT authentication" "Use HS256, 24h expiry, refresh tokens"
+/cco-implement "Add rate limiting" "100 requests per minute per IP"
+/cco-implement "Add payment processing" "Stripe integration, support EUR and USD"
+```
+
+**Optional Prompt Support:**
+Any additional text is treated as context for the feature implementation. The AI will:
+- Use specified technical requirements
+- Follow mentioned standards or libraries
+- Incorporate specific constraints or preferences
+- Adapt architecture based on your guidance
 ```

@@ -645,7 +645,19 @@ Next Steps:
 
 # All recommended
 /cco-generate --all
+
+# With additional context (optional prompt)
+/cco-generate --tests "Focus on edge cases for payment logic"
+/cco-generate --openapi "Include authentication examples"
+/cco-generate --all "Follow company documentation standards"
 ```
+
+**Optional Prompt Support:**
+Any text after the flags is treated as additional context for generation. The AI will:
+- Incorporate domain-specific requirements
+- Follow project-specific conventions
+- Include relevant examples based on your context
+- Adapt output format to your preferences
 
 ---
 
