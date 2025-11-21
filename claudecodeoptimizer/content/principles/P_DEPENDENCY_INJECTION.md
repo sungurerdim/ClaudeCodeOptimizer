@@ -12,8 +12,6 @@ related_skills: []
 
 **Severity**: Medium
 
-
-
 ---
 
 ## Rules

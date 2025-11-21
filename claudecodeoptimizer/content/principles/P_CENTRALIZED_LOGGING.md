@@ -40,7 +40,6 @@ class JSONFormatter(jsonlogger.JsonFormatter):
         log_record['environment'] = 'production'
         log_record['version'] = '1.0.0'
 
-
 ```
 **Why right**: ---
 
