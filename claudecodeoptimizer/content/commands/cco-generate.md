@@ -85,6 +85,22 @@ parameters:
 
 ## Purpose
 
+Generate missing tests, documentation, CI/CD configs, and other project components using specialized skills and the generate agent.
+
+---
+
+## CRITICAL: Check for Context from Calling Command
+
+**BEFORE any discovery/analysis, check conversation for "CONTEXT FOR /cco-generate:"**
+
+✓ **If found**: Use provided findings, skip discovery, focus ONLY on specified items
+✗ **If not found**: Proceed with normal full discovery
+
+**Why**: Eliminates duplicate work - previous command already analyzed.
+
+See **C_COMMAND_CONTEXT_PASSING** principle.
+
+---
 
 ## Execution Guarantee
 
@@ -92,7 +108,6 @@ This command executes the FULL operation as planned.
 No scope reduction due to time constraints or "workload concerns".
 
 **Estimated time: Provided for transparency, NOT to reduce scope.**
-Generate missing tests, documentation, CI/CD configs, and other project components using specialized skills and the generate agent.
 
 ---
 

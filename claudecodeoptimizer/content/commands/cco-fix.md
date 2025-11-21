@@ -118,6 +118,7 @@ parameters:
 Automatically fix issues found by audits. Runs audit first if no recent audit exists. Categorizes fixes into safe (auto-apply) and risky (require approval).
 
 ---
+## CRITICAL: Check for Context from Calling Command**BEFORE running audit, check conversation for "CONTEXT FOR /cco-fix:"**✓ **If found**: Use provided issue list, skip audit, fix specified issues only✗ **If not found**: Run audit first, then fix discovered issues**Why**: Eliminates duplicate audit - previous command already analyzed.See **C_COMMAND_CONTEXT_PASSING** principle.---
 
 ## Critical UX Principles (Same as Audit)
 
@@ -841,3 +842,45 @@ AskUserQuestion({
     ]
   }]
 })
+
+---
+
+## Next Steps: Calling Other Commands (C_COMMAND_CONTEXT_PASSING)
+
+### If Tests/Docs Needed After Fixes
+
+When fixes are applied but tests or documentation are missing:
+
+**ALWAYS provide context before calling /cco-generate:**
+
+```markdown
+CONTEXT FOR /cco-generate:
+Fix applied to {COUNT} files: {FILE_LIST}. These changes need:
+- Tests: {TEST_DESCRIPTION} ({AFFECTED_FUNCTIONS})
+- Docs: {DOC_DESCRIPTION} ({AFFECTED_APIs})
+Pattern: {EXISTING_PATTERN_REFERENCE}
+
+[Then immediately call SlashCommand]
+```
+
+**Example:**
+
+```markdown
+CONTEXT FOR /cco-generate:
+Fixed SQL injection in 5 files (api/db.py, models/user.py, etc.) by adding parameterized queries. These changes need integration tests to verify: db query functions (get_user_by_email, search_products, etc.) and API endpoints (/api/users, /api/products). Existing test pattern in tests/test_db.py uses pytest with database fixtures.
+
+SlashCommand({command: "/cco-generate tests"})
+```
+
+**Why This Matters:**
+- `/cco-generate` knows exactly what was fixed
+- Can generate tests specifically for fixed code
+- No need to re-analyze the codebase
+
+**DON'T:**
+```markdown
+# ❌ BAD: No context
+Applied some fixes.
+SlashCommand({command: "/cco-generate tests"})
+```
+
