@@ -228,24 +228,3 @@ requirements.txt.lock
 
 # VS Code
 .vscode/content/principles_backup/
-
-# Keep directory structure
-!.claude/commands/.gitkeep
-!.claude/guides/.gitkeep
-!.claude/principles/.gitkeep
-!.claude/agents/.gitkeep
-!.claude/skills/.gitkeep
-
-# CCO: Symlinked knowledge base (ignore)
-.claude/commands/*
-.claude/guides/*
-.claude/principles/*
-.claude/agents/*
-.claude/skills/*
-
-# Keep directory structure
-!.claude/commands/.gitkeep
-!.claude/guides/.gitkeep
-!.claude/principles/.gitkeep
-!.claude/agents/.gitkeep
-!.claude/skills/.gitkeep
