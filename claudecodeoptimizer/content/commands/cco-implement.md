@@ -320,7 +320,7 @@ implementation_options.extend([
 
 AskUserQuestion({
   questions: [{
-    question: "Which implementation steps should I execute? Select the specific tasks you want:",
+    question: "Which implementation steps should I execute? Select the specific tasks you want:? (Space: select, Enter: confirm)",
     header: "Implement",
     multiSelect: true,
     options: implementation_options

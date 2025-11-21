@@ -442,7 +442,7 @@ safe_fix_options.append({
 AskUserQuestion({
   questions: [
     {
-      question: "Select SAFE fix categories (low-risk, reversible):",
+      question: "Select SAFE fix categories (low-risk, reversible):? (Space: select, Enter: confirm)",
       header: "✅ Safe",
       multiSelect: true,
       options: [
@@ -465,7 +465,7 @@ AskUserQuestion({
       ]
     },
     {
-      question: "Select RISKY fix categories (require confirmation):",
+      question: "Select RISKY fix categories (require confirmation):? (Space: select, Enter: confirm)",
       header: "⚠️ Risky",
       multiSelect: true,
       options: [
@@ -553,7 +553,7 @@ risky_fix_options.extend([
 
 AskUserQuestion({
   questions: [{
-    question: "Which RISKY fix steps should I apply? (These could break functionality - select carefully):",
+    question: "Which RISKY fix steps should I apply? (These could break functionality - select carefully):? (Space: select, Enter: confirm)",
     header: "Risky Fixes",
     multiSelect: true,
     options: risky_fix_options

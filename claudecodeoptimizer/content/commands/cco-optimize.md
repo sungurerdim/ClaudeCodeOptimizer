@@ -514,7 +514,7 @@ AskUserQuestion supports **4 questions maximum** with **4 options maximum per qu
 AskUserQuestion({
   questions: [
     {
-      question: "Select infrastructure optimizations:",
+      question: "Select infrastructure optimizations:? (Space: select, Enter: confirm)",
       header: "Infrastructure",
       multiSelect: true,
       options: [
@@ -537,7 +537,7 @@ AskUserQuestion({
       ]
     },
     {
-      question: "Select advanced optimizations:",
+      question: "Select advanced optimizations:? (Space: select, Enter: confirm)",
       header: "Advanced",
       multiSelect: true,
       options: [
@@ -556,7 +556,7 @@ AskUserQuestion({
       ]
     },
     {
-      question: "Or select all:",
+      question: "Or select all:? (Space: select, Enter: confirm)",
       header: "✅ All",
       multiSelect: true,
       options: [

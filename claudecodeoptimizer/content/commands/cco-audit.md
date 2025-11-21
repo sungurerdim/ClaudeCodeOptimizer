@@ -771,7 +771,7 @@ presets:
 AskUserQuestion({
   questions: [
     {
-      question: "Select Critical Impact categories:",
+      question: "Select Critical Impact categories:? (Space: select, Enter: confirm)",
       header: "🔴 Critical",
       multiSelect: true,
       options: [
@@ -782,7 +782,7 @@ AskUserQuestion({
       ]
     },
     {
-      question: "Select High Impact categories:",
+      question: "Select High Impact categories:? (Space: select, Enter: confirm)",
       header: "🟡 High",
       multiSelect: true,
       options: [
@@ -793,7 +793,7 @@ AskUserQuestion({
       ]
     },
     {
-      question: "Select Medium Impact categories:",
+      question: "Select Medium Impact categories:? (Space: select, Enter: confirm)",
       header: "🟢 Medium",
       multiSelect: true,
       options: [
