@@ -235,25 +235,25 @@ Add context after mode/category flags for optimization preferences:
 ```python
 AskUserQuestion({
   questions: [{
-    question: "What do you want to optimize?",
+    question: "What do you want to optimize? (Space: select, Enter: confirm)",
     header: "Categories",
     multiSelect: true,
     options: [
       {
         label: "All (Ultimate Context Optimization)",
-        description: "🎯 ULTIMATE: Context optimization for ALL files - README, docs, principles, skills, agents, commands, code"
+        description: "🎯 ULTIMATE: Optimize all project files - markdown, code, tools, documentation, everything"
       },
       {
         label: "Markdown Docs",
-        description: "Context-aware optimization: README, ARCHITECTURE, CONTRIBUTING, all .md docs (potential context)"
+        description: "All markdown files (.md) anywhere in project - docs, guides, architecture"
       },
       {
         label: "Code Files",
-        description: "Context-aware optimization: Source code that may be referenced by skills/agents"
+        description: "All source code files (.py, .js, .ts, etc.) anywhere in project"
       },
       {
-        label: "Claude Tools",
-        description: "🔥 HIGH IMPACT: Skills, agents, commands - directly loaded in context"
+        label: "Tools & Architecture",
+        description: "🔥 HIGH IMPACT: Tool configs, automation, patterns (skill, agent, command, principle related files)"
       },
       {
         label: "Active Context (Primary)",
@@ -377,9 +377,9 @@ discovery_result = Task({
     Discover files for categories: {selected_categories}
 
     Rules:
-    - "Markdown Docs": *.md (exclude claudecodeoptimizer/content/)
+    - "Markdown Docs": **/*.md
     - "Code Files": *.py, *.js, *.ts, *.tsx, *.java, *.go, *.rs
-    - "Claude Tools": cco-skill-*.md, cco-agent-*.md, cco-*.md in commands/
+    - "Claude Tools": **/*{cco,skill,agent,command,principle}*.md (tools, architecture, configs anywhere in project)
     - "Active Context": ~/.claude/CLAUDE.md + referenced principles
     - "All": All categories
 
@@ -420,9 +420,9 @@ if discovery_result is None or (isinstance(discovery_result, dict) and "error" i
             Discover files for categories: {selected_categories}
 
             Rules:
-            - "Markdown Docs": *.md (exclude claudecodeoptimizer/content/)
+            - "Markdown Docs": **/*.md
             - "Code Files": *.py, *.js, *.ts, *.tsx, *.java, *.go, *.rs
-            - "Claude Tools": cco-skill-*.md, cco-agent-*.md, cco-*.md in commands/
+            - "Claude Tools": **/*{cco,skill,agent,command,principle}*.md (tools, architecture, configs anywhere in project)
             - "Active Context": ~/.claude/CLAUDE.md + referenced principles
             - "All": All categories
 
@@ -444,9 +444,9 @@ if discovery_result is None or (isinstance(discovery_result, dict) and "error" i
             Discover files for categories: {selected_categories}
 
             Rules:
-            - "Markdown Docs": *.md (exclude claudecodeoptimizer/content/)
+            - "Markdown Docs": **/*.md
             - "Code Files": *.py, *.js, *.ts, *.tsx, *.java, *.go, *.rs
-            - "Claude Tools": cco-skill-*.md, cco-agent-*.md, cco-*.md in commands/
+            - "Claude Tools": **/*{cco,skill,agent,command,principle}*.md (tools, architecture, configs anywhere in project)
             - "Active Context": ~/.claude/CLAUDE.md + referenced principles
             - "All": All categories
 
@@ -859,7 +859,7 @@ recommendations.sort(key=lambda r: r.reference_count, reverse=True)
 ```python
 AskUserQuestion({
   questions: [{
-    question: "Apply context optimizations?",
+    question: "Apply context optimizations? (Space: select, Enter: confirm)",
     header: "Context Optimization",
     multiSelect: true,
     options: [
