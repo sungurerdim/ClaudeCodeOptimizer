@@ -1867,7 +1867,7 @@ Slim analysis found {COUNT} files with missing/stub content:
 
 ```markdown
 CONTEXT FOR /cco-generate:
-Slim analysis found 15-20 stub principle files containing only TODO markers without actual content. Affected files: principles/U_CHANGE_VERIFICATION.md, U_COMPLETE_REPORTING.md, C_HONEST_REPORTING.md, +12 others in ~/.claude/principles/. These need comprehensive implementation following C_AGENT_ORCHESTRATION_PATTERNS.md pattern (1847 tokens, complete structure with examples, rules, checklists).
+Slim analysis found 15-20 stub principle files containing only TODO markers without actual content. Affected files: principles/U_CHANGE_VERIFICATION.md, U_EVIDENCE_BASED_ANALYSIS.md, U_FOLLOW_PATTERNS.md, +12 others in ~/.claude/principles/. These need comprehensive implementation following C_AGENT_ORCHESTRATION_PATTERNS.md pattern (1847 tokens, complete structure with examples, rules, checklists).
 
 SlashCommand({command: "/cco-generate principles"})
 ```

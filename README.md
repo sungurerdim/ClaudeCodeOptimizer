@@ -75,7 +75,7 @@ All CCO components (commands, skills, agents, principles) follow strict design r
 
 **Why:** Prevents AI from using fictional examples as real data, causing incorrect references and fabricated issues
 
-**Reference:** `C_NO_HARDCODED_EXAMPLES` principle
+**Reference:** `U_NO_HARDCODED_EXAMPLES` principle
 
 ### 2. Native Tool Interactions (Critical)
 **Problem:** Text-based prompts break UX flow and lack validation
@@ -85,6 +85,18 @@ All CCO components (commands, skills, agents, principles) follow strict design r
 **Why:** Provides consistent UI, validation, accessibility, and cross-platform compatibility
 
 **Reference:** `C_NATIVE_TOOL_INTERACTIONS` principle
+
+**Reporting Conventions**:
+- Always use `file_path:line_number` format when referencing code
+- Report all actions explicitly (reads, edits, searches)
+- ✅ Good: "Fixed SQL injection in api/users.py:89"
+- ❌ Bad: "Fixed the authentication bug"
+
+**Breaking Changes Protocol**:
+- Detect: Grep all usages before implementation
+- Propose: Show impact, migration path, alternatives
+- Wait: Get explicit user approval before proceeding
+- Breaking changes include: removing/renaming public APIs, changing signatures, changing data formats, changing behavior
 
 ### 3. MultiSelect with "All" Option (Critical)
 **Problem:** Users waste time clicking individual items
@@ -102,7 +114,7 @@ All CCO components (commands, skills, agents, principles) follow strict design r
 
 **Why:** Users make decisions based on reports - inaccuracy causes real damage
 
-**Reference:** `C_HONEST_REPORTING`, `U_EVIDENCE_BASED_ANALYSIS` principles
+**Reference:** `U_EVIDENCE_BASED_ANALYSIS` principle (accurate categorization, verification patterns)
 
 ### 5. Complete Accounting (Critical)
 **Problem:** Losing track of items creates incomplete work
@@ -113,7 +125,7 @@ All CCO components (commands, skills, agents, principles) follow strict design r
 
 **Why:** Ensures nothing falls through cracks, provides full transparency
 
-**Reference:** `U_COMPLETE_REPORTING` principle
+**Reference:** `U_EVIDENCE_BASED_ANALYSIS` principle (complete accounting section)
 
 ### 6. Optimal UX/DX (High)
 **Problem:** Poor experience reduces adoption and productivity
@@ -135,6 +147,8 @@ All CCO components (commands, skills, agents, principles) follow strict design r
 - `U_DRY`: Single source of truth
 - `U_MINIMAL_TOUCH`: Edit only required files
 - `U_CHANGE_VERIFICATION`: Verify before claiming
+- `U_FOLLOW_PATTERNS`: Consistency over personal preference
+- `U_CROSS_PLATFORM_COMPATIBILITY`: Works on Windows, Linux, macOS
 - `C_AGENT_ORCHESTRATION_PATTERNS`: Parallel execution where beneficial
 - `C_CONTEXT_WINDOW_MGMT`: Token optimization
 

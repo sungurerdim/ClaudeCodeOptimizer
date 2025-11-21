@@ -1,4 +1,4 @@
-# C_NO_HARDCODED_EXAMPLES: No Hardcoded Examples in Templates
+# U_NO_HARDCODED_EXAMPLES: No Hardcoded Examples in Templates
 
 **Severity**: Critical
 

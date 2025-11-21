@@ -641,7 +641,7 @@ Task({
   - [skills for selected risky fixes]
 
   Follow U_CHANGE_VERIFICATION protocol.
-  Follow C_BREAKING_CHANGES_APPROVAL (user already approved).
+  Breaking changes already approved by user in Component 2.
   """
 })
 ```

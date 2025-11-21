@@ -8,9 +8,9 @@
 
 CCO principles guide Claude Code's behavior to ensure quality, efficiency, and consistency across all operations.
 
-**Total Principles**: 110
-- **Universal (U_*)**: 6 - Core development best practices
-- **Claude-Specific (C_*)**: 13 - Claude Code optimizations
+**Total Principles**: 106
+- **Universal (U_*)**: 8 - Core development best practices
+- **Claude-Specific (C_*)**: 7 - Claude Code optimizations
 - **Project-Specific (P_*)**: 91 - Optional domain-specific practices
 
 ---
@@ -24,10 +24,12 @@ CCO principles guide Claude Code's behavior to ensure quality, efficiency, and c
 Fundamental principles that apply to all development work, regardless of language or framework.
 
 - **U_CHANGE_VERIFICATION** - Verify before claiming completion
-- **U_COMPLETE_REPORTING** - Explicit reporting with file:line references
+- **U_CROSS_PLATFORM_COMPATIBILITY** - Works on Windows, Linux, macOS
 - **U_DRY** - Single source of truth for all knowledge
-- **U_EVIDENCE_BASED_ANALYSIS** - Command execution proof required
+- **U_EVIDENCE_BASED_ANALYSIS** - Command execution proof, complete accounting
+- **U_FOLLOW_PATTERNS** - Match existing code conventions
 - **U_MINIMAL_TOUCH** - Edit only required files
+- **U_NO_HARDCODED_EXAMPLES** - Use placeholders, not real data
 - **U_NO_OVERENGINEERING** - Simplest solution, avoid premature abstraction
 
 **Why always active?** These prevent bugs, ensure quality, and reduce technical debt universally.
@@ -46,19 +48,11 @@ Principles that optimize Claude Code's performance, cost, and user experience.
 - **C_AGENT_ORCHESTRATION_PATTERNS** - Parallel agents, right model selection
 - **C_MODEL_SELECTION** - Haiku/Sonnet/Opus based on complexity
 
-**Quality & Safety:**
-- **C_HONEST_REPORTING** - Truth only, complete accounting
-- **C_NO_HARDCODED_EXAMPLES** - Use placeholders, not real data
-- **C_BREAKING_CHANGES_APPROVAL** - Explicit approval for breaking changes
-- **C_TEMP_FILE_SANDBOXING** - Only {PROJECT_ROOT}/.tmp/
-
 **UX & Integration:**
 - **C_NATIVE_TOOL_INTERACTIONS** - AskUserQuestion, not text prompts
-- **C_FOLLOW_PATTERNS** - Match existing code conventions
-- **C_CROSS_PLATFORM_BASH** - Windows/macOS/Linux compatibility
 - **C_NO_UNSOLICITED_FILE_CREATION** - Ask before creating files
 - **C_PROJECT_CONTEXT_DISCOVERY** - Extract context before analysis
-- **C_COMMAND_CONTEXT_PASSING** - Pass context between commands
+- **C_MODEL_SELECTION** - Haiku/Sonnet/Opus based on complexity
 
 **Why always active?** These maximize Claude Code's effectiveness and user satisfaction.
 
@@ -101,10 +95,20 @@ Universal (U_*) and Claude-specific (C_*) principles are **always loaded** via C
 ```markdown
 <!-- CCO_PRINCIPLES_START -->
 @principles/U_CHANGE_VERIFICATION.md
-@principles/U_COMPLETE_REPORTING.md
-...
-@principles/C_HONEST_REPORTING.md
+@principles/U_CROSS_PLATFORM_COMPATIBILITY.md
+@principles/U_DRY.md
+@principles/U_EVIDENCE_BASED_ANALYSIS.md
+@principles/U_FOLLOW_PATTERNS.md
+@principles/U_MINIMAL_TOUCH.md
+@principles/U_NO_HARDCODED_EXAMPLES.md
+@principles/U_NO_OVERENGINEERING.md
+@principles/C_AGENT_ORCHESTRATION_PATTERNS.md
+@principles/C_CONTEXT_WINDOW_MGMT.md
+@principles/C_EFFICIENT_FILE_OPERATIONS.md
+@principles/C_MODEL_SELECTION.md
 @principles/C_NATIVE_TOOL_INTERACTIONS.md
+@principles/C_NO_UNSOLICITED_FILE_CREATION.md
+@principles/C_PROJECT_CONTEXT_DISCOVERY.md
 <!-- CCO_PRINCIPLES_END -->
 ```
 
@@ -134,11 +138,11 @@ Project-specific (P_*) principles are **optional**. Enable per project needs:
 
 All CCO components (commands, skills, agents) follow these principles:
 
-✅ **No hardcoded examples** - C_NO_HARDCODED_EXAMPLES
+✅ **No hardcoded examples** - U_NO_HARDCODED_EXAMPLES
 ✅ **Native tool interactions** - C_NATIVE_TOOL_INTERACTIONS
-✅ **Honest reporting** - C_HONEST_REPORTING
-✅ **Evidence-based** - U_EVIDENCE_BASED_ANALYSIS
-✅ **Complete accounting** - Total items = completed + skipped + failed
+✅ **Evidence-based with complete accounting** - U_EVIDENCE_BASED_ANALYSIS
+✅ **Follow existing patterns** - U_FOLLOW_PATTERNS
+✅ **Cross-platform compatibility** - U_CROSS_PLATFORM_COMPATIBILITY
 
 See [PR Template](../../.github/PULL_REQUEST_TEMPLATE.md) for full compliance checklist.
 
@@ -172,6 +176,6 @@ Want to add your own principles?
 
 ---
 
-**Total**: 110 principles (6 Universal + 13 Claude + 91 Project)
+**Total**: 106 principles (8 Universal + 7 Claude + 91 Project)
 
 **Full catalog:** [CATALOG.md](CATALOG.md)

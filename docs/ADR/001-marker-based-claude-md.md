@@ -35,7 +35,20 @@ Implement a **marker-based injection system** using HTML comment markers:
 ```markdown
 <!-- CCO_PRINCIPLES_START -->
 @principles/U_CHANGE_VERIFICATION.md
-@principles/U_COMPLETE_REPORTING.md
+@principles/U_CROSS_PLATFORM_COMPATIBILITY.md
+@principles/U_DRY.md
+@principles/U_EVIDENCE_BASED_ANALYSIS.md
+@principles/U_FOLLOW_PATTERNS.md
+@principles/U_MINIMAL_TOUCH.md
+@principles/U_NO_HARDCODED_EXAMPLES.md
+@principles/U_NO_OVERENGINEERING.md
+@principles/C_AGENT_ORCHESTRATION_PATTERNS.md
+@principles/C_CONTEXT_WINDOW_MGMT.md
+@principles/C_EFFICIENT_FILE_OPERATIONS.md
+@principles/C_MODEL_SELECTION.md
+@principles/C_NATIVE_TOOL_INTERACTIONS.md
+@principles/C_NO_UNSOLICITED_FILE_CREATION.md
+@principles/C_PROJECT_CONTEXT_DISCOVERY.md
 <!-- CCO_PRINCIPLES_END -->
 ```
 
@@ -208,8 +221,7 @@ def remove_cco_content(claude_md_path: Path) -> None:
 
 ## References
 
-- [C_NO_HARDCODED_EXAMPLES Principle](../../claudecodeoptimizer/content/principles/C_NO_HARDCODED_EXAMPLES.md)
-- [C_TEMP_FILE_SANDBOXING Principle](../../claudecodeoptimizer/content/principles/C_TEMP_FILE_SANDBOXING.md)
+- [U_NO_HARDCODED_EXAMPLES Principle](../../claudecodeoptimizer/content/principles/U_NO_HARDCODED_EXAMPLES.md)
 - [CCO Installation Documentation](../runbooks/installation.md)
 - [GitHub Issue: CLAUDE.md Management](#) (if applicable)
 

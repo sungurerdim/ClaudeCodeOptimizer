@@ -7,7 +7,7 @@ keywords: [bash, cross-platform, scripting, path handling, Git Bash, compatibili
 category: [workflow, quality]
 ---
 
-# C_CROSS_PLATFORM_BASH: Cross-Platform Bash Commands
+# U_CROSS_PLATFORM_COMPATIBILITY: Cross-Platform Bash Commands
 
 **Severity**: High
 

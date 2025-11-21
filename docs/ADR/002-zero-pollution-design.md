@@ -187,7 +187,7 @@ Users who need per-project settings can manually create `.claudecodeoptimizerrc`
 {
   "principles": {
     "enabled": ["U_CHANGE_VERIFICATION", "U_DRY"],
-    "disabled": ["C_BREAKING_CHANGES_APPROVAL"]
+    "disabled": []
   },
   "commands": {
     "exclude": ["cco-audit"]
@@ -226,14 +226,13 @@ def uninstall_cco() -> None:
 
 ### Principles Compliance
 
-- **C_TEMP_FILE_SANDBOXING**: Tests only use `tmp_path` (project .tmp/) - NEVER system /tmp or ~/.claude/.tmp/
 - **C_NO_UNSOLICITED_FILE_CREATION**: No files created in project directories
 - **U_MINIMAL_TOUCH**: Only touch `~/.claude/`, nothing else
 
 ## References
 
-- [C_TEMP_FILE_SANDBOXING Principle](../../claudecodeoptimizer/content/principles/C_TEMP_FILE_SANDBOXING.md)
 - [C_NO_UNSOLICITED_FILE_CREATION Principle](../../claudecodeoptimizer/content/principles/C_NO_UNSOLICITED_FILE_CREATION.md)
+- [U_MINIMAL_TOUCH Principle](../../claudecodeoptimizer/content/principles/U_MINIMAL_TOUCH.md)
 - [Installation Runbook](../runbooks/installation.md)
 - [Uninstallation Runbook](../runbooks/uninstallation.md)
 
