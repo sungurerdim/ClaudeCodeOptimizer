@@ -21,4 +21,3 @@ if sys.platform == "win32" and hasattr(sys.stdout, "reconfigure"):
 from .config import CCOConfig  # noqa: E402
 
 __all__ = ["CCOConfig", "__version__"]
-

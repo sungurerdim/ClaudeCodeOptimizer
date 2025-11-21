@@ -1,7 +1,6 @@
 """Unit tests for claudecodeoptimizer/__init__.py module."""
 
 import sys
-from unittest.mock import patch
 
 import pytest
 
@@ -173,5 +172,3 @@ class TestExceptionHandling:
         import claudecodeoptimizer
 
         assert claudecodeoptimizer is not None
-
-

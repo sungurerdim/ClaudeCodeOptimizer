@@ -9,7 +9,6 @@ import subprocess
 import sys
 from datetime import datetime
 from pathlib import Path
-from typing import Dict, Optional, Tuple
 
 
 def get_claude_dir() -> Path:
@@ -17,7 +16,7 @@ def get_claude_dir() -> Path:
     return Path.home() / ".claude"
 
 
-def detect_package_install() -> Optional[str]:
+def detect_package_install() -> str | None:
     """
     Detect how CCO was installed.
 
@@ -26,12 +25,7 @@ def detect_package_install() -> Optional[str]:
     """
     # Check pipx
     try:
-        result = subprocess.run(
-            ["pipx", "list"],
-            capture_output=True,
-            text=True,
-            timeout=5
-        )
+        result = subprocess.run(["pipx", "list"], capture_output=True, text=True, timeout=5)
         if result.returncode == 0 and "claudecodeoptimizer" in result.stdout:
             return "pipx"
     except (subprocess.TimeoutExpired, FileNotFoundError):
@@ -39,12 +33,7 @@ def detect_package_install() -> Optional[str]:
 
     # Check uv
     try:
-        result = subprocess.run(
-            ["uv", "tool", "list"],
-            capture_output=True,
-            text=True,
-            timeout=5
-        )
+        result = subprocess.run(["uv", "tool", "list"], capture_output=True, text=True, timeout=5)
         if result.returncode == 0 and "claudecodeoptimizer" in result.stdout:
             return "uv"
     except (subprocess.TimeoutExpired, FileNotFoundError):
@@ -53,10 +42,7 @@ def detect_package_install() -> Optional[str]:
     # Check pip
     try:
         result = subprocess.run(
-            ["pip", "show", "claudecodeoptimizer"],
-            capture_output=True,
-            text=True,
-            timeout=5
+            ["pip", "show", "claudecodeoptimizer"], capture_output=True, text=True, timeout=5
         )
         if result.returncode == 0:
             return "pip"
@@ -66,7 +52,7 @@ def detect_package_install() -> Optional[str]:
     return None
 
 
-def count_cco_files(claude_dir: Path) -> Dict[str, int]:
+def count_cco_files(claude_dir: Path) -> dict[str, int]:
     """
     Count CCO files in ~/.claude/
 
@@ -119,14 +105,11 @@ def count_cco_files(claude_dir: Path) -> Dict[str, int]:
     return counts
 
 
-def get_package_location() -> Optional[str]:
+def get_package_location() -> str | None:
     """Get CCO package installation location."""
     try:
         result = subprocess.run(
-            ["pip", "show", "claudecodeoptimizer"],
-            capture_output=True,
-            text=True,
-            timeout=5
+            ["pip", "show", "claudecodeoptimizer"], capture_output=True, text=True, timeout=5
         )
         if result.returncode == 0:
             for line in result.stdout.split("\n"):
@@ -138,9 +121,7 @@ def get_package_location() -> Optional[str]:
 
 
 def show_removal_preview(
-    install_method: Optional[str],
-    package_location: Optional[str],
-    counts: Dict[str, int]
+    install_method: str | None, package_location: str | None, counts: dict[str, int]
 ) -> None:
     """Show what will be deleted."""
     print("=" * 60)
@@ -225,21 +206,21 @@ def remove_package(install_method: str) -> bool:
                 ["pipx", "uninstall", "claudecodeoptimizer"],
                 capture_output=True,
                 text=True,
-                timeout=30
+                timeout=30,
             )
         elif install_method == "uv":
             result = subprocess.run(
                 ["uv", "tool", "uninstall", "claudecodeoptimizer"],
                 capture_output=True,
                 text=True,
-                timeout=30
+                timeout=30,
             )
         else:  # pip
             result = subprocess.run(
                 ["pip", "uninstall", "-y", "claudecodeoptimizer"],
                 capture_output=True,
                 text=True,
-                timeout=30
+                timeout=30,
             )
 
         return result.returncode == 0
@@ -248,7 +229,7 @@ def remove_package(install_method: str) -> bool:
         return False
 
 
-def backup_claude_dir(claude_dir: Path) -> Optional[Path]:
+def backup_claude_dir(claude_dir: Path) -> Path | None:
     """
     Create backup of ~/.claude/ directory.
 
@@ -266,7 +247,7 @@ def backup_claude_dir(claude_dir: Path) -> Optional[Path]:
         return None
 
 
-def remove_claude_dir(claude_dir: Path, create_backup: bool = False) -> Tuple[bool, Optional[Path]]:
+def remove_claude_dir(claude_dir: Path, create_backup: bool = False) -> tuple[bool, Path | None]:
     """
     Remove ~/.claude/ directory.
 
@@ -290,7 +271,7 @@ def remove_claude_dir(claude_dir: Path, create_backup: bool = False) -> Tuple[bo
         return False, backup_path
 
 
-def verify_removal(install_method: Optional[str]) -> Dict[str, bool]:
+def verify_removal(install_method: str | None) -> dict[str, bool]:
     """
     Verify CCO was removed completely.
 
@@ -333,7 +314,7 @@ def main() -> int:
             print("[INFO] CCO is not installed")
             print()
             print("Nothing to remove:")
-            print(f"  • Package: not found")
+            print("  • Package: not found")
             print(f"  • Directory: {claude_dir} has no CCO files")
             return 0
 
@@ -356,22 +337,22 @@ def main() -> int:
             print(f"Uninstalling package ({install_method})...")
             package_removed = remove_package(install_method)
             if package_removed:
-                print(f"  ✓ Package uninstalled")
+                print("  ✓ Package uninstalled")
             else:
-                print(f"  ✗ Failed to uninstall package")
+                print("  ✗ Failed to uninstall package")
 
         # Remove directory
         directory_removed = True
         backup_path = None
         if total_files > 0:
-            print(f"Removing global directory...")
+            print("Removing global directory...")
             directory_removed, backup_path = remove_claude_dir(claude_dir, create_backup=False)
             if directory_removed:
-                print(f"  ✓ Directory removed")
+                print("  ✓ Directory removed")
                 if backup_path:
                     print(f"  ✓ Backup created: {backup_path}")
             else:
-                print(f"  ✗ Failed to remove directory")
+                print("  ✗ Failed to remove directory")
 
         # Verify
         print()
