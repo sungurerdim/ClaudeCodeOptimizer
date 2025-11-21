@@ -17,8 +17,8 @@ Architecture:
 
 from pathlib import Path
 
-# Command → Principle Category Mapping (using actual category names from .md frontmatter)
-# Note: "universal" category is ALWAYS included automatically for all commands
+# Command → principle categories (universal always included)
+
 COMMAND_PRINCIPLE_MAP: dict[str, list[str]] = {
     # Core commands (universal + core only)
     "cco-status": ["universal", "core"],
