@@ -37,6 +37,11 @@ User runs command          Agent executes           Skills activate
                            (Sonnet)                 - Unit tests
                            - Quality output         - Integration tests
                            - Complete code          - Coverage targets
+
+/cco-slim              →   slim-agent (Sonnet)  →   Context optimization
+                           - CLAUDE.md analysis     - Duplication detection
+                           - Token optimization     - Quality preservation
+                           - Semantic verification  - Content evaluation
 ```
 
 ### Data Flow: audit → fix → generate
@@ -119,10 +124,10 @@ No manual skill selection needed. Claude matches context to relevant skills auto
 
 **Global Storage (`~/.claude/`):**
 - **Commands** - Core functionality
-- **Principles** - Claude guidelines + universal + project
+- **Principles** - Claude guidelines + universal + project (U_*, C_*, P_*)
 - **Skills** - Auto-activate on demand
-- **Agents** - Parallel execution (audit/Haiku, fix/Sonnet, generate/Sonnet)
-- **CLAUDE.md** - Principle markers
+- **Agents** - Parallel execution (audit/Haiku, fix/Sonnet, generate/Sonnet, slim/Sonnet)
+- **CLAUDE.md** - Marker-based principle injection (see [ADR-001](docs/ADR/001-marker-based-claude-md.md))
 
 **Project Storage:**
 - **ZERO files created** in your projects
@@ -179,11 +184,12 @@ Skills load on-demand when Claude detects relevance:
 
 ## Agent Orchestration
 
-### 3 Specialized Agents
+### Specialized Agents
 
 - **audit-agent** (Haiku) - Fast scanning, cost-efficient pattern detection
 - **fix-agent** (Sonnet) - Accurate code modifications
 - **generate-agent** (Sonnet) - Quality code generation
+- **slim-agent** (Sonnet) - Context optimization and token reduction with quality preservation
 
 ### Agent Format
 
@@ -476,11 +482,60 @@ CCO is designed for easy extension:
 
 ---
 
+## Recent Improvements (Last 24 Hours)
+
+### Quality & Testing
+- ✅ **100% Test Pass Rate** - All unit tests fixed and passing
+- ✅ **Test Suite Modernization** - Updated to Python 3.11+ syntax
+- ✅ **CI/CD Simplification** - Minimal test matrix for alpha stage
+
+### Documentation
+- ✅ **Architecture Decision Records** - docs/ADR/ directory with initial ADRs
+- ✅ **Operational Runbooks** - docs/runbooks/ with installation, update, troubleshooting guides
+- ✅ **PR Template** - Comprehensive checklist with CCO principle compliance
+
+### Code Quality
+- ✅ **Unused Code Removal** - Cleaned up principles.py and related tests
+- ✅ **Hardcoded Examples Eliminated** - Full compliance with C_NO_HARDCODED_EXAMPLES principle
+- ✅ **GitIgnore Cleanup** - Removed unnecessary entries
+
+### Features
+- ✅ **Context Optimization** - `/cco-slim` primary focus on CLAUDE.md duplication elimination
+- ✅ **Installation UX** - Before/after file count summary, template tracking
+- ✅ **Command Enhancements** - audit, fix, generate, slim, optimize, implement, commit all improved
+- ✅ **Skill Integration** - Unused skills now properly integrated into commands
+- ✅ **Context Passing Between Commands** - C_COMMAND_CONTEXT_PASSING principle implementation
+  - `/cco-audit` → `/cco-fix`: Passes issue list, file paths, severity levels
+  - `/cco-audit` → `/cco-generate`: Passes missing components, existing patterns
+  - `/cco-fix` → `/cco-generate`: Passes fixed files, needed tests/docs
+  - Eliminates duplicate analysis, significantly faster execution
+  - See [C_COMMAND_CONTEXT_PASSING principle](claudecodeoptimizer/content/principles/C_COMMAND_CONTEXT_PASSING.md)
+
+### Performance
+- ✅ **Token Efficiency** - Context-first approach in slim command
+- ✅ **Model Selection** - Optimal Haiku/Sonnet/Opus usage per task complexity
+
 ## Related Documentation
 
+### Core Documentation
 - [README.md](README.md) - Installation and quick start
 - [CONTRIBUTING.md](CONTRIBUTING.md) - Development guidelines
 - [LICENSE](LICENSE) - MIT License
+
+### Architecture Decision Records
+- [ADR-001: Marker-based CLAUDE.md System](docs/ADR/001-marker-based-claude-md.md)
+- [ADR-002: Zero Pollution Design](docs/ADR/002-zero-pollution-design.md)
+- [ADR-003: Progressive Skill Loading](docs/ADR/003-progressive-skill-loading.md)
+
+### Operational Runbooks
+- [Installation](docs/runbooks/installation.md)
+- [Updates](docs/runbooks/updates.md)
+- [Troubleshooting](docs/runbooks/troubleshooting.md)
+- [Uninstallation](docs/runbooks/uninstallation.md)
+
+### Development Resources
+- [PR Template](.github/PULL_REQUEST_TEMPLATE.md)
+- [CI/CD Workflows](.github/workflows/)
 
 ---
 

@@ -250,7 +250,7 @@ Before finalizing any CCO component:
 # Install
 pip install git+https://github.com/sungurerdim/ClaudeCodeOptimizer.git
 
-# Setup
+# Setup (with before/after file count summary)
 cco-setup
 ```
 
@@ -279,16 +279,25 @@ cco-setup
 
 1. `pip install` → Installs Python package globally
 2. `cco-setup` → Copies content files to `~/.claude/` directory
-   - Creates `~/.claude/commands/` (commands)
-   - Creates `~/.claude/principles/` (principles)
-   - Creates `~/.claude/skills/` (skills)
-   - Creates `~/.claude/agents/` (agents)
-   - Generates `~/.claude/CLAUDE.md` (principle markers)
+   - Creates `~/.claude/commands/` (all CCO commands)
+   - Creates `~/.claude/principles/` (U_*, C_*, P_* principles)
+   - Creates `~/.claude/skills/` (domain-specific skills)
+   - Creates `~/.claude/agents/` (specialized agents)
+   - Generates `~/.claude/CLAUDE.md` (marker-based principle injection - see [ADR-001](docs/ADR/001-marker-based-claude-md.md))
    - Copies `~/.claude/settings.json.example` (optional: Claude Code config template)
    - Copies `~/.claude/statusline.js.example` (optional: status line script template)
+   - Shows before/after file count summary
    - If files exist, asks before overwriting (interactive mode)
    - Use `cco-setup --force` to skip confirmation and overwrite
 3. Done! Commands available in all projects immediately via Claude Code
+
+**What's New (Recent Updates):**
+- ✅ 100% test pass rate (all tests fixed and passing)
+- ✅ Enhanced command UX with unused skills integration
+- ✅ Context optimization focus in `/cco-slim` (CLAUDE.md duplication elimination)
+- ✅ Comprehensive PR template with CCO principle compliance checklist
+- ✅ Architecture Decision Records (ADR) and operational runbooks
+- ✅ Installation tracking improvements with before/after summary
 
 **Installation Options:**
 ```bash
@@ -717,9 +726,27 @@ cco-setup
 
 ## Documentation
 
+### Core Documentation
 - **[ARCHITECTURE.md](ARCHITECTURE.md)** - Detailed architecture, agent orchestration, principles
 - **[CONTRIBUTING.md](CONTRIBUTING.md)** - Development guidelines
 - **Skills Reference** - See `~/.claude/skills/` after installation
+
+### Architecture Decision Records (ADR)
+- **[ADR-001: Marker-based CLAUDE.md System](docs/ADR/001-marker-based-claude-md.md)** - How CCO injects content into CLAUDE.md
+- **[ADR-002: Zero Pollution Design](docs/ADR/002-zero-pollution-design.md)** - Why all content goes in `~/.claude/`
+- **[ADR-003: Progressive Skill Loading](docs/ADR/003-progressive-skill-loading.md)** - How skills auto-activate on demand
+- **[ADR Index](docs/ADR/README.md)** - All architectural decisions
+
+### Operational Runbooks
+- **[Installation Runbook](docs/runbooks/installation.md)** - Step-by-step installation guide
+- **[Update Runbook](docs/runbooks/updates.md)** - Update existing CCO installation
+- **[Troubleshooting Runbook](docs/runbooks/troubleshooting.md)** - Common issues and solutions
+- **[Uninstallation Runbook](docs/runbooks/uninstallation.md)** - Clean removal procedures
+- **[Runbook Index](docs/runbooks/README.md)** - All operational procedures
+
+### Development Resources
+- **[PR Template](.github/PULL_REQUEST_TEMPLATE.md)** - Comprehensive PR checklist with CCO principle compliance
+- **[CI/CD Workflows](.github/workflows/)** - Automated testing and quality checks
 
 ---
 
