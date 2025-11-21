@@ -102,6 +102,60 @@ ROOT CAUSE: Batch process design flaw
 FIX: Chunk updates (1000 rows each)
 ```
 
+**CRITICAL: Never trust agent output blindly. Always verify.**
+
+```python
+# ❌ BAD: Blind trust
+agent_result = Task("Fix auth bug")
+# No verification
+
+# ✅ GOOD: Verify
+agent_result = Task("Fix auth bug")
+
+# Verify file changed
+content = Read("auth.py", offset=145, limit=20)
+assert "session['user_id']" in content
+
+# Verify accounting
+assert result.fixed + result.skipped == result.total
+
+# Run tests
+Bash("pytest tests/test_auth.py -v")
+```
+
+**Agent Verification Checklist:**
+
+- [ ] Agent claimed "fixed" → Verify file actually changed (Read or git diff)
+- [ ] Agent claimed "generated" → Verify file exists (Read or ls)
+- [ ] Agent claimed "optimized" → Verify token reduction (word count before/after)
+- [ ] Agent provided accounting → Verify formula: `total = completed + skipped + failed`
+- [ ] Agent skipped items → Verify reasons are legitimate (not excuses)
+- [ ] Agent reported numbers → Verify counts match reality (grep, find, wc)
+
+**Common Output Errors to Detect:**
+
+```python
+# Agent: "Fixed 10 issues"
+# Verify:
+Bash("git diff --stat")  # How many files changed?
+# If 0 changes → Claim incorrect!
+
+# Agent: "Applied 20 optimizations"
+# Verify accounting:
+assert 20 == len(applied) + len(skipped) + len(failed)
+# If formula doesn't balance → Items unaccounted for!
+```
+
+**Reason Verification:**
+
+```python
+# ❌ UNVERIFIABLE (reject):
+"File was being modified externally"  # Check git status first!
+"Section already optimal"  # Measure tokens to verify!
+# ✅ VERIFIABLE:
+"File doesn't exist: <path>"  # Verifiable
+"Git conflict detected"  # Verifiable
+```
 ---
 
 ## Workflow
@@ -112,6 +166,7 @@ def test_reproduces_bug():
     result = process_data(malformed_input)
     assert result.error is not None
 ```
+
 
 ### 2. Verify Root Cause
 ```python
