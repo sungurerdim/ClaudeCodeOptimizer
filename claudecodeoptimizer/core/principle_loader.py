@@ -17,105 +17,6 @@ Architecture:
 
 from pathlib import Path
 
-# Command → principle categories (universal always included)
-
-COMMAND_PRINCIPLE_MAP: dict[str, list[str]] = {
-    # Core commands (universal + core only)
-    "cco-status": ["universal", "core"],
-    "cco-config": ["universal", "core"],
-    "cco-remove": ["universal", "core"],
-    # Audit commands
-    "cco-audit": ["universal", "all"],  # Full audit loads everything
-    "cco-audit-code": ["universal", "core", "code_quality"],
-    "cco-audit-security": ["universal", "core", "security_privacy"],
-    "cco-audit-tests": ["universal", "core", "testing"],
-    "cco-audit-docs": ["universal", "core", "code_quality"],
-    "cco-audit-all": ["universal", "all"],
-    # Analysis commands
-    "cco-analyze": ["universal", "core", "architecture", "code_quality"],
-    "cco-analyze-structure": ["universal", "core", "architecture"],
-    "cco-analyze-dependencies": ["universal", "core", "architecture"],
-    "cco-analyze-complexity": ["universal", "core", "code_quality"],
-    # Fix commands
-    "cco-fix": ["universal", "core", "code_quality", "security_privacy"],
-    "cco-fix-code": ["universal", "core", "code_quality"],
-    "cco-fix-security": ["universal", "core", "security_privacy"],
-    "cco-fix-docs": ["universal", "core", "code_quality"],
-    # Optimize commands
-    "cco-optimize": ["universal", "core", "performance"],
-    "cco-optimize-code": ["universal", "core", "performance", "code_quality"],
-    "cco-optimize-deps": ["universal", "core", "performance"],
-    "cco-optimize-docker": ["universal", "core", "performance", "project-specific"],
-    # Test commands
-    "cco-test": ["universal", "core", "testing"],
-    "cco-generate-tests": ["universal", "core", "testing"],
-    # Generate commands
-    "cco-generate": ["universal", "core", "code_quality"],
-    "cco-generate-docs": ["universal", "core", "api_design"],
-    "cco-generate-integration-tests": ["universal", "core", "testing"],
-    # DevOps commands
-    "cco-scan-secrets": ["universal", "core", "security_privacy"],
-    "cco-setup-cicd": ["universal", "core", "project-specific"],
-    "cco-setup-monitoring": ["universal", "core", "project-specific"],
-    # Sync commands
-    "cco-sync": ["universal", "core"],
-}
-
-# Category → Principle ID Mapping (cached)
-_CATEGORY_TO_IDS: dict[str, list[str]] | None = None
-
-
-def _load_category_mapping() -> dict[str, list[str]]:
-    """Load category to principle ID mapping from .md files"""
-    global _CATEGORY_TO_IDS
-
-    if _CATEGORY_TO_IDS is not None:
-        return _CATEGORY_TO_IDS
-
-    # Load from claudecodeoptimizer/content/principles/ directory
-    package_dir = Path(__file__).parent.parent
-    principles_dir = package_dir / "content" / "principles"
-
-    if not principles_dir.exists():
-        # Fallback: return empty mapping
-        _CATEGORY_TO_IDS = {}
-        return _CATEGORY_TO_IDS
-
-    # Use principle_md_loader to get category mapping
-    from .principle_md_loader import get_category_mapping
-
-    mapping = get_category_mapping(principles_dir)
-
-    # Add "core" category (now references universal principles)
-    # Core principles are now U_EVIDENCE_BASED, U_FAIL_FAST, U_NO_OVERENGINEERING
-    mapping["core"] = ["U_EVIDENCE_BASED", "U_FAIL_FAST", "U_NO_OVERENGINEERING"]
-
-    _CATEGORY_TO_IDS = mapping
-    return mapping
-
-
-def _resolve_categories_to_ids(categories: list[str]) -> list[str]:
-    """Convert category names to principle IDs"""
-    mapping = _load_category_mapping()
-    principle_ids = []
-
-    for category in categories:
-        if category == "all":
-            # Return all principle IDs
-            for cat_ids in mapping.values():
-                principle_ids.extend(cat_ids)
-        elif category in mapping:
-            principle_ids.extend(mapping[category])
-
-    # Remove duplicates while preserving order
-    seen = set()
-    unique_ids = []
-    for pid in principle_ids:
-        if pid not in seen:
-            seen.add(pid)
-            unique_ids.append(pid)
-
-    return unique_ids
 
 
 class PrincipleLoader:
@@ -158,20 +59,17 @@ class PrincipleLoader:
             >>> content = loader.load_for_command("cco-audit-security")
             # Returns: U_*.md + P_*.md + C_*.md files (~800 tokens)
         """
-        # Use COMMAND_PRINCIPLE_MAP (STATIC)
-        categories = COMMAND_PRINCIPLE_MAP.get(command, ["universal", "core"])
+        # Try to load from command file frontmatter first (dynamic)
+        package_dir = Path(__file__).parent.parent
+        command_file = package_dir / "content" / "commands" / f"{command}.md"
 
-        # Convert categories to principle IDs
-        principle_ids = _resolve_categories_to_ids(categories)
+        if command_file.exists():
+            content = self.load_from_frontmatter(command_file)
+            if content:  # If frontmatter has principles, use them
+                return content
 
-        # Load each principle
-        principles = []
-        for principle_id in principle_ids:
-            content = self.load_principle(principle_id)
-            if content:
-                principles.append(content)
-
-        return "\n\n---\n\n".join(principles)
+        # No frontmatter found - return empty
+        return ""
 
     def load_principles(self, principle_ids: list[str]) -> str:
         """
@@ -296,58 +194,6 @@ class PrincipleLoader:
             all_principles.append(content)
 
         return "\n\n---\n\n".join(all_principles)
-
-    def get_categories_for_command(self, command: str) -> list[str]:
-        """
-        Get principle categories for a command.
-
-        Args:
-            command: Command name
-
-        Returns:
-            List of category names
-        """
-        return COMMAND_PRINCIPLE_MAP.get(command, ["core"])
-
-    def estimate_token_count(self, command: str) -> int:
-        """
-        Estimate token count for a command's principles.
-
-        Args:
-            command: Command name
-
-        Returns:
-            Estimated token count
-
-        Token estimates by category:
-            - core: 500
-            - code-quality: 1400
-            - security: 1900
-            - testing: 600
-            - architecture: 1100
-            - performance: 500
-            - operations: 1100
-            - git-workflow: 500
-            - api-design: 300
-        """
-        category_tokens = {
-            "core": 500,
-            "code-quality": 1400,
-            "security": 1900,
-            "testing": 600,
-            "architecture": 1100,
-            "performance": 500,
-            "project-specific": 1100,
-            "git-workflow": 500,
-            "api-design": 300,
-        }
-
-        categories = self.get_categories_for_command(command)
-
-        if "all" in categories:
-            return sum(category_tokens.values())
-
-        return sum(category_tokens.get(cat, 500) for cat in categories)
 
     def clear_cache(self) -> None:
         """Clear principle cache."""
