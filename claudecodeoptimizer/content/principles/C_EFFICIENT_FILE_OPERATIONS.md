@@ -79,6 +79,89 @@ Read("<auth_module>/<jwt_file>.py", offset=145, limit=30)
 
 ---
 
+## Tool Selection for File Modifications
+
+**Choose the right tool based on modification type and risk.**
+
+### Decision Tree
+
+```
+File modification?
+├─ Simple pattern? → sed/awk (atomic, no locking)
+├─ Complex semantic?
+│  ├─ <5 files? → Edit tool (verify)
+│  └─ 5+ files? → Agent + sed
+└─ Agent-driven? → MUST verify output
+```
+
+### Tool Comparison
+
+| Tool | Use Case | Pros | Cons |
+|------|----------|------|------|
+| **sed** | Pattern replacement, line deletion, simple edits | Atomic, no file locking issues, reliable, scriptable | Limited to line-based operations |
+| **awk** | Column-based edits, complex patterns | Powerful pattern matching, field processing | Steeper learning curve |
+| **Edit tool** | Semantic changes, small edits | Preserves formatting, line number tracking | File locking issues, "unexpectedly modified" errors |
+| **Write tool** | Complete file rewrites | Full control | Must Read first, overwrites entire file |
+| **Agent + sed** | Bulk modifications | Parallelizable, scalable | Agent output must be verified |
+
+### sed Best Practices
+
+```bash
+# ✅ GOOD: In-place edit with backup
+```bash
+# ✅ In-place with backup
+sed -i.bak 's/old/new/g' file.txt
+
+# ✅ Delete lines by pattern
+sed -i '/^[[:space:]]*#/d' file.py
+
+# ✅ Multi-line deletion
+sed -i '/start/,/end/d' file.txt
+
+# ✅ Test first
+sed 's/old/new/g' file.txt  # Preview
+sed -i 's/old/new/g' file.txt  # Apply
+```
+
+1. **Agent generates sed commands** (not direct edits)
+2. **Review commands** before execution
+3. **Execute sed commands** with Bash tool
+4. **Verify changes** with git diff or Read
+5. **Rollback if needed** (git restore or .bak files)
+
+```python
+# ❌ BAD: Blindly trust agent edits
+**When using agents for file modifications:**
+
+1. Agent generates sed commands (not direct edits)
+2. Review commands before execution
+3. Execute with Bash tool
+4. Verify with git diff
+5. Rollback if needed (git restore or .bak)
+
+```python
+# ❌ BAD: Blind trust
+agent_result = Task("Optimize file.py")
+
+# ✅ GOOD: Verify
+agent_result = Task("Generate sed commands for file.py")
+Bash("sed -i.bak '/^#/d' file.py")  # Execute
+Bash("git diff file.py")  # Verify
+```
+2. **Commit changes** and retry
+3. **Close file watchers** (disable linters temporarily)
+4. **Use agent with sed** (generate commands, execute via Bash)
+
+### Checklist
+
+- [ ] Simple pattern? → Use sed
+- [ ] Complex semantic change? → Use Edit (if <5 files) or Agent + sed (if 5+ files)
+- [ ] Agent modifications? → Verify output before accepting
+- [ ] Edit tool fails? → Switch to sed immediately
+- [ ] Bulk changes? → Parallelize with multiple agents
+
+---
+
 ## Anti-Patterns
 
 ### ❌ Reading Without Searching
