@@ -66,29 +66,7 @@ User runs command          Agent executes           Skills activate
                     • Finding categories
 ```
 
-**Flow Details:**
-
-1. **Discovery Phase** (All commands)
-   - Detect tech stack via Glob patterns (`**/*.py`, `**/Dockerfile`)
-   - Identify frameworks (Flask, Django, FastAPI)
-   - Store context for downstream commands
-
-2. **Audit Phase**
-   - Run applicable checks based on flags
-   - Categorize findings by severity (critical/high/medium/low)
-   - Report with file:line references
-
-3. **Fix Phase**
-   - Reuse audit findings (auto-runs audit if needed)
-   - Safe fixes: Apply automatically (parameterize SQL, remove dead code)
-   - Risky fixes: Request user approval (auth changes, CSRF)
-   - Verify each fix
-
-4. **Generate Phase**
-   - Use tech stack context
-   - Follow project conventions
-   - Create missing components (tests, docs, configs)
-
+n**Flow:** Discovery (detect tech stack) → Audit (classify findings) → Fix (auto-apply safe, request risky) → Generate (create tests/docs with conventions)
 ### Model Selection Rationale
 
 | Agent | Model | Why |
@@ -168,22 +146,7 @@ Skills load on-demand when Claude detects relevance:
 **Project Context Discovery:**
 - Optional analysis of project documentation (README, CONTRIBUTING, ARCHITECTURE)
 - Haiku sub-agent extracts project context without consuming main context
-- Ensures findings/fixes align with project goals and conventions
-
-**Full Control Mode (Audit):**
-- Three modes: Quick Presets, Category Mode, Full Control
-- Full Control shows all available checks with applicability status
-- Individual check selection for maximum precision
-
-**YAML Frontmatter:**
-- All commands/agents include structured metadata
-- Command Discovery Protocol for semantic matching
-- Enables intelligent command recommendations
-
----
-
-## Agent Orchestration
-
+n**Auto-Activating Skills (26 total):** Security (5), Testing (2), Database (2), Observability (3), CI/CD (2), Code Quality (2), Docs (1), Git (2), Performance (2), Architecture (2), Mobile (1), DevEx (1). Skills load on-demand when relevant, keeping context focused.
 ### Specialized Agents
 
 - **audit-agent** (Haiku) - Fast scanning, cost-efficient pattern detection
@@ -338,120 +301,17 @@ AskUserQuestion({
 
 ### 3. MultiSelect with "All" Option
 
-Any question with multiple choices must be multiSelect with "All" option.
+n## Universal Principles
 
-```python
-options: [
-  {label: "All", description: "Select all options"},
-  {label: "Security", description: "..."},
-  {label: "Testing", description: "..."},
-]
-# If "All" selected → all other options are default selected
-```
+See `~/.claude/principles/` for complete principle documentation:
 
-### 4. 100% Honesty - No False Claims
+**Universal (U_*) Principles:**
+- U_CHANGE_VERIFICATION, U_CROSS_PLATFORM_COMPATIBILITY, U_DRY, U_EVIDENCE_BASED_ANALYSIS, U_FOLLOW_PATTERNS, U_MINIMAL_TOUCH, U_NO_HARDCODED_EXAMPLES, U_NO_OVERENGINEERING
 
-- Never claim "fixed" unless change verified
-- Never say "impossible" if technically possible
-- Never claim "generated" unless file exists
-- Report exact truth, nothing more or less
+**Claude Guidelines (C_*) Principles:**
+- C_AGENT_ORCHESTRATION_PATTERNS, C_CONTEXT_WINDOW_MGMT, C_EFFICIENT_FILE_OPERATIONS, C_MODEL_SELECTION, C_NATIVE_TOOL_INTERACTIONS, C_NO_UNSOLICITED_FILE_CREATION, C_PROJECT_CONTEXT_DISCOVERY
 
-```python
-# Accurate outcome categories
-OUTCOMES = {
-    "fixed": "Applied and verified",
-    "needs_decision": "Multiple approaches - user chooses",
-    "needs_review": "Complex - requires human verification",
-    "requires_migration": "DB change - needs migration script",
-    "impossible_external": "Issue in third-party code",
-}
-```
-
-### 5. Complete Accounting
-
-Every item must have a disposition. Totals must match.
-
-```python
-# MUST verify: fixed + skipped + cannot_fix = total
-assert len(fixed) + len(skipped) + len(cannot_fix) == total_issues
-```
-
-### 6. Best UX with Highest Quality
-
-- Explicit phase transitions (start/complete announcements)
-- Consistent counts (single source of truth)
-- Progressive disclosure (simple start, detail on demand)
-- Real-time feedback (streaming, not batch)
-
-### 7. Token Optimization
-
-- Minimize context usage without sacrificing quality
-- Grep before Read
-- Use offset+limit for large files
-- Targeted reads, not full file dumps
-
-### 8. Unlimited Sub-Agents for Concrete Benefit
-
-Use as many sub-agents as needed when they provide concrete benefit.
-
-```python
-# Parallel agents for independent tasks
-Task(model="haiku", prompt="Scan security...")
-Task(model="haiku", prompt="Scan testing...")
-Task(model="haiku", prompt="Scan database...")
-# All run in parallel → faster, better results
-```
-
-### 9. Universal + Claude Principle Compliance
-
-All components must align with:
-- **U_*** principles (Evidence-based, DRY, Minimal touch, No overengineering)
-- **C_*** principles (Context window, Cross-platform, Efficient file ops, Follow patterns)
-
-**Full Principle Documentation:**
-
-See `~/.claude/principles/` for complete details:
-- **U_* (Universal)**: Core development best practices
-- **C_* (Claude Guidelines)**: Claude Code-specific optimizations
-- **P_* (Project-specific)**: Optional per-project overrides
-
----
-
-## Performance Characteristics
-
-### Typical Execution Times
-
-| Command | Codebase Size | Time | Model Cost |
-|---------|--------------|------|------------|
-| `/cco-audit --quick` | Small (<1K files) | ~10s | $0.01 |
-| `/cco-audit --security` | Medium (<5K files) | ~30s | $0.05 |
-| `/cco-audit --all` | Large (5K+ files) | ~2min | $0.20 |
-| `/cco-fix --security` | 10 issues | ~45s | $0.10 |
-| `/cco-generate --tests` | 5 files | ~60s | $0.15 |
-
-### Optimization Techniques
-
-1. **Parallel Agent Execution**
-   - Independent checks run simultaneously
-   - 3-5x faster than sequential scanning
-
-2. **Progressive Context Loading**
-   - Only load relevant skills when needed
-   - Baseline principles always loaded (~10KB)
-   - Skills load on-demand (5-15KB each)
-
-3. **Efficient File Operations**
-   - Grep before Read (10x token savings)
-   - Targeted reads with offset+limit
-   - Pattern-based file discovery
-
-4. **Model Selection**
-   - Haiku for pattern matching (5x faster, 10x cheaper)
-   - Sonnet for code analysis (balanced)
-   - Opus only when strictly necessary (rare)
-
----
-
+These principles guide all CCO component development (commands, skills, agents).
 ## Extension Points
 
 CCO is designed for easy extension:

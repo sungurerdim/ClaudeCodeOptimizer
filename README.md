@@ -13,20 +13,20 @@
 
 ### The 12 Critical Pain Points (2025 Data)
 
-| # | Pain Point | Impact | CCO Solution |
-|---|------------|--------|--------------|
-| **1** | **Security** | Vulnerabilities in production | `/cco-audit --security` detects OWASP Top 10 2025, supply chain risks |
-| **2** | **Technical Debt** | Wasted developer time | `/cco-audit --tech-debt` finds dead code, complexity hotspots |
-| **3** | **AI Security** | Prompt injection, PII leakage | `/cco-audit --ai-security` detects OWASP A01:2025 in AI code |
-| **4** | **Missing Tests** | Production bugs, delays | `/cco-audit --tests` identifies untested critical paths |
-| **5** | **Time Waste** | Inefficient queries, slow builds | `/cco-audit --performance` finds N+1 queries, missing indexes |
-| **6** | **Integration Failures** | Broken builds, deploy delays | `/cco-audit --integration` finds import errors, conflicts |
-| **7** | **Documentation Gaps** | Onboarding delays | `/cco-audit --docs` measures docstring coverage |
-| **8** | **AI Code Quality** | Hallucinated APIs, code bloat | `/cco-audit --ai-quality` detects non-existent APIs, vibe coding |
-| **9** | **Velocity Loss** | Slow feature delivery | `/cco-audit --code-review` analyzes DORA metrics decline |
-| **10** | **AI Readiness Gaps** | Can't leverage AI tooling | `/cco-audit --platform` assesses CI/CD maturity, test automation |
-| **11** | **Code Review Decline** | -27% comment rate (2025) | `/cco-audit --code-review` measures review quality, diversity |
-| **12** | **Team Breakdowns** | Knowledge silos | `/cco-audit --code-review` detects echo chambers, rework rates |
+| # | Problem | Impact | Solution |
+|---|---------|--------|----------|
+| 1 | Security | Vulnerabilities | `/cco-audit --security` |
+| 2 | Tech Debt | Wasted time | `/cco-audit --tech-debt` |
+| 3 | AI Security | Prompt injection | `/cco-audit --ai-security` |
+| 4 | Missing Tests | Production bugs | `/cco-audit --tests` |
+| 5 | Performance | Slow queries | `/cco-audit --performance` |
+| 6 | Integration | Broken builds | `/cco-audit --integration` |
+| 7 | Documentation | Onboarding delays | `/cco-audit --docs` |
+| 8 | AI Quality | Hallucinated APIs | `/cco-audit --ai-quality` |
+| 9 | Velocity Loss | Slow delivery | `/cco-audit --code-review` |
+| 10 | AI Readiness | Can't leverage AI | `/cco-audit --platform` |
+| 11 | Code Review | -27% comments | `/cco-audit --code-review` |
+| 12 | Team Gaps | Knowledge silos | `/cco-audit --code-review` |
 
 **What CCO Provides:**
 - **Commands** that configure Claude Code to address these pain points
@@ -38,207 +38,39 @@
 
 ## What is CCO?
 
-CCO is a **pain-point driven configuration layer** that provides Claude Code with specialized commands, skills, agents, and principles to tackle 2025's costliest development problems.
+**CCO = Pain-point driven configuration layer for Claude Code** (like ESLint config → ESLint)
 
-### Reality Check: What CCO Actually Does
-
-**CCO = Configuration for Claude Code** (like ESLint config → ESLint)
-
-| Component | What It Is | What It's NOT |
-|-----------|------------|---------------|
-| **Commands** | Instructions for Claude Code | NOT executable scripts |
-| **Skills** | Domain knowledge | NOT code libraries |
-| **Agents** | Execution patterns | NOT separate processes |
-| **Principles** | Behavioral guidelines | NOT enforced rules |
-
-**Example: `/cco-audit --security`**
-1. CCO command tells Claude what to check
-2. CCO skill provides OWASP 2025 patterns
-3. Claude Code executes grep/read/analysis
-4. CCO agent guides result organization
-
-**Key Benefits:**
-- **Pain-point driven**: Targets 2025's costliest dev problems (security, tech debt, AI quality)
-- **Zero pollution**: Lives in `~/.claude/`, shared across all projects
-- **Instant propagation**: One CCO update → all projects
+| Component | What It Is |
+|-----------|-----------|
+| **Commands** | Instructions for Claude (e.g., `/cco-audit`) |
+| **Skills** | Domain knowledge (OWASP 2025, DORA metrics) |
+| **Agents** | Execution patterns (parallel, pipeline) |
+| **Principles** | Behavioral guidelines (DRY, verification) |
 
 ---
 
 ## CCO Component Design Principles
 
-All CCO components (commands, skills, agents, principles) follow strict design rules to ensure consistency, quality, and optimal Claude Code integration:
+All CCO components follow strict design rules. **For detailed principles, see `~/.claude/principles/` after installation.**
 
-### 1. No Hardcoded Examples (Critical)
-**Problem:** AI models cannot distinguish between "example" and "real data"
+### Essential Principles
 
-**Rule:** Use placeholders like `{FILE_PATH}`, `{LINE_NUMBER}`, `{FUNCTION_NAME}` instead of hardcoded examples like `src/auth/login.py:45`
+- **No Hardcoded Examples** - Use placeholders like `{FILE_PATH}`, `{LINE_NUMBER}` (See `U_NO_HARDCODED_EXAMPLES`)
+- **Native Tool Interactions** - Use `AskUserQuestion` for user input (See `C_NATIVE_TOOL_INTERACTIONS`)
+- **100% Honest Reporting** - Never claim "fixed" without verification (See `U_EVIDENCE_BASED_ANALYSIS`)
+- **Complete Accounting** - All items: completed/skipped/failed/cannot-do. Totals must match.
+- **MultiSelect with "All"** - Every multiSelect question must have "All" option
+- **Principle Adherence** - Follow U_* (Universal) and C_* (Claude-specific) principles
+- **Token Efficiency** - Grep before Read, targeted reads, parallel operations
+- **UX/DX Excellence** - Progress tracking, actionable results, streaming feedback
 
-**Why:** Prevents AI from using fictional examples as real data, causing incorrect references and fabricated issues
+**Quick Verification Checklist:**
 
-**Reference:** `U_NO_HARDCODED_EXAMPLES` principle
-
-### 2. Native Tool Interactions (Critical)
-**Problem:** Text-based prompts break UX flow and lack validation
-
-**Rule:** Always use native Claude Code tools (`AskUserQuestion`) for user interactions
-
-**Why:** Provides consistent UI, validation, accessibility, and cross-platform compatibility
-
-**Reference:** `C_NATIVE_TOOL_INTERACTIONS` principle
-
-**Reporting Conventions**:
-- Always use `file_path:line_number` format when referencing code
-- Report all actions explicitly (reads, edits, searches)
-- ✅ Good: "Fixed SQL injection in api/users.py:89"
-- ❌ Bad: "Fixed the authentication bug"
-
-**Breaking Changes Protocol**:
-- Detect: Grep all usages before implementation
-- Propose: Show impact, migration path, alternatives
-- Wait: Get explicit user approval before proceeding
-- Breaking changes include: removing/renaming public APIs, changing signatures, changing data formats, changing behavior
-
-### 3. MultiSelect with "All" Option (Critical)
-**Problem:** Users waste time clicking individual items
-
-**Rule:** Every `multiSelect` question must include "All" as the first option
-
-**Implementation:** When "All" is selected, treat it as all other options selected
-
-**Why:** Enables efficient bulk selection without repetitive clicking
-
-### 4. 100% Honest Reporting (Critical)
-**Problem:** False claims erode trust and create production incidents
-
-**Rule:** Never claim "fixed/completed" without verification, distinguish technical possibility from impossibility accurately
-
-**Why:** Users make decisions based on reports - inaccuracy causes real damage
-
-**Reference:** `U_EVIDENCE_BASED_ANALYSIS` principle (accurate categorization, verification patterns)
-
-### 5. Complete Accounting (Critical)
-**Problem:** Losing track of items creates incomplete work
-
-**Rule:** Every item must have a disposition: completed, skipped (reason), failed (reason), or cannot-do (reason)
-
-**Formula:** `total = completed + skipped + failed + cannot-do`
-
-**Why:** Ensures nothing falls through cracks, provides full transparency
-
-**Reference:** `U_EVIDENCE_BASED_ANALYSIS` principle (complete accounting section)
-
-### 6. Optimal UX/DX (High)
-**Problem:** Poor experience reduces adoption and productivity
-
-**Rule:** Design every interaction for clarity, speed, and user satisfaction
-
-**Examples:**
-- Progress tracking: "Phase 2/5 (40% complete)"
-- Clear categorization: Critical/High/Medium
-- Actionable results with file:line references
-- Streaming results for long operations
-
-### 7. Principle Adherence (High)
-**Problem:** Inconsistent behavior across components
-
-**Rule:** All components must follow both Universal (U_*) and Claude-specific (C_*) principles
-
-**Key Principles:**
-- `U_DRY`: Single source of truth
-- `U_MINIMAL_TOUCH`: Edit only required files
-- `U_CHANGE_VERIFICATION`: Verify before claiming
-- `U_FOLLOW_PATTERNS`: Consistency over personal preference
-- `U_CROSS_PLATFORM_COMPATIBILITY`: Works on Windows, Linux, macOS
-- `C_AGENT_ORCHESTRATION_PATTERNS`: Parallel execution where beneficial
-- `C_CONTEXT_WINDOW_MGMT`: Token optimization
-
-### 8. Token Efficiency with Quality (High)
-**Problem:** Wasting tokens reduces conversation length and increases costs
-
-**Rule:** Minimize token usage while maximizing output quality
-
-**Techniques:**
-- Grep before Read (discovery → preview → precise read)
-- Use Haiku for simple tasks, Sonnet for development, Opus for architecture
-- Parallel operations where independent
-- Targeted file reads with offset+limit
-
-### 9. Strategic Sub-Agent Use (Medium)
-**Problem:** Sequential operations create bottlenecks
-
-**Rule:** Use sub-agents with appropriate models for parallelizable work
-
-**Examples:**
-- Security audit + Performance audit + Test audit (parallel, 3x faster)
-- Multiple module analysis (parallel Haiku agents)
-- Sequential only when dependencies exist
-
-### 10. Progress Transparency (Medium)
-**Problem:** Long operations feel unresponsive
-
-**Rule:** Display current phase, total phases, percentage, and streaming results for operations >30 seconds
-
-**Format:** `Phase 3/5: Analyzing security patterns... (60% complete)`
-
-### 11. Universal Skill Utilization (Medium)
-**Problem:** Skills created but not used waste effort
-
-**Rule:** Every relevant skill must be utilized by appropriate commands/agents
-
-**Verification:** Each skill should be referenced in at least one command or agent
-
-### 12. Complete Documentation (Medium)
-**Problem:** Users can't discover or use features effectively
-
-**Rule:** All components documented with examples, listed in appropriate indexes
-
-**Locations:**
-- Commands: Listed in `/cco-help` and README
-- Skills: Listed in `/cco-status` and skills/README.md
-- Agents: Referenced in command documentation
-- Principles: Listed in CLAUDE.md markers
-
-### 13. Command Prompt Support (High)
-**Problem:** Users can't provide additional context with commands
-
-**Rule:** All commands must support optional prompt after command
-
-**Format:** `/cco-audit --security "Focus on authentication endpoints"`
-
-**Implementation:** AI reads and treats as additional instruction
-
-### 14. Enhanced Help System (High)
-**Problem:** Users struggle to discover and use features
-
-**Rule:** `/cco-help` must be UX/DX focused, comprehensive, and accessible to all skill levels
-
-**Requirements:**
-- Pain-point organized (not alphabetical)
-- Clear examples for each command
-- Common workflows
-- Beginner-friendly language
-- Quick reference format
-
-### Self-Enforcement
-
-These principles apply to:
-1. **Component definitions** - Templates and existing components must follow rules
-2. **Runtime execution** - AI follows principles when executing commands
-3. **Generated outputs** - All results respect principles (no hardcoded examples in output)
-
-### Verification Checklist
-
-Before finalizing any CCO component:
 - [ ] No hardcoded examples (use placeholders)
-- [ ] Native tools for user interaction (no text prompts)
-- [ ] MultiSelect questions have "All" option
 - [ ] Honest reporting (verify before claiming)
-- [ ] Complete accounting (all items have disposition)
-- [ ] Progress tracking for long operations
-- [ ] Token-optimized implementation
-- [ ] Follows all relevant U_* and C_* principles
-- [ ] Documented in appropriate locations
-- [ ] Supports optional prompt parameter (commands)
+- [ ] Complete accounting (all items accounted for)
+- [ ] MultiSelect has "All" option
+- [ ] Follows U_* and C_* principles
 
 
 ## Quick Start
@@ -419,199 +251,41 @@ Open any project in Claude Code:
 
 ## Core Commands
 
-### Discovery (Know Your Problems)
+| Command | Purpose | Example |
+|---------|---------|---------|
+| `/cco-status` | Health check | `/cco-status` |
+| `/cco-help` | Command reference | `/cco-help` |
+| `/cco-audit --security` | Find security issues | `/cco-audit --security --ai-quality --code-review` |
+| `/cco-fix --security` | Auto-fix problems | `/cco-fix --security --ai-quality --tech-debt` |
+| `/cco-generate --tests` | Create tests/docs | `/cco-generate --tests --openapi --review-checklist` |
+| `/cco-optimize --database` | Speed up code | `/cco-optimize --database --docker` |
+| `/cco-commit` | Smart git commits | `git add . && /cco-commit` |
+| `/cco-implement "feature"` | Build with TDD | `/cco-implement "Add JWT authentication"` |
+| `/cco-update` | Update version | `/cco-update` |
+| `/cco-remove` | Clean uninstall | `/cco-remove` |
 
-**`/cco-status`** - Check CCO installation health
-- Verify CCO setup, show installed commands (10), skills (30), agents (3)
-- Example: `/cco-status`
-
-**`/cco-help`** - Quick command reference
-- All 10 commands with clear examples, common tasks, 5 typical workflows
-- Example: `/cco-help`
-
-### Critical Action (Fix Your Problems)
-
-**`/cco-audit`** - Find problems in your code ⭐ START HERE
-- **Quick mode:** `--quick` (5 min health check with scores)
-- **Core (7):** `--security`, `--tech-debt`, `--tests`, `--database`, `--performance`, `--integration`, `--docs`
-- **AI (2025):** `--ai-security`, `--ai-quality`, `--ai` (meta: all AI), `--ai-debt` (meta: AI + tech-debt)
-- **Team (2025):** `--code-review`, `--platform`
-- **Infrastructure:** `--ci-cd`, `--containers`, `--supply-chain`
-- **Total: 14 categories** (security, ai-security, tech-debt, ai-quality, tests, database, performance, integration, docs, code-review, platform, ci-cd, containers, supply-chain)
-- **Presets:** `--all` (comprehensive scan)
-- Example: `/cco-audit --security --ai-quality --code-review`
-
-**`/cco-fix`** - Auto-fix detected problems
-- Safe fixes auto-applied (SQL parameterization, remove dead code, API hallucination removal)
-- Risky fixes require approval (CSRF protection, auth changes)
-- Same 14 categories as audit (plus meta-flags: `--ai`, `--ai-debt`)
-- Auto-runs audit if needed
-- Example: `/cco-fix --security --ai-quality --tech-debt`
-
-**`/cco-generate`** - Create tests, docs, configs (18 types)
-- **Critical:** `--tests`, `--contract-tests`
-- **High:** `--load-tests`, `--chaos-tests`, `--openapi`, `--cicd`
-- **Team (2025):** `--review-checklist` (PR quality gates, DORA metrics tracking)
-- **Recommended:** `--docs`, `--adr`, `--runbook`, `--dockerfile`, `--migration`, `--indexes`, `--monitoring`, `--logging`, `--slo`, `--pre-commit`, `--requirements`
-- Example: `/cco-generate --tests --openapi --review-checklist`
-
-### Productivity (Save Time)
-
-**`/cco-optimize`** - Speed up your code with metrics
-- **Types:** `--database` (queries), `--docker` (image size), `--bundle` (frontend), `--performance` (bottlenecks)
-- Shows before/after metrics for all optimizations
-- Example: `/cco-optimize --database --docker`
-
-**`/cco-commit`** - Smart git commits
-- AI-generated semantic commit messages, atomic commit recommendations
-- Example: `git add . && /cco-commit`
-
-**`/cco-implement`** - Build new features with TDD
-- Test-Driven Development approach, auto-skill selection based on feature type
-- Example: `/cco-implement "Add JWT authentication"`
-
-### Management
-
-**`/cco-update`** - Update to latest version
-- One command updates all projects instantly
-
-**`/cco-remove`** - Clean uninstall (Step 1 of 2)
-- Removes all global CCO files (`~/.claude/`), shows what will be deleted before confirmation
-- Must be run BEFORE `pip uninstall` (requires package to work)
+**Audit Categories:** `--quick`, `--security`, `--ai-security`, `--ai-quality`, `--tests`, `--database`, `--performance`, `--tech-debt`, `--code-review`, `--platform`, `--ci-cd`, `--containers`, `--supply-chain`, `--all`
 
 ---
 
-## End-to-End Example
-
-Here's a complete walkthrough of a security audit on a Flask API project:
-
-### Step 1: Run Security Audit
+## Quick Example Walkthrough
 
 ```bash
+# Step 1: Find security issues
 /cco-audit --security
-```
+# Detects SQL injections, secrets, CSRF risks
 
-**Sample Output:**
-```
-Phase 1: Tech Stack Detection
-─────────────────────────────
-✓ Python 3.11 detected
-✓ Flask framework found
-✓ SQLAlchemy ORM detected
-✓ PostgreSQL database
-
-Phase 2: Security Scanning
-──────────────────────────
-Scanning for OWASP Top 10 vulnerabilities...
-
-Found 4 issues:
-
-CRITICAL (1):
-• SQL Injection in {FILE_PATH}:{LINE_NUMBER}
-  db.execute(f"SELECT * FROM users WHERE id = {user_id}")
-  → Use parameterized query
-
-HIGH (2):
-• Hardcoded secret in {FILE_PATH}:{LINE_NUMBER}
-  SECRET_KEY = "mysecretkey123"
-  → Move to environment variable
-
-• Missing CSRF protection in {FILE_PATH}:{LINE_NUMBER}
-  → Add CSRF token validation
-
-MEDIUM (1):
-• Debug mode enabled in {FILE_PATH}:{LINE_NUMBER}
-  DEBUG = True
-  → Disable in production
-
-Summary: 4 issues (1 critical, 2 high, 1 medium)
-```
-
-### Step 2: Auto-Fix Safe Issues
-
-```bash
+# Step 2: Auto-fix safe issues
 /cco-fix --security
-```
+# Parameterizes queries, externalizes secrets, flags risky changes
 
-**Sample Output:**
-```
-Analyzing 4 security issues...
-
-Safe Fixes (auto-applied):
-──────────────────────────
-✓ {FILE_PATH}:{LINE_NUMBER} - Parameterized SQL query
-  Before: db.execute(f"SELECT * FROM users WHERE id = {user_id}")
-  After:  db.execute("SELECT * FROM users WHERE id = :id", {"id": user_id})
-
-✓ {FILE_PATH}:{LINE_NUMBER} - Externalized secret
-  Before: SECRET_KEY = "mysecretkey123"
-  After:  SECRET_KEY = os.environ.get("SECRET_KEY")
-  Note: Add SECRET_KEY to your .env file
-
-Risky Fixes (need approval):
-────────────────────────────
-? {FILE_PATH}:{LINE_NUMBER} - Add CSRF protection
-  This requires adding middleware and updating forms.
-  Apply this fix? [y/n]
-
-Skipped:
-────────
-• {FILE_PATH}:{LINE_NUMBER} - Debug mode
-  Reason: Environment-specific, configure manually
-
-Summary: 2 fixed, 1 needs approval, 1 skipped
-```
-
-### Step 3: Generate Missing Tests
-
-```bash
+# Step 3: Generate tests
 /cco-generate --tests
-```
+# Creates unit + integration tests for uncovered code
 
-**Sample Output:**
-```
-Analyzing test coverage...
-
-Current coverage: 45%
-Target coverage: 80%
-
-Generating tests for uncovered code:
-────────────────────────────────────
-✓ tests/test_api_users.py - 5 test cases
-  - test_get_user_success
-  - test_get_user_not_found
-  - test_create_user_valid
-  - test_create_user_duplicate_email
-  - test_sql_injection_prevented
-
-✓ tests/test_api_auth.py - 4 test cases
-  - test_login_success
-  - test_login_invalid_password
-  - test_csrf_token_required
-  - test_session_expiry
-
-Created: 2 test files, 9 test cases
-Run: pytest tests/ to verify
-```
-
-### Step 4: Verify Results
-
-```bash
+# Step 4: Verify
 /cco-audit --security
-```
-
-**Sample Output:**
-```
-Phase 2: Security Scanning
-──────────────────────────
-Found 1 issue:
-
-MEDIUM (1):
-• Debug mode enabled in {FILE_PATH}:{LINE_NUMBER}
-  → Disable in production (environment-specific)
-
-Summary: 1 issue (0 critical, 0 high, 1 medium)
-Previously: 4 issues → Now: 1 issue
+# Shows reduced issue count
 ```
 
 ---

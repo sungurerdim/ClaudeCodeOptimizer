@@ -38,52 +38,14 @@ parameters:
 
 **PRIMARY GOAL: Minimize context usage while maximizing quality, efficiency, and AI performance.**
 
-This means:
-1. **Eliminate duplication**: CLAUDE.md + skills/agents/commands loading same files
-2. **Detect incomplete content**: Stub files, TODO markers, missing implementations
-3. **Optimize CLAUDE.md**: Add frequently-used files, remove redundant references
-4. **Token reduction WITHOUT quality loss**: Preserve meaning, effectiveness, completeness
-5. **Evaluate ALL context elements**: Principles, skills, agents, commands, README, ARCHITECTURE, CONTRIBUTING, all .md docs - EVERYTHING that can be context
-6. **Optimize each file internally**: Every principle/skill/agent/command written with minimum tokens for maximum effectiveness
+1. **Eliminate duplication** - CLAUDE.md + skills/agents/commands loading same files
+2. **Detect incomplete content** - Stub files, TODO markers, missing implementations  
+3. **Optimize CLAUDE.md** - Add frequently-used files, remove redundant references
+4. **Token reduction without quality loss** - Preserve meaning, effectiveness, completeness
+5. **Evaluate ALL context elements** - Principles, skills, agents, commands, docs, everything
+6. **Optimize each file internally** - Every file with minimum tokens for maximum effectiveness
 
 **Success = Minimum tokens for maximum quality.**
-
-### Internal Content Optimization (Critical Component)
-
-**Each context element must be internally optimized:**
-
-**Goal**: Same effectiveness with minimum tokens.
-
-**Target Elements**:
-- **Principles**: Verbose explanations → Concise rules with examples
-- **Skills**: Redundant instructions → Streamlined procedures
-- **Agents**: Long prompts → Token-efficient directives
-- **Commands**: Repeated patterns → DRY implementations
-- **MD Docs**: Verbose text → Information-dense content
-
-**Example Optimization**:
-```markdown
-❌ BEFORE (200 tokens, verbose):
-"This principle is about ensuring that you always verify your changes before 
-claiming that you have completed a task. You should never say that something 
-is done without actually checking to make sure it's really done. This is very 
-important because it prevents incomplete work and ensures reliability..."
-
-✅ AFTER (50 tokens, optimized):
-**Verify before claiming completion. Check, don't assume.**
-
-**Why**: Prevents incomplete work, ensures reliability.
-
-**How**: Run commands, check outputs, confirm results.
-```
-
-**Quality Preservation**:
-- ✅ Meaning preserved (verify before claim)
-- ✅ Effectiveness maintained (same outcome)
-- ✅ Examples included (how to verify)
-- ✅ 75% token reduction
-
-**This applies to EVERY context file - no exceptions.**
 
 
 ---
@@ -270,93 +232,13 @@ AskUserQuestion({
 
 ### If "Custom Files/Folders" Selected
 
-**Ask for wildcard patterns using native Claude conversation.**
-
-```python
-if "Custom Files/Folders" in selected_categories:
-    # Prompt user for custom patterns via native conversation
-    """
-## Custom File/Folder Selection
-
-**You can specify files or folders using wildcard patterns.**
+Use glob patterns (comma-separated):
 
 **Examples:**
 ```
-# Single file
-docs/api.md
-
-# All markdown in a folder
-docs/**/*.md
-
-# Multiple patterns (comma-separated)
-src/components/**/*.tsx, tests/**/*.test.ts
-
-# Specific files
-README.md, CONTRIBUTING.md, docs/architecture.md
-
-# Exclude pattern (use minus prefix)
-src/**/*.py, -src/generated/**
-
-# Combine patterns
-claudecodeoptimizer/content/**/*.md, src/**/*.py, -**/*_test.py
-```
-
-**Enter your patterns (comma-separated):**
-"""
-
-    # Get user input via conversation
-    custom_patterns = await_user_response()
-
-    # Parse patterns
-    include_patterns = []
-    exclude_patterns = []
-
-    for pattern in custom_patterns.split(','):
-        pattern = pattern.strip()
-        if pattern.startswith('-'):
-            exclude_patterns.append(pattern[1:].strip())
-        else:
-            include_patterns.append(pattern)
-
-    # Discover files
-    custom_files = []
-    for pattern in include_patterns:
-        matched = Glob(pattern)
-        custom_files.extend(matched)
-
-    # Apply exclusions
-    for pattern in exclude_patterns:
-        excluded = Glob(pattern)
-        custom_files = [f for f in custom_files if f not in excluded]
-
-    # Add to discovery
-    discovered["custom"] = custom_files
-
-    # Report back to user
-    print(f"""
-## Custom Files Discovered
-
-**Patterns Matched:** {len(include_patterns)} patterns
-**Files Found:** {len(custom_files)} files
-**Excluded:** {len([f for f in all_matched if f not in custom_files])} files
-
-{if len(custom_files) > 0}
-**Sample Files:**
-{for file in custom_files[:10]}
-- {file_path}
-{endfor}
-{if len(custom_files) > 10}
-... and {len(custom_files) - 10} more files
-{endif}
-{else}
-**No files found** matching your patterns. Please try different patterns.
-{endif}
-""")
-
-    # Confirm or modify
-    if len(custom_files) == 0:
-        # Ask to re-enter patterns
-        return "retry_custom_patterns"
+# Single file: docs/api.md
+# Multiple patterns: src/components/**/*.tsx, tests/**/*.test.ts
+# Exclude: src/**/*.py, -src/generated/**
 ```
 
 ---
@@ -628,145 +510,6 @@ else:
 ---
 
 ## Component 3.5: Context Duplication Analysis
-
-**Detect files loaded multiple times across contexts (CLAUDE.md + skills/commands/agents).**
-
-### Analysis Flow
-
-1. **Extract CLAUDE.md References**
-   - Parse `@principles/`, `@skills/` patterns using regex
-   - Track: file path, reference type, line number
-
-2. **Launch Duplication Analysis** (Explore agent, Haiku)
-   - Input: CLAUDE.md refs + all tool files (cco-*.md, skill-*.md, agent-*.md)
-   - Task: Find duplicates (same file loaded by CLAUDE.md + tools)
-   - Task: Find missing (frequently referenced but not in CLAUDE.md)
-   - Error handling: Retry | Retry with Sonnet | Skip | Cancel
-
-3. **Output:**
-   - `duplicates[]`: Files loaded 2+ times (waste)
-   - `missing[]`: Frequently referenced but not in CLAUDE.md (inefficiency)
-
-**For each tool file:**
-- Extract file references (Read(), @principles/, @skills/ patterns)
-- Check if already in CLAUDE.md → mark as duplicate
-- Count total wasted tokens
-
-**Result:** `duplication_groups[]` with files loaded 2+ times
-
-### Step 3: Recommend CLAUDE.md Additions
-
-**Find frequently referenced files NOT in CLAUDE.md:**
-- Count references across all tools
-- Filter: ≥3 references + not in CLAUDE.md
-- Calculate benefit: Load once vs N times
-
-**Result:** `recommendations[]` sorted by reference count
-
-### Step 4: Display Results
-
-**Show user:**
-- **Duplications**: Files in CLAUDE.md + tools (table: File | Tokens | Also In | Recommendation)
-- **CLAUDE.md Recommendations**: Frequently referenced files to add (table: File | Referenced By | Count | Benefit)
-
-**Potential Token Savings:** {total_potential_savings}
-
-**Action:** Add these files to CLAUDE.md to load once instead of multiple times.
-{else}
-✅ **CLAUDE.md is optimal** - No additional files should be added.
-{endif}
-
----
-
-### User Confirmation
-
-{if len(duplications) > 0 or len(recommendations) > 0}
-```
-
-```python
-AskUserQuestion({
-  questions: [{
-    question: "Apply context optimizations? (Space: select, Enter: confirm)",
-    header: "Context Optimization",
-    multiSelect: true,
-    options: [
-      {
-        label: "All (Ultimate Context Optimization)",
-        description: "Apply all context optimizations below"
-      },
-      {
-        label: "Remove Duplications",
-        description: f"Remove {len(duplication_groups)} duplicate references from tools"
-      },
-      {
-        label: "Update CLAUDE.md",
-        description: f"Add {len(recommendations)} frequently-used files to CLAUDE.md"
-      },
-      {
-        label: "Skip",
-        description: "Continue without context optimizations"
-      }
-    ]
-  }]
-})
-```
-
-### Step 5: Apply Context Optimizations
-
-```python
-if "Remove Duplications" in user_selection or "All" in user_selection:
-    # Remove duplicate references from tools
-    for file, data in duplication_groups.items():
-        for tool in data["also_in"]:
-            remove_file_reference(tool, file)
-            print(f"✓ Removed {file} from {tool} (already in CLAUDE.md)")
-
-if "Update CLAUDE.md" in user_selection or "All" in user_selection:
-    # Add recommendations to CLAUDE.md
-    claude_md_content = Read(claude_md_path)
-
-    # Find appropriate section (e.g., <!-- CCO_PRINCIPLES_END -->)
-    insertion_point = find_insertion_point(claude_md_content)
-
-    # Add references
-    new_references = []
-    for rec in recommendations:
-        # Determine reference type
-        if "principles/" in rec.file_path:
-            new_references.append(f"@principles/{basename(rec.file_path)}")
-        elif "skills/" in rec.file_path:
-            new_references.append(f"@skills/{basename(rec.file_path)}")
-        else:
-            new_references.append(f"@{rec.file_path}")
-
-    # Insert into CLAUDE.md
-    updated_content = insert_references(
-        claude_md_content,
-        insertion_point,
-        new_references
-    )
-
-    Write(claude_md_path, updated_content)
-
-    print(f"✓ Added {len(recommendations)} references to CLAUDE.md")
-
-    # Remove from individual tools
-    for rec in recommendations:
-        for tool in rec.referenced_by:
-            remove_file_reference(tool, rec.file_path)
-            print(f"✓ Removed {rec.file_path} from {tool}")
-```
-
-**Benefits:**
-- Eliminated duplication: {duplication_tokens_saved} tokens saved
-- CLAUDE.md optimization: {recommendation_tokens_saved} tokens saved
-- Total context savings: {total_context_savings} tokens
-
-{endif}
-```
-
----
-
 ## Component 4: Analysis Phase
 
 **Find specific optimization opportunities per category using Explore agent.**
@@ -953,43 +696,6 @@ if analysis_result is None or (isinstance(analysis_result, dict) and "error" in 
             subagent_type: "Explore",
             model: new_model,
             description: f"Find {mode} optimizations (retry with {new_model})",
-            prompt: # ... same prompt as above
-        })
-    elif response == "Switch to Conservative":
-        # Switch to conservative mode and retry
-        mode = "conservative"
-        agent_model = "haiku"
-        optimization_prompt = # ... conservative prompt from above
-
-        analysis_result = Task({
-            subagent_type: "Explore",
-            model: "haiku",
-            description: "Find conservative optimizations",
-            prompt: f"""
-            Analyze {len(all_files)} files for conservative mode optimizations.
-
-            {optimization_prompt}
-
-            Return JSON array of 100% safe optimizations.
-            """
-        })
-    elif response == "Manual analysis":
-        # Guide user through manual identification
-        print(f"""
-        Manual Optimization Identification Guide:
-
-        For {mode} mode, look for:
-        {optimization_prompt}
-
-        Use these tools:
-        - Grep("pattern", output_mode="files_with_matches") - Find patterns
-        - Read(file) - Read file contents
-        - Document each optimization manually
-        """)
-        return "Manual mode - user identifying optimizations"
-    else:  # Cancel
-        return "cco-slim cancelled by user"
-
 # Parse analysis result
 if isinstance(analysis_result, str):
     try:
@@ -1315,75 +1021,6 @@ def verify_instruction_effectiveness(before: str, after: str) -> bool:
 
 ## Executive Summary
 
-**Mode:** {mode}
-**Status:** ✅ Complete
-
-**Token Reduction:** {tokens_before} → {tokens_after} ({reduction_pct}% reduction)
-**Tokens Saved:** {tokens_saved}
-**Quality:** ✅ Preserved (verified)
-
-**Files Modified:** {files_modified_count} / {files_analyzed_count}
-**Optimizations Applied:** {applied_count} / {total_optimizations}
-
-───────────────────────────────────────────────────────────────
-
-## Optimization Summary
-
-**Total Optimizations Planned:** {total_optimizations}
-
-### ✅ Applied Successfully: {applied_count}
-
-| Type | Count | Tokens Saved |
-|------|-------|--------------|
-| Whitespace | {count} | {tokens} |
-| Dead code | {count} | {tokens} |
-| Example consolidation | {count} | {tokens} |
-| Cross-reference | {count} | {tokens} |
-| Other | {count} | {tokens} |
-
-### ⏭️ Skipped: {skipped_count}
-
-| File | Type | Reason |
-|------|------|--------|
-| {file_path} | {type} | {reason} |
-| {file_path} | {type} | {reason} |
-
-### ↩️ Rolled Back: {rolled_back_count}
-
-| File | Type | Reason |
-|------|------|--------|
-| {file_path} | {type} | {reason} |
-| {file_path} | {type} | {reason} |
-
-───────────────────────────────────────────────────────────────
-
-**Verification:** {applied_count} + {skipped_count} + {rolled_back_count} = {total_optimizations} ✓
-
-───────────────────────────────────────────────────────────────
-
-## Detailed Results by Category
-
-### Markdown Documentation
-
-**Files:** {count}
-**Before:** {tokens_before} tokens
-**After:** {tokens_after} tokens
-**Reduction:** {tokens_saved} tokens ({pct}%)
-
-Top files:
-| File | Before | After | Saved | Reduction % |
-|------|--------|-------|-------|-------------|
-| {file_path} | {before} | {after} | {saved} | {pct}% |
-| {file_path} | {before} | {after} | {saved} | {pct}% |
-
-### Code Files
-
-**Files:** {count}
-**Before:** {tokens_before} tokens
-**After:** {tokens_after} tokens
-**Reduction:** {tokens_saved} tokens ({pct}%)
-
-Top files:
 | File | Before | After | Saved | Reduction % |
 |------|--------|-------|-------|-------------|
 | {file_path} | {before} | {after} | {saved} | {pct}% |

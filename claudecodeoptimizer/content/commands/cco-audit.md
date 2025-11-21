@@ -134,40 +134,11 @@ parameters:
 
 ## CRITICAL: No Hardcoded Examples
 
-**AI models may interpret hardcoded examples as real data and use them literally.**
-
-### Rules
+**AI models interpret hardcoded examples as real data. Use placeholders: `{FILE_PATH}`, `{LINE_NUMBER}`, `{ISSUE_DESCRIPTION}`**
 
 ```python
-# ❌ BAD: Hardcoded example (AI might use as-is)
-"file": "src/auth/example.py"   # ← Even "bad" examples should avoid real-looking paths
-"line": 45
-"issue": "SQL injection in function()"
-
-# ✅ GOOD: Dynamic placeholders
-"file": "{FILE_PATH}"
-"line": "{LINE_NUMBER}"
-"issue": "{ISSUE_DESCRIPTION}"
-```
-
-### Template Format
-
-All examples in this document use:
-- `{VARIABLE_NAME}` - To be replaced with actual values
-- `{COUNT}`, `{TIME}`, `{PCT}` - Numeric placeholders
-- `{file}`, `{line}`, `{code}` - Context-specific placeholders
-
-### Implementation
-
-```python
-def format_finding(finding: Finding) -> str:
-    """Format finding with REAL data, never hardcoded examples."""
-
-    # ❌ NEVER: Return template as-is
-    # return "SQL Injection in {file}:{line}"  # Even in comments, use placeholders
-
-    # ✅ ALWAYS: Use actual finding data
-    return f"{finding.issue} in {finding.file}:{finding.line}"
+# ✅ GOOD: Use placeholders, render real data at runtime
+return f"{finding.issue} in {finding.file}:{finding.line}"
 ```
 
 ---
@@ -462,141 +433,24 @@ project_context = context_result
 ### 🔴 CRITICAL IMPACT
 
 #### Security (15 checks)
-| #  | Check | Slug | Status | Time |
-|----|-------|------|--------|------|
-| 1  | SQL Injection | sql-injection | ✅ SQLAlchemy | 2m |
-| 2  | XSS | xss | ✅ Jinja templates | 2m |
-| 3  | CSRF | csrf | ⊘ No forms | - |
-| 4  | Hardcoded Secrets | secrets | ✅ Always | 1m |
-| 5  | Auth Bypass | auth-bypass | ✅ Auth found | 2m |
-| 6  | Authz Flaws | authz-flaws | ✅ Routes | 2m |
-| 7  | CVE Scan | cve-scan | ✅ Deps found | 2m |
-| 8  | AI Prompt Injection | ai-injection | ⊘ No AI | - |
-| 9  | SSRF | ssrf | ✅ HTTP calls | 1m |
-| 10 | XXE | xxe | ⊘ No XML | - |
-| 11 | Path Traversal | path-traversal | ✅ File ops | 1m |
-| 12 | Command Injection | cmd-injection | ✅ subprocess | 1m |
-| 13 | Insecure Deserial | deserial | ✅ pickle | 1m |
-| 14 | Weak Crypto | weak-crypto | ✅ crypto | 1m |
-| 15 | Security Headers | sec-headers | ✅ Flask | 1m |
+| Check | Slug | Status |
+|-------|------|--------|
+| SQL Injection, XSS, CSRF, Secrets, Auth Bypass, Authz Flaws | sec-* | Applicable |
+| CVE Scan, SSRF, XXE, Path Traversal, Command Injection | sec-* | Applicable |
+| Insecure Deserial, Weak Crypto, Security Headers | sec-* | Applicable |
 
-#### Database (10 checks)
-| #  | Check | Slug | Status | Time |
-|----|-------|------|--------|------|
-| 16 | N+1 Queries | n1-queries | ✅ ORM | 3m |
-| 17 | Missing Indexes | missing-indexes | ✅ DB | 2m |
-| 18 | Slow Queries | slow-queries | ✅ Queries | 2m |
-| 19 | Connection Pooling | conn-pooling | ✅ DB conn | 1m |
-| 20 | Query Optimization | query-optim | ✅ Complex | 2m |
-| 21 | Transaction Issues | tx-issues | ✅ TX found | 1m |
-| 22 | Deadlock Risk | deadlock | ✅ Concurrent | 1m |
-| 23 | Migration Safety | migration-safety | ✅ Alembic | 1m |
-| 24 | Raw SQL Risks | raw-sql | ✅ execute() | 1m |
-| 25 | DB Credentials | db-creds | ✅ Always | 1m |
+**[See full checklist: /cco-status --checks]**
 
-#### Tests (12 checks)
-| #  | Check | Slug | Status | Time |
-|----|-------|------|--------|------|
-| 26 | Coverage Analysis | coverage | ✅ pytest-cov | 2m |
-| 27 | Untested Functions | untested | ✅ Always | 3m |
-| 28 | Test Isolation | isolation | ✅ fixtures | 2m |
-| 29 | Test Pyramid | pyramid | ✅ structure | 1m |
-| 30 | Edge Cases | edge-cases | ✅ Always | 2m |
-| 31 | Flaky Tests | flaky | ✅ patterns | 2m |
-| 32 | Test Naming | test-naming | ✅ Always | 1m |
-| 33 | Assertion Quality | assertions | ✅ Always | 1m |
-| 34 | Mock Overuse | mock-overuse | ✅ mock | 1m |
-| 35 | Test Data Mgmt | test-data | ✅ fixtures | 1m |
-| 36 | Integration Tests | integration | ✅ structure | 1m |
-| 37 | E2E Tests | e2e | ⊘ No e2e | - |
-
-### 🟡 HIGH IMPACT
-
-#### Code Quality (15 checks)
-| #  | Check | Slug | Status | Time |
-|----|-------|------|--------|------|
-| 38 | Dead Code | dead-code | ✅ Always | 2m |
-| 39 | Complexity | complexity | ✅ Always | 2m |
-| 40 | Duplication | duplication | ✅ Always | 2m |
-| 41 | Type Errors | type-errors | ✅ hints | 2m |
-| 42 | Linting | linting | ✅ Always | 1m |
-| 43 | Code Smells | smells | ✅ Always | 2m |
-| 44 | Long Functions | long-funcs | ✅ Always | 1m |
-| 45 | Long Files | long-files | ✅ Always | 1m |
-| 46 | Deep Nesting | deep-nesting | ✅ Always | 1m |
-| 47 | Magic Numbers | magic-nums | ✅ Always | 1m |
-| 48 | TODO Comments | todos | ✅ Always | 1m |
-| 49 | Commented Code | commented | ✅ Always | 1m |
-| 50 | Import Order | imports | ✅ Always | 1m |
-| 51 | Naming | naming | ✅ Always | 1m |
-| 52 | Error Handling | error-handling | ✅ Always | 2m |
-
-#### Performance (10 checks)
-| #  | Check | Slug | Status | Time |
-|----|-------|------|--------|------|
-| 53 | Slow Operations | slow-ops | ✅ Always | 2m |
-| 54 | Bundle Size | bundle | ⊘ No frontend | - |
-| 55 | Missing Cache | no-cache | ✅ Always | 2m |
-| 56 | Circuit Breakers | circuit | ✅ HTTP | 1m |
-| 57 | Memory Leaks | mem-leaks | ✅ Always | 2m |
-| 58 | Bad Algorithms | algorithms | ✅ Always | 2m |
-| 59 | Large Loops | large-loops | ✅ Always | 1m |
-| 60 | File I/O | file-io | ✅ File ops | 1m |
-| 61 | Network in Loops | net-loops | ✅ HTTP | 1m |
-| 62 | Lazy Loading | lazy | ⊘ No frontend | - |
-
-#### CI/CD (8 checks)
-| #  | Check | Slug | Status | Time |
-|----|-------|------|--------|------|
-| 63 | Pipeline Exists | pipeline | ✅ GH Actions | 1m |
-| 64 | Quality Gates | gates | ✅ Pipeline | 1m |
-| 65 | Secret Management | ci-secrets | ✅ Pipeline | 1m |
-| 66 | Build Optimization | build-optim | ✅ Pipeline | 1m |
-| 67 | Test Automation | test-auto | ✅ Pipeline | 1m |
-| 68 | Deploy Automation | deploy-auto | ✅ Pipeline | 1m |
-| 69 | Rollback Strategy | rollback | ✅ Deploy | 1m |
-| 70 | Env Parity | env-parity | ✅ Envs | 1m |
-
-### 🟢 MEDIUM IMPACT
-
-#### Documentation (8 checks)
-| #  | Check | Slug | Status | Time |
-|----|-------|------|--------|------|
-| 71 | Missing Docstrings | docstrings | ✅ Always | 1m |
-| 72 | API Docs | api-docs | ✅ Routes | 1m |
-| 73 | README Quality | readme | ✅ Always | 1m |
-| 74 | Doc Drift | doc-drift | ✅ docs/ | 1m |
-| 75 | Code Comments | comments | ✅ Always | 1m |
-| 76 | Examples | examples | ✅ docs/ | 1m |
-| 77 | ADRs | adrs | ✅ Always | 1m |
-| 78 | Runbooks | runbooks | ✅ Prod app | 1m |
-
-#### Containers (6 checks)
-| #  | Check | Slug | Status | Time |
-|----|-------|------|--------|------|
-| 79 | Dockerfile Best Practices | dockerfile | ✅ Docker | 1m |
-| 80 | Multi-stage Builds | multistage | ✅ Dockerfile | 1m |
-| 81 | Non-root User | nonroot | ✅ Dockerfile | 1m |
-| 82 | Image Size | image-size | ✅ Dockerfile | 1m |
-| 83 | Base Image CVEs | base-cves | ✅ Dockerfile | 2m |
-| 84 | Layer Optimization | layers | ✅ Dockerfile | 1m |
-
-#### Tech Debt (8 checks)
-| #  | Check | Slug | Status | Time |
-|----|-------|------|--------|------|
-| 85 | Deprecated APIs | deprecated | ✅ Always | 2m |
-| 86 | Legacy Code | legacy | ✅ Always | 2m |
-| 87 | Hard Dependencies | hard-deps | ✅ Always | 1m |
-| 88 | Tight Coupling | coupling | ✅ Always | 2m |
-| 89 | God Objects | god-objects | ✅ Classes | 2m |
-| 90 | Feature Envy | feature-envy | ✅ Classes | 1m |
-| 91 | Data Clumps | data-clumps | ✅ Always | 1m |
-| 92 | Shotgun Surgery | shotgun | ✅ Always | 2m |
-
----
-
-**Summary:** {TOTAL_CHECKS} total, {APPLICABLE_COUNT} applicable (✅), {NA_COUNT} not applicable (⊘)
-```
+Full coverage of 92 critical checks across 9 categories:
+- **Security** (15): OWASP Top 10, secrets, CVEs
+- **Database** (10): N+1, indexes, optimization
+- **Tests** (12): Coverage, isolation, pyramid
+- **Code Quality** (15): Complexity, duplication, smells
+- **Performance** (10): Slow ops, caching, algorithms
+- **CI/CD** (8): Pipeline, gates, deploy
+- **Documentation** (8): Docstrings, ADRs, examples
+- **Containers** (6): Dockerfile, security, optimization
+- **Tech Debt** (8): Deprecated, coupling, refactoring
 
 ---
 
@@ -980,49 +834,7 @@ AskUserQuestion({
 
 ---
 
-## Component 6: State Management & Count Tracking
-
-**CRITICAL: Maintain single source of truth for all counts and status.**
-
-### AuditState Pattern
-
-**Create central state object:**
-- **Phase tracking**: current_phase (0=not started, 1=setup, 2=scanning, 3=synthesis)
-- **Count tracking**: total_findings, findings_by_severity{critical, high, medium, low}
-- **Complete accounting**: all_findings[] list
-- **Methods**: add_finding() updates all counts atomically, get_counts_string() for display
-
-**Rules:**
-- NEVER derive counts - always update explicitly
-- ALWAYS use get_counts_string() for consistency
-- Global state: `AUDIT_STATE` initialized once, used everywhere
-
-### Phase Transitions
-
-**Every transition MUST:**
-1. End current phase (record end time, calculate duration, announce completion)
-2. Start new phase (set new phase number, record start time, announce start)
-    state.phase_start_times[new_phase] = datetime.now()
-
-    # MUST announce phase start
-    print(format_phase_start(new_phase))
-
-def format_phase_start(phase: int) -> str:
-    """Format phase start announcement."""
-    phase_names = {1: "Setup", 2: "Scanning", 3: "Synthesis"}
-    return f"""
-───────────────────────────────────────────────────
-### Phase {phase}/3: {phase_names[phase]} ▶ STARTED
-───────────────────────────────────────────────────
-"""
-
-def format_phase_complete(phase: int, duration: timedelta) -> str:
-    """Format phase completion announcement."""
-    phase_names = {1: "Setup", 2: "Scanning", 3: "Synthesis"}
-    return f"""
-### Phase {phase}/3: {phase_names[phase]} ✓ COMPLETE ({format_duration(duration)})
-"""
-```
+## Component 6: State Management & Count Tracking**CRITICAL: Maintain single source of truth for all counts and status.**### AuditState Pattern**Create central state object:**```python@dataclassclass AuditState:    phase: int = 0    total_findings: int = 0    findings: List[Finding] = field(default_factory=list)    critical: int = 0    high: int = 0    medium: int = 0    low: int = 0    def add_finding(self, finding: Finding) -> None:        self.findings.append(finding)        if finding.severity == "critical": self.critical += 1        elif finding.severity == "high": self.high += 1        elif finding.severity == "medium": self.medium += 1        else: self.low += 1    def get_counts_string(self) -> str:        return f"Issues: {len(self.findings)} ({self.critical}C, {self.high}H, {self.medium}M, {self.low}L)"```**Rules:**- NEVER derive counts (always update explicitly)- ALWAYS use get_counts_string() for display consistency- Global state: `AUDIT_STATE` initialized once
 
 ---
 
@@ -1248,134 +1060,7 @@ class FixOutcome:
     # Technically possible but needs human decision
     NEEDS_DECISION = "needs_decision"  # Multiple valid approaches
     NEEDS_REVIEW = "needs_review"      # Complex, risk of regression
-
-    # Technically possible but outside tool scope
-    REQUIRES_MIGRATION = "requires_migration"   # DB schema change
-    REQUIRES_CONFIG = "requires_config"         # External system config
-    REQUIRES_INFRA = "requires_infra"           # Infrastructure change
-
-    # Truly impossible to auto-fix
-    IMPOSSIBLE_DESIGN = "impossible_design"     # Architectural flaw
-    IMPOSSIBLE_EXTERNAL = "impossible_external" # Third-party code
-    IMPOSSIBLE_RUNTIME = "impossible_runtime"   # Runtime-only issue
-
-def categorize_fix(finding: Finding) -> Tuple[str, str]:
-    """Return accurate category and honest explanation."""
-
-    # Example: Type error in third-party library
-    if finding.file.startswith("node_modules/"):
-        return (FixOutcome.IMPOSSIBLE_EXTERNAL,
-                "Issue in third-party code - update package or report upstream")
-
-    # Example: N+1 query that's actually intentional
-    if finding.check_id == 16 and is_intentional_eager_load(finding):
-        return (FixOutcome.NEEDS_REVIEW,
-                "Pattern appears intentional - verify before changing")
-
-    # Example: Complex regex
-    if finding.check_id == 42 and "regex" in finding.code.lower():
-        return (FixOutcome.NEEDS_DECISION,
-                "Multiple valid regex patterns - choose based on requirements")
-
-    # Default: actually fixable
-    return (FixOutcome.FIXED, "Applied automated fix")
-```
-
-### Honest Reporting Templates
-
-**When truly fixed:**
-```markdown
-✅ **Fixed:** {ISSUE_TYPE} in {FILE_PATH}:{LINE_NUMBER}
-   Applied: {FIX_DESCRIPTION}
-   Verified: File updated, syntax valid
-```
-
-**When needs human decision:**
-```markdown
-⚠️ **Needs Decision:** {ISSUE_TYPE} in {FILE_PATH}:{LINE_NUMBER}
-   Issue: {ISSUE_DESCRIPTION}
-   Options:
-   - Option A: {OPTION_A_DESCRIPTION}
-   - Option B: {OPTION_B_DESCRIPTION}
-   Action: Choose option based on user requirements
-```
-
-**When outside tool scope:**
-```markdown
-🔧 **Requires Manual Action:** {ISSUE_TYPE} on {TABLE_NAME}.{COLUMN_NAME}
-   Issue: {ISSUE_DESCRIPTION}
-   Why not auto-fixed: {REASON}
-   Action: {MANUAL_ACTION_DESCRIPTION}
-```
-
-**When truly impossible:**
-```markdown
-❌ **Cannot Auto-Fix:** {ISSUE_TYPE} in {EXTERNAL_COMPONENT}
-   Issue: {ISSUE_DESCRIPTION}
-   Why impossible: {REASON}
-   Action: {RECOMMENDED_ACTION}
-```
-
-### Verification Requirements
-
-```python
-def report_fix(finding: Finding, outcome: str, explanation: str):
-    """Report fix outcome with verification."""
-
-    if outcome == FixOutcome.FIXED:
-        # MUST verify before claiming fixed
-        file_content = Read(finding.file)
-        if not verify_fix_applied(file_content, finding):
-            raise AssertionError(
-                f"HONESTY VIOLATION: Claimed fixed but change not found in {finding.file}"
-            )
-
-    # Report with accurate category
-    return format_outcome(finding, outcome, explanation)
-```
-
----
-
-## Component 10: Fix Integration Accounting
-
-**When /cco-fix is called after audit, maintain complete accountability with honest reporting.**
-
-### Fix Request Flow
-
-```python
-@dataclass
-class FixState:
-    """Track all fix outcomes."""
-
-    total_issues: int = 0
-
-    # Dispositions - MUST sum to total_issues
-    fixed: List[Finding] = field(default_factory=list)
-    skipped: List[Tuple[Finding, str]] = field(default_factory=list)  # (finding, reason)
-    cannot_fix: List[Tuple[Finding, str]] = field(default_factory=list)  # (finding, reason)
-
-    def verify_accounting(self) -> bool:
-        """Verify all issues are accounted for."""
-        accounted = len(self.fixed) + len(self.skipped) + len(self.cannot_fix)
-        return accounted == self.total_issues
-
-    def get_summary(self) -> str:
-        """Get complete accounting summary."""
-        assert self.verify_accounting(), "Accounting mismatch!"
-
-        return f"""
-## Fix Summary
-
-**Total Issues:** {self.total_issues}
-
-### ✅ Fixed: {len(self.fixed)}
-{self._format_list(self.fixed)}
-
-### ⏭️ Skipped: {len(self.skipped)}
-{self._format_with_reasons(self.skipped)}
-
-### ❌ Cannot Fix Automatically: {len(self.cannot_fix)}
-{self._format_with_reasons(self.cannot_fix)}
+## Component 9: Honesty & Accurate Reporting**CRITICAL PRINCIPLE: Always report the exact truth. No optimistic claims, no false limitations.**### Accurate Outcome Categories```python@dataclassclass FixOutcome:    FIXED = "fixed"                          # File modified, verified    NEEDS_DECISION = "needs_decision"        # Multiple valid approaches    IMPOSSIBLE_EXTERNAL = "impossible_external"  # Third-party codedef categorize_fix(finding: Finding) -> Tuple[str, str]:    if finding.file.startswith("node_modules/"):        return (FixOutcome.IMPOSSIBLE_EXTERNAL,                "Issue in third-party code - update package or report upstream")    if finding.check_id == 16 and is_intentional_eager_load(finding):        return (FixOutcome.NEEDS_DECISION,                "Pattern appears intentional - verify before changing")    return (FixOutcome.FIXED, "Applied automated fix")```### Verification Requirements```pythondef report_fix(finding: Finding, outcome: str):    if outcome == FixOutcome.FIXED:        file_content = Read(finding.file)        if not verify_fix_applied(file_content, finding):            raise AssertionError(f"HONESTY VIOLATION: Claimed fixed but change not found")```### Honest Reporting Templates**When truly fixed:**✅ Fixed: {ISSUE_TYPE} in {FILE_PATH}:{LINE_NUMBER}   Applied: {FIX_DESCRIPTION}   Verified: File updated, syntax valid**When needs human decision:**⚠️ Needs Decision: {ISSUE_TYPE} in {FILE_PATH}:{LINE_NUMBER}   Options: A) {OPTION_A}, B) {OPTION_B}**When impossible:**❌ Cannot Auto-Fix: {ISSUE_TYPE} in {EXTERNAL_COMPONENT}   Why impossible: {REASON}
 
 ───────────────────────────────────────────────────
 **Verification:** {len(self.fixed)} + {len(self.skipped)} + {len(self.cannot_fix)} = {self.total_issues} ✓
