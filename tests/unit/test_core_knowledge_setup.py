@@ -128,20 +128,6 @@ class TestSetupGlobalKnowledge:
             len(result["actions"]) == 6
         )  # commands, principles, agents, skills, claude.md, templates
 
-    def test_setup_with_force_flag(self, mock_claude_dir: Path) -> None:
-        """Test setup with force=True regenerates files"""
-        package_dir = Path(knowledge_setup.__file__).parent.parent
-
-        if not (package_dir / "content").exists():
-            pytest.skip("Content directory not available")
-
-        # First setup
-        result1 = setup_global_knowledge(force=False)
-        assert result1["success"] is True
-
-        # Second setup with force
-        result2 = setup_global_knowledge(force=True)
-        assert result2["success"] is True
 
 
 class TestSetupCommands:

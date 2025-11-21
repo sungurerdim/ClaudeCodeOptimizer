@@ -120,24 +120,37 @@ cco-setup
    - Copies `~/.claude/settings.json.example` (optional: Claude Code config template)
    - Copies `~/.claude/statusline.js.example` (optional: status line script template)
    - Shows before/after file count summary
-   - If files exist, asks before overwriting (interactive mode)
-   - Use `cco-setup --force` to skip confirmation and overwrite
+   - If files exist, asks before overwriting (always overwrites after confirmation)
 3. Done! Commands available in all projects immediately via Claude Code
 
 **What's New (Recent Updates):**
+- ✅ Dynamic principle loading from command frontmatter (-165 lines static code)
+- ✅ New CLI commands: `cco-status` (health check), `cco-remove` (safe uninstall)
+- ✅ Removed auto-setup behavior (explicit `cco-setup` command required)
 - ✅ 100% test pass rate (all tests fixed and passing)
 - ✅ Enhanced command UX with unused skills integration
 - ✅ Context optimization focus in `/cco-slim` (CLAUDE.md duplication elimination)
-- ✅ Comprehensive PR template with CCO principle compliance checklist
-- ✅ Architecture Decision Records (ADR) and operational runbooks
-- ✅ Installation tracking improvements with before/after summary
 
-**Installation Options:**
+
+
+### Verifying Installation
+
+Check CCO installation status and available components:
+
 ```bash
-cco-setup          # Interactive mode (asks before overwriting)
-cco-setup --force  # Force overwrite without asking
-cco-setup --help   # Show usage
+# Check installation health
+cco-status
+
+# Or inside Claude Code
+/cco-status
 ```
+
+**What cco-status shows:**
+- Installation health (Good/Incomplete)
+- Component counts (commands, principles, skills, agents)
+- Version info and installation method
+- Architecture overview
+- Quick start guidance
 
 ### Optional Configuration
 
@@ -177,8 +190,12 @@ cp ~/.claude/statusline.js.example ~/.claude/statusline.js
 **Complete Uninstall (2 Steps - ORDER MATTERS):**
 
 ```bash
-# Step 1: Remove global files FIRST (inside Claude Code)
+# Step 1: Remove global files FIRST
+# Option 1: Use slash command (inside Claude Code)
 /cco-remove
+
+# Option 2: Use CLI command (terminal)
+cco-remove
 # This removes:
 # - ~/.claude/commands/ (all cco-*.md files)
 # - ~/.claude/principles/ (all C_*, U_*, P_* files)
@@ -195,7 +212,11 @@ uv tool uninstall claudecodeoptimizer
 
 **Why This Order?**
 
-`/cco-remove` is a Claude Code slash command, so it only works when the package is installed. If you run `pip uninstall` first, you lose access to `/cco-remove` and must manually delete `~/.claude/` files.
+`# Option 1: Use slash command (inside Claude Code)
+/cco-remove
+
+# Option 2: Use CLI command (terminal)
+cco-remove` is a Claude Code slash command, so it only works when the package is installed. If you run `pip uninstall` first, you lose access to `/cco-remove` and must manually delete `~/.claude/` files.
 
 **What Gets Removed:**
 - ✓ Python package (claudecodeoptimizer)
@@ -262,7 +283,11 @@ Open any project in Claude Code:
 | `/cco-commit` | Smart git commits | `git add . && /cco-commit` |
 | `/cco-implement "feature"` | Build with TDD | `/cco-implement "Add JWT authentication"` |
 | `/cco-update` | Update version | `/cco-update` |
-| `/cco-remove` | Clean uninstall | `/cco-remove` |
+| `# Option 1: Use slash command (inside Claude Code)
+/cco-remove
+
+# Option 2: Use CLI command (terminal)
+cco-remove` | Clean uninstall | `/cco-remove` |
 
 **Audit Categories:** `--quick`, `--security`, `--ai-security`, `--ai-quality`, `--tests`, `--database`, `--performance`, `--tech-debt`, `--code-review`, `--platform`, `--ci-cd`, `--containers`, `--supply-chain`, `--all`
 

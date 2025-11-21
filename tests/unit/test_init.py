@@ -103,77 +103,11 @@ class TestCCOConfigImport:
         assert "__version__" in __all__
 
 
-class TestGlobalSetup:
-    """Test _ensure_global_setup function."""
+class TestImportSuccess:
+    """Test module import succeeds."""
 
-    def test_ensure_global_setup_called_once(self):
-        """Test _ensure_global_setup is called only once."""
-        # The function should set _setup_checked to True after first run
-        import claudecodeoptimizer
-
-        assert claudecodeoptimizer._setup_checked is True
-
-    def test_ensure_global_setup_early_return(self):
-        """Test _ensure_global_setup returns early if already checked (line 35)."""
-        # Import the function
-        # Mock _setup_checked as True to trigger early return
-        import claudecodeoptimizer
-        from claudecodeoptimizer import _ensure_global_setup
-
-        original_checked = claudecodeoptimizer._setup_checked
-        try:
-            claudecodeoptimizer._setup_checked = True
-            # Call should return immediately without doing anything
-            _ensure_global_setup()
-            # Verify it returned and _setup_checked remains True (early return path)
-            assert claudecodeoptimizer._setup_checked is True, (
-                "Setup flag should remain True after early return"
-            )
-        finally:
-            claudecodeoptimizer._setup_checked = original_checked
-
-    def test_ensure_global_setup_exception_handling(self):
-        """Test _ensure_global_setup handles exceptions silently (line 59-62)."""
-        import claudecodeoptimizer
-        from claudecodeoptimizer import _ensure_global_setup
-
-        original_checked = claudecodeoptimizer._setup_checked
-
-        try:
-            claudecodeoptimizer._setup_checked = False
-
-            with patch("claudecodeoptimizer.config.get_claude_dir") as mock_get_dir:
-                # Make get_claude_dir raise an exception
-                mock_get_dir.side_effect = Exception("Test error")
-
-                # Call should not raise exception (silent fail)
-                _ensure_global_setup()
-
-                # Verify the mock was called (exception path was exercised)
-                mock_get_dir.assert_called_once()
-                # Verify setup completed (flag set to True despite exception)
-                assert claudecodeoptimizer._setup_checked is True, (
-                    "Setup flag should be True after silent exception handling"
-                )
-
-        finally:
-            claudecodeoptimizer._setup_checked = original_checked
-
-
-class TestModuleLevelSetup:
-    """Test module-level setup execution."""
-
-    def test_setup_runs_on_import(self):
-        """Test _ensure_global_setup runs on module import."""
-        # This test verifies the module-level call to _ensure_global_setup()
-        import claudecodeoptimizer
-
-        # If we got here, the import succeeded
-        assert claudecodeoptimizer._setup_checked is True
-
-    def test_setup_failure_does_not_break_import(self):
-        """Test import succeeds even if setup fails."""
-        # The setup should fail silently and not prevent import
+    def test_import_succeeds(self):
+        """Test import succeeds without errors."""
         import claudecodeoptimizer
 
         assert claudecodeoptimizer is not None
@@ -241,41 +175,3 @@ class TestExceptionHandling:
         assert claudecodeoptimizer is not None
 
 
-class TestSetupCheckedFlag:
-    """Test _setup_checked flag behavior."""
-
-    def test_setup_checked_flag_exists(self):
-        """Test _setup_checked flag exists."""
-        import claudecodeoptimizer
-
-        assert hasattr(claudecodeoptimizer, "_setup_checked")
-
-    def test_setup_checked_is_boolean(self):
-        """Test _setup_checked is boolean."""
-        import claudecodeoptimizer
-
-        assert isinstance(claudecodeoptimizer._setup_checked, bool)
-
-    def test_setup_checked_is_true_after_import(self):
-        """Test _setup_checked is True after import."""
-        import claudecodeoptimizer
-
-        assert claudecodeoptimizer._setup_checked is True
-
-
-class TestPrinciplesDirectoryCheck:
-    """Test principles directory checking logic."""
-
-    def test_principles_check_threshold(self):
-        """Test principles directory check uses threshold of 80 files."""
-        # This tests line 45 - the check for < 80 files
-        # The logic checks: len(list(principles_dir.glob("*.md"))) < 80
-        threshold = 80
-        # Verify this is the expected threshold
-        assert threshold == 80
-
-    def test_glob_pattern_for_markdown(self):
-        """Test glob pattern checks for .md files."""
-        # This tests line 45 - principles_dir.glob("*.md")
-        pattern = "*.md"
-        assert pattern == "*.md"
