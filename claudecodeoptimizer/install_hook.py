@@ -89,23 +89,20 @@ def post_install() -> int:
     Called automatically after pip install.
 
     Supports flags:
-    - --force: Overwrite existing files without asking
     - --help: Show usage
 
     Returns:
         Exit code (0 for success)
     """
     # Parse command-line arguments
-    force = "--force" in sys.argv
     show_help = "--help" in sys.argv or "-h" in sys.argv
 
     if show_help:
-        print("\nUsage: cco-setup [--force] [--help]")
+        print("\nUsage: cco-setup [--help]")
         print()
         print("Setup CCO global configuration in ~/.claude/")
         print()
         print("Options:")
-        print("  --force    Overwrite existing files without asking")
         print("  --help     Show this help message")
         print()
         return 0
@@ -124,7 +121,7 @@ def post_install() -> int:
         # Check if CCO is already installed
         existing = check_existing_installation()
 
-        if existing and not force:
+        if existing:
             # Interactive mode: Ask user before overwriting
             print("\n[NOTICE] Found existing CCO installation in ~/.claude/")
             print("\n  Existing installation:")
@@ -151,14 +148,13 @@ def post_install() -> int:
 
             if choice != "y":
                 print("\n[CANCELLED] Setup cancelled by user")
-                print("  To overwrite without asking: cco-setup --force")
                 print("=" * 60 + "\n")
                 return 0
             else:
                 print("\n[OK] Proceeding with setup...")
 
         # Setup global ~/.claude/ structure
-        result = setup_global_knowledge(force=force or bool(existing))
+        result = setup_global_knowledge()
 
         if result.get("success"):
             # Show installation actions

@@ -59,20 +59,6 @@ author: "Author Name"
 - Displayed in selection UI
 - Should clearly convey purpose
 
-### Recommendation Matching
-
-**use_cases**: Criteria for automatic recommendation
-
-The MetadataManager matches these against user's `AnswerContext.answers`.
-File is recommended if ANY criterion matches.
-
-Example:
-```yaml
-use_cases:
-  development_philosophy: [quality_first, balanced]  # Recommended for quality-focused teams
-  project_maturity: [production, legacy]  # Recommended for mature projects
-```
-
 ### Optional Metadata
 
 **metadata.activation_keywords**: Keywords that trigger this file (for skills)
@@ -157,15 +143,3 @@ use_cases:
 5. **Use consistent category values** across files
 6. **Follow AnswerContext key naming** exactly (e.g., `project_maturity` not `maturity`)
 
-## Integration with Systems
-
-### MetadataManager
-Parses frontmatter, extracts use_cases, provides generic matching
-
-### RecommendationService
-Uses MetadataManager to recommend files based on context
-
-### Orchestrator
-Delegates all recommendation logic to RecommendationService
-
-This creates a **Single Source of Truth** for metadata across all CCO file types.

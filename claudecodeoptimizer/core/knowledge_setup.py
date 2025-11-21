@@ -193,14 +193,11 @@ def _setup_files(
             shutil.copy2(src_file, dest_dir / src_file.name)
 
 
-def setup_global_knowledge(force: bool = False) -> dict[str, Any]:
+def setup_global_knowledge() -> dict[str, Any]:
     """
     Initialize global ~/.claude/ directory structure for CCO.
 
     Copies all CCO files to ~/.claude/ and updates CLAUDE.md with principle markers.
-
-    Args:
-        force: If True, regenerate even if already exists
 
     Returns:
         Dictionary with setup status including before/after counts
