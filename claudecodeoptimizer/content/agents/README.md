@@ -1,10 +1,135 @@
-# Custom Agents
+# CCO Agents
 
-This directory contains custom agent definitions for task automation.
+**Specialized AI assistants for complex, multi-step tasks**
+
+---
 
 ## What are Agents?
 
 Agents are specialized AI assistants that perform complex, multi-step tasks autonomously. They combine instructions, context, and tools to accomplish specific objectives.
+
+---
+
+## Built-in CCO Agents
+
+CCO includes 4 specialized agents optimized for different task types:
+
+### 1. audit-agent
+
+**Model:** Haiku (fast & cost-efficient)
+
+**Purpose:** Fast scanning and pattern detection
+
+**Capabilities:**
+- Pattern matching (SQL injection, XSS, secrets)
+- Dependency scanning (CVEs, outdated packages)
+- Integration checks (import errors, conflicts)
+- Container rule checks (Dockerfile best practices)
+
+**When to use:** Discovery phase, finding issues quickly
+
+**Cost:** Low (Haiku model optimized for pattern matching)
+
+**File:** `cco-agent-audit.md`
+
+---
+
+### 2. fix-agent
+
+**Model:** Sonnet (accurate)
+
+**Purpose:** Semantic code modifications
+
+**Capabilities:**
+- Security vulnerability fixes (parameterized queries, input validation)
+- Tech debt removal (dead code, unused imports)
+- AI quality fixes (hallucinated APIs, code bloat)
+- Safe/risky categorization (auto-apply vs approval)
+
+**When to use:** Fixing issues found by audit-agent
+
+**Cost:** Medium (Sonnet needed for semantic understanding)
+
+**File:** `cco-agent-fix.md`
+
+---
+
+### 3. generate-agent
+
+**Model:** Sonnet (quality output)
+
+**Purpose:** Quality code generation
+
+**Capabilities:**
+- Test generation (unit, integration, contract, load, chaos)
+- Documentation (API docs, ADRs, runbooks)
+- Infrastructure (Dockerfile, CI/CD, migrations)
+- Monitoring (logging, metrics, SLO)
+
+**When to use:** Creating missing components
+
+**Cost:** Medium (Sonnet ensures quality output)
+
+**File:** `cco-agent-generate.md`
+
+---
+
+### 4. slim-agent
+
+**Model:** Sonnet (semantic verification)
+
+**Purpose:** Context optimization and token reduction
+
+**Capabilities:**
+- CLAUDE.md duplication elimination
+- Incomplete content detection (stubs, TODOs)
+- Internal content optimization (principles, skills, commands)
+- Token reduction with quality preservation
+
+**When to use:** Optimizing context usage, reducing tokens
+
+**Cost:** Medium (Sonnet needed for semantic verification)
+
+**File:** `cco-agent-slim.md`
+
+---
+
+## Agent Orchestration Patterns
+
+### Parallel Execution
+
+Independent tasks run simultaneously for speed:
+
+```python
+# Security audit with parallel agents
+Task(model="haiku", prompt="Scan SQL injection patterns...")
+Task(model="haiku", prompt="Scan hardcoded secrets...")
+Task(model="haiku", prompt="Check dependency CVEs...")
+# All run in parallel → 3x faster
+```
+
+### Sequential Pipeline
+
+Dependent tasks run in order:
+
+```python
+# audit → fix → generate workflow
+audit_result = Task("audit-agent", "Find security issues")
+fix_result = Task("fix-agent", f"Fix issues: {audit_result}")
+test_result = Task("generate-agent", f"Generate tests for: {fix_result}")
+```
+
+### Model Selection
+
+- **Haiku** - Fast scanning, pattern matching (audit)
+- **Sonnet** - Accurate modifications, quality generation (fix, generate, slim)
+- **Opus** - Complex architecture (rare, not used by default)
+
+See [C_AGENT_ORCHESTRATION_PATTERNS](../principles/C_AGENT_ORCHESTRATION_PATTERNS.md)
+
+---
+
+## Custom Agents
 
 ## Creating a Custom Agent
 
