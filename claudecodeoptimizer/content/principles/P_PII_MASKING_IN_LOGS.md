@@ -1,3 +1,12 @@
+---
+name: pii-masking-in-logs
+description: Mask PII in logs to comply with GDPR, HIPAA, PCI-DSS and prevent data exposure
+type: project
+severity: critical
+keywords: [PII, logging, masking, security, compliance, GDPR, HIPAA, PCI-DSS]
+category: [security, compliance]
+---
+
 # P_PII_MASKING_IN_LOGS: PII Masking in Logs
 
 **Severity**: Critical

@@ -1,7 +1,8 @@
 ---
 name: cco-fix
 description: Automated issue resolution with safe/risky categorization
-action_type: fix
+
+principles: [U_EVIDENCE_BASED_ANALYSIS, U_CHANGE_VERIFICATION, U_MINIMAL_TOUCH]
 note: Uses same categories as cco-audit - search cco-audit metadata for parameter details
 parameters:
   security:

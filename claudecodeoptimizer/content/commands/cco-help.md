@@ -1,7 +1,8 @@
 ---
 name: cco-help
 description: Comprehensive CCO command reference guide organized by pain-point priority with examples and workflows
-action_type: help
+
+principles: [U_EVIDENCE_BASED_ANALYSIS]
 keywords: [help, guide, reference, commands, documentation, usage, examples]
 category: discovery
 pain_points: []

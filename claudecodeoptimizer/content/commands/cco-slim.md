@@ -1,7 +1,8 @@
 ---
 name: cco-slim
 description: Context optimization and duplication elimination (primary). Optional token reduction for other files.
-action_type: optimize
+
+principles: [U_EVIDENCE_BASED_ANALYSIS, U_MINIMAL_TOUCH, C_EFFICIENT_FILE_OPERATIONS]
 parameters:
   markdown:
     keywords: [slim markdown, optimize docs, compress documentation, reduce tokens]

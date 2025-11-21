@@ -1,7 +1,8 @@
 ---
 name: cco-implement
 description: AI-assisted feature implementation with TDD approach and automatic skill selection based on feature type
-action_type: implement
+
+principles: [U_EVIDENCE_BASED_ANALYSIS, U_CHANGE_VERIFICATION, U_FOLLOW_PATTERNS, U_NO_OVERENGINEERING]
 keywords: [implement, feature, tdd, test-driven, development, generate, create, build]
 category: productivity
 pain_points: [1, 4]

@@ -1,3 +1,12 @@
+---
+name: no-hardcoded-examples
+description: Never use hardcoded examples in templates; AI models interpret them as real data
+type: universal
+severity: critical
+keywords: [templates, placeholders, examples, AI models, code generation]
+category: [quality, workflow]
+---
+
 # U_NO_HARDCODED_EXAMPLES: No Hardcoded Examples in Templates
 
 **Severity**: Critical

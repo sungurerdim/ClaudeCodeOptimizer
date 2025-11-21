@@ -1,3 +1,12 @@
+---
+name: linting-sast
+description: Enforce linting and SAST tools to catch vulnerabilities, code quality issues, and style violations
+type: project
+severity: high
+keywords: [linting, SAST, security, code quality, static analysis, vulnerabilities]
+category: [security, quality]
+---
+
 # P_LINTING_SAST: Linting & SAST Enforcement
 
 **Severity**: High

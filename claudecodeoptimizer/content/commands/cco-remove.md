@@ -1,7 +1,8 @@
 ---
 name: cco-remove
 description: Complete CCO uninstall with full transparency showing exactly what will be deleted before confirmation
-action_type: remove
+
+principles: [U_EVIDENCE_BASED_ANALYSIS, U_CHANGE_VERIFICATION]
 keywords: [remove, uninstall, delete, cleanup, unset]
 category: management
 pain_points: []
