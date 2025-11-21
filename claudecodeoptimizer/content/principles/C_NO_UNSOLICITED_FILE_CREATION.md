@@ -53,7 +53,7 @@ Grep("logger|logging", output_mode="files_with_matches")
 Edit("src/utils/helpers.py", ...)
 ```
 
-### 2. Avoid Temp Files (See C_TEMP_FILE_SANDBOXING)
+### 2. Avoid Temp Files
 ```bash
 # ❌ BAD: Unsolicited temp files for debugging
 Write("test.py", experimental_code)
@@ -62,8 +62,7 @@ Write("temp.txt", debug_output)
 # ✅ GOOD
 # - Test in existing files
 # - Use logging, not temp files
-# - For legitimate temp files (analysis caches, etc.),
-#   see C_TEMP_FILE_SANDBOXING for safe location rules
+# - Avoid creating temp files unless absolutely necessary
 ```
 
 ### 3. Always Ask for Docs

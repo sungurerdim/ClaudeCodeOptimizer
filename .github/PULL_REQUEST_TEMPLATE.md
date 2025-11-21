@@ -46,10 +46,12 @@
 **Principles Applied:**
 <!-- Check which CCO principles this PR follows -->
 - [ ] U_CHANGE_VERIFICATION - All changes verified before claiming completion
-- [ ] U_COMPLETE_REPORTING - All actions reported with precise file references
+- [ ] U_CROSS_PLATFORM_COMPATIBILITY - Commands work on Windows, macOS, Linux
 - [ ] U_DRY - No unnecessary duplication
-- [ ] U_EVIDENCE_BASED_ANALYSIS - Claims backed by evidence (test results, etc.)
+- [ ] U_EVIDENCE_BASED_ANALYSIS - Claims backed by evidence, complete accounting
+- [ ] U_FOLLOW_PATTERNS - Follows existing codebase patterns
 - [ ] U_MINIMAL_TOUCH - Only required files edited
+- [ ] U_NO_HARDCODED_EXAMPLES - No hardcoded example data in templates
 - [ ] U_NO_OVERENGINEERING - Simplest solution chosen
 
 ---
@@ -77,11 +79,8 @@
 - [ ] **Configuration**: No hardcoded paths or environment assumptions
 
 **Principles Applied:**
-- [ ] C_NO_HARDCODED_EXAMPLES - No hardcoded example data in templates
 - [ ] C_NO_UNSOLICITED_FILE_CREATION - No unnecessary file creation
-- [ ] C_CROSS_PLATFORM_BASH - Commands work on Windows, macOS, Linux
-- [ ] C_FOLLOW_PATTERNS - Follows existing codebase patterns
-- [ ] C_HONEST_REPORTING - Accurate claims, no exaggeration
+- [ ] C_NATIVE_TOOL_INTERACTIONS - Uses native Claude Code tools
 
 ---
 
@@ -105,7 +104,6 @@
 ```
 
 **Principles Applied:**
-- [ ] C_TEMP_FILE_SANDBOXING - Tests use tmp_path, not system directories
 - [ ] U_EVIDENCE_BASED_ANALYSIS - Test results prove functionality works
 
 ---
@@ -182,8 +180,9 @@
 3.
 ```
 
-**Principles Applied:**
-- [ ] C_BREAKING_CHANGES_APPROVAL - Breaking change approved before implementation
+**Breaking Changes Guideline:**
+- Breaking changes require explicit user approval before implementation
+- Document migration path and alternatives considered
 
 ---
 

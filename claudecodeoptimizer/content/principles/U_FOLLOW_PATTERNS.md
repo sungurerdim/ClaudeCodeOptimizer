@@ -7,7 +7,7 @@ keywords: [consistency, code patterns, naming conventions, architecture, code re
 category: [quality, workflow]
 ---
 
-# C_FOLLOW_PATTERNS: Follow Existing Patterns
+# U_FOLLOW_PATTERNS: Follow Existing Patterns
 
 **Severity**: High
 

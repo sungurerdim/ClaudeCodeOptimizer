@@ -31,7 +31,63 @@ Every claim needs:
 3. Timestamps (prove freshness)
 4. Error messages (when applicable)
 
-### 2. Root Cause Analysis (5 Whys)
+### 2. Complete Accounting
+
+Every item must have a disposition. Never lose track of work:
+
+```python
+@dataclass
+class AccountingState:
+    total_items: int = 0
+    completed: List = field(default_factory=list)
+    skipped: List[Tuple[Item, str]] = field(default_factory=list)  # (item, reason)
+    failed: List[Tuple[Item, str]] = field(default_factory=list)   # (item, reason)
+    cannot_do: List[Tuple[Item, str]] = field(default_factory=list) # (item, reason)
+
+    def verify_accounting(self) -> bool:
+        """Totals MUST match."""
+        accounted = (len(self.completed) + len(self.skipped) +
+                    len(self.failed) + len(self.cannot_do))
+        return accounted == self.total_items
+```
+
+**Formula:** `total = completed + skipped + failed + cannot-do`
+
+### 3. Accurate Outcome Categorization
+
+Use precise categories, never claim "fixed" without verification:
+
+```python
+OUTCOMES = {
+    # Truly completed
+    "fixed": "Change applied AND verified in file",
+    "generated": "File created AND exists on disk",
+    "completed": "Action performed AND result confirmed",
+
+    # Requires human action
+    "needs_decision": "Multiple valid approaches - user must choose",
+    "needs_review": "Complex change - requires human verification",
+    "requires_approval": "Risky change - needs explicit permission",
+
+    # Outside tool scope
+    "requires_migration": "Database schema change - needs migration script",
+    "requires_config": "External system configuration needed",
+    "requires_infra": "Infrastructure change needed",
+
+    # Truly impossible
+    "impossible_external": "Issue in third-party code",
+    "impossible_design": "Requires architectural redesign",
+    "impossible_runtime": "Runtime-only issue, not fixable in code",
+}
+```
+
+**Distinguish difficulty from impossibility:**
+- ❌ "Cannot fix: Complex regex" (it IS possible)
+- ✅ "needs_review: Complex regex with edge cases"
+- ❌ "Can fix: Issue in node_modules" (CAN'T modify third-party)
+- ✅ "impossible_external: Update package or report upstream"
+
+### 4. Root Cause Analysis (5 Whys)
 
 Ask "Why?" five times:
 
@@ -121,6 +177,60 @@ Root cause: Session not set (login.py:<line>)
 Fix: Added session['user_id'] = user.id"
 ```
 
+### ❌ Inconsistent Counts
+```python
+# ❌ BAD: Different calculations produce different numbers
+print(f"Found {len(critical_issues)} critical")  # One place
+print(f"Total: {security + testing + other}")    # Different place
+
+# ✅ GOOD: Single source of truth
+class State:
+    def __init__(self):
+        self.all_items = []
+
+    def get_count(self) -> int:
+        return len(self.all_items)  # ALWAYS use this
+
+state = State()
+# ... add items ...
+print(f"Found: {state.get_count()}")  # Same everywhere
+print(f"Total: {state.get_count()}")  # Same number
+```
+
+### ❌ Silent Filtering
+```python
+# ❌ BAD: Filter without explanation
+displayed = [i for i in items if i.severity != "low"]
+print(f"Issues: {len(displayed)}")  # User sees 30
+# Later...
+print(f"Total: {len(items)}")  # User sees 50 - CONFUSION
+
+# ✅ GOOD: Explain filtering explicitly
+print(f"Total: {len(items)} issues")
+print(f"Showing: {len(displayed)} (hiding {len(items) - len(displayed)} low-severity)")
+```
+
+---
+
+## Verification Patterns
+
+```python
+# After any file modification
+def verify_edit(file_path: str, expected_content: str) -> bool:
+    content = Read(file_path)
+    return expected_content in content
+
+# After any generation
+def verify_created(file_path: str) -> bool:
+    return os.path.exists(file_path)
+
+# Before claiming completion
+def claim_completion(action: str, verification: bool):
+    if not verification:
+        raise AssertionError(f"Cannot claim '{action}' - verification failed")
+    return f"Completed: {action}"
+```
+
 ---
 
 ## Checklist
@@ -132,3 +242,8 @@ Fix: Added session['user_id'] = user.id"
 - [ ] Verify root cause hypothesis
 - [ ] Fix at source, never band-aids
 - [ ] Add regression test
+- [ ] Every item has disposition (completed/skipped/failed/cannot-do)
+- [ ] Totals match (accounting formula verified)
+- [ ] Counts consistent everywhere (single source)
+- [ ] Any filtering explicitly explained
+- [ ] Accurate outcome categories (not "fixed" without verification)

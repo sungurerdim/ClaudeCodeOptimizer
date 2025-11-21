@@ -496,7 +496,7 @@ CCO is designed for easy extension:
 
 ### Code Quality
 - ✅ **Unused Code Removal** - Cleaned up principles.py and related tests
-- ✅ **Hardcoded Examples Eliminated** - Full compliance with C_NO_HARDCODED_EXAMPLES principle
+- ✅ **Hardcoded Examples Eliminated** - Full compliance with U_NO_HARDCODED_EXAMPLES principle
 - ✅ **GitIgnore Cleanup** - Removed unnecessary entries
 
 ### Features

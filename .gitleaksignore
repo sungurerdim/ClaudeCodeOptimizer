@@ -1,0 +1,23 @@
+# Gitleaks Ignore File
+# These are example/placeholder values in documentation, not real secrets
+
+# Documentation examples - security principles
+claudecodeoptimizer/content/principles/P_LINTING_SAST.md:generic-api-key:50
+claudecodeoptimizer/content/principles/P_LINTING_SAST.md:stripe-access-token:50
+claudecodeoptimizer/content/principles/P_PII_MASKING_IN_LOGS.md:generic-api-key:50
+content/principles/P_LINTING_SAST.md:stripe-access-token:200
+content/principles/P_LINTING_SAST.md:stripe-access-token:293
+
+# Documentation examples - security skills
+claudecodeoptimizer/content/skills/cco-skill-security-owasp-xss-sqli-csrf.md:generic-api-key:3
+claudecodeoptimizer/skills/security-emergency-response.md:generic-api-key:49
+claudecodeoptimizer/skills/security-emergency-response.md:generic-api-key:85
+claudecodeoptimizer/skills/security-emergency-response.md:generic-api-key:168
+claudecodeoptimizer/skills/security-emergency-response.md:generic-api-key:288
+claudecodeoptimizer/skills/security-emergency-response.md:generic-api-key:411
+claudecodeoptimizer/skills/security-emergency-response.md:generic-api-key:419
+
+# Documentation examples - guides
+docs/cco/guides/container-best-practices.md:generic-api-key:297
+docs/cco/guides/container-best-practices.md:generic-api-key:332
+docs/cco/guides/security-response.md:generic-api-key:191

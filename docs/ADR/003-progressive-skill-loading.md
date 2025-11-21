@@ -255,7 +255,7 @@ Users can discover skills by:
 
 - **C_NO_UNSOLICITED_FILE_CREATION**: Skills only created in `~/.claude/`, not in projects
 - **U_NO_OVERENGINEERING**: Simple file-based system, no database or complex state
-- **C_FOLLOW_PATTERNS**: Skills follow consistent template and structure
+- **U_FOLLOW_PATTERNS**: Skills follow consistent template and structure
 
 ## References
 

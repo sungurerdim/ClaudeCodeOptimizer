@@ -6,11 +6,11 @@
 
 ## Summary
 
-**Total Principles**: 110
+**Total Principles**: 106
 
 **Categories**:
-- **Universal (U_*)**: 6 - Core development best practices (apply everywhere)
-- **Claude-Specific (C_*)**: 13 - Optimizations for Claude Code
+- **Universal (U_*)**: 8 - Core development best practices (apply everywhere)
+- **Claude-Specific (C_*)**: 7 - Optimizations for Claude Code
 - **Project-Specific (P_*)**: 91 - Optional per-project overrides
 
 ---
@@ -49,15 +49,15 @@ These principles are fundamental to all development work, regardless of language
 
 ---
 
-### 2. U_COMPLETE_REPORTING
+### 2. U_CROSS_PLATFORM_COMPATIBILITY
 
-**Every action must be explicitly reported with precise file references**
+**Use cross-platform compatible bash commands and paths**
 
-- Always use `file_path:line_number` format
-- Report all actions (reads, edits, searches)
-- No hidden operations
+- Always forward slashes (Windows accepts them)
+- Git Bash commands (ls, grep, cat, find)
+- Quote paths with spaces
 
-**File**: `U_COMPLETE_REPORTING.md`
+**File**: `U_CROSS_PLATFORM_COMPATIBILITY.md`
 
 ---
 
@@ -80,12 +80,26 @@ These principles are fundamental to all development work, regardless of language
 - Show command output, exit codes, timestamps
 - Use 5 Whys for root cause analysis
 - Fix at source, not symptom
+- Complete accounting (all items have disposition)
+- Accurate outcome categorization
 
 **File**: `U_EVIDENCE_BASED_ANALYSIS.md`
 
 ---
 
-### 5. U_MINIMAL_TOUCH
+### 5. U_FOLLOW_PATTERNS
+
+**Always follow existing code patterns and conventions**
+
+- Examine existing code first
+- Match naming conventions exactly
+- Consistency > personal preference
+
+**File**: `U_FOLLOW_PATTERNS.md`
+
+---
+
+### 6. U_MINIMAL_TOUCH
 
 **Edit only required files - No drive-by improvements**
 
@@ -97,7 +111,19 @@ These principles are fundamental to all development work, regardless of language
 
 ---
 
-### 6. U_NO_OVERENGINEERING
+### 7. U_NO_HARDCODED_EXAMPLES
+
+**Never use hardcoded examples in templates**
+
+- Use placeholders: {FILE_PATH}, {LINE_NUMBER}, {FUNCTION_NAME}
+- AI models cannot distinguish example from real data
+- Runtime outputs must use actual project data
+
+**File**: `U_NO_HARDCODED_EXAMPLES.md`
+
+---
+
+### 8. U_NO_OVERENGINEERING
 
 **Choose simplest solution - Avoid premature abstraction**
 
@@ -127,31 +153,7 @@ These principles optimize Claude Code's behavior for efficiency, cost, and quali
 
 ---
 
-### 2. C_BREAKING_CHANGES_APPROVAL
-
-**Never make breaking changes without explicit user approval**
-
-- Detect breaking changes before implementation
-- Propose with full context and migration path
-- Offer non-breaking alternatives
-
-**File**: `C_BREAKING_CHANGES_APPROVAL.md`
-
----
-
-### 3. C_COMMAND_CONTEXT_PASSING
-
-**Always pass context when calling another slash command**
-
-- Provide summary, file paths, counts before SlashCommand call
-- Eliminates duplicate analysis
-- Significantly faster execution
-
-**File**: `C_COMMAND_CONTEXT_PASSING.md`
-
----
-
-### 4. C_CONTEXT_WINDOW_MGMT
+### 2. C_CONTEXT_WINDOW_MGMT
 
 **Optimize context via targeted reads and strategic model selection**
 
@@ -163,19 +165,7 @@ These principles optimize Claude Code's behavior for efficiency, cost, and quali
 
 ---
 
-### 5. C_CROSS_PLATFORM_BASH
-
-**Use cross-platform compatible commands and paths**
-
-- Always forward slashes (Windows accepts them)
-- Git Bash commands (ls, grep, cat, find)
-- Quote paths with spaces
-
-**File**: `C_CROSS_PLATFORM_BASH.md`
-
----
-
-### 6. C_EFFICIENT_FILE_OPERATIONS
+### 3. C_EFFICIENT_FILE_OPERATIONS
 
 **Grep-first: discovery → preview → precise read**
 
@@ -187,31 +177,7 @@ These principles optimize Claude Code's behavior for efficiency, cost, and quali
 
 ---
 
-### 7. C_FOLLOW_PATTERNS
-
-**Always follow existing code patterns and conventions**
-
-- Examine existing code first
-- Match naming conventions exactly
-- Consistency > personal preference
-
-**File**: `C_FOLLOW_PATTERNS.md`
-
----
-
-### 8. C_HONEST_REPORTING
-
-**Report exact truth only - Never claim without verification**
-
-- Distinguish difficulty from impossibility accurately
-- Complete accounting (all items have disposition)
-- Consistent counts (single source of truth)
-
-**File**: `C_HONEST_REPORTING.md`
-
----
-
-### 9. C_MODEL_SELECTION
+### 4. C_MODEL_SELECTION
 
 **Choose appropriate model based on task complexity**
 
@@ -223,7 +189,7 @@ These principles optimize Claude Code's behavior for efficiency, cost, and quali
 
 ---
 
-### 10. C_NATIVE_TOOL_INTERACTIONS
+### 5. C_NATIVE_TOOL_INTERACTIONS
 
 **All user interactions must use native Claude Code tools**
 
@@ -235,31 +201,19 @@ These principles optimize Claude Code's behavior for efficiency, cost, and quali
 
 ---
 
-### 11. C_NO_HARDCODED_EXAMPLES
-
-**Never use hardcoded examples in templates**
-
-- Use placeholders: {FILE_PATH}, {LINE_NUMBER}, {FUNCTION_NAME}
-- AI models cannot distinguish example from real data
-- Runtime outputs must use actual project data
-
-**File**: `C_NO_HARDCODED_EXAMPLES.md`
-
----
-
-### 12. C_NO_UNSOLICITED_FILE_CREATION
+### 6. C_NO_UNSOLICITED_FILE_CREATION
 
 **Never create files unless explicitly requested**
 
 - Prefer editing existing files
 - Always ask before creating documentation
-- Avoid temp files (use sandboxed .tmp/)
+- No unsolicited temp files
 
 **File**: `C_NO_UNSOLICITED_FILE_CREATION.md`
 
 ---
 
-### 13. C_PROJECT_CONTEXT_DISCOVERY
+### 7. C_PROJECT_CONTEXT_DISCOVERY
 
 **Use Haiku sub-agent to extract project context before analysis**
 
@@ -268,18 +222,6 @@ These principles optimize Claude Code's behavior for efficiency, cost, and quali
 - Align findings with project objectives
 
 **File**: `C_PROJECT_CONTEXT_DISCOVERY.md`
-
----
-
-### 14. C_TEMP_FILE_SANDBOXING
-
-**Only create temp files in project .tmp/ directory**
-
-- ONLY allowed: {PROJECT_ROOT}/.tmp/
-- FORBIDDEN: /tmp, C:\tmp, D:\tmp, ~/.claude/.tmp/
-- Path verification before ANY file operation
-
-**File**: `C_TEMP_FILE_SANDBOXING.md`
 
 ---
 
@@ -479,7 +421,20 @@ Principles are automatically injected via markers:
 ```markdown
 <!-- CCO_PRINCIPLES_START -->
 @principles/U_CHANGE_VERIFICATION.md
-@principles/C_HONEST_REPORTING.md
+@principles/U_CROSS_PLATFORM_COMPATIBILITY.md
+@principles/U_DRY.md
+@principles/U_EVIDENCE_BASED_ANALYSIS.md
+@principles/U_FOLLOW_PATTERNS.md
+@principles/U_MINIMAL_TOUCH.md
+@principles/U_NO_HARDCODED_EXAMPLES.md
+@principles/U_NO_OVERENGINEERING.md
+@principles/C_AGENT_ORCHESTRATION_PATTERNS.md
+@principles/C_CONTEXT_WINDOW_MGMT.md
+@principles/C_EFFICIENT_FILE_OPERATIONS.md
+@principles/C_MODEL_SELECTION.md
+@principles/C_NATIVE_TOOL_INTERACTIONS.md
+@principles/C_NO_UNSOLICITED_FILE_CREATION.md
+@principles/C_PROJECT_CONTEXT_DISCOVERY.md
 <!-- CCO_PRINCIPLES_END -->
 ```
 
@@ -487,8 +442,8 @@ See [ADR-001: Marker-based CLAUDE.md System](../../docs/ADR/001-marker-based-cla
 
 ### Principle Selection
 
-- **Universal (U_*)**: Always loaded (6 principles)
-- **Claude (C_*)**: Always loaded (13 principles)
+- **Universal (U_*)**: Always loaded (8 principles)
+- **Claude (C_*)**: Always loaded (7 principles)
 - **Project (P_*)**: Optional, enable per project needs
 
 ### Adding Project Principles
@@ -503,14 +458,14 @@ See [ADR-001: Marker-based CLAUDE.md System](../../docs/ADR/001-marker-based-cla
 
 All CCO components (commands, skills, agents) follow these principles:
 
-- ✅ No hardcoded examples (C_NO_HARDCODED_EXAMPLES)
+- ✅ No hardcoded examples (U_NO_HARDCODED_EXAMPLES)
 - ✅ Native tool interactions (C_NATIVE_TOOL_INTERACTIONS)
-- ✅ Honest reporting (C_HONEST_REPORTING)
-- ✅ Evidence-based (U_EVIDENCE_BASED_ANALYSIS)
-- ✅ Complete accounting (C_HONEST_REPORTING)
+- ✅ Evidence-based with complete accounting (U_EVIDENCE_BASED_ANALYSIS)
+- ✅ Follow existing patterns (U_FOLLOW_PATTERNS)
+- ✅ Cross-platform compatibility (U_CROSS_PLATFORM_COMPATIBILITY)
 
 See [PR Template](../../.github/PULL_REQUEST_TEMPLATE.md) for full compliance checklist.
 
 ---
 
-**Total**: 110 principles across 3 categories
+**Total**: 106 principles across 3 categories

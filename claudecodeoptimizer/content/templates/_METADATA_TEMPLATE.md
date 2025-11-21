@@ -124,7 +124,7 @@ description: Comprehensive codebase audit and violation detection
 metadata:
   name: "Audit Agent"
   priority: high
-principles: ['U_EVIDENCE_BASED', 'U_COMPLETE_REPORTING']
+principles: ['U_EVIDENCE_BASED_ANALYSIS', 'U_CHANGE_VERIFICATION']
 use_cases:
   project_maturity: [active-dev, production, legacy]
   development_philosophy: [quality_first, balanced]
@@ -142,7 +142,7 @@ metadata:
   priority: high
   category: status
 author: Claude Code
-principles: ['U_EVIDENCE_BASED', 'U_COMPLETE_REPORTING']
+principles: ['U_EVIDENCE_BASED_ANALYSIS', 'U_CHANGE_VERIFICATION']
 use_cases:
   project_maturity: [active-dev, production, legacy]
 ---
