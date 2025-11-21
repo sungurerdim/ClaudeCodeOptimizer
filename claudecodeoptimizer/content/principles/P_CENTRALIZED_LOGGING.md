@@ -48,7 +48,7 @@ class JSONFormatter(jsonlogger.JsonFormatter):
 ```bash
 # ❌ BAD: Each service logs locally
 # Service 1: /var/log/user-service/app.log
-2024-01-15 10:30:45 User login: john@example.com
+2024-01-15 10:30:45 User login: {USER_EMAIL}
 2024-01-15 10:30:46 Calling profile service
 2024-01-15 10:30:47 Request completed
 

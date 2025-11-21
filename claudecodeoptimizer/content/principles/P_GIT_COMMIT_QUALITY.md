@@ -122,17 +122,17 @@ chore(deps): upgrade axios to 1.5.0            # Maintenance
 ```bash
 # Changed 3 files, 2 separate features
 git status
-# modified: auth/login.py (feature A + B)
-# modified: auth/signup.py (feature A)
-# modified: api/users.py (feature B)
+# modified: {AUTH_FILE1}.py (feature A + B)
+# modified: {AUTH_FILE2}.py (feature A)
+# modified: {API_FILE}.py (feature B)
 
 # Commit feature A only
-git add auth/signup.py
-git add -p auth/login.py  # Interactively stage feature A changes
+git add {AUTH_FILE2}.py
+git add -p {AUTH_FILE1}.py  # Interactively stage feature A changes
 git commit -m "feat(auth): add email validation"
 
 # Commit feature B separately
-git add api/users.py auth/login.py
+git add {API_FILE}.py {AUTH_FILE1}.py
 git commit -m "feat(api): add user profile endpoint"
 ```
 
@@ -305,7 +305,7 @@ git rebase -i HEAD~5  # Interactive rebase
 
 ```bash
 # ✅ OK: All files relate to same feature
-git add models/user.py api/users.py tests/test_users.py
+git add {MODEL_FILE}.py {API_FILE}.py tests/{TEST_FILE}.py
 git commit -m "feat(user): add email verification
 
 Sends verification code via email.

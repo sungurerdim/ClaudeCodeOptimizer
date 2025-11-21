@@ -72,9 +72,9 @@ def database():
         yield postgres.get_connection_url()
 
 def test_user_registration_flow(database, cache):
-    response = app.post('/register', json={'email': 'test@example.com', 'password': '<test-password>'})
+    response = app.post('/register', json={'email': '{TEST_EMAIL}', 'password': '{TEST_PASSWORD}'})
     assert response.status_code == 201
-    user = db.query(User).filter_by(email='test@example.com').first()
+    user = db.query(User).filter_by(email='{TEST_EMAIL}').first()
     assert user is not None
 ```
 **Why**: Tests real dependencies, catches integration issues

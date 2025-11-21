@@ -95,7 +95,7 @@ find $DIR -name "full_*.dump.gz" -mtime +30 -delete
 
 # Verify
 pg_restore --list "$DIR/full_$DATE.dump.gz" > /dev/null || \
-  echo "BACKUP FAILED!" | mail -s "Alert" oncall@example.com
+  echo "BACKUP FAILED!" | mail -s "Alert" {ONCALL_EMAIL}
 ```
 
 ### Soft Delete Pattern
@@ -127,7 +127,7 @@ def erase_user_data(user_id: int):
     if datetime.utcnow() - user.deleted_at < timedelta(days=30):
         raise ValueError("Retention period not elapsed")
 
-    user.email = f"deleted_{user.id}@example.com"
+    user.email = f"deleted_{user.id}@{DOMAIN}"
     user.name = "Deleted User"
     AuditLog.create(action="gdpr_erasure", user_id=user_id)
     db.session.commit()
