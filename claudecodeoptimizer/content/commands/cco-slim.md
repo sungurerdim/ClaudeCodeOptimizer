@@ -361,486 +361,313 @@ claudecodeoptimizer/content/**/*.md, src/**/*.py, -**/*_test.py
 
 ---
 
-## Component 3: Discovery Phase
+## Component 2.5: Project Scope Detection (Default Behavior)
 
-**Categorize all files, measure current token usage.**
+**DEFAULT: Optimize ONLY project files. Detect out-of-project files and ask user.**
 
-### Step 1: File Discovery
+### Why This Matters
+
+- **Project files**: Safe to optimize, user has full control
+- **Out-of-project files**: Could be shared across projects (e.g., global ~/.claude/)
+- **User choice**: Let user decide whether to include external files
+
+### Step 1: Detect Project Root
 
 ```python
-# Launch discovery agent for efficient categorization
-discovery_result = Task({
+import os
+import subprocess
+
+def get_project_root() -> str:
+    """Get project root directory (git root or current working directory)."""
+
+    # Try git root first
+    try:
+        result = subprocess.run(
+            ["git", "rev-parse", "--show-toplevel"],
+            capture_output=True,
+            text=True,
+            check=True
+        )
+        git_root = result.stdout.strip()
+        if os.path.exists(git_root):
+            return git_root
+    except (subprocess.CalledProcessError, FileNotFoundError):
+        pass
+
+    # Fallback to current working directory
+    return os.getcwd()
+
+project_root = get_project_root()
+print(f"Project root detected: {project_root}")
+```
+
+### Step 2: Discover PROJECT-ONLY Files (Default Scope)
+
+```python
+# Launch discovery agent for PROJECT INTERNAL files ONLY
+project_discovery_result = Task({
     subagent_type: "Explore",
     model: "haiku",
-    description: "Discover and categorize files",
+    description: "Discover project-only files",
     prompt: f"""
-    Discover files for categories: {selected_categories}
+    Discover files ONLY within project root directory.
 
-    Rules:
-    - "Markdown Docs": **/*.md
-    - "Code Files": *.py, *.js, *.ts, *.tsx, *.java, *.go, *.rs
-    - "Claude Tools": **/*{cco,skill,agent,command,principle}*.md (tools, architecture, configs anywhere in project)
-    - "Active Context": ~/.claude/CLAUDE.md + referenced principles
-    - "All": All categories
+    **STRICT PROJECT-ONLY SCOPE:**
+
+    **Base directory:** {project_root}
+    **Include:** All files and subdirectories WITHIN {project_root}
+    **Exclude:** ANY paths outside {project_root}
+
+    **Categories to find:**
+    - Markdown: **/*.md files within project
+    - Code: *.py, *.js, *.ts, *.tsx, *.java, *.go, *.rs within project
+    - Tools: Any cco-*.md, skill, agent, principle files within project
+
+    **CRITICAL:** Use Glob with base path {project_root} to ensure project-only scope.
 
     Return JSON:
     {{
+        "project_root": "{project_root}",
         "markdown": ["path1.md"],
         "code": ["path1.py"],
-        "claude_tools": {{"skills": [], "agents": [], "commands": []}},
-        "active_context": []
+        "tools": ["cco-*.md"],
+        "total_files": 123,
+        "total_tokens_estimate": 50000
     }}
     """
 })
 
-# Handle discovery errors
-if discovery_result is None or (isinstance(discovery_result, dict) and "error" in discovery_result):
-    error_msg = discovery_result.get('error', 'Unknown error') if isinstance(discovery_result, dict) else 'Agent returned None'
+# Parse project files
+project_files = project_discovery_result
+```
 
-    response = AskUserQuestion({
+### Step 3: Detect OUT-OF-PROJECT File References
+
+```python
+# Search for references to files OUTSIDE project root
+out_of_project_refs = Task({
+    subagent_type: "Explore",
+    model: "haiku",
+    description: "Detect out-of-project references",
+    prompt: f"""
+    Search for references to files OUTSIDE project root: {project_root}
+
+    **Look for:**
+    1. ~/.claude/* paths
+    2. C:\\Users\\* paths (Windows)
+    3. /Users/* paths (macOS)
+    4. @principles/ @skills/ @agents/ references to global files
+    5. Absolute paths outside {project_root}
+
+    **Search in:**
+    - README.md, CONTRIBUTING.md, ARCHITECTURE.md
+    - All *.md files in project
+    - CLAUDE.md if exists (may reference global principles)
+
+    **Return JSON:**
+    {{
+        "out_of_project_files": [
+            "~/.claude/CLAUDE.md",
+            "~/.claude/principles/U_CHANGE_VERIFICATION.md",
+            ...
+        ],
+        "reference_count": 50,
+        "unique_files": 20
+    }}
+
+    If NO out-of-project references found, return empty list.
+    """
+})
+
+# Parse out-of-project files
+out_of_project_files = out_of_project_refs.get("out_of_project_files", [])
+```
+
+### Step 4: Ask User About Out-of-Project Files
+
+```python
+if len(out_of_project_files) > 0:
+    # Display detected out-of-project files
+    print(f"""
+════════════════════════════════════════════════════════════════
+         OUT-OF-PROJECT FILES DETECTED
+════════════════════════════════════════════════════════════════
+
+## Default Scope (Project Files ONLY)
+
+**Project Root:** {project_root}
+**Project Files:** {len(project_files['markdown']) + len(project_files['code']) + len(project_files['tools'])} files
+
+✅ **Included by default:**
+- All files within {project_root}
+
+════════════════════════════════════════════════════════════════
+
+## Out-of-Project Files Detected
+
+**Location:** Outside {project_root}
+**Total:** {len(out_of_project_files)} files detected
+
+**Examples:**
+{chr(10).join(f"  - {f}" for f in out_of_project_files[:10])}
+{f"  ... and {len(out_of_project_files) - 10} more" if len(out_of_project_files) > 10 else ""}
+
+════════════════════════════════════════════════════════════════
+    """)
+
+    # Ask user
+    include_external = AskUserQuestion({
         questions: [{
-            question: f"Explore agent (Haiku) file discovery failed: {error_msg}. How to proceed?",
-            header: "Explore (Haiku) Error",
+            question: "Include out-of-project files in optimization?",
+            header: "Scope Selection",
             multiSelect: false,
             options: [
-                {label: "Retry", description: "Run discovery agent again"},
-                {label: "Retry with Sonnet", description: "Use more capable model"},
-                {label: "Manual discovery", description: "Use Glob() commands directly"},
-                {label: "Cancel", description: "Stop cco-slim"}
+                {
+                    label: "No (Project Files ONLY - Recommended)",
+                    description: f"Optimize ONLY files within {project_root} ({len(project_files['total_files'])} files)"
+                },
+                {
+                    label: "Yes (Project + Out-of-Project)",
+                    description: f"Include project ({len(project_files['total_files'])}) + out-of-project ({len(out_of_project_files)}) files"
+                },
+                {
+                    label: "Only Out-of-Project Files",
+                    description: f"Optimize ONLY the {len(out_of_project_files)} out-of-project files"
+                },
+                {
+                    label: "Cancel",
+                    description: "Exit cco-slim"
+                }
             ]
         }]
     })
 
-    if response == "Retry":
-        discovery_result = Task({
-            subagent_type: "Explore",
-            model: "haiku",
-            description: "Discover and categorize files (retry)",
-            prompt: f"""
-            Discover files for categories: {selected_categories}
-
-            Rules:
-            - "Markdown Docs": **/*.md
-            - "Code Files": *.py, *.js, *.ts, *.tsx, *.java, *.go, *.rs
-            - "Claude Tools": **/*{cco,skill,agent,command,principle}*.md (tools, architecture, configs anywhere in project)
-            - "Active Context": ~/.claude/CLAUDE.md + referenced principles
-            - "All": All categories
-
-            Return JSON:
-            {{
-                "markdown": ["path1.md"],
-                "code": ["path1.py"],
-                "claude_tools": {{"skills": [], "agents": [], "commands": []}},
-                "active_context": []
-            }}
-            """
-        })
-    elif response == "Retry with Sonnet":
-        discovery_result = Task({
-            subagent_type: "Explore",
-            model: "sonnet",
-            description: "Discover and categorize files (retry)",
-            prompt: f"""
-            Discover files for categories: {selected_categories}
-
-            Rules:
-            - "Markdown Docs": **/*.md
-            - "Code Files": *.py, *.js, *.ts, *.tsx, *.java, *.go, *.rs
-            - "Claude Tools": **/*{cco,skill,agent,command,principle}*.md (tools, architecture, configs anywhere in project)
-            - "Active Context": ~/.claude/CLAUDE.md + referenced principles
-            - "All": All categories
-
-            Return JSON:
-            {{
-                "markdown": ["path1.md"],
-                "code": ["path1.py"],
-                "claude_tools": {{"skills": [], "agents": [], "commands": []}},
-                "active_context": []
-            }}
-            """
-        })
-    elif response == "Manual discovery":
-        # Fallback to manual Glob()
-        discovered = {
-            "markdown": [],
-            "code": [],
-            "claude_tools": {"skills": [], "agents": [], "commands": []},
-            "active_context": []
-        }
-
-        if "Markdown Docs" in selected_categories or "All" in selected_categories:
-            discovered["markdown"] = Glob("**/*.md")
-            discovered["markdown"] = [f for f in discovered["markdown"]
-                                      if not f.startswith("claudecodeoptimizer/content/")]
-
-        if "Code Files" in selected_categories or "All" in selected_categories:
-            for ext in ["*.py", "*.js", "*.ts", "*.tsx", "*.java", "*.go", "*.rs"]:
-                discovered["code"].extend(Glob(f"**/{ext}"))
-
-        if "Claude Tools" in selected_categories or "All" in selected_categories:
-            discovered["claude_tools"]["skills"] = Glob("**/cco-skill-*.md")
-            discovered["claude_tools"]["agents"] = Glob("**/cco-agent-*.md")
-            discovered["claude_tools"]["commands"] = Glob("**/cco-*.md",
-                                                           path="claudecodeoptimizer/content/commands/")
-
-        if "Active Context" in selected_categories or "All" in selected_categories:
-            claude_md_path = "~/.claude/CLAUDE.md"
-            if file_exists(claude_md_path):
-                discovered["active_context"].append(claude_md_path)
-                principles = extract_principle_references(claude_md_path)
-                discovered["active_context"].extend(principles)
-
-        discovery_result = discovered
+    # Handle user choice
+    if include_external == "No (Project Files ONLY - Recommended)":
+        final_files = project_files
+        scope_description = f"Project files only ({project_root})"
+    elif include_external == "Yes (Project + Out-of-Project)":
+        # Merge project + out-of-project files
+        final_files = merge_file_lists(project_files, out_of_project_files)
+        scope_description = f"Project + out-of-project files"
+    elif include_external == "Only Out-of-Project Files":
+        # Use ONLY out-of-project files
+        final_files = {"out_of_project": out_of_project_files}
+        scope_description = "Out-of-project files only"
     else:  # Cancel
         return "cco-slim cancelled by user"
+else:
+    # No out-of-project files detected
+    final_files = project_files
+    scope_description = f"Project files only ({project_root})"
+    print(f"✅ No out-of-project files detected. Optimizing project files only.")
+```
 
-# Parse result
-discovered = discovery_result if isinstance(discovery_result, dict) else json.loads(discovery_result)
+### Step 5: Display Final Scope
+
+```markdown
+## Final Optimization Scope
+
+**Scope:** {scope_description}
+**Total Files:** {total_file_count}
+**Estimated Tokens:** {total_token_estimate}
+
+{if scope includes out-of-project}
+⚠️ **Note:** Out-of-project files will be optimized. These may be shared across multiple projects.
+{endif}
+```
+
+---
+
+## Component 3: Discovery Phase
+
+**Categorize all files in final scope, measure current token usage.**
+
+### Step 1: File Discovery
+
+**Discovery Flow:**
+
+1. **Launch Explore Agent** (Haiku model for efficiency)
+   - Input: `{selected_categories}` from Component 2
+   - Task: Categorize files by patterns (markdown, code, tools, active context)
+   - Output: JSON with categorized file lists
+
+2. **Error Handling** (if agent fails):
+   - Ask user via `AskUserQuestion`: Retry | Retry with Sonnet | Manual Glob | Cancel
+   - **Retry**: Re-run with Haiku
+   - **Retry with Sonnet**: Use more capable model
+   - **Manual**: Fallback to `Glob("**/*.md")`, `Glob("**/*.py")`, etc. for each category
+   - **Cancel**: Exit cco-slim
+
+3. **Category Patterns:**
+   - **Markdown**: `**/*.md` (exclude claudecodeoptimizer/content/)
+   - **Code**: `*.{py,js,ts,tsx,java,go,rs}`
+   - **Claude Tools**: `**/cco-*.md`, `**/skill-*.md`, `**/agent-*.md`
+   - **Active Context**: `~/.claude/CLAUDE.md` + referenced principles
+
+**Result:** `discovered` dict with file lists per category
 ```
 
 ### Step 2: Token Measurement
 
-```python
-@dataclass
-class FileMetrics:
-    """Metrics for a single file."""
-    path: str
-    category: str
-    size_bytes: int
-    line_count: int
-    token_estimate: int  # Rough estimate: words * 1.3
-    redundancy_score: float  # 0.0-1.0 (higher = more redundancy)
-    example_count: int
-    whitespace_pct: float  # Percentage of whitespace lines
+**For each discovered file:**
+- Read content, count lines/tokens (estimate: words × 1.3)
+- Calculate: redundancy score, example count, whitespace %
+- Aggregate metrics by category
 
-def measure_file(file_path: str, category: str) -> FileMetrics:
-    """Measure file metrics."""
-    content = Read(file_path)
-    lines = content.split('\n')
-
-    return FileMetrics(
-        path=file_path,
-        category=category,
-        size_bytes=len(content.encode('utf-8')),
-        line_count=len(lines),
-        token_estimate=estimate_tokens(content),
-        redundancy_score=calculate_redundancy(content),
-        example_count=count_examples(content),
-        whitespace_pct=calculate_whitespace_pct(lines)
-    )
-
-# Measure all discovered files
-metrics = []
-for category, files in discovered.items():
-    if isinstance(files, dict):  # Claude tools
-        for subcategory, subfiles in files.items():
-            for file in subfiles:
-                metrics.append(measure_file(file, f"{category}.{subcategory}"))
-    else:
-        for file in files:
-            metrics.append(measure_file(file, category))
-
-# Calculate totals
-total_tokens_before = sum(m.token_estimate for m in metrics)
-total_files = len(metrics)
-```
+**Result:** `metrics[]` with per-file data + `total_tokens_before` sum
 
 ### Step 3: Display Discovery Results
 
-```markdown
-## Discovery Complete
-
-**Files Discovered:** {total_files}
-
-### By Category
-
-| Category | Files | Tokens | Avg Tokens/File |
-|----------|-------|--------|-----------------|
-| Markdown Docs | {count} | {tokens} | {avg} |
-| Code Files | {count} | {tokens} | {avg} |
-| Claude Tools | {count} | {tokens} | {avg} |
-| ├─ Skills | {count} | {tokens} | {avg} |
-| ├─ Agents | {count} | {tokens} | {avg} |
-| └─ Commands | {count} | {tokens} | {avg} |
-| Active Context | {count} | {tokens} | {avg} |
-
-**Total Tokens (Before):** {total_tokens_before}
-
-### Top Opportunities
-
-Files with highest optimization potential:
-
-| File | Tokens | Redundancy | Examples | Opportunity |
-|------|--------|------------|----------|-------------|
-| {file_path} | {tokens} | {redundancy_pct}% | {examples} | {opportunity_desc} |
-| {file_path} | {tokens} | {redundancy_pct}% | {examples} | {opportunity_desc} |
-| {file_path} | {tokens} | {redundancy_pct}% | {examples} | {opportunity_desc} |
-
-**Estimated Reduction:** {min_pct}%-{max_pct}% ({min_tokens}-{max_tokens} tokens)
-```
+**Show user:**
+- Total files discovered: `{total_files}`
+- Tokens by category (table: Category | Files | Tokens | Avg)
+- Top optimization opportunities (files with high redundancy/examples)
+- Estimated reduction range: `{min_pct}%-{max_pct}%`
 
 ---
 
 ## Component 3.5: Context Duplication Analysis
 
-**CRITICAL: Detect duplicated context loading and recommend CLAUDE.md improvements.**
+**Detect files loaded multiple times across contexts (CLAUDE.md + skills/commands/agents).**
 
-### Why This Matters
+### Analysis Flow
 
-- **Duplication**: If CLAUDE.md loads `@principles/U_DRY.md` AND a skill also loads it → waste
-- **Missing References**: If many skills reference a file but CLAUDE.md doesn't → inefficiency
+1. **Extract CLAUDE.md References**
+   - Parse `@principles/`, `@skills/` patterns using regex
+   - Track: file path, reference type, line number
 
-### Step 1: Analyze CLAUDE.md References
+2. **Launch Duplication Analysis** (Explore agent, Haiku)
+   - Input: CLAUDE.md refs + all tool files (cco-*.md, skill-*.md, agent-*.md)
+   - Task: Find duplicates (same file loaded by CLAUDE.md + tools)
+   - Task: Find missing (frequently referenced but not in CLAUDE.md)
+   - Error handling: Retry | Retry with Sonnet | Skip | Cancel
 
-```python
-@dataclass
-class ContextReference:
-    """Track what's loaded in CLAUDE.md."""
-    file_path: str
-    ref_type: str  # "principle", "skill", "direct"
-    line: int
+3. **Output:**
+   - `duplicates[]`: Files loaded 2+ times (waste)
+   - `missing[]`: Frequently referenced but not in CLAUDE.md (inefficiency)
 
-def extract_claude_md_references(claude_md_path: str) -> List[ContextReference]:
-    """Extract all file references from CLAUDE.md."""
-    content = Read(claude_md_path)
-    references = []
+**For each tool file:**
+- Extract file references (Read(), @principles/, @skills/ patterns)
+- Check if already in CLAUDE.md → mark as duplicate
+- Count total wasted tokens
 
-    # Find @principles/... references
-    principle_refs = re.findall(r'@principles/([\w_-]+\.md)', content)
-    for ref in principle_refs:
-        references.append(ContextReference(
-            file_path=f"~/.claude/principles/{ref}",
-            ref_type="principle",
-            line=get_line_number(content, ref)
-        ))
-
-    # Find @skills/... references
-    skill_refs = re.findall(r'@skills/([\w_-]+\.md)', content)
-    for ref in skill_refs:
-        references.append(ContextReference(
-            file_path=f"~/.claude/skills/{ref}",
-            ref_type="skill",
-            line=get_line_number(content, ref)
-        ))
-
-    # Find other explicit file references
-    # (Custom paths users might have added)
-
-    return references
-
-claude_md_refs = extract_claude_md_references(claude_md_path)
-claude_md_loaded_files = {ref.file_path for ref in claude_md_refs}
-
-# Use Explore agent for dependency analysis
-duplication_result = Task({
-    subagent_type: "Explore",
-    model: "haiku",
-    description: "Analyze context duplication",
-    prompt: """
-    Analyze context duplication between CLAUDE.md and skills/commands/agents.
-
-    1. Extract all @principles/, @skills/, file references from CLAUDE.md
-    2. Find all file references in cco-skill-*.md, cco-agent-*.md, cco-*.md files
-    3. Identify duplicates (same file loaded by both CLAUDE.md and other tools)
-    4. Identify missing (frequently referenced but not in CLAUDE.md)
-
-    Return JSON:
-    {
-        "claude_md_refs": ["principle1.md", "skill1.md"],
-        "tool_refs": {"skill1.md": ["file1.md", "file2.md"]},
-        "duplicates": [{"file": "file1.md", "loaded_by": ["CLAUDE.md", "skill1.md"]}],
-        "missing": [{"file": "file2.md", "referenced_by": ["skill1", "skill2", "skill3"]}]
-    }
-    """
-})
-
-# Handle errors
-if duplication_result is None or (isinstance(duplication_result, dict) and "error" in duplication_result):
-    error_msg = duplication_result.get('error', 'Unknown error') if isinstance(duplication_result, dict) else 'Agent returned None'
-
-    response = AskUserQuestion({
-        questions: [{
-            question: f"Explore agent (Haiku) duplication analysis failed: {error_msg}. How to proceed?",
-            header: "Explore (Haiku) Error",
-            multiSelect: false,
-            options: [
-                {label: "Retry", description: "Run analysis agent again"},
-                {label: "Retry with Sonnet", description: "Use more capable model"},
-                {label: "Skip duplication check", description: "Continue without this analysis"},
-                {label: "Cancel", description: "Stop cco-slim"}
-            ]
-        }]
-    })
-
-    if response == "Retry":
-        duplication_result = Task({
-            subagent_type: "Explore",
-            model: "haiku",
-            description: "Analyze context duplication (retry)",
-            prompt: """
-            Analyze context duplication between CLAUDE.md and skills/commands/agents.
-
-            1. Extract all @principles/, @skills/, file references from CLAUDE.md
-            2. Find all file references in cco-skill-*.md, cco-agent-*.md, cco-*.md files
-            3. Identify duplicates (same file loaded by both CLAUDE.md and other tools)
-            4. Identify missing (frequently referenced but not in CLAUDE.md)
-
-            Return JSON:
-            {
-                "claude_md_refs": ["principle1.md", "skill1.md"],
-                "tool_refs": {"skill1.md": ["file1.md", "file2.md"]},
-                "duplicates": [{"file": "file1.md", "loaded_by": ["CLAUDE.md", "skill1.md"]}],
-                "missing": [{"file": "file2.md", "referenced_by": ["skill1", "skill2", "skill3"]}]
-            }
-            """
-        })
-    elif response == "Retry with Sonnet":
-        duplication_result = Task({
-            subagent_type: "Explore",
-            model: "sonnet",
-            description: "Analyze context duplication (retry)",
-            prompt: """
-            Analyze context duplication between CLAUDE.md and skills/commands/agents.
-
-            1. Extract all @principles/, @skills/, file references from CLAUDE.md
-            2. Find all file references in cco-skill-*.md, cco-agent-*.md, cco-*.md files
-            3. Identify duplicates (same file loaded by both CLAUDE.md and other tools)
-            4. Identify missing (frequently referenced but not in CLAUDE.md)
-
-            Return JSON:
-            {
-                "claude_md_refs": ["principle1.md", "skill1.md"],
-                "tool_refs": {"skill1.md": ["file1.md", "file2.md"]},
-                "duplicates": [{"file": "file1.md", "loaded_by": ["CLAUDE.md", "skill1.md"]}],
-                "missing": [{"file": "file2.md", "referenced_by": ["skill1", "skill2", "skill3"]}]
-            }
-            """
-        })
-    elif response == "Skip duplication check":
-        duplication_result = {"duplicates": [], "missing": []}
-    else:  # Cancel
-        return "cco-slim cancelled by user"
-```
-
-### Step 2: Detect Duplications in Claude Tools
-
-```python
-@dataclass
-class DuplicationIssue:
-    """Context duplication - file loaded multiple times."""
-    file_path: str
-    loaded_in_claude_md: bool
-    also_loaded_in: List[str]  # List of skills/agents/commands
-    wasted_tokens: int
-    recommendation: str
-
-duplications = []
-
-for tool_file in all_claude_tools:
-    content = Read(tool_file)
-
-    # Find file references in this tool
-    # Look for Read(), Glob(), @principles/, @skills/ patterns
-    references = extract_file_references(content)
-
-    for ref_file in references:
-        # Check if this file is already in CLAUDE.md
-        if ref_file in claude_md_loaded_files:
-            duplications.append(DuplicationIssue(
-                file_path=ref_file,
-                loaded_in_claude_md=True,
-                also_loaded_in=[tool_file],
-                wasted_tokens=estimate_tokens(Read(ref_file)),
-                recommendation=f"Remove from {tool_file} - already in CLAUDE.md"
-            ))
-
-# Group duplications by file
-duplication_groups = {}
-for dup in duplications:
-    if dup.file_path not in duplication_groups:
-        duplication_groups[dup.file_path] = {
-            "file": dup.file_path,
-            "in_claude_md": True,
-            "also_in": [],
-            "tokens": dup.wasted_tokens
-        }
-    duplication_groups[dup.file_path]["also_in"].extend(dup.also_loaded_in)
-```
+**Result:** `duplication_groups[]` with files loaded 2+ times
 
 ### Step 3: Recommend CLAUDE.md Additions
 
-```python
-@dataclass
-class CLAUDEmdRecommendation:
-    """Recommend adding file to CLAUDE.md for efficiency."""
-    file_path: str
-    referenced_by: List[str]  # List of skills/agents/commands
-    reference_count: int
-    tokens: int
-    benefit: str
+**Find frequently referenced files NOT in CLAUDE.md:**
+- Count references across all tools
+- Filter: ≥3 references + not in CLAUDE.md
+- Calculate benefit: Load once vs N times
 
-recommendations = []
+**Result:** `recommendations[]` sorted by reference count
 
-# Count file references across all Claude tools
-file_reference_counts = {}
-for tool_file in all_claude_tools:
-    content = Read(tool_file)
-    references = extract_file_references(content)
+### Step 4: Display Results
 
-    for ref_file in references:
-        if ref_file not in file_reference_counts:
-            file_reference_counts[ref_file] = []
-        file_reference_counts[ref_file].append(tool_file)
-
-# Find frequently referenced files NOT in CLAUDE.md
-for ref_file, referencing_tools in file_reference_counts.items():
-    if len(referencing_tools) >= 3:  # Referenced by 3+ tools
-        if ref_file not in claude_md_loaded_files:  # NOT in CLAUDE.md
-            recommendations.append(CLAUDEmdRecommendation(
-                file_path=ref_file,
-                referenced_by=referencing_tools,
-                reference_count=len(referencing_tools),
-                tokens=estimate_tokens(Read(ref_file)),
-                benefit=f"Load once in CLAUDE.md instead of {len(referencing_tools)} times"
-            ))
-
-# Sort by reference count (most referenced first)
-recommendations.sort(key=lambda r: r.reference_count, reverse=True)
-```
-
-### Step 4: Display Context Analysis Results
-
-```markdown
-## Context Duplication Analysis
-
-### ⚠️ Duplicated Context Loading
-
-**Issues Found:** {len(duplication_groups)}
-
-{if len(duplication_groups) > 0}
-| File | Tokens | Loaded In | Also Loaded In | Recommendation |
-|------|--------|-----------|----------------|----------------|
-| {file_path} | {tokens} | CLAUDE.md | {tools} | Remove from tools |
-| {file_path} | {tokens} | CLAUDE.md | {tools} | Remove from tools |
-
-**Wasted Tokens:** {total_wasted_tokens}
-
-**Action Required:** Remove these references from tools to eliminate duplication.
-{else}
-✅ **No duplications detected** - All files loaded only once.
-{endif}
-
----
-
-### 💡 CLAUDE.md Optimization Recommendations
-
-**Opportunities Found:** {len(recommendations)}
-
-{if len(recommendations) > 0}
-| File | Referenced By | Count | Tokens | Benefit |
-|------|---------------|-------|--------|---------|
-| {file_path} | {tools} | {count}x | {tokens} | {benefit} |
-| {file_path} | {tools} | {count}x | {tokens} | {benefit} |
+**Show user:**
+- **Duplications**: Files in CLAUDE.md + tools (table: File | Tokens | Also In | Recommendation)
+- **CLAUDE.md Recommendations**: Frequently referenced files to add (table: File | Referenced By | Count | Benefit)
 
 **Potential Token Savings:** {total_potential_savings}
 
