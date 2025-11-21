@@ -1,7 +1,7 @@
 """
 Unit tests for PrincipleLoader
 
-Tests principle loading, category mapping, caching, and command-to-principle resolution.
+Tests principle loading from frontmatter, caching, and individual principle loading.
 Target Coverage: 100%
 """
 
@@ -11,10 +11,7 @@ from unittest.mock import patch
 import pytest
 
 from claudecodeoptimizer.core.principle_loader import (
-    COMMAND_PRINCIPLE_MAP,
     PrincipleLoader,
-    _load_category_mapping,
-    _resolve_categories_to_ids,
     load_principles_for_command,
 )
 
@@ -59,166 +56,36 @@ def temp_principles_dir(tmp_path: Path) -> Path:
 
 
 @pytest.fixture
-def mock_category_mapping() -> dict[str, list[str]]:
-    """Mock category to IDs mapping"""
-    return {
-        "universal": [
-            "U_DRY",
-            "U_FAIL_FAST",
-            "U_EVIDENCE_BASED",
-            "U_NO_OVERENGINEERING",
-        ],
-        "core": ["U_EVIDENCE_BASED", "U_FAIL_FAST", "U_NO_OVERENGINEERING"],
-        "code_quality": ["P_LINTING_SAST", "P_TYPE_SAFETY"],
-        "security_privacy": ["P_API_SECURITY", "P_ENCRYPTION_AT_REST"],
-        "testing": ["P_TEST_COVERAGE", "P_CI_GATES"],
-        "architecture": ["P_API_VERSIONING"],
-        "performance": ["P_DB_OPTIMIZATION"],
-        "project-specific": ["P_CONTAINER_SECURITY"],
-    }
+def temp_commands_dir(tmp_path: Path) -> Path:
+    """Create a temporary commands directory with test files"""
+    commands_dir = tmp_path / "commands"
+    commands_dir.mkdir()
 
+    # Command with principles in frontmatter
+    (commands_dir / "cco-test-with-principles.md").write_text(
+        "---\nprinciples: ['U_DRY', 'P_LINTING_SAST']\n---\n\nTest command",
+        encoding="utf-8",
+    )
 
-class TestLoadCategoryMapping:
-    """Test _load_category_mapping function"""
+    # Command without frontmatter
+    (commands_dir / "cco-test-no-frontmatter.md").write_text(
+        "No frontmatter here",
+        encoding="utf-8",
+    )
 
-    def test_load_category_mapping_caches_result(self, temp_principles_dir: Path) -> None:
-        """Test that category mapping is cached"""
-        # Reset cache
-        import claudecodeoptimizer.core.principle_loader as loader_module
+    # Command with empty principles
+    (commands_dir / "cco-test-empty-principles.md").write_text(
+        "---\nprinciples: []\n---\n\nEmpty principles",
+        encoding="utf-8",
+    )
 
-        loader_module._CATEGORY_TO_IDS = None
+    # Command with no principles field
+    (commands_dir / "cco-test-no-principles-field.md").write_text(
+        "---\ntitle: Test\n---\n\nNo principles field",
+        encoding="utf-8",
+    )
 
-        # Mock the principles directory path
-        mock_mapping = {"universal": ["U_DRY"], "code_quality": ["P_LINTING"]}
-        with patch(
-            "claudecodeoptimizer.core.principle_md_loader.get_category_mapping",
-            return_value=mock_mapping,
-        ):
-            with patch("pathlib.Path.exists", return_value=True):
-                # First call
-                result1 = _load_category_mapping()
-                # Second call should return cached value
-                result2 = _load_category_mapping()
-
-                assert result1 is result2
-                assert "core" in result1  # Core category should be added
-
-    def test_load_category_mapping_nonexistent_dir(self, tmp_path: Path) -> None:
-        """Test handling of non-existent principles directory"""
-        # Reset cache
-        import claudecodeoptimizer.core.principle_loader as loader_module
-
-        loader_module._CATEGORY_TO_IDS = None
-
-        # Mock Path.exists to return False for principles directory
-        with patch("pathlib.Path.exists", return_value=False):
-            result = _load_category_mapping()
-            assert result == {}
-
-    def test_load_category_mapping_adds_core_category(self, temp_principles_dir: Path) -> None:
-        """Test that core category is added with universal principles"""
-        # Reset cache
-        import claudecodeoptimizer.core.principle_loader as loader_module
-
-        loader_module._CATEGORY_TO_IDS = None
-
-        with patch("claudecodeoptimizer.core.principle_loader.Path") as mock_path:
-            mock_path.return_value.parent.parent = temp_principles_dir.parent
-
-            mock_mapping = {"universal": ["U_DRY"]}
-            with patch(
-                "claudecodeoptimizer.core.principle_md_loader.get_category_mapping",
-                return_value=mock_mapping,
-            ):
-                with patch.object(Path, "exists", return_value=True):
-                    result = _load_category_mapping()
-
-                    assert "core" in result
-                    assert result["core"] == [
-                        "U_EVIDENCE_BASED",
-                        "U_FAIL_FAST",
-                        "U_NO_OVERENGINEERING",
-                    ]
-
-
-class TestResolveCategoriestoIds:
-    """Test _resolve_categories_to_ids function"""
-
-    def test_resolve_single_category(self, mock_category_mapping: dict[str, list[str]]) -> None:
-        """Test resolving a single category to principle IDs"""
-        with patch(
-            "claudecodeoptimizer.core.principle_loader._load_category_mapping",
-            return_value=mock_category_mapping,
-        ):
-            result = _resolve_categories_to_ids(["code_quality"])
-            assert "P_LINTING_SAST" in result
-            assert "P_TYPE_SAFETY" in result
-
-    def test_resolve_multiple_categories(self, mock_category_mapping: dict[str, list[str]]) -> None:
-        """Test resolving multiple categories"""
-        with patch(
-            "claudecodeoptimizer.core.principle_loader._load_category_mapping",
-            return_value=mock_category_mapping,
-        ):
-            result = _resolve_categories_to_ids(["code_quality", "testing"])
-            assert "P_LINTING_SAST" in result
-            assert "P_TEST_COVERAGE" in result
-
-    def test_resolve_all_category(self, mock_category_mapping: dict[str, list[str]]) -> None:
-        """Test resolving 'all' category returns all principles"""
-        with patch(
-            "claudecodeoptimizer.core.principle_loader._load_category_mapping",
-            return_value=mock_category_mapping,
-        ):
-            result = _resolve_categories_to_ids(["all"])
-
-            # Should contain principles from all categories
-            assert "U_DRY" in result
-            assert "P_LINTING_SAST" in result
-            assert "P_API_SECURITY" in result
-            assert "P_TEST_COVERAGE" in result
-
-    def test_resolve_removes_duplicates(self, mock_category_mapping: dict[str, list[str]]) -> None:
-        """Test that duplicate principle IDs are removed"""
-        with patch(
-            "claudecodeoptimizer.core.principle_loader._load_category_mapping",
-            return_value=mock_category_mapping,
-        ):
-            # universal and core both contain U_FAIL_FAST
-            result = _resolve_categories_to_ids(["universal", "core"])
-
-            # Count occurrences
-            assert result.count("U_FAIL_FAST") == 1
-            assert result.count("U_EVIDENCE_BASED") == 1
-
-    def test_resolve_preserves_order(self, mock_category_mapping: dict[str, list[str]]) -> None:
-        """Test that principle order is preserved"""
-        with patch(
-            "claudecodeoptimizer.core.principle_loader._load_category_mapping",
-            return_value=mock_category_mapping,
-        ):
-            result = _resolve_categories_to_ids(["code_quality"])
-
-            # Order should match category mapping
-            assert result == ["P_LINTING_SAST", "P_TYPE_SAFETY"]
-
-    def test_resolve_unknown_category(self, mock_category_mapping: dict[str, list[str]]) -> None:
-        """Test resolving unknown category returns empty list"""
-        with patch(
-            "claudecodeoptimizer.core.principle_loader._load_category_mapping",
-            return_value=mock_category_mapping,
-        ):
-            result = _resolve_categories_to_ids(["unknown_category"])
-            assert result == []
-
-    def test_resolve_empty_categories(self, mock_category_mapping: dict[str, list[str]]) -> None:
-        """Test resolving empty category list"""
-        with patch(
-            "claudecodeoptimizer.core.principle_loader._load_category_mapping",
-            return_value=mock_category_mapping,
-        ):
-            result = _resolve_categories_to_ids([])
-            assert result == []
+    return commands_dir
 
 
 class TestPrincipleLoaderInit:
@@ -329,75 +196,35 @@ class TestPrincipleLoaderLoadPrinciples:
         # Should have separator between principles
         assert content.count("\n\n---\n\n") == 1
 
-
-class TestPrincipleLoaderLoadForCommand:
-    """Test load_for_command method"""
-
-    def test_load_for_known_command(self, temp_principles_dir: Path) -> None:
-        """Test loading principles for a known command"""
+    def test_load_single_principle(self, temp_principles_dir: Path) -> None:
+        """Test loading single principle through load_principles"""
         loader = PrincipleLoader(temp_principles_dir)
+        content = loader.load_principles(["U_DRY"])
 
-        with patch(
-            "claudecodeoptimizer.core.principle_loader._resolve_categories_to_ids",
-            return_value=["U_DRY", "P_LINTING_SAST"],
-        ):
-            content = loader.load_for_command("cco-audit-code")
-
-            assert "Don't Repeat Yourself" in content or "Linting content" in content
-
-    def test_load_for_unknown_command(self, temp_principles_dir: Path) -> None:
-        """Test loading principles for unknown command uses defaults"""
-        loader = PrincipleLoader(temp_principles_dir)
-
-        with patch(
-            "claudecodeoptimizer.core.principle_loader._resolve_categories_to_ids",
-            return_value=["U_DRY"],
-        ):
-            content = loader.load_for_command("unknown-command")
-
-            # Should use default categories (universal, core)
-            assert content is not None
-
-    def test_load_for_command_uses_mapping(
-        self, temp_principles_dir: Path, mock_category_mapping: dict[str, list[str]]
-    ) -> None:
-        """Test that load_for_command uses COMMAND_PRINCIPLE_MAP"""
-        loader = PrincipleLoader(temp_principles_dir)
-
-        # Test specific command mapping
-        assert "cco-audit-security" in COMMAND_PRINCIPLE_MAP
-        categories = COMMAND_PRINCIPLE_MAP["cco-audit-security"]
-        assert "security_privacy" in categories
+        assert "Don't Repeat Yourself" in content
+        assert content.count("\n\n---\n\n") == 0  # No separator for single principle
 
 
 class TestPrincipleLoaderLoadFromFrontmatter:
     """Test load_from_frontmatter method"""
 
     def test_load_from_frontmatter_valid_file(
-        self, temp_principles_dir: Path, tmp_path: Path
+        self, temp_principles_dir: Path, temp_commands_dir: Path
     ) -> None:
         """Test loading principles from command file frontmatter"""
         loader = PrincipleLoader(temp_principles_dir)
 
-        # Create command file with frontmatter
-        cmd_file = tmp_path / "command.md"
-        cmd_file.write_text(
-            "---\nprinciples: ['U_DRY', 'P_LINTING_SAST']\n---\n\nCommand content",
-            encoding="utf-8",
-        )
-
+        cmd_file = temp_commands_dir / "cco-test-with-principles.md"
         content = loader.load_from_frontmatter(cmd_file)
         assert "Don't Repeat Yourself" in content or "Linting" in content
 
     def test_load_from_frontmatter_no_frontmatter(
-        self, temp_principles_dir: Path, tmp_path: Path
+        self, temp_principles_dir: Path, temp_commands_dir: Path
     ) -> None:
         """Test loading from file without frontmatter"""
         loader = PrincipleLoader(temp_principles_dir)
 
-        cmd_file = tmp_path / "command.md"
-        cmd_file.write_text("No frontmatter here", encoding="utf-8")
-
+        cmd_file = temp_commands_dir / "cco-test-no-frontmatter.md"
         content = loader.load_from_frontmatter(cmd_file)
         assert content == ""
 
@@ -412,32 +239,22 @@ class TestPrincipleLoaderLoadFromFrontmatter:
         assert content == ""
 
     def test_load_from_frontmatter_no_principles_field(
-        self, temp_principles_dir: Path, tmp_path: Path
+        self, temp_principles_dir: Path, temp_commands_dir: Path
     ) -> None:
         """Test loading from file with frontmatter but no principles field"""
         loader = PrincipleLoader(temp_principles_dir)
 
-        cmd_file = tmp_path / "command.md"
-        cmd_file.write_text(
-            "---\ntitle: Test\n---\n\nContent",
-            encoding="utf-8",
-        )
-
+        cmd_file = temp_commands_dir / "cco-test-no-principles-field.md"
         content = loader.load_from_frontmatter(cmd_file)
         assert content == ""
 
     def test_load_from_frontmatter_empty_principles(
-        self, temp_principles_dir: Path, tmp_path: Path
+        self, temp_principles_dir: Path, temp_commands_dir: Path
     ) -> None:
         """Test loading from file with empty principles list"""
         loader = PrincipleLoader(temp_principles_dir)
 
-        cmd_file = tmp_path / "command.md"
-        cmd_file.write_text(
-            "---\nprinciples: []\n---\n\nContent",
-            encoding="utf-8",
-        )
-
+        cmd_file = temp_commands_dir / "cco-test-empty-principles.md"
         content = loader.load_from_frontmatter(cmd_file)
         assert content == ""
 
@@ -447,7 +264,7 @@ class TestPrincipleLoaderLoadFromFrontmatter:
         """Test loading from file with malformed frontmatter"""
         loader = PrincipleLoader(temp_principles_dir)
 
-        cmd_file = tmp_path / "command.md"
+        cmd_file = tmp_path / "malformed.md"
         cmd_file.write_text(
             "---\nmalformed frontmatter\n",
             encoding="utf-8",
@@ -462,7 +279,7 @@ class TestPrincipleLoaderLoadFromFrontmatter:
         """Test loading principles with quoted IDs in frontmatter"""
         loader = PrincipleLoader(temp_principles_dir)
 
-        cmd_file = tmp_path / "command.md"
+        cmd_file = tmp_path / "quoted.md"
         cmd_file.write_text(
             "---\nprinciples: [\"U_DRY\", 'P_LINTING_SAST']\n---\n\nContent",
             encoding="utf-8",
@@ -470,6 +287,87 @@ class TestPrincipleLoaderLoadFromFrontmatter:
 
         content = loader.load_from_frontmatter(cmd_file)
         assert len(content) > 0
+        assert "Don't Repeat Yourself" in content or "Linting" in content
+
+    def test_load_from_frontmatter_incomplete_frontmatter(
+        self, temp_principles_dir: Path, tmp_path: Path
+    ) -> None:
+        """Test loading from file with incomplete frontmatter (no closing ---)"""
+        loader = PrincipleLoader(temp_principles_dir)
+
+        cmd_file = tmp_path / "incomplete.md"
+        cmd_file.write_text(
+            "---\nprinciples: ['U_DRY']\nNo closing delimiter",
+            encoding="utf-8",
+        )
+
+        content = loader.load_from_frontmatter(cmd_file)
+        assert content == ""
+
+
+class TestPrincipleLoaderLoadForCommand:
+    """Test load_for_command method"""
+
+    def test_load_for_command_with_frontmatter(
+        self, temp_principles_dir: Path, tmp_path: Path
+    ) -> None:
+        """Test loading principles for command with frontmatter"""
+        loader = PrincipleLoader(temp_principles_dir)
+
+        # Mock the package directory structure
+        package_dir = tmp_path / "package"
+        commands_dir = package_dir / "content" / "commands"
+        commands_dir.mkdir(parents=True)
+
+        cmd_file = commands_dir / "cco-test.md"
+        cmd_file.write_text(
+            "---\nprinciples: ['U_DRY']\n---\n\nTest",
+            encoding="utf-8",
+        )
+
+        with patch("claudecodeoptimizer.core.principle_loader.Path") as mock_path:
+            # Mock Path(__file__).parent.parent to return package_dir
+            mock_path.return_value.parent.parent = package_dir
+
+            content = loader.load_for_command("cco-test")
+            assert "Don't Repeat Yourself" in content
+
+    def test_load_for_command_no_frontmatter(
+        self, temp_principles_dir: Path, tmp_path: Path
+    ) -> None:
+        """Test loading principles for command without frontmatter"""
+        loader = PrincipleLoader(temp_principles_dir)
+
+        # Mock the package directory structure
+        package_dir = tmp_path / "package"
+        commands_dir = package_dir / "content" / "commands"
+        commands_dir.mkdir(parents=True)
+
+        cmd_file = commands_dir / "cco-test.md"
+        cmd_file.write_text("No frontmatter", encoding="utf-8")
+
+        with patch("claudecodeoptimizer.core.principle_loader.Path") as mock_path:
+            mock_path.return_value.parent.parent = package_dir
+
+            content = loader.load_for_command("cco-test")
+            assert content == ""
+
+    def test_load_for_command_nonexistent_file(
+        self, temp_principles_dir: Path, tmp_path: Path
+    ) -> None:
+        """Test loading principles for non-existent command file"""
+        loader = PrincipleLoader(temp_principles_dir)
+
+        # Mock the package directory structure
+        package_dir = tmp_path / "package"
+        commands_dir = package_dir / "content" / "commands"
+        commands_dir.mkdir(parents=True)
+
+        with patch("claudecodeoptimizer.core.principle_loader.Path") as mock_path:
+            mock_path.return_value.parent.parent = package_dir
+
+            content = loader.load_for_command("cco-nonexistent")
+            assert content == ""
 
 
 class TestPrincipleLoaderLoadAllPrinciples:
@@ -516,71 +414,6 @@ class TestPrincipleLoaderLoadAllPrinciples:
         assert content == ""
 
 
-class TestPrincipleLoaderGetCategoriesForCommand:
-    """Test get_categories_for_command method"""
-
-    def test_get_categories_known_command(self, temp_principles_dir: Path) -> None:
-        """Test getting categories for known command"""
-        loader = PrincipleLoader(temp_principles_dir)
-        categories = loader.get_categories_for_command("cco-audit-security")
-
-        assert "universal" in categories
-        assert "security_privacy" in categories
-
-    def test_get_categories_unknown_command(self, temp_principles_dir: Path) -> None:
-        """Test getting categories for unknown command returns defaults"""
-        loader = PrincipleLoader(temp_principles_dir)
-        categories = loader.get_categories_for_command("unknown-command")
-
-        assert categories == ["core"]
-
-    def test_get_categories_all_audit(self, temp_principles_dir: Path) -> None:
-        """Test getting categories for comprehensive audit"""
-        loader = PrincipleLoader(temp_principles_dir)
-        categories = loader.get_categories_for_command("cco-audit-all")
-
-        assert "all" in categories
-
-
-class TestPrincipleLoaderEstimateTokenCount:
-    """Test estimate_token_count method"""
-
-    def test_estimate_single_category(self, temp_principles_dir: Path) -> None:
-        """Test token estimation for single category"""
-        loader = PrincipleLoader(temp_principles_dir)
-        count = loader.estimate_token_count("cco-remove")
-
-        # Should estimate tokens for core category
-        assert count > 0
-
-    def test_estimate_multiple_categories(self, temp_principles_dir: Path) -> None:
-        """Test token estimation for multiple categories"""
-        loader = PrincipleLoader(temp_principles_dir)
-        count = loader.estimate_token_count("cco-audit-security")
-
-        # Should be sum of multiple categories
-        assert count > 500
-
-    def test_estimate_all_categories(self, temp_principles_dir: Path) -> None:
-        """Test token estimation for all categories"""
-        loader = PrincipleLoader(temp_principles_dir)
-        count = loader.estimate_token_count("cco-audit-all")
-
-        # Should be sum of all category estimates
-        assert count > 5000
-
-    def test_estimate_unknown_category(self, temp_principles_dir: Path) -> None:
-        """Test token estimation for unknown category uses default"""
-        loader = PrincipleLoader(temp_principles_dir)
-
-        # Mock command with unknown category
-        with patch.object(loader, "get_categories_for_command", return_value=["unknown"]):
-            count = loader.estimate_token_count("test-command")
-
-            # Should use default estimate (500)
-            assert count == 500
-
-
 class TestPrincipleLoaderClearCache:
     """Test clear_cache method"""
 
@@ -599,73 +432,67 @@ class TestPrincipleLoaderClearCache:
 
         assert len(loader._cache) == 0
 
+    def test_clear_cache_empty(self, temp_principles_dir: Path) -> None:
+        """Test clearing already empty cache"""
+        loader = PrincipleLoader(temp_principles_dir)
+
+        assert len(loader._cache) == 0
+
+        # Clear empty cache
+        loader.clear_cache()
+
+        assert len(loader._cache) == 0
+
 
 class TestLoadPrinciplesForCommand:
     """Test load_principles_for_command convenience function"""
 
-    def test_convenience_function(self, temp_principles_dir: Path) -> None:
+    def test_convenience_function(self, temp_principles_dir: Path, tmp_path: Path) -> None:
         """Test convenience function loads principles"""
+        # Mock the package directory structure
+        package_dir = tmp_path / "package"
+        commands_dir = package_dir / "content" / "commands"
+        commands_dir.mkdir(parents=True)
+
+        cmd_file = commands_dir / "cco-test.md"
+        cmd_file.write_text(
+            "---\nprinciples: ['U_DRY']\n---\n\nTest",
+            encoding="utf-8",
+        )
+
         with patch("claudecodeoptimizer.config.CCOConfig.get_principles_dir") as mock_get:
             mock_get.return_value = temp_principles_dir
 
-            with patch(
-                "claudecodeoptimizer.core.principle_loader._resolve_categories_to_ids",
-                return_value=["U_DRY"],
-            ):
-                content = load_principles_for_command("cco-status")
+            with patch("claudecodeoptimizer.core.principle_loader.Path") as mock_path:
+                mock_path.return_value.parent.parent = package_dir
 
+                content = load_principles_for_command("cco-test")
                 assert len(content) > 0
 
 
-class TestCommandPrincipleMap:
-    """Test COMMAND_PRINCIPLE_MAP constant"""
-
-    def test_map_has_core_commands(self) -> None:
-        """Test that map includes core commands"""
-        assert "cco-status" in COMMAND_PRINCIPLE_MAP
-        assert "cco-config" in COMMAND_PRINCIPLE_MAP
-        assert "cco-remove" in COMMAND_PRINCIPLE_MAP
-
-    def test_map_has_audit_commands(self) -> None:
-        """Test that map includes audit commands"""
-        assert "cco-audit" in COMMAND_PRINCIPLE_MAP
-        assert "cco-audit-code" in COMMAND_PRINCIPLE_MAP
-        assert "cco-audit-security" in COMMAND_PRINCIPLE_MAP
-
-    def test_all_commands_have_universal(self) -> None:
-        """Test that all commands include universal category"""
-        for command, categories in COMMAND_PRINCIPLE_MAP.items():
-            assert "universal" in categories, f"Command {command} missing universal category"
-
-    def test_map_values_are_lists(self) -> None:
-        """Test that all map values are lists"""
-        for command, categories in COMMAND_PRINCIPLE_MAP.items():
-            assert isinstance(categories, list), f"Command {command} has non-list value"
-
-    def test_comprehensive_audit_has_all(self) -> None:
-        """Test that comprehensive audit commands use 'all' category"""
-        assert "all" in COMMAND_PRINCIPLE_MAP["cco-audit"]
-        assert "all" in COMMAND_PRINCIPLE_MAP["cco-audit-all"]
-
-
 class TestIntegration:
-    """Integration tests with mocked file system"""
+    """Integration tests"""
 
     def test_full_workflow(self, temp_principles_dir: Path, tmp_path: Path) -> None:
         """Test complete workflow from command to loaded principles"""
         loader = PrincipleLoader(temp_principles_dir)
 
-        # Mock category mapping
-        with patch(
-            "claudecodeoptimizer.core.principle_loader._load_category_mapping",
-            return_value={
-                "universal": ["U_DRY"],
-                "core": ["U_DRY"],
-                "code_quality": ["P_LINTING_SAST"],
-            },
-        ):
+        # Mock the package directory structure
+        package_dir = tmp_path / "package"
+        commands_dir = package_dir / "content" / "commands"
+        commands_dir.mkdir(parents=True)
+
+        cmd_file = commands_dir / "cco-test.md"
+        cmd_file.write_text(
+            "---\nprinciples: ['U_DRY', 'P_LINTING_SAST']\n---\n\nTest",
+            encoding="utf-8",
+        )
+
+        with patch("claudecodeoptimizer.core.principle_loader.Path") as mock_path:
+            mock_path.return_value.parent.parent = package_dir
+
             # Load for command
-            content = loader.load_for_command("cco-audit-code")
+            content = loader.load_for_command("cco-test")
 
             # Should have loaded relevant principles
             assert len(content) > 0
