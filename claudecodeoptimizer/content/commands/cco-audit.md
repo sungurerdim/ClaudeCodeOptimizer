@@ -1685,8 +1685,11 @@ Task({
     description: "Security audit",
     prompt: """
     Focus: Security vulnerabilities
-    Checks: SQL injection, XSS, CSRF, secrets, auth, CVEs
-    Skill: cco-skill-security-owasp-xss-sqli-csrf
+    Checks: SQL injection, XSS, CSRF, secrets, auth, CVEs, GDPR, privacy, encryption, supply chain, dependencies, SAST
+    Skills:
+    - cco-skill-security-owasp-xss-sqli-csrf
+    - cco-skill-privacy-gdpr-compliance-encryption
+    - cco-skill-supply-chain-dependencies-sast
     Return: Findings with severity, file:line, risk, fix
     """
 })
@@ -1697,8 +1700,10 @@ Task({
     description: "Performance audit",
     prompt: """
     Focus: Performance bottlenecks
-    Checks: N+1 queries, missing indexes, no caching, slow algorithms
-    Skill: cco-skill-database-optimization-caching-profiling
+    Checks: N+1 queries, missing indexes, no caching, slow algorithms, mobile performance, battery optimization, offline-first
+    Skills:
+    - cco-skill-database-optimization-caching-profiling
+    - cco-skill-mobile-offline-battery-appstore
     Return: Findings with impact metrics, file:line, optimization
     """
 })
@@ -1733,8 +1738,10 @@ Task({
     description: "Architecture audit",
     prompt: """
     Focus: Architecture concerns
-    Checks: Coupling, patterns, boundaries, dependencies
-    Skill: cco-skill-microservices-cqrs-mesh-di
+    Checks: Coupling, patterns, boundaries, dependencies, event-driven architecture, messaging
+    Skills:
+    - cco-skill-microservices-cqrs-mesh-di
+    - cco-skill-eventdriven-async-messaging-queues
     Return: Findings with design issue, impact, restructure suggestion
     """
 })
@@ -1770,7 +1777,10 @@ Task({
     prompt: """
     Focus: Platform engineering maturity
     Checks: CI/CD completeness, IaC presence, deployment automation, test automation, DX
-    Skill: cco-skill-platform-engineering-maturity-dx
+    Skills:
+    - cco-skill-platform-engineering-maturity-dx
+    - cco-skill-cicd-gates-deployment-automation
+    - cco-skill-deployment-bluegreen-canary-rollback
     Return: Findings with maturity score, missing capabilities, improvement recommendations
     """
 })
@@ -1984,3 +1994,37 @@ Consider smaller selection:
 - [ ] Findings streamed as discovered
 - [ ] Final report generated with all sections
 - [ ] Next action commands provided
+
+## Agent Error Handling
+
+**If audit agent execution fails:**
+
+AskUserQuestion({
+  questions: [{
+    question: "audit-agent (Sonnet) failed: {error_message}. How to proceed?",
+    header: "audit-agent (Sonnet) Error",
+    multiSelect: false,
+    options: [
+      {label: "Retry", description: "Run agent again with same parameters"},
+      {label: "Retry with different model", description: "Try Sonnet/Haiku/Opus"},
+      {label: "Manual audit", description: "Guide manual audit process"},
+      {label: "Skip this audit category", description: "Continue with next category"},
+      {label: "Cancel", description: "Stop entire command"}
+    ]
+  }]
+})
+
+**Model selection if user chooses "Retry with different model":**
+
+AskUserQuestion({
+  questions: [{
+    question: "Which model to try?",
+    header: "Model Selection",
+    multiSelect: false,
+    options: [
+      {label: "Sonnet", description: "Balanced performance and cost (recommended)"},
+      {label: "Haiku", description: "Faster, more affordable"},
+      {label: "Opus", description: "Most capable, higher cost"}
+    ]
+  }]
+})

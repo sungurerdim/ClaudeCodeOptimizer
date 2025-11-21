@@ -85,6 +85,13 @@ parameters:
 
 ## Purpose
 
+
+## Execution Guarantee
+
+This command executes the FULL operation as planned.
+No scope reduction due to time constraints or "workload concerns".
+
+**Estimated time: Provided for transparency, NOT to reduce scope.**
 Generate missing tests, documentation, CI/CD configs, and other project components using specialized skills and the generate agent.
 
 ---
@@ -139,8 +146,8 @@ OUTCOMES = {
    - Generates: Complete OpenAPI 3.0 spec from code
 
 6. **--cicd** - CI/CD pipeline
-   - Skill: `cco-skill-cicd-gates-deployment-automation`
-   - Generates: GitHub Actions/GitLab CI with quality gates
+   - Skills: `cco-skill-cicd-gates-deployment-automation`, `cco-skill-deployment-bluegreen-canary-rollback`
+   - Generates: GitHub Actions/GitLab CI with quality gates, deployment strategies
 
 ### 🟢 Recommended
 
@@ -359,6 +366,10 @@ AskUserQuestion({
       multiSelect: true,
       options: [
         {
+          label: "All Testing",
+          description: "Generate all testing components (unit, integration, contract, load, chaos)"
+        },
+        {
           label: f"Unit + Integration ({test_file_count} files)",
           description: f"Untested functions, API tests, fixtures | {untested_count} functions | Pain #4"
         },
@@ -369,10 +380,6 @@ AskUserQuestion({
         {
           label: f"Load + Chaos ({perf_count} scenarios)",
           description: "Locust/k6 load tests, chaos engineering, failure injection"
-        },
-        {
-          label: "All Testing",
-          description: "Generate all testing components (unit, integration, contract, load, chaos)"
         }
       ]
     },
@@ -381,6 +388,10 @@ AskUserQuestion({
       header: "🟡 Docs",
       multiSelect: true,
       options: [
+        {
+          label: "All Documentation",
+          description: "Generate all documentation components"
+        },
         {
           label: f"OpenAPI Spec ({endpoint_count} endpoints)",
           description: "Complete OpenAPI 3.0, Swagger UI, schemas, examples | Pain #7"
@@ -396,10 +407,6 @@ AskUserQuestion({
         {
           label: "Runbooks + Requirements",
           description: "Operational runbooks, incident response, dependency files"
-        },
-        {
-          label: "All Documentation",
-          description: "Generate all documentation components"
         }
       ]
     },
@@ -408,6 +415,10 @@ AskUserQuestion({
       header: "🟢 CI/CD",
       multiSelect: true,
       options: [
+        {
+          label: "All CI/CD & Containers",
+          description: "Generate all CI/CD and container components"
+        },
         {
           label: "CI/CD Pipeline",
           description: "GitHub Actions/GitLab CI with quality gates, parallel jobs"
@@ -419,10 +430,6 @@ AskUserQuestion({
         {
           label: "Dockerfile",
           description: "Multi-stage build, docker-compose, .dockerignore, health checks"
-        },
-        {
-          label: "All CI/CD & Containers",
-          description: "Generate all CI/CD and container components"
         }
       ]
     },
@@ -431,6 +438,10 @@ AskUserQuestion({
       header: "🟢 Ops",
       multiSelect: true,
       options: [
+        {
+          label: "All Ops",
+          description: "Select all database and observability components"
+        },
         {
           label: f"Migration + Indexes ({db_issue_count} items)",
           description: "Migration scripts with rollback, index creation for slow queries"
@@ -442,10 +453,6 @@ AskUserQuestion({
         {
           label: "Logging",
           description: "Structured logging config with correlation IDs, tracing"
-        },
-        {
-          label: "All Components",
-          description: "✅ Generate ALL components across all categories (comprehensive setup)"
         }
       ]
     }
@@ -673,14 +680,14 @@ Any text after the flags is treated as additional context for generation. The AI
 Task({
   subagent_type: "general-purpose",
   model: "sonnet",
-  description: "Generate unit tests for auth module",
-  prompt: "Analyze auth.py and generate comprehensive unit tests..."
+  description: "Generate unit tests for {MODULE_NAME}",
+  prompt: "Analyze {MODULE_FILE} and generate comprehensive unit tests..."
 })
 Task({
   subagent_type: "general-purpose",
   model: "sonnet",
-  description: "Generate integration tests for API",
-  prompt: "Analyze API endpoints and generate integration tests..."
+  description: "Generate integration tests for {COMPONENT_TYPE}",
+  prompt: "Analyze {ENDPOINT_TYPE} and generate integration tests..."
 })
 Task({
   subagent_type: "general-purpose",
@@ -692,7 +699,7 @@ Task({
   subagent_type: "general-purpose",
   model: "sonnet",
   description: "Generate CI/CD config",
-  prompt: "Generate GitHub Actions workflow with tests and quality gates..."
+  prompt: "Generate {CI_PLATFORM} workflow with tests and quality gates..."
 })
 
 # All run in parallel since outputs are independent
@@ -791,3 +798,37 @@ Warn user if:
 - **After /cco-audit --quick**: Follow action plan
 - **With /cco-fix**: Fix existing, generate missing
 - **Before /cco-commit**: Generate then commit
+
+## Agent Error Handling
+
+**If generate-agent execution fails:**
+
+AskUserQuestion({
+  questions: [{
+    question: "generate-agent (Sonnet) failed: {error_message}. How to proceed?",
+    header: "generate-agent (Sonnet) Error",
+    multiSelect: false,
+    options: [
+      {label: "Retry", description: "Run agent again with same parameters"},
+      {label: "Retry with different model", description: "Try Sonnet/Haiku/Opus"},
+      {label: "Manual generation", description: "Guide manual implementation"},
+      {label: "Skip this component", description: "Continue without this component"},
+      {label: "Cancel", description: "Stop entire command"}
+    ]
+  }]
+})
+
+**Model selection if user chooses "Retry with different model":**
+
+AskUserQuestion({
+  questions: [{
+    question: "Which model to try?",
+    header: "Model Selection",
+    multiSelect: false,
+    options: [
+      {label: "Sonnet", description: "Balanced performance and cost (recommended)"},
+      {label: "Haiku", description: "Faster, more affordable"},
+      {label: "Opus", description: "Most capable, higher cost"}
+    ]
+  }]
+})

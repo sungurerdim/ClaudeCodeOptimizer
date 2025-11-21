@@ -81,17 +81,26 @@ WHAT WILL NOT BE DELETED:
 
 ============================================================
 
-Type 'yes-delete-cco' to confirm deletion
-Type 'no' or anything else to cancel
 
-Choice: ▯
+AskUserQuestion({
+  questions: [{
+    question: "PERMANENT DELETION: This will remove ALL CCO files. This action CANNOT be undone. Are you absolutely sure?",
+    header: "Confirm Deletion",
+    multiSelect: false,
+    options: [
+      {label: "Yes, delete everything", description: "⚠️ PERMANENT - Removes all CCO"},
+      {label: "Backup first", description: "Create backup before deletion"},
+      {label: "Cancel", description: "Keep CCO installed"}
+    ]
+  }]
+})
 ```
 
 ### Step 3: Confirm Deletion
 
-User must type exact string: **`yes-delete-cco`**
+User must select "Yes, delete everything" to proceed.
 
-Any other input cancels.
+Any other selection cancels.
 
 ### Step 4: Execute Removal
 
@@ -163,7 +172,7 @@ BACKUP (if created):
 ## Safety Features
 
 1. **Preview before delete:** Show exactly what will be removed
-2. **Explicit confirmation:** Require typing exact string
+2. **Explicit confirmation:** Require explicit selection
 3. **Optional backup:** Backup before deletion
 4. **Verification:** Confirm removal completed
 5. **Zero project pollution:** Only CCO files removed, no project files
@@ -193,7 +202,7 @@ However, global directory exists: ~/.claude/
   Total: {TOTAL_COUNT} CCO files found
 ------------------------------------------------------------
 
-Delete global CCO files only? (yes/no)
+AskUserQuestion({  questions: [{    question: "CCO package not found, but global directory exists. Delete global CCO files only?",    header: "Warning: Package Not Found",    multiSelect: false,    options: [      {label: "Yes", description: "Delete global CCO files"},      {label: "No", description: "Cancel deletion"}    ]  }]})
 ```
 
 If directory not found but package exists:
@@ -209,7 +218,7 @@ However, CCO package is installed:
   • Location: {PACKAGE_LOCATION}
   • Version: {VERSION}
 
-Uninstall package only? (yes/no)
+AskUserQuestion({  questions: [{    question: "Global directory not found, but CCO package is installed. Uninstall package only?",    header: "Warning: Directory Not Found",    multiSelect: false,    options: [      {label: "Yes", description: "Uninstall package only"},      {label: "No", description: "Cancel uninstallation"}    ]  }]})
 ```
 
 ---
@@ -250,3 +259,26 @@ cco-setup
 pipx install git+https://github.com/sungurerdim/ClaudeCodeOptimizer.git
 cco-setup
 ```
+
+## Removal Error Handling
+
+**If removal fails for some files:**
+
+AskUserQuestion({
+  questions: [{
+    question: "Removal failed for {N} files: {error_summary}. How to proceed?",
+    header: "Removal Error",
+    multiSelect: false,
+    options: [
+      {label: "Retry", description: "Try removing failed files again"},
+      {label: "Force delete", description: "Force removal (may require admin permissions)"},
+      {label: "Manual cleanup", description: "Show files to delete manually"},
+      {label: "Leave as-is", description: "Keep remaining files"},
+      {label: "Cancel", description: "Stop removal"}
+    ]
+  }]
+})
+
+**Permission errors:**
+- Windows: May require running as Administrator
+- Unix: May require sudo or different file permissions

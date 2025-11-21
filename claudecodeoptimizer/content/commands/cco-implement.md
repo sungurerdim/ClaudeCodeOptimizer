@@ -15,6 +15,13 @@ pain_points: [1, 4]
 
 ## Purpose
 
+
+## Execution Guarantee
+
+This command executes the FULL TDD implementation cycle.
+All phases (Red → Green → Refactor) completed without shortcuts.
+
+**Estimated time: Provided for transparency, NOT to skip steps.**
 Implement new features using Test-Driven Development (TDD), automatically selecting appropriate skills based on feature type.
 
 ---
@@ -211,6 +218,7 @@ Skills I'll use:
 - Keywords "database", "query", "schema" → database skills
 - Keywords "frontend", "UI", "component" → frontend skills
 - Keywords "deploy", "CI/CD", "pipeline" → deployment skills
+- Keywords "mobile", "offline", "battery", "app store", "iOS", "Android" → cco-skill-mobile-offline-battery-appstore
 - Always include: testing skills (TDD approach)
 
 ### Step 3: Create Implementation Plan and Get User Confirmation
@@ -305,7 +313,7 @@ implementation_options.extend([
         description: f"🟢 Execute only {len(implementation_steps)} implementation steps (Phase 3) - TDD Green Phase (requires tests!)"
     },
     {
-        label: "Skip Tests (NOT RECOMMENDED)",
+        label: "Skip Tests ⚠️ STRONGLY NOT RECOMMENDED - Violates TDD principles, no quality guarantee",
         description: "⚠️ Skip Phase 2 (Tests) - Pain #4: Biggest mistake!"
     }
 ])
@@ -332,18 +340,53 @@ AskUserQuestion({
 
 ### Step 4: Execute TDD Implementation
 
-**Use TodoWrite** to track phases
+**CRITICAL UX: Announce each phase transition explicitly using the PHASES dict**
+
+Before executing each phase, announce it to the user:
+
+```markdown
+───────────────────────────────────────────────────────
+### Phase 1/5: Architecture Design ▶ STARTED
+───────────────────────────────────────────────────────
+Designing feature architecture and component structure...
+```
+
+**Use TodoWrite** to track phases:
+```python
+TodoWrite([
+    {"content": "Phase 1: Architecture Design", "status": "in_progress", "activeForm": "Designing architecture"},
+    {"content": "Phase 2: TDD Red Phase (Tests First)", "status": "pending", "activeForm": "Writing failing tests"},
+    {"content": "Phase 3: TDD Green Phase (Implementation)", "status": "pending", "activeForm": "Implementing feature"},
+    {"content": "Phase 4: Security Hardening", "status": "pending", "activeForm": "Adding security measures"},
+    {"content": "Phase 5: Documentation", "status": "pending", "activeForm": "Writing documentation"}
+])
+```
 
 **Launch Task** for each phase:
 
 ```python
-# Phase 1: Architecture
+# ═══════════════════════════════════════════════════════
+# Phase 1/5: Architecture Design ▶ STARTED
+# ═══════════════════════════════════════════════════════
 Task({
   model: "sonnet",
   prompt: "Design JWT authentication architecture..."
 })
 
-# Phase 2: Tests (TDD - Write tests first)
+# Mark Phase 1 complete
+print("───────────────────────────────────────────────────────")
+print("### Phase 1/5: Architecture Design ✓ COMPLETE")
+print("───────────────────────────────────────────────────────")
+TodoWrite([...update Phase 1 to "completed", Phase 2 to "in_progress"...])
+
+# ═══════════════════════════════════════════════════════
+# Phase 2/5: TDD Red Phase (Tests First) ▶ STARTED
+# ═══════════════════════════════════════════════════════
+print("───────────────────────────────────────────────────────")
+print("### Phase 2/5: TDD Red Phase ▶ STARTED")
+print("───────────────────────────────────────────────────────")
+print("Writing failing tests first (TDD approach)...")
+
 Task({
   model: "sonnet",
   prompt: """
@@ -374,7 +417,19 @@ Task({
   """
 })
 
-# Phase 3: Implementation (Make tests pass)
+print("───────────────────────────────────────────────────────")
+print("### Phase 2/5: TDD Red Phase ✓ COMPLETE")
+print("───────────────────────────────────────────────────────")
+TodoWrite([...update Phase 2 to "completed", Phase 3 to "in_progress"...])
+
+# ═══════════════════════════════════════════════════════
+# Phase 3/5: TDD Green Phase (Implementation) ▶ STARTED
+# ═══════════════════════════════════════════════════════
+print("───────────────────────────────────────────────────────")
+print("### Phase 3/5: TDD Green Phase ▶ STARTED")
+print("───────────────────────────────────────────────────────")
+print("Implementing feature to make tests pass...")
+
 Task({
   model: "sonnet",
   prompt: """
@@ -407,8 +462,47 @@ Task({
   """
 })
 
-# Phase 4-5: Security & Documentation
-# ... similar Task calls
+print("───────────────────────────────────────────────────────")
+print("### Phase 3/5: TDD Green Phase ✓ COMPLETE")
+print("───────────────────────────────────────────────────────")
+TodoWrite([...update Phase 3 to "completed", Phase 4 to "in_progress"...])
+
+# ═══════════════════════════════════════════════════════
+# Phase 4/5: Security Hardening ▶ STARTED
+# ═══════════════════════════════════════════════════════
+print("───────────────────────────────────────────────────────")
+print("### Phase 4/5: Security Hardening ▶ STARTED")
+print("───────────────────────────────────────────────────────")
+print("Adding security measures...")
+
+Task({
+  model: "sonnet",
+  prompt: "Add rate limiting, input validation, and security hardening..."
+})
+
+print("───────────────────────────────────────────────────────")
+print("### Phase 4/5: Security Hardening ✓ COMPLETE")
+print("───────────────────────────────────────────────────────")
+TodoWrite([...update Phase 4 to "completed", Phase 5 to "in_progress"...])
+
+# ═══════════════════════════════════════════════════════
+# Phase 5/5: Documentation ▶ STARTED
+# ═══════════════════════════════════════════════════════
+print("───────────────────────────────────────────────────────")
+print("### Phase 5/5: Documentation ▶ STARTED")
+print("───────────────────────────────────────────────────────")
+print("Writing API documentation and usage examples...")
+
+Task({
+  model: "sonnet",
+  prompt: "Generate OpenAPI spec and usage documentation..."
+})
+
+print("───────────────────────────────────────────────────────")
+print("### Phase 5/5: Documentation ✓ COMPLETE")
+print("───────────────────────────────────────────────────────")
+print("✅ ALL PHASES COMPLETE - Feature implementation finished!")
+TodoWrite([...update Phase 5 to "completed"...])
 ```
 
 ### Step 5: Report Progress and Results
@@ -563,3 +657,37 @@ Any additional text is treated as context for the feature implementation. The AI
 - Incorporate specific constraints or preferences
 - Adapt architecture based on your guidance
 ```
+
+## Agent Error Handling
+
+**If implementation agent execution fails:**
+
+AskUserQuestion({
+  questions: [{
+    question: "implement-agent (Sonnet) failed: {error_message}. How to proceed?",
+    header: "implement-agent (Sonnet) Error",
+    multiSelect: false,
+    options: [
+      {label: "Retry", description: "Run agent again with same parameters"},
+      {label: "Retry with different model", description: "Try Sonnet/Haiku/Opus"},
+      {label: "Manual implementation", description: "Guide manual step-by-step implementation"},
+      {label: "Skip failing step", description: "Continue with next implementation step"},
+      {label: "Cancel", description: "Stop entire command"}
+    ]
+  }]
+})
+
+**Model selection if user chooses "Retry with different model":**
+
+AskUserQuestion({
+  questions: [{
+    question: "Which model to try?",
+    header: "Model Selection",
+    multiSelect: false,
+    options: [
+      {label: "Sonnet", description: "Balanced performance and cost (recommended)"},
+      {label: "Haiku", description: "Faster, more affordable"},
+      {label: "Opus", description: "Most capable, higher cost"}
+    ]
+  }]
+})

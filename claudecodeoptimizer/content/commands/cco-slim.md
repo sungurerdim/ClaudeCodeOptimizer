@@ -141,6 +141,32 @@ AskUserQuestion({
 
 ---
 
+## Optional Prompt Support (Advanced)
+
+Add context after mode/category flags for optimization preferences:
+
+**Examples:**
+```bash
+/cco-slim --balanced "Prioritize documentation optimization"
+/cco-slim --conservative "Minimize changes to critical files"
+/cco-slim --aggressive "Focus on removing duplicate patterns"
+/cco-slim "Optimize commands and skills, preserve principles"
+```
+
+**The AI will:**
+- Apply your preferences when analyzing optimization opportunities
+- Prioritize areas you specify
+- Adjust optimization aggressiveness based on your guidance
+- Focus on specific file types or categories you mention
+
+**Use cases:**
+- Specify which files/categories to prioritize
+- Provide context about which content is more critical
+- Request focus on specific optimization types (whitespace, examples, duplicates)
+- Indicate risk tolerance beyond mode selection
+
+---
+
 ## Component 2: Category Selection
 
 **Choose what to optimize.**
@@ -281,51 +307,134 @@ claudecodeoptimizer/content/**/*.md, src/**/*.py, -**/*_test.py
 ### Step 1: File Discovery
 
 ```python
-# Discover all relevant files
-discovered = {
-    "markdown": [],
-    "code": [],
-    "claude_tools": {
-        "skills": [],
-        "agents": [],
-        "commands": []
-    },
-    "active_context": []
-}
+# Launch discovery agent for efficient categorization
+discovery_result = Task({
+    subagent_type: "Explore",
+    model: "haiku",
+    description: "Discover and categorize files",
+    prompt: f"""
+    Discover files for categories: {selected_categories}
 
-# Markdown documentation
-if "Markdown Docs" in selected_categories or "All" in selected_categories:
-    discovered["markdown"] = Glob("**/*.md")
-    # Exclude Claude tools (handled separately)
-    discovered["markdown"] = [f for f in discovered["markdown"]
-                              if not f.startswith("claudecodeoptimizer/content/")]
+    Rules:
+    - "Markdown Docs": *.md (exclude claudecodeoptimizer/content/)
+    - "Code Files": *.py, *.js, *.ts, *.tsx, *.java, *.go, *.rs
+    - "Claude Tools": cco-skill-*.md, cco-agent-*.md, cco-*.md in commands/
+    - "Active Context": ~/.claude/CLAUDE.md + referenced principles
+    - "All": All categories
 
-# Code files
-if "Code Files" in selected_categories or "All" in selected_categories:
-    discovered["code"].extend(Glob("**/*.py"))
-    discovered["code"].extend(Glob("**/*.js"))
-    discovered["code"].extend(Glob("**/*.ts"))
-    discovered["code"].extend(Glob("**/*.tsx"))
-    discovered["code"].extend(Glob("**/*.java"))
-    discovered["code"].extend(Glob("**/*.go"))
-    discovered["code"].extend(Glob("**/*.rs"))
+    Return JSON:
+    {{
+        "markdown": ["path1.md"],
+        "code": ["path1.py"],
+        "claude_tools": {{"skills": [], "agents": [], "commands": []}},
+        "active_context": []
+    }}
+    """
+})
 
-# Claude tools
-if "Claude Tools" in selected_categories or "All" in selected_categories:
-    discovered["claude_tools"]["skills"] = Glob("**/cco-skill-*.md")
-    discovered["claude_tools"]["agents"] = Glob("**/cco-agent-*.md")
-    discovered["claude_tools"]["commands"] = Glob("**/cco-*.md",
-                                                   path="claudecodeoptimizer/content/commands/")
+# Handle discovery errors
+if discovery_result is None or (isinstance(discovery_result, dict) and "error" in discovery_result):
+    error_msg = discovery_result.get('error', 'Unknown error') if isinstance(discovery_result, dict) else 'Agent returned None'
 
-# Active context
-if "Active Context" in selected_categories or "All" in selected_categories:
-    claude_md_path = "~/.claude/CLAUDE.md"
-    if file_exists(claude_md_path):
-        discovered["active_context"].append(claude_md_path)
+    response = AskUserQuestion({
+        questions: [{
+            question: f"Explore agent (Haiku) file discovery failed: {error_msg}. How to proceed?",
+            header: "Explore (Haiku) Error",
+            multiSelect: false,
+            options: [
+                {label: "Retry", description: "Run discovery agent again"},
+                {label: "Retry with Sonnet", description: "Use more capable model"},
+                {label: "Manual discovery", description: "Use Glob() commands directly"},
+                {label: "Cancel", description: "Stop cco-slim"}
+            ]
+        }]
+    })
 
-    # Principles referenced in CLAUDE.md
-    principles = extract_principle_references(claude_md_path)
-    discovered["active_context"].extend(principles)
+    if response == "Retry":
+        discovery_result = Task({
+            subagent_type: "Explore",
+            model: "haiku",
+            description: "Discover and categorize files (retry)",
+            prompt: f"""
+            Discover files for categories: {selected_categories}
+
+            Rules:
+            - "Markdown Docs": *.md (exclude claudecodeoptimizer/content/)
+            - "Code Files": *.py, *.js, *.ts, *.tsx, *.java, *.go, *.rs
+            - "Claude Tools": cco-skill-*.md, cco-agent-*.md, cco-*.md in commands/
+            - "Active Context": ~/.claude/CLAUDE.md + referenced principles
+            - "All": All categories
+
+            Return JSON:
+            {{
+                "markdown": ["path1.md"],
+                "code": ["path1.py"],
+                "claude_tools": {{"skills": [], "agents": [], "commands": []}},
+                "active_context": []
+            }}
+            """
+        })
+    elif response == "Retry with Sonnet":
+        discovery_result = Task({
+            subagent_type: "Explore",
+            model: "sonnet",
+            description: "Discover and categorize files (retry)",
+            prompt: f"""
+            Discover files for categories: {selected_categories}
+
+            Rules:
+            - "Markdown Docs": *.md (exclude claudecodeoptimizer/content/)
+            - "Code Files": *.py, *.js, *.ts, *.tsx, *.java, *.go, *.rs
+            - "Claude Tools": cco-skill-*.md, cco-agent-*.md, cco-*.md in commands/
+            - "Active Context": ~/.claude/CLAUDE.md + referenced principles
+            - "All": All categories
+
+            Return JSON:
+            {{
+                "markdown": ["path1.md"],
+                "code": ["path1.py"],
+                "claude_tools": {{"skills": [], "agents": [], "commands": []}},
+                "active_context": []
+            }}
+            """
+        })
+    elif response == "Manual discovery":
+        # Fallback to manual Glob()
+        discovered = {
+            "markdown": [],
+            "code": [],
+            "claude_tools": {"skills": [], "agents": [], "commands": []},
+            "active_context": []
+        }
+
+        if "Markdown Docs" in selected_categories or "All" in selected_categories:
+            discovered["markdown"] = Glob("**/*.md")
+            discovered["markdown"] = [f for f in discovered["markdown"]
+                                      if not f.startswith("claudecodeoptimizer/content/")]
+
+        if "Code Files" in selected_categories or "All" in selected_categories:
+            for ext in ["*.py", "*.js", "*.ts", "*.tsx", "*.java", "*.go", "*.rs"]:
+                discovered["code"].extend(Glob(f"**/{ext}"))
+
+        if "Claude Tools" in selected_categories or "All" in selected_categories:
+            discovered["claude_tools"]["skills"] = Glob("**/cco-skill-*.md")
+            discovered["claude_tools"]["agents"] = Glob("**/cco-agent-*.md")
+            discovered["claude_tools"]["commands"] = Glob("**/cco-*.md",
+                                                           path="claudecodeoptimizer/content/commands/")
+
+        if "Active Context" in selected_categories or "All" in selected_categories:
+            claude_md_path = "~/.claude/CLAUDE.md"
+            if file_exists(claude_md_path):
+                discovered["active_context"].append(claude_md_path)
+                principles = extract_principle_references(claude_md_path)
+                discovered["active_context"].extend(principles)
+
+        discovery_result = discovered
+    else:  # Cancel
+        return "cco-slim cancelled by user"
+
+# Parse result
+discovered = discovery_result if isinstance(discovery_result, dict) else json.loads(discovery_result)
 ```
 
 ### Step 2: Token Measurement
@@ -460,6 +569,96 @@ def extract_claude_md_references(claude_md_path: str) -> List[ContextReference]:
 
 claude_md_refs = extract_claude_md_references(claude_md_path)
 claude_md_loaded_files = {ref.file_path for ref in claude_md_refs}
+
+# Use Explore agent for dependency analysis
+duplication_result = Task({
+    subagent_type: "Explore",
+    model: "haiku",
+    description: "Analyze context duplication",
+    prompt: """
+    Analyze context duplication between CLAUDE.md and skills/commands/agents.
+
+    1. Extract all @principles/, @skills/, file references from CLAUDE.md
+    2. Find all file references in cco-skill-*.md, cco-agent-*.md, cco-*.md files
+    3. Identify duplicates (same file loaded by both CLAUDE.md and other tools)
+    4. Identify missing (frequently referenced but not in CLAUDE.md)
+
+    Return JSON:
+    {
+        "claude_md_refs": ["principle1.md", "skill1.md"],
+        "tool_refs": {"skill1.md": ["file1.md", "file2.md"]},
+        "duplicates": [{"file": "file1.md", "loaded_by": ["CLAUDE.md", "skill1.md"]}],
+        "missing": [{"file": "file2.md", "referenced_by": ["skill1", "skill2", "skill3"]}]
+    }
+    """
+})
+
+# Handle errors
+if duplication_result is None or (isinstance(duplication_result, dict) and "error" in duplication_result):
+    error_msg = duplication_result.get('error', 'Unknown error') if isinstance(duplication_result, dict) else 'Agent returned None'
+
+    response = AskUserQuestion({
+        questions: [{
+            question: f"Explore agent (Haiku) duplication analysis failed: {error_msg}. How to proceed?",
+            header: "Explore (Haiku) Error",
+            multiSelect: false,
+            options: [
+                {label: "Retry", description: "Run analysis agent again"},
+                {label: "Retry with Sonnet", description: "Use more capable model"},
+                {label: "Skip duplication check", description: "Continue without this analysis"},
+                {label: "Cancel", description: "Stop cco-slim"}
+            ]
+        }]
+    })
+
+    if response == "Retry":
+        duplication_result = Task({
+            subagent_type: "Explore",
+            model: "haiku",
+            description: "Analyze context duplication (retry)",
+            prompt: """
+            Analyze context duplication between CLAUDE.md and skills/commands/agents.
+
+            1. Extract all @principles/, @skills/, file references from CLAUDE.md
+            2. Find all file references in cco-skill-*.md, cco-agent-*.md, cco-*.md files
+            3. Identify duplicates (same file loaded by both CLAUDE.md and other tools)
+            4. Identify missing (frequently referenced but not in CLAUDE.md)
+
+            Return JSON:
+            {
+                "claude_md_refs": ["principle1.md", "skill1.md"],
+                "tool_refs": {"skill1.md": ["file1.md", "file2.md"]},
+                "duplicates": [{"file": "file1.md", "loaded_by": ["CLAUDE.md", "skill1.md"]}],
+                "missing": [{"file": "file2.md", "referenced_by": ["skill1", "skill2", "skill3"]}]
+            }
+            """
+        })
+    elif response == "Retry with Sonnet":
+        duplication_result = Task({
+            subagent_type: "Explore",
+            model: "sonnet",
+            description: "Analyze context duplication (retry)",
+            prompt: """
+            Analyze context duplication between CLAUDE.md and skills/commands/agents.
+
+            1. Extract all @principles/, @skills/, file references from CLAUDE.md
+            2. Find all file references in cco-skill-*.md, cco-agent-*.md, cco-*.md files
+            3. Identify duplicates (same file loaded by both CLAUDE.md and other tools)
+            4. Identify missing (frequently referenced but not in CLAUDE.md)
+
+            Return JSON:
+            {
+                "claude_md_refs": ["principle1.md", "skill1.md"],
+                "tool_refs": {"skill1.md": ["file1.md", "file2.md"]},
+                "duplicates": [{"file": "file1.md", "loaded_by": ["CLAUDE.md", "skill1.md"]}],
+                "missing": [{"file": "file2.md", "referenced_by": ["skill1", "skill2", "skill3"]}]
+            }
+            """
+        })
+    elif response == "Skip duplication check":
+        duplication_result = {"duplicates": [], "missing": []}
+    else:  # Cancel
+        return "cco-slim cancelled by user"
 ```
 
 ### Step 2: Detect Duplications in Claude Tools
@@ -682,211 +881,283 @@ if "Update CLAUDE.md" in user_selection or "All" in user_selection:
 
 ## Component 4: Analysis Phase
 
-**Find specific optimization opportunities per category.**
+**Find specific optimization opportunities per category using Explore agent.**
 
-### Safe Optimizations (Conservative Mode)
+### Agent-Based Optimization Discovery
 
-```python
-@dataclass
-class SafeOptimization:
-    """100% safe optimization - no semantic risk."""
-    type: str
-    file: str
-    line: int
-    description: str
-    token_saving: int
-    risk: str = "none"
-
-safe_optimizations = []
-
-# 1. Whitespace normalization
-for file in all_files:
-    content = Read(file)
-    lines = content.split('\n')
-
-    # Find excessive blank lines
-    for i, (line1, line2, line3) in enumerate(zip(lines, lines[1:], lines[2:])):
-        if not line1.strip() and not line2.strip() and not line3.strip():
-            safe_optimizations.append(SafeOptimization(
-                type="whitespace",
-                file=file,
-                line=i,
-                description="Remove excessive blank lines (3+ consecutive)",
-                token_saving=2  # Approximate
-            ))
-
-# 2. Dead code (provably unused)
-for file in code_files:
-    unused_imports = find_unused_imports(file)  # AST analysis
-    for imp in unused_imports:
-        safe_optimizations.append(SafeOptimization(
-            type="dead_code",
-            file=file,
-            line=imp.line,
-            description=f"Remove unused import: {imp.name}",
-            token_saving=estimate_tokens(imp.text)
-        ))
-
-# 3. Spelling/grammar fixes
-for file in markdown_files:
-    typos = run_spell_check(file)
-    for typo in typos:
-        safe_optimizations.append(SafeOptimization(
-            type="spelling",
-            file=file,
-            line=typo.line,
-            description=f"Fix typo: {typo.wrong} → {typo.correct}",
-            token_saving=0  # No token change, quality improvement
-        ))
-
-# 4. Format consistency
-for file in markdown_files:
-    inconsistencies = check_markdown_format(file)
-    for inc in inconsistencies:
-        safe_optimizations.append(SafeOptimization(
-            type="format",
-            file=file,
-            line=inc.line,
-            description=inc.description,
-            token_saving=0  # No token change, consistency improvement
-        ))
-```
-
-### Low-Risk Optimizations (Balanced Mode)
+**Use appropriate model based on mode complexity and risk level.**
 
 ```python
-@dataclass
-class LowRiskOptimization:
-    """Low-risk optimization - requires verification."""
-    type: str
-    file: str
-    line: int
-    description: str
-    token_saving: int
-    risk: str = "low"
-    verification_required: bool = True
+# Select agent model based on mode
+if mode == "conservative":
+    agent_model = "haiku"  # Fast, cheap for simple patterns
+    optimization_prompt = """
+    Find 100% safe optimizations (zero semantic risk):
 
-low_risk_optimizations = []
+    1. **Whitespace normalization**:
+       - Excessive blank lines (3+ consecutive → 2)
+       - Trailing whitespace at line ends
+       - Inconsistent indentation
 
-# 1. Example consolidation (if truly redundant)
-for file in all_files:
-    redundant_examples = find_redundant_examples(file)
-    for example_group in redundant_examples:
-        low_risk_optimizations.append(LowRiskOptimization(
-            type="example_consolidation",
-            file=file,
-            line=example_group.start_line,
-            description=f"Consolidate {len(example_group.examples)} redundant examples into 1",
-            token_saving=estimate_tokens(example_group.redundant_text),
-            verification_required=True
-        ))
+    2. **Dead code removal** (provably unused):
+       - Unused imports (verify with AST analysis)
+       - Commented-out code blocks
+       - Unreachable code after return/break
 
-# 2. Table optimization
-for file in markdown_files:
-    tables = find_tables(file)
-    for table in tables:
-        if table.has_redundant_columns:
-            low_risk_optimizations.append(LowRiskOptimization(
-                type="table_optimization",
-                file=file,
-                line=table.line,
-                description=f"Remove redundant column: {table.redundant_column}",
-                token_saving=table.column_token_count,
-                verification_required=True
-            ))
+    3. **Spelling/grammar fixes**:
+       - Typos in documentation
+       - Grammar improvements (no meaning change)
 
-# 3. Cross-referencing
-for file in all_files:
-    duplicates = find_duplicate_content(file, other_files)
-    for dup in duplicates:
-        low_risk_optimizations.append(LowRiskOptimization(
-            type="cross_reference",
-            file=file,
-            line=dup.line,
-            description=f"Replace duplicate with reference to {dup.source_file}",
-            token_saving=estimate_tokens(dup.duplicate_text),
-            verification_required=True
-        ))
+    4. **Format consistency**:
+       - Markdown heading format (ATX vs Setext)
+       - Code block language tags
+       - List marker consistency (- vs *)
+
+    For each optimization, return:
+    {
+        "type": "whitespace|dead_code|spelling|format",
+        "file": "path/to/file.md",
+        "line": 123,
+        "description": "Specific change description",
+        "token_saving": 5,
+        "risk": "none"
+    }
+
+    Only include changes with ZERO semantic risk.
+    """
+
+elif mode == "balanced":
+    agent_model = "sonnet"  # Balanced for judgment calls
+    optimization_prompt = """
+    Find balanced optimizations (low semantic risk, requires verification):
+
+    1. **Verbosity reduction**:
+       - "In order to" → "To"
+       - "It is important to note that" → "Note:"
+       - Remove filler phrases
+
+    2. **Example consolidation**:
+       - Multiple redundant examples → 1 clear example
+       - Keep one representative of each pattern
+
+    3. **Redundant explanation**:
+       - Same concept explained multiple ways
+       - Obvious statements ("JavaScript is a programming language")
+
+    4. **DRY improvements**:
+       - Repeated patterns → single reference
+       - Duplicated sections across files
+
+    For each optimization, return:
+    {
+        "type": "verbosity|example_consolidation|redundant|dry",
+        "file": "path/to/file.md",
+        "line": 123,
+        "description": "Specific change description",
+        "token_saving": 45,
+        "risk": "low",
+        "verification_required": true,
+        "original_text": "text to be changed",
+        "proposed_text": "new text"
+    }
+
+    Include LOW-RISK changes only. Preserve all semantics.
+    """
+
+else:  # aggressive
+    agent_model = "sonnet"  # Complex analysis required
+    optimization_prompt = """
+    Find aggressive optimizations (moderate semantic risk, quality verification required):
+
+    1. **Comprehensive rewrites**:
+       - Multi-paragraph explanations → concise single paragraph
+       - Verbose tutorials → essential reference
+
+    2. **Format compression**:
+       - Markdown → plain text (where formatting not needed)
+       - JSON examples → YAML (shorter)
+       - Code examples → pseudocode
+
+    3. **Technical jargon**:
+       - Long technical terms → abbreviations (first use full, then abbr)
+       - "authentication and authorization" → "auth/z"
+
+    4. **Content restructuring**:
+       - Move detailed content to appendices
+       - Replace detailed examples with links to external docs
+       - Summarize reference sections
+
+    For each optimization, return:
+    {
+        "type": "rewrite|compression|jargon|restructure",
+        "file": "path/to/file.md",
+        "line": 123,
+        "description": "Specific change description",
+        "token_saving": 150,
+        "risk": "moderate",
+        "quality_check_required": true,
+        "original_text": "text to be changed",
+        "proposed_text": "new text"
+    }
+
+    Moderate semantic risk acceptable IF quality preserved.
+    """
+
+# Launch analysis agent
+analysis_result = Task({
+    subagent_type: "Explore",
+    model: agent_model,
+    description: f"Find {mode} optimizations",
+    prompt: f"""
+    Analyze {len(all_files)} files for {mode} mode optimizations.
+
+    Categories to analyze: {selected_categories}
+
+    Skills:
+    - cco-skill-content-optimization-automation
+    - cco-skill-code-quality-refactoring-complexity
+
+    Files to analyze:
+    - Markdown: {len(markdown_files)} files
+    - Code: {len(code_files)} files
+    - Claude Tools: {len(claude_tool_files)} files
+    - Active Context: {len(active_context_files)} files
+
+    {optimization_prompt}
+
+    Return JSON array of optimizations.
+    Estimate token savings for each.
+    Total optimizations must be verifiable.
+    """
+})
+
+# Handle analysis errors
+if analysis_result is None or (isinstance(analysis_result, dict) and "error" in analysis_result):
+    error_msg = analysis_result.get('error', 'Unknown error') if isinstance(analysis_result, dict) else 'Agent returned None'
+
+    response = AskUserQuestion({
+        questions: [{
+            question: f"Explore agent ({agent_model.capitalize()}) optimization analysis failed: {error_msg}. How to proceed?",
+            header: f"Explore ({agent_model.capitalize()}) Error",
+            multiSelect: false,
+            options: [
+                {label: "Retry", description: f"Run {mode} analysis again"},
+                {label: "Retry with Sonnet", description: "Use more capable model"} if agent_model == "haiku" else {label: "Retry with Opus", description: "Use most capable model"},
+                {label: "Switch to Conservative", description: "Use Conservative mode instead (safer, fewer optimizations)"},
+                {label: "Manual analysis", description: "Guide manual optimization identification"},
+                {label: "Cancel", description: "Stop cco-slim"}
+            ]
+        }]
+    })
+
+    if response == "Retry":
+        # Retry with same model
+        analysis_result = Task({
+            subagent_type: "Explore",
+            model: agent_model,
+            description: f"Find {mode} optimizations (retry)",
+            prompt: # ... same prompt as above
+        })
+    elif response == "Retry with Sonnet" or response == "Retry with Opus":
+        # Retry with more capable model
+        new_model = "sonnet" if response == "Retry with Sonnet" else "opus"
+        analysis_result = Task({
+            subagent_type: "Explore",
+            model: new_model,
+            description: f"Find {mode} optimizations (retry with {new_model})",
+            prompt: # ... same prompt as above
+        })
+    elif response == "Switch to Conservative":
+        # Switch to conservative mode and retry
+        mode = "conservative"
+        agent_model = "haiku"
+        optimization_prompt = # ... conservative prompt from above
+
+        analysis_result = Task({
+            subagent_type: "Explore",
+            model: "haiku",
+            description: "Find conservative optimizations",
+            prompt: f"""
+            Analyze {len(all_files)} files for conservative mode optimizations.
+
+            {optimization_prompt}
+
+            Return JSON array of 100% safe optimizations.
+            """
+        })
+    elif response == "Manual analysis":
+        # Guide user through manual identification
+        print(f"""
+        Manual Optimization Identification Guide:
+
+        For {mode} mode, look for:
+        {optimization_prompt}
+
+        Use these tools:
+        - Grep("pattern", output_mode="files_with_matches") - Find patterns
+        - Read(file) - Read file contents
+        - Document each optimization manually
+        """)
+        return "Manual mode - user identifying optimizations"
+    else:  # Cancel
+        return "cco-slim cancelled by user"
+
+# Parse analysis result
+if isinstance(analysis_result, str):
+    try:
+        optimizations = json.loads(analysis_result)
+    except json.JSONDecodeError:
+        print(f"Warning: Could not parse analysis result as JSON. Raw result: {analysis_result[:200]}...")
+        optimizations = []
+elif isinstance(analysis_result, list):
+    optimizations = analysis_result
+else:
+    print(f"Warning: Unexpected analysis result type: {type(analysis_result)}")
+    optimizations = []
+
+# Validate optimizations
+total_token_savings = sum(opt.get("token_saving", 0) for opt in optimizations)
+print(f"""
+Analysis Complete:
+- Mode: {mode}
+- Model used: {agent_model}
+- Optimizations found: {len(optimizations)}
+- Estimated token savings: {total_token_savings:,} tokens
+""")
 ```
 
-### High-Risk Optimizations (Aggressive Mode)
+### Optimization Categorization
 
 ```python
-@dataclass
-class HighRiskOptimization:
-    """High-risk optimization - strong verification required."""
-    type: str
-    file: str
-    line: int
-    description: str
-    token_saving: int
-    risk: str = "high"
-    verification_required: bool = True
-    manual_review_required: bool = True
+# Categorize by type for reporting
+optimizations_by_type = {}
+for opt in optimizations:
+    opt_type = opt.get("type", "unknown")
+    if opt_type not in optimizations_by_type:
+        optimizations_by_type[opt_type] = []
+    optimizations_by_type[opt_type].append(opt)
 
-high_risk_optimizations = []
+# Categorize by risk level
+optimizations_by_risk = {
+    "none": [opt for opt in optimizations if opt.get("risk") == "none"],
+    "low": [opt for opt in optimizations if opt.get("risk") == "low"],
+    "moderate": [opt for opt in optimizations if opt.get("risk") == "moderate"]
+}
 
-# 1. Example reduction
-for file in all_files:
-    examples = find_all_examples(file)
-    if len(examples) > 3:  # More than 3 examples
-        high_risk_optimizations.append(HighRiskOptimization(
-            type="example_reduction",
-            file=file,
-            line=examples[3].line,
-            description=f"Reduce from {len(examples)} to 3 most effective examples",
-            token_saving=sum(estimate_tokens(ex.text) for ex in examples[3:]),
-            manual_review_required=True
-        ))
+# Show breakdown
+print(f"""
+Optimization Breakdown:
 
-# 2. Instruction condensing
-for file in claude_tool_files:
-    instructions = find_verbose_instructions(file)
-    for inst in instructions:
-        high_risk_optimizations.append(HighRiskOptimization(
-            type="instruction_condensing",
-            file=file,
-            line=inst.line,
-            description=f"Condense verbose instruction (may lose nuance)",
-            token_saving=estimate_tokens(inst.verbose_part),
-            manual_review_required=True
-        ))
+By Type:
+{chr(10).join(f"  - {type_name}: {len(opts)} optimizations (~{sum(o.get('token_saving', 0) for o in opts)} tokens)"
+                for type_name, opts in optimizations_by_type.items())}
+
+By Risk:
+  - Zero risk: {len(optimizations_by_risk['none'])} optimizations
+  - Low risk: {len(optimizations_by_risk['low'])} optimizations
+  - Moderate risk: {len(optimizations_by_risk['moderate'])} optimizations
+""")
 ```
-
-### Analysis Summary
-
-```markdown
-## Analysis Complete
-
-**Optimization Opportunities Found:** {total_opportunities}
-
-### By Type
-
-#### ✅ Safe Optimizations ({count}) - {tokens} tokens
-- Whitespace normalization: {count} instances
-- Dead code removal: {count} instances
-- Spelling/grammar: {count} instances
-- Format consistency: {count} instances
-
-#### ⚠️ Low-Risk Optimizations ({count}) - {tokens} tokens
-- Example consolidation: {count} instances
-- Table optimization: {count} instances
-- Cross-referencing: {count} instances
-
-#### ❌ High-Risk Optimizations ({count}) - {tokens} tokens
-- Example reduction: {count} instances
-- Instruction condensing: {count} instances
-- Detail removal: {count} instances
-
-### Mode Recommendations
-
-**Conservative:** Apply {safe_count} safe optimizations → {safe_tokens} tokens saved
-**Balanced:** Apply {safe_count + low_risk_count} optimizations → {balanced_tokens} tokens saved
-**Aggressive:** Apply {all_count} optimizations → {aggressive_tokens} tokens saved (⚠️ Manual review required)
-```
-
----
-
 ## Component 5: Pre-Flight Summary
 
 **Show EXACTLY what will change before execution. No surprises.**
@@ -1339,36 +1610,254 @@ To restore all files:
 
 ## Agent Integration
 
-**Use specialized agent for complex optimization.**
+**Always use agents for consistent execution. Parallel batches for large workloads.**
 
 ```python
-# For large-scale optimization (50+ files), use parallel processing
-if file_count > 50:
-    # Launch optimization agent
-    Task({
+# Always use agent (no threshold) - ensures consistent behavior
+# Use parallel batches for efficient processing of large workloads
+
+optimization_count = len(optimizations)
+
+if optimization_count > 20:
+    # Split into batches for parallel processing
+    batch_size = 20
+    batches = [optimizations[i:i + batch_size]
+               for i in range(0, len(optimizations), batch_size)]
+
+    print(f"Processing {optimization_count} optimizations in {len(batches)} parallel batches...")
+
+    results = []
+    for batch_id, batch in enumerate(batches):
+        print(f"Starting batch {batch_id + 1}/{len(batches)} ({len(batch)} optimizations)...")
+
+        batch_result = Task({
+            subagent_type: "general-purpose",
+            model: "haiku",  # Fast, cheap model for simple edits
+            description: f"Apply optimization batch {batch_id + 1}/{len(batches)}",
+            prompt: f"""
+            Apply {len(batch)} optimizations from batch {batch_id + 1}.
+
+            Mode: {mode}
+
+            For each optimization:
+            1. Read file at specified path
+            2. Apply the specified change
+            3. Verify quality preserved (semantic check)
+            4. Save file if verification passes
+            5. Report token reduction
+            6. If verification fails, rollback and report
+
+            Optimizations to apply:
+            {json.dumps(batch, indent=2)}
+
+            Return accounting JSON:
+            {{
+                "applied": [
+                    {{"file": "path.md", "line": 123, "tokens_saved": 45, "description": "..."}}
+                ],
+                "skipped": [
+                    {{"file": "path.md", "line": 123, "reason": "..."}}
+                ],
+                "rolled_back": [
+                    {{"file": "path.md", "line": 123, "reason": "verification failed"}}
+                ]
+            }}
+
+            Verification: len(applied) + len(skipped) + len(rolled_back) = {len(batch)}
+            """
+        })
+
+        # Handle batch errors
+        if batch_result is None or (isinstance(batch_result, dict) and "error" in batch_result):
+            error_msg = batch_result.get('error', 'Unknown error') if isinstance(batch_result, dict) else 'Agent returned None'
+
+            response = AskUserQuestion({
+                questions: [{
+                    question: f"general-purpose agent (Haiku) batch {batch_id + 1}/{len(batches)} failed: {error_msg}. How to proceed?",
+                    header: "general-purpose (Haiku) Error",
+                    multiSelect: false,
+                    options: [
+                        {label: "Retry batch", description: f"Retry batch {batch_id + 1} with same model"},
+                        {label: "Retry with Sonnet", description: "Use more capable model for this batch"},
+                        {label: "Skip batch", description: f"Skip {len(batch)} optimizations in this batch"},
+                        {label: "Manual mode", description: "Apply batch optimizations manually"},
+                        {label: "Cancel all", description: "Stop optimization phase entirely"}
+                    ]
+                }]
+            })
+
+            if response == "Retry batch":
+                # Retry with same model and prompt
+                batch_result = Task({
+                    subagent_type: "general-purpose",
+                    model: "haiku",
+                    description: f"Apply optimization batch {batch_id + 1} (retry)",
+                    prompt: # ... same prompt as above
+                })
+            elif response == "Retry with Sonnet":
+                # Retry with more capable model
+                batch_result = Task({
+                    subagent_type: "general-purpose",
+                    model: "sonnet",
+                    description: f"Apply optimization batch {batch_id + 1} (retry with Sonnet)",
+                    prompt: # ... same prompt as above
+                })
+            elif response == "Skip batch":
+                # Mark all optimizations in batch as skipped
+                batch_result = {
+                    "applied": [],
+                    "skipped": [
+                        {"file": opt["file"], "line": opt["line"], "reason": "Batch skipped by user"}
+                        for opt in batch
+                    ],
+                    "rolled_back": []
+                }
+            elif response == "Manual mode":
+                # Guide user through manual application for this batch
+                print(f"""
+                Manual Application - Batch {batch_id + 1}:
+
+                {len(batch)} optimizations to apply:
+                """)
+                for i, opt in enumerate(batch, 1):
+                    print(f"{i}. {opt['file']}:{opt['line']} - {opt['description']}")
+                    print(f"   Token savings: {opt['token_saving']}")
+                    print()
+
+                return "Manual mode activated for batch {batch_id + 1}"
+            else:  # Cancel all
+                print(f"Optimization cancelled at batch {batch_id + 1}/{len(batches)}")
+                print(f"Processed: {batch_id} batches")
+                print(f"Remaining: {len(batches) - batch_id} batches")
+                return "Optimization phase cancelled by user"
+
+        results.append(batch_result)
+        print(f"✓ Batch {batch_id + 1} complete")
+
+else:
+    # Single agent for small workloads
+    print(f"Processing {optimization_count} optimizations (single batch)...")
+
+    optimization_result = Task({
         subagent_type: "general-purpose",
-        model: "sonnet",
-        description: "Slim content optimization",
+        model: "haiku",  # Fast, cheap for simple edits
+        description: "Apply all optimizations",
         prompt: f"""
-        Optimize {file_count} files with {mode} mode.
+        Apply {optimization_count} optimizations with {mode} mode.
 
-        Categories: {selected_categories}
-
-        For each file:
-        1. Read file
-        2. Apply {mode} optimizations
-        3. Verify quality preserved
-        4. Save if verification passes
+        For each optimization:
+        1. Read file at specified path
+        2. Apply the specified change
+        3. Verify quality preserved (semantic check)
+        4. Save file if verification passes
         5. Report token reduction
+        6. If verification fails, rollback and report
 
-        Return complete accounting:
-        - Applied: {count} optimizations, {tokens} saved
-        - Skipped: {count} optimizations, {reasons}
-        - Rolled back: {count} optimizations, {reasons}
+        Optimizations to apply:
+        {json.dumps(optimizations, indent=2)}
 
-        Verification: applied + skipped + rolled_back = total
+        Return complete accounting JSON:
+        {{
+            "applied": [
+                {{"file": "path.md", "line": 123, "tokens_saved": 45, "description": "..."}}
+            ],
+            "skipped": [
+                {{"file": "path.md", "line": 123, "reason": "..."}}
+            ],
+            "rolled_back": [
+                {{"file": "path.md", "line": 123, "reason": "verification failed"}}
+            ]
+        }}
+
+        Verification: len(applied) + len(skipped) + len(rolled_back) = {optimization_count}
         """
     })
+
+    # Handle errors
+    if optimization_result is None or (isinstance(optimization_result, dict) and "error" in optimization_result):
+        error_msg = optimization_result.get('error', 'Unknown error') if isinstance(optimization_result, dict) else 'Agent returned None'
+
+        response = AskUserQuestion({
+            questions: [{
+                question: f"general-purpose agent (Haiku) optimization failed: {error_msg}. How to proceed?",
+                header: "general-purpose (Haiku) Error",
+                multiSelect: false,
+                options: [
+                    {label: "Retry", description: "Run optimization agent again"},
+                    {label: "Retry with Sonnet", description: "Use more capable model"},
+                    {label: "Manual optimization", description: "Apply optimizations manually"},
+                    {label: "Cancel", description: "Stop cco-slim"}
+                ]
+            }]
+        })
+
+        if response == "Retry":
+            # Retry with same model
+            optimization_result = Task({
+                subagent_type: "general-purpose",
+                model: "haiku",
+                description: "Apply all optimizations (retry)",
+                prompt: # ... same prompt as above
+            })
+        elif response == "Retry with Sonnet":
+            # Retry with more capable model
+            optimization_result = Task({
+                subagent_type: "general-purpose",
+                model: "sonnet",
+                description: "Apply all optimizations (retry with Sonnet)",
+                prompt: # ... same prompt as above
+            })
+        elif response == "Manual optimization":
+            # Guide user through manual application
+            print(f"""
+            Manual Application Mode:
+
+            {optimization_count} optimizations to apply:
+            """)
+            for i, opt in enumerate(optimizations, 1):
+                print(f"{i}. {opt['file']}:{opt['line']} - {opt['description']}")
+                print(f"   Token savings: {opt['token_saving']}")
+                if 'original_text' in opt and 'proposed_text' in opt:
+                    print(f"   Change: {opt['original_text'][:50]}... → {opt['proposed_text'][:50]}...")
+                print()
+
+            return "Manual optimization mode - user will apply changes"
+        else:  # Cancel
+            return "cco-slim cancelled by user"
+
+    results = [optimization_result]
+
+# Aggregate results from all batches
+total_applied = []
+total_skipped = []
+total_rolled_back = []
+
+for result in results:
+    if isinstance(result, dict):
+        total_applied.extend(result.get("applied", []))
+        total_skipped.extend(result.get("skipped", []))
+        total_rolled_back.extend(result.get("rolled_back", []))
+
+# Calculate totals
+total_tokens_saved = sum(opt.get("tokens_saved", 0) for opt in total_applied)
+files_modified = len(set(opt["file"] for opt in total_applied))
+
+print(f"""
+Optimization Complete:
+- Applied: {len(total_applied)} optimizations
+- Skipped: {len(total_skipped)} optimizations
+- Rolled back: {len(total_rolled_back)} optimizations
+- Files modified: {files_modified}
+- Total tokens saved: {total_tokens_saved:,}
+
+Accounting verification: {len(total_applied)} + {len(total_skipped)} + {len(total_rolled_back)} = {optimization_count}
+""")
+
+# Verify accounting
+if len(total_applied) + len(total_skipped) + len(total_rolled_back) != optimization_count:
+    print(f"⚠️ WARNING: Accounting mismatch!")
+    print(f"Expected: {optimization_count}")
+    print(f"Actual: {len(total_applied) + len(total_skipped) + len(total_rolled_back)}")
 ```
 
 ---
