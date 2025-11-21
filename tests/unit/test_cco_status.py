@@ -5,6 +5,7 @@ Target Coverage: 95%+
 """
 
 import subprocess
+import sys
 from pathlib import Path
 from unittest.mock import MagicMock, patch
 
@@ -172,8 +173,12 @@ class TestGetVersionInfo:
 
         assert "version" in info
         assert "install_method" in info
+        assert "python_version" in info
+        assert "platform" in info
         assert isinstance(info["version"], str)
         assert isinstance(info["install_method"], str)
+        assert isinstance(info["python_version"], str)
+        assert isinstance(info["platform"], str)
 
     def test_get_version_info_has_version(self):
         """Test that version is retrieved"""
@@ -181,6 +186,17 @@ class TestGetVersionInfo:
         assert info["version"] != ""
         # Should be either a version number or "unknown"
         assert info["version"] == "0.1.0" or info["version"] == "unknown"
+
+    def test_get_version_info_python_version(self):
+        """Test that python version is correct format"""
+        info = get_version_info()
+        expected = f"{sys.version_info.major}.{sys.version_info.minor}.{sys.version_info.micro}"
+        assert info["python_version"] == expected
+
+    def test_get_version_info_platform(self):
+        """Test that platform is sys.platform"""
+        info = get_version_info()
+        assert info["platform"] == sys.platform
 
     @patch("subprocess.run")
     def test_get_version_info_pipx(self, mock_run: MagicMock):
@@ -190,24 +206,32 @@ class TestGetVersionInfo:
         )
 
         info = get_version_info()
-        assert info["install_method"] in ["pipx", "pip", "unknown"]
+        assert info["install_method"] == "pipx"
 
     @patch("subprocess.run")
     def test_get_version_info_pip(self, mock_run: MagicMock):
         """Test detection of pip installation"""
-        # pipx fails
+        # First call (pipx) returns no match, second call (pip) succeeds
         mock_run.side_effect = [
-            subprocess.CalledProcessError(1, "pipx"),
+            MagicMock(returncode=0, stdout="other packages"),
             MagicMock(returncode=0, stdout="claudecodeoptimizer"),
         ]
 
         info = get_version_info()
-        assert info["install_method"] in ["pip", "unknown"]
+        assert info["install_method"] == "pip"
 
     @patch("subprocess.run")
-    def test_get_version_info_unknown(self, mock_run: MagicMock):
-        """Test fallback to unknown installation method"""
-        mock_run.side_effect = subprocess.CalledProcessError(1, "cmd")
+    def test_get_version_info_timeout(self, mock_run: MagicMock):
+        """Test fallback when subprocess times out"""
+        mock_run.side_effect = subprocess.TimeoutExpired("pipx", 2)
+
+        info = get_version_info()
+        assert info["install_method"] == "unknown"
+
+    @patch("subprocess.run")
+    def test_get_version_info_file_not_found(self, mock_run: MagicMock):
+        """Test fallback when command not found"""
+        mock_run.side_effect = FileNotFoundError()
 
         info = get_version_info()
         assert info["install_method"] == "unknown"
@@ -250,6 +274,19 @@ class TestCheckClaudeMd:
         result = check_claude_md(claude_dir)
         assert result is True
 
+    def test_check_claude_md_read_error(self, tmp_path: Path):
+        """Test when CLAUDE.md read fails"""
+        claude_dir = tmp_path / ".claude"
+        claude_dir.mkdir()
+
+        claude_md = claude_dir / "CLAUDE.md"
+        claude_md.write_text("content")
+
+        # Mock read_text to raise exception
+        with patch.object(Path, "read_text", side_effect=Exception("Read error")):
+            result = check_claude_md(claude_dir)
+            assert result is False
+
 
 class TestPrintStatus:
     """Test print_status function"""
@@ -273,7 +310,12 @@ class TestPrintStatus:
         claude_dir.mkdir()
 
         mock_get_dir.return_value = claude_dir
-        mock_version.return_value = {"version": "0.1.0", "install_method": "pipx"}
+        mock_version.return_value = {
+            "version": "0.1.0",
+            "install_method": "pipx",
+            "python_version": "3.11.0",
+            "platform": "linux",
+        }
         mock_count.return_value = {
             "commands": 11,
             "principles": 25,
@@ -304,8 +346,8 @@ class TestPrintStatus:
 
         result = print_status()
 
-        # Should return 1 (error) since directory doesn't exist
-        assert result in [0, 1]  # Depends on implementation
+        # Returns 1 when directory doesn't exist (incomplete installation)
+        assert result == 1
         assert mock_print.called
 
 
