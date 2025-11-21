@@ -1,7 +1,8 @@
 ---
 name: cco-generate
 description: Create missing project components with skill-guided generation
-action_type: generate
+
+principles: [U_EVIDENCE_BASED_ANALYSIS, U_NO_OVERENGINEERING, U_FOLLOW_PATTERNS]
 parameters:
   tests:
     keywords: [unit tests, integration tests, coverage, pytest, test fixtures, untested functions]

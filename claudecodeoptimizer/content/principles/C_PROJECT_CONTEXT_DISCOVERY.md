@@ -1,3 +1,12 @@
+---
+name: project-context-discovery
+description: Use Haiku sub-agent to extract project context from documentation before analysis operations
+type: claude
+severity: high
+keywords: [context, documentation, sub-agent, conventions, alignment, efficiency]
+category: [workflow, optimization]
+---
+
 # C_PROJECT_CONTEXT_DISCOVERY: Project Context Discovery via Sub-Agent
 
 **Severity**: High

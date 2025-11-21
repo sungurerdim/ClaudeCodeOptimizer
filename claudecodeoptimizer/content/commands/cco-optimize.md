@@ -1,7 +1,8 @@
 ---
 name: cco-optimize
 description: Performance optimization with before/after metrics measurement
-action_type: optimize
+
+principles: [U_EVIDENCE_BASED_ANALYSIS, U_MINIMAL_TOUCH, C_EFFICIENT_FILE_OPERATIONS]
 parameters:
   docker:
     keywords: [docker optimization, multi-stage build, layer optimization, image size reduction]

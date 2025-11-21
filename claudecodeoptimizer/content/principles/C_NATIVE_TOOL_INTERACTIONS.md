@@ -1,3 +1,12 @@
+---
+name: native-tool-interactions
+description: All user interactions must use native Claude Code tools with MultiSelect questions including "All" option
+type: claude
+severity: critical
+keywords: [user interaction, UX, multiselect, native tools, cross-platform]
+category: [ux, tooling]
+---
+
 # C_NATIVE_TOOL_INTERACTIONS: Native Claude Code Tools for All User Interactions
 
 **Severity**: Critical

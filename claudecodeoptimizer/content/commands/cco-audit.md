@@ -2,6 +2,7 @@
 name: cco-audit
 description: Comprehensive codebase audit with full transparency and real-time progress
 action_type: audit
+principles: [U_EVIDENCE_BASED_ANALYSIS, U_CHANGE_VERIFICATION, U_MINIMAL_TOUCH]
 parameters:
   security:
     keywords: [security audit, owasp scan, xss check, sqli scan, csrf check, secrets scan, vulnerability scan]
@@ -357,23 +358,23 @@ context_result = Task({
     model: "haiku",
     prompt: """
     Extract project context summary (MAX 200 tokens).
-    
+
     Search for files in priority order (stop after 3-4 relevant ones):
     - README.md, README.rst, README.txt
     - CONTRIBUTING.md, .github/CONTRIBUTING.md
     - ARCHITECTURE.md, DESIGN.md, docs/architecture.md
     - docs/ADR/*.md, ROADMAP.md, CHANGELOG.md
-    
+
     Return structured summary:
-    
+
     ## Project Context
-    
+
     **Purpose**: {1-2 sentences}
     **Goals**: {3 bullets max}
     **Tech Stack**: {languages, frameworks}
     **Conventions**: {naming, testing, formatting}
     **Architecture Notes**: {2 key decisions}
-    
+
     If no documentation found: "No project documentation found."
     """
 })
@@ -1689,4 +1690,3 @@ SlashCommand({command: "/cco-generate tests"})
 Found some security issues.
 SlashCommand({command: "/cco-fix"})
 ```
-
