@@ -32,8 +32,7 @@ def main() -> int:
     print(f"\n[OK] Python {sys.version_info.major}.{sys.version_info.minor}")
 
     # Check if package is already installed
-    print("
-> Checking existing installation...")
+    print("\n> Checking existing installation...")
     check_result = subprocess.run(
         [sys.executable, "-m", "pip", "show", "claudecodeoptimizer"],
         capture_output=True,
