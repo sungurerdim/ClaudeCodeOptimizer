@@ -376,7 +376,7 @@ AskUserQuestion supports **4 questions maximum** with **4 options maximum per qu
 AskUserQuestion({
   questions: [
     {
-      question: "Select Testing components to generate:",
+      question: "Select Testing components to generate:? (Space: select, Enter: confirm)",
       header: "🔴 Testing",
       multiSelect: true,
       options: [
@@ -399,7 +399,7 @@ AskUserQuestion({
       ]
     },
     {
-      question: "Select Documentation components to generate:",
+      question: "Select Documentation components to generate:? (Space: select, Enter: confirm)",
       header: "🟡 Docs",
       multiSelect: true,
       options: [
@@ -426,7 +426,7 @@ AskUserQuestion({
       ]
     },
     {
-      question: "Select CI/CD & Container components:",
+      question: "Select CI/CD & Container components:? (Space: select, Enter: confirm)",
       header: "🟢 CI/CD",
       multiSelect: true,
       options: [
@@ -449,7 +449,7 @@ AskUserQuestion({
       ]
     },
     {
-      question: "Select Database & Observability components:",
+      question: "Select Database & Observability components:? (Space: select, Enter: confirm)",
       header: "🟢 Ops",
       multiSelect: true,
       options: [
