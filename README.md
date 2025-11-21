@@ -42,38 +42,25 @@ CCO is a **pain-point driven configuration layer** that provides Claude Code wit
 
 ### Reality Check: What CCO Actually Does
 
-**CCO provides the "what to do"** - Claude Code executes the "how to do it":
+**CCO = Configuration for Claude Code** (like ESLint config → ESLint)
 
 | Component | What It Is | What It's NOT |
 |-----------|------------|---------------|
-| **CCO** | Configuration files in `~/.claude/` | NOT a standalone tool |
 | **Commands** | Instructions for Claude Code | NOT executable scripts |
-| **Skills** | Domain knowledge for Claude | NOT code libraries |
-| **Agents** | Execution patterns for Claude | NOT separate processes |
-| **Principles** | Guidelines for Claude's behavior | NOT enforced rules |
+| **Skills** | Domain knowledge | NOT code libraries |
+| **Agents** | Execution patterns | NOT separate processes |
+| **Principles** | Behavioral guidelines | NOT enforced rules |
 
-**How it works:**
-1. You run `/cco-audit --security` in Claude Code
-2. CCO's command file tells Claude Code what to check for
-3. CCO's security skill provides Claude Code with OWASP 2025 patterns
-4. Claude Code executes the actual grepping, reading, and analysis
-5. CCO's audit-agent guides Claude Code on how to organize results
+**Example: `/cco-audit --security`**
+1. CCO command tells Claude what to check
+2. CCO skill provides OWASP 2025 patterns
+3. Claude Code executes grep/read/analysis
+4. CCO agent guides result organization
 
-**CCO is to Claude Code what:**
-- ESLint config is to ESLint
-- Prettier config is to Prettier
-- Docker Compose files are to Docker
-
-**The Challenge:** Development teams face recurring problems: security vulnerabilities slip through, technical debt accumulates, AI-generated code has quality issues, and team collaboration breaks down.
-
-**CCO's Approach:**
-1. **Intelligent commands** (`/cco-audit`, `/cco-fix`, `/cco-generate`) that Claude Code executes
-2. **Specialized skills** (OWASP 2025, DORA metrics, AI quality) that provide Claude Code with current knowledge
-3. **Agent patterns** (audit-agent, fix-agent, generate-agent) that guide Claude Code's execution strategy
-4. **Universal principles** (DRY, honesty, verification) that shape Claude Code's behavior
-5. **Zero project pollution** - everything lives in `~/.claude/`, shared across all projects
-
-One CCO update propagates to all projects instantly.
+**Key Benefits:**
+- **Pain-point driven**: Targets 2025's costliest dev problems (security, tech debt, AI quality)
+- **Zero pollution**: Lives in `~/.claude/`, shared across all projects
+- **Instant propagation**: One CCO update → all projects
 
 ---
 
