@@ -77,7 +77,6 @@ class MetadataManager:
         if "description" in frontmatter:
             return str(frontmatter["description"])
 
-        # Fallback: extract first paragraph
         try:
             content = file_path.read_text(encoding="utf-8")
             # Remove frontmatter
