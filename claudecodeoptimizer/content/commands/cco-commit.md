@@ -64,7 +64,18 @@ Commit [N]: [CHANGE_TYPE]
 Files: [ACTUAL_FILES from analysis]
 Type: [type]([scope])
 
-Proceed with split? (yes/no/customize)
+AskUserQuestion({
+  questions: [{
+    question: "Proceed with atomic commit split?",
+    header: "Commit Split",
+    multiSelect: false,
+    options: [
+      {label: "Yes", description: "Create atomic commits as suggested"},
+      {label: "No", description: "Cancel split"},
+      {label: "Customize", description: "Modify commit grouping"}
+    ]
+  }]
+})
 ```
 
 ### Step 3: Generate Semantic Commit Messages
@@ -117,6 +128,28 @@ EOF
 
 # Repeat for each atomic commit
 ```
+
+**Error Handling:**
+
+If commit fails:
+```bash
+# Check for pre-commit hooks
+git commit --no-verify  # Only if user approves
+
+# Check for uncommitted changes
+git status
+git diff --cached
+
+# Verify git config
+git config user.name
+git config user.email
+```
+
+Common failures:
+- Pre-commit hook rejection: Review hook output, fix issues, retry
+- Empty commit: Verify files staged with `git diff --cached`
+- Author not configured: Run `git config user.name/email`
+- Merge conflicts: Resolve conflicts first with `git status`
 
 ### Step 5: Summary
 
@@ -185,3 +218,66 @@ Next:
 git add .
 /cco-commit
 ```
+
+---
+
+## Optional Prompt Support
+
+Any text after the command is treated as additional context for commit generation.
+
+**Examples:**
+```bash
+/cco-commit "Include co-authored commit"
+/cco-commit "Use conventional commits with BREAKING CHANGE keyword"
+/cco-commit "Focus on security-related changes"
+/cco-commit "Atomic commits only - split unrelated changes"
+```
+
+**How it works:**
+The AI will incorporate your guidance when:
+- Analyzing changes for commit granularity
+- Generating commit messages
+- Determining atomic commit boundaries
+- Applying conventional commit formats
+- Adding co-authors or special metadata
+
+**Use cases:**
+- Specify commit message style preferences
+- Request inclusion of specific metadata (co-authors, issue refs, breaking changes)
+- Provide context about the changes (why, not just what)
+- Request specific commit splitting strategies
+
+---
+
+### Step 4.5: Git Error Handling
+
+**If commit fails (pre-commit hook, git config, merge conflict):**
+
+AskUserQuestion({
+  questions: [{
+    question: "Git commit failed: {error_type} - {error_message}. How to proceed?",
+    header: "Git Error",
+    multiSelect: false,
+    options: [
+      {label: "Fix and retry", description: "Fix the issue and retry commit"},
+      {label: "Skip hooks", description: "Commit with --no-verify (use cautiously)"},
+      {label: "Amend previous", description: "Amend previous commit instead"},
+      {label: "Cancel", description: "Stop commit operation"}
+    ]
+  }]
+})
+
+**If too many changes detected (>5 logical changes):**
+
+AskUserQuestion({
+  questions: [{
+    question: "Too many changes detected ({COUNT} logical changes). Split into atomic commits?",
+    header: "Commit Split",
+    multiSelect: false,
+    options: [
+      {label: "Yes - atomic commits", description: "Create separate commit for each logical change (recommended)"},
+      {label: "No - single commit", description: "Keep all changes in one commit"},
+      {label: "Custom split", description: "Manually select which changes to group"}
+    ]
+  }]
+})

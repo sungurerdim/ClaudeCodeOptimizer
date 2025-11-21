@@ -19,6 +19,10 @@ parameters:
     keywords: [performance profiling, bottleneck removal, circuit breakers, retry logic, timeouts]
     category: performance
     pain_points: [5]
+  agents:
+    keywords: [agent optimization, model selection, parallelization, cost optimization, task orchestration]
+    category: performance
+    pain_points: [5]
 ---
 
 # cco-optimize
@@ -29,13 +33,20 @@ parameters:
 
 ## Purpose
 
+
+## Execution Guarantee
+
+This command performs COMPLETE optimization analysis and application.
+No premature scope reduction regardless of workload.
+
+**Estimated time: Provided for transparency, NOT to limit scope.**
 Measure and improve performance metrics: query times, image sizes, bundle sizes, and response times. Unlike /cco-fix which fixes issues, /cco-optimize focuses on **measuring improvements** with before/after metrics.
 
 **Note:** For code cleanup (dead code, complexity) use `/cco-fix --tech-debt`. For dependency updates use `/cco-fix --supply-chain`.
 
 ---
 
-## 4 Optimization Types
+## 5 Optimization Types
 
 1. **--docker** - Multi-stage builds, layer optimization
    - Skill: `cco-skill-kubernetes-security-containers`
@@ -57,6 +68,368 @@ Measure and improve performance metrics: query times, image sizes, bundle sizes,
    - Measures: Response times (ms), error rates, throughput
    - Optimizes: Circuit breakers, retry logic, timeouts
 
+5. **--agents** - Agent/model usage optimization
+   - Principle: `C_AGENT_ORCHESTRATION_PATTERNS`
+   - Skill: `cco-skill-content-optimization-automation` (for Claude Code content)
+   - Measures: Model costs, execution time, parallelization efficiency
+   - Optimizes: Model selection (opus→haiku), parallel execution, agent type selection
+   - Analyzes: All `.md` files in `.claude/` and `content/` directories
+   - Detects: Wrong model usage, sequential→parallel opportunities, inefficient agent calls
+
+---
+
+## Agent Optimization Analysis Algorithm (--agents)
+
+When `--agents` optimization is selected, the following analysis is performed:
+
+### Phase 1: Discovery - Find All Agent Usage
+
+```python
+# Scan command files
+Grep("Task\\(", glob="**/.claude/commands/*.md", output_mode="content", "-n": true, "-C": 3)
+
+# Scan skill files
+Grep("Task\\(", glob="**/content/skills/*.md", output_mode="content", "-n": true, "-C": 3)
+
+# Scan agent files
+Grep("Task\\(", glob="**/content/agents/*.md", output_mode="content", "-n": true, "-C": 3)
+
+# Extract patterns:
+# - Task(..., model="opus|sonnet|haiku")
+# - Multiple Task() calls in sequence
+# - Single vs parallel execution patterns
+```
+
+### Phase 2: Analysis Against C_AGENT_ORCHESTRATION_PATTERNS
+
+For each `Task()` call found, check:
+
+**1. Model Selection Violations:**
+```python
+VIOLATIONS = {
+    # Simple tasks using expensive models
+    "opus_for_simple": {
+        "pattern": r'Task\([^)]*model="opus"[^)]*\)',
+        "context_keywords": ["grep", "find", "list", "count", "read", "format"],
+        "severity": "high",
+        "fix": "Change model from opus to haiku",
+        "savings": "~60% cost reduction"
+    },
+
+    # Complex tasks using cheap models
+    "haiku_for_complex": {
+        "pattern": r'Task\([^)]*model="haiku"[^)]*\)',
+        "context_keywords": ["architecture", "design", "algorithm", "complex", "analyze deeply"],
+        "severity": "medium",
+        "fix": "Change model from haiku to sonnet or opus",
+        "impact": "Better quality results"
+    }
+}
+```
+
+**2. Parallelization Opportunities:**
+```python
+SEQUENTIAL_PATTERNS = {
+    # Multiple independent Task() calls
+    "sequential_independent": {
+        "pattern": r'Task\([^)]+\)\s+# Result used\s+Task\([^)]+\)',
+        "check": "Are tasks truly dependent?",
+        "fix": "Batch independent tasks in single message",
+        "savings": "~50% time reduction"
+    }
+}
+```
+
+**3. Agent Type Selection:**
+```python
+AGENT_TYPE_ISSUES = {
+    "wrong_subagent": {
+        "pattern": r'subagent_type:\s*"([^"]+)"',
+        "validate_against": {
+            "Explore": ["find", "search", "locate", "discover"],
+            "general-purpose": ["implement", "fix", "refactor"],
+            "fix-agent": ["fix violations", "apply fixes"],
+        }
+    }
+}
+```
+
+**4. Unnecessary Agent Usage (OVER-USE):**
+```python
+UNNECESSARY_AGENT_PATTERNS = {
+    # Agent for simple grep/search
+    "agent_for_grep": {
+        "pattern": r'Task\([^)]*"[Gg]rep|[Ff]ind|[Ss]earch|[Ll]ist"[^)]*\)',
+        "check": "Can this be done with direct Grep/Glob tool?",
+        "severity": "high",
+        "fix": "Replace Task() with direct Grep/Glob call",
+        "savings": "~$0.10 per call + faster execution"
+    },
+
+    # Agent for simple file read
+    "agent_for_read": {
+        "pattern": r'Task\([^)]*"[Rr]ead|[Oo]pen|[Cc]at"[^)]*\)',
+        "check": "Can this be done with direct Read tool?",
+        "severity": "high",
+        "fix": "Replace Task() with direct Read call",
+        "savings": "~$0.08 per call + faster"
+    },
+
+    # Agent for simple edit
+    "agent_for_simple_edit": {
+        "pattern": r'Task\([^)]*"[Rr]eplace|[Cc]hange|[Uu]pdate a word"[^)]*\)',
+        "context_check": "Is this a simple string replacement?",
+        "severity": "medium",
+        "fix": "Use Edit tool directly for simple replacements",
+        "savings": "~$0.05 per call + instant"
+    },
+
+    # Agent for simple bash command
+    "agent_for_bash": {
+        "pattern": r'Task\([^)]*"[Rr]un|[Ee]xecute.*ls|pwd|cd|cat"[^)]*\)',
+        "check": "Can this be done with direct Bash tool?",
+        "severity": "high",
+        "fix": "Replace Task() with direct Bash call",
+        "savings": "~$0.12 per call + instant"
+    }
+}
+```
+
+**5. Missing Agent Opportunities (UNDER-USE):**
+```python
+MISSING_AGENT_PATTERNS = {
+    # Sequential loop that should use parallel agents
+    "sequential_loop_candidates": {
+        "pattern": r'for .* in .*:\s+(?:Grep|Read|Edit|Bash)\(',
+        "check": "Are iterations independent? Can parallelize with multiple Task() calls?",
+        "severity": "high",
+        "fix": "Replace loop with parallel Task() calls",
+        "benefit": "~50-80% time reduction for N items"
+    },
+
+    # Large analysis that should be decomposed
+    "large_single_operation": {
+        "pattern": r'(analyze|audit|review).*all.*(modules|files|components)',
+        "check": "Should this be split into parallel sub-agents?",
+        "severity": "medium",
+        "fix": "Decompose into parallel Task() calls per module/file",
+        "benefit": "Faster execution + better results"
+    },
+
+    # Complex multi-step without orchestration
+    "complex_without_agents": {
+        "indicators": [
+            "Multiple sequential Read→Grep→Edit chains",
+            "Long prompts with multiple distinct tasks",
+            "Comments like 'then do X, then Y, then Z'"
+        ],
+        "severity": "medium",
+        "fix": "Break into orchestrated Task() calls",
+        "benefit": "Better error handling + parallelization"
+    }
+}
+```
+
+### Phase 3: Report Violations
+
+```markdown
+## Agent Usage Analysis Results
+
+**Total Task() calls found:** {COUNT}
+
+### 🔴 High Priority Violations ({COUNT})
+
+**Wrong model selection (opus for simple tasks):**
+1. ❌ {FILE_PATH}:{LINE_NUMBER}
+   Current: `Task("Find Python files", model="opus")`
+   Issue: Simple grep task using expensive model
+   Fix: Change to `model="haiku"`
+   Savings: ~$0.15 per execution (60% cost reduction)
+
+2. ❌ {FILE_PATH}:{LINE_NUMBER}
+   Current: `Task("List dependencies", model="opus")`
+   Issue: File reading using expensive model
+   Fix: Change to `model="haiku"`
+   Savings: ~$0.12 per execution
+
+### 🟡 Medium Priority Violations ({COUNT})
+
+**Sequential execution opportunities:**
+1. ⚠️ {FILE_PATH}:{LINE_NUMBER}-{LINE_NUMBER+10}
+   Current: 3 independent Task() calls executed sequentially
+   ```python
+   Task("Analyze module A", model="sonnet")  # Wait
+   Task("Analyze module B", model="sonnet")  # Wait
+   Task("Analyze module C", model="sonnet")  # Wait
+   ```
+   Issue: Independent tasks not parallelized
+   Fix: Batch in single message
+   ```python
+   # Single message with 3 Task calls
+   Task("Analyze module A", model="sonnet")
+   Task("Analyze module B", model="sonnet")
+   Task("Analyze module C", model="sonnet")
+   ```
+   Savings: ~50% time reduction (parallel execution)
+
+**Unnecessary agent usage (OVER-USE):**
+1. ❌ {FILE_PATH}:{LINE_NUMBER}
+   Current: `Task("Find all Python files", model="haiku")`
+   Issue: Using agent for simple Glob operation
+   Fix: Replace with `Glob("**/*.py")`
+   Savings: ~$0.10 per call + instant execution (no agent overhead)
+
+2. ❌ {FILE_PATH}:{LINE_NUMBER}
+   Current: `Task("Read configuration file", model="haiku")`
+   Issue: Using agent for simple file read
+   Fix: Replace with `Read("config.yaml")`
+   Savings: ~$0.08 per call + instant
+
+**Missing agent opportunities (UNDER-USE):**
+1. ⚠️ {FILE_PATH}:{LINE_NUMBER}-{LINE_NUMBER+20}
+   Current: Sequential loop analyzing 10 modules
+   ```python
+   for module in modules:  # 10 iterations
+       Grep(f"import.*{module}", output_mode="content")
+       Read(f"src/{module}.py")
+       # Process sequentially
+   ```
+   Issue: Sequential processing, no parallelization
+   Fix: Use 10 parallel Task() calls
+   ```python
+   # Spawn 10 agents in parallel
+   for module in modules:
+       Task(f"Analyze {module} module", model="haiku")
+   ```
+   Benefit: ~80% time reduction (10x parallelization)
+
+2. ⚠️ {FILE_PATH}:{LINE_NUMBER}
+   Current: Single large prompt "Analyze all security, testing, and database issues"
+   Issue: Complex multi-domain task in one agent
+   Fix: Decompose into specialized agents
+   ```python
+   Task("Security audit", model="sonnet")  # Parallel
+   Task("Testing audit", model="sonnet")   # Parallel
+   Task("Database audit", model="sonnet")  # Parallel
+   ```
+   Benefit: ~60% faster + better domain-specific analysis
+
+### 💡 Recommendations ({COUNT})
+
+**Model upgrade opportunities:**
+1. ℹ️ {FILE_PATH}:{LINE_NUMBER}
+   Current: `Task("Design architecture", model="haiku")`
+   Suggestion: Complex architectural work better suited for opus
+   Impact: Higher quality architectural decisions
+
+### Summary
+
+- Total potential cost savings: {PERCENTAGE}%
+- Total potential time savings: {PERCENTAGE}%
+- Auto-fixable violations: {COUNT}/{TOTAL}
+```
+
+### Phase 4: Auto-Fix (If User Approves)
+
+```python
+# For each violation:
+for violation in high_priority_violations:
+    if violation.type == "model_selection":
+        # Direct string replacement
+        Edit(
+            file_path=violation.file,
+            old_string=f'model="{violation.current_model}"',
+            new_string=f'model="{violation.recommended_model}"'
+        )
+
+    elif violation.type == "sequential_tasks":
+        # Add comment suggesting parallelization
+        Edit(
+            file_path=violation.file,
+            old_string=violation.sequential_block,
+            new_string=f"# TODO: These {violation.task_count} tasks can run in parallel\n" +
+                      violation.sequential_block
+        )
+
+    elif violation.type == "unnecessary_agent":
+        # Remove agent, replace with direct tool
+        if violation.should_use == "Glob":
+            Edit(
+                file_path=violation.file,
+                old_string=violation.task_call,
+                new_string=violation.direct_tool_call
+            )
+            # Example: Task("Find Python files") → Glob("**/*.py")
+
+        elif violation.should_use == "Read":
+            Edit(
+                file_path=violation.file,
+                old_string=violation.task_call,
+                new_string=f'Read("{violation.file_to_read}")'
+            )
+            # Example: Task("Read config") → Read("config.yaml")
+
+        elif violation.should_use == "Bash":
+            Edit(
+                file_path=violation.file,
+                old_string=violation.task_call,
+                new_string=f'Bash("{violation.bash_command}")'
+            )
+            # Example: Task("List files") → Bash("ls -la")
+
+    elif violation.type == "missing_agent":
+        # Add comment suggesting agent usage
+        Edit(
+            file_path=violation.file,
+            old_string=violation.sequential_code,
+            new_string=f"# TODO: Parallelize with {violation.suggested_agent_count} Task() calls\n" +
+                      f"# Potential {violation.time_savings}% time reduction\n" +
+                      violation.sequential_code
+        )
+        # For complex cases, provide full replacement suggestion
+        if violation.can_auto_convert:
+            Edit(
+                file_path=violation.file,
+                old_string=violation.sequential_code,
+                new_string=violation.parallel_code
+            )
+```
+
+### Expected Results
+
+```markdown
+## Agent Usage Optimizations Applied ✓
+
+**Before:**
+- Average cost per command execution: $0.45
+- Average execution time: 45 seconds
+- Parallelization efficiency: 30%
+
+**After:**
+- Average cost per command execution: $0.18 (-60%)
+- Average execution time: 23 seconds (-49%)
+- Parallelization efficiency: 85%
+
+**Specific Changes:**
+- ✓ Fixed 12 opus→haiku opportunities (simple tasks)
+- ✓ Identified 5 sequential→parallel opportunities
+- ✓ Flagged 2 haiku→sonnet upgrades (complex tasks)
+- ✓ Removed 8 unnecessary agents (replaced with direct tools)
+- ✓ Added 4 missing parallelization opportunities
+- ✓ Decomposed 2 large single-agent tasks into parallel sub-agents
+
+**Violation Breakdown:**
+- Model selection: 14 violations fixed
+- Parallelization: 5 opportunities identified
+- Over-use (unnecessary agents): 8 removed
+- Under-use (missing agents): 6 opportunities added
+
+**Cost Impact:**
+- Monthly savings (100 executions): $35.00
+- Annual savings: $420.00
+- Time savings: ~49% faster execution
+```
+
 ---
 
 ## Execution Protocol
@@ -69,11 +442,11 @@ Measure and improve performance metrics: query times, image sizes, bundle sizes,
 # Optimize Command
 
 **What I do:**
-I identify and fix performance bottlenecks across 6 areas: database queries, Docker images, code quality, dependencies, frontend bundles, and resilience patterns.
+I identify and fix performance bottlenecks across 7 areas: database queries, Docker images, code quality, dependencies, frontend bundles, resilience patterns, and **agent/model usage**.
 
 **How it works:**
-1. I analyze your project to find optimization opportunities (N+1 queries, large images, dead code, etc.)
-2. I measure current metrics (query times, image sizes, bundle sizes)
+1. I analyze your project to find optimization opportunities (N+1 queries, large images, dead code, inefficient agent calls, etc.)
+2. I measure current metrics (query times, image sizes, bundle sizes, agent costs)
 3. You select which optimizations to apply (individual steps or groups)
 4. I apply optimizations and measure improvements
 5. I report before/after metrics with impact analysis
@@ -85,6 +458,7 @@ I identify and fix performance bottlenecks across 6 areas: database queries, Doc
 - Dependency updates (security patches, remove unused)
 - Bundle optimizations (code splitting - smaller bundles)
 - Resilience patterns (circuit breakers, retry logic)
+- **Agent optimizations (opus→haiku, parallel execution - 60% cost reduction)**
 
 **Time estimate:** 10-30 minutes depending on optimizations selected
 
@@ -140,10 +514,14 @@ AskUserQuestion supports **4 questions maximum** with **4 options maximum per qu
 AskUserQuestion({
   questions: [
     {
-      question: "Select optimizations to run (with before/after metrics):",
-      header: "Performance",
+      question: "Select infrastructure optimizations:",
+      header: "Infrastructure",
       multiSelect: true,
       options: [
+        {
+          label: "All Infrastructure",
+          description: "Select all infrastructure optimizations"
+        },
         {
           label: "Docker",
           description: f"Image size {current_size}, build time {build_time} | Measures: MB, seconds"
@@ -155,10 +533,25 @@ AskUserQuestion({
         {
           label: "Bundle",
           description: f"Frontend bundle size: {bundle_size} | Measures: KB, chunks"
+        }
+      ]
+    },
+    {
+      question: "Select advanced optimizations:",
+      header: "Advanced",
+      multiSelect: true,
+      options: [
+        {
+          label: "All Advanced",
+          description: "Select all advanced optimizations"
         },
         {
           label: "Performance",
           description: "Response times, circuit breakers | Measures: ms, error rate"
+        },
+        {
+          label: "Agents",
+          description: f"{task_count} Task calls found | Measures: cost, parallelization | 60% savings"
         }
       ]
     },
@@ -307,6 +700,19 @@ Task({
   - Remove unused imports
   - Refactor complex functions to <10 complexity
 
+  AGENTS: Reference C_AGENT_ORCHESTRATION_PATTERNS principle (NO skill needed)
+  - Scan all .md files in .claude/ and content/ directories
+  - Find Task() calls with model parameter
+  - Analyze against C_AGENT_ORCHESTRATION_PATTERNS:
+    * Wrong model selection (opus for simple tasks, haiku for complex)
+    * Sequential execution that could be parallel
+    * Multiple independent tasks not batched in single message
+    * OVER-USE: Unnecessary agents for simple operations (Grep, Read, Bash)
+    * UNDER-USE: Missing agent opportunities (sequential loops, large single tasks)
+  - Report violations with file:line references
+  - Auto-fix: Remove unnecessary agents, suggest missing parallelization
+  - Suggest fixes with cost savings estimates
+
   Verify each change:
   - Measure before/after metrics
   - Run tests to ensure functionality intact
@@ -348,6 +754,11 @@ Code Quality:
 - Codebase size: [REDUCTION]% (easier to maintain)
 - Complexity: All functions <[MAX_COMPLEXITY]
 - Dead code: [RESULT]
+
+Agent/Model Usage:
+- Model cost reduction: [REDUCTION]% (opus→haiku where appropriate)
+- Parallelization efficiency: [IMPROVEMENT]% (sequential→parallel)
+- Execution time: [BEFORE] → [AFTER] ([IMPROVEMENT]% faster)
 
 Pain Point Impact:
 ✓ Addresses Pain #5 (significant time waste)
@@ -441,6 +852,9 @@ After optimizations, measure improvements and report.
 # Optimize frontend bundle (with before/after metrics)
 /cco-optimize --bundle
 
+# Optimize agent/model usage (with cost savings)
+/cco-optimize --agents
+
 # Comprehensive optimization (all areas)
 /cco-optimize --all
 
@@ -470,3 +884,37 @@ Any text after the flags is treated as additional context for optimization. The 
 - **After /cco-audit --performance**: Fix detected issues
 - **After /cco-audit --quick**: Follow optimization recommendations
 - **Before deployment**: Optimize before going to production
+
+## Agent Error Handling
+
+**If optimization agent execution fails:**
+
+AskUserQuestion({
+  questions: [{
+    question: "optimize-agent (Sonnet) failed: {error_message}. How to proceed?",
+    header: "optimize-agent (Sonnet) Error",
+    multiSelect: false,
+    options: [
+      {label: "Retry", description: "Run agent again with same parameters"},
+      {label: "Retry with different model", description: "Try Sonnet/Haiku/Opus"},
+      {label: "Manual optimization", description: "Guide manual optimization process"},
+      {label: "Skip this optimization", description: "Continue with next optimization"},
+      {label: "Cancel", description: "Stop entire command"}
+    ]
+  }]
+})
+
+**Model selection if user chooses "Retry with different model":**
+
+AskUserQuestion({
+  questions: [{
+    question: "Which model to try?",
+    header: "Model Selection",
+    multiSelect: false,
+    options: [
+      {label: "Sonnet", description: "Balanced performance and cost (recommended)"},
+      {label: "Haiku", description: "Faster, more affordable"},
+      {label: "Opus", description: "Most capable, higher cost"}
+    ]
+  }]
+})

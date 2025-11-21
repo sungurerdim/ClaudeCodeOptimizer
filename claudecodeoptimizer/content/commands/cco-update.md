@@ -57,7 +57,19 @@ What will be updated:
 
 All projects using CCO will get updates automatically.
 
-Proceed? (yes/no)
+AskUserQuestion({
+  questions: [{
+    question: "Update CCO to latest version?",
+    header: "Update",
+    multiSelect: false,
+    options: [
+      {label: "Yes", description: "Update all components"},
+      {label: "Preview changes", description: "Show what will be updated"},
+      {label: "Selective update", description: "Choose specific components"},
+      {label: "No", description: "Cancel update"}
+    ]
+  }]
+})
 ```
 
 ### Step 4: Run Update
@@ -163,3 +175,26 @@ def check_updates_if_old():
 # After update, verify
 /cco-status
 ```
+
+## Update Error Handling
+
+**If update fails (network error, installation error, sync error):**
+
+AskUserQuestion({
+  questions: [{
+    question: "Update failed: {error_type} - {error_message}. How to proceed?",
+    header: "Update Error",
+    multiSelect: false,
+    options: [
+      {label: "Retry", description: "Try update again"},
+      {label: "Rollback", description: "Restore previous version"},
+      {label: "Force sync", description: "Force sync (may overwrite local changes)"},
+      {label: "Manual update", description: "Show manual update instructions"},
+      {label: "Cancel", description: "Stop update"}
+    ]
+  }]
+})
+
+**Network failure retry strategy:**
+- Retry up to 3 times with exponential backoff (1s, 2s, 4s)
+- If all retries fail, offer manual download option

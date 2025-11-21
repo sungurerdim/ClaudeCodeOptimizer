@@ -234,7 +234,25 @@ def fix(category):
 
 ## Execution Protocol
 
+**PHASES TRACKING:**
+```python
+PHASES = {
+    1: "Introduction & Confirmation",
+    2: "Project Context Discovery",
+    3: "Fix Categorization & Selection",
+    4: "Apply Fixes & Report Results"
+}
+
+# Before each phase, announce:
+print("───────────────────────────────────────────────────────")
+print(f"### Phase {N}/4: {PHASES[N]} ▶ STARTED")
+print("───────────────────────────────────────────────────────")
+# After phase completes:
+print(f"### Phase {N}/4: {PHASES[N]} ✓ COMPLETE")
+```
+
 ### Step 0: Introduction and Confirmation (ALWAYS FIRST)
+**[Phase 1/4: Introduction & Confirmation]**
 
 **Before doing ANYTHING, present this introduction and get user confirmation:**
 
@@ -291,6 +309,7 @@ AskUserQuestion({
 ---
 
 ### Step 0.5: Project Context Discovery (Optional)
+**[Phase 2/4: Project Context Discovery]**
 
 **Ask user if they want project documentation analyzed for better fix alignment.**
 
@@ -375,6 +394,7 @@ for issue in issues:
 ```
 
 ### Step 3: Present Fix Plan with AskUserQuestion
+**[Phase 3/4: Fix Categorization & Selection]**
 
 **IMPORTANT - Dynamic Fix Generation Protocol:**
 You MUST generate fix options from ACTUAL audit results:
@@ -449,6 +469,10 @@ AskUserQuestion({
       multiSelect: true,
       options: [
         {
+          label: "All Risky Fixes",
+          description: f"⚠️ Select all {total_risky_count} risky fixes (each will need confirmation)"
+        },
+        {
           label: f"Security ({risky_security_count} fixes)",
           description: "Auth changes, CSRF protection, encryption"
         },
@@ -459,10 +483,6 @@ AskUserQuestion({
         {
           label: f"Architecture ({risky_arch_count} fixes)",
           description: "Refactoring, pattern changes, API updates"
-        },
-        {
-          label: "All Risky Fixes",
-          description: f"⚠️ Select all {total_risky_count} risky fixes (each will need confirmation)"
         }
       ]
     }
@@ -549,6 +569,7 @@ AskUserQuestion({
 - Keep simple fixes (single file/change) as single options
 
 ### Step 4: Apply Safe Fixes
+**[Phase 4/4: Apply Fixes & Report Results]**
 
 If user confirms:
 
@@ -713,7 +734,7 @@ Task({
 ## Skills Usage
 
 Each fix category uses same skills as corresponding audit:
-- `--security` → 3 security skills
+- `--security` → 3 security skills (cco-skill-security-owasp-xss-sqli-csrf, cco-skill-privacy-gdpr-compliance-encryption, cco-skill-supply-chain-dependencies-sast)
 - `--tech-debt` → 2 code quality skills
 - `--database` → 2 database skills
 - etc.
@@ -786,3 +807,37 @@ Any text after the flags is treated as additional context for the fix process. T
 - **Before /cco-commit**: Good to fix before committing
 - **After /cco-audit --quick**: Follow action plan
 - **With /cco-generate**: Fix existing, generate missing
+
+## Agent Error Handling
+
+**If fix agent execution fails:**
+
+AskUserQuestion({
+  questions: [{
+    question: "fix-agent (Sonnet) failed: {error_message}. How to proceed?",
+    header: "fix-agent (Sonnet) Error",
+    multiSelect: false,
+    options: [
+      {label: "Retry", description: "Run agent again with same parameters"},
+      {label: "Retry with different model", description: "Try Sonnet/Haiku/Opus"},
+      {label: "Manual fix", description: "Guide manual fix process"},
+      {label: "Skip this fix", description: "Continue with next fix"},
+      {label: "Cancel", description: "Stop entire command"}
+    ]
+  }]
+})
+
+**Model selection if user chooses "Retry with different model":**
+
+AskUserQuestion({
+  questions: [{
+    question: "Which model to try?",
+    header: "Model Selection",
+    multiSelect: false,
+    options: [
+      {label: "Sonnet", description: "Balanced performance and cost (recommended)"},
+      {label: "Haiku", description: "Faster, more affordable"},
+      {label: "Opus", description: "Most capable, higher cost"}
+    ]
+  }]
+})
