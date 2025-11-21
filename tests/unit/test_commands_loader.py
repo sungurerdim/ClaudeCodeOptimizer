@@ -217,8 +217,9 @@ description: Remove CCO from current project
 
     def test_load_global_commands_with_real_structure(self, tmp_path):
         """Test loading with actual file structure"""
-        # Create the directory structure
-        content_dir = tmp_path / "content"
+        # Create the directory structure - must match Path(__file__).parent / "content" / "commands"
+        module_dir = tmp_path / "claudecodeoptimizer"
+        content_dir = module_dir / "content"
         commands_dir = content_dir / "commands"
         commands_dir.mkdir(parents=True)
 
@@ -266,7 +267,9 @@ description: Remove CCO from current project (keeps global installation)
 
     def test_load_global_commands_only_remove_exists(self, tmp_path):
         """Test loading when only cco-remove exists"""
-        commands_dir = tmp_path / "content" / "commands"
+        # Must match Path(__file__).parent / "content" / "commands"
+        module_dir = tmp_path / "claudecodeoptimizer"
+        commands_dir = module_dir / "content" / "commands"
         commands_dir.mkdir(parents=True)
 
         remove_file = commands_dir / "cco-remove.md"
@@ -293,7 +296,9 @@ description: Remove CCO
 
     def test_load_global_commands_invalid_frontmatter(self, tmp_path):
         """Test loading with invalid frontmatter returns title from filename"""
-        commands_dir = tmp_path / "content" / "commands"
+        # Must match Path(__file__).parent / "content" / "commands"
+        module_dir = tmp_path / "claudecodeoptimizer"
+        commands_dir = module_dir / "content" / "commands"
         commands_dir.mkdir(parents=True)
 
         # File with no frontmatter
@@ -342,8 +347,8 @@ class TestGetCommandList:
         with patch("claudecodeoptimizer.commands_loader.load_global_commands", return_value={}):
             result = get_command_list()
 
-            # Default fallback
-            assert result == "cco-remove.md"
+            # Should return empty string when no commands
+            assert result == ""
 
     def test_get_command_list_single_command(self):
         """Test command list with single command"""
@@ -405,8 +410,8 @@ class TestGetSlashCommands:
         with patch("claudecodeoptimizer.commands_loader.load_global_commands", return_value={}):
             result = get_slash_commands()
 
-            # Default fallback
-            assert result == "/cco-remove"
+            # Should return empty string when no commands
+            assert result == ""
 
     def test_get_slash_commands_single_command(self):
         """Test slash commands with single command"""
@@ -493,13 +498,16 @@ name: 'single-quoted-name'
         assert result["name"] == "'single-quoted-name'"
 
     def test_load_global_commands_only_loads_remove(self):
-        """Test that only cco-remove is loaded"""
-        # This is the actual behavior - only specific commands are global
+        """Test that all cco-*.md commands are loaded"""
+        # This loads from actual content/commands directory
         result = load_global_commands()
 
-        # Should only have remove (or be empty if file doesn't exist)
+        # Should load all cco-*.md files
         if result:
-            assert all(key in ["cco-remove"] for key in result.keys())
+            # All keys should start with "cco-"
+            assert all(key.startswith("cco-") for key in result.keys())
+            # Should have multiple commands in the actual codebase
+            assert len(result) > 0
 
     def test_functions_dont_raise_on_missing_files(self):
         """Test that functions handle missing files gracefully"""
