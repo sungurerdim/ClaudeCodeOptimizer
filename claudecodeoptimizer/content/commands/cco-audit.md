@@ -422,80 +422,31 @@ project_context = context_result
 
 ## Component 2: Discovery Phase
 
-**Run BEFORE showing any selection options. Required for applicability.**
+**Run BEFORE selection. Detects tech stack to show only applicable checks.**
 
 ### Step 1: Tech Stack Detection
 
-```python
-# Detect project technologies
-detected = {
-    "languages": [],
-    "frameworks": [],
-    "databases": [],
-    "devops": [],
-    "testing": []
-}
+**Use Glob + Read to detect:**
+- **Languages**: `**/*.py` → Python, `**/*.{js,ts}` → JavaScript/TypeScript
+- **Frameworks**: Parse requirements.txt/pyproject.toml/package.json for Flask/Django/FastAPI/React/etc.
+- **Databases**: Check for SQLAlchemy/Sequelize/Prisma patterns
+- **DevOps**: `Dockerfile` → Docker, `.github/workflows/` → GitHub Actions
+- **Testing**: `pytest.ini`/`conftest.py` → pytest, `jest.config.js` → Jest
 
-# Detection rules
-if Glob("**/*.py"):
-    detected["languages"].append("Python")
-
-    # Check for frameworks
-    req_content = Read("requirements.txt") or Read("pyproject.toml")
-    if "flask" in req_content.lower():
-        detected["frameworks"].append("Flask")
-    if "django" in req_content.lower():
-        detected["frameworks"].append("Django")
-    if "fastapi" in req_content.lower():
-        detected["frameworks"].append("FastAPI")
-    if "sqlalchemy" in req_content.lower():
-        detected["databases"].append("SQLAlchemy")
-
-if Glob("**/*.js") or Glob("**/*.ts"):
-    detected["languages"].append("JavaScript/TypeScript")
-
-if Glob("**/Dockerfile"):
-    detected["devops"].append("Docker")
-
-if Glob("**/.github/workflows/*.yml"):
-    detected["devops"].append("GitHub Actions")
-
-if Glob("**/pytest.ini") or Glob("**/conftest.py"):
-    detected["testing"].append("pytest")
-```
+**Result:** `detected` dict with tech categories
 
 ### Step 2: Calculate Applicability
 
-```python
-# For each check, determine if applicable
-applicable_checks = []
-not_applicable = []
+**Filter checks by tech stack:**
+- For each check in ALL_CHECKS, evaluate `is_applicable(detected)`
+- Split into `applicable_checks[]` and `not_applicable[]` with reasons
 
-for check in ALL_CHECKS:
-    if check.is_applicable(detected):
-        applicable_checks.append(check)
-    else:
-        not_applicable.append((check, check.reason_not_applicable(detected)))
-```
+### Step 3: Display Discovery
 
-### Step 3: Display Discovery Results
-
-```markdown
-## Discovery Complete
-
-**Tech Stack:**
-```
-Languages:   Python 3.11
-Frameworks:  Flask 2.3, SQLAlchemy 2.0
-Database:    PostgreSQL
-DevOps:      Docker, GitHub Actions
-Testing:     pytest, coverage
-```
-
-**Applicability:** {APPLICABLE_COUNT}/{TOTAL_CHECKS} checks ({APPLICABILITY_PCT}%)
-
-**Files to scan:** {FILE_COUNT} files in {DIR_COUNT} directories
-```
+**Show user:**
+- Tech stack summary (Languages, Frameworks, Database, DevOps, Testing)
+- Applicability: `{APPLICABLE_COUNT}/{TOTAL_CHECKS}` checks (`{PCT}%`)
+- Files to scan: `{FILE_COUNT}` in `{DIR_COUNT}` directories
 
 ---
 
@@ -1031,66 +982,26 @@ AskUserQuestion({
 
 ## Component 6: State Management & Count Tracking
 
-**CRITICAL: All UX issues stem from inconsistent state and count management.**
+**CRITICAL: Maintain single source of truth for all counts and status.**
 
-### Single Source of Truth
+### AuditState Pattern
 
-```python
-@dataclass
-class AuditState:
-    """Central state object - ONLY source for all counts and status."""
+**Create central state object:**
+- **Phase tracking**: current_phase (0=not started, 1=setup, 2=scanning, 3=synthesis)
+- **Count tracking**: total_findings, findings_by_severity{critical, high, medium, low}
+- **Complete accounting**: all_findings[] list
+- **Methods**: add_finding() updates all counts atomically, get_counts_string() for display
 
-    # Phase tracking
-    current_phase: int = 0  # 0=not started, 1=setup, 2=scanning, 3=synthesis
-    phase_start_times: Dict[int, datetime] = field(default_factory=dict)
-    phase_end_times: Dict[int, datetime] = field(default_factory=dict)
+**Rules:**
+- NEVER derive counts - always update explicitly
+- ALWAYS use get_counts_string() for consistency
+- Global state: `AUDIT_STATE` initialized once, used everywhere
 
-    # Count tracking - NEVER derive these, always update explicitly
-    total_findings: int = 0
-    findings_by_severity: Dict[str, int] = field(default_factory=lambda: {
-        "critical": 0, "high": 0, "medium": 0, "low": 0
-    })
+### Phase Transitions
 
-    # Complete accounting - track ALL items
-    all_findings: List[Finding] = field(default_factory=list)
-
-    def add_finding(self, finding: Finding):
-        """Single method to add findings - maintains consistency."""
-        self.all_findings.append(finding)
-        self.total_findings += 1
-        self.findings_by_severity[finding.severity] += 1
-
-    def get_counts_string(self) -> str:
-        """ALWAYS use this for displaying counts - ensures consistency."""
-        return (f"{self.total_findings} issues "
-                f"({self.findings_by_severity['critical']} critical, "
-                f"{self.findings_by_severity['high']} high, "
-                f"{self.findings_by_severity['medium']} medium)")
-
-# Global state - initialized once, used everywhere
-AUDIT_STATE = AuditState()
-```
-
-### Phase State Machine
-
-**RULE: Every phase transition MUST be explicitly announced.**
-
-```python
-def transition_phase(state: AuditState, new_phase: int):
-    """Explicit phase transition with required announcements."""
-
-    old_phase = state.current_phase
-
-    # End current phase
-    if old_phase > 0:
-        state.phase_end_times[old_phase] = datetime.now()
-        duration = state.phase_end_times[old_phase] - state.phase_start_times[old_phase]
-
-        # MUST announce phase completion
-        print(format_phase_complete(old_phase, duration))
-
-    # Start new phase
-    state.current_phase = new_phase
+**Every transition MUST:**
+1. End current phase (record end time, calculate duration, announce completion)
+2. Start new phase (set new phase number, record start time, announce start)
     state.phase_start_times[new_phase] = datetime.now()
 
     # MUST announce phase start
