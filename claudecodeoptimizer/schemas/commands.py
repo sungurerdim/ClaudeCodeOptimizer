@@ -7,7 +7,7 @@ No project-specific data; all specialization via tagging and templates.
 
 from datetime import datetime
 
-from pydantic import BaseModel, Field
+from pydantic import BaseModel, ConfigDict, Field
 
 from .. import __version__ as cco_version
 
@@ -70,8 +70,8 @@ class CommandMetadata(BaseModel):
     success_rate: float | None = Field(None, ge=0.0, le=1.0, description="Success rate")
     last_used: str | None = Field(None, description="Last invocation timestamp")
 
-    class Config:
-        json_schema_extra = {
+    model_config = ConfigDict(
+        json_schema_extra={
             "example": {
                 "command_id": "cco-audit-code",
                 "display_name": "Code Quality Audit",
@@ -84,6 +84,7 @@ class CommandMetadata(BaseModel):
                 "is_core": True,
             },
         }
+    )
 
 
 class CommandSelection(BaseModel):
@@ -148,7 +149,8 @@ class CommandRegistry(BaseModel):
             if "all" in cmd.applicable_team_sizes or team_size in cmd.applicable_team_sizes
         ]
 
-    class Config:
-        json_schema_extra = {
+    model_config = ConfigDict(
+        json_schema_extra={
             "description": "Universal command registry - works for any project",
         }
+    )

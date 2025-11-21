@@ -8,7 +8,7 @@ AI-generated recommendations based on project analysis.
 from datetime import datetime
 from typing import Any
 
-from pydantic import BaseModel, Field
+from pydantic import BaseModel, ConfigDict, Field
 
 
 class DetectionResult(BaseModel):
@@ -22,8 +22,8 @@ class DetectionResult(BaseModel):
     confidence: float = Field(..., ge=0.0, le=1.0, description="Confidence score (0.0-1.0)")
     evidence: list[str] = Field(default=[], description="Evidence (file paths, patterns found)")
 
-    class Config:
-        json_schema_extra = {
+    model_config = ConfigDict(
+        json_schema_extra={
             "example": {
                 "category": "language",
                 "detected_value": "python",
@@ -31,6 +31,7 @@ class DetectionResult(BaseModel):
                 "evidence": ["47 .py files", "pyproject.toml present"],
             },
         }
+    )
 
 
 class Recommendation(BaseModel):
@@ -49,8 +50,8 @@ class Recommendation(BaseModel):
         description="Detection results that informed this recommendation",
     )
 
-    class Config:
-        json_schema_extra = {
+    model_config = ConfigDict(
+        json_schema_extra={
             "example": {
                 "preference_path": "testing.coverage_target",
                 "recommended_value": "90",
@@ -60,6 +61,7 @@ class Recommendation(BaseModel):
                 "detection_basis": [],
             },
         }
+    )
 
 
 class RecommendationBundle(BaseModel):
@@ -120,7 +122,8 @@ class ProjectAnalysisReport(BaseModel):
     analyzed_at: str = Field(default_factory=lambda: datetime.now().isoformat())
     analysis_duration_ms: int = Field(0, description="Time taken for analysis")
 
-    class Config:
-        json_schema_extra = {
+    model_config = ConfigDict(
+        json_schema_extra={
             "description": "Universal project analysis report - works for any language/framework",
         }
+    )
