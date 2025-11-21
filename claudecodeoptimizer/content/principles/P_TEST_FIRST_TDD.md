@@ -47,8 +47,8 @@ from auth import <function_name>
 
 def test_authenticate_user_with_valid_credentials():
     # Arrange
-    email = "user@example.com"
-    password = "<test-password>"
+    email = "{TEST_EMAIL}"
+    password = "{TEST_PASSWORD}"
 
     # Act
     result = <function_name>(email, password)
@@ -176,7 +176,7 @@ def test_addition():
 ```python
 # ✅ GOOD: Focused tests
 def test_user_creation_with_valid_data():
-    user = create_user("John", "john@example.com")
+    user = create_user("{USER_NAME}", "{USER_EMAIL}")
     assert user.name == "John"
 
 def test_user_creation_rejects_invalid_email():
@@ -185,7 +185,7 @@ def test_user_creation_rejects_invalid_email():
 
 # ❌ BAD: Tests multiple things
 def test_user_everything():
-    user = create_user("John", "john@example.com")
+    user = create_user("{USER_NAME}", "{USER_EMAIL}")
     assert user.name == "John"
     assert user.id is not None
     # ... 20 more assertions (which one failed?)

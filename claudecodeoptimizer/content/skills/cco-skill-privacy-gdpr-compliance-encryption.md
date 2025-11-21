@@ -78,7 +78,7 @@ async def erasure_request(user: User = Depends(get_current_user)):
         raise HTTPException(403, "Legal hold")
 
     # Pseudonymize
-    user.email = f"deleted_{user.id}@example.com"
+    user.email = f"deleted_{user.id}@{DOMAIN}"
     user.first_name = "[DELETED]"
     user.account_status = 'deleted'
 

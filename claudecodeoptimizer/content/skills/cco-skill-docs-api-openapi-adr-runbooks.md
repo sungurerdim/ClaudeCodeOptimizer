@@ -229,7 +229,7 @@ app = FastAPI(
     description="API for managing user accounts and permissions",
     contact={
         "name": "API Support",
-        "email": "api@example.com",
+        "email": "{API_CONTACT_EMAIL}",
     },
     license_info={
         "name": "MIT",
@@ -239,7 +239,7 @@ app = FastAPI(
 class User(BaseModel):
     """User model with validation"""
     id: int = Field(..., description="Unique user identifier", example=123)
-    email: str = Field(..., description="User email address", example="user@example.com")
+    email: str = Field(..., description="User email address", example="{USER_EMAIL}")
     name: str = Field(..., description="Full name", min_length=1, max_length=100)
     is_active: bool = Field(default=True, description="Account active status")
 
@@ -247,8 +247,8 @@ class User(BaseModel):
         schema_extra = {
             "example": {
                 "id": 123,
-                "email": "john.doe@example.com",
-                "name": "John Doe",
+                "email": "{USER_EMAIL}",
+                "name": "{USER_NAME}",
                 "is_active": True
             }
         }

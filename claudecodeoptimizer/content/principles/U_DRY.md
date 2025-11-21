@@ -57,8 +57,8 @@ from shared.constants import MAX_RETRIES
 
 ### ❌ Bad - Data Duplication
 ```python
-user.email = "old@example.com"  # DB
-cache.set("user_email", "new@example.com")  # Cache - which is truth?
+user.email = "{OLD_EMAIL}"  # DB
+cache.set("user_email", "{NEW_EMAIL}")  # Cache - which is truth?
 ```
 
 ### ✅ Good - Data
