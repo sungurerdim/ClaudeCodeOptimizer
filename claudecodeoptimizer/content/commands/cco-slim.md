@@ -1,6 +1,6 @@
 ---
 name: cco-slim
-description: Token-optimized content slimming with quality preservation and semantic verification
+description: Context optimization and duplication elimination (primary). Optional token reduction for other files.
 action_type: optimize
 parameters:
   markdown:
@@ -17,21 +17,76 @@ parameters:
     category: context
 ---
 
-# CCO Slim Command
+# CCO Slim: Ultimate Context Optimization
 
-**Token optimization with guaranteed quality preservation and semantic verification.**
+**Primary: Context optimization (CLAUDE.md duplication elimination). Secondary: Token reduction for other content.**
 
 ---
 
 ## Design Principles
 
-1. **Quality First** - Never sacrifice meaning, effectiveness, or completeness
-2. **Verification Heavy** - Every optimization verified before acceptance
-3. **Conservative Default** - Only 100% safe optimizations unless user opts-in
+1. **Context First** - Primary focus on CLAUDE.md and context duplication (core mission)
+2. **Quality First** - Never sacrifice meaning, effectiveness, or completeness
+3. **Verification Heavy** - Every optimization verified before acceptance
+4. **Conservative Default** - Only 100% safe optimizations unless user opts-in
 4. **Complete Accounting** - Every file categorized, every change tracked
 5. **Semantic Preservation** - Meaning preserved at all costs
 6. **Honest Reporting** - Exact truth about reductions and risks
 7. **No Hardcoded Examples** - All examples use placeholders
+
+## Mission Statement
+
+**PRIMARY GOAL: Minimize context usage while maximizing quality, efficiency, and AI performance.**
+
+This means:
+1. **Eliminate duplication**: CLAUDE.md + skills/agents/commands loading same files
+2. **Detect incomplete content**: Stub files, TODO markers, missing implementations
+3. **Optimize CLAUDE.md**: Add frequently-used files, remove redundant references
+4. **Token reduction WITHOUT quality loss**: Preserve meaning, effectiveness, completeness
+5. **Evaluate ALL context elements**: Principles, skills, agents, commands, README, ARCHITECTURE, CONTRIBUTING, all .md docs - EVERYTHING that can be context
+6. **Optimize each file internally**: Every principle/skill/agent/command written with minimum tokens for maximum effectiveness
+
+**Success = Minimum tokens for maximum quality.**
+
+### Internal Content Optimization (Critical Component)
+
+**Each context element must be internally optimized:**
+
+**Goal**: Same effectiveness with minimum tokens.
+
+**Target Elements**:
+- **Principles**: Verbose explanations → Concise rules with examples
+- **Skills**: Redundant instructions → Streamlined procedures
+- **Agents**: Long prompts → Token-efficient directives
+- **Commands**: Repeated patterns → DRY implementations
+- **MD Docs**: Verbose text → Information-dense content
+
+**Example Optimization**:
+```markdown
+❌ BEFORE (200 tokens, verbose):
+"This principle is about ensuring that you always verify your changes before 
+claiming that you have completed a task. You should never say that something 
+is done without actually checking to make sure it's really done. This is very 
+important because it prevents incomplete work and ensures reliability..."
+
+✅ AFTER (50 tokens, optimized):
+**Verify before claiming completion. Check, don't assume.**
+
+**Why**: Prevents incomplete work, ensures reliability.
+
+**How**: Run commands, check outputs, confirm results.
+```
+
+**Quality Preservation**:
+- ✅ Meaning preserved (verify before claim)
+- ✅ Effectiveness maintained (same outcome)
+- ✅ Examples included (how to verify)
+- ✅ 75% token reduction
+
+**This applies to EVERY context file - no exceptions.**
+
+
+---
 
 ---
 
@@ -101,15 +156,15 @@ AskUserQuestion({
     options: [
       {
         label: "Conservative (Recommended)",
-        description: "Only 100% safe optimizations - Quality guaranteed, 10-20% reduction"
+        description: "Only 100% safe optimizations - Quality guaranteed, maximum reduction with zero risk"
       },
       {
         label: "Balanced",
-        description: "Safe + verified low-risk - Quality checks enforced, 20-35% reduction"
+        description: "Safe + verified low-risk - Quality checks enforced, maximum reduction with minimal risk"
       },
       {
         label: "Aggressive (Not Recommended)",
-        description: "All optimizations - Higher risk, manual review required, 35-50% reduction"
+        description: "All optimizations - Higher risk, manual review required, maximum achievable reduction"
       }
     ]
   }]
@@ -117,26 +172,26 @@ AskUserQuestion({
 ```
 
 ### Mode Details
-
 **Conservative (Default):**
-- Only whitespace, formatting, provably unused code
-- No semantic risk
+- Only 100% safe optimizations (whitespace, provably unused, formatting)
+- Zero semantic risk
 - Quality: 100% guaranteed
-- Typical reduction: 10-20%
+- **Reduction: Maximum possible with zero risk** (not capped at %)
 - Recommended for: Production content, critical documentation
 
 **Balanced:**
-- Conservative + example consolidation + instruction reordering
-- Quality checks before acceptance
-- Rollback on degradation
-- Typical reduction: 20-35%
+- Safe + verified low-risk optimizations
+- Quality checks before acceptance, rollback on degradation
+- **Reduction: Maximum possible with minimal risk** (not capped at %)
 - Recommended for: Development content, iterative improvement
 
 **Aggressive:**
-- All techniques including example reduction, detail removal
-- Manual review required
-- Higher risk of quality loss
-- Typical reduction: 35-50%
+- All optimization techniques, manual review required
+- Higher risk of quality loss (careful verification needed)
+- **Reduction: Maximum achievable** (not capped at %)
+- Recommended for: Experimental optimization, draft content
+
+**Goal for ALL modes: Maximum optimization while preserving quality - no artificial caps.**
 - Recommended for: Experimental optimization, draft content
 
 ---
@@ -169,6 +224,12 @@ Add context after mode/category flags for optimization preferences:
 
 ## Component 2: Category Selection
 
+
+**Context-Aware Perspective**: ALL files are evaluated for context optimization because:
+- README/docs may be read by skills during execution
+- Code files may be analyzed by agents
+- EVERYTHING is potential context - optimize accordingly
+
 **Choose what to optimize.**
 
 ```python
@@ -179,24 +240,24 @@ AskUserQuestion({
     multiSelect: true,
     options: [
       {
-        label: "All",
-        description: "Optimize all categories (comprehensive)"
+        label: "All (Ultimate Context Optimization)",
+        description: "🎯 ULTIMATE: Context optimization for ALL files - README, docs, principles, skills, agents, commands, code"
       },
       {
         label: "Markdown Docs",
-        description: "README, ARCHITECTURE, principles, guides (*.md)"
+        description: "Context-aware optimization: README, ARCHITECTURE, CONTRIBUTING, all .md docs (potential context)"
       },
       {
         label: "Code Files",
-        description: "Source code, tests, scripts (*.py, *.js, *.ts, etc.)"
+        description: "Context-aware optimization: Source code that may be referenced by skills/agents"
       },
       {
         label: "Claude Tools",
-        description: "Skills, agents, commands (cco-skill-*, cco-agent-*, cco-*.md)"
+        description: "🔥 HIGH IMPACT: Skills, agents, commands - directly loaded in context"
       },
       {
-        label: "Active Context",
-        description: "CLAUDE.md, principles, global instructions"
+        label: "Active Context (Primary)",
+        description: "🎯 PRIMARY: CLAUDE.md duplication elimination, principle optimization, context minimization"
       },
       {
         label: "Custom Files/Folders",
@@ -803,7 +864,7 @@ AskUserQuestion({
     multiSelect: true,
     options: [
       {
-        label: "All",
+        label: "All (Ultimate Context Optimization)",
         description: "Apply all context optimizations below"
       },
       {
@@ -1954,3 +2015,46 @@ if len(total_applied) + len(total_skipped) + len(total_rolled_back) != optimizat
 - [ ] Complete accounting (applied + skipped + rolled back = total)
 - [ ] Final report generated
 - [ ] Backup created and documented
+
+---
+
+## Next Steps: Calling Other Commands (C_COMMAND_CONTEXT_PASSING)
+
+### If Missing Content Detected
+
+When analysis reveals stub files, incomplete docs, or missing content:
+
+**ALWAYS provide context before calling /cco-generate:**
+
+```markdown
+CONTEXT FOR /cco-generate:
+Slim analysis found {COUNT} files with missing/stub content:
+- Stub files: {FILE_LIST} (contain only TODO markers/placeholders)
+- Pattern reference: {COMPLETE_FILE_EXAMPLE}
+- Expected structure: {STRUCTURE_DESCRIPTION}
+
+[Then immediately call SlashCommand]
+```
+
+**Example:**
+
+```markdown
+CONTEXT FOR /cco-generate:
+Slim analysis found 15-20 stub principle files containing only TODO markers without actual content. Affected files: principles/U_CHANGE_VERIFICATION.md, U_COMPLETE_REPORTING.md, C_HONEST_REPORTING.md, +12 others in ~/.claude/principles/. These need comprehensive implementation following C_AGENT_ORCHESTRATION_PATTERNS.md pattern (1847 tokens, complete structure with examples, rules, checklists).
+
+SlashCommand({command: "/cco-generate principles"})
+```
+
+**Why This Matters:**
+- `/cco-generate` receives specific file list and counts
+- No need to re-scan all files
+- Knows exactly which files to focus on
+- Understands expected structure from reference
+
+**DON'T:**
+```markdown
+# ❌ BAD: No context
+Found some stub files.
+SlashCommand({command: "/cco-generate"})
+```
+

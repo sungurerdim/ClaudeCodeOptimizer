@@ -2028,3 +2028,69 @@ AskUserQuestion({
     ]
   }]
 })
+
+---
+
+## Next Steps: Calling Other Commands (C_COMMAND_CONTEXT_PASSING)
+
+### If Issues Found: Calling /cco-fix or /cco-generate
+
+When audit finds fixable issues or missing components:
+
+**ALWAYS provide context before calling another command:**
+
+#### Calling /cco-fix
+
+```markdown
+CONTEXT FOR /cco-fix:
+Audit found {COUNT} {SEVERITY} issues across {CATEGORY_COUNT} categories:
+- {CATEGORY_1}: {COUNT}x {ISSUE_TYPE} ({FILE_PATHS})
+- {CATEGORY_2}: {COUNT}x {ISSUE_TYPE} ({FILE_PATHS})
+All issues are {FIXABILITY} with {APPROACH}.
+
+[Then immediately call SlashCommand]
+```
+
+**Example:**
+
+```markdown
+CONTEXT FOR /cco-fix:
+Audit found 12 critical security issues: 5x SQL injection (api/db.py:45, 67, 89; models/user.py:123, 145), 4x XSS (templates/profile.html:23, 45; api/render.py:67, 89), 3x hardcoded secrets (.env.example:12, config.py:34, utils/aws.py:56). All are safe-fixable with parameterized queries, HTML escaping, and environment variables.
+
+SlashCommand({command: "/cco-fix security"})
+```
+
+#### Calling /cco-generate
+
+```markdown
+CONTEXT FOR /cco-generate:
+Audit found {COUNT} missing components:
+- {COMPONENT_TYPE}: {COUNT} {ITEMS} ({DETAILS})
+- Pattern: {EXISTING_PATTERN_REFERENCE}
+- Expected: {EXPECTED_STRUCTURE}
+
+[Then immediately call SlashCommand]
+```
+
+**Example:**
+
+```markdown
+CONTEXT FOR /cco-generate:
+Audit found 8 critical files with zero test coverage: src/payments/processor.py (0%), src/auth/jwt_validator.py (0%), src/api/webhooks.py (0%), +5 others. Existing test pattern in tests/test_auth.py uses pytest with fixtures. Generate comprehensive test suites for these 8 files following project conventions.
+
+SlashCommand({command: "/cco-generate tests"})
+```
+
+**Why This Matters:**
+- Called command receives specific issue list, file paths, line numbers
+- No duplicate scanning/analysis
+- Faster execution
+- Consistent findings across commands
+
+**DON'T:**
+```markdown
+# ❌ BAD: No context
+Found some security issues.
+SlashCommand({command: "/cco-fix"})
+```
+
