@@ -18,7 +18,6 @@ Architecture:
 from pathlib import Path
 
 
-
 class PrincipleLoader:
     """Load principles by category for token optimization"""
 

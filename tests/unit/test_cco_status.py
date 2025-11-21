@@ -4,19 +4,19 @@ Tests installation health check and component counting.
 Target Coverage: 95%+
 """
 
-from pathlib import Path
-from unittest.mock import patch, MagicMock
 import subprocess
+from pathlib import Path
+from unittest.mock import MagicMock, patch
 
 import pytest
 
 from claudecodeoptimizer.cco_status import (
-    get_claude_dir,
-    count_components,
-    get_version_info,
     check_claude_md,
-    print_status,
+    count_components,
+    get_claude_dir,
+    get_version_info,
     main,
+    print_status,
 )
 
 
@@ -186,8 +186,7 @@ class TestGetVersionInfo:
     def test_get_version_info_pipx(self, mock_run: MagicMock):
         """Test detection of pipx installation"""
         mock_run.return_value = MagicMock(
-            returncode=0,
-            stdout="  package claudecodeoptimizer 0.1.0\n"
+            returncode=0, stdout="  package claudecodeoptimizer 0.1.0\n"
         )
 
         info = get_version_info()

@@ -129,7 +129,6 @@ class TestSetupGlobalKnowledge:
         )  # commands, principles, agents, skills, claude.md, templates
 
 
-
 class TestSetupCommands:
     """Test _setup_commands function"""
 

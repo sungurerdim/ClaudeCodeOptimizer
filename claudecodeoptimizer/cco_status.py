@@ -6,7 +6,6 @@ Verifies CCO installation and shows available components.
 
 import sys
 from pathlib import Path
-from typing import Dict
 
 
 def get_claude_dir() -> Path:
@@ -14,7 +13,7 @@ def get_claude_dir() -> Path:
     return Path.home() / ".claude"
 
 
-def count_components(claude_dir: Path) -> Dict[str, int]:
+def count_components(claude_dir: Path) -> dict[str, int]:
     """
     Count CCO components in ~/.claude/
 
@@ -63,10 +62,11 @@ def count_components(claude_dir: Path) -> Dict[str, int]:
     return counts
 
 
-def get_version_info() -> Dict[str, str]:
+def get_version_info() -> dict[str, str]:
     """Get CCO version and installation info."""
     try:
         from claudecodeoptimizer import __version__
+
         version = __version__
     except ImportError:
         version = "unknown"
@@ -75,22 +75,15 @@ def get_version_info() -> Dict[str, str]:
     install_method = "unknown"
     try:
         import subprocess
+
         # Check pipx
-        result = subprocess.run(
-            ["pipx", "list"],
-            capture_output=True,
-            text=True,
-            timeout=2
-        )
+        result = subprocess.run(["pipx", "list"], capture_output=True, text=True, timeout=2)
         if "claudecodeoptimizer" in result.stdout:
             install_method = "pipx"
         else:
             # Check pip
             result = subprocess.run(
-                ["pip", "show", "claudecodeoptimizer"],
-                capture_output=True,
-                text=True,
-                timeout=2
+                ["pip", "show", "claudecodeoptimizer"], capture_output=True, text=True, timeout=2
             )
             if result.returncode == 0:
                 install_method = "pip"
@@ -200,7 +193,9 @@ def print_status() -> int:
     print("- Updates: One command updates all projects")
     print()
     print("**Progressive Loading:**")
-    print(f"- Always loaded: Baseline principles ({counts['principles_c']} C_ + {counts['principles_u']} U_)")
+    print(
+        f"- Always loaded: Baseline principles ({counts['principles_c']} C_ + {counts['principles_u']} U_)"
+    )
     print(f"- Auto-activated: {counts['skills']} skills via semantic matching")
     print()
     print("**CLAUDE.md Integration:**")
