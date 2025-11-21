@@ -126,8 +126,8 @@ def post_install() -> int:
 
         if existing and not force:
             # Interactive mode: Ask user before overwriting
-            print("\n[NOTICE] CCO is already installed in ~/.claude/")
-            print("\n  Current installation:")
+            print("\n[NOTICE] Found existing CCO installation in ~/.claude/")
+            print("\n  Existing installation:")
             for category, count in existing.items():
                 print(f"    • {category.capitalize()}: {count} files")
             print("\n" + "-" * 60)

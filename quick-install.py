@@ -31,6 +31,31 @@ def main() -> int:
 
     print(f"\n[OK] Python {sys.version_info.major}.{sys.version_info.minor}")
 
+    # Check if package is already installed
+    print("
+> Checking existing installation...")
+    check_result = subprocess.run(
+        [sys.executable, "-m", "pip", "show", "claudecodeoptimizer"],
+        capture_output=True,
+        text=True,
+    )
+
+    if check_result.returncode == 0:
+        # Package is installed, remove it first
+        print("[NOTICE] Existing installation found, removing...")
+        try:
+            subprocess.run(
+                [sys.executable, "-m", "pip", "uninstall", "-y", "claudecodeoptimizer"],
+                check=True,
+                capture_output=True,
+                text=True,
+            )
+            print("[OK] Previous installation removed")
+        except subprocess.CalledProcessError as e:
+            print("[ERROR] Removal failed:")
+            print(e.stderr)
+            return 1
+
     # Install directly from GitHub
     github_url = "git+https://github.com/sungurerdim/ClaudeCodeOptimizer.git"
 
