@@ -11,8 +11,6 @@ related_skills: []
 
 **Severity**: Critical
 
-
-
 ---
 
 ## Rules
