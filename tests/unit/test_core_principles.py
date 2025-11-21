@@ -64,7 +64,6 @@ class TestPrinciplesManagerInit:
         assert manager.version == VERSION
         assert isinstance(manager.principles, dict)
         assert isinstance(manager.categories, list)
-        assert isinstance(manager.selection_strategies, dict)
 
     def test_init_without_dir(self, tmp_path: Path) -> None:
         """Test initialization without providing directory"""

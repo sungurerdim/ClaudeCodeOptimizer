@@ -734,6 +734,12 @@ class TestKnowledgeSetupIntegration:
         (content_dir / "skills").mkdir(parents=True)
         (content_dir / "skills" / "cco-skill-test.md").write_text("# Skill")
 
+        # Templates (required by setup_global_knowledge_templates)
+        templates_dir = tmp_path.parent / "templates"
+        templates_dir.mkdir(exist_ok=True)
+        (templates_dir / "statusline.js.template").write_text("// Statusline template")
+        (templates_dir / "settings.json.template").write_text("{}")
+
         # Setup destination
         claude_dir = tmp_path / ".claude"
 
@@ -769,7 +775,9 @@ class TestKnowledgeSetupIntegration:
             result = setup_global_knowledge()
 
         assert result["success"] is True
-        assert len(result["actions"]) == 5
+        assert (
+            len(result["actions"]) == 6
+        )  # commands, principles, agents, skills, CLAUDE.md, templates
 
     def test_preserves_user_files(self, tmp_path: Path) -> None:
         """Test that user's custom files are preserved during setup"""
@@ -791,6 +799,12 @@ class TestKnowledgeSetupIntegration:
         # Skills (required)
         (content_dir / "skills").mkdir(parents=True)
         (content_dir / "skills" / "cco-skill-test.md").write_text("# Skill")
+
+        # Templates (required by setup_global_knowledge_templates)
+        templates_dir = tmp_path.parent / "templates"
+        templates_dir.mkdir(exist_ok=True)
+        (templates_dir / "statusline.js.template").write_text("// Statusline template")
+        (templates_dir / "settings.json.template").write_text("{}")
 
         # Setup destination with user files
         claude_dir = tmp_path / ".claude"
