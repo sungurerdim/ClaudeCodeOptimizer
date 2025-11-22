@@ -112,8 +112,46 @@ parameters:
 
 **Automated issue resolution with safe/risky categorization and auto-audit dependency.**
 
+**Implementation Note:** This command follows [COMMAND_STANDARDS.md](../COMMAND_STANDARDS.md) for file discovery (exclusions applied BEFORE processing), token optimization (three-stage discovery), parallelization (Task calls in single message), and cross-platform compatibility. See cco-audit.md for reference implementation.
+
 ---
 
+
+## Execution Guarantee
+
+**This command WILL execute fully without requiring user presence during processing.**
+
+**What Happens:**
+1. **Step 0**: Introduction and confirmation (user input required)
+2. **Context Check**: Check for calling command context (automated)
+3. **Audit** (if no context): Run audit to discover issues (automated)
+4. **Selection**: Select fixes to apply (user input or automated)
+5. **Pre-Flight**: Summary and confirmation (user input required)
+6. **Execution**: Apply fixes with verification (fully automated)
+7. **Final Report**: Results with accounting (automated)
+
+**User Interaction Points:**
+- Initial confirmation
+- Fix selection (if manual mode)
+- Pre-flight confirmation
+- Risky fix approval (if risky fixes detected)
+
+**Automation:**
+- All audits run without interruption
+- Fix agents apply changes in parallel
+- Complete accounting enforced (total = applied + skipped + failed)
+- Verification runs automatically
+
+**Time Estimate:**
+- Quick fixes (1-5): 2-5 minutes
+- Moderate (6-20): 5-15 minutes
+- Comprehensive (21+): 15-30 minutes
+
+**Verification:**
+- Every fix verified before acceptance
+- Accounting formula: `total = applied + skipped + failed`
+
+---
 ## Purpose
 
 Automatically fix issues found by audits. Runs audit first if no recent audit exists. Categorizes fixes into safe (auto-apply) and risky (require approval).
@@ -698,38 +736,26 @@ Recommended:
 - Worth the extra cost for correctness
 
 **Parallel Execution Pattern:**
-```python
-# Example: Fixing multiple independent issues in parallel
 
-# Safe fixes that can run in parallel (independent files)
-Task({
-  subagent_type: "general-purpose",
-  model: "sonnet",
-  description: "Fix [issue type] in <file1>",
-  prompt: "[Fix description] at <file1>:<line>..."
-})
-Task({
-  subagent_type: "general-purpose",
-  model: "sonnet",
-  description: "Fix [issue type] in <file2>",
-  prompt: "[Fix description] at <file2>:<line>..."
-})
-Task({
-  subagent_type: "general-purpose",
-  model: "sonnet",
-  description: "Fix [issue type] in <file3>",
-  prompt: "[Fix description] at <file3>:<line>..."
-})
+**Built-in Agent Behavior:**
+Agent automatically handles parallel execution for independent fixes.
 
-# All run in parallel since they modify different files
-# Total time: significantly faster than sequential
-# No cost savings (all Sonnet), but much faster
+**What happens:**
+- **Independent fixes** (different files) → Run in parallel (fan-out pattern)
+- **Dependent fixes** (interface → implementations → tests) → Run sequentially (pipeline pattern)
+- **Performance:** Significantly faster for multi-file fixes
 
-# Sequential execution needed when files depend on each other:
-# 1. Update interface definition first
-# 2. Then update all implementations
-# 3. Then update tests
+**User sees:**
 ```
+Applying 3 fixes in parallel:
+- Fix {issue_type} in {file1}
+- Fix {issue_type} in {file2}
+- Fix {issue_type} in {file3}
+
+Total time: significantly faster than sequential
+```
+
+**No manual configuration needed** - agent parallelizes automatically.
 
 ---
 

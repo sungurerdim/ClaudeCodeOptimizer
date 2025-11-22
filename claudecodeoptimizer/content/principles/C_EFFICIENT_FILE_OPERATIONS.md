@@ -26,6 +26,7 @@ Reading without searching wastes most context. Grep-first delivers significant t
 
 **Strategy:**
 ```
+Stage 0: File Exclusion              → Filter out unnecessary files FIRST
 Stage 1: Discovery (files_with_matches) → Find which files
 Stage 2: Preview (content + context)     → Verify relevance
 Stage 3: Precise Read (offset+limit)     → Read exact section
@@ -33,7 +34,93 @@ Stage 3: Precise Read (offset+limit)     → Read exact section
 
 ---
 
-## Implementation
+## Stage 0: File Exclusion (Apply FIRST)
+
+**CRITICAL**: Filter files BEFORE any processing to avoid wasted effort.
+
+### Standard Exclusion Lists
+
+```python
+# Directories to ALWAYS exclude
+EXCLUDED_DIRS = [
+    ".git",           # Version control
+    "node_modules",   # Node.js dependencies
+    "venv", ".venv",  # Python virtual environments
+    "__pycache__",    # Python cache
+    ".pytest_cache",  # Test cache
+    "dist", "build",  # Build artifacts
+    ".next", ".nuxt", # Framework build dirs
+    "target",         # Rust/Java build
+    "bin", "obj",     # .NET build
+    ".egg-info",      # Python package metadata
+    "coverage",       # Test coverage reports
+    ".tox", ".nox",   # Python testing
+]
+
+# Files to ALWAYS exclude
+EXCLUDED_FILES = [
+    "package-lock.json", "yarn.lock", "pnpm-lock.yaml",  # Node.js locks
+    "poetry.lock", "Pipfile.lock", "Gemfile.lock",        # Other locks
+    "*.min.js", "*.min.css",  # Minified assets
+    "*.map",                   # Source maps
+    "*.pyc", "*.pyo",         # Python bytecode
+    "*.so", "*.dll", "*.dylib", # Compiled binaries
+    "*.exe", "*.bin",         # Executables
+    "*.log",                  # Log files
+]
+```
+
+### Implementation
+
+```python
+def should_exclude_path(path: str) -> bool:
+    """Check if path should be excluded."""
+
+    path_parts = Path(path).parts
+
+    # Check directory exclusions
+    for excluded_dir in EXCLUDED_DIRS:
+        if excluded_dir in path_parts:
+            return True
+
+    # Check file exclusions
+    filename = Path(path).name
+    for pattern in EXCLUDED_FILES:
+        if fnmatch.fnmatch(filename, pattern):
+            return True
+
+    return False
+
+def discover_files(root_dir: str) -> List[str]:
+    """Discover files with exclusions applied FIRST."""
+
+    all_files = Glob("**/*", path=root_dir)
+    included = []
+    excluded = []
+
+    for file in all_files:
+        if should_exclude_path(file):
+            excluded.append(file)
+        else:
+            included.append(file)
+
+    # Report counts
+    print(f"Included: {len(included)} files")
+    print(f"Excluded: {len(excluded)} files")
+
+    return included
+```
+
+### Checklist
+
+- [ ] Apply exclusions BEFORE any processing (not during/after)
+- [ ] Report included/excluded counts
+- [ ] Use standard lists (extend if project-specific)
+- [ ] Never process excluded files
+
+---
+
+## Three-Stage File Discovery
 
 ### Stage 1: Discovery
 ```python

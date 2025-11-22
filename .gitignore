@@ -188,11 +188,9 @@ nul                       # Windows null device output
 # Backup files and directories
 *.backup
 *.backup_*
-.claude.backup_*
-CLAUDE.md.backup_*
+*.bak
 
 # Temporary files
-TODO.md
 *.tmp
 .tmp/                # CCO temporary files (sandboxed)
 
@@ -200,31 +198,10 @@ TODO.md
 *.lock
 requirements.txt.lock
 
-# Claude Code - CCO content files
-# These are copied to ~/.claude/ during setup
-.claude/commands/*
-.claude/guides/*
-.claude/principles/*
-.claude/agents/*
-.claude/skills/*
-
-# Keep directory structure only
-!.claude/commands/.gitkeep
-!.claude/guides/.gitkeep
-!.claude/principles/.gitkeep
-!.claude/agents/.gitkeep
-!.claude/skills/.gitkeep
-
-# Personal overrides (ignore)
-.claude/settings.local.json
-.claude/statusline.js
-.claude/usage_sessions/
-
-# Team settings (commit to git - but excluded due to wildcard above)
-!.claude/settings.json
-
 # User-specific scripts
 *.bat
 
 # VS Code
 .vscode/content/principles_backup/
+
+.claude/*

@@ -82,6 +82,8 @@ parameters:
 
 **Create missing project components with skill-guided generation.**
 
+**Implementation Note:** This command follows [COMMAND_STANDARDS.md](../COMMAND_STANDARDS.md) for file discovery (exclusions applied BEFORE processing), token optimization (three-stage discovery), parallelization (Task calls in single message), and cross-platform compatibility. See cco-audit.md for reference implementation.
+
 ---
 
 ## Purpose
@@ -109,6 +111,63 @@ This command executes the FULL operation as planned.
 No scope reduction due to time constraints or "workload concerns".
 
 **Estimated time: Provided for transparency, NOT to reduce scope.**
+
+---
+
+
+## Step 0: Introduction and Confirmation
+
+**Welcome to cco-generate - Auto-Generate Missing Components**
+
+This command generates missing tests, documentation, and boilerplate following project conventions.
+
+### What This Command Does
+
+**Generation Types:**
+- Unit/integration tests
+- API documentation
+- CI/CD configs
+- Missing docstrings
+- Boilerplate code
+
+### What You'll Be Asked
+
+1. **Confirmation** (Start generation)
+2. **Generation Selection** (What to generate)
+3. **Review Generated Code** (Before writing files)
+
+### Time Commitment
+
+- Analysis: 2-5 minutes
+- Generation: 5-15 minutes
+- Total: 7-20 minutes
+
+### What You'll Get
+
+**Generated Components:**
+- Tests following project patterns
+- Documentation with proper format
+- CI/CD configs matching conventions
+
+```python
+AskUserQuestion({
+  questions: [{
+    question: "Ready to generate missing components?",
+    header: "Confirm Start",
+    multiSelect: false,
+    options: [
+      {
+        label: "Start Generation",
+        description: "Begin component generation"
+      },
+      {
+        label: "Cancel",
+        description: "Exit cco-generate"
+      }
+    ]
+  }]
+})
+```
 
 ---
 
