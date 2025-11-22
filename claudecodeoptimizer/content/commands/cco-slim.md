@@ -24,6 +24,44 @@ parameters:
 
 ---
 
+## Execution Guarantee
+
+**This command WILL execute fully without requiring user presence during processing.**
+
+**What Happens:**
+1. **Step 0**: Introduction, mode selection, category selection (user input required)
+2. **Step 0.5**: Project context discovery (optional, user choice)
+3. **Discovery**: File categorization and token measurement (automated)
+4. **Analysis**: Optimization opportunity identification (automated)
+5. **Pre-Flight**: Summary and confirmation (user input required)
+6. **Optimization**: Apply changes with verification (fully automated)
+7. **Final Report**: Complete accounting and metrics (automated)
+
+**User Interaction Points:**
+- Mode selection (Conservative/Balanced/Aggressive)
+- Category selection (what to optimize)
+- Project context discovery (optional)
+- Pre-flight confirmation
+- Agent error handling (if failures occur)
+
+**Automation:**
+- All file discovery, analysis, optimization, verification runs without interruption
+- Agents handle batch processing in parallel
+- Complete accounting enforced (total = applied + skipped + rolled_back)
+- Quality safeguards automated (syntax, semantic, effectiveness checks)
+
+**Time Estimate:**
+- Small projects (<100 files): 5-10 minutes
+- Medium projects (100-500 files): 10-20 minutes
+- Large projects (>500 files): 20-40 minutes
+
+**Verification:**
+- Every optimization verified before acceptance
+- Rollback on quality degradation
+- Accounting formula enforced: `total = applied + skipped + rolled_back`
+
+---
+
 ## Design Principles
 
 1. **Context First** - Primary focus on CLAUDE.md and context duplication (core mission)
@@ -82,14 +120,94 @@ parameters:
 
 ---
 
+
+## Step 0: Introduction and Confirmation
+
+**Welcome to cco-slim - Context Optimization Command**
+
+This command optimizes your project files to reduce token usage while preserving quality.
+
+### What This Command Does
+
+**Primary Mission:**
+- Eliminate CLAUDE.md duplication (files loaded multiple times)
+- Detect and flag incomplete/stub content
+- Optimize context window usage
+
+**Secondary Benefits:**
+- Reduce markdown documentation verbosity
+- Remove dead code and unnecessary comments
+- Compress Claude tools (skills, agents, commands, principles)
+
+### What You'll Be Asked
+
+1. **Optimization Mode** (Conservative/Balanced/Aggressive)
+2. **Categories to Optimize** (Markdown/Code/Tools/Active Context/All)
+3. **Project Scope** (Project files only or include external files)
+4. **Context Discovery** (Optional: Extract project context from README/docs)
+5. **Pre-Flight Confirmation** (Review changes before applying)
+
+### Time Commitment
+
+- **Setup**: 2-3 minutes (questions)
+- **Processing**: 5-40 minutes (depends on project size, fully automated)
+- **Total**: ~10-45 minutes
+
+### Quality Guarantees
+
+✅ **Semantic meaning preserved** (verified automatically)
+✅ **Backups created** (easy rollback)
+✅ **Syntax validation** (all modified files checked)
+✅ **Complete accounting** (every file tracked)
+✅ **Rollback on degradation** (quality always protected)
+
+```python
+AskUserQuestion({
+  questions: [{
+    question: "Ready to start cco-slim optimization?",
+    header: "Confirm Start",
+    multiSelect: false,
+    options: [
+      {
+        label: "Start Optimization",
+        description: "Proceed with context optimization (recommended)"
+      },
+      {
+        label: "Learn More",
+        description: "Show detailed explanation of optimization process"
+      },
+      {
+        label: "Cancel",
+        description: "Exit cco-slim"
+      }
+    ]
+  }]
+})
+```
+
+**If user selects "Learn More":**
+Display complete optimization flow, quality safeguards, and example results before asking again.
+
+**If user selects "Cancel":**
+Exit immediately with message: "cco-slim cancelled. No changes made."
+
+**If user selects "Start Optimization":**
+Continue to Component 1 (Mode Selection).
+
+---
+
 ## Execution Flow
 
 ```
 /cco-slim
     │
+    ├─► Step 0: Introduction & Confirmation
+    │
     ├─► Mode Selection (Conservative/Balanced/Aggressive)
     │
     ├─► Category Selection (What to optimize)
+    │
+    ├─► Step 0.5: Project Context Discovery (Optional)
     │
     ├─► Discovery Phase (Categorize files, measure tokens)
     │
@@ -284,47 +402,68 @@ project_root = get_project_root()
 print(f"Project root detected: {project_root}")
 ```
 
-### Step 2: Discover PROJECT-ONLY Files (Default Scope)
+### Step 2: File Discovery with Exclusion Protocol
 
-```python
-# Launch discovery agent for PROJECT INTERNAL files ONLY
-project_discovery_result = Task({
-    subagent_type: "Explore",
-    model: "haiku",
-    description: "Discover project-only files",
-    prompt: f"""
-    Discover files ONLY within project root directory.
+**Built-in Agent Behavior:**
+Agent automatically handles file exclusion with standard filters.
 
-    **STRICT PROJECT-ONLY SCOPE:**
+**What the agent does:**
+- Excludes build artifacts (`.git`, `node_modules`, `dist`, `build`, etc.)
+- Excludes lock files (`package-lock.json`, `yarn.lock`, `*.min.js`, etc.)
+- Discovers and categorizes remaining files (Markdown, code, Claude tools)
+- Reports discovery results
 
-    **Base directory:** {project_root}
-    **Include:** All files and subdirectories WITHIN {project_root}
-    **Exclude:** ANY paths outside {project_root}
+**User sees:**
+```
+════════════════════════════════════════════════════════════════
+         FILE DISCOVERY SUMMARY
+════════════════════════════════════════════════════════════════
+Project Root: {project_root}
 
-    **Categories to find:**
-    - Markdown: **/*.md files within project
-    - Code: *.py, *.js, *.ts, *.tsx, *.java, *.go, *.rs within project
-    - Tools: Any cco-*.md, skill, agent, principle files within project
+Included File Types:
+✅ Markdown: *.md (45 files)
+✅ Code: *.py, *.js, *.ts (112 files)
 
-    **CRITICAL:** Use Glob with base path {project_root} to ensure project-only scope.
+Excluded:
+❌ Dependencies: node_modules/, venv/, __pycache__/ (3,892 files)
+❌ Build artifacts: dist/, build/, *.min.js (234 files)
+❌ Lock files: package-lock.json, yarn.lock (2 files)
 
-    Return JSON:
-    {{
-        "project_root": "{project_root}",
-        "markdown": ["path1.md"],
-        "code": ["path1.py"],
-        "tools": ["cco-*.md"],
-        "total_files": 123,
-        "total_tokens_estimate": 50000
-    }}
-    """
-})
-
-# Parse project files
-project_files = project_discovery_result
+Total files: 4,285 | Excluded: 4,128 | Included: 157
+════════════════════════════════════════════════════════════════
 ```
 
-### Step 3: Detect OUT-OF-PROJECT File References
+**No configuration needed** - agent applies standard exclusions.
+
+```python
+AskUserQuestion({
+  questions: [{
+    question: "File discovery complete. Proceed with these included/excluded files?",
+    header: "File Discovery",
+    multiSelect: false,
+    options: [
+      {
+        label: "Yes (Continue)",
+        description: f"Optimize {total_files - total_excluded} included files"
+      },
+      {
+        label: "Modify Exclusions",
+        description: "Add or remove exclusion patterns"
+      },
+      {
+        label: "Show File List",
+        description: "Display all discovered files before continuing"
+      },
+      {
+        label: "Cancel",
+        description: "Exit cco-slim"
+      }
+    ]
+  }]
+})
+```
+
+### Step 4: Detect OUT-OF-PROJECT File References
 
 ```python
 # Search for references to files OUTSIDE project root
@@ -466,29 +605,41 @@ else:
 
 **Categorize all files in final scope, measure current token usage.**
 
-### Step 1: File Discovery
+### Step 0: File Exclusion (CRITICAL - FIRST)
 
-**Discovery Flow:**
+**Built-in Agent Behavior:**
+Agent automatically handles file exclusion with standard filters before discovery.
+
+**What happens:**
+- Excludes build artifacts, dependencies, cache directories
+- Excludes lock files, minified assets, source maps
+- Reports: "Scanned {total_scanned} files, found {found} files, excluded {excluded} files ({percentage_excluded}%)"
+
+**No configuration needed** - agent applies standard exclusions.
+
+### Step 1: File Discovery and Categorization
+
+**Discovery Flow (on FILTERED files only):**
 
 1. **Launch Explore Agent** (Haiku model for efficiency)
-   - Input: `{selected_categories}` from Component 2
-   - Task: Categorize files by patterns (markdown, code, tools, active context)
+   - Input: Files from Step 0 (already filtered) + `{selected_categories}` from Component 2
+   - Task: Categorize filtered files by patterns (markdown, code, tools, active context)
    - Output: JSON with categorized file lists
 
 2. **Error Handling** (if agent fails):
    - Ask user via `AskUserQuestion`: Retry | Retry with Sonnet | Manual Glob | Cancel
    - **Retry**: Re-run with Haiku
    - **Retry with Sonnet**: Use more capable model
-   - **Manual**: Fallback to `Glob("**/*.md")`, `Glob("**/*.py")`, etc. for each category
+   - **Manual**: Fallback to manual categorization of filtered files
    - **Cancel**: Exit cco-slim
 
-3. **Category Patterns:**
+3. **Category Patterns** (applied to filtered files):
    - **Markdown**: `**/*.md` (exclude claudecodeoptimizer/content/)
    - **Code**: `*.{py,js,ts,tsx,java,go,rs}`
    - **Claude Tools**: `**/cco-*.md`, `**/skill-*.md`, `**/agent-*.md`
    - **Active Context**: `~/.claude/CLAUDE.md` + referenced principles
 
-**Result:** `discovered` dict with file lists per category
+**Result:** `discovered` dict with categorized file lists (all pre-filtered)
 ```
 
 ### Step 2: Token Measurement
@@ -517,151 +668,30 @@ else:
 
 ### Agent-Based Optimization Discovery
 
-**Use appropriate model based on mode complexity and risk level.**
+**Built-in Agent Behavior:**
+Agent automatically optimizes analysis:
+- Chooses model based on risk level (Haiku for conservative, Sonnet for balanced/aggressive)
+- Uses three-stage discovery for large files
 
-```python
-# Select agent model based on mode
-if mode == "conservative":
-    agent_model = "haiku"  # Fast, cheap for simple patterns
-    optimization_prompt = """
-    Find 100% safe optimizations (zero semantic risk):
+**What happens:**
+- **Conservative mode** → Haiku (fast, cheap) for zero-risk changes (whitespace, dead code, spelling)
+- **Balanced mode** → Sonnet for low-risk changes (verbosity, examples, DRY)
+- **Aggressive mode** → Sonnet for moderate-risk changes (rewrites, compression, restructuring)
 
-    1. **Whitespace normalization**:
-       - Excessive blank lines (3+ consecutive → 2)
-       - Trailing whitespace at line ends
-       - Inconsistent indentation
+**Agent analyzes:**
+- Whitespace normalization, dead code removal, spelling fixes
+- Verbosity reduction, example consolidation, redundant explanations
+- Comprehensive rewrites, format compression (based on mode)
 
-    2. **Dead code removal** (provably unused):
-       - Unused imports (verify with AST analysis)
-       - Commented-out code blocks
-       - Unreachable code after return/break
+**User sees:**
+```
+Phase 2: Analysis ({mode} mode, {agent_model} model)
+- Analyzing 157 files across {selected_categories} categories
+- Found {optimizations_count} optimization opportunities
+- Estimated token savings: {token_savings} tokens
+```
 
-    3. **Spelling/grammar fixes**:
-       - Typos in documentation
-       - Grammar improvements (no meaning change)
-
-    4. **Format consistency**:
-       - Markdown heading format (ATX vs Setext)
-       - Code block language tags
-       - List marker consistency (- vs *)
-
-    For each optimization, return:
-    {
-        "type": "whitespace|dead_code|spelling|format",
-        "file": "path/to/file.md",
-        "line": 123,
-        "description": "Specific change description",
-        "token_saving": 5,
-        "risk": "none"
-    }
-
-    Only include changes with ZERO semantic risk.
-    """
-
-elif mode == "balanced":
-    agent_model = "sonnet"  # Balanced for judgment calls
-    optimization_prompt = """
-    Find balanced optimizations (low semantic risk, requires verification):
-
-    1. **Verbosity reduction**:
-       - "In order to" → "To"
-       - "It is important to note that" → "Note:"
-       - Remove filler phrases
-
-    2. **Example consolidation**:
-       - Multiple redundant examples → 1 clear example
-       - Keep one representative of each pattern
-
-    3. **Redundant explanation**:
-       - Same concept explained multiple ways
-       - Obvious statements ("JavaScript is a programming language")
-
-    4. **DRY improvements**:
-       - Repeated patterns → single reference
-       - Duplicated sections across files
-
-    For each optimization, return:
-    {
-        "type": "verbosity|example_consolidation|redundant|dry",
-        "file": "path/to/file.md",
-        "line": 123,
-        "description": "Specific change description",
-        "token_saving": 45,
-        "risk": "low",
-        "verification_required": true,
-        "original_text": "text to be changed",
-        "proposed_text": "new text"
-    }
-
-    Include LOW-RISK changes only. Preserve all semantics.
-    """
-
-else:  # aggressive
-    agent_model = "sonnet"  # Complex analysis required
-    optimization_prompt = """
-    Find aggressive optimizations (moderate semantic risk, quality verification required):
-
-    1. **Comprehensive rewrites**:
-       - Multi-paragraph explanations → concise single paragraph
-       - Verbose tutorials → essential reference
-
-    2. **Format compression**:
-       - Markdown → plain text (where formatting not needed)
-       - JSON examples → YAML (shorter)
-       - Code examples → pseudocode
-
-    3. **Technical jargon**:
-       - Long technical terms → abbreviations (first use full, then abbr)
-       - "authentication and authorization" → "auth/z"
-
-    4. **Content restructuring**:
-       - Move detailed content to appendices
-       - Replace detailed examples with links to external docs
-       - Summarize reference sections
-
-    For each optimization, return:
-    {
-        "type": "rewrite|compression|jargon|restructure",
-        "file": "path/to/file.md",
-        "line": 123,
-        "description": "Specific change description",
-        "token_saving": 150,
-        "risk": "moderate",
-        "quality_check_required": true,
-        "original_text": "text to be changed",
-        "proposed_text": "new text"
-    }
-
-    Moderate semantic risk acceptable IF quality preserved.
-    """
-
-# Launch analysis agent
-analysis_result = Task({
-    subagent_type: "Explore",
-    model: agent_model,
-    description: f"Find {mode} optimizations",
-    prompt: f"""
-    Analyze {len(all_files)} files for {mode} mode optimizations.
-
-    Categories to analyze: {selected_categories}
-
-    Skills:
-    - cco-skill-content-optimization-automation
-    - cco-skill-code-quality-refactoring-complexity
-
-    Files to analyze:
-    - Markdown: {len(markdown_files)} files
-    - Code: {len(code_files)} files
-    - Claude Tools: {len(claude_tool_files)} files
-    - Active Context: {len(active_context_files)} files
-
-    {optimization_prompt}
-
-    Return JSON array of optimizations.
-    Estimate token savings for each.
-    Total optimizations must be verifiable.
-    """
-})
+**No manual configuration needed** - agent selects appropriate strategy.
 
 # Handle analysis errors
 if analysis_result is None or (isinstance(analysis_result, dict) and "error" in analysis_result):
@@ -753,6 +783,142 @@ By Risk:
   - Moderate risk: {len(optimizations_by_risk['moderate'])} optimizations
 """)
 ```
+
+---
+
+## Component 4.5: Agent Optimization Strategy
+
+**Maximize performance through proper model selection, parallelization, and token-efficient prompts.**
+
+### Parallel Batch Processing
+
+```python
+# ✅ GOOD: Process file categories in parallel
+# Instead of sequential processing, analyze all categories simultaneously
+
+# Group files by category
+markdown_files = [f for f in all_files if f.endswith('.md')]
+code_files = [f for f in all_files if f.suffix in ['.py', '.js', '.ts']]
+tool_files = [f for f in all_files if 'cco-' in f.name or 'skill-' in f.name]
+
+# Launch parallel analysis tasks (all in single message)
+Task({
+    subagent_type: "Explore",
+    model: "haiku",
+    prompt: f"Analyze markdown files for optimization: {markdown_files[:20]}"
+})
+Task({
+    subagent_type: "Explore",
+    model: "haiku",
+    prompt: f"Analyze code files for dead code: {code_files[:20]}"
+})
+Task({
+    subagent_type: "Explore",
+    model: "haiku",
+    prompt: f"Analyze tool files for redundancy: {tool_files[:20]}"
+})
+# All execute simultaneously, significantly faster
+
+# ❌ BAD: Sequential processing
+Task("Analyze markdown")  # Wait
+Task("Analyze code")      # Wait
+Task("Analyze tools")     # Wait
+# 3x slower!
+```
+
+### Token-Efficient Prompts
+
+```python
+# ❌ BAD: Verbose prompt (wastes tokens)
+prompt = """
+Please carefully analyze the markdown files in the documentation directory.
+Look for any opportunities to reduce verbosity, remove redundant examples,
+consolidate similar sections, and generally make the documentation more concise
+while preserving all the important information and meaning...
+""" # 200+ tokens
+
+# ✅ GOOD: Concise, structured prompt
+prompt = """
+Find optimization opportunities in markdown files:
+1. Redundant examples (>3 similar)
+2. Verbose sections (>100 words, no info density)
+3. Duplicate content (exact or near-exact)
+
+Return: file:section:{type}:{token_saving}
+""" # 35 tokens
+```
+
+### Three-Stage Discovery for Large Files
+
+```python
+# For large files (>500 lines), use three-stage discovery:
+
+# Stage 1: Files with matches (discovery)
+Grep("TODO|FIXME|XXX", output_mode="files_with_matches")
+# → file1.md, file2.py (~10 tokens)
+
+# Stage 2: Preview with context (verification)
+Grep("TODO", path="file1.md", output_mode="content", "-C": 3, "-n": true)
+# → Lines 145-151 with TODO context (~80 tokens)
+
+# Stage 3: Targeted read (optimization)
+Read("file1.md", offset=140, limit=20)
+# → Lines 140-160 for precise analysis (~50 tokens)
+
+# Total: ~140 tokens vs 3000+ tokens for full file read (21x better)
+```
+
+### Model Selection by Task Complexity
+
+```python
+# Use Haiku for mechanical tasks (90% of slim operations)
+HAIKU_TASKS = [
+    "whitespace-normalization",
+    "dead-code-detection",
+    "file-discovery",
+    "token-counting",
+    "duplicate-detection"
+]
+
+# Use Sonnet only for semantic analysis
+SONNET_TASKS = [
+    "example-consolidation",  # Requires judgment
+    "content-restructuring",   # Requires understanding
+    "cross-referencing"        # Requires context
+]
+
+def get_model_for_task(task_type: str) -> str:
+    return "sonnet" if task_type in SONNET_TASKS else "haiku"
+```
+
+### Error Handling with Model Escalation
+
+```python
+try:
+    result = Task({
+        subagent_type: "Explore",
+        model: "haiku",
+        prompt: optimization_prompt
+    })
+except Exception as e:
+    # Ask user how to proceed
+    AskUserQuestion({
+        questions: [{
+            question: "Optimization agent (Haiku) failed. How to proceed?",
+            header: "Error Recovery",
+            multiSelect: false,
+            options: [
+                {label: "Retry with Haiku", description: "Try again with same model"},
+                {label: "Escalate to Sonnet", description: "Use more capable model"},
+                {label: "Skip this batch", description: "Continue with next file group"},
+                {label: "Abort", description: "Stop entire optimization"}
+            ]
+        }]
+    })
+```
+
+---
+
 ## Component 5: Pre-Flight Summary
 
 **Show EXACTLY what will change before execution. No surprises.**
@@ -1013,121 +1179,51 @@ def verify_instruction_effectiveness(before: str, after: str) -> bool:
 
 ## Component 7: Final Report
 
-**Comprehensive accounting and metrics.**
+**Concise accounting and key metrics only.**
 
 ```markdown
 ═══════════════════════════════════════════════════════════════
                     OPTIMIZATION REPORT
 ═══════════════════════════════════════════════════════════════
 
-## Executive Summary
+## Results
 
-| File | Before | After | Saved | Reduction % |
-|------|--------|-------|-------|-------------|
-| {file_path} | {before} | {after} | {saved} | {pct}% |
+**Files Modified:** {files_modified_count}
+**Token Reduction:** {tokens_saved:,} tokens ({reduction_pct}%)
 
-### Claude Tools
+| Metric | Before | After | Saved |
+|--------|--------|-------|-------|
+| Total Tokens | {tokens_before:,} | {tokens_after:,} | {tokens_saved:,} ({pct}%) |
 
-**Files:** {count}
-**Before:** {tokens_before} tokens
-**After:** {tokens_after} tokens
-**Reduction:** {tokens_saved} tokens ({pct}%)
+## Accounting
 
-By subcategory:
-- Skills: {count} files, {tokens_saved} tokens saved
-- Agents: {count} files, {tokens_saved} tokens saved
-- Commands: {count} files, {tokens_saved} tokens saved
+**Total Optimizations:** {total_optimizations}
+- ✅ Applied: {applied_count}
+- ⏭️ Skipped: {skipped_count}
+- ↩️ Rolled Back: {rolled_back_count}
 
-### Active Context
-
-**Files:** {count}
-**Before:** {tokens_before} tokens
-**After:** {tokens_after} tokens
-**Reduction:** {tokens_saved} tokens ({pct}%)
-
-**Impact:** Context window usage reduced by {pct}%
-
-───────────────────────────────────────────────────────────────
+**Verification:** {applied_count} + {skipped_count} + {rolled_back_count} = {total_optimizations} ✓
 
 ## Quality Verification
 
-### Metrics Preserved
-
-✅ **Semantic meaning:** 100% preserved
-✅ **Instruction count:** {before_instructions} → {after_instructions} (preserved)
-✅ **Example coverage:** {before_coverage}% → {after_coverage}% (preserved)
-✅ **Concept completeness:** {before_concepts} → {after_concepts} (preserved)
-✅ **Edge case handling:** Preserved
-
-### Syntax Validation
-
-✅ **Markdown:** {markdown_files} files validated
-✅ **Python:** {python_files} files validated
-✅ **JavaScript/TypeScript:** {js_files} files validated
-
-All files pass syntax validation.
-
-───────────────────────────────────────────────────────────────
-
-## Recommendations
-
-### Further Optimization Opportunities
-
-{if skipped_count > 0}
-**Skipped Optimizations ({skipped_count}):**
-- Consider running in Balanced mode to apply low-risk optimizations
-- Review skipped optimizations for manual application
-- Estimated additional savings: {potential_tokens} tokens
-{endif}
-
-{if mode == "Conservative"}
-**Next Steps:**
-- Consider Balanced mode for {low_risk_count} additional optimizations
-- Potential additional savings: {additional_tokens} tokens ({additional_pct}%)
-{endif}
+✅ **Semantic meaning:** Preserved
+✅ **Syntax:** All files validated
+✅ **Instruction effectiveness:** Preserved
 
 {if rolled_back_count > 0}
-**Review Rolled-Back Items:**
-- {rolled_back_count} optimizations failed verification
-- Review reasons and consider manual fixes
+## Rolled Back Items
+
+{for item, reason in rolled_back_items}
+- {file}:{line} - {reason}
+{endfor}
 {endif}
 
-### Maintenance
+{if skipped_count > 0}
+## Next Steps
 
-**Regular Re-optimization:**
-- Run `/cco-slim` monthly to catch new redundancy
-- Review newly added files for optimization opportunities
-- Monitor active context size (currently {context_tokens} tokens)
-
-───────────────────────────────────────────────────────────────
-
-## Files Modified
-
-**Total:** {files_modified_count} files
-
-{for file in files_modified}
-✓ {file_path}
-  Before: {tokens_before} tokens
-  After: {tokens_after} tokens
-  Saved: {tokens_saved} tokens ({pct}% reduction)
-{endfor}
-
-───────────────────────────────────────────────────────────────
-
-## Backup Information
-
-**Backup Location:** {backup_dir}
-**Backup Created:** {timestamp}
-
-To restore a file:
-```bash
-cp {backup_dir}/{file_path} {original_path}
-```
-
-To restore all files:
-```bash
-/cco-restore-backup {backup_dir}
-```
+Consider running in {higher_mode} mode for {potential_count} additional optimizations.
+Potential savings: {potential_tokens:,} tokens ({potential_pct}%)
+{endif}
 
 ═══════════════════════════════════════════════════════════════
 ```
@@ -1469,8 +1565,11 @@ if len(total_applied) + len(total_skipped) + len(total_rolled_back) != optimizat
 
 ## Success Criteria
 
+- [ ] Step 0: Introduction and confirmation completed
 - [ ] Mode selection presented
 - [ ] Category selection completed
+- [ ] Step 0.5: Project context discovery (optional)
+- [ ] File discovery with exclusion protocol applied
 - [ ] Discovery phase measured all files
 - [ ] Analysis found optimization opportunities
 - [ ] Pre-flight summary displayed
@@ -1478,7 +1577,7 @@ if len(total_applied) + len(total_skipped) + len(total_rolled_back) != optimizat
 - [ ] Optimizations applied with verification
 - [ ] Quality metrics verified
 - [ ] Complete accounting (applied + skipped + rolled back = total)
-- [ ] Final report generated
+- [ ] Final report generated (concise format)
 - [ ] Backup created and documented
 
 ---

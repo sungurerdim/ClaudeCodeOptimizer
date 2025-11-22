@@ -47,6 +47,63 @@ Measure and improve performance metrics: query times, image sizes, bundle sizes,
 
 ---
 
+
+## Step 0: Introduction and Confirmation
+
+**Welcome to cco-optimize - Performance Optimization**
+
+This command analyzes and optimizes your codebase for performance.
+
+### What This Command Does
+
+**Optimization Types:**
+- Caching improvements
+- Bundle size reduction
+- Query optimization
+- Agent usage efficiency
+- Response time improvements
+
+### What You'll Be Asked
+
+1. **Confirmation** (Start optimization analysis)
+2. **Optimization Selection** (Which optimizations to apply)
+3. **Pre-Flight Confirmation** (Review changes before applying)
+
+### Time Commitment
+
+- Analysis: 3-8 minutes
+- Application: 5-15 minutes
+- Total: 8-23 minutes
+
+### What You'll Get
+
+**Optimizations Applied:**
+- Performance improvements with metrics
+- Before/after measurements
+- Complete verification
+
+```python
+AskUserQuestion({
+  questions: [{
+    question: "Ready to start performance optimization?",
+    header: "Confirm Start",
+    multiSelect: false,
+    options: [
+      {
+        label: "Start Optimization",
+        description: "Begin performance analysis and optimization"
+      },
+      {
+        label: "Cancel",
+        description: "Exit cco-optimize"
+      }
+    ]
+  }]
+})
+```
+
+---
+
 ## 5 Optimization Types
 
 1. **--docker** - Multi-stage builds, layer optimization
@@ -70,7 +127,7 @@ Measure and improve performance metrics: query times, image sizes, bundle sizes,
    - Optimizes: Circuit breakers, retry logic, timeouts
 
 5. **--agents** - Agent/model usage optimization
-   - Principle: `C_AGENT_ORCHESTRATION_PATTERNS`
+   - Uses agent orchestration patterns for parallel execution
    - Skill: `cco-skill-content-optimization-automation` (for Claude Code content)
    - Measures: Model costs, execution time, parallelization efficiency
    - Optimizes: Model selection (opus→haiku), parallel execution, agent type selection
@@ -83,10 +140,29 @@ Measure and improve performance metrics: query times, image sizes, bundle sizes,
 
 When `--agents` optimization is selected, the following analysis is performed:
 
-### Phase 1: Discovery - Find All Agent Usage
+### Phase 0: File Exclusion (CRITICAL - FIRST)
+
+**Built-in Agent Behavior:**
+Agent automatically handles file exclusion with standard filters.
+
+**What the agent does:**
+- Excludes build artifacts (`.git`, `node_modules`, `dist`, `__pycache__`, etc.)
+- Excludes lock files and secrets (`package-lock.json`, `*.min.js`, `*.key`, etc.)
+- Focuses on `.claude/`, `content/`, and principle files only
+
+**User sees:**
+```
+Files scanned: {total_scanned}
+Files to analyze: {found}
+Files excluded: {excluded} ({percentage_excluded}%)
+```
+
+**No configuration needed** - agent applies standard exclusions.
+
+### Phase 1: Discovery - Find All Agent Usage (on FILTERED files only)
 
 ```python
-# Scan command files
+# Scan command files (already filtered by exclusions)
 Grep("Task\\(", glob="**/.claude/commands/*.md", output_mode="content", "-n": true, "-C": 3)
 
 # Scan skill files
@@ -97,7 +173,7 @@ Grep("Task\\(", glob="**/content/agents/*.md", output_mode="content", "-n": true
 
 # Extract patterns:
 # - Task(..., model="opus|sonnet|haiku")
-# - Multiple Task() calls in sequence
+# - Multiple Task() calls in sequence (parallelization opportunity)
 # - Single vs parallel execution patterns
 ```
 
@@ -434,6 +510,20 @@ for violation in high_priority_violations:
 ---
 
 ## Execution Protocol
+
+
+### File Discovery with Exclusion Protocol
+
+**Built-in Agent Behavior:**
+Agent automatically handles file exclusion before performance analysis.
+
+**User sees:**
+```
+Included: {len(included_files)} files
+Excluded: {len(all_files) - len(included_files)} files
+```
+
+**No configuration needed** - agent applies standard exclusions.
 
 ### Step 0: Introduction and Confirmation (ALWAYS FIRST)
 

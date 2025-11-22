@@ -121,6 +121,44 @@ parameters:
 
 ---
 
+## Execution Guarantee
+
+**This command WILL execute fully without requiring user presence during processing.**
+
+**What Happens:**
+1. **Step 0**: Introduction and mode selection (user input required)
+2. **Step 0.5**: Project context discovery (optional, user choice)
+3. **Discovery**: Tech detection and check applicability (automated)
+4. **Selection**: Check selection based on mode (automated or user input)
+5. **Pre-Flight**: Summary and confirmation (user input required)
+6. **Execution**: Run selected checks with real-time progress (fully automated)
+7. **Final Report**: Prioritized findings with action plan (automated)
+
+**User Interaction Points:**
+- Mode selection (Quick/Category/Full Control)
+- Project context discovery (optional)
+- Check selection (if Category/Full Control modes)
+- Pre-flight confirmation
+- Agent error handling (if failures occur)
+
+**Automation:**
+- All checks run without interruption
+- Streaming results displayed in real-time
+- Complete accounting enforced (total issues = reported + verified)
+- Agents handle audit execution in parallel
+
+**Time Estimate:**
+- Quick Mode: 3-8 minutes
+- Category Mode: 5-15 minutes
+- Full Control: 10-30 minutes (depends on checks selected)
+
+**Verification:**
+- All findings verified (no false positives)
+- File-level accounting enforced
+- Complete transparency into execution progress
+
+---
+
 ## Design Principles
 
 1. **Full Transparency** - User sees exactly what will run, why, and how long
@@ -149,11 +187,13 @@ return f"{finding.issue} in {finding.file}:{finding.line}"
 ```
 /cco-audit
     │
+    ├─► Step 0: Introduction & Confirmation
+    │
     ├─► Mode Selection (Quick/Standard/Full)
     │
     ├─► Project Context (optional, recommended)
     │
-    ├─► Discovery Phase (tech detection, applicability)
+    ├─► Discovery Phase (tech detection, applicability, file filtering)
     │
     ├─► Selection (based on mode)
     │
@@ -163,8 +203,85 @@ return f"{finding.issue} in {finding.file}:{finding.line}"
     │
     ├─► Streaming Results (findings as discovered)
     │
-    └─► Final Report (prioritized, actionable)
+    └─► Final Report (prioritized, actionable, concise)
 ```
+
+---
+
+
+## Step 0: Introduction and Confirmation
+
+**Welcome to cco-audit - Comprehensive Codebase Audit**
+
+This command analyzes your codebase for security, quality, performance, and infrastructure issues.
+
+### What This Command Does
+
+**Audit Categories:**
+- **Security**: OWASP Top 10, secrets, AI security, supply chain
+- **Quality**: Tech debt, code quality, AI-generated code issues
+- **Testing**: Coverage, isolation, test pyramid
+- **Performance**: N+1 queries, caching, bundle size
+- **Infrastructure**: CI/CD, containers, monitoring
+
+### What You'll Be Asked
+
+1. **Audit Mode** (Quick/Category/Full Control)
+2. **Project Context** (Optional: Extract goals/conventions from README/docs)
+3. **Check Selection** (Automated or manual depending on mode)
+4. **Pre-Flight Confirmation** (Review checks before running)
+
+### Time Commitment
+
+- **Quick Mode**: 3-8 minutes (automated check selection)
+- **Category Mode**: 5-15 minutes (select category groups)
+- **Full Control**: 10-30 minutes (select individual checks)
+
+### What You'll Get
+
+**Findings Report:**
+- Prioritized issues (Critical → High → Medium → Low)
+- Exact file and line locations
+- Clear fix recommendations
+- Comparison to ideal state
+
+**Action Plan:**
+- Immediate fixes (quick wins)
+- Short-term improvements (1-2 weeks)
+- Long-term investments (architecture changes)
+
+```python
+AskUserQuestion({
+  questions: [{
+    question: "Ready to start codebase audit?",
+    header: "Confirm Start",
+    multiSelect: false,
+    options: [
+      {
+        label: "Start Audit",
+        description: "Proceed with comprehensive codebase analysis (recommended)"
+      },
+      {
+        label: "Learn More",
+        description: "Show detailed explanation of audit categories and checks"
+      },
+      {
+        label: "Cancel",
+        description: "Exit cco-audit"
+      }
+    ]
+  }]
+})
+```
+
+**If user selects "Learn More":**
+Display complete check catalog, severity levels, and example findings before asking again.
+
+**If user selects "Cancel":**
+Exit immediately with message: "cco-audit cancelled. No analysis performed."
+
+**If user selects "Start Audit":**
+Continue to Component 1 (Mode Selection).
 
 ---
 
@@ -396,9 +513,26 @@ project_context = context_result
 
 **Run BEFORE selection. Detects tech stack to show only applicable checks.**
 
+### Step 0: File Discovery with Exclusions (CRITICAL - FIRST)
+
+**Built-in Agent Behavior:**
+Agent automatically handles file exclusion with standard filters.
+
+**What the agent does:**
+- Excludes standard directories (`.git`, `node_modules`, `venv`, `__pycache__`, `dist`, `build`, etc.)
+- Excludes standard files (`package-lock.json`, `yarn.lock`, `*.min.js`, `*.min.css`, `*.map`, `*.pyc`, `*.log`, etc.)
+- Reports included/excluded counts
+
+**User sees:**
+```
+Discovered {to_scan} files (excluded {excluded} files, {percentage_excluded}%)
+```
+
+**No configuration needed** - agent knows what to do.
+
 ### Step 1: Tech Stack Detection
 
-**Use Glob + Read to detect:**
+**Use Glob + Read on FILTERED files only:**
 - **Languages**: `**/*.py` → Python, `**/*.{js,ts}` → JavaScript/TypeScript
 - **Frameworks**: Parse requirements.txt/pyproject.toml/package.json for Flask/Django/FastAPI/React/etc.
 - **Databases**: Check for SQLAlchemy/Sequelize/Prisma patterns
@@ -415,10 +549,10 @@ project_context = context_result
 
 ### Step 3: Display Discovery
 
-**Show user:**
-- Tech stack summary (Languages, Frameworks, Database, DevOps, Testing)
-- Applicability: `{APPLICABLE_COUNT}/{TOTAL_CHECKS}` checks (`{PCT}%`)
-- Files to scan: `{FILE_COUNT}` in `{DIR_COUNT}` directories
+**Concise summary:**
+- **Tech Stack:** {Languages}, {Frameworks}, {Database}
+- **Checks:** {APPLICABLE_COUNT}/{TOTAL_CHECKS} applicable ({PCT}%)
+- **Files:** {FILE_COUNT} to scan (excluded {EXCLUDED_PCT}%)
 
 ---
 
@@ -943,6 +1077,75 @@ Issues found: {total} ({critical} critical, {high} high, {medium} medium)
 
 ---
 
+## Component 7.5: Agent Execution Strategy
+
+**Built-in Agent Behavior:**
+Agent automatically optimizes execution:
+- Chooses appropriate model per check (Haiku for patterns, Sonnet for analysis, Opus rarely)
+- Runs independent category checks in parallel (fan-out pattern)
+
+**What happens:**
+- Pattern matching checks (secrets, syntax) → Haiku (fast, cheap)
+- Semantic checks (SQL injection, XSS, N+1) → Sonnet (balanced)
+- Independent categories run in parallel for speed
+- Example: `--security --tests --database` → 3 parallel agents
+
+**User sees:**
+```
+Phase 2: Scanning (3 categories in parallel)
+- Security: 8 checks
+- Testing: 5 checks
+- Database: 4 checks
+```
+
+**No manual configuration needed** - agent optimizes automatically.
+
+### Agent Prompt Optimization
+
+```python
+# ❌ BAD: Verbose, wastes tokens
+prompt = """
+Please carefully analyze the codebase for SQL injection vulnerabilities.
+Look through all Python files and check if user input is being passed
+to database queries without proper sanitization or parameterization.
+Give me a detailed report of all findings...
+""" # 200+ tokens
+
+# ✅ GOOD: Concise, structured
+prompt = """
+Find SQL injection in Python files.
+Check: raw string formatting in queries, user input without sanitization.
+Return: file:line format only, brief description.
+""" # 25 tokens
+```
+
+### Error Handling Template
+
+```python
+try:
+    result = Task({
+        subagent_type: "audit-agent",
+        model: "sonnet",
+        prompt: audit_prompt
+    })
+except Exception as e:
+    # Ask user how to proceed
+    AskUserQuestion({
+        questions: [{
+            question: "Audit agent failed. How to proceed?",
+            header: "Error Recovery",
+            multiSelect: false,
+            options: [
+                {label: "Retry", description: "Run agent task again"},
+                {label: "Skip", description: "Continue without this check"},
+                {label: "Abort", description: "Stop entire audit"}
+            ]
+        }]
+    })
+```
+
+---
+
 ## Component 8: Count Consistency Rules
 
 **CRITICAL: These rules prevent the 30+ vs 50+ inconsistency.**
@@ -1138,334 +1341,63 @@ By severity:
 
 ## Component 7: Final Report
 
-**Actionable, prioritized results with clear next steps.**
+**Concise, actionable findings with clear next steps.**
 
 ```markdown
 ═══════════════════════════════════════════════════════════════
-                         AUDIT REPORT
+                    AUDIT REPORT
 ═══════════════════════════════════════════════════════════════
 
 ## Executive Summary
 
-**Score:** {SCORE}/100 (Grade: {GRADE})
-**Risk Level:** {LEVEL} - {DESCRIPTION}
+**Total Findings:** {total_findings}
+- Critical: {critical_count}
+- High: {high_count}
+- Medium: {medium_count}
+- Low: {low_count}
 
-| Category | Score | Issues | Status |
-|----------|-------|--------|--------|
-| Security | {X}/100 | {N} | {STATUS} |
-| Database | {X}/100 | {N} | {STATUS} |
-| Tests | {X}/100 | {N} | {STATUS} |
+**Accounting Verification:** {total_findings} = {critical_count} + {high_count} + {medium_count} + {low_count} ✓
 
-**Top Concerns:**
-1. {Issue description}
-2. {Issue description}
-3. {Issue description}
+## Findings by Category
 
-───────────────────────────────────────────────────────────────
+| Category | Critical | High | Medium | Low | Total |
+|----------|----------|------|--------|-----|-------|
+| Security | {count} | {count} | {count} | {count} | {total} |
+| Database | {count} | {count} | {count} | {count} | {total} |
+| Tests | {count} | {count} | {count} | {count} | {total} |
 
-## Critical Issues ({COUNT})
+## Top Priority Fixes
 
-### {N}. {Issue Type} - {file}:{line}
+### Critical Issues ({critical_count})
 
-**Severity:** 🔴 CRITICAL
-**Category:** {Category}
-**Check:** #{N} {Check Name}
+{for finding in critical_findings[:10]}
+**{finding.category}**: {finding.issue}
+- **File**: {finding.file}:{finding.line}
+- **Fix**: {finding.recommendation}
+{endfor}
 
-**Vulnerable Code:**
-```{lang}
-# {file}:{line}
-{actual code snippet}
-```
+{if critical_count > 10}
+... and {critical_count - 10} more critical issues (see full report)
+{endif}
 
-**Risk:** {Explanation of what could go wrong}
+## Action Plan
 
-**Fix:**
-```{lang}
-{corrected code}
-```
+### Immediate (Today)
+1. Fix {quick_fix_count} critical issues (estimated 1-2 hours)
+2. Review {high_priority_count} high-priority security findings
 
-**Command:** `/cco-fix --check={N} --file={file}`
+### Short-term (This Week)
+1. Address remaining high-priority issues
+2. Improve test coverage to {target_coverage}%
 
----
-
-[Repeat for each critical issue]
-
-───────────────────────────────────────────────────────────────
-
-## High Priority Issues ({COUNT})
-
-### {N}. {Issue Type} - {file}:{line}
-```{lang}
-{code snippet}
-```
-**Fix:** {Brief fix description}
-**Command:** `/cco-fix --check={N} --file={file}`
-
-[Repeat for each high issue]
-
-───────────────────────────────────────────────────────────────
-
-## Medium Priority Issues ({COUNT})
-
-### {N}. {Issue Type} - {file}:{line}
-**Fix:** {Brief description}
-**Command:** `/cco-fix --check={N} --file={file}`
-
-[Repeat for each medium issue]
-
-───────────────────────────────────────────────────────────────
-
-## Recommended Actions
-
-### P0 - Fix Now (Critical)
-**Issues:** {count} critical vulnerabilities
-**Time:** ~{time}
-**Command:**
-```bash
-/cco-fix --critical
-```
-
-### P1 - Fix This Week (High)
-**Issues:** {count} high priority
-**Time:** ~{time}
-**Command:**
-```bash
-/cco-fix --high
-```
-
-### P2 - Fix This Sprint (Medium)
-**Issues:** {count} medium priority
-**Time:** ~{time}
-**Command:**
-```bash
-/cco-fix --medium
-```
-
-───────────────────────────────────────────────────────────────
-
-## Score Improvement
-
-| Action | Issues | Impact |
-|--------|--------|--------|
-| Fix critical | {N} | +{X} pts |
-| Fix high | {N} | +{X} pts |
-| Fix medium | {N} | +{X} pts |
-| **Total** | **{N}** | **{X} → {Y}** |
-
-───────────────────────────────────────────────────────────────
-
-## Re-run Audit
-
-After fixes, verify:
-```bash
-/cco-audit --checks="{list of check numbers that had issues}"
-```
-
-Expected: 0 issues → Score: {projected}/100
+### Long-term (Next Month)
+1. Refactor {complexity_count} high-complexity modules
+2. Implement monitoring for {observability_gaps} areas
 
 ═══════════════════════════════════════════════════════════════
 ```
 
 ---
-
-## Agent Orchestration
-
-### 6-Aspect Parallel Audit
-
-For comprehensive audits (`--all`, `--preset=weekly`, `--preset=critical`), use 6 specialized parallel agents:
-
-```python
-# Launch 6 aspect-focused agents in parallel
-Task({
-    subagent_type: "audit-agent",
-    model: "sonnet",
-    description: "Security audit",
-    prompt: """
-    Focus: Security vulnerabilities
-    Checks: SQL injection, XSS, CSRF, secrets, auth, CVEs, GDPR, privacy, encryption, supply chain, dependencies, SAST
-    Skills:
-    - cco-skill-security-owasp-xss-sqli-csrf
-    - cco-skill-privacy-gdpr-compliance-encryption
-    - cco-skill-supply-chain-dependencies-sast
-    Return: Findings with severity, file:line, risk, fix
-    """
-})
-
-Task({
-    subagent_type: "audit-agent",
-    model: "haiku",
-    description: "Performance audit",
-    prompt: """
-    Focus: Performance bottlenecks
-    Checks: N+1 queries, missing indexes, no caching, slow algorithms, mobile performance, battery optimization, offline-first
-    Skills:
-    - cco-skill-database-optimization-caching-profiling
-    - cco-skill-mobile-offline-battery-appstore
-    Return: Findings with impact metrics, file:line, optimization
-    """
-})
-
-Task({
-    subagent_type: "audit-agent",
-    model: "sonnet",
-    description: "Test coverage audit",
-    prompt: """
-    Focus: Testing gaps
-    Checks: Coverage, untested functions, isolation, pyramid
-    Skill: cco-skill-test-pyramid-coverage-isolation
-    Return: Findings with coverage %, critical untested paths
-    """
-})
-
-Task({
-    subagent_type: "audit-agent",
-    model: "haiku",
-    description: "Code quality audit",
-    prompt: """
-    Focus: Code quality issues
-    Checks: Complexity, dead code, duplication, smells
-    Skill: cco-skill-code-quality-refactoring-complexity
-    Return: Findings with metrics (CC, LOC), file:line, refactor suggestion
-    """
-})
-
-Task({
-    subagent_type: "audit-agent",
-    model: "sonnet",
-    description: "Architecture audit",
-    prompt: """
-    Focus: Architecture concerns
-    Checks: Coupling, patterns, boundaries, dependencies, event-driven architecture, messaging
-    Skills:
-    - cco-skill-microservices-cqrs-mesh-di
-    - cco-skill-eventdriven-async-messaging-queues
-    Return: Findings with design issue, impact, restructure suggestion
-    """
-})
-
-Task({
-    subagent_type: "audit-agent",
-    model: "haiku",
-    description: "Documentation audit",
-    prompt: """
-    Focus: Documentation gaps
-    Checks: Docstrings, API docs, README, ADRs
-    Skill: cco-skill-docs-api-openapi-adr-runbooks
-    Return: Findings with missing doc type, file:line, template
-    """
-})
-
-Task({
-    subagent_type: "audit-agent",
-    model: "sonnet",
-    description: "AI code quality audit",
-    prompt: """
-    Focus: AI-generated code quality issues
-    Checks: Hallucination, copy/paste patterns, code bloat, vibe coding, model inconsistency
-    Skill: cco-skill-ai-code-quality-verification-debt
-    Return: Findings with AI signature, quality score, file:line, refactoring suggestion
-    """
-})
-
-Task({
-    subagent_type: "audit-agent",
-    model: "haiku",
-    description: "Platform maturity audit",
-    prompt: """
-    Focus: Platform engineering maturity
-    Checks: CI/CD completeness, IaC presence, deployment automation, test automation, DX
-    Skills:
-    - cco-skill-platform-engineering-maturity-dx
-    - cco-skill-cicd-gates-deployment-automation
-    - cco-skill-deployment-bluegreen-canary-rollback
-    Return: Findings with maturity score, missing capabilities, improvement recommendations
-    """
-})
-
-Task({
-    subagent_type: "audit-agent",
-    model: "haiku",
-    description: "DORA metrics & stability audit",
-    prompt: """
-    Focus: Delivery performance and stability
-    Checks: DORA 5 metrics, rework rate, deployment frequency, change failure rate
-    Skill: cco-skill-dora-metrics-stability-rework
-    Return: Findings with DORA scores, stability trends, rework patterns, git analysis
-    """
-})
-
-Task({
-    subagent_type: "audit-agent",
-    model: "haiku",
-    description: "Code review quality audit",
-    prompt: """
-    Focus: Code review effectiveness
-    Checks: Review depth, comment density, reviewer diversity, review time distribution
-    Skill: cco-skill-code-review-quality-ai-guidance
-    Return: Findings with review quality score, process gaps, AI review patterns
-    """
-})
-
-# Synthesis agent (waits for all 10 to complete)
-Task({
-    subagent_type: "audit-agent",
-    model: "sonnet",
-    description: "Synthesize findings",
-    prompt: """
-    Aggregate all 10 aspect findings:
-    - Deduplicate overlapping issues
-    - Calculate overall score
-    - Prioritize by severity and impact
-    - Generate unified report
-    """
-})
-```
-
-**Benefits of 6-Aspect Approach:**
-- Parallel = faster (6 agents simultaneously vs sequential)
-- Specialized = more accurate (each agent focuses on one domain)
-- Complete = nothing missed (all aspects covered)
-
-### Model Selection by Aspect
-
-| Aspect | Model | Rationale |
-|--------|-------|-----------|
-| Security | Sonnet | Semantic analysis, context-aware vulnerability detection |
-| Performance | Haiku | Pattern matching, metrics collection |
-| Testing | Sonnet | Coverage analysis, critical path identification |
-| Quality | Haiku | Metrics calculation, pattern detection |
-| Architecture | Sonnet | Design pattern recognition, coupling analysis |
-| Documentation | Haiku | Presence checks, template matching |
-
-### Single-Category Execution
-
-For single-category audits (`--preset=security`, `--preset=database`), use direct execution:
-
-```python
-# Single category = one focused agent
-Task({
-    subagent_type: "audit-agent",
-    model: "sonnet",  # or haiku based on category
-    description: f"{category} audit",
-    prompt: generate_category_prompt(category, checks)
-})
-```
-
-### Cost Optimization
-
-```
-6-Aspect Parallel (comprehensive):
-├── Haiku agents: lower cost
-├── Sonnet agents: balanced cost
-├── Sonnet synthesis
-└── Total: cost-efficient
-
-vs All-Sonnet Sequential:
-└── Total: significantly more expensive and slower
-```
-
----
-
 ## CLI Usage
 
 ### Interactive (Default)

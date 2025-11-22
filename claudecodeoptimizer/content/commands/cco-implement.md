@@ -12,6 +12,8 @@ pain_points: [1, 4]
 
 **AI-assisted feature implementation with TDD approach and skill auto-selection.**
 
+**Implementation Note:** This command follows [COMMAND_STANDARDS.md](../COMMAND_STANDARDS.md) for file discovery (exclusions applied BEFORE processing), token optimization (three-stage discovery), parallelization (Task calls in single message), and cross-platform compatibility. See cco-audit.md for reference implementation.
+
 ---
 
 ## Purpose
@@ -24,6 +26,62 @@ All phases (Red → Green → Refactor) completed without shortcuts.
 
 **Estimated time: Provided for transparency, NOT to skip steps.**
 Implement new features using Test-Driven Development (TDD), automatically selecting appropriate skills based on feature type.
+
+---
+
+
+## Step 0: Introduction and Confirmation
+
+**Welcome to cco-implement - Feature Implementation with TDD**
+
+This command implements features following Test-Driven Development approach with automatic skill selection.
+
+### What This Command Does
+
+**Implementation Approach:**
+- TDD cycle (Red → Green → Refactor)
+- Automatic skill selection based on feature type
+- Test-first development
+- Continuous verification
+
+### What You'll Be Asked
+
+1. **Confirmation** (Start implementation)
+2. **Feature Description** (What to implement)
+3. **Test Review** (Verify tests before implementation)
+
+### Time Commitment
+
+- Small feature: 10-20 minutes
+- Medium feature: 20-40 minutes
+- Large feature: 40-90 minutes
+
+### What You'll Get
+
+**Completed Feature:**
+- Tests written first (TDD)
+- Implementation following project patterns
+- Full verification
+
+```python
+AskUserQuestion({
+  questions: [{
+    question: "Ready to implement feature using TDD approach?",
+    header: "Confirm Start",
+    multiSelect: false,
+    options: [
+      {
+        label: "Start Implementation",
+        description: "Begin TDD feature implementation"
+      },
+      {
+        label: "Cancel",
+        description: "Exit cco-implement"
+      }
+    ]
+  }]
+})
+```
 
 ---
 

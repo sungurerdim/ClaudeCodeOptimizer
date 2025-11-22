@@ -14,9 +14,72 @@ pain_points: [5]
 
 ---
 
+## Execution Guarantee
+
+**This command WILL execute fully without requiring user presence during processing.**
+
+**What Happens:**
+1. **Step 0**: Introduction and confirmation (user input required)
+2. **Step 1**: Analyze staged changes, detect change types (automated)
+3. **Step 2**: Recommend atomic commit splits if needed (user confirmation required)
+4. **Step 3**: Generate semantic commit messages (automated)
+5. **Step 4**: Create commits with proper format (automated)
+6. **Step 5**: Display summary with accounting (automated)
+
+**User Interaction Points:**
+- Initial confirmation (optional prompt context)
+- Atomic commit split confirmation (if multiple change types detected)
+- Git error handling (if commit failures occur)
+
+**Automation:**
+- Git diff analysis runs without interruption
+- Commit messages generated automatically from actual changes
+- All commits created with conventional commits format
+- Complete accounting enforced (total commits created = planned commits)
+
+**Time Estimate:**
+- Single commit: 1-2 minutes
+- Multiple atomic commits (2-5): 3-5 minutes
+- Complex split (6+): 5-10 minutes
+
+**Verification:**
+- All commits verified with git log
+- Accounting enforced: created commits = planned commits
+- Conventional commits format validated
+
+---
+
 ## Purpose
 
 Generate high-quality semantic commit messages, recommend atomic commit splits, and improve git workflow quality (Pain #5: Git quality).
+
+---
+
+
+## CRITICAL: No Hardcoded Examples
+
+**AI models interpret hardcoded examples as real data. Use placeholders and generate from actual changes.**
+
+```python
+# ❌ BAD: Hardcoded example commit message
+message = "feat(auth): add JWT authentication"
+
+# ✅ GOOD: Generated from actual changes
+message = f"{commit_type}({scope}): {summary_from_actual_changes}"
+```
+
+**All commit messages, file lists, and summaries must be generated from actual git diff output.**
+
+**Template:**
+```
+{commit_type}({scope_from_actual_files}): {summary_from_actual_changes}
+
+- {change_1_from_diff}
+- {change_2_from_diff}
+- {impact_from_analysis}
+
+Refs: #{issue_number_if_provided}
+```
 
 ---
 
@@ -27,21 +90,157 @@ Generate high-quality semantic commit messages, recommend atomic commit splits, 
 
 ---
 
+
+## Step 0: Introduction and Confirmation
+
+**Welcome to cco-commit - AI-Assisted Semantic Commits**
+
+This command helps you create high-quality git commits following Conventional Commits format.
+
+### What This Command Does
+
+**Analysis:**
+- Analyzes staged changes (or all unstaged changes if none staged)
+- Detects change types (feature, fix, refactor, docs, etc.)
+- Identifies related vs unrelated changes
+- Recommends atomic commit splits
+
+**Generation:**
+- Generates semantic commit messages following Conventional Commits
+- Includes proper type, scope, summary, and body
+- Adds BREAKING CHANGE markers when needed
+- References related issues
+
+### What You'll Be Asked
+
+1. **Confirmation** (Optional: Provide additional context for commit generation)
+2. **Atomic Split** (If multiple change types detected: Yes/No/Customize)
+3. **Git Error Handling** (If commit failures: Fix/Skip hooks/Amend/Cancel)
+
+### Time Commitment
+
+- Single commit: 1-2 minutes
+- Multiple atomic commits: 3-5 minutes
+
+### What You'll Get
+
+**Commits Created:**
+- Semantic messages following Conventional Commits format
+- Proper type/scope classification
+- Clear summary and detailed body
+- Issue references and co-authors (if provided)
+
+**Improvement:**
+- Better git history (easier to review, search, understand)
+- Automated changelog generation compatibility
+- Simpler rollbacks (atomic commits)
+- Addresses Pain #5 (git quality)
+
+```python
+AskUserQuestion({
+  questions: [{
+    question: "Ready to create semantic commits from staged changes?",
+    header: "Confirm Start",
+    multiSelect: false,
+    options: [
+      {
+        label: "Start Commit",
+        description: "Analyze staged changes and create commits (recommended)"
+      },
+      {
+        label: "Add Context",
+        description: "Provide additional context before analysis (e.g., co-authors, issue refs)"
+      },
+      {
+        label: "Cancel",
+        description: "Exit cco-commit"
+      }
+    ]
+  }]
+})
+```
+
+**If user selects "Add Context":**
+Prompt for additional context (free text input), then proceed to analysis.
+
+**If user selects "Cancel":**
+Exit immediately with message: "cco-commit cancelled. No commits created."
+
+**If user selects "Start Commit":**
+Continue to Step 1 (Analyze Staged Changes).
+
+---
+
 ## Execution Protocol
 
 ### Step 1: Analyze Staged Changes
 
+**File Discovery with Exclusion Protocol:**
+
 ```bash
-git status
-git diff --cached --stat
-git diff --cached
+# Get staged files, filter excluded files BEFORE analysis
+staged_files=$(git diff --cached --name-only)
+
+# Define exclusion patterns (match COMMAND_STANDARDS.md)
+EXCLUDED_FILES=(
+    "*.pyc" "*.pyo" "*.so" "*.dll" "*.class" "*.o"
+    "*.min.js" "*.min.css" "*.bundle.js"
+    "package-lock.json" "yarn.lock" "poetry.lock"
+    ".env" ".env.*" "*secret*" "*credential*" "*.pem"
+)
+
+# Filter excluded files
+filtered_files=""
+for file in $staged_files; do
+    excluded=false
+    for pattern in "${EXCLUDED_FILES[@]}"; do
+        if [[ "$file" == $pattern ]]; then
+            excluded=true
+            break
+        fi
+    done
+
+    if [ "$excluded" = false ]; then
+        filtered_files="$filtered_files $file"
+    fi
+done
+
+# Analyze filtered files only
+git diff --cached --stat -- $filtered_files
+git diff --cached -- $filtered_files
 ```
 
-Analyze:
+**Analysis (on filtered files only):**
 - Files changed and line counts
 - Types of changes (feature, fix, refactor, docs)
 - Related vs unrelated changes
 - Breaking changes
+
+**Display Included/Excluded:**
+```markdown
+════════════════════════════════════════════════════════════════
+         STAGED CHANGES ANALYSIS
+════════════════════════════════════════════════════════════════
+
+## Files Included
+
+{for file in included_files}
+✅ {file} (+{added} -{removed})
+{endfor}
+
+Total: {included_count} files
+
+## Files Excluded (Not Committed)
+
+{for file in excluded_files}
+❌ {file} (excluded by pattern: {pattern})
+{endfor}
+
+Total: {excluded_count} files
+
+════════════════════════════════════════════════════════════════
+```
+
 
 ### Step 2: Recommend Atomic Commits
 
@@ -130,6 +329,39 @@ EOF
 # Repeat for each atomic commit
 ```
 
+
+### Multi-Commit Tracking with TodoWrite
+
+**When creating multiple atomic commits, use TodoWrite to track progress:**
+
+```python
+# After analyzing changes and recommending splits
+if commit_count > 1:
+    todos = []
+    for i, commit_plan in enumerate(commit_plans, 1):
+        todos.append({
+            "content": f"Create commit {i}/{commit_count}: {commit_plan.type}({commit_plan.scope})",
+            "status": "pending",
+            "activeForm": f"Creating commit {i}/{commit_count}"
+        })
+
+    TodoWrite(todos)
+
+# Update as each commit is created
+for i, commit_plan in enumerate(commit_plans, 1):
+    # Mark current as in_progress
+    todos[i-1]["status"] = "in_progress"
+    TodoWrite(todos)
+
+    # Create commit...
+
+    # Mark as completed
+    todos[i-1]["status"] = "completed"
+    TodoWrite(todos)
+```
+
+**Benefit**: User can see commit creation progress in real-time.
+
 **Error Handling:**
 
 If commit fails:
@@ -152,18 +384,25 @@ Common failures:
 - Author not configured: Run `git config user.name/email`
 - Merge conflicts: Resolve conflicts first with `git status`
 
-### Step 5: Summary
+### Step 5: Summary with Complete Accounting
 
-**IMPORTANT - Dynamic Summary Generation:**
+**IMPORTANT - Dynamic Summary with Accounting:**
+
 Generate summary from ACTUAL commits created. Use this template:
 
 ```markdown
-Created [N] atomic commits:
+Created {total_commits} atomic commits:
 
-[For each commit created:]
-✓ [type]([scope]): [summary]
-  Files: [ACTUAL_FILES]
-  Lines: +[ADDED] / -[REMOVED]
+{for commit in created_commits}
+✓ {commit.type}({commit.scope}): {commit.summary}
+  Files: {commit.files}
+  Lines: +{commit.added} / -{commit.removed}
+{endfor}
+
+**Accounting Verification:**
+- Planned commits: {planned_commits}
+- Created commits: {created_commits}
+- **Verification**: {created_commits} = {planned_commits} ✓
 
 Impact:
 - Git workflow score: [BEFORE] → [AFTER]
@@ -171,11 +410,34 @@ Impact:
 - Benefits: Easier review, better history, simpler rollbacks
 
 Next:
-- Push: git push origin [ACTUAL_BRANCH]
+- Push: git push origin {ACTUAL_BRANCH}
 - Create PR: gh pr create
 ```
 
+**If accounting doesn't match:**
+```markdown
+⚠️ Accounting Mismatch Detected!
+- Planned: {planned_commits}
+- Created: {created_commits}
+- Missing: {planned_commits - created_commits}
+
+Action: Review commit log and identify missing commits.
+```
+
+
 ---
+
+
+### Agent Execution with Global Permissions
+
+**All git operations use existing global/project git configuration automatically.**
+
+**No additional setup required:**
+- Git user.name and user.email already configured
+- Pre-commit hooks will run automatically
+- Git credentials inherited from system
+
+**If git config missing, command will prompt for setup.**
 
 ## Conventional Commits Format
 
@@ -199,13 +461,16 @@ Next:
 
 ## Success Criteria
 
-- [OK] Staged changes analyzed
-- [OK] Change types detected
-- [OK] Atomic split recommended if needed
-- [OK] Semantic messages generated
-- [OK] Commits created with proper format
-- [OK] Summary presented
-- [OK] Pain-point impact communicated
+- [ ] Step 0: Introduction and confirmation completed
+- [ ] Staged changes analyzed (excluded files filtered)
+- [ ] Change types detected
+- [ ] Atomic split recommended if needed (dynamic based on analysis)
+- [ ] Semantic messages generated (no hardcoded examples)
+- [ ] TodoWrite tracking for multi-commit operations
+- [ ] Commits created with proper format
+- [ ] Complete accounting verified (created = planned)
+- [ ] Summary presented with impact metrics
+- [ ] Pain-point impact communicated
 
 ---
 
