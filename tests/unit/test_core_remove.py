@@ -33,8 +33,8 @@ class TestCCORemover:
         assert result["success"] is True
         assert "actions" in result
         assert (
-            len(result["actions"]) == 6
-        )  # commands, principles, agents, skills, templates, claude.md
+            len(result["actions"]) == 7
+        )  # agents, commands, skills, principles, standards, templates, claude.md
 
     def test_remove_without_cleaning_claude_md(self, tmp_path, monkeypatch) -> None:
         """Test remove() without cleaning CLAUDE.md"""
@@ -47,8 +47,8 @@ class TestCCORemover:
 
         assert result["success"] is True
         assert (
-            len(result["actions"]) == 5
-        )  # commands, principles, agents, skills, templates (no claude.md)
+            len(result["actions"]) == 6
+        )  # agents, commands, skills, principles, standards, templates (no claude.md)
 
 
 class TestRemoveCommands:
@@ -407,7 +407,7 @@ class TestRemoveCcoFunction:
         result = remove_cco()
 
         assert result["success"] is True
-        assert len(result["actions"]) == 6
+        assert len(result["actions"]) == 7
 
     def test_passes_clean_claude_md_false(self, tmp_path, monkeypatch) -> None:
         """Test that clean_claude_md=False is passed through"""
@@ -418,7 +418,7 @@ class TestRemoveCcoFunction:
         result = remove_cco(clean_claude_md=False)
 
         assert result["success"] is True
-        assert len(result["actions"]) == 5
+        assert len(result["actions"]) == 6
 
 
 class TestRemoveIntegration:
@@ -464,7 +464,7 @@ class TestRemoveIntegration:
 
         # Verify results
         assert result["success"] is True
-        assert len(result["actions"]) == 6
+        assert len(result["actions"]) == 7
 
         # CCO files should be gone
         assert not (commands_dir / "cco-audit.md").exists()
@@ -493,7 +493,7 @@ class TestRemoveIntegration:
 
         assert result["success"] is True
         # Should still report actions even if nothing was removed
-        assert len(result["actions"]) == 6
+        assert len(result["actions"]) == 7
 
 
 if __name__ == "__main__":

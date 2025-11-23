@@ -1,7 +1,7 @@
 ---
 name: cco-generate
 description: Create missing project components with skill-guided generation
-
+action_type: generate
 principles: [U_EVIDENCE_BASED_ANALYSIS, U_NO_OVERENGINEERING, U_FOLLOW_PATTERNS]
 parameters:
   tests:
@@ -78,11 +78,23 @@ parameters:
     pain_points: [11, 12]
 ---
 
-# cco-generate
+# CCO Generate Command
 
 **Create missing project components with skill-guided generation.**
 
-**Implementation Note:** This command follows [COMMAND_STANDARDS.md](../COMMAND_STANDARDS.md) for file discovery (exclusions applied BEFORE processing), token optimization (three-stage discovery), parallelization (Task calls in single message), and cross-platform compatibility. See cco-audit.md for reference implementation.
+**Implementation Note:** This command follows [STANDARDS_COMMANDS.md](../STANDARDS_COMMANDS.md) for file discovery (exclusions applied BEFORE processing), token optimization (three-stage discovery), parallelization (Task calls in single message), and cross-platform compatibility. See cco-audit.md for reference implementation.
+---
+
+## Built-in References
+
+**This command inherits standard behaviors from:**
+
+- **[STANDARDS_COMMANDS.md](../STANDARDS_COMMANDS.md)** - Standard structure, execution protocol, file discovery
+- **[STANDARDS_QUALITY.md](../STANDARDS_QUALITY.md)** - UX/DX, efficiency, simplicity, performance standards
+- **[LIBRARY_PATTERNS.md](../LIBRARY_PATTERNS.md)** - Reusable patterns (Step 0, Selection, Accounting, Progress, Error Handling)
+- **[STANDARDS_AGENTS.md](../STANDARDS_AGENTS.md)** - File discovery, model selection, parallel execution
+
+**See these files for detailed patterns. Only command-specific content is documented below.**
 
 ---
 
@@ -114,72 +126,16 @@ No scope reduction due to time constraints or "workload concerns".
 
 ---
 
+## Design Principles
 
-## Step 0: Introduction and Confirmation
-
-**Welcome to cco-generate - Auto-Generate Missing Components**
-
-This command generates missing tests, documentation, and boilerplate following project conventions.
-
-### What This Command Does
-
-**Generation Types:**
-- Unit/integration tests
-- API documentation
-- CI/CD configs
-- Missing docstrings
-- Boilerplate code
-
-### What You'll Be Asked
-
-1. **Confirmation** (Start generation)
-2. **Generation Selection** (What to generate)
-3. **Review Generated Code** (Before writing files)
-
-### Time Commitment
-
-- Analysis: 2-5 minutes
-- Generation: 5-15 minutes
-- Total: 7-20 minutes
-
-### What You'll Get
-
-**Generated Components:**
-- Tests following project patterns
-- Documentation with proper format
-- CI/CD configs matching conventions
-
-```python
-AskUserQuestion({
-  questions: [{
-    question: "Ready to generate missing components?",
-    header: "Confirm Start",
-    multiSelect: false,
-    options: [
-      {
-        label: "Start Generation",
-        description: "Begin component generation"
-      },
-      {
-        label: "Cancel",
-        description: "Exit cco-generate"
-      }
-    ]
-  }]
-})
-```
+**See:** STANDARDS_QUALITY.md
+- UX/DX principles (transparency, progressive disclosure, zero surprises)
+- Honesty & accurate reporting (no false positives/negatives)
+- No hardcoded examples (use placeholders: `{FILE_PATH}`, `{LINE_NUMBER}`)
 
 ---
 
-## Critical UX Principles
-
-1. **100% Honesty** - Only claim "generated" if file actually created and verified
-2. **Complete Accounting** - Report: generated + skipped + failed = total requested
-3. **No Hardcoded Examples** - All examples use `{PLACEHOLDERS}`, never fake paths/names
-4. **Phase Tracking** - Explicit start/end for each generation phase
-5. **Consistent Counts** - Same counts shown everywhere (single source of truth)
-
-### Generation Outcome Categories
+## Generation Outcome Categories
 
 ```python
 OUTCOMES = {
@@ -284,35 +240,21 @@ OUTCOMES = {
 
 ## Execution Protocol
 
-### Step 0: Introduction and Confirmation (ALWAYS FIRST)
+### Step 0: Introduction and Confirmation
 
-**Before doing ANYTHING, present this introduction and get user confirmation:**
+**Pattern:** Pattern 1 (Step 0 Introduction)
 
-```markdown
-# Generate Command
+**Command-Specific Details:**
 
-**What I do:**
-I create missing project components like tests, documentation, CI/CD configs, and infrastructure files based on what's missing in your project.
+**What I do:** Create missing tests, docs, CI/CD configs, and infrastructure files based on what's missing
 
-**How it works:**
-1. I analyze your project to detect missing components
-2. You select which components to generate (individual files or groups)
-3. I generate selected files following your project conventions
-4. I report what was created with file paths and line counts
+**Process:** Analyze project → Detect missing components → You select → I generate following conventions → Report results
 
-**What you'll get:**
-- Unit and integration tests (significantly increase coverage)
-- API documentation (OpenAPI specs, Swagger UI)
-- CI/CD pipelines (GitHub Actions with quality gates)
-- Infrastructure files (Dockerfile, docker-compose, monitoring configs)
-- Operational docs (runbooks, ADRs)
+**Output:** Complete files (tests, OpenAPI specs, CI/CD pipelines, Dockerfile, monitoring configs)
 
-**Time estimate:** 5-20 minutes depending on what you select
+**Time:** 5-20 minutes depending on selection
 
-**New files WILL be created** - all files follow project conventions and can be reviewed before committing.
-```
-
-**Then ask for confirmation using AskUserQuestion:**
+**New files WILL be created** - all follow project conventions, reviewable before committing
 
 ```python
 AskUserQuestion({
@@ -321,113 +263,50 @@ AskUserQuestion({
     header: "Start Generate",
     multiSelect: false,
     options: [
-      {
-        label: "Yes, start generating",
-        description: "Analyze project and generate missing components"
-      },
-      {
-        label: "No, cancel",
-        description: "Exit without creating any files"
-      }
+      {label: "Yes, start generating", description: "Analyze project and generate missing components"},
+      {label: "No, cancel", description: "Exit without creating any files"}
     ]
   }]
 })
 ```
 
-**CRITICAL:**
-- If user selects "No, cancel" → EXIT immediately, do NOT proceed
-- If user selects "Yes, start generating" → Continue to Step 0.5
+**If Cancel:** Exit immediately, do NOT proceed
+**If Start:** Continue to Project Context Discovery
 
 ---
 
-### Step 0.5: Project Context Discovery (Optional)
+### Step 0.5: Project Context Discovery
 
-**Ask user if they want project documentation analyzed for better generation alignment.**
+**Pattern:** Pattern 2 (Multi-Select with "All")
 
-```python
-AskUserQuestion({
-  questions: [{
-    question: "Extract context from project documentation?",
-    header: "Project Context",
-    multiSelect: false,
-    options: [
-      {
-        label: "Yes (recommended)",
-        description: "Extract project style from README/CONTRIBUTING, generated code aligns with style"
-      },
-      {
-        label: "No",
-        description: "Generate code only (faster)"
-      }
-    ]
-  }]
-})
-```
+**Command-Specific Details:**
 
-**If "Yes" selected:**
+**Benefits for /cco-generate:** Generated tests/docs follow project conventions and style
 
-```python
-# Extract project context via Haiku sub-agent
-context_result = Task({
-    subagent_type: "Explore",
-    model: "haiku",
-    prompt: """
-    Extract project context summary (MAX 200 tokens).
-    Focus on: naming conventions, testing patterns, documentation style.
-
-    Files to check: README.md, CONTRIBUTING.md, ARCHITECTURE.md
-
-    Return: Purpose, Tech Stack, Conventions (naming, testing, doc style)
-    """
-})
-
-# Use context when generating code
-project_context = context_result
-```
-
-**Benefits:** Generated tests/docs follow project conventions and style.
+**Context Used:** Project naming conventions, testing patterns, documentation style applied to all generated files
 
 ---
 
-### Interactive Mode (No Parameters)
+### Step 1: Detection and Selection
 
-1. **Detect what's missing** using Glob/Grep:
-   - No `tests/` directory → Missing tests
-   - No `openapi.yaml` → Missing API spec
-   - No `.github/workflows/` → Missing CI/CD
-   - No `Dockerfile` → Missing containerization
-   - Coverage below threshold → Need more tests
+**Pattern:** Pattern 3 (Progress Reporting)
 
-2. **Analyze what's missing first**, then **present specific generation steps using AskUserQuestion**:
+**Command-Specific Details:**
 
-**IMPORTANT - Dynamic Generation Options Protocol:**
-You MUST analyze the project BEFORE presenting options:
+**Detection Phase:**
+
 1. Detect what EXISTS (tests/, openapi.yaml, Dockerfile, etc.)
 2. Detect what's MISSING (compare to ideal project structure)
-3. For missing components, count specifics:
-   - How many untested functions? (grep for function definitions, check for tests)
-   - How many undocumented endpoints? (find endpoints, check for OpenAPI entries)
+3. Count specifics:
+   - How many untested functions? (grep for definitions, check for tests)
+   - How many undocumented endpoints? (find endpoints, check for OpenAPI)
    - Which files need generation? (list actual file paths)
-4. Generate options with REAL counts and ACTUAL file/function names
-5. Skip options for components that already exist
 
-**Example analysis template (DO NOT use verbatim):**
-```python
-# Analysis phase:
-untested_functions = find_functions_without_tests()
-undocumented_endpoints = find_endpoints_without_docs()
-missing_configs = check_for_cicd_dockerfile_etc()
+**Dynamic Generation Options:**
 
-# Then generate options:
-for func in untested_functions:
-    option = {
-        label: f"Unit tests for {func.file} ({len(func.functions)} functions)",
-        description: f"(Tests, {func.estimate}) {', '.join(func.functions[:3])}... | 🔴 CRITICAL"
-    }
-```
+Generate options with REAL counts and ACTUAL file/function names from analysis.
 
-**IMPORTANT - Tab-Based Selection (Single Submit):**
-AskUserQuestion supports **4 questions maximum** with **4 options maximum per question**. Group generation types by category to ensure ALL options are presented:
+**Tab-Based Selection (4×4 limit, 17 generation types):**
 
 ```python
 # Analyze project first, then present tab-based selection
@@ -436,201 +315,160 @@ AskUserQuestion supports **4 questions maximum** with **4 options maximum per qu
 AskUserQuestion({
   questions: [
     {
-      question: "Select Testing components to generate:? (Space: select, Enter: confirm)",
+      question: "Select Testing components to generate:",
       header: "🔴 Testing",
       multiSelect: true,
       options: [
-        {
-          label: "All Testing",
-          description: "Generate all testing components (unit, integration, contract, load, chaos)"
-        },
-        {
-          label: f"Unit + Integration ({test_file_count} files)",
-          description: f"Untested functions, API tests, fixtures | {untested_count} functions | Pain #4"
-        },
-        {
-          label: f"Contract Tests ({contract_count} endpoints)",
-          description: "Pact contracts, provider verification, broker config"
-        },
-        {
-          label: f"Load + Chaos ({perf_count} scenarios)",
-          description: "Locust/k6 load tests, chaos engineering, failure injection"
-        }
+        {label: "All Testing", description: "Generate all testing components (unit, integration, contract, load, chaos)"},
+        {label: f"Unit + Integration ({test_file_count} files)", description: f"Untested functions, API tests, fixtures | {untested_count} functions | Pain #4"},
+        {label: f"Contract Tests ({contract_count} endpoints)", description: "Pact contracts, provider verification"},
+        {label: f"Load + Chaos ({perf_count} scenarios)", description: "Locust/k6 load tests, chaos engineering"}
       ]
     },
     {
-      question: "Select Documentation components to generate:? (Space: select, Enter: confirm)",
+      question: "Select Documentation components to generate:",
       header: "🟡 Docs",
       multiSelect: true,
       options: [
-        {
-          label: "All Documentation",
-          description: "Generate all documentation components"
-        },
-        {
-          label: f"OpenAPI Spec ({endpoint_count} endpoints)",
-          description: "Complete OpenAPI 3.0, Swagger UI, schemas, examples | Pain #7"
-        },
-        {
-          label: f"Docs + ADR ({undoc_count} items)",
-          description: "Docstrings, README sections, Architecture Decision Records"
-        },
-        {
-          label: "Review Checklist (AI-aware)",
-          description: "Code review checklist with AI hallucination checks | Pain #11, #12 | 🔴 2025 CRITICAL"
-        },
-        {
-          label: "Runbooks + Requirements",
-          description: "Operational runbooks, incident response, dependency files"
-        }
+        {label: "All Documentation", description: "Generate all documentation components"},
+        {label: f"OpenAPI Spec ({endpoint_count} endpoints)", description: "Complete OpenAPI 3.0, Swagger UI | Pain #7"},
+        {label: f"Docs + ADR ({undoc_count} items)", description: "Docstrings, README sections, Architecture Decision Records"},
+        {label: "Review Checklist (AI-aware)", description: "Code review checklist with AI hallucination checks | Pain #11, #12 | 🔴 2025 CRITICAL"}
       ]
     },
     {
-      question: "Select CI/CD & Container components:? (Space: select, Enter: confirm)",
+      question: "Select CI/CD & Container components:",
       header: "🟢 CI/CD",
       multiSelect: true,
       options: [
-        {
-          label: "All CI/CD & Containers",
-          description: "Generate all CI/CD and container components"
-        },
-        {
-          label: "CI/CD Pipeline",
-          description: "GitHub Actions/GitLab CI with quality gates, parallel jobs"
-        },
-        {
-          label: "Pre-commit Hooks",
-          description: ".pre-commit-config.yaml with linting, security, formatting"
-        },
-        {
-          label: "Dockerfile",
-          description: "Multi-stage build, docker-compose, .dockerignore, health checks"
-        }
+        {label: "All CI/CD & Containers", description: "Generate all CI/CD and container components"},
+        {label: "CI/CD Pipeline", description: "GitHub Actions/GitLab CI with quality gates"},
+        {label: "Pre-commit Hooks", description: ".pre-commit-config.yaml with linting, security"},
+        {label: "Dockerfile", description: "Multi-stage build, docker-compose, health checks"}
       ]
     },
     {
-      question: "Select Database & Observability components:? (Space: select, Enter: confirm)",
+      question: "Select Database & Observability components:",
       header: "🟢 Ops",
       multiSelect: true,
       options: [
-        {
-          label: "All Ops",
-          description: "Select all database and observability components"
-        },
-        {
-          label: f"Migration + Indexes ({db_issue_count} items)",
-          description: "Migration scripts with rollback, index creation for slow queries"
-        },
-        {
-          label: "Monitoring + SLO",
-          description: "Prometheus metrics, Grafana dashboards, SLO specs, alerts"
-        },
-        {
-          label: "Logging",
-          description: "Structured logging config with correlation IDs, tracing"
-        }
+        {label: "All Ops", description: "Select all database and observability components"},
+        {label: f"Migration + Indexes ({db_issue_count} items)", description: "Migration scripts with rollback, index creation"},
+        {label: "Monitoring + SLO", description: "Prometheus metrics, Grafana dashboards, SLO specs"},
+        {label: "Logging", description: "Structured logging config with correlation IDs"}
       ]
     }
   ]
 })
 ```
 
-**Note about groupings:** Due to 4×4=16 slot limit with 17 generation types, these related items are grouped:
+**Grouped items (due to 4×4=16 slot limit with 17 types):**
 - **Load + Chaos** (both performance/resilience testing)
 - **Docs + ADR** (both code documentation)
-- **Runbooks + Requirements** (both operational documentation)
 - **Migration + Indexes** (both database operations)
 - **Monitoring + SLO** (both observability/alerting)
 
-### Selection Processing
-
-**After user submits, calculate and display selection summary:**
+**Selection Processing:**
 
 ```markdown
 ## Generation Selection Summary
 
 **Your selections:**
-- 🔴 Testing: [list selected] → [component count] components
-- 🟡 Docs: [list selected] → [component count] components
-- 🟢 CI/CD: [list selected] → [component count] components
-- 🟢 Ops: [list selected] → [component count] components
+- 🔴 Testing: [list selected] → {COMPONENT_COUNT} components
+- 🟡 Docs: [list selected] → {COMPONENT_COUNT} components
+- 🟢 CI/CD: [list selected] → {COMPONENT_COUNT} components
+- 🟢 Ops: [list selected] → {COMPONENT_COUNT} components
 
-**Total: {{SELECTED_COUNT}} generation tasks selected**
+**Total: {SELECTED_COUNT} generation tasks selected**
 
 ⚠️ Only selected categories will be generated.
-Categories NOT selected will be skipped entirely.
 ```
 
-**IMPORTANT:**
-- If user selects "All Components", ignore other selections and generate ALL
-- If user selects "All [Category]", generate all components in that category
-- Otherwise, generate ONLY the individually selected items
-- For grouped items (e.g., "Load + Chaos"), generate both components
-- Components can be generated in parallel when they don't conflict
+**Processing rules:**
+- "All Components" → generate ALL
+- "All [Category]" → generate all in category
+- Grouped items (e.g., "Load + Chaos") → generate both
+- Otherwise → generate ONLY individually selected items
 
-3. **Present generation plan:**
+---
+
+### Step 2: Pre-Flight Confirmation
+
+**Pattern:** Pattern 4 (Complete Accounting)
+
+**Command-Specific Details:**
+
+**Present generation plan with file estimates and time:**
 
 ```markdown
-Selected: [list selected components or "All Recommended"]
+Selected: [list selected components]
 
-Skills I'll use:
-- [list skills for selected components]
+Skills I'll use: [list skills for selected components]
 
-Agent: cco-agent-generate (Sonnet for quality generation)
+Agent: generate-agent (Sonnet for quality generation)
 
 I'll create:
-
 [For each selected component, explain what will be generated]
 
-Example for Tests:
-- Unit tests for untested functions
-- Integration tests for API endpoints
-- Test fixtures for database models
-- Estimated: significant lines of test code
-- Coverage: significantly increased (target: high coverage)
-
-Time estimate: ~[X] minutes
-Files to create: ~[Y] files
+Time estimate: ~{X} minutes
+Files to create: ~{Y} files
 ```
 
-4. **Confirm generation** using AskUserQuestion:
+---
 
-```python
-AskUserQuestion({
-  questions: [{
-    question: "Ready to generate the selected components?",
-    header: "Confirm",
-    multiSelect: false,
-    options: [
-      {
-        label: "Yes, start generation",
-        description: "Generate all selected components"
-      },
-      {
-        label: "No, cancel",
-        description: "Cancel and return to component selection"
-      }
-    ]
-  }]
-})
-```
+### Step 3: Generate Components
 
-5. **Use TodoWrite** to track generation progress
+**See [STANDARDS_AGENTS.md](../STANDARDS_AGENTS.md) for agent delegation patterns.**
 
-5. **Launch Task with cco-agent-generate**:
+**Command-Specific Details:**
+
+**Agent:** `generate-agent` (Sonnet)
+
+**Why Sonnet:** Code generation requires accuracy, better understanding of project context, generates higher quality tests/docs
+
+**Parallel Execution:** Agent automatically parallelizes independent generation tasks (different files)
+
+**TodoWrite tracking:** All generation tasks tracked in real-time
+
+**Generation Protocol:**
 
 ```python
 Task({
-  subagent_type: "general-purpose",
+  subagent_type: "generate-agent",
   model: "sonnet",
-  description: "Generate tests and documentation",
   prompt: """
-  Generate missing tests, contract tests, and OpenAPI spec.
+  Generate missing {COMPONENT_TYPE}.
+
+  Use these skills:
+  - {SKILL_LIST_FOR_COMPONENT}
+
+  {COMPONENT_TYPE_SPECIFIC_INSTRUCTIONS}
+
+  Follow:
+  - {RELEVANT_PATTERNS}
+  - U_NO_OVERENGINEERING (keep it simple)
+  - U_FOLLOW_PATTERNS (match project conventions)
+
+  Report:
+  - Files created with line counts
+  - {COMPONENT_SPECIFIC_METRICS}
+  - How to {USE_GENERATED_COMPONENT}
+  """
+})
+```
+
+**Example for Tests:**
+
+```python
+Task({
+  subagent_type: "generate-agent",
+  model: "sonnet",
+  prompt: """
+  Generate missing tests.
 
   Use these skills:
   - cco-skill-test-pyramid-coverage-isolation
   - cco-skill-api-testing-contract-load-chaos
-  - cco-skill-docs-api-openapi-adr-runbooks
 
   TESTS:
   1. Analyze all Python files in src/ to find untested functions
@@ -647,146 +485,90 @@ Task({
      - Test authentication/authorization
      - Test input validation
 
-  CONTRACT TESTS:
-  1. For each API endpoint, generate Pact contract
-  2. Include request/response examples
-  3. Generate provider verification tests
-  4. Setup contract broker config
-
-  OPENAPI:
-  1. Analyze all API endpoints (Flask routes, FastAPI paths)
-  2. Generate complete OpenAPI 3.0 spec
-  3. Include schemas for all request/response types
-  4. Document authentication (JWT, API keys)
-  5. Add examples for each endpoint
-  6. Setup Swagger UI integration
-
   Follow:
   - P_TEST_PYRAMID (unit >> integration >> e2e)
   - P_TEST_COVERAGE (high coverage target)
-  - P_API_DOCUMENTATION_OPENAPI (complete spec)
   - U_NO_OVERENGINEERING (keep it simple)
 
   Report:
   - Files created with line counts
   - Coverage improvement estimate
   - How to run tests
-  - How to view docs
   """
 })
 ```
 
-6. **Present results:**
+---
 
-**IMPORTANT - Dynamic Results Generation:**
-Report ACTUAL files created and metrics. Use this template with REAL data:
+### Step 4: Results Report
+
+**See [LIBRARY_PATTERNS.md](../LIBRARY_PATTERNS.md#pattern-8-results-generation) for standard results pattern.**
+
+**Command-Specific Details:**
+
+**Accounting formula enforced:** `total = generated + skipped + failed`
+
+**Real metrics (no placeholders):**
 
 ```markdown
 Generation Complete! ✓
 
 [For each category generated, report REAL files:]
 Tests Created:
-✓ tests/unit/ ([ACTUAL_COUNT] test files, [ACTUAL_TEST_COUNT]+ unit tests)
-  [List first 3-5 actual files created with real test counts]
-  - ... ([remaining_count] more files)
+✓ tests/unit/ ({ACTUAL_COUNT} test files, {ACTUAL_TEST_COUNT}+ unit tests)
+  {LIST_FIRST_3_5_ACTUAL_FILES_WITH_REAL_TEST_COUNTS}
+  - ... ({REMAINING_COUNT} more files)
 
-✓ tests/integration/ ([ACTUAL_COUNT] API integration tests)
-  [List actual integration test files created]
+✓ tests/integration/ ({ACTUAL_COUNT} API integration tests)
+  {LIST_ACTUAL_INTEGRATION_TEST_FILES}
 
 ✓ tests/fixtures.py (database fixtures) [if created]
 ✓ tests/conftest.py (pytest configuration) [if created]
 
-Coverage: [BEFORE]% → [AFTER]% ✓ (Target: high coverage)
-Total tests: [ACTUAL_COUNT] tests created
+Coverage: {BEFORE}% → {AFTER}% ✓
+Total tests: {ACTUAL_COUNT} tests created
 
 [Repeat for other categories that were actually generated]
 
 Impact:
-- Addresses Pain #[X] ([PAIN_DESCRIPTION])
-- Testing score: [BEFORE] → [AFTER] (+[DELTA] points)
-- Documentation score: [BEFORE] → [AFTER] (+[DELTA] points)
-- [Other actual improvements]
+- Addresses Pain #{X} ({PAIN_DESCRIPTION})
+- Testing score: {BEFORE} → {AFTER} (+{DELTA} points)
+- Documentation score: {BEFORE} → {AFTER} (+{DELTA} points)
 
 Next Steps:
-1. Run tests: [actual test command for this project]
-2. View coverage: [actual coverage command]
-3. [Other actual next steps based on what was generated]
+1. Run tests: {ACTUAL_TEST_COMMAND_FOR_THIS_PROJECT}
+2. View coverage: {ACTUAL_COVERAGE_COMMAND}
+3. {OTHER_ACTUAL_NEXT_STEPS}
 4. Commit changes: /cco-commit
 ```
 
 **Never use placeholder examples - only report what was actually generated.**
 
-### Parametrized Mode (Power Users)
-
-```bash
-# Single type
-/cco-generate --tests
-
-# Multiple types
-/cco-generate --tests --openapi --cicd
-
-# All recommended
-/cco-generate --all
-
-# With additional context (optional prompt)
-/cco-generate --tests "Focus on edge cases for payment logic"
-/cco-generate --openapi "Include authentication examples"
-/cco-generate --all "Follow company documentation standards"
-```
-
-**Optional Prompt Support:**
-Any text after the flags is treated as additional context for generation. The AI will:
-- Incorporate domain-specific requirements
-- Follow project-specific conventions
-- Include relevant examples based on your context
-- Adapt output format to your preferences
-
 ---
 
 ## Agent Usage
 
-**Agent:** `cco-agent-generate` (Sonnet for code generation)
+**See [STANDARDS_AGENTS.md](../STANDARDS_AGENTS.md) for:**
+- Parallel execution patterns (fan-out, pipeline, hierarchical)
+- Model selection strategy (Haiku/Sonnet/Opus)
+- Error handling protocols
+- Agent communication patterns
 
-**Parallel Execution Pattern:**
-```python
-# Example: Generating multiple independent components in parallel
+**Command-Specific Agent Configuration:**
 
-# All generate tasks run simultaneously (independent files)
-Task({
-  subagent_type: "general-purpose",
-  model: "sonnet",
-  description: "Generate unit tests for {MODULE_NAME}",
-  prompt: "Analyze {MODULE_FILE} and generate comprehensive unit tests..."
-})
-Task({
-  subagent_type: "general-purpose",
-  model: "sonnet",
-  description: "Generate integration tests for {COMPONENT_TYPE}",
-  prompt: "Analyze {ENDPOINT_TYPE} and generate integration tests..."
-})
-Task({
-  subagent_type: "general-purpose",
-  model: "sonnet",
-  description: "Generate OpenAPI spec",
-  prompt: "Analyze all routes and generate OpenAPI 3.0 specification..."
-})
-Task({
-  subagent_type: "general-purpose",
-  model: "sonnet",
-  description: "Generate CI/CD config",
-  prompt: "Generate {CI_PLATFORM} workflow with tests and quality gates..."
-})
+**Agent:** generate-agent (Sonnet)
+**Pattern:** Automatic parallelization (independent files generated in parallel)
+**Skills:** Selected based on generation type (tests → test skills, docs → doc skills, etc.)
 
-# All run in parallel since outputs are independent
-# Total time: significantly faster than sequential
-# All use Sonnet for quality generation
-```
+---
 
-**Why Sonnet:**
-- Code generation requires accuracy
-- Better understanding of project context
-- Generates higher quality tests/docs
-- Worth the cost for quality output
+## Agent Error Handling
+
+**Pattern:** Pattern 5 (Error Handling)
+
+**Command-Specific Handling:**
+
+Options: Retry | Retry with different model | Manual generation | Skip this component | Cancel
 
 ---
 
@@ -839,7 +621,7 @@ Warn user if:
 - [OK] Missing components detected
 - [OK] User selected what to generate
 - [OK] Appropriate skills used
-- [OK] cco-agent-generate executed with Sonnet
+- [OK] generate-agent executed with Sonnet
 - [OK] Files created in correct locations
 - [OK] Files follow framework conventions
 - [OK] Quality verified (tests pass, specs valid)
@@ -863,7 +645,19 @@ Warn user if:
 
 # Full setup for new project
 /cco-generate --tests --openapi --cicd --dockerfile --monitoring
+
+# With additional context (optional prompt)
+/cco-generate --tests "Focus on edge cases for payment logic"
+/cco-generate --openapi "Include authentication examples"
+/cco-generate --all "Follow company documentation standards"
 ```
+
+**Optional Prompt Support:**
+Any text after the flags is treated as additional context for generation. The AI will:
+- Incorporate domain-specific requirements
+- Follow project-specific conventions
+- Include relevant examples based on your context
+- Adapt output format to your preferences
 
 ---
 
@@ -874,36 +668,4 @@ Warn user if:
 - **With /cco-fix**: Fix existing, generate missing
 - **Before /cco-commit**: Generate then commit
 
-## Agent Error Handling
-
-**If generate-agent execution fails:**
-
-AskUserQuestion({
-  questions: [{
-    question: "generate-agent (Sonnet) failed: {error_message}. How to proceed?",
-    header: "generate-agent (Sonnet) Error",
-    multiSelect: false,
-    options: [
-      {label: "Retry", description: "Run agent again with same parameters"},
-      {label: "Retry with different model", description: "Try Sonnet/Haiku/Opus"},
-      {label: "Manual generation", description: "Guide manual implementation"},
-      {label: "Skip this component", description: "Continue without this component"},
-      {label: "Cancel", description: "Stop entire command"}
-    ]
-  }]
-})
-
-**Model selection if user chooses "Retry with different model":**
-
-AskUserQuestion({
-  questions: [{
-    question: "Which model to try?",
-    header: "Model Selection",
-    multiSelect: false,
-    options: [
-      {label: "Sonnet", description: "Balanced performance and cost (recommended)"},
-      {label: "Haiku", description: "Faster, more affordable"},
-      {label: "Opus", description: "Most capable, higher cost"}
-    ]
-  }]
-})
+---

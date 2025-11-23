@@ -118,6 +118,18 @@ parameters:
 # CCO Audit Command
 
 **Comprehensive codebase analysis with full transparency, flexible selection, and real-time progress.**
+---
+
+## Built-in References
+
+**This command inherits standard behaviors from:**
+
+- **[STANDARDS_COMMANDS.md](../STANDARDS_COMMANDS.md)** - Standard structure, execution protocol, file discovery
+- **[STANDARDS_QUALITY.md](../STANDARDS_QUALITY.md)** - UX/DX, efficiency, simplicity, performance standards
+- **[LIBRARY_PATTERNS.md](../LIBRARY_PATTERNS.md)** - Reusable patterns (Step 0, Selection, Accounting, Progress, Error Handling)
+- **[STANDARDS_AGENTS.md](../STANDARDS_AGENTS.md)** - File discovery, model selection, parallel execution
+
+**See these files for detailed patterns. Only command-specific content is documented below.**
 
 ---
 
@@ -161,7 +173,7 @@ parameters:
 
 ## Design Principles
 
-**See [COMMAND_QUALITY_STANDARDS.md](../COMMAND_QUALITY_STANDARDS.md) for:**
+**See:** STANDARDS_QUALITY.md
 - UX/DX principles (transparency, progressive disclosure, zero surprises)
 - Honesty & accurate reporting (no false positives/negatives)
 - No hardcoded examples (use placeholders: `{FILE_PATH}`, `{LINE_NUMBER}`)
@@ -197,7 +209,7 @@ parameters:
 
 ## Step 0: Introduction and Confirmation
 
-**See [COMMAND_PATTERNS.md](../COMMAND_PATTERNS.md#pattern-1-step-0-introduction-template) for standard introduction pattern.**
+**Pattern:** Pattern 1 (Step 0 Introduction)
 
 **Command-Specific Details:**
 
@@ -411,7 +423,7 @@ AskUserQuestion({
 
 ## Component 1.5: Project Context Discovery (Optional)
 
-**See [COMMAND_PATTERNS.md](../COMMAND_PATTERNS.md#pattern-9-context-passing-between-commands) for project context discovery pattern.**
+**Pattern:** Pattern 9 (Context Passing)
 
 **Audit-Specific Usage:**
 - Extracted context passed to audit agents for alignment
@@ -422,7 +434,7 @@ AskUserQuestion({
 
 ## Component 2: Discovery Phase
 
-**See [AGENT_STANDARDS.md](../AGENT_STANDARDS.md#file-discovery--exclusion) and [COMMAND_PATTERNS.md](../COMMAND_PATTERNS.md#pattern-7-file-discovery-with-exclusion) for file discovery with exclusions.**
+**See:** STANDARDS_AGENTS.md & LIBRARY_PATTERNS.md
 
 **Audit-Specific Discovery:**
 1. **File Discovery**: Apply exclusions FIRST, report included/excluded counts
@@ -467,7 +479,7 @@ Full coverage of 92 critical checks across 9 categories:
 
 ## Component 4: Selection Input
 
-**See [COMMAND_PATTERNS.md](../COMMAND_PATTERNS.md#pattern-2-category-selection-multi-select-with-all) for category selection with "All" option pattern.**
+**Pattern:** Pattern 2 (Multi-Select with "All")
 
 **Audit-Specific Selection Modes:**
 
@@ -507,7 +519,7 @@ Full coverage of 92 critical checks across 9 categories:
 
 ## Component 6: State Management & Count Tracking
 
-**See [COMMAND_PATTERNS.md](../COMMAND_PATTERNS.md#pattern-4-complete-accounting-formula) for state management and count tracking pattern.**
+**Pattern:** Pattern 4 (Complete Accounting)
 
 **Audit-Specific State:**
 - Central `AuditState` object maintains: phase, total_findings, severity counts
@@ -518,7 +530,7 @@ Full coverage of 92 critical checks across 9 categories:
 
 ## Component 7: Execution Dashboard
 
-**See [COMMAND_PATTERNS.md](../COMMAND_PATTERNS.md#pattern-3-progress-reporting-phase-transitions) for progress reporting with phase transitions.**
+**Pattern:** Pattern 3 (Progress Reporting)
 
 **Audit-Specific Phases:**
 1. **Setup** (12s): Load skills, discover files, initialize scanners
@@ -529,7 +541,7 @@ Full coverage of 92 critical checks across 9 categories:
 
 ## Component 7.5: Agent Execution Strategy
 
-**See [AGENT_STANDARDS.md](../AGENT_STANDARDS.md) and [COMMAND_PATTERNS.md](../COMMAND_PATTERNS.md) for:**
+**See:** STANDARDS_AGENTS.md & LIBRARY_PATTERNS.md
 - Model selection (Haiku for patterns, Sonnet for analysis)
 - Parallel execution patterns (fan-out for independent categories)
 - Error handling with user recovery options (Pattern 5)
@@ -543,7 +555,7 @@ Full coverage of 92 critical checks across 9 categories:
 
 ## Component 8: Count Consistency Rules
 
-**See [COMMAND_PATTERNS.md](../COMMAND_PATTERNS.md#pattern-4-complete-accounting-formula) for count consistency rules and complete accounting pattern.**
+**Pattern:** Pattern 4 (Complete Accounting)
 
 **Audit-Specific Application:**
 - All finding counts use single source (state object)
@@ -554,7 +566,7 @@ Full coverage of 92 critical checks across 9 categories:
 
 ## Component 9: Honesty & Accurate Reporting
 
-**See [COMMAND_QUALITY_STANDARDS.md](../COMMAND_QUALITY_STANDARDS.md#honesty--accurate-reporting) for honesty and accurate reporting principles.**
+**See:** STANDARDS_QUALITY.md
 
 **Audit-Specific Application:**
 - All findings verified (no false positives/negatives)
@@ -639,7 +651,7 @@ Full coverage of 92 critical checks across 9 categories:
 
 ## Error Handling
 
-**See [COMMAND_PATTERNS.md](../COMMAND_PATTERNS.md#pattern-5-error-handling-with-user-choice) for error handling pattern with user recovery options.**
+**Pattern:** Pattern 5 (Error Handling)
 
 **Audit-Specific Error Types:**
 1. **CLI Parameter Errors**: Invalid check numbers, unknown slugs, invalid ranges (CLI only, interactive validates automatically)

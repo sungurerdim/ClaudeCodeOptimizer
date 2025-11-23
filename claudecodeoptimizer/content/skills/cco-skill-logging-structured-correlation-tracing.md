@@ -13,6 +13,18 @@ description: |
 Enable production debugging via structured logs, correlation IDs, tracing, PII masking, audit trails.
 
 **Solves**: Unstructured logs (80% debugging time wasted), lost context (60%+ incomplete traces), PII leaks (30% breaches), compliance failures (40%+ audits), slow MTTR (hours→minutes)
+---
+
+## Standard Structure
+
+**This skill follows [STANDARDS_SKILLS.md](../STANDARDS_SKILLS.md):**
+
+- **Standard sections** - Domain, Purpose, Core Techniques, Anti-Patterns, Checklist
+- **Code example format** - Bad/Good pattern with specific examples
+- **Detection pattern format** - Python functions with Finding objects
+- **Checklist format** - Specific, verifiable items
+
+**See STANDARDS_SKILLS.md for format details. Only skill-specific content is documented below.**
 
 ---
 

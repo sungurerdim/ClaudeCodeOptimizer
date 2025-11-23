@@ -1,7 +1,7 @@
 ---
 name: cco-commit
 description: AI-assisted semantic commit workflow with atomic commit recommendations and conventional commits format
-
+
 principles: [U_EVIDENCE_BASED_ANALYSIS, U_CHANGE_VERIFICATION]
 keywords: [commit, git, semantic, atomic, conventional, version control, changelog]
 category: productivity
@@ -11,6 +11,18 @@ pain_points: [5]
 # cco-commit
 
 **AI-assisted semantic commit workflow with atomic commit recommendations.**
+---
+
+## Built-in References
+
+**This command inherits standard behaviors from:**
+
+- **[STANDARDS_COMMANDS.md](../STANDARDS_COMMANDS.md)** - Standard structure, execution protocol, file discovery
+- **[STANDARDS_QUALITY.md](../STANDARDS_QUALITY.md)** - UX/DX, efficiency, simplicity, performance standards
+- **[LIBRARY_PATTERNS.md](../LIBRARY_PATTERNS.md)** - Reusable patterns (Step 0, Selection, Accounting, Progress, Error Handling)
+- **[STANDARDS_AGENTS.md](../STANDARDS_AGENTS.md)** - File discovery, model selection, parallel execution
+
+**See these files for detailed patterns. Only command-specific content is documented below.**
 
 ---
 
@@ -55,7 +67,6 @@ Generate high-quality semantic commit messages, recommend atomic commit splits, 
 
 ---
 
-
 ## CRITICAL: No Hardcoded Examples
 
 **AI models interpret hardcoded examples as real data. Use placeholders and generate from actual changes.**
@@ -90,51 +101,28 @@ Refs: #{issue_number_if_provided}
 
 ---
 
-
 ## Step 0: Introduction and Confirmation
 
-**Welcome to cco-commit - AI-Assisted Semantic Commits**
+**Pattern:** Pattern 1 (Step 0 Introduction)
 
-This command helps you create high-quality git commits following Conventional Commits format.
+**Command-Specific Details:**
 
-### What This Command Does
+**What I do:**
+Help you create high-quality git commits following Conventional Commits format.
 
-**Analysis:**
-- Analyzes staged changes (or all unstaged changes if none staged)
-- Detects change types (feature, fix, refactor, docs, etc.)
-- Identifies related vs unrelated changes
-- Recommends atomic commit splits
+**Process:**
+1. Analyze staged changes (or all unstaged changes if none staged)
+2. Detect change types and recommend atomic splits
+3. Generate semantic commit messages with proper type/scope/summary
+4. Create commits with Conventional Commits format
 
-**Generation:**
-- Generates semantic commit messages following Conventional Commits
-- Includes proper type, scope, summary, and body
-- Adds BREAKING CHANGE markers when needed
-- References related issues
-
-### What You'll Be Asked
-
-1. **Confirmation** (Optional: Provide additional context for commit generation)
-2. **Atomic Split** (If multiple change types detected: Yes/No/Customize)
-3. **Git Error Handling** (If commit failures: Fix/Skip hooks/Amend/Cancel)
-
-### Time Commitment
-
-- Single commit: 1-2 minutes
-- Multiple atomic commits: 3-5 minutes
-
-### What You'll Get
-
-**Commits Created:**
+**Output:**
 - Semantic messages following Conventional Commits format
 - Proper type/scope classification
 - Clear summary and detailed body
 - Issue references and co-authors (if provided)
 
-**Improvement:**
-- Better git history (easier to review, search, understand)
-- Automated changelog generation compatibility
-- Simpler rollbacks (atomic commits)
-- Addresses Pain #5 (git quality)
+**Time:** 1-5 minutes depending on changes
 
 ```python
 AskUserQuestion({
@@ -160,14 +148,14 @@ AskUserQuestion({
 })
 ```
 
-**If user selects "Add Context":**
-Prompt for additional context (free text input), then proceed to analysis.
+---
 
-**If user selects "Cancel":**
-Exit immediately with message: "cco-commit cancelled. No commits created."
+## Design Principles
 
-**If user selects "Start Commit":**
-Continue to Step 1 (Analyze Staged Changes).
+**See:** STANDARDS_QUALITY.md
+- UX/DX principles (transparency, progressive disclosure, zero surprises)
+- Honesty & accurate reporting (no false positives/negatives)
+- No hardcoded examples (use placeholders: `{FILE_PATH}`, `{LINE_NUMBER}`)
 
 ---
 
@@ -175,13 +163,15 @@ Continue to Step 1 (Analyze Staged Changes).
 
 ### Step 1: Analyze Staged Changes
 
+**Pattern:** Pattern 7 (File Discovery)
+
 **File Discovery with Exclusion Protocol:**
 
 ```bash
 # Get staged files, filter excluded files BEFORE analysis
 staged_files=$(git diff --cached --name-only)
 
-# Define exclusion patterns (match COMMAND_STANDARDS.md)
+# Define exclusion patterns (match STANDARDS_COMMANDS.md)
 EXCLUDED_FILES=(
     "*.pyc" "*.pyo" "*.so" "*.dll" "*.class" "*.o"
     "*.min.js" "*.min.css" "*.bundle.js"
@@ -190,21 +180,6 @@ EXCLUDED_FILES=(
 )
 
 # Filter excluded files
-filtered_files=""
-for file in $staged_files; do
-    excluded=false
-    for pattern in "${EXCLUDED_FILES[@]}"; do
-        if [[ "$file" == $pattern ]]; then
-            excluded=true
-            break
-        fi
-    done
-
-    if [ "$excluded" = false ]; then
-        filtered_files="$filtered_files $file"
-    fi
-done
-
 # Analyze filtered files only
 git diff --cached --stat -- $filtered_files
 git diff --cached -- $filtered_files
@@ -223,24 +198,18 @@ git diff --cached -- $filtered_files
 ════════════════════════════════════════════════════════════════
 
 ## Files Included
-
 {for file in included_files}
 ✅ {file} (+{added} -{removed})
-{endfor}
 
 Total: {included_count} files
 
 ## Files Excluded (Not Committed)
-
 {for file in excluded_files}
 ❌ {file} (excluded by pattern: {pattern})
-{endfor}
 
 Total: {excluded_count} files
-
 ════════════════════════════════════════════════════════════════
 ```
-
 
 ### Step 2: Recommend Atomic Commits
 
@@ -248,21 +217,21 @@ If multiple change types detected:
 ```markdown
 Analyzing staged changes...
 
-Files changed: 8
-Lines added: 234
-Lines removed: 89
+Files changed: {COUNT}
+Lines added: {COUNT}
+Lines removed: {COUNT}
 
 Detected changes:
-- [CHANGE_TYPE_1] ([ACTUAL_FILES])
-- [CHANGE_TYPE_2] ([ACTUAL_FILES])
-- [CHANGE_TYPE_3] ([ACTUAL_FILES])
+- {CHANGE_TYPE_1} ({ACTUAL_FILES})
+- {CHANGE_TYPE_2} ({ACTUAL_FILES})
+- {CHANGE_TYPE_3} ({ACTUAL_FILES})
 
-Recommendation: Split into [N] atomic commits
+Recommendation: Split into {N} atomic commits
 
-[For each detected change type:]
-Commit [N]: [CHANGE_TYPE]
-Files: [ACTUAL_FILES from analysis]
-Type: [type]([scope])
+{For each detected change type:}
+Commit {N}: {CHANGE_TYPE}
+Files: {ACTUAL_FILES from analysis}
+Type: {type}({scope})
 
 AskUserQuestion({
   questions: [{
@@ -271,7 +240,7 @@ AskUserQuestion({
     multiSelect: false,
     options: [
       {label: "Yes", description: "Create atomic commits as suggested"},
-      {label: "No", description: "Cancel split"},
+      {label: "No", description: "Single commit for all changes"},
       {label: "Customize", description: "Modify commit grouping"}
     ]
   }]
@@ -279,6 +248,8 @@ AskUserQuestion({
 ```
 
 ### Step 3: Generate Semantic Commit Messages
+
+**See [LIBRARY_PATTERNS.md](../LIBRARY_PATTERNS.md#pattern-8-dynamic-results-generation) for template.**
 
 For each commit, generate message following Conventional Commits:
 
@@ -291,51 +262,32 @@ BREAKING CHANGE: <description if applicable>
 Refs: #<issue-number>
 ```
 
-**Example template (generate from ACTUAL changes):**
-```markdown
-Commit [N] Message:
-
-[type]([scope]): [summary from actual changes]
-
-- [Specific change 1 from analysis]
-- [Specific change 2 from analysis]
-- [Impact description based on actual changes]
-
-Skill used: [skill used if applicable]
-
-BREAKING CHANGE: [None or description]
-Refs: #[issue-number if applicable]
-```
-
 ### Step 4: Create Commits
 
 ```bash
-# Stage files for commit [N]
+# Stage files for commit {N}
 git reset
-git add [ACTUAL_FILES for this commit]
+git add {ACTUAL_FILES for this commit}
 
-# Create commit [N]
+# Create commit {N}
 git commit -m "$(cat <<'EOF'
-[type]([scope]): [summary from actual changes]
+{type}({scope}): {summary from actual changes}
 
-- [Specific change 1]
-- [Specific change 2]
-- [Impact description]
+- {Specific change 1}
+- {Specific change 2}
+- {Impact description}
 
-Refs: #[issue-number if applicable]
+Refs: #{issue-number if applicable}
 EOF
 )"
-
-# Repeat for each atomic commit
 ```
-
 
 ### Multi-Commit Tracking with TodoWrite
 
-**When creating multiple atomic commits, use TodoWrite to track progress:**
+**Pattern:** Pattern 3 (Progress Reporting)
 
 ```python
-# After analyzing changes and recommending splits
+# When creating multiple atomic commits
 if commit_count > 1:
     todos = []
     for i, commit_plan in enumerate(commit_plans, 1):
@@ -344,51 +296,18 @@ if commit_count > 1:
             "status": "pending",
             "activeForm": f"Creating commit {i}/{commit_count}"
         })
-
-    TodoWrite(todos)
-
-# Update as each commit is created
-for i, commit_plan in enumerate(commit_plans, 1):
-    # Mark current as in_progress
-    todos[i-1]["status"] = "in_progress"
-    TodoWrite(todos)
-
-    # Create commit...
-
-    # Mark as completed
-    todos[i-1]["status"] = "completed"
     TodoWrite(todos)
 ```
-
-**Benefit**: User can see commit creation progress in real-time.
-
-**Error Handling:**
-
-If commit fails:
-```bash
-# Check for pre-commit hooks
-git commit --no-verify  # Only if user approves
-
-# Check for uncommitted changes
-git status
-git diff --cached
-
-# Verify git config
-git config user.name
-git config user.email
-```
-
-Common failures:
-- Pre-commit hook rejection: Review hook output, fix issues, retry
-- Empty commit: Verify files staged with `git diff --cached`
-- Author not configured: Run `git config user.name/email`
-- Merge conflicts: Resolve conflicts first with `git status`
 
 ### Step 5: Summary with Complete Accounting
 
-**IMPORTANT - Dynamic Summary with Accounting:**
+**Pattern:** Pattern 4 (Complete Accounting)
 
-Generate summary from ACTUAL commits created. Use this template:
+**Command-Specific Details:**
+
+**Accounting formula enforced:** `total_commits = planned_commits`
+
+**Real metrics (no placeholders):**
 
 ```markdown
 Created {total_commits} atomic commits:
@@ -397,7 +316,6 @@ Created {total_commits} atomic commits:
 ✓ {commit.type}({commit.scope}): {commit.summary}
   Files: {commit.files}
   Lines: +{commit.added} / -{commit.removed}
-{endfor}
 
 **Accounting Verification:**
 - Planned commits: {planned_commits}
@@ -405,7 +323,7 @@ Created {total_commits} atomic commits:
 - **Verification**: {created_commits} = {planned_commits} ✓
 
 Impact:
-- Git workflow score: [BEFORE] → [AFTER]
+- Git workflow score: {BEFORE} → {AFTER}
 - Addresses Pain #5 (better git practices)
 - Benefits: Easier review, better history, simpler rollbacks
 
@@ -414,30 +332,52 @@ Next:
 - Create PR: gh pr create
 ```
 
-**If accounting doesn't match:**
-```markdown
-⚠️ Accounting Mismatch Detected!
-- Planned: {planned_commits}
-- Created: {created_commits}
-- Missing: {planned_commits - created_commits}
-
-Action: Review commit log and identify missing commits.
-```
-
-
 ---
 
+## Agent Error Handling
 
-### Agent Execution with Global Permissions
+**Pattern:** Pattern 5 (Error Handling)
 
-**All git operations use existing global/project git configuration automatically.**
+**Command-Specific Handling:**
 
-**No additional setup required:**
-- Git user.name and user.email already configured
-- Pre-commit hooks will run automatically
-- Git credentials inherited from system
+**Git Error Handling:**
 
-**If git config missing, command will prompt for setup.**
+If commit fails:
+
+```python
+AskUserQuestion({
+  questions: [{
+    question: "Git commit failed: {error_type} - {error_message}. How to proceed?",
+    header: "Git Error",
+    multiSelect: false,
+    options: [
+      {label: "Fix and retry", description: "Fix the issue and retry commit"},
+      {label: "Skip hooks", description: "Commit with --no-verify (use cautiously)"},
+      {label: "Amend previous", description: "Amend previous commit instead"},
+      {label: "Cancel", description: "Stop commit operation"}
+    ]
+  }]
+})
+```
+
+**If too many changes detected:**
+
+```python
+AskUserQuestion({
+  questions: [{
+    question: "Too many changes detected ({COUNT} logical changes). Split into atomic commits?",
+    header: "Commit Split",
+    multiSelect: false,
+    options: [
+      {label: "Yes - atomic commits", description: "Create separate commit for each logical change (recommended)"},
+      {label: "No - single commit", description: "Keep all changes in one commit"},
+      {label: "Custom split", description: "Manually select which changes to group"}
+    ]
+  }]
+})
+```
+
+---
 
 ## Conventional Commits Format
 
@@ -506,44 +446,3 @@ The AI will incorporate your guidance when:
 - Determining atomic commit boundaries
 - Applying conventional commit formats
 - Adding co-authors or special metadata
-
-**Use cases:**
-- Specify commit message style preferences
-- Request inclusion of specific metadata (co-authors, issue refs, breaking changes)
-- Provide context about the changes (why, not just what)
-- Request specific commit splitting strategies
-
----
-
-### Step 4.5: Git Error Handling
-
-**If commit fails (pre-commit hook, git config, merge conflict):**
-
-AskUserQuestion({
-  questions: [{
-    question: "Git commit failed: {error_type} - {error_message}. How to proceed?",
-    header: "Git Error",
-    multiSelect: false,
-    options: [
-      {label: "Fix and retry", description: "Fix the issue and retry commit"},
-      {label: "Skip hooks", description: "Commit with --no-verify (use cautiously)"},
-      {label: "Amend previous", description: "Amend previous commit instead"},
-      {label: "Cancel", description: "Stop commit operation"}
-    ]
-  }]
-})
-
-**If too many changes detected (>5 logical changes):**
-
-AskUserQuestion({
-  questions: [{
-    question: "Too many changes detected ({COUNT} logical changes). Split into atomic commits?",
-    header: "Commit Split",
-    multiSelect: false,
-    options: [
-      {label: "Yes - atomic commits", description: "Create separate commit for each logical change (recommended)"},
-      {label: "No - single commit", description: "Keep all changes in one commit"},
-      {label: "Custom split", description: "Manually select which changes to group"}
-    ]
-  }]
-})

@@ -14,6 +14,18 @@ pain_points: [4, 9, 12]
 **Purpose**: Minimize incident impact through rapid detection, coordinated response, blameless postmortems, and systematic improvement.
 
 **Principles**: P_INCIDENT_RESPONSE_READINESS, P_RUNBOOK_OPERATIONAL_DOCS, P_GRACEFUL_SHUTDOWN, P_HEALTH_CHECKS
+---
+
+## Standard Structure
+
+**This skill follows [STANDARDS_SKILLS.md](../STANDARDS_SKILLS.md):**
+
+- **Standard sections** - Domain, Purpose, Core Techniques, Anti-Patterns, Checklist
+- **Code example format** - Bad/Good pattern with specific examples
+- **Detection pattern format** - Python functions with Finding objects
+- **Checklist format** - Specific, verifiable items
+
+**See STANDARDS_SKILLS.md for format details. Only skill-specific content is documented below.**
 
 ---
 

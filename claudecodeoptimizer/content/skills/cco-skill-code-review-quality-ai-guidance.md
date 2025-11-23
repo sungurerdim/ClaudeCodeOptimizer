@@ -12,6 +12,18 @@ pain_points: [11, 12]
 # Code Review Quality & AI Review Guidance
 
 Assess and improve code review quality + AI-specific review patterns.
+---
+
+## Standard Structure
+
+**This skill follows [STANDARDS_SKILLS.md](../STANDARDS_SKILLS.md):**
+
+- **Standard sections** - Domain, Purpose, Core Techniques, Anti-Patterns, Checklist
+- **Code example format** - Bad/Good pattern with specific examples
+- **Detection pattern format** - Python functions with Finding objects
+- **Checklist format** - Specific, verifiable items
+
+**See STANDARDS_SKILLS.md for format details. Only skill-specific content is documented below.**
 
 ---
 

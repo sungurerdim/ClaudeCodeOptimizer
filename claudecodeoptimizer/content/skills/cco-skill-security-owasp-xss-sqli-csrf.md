@@ -12,6 +12,18 @@ pain_points: [1, 2, 3]
 # Security - OWASP Top 10, XSS, SQLi, CSRF, Access Control
 
 Prevent OWASP Top 10 2025 vulnerabilities via secure coding patterns and comprehensive validation.
+---
+
+## Standard Structure
+
+**This skill follows [STANDARDS_SKILLS.md](../STANDARDS_SKILLS.md):**
+
+- **Standard sections** - Domain, Purpose, Core Techniques, Anti-Patterns, Checklist
+- **Code example format** - Bad/Good pattern with specific examples
+- **Detection pattern format** - Python functions with Finding objects
+- **Checklist format** - Specific, verifiable items
+
+**See STANDARDS_SKILLS.md for format details. Only skill-specific content is documented below.**
 
 ---
 

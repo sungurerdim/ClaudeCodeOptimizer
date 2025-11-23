@@ -354,7 +354,7 @@ Task("Analyze module C", model="haiku")
 - **audit-agent** (subagent_type: "Explore", model: "haiku") - Fast scanning
 - **fix-agent** (subagent_type: "general-purpose", model: "sonnet") - Accurate fixes
 - **generate-agent** (subagent_type: "general-purpose", model: "sonnet") - Quality generation
-- **slim-agent** (subagent_type: "general-purpose", model: "haiku") - Token optimization
+- **optimize-context-usage-agent** (subagent_type: "general-purpose", model: "haiku") - Token optimization
 
 All agents use existing global/project permissions (no additional approval needed).
 ```

@@ -10,8 +10,12 @@ pain_points: [4, 7, 9]
 ---
 
 # Skill: API Testing - Contract, Load, Chaos
-**Domain**: Testing
-**Purpose**: Ensure API reliability, performance, resilience through contract tests (Pact), load tests (k6), chaos engineering, and integration tests.
+
+## Domain
+Testing
+
+## Purpose
+Ensure API reliability, performance, resilience through contract tests (Pact), load tests (k6), chaos engineering, and integration tests.
 
 ## Core Techniques
 
@@ -129,6 +133,18 @@ def test_create_user():
 - [ ] Chaos experiments for critical paths
 - [ ] Progressive load: smoke → load → stress
 - [ ] Track metrics: coverage, SLA%, contract failures, p95 latency
+---
+
+## Standard Structure
+
+**This skill follows [STANDARDS_SKILLS.md](../STANDARDS_SKILLS.md):**
+
+- **Standard sections** - Domain, Purpose, Core Techniques, Anti-Patterns, Checklist
+- **Code example format** - Bad/Good pattern with specific examples
+- **Detection pattern format** - Python functions with Finding objects
+- **Checklist format** - Specific, verifiable items
+
+**See STANDARDS_SKILLS.md for format details. Only skill-specific content is documented below.**
 
 ---
 

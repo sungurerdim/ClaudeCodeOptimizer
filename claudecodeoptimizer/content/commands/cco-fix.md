@@ -1,7 +1,7 @@
 ---
 name: cco-fix
 description: Automated issue resolution with safe/risky categorization
-
+action_type: fix
 principles: [U_EVIDENCE_BASED_ANALYSIS, U_CHANGE_VERIFICATION, U_MINIMAL_TOUCH]
 note: Uses same categories as cco-audit - search cco-audit metadata for parameter details
 parameters:
@@ -108,14 +108,25 @@ parameters:
     meta_flags: [code-review, platform, cicd]
 ---
 
-# cco-fix
+# CCO Fix Command
 
 **Automated issue resolution with safe/risky categorization and auto-audit dependency.**
 
-**Implementation Note:** This command follows [COMMAND_STANDARDS.md](../COMMAND_STANDARDS.md) for file discovery (exclusions applied BEFORE processing), token optimization (three-stage discovery), parallelization (Task calls in single message), and cross-platform compatibility. See cco-audit.md for reference implementation.
-
+**Implementation Note:** This command follows [STANDARDS_COMMANDS.md](../STANDARDS_COMMANDS.md) for file discovery (exclusions applied BEFORE processing), token optimization (three-stage discovery), parallelization (Task calls in single message), and cross-platform compatibility. See cco-audit.md for reference implementation.
 ---
 
+## Built-in References
+
+**This command inherits standard behaviors from:**
+
+- **[STANDARDS_COMMANDS.md](../STANDARDS_COMMANDS.md)** - Standard structure, execution protocol, file discovery
+- **[STANDARDS_QUALITY.md](../STANDARDS_QUALITY.md)** - UX/DX, efficiency, simplicity, performance standards
+- **[LIBRARY_PATTERNS.md](../LIBRARY_PATTERNS.md)** - Reusable patterns (Step 0, Selection, Accounting, Progress, Error Handling)
+- **[STANDARDS_AGENTS.md](../STANDARDS_AGENTS.md)** - File discovery, model selection, parallel execution
+
+**See these files for detailed patterns. Only command-specific content is documented below.**
+
+---
 
 ## Execution Guarantee
 
@@ -152,25 +163,32 @@ parameters:
 - Accounting formula: `total = applied + skipped + failed`
 
 ---
+
+## Design Principles
+
+**See:** STANDARDS_QUALITY.md
+- UX/DX principles (transparency, progressive disclosure, zero surprises)
+- Honesty & accurate reporting (no false positives/negatives)
+- No hardcoded examples (use placeholders: `{FILE_PATH}`, `{LINE_NUMBER}`)
+
+---
+
 ## Purpose
 
 Automatically fix issues found by audits. Runs audit first if no recent audit exists. Categorizes fixes into safe (auto-apply) and risky (require approval).
 
 ---
-## CRITICAL: Check for Context from Calling Command**BEFORE running audit, check conversation for "CONTEXT FOR /cco-fix:"**✓ **If found**: Use provided issue list, skip audit, fix specified issues only✗ **If not found**: Run audit first, then fix discovered issues**Why**: Eliminates duplicate audit - previous command already analyzed.See **C_COMMAND_CONTEXT_PASSING** principle.---
 
-## Critical UX Principles (Same as Audit)
+## CRITICAL: Check for Context from Calling Command
 
-1. **100% Honesty** - Never claim "fixed" unless verified, never say "impossible" if technically possible
-2. **Complete Accounting** - Every issue must be accounted: fixed + skipped + cannot-fix = total
-3. **No Hardcoded Examples** - All examples use `{PLACEHOLDERS}`, never fake data
-4. **Phase Tracking** - Explicit start/end for each phase with timestamps
-5. **Consistent Counts** - Same numbers shown everywhere (single source of truth)
+**BEFORE running audit, check conversation for "CONTEXT FOR /cco-fix:"**
 
-**See `/cco-audit` for detailed implementation of:**
-- Component 6: State Management & Count Tracking
-- Component 9: Honesty & Accurate Reporting
-- Component 10: Fix Integration Accounting
+✓ **If found**: Use provided issue list, skip audit, fix specified issues only
+✗ **If not found**: Run audit first, then fix discovered issues
+
+**Why**: Eliminates duplicate audit - previous command already analyzed.
+
+See **C_COMMAND_CONTEXT_PASSING** principle.
 
 ---
 
@@ -240,87 +258,23 @@ Fixes that could break functionality:
 
 ---
 
-## Auto-Audit Dependency
-
-**Before fixing, check for recent audit in conversation context:**
-
-```python
-def fix(category):
-    # Check if audit results exist in current conversation
-    # (Zero pollution: no files, only conversation memory)
-    if not has_audit_in_context(category):
-        print(f"No recent {category} audit found in conversation.")
-        print(f"Running /cco-audit --{category} first...\n")
-
-        # Run audit (results go to conversation context)
-        run_audit(category)
-
-    # Get audit results from conversation context
-    issues = get_audit_from_context(category)
-
-    if not issues:
-        print(f"No issues found in {category} audit.")
-        print("Nothing to fix! ✓")
-        return
-
-    # Categorize fixes
-    safe_fixes, risky_fixes = categorize_fixes(issues)
-
-    # Present and apply
-    present_and_apply(safe_fixes, risky_fixes)
-```
-
----
-
 ## Execution Protocol
 
-**PHASES TRACKING:**
-```python
-PHASES = {
-    1: "Introduction & Confirmation",
-    2: "Project Context Discovery",
-    3: "Fix Categorization & Selection",
-    4: "Apply Fixes & Report Results"
-}
+### Step 0: Introduction and Confirmation
 
-# Before each phase, announce:
-print("───────────────────────────────────────────────────────")
-print(f"### Phase {N}/4: {PHASES[N]} ▶ STARTED")
-print("───────────────────────────────────────────────────────")
-# After phase completes:
-print(f"### Phase {N}/4: {PHASES[N]} ✓ COMPLETE")
-```
+**Pattern:** Pattern 1 (Step 0 Introduction)
 
-### Step 0: Introduction and Confirmation (ALWAYS FIRST)
-**[Phase 1/4: Introduction & Confirmation]**
+**Command-Specific Details:**
 
-**Before doing ANYTHING, present this introduction and get user confirmation:**
+**What I do:** Automatically fix issues found by audits. Safe fixes auto-applied, risky fixes require approval.
 
-```markdown
-# Fix Command
+**Process:** Check for recent audit → Categorize fixes (safe/risky) → You select → I apply and verify → Report results
 
-**What I do:**
-I automatically fix issues found by audits. I categorize fixes into safe (low-risk, auto-applicable) and risky (could break functionality, need approval).
+**Output:** Complete verification of all changes, impact summary (vulnerabilities reduced, files modified, etc.)
 
-**How it works:**
-1. Check if recent audit exists (if not, run audit first)
-2. Categorize all issues into safe and risky fixes
-3. You select which fixes to apply (individual steps or groups)
-4. I apply selected fixes and verify changes
-5. I report what was fixed with before/after verification
+**Time:** 2-30 minutes depending on fix count
 
-**What you'll get:**
-- Safe fixes applied automatically (SQL injection, dead code, etc.)
-- Risky fixes with individual approval (CSRF protection, architecture changes, etc.)
-- Complete verification of all changes (grep verification, test runs)
-- Impact summary (vulnerabilities reduced, files modified, etc.)
-
-**Time estimate:** 5-30 minutes depending on number of fixes
-
-**Changes WILL be made to your code** - all changes are verified and can be reviewed with git diff before committing.
-```
-
-**Then ask for confirmation using AskUserQuestion:**
+**Changes WILL be made** - all verified and reviewable with git diff
 
 ```python
 AskUserQuestion({
@@ -329,72 +283,27 @@ AskUserQuestion({
     header: "Start Fix",
     multiSelect: false,
     options: [
-      {
-        label: "Yes, start fixing",
-        description: "Begin fixing issues (will run audit first if needed)"
-      },
-      {
-        label: "No, cancel",
-        description: "Exit without making any changes"
-      }
+      {label: "Yes, start fixing", description: "Begin fixing issues (will run audit first if needed)"},
+      {label: "No, cancel", description: "Exit without making any changes"}
     ]
   }]
 })
 ```
 
-**CRITICAL:**
-- If user selects "No, cancel" → EXIT immediately, do NOT proceed
-- If user selects "Yes, start fixing" → Continue to Step 0.5
+**If Cancel:** Exit immediately, do NOT proceed
+**If Start:** Continue to Project Context Discovery
 
 ---
 
-### Step 0.5: Project Context Discovery (Optional)
-**[Phase 2/4: Project Context Discovery]**
+### Step 0.5: Project Context Discovery
 
-**Ask user if they want project documentation analyzed for better fix alignment.**
+**Pattern:** Pattern 2 (Multi-Select with "All")
 
-```python
-AskUserQuestion({
-  questions: [{
-    question: "Extract context from project documentation?",
-    header: "Project Context",
-    multiSelect: false,
-    options: [
-      {
-        label: "Yes (recommended)",
-        description: "Extract project conventions from README/CONTRIBUTING, fixes align with project style"
-      },
-      {
-        label: "No",
-        description: "Code fixes only (faster)"
-      }
-    ]
-  }]
-})
-```
+**Command-Specific Details:**
 
-**If "Yes" selected:**
+**Benefits for /cco-fix:** Fixes follow project conventions (naming style, ORM usage, test patterns)
 
-```python
-# Extract project context via Haiku sub-agent
-context_result = Task({
-    subagent_type: "Explore",
-    model: "haiku",
-    prompt: """
-    Extract project context summary (MAX 200 tokens).
-    Focus on: naming conventions, testing framework, formatting style.
-
-    Files to check: README.md, CONTRIBUTING.md, ARCHITECTURE.md
-
-    Return: Purpose, Tech Stack, Conventions (naming, testing, formatting)
-    """
-})
-
-# Use context when applying fixes
-project_context = context_result
-```
-
-**Benefits:** Fixes follow project conventions (naming style, ORM usage, test patterns).
+**Context Used:** Project naming conventions, testing framework, formatting style applied to all fixes
 
 ---
 
@@ -418,6 +327,8 @@ Found recent audit results
 Using existing results...
 ```
 
+---
+
 ### Step 2: Categorize Fixes
 
 Analyze each issue and categorize:
@@ -433,198 +344,101 @@ for issue in issues:
         risky.append(issue)
 ```
 
-### Step 3: Present Fix Plan with AskUserQuestion
-**[Phase 3/4: Fix Categorization & Selection]**
+---
 
-**IMPORTANT - Dynamic Fix Generation Protocol:**
-You MUST generate fix options from ACTUAL audit results:
-1. Read audit results to get REAL issues found
-2. Categorize each issue as safe or risky using the criteria below
-3. For simple fixes (one file, one change): Create single option
-4. For complex fixes (multiple files/changes): Break into individual steps
-5. Use ACTUAL file paths and line numbers from audit (e.g., <real-file>:<real-line>)
-6. Include REAL issue descriptions from audit findings
-7. Reference ACTUAL skills used in detection
+### Step 3: Present Fix Plan with Category Selection
 
-**Example template for generating options (DO NOT use verbatim):**
-```python
-# From audit results:
-for issue in audit_results:
-    if is_safe_fix(issue):
-        option = {
-            label: f"{issue.fix_type} - {issue.file}:{issue.line}",
-            description: f"{issue.fix_description} | Skill: {issue.skill}"
-        }
-```
+**Pattern:** Pattern 3 (Progress Reporting)
 
-**IMPORTANT - Tab-Based Selection (Single Submit):**
-Present safe and risky fixes together in a single AskUserQuestion with multiple tabs:
+**Command-Specific Details:**
+
+**Tab-based selection (single submit):**
+- Tab 1: Safe fix categories (✅ low-risk, reversible)
+- Tab 2: Risky fix categories (⚠️ require confirmation)
+
+**Dynamic generation:** All options generated from REAL audit results (no hardcoded examples)
+
+**Category grouping:** Fixes grouped by category (Security, Quality, Database, etc.) to ensure ALL fixes shown regardless of count
 
 ```python
-# Generate options dynamically from REAL audit results
-safe_fix_options = []
-for safe_fix in safe_fixes:
-    safe_fix_options.append({
-        label: f"{safe_fix.type} - {safe_fix.file}:{safe_fix.line}",
-        description: f"{safe_fix.description} | Skill: {safe_fix.skill}"
-    })
-
-# Add group option for safe fixes
-safe_fix_options.append({
-    label: "All Safe Fixes",
-    description: f"✅ Apply all safe fixes automatically (recommended)"
-})
-
-# Tab-based selection - group by category to ensure ALL fixes are shown
-# Since fix counts are dynamic (from audit), group by category for scalability
+# Generate safe fix category counts
+safe_security_count = len([f for f in safe_fixes if f.category == "security"])
+safe_quality_count = len([f for f in safe_fixes if f.category == "quality"])
+# ... etc
 
 AskUserQuestion({
   questions: [
     {
-      question: "Select SAFE fix categories (low-risk, reversible):? (Space: select, Enter: confirm)",
+      question: "Select SAFE fix categories (low-risk, reversible):",
       header: "✅ Safe",
       multiSelect: true,
       options: [
-        {
-          label: f"Security ({safe_security_count} fixes)",
-          description: "Parameterize queries, externalize secrets, add headers"
-        },
-        {
-          label: f"Code Quality ({safe_quality_count} fixes)",
-          description: "Remove dead code, fix imports, add error handling"
-        },
-        {
-          label: f"Other Safe ({safe_other_count} fixes)",
-          description: "Formatting, linting, documentation updates"
-        },
-        {
-          label: "All Safe Fixes",
-          description: f"Apply all {total_safe_count} safe fixes (recommended)"
-        }
+        {label: "All Safe Fixes", description: f"Apply all {total_safe_count} safe fixes (recommended)"},
+        {label: f"Security ({safe_security_count} fixes)", description: "Parameterize queries, externalize secrets"},
+        {label: f"Code Quality ({safe_quality_count} fixes)", description: "Remove dead code, fix imports"},
+        # ... dynamic categories
       ]
     },
     {
-      question: "Select RISKY fix categories (require confirmation):? (Space: select, Enter: confirm)",
+      question: "Select RISKY fix categories (require confirmation):",
       header: "⚠️ Risky",
       multiSelect: true,
       options: [
-        {
-          label: "All Risky Fixes",
-          description: f"⚠️ Select all {total_risky_count} risky fixes (each will need confirmation)"
-        },
-        {
-          label: f"Security ({risky_security_count} fixes)",
-          description: "Auth changes, CSRF protection, encryption"
-        },
-        {
-          label: f"Database ({risky_db_count} fixes)",
-          description: "Schema changes, migrations, indexes"
-        },
-        {
-          label: f"Architecture ({risky_arch_count} fixes)",
-          description: "Refactoring, pattern changes, API updates"
-        }
+        {label: "All Risky Fixes", description: f"⚠️ Select all {total_risky_count} risky fixes"},
+        {label: f"Security ({risky_security_count} fixes)", description: "Auth changes, CSRF protection"},
+        {label: f"Database ({risky_db_count} fixes)", description: "Schema changes, migrations"},
+        # ... dynamic categories
       ]
     }
   ]
 })
 ```
 
-### Selection Processing
+**Selection Processing:**
 
-**After user submits, calculate and display selection summary:**
-
+After user submits:
 ```markdown
 ## Fix Selection Summary
 
 **Your selections:**
-- ✅ Safe: [list selected categories] → [total fix count] fixes
-- ⚠️ Risky: [list selected categories] → [total fix count] fixes
+- ✅ Safe: [categories] → {SELECTED_COUNT} fixes
+- ⚠️ Risky: [categories] → {SELECTED_COUNT} fixes
 
-**Total: {{SELECTED_COUNT}} fixes selected**
+**Total: {TOTAL_SELECTED} fixes selected**
 
-⚠️ Only selected fix categories will be applied.
+⚠️ Only selected categories will be applied.
 Categories NOT selected will be skipped entirely.
 ```
 
-**IMPORTANT:**
-- Group fixes by category to ensure ALL fixes are visible regardless of count
-- If user selects "All Safe Fixes", apply all safe fixes in all categories
-- For risky fixes, always show individual confirmation before applying each fix
+---
 
-For detailed fix selection within a category:
+### Step 4: Apply Fixes
 
-```python
-# Generate risky fix options dynamically from REAL audit results
-risky_fix_options = []
+**Pattern:** Pattern 4 (Complete Accounting)
 
-# For each risky fix, determine if it needs breakdown
-for risky_fix in risky_fixes:
-    if risky_fix.is_complex():  # Multiple files or steps
-        # Break down into individual steps
-        for step in risky_fix.steps:
-            risky_fix_options.append({
-                label: f"{step.action}",
-                description: f"({risky_fix.name}, {step.time_estimate}) {step.description} | ⚠️ {step.risk_level}"
-            })
-        # Add group option for this fix
-        risky_fix_options.append({
-            label: f"All {risky_fix.name} Steps",
-            description: f"⚠️ Apply all {len(risky_fix.steps)} {risky_fix.name} steps above"
-        })
-    else:  # Simple risky fix
-        risky_fix_options.append({
-            label: f"{risky_fix.name}",
-            description: f"({risky_fix.category}, {risky_fix.time_estimate}) {risky_fix.description} | ⚠️ {risky_fix.risk_level} | Impact: {risky_fix.impact}"
-        })
+**See [STANDARDS_AGENTS.md](../STANDARDS_AGENTS.md) for agent delegation patterns.**
 
-# Add master group options
-risky_fix_options.extend([
-    {
-        label: "All Risky Fix Steps",
-        description: f"⚠️ Apply ALL {sum(len(f.steps) if f.is_complex() else 1 for f in risky_fixes)} risky fix steps above - Only if you understand ALL risks and have backups"
-    },
-    {
-        label: "Skip all risky fixes",
-        description: "✅ SAFE CHOICE: Skip all risky fixes for now (review manually later)"
-    }
-])
+**Command-Specific Details:**
 
-AskUserQuestion({
-  questions: [{
-    question: "Which RISKY fix steps should I apply? (These could break functionality - select carefully):? (Space: select, Enter: confirm)",
-    header: "Risky Fixes",
-    multiSelect: true,
-    options: risky_fix_options
-  }]
-})
-```
+**Agent:** `fix-agent` (Sonnet for code changes)
 
-**IMPORTANT:**
-- If user selects "All Risky Fix Steps", ignore other selections and apply all risky fix steps
-- If user selects "All [Fix Name] Steps", apply all steps for that specific fix
-- If user selects "Skip all risky fixes", ignore other selections and skip all risky fixes
-- Otherwise, apply ONLY the individually selected steps
-- Break down complex fixes (affecting multiple files) into individual steps
-- Keep simple fixes (single file/change) as single options
+**Why Sonnet:** Higher accuracy for code modifications, better contextual understanding, safer refactoring
 
-### Step 4: Apply Safe Fixes
-**[Phase 4/4: Apply Fixes & Report Results]**
+**Parallel Execution:** Agent automatically parallelizes independent fixes (different files)
 
-If user confirms:
+**TodoWrite tracking:** All fixes tracked in real-time
 
-1. **Use TodoWrite** to track fixes
-2. **Launch Task with cco-agent-fix**:
+**Fix Application:**
 
 ```python
 Task({
-  subagent_type: "general-purpose",
-  model: "sonnet",  # Use Sonnet for accuracy
+  subagent_type: "fix-agent",
+  model: "sonnet",
   prompt: """
   Apply these safe security fixes (from audit results):
 
   [For each issue selected by user:]
-  [N]. <file>:<line> - [Fix description from audit]
+  {N}. {FILE_PATH}:{LINE_NUMBER} - {FIX_DESCRIPTION}
 
   For each fix:
   - Read the file
@@ -641,83 +455,59 @@ Task({
 })
 ```
 
-3. **Report completion with REAL results:**
-
-**IMPORTANT - Dynamic Results Reporting:**
-Report ACTUAL changes made, not examples. Use this template:
+**Report ACTUAL changes made:**
 
 ```markdown
-Applied [ACTUAL_COUNT] safe fixes:
+Applied {ACTUAL_COUNT} safe fixes:
 [For each fix actually applied:]
-✓ <real-file>:<real-line> ([specific change made])
+✓ {FILE_PATH}:{LINE_NUMBER} ({SPECIFIC_CHANGE})
 
 Verification:
-[For each verification run:]
-✓ [actual verification command] → [actual result]
+✓ {ACTUAL_VERIFICATION_COMMAND} → {ACTUAL_RESULT}
 ✓ All changes follow U_CHANGE_VERIFICATION protocol
 ```
 
-3. **Launch Task with cco-agent-fix** for selected risky fixes:
+**For risky fixes:** Same process, but with individual confirmation for each fix before applying.
 
-```python
-Task({
-  subagent_type: "general-purpose",
-  model: "sonnet",  # Use Sonnet for accuracy on risky changes
-  prompt: """
-  Apply these risky fixes (user approved):
-
-  [List only the risky fixes user selected]
-
-  For each fix:
-  - Explain what will change
-  - Apply the fix using Edit/Write tools
-  - Run tests to verify functionality
-  - Verify the fix (grep for patterns)
-  - Report completion with file:line references
-  - Warn if tests fail
-
-  Use these skills:
-  - [skills for selected risky fixes]
-
-  Follow U_CHANGE_VERIFICATION protocol.
-  Breaking changes already approved by user in Component 2.
-  """
-})
-```
+---
 
 ### Step 5: Impact Summary
 
-**IMPORTANT - Dynamic Impact Reporting:**
-Generate summary from ACTUAL changes made. Use this template with REAL metrics:
+**See [LIBRARY_PATTERNS.md](../LIBRARY_PATTERNS.md#pattern-8-results-generation) for standard results pattern.**
+
+**Command-Specific Details:**
+
+**Accounting formula enforced:** `total = applied + skipped + failed`
+
+**Real metrics (no placeholders):**
 
 ```markdown
 Fix Summary:
 
 Applied:
-✓ [ACTUAL_SAFE_COUNT] safe fixes (auto-applied)
-✓ [ACTUAL_RISKY_COUNT] risky fixes (user approved)
-✗ [SKIPPED_COUNT] fixes (user skipped)
+✓ {ACTUAL_SAFE_COUNT} safe fixes (auto-applied)
+✓ {ACTUAL_RISKY_COUNT} risky fixes (user approved)
+✗ {SKIPPED_COUNT} fixes (user skipped)
 
 Results:
-- Security score: [BEFORE_SCORE] → [AFTER_SCORE] (+[DELTA] points)
-- Vulnerabilities: [BEFORE_COUNT] → [AFTER_COUNT] ([PERCENTAGE]% reduction)
-- Files modified: [ACTUAL_FILE_COUNT]
-- Lines changed: +[ADDED] / -[REMOVED]
+- Security score: {BEFORE_SCORE} → {AFTER_SCORE} (+{DELTA} points)
+- Vulnerabilities: {BEFORE_COUNT} → {AFTER_COUNT} ({PERCENTAGE}% reduction)
+- Files modified: {ACTUAL_FILE_COUNT}
+- Lines changed: +{ADDED} / -{REMOVED}
 
 Pain Point Impact:
-✓ Addresses Pain #[X] ([PAIN_DESCRIPTION])
-✓ Risk reduced: [ACTUAL_PERCENTAGE]%
-✓ [Other actual improvements]
+✓ Addresses Pain #{X} ({PAIN_DESCRIPTION})
+✓ Risk reduced: {ACTUAL_PERCENTAGE}%
 
 Remaining Issues:
-- [List REAL remaining issues]
-- [List REAL skipped fixes]
+- {REAL_REMAINING_ISSUE_1}
+- {REAL_REMAINING_ISSUE_2}
 
 Next Steps:
-1. Test changes: [actual test command for this project]
+1. Test changes: {PROJECT_SPECIFIC_TEST_COMMAND}
 2. Review git diff before committing
 3. Address remaining issues manually
-4. Run /cco-audit --[category] to verify
+4. Run /cco-audit --{CATEGORY} to verify
 
 Recommended:
 /cco-commit (generates semantic commit messages)
@@ -727,47 +517,27 @@ Recommended:
 
 ## Agent Usage
 
-**Agent:** `cco-agent-fix` (Sonnet for code changes)
+**See [STANDARDS_AGENTS.md](../STANDARDS_AGENTS.md) for:**
+- Parallel execution patterns (fan-out, pipeline, hierarchical)
+- Model selection strategy (Haiku/Sonnet/Opus)
+- Error handling protocols
+- Agent communication patterns
 
-**Why Sonnet:**
-- Higher accuracy for code modifications
-- Better contextual understanding
-- Safer refactoring and fixes
-- Worth the extra cost for correctness
+**Command-Specific Agent Configuration:**
 
-**Parallel Execution Pattern:**
-
-**Built-in Agent Behavior:**
-Agent automatically handles parallel execution for independent fixes.
-
-**What happens:**
-- **Independent fixes** (different files) → Run in parallel (fan-out pattern)
-- **Dependent fixes** (interface → implementations → tests) → Run sequentially (pipeline pattern)
-- **Performance:** Significantly faster for multi-file fixes
-
-**User sees:**
-```
-Applying 3 fixes in parallel:
-- Fix {issue_type} in {file1}
-- Fix {issue_type} in {file2}
-- Fix {issue_type} in {file3}
-
-Total time: significantly faster than sequential
-```
-
-**No manual configuration needed** - agent parallelizes automatically.
+**Agent:** fix-agent (Sonnet)
+**Pattern:** Automatic parallelization (independent fixes in parallel)
+**Skills:** Same skills as corresponding audit category
 
 ---
 
-## Skills Usage
+## Agent Error Handling
 
-Each fix category uses same skills as corresponding audit:
-- `--security` → 3 security skills (cco-skill-security-owasp-xss-sqli-csrf, cco-skill-privacy-gdpr-compliance-encryption, cco-skill-supply-chain-dependencies-sast)
-- `--tech-debt` → 2 code quality skills
-- `--database` → 2 database skills
-- etc.
+**Pattern:** Pattern 5 (Error Handling)
 
-Skills are referenced in agent prompt for context.
+**Command-Specific Handling:**
+
+Options: Retry | Retry with different model | Manual fix | Skip this fix | Cancel
 
 ---
 
@@ -791,7 +561,7 @@ Warn user if:
 - [OK] Recent audit exists or was run automatically
 - [OK] Issues categorized into safe/risky
 - [OK] Safe fixes explained and user confirmed
-- [OK] Safe fixes applied using cco-agent-fix
+- [OK] Safe fixes applied using fix-agent
 - [OK] Changes verified (U_CHANGE_VERIFICATION)
 - [OK] Risky fixes presented individually
 - [OK] User chose to apply/skip each risky fix
@@ -836,43 +606,13 @@ Any text after the flags is treated as additional context for the fix process. T
 - **After /cco-audit --quick**: Follow action plan
 - **With /cco-generate**: Fix existing, generate missing
 
-## Agent Error Handling
-
-**If fix agent execution fails:**
-
-AskUserQuestion({
-  questions: [{
-    question: "fix-agent (Sonnet) failed: {error_message}. How to proceed?",
-    header: "fix-agent (Sonnet) Error",
-    multiSelect: false,
-    options: [
-      {label: "Retry", description: "Run agent again with same parameters"},
-      {label: "Retry with different model", description: "Try Sonnet/Haiku/Opus"},
-      {label: "Manual fix", description: "Guide manual fix process"},
-      {label: "Skip this fix", description: "Continue with next fix"},
-      {label: "Cancel", description: "Stop entire command"}
-    ]
-  }]
-})
-
-**Model selection if user chooses "Retry with different model":**
-
-AskUserQuestion({
-  questions: [{
-    question: "Which model to try?",
-    header: "Model Selection",
-    multiSelect: false,
-    options: [
-      {label: "Sonnet", description: "Balanced performance and cost (recommended)"},
-      {label: "Haiku", description: "Faster, more affordable"},
-      {label: "Opus", description: "Most capable, higher cost"}
-    ]
-  }]
-})
-
 ---
 
-## Next Steps: Calling Other Commands (C_COMMAND_CONTEXT_PASSING)
+## Next Steps: Calling Other Commands
+
+**See [LIBRARY_PATTERNS.md - Pattern 7: Context Check](../LIBRARY_PATTERNS.md#pattern-7-context-check-avoid-duplicate-work) for context passing patterns.**
+
+**Command-Specific Context:**
 
 ### If Tests/Docs Needed After Fixes
 
@@ -904,10 +644,4 @@ SlashCommand({command: "/cco-generate tests"})
 - Can generate tests specifically for fixed code
 - No need to re-analyze the codebase
 
-**DON'T:**
-```markdown
-# ❌ BAD: No context
-Applied some fixes.
-SlashCommand({command: "/cco-generate tests"})
-```
-
+---

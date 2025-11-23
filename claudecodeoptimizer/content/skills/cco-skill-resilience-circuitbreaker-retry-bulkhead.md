@@ -18,6 +18,18 @@ Prevent cascading failures in distributed systems via circuit breakers, retry pa
 **Problems**: Cascading failures (95% distributed outages), resource exhaustion (thundering herd), hanging requests, unpredictable recovery
 
 **Includes**: @content/principles/P_CIRCUIT_BREAKER.md, @content/principles/P_RETRY_WITH_BACKOFF.md, @content/principles/P_BULKHEAD_PATTERN.md, @content/principles/P_GRACEFUL_DEGRADATION.md, @content/principles/P_TIMEOUT_CONFIGURATION.md, @content/principles/P_DEAD_LETTER_QUEUE.md, @content/principles/P_FAIL_FAST_STRATEGY.md, @content/principles/P_PRODUCTION_GRADE.md
+---
+
+## Standard Structure
+
+**This skill follows [STANDARDS_SKILLS.md](../STANDARDS_SKILLS.md):**
+
+- **Standard sections** - Domain, Purpose, Core Techniques, Anti-Patterns, Checklist
+- **Code example format** - Bad/Good pattern with specific examples
+- **Detection pattern format** - Python functions with Finding objects
+- **Checklist format** - Specific, verifiable items
+
+**See STANDARDS_SKILLS.md for format details. Only skill-specific content is documented below.**
 
 ---
 

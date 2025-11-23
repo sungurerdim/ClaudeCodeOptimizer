@@ -125,8 +125,8 @@ class TestSetupGlobalKnowledge:
         assert "claude_dir" in result
         assert "actions" in result
         assert (
-            len(result["actions"]) == 6
-        )  # commands, principles, agents, skills, claude.md, templates
+            len(result["actions"]) == 7
+        )  # commands, principles, agents, skills, standards, claude.md, templates
 
 
 class TestSetupCommands:
@@ -761,8 +761,8 @@ class TestKnowledgeSetupIntegration:
 
         assert result["success"] is True
         assert (
-            len(result["actions"]) == 6
-        )  # commands, principles, agents, skills, CLAUDE.md, templates
+            len(result["actions"]) == 7
+        )  # commands, principles, agents, skills, standards, CLAUDE.md, templates
 
     def test_preserves_user_files(self, tmp_path: Path) -> None:
         """Test that user's custom files are preserved during setup"""

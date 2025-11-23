@@ -116,6 +116,8 @@ cco-setup
    - Creates `~/.claude/principles/` (U_*, C_*, P_* principles)
    - Creates `~/.claude/skills/` (domain-specific skills)
    - Creates `~/.claude/agents/` (specialized agents)
+   - Copies `~/.claude/STANDARDS_*.md` (structure and quality standards)
+   - Copies `~/.claude/LIBRARY_PATTERNS.md` (reusable patterns)
    - Generates `~/.claude/CLAUDE.md` (marker-based principle injection - see [ADR-001](docs/ADR/001-marker-based-claude-md.md))
    - Copies `~/.claude/settings.json.example` (optional: Claude Code config template)
    - Copies `~/.claude/statusline.js.example` (optional: status line script template)
@@ -124,12 +126,14 @@ cco-setup
 3. Done! Commands available in all projects immediately via Claude Code
 
 **What's New (Recent Updates):**
+- ✅ Standards files architecture - SKILL/AGENT/COMMAND/PRINCIPLE standards for DRY compliance
+- ✅ Reference deduplication - Reduced command references from 71 to ~15 (79% reduction)
 - ✅ Dynamic principle loading from command frontmatter (-165 lines static code)
 - ✅ New CLI commands: `cco-status` (health check), `cco-remove` (safe uninstall)
 - ✅ Removed auto-setup behavior (explicit `cco-setup` command required)
 - ✅ 100% test pass rate (all tests fixed and passing)
 - ✅ Enhanced command UX with unused skills integration
-- ✅ Context optimization focus in `/cco-slim` (CLAUDE.md duplication elimination)
+- ✅ Context optimization focus in `/cco-optimize-code-performance-context-usage` (CLAUDE.md duplication elimination)
 
 
 
@@ -201,6 +205,8 @@ cco-remove
 # - ~/.claude/principles/ (all C_*, U_*, P_* files)
 # - ~/.claude/skills/ (all cco-skill-*.md files)
 # - ~/.claude/agents/ (all cco-agent-*.md files)
+# - ~/.claude/STANDARDS_*.md (all standards files)
+# - ~/.claude/LIBRARY_PATTERNS.md (pattern library)
 # - ~/.claude/CLAUDE.md (principle markers)
 
 # Step 2: Uninstall package (outside Claude Code)
@@ -279,7 +285,7 @@ Open any project in Claude Code:
 | `/cco-audit --security` | Find security issues | `/cco-audit --security --ai-quality --code-review` |
 | `/cco-fix --security` | Auto-fix problems | `/cco-fix --security --ai-quality --tech-debt` |
 | `/cco-generate --tests` | Create tests/docs | `/cco-generate --tests --openapi --review-checklist` |
-| `/cco-optimize --database` | Speed up code | `/cco-optimize --database --docker` |
+| `/cco-optimize-code-performance --database` | Speed up code | `/cco-optimize-code-performance --database --docker` |
 | `/cco-commit` | Smart git commits | `git add . && /cco-commit` |
 | `/cco-implement "feature"` | Build with TDD | `/cco-implement "Add JWT authentication"` |
 | `/cco-update` | Update version | `/cco-update` |
@@ -336,7 +342,7 @@ cco-remove` | Clean uninstall | `/cco-remove` |
 ```bash
 /cco-audit --performance --database
 # Finds N+1 queries, missing indexes
-/cco-optimize --database --docker
+/cco-optimize-code-performance --database --docker
 # Faster queries, smaller images (with metrics)
 ```
 
@@ -369,7 +375,7 @@ cco-remove` | Clean uninstall | `/cco-remove` |
 /cco-audit --all           # Find all issues
 /cco-fix --all             # Fix safe issues
 /cco-generate --all        # Create missing components
-/cco-optimize --all        # Performance tuning
+/cco-optimize-code-performance --all        # Performance tuning
 /cco-commit                # Clean commits
 ```
 

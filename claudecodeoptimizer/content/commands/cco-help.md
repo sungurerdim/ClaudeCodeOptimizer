@@ -1,7 +1,7 @@
 ---
 name: cco-help
 description: Comprehensive CCO command reference guide organized by pain-point priority with examples and workflows
-
+
 principles: [U_EVIDENCE_BASED_ANALYSIS]
 keywords: [help, guide, reference, commands, documentation, usage, examples]
 category: discovery
@@ -11,6 +11,18 @@ pain_points: []
 # cco-help
 
 **Quick command reference for ClaudeCodeOptimizer**
+---
+
+## Built-in References
+
+**This command inherits standard behaviors from:**
+
+- **[STANDARDS_COMMANDS.md](../STANDARDS_COMMANDS.md)** - Standard structure, execution protocol, file discovery
+- **[STANDARDS_QUALITY.md](../STANDARDS_QUALITY.md)** - UX/DX, efficiency, simplicity, performance standards
+- **[LIBRARY_PATTERNS.md](../LIBRARY_PATTERNS.md)** - Reusable patterns (Step 0, Selection, Accounting, Progress, Error Handling)
+- **[STANDARDS_AGENTS.md](../STANDARDS_AGENTS.md)** - File discovery, model selection, parallel execution
+
+**See these files for detailed patterns. Only command-specific content is documented below.**
 
 ---
 
@@ -94,12 +106,10 @@ Add quotes after command = focused results!
 - **Team (2025):** `--code-review`, `--platform`
 - **Infrastructure:** `--ci-cd`, `--containers`, `--supply-chain`
 - **Presets:** `--all` (comprehensive scan)
-- Example: `/cco-audit --security --ai-quality --code-review`
 
 **`/cco-status`** → Check CCO installation health
 - Shows installed commands, skills, agents
 - Verifies configuration
-- Example: `/cco-status`
 
 ---
 
@@ -107,16 +117,13 @@ Add quotes after command = focused results!
 
 **`/cco-fix`** → Auto-fix detected problems
 - **Same categories as audit** (including `--ai`, `--ai-quality`, `--ai-debt`)
-- Safe fixes auto-applied (SQL parameterization, remove dead code, API hallucination removal)
-- Risky fixes require approval (CSRF protection, auth changes)
+- Safe fixes auto-applied
+- Risky fixes require approval
 - Auto-runs audit if needed
-- Example: `/cco-fix --security --ai-quality --tech-debt`
 
 **`/cco-optimize`** → Speed up your code with metrics
 - **Types:** `--database` (queries), `--docker` (image size), `--bundle` (frontend), `--performance` (bottlenecks)
 - Shows before/after metrics
-- Note: For code cleanup use `/cco-fix --tech-debt`
-- Example: `/cco-optimize --database`
 
 ---
 
@@ -125,14 +132,12 @@ Add quotes after command = focused results!
 **`/cco-generate`** → Create tests, docs, configs
 - **Critical:** `--tests`, `--contract-tests`
 - **High:** `--load-tests`, `--chaos-tests`, `--openapi`, `--cicd`
-- **Team (2025):** `--review-checklist` (PR quality gates, DORA metrics tracking)
+- **Team (2025):** `--review-checklist` (PR quality gates, DORA metrics)
 - **Recommended:** `--docs`, `--adr`, `--runbook`, `--dockerfile`, `--migration`, `--indexes`, `--monitoring`, `--logging`, `--slo`, `--pre-commit`, `--requirements`
-- Example: `/cco-generate --tests --openapi --review-checklist`
 
 **`/cco-implement`** → Build new features with TDD
 - Test-Driven Development approach
 - Auto-skill selection based on feature type
-- Example: `/cco-implement "Add JWT authentication"`
 
 ---
 
@@ -141,21 +146,17 @@ Add quotes after command = focused results!
 **`/cco-commit`** → Smart git commits
 - AI-generated semantic commit messages
 - Atomic commit recommendations
-- Example: `git add . && /cco-commit`
 
 **`/cco-help`** → This guide
 - Quick command reference
-- Example: `/cco-help`
 
 **`/cco-update`** → Update to latest CCO version
 - Updates all commands, skills, agents
 - One update → all projects get it instantly
-- Example: `/cco-update`
 
 **`/cco-remove`** → Clean uninstall (Step 1 of 2)
 - Removes all global CCO files (`~/.claude/`)
 - Must run BEFORE `pip uninstall` (requires package)
-- Example: `/cco-remove` → then `pip uninstall claudecodeoptimizer`
 
 ---
 
@@ -172,21 +173,6 @@ Add quotes after command = focused results!
 | **Build new feature** | `/cco-implement "feature description"` |
 | **Make good commits** | `/cco-commit` |
 | **Full health check** | `/cco-audit --all` → `/cco-fix --all` |
-
----
-
-## 📊 Quick Reference Table
-
-| Command | Primary Use | Optional Prompt Example |
-|---------|-------------|-------------------------|
-| `/cco-audit --quick` | Health check | "Focus on production-critical areas" |
-| `/cco-audit --security` | Security scan | "Prioritize authentication" |
-| `/cco-fix --security` | Auto-fix | "Conservative fixes only" |
-| `/cco-generate --tests` | Create tests | "Edge cases for payments" |
-| `/cco-implement` | New feature | "[Feature] with [tech requirements]" |
-| `/cco-optimize --database` | DB optimization | "Focus on checkout queries" |
-| `/cco-commit` | Smart commit | N/A |
-| `/cco-status` | Health check | N/A |
 
 ---
 
@@ -212,22 +198,12 @@ Add quotes after command = focused results!
 - **Containers** - Dockerfile issues, Pod Security, Kubernetes security
 - **Integration** - Import errors, dependency conflicts
 
-**Use with:** `--security`, `--ai-security`, `--database`, `--tests`, `--tech-debt`, `--ai-quality`, `--performance`, `--ci-cd`, `--supply-chain`, `--docs`, `--code-review`, `--platform`, `--containers`, `--integration`
-
 **Meta-flags (Convenience Shortcuts):**
 - `--ai` → All AI-related (ai-security + ai-quality + ai-debt)
 - `--critical` → Critical impact (security + ai-security + database + tests)
 - `--production-ready` → Pre-deploy essentials (security + performance + database + tests + docs)
 - `--code-health` → Quality focus (tech-debt + code-quality + tests + docs)
 - `--team-metrics` → Team performance (code-review + platform + cicd)
-
-**Examples:**
-```bash
-/cco-audit --critical          # Focus on critical issues only
-/cco-fix --production-ready    # Fix everything needed for deploy
-/cco-audit --code-health       # Assess code quality
-/cco-audit --team-metrics      # Check team collaboration metrics
-```
 
 ---
 
@@ -245,7 +221,7 @@ Add quotes after command = focused results!
 
 **Auto-Activating Skills:**
 - Skills load on-demand based on context
-- Security (OWASP 2025), AI quality, code review (DORA), platform engineering, and more
+- Security (OWASP 2025), AI quality, code review (DORA), platform engineering
 - No manual skill selection needed
 
 ---
@@ -254,7 +230,7 @@ Add quotes after command = focused results!
 
 **New Project Setup:**
 ```bash
-/cco-audit --quick                    # Health baseline
+/cco-audit --quick
 /cco-generate --tests --openapi --cicd --dockerfile
 /cco-commit
 ```
@@ -297,16 +273,16 @@ Add quotes after command = focused results!
 
 🔴 **#1 Security** - OWASP Top 10 2025, supply chain, CVE scanning
 🔴 **#2 Technical Debt** - Dead code, complexity, coupling, legacy patterns
-🔴 **#3 AI Security** - Prompt injection, PII leakage, broken access control (A01:2025)
-🔴 **#4 Missing Tests** - Coverage gaps, untested critical paths, pyramid violations
+🔴 **#3 AI Security** - Prompt injection, PII leakage, broken access control
+🔴 **#4 Missing Tests** - Coverage gaps, untested critical paths
 🟡 **#5 Time Waste** - N+1 queries, missing indexes, slow builds
-🟡 **#6 Integration Failures** - Import errors, dependency conflicts, broken builds
-🟢 **#7 Documentation Gaps** - Missing docstrings, outdated API docs, no runbooks
+🟡 **#6 Integration Failures** - Import errors, dependency conflicts
+🟢 **#7 Documentation Gaps** - Missing docstrings, outdated API docs
 🟡 **#8 AI Code Quality** - Hallucinated APIs, code bloat, vibe coding
 🟡 **#9 Velocity Loss** - DORA metrics decline, slow feature delivery
-🟢 **#10 AI Readiness Gaps** - Immature CI/CD, missing test automation, poor DX
-🟡 **#11 Code Review Decline** - -27% comment rate (2025), shallow reviews, echo chambers
-🟡 **#12 Team Breakdowns** - Knowledge silos, reviewer diversity issues, high rework rates
+🟢 **#10 AI Readiness Gaps** - Immature CI/CD, missing test automation
+🟡 **#11 Code Review Decline** - -27% comment rate (2025), shallow reviews
+🟡 **#12 Team Breakdowns** - Knowledge silos, reviewer diversity issues
 
 ---
 

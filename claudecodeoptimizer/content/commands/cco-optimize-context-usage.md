@@ -1,5 +1,5 @@
 ---
-name: cco-slim
+name: cco-optimize-context-usage
 description: Context optimization and duplication elimination (primary). Optional token reduction for other files.
 
 principles: [U_EVIDENCE_BASED_ANALYSIS, U_MINIMAL_TOUCH, C_EFFICIENT_FILE_OPERATIONS]
@@ -21,6 +21,18 @@ parameters:
 # CCO Slim: Ultimate Context Optimization
 
 **Primary: Context optimization (CLAUDE.md duplication elimination). Secondary: Token reduction for other content.**
+---
+
+## Built-in References
+
+**This command inherits standard behaviors from:**
+
+- **[STANDARDS_COMMANDS.md](../STANDARDS_COMMANDS.md)** - Standard structure, execution protocol, file discovery
+- **[STANDARDS_QUALITY.md](../STANDARDS_QUALITY.md)** - UX/DX, efficiency, simplicity, performance standards
+- **[LIBRARY_PATTERNS.md](../LIBRARY_PATTERNS.md)** - Reusable patterns (Step 0, Selection, Accounting, Progress, Error Handling)
+- **[STANDARDS_AGENTS.md](../STANDARDS_AGENTS.md)** - File discovery, model selection, parallel execution
+
+**See these files for detailed patterns. Only command-specific content is documented below.**
 
 ---
 
@@ -64,7 +76,7 @@ parameters:
 
 ## Design Principles
 
-**See [COMMAND_QUALITY_STANDARDS.md](../COMMAND_QUALITY_STANDARDS.md) for quality principles.**
+**See:** STANDARDS_QUALITY.md
 
 **Slim-Specific:**
 1. **Context First** - CLAUDE.md duplication elimination (primary mission)
@@ -84,7 +96,7 @@ parameters:
 
 ## Step 0: Introduction and Confirmation
 
-**See [COMMAND_PATTERNS.md](../COMMAND_PATTERNS.md#pattern-1-step-0-introduction-template) for standard introduction pattern.**
+**Pattern:** Pattern 1 (Step 0 Introduction)
 
 **Command-Specific:**
 - **Primary Mission**: Eliminate CLAUDE.md duplication, detect incomplete content, optimize context
@@ -97,7 +109,7 @@ parameters:
 ## Execution Flow
 
 ```
-/cco-slim
+/cco-optimize-context-usage
     │
     ├─► Step 0: Introduction & Confirmation
     │
@@ -124,7 +136,7 @@ parameters:
 
 ## Component 1: Mode Selection
 
-**See [COMMAND_PATTERNS.md](../COMMAND_PATTERNS.md#pattern-2-category-selection-multi-select-with-all) for selection pattern.**
+**Pattern:** Pattern 2 (Multi-Select with "All")
 
 **Slim-Specific Modes:**
 - **Conservative** (Recommended): 100% safe (whitespace, unused, formatting), zero risk, quality guaranteed
@@ -133,13 +145,13 @@ parameters:
 
 **Goal: Maximum optimization while preserving quality (no artificial caps).**
 
-**Optional Context**: Add prompt after flags: `/cco-slim --balanced "Prioritize docs"`
+**Optional Context**: Add prompt after flags: `/cco-optimize-context-usage --balanced "Prioritize docs"`
 
 ---
 
 ## Component 2: Category Selection
 
-**See [COMMAND_PATTERNS.md](../COMMAND_PATTERNS.md#pattern-2-category-selection-multi-select-with-all) for category selection pattern.**
+**Pattern:** Pattern 2 (Multi-Select with "All")
 
 **Slim-Specific Categories:**
 - **All** (Ultimate Context Optimization): Everything - markdown, code, tools, docs
@@ -153,7 +165,7 @@ parameters:
 
 ## Component 2.5: Project Scope Detection
 
-**See [AGENT_STANDARDS.md](../AGENT_STANDARDS.md#file-discovery--exclusion) and [COMMAND_PATTERNS.md](../COMMAND_PATTERNS.md#pattern-7-file-discovery-with-exclusion) for file discovery pattern.**
+**See:** STANDARDS_AGENTS.md & LIBRARY_PATTERNS.md
 
 **Slim-Specific Scope:**
 1. **Detect Project Root**: Git root or cwd
@@ -166,7 +178,7 @@ parameters:
 
 ## Component 3: Discovery Phase
 
-**See [AGENT_STANDARDS.md](../AGENT_STANDARDS.md#file-discovery--exclusion) for file discovery and [COMMAND_PATTERNS.md](../COMMAND_PATTERNS.md#pattern-7-file-discovery-with-exclusion) for exclusion pattern.**
+**See [STANDARDS_AGENTS.md](../STANDARDS_AGENTS.md#file-discovery--exclusion) for file discovery and [LIBRARY_PATTERNS.md](../LIBRARY_PATTERNS.md#pattern-7-file-discovery-with-exclusion) for exclusion pattern.**
 
 **Slim-Specific Discovery:**
 1. **File Exclusion**: Apply FIRST (build artifacts, dependencies, lock files)
@@ -178,7 +190,7 @@ parameters:
 
 ## Component 4: Analysis Phase
 
-**See [AGENT_STANDARDS.md](../AGENT_STANDARDS.md#model-selection-guidelines) and [COMMAND_PATTERNS.md](../COMMAND_PATTERNS.md#pattern-6-agent-task-execution-with-verification) for agent execution patterns.**
+**See:** STANDARDS_AGENTS.md & LIBRARY_PATTERNS.md
 
 **Slim-Specific Analysis:**
 - **Model Selection**: Conservative→Haiku | Balanced/Aggressive→Sonnet
@@ -199,7 +211,7 @@ if analysis_result is None or (isinstance(analysis_result, dict) and "error" in 
                 {label: "Retry with Sonnet", description: "Use more capable model"} if agent_model == "haiku" else {label: "Retry with Opus", description: "Use most capable model"},
                 {label: "Switch to Conservative", description: "Use Conservative mode instead (safer, fewer optimizations)"},
                 {label: "Manual analysis", description: "Guide manual optimization identification"},
-                {label: "Cancel", description: "Stop cco-slim"}
+                {label: "Cancel", description: "Stop cco-optimize-context-usage"}
             ]
         }]
     })
@@ -280,7 +292,7 @@ By Risk:
 
 ## Component 4.5: Agent Optimization Strategy
 
-**See [AGENT_STANDARDS.md](../AGENT_STANDARDS.md#model-selection-guidelines) for model selection and [COMMAND_PATTERNS.md](../COMMAND_PATTERNS.md#pattern-6-agent-task-execution-with-verification) for agent execution patterns.**
+**See [STANDARDS_AGENTS.md](../STANDARDS_AGENTS.md#model-selection-guidelines) for model selection and [LIBRARY_PATTERNS.md](../LIBRARY_PATTERNS.md#pattern-6-agent-task-execution-with-verification) for agent execution patterns.**
 
 **Slim-Specific Strategy:**
 - **Parallel Processing**: Group files by category (markdown/code/tools), analyze all groups simultaneously
@@ -292,7 +304,7 @@ By Risk:
 
 ## Component 5: Pre-Flight Summary
 
-**See [COMMAND_PATTERNS.md](../COMMAND_PATTERNS.md#pattern-8-dynamic-results-generation) for pre-flight summary pattern.**
+**See [LIBRARY_PATTERNS.md](../LIBRARY_PATTERNS.md#pattern-8-dynamic-results-generation) for pre-flight summary pattern.**
 
 **Slim-Specific Display:**
 - **What Changes**: Files count, optimizations count, token reduction (by category, by type with risk levels)
@@ -304,7 +316,7 @@ By Risk:
 
 ## Component 6: Optimization Phase
 
-**See [COMMAND_PATTERNS.md](../COMMAND_PATTERNS.md#pattern-4-complete-accounting-formula) for complete accounting and [COMMAND_PATTERNS.md](../COMMAND_PATTERNS.md#pattern-6-agent-task-execution-with-verification) for verification pattern.**
+**Pattern:** Pattern 4 (Complete Accounting)
 
 **Slim-Specific Optimization Loop:**
 1. **For each optimization**: Backup → Apply → Verify (4 checks) → Measure tokens → Record disposition
@@ -320,7 +332,7 @@ By Risk:
 
 ## Component 7: Final Report
 
-**See [COMMAND_PATTERNS.md](../COMMAND_PATTERNS.md#pattern-8-dynamic-results-generation) for final report pattern.**
+**See [LIBRARY_PATTERNS.md](../LIBRARY_PATTERNS.md#pattern-8-dynamic-results-generation) for final report pattern.**
 
 **Slim-Specific Report:**
 - **Results**: Files modified, token reduction (before/after/saved)
@@ -332,7 +344,7 @@ By Risk:
 
 ## Agent Integration
 
-**See [AGENT_STANDARDS.md](../AGENT_STANDARDS.md) for agent delegation patterns and [COMMAND_PATTERNS.md](../COMMAND_PATTERNS.md#pattern-6-agent-task-execution-with-verification) for execution with error handling.**
+**See [STANDARDS_AGENTS.md](../STANDARDS_AGENTS.md) for agent delegation patterns and [LIBRARY_PATTERNS.md](../LIBRARY_PATTERNS.md#pattern-6-agent-task-execution-with-verification) for execution with error handling.**
 
 **Slim-Specific Agent Strategy:**
 - **Threshold**: Always use agent (no threshold) for consistent behavior
@@ -347,43 +359,43 @@ By Risk:
 
 ### Interactive (Default)
 ```bash
-/cco-slim
+/cco-optimize-context-usage
 ```
 
 ### Parametrized (Power Users)
 
 **Mode selection:**
 ```bash
-/cco-slim --conservative  # Default
-/cco-slim --balanced
-/cco-slim --aggressive
+/cco-optimize-context-usage --conservative  # Default
+/cco-optimize-context-usage --balanced
+/cco-optimize-context-usage --aggressive
 ```
 
 **Category selection:**
 ```bash
-/cco-slim --markdown
-/cco-slim --code
-/cco-slim --claude-tools
-/cco-slim --active-context
-/cco-slim --all
+/cco-optimize-context-usage --markdown
+/cco-optimize-context-usage --code
+/cco-optimize-context-usage --claude-tools
+/cco-optimize-context-usage --active-context
+/cco-optimize-context-usage --all
 ```
 
 **Combined:**
 ```bash
-/cco-slim --balanced --claude-tools
-/cco-slim --conservative --all
+/cco-optimize-context-usage --balanced --claude-tools
+/cco-optimize-context-usage --conservative --all
 ```
 
 **Dry run (preview only):**
 ```bash
-/cco-slim --dry-run
+/cco-optimize-context-usage --dry-run
 ```
 
 ---
 
 ## Error Handling
 
-**See [COMMAND_PATTERNS.md](../COMMAND_PATTERNS.md#pattern-5-error-handling-with-user-choice) for error handling pattern.**
+**Pattern:** Pattern 5 (Error Handling)
 
 **Slim-Specific Errors:**
 - **Verification Failures**: Show file, optimization type, reason, metric details (before/after/threshold), rollback confirmation
