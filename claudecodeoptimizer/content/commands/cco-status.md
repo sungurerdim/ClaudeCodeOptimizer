@@ -10,6 +10,18 @@ pain_points: []
 # cco-status
 
 **CCO installation health check with skill and agent availability.**
+---
+
+## Built-in References
+
+**This command inherits standard behaviors from:**
+
+- **[STANDARDS_COMMANDS.md](../STANDARDS_COMMANDS.md)** - Standard structure, execution protocol, file discovery
+- **[STANDARDS_QUALITY.md](../STANDARDS_QUALITY.md)** - UX/DX, efficiency, simplicity, performance standards
+- **[LIBRARY_PATTERNS.md](../LIBRARY_PATTERNS.md)** - Reusable patterns (Step 0, Selection, Accounting, Progress, Error Handling)
+- **[STANDARDS_AGENTS.md](../STANDARDS_AGENTS.md)** - File discovery, model selection, parallel execution
+
+**See these files for detailed patterns. Only command-specific content is documented below.**
 
 ---
 
@@ -31,10 +43,10 @@ ls ~/.claude/
 Expected structure:
 ```
 ~/.claude/
-├── commands/      ({{COMMAND_COUNT}} core commands)
-├── principles/    ({{PRINCIPLE_COUNT}} principles: {{C_PRINCIPLE_COUNT}} C_, {{U_PRINCIPLE_COUNT}} U_, {{P_PRINCIPLE_COUNT}} P_)
-├── skills/        ({{SKILL_COUNT}} skills)
-├── agents/        ({{AGENT_COUNT}} agents)
+├── commands/      ({COMMAND_COUNT} core commands)
+├── principles/    ({PRINCIPLE_COUNT} principles: {C_PRINCIPLE_COUNT} C_, {U_PRINCIPLE_COUNT} U_, {P_PRINCIPLE_COUNT} P_)
+├── skills/        ({SKILL_COUNT} skills)
+├── agents/        ({AGENT_COUNT} agents)
 └── CLAUDE.md      (principle markers)
 ```
 
@@ -51,9 +63,9 @@ ls ~/.claude/agents/cco-agent-*.md | wc -l # Count agents
 cat ~/.claude/CLAUDE.md | head -20
 ```
 
-Should contain principle markers (U_* and C_*).
-
 ### Output Format
+
+**See [LIBRARY_PATTERNS.md](../LIBRARY_PATTERNS.md#pattern-8-dynamic-results-generation) for reporting pattern.**
 
 ```markdown
 # CCO Installation Status
@@ -65,18 +77,18 @@ Should contain principle markers (U_* and C_*).
 
 ## Components
 
-**Commands ({{COMMAND_COUNT}} core):**
+**Commands ({COMMAND_COUNT} core):**
 - Discovery: help, status
 - Critical: audit, fix, generate
 - Productivity: optimize, commit, implement
 - Management: update, remove
 
-**Principles ({{PRINCIPLE_COUNT}}):**
-- {{C_PRINCIPLE_COUNT}} Claude Guidelines (C_*) - Always active
-- {{U_PRINCIPLE_COUNT}} Universal (U_*) - Always active
-- {{P_PRINCIPLE_COUNT}} Project (P_*) - Progressive loading via skills
+**Principles ({PRINCIPLE_COUNT}):**
+- {C_PRINCIPLE_COUNT} Claude Guidelines (C_*) - Always active
+- {U_PRINCIPLE_COUNT} Universal (U_*) - Always active
+- {P_PRINCIPLE_COUNT} Project (P_*) - Progressive loading via skills
 
-**Skills ({{SKILL_COUNT}} - Auto-Activate on Demand):**
+**Skills ({SKILL_COUNT} - Auto-Activate on Demand):**
 
 Security (5):
 - cco-skill-security-owasp-xss-sqli-csrf
@@ -127,14 +139,14 @@ Mobile (1):
 DevEx (1):
 - cco-skill-devex-onboarding-tooling-parity
 
-**Agents ({{AGENT_COUNT}} - Parallel Execution):**
+**Agents ({AGENT_COUNT} - Parallel Execution):**
 - cco-agent-audit (Haiku - Fast scanning, cost-efficient)
 - cco-agent-fix (Sonnet - Accurate fixes, better quality)
 - cco-agent-generate (Sonnet - Code generation, better quality)
 
 ---
 
-## Pain Points Addressed (2025 Industry Data)
+## Pain Points Addressed (12 - 2025 Industry Data)
 
 [OK] #1 Security (top concern) - High cost
 [OK] #2 Technical Debt (significant time waste)
@@ -143,6 +155,11 @@ DevEx (1):
 [OK] #5 Time Waste (significant hours lost)
 [OK] #6 Integration Failures - Deployment delays
 [OK] #7 Documentation Gaps - Knowledge loss
+[OK] #8 AI Code Quality - Hallucinated APIs
+[OK] #9 Velocity Loss - DORA metrics decline
+[OK] #10 AI Readiness Gaps - Immature CI/CD
+[OK] #11 Code Review Decline - -27% comment rate
+[OK] #12 Team Breakdowns - Knowledge silos
 
 ---
 
@@ -152,12 +169,11 @@ DevEx (1):
 - Global storage: ~/.claude/ (all projects share)
 - Project storage: ZERO files created
 - Updates: One command updates all projects
-- Token efficiency: Optimized (significant reduction from old system)
+- Token efficiency: Optimized via progressive loading
 
 **Progressive Loading:**
-- Always loaded: Baseline principles ({{C_PRINCIPLE_COUNT}} C_ + {{U_PRINCIPLE_COUNT}} U_)
-- Auto-activated: {{SKILL_COUNT}} skills via semantic matching (load {{P_PRINCIPLE_COUNT}} P_ principles on-demand)
-- Context: Significant reduction via progressive loading
+- Always loaded: Baseline principles ({C_PRINCIPLE_COUNT} C_ + {U_PRINCIPLE_COUNT} U_)
+- Auto-activated: {SKILL_COUNT} skills via semantic matching (load {P_PRINCIPLE_COUNT} P_ on-demand)
 
 **Skill-Based Intelligence:**
 - Claude autonomously loads what's needed
@@ -234,6 +250,8 @@ Next: /cco-help (command reference) or /cco-audit --quick (project health)
 ---
 
 ## Error Cases
+
+**Pattern:** Pattern 5 (Error Handling)
 
 If components missing:
 ```markdown

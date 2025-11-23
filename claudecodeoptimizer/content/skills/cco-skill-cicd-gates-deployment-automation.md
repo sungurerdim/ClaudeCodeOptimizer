@@ -17,8 +17,10 @@ description: |
 
 # Skill: CI/CD - Quality Gates, Deployment & Automation
 
-## Purpose
+## Domain
+CI/CD pipelines, deployment automation, quality gates
 
+## Purpose
 Prevent production incidents through automated quality gates, safe deployment strategies, and infrastructure automation.
 
 **Solves**:
@@ -28,6 +30,18 @@ Prevent production incidents through automated quality gates, safe deployment st
 - **Environment Drift**: Manual infrastructure causes "works on my machine" issues
 
 **Impact**: Critical
+---
+
+## Standard Structure
+
+**This skill follows [STANDARDS_SKILLS.md](../STANDARDS_SKILLS.md):**
+
+- **Standard sections** - Domain, Purpose, Core Techniques, Anti-Patterns, Checklist
+- **Code example format** - Bad/Good pattern with specific examples
+- **Detection pattern format** - Python functions with Finding objects
+- **Checklist format** - Specific, verifiable items
+
+**See STANDARDS_SKILLS.md for format details. Only skill-specific content is documented below.**
 
 ---
 

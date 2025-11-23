@@ -10,6 +10,18 @@ pain_points: []
 # cco-update
 
 **Update CCO to latest version with automatic sync.**
+---
+
+## Built-in References
+
+**This command inherits standard behaviors from:**
+
+- **[STANDARDS_COMMANDS.md](../STANDARDS_COMMANDS.md)** - Standard structure, execution protocol, file discovery
+- **[STANDARDS_QUALITY.md](../STANDARDS_QUALITY.md)** - UX/DX, efficiency, simplicity, performance standards
+- **[LIBRARY_PATTERNS.md](../LIBRARY_PATTERNS.md)** - Reusable patterns (Step 0, Selection, Accounting, Progress, Error Handling)
+- **[STANDARDS_AGENTS.md](../STANDARDS_AGENTS.md)** - File discovery, model selection, parallel execution
+
+**See these files for detailed patterns. Only command-specific content is documented below.**
 
 ---
 
@@ -37,6 +49,8 @@ gh release list --repo sungurerdim/ClaudeCodeOptimizer
 
 ### Step 3: Confirm Update
 
+**See [LIBRARY_PATTERNS.md](../LIBRARY_PATTERNS.md#pattern-8-dynamic-results-generation) for reporting pattern.**
+
 ```markdown
 CCO Update Available
 
@@ -49,11 +63,11 @@ Changes in {LATEST_VERSION}:
 - {CHANGE_3}
 
 What will be updated:
-- CCO package: [current] → [latest]
-- Commands: [count] files synced
-- Skills: [count] files synced
-- Principles: [count] files synced
-- Agents: [count] files synced
+- CCO package: {current} → {latest}
+- Commands: {count} files synced
+- Skills: {count} files synced
+- Principles: {count} files synced
+- Agents: {count} files synced
 
 All projects using CCO will get updates automatically.
 
@@ -102,30 +116,31 @@ This syncs all files in ~/.claude/ to latest versions.
 
 ### Step 6: Verify Update
 
+**Pattern:** Pattern 4 (Complete Accounting)
+
 ```markdown
 Update Complete! ✓
 
 Updated:
 ✓ CCO package: {OLD_VERSION} → {NEW_VERSION}
-✓ Commands: [synced]/[total] synced
-✓ Skills: [synced]/[total] synced
-✓ Principles: [synced]/[total] synced
-✓ Agents: [synced]/[total] synced
+✓ Commands: {synced}/{total} synced
+✓ Skills: {synced}/{total} synced
+✓ Principles: {synced}/{total} synced
+✓ Agents: {synced}/{total} synced
 
 Changes:
 - New skills:
-  * cco-skill-ai-security-enhanced (improved prompt injection detection)
-  * cco-skill-performance-profiling (bottleneck analysis)
-  * cco-skill-mobile-testing (mobile-specific test patterns)
+  * {skill-1} ({description})
+  * {skill-2} ({description})
 
 - Updated principles:
-  * P_SECURITY_OWASP (added OWASP Top 10 2024)
-  * P_TEST_COVERAGE (increased coverage target)
-  * ... (13 more)
+  * {principle-1} ({change})
+  * {principle-2} ({change})
+  * ... ({count} more)
 
 - Performance improvements:
-  * Audit faster (parallel agent execution)
-  * Generate faster (optimized prompts)
+  * {improvement-1}
+  * {improvement-2}
 
 All projects now use latest version ✓
 
@@ -136,20 +151,32 @@ Release notes: https://github.com/sungurerdim/ClaudeCodeOptimizer/releases/tag/v
 
 ---
 
-## Auto-Update Check
+## Error Handling
 
-Optionally check for updates periodically:
+**Pattern:** Pattern 5 (Error Handling)
+
+**If update fails:**
+
 ```python
-# In __init__.py or hook
-def check_updates_if_old():
-    last_check = get_last_update_check()  # From ~/.claude/.last_check
-    if (now - last_check) > 7 days:
-        latest = get_latest_version_from_github()
-        current = __version__
-        if latest > current:
-            print(f"CCO update available: {current} → {latest}")
-            print("Run: /cco-update")
+AskUserQuestion({
+  questions: [{
+    question: "Update failed: {error_type} - {error_message}. How to proceed?",
+    header: "Update Error",
+    multiSelect: false,
+    options: [
+      {label: "Retry", description: "Try update again"},
+      {label: "Rollback", description: "Restore previous version"},
+      {label: "Force sync", description: "Force sync (may overwrite local changes)"},
+      {label: "Manual update", description: "Show manual update instructions"},
+      {label: "Cancel", description: "Stop update"}
+    ]
+  }]
+})
 ```
+
+**Network failure retry strategy:**
+- Retry up to 3 times with exponential backoff (1s, 2s, 4s)
+- If all retries fail, offer manual download option
 
 ---
 
@@ -175,26 +202,3 @@ def check_updates_if_old():
 # After update, verify
 /cco-status
 ```
-
-## Update Error Handling
-
-**If update fails (network error, installation error, sync error):**
-
-AskUserQuestion({
-  questions: [{
-    question: "Update failed: {error_type} - {error_message}. How to proceed?",
-    header: "Update Error",
-    multiSelect: false,
-    options: [
-      {label: "Retry", description: "Try update again"},
-      {label: "Rollback", description: "Restore previous version"},
-      {label: "Force sync", description: "Force sync (may overwrite local changes)"},
-      {label: "Manual update", description: "Show manual update instructions"},
-      {label: "Cancel", description: "Stop update"}
-    ]
-  }]
-})
-
-**Network failure retry strategy:**
-- Retry up to 3 times with exponential backoff (1s, 2s, 4s)
-- If all retries fail, offer manual download option

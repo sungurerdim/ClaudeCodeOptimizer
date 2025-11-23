@@ -6,9 +6,9 @@ Creates:
 - ~/.claude/principles/ (all U_*, C_*, P_*.md from claudecodeoptimizer/content/principles/)
 - ~/.claude/agents/ (all cco-*.md from claudecodeoptimizer/content/agents/)
 - ~/.claude/skills/ (all cco-*.md from claudecodeoptimizer/content/skills/)
+- ~/.claude/*.md (standards files: SKILL/AGENT/COMMAND/PRINCIPLE standards & patterns)
 - ~/.claude/CLAUDE.md (with U_* and C_* principle markers)
-- ~/.claude/settings.json.example (Claude Code configuration template)
-- ~/.claude/statusline.js.example (Status line script template)
+- ~/.claude/*.cco (template files: settings.json.cco, statusline.js.cco)
 """
 
 import shutil
@@ -19,8 +19,8 @@ from typing import Any
 from .. import config
 
 # Consistent category ordering for all reports
-# Agents → Commands → Skills → Principles → Templates
-CATEGORY_ORDER = ["agents", "commands", "skills", "principles", "templates"]
+# Agents → Commands → Skills → Principles → Standards → Templates
+CATEGORY_ORDER = ["agents", "commands", "skills", "principles", "standards", "templates"]
 
 
 def check_existing_installation() -> dict[str, int] | None:
@@ -42,6 +42,7 @@ def check_existing_installation() -> dict[str, int] | None:
         "commands": config.get_global_commands_dir(),
         "skills": config.get_skills_dir(),
         "principles": config.get_principles_dir(),
+        "standards": config.get_claude_dir(),  # Standards are in ~/.claude/ root
         "templates": config.get_claude_dir(),  # Templates are in ~/.claude/ root
     }
 
@@ -56,6 +57,13 @@ def check_existing_installation() -> dict[str, int] | None:
                     len(list(dir_path.glob("U_*.md")))
                     + len(list(dir_path.glob("C_*.md")))
                     + len(list(dir_path.glob("P_*.md")))
+                )
+            elif category == "standards":
+                # Count standards files (*_STANDARDS.md, PRINCIPLE_FORMAT.md, COMMAND_PATTERNS.md)
+                count = (
+                    len(list(dir_path.glob("*_STANDARDS.md")))
+                    + len(list(dir_path.glob("PRINCIPLE_FORMAT.md")))
+                    + len(list(dir_path.glob("COMMAND_PATTERNS.md")))
                 )
             elif category == "templates":
                 # Count template files (*.cco)
@@ -77,7 +85,7 @@ def show_installation_diff() -> None:
     print("FILES TO BE OVERWRITTEN")
     print("=" * 60)
 
-    # Use consistent ordering: agents → commands → skills → principles → templates
+    # Use consistent ordering: agents → commands → skills → principles → standards → templates
     categories = [
         ("Agents", config.get_agents_dir(), "cco-*.md"),
         ("Commands", config.get_global_commands_dir(), "cco-*.md"),
@@ -85,6 +93,9 @@ def show_installation_diff() -> None:
         ("Principles (U_*)", config.get_principles_dir(), "U_*.md"),
         ("Principles (C_*)", config.get_principles_dir(), "C_*.md"),
         ("Principles (P_*)", config.get_principles_dir(), "P_*.md"),
+        ("Standards", config.get_claude_dir(), "*_STANDARDS.md"),
+        ("Standards (Patterns)", config.get_claude_dir(), "COMMAND_PATTERNS.md"),
+        ("Standards (Format)", config.get_claude_dir(), "PRINCIPLE_FORMAT.md"),
         ("Templates", config.get_claude_dir(), "*.cco"),
     ]
 
@@ -115,12 +126,13 @@ def get_installation_counts() -> dict[str, int]:
     """
     counts = {}
 
-    # Use consistent ordering: agents → commands → skills → principles → templates
+    # Use consistent ordering: agents → commands → skills → principles → standards → templates
     categories_config = {
         "agents": config.get_agents_dir(),
         "commands": config.get_global_commands_dir(),
         "skills": config.get_skills_dir(),
         "principles": config.get_principles_dir(),
+        "standards": config.get_claude_dir(),
         "templates": config.get_claude_dir(),
     }
 
@@ -136,6 +148,13 @@ def get_installation_counts() -> dict[str, int]:
                     len(list(dir_path.glob("U_*.md")))
                     + len(list(dir_path.glob("C_*.md")))
                     + len(list(dir_path.glob("P_*.md")))
+                )
+            elif category == "standards":
+                # Standards include *_STANDARDS.md, PRINCIPLE_FORMAT.md, COMMAND_PATTERNS.md
+                count = (
+                    len(list(dir_path.glob("*_STANDARDS.md")))
+                    + len(list(dir_path.glob("PRINCIPLE_FORMAT.md")))
+                    + len(list(dir_path.glob("COMMAND_PATTERNS.md")))
                 )
             elif category == "templates":
                 # Templates are *.cco files
@@ -228,6 +247,10 @@ def setup_global_knowledge() -> dict[str, Any]:
 
     _setup_skills(skills_dir)
     actions.append("Copied skill files to ~/.claude/skills/")
+
+    # Setup standards files to ~/.claude/ root
+    _setup_standards(claude_dir)
+    actions.append("Copied standards files to ~/.claude/ (SKILL/AGENT/COMMAND standards)")
 
     # Setup CLAUDE.md with ONLY U_* and C_* markers
     _setup_claude_md(claude_dir, principles_dir)
@@ -441,6 +464,41 @@ def get_available_skills() -> list[str]:
                 skills.append(f"{subdir.name}/{f.stem}")
 
     return skills
+
+
+def _setup_standards(claude_dir: Path) -> None:
+    """
+    Copy CCO standards files to ~/.claude/ root.
+
+    These files define standard structure and patterns for:
+    - STANDARDS_SKILLS.md - Skill file format and quality requirements
+    - STANDARDS_AGENTS.md - Built-in agent behaviors (file discovery, model selection, etc.)
+    - STANDARDS_COMMANDS.md - Standard command structure and execution protocol
+    - STANDARDS_QUALITY.md - UX/DX, efficiency, simplicity, performance standards
+    - STANDARDS_PRINCIPLES.md - Standard format for principle files
+    - LIBRARY_PATTERNS.md - Reusable command patterns (Step 0, Selection, Accounting, etc.)
+
+    Commands, agents, and skills reference these files using relative paths like:
+    - [STANDARDS_AGENTS.md](../STANDARDS_AGENTS.md) from ~/.claude/agents/
+    - [LIBRARY_PATTERNS.md](../LIBRARY_PATTERNS.md) from ~/.claude/commands/
+    """
+    content_dir = _get_content_dir("")
+
+    # Standards files to copy
+    standards_files = [
+        "STANDARDS_SKILLS.md",
+        "STANDARDS_AGENTS.md",
+        "STANDARDS_COMMANDS.md",
+        "STANDARDS_QUALITY.md",
+        "STANDARDS_PRINCIPLES.md",
+        "LIBRARY_PATTERNS.md",
+    ]
+
+    # Copy each standards file to ~/.claude/ root
+    for filename in standards_files:
+        src_file = content_dir / filename
+        if src_file.exists():
+            shutil.copy2(src_file, claude_dir / filename)
 
 
 def _setup_global_templates(claude_dir: Path) -> None:

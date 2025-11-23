@@ -21,12 +21,26 @@ use_cases:
 - Fix code quality, security, docs, test issues
 - TDD-first approach with verification
 - Surgical changes only
+---
+
+## Built-in Behaviors
+
+**This agent inherits from [STANDARDS_AGENTS.md](../STANDARDS_AGENTS.md):**
+
+- **File Discovery & Exclusion (Stage 0)** - Apply exclusions BEFORE processing
+- **Three-Stage File Discovery** - files_with_matches → content → Read
+- **Model Selection Guidelines** - Haiku/Sonnet/Opus based on task complexity
+- **Parallel Execution Patterns** - Fan-out for independent tasks
+- **Evidence-Based Verification** - Never trust blindly, always verify
+- **Cross-Platform Compatibility** - Forward slashes, Git Bash, quoted paths
+
+**See STANDARDS_AGENTS.md for detailed implementation. Only agent-specific behavior is documented below.**
 
 ---
 
 ## Built-in Behaviors
 
-**See [AGENT_STANDARDS.md](../AGENT_STANDARDS.md) for standard behaviors:**
+**See [STANDARDS_AGENTS.md](../STANDARDS_AGENTS.md) for standard behaviors:**
 - File Discovery & Exclusion (Stage 0)
 - Three-Stage File Discovery
 - Model Selection Guidelines

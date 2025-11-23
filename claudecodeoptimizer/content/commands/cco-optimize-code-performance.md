@@ -1,5 +1,5 @@
 ---
-name: cco-optimize
+name: cco-optimize-code-performance
 description: Performance optimization with before/after metrics measurement
 
 principles: [U_EVIDENCE_BASED_ANALYSIS, U_MINIMAL_TOUCH, C_EFFICIENT_FILE_OPERATIONS]
@@ -29,6 +29,18 @@ parameters:
 # cco-optimize
 
 **Performance optimization with before/after metrics measurement to address Pain #5 (significant time waste).**
+---
+
+## Built-in References
+
+**This command inherits standard behaviors from:**
+
+- **[STANDARDS_COMMANDS.md](../STANDARDS_COMMANDS.md)** - Standard structure, execution protocol, file discovery
+- **[STANDARDS_QUALITY.md](../STANDARDS_QUALITY.md)** - UX/DX, efficiency, simplicity, performance standards
+- **[LIBRARY_PATTERNS.md](../LIBRARY_PATTERNS.md)** - Reusable patterns (Step 0, Selection, Accounting, Progress, Error Handling)
+- **[STANDARDS_AGENTS.md](../STANDARDS_AGENTS.md)** - File discovery, model selection, parallel execution
+
+**See these files for detailed patterns. Only command-specific content is documented below.**
 
 ---
 
@@ -41,7 +53,7 @@ This command performs COMPLETE optimization analysis and application.
 No premature scope reduction regardless of workload.
 
 **Estimated time: Provided for transparency, NOT to limit scope.**
-Measure and improve performance metrics: query times, image sizes, bundle sizes, and response times. Unlike /cco-fix which fixes issues, /cco-optimize focuses on **measuring improvements** with before/after metrics.
+Measure and improve performance metrics: query times, image sizes, bundle sizes, and response times. Unlike /cco-fix which fixes issues, /cco-optimize-code-performance focuses on **measuring improvements** with before/after metrics.
 
 **Note:** For code cleanup (dead code, complexity) use `/cco-fix --tech-debt`. For dependency updates use `/cco-fix --supply-chain`.
 
@@ -138,24 +150,24 @@ AskUserQuestion({
 
 ## Agent Optimization Analysis Algorithm (--agents)
 
-**See [AGENT_STANDARDS.md](../AGENT_STANDARDS.md) for agent delegation patterns and [C_AGENT_ORCHESTRATION_PATTERNS.md](~/.claude/principles/C_AGENT_ORCHESTRATION_PATTERNS.md) for optimization patterns.**
+**See [STANDARDS_AGENTS.md](../STANDARDS_AGENTS.md) for agent delegation patterns and [C_AGENT_ORCHESTRATION_PATTERNS.md](../principles/C_AGENT_ORCHESTRATION_PATTERNS.md) for optimization patterns.**
 
 **Optimize-Specific Agent Analysis:**
 
 **Phase 0: File Exclusion**
-- See [AGENT_STANDARDS.md - File Discovery & Exclusion](../AGENT_STANDARDS.md#file-discovery--exclusion)
+- See [STANDARDS_AGENTS.md - File Discovery & Exclusion](../STANDARDS_AGENTS.md#file-discovery--exclusion)
 - Focus: `.claude/`, `content/` directories only
 
 **Phase 1: Discovery**
 - Grep `Task()` calls in `.claude/commands/`, `content/skills/`, `content/agents/`
 - Extract model selection, parallelization patterns
 
-**Phase 2: Analysis** (See [C_AGENT_ORCHESTRATION_PATTERNS.md](~/.claude/principles/C_AGENT_ORCHESTRATION_PATTERNS.md))
+**Phase 2: Analysis** (See [C_AGENT_ORCHESTRATION_PATTERNS.md](../principles/C_AGENT_ORCHESTRATION_PATTERNS.md))
 - **Violations Detected**: Model selection (opus for simple, haiku for complex), sequential→parallel opportunities, wrong agent type
 - **Over-use**: Agent for grep/read/edit/bash (replace with direct tools)
 - **Under-use**: Sequential loops, large single operations (should parallelize)
 
-**Phase 3: Report** (See [COMMAND_PATTERNS.md - Pattern 8](../COMMAND_PATTERNS.md#pattern-8-dynamic-results-generation))
+**Phase 3: Report** (See [LIBRARY_PATTERNS.md - Pattern 8](../LIBRARY_PATTERNS.md#pattern-8-dynamic-results-generation))
 - **High Priority**: Model selection issues (60% cost savings)
 - **Medium Priority**: Parallelization opportunities (50% time savings), unnecessary agents ($0.08-0.12 per call)
 - **Recommendations**: Model upgrades for complex tasks
@@ -170,11 +182,11 @@ AskUserQuestion({
 
 ## Execution Protocol
 
-**See [COMMAND_PATTERNS.md](../COMMAND_PATTERNS.md) for reusable command patterns and [AGENT_STANDARDS.md](../AGENT_STANDARDS.md) for agent delegation.**
+**See [LIBRARY_PATTERNS.md](../LIBRARY_PATTERNS.md) for reusable command patterns and [STANDARDS_AGENTS.md](../STANDARDS_AGENTS.md) for agent delegation.**
 
-**File Discovery**: See [AGENT_STANDARDS.md - File Discovery & Exclusion](../AGENT_STANDARDS.md#file-discovery--exclusion)
+**File Discovery**: See [STANDARDS_AGENTS.md - File Discovery & Exclusion](../STANDARDS_AGENTS.md#file-discovery--exclusion)
 
-**Step 0: Introduction** (See [COMMAND_PATTERNS.md - Pattern 1](../COMMAND_PATTERNS.md#pattern-1-step-0-introduction-and-confirmation))
+**Step 0: Introduction** (See [LIBRARY_PATTERNS.md - Pattern 1](../LIBRARY_PATTERNS.md#pattern-1-step-0-introduction-and-confirmation))
 - **What**: Identify performance bottlenecks (database, Docker, bundle, agents)
 - **How**: Analyze → Measure → Select → Optimize → Report before/after
 - **Time**: 10-30 minutes
@@ -182,7 +194,7 @@ AskUserQuestion({
 
 ---
 
-**Interactive Mode**: See [COMMAND_PATTERNS.md - Pattern 2](../COMMAND_PATTERNS.md#pattern-2-category-selection-multi-select-with-all)
+**Interactive Mode**: See [LIBRARY_PATTERNS.md - Pattern 2](../LIBRARY_PATTERNS.md#pattern-2-category-selection-multi-select-with-all)
 
 1. **Analyze First**: Run analysis (Grep N+1, check Docker size, count unused functions), measure real metrics
 2. **Tab-Based Selection**: Infrastructure (All Infrastructure | Docker | Database | Bundle) + Advanced (All Advanced | Performance | Agents) + All (All Optimizations)
@@ -251,13 +263,13 @@ Next Steps:
 
 ```bash
 # Single optimization
-/cco-optimize --database
+/cco-optimize-code-performance --database
 
 # Multiple optimizations
-/cco-optimize --database --docker --code
+/cco-optimize-code-performance --database --docker --code
 
 # All optimizations
-/cco-optimize --all
+/cco-optimize-code-performance --all
 ```
 
 ---
@@ -315,24 +327,24 @@ After optimizations, measure improvements and report.
 
 ```bash
 # Optimize database queries (with before/after metrics)
-/cco-optimize --database
+/cco-optimize-code-performance --database
 
 # Reduce Docker image size (with before/after metrics)
-/cco-optimize --docker
+/cco-optimize-code-performance --docker
 
 # Optimize frontend bundle (with before/after metrics)
-/cco-optimize --bundle
+/cco-optimize-code-performance --bundle
 
 # Optimize agent/model usage (with cost savings)
-/cco-optimize --agents
+/cco-optimize-code-performance --agents
 
 # Comprehensive optimization (all areas)
-/cco-optimize --all
+/cco-optimize-code-performance --all
 
 # With additional context (optional prompt)
-/cco-optimize --database "Focus on payment queries"
-/cco-optimize --docker "Target size under 100MB"
-/cco-optimize --all "Conservative optimizations only, no breaking changes"
+/cco-optimize-code-performance --database "Focus on payment queries"
+/cco-optimize-code-performance --docker "Target size under 100MB"
+/cco-optimize-code-performance --all "Conservative optimizations only, no breaking changes"
 
 # For code cleanup, use fix instead:
 /cco-fix --tech-debt

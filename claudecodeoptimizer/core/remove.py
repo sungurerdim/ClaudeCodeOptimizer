@@ -6,6 +6,8 @@ Removes (in consistent order):
 - ~/.claude/commands/cco-*.md
 - ~/.claude/skills/cco-*.md
 - ~/.claude/principles/U_*.md, C_*.md, P_*.md
+- ~/.claude/*_STANDARDS.md, PRINCIPLE_FORMAT.md, COMMAND_PATTERNS.md
+- ~/.claude/*.cco templates
 - CCO markers from ~/.claude/CLAUDE.md
 """
 
@@ -17,7 +19,7 @@ from typing import Any
 logger = logging.getLogger(__name__)
 
 # Consistent category ordering (same as knowledge_setup.py)
-CATEGORY_ORDER = ["agents", "commands", "skills", "principles", "templates"]
+CATEGORY_ORDER = ["agents", "commands", "skills", "principles", "standards", "templates"]
 
 
 class CCORemover:
@@ -68,6 +70,16 @@ class CCORemover:
             if count > 0:
                 counts["principles"] = count
 
+        # Standards (*_STANDARDS.md, PRINCIPLE_FORMAT.md, COMMAND_PATTERNS.md)
+        if self.claude_dir.exists():
+            count = (
+                len(list(self.claude_dir.glob("*_STANDARDS.md")))
+                + len(list(self.claude_dir.glob("PRINCIPLE_FORMAT.md")))
+                + len(list(self.claude_dir.glob("COMMAND_PATTERNS.md")))
+            )
+            if count > 0:
+                counts["standards"] = count
+
         # Templates (*.cco)
         if self.claude_dir.exists():
             count = len(list(self.claude_dir.glob("*.cco")))
@@ -91,7 +103,7 @@ class CCORemover:
         # Get counts before removal
         counts_before = self._get_file_counts()
 
-        # Remove in consistent order: agents → commands → skills → principles → templates
+        # Remove in consistent order: agents → commands → skills → principles → standards → templates
         self._remove_agents()
         results["actions"].append("Removed ~/.claude/agents/cco-*.md")
 
@@ -103,6 +115,11 @@ class CCORemover:
 
         self._remove_principles()
         results["actions"].append("Removed ~/.claude/principles/[UCP]_*.md")
+
+        self._remove_standards()
+        results["actions"].append(
+            "Removed ~/.claude/*_STANDARDS.md, PRINCIPLE_FORMAT.md, COMMAND_PATTERNS.md"
+        )
 
         self._remove_templates()
         results["actions"].append("Removed ~/.claude/*.cco templates")
@@ -178,6 +195,30 @@ class CCORemover:
                 skill_file.unlink()
             except Exception as e:
                 logger.debug(f"Skipped removal of {skill_file}: {e}")
+
+    def _remove_standards(self) -> None:
+        """Remove all standards files from ~/.claude/"""
+        if not self.claude_dir.exists():
+            return
+
+        # Standards files to remove
+        standards_files = [
+            "STANDARDS_SKILLS.md",
+            "STANDARDS_AGENTS.md",
+            "STANDARDS_COMMANDS.md",
+            "STANDARDS_QUALITY.md",
+            "STANDARDS_PRINCIPLES.md",
+            "LIBRARY_PATTERNS.md",
+        ]
+
+        # Remove each standards file
+        for filename in standards_files:
+            file_path = self.claude_dir / filename
+            if file_path.exists():
+                try:
+                    file_path.unlink()
+                except Exception as e:
+                    logger.debug(f"Skipped removal of {file_path}: {e}")
 
     def _remove_templates(self) -> None:
         """Remove all *.cco template files from ~/.claude/"""

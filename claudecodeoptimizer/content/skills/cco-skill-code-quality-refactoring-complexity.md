@@ -11,13 +11,27 @@ pain_points: [1, 2, 3]
 
 # Skill: Code Quality & Refactoring
 
-## Purpose
+## Domain
+Code quality, refactoring, complexity management
 
+## Purpose
 Manage code quality through complexity reduction and technical debt tracking.
 
 **Solves**: Unmaintainable code (complexity >10), technical debt accumulation, code smells, slow feature velocity
 
 **Impact**: High
+---
+
+## Standard Structure
+
+**This skill follows [STANDARDS_SKILLS.md](../STANDARDS_SKILLS.md):**
+
+- **Standard sections** - Domain, Purpose, Core Techniques, Anti-Patterns, Checklist
+- **Code example format** - Bad/Good pattern with specific examples
+- **Detection pattern format** - Python functions with Finding objects
+- **Checklist format** - Specific, verifiable items
+
+**See STANDARDS_SKILLS.md for format details. Only skill-specific content is documented below.**
 
 ---
 

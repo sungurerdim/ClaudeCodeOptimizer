@@ -11,6 +11,21 @@ pain_points: [9, 10, 11]
 
 # Deployment Strategies
 
+---
+
+## Standard Structure
+
+**This skill follows [STANDARDS_SKILLS.md](../STANDARDS_SKILLS.md):**
+
+- **Standard sections** - Domain, Purpose, Core Techniques, Anti-Patterns, Checklist
+- **Code example format** - Bad/Good pattern with specific examples
+- **Detection pattern format** - Python functions with Finding objects
+- **Checklist format** - Specific, verifiable items
+
+**See STANDARDS_SKILLS.md for format details. Only skill-specific content is documented below.**
+
+---
+
 ## Core Strategies
 
 **Blue-Green**: Two environments (blue=current, green=new). Switch traffic atomically. Instant rollback via traffic switch.

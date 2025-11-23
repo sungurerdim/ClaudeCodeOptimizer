@@ -161,25 +161,25 @@ CCO provides 11 slash commands for discovery, fixing, generation, and optimizati
 
 ### Productivity - Save Time
 
-#### `/cco-optimize`
+#### `/cco-optimize-code-performance`
 
 **Speed up your code with metrics**
 
 ```bash
 # Database optimization
-/cco-optimize --database
+/cco-optimize-code-performance --database
 
 # Docker image size reduction
-/cco-optimize --docker
+/cco-optimize-code-performance --docker
 
 # Frontend bundle size
-/cco-optimize --bundle
+/cco-optimize-code-performance --bundle
 
 # All performance bottlenecks
-/cco-optimize --performance
+/cco-optimize-code-performance --performance
 
 # Multiple targets
-/cco-optimize --database --docker
+/cco-optimize-code-performance --database --docker
 ```
 
 **Types:**
@@ -192,16 +192,16 @@ CCO provides 11 slash commands for discovery, fixing, generation, and optimizati
 
 ---
 
-#### `/cco-slim`
+#### `/cco-optimize-code-performance-context-usage`
 
 **Context optimization and token reduction**
 
 ```bash
 # Primary: CLAUDE.md duplication elimination
-/cco-slim
+/cco-optimize-code-performance-context-usage
 
 # With specific focus
-/cco-slim "Focus on principle duplication"
+/cco-optimize-code-performance-context-usage "Focus on principle duplication"
 ```
 
 **Primary Mission:**
@@ -317,7 +317,7 @@ pip uninstall claudecodeoptimizer
 ### Performance Optimization
 ```bash
 /cco-audit --performance --database
-/cco-optimize --database --docker
+/cco-optimize-code-performance --database --docker
 ```
 
 ### Quality Improvement
@@ -339,7 +339,7 @@ pip uninstall claudecodeoptimizer
 /cco-audit --all           # Find all issues
 /cco-fix --all             # Fix safe issues
 /cco-generate --all        # Create missing components
-/cco-optimize --all        # Performance tuning
+/cco-optimize-code-performance --all        # Performance tuning
 /cco-commit                # Clean commits
 ```
 

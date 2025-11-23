@@ -38,7 +38,7 @@ User runs command          Agent executes           Skills activate
                            - Quality output         - Integration tests
                            - Complete code          - Coverage targets
 
-/cco-slim              →   slim-agent (Sonnet)  →   Context optimization
+/cco-optimize-code-performance-context-usage              →   optimize-context-usage-agent (Sonnet)  →   Context optimization
                            - CLAUDE.md analysis     - Duplication detection
                            - Token optimization     - Quality preservation
                            - Semantic verification  - Content evaluation
@@ -152,7 +152,7 @@ n**Auto-Activating Skills (26 total):** Security (5), Testing (2), Database (2),
 - **audit-agent** (Haiku) - Fast scanning, cost-efficient pattern detection
 - **fix-agent** (Sonnet) - Accurate code modifications
 - **generate-agent** (Sonnet) - Quality code generation
-- **slim-agent** (Sonnet) - Context optimization and token reduction with quality preservation
+- **optimize-context-usage-agent** (Sonnet) - Context optimization and token reduction with quality preservation
 
 ### Agent Format
 
@@ -360,7 +360,7 @@ CCO is designed for easy extension:
 - ✅ **GitIgnore Cleanup** - Removed unnecessary entries
 
 ### Features
-- ✅ **Context Optimization** - `/cco-slim` primary focus on CLAUDE.md duplication elimination
+- ✅ **Context Optimization** - `/cco-optimize-code-performance-context-usage` primary focus on CLAUDE.md duplication elimination
 - ✅ **Installation UX** - Before/after file count summary, template tracking
 - ✅ **Command Enhancements** - audit, fix, generate, slim, optimize, implement, commit all improved
 - ✅ **Skill Integration** - Unused skills now properly integrated into commands

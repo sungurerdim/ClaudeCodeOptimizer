@@ -10,8 +10,24 @@ pain_points: [11, 12]
 ---
 
 # Skill: Developer Experience
+
 **Domain**: Developer Productivity
 **Purpose**: Optimize onboarding (< 1hr to first commit), local/prod parity, reproducible builds, fast feedback loops.
+
+---
+
+## Standard Structure
+
+**This skill follows [STANDARDS_SKILLS.md](../STANDARDS_SKILLS.md):**
+
+- **Standard sections** - Domain, Purpose, Core Techniques, Anti-Patterns, Checklist
+- **Code example format** - Bad/Good pattern with specific examples
+- **Detection pattern format** - Python functions with Finding objects
+- **Checklist format** - Specific, verifiable items
+
+**See STANDARDS_SKILLS.md for format details. Only skill-specific content is documented below.**
+
+---
 
 ## Core Techniques
 

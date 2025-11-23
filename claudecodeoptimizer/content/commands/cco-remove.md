@@ -1,7 +1,7 @@
 ---
 name: cco-remove
 description: Complete CCO uninstall with full transparency showing exactly what will be deleted before confirmation
-
+
 principles: [U_EVIDENCE_BASED_ANALYSIS, U_CHANGE_VERIFICATION]
 keywords: [remove, uninstall, delete, cleanup, unset]
 category: management
@@ -11,6 +11,18 @@ pain_points: []
 # cco-remove
 
 **Complete CCO uninstall with full transparency and confirmation.**
+---
+
+## Built-in References
+
+**This command inherits standard behaviors from:**
+
+- **[STANDARDS_COMMANDS.md](../STANDARDS_COMMANDS.md)** - Standard structure, execution protocol, file discovery
+- **[STANDARDS_QUALITY.md](../STANDARDS_QUALITY.md)** - UX/DX, efficiency, simplicity, performance standards
+- **[LIBRARY_PATTERNS.md](../LIBRARY_PATTERNS.md)** - Reusable patterns (Step 0, Selection, Accounting, Progress, Error Handling)
+- **[STANDARDS_AGENTS.md](../STANDARDS_AGENTS.md)** - File discovery, model selection, parallel execution
+
+**See these files for detailed patterns. Only command-specific content is documented below.**
 
 ---
 
@@ -33,6 +45,8 @@ ls ~/.claude/
 ```
 
 ### Step 2: Show What Will Be Deleted
+
+**See [LIBRARY_PATTERNS.md](../LIBRARY_PATTERNS.md#pattern-8-dynamic-results-generation) for reporting pattern.**
 
 ```markdown
 ============================================================
@@ -58,8 +72,6 @@ GLOBAL DIRECTORY (~/.claude/)
     - C_*.md: {C_PRINCIPLE_COUNT} (Claude guidelines)
     - P_*.md: {P_PRINCIPLE_COUNT} (Project principles)
   • Templates: {TEMPLATE_COUNT} files
-    - settings.json.cco (Claude Code configuration)
-    - statusline.js.cco (Status line script)
 
 ------------------------------------------------------------
   Total: {TOTAL_COUNT} files in ~/.claude/
@@ -82,7 +94,6 @@ WHAT WILL NOT BE DELETED:
 
 ============================================================
 
-
 AskUserQuestion({
   questions: [{
     question: "PERMANENT DELETION: This will remove ALL CCO files. This action CANNOT be undone. Are you absolutely sure?",
@@ -97,13 +108,7 @@ AskUserQuestion({
 })
 ```
 
-### Step 3: Confirm Deletion
-
-User must select "Yes, delete everything" to proceed.
-
-Any other selection cancels.
-
-### Step 4: Execute Removal
+### Step 3: Execute Removal
 
 **Remove package:**
 ```bash
@@ -118,14 +123,16 @@ elif uv tool list | grep claudecodeoptimizer:
 
 **Remove global directory:**
 ```bash
-# Backup first (optional safety)
+# Backup first (if user selected)
 mv ~/.claude/ ~/.claude.backup-$(date +%Y%m%d-%H%M%S)
 
 # Or delete directly if user confirmed
 rm -rf ~/.claude/
 ```
 
-### Step 5: Verify Removal
+### Step 4: Verify Removal
+
+**Pattern:** Pattern 4 (Complete Accounting)
 
 ```markdown
 ============================================================
@@ -170,6 +177,52 @@ BACKUP (if created):
 
 ---
 
+## Error Handling
+
+**Pattern:** Pattern 5 (Error Handling)
+
+**If package not found:**
+```markdown
+[WARNING] CCO Package Not Found
+
+The CCO package is not installed via pip/pipx/uv.
+
+However, global directory exists: ~/.claude/
+Current CCO files: {TOTAL_COUNT}
+
+AskUserQuestion({
+  questions: [{
+    question: "CCO package not found, but global directory exists. Delete global CCO files only?",
+    header: "Package Not Found",
+    multiSelect: false,
+    options: [
+      {label: "Yes", description: "Delete global CCO files"},
+      {label: "No", description: "Cancel deletion"}
+    ]
+  }]
+})
+```
+
+**If removal fails:**
+```python
+AskUserQuestion({
+  questions: [{
+    question: "Removal failed for {N} files: {error_summary}. How to proceed?",
+    header: "Removal Error",
+    multiSelect: false,
+    options: [
+      {label: "Retry", description: "Try removing failed files again"},
+      {label: "Force delete", description: "Force removal (may require admin permissions)"},
+      {label: "Manual cleanup", description: "Show files to delete manually"},
+      {label: "Leave as-is", description: "Keep remaining files"},
+      {label: "Cancel", description: "Stop removal"}
+    ]
+  }]
+})
+```
+
+---
+
 ## Safety Features
 
 1. **Preview before delete:** Show exactly what will be removed
@@ -177,50 +230,6 @@ BACKUP (if created):
 3. **Optional backup:** Backup before deletion
 4. **Verification:** Confirm removal completed
 5. **Zero project pollution:** Only CCO files removed, no project files
-
----
-
-## Error Handling
-
-If package not found:
-```markdown
-============================================================
-[WARNING] CCO Package Not Found
-============================================================
-
-The CCO package is not installed via pip/pipx/uv.
-
-However, global directory exists: ~/.claude/
-
-  Current CCO files:
-    • Agents: {AGENT_COUNT} files
-    • Commands: {COMMAND_COUNT} files
-    • Skills: {SKILL_COUNT} files
-    • Principles: {PRINCIPLE_COUNT} files
-    • Templates: {TEMPLATE_COUNT} files
-
-------------------------------------------------------------
-  Total: {TOTAL_COUNT} CCO files found
-------------------------------------------------------------
-
-AskUserQuestion({  questions: [{    question: "CCO package not found, but global directory exists. Delete global CCO files only?",    header: "Warning: Package Not Found",    multiSelect: false,    options: [      {label: "Yes", description: "Delete global CCO files"},      {label: "No", description: "Cancel deletion"}    ]  }]})
-```
-
-If directory not found but package exists:
-```markdown
-============================================================
-[WARNING] Global Directory Not Found
-============================================================
-
-Global directory (~/.claude/) does not contain CCO files.
-
-However, CCO package is installed:
-  • Package: claudecodeoptimizer
-  • Location: {PACKAGE_LOCATION}
-  • Version: {VERSION}
-
-AskUserQuestion({  questions: [{    question: "Global directory not found, but CCO package is installed. Uninstall package only?",    header: "Warning: Directory Not Found",    multiSelect: false,    options: [      {label: "Yes", description: "Uninstall package only"},      {label: "No", description: "Cancel uninstallation"}    ]  }]})
-```
 
 ---
 
@@ -242,8 +251,6 @@ AskUserQuestion({  questions: [{    question: "Global directory not found, but C
 ```bash
 # Uninstall CCO
 /cco-remove
-
-# Type 'yes-delete-cco' to confirm
 ```
 
 ---
@@ -260,26 +267,3 @@ cco-setup
 pipx install git+https://github.com/sungurerdim/ClaudeCodeOptimizer.git
 cco-setup
 ```
-
-## Removal Error Handling
-
-**If removal fails for some files:**
-
-AskUserQuestion({
-  questions: [{
-    question: "Removal failed for {N} files: {error_summary}. How to proceed?",
-    header: "Removal Error",
-    multiSelect: false,
-    options: [
-      {label: "Retry", description: "Try removing failed files again"},
-      {label: "Force delete", description: "Force removal (may require admin permissions)"},
-      {label: "Manual cleanup", description: "Show files to delete manually"},
-      {label: "Leave as-is", description: "Keep remaining files"},
-      {label: "Cancel", description: "Stop removal"}
-    ]
-  }]
-})
-
-**Permission errors:**
-- Windows: May require running as Administrator
-- Unix: May require sudo or different file permissions

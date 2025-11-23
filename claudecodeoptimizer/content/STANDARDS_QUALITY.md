@@ -2,7 +2,7 @@
 
 **Purpose:** Enforce consistent UX/DX, maximum efficiency, simplicity, and performance across ALL CCO commands.
 
-**Scope:** cco-audit, cco-fix, cco-generate, cco-optimize, cco-slim, cco-implement, cco-commit
+**Scope:** cco-audit, cco-fix, cco-generate, cco-optimize-code-performance, cco-optimize-context-usage, cco-implement, cco-commit
 
 ---
 
@@ -95,9 +95,9 @@ Every CCO command MUST satisfy these requirements:
 
 **Command-Specific:**
 - cco-audit, cco-fix, cco-generate: + U_FOLLOW_PATTERNS
-- cco-fix, cco-optimize: + U_MINIMAL_TOUCH
+- cco-fix, cco-optimize-code-performance: + U_MINIMAL_TOUCH
 - cco-generate: + U_NO_OVERENGINEERING
-- cco-slim: + C_CONTEXT_WINDOW_MGMT
+- cco-optimize-context-usage: + C_CONTEXT_WINDOW_MGMT
 
 ---
 

@@ -74,7 +74,7 @@ CCO includes 4 specialized agents optimized for different task types:
 
 ---
 
-### 4. slim-agent
+### 4. optimize-context-usage-agent
 
 **Model:** Sonnet (semantic verification)
 

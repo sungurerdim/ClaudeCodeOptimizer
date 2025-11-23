@@ -18,6 +18,18 @@ pain_points: [1, 6, 11]
 **Purpose:** Reduce bundle size (<200KB gzipped), ensure WCAG 2.1 AA compliance, achieve Core Web Vitals targets (LCP <2.5s, FID <100ms, CLS <0.1), enable SPA SEO
 
 **Related:** P_LAZY_LOADING, P_PERFORMANCE_PROFILE_BEFORE_OPTIMIZE
+---
+
+## Standard Structure
+
+**This skill follows [STANDARDS_SKILLS.md](../STANDARDS_SKILLS.md):**
+
+- **Standard sections** - Domain, Purpose, Core Techniques, Anti-Patterns, Checklist
+- **Code example format** - Bad/Good pattern with specific examples
+- **Detection pattern format** - Python functions with Finding objects
+- **Checklist format** - Specific, verifiable items
+
+**See STANDARDS_SKILLS.md for format details. Only skill-specific content is documented below.**
 
 ---
 
