@@ -60,3 +60,9 @@ def process_items_slow(items):
 def process_items_fast(items):
 ```
 **Why wrong**: ---
+---
+
+## Checklist
+
+- [ ] *No rules extracted*
+

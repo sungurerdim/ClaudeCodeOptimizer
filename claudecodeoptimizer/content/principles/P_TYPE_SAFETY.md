@@ -60,3 +60,9 @@ def process_payment(cart, user, method):
         return None
 ```
 **Why wrong**: ---
+---
+
+## Checklist
+
+- [ ] *No rules extracted*
+

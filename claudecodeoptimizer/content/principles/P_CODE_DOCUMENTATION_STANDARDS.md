@@ -56,3 +56,9 @@ def calc_total(items, tax=0.08, disc=0):
 # Problems: No parameter descriptions, no examples, algorithm unexplained
 ```
 **Why wrong**: ---
+---
+
+## Checklist
+
+- [ ] *No rules extracted*
+

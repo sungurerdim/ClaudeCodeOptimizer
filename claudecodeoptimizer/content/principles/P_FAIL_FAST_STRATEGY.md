@@ -425,3 +425,13 @@ except NetworkError as e:
 **Fail-Fast Error Handling** means errors cause immediate, visible failure instead of silent continuation. This prevents error accumulation, data corruption, and debugging nightmares.
 
 **Core Rule**: If an operation fails, STOP IMMEDIATELY. Don't log-and-continue, don't return null, don't catch-all exceptions.
+---
+
+## Checklist
+
+Before implementation:
+- [ ] Principle requirements reviewed
+- [ ] Implementation follows P_FAIL_FAST_STRATEGY guidelines
+- [ ] Code verified against principle standards
+- [ ] Documentation updated if needed
+

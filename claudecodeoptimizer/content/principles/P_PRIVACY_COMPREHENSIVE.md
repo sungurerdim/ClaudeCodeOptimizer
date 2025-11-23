@@ -44,3 +44,9 @@ def process_payment(user_id: str, card_number: str):
 def process_payment(user_id: str, card_number: str):
 ```
 **Why right**: ---
+---
+
+## Checklist
+
+- [ ] *No rules extracted*
+

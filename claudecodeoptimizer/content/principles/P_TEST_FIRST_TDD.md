@@ -296,3 +296,13 @@ def calculate_total(items):
 **The Cycle: RED → GREEN → REFACTOR → Repeat**
 
 **Core Rule**: No production code without a failing test first.
+---
+
+## Checklist
+
+Before implementation:
+- [ ] Principle requirements reviewed
+- [ ] Implementation follows P_TEST_FIRST_TDD guidelines
+- [ ] Code verified against principle standards
+- [ ] Documentation updated if needed
+

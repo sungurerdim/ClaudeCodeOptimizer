@@ -59,3 +59,9 @@ jobs:
     steps:
 ```
 **Why wrong**: ---
+---
+
+## Checklist
+
+- [ ] *No rules extracted*
+

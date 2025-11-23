@@ -21,3 +21,9 @@ related_skills: []
 ---
 
 ## Examples
+---
+
+## Checklist
+
+- [ ] *No rules extracted*
+

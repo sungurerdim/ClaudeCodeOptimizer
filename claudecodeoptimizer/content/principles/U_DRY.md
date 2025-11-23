@@ -85,3 +85,16 @@ from config import USE_NEW_API
 if USE_NEW_API:
     use_new_api()
 ```
+
+---
+
+## Checklist
+
+Before committing code:
+- [ ] No duplicate function definitions (search for similar function names)
+- [ ] No magic numbers except 0, 1, -1 (extract to named constants)
+- [ ] All constants defined once in a single location
+- [ ] Database is single source of truth (cache/aggregates are derived)
+- [ ] Configuration values read from one place (no repeated `os.getenv()` calls)
+- [ ] No copy-paste code blocks (extract to reusable function)
+- [ ] When found duplication: refactor to single source, then update all references

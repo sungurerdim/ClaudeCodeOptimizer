@@ -305,3 +305,13 @@ jobs:
 **Complete Integration Check** means verifying every function is called, every import is used, and every reference is valid. Zero orphaned code, zero broken integrations.
 
 **Core Rule**: If it's not integrated (called, imported, referenced), remove it or fix the integration.
+---
+
+## Checklist
+
+Before implementation:
+- [ ] Principle requirements reviewed
+- [ ] Implementation follows P_INTEGRATION_CHECK guidelines
+- [ ] Code verified against principle standards
+- [ ] Documentation updated if needed
+

@@ -44,3 +44,9 @@ class LocalFeatureFlags(FeatureFlagBackend):
             'advanced_analytics': False,
 ```
 **Why right**: ---
+---
+
+## Checklist
+
+- [ ] *No rules extracted*
+

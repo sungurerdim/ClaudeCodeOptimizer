@@ -304,3 +304,13 @@ def validate_input(data: str) -> str:
 - **Complete error handling** - Handle all error cases with specific exceptions
 - **No placeholders** - No `return True` bypasses or stub implementations
 - **Proper logging** - Structured, searchable logs; no sensitive data
+---
+
+## Checklist
+
+Before implementation:
+- [ ] Principle requirements reviewed
+- [ ] Implementation follows P_PRODUCTION_GRADE guidelines
+- [ ] Code verified against principle standards
+- [ ] Documentation updated if needed
+
