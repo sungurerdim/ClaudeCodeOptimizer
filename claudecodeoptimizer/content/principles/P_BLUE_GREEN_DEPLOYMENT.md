@@ -43,3 +43,9 @@ spec:
         app: myapp
 ```
 **Why right**: **Advantages:**
+---
+
+## Checklist
+
+- [ ] *No rules extracted*
+

@@ -53,3 +53,9 @@ related_skills: []
 # Single point of failure; Alex on vacation = nobody can deploy
 ```
 **Why wrong**: ---
+---
+
+## Checklist
+
+- [ ] *No rules extracted*
+

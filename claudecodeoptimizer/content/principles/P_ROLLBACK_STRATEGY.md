@@ -23,3 +23,9 @@ Scrambling during incidents wastes time, increases user impact Manual rollback p
 ---
 
 ## Examples
+---
+
+## Checklist
+
+- [ ] *No rules extracted*
+

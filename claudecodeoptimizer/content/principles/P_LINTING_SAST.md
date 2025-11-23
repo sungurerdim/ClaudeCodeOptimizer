@@ -59,3 +59,9 @@ def get_data(user_id):
     # Pattern: api_key = "..." (any hardcoded key value)
 ```
 **Why wrong**: ---
+---
+
+## Checklist
+
+- [ ] *No rules extracted*
+

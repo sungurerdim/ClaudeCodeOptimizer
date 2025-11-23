@@ -371,3 +371,13 @@ echo "dependencies_with_vulnerabilities $(npm audit --json | jq '.metadata.vulne
 **Dependency Management** means keeping dependencies updated, scanning for vulnerabilities, locking versions, and auditing licenses. Proactive management prevents security incidents and technical debt.
 
 **Core Rule**: Lock versions, scan weekly, update monthly, audit constantly.
+---
+
+## Checklist
+
+Before implementation:
+- [ ] Principle requirements reviewed
+- [ ] Implementation follows P_DEPENDENCY_MANAGEMENT guidelines
+- [ ] Code verified against principle standards
+- [ ] Documentation updated if needed
+

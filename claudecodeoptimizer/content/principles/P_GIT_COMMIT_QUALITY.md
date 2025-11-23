@@ -357,3 +357,13 @@ Updated all 47 call sites for consistency."
 - **Clean history** - Squash WIP before pushing
 - **Ask user** - When multiple types detected, ask single vs atomic preference
 - **Pre-commit checks** - Run linting/formatting before commit
+---
+
+## Checklist
+
+Before implementation:
+- [ ] Principle requirements reviewed
+- [ ] Implementation follows P_GIT_COMMIT_QUALITY guidelines
+- [ ] Code verified against principle standards
+- [ ] Documentation updated if needed
+

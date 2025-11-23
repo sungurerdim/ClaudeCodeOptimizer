@@ -115,3 +115,16 @@ Present critical change points to user for manual verification.
 - **Comprehensive** (2-5min): 5+ files, Explore agent + full analysis
 
 **Never skip verification** - adjust thoroughness to scope.
+
+---
+
+## Checklist
+
+Before claiming completion:
+- [ ] Ran grep to find ALL affected points (definitions, callers, imports, config, tests, docs)
+- [ ] Created TODOs for each affected file/location
+- [ ] Verified each change individually (grep old name in file = 0 results)
+- [ ] Completed final verification: `grep -r "old_name"` returns 0 results
+- [ ] Verified new name exists where expected
+- [ ] No "should work" claims - only verified facts reported
+- [ ] If no tests available, performed structural verification (syntax check, import validation)

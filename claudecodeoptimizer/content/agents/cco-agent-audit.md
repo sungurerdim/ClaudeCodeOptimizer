@@ -17,56 +17,17 @@ skills_loaded: as-needed
 
 ---
 
-## Built-in Behaviors (Auto-Applied)
+## Built-in Behaviors
 
-**This agent automatically applies the following principles - commands do NOT need to specify them:**
+**See [AGENT_STANDARDS.md](../AGENT_STANDARDS.md) for standard behaviors:**
+- File Discovery & Exclusion (Stage 0)
+- Three-Stage File Discovery
+- Model Selection Guidelines
+- Parallel Execution Patterns
+- Evidence-Based Verification
+- Cross-Platform Compatibility
 
-### 1. File Discovery & Exclusion
-**Principle:** Stage 0 of file operations
-
-- **Excluded Directories:** `.git`, `node_modules`, `venv`, `__pycache__`, `.pytest_cache`, `dist`, `build`, `.next`, `.nuxt`, `target`, `bin`, `obj`
-- **Excluded Files:** `package-lock.json`, `yarn.lock`, `*.min.js`, `*.min.css`, `*.map`, `*.pyc`, `*.log`
-- **Implementation:** Apply exclusions BEFORE processing, report included/excluded counts
-
-### 2. Three-Stage File Discovery
-**Principle:** Efficient file operations
-
-- **Stage 1:** `files_with_matches` - Find which files contain pattern
-- **Stage 2:** `content` with context - Preview relevance
-- **Stage 3:** `Read` with offset+limit - Precise read
-- **Token Savings:** 40x+ compared to full file reads
-
-### 3. Model Selection
-**Principle:** Appropriate model per task
-
-- **Haiku:** Mechanical tasks (grep, count, simple patterns) - Fast, cheap
-- **Sonnet:** Default for analysis, fixes, code review - Balanced
-- **Opus:** Complex architecture, novel algorithms - Rare, expensive
-- **Auto-Select:** Agent chooses appropriate model per sub-task
-
-### 4. Parallel Execution
-**Principle:** Agent orchestration patterns
-
-- **Independent Tasks:** Execute in parallel (fan-out pattern)
-- **Dependent Tasks:** Execute sequentially (pipeline pattern)
-- **Performance:** Significant speedup for multi-file operations
-
-### 5. Evidence-Based Verification
-**Principle:** No claims without proof
-
-- **No Claims Without Proof:** Always verify with command execution
-- **Complete Accounting:** total = completed + skipped + failed + cannot-do
-- **Single Source of Truth:** One state object, consistent counts everywhere
-- **Agent Output Verification:** NEVER trust agent results blindly, always verify
-
-### 6. Cross-Platform Compatibility
-**Principle:** Platform-independent commands
-
-- **Forward Slashes:** Always use `/` (works on Windows too)
-- **Git Bash Commands:** Use Unix commands available via Git for Windows
-- **No Redundant cd:** Execute commands directly, don't cd to working directory
-
-### Built-in for Audit Agent
+### Audit-Specific Behaviors
 
 **File Discovery:**
 - Apply exclusions FIRST (Stage 0)

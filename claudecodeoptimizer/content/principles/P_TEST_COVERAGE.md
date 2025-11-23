@@ -60,3 +60,9 @@ def transfer_funds(from_account, to_account, amount):
     to_account.balance += amount
 ```
 **Why wrong**: ---
+---
+
+## Checklist
+
+- [ ] *No rules extracted*
+

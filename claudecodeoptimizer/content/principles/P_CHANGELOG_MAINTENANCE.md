@@ -36,3 +36,9 @@ Users don't know what changed; hesitant to upgrade Breaking changes hidden; prod
 # Problems: Vague, no breaking changes documented, 20+ releases undocumented
 ```
 **Why wrong**: ---
+---
+
+## Checklist
+
+- [ ] *No rules extracted*
+
