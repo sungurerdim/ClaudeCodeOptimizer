@@ -325,6 +325,7 @@ Content with emojis: 🚀 ✅ ⚠️ 🔒
         assert "中文" in result["content"]
         assert "🚀" in result["content"]
 
+
 class TestLoadAllPrinciples:
     """Test load_all_principles function"""
 
@@ -492,6 +493,7 @@ category: archived
         assert len(result) == 1
         assert result[0]["id"] == "U_DRY"
 
+
 class TestGetPrincipleById:
     """Test get_principle_by_id function"""
 
@@ -578,6 +580,7 @@ category: claude
         assert result is not None
         assert result["id"] == "P_LINTING"
         assert result["title"] == "Linting"
+
 
 class TestGetPrinciplesByCategory:
     """Test get_principles_by_category function"""
@@ -682,6 +685,7 @@ category: universal
         result = get_principles_by_category("any_category", principles_dir)
 
         assert result == []
+
 
 class TestGetCategoryMapping:
     """Test get_category_mapping function"""
@@ -817,6 +821,7 @@ category: testing
         # Since files are loaded in sorted order, the mapping should reflect that
         assert result["testing"] == ["P_A_FIRST", "P_M_MIDDLE", "P_Z_LAST"]
 
+
 class TestEdgeCases:
     """Test edge cases and error scenarios"""
 
@@ -941,6 +946,7 @@ category: testing
         except Exception:
             # If it raises an error, that's also acceptable
             pass
+
 
 class TestAdditionalEdgeCases:
     """Additional edge case tests for thorough coverage"""
@@ -1265,6 +1271,7 @@ category: testing
         assert result[0]["id"] == "A_FIRST"
         assert result[1]["id"] == "M_MIDDLE"
         assert result[2]["id"] == "Z_LAST"
+
 
 if __name__ == "__main__":
     pytest.main([__file__, "-v"])

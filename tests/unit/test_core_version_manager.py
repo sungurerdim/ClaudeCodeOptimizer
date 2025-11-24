@@ -107,7 +107,7 @@ class TestDetectBumpType:
     def test_empty_commits(self, temp_dir: Path) -> None:
         """Test empty commit list"""
         vm = VersionManager(temp_dir)
-        commits = []
+        commits: list[str] = []
         assert vm.detect_bump_type(commits) == BumpType.NO_BUMP
 
     def test_priority_breaking_over_feat(self, temp_dir: Path) -> None:

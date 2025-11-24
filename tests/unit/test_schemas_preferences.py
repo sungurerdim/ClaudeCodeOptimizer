@@ -140,13 +140,13 @@ class TestProjectIdentity:
     def test_missing_required_fields(self) -> None:
         """Test that missing required fields raises validation error"""
         with pytest.raises(ValidationError):
-            ProjectIdentity()
+            ProjectIdentity()  # type: ignore[call-arg]
 
         with pytest.raises(ValidationError):
-            ProjectIdentity(name="Test")
+            ProjectIdentity(name="Test")  # type: ignore[call-arg]
 
         with pytest.raises(ValidationError):
-            ProjectIdentity(primary_language="python")
+            ProjectIdentity(primary_language="python")  # type: ignore[call-arg]
 
     def test_empty_name_validation(self) -> None:
         """Test that empty name is invalid"""
@@ -877,7 +877,7 @@ class TestCCOPreferences:
     def test_missing_required_project_identity(self) -> None:
         """Test that project_identity is required"""
         with pytest.raises(ValidationError):
-            CCOPreferences()
+            CCOPreferences()  # type: ignore[call-arg]
 
     def test_timestamp_immutability_concept(self) -> None:
         """Test that timestamps are set at creation"""

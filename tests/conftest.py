@@ -123,8 +123,6 @@ def principles_manager_factory() -> Callable[[list[dict[str, Any]]], PrinciplesM
             )
             manager.principles[p_data["id"]] = principle
 
-        if selection_strategies:
-            manager.selection_strategies = selection_strategies
         if categories:
             manager.categories = categories
 

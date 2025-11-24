@@ -89,7 +89,7 @@ class TestCommandMetadata:
     def test_missing_required_fields(self) -> None:
         """Test that missing required fields raises validation error"""
         with pytest.raises(ValidationError):
-            CommandMetadata()
+            CommandMetadata()  # type: ignore[call-arg]
 
     def test_success_rate_bounds(self) -> None:
         """Test success rate is bounded between 0 and 1"""
@@ -184,10 +184,10 @@ class TestCommandSelection:
     def test_missing_required_fields(self) -> None:
         """Test that missing required fields raises validation error"""
         with pytest.raises(ValidationError):
-            CommandSelection()
+            CommandSelection()  # type: ignore[call-arg]
 
         with pytest.raises(ValidationError):
-            CommandSelection(selected_commands=["cmd1"])
+            CommandSelection(selected_commands=["cmd1"])  # type: ignore[call-arg]
 
 
 class TestCommandRegistry:

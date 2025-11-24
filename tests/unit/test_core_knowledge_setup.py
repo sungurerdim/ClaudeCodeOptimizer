@@ -554,8 +554,8 @@ class TestSetupClaudeMd:
 
         _setup_claude_md(claude_dir, principles_dir)
 
-        content = claude_md_path = claude_dir / "CLAUDE.md"
-        content = content.read_text()
+        claude_md_path = claude_dir / "CLAUDE.md"
+        content = claude_md_path.read_text()
 
         # U_* should come before C_*
         u_aaa_pos = content.find("U_AAA")

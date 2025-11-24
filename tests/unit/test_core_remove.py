@@ -5,8 +5,6 @@ Tests CCORemover class and remove_cco function for clean uninstallation.
 Target Coverage: 100%
 """
 
-from typing import Any
-
 import pytest
 
 from claudecodeoptimizer.core.remove import CCORemover, remove_cco
@@ -109,10 +107,10 @@ class TestRemoveCommands:
 
         original_unlink = Path.unlink
 
-        def raise_on_cco_test(self, *args: tuple[Any, ...], **kwargs: dict[str, Any]) -> None:
+        def raise_on_cco_test(self, *args: object, **kwargs: object) -> None:
             if "cco-test.md" in str(self):
                 raise PermissionError("Cannot delete")
-            return original_unlink(self, *args, **kwargs)
+            return original_unlink(self, *args, **kwargs)  # type: ignore[arg-type]
 
         monkeypatch.setattr(Path, "unlink", raise_on_cco_test)
 
@@ -190,10 +188,10 @@ class TestRemovePrinciples:
 
         original_unlink = Path.unlink
 
-        def raise_on_principle(self, *args, **kwargs):
+        def raise_on_principle(self, *args: object, **kwargs: object):
             if "U_TEST.md" in str(self):
                 raise PermissionError("Cannot delete")
-            return original_unlink(self, *args, **kwargs)
+            return original_unlink(self, *args, **kwargs)  # type: ignore[arg-type]
 
         monkeypatch.setattr(Path, "unlink", raise_on_principle)
 
@@ -265,10 +263,10 @@ class TestRemoveAgents:
 
         original_unlink = Path.unlink
 
-        def raise_on_agent(self, *args, **kwargs):
+        def raise_on_agent(self, *args: object, **kwargs: object):
             if "cco-agent-test.md" in str(self):
                 raise PermissionError("Cannot delete")
-            return original_unlink(self, *args, **kwargs)
+            return original_unlink(self, *args, **kwargs)  # type: ignore[arg-type]
 
         monkeypatch.setattr(Path, "unlink", raise_on_agent)
 
@@ -359,10 +357,10 @@ class TestRemoveSkills:
 
         original_unlink = Path.unlink
 
-        def raise_on_skill(self, *args, **kwargs):
+        def raise_on_skill(self, *args: object, **kwargs: object):
             if "cco-skill-test.md" in str(self):
                 raise PermissionError("Cannot delete")
-            return original_unlink(self, *args, **kwargs)
+            return original_unlink(self, *args, **kwargs)  # type: ignore[arg-type]
 
         monkeypatch.setattr(Path, "unlink", raise_on_skill)
 
@@ -562,10 +560,10 @@ class TestRemoveStandardsAndTemplates:
 
         original_unlink = Path.unlink
 
-        def raise_on_standards(self, *args, **kwargs):
+        def raise_on_standards(self, *args: object, **kwargs: object):
             if "STANDARDS_SKILLS.md" in str(self):
                 raise PermissionError("Cannot delete")
-            return original_unlink(self, *args, **kwargs)
+            return original_unlink(self, *args, **kwargs)  # type: ignore[arg-type]
 
         monkeypatch.setattr(Path, "unlink", raise_on_standards)
 
@@ -595,10 +593,10 @@ class TestRemoveStandardsAndTemplates:
 
         original_unlink = Path.unlink
 
-        def raise_on_template(self, *args, **kwargs):
+        def raise_on_template(self, *args: object, **kwargs: object):
             if "settings.json.cco" in str(self):
                 raise PermissionError("Cannot delete")
-            return original_unlink(self, *args, **kwargs)
+            return original_unlink(self, *args, **kwargs)  # type: ignore[arg-type]
 
         monkeypatch.setattr(Path, "unlink", raise_on_template)
 
