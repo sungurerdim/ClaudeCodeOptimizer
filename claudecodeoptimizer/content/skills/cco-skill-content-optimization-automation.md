@@ -1,30 +1,12 @@
 ---
 name: Content Optimization & Token Efficiency
-description: Automatically detect, analyze, and optimize Claude Code content files (skills, commands, agents, principles) to reduce token consumption while preserving 100% semantic meaning and functionality.
+description: Automatically detect, analyze, and optimize Claude Code content files to reduce token consumption while preserving 100% semantic meaning and functionality
+keywords: [context window, token limit, optimize content, reduce tokens, large files, verbose content, context efficiency, token efficiency, content cleanup, optimization]
 category: productivity
-activation_keywords:
-  - context window
-  - token limit
-  - optimize content
-  - reduce tokens
-  - large files
-  - verbose content
-  - context efficiency
-file_patterns:
-  - "**/.claude/**/*.md"
-  - "**/claudecodeoptimizer/content/**/*.md"
-  - "**/CLAUDE.md"
-triggers:
-  - Large skill/command/agent files detected
-  - Context window warnings
-  - Manual optimization request
-  - Post-content-addition cleanup
-related_principles:
-  - U_MINIMAL_TOUCH
-  - U_CHANGE_VERIFICATION
-  - U_EVIDENCE_BASED_ANALYSIS
-  - C_EFFICIENT_FILE_OPERATIONS
-  - C_AGENT_ORCHESTRATION_PATTERNS
+related_commands:
+  action_types: [audit, optimize, status]
+  categories: [quality]
+pain_points: [5]
 ---
 
 # Skill: Content Optimization & Token Efficiency
@@ -700,26 +682,6 @@ for file in large_files:
 - [ ] Verify principles still load correctly
 - [ ] Check no broken @content/... references
 - [ ] Confirm context window usage improved
-
----
-
-## Command Discovery Protocol
-
-When this skill is active, find relevant commands by searching `~/.claude/commands/` metadata:
-
-```yaml
-# Search criteria for this skill's domain
-action_types: [audit, optimize, status]
-keywords: [optimization, token reduction, context window, verbose files, content cleanup]
-category: quality
-pain_points: [5]
-```
-
-**How Claude finds commands:**
-1. Grep command files for `keywords:.*optim|token|context` in frontmatter
-2. Present matching commands with their parameters
-
-This ensures commands are always current even when renamed or updated.
 
 ---
 

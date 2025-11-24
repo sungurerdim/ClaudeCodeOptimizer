@@ -1,5 +1,5 @@
 ---
-id: U_FAIL_FAST
+id: P_FAIL_FAST_STRATEGY
 title: Fail-Fast Error Handling
 category: universal
 severity: critical
@@ -10,7 +10,7 @@ applicability:
   languages: ['all']
 ---
 
-# U_FAIL_FAST: Fail-Fast Error Handling 🔴
+# P_FAIL_FAST_STRATEGY: Fail-Fast Error Handling 🔴
 
 **Severity**: Critical
 

@@ -16,20 +16,6 @@ skills_loaded: as-needed
 **Purpose**: Execute audit checks with real-time progress reporting and streaming results.
 ---
 
-## Built-in Behaviors
-
-**This agent inherits from [STANDARDS_AGENTS.md](../STANDARDS_AGENTS.md):**
-
-- **File Discovery & Exclusion (Stage 0)** - Apply exclusions BEFORE processing
-- **Three-Stage File Discovery** - files_with_matches → content → Read
-- **Model Selection Guidelines** - Haiku/Sonnet/Opus based on task complexity
-- **Parallel Execution Patterns** - Fan-out for independent tasks
-- **Evidence-Based Verification** - Never trust blindly, always verify
-- **Cross-Platform Compatibility** - Forward slashes, Git Bash, quoted paths
-
-**See STANDARDS_AGENTS.md for detailed implementation. Only agent-specific behavior is documented below.**
-
----
 
 ## Built-in Behaviors
 
@@ -411,7 +397,7 @@ def scan_sql_injection(file: str) -> List[Finding]:
             line=match.line,
             code=match.content,
             risk="User input directly concatenated into SQL query allows attackers to modify query logic",
-            fix="Use parameterized queries: db.execute('SELECT * FROM users WHERE id = ?', (user_id,))"
+            fix="Use parameterized queries: db.execute('SELECT * FROM {TABLE_NAME} WHERE {COLUMN} = ?', ({VARIABLE_NAME},))"
         ))
 
     # Pattern 2: String formatting in queries

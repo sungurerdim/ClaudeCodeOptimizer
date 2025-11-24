@@ -1,18 +1,12 @@
 ---
 name: cco-skill-cicd-gates-deployment-automation
-description: |
-  Use this skill when CI/CD pipelines, deployment, automation, or quality gates are mentioned:
-  - CI/CD, continuous integration, continuous deployment, continuous delivery, pipeline
-  - deployment, deploy, release, rollout, production deployment, staging deployment
-  - automation, automate, automated testing, automated deployment, build automation
-  - quality gates, build gates, test gates, coverage gates, security gates, deployment gates
-  - GitHub Actions, GitLab CI, Jenkins, CircleCI, Travis CI, Azure DevOps
-  - blue-green deployment, canary release, rolling deployment, feature flags
-  - rollback, rollback strategy, disaster recovery, deployment failure
-  - infrastructure as code, IaC, GitOps, Terraform, Ansible, CloudFormation
-  - Files: .github/workflows/*, .gitlab-ci.yml, Jenkinsfile, azure-pipelines.yml, *.tf, deploy.sh
-
-  Triggers: CI/CD, pipeline, deployment, deploy, automation, gates, build, release, rollback, blue-green, canary, IaC, GitOps
+description: Use this skill when CI/CD pipelines, deployment, automation, or quality gates are mentioned
+keywords: [cicd, pipeline, continuous integration, continuous deployment, deployment, deploy, release, rollout, automation, quality gates, build gates, github actions, gitlab ci, jenkins, circleci, blue-green, canary, rollback, infrastructure as code, gitops, terraform]
+category: infrastructure
+related_commands:
+  action_types: [audit, fix, generate]
+  categories: [infrastructure]
+pain_points: [6]
 ---
 
 # Skill: CI/CD - Quality Gates, Deployment & Automation
@@ -85,27 +79,6 @@ Auto-loads when detecting:
 - **Keywords**: CI/CD, pipeline, deployment, deploy, automation, gates, build, release, rollback, blue-green, canary, IaC
 - **Intent**: "setup CI/CD", "automate deployment", "fix pipeline", "deployment strategy"
 - **Files**: `.github/workflows/*`, `.gitlab-ci.yml`, `Jenkinsfile`, `*.tf`, `deploy.sh`, `azure-pipelines.yml`
-
----
-
-## Command Discovery Protocol
-
-When this skill is active, find relevant commands by searching `~/.claude/commands/` metadata:
-
-```yaml
-# Search criteria for this skill's domain
-action_types: [audit, fix, generate]
-keywords: [cicd, pipeline, github actions, gitlab ci, deployment, quality gates, terraform]
-category: infrastructure
-pain_points: [6]
-```
-
-**How Claude finds commands:**
-1. Grep command files for `keywords:.*cicd|pipeline|deployment` in frontmatter
-2. Match `category: infrastructure`
-3. Present matching commands with their parameters
-
-This ensures commands are always current even when renamed or updated.
 
 ---
 

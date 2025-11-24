@@ -1,16 +1,12 @@
 ---
 name: cco-skill-test-pyramid-coverage-isolation
-description: |
-  Use this skill when testing strategy, test quality, or test architecture is mentioned:
-  - test, testing, tests, test suite, test strategy, test pyramid
-  - coverage, test coverage, code coverage, branch coverage, line coverage
-  - unit test, integration test, e2e test, end-to-end test, functional test
-  - test isolation, test independence, flaky test, test reliability
-  - property testing, generative testing, fuzz testing, randomized testing
-  - test framework, pytest, jest, junit, mocha, rspec
-  - Files: *test*.py, *spec.ts, *test.js, test_*.py, *_test.go
-
-  Triggers: test, testing, coverage, unit, integration, e2e, pyramid, isolation, property, flaky, mock, stub, fixture
+description: Use this skill when testing strategy, test quality, or test architecture is mentioned
+keywords: [test, testing, coverage, unit tests, integration tests, e2e, test pyramid, test isolation, property testing, flaky tests, pytest, jest, mock, fixture]
+category: testing
+related_commands:
+  action_types: [audit, fix, generate]
+  categories: [testing]
+pain_points: [4]
 ---
 
 # Skill: Testing Strategy - Test Pyramid, Coverage & Isolation
@@ -82,27 +78,6 @@ This skill auto-loads when Claude detects:
 - **File context**: `*test*.py`, `*_test.go`, `*.spec.ts`, `test_*.py`, `*Test.java`
 
 **No manual invocation needed** - Claude autonomously decides based on context.
-
----
-
-## Command Discovery Protocol
-
-When this skill is active, find relevant commands by searching `~/.claude/commands/` metadata:
-
-```yaml
-# Search criteria for this skill's domain
-action_types: [audit, fix, generate]
-keywords: [tests, coverage, unit tests, integration tests, pytest, test pyramid, isolation]
-category: testing
-pain_points: [4]
-```
-
-**How Claude finds commands:**
-1. Grep command files for `keywords:.*test` in frontmatter
-2. Match `category: testing`
-3. Present matching commands with their parameters
-
-This ensures commands are always current even when renamed or updated.
 
 ---
 
