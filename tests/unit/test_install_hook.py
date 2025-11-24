@@ -21,7 +21,7 @@ class TestShowInstallationSummary:
 
     def test_shows_new_files(self, capsys) -> None:
         """Test displaying new files (0 → N)"""
-        counts_before = {}
+        counts_before: dict[str, int] = {}
         counts_after = {"agents": 3, "commands": 10, "skills": 26, "principles": 15}
 
         _show_installation_summary(counts_before, counts_after, was_already_installed=False)
@@ -85,7 +85,7 @@ class TestShowInstallationSummary:
 
     def test_respects_category_order(self, capsys) -> None:
         """Test that categories are displayed in correct order"""
-        counts_before = {}
+        counts_before: dict[str, int] = {}
         counts_after = {
             "principles": 15,
             "agents": 3,
@@ -260,9 +260,7 @@ class TestPostInstall:
                 "claudecodeoptimizer.core.knowledge_setup.check_existing_installation",
                 return_value=existing,
             ),
-            patch(
-                "claudecodeoptimizer.core.knowledge_setup.show_installation_diff"
-            ) as mock_diff,
+            patch("claudecodeoptimizer.core.knowledge_setup.show_installation_diff") as mock_diff,
             patch(
                 "claudecodeoptimizer.core.knowledge_setup.setup_global_knowledge",
                 return_value=mock_result,
@@ -290,9 +288,7 @@ class TestPostInstall:
                 "claudecodeoptimizer.core.knowledge_setup.check_existing_installation",
                 return_value=existing,
             ),
-            patch(
-                "claudecodeoptimizer.core.knowledge_setup.show_installation_diff"
-            ) as mock_diff,
+            patch("claudecodeoptimizer.core.knowledge_setup.show_installation_diff") as mock_diff,
         ):
             result = post_install()
 

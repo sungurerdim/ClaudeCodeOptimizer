@@ -243,12 +243,12 @@ class TestGetVersionInfo:
 
         original_import = builtins.__import__
 
-        def mock_import(name, *args, **kwargs):
+        def mock_import(name, *args: object, **kwargs: object):
             if name == "claudecodeoptimizer" or (
                 "claudecodeoptimizer" in name and "__version__" in str(args)
             ):
                 raise ImportError("No module named claudecodeoptimizer")
-            return original_import(name, *args, **kwargs)
+            return original_import(name, *args, **kwargs)  # type: ignore[arg-type]
 
         monkeypatch.setattr(builtins, "__import__", mock_import)
 

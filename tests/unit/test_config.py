@@ -228,6 +228,7 @@ class TestDefaultConfig:
 
         assert "brand" in DEFAULT_CONFIG
         brand = DEFAULT_CONFIG["brand"]
+        assert isinstance(brand, dict)
         assert brand["name"] == BRAND_NAME
         assert brand["full_name"] == FULL_NAME
         assert brand["display_name"] == DISPLAY_NAME

@@ -62,13 +62,13 @@ class CommandMetadata(BaseModel):
     )
 
     # Flags
-    is_core: bool = Field(False, description="Always recommended (core functionality)")
-    is_experimental: bool = Field(False, description="Experimental/beta feature")
+    is_core: bool = Field(default=False, description="Always recommended (core functionality)")
+    is_experimental: bool = Field(default=False, description="Experimental/beta feature")
 
     # Usage tracking (for learning)
-    usage_frequency: int = Field(0, description="Times this command has been invoked")
-    success_rate: float | None = Field(None, ge=0.0, le=1.0, description="Success rate")
-    last_used: str | None = Field(None, description="Last invocation timestamp")
+    usage_frequency: int = Field(default=0, description="Times this command has been invoked")
+    success_rate: float | None = Field(default=None, ge=0.0, le=1.0, description="Success rate")
+    last_used: str | None = Field(default=None, description="Last invocation timestamp")
 
     model_config = ConfigDict(
         json_schema_extra={
@@ -117,7 +117,7 @@ class CommandRegistry(BaseModel):
     """
 
     commands: list[CommandMetadata] = Field(default=[])
-    version: str = Field(cco_version, description="Registry version")
+    version: str = Field(default=cco_version, description="Registry version")
     last_updated: str = Field(default_factory=lambda: datetime.now().isoformat())
 
     def get_by_id(self, command_id: str) -> CommandMetadata | None:

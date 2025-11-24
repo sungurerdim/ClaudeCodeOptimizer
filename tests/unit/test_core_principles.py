@@ -151,7 +151,7 @@ class TestPrinciplesManagerGetters:
     @pytest.fixture
     def getter_manager(self, principles_manager_factory) -> PrinciplesManager:
         """Create a test manager with sample principles for getter tests"""
-        return principles_manager_factory(
+        return principles_manager_factory(  # type: ignore[no-any-return]
             [
                 {
                     "id": "U_TEST_1",
@@ -253,7 +253,7 @@ class TestPrinciplesManagerSummary:
     @pytest.fixture
     def summary_manager(self, principles_manager_factory) -> PrinciplesManager:
         """Create a test manager with sample principles for summary tests"""
-        return principles_manager_factory(
+        return principles_manager_factory(  # type: ignore[no-any-return]
             [
                 {
                     "id": "U_TEST_1",
