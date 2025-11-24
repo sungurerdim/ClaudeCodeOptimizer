@@ -11,19 +11,12 @@ pain_points: [3, 10]
 
 # Supply Chain Security, Dependencies & SAST
 
+> **Standards:** Format defined in [STANDARDS_SKILLS.md](../STANDARDS_SKILLS.md)  
+> **Discovery:** See [STANDARDS_COMMANDS.md](../STANDARDS_COMMANDS.md#18-command-discovery-protocol)
+
+
 Comprehensive supply chain security including SBOM, SAST, SLSA, build security, and provenance verification.
 ---
-
-## Standard Structure
-
-**This skill follows [STANDARDS_SKILLS.md](../STANDARDS_SKILLS.md):**
-
-- **Standard sections** - Domain, Purpose, Core Techniques, Anti-Patterns, Checklist
-- **Code example format** - Bad/Good pattern with specific examples
-- **Detection pattern format** - Python functions with Finding objects
-- **Checklist format** - Specific, verifiable items
-
-**See STANDARDS_SKILLS.md for format details. Only skill-specific content is documented below.**
 
 ---
 
@@ -730,25 +723,6 @@ def calculate_supply_chain_score() -> dict:
 - [ ] Multi-stage builds for minimal images
 
 ---
-
-## Command Discovery Protocol
-
-When this skill is active, find relevant commands by searching `~/.claude/commands/` metadata:
-
-```yaml
-# Search criteria for supply chain security domain
-action_types: [audit, fix, generate]
-keywords: [SBOM, vulnerability, SAST, Bandit, Semgrep, Trivy, dependency, supply chain, SLSA, provenance]
-category: security
-pain_points: [3, 10]  # Security, Software Supply Chain
-```
-
-**How Claude finds commands:**
-1. Grep command files for `keywords:.*[pattern]` in frontmatter
-2. Match `category: security`
-3. Present matching commands with their parameters
-
-This ensures commands are always current even when renamed or updated.
 
 ---
 

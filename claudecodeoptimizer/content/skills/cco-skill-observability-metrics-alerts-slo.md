@@ -11,18 +11,11 @@ pain_points: [9, 10]
 
 # Observability - Metrics, Alerts, SLOs
 
+> **Standards:** Format defined in [STANDARDS_SKILLS.md](../STANDARDS_SKILLS.md)  
+> **Discovery:** See [STANDARDS_COMMANDS.md](../STANDARDS_COMMANDS.md#18-command-discovery-protocol)
+
+
 ---
-
-## Standard Structure
-
-**This skill follows [STANDARDS_SKILLS.md](../STANDARDS_SKILLS.md):**
-
-- **Standard sections** - Domain, Purpose, Core Techniques, Anti-Patterns, Checklist
-- **Code example format** - Bad/Good pattern with specific examples
-- **Detection pattern format** - Python functions with Finding objects
-- **Checklist format** - Specific, verifiable items
-
-**See STANDARDS_SKILLS.md for format details. Only skill-specific content is documented below.**
 
 ---
 
@@ -212,21 +205,3 @@ startupProbe:
 - [ ] Latency percentiles (p50, p95, p99)
 - [ ] Error rate by endpoint
 
-## Command Discovery Protocol
-
-When this skill is active, find relevant commands by searching `~/.claude/commands/` metadata:
-
-```yaml
-# Search criteria for this skill's domain
-action_types: [audit, generate, optimize]
-keywords: [observability, metrics, SLO, health check, monitoring, alerts]
-category: observability
-pain_points: [9, 10]
-```
-
-**How Claude finds commands:**
-1. Grep command files for `keywords:.*[pattern]` in frontmatter
-2. Match `category: observability`
-3. Present matching commands with their parameters
-
-This ensures commands are always current even when renamed or updated.

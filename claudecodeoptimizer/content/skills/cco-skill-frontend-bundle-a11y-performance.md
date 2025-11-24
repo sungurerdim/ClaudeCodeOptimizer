@@ -11,6 +11,10 @@ pain_points: [1, 6, 11]
 
 # Frontend: Bundle Size, Accessibility & Performance
 
+> **Standards:** Format defined in [STANDARDS_SKILLS.md](../STANDARDS_SKILLS.md)  
+> **Discovery:** See [STANDARDS_COMMANDS.md](../STANDARDS_COMMANDS.md#18-command-discovery-protocol)
+
+
 **Skill ID:** `frontend-bundle-a11y-performance`
 
 **Domain:** Frontend optimization (React/Vue/Angular SPAs)
@@ -19,17 +23,6 @@ pain_points: [1, 6, 11]
 
 **Related:** P_LAZY_LOADING, P_PERFORMANCE_PROFILE_BEFORE_OPTIMIZE
 ---
-
-## Standard Structure
-
-**This skill follows [STANDARDS_SKILLS.md](../STANDARDS_SKILLS.md):**
-
-- **Standard sections** - Domain, Purpose, Core Techniques, Anti-Patterns, Checklist
-- **Code example format** - Bad/Good pattern with specific examples
-- **Detection pattern format** - Python functions with Finding objects
-- **Checklist format** - Specific, verifiable items
-
-**See STANDARDS_SKILLS.md for format details. Only skill-specific content is documented below.**
 
 ---
 
@@ -269,21 +262,3 @@ import Chart from 'chart.js'; // Blocks render
 
 ---
 
-## Command Discovery Protocol
-
-When this skill is active, find relevant commands by searching `~/.claude/commands/` metadata:
-
-```yaml
-# Search criteria for frontend optimization domain
-action_types: [audit, fix, optimize]
-keywords: [bundle, accessibility, WCAG, Core Web Vitals, performance, a11y]
-category: performance
-pain_points: [1, 6, 11]
-```
-
-**How Claude finds commands:**
-1. Grep command files for `keywords:.*[pattern]` in frontmatter
-2. Match `category: performance` or `category: quality`
-3. Present matching commands with their parameters
-
-This ensures commands are always current even when renamed or updated.

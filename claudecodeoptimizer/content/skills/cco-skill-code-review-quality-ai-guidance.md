@@ -11,19 +11,12 @@ pain_points: [11, 12]
 
 # Code Review Quality & AI Review Guidance
 
+> **Standards:** Format defined in [STANDARDS_SKILLS.md](../STANDARDS_SKILLS.md)  
+> **Discovery:** See [STANDARDS_COMMANDS.md](../STANDARDS_COMMANDS.md#18-command-discovery-protocol)
+
+
 Assess and improve code review quality + AI-specific review patterns.
 ---
-
-## Standard Structure
-
-**This skill follows [STANDARDS_SKILLS.md](../STANDARDS_SKILLS.md):**
-
-- **Standard sections** - Domain, Purpose, Core Techniques, Anti-Patterns, Checklist
-- **Code example format** - Bad/Good pattern with specific examples
-- **Detection pattern format** - Python functions with Finding objects
-- **Checklist format** - Specific, verifiable items
-
-**See STANDARDS_SKILLS.md for format details. Only skill-specific content is documented below.**
 
 ---
 
@@ -427,18 +420,6 @@ def generate_recommendations() -> List[str]:
 - [ ] Monthly review quality reports
 
 ---
-
-## Command Discovery Protocol
-
-When this skill is active, find relevant commands by searching `~/.claude/commands/` metadata:
-
-```yaml
-# Search criteria for code review domain
-action_types: [audit, generate]
-keywords: [code review, PR quality, review depth, commit quality]
-category: quality
-pain_points: [11, 12]  # Review Quality Decline, Context Loss in Reviews
-```
 
 ---
 

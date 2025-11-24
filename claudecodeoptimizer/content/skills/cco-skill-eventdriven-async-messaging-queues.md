@@ -11,19 +11,12 @@ pain_points: [5, 6]
 
 # Event-Driven Architecture & Async Messaging
 
+> **Standards:** Format defined in [STANDARDS_SKILLS.md](../STANDARDS_SKILLS.md)  
+> **Discovery:** See [STANDARDS_COMMANDS.md](../STANDARDS_COMMANDS.md#18-command-discovery-protocol)
+
+
 **Domain:** Architecture | **Complexity:** High
 ---
-
-## Standard Structure
-
-**This skill follows [STANDARDS_SKILLS.md](../STANDARDS_SKILLS.md):**
-
-- **Standard sections** - Domain, Purpose, Core Techniques, Anti-Patterns, Checklist
-- **Code example format** - Bad/Good pattern with specific examples
-- **Detection pattern format** - Python functions with Finding objects
-- **Checklist format** - Specific, verifiable items
-
-**See STANDARDS_SKILLS.md for format details. Only skill-specific content is documented below.**
 
 ---
 
@@ -175,21 +168,3 @@ class OrderAggregate {
 - [ ] Circuit breakers for external services
 - [ ] Queue depth monitoring/alerting
 
-## Command Discovery Protocol
-
-When this skill is active, find relevant commands by searching `~/.claude/commands/` metadata:
-
-```yaml
-# Search criteria for this skill's domain
-action_types: [audit, generate, optimize]
-keywords: [event-driven, async, messaging, queue, Kafka, RabbitMQ, event sourcing]
-category: architecture
-pain_points: [5, 6]
-```
-
-**How Claude finds commands:**
-1. Grep command files for `keywords:.*[pattern]` in frontmatter
-2. Match `category: architecture`
-3. Present matching commands with their parameters
-
-This ensures commands are always current even when renamed or updated.

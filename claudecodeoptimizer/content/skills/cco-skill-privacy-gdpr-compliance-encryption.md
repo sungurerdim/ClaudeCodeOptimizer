@@ -13,6 +13,10 @@ pain_points: [3, 5, 8]
 **Domain**: Data Protection
 **Purpose**: Implement GDPR/HIPAA/CCPA compliance through PII encryption, consent management, data subject rights, and privacy-by-design.
 
+> **Standards:** Format defined in [STANDARDS_SKILLS.md](../STANDARDS_SKILLS.md)  
+> **Discovery:** See [STANDARDS_COMMANDS.md](../STANDARDS_COMMANDS.md#18-command-discovery-protocol)
+
+
 ## Core Techniques
 - **PII Identification**: Scan models for PII keywords (email, phone, ssn, health), create GDPR Art. 30 data inventory
 - **Field Encryption**: Use SQLAlchemy TypeDecorator for app-level encryption, pgcrypto for DB-level
@@ -122,34 +126,5 @@ accept_all_terms = Column(Boolean)  # Single checkbox
 - [ ] Privacy Impact Assessment for new features
 ---
 
-## Standard Structure
-
-**This skill follows [STANDARDS_SKILLS.md](../STANDARDS_SKILLS.md):**
-
-- **Standard sections** - Domain, Purpose, Core Techniques, Anti-Patterns, Checklist
-- **Code example format** - Bad/Good pattern with specific examples
-- **Detection pattern format** - Python functions with Finding objects
-- **Checklist format** - Specific, verifiable items
-
-**See STANDARDS_SKILLS.md for format details. Only skill-specific content is documented below.**
-
 ---
 
-## Command Discovery Protocol
-
-When this skill is active, find relevant commands by searching `~/.claude/commands/` metadata:
-
-```yaml
-# Search criteria for privacy compliance domain
-action_types: [audit, fix, generate]
-keywords: [GDPR, HIPAA, CCPA, PII, encryption, consent, privacy, data subject rights]
-category: security
-pain_points: [3, 5, 8]
-```
-
-**How Claude finds commands:**
-1. Grep command files for `keywords:.*[pattern]` in frontmatter
-2. Match `category: security`
-3. Present matching commands with their parameters
-
-This ensures commands are always current even when renamed or updated.

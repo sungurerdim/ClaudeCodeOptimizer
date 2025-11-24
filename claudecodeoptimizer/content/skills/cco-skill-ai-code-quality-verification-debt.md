@@ -11,19 +11,12 @@ pain_points: [2, 3, 8, 9]
 
 # AI Code Quality, Verification & Debt
 
+> **Standards:** Format defined in [STANDARDS_SKILLS.md](../STANDARDS_SKILLS.md)  
+> **Discovery:** See [STANDARDS_COMMANDS.md](../STANDARDS_COMMANDS.md#18-command-discovery-protocol)
+
+
 Detect and fix AI-generated code issues: hallucination, copy/paste, bloat, model inconsistency, vibe coding.
 ---
-
-## Standard Structure
-
-**This skill follows [STANDARDS_SKILLS.md](../STANDARDS_SKILLS.md):**
-
-- **Standard sections** - Domain, Purpose, Core Techniques, Anti-Patterns, Checklist
-- **Code example format** - Bad/Good pattern with specific examples
-- **Detection pattern format** - Python functions with Finding objects
-- **Checklist format** - Specific, verifiable items
-
-**See STANDARDS_SKILLS.md for format details. Only skill-specific content is documented below.**
 
 ---
 
@@ -384,23 +377,6 @@ def fix_ai_debt(file_path: str, issues: dict) -> List[str]:
 - [ ] Refactor bloated code (with approval)
 
 ---
-
-## Command Discovery Protocol
-
-When this skill is active, find relevant commands by searching `~/.claude/commands/` metadata:
-
-```yaml
-# Search criteria for AI code quality domain
-action_types: [audit, fix]
-keywords: [AI code, hallucination, copy paste, code bloat, vibe coding, AI debt]
-category: quality
-pain_points: [2, 3, 8, 9]  # AI Quality Crisis, AI Tech Debt, Platform Incompatibility, AI Security
-```
-
-**How Claude finds commands:**
-1. Grep command files for `keywords:.*[pattern]` in frontmatter
-2. Match `category: quality` or related categories
-3. Present matching commands with their parameters
 
 ---
 

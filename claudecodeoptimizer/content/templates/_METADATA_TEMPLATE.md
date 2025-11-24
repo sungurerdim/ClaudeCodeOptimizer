@@ -30,11 +30,6 @@ metadata:
   category: "subcategory"
   priority: high  # high, medium, low
 
-# RELATED PRINCIPLES (optional)
-principles:
-  - 'U_EVIDENCE_BASED'
-  - 'U_TEST_FIRST'
-
 # TAGS (optional)
 tags: [tag1, tag2, tag3]
 
@@ -64,7 +59,6 @@ author: "Author Name"
 **metadata.activation_keywords**: Keywords that trigger this file (for skills)
 **metadata.priority**: Recommendation priority (high/medium/low)
 
-**principles**: Related CCO principles (for cross-referencing)
 
 **tags**: Free-form tags for search/filtering
 
@@ -93,7 +87,6 @@ metadata:
   name: "Verification Protocol"
   activation_keywords: ["verify", "verification", "violations"]
   category: "enforcement"
-principles: ['U_CHANGE_VERIFICATION', 'U_EVIDENCE_BASED']
 use_cases:
   development_philosophy: [quality_first, balanced]
   project_maturity: [active-dev, production, legacy]
@@ -110,7 +103,6 @@ description: Comprehensive codebase audit and violation detection
 metadata:
   name: "Audit Agent"
   priority: high
-principles: ['U_EVIDENCE_BASED_ANALYSIS', 'U_CHANGE_VERIFICATION']
 use_cases:
   project_maturity: [active-dev, production, legacy]
   development_philosophy: [quality_first, balanced]
@@ -128,7 +120,6 @@ metadata:
   priority: high
   category: status
 author: Claude Code
-principles: ['U_EVIDENCE_BASED_ANALYSIS', 'U_CHANGE_VERIFICATION']
 use_cases:
   project_maturity: [active-dev, production, legacy]
 ---

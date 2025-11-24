@@ -93,6 +93,63 @@ AskUserQuestion({
 
 ---
 
+## 2.5. Native UI Tools for ALL User Interactions
+
+**CRITICAL RULE: Every user interaction MUST use AskUserQuestion tool.**
+
+**This applies to:**
+- ✅ Step 0 Introduction confirmation
+- ✅ Mode/category selection
+- ✅ Pre-flight confirmation
+- ✅ Error recovery decisions
+- ✅ Mid-execution choices
+- ✅ ANY question asked to user
+
+**NEVER use text-based prompts:**
+
+```python
+# ❌ FORBIDDEN: Text-based prompts
+print("Ready to proceed with context optimization?")
+print("Do you want to continue? (y/n)")
+print("Select option (1/2/3):")
+print("""
+Choose mode:
+- Conservative
+- Balanced
+- Aggressive
+""")
+
+# ✅ REQUIRED: AskUserQuestion
+AskUserQuestion({
+  questions: [{
+    question: "Ready to proceed with context optimization?",
+    header: "Confirm Start",
+    multiSelect: false,
+    options: [
+      {label: "Yes", description: "Start optimization process"},
+      {label: "No", description: "Cancel operation"}
+    ]
+  }]
+})
+```
+
+**Why this matters:**
+- Text-based prompts break UX flow
+- No validation, accessibility, or consistency
+- Manual parsing required
+- Not cross-platform compatible
+- Poor user experience
+
+**Enforcement:**
+- Grep check: No patterns like "Ready to", "Do you want", "Select option", "(y/n)", "Choose"
+- All user decisions via AskUserQuestion with proper options
+- MultiSelect questions MUST include "All" option
+
+**See also:** C_NATIVE_TOOL_INTERACTIONS principle in ~/.claude/principles/
+
+---
+
+
 ## 3. File Discovery Protocol
 
 **Every command that processes files MUST apply filters BEFORE any analysis:**
@@ -825,6 +882,61 @@ except Exception as e:
 **Purpose:** Learn from common mistakes, maintain quality.
 
 **Applies to:** All commands
+
+---
+
+## 18. Command Discovery Protocol
+
+**How Skills Expose Commands:**
+
+Skills declare which commands are relevant via frontmatter metadata:
+
+```yaml
+# Example: cco-skill-security-owasp-xss-sqli-csrf.md
+---
+name: security-owasp-xss-sqli-csrf
+description: Prevent OWASP Top 10 vulnerabilities...
+keywords: [security, OWASP, XSS, SQL injection, CSRF, auth]
+category: security
+related_commands:
+  action_types: [audit, fix, generate]
+  categories: [security]
+  pain_points: [1, 2, 3]
+---
+```
+
+**Discovery Mechanism:**
+
+When a skill is active, CCO automatically discovers relevant commands:
+
+1. **Keyword Matching**: Grep command files for `keywords:` in frontmatter
+   ```bash
+   grep -l "keywords:.*security" ~/.claude/commands/*.md
+   ```
+
+2. **Category Matching**: Filter by `category:` and `action_types:`
+   ```python
+   if skill.category in command.categories and
+      any(action in command.action_types for action in skill.related_commands.action_types):
+       commands.append(command)
+   ```
+
+3. **Pain Point Alignment**: Match `pain_points:` (1=AI Tech Debt, 2=AI Quality, 3=Security, etc.)
+
+4. **Present to User**: Show matching commands with their parameters and descriptions
+
+**Benefits:**
+
+- Commands are always current (no hardcoded lists)
+- Skills and commands loosely coupled via metadata
+- New commands automatically discovered if metadata matches
+- Commands can be renamed/moved without breaking skills
+
+**Implementation:**
+
+Commands and skills use frontmatter metadata, not hardcoded references. CCO runtime handles discovery dynamically.
+
+**Applies to:** All skills and commands
 
 ---
 

@@ -11,6 +11,10 @@ pain_points: [5]
 
 # Skill: Versioning - SemVer, Changelog & Backward Compatibility
 
+> **Standards:** Format defined in [STANDARDS_SKILLS.md](../STANDARDS_SKILLS.md)  
+> **Discovery:** See [STANDARDS_COMMANDS.md](../STANDARDS_COMMANDS.md#18-command-discovery-protocol)
+
+
 ## Purpose
 
 Prevent breaking changes through semantic versioning and deprecation.
@@ -19,17 +23,6 @@ Prevent breaking changes through semantic versioning and deprecation.
 
 **Impact**: High
 ---
-
-## Standard Structure
-
-**This skill follows [STANDARDS_SKILLS.md](../STANDARDS_SKILLS.md):**
-
-- **Standard sections** - Domain, Purpose, Core Techniques, Anti-Patterns, Checklist
-- **Code example format** - Bad/Good pattern with specific examples
-- **Detection pattern format** - Python functions with Finding objects
-- **Checklist format** - Specific, verifiable items
-
-**See STANDARDS_SKILLS.md for format details. Only skill-specific content is documented below.**
 
 ---
 
@@ -45,31 +38,6 @@ Prevent breaking changes through semantic versioning and deprecation.
 
 **Keywords**: version, release, changelog, semver, breaking, deprecation
 **Files**: VERSION, CHANGELOG.md, .releaserc.json
-
-## Command Discovery Protocol
-
-When this skill is active, find relevant commands by searching `~/.claude/commands/` metadata:
-
-```yaml
-# Search criteria for this skill's domain
-action_types: [audit, fix, generate]
-keywords: [versioning, semver, changelog, git, releases, breaking changes, deprecation]
-category: infrastructure
-pain_points: [5]
-```
-
-**How Claude finds commands:**
-1. Grep command files for `keywords:.*version|changelog|semver` in frontmatter
-2. Match `category: infrastructure`
-3. Present matching commands with their parameters
-
-This ensures commands are always current even when renamed or updated.
-
-## Related Skills
-
-- **cco-skill-cicd-gates-deployment-automation**
-- **cco-skill-git-branching-pr-review**
-- **cco-skill-api-rest-versioning-security**
 
 ---
 
