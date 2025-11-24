@@ -76,31 +76,29 @@ def count_cco_files(claude_dir: Path) -> dict[str, int]:
     # Count agents
     agents_dir = claude_dir / "agents"
     if agents_dir.exists():
-        counts["agents"] = len(list(agents_dir.glob("cco-*.md")))
+        counts["agents"] = sum(1 for _ in agents_dir.glob("cco-*.md"))
 
     # Count commands
     commands_dir = claude_dir / "commands"
     if commands_dir.exists():
-        counts["commands"] = len(list(commands_dir.glob("cco-*.md")))
+        counts["commands"] = sum(1 for _ in commands_dir.glob("cco-*.md"))
 
     # Count skills
     skills_dir = claude_dir / "skills"
     if skills_dir.exists():
-        counts["skills"] = len(list(skills_dir.glob("cco-skill-*.md")))
+        counts["skills"] = sum(1 for _ in skills_dir.glob("cco-skill-*.md"))
 
     # Count principles
     principles_dir = claude_dir / "principles"
     if principles_dir.exists():
-        all_principles = list(principles_dir.glob("*.md"))
-        # Exclude PRINCIPLES.md summary
-        all_principles = [p for p in all_principles if p.name != "PRINCIPLES.md"]
+        all_principles = [p for p in principles_dir.glob("*.md") if p.name != "PRINCIPLES.md"]
         counts["principles"] = len(all_principles)
-        counts["principles_u"] = len([p for p in all_principles if p.name.startswith("U_")])
-        counts["principles_c"] = len([p for p in all_principles if p.name.startswith("C_")])
-        counts["principles_p"] = len([p for p in all_principles if p.name.startswith("P_")])
+        counts["principles_u"] = sum(1 for p in all_principles if p.name.startswith("U_"))
+        counts["principles_c"] = sum(1 for p in all_principles if p.name.startswith("C_"))
+        counts["principles_p"] = sum(1 for p in all_principles if p.name.startswith("P_"))
 
     # Count templates
-    counts["templates"] = len(list(claude_dir.glob("*.cco")))
+    counts["templates"] = sum(1 for _ in claude_dir.glob("*.cco"))
 
     return counts
 

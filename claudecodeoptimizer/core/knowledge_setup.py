@@ -54,22 +54,22 @@ def check_existing_installation() -> dict[str, int] | None:
             # Count CCO files only
             if category == "principles":
                 count = (
-                    len(list(dir_path.glob("U_*.md")))
-                    + len(list(dir_path.glob("C_*.md")))
-                    + len(list(dir_path.glob("P_*.md")))
+                    sum(1 for _ in dir_path.glob("U_*.md"))
+                    + sum(1 for _ in dir_path.glob("C_*.md"))
+                    + sum(1 for _ in dir_path.glob("P_*.md"))
                 )
             elif category == "standards":
                 # Count standards files (*_STANDARDS.md, PRINCIPLE_FORMAT.md, COMMAND_PATTERNS.md)
                 count = (
-                    len(list(dir_path.glob("*_STANDARDS.md")))
-                    + len(list(dir_path.glob("PRINCIPLE_FORMAT.md")))
-                    + len(list(dir_path.glob("COMMAND_PATTERNS.md")))
+                    sum(1 for _ in dir_path.glob("*_STANDARDS.md"))
+                    + sum(1 for _ in dir_path.glob("PRINCIPLE_FORMAT.md"))
+                    + sum(1 for _ in dir_path.glob("COMMAND_PATTERNS.md"))
                 )
             elif category == "templates":
                 # Count template files (*.cco)
-                count = len(list(dir_path.glob("*.cco")))
+                count = sum(1 for _ in dir_path.glob("*.cco"))
             else:
-                count = len(list(dir_path.glob("cco-*.md")))
+                count = sum(1 for _ in dir_path.glob("cco-*.md"))
 
             if count > 0:
                 counts[category] = count
@@ -145,23 +145,23 @@ def get_installation_counts() -> dict[str, int]:
             elif category == "principles":
                 # Principles include U_*, C_*, P_*
                 count = (
-                    len(list(dir_path.glob("U_*.md")))
-                    + len(list(dir_path.glob("C_*.md")))
-                    + len(list(dir_path.glob("P_*.md")))
+                    sum(1 for _ in dir_path.glob("U_*.md"))
+                    + sum(1 for _ in dir_path.glob("C_*.md"))
+                    + sum(1 for _ in dir_path.glob("P_*.md"))
                 )
             elif category == "standards":
                 # Standards include *_STANDARDS.md, PRINCIPLE_FORMAT.md, COMMAND_PATTERNS.md
                 count = (
-                    len(list(dir_path.glob("*_STANDARDS.md")))
-                    + len(list(dir_path.glob("PRINCIPLE_FORMAT.md")))
-                    + len(list(dir_path.glob("COMMAND_PATTERNS.md")))
+                    sum(1 for _ in dir_path.glob("*_STANDARDS.md"))
+                    + sum(1 for _ in dir_path.glob("PRINCIPLE_FORMAT.md"))
+                    + sum(1 for _ in dir_path.glob("COMMAND_PATTERNS.md"))
                 )
             elif category == "templates":
                 # Templates are *.cco files
-                count = len(list(dir_path.glob("*.cco")))
+                count = sum(1 for _ in dir_path.glob("*.cco"))
             else:
                 # Agents and commands
-                count = len(list(dir_path.glob("cco-*.md")))
+                count = sum(1 for _ in dir_path.glob("cco-*.md"))
 
             if count > 0:
                 counts[category] = count
