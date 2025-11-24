@@ -13,19 +13,12 @@ pain_points: [4, 9, 12]
 **Domain**: Operations & Reliability
 **Purpose**: Minimize incident impact through rapid detection, coordinated response, blameless postmortems, and systematic improvement.
 
+> **Standards:** Format defined in [STANDARDS_SKILLS.md](../STANDARDS_SKILLS.md)  
+> **Discovery:** See [STANDARDS_COMMANDS.md](../STANDARDS_COMMANDS.md#18-command-discovery-protocol)
+
+
 **Principles**: P_INCIDENT_RESPONSE_READINESS, P_RUNBOOK_OPERATIONAL_DOCS, P_GRACEFUL_SHUTDOWN, P_HEALTH_CHECKS
 ---
-
-## Standard Structure
-
-**This skill follows [STANDARDS_SKILLS.md](../STANDARDS_SKILLS.md):**
-
-- **Standard sections** - Domain, Purpose, Core Techniques, Anti-Patterns, Checklist
-- **Code example format** - Bad/Good pattern with specific examples
-- **Detection pattern format** - Python functions with Finding objects
-- **Checklist format** - Specific, verifiable items
-
-**See STANDARDS_SKILLS.md for format details. Only skill-specific content is documented below.**
 
 ---
 
@@ -192,21 +185,3 @@ def record_incident(severity, detected_at, resolved_at):
 
 ---
 
-## Command Discovery Protocol
-
-When this skill is active, find relevant commands by searching `~/.claude/commands/` metadata:
-
-```yaml
-# Search criteria for incident response domain
-action_types: [audit, generate]
-keywords: [incident, on-call, postmortem, runbook, playbook, MTTD, MTTR]
-category: observability
-pain_points: [4, 9, 12]
-```
-
-**How Claude finds commands:**
-1. Grep command files for `keywords:.*[pattern]` in frontmatter
-2. Match `category: observability`
-3. Present matching commands with their parameters
-
-This ensures commands are always current even when renamed or updated.

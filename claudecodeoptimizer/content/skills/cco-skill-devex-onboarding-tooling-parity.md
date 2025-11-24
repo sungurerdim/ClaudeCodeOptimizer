@@ -11,21 +11,14 @@ pain_points: [11, 12]
 
 # Skill: Developer Experience
 
+> **Standards:** Format defined in [STANDARDS_SKILLS.md](../STANDARDS_SKILLS.md)  
+> **Discovery:** See [STANDARDS_COMMANDS.md](../STANDARDS_COMMANDS.md#18-command-discovery-protocol)
+
+
 **Domain**: Developer Productivity
 **Purpose**: Optimize onboarding (< 1hr to first commit), local/prod parity, reproducible builds, fast feedback loops.
 
 ---
-
-## Standard Structure
-
-**This skill follows [STANDARDS_SKILLS.md](../STANDARDS_SKILLS.md):**
-
-- **Standard sections** - Domain, Purpose, Core Techniques, Anti-Patterns, Checklist
-- **Code example format** - Bad/Good pattern with specific examples
-- **Detection pattern format** - Python functions with Finding objects
-- **Checklist format** - Specific, verifiable items
-
-**See STANDARDS_SKILLS.md for format details. Only skill-specific content is documented below.**
 
 ---
 
@@ -131,21 +124,3 @@ npm test  # Takes 5 minutes
 - [ ] README with quick start
 - [ ] IDE config committed (.vscode/)
 
-## Command Discovery Protocol
-
-When this skill is active, find relevant commands by searching `~/.claude/commands/` metadata:
-
-```yaml
-# Search criteria for this skill's domain
-action_types: [generate, audit, optimize]
-keywords: [onboarding, devex, docker, setup, reproducible]
-category: infrastructure
-pain_points: [11, 12]
-```
-
-**How Claude finds commands:**
-1. Grep command files for `keywords:.*[pattern]` in frontmatter
-2. Match `category: infrastructure`
-3. Present matching commands with their parameters
-
-This ensures commands are always current even when renamed or updated.

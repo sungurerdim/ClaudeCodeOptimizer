@@ -2,7 +2,6 @@
 name: cco-commit
 description: AI-assisted semantic commit workflow with atomic commit recommendations and conventional commits format
 
-principles: [U_EVIDENCE_BASED_ANALYSIS, U_CHANGE_VERIFICATION]
 keywords: [commit, git, semantic, atomic, conventional, version control, changelog]
 category: productivity
 pain_points: [5]

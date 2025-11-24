@@ -11,19 +11,12 @@ pain_points: [12]
 
 # Documentation - API, ADRs, Runbooks, Code Docs
 
+> **Standards:** Format defined in [STANDARDS_SKILLS.md](../STANDARDS_SKILLS.md)  
+> **Discovery:** See [STANDARDS_COMMANDS.md](../STANDARDS_COMMANDS.md#18-command-discovery-protocol)
+
+
 Comprehensive documentation strategy with AI code documentation templates and coverage metrics.
 ---
-
-## Standard Structure
-
-**This skill follows [STANDARDS_SKILLS.md](../STANDARDS_SKILLS.md):**
-
-- **Standard sections** - Domain, Purpose, Core Techniques, Anti-Patterns, Checklist
-- **Code example format** - Bad/Good pattern with specific examples
-- **Detection pattern format** - Python functions with Finding objects
-- **Checklist format** - Specific, verifiable items
-
-**See STANDARDS_SKILLS.md for format details. Only skill-specific content is documented below.**
 
 ---
 
@@ -740,25 +733,6 @@ MIT - see [LICENSE](LICENSE)
 - [ ] LICENSE file present
 
 ---
-
-## Command Discovery Protocol
-
-When this skill is active, find relevant commands by searching `~/.claude/commands/` metadata:
-
-```yaml
-# Search criteria for documentation domain
-action_types: [audit, fix, generate]
-keywords: [documentation, openapi, swagger, adr, runbook, changelog, docstrings, readme, api docs]
-category: docs
-pain_points: [12]  # Documentation Gaps
-```
-
-**How Claude finds commands:**
-1. Grep command files for `keywords:.*[pattern]` in frontmatter
-2. Match `category: docs`
-3. Present matching commands with their parameters
-
-This ensures commands are always current even when renamed or updated.
 
 ---
 

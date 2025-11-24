@@ -2,7 +2,6 @@
 name: cco-optimize-context-usage
 description: Context optimization and duplication elimination (primary). Optional token reduction for other files.
 
-principles: [U_EVIDENCE_BASED_ANALYSIS, U_MINIMAL_TOUCH, C_EFFICIENT_FILE_OPERATIONS]
 parameters:
   markdown:
     keywords: [slim markdown, optimize docs, compress documentation, reduce tokens]
@@ -31,6 +30,7 @@ parameters:
 - **[STANDARDS_QUALITY.md](../STANDARDS_QUALITY.md)** - UX/DX, efficiency, simplicity, performance standards
 - **[LIBRARY_PATTERNS.md](../LIBRARY_PATTERNS.md)** - Reusable patterns (Step 0, Selection, Accounting, Progress, Error Handling)
 - **[STANDARDS_AGENTS.md](../STANDARDS_AGENTS.md)** - File discovery, model selection, parallel execution
+- **model selection** - Strategic Opus model selection, complexity scoring, ROI guidelines
 
 **See these files for detailed patterns. Only command-specific content is documented below.**
 

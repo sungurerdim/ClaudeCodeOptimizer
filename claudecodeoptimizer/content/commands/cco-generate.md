@@ -2,7 +2,6 @@
 name: cco-generate
 description: Create missing project components with skill-guided generation
 action_type: generate
-principles: [U_EVIDENCE_BASED_ANALYSIS, U_NO_OVERENGINEERING, U_FOLLOW_PATTERNS]
 parameters:
   tests:
     keywords: [unit tests, integration tests, coverage, pytest, test fixtures, untested functions]
@@ -93,6 +92,8 @@ parameters:
 - **[STANDARDS_QUALITY.md](../STANDARDS_QUALITY.md)** - UX/DX, efficiency, simplicity, performance standards
 - **[LIBRARY_PATTERNS.md](../LIBRARY_PATTERNS.md)** - Reusable patterns (Step 0, Selection, Accounting, Progress, Error Handling)
 - **[STANDARDS_AGENTS.md](../STANDARDS_AGENTS.md)** - File discovery, model selection, parallel execution
+- **model selection** - Strategic Opus model selection, complexity scoring, ROI guidelines
+- **[STANDARDS_TECH_DETECTION.md](../STANDARDS_TECH_DETECTION.md)** - Fast tech detection (<2s), applicability filtering, pre-filtering UI
 
 **See these files for detailed patterns. Only command-specific content is documented below.**
 
@@ -306,6 +307,28 @@ Tech stack determines:
 - Test structure ({STRUCTURE_1} vs {STRUCTURE_2})
 - CI/CD templates ({CICD_1} vs {CICD_2})
 - Documentation style ({DOC_STYLE_1} vs {DOC_STYLE_2})
+```
+
+---
+
+### Step 0.7: Opus Upgrade Opportunity (Architecture Documentation)
+
+**Pattern:** Pattern 11 (Opus Upgrade Opportunity - See model selection standards)
+
+**Trigger:** Generating architecture documentation, ADRs, or complex design pattern documentation
+
+**Complexity Scoring:** Use algorithm from model selection
+**ROI Calculation:** See model selection standards for cost/benefit analysis
+
+```python
+if generation_type in ["architecture_docs", "adr", "design_patterns"]:
+    selected_model = offer_opus_upgrade(
+        task_name="Architecture Documentation Generation",
+        task_description=f"Generating: {generation_type}",
+        complexity_reason="complex architectural concepts requiring deep understanding",
+        expected_benefit="More comprehensive documentation with better examples (30-40% improvement)",
+        default_model="sonnet"
+    )
 ```
 
 ---

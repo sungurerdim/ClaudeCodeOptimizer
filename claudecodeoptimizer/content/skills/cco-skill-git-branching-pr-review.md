@@ -11,18 +11,11 @@ pain_points: [3, 4]
 
 # Git Workflow, Branching & PR Review
 
+> **Standards:** Format defined in [STANDARDS_SKILLS.md](../STANDARDS_SKILLS.md)  
+> **Discovery:** See [STANDARDS_COMMANDS.md](../STANDARDS_COMMANDS.md#18-command-discovery-protocol)
+
+
 ---
-
-## Standard Structure
-
-**This skill follows [STANDARDS_SKILLS.md](../STANDARDS_SKILLS.md):**
-
-- **Standard sections** - Domain, Purpose, Core Techniques, Anti-Patterns, Checklist
-- **Code example format** - Bad/Good pattern with specific examples
-- **Detection pattern format** - Python functions with Finding objects
-- **Checklist format** - Specific, verifiable items
-
-**See STANDARDS_SKILLS.md for format details. Only skill-specific content is documented below.**
 
 ---
 
@@ -104,21 +97,3 @@ Performance: N+1, indexes, loops
 - [ ] Review: security/quality/perf
 - [ ] Merge: rebase/squash, docs updated
 
-## Command Discovery Protocol
-
-When this skill is active, find relevant commands by searching `~/.claude/commands/` metadata:
-
-```yaml
-# Search criteria for this skill's domain
-action_types: [audit, generate, fix]
-keywords: [git, branch, PR, commit, review, merge, rebase]
-category: quality
-pain_points: [3, 4]
-```
-
-**How Claude finds commands:**
-1. Grep command files for `keywords:.*[pattern]` in frontmatter
-2. Match `category: quality`
-3. Present matching commands with their parameters
-
-This ensures commands are always current even when renamed or updated.

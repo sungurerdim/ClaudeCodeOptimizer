@@ -11,6 +11,10 @@ pain_points: [3, 5, 8]
 
 # RESTful API Design & Security
 
+> **Standards:** Format defined in [STANDARDS_SKILLS.md](../STANDARDS_SKILLS.md)  
+> **Discovery:** See [STANDARDS_COMMANDS.md](../STANDARDS_COMMANDS.md#18-command-discovery-protocol)
+
+
 ## Domain
 REST API design, versioning, auth, rate limiting, CORS, validation
 
@@ -144,34 +148,5 @@ class Order(BaseModel):
 - [ ] Deprecation
 ---
 
-## Standard Structure
-
-**This skill follows [STANDARDS_SKILLS.md](../STANDARDS_SKILLS.md):**
-
-- **Standard sections** - Domain, Purpose, Core Techniques, Anti-Patterns, Checklist
-- **Code example format** - Bad/Good pattern with specific examples
-- **Detection pattern format** - Python functions with Finding objects
-- **Checklist format** - Specific, verifiable items
-
-**See STANDARDS_SKILLS.md for format details. Only skill-specific content is documented below.**
-
 ---
 
-## Command Discovery Protocol
-
-When this skill is active, find relevant commands by searching `~/.claude/commands/` metadata:
-
-```yaml
-# Search criteria for API design and security domain
-action_types: [audit, fix, generate]
-keywords: [REST, API, versioning, authentication, JWT, OAuth2, rate limiting, CORS]
-category: security
-pain_points: [3, 5, 8]
-```
-
-**How Claude finds commands:**
-1. Grep command files for `keywords:.*[pattern]` in frontmatter
-2. Match `category: security` or `category: quality`
-3. Present matching commands with their parameters
-
-This ensures commands are always current even when renamed or updated.

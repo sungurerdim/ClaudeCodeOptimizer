@@ -11,6 +11,10 @@ pain_points: [5, 6, 10]
 
 # Skill: Resilience - Circuit Breaker, Retry, Bulkhead
 
+> **Standards:** Format defined in [STANDARDS_SKILLS.md](../STANDARDS_SKILLS.md)  
+> **Discovery:** See [STANDARDS_COMMANDS.md](../STANDARDS_COMMANDS.md#18-command-discovery-protocol)
+
+
 ## Domain & Purpose
 
 Prevent cascading failures in distributed systems via circuit breakers, retry patterns, and failure isolation.
@@ -19,17 +23,6 @@ Prevent cascading failures in distributed systems via circuit breakers, retry pa
 
 **Includes**: @content/principles/P_CIRCUIT_BREAKER.md, @content/principles/P_RETRY_WITH_BACKOFF.md, @content/principles/P_BULKHEAD_PATTERN.md, @content/principles/P_GRACEFUL_DEGRADATION.md, @content/principles/P_TIMEOUT_CONFIGURATION.md, @content/principles/P_DEAD_LETTER_QUEUE.md, @content/principles/P_FAIL_FAST_STRATEGY.md, @content/principles/P_PRODUCTION_GRADE.md
 ---
-
-## Standard Structure
-
-**This skill follows [STANDARDS_SKILLS.md](../STANDARDS_SKILLS.md):**
-
-- **Standard sections** - Domain, Purpose, Core Techniques, Anti-Patterns, Checklist
-- **Code example format** - Bad/Good pattern with specific examples
-- **Detection pattern format** - Python functions with Finding objects
-- **Checklist format** - Specific, verifiable items
-
-**See STANDARDS_SKILLS.md for format details. Only skill-specific content is documented below.**
 
 ---
 
@@ -113,21 +106,3 @@ def get_price(id):
 - [ ] Dead letter queue for failures
 - [ ] Monitor: circuit state, retry rates, timeouts, fallback usage
 
-## Command Discovery Protocol
-
-When this skill is active, find relevant commands by searching `~/.claude/commands/` metadata:
-
-```yaml
-# Search criteria for this skill's domain
-action_types: [audit, generate, fix]
-keywords: [resilience, circuit breaker, retry, timeout, fallback, bulkhead]
-category: architecture
-pain_points: [5, 6, 10]
-```
-
-**How Claude finds commands:**
-1. Grep command files for `keywords:.*[pattern]` in frontmatter
-2. Match `category: architecture`
-3. Present matching commands with their parameters
-
-This ensures commands are always current even when renamed or updated.

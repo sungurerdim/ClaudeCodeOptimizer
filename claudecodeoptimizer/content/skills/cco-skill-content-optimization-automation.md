@@ -11,23 +11,16 @@ pain_points: [5]
 
 # Skill: Content Optimization & Token Efficiency
 
+> **Standards:** Format defined in [STANDARDS_SKILLS.md](../STANDARDS_SKILLS.md)  
+> **Discovery:** See [STANDARDS_COMMANDS.md](../STANDARDS_COMMANDS.md#18-command-discovery-protocol)
+
+
 ## Domain
 Content optimization, token efficiency, context management
 
 ## Purpose
 Proactively identify and optimize verbose Claude Code content (skills, commands, agents, principles, guides, CLAUDE.md) to maximize context window efficiency, achieving significant token reduction while preserving 100% functionality and professional quality.
 ---
-
-## Standard Structure
-
-**This skill follows [STANDARDS_SKILLS.md](../STANDARDS_SKILLS.md):**
-
-- **Standard sections** - Domain, Purpose, Core Techniques, Anti-Patterns, Checklist
-- **Code example format** - Bad/Good pattern with specific examples
-- **Detection pattern format** - Python functions with Finding objects
-- **Checklist format** - Specific, verifiable items
-
-**See STANDARDS_SKILLS.md for format details. Only skill-specific content is documented below.**
 
 ---
 

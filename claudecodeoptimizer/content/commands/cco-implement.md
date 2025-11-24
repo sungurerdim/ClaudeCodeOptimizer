@@ -2,7 +2,6 @@
 name: cco-implement
 description: AI-assisted feature implementation with TDD approach and automatic skill selection based on feature type
 
-principles: [U_EVIDENCE_BASED_ANALYSIS, U_CHANGE_VERIFICATION, U_FOLLOW_PATTERNS, U_NO_OVERENGINEERING]
 keywords: [implement, feature, tdd, test-driven, development, generate, create, build]
 category: productivity
 pain_points: [1, 4]
@@ -23,6 +22,7 @@ pain_points: [1, 4]
 - **[STANDARDS_QUALITY.md](../STANDARDS_QUALITY.md)** - UX/DX, efficiency, simplicity, performance standards
 - **[LIBRARY_PATTERNS.md](../LIBRARY_PATTERNS.md)** - Reusable patterns (Step 0, Selection, Accounting, Progress, Error Handling)
 - **[STANDARDS_AGENTS.md](../STANDARDS_AGENTS.md)** - File discovery, model selection, parallel execution
+- **model selection** - Strategic Opus model selection, complexity scoring, ROI guidelines
 
 **See these files for detailed patterns. Only command-specific content is documented below.**
 
@@ -126,9 +126,12 @@ Detecting tech stack...
 
 ### Step 0.7: Opus Upgrade Opportunity (Complex Features)
 
-**Pattern:** Pattern 11
+**Pattern:** Pattern 11 (Opus Upgrade Opportunity - See model selection standards)
 
 **Trigger:** Feature complexity == "high" OR requires novel algorithm
+
+**Complexity Scoring:** Use algorithm from model selection
+**ROI Calculation:** See model selection standards for cost/benefit analysis
 
 ```python
 if feature_complexity == "high":

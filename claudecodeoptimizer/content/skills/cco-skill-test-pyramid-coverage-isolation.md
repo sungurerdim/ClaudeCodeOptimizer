@@ -11,6 +11,10 @@ pain_points: [4]
 
 # Skill: Testing Strategy - Test Pyramid, Coverage & Isolation
 
+> **Standards:** Format defined in [STANDARDS_SKILLS.md](../STANDARDS_SKILLS.md)  
+> **Discovery:** See [STANDARDS_COMMANDS.md](../STANDARDS_COMMANDS.md#18-command-discovery-protocol)
+
+
 ## Purpose
 
 Prevent production defects, flaky tests, and inadequate test coverage through comprehensive testing strategies.
@@ -23,17 +27,6 @@ Prevent production defects, flaky tests, and inadequate test coverage through co
 
 **Impact**: Critical
 ---
-
-## Standard Structure
-
-**This skill follows [STANDARDS_SKILLS.md](../STANDARDS_SKILLS.md):**
-
-- **Standard sections** - Domain, Purpose, Core Techniques, Anti-Patterns, Checklist
-- **Code example format** - Bad/Good pattern with specific examples
-- **Detection pattern format** - Python functions with Finding objects
-- **Checklist format** - Specific, verifiable items
-
-**See STANDARDS_SKILLS.md for format details. Only skill-specific content is documented below.**
 
 ---
 

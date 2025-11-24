@@ -11,6 +11,10 @@ pain_points: [1, 2, 3]
 
 # Skill: Code Quality & Refactoring
 
+> **Standards:** Format defined in [STANDARDS_SKILLS.md](../STANDARDS_SKILLS.md)  
+> **Discovery:** See [STANDARDS_COMMANDS.md](../STANDARDS_COMMANDS.md#18-command-discovery-protocol)
+
+
 ## Domain
 Code quality, refactoring, complexity management
 
@@ -21,17 +25,6 @@ Manage code quality through complexity reduction and technical debt tracking.
 
 **Impact**: High
 ---
-
-## Standard Structure
-
-**This skill follows [STANDARDS_SKILLS.md](../STANDARDS_SKILLS.md):**
-
-- **Standard sections** - Domain, Purpose, Core Techniques, Anti-Patterns, Checklist
-- **Code example format** - Bad/Good pattern with specific examples
-- **Detection pattern format** - Python functions with Finding objects
-- **Checklist format** - Specific, verifiable items
-
-**See STANDARDS_SKILLS.md for format details. Only skill-specific content is documented below.**
 
 ---
 
@@ -97,25 +90,6 @@ Result: Applies Extract Function, creates shared module, updates 5 files
 User: "Prioritize TODO comments"
 Result: Scans codebase, categorizes by impact/effort, generates paydown roadmap
 ```
-
-## Command Discovery Protocol
-
-When this skill is active, find relevant commands by searching `~/.claude/commands/` metadata:
-
-```yaml
-# Search criteria for this skill's domain
-action_types: [audit, fix, optimize]
-keywords: [refactor, complexity, code smell, technical debt, SOLID, clean code]
-category: quality
-pain_points: [1, 2, 3]
-```
-
-**How Claude finds commands:**
-1. Grep command files for `keywords:.*[pattern]` in frontmatter
-2. Match `category: quality`
-3. Present matching commands with their parameters
-
-This ensures commands are always current even when renamed or updated.
 
 ---
 

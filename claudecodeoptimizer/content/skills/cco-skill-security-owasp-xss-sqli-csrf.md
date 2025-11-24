@@ -11,19 +11,12 @@ pain_points: [1, 2, 3]
 
 # Security - OWASP Top 10, XSS, SQLi, CSRF, Access Control
 
+> **Standards:** Format defined in [STANDARDS_SKILLS.md](../STANDARDS_SKILLS.md)  
+> **Discovery:** See [STANDARDS_COMMANDS.md](../STANDARDS_COMMANDS.md#18-command-discovery-protocol)
+
+
 Prevent OWASP Top 10 2025 vulnerabilities via secure coding patterns and comprehensive validation.
 ---
-
-## Standard Structure
-
-**This skill follows [STANDARDS_SKILLS.md](../STANDARDS_SKILLS.md):**
-
-- **Standard sections** - Domain, Purpose, Core Techniques, Anti-Patterns, Checklist
-- **Code example format** - Bad/Good pattern with specific examples
-- **Detection pattern format** - Python functions with Finding objects
-- **Checklist format** - Specific, verifiable items
-
-**See STANDARDS_SKILLS.md for format details. Only skill-specific content is documented below.**
 
 ---
 
@@ -741,25 +734,6 @@ def detect_ai_auth_skips(code: str) -> List[dict]:
 ```
 
 ---
-
-## Command Discovery Protocol
-
-When this skill is active, find relevant commands by searching `~/.claude/commands/` metadata:
-
-```yaml
-# Search criteria for security domain
-action_types: [audit, fix, generate]
-keywords: [security, OWASP, broken access control, injection, XSS, CSRF, auth]
-category: security
-pain_points: [1, 2, 3]  # AI Tech Debt, AI Quality, Security
-```
-
-**How Claude finds commands:**
-1. Grep command files for `keywords:.*[pattern]` in frontmatter
-2. Match `category: security`
-3. Present matching commands with their parameters
-
-This ensures commands are always current even when renamed or updated.
 
 ---
 

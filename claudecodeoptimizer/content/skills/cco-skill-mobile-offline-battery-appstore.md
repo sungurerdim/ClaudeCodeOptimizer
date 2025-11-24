@@ -13,6 +13,10 @@ pain_points: [1, 6, 11]
 **Domain**: iOS/Android
 **Purpose**: Build offline-first mobile apps with battery optimization and app store compliance for reliable, performant mobile experiences.
 
+> **Standards:** Format defined in [STANDARDS_SKILLS.md](../STANDARDS_SKILLS.md)  
+> **Discovery:** See [STANDARDS_COMMANDS.md](../STANDARDS_COMMANDS.md#18-command-discovery-protocol)
+
+
 ## Core Techniques
 - **Offline-First**: Cache data locally, sync when connected, queue operations
 - **Battery Optimization**: Batch network requests, coarse location, limit background tasks
@@ -136,34 +140,5 @@ navigator.geolocation.watchPosition(callback, error, {
 - [ ] Android: Target API 33+
 ---
 
-## Standard Structure
-
-**This skill follows [STANDARDS_SKILLS.md](../STANDARDS_SKILLS.md):**
-
-- **Standard sections** - Domain, Purpose, Core Techniques, Anti-Patterns, Checklist
-- **Code example format** - Bad/Good pattern with specific examples
-- **Detection pattern format** - Python functions with Finding objects
-- **Checklist format** - Specific, verifiable items
-
-**See STANDARDS_SKILLS.md for format details. Only skill-specific content is documented below.**
-
 ---
 
-## Command Discovery Protocol
-
-When this skill is active, find relevant commands by searching `~/.claude/commands/` metadata:
-
-```yaml
-# Search criteria for mobile development domain
-action_types: [audit, fix, optimize]
-keywords: [mobile, offline, battery, app store, iOS, Android, React Native]
-category: performance
-pain_points: [1, 6, 11]
-```
-
-**How Claude finds commands:**
-1. Grep command files for `keywords:.*[pattern]` in frontmatter
-2. Match `category: performance`
-3. Present matching commands with their parameters
-
-This ensures commands are always current even when renamed or updated.

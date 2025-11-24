@@ -94,21 +94,21 @@ Universal (U_*) and Claude-specific (C_*) principles are **always loaded** via C
 
 ```markdown
 <!-- CCO_PRINCIPLES_START -->
-@principles/U_CHANGE_VERIFICATION.md
-@principles/U_CROSS_PLATFORM_COMPATIBILITY.md
-@principles/U_DRY.md
-@principles/U_EVIDENCE_BASED_ANALYSIS.md
-@principles/U_FOLLOW_PATTERNS.md
-@principles/U_MINIMAL_TOUCH.md
-@principles/U_NO_HARDCODED_EXAMPLES.md
-@principles/U_NO_OVERENGINEERING.md
-@principles/C_AGENT_ORCHESTRATION_PATTERNS.md
-@principles/C_CONTEXT_WINDOW_MGMT.md
-@principles/C_EFFICIENT_FILE_OPERATIONS.md
-@principles/C_MODEL_SELECTION.md
-@principles/C_NATIVE_TOOL_INTERACTIONS.md
-@principles/C_NO_UNSOLICITED_FILE_CREATION.md
-@principles/C_PROJECT_CONTEXT_DISCOVERY.md
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 <!-- CCO_PRINCIPLES_END -->
 ```
 
@@ -126,9 +126,9 @@ Project-specific (P_*) principles are **optional**. Enable per project needs:
 ```markdown
 <!-- CCO_PRINCIPLES_START -->
 ...existing U_* and C_* principles...
-@principles/P_SQL_INJECTION.md
-@principles/P_XSS_PREVENTION.md
-@principles/P_AUTH_AUTHZ.md
+
+
+
 <!-- CCO_PRINCIPLES_END -->
 ```
 

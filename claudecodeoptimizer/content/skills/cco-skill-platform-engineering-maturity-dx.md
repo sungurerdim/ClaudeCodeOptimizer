@@ -11,19 +11,12 @@ pain_points: [4, 6, 10]
 
 # Platform Engineering, Maturity & Developer Experience
 
+> **Standards:** Format defined in [STANDARDS_SKILLS.md](../STANDARDS_SKILLS.md)  
+> **Discovery:** See [STANDARDS_COMMANDS.md](../STANDARDS_COMMANDS.md#18-command-discovery-protocol)
+
+
 Assess platform maturity + CI/CD automation + test coverage + IaC + DX + AI readiness.
 ---
-
-## Standard Structure
-
-**This skill follows [STANDARDS_SKILLS.md](../STANDARDS_SKILLS.md):**
-
-- **Standard sections** - Domain, Purpose, Core Techniques, Anti-Patterns, Checklist
-- **Code example format** - Bad/Good pattern with specific examples
-- **Detection pattern format** - Python functions with Finding objects
-- **Checklist format** - Specific, verifiable items
-
-**See STANDARDS_SKILLS.md for format details. Only skill-specific content is documented below.**
 
 ---
 
@@ -496,18 +489,6 @@ def calculate_overall_platform_maturity() -> dict:
 - [ ] Foundation strong for AI amplification
 
 ---
-
-## Command Discovery Protocol
-
-When this skill is active, find relevant commands by searching `~/.claude/commands/` metadata:
-
-```yaml
-# Search criteria for platform engineering domain
-action_types: [audit]
-keywords: [platform, CI/CD, test automation, IaC, deployment, DX, AI readiness]
-category: platform
-pain_points: [4, 6, 10]  # Stability/Rework Rate, Platform Engineering, Hidden Complexity
-```
 
 ---
 

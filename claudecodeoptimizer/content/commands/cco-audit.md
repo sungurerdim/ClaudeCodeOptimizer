@@ -2,7 +2,6 @@
 name: cco-audit
 description: Comprehensive codebase audit with full transparency and real-time progress
 action_type: audit
-principles: [U_EVIDENCE_BASED_ANALYSIS, U_CHANGE_VERIFICATION, U_MINIMAL_TOUCH]
 parameters:
   security:
     keywords: [security audit, owasp scan, xss check, sqli scan, csrf check, secrets scan, vulnerability scan]
@@ -128,6 +127,8 @@ parameters:
 - **[STANDARDS_QUALITY.md](../STANDARDS_QUALITY.md)** - UX/DX, efficiency, simplicity, performance standards
 - **[LIBRARY_PATTERNS.md](../LIBRARY_PATTERNS.md)** - Reusable patterns (Step 0, Selection, Accounting, Progress, Error Handling)
 - **[STANDARDS_AGENTS.md](../STANDARDS_AGENTS.md)** - File discovery, model selection, parallel execution
+- **model selection** - Strategic Opus model selection, complexity scoring, ROI guidelines
+- **[STANDARDS_TECH_DETECTION.md](../STANDARDS_TECH_DETECTION.md)** - Fast tech detection (<2s), applicability filtering, pre-filtering UI
 
 **See these files for detailed patterns. Only command-specific content is documented below.**
 
@@ -571,9 +572,12 @@ Full coverage of 92 critical checks across 9 categories:
 
 ## Component 4.5: Opus Model Upgrade Opportunity
 
-**Pattern:** Pattern 11 (Opus Upgrade Opportunity)
+**Pattern:** Pattern 11 (Opus Upgrade Opportunity - See model selection standards)
 
 **Trigger:** User selected "architecture" category OR "critical" meta-flag includes architecture
+
+**Complexity Scoring:** Use algorithm from model selection
+**ROI Calculation:** See model selection standards for cost/benefit analysis
 
 **Implementation:**
 
@@ -846,7 +850,7 @@ Audit found {COUNT} missing components:
 
 ```markdown
 CONTEXT FOR /cco-generate:
-Audit found 8 critical files with zero test coverage: src/payments/processor.py (0%), src/auth/jwt_validator.py (0%), src/api/webhooks.py (0%), +5 others. Existing test pattern in tests/test_auth.py uses pytest with fixtures. Generate comprehensive test suites for these 8 files following project conventions.
+Audit found {COUNT} critical files with zero test coverage: {FILE_PATH_1} (0%), {FILE_PATH_2} (0%), {FILE_PATH_3} (0%), +{REMAINING_COUNT} others. Existing test pattern in {TEST_FILE_PATH} uses {TESTING_FRAMEWORK} with {TEST_PATTERN}. Generate comprehensive test suites for these {COUNT} files following project conventions.
 
 SlashCommand({command: "/cco-generate tests"})
 ```

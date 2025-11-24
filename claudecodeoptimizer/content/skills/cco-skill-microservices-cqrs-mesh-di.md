@@ -13,6 +13,10 @@ pain_points: [2, 6, 10]
 **Domain**: Distributed Systems
 **Purpose**: Implement microservices with CQRS pattern, service mesh, dependency injection, and event-driven communication for scalable distributed systems.
 
+> **Standards:** Format defined in [STANDARDS_SKILLS.md](../STANDARDS_SKILLS.md)  
+> **Discovery:** See [STANDARDS_COMMANDS.md](../STANDARDS_COMMANDS.md#18-command-discovery-protocol)
+
+
 ## Core Techniques
 - **Service Decomposition**: Use DDD bounded contexts to define service boundaries
 - **CQRS Pattern**: Separate write (commands) and read (queries) models
@@ -173,34 +177,5 @@ async def create_order(command):
 - [ ] No circular service dependencies
 ---
 
-## Standard Structure
-
-**This skill follows [STANDARDS_SKILLS.md](../STANDARDS_SKILLS.md):**
-
-- **Standard sections** - Domain, Purpose, Core Techniques, Anti-Patterns, Checklist
-- **Code example format** - Bad/Good pattern with specific examples
-- **Detection pattern format** - Python functions with Finding objects
-- **Checklist format** - Specific, verifiable items
-
-**See STANDARDS_SKILLS.md for format details. Only skill-specific content is documented below.**
-
 ---
 
-## Command Discovery Protocol
-
-When this skill is active, find relevant commands by searching `~/.claude/commands/` metadata:
-
-```yaml
-# Search criteria for microservices architecture domain
-action_types: [audit, fix, generate, optimize]
-keywords: [microservices, CQRS, service mesh, DDD, saga, event-driven]
-category: architecture
-pain_points: [2, 6, 10]
-```
-
-**How Claude finds commands:**
-1. Grep command files for `keywords:.*[pattern]` in frontmatter
-2. Match `category: architecture`
-3. Present matching commands with their parameters
-
-This ensures commands are always current even when renamed or updated.

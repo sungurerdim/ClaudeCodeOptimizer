@@ -2,7 +2,6 @@
 name: cco-fix
 description: Automated issue resolution with safe/risky categorization
 action_type: fix
-principles: [U_EVIDENCE_BASED_ANALYSIS, U_CHANGE_VERIFICATION, U_MINIMAL_TOUCH]
 note: Uses same categories as cco-audit - search cco-audit metadata for parameter details
 parameters:
   security:
@@ -123,6 +122,8 @@ parameters:
 - **[STANDARDS_QUALITY.md](../STANDARDS_QUALITY.md)** - UX/DX, efficiency, simplicity, performance standards
 - **[LIBRARY_PATTERNS.md](../LIBRARY_PATTERNS.md)** - Reusable patterns (Step 0, Selection, Accounting, Progress, Error Handling)
 - **[STANDARDS_AGENTS.md](../STANDARDS_AGENTS.md)** - File discovery, model selection, parallel execution
+- **model selection** - Strategic Opus model selection, complexity scoring, ROI guidelines
+- **[STANDARDS_TECH_DETECTION.md](../STANDARDS_TECH_DETECTION.md)** - Fast tech detection (<2s), applicability filtering, pre-filtering UI
 
 **See these files for detailed patterns. Only command-specific content is documented below.**
 
@@ -445,9 +446,12 @@ Categories NOT selected will be skipped entirely.
 
 ### Step 3.5: Opus Model Upgrade Opportunity
 
-**Pattern:** Pattern 11 (Opus Upgrade Opportunity)
+**Pattern:** Pattern 11 (Opus Upgrade Opportunity - See model selection standards)
 
 **Trigger:** User selected "architecture" category fixes OR risky architectural refactoring detected (5+ architecture fixes)
+
+**Complexity Scoring:** Use algorithm from model selection
+**ROI Calculation:** See model selection standards for cost/benefit analysis
 
 **Implementation:**
 

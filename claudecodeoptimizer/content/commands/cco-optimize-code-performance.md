@@ -2,7 +2,6 @@
 name: cco-optimize-code-performance
 description: Performance optimization with before/after metrics measurement
 
-principles: [U_EVIDENCE_BASED_ANALYSIS, U_MINIMAL_TOUCH, C_EFFICIENT_FILE_OPERATIONS]
 parameters:
   docker:
     keywords: [docker optimization, multi-stage build, layer optimization, image size reduction]
@@ -39,6 +38,8 @@ parameters:
 - **[STANDARDS_QUALITY.md](../STANDARDS_QUALITY.md)** - UX/DX, efficiency, simplicity, performance standards
 - **[LIBRARY_PATTERNS.md](../LIBRARY_PATTERNS.md)** - Reusable patterns (Step 0, Selection, Accounting, Progress, Error Handling)
 - **[STANDARDS_AGENTS.md](../STANDARDS_AGENTS.md)** - File discovery, model selection, parallel execution
+- **model selection** - Strategic Opus model selection, complexity scoring, ROI guidelines
+- **[STANDARDS_TECH_DETECTION.md](../STANDARDS_TECH_DETECTION.md)** - Fast tech detection (<2s), applicability filtering, pre-filtering UI
 
 **See these files for detailed patterns. Only command-specific content is documented below.**
 
@@ -140,9 +141,12 @@ Filtered: {FILTERED_COUNT} ({FILTERED_LIST})
 
 ## Step 0.6: Opus Upgrade Opportunity (Algorithm Optimization)
 
-**Pattern:** Pattern 11
+**Pattern:** Pattern 11 (Opus Upgrade Opportunity - See model selection standards)
 
 **Trigger:** User selected "--performance" OR algorithm optimization detected
+
+**Complexity Scoring:** Use algorithm from model selection
+**ROI Calculation:** See model selection standards for cost/benefit analysis
 
 ```python
 if "--performance" in selected_optimizations or has_algorithm_optimization:
