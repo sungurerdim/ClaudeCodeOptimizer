@@ -126,29 +126,29 @@ class TestCCOGenerateCommand:
         # Create source file that needs tests
         src_dir = tmp_path / "src"
         src_dir.mkdir()
-        source_file = src_dir / "recommendations.py"
+        source_file = src_dir / "user_manager.py"
         source_file.write_text("""
-class DetectionResult:
-    def __init__(self, category, value):
-        self.category = category
-        self.value = value
+class User:
+    def __init__(self, username, email):
+        self.username = username
+        self.email = email
 """)
 
         # Simulate test file generation
-        test_file = unit_dir / "test_recommendations.py"
+        test_file = unit_dir / "test_user_manager.py"
         test_file.write_text("""
 import pytest
 
-class TestDetectionResult:
+class TestUser:
     def test_create_valid(self):
-        result = DetectionResult("test", "value")
-        assert result.category == "test"
+        user = User("testuser", "test@example.com")
+        assert user.username == "testuser"
 """)
 
         # Verify test file created
         assert test_file.exists()
         content = test_file.read_text()
-        assert "TestDetectionResult" in content
+        assert "TestUser" in content
         assert "test_create_valid" in content
 
     def test_generate_creates_documentation(self, tmp_path: Path) -> None:

@@ -41,21 +41,21 @@ class CCORemover:
         # Agents
         agents_dir = self.claude_dir / "agents"
         if agents_dir.exists():
-            count = len(list(agents_dir.glob("cco-*.md")))
+            count = sum(1 for _ in agents_dir.glob("cco-*.md"))
             if count > 0:
                 counts["agents"] = count
 
         # Commands
         commands_dir = self.claude_dir / "commands"
         if commands_dir.exists():
-            count = len(list(commands_dir.glob("cco-*.md")))
+            count = sum(1 for _ in commands_dir.glob("cco-*.md"))
             if count > 0:
                 counts["commands"] = count
 
         # Skills (recursive)
         skills_dir = self.claude_dir / "skills"
         if skills_dir.exists():
-            count = len(list(skills_dir.rglob("cco-*.md")))
+            count = sum(1 for _ in skills_dir.rglob("cco-*.md"))
             if count > 0:
                 counts["skills"] = count
 
@@ -63,9 +63,9 @@ class CCORemover:
         principles_dir = self.claude_dir / "principles"
         if principles_dir.exists():
             count = (
-                len(list(principles_dir.glob("U_*.md")))
-                + len(list(principles_dir.glob("C_*.md")))
-                + len(list(principles_dir.glob("P_*.md")))
+                sum(1 for _ in principles_dir.glob("U_*.md"))
+                + sum(1 for _ in principles_dir.glob("C_*.md"))
+                + sum(1 for _ in principles_dir.glob("P_*.md"))
             )
             if count > 0:
                 counts["principles"] = count
@@ -73,16 +73,16 @@ class CCORemover:
         # Standards (*_STANDARDS.md, PRINCIPLE_FORMAT.md, COMMAND_PATTERNS.md)
         if self.claude_dir.exists():
             count = (
-                len(list(self.claude_dir.glob("*_STANDARDS.md")))
-                + len(list(self.claude_dir.glob("PRINCIPLE_FORMAT.md")))
-                + len(list(self.claude_dir.glob("COMMAND_PATTERNS.md")))
+                sum(1 for _ in self.claude_dir.glob("*_STANDARDS.md"))
+                + sum(1 for _ in self.claude_dir.glob("PRINCIPLE_FORMAT.md"))
+                + sum(1 for _ in self.claude_dir.glob("COMMAND_PATTERNS.md"))
             )
             if count > 0:
                 counts["standards"] = count
 
         # Templates (*.cco)
         if self.claude_dir.exists():
-            count = len(list(self.claude_dir.glob("*.cco")))
+            count = sum(1 for _ in self.claude_dir.glob("*.cco"))
             if count > 0:
                 counts["templates"] = count
 
