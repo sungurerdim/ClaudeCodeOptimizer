@@ -261,7 +261,6 @@ Users can discover skills by:
 
 - [Skill Development Guide](../guides/skill-development.md) (if it exists)
 - [CCO Skills Directory](../../claudecodeoptimizer/content/skills/)
-- [MetadataManager Documentation](../../claudecodeoptimizer/core/metadata_manager.py)
 
 ## Related ADRs
 

@@ -432,6 +432,70 @@ AskUserQuestion({
 
 ---
 
+## Component 1.6: Tech Stack Detection & Applicability Filtering
+
+**Pattern:** Pattern 10 (Tech Stack Detection & Context Sharing)
+
+**Purpose:** Eliminate irrelevant checks, show only applicable options to user
+
+**Implementation:**
+
+```markdown
+### Tech Stack Detection (1-2 seconds)
+
+Detecting project technology stack...
+
+✓ Languages: {DETECTED_LANGUAGES}
+✓ Frameworks: {DETECTED_FRAMEWORKS}
+✓ DevOps: {DETECTED_DEVOPS}
+✓ Testing: {DETECTED_TESTING}
+✓ Database: {DETECTED_DATABASE}
+✓ Frontend: {DETECTED_FRONTEND}
+
+════════════════════════════════════════════════════════════════
+TECH STACK DETECTED (session cache for subsequent commands):
+
+Languages: {DETECTED_LANGUAGES}
+Frameworks: {DETECTED_FRAMEWORKS}
+Databases: {DETECTED_DATABASES}
+DevOps: {DETECTED_DEVOPS}
+Frontend: {DETECTED_FRONTEND}
+Testing: {DETECTED_TESTING}
+
+Detection time: {DURATION}s
+════════════════════════════════════════════════════════════════
+```
+
+**Applicability Filtering:**
+
+```python
+# Filter checks based on detected tech stack
+applicable_checks, filtered_checks = filter_applicable_checks(
+    all_checks=ALL_CHECKS,
+    tech_stack=detected_tech_stack
+)
+
+# Report filtering results
+print(f"""
+Available checks: {len(applicable_checks)}
+Filtered: {len(filtered_checks)} checks not applicable to your project
+
+ℹ️  Filtered categories:
+  - {FILTERED_CATEGORY_1} ({REASON_1})
+  - {FILTERED_CATEGORY_2} ({REASON_2})
+  - {FILTERED_CATEGORY_3} ({REASON_3})
+
+Use --show-all to see filtered checks
+""")
+```
+
+**User Options After Filtering:**
+
+- See only **applicable checks** (default, recommended)
+- Show **all checks** including filtered (--show-all flag)
+
+---
+
 ## Component 2: Discovery Phase
 
 **See:** STANDARDS_AGENTS.md & LIBRARY_PATTERNS.md
@@ -502,6 +566,73 @@ Full coverage of 92 critical checks across 9 categories:
 ```
 
 **Selection Parser:** Supports ranges (1-15), categories, presets (@pre-commit), keywords (all, critical), exclusions (-3)
+
+---
+
+## Component 4.5: Opus Model Upgrade Opportunity
+
+**Pattern:** Pattern 11 (Opus Upgrade Opportunity)
+
+**Trigger:** User selected "architecture" category OR "critical" meta-flag includes architecture
+
+**Implementation:**
+
+```python
+# Check if architecture checks selected
+if "architecture" in selected_categories or has_architecture_in_selection(selected_checks):
+    selected_model = offer_opus_upgrade(
+        task_name="Architecture Analysis",
+        task_description="Deep analysis of system architecture, design patterns, coupling, and architectural anti-patterns",
+        complexity_reason="complex architectural patterns, design trade-offs, and structural analysis",
+        expected_benefit="Significantly deeper insights into architectural flaws, better design recommendations, and more accurate coupling detection (40-50% improvement)",
+        default_model="sonnet"
+    )
+else:
+    selected_model = "sonnet"  # Default for other checks
+
+# Use selected model for audit-agent
+```
+
+**User Question:**
+
+```markdown
+### Model Selection for Architecture Analysis
+
+Architecture analysis would benefit from Opus model for deeper insights.
+
+**Opus Benefits:**
+- Deeper architectural pattern detection
+- More accurate coupling analysis
+- Better design flaw identification
+- Sophisticated refactoring suggestions
+
+**Time Impact:** ~20-30% slower than Sonnet
+**Quality Impact:** ~40-50% better architectural insights
+
+Use Opus for architecture checks?
+```
+
+**AskUserQuestion:**
+
+```python
+AskUserQuestion({
+    "questions": [{
+        "question": "Architecture analysis would benefit from Opus model. Use Opus?",
+        "header": "Model Selection",
+        "multiSelect": False,
+        "options": [
+            {
+                "label": "Yes - Use Opus (Recommended)",
+                "description": "Best quality for complex architectural patterns. Deeper insights. 20-30% slower."
+            },
+            {
+                "label": "No - Use Sonnet",
+                "description": "Faster, sufficient for most architecture checks. May miss subtle design flaws."
+            }
+        ]
+    }]
+})
+```
 
 ---
 

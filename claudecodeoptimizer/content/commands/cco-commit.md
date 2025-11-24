@@ -32,9 +32,9 @@ pain_points: [5]
 
 **What Happens:**
 1. **Step 0**: Introduction and confirmation (user input required)
-2. **Step 1**: Analyze staged changes, detect change types (automated)
+2. **Step 1**: Analyze ALL uncommitted changes (staged, unstaged, untracked), detect change types (automated)
 3. **Step 2**: Recommend atomic commit splits if needed (user confirmation required)
-4. **Step 3**: Generate semantic commit messages (automated)
+4. **Step 3**: Generate semantic commit messages following skill guidelines (automated)
 5. **Step 4**: Create commits with proper format (automated)
 6. **Step 5**: Display summary with accounting (automated)
 
@@ -108,12 +108,12 @@ Refs: #{issue_number_if_provided}
 **Command-Specific Details:**
 
 **What I do:**
-Help you create high-quality git commits following Conventional Commits format.
+Help you create high-quality git commits following Conventional Commits format per `cco-skill-git-branching-pr-review`.
 
 **Process:**
-1. Analyze staged changes (or all unstaged changes if none staged)
+1. Analyze ALL uncommitted changes (staged, unstaged, untracked files)
 2. Detect change types and recommend atomic splits
-3. Generate semantic commit messages with proper type/scope/summary
+3. Generate semantic commit messages following skill guidelines (title max 50 chars)
 4. Create commits with Conventional Commits format
 
 **Output:**
@@ -127,13 +127,13 @@ Help you create high-quality git commits following Conventional Commits format.
 ```python
 AskUserQuestion({
   questions: [{
-    question: "Ready to create semantic commits from staged changes?",
+    question: "Ready to create semantic commits from all uncommitted changes?",
     header: "Confirm Start",
     multiSelect: false,
     options: [
       {
         label: "Start Commit",
-        description: "Analyze staged changes and create commits (recommended)"
+        description: "Analyze ALL uncommitted changes (staged/unstaged/untracked) and create commits (recommended)"
       },
       {
         label: "Add Context",
@@ -161,15 +161,21 @@ AskUserQuestion({
 
 ## Execution Protocol
 
-### Step 1: Analyze Staged Changes
+### Step 1: Analyze All Uncommitted Changes
 
 **Pattern:** Pattern 7 (File Discovery)
 
 **File Discovery with Exclusion Protocol:**
 
 ```bash
-# Get staged files, filter excluded files BEFORE analysis
-staged_files=$(git diff --cached --name-only)
+# Get ALL uncommitted files (staged, unstaged, untracked)
+all_changes=$(git status --short)
+
+# Separate file types:
+# - Modified (staged/unstaged): M, MM, AM
+# - Deleted: D
+# - Untracked: ??
+# - Renamed: R
 
 # Define exclusion patterns (match STANDARDS_COMMANDS.md)
 EXCLUDED_FILES=(
@@ -180,9 +186,10 @@ EXCLUDED_FILES=(
 )
 
 # Filter excluded files
-# Analyze filtered files only
-git diff --cached --stat -- $filtered_files
-git diff --cached -- $filtered_files
+# Analyze ALL changes (staged + unstaged + untracked):
+git diff HEAD --stat -- $filtered_files  # Staged + unstaged
+git ls-files --others --exclude-standard  # Untracked
+git diff HEAD -- $filtered_files  # Detailed diff
 ```
 
 **Analysis (on filtered files only):**
@@ -194,12 +201,13 @@ git diff --cached -- $filtered_files
 **Display Included/Excluded:**
 ```markdown
 ════════════════════════════════════════════════════════════════
-         STAGED CHANGES ANALYSIS
+         ALL UNCOMMITTED CHANGES ANALYSIS
 ════════════════════════════════════════════════════════════════
 
-## Files Included
+## Files Included (Staged + Unstaged + Untracked)
 {for file in included_files}
-✅ {file} (+{added} -{removed})
+✅ {file} ({status}) (+{added} -{removed})
+   Status: M=modified, ??=untracked, D=deleted, R=renamed
 
 Total: {included_count} files
 
@@ -215,7 +223,7 @@ Total: {excluded_count} files
 
 If multiple change types detected:
 ```markdown
-Analyzing staged changes...
+Analyzing uncommitted changes (staged + unstaged + untracked)...
 
 Files changed: {COUNT}
 Lines added: {COUNT}
@@ -249,18 +257,23 @@ AskUserQuestion({
 
 ### Step 3: Generate Semantic Commit Messages
 
-**See [LIBRARY_PATTERNS.md](../LIBRARY_PATTERNS.md#pattern-8-dynamic-results-generation) for template.**
+**See:**
+- **[LIBRARY_PATTERNS.md](../LIBRARY_PATTERNS.md#pattern-8-dynamic-results-generation)** for template
+- **`cco-skill-git-branching-pr-review`** for commit message format rules
 
-For each commit, generate message following Conventional Commits:
+For each commit, generate message following Conventional Commits **and skill guidelines**:
 
 ```
-<type>(<scope>): <summary>
+<type>(<scope>): <subject>  ← MAX 50 CHARS (see skill)
 
-<body>
+<body wrapped at 72 chars>
+Explain WHAT and WHY, not HOW.
 
 BREAKING CHANGE: <description if applicable>
 Refs: #<issue-number>
 ```
+
+**CRITICAL:** Title must be ≤50 chars (ideal) or ≤72 (hard limit) per `cco-skill-git-branching-pr-review`.
 
 ### Step 4: Create Commits
 
@@ -402,12 +415,12 @@ AskUserQuestion({
 ## Success Criteria
 
 - [ ] Step 0: Introduction and confirmation completed
-- [ ] Staged changes analyzed (excluded files filtered)
+- [ ] ALL uncommitted changes analyzed (staged/unstaged/untracked, excluded files filtered)
 - [ ] Change types detected
 - [ ] Atomic split recommended if needed (dynamic based on analysis)
-- [ ] Semantic messages generated (no hardcoded examples)
+- [ ] Semantic messages generated following `cco-skill-git-branching-pr-review` (title ≤50 chars, no hardcoded examples)
 - [ ] TodoWrite tracking for multi-commit operations
-- [ ] Commits created with proper format
+- [ ] Commits created with proper format per skill guidelines
 - [ ] Complete accounting verified (created = planned)
 - [ ] Summary presented with impact metrics
 - [ ] Pain-point impact communicated
@@ -417,12 +430,14 @@ AskUserQuestion({
 ## Example Usage
 
 ```bash
-# Analyze staged changes and create commits
+# Analyze ALL uncommitted changes (staged/unstaged/untracked) and create commits
 /cco-commit
 
-# If no staged changes, stage all and analyze
-git add .
-/cco-commit
+# The command automatically detects all uncommitted changes:
+# - Staged files (git add)
+# - Unstaged modified files
+# - Untracked new files
+# No need to stage beforehand - cco-commit handles everything
 ```
 
 ---

@@ -307,6 +307,37 @@ AskUserQuestion({
 
 ---
 
+### Step 0.6: Tech Stack Detection & Applicability Filtering
+
+**Pattern:** Pattern 10 (Tech Stack Detection & Context Sharing)
+
+**Purpose:** Filter fixes to show only applicable options
+
+```markdown
+Detecting tech stack for fix applicability...
+
+════════════════════════════════════════════════════════════════
+TECH STACK DETECTED:
+
+Languages: {DETECTED_LANGUAGES}
+Frameworks: {DETECTED_FRAMEWORKS}
+Databases: {DETECTED_DATABASES}
+Testing: {DETECTED_TESTING}
+
+Detection time: {DURATION}s
+════════════════════════════════════════════════════════════════
+
+Applicable fixes: {APPLICABLE_COUNT}
+Filtered: {FILTERED_COUNT} fixes (not applicable to this project)
+
+ℹ️  Filtered:
+  - {FILTERED_FIX_CATEGORY_1} ({REASON_1})
+  - {FILTERED_FIX_CATEGORY_2} ({REASON_2})
+  - {FILTERED_FIX_CATEGORY_3} ({REASON_3})
+```
+
+---
+
 ### Step 1: Check for Recent Audit
 
 ```markdown
@@ -412,6 +443,52 @@ Categories NOT selected will be skipped entirely.
 
 ---
 
+### Step 3.5: Opus Model Upgrade Opportunity
+
+**Pattern:** Pattern 11 (Opus Upgrade Opportunity)
+
+**Trigger:** User selected "architecture" category fixes OR risky architectural refactoring detected (5+ architecture fixes)
+
+**Implementation:**
+
+```python
+# Check if architectural refactoring is needed
+if fix_category == "architecture" or (has_architecture_fixes and len(architecture_fixes) >= 5):
+    selected_model = offer_opus_upgrade(
+        task_name="Architectural Refactoring",
+        task_description=f"Applying {len(architecture_fixes)} architectural fixes across {affected_modules_count} modules",
+        complexity_reason="major structural changes, coupling reduction, and design pattern application",
+        expected_benefit="Safer refactoring with better functionality preservation and cleaner architecture (30-40% improvement)",
+        default_model="sonnet"
+    )
+else:
+    selected_model = "sonnet"  # Default
+```
+
+**AskUserQuestion:**
+
+```python
+AskUserQuestion({
+    "questions": [{
+        "question": "Architectural refactoring would benefit from Opus for safer changes. Use Opus?",
+        "header": "Model Selection",
+        "multiSelect": False,
+        "options": [
+            {
+                "label": "Yes - Use Opus (Recommended)",
+                "description": "Safer refactoring for complex architectural changes. Better preservation. 20-30% slower."
+            },
+            {
+                "label": "No - Use Sonnet",
+                "description": "Faster, sufficient for simple fixes. May need manual review for complex refactoring."
+            }
+        ]
+    }]
+})
+```
+
+---
+
 ### Step 4: Apply Fixes
 
 **Pattern:** Pattern 4 (Complete Accounting)
@@ -420,9 +497,9 @@ Categories NOT selected will be skipped entirely.
 
 **Command-Specific Details:**
 
-**Agent:** `fix-agent` (Sonnet for code changes)
+**Agent:** `fix-agent` (model selected in Step 3.5, defaults to Sonnet)
 
-**Why Sonnet:** Higher accuracy for code modifications, better contextual understanding, safer refactoring
+**Model Selection:** Opus for architectural refactoring (if user opted in), Sonnet for other fixes
 
 **Parallel Execution:** Agent automatically parallelizes independent fixes (different files)
 

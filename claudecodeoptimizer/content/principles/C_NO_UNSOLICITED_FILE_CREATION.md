@@ -170,10 +170,11 @@ Write("ARCHITECTURE.md", design)
 - [ ] Documentation? (ALWAYS ask)
 
 ### Avoid Creating
-- [ ] Temp files (test.py, temp.txt, debug.log)
+- [ ] Temp files ({TEMP_FILE}.py, {DEBUG_FILE}.txt, {LOG_FILE}.log)
 - [ ] Single-function files
 - [ ] Premature configs
 - [ ] Unsolicited docs (README, CONTRIBUTING)
+- [ ] Auto-generated reports/summaries ({SUMMARY_FILE}.md, {REPORT_FILE}.md, etc.)
 - [ ] Duplicate utilities
 
 ### OK Without Asking
@@ -182,3 +183,28 @@ Write("ARCHITECTURE.md", design)
 - [ ] Type hints
 - [ ] Updating existing docs
 - [ ] Commit messages
+
+### ❌ Auto-Generated Reports/Summaries
+```bash
+# ❌ BAD: Create reports without request
+Write("{SUMMARY_FILE}.md", {RESULTS_DATA})
+Write("{ANALYSIS_FILE}.md", {FINDINGS_DATA})
+Write("{AUDIT_FILE}.md", {AUDIT_DATA})
+Write("{CHANGES_FILE}.md", {CHANGES_DATA})
+
+# ✅ GOOD: Output in conversation
+print("""
+{OPERATION} Complete! ✓
+
+Applied {COUNT} {ITEMS}:
+- {CATEGORY_1}: {IMPROVEMENTS_1}
+- {CATEGORY_2}: {IMPROVEMENTS_2}
+
+Impact: {METRICS}
+""")
+
+# ✅ GOOD: Ask first if user wants file
+"{OPERATION} complete. Save report to file? (Default: show in conversation)"
+```
+
+**Critical Rule**: NEVER create summary/report/analysis files unless explicitly requested. Always output results directly in conversation.

@@ -116,6 +116,47 @@ AskUserQuestion({
 
 ---
 
+## Step 0.5: Tech Stack Detection & Applicability Filtering
+
+**Pattern:** Pattern 10 (Tech Stack Detection)
+
+**Purpose:** Show only applicable optimization types
+
+```markdown
+Detecting tech stack for optimization applicability...
+
+✓ Docker: {DOCKER_STATUS} → {DOCKER_ACTION}
+✓ Database: {DATABASE_STATUS} → {DATABASE_ACTION}
+✓ Frontend: {FRONTEND_STATUS} → {FRONTEND_ACTION}
+✓ Performance: {PERFORMANCE_STATUS} → {PERFORMANCE_ACTION}
+
+Available optimizations: {AVAILABLE_COUNT} ({AVAILABLE_LIST})
+Filtered: {FILTERED_COUNT} ({FILTERED_LIST})
+
+ℹ️  Use --show-all to see filtered options
+```
+
+---
+
+## Step 0.6: Opus Upgrade Opportunity (Algorithm Optimization)
+
+**Pattern:** Pattern 11
+
+**Trigger:** User selected "--performance" OR algorithm optimization detected
+
+```python
+if "--performance" in selected_optimizations or has_algorithm_optimization:
+    selected_model = offer_opus_upgrade(
+        task_name="Algorithm Optimization",
+        task_description="Optimizing performance-critical algorithms and bottlenecks",
+        complexity_reason="complex performance trade-offs, novel optimization strategies",
+        expected_benefit="Significantly better performance improvements (30-40% vs 10-15% with Sonnet)",
+        default_model="sonnet"
+    )
+```
+
+---
+
 ## 5 Optimization Types
 
 1. **--docker** - Multi-stage builds, layer optimization
