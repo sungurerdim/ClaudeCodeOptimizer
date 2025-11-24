@@ -79,6 +79,28 @@ class TestWindowsConsoleEncoding:
         # Verify exception was handled without raising
         assert exception_handled, "Exception should have been caught and handled"
 
+    @pytest.mark.skipif(sys.platform != "win32", reason="Windows-specific test")
+    def test_windows_reconfigure_exception_in_actual_module(self):
+        """Test that actual module import handles reconfigure exceptions (lines 14-19)."""
+        from unittest.mock import MagicMock, patch
+
+        # Test with mock that raises exception during reconfigure
+        mock_stdout = MagicMock()
+        mock_stdout.reconfigure.side_effect = Exception("Reconfigure failed")
+
+        with patch("sys.stdout", mock_stdout):
+            with patch("sys.stderr", MagicMock()):
+                # Re-import module to trigger __init__ code
+                import importlib
+
+                import claudecodeoptimizer
+
+                importlib.reload(claudecodeoptimizer)
+
+                # Module should still be importable despite exception
+                assert claudecodeoptimizer is not None
+                assert hasattr(claudecodeoptimizer, "__version__")
+
 
 class TestCCOConfigImport:
     """Test CCOConfig import."""

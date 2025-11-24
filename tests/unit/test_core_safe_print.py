@@ -28,6 +28,35 @@ class TestConfigureUtf8Encoding:
         except Exception as e:
             pytest.fail(f"configure_utf8_encoding() raised {e}")
 
+    @patch("sys.stdout")
+    def test_configure_handles_attribute_error(self, mock_stdout: MagicMock):
+        """Test that AttributeError is caught and handled (lines 41-47, 53-55)"""
+        # Remove buffer attribute to trigger AttributeError
+        mock_stdout.configure_mock(**{"buffer": None})
+        delattr(mock_stdout, "buffer")
+
+        # Should not raise exception
+        try:
+            configure_utf8_encoding()
+        except AttributeError:
+            pytest.fail("configure_utf8_encoding() should catch AttributeError")
+
+    @patch("sys.stdout")
+    @patch("sys.platform", "win32")
+    def test_configure_handles_os_error(self, mock_stdout: MagicMock):
+        """Test that OSError is caught and handled (lines 41-47, 53-55)"""
+        # Mock stdout.buffer to exist but raise OSError when accessed
+        mock_buffer = MagicMock()
+        mock_stdout.buffer = mock_buffer
+
+        # Make TextIOWrapper raise OSError to simulate system-level error
+        with patch("io.TextIOWrapper", side_effect=OSError("Cannot reconfigure")):
+            # Should not raise exception
+            try:
+                configure_utf8_encoding()
+            except OSError:
+                pytest.fail("configure_utf8_encoding() should catch OSError")
+
 
 class TestSafePrint:
     """Test safe_print function"""

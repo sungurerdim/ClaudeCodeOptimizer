@@ -692,6 +692,226 @@ class TestMain:
 
         assert result == 1
 
+    @patch("claudecodeoptimizer.cco_remove.verify_removal")
+    @patch("claudecodeoptimizer.cco_remove.remove_package")
+    @patch("claudecodeoptimizer.cco_remove.remove_claude_dir")
+    @patch("claudecodeoptimizer.cco_remove.confirm_deletion")
+    @patch("claudecodeoptimizer.cco_remove.show_removal_preview")
+    @patch("claudecodeoptimizer.cco_remove.count_cco_files")
+    @patch("claudecodeoptimizer.cco_remove.get_package_location")
+    @patch("claudecodeoptimizer.cco_remove.detect_package_install")
+    @patch("claudecodeoptimizer.cco_remove.get_claude_dir")
+    @patch("builtins.print")
+    def test_main_package_removal_failed(
+        self,
+        mock_print: MagicMock,
+        mock_get_dir: MagicMock,
+        mock_detect: MagicMock,
+        mock_location: MagicMock,
+        mock_count: MagicMock,
+        mock_preview: MagicMock,
+        mock_confirm: MagicMock,
+        mock_remove_dir: MagicMock,
+        mock_remove_pkg: MagicMock,
+        mock_verify: MagicMock,
+        tmp_path: Path,
+    ):
+        """Test main when package removal fails (line 340)"""
+        claude_dir = tmp_path / ".claude"
+        claude_dir.mkdir()
+        mock_get_dir.return_value = claude_dir
+        mock_detect.return_value = "pipx"
+        mock_location.return_value = "/usr/local/lib"
+        mock_count.return_value = {
+            "agents": 1,
+            "commands": 1,
+            "skills": 1,
+            "principles": 1,
+            "principles_u": 0,
+            "principles_c": 0,
+            "principles_p": 0,
+            "templates": 0,
+        }
+        mock_confirm.return_value = True
+        mock_remove_pkg.return_value = False  # Package removal fails
+        mock_remove_dir.return_value = (True, None)
+        mock_verify.return_value = {"package_removed": True, "directory_removed": True}
+
+        result = main()
+
+        assert result == 0
+        printed_text = " ".join(
+            [str(call.args[0]) for call in mock_print.call_args_list if call.args]
+        )
+        assert "Failed to uninstall package" in printed_text
+
+    @patch("claudecodeoptimizer.cco_remove.verify_removal")
+    @patch("claudecodeoptimizer.cco_remove.remove_package")
+    @patch("claudecodeoptimizer.cco_remove.remove_claude_dir")
+    @patch("claudecodeoptimizer.cco_remove.confirm_deletion")
+    @patch("claudecodeoptimizer.cco_remove.show_removal_preview")
+    @patch("claudecodeoptimizer.cco_remove.count_cco_files")
+    @patch("claudecodeoptimizer.cco_remove.get_package_location")
+    @patch("claudecodeoptimizer.cco_remove.detect_package_install")
+    @patch("claudecodeoptimizer.cco_remove.get_claude_dir")
+    @patch("builtins.print")
+    def test_main_removal_with_backup(
+        self,
+        mock_print: MagicMock,
+        mock_get_dir: MagicMock,
+        mock_detect: MagicMock,
+        mock_location: MagicMock,
+        mock_count: MagicMock,
+        mock_preview: MagicMock,
+        mock_confirm: MagicMock,
+        mock_remove_dir: MagicMock,
+        mock_remove_pkg: MagicMock,
+        mock_verify: MagicMock,
+        tmp_path: Path,
+    ):
+        """Test main when removal creates backup (lines 351-353)"""
+        claude_dir = tmp_path / ".claude"
+        claude_dir.mkdir()
+        backup_dir = tmp_path / ".claude.backup.20240101_120000"
+        backup_dir.mkdir()
+
+        mock_get_dir.return_value = claude_dir
+        mock_detect.return_value = "pipx"
+        mock_location.return_value = "/usr/local/lib"
+        mock_count.return_value = {
+            "agents": 1,
+            "commands": 1,
+            "skills": 1,
+            "principles": 1,
+            "principles_u": 0,
+            "principles_c": 0,
+            "principles_p": 0,
+            "templates": 0,
+        }
+        mock_confirm.return_value = True
+        mock_remove_pkg.return_value = True
+        mock_remove_dir.return_value = (True, backup_dir)  # With backup
+        mock_verify.return_value = {"package_removed": True, "directory_removed": True}
+
+        result = main()
+
+        assert result == 0
+        printed_text = " ".join(
+            [str(call.args[0]) for call in mock_print.call_args_list if call.args]
+        )
+        assert "Backup created" in printed_text
+
+    @patch("claudecodeoptimizer.cco_remove.verify_removal")
+    @patch("claudecodeoptimizer.cco_remove.remove_package")
+    @patch("claudecodeoptimizer.cco_remove.remove_claude_dir")
+    @patch("claudecodeoptimizer.cco_remove.confirm_deletion")
+    @patch("claudecodeoptimizer.cco_remove.show_removal_preview")
+    @patch("claudecodeoptimizer.cco_remove.count_cco_files")
+    @patch("claudecodeoptimizer.cco_remove.get_package_location")
+    @patch("claudecodeoptimizer.cco_remove.detect_package_install")
+    @patch("claudecodeoptimizer.cco_remove.get_claude_dir")
+    @patch("builtins.print")
+    def test_main_directory_removal_failed(
+        self,
+        mock_print: MagicMock,
+        mock_get_dir: MagicMock,
+        mock_detect: MagicMock,
+        mock_location: MagicMock,
+        mock_count: MagicMock,
+        mock_preview: MagicMock,
+        mock_confirm: MagicMock,
+        mock_remove_dir: MagicMock,
+        mock_remove_pkg: MagicMock,
+        mock_verify: MagicMock,
+        tmp_path: Path,
+    ):
+        """Test main when directory removal fails (line 353)"""
+        claude_dir = tmp_path / ".claude"
+        claude_dir.mkdir()
+        mock_get_dir.return_value = claude_dir
+        mock_detect.return_value = "pipx"
+        mock_location.return_value = "/usr/local/lib"
+        mock_count.return_value = {
+            "agents": 1,
+            "commands": 1,
+            "skills": 1,
+            "principles": 1,
+            "principles_u": 0,
+            "principles_c": 0,
+            "principles_p": 0,
+            "templates": 0,
+        }
+        mock_confirm.return_value = True
+        mock_remove_pkg.return_value = True
+        mock_remove_dir.return_value = (False, None)  # Directory removal fails
+        mock_verify.return_value = {"package_removed": True, "directory_removed": False}
+
+        result = main()
+
+        assert result == 1
+        printed_text = " ".join(
+            [str(call.args[0]) for call in mock_print.call_args_list if call.args]
+        )
+        assert "Failed to remove directory" in printed_text
+
+    @patch("claudecodeoptimizer.cco_remove.verify_removal")
+    @patch("claudecodeoptimizer.cco_remove.remove_package")
+    @patch("claudecodeoptimizer.cco_remove.remove_claude_dir")
+    @patch("claudecodeoptimizer.cco_remove.confirm_deletion")
+    @patch("claudecodeoptimizer.cco_remove.show_removal_preview")
+    @patch("claudecodeoptimizer.cco_remove.count_cco_files")
+    @patch("claudecodeoptimizer.cco_remove.get_package_location")
+    @patch("claudecodeoptimizer.cco_remove.detect_package_install")
+    @patch("claudecodeoptimizer.cco_remove.get_claude_dir")
+    @patch("builtins.print")
+    def test_main_incomplete_removal(
+        self,
+        mock_print: MagicMock,
+        mock_get_dir: MagicMock,
+        mock_detect: MagicMock,
+        mock_location: MagicMock,
+        mock_count: MagicMock,
+        mock_preview: MagicMock,
+        mock_confirm: MagicMock,
+        mock_remove_dir: MagicMock,
+        mock_remove_pkg: MagicMock,
+        mock_verify: MagicMock,
+        tmp_path: Path,
+    ):
+        """Test main when removal is incomplete (lines 387-393)"""
+        claude_dir = tmp_path / ".claude"
+        claude_dir.mkdir()
+        mock_get_dir.return_value = claude_dir
+        mock_detect.return_value = "pipx"
+        mock_location.return_value = "/usr/local/lib"
+        mock_count.return_value = {
+            "agents": 1,
+            "commands": 1,
+            "skills": 1,
+            "principles": 1,
+            "principles_u": 0,
+            "principles_c": 0,
+            "principles_p": 0,
+            "templates": 0,
+        }
+        mock_confirm.return_value = True
+        mock_remove_pkg.return_value = True
+        mock_remove_dir.return_value = (True, None)
+        mock_verify.return_value = {
+            "package_removed": False,
+            "directory_removed": False,
+        }  # Both failed
+
+        result = main()
+
+        assert result == 1
+        printed_text = " ".join(
+            [str(call.args[0]) for call in mock_print.call_args_list if call.args]
+        )
+        assert "Removal incomplete" in printed_text
+        assert "Package still installed" in printed_text
+        assert "CCO files still present" in printed_text
+
 
 if __name__ == "__main__":
     pytest.main([__file__, "-v", "--cov=claudecodeoptimizer.cco_remove"])

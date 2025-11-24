@@ -694,6 +694,396 @@ class TestGetAvailableSkills:
         assert "_hidden/cco-skill-hidden" not in result
 
 
+class TestCheckExistingInstallation:
+    """Test check_existing_installation function"""
+
+    def test_returns_none_when_claude_dir_missing(self, mock_claude_dir: Path) -> None:
+        """Test returns None when ~/.claude/ doesn't exist"""
+        from claudecodeoptimizer.core.knowledge_setup import check_existing_installation
+
+        result = check_existing_installation()
+
+        assert result is None
+
+    def test_returns_none_when_no_cco_files(self, mock_claude_dir: Path) -> None:
+        """Test returns None when directory exists but no CCO files"""
+        from claudecodeoptimizer.core.knowledge_setup import check_existing_installation
+
+        # Create directory but no files
+        mock_claude_dir.mkdir(parents=True)
+        (mock_claude_dir / "commands").mkdir()
+        (mock_claude_dir / "principles").mkdir()
+
+        result = check_existing_installation()
+
+        assert result is None
+
+    def test_counts_agents_commands_skills(self, mock_claude_dir: Path) -> None:
+        """Test counts cco-*.md files in agents, commands, skills"""
+        from claudecodeoptimizer.core.knowledge_setup import check_existing_installation
+
+        # Create directories with files
+        agents_dir = mock_claude_dir / "agents"
+        agents_dir.mkdir(parents=True)
+        (agents_dir / "cco-agent-1.md").touch()
+        (agents_dir / "cco-agent-2.md").touch()
+
+        commands_dir = mock_claude_dir / "commands"
+        commands_dir.mkdir(parents=True)
+        (commands_dir / "cco-cmd-1.md").touch()
+        (commands_dir / "cco-cmd-2.md").touch()
+        (commands_dir / "cco-cmd-3.md").touch()
+
+        skills_dir = mock_claude_dir / "skills"
+        skills_dir.mkdir(parents=True)
+        (skills_dir / "cco-skill-1.md").touch()
+
+        result = check_existing_installation()
+
+        assert result is not None
+        assert result["agents"] == 2
+        assert result["commands"] == 3
+        assert result["skills"] == 1
+
+    def test_counts_principles_u_c_p(self, mock_claude_dir: Path) -> None:
+        """Test counts U_*, C_*, P_*.md principle files"""
+        from claudecodeoptimizer.core.knowledge_setup import check_existing_installation
+
+        principles_dir = mock_claude_dir / "principles"
+        principles_dir.mkdir(parents=True)
+        (principles_dir / "U_TEST1.md").touch()
+        (principles_dir / "U_TEST2.md").touch()
+        (principles_dir / "C_TEST1.md").touch()
+        (principles_dir / "P_TEST1.md").touch()
+        (principles_dir / "README.md").touch()  # Should not count
+
+        result = check_existing_installation()
+
+        assert result is not None
+        assert result["principles"] == 4  # U_*2 + C_*1 + P_*1
+
+    def test_counts_standards_files(self, mock_claude_dir: Path) -> None:
+        """Test counts *_STANDARDS.md, PRINCIPLE_FORMAT.md, COMMAND_PATTERNS.md"""
+        from claudecodeoptimizer.core.knowledge_setup import check_existing_installation
+
+        mock_claude_dir.mkdir(parents=True)
+        (mock_claude_dir / "SKILL_STANDARDS.md").touch()
+        (mock_claude_dir / "AGENT_STANDARDS.md").touch()
+        (mock_claude_dir / "PRINCIPLE_FORMAT.md").touch()
+        (mock_claude_dir / "COMMAND_PATTERNS.md").touch()
+        (mock_claude_dir / "OTHER.md").touch()  # Should not count
+
+        result = check_existing_installation()
+
+        assert result is not None
+        assert result["standards"] == 4
+
+    def test_counts_template_files(self, mock_claude_dir: Path) -> None:
+        """Test counts *.cco template files"""
+        from claudecodeoptimizer.core.knowledge_setup import check_existing_installation
+
+        mock_claude_dir.mkdir(parents=True)
+        (mock_claude_dir / "settings.json.cco").touch()
+        (mock_claude_dir / "statusline.js.cco").touch()
+        (mock_claude_dir / "settings.json").touch()  # Should not count
+
+        result = check_existing_installation()
+
+        assert result is not None
+        assert result["templates"] == 2
+
+    def test_respects_category_order(self, mock_claude_dir: Path) -> None:
+        """Test returns dictionary with consistent category ordering"""
+        from claudecodeoptimizer.core.knowledge_setup import check_existing_installation
+
+        # Create files in reverse order
+        (mock_claude_dir / "principles").mkdir(parents=True)
+        (mock_claude_dir / "principles" / "U_TEST.md").touch()
+
+        (mock_claude_dir / "skills").mkdir(parents=True)
+        (mock_claude_dir / "skills" / "cco-skill.md").touch()
+
+        (mock_claude_dir / "commands").mkdir(parents=True)
+        (mock_claude_dir / "commands" / "cco-cmd.md").touch()
+
+        (mock_claude_dir / "agents").mkdir(parents=True)
+        (mock_claude_dir / "agents" / "cco-agent.md").touch()
+
+        result = check_existing_installation()
+
+        assert result is not None
+        # Check that keys maintain order: agents, commands, skills, principles
+        keys = list(result.keys())
+        assert keys.index("agents") < keys.index("commands")
+        assert keys.index("commands") < keys.index("skills")
+        assert keys.index("skills") < keys.index("principles")
+
+
+class TestGetInstallationCounts:
+    """Test get_installation_counts function"""
+
+    def test_returns_empty_when_no_files(self, mock_claude_dir: Path) -> None:
+        """Test returns empty dict when no CCO files exist"""
+        from claudecodeoptimizer.core.knowledge_setup import get_installation_counts
+
+        # Create empty directories
+        mock_claude_dir.mkdir(parents=True)
+        (mock_claude_dir / "commands").mkdir()
+        (mock_claude_dir / "principles").mkdir()
+
+        result = get_installation_counts()
+
+        assert result == {}
+
+    def test_counts_all_categories(self, mock_claude_dir: Path) -> None:
+        """Test counts all CCO file categories"""
+        from claudecodeoptimizer.core.knowledge_setup import get_installation_counts
+
+        # Create all types of files
+        (mock_claude_dir / "agents").mkdir(parents=True)
+        (mock_claude_dir / "agents" / "cco-agent.md").touch()
+
+        (mock_claude_dir / "commands").mkdir(parents=True)
+        (mock_claude_dir / "commands" / "cco-cmd1.md").touch()
+        (mock_claude_dir / "commands" / "cco-cmd2.md").touch()
+
+        (mock_claude_dir / "skills").mkdir(parents=True)
+        (mock_claude_dir / "skills" / "cco-skill.md").touch()
+
+        (mock_claude_dir / "principles").mkdir(parents=True)
+        (mock_claude_dir / "principles" / "U_TEST.md").touch()
+        (mock_claude_dir / "principles" / "C_TEST.md").touch()
+
+        mock_claude_dir.mkdir(exist_ok=True)
+        (mock_claude_dir / "SKILL_STANDARDS.md").touch()
+
+        (mock_claude_dir / "settings.json.cco").touch()
+
+        result = get_installation_counts()
+
+        assert result["agents"] == 1
+        assert result["commands"] == 2
+        assert result["skills"] == 1
+        assert result["principles"] == 2
+        assert result["standards"] == 1
+        assert result["templates"] == 1
+
+    def test_skills_recursive_count(self, mock_claude_dir: Path) -> None:
+        """Test skills are counted recursively (includes subdirectories)"""
+        from claudecodeoptimizer.core.knowledge_setup import get_installation_counts
+
+        skills_dir = mock_claude_dir / "skills"
+        skills_dir.mkdir(parents=True)
+        (skills_dir / "cco-skill-root.md").touch()
+
+        # Subdirectory
+        python_dir = skills_dir / "python"
+        python_dir.mkdir()
+        (python_dir / "cco-skill-django.md").touch()
+        (python_dir / "cco-skill-flask.md").touch()
+
+        result = get_installation_counts()
+
+        assert result["skills"] == 3  # 1 root + 2 subdirectory
+
+
+class TestShowInstallationDiff:
+    """Test show_installation_diff function"""
+
+    def test_shows_files_to_overwrite(self, mock_claude_dir: Path, capsys) -> None:
+        """Test displays files that will be overwritten"""
+        from claudecodeoptimizer.core.knowledge_setup import show_installation_diff
+
+        # Create existing files
+        commands_dir = mock_claude_dir / "commands"
+        commands_dir.mkdir(parents=True)
+        (commands_dir / "cco-cmd1.md").touch()
+        (commands_dir / "cco-cmd2.md").touch()
+
+        principles_dir = mock_claude_dir / "principles"
+        principles_dir.mkdir(parents=True)
+        (principles_dir / "U_TEST.md").touch()
+
+        show_installation_diff()
+
+        captured = capsys.readouterr()
+        assert "FILES TO BE OVERWRITTEN" in captured.out
+        assert "Commands: 2 files" in captured.out
+        assert "Principles (U_*): 1 files" in captured.out
+        assert "Total:" in captured.out
+
+    def test_shows_first_three_files(self, mock_claude_dir: Path, capsys) -> None:
+        """Test shows first 3 files and indicates more"""
+        from claudecodeoptimizer.core.knowledge_setup import show_installation_diff
+
+        commands_dir = mock_claude_dir / "commands"
+        commands_dir.mkdir(parents=True)
+        (commands_dir / "cco-cmd1.md").touch()
+        (commands_dir / "cco-cmd2.md").touch()
+        (commands_dir / "cco-cmd3.md").touch()
+        (commands_dir / "cco-cmd4.md").touch()
+        (commands_dir / "cco-cmd5.md").touch()
+
+        show_installation_diff()
+
+        captured = capsys.readouterr()
+        assert "cco-cmd" in captured.out
+        assert "... and 2 more" in captured.out
+
+    def test_handles_missing_directories(self, mock_claude_dir: Path, capsys) -> None:
+        """Test gracefully handles missing directories"""
+        from claudecodeoptimizer.core.knowledge_setup import show_installation_diff
+
+        # Don't create any directories
+        show_installation_diff()
+
+        captured = capsys.readouterr()
+        assert "FILES TO BE OVERWRITTEN" in captured.out
+        assert "Total: 0 files" in captured.out
+
+
+class TestSetupStandards:
+    """Test _setup_standards function"""
+
+    def test_copies_standards_files(self, tmp_path: Path) -> None:
+        """Test copies all standards files to ~/.claude/ root"""
+        from claudecodeoptimizer.core.knowledge_setup import _setup_standards
+
+        # Create source standards files - need to match actual package structure
+        package_dir = tmp_path / "claudecodeoptimizer"
+        content_dir = package_dir / "content"
+        content_dir.mkdir(parents=True)
+        (content_dir / "STANDARDS_SKILLS.md").write_text("# Skills Standards")
+        (content_dir / "STANDARDS_AGENTS.md").write_text("# Agents Standards")
+        (content_dir / "STANDARDS_COMMANDS.md").write_text("# Commands Standards")
+        (content_dir / "STANDARDS_QUALITY.md").write_text("# Quality Standards")
+        (content_dir / "STANDARDS_PRINCIPLES.md").write_text("# Principles Standards")
+        (content_dir / "LIBRARY_PATTERNS.md").write_text("# Library Patterns")
+
+        # Create destination
+        claude_dir = tmp_path / ".claude"
+        claude_dir.mkdir()
+
+        # Mock __file__ to point to our test structure
+        mock_file = package_dir / "core" / "knowledge_setup.py"
+        mock_file.parent.mkdir(parents=True)
+        mock_file.touch()
+
+        with patch.object(knowledge_setup, "__file__", str(mock_file)):
+            _setup_standards(claude_dir)
+
+        # Verify all files copied
+        assert (claude_dir / "STANDARDS_SKILLS.md").exists()
+        assert (claude_dir / "STANDARDS_AGENTS.md").exists()
+        assert (claude_dir / "STANDARDS_COMMANDS.md").exists()
+        assert (claude_dir / "STANDARDS_QUALITY.md").exists()
+        assert (claude_dir / "STANDARDS_PRINCIPLES.md").exists()
+        assert (claude_dir / "LIBRARY_PATTERNS.md").exists()
+
+    def test_handles_missing_standards_files(self, tmp_path: Path) -> None:
+        """Test gracefully handles missing standards files"""
+        from claudecodeoptimizer.core.knowledge_setup import _setup_standards
+
+        # Create empty content dir with correct package structure
+        package_dir = tmp_path / "claudecodeoptimizer"
+        content_dir = package_dir / "content"
+        content_dir.mkdir(parents=True)
+
+        claude_dir = tmp_path / ".claude"
+        claude_dir.mkdir()
+
+        mock_file = package_dir / "core" / "knowledge_setup.py"
+        mock_file.parent.mkdir(parents=True)
+        mock_file.touch()
+
+        # Should not raise error
+        with patch.object(knowledge_setup, "__file__", str(mock_file)):
+            _setup_standards(claude_dir)
+
+        # No files should be created
+        assert not (claude_dir / "STANDARDS_SKILLS.md").exists()
+
+
+class TestSetupGlobalTemplates:
+    """Test _setup_global_templates function"""
+
+    def test_copies_templates_as_cco_files(self, tmp_path: Path) -> None:
+        """Test copies template files with .cco extension"""
+        from claudecodeoptimizer.core.knowledge_setup import _setup_global_templates
+
+        # Create templates directory
+        templates_dir = tmp_path / "templates"
+        templates_dir.mkdir(parents=True)
+        (templates_dir / "statusline.js.template").write_text("// Statusline")
+        (templates_dir / "settings.json.template").write_text("{}")
+
+        # Create destination
+        claude_dir = tmp_path / ".claude"
+        claude_dir.mkdir()
+
+        # Mock package structure
+        package_dir = tmp_path / "claudecodeoptimizer"
+        package_dir.mkdir()
+        mock_file = package_dir / "core" / "knowledge_setup.py"
+        mock_file.parent.mkdir(parents=True)
+        mock_file.touch()
+
+        with patch.object(knowledge_setup, "__file__", str(mock_file)):
+            _setup_global_templates(claude_dir)
+
+        # Verify files copied with .cco extension
+        assert (claude_dir / "statusline.js.cco").exists()
+        assert (claude_dir / "settings.json.cco").exists()
+        assert (claude_dir / "statusline.js.cco").read_text() == "// Statusline"
+
+    def test_raises_when_templates_dir_missing(self, tmp_path: Path) -> None:
+        """Test raises FileNotFoundError when templates directory missing"""
+        from claudecodeoptimizer.core.knowledge_setup import _setup_global_templates
+
+        claude_dir = tmp_path / ".claude"
+        claude_dir.mkdir()
+
+        # Mock package structure without templates
+        package_dir = tmp_path / "claudecodeoptimizer"
+        package_dir.mkdir()
+        mock_file = package_dir / "core" / "knowledge_setup.py"
+        mock_file.parent.mkdir(parents=True)
+        mock_file.touch()
+
+        with patch.object(knowledge_setup, "__file__", str(mock_file)):
+            with pytest.raises(FileNotFoundError) as exc_info:
+                _setup_global_templates(claude_dir)
+
+            assert "Templates directory not found" in str(exc_info.value)
+
+    def test_overwrites_existing_cco_files(self, tmp_path: Path) -> None:
+        """Test always updates .cco files (provides latest)"""
+        from claudecodeoptimizer.core.knowledge_setup import _setup_global_templates
+
+        # Create templates
+        templates_dir = tmp_path / "templates"
+        templates_dir.mkdir(parents=True)
+        (templates_dir / "statusline.js.template").write_text("// New version")
+
+        # Create destination with old file
+        claude_dir = tmp_path / ".claude"
+        claude_dir.mkdir()
+        (claude_dir / "statusline.js.cco").write_text("// Old version")
+
+        # Mock package structure
+        package_dir = tmp_path / "claudecodeoptimizer"
+        package_dir.mkdir()
+        mock_file = package_dir / "core" / "knowledge_setup.py"
+        mock_file.parent.mkdir(parents=True)
+        mock_file.touch()
+
+        with patch.object(knowledge_setup, "__file__", str(mock_file)):
+            _setup_global_templates(claude_dir)
+
+        # Verify file updated
+        assert (claude_dir / "statusline.js.cco").read_text() == "// New version"
+
+
 class TestKnowledgeSetupIntegration:
     """Integration tests for knowledge setup module"""
 
