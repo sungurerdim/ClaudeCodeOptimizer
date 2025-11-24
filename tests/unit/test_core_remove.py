@@ -172,19 +172,39 @@ class TestRemovePrinciples:
         # Should not raise
         remover._remove_principles()
 
-    def test_handles_unlink_error(self, tmp_path, monkeypatch) -> None:
-        """Test that unlink errors are logged and skipped"""
+    def test_handles_unlink_error(self, tmp_path, monkeypatch, caplog) -> None:
+        """Test that unlink errors are logged and skipped (lines 168-169)"""
         monkeypatch.setattr("pathlib.Path.home", lambda: tmp_path)
         claude_dir = tmp_path / ".claude"
         principles_dir = claude_dir / "principles"
         principles_dir.mkdir(parents=True)
 
         # Create files
-        (principles_dir / "U_TEST.md").write_text("content")
+        principle_file = principles_dir / "U_TEST.md"
+        principle_file.write_text("content")
 
         remover = CCORemover()
-        # Should complete without error even if internal errors occur
-        remover._remove_principles()
+
+        # Mock Path.unlink to raise on this specific file
+        from pathlib import Path
+
+        original_unlink = Path.unlink
+
+        def raise_on_principle(self, *args, **kwargs):
+            if "U_TEST.md" in str(self):
+                raise PermissionError("Cannot delete")
+            return original_unlink(self, *args, **kwargs)
+
+        monkeypatch.setattr(Path, "unlink", raise_on_principle)
+
+        # Should not raise, should log
+        import logging
+
+        with caplog.at_level(logging.DEBUG):
+            remover._remove_principles()
+
+        # File should still exist since unlink failed
+        assert principle_file.exists()
 
 
 class TestRemoveAgents:
@@ -226,6 +246,40 @@ class TestRemoveAgents:
         remover = CCORemover()
         # Should not raise
         remover._remove_agents()
+
+    def test_handles_agent_unlink_error(self, tmp_path, monkeypatch, caplog) -> None:
+        """Test that agent unlink errors are logged (lines 182-183)"""
+        monkeypatch.setattr("pathlib.Path.home", lambda: tmp_path)
+        claude_dir = tmp_path / ".claude"
+        agents_dir = claude_dir / "agents"
+        agents_dir.mkdir(parents=True)
+
+        # Create files
+        agent_file = agents_dir / "cco-agent-test.md"
+        agent_file.write_text("content")
+
+        remover = CCORemover()
+
+        # Mock Path.unlink to raise on this specific file
+        from pathlib import Path
+
+        original_unlink = Path.unlink
+
+        def raise_on_agent(self, *args, **kwargs):
+            if "cco-agent-test.md" in str(self):
+                raise PermissionError("Cannot delete")
+            return original_unlink(self, *args, **kwargs)
+
+        monkeypatch.setattr(Path, "unlink", raise_on_agent)
+
+        # Should not raise, should log
+        import logging
+
+        with caplog.at_level(logging.DEBUG):
+            remover._remove_agents()
+
+        # File should still exist since unlink failed
+        assert agent_file.exists()
 
 
 class TestRemoveSkills:
@@ -286,6 +340,40 @@ class TestRemoveSkills:
         remover = CCORemover()
         # Should not raise
         remover._remove_skills()
+
+    def test_handles_skill_unlink_error(self, tmp_path, monkeypatch, caplog) -> None:
+        """Test that skill unlink errors are logged (lines 196-197)"""
+        monkeypatch.setattr("pathlib.Path.home", lambda: tmp_path)
+        claude_dir = tmp_path / ".claude"
+        skills_dir = claude_dir / "skills"
+        skills_dir.mkdir(parents=True)
+
+        # Create files
+        skill_file = skills_dir / "cco-skill-test.md"
+        skill_file.write_text("content")
+
+        remover = CCORemover()
+
+        # Mock Path.unlink to raise on this specific file
+        from pathlib import Path
+
+        original_unlink = Path.unlink
+
+        def raise_on_skill(self, *args, **kwargs):
+            if "cco-skill-test.md" in str(self):
+                raise PermissionError("Cannot delete")
+            return original_unlink(self, *args, **kwargs)
+
+        monkeypatch.setattr(Path, "unlink", raise_on_skill)
+
+        # Should not raise, should log
+        import logging
+
+        with caplog.at_level(logging.DEBUG):
+            remover._remove_skills()
+
+        # File should still exist since unlink failed
+        assert skill_file.exists()
 
 
 class TestCleanClaudeMd:
@@ -419,6 +507,127 @@ class TestRemoveCcoFunction:
 
         assert result["success"] is True
         assert len(result["actions"]) == 6
+
+
+class TestRemoveStandardsAndTemplates:
+    """Test _remove_standards and _remove_templates methods"""
+
+    def test_removes_standards_with_count(self, tmp_path, monkeypatch) -> None:
+        """Test that standards are counted properly (line 81)"""
+        monkeypatch.setattr("pathlib.Path.home", lambda: tmp_path)
+        claude_dir = tmp_path / ".claude"
+        claude_dir.mkdir()
+
+        # Create standards files matching the actual pattern
+        (claude_dir / "SKILLS_STANDARDS.md").write_text("skills standard")
+        (claude_dir / "AGENTS_STANDARDS.md").write_text("agents standard")
+        (claude_dir / "PRINCIPLE_FORMAT.md").write_text("principle format")
+
+        remover = CCORemover()
+        counts = remover._get_file_counts()
+
+        # Should count standards files (2 *_STANDARDS.md + 1 PRINCIPLE_FORMAT.md)
+        assert counts.get("standards", 0) == 3
+
+    def test_removes_templates_with_count(self, tmp_path, monkeypatch) -> None:
+        """Test that templates are counted properly (line 87)"""
+        monkeypatch.setattr("pathlib.Path.home", lambda: tmp_path)
+        claude_dir = tmp_path / ".claude"
+        claude_dir.mkdir()
+
+        # Create template files
+        (claude_dir / "settings.json.cco").write_text("settings")
+        (claude_dir / "statusline.js.cco").write_text("statusline")
+
+        remover = CCORemover()
+        counts = remover._get_file_counts()
+
+        # Should count template files
+        assert counts.get("templates", 0) == 2
+
+    def test_handles_standards_removal_error(self, tmp_path, monkeypatch, caplog) -> None:
+        """Test that standards removal errors are logged (lines 218-221)"""
+        monkeypatch.setattr("pathlib.Path.home", lambda: tmp_path)
+        claude_dir = tmp_path / ".claude"
+        claude_dir.mkdir()
+
+        # Create a standards file matching the hardcoded list in _remove_standards
+        standards_file = claude_dir / "STANDARDS_SKILLS.md"
+        standards_file.write_text("content")
+
+        remover = CCORemover()
+
+        # Mock Path.unlink to raise on this specific file
+        from pathlib import Path
+
+        original_unlink = Path.unlink
+
+        def raise_on_standards(self, *args, **kwargs):
+            if "STANDARDS_SKILLS.md" in str(self):
+                raise PermissionError("Cannot delete")
+            return original_unlink(self, *args, **kwargs)
+
+        monkeypatch.setattr(Path, "unlink", raise_on_standards)
+
+        # Should not raise, should log
+        import logging
+
+        with caplog.at_level(logging.DEBUG):
+            remover._remove_standards()
+
+        # File should still exist since unlink failed
+        assert standards_file.exists()
+
+    def test_handles_templates_removal_error(self, tmp_path, monkeypatch, caplog) -> None:
+        """Test that templates removal errors are logged (lines 230-233)"""
+        monkeypatch.setattr("pathlib.Path.home", lambda: tmp_path)
+        claude_dir = tmp_path / ".claude"
+        claude_dir.mkdir()
+
+        # Create a template file
+        template_file = claude_dir / "settings.json.cco"
+        template_file.write_text("content")
+
+        remover = CCORemover()
+
+        # Mock Path.unlink to raise on this specific file
+        from pathlib import Path
+
+        original_unlink = Path.unlink
+
+        def raise_on_template(self, *args, **kwargs):
+            if "settings.json.cco" in str(self):
+                raise PermissionError("Cannot delete")
+            return original_unlink(self, *args, **kwargs)
+
+        monkeypatch.setattr(Path, "unlink", raise_on_template)
+
+        # Should not raise, should log
+        import logging
+
+        with caplog.at_level(logging.DEBUG):
+            remover._remove_templates()
+
+        # File should still exist since unlink failed
+        assert template_file.exists()
+
+    def test_handles_missing_standards_dir(self, tmp_path, monkeypatch) -> None:
+        """Test that missing claude dir for standards is handled (line 202)"""
+        monkeypatch.setattr("pathlib.Path.home", lambda: tmp_path)
+        # claude dir does not exist
+
+        remover = CCORemover()
+        # Should not raise
+        remover._remove_standards()
+
+    def test_handles_missing_templates_dir(self, tmp_path, monkeypatch) -> None:
+        """Test that missing claude dir for templates is handled (line 226)"""
+        monkeypatch.setattr("pathlib.Path.home", lambda: tmp_path)
+        # claude dir does not exist
+
+        remover = CCORemover()
+        # Should not raise
+        remover._remove_templates()
 
 
 class TestRemoveIntegration:

@@ -236,6 +236,26 @@ class TestGetVersionInfo:
         info = get_version_info()
         assert info["install_method"] == "unknown"
 
+    def test_get_version_info_import_error(self, monkeypatch):
+        """Test version when __version__ import fails (lines 69-70)"""
+        # Mock the import to raise ImportError
+        import sys
+        import builtins
+
+        original_import = builtins.__import__
+
+        def mock_import(name, *args, **kwargs):
+            if name == "claudecodeoptimizer" or (
+                "claudecodeoptimizer" in name and "__version__" in str(args)
+            ):
+                raise ImportError("No module named claudecodeoptimizer")
+            return original_import(name, *args, **kwargs)
+
+        monkeypatch.setattr(builtins, "__import__", mock_import)
+
+        info = get_version_info()
+        assert info["version"] == "unknown"
+
 
 class TestCheckClaudeMd:
     """Test check_claude_md function"""
@@ -350,6 +370,55 @@ class TestPrintStatus:
         assert result == 1
         assert mock_print.called
 
+    @patch("claudecodeoptimizer.cco_status.check_claude_md")
+    @patch("claudecodeoptimizer.cco_status.count_components")
+    @patch("claudecodeoptimizer.cco_status.get_version_info")
+    @patch("claudecodeoptimizer.cco_status.get_claude_dir")
+    @patch("builtins.print")
+    def test_print_status_incomplete_installation(
+        self,
+        mock_print: MagicMock,
+        mock_get_dir: MagicMock,
+        mock_version: MagicMock,
+        mock_count: MagicMock,
+        mock_check: MagicMock,
+        tmp_path: Path,
+    ):
+        """Test status with incomplete installation (lines 142-143, 162, 174, 182, 203, 223-225)"""
+        claude_dir = tmp_path / ".claude"
+        claude_dir.mkdir()
+
+        mock_get_dir.return_value = claude_dir
+        mock_version.return_value = {
+            "version": "0.1.0",
+            "install_method": "pipx",
+            "python_version": "3.11.0",
+            "platform": "linux",
+        }
+        mock_count.return_value = {
+            "commands": 0,  # No commands - incomplete
+            "principles": 0,  # No principles - incomplete
+            "principles_u": 0,
+            "principles_c": 0,
+            "principles_p": 0,
+            "skills": 0,
+            "agents": 0,
+        }
+        mock_check.return_value = False  # No CLAUDE.md configured
+
+        result = print_status()
+
+        assert result == 2  # Incomplete installation
+        printed_text = " ".join(
+            [str(call.args[0]) for call in mock_print.call_args_list if call.args]
+        )
+        assert "Incomplete installation" in printed_text
+        assert "No commands found" in printed_text
+        assert "No skills found" in printed_text
+        assert "No agents found" in printed_text
+        assert "not configured" in printed_text
+        assert "Installation incomplete" in printed_text
+
 
 class TestMain:
     """Test main function"""
@@ -368,6 +437,29 @@ class TestMain:
     def test_main_returns_status_code(self, mock_print: MagicMock):
         """Test that main returns the status code from print_status"""
         mock_print.return_value = 1
+
+        result = main()
+
+        assert result == 1
+
+    @patch("claudecodeoptimizer.cco_status.print_status")
+    @patch("builtins.print")
+    def test_main_keyboard_interrupt(self, mock_print_builtin: MagicMock, mock_print: MagicMock):
+        """Test main handling KeyboardInterrupt (lines 234-236)"""
+        mock_print.side_effect = KeyboardInterrupt()
+
+        result = main()
+
+        assert result == 130
+        printed_text = " ".join(
+            [str(call.args[0]) for call in mock_print_builtin.call_args_list if call.args]
+        )
+        assert "Interrupted by user" in printed_text
+
+    @patch("claudecodeoptimizer.cco_status.print_status")
+    def test_main_unexpected_error(self, mock_print: MagicMock):
+        """Test main handling unexpected error (lines 237-239)"""
+        mock_print.side_effect = Exception("Unexpected error")
 
         result = main()
 

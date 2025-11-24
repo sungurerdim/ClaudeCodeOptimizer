@@ -142,17 +142,23 @@ description: test description
         assert "this line has no colon" not in result
 
     def test_parse_frontmatter_exception_handling(self):
-        """Test exception handling returns empty dict"""
-        # Invalid content that might cause exception
-        content = None
+        """Test exception handling returns empty dict (lines 32-34)"""
+        from unittest.mock import MagicMock, patch
 
-        # Should not raise exception, returns empty dict
-        with patch("claudecodeoptimizer.commands_loader.parse_frontmatter") as mock_parse:
-            # Simulate an exception
-            mock_parse.side_effect = Exception("Unexpected error")
+        # Test that exceptions during parsing are caught and return empty dict
+        # Create a mock content object that will raise exception when split is called
+        mock_content = MagicMock(spec=str)
+        mock_content.startswith.return_value = True
+        mock_content.split.side_effect = Exception("Parsing error")
 
-            with pytest.raises(Exception):  # noqa: B017
-                parse_frontmatter(content)
+        # Patch the content parameter to use mock
+        with patch("claudecodeoptimizer.commands_loader.logger") as mock_logger:
+            result = parse_frontmatter(mock_content)
+            assert result == {}
+            # Verify logger.debug was called with error message
+            assert mock_logger.debug.called
+            call_args = mock_logger.debug.call_args[0][0]
+            assert "Failed to parse frontmatter" in call_args
 
     def test_parse_frontmatter_whitespace_handling(self):
         """Test whitespace is stripped from keys and values"""

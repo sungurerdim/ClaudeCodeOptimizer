@@ -512,6 +512,23 @@ class TestCreateGitTag:
         assert vm.create_git_tag("2.5.8", create=False) == "v2.5.8"
         assert vm.create_git_tag("10.20.30", create=False) == "v10.20.30"
 
+    def test_invalid_version_format_raises_error(self, temp_dir: Path) -> None:
+        """Test that invalid version format raises ValueError (line 206)"""
+        vm = VersionManager(temp_dir)
+
+        # Test various invalid formats
+        with pytest.raises(ValueError, match="Invalid version format"):
+            vm.create_git_tag("invalid", create=False)
+
+        with pytest.raises(ValueError, match="Invalid version format"):
+            vm.create_git_tag("1.2", create=False)
+
+        with pytest.raises(ValueError, match="Invalid version format"):
+            vm.create_git_tag("v1.2.3", create=False)
+
+        with pytest.raises(ValueError, match="Invalid version format"):
+            vm.create_git_tag("1.2.3.4", create=False)
+
     @patch("subprocess.run")
     def test_create_tag_success(self, mock_run: Mock, temp_dir: Path) -> None:
         """Test successful tag creation"""
