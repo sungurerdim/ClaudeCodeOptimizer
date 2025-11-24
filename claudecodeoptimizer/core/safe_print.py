@@ -21,6 +21,10 @@ def configure_utf8_encoding() -> None:
     - Enables error replacement instead of crashes
     - Sets console code page on platforms that require it
     """
+    # Skip reconfiguration during pytest execution to avoid interfering with pytest's capture
+    if "pytest" in sys.modules:
+        return
+
     try:
         import io
 

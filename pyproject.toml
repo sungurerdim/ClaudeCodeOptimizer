@@ -62,7 +62,6 @@ dev = [
     "pytest",
     "pytest-cov",
     "pytest-xdist",  # Parallel test execution
-    "pluggy<1.6.0",  # Pin to avoid Python 3.13.9 compatibility issues
     "ruff",
     "mypy",  # Type checking
     "pre-commit",
