@@ -36,7 +36,7 @@ Prevent merge conflicts, maintain clean history, ensure PR quality
 
 **Branch**: <3 days, `feature/auth`, trunk-based, feature flags
 
-**Commit**: `type(scope): msg` (feat/fix/docs), atomic, <200 lines
+**Commit**: `type(scope): subject` - **Title: max 50 chars** (ideal), max 72 (hard limit), imperative mood, no period. Body: wrap 72 chars. Types: feat/fix/docs/style/refactor/perf/test/build/ci/chore. Atomic: <200 lines
 
 **PR**: <400 lines, template (summary/test/checklist), 1-2 reviewers, CI passes
 
@@ -46,11 +46,31 @@ Prevent merge conflicts, maintain clean history, ensure PR quality
 
 ## Patterns
 
-### Commit
+### Commit Messages
+
+**Format:** `type(scope): subject` (max 50 chars for subject)
+
 ```bash
-feat(auth): add JWT refresh token
-fix(api): handle null in /profile
-docs: update install steps
+# ✅ GOOD: Short, imperative, no period
+feat(auth): add JWT refresh tokens
+fix(api): handle null user in profile endpoint
+docs: update installation steps
+perf(db): optimize user query with index
+
+# ❌ BAD: Too long, wrong mood, has period
+feat(auth): added a new JWT refresh token implementation with expiry.
+fix(api): fixed the issue where null values were causing errors in the user profile endpoint
+```
+
+**Body (optional):**
+```
+type(scope): short subject line (max 50 chars)
+
+Detailed explanation wrapped at 72 characters. Explain WHAT
+and WHY, not HOW. Separate from subject with blank line.
+
+- Bullet points are okay
+- Use imperative mood: "add" not "added"
 ```
 
 ### PR

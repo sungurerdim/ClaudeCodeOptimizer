@@ -112,6 +112,37 @@ AskUserQuestion({
 
 ---
 
+### Step 0.6: Tech Stack Detection & Feature Complexity Analysis
+
+**Pattern:** Pattern 10 (Tech Stack Detection)
+
+```markdown
+Detecting tech stack...
+
+✓ Tech stack detected: {DETECTED_LANGUAGES}, {DETECTED_FRAMEWORKS}, {DETECTED_TESTING}
+✓ Available patterns identified
+✓ Complexity analysis: {FEATURE_COMPLEXITY}
+```
+
+### Step 0.7: Opus Upgrade Opportunity (Complex Features)
+
+**Pattern:** Pattern 11
+
+**Trigger:** Feature complexity == "high" OR requires novel algorithm
+
+```python
+if feature_complexity == "high":
+    selected_model = offer_opus_upgrade(
+        task_name="Feature Implementation",
+        task_description=f"Implementing: {feature_name}",
+        complexity_reason="novel algorithm design, complex integration, or architectural changes",
+        expected_benefit="Better architecture, cleaner code, better edge case handling (30-40% improvement)",
+        default_model="sonnet"
+    )
+```
+
+---
+
 ## Critical UX Principles
 
 1. **100% Honesty** - Only claim "implemented" if code works and tests pass

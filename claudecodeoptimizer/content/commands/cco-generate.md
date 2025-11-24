@@ -287,6 +287,29 @@ AskUserQuestion({
 
 ---
 
+### Step 0.6: Tech Stack Detection for Template Selection
+
+**Pattern:** Pattern 10 (Tech Stack Detection)
+
+**Purpose:** Select appropriate templates and patterns for generation
+
+```markdown
+Detecting tech stack for template selection...
+
+✓ Testing framework: {DETECTED_TESTING} → Using {TESTING_FRAMEWORK} templates
+✓ Language: {DETECTED_LANGUAGE} → {LANGUAGE}-specific patterns
+✓ Web framework: {DETECTED_FRAMEWORK} → {FRAMEWORK} test patterns
+✓ DevOps: {DETECTED_DEVOPS} → {DEVOPS} workflow templates
+
+Tech stack determines:
+- Test file naming ({TEST_PATTERN_1} vs {TEST_PATTERN_2})
+- Test structure ({STRUCTURE_1} vs {STRUCTURE_2})
+- CI/CD templates ({CICD_1} vs {CICD_2})
+- Documentation style ({DOC_STYLE_1} vs {DOC_STYLE_2})
+```
+
+---
+
 ### Step 1: Detection and Selection
 
 **Pattern:** Pattern 3 (Progress Reporting)

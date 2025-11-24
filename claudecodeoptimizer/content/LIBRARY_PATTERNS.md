@@ -657,6 +657,391 @@ else:
 
 ---
 
-**Last Updated:** 2025-01-23
-**Version:** 1.0.0
+## Pattern 10: Tech Stack Detection & Context Sharing
+
+**Usage:** Detect project tech stack once, share via conversation context (no files).
+
+**Purpose:**
+- Eliminate irrelevant options (Docker checks when no Docker)
+- Share detection across commands in same session
+- Fast fallback (1-2 sec) if no cached data
+
+### Detection Algorithm (Fast - 1-2 seconds)
+
+```python
+from dataclasses import dataclass, field
+from typing import List
+
+@dataclass
+class TechStack:
+    """Project technology stack."""
+    languages: List[str] = field(default_factory=list)
+    frameworks: List[str] = field(default_factory=list)
+    databases: List[str] = field(default_factory=list)
+    devops: List[str] = field(default_factory=list)
+    frontend: List[str] = field(default_factory=list)
+    testing: List[str] = field(default_factory=list)
+
+    def has_docker(self) -> bool:
+        return "Docker" in self.devops
+
+    def has_database(self) -> bool:
+        return len(self.databases) > 0
+
+    def has_frontend(self) -> bool:
+        return len(self.frontend) > 0 or any(lang in self.languages for lang in ["JavaScript/TypeScript", "React", "Vue", "Angular"])
+
+def detect_tech_stack_fast() -> TechStack:
+    """
+    Fast tech stack detection using Glob only (1-2 seconds).
+
+    Uses parallel Glob operations for maximum speed.
+    """
+    tech = TechStack()
+
+    # Languages (parallel checks)
+    if Glob("**/*.py"):
+        tech.languages.append("Python")
+    if Glob("**/*.js") or Glob("**/*.ts"):
+        tech.languages.append("JavaScript/TypeScript")
+    if Glob("**/*.go"):
+        tech.languages.append("Go")
+    if Glob("**/*.rs"):
+        tech.languages.append("Rust")
+    if Glob("**/*.java"):
+        tech.languages.append("Java")
+    if Glob("**/*.cs"):
+        tech.languages.append("C#")
+
+    # Python frameworks (if Python detected)
+    if "Python" in tech.languages:
+        # Check for common dependency files
+        req_files = Glob("**/requirements.txt") or Glob("**/pyproject.toml") or Glob("**/setup.py")
+        if req_files:
+            # Read first found dependency file (small, fast)
+            deps_content = Read(req_files[0]) if req_files else ""
+            deps_lower = deps_content.lower()
+
+            if "flask" in deps_lower:
+                tech.frameworks.append("Flask")
+            if "django" in deps_lower:
+                tech.frameworks.append("Django")
+            if "fastapi" in deps_lower:
+                tech.frameworks.append("FastAPI")
+            if "sqlalchemy" in deps_lower:
+                tech.databases.append("SQLAlchemy")
+            if "psycopg2" in deps_lower or "pg8000" in deps_lower:
+                tech.databases.append("PostgreSQL")
+            if "pymongo" in deps_lower:
+                tech.databases.append("MongoDB")
+
+    # JavaScript/TypeScript frameworks
+    if "JavaScript/TypeScript" in tech.languages:
+        package_json = Glob("**/package.json")
+        if package_json:
+            pkg_content = Read(package_json[0])
+            pkg_lower = pkg_content.lower()
+
+            if "react" in pkg_lower:
+                tech.frontend.append("React")
+            if "vue" in pkg_lower:
+                tech.frontend.append("Vue")
+            if "angular" in pkg_lower:
+                tech.frontend.append("Angular")
+            if "next" in pkg_lower:
+                tech.frontend.append("Next.js")
+
+    # DevOps tools
+    if Glob("**/Dockerfile") or Glob("**/docker-compose.yml"):
+        tech.devops.append("Docker")
+    if Glob("**/.github/workflows/*.yml") or Glob("**/.github/workflows/*.yaml"):
+        tech.devops.append("GitHub Actions")
+    if Glob("**/.gitlab-ci.yml"):
+        tech.devops.append("GitLab CI")
+    if Glob("**/Jenkinsfile"):
+        tech.devops.append("Jenkins")
+
+    # Testing frameworks
+    if Glob("**/pytest.ini") or Glob("**/conftest.py"):
+        tech.testing.append("pytest")
+    if Glob("**/jest.config.*"):
+        tech.testing.append("Jest")
+    if Glob("**/karma.conf.*"):
+        tech.testing.append("Karma")
+
+    return tech
+```
+
+### Context Sharing Pattern
+
+```markdown
+**After detection, write to conversation context:**
+
+════════════════════════════════════════════════════════════════
+TECH STACK DETECTED (session cache for subsequent commands):
+
+Languages: {DETECTED_LANGUAGES}
+Frameworks: {DETECTED_FRAMEWORKS}
+Databases: {DETECTED_DATABASES}
+DevOps: {DETECTED_DEVOPS}
+Frontend: {DETECTED_FRONTEND}
+Testing: {DETECTED_TESTING}
+
+Detection time: {DURATION}s
+════════════════════════════════════════════════════════════════
+```
+
+### Context Reading Pattern
+
+```python
+def get_tech_stack_from_context() -> Optional[TechStack]:
+    """
+    Read tech stack from conversation context.
+
+    Returns:
+        TechStack if found in conversation, None otherwise
+    """
+    # Search conversation history for "TECH STACK DETECTED"
+    # If found, parse the data and return TechStack object
+    # If not found, return None (will trigger new detection)
+
+    # NOTE: Implementation is Claude Code-specific
+    # This is a conceptual pattern - actual implementation
+    # depends on how conversation history is accessed
+
+    return None  # Fallback to new detection
+
+# Usage in commands:
+tech_stack = get_tech_stack_from_context()
+
+if tech_stack is None:
+    print("Detecting project tech stack...")
+    tech_stack = detect_tech_stack_fast()
+    print(f"✓ Detection complete ({duration}s)")
+    # Write to conversation context
+    print_tech_stack_context(tech_stack)
+else:
+    print("✓ Using cached tech stack from conversation context")
+```
+
+### Applicability Filtering
+
+```python
+def filter_applicable_options(
+    all_options: List[dict],
+    tech_stack: TechStack
+) -> Tuple[List[dict], List[dict]]:
+    """
+    Filter options based on tech stack.
+
+    Returns:
+        (applicable_options, filtered_options)
+    """
+    applicable = []
+    filtered = []
+
+    for option in all_options:
+        # Check applicability rules
+        if option.get("requires_docker") and not tech_stack.has_docker():
+            filtered.append({
+                "option": option,
+                "reason": "Docker not detected in project"
+            })
+        elif option.get("requires_database") and not tech_stack.has_database():
+            filtered.append({
+                "option": option,
+                "reason": "No database detected in project"
+            })
+        elif option.get("requires_frontend") and not tech_stack.has_frontend():
+            filtered.append({
+                "option": option,
+                "reason": "No frontend framework detected"
+            })
+        elif option.get("requires_language") and option["requires_language"] not in tech_stack.languages:
+            filtered.append({
+                "option": option,
+                "reason": f"{option['requires_language']} not detected"
+            })
+        else:
+            applicable.append(option)
+
+    return applicable, filtered
+
+# Usage:
+applicable, filtered = filter_applicable_options(all_checks, tech_stack)
+
+print(f"""
+Available checks: {len(applicable)}
+Filtered out: {len(filtered)} (not applicable to your project)
+""")
+
+# Optionally show filtered
+if filtered and user_wants_to_see:
+    print("\nFiltered checks (show with --show-all):")
+    for item in filtered[:5]:
+        print(f"  - {item['option']['name']}: {item['reason']}")
+```
+
+---
+
+## Pattern 11: Opus Model Upgrade Opportunity
+
+**Usage:** Offer Opus upgrade when task benefits significantly from higher capability.
+
+**When to Use:**
+- Architecture design/review
+- Complex algorithm optimization
+- Novel problem-solving
+- Deep security threat modeling
+- Major architectural refactoring
+
+**When NOT to Use:**
+- Simple fixes
+- Pattern matching
+- Mechanical tasks
+- Standard code generation
+
+### Opus Upgrade Prompt Pattern
+
+```python
+def offer_opus_upgrade(
+    task_name: str,
+    task_description: str,
+    complexity_reason: str,
+    expected_benefit: str,
+    default_model: str = "sonnet"
+) -> str:
+    """
+    Offer Opus model upgrade with clear cost/benefit trade-off.
+
+    Returns: Selected model ("opus" or default_model)
+    """
+    response = AskUserQuestion({
+        "questions": [{
+            "question": f"{task_name} would benefit from Opus model. Use Opus?",
+            "header": "Model Selection",
+            "multiSelect": False,
+            "options": [
+                {
+                    "label": f"Yes - Use Opus (Recommended)",
+                    "description": f"Best quality for {complexity_reason}. {expected_benefit}. Slightly slower."
+                },
+                {
+                    "label": f"No - Use {default_model.capitalize()}",
+                    "description": f"Faster, sufficient quality for most cases. May miss {expected_benefit.lower()}."
+                }
+            ]
+        }]
+    })
+
+    selected = response["answers"]["question"]
+    return "opus" if "Opus" in selected else default_model
+
+# Usage examples:
+
+# Example 1: Architecture review
+if "architecture" in selected_categories:
+    model = offer_opus_upgrade(
+        task_name="Architecture Analysis",
+        task_description="Reviewing system architecture, design patterns, and coupling",
+        complexity_reason="complex architectural patterns and trade-offs",
+        expected_benefit="Deeper insights into design flaws and better refactoring suggestions",
+        default_model="sonnet"
+    )
+
+# Example 2: Complex feature implementation
+if feature_complexity == "high":
+    model = offer_opus_upgrade(
+        task_name="Feature Implementation",
+        task_description=f"Implementing: {feature_description}",
+        complexity_reason="novel algorithm design and complex integration",
+        expected_benefit="More elegant architecture and better edge case handling",
+        default_model="sonnet"
+    )
+
+# Example 3: Algorithm optimization
+if optimization_type == "algorithm":
+    model = offer_opus_upgrade(
+        task_name="Algorithm Optimization",
+        task_description="Optimizing performance-critical algorithms",
+        complexity_reason="complex performance trade-offs and novel optimizations",
+        expected_benefit="Significantly better performance improvements (30-40% vs 10-15%)",
+        default_model="sonnet"
+    )
+
+# Example 4: Architectural refactoring
+if fix_category == "architecture" and fix_count > 5:
+    model = offer_opus_upgrade(
+        task_name="Architectural Refactoring",
+        task_description=f"Refactoring {fix_count} architectural issues",
+        complexity_reason="major structural changes across multiple modules",
+        expected_benefit="Safer refactoring with better preservation of functionality",
+        default_model="sonnet"
+    )
+```
+
+### Integration with Agent Execution
+
+```python
+# Before launching agent, check for opus opportunity
+selected_model = "sonnet"  # default
+
+if should_offer_opus_upgrade(task_type, complexity):
+    selected_model = offer_opus_upgrade(
+        task_name=task_name,
+        task_description=task_description,
+        complexity_reason=get_complexity_reason(task_type),
+        expected_benefit=get_expected_benefit(task_type)
+    )
+
+# Launch agent with selected model
+Task({
+    "subagent_type": agent_type,
+    "model": selected_model,  # "opus" or "sonnet"
+    "description": task_description,
+    "prompt": full_prompt
+})
+```
+
+### Complexity Detection Helper
+
+```python
+def should_offer_opus_upgrade(task_type: str, complexity: str) -> bool:
+    """
+    Determine if task benefits from Opus upgrade.
+
+    Returns: True if opus would provide significant benefit
+    """
+    # High-benefit tasks (always offer)
+    HIGH_BENEFIT_TASKS = [
+        "architecture_review",
+        "architecture_design",
+        "novel_algorithm",
+        "complex_refactoring"
+    ]
+
+    if task_type in HIGH_BENEFIT_TASKS:
+        return True
+
+    # Medium-benefit tasks (offer if high complexity)
+    MEDIUM_BENEFIT_TASKS = [
+        "feature_implementation",
+        "algorithm_optimization",
+        "security_audit",
+        "performance_analysis"
+    ]
+
+    if task_type in MEDIUM_BENEFIT_TASKS and complexity == "high":
+        return True
+
+    # Low-benefit tasks (never offer)
+    # - Simple fixes
+    # - Pattern matching
+    # - Mechanical tasks
+    return False
+```
+
+---
+
+**Last Updated:** 2025-01-24
 **Status:** Active - All commands MUST use these patterns

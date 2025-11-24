@@ -69,12 +69,13 @@ pytest -n auto
 
 ### Test Coverage Standards
 
-- **Minimum Coverage**: 60% overall
-- **Critical Modules**: 80%+ coverage required
-  - `core/principle_selector.py`
-  - `core/claude_md_generator.py`
-  - `wizard/decision_tree.py`
-  - `ai/detection.py`
+- **Minimum Coverage**: 80% overall (current: 84%)
+- **Critical Modules**: 90%+ coverage required
+  - `core/knowledge_setup.py`
+  - `core/principle_loader.py`
+  - `core/remove.py`
+  - `schemas/commands.py`
+  - `schemas/preferences.py`
 
 ### Writing Tests
 
@@ -201,20 +202,22 @@ Before submitting a PR, verify:
 ClaudeCodeOptimizer/
 ├── claudecodeoptimizer/     # Main package
 │   ├── core/                # Core functionality
-│   │   ├── claude_md_generator.py  # Marker-based CLAUDE.md generation
-│   │   ├── principle_selector.py   # AI-powered principle selection
-│   │   └── knowledge_setup.py      # Symlink management
-│   ├── wizard/              # Interactive wizard
-│   │   ├── orchestrator.py         # Main initialization flow
-│   │   ├── decision_tree.py        # Decision points & options
-│   │   └── ui_adapter.py           # Claude Code UI integration
-│   ├── ai/                  # AI detection & recommendations
-│   │   ├── detection.py            # Project type detection
-│   │   └── recommendations.py      # Principle recommendations
-│   └── commands_loader.py   # Command loading
+│   │   ├── knowledge_setup.py      # Setup and deployment
+│   │   ├── principle_loader.py     # Principle loading
+│   │   ├── principles.py           # Principle management
+│   │   ├── remove.py               # Uninstallation
+│   │   ├── version_manager.py      # Version tracking
+│   │   └── utils.py                # Utilities
+│   ├── schemas/             # Data schemas
+│   │   ├── commands.py             # Command metadata
+│   │   └── preferences.py          # User preferences
+│   ├── cco_status.py        # Status command
+│   ├── cco_remove.py        # Remove command
+│   ├── commands_loader.py   # Command loading
+│   └── config.py            # Configuration
 ├── content/                 # Knowledge base (deployed to ~/.claude/)
 │   ├── commands/            # Slash commands (cco-*.md)
-│   ├── principles/          # Development principles (U_*, P_*, C_*.md)
+│   ├── principles/          # Development principles (U_*, C_*, P_*.md)
 │   ├── skills/              # Reusable skills (cco-skill-*.md)
 │   └── agents/              # Autonomous agents (cco-agent-*.md)
 └── tests/                   # Test suite
