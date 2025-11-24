@@ -1,13 +1,12 @@
 ---
 name: cco-skill-versioning-semver-changelog-compat
-description: |
-  Versioning, releases, changelogs, backward compatibility:
-  - semver, version, major, minor, patch, release, breaking change
-  - changelog, CHANGELOG.md, release notes, deprecation, migration
-  - conventional commits, automated versioning
-  - Files: VERSION, CHANGELOG.md, .releaserc.json, package.json
-
-  Triggers: version, release, changelog, semver, breaking, deprecation
+description: Versioning, releases, changelogs, backward compatibility
+keywords: [versioning, semver, version, major, minor, patch, release, breaking changes, changelog, deprecation, git, releases, conventional commits]
+category: infrastructure
+related_commands:
+  action_types: [audit, fix, generate]
+  categories: [infrastructure]
+pain_points: [5]
 ---
 
 # Skill: Versioning - SemVer, Changelog & Backward Compatibility

@@ -711,7 +711,7 @@ Pattern: {EXISTING_PATTERN_REFERENCE}
 
 ```markdown
 CONTEXT FOR /cco-generate:
-Fixed SQL injection in 5 files (api/db.py, models/user.py, etc.) by adding parameterized queries. These changes need integration tests to verify: db query functions (get_user_by_email, search_products, etc.) and API endpoints (/api/users, /api/products). Existing test pattern in tests/test_db.py uses pytest with database fixtures.
+Fixed SQL injection in {COUNT} files ({FILE_PATH}, {FILE_PATH}, etc.) by adding parameterized queries. These changes need integration tests to verify: db query functions ({FUNCTION_NAME}, {FUNCTION_NAME}, etc.) and API endpoints ({API_ENDPOINT}, {API_ENDPOINT}). Existing test pattern in {TEST_FILE} uses pytest with database fixtures.
 
 SlashCommand({command: "/cco-generate tests"})
 ```

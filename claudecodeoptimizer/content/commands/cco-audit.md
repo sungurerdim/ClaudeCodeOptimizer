@@ -825,7 +825,7 @@ All issues are {FIXABILITY} with {APPROACH}.
 
 ```markdown
 CONTEXT FOR /cco-fix:
-Audit found 12 critical security issues: 5x SQL injection (api/db.py:45, 67, 89; models/user.py:123, 145), 4x XSS (templates/profile.html:23, 45; api/render.py:67, 89), 3x hardcoded secrets (.env.example:12, config.py:34, utils/aws.py:56). All are safe-fixable with parameterized queries, HTML escaping, and environment variables.
+Audit found {COUNT} critical security issues: {COUNT}x SQL injection ({FILE_PATH}:{LINE_NUMBER}), {COUNT}x XSS ({FILE_PATH}:{LINE_NUMBER}), {COUNT}x hardcoded secrets ({FILE_PATH}:{LINE_NUMBER}). All are safe-fixable with parameterized queries, HTML escaping, and environment variables.
 
 SlashCommand({command: "/cco-fix security"})
 ```

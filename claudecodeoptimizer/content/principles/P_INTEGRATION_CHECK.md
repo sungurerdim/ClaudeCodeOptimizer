@@ -1,5 +1,5 @@
 ---
-id: U_INTEGRATION_CHECK
+id: P_INTEGRATION_CHECK
 title: Complete Integration Check
 category: universal
 severity: high
@@ -9,7 +9,7 @@ applicability:
   languages: ['all']
 ---
 
-# U_INTEGRATION_CHECK: Complete Integration Check 🔴
+# P_INTEGRATION_CHECK: Complete Integration Check 🔴
 
 **Severity**: High
 

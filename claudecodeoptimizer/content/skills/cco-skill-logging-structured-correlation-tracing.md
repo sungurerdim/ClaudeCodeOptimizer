@@ -1,9 +1,12 @@
 ---
 name: cco-skill-logging-structured-correlation-tracing
-description: |
-  Structured logging, correlation IDs, tracing, PII masking, audit trails
-  Triggers: logging, logs, correlation, tracing, audit, PII
-  Files: *logger*.py, *logging*.js, *audit*.go, middleware.ts
+description: Structured logging, correlation IDs, tracing, PII masking, audit trails
+keywords: [logging, logs, structured logging, correlation, correlation ids, tracing, audit, pii, observability, metrics]
+category: observability
+related_commands:
+  action_types: [audit, fix, generate]
+  categories: [observability]
+pain_points: [5]
 ---
 
 # Skill: Structured Logging & Correlation Tracing
@@ -43,27 +46,6 @@ Enable production debugging via structured logs, correlation IDs, tracing, PII m
 
 **Keywords**: logging, logs, correlation, tracing, audit, PII, structured logs
 **Files**: `*logger*.py`, `*logging*.js`, `*audit*.go`, `middleware.ts`
-
----
-
-## Command Discovery Protocol
-
-When this skill is active, find relevant commands by searching `~/.claude/commands/` metadata:
-
-```yaml
-# Search criteria for this skill's domain
-action_types: [audit, fix, generate]
-keywords: [logging, structured logging, correlation ids, tracing, observability, metrics]
-category: observability
-pain_points: [5]
-```
-
-**How Claude finds commands:**
-1. Grep command files for `keywords:.*logging|observability|correlation` in frontmatter
-2. Match `category: observability`
-3. Present matching commands with their parameters
-
-This ensures commands are always current even when renamed or updated.
 
 ---
 

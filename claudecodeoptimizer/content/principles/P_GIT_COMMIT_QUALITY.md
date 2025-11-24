@@ -1,5 +1,5 @@
 ---
-id: U_COMMIT_QUALITY
+id: P_GIT_COMMIT_QUALITY
 title: Commit Quality
 category: universal
 severity: medium
@@ -10,7 +10,7 @@ applicability:
   languages: ['all']
 ---
 
-# U_COMMIT_QUALITY: Commit Quality 🟡
+# P_GIT_COMMIT_QUALITY: Commit Quality 🟡
 
 **Severity**: Medium
 

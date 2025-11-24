@@ -1,5 +1,5 @@
 ---
-id: U_DEPENDENCY_MANAGEMENT
+id: P_DEPENDENCY_MANAGEMENT
 title: Dependency Management
 category: universal
 severity: high
@@ -9,7 +9,7 @@ applicability:
   languages: ['all']
 ---
 
-# U_DEPENDENCY_MANAGEMENT: Dependency Management 🔴
+# P_DEPENDENCY_MANAGEMENT: Dependency Management 🔴
 
 **Severity**: High
 

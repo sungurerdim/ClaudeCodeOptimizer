@@ -1,5 +1,5 @@
 ---
-id: C_PRODUCTION_GRADE
+id: P_PRODUCTION_GRADE
 title: Production-Grade Code Only
 category: claude-guidelines
 severity: critical
@@ -9,7 +9,7 @@ applicability:
   languages: ['all']
 ---
 
-# C_PRODUCTION_GRADE: Production-Grade Code Only
+# P_PRODUCTION_GRADE: Production-Grade Code Only
 
 **Severity**: Critical
 
