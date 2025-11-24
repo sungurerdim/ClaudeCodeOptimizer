@@ -6,13 +6,10 @@ Target Coverage: 100%
 """
 
 import sys
-from io import StringIO
-from pathlib import Path
-from unittest.mock import MagicMock, patch
+from unittest.mock import patch
 
 import pytest
 
-from claudecodeoptimizer import install_hook
 from claudecodeoptimizer.install_hook import (
     _show_installation_summary,
     post_install,

@@ -239,7 +239,6 @@ class TestGetVersionInfo:
     def test_get_version_info_import_error(self, monkeypatch):
         """Test version when __version__ import fails (lines 69-70)"""
         # Mock the import to raise ImportError
-        import sys
         import builtins
 
         original_import = builtins.__import__
