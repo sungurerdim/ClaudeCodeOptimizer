@@ -123,12 +123,12 @@ parameters:
 
 **This command inherits standard behaviors from:**
 
-- **[STANDARDS_COMMANDS.md](../STANDARDS_COMMANDS.md)** - Standard structure, execution protocol, file discovery
-- **[STANDARDS_QUALITY.md](../STANDARDS_QUALITY.md)** - UX/DX, efficiency, simplicity, performance standards
-- **[LIBRARY_PATTERNS.md](../LIBRARY_PATTERNS.md)** - Reusable patterns (Step 0, Selection, Accounting, Progress, Error Handling)
-- **[STANDARDS_AGENTS.md](../STANDARDS_AGENTS.md)** - File discovery, model selection, parallel execution
+- **[cco-standards.md](../cco-standards.md)** - Standard structure, execution protocol, file discovery
+- **[cco-standards.md](../cco-standards.md)** - UX/DX, efficiency, simplicity, performance standards
+- **[cco-patterns.md](../cco-patterns.md)** - Reusable patterns (Step 0, Selection, Accounting, Progress, Error Handling)
+- **[cco-standards.md](../cco-standards.md)** - File discovery, model selection, parallel execution
 - **model selection** - Haiku for mechanical tasks, let Claude Code decide for complex tasks
-- **[STANDARDS_TECH_DETECTION.md](../STANDARDS_TECH_DETECTION.md)** - Fast tech detection (<2s), applicability filtering, pre-filtering UI
+- **[cco-tech-detection.md](../cco-tech-detection.md)** - Fast tech detection (<2s), applicability filtering, pre-filtering UI
 
 **See these files for detailed patterns. Only command-specific content is documented below.**
 
@@ -174,7 +174,7 @@ parameters:
 
 ## Design Principles
 
-**See:** STANDARDS_QUALITY.md
+**See:** cco-standards.md
 - UX/DX principles (transparency, progressive disclosure, zero surprises)
 - Honesty & accurate reporting (no false positives/negatives)
 - No hardcoded examples (use placeholders: `{FILE_PATH}`, `{LINE_NUMBER}`)
@@ -499,7 +499,7 @@ Use --show-all to see filtered checks
 
 ## Component 2: Discovery Phase
 
-**See:** STANDARDS_AGENTS.md & LIBRARY_PATTERNS.md
+**See:** cco-standards.md & cco-patterns.md
 
 **Audit-Specific Discovery:**
 1. **File Discovery**: Apply exclusions FIRST, report included/excluded counts
@@ -609,7 +609,7 @@ Full coverage of 92 critical checks across 9 categories:
 
 ## Component 7.5: Agent Execution Strategy
 
-**See:** STANDARDS_AGENTS.md & LIBRARY_PATTERNS.md
+**See:** cco-standards.md & cco-patterns.md
 - Model selection (Haiku for patterns, Sonnet for analysis)
 - Parallel execution patterns (fan-out for independent categories)
 - Error handling with user recovery options (Pattern 5)
@@ -634,7 +634,7 @@ Full coverage of 92 critical checks across 9 categories:
 
 ## Component 9: Honesty & Accurate Reporting
 
-**See:** STANDARDS_QUALITY.md
+**See:** cco-standards.md
 
 **Audit-Specific Application:**
 - All findings verified (no false positives/negatives)

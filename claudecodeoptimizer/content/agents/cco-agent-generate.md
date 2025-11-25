@@ -1,8 +1,7 @@
 ---
-name: generate-agent
+name: cco-agent-generate
 description: Auto-generate tests, documentation, and boilerplate code following project conventions. Creates unit/integration tests, API documentation, CI/CD configs, and other missing components. Use for /cco-generate command execution.
 tools: Grep, Read, Glob, Bash, Write
-# model: auto-selected by Claude Code
 category: generate
 metadata:
   priority: medium
@@ -25,7 +24,7 @@ use_cases:
 
 ## Built-in Behaviors
 
-**See [STANDARDS_AGENTS.md](../STANDARDS_AGENTS.md) for standard behaviors:**
+**See [cco-standards.md](../cco-standards.md) for standard behaviors:**
 - File Discovery & Exclusion (Stage 0)
 - Three-Stage File Discovery
 - Model Selection Guidelines
@@ -109,14 +108,14 @@ OUTCOMES = {
 When generating components, load relevant skills for templates:
 
 ### Test Generation (Pain #4)
-**Skill**: `cco-skill-test-pyramid-coverage-isolation`
+**Skill**: `cco-skill-testing-fundamentals`
 - Follow test pyramid ratio (70% unit, 20% integration, 10% e2e)
 - Use AAA pattern (Arrange-Act-Assert)
 - Include edge cases and error conditions
 - Generate fixtures for dependencies
 
 ### CI/CD Generation (Pain #6)
-**Skill**: `cco-skill-cicd-gates-deployment-automation`
+**Skill**: `cco-skill-cicd-automation`
 - Use "CI/CD Templates" section for configs
 - GitHub Actions template for GitHub repos
 - GitLab CI template for GitLab repos
@@ -124,7 +123,7 @@ When generating components, load relevant skills for templates:
 - Dockerfile template for containerization
 
 ### Documentation Generation (Pain #7)
-**Skill**: `cco-skill-docs-api-openapi-adr-runbooks`
+**Skill**: `cco-skill-documentation`
 - Use "Documentation Templates" section
 - README template for project overview
 - ADR template for architecture decisions
@@ -133,14 +132,14 @@ When generating components, load relevant skills for templates:
 - AI code documentation templates (2025)
 
 ### Code Review Checklist Generation (Pain #11, #12)
-**Skill**: `cco-skill-code-review-quality-dora`
+**Skill**: `cco-skill-code-quality`
 - Review checklist template
 - PR template with quality gates
 - Commit message guidelines
 - DORA metrics tracking setup
 
 ### Platform Engineering Generation (Pain #4, #6, #10)
-**Skill**: `cco-skill-platform-cicd-tests-iac`
+**Skill**: `cco-skill-cicd-automation`
 - CI/CD maturity assessment template
 - Test automation scaffold
 - IaC boilerplate (Terraform/Pulumi)
@@ -154,15 +153,15 @@ When generating components, load relevant skills for templates:
 # Load template based on generation type
 def get_template_for_type(gen_type: str) -> str:
     templates = {
-        "cicd": "cco-skill-cicd-gates-deployment-automation → CI/CD Templates",
-        "docs": "cco-skill-docs-api-openapi-adr-runbooks → Documentation Templates",
-        "tests": "cco-skill-test-pyramid-coverage-isolation → Test Analysis Patterns",
-        "dockerfile": "cco-skill-cicd-gates-deployment-automation → Dockerfile",
-        "readme": "cco-skill-docs-api-openapi-adr-runbooks → README Template",
-        "adr": "cco-skill-docs-api-openapi-adr-runbooks → ADR Template",
-        "runbook": "cco-skill-docs-api-openapi-adr-runbooks → Runbook Template",
-        "review-checklist": "cco-skill-code-review-quality-dora → Review Checklist Template",
-        "platform": "cco-skill-platform-cicd-tests-iac → Platform Templates",
+        "cicd": "cco-skill-cicd-automation → CI/CD Templates",
+        "docs": "cco-skill-documentation → Documentation Templates",
+        "tests": "cco-skill-testing-fundamentals → Test Analysis Patterns",
+        "dockerfile": "cco-skill-cicd-automation → Dockerfile",
+        "readme": "cco-skill-documentation → README Template",
+        "adr": "cco-skill-documentation → ADR Template",
+        "runbook": "cco-skill-documentation → Runbook Template",
+        "review-checklist": "cco-skill-code-quality → Review Checklist Template",
+        "platform": "cco-skill-cicd-automation → Platform Templates",
     }
     return templates.get(gen_type, "")
 

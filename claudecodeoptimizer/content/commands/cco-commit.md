@@ -16,10 +16,10 @@ pain_points: [5]
 
 **This command inherits standard behaviors from:**
 
-- **[STANDARDS_COMMANDS.md](../STANDARDS_COMMANDS.md)** - Standard structure, execution protocol, file discovery
-- **[STANDARDS_QUALITY.md](../STANDARDS_QUALITY.md)** - UX/DX, efficiency, simplicity, performance standards
-- **[LIBRARY_PATTERNS.md](../LIBRARY_PATTERNS.md)** - Reusable patterns (Step 0, Selection, Accounting, Progress, Error Handling)
-- **[STANDARDS_AGENTS.md](../STANDARDS_AGENTS.md)** - File discovery, model selection, parallel execution
+- **[cco-standards.md](../cco-standards.md)** - Standard structure, execution protocol, file discovery
+- **[cco-standards.md](../cco-standards.md)** - UX/DX, efficiency, simplicity, performance standards
+- **[cco-patterns.md](../cco-patterns.md)** - Reusable patterns (Step 0, Selection, Accounting, Progress, Error Handling)
+- **[cco-standards.md](../cco-standards.md)** - File discovery, model selection, parallel execution
 
 **See these files for detailed patterns. Only command-specific content is documented below.**
 
@@ -95,8 +95,8 @@ Refs: #{issue_number_if_provided}
 
 ## Skills Used
 
-- `cco-skill-git-branching-pr-review`
-- `cco-skill-versioning-semver-changelog-compat`
+- `cco-skill-git-workflow`
+- `cco-skill-versioning`
 
 ---
 
@@ -107,7 +107,7 @@ Refs: #{issue_number_if_provided}
 **Command-Specific Details:**
 
 **What I do:**
-Help you create high-quality git commits following Conventional Commits format per `cco-skill-git-branching-pr-review`.
+Help you create high-quality git commits following Conventional Commits format per `cco-skill-git-workflow`.
 
 **Process:**
 1. Analyze ALL uncommitted changes (staged, unstaged, untracked files)
@@ -151,7 +151,7 @@ AskUserQuestion({
 
 ## Design Principles
 
-**See:** STANDARDS_QUALITY.md
+**See:** cco-standards.md
 - UX/DX principles (transparency, progressive disclosure, zero surprises)
 - Honesty & accurate reporting (no false positives/negatives)
 - No hardcoded examples (use placeholders: `{FILE_PATH}`, `{LINE_NUMBER}`)
@@ -176,7 +176,7 @@ all_changes=$(git status --short)
 # - Untracked: ??
 # - Renamed: R
 
-# Define exclusion patterns (match STANDARDS_COMMANDS.md)
+# Define exclusion patterns (match cco-standards.md)
 EXCLUDED_FILES=(
     "*.pyc" "*.pyo" "*.so" "*.dll" "*.class" "*.o"
     "*.min.js" "*.min.css" "*.bundle.js"
@@ -257,8 +257,8 @@ AskUserQuestion({
 ### Step 3: Generate Semantic Commit Messages
 
 **See:**
-- **[LIBRARY_PATTERNS.md](../LIBRARY_PATTERNS.md#pattern-8-dynamic-results-generation)** for template
-- **`cco-skill-git-branching-pr-review`** for commit message format rules
+- **[cco-patterns.md](../cco-patterns.md#pattern-8-dynamic-results-generation)** for template
+- **`cco-skill-git-workflow`** for commit message format rules
 
 For each commit, generate message following Conventional Commits **and skill guidelines**:
 
@@ -272,7 +272,7 @@ BREAKING CHANGE: <description if applicable>
 Refs: #<issue-number>
 ```
 
-**CRITICAL:** Title must be ≤50 chars (ideal) or ≤72 (hard limit) per `cco-skill-git-branching-pr-review`.
+**CRITICAL:** Title must be ≤50 chars (ideal) or ≤72 (hard limit) per `cco-skill-git-workflow`.
 
 ### Step 4: Create Commits
 
@@ -417,7 +417,7 @@ AskUserQuestion({
 - [ ] ALL uncommitted changes analyzed (staged/unstaged/untracked, excluded files filtered)
 - [ ] Change types detected
 - [ ] Atomic split recommended if needed (dynamic based on analysis)
-- [ ] Semantic messages generated following `cco-skill-git-branching-pr-review` (title ≤50 chars, no hardcoded examples)
+- [ ] Semantic messages generated following `cco-skill-git-workflow` (title ≤50 chars, no hardcoded examples)
 - [ ] TodoWrite tracking for multi-commit operations
 - [ ] Commits created with proper format per skill guidelines
 - [ ] Complete accounting verified (created = planned)

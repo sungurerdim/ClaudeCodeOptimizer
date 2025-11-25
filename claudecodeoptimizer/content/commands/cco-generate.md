@@ -81,19 +81,19 @@ parameters:
 
 **Create missing project components with skill-guided generation.**
 
-**Implementation Note:** This command follows [STANDARDS_COMMANDS.md](../STANDARDS_COMMANDS.md) for file discovery (exclusions applied BEFORE processing), token optimization (three-stage discovery), parallelization (Task calls in single message), and cross-platform compatibility. See cco-audit.md for reference implementation.
+**Implementation Note:** This command follows [cco-standards.md](../cco-standards.md) for file discovery (exclusions applied BEFORE processing), token optimization (three-stage discovery), parallelization (Task calls in single message), and cross-platform compatibility. See cco-audit.md for reference implementation.
 ---
 
 ## Built-in References
 
 **This command inherits standard behaviors from:**
 
-- **[STANDARDS_COMMANDS.md](../STANDARDS_COMMANDS.md)** - Standard structure, execution protocol, file discovery
-- **[STANDARDS_QUALITY.md](../STANDARDS_QUALITY.md)** - UX/DX, efficiency, simplicity, performance standards
-- **[LIBRARY_PATTERNS.md](../LIBRARY_PATTERNS.md)** - Reusable patterns (Step 0, Selection, Accounting, Progress, Error Handling)
-- **[STANDARDS_AGENTS.md](../STANDARDS_AGENTS.md)** - File discovery, model selection, parallel execution
+- **[cco-standards.md](../cco-standards.md)** - Standard structure, execution protocol, file discovery
+- **[cco-standards.md](../cco-standards.md)** - UX/DX, efficiency, simplicity, performance standards
+- **[cco-patterns.md](../cco-patterns.md)** - Reusable patterns (Step 0, Selection, Accounting, Progress, Error Handling)
+- **[cco-standards.md](../cco-standards.md)** - File discovery, model selection, parallel execution
 - **model selection** - Haiku for mechanical tasks, let Claude Code decide for complex tasks
-- **[STANDARDS_TECH_DETECTION.md](../STANDARDS_TECH_DETECTION.md)** - Fast tech detection (<2s), applicability filtering, pre-filtering UI
+- **[cco-tech-detection.md](../cco-tech-detection.md)** - Fast tech detection (<2s), applicability filtering, pre-filtering UI
 
 **See these files for detailed patterns. Only command-specific content is documented below.**
 
@@ -129,7 +129,7 @@ No scope reduction due to time constraints or "workload concerns".
 
 ## Design Principles
 
-**See:** STANDARDS_QUALITY.md
+**See:** cco-standards.md
 - UX/DX principles (transparency, progressive disclosure, zero surprises)
 - Honesty & accurate reporting (no false positives/negatives)
 - No hardcoded examples (use placeholders: `{FILE_PATH}`, `{LINE_NUMBER}`)
@@ -156,79 +156,79 @@ OUTCOMES = {
 ### 🔴 Critical Missing (Pain #4: Biggest mistake)
 
 1. **--tests** - Unit + integration tests
-   - Skill: `cco-skill-test-pyramid-coverage-isolation`
+   - Skill: `cco-skill-testing-fundamentals`
    - Generates: Unit tests for untested functions, integration tests for APIs, fixtures
 
 2. **--contract-tests** - API contract tests (Pact)
-   - Skill: `cco-skill-api-testing-contract-load-chaos`
+   - Skill: `cco-skill-testing-fundamentals`
    - Generates: Consumer contracts, provider verification
 
 ### 🟡 High Priority
 
 3. **--load-tests** - Performance/stress tests
-   - Skill: `cco-skill-api-testing-contract-load-chaos`
+   - Skill: `cco-skill-testing-fundamentals`
    - Generates: Locust/k6 load tests, stress scenarios
 
 4. **--chaos-tests** - Resilience tests
-   - Skill: `cco-skill-api-testing-contract-load-chaos`
+   - Skill: `cco-skill-testing-fundamentals`
    - Generates: Chaos engineering tests (failure injection)
 
 5. **--openapi** - OpenAPI/Swagger spec (Pain #7)
-   - Skill: `cco-skill-docs-api-openapi-adr-runbooks`
+   - Skill: `cco-skill-documentation`
    - Generates: Complete OpenAPI 3.0 spec from code
 
 6. **--cicd** - CI/CD pipeline
-   - Skills: `cco-skill-cicd-gates-deployment-automation`, `cco-skill-deployment-bluegreen-canary-rollback`
+   - Skills: `cco-skill-cicd-automation`, `cco-skill-cicd-automation`
    - Generates: GitHub Actions/GitLab CI with quality gates, deployment strategies
 
 ### 🟢 Recommended
 
 7. **--docs** - Code documentation
-   - Skill: `cco-skill-docs-api-openapi-adr-runbooks`
+   - Skill: `cco-skill-documentation`
    - Generates: Docstrings, README sections, usage examples
 
 8. **--adr** - Architecture Decision Records
-   - Skill: `cco-skill-docs-api-openapi-adr-runbooks`
+   - Skill: `cco-skill-documentation`
    - Generates: ADR templates, decision logs
 
 9. **--runbook** - Operational runbooks
-   - Skill: `cco-skill-docs-api-openapi-adr-runbooks`, `cco-skill-incident-oncall-postmortem-playbooks`
+   - Skill: `cco-skill-documentation`, `cco-skill-incident`
    - Generates: Incident response, deployment procedures
 
 10. **--dockerfile** - Docker configuration
-    - Skill: `cco-skill-kubernetes-security-containers`
+    - Skill: `cco-skill-containers`
     - Generates: Dockerfile (multi-stage), docker-compose.yml
 
 11. **--migration** - Database migration scripts
-    - Skill: `cco-skill-data-migrations-backup-versioning`
+    - Skill: `cco-skill-database-optimization`
     - Generates: Migration scripts with rollback, backup procedures
 
 12. **--indexes** - Database indexes
-    - Skill: `cco-skill-database-optimization-caching-profiling`
+    - Skill: `cco-skill-database-optimization`
     - Generates: Index creation scripts for slow queries
 
 13. **--monitoring** - Monitoring configuration
-    - Skill: `cco-skill-observability-metrics-alerts-slo`
+    - Skill: `cco-skill-observability`
     - Generates: Prometheus metrics, Grafana dashboards
 
 14. **--logging** - Structured logging config
-    - Skill: `cco-skill-logging-structured-correlation-tracing`
+    - Skill: `cco-skill-observability`
     - Generates: Logging setup with correlation IDs
 
 15. **--slo** - SLO/SLA definitions
-    - Skill: `cco-skill-observability-metrics-alerts-slo`
+    - Skill: `cco-skill-observability`
     - Generates: SLO specs, SLA templates, alert rules
 
 16. **--pre-commit** - Pre-commit hooks
-    - Skill: `cco-skill-cicd-gates-deployment-automation`
+    - Skill: `cco-skill-cicd-automation`
     - Generates: .pre-commit-config.yaml with linting, security
 
 17. **--requirements** - Dependency files
-    - Skill: `cco-skill-supply-chain-dependencies-sast`
+    - Skill: `cco-skill-supply-chain`
     - Generates: requirements.txt/pyproject.toml from imports
 
 18. **--review-checklist** - Code review checklist (Pain #11, #12)
-    - Skill: `cco-skill-code-review-quality-ai-guidance`
+    - Skill: `cco-skill-code-quality`
     - Generates: AI-aware review checklist template, PR checklist with quality gates
     - **2025 Critical**: Addresses 27% decline in code review comments
     - Includes:
@@ -445,7 +445,7 @@ Files to create: ~{Y} files
 
 ### Step 3: Generate Components
 
-**See [STANDARDS_AGENTS.md](../STANDARDS_AGENTS.md) for agent delegation patterns.**
+**See [cco-standards.md](../cco-standards.md) for agent delegation patterns.**
 
 **Command-Specific Details:**
 
@@ -494,8 +494,8 @@ Task({
   Generate missing tests.
 
   Use these skills:
-  - cco-skill-test-pyramid-coverage-isolation
-  - cco-skill-api-testing-contract-load-chaos
+  - cco-skill-testing-fundamentals
+  - cco-skill-testing-fundamentals
 
   TESTS:
   1. Analyze all Python files in src/ to find untested functions
@@ -513,9 +513,9 @@ Task({
      - Test input validation
 
   Follow:
-  - P_TEST_PYRAMID (unit >> integration >> e2e)
-  - P_TEST_COVERAGE (high coverage target)
-  - U_NO_OVERENGINEERING (keep it simple)
+  - cco-skill-testing-fundamentals (test pyramid: unit >> integration >> e2e)
+  - cco-skill-testing-fundamentals (coverage targets)
+  - cco-principle-u-no-overengineering (keep it simple)
 
   Report:
   - Files created with line counts
@@ -529,7 +529,7 @@ Task({
 
 ### Step 4: Results Report
 
-**See [LIBRARY_PATTERNS.md](../LIBRARY_PATTERNS.md#pattern-8-results-generation) for standard results pattern.**
+**See [cco-patterns.md](../cco-patterns.md#pattern-8-results-generation) for standard results pattern.**
 
 **Command-Specific Details:**
 
@@ -575,7 +575,7 @@ Next Steps:
 
 ## Agent Usage
 
-**See [STANDARDS_AGENTS.md](../STANDARDS_AGENTS.md) for:**
+**See [cco-standards.md](../cco-standards.md) for:**
 - Parallel execution patterns (fan-out, pipeline, hierarchical)
 - Model selection (Haiku for mechanical, auto for complex)
 - Error handling protocols

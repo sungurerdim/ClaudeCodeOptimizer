@@ -1,8 +1,7 @@
 ---
-name: audit-agent
+name: cco-agent-audit
 description: Multi-phase codebase audit with real-time progress and streaming results
 tools: Grep, Read, Glob, Bash
-model: haiku
 category: analysis
 metadata:
   priority: high
@@ -19,7 +18,7 @@ skills_loaded: as-needed
 
 ## Built-in Behaviors
 
-**See [STANDARDS_AGENTS.md](../STANDARDS_AGENTS.md) for standard behaviors:**
+**See [cco-standards.md](../cco-standards.md) for standard behaviors:**
 - File Discovery & Exclusion (Stage 0)
 - Three-Stage File Discovery
 - Model Selection Guidelines
@@ -626,51 +625,51 @@ To fix specific findings, run:
 When executing audits, load relevant skills for analysis patterns:
 
 ### Tech Debt Audit (Pain #2)
-**Skill**: `cco-skill-code-quality-refactoring-complexity`
+**Skill**: `cco-skill-code-quality`
 - Use "Analysis Patterns" section for bash commands
 - Use "Technical Debt Register Template" for output format
 - Use "Debt Categories" for classification
 
 ### Test Coverage Audit (Pain #4)
-**Skill**: `cco-skill-test-pyramid-coverage-isolation`
+**Skill**: `cco-skill-testing-fundamentals`
 - Use "Test Analysis Patterns" for coverage commands
 - Use "Flaky Test Detection" for reliability checks
 - Use "Test Pyramid Analysis" for balance assessment
 
 ### Security Audit (Pain #1)
-**Skill**: `cco-skill-security-owasp-xss-sqli-csrf`
+**Skill**: `cco-skill-security-fundamentals`
 - Check XSS, SQLi, CSRF patterns
 - Use bcrypt/argon2 for password analysis
 - Check JWT configuration
 
 ### Performance Audit (Pain #5)
-**Skill**: `cco-skill-database-optimization-caching-profiling`
+**Skill**: `cco-skill-database-optimization`
 - N+1 query detection
 - Index analysis
 - Caching opportunities
 
 ### CI/CD Audit (Pain #6)
-**Skill**: `cco-skill-cicd-gates-deployment-automation`
+**Skill**: `cco-skill-cicd-automation`
 - Pipeline completeness check
 - Quality gate verification
 - Deployment strategy analysis
 
 ### Documentation Audit (Pain #7)
-**Skill**: `cco-skill-docs-api-openapi-adr-runbooks`
+**Skill**: `cco-skill-documentation`
 - Docstring coverage
 - API documentation completeness
 - ADR presence
 - AI documentation templates (2025)
 
 ### AI Security Audit (Pain #3)
-**Skill**: `cco-skill-ai-security-promptinjection-models`
+**Skill**: `cco-skill-ai-security`
 - Prompt injection detection
 - AI-generated code access control (OWASP A01:2025)
 - Exception handling (OWASP A10:2025)
 - PII leakage detection
 
 ### AI Quality Audit (Pain #3, #8, #9)
-**Skill**: `cco-skill-ai-quality-hallucination-bloat`
+**Skill**: `cco-skill-ai-quality`
 - API hallucination detection
 - Code bloat scoring
 - Vibe coding patterns
@@ -678,7 +677,7 @@ When executing audits, load relevant skills for analysis patterns:
 - Tool signature identification
 
 ### Code Review Audit (Pain #11, #12)
-**Skill**: `cco-skill-code-review-quality-dora`
+**Skill**: `cco-skill-code-quality`
 - Commit message quality
 - Review time distribution
 - Reviewer diversity
@@ -686,7 +685,7 @@ When executing audits, load relevant skills for analysis patterns:
 - DORA metrics (5 metrics, 2025)
 
 ### Platform Engineering Audit (Pain #4, #6, #10)
-**Skill**: `cco-skill-platform-cicd-tests-iac`
+**Skill**: `cco-skill-cicd-automation`
 - CI/CD maturity (8 stages)
 - Test automation coverage
 - IaC presence detection
@@ -700,19 +699,19 @@ When executing audits, load relevant skills for analysis patterns:
 # Load skill based on audit category
 def get_skill_for_category(category: str) -> str:
     skills = {
-        "tech-debt": "cco-skill-code-quality-refactoring-complexity",
-        "tests": "cco-skill-test-pyramid-coverage-isolation",
-        "security": "cco-skill-security-owasp-xss-sqli-csrf",
-        "database": "cco-skill-database-optimization-caching-profiling",
-        "cicd": "cco-skill-cicd-gates-deployment-automation",
-        "docs": "cco-skill-docs-api-openapi-adr-runbooks",
-        "ai-security": "cco-skill-ai-security-promptinjection-models",
-        "ai-quality": "cco-skill-ai-quality-hallucination-bloat",
-        "ai-debt": "cco-skill-ai-quality-hallucination-bloat",
-        "code-review": "cco-skill-code-review-quality-dora",
-        "platform": "cco-skill-platform-cicd-tests-iac",
-        "supply-chain": "cco-skill-supply-chain-dependencies-sast",
-        "containers": "cco-skill-kubernetes-security-containers",
+        "tech-debt": "cco-skill-code-quality",
+        "tests": "cco-skill-testing-fundamentals",
+        "security": "cco-skill-security-fundamentals",
+        "database": "cco-skill-database-optimization",
+        "cicd": "cco-skill-cicd-automation",
+        "docs": "cco-skill-documentation",
+        "ai-security": "cco-skill-ai-security",
+        "ai-quality": "cco-skill-ai-quality",
+        "ai-debt": "cco-skill-ai-quality",
+        "code-review": "cco-skill-code-quality",
+        "platform": "cco-skill-cicd-automation",
+        "supply-chain": "cco-skill-supply-chain",
+        "containers": "cco-skill-containers",
     }
     return skills.get(category, "")
 

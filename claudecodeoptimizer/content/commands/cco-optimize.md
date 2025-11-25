@@ -26,10 +26,10 @@ parameters:
 
 **This command inherits standard behaviors from:**
 
-- **[STANDARDS_COMMANDS.md](../STANDARDS_COMMANDS.md)** - Standard structure, execution protocol, file discovery
-- **[STANDARDS_QUALITY.md](../STANDARDS_QUALITY.md)** - UX/DX, efficiency, simplicity, performance standards
-- **[LIBRARY_PATTERNS.md](../LIBRARY_PATTERNS.md)** - Reusable patterns (Step 0, Selection, Accounting, Progress, Error Handling)
-- **[STANDARDS_AGENTS.md](../STANDARDS_AGENTS.md)** - File discovery, model selection, parallel execution
+- **[cco-standards.md](../cco-standards.md)** - Standard structure, execution protocol, file discovery
+- **[cco-standards.md](../cco-standards.md)** - UX/DX, efficiency, simplicity, performance standards
+- **[cco-patterns.md](../cco-patterns.md)** - Reusable patterns (Step 0, Selection, Accounting, Progress, Error Handling)
+- **[cco-standards.md](../cco-standards.md)** - File discovery, model selection, parallel execution
 - **model selection** - Haiku for mechanical tasks, let Claude Code decide for complex tasks
 
 **See these files for detailed patterns. Only command-specific content is documented below.**
@@ -76,7 +76,7 @@ parameters:
 
 ## Design Principles
 
-**See:** STANDARDS_QUALITY.md
+**See:** cco-standards.md
 
 **Slim-Specific:**
 1. **Context First** - CLAUDE.md duplication elimination (primary mission)
@@ -165,7 +165,7 @@ parameters:
 
 ## Component 2.5: Project Scope Detection
 
-**See:** STANDARDS_AGENTS.md & LIBRARY_PATTERNS.md
+**See:** cco-standards.md & cco-patterns.md
 
 **Slim-Specific Scope:**
 1. **Detect Project Root**: Git root or cwd
@@ -178,7 +178,7 @@ parameters:
 
 ## Component 3: Discovery Phase
 
-**See [STANDARDS_AGENTS.md](../STANDARDS_AGENTS.md#file-discovery--exclusion) for file discovery and [LIBRARY_PATTERNS.md](../LIBRARY_PATTERNS.md#pattern-7-file-discovery-with-exclusion) for exclusion pattern.**
+**See [cco-standards.md](../cco-standards.md#file-discovery--exclusion) for file discovery and [cco-patterns.md](../cco-patterns.md#pattern-7-file-discovery-with-exclusion) for exclusion pattern.**
 
 **Slim-Specific Discovery:**
 1. **File Exclusion**: Apply FIRST (build artifacts, dependencies, lock files)
@@ -190,7 +190,7 @@ parameters:
 
 ## Component 4: Analysis Phase
 
-**See:** STANDARDS_AGENTS.md & LIBRARY_PATTERNS.md
+**See:** cco-standards.md & cco-patterns.md
 
 **Slim-Specific Analysis:**
 - **Model Selection**: Conservative→Haiku | Balanced/Aggressive→Sonnet
@@ -292,7 +292,7 @@ By Risk:
 
 ## Component 4.5: Agent Optimization Strategy
 
-**See [STANDARDS_AGENTS.md](../STANDARDS_AGENTS.md#model-selection-guidelines) for model selection and [LIBRARY_PATTERNS.md](../LIBRARY_PATTERNS.md#pattern-6-agent-task-execution-with-verification) for agent execution patterns.**
+**See [cco-standards.md](../cco-standards.md#model-selection-guidelines) for model selection and [cco-patterns.md](../cco-patterns.md#pattern-6-agent-task-execution-with-verification) for agent execution patterns.**
 
 **Slim-Specific Strategy:**
 - **Parallel Processing**: Group files by category (markdown/code/tools), analyze all groups simultaneously
@@ -304,7 +304,7 @@ By Risk:
 
 ## Component 5: Pre-Flight Summary
 
-**See [LIBRARY_PATTERNS.md](../LIBRARY_PATTERNS.md#pattern-8-dynamic-results-generation) for pre-flight summary pattern.**
+**See [cco-patterns.md](../cco-patterns.md#pattern-8-dynamic-results-generation) for pre-flight summary pattern.**
 
 **Slim-Specific Display:**
 - **What Changes**: Files count, optimizations count, token reduction (by category, by type with risk levels)
@@ -332,7 +332,7 @@ By Risk:
 
 ## Component 7: Final Report
 
-**See [LIBRARY_PATTERNS.md](../LIBRARY_PATTERNS.md#pattern-8-dynamic-results-generation) for final report pattern.**
+**See [cco-patterns.md](../cco-patterns.md#pattern-8-dynamic-results-generation) for final report pattern.**
 
 **Slim-Specific Report:**
 - **Results**: Files modified, token reduction (before/after/saved)
@@ -344,7 +344,7 @@ By Risk:
 
 ## Agent Integration
 
-**See [STANDARDS_AGENTS.md](../STANDARDS_AGENTS.md) for agent delegation patterns and [LIBRARY_PATTERNS.md](../LIBRARY_PATTERNS.md#pattern-6-agent-task-execution-with-verification) for execution with error handling.**
+**See [cco-standards.md](../cco-standards.md) for agent delegation patterns and [cco-patterns.md](../cco-patterns.md#pattern-6-agent-task-execution-with-verification) for execution with error handling.**
 
 **Slim-Specific Agent Strategy:**
 - **Threshold**: Always use agent (no threshold) for consistent behavior
