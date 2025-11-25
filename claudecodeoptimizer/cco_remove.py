@@ -88,14 +88,20 @@ def count_cco_files(claude_dir: Path) -> dict[str, int]:
     if skills_dir.exists():
         counts["skills"] = sum(1 for _ in skills_dir.glob("cco-skill-*.md"))
 
-    # Count principles
+    # Count principles - single pass instead of 4 iterations over list
     principles_dir = claude_dir / "principles"
     if principles_dir.exists():
-        all_principles = [p for p in principles_dir.glob("*.md") if p.name != "PRINCIPLES.md"]
-        counts["principles"] = len(all_principles)
-        counts["principles_u"] = sum(1 for p in all_principles if p.name.startswith("U_"))
-        counts["principles_c"] = sum(1 for p in all_principles if p.name.startswith("C_"))
-        counts["principles_p"] = sum(1 for p in all_principles if p.name.startswith("P_"))
+        for p in principles_dir.glob("*.md"):
+            if p.name == "PRINCIPLES.md":
+                continue
+            counts["principles"] += 1
+            # Check prefix in single pass (O(n) vs O(4n))
+            if p.name.startswith("U_"):
+                counts["principles_u"] += 1
+            elif p.name.startswith("C_"):
+                counts["principles_c"] += 1
+            elif p.name.startswith("P_"):
+                counts["principles_p"] += 1
 
     # Count templates
     counts["templates"] = sum(1 for _ in claude_dir.glob("*.cco"))

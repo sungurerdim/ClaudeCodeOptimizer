@@ -11,6 +11,7 @@ Creates:
 - ~/.claude/*.cco (template files: settings.json.cco, statusline.js.cco)
 """
 
+import heapq
 import shutil
 from collections.abc import Callable
 from pathlib import Path
@@ -21,6 +22,38 @@ from .. import config
 # Consistent category ordering for all reports
 # Agents → Commands → Skills → Principles → Standards → Templates
 CATEGORY_ORDER = ["agents", "commands", "skills", "principles", "standards", "templates"]
+
+
+def _count_principles(dir_path: Path) -> int:
+    """
+    Count principle files efficiently with single directory scan.
+
+    Filters for U_*, C_*, P_* prefixes in one pass instead of 3 separate glob calls.
+    Performance: O(n) single scan vs O(3n) with multiple glob() calls.
+    """
+    count = 0
+    for f in dir_path.iterdir():
+        if f.is_file() and f.suffix == ".md":
+            name = f.name
+            if len(name) > 2 and name[1] == "_" and name[0] in ("U", "C", "P"):
+                count += 1
+    return count
+
+
+def _count_standards(dir_path: Path) -> int:
+    """
+    Count standards files efficiently with single directory scan.
+
+    Matches *_STANDARDS.md, PRINCIPLE_FORMAT.md, COMMAND_PATTERNS.md in one pass.
+    Performance: O(n) single scan vs O(3n) with multiple glob() calls.
+    """
+    count = 0
+    for f in dir_path.iterdir():
+        if f.is_file() and f.suffix == ".md":
+            name = f.name
+            if name.endswith("_STANDARDS.md") or name in ("PRINCIPLE_FORMAT.md", "COMMAND_PATTERNS.md"):
+                count += 1
+    return count
 
 
 def check_existing_installation() -> dict[str, int] | None:
@@ -51,20 +84,11 @@ def check_existing_installation() -> dict[str, int] | None:
     for category in CATEGORY_ORDER:
         dir_path = categories[category]
         if dir_path.exists():
-            # Count CCO files only
+            # Count CCO files only (using optimized single-pass functions)
             if category == "principles":
-                count = (
-                    sum(1 for _ in dir_path.glob("U_*.md"))
-                    + sum(1 for _ in dir_path.glob("C_*.md"))
-                    + sum(1 for _ in dir_path.glob("P_*.md"))
-                )
+                count = _count_principles(dir_path)
             elif category == "standards":
-                # Count standards files (*_STANDARDS.md, PRINCIPLE_FORMAT.md, COMMAND_PATTERNS.md)
-                count = (
-                    sum(1 for _ in dir_path.glob("*_STANDARDS.md"))
-                    + sum(1 for _ in dir_path.glob("PRINCIPLE_FORMAT.md"))
-                    + sum(1 for _ in dir_path.glob("COMMAND_PATTERNS.md"))
-                )
+                count = _count_standards(dir_path)
             elif category == "templates":
                 # Count template files (*.cco)
                 count = sum(1 for _ in dir_path.glob("*.cco"))
@@ -143,19 +167,11 @@ def get_installation_counts() -> dict[str, int]:
                 # Skills are recursive (includes subdirectories)
                 count = len(list(dir_path.rglob("cco-*.md")))
             elif category == "principles":
-                # Principles include U_*, C_*, P_*
-                count = (
-                    sum(1 for _ in dir_path.glob("U_*.md"))
-                    + sum(1 for _ in dir_path.glob("C_*.md"))
-                    + sum(1 for _ in dir_path.glob("P_*.md"))
-                )
+                # Principles include U_*, C_*, P_* (optimized single-pass)
+                count = _count_principles(dir_path)
             elif category == "standards":
-                # Standards include *_STANDARDS.md, PRINCIPLE_FORMAT.md, COMMAND_PATTERNS.md
-                count = (
-                    sum(1 for _ in dir_path.glob("*_STANDARDS.md"))
-                    + sum(1 for _ in dir_path.glob("PRINCIPLE_FORMAT.md"))
-                    + sum(1 for _ in dir_path.glob("COMMAND_PATTERNS.md"))
-                )
+                # Standards (optimized single-pass)
+                count = _count_standards(dir_path)
             elif category == "templates":
                 # Templates are *.cco files
                 count = sum(1 for _ in dir_path.glob("*.cco"))
