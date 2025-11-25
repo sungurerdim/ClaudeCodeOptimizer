@@ -1,8 +1,7 @@
 ---
-name: optimize-context-usage-agent
+name: cco-agent-optimize
 description: Token-optimized content slimming with quality preservation, semantic verification, and context duplication detection. Use for /cco-optimize-context-usage command execution.
 tools: Grep, Read, Glob, Bash, Edit, Write
-# model: auto-selected by Claude Code
 category: optimize
 metadata:
   priority: medium
@@ -27,7 +26,7 @@ use_cases:
 
 ## Built-in Behaviors
 
-**See [STANDARDS_AGENTS.md](../STANDARDS_AGENTS.md) for standard behaviors:**
+**See [cco-standards.md](../cco-standards.md) for standard behaviors:**
 - File Discovery & Exclusion (Stage 0)
 - Three-Stage File Discovery
 - Model Selection Guidelines

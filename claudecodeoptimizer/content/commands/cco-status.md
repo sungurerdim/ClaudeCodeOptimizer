@@ -16,10 +16,10 @@ pain_points: []
 
 **This command inherits standard behaviors from:**
 
-- **[STANDARDS_COMMANDS.md](../STANDARDS_COMMANDS.md)** - Standard structure, execution protocol, file discovery
-- **[STANDARDS_QUALITY.md](../STANDARDS_QUALITY.md)** - UX/DX, efficiency, simplicity, performance standards
-- **[LIBRARY_PATTERNS.md](../LIBRARY_PATTERNS.md)** - Reusable patterns (Step 0, Selection, Accounting, Progress, Error Handling)
-- **[STANDARDS_AGENTS.md](../STANDARDS_AGENTS.md)** - File discovery, model selection, parallel execution
+- **[cco-standards.md](../cco-standards.md)** - Standard structure, execution protocol, file discovery
+- **[cco-standards.md](../cco-standards.md)** - UX/DX, efficiency, simplicity, performance standards
+- **[cco-patterns.md](../cco-patterns.md)** - Reusable patterns (Step 0, Selection, Accounting, Progress, Error Handling)
+- **[cco-standards.md](../cco-standards.md)** - File discovery, model selection, parallel execution
 
 **See these files for detailed patterns. Only command-specific content is documented below.**
 
@@ -44,7 +44,7 @@ Expected structure:
 ```
 ~/.claude/
 ├── commands/      ({COMMAND_COUNT} core commands)
-├── principles/    ({PRINCIPLE_COUNT} principles: {C_PRINCIPLE_COUNT} C_, {U_PRINCIPLE_COUNT} U_, {P_PRINCIPLE_COUNT} P_)
+├── principles/    ({PRINCIPLE_COUNT} principles: {U_PRINCIPLE_COUNT} universal + {C_PRINCIPLE_COUNT} claude-specific)
 ├── skills/        ({SKILL_COUNT} skills)
 ├── agents/        ({AGENT_COUNT} agents)
 └── CLAUDE.md      (principle markers)
@@ -65,7 +65,7 @@ cat ~/.claude/CLAUDE.md | head -20
 
 ### Output Format
 
-**See [LIBRARY_PATTERNS.md](../LIBRARY_PATTERNS.md#pattern-8-dynamic-results-generation) for reporting pattern.**
+**See [cco-patterns.md](../cco-patterns.md#pattern-8-dynamic-results-generation) for reporting pattern.**
 
 ```markdown
 # CCO Installation Status
@@ -84,65 +84,48 @@ cat ~/.claude/CLAUDE.md | head -20
 - Management: update, remove
 
 **Principles ({PRINCIPLE_COUNT}):**
-- {C_PRINCIPLE_COUNT} Claude Guidelines (C_*) - Always active
-- {U_PRINCIPLE_COUNT} Universal (U_*) - Always active
-- {P_PRINCIPLE_COUNT} Project (P_*) - Progressive loading via skills
+- {U_PRINCIPLE_COUNT} Universal (cco-principle-u-*) - Always active
+- {C_PRINCIPLE_COUNT} Claude-specific (cco-principle-c-*) - Always active
 
 **Skills ({SKILL_COUNT} - Auto-Activate on Demand):**
 
-Security (5):
-- cco-skill-security-owasp-xss-sqli-csrf
-- cco-skill-ai-security-promptinjection-models
-- cco-skill-supply-chain-dependencies-sast
-- cco-skill-kubernetes-security-containers
-- cco-skill-privacy-gdpr-compliance-encryption
+Security & Privacy (5):
+- cco-skill-security-fundamentals (OWASP, XSS, SQL injection, CSRF)
+- cco-skill-ai-security (prompt injection, model security)
+- cco-skill-supply-chain (dependencies, SAST)
+- cco-skill-containers (Kubernetes security)
+- cco-skill-privacy (GDPR, compliance, encryption)
 
-Testing (2):
-- cco-skill-test-pyramid-coverage-isolation
-- cco-skill-api-testing-contract-load-chaos
+Quality & Testing (3):
+- cco-skill-testing-fundamentals (test pyramid, coverage, isolation)
+- cco-skill-code-quality (refactoring, complexity)
+- cco-skill-ai-quality (code verification, tech debt)
 
-Database (2):
-- cco-skill-database-optimization-caching-profiling
-- cco-skill-data-migrations-backup-versioning
-
-Observability (3):
-- cco-skill-observability-metrics-alerts-slo
-- cco-skill-logging-structured-correlation-tracing
-- cco-skill-incident-oncall-postmortem-playbooks
-
-CI/CD (2):
-- cco-skill-cicd-gates-deployment-automation
-- cco-skill-deployment-bluegreen-canary-rollback
-
-Code Quality (2):
-- cco-skill-code-quality-refactoring-complexity
-- cco-skill-content-optimization-automation
-
-Documentation (1):
-- cco-skill-docs-api-openapi-adr-runbooks
-
-Git (2):
-- cco-skill-git-branching-pr-review
-- cco-skill-versioning-semver-changelog-compat
-
-Performance (2):
-- cco-skill-frontend-bundle-a11y-performance
-- cco-skill-resilience-circuitbreaker-retry-bulkhead
+Infrastructure (4):
+- cco-skill-database-optimization (N+1, caching, profiling)
+- cco-skill-observability (metrics, alerts, SLOs)
+- cco-skill-cicd-automation (gates, deployment)
+- cco-skill-resilience (circuit breaker, retry, bulkhead)
 
 Architecture (2):
-- cco-skill-microservices-cqrs-mesh-di
-- cco-skill-eventdriven-async-messaging-queues
+- cco-skill-microservices (CQRS, service mesh, DI)
+- cco-skill-incident (on-call, postmortem, playbooks)
 
-Mobile (1):
-- cco-skill-mobile-offline-battery-appstore
+Documentation & Git (3):
+- cco-skill-documentation (API docs, OpenAPI, ADRs)
+- cco-skill-git-workflow (branching, PR review)
+- cco-skill-versioning (SemVer, changelog)
 
-DevEx (1):
-- cco-skill-devex-onboarding-tooling-parity
+Frontend & Mobile (3):
+- cco-skill-frontend (bundle, a11y, performance)
+- cco-skill-mobile (offline, battery, app store)
+- cco-skill-platform-maturity (engineering maturity, DX)
 
 **Agents ({AGENT_COUNT} - Parallel Execution):**
 - cco-agent-audit (Haiku - Fast scanning, cost-efficient)
 - cco-agent-fix (Sonnet - Accurate fixes, better quality)
 - cco-agent-generate (Sonnet - Code generation, better quality)
+- cco-agent-optimize (Haiku - Context optimization, token efficiency)
 
 ---
 
@@ -172,13 +155,13 @@ DevEx (1):
 - Token efficiency: Optimized via progressive loading
 
 **Progressive Loading:**
-- Always loaded: Baseline principles ({C_PRINCIPLE_COUNT} C_ + {U_PRINCIPLE_COUNT} U_)
-- Auto-activated: {SKILL_COUNT} skills via semantic matching (load {P_PRINCIPLE_COUNT} P_ on-demand)
+- Always loaded: All principles ({U_PRINCIPLE_COUNT} universal + {C_PRINCIPLE_COUNT} claude-specific)
+- Auto-activated: {SKILL_COUNT} skills via semantic matching (domain guidance on-demand)
 
 **Skill-Based Intelligence:**
 - Claude autonomously loads what's needed
 - No manual skill activation required
-- Skills reference relevant P_ principles
+- Skills provide domain-specific guidance (security, testing, etc.)
 
 ---
 

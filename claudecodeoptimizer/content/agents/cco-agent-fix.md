@@ -1,8 +1,7 @@
 ---
-name: fix-agent
+name: cco-agent-fix
 description: Automated violation fixing with verification. Applies surgical changes to resolve security, quality, testing, and documentation issues. Use for /cco-fix command execution.
 tools: Grep, Read, Glob, Bash, Edit, Write
-# model: auto-selected by Claude Code
 category: fix
 metadata:
   priority: high
@@ -26,7 +25,7 @@ use_cases:
 
 ## Built-in Behaviors
 
-**See [STANDARDS_AGENTS.md](../STANDARDS_AGENTS.md) for standard behaviors:**
+**See [cco-standards.md](../cco-standards.md) for standard behaviors:**
 - File Discovery & Exclusion (Stage 0)
 - Three-Stage File Discovery
 - Model Selection Guidelines
@@ -122,52 +121,52 @@ Read, Edit, Bash, Grep
 When fixing issues, load relevant skills for fix patterns and verification:
 
 ### Security Fixes
-**Skill**: `cco-skill-security-owasp-xss-sqli-csrf`
+**Skill**: `cco-skill-security-fundamentals`
 - SQL injection fixes (parameterized queries)
 - XSS protection (escaping, CSP headers)
 - CSRF token implementation
 - Access control fixes (OWASP A01:2025)
 
 ### AI Security Fixes
-**Skill**: `cco-skill-ai-security-promptinjection-models`
+**Skill**: `cco-skill-ai-security`
 - Input sanitization for prompt injection
 - Output validation and PII masking
 - Authentication decorator addition
 - Exception handling (fail closed, not open)
 
 ### AI Quality Fixes
-**Skill**: `cco-skill-ai-quality-hallucination-bloat`
+**Skill**: `cco-skill-ai-quality`
 - API hallucination fixes (remove non-existent APIs)
 - Code bloat reduction (remove redundant code)
 - Vibe coding refactoring (add comments, simplify)
 - Copy/paste deduplication
 
 ### Tech Debt Fixes
-**Skill**: `cco-skill-code-quality-refactoring-complexity`
+**Skill**: `cco-skill-code-quality`
 - Complexity reduction
 - Dead code removal
 - Duplication elimination
 
 ### Database Fixes
-**Skill**: `cco-skill-database-optimization-caching-profiling`
+**Skill**: `cco-skill-database-optimization`
 - N+1 query fixes (eager loading)
 - Index addition
 - Query optimization
 
 ### Supply Chain Fixes
-**Skill**: `cco-skill-supply-chain-dependencies-sast`
+**Skill**: `cco-skill-supply-chain`
 - Dependency updates
 - CVE remediation
 - SBOM generation
 
 ### Container Fixes
-**Skill**: `cco-skill-kubernetes-security-containers`
+**Skill**: `cco-skill-containers`
 - Dockerfile security fixes
 - Pod Security Admission compliance
 - Image signing setup
 
 ### Documentation Fixes
-**Skill**: `cco-skill-docs-api-openapi-adr-runbooks`
+**Skill**: `cco-skill-documentation`
 - Docstring addition
 - API documentation generation
 - AI code documentation templates

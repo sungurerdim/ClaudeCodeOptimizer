@@ -111,19 +111,19 @@ parameters:
 
 **Automated issue resolution with safe/risky categorization and auto-audit dependency.**
 
-**Implementation Note:** This command follows [STANDARDS_COMMANDS.md](../STANDARDS_COMMANDS.md) for file discovery (exclusions applied BEFORE processing), token optimization (three-stage discovery), parallelization (Task calls in single message), and cross-platform compatibility. See cco-audit.md for reference implementation.
+**Implementation Note:** This command follows [cco-standards.md](../cco-standards.md) for file discovery (exclusions applied BEFORE processing), token optimization (three-stage discovery), parallelization (Task calls in single message), and cross-platform compatibility. See cco-audit.md for reference implementation.
 ---
 
 ## Built-in References
 
 **This command inherits standard behaviors from:**
 
-- **[STANDARDS_COMMANDS.md](../STANDARDS_COMMANDS.md)** - Standard structure, execution protocol, file discovery
-- **[STANDARDS_QUALITY.md](../STANDARDS_QUALITY.md)** - UX/DX, efficiency, simplicity, performance standards
-- **[LIBRARY_PATTERNS.md](../LIBRARY_PATTERNS.md)** - Reusable patterns (Step 0, Selection, Accounting, Progress, Error Handling)
-- **[STANDARDS_AGENTS.md](../STANDARDS_AGENTS.md)** - File discovery, model selection, parallel execution
+- **[cco-standards.md](../cco-standards.md)** - Standard structure, execution protocol, file discovery
+- **[cco-standards.md](../cco-standards.md)** - UX/DX, efficiency, simplicity, performance standards
+- **[cco-patterns.md](../cco-patterns.md)** - Reusable patterns (Step 0, Selection, Accounting, Progress, Error Handling)
+- **[cco-standards.md](../cco-standards.md)** - File discovery, model selection, parallel execution
 - **model selection** - Haiku for mechanical tasks, let Claude Code decide for complex tasks
-- **[STANDARDS_TECH_DETECTION.md](../STANDARDS_TECH_DETECTION.md)** - Fast tech detection (<2s), applicability filtering, pre-filtering UI
+- **[cco-tech-detection.md](../cco-tech-detection.md)** - Fast tech detection (<2s), applicability filtering, pre-filtering UI
 
 **See these files for detailed patterns. Only command-specific content is documented below.**
 
@@ -167,7 +167,7 @@ parameters:
 
 ## Design Principles
 
-**See:** STANDARDS_QUALITY.md
+**See:** cco-standards.md
 - UX/DX principles (transparency, progressive disclosure, zero surprises)
 - Honesty & accurate reporting (no false positives/negatives)
 - No hardcoded examples (use placeholders: `{FILE_PATH}`, `{LINE_NUMBER}`)
@@ -451,7 +451,7 @@ Categories NOT selected will be skipped entirely.
 
 **Pattern:** Pattern 4 (Complete Accounting)
 
-**See [STANDARDS_AGENTS.md](../STANDARDS_AGENTS.md) for agent delegation patterns.**
+**See [cco-standards.md](../cco-standards.md) for agent delegation patterns.**
 
 **Command-Specific Details:**
 
@@ -482,8 +482,8 @@ Task({
   - Report completion with file:line reference
 
   Use these skills:
-  - cco-skill-security-owasp-xss-sqli-csrf
-  - cco-skill-ai-security-promptinjection-models
+  - cco-skill-security-fundamentals
+  - cco-skill-ai-security
 
   Follow U_CHANGE_VERIFICATION protocol.
   """
@@ -508,7 +508,7 @@ Verification:
 
 ### Step 5: Impact Summary
 
-**See [LIBRARY_PATTERNS.md](../LIBRARY_PATTERNS.md#pattern-8-results-generation) for standard results pattern.**
+**See [cco-patterns.md](../cco-patterns.md#pattern-8-results-generation) for standard results pattern.**
 
 **Command-Specific Details:**
 
@@ -552,7 +552,7 @@ Recommended:
 
 ## Agent Usage
 
-**See [STANDARDS_AGENTS.md](../STANDARDS_AGENTS.md) for:**
+**See [cco-standards.md](../cco-standards.md) for:**
 - Parallel execution patterns (fan-out, pipeline, hierarchical)
 - Model selection (Haiku for mechanical, auto for complex)
 - Error handling protocols
@@ -645,7 +645,7 @@ Any text after the flags is treated as additional context for the fix process. T
 
 ## Next Steps: Calling Other Commands
 
-**See [LIBRARY_PATTERNS.md - Pattern 7: Context Check](../LIBRARY_PATTERNS.md#pattern-7-context-check-avoid-duplicate-work) for context passing patterns.**
+**See [cco-patterns.md - Pattern 7: Context Check](../cco-patterns.md#pattern-7-context-check-avoid-duplicate-work) for context passing patterns.**
 
 **Command-Specific Context:**
 

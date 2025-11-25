@@ -16,10 +16,10 @@ pain_points: []
 
 **This command inherits standard behaviors from:**
 
-- **[STANDARDS_COMMANDS.md](../STANDARDS_COMMANDS.md)** - Standard structure, execution protocol, file discovery
-- **[STANDARDS_QUALITY.md](../STANDARDS_QUALITY.md)** - UX/DX, efficiency, simplicity, performance standards
-- **[LIBRARY_PATTERNS.md](../LIBRARY_PATTERNS.md)** - Reusable patterns (Step 0, Selection, Accounting, Progress, Error Handling)
-- **[STANDARDS_AGENTS.md](../STANDARDS_AGENTS.md)** - File discovery, model selection, parallel execution
+- **[cco-standards.md](../cco-standards.md)** - Standard structure, execution protocol, file discovery
+- **[cco-standards.md](../cco-standards.md)** - UX/DX, efficiency, simplicity, performance standards
+- **[cco-patterns.md](../cco-patterns.md)** - Reusable patterns (Step 0, Selection, Accounting, Progress, Error Handling)
+- **[cco-standards.md](../cco-standards.md)** - File discovery, model selection, parallel execution
 
 **See these files for detailed patterns. Only command-specific content is documented below.**
 
@@ -133,10 +133,7 @@ Add quotes after command = focused results!
 - **High:** `--load-tests`, `--chaos-tests`, `--openapi`, `--cicd`
 - **Team (2025):** `--review-checklist` (PR quality gates, DORA metrics)
 - **Recommended:** `--docs`, `--adr`, `--runbook`, `--dockerfile`, `--migration`, `--indexes`, `--monitoring`, `--logging`, `--slo`, `--pre-commit`, `--requirements`
-
-**`/cco-implement`** → Build new features with TDD
-- Test-Driven Development approach
-- Auto-skill selection based on feature type
+- **Feature building:** `--feature "description"` (TDD approach with auto-skill selection)
 
 ---
 
@@ -149,11 +146,12 @@ Add quotes after command = focused results!
 **`/cco-help`** → This guide
 - Quick command reference
 
-**`/cco-update`** → Update to latest CCO version
-- Updates all commands, skills, agents
+**`cco-setup`** → Install/update CCO (CLI command, not slash command)
+- Run in terminal: `cco-setup`
+- Updates all commands, skills, agents globally
 - One update → all projects get it instantly
 
-**`/cco-remove`** → Clean uninstall (Step 1 of 2)
+**`/cco-remove`** or `cco-remove` → Clean uninstall (Step 1 of 2)
 - Removes all global CCO files (`~/.claude/`)
 - Must run BEFORE `pip uninstall` (requires package)
 
@@ -169,7 +167,7 @@ Add quotes after command = focused results!
 | **Speed up database** | `/cco-optimize --database` |
 | **Clean up code** | `/cco-fix --tech-debt` |
 | **Create API docs** | `/cco-generate --openapi` |
-| **Build new feature** | `/cco-implement "feature description"` |
+| **Build new feature** | `/cco-generate --feature "description"` |
 | **Make good commits** | `/cco-commit` |
 | **Full health check** | `/cco-audit --all` → `/cco-fix --all` |
 
@@ -222,6 +220,38 @@ Add quotes after command = focused results!
 - Skills load on-demand based on context
 - Security (OWASP 2025), AI quality, code review (DORA), platform engineering
 - No manual skill selection needed
+
+---
+
+## 🔗 Command Chaining (Context Passing)
+
+Commands pass context to each other for efficiency:
+
+**audit → fix:**
+```bash
+/cco-audit --security
+# Finds issues: SQL injection, XSS, secrets
+/cco-fix --security
+# Receives issue list automatically, no duplicate analysis
+```
+
+**audit → generate:**
+```bash
+/cco-audit --tests
+# Finds critical files with zero coverage
+/cco-generate --tests
+# Receives file list automatically, generates tests for those files
+```
+
+**fix → generate:**
+```bash
+/cco-fix --security
+# Fixed SQL injection in files
+/cco-generate --tests
+# Receives fixed file list, generates tests for those changes
+```
+
+**Why:** Eliminates duplicate analysis, significantly faster execution
 
 ---
 
@@ -308,10 +338,10 @@ A: Combines `--ai-security + --ai-quality + --ai-debt` (saves typing)
 A: Put it in quotes after flags: `/cco-fix --tech-debt "High-complexity functions only"`
 
 **Q: Which commands need quotes for feature description?**
-A: Only `/cco-implement`: `/cco-implement "Add JWT auth"`
+A: Use `/cco-generate --feature "Add JWT auth"` for TDD feature building
 
 **Q: How do I update CCO?**
-A: Run `/cco-update` (updates all commands/skills/agents globally)
+A: Run `cco-setup` in terminal (updates all commands/skills/agents globally)
 
 **Q: How do I uninstall CCO?**
 A: Two steps: 1) `/cco-remove` (requires package) 2) `pip uninstall claudecodeoptimizer`
