@@ -1,5 +1,5 @@
 ---
-name: docs-api-openapi-adr-runbooks
+name: cco-skill-documentation
 description: Comprehensive documentation including API specs (OpenAPI/Swagger), ADRs, runbooks, changelogs, code docstrings, AI code documentation templates, and automated doc coverage metrics
 keywords: [documentation, docs, OpenAPI, Swagger, ADR, runbook, changelog, docstring, API spec, code documentation, AI documentation, doc coverage, readme]
 category: docs
@@ -11,8 +11,8 @@ pain_points: [12]
 
 # Documentation - API, ADRs, Runbooks, Code Docs
 
-> **Standards:** Format defined in [STANDARDS_SKILLS.md](../STANDARDS_SKILLS.md)  
-> **Discovery:** See [STANDARDS_COMMANDS.md](../STANDARDS_COMMANDS.md#18-command-discovery-protocol)
+> **Standards:** Format defined in [cco-standards.md](../cco-standards.md)  
+> **Discovery:** See [cco-standards.md](../cco-standards.md#18-command-discovery-protocol)
 
 
 Comprehensive documentation strategy with AI code documentation templates and coverage metrics.
@@ -736,6 +736,336 @@ MIT - see [LICENSE](LICENSE)
 
 ---
 
+## Team Collaboration & Knowledge Sharing (Pain Point #12)
+
+### Why Knowledge Sharing Matters
+
+**2025 Statistics:**
+- 60% of knowledge lost when developer leaves
+- Onboarding takes 3-6 months without good docs
+- Knowledge silos cause 40% of duplicate work
+- Teams with documented conventions ship 2x faster
+
+### Knowledge Sharing Patterns
+
+#### 1. Technical Design Documents (TDD)
+
+```markdown
+# {FEATURE_NAME} Technical Design
+
+**Author**: {name}
+**Reviewers**: {names}
+**Status**: Draft | Review | Approved
+**Date**: {YYYY-MM-DD}
+
+## Problem Statement
+{What problem are we solving?}
+
+## Goals
+- {Goal 1}
+- {Goal 2}
+
+## Non-Goals
+- {Explicitly out of scope}
+
+## Proposed Solution
+{High-level design}
+
+### Components
+- **Component A**: {Description}
+- **Component B**: {Description}
+
+### Data Flow
+{Diagram or description}
+
+### API Changes
+{New/modified endpoints}
+
+## Alternatives Considered
+### Option A: {Name}
+- Pros: {list}
+- Cons: {list}
+- Why rejected: {reason}
+
+## Implementation Plan
+1. {Phase 1}
+2. {Phase 2}
+
+## Rollout Plan
+- [ ] Feature flag setup
+- [ ] Gradual rollout (1% → 10% → 100%)
+- [ ] Monitoring dashboards
+
+## Open Questions
+- [ ] {Question 1}
+- [ ] {Question 2}
+```
+
+#### 2. Team Knowledge Base Structure
+
+```
+docs/
+├── architecture/
+│   ├── ADR/                    # Architecture Decision Records
+│   │   ├── 001-database-choice.md
+│   │   └── 002-api-versioning.md
+│   ├── system-overview.md      # High-level architecture
+│   └── data-flow.md            # How data moves through system
+├── onboarding/
+│   ├── getting-started.md      # Day 1 setup guide
+│   ├── codebase-tour.md        # Key files and patterns
+│   ├── first-pr-checklist.md   # First contribution guide
+│   └── glossary.md             # Domain terminology
+├── conventions/
+│   ├── coding-standards.md     # Style guide
+│   ├── git-workflow.md         # Branching, commits
+│   ├── testing-guide.md        # How we test
+│   └── api-design.md           # API conventions
+├── runbooks/
+│   ├── deployment.md           # How to deploy
+│   ├── rollback.md             # How to rollback
+│   └── incident-response.md    # When things go wrong
+└── team/
+    ├── roles.md                # Who does what
+    ├── rituals.md              # Meetings, ceremonies
+    └── communication.md        # Slack channels, escalation
+```
+
+### Pair Programming Guidelines
+
+#### When to Pair
+| Scenario | Pair? | Why |
+|----------|-------|-----|
+| **New team member** | Yes | Knowledge transfer |
+| **Complex feature** | Yes | Two minds better |
+| **Security-critical** | Yes | Extra review |
+| **Bug investigation** | Yes | Rubber duck debugging |
+| **Routine task** | No | Overhead not worth it |
+| **Solo exploration** | No | Need thinking time |
+
+#### Pairing Best Practices
+
+```markdown
+## Effective Pairing
+
+### Before Session
+- [ ] Define goal: "We will complete {X}"
+- [ ] Time-box: 25-50 minute sessions
+- [ ] Setup: Both have code access
+
+### During Session
+
+**Driver** (keyboard):
+- Types code
+- Explains thinking out loud
+- Asks for input when stuck
+
+**Navigator** (watching):
+- Reviews code as it's written
+- Thinks about edge cases
+- Suggests improvements
+- Catches typos/bugs
+
+**Rotate every 15-25 minutes**
+
+### Anti-Patterns to Avoid
+- ❌ Navigator checking email
+- ❌ Driver coding silently
+- ❌ One person dominating
+- ❌ Sessions > 2 hours without break
+```
+
+#### Remote Pairing Tools
+
+```yaml
+# Recommended tools for remote pairing
+
+code_sharing:
+  - VS Code Live Share: "Real-time collaborative editing"
+  - JetBrains Code With Me: "IntelliJ-based collaboration"
+  - Tuple: "Purpose-built pairing app (macOS)"
+
+communication:
+  - Zoom/Meet: "Video + screen share"
+  - Slack Huddle: "Quick audio sync"
+
+best_practices:
+  - "Use video when possible (builds rapport)"
+  - "Share full screen, not just IDE"
+  - "Take breaks every 25-50 minutes"
+  - "Document decisions in shared doc"
+```
+
+### Onboarding Documentation
+
+#### New Developer Onboarding Checklist
+
+```markdown
+# Onboarding: {NEW_DEVELOPER_NAME}
+
+**Start Date**: {DATE}
+**Buddy**: {BUDDY_NAME}
+**Manager**: {MANAGER_NAME}
+
+## Day 1: Environment Setup
+- [ ] Laptop configured
+- [ ] Git access (GitHub/GitLab)
+- [ ] IDE installed and configured
+- [ ] Clone main repositories
+- [ ] Run project locally
+- [ ] Access to team Slack channels
+- [ ] Calendar invites for recurring meetings
+
+## Week 1: Orientation
+- [ ] Meet team members (1:1s scheduled)
+- [ ] Read architecture overview
+- [ ] Complete codebase tour with buddy
+- [ ] Review coding standards doc
+- [ ] First small PR (typo fix, doc update)
+
+## Week 2-4: First Contribution
+- [ ] Pick starter issue (labeled "good first issue")
+- [ ] Complete first feature PR
+- [ ] Review others' PRs (with buddy guidance)
+- [ ] Shadow production deployment
+- [ ] Shadow on-call rotation
+
+## Month 2-3: Independence
+- [ ] Own a small feature end-to-end
+- [ ] Lead a code review
+- [ ] Update documentation based on learnings
+- [ ] Present learning to team (optional)
+```
+
+#### Codebase Tour Document
+
+```markdown
+# Codebase Tour
+
+## Quick Overview
+{One paragraph describing what this codebase does}
+
+## Key Directories
+
+```
+project/
+├── src/
+│   ├── api/          # REST/GraphQL endpoints
+│   ├── services/     # Business logic
+│   ├── models/       # Database models
+│   ├── utils/        # Shared utilities
+│   └── config/       # Configuration
+├── tests/
+│   ├── unit/         # Unit tests
+│   └── integration/  # Integration tests
+└── docs/             # Documentation
+```
+
+## Entry Points
+- **Web server**: `src/main.py` → starts FastAPI/Flask
+- **CLI commands**: `src/cli.py` → management commands
+- **Background jobs**: `src/workers/` → Celery tasks
+
+## Key Patterns Used
+- **Repository pattern**: Database access in `src/repositories/`
+- **Dependency injection**: Services injected via constructors
+- **Feature flags**: Controlled via `src/config/features.py`
+
+## Common Tasks
+
+### "I need to add a new API endpoint"
+1. Define route in `src/api/routes/{domain}.py`
+2. Add business logic in `src/services/{domain}.py`
+3. Add tests in `tests/unit/test_{domain}.py`
+4. Update OpenAPI docs (auto-generated)
+
+### "I need to add a new database model"
+1. Create model in `src/models/{model}.py`
+2. Generate migration: `alembic revision --autogenerate`
+3. Run migration: `alembic upgrade head`
+
+### "I need to understand how X works"
+Start with: `grep -r "def X" src/` then trace the calls
+```
+
+### Team Conventions Documentation
+
+```markdown
+# Team Conventions
+
+## Code Style
+- **Python**: Black formatting, Ruff linting
+- **TypeScript**: Prettier, ESLint with our config
+- **All**: Max line length 100 chars
+
+## Naming Conventions
+| Type | Convention | Example |
+|------|------------|---------|
+| Files | snake_case | `user_service.py` |
+| Classes | PascalCase | `UserService` |
+| Functions | snake_case | `get_user_by_id` |
+| Constants | UPPER_SNAKE | `MAX_RETRIES` |
+| API routes | kebab-case | `/api/user-profile` |
+
+## Git Conventions
+- **Branch naming**: `{type}/{ticket}-{description}`
+  - `feature/PROJ-123-add-auth`
+  - `fix/PROJ-456-null-pointer`
+- **Commits**: Conventional commits format
+  - `feat(auth): add JWT refresh tokens`
+  - `fix(api): handle null user`
+
+## PR Conventions
+- PR title matches commit format
+- Description uses template
+- Max 400 lines changed
+- 2 approvals required
+
+## Testing Conventions
+- Unit tests: `tests/unit/test_{module}.py`
+- Integration tests: `tests/integration/test_{feature}.py`
+- Naming: `test_{method}_{scenario}_{expected}`
+  - `test_get_user_with_invalid_id_returns_404`
+
+## Communication
+- **Slack**: #team-{name} for general, #team-{name}-alerts for incidents
+- **Decisions**: Document in ADR if architectural
+- **Questions**: Ask in Slack first, then schedule sync if needed
+```
+
+### Knowledge Transfer Sessions
+
+```markdown
+## Knowledge Transfer (KT) Template
+
+**Topic**: {Topic Name}
+**Presenter**: {Name}
+**Date**: {YYYY-MM-DD}
+**Duration**: 30-60 minutes
+**Recording**: {link}
+
+### Agenda
+1. Overview (5 min)
+2. Deep dive (20-30 min)
+3. Q&A (10-15 min)
+4. Action items
+
+### Materials
+- Slides: {link}
+- Code examples: {link}
+- Related docs: {links}
+
+### Key Takeaways
+- {Takeaway 1}
+- {Takeaway 2}
+
+### Follow-up Actions
+- [ ] {Action 1} - Owner: {name}
+- [ ] {Action 2} - Owner: {name}
+```
+
+---
+
 ## References
 
 - [Google Style Python Docstrings](https://google.github.io/styleguide/pyguide.html#38-comments-and-docstrings)
@@ -743,3 +1073,5 @@ MIT - see [LICENSE](LICENSE)
 - [ADR Template by Michael Nygard](https://github.com/joelparkerhenderson/architecture-decision-record)
 - [Keep a Changelog](https://keepachangelog.com/)
 - [FastAPI Documentation](https://fastapi.tiangolo.com/tutorial/metadata/)
+- [Pair Programming Guide](https://martinfowler.com/articles/on-pair-programming.html)
+- [Technical Design Document Template](https://www.industrialempathy.com/posts/design-docs-at-google/)

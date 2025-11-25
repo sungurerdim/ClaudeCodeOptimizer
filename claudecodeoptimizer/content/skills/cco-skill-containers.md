@@ -1,5 +1,5 @@
 ---
-name: kubernetes-security
+name: cco-skill-containers
 description: Comprehensive Kubernetes and container security including pod security standards, RBAC, network policies, Zero Trust (mTLS), KSPM, runtime monitoring with Falco/Tetragon, image scanning, CIS benchmarks, and admission control (2025 best practices)
 keywords: [kubernetes, container security, RBAC, network policy, pod security, secrets management, Trivy, Falco, Tetragon, distroless, OPA Gatekeeper, Zero Trust, mTLS, KSPM, CIS benchmark, runC CVE, eBPF]
 category: infrastructure
@@ -11,8 +11,8 @@ pain_points: [3, 11]
 
 # Kubernetes Security & Container Hardening
 
-> **Standards:** Format defined in [STANDARDS_SKILLS.md](../STANDARDS_SKILLS.md)  
-> **Discovery:** See [STANDARDS_COMMANDS.md](../STANDARDS_COMMANDS.md#18-command-discovery-protocol)
+> **Standards:** Format defined in [cco-standards.md](../cco-standards.md)  
+> **Discovery:** See [cco-standards.md](../cco-standards.md#18-command-discovery-protocol)
 
 
 Comprehensive K8s and container security via defense-in-depth, Zero Trust, KSPM, and runtime monitoring.

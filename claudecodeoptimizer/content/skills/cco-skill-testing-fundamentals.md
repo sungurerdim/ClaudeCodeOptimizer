@@ -1,5 +1,5 @@
 ---
-name: cco-skill-test-pyramid-coverage-isolation
+name: cco-skill-testing-fundamentals
 description: Use this skill when testing strategy, test quality, or test architecture is mentioned
 keywords: [test, testing, coverage, unit tests, integration tests, e2e, test pyramid, test isolation, property testing, flaky tests, pytest, jest, mock, fixture]
 category: testing
@@ -11,8 +11,8 @@ pain_points: [4]
 
 # Skill: Testing Strategy - Test Pyramid, Coverage & Isolation
 
-> **Standards:** Format defined in [STANDARDS_SKILLS.md](../STANDARDS_SKILLS.md)  
-> **Discovery:** See [STANDARDS_COMMANDS.md](../STANDARDS_COMMANDS.md#18-command-discovery-protocol)
+> **Standards:** Format defined in [cco-standards.md](../cco-standards.md)  
+> **Discovery:** See [cco-standards.md](../cco-standards.md#18-command-discovery-protocol)
 
 
 ## Purpose
@@ -30,36 +30,34 @@ Prevent production defects, flaky tests, and inadequate test coverage through co
 
 ---
 
-## Principles Included
+## Guidance Areas
 
-This skill loads the following P_ principles on-demand:
-
-### P_TEST_PYRAMID
+### Test Pyramid
 **Category**: Testing Architecture
 **Why**: Fast unit tests (majority), moderate integration tests, minimal e2e tests
 **Triggers when**: Test strategy, CI performance, test suite design
 
-### P_TEST_COVERAGE
+### Test Coverage
 **Category**: Test Quality
 **Why**: Measure and enforce minimum coverage thresholds (high coverage target)
 **Triggers when**: Analyzing test gaps, reviewing PRs, quality gates
 
-### P_TEST_ISOLATION
+### Test Isolation
 **Category**: Test Reliability
 **Why**: Each test runs independently; shared state causes most flaky tests
 **Triggers when**: Debugging flaky tests, test fixtures, parallelization
 
-### P_PROPERTY_TESTING
+### Property Testing
 **Category**: Advanced Testing
 **Why**: Generative testing finds edge cases manual tests miss (significant additional coverage)
 **Triggers when**: Testing complex algorithms, data validation, invariant checking
 
-### P_INTEGRATION_TESTS
+### Integration Tests
 **Category**: Testing Strategy
 **Why**: Verify component interactions without full system overhead
 **Triggers when**: API integrations, database interactions, multi-module workflows
 
-**Note**: These principles are loaded into context only when this skill activates.
+**Note**: This guidance is loaded into context only when this skill activates.
 
 ---
 
@@ -77,8 +75,8 @@ This skill auto-loads when Claude detects:
 ## Related Skills
 
 Skills that work well together:
-- **cco-skill-code-quality-refactoring-complexity**: Testing drives refactoring
-- **cco-skill-cicd-gates-deployment-automation**: Test pyramid determines CI gate thresholds
+- **cco-skill-code-quality**: Testing drives refactoring
+- **cco-skill-cicd-automation**: Test pyramid determines CI gate thresholds
 
 ---
 
@@ -88,9 +86,9 @@ Skills that work well together:
 ```
 User: "Our test suite takes 20 minutes to run. How can we speed it up?"
        ↓
-Skill: cco-skill-test-pyramid-coverage-isolation auto-loads (detects "test suite")
+Skill: cco-skill-testing-fundamentals auto-loads (detects "test suite")
        ↓
-Principles: P_TEST_PYRAMID, P_TEST_ISOLATION active
+Guidance: Test Pyramid, Test Isolation active
        ↓
 Result: Analyzes test distribution, identifies inverted pyramid, recommends e2e → unit refactor
 ```
@@ -99,9 +97,9 @@ Result: Analyzes test distribution, identifies inverted pyramid, recommends e2e 
 ```
 User: "Why do our tests fail randomly?"
        ↓
-Skill: cco-skill-test-pyramid-coverage-isolation (detects "flaky test" intent)
+Skill: cco-skill-testing-fundamentals (detects "flaky test" intent)
        ↓
-Principles: P_TEST_ISOLATION active
+Guidance: Test Isolation active
        ↓
 Result: Identifies shared state, non-deterministic dependencies, parallelization issues
 ```
@@ -110,9 +108,9 @@ Result: Identifies shared state, non-deterministic dependencies, parallelization
 ```
 User opens: test_auth.py
        ↓
-Skill: cco-skill-test-pyramid-coverage-isolation (detects "test_*.py" pattern)
+Skill: cco-skill-testing-fundamentals (detects "test_*.py" pattern)
        ↓
-Principles: P_TEST_ISOLATION, P_TEST_COVERAGE active
+Guidance: Test Isolation, Test Coverage active
        ↓
 Result: Checks isolation violations, coverage gaps, property-based opportunities
 ```

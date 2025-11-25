@@ -1,5 +1,5 @@
 ---
-name: code-quality-refactoring-complexity
+name: cco-skill-code-quality
 description: Manage code quality through complexity reduction and technical debt tracking. Includes cyclomatic/cognitive complexity limits, code smell detection, refactoring patterns (Extract Method, Split Class), and debt prioritization with impact/effort analysis.
 keywords: [refactor, complexity, code smell, technical debt, maintainability, cyclomatic, cognitive, duplication, SOLID, clean code]
 category: quality
@@ -11,8 +11,8 @@ pain_points: [1, 2, 3]
 
 # Skill: Code Quality & Refactoring
 
-> **Standards:** Format defined in [STANDARDS_SKILLS.md](../STANDARDS_SKILLS.md)  
-> **Discovery:** See [STANDARDS_COMMANDS.md](../STANDARDS_COMMANDS.md#18-command-discovery-protocol)
+> **Standards:** Format defined in [cco-standards.md](../cco-standards.md)  
+> **Discovery:** See [cco-standards.md](../cco-standards.md#18-command-discovery-protocol)
 
 
 ## Domain
@@ -28,34 +28,31 @@ Manage code quality through complexity reduction and technical debt tracking.
 
 ---
 
-## Principles Included
+## Guidance Areas
 
-### P_CODE_SMELL_DETECTION
+### Code Smell Detection
 Automated detection of duplication, long methods, god objects, feature envy
 
-### P_REFACTORING_PATTERNS
+### Refactoring Patterns
 Safe refactoring techniques (Extract Method, Replace Conditional) with automated tests
 
-### P_TECHNICAL_DEBT_TRACKING
+### Technical Debt Tracking
 Quantify, prioritize, schedule debt paydown (interest rate, principal, impact)
 
-### P_CYCLOMATIC_COMPLEXITY_LIMITS
+### Cyclomatic Complexity Limits
 Functions >10 cyclomatic complexity exponentially harder to test/debug
 
-### P_COGNITIVE_COMPLEXITY
+### Cognitive Complexity
 Cognitive complexity >15 exceeds working memory capacity
 
-### P_FAIL_FAST_STRATEGY
+### Fail-Fast Strategy
 Fail immediately on invalid conditions vs propagating errors
-@content/principles/P_FAIL_FAST_STRATEGY.md
 
-### P_INTEGRATION_CHECK
+### Integration Check
 Prevent dead code, ensure all paths reachable and tested
-@content/principles/P_INTEGRATION_CHECK.md
 
-### P_PRODUCTION_GRADE
+### Production Grade
 No TODOs, placeholders, or incomplete implementations in production
-@content/principles/P_PRODUCTION_GRADE.md
 
 ---
 

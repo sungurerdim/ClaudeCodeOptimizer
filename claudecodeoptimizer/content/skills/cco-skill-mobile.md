@@ -1,5 +1,5 @@
 ---
-name: mobile-development
+name: cco-skill-mobile
 description: Build offline-first mobile apps with cache-first data layer, battery-efficient location and networking, app store compliance (iOS ATT, Android runtime permissions), and FlatList virtualization
 keywords: [mobile, offline-first, battery optimization, app store, iOS, Android, ATT, AsyncStorage, FlatList, React Native]
 category: performance
@@ -13,8 +13,8 @@ pain_points: [1, 6, 11]
 **Domain**: iOS/Android
 **Purpose**: Build offline-first mobile apps with battery optimization and app store compliance for reliable, performant mobile experiences.
 
-> **Standards:** Format defined in [STANDARDS_SKILLS.md](../STANDARDS_SKILLS.md)  
-> **Discovery:** See [STANDARDS_COMMANDS.md](../STANDARDS_COMMANDS.md#18-command-discovery-protocol)
+> **Standards:** Format defined in [cco-standards.md](../cco-standards.md)  
+> **Discovery:** See [cco-standards.md](../cco-standards.md#18-command-discovery-protocol)
 
 
 ## Core Techniques

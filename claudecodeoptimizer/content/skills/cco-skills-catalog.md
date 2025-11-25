@@ -39,7 +39,7 @@
 
 **Addresses Pain Points**: #5, #6
 
-**File**: `cco-skill-eventdriven-async-messaging-queues.md`
+**File**: `cco-skill-microservices.md`
 
 ### 2. microservices-architecture
 
@@ -50,7 +50,7 @@
 
 **Addresses Pain Points**: #2, #6, #10
 
-**File**: `cco-skill-microservices-cqrs-mesh-di.md`
+**File**: `cco-skill-microservices.md`
 
 ### 3. resilience-circuitbreaker-retry-bulkhead
 
@@ -61,7 +61,7 @@
 
 **Addresses Pain Points**: #5, #6, #10
 
-**File**: `cco-skill-resilience-circuitbreaker-retry-bulkhead.md`
+**File**: `cco-skill-resilience.md`
 
 ---
 
@@ -80,7 +80,7 @@
 
 **Addresses Pain Points**: #2, #3, #8, #9
 
-**File**: `cco-skill-ai-code-quality-verification-debt.md`
+**File**: `cco-skill-ai-quality.md`
 
 ### 2. code-quality-refactoring-complexity
 
@@ -91,7 +91,7 @@
 
 **Addresses Pain Points**: #1, #2, #3
 
-**File**: `cco-skill-code-quality-refactoring-complexity.md`
+**File**: `cco-skill-code-quality.md`
 
 ### 3. code-review-quality-ai-guidance
 
@@ -102,7 +102,7 @@
 
 **Addresses Pain Points**: #11, #12
 
-**File**: `cco-skill-code-review-quality-ai-guidance.md`
+**File**: `cco-skill-code-quality.md`
 
 ### 4. git-branching-pr-review
 
@@ -113,7 +113,7 @@
 
 **Addresses Pain Points**: #3, #4
 
-**File**: `cco-skill-git-branching-pr-review.md`
+**File**: `cco-skill-git-workflow.md`
 
 ---
 
@@ -132,7 +132,7 @@
 
 **Addresses Pain Points**: #12
 
-**File**: `cco-skill-docs-api-openapi-adr-runbooks.md`
+**File**: `cco-skill-documentation.md`
 
 ---
 
@@ -151,7 +151,7 @@
 
 **Addresses Pain Points**: #9, #10, #11
 
-**File**: `cco-skill-deployment-bluegreen-canary-rollback.md`
+**File**: `cco-skill-cicd-automation.md`
 
 ### 2. devex-onboarding
 
@@ -162,7 +162,7 @@
 
 **Addresses Pain Points**: #11, #12
 
-**File**: `cco-skill-devex-onboarding-tooling-parity.md`
+**File**: `cco-skill-platform-maturity.md`
 
 ### 3. kubernetes-security
 
@@ -173,7 +173,7 @@
 
 **Addresses Pain Points**: #3, #11
 
-**File**: `cco-skill-kubernetes-security-containers.md`
+**File**: `cco-skill-containers.md`
 
 ---
 
@@ -192,7 +192,7 @@
 
 **Addresses Pain Points**: #4, #9, #12
 
-**File**: `cco-skill-incident-oncall-postmortem-playbooks.md`
+**File**: `cco-skill-incident.md`
 
 ### 2. observability-metrics-slo
 
@@ -203,7 +203,7 @@
 
 **Addresses Pain Points**: #9, #10
 
-**File**: `cco-skill-observability-metrics-alerts-slo.md`
+**File**: `cco-skill-observability.md`
 
 ---
 
@@ -217,31 +217,31 @@
 
 **Description**: Automatically detect, analyze, and optimize Claude Code content files (skills, commands, agents, principles) to reduce token consumption while preserving 100% semantic meaning and functionality.
 
-**File**: `cco-skill-content-optimization-automation.md`
+**File**: `cco-skill-code-quality.md`
 
-### 2. cco-skill-cicd-gates-deployment-automation
-
-**Description**: |
-
-**File**: `cco-skill-cicd-gates-deployment-automation.md`
-
-### 3. cco-skill-logging-structured-correlation-tracing
+### 2. cco-skill-cicd-automation
 
 **Description**: |
 
-**File**: `cco-skill-logging-structured-correlation-tracing.md`
+**File**: `cco-skill-cicd-automation.md`
 
-### 4. cco-skill-test-pyramid-coverage-isolation
-
-**Description**: |
-
-**File**: `cco-skill-test-pyramid-coverage-isolation.md`
-
-### 5. cco-skill-versioning-semver-changelog-compat
+### 3. cco-skill-observability
 
 **Description**: |
 
-**File**: `cco-skill-versioning-semver-changelog-compat.md`
+**File**: `cco-skill-observability.md`
+
+### 4. cco-skill-testing-fundamentals
+
+**Description**: |
+
+**File**: `cco-skill-testing-fundamentals.md`
+
+### 5. cco-skill-versioning
+
+**Description**: |
+
+**File**: `cco-skill-versioning.md`
 
 ### 6. dora-metrics-stability-rework
 
@@ -252,7 +252,7 @@
 
 **Addresses Pain Points**: #4, #6
 
-**File**: `cco-skill-dora-metrics-stability-rework.md`
+**File**: `cco-skill-observability.md`
 
 ### 7. platform-engineering-maturity-dx
 
@@ -263,7 +263,7 @@
 
 **Addresses Pain Points**: #4, #6, #10
 
-**File**: `cco-skill-platform-engineering-maturity-dx.md`
+**File**: `cco-skill-platform-maturity.md`
 
 ---
 
@@ -282,7 +282,7 @@
 
 **Addresses Pain Points**: #7, #8, #10
 
-**File**: `cco-skill-data-migrations-backup-versioning.md`
+**File**: `cco-skill-database-optimization.md`
 
 ### 2. database-optimization-caching
 
@@ -293,7 +293,7 @@
 
 **Addresses Pain Points**: #7, #8
 
-**File**: `cco-skill-database-optimization-caching-profiling.md`
+**File**: `cco-skill-database-optimization.md`
 
 ### 3. frontend-optimization
 
@@ -304,7 +304,7 @@
 
 **Addresses Pain Points**: #1, #6, #11
 
-**File**: `cco-skill-frontend-bundle-a11y-performance.md`
+**File**: `cco-skill-frontend.md`
 
 ### 4. mobile-development
 
@@ -315,7 +315,7 @@
 
 **Addresses Pain Points**: #1, #6, #11
 
-**File**: `cco-skill-mobile-offline-battery-appstore.md`
+**File**: `cco-skill-mobile.md`
 
 ---
 
@@ -334,7 +334,7 @@
 
 **Addresses Pain Points**: #3, #5, #8
 
-**File**: `cco-skill-ai-security-promptinjection-models.md`
+**File**: `cco-skill-ai-security.md`
 
 ### 2. api-design-security
 
@@ -345,7 +345,7 @@
 
 **Addresses Pain Points**: #3, #5, #8
 
-**File**: `cco-skill-api-rest-versioning-security.md`
+**File**: `cco-skill-security-fundamentals.md`
 
 ### 3. privacy-compliance
 
@@ -356,7 +356,7 @@
 
 **Addresses Pain Points**: #3, #5, #8
 
-**File**: `cco-skill-privacy-gdpr-compliance-encryption.md`
+**File**: `cco-skill-privacy.md`
 
 ### 4. security-owasp-xss-sqli-csrf
 
@@ -367,7 +367,7 @@
 
 **Addresses Pain Points**: #1, #2, #3
 
-**File**: `cco-skill-security-owasp-xss-sqli-csrf.md`
+**File**: `cco-skill-security-fundamentals.md`
 
 ### 5. supply-chain-security
 
@@ -378,7 +378,7 @@
 
 **Addresses Pain Points**: #3, #10
 
-**File**: `cco-skill-supply-chain-dependencies-sast.md`
+**File**: `cco-skill-supply-chain.md`
 
 ---
 
@@ -397,7 +397,7 @@
 
 **Addresses Pain Points**: #4, #7, #9
 
-**File**: `cco-skill-api-testing-contract-load-chaos.md`
+**File**: `cco-skill-testing-fundamentals.md`
 
 ---
 

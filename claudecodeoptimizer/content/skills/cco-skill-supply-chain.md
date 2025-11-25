@@ -1,5 +1,5 @@
 ---
-name: supply-chain-security
+name: cco-skill-supply-chain
 description: Comprehensive supply chain security including SBOM, vulnerability scanning, SAST, SLSA framework, build security, provenance verification, dependency confusion prevention, and automated patching (OWASP A03:2025 expanded scope)
 keywords: [SBOM, vulnerability scanning, SAST, Bandit, Semgrep, Trivy, license compliance, dependency confusion, Dependabot, supply chain, SLSA, provenance, build security, VEX, image signing]
 category: security
@@ -11,8 +11,8 @@ pain_points: [3, 10]
 
 # Supply Chain Security, Dependencies & SAST
 
-> **Standards:** Format defined in [STANDARDS_SKILLS.md](../STANDARDS_SKILLS.md)  
-> **Discovery:** See [STANDARDS_COMMANDS.md](../STANDARDS_COMMANDS.md#18-command-discovery-protocol)
+> **Standards:** Format defined in [cco-standards.md](../cco-standards.md)  
+> **Discovery:** See [cco-standards.md](../cco-standards.md#18-command-discovery-protocol)
 
 
 Comprehensive supply chain security including SBOM, SAST, SLSA, build security, and provenance verification.
