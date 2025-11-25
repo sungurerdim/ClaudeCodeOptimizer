@@ -182,6 +182,7 @@ def show_removal_preview(
     print("  • Other Python packages")
     print("  • IDE configurations")
     print("  • Non-CCO files in ~/.claude/ (preserved)")
+    print("  • Folder structure in ~/.claude/ (preserved)")
     print()
     print("=" * 60)
     print()
@@ -233,7 +234,12 @@ def remove_package(install_method: str) -> bool:
 
 
 def remove_cco_files(claude_dir: Path) -> dict[str, int]:
-    """Remove only CCO files, preserving user content."""
+    """
+    Remove only CCO files, preserving all user content and folders.
+
+    Only removes files with cco-* prefix. Never deletes folders (even empty ones)
+    to preserve user's directory structure.
+    """
     deleted = {
         "agents": 0,
         "commands": 0,
@@ -246,35 +252,28 @@ def remove_cco_files(claude_dir: Path) -> dict[str, int]:
     if not claude_dir.exists():
         return deleted
 
-    # Remove agents
+    # Remove agents (cco-*.md only, preserve folder)
     agents_dir = claude_dir / "agents"
     if agents_dir.exists():
         for f in agents_dir.glob("cco-*.md"):
             f.unlink()
             deleted["agents"] += 1
-        if not any(agents_dir.iterdir()):
-            agents_dir.rmdir()
 
-    # Remove commands
+    # Remove commands (cco-*.md only, preserve folder)
     commands_dir = claude_dir / "commands"
     if commands_dir.exists():
         for f in commands_dir.glob("cco-*.md"):
             f.unlink()
             deleted["commands"] += 1
 
-    # Remove skills
+    # Remove skills (cco-skill-*.md only, preserve folders)
     skills_dir = claude_dir / "skills"
     if skills_dir.exists():
         for f in skills_dir.rglob("cco-skill-*.md"):
             f.unlink()
             deleted["skills"] += 1
-        for subdir in list(skills_dir.iterdir()):
-            if subdir.is_dir() and not any(subdir.iterdir()):
-                subdir.rmdir()
-        if skills_dir.exists() and not any(skills_dir.iterdir()):
-            skills_dir.rmdir()
 
-    # Remove principles
+    # Remove principles (cco-principle-*.md only, preserve folder)
     principles_dir = claude_dir / "principles"
     if principles_dir.exists():
         for f in principles_dir.glob("cco-principle-u-*.md"):
@@ -283,17 +282,14 @@ def remove_cco_files(claude_dir: Path) -> dict[str, int]:
         for f in principles_dir.glob("cco-principle-c-*.md"):
             f.unlink()
             deleted["principles"] += 1
-        if principles_dir.exists() and not any(principles_dir.iterdir()):
-            principles_dir.rmdir()
 
-    # Remove standards
-    for standards_file in ["cco-standards.md", "cco-patterns.md", "cco-tech-detection.md"]:
-        f = claude_dir / standards_file
-        if f.exists():
+    # Remove standards (cco-*.md in root only)
+    for f in claude_dir.glob("cco-*.md"):
+        if f.is_file():
             f.unlink()
             deleted["standards"] += 1
 
-    # Remove templates
+    # Remove templates (*.cco files only)
     for f in claude_dir.glob("*.cco"):
         f.unlink()
         deleted["templates"] += 1
@@ -303,19 +299,28 @@ def remove_cco_files(claude_dir: Path) -> dict[str, int]:
 
 
 def _remove_claude_md_markers(claude_dir: Path) -> None:
-    """Remove CCO markers from CLAUDE.md."""
+    """
+    Remove CCO markers from CLAUDE.md while preserving all user content.
+
+    Only removes the CCO_PRINCIPLES_START/END markers and content between them.
+    Never deletes the file - preserves user's other settings and content.
+    """
     claude_md = claude_dir / "CLAUDE.md"
     if not claude_md.exists():
         return
 
     file_content = claude_md.read_text(encoding="utf-8")
-    pattern = r"<!-- CCO_PRINCIPLES_START -->.*?<!-- CCO_PRINCIPLES_END -->"
-    new_content = re.sub(pattern, "", file_content, flags=re.DOTALL).strip()
 
-    if new_content:
-        claude_md.write_text(new_content, encoding="utf-8")
-    else:
-        claude_md.unlink()
+    # Only remove CCO markers and content between them
+    # Pattern matches: <!-- CCO_PRINCIPLES_START --> ... <!-- CCO_PRINCIPLES_END --> + optional newlines
+    pattern = r"<!-- CCO_PRINCIPLES_START -->.*?<!-- CCO_PRINCIPLES_END -->\n?"
+    new_content = re.sub(pattern, "", file_content, flags=re.DOTALL)
+
+    # Clean up excessive blank lines (more than 2 consecutive) but preserve structure
+    new_content = re.sub(r"\n{3,}", "\n\n", new_content)
+
+    # Write back content (even if empty - never delete user's CLAUDE.md)
+    claude_md.write_text(new_content, encoding="utf-8")
 
 
 def verify_removal(install_method: str | None) -> dict[str, bool]:
