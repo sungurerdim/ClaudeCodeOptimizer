@@ -151,91 +151,34 @@ OUTCOMES = {
 
 ---
 
-## Generation Types
+## Generation Types (Dynamic Skill Matching)
 
-### 🔴 Critical Missing (Pain #4: Biggest mistake)
+**CRITICAL: Skills are matched dynamically, never hardcoded.**
 
-1. **--tests** - Unit + integration tests
-   - Skill: `cco-skill-testing-fundamentals`
-   - Generates: Unit tests for untested functions, integration tests for APIs, fixtures
+Each parameter in frontmatter defines keywords and category for dynamic skill matching.
 
-2. **--contract-tests** - API contract tests (Pact)
-   - Skill: `cco-skill-testing-fundamentals`
-   - Generates: Consumer contracts, provider verification
+### Dynamic Skill Matching
 
-### 🟡 High Priority
+At runtime, for each selected generation type:
+1. Read parameter's `keywords` and `category` from this file's frontmatter
+2. Scan ~/.claude/skills/cco-skill-*.md files
+3. Parse each skill's frontmatter for `keywords` and `category`
+4. Match skills where category matches OR keywords overlap
+5. Load matched skills for generation guidance
 
-3. **--load-tests** - Performance/stress tests
-   - Skill: `cco-skill-testing-fundamentals`
-   - Generates: Locust/k6 load tests, stress scenarios
+### Available Parameters
 
-4. **--chaos-tests** - Resilience tests
-   - Skill: `cco-skill-testing-fundamentals`
-   - Generates: Chaos engineering tests (failure injection)
+See frontmatter at top of this file for full parameter definitions.
 
-5. **--openapi** - OpenAPI/Swagger spec (Pain #7)
-   - Skill: `cco-skill-documentation`
-   - Generates: Complete OpenAPI 3.0 spec from code
+**Adding new generation types:**
+1. Add parameter to frontmatter with keywords/category
+2. Matching skills auto-discovered at runtime
+3. No other changes needed
 
-6. **--cicd** - CI/CD pipeline
-   - Skills: `cco-skill-cicd-automation`, `cco-skill-cicd-automation`
-   - Generates: GitHub Actions/GitLab CI with quality gates, deployment strategies
-
-### 🟢 Recommended
-
-7. **--docs** - Code documentation
-   - Skill: `cco-skill-documentation`
-   - Generates: Docstrings, README sections, usage examples
-
-8. **--adr** - Architecture Decision Records
-   - Skill: `cco-skill-documentation`
-   - Generates: ADR templates, decision logs
-
-9. **--runbook** - Operational runbooks
-   - Skill: `cco-skill-documentation`, `cco-skill-incident`
-   - Generates: Incident response, deployment procedures
-
-10. **--dockerfile** - Docker configuration
-    - Skill: `cco-skill-containers`
-    - Generates: Dockerfile (multi-stage), docker-compose.yml
-
-11. **--migration** - Database migration scripts
-    - Skill: `cco-skill-database-optimization`
-    - Generates: Migration scripts with rollback, backup procedures
-
-12. **--indexes** - Database indexes
-    - Skill: `cco-skill-database-optimization`
-    - Generates: Index creation scripts for slow queries
-
-13. **--monitoring** - Monitoring configuration
-    - Skill: `cco-skill-observability`
-    - Generates: Prometheus metrics, Grafana dashboards
-
-14. **--logging** - Structured logging config
-    - Skill: `cco-skill-observability`
-    - Generates: Logging setup with correlation IDs
-
-15. **--slo** - SLO/SLA definitions
-    - Skill: `cco-skill-observability`
-    - Generates: SLO specs, SLA templates, alert rules
-
-16. **--pre-commit** - Pre-commit hooks
-    - Skill: `cco-skill-cicd-automation`
-    - Generates: .pre-commit-config.yaml with linting, security
-
-17. **--requirements** - Dependency files
-    - Skill: `cco-skill-supply-chain`
-    - Generates: requirements.txt/pyproject.toml from imports
-
-18. **--review-checklist** - Code review checklist (Pain #11, #12)
-    - Skill: `cco-skill-code-quality`
-    - Generates: AI-aware review checklist template, PR checklist with quality gates
-    - **2025 Critical**: Addresses 27% decline in code review comments
-    - Includes:
-      - General review checklist (security, testing, performance)
-      - AI-specific checks (hallucination detection, bloat prevention)
-      - Context-specific checks (async patterns, resource cleanup)
-      - Review quality metrics (comment density, reviewer diversity)
+**Adding new skills:**
+1. Create skill file with proper frontmatter (keywords, category)
+2. Skills auto-matched to relevant generation types
+3. No command file changes needed
 
 ---
 
@@ -494,8 +437,8 @@ Task({
   Generate missing tests.
 
   Use these skills:
-  - cco-skill-testing-fundamentals
-  - cco-skill-testing-fundamentals
+  - {MATCHED_TESTING_SKILL}
+  - {MATCHED_TESTING_SKILL}
 
   TESTS:
   1. Analyze all Python files in src/ to find untested functions
@@ -513,8 +456,8 @@ Task({
      - Test input validation
 
   Follow:
-  - cco-skill-testing-fundamentals (test pyramid: unit >> integration >> e2e)
-  - cco-skill-testing-fundamentals (coverage targets)
+  - {MATCHED_TESTING_SKILL} (test pyramid: unit >> integration >> e2e)
+  - {MATCHED_TESTING_SKILL} (coverage targets)
   - cco-principle-u-no-overengineering (keep it simple)
 
   Report:

@@ -103,72 +103,59 @@ OUTCOMES = {
 
 ---
 
-## Template References
+## Dynamic Template Matching
 
-When generating components, load relevant skills for templates:
+**CRITICAL: Templates are matched dynamically based on generation type and skill frontmatter.**
 
-### Test Generation (Pain #4)
-**Skill**: `cco-skill-testing-fundamentals`
-- Follow test pyramid ratio (70% unit, 20% integration, 10% e2e)
-- Use AAA pattern (Arrange-Act-Assert)
-- Include edge cases and error conditions
-- Generate fixtures for dependencies
+### Template Discovery Protocol
 
-### CI/CD Generation (Pain #6)
-**Skill**: `cco-skill-cicd-automation`
-- Use "CI/CD Templates" section for configs
-- GitHub Actions template for GitHub repos
-- GitLab CI template for GitLab repos
-- Pre-commit config for local quality gates
-- Dockerfile template for containerization
+When generating components, the agent:
+1. **Identifies generation type**: tests, cicd, docs, dockerfile, etc.
+2. **Discovers skills**: ls ~/.claude/skills/cco-skill-*.md
+3. **Matches by keywords**: Generation type matched to skill keywords/category
+4. **Loads templates**: Uses skill's template sections
 
-### Documentation Generation (Pain #7)
-**Skill**: `cco-skill-documentation`
-- Use "Documentation Templates" section
-- README template for project overview
-- ADR template for architecture decisions
-- Runbook template for operational docs
-- Docstring template for code documentation
-- AI code documentation templates (2025)
+### Generation Types (Auto-Matched to Skills)
 
-### Code Review Checklist Generation (Pain #11, #12)
-**Skill**: `cco-skill-code-quality`
-- Review checklist template
-- PR template with quality gates
-- Commit message guidelines
-- DORA metrics tracking setup
-
-### Platform Engineering Generation (Pain #4, #6, #10)
-**Skill**: `cco-skill-cicd-automation`
-- CI/CD maturity assessment template
-- Test automation scaffold
-- IaC boilerplate (Terraform/Pulumi)
-- AI readiness checklist
+| Generation Type | Skill Matched By | Templates Used |
+|-----------------|------------------|----------------|
+| Tests | category: testing | Test pyramid, AAA pattern |
+| CI/CD | category: cicd | GitHub Actions, GitLab CI |
+| Docs | category: documentation | README, ADR, Runbook |
+| Dockerfile | keywords: [containers, docker] | Dockerfile template |
+| Review | category: quality | Review checklist, PR template |
+| Platform | keywords: [platform, cicd] | Maturity, IaC |
 
 ---
 
 ## Template Loading Protocol
 
 ```python
-# Load template based on generation type
-def get_template_for_type(gen_type: str) -> str:
-    templates = {
-        "cicd": "cco-skill-cicd-automation → CI/CD Templates",
-        "docs": "cco-skill-documentation → Documentation Templates",
-        "tests": "cco-skill-testing-fundamentals → Test Analysis Patterns",
-        "dockerfile": "cco-skill-cicd-automation → Dockerfile",
-        "readme": "cco-skill-documentation → README Template",
-        "adr": "cco-skill-documentation → ADR Template",
-        "runbook": "cco-skill-documentation → Runbook Template",
-        "review-checklist": "cco-skill-code-quality → Review Checklist Template",
-        "platform": "cco-skill-cicd-automation → Platform Templates",
-    }
-    return templates.get(gen_type, "")
+# Discover skills dynamically
+def discover_skills():
+    skills = []
+    for skill_file in glob.glob("~/.claude/skills/cco-skill-*.md"):
+        frontmatter = parse_yaml_frontmatter(skill_file)
+        skills.append({
+            "name": frontmatter.get("name"),
+            "keywords": frontmatter.get("keywords", []),
+            "category": frontmatter.get("category"),
+        })
+    return skills
 
-# Generate from template
-def generate_from_template(template_name: str, context: dict) -> str:
-    # Load skill containing template
-    # Extract template section
+# Match template type to skill dynamically
+def get_template_for_type(gen_type):
+    skills = discover_skills()
+    for skill in skills:
+        if skill["category"] == gen_type:
+            return skill["name"]
+        if gen_type in skill["keywords"]:
+            return skill["name"]
+    return ""
+
+# Generate from matched skill template
+def generate_from_template(template_name, context):
+    # Load skill, extract template section
     # Replace placeholders with context
     # Return generated content
     pass

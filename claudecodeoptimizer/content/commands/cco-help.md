@@ -31,6 +31,80 @@ Show all available CCO commands with clear examples and common use cases. Maximu
 
 ---
 
+## Help Tiers
+
+When `/cco-help` is invoked, ask user for detail level:
+
+```python
+AskUserQuestion({
+  questions: [{
+    question: "How much detail do you need?",
+    header: "Help Level",
+    multiSelect: false,
+    options: [
+      {
+        label: "Quick",
+        description: "Command names + one-liners (~30 sec read)"
+      },
+      {
+        label: "Standard",
+        description: "Commands + flags + examples (~2 min read)"
+      },
+      {
+        label: "Full",
+        description: "Complete reference with workflows (~5 min read)"
+      }
+    ]
+  }]
+})
+```
+
+### Quick Help Output
+
+```markdown
+# CCO Commands
+
+**Find:** `/cco-audit` - Find issues | `/cco-status` - Check installation
+**Fix:** `/cco-fix` - Auto-fix issues | `/cco-optimize` - Improve performance
+**Create:** `/cco-generate` - Create tests/docs/configs
+**Workflow:** `/cco-commit` - Smart commits | `/cco-help` - This guide
+
+**Start:** `/cco-audit --smart` (auto-detect stack, run top checks)
+
+More detail: `/cco-help` and select "Standard" or "Full"
+```
+
+### Standard Help Output
+
+```markdown
+# CCO Commands
+
+## Find Issues
+`/cco-audit --smart` → Auto-detect stack, run relevant checks
+`/cco-audit --security` → Security scan (OWASP 2025)
+`/cco-audit --tests` → Test coverage analysis
+`/cco-audit --quick` → Health scores
+
+## Fix Issues
+`/cco-fix --security` → Fix security issues
+`/cco-fix --tech-debt` → Clean up code
+`/cco-optimize --database` → Speed up queries
+
+## Create
+`/cco-generate --tests` → Generate missing tests
+`/cco-generate --openapi` → Create API docs
+
+## Workflow
+`/cco-commit` → Smart commits
+`/cco-status` → Check installation
+
+**Full guide:** `/cco-help` → "Full"
+```
+
+### Full Help Output (Current)
+
+---
+
 ## Output Format
 
 ```markdown
@@ -42,11 +116,11 @@ Show all available CCO commands with clear examples and common use cases. Maximu
 
 ## 🚀 Start Here (First Time?)
 
-### 1️⃣ First Command - Quick Health Check
+### 1️⃣ First Command - Smart Audit (Recommended)
 ```bash
-/cco-audit --quick
+/cco-audit --smart
 ```
-See your project health scores. That's it!
+Auto-detects your tech stack, runs the top 5-8 relevant checks. That's it!
 
 ### 2️⃣ Second Command - Find Issues
 ```bash
@@ -99,6 +173,7 @@ Add quotes after command = focused results!
 ### Find Issues
 
 **`/cco-audit`** → Find problems in your code
+- **Smart mode:** `--smart` (auto-detect stack, run top 5-8 checks) **← Recommended**
 - **Quick mode:** `--quick` (health check with scores)
 - **Core:** `--security`, `--tech-debt`, `--tests`, `--database`, `--performance`, `--integration`, `--docs`
 - **AI (2025):** `--ai-security`, `--ai-quality`, `--ai-debt`, `--ai` (meta-flag: combines all AI)

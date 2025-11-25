@@ -482,8 +482,8 @@ Task({
   - Report completion with file:line reference
 
   Use these skills:
-  - cco-skill-security-fundamentals
-  - cco-skill-ai-security
+  - {MATCHED_SECURITY_SKILL}
+  - {MATCHED_AI_SECURITY_SKILL}
 
   Follow U_CHANGE_VERIFICATION protocol.
   """

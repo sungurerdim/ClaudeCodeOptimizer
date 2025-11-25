@@ -6,7 +6,7 @@ category: quality
 related_commands:
   action_types: [audit, generate, fix]
   categories: [quality]
-pain_points: [3, 4]
+pain_points: [9, 11]
 ---
 
 # Git Workflow, Branching & PR Review

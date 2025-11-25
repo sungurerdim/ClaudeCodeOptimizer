@@ -116,57 +116,29 @@ Read, Edit, Bash, Grep
 
 ---
 
-## Skill References
+## Dynamic Skill Matching
 
-When fixing issues, load relevant skills for fix patterns and verification:
+**CRITICAL: Skills are matched dynamically based on fix category and frontmatter keywords.**
 
-### Security Fixes
-**Skill**: `cco-skill-security-fundamentals`
-- SQL injection fixes (parameterized queries)
-- XSS protection (escaping, CSP headers)
-- CSRF token implementation
-- Access control fixes (OWASP A01:2025)
+### Skill Discovery for Fixes
 
-### AI Security Fixes
-**Skill**: `cco-skill-ai-security`
-- Input sanitization for prompt injection
-- Output validation and PII masking
-- Authentication decorator addition
-- Exception handling (fail closed, not open)
+When fixing issues, the agent:
+1. **Identifies fix category**: security, ai-security, database, docs, etc.
+2. **Discovers skills**: ls ~/.claude/skills/cco-skill-*.md
+3. **Matches by keywords**: Fix category matched to skill keywords/category
+4. **Loads fix patterns**: Uses skill's fix patterns and verification
 
-### AI Quality Fixes
-**Skill**: `cco-skill-ai-quality`
-- API hallucination fixes (remove non-existent APIs)
-- Code bloat reduction (remove redundant code)
-- Vibe coding refactoring (add comments, simplify)
-- Copy/paste deduplication
+### Fix Categories (Auto-Matched to Skills)
 
-### Tech Debt Fixes
-**Skill**: `cco-skill-code-quality`
-- Complexity reduction
-- Dead code removal
-- Duplication elimination
+| Fix Category | Skill Matched By | Fix Patterns |
+|--------------|------------------|--------------|
+| Security | category: security | SQL injection, XSS, CSRF, access control |
+| AI Security | keywords: [ai, security] | Prompt injection, PII masking |
+| AI Quality | keywords: [ai, quality] | Hallucination, code bloat |
+| Tech Debt | category: quality | Complexity, dead code |
+| Database | category: database | N+1, indexes, queries |
+| Supply Chain | category: supply-chain | Dependencies, CVEs |
+| Containers | category: containers | Dockerfile, pod security |
+| Documentation | category: documentation | Docstrings, API docs |
 
-### Database Fixes
-**Skill**: `cco-skill-database-optimization`
-- N+1 query fixes (eager loading)
-- Index addition
-- Query optimization
-
-### Supply Chain Fixes
-**Skill**: `cco-skill-supply-chain`
-- Dependency updates
-- CVE remediation
-- SBOM generation
-
-### Container Fixes
-**Skill**: `cco-skill-containers`
-- Dockerfile security fixes
-- Pod Security Admission compliance
-- Image signing setup
-
-### Documentation Fixes
-**Skill**: `cco-skill-documentation`
-- Docstring addition
-- API documentation generation
-- AI code documentation templates
+**No hardcoded skill mappings. Adding new skills requires NO code changes.**

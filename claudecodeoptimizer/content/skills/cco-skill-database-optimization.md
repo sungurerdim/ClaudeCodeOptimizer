@@ -6,7 +6,7 @@ category: performance
 related_commands:
   action_types: [audit, optimize, fix]
   categories: [performance, database]
-pain_points: [7, 8]
+pain_points: [5, 7]
 ---
 
 # Database Optimization & Caching
@@ -549,325 +549,30 @@ def bulk_load_users(users: list):
         buffer.write(f"{user['name']}\t{user['email']}\n")
     buffer.seek(0)
 
-    cursor.copy_from(buffer, 'users', columns=('name', 'email'))
-    conn.commit()
-```
-
-### Batch Updates
-
-```python
-# ❌ BAD: Individual updates
-for user_id, status in updates:
-    db.execute("UPDATE users SET status = %s WHERE id = %s", [status, user_id])
-
-# ✅ GOOD: Batch with VALUES
-def batch_update(updates: list):
-    """Updates: [(id, status), ...]"""
-    query = """
-    UPDATE users AS u
-    SET status = v.status
-    FROM (VALUES %s) AS v(id, status)
-    WHERE u.id = v.id
-    """
-    execute_values(cursor, query, updates)
-```
-
-### Upsert (INSERT ON CONFLICT)
-
-```sql
--- PostgreSQL upsert
-INSERT INTO users (email, name, updated_at)
-VALUES ('user@example.com', 'New Name', NOW())
-ON CONFLICT (email)
-DO UPDATE SET
-    name = EXCLUDED.name,
-    updated_at = EXCLUDED.updated_at;
-
--- MySQL upsert
-INSERT INTO users (email, name, updated_at)
-VALUES ('user@example.com', 'New Name', NOW())
-ON DUPLICATE KEY UPDATE
-    name = VALUES(name),
-    updated_at = VALUES(updated_at);
-```
-
----
-
-## Database Partitioning
-
-### Range Partitioning (Time-based)
-
-```sql
--- PostgreSQL range partitioning by date
-CREATE TABLE orders (
-    id SERIAL,
-    user_id INTEGER,
-    created_at TIMESTAMP,
-    total DECIMAL
-) PARTITION BY RANGE (created_at);
-
--- Create partitions
-CREATE TABLE orders_2024_q1 PARTITION OF orders
-    FOR VALUES FROM ('2024-01-01') TO ('2024-04-01');
-
-CREATE TABLE orders_2024_q2 PARTITION OF orders
-    FOR VALUES FROM ('2024-04-01') TO ('2024-07-01');
-
--- Queries automatically route to correct partition
-SELECT * FROM orders WHERE created_at BETWEEN '2024-02-01' AND '2024-02-28';
-```
-
-### List Partitioning (By Category)
-
-```sql
-CREATE TABLE orders (
-    id SERIAL,
-    region TEXT,
-    total DECIMAL
-) PARTITION BY LIST (region);
-
-CREATE TABLE orders_us PARTITION OF orders FOR VALUES IN ('us-east', 'us-west');
-CREATE TABLE orders_eu PARTITION OF orders FOR VALUES IN ('eu-west', 'eu-central');
-CREATE TABLE orders_asia PARTITION OF orders FOR VALUES IN ('ap-east', 'ap-south');
-```
-
-### Hash Partitioning (Even Distribution)
-
-```sql
-CREATE TABLE users (
-    id SERIAL,
-    email TEXT,
-    data JSONB
-) PARTITION BY HASH (id);
-
--- Create 4 partitions for even distribution
-CREATE TABLE users_p0 PARTITION OF users FOR VALUES WITH (MODULUS 4, REMAINDER 0);
-CREATE TABLE users_p1 PARTITION OF users FOR VALUES WITH (MODULUS 4, REMAINDER 1);
-CREATE TABLE users_p2 PARTITION OF users FOR VALUES WITH (MODULUS 4, REMAINDER 2);
-CREATE TABLE users_p3 PARTITION OF users FOR VALUES WITH (MODULUS 4, REMAINDER 3);
-```
-
-### Partition Maintenance
-
-```sql
--- Drop old partitions (archive first if needed)
-DROP TABLE orders_2022_q1;
-
--- Detach partition (keeps data, removes from partitioned table)
-ALTER TABLE orders DETACH PARTITION orders_2023_q1;
-
--- Attach existing table as partition
-ALTER TABLE orders ATTACH PARTITION orders_2024_q3
-    FOR VALUES FROM ('2024-07-01') TO ('2024-10-01');
-```
-
----
-
-## Lock Management
-
-### Understanding Locks
-
-```sql
--- PostgreSQL: View current locks
-SELECT
-    locktype,
-    relation::regclass,
-    mode,
-    granted,
-    pid
-FROM pg_locks
-WHERE relation IS NOT NULL;
-
--- View blocking queries
-SELECT
-    blocked.pid AS blocked_pid,
-    blocked.query AS blocked_query,
-    blocking.pid AS blocking_pid,
-    blocking.query AS blocking_query
-FROM pg_stat_activity blocked
-JOIN pg_locks blocked_locks ON blocked.pid = blocked_locks.pid
-JOIN pg_locks blocking_locks ON blocked_locks.relation = blocking_locks.relation
-JOIN pg_stat_activity blocking ON blocking_locks.pid = blocking.pid
-WHERE NOT blocked_locks.granted AND blocking_locks.granted;
-```
-
-### Avoiding Deadlocks
-
-```python
-# ✅ GOOD: Consistent lock ordering
-def transfer_funds(from_id: int, to_id: int, amount: Decimal):
-    # Always lock in consistent order (by ID)
-    first_id, second_id = sorted([from_id, to_id])
-
-    with db.transaction():
-        # Lock accounts in order
-        db.execute("SELECT * FROM accounts WHERE id = %s FOR UPDATE", [first_id])
-        db.execute("SELECT * FROM accounts WHERE id = %s FOR UPDATE", [second_id])
-
-        # Perform transfer
-        db.execute("UPDATE accounts SET balance = balance - %s WHERE id = %s",
-                   [amount, from_id])
-        db.execute("UPDATE accounts SET balance = balance + %s WHERE id = %s",
-                   [amount, to_id])
-```
-
-### Advisory Locks
-
-```python
-# Application-level locking for distributed systems
-def process_with_lock(resource_id: int):
-    lock_id = hash(f"process:{resource_id}") % (2**31)
-
-    # Acquire advisory lock
-    cursor.execute("SELECT pg_try_advisory_lock(%s)", [lock_id])
-    if not cursor.fetchone()[0]:
-        raise Exception("Could not acquire lock")
-
-    try:
-        # Do work...
-        process_resource(resource_id)
-    finally:
-        cursor.execute("SELECT pg_advisory_unlock(%s)", [lock_id])
-```
-
-### Optimistic Locking
-
-```python
-# Version-based optimistic locking
-def update_user_optimistic(user_id: int, data: dict, expected_version: int):
-    result = db.execute("""
-        UPDATE users
-        SET data = %s, version = version + 1
-        WHERE id = %s AND version = %s
-    """, [json.dumps(data), user_id, expected_version])
-
-    if result.rowcount == 0:
-        raise ConcurrentModificationError("User was modified by another process")
-```
-
----
-
-## Monitoring & Alerting
-
-### Key Metrics to Monitor
-
-```sql
--- PostgreSQL: Slow queries
-SELECT query, calls, mean_exec_time, total_exec_time
-FROM pg_stat_statements
-ORDER BY mean_exec_time DESC LIMIT 10;
-
--- Index usage
-SELECT schemaname, tablename, indexname, idx_scan, idx_tup_read
-FROM pg_stat_user_indexes
-ORDER BY idx_scan ASC;
-
--- Table bloat
-SELECT schemaname, tablename,
-       pg_size_pretty(pg_total_relation_size(schemaname||'.'||tablename)) as size,
-       n_dead_tup, n_live_tup
-FROM pg_stat_user_tables
-ORDER BY n_dead_tup DESC;
-
--- Connection stats
-SELECT state, COUNT(*) FROM pg_stat_activity GROUP BY state;
-```
-
-### Alert Thresholds
-
-| Metric | Warning | Critical |
-|--------|---------|----------|
-| Query time | > 1s | > 5s |
-| Connection pool utilization | > 70% | > 90% |
-| Cache hit ratio | < 95% | < 90% |
-| Replication lag | > 1s | > 10s |
-| Deadlock rate | > 0.1/min | > 1/min |
-| Long-running transactions | > 5min | > 30min |
-
----
-
-## Patterns
-
-### N+1 Fix
-```python
-# ❌ BAD: 1001 queries
-users = User.objects.all()
-for user in users:
-    orders = user.orders.all()  # N queries
-
-# ✅ GOOD: 1 query
-users = User.objects.prefetch_related('orders')
-for user in users:
-    orders = user.orders.all()  # No query
-```
-
-### Indexing
-```sql
--- Slow queries
-SELECT query, mean_exec_time FROM pg_stat_statements
-WHERE mean_exec_time > 100 ORDER BY mean_exec_time DESC LIMIT 10;
-
--- Add indexes
-CREATE INDEX idx_users_email ON users(email);
-CREATE INDEX idx_orders_user_created ON orders(user_id, created_at DESC);
-CREATE INDEX idx_users_active ON users(email) WHERE status = 'active';
-```
-
-### Redis Caching
-```python
-def cache(ttl=300):
-    def decorator(func):
-        @wraps(func)
-        def wrapper(*args, **kwargs):
-            key = f"{func.__name__}:{json.dumps(args)}"
-            cached = redis_client.get(key)
-            if cached:
-                return json.loads(cached)
-            result = func(*args, **kwargs)
-            redis_client.setex(key, ttl, json.dumps(result))
-            return result
-        return wrapper
-    return decorator
-
-@cache(ttl=300)
-def get_user_stats(user_id):
-    return db.query("SELECT COUNT(*), SUM(total) FROM orders WHERE user_id = %s", user_id)
-```
-
-### Cache Invalidation
-```python
-def update_user(user_id, data):
-    db.execute("UPDATE users SET ... WHERE id = %s", user_id)
-    redis_client.delete(f"user:{user_id}")
-```
-
-### Connection Pooling
-```python
-engine = create_engine(
-    "postgresql://user:pass@localhost/db",
-    pool_size=20, max_overflow=10, pool_timeout=30, pool_pre_ping=True
-)
-```
-
 ---
 
 ## Checklist
 
-### Before Optimization
-- [ ] Profile queries (EXPLAIN ANALYZE, slow query log)
-- [ ] Identify N+1 (query count grows with data)
-- [ ] Check index usage (pg_stat_user_indexes)
+### Query Optimization
+- [ ] N+1 queries detected and fixed (eager loading)
+- [ ] EXPLAIN ANALYZE on slow queries
+- [ ] Proper indexes for WHERE clauses
+- [ ] No SELECT * (specify columns)
 
-### Optimization
-- [ ] Add indexes on filtered/joined columns
-- [ ] Use eager loading (prefetch_related, joinedload)
-- [ ] Implement caching (Redis with TTL)
-- [ ] Add connection pooling
-- [ ] Paginate large results
+### Indexing
+- [ ] Foreign keys indexed
+- [ ] Frequent WHERE columns indexed
+- [ ] Composite indexes for multi-column queries
+- [ ] EXPLAIN shows index usage (no seq scan)
 
-### Validation
-- [ ] Verify query count reduced
-- [ ] Check index usage (idx_scan > 0)
-- [ ] Measure response time improvement
-- [ ] Monitor cache hit rate
+### Caching
+- [ ] Hot data cached (Redis/Memcached)
+- [ ] Cache invalidation strategy
+- [ ] TTL set appropriately
+- [ ] Cache stampede prevention
 
+### Connection Pooling
+- [ ] Pool configured (not per-request connections)
+- [ ] Pool size tuned for workload
+- [ ] Idle connection timeout set
+- [ ] Connection pool monitoring

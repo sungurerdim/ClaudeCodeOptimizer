@@ -77,9 +77,9 @@ Auto-loads when detecting:
 
 ## Related Skills
 
-- **cco-skill-git-workflow**: Git events trigger pipelines
-- **cco-skill-testing-fundamentals**: Test pyramid defines gate thresholds
-- **cco-skill-security-fundamentals**: Security scanning as gate
+- **Git workflow skills**: Git events trigger pipelines
+- **Testing skills**: Test pyramid defines gate thresholds
+- **Security skills**: Security scanning as gate
 
 ---
 
