@@ -1,5 +1,5 @@
 ---
-name: microservices-architecture
+name: cco-skill-microservices
 description: Implement microservices with CQRS pattern, service mesh, dependency injection, event-driven communication, and saga pattern for distributed transactions in scalable systems
 keywords: [microservices, CQRS, service mesh, dependency injection, event-driven, saga pattern, DDD, bounded context, circuit breaker, Istio]
 category: architecture
@@ -13,8 +13,8 @@ pain_points: [2, 6, 10]
 **Domain**: Distributed Systems
 **Purpose**: Implement microservices with CQRS pattern, service mesh, dependency injection, and event-driven communication for scalable distributed systems.
 
-> **Standards:** Format defined in [STANDARDS_SKILLS.md](../STANDARDS_SKILLS.md)  
-> **Discovery:** See [STANDARDS_COMMANDS.md](../STANDARDS_COMMANDS.md#18-command-discovery-protocol)
+> **Standards:** Format defined in [cco-standards.md](../cco-standards.md)  
+> **Discovery:** See [cco-standards.md](../cco-standards.md#18-command-discovery-protocol)
 
 
 ## Core Techniques

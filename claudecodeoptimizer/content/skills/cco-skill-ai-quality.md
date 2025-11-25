@@ -1,5 +1,5 @@
 ---
-name: ai-code-quality-verification-debt
+name: cco-skill-ai-quality
 description: Detect and fix AI-generated code issues including hallucination, copy/paste patterns, code bloat, model inconsistency, and vibe coding anti-patterns through signature analysis and quality metrics
 keywords: [AI code, hallucination, copy paste, code bloat, vibe coding, AI debt, model detection, ChatGPT, Copilot, Claude, generated code quality, AI verification]
 category: quality
@@ -11,8 +11,8 @@ pain_points: [2, 3, 8, 9]
 
 # AI Code Quality, Verification & Debt
 
-> **Standards:** Format defined in [STANDARDS_SKILLS.md](../STANDARDS_SKILLS.md)  
-> **Discovery:** See [STANDARDS_COMMANDS.md](../STANDARDS_COMMANDS.md#18-command-discovery-protocol)
+> **Standards:** Format defined in [cco-standards.md](../cco-standards.md)  
+> **Discovery:** See [cco-standards.md](../cco-standards.md#18-command-discovery-protocol)
 
 
 Detect and fix AI-generated code issues: hallucination, copy/paste, bloat, model inconsistency, vibe coding.

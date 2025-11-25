@@ -1,5 +1,5 @@
 ---
-name: resilience-circuitbreaker-retry-bulkhead
+name: cco-skill-resilience
 description: Prevent cascading failures in distributed systems via circuit breakers, retry patterns, and failure isolation. Includes exponential backoff with jitter, bulkhead isolation, graceful degradation chains, timeout configuration, and dead letter queues.
 keywords: [resilience, circuit breaker, retry, bulkhead, timeout, cascading failure, fault tolerance, fallback, isolation, graceful degradation, dead letter queue]
 category: architecture
@@ -11,8 +11,8 @@ pain_points: [5, 6, 10]
 
 # Skill: Resilience - Circuit Breaker, Retry, Bulkhead
 
-> **Standards:** Format defined in [STANDARDS_SKILLS.md](../STANDARDS_SKILLS.md)  
-> **Discovery:** See [STANDARDS_COMMANDS.md](../STANDARDS_COMMANDS.md#18-command-discovery-protocol)
+> **Standards:** Format defined in [cco-standards.md](../cco-standards.md)  
+> **Discovery:** See [cco-standards.md](../cco-standards.md#18-command-discovery-protocol)
 
 
 ## Domain & Purpose
@@ -21,7 +21,7 @@ Prevent cascading failures in distributed systems via circuit breakers, retry pa
 
 **Problems**: Cascading failures (95% distributed outages), resource exhaustion (thundering herd), hanging requests, unpredictable recovery
 
-**Includes**: @content/principles/P_CIRCUIT_BREAKER.md, @content/principles/P_RETRY_WITH_BACKOFF.md, @content/principles/P_BULKHEAD_PATTERN.md, @content/principles/P_GRACEFUL_DEGRADATION.md, @content/principles/P_TIMEOUT_CONFIGURATION.md, @content/principles/P_DEAD_LETTER_QUEUE.md, @content/principles/P_FAIL_FAST_STRATEGY.md, @content/principles/P_PRODUCTION_GRADE.md
+**Guidance Areas**: Circuit Breaker, Retry with Backoff, Bulkhead Pattern, Graceful Degradation, Timeout Configuration, Dead Letter Queue, Fail-Fast Strategy, Production Grade
 ---
 
 ---

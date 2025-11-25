@@ -1,5 +1,5 @@
 ---
-name: incident-response
+name: cco-skill-incident
 description: Minimize incident impact through severity classification, automated detection, on-call rotation, incident playbooks, blameless postmortems, and MTTD/MTTR tracking
 keywords: [incident response, on-call, postmortem, runbook, playbook, severity, MTTD, MTTR, status page, escalation]
 category: observability
@@ -13,11 +13,11 @@ pain_points: [4, 9, 12]
 **Domain**: Operations & Reliability
 **Purpose**: Minimize incident impact through rapid detection, coordinated response, blameless postmortems, and systematic improvement.
 
-> **Standards:** Format defined in [STANDARDS_SKILLS.md](../STANDARDS_SKILLS.md)  
-> **Discovery:** See [STANDARDS_COMMANDS.md](../STANDARDS_COMMANDS.md#18-command-discovery-protocol)
+> **Standards:** Format defined in [cco-standards.md](../cco-standards.md)  
+> **Discovery:** See [cco-standards.md](../cco-standards.md#18-command-discovery-protocol)
 
 
-**Principles**: P_INCIDENT_RESPONSE_READINESS, P_RUNBOOK_OPERATIONAL_DOCS, P_GRACEFUL_SHUTDOWN, P_HEALTH_CHECKS
+**Guidance Areas**: Incident Response Readiness, Runbook Documentation, Graceful Shutdown, Health Checks
 ---
 
 ---

@@ -1,5 +1,5 @@
 ---
-name: ai-ml-security
+name: cco-skill-ai-security
 description: Protect AI systems from prompt injection, PII leakage, adversarial inputs, and API abuse through input sanitization, output filtering, rate limiting, and comprehensive audit logging
 keywords: [prompt injection, LLM security, PII protection, adversarial inputs, AI safety, model security, content moderation, rate limiting, token budget]
 category: security
@@ -11,8 +11,8 @@ pain_points: [3, 5, 8]
 
 # AI/ML Security: Prompt Injection & Model Security
 
-> **Standards:** Format defined in [STANDARDS_SKILLS.md](../STANDARDS_SKILLS.md)  
-> **Discovery:** See [STANDARDS_COMMANDS.md](../STANDARDS_COMMANDS.md#18-command-discovery-protocol)
+> **Standards:** Format defined in [cco-standards.md](../cco-standards.md)  
+> **Discovery:** See [cco-standards.md](../cco-standards.md#18-command-discovery-protocol)
 
 
 Protect AI systems from prompt injection, PII leakage, adversarial inputs, and API abuse.

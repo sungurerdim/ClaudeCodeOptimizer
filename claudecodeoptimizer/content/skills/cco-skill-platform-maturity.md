@@ -1,5 +1,5 @@
 ---
-name: platform-engineering-maturity-dx
+name: cco-skill-platform-maturity
 description: Assess platform engineering maturity through CI/CD automation, test coverage, IaC presence, deployment capabilities, and developer experience scoring to determine AI readiness and amplification potential
 keywords: [platform engineering, CI/CD maturity, test automation, IaC, Infrastructure as Code, deployment automation, developer experience, DX, AI readiness, platform maturity, DevOps]
 category: platform
@@ -11,8 +11,8 @@ pain_points: [4, 6, 10]
 
 # Platform Engineering, Maturity & Developer Experience
 
-> **Standards:** Format defined in [STANDARDS_SKILLS.md](../STANDARDS_SKILLS.md)  
-> **Discovery:** See [STANDARDS_COMMANDS.md](../STANDARDS_COMMANDS.md#18-command-discovery-protocol)
+> **Standards:** Format defined in [cco-standards.md](../cco-standards.md)  
+> **Discovery:** See [cco-standards.md](../cco-standards.md#18-command-discovery-protocol)
 
 
 Assess platform maturity + CI/CD automation + test coverage + IaC + DX + AI readiness.

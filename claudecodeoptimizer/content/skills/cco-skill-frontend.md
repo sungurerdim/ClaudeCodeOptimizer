@@ -1,5 +1,5 @@
 ---
-name: frontend-optimization
+name: cco-skill-frontend
 description: Reduce bundle size under 200KB gzipped, ensure WCAG 2.1 AA compliance, achieve Core Web Vitals targets (LCP under 2.5s, FID under 100ms, CLS under 0.1), and enable SPA SEO
 keywords: [bundle size, accessibility, WCAG, Core Web Vitals, LCP, FID, CLS, code splitting, tree shaking, lazy loading, a11y]
 category: performance
@@ -11,8 +11,8 @@ pain_points: [1, 6, 11]
 
 # Frontend: Bundle Size, Accessibility & Performance
 
-> **Standards:** Format defined in [STANDARDS_SKILLS.md](../STANDARDS_SKILLS.md)  
-> **Discovery:** See [STANDARDS_COMMANDS.md](../STANDARDS_COMMANDS.md#18-command-discovery-protocol)
+> **Standards:** Format defined in [cco-standards.md](../cco-standards.md)  
+> **Discovery:** See [cco-standards.md](../cco-standards.md#18-command-discovery-protocol)
 
 
 **Skill ID:** `frontend-bundle-a11y-performance`
@@ -21,7 +21,7 @@ pain_points: [1, 6, 11]
 
 **Purpose:** Reduce bundle size (<200KB gzipped), ensure WCAG 2.1 AA compliance, achieve Core Web Vitals targets (LCP <2.5s, FID <100ms, CLS <0.1), enable SPA SEO
 
-**Related:** P_LAZY_LOADING, P_PERFORMANCE_PROFILE_BEFORE_OPTIMIZE
+**Related Guidance:** Lazy Loading, Profile Before Optimize
 ---
 
 ---

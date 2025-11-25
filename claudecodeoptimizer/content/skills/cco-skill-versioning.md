@@ -1,5 +1,5 @@
 ---
-name: cco-skill-versioning-semver-changelog-compat
+name: cco-skill-versioning
 description: Versioning, releases, changelogs, backward compatibility
 keywords: [versioning, semver, version, major, minor, patch, release, breaking changes, changelog, deprecation, git, releases, conventional commits]
 category: infrastructure
@@ -11,8 +11,8 @@ pain_points: [5]
 
 # Skill: Versioning - SemVer, Changelog & Backward Compatibility
 
-> **Standards:** Format defined in [STANDARDS_SKILLS.md](../STANDARDS_SKILLS.md)  
-> **Discovery:** See [STANDARDS_COMMANDS.md](../STANDARDS_COMMANDS.md#18-command-discovery-protocol)
+> **Standards:** Format defined in [cco-standards.md](../cco-standards.md)  
+> **Discovery:** See [cco-standards.md](../cco-standards.md#18-command-discovery-protocol)
 
 
 ## Purpose
@@ -26,13 +26,13 @@ Prevent breaking changes through semantic versioning and deprecation.
 
 ---
 
-## Principles
+## Guidance Areas
 
-- **P_SEMANTIC_VERSIONING** - MAJOR.MINOR.PATCH compatibility
-- **P_CHANGELOG_MAINTENANCE** - Keep a Changelog format
-- **P_NO_BACKWARD_COMPAT_DEBT** - 6mo+ deprecation periods
-- **P_AUTO_VERSIONING** - Conventional commits → auto version
-- **P_GIT_COMMIT_QUALITY** - @content/principles/P_GIT_COMMIT_QUALITY.md
+- **Semantic Versioning** - MAJOR.MINOR.PATCH compatibility
+- **Changelog Maintenance** - Keep a Changelog format
+- **Backward Compatibility** - 6mo+ deprecation periods
+- **Auto Versioning** - Conventional commits → auto version
+- **Git Commit Quality** - Quality commits enable deployment tracking
 
 ## Activation
 

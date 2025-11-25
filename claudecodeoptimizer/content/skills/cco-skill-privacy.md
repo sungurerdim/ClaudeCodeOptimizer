@@ -1,5 +1,5 @@
 ---
-name: privacy-compliance
+name: cco-skill-privacy
 description: Implement GDPR/HIPAA/CCPA compliance through PII encryption, consent management, data subject rights (access, erasure, portability), log sanitization, and retention automation
 keywords: [GDPR, HIPAA, CCPA, PII encryption, consent management, data subject rights, privacy by design, log sanitization, retention policy]
 category: security
@@ -13,8 +13,8 @@ pain_points: [3, 5, 8]
 **Domain**: Data Protection
 **Purpose**: Implement GDPR/HIPAA/CCPA compliance through PII encryption, consent management, data subject rights, and privacy-by-design.
 
-> **Standards:** Format defined in [STANDARDS_SKILLS.md](../STANDARDS_SKILLS.md)  
-> **Discovery:** See [STANDARDS_COMMANDS.md](../STANDARDS_COMMANDS.md#18-command-discovery-protocol)
+> **Standards:** Format defined in [cco-standards.md](../cco-standards.md)  
+> **Discovery:** See [cco-standards.md](../cco-standards.md#18-command-discovery-protocol)
 
 
 ## Core Techniques

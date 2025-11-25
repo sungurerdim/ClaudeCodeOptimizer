@@ -1,5 +1,5 @@
 ---
-name: cco-skill-cicd-gates-deployment-automation
+name: cco-skill-cicd-automation
 description: Use this skill when CI/CD pipelines, deployment, automation, or quality gates are mentioned
 keywords: [cicd, pipeline, continuous integration, continuous deployment, deployment, deploy, release, rollout, automation, quality gates, build gates, github actions, gitlab ci, jenkins, circleci, blue-green, canary, rollback, infrastructure as code, gitops, terraform]
 category: infrastructure
@@ -11,8 +11,8 @@ pain_points: [6]
 
 # Skill: CI/CD - Quality Gates, Deployment & Automation
 
-> **Standards:** Format defined in [STANDARDS_SKILLS.md](../STANDARDS_SKILLS.md)  
-> **Discovery:** See [STANDARDS_COMMANDS.md](../STANDARDS_COMMANDS.md#18-command-discovery-protocol)
+> **Standards:** Format defined in [cco-standards.md](../cco-standards.md)  
+> **Discovery:** See [cco-standards.md](../cco-standards.md#18-command-discovery-protocol)
 
 
 ## Domain
@@ -32,34 +32,34 @@ Prevent production incidents through automated quality gates, safe deployment st
 
 ---
 
-## Principles Included
+## Guidance Areas
 
-### P_CI_GATES
+### CI Gates
 **Category**: Quality Enforcement
 **Why**: Automated gates (lint, test, coverage, security) block broken code
 **Triggers**: Setting up CI, quality thresholds, pipeline failures
 
-### P_IAC_GITOPS
+### Infrastructure as Code (IaC/GitOps)
 **Category**: Infrastructure Automation
 **Why**: IaC enables version control, review, automated provisioning
 **Triggers**: Infrastructure deployment, environment management
 
-### P_BLUE_GREEN_DEPLOYMENT
+### Blue-Green Deployment
 **Category**: Deployment Strategy
 **Why**: Zero-downtime by switching traffic between identical environments
 **Triggers**: Production deploys, zero-downtime releases, rollback
 
-### P_CANARY_RELEASES
+### Canary Releases
 **Category**: Progressive Deployment
 **Why**: Gradual rollout in stages detects issues early
 **Triggers**: High-risk deploys, A/B testing, gradual rollout
 
-### P_ROLLBACK_STRATEGY
+### Rollback Strategy
 **Category**: Incident Response
 **Why**: Fast automated rollback prevents prolonged outages
 **Triggers**: Deployment failures, performance degradation, error spikes
 
-### P_GIT_COMMIT_QUALITY
+### Git Commit Quality
 **Category**: Git Best Practices
 **Why**: Quality commits enable deployment tracking, changelog automation
 **Triggers**: CI/CD pipelines, deployment automation, release management
@@ -77,9 +77,9 @@ Auto-loads when detecting:
 
 ## Related Skills
 
-- **cco-skill-git-branching-pr-review**: Git events trigger pipelines
-- **cco-skill-test-pyramid-coverage-isolation**: Test pyramid defines gate thresholds
-- **cco-skill-security-owasp-xss-sqli-csrf**: Security scanning as gate
+- **cco-skill-git-workflow**: Git events trigger pipelines
+- **cco-skill-testing-fundamentals**: Test pyramid defines gate thresholds
+- **cco-skill-security-fundamentals**: Security scanning as gate
 
 ---
 
@@ -87,21 +87,21 @@ Auto-loads when detecting:
 
 ### File Context
 ```
-User opens: .github/workflows/ci.yml → Skill loads → P_CI_GATES active
+User opens: .github/workflows/ci.yml → Skill loads → CI Gates guidance active
 Result: Reviews gate completeness (lint, test, coverage, security)
 ```
 
 ### Deployment Strategy
 ```
 User: "Deploy high-risk feature to production?"
-Principles: P_CANARY_RELEASES, P_BLUE_GREEN_DEPLOYMENT
+Guidance: Canary Releases, Blue-Green Deployment
 Result: Recommends canary deployment with gradual rollout + automated rollback
 ```
 
 ### Pipeline Failure
 ```
 User: "Pipeline failing - coverage below threshold"
-Principle: P_CI_GATES
+Guidance: CI Gates
 Result: Analyzes threshold, identifies gaps, generates tests
 ```
 
@@ -114,7 +114,7 @@ Use these templates when generating CI/CD configurations:
 ### GitHub Actions - Python
 
 ```yaml
-name: CI
+name: cco-skill-cicd-automation
 on: [push, pull_request]
 
 jobs:
@@ -147,7 +147,7 @@ jobs:
 ### GitHub Actions - Node.js
 
 ```yaml
-name: CI
+name: cco-skill-cicd-automation
 on: [push, pull_request]
 
 jobs:

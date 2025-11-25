@@ -1,5 +1,5 @@
 ---
-name: observability-metrics-slo
+name: cco-skill-observability
 description: Implement OpenTelemetry-based observability with SLO-driven alerting to detect issues before user impact. Includes metrics (Counter, Gauge, Histogram), health checks (liveness, readiness, startup), SLO/SLI/SLA frameworks, error budgets, and Prometheus/Grafana dashboards.
 keywords: [observability, metrics, monitoring, alerts, SLO, SLI, SLA, Prometheus, Grafana, health check, error budget, telemetry, OpenTelemetry, golden signals]
 category: observability
@@ -11,8 +11,8 @@ pain_points: [9, 10]
 
 # Observability - Metrics, Alerts, SLOs
 
-> **Standards:** Format defined in [STANDARDS_SKILLS.md](../STANDARDS_SKILLS.md)  
-> **Discovery:** See [STANDARDS_COMMANDS.md](../STANDARDS_COMMANDS.md#18-command-discovery-protocol)
+> **Standards:** Format defined in [cco-standards.md](../cco-standards.md)  
+> **Discovery:** See [cco-standards.md](../cco-standards.md#18-command-discovery-protocol)
 
 
 ---
