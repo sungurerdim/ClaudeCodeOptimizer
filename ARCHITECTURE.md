@@ -124,7 +124,7 @@ No manual skill selection needed. Claude matches context to relevant skills auto
 - Claude Guidelines (C_*): Token optimization, parallel agents, efficient file ops, honest reporting, native tools, project context discovery
 - Universal (U_*): Evidence-based verification, DRY, minimal touch, no overengineering
 
-**Auto-Activating Skills (26 total):**
+**Auto-Activating Skills:**
 Skills load on-demand when Claude detects relevance:
 - **Security (5):** OWASP, AI security, supply chain, K8s, privacy
 - **Testing (2):** Test pyramid, API testing
@@ -146,7 +146,7 @@ Skills load on-demand when Claude detects relevance:
 **Project Context Discovery:**
 - Optional analysis of project documentation (README, CONTRIBUTING, ARCHITECTURE)
 - Haiku sub-agent extracts project context without consuming main context
-n**Auto-Activating Skills (26 total):** Security (5), Testing (2), Database (2), Observability (3), CI/CD (2), Code Quality (2), Docs (1), Git (2), Performance (2), Architecture (2), Mobile (1), DevEx (1). Skills load on-demand when relevant, keeping context focused.
+n**Auto-Activating Skills:** Security (5), Testing (2), Database (2), Observability (3), CI/CD (2), Code Quality (2), Docs (1), Git (2), Performance (2), Architecture (2), Mobile (1), DevEx (1). Skills load on-demand when relevant, keeping context focused.
 ### Specialized Agents
 
 - **audit-agent** (Haiku) - Fast scanning, cost-efficient pattern detection
@@ -309,7 +309,7 @@ See `~/.claude/principles/` for complete principle documentation:
 - U_CHANGE_VERIFICATION, U_CROSS_PLATFORM_COMPATIBILITY, U_DRY, U_EVIDENCE_BASED_ANALYSIS, U_FOLLOW_PATTERNS, U_MINIMAL_TOUCH, U_NO_HARDCODED_EXAMPLES, U_NO_OVERENGINEERING
 
 **Claude Guidelines (C_*) Principles:**
-- C_AGENT_ORCHESTRATION_PATTERNS, C_CONTEXT_WINDOW_MGMT, C_EFFICIENT_FILE_OPERATIONS, C_MODEL_SELECTION, C_NATIVE_TOOL_INTERACTIONS, C_NO_UNSOLICITED_FILE_CREATION, C_PROJECT_CONTEXT_DISCOVERY
+- C_CONTEXT_WINDOW_MGMT, C_EFFICIENT_FILE_OPERATIONS, C_NATIVE_TOOL_INTERACTIONS, C_NO_UNSOLICITED_FILE_CREATION, C_PROJECT_CONTEXT_DISCOVERY
 
 These principles guide all CCO component development (commands, skills, agents).
 ## Extension Points

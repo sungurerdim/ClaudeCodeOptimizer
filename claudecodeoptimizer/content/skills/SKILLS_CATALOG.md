@@ -6,21 +6,21 @@
 
 ## Summary
 
-**Total Skills**: 30
+**Total Skills**: See skills directory
 
-**Categories**: 9
+**Categories**: See below
 
 ## Table of Contents
 
-- [Architecture](#architecture) (3 skills)
-- [Code Quality](#code-quality) (4 skills)
-- [Docs](#docs) (1 skills)
-- [Infrastructure](#infrastructure) (3 skills)
-- [Observability](#observability) (2 skills)
-- [Other](#other) (7 skills)
-- [Performance](#performance) (4 skills)
-- [Security](#security) (5 skills)
-- [Testing](#testing) (1 skills)
+- [Architecture](#architecture)
+- [Code Quality](#code-quality)
+- [Docs](#docs)
+- [Infrastructure](#infrastructure)
+- [Observability](#observability)
+- [Other](#other)
+- [Performance](#performance)
+- [Security](#security)
+- [Testing](#testing)
 
 ---
 

@@ -42,10 +42,8 @@ Implement a **marker-based injection system** using HTML comment markers:
 @principles/U_MINIMAL_TOUCH.md
 @principles/U_NO_HARDCODED_EXAMPLES.md
 @principles/U_NO_OVERENGINEERING.md
-@principles/C_AGENT_ORCHESTRATION_PATTERNS.md
 @principles/C_CONTEXT_WINDOW_MGMT.md
 @principles/C_EFFICIENT_FILE_OPERATIONS.md
-@principles/C_MODEL_SELECTION.md
 @principles/C_NATIVE_TOOL_INTERACTIONS.md
 @principles/C_NO_UNSOLICITED_FILE_CREATION.md
 @principles/C_PROJECT_CONTEXT_DISCOVERY.md
