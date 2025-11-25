@@ -132,7 +132,7 @@ cco-setup
 - ✅ Removed auto-setup behavior (explicit `cco-setup` command required)
 - ✅ 100% test pass rate (all tests fixed and passing)
 - ✅ Enhanced command UX with unused skills integration
-- ✅ Context optimization focus in `/cco-optimize-code-performance-context-usage` (CLAUDE.md duplication elimination)
+- ✅ Context optimization focus in `/cco-optimize-context-usage` (CLAUDE.md duplication elimination)
 
 ### Verifying Installation
 
@@ -286,11 +286,8 @@ Open any project in Claude Code:
 | `/cco-commit` | Smart git commits | `git add . && /cco-commit` |
 | `/cco-implement "feature"` | Build with TDD | `/cco-implement "Add JWT authentication"` |
 | `/cco-update` | Update version | `/cco-update` |
-| `# Option 1: Use slash command (inside Claude Code)
-/cco-remove
-
-# Option 2: Use CLI command (terminal)
-cco-remove` | Clean uninstall | `/cco-remove` |
+| `/cco-optimize-context-usage` | Reduce context tokens | `/cco-optimize-context-usage` |
+| `/cco-remove` | Clean uninstall | `/cco-remove` |
 
 **Audit Categories:** `--quick`, `--security`, `--ai-security`, `--ai-quality`, `--tests`, `--database`, `--performance`, `--tech-debt`, `--code-review`, `--platform`, `--ci-cd`, `--containers`, `--supply-chain`, `--all`
 

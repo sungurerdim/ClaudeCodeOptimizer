@@ -6,7 +6,7 @@
 
 ## Overview
 
-CCO provides 11 slash commands for discovery, fixing, generation, and optimization.
+CCO provides slash commands for discovery, fixing, generation, and optimization.
 
 **Command Categories:**
 - **Discovery** (2) - Know your problems
@@ -425,6 +425,6 @@ cat ~/.claude/commands/cco-audit.md
 
 ---
 
-**Total:** 11 commands across 4 categories
+**See commands/ directory for current list**
 
 **Runtime:** All execute within Claude Code
