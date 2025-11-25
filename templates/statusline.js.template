@@ -1,361 +1,389 @@
 #!/usr/bin/env node
 
-// Claude Code Statusline - High Performance
-// Single-pass git status parsing, minimal file I/O
+// Claude Code Statusline - Privacy-Focused & Feature-Rich
+// Clean box design with icons, minimal path exposure
 
 const fs = require('fs');
 const path = require('path');
 const { execSync } = require('child_process');
 const os = require('os');
 
-const CCO_STATE_DIR = path.join(__dirname, '..', '.cco', 'state');
+// ============================================================================
+// CONFIGURATION
+// ============================================================================
+const CONFIG = {
+  pathSegments: 2,      // Show last N path segments (0 = hide)
+  showHostname: false,  // true = user@host, false = just user
+  emojiWidth: 2,        // Terminal emoji width (1 or 2, try 1 if alignment is off)
+};
 
-// ANSI Color codes
-const COLORS = {
+// ============================================================================
+// ICONS
+// ============================================================================
+const ICON = {
+  user: '👤',
+  folder: '📁',
+  model: '🤖',
+  cc: '🔷',
+  repo: '🔗',
+  stage: '📤',
+  commit: '📦',
+  push: '🚀',
+  modified: '📝',
+  new: '✨',
+  deleted: '🗑️',
+  conflict: '⚠️',
+  stash: '📚',
+};
+
+// ============================================================================
+// BOX DRAWING
+// ============================================================================
+const BOX = {
+  tl: '┌', tr: '┐', bl: '└', br: '┘',
+  h: '─', v: '│', sep: '│',
+};
+
+// ============================================================================
+// ANSI COLORS
+// ============================================================================
+const C = {
   reset: '\x1b[0m',
+  bold: '\x1b[1m',
+  dim: '\x1b[2m',
   red: '\x1b[91m',
   green: '\x1b[92m',
   yellow: '\x1b[93m',
-  blue: '\x1b[1m\x1b[94m',
-  magenta: '\x1b[1m\x1b[95m',
-  cyan: '\x1b[36m',
+  blue: '\x1b[94m',
+  magenta: '\x1b[95m',
+  cyan: '\x1b[96m',
   white: '\x1b[97m',
-  gray: '\x1b[90m'
+  gray: '\x1b[90m',
 };
 
-function colorize(text, color, enabled = true) {
-  if (!enabled) return text;
-  return `${COLORS[color] || ''}${text}${COLORS.reset}`;
+function c(text, color) {
+  return `${C[color] || ''}${text}${C.reset}`;
 }
 
-function padString(str, length, align = 'left') {
-  const visibleLength = str.replace(/\x1b\[[0-9;]*m/g, '').length;
-  const paddingNeeded = length - visibleLength;
-  if (paddingNeeded <= 0) return str;
-  const padding = ' '.repeat(paddingNeeded);
-  return align === 'right' ? padding + str : str + padding;
-}
-
+// ============================================================================
+// UTILITIES
+// ============================================================================
 function getVisibleLength(str) {
-  return str.replace(/\x1b\[[0-9;]*m/g, '').length;
+  // Remove ANSI escape codes
+  let s = str.replace(/\x1b\[[0-9;]*m/g, '');
+
+  // Remove zero-width characters FIRST
+  s = s.replace(/[\u{FE00}-\u{FE0F}\u{200B}-\u{200D}\u{2060}\u{FEFF}]/gu, '');
+
+  // Replace emojis with configured width
+  const emojiReplace = CONFIG.emojiWidth === 1 ? ' ' : '  ';
+  s = s.replace(/[\u{2600}-\u{27BF}\u{2B50}-\u{2B55}\u{1F300}-\u{1F9FF}\u{1FA00}-\u{1FAFF}]/gu, emojiReplace);
+
+  return s.length;
 }
 
-function truncateString(str, maxLength, suffix = '...') {
-  const visibleLength = getVisibleLength(str);
-  if (visibleLength <= maxLength) return str;
-
-  let currentVisible = 0;
-  let result = '';
-  let inAnsiCode = false;
-
-  for (let i = 0; i < str.length; i++) {
-    if (str[i] === '\x1b') inAnsiCode = true;
-    if (!inAnsiCode) {
-      if (currentVisible >= maxLength - suffix.length) break;
-      currentVisible++;
-    }
-    result += str[i];
-    if (inAnsiCode && str[i] === 'm') inAnsiCode = false;
-  }
-
-  return result + suffix + COLORS.reset;
+function padRight(str, len) {
+  const visible = getVisibleLength(str);
+  return visible >= len ? str : str + ' '.repeat(len - visible);
 }
 
-function execCommand(command, useShell = false) {
+function padLeft(str, len) {
+  const visible = getVisibleLength(str);
+  return visible >= len ? str : ' '.repeat(len - visible) + str;
+}
+
+function execCmd(cmd) {
   try {
-    const output = execSync(command, {
-      encoding: 'utf-8',
-      stdio: ['pipe', 'pipe', 'ignore'],
-      timeout: 3000,
-      shell: useShell  // Enable shell for pipes/redirects
-    });
-    // Only trim trailing newline, preserve leading spaces (important for git porcelain)
-    return output.replace(/\n$/, '');
-  } catch (e) {
-    return null;
-  }
+    return execSync(cmd, { encoding: 'utf-8', stdio: ['pipe', 'pipe', 'ignore'], timeout: 3000 }).replace(/\n$/, '');
+  } catch { return null; }
 }
 
-// OPTIMIZED: Single git status --porcelain call + self-parsed
+// ============================================================================
+// PATH FORMATTING
+// ============================================================================
+function formatPath(fullPath) {
+  if (CONFIG.pathSegments === 0) return '';
+  const parts = fullPath.replace(/\\/g, '/').split('/').filter(Boolean);
+  if (parts.length <= CONFIG.pathSegments) return parts.join('/');
+  return parts.slice(-CONFIG.pathSegments).join('/');
+}
+
+// ============================================================================
+// MODEL NAME PARSING
+// ============================================================================
+function formatModelName(modelData) {
+  return modelData?.display_name || 'Unknown';
+}
+
+// ============================================================================
+// CLAUDE CODE VERSION
+// ============================================================================
+function getClaudeCodeVersion() {
+  const version = execCmd('claude --version');
+  if (version) {
+    const match = version.match(/(\d+\.\d+\.\d+)/);
+    if (match) return match[1];
+  }
+  return null;
+}
+
+// ============================================================================
+// GIT INFO
+// ============================================================================
 function getGitInfo() {
-  const branch = execCommand('git rev-parse --abbrev-ref HEAD');
+  const branch = execCmd('git rev-parse --abbrev-ref HEAD');
   if (!branch) return null;
 
-  // Single porcelain call for all file status
-  // Format: "XY PATH" where X=index(staged), Y=worktree(unstaged)
-  const statusOutput = execCommand('git status --porcelain');
+  const statusOutput = execCmd('git status --porcelain') || '';
+  let mod = 0, add = 0, del = 0;
+  let sMod = 0, sAdd = 0, sDel = 0;
+  let conflict = 0, untracked = 0;
 
-  let modifiedCount = 0, deletedCount = 0, untrackedCount = 0;
-  let stagedModCount = 0, stagedNewCount = 0, stagedDelCount = 0;
-  let conflictCount = 0;
+  for (const line of statusOutput.split('\n')) {
+    if (!line || line.length < 2) continue;
+    const idx = line.charAt(0);
+    const wt = line.charAt(1);
 
-  if (statusOutput) {
-    const lines = statusOutput.split('\n');
-    for (const line of lines) {
-      if (!line || line.length < 2) continue;
+    if (idx === 'U' || wt === 'U' || (idx === 'D' && wt === 'D') || (idx === 'A' && wt === 'A')) {
+      conflict++; continue;
+    }
+    if (idx === '?' && wt === '?') { untracked++; continue; }
 
-      // Git porcelain: "XY PATH" - first 2 chars are status codes
-      const index = line.charAt(0);    // Staged (index) - use charAt for safety
-      const worktree = line.charAt(1); // Unstaged (working tree)
+    if (wt === 'M') mod++;
+    if (wt === 'D') del++;
+    if (idx === 'M') sMod++;
+    if (idx === 'A') sAdd++;
+    if (idx === 'D') sDel++;
+    if (idx === 'R') sMod++;
+    if (idx === 'C') sAdd++;
+  }
 
-      // CONFLICTS (unmerged files) - detect first to avoid double-counting
-      // Conflict patterns: DD, AU, UD, UA, DU, AA, UU (any 'U' or both same)
-      if (index === 'U' || worktree === 'U' ||
-          (index === 'D' && worktree === 'D') ||
-          (index === 'A' && worktree === 'A')) {
-        conflictCount++;
-        continue; // Skip further counting for conflicts
+  add = untracked;
+
+  // Line counts
+  let unstAdd = 0, unstRem = 0, stAdd = 0, stRem = 0;
+
+  const unstaged = execCmd('git diff --numstat');
+  if (unstaged) {
+    for (const line of unstaged.split('\n')) {
+      const p = line.split(/\s+/);
+      if (p.length >= 2) {
+        const a = parseInt(p[0], 10), r = parseInt(p[1], 10);
+        if (!isNaN(a)) unstAdd += a;
+        if (!isNaN(r)) unstRem += r;
       }
-
-      // UNTRACKED (both columns are '?')
-      if (index === '?' && worktree === '?') {
-        untrackedCount++;
-        continue;
-      }
-
-      // UNSTAGED (working tree column)
-      if (worktree === 'M') modifiedCount++;
-      if (worktree === 'D') deletedCount++;
-
-      // STAGED (index column) - space means "unchanged in index"
-      if (index === 'M') stagedModCount++;
-      if (index === 'A') stagedNewCount++;
-      if (index === 'D') stagedDelCount++;
-      if (index === 'R') stagedModCount++; // Renamed = modified
-      if (index === 'C') stagedNewCount++;  // Copied = new file
     }
   }
 
-  // Aggregated numstat (single call for unstaged)
-  let unstagedAdded = 0, unstagedRemoved = 0;
-  const unstagedStats = execCommand('git diff --numstat');
-  if (unstagedStats) {
-    unstagedStats.split('\n').forEach(line => {
-      if (!line.trim()) return;
-      const parts = line.split(/\s+/);
-      if (parts.length >= 2) {
-        // Binary files show '-' in numstat, parseInt returns NaN, fallback to 0
-        const added = parseInt(parts[0], 10);
-        const removed = parseInt(parts[1], 10);
-        if (!isNaN(added)) unstagedAdded += added;
-        if (!isNaN(removed)) unstagedRemoved += removed;
-      }
-    });
-  }
-
-  // Count lines in untracked files - optimized with shell
-  // Performance limit: skip if > 500 files (binary/huge files could slow down)
-  if (untrackedCount > 0 && untrackedCount <= 500) {
-    // Use bash -c to ensure proper shell execution
-    const untrackedLines = execCommand('bash -c "git ls-files --others --exclude-standard | xargs cat 2>/dev/null | wc -l"');
+  // Untracked file lines
+  if (untracked > 0 && untracked <= 100) {
+    const untrackedLines = execCmd('bash -c "git ls-files --others --exclude-standard | head -100 | xargs cat 2>/dev/null | wc -l"');
     if (untrackedLines) {
       const lines = parseInt(untrackedLines, 10);
-      if (!isNaN(lines) && lines > 0) {
-        unstagedAdded += lines;
+      if (!isNaN(lines)) unstAdd += lines;
+    }
+  }
+
+  const staged = execCmd('git diff --cached --numstat');
+  if (staged) {
+    for (const line of staged.split('\n')) {
+      const p = line.split(/\s+/);
+      if (p.length >= 2) {
+        const a = parseInt(p[0], 10), r = parseInt(p[1], 10);
+        if (!isNaN(a)) stAdd += a;
+        if (!isNaN(r)) stRem += r;
       }
     }
   }
 
-  // Aggregated numstat (single call for staged)
-  let stagedAdded = 0, stagedRemoved = 0;
-  const stagedStats = execCommand('git diff --cached --numstat');
-  if (stagedStats) {
-    stagedStats.split('\n').forEach(line => {
-      if (!line.trim()) return;
-      const parts = line.split(/\s+/);
-      if (parts.length >= 2) {
-        // Binary files show '-' in numstat, parseInt returns NaN, fallback to 0
-        const added = parseInt(parts[0], 10);
-        const removed = parseInt(parts[1], 10);
-        if (!isNaN(added)) stagedAdded += added;
-        if (!isNaN(removed)) stagedRemoved += removed;
-      }
-    });
+  // Unpushed
+  let unpushed = 0;
+  const tracking = execCmd('git rev-parse --abbrev-ref @{u}');
+  if (tracking) {
+    const cnt = execCmd('git rev-list --count @{u}..HEAD');
+    unpushed = parseInt(cnt || '0', 10);
   }
 
-  // Unpushed commits (simplified)
-  let unpushedCount = 0;
-  const trackingBranch = execCommand('git rev-parse --abbrev-ref @{u}');
-  if (trackingBranch) {
-    const result = execCommand('git rev-list --count @{u}..HEAD');
-    unpushedCount = parseInt(result || 0);
-  }
+  // Stash
+  const stashList = execCmd('git stash list');
+  const stash = stashList ? stashList.split('\n').filter(x => x.trim()).length : 0;
 
-  // Stash (single call - conflicts already counted from porcelain)
-  const stashList = execCommand('git stash list');
-  const stashCount = stashList ? stashList.split('\n').filter(x => x.trim()).length : 0;
-
-  // Repo name (cache-friendly)
-  let repoName = null;
-  const gitRoot = execCommand('git rev-parse --show-toplevel');
-  if (gitRoot) repoName = path.basename(gitRoot);
+  // Repo name
+  const gitRoot = execCmd('git rev-parse --show-toplevel');
+  const repoName = gitRoot ? path.basename(gitRoot) : null;
 
   return {
-    branch,
-    repoName,
-    // Unstaged
-    modifiedFiles: modifiedCount,
-    deletedFiles: deletedCount,
-    untrackedFiles: untrackedCount,
-    unstagedAdded,
-    unstagedRemoved,
-    // Staged
-    stagedModifiedFiles: stagedModCount,
-    stagedNewFiles: stagedNewCount,
-    stagedDeletedFiles: stagedDelCount,
-    stagedAdded,
-    stagedRemoved,
-    // Unpushed
-    unpushedCommits: unpushedCount,
-    // Other
-    conflictCount,
-    stashCount
+    branch, repoName,
+    mod, add, del,
+    sMod, sAdd, sDel,
+    unstAdd, unstRem,
+    stAdd, stRem,
+    unpushed, conflict, stash
   };
 }
 
-// OPTIMIZED: Lazy loading, single file check
-function getCCOState() {
-  const projectConfigFile = path.join(process.cwd(), '.cco', 'project.json');
+// ============================================================================
+// FORMAT STATUSLINE
+// ============================================================================
+function formatStatusline(input, git) {
+  const termWidth = process.stdout.columns || 100;
+  const username = os.userInfo().username || 'user';
+  const host = os.hostname() || 'host';
+  const userDisplay = CONFIG.showHostname ? `${username}@${host}` : username;
 
-  // Fast early exit
-  if (!fs.existsSync(projectConfigFile)) {
-    return { enabled: false };
-  }
+  const fullPath = input.cwd || process.cwd();
+  const pathDisplay = formatPath(fullPath);
+  const modelDisplay = formatModelName(input.model);
+  const ccVersion = getClaudeCodeVersion();
 
-  try {
-    const projectConfig = JSON.parse(fs.readFileSync(projectConfigFile, 'utf-8'));
-    return {
-      enabled: true,
-      projectType: projectConfig.project_type || null,
-      maturity: projectConfig.maturity || null,
-      activePrinciples: (projectConfig.active_principles || []).length
-    };
-  } catch (e) {
-    return { enabled: false };
-  }
-}
+  // ─────────────────────────────────────────────────────────────────────────
+  // BUILD 4-COLUMN GRID
+  // ─────────────────────────────────────────────────────────────────────────
+  // Row 1: Path | User | CC | Model
+  // Row 2: Repo:Branch | Conflicts | Stash | Push
 
-function formatMetricsForStatusline(inputData, git, cco) {
-  const colorEnabled = true;
-  const terminalWidth = process.stdout.columns || 120;
-  // Only truncate if terminal is VERY narrow (< 80 cols)
-  const maxLineWidth = terminalWidth < 80 ? terminalWidth - 5 : terminalWidth;
-
-  const model = inputData.model?.display_name || 'Unknown';
-  const username = os.userInfo().username || 'unknown';
-  const hostname = os.hostname() || 'unknown';
-  const fullPath = inputData.cwd || process.cwd();
-
-  const lines = [];
-
-  // Line 1: User@hostname | CC Version | Model
-  const line1Parts = [
-    colorize(`${username}@${hostname}`, 'cyan', colorEnabled)
+  const row1 = [
+    `${ICON.folder} ${c(pathDisplay, 'white')}`,
+    `${ICON.user} ${c(userDisplay, 'cyan')}`,
+    ccVersion ? `${ICON.cc} ${c('CC ' + ccVersion, 'yellow')}` : `${ICON.cc} ${c('CC ?', 'gray')}`,
+    `${ICON.model} ${c(modelDisplay, 'magenta')}`
   ];
 
-  // Claude Code version (fast check)
-  const claudeVersion = execCommand('claude --version');
-  if (claudeVersion) {
-    const versionMatch = claudeVersion.match(/(\d+\.\d+\.\d+)/);
-    if (versionMatch) {
-      line1Parts.push(colorize(`CC ${versionMatch[1]}`, 'yellow', colorEnabled));
+  let row2;
+  if (git) {
+    const repoText = git.repoName ? `${git.repoName}:${git.branch}` : git.branch;
+    const conflictColor = git.conflict > 0 ? 'red' : 'gray';
+    const stashColor = git.stash > 0 ? 'cyan' : 'gray';
+    const pushColor = git.unpushed > 0 ? 'magenta' : 'gray';
+
+    row2 = [
+      `${ICON.repo} ${c(repoText, 'green')}`,
+      `${ICON.conflict} ${c('Conflicts:', conflictColor)} ${c(String(git.conflict), conflictColor)}`,
+      `${ICON.stash} ${c('Stash:', stashColor)} ${c(String(git.stash), stashColor)}`,
+      `${ICON.push} ${c('Push:', pushColor)} ${c(String(git.unpushed), pushColor)}`
+    ];
+  } else {
+    row2 = [
+      c('Not a git repo', 'gray'),
+      '',
+      '',
+      ''
+    ];
+  }
+
+  // Calculate column widths (max of each column pair + 1 for single space padding)
+  const colWidths = [];
+  for (let i = 0; i < 4; i++) {
+    colWidths[i] = Math.max(getVisibleLength(row1[i]), getVisibleLength(row2[i])) + 1;
+  }
+
+  // Build Stage/Commit rows (4 columns: label+lines, mod, new, del)
+  let row3, row4;
+  if (git) {
+    const modStr = padLeft(String(git.mod), 2);
+    const addStr = padLeft(String(git.add), 2);
+    const delStr = padLeft(String(git.del), 2);
+    const unstAddStr = padLeft(String(git.unstAdd), 4);
+    const unstRemStr = padLeft(String(git.unstRem), 4);
+
+    const sModStr = padLeft(String(git.sMod), 2);
+    const sAddStr = padLeft(String(git.sAdd), 2);
+    const sDelStr = padLeft(String(git.sDel), 2);
+    const stAddStr = padLeft(String(git.stAdd), 4);
+    const stRemStr = padLeft(String(git.stRem), 4);
+
+    // Row 3: Stage (col1: label+lines, col2: mod, col3: new, col4: del)
+    row3 = [
+      `${ICON.stage} ${c('Ready to Stage ', 'white')} ${c('+' + unstAddStr, 'green')} ${c('-' + unstRemStr, 'red')}`,
+      `${ICON.modified} ${c(modStr, 'yellow')}`,
+      `${ICON.new} ${c(addStr, 'green')}`,
+      `${ICON.deleted} ${c(delStr, 'red')}`
+    ];
+
+    // Row 4: Commit (col1: label+lines, col2: mod, col3: new, col4: del)
+    row4 = [
+      `${ICON.commit} ${c('Ready to Commit', 'white')} ${c('+' + stAddStr, 'green')} ${c('-' + stRemStr, 'red')}`,
+      `${ICON.modified} ${c(sModStr, 'yellow')}`,
+      `${ICON.new} ${c(sAddStr, 'green')}`,
+      `${ICON.deleted} ${c(sDelStr, 'red')}`
+    ];
+
+    // Ensure first column can fit the labels with line counts
+    const labelWidth = Math.max(getVisibleLength(row3[0]), getVisibleLength(row4[0]));
+    if (labelWidth > colWidths[0] - 1) {
+      colWidths[0] = labelWidth + 1;
     }
   }
 
-  line1Parts.push(colorize(model, 'magenta', colorEnabled));
-  lines.push(line1Parts.join(' | '));
+  // ─────────────────────────────────────────────────────────────────────────
+  // BUILD LINES
+  // ─────────────────────────────────────────────────────────────────────────
+  const lines = [];
 
-  // Line 2: Directory | Repo:Branch
-  const line2Parts = [];
-  const pathParts = fullPath.split(/[\\/]/);
-  const displayPath = pathParts.length > 3 && fullPath.length > 50
-    ? '.../' + pathParts.slice(-2).join('/')
-    : fullPath;
-  line2Parts.push(colorize(displayPath, 'white', colorEnabled));
+  // Helper to build a row with columns
+  function buildRow(cells, leftChar, sepChar, rightChar) {
+    let result = c(leftChar, 'gray');
+    for (let i = 0; i < cells.length; i++) {
+      const content = cells[i];
+      const pad = colWidths[i] - getVisibleLength(content);
+      result += ` ${content}${' '.repeat(pad)}`;
+      if (i < cells.length - 1) {
+        result += c(sepChar, 'gray');
+      }
+    }
+    result += c(rightChar, 'gray');
+    return result;
+  }
+
+  // Helper to build a separator line
+  function buildSep(leftChar, midChar, rightChar, fillChar) {
+    let result = c(leftChar, 'gray');
+    for (let i = 0; i < colWidths.length; i++) {
+      result += c(fillChar.repeat(colWidths[i] + 1), 'gray');
+      if (i < colWidths.length - 1) {
+        result += c(midChar, 'gray');
+      }
+    }
+    result += c(rightChar, 'gray');
+    return result;
+  }
+
+  // Title row (same structure as buildRow, but with space/| instead of │)
+  lines.push(buildRow(row1, ' ', c('|', 'gray'), ' '));
+
+  // Top border of table
+  lines.push(buildSep('┌', '┬', '┐', '─'));
+
+  // Row 2 (git info)
+  lines.push(buildRow(row2, '│', '│', '│'));
 
   if (git) {
-    const repoDisplay = git.repoName
-      ? colorize(`${git.repoName}:${git.branch}`, 'green', colorEnabled)
-      : colorize(git.branch, 'green', colorEnabled);
-    line2Parts.push(repoDisplay);
-  }
-  lines.push(line2Parts.join(' | '));
+    // Middle separator (4 columns)
+    lines.push(buildSep('├', '┼', '┤', '─'));
 
-  if (!git) {
-    return lines.map(line => truncateString(line, maxLineWidth)).join('\n');
-  }
+    // Stage row (4 columns)
+    lines.push(buildRow(row3, '│', '│', '│'));
 
-  // Line 3: Ready to Stage
-  const modCount = git.modifiedFiles || 0;
-  const newCount = git.untrackedFiles || 0;
-  const delCount = git.deletedFiles || 0;
+    // Commit row (4 columns)
+    lines.push(buildRow(row4, '│', '│', '│'));
 
-  const modCountStr = padString(colorize(`${modCount}`, 'yellow', colorEnabled), 3, 'right');
-  const newCountStr = padString(colorize(`${newCount}`, 'green', colorEnabled), 3, 'right');
-  const delCountStr = padString(colorize(`${delCount}`, 'red', colorEnabled), 3, 'right');
-
-  const unstagedLine = `Ready to Stage:  ${modCountStr} mod  ${newCountStr} new  ${delCountStr} del  (${colorize(`+${git.unstagedAdded}`, 'green', colorEnabled)}/${colorize(`-${git.unstagedRemoved}`, 'red', colorEnabled)})`;
-
-  // Add CCO status inline
-  if (cco && cco.enabled) {
-    const ccoParts = [];
-    if (cco.projectType) ccoParts.push(colorize(cco.projectType.toUpperCase(), 'magenta', colorEnabled));
-    if (cco.maturity) {
-      const labels = { prototype: 'PROTO', mvp: 'MVP', active: 'DEV', production: 'PROD', maintenance: 'MAINT' };
-      ccoParts.push(colorize(labels[cco.maturity] || cco.maturity.toUpperCase(), 'cyan', colorEnabled));
-    }
-    if (cco.activePrinciples > 0) ccoParts.push(colorize(`${cco.activePrinciples}P`, 'blue', colorEnabled));
-
-    if (ccoParts.length > 0) {
-      lines.push(unstagedLine + ' | CCO: ' + ccoParts.join(' '));
-    } else {
-      lines.push(unstagedLine);
-    }
+    // Bottom border (4 columns)
+    lines.push(buildSep('└', '┴', '┘', '─'));
   } else {
-    lines.push(unstagedLine);
+    // Bottom border (with columns)
+    lines.push(buildSep('└', '┴', '┘', '─'));
   }
 
-  // Line 4: Ready to Commit
-  const stagedModCount = git.stagedModifiedFiles || 0;
-  const stagedNewCount = git.stagedNewFiles || 0;
-  const stagedDelCount = git.stagedDeletedFiles || 0;
-  const stagedTotal = stagedModCount + stagedNewCount + stagedDelCount;
-  const stagedColor = stagedTotal > 0 ? 'blue' : 'gray';
-
-  const sModCountStr = padString(colorize(`${stagedModCount}`, 'yellow', colorEnabled), 3, 'right');
-  const sNewCountStr = padString(colorize(`${stagedNewCount}`, 'green', colorEnabled), 3, 'right');
-  const sDelCountStr = padString(colorize(`${stagedDelCount}`, 'red', colorEnabled), 3, 'right');
-
-  const commitLabel = colorize('Ready to Commit:', stagedColor, colorEnabled);
-  lines.push(`${commitLabel} ${sModCountStr} mod  ${sNewCountStr} new  ${sDelCountStr} del  (${colorize(`+${git.stagedAdded}`, 'green', colorEnabled)}/${colorize(`-${git.stagedRemoved}`, 'red', colorEnabled)})`);
-
-  // Line 5: Ready to Push
-  const unpushedColor = git.unpushedCommits > 0 ? 'magenta' : 'gray';
-  const pushLabel = colorize('Ready to Push:', unpushedColor, colorEnabled);
-  lines.push(`${pushLabel}     ${colorize(`${git.unpushedCommits}`, unpushedColor, colorEnabled)} commits`);
-
-  // Line 6: Conflicts & Stashed
-  const conflictColor = git.conflictCount > 0 ? 'red' : 'gray';
-  const stashColor = git.stashCount > 0 ? 'cyan' : 'gray';
-
-  lines.push(
-    `${colorize('Conflicts:', conflictColor, colorEnabled)} ${colorize(`${git.conflictCount}`, conflictColor, colorEnabled)} files  |  ` +
-    `${colorize('Stashed:', stashColor, colorEnabled)} ${colorize(`${git.stashCount}`, stashColor, colorEnabled)} entries`
-  );
-
-  return lines.map(line => truncateString(line, maxLineWidth)).join('\n');
+  return lines.join('\n');
 }
 
-// Main
+// ============================================================================
+// MAIN
+// ============================================================================
 try {
-  const input = fs.readFileSync(0, 'utf-8');
-  const data = JSON.parse(input);
-
+  const input = JSON.parse(fs.readFileSync(0, 'utf-8'));
   const git = getGitInfo();
-  const cco = git ? getCCOState() : { enabled: false };
-
-  const output = formatMetricsForStatusline(data, git, cco);
-  console.log(output);
+  console.log(formatStatusline(input, git));
 } catch (error) {
-  console.log('[Statusline Error: ' + error.message + ']');
+  console.log(`[Statusline Error: ${error.message}]`);
 }
