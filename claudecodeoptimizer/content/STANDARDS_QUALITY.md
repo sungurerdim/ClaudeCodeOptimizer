@@ -40,7 +40,7 @@ Every CCO command MUST satisfy these requirements:
 - ✅ Placeholder usage (no hardcoded examples)
 
 **Resource Optimization:**
-- ✅ Right model for task (haiku/sonnet/opus)
+- ✅ Right model for task (haiku for mechanical, omit for complex)
 - ✅ Parallel execution for independent tasks
 - ✅ Cache strategies (principle loader caching)
 - ✅ Minimal file reads (offset+limit)
@@ -75,7 +75,7 @@ Every CCO command MUST satisfy these requirements:
 **Model Selection:**
 - ✅ Haiku: Discovery, enumeration, pattern matching
 - ✅ Sonnet: Analysis, fixes, generation (default)
-- ✅ Opus: Architecture, complex algorithms (rare)
+- ✅ Auto: Architecture, complex algorithms (let Claude decide)
 
 **Time Targets:**
 - ✅ Discovery: < 30 seconds
@@ -91,7 +91,7 @@ Every CCO command MUST satisfy these requirements:
 - ✅ U_NO_HARDCODED_EXAMPLES - Use placeholders
 - ✅ C_NATIVE_TOOL_INTERACTIONS - AskUserQuestion with "All" option
 - ✅ C_EFFICIENT_FILE_OPERATIONS - Three-stage discovery
-- ✅ C_AGENT_ORCHESTRATION_PATTERNS - Right model, parallelization
+- ✅ Claude Code auto-selects models
 
 **Command-Specific:**
 - cco-audit, cco-fix, cco-generate: + U_FOLLOW_PATTERNS
@@ -176,7 +176,7 @@ AskUserQuestion({
 ## Agent Usage
 
 **Agent:** cco-agent-{type}
-**Model:** {haiku/sonnet/opus}
+**Model:** haiku (for mechanical), omit (for complex - let Claude decide)
 **Why:** {Justification}
 
 ---

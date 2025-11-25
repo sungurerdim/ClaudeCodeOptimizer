@@ -8,10 +8,10 @@
 
 CCO principles guide Claude Code's behavior to ensure quality, efficiency, and consistency across all operations.
 
-**Total Principles**: 106
-- **Universal (U_*)**: 8 - Core development best practices
-- **Claude-Specific (C_*)**: 7 - Claude Code optimizations
-- **Project-Specific (P_*)**: 91 - Optional domain-specific practices
+**Total Principles**: See CATALOG.md for current count
+- **Universal (U_*)**: Core development best practices
+- **Claude-Specific (C_*)**: Claude Code optimizations
+- **Project-Specific (P_*)**: Optional domain-specific practices
 
 ---
 
@@ -45,14 +45,11 @@ Principles that optimize Claude Code's performance, cost, and user experience.
 **Context & Efficiency:**
 - **C_CONTEXT_WINDOW_MGMT** - Optimize context via grep-first strategy
 - **C_EFFICIENT_FILE_OPERATIONS** - Discovery → preview → precise read
-- **C_AGENT_ORCHESTRATION_PATTERNS** - Parallel agents, right model selection
-- **C_MODEL_SELECTION** - Haiku/Sonnet/Opus based on complexity
 
 **UX & Integration:**
 - **C_NATIVE_TOOL_INTERACTIONS** - AskUserQuestion, not text prompts
 - **C_NO_UNSOLICITED_FILE_CREATION** - Ask before creating files
 - **C_PROJECT_CONTEXT_DISCOVERY** - Extract context before analysis
-- **C_MODEL_SELECTION** - Haiku/Sonnet/Opus based on complexity
 
 **Why always active?** These maximize Claude Code's effectiveness and user satisfaction.
 
@@ -176,6 +173,6 @@ Want to add your own principles?
 
 ---
 
-**Total**: 106 principles (8 Universal + 7 Claude + 91 Project)
+**Full catalog with counts**: [CATALOG.md](CATALOG.md)
 
 **Full catalog:** [CATALOG.md](CATALOG.md)

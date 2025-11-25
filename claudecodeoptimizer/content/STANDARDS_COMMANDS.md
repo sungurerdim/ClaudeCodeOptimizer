@@ -755,21 +755,21 @@ except PermissionError:
 | Read docs, summarize | Low | **Haiku** | Information extraction |
 | Add feature, fix bug | Medium | **Sonnet** | Requires understanding + changes |
 | Code review, refactor | Medium | **Sonnet** | Requires judgment |
-| Architecture design | High | **Opus** | Novel thinking required |
-| Complex algorithms | High | **Opus** | Deep analysis needed |
+| Architecture design | High | **Auto** | Let Claude decide |
+| Complex algorithms | High | **Auto** | Let Claude decide |
 
 ### Cost Optimization Pattern
 
 ```python
-# ❌ EXPENSIVE: All Opus
-Task("Find Python files", model="opus")      # Expensive for simple task
-Task("Add validation logic", model="opus")   # Sonnet sufficient
-Task("Design microservices", model="opus")   # Appropriate
+# ❌ BAD: Specifying model for non-mechanical tasks
+Task("Find Python files", model="haiku")     # Fast, cheap
+Task("Add validation logic")                  # Let Claude decide
+Task("Design microservices")                  # Let Claude decide
 
 # ✅ OPTIMIZED: Right model for task
 Task("Find Python files", model="haiku")     # Cheap, fast
 Task("Add validation logic", model="sonnet") # Balanced
-Task("Design microservices", model="opus")   # Appropriate
+Task("Design microservices")                  # Let Claude decide
 ```
 
 ### Parallel Execution with Model Selection
@@ -780,7 +780,7 @@ Task("Analyze module 1", model="haiku")
 Task("Analyze module 2", model="haiku")
 Task("Analyze module 3", model="haiku")
 # ... 10 tasks in single message
-# Significantly faster than sequential Opus
+# Significantly faster with parallel execution
 ```
 
 **Purpose:** Optimize cost/performance ratio.
@@ -960,7 +960,7 @@ Before finalizing any command, verify compliance across these categories:
 ### 3. Performance & Efficiency
 - [ ] Token Optimization (three-stage discovery)
 - [ ] Maximum parallelization (Task calls in single message)
-- [ ] Appropriate model selection (Haiku/Sonnet/Opus)
+- [ ] Appropriate model selection (Haiku for mechanical, omit for complex)
 - [ ] Agent prompt optimization (concise, structured)
 
 ### 4. Cross-Platform & Compatibility

@@ -22,7 +22,7 @@ pain_points: [1, 4]
 - **[STANDARDS_QUALITY.md](../STANDARDS_QUALITY.md)** - UX/DX, efficiency, simplicity, performance standards
 - **[LIBRARY_PATTERNS.md](../LIBRARY_PATTERNS.md)** - Reusable patterns (Step 0, Selection, Accounting, Progress, Error Handling)
 - **[STANDARDS_AGENTS.md](../STANDARDS_AGENTS.md)** - File discovery, model selection, parallel execution
-- **model selection** - Strategic Opus model selection, complexity scoring, ROI guidelines
+- **model selection** - Haiku for mechanical tasks, let Claude Code decide for complex tasks
 
 **See these files for detailed patterns. Only command-specific content is documented below.**
 
@@ -124,25 +124,6 @@ Detecting tech stack...
 ✓ Complexity analysis: {FEATURE_COMPLEXITY}
 ```
 
-### Step 0.7: Opus Upgrade Opportunity (Complex Features)
-
-**Pattern:** Pattern 11 (Opus Upgrade Opportunity - See model selection standards)
-
-**Trigger:** Feature complexity == "high" OR requires novel algorithm
-
-**Complexity Scoring:** Use algorithm from model selection
-**ROI Calculation:** See model selection standards for cost/benefit analysis
-
-```python
-if feature_complexity == "high":
-    selected_model = offer_opus_upgrade(
-        task_name="Feature Implementation",
-        task_description=f"Implementing: {feature_name}",
-        complexity_reason="novel algorithm design, complex integration, or architectural changes",
-        expected_benefit="Better architecture, cleaner code, better edge case handling (30-40% improvement)",
-        default_model="sonnet"
-    )
-```
 
 ---
 
@@ -363,7 +344,7 @@ Next Steps:
 
 **See [STANDARDS_AGENTS.md](../STANDARDS_AGENTS.md) for:**
 - Parallel execution patterns (fan-out, pipeline, hierarchical)
-- Model selection strategy (Haiku/Sonnet/Opus)
+- Model selection (Haiku for mechanical, auto for complex)
 - Error handling protocols
 - Agent communication patterns
 
@@ -395,7 +376,7 @@ AskUserQuestion({
     multiSelect: false,
     options: [
       {label: "Retry", description: "Run agent again with same parameters"},
-      {label: "Retry with different model", description: "Try Sonnet/Haiku/Opus"},
+      {label: "Retry with different model", description: "Try different approach"},
       {label: "Manual implementation", description: "Guide manual step-by-step implementation"},
       {label: "Skip failing step", description: "Continue with next implementation step"},
       {label: "Cancel", description: "Stop entire command"}

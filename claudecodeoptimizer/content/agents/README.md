@@ -123,9 +123,8 @@ test_result = Task("generate-agent", f"Generate tests for: {fix_result}")
 
 - **Haiku** - Fast scanning, pattern matching (audit)
 - **Sonnet** - Accurate modifications, quality generation (fix, generate, slim)
-- **Opus** - Complex architecture (rare, not used by default)
+- **Auto** - Complex tasks (let Claude Code decide)
 
-See [C_AGENT_ORCHESTRATION_PATTERNS](../principles/C_AGENT_ORCHESTRATION_PATTERNS.md)
 
 ---
 

@@ -41,7 +41,7 @@ skills_loaded: as-needed
 
 **Model Selection:**
 - Haiku: Pattern matching checks (secrets, linting, TODOs)
-- Sonnet: Semantic checks (SQL injection, XSS, N+1 queries)
+- Auto (don't specify): Semantic checks (let Claude Code decide)
 
 **Progress Tracking:**
 - Real-time streaming results
@@ -529,7 +529,7 @@ def format_finding_update(update: FindingUpdate) -> str:
 - Import checking (#50)
 - Simple pattern greps
 
-**Sonnet** (accurate, semantic):
+**Auto (don't specify model)**:
 - SQL injection (#1)
 - XSS detection (#2)
 - N+1 queries (#16)
@@ -544,7 +544,7 @@ def get_model_for_check(check_id: int) -> str:
 
     if check_id in HAIKU_CHECKS:
         return "haiku"
-    return "sonnet"
+    return None  # Let Claude Code decide
 ```
 
 ---

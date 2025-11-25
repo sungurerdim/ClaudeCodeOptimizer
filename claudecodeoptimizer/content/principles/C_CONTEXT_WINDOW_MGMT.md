@@ -109,6 +109,6 @@ Read("auth.py", offset=145, limit=20)
 
 - [ ] Use offset+limit for targeted reads
 - [ ] Grep before Read to locate targets
-- [ ] Match model to task (Haiku/Sonnet/Opus)
+- [ ] Match model to task (Haiku for mechanical, omit for complex)
 - [ ] Parallelize independent operations
 - [ ] Use `file:line → action` format

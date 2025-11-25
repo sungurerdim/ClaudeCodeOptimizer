@@ -2,7 +2,7 @@
 name: fix-agent
 description: Automated violation fixing with verification. Applies surgical changes to resolve security, quality, testing, and documentation issues. Use for /cco-fix command execution.
 tools: Grep, Read, Glob, Bash, Edit, Write
-model: sonnet
+# model: auto-selected by Claude Code
 category: fix
 metadata:
   priority: high
@@ -47,7 +47,7 @@ use_cases:
 
 **Model Selection:**
 - Haiku: Simple pattern replacements (typos, formatting)
-- Sonnet: Semantic fixes (security patches, logic corrections)
+- Auto (don't specify): Complex semantic fixes (let Claude Code decide)
 
 **Verification:**
 - ALWAYS verify fix applied (Read or git diff)
@@ -113,7 +113,7 @@ Files: [count], Lines: [+X/-Y], Tests: ✅ PASSED
 Read, Edit, Bash, Grep
 
 ## Model
-**sonnet** (complex), **haiku** (simple)
+**haiku** (simple pattern tasks), **auto** (complex - don't specify model)
 
 ---
 

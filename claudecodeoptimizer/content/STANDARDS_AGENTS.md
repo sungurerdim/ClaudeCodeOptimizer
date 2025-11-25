@@ -13,7 +13,7 @@
 name: {agent-name}
 description: {One-line description}
 tools: {tool-list}
-model: {haiku|sonnet|opus}
+model: haiku  # Only specify for mechanical tasks, otherwise omit
 ---
 
 # {Agent Name}
@@ -178,7 +178,7 @@ Savings: 42x reduction (98% less tokens)
 
 ## Built-in Behavior 3: Model Selection Guidelines
 
-**Principle:** C_AGENT_ORCHESTRATION_PATTERNS, C_MODEL_SELECTION
+**Principle:** Claude Code auto-selection
 
 **What:** Choose the right model for each task type.
 
@@ -196,10 +196,10 @@ Savings: 42x reduction (98% less tokens)
 | - Bug fixes | Sonnet | Logic reasoning | Medium |
 | - Code generation | Sonnet | Pattern application | Medium |
 | - Test writing | Sonnet | Coverage reasoning | Medium |
-| **Complex Tasks** | Opus | Highest capability | $15/M tokens |
-| - Architecture | Opus | Novel design | Highest |
-| - Complex algorithms | Opus | Deep reasoning | Highest |
-| - Security audits | Opus | Threat modeling | Highest |
+| **Complex Tasks** | Auto | Let Claude decide | Varies |
+| - Architecture | Auto | Novel design | Let Claude decide |
+| - Complex algorithms | Auto | Deep reasoning | Let Claude decide |
+| - Security audits | Auto | Threat modeling | Let Claude decide |
 
 ### Selection Algorithm
 
@@ -211,9 +211,9 @@ def select_model(task_type: str, complexity: str) -> str:
     if task_type in ["grep", "find", "count", "list", "format"]:
         return "haiku"
 
-    # Novel/architectural → Opus if complex
+    # Novel/architectural → Let Claude Code decide
     if task_type in ["design", "architecture", "algorithm"]:
-        return "opus" if complexity == "high" else "sonnet"
+        return None  # Let Claude Code decide
 
     # Default → Sonnet (balanced)
     return "sonnet"
@@ -223,7 +223,7 @@ def select_model(task_type: str, complexity: str) -> str:
 
 ## Built-in Behavior 4: Parallel Execution Patterns
 
-**Principle:** C_AGENT_ORCHESTRATION_PATTERNS
+**Principle:** parallel execution best practices
 
 **What:** Execute independent tasks in parallel for maximum speed.
 
@@ -451,7 +451,7 @@ Before claiming ANY agent execution is complete:
 
 - [ ] File exclusions applied (Stage 0)
 - [ ] Three-stage discovery used (when reading files)
-- [ ] Right model selected (haiku/sonnet/opus)
+- [ ] Right model selected (haiku for mechanical, omit for complex)
 - [ ] Parallel execution used (when tasks independent)
 - [ ] Accounting formula verified (total = completed + skipped + failed)
 - [ ] Cross-platform commands used (forward slashes, Git Bash)

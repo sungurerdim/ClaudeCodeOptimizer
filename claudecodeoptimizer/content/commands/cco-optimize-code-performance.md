@@ -38,7 +38,7 @@ parameters:
 - **[STANDARDS_QUALITY.md](../STANDARDS_QUALITY.md)** - UX/DX, efficiency, simplicity, performance standards
 - **[LIBRARY_PATTERNS.md](../LIBRARY_PATTERNS.md)** - Reusable patterns (Step 0, Selection, Accounting, Progress, Error Handling)
 - **[STANDARDS_AGENTS.md](../STANDARDS_AGENTS.md)** - File discovery, model selection, parallel execution
-- **model selection** - Strategic Opus model selection, complexity scoring, ROI guidelines
+- **model selection** - Haiku for mechanical tasks, let Claude Code decide for complex tasks
 - **[STANDARDS_TECH_DETECTION.md](../STANDARDS_TECH_DETECTION.md)** - Fast tech detection (<2s), applicability filtering, pre-filtering UI
 
 **See these files for detailed patterns. Only command-specific content is documented below.**
@@ -139,25 +139,6 @@ Filtered: {FILTERED_COUNT} ({FILTERED_LIST})
 
 ---
 
-## Step 0.6: Opus Upgrade Opportunity (Algorithm Optimization)
-
-**Pattern:** Pattern 11 (Opus Upgrade Opportunity - See model selection standards)
-
-**Trigger:** User selected "--performance" OR algorithm optimization detected
-
-**Complexity Scoring:** Use algorithm from model selection
-**ROI Calculation:** See model selection standards for cost/benefit analysis
-
-```python
-if "--performance" in selected_optimizations or has_algorithm_optimization:
-    selected_model = offer_opus_upgrade(
-        task_name="Algorithm Optimization",
-        task_description="Optimizing performance-critical algorithms and bottlenecks",
-        complexity_reason="complex performance trade-offs, novel optimization strategies",
-        expected_benefit="Significantly better performance improvements (30-40% vs 10-15% with Sonnet)",
-        default_model="sonnet"
-    )
-```
 
 ---
 
@@ -187,7 +168,7 @@ if "--performance" in selected_optimizations or has_algorithm_optimization:
    - Uses agent orchestration patterns for parallel execution
    - Skill: `cco-skill-content-optimization-automation` (for Claude Code content)
    - Measures: Model costs, execution time, parallelization efficiency
-   - Optimizes: Model selection (opus→haiku), parallel execution, agent type selection
+   - Optimizes: Model selection (specify haiku for mechanical), parallel execution, agent type selection
    - Analyzes: All `.md` files in `.claude/` and `content/` directories
    - Detects: Wrong model usage, sequential→parallel opportunities, inefficient agent calls
 
@@ -195,7 +176,7 @@ if "--performance" in selected_optimizations or has_algorithm_optimization:
 
 ## Agent Optimization Analysis Algorithm (--agents)
 
-**See [STANDARDS_AGENTS.md](../STANDARDS_AGENTS.md) for agent delegation patterns and [C_AGENT_ORCHESTRATION_PATTERNS.md](../principles/C_AGENT_ORCHESTRATION_PATTERNS.md) for optimization patterns.**
+**See [STANDARDS_AGENTS.md](../STANDARDS_AGENTS.md) for agent delegation patterns.**
 
 **Optimize-Specific Agent Analysis:**
 
@@ -207,8 +188,8 @@ if "--performance" in selected_optimizations or has_algorithm_optimization:
 - Grep `Task()` calls in `.claude/commands/`, `content/skills/`, `content/agents/`
 - Extract model selection, parallelization patterns
 
-**Phase 2: Analysis** (See [C_AGENT_ORCHESTRATION_PATTERNS.md](../principles/C_AGENT_ORCHESTRATION_PATTERNS.md))
-- **Violations Detected**: Model selection (opus for simple, haiku for complex), sequential→parallel opportunities, wrong agent type
+**Phase 2: Analysis**
+- **Violations Detected**: Model selection (haiku for mechanical, auto for complex), sequential→parallel opportunities, wrong agent type
 - **Over-use**: Agent for grep/read/edit/bash (replace with direct tools)
 - **Under-use**: Sequential loops, large single operations (should parallelize)
 
@@ -218,7 +199,7 @@ if "--performance" in selected_optimizations or has_algorithm_optimization:
 - **Recommendations**: Model upgrades for complex tasks
 
 **Phase 4: Auto-Fix**
-- Model selection: Direct Edit (opus→haiku, haiku→sonnet)
+- Model selection: Specify haiku for mechanical tasks only
 - Parallelization: Add TODO comments or auto-convert
 - Over-use: Replace Task() with direct tools (Glob/Read/Bash)
 - Under-use: Add parallelization suggestions
@@ -284,7 +265,7 @@ Code Quality:
 - Dead code: [RESULT]
 
 Agent/Model Usage:
-- Model cost reduction: [REDUCTION]% (opus→haiku where appropriate)
+- Model optimization: Specify haiku for mechanical tasks)
 - Parallelization efficiency: [IMPROVEMENT]% (sequential→parallel)
 - Execution time: [BEFORE] → [AFTER] ([IMPROVEMENT]% faster)
 
@@ -424,7 +405,7 @@ AskUserQuestion({
     multiSelect: false,
     options: [
       {label: "Retry", description: "Run agent again with same parameters"},
-      {label: "Retry with different model", description: "Try Sonnet/Haiku/Opus"},
+      {label: "Retry with different model", description: "Try different approach"},
       {label: "Manual optimization", description: "Guide manual optimization process"},
       {label: "Skip this optimization", description: "Continue with next optimization"},
       {label: "Cancel", description: "Stop entire command"}
@@ -442,7 +423,7 @@ AskUserQuestion({
     options: [
       {label: "Sonnet", description: "Balanced performance and cost (recommended)"},
       {label: "Haiku", description: "Faster, more affordable"},
-      {label: "Opus", description: "Most capable, higher cost"}
+      {label: "Retry", description: "Try a different approach"}
     ]
   }]
 })

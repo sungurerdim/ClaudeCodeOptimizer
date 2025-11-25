@@ -2,7 +2,7 @@
 name: generate-agent
 description: Auto-generate tests, documentation, and boilerplate code following project conventions. Creates unit/integration tests, API documentation, CI/CD configs, and other missing components. Use for /cco-generate command execution.
 tools: Grep, Read, Glob, Bash, Write
-model: sonnet
+# model: auto-selected by Claude Code
 category: generate
 metadata:
   priority: medium
@@ -42,8 +42,7 @@ use_cases:
 
 **Model Selection:**
 - Haiku: Boilerplate generation (simple templates)
-- Sonnet: Test generation, API docs (default)
-- Opus: Complex architecture documentation (rare)
+- Auto (don't specify): Test generation, API docs, complex docs (let Claude Code decide)
 
 **Pattern Following:**
 - Automatically detect project conventions (U_FOLLOW_PATTERNS)
@@ -101,7 +100,7 @@ OUTCOMES = {
 ```
 
 **Tools**: Read, Write, Edit, Bash, Grep
-**Model**: sonnet (complex), haiku (simple)
+**Model**: haiku (simple), auto (complex - don't specify model)
 
 ---
 

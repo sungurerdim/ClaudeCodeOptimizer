@@ -122,7 +122,7 @@ parameters:
 - **[STANDARDS_QUALITY.md](../STANDARDS_QUALITY.md)** - UX/DX, efficiency, simplicity, performance standards
 - **[LIBRARY_PATTERNS.md](../LIBRARY_PATTERNS.md)** - Reusable patterns (Step 0, Selection, Accounting, Progress, Error Handling)
 - **[STANDARDS_AGENTS.md](../STANDARDS_AGENTS.md)** - File discovery, model selection, parallel execution
-- **model selection** - Strategic Opus model selection, complexity scoring, ROI guidelines
+- **model selection** - Haiku for mechanical tasks, let Claude Code decide for complex tasks
 - **[STANDARDS_TECH_DETECTION.md](../STANDARDS_TECH_DETECTION.md)** - Fast tech detection (<2s), applicability filtering, pre-filtering UI
 
 **See these files for detailed patterns. Only command-specific content is documented below.**
@@ -444,52 +444,6 @@ Categories NOT selected will be skipped entirely.
 
 ---
 
-### Step 3.5: Opus Model Upgrade Opportunity
-
-**Pattern:** Pattern 11 (Opus Upgrade Opportunity - See model selection standards)
-
-**Trigger:** User selected "architecture" category fixes OR risky architectural refactoring detected (5+ architecture fixes)
-
-**Complexity Scoring:** Use algorithm from model selection
-**ROI Calculation:** See model selection standards for cost/benefit analysis
-
-**Implementation:**
-
-```python
-# Check if architectural refactoring is needed
-if fix_category == "architecture" or (has_architecture_fixes and len(architecture_fixes) >= 5):
-    selected_model = offer_opus_upgrade(
-        task_name="Architectural Refactoring",
-        task_description=f"Applying {len(architecture_fixes)} architectural fixes across {affected_modules_count} modules",
-        complexity_reason="major structural changes, coupling reduction, and design pattern application",
-        expected_benefit="Safer refactoring with better functionality preservation and cleaner architecture (30-40% improvement)",
-        default_model="sonnet"
-    )
-else:
-    selected_model = "sonnet"  # Default
-```
-
-**AskUserQuestion:**
-
-```python
-AskUserQuestion({
-    "questions": [{
-        "question": "Architectural refactoring would benefit from Opus for safer changes. Use Opus?",
-        "header": "Model Selection",
-        "multiSelect": False,
-        "options": [
-            {
-                "label": "Yes - Use Opus (Recommended)",
-                "description": "Safer refactoring for complex architectural changes. Better preservation. 20-30% slower."
-            },
-            {
-                "label": "No - Use Sonnet",
-                "description": "Faster, sufficient for simple fixes. May need manual review for complex refactoring."
-            }
-        ]
-    }]
-})
-```
 
 ---
 
@@ -503,7 +457,7 @@ AskUserQuestion({
 
 **Agent:** `fix-agent` (model selected in Step 3.5, defaults to Sonnet)
 
-**Model Selection:** Opus for architectural refactoring (if user opted in), Sonnet for other fixes
+**Model Selection:** Let Claude Code decide based on task complexity
 
 **Parallel Execution:** Agent automatically parallelizes independent fixes (different files)
 
@@ -600,7 +554,7 @@ Recommended:
 
 **See [STANDARDS_AGENTS.md](../STANDARDS_AGENTS.md) for:**
 - Parallel execution patterns (fan-out, pipeline, hierarchical)
-- Model selection strategy (Haiku/Sonnet/Opus)
+- Model selection (Haiku for mechanical, auto for complex)
 - Error handling protocols
 - Agent communication patterns
 

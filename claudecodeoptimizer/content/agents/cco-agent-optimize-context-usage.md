@@ -2,7 +2,7 @@
 name: optimize-context-usage-agent
 description: Token-optimized content slimming with quality preservation, semantic verification, and context duplication detection. Use for /cco-optimize-context-usage command execution.
 tools: Grep, Read, Glob, Bash, Edit, Write
-model: sonnet
+# model: auto-selected by Claude Code
 category: optimize
 metadata:
   priority: medium
@@ -49,7 +49,7 @@ use_cases:
 
 **Model Selection:**
 - Haiku: Simple comment/whitespace removal
-- Sonnet: Semantic deduplication, context preservation
+- Auto (don't specify): Semantic deduplication, context preservation (let Claude Code decide)
 
 ---
 
@@ -388,7 +388,7 @@ def verify_instruction_effectiveness(before: str, after: str) -> bool:
 
 ## Model Selection
 
-**Sonnet**: Default for complex optimization decisions, semantic verification
+**Auto (don't specify)**: Complex optimization decisions, semantic verification (let Claude Code decide)
 **Haiku**: Simple tasks like whitespace normalization, dead code detection
 
 ---
