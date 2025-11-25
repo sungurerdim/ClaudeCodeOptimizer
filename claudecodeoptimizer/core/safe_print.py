@@ -5,8 +5,45 @@ Ensures proper UTF-8 encoding for emojis and special characters across all platf
 Automatically handles console encoding configuration with error recovery.
 """
 
+import re
 import sys
 from typing import Any
+
+# Pre-built replacement map (module-level constant for single initialization)
+# Multi-char replacements require regex, single-char can use translate
+_UNICODE_REPLACEMENTS = {
+    # Status indicators
+    "✓": "[OK]",
+    "✗": "[X]",
+    "❌": "[ERROR]",
+    "⚠️": "[WARNING]",
+    "💡": "[TIP]",
+    # Progress indicators
+    "🔧": "[BUILD]",
+    "📊": "[ANALYSIS]",
+    "🎯": "[TARGET]",
+    "🚀": "[LAUNCH]",
+    # Documentation
+    "📋": "[LIST]",
+    "📦": "[PACKAGE]",
+    "📅": "[DATE]",
+    "📝": "[NOTE]",
+    # Levels
+    "🟢": "[HIGH]",
+    "🟡": "[MEDIUM]",
+    "🔴": "[LOW]",
+    "⚪": "[NONE]",
+    # Other common
+    "→": "->",
+    "←": "<-",
+    "↓": "v",
+    "↑": "^",
+    "•": "*",
+    "…": "...",
+}
+
+# Pre-compiled regex pattern for O(n) single-pass replacement
+_UNICODE_PATTERN = re.compile("|".join(re.escape(k) for k in _UNICODE_REPLACEMENTS))
 
 
 def configure_utf8_encoding() -> None:
@@ -89,42 +126,10 @@ def _unicode_to_ascii(text: str) -> str:
     Convert Unicode characters to ASCII equivalents for consoles without UTF-8 support.
 
     Maps common emojis and special characters to readable ASCII alternatives.
+    Uses pre-compiled regex for O(n) single-pass replacement instead of O(n*m) sequential.
     """
-    # Emoji replacements
-    replacements = {
-        # Status indicators
-        "✓": "[OK]",
-        "✗": "[X]",
-        "❌": "[ERROR]",
-        "⚠️": "[WARNING]",
-        "💡": "[TIP]",
-        # Progress indicators
-        "🔧": "[BUILD]",
-        "📊": "[ANALYSIS]",
-        "🎯": "[TARGET]",
-        "🚀": "[LAUNCH]",
-        # Documentation
-        "📋": "[LIST]",
-        "📦": "[PACKAGE]",
-        "📅": "[DATE]",
-        "📝": "[NOTE]",
-        # Levels
-        "🟢": "[HIGH]",
-        "🟡": "[MEDIUM]",
-        "🔴": "[LOW]",
-        "⚪": "[NONE]",
-        # Other common
-        "→": "->",
-        "←": "<-",
-        "↓": "v",
-        "↑": "^",
-        "•": "*",
-        "…": "...",
-    }
-
-    result = text
-    for unicode_char, ascii_equiv in replacements.items():
-        result = result.replace(unicode_char, ascii_equiv)
+    # Single-pass replacement using pre-compiled pattern (O(n) vs O(n*m))
+    result = _UNICODE_PATTERN.sub(lambda m: _UNICODE_REPLACEMENTS[m.group()], text)
 
     # Final fallback: encode with 'replace' error handling
     try:
