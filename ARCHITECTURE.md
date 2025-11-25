@@ -301,15 +301,15 @@ AskUserQuestion({
 
 ### 3. MultiSelect with "All" Option
 
-n## Universal Principles
+## Universal Principles
 
 See `~/.claude/principles/` for complete principle documentation:
 
-**Universal (U_*) Principles:**
-- U_CHANGE_VERIFICATION, U_CROSS_PLATFORM_COMPATIBILITY, U_DRY, U_EVIDENCE_BASED_ANALYSIS, U_FOLLOW_PATTERNS, U_MINIMAL_TOUCH, U_NO_HARDCODED_EXAMPLES, U_NO_OVERENGINEERING
+**Universal (cco-principle-u-*) Principles:**
+- cco-principle-u-change-verification, cco-principle-u-cross-platform-compatibility, cco-principle-u-dry, cco-principle-u-evidence-based-analysis, cco-principle-u-follow-patterns, cco-principle-u-minimal-touch, cco-principle-u-no-hardcoded-examples, cco-principle-u-no-overengineering
 
-**Claude Guidelines (C_*) Principles:**
-- C_CONTEXT_WINDOW_MGMT, C_EFFICIENT_FILE_OPERATIONS, C_NATIVE_TOOL_INTERACTIONS, C_NO_UNSOLICITED_FILE_CREATION, C_PROJECT_CONTEXT_DISCOVERY
+**Claude Guidelines (cco-principle-c-*) Principles:**
+- cco-principle-c-context-window-mgmt, cco-principle-c-efficient-file-operations, cco-principle-c-native-tool-interactions, cco-principle-c-no-unsolicited-file-creation, cco-principle-c-project-context-discovery
 
 These principles guide all CCO component development (commands, skills, agents).
 ## Extension Points
@@ -336,9 +336,9 @@ CCO is designed for easy extension:
 
 ### Adding New Principles
 
-1. Create `~/.claude/principles/P_YOUR_PRINCIPLE.md`
+1. Create `~/.claude/principles/cco-principle-u-your-principle.md` (universal) or `cco-principle-c-your-principle.md` (Claude-specific)
 2. Follow principle template format
-3. Add marker to `~/.claude/CLAUDE.md`
+3. Principle will be auto-added to `~/.claude/CLAUDE.md` on next `cco-setup`
 
 ---
 
@@ -360,16 +360,15 @@ CCO is designed for easy extension:
 - ✅ **GitIgnore Cleanup** - Removed unnecessary entries
 
 ### Features
-- ✅ **Context Optimization** - `/cco-optimize-code-performance-context-usage` primary focus on CLAUDE.md duplication elimination
+- ✅ **Context Optimization** - `/cco-optimize --context` for CLAUDE.md duplication elimination
 - ✅ **Installation UX** - Before/after file count summary, template tracking
-- ✅ **Command Enhancements** - audit, fix, generate, slim, optimize, implement, commit all improved
-- ✅ **Skill Integration** - Unused skills now properly integrated into commands
-- ✅ **Context Passing Between Commands** - C_COMMAND_CONTEXT_PASSING principle implementation
+- ✅ **Command Enhancements** - audit, fix, generate, optimize, commit all improved
+- ✅ **Skill Integration** - 20 skills properly integrated into commands
+- ✅ **Context Passing Between Commands** - Built-in command chaining
   - `/cco-audit` → `/cco-fix`: Passes issue list, file paths, severity levels
   - `/cco-audit` → `/cco-generate`: Passes missing components, existing patterns
   - `/cco-fix` → `/cco-generate`: Passes fixed files, needed tests/docs
   - Eliminates duplicate analysis, significantly faster execution
-  - See [C_COMMAND_CONTEXT_PASSING principle](claudecodeoptimizer/content/principles/C_COMMAND_CONTEXT_PASSING.md)
 
 ### Performance
 - ✅ **Token Efficiency** - Context-first approach in slim command

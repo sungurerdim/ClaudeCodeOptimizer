@@ -46,15 +46,15 @@ pytest --cov=claudecodeoptimizer --cov-report=html
 **Target**: 85%
 
 **Priority areas**:
-1. Detection engine (ai/detection.py)
-2. Principle selection (core/principle_selector.py)
-3. Linking strategy (core/linking.py)
-4. CLAUDE.md generation (core/claude_md_generator.py)
-5. Command selection (ai/command_selection.py)
+1. Knowledge setup (core/knowledge_setup.py)
+2. CCO status (cco_status.py)
+3. CCO update (cco_update.py)
+4. Content management (content handling)
+5. CLI commands (install, remove, status, update)
 
 ## Test Principles
 
-- **P_INCREMENTAL_SAFETY_PATTERNS: Evidence-Based Verification** - All tests must verify with actual command output
-- **P001: Fail-Fast** - Tests fail loudly, no silent failures
+- **cco-principle-u-evidence-based-analysis: Evidence-Based Verification** - All tests must verify with actual command output
+- **Fail-Fast** - Tests fail loudly, no silent failures
 - **Isolation** - Each test is independent
 - **Deterministic** - Same input always produces same output

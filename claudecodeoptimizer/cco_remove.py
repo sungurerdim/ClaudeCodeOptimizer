@@ -4,16 +4,12 @@ CCO Remove - Complete uninstallation
 Safely removes CCO package and global ~/.claude/ directory.
 """
 
-import shutil
+import re
 import subprocess
 import sys
-from datetime import datetime
 from pathlib import Path
 
-
-def get_claude_dir() -> Path:
-    """Get ~/.claude/ directory path."""
-    return Path.home() / ".claude"
+from .config import get_claude_dir
 
 
 def detect_package_install() -> str | None:
@@ -64,10 +60,10 @@ def count_cco_files(claude_dir: Path) -> dict[str, int]:
         "commands": 0,
         "skills": 0,
         "principles": 0,
-        "principles_u": 0,
-        "principles_c": 0,
-        "principles_p": 0,
+        "principles_cco_u": 0,
+        "principles_cco_c": 0,
         "templates": 0,
+        "standards": 0,
     }
 
     if not claude_dir.exists():
@@ -96,14 +92,18 @@ def count_cco_files(claude_dir: Path) -> dict[str, int]:
                 continue
             counts["principles"] += 1
             # Check prefix in single pass (O(n) vs O(4n))
-            if p.name.startswith("U_"):
-                counts["principles_u"] += 1
-            elif p.name.startswith("C_"):
-                counts["principles_c"] += 1
-            elif p.name.startswith("P_"):
-                counts["principles_p"] += 1
+            if p.name.startswith("cco-principle-u-"):
+                counts["principles_cco_u"] += 1
+            elif p.name.startswith("cco-principle-c-"):
+                counts["principles_cco_c"] += 1
 
     # Count templates
+    # Count standards (cco-*.md)
+    counts["standards"] = sum(
+        1
+        for f in claude_dir.glob("cco-*.md")
+        if f.name in ("cco-standards.md", "cco-patterns.md", "cco-tech-detection.md")
+    )
     counts["templates"] = sum(1 for _ in claude_dir.glob("*.cco"))
 
     return counts
@@ -156,9 +156,8 @@ def show_removal_preview(
             print(f"  • Skills: {counts['skills']} files")
         if counts["principles"] > 0:
             print(f"  • Principles: {counts['principles']} files")
-            print(f"    - U_*.md: {counts['principles_u']} (Universal principles)")
-            print(f"    - C_*.md: {counts['principles_c']} (Claude guidelines)")
-            print(f"    - P_*.md: {counts['principles_p']} (Project principles)")
+            print(f"    - cco-principle-u-*: {counts['principles_cco_u']} (Universal)")
+            print(f"    - cco-principle-c-*: {counts['principles_cco_c']} (Claude)")
         if counts["templates"] > 0:
             print(f"  • Templates: {counts['templates']} files")
             print("    - settings.json.cco (Claude Code configuration)")
@@ -233,46 +232,90 @@ def remove_package(install_method: str) -> bool:
         return False
 
 
-def backup_claude_dir(claude_dir: Path) -> Path | None:
-    """
-    Create backup of ~/.claude/ directory.
+def remove_cco_files(claude_dir: Path) -> dict[str, int]:
+    """Remove only CCO files, preserving user content."""
+    deleted = {
+        "agents": 0,
+        "commands": 0,
+        "skills": 0,
+        "principles": 0,
+        "standards": 0,
+        "templates": 0,
+    }
 
-    Returns:
-        Backup path if successful, None otherwise
-    """
-    timestamp = datetime.now().strftime("%Y%m%d-%H%M%S")
-    backup_path = claude_dir.parent / f".claude.backup-{timestamp}"
+    if not claude_dir.exists():
+        return deleted
 
-    try:
-        shutil.copytree(claude_dir, backup_path)
-        return backup_path
-    except Exception as e:
-        print(f"Warning: Could not create backup: {e}", file=sys.stderr)
-        return None
+    # Remove agents
+    agents_dir = claude_dir / "agents"
+    if agents_dir.exists():
+        for f in agents_dir.glob("cco-*.md"):
+            f.unlink()
+            deleted["agents"] += 1
+        if not any(agents_dir.iterdir()):
+            agents_dir.rmdir()
+
+    # Remove commands
+    commands_dir = claude_dir / "commands"
+    if commands_dir.exists():
+        for f in commands_dir.glob("cco-*.md"):
+            f.unlink()
+            deleted["commands"] += 1
+
+    # Remove skills
+    skills_dir = claude_dir / "skills"
+    if skills_dir.exists():
+        for f in skills_dir.rglob("cco-skill-*.md"):
+            f.unlink()
+            deleted["skills"] += 1
+        for subdir in list(skills_dir.iterdir()):
+            if subdir.is_dir() and not any(subdir.iterdir()):
+                subdir.rmdir()
+        if skills_dir.exists() and not any(skills_dir.iterdir()):
+            skills_dir.rmdir()
+
+    # Remove principles
+    principles_dir = claude_dir / "principles"
+    if principles_dir.exists():
+        for f in principles_dir.glob("cco-principle-u-*.md"):
+            f.unlink()
+            deleted["principles"] += 1
+        for f in principles_dir.glob("cco-principle-c-*.md"):
+            f.unlink()
+            deleted["principles"] += 1
+        if principles_dir.exists() and not any(principles_dir.iterdir()):
+            principles_dir.rmdir()
+
+    # Remove standards
+    for standards_file in ["cco-standards.md", "cco-patterns.md", "cco-tech-detection.md"]:
+        f = claude_dir / standards_file
+        if f.exists():
+            f.unlink()
+            deleted["standards"] += 1
+
+    # Remove templates
+    for f in claude_dir.glob("*.cco"):
+        f.unlink()
+        deleted["templates"] += 1
+
+    _remove_claude_md_markers(claude_dir)
+    return deleted
 
 
-def remove_claude_dir(claude_dir: Path, create_backup: bool = False) -> tuple[bool, Path | None]:
-    """
-    Remove ~/.claude/ directory.
+def _remove_claude_md_markers(claude_dir: Path) -> None:
+    """Remove CCO markers from CLAUDE.md."""
+    claude_md = claude_dir / "CLAUDE.md"
+    if not claude_md.exists():
+        return
 
-    Args:
-        claude_dir: Path to ~/.claude/
-        create_backup: Whether to create backup before deletion
+    file_content = claude_md.read_text(encoding="utf-8")
+    pattern = r"<!-- CCO_PRINCIPLES_START -->.*?<!-- CCO_PRINCIPLES_END -->"
+    new_content = re.sub(pattern, "", file_content, flags=re.DOTALL).strip()
 
-    Returns:
-        (success, backup_path) tuple
-    """
-    backup_path = None
-
-    if create_backup:
-        backup_path = backup_claude_dir(claude_dir)
-
-    try:
-        shutil.rmtree(claude_dir)
-        return True, backup_path
-    except Exception as e:
-        print(f"Error removing directory: {e}", file=sys.stderr)
-        return False, backup_path
+    if new_content:
+        claude_md.write_text(new_content, encoding="utf-8")
+    else:
+        claude_md.unlink()
 
 
 def verify_removal(install_method: str | None) -> dict[str, bool]:
@@ -284,7 +327,7 @@ def verify_removal(install_method: str | None) -> dict[str, bool]:
     """
     results = {
         "package_removed": True,
-        "directory_removed": True,
+        "files_removed": True,
     }
 
     # Check package
@@ -292,12 +335,12 @@ def verify_removal(install_method: str | None) -> dict[str, bool]:
         check_result = detect_package_install()
         results["package_removed"] = check_result is None
 
-    # Check directory
+    # Check CCO files
     claude_dir = get_claude_dir()
     if claude_dir.exists():
         cco_files = count_cco_files(claude_dir)
         total = sum(cco_files.values())
-        results["directory_removed"] = total == 0
+        results["files_removed"] = total == 0
 
     return results
 
@@ -345,25 +388,30 @@ def main() -> int:
             else:
                 print("  ✗ Failed to uninstall package")
 
-        # Remove directory
-        directory_removed = True
-        backup_path = None
+        # Remove CCO files (selective, preserves user content)
+        files_removed = True
+        deleted = {
+            "agents": 0,
+            "commands": 0,
+            "skills": 0,
+            "principles": 0,
+            "standards": 0,
+            "templates": 0,
+        }
         if total_files > 0:
-            print("Removing global directory...")
-            directory_removed, backup_path = remove_claude_dir(claude_dir, create_backup=False)
-            if directory_removed:
-                print("  ✓ Directory removed")
-                if backup_path:
-                    print(f"  ✓ Backup created: {backup_path}")
-            else:
-                print("  ✗ Failed to remove directory")
+            print("Removing CCO files...")
+            deleted = remove_cco_files(claude_dir)
+            total_deleted = sum(deleted.values())
+            if total_deleted > 0:
+                print(f"  [OK] Removed {total_deleted} CCO files")
+            files_removed = total_deleted == total_files
 
         # Verify
         print()
         print("Verifying removal...")
         results = verify_removal(install_method)
 
-        if results["package_removed"] and results["directory_removed"]:
+        if results["package_removed"] and results.get("files_removed", files_removed):
             print()
             print("=" * 60)
             print("CCO UNINSTALL COMPLETE")
@@ -373,17 +421,26 @@ def main() -> int:
             if install_method:
                 print(f"  ✓ Package: claudecodeoptimizer ({install_method})")
             if total_files > 0:
-                print(f"  ✓ Agents: {counts['agents']} files deleted")
-                print(f"  ✓ Commands: {counts['commands']} files deleted")
-                print(f"  ✓ Skills: {counts['skills']} files deleted")
-                print(f"  ✓ Principles: {counts['principles']} files deleted")
-                print(f"  ✓ Templates: {counts['templates']} files deleted")
+                if deleted["agents"] > 0:
+                    print(f"  [OK] Agents: {deleted['agents']} files")
+                if deleted["commands"] > 0:
+                    print(f"  [OK] Commands: {deleted['commands']} files")
+                if deleted["skills"] > 0:
+                    print(f"  [OK] Skills: {deleted['skills']} files")
+                if deleted["principles"] > 0:
+                    print(f"  [OK] Principles: {deleted['principles']} files")
+                if deleted["standards"] > 0:
+                    print(f"  [OK] Standards: {deleted['standards']} files")
+                if deleted["templates"] > 0:
+                    print(f"  [OK] Templates: {deleted['templates']} files")
+                print("  [OK] CLAUDE.md markers removed")
             print()
             print("-" * 60)
-            print(f"  Total: {total_files} files deleted")
+            print(f"  Total: {sum(deleted.values())} files deleted")
             print("-" * 60)
             print()
             print("CCO has been completely removed from your system.")
+            print("Your non-CCO files in ~/.claude/ were preserved.")
             print()
             print("TO REINSTALL:")
             print("  pip install git+https://github.com/sungurerdim/ClaudeCodeOptimizer.git")
@@ -394,8 +451,8 @@ def main() -> int:
             print("[ERROR] Removal incomplete")
             if not results["package_removed"]:
                 print("  ✗ Package still installed")
-            if not results["directory_removed"]:
-                print("  ✗ CCO files still present in ~/.claude/")
+            if not results.get("files_removed", files_removed):
+                print("  [FAIL] Some CCO files still present in ~/.claude/")
             return 1
 
     except KeyboardInterrupt:

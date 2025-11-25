@@ -164,24 +164,24 @@ Update files
 
 ## Development Principles
 
-This project follows strict development principles documented in `.claude/principles/`:
+This project follows strict development principles documented in `~/.claude/principles/`:
 
-### Universal Principles (Always Applied)
+### Universal Principles (cco-principle-u-*)
 
-- **U_ATOMIC_COMMITS**: One logical change per commit
-- **U_DRY**: Single source of truth, no duplication
-- **U_MINIMAL_TOUCH**: Change only what's necessary
-- **U_TEST_FIRST**: Write tests before implementation
-- **U_FAIL_FAST**: Explicit error handling, no silent failures
-- **U_EVIDENCE_BASED**: Verify changes with concrete evidence
+- **cco-principle-u-dry**: Single source of truth, no duplication
+- **cco-principle-u-minimal-touch**: Change only what's necessary
+- **cco-principle-u-evidence-based-analysis**: Verify changes with concrete evidence
+- **cco-principle-u-change-verification**: Verify all changes before claiming completion
+- **cco-principle-u-follow-patterns**: Follow existing code patterns
+- **cco-principle-u-no-overengineering**: Keep solutions simple
 
-### Project-Specific Principles
+### Claude-Specific Principles (cco-principle-c-*)
 
-- **P_TYPE_SAFETY**: Full type annotations, mypy compliance
-- **P_LINTING_SAST**: Ruff + security scanning enforced
-- **P_TEST_COVERAGE**: Minimum 60% coverage, critical modules 80%
-- **P_ZERO_DISK_TOUCH**: Minimal file system operations
-- **P_PRIVACY_FIRST**: No data collection without consent
+- **cco-principle-c-context-window-mgmt**: Optimize context window usage
+- **cco-principle-c-efficient-file-operations**: Grep-first, targeted reads
+- **cco-principle-c-native-tool-interactions**: Use native Claude Code tools
+- **cco-principle-c-no-unsolicited-file-creation**: No unnecessary file creation
+- **cco-principle-c-project-context-discovery**: Discover project context first
 
 ## Local Testing Checklist
 

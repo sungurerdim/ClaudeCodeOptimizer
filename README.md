@@ -5,7 +5,7 @@
 [![Python 3.11+](https://img.shields.io/badge/python-3.11+-blue.svg)](https://www.python.org/downloads/)
 [![MIT License](https://img.shields.io/badge/license-MIT-green.svg)](LICENSE)
 
-> **v0.1.0**: Configuration layer providing Claude Code with specialized commands, skills, and agents for 12 critical industry pain points based on 2025 data.
+> **v1.0.0**: Configuration layer providing Claude Code with specialized commands, skills, and agents for 12 critical industry pain points based on 2025 data.
 
 ---
 
@@ -55,12 +55,12 @@ All CCO components follow strict design rules. **For detailed principles, see `~
 
 ### Essential Principles
 
-- **No Hardcoded Examples** - Use placeholders like `{FILE_PATH}`, `{LINE_NUMBER}` (See `U_NO_HARDCODED_EXAMPLES`)
-- **Native Tool Interactions** - Use `AskUserQuestion` for user input (See `C_NATIVE_TOOL_INTERACTIONS`)
-- **100% Honest Reporting** - Never claim "fixed" without verification (See `U_EVIDENCE_BASED_ANALYSIS`)
+- **No Hardcoded Examples** - Use placeholders like `{FILE_PATH}`, `{LINE_NUMBER}` (See `cco-principle-u-no-hardcoded-examples`)
+- **Native Tool Interactions** - Use `AskUserQuestion` for user input (See `cco-principle-c-native-tool-interactions`)
+- **100% Honest Reporting** - Never claim "fixed" without verification (See `cco-principle-u-evidence-based-analysis`)
 - **Complete Accounting** - All items: completed/skipped/failed/cannot-do. Totals must match.
 - **MultiSelect with "All"** - Every multiSelect question must have "All" option
-- **Principle Adherence** - Follow U_* (Universal) and C_* (Claude-specific) principles
+- **Principle Adherence** - Follow cco-principle-u-* (Universal) and cco-principle-c-* (Claude-specific) principles
 - **Token Efficiency** - Grep before Read, targeted reads, parallel operations
 - **UX/DX Excellence** - Progress tracking, actionable results, streaming feedback
 
@@ -70,7 +70,7 @@ All CCO components follow strict design rules. **For detailed principles, see `~
 - [ ] Honest reporting (verify before claiming)
 - [ ] Complete accounting (all items accounted for)
 - [ ] MultiSelect has "All" option
-- [ ] Follows U_* and C_* principles
+- [ ] Follows cco-principle-u-* and cco-principle-c-* principles
 
 ## Quick Start
 
@@ -112,27 +112,18 @@ cco-setup
 1. `pip install` → Installs Python package globally
 2. `cco-setup` → Copies content files to `~/.claude/` directory
    - Creates `~/.claude/commands/` (all CCO commands)
-   - Creates `~/.claude/principles/` (U_*, C_*, P_* principles)
+   - Creates `~/.claude/principles/` (cco-principle-u-*, cco-principle-c-* principles)
    - Creates `~/.claude/skills/` (domain-specific skills)
    - Creates `~/.claude/agents/` (specialized agents)
-   - Copies `~/.claude/STANDARDS_*.md` (structure and quality standards)
-   - Copies `~/.claude/LIBRARY_PATTERNS.md` (reusable patterns)
+   - Copies `~/.claude/cco-*.md` (structure and quality standards)
+   - Copies `~/.claude/cco-patterns.md` (reusable patterns)
    - Generates `~/.claude/CLAUDE.md` (marker-based principle injection - see [ADR-001](docs/ADR/001-marker-based-claude-md.md))
-   - Copies `~/.claude/settings.json.example` (optional: Claude Code config template)
-   - Copies `~/.claude/statusline.js.example` (optional: status line script template)
+   - Copies `~/.claude/settings.json.cco` (optional: Claude Code config template)
+   - Copies `~/.claude/statusline.js.cco` (optional: status line script template)
    - Shows before/after file count summary
    - If files exist, asks before overwriting (always overwrites after confirmation)
 3. Done! Commands available in all projects immediately via Claude Code
 
-**What's New (Recent Updates):**
-- ✅ Standards files architecture - SKILL/AGENT/COMMAND/PRINCIPLE standards for DRY compliance
-- ✅ Reference deduplication - Reduced command references from 71 to ~15 (79% reduction)
-- ✅ Dynamic principle loading from command frontmatter (-165 lines static code)
-- ✅ New CLI commands: `cco-status` (health check), `cco-remove` (safe uninstall)
-- ✅ Removed auto-setup behavior (explicit `cco-setup` command required)
-- ✅ 100% test pass rate (all tests fixed and passing)
-- ✅ Enhanced command UX with unused skills integration
-- ✅ Context optimization focus in `/cco-optimize-context-usage` (CLAUDE.md duplication elimination)
 
 ### Verifying Installation
 
@@ -159,32 +150,86 @@ CCO provides template files for Claude Code configuration. **These are completel
 
 **Available Templates:**
 
-1. **`~/.claude/settings.json.example`** - Claude Code settings
+1. **`~/.claude/settings.json.cco`** - Claude Code settings
    - Pre-configured permissions for CCO commands
    - Status line integration
    - Security safeguards (blocked destructive commands)
 
-2. **`~/.claude/statusline.js.example`** - Enhanced status line
-   - Git status (branch, changes, commits)
-   - CCO project info
-   - Real-time metrics
+2. **`~/.claude/statusline.js.cco`** - Enhanced status line (see [Statusline Documentation](#statusline) below)
 
 **How to Use:**
 
 ```bash
 # Option 1: Copy and customize
-cp ~/.claude/settings.json.example ~/.claude/settings.json
-cp ~/.claude/statusline.js.example ~/.claude/statusline.js
+cp ~/.claude/settings.json.cco ~/.claude/settings.json
+cp ~/.claude/statusline.js.cco ~/.claude/statusline.js
 # Edit files to match your preferences
 
 # Option 2: Use as reference
-# Keep .example files as reference, manually add desired parts to your existing config
+# Keep .cco files as reference, manually add desired parts to your existing config
 ```
 
 **Important Notes:**
 - CCO **never** overwrites your existing `settings.json` or `statusline.js`
-- `.example` files are updated on every `cco-setup` to provide latest templates
+- `.cco` template files are updated on every `cco-setup` to provide latest templates
 - You can safely ignore these templates - CCO commands work without them
+
+### Statusline
+
+The CCO statusline provides real-time project and git information in a compact, privacy-focused display.
+
+**Example Output:**
+```
+ 📁 {project}/{dir} | 👤 {username} | {git size} | {claude code version} | 🤖 {active ai model}
+┌────────────────────┬──────────────┬──────────┬──────────┬─────────────┐
+│ 🔗 {repo}:{branch} │ Conflicts: # │ Stash: # │ Ahead: # │ Last: hh:mm │
+├────────────────────┼──────────────┼──────────┼──────────┼─────────────┤
+│ Unstaged +### -### │ edit ##      │ new ##   │ del ##   │ move ##     │
+│ Staged   +### -### │ edit ##      │ new ##   │ del ##   │ move ##     │
+└────────────────────┴──────────────┴──────────┴──────────┴─────────────┘
+```
+
+**Title Row:**
+| Field | Description |
+|-------|-------------|
+| 📁 {project}/{dir} | Last 2 segments of current directory |
+| 👤 {username} | System username |
+| {git size} | Project size excluding `.gitignore`'d files |
+| {claude code version} | Installed Claude Code version |
+| 🤖 {active ai model} | Currently active AI model |
+
+**Git Info Row:**
+| Field | Description |
+|-------|-------------|
+| 🔗 Repo:Branch | Repository name and current branch |
+| Conflicts | Merge conflict count (`git status` UU/AA/DD) |
+| Stash | Stash count (`git stash list`) |
+| Ahead | Unpushed commits (`git rev-list @{u}..HEAD`) |
+| Last | Time since last commit (`hh:mm` or `#d #h`) |
+
+**Unstaged Row:**
+| Field | Description |
+|-------|-------------|
+| +/- | Total lines added/removed (working tree) |
+| edit | Modified files |
+| new | Untracked files (not in `.gitignore`) |
+| del | Deleted files |
+| move | Renamed files |
+
+**Staged Row:**
+Same as Unstaged, but for files added to index (`git add`) ready to commit.
+
+**Features:**
+- ✅ OS-agnostic (Windows, Linux, macOS)
+- ✅ Fully dynamic (no hardcoded values)
+- ✅ Privacy-focused (minimal path exposure)
+- ✅ Respects `.gitignore` for size calculation
+- ✅ Cross-platform git integration
+
+**Installation:**
+```bash
+cp ~/.claude/statusline.js.cco ~/.claude/statusline.js
+```
 
 ### Uninstallation
 
@@ -193,17 +238,17 @@ cp ~/.claude/statusline.js.example ~/.claude/statusline.js
 ```bash
 # Step 1: Remove global files FIRST
 # Option 1: Use slash command (inside Claude Code)
-/cco-remove
+cco-remove
 
 # Option 2: Use CLI command (terminal)
 cco-remove
 # This removes:
 # - ~/.claude/commands/ (all cco-*.md files)
-# - ~/.claude/principles/ (all C_*, U_*, P_* files)
+# - ~/.claude/principles/ (all cco-principle-c-*, cco-principle-u-* files)
 # - ~/.claude/skills/ (all cco-skill-*.md files)
 # - ~/.claude/agents/ (all cco-agent-*.md files)
-# - ~/.claude/STANDARDS_*.md (all standards files)
-# - ~/.claude/LIBRARY_PATTERNS.md (pattern library)
+# - ~/.claude/cco-*.md (all standards files)
+# - ~/.claude/cco-patterns.md (pattern library)
 # - ~/.claude/CLAUDE.md (principle markers)
 
 # Step 2: Uninstall package (outside Claude Code)
@@ -216,10 +261,10 @@ uv tool uninstall claudecodeoptimizer
 **Why This Order?**
 
 `# Option 1: Use slash command (inside Claude Code)
-/cco-remove
+cco-remove
 
 # Option 2: Use CLI command (terminal)
-cco-remove` is a Claude Code slash command, so it only works when the package is installed. If you run `pip uninstall` first, you lose access to `/cco-remove` and must manually delete `~/.claude/` files.
+cco-remove` is a Claude Code slash command, so it only works when the package is installed. If you run `pip uninstall` first, you lose access to `cco-remove` and must manually delete `~/.claude/` files.
 
 **What Gets Removed:**
 - ✓ Python package (claudecodeoptimizer)
@@ -282,12 +327,12 @@ Open any project in Claude Code:
 | `/cco-audit --security` | Find security issues | `/cco-audit --security --ai-quality --code-review` |
 | `/cco-fix --security` | Auto-fix problems | `/cco-fix --security --ai-quality --tech-debt` |
 | `/cco-generate --tests` | Create tests/docs | `/cco-generate --tests --openapi --review-checklist` |
-| `/cco-optimize-code-performance --database` | Speed up code | `/cco-optimize-code-performance --database --docker` |
+| `/cco-optimize --performance --database` | Speed up code | `/cco-optimize --performance --database --docker` |
 | `/cco-commit` | Smart git commits | `git add . && /cco-commit` |
-| `/cco-implement "feature"` | Build with TDD | `/cco-implement "Add JWT authentication"` |
-| `/cco-update` | Update version | `/cco-update` |
-| `/cco-optimize-context-usage` | Reduce context tokens | `/cco-optimize-context-usage` |
-| `/cco-remove` | Clean uninstall | `/cco-remove` |
+| `/cco-generate --feature "feature"` | Build with TDD | `/cco-generate --feature "Add JWT authentication"` |
+| `cco-setup` | Update version | `cco-setup` |
+| `/cco-optimize --context` | Reduce context tokens | `/cco-optimize --context` |
+| `cco-remove` | Clean uninstall | `cco-remove` |
 
 **Audit Categories:** `--quick`, `--security`, `--ai-security`, `--ai-quality`, `--tests`, `--database`, `--performance`, `--tech-debt`, `--code-review`, `--platform`, `--ci-cd`, `--containers`, `--supply-chain`, `--all`
 
@@ -336,7 +381,7 @@ Open any project in Claude Code:
 ```bash
 /cco-audit --performance --database
 # Finds N+1 queries, missing indexes
-/cco-optimize-code-performance --database --docker
+/cco-optimize --performance --database --docker
 # Faster queries, smaller images (with metrics)
 ```
 
@@ -369,7 +414,7 @@ Open any project in Claude Code:
 /cco-audit --all           # Find all issues
 /cco-fix --all             # Fix safe issues
 /cco-generate --all        # Create missing components
-/cco-optimize-code-performance --all        # Performance tuning
+/cco-optimize --performance --all        # Performance tuning
 /cco-commit                # Clean commits
 ```
 

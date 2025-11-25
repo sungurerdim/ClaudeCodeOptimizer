@@ -34,19 +34,19 @@ Implement a **marker-based injection system** using HTML comment markers:
 
 ```markdown
 <!-- CCO_PRINCIPLES_START -->
-@principles/U_CHANGE_VERIFICATION.md
-@principles/U_CROSS_PLATFORM_COMPATIBILITY.md
-@principles/U_DRY.md
-@principles/U_EVIDENCE_BASED_ANALYSIS.md
-@principles/U_FOLLOW_PATTERNS.md
-@principles/U_MINIMAL_TOUCH.md
-@principles/U_NO_HARDCODED_EXAMPLES.md
-@principles/U_NO_OVERENGINEERING.md
-@principles/C_CONTEXT_WINDOW_MGMT.md
-@principles/C_EFFICIENT_FILE_OPERATIONS.md
-@principles/C_NATIVE_TOOL_INTERACTIONS.md
-@principles/C_NO_UNSOLICITED_FILE_CREATION.md
-@principles/C_PROJECT_CONTEXT_DISCOVERY.md
+@principles/cco-principle-u-change-verification.md
+@principles/cco-principle-u-cross-platform-compatibility.md
+@principles/cco-principle-u-dry.md
+@principles/cco-principle-u-evidence-based-analysis.md
+@principles/cco-principle-u-follow-patterns.md
+@principles/cco-principle-u-minimal-touch.md
+@principles/cco-principle-u-no-hardcoded-examples.md
+@principles/cco-principle-u-no-overengineering.md
+@principles/cco-principle-c-context-window-mgmt.md
+@principles/cco-principle-c-efficient-file-operations.md
+@principles/cco-principle-c-native-tool-interactions.md
+@principles/cco-principle-c-no-unsolicited-file-creation.md
+@principles/cco-principle-c-project-context-discovery.md
 <!-- CCO_PRINCIPLES_END -->
 ```
 
@@ -219,7 +219,7 @@ def remove_cco_content(claude_md_path: Path) -> None:
 
 ## References
 
-- [U_NO_HARDCODED_EXAMPLES Principle](../../claudecodeoptimizer/content/principles/U_NO_HARDCODED_EXAMPLES.md)
+- [cco-principle-u-no-hardcoded-examples](../../claudecodeoptimizer/content/principles/cco-principle-u-no-hardcoded-examples.md)
 - [CCO Installation Documentation](../runbooks/installation.md)
 - [GitHub Issue: CLAUDE.md Management](#) (if applicable)
 
