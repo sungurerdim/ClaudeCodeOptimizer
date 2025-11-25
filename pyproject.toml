@@ -87,7 +87,6 @@ packages = {find = {}}  # Auto-discover all packages
 [tool.setuptools.package-data]
 claudecodeoptimizer = [
     "content/**/*",
-    "schemas/**/*",
 ]
 
 [tool.setuptools.dynamic]

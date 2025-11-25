@@ -45,14 +45,14 @@
 
 **Principles Applied:**
 <!-- Check which CCO principles this PR follows -->
-- [ ] U_CHANGE_VERIFICATION - All changes verified before claiming completion
-- [ ] U_CROSS_PLATFORM_COMPATIBILITY - Commands work on Windows, macOS, Linux
-- [ ] U_DRY - No unnecessary duplication
-- [ ] U_EVIDENCE_BASED_ANALYSIS - Claims backed by evidence, complete accounting
-- [ ] U_FOLLOW_PATTERNS - Follows existing codebase patterns
-- [ ] U_MINIMAL_TOUCH - Only required files edited
-- [ ] U_NO_HARDCODED_EXAMPLES - No hardcoded example data in templates
-- [ ] U_NO_OVERENGINEERING - Simplest solution chosen
+- [ ] cco-principle-u-change-verification - All changes verified before claiming completion
+- [ ] cco-principle-u-cross-platform-compatibility - Commands work on Windows, macOS, Linux
+- [ ] cco-principle-u-dry - No unnecessary duplication
+- [ ] cco-principle-u-evidence-based-analysis - Claims backed by evidence, complete accounting
+- [ ] cco-principle-u-follow-patterns - Follows existing codebase patterns
+- [ ] cco-principle-u-minimal-touch - Only required files edited
+- [ ] cco-principle-u-no-hardcoded-examples - No hardcoded example data in templates
+- [ ] cco-principle-u-no-overengineering - Simplest solution chosen
 
 ---
 
@@ -79,8 +79,8 @@
 - [ ] **Configuration**: No hardcoded paths or environment assumptions
 
 **Principles Applied:**
-- [ ] C_NO_UNSOLICITED_FILE_CREATION - No unnecessary file creation
-- [ ] C_NATIVE_TOOL_INTERACTIONS - Uses native Claude Code tools
+- [ ] cco-principle-c-no-unsolicited-file-creation - No unnecessary file creation
+- [ ] cco-principle-c-native-tool-interactions - Uses native Claude Code tools
 
 ---
 
@@ -104,7 +104,7 @@
 ```
 
 **Principles Applied:**
-- [ ] U_EVIDENCE_BASED_ANALYSIS - Test results prove functionality works
+- [ ] cco-principle-u-evidence-based-analysis - Test results prove functionality works
 
 ---
 

@@ -3,15 +3,15 @@ Knowledge Setup - Global ~/.claude/ structure initialization
 
 Creates:
 - ~/.claude/commands/ (all cco-*.md from claudecodeoptimizer/content/commands/)
-- ~/.claude/principles/ (all U_*, C_*, P_*.md from claudecodeoptimizer/content/principles/)
+- ~/.claude/principles/ (all cco-principle-*.md from claudecodeoptimizer/content/principles/)
 - ~/.claude/agents/ (all cco-*.md from claudecodeoptimizer/content/agents/)
 - ~/.claude/skills/ (all cco-*.md from claudecodeoptimizer/content/skills/)
 - ~/.claude/*.md (standards files: SKILL/AGENT/COMMAND/PRINCIPLE standards & patterns)
-- ~/.claude/CLAUDE.md (with U_* and C_* principle markers)
+- ~/.claude/CLAUDE.md (with cco-principle-* markers)
 - ~/.claude/*.cco (template files: settings.json.cco, statusline.js.cco)
 """
 
-import heapq
+import re
 import shutil
 from collections.abc import Callable
 from pathlib import Path
@@ -35,7 +35,7 @@ def _count_principles(dir_path: Path) -> int:
     for f in dir_path.iterdir():
         if f.is_file() and f.suffix == ".md":
             name = f.name
-            if len(name) > 2 and name[1] == "_" and name[0] in ("U", "C", "P"):
+            if name.startswith("cco-principle-u-") or name.startswith("cco-principle-c-"):
                 count += 1
     return count
 
@@ -44,14 +44,14 @@ def _count_standards(dir_path: Path) -> int:
     """
     Count standards files efficiently with single directory scan.
 
-    Matches *_STANDARDS.md, PRINCIPLE_FORMAT.md, COMMAND_PATTERNS.md in one pass.
+    Matches cco-*.md, ,  in one pass.
     Performance: O(n) single scan vs O(3n) with multiple glob() calls.
     """
     count = 0
     for f in dir_path.iterdir():
         if f.is_file() and f.suffix == ".md":
             name = f.name
-            if name.endswith("_STANDARDS.md") or name in ("PRINCIPLE_FORMAT.md", "COMMAND_PATTERNS.md"):
+            if name.startswith("cco-") and not name.startswith("cco-principle-"):
                 count += 1
     return count
 
@@ -114,12 +114,9 @@ def show_installation_diff() -> None:
         ("Agents", config.get_agents_dir(), "cco-*.md"),
         ("Commands", config.get_global_commands_dir(), "cco-*.md"),
         ("Skills", config.get_skills_dir(), "cco-*.md"),
-        ("Principles (U_*)", config.get_principles_dir(), "U_*.md"),
-        ("Principles (C_*)", config.get_principles_dir(), "C_*.md"),
-        ("Principles (P_*)", config.get_principles_dir(), "P_*.md"),
-        ("Standards", config.get_claude_dir(), "*_STANDARDS.md"),
-        ("Standards (Patterns)", config.get_claude_dir(), "COMMAND_PATTERNS.md"),
-        ("Standards (Format)", config.get_claude_dir(), "PRINCIPLE_FORMAT.md"),
+        ("Principles (cco-principle-u-*)", config.get_principles_dir(), "cco-principle-u-*.md"),
+        ("Principles (cco-principle-c-*)", config.get_principles_dir(), "cco-principle-c-*.md"),
+        ("Standards", config.get_claude_dir(), "cco-*.md"),
         ("Templates", config.get_claude_dir(), "*.cco"),
     ]
 
@@ -314,12 +311,13 @@ def _setup_principles(principles_dir: Path) -> None:
     """
 
     def is_cco_principle(path: Path) -> bool:
-        return len(path.name) > 1 and path.name[0] in ("U", "C", "P") and path.name[1] == "_"
+        """Check if file is a CCO principle (cco-principle-u-* or cco-principle-c-*)."""
+        return path.name.startswith("cco-principle-u-") or path.name.startswith("cco-principle-c-")
 
     _setup_files(
         source_dir=_get_content_dir("principles"),
         dest_dir=principles_dir,
-        cleanup_patterns=["U_*.md", "C_*.md", "P_*.md"],
+        cleanup_patterns=["cco-principle-u-*.md", "cco-principle-c-*.md"],
         copy_pattern="*.md",
         copy_filter=is_cco_principle,
     )
@@ -372,32 +370,32 @@ def _setup_claude_md(claude_dir: Path, principles_dir: Path) -> None:
     """
     Create or update ~/.claude/CLAUDE.md with CCO principle markers.
 
-    ONLY adds markers for U_* (Universal) and C_* (Claude-specific) principles.
-    P_* (Project-specific) principles are loaded dynamically by skills.
+    Adds markers for cco-principle-u-* (Universal) and cco-principle-c-* (Claude-specific) principles.
+    P_* principles integrated into skills.
 
     Format:
     <!-- CCO_PRINCIPLES_START -->
-    @principles/U_CHANGE_VERIFICATION.md
-    @principles/U_COMPLETE_REPORTING.md
+    @principles/cco-principle-u-change-verification.md
+    @principles/cco-principle-u-dry.md
     ...
-    @principles/C_EFFICIENT_FILE_OPERATIONS.md
+    @principles/cco-principle-c-efficient-file-operations.md
     ...
     <!-- CCO_PRINCIPLES_END -->
     """
     claude_md_path = claude_dir / "CLAUDE.md"
 
     # Get all U_* and C_* principle files (sorted)
-    u_principles = sorted(principles_dir.glob("U_*.md"))
-    c_principles = sorted(principles_dir.glob("C_*.md"))
+    u_principles = sorted(principles_dir.glob("cco-principle-u-*.md"))
+    c_principles = sorted(principles_dir.glob("cco-principle-c-*.md"))
 
     # Build marker section - ONLY markers and principle references, nothing else
     marker_lines = ["<!-- CCO_PRINCIPLES_START -->"]
 
-    # Add U_* principles
+    # Add cco-principle-u-* principles
     for principle_file in u_principles:
         marker_lines.append(f"@principles/{principle_file.name}")
 
-    # Add C_* principles
+    # Add cco-principle-c-* principles
     for principle_file in c_principles:
         marker_lines.append(f"@principles/{principle_file.name}")
 
@@ -412,8 +410,6 @@ def _setup_claude_md(claude_dir: Path, principles_dir: Path) -> None:
         # Check if markers exist
         if "<!-- CCO_PRINCIPLES_START -->" in existing_content:
             # Replace existing marker section
-            import re
-
             pattern = r"<!-- CCO_PRINCIPLES_START -->.*?<!-- CCO_PRINCIPLES_END -->\n?"
             new_content = re.sub(pattern, marker_content, existing_content, flags=re.DOTALL)
         else:
@@ -487,27 +483,20 @@ def _setup_standards(claude_dir: Path) -> None:
     Copy CCO standards files to ~/.claude/ root.
 
     These files define standard structure and patterns for:
-    - STANDARDS_SKILLS.md - Skill file format and quality requirements
-    - STANDARDS_AGENTS.md - Built-in agent behaviors (file discovery, model selection, etc.)
-    - STANDARDS_COMMANDS.md - Standard command structure and execution protocol
-    - STANDARDS_QUALITY.md - UX/DX, efficiency, simplicity, performance standards
-    - STANDARDS_PRINCIPLES.md - Standard format for principle files
-    - LIBRARY_PATTERNS.md - Reusable command patterns (Step 0, Selection, Accounting, etc.)
+    - cco-standards.md - Skill file format and quality requirements
+    - cco-patterns.md - Built-in agent behaviors (file discovery, model selection, etc.)
+    - cco-tech-detection.md - Standard command structure and execution protocol
 
     Commands, agents, and skills reference these files using relative paths like:
-    - [STANDARDS_AGENTS.md](../STANDARDS_AGENTS.md) from ~/.claude/agents/
-    - [LIBRARY_PATTERNS.md](../LIBRARY_PATTERNS.md) from ~/.claude/commands/
+    - [cco-patterns.md](../cco-standards.md) from ~/.claude/agents/
     """
     content_dir = _get_content_dir("")
 
     # Standards files to copy
     standards_files = [
-        "STANDARDS_SKILLS.md",
-        "STANDARDS_AGENTS.md",
-        "STANDARDS_COMMANDS.md",
-        "STANDARDS_QUALITY.md",
-        "STANDARDS_PRINCIPLES.md",
-        "LIBRARY_PATTERNS.md",
+        "cco-standards.md",
+        "cco-patterns.md",
+        "cco-tech-detection.md",
     ]
 
     # Copy each standards file to ~/.claude/ root

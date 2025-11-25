@@ -82,26 +82,20 @@ class TestCountComponents:
         principles_dir = claude_dir / "principles"
         principles_dir.mkdir(parents=True)
 
-        # Create U_ principles
-        (principles_dir / "U_DRY.md").write_text("DRY principle")
-        (principles_dir / "U_FAIL_FAST.md").write_text("Fail fast")
+        # Create universal principles (cco-principle-u-*)
+        (principles_dir / "cco-principle-u-dry.md").write_text("DRY principle")
+        (principles_dir / "cco-principle-u-fail-fast.md").write_text("Fail fast")
 
-        # Create C_ principles
-        (principles_dir / "C_CONTEXT.md").write_text("Context")
-
-        # Create P_ principles
-        (principles_dir / "P_LINTING.md").write_text("Linting")
-        (principles_dir / "P_TESTING.md").write_text("Testing")
-        (principles_dir / "P_SECURITY.md").write_text("Security")
+        # Create claude-specific principles (cco-principle-c-*)
+        (principles_dir / "cco-principle-c-context.md").write_text("Context")
 
         # Create summary file (should be excluded)
         (principles_dir / "PRINCIPLES.md").write_text("Summary")
 
         counts = count_components(claude_dir)
-        assert counts["principles"] == 6  # Excludes PRINCIPLES.md
+        assert counts["principles"] == 3  # Excludes PRINCIPLES.md
         assert counts["principles_u"] == 2
         assert counts["principles_c"] == 1
-        assert counts["principles_p"] == 3
 
     def test_count_components_with_skills(self, tmp_path: Path):
         """Test counting CCO skills"""
@@ -148,8 +142,8 @@ class TestCountComponents:
         (claude_dir / "commands" / "cco-status.md").write_text("status")
         (claude_dir / "commands" / "cco-help.md").write_text("help")
 
-        (claude_dir / "principles" / "U_DRY.md").write_text("DRY")
-        (claude_dir / "principles" / "C_CONTEXT.md").write_text("Context")
+        (claude_dir / "principles" / "cco-principle-u-dry.md").write_text("DRY")
+        (claude_dir / "principles" / "cco-principle-c-context.md").write_text("Context")
 
         (claude_dir / "skills" / "cco-skill-audit.md").write_text("audit")
 
@@ -185,7 +179,7 @@ class TestGetVersionInfo:
         info = get_version_info()
         assert info["version"] != ""
         # Should be either a version number or "unknown"
-        assert info["version"] == "0.1.0" or info["version"] == "unknown"
+        assert info["version"] == "1.0.0" or info["version"] == "unknown"
 
     def test_get_version_info_python_version(self):
         """Test that python version is correct format"""
@@ -286,7 +280,7 @@ class TestCheckClaudeMd:
         claude_md = claude_dir / "CLAUDE.md"
         claude_md.write_text(
             "# Config\n\n<!-- CCO_PRINCIPLES_START -->\n"
-            "@principles/U_DRY.md\n"
+            "@principles/cco-principle-u-dry.md\n"
             "<!-- CCO_PRINCIPLES_END -->\n"
         )
 

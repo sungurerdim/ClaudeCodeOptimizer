@@ -67,11 +67,10 @@ def mock_content_dir(tmp_path: Path) -> Generator[Path, None, None]:
     # Create principles
     principles_src = content_dir / "principles"
     principles_src.mkdir(parents=True)
-    (principles_src / "U_CHANGE_VERIFICATION.md").write_text("# U Principle 1")
-    (principles_src / "U_DRY.md").write_text("# U Principle 2")
-    (principles_src / "C_FOLLOW_PATTERNS.md").write_text("# C Principle 1")
-    (principles_src / "C_CONTEXT_WINDOW_MGMT.md").write_text("# C Principle 2")
-    (principles_src / "P_PROJECT_SPECIFIC.md").write_text("# P Principle 1")
+    (principles_src / "cco-principle-u-change-verification.md").write_text("# U Principle 1")
+    (principles_src / "cco-principle-u-dry.md").write_text("# U Principle 2")
+    (principles_src / "cco-principle-c-follow-patterns.md").write_text("# C Principle 1")
+    (principles_src / "cco-principle-c-context-window-mgmt.md").write_text("# C Principle 2")
     (principles_src / "other_file.md").write_text("# Other file")
 
     # Create agents
@@ -212,14 +211,13 @@ class TestSetupCommands:
 class TestSetupPrinciples:
     """Test _setup_principles function"""
 
-    def test_copies_u_c_p_principles(self, tmp_path: Path) -> None:
-        """Test that U_*, C_*, P_*.md files are copied"""
+    def test_copies_cco_principles(self, tmp_path: Path) -> None:
+        """Test that cco-principle-u-*, cco-principle-c-*.md files are copied"""
         # Setup source
         source_dir = tmp_path / "source" / "content" / "principles"
         source_dir.mkdir(parents=True)
-        (source_dir / "U_TEST.md").write_text("# U Principle")
-        (source_dir / "C_TEST.md").write_text("# C Principle")
-        (source_dir / "P_TEST.md").write_text("# P Principle")
+        (source_dir / "cco-principle-u-test.md").write_text("# U Principle")
+        (source_dir / "cco-principle-c-test.md").write_text("# C Principle")
         (source_dir / "README.md").write_text("# README")  # Should not be copied
 
         dest_dir = tmp_path / "dest" / "principles"
@@ -231,24 +229,22 @@ class TestSetupPrinciples:
         with patch.object(knowledge_setup, "__file__", str(mock_file)):
             _setup_principles(dest_dir)
 
-        assert (dest_dir / "U_TEST.md").exists()
-        assert (dest_dir / "C_TEST.md").exists()
-        assert (dest_dir / "P_TEST.md").exists()
+        assert (dest_dir / "cco-principle-u-test.md").exists()
+        assert (dest_dir / "cco-principle-c-test.md").exists()
         assert not (dest_dir / "README.md").exists()
 
     def test_removes_old_principle_files(self, tmp_path: Path) -> None:
-        """Test that old U_*, C_*, P_*.md files are removed"""
+        """Test that old cco-principle-*.md files are removed and new ones installed"""
         # Setup source
         source_dir = tmp_path / "source" / "content" / "principles"
         source_dir.mkdir(parents=True)
-        (source_dir / "U_NEW.md").write_text("# New")
+        (source_dir / "cco-principle-u-new.md").write_text("# New")
 
         # Setup destination with old files
         dest_dir = tmp_path / "dest" / "principles"
         dest_dir.mkdir(parents=True)
-        (dest_dir / "U_OLD.md").write_text("# Old U")
-        (dest_dir / "C_OLD.md").write_text("# Old C")
-        (dest_dir / "P_OLD.md").write_text("# Old P")
+        (dest_dir / "cco-principle-u-old.md").write_text("# Old U")
+        (dest_dir / "cco-principle-c-old.md").write_text("# Old C")
         (dest_dir / "user_principle.md").write_text("# User")  # Should be preserved
 
         mock_file = tmp_path / "source" / "core" / "knowledge_setup.py"
@@ -258,10 +254,9 @@ class TestSetupPrinciples:
         with patch.object(knowledge_setup, "__file__", str(mock_file)):
             _setup_principles(dest_dir)
 
-        assert not (dest_dir / "U_OLD.md").exists()
-        assert not (dest_dir / "C_OLD.md").exists()
-        assert not (dest_dir / "P_OLD.md").exists()
-        assert (dest_dir / "U_NEW.md").exists()
+        assert not (dest_dir / "cco-principle-u-old.md").exists()
+        assert not (dest_dir / "cco-principle-c-old.md").exists()
+        assert (dest_dir / "cco-principle-u-new.md").exists()
         assert (dest_dir / "user_principle.md").exists()
 
     def test_raises_on_missing_source(self, tmp_path: Path) -> None:
@@ -476,9 +471,9 @@ class TestSetupClaudeMd:
 
         principles_dir = claude_dir / "principles"
         principles_dir.mkdir()
-        (principles_dir / "U_TEST1.md").touch()
-        (principles_dir / "U_TEST2.md").touch()
-        (principles_dir / "C_TEST1.md").touch()
+        (principles_dir / "cco-principle-u-test1.md").touch()
+        (principles_dir / "cco-principle-u-test2.md").touch()
+        (principles_dir / "cco-principle-c-test1.md").touch()
 
         _setup_claude_md(claude_dir, principles_dir)
 
@@ -488,9 +483,9 @@ class TestSetupClaudeMd:
         content = claude_md.read_text()
         assert "<!-- CCO_PRINCIPLES_START -->" in content
         assert "<!-- CCO_PRINCIPLES_END -->" in content
-        assert "@principles/U_TEST1.md" in content
-        assert "@principles/U_TEST2.md" in content
-        assert "@principles/C_TEST1.md" in content
+        assert "@principles/cco-principle-u-test1.md" in content
+        assert "@principles/cco-principle-u-test2.md" in content
+        assert "@principles/cco-principle-c-test1.md" in content
 
     def test_updates_existing_claude_md(self, tmp_path: Path) -> None:
         """Test updating existing CLAUDE.md with new markers"""
@@ -509,14 +504,14 @@ class TestSetupClaudeMd:
 
         principles_dir = claude_dir / "principles"
         principles_dir.mkdir()
-        (principles_dir / "U_NEW.md").touch()
+        (principles_dir / "cco-principle-u-new.md").touch()
 
         _setup_claude_md(claude_dir, principles_dir)
 
         content = claude_md.read_text()
         assert "# My Project" in content
         assert "Some other content" in content
-        assert "@principles/U_NEW.md" in content
+        assert "@principles/cco-principle-u-new.md" in content
         assert "@principles/OLD_PRINCIPLE.md" not in content
 
     def test_appends_to_claude_md_without_markers(self, tmp_path: Path) -> None:
@@ -530,7 +525,7 @@ class TestSetupClaudeMd:
 
         principles_dir = claude_dir / "principles"
         principles_dir.mkdir()
-        (principles_dir / "U_TEST.md").touch()
+        (principles_dir / "cco-principle-u-test.md").touch()
 
         _setup_claude_md(claude_dir, principles_dir)
 
@@ -538,7 +533,7 @@ class TestSetupClaudeMd:
         assert "# My Project" in content
         assert "Existing content" in content
         assert "<!-- CCO_PRINCIPLES_START -->" in content
-        assert "@principles/U_TEST.md" in content
+        assert "@principles/cco-principle-u-test.md" in content
 
     def test_sorts_principles_alphabetically(self, tmp_path: Path) -> None:
         """Test that principles are sorted alphabetically"""
@@ -547,43 +542,43 @@ class TestSetupClaudeMd:
 
         principles_dir = claude_dir / "principles"
         principles_dir.mkdir()
-        (principles_dir / "U_ZZZ.md").touch()
-        (principles_dir / "U_AAA.md").touch()
-        (principles_dir / "C_ZZZ.md").touch()
-        (principles_dir / "C_AAA.md").touch()
+        (principles_dir / "cco-principle-u-zzz.md").touch()
+        (principles_dir / "cco-principle-u-aaa.md").touch()
+        (principles_dir / "cco-principle-c-zzz.md").touch()
+        (principles_dir / "cco-principle-c-aaa.md").touch()
 
         _setup_claude_md(claude_dir, principles_dir)
 
         claude_md_path = claude_dir / "CLAUDE.md"
         content = claude_md_path.read_text()
 
-        # U_* should come before C_*
-        u_aaa_pos = content.find("U_AAA")
-        u_zzz_pos = content.find("U_ZZZ")
-        c_aaa_pos = content.find("C_AAA")
-        c_zzz_pos = content.find("C_ZZZ")
+        # cco-principle-u-* should come before cco-principle-c-*
+        u_aaa_pos = content.find("cco-principle-u-aaa")
+        u_zzz_pos = content.find("cco-principle-u-zzz")
+        c_aaa_pos = content.find("cco-principle-c-aaa")
+        c_zzz_pos = content.find("cco-principle-c-zzz")
 
-        assert u_aaa_pos < u_zzz_pos  # U_AAA before U_ZZZ
-        assert u_zzz_pos < c_aaa_pos  # All U_* before C_*
-        assert c_aaa_pos < c_zzz_pos  # C_AAA before C_ZZZ
+        assert u_aaa_pos < u_zzz_pos  # u-aaa before u-zzz
+        assert u_zzz_pos < c_aaa_pos  # All u-* before c-*
+        assert c_aaa_pos < c_zzz_pos  # c-aaa before c-zzz
 
-    def test_excludes_p_principles_from_markers(self, tmp_path: Path) -> None:
-        """Test that P_* principles are NOT included in CLAUDE.md markers"""
+    def test_excludes_non_cco_principles_from_markers(self, tmp_path: Path) -> None:
+        """Test that non-CCO principles are NOT included in CLAUDE.md markers"""
         claude_dir = tmp_path / ".claude"
         claude_dir.mkdir(parents=True)
 
         principles_dir = claude_dir / "principles"
         principles_dir.mkdir()
-        (principles_dir / "U_TEST.md").touch()
-        (principles_dir / "C_TEST.md").touch()
-        (principles_dir / "P_PROJECT.md").touch()
+        (principles_dir / "cco-principle-u-test.md").touch()
+        (principles_dir / "cco-principle-c-test.md").touch()
+        (principles_dir / "OTHER_PRINCIPLE.md").touch()  # Non-CCO principle
 
         _setup_claude_md(claude_dir, principles_dir)
 
         content = (claude_dir / "CLAUDE.md").read_text()
-        assert "@principles/U_TEST.md" in content
-        assert "@principles/C_TEST.md" in content
-        assert "@principles/P_PROJECT.md" not in content
+        assert "@principles/cco-principle-u-test.md" in content
+        assert "@principles/cco-principle-c-test.md" in content
+        assert "@principles/OTHER_PRINCIPLE.md" not in content
 
 
 class TestGetAvailableCommands:
@@ -745,38 +740,36 @@ class TestCheckExistingInstallation:
         assert result["commands"] == 3
         assert result["skills"] == 1
 
-    def test_counts_principles_u_c_p(self, mock_claude_dir: Path) -> None:
-        """Test counts U_*, C_*, P_*.md principle files"""
+    def test_counts_cco_principles(self, mock_claude_dir: Path) -> None:
+        """Test counts cco-principle-u-*, cco-principle-c-*.md principle files"""
         from claudecodeoptimizer.core.knowledge_setup import check_existing_installation
 
         principles_dir = mock_claude_dir / "principles"
         principles_dir.mkdir(parents=True)
-        (principles_dir / "U_TEST1.md").touch()
-        (principles_dir / "U_TEST2.md").touch()
-        (principles_dir / "C_TEST1.md").touch()
-        (principles_dir / "P_TEST1.md").touch()
+        (principles_dir / "cco-principle-u-test1.md").touch()
+        (principles_dir / "cco-principle-u-test2.md").touch()
+        (principles_dir / "cco-principle-c-test1.md").touch()
         (principles_dir / "README.md").touch()  # Should not count
 
         result = check_existing_installation()
 
         assert result is not None
-        assert result["principles"] == 4  # U_*2 + C_*1 + P_*1
+        assert result["principles"] == 3  # u*2 + c*1
 
     def test_counts_standards_files(self, mock_claude_dir: Path) -> None:
-        """Test counts *_STANDARDS.md, PRINCIPLE_FORMAT.md, COMMAND_PATTERNS.md"""
+        """Test counts cco-*.md standards files in ~/.claude/ root"""
         from claudecodeoptimizer.core.knowledge_setup import check_existing_installation
 
         mock_claude_dir.mkdir(parents=True)
-        (mock_claude_dir / "SKILL_STANDARDS.md").touch()
-        (mock_claude_dir / "AGENT_STANDARDS.md").touch()
-        (mock_claude_dir / "PRINCIPLE_FORMAT.md").touch()
-        (mock_claude_dir / "COMMAND_PATTERNS.md").touch()
+        (mock_claude_dir / "cco-standards.md").touch()
+        (mock_claude_dir / "cco-patterns.md").touch()
+        (mock_claude_dir / "cco-tech-detection.md").touch()
         (mock_claude_dir / "OTHER.md").touch()  # Should not count
 
         result = check_existing_installation()
 
         assert result is not None
-        assert result["standards"] == 4
+        assert result["standards"] == 3
 
     def test_counts_template_files(self, mock_claude_dir: Path) -> None:
         """Test counts *.cco template files"""
@@ -798,10 +791,10 @@ class TestCheckExistingInstallation:
 
         # Create files in reverse order
         (mock_claude_dir / "principles").mkdir(parents=True)
-        (mock_claude_dir / "principles" / "U_TEST.md").touch()
+        (mock_claude_dir / "principles" / "cco-principle-u-test.md").touch()
 
         (mock_claude_dir / "skills").mkdir(parents=True)
-        (mock_claude_dir / "skills" / "cco-skill.md").touch()
+        (mock_claude_dir / "skills" / "cco-skill-test.md").touch()
 
         (mock_claude_dir / "commands").mkdir(parents=True)
         (mock_claude_dir / "commands" / "cco-cmd.md").touch()
@@ -848,14 +841,14 @@ class TestGetInstallationCounts:
         (mock_claude_dir / "commands" / "cco-cmd2.md").touch()
 
         (mock_claude_dir / "skills").mkdir(parents=True)
-        (mock_claude_dir / "skills" / "cco-skill.md").touch()
+        (mock_claude_dir / "skills" / "cco-skill-test.md").touch()
 
         (mock_claude_dir / "principles").mkdir(parents=True)
-        (mock_claude_dir / "principles" / "U_TEST.md").touch()
-        (mock_claude_dir / "principles" / "C_TEST.md").touch()
+        (mock_claude_dir / "principles" / "cco-principle-u-test.md").touch()
+        (mock_claude_dir / "principles" / "cco-principle-c-test.md").touch()
 
         mock_claude_dir.mkdir(exist_ok=True)
-        (mock_claude_dir / "SKILL_STANDARDS.md").touch()
+        (mock_claude_dir / "cco-standards.md").touch()
 
         (mock_claude_dir / "settings.json.cco").touch()
 
@@ -902,14 +895,14 @@ class TestShowInstallationDiff:
 
         principles_dir = mock_claude_dir / "principles"
         principles_dir.mkdir(parents=True)
-        (principles_dir / "U_TEST.md").touch()
+        (principles_dir / "cco-principle-u-test.md").touch()
 
         show_installation_diff()
 
         captured = capsys.readouterr()
         assert "FILES TO BE OVERWRITTEN" in captured.out
         assert "Commands: 2 files" in captured.out
-        assert "Principles (U_*): 1 files" in captured.out
+        assert "Principles (cco-principle-u-*): 1 files" in captured.out
         assert "Total:" in captured.out
 
     def test_shows_first_three_files(self, mock_claude_dir: Path, capsys) -> None:
@@ -953,12 +946,9 @@ class TestSetupStandards:
         package_dir = tmp_path / "claudecodeoptimizer"
         content_dir = package_dir / "content"
         content_dir.mkdir(parents=True)
-        (content_dir / "STANDARDS_SKILLS.md").write_text("# Skills Standards")
-        (content_dir / "STANDARDS_AGENTS.md").write_text("# Agents Standards")
-        (content_dir / "STANDARDS_COMMANDS.md").write_text("# Commands Standards")
-        (content_dir / "STANDARDS_QUALITY.md").write_text("# Quality Standards")
-        (content_dir / "STANDARDS_PRINCIPLES.md").write_text("# Principles Standards")
-        (content_dir / "LIBRARY_PATTERNS.md").write_text("# Library Patterns")
+        (content_dir / "cco-standards.md").write_text("# CCO Standards")
+        (content_dir / "cco-patterns.md").write_text("# CCO Patterns")
+        (content_dir / "cco-tech-detection.md").write_text("# CCO Tech Detection")
 
         # Create destination
         claude_dir = tmp_path / ".claude"
@@ -973,12 +963,9 @@ class TestSetupStandards:
             _setup_standards(claude_dir)
 
         # Verify all files copied
-        assert (claude_dir / "STANDARDS_SKILLS.md").exists()
-        assert (claude_dir / "STANDARDS_AGENTS.md").exists()
-        assert (claude_dir / "STANDARDS_COMMANDS.md").exists()
-        assert (claude_dir / "STANDARDS_QUALITY.md").exists()
-        assert (claude_dir / "STANDARDS_PRINCIPLES.md").exists()
-        assert (claude_dir / "LIBRARY_PATTERNS.md").exists()
+        assert (claude_dir / "cco-standards.md").exists()
+        assert (claude_dir / "cco-patterns.md").exists()
+        assert (claude_dir / "cco-tech-detection.md").exists()
 
     def test_handles_missing_standards_files(self, tmp_path: Path) -> None:
         """Test gracefully handles missing standards files"""
@@ -1001,7 +988,7 @@ class TestSetupStandards:
             _setup_standards(claude_dir)
 
         # No files should be created
-        assert not (claude_dir / "STANDARDS_SKILLS.md").exists()
+        assert not (claude_dir / "cco-standards.md").exists()
 
 
 class TestSetupGlobalTemplates:

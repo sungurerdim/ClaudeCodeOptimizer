@@ -32,8 +32,11 @@ const ICON = {
   modified: '📝',
   new: '✨',
   deleted: '🗑️',
+  renamed: '📎',
   conflict: '⚠️',
   stash: '📚',
+  time: '🕐',
+  lastCommit: '⏰',
 };
 
 // ============================================================================
@@ -72,12 +75,13 @@ function getVisibleLength(str) {
   // Remove ANSI escape codes
   let s = str.replace(/\x1b\[[0-9;]*m/g, '');
 
-  // Remove zero-width characters FIRST
+  // Remove zero-width characters (variation selectors, joiners, etc.)
   s = s.replace(/[\u{FE00}-\u{FE0F}\u{200B}-\u{200D}\u{2060}\u{FEFF}]/gu, '');
 
-  // Replace emojis with configured width
+  // Replace ALL emojis with configured width
+  // Covers: Misc Symbols, Dingbats, Emoticons, Transport, Misc Symbols Extended, etc.
   const emojiReplace = CONFIG.emojiWidth === 1 ? ' ' : '  ';
-  s = s.replace(/[\u{2600}-\u{27BF}\u{2B50}-\u{2B55}\u{1F300}-\u{1F9FF}\u{1FA00}-\u{1FAFF}]/gu, emojiReplace);
+  s = s.replace(/[\u{2000}-\u{2BFF}\u{1F000}-\u{1FFFF}]/gu, emojiReplace);
 
   return s.length;
 }
@@ -128,6 +132,48 @@ function getClaudeCodeVersion() {
 }
 
 // ============================================================================
+// PROJECT SIZE (Git tracked files only)
+// ============================================================================
+function formatBytes(bytes) {
+  if (bytes >= 1073741824) {
+    return (bytes / 1073741824).toFixed(1) + 'G';
+  } else if (bytes >= 1048576) {
+    return (bytes / 1048576).toFixed(1) + 'M';
+  } else if (bytes >= 1024) {
+    return (bytes / 1024).toFixed(0) + 'K';
+  }
+  return bytes + 'B';
+}
+
+function getProjectSize() {
+  // Get list of files (tracked + untracked but not ignored)
+  const tracked = execCmd('git ls-files');
+  const untracked = execCmd('git ls-files --others --exclude-standard');
+
+  if (!tracked && !untracked) return null;
+
+  // Combine file lists
+  const files = [];
+  if (tracked) files.push(...tracked.split('\n').filter(f => f.trim()));
+  if (untracked) files.push(...untracked.split('\n').filter(f => f.trim()));
+
+  if (files.length === 0) return null;
+
+  // Calculate total size using Node.js fs.statSync
+  let totalBytes = 0;
+  for (const file of files) {
+    try {
+      const stat = fs.statSync(file);
+      if (stat.isFile()) {
+        totalBytes += stat.size;
+      }
+    } catch {}
+  }
+
+  return totalBytes > 0 ? formatBytes(totalBytes) : null;
+}
+
+// ============================================================================
 // GIT INFO
 // ============================================================================
 function getGitInfo() {
@@ -135,8 +181,8 @@ function getGitInfo() {
   if (!branch) return null;
 
   const statusOutput = execCmd('git status --porcelain') || '';
-  let mod = 0, add = 0, del = 0;
-  let sMod = 0, sAdd = 0, sDel = 0;
+  let mod = 0, add = 0, del = 0, ren = 0;
+  let sMod = 0, sAdd = 0, sDel = 0, sRen = 0;
   let conflict = 0, untracked = 0;
 
   for (const line of statusOutput.split('\n')) {
@@ -149,13 +195,16 @@ function getGitInfo() {
     }
     if (idx === '?' && wt === '?') { untracked++; continue; }
 
+    // Working tree changes
     if (wt === 'M') mod++;
     if (wt === 'D') del++;
+
+    // Staged changes
     if (idx === 'M') sMod++;
     if (idx === 'A') sAdd++;
     if (idx === 'D') sDel++;
-    if (idx === 'R') sMod++;
-    if (idx === 'C') sAdd++;
+    if (idx === 'R') sRen++;  // Rename as separate category
+    if (idx === 'C') sAdd++;  // Copy as add
   }
 
   add = untracked;
@@ -212,13 +261,18 @@ function getGitInfo() {
   const gitRoot = execCmd('git rev-parse --show-toplevel');
   const repoName = gitRoot ? path.basename(gitRoot) : null;
 
+  // Last commit time (Unix timestamp)
+  const lastCommitTs = execCmd('git log -1 --format=%ct');
+  const lastCommit = lastCommitTs ? parseInt(lastCommitTs, 10) : null;
+
   return {
     branch, repoName,
-    mod, add, del,
-    sMod, sAdd, sDel,
+    mod, add, del, ren,
+    sMod, sAdd, sDel, sRen,
     unstAdd, unstRem,
     stAdd, stRem,
-    unpushed, conflict, stash
+    unpushed, conflict, stash,
+    lastCommit
   };
 }
 
@@ -235,32 +289,58 @@ function formatStatusline(input, git) {
   const pathDisplay = formatPath(fullPath);
   const modelDisplay = formatModelName(input.model);
   const ccVersion = getClaudeCodeVersion();
+  const projectSize = getProjectSize();
 
   // ─────────────────────────────────────────────────────────────────────────
-  // BUILD 4-COLUMN GRID
+  // BUILD 5-COLUMN GRID
   // ─────────────────────────────────────────────────────────────────────────
-  // Row 1: Path | User | CC | Model
-  // Row 2: Repo:Branch | Conflicts | Stash | Push
+  // Row 1: Path | User | Size | CC | Model
+  // Row 2: Repo:Branch | Conflicts | Stash | Ahead | Last
+  // Row 3: Unstaged +/- | edit | new | del | move
+  // Row 4: Staged +/- | edit | new | del | move
 
   const row1 = [
     `${ICON.folder} ${c(pathDisplay, 'white')}`,
     `${ICON.user} ${c(userDisplay, 'cyan')}`,
-    ccVersion ? `${ICON.cc} ${c('CC ' + ccVersion, 'yellow')}` : `${ICON.cc} ${c('CC ?', 'gray')}`,
+    projectSize ? c(projectSize, 'blue') : c('?', 'gray'),
+    ccVersion ? c('CC ' + ccVersion, 'yellow') : c('CC ?', 'gray'),
     `${ICON.model} ${c(modelDisplay, 'magenta')}`
   ];
 
   let row2;
   if (git) {
     const repoText = git.repoName ? `${git.repoName}:${git.branch}` : git.branch;
-    const conflictColor = git.conflict > 0 ? 'red' : 'gray';
-    const stashColor = git.stash > 0 ? 'cyan' : 'gray';
-    const pushColor = git.unpushed > 0 ? 'magenta' : 'gray';
+    const issueColor = git.conflict > 0 ? 'red' : 'gray';
+    const savedColor = git.stash > 0 ? 'cyan' : 'gray';
+    const syncColor = git.unpushed > 0 ? 'magenta' : 'gray';
+
+    // Format last commit time from Unix timestamp
+    let lastCommitShort = 'never';
+    if (git.lastCommit) {
+      const nowSec = Math.floor(Date.now() / 1000);
+      const diffSec = nowSec - git.lastCommit;
+      const diffMin = Math.floor(diffSec / 60);
+      const diffHour = Math.floor(diffSec / 3600);
+      const diffDay = Math.floor(diffSec / 86400);
+
+      if (diffDay >= 1) {
+        // 1+ days: show "#d #h" format
+        const hours = Math.floor((diffSec % 86400) / 3600);
+        lastCommitShort = hours > 0 ? `${diffDay}d ${hours}h` : `${diffDay}d`;
+      } else {
+        // Less than 1 day: show "hh:mm" format
+        const hours = diffHour;
+        const mins = diffMin % 60;
+        lastCommitShort = `${hours.toString().padStart(2, '0')}:${mins.toString().padStart(2, '0')}`;
+      }
+    }
 
     row2 = [
       `${ICON.repo} ${c(repoText, 'green')}`,
-      `${ICON.conflict} ${c('Conflicts:', conflictColor)} ${c(String(git.conflict), conflictColor)}`,
-      `${ICON.stash} ${c('Stash:', stashColor)} ${c(String(git.stash), stashColor)}`,
-      `${ICON.push} ${c('Push:', pushColor)} ${c(String(git.unpushed), pushColor)}`
+      `${c('Conflicts:', issueColor)} ${c(String(git.conflict), issueColor)}`,
+      `${c('Stash:', savedColor)} ${c(String(git.stash), savedColor)}`,
+      `${c('Ahead:', syncColor)} ${c(String(git.unpushed), syncColor)}`,
+      `${c('Last:', 'gray')} ${c(lastCommitShort, 'gray')}`
     ];
   } else {
     row2 = [
@@ -271,48 +351,53 @@ function formatStatusline(input, git) {
     ];
   }
 
-  // Calculate column widths (max of each column pair + 1 for single space padding)
-  const colWidths = [];
-  for (let i = 0; i < 4; i++) {
-    colWidths[i] = Math.max(getVisibleLength(row1[i]), getVisibleLength(row2[i])) + 1;
-  }
-
-  // Build Stage/Commit rows (4 columns: label+lines, mod, new, del)
+  // Build Unstaged/Staged rows
   let row3, row4;
   if (git) {
     const modStr = padLeft(String(git.mod), 2);
     const addStr = padLeft(String(git.add), 2);
     const delStr = padLeft(String(git.del), 2);
+    const renStr = padLeft(String(git.ren), 2);
     const unstAddStr = padLeft(String(git.unstAdd), 4);
     const unstRemStr = padLeft(String(git.unstRem), 4);
 
     const sModStr = padLeft(String(git.sMod), 2);
     const sAddStr = padLeft(String(git.sAdd), 2);
     const sDelStr = padLeft(String(git.sDel), 2);
+    const sRenStr = padLeft(String(git.sRen), 2);
     const stAddStr = padLeft(String(git.stAdd), 4);
     const stRemStr = padLeft(String(git.stRem), 4);
 
-    // Row 3: Stage (col1: label+lines, col2: mod, col3: new, col4: del)
+    // Row 3: Unstaged changes (working tree)
     row3 = [
-      `${ICON.stage} ${c('Ready to Stage ', 'white')} ${c('+' + unstAddStr, 'green')} ${c('-' + unstRemStr, 'red')}`,
-      `${ICON.modified} ${c(modStr, 'yellow')}`,
-      `${ICON.new} ${c(addStr, 'green')}`,
-      `${ICON.deleted} ${c(delStr, 'red')}`
+      `${c('Unstaged', 'white')} ${c('+' + unstAddStr, 'green')} ${c('-' + unstRemStr, 'red')}`,
+      `${c('edit', 'gray')} ${c(modStr, 'yellow')}`,
+      `${c('new', 'gray')} ${c(addStr, 'green')}`,
+      `${c('del', 'gray')} ${c(delStr, 'red')}`,
+      `${c('move', 'gray')} ${c(renStr, 'cyan')}`
     ];
 
-    // Row 4: Commit (col1: label+lines, col2: mod, col3: new, col4: del)
+    // Row 4: Staged changes (index, ready to commit)
     row4 = [
-      `${ICON.commit} ${c('Ready to Commit', 'white')} ${c('+' + stAddStr, 'green')} ${c('-' + stRemStr, 'red')}`,
-      `${ICON.modified} ${c(sModStr, 'yellow')}`,
-      `${ICON.new} ${c(sAddStr, 'green')}`,
-      `${ICON.deleted} ${c(sDelStr, 'red')}`
+      `${c('Staged', 'white')}   ${c('+' + stAddStr, 'green')} ${c('-' + stRemStr, 'red')}`,
+      `${c('edit', 'gray')} ${c(sModStr, 'yellow')}`,
+      `${c('new', 'gray')} ${c(sAddStr, 'green')}`,
+      `${c('del', 'gray')} ${c(sDelStr, 'red')}`,
+      `${c('move', 'gray')} ${c(sRenStr, 'cyan')}`
     ];
+  }
 
-    // Ensure first column can fit the labels with line counts
-    const labelWidth = Math.max(getVisibleLength(row3[0]), getVisibleLength(row4[0]));
-    if (labelWidth > colWidths[0] - 1) {
-      colWidths[0] = labelWidth + 1;
+  // Calculate column widths from ALL rows
+  const colWidths = [];
+  const allRows = [row1, row2, row3, row4].filter(Boolean);
+  for (let i = 0; i < 5; i++) {
+    let maxWidth = 0;
+    for (const row of allRows) {
+      if (row[i]) {
+        maxWidth = Math.max(maxWidth, getVisibleLength(row[i]));
+      }
     }
+    colWidths[i] = maxWidth + 1;
   }
 
   // ─────────────────────────────────────────────────────────────────────────
@@ -361,10 +446,10 @@ function formatStatusline(input, git) {
     // Middle separator (4 columns)
     lines.push(buildSep('├', '┼', '┤', '─'));
 
-    // Stage row (4 columns)
+    // Unstaged row (working tree changes)
     lines.push(buildRow(row3, '│', '│', '│'));
 
-    // Commit row (4 columns)
+    // Staged row (index changes)
     lines.push(buildRow(row4, '│', '│', '│'));
 
     // Bottom border (4 columns)

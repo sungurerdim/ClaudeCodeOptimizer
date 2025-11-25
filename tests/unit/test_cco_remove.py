@@ -11,14 +11,13 @@ from unittest.mock import MagicMock, patch
 import pytest
 
 from claudecodeoptimizer.cco_remove import (
-    backup_claude_dir,
     confirm_deletion,
     count_cco_files,
     detect_package_install,
     get_claude_dir,
     get_package_location,
     main,
-    remove_claude_dir,
+    remove_cco_files,
     remove_package,
     show_removal_preview,
     verify_removal,
@@ -173,25 +172,20 @@ class TestCountCcoFiles:
         principles_dir = tmp_path / "principles"
         principles_dir.mkdir()
 
-        # Create U_ principles
-        (principles_dir / "U_DRY.md").write_text("DRY")
-        (principles_dir / "U_FAIL_FAST.md").write_text("Fail fast")
+        # Create universal principles (cco-principle-u-*)
+        (principles_dir / "cco-principle-u-dry.md").write_text("DRY")
+        (principles_dir / "cco-principle-u-fail-fast.md").write_text("Fail fast")
 
-        # Create C_ principles
-        (principles_dir / "C_CONTEXT.md").write_text("Context")
-
-        # Create P_ principles
-        (principles_dir / "P_LINTING.md").write_text("Linting")
-        (principles_dir / "P_TESTING.md").write_text("Testing")
+        # Create claude-specific principles (cco-principle-c-*)
+        (principles_dir / "cco-principle-c-context.md").write_text("Context")
 
         # Create summary file (should be excluded)
         (principles_dir / "PRINCIPLES.md").write_text("Summary")
 
         counts = count_cco_files(tmp_path)
-        assert counts["principles"] == 5  # Excludes PRINCIPLES.md
-        assert counts["principles_u"] == 2
-        assert counts["principles_c"] == 1
-        assert counts["principles_p"] == 2
+        assert counts["principles"] == 3  # Excludes PRINCIPLES.md
+        assert counts["principles_cco_u"] == 2
+        assert counts["principles_cco_c"] == 1
 
     def test_count_templates(self, tmp_path: Path):
         """Test counting template files"""
@@ -273,9 +267,8 @@ class TestShowRemovalPreview:
             "commands": 11,
             "skills": 2,
             "principles": 25,
-            "principles_u": 10,
-            "principles_c": 10,
-            "principles_p": 5,
+            "principles_cco_u": 10,
+            "principles_cco_c": 15,
             "templates": 2,
         }
 
@@ -299,9 +292,8 @@ class TestShowRemovalPreview:
             "commands": 0,
             "skills": 0,
             "principles": 0,
-            "principles_u": 0,
-            "principles_c": 0,
-            "principles_p": 0,
+            "principles_cco_u": 0,
+            "principles_cco_c": 0,
             "templates": 0,
         }
 
@@ -397,87 +389,62 @@ class TestRemovePackage:
         assert result is False
 
 
-class TestBackupClaudeDir:
-    """Test backup_claude_dir function"""
+class TestRemoveCcoFiles:
+    """Test remove_cco_files function"""
 
-    def test_backup_success(self, tmp_path: Path):
-        """Test successful backup creation"""
-        source_dir = tmp_path / ".claude"
-        source_dir.mkdir()
-        (source_dir / "test.txt").write_text("test content")
+    def test_remove_cco_files_empty_dir(self, tmp_path: Path):
+        """Test removal from empty directory"""
+        claude_dir = tmp_path / ".claude"
+        claude_dir.mkdir()
 
-        backup_path = backup_claude_dir(source_dir)
+        deleted = remove_cco_files(claude_dir)
 
-        assert backup_path is not None
-        assert backup_path.exists()
-        assert (backup_path / "test.txt").exists()
-        assert (backup_path / "test.txt").read_text() == "test content"
+        assert deleted["agents"] == 0
+        assert deleted["commands"] == 0
+        assert deleted["skills"] == 0
+        assert deleted["principles"] == 0
 
-    def test_backup_nonexistent_dir(self, tmp_path: Path):
-        """Test backup of non-existent directory"""
+    def test_remove_cco_files_nonexistent_dir(self, tmp_path: Path):
+        """Test removal from non-existent directory"""
         nonexistent = tmp_path / "nonexistent"
 
-        backup_path = backup_claude_dir(nonexistent)
-        assert backup_path is None
+        deleted = remove_cco_files(nonexistent)
 
-    @patch("shutil.copytree")
-    def test_backup_exception(self, mock_copytree: MagicMock, tmp_path: Path):
-        """Test backup with exception"""
-        mock_copytree.side_effect = Exception("Permission denied")
-        source_dir = tmp_path / ".claude"
-        source_dir.mkdir()
+        assert deleted["agents"] == 0
+        assert deleted["commands"] == 0
+        assert deleted["skills"] == 0
+        assert deleted["principles"] == 0
 
-        backup_path = backup_claude_dir(source_dir)
-        assert backup_path is None
+    def test_remove_cco_files_with_content(self, tmp_path: Path):
+        """Test removal of CCO files"""
+        claude_dir = tmp_path / ".claude"
+        agents_dir = claude_dir / "agents"
+        commands_dir = claude_dir / "commands"
+        agents_dir.mkdir(parents=True)
+        commands_dir.mkdir(parents=True)
 
+        # Create CCO files
+        (agents_dir / "cco-agent-audit.md").write_text("audit")
+        (commands_dir / "cco-status.md").write_text("status")
+        # Create non-CCO file (should be preserved)
+        (commands_dir / "custom.md").write_text("custom")
 
-class TestRemoveClaudeDir:
-    """Test remove_claude_dir function"""
+        deleted = remove_cco_files(claude_dir)
 
-    def test_remove_without_backup(self, tmp_path: Path):
-        """Test removal without backup"""
+        assert deleted["agents"] == 1
+        assert deleted["commands"] == 1
+        # Non-CCO file preserved
+        assert (commands_dir / "custom.md").exists()
+
+    def test_remove_preserves_user_content(self, tmp_path: Path):
+        """Test that non-CCO files are preserved"""
         claude_dir = tmp_path / ".claude"
         claude_dir.mkdir()
-        (claude_dir / "test.txt").write_text("test")
+        (claude_dir / "user-config.txt").write_text("user content")
 
-        success, backup_path = remove_claude_dir(claude_dir, create_backup=False)
+        remove_cco_files(claude_dir)
 
-        assert success is True
-        assert backup_path is None
-        assert not claude_dir.exists()
-
-    def test_remove_with_backup(self, tmp_path: Path):
-        """Test removal with backup"""
-        claude_dir = tmp_path / ".claude"
-        claude_dir.mkdir()
-        (claude_dir / "test.txt").write_text("test")
-
-        success, backup_path = remove_claude_dir(claude_dir, create_backup=True)
-
-        assert success is True
-        assert backup_path is not None
-        assert backup_path.exists()
-        assert not claude_dir.exists()
-
-    def test_remove_nonexistent_dir(self, tmp_path: Path):
-        """Test removal of non-existent directory"""
-        nonexistent = tmp_path / "nonexistent"
-
-        success, backup_path = remove_claude_dir(nonexistent, create_backup=False)
-
-        assert success is False
-        assert backup_path is None
-
-    @patch("shutil.rmtree")
-    def test_remove_exception(self, mock_rmtree: MagicMock, tmp_path: Path):
-        """Test removal with exception"""
-        mock_rmtree.side_effect = Exception("Permission denied")
-        claude_dir = tmp_path / ".claude"
-        claude_dir.mkdir()
-
-        success, backup_path = remove_claude_dir(claude_dir, create_backup=False)
-
-        assert success is False
+        assert (claude_dir / "user-config.txt").exists()
 
 
 class TestVerifyRemoval:
@@ -496,7 +463,7 @@ class TestVerifyRemoval:
         results = verify_removal("pipx")
 
         assert results["package_removed"] is True
-        assert results["directory_removed"] is True
+        assert results["files_removed"] is True
 
     @patch("claudecodeoptimizer.cco_remove.detect_package_install")
     @patch("claudecodeoptimizer.cco_remove.get_claude_dir")
@@ -511,7 +478,7 @@ class TestVerifyRemoval:
         results = verify_removal("pipx")
 
         assert results["package_removed"] is False
-        assert results["directory_removed"] is True
+        assert results["files_removed"] is True
 
     @patch("claudecodeoptimizer.cco_remove.detect_package_install")
     @patch("claudecodeoptimizer.cco_remove.get_claude_dir")
@@ -530,7 +497,7 @@ class TestVerifyRemoval:
         results = verify_removal(None)
 
         assert results["package_removed"] is True
-        assert results["directory_removed"] is False
+        assert results["files_removed"] is False
 
 
 class TestMain:
@@ -561,7 +528,7 @@ class TestMain:
 
     @patch("claudecodeoptimizer.cco_remove.verify_removal")
     @patch("claudecodeoptimizer.cco_remove.remove_package")
-    @patch("claudecodeoptimizer.cco_remove.remove_claude_dir")
+    @patch("claudecodeoptimizer.cco_remove.remove_cco_files")
     @patch("claudecodeoptimizer.cco_remove.confirm_deletion")
     @patch("claudecodeoptimizer.cco_remove.show_removal_preview")
     @patch("claudecodeoptimizer.cco_remove.count_cco_files")
@@ -578,7 +545,7 @@ class TestMain:
         mock_count: MagicMock,
         mock_preview: MagicMock,
         mock_confirm: MagicMock,
-        mock_remove_dir: MagicMock,
+        mock_remove_files: MagicMock,
         mock_remove_pkg: MagicMock,
         mock_verify: MagicMock,
         tmp_path: Path,
@@ -594,9 +561,8 @@ class TestMain:
             "commands": 1,
             "skills": 1,
             "principles": 1,
-            "principles_u": 0,
-            "principles_c": 0,
-            "principles_p": 0,
+            "principles_cco_u": 0,
+            "principles_cco_c": 0,
             "templates": 0,
         }
         mock_confirm.return_value = False
@@ -611,7 +577,7 @@ class TestMain:
 
     @patch("claudecodeoptimizer.cco_remove.verify_removal")
     @patch("claudecodeoptimizer.cco_remove.remove_package")
-    @patch("claudecodeoptimizer.cco_remove.remove_claude_dir")
+    @patch("claudecodeoptimizer.cco_remove.remove_cco_files")
     @patch("claudecodeoptimizer.cco_remove.confirm_deletion")
     @patch("claudecodeoptimizer.cco_remove.show_removal_preview")
     @patch("claudecodeoptimizer.cco_remove.count_cco_files")
@@ -628,7 +594,7 @@ class TestMain:
         mock_count: MagicMock,
         mock_preview: MagicMock,
         mock_confirm: MagicMock,
-        mock_remove_dir: MagicMock,
+        mock_remove_files: MagicMock,
         mock_remove_pkg: MagicMock,
         mock_verify: MagicMock,
         tmp_path: Path,
@@ -644,15 +610,21 @@ class TestMain:
             "commands": 11,
             "skills": 2,
             "principles": 25,
-            "principles_u": 10,
-            "principles_c": 10,
-            "principles_p": 5,
+            "principles_cco_u": 10,
+            "principles_cco_c": 15,
             "templates": 2,
         }
         mock_confirm.return_value = True
         mock_remove_pkg.return_value = True
-        mock_remove_dir.return_value = (True, None)
-        mock_verify.return_value = {"package_removed": True, "directory_removed": True}
+        mock_remove_files.return_value = {
+            "agents": 3,
+            "commands": 11,
+            "skills": 2,
+            "principles": 25,
+            "templates": 2,
+            "standards": 0,
+        }
+        mock_verify.return_value = {"package_removed": True, "files_removed": True}
 
         result = main()
 
@@ -694,7 +666,7 @@ class TestMain:
 
     @patch("claudecodeoptimizer.cco_remove.verify_removal")
     @patch("claudecodeoptimizer.cco_remove.remove_package")
-    @patch("claudecodeoptimizer.cco_remove.remove_claude_dir")
+    @patch("claudecodeoptimizer.cco_remove.remove_cco_files")
     @patch("claudecodeoptimizer.cco_remove.confirm_deletion")
     @patch("claudecodeoptimizer.cco_remove.show_removal_preview")
     @patch("claudecodeoptimizer.cco_remove.count_cco_files")
@@ -711,12 +683,12 @@ class TestMain:
         mock_count: MagicMock,
         mock_preview: MagicMock,
         mock_confirm: MagicMock,
-        mock_remove_dir: MagicMock,
+        mock_remove_files: MagicMock,
         mock_remove_pkg: MagicMock,
         mock_verify: MagicMock,
         tmp_path: Path,
     ):
-        """Test main when package removal fails (line 340)"""
+        """Test main when package removal fails"""
         claude_dir = tmp_path / ".claude"
         claude_dir.mkdir()
         mock_get_dir.return_value = claude_dir
@@ -727,15 +699,21 @@ class TestMain:
             "commands": 1,
             "skills": 1,
             "principles": 1,
-            "principles_u": 0,
-            "principles_c": 0,
-            "principles_p": 0,
+            "principles_cco_u": 0,
+            "principles_cco_c": 1,
             "templates": 0,
         }
         mock_confirm.return_value = True
         mock_remove_pkg.return_value = False  # Package removal fails
-        mock_remove_dir.return_value = (True, None)
-        mock_verify.return_value = {"package_removed": True, "directory_removed": True}
+        mock_remove_files.return_value = {
+            "agents": 1,
+            "commands": 1,
+            "skills": 1,
+            "principles": 1,
+            "templates": 0,
+            "standards": 0,
+        }
+        mock_verify.return_value = {"package_removed": True, "files_removed": True}
 
         result = main()
 
@@ -747,116 +725,7 @@ class TestMain:
 
     @patch("claudecodeoptimizer.cco_remove.verify_removal")
     @patch("claudecodeoptimizer.cco_remove.remove_package")
-    @patch("claudecodeoptimizer.cco_remove.remove_claude_dir")
-    @patch("claudecodeoptimizer.cco_remove.confirm_deletion")
-    @patch("claudecodeoptimizer.cco_remove.show_removal_preview")
-    @patch("claudecodeoptimizer.cco_remove.count_cco_files")
-    @patch("claudecodeoptimizer.cco_remove.get_package_location")
-    @patch("claudecodeoptimizer.cco_remove.detect_package_install")
-    @patch("claudecodeoptimizer.cco_remove.get_claude_dir")
-    @patch("builtins.print")
-    def test_main_removal_with_backup(
-        self,
-        mock_print: MagicMock,
-        mock_get_dir: MagicMock,
-        mock_detect: MagicMock,
-        mock_location: MagicMock,
-        mock_count: MagicMock,
-        mock_preview: MagicMock,
-        mock_confirm: MagicMock,
-        mock_remove_dir: MagicMock,
-        mock_remove_pkg: MagicMock,
-        mock_verify: MagicMock,
-        tmp_path: Path,
-    ):
-        """Test main when removal creates backup (lines 351-353)"""
-        claude_dir = tmp_path / ".claude"
-        claude_dir.mkdir()
-        backup_dir = tmp_path / ".claude.backup.20240101_120000"
-        backup_dir.mkdir()
-
-        mock_get_dir.return_value = claude_dir
-        mock_detect.return_value = "pipx"
-        mock_location.return_value = "/usr/local/lib"
-        mock_count.return_value = {
-            "agents": 1,
-            "commands": 1,
-            "skills": 1,
-            "principles": 1,
-            "principles_u": 0,
-            "principles_c": 0,
-            "principles_p": 0,
-            "templates": 0,
-        }
-        mock_confirm.return_value = True
-        mock_remove_pkg.return_value = True
-        mock_remove_dir.return_value = (True, backup_dir)  # With backup
-        mock_verify.return_value = {"package_removed": True, "directory_removed": True}
-
-        result = main()
-
-        assert result == 0
-        printed_text = " ".join(
-            [str(call.args[0]) for call in mock_print.call_args_list if call.args]
-        )
-        assert "Backup created" in printed_text
-
-    @patch("claudecodeoptimizer.cco_remove.verify_removal")
-    @patch("claudecodeoptimizer.cco_remove.remove_package")
-    @patch("claudecodeoptimizer.cco_remove.remove_claude_dir")
-    @patch("claudecodeoptimizer.cco_remove.confirm_deletion")
-    @patch("claudecodeoptimizer.cco_remove.show_removal_preview")
-    @patch("claudecodeoptimizer.cco_remove.count_cco_files")
-    @patch("claudecodeoptimizer.cco_remove.get_package_location")
-    @patch("claudecodeoptimizer.cco_remove.detect_package_install")
-    @patch("claudecodeoptimizer.cco_remove.get_claude_dir")
-    @patch("builtins.print")
-    def test_main_directory_removal_failed(
-        self,
-        mock_print: MagicMock,
-        mock_get_dir: MagicMock,
-        mock_detect: MagicMock,
-        mock_location: MagicMock,
-        mock_count: MagicMock,
-        mock_preview: MagicMock,
-        mock_confirm: MagicMock,
-        mock_remove_dir: MagicMock,
-        mock_remove_pkg: MagicMock,
-        mock_verify: MagicMock,
-        tmp_path: Path,
-    ):
-        """Test main when directory removal fails (line 353)"""
-        claude_dir = tmp_path / ".claude"
-        claude_dir.mkdir()
-        mock_get_dir.return_value = claude_dir
-        mock_detect.return_value = "pipx"
-        mock_location.return_value = "/usr/local/lib"
-        mock_count.return_value = {
-            "agents": 1,
-            "commands": 1,
-            "skills": 1,
-            "principles": 1,
-            "principles_u": 0,
-            "principles_c": 0,
-            "principles_p": 0,
-            "templates": 0,
-        }
-        mock_confirm.return_value = True
-        mock_remove_pkg.return_value = True
-        mock_remove_dir.return_value = (False, None)  # Directory removal fails
-        mock_verify.return_value = {"package_removed": True, "directory_removed": False}
-
-        result = main()
-
-        assert result == 1
-        printed_text = " ".join(
-            [str(call.args[0]) for call in mock_print.call_args_list if call.args]
-        )
-        assert "Failed to remove directory" in printed_text
-
-    @patch("claudecodeoptimizer.cco_remove.verify_removal")
-    @patch("claudecodeoptimizer.cco_remove.remove_package")
-    @patch("claudecodeoptimizer.cco_remove.remove_claude_dir")
+    @patch("claudecodeoptimizer.cco_remove.remove_cco_files")
     @patch("claudecodeoptimizer.cco_remove.confirm_deletion")
     @patch("claudecodeoptimizer.cco_remove.show_removal_preview")
     @patch("claudecodeoptimizer.cco_remove.count_cco_files")
@@ -873,12 +742,12 @@ class TestMain:
         mock_count: MagicMock,
         mock_preview: MagicMock,
         mock_confirm: MagicMock,
-        mock_remove_dir: MagicMock,
+        mock_remove_files: MagicMock,
         mock_remove_pkg: MagicMock,
         mock_verify: MagicMock,
         tmp_path: Path,
     ):
-        """Test main when removal is incomplete (lines 387-393)"""
+        """Test main when removal is incomplete"""
         claude_dir = tmp_path / ".claude"
         claude_dir.mkdir()
         mock_get_dir.return_value = claude_dir
@@ -889,17 +758,23 @@ class TestMain:
             "commands": 1,
             "skills": 1,
             "principles": 1,
-            "principles_u": 0,
-            "principles_c": 0,
-            "principles_p": 0,
+            "principles_cco_u": 0,
+            "principles_cco_c": 1,
             "templates": 0,
         }
         mock_confirm.return_value = True
         mock_remove_pkg.return_value = True
-        mock_remove_dir.return_value = (True, None)
+        mock_remove_files.return_value = {
+            "agents": 1,
+            "commands": 1,
+            "skills": 1,
+            "principles": 1,
+            "templates": 0,
+            "standards": 0,
+        }
         mock_verify.return_value = {
             "package_removed": False,
-            "directory_removed": False,
+            "files_removed": False,
         }  # Both failed
 
         result = main()

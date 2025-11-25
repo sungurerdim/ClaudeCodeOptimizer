@@ -7,10 +7,7 @@ Verifies CCO installation and shows available components.
 import sys
 from pathlib import Path
 
-
-def get_claude_dir() -> Path:
-    """Get ~/.claude/ directory path."""
-    return Path.home() / ".claude"
+from .config import get_claude_dir
 
 
 def count_components(claude_dir: Path) -> dict[str, int]:
@@ -25,7 +22,6 @@ def count_components(claude_dir: Path) -> dict[str, int]:
         "principles": 0,
         "principles_c": 0,
         "principles_u": 0,
-        "principles_p": 0,
         "skills": 0,
         "agents": 0,
     }
@@ -46,12 +42,10 @@ def count_components(claude_dir: Path) -> dict[str, int]:
                 continue
             counts["principles"] += 1
             # Check prefix in single pass (O(n) vs O(4n))
-            if p.name.startswith("C_"):
+            if p.name.startswith("cco-principle-c-"):
                 counts["principles_c"] += 1
-            elif p.name.startswith("U_"):
+            elif p.name.startswith("cco-principle-u-"):
                 counts["principles_u"] += 1
-            elif p.name.startswith("P_"):
-                counts["principles_p"] += 1
 
     # Count skills
     skills_dir = claude_dir / "skills"
@@ -115,6 +109,73 @@ def check_claude_md(claude_dir: Path) -> bool:
         return False
 
 
+def _print_components_section(counts: dict[str, int]) -> None:
+    """Print the components section of the status report."""
+    print("## Components")
+    print()
+    print(f"**Commands ({counts['commands']} core):**")
+    if counts["commands"] > 0:
+        print("- Discovery: help, status")
+        print("- Critical: audit, fix, generate")
+        print("- Productivity: optimize, commit")
+    else:
+        print("  [ERROR] No commands found - run cco-setup")
+    print()
+    print(f"**Principles ({counts['principles']}):**")
+    print(f"- {counts['principles_c']} Claude Guidelines (cco-principle-c-*) - Always active")
+    print(f"- {counts['principles_u']} Universal (cco-principle-u-*) - Always active")
+    print()
+    print(f"**Skills ({counts['skills']} - Auto-Activate on Demand):**")
+    if counts["skills"] > 0:
+        print("  Available: security, testing, database, CI/CD, performance, and more")
+        print("  Skills auto-activate via Claude's semantic matching")
+    else:
+        print("  [WARNING] No skills found")
+    print()
+    print(f"**Agents ({counts['agents']} - Parallel Execution):**")
+    if counts["agents"] > 0:
+        print("- cco-agent-audit (Fast scanning)")
+        print("- cco-agent-fix (Accurate fixes)")
+        print("- cco-agent-generate (Code generation)")
+        print("- cco-agent-optimize (Context optimization)")
+    else:
+        print("  [WARNING] No agents found")
+
+
+def _print_architecture_section(
+    claude_dir: Path, counts: dict[str, int], has_claude_md: bool
+) -> None:
+    """Print the architecture section of the status report."""
+    print("## Architecture")
+    print()
+    print("**Zero Pollution:**")
+    print(f"- Global storage: {claude_dir} (all projects share)")
+    print("- Project storage: ZERO files created")
+    print("- Updates: One command updates all projects")
+    print()
+    print("**Progressive Loading:**")
+    print(
+        f"- Always loaded: Baseline principles ({counts['principles_c']} cco-principle-c-* + {counts['principles_u']} cco-principle-u-*)"
+    )
+    print(f"- Auto-activated: {counts['skills']} skills via semantic matching")
+    print()
+    print("**CLAUDE.md Integration:**")
+    if has_claude_md:
+        print(f"  [OK] {claude_dir}/CLAUDE.md configured with CCO principles")
+    else:
+        print(f"  [WARNING] {claude_dir}/CLAUDE.md not configured")
+
+
+def _print_version_section(version_info: dict[str, str]) -> None:
+    """Print the version info section of the status report."""
+    print("## Version Info")
+    print()
+    print(f"**CCO Version:** {version_info['version']}")
+    print(f"**Installation Method:** {version_info['install_method']}")
+    print(f"**Python Version:** {version_info['python_version']}")
+    print(f"**Platform:** {version_info['platform']}")
+
+
 def print_status() -> int:
     """
     Print CCO installation status.
@@ -148,7 +209,7 @@ def print_status() -> int:
         health = "Incomplete installation"
         exit_code = 2
 
-    # Print status
+    # Print status header
     print("# CCO Installation Status")
     print()
     print(f"[{'OK' if exit_code == 0 else 'ERROR'}] Health: {health}")
@@ -156,70 +217,22 @@ def print_status() -> int:
     print()
     print("---")
     print()
-    print("## Components")
-    print()
-    print(f"**Commands ({counts['commands']} core):**")
-    if counts["commands"] > 0:
-        print("- Discovery: help, status")
-        print("- Critical: audit, fix, generate")
-        print("- Productivity: optimize, commit, implement, slim")
-        print("- Management: update, remove")
-    else:
-        print("  [ERROR] No commands found - run cco-setup")
-    print()
-    print(f"**Principles ({counts['principles']}):**")
-    print(f"- {counts['principles_c']} Claude Guidelines (C_*) - Always active")
-    print(f"- {counts['principles_u']} Universal (U_*) - Always active")
-    print(f"- {counts['principles_p']} Project (P_*) - Progressive loading via skills")
-    print()
-    print(f"**Skills ({counts['skills']} - Auto-Activate on Demand):**")
-    if counts["skills"] > 0:
-        print("  Available: security, testing, database, CI/CD, performance, and more")
-        print("  Skills auto-activate via Claude's semantic matching")
-    else:
-        print("  [WARNING] No skills found")
-    print()
-    print(f"**Agents ({counts['agents']} - Parallel Execution):**")
-    if counts["agents"] > 0:
-        print("- cco-agent-audit (Haiku - Fast scanning)")
-        print("- cco-agent-fix (Sonnet - Accurate fixes)")
-        print("- cco-agent-generate (Sonnet - Code generation)")
-    else:
-        print("  [WARNING] No agents found")
+
+    # Print sections
+    _print_components_section(counts)
     print()
     print("---")
     print()
-    print("## Architecture")
-    print()
-    print("**Zero Pollution:**")
-    print(f"- Global storage: {claude_dir} (all projects share)")
-    print("- Project storage: ZERO files created")
-    print("- Updates: One command updates all projects")
-    print()
-    print("**Progressive Loading:**")
-    print(
-        f"- Always loaded: Baseline principles ({counts['principles_c']} C_ + {counts['principles_u']} U_)"
-    )
-    print(f"- Auto-activated: {counts['skills']} skills via semantic matching")
-    print()
-    print("**CLAUDE.md Integration:**")
-    if has_claude_md:
-        print(f"  [OK] {claude_dir}/CLAUDE.md configured with CCO principles")
-    else:
-        print(f"  [WARNING] {claude_dir}/CLAUDE.md not configured")
+    _print_architecture_section(claude_dir, counts, has_claude_md)
     print()
     print("---")
     print()
-    print("## Version Info")
-    print()
-    print(f"**CCO Version:** {version_info['version']}")
-    print(f"**Installation Method:** {version_info['install_method']}")
-    print(f"**Python Version:** {version_info['python_version']}")
-    print(f"**Platform:** {version_info['platform']}")
+    _print_version_section(version_info)
     print()
     print("---")
     print()
 
+    # Print final status
     if exit_code == 0:
         print("[OK] CCO is ready!")
         print("All components installed and available.")

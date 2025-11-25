@@ -83,7 +83,21 @@ def get_skills_dir() -> Path:
 
 
 def get_command_name(action: str) -> str:
-    """Generate command name with brand prefix."""
+    """
+    Generate command name with CCO brand prefix.
+
+    Args:
+        action: Command action name (e.g., "help", "status", "audit")
+
+    Returns:
+        Formatted command name with prefix (e.g., "/cco-help", "/cco-status")
+
+    Example:
+        >>> get_command_name("help")
+        '/cco-help'
+        >>> get_command_name("audit")
+        '/cco-audit'
+    """
     return f"/{COMMAND_PREFIX}-{action}"
 
 
@@ -116,7 +130,22 @@ DEFAULT_CONFIG = {
 
 
 def get_all_paths() -> dict[str, Path]:
-    """Get dictionary of all configured paths."""
+    """
+    Get dictionary of all configured paths.
+
+    Returns:
+        Dictionary mapping path names to Path objects:
+        - claude_dir: ~/.claude/ (base directory)
+        - commands_dir: ~/.claude/commands/
+        - principles_dir: ~/.claude/principles/
+        - skills_dir: ~/.claude/skills/
+        - agents_dir: ~/.claude/agents/
+
+    Example:
+        >>> paths = get_all_paths()
+        >>> paths["claude_dir"]
+        PosixPath('/home/user/.claude')
+    """
     return {
         "claude_dir": get_claude_dir(),
         "commands_dir": get_global_commands_dir(),

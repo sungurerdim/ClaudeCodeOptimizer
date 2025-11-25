@@ -231,8 +231,8 @@ def uninstall_cco() -> None:
 
 ## References
 
-- [C_NO_UNSOLICITED_FILE_CREATION Principle](../../claudecodeoptimizer/content/principles/C_NO_UNSOLICITED_FILE_CREATION.md)
-- [U_MINIMAL_TOUCH Principle](../../claudecodeoptimizer/content/principles/U_MINIMAL_TOUCH.md)
+- [cco-principle-c-no-unsolicited-file-creation](../../claudecodeoptimizer/content/principles/cco-principle-c-no-unsolicited-file-creation.md)
+- [cco-principle-u-minimal-touch](../../claudecodeoptimizer/content/principles/cco-principle-u-minimal-touch.md)
 - [Installation Runbook](../runbooks/installation.md)
 - [Uninstallation Runbook](../runbooks/uninstallation.md)
 
