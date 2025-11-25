@@ -83,7 +83,7 @@ Before {claiming-compliance-condition}:
   - Example: `U_DRY`, `U_EVIDENCE_BASED_ANALYSIS`, `U_MINIMAL_TOUCH`
 
 - **C_** - Claude Code specific principles (Claude AI usage)
-  - Example: `C_AGENT_ORCHESTRATION_PATTERNS`, `C_EFFICIENT_FILE_OPERATIONS`
+  - Example: `C_EFFICIENT_FILE_OPERATIONS`, `C_CONTEXT_WINDOW_MGMT`
 
 - **P_** - Project/Domain principles (software engineering best practices)
   - Example: `P_TEST_COVERAGE`, `P_SQL_INJECTION`, `P_API_VERSIONING`
@@ -96,7 +96,7 @@ Before {claiming-compliance-condition}:
 - Examples:
   - `U_DRY` (short, clear)
   - `U_EVIDENCE_BASED_ANALYSIS` (descriptive)
-  - `C_AGENT_ORCHESTRATION_PATTERNS` (specific to Claude)
+  - `C_CONTEXT_WINDOW_MGMT` (specific to Claude)
   - `P_CONTAINER_SECURITY` (domain-specific)
 
 ---

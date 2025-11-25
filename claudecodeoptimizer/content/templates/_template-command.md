@@ -278,7 +278,7 @@ class CommandState:
 **Model Selection:**
 - **Haiku**: Simple, mechanical tasks (grep, format, list)
 - **Sonnet**: Standard development work (DEFAULT)
-- **Opus**: Complex architecture, novel algorithms
+- **Auto**: Complex tasks (let Claude Code decide)
 
 **Parallel Execution (when applicable):**
 ```python

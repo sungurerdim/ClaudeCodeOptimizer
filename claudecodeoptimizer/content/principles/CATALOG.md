@@ -6,11 +6,11 @@
 
 ## Summary
 
-**Total Principles**: 106
+**Total Principles**: 104
 
 **Categories**:
 - **Universal (U_*)**: 8 - Core development best practices (apply everywhere)
-- **Claude-Specific (C_*)**: 7 - Optimizations for Claude Code
+- **Claude-Specific (C_*)**: 5 - Optimizations for Claude Code
 - **Project-Specific (P_*)**: 91 - Optional per-project overrides
 
 ---
@@ -141,19 +141,7 @@ These principles are fundamental to all development work, regardless of language
 
 These principles optimize Claude Code's behavior for efficiency, cost, and quality.
 
-### 1. C_AGENT_ORCHESTRATION_PATTERNS
-
-**Use parallel agents, pipelines, and appropriate model selection**
-
-- Parallel fan-out for independent tasks
-- Sequential pipeline for dependencies
-- Haiku for simple, Sonnet for development, Opus for architecture
-
-**File**: `C_AGENT_ORCHESTRATION_PATTERNS.md`
-
----
-
-### 2. C_CONTEXT_WINDOW_MGMT
+### 1. C_CONTEXT_WINDOW_MGMT
 
 **Optimize context via targeted reads and strategic model selection**
 
@@ -165,7 +153,7 @@ These principles optimize Claude Code's behavior for efficiency, cost, and quali
 
 ---
 
-### 3. C_EFFICIENT_FILE_OPERATIONS
+### 2. C_EFFICIENT_FILE_OPERATIONS
 
 **Grep-first: discovery → preview → precise read**
 
@@ -177,19 +165,7 @@ These principles optimize Claude Code's behavior for efficiency, cost, and quali
 
 ---
 
-### 4. C_MODEL_SELECTION
-
-**Choose appropriate model based on task complexity**
-
-- Haiku: Grep, format, read, simple edits
-- Sonnet: Features, bugs, code review (default)
-- Opus: Architecture, complex algorithms (rare)
-
-**File**: `C_MODEL_SELECTION.md`
-
----
-
-### 5. C_NATIVE_TOOL_INTERACTIONS
+### 3. C_NATIVE_TOOL_INTERACTIONS
 
 **All user interactions must use native Claude Code tools**
 
@@ -201,7 +177,7 @@ These principles optimize Claude Code's behavior for efficiency, cost, and quali
 
 ---
 
-### 6. C_NO_UNSOLICITED_FILE_CREATION
+### 4. C_NO_UNSOLICITED_FILE_CREATION
 
 **Never create files unless explicitly requested**
 
@@ -213,7 +189,7 @@ These principles optimize Claude Code's behavior for efficiency, cost, and quali
 
 ---
 
-### 7. C_PROJECT_CONTEXT_DISCOVERY
+### 5. C_PROJECT_CONTEXT_DISCOVERY
 
 **Use Haiku sub-agent to extract project context before analysis**
 
@@ -443,7 +419,7 @@ See [ADR-001: Marker-based CLAUDE.md System](../../docs/ADR/001-marker-based-cla
 ### Principle Selection
 
 - **Universal (U_*)**: Always loaded (8 principles)
-- **Claude (C_*)**: Always loaded (7 principles)
+- **Claude (C_*)**: Always loaded (5 principles)
 - **Project (P_*)**: Optional, enable per project needs
 
 ### Adding Project Principles
@@ -468,4 +444,4 @@ See [PR Template](../../.github/PULL_REQUEST_TEMPLATE.md) for full compliance ch
 
 ---
 
-**Total**: 106 principles across 3 categories
+**Total**: 104 principles across 3 categories

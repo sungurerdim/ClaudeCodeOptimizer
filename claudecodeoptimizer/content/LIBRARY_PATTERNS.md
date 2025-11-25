@@ -406,7 +406,7 @@ def execute_agent_task(
 
     Args:
         agent_type: Agent type (e.g., "fix-agent", "audit-agent")
-        model: Model to use ("haiku", "sonnet", "opus")
+        model: Model to use ("haiku" for mechanical tasks, omit for complex)
         description: Short description for tracking
         prompt: Full agent prompt
         verify_fn: Function to verify agent output
@@ -884,162 +884,44 @@ if filtered and user_wants_to_see:
 
 ---
 
-## Pattern 11: Opus Model Upgrade Opportunity
+## Pattern 11: Model Selection Strategy
 
-**Usage:** Offer Opus upgrade when task benefits significantly from higher capability.
+**Usage:** Only specify model for mechanical tasks. Let Claude Code auto-select for everything else.
 
-**When to Use:**
-- Architecture design/review
-- Complex algorithm optimization
-- Novel problem-solving
-- Deep security threat modeling
-- Major architectural refactoring
+**When to Specify Haiku:**
+- Pattern matching (grep, search)
+- File discovery
+- Simple formatting
+- Mechanical edits
 
-**When NOT to Use:**
-- Simple fixes
-- Pattern matching
-- Mechanical tasks
-- Standard code generation
+**When NOT to Specify Model (Let Claude Code decide):**
+- Feature implementation
+- Bug fixes
+- Security analysis
+- Architecture decisions
+- Complex refactoring
+- Test generation
 
-### Opus Upgrade Prompt Pattern
-
-```python
-def offer_opus_upgrade(
-    task_name: str,
-    task_description: str,
-    complexity_reason: str,
-    expected_benefit: str,
-    default_model: str = "sonnet"
-) -> str:
-    """
-    Offer Opus model upgrade with clear cost/benefit trade-off.
-
-    Returns: Selected model ("opus" or default_model)
-    """
-    response = AskUserQuestion({
-        "questions": [{
-            "question": f"{task_name} would benefit from Opus model. Use Opus?",
-            "header": "Model Selection",
-            "multiSelect": False,
-            "options": [
-                {
-                    "label": f"Yes - Use Opus (Recommended)",
-                    "description": f"Best quality for {complexity_reason}. {expected_benefit}. Slightly slower."
-                },
-                {
-                    "label": f"No - Use {default_model.capitalize()}",
-                    "description": f"Faster, sufficient quality for most cases. May miss {expected_benefit.lower()}."
-                }
-            ]
-        }]
-    })
-
-    selected = response["answers"]["question"]
-    return "opus" if "Opus" in selected else default_model
-
-# Usage examples:
-
-# Example 1: Architecture review
-if "architecture" in selected_categories:
-    model = offer_opus_upgrade(
-        task_name="Architecture Analysis",
-        task_description="Reviewing system architecture, design patterns, and coupling",
-        complexity_reason="complex architectural patterns and trade-offs",
-        expected_benefit="Deeper insights into design flaws and better refactoring suggestions",
-        default_model="sonnet"
-    )
-
-# Example 2: Complex feature implementation
-if feature_complexity == "high":
-    model = offer_opus_upgrade(
-        task_name="Feature Implementation",
-        task_description=f"Implementing: {feature_description}",
-        complexity_reason="novel algorithm design and complex integration",
-        expected_benefit="More elegant architecture and better edge case handling",
-        default_model="sonnet"
-    )
-
-# Example 3: Algorithm optimization
-if optimization_type == "algorithm":
-    model = offer_opus_upgrade(
-        task_name="Algorithm Optimization",
-        task_description="Optimizing performance-critical algorithms",
-        complexity_reason="complex performance trade-offs and novel optimizations",
-        expected_benefit="Significantly better performance improvements (30-40% vs 10-15%)",
-        default_model="sonnet"
-    )
-
-# Example 4: Architectural refactoring
-if fix_category == "architecture" and fix_count > 5:
-    model = offer_opus_upgrade(
-        task_name="Architectural Refactoring",
-        task_description=f"Refactoring {fix_count} architectural issues",
-        complexity_reason="major structural changes across multiple modules",
-        expected_benefit="Safer refactoring with better preservation of functionality",
-        default_model="sonnet"
-    )
-```
-
-### Integration with Agent Execution
+### Model Selection Pattern
 
 ```python
-# Before launching agent, check for opus opportunity
-selected_model = "sonnet"  # default
+def get_model_for_task(task_type: str):
+    MECHANICAL_TASKS = ["pattern_search", "file_discovery", "simple_format", "grep_scan"]
+    if task_type in MECHANICAL_TASKS:
+        return "haiku"
+    return None  # Let Claude Code decide
 
-if should_offer_opus_upgrade(task_type, complexity):
-    selected_model = offer_opus_upgrade(
-        task_name=task_name,
-        task_description=task_description,
-        complexity_reason=get_complexity_reason(task_type),
-        expected_benefit=get_expected_benefit(task_type)
-    )
-
-# Launch agent with selected model
-Task({
-    "subagent_type": agent_type,
-    "model": selected_model,  # "opus" or "sonnet"
-    "description": task_description,
-    "prompt": full_prompt
-})
+# Usage:
+model = get_model_for_task(task_type)
+if model:
+    Task({"subagent_type": agent_type, "model": model, "prompt": prompt})
+else:
+    Task({"subagent_type": agent_type, "prompt": prompt})  # No model specified
 ```
 
-### Complexity Detection Helper
+### Key Principle
 
-```python
-def should_offer_opus_upgrade(task_type: str, complexity: str) -> bool:
-    """
-    Determine if task benefits from Opus upgrade.
-
-    Returns: True if opus would provide significant benefit
-    """
-    # High-benefit tasks (always offer)
-    HIGH_BENEFIT_TASKS = [
-        "architecture_review",
-        "architecture_design",
-        "novel_algorithm",
-        "complex_refactoring"
-    ]
-
-    if task_type in HIGH_BENEFIT_TASKS:
-        return True
-
-    # Medium-benefit tasks (offer if high complexity)
-    MEDIUM_BENEFIT_TASKS = [
-        "feature_implementation",
-        "algorithm_optimization",
-        "security_audit",
-        "performance_analysis"
-    ]
-
-    if task_type in MEDIUM_BENEFIT_TASKS and complexity == "high":
-        return True
-
-    # Low-benefit tasks (never offer)
-    # - Simple fixes
-    # - Pattern matching
-    # - Mechanical tasks
-    return False
-```
+Claude Code has intelligent model selection built-in. Only specify haiku for mechanical tasks.
 
 ---
 

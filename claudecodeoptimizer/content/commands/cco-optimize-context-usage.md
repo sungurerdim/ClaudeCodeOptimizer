@@ -30,7 +30,7 @@ parameters:
 - **[STANDARDS_QUALITY.md](../STANDARDS_QUALITY.md)** - UX/DX, efficiency, simplicity, performance standards
 - **[LIBRARY_PATTERNS.md](../LIBRARY_PATTERNS.md)** - Reusable patterns (Step 0, Selection, Accounting, Progress, Error Handling)
 - **[STANDARDS_AGENTS.md](../STANDARDS_AGENTS.md)** - File discovery, model selection, parallel execution
-- **model selection** - Strategic Opus model selection, complexity scoring, ROI guidelines
+- **model selection** - Haiku for mechanical tasks, let Claude Code decide for complex tasks
 
 **See these files for detailed patterns. Only command-specific content is documented below.**
 
@@ -208,7 +208,7 @@ if analysis_result is None or (isinstance(analysis_result, dict) and "error" in 
             multiSelect: false,
             options: [
                 {label: "Retry", description: f"Run {mode} analysis again"},
-                {label: "Retry with Sonnet", description: "Use more capable model"} if agent_model == "haiku" else {label: "Retry with Opus", description: "Use most capable model"},
+                {label: "Retry", description: "Retry the operation"},
                 {label: "Switch to Conservative", description: "Use Conservative mode instead (safer, fewer optimizations)"},
                 {label: "Manual analysis", description: "Guide manual optimization identification"},
                 {label: "Cancel", description: "Stop cco-optimize-context-usage"}
@@ -224,9 +224,9 @@ if analysis_result is None or (isinstance(analysis_result, dict) and "error" in 
             description: f"Find {mode} optimizations (retry)",
             prompt: # ... same prompt as above
         })
-    elif response == "Retry with Sonnet" or response == "Retry with Opus":
+    elif response == "Retry":
         # Retry with more capable model
-        new_model = "sonnet" if response == "Retry with Sonnet" else "opus"
+        # Let Claude Code decide the model
         analysis_result = Task({
             subagent_type: "Explore",
             model: new_model,
@@ -444,7 +444,7 @@ Slim analysis found {COUNT} files with missing/stub content:
 
 ```markdown
 CONTEXT FOR /cco-generate:
-Slim analysis found 15-20 stub principle files containing only TODO markers without actual content. Affected files: principles/U_CHANGE_VERIFICATION.md, U_EVIDENCE_BASED_ANALYSIS.md, U_FOLLOW_PATTERNS.md, +12 others in ~/.claude/principles/. These need comprehensive implementation following C_AGENT_ORCHESTRATION_PATTERNS.md pattern (1847 tokens, complete structure with examples, rules, checklists).
+Slim analysis found 15-20 stub principle files containing only TODO markers without actual content. Affected files: principles/U_CHANGE_VERIFICATION.md, U_EVIDENCE_BASED_ANALYSIS.md, U_FOLLOW_PATTERNS.md, +12 others in ~/.claude/principles/. These need comprehensive implementation following existing principle patterns (1847 tokens, complete structure with examples, rules, checklists).
 
 SlashCommand({command: "/cco-generate principles"})
 ```

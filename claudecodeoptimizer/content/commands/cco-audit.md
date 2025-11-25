@@ -127,7 +127,7 @@ parameters:
 - **[STANDARDS_QUALITY.md](../STANDARDS_QUALITY.md)** - UX/DX, efficiency, simplicity, performance standards
 - **[LIBRARY_PATTERNS.md](../LIBRARY_PATTERNS.md)** - Reusable patterns (Step 0, Selection, Accounting, Progress, Error Handling)
 - **[STANDARDS_AGENTS.md](../STANDARDS_AGENTS.md)** - File discovery, model selection, parallel execution
-- **model selection** - Strategic Opus model selection, complexity scoring, ROI guidelines
+- **model selection** - Haiku for mechanical tasks, let Claude Code decide for complex tasks
 - **[STANDARDS_TECH_DETECTION.md](../STANDARDS_TECH_DETECTION.md)** - Fast tech detection (<2s), applicability filtering, pre-filtering UI
 
 **See these files for detailed patterns. Only command-specific content is documented below.**
@@ -570,73 +570,6 @@ Full coverage of 92 critical checks across 9 categories:
 
 ---
 
-## Component 4.5: Opus Model Upgrade Opportunity
-
-**Pattern:** Pattern 11 (Opus Upgrade Opportunity - See model selection standards)
-
-**Trigger:** User selected "architecture" category OR "critical" meta-flag includes architecture
-
-**Complexity Scoring:** Use algorithm from model selection
-**ROI Calculation:** See model selection standards for cost/benefit analysis
-
-**Implementation:**
-
-```python
-# Check if architecture checks selected
-if "architecture" in selected_categories or has_architecture_in_selection(selected_checks):
-    selected_model = offer_opus_upgrade(
-        task_name="Architecture Analysis",
-        task_description="Deep analysis of system architecture, design patterns, coupling, and architectural anti-patterns",
-        complexity_reason="complex architectural patterns, design trade-offs, and structural analysis",
-        expected_benefit="Significantly deeper insights into architectural flaws, better design recommendations, and more accurate coupling detection (40-50% improvement)",
-        default_model="sonnet"
-    )
-else:
-    selected_model = "sonnet"  # Default for other checks
-
-# Use selected model for audit-agent
-```
-
-**User Question:**
-
-```markdown
-### Model Selection for Architecture Analysis
-
-Architecture analysis would benefit from Opus model for deeper insights.
-
-**Opus Benefits:**
-- Deeper architectural pattern detection
-- More accurate coupling analysis
-- Better design flaw identification
-- Sophisticated refactoring suggestions
-
-**Time Impact:** ~20-30% slower than Sonnet
-**Quality Impact:** ~40-50% better architectural insights
-
-Use Opus for architecture checks?
-```
-
-**AskUserQuestion:**
-
-```python
-AskUserQuestion({
-    "questions": [{
-        "question": "Architecture analysis would benefit from Opus model. Use Opus?",
-        "header": "Model Selection",
-        "multiSelect": False,
-        "options": [
-            {
-                "label": "Yes - Use Opus (Recommended)",
-                "description": "Best quality for complex architectural patterns. Deeper insights. 20-30% slower."
-            },
-            {
-                "label": "No - Use Sonnet",
-                "description": "Faster, sufficient for most architecture checks. May miss subtle design flaws."
-            }
-        ]
-    }]
-})
-```
 
 ---
 
