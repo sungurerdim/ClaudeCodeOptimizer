@@ -165,57 +165,55 @@ def process_selections(user_selections: Dict[str, List[str]]) -> List[str]:
 
 ---
 
-## Pattern 3: Progress Reporting (Phase Transitions)
+## Pattern 3: Progress Tracking with TodoWrite
 
-**Usage:** Explicit phase start/complete announcements.
+**Usage:** Use native TodoWrite tool for real progress visibility.
+
+**Why TodoWrite:**
+- Actually shows in Claude Code UI
+- Updates in real-time as tasks complete
+- User sees genuine progress, not fake indicators
 
 ```python
-class PhaseTracker:
-    """Track and report phase transitions."""
+# Start of multi-step operation
+TodoWrite([
+    {"content": "Discover project files", "status": "in_progress", "activeForm": "Discovering files"},
+    {"content": "Analyze selected categories", "status": "pending", "activeForm": "Analyzing categories"},
+    {"content": "Generate results report", "status": "pending", "activeForm": "Generating report"}
+])
 
-    def __init__(self, total_phases: int):
-        self.total_phases = total_phases
-        self.current_phase = 0
-        self.phase_times = {}
+# After completing discovery
+TodoWrite([
+    {"content": "Discover project files", "status": "completed", "activeForm": "Discovering files"},
+    {"content": "Analyze selected categories", "status": "in_progress", "activeForm": "Analyzing categories"},
+    {"content": "Generate results report", "status": "pending", "activeForm": "Generating report"}
+])
 
-    def start_phase(self, phase_number: int, phase_name: str):
-        """Announce phase start."""
-        self.current_phase = phase_number
-        self.phase_times[phase_number] = {"start": time.time()}
-
-        print(f"""
-════════════════════════════════════════════════════════════════
-Phase {phase_number}/{self.total_phases}: {phase_name} ▶ STARTED
-════════════════════════════════════════════════════════════════
-""")
-
-    def complete_phase(self, phase_number: int, phase_name: str):
-        """Announce phase completion with duration."""
-        end_time = time.time()
-        start_time = self.phase_times[phase_number]["start"]
-        duration = end_time - start_time
-
-        print(f"""
-════════════════════════════════════════════════════════════════
-Phase {phase_number}/{self.total_phases}: {phase_name} ✓ COMPLETE ({duration:.1f}s)
-════════════════════════════════════════════════════════════════
-""")
-
-# Usage example:
-tracker = PhaseTracker(total_phases=3)
-
-tracker.start_phase(1, "Discovery")
-# ... do work ...
-tracker.complete_phase(1, "Discovery")
-
-tracker.start_phase(2, "Analysis")
-# ... do work ...
-tracker.complete_phase(2, "Analysis")
-
-tracker.start_phase(3, "Reporting")
-# ... do work ...
-tracker.complete_phase(3, "Reporting")
+# After completing analysis
+TodoWrite([
+    {"content": "Discover project files", "status": "completed", "activeForm": "Discovering files"},
+    {"content": "Analyze selected categories", "status": "completed", "activeForm": "Analyzing categories"},
+    {"content": "Generate results report", "status": "in_progress", "activeForm": "Generating report"}
+])
 ```
+
+**Simple section headers (optional, for log clarity):**
+
+```markdown
+=== Discovery ===
+Found 45 files (excluded 12)
+
+=== Analysis ===
+Running security checks...
+
+=== Results ===
+Total: 8 issues found
+```
+
+**DO NOT USE:**
+- `Phase X/Y` indicators (fake, can't guarantee order)
+- Progress bars like `█████░░░░░` (can't update in real-time)
+- Percentage indicators (same problem)
 
 ---
 

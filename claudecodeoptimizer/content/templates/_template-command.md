@@ -172,37 +172,38 @@ Task({
 
 ---
 
-## Phase 1: [First Phase Name]
+## Step 1: [First Step Name]
 
-**Show explicit phase start:**
+**Use TodoWrite for progress:**
 
-```markdown
-───────────────────────────────────────────────────
-### Phase 1/[TOTAL]: [Phase Name] ▶ STARTED
-───────────────────────────────────────────────────
+```python
+TodoWrite([
+    {"content": "[Step 1 description]", "status": "in_progress", "activeForm": "[Active description]"},
+    {"content": "[Step 2 description]", "status": "pending", "activeForm": "[Active description]"},
+    {"content": "[Step 3 description]", "status": "pending", "activeForm": "[Active description]"}
+])
 ```
 
 **[Detailed steps for this phase]**
 
-**Show explicit phase completion:**
+**Simple section header (optional, for log clarity):**
 
 ```markdown
-### Phase 1/[TOTAL]: [Phase Name] ✓ COMPLETE ([duration])
-
+=== [Step Name] ===
 [Summary of what was accomplished]
 ```
 
 ---
 
-## Phase 2: [Second Phase Name]
+## Step 2: [Second Step Name]
 
-[Similar structure as Phase 1]
+[Similar structure - update TodoWrite, do work]
 
 ---
 
-## Phase 3: [Third Phase Name]
+## Step 3: [Third Step Name]
 
-[Similar structure as Phase 1]
+[Similar structure - update TodoWrite, do work]
 
 ---
 
