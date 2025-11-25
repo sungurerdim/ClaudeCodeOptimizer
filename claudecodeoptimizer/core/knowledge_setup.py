@@ -482,39 +482,23 @@ def _setup_standards(claude_dir: Path) -> None:
     """
     Copy CCO standards files to ~/.claude/ root.
 
-    These files define standard structure and patterns for:
-    - cco-standards.md - Skill file format and quality requirements
-    - cco-patterns.md - Built-in agent behaviors (file discovery, model selection, etc.)
-    - cco-tech-detection.md - Standard command structure and execution protocol
-
-    Commands, agents, and skills reference these files using relative paths like:
-    - [cco-patterns.md](../cco-standards.md) from ~/.claude/agents/
+    Dynamically discovers cco-*.md files in content root directory.
+    Commands, agents, and skills reference these files using relative paths.
     """
     content_dir = _get_content_dir("")
 
-    # Standards files to copy
-    standards_files = [
-        "cco-standards.md",
-        "cco-patterns.md",
-        "cco-tech-detection.md",
-    ]
-
-    # Copy each standards file to ~/.claude/ root
-    for filename in standards_files:
-        src_file = content_dir / filename
-        if src_file.exists():
-            shutil.copy2(src_file, claude_dir / filename)
+    # Dynamically discover standards files (cco-*.md in content root, not subdirs)
+    for src_file in content_dir.glob("cco-*.md"):
+        if src_file.is_file():
+            shutil.copy2(src_file, claude_dir / src_file.name)
 
 
 def _setup_global_templates(claude_dir: Path) -> None:
     """
     Copy global template files to ~/.claude/ as .cco files.
 
-    User can manually copy/customize these templates:
-    - settings.json.cco → settings.json (Claude Code configuration)
-    - statusline.js.cco → statusline.js (Status line script)
-
-    Templates are always updated to ensure users have latest examples.
+    Dynamically discovers *.template files and copies them as .cco files.
+    User can manually copy/customize these templates.
     """
     package_dir = Path(__file__).parent.parent
     templates_dir = package_dir.parent / "templates"
@@ -522,14 +506,9 @@ def _setup_global_templates(claude_dir: Path) -> None:
     if not templates_dir.exists():
         raise FileNotFoundError(f"Templates directory not found at {templates_dir}")
 
-    # Copy templates as .cco files (always update to provide latest)
-    templates_to_copy = [
-        ("statusline.js.template", "statusline.js.cco"),
-        ("settings.json.template", "settings.json.cco"),
-    ]
-
-    for src_name, dest_name in templates_to_copy:
-        src_file = templates_dir / src_name
-        dest_file = claude_dir / dest_name
-        if src_file.exists():
-            shutil.copy2(src_file, dest_file)
+    # Dynamically discover and copy templates as .cco files
+    for src_file in templates_dir.glob("*.template"):
+        if src_file.is_file():
+            # Convert .template to .cco (e.g., settings.json.template -> settings.json.cco)
+            dest_name = src_file.name.replace(".template", ".cco")
+            shutil.copy2(src_file, claude_dir / dest_name)

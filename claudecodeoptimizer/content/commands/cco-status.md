@@ -9,63 +9,52 @@ pain_points: []
 
 # cco-status
 
-**CCO installation health check with skill and agent availability.**
+**CCO installation health check with dynamic component discovery.**
+
 ---
 
 ## Built-in References
 
-**This command inherits standard behaviors from:**
-
-- **[cco-standards.md](../cco-standards.md)** - Standard structure, execution protocol, file discovery
-- **[cco-standards.md](../cco-standards.md)** - UX/DX, efficiency, simplicity, performance standards
-- **[cco-patterns.md](../cco-patterns.md)** - Reusable patterns (Step 0, Selection, Accounting, Progress, Error Handling)
-- **[cco-standards.md](../cco-standards.md)** - File discovery, model selection, parallel execution
-
-**See these files for detailed patterns. Only command-specific content is documented below.**
+- **[cco-standards.md](../cco-standards.md)** - Standard structure, execution protocol
+- **[cco-patterns.md](../cco-patterns.md)** - Reusable patterns (Progress, Error Handling)
 
 ---
 
 ## Purpose
 
-Verify CCO installation, show available commands, skills, agents, principles, and provide quick start guidance.
+Verify CCO installation by dynamically discovering all components from the file system.
 
 ---
 
 ## Execution Protocol
 
-### Check Installation
+### 1. Discover Components Dynamically
 
-1. **Verify global directory exists:**
+**CRITICAL: All counts and lists MUST be read from file system, never hardcoded.**
+
 ```bash
-ls ~/.claude/
+# Count each component type
+COMMANDS=$(ls ~/.claude/commands/cco-*.md 2>/dev/null | wc -l)
+SKILLS=$(ls ~/.claude/skills/cco-skill-*.md 2>/dev/null | wc -l)
+AGENTS=$(ls ~/.claude/agents/cco-agent-*.md 2>/dev/null | wc -l)
+U_PRINCIPLES=$(ls ~/.claude/principles/cco-principle-u-*.md 2>/dev/null | wc -l)
+C_PRINCIPLES=$(ls ~/.claude/principles/cco-principle-c-*.md 2>/dev/null | wc -l)
 ```
 
-Expected structure:
-```
-~/.claude/
-├── commands/      ({COMMAND_COUNT} core commands)
-├── principles/    ({PRINCIPLE_COUNT} principles: {U_PRINCIPLE_COUNT} universal + {C_PRINCIPLE_COUNT} claude-specific)
-├── skills/        ({SKILL_COUNT} skills)
-├── agents/        ({AGENT_COUNT} agents)
-└── CLAUDE.md      (principle markers)
-```
+### 2. Read Component Details from Frontmatter
 
-2. **Count components:**
-```bash
-ls ~/.claude/commands/cco-*.md | wc -l    # Count commands
-ls ~/.claude/principles/*.md | wc -l       # Count principles
-ls ~/.claude/skills/cco-skill-*.md | wc -l # Count skills
-ls ~/.claude/agents/cco-agent-*.md | wc -l # Count agents
+For each component, extract name and description from YAML frontmatter:
+
+```yaml
+---
+name: cco-skill-security-fundamentals
+description: OWASP Top 10, XSS, SQL injection prevention
+keywords: [security, owasp, xss, sqli]
+category: security
+---
 ```
 
-3. **Check CLAUDE.md:**
-```bash
-cat ~/.claude/CLAUDE.md | head -20
-```
-
-### Output Format
-
-**See [cco-patterns.md](../cco-patterns.md#pattern-8-dynamic-results-generation) for reporting pattern.**
+### 3. Generate Dynamic Output
 
 ```markdown
 # CCO Installation Status
@@ -75,74 +64,27 @@ cat ~/.claude/CLAUDE.md | head -20
 
 ---
 
-## Components
+## Components (Dynamically Discovered)
 
-**Commands ({COMMAND_COUNT} core):**
-- Discovery: help, status
-- Critical: audit, fix, generate
-- Productivity: optimize, commit, implement
-- Management: update, remove
+**Commands ({actual_count} found):**
+[List each cco-*.md from ~/.claude/commands/ with description from frontmatter]
 
-**Principles ({PRINCIPLE_COUNT}):**
-- {U_PRINCIPLE_COUNT} Universal (cco-principle-u-*) - Always active
-- {C_PRINCIPLE_COUNT} Claude-specific (cco-principle-c-*) - Always active
+**Principles ({actual_count} found):**
+- {u_count} Universal (cco-principle-u-*) - Always active
+- {c_count} Claude-specific (cco-principle-c-*) - Always active
 
-**Skills ({SKILL_COUNT} - Auto-Activate on Demand):**
+**Skills ({actual_count} found - Auto-Activate on Demand):**
+[For each cco-skill-*.md in ~/.claude/skills/:
+ - Read frontmatter
+ - Extract: name, description, category, keywords
+ - Group by category
+ - List with description]
 
-Security & Privacy (5):
-- cco-skill-security-fundamentals (OWASP, XSS, SQL injection, CSRF)
-- cco-skill-ai-security (prompt injection, model security)
-- cco-skill-supply-chain (dependencies, SAST)
-- cco-skill-containers (Kubernetes security)
-- cco-skill-privacy (GDPR, compliance, encryption)
-
-Quality & Testing (3):
-- cco-skill-testing-fundamentals (test pyramid, coverage, isolation)
-- cco-skill-code-quality (refactoring, complexity)
-- cco-skill-ai-quality (code verification, tech debt)
-
-Infrastructure (4):
-- cco-skill-database-optimization (N+1, caching, profiling)
-- cco-skill-observability (metrics, alerts, SLOs)
-- cco-skill-cicd-automation (gates, deployment)
-- cco-skill-resilience (circuit breaker, retry, bulkhead)
-
-Architecture (2):
-- cco-skill-microservices (CQRS, service mesh, DI)
-- cco-skill-incident (on-call, postmortem, playbooks)
-
-Documentation & Git (3):
-- cco-skill-documentation (API docs, OpenAPI, ADRs)
-- cco-skill-git-workflow (branching, PR review)
-- cco-skill-versioning (SemVer, changelog)
-
-Frontend & Mobile (3):
-- cco-skill-frontend (bundle, a11y, performance)
-- cco-skill-mobile (offline, battery, app store)
-- cco-skill-platform-maturity (engineering maturity, DX)
-
-**Agents ({AGENT_COUNT} - Parallel Execution):**
-- cco-agent-audit (Haiku - Fast scanning, cost-efficient)
-- cco-agent-fix (Sonnet - Accurate fixes, better quality)
-- cco-agent-generate (Sonnet - Code generation, better quality)
-- cco-agent-optimize (Haiku - Context optimization, token efficiency)
-
----
-
-## Pain Points Addressed (12 - 2025 Industry Data)
-
-[OK] #1 Security (top concern) - High cost
-[OK] #2 Technical Debt (significant time waste)
-[OK] #3 AI Reliability (unreliable AI code)
-[OK] #4 Testing (biggest mistake) - Production bugs
-[OK] #5 Time Waste (significant hours lost)
-[OK] #6 Integration Failures - Deployment delays
-[OK] #7 Documentation Gaps - Knowledge loss
-[OK] #8 AI Code Quality - Hallucinated APIs
-[OK] #9 Velocity Loss - DORA metrics decline
-[OK] #10 AI Readiness Gaps - Immature CI/CD
-[OK] #11 Code Review Decline - -27% comment rate
-[OK] #12 Team Breakdowns - Knowledge silos
+**Agents ({actual_count} found):**
+[For each cco-agent-*.md in ~/.claude/agents/:
+ - Read frontmatter
+ - Extract: name, description, model
+ - List with description]
 
 ---
 
@@ -152,123 +94,47 @@ Frontend & Mobile (3):
 - Global storage: ~/.claude/ (all projects share)
 - Project storage: ZERO files created
 - Updates: One command updates all projects
-- Token efficiency: Optimized via progressive loading
 
-**Progressive Loading:**
-- Always loaded: All principles ({U_PRINCIPLE_COUNT} universal + {C_PRINCIPLE_COUNT} claude-specific)
-- Auto-activated: {SKILL_COUNT} skills via semantic matching (domain guidance on-demand)
-
-**Skill-Based Intelligence:**
-- Claude autonomously loads what's needed
-- No manual skill activation required
-- Skills provide domain-specific guidance (security, testing, etc.)
+**Dynamic Loading:**
+- Principles: Auto-injected via CLAUDE.md markers
+- Skills: Auto-activated via Claude's semantic matching
+- No manual configuration required
 
 ---
 
 ## Quick Start
 
-**First time?**
-```bash
 /cco-audit --quick         # Fast health assessment
-/cco-audit --security      # Find vulnerabilities
-/cco-fix --security        # Auto-fix issues
-```
-
-**Want comprehensive check?**
-```bash
-/cco-audit --quick         # Fast health assessment
-/cco-audit --all           # Find all issues
-/cco-fix --all             # Fix safe issues
-/cco-generate --all        # Create missing components
-```
-
-**Need help?**
-```bash
 /cco-help                  # Full command reference
-```
 
 ---
 
 ## Troubleshooting
 
-**Commands not found?**
-```bash
-ls ~/.claude/commands/cco-*.md
-# If empty or fewer files than expected, run:
-cco-setup
-```
+**Components missing?**
+Run: cco-setup
 
 **Skills not loading?**
-- Skills auto-activate via Claude's semantic matching
-- No manual intervention needed
-- Check availability: /cco-status (this command)
-
-**Installation issues?**
-```bash
-# Reinstall
-pip install -U git+https://github.com/sungurerdim/ClaudeCodeOptimizer.git
-cco-setup
-
-# Or with pipx
-pipx reinstall claudecodeoptimizer
+Skills auto-activate via semantic matching. No manual intervention needed.
 ```
 
 ---
 
-## Version Info
+## Dynamic Discovery Rules
 
-**CCO Version:** [Read from package]
-**Installation Method:** [Detect: pip/pipx/uv]
-**Python Version:** [Detect]
-**Platform:** [Detect: Windows/macOS/Linux]
-
----
-
-[OK] CCO is ready!
-All components installed and available.
-
-Next: /cco-help (command reference) or /cco-audit --quick (project health)
-```
-
----
-
-## Error Cases
-
-**Pattern:** Pattern 5 (Error Handling)
-
-If components missing:
-```markdown
-[ERROR] Health: Incomplete installation
-
-Missing components:
-- Commands: incomplete (missing: update, remove, help)
-- Skills: incomplete (missing: some security skills)
-- Agents: [OK]
-
-Fix: Run cco-setup to repair installation
-```
-
-If directory doesn't exist:
-```markdown
-[ERROR] CCO not installed
-
-Directory ~/.claude/ not found.
-
-Install:
-1. pip install git+https://github.com/sungurerdim/ClaudeCodeOptimizer.git
-2. cco-setup
-
-Or one-line: [provide install script URL]
-```
+1. **Never hardcode counts** - Always count from file system
+2. **Never hardcode lists** - Always read from actual files
+3. **Read frontmatter** - Extract metadata from YAML header
+4. **Group by category** - Use `category` field from frontmatter
+5. **Show descriptions** - Use `description` field from frontmatter
 
 ---
 
 ## Success Criteria
 
-- [OK] Installation verified
-- [OK] Component counts displayed
-- [OK] Skills categorized and listed
-- [OK] Agents explained
-- [OK] Pain points listed
-- [OK] Quick start provided
-- [OK] Troubleshooting included
+- [OK] All counts from file system (not hardcoded)
+- [OK] All lists from actual files (not hardcoded)
+- [OK] Frontmatter parsed for metadata
+- [OK] Components grouped by category
+- [OK] New components auto-discovered
+- [OK] Removed components auto-excluded

@@ -95,8 +95,8 @@ Refs: #{issue_number_if_provided}
 
 ## Skills Used
 
-- `cco-skill-git-workflow`
-- `cco-skill-versioning`
+- {MATCHED_GIT_SKILL}
+- {MATCHED_VERSIONING_SKILL}
 
 ---
 
@@ -107,7 +107,7 @@ Refs: #{issue_number_if_provided}
 **Command-Specific Details:**
 
 **What I do:**
-Help you create high-quality git commits following Conventional Commits format per `cco-skill-git-workflow`.
+Help you create high-quality git commits following Conventional Commits format per {MATCHED_GIT_SKILL}.
 
 **Process:**
 1. Analyze ALL uncommitted changes (staged, unstaged, untracked files)
@@ -258,7 +258,7 @@ AskUserQuestion({
 
 **See:**
 - **[cco-patterns.md](../cco-patterns.md#pattern-8-dynamic-results-generation)** for template
-- **`cco-skill-git-workflow`** for commit message format rules
+- **{MATCHED_GIT_SKILL}** for commit message format rules
 
 For each commit, generate message following Conventional Commits **and skill guidelines**:
 
@@ -272,7 +272,7 @@ BREAKING CHANGE: <description if applicable>
 Refs: #<issue-number>
 ```
 
-**CRITICAL:** Title must be ≤50 chars (ideal) or ≤72 (hard limit) per `cco-skill-git-workflow`.
+**CRITICAL:** Title must be ≤50 chars (ideal) or ≤72 (hard limit) per {MATCHED_GIT_SKILL}.
 
 ### Step 4: Create Commits
 
@@ -417,7 +417,7 @@ AskUserQuestion({
 - [ ] ALL uncommitted changes analyzed (staged/unstaged/untracked, excluded files filtered)
 - [ ] Change types detected
 - [ ] Atomic split recommended if needed (dynamic based on analysis)
-- [ ] Semantic messages generated following `cco-skill-git-workflow` (title ≤50 chars, no hardcoded examples)
+- [ ] Semantic messages generated following {MATCHED_GIT_SKILL} (title ≤50 chars, no hardcoded examples)
 - [ ] TodoWrite tracking for multi-commit operations
 - [ ] Commits created with proper format per skill guidelines
 - [ ] Complete accounting verified (created = planned)

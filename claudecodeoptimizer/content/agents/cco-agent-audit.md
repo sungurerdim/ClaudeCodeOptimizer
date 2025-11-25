@@ -620,106 +620,44 @@ To fix specific findings, run:
 
 ---
 
-## Skill References
+## Dynamic Skill Matching
 
-When executing audits, load relevant skills for analysis patterns:
+**CRITICAL: Skills are matched dynamically based on frontmatter keywords and category, never hardcoded.**
 
-### Tech Debt Audit (Pain #2)
-**Skill**: `cco-skill-code-quality`
-- Use "Analysis Patterns" section for bash commands
-- Use "Technical Debt Register Template" for output format
-- Use "Debt Categories" for classification
-
-### Test Coverage Audit (Pain #4)
-**Skill**: `cco-skill-testing-fundamentals`
-- Use "Test Analysis Patterns" for coverage commands
-- Use "Flaky Test Detection" for reliability checks
-- Use "Test Pyramid Analysis" for balance assessment
-
-### Security Audit (Pain #1)
-**Skill**: `cco-skill-security-fundamentals`
-- Check XSS, SQLi, CSRF patterns
-- Use bcrypt/argon2 for password analysis
-- Check JWT configuration
-
-### Performance Audit (Pain #5)
-**Skill**: `cco-skill-database-optimization`
-- N+1 query detection
-- Index analysis
-- Caching opportunities
-
-### CI/CD Audit (Pain #6)
-**Skill**: `cco-skill-cicd-automation`
-- Pipeline completeness check
-- Quality gate verification
-- Deployment strategy analysis
-
-### Documentation Audit (Pain #7)
-**Skill**: `cco-skill-documentation`
-- Docstring coverage
-- API documentation completeness
-- ADR presence
-- AI documentation templates (2025)
-
-### AI Security Audit (Pain #3)
-**Skill**: `cco-skill-ai-security`
-- Prompt injection detection
-- AI-generated code access control (OWASP A01:2025)
-- Exception handling (OWASP A10:2025)
-- PII leakage detection
-
-### AI Quality Audit (Pain #3, #8, #9)
-**Skill**: `cco-skill-ai-quality`
-- API hallucination detection
-- Code bloat scoring
-- Vibe coding patterns
-- Copy/paste detection
-- Tool signature identification
-
-### Code Review Audit (Pain #11, #12)
-**Skill**: `cco-skill-code-quality`
-- Commit message quality
-- Review time distribution
-- Reviewer diversity
-- Comment density
-- DORA metrics (5 metrics, 2025)
-
-### Platform Engineering Audit (Pain #4, #6, #10)
-**Skill**: `cco-skill-cicd-automation`
-- CI/CD maturity (8 stages)
-- Test automation coverage
-- IaC presence detection
-- AI readiness scoring
-
----
-
-## Skill Loading Protocol
+### Skill Discovery Protocol
 
 ```python
-# Load skill based on audit category
-def get_skill_for_category(category: str) -> str:
-    skills = {
-        "tech-debt": "cco-skill-code-quality",
-        "tests": "cco-skill-testing-fundamentals",
-        "security": "cco-skill-security-fundamentals",
-        "database": "cco-skill-database-optimization",
-        "cicd": "cco-skill-cicd-automation",
-        "docs": "cco-skill-documentation",
-        "ai-security": "cco-skill-ai-security",
-        "ai-quality": "cco-skill-ai-quality",
-        "ai-debt": "cco-skill-ai-quality",
-        "code-review": "cco-skill-code-quality",
-        "platform": "cco-skill-cicd-automation",
-        "supply-chain": "cco-skill-supply-chain",
-        "containers": "cco-skill-containers",
-    }
-    return skills.get(category, "")
+# Discover skills dynamically from filesystem
+def discover_skills():
+    skills = []
+    for skill_file in glob.glob("~/.claude/skills/cco-skill-*.md"):
+        frontmatter = parse_yaml_frontmatter(skill_file)
+        skills.append({
+            "name": frontmatter.get("name"),
+            "keywords": frontmatter.get("keywords", []),
+            "category": frontmatter.get("category"),
+        })
+    return skills
 
-# Execute analysis patterns from skill
-def run_skill_patterns(skill_name: str):
-    # Load skill
-    # Extract "Analysis Patterns" section
-    # Execute bash commands
-    # Return findings
-    pass
+# Match skill to audit category dynamically
+def get_skill_for_category(category):
+    skills = discover_skills()
+    for skill in skills:
+        if skill["category"] == category:
+            return skill["name"]
+        if category in skill["keywords"]:
+            return skill["name"]
+    return ""
 ```
+
+### Category to Skill Matching Algorithm
+
+When auditing a category, the agent:
+1. **Discovers all skills**: ls ~/.claude/skills/cco-skill-*.md
+2. **Parses frontmatter**: Extracts keywords and category from each skill
+3. **Matches by category**: If skill category matches audit category
+4. **Matches by keywords**: If audit category appears in skill keywords array
+5. **Loads matched skill**: Uses skill Analysis Patterns section
+
+**No hardcoded mappings. Adding new skills requires NO code changes.**
+

@@ -253,6 +253,10 @@ AskUserQuestion({
     multiSelect: false,
     options: [
       {
+        label: "Smart Mode",
+        description: "Auto-detect tech stack → Run top 5-8 relevant checks (~3-5 min)"
+      },
+      {
         label: "Quick Mode",
         description: "Fast health assessment with scores, ideal comparison, and action plan (~5 min)"
       },
@@ -272,6 +276,112 @@ AskUserQuestion({
   }]
 })
 ```
+
+### Smart Mode (Recommended)
+
+**When user selects "Smart Mode" or uses `--smart` flag:**
+
+1. **Auto-detect tech stack** (2 seconds)
+2. **Select top 5-8 checks** based on detected stack and common issues
+3. **Run immediately** without additional selection
+
+```python
+def smart_mode():
+    """
+    Intelligent auto-selection based on detected tech stack.
+    No user input required after mode selection.
+    """
+
+    # Step 1: Detect tech stack (<2 seconds)
+    tech_stack = detect_tech_stack()
+
+    # Step 2: Select relevant checks based on stack
+    selected_checks = select_smart_checks(tech_stack)
+
+    # Step 3: Display selection (informational, no confirmation needed)
+    print(f"""
+Smart Mode Analysis
+═══════════════════════════════════════════════════════════════
+
+Detected Stack: {tech_stack.summary}
+
+Auto-Selected Checks ({len(selected_checks)}):
+{format_check_list(selected_checks)}
+
+Starting audit in 3 seconds...
+(Press Ctrl+C to cancel and choose different mode)
+    """)
+
+    # Step 4: Execute checks
+    return execute_checks(selected_checks)
+
+
+def select_smart_checks(tech_stack: TechStack) -> list:
+    """
+    Select 5-8 most relevant checks based on tech stack.
+    Always includes: Security + Testing core checks.
+    Adds stack-specific checks.
+    """
+
+    checks = []
+
+    # ALWAYS include (pain points #1, #4):
+    checks.append("security-secrets")     # Critical for all projects
+    checks.append("security-sql-injection" if tech_stack.has_database else "security-xss")
+    checks.append("tests-coverage")       # Missing tests = #4 pain point
+
+    # Stack-specific additions:
+    if "python" in tech_stack.languages:
+        checks.append("code-quality-complexity")  # Python complexity analysis
+        checks.append("imports-unused")           # Python import issues
+
+    if "typescript" in tech_stack.languages or "javascript" in tech_stack.languages:
+        checks.append("frontend-bundle-size")     # Bundle analysis
+        checks.append("security-xss")             # XSS common in frontend
+
+    if tech_stack.has_database:
+        checks.append("database-n1-queries")      # N+1 = top DB issue
+        checks.append("database-missing-indexes")
+
+    if tech_stack.has_docker:
+        checks.append("containers-dockerfile-security")
+
+    if tech_stack.has_cicd:
+        checks.append("cicd-quality-gates")
+
+    # Ensure 5-8 checks
+    while len(checks) < 5:
+        checks.append("tech-debt-todo-fixme")
+
+    return checks[:8]  # Cap at 8 checks
+```
+
+**Smart Mode Output:**
+
+```markdown
+Smart Mode Analysis
+═══════════════════════════════════════════════════════════════
+
+Detected: Python + FastAPI + PostgreSQL + Docker
+
+Auto-Selected Checks (6):
+1. 🔒 security-secrets - Hardcoded credentials scan
+2. 🔒 security-sql-injection - Parameterized query check
+3. 🧪 tests-coverage - Coverage gap analysis
+4. 🐍 code-quality-complexity - Function complexity
+5. 📊 database-n1-queries - N+1 detection
+6. 🐳 containers-dockerfile - Dockerfile best practices
+
+Running checks...
+
+[Progress bar and streaming results]
+```
+
+**Why Smart Mode First?**
+- Most users want "just run the important stuff"
+- Reduces decision fatigue
+- Fastest path to actionable results
+- Can always switch to other modes if needed
 
 ### Quick Mode
 
@@ -706,6 +816,7 @@ Full coverage of 92 critical checks across 9 categories:
 ## CLI Usage
 
 **Interactive (Default):** `/cco-audit` - Full UI-guided workflow
+**Smart Mode:** `/cco-audit --smart` - Auto-detect stack, run top 5-8 checks (~3-5 min)
 **Quick Mode:** `/cco-audit --quick` - Health assessment (~5 min)
 
 **Parametrized (Power Users):**

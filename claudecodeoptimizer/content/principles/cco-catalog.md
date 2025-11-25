@@ -200,28 +200,7 @@ These principles optimize Claude Code's behavior for efficiency, cost, and quali
 
 Domain-specific guidance (formerly P_* principles) has been consolidated into specialized skills for better organization and contextual activation:
 
-| Domain | Skill File | Coverage |
-|--------|-----------|----------|
-| **Security** | `cco-skill-security-fundamentals.md` | OWASP, XSS, SQL injection, CSRF |
-| **AI Security** | `cco-skill-ai-security.md` | Prompt injection, model security |
-| **Testing** | `cco-skill-testing-fundamentals.md` | Test pyramid, coverage, isolation |
-| **Code Quality** | `cco-skill-code-quality.md` | Refactoring, complexity |
-| **AI Quality** | `cco-skill-ai-quality.md` | Code verification, tech debt |
-| **Database** | `cco-skill-database-optimization.md` | N+1, caching, profiling |
-| **Resilience** | `cco-skill-resilience.md` | Circuit breaker, retry, bulkhead |
-| **Observability** | `cco-skill-observability.md` | Metrics, alerts, SLOs |
-| **CI/CD** | `cco-skill-cicd-automation.md` | Gates, deployment, automation |
-| **Containers** | `cco-skill-containers.md` | Kubernetes security |
-| **Microservices** | `cco-skill-microservices.md` | CQRS, service mesh, DI |
-| **Documentation** | `cco-skill-documentation.md` | API docs, OpenAPI, ADRs |
-| **Git Workflow** | `cco-skill-git-workflow.md` | Branching, PR review |
-| **Versioning** | `cco-skill-versioning.md` | SemVer, changelog |
-| **Privacy** | `cco-skill-privacy.md` | GDPR, compliance, encryption |
-| **Supply Chain** | `cco-skill-supply-chain.md` | Dependencies, SAST |
-| **Incident** | `cco-skill-incident.md` | On-call, postmortem, playbooks |
-| **Frontend** | `cco-skill-frontend.md` | Bundle, a11y, performance |
-| **Mobile** | `cco-skill-mobile.md` | Offline, battery, app store |
-| **Platform** | `cco-skill-platform-maturity.md` | Engineering maturity, DX |
+Skills are dynamically discovered from ~/.claude/skills/. Run /cco-status to see all.
 
 Skills are auto-activated based on context and provide comprehensive guidance for each domain.
 
@@ -255,8 +234,8 @@ See [ADR-001: Marker-based CLAUDE.md System](../../docs/ADR/001-marker-based-cla
 
 ### Principle Selection
 
-- **Universal (cco-principle-u-*)**: Always loaded (8 principles)
-- **Claude (cco-principle-c-*)**: Always loaded (5 principles)
+- **Universal (cco-principle-u-*)**: Always loaded (dynamically discovered)
+- **Claude (cco-principle-c-*)**: Always loaded (dynamically discovered)
 - **Domain Skills**: Auto-activated based on project context
 
 ---
@@ -275,4 +254,4 @@ See [PR Template](../../.github/PULL_REQUEST_TEMPLATE.md) for full compliance ch
 
 ---
 
-**Total**: 13 principles (8 Universal + 5 Claude-Specific) + 20 domain skills
+**Total**: Dynamically discovered from ~/.claude/ directories

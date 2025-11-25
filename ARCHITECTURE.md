@@ -88,8 +88,8 @@ Claude detects:
 - Flask detected → loads web security patterns
 
 Skills activated:
-- cco-skill-security-owasp-xss-sqli-csrf
-- cco-skill-ai-security-promptinjection-models
+- {matched-skill-1}
+- {matched-skill-2}
 ```
 
 No manual skill selection needed. Claude matches context to relevant skills automatically.
@@ -125,19 +125,7 @@ No manual skill selection needed. Claude matches context to relevant skills auto
 - Universal (U_*): Evidence-based verification, DRY, minimal touch, no overengineering
 
 **Auto-Activating Skills:**
-Skills load on-demand when Claude detects relevance:
-- **Security (5):** OWASP, AI security, supply chain, K8s, privacy
-- **Testing (2):** Test pyramid, API testing
-- **Database (2):** Optimization, migrations
-- **Observability (3):** Metrics, logging, incidents
-- **CI/CD (2):** Gates, deployments
-- **Code Quality (2):** Refactoring, content
-- **Documentation (1):** API/OpenAPI/ADR/runbooks
-- **Git (2):** Branching, versioning
-- **Performance (2):** Frontend, resilience
-- **Architecture (2):** Microservices, event-driven
-- **Mobile (1):** Offline/battery
-- **DevEx (1):** Onboarding/tooling
+Skills load on-demand when Claude detects relevance. Run /cco-status to see all available skills.
 
 **Context Efficiency:** Only baseline principles loaded initially. Skills activate when needed, not upfront. This keeps context focused on current task.
 
@@ -146,7 +134,6 @@ Skills load on-demand when Claude detects relevance:
 **Project Context Discovery:**
 - Optional analysis of project documentation (README, CONTRIBUTING, ARCHITECTURE)
 - Haiku sub-agent extracts project context without consuming main context
-n**Auto-Activating Skills:** Security (5), Testing (2), Database (2), Observability (3), CI/CD (2), Code Quality (2), Docs (1), Git (2), Performance (2), Architecture (2), Mobile (1), DevEx (1). Skills load on-demand when relevant, keeping context focused.
 ### Specialized Agents
 
 - **audit-agent** (Haiku) - Fast scanning, cost-efficient pattern detection
@@ -363,7 +350,7 @@ CCO is designed for easy extension:
 - ✅ **Context Optimization** - `/cco-optimize --context` for CLAUDE.md duplication elimination
 - ✅ **Installation UX** - Before/after file count summary, template tracking
 - ✅ **Command Enhancements** - audit, fix, generate, optimize, commit all improved
-- ✅ **Skill Integration** - 20 skills properly integrated into commands
+- ✅ **Skill Integration** - Skills dynamically discovered into commands
 - ✅ **Context Passing Between Commands** - Built-in command chaining
   - `/cco-audit` → `/cco-fix`: Passes issue list, file paths, severity levels
   - `/cco-audit` → `/cco-generate`: Passes missing components, existing patterns
