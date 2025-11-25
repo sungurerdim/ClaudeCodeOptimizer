@@ -70,7 +70,7 @@ def mock_content_dir(tmp_path: Path) -> Generator[Path, None, None]:
     (principles_src / "U_CHANGE_VERIFICATION.md").write_text("# U Principle 1")
     (principles_src / "U_DRY.md").write_text("# U Principle 2")
     (principles_src / "C_FOLLOW_PATTERNS.md").write_text("# C Principle 1")
-    (principles_src / "C_MODEL_SELECTION.md").write_text("# C Principle 2")
+    (principles_src / "C_CONTEXT_WINDOW_MGMT.md").write_text("# C Principle 2")
     (principles_src / "P_PROJECT_SPECIFIC.md").write_text("# P Principle 1")
     (principles_src / "other_file.md").write_text("# Other file")
 

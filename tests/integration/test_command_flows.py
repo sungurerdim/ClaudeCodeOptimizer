@@ -16,8 +16,6 @@ from typing import Any
 
 import pytest
 
-from claudecodeoptimizer.core.version_manager import VersionManager
-
 
 class TestCCOStatusCommand:
     """Test cco-status command flow"""
@@ -259,23 +257,6 @@ Use HTML comment markers for automatic content injection.
 
 class TestCCOUpdateCommand:
     """Test cco-update command flow"""
-
-    def test_update_with_version_manager(self, tmp_path: Path) -> None:
-        """Test update command uses VersionManager"""
-        # Create CCO directory structure
-        claude_dir = tmp_path / ".claude"
-        claude_dir.mkdir()
-
-        # Initialize VersionManager
-        version_manager = VersionManager(claude_dir)
-
-        # Simulate version tracking
-        metadata_file = claude_dir / "metadata.json"
-        if not metadata_file.exists():
-            metadata_file.write_text('{"version": "1.0.0", "last_update": "2025-01-01"}')
-
-        # Verify version file exists
-        assert metadata_file.exists()
 
     def test_update_backups_existing_content(self, tmp_path: Path) -> None:
         """Test update command creates backup before updating"""

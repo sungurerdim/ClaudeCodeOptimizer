@@ -364,7 +364,7 @@ def _setup_claude_md(claude_dir: Path, principles_dir: Path) -> None:
     @principles/U_CHANGE_VERIFICATION.md
     @principles/U_COMPLETE_REPORTING.md
     ...
-    @principles/C_AGENT_ORCHESTRATION_PATTERNS.md
+    @principles/C_EFFICIENT_FILE_OPERATIONS.md
     ...
     <!-- CCO_PRINCIPLES_END -->
     """
