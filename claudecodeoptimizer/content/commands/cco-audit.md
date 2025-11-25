@@ -1,6 +1,6 @@
 ---
 name: cco-audit
-description: Comprehensive codebase audit with full transparency and real-time progress
+description: Comprehensive codebase audit with full transparency and streaming results
 action_type: audit
 parameters:
   security:
@@ -116,7 +116,7 @@ parameters:
 
 # CCO Audit Command
 
-**Comprehensive codebase analysis with full transparency, flexible selection, and real-time progress.**
+**Comprehensive codebase analysis with full transparency and flexible selection.**
 ---
 
 ## Built-in References
@@ -144,7 +144,7 @@ parameters:
 3. **Discovery**: Tech detection and check applicability (automated)
 4. **Selection**: Check selection based on mode (automated or user input)
 5. **Pre-Flight**: Summary and confirmation (user input required)
-6. **Execution**: Run selected checks with real-time progress (fully automated)
+6. **Execution**: Run selected checks with TodoWrite progress tracking (fully automated)
 7. **Final Report**: Prioritized findings with action plan (automated)
 
 **User Interaction Points:**
@@ -168,7 +168,7 @@ parameters:
 **Verification:**
 - All findings verified (no false positives)
 - File-level accounting enforced
-- Complete transparency into execution progress
+- TodoWrite for execution progress tracking
 
 ---
 
@@ -198,7 +198,7 @@ parameters:
     │
     ├─► Pre-Flight Summary (confirm before run)
     │
-    ├─► Execution Dashboard (real-time progress)
+    ├─► Execution (TodoWrite progress tracking)
     │
     ├─► Streaming Results (findings as discovered)
     │
@@ -712,7 +712,7 @@ Full coverage of 92 critical checks across 9 categories:
 
 **Audit-Specific Phases:**
 1. **Setup** (12s): Load skills, discover files, initialize scanners
-2. **Scanning** (8-15min): Run checks with real-time progress, streaming findings
+2. **Scanning** (8-15min): Run checks with TodoWrite tracking, streaming findings
 3. **Synthesis** (45s): Aggregate findings, calculate scores, generate report
 
 ---
@@ -843,7 +843,7 @@ Full coverage of 92 critical checks across 9 categories:
 ## Success Criteria
 
 - [ ] Mode selection → Discovery → Selection → Pre-flight → Confirmation → Execution → Final report
-- [ ] Real-time progress with streaming findings
+- [ ] TodoWrite progress tracking with streaming findings
 - [ ] Complete accounting enforced (total issues = reported + verified)
 - [ ] Next action commands provided with context
 

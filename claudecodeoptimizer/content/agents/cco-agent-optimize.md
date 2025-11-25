@@ -88,25 +88,25 @@ use_cases:
 
 ## Workflow
 
-### Phase 1: Discovery
+### Step 1: Discovery
 1. Categorize all files (markdown, code, Claude tools, active context, custom)
 2. Measure token usage per file and category
 3. Calculate metrics (redundancy, examples, whitespace)
 4. Identify top optimization opportunities
 
-### Phase 2: Context Duplication Analysis
+### Step 2: Context Duplication Analysis
 1. Extract CLAUDE.md references
 2. Detect duplications in Claude tools
 3. Recommend CLAUDE.md additions for frequently-used files
 4. Calculate potential context savings
 
-### Phase 3: Analysis
+### Step 3: Analysis
 1. Find safe optimizations (whitespace, dead code, spelling)
 2. Find low-risk optimizations (example consolidation, cross-references)
 3. Find high-risk optimizations (example reduction, instruction condensing)
 4. Filter by selected mode (Conservative/Balanced/Aggressive)
 
-### Phase 4: Verification & Optimization
+### Step 4: Verification & Optimization
 1. Create backup for each file
 2. Apply optimization
 3. Verify:
@@ -117,7 +117,7 @@ use_cases:
 4. If verification fails → rollback
 5. Record outcome (applied/skipped/rolled_back)
 
-### Phase 5: Reporting
+### Step 5: Reporting
 1. Complete accounting (all optimizations accounted)
 2. Token reduction metrics
 3. Quality preservation verification

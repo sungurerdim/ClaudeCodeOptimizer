@@ -1,6 +1,6 @@
 ---
 name: cco-agent-audit
-description: Multi-phase codebase audit with real-time progress and streaming results
+description: Codebase audit agent with streaming results
 tools: Grep, Read, Glob, Bash
 category: analysis
 metadata:
@@ -12,7 +12,7 @@ skills_loaded: as-needed
 
 # Audit Agent
 
-**Purpose**: Execute audit checks with real-time progress reporting and streaming results.
+**Purpose**: Execute audit checks with TodoWrite progress tracking and streaming results.
 ---
 
 
@@ -43,9 +43,8 @@ skills_loaded: as-needed
 - Auto (don't specify): Semantic checks (let Claude Code decide)
 
 **Progress Tracking:**
-- Real-time streaming results
-- Per-category progress bars
-- Explicit phase transitions (START → COMPLETE)
+- Use TodoWrite for real progress visibility
+- Simple section headers for log clarity
 
 ---
 
@@ -53,44 +52,35 @@ skills_loaded: as-needed
 
 **MUST follow these principles throughout execution:**
 
-1. **Explicit Phase Transitions** - Announce start AND completion of every phase
+1. **Use TodoWrite** - Native tool shows real progress in UI
 2. **Single Source of Truth** - One count object, updated consistently everywhere
 3. **Complete Accounting** - All findings tracked with disposition
 4. **100% Honesty** - Report exact truth, verify before claiming
 5. **No Hardcoded Examples** - Use actual project data, never fake examples
 
-### State Management
+### Progress with TodoWrite
 
 ```python
-# Central state - ONLY source for counts
-class AuditState:
-    current_phase: int = 0
-    total_findings: int = 0
-    findings_by_severity: Dict[str, int] = {}
-    all_findings: List[Finding] = []
+# Start audit
+TodoWrite([
+    {"content": "Discover project files", "status": "in_progress", "activeForm": "Discovering files"},
+    {"content": "Run security checks", "status": "pending", "activeForm": "Running security checks"},
+    {"content": "Generate report", "status": "pending", "activeForm": "Generating report"}
+])
 
-    def add_finding(self, finding):
-        self.all_findings.append(finding)
-        self.total_findings += 1
-        self.findings_by_severity[finding.severity] += 1
-
-    def get_counts_string(self) -> str:
-        """ALWAYS use this - ensures consistency."""
-        return f"{self.total_findings} issues..."
-
-# Phase transitions MUST be explicit
-def transition_phase(state, new_phase):
-    if state.current_phase > 0:
-        print(f"Phase {state.current_phase}/3 ✓ COMPLETE")
-    state.current_phase = new_phase
-    print(f"Phase {new_phase}/3 ▶ STARTED")
+# Update as work progresses - mark completed, move to next
 ```
+
+**DO NOT USE fake indicators:**
+- `Phase X/Y` (ordering not guaranteed)
+- Progress bars `█████░░░░░` (can't update real-time)
+- Percentage indicators
 
 ---
 
 ## Execution Model
 
-This agent supports three execution phases:
+This agent executes in three stages:
 
 1. **Discovery** - Tech detection, file enumeration, applicability
 2. **Scanning** - Parallel check execution with progress updates
@@ -98,7 +88,7 @@ This agent supports three execution phases:
 
 ---
 
-## Phase 1: Discovery
+## Stage 1: Discovery
 
 **Input**: Project root path
 **Output**: DiscoveryResult
@@ -175,7 +165,7 @@ def execute_discovery(project_path: str) -> DiscoveryResult:
 
 ---
 
-## Phase 2: Scanning
+## Stage 2: Scanning
 
 **Input**: Selected checks, files to scan
 **Output**: Stream of ScanResult
@@ -257,7 +247,7 @@ def execute_scanning(selected_checks: List[int], files: List[str]) -> Generator[
 
 ---
 
-## Phase 3: Synthesis
+## Stage 3: Synthesis
 
 **Input**: All findings
 **Output**: AuditReport
@@ -463,58 +453,29 @@ def scan_n1_queries(file: str) -> List[Finding]:
 
 ---
 
-## Progress Streaming Format
+## Output Format
 
-### Update Types
+### Finding Format
 
 ```python
-@dataclass
-class ProgressUpdate:
-    type: str = "progress"
-    category: str
-    status: str  # "started" | "in_progress" | "completed"
-    completed: int = 0
-    total: int = 0
-    current_check: str = ""
-    current_file: str = ""
-
-@dataclass
-class FindingUpdate:
-    type: str = "finding"
-    finding: Finding
-
-@dataclass
-class PhaseUpdate:
-    type: str = "phase"
-    phase: int  # 1, 2, 3
-    status: str  # "started" | "completed"
-    duration_seconds: int = 0
+def format_finding(finding: Finding) -> str:
+    """Format finding for display."""
+    severity_emoji = {"critical": "🔴", "high": "🟡", "medium": "🟢", "low": "⚪"}
+    emoji = severity_emoji.get(finding.severity, "⚪")
+    return f"{emoji} {finding.severity.upper()}: {finding.check_name} in {finding.file}:{finding.line}"
 ```
 
-### Stream Output
+### Section Headers (for log clarity)
 
-```python
-def format_progress_update(update: ProgressUpdate) -> str:
-    """Format progress update for display."""
+```markdown
+=== Discovery ===
+Found 45 Python files (excluded 12 in venv/)
 
-    if update.status == "started":
-        return f"⠋ Starting {update.category} checks..."
+=== Security Checks ===
+Running 5 security checks...
 
-    if update.status == "in_progress":
-        pct = int(update.completed / update.total * 100)
-        bar = "█" * (pct // 10) + "░" * (10 - pct // 10)
-        return f"{update.category}  {bar} {pct}% ({update.completed}/{update.total})"
-
-    if update.status == "completed":
-        return f"✓ {update.category} complete"
-
-def format_finding_update(update: FindingUpdate) -> str:
-    """Format finding for streaming display."""
-
-    f = update.finding
-    emoji = {"critical": "🔴", "high": "🟡", "medium": "🟢", "low": "⚪"}[f.severity]
-
-    return f"{emoji} {f.severity.upper()}: {f.check_name} in {f.file}:{f.line}"
+=== Results ===
+Found 8 issues (2 critical, 3 high, 3 medium)
 ```
 
 ---
