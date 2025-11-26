@@ -12,7 +12,6 @@ from claudecodeoptimizer.install_hook import (
     setup_agents,
     setup_claude_md,
     setup_commands,
-    setup_templates,
 )
 
 
@@ -41,20 +40,21 @@ class TestSetupCommands:
                 (tmp_path / "pkg" / "commands").mkdir(parents=True)
                 (tmp_path / "pkg" / "commands" / "cco-test.md").touch()
 
-                count = setup_commands()
+                installed = setup_commands()
 
                 assert (tmp_path / "commands").exists()
-                assert count == 1
+                assert len(installed) == 1
+                assert "cco-test.md" in installed
 
-    def test_returns_zero_if_no_source(self, tmp_path):
-        """Test returns 0 if source dir doesn't exist."""
+    def test_returns_empty_if_no_source(self, tmp_path):
+        """Test returns empty list if source dir doesn't exist."""
         with patch("claudecodeoptimizer.install_hook.COMMANDS_DIR", tmp_path / "commands"):
             with patch("claudecodeoptimizer.install_hook.get_content_dir") as mock_content:
                 mock_content.return_value = tmp_path / "nonexistent"
 
-                count = setup_commands()
+                installed = setup_commands()
 
-                assert count == 0
+                assert installed == []
 
 
 class TestSetupAgents:
@@ -68,31 +68,21 @@ class TestSetupAgents:
                 (tmp_path / "pkg" / "agents").mkdir(parents=True)
                 (tmp_path / "pkg" / "agents" / "cco-agent-test.md").touch()
 
-                count = setup_agents()
+                installed = setup_agents()
 
                 assert (tmp_path / "agents").exists()
-                assert count == 1
+                assert len(installed) == 1
+                assert "cco-agent-test.md" in installed
 
-    def test_returns_zero_if_no_source(self, tmp_path):
-        """Test returns 0 if source dir doesn't exist."""
+    def test_returns_empty_if_no_source(self, tmp_path):
+        """Test returns empty list if source dir doesn't exist."""
         with patch("claudecodeoptimizer.install_hook.AGENTS_DIR", tmp_path / "agents"):
             with patch("claudecodeoptimizer.install_hook.get_content_dir") as mock_content:
                 mock_content.return_value = tmp_path / "nonexistent"
 
-                count = setup_agents()
+                installed = setup_agents()
 
-                assert count == 0
-
-
-class TestSetupTemplates:
-    """Test setup_templates function."""
-
-    def test_returns_zero_if_no_templates(self, tmp_path):
-        """Test returns 0 if templates dir doesn't exist."""
-        with patch("claudecodeoptimizer.install_hook.CLAUDE_DIR", tmp_path):
-            count = setup_templates()
-            # Templates dir doesn't exist in current structure
-            assert count >= 0
+                assert installed == []
 
 
 class TestSetupClaudeMd:
