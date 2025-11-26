@@ -1,42 +1,72 @@
 ---
 name: cco-status
-description: CCO installation health check
+description: CCO installation and config health check
 ---
 
 # /cco-status
 
-**Check CCO installation**
+Check CCO installation and configuration health.
 
----
+## Installation Check
 
-## Flow: Check → Show
-
-### Check
 1. Count files in ~/.claude/commands/cco-*.md
 2. Count files in ~/.claude/agents/cco-*.md
 3. Verify CLAUDE.md has CCO_RULES markers
 
-### Show
-```markdown
-# CCO Status
+## Config Health Check
 
-**Health:** OK ✓
-**Location:** ~/.claude/
+Check both global (~/.claude/) and local (./.claude/) scopes:
 
-## Components
-- Commands: {count} (cco-audit, cco-fix, ...)
-- Agents: {count} (cco-agent-scan, cco-agent-action)
-- Rules: inline in CLAUDE.md
+### settings.json Validation
+- [ ] JSON syntax valid (parseable)
+- [ ] No unknown top-level keys (warn only)
+- [ ] allow/deny/ask arrays are valid format
+- [ ] No conflicting rules (same pattern in both allow and deny)
+- [ ] Dangerous commands properly denied
 
-## Quick Start
-/cco-audit --smart
-/cco-help
+### statusline.js Validation
+- [ ] JavaScript syntax valid
+- [ ] Exports expected function signature
+
+### Cross-Scope Check
+- [ ] No conflicting rules between global and local
+- [ ] Warn if local overrides global completely
+
+## Output
+
+```
+CCO Status: OK
+Location: ~/.claude/
+Commands: 9
+Agents: 3
+Rules: inline
+
+Config Health:
+  Global settings.json: OK
+  Global statusline.js: not configured
+  Local settings.json: OK (overrides global)
+  Local statusline.js: not configured
+
+Quick start: /cco-audit --smart
 ```
 
----
+### If Issues Found
+
+```
+CCO Status: WARNING
+Location: ~/.claude/
+
+Config Issues:
+  ⚠ Global settings.json: "rm -rf" in allow list (security risk)
+  ⚠ Local settings.json: invalid JSON at line 15
+  ⚠ Conflict: "Bash(npm:*)" in global deny, local allow
+
+Run /cco-config to fix issues
+```
 
 ## Usage
 
 ```bash
-/cco-status
+/cco-status          # Full health check
+/cco-status --quick  # Installation only, skip config validation
 ```

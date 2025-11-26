@@ -1,80 +1,70 @@
 ---
 name: cco-commit
-description: Smart semantic commits with atomic split recommendations
+description: Atomic traceable change management
 ---
 
 # /cco-commit
 
-**Create semantic git commits**
+**Change management** - Analyze → group atomically → commit with traceability.
 
----
+## Atomic Grouping Rules
 
-## Flow: Analyze → Suggest → Execute → Done
+**Keep together (one commit):**
+- Implementation + its tests
+- Implementation + its types/interfaces
+- Rename across multiple files
+- Single logical change across related files
 
-### Analyze
-1. Get all uncommitted changes (staged + unstaged + untracked)
-2. Detect change types (feat, fix, refactor, docs, etc.)
-3. Identify logical groupings
+**Split apart (separate commits):**
+- Different features/fixes
+- Unrelated files
+- Config vs code changes
+- Docs vs implementation
 
-### Suggest
-If multiple change types detected:
-- Recommend atomic commit splits
-- Show files per commit
-- User confirms or customizes
+## Commit Order
 
-### Execute
-1. Stage files for each commit
-2. Create commits with conventional format
-3. Track progress with TodoWrite
+If changes have dependencies, commit in order:
+1. Types/interfaces first
+2. Core implementations
+3. Dependent code
+4. Tests
+5. Docs/config
 
-### Done
-1. Show created commits
-2. Verify: created = planned
-3. Suggest: `git push`
+## Quality Thresholds
 
----
+- Max 10 files per commit (split if more)
+- Title: max 50 chars, imperative verb, no period
+- Body: wrap at 72 chars, explain WHY not just WHAT
+- Scope: derive from directory/module name
 
-## Conventional Commits
+## Title Format
 
 ```
-<type>(<scope>): <subject>  ← 50 chars max
-
-<body>                      ← 72 chars wrap
-Explain WHAT and WHY.
-
-BREAKING CHANGE: <desc>
-Refs: #<issue>
+<type>(<scope>): <imperative verb> <specific change>
 ```
 
-**Types:** feat, fix, docs, style, refactor, perf, test, build, ci, chore
+Good: `fix(auth): handle expired token in refresh flow`
+Bad: `fix: fixed bug`
 
----
+**Types:** feat, fix, refactor, perf, test, docs, style, build, ci, chore
 
-## Output Format
+## Flow
 
-```markdown
-# Commits Created
+1. **Analyze** - `git status`, `git diff`, detect change types
+2. **Group** - Apply atomic grouping rules, detect dependencies
+3. **Plan** - Show commit plan with files per commit
+4. **Confirm** - AskUserQuestion: Accept / Modify / Custom
+5. **Execute** - Stage and commit each group in order
+6. **Verify** - `git log` count = planned count
 
-**Commits:** {count}
+## Flags
 
-## Summary
-✓ feat(auth): add JWT authentication
-✓ fix(api): handle null response
-✓ docs: update README
-
-## Verification
-Created: {count} = Planned: {count} ✓
-
-## Next Steps
-→ Push: git push origin {branch}
-→ Create PR: gh pr create
-```
-
----
+- `--dry-run` - Show plan without committing
+- `--single` - Force all changes into one commit
 
 ## Usage
 
 ```bash
-/cco-commit                   # Analyze all changes, create commits
-/cco-commit "co-author info"  # With additional context
+/cco-commit              # Analyze and suggest atomic commits
+/cco-commit --dry-run    # Preview only
 ```

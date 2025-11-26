@@ -1,134 +1,124 @@
 ---
 name: cco-audit
-description: Codebase analysis with prioritized findings
-categories:
-  security: [owasp, xss, sqli, csrf, secrets, cve]
-  ai-security: [prompt-injection, pii, llm-security]
-  database: [n+1, indexes, queries, connections]
-  tests: [coverage, isolation, pyramid]
-  tech-debt: [dead-code, complexity, duplication]
-  code-quality: [syntax, types, error-handling]
-  performance: [caching, algorithms, bottlenecks]
-  docs: [docstrings, api-docs, readme]
-  cicd: [pipeline, quality-gates, deployment]
-  containers: [dockerfile, k8s, security]
-  supply-chain: [dependencies, cve, sbom]
-meta-flags:
-  ai: [ai-security, ai-quality, ai-debt]
-  critical: [security, ai-security, database, tests]
-  production-ready: [security, performance, database, tests, docs]
+description: Standardized quality gates with prioritized fixes
+requires: detection
 ---
 
 # /cco-audit
 
-**Find issues in your codebase**
+**Quality gates** - Detect stack → run standardized checks → prioritize → offer fixes.
 
----
+## Pre-Operation Safety
 
-## Flow: Confirm → Detect → Scan → Report
+Before starting:
+1. Check `git status` for uncommitted changes
+2. If dirty, AskUserQuestion: → Commit first (cco-commit) / Stash / Continue anyway
+3. This ensures safe rollback if needed
 
-### Confirm
-Ask user what to audit. Options:
-- **Smart**: Auto-detect stack, run top 5-8 checks (recommended)
-- **Quick**: Health scores only (~5 min)
-- **Category**: Select categories (security, tests, etc.)
-- **Full**: All checks
+## Flow
 
-### Detect
-1. Identify tech stack (languages, frameworks, databases)
-2. Filter applicable checks
-3. Report: "{X} checks applicable, {Y} filtered"
-
-### Scan
-1. Run checks in parallel by category
-2. Stream findings as discovered
-3. Track progress with TodoWrite
-
-### Report
-1. Summary: score, grade, finding counts
-2. Critical issues first (with file:line)
-3. Recommendations prioritized
-4. Next steps: `/cco-fix --{category}`
-
----
+1. **Detect** - Identify stack, filter applicable checks
+2. **Extract Rules** - Find project docs, extract stated principles/rules
+3. **Scan** - Run checks including self-compliance
+4. **Report** - Scores, issues with file:line, priority
+5. **Fix** - Offer fixes via AskUserQuestion
 
 ## Categories
 
-| Category | Checks | Severity |
-|----------|--------|----------|
-| security | OWASP Top 10, secrets, CVEs | Critical |
-| ai-security | Prompt injection, PII | Critical |
-| database | N+1, indexes, connections | High |
-| tests | Coverage, isolation, pyramid | High |
-| tech-debt | Dead code, complexity | Medium |
-| code-quality | Types, error handling | Medium |
-| performance | Caching, algorithms | Medium |
-| docs | Docstrings, API docs | Low |
-| cicd | Pipeline, quality gates | Low |
-| containers | Dockerfile, K8s | Low |
-| supply-chain | CVEs, SBOM | Medium |
+**Core (always run):**
+- `--security` - OWASP, secrets, CVEs
+- `--tech-debt` - Dead code, complexity, duplication
+- `--hygiene` - Old TODOs, orphans, hardcoded values
+- `--self-compliance` - Check against project's own stated rules
 
----
+**Stack-dependent (auto-skip if not applicable):**
+- `--ai-security` - Prompt injection, PII exposure
+- `--ai-quality` - Hallucinated APIs, AI patterns
+- `--database` - N+1, indexes, queries
+- `--tests` - Coverage, isolation, flaky
+- `--performance` - Caching, algorithms
+- `--docs` - Docstrings, API docs
+- `--cicd` - Pipeline, quality gates
+- `--containers` - Dockerfile, K8s
+- `--supply-chain` - Dependency CVEs
+- `--dora` - Deploy frequency, lead time, MTTR
+- `--compliance` - GDPR, licenses
+- `--api-contract` - Breaking changes
+
+## Self-Compliance Check
+
+Detect project documentation:
+- README.md, CLAUDE.md, CONTRIBUTING.md
+- docs/, .github/, pyproject.toml, package.json
+
+Extract stated:
+- Principles, goals, design decisions
+- Rules, standards, constraints
+- Required patterns, forbidden patterns
+
+Check all files against extracted rules:
+- Code matches stated principles?
+- No violations of stated rules?
+- Missing implementations of stated features?
+- Excess/unused code vs stated scope?
+
+Report as: `[SELF-COMPLIANCE] <rule> violated in <file:line>`
+
+## SSOT Resolution
+
+When mismatches found, AskUserQuestion for Single Source of Truth:
+
+**SSOT=docs** - Align code to documentation
+- Code is wrong, docs are right
+- Update code to match stated rules
+
+**SSOT=code** - Align documentation to code
+- Code is right, docs are outdated
+- Update docs to match actual implementation
+
+**SSOT=discuss** - Need to decide
+- Show both sides, ask user to choose direction
 
 ## Meta-flags
 
-- `--ai` = ai-security + ai-quality + ai-debt
-- `--critical` = security + ai-security + database + tests
-- `--production-ready` = security + performance + database + tests + docs
+- `--smart` - Auto-detect and run applicable (includes self-compliance)
+- `--critical` - security + ai-security + database + tests
+- `--weekly` - security + tech-debt + hygiene + tests + self-compliance
+- `--pre-release` - security + api-contract + docs + tests
+- `--all` - Everything applicable
+- `--auto-fix` - Skip asking, auto-fix safe issues
 
----
+## Fix Behavior
 
-## Output Format
+**Safe (auto-apply):**
+- Parameterize SQL queries
+- Remove unused imports/code
+- Move secrets to env vars
+- Fix linting issues
 
-```markdown
-# Audit Results
+**Risky (approval via AskUserQuestion):**
+- Auth/CSRF changes
+- DB schema changes
+- API contract changes
+- Self-compliance fixes (may need design decision)
 
-**Score:** {score}/100 ({grade})
-**Findings:** {total} ({critical}C / {high}H / {medium}M / {low}L)
+## Priority Scoring
 
-## Critical Issues
-1. {file}:{line} - {issue} ({category})
-   Fix: {recommendation}
+Each issue gets priority based on impact/effort ratio:
+- **HIGH** - High impact, low effort (fix first)
+- **MED** - Balanced
+- **LOW** - Low impact or high effort
 
-## Scores by Category
-| Category | Score | Issues |
-|----------|-------|--------|
-| security | 85/100 | 2 |
+Output sorted by priority, grouped by category.
 
-## Recommendations
-1. [Immediate] Fix {X} critical issues
-2. [Short-term] Address {Y} high priority
-3. [Long-term] Improve {Z} coverage
+## Verification
 
-## Next Steps
-→ /cco-fix --security
-→ /cco-generate --tests
-```
-
----
-
-## Context Passing
-
-After audit, pass context to other commands:
-
-```markdown
-CONTEXT FOR /cco-fix:
-Audit found {count} {severity} issues:
-- {category}: {count}x {issue} ({files})
-All fixable with {approach}.
-```
-
----
+After fixes: done + skip + fail + cannot_do = total
 
 ## Usage
 
 ```bash
-/cco-audit                    # Interactive
-/cco-audit --smart            # Auto-detect, top checks
-/cco-audit --quick            # Health scores
-/cco-audit --security         # Single category
-/cco-audit --security --tests # Multiple categories
-/cco-audit --critical         # Meta-flag
-/cco-audit --all              # Everything
-/cco-audit --security "auth"  # With focus context
+/cco-audit --smart
+/cco-audit --self-compliance
+/cco-audit --critical --auto-fix
 ```
