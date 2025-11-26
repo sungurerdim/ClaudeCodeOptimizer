@@ -3,11 +3,8 @@ Knowledge Setup - Global ~/.claude/ structure initialization
 
 Creates:
 - ~/.claude/commands/ (all cco-*.md from claudecodeoptimizer/content/commands/)
-- ~/.claude/principles/ (all cco-principle-*.md from claudecodeoptimizer/content/principles/)
 - ~/.claude/agents/ (all cco-*.md from claudecodeoptimizer/content/agents/)
-- ~/.claude/skills/ (all cco-*.md from claudecodeoptimizer/content/skills/)
-- ~/.claude/*.md (standards files: SKILL/AGENT/COMMAND/PRINCIPLE standards & patterns)
-- ~/.claude/CLAUDE.md (with cco-principle-* markers)
+- ~/.claude/CLAUDE.md (with inline CCO Rules)
 - ~/.claude/*.cco (template files: settings.json.cco, statusline.js.cco)
 """
 
@@ -20,40 +17,8 @@ from typing import Any
 from .. import config
 
 # Consistent category ordering for all reports
-# Agents → Commands → Skills → Principles → Standards → Templates
-CATEGORY_ORDER = ["agents", "commands", "skills", "principles", "standards", "templates"]
-
-
-def _count_principles(dir_path: Path) -> int:
-    """
-    Count principle files efficiently with single directory scan.
-
-    Filters for U_*, C_*, P_* prefixes in one pass instead of 3 separate glob calls.
-    Performance: O(n) single scan vs O(3n) with multiple glob() calls.
-    """
-    count = 0
-    for f in dir_path.iterdir():
-        if f.is_file() and f.suffix == ".md":
-            name = f.name
-            if name.startswith("cco-principle-u-") or name.startswith("cco-principle-c-"):
-                count += 1
-    return count
-
-
-def _count_standards(dir_path: Path) -> int:
-    """
-    Count standards files efficiently with single directory scan.
-
-    Matches cco-*.md, ,  in one pass.
-    Performance: O(n) single scan vs O(3n) with multiple glob() calls.
-    """
-    count = 0
-    for f in dir_path.iterdir():
-        if f.is_file() and f.suffix == ".md":
-            name = f.name
-            if name.startswith("cco-") and not name.startswith("cco-principle-"):
-                count += 1
-    return count
+# Agents → Commands → Templates
+CATEGORY_ORDER = ["agents", "commands", "templates"]
 
 
 def check_existing_installation() -> dict[str, int] | None:
@@ -63,7 +28,7 @@ def check_existing_installation() -> dict[str, int] | None:
     Returns:
         Dictionary with counts of existing files by category (in consistent order),
         or None if not installed.
-        Example: {'agents': 3, 'commands': 10, 'skills': 26, 'principles': 15}
+        Example: {'agents': 3, 'commands': 10, 'skills': 26}
     """
     claude_dir = config.get_claude_dir()
     if not claude_dir.exists():
@@ -73,9 +38,6 @@ def check_existing_installation() -> dict[str, int] | None:
     categories = {
         "agents": config.get_agents_dir(),
         "commands": config.get_global_commands_dir(),
-        "skills": config.get_skills_dir(),
-        "principles": config.get_principles_dir(),
-        "standards": config.get_claude_dir(),  # Standards are in ~/.claude/ root
         "templates": config.get_claude_dir(),  # Templates are in ~/.claude/ root
     }
 
@@ -84,12 +46,8 @@ def check_existing_installation() -> dict[str, int] | None:
     for category in CATEGORY_ORDER:
         dir_path = categories[category]
         if dir_path.exists():
-            # Count CCO files only (using optimized single-pass functions)
-            if category == "principles":
-                count = _count_principles(dir_path)
-            elif category == "standards":
-                count = _count_standards(dir_path)
-            elif category == "templates":
+            # Count CCO files only
+            if category == "templates":
                 # Count template files (*.cco)
                 count = sum(1 for _ in dir_path.glob("*.cco"))
             else:
@@ -109,14 +67,10 @@ def show_installation_diff() -> None:
     print("FILES TO BE OVERWRITTEN")
     print("=" * 60)
 
-    # Use consistent ordering: agents → commands → skills → principles → standards → templates
+    # Use consistent ordering: agents → commands → templates
     categories = [
         ("Agents", config.get_agents_dir(), "cco-*.md"),
         ("Commands", config.get_global_commands_dir(), "cco-*.md"),
-        ("Skills", config.get_skills_dir(), "cco-*.md"),
-        ("Principles (cco-principle-u-*)", config.get_principles_dir(), "cco-principle-u-*.md"),
-        ("Principles (cco-principle-c-*)", config.get_principles_dir(), "cco-principle-c-*.md"),
-        ("Standards", config.get_claude_dir(), "cco-*.md"),
         ("Templates", config.get_claude_dir(), "*.cco"),
     ]
 
@@ -143,33 +97,21 @@ def get_installation_counts() -> dict[str, int]:
 
     Returns:
         Dictionary with counts by category in consistent order
-        Example: {'agents': 3, 'commands': 10, 'skills': 26, 'principles': 15}
+        Example: {'agents': 3, 'commands': 10}
     """
     counts = {}
 
-    # Use consistent ordering: agents → commands → skills → principles → standards → templates
+    # Use consistent ordering: agents → commands → templates
     categories_config = {
         "agents": config.get_agents_dir(),
         "commands": config.get_global_commands_dir(),
-        "skills": config.get_skills_dir(),
-        "principles": config.get_principles_dir(),
-        "standards": config.get_claude_dir(),
         "templates": config.get_claude_dir(),
     }
 
     for category in CATEGORY_ORDER:
         dir_path = categories_config[category]
         if dir_path.exists():
-            if category == "skills":
-                # Skills are recursive (includes subdirectories)
-                count = len(list(dir_path.rglob("cco-*.md")))
-            elif category == "principles":
-                # Principles include U_*, C_*, P_* (optimized single-pass)
-                count = _count_principles(dir_path)
-            elif category == "standards":
-                # Standards (optimized single-pass)
-                count = _count_standards(dir_path)
-            elif category == "templates":
+            if category == "templates":
                 # Templates are *.cco files
                 count = sum(1 for _ in dir_path.glob("*.cco"))
             else:
@@ -229,16 +171,14 @@ def setup_global_knowledge() -> dict[str, Any]:
     """
     Initialize global ~/.claude/ directory structure for CCO.
 
-    Copies all CCO files to ~/.claude/ and updates CLAUDE.md with principle markers.
+    Copies all CCO files to ~/.claude/ and updates CLAUDE.md with inline CCO Rules.
 
     Returns:
         Dictionary with setup status including before/after counts
     """
     claude_dir = config.get_claude_dir()
     commands_dir = config.get_global_commands_dir()
-    principles_dir = config.get_principles_dir()
     agents_dir = config.get_agents_dir()
-    skills_dir = config.get_skills_dir()
 
     # Capture counts BEFORE setup
     counts_before = get_installation_counts()
@@ -252,22 +192,12 @@ def setup_global_knowledge() -> dict[str, Any]:
     _setup_commands(commands_dir)
     actions.append("Copied command files to ~/.claude/commands/")
 
-    _setup_principles(principles_dir)
-    actions.append("Copied principle files to ~/.claude/principles/")
-
     _setup_agents(agents_dir)
     actions.append("Copied agent files to ~/.claude/agents/")
 
-    _setup_skills(skills_dir)
-    actions.append("Copied skill files to ~/.claude/skills/")
-
-    # Setup standards files to ~/.claude/ root
-    _setup_standards(claude_dir)
-    actions.append("Copied standards files to ~/.claude/ (SKILL/AGENT/COMMAND standards)")
-
-    # Setup CLAUDE.md with ONLY U_* and C_* markers
-    _setup_claude_md(claude_dir, principles_dir)
-    actions.append("Updated ~/.claude/CLAUDE.md with principle markers")
+    # Setup CLAUDE.md with inline CCO Rules
+    _setup_claude_md(claude_dir)
+    actions.append("Updated ~/.claude/CLAUDE.md with CCO Rules")
 
     # Setup global templates as .cco files
     _setup_global_templates(claude_dir)
@@ -302,27 +232,6 @@ def _setup_commands(commands_dir: Path) -> None:
     )
 
 
-def _setup_principles(principles_dir: Path) -> None:
-    """
-    Copy CCO principle files to ~/.claude/principles/.
-
-    Only removes U_*, C_*, P_*.md files before copying.
-    Copies all [UCP]_*.md from claudecodeoptimizer/content/principles/.
-    """
-
-    def is_cco_principle(path: Path) -> bool:
-        """Check if file is a CCO principle (cco-principle-u-* or cco-principle-c-*)."""
-        return path.name.startswith("cco-principle-u-") or path.name.startswith("cco-principle-c-")
-
-    _setup_files(
-        source_dir=_get_content_dir("principles"),
-        dest_dir=principles_dir,
-        cleanup_patterns=["cco-principle-u-*.md", "cco-principle-c-*.md"],
-        copy_pattern="*.md",
-        copy_filter=is_cco_principle,
-    )
-
-
 def _setup_agents(agents_dir: Path) -> None:
     """
     Copy CCO agent files to ~/.claude/agents/.
@@ -338,86 +247,100 @@ def _setup_agents(agents_dir: Path) -> None:
     )
 
 
-def _setup_skills(skills_dir: Path) -> None:
+def _setup_claude_md(claude_dir: Path) -> None:
     """
-    Copy CCO skill files to ~/.claude/skills/.
+    Create or update ~/.claude/CLAUDE.md with inline CCO Rules.
 
-    Only removes cco-*.md files before copying.
-    Copies all cco-*.md from claudecodeoptimizer/content/skills/.
-    """
-    source_skills = _get_content_dir("skills")
-
-    # Use helper for root-level files with recursive cleanup
-    _setup_files(
-        source_dir=source_skills,
-        dest_dir=skills_dir,
-        cleanup_patterns=["cco-*.md"],
-        copy_pattern="cco-*.md",
-        recursive_cleanup=True,
-    )
-
-    # Copy from subdirectories (language-specific skills)
-    for subdir in source_skills.iterdir():
-        if subdir.is_dir() and not subdir.name.startswith(("_", ".")):
-            dest_subdir = skills_dir / subdir.name
-            dest_subdir.mkdir(parents=True, exist_ok=True)
-
-            for skill_file in subdir.glob("cco-*.md"):
-                shutil.copy2(skill_file, dest_subdir / skill_file.name)
-
-
-def _setup_claude_md(claude_dir: Path, principles_dir: Path) -> None:
-    """
-    Create or update ~/.claude/CLAUDE.md with CCO principle markers.
-
-    Adds markers for cco-principle-u-* (Universal) and cco-principle-c-* (Claude-specific) principles.
-    P_* principles integrated into skills.
+    CCO Rules are minimal, research-based guidelines that complement Claude's
+    built-in capabilities (Opus 4.5+). Rules focus on:
+    - Cross-platform compatibility
+    - Reference integrity for code changes
+    - Verification protocols
+    - Efficient file discovery patterns
 
     Format:
-    <!-- CCO_PRINCIPLES_START -->
-    @principles/cco-principle-u-change-verification.md
-    @principles/cco-principle-u-dry.md
-    ...
-    @principles/cco-principle-c-efficient-file-operations.md
-    ...
-    <!-- CCO_PRINCIPLES_END -->
+    <!-- CCO_RULES_START -->
+    # CCO Rules
+    ...inline rules...
+    <!-- CCO_RULES_END -->
     """
     claude_md_path = claude_dir / "CLAUDE.md"
 
-    # Get all U_* and C_* principle files (sorted)
-    u_principles = sorted(principles_dir.glob("cco-principle-u-*.md"))
-    c_principles = sorted(principles_dir.glob("cco-principle-c-*.md"))
+    # CCO Rules - minimal, research-based, complementing Claude's built-in capabilities
+    # Based on: Anthropic best practices, community CLAUDE.md examples, Opus 4.5 capabilities
+    cco_rules = """<!-- CCO_RULES_START -->
+# CCO Rules
 
-    # Build marker section - ONLY markers and principle references, nothing else
-    marker_lines = ["<!-- CCO_PRINCIPLES_START -->"]
+## Cross-Platform
+- Forward slashes (/) for all paths
+- Relative paths preferred
+- Quote paths with spaces
+- Git Bash commands over OS-specific
 
-    # Add cco-principle-u-* principles
-    for principle_file in u_principles:
-        marker_lines.append(f"@principles/{principle_file.name}")
+## Reference Integrity
+Before delete/rename/move/modify:
+1. Find ALL refs: definitions, callers, imports, types, tests, docs, configs
+2. Update in order: definitions → types → callers → imports → tests → docs
+3. Verify: grep old = 0, grep new = expected count
 
-    # Add cco-principle-c-* principles
-    for principle_file in c_principles:
-        marker_lines.append(f"@principles/{principle_file.name}")
+## Verification
+- Accounting: total = completed + skipped + failed + cannot-do
+- No "fixed" claims without Read/diff verification
+- Verify agent outputs before accepting
 
-    marker_lines.append("<!-- CCO_PRINCIPLES_END -->")
+## File Discovery
 
-    marker_content = "\n".join(marker_lines) + "\n"
+### Exclude from Search
+**System & VCS:** .git, .svn, .hg, .DS_Store, Thumbs.db, *.log, *.tmp, *.bak, *.swp
+**Build outputs:** dist, build, out, target, bin, obj, *.min.js, *.min.css, *.map
+**Dependencies:** node_modules, vendor, packages, .gradle, .maven, .cargo
+**Virtual envs:** venv, .venv, .env, env, __pycache__, *.pyc, *.pyo
+**Caches:** .cache, .pytest_cache, .mypy_cache, .ruff_cache, .tox, .nox, .next, .nuxt, .turbo, .parcel-cache
+**Coverage:** coverage, htmlcov, .coverage, .nyc_output, *.lcov
+**IDE:** .idea, .vscode, .vs, *.sublime-*
+**Binaries:** *.class, *.jar, *.war, *.dll, *.exe, *.so, *.dylib, *.o, *.whl, *.egg-info
+**Lock files:** package-lock.json, yarn.lock, pnpm-lock.yaml, poetry.lock, Cargo.lock, go.sum, Gemfile.lock, composer.lock
+
+### Discovery Stages
+1. files_with_matches (discover)
+2. content with -C (preview)
+3. Read offset+limit (precise)
+
+## Change Safety
+- Commit/stash before bulk changes
+- Test before → change → test after
+- Max 10 files per batch, verify each
+
+## Scope
+- Define boundaries before starting
+- Out-of-scope items → separate tasks
+- One change = one purpose
+<!-- CCO_RULES_END -->
+"""
 
     # Read existing file or create new
     if claude_md_path.exists():
         existing_content = claude_md_path.read_text(encoding="utf-8")
 
-        # Check if markers exist
+        # Check for old principle markers and remove them
         if "<!-- CCO_PRINCIPLES_START -->" in existing_content:
-            # Replace existing marker section
             pattern = r"<!-- CCO_PRINCIPLES_START -->.*?<!-- CCO_PRINCIPLES_END -->\n?"
-            new_content = re.sub(pattern, marker_content, existing_content, flags=re.DOTALL)
+            existing_content = re.sub(pattern, "", existing_content, flags=re.DOTALL)
+
+        # Check if new rules markers exist
+        if "<!-- CCO_RULES_START -->" in existing_content:
+            # Replace existing rules section
+            pattern = r"<!-- CCO_RULES_START -->.*?<!-- CCO_RULES_END -->\n?"
+            new_content = re.sub(pattern, cco_rules, existing_content, flags=re.DOTALL)
         else:
-            # Append marker section
-            new_content = existing_content.rstrip() + "\n\n" + marker_content
+            # Append rules section
+            new_content = existing_content.rstrip() + "\n\n" + cco_rules
     else:
-        # Create new file with just markers
-        new_content = marker_content
+        # Create new file with rules
+        new_content = cco_rules
+
+    # Clean up excessive blank lines
+    new_content = re.sub(r"\n{3,}", "\n\n", new_content)
 
     # Write updated content
     claude_md_path.write_text(new_content, encoding="utf-8")
@@ -449,48 +372,6 @@ def get_available_agents() -> list[str]:
         return []
 
     return [f.stem for f in agents_dir.glob("cco-*.md")]
-
-
-def get_available_skills() -> list[str]:
-    """
-    Get list of available CCO skill files including language-specific ones.
-
-    Returns:
-        List of skill filenames without extension.
-        Language-specific skills are returned as "language/skill-name".
-    """
-    skills_dir = config.get_skills_dir()
-    if not skills_dir.exists():
-        return []
-
-    skills = []
-
-    # Root level skills
-    for f in skills_dir.glob("cco-*.md"):
-        skills.append(f.stem)
-
-    # Language-specific skills
-    for subdir in skills_dir.iterdir():
-        if subdir.is_dir() and not subdir.name.startswith(("_", ".")):
-            for f in subdir.glob("cco-*.md"):
-                skills.append(f"{subdir.name}/{f.stem}")
-
-    return skills
-
-
-def _setup_standards(claude_dir: Path) -> None:
-    """
-    Copy CCO standards files to ~/.claude/ root.
-
-    Dynamically discovers cco-*.md files in content root directory.
-    Commands, agents, and skills reference these files using relative paths.
-    """
-    content_dir = _get_content_dir("")
-
-    # Dynamically discover standards files (cco-*.md in content root, not subdirs)
-    for src_file in content_dir.glob("cco-*.md"):
-        if src_file.is_file():
-            shutil.copy2(src_file, claude_dir / src_file.name)
 
 
 def _setup_global_templates(claude_dir: Path) -> None:

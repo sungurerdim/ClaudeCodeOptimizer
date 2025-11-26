@@ -5,7 +5,7 @@ Accepted
 
 ## Context
 
-ClaudeCodeOptimizer needs to inject content (commands, skills, agents, principles) into the user's `~/.claude/CLAUDE.md` file without requiring manual editing. The system must support:
+ClaudeCodeOptimizer needs to inject minimal CCO Rules (~350 tokens) into the user's `~/.claude/CLAUDE.md` file without requiring manual editing. The system must support:
 
 1. **Automatic Updates**: When CCO is updated, new content should automatically appear in CLAUDE.md
 2. **User Preservation**: User-written content outside CCO sections must be preserved
@@ -33,37 +33,31 @@ ClaudeCodeOptimizer needs to inject content (commands, skills, agents, principle
 Implement a **marker-based injection system** using HTML comment markers:
 
 ```markdown
-<!-- CCO_PRINCIPLES_START -->
-@principles/cco-principle-u-change-verification.md
-@principles/cco-principle-u-cross-platform-compatibility.md
-@principles/cco-principle-u-dry.md
-@principles/cco-principle-u-evidence-based-analysis.md
-@principles/cco-principle-u-follow-patterns.md
-@principles/cco-principle-u-minimal-touch.md
-@principles/cco-principle-u-no-hardcoded-examples.md
-@principles/cco-principle-u-no-overengineering.md
-@principles/cco-principle-c-context-window-mgmt.md
-@principles/cco-principle-c-efficient-file-operations.md
-@principles/cco-principle-c-native-tool-interactions.md
-@principles/cco-principle-c-no-unsolicited-file-creation.md
-@principles/cco-principle-c-project-context-discovery.md
-<!-- CCO_PRINCIPLES_END -->
+<!-- CCO_RULES_START -->
+# CCO Rules
+
+1. **Cross-Platform**: Forward slashes, relative paths, Git Bash commands
+2. **Reference Integrity**: Find ALL refs before delete/rename/move/modify
+3. **Verification**: Accounting formula: total = completed + skipped + failed + cannot-do
+4. **File Discovery**: files_with_matches → content with -C → Read offset+limit
+5. **Change Safety**: Commit before bulk changes, max 10 files per batch
+6. **Scope Control**: Define boundaries, one change = one purpose
+<!-- CCO_RULES_END -->
 ```
 
 ### Key Implementation Details
 
 1. **Marker Format**: HTML comments that are invisible in rendered markdown
-2. **Content Sections**: Separate markers for each content type (principles, commands, skills, agents)
+2. **Single Section**: One marker section for CCO Rules (~350 tokens)
 3. **Line-based Replacement**: Find start/end markers, replace content between them
 4. **Preservation**: Content outside markers is never touched
 5. **Validation**: Verify markers exist before injection, create if missing
+6. **Legacy Support**: Handle old CCO_PRINCIPLES markers for backward compatibility
 
-### Marker Sections
+### Marker Section
 
-- `CCO_PRINCIPLES_START/END`: User-selected and Claude-selected principles
-- `CCO_COMMANDS_START/END`: Available slash commands
-- `CCO_SKILLS_START/END`: Auto-activating skills
-- `CCO_AGENTS_START/END`: Available agents
+- `CCO_RULES_START/END`: Minimal inline rules (~350 tokens)
+- Legacy: `CCO_PRINCIPLES_START/END` (removed on upgrade)
 
 ## Consequences
 
@@ -157,8 +151,8 @@ def ensure_markers_exist(claude_md_path: Path) -> None:
     """Add CCO markers if they don't exist"""
     content = claude_md_path.read_text()
 
-    if "CCO_PRINCIPLES_START" not in content:
-        content += "\n<!-- CCO_PRINCIPLES_START -->\n<!-- CCO_PRINCIPLES_END -->\n"
+    if "CCO_RULES_START" not in content:
+        content += "\n<!-- CCO_RULES_START -->\n<!-- CCO_RULES_END -->\n"
 
     claude_md_path.write_text(content)
 ```
@@ -192,11 +186,19 @@ def remove_cco_content(claude_md_path: Path) -> None:
     """Remove all CCO markers and content"""
     content = claude_md_path.read_text()
 
-    # Remove each marker section
-    for marker in ["PRINCIPLES", "COMMANDS", "SKILLS", "AGENTS"]:
-        start = f"<!-- CCO_{marker}_START -->"
-        end = f"<!-- CCO_{marker}_END -->"
-        content = remove_between_markers(content, start, end)
+    # Remove CCO Rules section
+    content = remove_between_markers(
+        content,
+        "<!-- CCO_RULES_START -->",
+        "<!-- CCO_RULES_END -->"
+    )
+
+    # Remove legacy principles section (backward compatibility)
+    content = remove_between_markers(
+        content,
+        "<!-- CCO_PRINCIPLES_START -->",
+        "<!-- CCO_PRINCIPLES_END -->"
+    )
 
     claude_md_path.write_text(content)
 ```
@@ -219,11 +221,8 @@ def remove_cco_content(claude_md_path: Path) -> None:
 
 ## References
 
-- [cco-principle-u-no-hardcoded-examples](../../claudecodeoptimizer/content/principles/cco-principle-u-no-hardcoded-examples.md)
 - [CCO Installation Documentation](../runbooks/installation.md)
-- [GitHub Issue: CLAUDE.md Management](#) (if applicable)
 
 ## Related ADRs
 
 - [ADR-002: Zero Pollution Design](002-zero-pollution-design.md) - Explains why all content goes in `~/.claude/`
-- [ADR-003: Progressive Skill Loading](003-progressive-skill-loading.md) - How skills are auto-activated via CLAUDE.md

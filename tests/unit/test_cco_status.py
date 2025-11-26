@@ -44,8 +44,6 @@ class TestCountComponents:
         counts = count_components(nonexistent)
 
         assert counts["commands"] == 0
-        assert counts["principles"] == 0
-        assert counts["skills"] == 0
         assert counts["agents"] == 0
 
     def test_count_components_empty_dir(self, tmp_path: Path):
@@ -56,8 +54,6 @@ class TestCountComponents:
         counts = count_components(empty_claude)
 
         assert counts["commands"] == 0
-        assert counts["principles"] == 0
-        assert counts["skills"] == 0
         assert counts["agents"] == 0
 
     def test_count_components_with_commands(self, tmp_path: Path):
@@ -75,42 +71,6 @@ class TestCountComponents:
 
         counts = count_components(claude_dir)
         assert counts["commands"] == 3
-
-    def test_count_components_with_principles(self, tmp_path: Path):
-        """Test counting principles by category"""
-        claude_dir = tmp_path / ".claude"
-        principles_dir = claude_dir / "principles"
-        principles_dir.mkdir(parents=True)
-
-        # Create universal principles (cco-principle-u-*)
-        (principles_dir / "cco-principle-u-dry.md").write_text("DRY principle")
-        (principles_dir / "cco-principle-u-fail-fast.md").write_text("Fail fast")
-
-        # Create claude-specific principles (cco-principle-c-*)
-        (principles_dir / "cco-principle-c-context.md").write_text("Context")
-
-        # Create summary file (should be excluded)
-        (principles_dir / "PRINCIPLES.md").write_text("Summary")
-
-        counts = count_components(claude_dir)
-        assert counts["principles"] == 3  # Excludes PRINCIPLES.md
-        assert counts["principles_u"] == 2
-        assert counts["principles_c"] == 1
-
-    def test_count_components_with_skills(self, tmp_path: Path):
-        """Test counting CCO skills"""
-        claude_dir = tmp_path / ".claude"
-        skills_dir = claude_dir / "skills"
-        skills_dir.mkdir(parents=True)
-
-        # Create CCO skills
-        (skills_dir / "cco-skill-audit.md").write_text("audit skill")
-        (skills_dir / "cco-skill-generate.md").write_text("generate skill")
-        # Create non-CCO file (should be ignored)
-        (skills_dir / "custom-skill.md").write_text("custom")
-
-        counts = count_components(claude_dir)
-        assert counts["skills"] == 2
 
     def test_count_components_with_agents(self, tmp_path: Path):
         """Test counting CCO agents"""
@@ -134,27 +94,16 @@ class TestCountComponents:
 
         # Create all directories
         (claude_dir / "commands").mkdir(parents=True)
-        (claude_dir / "principles").mkdir(parents=True)
-        (claude_dir / "skills").mkdir(parents=True)
         (claude_dir / "agents").mkdir(parents=True)
 
         # Add components
         (claude_dir / "commands" / "cco-status.md").write_text("status")
         (claude_dir / "commands" / "cco-help.md").write_text("help")
 
-        (claude_dir / "principles" / "cco-principle-u-dry.md").write_text("DRY")
-        (claude_dir / "principles" / "cco-principle-c-context.md").write_text("Context")
-
-        (claude_dir / "skills" / "cco-skill-audit.md").write_text("audit")
-
         (claude_dir / "agents" / "cco-agent-fix.md").write_text("fix")
 
         counts = count_components(claude_dir)
         assert counts["commands"] == 2
-        assert counts["principles"] == 2
-        assert counts["principles_u"] == 1
-        assert counts["principles_c"] == 1
-        assert counts["skills"] == 1
         assert counts["agents"] == 1
 
 
@@ -279,9 +228,10 @@ class TestCheckClaudeMd:
 
         claude_md = claude_dir / "CLAUDE.md"
         claude_md.write_text(
-            "# Config\n\n<!-- CCO_PRINCIPLES_START -->\n"
-            "@principles/cco-principle-u-dry.md\n"
-            "<!-- CCO_PRINCIPLES_END -->\n"
+            "# Config\n\n<!-- CCO_RULES_START -->\n"
+            "# CCO Rules\n"
+            "1. Cross-Platform: Forward slashes\n"
+            "<!-- CCO_RULES_END -->\n"
         )
 
         result = check_claude_md(claude_dir)
@@ -331,11 +281,6 @@ class TestPrintStatus:
         }
         mock_count.return_value = {
             "commands": 11,
-            "principles": 25,
-            "principles_u": 10,
-            "principles_c": 10,
-            "principles_p": 5,
-            "skills": 3,
             "agents": 4,
         }
         mock_check.return_value = True
@@ -390,11 +335,6 @@ class TestPrintStatus:
         }
         mock_count.return_value = {
             "commands": 0,  # No commands - incomplete
-            "principles": 0,  # No principles - incomplete
-            "principles_u": 0,
-            "principles_c": 0,
-            "principles_p": 0,
-            "skills": 0,
             "agents": 0,
         }
         mock_check.return_value = False  # No CLAUDE.md configured
@@ -407,7 +347,6 @@ class TestPrintStatus:
         )
         assert "Incomplete installation" in printed_text
         assert "No commands found" in printed_text
-        assert "No skills found" in printed_text
         assert "No agents found" in printed_text
         assert "not configured" in printed_text
         assert "Installation incomplete" in printed_text

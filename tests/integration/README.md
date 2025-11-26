@@ -102,7 +102,6 @@ assert "expected" in content
 # Setup CCO structure
 claude_dir = tmp_path / ".claude"
 (claude_dir / "commands").mkdir(parents=True)
-(claude_dir / "principles").mkdir()
 (claude_dir / "skills").mkdir()
 (claude_dir / "agents").mkdir()
 ```

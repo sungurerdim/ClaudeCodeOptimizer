@@ -50,15 +50,6 @@ def get_global_commands_dir() -> Path:
     return get_claude_dir() / "commands"
 
 
-def get_principles_dir() -> Path:
-    """
-    Get global principles directory (~/.claude/principles/).
-
-    All principle files (U_*, C_*, P_*) stored globally.
-    """
-    return get_claude_dir() / "principles"
-
-
 def get_agents_dir() -> Path:
     """
     Get global agents directory (~/.claude/agents/).
@@ -66,15 +57,6 @@ def get_agents_dir() -> Path:
     All CCO agent definitions stored globally.
     """
     return get_claude_dir() / "agents"
-
-
-def get_skills_dir() -> Path:
-    """
-    Get global skills directory (~/.claude/skills/).
-
-    All CCO skill definitions stored globally.
-    """
-    return get_claude_dir() / "skills"
 
 
 # ============================================================================
@@ -137,8 +119,6 @@ def get_all_paths() -> dict[str, Path]:
         Dictionary mapping path names to Path objects:
         - claude_dir: ~/.claude/ (base directory)
         - commands_dir: ~/.claude/commands/
-        - principles_dir: ~/.claude/principles/
-        - skills_dir: ~/.claude/skills/
         - agents_dir: ~/.claude/agents/
 
     Example:
@@ -149,8 +129,6 @@ def get_all_paths() -> dict[str, Path]:
     return {
         "claude_dir": get_claude_dir(),
         "commands_dir": get_global_commands_dir(),
-        "principles_dir": get_principles_dir(),
-        "skills_dir": get_skills_dir(),
         "agents_dir": get_agents_dir(),
     }
 
@@ -189,9 +167,6 @@ class CCOConfig:
     get_claude_dir = staticmethod(get_claude_dir)
 
     get_global_commands_dir = staticmethod(get_global_commands_dir)
-    get_principles_dir = staticmethod(get_principles_dir)
-
-    get_skills_dir = staticmethod(get_skills_dir)
     get_agents_dir = staticmethod(get_agents_dir)
 
     # REMOVED: get_project_backups_dir - No backups with stateless architecture

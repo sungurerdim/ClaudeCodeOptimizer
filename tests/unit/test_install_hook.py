@@ -22,7 +22,7 @@ class TestShowInstallationSummary:
     def test_shows_new_files(self, capsys) -> None:
         """Test displaying new files (0 → N)"""
         counts_before: dict[str, int] = {}
-        counts_after = {"agents": 3, "commands": 10, "skills": 26, "principles": 15}
+        counts_after = {"agents": 3, "commands": 10, "skills": 26, "standards": 3}
 
         _show_installation_summary(counts_before, counts_after, was_already_installed=False)
 
@@ -31,8 +31,8 @@ class TestShowInstallationSummary:
         assert "Agents: 3 files" in captured.out
         assert "Commands: 10 files" in captured.out
         assert "Skills: 26 files" in captured.out
-        assert "Principles: 15 files" in captured.out
-        assert "Total: 0 → 54 files" in captured.out
+        assert "Standards: 3 files" in captured.out
+        assert "Total: 0 → 42 files" in captured.out
 
     def test_shows_reinstalled_files_same_count(self, capsys) -> None:
         """Test displaying re-installed files when count stays same"""
@@ -87,7 +87,7 @@ class TestShowInstallationSummary:
         """Test that categories are displayed in correct order"""
         counts_before: dict[str, int] = {}
         counts_after = {
-            "principles": 15,
+            "standards": 3,
             "agents": 3,
             "skills": 26,
             "commands": 10,
@@ -101,15 +101,15 @@ class TestShowInstallationSummary:
         agents_pos = captured.out.find("Agents:")
         commands_pos = captured.out.find("Commands:")
         skills_pos = captured.out.find("Skills:")
-        principles_pos = captured.out.find("Principles:")
+        standards_pos = captured.out.find("Standards:")
         templates_pos = captured.out.find("Templates:")
 
-        # Verify order: agents → commands → skills → principles → templates
-        assert agents_pos < commands_pos < skills_pos < principles_pos < templates_pos
+        # Verify order: agents → commands → skills → standards → templates
+        assert agents_pos < commands_pos < skills_pos < standards_pos < templates_pos
 
     def test_handles_mixed_changes(self, capsys) -> None:
         """Test displaying mix of new, updated, and removed files"""
-        counts_before = {"commands": 8, "skills": 20, "principles": 10}
+        counts_before = {"commands": 8, "skills": 20, "standards": 3}
         counts_after = {"agents": 3, "commands": 10, "skills": 26}
 
         _show_installation_summary(counts_before, counts_after, was_already_installed=False)
@@ -122,9 +122,9 @@ class TestShowInstallationSummary:
         assert "Updated:" in captured.out
         assert "Commands: 8 → 10 files" in captured.out
         assert "Skills: 20 → 26 files" in captured.out
-        # Removed principles
+        # Removed standards
         assert "Removed:" in captured.out
-        assert "Principles: 10 files removed" in captured.out
+        assert "Standards: 3 files removed" in captured.out
 
     def test_handles_empty_counts(self, capsys) -> None:
         """Test handles empty before and after counts"""
@@ -163,11 +163,11 @@ class TestPostInstall:
             "claude_dir": "/home/user/.claude",
             "actions": [
                 "Copied command files",
-                "Copied principle files",
+                "Copied standards files",
                 "Updated CLAUDE.md",
             ],
             "counts_before": {},
-            "counts_after": {"commands": 10, "principles": 15, "agents": 3},
+            "counts_after": {"commands": 10, "standards": 3, "agents": 3},
         }
 
         with (
@@ -191,13 +191,13 @@ class TestPostInstall:
 
     def test_existing_installation_yes_proceeds(self, capsys, monkeypatch) -> None:
         """Test proceeding with overwrite when user selects 'y'"""
-        existing = {"commands": 8, "principles": 12}
+        existing = {"commands": 8, "standards": 3}
         mock_result = {
             "success": True,
             "claude_dir": "/home/user/.claude",
             "actions": ["Updated files"],
             "counts_before": existing,
-            "counts_after": {"commands": 10, "principles": 15},
+            "counts_after": {"commands": 10, "standards": 3},
         }
 
         # Mock user input
@@ -242,13 +242,13 @@ class TestPostInstall:
 
     def test_existing_installation_diff_then_yes(self, capsys, monkeypatch) -> None:
         """Test showing diff then proceeding with 'y'"""
-        existing = {"commands": 8, "principles": 12}
+        existing = {"commands": 8, "standards": 3}
         mock_result = {
             "success": True,
             "claude_dir": "/home/user/.claude",
             "actions": ["Updated files"],
             "counts_before": existing,
-            "counts_after": {"commands": 10, "principles": 15},
+            "counts_after": {"commands": 10, "standards": 3},
         }
 
         # Mock user inputs: first 'd' for diff, then 'y' to proceed
@@ -350,7 +350,7 @@ class TestPostInstall:
             "claude_dir": "/home/user/.claude",
             "actions": ["Updated files"],
             "counts_before": {"commands": 8},
-            "counts_after": {"commands": 10, "principles": 15},
+            "counts_after": {"commands": 10, "standards": 3},
         }
 
         with (

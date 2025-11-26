@@ -5,7 +5,7 @@ Accepted
 
 ## Context
 
-ClaudeCodeOptimizer enhances Claude Code with additional commands, skills, agents, and principles. The system needs to store this content somewhere accessible to Claude Code while avoiding project pollution.
+ClaudeCodeOptimizer enhances Claude Code with additional commands and agents. The system needs to store this content somewhere accessible to Claude Code while avoiding project pollution.
 
 ### The Problem
 
@@ -52,13 +52,10 @@ Adopt a **zero pollution design** where ALL CCO content is stored in `~/.claude/
 
 ```
 ~/.claude/
-├── commands/         # CCO slash commands
-├── principles/       # CCO principles (U_*, C_*, P_*)
-├── skills/          # CCO auto-activating skills
-├── agents/          # CCO agent definitions
-├── CLAUDE.md        # Main config (with CCO markers)
-├── metadata.json    # CCO installation metadata
-└── templates/       # CCO templates (optional)
+├── commands/         # CCO slash commands (cco-*.md)
+├── agents/          # CCO agent definitions (cco-agent-*.md)
+├── CLAUDE.md        # Main config (with CCO Rules markers)
+└── *.cco            # Template files for user customization
 ```
 
 Project directories remain **completely clean** - no CCO files.
@@ -165,37 +162,15 @@ def install_cco_globally() -> None:
     # Create directory structure
     claude_dir.mkdir(exist_ok=True)
     (claude_dir / "commands").mkdir(exist_ok=True)
-    (claude_dir / "principles").mkdir(exist_ok=True)
-    (claude_dir / "skills").mkdir(exist_ok=True)
     (claude_dir / "agents").mkdir(exist_ok=True)
 
     # Copy content files
     copy_commands(claude_dir / "commands")
-    copy_principles(claude_dir / "principles")
-    copy_skills(claude_dir / "skills")
     copy_agents(claude_dir / "agents")
 
-    # Update CLAUDE.md with markers
+    # Update CLAUDE.md with CCO Rules markers
     update_claude_md(claude_dir / "CLAUDE.md")
 ```
-
-### Per-Project Customization (Optional)
-
-Users who need per-project settings can manually create `.claudecodeoptimizerrc`:
-
-```json
-{
-  "principles": {
-    "enabled": ["U_CHANGE_VERIFICATION", "U_DRY"],
-    "disabled": []
-  },
-  "commands": {
-    "exclude": ["cco-audit"]
-  }
-}
-```
-
-**Important**: CCO does NOT auto-generate this file (zero pollution). Users create it only when needed.
 
 ### Uninstallation
 
@@ -205,13 +180,13 @@ def uninstall_cco() -> None:
     home = Path.home()
     claude_dir = home / ".claude"
 
-    # Remove CCO directories
-    shutil.rmtree(claude_dir / "commands" / "cco-*")
-    shutil.rmtree(claude_dir / "principles")
-    shutil.rmtree(claude_dir / "skills")
-    shutil.rmtree(claude_dir / "agents")
+    # Remove CCO files only (cco-*.md, cco-agent-*.md)
+    for f in (claude_dir / "commands").glob("cco-*.md"):
+        f.unlink()
+    for f in (claude_dir / "agents").glob("cco-*.md"):
+        f.unlink()
 
-    # Remove CCO markers from CLAUDE.md
+    # Remove CCO Rules markers from CLAUDE.md
     remove_cco_markers(claude_dir / "CLAUDE.md")
 ```
 
@@ -224,19 +199,16 @@ def uninstall_cco() -> None:
 - Test uninstall leaves no traces
 - Verify project directories remain untouched
 
-### Principles Compliance
+### Design Principles
 
-- **C_NO_UNSOLICITED_FILE_CREATION**: No files created in project directories
-- **U_MINIMAL_TOUCH**: Only touch `~/.claude/`, nothing else
+- **No files in project directories**: Zero pollution
+- **Minimal touch**: Only modify `~/.claude/`
 
 ## References
 
-- [cco-principle-c-no-unsolicited-file-creation](../../claudecodeoptimizer/content/principles/cco-principle-c-no-unsolicited-file-creation.md)
-- [cco-principle-u-minimal-touch](../../claudecodeoptimizer/content/principles/cco-principle-u-minimal-touch.md)
 - [Installation Runbook](../runbooks/installation.md)
 - [Uninstallation Runbook](../runbooks/uninstallation.md)
 
 ## Related ADRs
 
 - [ADR-001: Marker-based CLAUDE.md System](001-marker-based-claude-md.md) - How content is injected into global CLAUDE.md
-- [ADR-003: Progressive Skill Loading](003-progressive-skill-loading.md) - How skills are loaded from global directory

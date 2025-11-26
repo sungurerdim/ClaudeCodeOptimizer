@@ -52,9 +52,9 @@ pytest --cov=claudecodeoptimizer --cov-report=html
 4. Content management (content handling)
 5. CLI commands (install, remove, status, update)
 
-## Test Principles
+## Testing Guidelines
 
-- **cco-principle-u-evidence-based-analysis: Evidence-Based Verification** - All tests must verify with actual command output
+- **Evidence-Based Verification** - All tests must verify with actual command output
 - **Fail-Fast** - Tests fail loudly, no silent failures
 - **Isolation** - Each test is independent
 - **Deterministic** - Same input always produces same output

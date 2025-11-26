@@ -24,7 +24,6 @@ use_cases:
 
 ## Built-in Behaviors
 
-**See [cco-standards.md](../cco-standards.md) for standard behaviors:**
 - File Discovery & Exclusion (Stage 0)
 - Three-Stage File Discovery
 - Model Selection Guidelines

@@ -58,12 +58,7 @@ def count_cco_files(claude_dir: Path) -> dict[str, int]:
     counts = {
         "agents": 0,
         "commands": 0,
-        "skills": 0,
-        "principles": 0,
-        "principles_cco_u": 0,
-        "principles_cco_c": 0,
         "templates": 0,
-        "standards": 0,
     }
 
     if not claude_dir.exists():
@@ -79,31 +74,6 @@ def count_cco_files(claude_dir: Path) -> dict[str, int]:
     if commands_dir.exists():
         counts["commands"] = sum(1 for _ in commands_dir.glob("cco-*.md"))
 
-    # Count skills
-    skills_dir = claude_dir / "skills"
-    if skills_dir.exists():
-        counts["skills"] = sum(1 for _ in skills_dir.glob("cco-skill-*.md"))
-
-    # Count principles - single pass instead of 4 iterations over list
-    principles_dir = claude_dir / "principles"
-    if principles_dir.exists():
-        for p in principles_dir.glob("*.md"):
-            if p.name == "PRINCIPLES.md":
-                continue
-            counts["principles"] += 1
-            # Check prefix in single pass (O(n) vs O(4n))
-            if p.name.startswith("cco-principle-u-"):
-                counts["principles_cco_u"] += 1
-            elif p.name.startswith("cco-principle-c-"):
-                counts["principles_cco_c"] += 1
-
-    # Count templates
-    # Count standards (cco-*.md)
-    counts["standards"] = sum(
-        1
-        for f in claude_dir.glob("cco-*.md")
-        if f.name in ("cco-standards.md", "cco-patterns.md", "cco-tech-detection.md")
-    )
     counts["templates"] = sum(1 for _ in claude_dir.glob("*.cco"))
 
     return counts
@@ -152,12 +122,6 @@ def show_removal_preview(
             print(f"  • Agents: {counts['agents']} files")
         if counts["commands"] > 0:
             print(f"  • Commands: {counts['commands']} files")
-        if counts["skills"] > 0:
-            print(f"  • Skills: {counts['skills']} files")
-        if counts["principles"] > 0:
-            print(f"  • Principles: {counts['principles']} files")
-            print(f"    - cco-principle-u-*: {counts['principles_cco_u']} (Universal)")
-            print(f"    - cco-principle-c-*: {counts['principles_cco_c']} (Claude)")
         if counts["templates"] > 0:
             print(f"  • Templates: {counts['templates']} files")
             print("    - settings.json.cco (Claude Code configuration)")
@@ -169,7 +133,7 @@ def show_removal_preview(
         print()
 
     print("CLAUDE.MD:")
-    print("  • CCO principle markers will be removed from ~/.claude/CLAUDE.md")
+    print("  • CCO Rules section will be removed from ~/.claude/CLAUDE.md")
     print("  • Your other content in CLAUDE.md will be preserved")
     print()
     print("PROJECT FILES:")
@@ -243,9 +207,6 @@ def remove_cco_files(claude_dir: Path) -> dict[str, int]:
     deleted = {
         "agents": 0,
         "commands": 0,
-        "skills": 0,
-        "principles": 0,
-        "standards": 0,
         "templates": 0,
     }
 
@@ -266,29 +227,6 @@ def remove_cco_files(claude_dir: Path) -> dict[str, int]:
             f.unlink()
             deleted["commands"] += 1
 
-    # Remove skills (cco-skill-*.md only, preserve folders)
-    skills_dir = claude_dir / "skills"
-    if skills_dir.exists():
-        for f in skills_dir.rglob("cco-skill-*.md"):
-            f.unlink()
-            deleted["skills"] += 1
-
-    # Remove principles (cco-principle-*.md only, preserve folder)
-    principles_dir = claude_dir / "principles"
-    if principles_dir.exists():
-        for f in principles_dir.glob("cco-principle-u-*.md"):
-            f.unlink()
-            deleted["principles"] += 1
-        for f in principles_dir.glob("cco-principle-c-*.md"):
-            f.unlink()
-            deleted["principles"] += 1
-
-    # Remove standards (cco-*.md in root only)
-    for f in claude_dir.glob("cco-*.md"):
-        if f.is_file():
-            f.unlink()
-            deleted["standards"] += 1
-
     # Remove templates (*.cco files only)
     for f in claude_dir.glob("*.cco"):
         f.unlink()
@@ -302,7 +240,7 @@ def _remove_claude_md_markers(claude_dir: Path) -> None:
     """
     Remove CCO markers from CLAUDE.md while preserving all user content.
 
-    Only removes the CCO_PRINCIPLES_START/END markers and content between them.
+    Removes both old CCO_PRINCIPLES markers and new CCO_RULES markers.
     Never deletes the file - preserves user's other settings and content.
     """
     claude_md = claude_dir / "CLAUDE.md"
@@ -311,10 +249,13 @@ def _remove_claude_md_markers(claude_dir: Path) -> None:
 
     file_content = claude_md.read_text(encoding="utf-8")
 
-    # Only remove CCO markers and content between them
-    # Pattern matches: <!-- CCO_PRINCIPLES_START --> ... <!-- CCO_PRINCIPLES_END --> + optional newlines
-    pattern = r"<!-- CCO_PRINCIPLES_START -->.*?<!-- CCO_PRINCIPLES_END -->\n?"
-    new_content = re.sub(pattern, "", file_content, flags=re.DOTALL)
+    # Remove old CCO_PRINCIPLES markers (legacy)
+    pattern_principles = r"<!-- CCO_PRINCIPLES_START -->.*?<!-- CCO_PRINCIPLES_END -->\n?"
+    new_content = re.sub(pattern_principles, "", file_content, flags=re.DOTALL)
+
+    # Remove new CCO_RULES markers
+    pattern_rules = r"<!-- CCO_RULES_START -->.*?<!-- CCO_RULES_END -->\n?"
+    new_content = re.sub(pattern_rules, "", new_content, flags=re.DOTALL)
 
     # Clean up excessive blank lines (more than 2 consecutive) but preserve structure
     new_content = re.sub(r"\n{3,}", "\n\n", new_content)
@@ -398,9 +339,6 @@ def main() -> int:
         deleted = {
             "agents": 0,
             "commands": 0,
-            "skills": 0,
-            "principles": 0,
-            "standards": 0,
             "templates": 0,
         }
         if total_files > 0:
@@ -430,12 +368,6 @@ def main() -> int:
                     print(f"  [OK] Agents: {deleted['agents']} files")
                 if deleted["commands"] > 0:
                     print(f"  [OK] Commands: {deleted['commands']} files")
-                if deleted["skills"] > 0:
-                    print(f"  [OK] Skills: {deleted['skills']} files")
-                if deleted["principles"] > 0:
-                    print(f"  [OK] Principles: {deleted['principles']} files")
-                if deleted["standards"] > 0:
-                    print(f"  [OK] Standards: {deleted['standards']} files")
                 if deleted["templates"] > 0:
                     print(f"  [OK] Templates: {deleted['templates']} files")
                 print("  [OK] CLAUDE.md markers removed")

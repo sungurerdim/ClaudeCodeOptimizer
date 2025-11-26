@@ -12,18 +12,6 @@ pain_points: []
 **Quick command reference for ClaudeCodeOptimizer**
 ---
 
-## Built-in References
-
-**This command inherits standard behaviors from:**
-
-- **[cco-standards.md](../cco-standards.md)** - Standard structure, execution protocol, file discovery
-- **[cco-standards.md](../cco-standards.md)** - UX/DX, efficiency, simplicity, performance standards
-- **[cco-patterns.md](../cco-patterns.md)** - Reusable patterns (Step 0, Selection, Accounting, Progress, Error Handling)
-- **[cco-standards.md](../cco-standards.md)** - File discovery, model selection, parallel execution
-
-**See these files for detailed patterns. Only command-specific content is documented below.**
-
----
 
 ## Purpose
 

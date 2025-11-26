@@ -24,9 +24,9 @@ parameters:
 
 ---
 
-## Design Principles (CRITICAL)
+## Design Standards (CRITICAL)
 
-**All CCO commands must follow these core principles:**
+**All CCO commands must follow these core standards:**
 
 1. **No Hardcoded Examples** - Use `{FILE_PATH}`, `{LINE_NUMBER}`, `{PLACEHOLDERS}` instead of real-looking data
 2. **Native Tool Interactions** - Always use `AskUserQuestion` for user input, never text prompts
@@ -394,9 +394,9 @@ Skills are referenced in agent prompts for domain knowledge.
 
 **Template Notes:**
 - Replace ALL `[placeholders]` with actual content
-- Follow ALL design principles (no hardcoded examples, native tools, etc.)
+- Follow ALL design standards (no hardcoded examples, native tools, etc.)
 - Always include command prompt support section
 - Use AskUserQuestion for ALL user interactions
 - Show explicit phase transitions
 - Verify complete accounting before claiming completion
-- Reference specific principles (U_*, C_*) where applicable
+- Reference CCO Rules from CLAUDE.md where applicable

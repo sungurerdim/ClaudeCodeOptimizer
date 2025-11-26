@@ -16,11 +16,8 @@ from claudecodeoptimizer.core.knowledge_setup import (
     _setup_agents,
     _setup_claude_md,
     _setup_commands,
-    _setup_principles,
-    _setup_skills,
     get_available_agents,
     get_available_commands,
-    get_available_skills,
     setup_global_knowledge,
 )
 
@@ -34,16 +31,12 @@ def mock_claude_dir(tmp_path: Path) -> Generator[Path, None, None]:
     """
     claude_dir = tmp_path / ".claude"
     commands_dir = claude_dir / "commands"
-    principles_dir = claude_dir / "principles"
     agents_dir = claude_dir / "agents"
-    skills_dir = claude_dir / "skills"
 
     with (
         patch.object(knowledge_setup.config, "get_claude_dir", return_value=claude_dir),
         patch.object(knowledge_setup.config, "get_global_commands_dir", return_value=commands_dir),
-        patch.object(knowledge_setup.config, "get_principles_dir", return_value=principles_dir),
         patch.object(knowledge_setup.config, "get_agents_dir", return_value=agents_dir),
-        patch.object(knowledge_setup.config, "get_skills_dir", return_value=skills_dir),
     ):
         yield claude_dir
 
@@ -53,7 +46,7 @@ def mock_content_dir(tmp_path: Path) -> Generator[Path, None, None]:
     """
     Fixture that provides mock content directories with sample files.
 
-    Creates content/commands/, content/principles/, content/agents/, content/skills/.
+    Creates content/commands/, content/agents/.
     """
     content_dir = tmp_path / "content"
 
@@ -64,35 +57,11 @@ def mock_content_dir(tmp_path: Path) -> Generator[Path, None, None]:
     (commands_src / "cco-fix.md").write_text("# Fix Command")
     (commands_src / "cco-help.md").write_text("# Help Command")
 
-    # Create principles
-    principles_src = content_dir / "principles"
-    principles_src.mkdir(parents=True)
-    (principles_src / "cco-principle-u-change-verification.md").write_text("# U Principle 1")
-    (principles_src / "cco-principle-u-dry.md").write_text("# U Principle 2")
-    (principles_src / "cco-principle-c-follow-patterns.md").write_text("# C Principle 1")
-    (principles_src / "cco-principle-c-context-window-mgmt.md").write_text("# C Principle 2")
-    (principles_src / "other_file.md").write_text("# Other file")
-
     # Create agents
     agents_src = content_dir / "agents"
     agents_src.mkdir(parents=True)
     (agents_src / "cco-agent-audit.md").write_text("# Audit Agent")
     (agents_src / "cco-agent-fix.md").write_text("# Fix Agent")
-
-    # Create skills
-    skills_src = content_dir / "skills"
-    skills_src.mkdir(parents=True)
-    (skills_src / "cco-skill-testing.md").write_text("# Testing Skill")
-    (skills_src / "cco-skill-security.md").write_text("# Security Skill")
-
-    # Create language-specific skills
-    python_skills = skills_src / "python"
-    python_skills.mkdir(parents=True)
-    (python_skills / "cco-skill-django.md").write_text("# Django Skill")
-
-    js_skills = skills_src / "javascript"
-    js_skills.mkdir(parents=True)
-    (js_skills / "cco-skill-react.md").write_text("# React Skill")
 
     yield content_dir
 
@@ -123,9 +92,7 @@ class TestSetupGlobalKnowledge:
         assert result["success"] is True
         assert "claude_dir" in result
         assert "actions" in result
-        assert (
-            len(result["actions"]) == 7
-        )  # commands, principles, agents, skills, standards, claude.md, templates
+        assert len(result["actions"]) == 4  # commands, agents, claude.md, templates
 
 
 class TestSetupCommands:
@@ -208,72 +175,6 @@ class TestSetupCommands:
             assert "Content not found" in str(exc_info.value)
 
 
-class TestSetupPrinciples:
-    """Test _setup_principles function"""
-
-    def test_copies_cco_principles(self, tmp_path: Path) -> None:
-        """Test that cco-principle-u-*, cco-principle-c-*.md files are copied"""
-        # Setup source
-        source_dir = tmp_path / "source" / "content" / "principles"
-        source_dir.mkdir(parents=True)
-        (source_dir / "cco-principle-u-test.md").write_text("# U Principle")
-        (source_dir / "cco-principle-c-test.md").write_text("# C Principle")
-        (source_dir / "README.md").write_text("# README")  # Should not be copied
-
-        dest_dir = tmp_path / "dest" / "principles"
-
-        mock_file = tmp_path / "source" / "core" / "knowledge_setup.py"
-        mock_file.parent.mkdir(parents=True)
-        mock_file.touch()
-
-        with patch.object(knowledge_setup, "__file__", str(mock_file)):
-            _setup_principles(dest_dir)
-
-        assert (dest_dir / "cco-principle-u-test.md").exists()
-        assert (dest_dir / "cco-principle-c-test.md").exists()
-        assert not (dest_dir / "README.md").exists()
-
-    def test_removes_old_principle_files(self, tmp_path: Path) -> None:
-        """Test that old cco-principle-*.md files are removed and new ones installed"""
-        # Setup source
-        source_dir = tmp_path / "source" / "content" / "principles"
-        source_dir.mkdir(parents=True)
-        (source_dir / "cco-principle-u-new.md").write_text("# New")
-
-        # Setup destination with old files
-        dest_dir = tmp_path / "dest" / "principles"
-        dest_dir.mkdir(parents=True)
-        (dest_dir / "cco-principle-u-old.md").write_text("# Old U")
-        (dest_dir / "cco-principle-c-old.md").write_text("# Old C")
-        (dest_dir / "user_principle.md").write_text("# User")  # Should be preserved
-
-        mock_file = tmp_path / "source" / "core" / "knowledge_setup.py"
-        mock_file.parent.mkdir(parents=True)
-        mock_file.touch()
-
-        with patch.object(knowledge_setup, "__file__", str(mock_file)):
-            _setup_principles(dest_dir)
-
-        assert not (dest_dir / "cco-principle-u-old.md").exists()
-        assert not (dest_dir / "cco-principle-c-old.md").exists()
-        assert (dest_dir / "cco-principle-u-new.md").exists()
-        assert (dest_dir / "user_principle.md").exists()
-
-    def test_raises_on_missing_source(self, tmp_path: Path) -> None:
-        """Test that FileNotFoundError is raised when source doesn't exist"""
-        dest_dir = tmp_path / "dest" / "principles"
-
-        mock_file = tmp_path / "empty" / "core" / "knowledge_setup.py"
-        mock_file.parent.mkdir(parents=True)
-        mock_file.touch()
-
-        with patch.object(knowledge_setup, "__file__", str(mock_file)):
-            with pytest.raises(FileNotFoundError) as exc_info:
-                _setup_principles(dest_dir)
-
-            assert "Content not found" in str(exc_info.value)
-
-
 class TestSetupAgents:
     """Test _setup_agents function"""
 
@@ -338,184 +239,51 @@ class TestSetupAgents:
             assert "Content not found" in str(exc_info.value)
 
 
-class TestSetupSkills:
-    """Test _setup_skills function"""
-
-    def test_copies_root_skills(self, tmp_path: Path) -> None:
-        """Test that root cco-*.md skill files are copied"""
-        # Setup source
-        source_dir = tmp_path / "source" / "content" / "skills"
-        source_dir.mkdir(parents=True)
-        (source_dir / "cco-skill-testing.md").write_text("# Testing Skill")
-        (source_dir / "cco-skill-security.md").write_text("# Security Skill")
-
-        dest_dir = tmp_path / "dest" / "skills"
-
-        mock_file = tmp_path / "source" / "core" / "knowledge_setup.py"
-        mock_file.parent.mkdir(parents=True)
-        mock_file.touch()
-
-        with patch.object(knowledge_setup, "__file__", str(mock_file)):
-            _setup_skills(dest_dir)
-
-        assert (dest_dir / "cco-skill-testing.md").exists()
-        assert (dest_dir / "cco-skill-security.md").exists()
-
-    def test_copies_language_specific_skills(self, tmp_path: Path) -> None:
-        """Test that language-specific skill subdirectories are copied"""
-        # Setup source
-        source_dir = tmp_path / "source" / "content" / "skills"
-        source_dir.mkdir(parents=True)
-
-        # Python skills
-        python_dir = source_dir / "python"
-        python_dir.mkdir()
-        (python_dir / "cco-skill-django.md").write_text("# Django")
-
-        # JavaScript skills
-        js_dir = source_dir / "javascript"
-        js_dir.mkdir()
-        (js_dir / "cco-skill-react.md").write_text("# React")
-
-        dest_dir = tmp_path / "dest" / "skills"
-
-        mock_file = tmp_path / "source" / "core" / "knowledge_setup.py"
-        mock_file.parent.mkdir(parents=True)
-        mock_file.touch()
-
-        with patch.object(knowledge_setup, "__file__", str(mock_file)):
-            _setup_skills(dest_dir)
-
-        assert (dest_dir / "python" / "cco-skill-django.md").exists()
-        assert (dest_dir / "javascript" / "cco-skill-react.md").exists()
-
-    def test_removes_old_cco_skills_recursively(self, tmp_path: Path) -> None:
-        """Test that old cco-*.md files are removed recursively"""
-        # Setup source
-        source_dir = tmp_path / "source" / "content" / "skills"
-        source_dir.mkdir(parents=True)
-        (source_dir / "cco-skill-new.md").write_text("# New")
-
-        # Setup destination with old files
-        dest_dir = tmp_path / "dest" / "skills"
-        dest_dir.mkdir(parents=True)
-        (dest_dir / "cco-skill-old.md").write_text("# Old")
-
-        # Old file in subdirectory
-        old_subdir = dest_dir / "python"
-        old_subdir.mkdir()
-        (old_subdir / "cco-skill-old-django.md").write_text("# Old Django")
-        (old_subdir / "user-skill.md").write_text("# User Skill")
-
-        mock_file = tmp_path / "source" / "core" / "knowledge_setup.py"
-        mock_file.parent.mkdir(parents=True)
-        mock_file.touch()
-
-        with patch.object(knowledge_setup, "__file__", str(mock_file)):
-            _setup_skills(dest_dir)
-
-        assert not (dest_dir / "cco-skill-old.md").exists()
-        assert not (old_subdir / "cco-skill-old-django.md").exists()
-        assert (dest_dir / "cco-skill-new.md").exists()
-        assert (old_subdir / "user-skill.md").exists()
-
-    def test_skips_hidden_directories(self, tmp_path: Path) -> None:
-        """Test that hidden directories (starting with . or _) are skipped"""
-        # Setup source
-        source_dir = tmp_path / "source" / "content" / "skills"
-        source_dir.mkdir(parents=True)
-
-        # Hidden directories
-        hidden_dir = source_dir / "_hidden"
-        hidden_dir.mkdir()
-        (hidden_dir / "cco-skill-hidden.md").write_text("# Hidden")
-
-        dot_dir = source_dir / ".git"
-        dot_dir.mkdir()
-        (dot_dir / "cco-skill-dot.md").write_text("# Dot")
-
-        dest_dir = tmp_path / "dest" / "skills"
-
-        mock_file = tmp_path / "source" / "core" / "knowledge_setup.py"
-        mock_file.parent.mkdir(parents=True)
-        mock_file.touch()
-
-        with patch.object(knowledge_setup, "__file__", str(mock_file)):
-            _setup_skills(dest_dir)
-
-        assert not (dest_dir / "_hidden").exists()
-        assert not (dest_dir / ".git").exists()
-
-    def test_raises_on_missing_source(self, tmp_path: Path) -> None:
-        """Test that FileNotFoundError is raised when source doesn't exist"""
-        dest_dir = tmp_path / "dest" / "skills"
-
-        mock_file = tmp_path / "empty" / "core" / "knowledge_setup.py"
-        mock_file.parent.mkdir(parents=True)
-        mock_file.touch()
-
-        with patch.object(knowledge_setup, "__file__", str(mock_file)):
-            with pytest.raises(FileNotFoundError) as exc_info:
-                _setup_skills(dest_dir)
-
-            assert "Content not found" in str(exc_info.value)
-
-
 class TestSetupClaudeMd:
     """Test _setup_claude_md function"""
 
     def test_creates_new_claude_md(self, tmp_path: Path) -> None:
-        """Test creating new CLAUDE.md with principle markers"""
+        """Test creating new CLAUDE.md with CCO Rules"""
         claude_dir = tmp_path / ".claude"
         claude_dir.mkdir(parents=True)
 
-        principles_dir = claude_dir / "principles"
-        principles_dir.mkdir()
-        (principles_dir / "cco-principle-u-test1.md").touch()
-        (principles_dir / "cco-principle-u-test2.md").touch()
-        (principles_dir / "cco-principle-c-test1.md").touch()
-
-        _setup_claude_md(claude_dir, principles_dir)
+        _setup_claude_md(claude_dir)
 
         claude_md = claude_dir / "CLAUDE.md"
         assert claude_md.exists()
 
         content = claude_md.read_text()
-        assert "<!-- CCO_PRINCIPLES_START -->" in content
-        assert "<!-- CCO_PRINCIPLES_END -->" in content
-        assert "@principles/cco-principle-u-test1.md" in content
-        assert "@principles/cco-principle-u-test2.md" in content
-        assert "@principles/cco-principle-c-test1.md" in content
+        assert "<!-- CCO_RULES_START -->" in content
+        assert "<!-- CCO_RULES_END -->" in content
+        assert "# CCO Rules" in content
+        assert "Cross-Platform" in content
+        assert "Reference Integrity" in content
 
     def test_updates_existing_claude_md(self, tmp_path: Path) -> None:
-        """Test updating existing CLAUDE.md with new markers"""
+        """Test updating existing CLAUDE.md with new CCO Rules"""
         claude_dir = tmp_path / ".claude"
         claude_dir.mkdir(parents=True)
 
-        # Create existing CLAUDE.md with markers
+        # Create existing CLAUDE.md with old markers
         claude_md = claude_dir / "CLAUDE.md"
         claude_md.write_text(
             "# My Project\n\n"
-            "<!-- CCO_PRINCIPLES_START -->\n"
-            "@principles/OLD_PRINCIPLE.md\n"
-            "<!-- CCO_PRINCIPLES_END -->\n\n"
+            "<!-- CCO_RULES_START -->\n"
+            "Old rules content\n"
+            "<!-- CCO_RULES_END -->\n\n"
             "Some other content"
         )
 
-        principles_dir = claude_dir / "principles"
-        principles_dir.mkdir()
-        (principles_dir / "cco-principle-u-new.md").touch()
-
-        _setup_claude_md(claude_dir, principles_dir)
+        _setup_claude_md(claude_dir)
 
         content = claude_md.read_text()
         assert "# My Project" in content
         assert "Some other content" in content
-        assert "@principles/cco-principle-u-new.md" in content
-        assert "@principles/OLD_PRINCIPLE.md" not in content
+        assert "Old rules content" not in content
+        assert "# CCO Rules" in content
 
     def test_appends_to_claude_md_without_markers(self, tmp_path: Path) -> None:
-        """Test appending markers to existing CLAUDE.md without markers"""
+        """Test appending CCO Rules to existing CLAUDE.md without markers"""
         claude_dir = tmp_path / ".claude"
         claude_dir.mkdir(parents=True)
 
@@ -523,62 +291,37 @@ class TestSetupClaudeMd:
         claude_md = claude_dir / "CLAUDE.md"
         claude_md.write_text("# My Project\n\nExisting content")
 
-        principles_dir = claude_dir / "principles"
-        principles_dir.mkdir()
-        (principles_dir / "cco-principle-u-test.md").touch()
-
-        _setup_claude_md(claude_dir, principles_dir)
+        _setup_claude_md(claude_dir)
 
         content = claude_md.read_text()
         assert "# My Project" in content
         assert "Existing content" in content
-        assert "<!-- CCO_PRINCIPLES_START -->" in content
-        assert "@principles/cco-principle-u-test.md" in content
+        assert "<!-- CCO_RULES_START -->" in content
+        assert "# CCO Rules" in content
 
-    def test_sorts_principles_alphabetically(self, tmp_path: Path) -> None:
-        """Test that principles are sorted alphabetically"""
+    def test_removes_old_principles_markers(self, tmp_path: Path) -> None:
+        """Test that old CCO_PRINCIPLES markers are removed"""
         claude_dir = tmp_path / ".claude"
         claude_dir.mkdir(parents=True)
 
-        principles_dir = claude_dir / "principles"
-        principles_dir.mkdir()
-        (principles_dir / "cco-principle-u-zzz.md").touch()
-        (principles_dir / "cco-principle-u-aaa.md").touch()
-        (principles_dir / "cco-principle-c-zzz.md").touch()
-        (principles_dir / "cco-principle-c-aaa.md").touch()
+        # Create existing CLAUDE.md with old principle markers
+        claude_md = claude_dir / "CLAUDE.md"
+        claude_md.write_text(
+            "# My Project\n\n"
+            "<!-- CCO_PRINCIPLES_START -->\n"
+            "@principles/old_principle.md\n"
+            "<!-- CCO_PRINCIPLES_END -->\n\n"
+            "Some other content"
+        )
 
-        _setup_claude_md(claude_dir, principles_dir)
+        _setup_claude_md(claude_dir)
 
-        claude_md_path = claude_dir / "CLAUDE.md"
-        content = claude_md_path.read_text()
-
-        # cco-principle-u-* should come before cco-principle-c-*
-        u_aaa_pos = content.find("cco-principle-u-aaa")
-        u_zzz_pos = content.find("cco-principle-u-zzz")
-        c_aaa_pos = content.find("cco-principle-c-aaa")
-        c_zzz_pos = content.find("cco-principle-c-zzz")
-
-        assert u_aaa_pos < u_zzz_pos  # u-aaa before u-zzz
-        assert u_zzz_pos < c_aaa_pos  # All u-* before c-*
-        assert c_aaa_pos < c_zzz_pos  # c-aaa before c-zzz
-
-    def test_excludes_non_cco_principles_from_markers(self, tmp_path: Path) -> None:
-        """Test that non-CCO principles are NOT included in CLAUDE.md markers"""
-        claude_dir = tmp_path / ".claude"
-        claude_dir.mkdir(parents=True)
-
-        principles_dir = claude_dir / "principles"
-        principles_dir.mkdir()
-        (principles_dir / "cco-principle-u-test.md").touch()
-        (principles_dir / "cco-principle-c-test.md").touch()
-        (principles_dir / "OTHER_PRINCIPLE.md").touch()  # Non-CCO principle
-
-        _setup_claude_md(claude_dir, principles_dir)
-
-        content = (claude_dir / "CLAUDE.md").read_text()
-        assert "@principles/cco-principle-u-test.md" in content
-        assert "@principles/cco-principle-c-test.md" in content
-        assert "@principles/OTHER_PRINCIPLE.md" not in content
+        content = claude_md.read_text()
+        assert "# My Project" in content
+        assert "Some other content" in content
+        assert "CCO_PRINCIPLES" not in content
+        assert "@principles" not in content
+        assert "<!-- CCO_RULES_START -->" in content
 
 
 class TestGetAvailableCommands:
@@ -641,54 +384,6 @@ class TestGetAvailableAgents:
         assert result == []
 
 
-class TestGetAvailableSkills:
-    """Test get_available_skills function"""
-
-    def test_returns_root_skills(self, mock_claude_dir: Path) -> None:
-        """Test that root-level skill names are returned"""
-        skills_dir = mock_claude_dir / "skills"
-        skills_dir.mkdir(parents=True)
-        (skills_dir / "cco-skill-testing.md").touch()
-        (skills_dir / "cco-skill-security.md").touch()
-
-        result = get_available_skills()
-
-        assert "cco-skill-testing" in result
-        assert "cco-skill-security" in result
-
-    def test_returns_language_specific_skills(self, mock_claude_dir: Path) -> None:
-        """Test that language-specific skills include directory prefix"""
-        skills_dir = mock_claude_dir / "skills"
-        skills_dir.mkdir(parents=True)
-
-        python_dir = skills_dir / "python"
-        python_dir.mkdir()
-        (python_dir / "cco-skill-django.md").touch()
-
-        result = get_available_skills()
-
-        assert "python/cco-skill-django" in result
-
-    def test_returns_empty_when_directory_missing(self, mock_claude_dir: Path) -> None:
-        """Test returns empty list when skills directory doesn't exist"""
-        result = get_available_skills()
-
-        assert result == []
-
-    def test_skips_hidden_directories(self, mock_claude_dir: Path) -> None:
-        """Test that hidden directories are skipped"""
-        skills_dir = mock_claude_dir / "skills"
-        skills_dir.mkdir(parents=True)
-
-        hidden_dir = skills_dir / "_hidden"
-        hidden_dir.mkdir()
-        (hidden_dir / "cco-skill-hidden.md").touch()
-
-        result = get_available_skills()
-
-        assert "_hidden/cco-skill-hidden" not in result
-
-
 class TestCheckExistingInstallation:
     """Test check_existing_installation function"""
 
@@ -707,14 +402,13 @@ class TestCheckExistingInstallation:
         # Create directory but no files
         mock_claude_dir.mkdir(parents=True)
         (mock_claude_dir / "commands").mkdir()
-        (mock_claude_dir / "principles").mkdir()
 
         result = check_existing_installation()
 
         assert result is None
 
-    def test_counts_agents_commands_skills(self, mock_claude_dir: Path) -> None:
-        """Test counts cco-*.md files in agents, commands, skills"""
+    def test_counts_agents_and_commands(self, mock_claude_dir: Path) -> None:
+        """Test counts cco-*.md files in agents, commands"""
         from claudecodeoptimizer.core.knowledge_setup import check_existing_installation
 
         # Create directories with files
@@ -729,47 +423,11 @@ class TestCheckExistingInstallation:
         (commands_dir / "cco-cmd-2.md").touch()
         (commands_dir / "cco-cmd-3.md").touch()
 
-        skills_dir = mock_claude_dir / "skills"
-        skills_dir.mkdir(parents=True)
-        (skills_dir / "cco-skill-1.md").touch()
-
         result = check_existing_installation()
 
         assert result is not None
         assert result["agents"] == 2
         assert result["commands"] == 3
-        assert result["skills"] == 1
-
-    def test_counts_cco_principles(self, mock_claude_dir: Path) -> None:
-        """Test counts cco-principle-u-*, cco-principle-c-*.md principle files"""
-        from claudecodeoptimizer.core.knowledge_setup import check_existing_installation
-
-        principles_dir = mock_claude_dir / "principles"
-        principles_dir.mkdir(parents=True)
-        (principles_dir / "cco-principle-u-test1.md").touch()
-        (principles_dir / "cco-principle-u-test2.md").touch()
-        (principles_dir / "cco-principle-c-test1.md").touch()
-        (principles_dir / "README.md").touch()  # Should not count
-
-        result = check_existing_installation()
-
-        assert result is not None
-        assert result["principles"] == 3  # u*2 + c*1
-
-    def test_counts_standards_files(self, mock_claude_dir: Path) -> None:
-        """Test counts cco-*.md standards files in ~/.claude/ root"""
-        from claudecodeoptimizer.core.knowledge_setup import check_existing_installation
-
-        mock_claude_dir.mkdir(parents=True)
-        (mock_claude_dir / "cco-standards.md").touch()
-        (mock_claude_dir / "cco-patterns.md").touch()
-        (mock_claude_dir / "cco-tech-detection.md").touch()
-        (mock_claude_dir / "OTHER.md").touch()  # Should not count
-
-        result = check_existing_installation()
-
-        assert result is not None
-        assert result["standards"] == 3
 
     def test_counts_template_files(self, mock_claude_dir: Path) -> None:
         """Test counts *.cco template files"""
@@ -789,13 +447,6 @@ class TestCheckExistingInstallation:
         """Test returns dictionary with consistent category ordering"""
         from claudecodeoptimizer.core.knowledge_setup import check_existing_installation
 
-        # Create files in reverse order
-        (mock_claude_dir / "principles").mkdir(parents=True)
-        (mock_claude_dir / "principles" / "cco-principle-u-test.md").touch()
-
-        (mock_claude_dir / "skills").mkdir(parents=True)
-        (mock_claude_dir / "skills" / "cco-skill-test.md").touch()
-
         (mock_claude_dir / "commands").mkdir(parents=True)
         (mock_claude_dir / "commands" / "cco-cmd.md").touch()
 
@@ -805,11 +456,9 @@ class TestCheckExistingInstallation:
         result = check_existing_installation()
 
         assert result is not None
-        # Check that keys maintain order: agents, commands, skills, principles
+        # Check that keys maintain order: agents, commands
         keys = list(result.keys())
         assert keys.index("agents") < keys.index("commands")
-        assert keys.index("commands") < keys.index("skills")
-        assert keys.index("skills") < keys.index("principles")
 
 
 class TestGetInstallationCounts:
@@ -822,7 +471,6 @@ class TestGetInstallationCounts:
         # Create empty directories
         mock_claude_dir.mkdir(parents=True)
         (mock_claude_dir / "commands").mkdir()
-        (mock_claude_dir / "principles").mkdir()
 
         result = get_installation_counts()
 
@@ -840,15 +488,7 @@ class TestGetInstallationCounts:
         (mock_claude_dir / "commands" / "cco-cmd1.md").touch()
         (mock_claude_dir / "commands" / "cco-cmd2.md").touch()
 
-        (mock_claude_dir / "skills").mkdir(parents=True)
-        (mock_claude_dir / "skills" / "cco-skill-test.md").touch()
-
-        (mock_claude_dir / "principles").mkdir(parents=True)
-        (mock_claude_dir / "principles" / "cco-principle-u-test.md").touch()
-        (mock_claude_dir / "principles" / "cco-principle-c-test.md").touch()
-
         mock_claude_dir.mkdir(exist_ok=True)
-        (mock_claude_dir / "cco-standards.md").touch()
 
         (mock_claude_dir / "settings.json.cco").touch()
 
@@ -856,28 +496,7 @@ class TestGetInstallationCounts:
 
         assert result["agents"] == 1
         assert result["commands"] == 2
-        assert result["skills"] == 1
-        assert result["principles"] == 2
-        assert result["standards"] == 1
         assert result["templates"] == 1
-
-    def test_skills_recursive_count(self, mock_claude_dir: Path) -> None:
-        """Test skills are counted recursively (includes subdirectories)"""
-        from claudecodeoptimizer.core.knowledge_setup import get_installation_counts
-
-        skills_dir = mock_claude_dir / "skills"
-        skills_dir.mkdir(parents=True)
-        (skills_dir / "cco-skill-root.md").touch()
-
-        # Subdirectory
-        python_dir = skills_dir / "python"
-        python_dir.mkdir()
-        (python_dir / "cco-skill-django.md").touch()
-        (python_dir / "cco-skill-flask.md").touch()
-
-        result = get_installation_counts()
-
-        assert result["skills"] == 3  # 1 root + 2 subdirectory
 
 
 class TestShowInstallationDiff:
@@ -893,16 +512,16 @@ class TestShowInstallationDiff:
         (commands_dir / "cco-cmd1.md").touch()
         (commands_dir / "cco-cmd2.md").touch()
 
-        principles_dir = mock_claude_dir / "principles"
-        principles_dir.mkdir(parents=True)
-        (principles_dir / "cco-principle-u-test.md").touch()
+        agents_dir = mock_claude_dir / "agents"
+        agents_dir.mkdir(parents=True)
+        (agents_dir / "cco-agent-test.md").touch()
 
         show_installation_diff()
 
         captured = capsys.readouterr()
         assert "FILES TO BE OVERWRITTEN" in captured.out
         assert "Commands: 2 files" in captured.out
-        assert "Principles (cco-principle-u-*): 1 files" in captured.out
+        assert "Agents: 1 files" in captured.out
         assert "Total:" in captured.out
 
     def test_shows_first_three_files(self, mock_claude_dir: Path, capsys) -> None:
@@ -933,62 +552,6 @@ class TestShowInstallationDiff:
         captured = capsys.readouterr()
         assert "FILES TO BE OVERWRITTEN" in captured.out
         assert "Total: 0 files" in captured.out
-
-
-class TestSetupStandards:
-    """Test _setup_standards function"""
-
-    def test_copies_standards_files(self, tmp_path: Path) -> None:
-        """Test copies all standards files to ~/.claude/ root"""
-        from claudecodeoptimizer.core.knowledge_setup import _setup_standards
-
-        # Create source standards files - need to match actual package structure
-        package_dir = tmp_path / "claudecodeoptimizer"
-        content_dir = package_dir / "content"
-        content_dir.mkdir(parents=True)
-        (content_dir / "cco-standards.md").write_text("# CCO Standards")
-        (content_dir / "cco-patterns.md").write_text("# CCO Patterns")
-        (content_dir / "cco-tech-detection.md").write_text("# CCO Tech Detection")
-
-        # Create destination
-        claude_dir = tmp_path / ".claude"
-        claude_dir.mkdir()
-
-        # Mock __file__ to point to our test structure
-        mock_file = package_dir / "core" / "knowledge_setup.py"
-        mock_file.parent.mkdir(parents=True)
-        mock_file.touch()
-
-        with patch.object(knowledge_setup, "__file__", str(mock_file)):
-            _setup_standards(claude_dir)
-
-        # Verify all files copied
-        assert (claude_dir / "cco-standards.md").exists()
-        assert (claude_dir / "cco-patterns.md").exists()
-        assert (claude_dir / "cco-tech-detection.md").exists()
-
-    def test_handles_missing_standards_files(self, tmp_path: Path) -> None:
-        """Test gracefully handles missing standards files"""
-        from claudecodeoptimizer.core.knowledge_setup import _setup_standards
-
-        # Create empty content dir with correct package structure
-        package_dir = tmp_path / "claudecodeoptimizer"
-        content_dir = package_dir / "content"
-        content_dir.mkdir(parents=True)
-
-        claude_dir = tmp_path / ".claude"
-        claude_dir.mkdir()
-
-        mock_file = package_dir / "core" / "knowledge_setup.py"
-        mock_file.parent.mkdir(parents=True)
-        mock_file.touch()
-
-        # Should not raise error
-        with patch.object(knowledge_setup, "__file__", str(mock_file)):
-            _setup_standards(claude_dir)
-
-        # No files should be created
-        assert not (claude_dir / "cco-standards.md").exists()
 
 
 class TestSetupGlobalTemplates:
@@ -1083,18 +646,9 @@ class TestKnowledgeSetupIntegration:
         (content_dir / "commands").mkdir(parents=True)
         (content_dir / "commands" / "cco-test.md").write_text("# Test")
 
-        # Principles
-        (content_dir / "principles").mkdir(parents=True)
-        (content_dir / "principles" / "U_TEST.md").write_text("# U Test")
-        (content_dir / "principles" / "C_TEST.md").write_text("# C Test")
-
         # Agents
         (content_dir / "agents").mkdir(parents=True)
         (content_dir / "agents" / "cco-agent-test.md").write_text("# Agent")
-
-        # Skills
-        (content_dir / "skills").mkdir(parents=True)
-        (content_dir / "skills" / "cco-skill-test.md").write_text("# Skill")
 
         # Templates (required by setup_global_knowledge_templates)
         templates_dir = tmp_path.parent / "templates"
@@ -1115,18 +669,8 @@ class TestKnowledgeSetupIntegration:
             ),
             patch.object(
                 knowledge_setup.config,
-                "get_principles_dir",
-                return_value=claude_dir / "principles",
-            ),
-            patch.object(
-                knowledge_setup.config,
                 "get_agents_dir",
                 return_value=claude_dir / "agents",
-            ),
-            patch.object(
-                knowledge_setup.config,
-                "get_skills_dir",
-                return_value=claude_dir / "skills",
             ),
             patch.object(
                 knowledge_setup,
@@ -1137,9 +681,7 @@ class TestKnowledgeSetupIntegration:
             result = setup_global_knowledge()
 
         assert result["success"] is True
-        assert (
-            len(result["actions"]) == 7
-        )  # commands, principles, agents, skills, standards, CLAUDE.md, templates
+        assert len(result["actions"]) == 4  # commands, agents, CLAUDE.md, templates
 
     def test_preserves_user_files(self, tmp_path: Path) -> None:
         """Test that user's custom files are preserved during setup"""
@@ -1150,17 +692,9 @@ class TestKnowledgeSetupIntegration:
         (content_dir / "commands").mkdir(parents=True)
         (content_dir / "commands" / "cco-new.md").write_text("# New")
 
-        # Principles (required)
-        (content_dir / "principles").mkdir(parents=True)
-        (content_dir / "principles" / "U_TEST.md").write_text("# U Test")
-
         # Agents (required)
         (content_dir / "agents").mkdir(parents=True)
         (content_dir / "agents" / "cco-agent-test.md").write_text("# Agent")
-
-        # Skills (required)
-        (content_dir / "skills").mkdir(parents=True)
-        (content_dir / "skills" / "cco-skill-test.md").write_text("# Skill")
 
         # Templates (required by setup_global_knowledge_templates)
         templates_dir = tmp_path.parent / "templates"
@@ -1183,18 +717,8 @@ class TestKnowledgeSetupIntegration:
             ),
             patch.object(
                 knowledge_setup.config,
-                "get_principles_dir",
-                return_value=claude_dir / "principles",
-            ),
-            patch.object(
-                knowledge_setup.config,
                 "get_agents_dir",
                 return_value=claude_dir / "agents",
-            ),
-            patch.object(
-                knowledge_setup.config,
-                "get_skills_dir",
-                return_value=claude_dir / "skills",
             ),
             patch.object(
                 knowledge_setup,

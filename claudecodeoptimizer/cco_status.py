@@ -19,10 +19,6 @@ def count_components(claude_dir: Path) -> dict[str, int]:
     """
     counts = {
         "commands": 0,
-        "principles": 0,
-        "principles_c": 0,
-        "principles_u": 0,
-        "skills": 0,
         "agents": 0,
     }
 
@@ -34,28 +30,10 @@ def count_components(claude_dir: Path) -> dict[str, int]:
     if commands_dir.exists():
         counts["commands"] = sum(1 for _ in commands_dir.glob("cco-*.md"))
 
-    # Count principles - single pass instead of 4 iterations over list
-    principles_dir = claude_dir / "principles"
-    if principles_dir.exists():
-        for p in principles_dir.glob("*.md"):
-            if p.name == "PRINCIPLES.md":
-                continue
-            counts["principles"] += 1
-            # Check prefix in single pass (O(n) vs O(4n))
-            if p.name.startswith("cco-principle-c-"):
-                counts["principles_c"] += 1
-            elif p.name.startswith("cco-principle-u-"):
-                counts["principles_u"] += 1
-
-    # Count skills
-    skills_dir = claude_dir / "skills"
-    if skills_dir.exists():
-        counts["skills"] = sum(1 for _ in skills_dir.glob("cco-skill-*.md"))
-
     # Count agents
     agents_dir = claude_dir / "agents"
     if agents_dir.exists():
-        counts["agents"] = sum(1 for _ in agents_dir.glob("cco-agent-*.md"))
+        counts["agents"] = sum(1 for _ in agents_dir.glob("cco-*.md"))
 
     return counts
 
@@ -97,14 +75,14 @@ def get_version_info() -> dict[str, str]:
 
 
 def check_claude_md(claude_dir: Path) -> bool:
-    """Check if CLAUDE.md has CCO principle markers."""
+    """Check if CLAUDE.md has CCO Rules markers."""
     claude_md = claude_dir / "CLAUDE.md"
     if not claude_md.exists():
         return False
 
     try:
         content = claude_md.read_text(encoding="utf-8")
-        return "CCO_PRINCIPLES_START" in content and "CCO_PRINCIPLES_END" in content
+        return "CCO_RULES_START" in content and "CCO_RULES_END" in content
     except Exception:
         return False
 
@@ -120,17 +98,6 @@ def _print_components_section(counts: dict[str, int]) -> None:
         print("- Productivity: optimize, commit")
     else:
         print("  [ERROR] No commands found - run cco-setup")
-    print()
-    print(f"**Principles ({counts['principles']}):**")
-    print(f"- {counts['principles_c']} Claude Guidelines (cco-principle-c-*) - Always active")
-    print(f"- {counts['principles_u']} Universal (cco-principle-u-*) - Always active")
-    print()
-    print(f"**Skills ({counts['skills']} - Auto-Activate on Demand):**")
-    if counts["skills"] > 0:
-        print("  Available: security, testing, database, CI/CD, performance, and more")
-        print("  Skills auto-activate via Claude's semantic matching")
-    else:
-        print("  [WARNING] No skills found")
     print()
     print(f"**Agents ({counts['agents']} - Parallel Execution):**")
     if counts["agents"] > 0:
@@ -154,14 +121,12 @@ def _print_architecture_section(
     print("- Updates: One command updates all projects")
     print()
     print("**Progressive Loading:**")
-    print(
-        f"- Always loaded: Baseline principles ({counts['principles_c']} cco-principle-c-* + {counts['principles_u']} cco-principle-u-*)"
-    )
-    print(f"- Auto-activated: {counts['skills']} skills via semantic matching")
+    print("- Always loaded: CCO Rules (inline in CLAUDE.md, ~350 tokens)")
+    print(f"- On demand: {counts['commands']} commands, {counts['agents']} agents")
     print()
     print("**CLAUDE.md Integration:**")
     if has_claude_md:
-        print(f"  [OK] {claude_dir}/CLAUDE.md configured with CCO principles")
+        print(f"  [OK] {claude_dir}/CLAUDE.md configured with CCO Rules")
     else:
         print(f"  [WARNING] {claude_dir}/CLAUDE.md not configured")
 
@@ -205,7 +170,7 @@ def print_status() -> int:
     health = "Good"
     exit_code = 0
 
-    if counts["commands"] == 0 or counts["principles"] == 0:
+    if counts["commands"] == 0:
         health = "Incomplete installation"
         exit_code = 2
 

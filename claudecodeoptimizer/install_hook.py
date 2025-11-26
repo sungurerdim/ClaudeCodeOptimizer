@@ -17,7 +17,7 @@ def _show_installation_summary(
     Show detailed before/after comparison of installed files.
 
     Categories (consistent order):
-    - Agents → Commands → Skills → Principles
+    - Agents → Commands → Skills → Templates
 
     States:
     - New: Files added (0 → N)
@@ -30,7 +30,7 @@ def _show_installation_summary(
         was_already_installed: Whether CCO was already installed (shows "Re-installed" instead of "Updated")
     """
     # Use consistent category ordering
-    category_order = ["agents", "commands", "skills", "principles", "templates"]
+    category_order = ["agents", "commands", "skills", "standards", "templates"]
     all_categories = sorted(
         set(counts_before.keys()) | set(counts_after.keys()),
         key=lambda x: category_order.index(x) if x in category_order else 999,

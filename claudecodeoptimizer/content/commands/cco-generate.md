@@ -81,23 +81,8 @@ parameters:
 
 **Create missing project components with skill-guided generation.**
 
-**Implementation Note:** This command follows [cco-standards.md](../cco-standards.md) for file discovery (exclusions applied BEFORE processing), token optimization (three-stage discovery), parallelization (Task calls in single message), and cross-platform compatibility. See cco-audit.md for reference implementation.
 ---
 
-## Built-in References
-
-**This command inherits standard behaviors from:**
-
-- **[cco-standards.md](../cco-standards.md)** - Standard structure, execution protocol, file discovery
-- **[cco-standards.md](../cco-standards.md)** - UX/DX, efficiency, simplicity, performance standards
-- **[cco-patterns.md](../cco-patterns.md)** - Reusable patterns (Step 0, Selection, Accounting, Progress, Error Handling)
-- **[cco-standards.md](../cco-standards.md)** - File discovery, model selection, parallel execution
-- **model selection** - Haiku for mechanical tasks, let Claude Code decide for complex tasks
-- **[cco-tech-detection.md](../cco-tech-detection.md)** - Fast tech detection (<2s), applicability filtering, pre-filtering UI
-
-**See these files for detailed patterns. Only command-specific content is documented below.**
-
----
 
 ## Purpose
 
@@ -114,7 +99,6 @@ Generate missing tests, documentation, CI/CD configs, and other project componen
 
 **Why**: Eliminates duplicate work - previous command already analyzed.
 
-See **C_COMMAND_CONTEXT_PASSING** principle.
 
 ---
 
@@ -127,10 +111,9 @@ No scope reduction due to time constraints or "workload concerns".
 
 ---
 
-## Design Principles
+## Design Standards
 
-**See:** cco-standards.md
-- UX/DX principles (transparency, progressive disclosure, zero surprises)
+- UX/DX standards (transparency, progressive disclosure, zero surprises)
 - Honesty & accurate reporting (no false positives/negatives)
 - No hardcoded examples (use placeholders: `{FILE_PATH}`, `{LINE_NUMBER}`)
 
@@ -388,7 +371,6 @@ Files to create: ~{Y} files
 
 ### Step 3: Generate Components
 
-**See [cco-standards.md](../cco-standards.md) for agent delegation patterns.**
 
 **Command-Specific Details:**
 
@@ -458,7 +440,7 @@ Task({
   Follow:
   - {MATCHED_TESTING_SKILL} (test pyramid: unit >> integration >> e2e)
   - {MATCHED_TESTING_SKILL} (coverage targets)
-  - cco-principle-u-no-overengineering (keep it simple)
+  - CCO Rules: No over-engineering (keep it simple)
 
   Report:
   - Files created with line counts
@@ -472,7 +454,6 @@ Task({
 
 ### Step 4: Results Report
 
-**See [cco-patterns.md](../cco-patterns.md#pattern-8-results-generation) for standard results pattern.**
 
 **Command-Specific Details:**
 
@@ -518,7 +499,6 @@ Next Steps:
 
 ## Agent Usage
 
-**See [cco-standards.md](../cco-standards.md) for:**
 - Parallel execution patterns (fan-out, pipeline, hierarchical)
 - Model selection (Haiku for mechanical, auto for complex)
 - Error handling protocols

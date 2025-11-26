@@ -39,7 +39,7 @@ cp claudecodeoptimizer/content/templates/_template-command.md \
 - Domain knowledge and best practices
 - Pattern detection rules
 - Fix/generation guidelines
-- Integration with principles
+- Integration with CCO Rules
 
 **Usage**:
 ```bash
@@ -87,9 +87,9 @@ Used within other templates for frontmatter sections.
 
 ---
 
-## Template Design Principles
+## Template Design Standards
 
-All templates follow CCO Component Design Principles:
+All templates follow CCO Component Design Standards:
 
 1. **No Hardcoded Examples** - Use `{PLACEHOLDERS}` instead
 2. **Native Tool Interactions** - Use `AskUserQuestion` for all user input
@@ -99,7 +99,7 @@ All templates follow CCO Component Design Principles:
 6. **Progress Transparency** - Show "Phase X/Y (Z%)" for long operations
 7. **Command Prompt Support** - Accept optional context: `/cco-command --flag "context"`
 
-See `README.md` in parent directory for full principles documentation.
+See `README.md` in parent directory for full CCO Rules documentation.
 
 ---
 
@@ -132,7 +132,7 @@ Run checks:
 # Check for hardcoded examples
 python .tmp/scan_hardcoded_examples.py
 
-# Verify principles adherence
+# Verify standards adherence
 grep -n "AskUserQuestion" [your-file].md
 grep -n "TodoWrite" [your-file].md
 ```
@@ -149,7 +149,7 @@ grep -n "TodoWrite" [your-file].md
 
 When updating templates:
 1. Update this README if adding new templates
-2. Ensure all templates follow latest principles
+2. Ensure all templates follow latest standards
 3. Test template by creating actual component from it
 4. Update TODO.md if template changes affect pending tasks
 5. Document any breaking changes in template structure

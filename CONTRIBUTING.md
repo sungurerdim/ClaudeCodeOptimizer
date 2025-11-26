@@ -72,16 +72,15 @@ pytest -n auto
 - **Minimum Coverage**: 80% overall (current: 84%)
 - **Critical Modules**: 90%+ coverage required
   - `core/knowledge_setup.py`
-  - `core/principle_loader.py`
-  - `core/remove.py`
-  - `schemas/commands.py`
-  - `schemas/preferences.py`
+  - `cco_remove.py`
+  - `cco_status.py`
+  - `config.py`
 
 ### Writing Tests
 
 - Use `pytest` framework
 - Follow naming convention: `test_*.py`
-- Use descriptive test names: `test_filter_principles_by_category`
+- Use descriptive test names: `test_creates_claude_md_with_rules`
 - Include docstrings for complex test scenarios
 - Use fixtures for shared test data
 
@@ -164,24 +163,14 @@ Update files
 
 ## Development Principles
 
-This project follows strict development principles documented in `~/.claude/principles/`:
+This project follows CCO Rules documented in `~/.claude/CLAUDE.md`:
 
-### Universal Principles (cco-principle-u-*)
-
-- **cco-principle-u-dry**: Single source of truth, no duplication
-- **cco-principle-u-minimal-touch**: Change only what's necessary
-- **cco-principle-u-evidence-based-analysis**: Verify changes with concrete evidence
-- **cco-principle-u-change-verification**: Verify all changes before claiming completion
-- **cco-principle-u-follow-patterns**: Follow existing code patterns
-- **cco-principle-u-no-overengineering**: Keep solutions simple
-
-### Claude-Specific Principles (cco-principle-c-*)
-
-- **cco-principle-c-context-window-mgmt**: Optimize context window usage
-- **cco-principle-c-efficient-file-operations**: Grep-first, targeted reads
-- **cco-principle-c-native-tool-interactions**: Use native Claude Code tools
-- **cco-principle-c-no-unsolicited-file-creation**: No unnecessary file creation
-- **cco-principle-c-project-context-discovery**: Discover project context first
+- **Cross-Platform**: Forward slashes, relative paths, Git Bash commands
+- **Reference Integrity**: Find ALL refs before delete/rename/move/modify
+- **Verification**: Accounting formula: total = completed + skipped + failed + cannot-do
+- **File Discovery**: files_with_matches → content with -C → Read offset+limit
+- **Change Safety**: Commit before bulk changes, max 10 files per batch
+- **Scope Control**: Define boundaries, one change = one purpose
 
 ## Local Testing Checklist
 
@@ -203,23 +192,14 @@ ClaudeCodeOptimizer/
 ├── claudecodeoptimizer/     # Main package
 │   ├── core/                # Core functionality
 │   │   ├── knowledge_setup.py      # Setup and deployment
-│   │   ├── principle_loader.py     # Principle loading
-│   │   ├── principles.py           # Principle management
-│   │   ├── remove.py               # Uninstallation
-│   │   ├── version_manager.py      # Version tracking
-│   │   └── utils.py                # Utilities
-│   ├── schemas/             # Data schemas
-│   │   ├── commands.py             # Command metadata
-│   │   └── preferences.py          # User preferences
+│   │   └── ...                     # Other core modules
+│   ├── content/             # Knowledge base (deployed to ~/.claude/)
+│   │   ├── commands/        # Slash commands (cco-*.md)
+│   │   ├── agents/          # Autonomous agents (cco-agent-*.md)
+│   │   └── templates/       # Template files
 │   ├── cco_status.py        # Status command
 │   ├── cco_remove.py        # Remove command
-│   ├── commands_loader.py   # Command loading
 │   └── config.py            # Configuration
-├── content/                 # Knowledge base (deployed to ~/.claude/)
-│   ├── commands/            # Slash commands (cco-*.md)
-│   ├── principles/          # Development principles (U_*, C_*, P_*.md)
-│   ├── skills/              # Reusable skills (cco-skill-*.md)
-│   └── agents/              # Autonomous agents (cco-agent-*.md)
 └── tests/                   # Test suite
     ├── unit/                # Unit tests
     └── integration/         # Integration tests
@@ -227,59 +207,25 @@ ClaudeCodeOptimizer/
 
 ## CLAUDE.md Generation
 
-CLAUDE.md is generated using a **marker-based system** that preserves all user content:
+CLAUDE.md uses a **marker-based system** for CCO Rules:
 
 ### Marker Structure
 
-All CCO-managed content is within HTML comment markers:
+CCO Rules content is within HTML comment markers:
 ```markdown
-<!-- CCO_HEADER_START -->
-# Claude Code Development Guide
-**Project:** YourProject | **Team:** Solo Developer
-<!-- CCO_HEADER_END -->
-
-<!-- CCO_PRINCIPLES_START -->
-## Development Principles
+<!-- CCO_RULES_START -->
+# CCO Rules
 ...
-<!-- CCO_PRINCIPLES_END -->
+<!-- CCO_RULES_END -->
 ```
-
-**Available Markers:**
-- `CCO_HEADER`: Project metadata and title
-- `CCO_PRINCIPLES`: Universal, project-specific, and Claude guidelines
-- `CCO_SKILLS`: Selected skills
-- `CCO_AGENTS`: Selected agents
-- `CCO_COMMANDS`: Available slash commands
-- `CCO_GUIDES`: Available guides
-- `CCO_CLAUDE`: Claude-specific guidelines
 
 ### Generator Rules
 
 1. **Original Content Preservation**: Content outside markers is NEVER modified
-2. **Title Reading**: Titles are read from frontmatter (not hardcoded)
-   - Principles: `title:` field
-   - Skills: `metadata.name:` field
-   - Agents: `name:` field
-   - Commands: `title:` field
-   - Guides: First `# Header` in markdown
-3. **Empty Line Normalization**: Multiple consecutive empty lines → single empty line
-4. **Update Strategy**:
-   - New file: Create with all markers
+2. **Empty Line Normalization**: Multiple consecutive empty lines → single empty line
+3. **Update Strategy**:
+   - New file: Create with CCO Rules markers
    - Existing file: Update marker content only
-
-### Testing CLAUDE.md Changes
-
-When modifying `claude_md_generator.py`:
-```bash
-# Test generation
-python -c "from pathlib import Path; from claudecodeoptimizer.core.claude_md_generator import ClaudeMdGenerator; ..."
-
-# Verify markers
-grep -n "CCO_.*_START\|CCO_.*_END" CLAUDE.md
-
-# Check for multiple empty lines
-python -c "print(Path('CLAUDE.md').read_text().count('\\n\\n\\n'))"  # Should be 0
-```
 
 ## Getting Help
 

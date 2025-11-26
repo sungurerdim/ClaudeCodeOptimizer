@@ -37,10 +37,8 @@ python -m claudecodeoptimizer.install_hook
 **Expected Result:**
 - `~/.claude/` directory created
 - `~/.claude/commands/` directory created with cco-* commands
-- `~/.claude/principles/` directory created with principle files
-- `~/.claude/skills/` directory created with skill files
 - `~/.claude/agents/` directory created with agent files
-- `~/.claude/CLAUDE.md` updated with CCO markers
+- `~/.claude/CLAUDE.md` updated with CCO Rules markers
 
 ### Step 3: Verify Installation
 
@@ -57,10 +55,8 @@ Installation: ✓ Healthy
 Version: {VERSION}
 
 Components:
-- Commands: 11 available
-- Principles: 14 available
-- Skills: 5 available
-- Agents: 2 available
+- Commands: 7 available
+- Agents: 4 available
 
 Configuration:
 - Global config: ~/.claude/CLAUDE.md
@@ -77,7 +73,7 @@ In Claude Code conversation:
 
 **Expected Result:** Help screen showing all CCO commands
 
-### Step 5: Verify Principles Loaded
+### Step 5: Verify CCO Rules Loaded
 
 Check `~/.claude/CLAUDE.md`:
 
@@ -85,29 +81,14 @@ Check `~/.claude/CLAUDE.md`:
 cat ~/.claude/CLAUDE.md
 ```
 
-**Expected Content:** Should contain CCO marker sections:
+**Expected Content:** Should contain CCO Rules marker section:
 ```markdown
-<!-- CCO_PRINCIPLES_START -->
-@principles/cco-principle-u-CHANGE_VERIFICATION.md
-@principles/cco-principle-u-CROSS_PLATFORM_COMPATIBILITY.md
-@principles/cco-principle-u-DRY.md
-@principles/cco-principle-u-EVIDENCE_BASED_ANALYSIS.md
-@principles/cco-principle-u-FOLLOW_PATTERNS.md
-@principles/cco-principle-u-MINIMAL_TOUCH.md
-@principles/cco-principle-u-NO_HARDCODED_EXAMPLES.md
-@principles/cco-principle-u-NO_OVERENGINEERING.md
-@principles/cco-principle-c-CONTEXT_WINDOW_MGMT.md
-@principles/cco-principle-c-EFFICIENT_FILE_OPERATIONS.md
-@principles/cco-principle-c-NATIVE_TOOL_INTERACTIONS.md
-@principles/cco-principle-c-NO_UNSOLICITED_FILE_CREATION.md
-@principles/cco-principle-c-PROJECT_CONTEXT_DISCOVERY.md
-<!-- CCO_PRINCIPLES_END -->
+<!-- CCO_RULES_START -->
+# CCO Rules
 
-<!-- CCO_COMMANDS_START -->
-cco-audit
-cco-fix
+## Cross-Platform
 ...
-<!-- CCO_COMMANDS_END -->
+<!-- CCO_RULES_END -->
 ```
 
 ## Verification
@@ -116,10 +97,9 @@ cco-fix
 
 - [ ] Package installed: `pip list | grep claudecodeoptimizer`
 - [ ] Directory structure exists: `ls ~/.claude/`
-- [ ] Commands directory populated: `ls ~/.claude/commands/ | wc -l` (should be 11)
-- [ ] Principles directory populated: `ls ~/.claude/principles/ | wc -l` (should be 14)
-- [ ] Skills directory populated: `ls ~/.claude/skills/ | wc -l` (should be 5)
-- [ ] CLAUDE.md has markers: `grep "CCO_PRINCIPLES_START" ~/.claude/CLAUDE.md`
+- [ ] Commands directory populated: `ls ~/.claude/commands/ | wc -l` (should be 7)
+- [ ] Agents directory populated: `ls ~/.claude/agents/ | wc -l` (should be 4)
+- [ ] CLAUDE.md has markers: `grep "CCO_RULES_START" ~/.claude/CLAUDE.md`
 - [ ] `/cco-status` works in Claude Code
 - [ ] `/cco-help` shows command list
 
@@ -129,15 +109,12 @@ cco-fix
 # Check all directories exist
 test -d ~/.claude && \
 test -d ~/.claude/commands && \
-test -d ~/.claude/principles && \
-test -d ~/.claude/skills && \
 test -d ~/.claude/agents && \
 echo "✓ All directories present" || echo "✗ Missing directories"
 
 # Check file counts
-echo "Commands: $(ls ~/.claude/commands/ | wc -l)"
-echo "Principles: $(ls ~/.claude/principles/ | wc -l)"
-echo "Skills: $(ls ~/.claude/skills/ | wc -l)"
+echo "Commands: $(ls ~/.claude/commands/cco-*.md 2>/dev/null | wc -l)"
+echo "Agents: $(ls ~/.claude/agents/cco-*.md 2>/dev/null | wc -l)"
 ```
 
 ## Rollback
@@ -148,14 +125,13 @@ If installation fails or you want to start fresh:
 # Uninstall package
 pip uninstall claudecodeoptimizer -y
 
-# Remove directories
-rm -rf ~/.claude/commands/cco-*
-rm -rf ~/.claude/principles/
-rm -rf ~/.claude/skills/
-rm -rf ~/.claude/agents/
+# Remove CCO files (preserves user files)
+rm -f ~/.claude/commands/cco-*.md
+rm -f ~/.claude/agents/cco-*.md
+rm -f ~/.claude/*.cco
 
 # Remove markers from CLAUDE.md (manual edit required)
-# Open ~/.claude/CLAUDE.md and delete sections between CCO_* markers
+# Open ~/.claude/CLAUDE.md and delete sections between CCO_RULES_* markers
 ```
 
 ## Troubleshooting
@@ -202,7 +178,7 @@ pip install claudecodeoptimizer --index-url https://pypi.org/simple
 
 **Symptoms:**
 - `/cco-help` doesn't work
-- Principles not loading
+- CCO Rules not loading
 - Commands not available
 
 **Solution:**
@@ -210,17 +186,8 @@ pip install claudecodeoptimizer --index-url https://pypi.org/simple
 # Manually add markers to ~/.claude/CLAUDE.md
 cat >> ~/.claude/CLAUDE.md << 'EOF'
 
-<!-- CCO_PRINCIPLES_START -->
-<!-- CCO_PRINCIPLES_END -->
-
-<!-- CCO_COMMANDS_START -->
-<!-- CCO_COMMANDS_END -->
-
-<!-- CCO_SKILLS_START -->
-<!-- CCO_SKILLS_END -->
-
-<!-- CCO_AGENTS_START -->
-<!-- CCO_AGENTS_END -->
+<!-- CCO_RULES_START -->
+<!-- CCO_RULES_END -->
 EOF
 
 # Re-run install hook
@@ -253,8 +220,7 @@ After successful installation:
 
 1. **Explore Commands**: Run `/cco-help` in Claude Code
 2. **Run Audit**: Try `/cco-audit` on a project
-3. **Customize Principles**: Edit `~/.claude/CLAUDE.md` to enable/disable principles
-4. **Read Documentation**: Check [ADRs](../ADR/README.md) for architectural decisions
+3. **Read Documentation**: Check [ADRs](../ADR/README.md) for architectural decisions
 
 ## References
 

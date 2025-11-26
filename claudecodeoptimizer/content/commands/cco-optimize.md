@@ -1,40 +1,35 @@
 ---
-name: cco-optimize-context-usage
-description: Context optimization and duplication elimination (primary). Optional token reduction for other files.
+name: cco-optimize
+description: Comprehensive optimization - context deduplication, code quality, performance, and cross-source duplication detection (CLAUDE.md + system prompt awareness)
 
 parameters:
+  context:
+    keywords: [slim context, optimize rules, compress claude.md, system prompt, deduplication]
+    category: context
+  code-quality:
+    keywords: [refactor, complexity, dead code, unused imports, code smell, lint]
+    category: quality
+  performance:
+    keywords: [optimize performance, slow code, n+1, caching, profiling, bottleneck]
+    category: performance
   markdown:
     keywords: [slim markdown, optimize docs, compress documentation, reduce tokens]
     category: documentation
-  code:
-    keywords: [slim code, optimize source, reduce comments, dead code]
-    category: code
   claude-tools:
     keywords: [slim skills, optimize agents, compress commands, reduce tool tokens]
     category: tooling
-  active-context:
-    keywords: [slim principles, optimize context, compress claude.md]
-    category: context
+  all:
+    keywords: [full optimization, comprehensive, everything]
+    category: all
 ---
 
-# CCO Slim: Ultimate Context Optimization
+# CCO Optimize: Comprehensive Codebase Optimization
 
-**Primary: Context optimization (CLAUDE.md duplication elimination). Secondary: Token reduction for other content.**
+**Three pillars: Context Optimization | Code Quality | Performance**
+
+**NEW: Cross-source duplication detection (CLAUDE.md + system prompt awareness)**
 ---
 
-## Built-in References
-
-**This command inherits standard behaviors from:**
-
-- **[cco-standards.md](../cco-standards.md)** - Standard structure, execution protocol, file discovery
-- **[cco-standards.md](../cco-standards.md)** - UX/DX, efficiency, simplicity, performance standards
-- **[cco-patterns.md](../cco-patterns.md)** - Reusable patterns (Step 0, Selection, Accounting, Progress, Error Handling)
-- **[cco-standards.md](../cco-standards.md)** - File discovery, model selection, parallel execution
-- **model selection** - Haiku for mechanical tasks, let Claude Code decide for complex tasks
-
-**See these files for detailed patterns. Only command-specific content is documented below.**
-
----
 
 ## Execution Guarantee
 
@@ -76,7 +71,6 @@ parameters:
 
 ## Design Principles
 
-**See:** cco-standards.md
 
 **Slim-Specific:**
 1. **Context First** - CLAUDE.md duplication elimination (primary mission)
@@ -86,10 +80,63 @@ parameters:
 
 ## Mission Statement
 
-**PRIMARY: Minimize context usage while maximizing quality.**
+**COMPREHENSIVE OPTIMIZATION across three pillars:**
+
+### Pillar 1: Context Optimization (--context)
 - Eliminate CLAUDE.md duplication (skills/agents/commands loading same files)
+- **NEW: Cross-source duplication detection** - Detect content in CLAUDE.md that duplicates system prompt
 - Detect incomplete content (stubs, TODOs, missing implementations)
 - Token reduction without quality loss
+
+### Pillar 2: Code Quality Optimization (--code-quality)
+- Dead code detection and removal (unused imports, unreachable code)
+- Complexity reduction (functions >10 cyclomatic complexity)
+- Code smell detection (long methods, god classes, feature envy)
+- Lint/format violations
+
+### Pillar 3: Performance Optimization (--performance)
+- N+1 query detection
+- Missing index suggestions
+- Caching opportunities
+- Slow algorithm detection
+- Resource leak identification
+
+### Cross-Source Duplication Detection (--context mode)
+
+**System Prompt Awareness:**
+
+Claude Code's system prompt already includes guidance for:
+- Git commit/PR workflow
+- Tool usage policies
+- File operations best practices
+- Security testing guidelines
+- Task management
+
+**CLAUDE.md content that duplicates these is REDUNDANT.**
+
+Detection algorithm:
+```python
+SYSTEM_PROMPT_TOPICS = [
+    "git commit", "pull request", "PR creation",
+    "tool usage", "bash commands", "file operations",
+    "security testing", "task management", "todo tracking",
+    "code review", "professional objectivity"
+]
+
+def detect_system_prompt_duplication(claude_md_content: str) -> List[dict]:
+    """Find CLAUDE.md content that duplicates system prompt."""
+    duplications = []
+
+    for topic in SYSTEM_PROMPT_TOPICS:
+        if topic.lower() in claude_md_content.lower():
+            duplications.append({
+                "topic": topic,
+                "recommendation": f"Content about '{topic}' may duplicate system prompt",
+                "action": "Review and remove if redundant"
+            })
+
+    return duplications
+```
 
 
 ---
@@ -153,19 +200,24 @@ parameters:
 
 **Pattern:** Pattern 2 (Multi-Select with "All")
 
-**Slim-Specific Categories:**
-- **All** (Ultimate Context Optimization): Everything - markdown, code, tools, docs
-- **Markdown Docs**: All .md files anywhere in project
-- **Code Files**: All source (.py, .js, .ts, etc.)
-- **Tools & Architecture** (HIGH IMPACT): Skills, agents, commands, principles
-- **Active Context** (PRIMARY): CLAUDE.md duplication elimination, principle optimization
-- **Custom Files/Folders**: Glob patterns (e.g., `src/**/*.tsx, -src/generated/**`)
+**Optimization Categories:**
+
+| Category | Flag | Description | Impact |
+|----------|------|-------------|--------|
+| **Context** | `--context` | CLAUDE.md deduplication, system prompt awareness, token reduction | HIGH |
+| **Code Quality** | `--code-quality` | Dead code, complexity, code smells, lint violations | MEDIUM |
+| **Performance** | `--performance` | N+1 queries, missing indexes, caching, slow algorithms | HIGH |
+| **Markdown** | `--markdown` | Documentation token reduction, verbosity elimination | LOW |
+| **Claude Tools** | `--claude-tools` | Skills, agents, commands optimization | MEDIUM |
+| **All** | `--all` | Comprehensive optimization across all categories | FULL |
+
+**System Prompt Duplication Warning:**
+When `--context` selected, command will analyze CLAUDE.md against known system prompt topics and flag potential duplications.
 
 ---
 
 ## Component 2.5: Project Scope Detection
 
-**See:** cco-standards.md & cco-patterns.md
 
 **Slim-Specific Scope:**
 1. **Detect Project Root**: Git root or cwd
@@ -178,7 +230,6 @@ parameters:
 
 ## Component 3: Discovery Phase
 
-**See [cco-standards.md](../cco-standards.md#file-discovery--exclusion) for file discovery and [cco-patterns.md](../cco-patterns.md#pattern-7-file-discovery-with-exclusion) for exclusion pattern.**
 
 **Slim-Specific Discovery:**
 1. **File Exclusion**: Apply FIRST (build artifacts, dependencies, lock files)
@@ -190,7 +241,6 @@ parameters:
 
 ## Component 4: Analysis Phase
 
-**See:** cco-standards.md & cco-patterns.md
 
 **Slim-Specific Analysis:**
 - **Model Selection**: Conservative→Haiku | Balanced/Aggressive→Sonnet
@@ -292,7 +342,6 @@ By Risk:
 
 ## Component 4.5: Agent Optimization Strategy
 
-**See [cco-standards.md](../cco-standards.md#model-selection-guidelines) for model selection and [cco-patterns.md](../cco-patterns.md#pattern-6-agent-task-execution-with-verification) for agent execution patterns.**
 
 **Slim-Specific Strategy:**
 - **Parallel Processing**: Group files by category (markdown/code/tools), analyze all groups simultaneously
@@ -304,7 +353,6 @@ By Risk:
 
 ## Component 5: Pre-Flight Summary
 
-**See [cco-patterns.md](../cco-patterns.md#pattern-8-dynamic-results-generation) for pre-flight summary pattern.**
 
 **Slim-Specific Display:**
 - **What Changes**: Files count, optimizations count, token reduction (by category, by type with risk levels)
@@ -332,7 +380,6 @@ By Risk:
 
 ## Component 7: Final Report
 
-**See [cco-patterns.md](../cco-patterns.md#pattern-8-dynamic-results-generation) for final report pattern.**
 
 **Slim-Specific Report:**
 - **Results**: Files modified, token reduction (before/after/saved)
@@ -344,7 +391,6 @@ By Risk:
 
 ## Agent Integration
 
-**See [cco-standards.md](../cco-standards.md) for agent delegation patterns and [cco-patterns.md](../cco-patterns.md#pattern-6-agent-task-execution-with-verification) for execution with error handling.**
 
 **Slim-Specific Agent Strategy:**
 - **Threshold**: Always use agent (no threshold) for consistent behavior
@@ -359,36 +405,43 @@ By Risk:
 
 ### Interactive (Default)
 ```bash
-/cco-optimize-context-usage
+/cco-optimize
 ```
 
 ### Parametrized (Power Users)
 
 **Mode selection:**
 ```bash
-/cco-optimize-context-usage --conservative  # Default
-/cco-optimize-context-usage --balanced
-/cco-optimize-context-usage --aggressive
+/cco-optimize --conservative  # Default - 100% safe
+/cco-optimize --balanced      # Safe + verified low-risk
+/cco-optimize --aggressive    # All techniques, manual review
 ```
 
 **Category selection:**
 ```bash
-/cco-optimize-context-usage --markdown
-/cco-optimize-context-usage --code
-/cco-optimize-context-usage --claude-tools
-/cco-optimize-context-usage --active-context
-/cco-optimize-context-usage --all
+/cco-optimize --context       # Context + system prompt awareness
+/cco-optimize --code-quality  # Dead code, complexity, smells
+/cco-optimize --performance   # N+1, indexes, caching
+/cco-optimize --markdown      # Documentation optimization
+/cco-optimize --claude-tools  # Skills, agents, commands
+/cco-optimize --all           # Everything
 ```
 
-**Combined:**
+**Combined examples:**
 ```bash
-/cco-optimize-context-usage --balanced --claude-tools
-/cco-optimize-context-usage --conservative --all
+/cco-optimize --balanced --context --code-quality
+/cco-optimize --conservative --all
+/cco-optimize --aggressive --performance "Focus on database queries"
 ```
 
 **Dry run (preview only):**
 ```bash
-/cco-optimize-context-usage --dry-run
+/cco-optimize --dry-run --all
+```
+
+**System prompt duplication check only:**
+```bash
+/cco-optimize --context --dry-run "Check CLAUDE.md for system prompt duplications"
 ```
 
 ---
@@ -444,9 +497,9 @@ Slim analysis found {COUNT} files with missing/stub content:
 
 ```markdown
 CONTEXT FOR /cco-generate:
-Slim analysis found 15-20 stub principle files containing only TODO markers without actual content. Affected files: principles/U_CHANGE_VERIFICATION.md, U_EVIDENCE_BASED_ANALYSIS.md, U_FOLLOW_PATTERNS.md, +12 others in ~/.claude/principles/. These need comprehensive implementation following existing principle patterns (1847 tokens, complete structure with examples, rules, checklists).
+Slim analysis found 8-10 incomplete skill files containing only TODO markers without actual content. Affected files: skills/cco-skill-security.md, cco-skill-testing.md, cco-skill-database.md, +5 others in ~/.claude/skills/. These need comprehensive implementation following existing skill patterns (structure with examples, checklists).
 
-SlashCommand({command: "/cco-generate principles"})
+SlashCommand({command: "/cco-generate skills"})
 ```
 
 **Why This Matters:**

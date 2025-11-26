@@ -83,7 +83,7 @@ CCO includes 4 specialized agents optimized for different task types:
 **Capabilities:**
 - CLAUDE.md duplication elimination
 - Incomplete content detection (stubs, TODOs)
-- Internal content optimization (principles, skills, commands)
+- Internal content optimization (skills, commands, agents)
 - Token reduction with quality preservation
 
 **When to use:** Optimizing context usage, reducing tokens
