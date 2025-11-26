@@ -1,8 +1,4 @@
-"""Unit tests for __main__.py module
-
-Tests the module entry point and version display.
-Target Coverage: 100%
-"""
+"""Unit tests for __main__.py module."""
 
 import sys
 from unittest.mock import patch
@@ -13,66 +9,43 @@ from claudecodeoptimizer.__main__ import main
 
 
 class TestMain:
-    """Test main function"""
+    """Test main function."""
 
-    @patch("builtins.print")
-    def test_main_version_flag_long(self, mock_print):
-        """Test main with --version flag"""
-        with patch.object(sys, "argv", ["claudecodeoptimizer", "--version"]):
+    def test_version_flag_long(self, capsys):
+        """Test --version flag."""
+        with patch.object(sys, "argv", ["cco", "--version"]):
             main()
 
-        printed_text = " ".join(
-            [str(call.args[0]) for call in mock_print.call_args_list if call.args]
-        )
-        assert "ClaudeCodeOptimizer v" in printed_text
-        assert "Architecture: Stateless" in printed_text
+        captured = capsys.readouterr()
+        assert "CCO v" in captured.out
 
-    @patch("builtins.print")
-    def test_main_version_flag_short(self, mock_print):
-        """Test main with -v flag"""
-        with patch.object(sys, "argv", ["claudecodeoptimizer", "-v"]):
+    def test_version_flag_short(self, capsys):
+        """Test -v flag."""
+        with patch.object(sys, "argv", ["cco", "-v"]):
             main()
 
-        printed_text = " ".join(
-            [str(call.args[0]) for call in mock_print.call_args_list if call.args]
-        )
-        assert "ClaudeCodeOptimizer v" in printed_text
+        captured = capsys.readouterr()
+        assert "CCO v" in captured.out
 
-    @patch("builtins.print")
-    def test_main_version_command(self, mock_print):
-        """Test main with version command"""
-        with patch.object(sys, "argv", ["claudecodeoptimizer", "version"]):
+    def test_version_command(self, capsys):
+        """Test version command."""
+        with patch.object(sys, "argv", ["cco", "version"]):
             main()
 
-        printed_text = " ".join(
-            [str(call.args[0]) for call in mock_print.call_args_list if call.args]
-        )
-        assert "ClaudeCodeOptimizer v" in printed_text
+        captured = capsys.readouterr()
+        assert "CCO v" in captured.out
 
-    @patch("builtins.print")
-    def test_main_default_help(self, mock_print):
-        """Test main without arguments shows help"""
-        with patch.object(sys, "argv", ["claudecodeoptimizer"]):
+    def test_default_shows_help(self, capsys):
+        """Test no arguments shows help."""
+        with patch.object(sys, "argv", ["cco"]):
             main()
 
-        printed_text = " ".join(
-            [str(call.args[0]) for call in mock_print.call_args_list if call.args]
-        )
-        assert "ClaudeCodeOptimizer" in printed_text
-        assert "Usage:" in printed_text
-        assert "/cco-help" in printed_text
-
-    @patch("builtins.print")
-    def test_main_unknown_arg(self, mock_print):
-        """Test main with unknown argument shows help"""
-        with patch.object(sys, "argv", ["claudecodeoptimizer", "unknown"]):
-            main()
-
-        printed_text = " ".join(
-            [str(call.args[0]) for call in mock_print.call_args_list if call.args]
-        )
-        # Should show default help for unknown arguments
-        assert "ClaudeCodeOptimizer" in printed_text
+        captured = capsys.readouterr()
+        assert "CCO v" in captured.out
+        assert "cco-setup" in captured.out
+        assert "cco-status" in captured.out
+        assert "cco-remove" in captured.out
+        assert "/cco-help" in captured.out
 
 
 if __name__ == "__main__":

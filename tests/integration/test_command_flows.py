@@ -34,7 +34,7 @@ class TestCCOStatusCommand:
 
         # Create a few sample files
         (commands_dir / "cco-help.md").write_text("# Help command")
-        (agents_dir / "cco-agent-audit.md").write_text("# Audit agent")
+        (agents_dir / "cco-agent-scan.md").write_text("# Scan agent")
 
         # Verify structure exists
         assert commands_dir.exists()

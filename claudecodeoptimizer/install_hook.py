@@ -1,208 +1,136 @@
-"""
-Post-install hook for ClaudeCodeOptimizer
+"""CCO Setup - Install commands, agents, and rules to ~/.claude/"""
 
-Automatically sets up ~/.claude/ structure after pip install.
-"""
-
-import logging
+import re
+import shutil
 import sys
+from pathlib import Path
 
-logger = logging.getLogger(__name__)
+from .config import AGENTS_DIR, CLAUDE_DIR, COMMANDS_DIR
 
 
-def _show_installation_summary(
-    counts_before: dict[str, int], counts_after: dict[str, int], was_already_installed: bool
-) -> None:
-    """
-    Show detailed before/after comparison of installed files.
+def get_content_dir() -> Path:
+    """Get package content directory."""
+    return Path(__file__).parent / "content"
 
-    Categories (consistent order):
-    - Agents → Commands → Skills → Templates
 
-    States:
-    - New: Files added (0 → N)
-    - Re-installed: Files overwritten when already installed (N → N or N → M)
-    - Removed: Files deleted (N → 0)
+def setup_commands() -> int:
+    """Copy cco-*.md commands to ~/.claude/commands/"""
+    src = get_content_dir() / "commands"
+    if not src.exists():
+        return 0
+    COMMANDS_DIR.mkdir(parents=True, exist_ok=True)
+    for old in COMMANDS_DIR.glob("cco-*.md"):
+        old.unlink()
+    count = 0
+    for f in src.glob("cco-*.md"):
+        shutil.copy2(f, COMMANDS_DIR / f.name)
+        count += 1
+    return count
 
-    Args:
-        counts_before: File counts before installation
-        counts_after: File counts after installation
-        was_already_installed: Whether CCO was already installed (shows "Re-installed" instead of "Updated")
-    """
-    # Use consistent category ordering
-    category_order = ["agents", "commands", "skills", "standards", "templates"]
-    all_categories = sorted(
-        set(counts_before.keys()) | set(counts_after.keys()),
-        key=lambda x: category_order.index(x) if x in category_order else 999,
-    )
 
-    new_files = []
-    reinstalled_files = []
-    removed_files = []
+def setup_agents() -> int:
+    """Copy cco-*.md agents to ~/.claude/agents/"""
+    src = get_content_dir() / "agents"
+    if not src.exists():
+        return 0
+    AGENTS_DIR.mkdir(parents=True, exist_ok=True)
+    for old in AGENTS_DIR.glob("cco-*.md"):
+        old.unlink()
+    count = 0
+    for f in src.glob("cco-*.md"):
+        shutil.copy2(f, AGENTS_DIR / f.name)
+        count += 1
+    return count
 
-    for category in all_categories:
-        before = counts_before.get(category, 0)
-        after = counts_after.get(category, 0)
 
-        if before == 0 and after > 0:
-            # New files
-            new_files.append(f"  + {category.capitalize()}: {after} files")
-        elif before > 0 and after > 0:
-            # Re-installed files (when already installed)
-            if after != before:
-                reinstalled_files.append(f"  ↻ {category.capitalize()}: {before} → {after} files")
-            else:
-                reinstalled_files.append(f"  ↻ {category.capitalize()}: {after} files")
-        elif before > 0 and after == 0:
-            # Removed files
-            removed_files.append(f"  - {category.capitalize()}: {before} files removed")
+def setup_templates() -> int:
+    """Copy *.template files as *.cco to ~/.claude/"""
+    src = Path(__file__).parent.parent / "templates"
+    if not src.exists():
+        return 0
+    count = 0
+    for f in src.glob("*.template"):
+        dest = CLAUDE_DIR / f.name.replace(".template", ".cco")
+        shutil.copy2(f, dest)
+        count += 1
+    return count
 
-    # Display results with consistent formatting
-    if new_files:
-        print("\n  New:")
-        for line in new_files:
-            print(line)
 
-    if reinstalled_files:
-        # Show "Re-installed" if was already installed, otherwise "Updated"
-        section_name = "Re-installed" if was_already_installed else "Updated"
-        print(f"\n  {section_name}:")
-        for line in reinstalled_files:
-            print(line)
+def setup_claude_md() -> None:
+    """Add CCO Rules to ~/.claude/CLAUDE.md"""
+    rules = """<!-- CCO_RULES_START -->
+# CCO Rules
 
-    if removed_files:
-        print("\n  Removed:")
-        for line in removed_files:
-            print(line)
+## Paths
+Forward slash (/), relative, quote spaces, Git Bash preferred
 
-    # Total summary with visual separator
-    total_before = sum(counts_before.values())
-    total_after = sum(counts_after.values())
-    print("\n" + "  " + "-" * 56)
-    print(f"  Total: {total_before} → {total_after} files")
+## Reference Integrity
+Before delete/rename/move: find ALL refs → update (def→type→caller→import→test→doc) → verify (grep old=0, new=expected)
+
+## Verification
+- total = done + skip + fail (must match)
+- No "fixed" without Read/diff proof
+- Verify agent outputs
+
+## Safety
+Commit first, test before+after, max 10 files/batch
+<!-- CCO_RULES_END -->
+"""
+    claude_md = CLAUDE_DIR / "CLAUDE.md"
+    CLAUDE_DIR.mkdir(parents=True, exist_ok=True)
+
+    if claude_md.exists():
+        content = claude_md.read_text(encoding="utf-8")
+        content = re.sub(
+            r"<!-- CCO_PRINCIPLES_START -->.*?<!-- CCO_PRINCIPLES_END -->\n?",
+            "",
+            content,
+            flags=re.DOTALL,
+        )
+        if "<!-- CCO_RULES_START -->" in content:
+            content = re.sub(
+                r"<!-- CCO_RULES_START -->.*?<!-- CCO_RULES_END -->\n?",
+                rules,
+                content,
+                flags=re.DOTALL,
+            )
+        else:
+            content = content.rstrip() + "\n\n" + rules
+    else:
+        content = rules
+
+    content = re.sub(r"\n{3,}", "\n\n", content)
+    claude_md.write_text(content, encoding="utf-8")
 
 
 def post_install() -> int:
-    """
-    Post-install hook - sets up ~/.claude/ structure.
-
-    Called automatically after pip install.
-
-    Supports flags:
-    - --help: Show usage
-
-    Returns:
-        Exit code (0 for success)
-    """
-    # Parse command-line arguments
-    show_help = "--help" in sys.argv or "-h" in sys.argv
-
-    if show_help:
-        print("\nUsage: cco-setup [--help]")
-        print()
-        print("Setup CCO global configuration in ~/.claude/")
-        print()
-        print("Options:")
-        print("  --help     Show this help message")
-        print()
+    """CLI entry point for cco-setup."""
+    if "--help" in sys.argv or "-h" in sys.argv:
+        print("Usage: cco-setup")
+        print("Install CCO commands, agents, and rules to ~/.claude/")
         return 0
 
     try:
-        # Import here to avoid circular dependencies
-        from claudecodeoptimizer.core.knowledge_setup import (
-            check_existing_installation,
-            setup_global_knowledge,
-        )
+        print("\nCCO Setup")
+        print("-" * 40)
 
-        print("\n" + "=" * 60)
-        print("ClaudeCodeOptimizer Setup")
-        print("=" * 60)
+        cmds = setup_commands()
+        agents = setup_agents()
+        templates = setup_templates()
+        setup_claude_md()
 
-        # Check if CCO is already installed
-        existing = check_existing_installation()
-
-        if existing:
-            # Interactive mode: Ask user before overwriting
-            print("\n[NOTICE] Found existing CCO installation in ~/.claude/")
-            print("\n  Existing installation:")
-            for category, count in existing.items():
-                print(f"    • {category.capitalize()}: {count} files")
-            print("\n" + "-" * 60)
-            print("  Overwrite existing files?")
-            print("    [y] Yes, overwrite all")
-            print("    [n] No, cancel")
-            print("    [d] Show diff (what will be overwritten)")
-            print("-" * 60)
-            choice = input("\n  Choice [y/n/d]: ").strip().lower()
-
-            if choice == "d":
-                # Show what will be overwritten
-                from claudecodeoptimizer.core.knowledge_setup import (
-                    show_installation_diff,
-                )
-
-                show_installation_diff()
-                print("\n" + "-" * 60)
-                choice = input("  Proceed with overwrite? [y/n]: ").strip().lower()
-                print("-" * 60)
-
-            if choice != "y":
-                print("\n[CANCELLED] Setup cancelled by user")
-                print("=" * 60 + "\n")
-                return 0
-            else:
-                print("\n[OK] Proceeding with setup...")
-
-        # Setup global ~/.claude/ structure
-        result = setup_global_knowledge()
-
-        if result.get("success"):
-            # Show installation actions
-            print("\n" + "-" * 60)
-            print("INSTALLATION COMPLETE")
-            print("-" * 60)
-            print(f"\n  Location: {result['claude_dir']}")
-            print("\n  Actions performed:")
-            for action in result.get("actions", []):
-                print(f"    • {action}")
-
-            # Show before/after comparison
-            counts_before = result.get("counts_before", {})
-            counts_after = result.get("counts_after", {})
-
-            if counts_before or counts_after:
-                print("\n" + "-" * 60)
-                print("FILE SUMMARY")
-                print("-" * 60)
-                _show_installation_summary(counts_before, counts_after, bool(existing))
-
-            print("\n" + "=" * 60)
-            print("CCO IS READY!")
-            print("=" * 60)
-            print("\n  All CCO commands are now available globally.")
-            print("\n  Next steps:")
-            print("    1. Restart Claude Code (if already open)")
-            print("    2. Try: /cco-help or /cco-status")
-        else:
-            logger.warning("Setup completed with warnings")
-            print("\n[WARNING] Setup completed with warnings")
-
-        print("=" * 60 + "\n")
-
-        # Return success for scripting
+        print(f"Location: {CLAUDE_DIR}")
+        print(f"Commands: {cmds}")
+        print(f"Agents: {agents}")
+        print(f"Templates: {templates}")
+        print("Rules: added to CLAUDE.md")
+        print("\nCCO ready! Try: /cco-help")
         return 0
 
     except Exception as e:
-        # Non-fatal: Don't break pip install if setup fails
-        logger.error("CCO setup failed", exc_info=True)
-        print("\n" + "=" * 60)
-        print("[ERROR] Setup failed")
-        print("=" * 60)
-        print(f"\n  Error: {e}")
-        print("\n  You can run setup manually with: cco-setup")
-        print("=" * 60 + "\n")
+        print(f"Setup failed: {e}", file=sys.stderr)
         return 1
 
 
 if __name__ == "__main__":
-    post_install()
+    sys.exit(post_install())
