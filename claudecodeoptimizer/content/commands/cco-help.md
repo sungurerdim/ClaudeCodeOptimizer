@@ -1,60 +1,61 @@
 ---
 name: cco-help
-description: Quick command reference
+description: Command reference
 ---
 
 # /cco-help
 
-**CCO command reference**
-
----
-
 ## Commands
 
-| Command | Purpose | Common Usage |
-|---------|---------|--------------|
-| /cco-audit | Find issues | `--smart`, `--security`, `--all` |
-| /cco-fix | Fix issues | `--security`, `--tech-debt` |
-| /cco-generate | Create files | `--tests`, `--openapi`, `--cicd` |
-| /cco-commit | Smart commits | (interactive) |
-| /cco-optimize | Optimize | `--context`, `--code-quality` |
-| /cco-status | Health check | (no args) |
-| /cco-help | This guide | (no args) |
-
----
+| Command | Purpose |
+|---------|---------|
+| `/cco-audit` | **Quality gates** - standardized checks, prioritized fixes |
+| `/cco-generate` | **Generation** - convention-following, verified |
+| `/cco-health` | **Visibility** - actionable metrics dashboard |
+| `/cco-refactor` | **Risk mitigation** - verified transformations |
+| `/cco-optimize` | **Efficiency** - measurable improvements |
+| `/cco-commit` | **Change management** - atomic, traceable commits |
+| `/cco-config` | **Settings** - statusline, permissions (global/local) |
+| `/cco-status` | Installation check |
 
 ## Quick Start
 
 ```bash
-/cco-audit --smart    # Auto-detect, top checks
-/cco-fix --security   # Fix security issues
-/cco-generate --tests # Create missing tests
-/cco-commit           # Semantic commits
+/cco-audit --smart       # Quality gates → offer fixes
+/cco-health              # Metrics dashboard
+/cco-refactor rename x y # Verified rename
+/cco-commit              # Atomic commits
+/cco-config              # Configure statusline & permissions
 ```
 
----
+## Config Scope
 
-## Workflows
-
-**Security hardening:**
 ```bash
-/cco-audit --security → /cco-fix --security → /cco-commit
+/cco-config --global           # Apply to all projects (~/.claude/)
+/cco-config --local            # This project only (./.claude/)
 ```
 
-**Quality improvement:**
+## Permission Levels
+
 ```bash
-/cco-audit --tech-debt → /cco-fix --tech-debt → /cco-generate --tests
+/cco-config --permissions safe       # Read-only, maximum security
+/cco-config --permissions balanced   # Normal workflow (recommended)
+/cco-config --permissions permissive # Minimal prompts
 ```
 
-**Full health check:**
+## Audit Flags
+
 ```bash
-/cco-audit --all → /cco-fix --all → /cco-generate --all → /cco-commit
+/cco-audit --security        # Security checks
+/cco-audit --tech-debt       # Dead code, complexity
+/cco-audit --self-compliance # Check against project's own rules
+/cco-audit --critical        # security + ai-security + database + tests
+/cco-audit --auto-fix        # Auto-fix safe issues
 ```
 
----
+## Self-Compliance SSOT
 
-## Tips
-
-- Add context: `/cco-audit --security "auth endpoints"`
-- Combine flags: `/cco-audit --security --tests`
-- Meta-flags: `--ai`, `--critical`, `--production-ready`
+When docs↔code mismatch found:
+- **SSOT=docs** - Align code to documentation
+- **SSOT=code** - Align docs to code
+- **SSOT=discuss** - Choose direction
