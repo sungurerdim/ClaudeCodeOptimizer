@@ -196,7 +196,6 @@ ClaudeCodeOptimizer/
 │   ├── content/             # Knowledge base (deployed to ~/.claude/)
 │   │   ├── commands/        # Slash commands (cco-*.md)
 │   │   ├── agents/          # Autonomous agents (cco-agent-*.md)
-│   │   └── templates/       # Template files
 │   ├── cco_status.py        # Status command
 │   ├── cco_remove.py        # Remove command
 │   └── config.py            # Configuration
