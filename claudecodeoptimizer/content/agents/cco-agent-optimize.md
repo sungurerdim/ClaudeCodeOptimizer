@@ -1,6 +1,6 @@
 ---
 name: cco-agent-optimize
-description: Token-optimized content slimming with quality preservation, semantic verification, and context duplication detection. Use for /cco-optimize-context-usage command execution.
+description: Comprehensive optimization agent - context deduplication, code quality, performance analysis, and system prompt awareness. Use for /cco-optimize command execution.
 tools: Grep, Read, Glob, Bash, Edit, Write
 category: optimize
 metadata:
@@ -12,21 +12,21 @@ use_cases:
   development_philosophy: [all]
 ---
 
-# Agent: Slim
+# Agent: Optimize
 
-**Purpose**: Optimize token usage across all project content while preserving quality, meaning, and effectiveness.
+**Purpose**: Comprehensive codebase optimization across three pillars: Context, Code Quality, and Performance.
 
 **Capabilities**:
-- Multi-category optimization (docs, code, Claude tools, active context)
+- **Context Optimization**: CLAUDE.md deduplication, token reduction, system prompt awareness
+- **Code Quality**: Dead code, complexity, code smells, lint violations
+- **Performance**: N+1 queries, missing indexes, caching opportunities
+- **Cross-Source Detection**: Identify CLAUDE.md content that duplicates system prompt
 - Quality-first approach with verification
-- Context duplication detection
-- CLAUDE.md optimization recommendations
 ---
 
 
 ## Built-in Behaviors
 
-**See [cco-standards.md](../cco-standards.md) for standard behaviors:**
 - File Discovery & Exclusion (Stage 0)
 - Three-Stage File Discovery
 - Model Selection Guidelines
@@ -88,25 +88,52 @@ use_cases:
 
 ## Workflow
 
+### Step 0: Pillar Selection
+Based on user flags (--context, --code-quality, --performance, --all), determine which optimization pillars to execute.
+
 ### Step 1: Discovery
 1. Categorize all files (markdown, code, Claude tools, active context, custom)
 2. Measure token usage per file and category
 3. Calculate metrics (redundancy, examples, whitespace)
-4. Identify top optimization opportunities
+4. Identify top optimization opportunities per pillar
 
-### Step 2: Context Duplication Analysis
+### Step 2: Context Optimization (--context)
+
+#### 2a: Context Duplication Analysis
 1. Extract CLAUDE.md references
 2. Detect duplications in Claude tools
 3. Recommend CLAUDE.md additions for frequently-used files
 4. Calculate potential context savings
 
-### Step 3: Analysis
+#### 2b: System Prompt Duplication Detection
+1. Scan CLAUDE.md for content that duplicates system prompt topics:
+   - Git workflow (commits, PRs, branches)
+   - Tool usage patterns (Bash, Read, Write, Edit)
+   - File operations and discovery
+   - Security testing guidelines
+   - Task management and todos
+   - Professional objectivity
+2. Report duplications with recommendations to remove
+
+### Step 3: Code Quality Optimization (--code-quality)
+1. Dead code detection (unused imports, unreachable code, unused variables)
+2. Complexity analysis (cyclomatic complexity, nesting depth)
+3. Code smell detection (long methods, large classes, duplicate code)
+4. Lint violation identification
+
+### Step 4: Performance Optimization (--performance)
+1. N+1 query detection in ORM code
+2. Missing database index identification
+3. Caching opportunity analysis
+4. Inefficient algorithm detection (O(n²) in loops)
+
+### Step 5: Analysis & Categorization
 1. Find safe optimizations (whitespace, dead code, spelling)
 2. Find low-risk optimizations (example consolidation, cross-references)
 3. Find high-risk optimizations (example reduction, instruction condensing)
 4. Filter by selected mode (Conservative/Balanced/Aggressive)
 
-### Step 4: Verification & Optimization
+### Step 6: Verification & Optimization
 1. Create backup for each file
 2. Apply optimization
 3. Verify:
@@ -117,7 +144,7 @@ use_cases:
 4. If verification fails → rollback
 5. Record outcome (applied/skipped/rolled_back)
 
-### Step 5: Reporting
+### Step 7: Reporting
 1. Complete accounting (all optimizations accounted)
 2. Token reduction metrics
 3. Quality preservation verification
@@ -128,11 +155,10 @@ use_cases:
 ## Decision Logic
 
 **When to use:**
-- Content files growing large (high token usage)
-- Context window constraints
-- CLAUDE.md needs optimization
-- Detecting duplicate context loading
-- Regular maintenance (monthly)
+- **Context (--context)**: Content files growing large, context window constraints, CLAUDE.md needs optimization, detecting duplicate context loading
+- **Code Quality (--code-quality)**: Dead code accumulation, complexity concerns, lint violations, code smell detection
+- **Performance (--performance)**: Slow queries, missing indexes, caching opportunities, algorithm optimization
+- **All (--all)**: Regular maintenance (monthly), comprehensive optimization
 
 **Mode selection:**
 - **Conservative**: Production content, critical documentation, active context

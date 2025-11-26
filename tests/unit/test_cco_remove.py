@@ -114,8 +114,6 @@ class TestCountCcoFiles:
 
         assert counts["agents"] == 0
         assert counts["commands"] == 0
-        assert counts["skills"] == 0
-        assert counts["principles"] == 0
         assert counts["templates"] == 0
 
     def test_count_empty_dir(self, tmp_path: Path):
@@ -127,8 +125,6 @@ class TestCountCcoFiles:
 
         assert counts["agents"] == 0
         assert counts["commands"] == 0
-        assert counts["skills"] == 0
-        assert counts["principles"] == 0
 
     def test_count_agents(self, tmp_path: Path):
         """Test counting CCO agents"""
@@ -155,38 +151,6 @@ class TestCountCcoFiles:
         counts = count_cco_files(tmp_path)
         assert counts["commands"] == 2
 
-    def test_count_skills(self, tmp_path: Path):
-        """Test counting CCO skills"""
-        skills_dir = tmp_path / "skills"
-        skills_dir.mkdir()
-
-        (skills_dir / "cco-skill-audit.md").write_text("audit")
-        (skills_dir / "cco-skill-generate.md").write_text("generate")
-        (skills_dir / "custom.md").write_text("custom")  # Should be ignored
-
-        counts = count_cco_files(tmp_path)
-        assert counts["skills"] == 2
-
-    def test_count_principles(self, tmp_path: Path):
-        """Test counting principles by category"""
-        principles_dir = tmp_path / "principles"
-        principles_dir.mkdir()
-
-        # Create universal principles (cco-principle-u-*)
-        (principles_dir / "cco-principle-u-dry.md").write_text("DRY")
-        (principles_dir / "cco-principle-u-fail-fast.md").write_text("Fail fast")
-
-        # Create claude-specific principles (cco-principle-c-*)
-        (principles_dir / "cco-principle-c-context.md").write_text("Context")
-
-        # Create summary file (should be excluded)
-        (principles_dir / "PRINCIPLES.md").write_text("Summary")
-
-        counts = count_cco_files(tmp_path)
-        assert counts["principles"] == 3  # Excludes PRINCIPLES.md
-        assert counts["principles_cco_u"] == 2
-        assert counts["principles_cco_c"] == 1
-
     def test_count_templates(self, tmp_path: Path):
         """Test counting template files"""
         (tmp_path / "settings.json.cco").write_text("settings")
@@ -200,21 +164,15 @@ class TestCountCcoFiles:
         # Create all directories
         (tmp_path / "agents").mkdir()
         (tmp_path / "commands").mkdir()
-        (tmp_path / "skills").mkdir()
-        (tmp_path / "principles").mkdir()
 
         # Add components
         (tmp_path / "agents" / "cco-agent-audit.md").write_text("audit")
         (tmp_path / "commands" / "cco-status.md").write_text("status")
-        (tmp_path / "skills" / "cco-skill-audit.md").write_text("audit")
-        (tmp_path / "principles" / "U_DRY.md").write_text("DRY")
         (tmp_path / "settings.json.cco").write_text("settings")
 
         counts = count_cco_files(tmp_path)
         assert counts["agents"] == 1
         assert counts["commands"] == 1
-        assert counts["skills"] == 1
-        assert counts["principles"] == 1
         assert counts["templates"] == 1
 
 
@@ -265,10 +223,6 @@ class TestShowRemovalPreview:
         counts = {
             "agents": 3,
             "commands": 11,
-            "skills": 2,
-            "principles": 25,
-            "principles_cco_u": 10,
-            "principles_cco_c": 15,
             "templates": 2,
         }
 
@@ -290,10 +244,6 @@ class TestShowRemovalPreview:
         counts = {
             "agents": 0,
             "commands": 0,
-            "skills": 0,
-            "principles": 0,
-            "principles_cco_u": 0,
-            "principles_cco_c": 0,
             "templates": 0,
         }
 
@@ -401,8 +351,6 @@ class TestRemoveCcoFiles:
 
         assert deleted["agents"] == 0
         assert deleted["commands"] == 0
-        assert deleted["skills"] == 0
-        assert deleted["principles"] == 0
 
     def test_remove_cco_files_nonexistent_dir(self, tmp_path: Path):
         """Test removal from non-existent directory"""
@@ -412,8 +360,6 @@ class TestRemoveCcoFiles:
 
         assert deleted["agents"] == 0
         assert deleted["commands"] == 0
-        assert deleted["skills"] == 0
-        assert deleted["principles"] == 0
 
     def test_remove_cco_files_with_content(self, tmp_path: Path):
         """Test removal of CCO files"""
@@ -559,10 +505,6 @@ class TestMain:
         mock_count.return_value = {
             "agents": 1,
             "commands": 1,
-            "skills": 1,
-            "principles": 1,
-            "principles_cco_u": 0,
-            "principles_cco_c": 0,
             "templates": 0,
         }
         mock_confirm.return_value = False
@@ -608,10 +550,6 @@ class TestMain:
         mock_count.return_value = {
             "agents": 3,
             "commands": 11,
-            "skills": 2,
-            "principles": 25,
-            "principles_cco_u": 10,
-            "principles_cco_c": 15,
             "templates": 2,
         }
         mock_confirm.return_value = True
@@ -619,10 +557,7 @@ class TestMain:
         mock_remove_files.return_value = {
             "agents": 3,
             "commands": 11,
-            "skills": 2,
-            "principles": 25,
             "templates": 2,
-            "standards": 0,
         }
         mock_verify.return_value = {"package_removed": True, "files_removed": True}
 
@@ -697,10 +632,6 @@ class TestMain:
         mock_count.return_value = {
             "agents": 1,
             "commands": 1,
-            "skills": 1,
-            "principles": 1,
-            "principles_cco_u": 0,
-            "principles_cco_c": 1,
             "templates": 0,
         }
         mock_confirm.return_value = True
@@ -708,10 +639,7 @@ class TestMain:
         mock_remove_files.return_value = {
             "agents": 1,
             "commands": 1,
-            "skills": 1,
-            "principles": 1,
             "templates": 0,
-            "standards": 0,
         }
         mock_verify.return_value = {"package_removed": True, "files_removed": True}
 
@@ -756,10 +684,6 @@ class TestMain:
         mock_count.return_value = {
             "agents": 1,
             "commands": 1,
-            "skills": 1,
-            "principles": 1,
-            "principles_cco_u": 0,
-            "principles_cco_c": 1,
             "templates": 0,
         }
         mock_confirm.return_value = True
@@ -767,10 +691,7 @@ class TestMain:
         mock_remove_files.return_value = {
             "agents": 1,
             "commands": 1,
-            "skills": 1,
-            "principles": 1,
             "templates": 0,
-            "standards": 0,
         }
         mock_verify.return_value = {
             "package_removed": False,

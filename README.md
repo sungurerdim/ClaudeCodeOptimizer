@@ -32,7 +32,7 @@
 - **Commands** that configure Claude Code to address these pain points
 - **Skills** that provide Claude Code with specialized knowledge (OWASP 2025, DORA metrics, etc.)
 - **Agents** that execute audits, fixes, and generation in parallel
-- **Principles** that ensure Claude Code follows best practices (DRY, honesty, verification)
+- **CCO Rules** (~350 tokens, inline in CLAUDE.md) - minimal, research-based guidelines that complement Claude Opus 4.5's built-in capabilities
 
 ---
 
@@ -45,32 +45,42 @@
 | **Commands** | Instructions for Claude (e.g., `/cco-audit`) |
 | **Skills** | Domain knowledge (OWASP 2025, DORA metrics) |
 | **Agents** | Execution patterns (parallel, pipeline) |
-| **Principles** | Behavioral guidelines (DRY, verification) |
+| **CCO Rules** | Minimal behavioral guidelines (~350 tokens, inline in CLAUDE.md) |
 
 ---
 
-## CCO Component Design Principles
+## CCO Rules - Research-Based Design
 
-All CCO components follow strict design rules. **For detailed principles, see `~/.claude/principles/` after installation.**
+CCO Rules are minimal (~350 tokens), research-based guidelines that **complement** Claude Opus 4.5's built-in capabilities rather than duplicating them.
 
-### Essential Principles
+### Design Philosophy
 
-- **No Hardcoded Examples** - Use placeholders like `{FILE_PATH}`, `{LINE_NUMBER}` (See `cco-principle-u-no-hardcoded-examples`)
-- **Native Tool Interactions** - Use `AskUserQuestion` for user input (See `cco-principle-c-native-tool-interactions`)
-- **100% Honest Reporting** - Never claim "fixed" without verification (See `cco-principle-u-evidence-based-analysis`)
-- **Complete Accounting** - All items: completed/skipped/failed/cannot-do. Totals must match.
-- **MultiSelect with "All"** - Every multiSelect question must have "All" option
-- **Principle Adherence** - Follow cco-principle-u-* (Universal) and cco-principle-c-* (Claude-specific) principles
+Based on research into Claude's system prompts, Opus 4.5 capabilities, and community CLAUDE.md best practices (October-November 2025), CCO Rules only include guidelines that Claude doesn't already follow by default:
+
+- **Cross-Platform Compatibility** - Forward slashes, relative paths, Git Bash commands
+- **Reference Integrity** - Find ALL refs before delete/rename/move/modify
+- **Verification Protocol** - Accounting formula: total = completed + skipped + failed + cannot-do
+- **File Discovery Stages** - files_with_matches → content with -C → Read offset+limit
+- **Change Safety** - Commit before bulk changes, max 10 files per batch
+- **Scope Control** - Define boundaries, one change = one purpose
+
+### What's NOT in CCO Rules (Claude Already Does This)
+
+Claude Opus 4.5 has excellent built-in capabilities that CCO doesn't duplicate:
+- Complex reasoning and tradeoff analysis
+- Long-horizon autonomous tasks
+- Plan Mode with clarifying questions
+- Token-efficient code generation
+- No over-engineering, minimal touch, follow patterns
+- Professional objectivity and honest reporting
+
+### Component Design Guidelines
+
+All CCO components (commands, skills, agents) follow these rules:
+- **No Hardcoded Examples** - Use placeholders like `{FILE_PATH}`, `{LINE_NUMBER}`
+- **Native Tool Interactions** - Use `AskUserQuestion` for user input
+- **Complete Accounting** - All items: completed/skipped/failed/cannot-do
 - **Token Efficiency** - Grep before Read, targeted reads, parallel operations
-- **UX/DX Excellence** - Progress tracking, actionable results, streaming feedback
-
-**Quick Verification Checklist:**
-
-- [ ] No hardcoded examples (use placeholders)
-- [ ] Honest reporting (verify before claiming)
-- [ ] Complete accounting (all items accounted for)
-- [ ] MultiSelect has "All" option
-- [ ] Follows cco-principle-u-* and cco-principle-c-* principles
 
 ## Quick Start
 
@@ -112,12 +122,10 @@ cco-setup
 1. `pip install` → Installs Python package globally
 2. `cco-setup` → Copies content files to `~/.claude/` directory
    - Creates `~/.claude/commands/` (all CCO commands)
-   - Creates `~/.claude/principles/` (cco-principle-u-*, cco-principle-c-* principles)
    - Creates `~/.claude/skills/` (domain-specific skills)
    - Creates `~/.claude/agents/` (specialized agents)
    - Copies `~/.claude/cco-*.md` (structure and quality standards)
-   - Copies `~/.claude/cco-patterns.md` (reusable patterns)
-   - Generates `~/.claude/CLAUDE.md` (marker-based principle injection - see [ADR-001](docs/ADR/001-marker-based-claude-md.md))
+   - Updates `~/.claude/CLAUDE.md` with inline CCO Rules (~350 tokens)
    - Copies `~/.claude/settings.json.cco` (optional: Claude Code config template)
    - Copies `~/.claude/statusline.js.cco` (optional: status line script template)
    - Shows before/after file count summary
@@ -139,10 +147,10 @@ cco-status
 
 **What cco-status shows:**
 - Installation health (Good/Incomplete)
-- Component counts (commands, principles, skills, agents)
+- Component counts (commands, skills, agents, standards)
+- CLAUDE.md integration status (CCO Rules present)
 - Version info and installation method
 - Architecture overview
-- Quick start guidance
 
 ### Optional Configuration
 
@@ -237,21 +245,17 @@ cp ~/.claude/statusline.js.cco ~/.claude/statusline.js
 
 ```bash
 # Step 1: Remove global files FIRST
-# Option 1: Use slash command (inside Claude Code)
-cco-remove
-
-# Option 2: Use CLI command (terminal)
+# Option 1: Use CLI command (terminal)
 cco-remove
 # This removes:
 # - ~/.claude/commands/ (all cco-*.md files)
-# - ~/.claude/principles/ (all cco-principle-c-*, cco-principle-u-* files)
-# - ~/.claude/skills/ (all cco-skill-*.md files)
-# - ~/.claude/agents/ (all cco-agent-*.md files)
+# - ~/.claude/skills/ (all cco-*.md files)
+# - ~/.claude/agents/ (all cco-*.md files)
 # - ~/.claude/cco-*.md (all standards files)
-# - ~/.claude/cco-patterns.md (pattern library)
-# - ~/.claude/CLAUDE.md (principle markers)
+# - ~/.claude/CLAUDE.md (CCO Rules markers)
+# - ~/.claude/*.cco (template files)
 
-# Step 2: Uninstall package (outside Claude Code)
+# Step 2: Uninstall package
 pip uninstall claudecodeoptimizer
 # Or if you used pipx/uv:
 pipx uninstall claudecodeoptimizer
@@ -260,16 +264,12 @@ uv tool uninstall claudecodeoptimizer
 
 **Why This Order?**
 
-`# Option 1: Use slash command (inside Claude Code)
-cco-remove
-
-# Option 2: Use CLI command (terminal)
-cco-remove` is a Claude Code slash command, so it only works when the package is installed. If you run `pip uninstall` first, you lose access to `cco-remove` and must manually delete `~/.claude/` files.
+`cco-remove` is a CLI command that requires the package to be installed. If you run `pip uninstall` first, you lose access to `cco-remove` and must manually delete `~/.claude/` CCO files.
 
 **What Gets Removed:**
 - ✓ Python package (claudecodeoptimizer)
-- ✓ Global directory (`~/.claude/`)
-- ✓ All commands, principles, skills, agents
+- ✓ All CCO files in `~/.claude/` (commands, skills, agents, standards)
+- ✓ CCO Rules from CLAUDE.md
 - ✓ Zero trace left on your system
 
 **What Does NOT Get Removed:**
@@ -277,6 +277,7 @@ cco-remove` is a Claude Code slash command, so it only works when the package is
 - Your git history
 - Your dependencies
 - Other Claude Code configurations
+- Non-CCO files in ~/.claude/ (preserved)
 
 **Verification:**
 ```bash
@@ -472,7 +473,7 @@ cco-setup
 ## Documentation
 
 ### Core Documentation
-- **[ARCHITECTURE.md](ARCHITECTURE.md)** - Detailed architecture, agent orchestration, principles
+- **[ARCHITECTURE.md](ARCHITECTURE.md)** - Detailed architecture, agent orchestration, CCO Rules
 - **[CONTRIBUTING.md](CONTRIBUTING.md)** - Development guidelines
 - **Skills Reference** - See `~/.claude/skills/` after installation
 
@@ -490,7 +491,7 @@ cco-setup
 - **[Runbook Index](docs/runbooks/README.md)** - All operational procedures
 
 ### Development Resources
-- **[PR Template](.github/PULL_REQUEST_TEMPLATE.md)** - Comprehensive PR checklist with CCO principle compliance
+- **[PR Template](.github/PULL_REQUEST_TEMPLATE.md)** - Comprehensive PR checklist with CCO component guidelines
 - **[CI/CD Workflows](.github/workflows/)** - Automated testing and quality checks
 
 ---

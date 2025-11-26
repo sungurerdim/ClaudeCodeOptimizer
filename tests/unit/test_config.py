@@ -18,8 +18,6 @@ from claudecodeoptimizer.config import (
     get_command_name,
     get_global_commands_dir,
     get_home_dir,
-    get_principles_dir,
-    get_skills_dir,
 )
 
 
@@ -79,25 +77,11 @@ class TestPathHelpers:
         assert result.name == "commands"
         assert result.parent.name == ".claude"
 
-    def test_get_principles_dir(self):
-        """Test get_principles_dir returns ~/.claude/principles/."""
-        result = get_principles_dir()
-        assert isinstance(result, Path)
-        assert result.name == "principles"
-        assert result.parent.name == ".claude"
-
     def test_get_agents_dir(self):
         """Test get_agents_dir returns ~/.claude/agents/."""
         result = get_agents_dir()
         assert isinstance(result, Path)
         assert result.name == "agents"
-        assert result.parent.name == ".claude"
-
-    def test_get_skills_dir(self):
-        """Test get_skills_dir returns ~/.claude/skills/."""
-        result = get_skills_dir()
-        assert isinstance(result, Path)
-        assert result.name == "skills"
         assert result.parent.name == ".claude"
 
 
@@ -130,8 +114,6 @@ class TestUtilityFunctions:
         expected_keys = {
             "claude_dir",
             "commands_dir",
-            "principles_dir",
-            "skills_dir",
             "agents_dir",
         }
         assert set(result.keys()) == expected_keys
@@ -160,8 +142,6 @@ class TestCCOConfigClass:
         assert callable(CCOConfig.get_home_dir)
         assert callable(CCOConfig.get_claude_dir)
         assert callable(CCOConfig.get_global_commands_dir)
-        assert callable(CCOConfig.get_principles_dir)
-        assert callable(CCOConfig.get_skills_dir)
         assert callable(CCOConfig.get_agents_dir)
         assert callable(CCOConfig.get_command_name)
         assert callable(CCOConfig.get_all_paths)

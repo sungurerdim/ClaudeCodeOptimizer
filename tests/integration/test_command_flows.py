@@ -29,34 +29,23 @@ class TestCCOStatusCommand:
         commands_dir = claude_dir / "commands"
         commands_dir.mkdir()
 
-        principles_dir = claude_dir / "principles"
-        principles_dir.mkdir()
-
-        skills_dir = claude_dir / "skills"
-        skills_dir.mkdir()
-
         agents_dir = claude_dir / "agents"
         agents_dir.mkdir()
 
         # Create a few sample files
         (commands_dir / "cco-help.md").write_text("# Help command")
-        (principles_dir / "U_TEST.md").write_text("# Test principle")
-        (skills_dir / "test_skill.md").write_text("# Test skill")
+        (agents_dir / "cco-agent-audit.md").write_text("# Audit agent")
 
         # Verify structure exists
         assert commands_dir.exists()
-        assert principles_dir.exists()
-        assert skills_dir.exists()
         assert agents_dir.exists()
 
         # Count files
         command_count = len(list(commands_dir.glob("*.md")))
-        principle_count = len(list(principles_dir.glob("*.md")))
-        skill_count = len(list(skills_dir.glob("*.md")))
+        agent_count = len(list(agents_dir.glob("*.md")))
 
         assert command_count == 1
-        assert principle_count == 1
-        assert skill_count == 1
+        assert agent_count == 1
 
     def test_status_with_missing_directories(self, tmp_path: Path) -> None:
         """Test status command detects missing directories"""
@@ -69,8 +58,6 @@ class TestCCOStatusCommand:
 
         # Verify missing directories
         assert commands_dir.exists()
-        assert not (claude_dir / "principles").exists()
-        assert not (claude_dir / "skills").exists()
         assert not (claude_dir / "agents").exists()
 
     def test_status_with_no_installation(self, tmp_path: Path) -> None:
@@ -295,8 +282,7 @@ class TestMetadataTracking:
             "version": "1.0.0",
             "installed_at": "2025-01-01T12:00:00",
             "commands_count": 11,
-            "principles_count": 14,
-            "skills_count": 5,
+            "agents_count": 4,
         }
 
         # Save metadata
@@ -306,7 +292,7 @@ class TestMetadataTracking:
         loaded = json.loads(metadata_file.read_text())
         assert loaded["version"] == "1.0.0"
         assert loaded["commands_count"] == 11
-        assert loaded["principles_count"] == 14
+        assert loaded["agents_count"] == 4
 
     def test_metadata_handles_missing_file(self, tmp_path: Path) -> None:
         """Test handling of missing metadata file"""
@@ -344,15 +330,11 @@ class TestKnowledgeSetup:
         # Create minimal structure manually (simulating setup)
         claude_dir.mkdir()
         (claude_dir / "commands").mkdir()
-        (claude_dir / "principles").mkdir()
-        (claude_dir / "skills").mkdir()
         (claude_dir / "agents").mkdir()
 
         # Verify structure created
         assert claude_dir.exists()
         assert (claude_dir / "commands").exists()
-        assert (claude_dir / "principles").exists()
-        assert (claude_dir / "skills").exists()
         assert (claude_dir / "agents").exists()
 
     def test_setup_preserves_existing_files(self, tmp_path: Path) -> None:

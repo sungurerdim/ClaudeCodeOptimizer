@@ -91,13 +91,13 @@ def main() -> int:
 
     claude_dir = Path.home() / ".claude"
     commands_dir = claude_dir / "commands"
-    principles_dir = claude_dir / "principles"
+    agents_dir = claude_dir / "agents"
 
     cmd_count = len(list(commands_dir.glob("cco-*.md"))) if commands_dir.exists() else 0
-    principle_count = len(list(principles_dir.glob("*.md"))) if principles_dir.exists() else 0
+    agent_count = len(list(agents_dir.glob("cco-*.md"))) if agents_dir.exists() else 0
 
     print(f"\n[OK] Commands: {cmd_count}")
-    print(f"[OK] Principles: {principle_count}")
+    print(f"[OK] Agents: {agent_count}")
     print(f"[OK] Location: {claude_dir}")
 
     print("\n" + "=" * 60)

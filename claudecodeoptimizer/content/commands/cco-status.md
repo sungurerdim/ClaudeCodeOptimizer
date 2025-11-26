@@ -13,12 +13,6 @@ pain_points: []
 
 ---
 
-## Built-in References
-
-- **[cco-standards.md](../cco-standards.md)** - Standard structure, execution protocol
-- **[cco-patterns.md](../cco-patterns.md)** - Reusable patterns (Progress, Error Handling)
-
----
 
 ## Purpose
 
@@ -37,8 +31,6 @@ Verify CCO installation by dynamically discovering all components from the file 
 COMMANDS=$(ls ~/.claude/commands/cco-*.md 2>/dev/null | wc -l)
 SKILLS=$(ls ~/.claude/skills/cco-skill-*.md 2>/dev/null | wc -l)
 AGENTS=$(ls ~/.claude/agents/cco-agent-*.md 2>/dev/null | wc -l)
-U_PRINCIPLES=$(ls ~/.claude/principles/cco-principle-u-*.md 2>/dev/null | wc -l)
-C_PRINCIPLES=$(ls ~/.claude/principles/cco-principle-c-*.md 2>/dev/null | wc -l)
 ```
 
 ### 2. Read Component Details from Frontmatter
@@ -69,9 +61,9 @@ category: security
 **Commands ({actual_count} found):**
 [List each cco-*.md from ~/.claude/commands/ with description from frontmatter]
 
-**Principles ({actual_count} found):**
-- {u_count} Universal (cco-principle-u-*) - Always active
-- {c_count} Claude-specific (cco-principle-c-*) - Always active
+**CCO Rules:**
+- Inline in ~/.claude/CLAUDE.md (~350 tokens)
+- Cross-platform, reference integrity, verification protocol, file discovery, change safety, scope control
 
 **Skills ({actual_count} found - Auto-Activate on Demand):**
 [For each cco-skill-*.md in ~/.claude/skills/:

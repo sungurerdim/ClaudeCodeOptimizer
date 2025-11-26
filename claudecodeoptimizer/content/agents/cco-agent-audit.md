@@ -18,7 +18,6 @@ skills_loaded: as-needed
 
 ## Built-in Behaviors
 
-**See [cco-standards.md](../cco-standards.md) for standard behaviors:**
 - File Discovery & Exclusion (Stage 0)
 - Three-Stage File Discovery
 - Model Selection Guidelines
@@ -48,9 +47,9 @@ skills_loaded: as-needed
 
 ---
 
-## Critical UX Principles
+## Critical UX Standards
 
-**MUST follow these principles throughout execution:**
+**MUST follow these standards throughout execution:**
 
 1. **Use TodoWrite** - Native tool shows real progress in UI
 2. **Single Source of Truth** - One count object, updated consistently everywhere

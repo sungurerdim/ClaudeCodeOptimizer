@@ -12,18 +12,6 @@ pain_points: [5]
 **AI-assisted semantic commit workflow with atomic commit recommendations.**
 ---
 
-## Built-in References
-
-**This command inherits standard behaviors from:**
-
-- **[cco-standards.md](../cco-standards.md)** - Standard structure, execution protocol, file discovery
-- **[cco-standards.md](../cco-standards.md)** - UX/DX, efficiency, simplicity, performance standards
-- **[cco-patterns.md](../cco-patterns.md)** - Reusable patterns (Step 0, Selection, Accounting, Progress, Error Handling)
-- **[cco-standards.md](../cco-standards.md)** - File discovery, model selection, parallel execution
-
-**See these files for detailed patterns. Only command-specific content is documented below.**
-
----
 
 ## Execution Guarantee
 
@@ -149,10 +137,9 @@ AskUserQuestion({
 
 ---
 
-## Design Principles
+## Design Standards
 
-**See:** cco-standards.md
-- UX/DX principles (transparency, progressive disclosure, zero surprises)
+- UX/DX standards (transparency, progressive disclosure, zero surprises)
 - Honesty & accurate reporting (no false positives/negatives)
 - No hardcoded examples (use placeholders: `{FILE_PATH}`, `{LINE_NUMBER}`)
 
@@ -176,7 +163,7 @@ all_changes=$(git status --short)
 # - Untracked: ??
 # - Renamed: R
 
-# Define exclusion patterns (match cco-standards.md)
+# Define exclusion patterns 
 EXCLUDED_FILES=(
     "*.pyc" "*.pyo" "*.so" "*.dll" "*.class" "*.o"
     "*.min.js" "*.min.css" "*.bundle.js"
@@ -257,7 +244,6 @@ AskUserQuestion({
 ### Step 3: Generate Semantic Commit Messages
 
 **See:**
-- **[cco-patterns.md](../cco-patterns.md#pattern-8-dynamic-results-generation)** for template
 - **{MATCHED_GIT_SKILL}** for commit message format rules
 
 For each commit, generate message following Conventional Commits **and skill guidelines**:

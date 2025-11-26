@@ -43,16 +43,14 @@
 - [ ] Functions are single-purpose and focused
 - [ ] File/module organization follows existing patterns
 
-**Principles Applied:**
-<!-- Check which CCO principles this PR follows -->
-- [ ] cco-principle-u-change-verification - All changes verified before claiming completion
-- [ ] cco-principle-u-cross-platform-compatibility - Commands work on Windows, macOS, Linux
-- [ ] cco-principle-u-dry - No unnecessary duplication
-- [ ] cco-principle-u-evidence-based-analysis - Claims backed by evidence, complete accounting
-- [ ] cco-principle-u-follow-patterns - Follows existing codebase patterns
-- [ ] cco-principle-u-minimal-touch - Only required files edited
-- [ ] cco-principle-u-no-hardcoded-examples - No hardcoded example data in templates
-- [ ] cco-principle-u-no-overengineering - Simplest solution chosen
+**CCO Rules Applied:**
+<!-- Check which CCO Rules this PR follows (see ~/.claude/CLAUDE.md) -->
+- [ ] Cross-platform compatibility - Forward slashes, relative paths, Git Bash commands
+- [ ] Reference integrity - Find ALL refs before delete/rename/move
+- [ ] Verification protocol - Accounting formula: total = completed + skipped + failed
+- [ ] Change safety - Commit before bulk changes, max 10 files per batch
+- [ ] Scope control - Define boundaries, one change = one purpose
+- [ ] No hardcoded examples - Use placeholders in templates
 
 ---
 
@@ -78,9 +76,9 @@
 - [ ] **Error Messages**: Clear, actionable error messages
 - [ ] **Configuration**: No hardcoded paths or environment assumptions
 
-**Principles Applied:**
-- [ ] cco-principle-c-no-unsolicited-file-creation - No unnecessary file creation
-- [ ] cco-principle-c-native-tool-interactions - Uses native Claude Code tools
+**Best Practices:**
+- [ ] No unsolicited file creation - Edit existing files when possible
+- [ ] Native tool interactions - Uses native Claude Code tools (AskUserQuestion, etc.)
 
 ---
 
@@ -103,8 +101,8 @@
 # Paste test output here showing all tests pass
 ```
 
-**Principles Applied:**
-- [ ] cco-principle-u-evidence-based-analysis - Test results prove functionality works
+**Verification:**
+- [ ] Evidence-based - Test results prove functionality works
 
 ---
 
