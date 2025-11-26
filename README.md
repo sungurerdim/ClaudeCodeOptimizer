@@ -1,6 +1,6 @@
 # ClaudeCodeOptimizer
 
-**Commands, agents, and rules for Claude Code.**
+Project-aware commands for Claude Code.
 
 [![Python 3.11+](https://img.shields.io/badge/python-3.11+-blue.svg)](https://www.python.org/downloads/)
 [![MIT License](https://img.shields.io/badge/license-MIT-green.svg)](LICENSE)
@@ -9,41 +9,27 @@
 
 ## What is CCO?
 
-CCO extends Claude Code with:
-- **7 Commands** - Audit, fix, generate, optimize, commit, status, help
-- **2 Agents** - Scan (read-only) and Action (write operations)
-- **Rules** - Minimal guidelines (~80 tokens) added to CLAUDE.md
+CCO is a **process orchestration and quality standards** tool for Claude Code. It provides consistent quality gates, verified change management, and measurable efficiency improvements.
 
-All content is installed globally to `~/.claude/` - zero project pollution.
+**Covers 25 pain points from 2025 developer surveys:**
+
+| Category | Issues |
+|----------|--------|
+| Security | OWASP vulnerabilities, secret exposure, dependency CVEs |
+| AI Code | Hallucinated APIs, prompt injection, PII exposure |
+| Quality | Dead code, complexity, duplication, missing tests |
+| Database | N+1 queries, missing indexes, query optimization |
+| Operations | DORA metrics, CI/CD gaps, container issues |
+| Maintenance | Old TODOs, orphan files, hardcoded values, API breaking changes |
 
 ---
 
 ## Installation
 
 ```bash
-# Install package
 pip install git+https://github.com/sungurerdim/ClaudeCodeOptimizer.git
-
-# Setup global files
 cco-setup
 ```
-
-**Alternative methods:**
-
-```bash
-# With pipx (isolated)
-pipx install git+https://github.com/sungurerdim/ClaudeCodeOptimizer.git
-cco-setup
-
-# With uv (fast)
-uv tool install git+https://github.com/sungurerdim/ClaudeCodeOptimizer.git
-cco-setup
-```
-
-**What cco-setup does:**
-- Creates `~/.claude/commands/` (7 command files)
-- Creates `~/.claude/agents/` (2 agent files)
-- Adds CCO Rules to `~/.claude/CLAUDE.md`
 
 ---
 
@@ -51,75 +37,126 @@ cco-setup
 
 | Command | Purpose |
 |---------|---------|
-| `/cco-audit` | Find security, quality, and test issues |
-| `/cco-fix` | Auto-fix detected issues |
-| `/cco-generate` | Create tests, docs, configs |
-| `/cco-optimize` | Improve performance and reduce context |
-| `/cco-commit` | Smart git commits |
-| `/cco-status` | Check installation health |
+| `/cco-audit` | **Quality gates** - standardized checks, prioritized fixes |
+| `/cco-generate` | **Generation** - convention-following, verified |
+| `/cco-health` | **Visibility** - actionable metrics dashboard |
+| `/cco-refactor` | **Risk mitigation** - verified transformations |
+| `/cco-optimize` | **Efficiency** - measurable improvements |
+| `/cco-commit` | **Change management** - atomic, traceable commits |
+| `/cco-config` | **Settings** - statusline, permissions (global/local) |
+| `/cco-status` | Installation check |
 | `/cco-help` | Command reference |
 
-**Audit categories:**
+---
 
-| Category | What it checks |
-|----------|---------------|
-| `--security` | OWASP Top 10, XSS, SQLi, CSRF, secrets, CVEs |
-| `--ai-security` | Prompt injection, PII, LLM security |
-| `--database` | N+1 queries, missing indexes, connections |
-| `--tests` | Coverage, isolation, test pyramid |
-| `--tech-debt` | Dead code, complexity, duplication |
-| `--performance` | Caching, algorithms, bottlenecks |
-| `--docs` | Docstrings, API docs, README |
-| `--cicd` | Pipeline, quality gates, deployment |
-| `--containers` | Dockerfile, K8s security |
-| `--supply-chain` | Dependency CVEs, SBOM |
+## Usage Examples
 
-**Meta-flags:**
-- `--critical` = security + ai-security + database + tests
-- `--production-ready` = security + performance + database + tests + docs
-- `--all` = everything
-
-**Quick start:**
-
+**Find and fix issues:**
 ```bash
-/cco-audit --critical   # Find critical issues
-/cco-fix --security     # Fix security issues
-/cco-generate --tests   # Create missing tests
-/cco-commit             # Commit changes
+/cco-audit --smart              # Auto-detect stack, find issues, offer fixes
+/cco-audit --security --auto-fix  # Auto-fix safe security issues
+/cco-audit --critical           # security + ai-security + database + tests
+```
+
+**Generate missing components:**
+```bash
+/cco-generate --tests           # Unit/integration tests
+/cco-generate --openapi         # API documentation
+/cco-generate --cicd            # CI/CD pipelines
+```
+
+**Safe refactoring:**
+```bash
+/cco-refactor rename oldName newName
+```
+Finds ALL references, updates in order, verifies with grep.
+
+**Optimize context:**
+```bash
+/cco-optimize --context         # Reduce CLAUDE.md tokens
+/cco-optimize --code-quality    # Remove dead code, unused imports
+```
+
+**Configure settings:**
+```bash
+/cco-config                     # Interactive (scope, statusline, permissions)
+/cco-config --global            # Apply to all projects (~/.claude/)
+/cco-config --local             # This project only (./.claude/)
 ```
 
 ---
 
-## Agents
+## Audit Categories
 
-| Agent | Purpose |
-|-------|---------|
-| `cco-agent-scan` | Read-only analysis (audit, detect, report) |
-| `cco-agent-action` | Write operations (fix, generate, optimize) |
+| Flag | Checks |
+|------|--------|
+| `--security` | OWASP, secrets, CVEs |
+| `--ai-security` | Prompt injection, PII |
+| `--ai-quality` | Hallucinated APIs, AI patterns |
+| `--database` | N+1, indexes, queries |
+| `--tests` | Coverage, isolation, flaky |
+| `--tech-debt` | Dead code, complexity |
+| `--performance` | Caching, algorithms |
+| `--hygiene` | TODOs, orphans, hardcoded |
+| `--self-compliance` | Check against project's own stated rules |
+| `--dora` | Deploy frequency, MTTR |
+| `--compliance` | GDPR, licenses |
+| `--api-contract` | Breaking changes |
+| `--docs` | Docstrings, API docs |
+| `--cicd` | Pipeline, quality gates |
+| `--containers` | Dockerfile, K8s |
+| `--supply-chain` | Dependency CVEs |
 
-Agents are invoked automatically by commands.
+**Meta-flags:** `--smart`, `--critical`, `--weekly`, `--pre-release`, `--all`, `--auto-fix`
 
 ---
 
-## CCO Rules
+## Design Principles
 
-Minimal guidelines added to CLAUDE.md (~80 tokens):
+CCO provides 9 commands, 3 agents, and rules added to `~/.claude/`.
 
-- **Paths** - Forward slash, relative, quote spaces
-- **Reference Integrity** - Find all refs before delete/rename
-- **Verification** - total = done + skip + fail
-- **Safety** - Commit first, max 10 files/batch
+**Core principles:**
+- Perfect UX/DX, maximum efficiency
+- Maximum output quality, maximum simplicity
+- Zero overengineering, zero overlap with AI capabilities
+
+**What this means:**
+- CCO tells AI WHAT, not HOW (Opus 4.5 already knows how)
+- Workflow orchestration only (detect → scan → fix)
+- Verification patterns only (accounting, grep checks)
+- Project-specific context only (conventions, thresholds)
+
+**Key behaviors:**
+- Pre-operation safety: offer commit before major changes
+- Self-compliance: check code against project's stated rules
+- Auto-detects stack, skips non-applicable checks
+- Safe fixes auto-apply, risky ones need approval
+- Verification: `done + skip + fail + cannot_do = total`
+- Reference integrity: find ALL refs → update → verify
+- Priority scoring: impact/effort ratio for actionability
+
+---
+
+## Structure
+
+After `cco-setup`, the following is added to `~/.claude/`:
+
+```
+~/.claude/
+├── commands/
+│   └── cco-*.md          # 9 slash commands
+├── agents/
+│   └── cco-*.md          # 3 specialized agents
+└── CLAUDE.md             # CCO rules appended
+```
 
 ---
 
 ## Verification
 
 ```bash
-# Terminal
-cco-status
-
-# Claude Code
-/cco-status
+cco-status     # Terminal
+/cco-status    # Claude Code
 ```
 
 ---
@@ -127,14 +164,9 @@ cco-status
 ## Uninstallation
 
 ```bash
-# Step 1: Remove global files
 cco-remove
-
-# Step 2: Uninstall package
 pip uninstall claudecodeoptimizer
 ```
-
-**Important:** Run `cco-remove` before `pip uninstall`.
 
 ---
 
