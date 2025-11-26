@@ -23,47 +23,88 @@ def detect_install_method() -> str | None:
     return None
 
 
-def count_cco_files() -> dict[str, int]:
-    """Count CCO files in ~/.claude/"""
-    counts = {"agents": 0, "commands": 0, "templates": 0}
-    if AGENTS_DIR.exists():
-        counts["agents"] = sum(1 for _ in AGENTS_DIR.glob("cco-*.md"))
+def list_cco_files() -> dict[str, list[str]]:
+    """List CCO files in ~/.claude/ by category."""
+    files: dict[str, list[str]] = {"commands": [], "agents": []}
     if COMMANDS_DIR.exists():
-        counts["commands"] = sum(1 for _ in COMMANDS_DIR.glob("cco-*.md"))
-    counts["templates"] = sum(1 for _ in CLAUDE_DIR.glob("*.cco"))
-    return counts
+        files["commands"] = sorted(f.name for f in COMMANDS_DIR.glob("cco-*.md"))
+    if AGENTS_DIR.exists():
+        files["agents"] = sorted(f.name for f in AGENTS_DIR.glob("cco-*.md"))
+    return files
 
 
-def remove_cco_files() -> int:
-    """Remove CCO files, return count deleted."""
-    deleted = 0
-    for pattern, path in [
-        ("cco-*.md", AGENTS_DIR),
-        ("cco-*.md", COMMANDS_DIR),
-        ("*.cco", CLAUDE_DIR),
-    ]:
-        if path.exists():
-            for f in path.glob(pattern):
-                f.unlink()
-                deleted += 1
-
-    # Clean CLAUDE.md markers
+def has_claude_md_rules() -> list[str]:
+    """Check which CCO sections exist in CLAUDE.md."""
     claude_md = CLAUDE_DIR / "CLAUDE.md"
-    if claude_md.exists():
-        content = claude_md.read_text(encoding="utf-8")
+    if not claude_md.exists():
+        return []
+    content = claude_md.read_text(encoding="utf-8")
+    sections = []
+    if "<!-- CCO_RULES_START -->" in content:
+        sections.append("CCO Rules")
+    if "<!-- CCO_PRINCIPLES_START -->" in content:
+        sections.append("CCO Principles (legacy)")
+    return sections
+
+
+def remove_cco_files(verbose: bool = True) -> dict[str, int]:
+    """Remove CCO files with detailed output."""
+    removed = {"commands": 0, "agents": 0}
+
+    # Commands
+    if COMMANDS_DIR.exists():
+        for f in sorted(COMMANDS_DIR.glob("cco-*.md")):
+            f.unlink()
+            removed["commands"] += 1
+            if verbose:
+                print(f"  - {f.name}")
+
+    # Agents
+    if AGENTS_DIR.exists():
+        for f in sorted(AGENTS_DIR.glob("cco-*.md")):
+            f.unlink()
+            removed["agents"] += 1
+            if verbose:
+                print(f"  - {f.name}")
+
+    return removed
+
+
+def remove_claude_md_rules(verbose: bool = True) -> list[str]:
+    """Remove CCO rules from CLAUDE.md with detailed output."""
+    claude_md = CLAUDE_DIR / "CLAUDE.md"
+    if not claude_md.exists():
+        return []
+
+    content = claude_md.read_text(encoding="utf-8")
+    removed = []
+
+    if "<!-- CCO_RULES_START -->" in content:
         content = re.sub(
-            r"<!-- CCO_RULES_START -->.*?<!-- CCO_RULES_END -->\n?", "", content, flags=re.DOTALL
+            r"<!-- CCO_RULES_START -->.*?<!-- CCO_RULES_END -->\n?",
+            "",
+            content,
+            flags=re.DOTALL,
         )
+        removed.append("CCO Rules")
+
+    if "<!-- CCO_PRINCIPLES_START -->" in content:
         content = re.sub(
             r"<!-- CCO_PRINCIPLES_START -->.*?<!-- CCO_PRINCIPLES_END -->\n?",
             "",
             content,
             flags=re.DOTALL,
         )
+        removed.append("CCO Principles (legacy)")
+
+    if removed:
         content = re.sub(r"\n{3,}", "\n\n", content)
         claude_md.write_text(content, encoding="utf-8")
+        if verbose:
+            for section in removed:
+                print(f"  - {section}")
 
-    return deleted
+    return removed
 
 
 def uninstall_package(method: str) -> bool:
@@ -84,41 +125,87 @@ def main() -> int:
     """CLI entry point."""
     try:
         method = detect_install_method()
-        counts = count_cco_files()
-        total = sum(counts.values())
+        files = list_cco_files()
+        rules = has_claude_md_rules()
+        total_files = sum(len(f) for f in files.values())
 
-        if not method and total == 0:
+        if not method and total_files == 0 and not rules:
             print("CCO is not installed.")
             return 0
 
         # Show what will be removed
-        print("\nCCO Uninstall")
-        print("-" * 40)
+        print("\n" + "=" * 50)
+        print("CCO Uninstall")
+        print("=" * 50)
+        print(f"\nLocation: {CLAUDE_DIR}\n")
+
         if method:
-            print(f"Package: claudecodeoptimizer ({method})")
-        if total > 0:
-            print(f"Files: {total} in ~/.claude/")
+            print("Package:")
+            print(f"  claudecodeoptimizer ({method})")
+            print()
+
+        if files["commands"]:
+            print("Commands:")
+            for f in files["commands"]:
+                print(f"  - {f}")
+            print()
+
+        if files["agents"]:
+            print("Agents:")
+            for f in files["agents"]:
+                print(f"  - {f}")
+            print()
+
+        if rules:
+            print("CLAUDE.md sections:")
+            for section in rules:
+                print(f"  - {section}")
+            print()
+
+        # Summary
+        print("=" * 50)
+        print("Summary")
+        print("=" * 50)
+        if method:
+            print("  Package:   1")
+        print(f"  Commands:  {len(files['commands'])}")
+        print(f"  Agents:    {len(files['agents'])}")
+        print(f"  Rules:     {len(rules)} sections in CLAUDE.md")
         print()
 
-        # Simple confirmation
-        confirm = input("Remove CCO? [y/N]: ").strip().lower()
+        # Confirmation
+        confirm = input("Remove all CCO components? [y/N]: ").strip().lower()
         if confirm != "y":
             print("Cancelled.")
             return 0
 
-        # Remove
+        print()
+
+        # Remove package
         if method:
             print("Removing package...")
             if uninstall_package(method):
                 print("  Package removed")
             else:
                 print("  Failed to remove package")
+            print()
 
-        if total > 0:
-            deleted = remove_cco_files()
-            print(f"  Removed {deleted} files")
+        # Remove files
+        if total_files > 0:
+            print("Removing files...")
+            remove_cco_files()
+            print()
 
-        print("\nCCO removed.")
+        # Remove rules
+        if rules:
+            print("Removing CLAUDE.md sections...")
+            remove_claude_md_rules()
+            print()
+
+        print("=" * 50)
+        print("CCO removed successfully.")
+        print("=" * 50)
+        print()
         return 0
 
     except KeyboardInterrupt:

@@ -13,72 +13,64 @@ def get_content_dir() -> Path:
     return Path(__file__).parent / "content"
 
 
-def setup_commands() -> int:
+def setup_commands(verbose: bool = True) -> list[str]:
     """Copy cco-*.md commands to ~/.claude/commands/"""
     src = get_content_dir() / "commands"
     if not src.exists():
-        return 0
+        return []
     COMMANDS_DIR.mkdir(parents=True, exist_ok=True)
     for old in COMMANDS_DIR.glob("cco-*.md"):
         old.unlink()
-    count = 0
-    for f in src.glob("cco-*.md"):
+    installed = []
+    for f in sorted(src.glob("cco-*.md")):
         shutil.copy2(f, COMMANDS_DIR / f.name)
-        count += 1
-    return count
+        installed.append(f.name)
+        if verbose:
+            print(f"  + {f.name}")
+    return installed
 
 
-def setup_agents() -> int:
+def setup_agents(verbose: bool = True) -> list[str]:
     """Copy cco-*.md agents to ~/.claude/agents/"""
     src = get_content_dir() / "agents"
     if not src.exists():
-        return 0
+        return []
     AGENTS_DIR.mkdir(parents=True, exist_ok=True)
     for old in AGENTS_DIR.glob("cco-*.md"):
         old.unlink()
-    count = 0
-    for f in src.glob("cco-*.md"):
+    installed = []
+    for f in sorted(src.glob("cco-*.md")):
         shutil.copy2(f, AGENTS_DIR / f.name)
-        count += 1
-    return count
+        installed.append(f.name)
+        if verbose:
+            print(f"  + {f.name}")
+    return installed
 
 
-def setup_templates() -> int:
-    """Copy *.template files as *.cco to ~/.claude/"""
-    src = Path(__file__).parent.parent / "templates"
-    if not src.exists():
-        return 0
-    count = 0
-    for f in src.glob("*.template"):
-        dest = CLAUDE_DIR / f.name.replace(".template", ".cco")
-        shutil.copy2(f, dest)
-        count += 1
-    return count
-
-
-def setup_claude_md() -> None:
+def setup_claude_md(verbose: bool = True) -> None:
     """Add CCO Rules to ~/.claude/CLAUDE.md"""
     rules = """<!-- CCO_RULES_START -->
 # CCO Rules
 
 ## Paths
-Forward slash (/), relative, quote spaces, Git Bash preferred
+Forward slash (/), relative, quote spaces
 
 ## Reference Integrity
-Before delete/rename/move: find ALL refs → update (def→type→caller→import→test→doc) → verify (grep old=0, new=expected)
+Before delete/rename/move: find ALL refs → update in order → verify (grep old=0, new=expected)
 
 ## Verification
-- total = done + skip + fail (must match)
-- No "fixed" without Read/diff proof
-- Verify agent outputs
+- total = done + skip + fail + cannot_do (must match)
+- cannot_do = third-party, needs migration, needs infra
+- No "fixed" without Read proof
 
-## Safety
-Commit first, test before+after, max 10 files/batch
+## MultiSelect
+Always include "All" as first option
 <!-- CCO_RULES_END -->
 """
     claude_md = CLAUDE_DIR / "CLAUDE.md"
     CLAUDE_DIR.mkdir(parents=True, exist_ok=True)
 
+    action = "created"
     if claude_md.exists():
         content = claude_md.read_text(encoding="utf-8")
         content = re.sub(
@@ -94,13 +86,22 @@ Commit first, test before+after, max 10 files/batch
                 content,
                 flags=re.DOTALL,
             )
+            action = "updated"
         else:
             content = content.rstrip() + "\n\n" + rules
+            action = "appended"
     else:
         content = rules
 
     content = re.sub(r"\n{3,}", "\n\n", content)
     claude_md.write_text(content, encoding="utf-8")
+
+    if verbose:
+        print(f"  CLAUDE.md: CCO Rules {action}")
+        print("    - Paths")
+        print("    - Reference Integrity")
+        print("    - Verification")
+        print("    - MultiSelect")
 
 
 def post_install() -> int:
@@ -111,20 +112,40 @@ def post_install() -> int:
         return 0
 
     try:
-        print("\nCCO Setup")
-        print("-" * 40)
+        print("\n" + "=" * 50)
+        print("CCO Setup")
+        print("=" * 50)
+        print(f"\nLocation: {CLAUDE_DIR}\n")
 
+        # Commands
+        print("Commands:")
         cmds = setup_commands()
-        agents = setup_agents()
-        templates = setup_templates()
-        setup_claude_md()
+        if not cmds:
+            print("  (none)")
+        print()
 
-        print(f"Location: {CLAUDE_DIR}")
-        print(f"Commands: {cmds}")
-        print(f"Agents: {agents}")
-        print(f"Templates: {templates}")
-        print("Rules: added to CLAUDE.md")
-        print("\nCCO ready! Try: /cco-help")
+        # Agents
+        print("Agents:")
+        agents = setup_agents()
+        if not agents:
+            print("  (none)")
+        print()
+
+        # Rules
+        print("Rules:")
+        setup_claude_md()
+        print()
+
+        # Summary
+        print("=" * 50)
+        print("Summary")
+        print("=" * 50)
+        print(f"  Commands:  {len(cmds)}")
+        print(f"  Agents:    {len(agents)}")
+        print("  Rules:     4 sections in CLAUDE.md")
+        print()
+        print("CCO ready! Try: /cco-help")
+        print()
         return 0
 
     except Exception as e:
