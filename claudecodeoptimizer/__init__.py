@@ -1,23 +1,14 @@
-"""ClaudeCodeOptimizer - System-wide project management for Claude Code."""
+"""ClaudeCodeOptimizer - Enhance Claude Code with commands, agents, and rules."""
 
-import logging
 import sys
-
-logger = logging.getLogger(__name__)
 
 __version__ = "1.0.0"
 __author__ = "Sungur Zahid Erdim"
-__license__ = "MIT"
 
-# Fix Windows console encoding for emoji/Unicode support
+# Windows UTF-8 fix
 if sys.platform == "win32" and hasattr(sys.stdout, "reconfigure"):
     try:
         sys.stdout.reconfigure(encoding="utf-8")  # type: ignore[union-attr]
         sys.stderr.reconfigure(encoding="utf-8")  # type: ignore[union-attr]
-    except Exception as e:  # noqa: S110
-        logger.debug(f"Windows console encoding reconfigure failed: {e}")
-        pass  # Silent fail - continue with default encoding
-
-from .config import CCOConfig  # noqa: E402
-
-__all__ = ["CCOConfig", "__version__"]
+    except Exception:
+        pass
