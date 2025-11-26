@@ -153,7 +153,7 @@ class TestMain:
     @patch("claudecodeoptimizer.cco_remove.has_claude_md_rules")
     def test_not_installed(self, mock_rules, mock_list, mock_detect, capsys):
         mock_detect.return_value = None
-        mock_list.return_value = {"agents": [], "commands": [], "templates": []}
+        mock_list.return_value = {"agents": [], "commands": []}
         mock_rules.return_value = []
         result = main()
         assert result == 0
@@ -166,7 +166,7 @@ class TestMain:
     @patch("builtins.input")
     def test_cancelled(self, mock_input, mock_rules, mock_list, mock_detect, capsys):
         mock_detect.return_value = "pip"
-        mock_list.return_value = {"agents": ["a.md"], "commands": ["c.md"], "templates": []}
+        mock_list.return_value = {"agents": ["a.md"], "commands": ["c.md"]}
         mock_rules.return_value = ["CCO Rules"]
         mock_input.return_value = "n"
         result = main()
@@ -213,7 +213,7 @@ class TestMain:
         self, mock_input, mock_uninstall, mock_rules, mock_list, mock_detect, capsys
     ):
         mock_detect.return_value = "pip"
-        mock_list.return_value = {"commands": [], "agents": [], "templates": []}
+        mock_list.return_value = {"commands": [], "agents": []}
         mock_rules.return_value = []
         mock_input.return_value = "y"
         mock_uninstall.return_value = False
