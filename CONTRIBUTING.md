@@ -69,9 +69,9 @@ pytest -n auto
 
 ### Test Coverage Standards
 
-- **Minimum Coverage**: 80% overall (current: 84%)
+- **Minimum Coverage**: 80% overall (current: 98%)
 - **Critical Modules**: 90%+ coverage required
-  - `core/knowledge_setup.py`
+  - `install_hook.py`
   - `cco_remove.py`
   - `cco_status.py`
   - `config.py`
@@ -190,15 +190,15 @@ Before submitting a PR, verify:
 ```
 ClaudeCodeOptimizer/
 ├── claudecodeoptimizer/     # Main package
-│   ├── core/                # Core functionality
-│   │   ├── knowledge_setup.py      # Setup and deployment
-│   │   └── ...                     # Other core modules
 │   ├── content/             # Knowledge base (deployed to ~/.claude/)
 │   │   ├── commands/        # Slash commands (cco-*.md)
-│   │   ├── agents/          # Autonomous agents (cco-agent-*.md)
+│   │   └── agents/          # Autonomous agents (cco-agent-*.md)
+│   ├── __init__.py          # Package init, version
+│   ├── __main__.py          # CLI entry
+│   ├── config.py            # Configuration paths
+│   ├── install_hook.py      # Setup/deployment
 │   ├── cco_status.py        # Status command
-│   ├── cco_remove.py        # Remove command
-│   └── config.py            # Configuration
+│   └── cco_remove.py        # Remove command
 └── tests/                   # Test suite
     ├── unit/                # Unit tests
     └── integration/         # Integration tests
