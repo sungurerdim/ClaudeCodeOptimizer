@@ -8,6 +8,14 @@ requires: detection
 
 **Quality gates** - Detect stack → run standardized checks → prioritize → offer fixes.
 
+## Agent Delegation
+
+| Phase | Agent | Purpose |
+|-------|-------|---------|
+| 1. Detect | `cco-agent-detect` | Identify stack, filter applicable checks |
+| 2-4. Scan | `cco-agent-scan` | Find issues with file:line refs |
+| 5. Fix | `cco-agent-action` | Apply approved fixes with verification |
+
 ## Pre-Operation Safety
 
 Before starting:

@@ -8,6 +8,13 @@ requires: detection
 
 **Process visibility** - Single view of project health with actionable next steps.
 
+## Agent Delegation
+
+| Phase | Agent | Purpose |
+|-------|-------|---------|
+| Detect | `cco-agent-detect` | Identify stack for applicable metrics |
+| Scan | `cco-agent-scan` | Collect metrics, identify top issues |
+
 ## Scores (0-100)
 
 - **Security** - Based on vulnerabilities found

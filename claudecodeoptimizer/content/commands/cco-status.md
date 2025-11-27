@@ -7,6 +7,12 @@ description: CCO installation and config health check
 
 Check CCO installation and configuration health.
 
+## Agent Delegation
+
+| Phase | Agent | Purpose |
+|-------|-------|---------|
+| Validate | `cco-agent-scan` | Check files, validate configs |
+
 ## Installation Check
 
 1. Count files in ~/.claude/commands/cco-*.md

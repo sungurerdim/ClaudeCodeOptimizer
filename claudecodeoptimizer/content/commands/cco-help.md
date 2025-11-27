@@ -10,11 +10,12 @@ description: Command reference
 | Command | Purpose |
 |---------|---------|
 | `/cco-audit` | **Quality gates** - standardized checks, prioritized fixes |
+| `/cco-review` | **Strategic review** - architecture analysis, fresh perspective, apply improvements |
 | `/cco-generate` | **Generation** - convention-following, verified |
 | `/cco-health` | **Visibility** - actionable metrics dashboard |
 | `/cco-refactor` | **Risk mitigation** - verified transformations |
 | `/cco-optimize` | **Efficiency** - measurable improvements |
-| `/cco-commit` | **Change management** - atomic, traceable commits |
+| `/cco-commit` | **Change management** - quality gates, atomic commits |
 | `/cco-config` | **Settings** - statusline, permissions (global/local) |
 | `/cco-status` | Installation check |
 
@@ -22,9 +23,10 @@ description: Command reference
 
 ```bash
 /cco-audit --smart       # Quality gates → offer fixes
+/cco-review              # Strategic review → apply improvements
 /cco-health              # Metrics dashboard
 /cco-refactor rename x y # Verified rename
-/cco-commit              # Atomic commits
+/cco-commit              # Quality gates → atomic commits
 /cco-config              # Configure statusline & permissions
 ```
 
@@ -51,6 +53,15 @@ description: Command reference
 /cco-audit --self-compliance # Check against project's own rules
 /cco-audit --critical        # security + ai-security + database + tests
 /cco-audit --auto-fix        # Auto-fix safe issues
+```
+
+## Review Flags
+
+```bash
+/cco-review                    # Full review → approve → apply
+/cco-review --quick            # Gap analysis only
+/cco-review --focus=structure  # Focus on organization
+/cco-review --report-only      # Just show findings
 ```
 
 ## Self-Compliance SSOT

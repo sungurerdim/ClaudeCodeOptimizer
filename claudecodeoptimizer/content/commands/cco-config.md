@@ -7,6 +7,12 @@ description: Configure statusline and permissions
 
 **Configuration** - Detect existing → show details → remove/update/add.
 
+## Agent Delegation
+
+| Phase | Agent | Purpose |
+|-------|-------|---------|
+| Write | `cco-agent-action` | Create/update config files |
+
 ## Pre-Check
 
 Silently detect existing configuration:
@@ -590,39 +596,143 @@ Cross-platform command for settings.json:
 
 Target: `{scope}/settings.json`
 
-### Levels
+### Agent Compatibility
 
-**Safe:**
+| Level | detect | scan | action | Use Case |
+|-------|--------|------|--------|----------|
+| Safe | ✓ | ✗ | ✗ | Maximum security, manual approval |
+| Balanced | ✓ | ✓ | ✓ | Normal workflow (recommended) |
+| Permissive | ✓ | ✓ | ✓ | Minimal prompts, trusted projects |
+
+**Agent tool requirements:**
+- `cco-agent-detect`: Read, Glob, Grep (all read-only)
+- `cco-agent-scan`: + Bash (read-only: ruff check, pytest --collect-only, git log)
+- `cco-agent-action`: + Edit, Write, NotebookEdit, Bash (format, lint, test runners)
+
+### Always Allow (all levels)
+
+These safe tools are always in allow list:
 ```
-allow: Read, Glob, Grep, WebSearch, WebFetch, Task
-ask: Write, Edit, all Bash
+Read, Glob, Grep, WebSearch, WebFetch, Task, TodoWrite,
+SlashCommand, Skill, AskUserQuestion
+```
+
+**Safe:** Maximum security
+```
+allow: [always allow]
+ask: Write, Edit, NotebookEdit, all Bash
 deny: dangerous commands
 ```
+⚠️ Every file change and command needs approval.
 
-**Balanced (default):**
+**Balanced (default):** Normal workflow
 ```
-allow: Read, Write, Edit, Glob, Grep, WebSearch, WebFetch, Task
-       Bash (read-only + project tools)
-ask: Bash (install, delete, push)
+allow: [always allow] + Write, Edit, NotebookEdit
+       Bash: git, ruff, pytest, npm test, cargo check, etc.
+ask: rm/del, pip install, npm install, git push
 deny: dangerous commands
 ```
+✓ Code changes auto, destructive/install commands ask.
 
-**Permissive:**
+**Permissive:** Trusted projects
 ```
-allow: Read, Write, Edit, Glob, Grep, WebSearch, WebFetch, Task
-       Bash (most operations including delete)
-ask: Bash (push, system commands)
+allow: [always allow] + Write, Edit, NotebookEdit
+       Bash: everything except push and system
+ask: git push, npm publish, sudo, system commands
 deny: dangerous commands
 ```
+✓ Even rm/install auto, only publish/push asks.
 
-### Always Deny
+### Difference Table
 
+| Action | Safe | Balanced | Permissive |
+|--------|------|----------|------------|
+| Edit/Write files | ask | allow | allow |
+| git status/diff/log | ask | allow | allow |
+| ruff/pytest/npm test | ask | allow | allow |
+| rm file, del file | ask | **ask** | allow |
+| pip/npm install | ask | **ask** | allow |
+| git push | ask | ask | **ask** |
+| npm publish | ask | ask | **ask** |
+| rm -rf, format, dd | **deny** | **deny** | **deny** |
+| sudo, su, chmod 777 | **deny** | **deny** | **deny** |
+| curl\|bash, eval | **deny** | **deny** | **deny** |
+| .env, secrets, keys | **deny** | **deny** | **deny** |
+
+### Always Deny (all levels)
+
+These dangerous patterns are always in deny list regardless of permission level:
+
+**Destructive Commands:**
+```
+Bash(rm -rf /*:*)        # Root deletion
+Bash(rm -rf ~/*:*)       # Home deletion
+Bash(rm -rf .:*)         # Current dir recursive
+Bash(del /s /q:*)        # Windows recursive delete
+Bash(format:*)           # Disk format
+Bash(mkfs:*)             # Filesystem format
+Bash(dd if=:*)           # Raw disk write
+```
+
+**System/Privilege:**
+```
+Bash(sudo:*)             # Privilege escalation
+Bash(su:*)               # Switch user
+Bash(chmod 777:*)        # World writable
+Bash(chown root:*)       # Change to root
+Bash(shutdown:*)         # System shutdown
+Bash(reboot:*)           # System reboot
+Bash(halt:*)             # System halt
+```
+
+**Git Dangerous:**
+```
+Bash(git push --force:*)      # Force push
+Bash(git push -f:*)           # Force push short
+Bash(git reset --hard:*)      # Hard reset
+Bash(git clean -fdx:*)        # Clean all untracked
+Bash(git rebase -i:*)         # Interactive rebase
+```
+
+**Remote Code Execution:**
+```
+Bash(curl*|*sh:*)        # Pipe to shell
+Bash(curl*|*bash:*)      # Pipe to bash
+Bash(wget*|*sh:*)        # Wget pipe to shell
+Bash(eval:*)             # Eval command
+```
+
+**Sensitive Files:**
+```
+Edit(**/.env)            # Environment files
+Edit(**/.env.*)          # Environment variants
+Edit(**/secrets/**)      # Secrets directory
+Edit(**/*.pem)           # Private keys
+Edit(**/*.key)           # Key files
+Edit(**/*secret*)        # Secret files
+Write(**/.env)           # Write env
+Write(**/.env.*)         # Write env variants
+Write(**/secrets/**)     # Write secrets
+Read(**/.ssh/id_*)       # SSH private keys
+Read(**/.aws/credentials)# AWS credentials
+Read(**/.kube/config)    # Kubernetes config
+Read(**/*password*)      # Password files
+```
+
+**Combined deny array:**
 ```json
 "deny": [
-  "Bash(rm -rf /*:*)", "Bash(rm -rf ~/*:*)", "Bash(sudo:*)",
-  "Bash(git push --force:*)", "Bash(git reset --hard:*)",
-  "Edit(**/.env)", "Edit(**/secrets/**)", "Edit(**/*.pem)",
-  "Write(**/.env)", "Read(**/.ssh/id_*)", "Read(**/.aws/credentials)"
+  "Bash(rm -rf /*:*)", "Bash(rm -rf ~/*:*)", "Bash(rm -rf .:*)",
+  "Bash(del /s /q:*)", "Bash(format:*)", "Bash(mkfs:*)", "Bash(dd if=:*)",
+  "Bash(sudo:*)", "Bash(su:*)", "Bash(chmod 777:*)", "Bash(chown root:*)",
+  "Bash(shutdown:*)", "Bash(reboot:*)", "Bash(halt:*)",
+  "Bash(git push --force:*)", "Bash(git push -f:*)",
+  "Bash(git reset --hard:*)", "Bash(git clean -fdx:*)",
+  "Bash(curl*|*sh:*)", "Bash(curl*|*bash:*)", "Bash(wget*|*sh:*)", "Bash(eval:*)",
+  "Edit(**/.env)", "Edit(**/.env.*)", "Edit(**/secrets/**)", "Edit(**/*.pem)",
+  "Edit(**/*.key)", "Edit(**/*secret*)",
+  "Write(**/.env)", "Write(**/.env.*)", "Write(**/secrets/**)",
+  "Read(**/.ssh/id_*)", "Read(**/.aws/credentials)", "Read(**/.kube/config)"
 ]
 ```
 

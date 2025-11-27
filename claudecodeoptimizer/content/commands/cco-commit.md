@@ -5,7 +5,48 @@ description: Atomic traceable change management
 
 # /cco-commit
 
-**Change management** - Analyze → group atomically → commit with traceability.
+**Change management** - Quality gates → analyze → group atomically → commit with traceability.
+
+## Agent Delegation
+
+| Phase | Agent | Purpose |
+|-------|-------|---------|
+| Detect | `cco-agent-detect` | Find project tools (format, lint, test) |
+
+## Pre-Commit Quality Gates
+
+Before committing, automatically run quality checks:
+
+### Tool Detection
+
+Detect project tools from config files (no hardcoded tool names):
+- `pyproject.toml` → extract [tool.*] sections
+- `package.json` → extract scripts and devDependencies
+- `Cargo.toml` → Rust toolchain
+- `go.mod` → Go toolchain
+- `Makefile` → check for lint/test/format targets
+- `.pre-commit-config.yaml` → use pre-commit if configured
+
+### Check Order
+
+1. **Format** - Auto-fix style issues (modifies files)
+2. **Lint** - Static analysis (may auto-fix)
+3. **Test** - Verify behavior (read-only)
+
+### Behavior
+
+- Run detected tools in order
+- If format modifies files, include in commit
+- If lint fails with unfixable errors, stop and report
+- If tests fail, stop and report - never commit broken code
+- Show summary: `Format: OK | Lint: OK | Tests: 47 passed`
+
+### Skip Option
+
+Use `--skip-checks` to bypass (use with caution):
+```bash
+/cco-commit --skip-checks  # Skip quality gates
+```
 
 ## Atomic Grouping Rules
 
@@ -50,21 +91,25 @@ Bad: `fix: fixed bug`
 
 ## Flow
 
-1. **Analyze** - `git status`, `git diff`, detect change types
-2. **Group** - Apply atomic grouping rules, detect dependencies
-3. **Plan** - Show commit plan with files per commit
-4. **Confirm** - AskUserQuestion: Accept / Modify / Custom
-5. **Execute** - Stage and commit each group in order
-6. **Verify** - `git log` count = planned count
+1. **Detect Tools** - Find formatters, linters, test runners from config
+2. **Quality Gates** - Run format → lint → test (stop on failure)
+3. **Analyze** - `git status`, `git diff`, detect change types
+4. **Group** - Apply atomic grouping rules, detect dependencies
+5. **Plan** - Show commit plan with files per commit
+6. **Confirm** - AskUserQuestion: Accept / Modify / Custom
+7. **Execute** - Stage and commit each group in order
+8. **Verify** - `git log` count = planned count
 
 ## Flags
 
 - `--dry-run` - Show plan without committing
 - `--single` - Force all changes into one commit
+- `--skip-checks` - Skip format/lint/test gates (use with caution)
 
 ## Usage
 
 ```bash
-/cco-commit              # Analyze and suggest atomic commits
-/cco-commit --dry-run    # Preview only
+/cco-commit                 # Full flow: checks → analyze → commit
+/cco-commit --dry-run       # Preview only (still runs checks)
+/cco-commit --skip-checks   # Skip quality gates (emergency use)
 ```

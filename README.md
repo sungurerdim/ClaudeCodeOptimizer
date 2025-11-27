@@ -38,11 +38,12 @@ cco-setup
 | Command | Purpose |
 |---------|---------|
 | `/cco-audit` | **Quality gates** - standardized checks, prioritized fixes |
+| `/cco-review` | **Strategic review** - architecture analysis, fresh perspective |
 | `/cco-generate` | **Generation** - convention-following, verified |
 | `/cco-health` | **Visibility** - actionable metrics dashboard |
 | `/cco-refactor` | **Risk mitigation** - verified transformations |
 | `/cco-optimize` | **Efficiency** - measurable improvements |
-| `/cco-commit` | **Change management** - atomic, traceable commits |
+| `/cco-commit` | **Change management** - quality gates, atomic commits |
 | `/cco-config` | **Settings** - statusline, permissions (global/local) |
 | `/cco-status` | Installation check |
 | `/cco-help` | Command reference |
@@ -75,6 +76,13 @@ Finds ALL references, updates in order, verifies with grep.
 ```bash
 /cco-optimize --context         # Reduce CLAUDE.md tokens
 /cco-optimize --code-quality    # Remove dead code, unused imports
+```
+
+**Strategic review:**
+```bash
+/cco-review                     # Full architecture review
+/cco-review --quick             # Gap analysis only
+/cco-review --focus=structure   # Focus on organization
 ```
 
 **Configure settings:**
@@ -113,7 +121,7 @@ Finds ALL references, updates in order, verifies with grep.
 
 ## Design Principles
 
-CCO provides 9 commands, 3 agents, and rules added to `~/.claude/`.
+CCO provides 10 commands, 3 agents, and rules added to `~/.claude/`.
 
 **Core principles:**
 - Perfect UX/DX, maximum efficiency
@@ -170,7 +178,7 @@ After `cco-setup`, the following is added to `~/.claude/`:
 ```
 ~/.claude/
 ├── commands/
-│   └── cco-*.md          # 9 slash commands
+│   └── cco-*.md          # 10 slash commands
 ├── agents/
 │   └── cco-*.md          # 3 specialized agents
 └── CLAUDE.md             # 118 standards (17 categories)
