@@ -88,28 +88,78 @@ When mismatches found, AskUserQuestion for Single Source of Truth:
 - `--all` - Everything applicable
 - `--auto-fix` - Skip asking, auto-fix safe issues
 
+## Priority Scoring
+
+Each issue gets priority based on impact/effort ratio:
+- **CRITICAL** - Security vulnerabilities, data exposure (fix immediately)
+- **HIGH** - High impact, low effort (fix first)
+- **MEDIUM** - Balanced impact/effort
+- **LOW** - Low impact or high effort (fix if time permits)
+
+Output sorted by priority, grouped by category.
+
+## Fix Approval Process
+
+After analysis, present issues grouped by priority. Use **separate AskUserQuestion for each priority level** to give user granular control:
+
+### Step 1: Critical Issues (if any)
+```
+AskUserQuestion (multiSelect=true):
+"Found X critical issues. Which to fix?"
+- "All Critical" (first option per CCO rules)
+- Individual issue options...
+```
+
+### Step 2: High Priority Issues (if any)
+```
+AskUserQuestion (multiSelect=true):
+"Found X high priority issues. Which to fix?"
+- "All High" (first option)
+- Individual issue options...
+```
+
+### Step 3: Medium Priority Issues (if any)
+```
+AskUserQuestion (multiSelect=true):
+"Found X medium priority issues. Which to fix?"
+- "All Medium" (first option)
+- Individual issue options...
+```
+
+### Step 4: Low Priority Issues (if any)
+```
+AskUserQuestion (multiSelect=true):
+"Found X low priority issues. Which to fix?"
+- "All Low" (first option)
+- Individual issue options...
+```
+
+### Alternative: Single Combined Question
+For fewer total issues (<10), use single multiSelect:
+```
+AskUserQuestion (multiSelect=true):
+"Select issues to fix:"
+- "All Issues"
+- "All Critical (X)"
+- "All High (Y)"
+- "All Medium (Z)"
+- "All Low (W)"
+- Individual issues by priority...
+```
+
 ## Fix Behavior
 
-**Safe (auto-apply):**
+**Safe (auto-apply with --auto-fix):**
 - Parameterize SQL queries
 - Remove unused imports/code
 - Move secrets to env vars
 - Fix linting issues
 
-**Risky (approval via AskUserQuestion):**
+**Risky (always require approval):**
 - Auth/CSRF changes
 - DB schema changes
 - API contract changes
 - Self-compliance fixes (may need design decision)
-
-## Priority Scoring
-
-Each issue gets priority based on impact/effort ratio:
-- **HIGH** - High impact, low effort (fix first)
-- **MED** - Balanced
-- **LOW** - Low impact or high effort
-
-Output sorted by priority, grouped by category.
 
 ## Verification
 
