@@ -169,39 +169,40 @@ Priority = Impact / Effort (prefer high impact, low effort, low risk)
 
 ## Approval & Apply Flow
 
-After analysis, present recommendations grouped by priority for approval:
+After analysis, present all recommendations in a **single AskUserQuestion call** with up to 4 questions (one per priority level):
 
-### Step 1: Critical Improvements
 ```
-AskUserQuestion (multiSelect=true):
+AskUserQuestion (single call, multiple questions):
+
+Question 1 - header: "Critical"
 "Found X critical improvements. Which to apply?"
-- "All Critical"
-- Individual items...
-```
+multiSelect=true
+- "All" (first option)
+- Individual critical items...
 
-### Step 2: High Priority (Quick Wins)
-```
-AskUserQuestion (multiSelect=true):
+Question 2 - header: "Quick Wins"
 "Found X quick wins (high impact, low effort). Which to apply?"
-- "All Quick Wins"
-- Individual items...
-```
+multiSelect=true
+- "All"
+- Individual quick win items...
 
-### Step 3: Medium Priority
-```
-AskUserQuestion (multiSelect=true):
+Question 3 - header: "Medium"
 "Found X medium priority improvements. Which to apply?"
-- "All Medium"
-- Individual items...
+multiSelect=true
+- "All"
+- Individual medium items...
+
+Question 4 - header: "Nice to Have"
+"Found X nice-to-have improvements. Which to apply?"
+multiSelect=true
+- "All"
+- Individual low priority items...
 ```
 
-### Step 4: Low Priority (Nice to Have)
-```
-AskUserQuestion (multiSelect=true):
-"Found X nice-to-have improvements. Which to apply?"
-- "All Low"
-- Individual items...
-```
+**Rules:**
+- Only include questions for priority levels that have recommendations
+- Skip empty priority levels
+- Max 4 options per question - group if needed
 
 ### Apply Selected
 
