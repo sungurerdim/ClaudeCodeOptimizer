@@ -635,64 +635,591 @@ Read, Glob, Grep, WebSearch, WebFetch, Task, TodoWrite,
 SlashCommand, Skill, AskUserQuestion
 ```
 
-### Scope-Based Write Patterns
+### Hybrid Permission Model
 
-**Local scope (.claude/settings.local.json):**
-Project + global .claude folder access:
-```json
-"allow": [
-  "Read", "Glob", "Grep", "WebSearch", "WebFetch", "Task", "TodoWrite",
-  "Edit(./**)", "Write(./**)", "NotebookEdit(./**)",
-  "Edit(~/.claude/**)", "Write(~/.claude/**)", "Read(~/.claude/**)"
-]
+**Precedence:** deny > ask > allow
+
+| Level | Model | Security | Flexibility |
+|-------|-------|----------|-------------|
+| Safe | Whitelist | High | Low |
+| Balanced | Whitelist | High | Medium |
+| Permissive | Blacklist | Medium | High |
+
+### Command Lists
+
+**Core commands (whitelist base):**
+```javascript
+const coreCommands = [
+  // ═══════════════════════════════════════════════════════════════════════════
+  // GIT - Version control operations
+  // ═══════════════════════════════════════════════════════════════════════════
+  "Bash(git status:*)", "Bash(git diff:*)", "Bash(git log:*)", "Bash(git show:*)",
+  "Bash(git branch:*)", "Bash(git remote:*)", "Bash(git fetch:*)", "Bash(git pull:*)",
+  "Bash(git add:*)", "Bash(git commit:*)", "Bash(git stash:*)", "Bash(git checkout:*)",
+  "Bash(git switch:*)", "Bash(git merge:*)", "Bash(git rebase:*)", "Bash(git cherry-pick:*)",
+  "Bash(git tag:*)", "Bash(git rev-parse:*)", "Bash(git ls-files:*)", "Bash(git -C:*)",
+  "Bash(git blame:*)", "Bash(git shortlog:*)", "Bash(git describe:*)", "Bash(git config:*)",
+  "Bash(git rev-list:*)", "Bash(git ls-tree:*)", "Bash(git cat-file:*)", "Bash(git archive:*)",
+  "Bash(git worktree:*)", "Bash(git bisect:*)", "Bash(git reflog:*)", "Bash(git notes:*)",
+
+  // ═══════════════════════════════════════════════════════════════════════════
+  // FILE SYSTEM - Directory navigation & file operations
+  // ═══════════════════════════════════════════════════════════════════════════
+  "Bash(ls:*)", "Bash(dir:*)", "Bash(pwd:*)", "Bash(cd:*)",
+  "Bash(cat:*)", "Bash(head:*)", "Bash(tail:*)", "Bash(wc:*)",
+  "Bash(find:*)", "Bash(which:*)", "Bash(where:*)", "Bash(type:*)", "Bash(echo:*)",
+  "Bash(mkdir:*)", "Bash(cp:*)", "Bash(mv:*)", "Bash(touch:*)", "Bash(tree:*)",
+  "Bash(ln:*)", "Bash(readlink:*)", "Bash(realpath:*)", "Bash(basename:*)", "Bash(dirname:*)",
+  "Bash(pathchk:*)", "Bash(mktemp:*)", "Bash(stat:*)", "Bash(file:*)",
+
+  // ═══════════════════════════════════════════════════════════════════════════
+  // SEARCH & TEXT PROCESSING - Pattern matching & text manipulation
+  // ═══════════════════════════════════════════════════════════════════════════
+  "Bash(grep:*)", "Bash(rg:*)", "Bash(fd:*)", "Bash(diff:*)",
+  "Bash(sort:*)", "Bash(uniq:*)", "Bash(cut:*)", "Bash(tr:*)",
+  "Bash(jq:*)", "Bash(yq:*)", "Bash(sed:*)", "Bash(awk:*)",
+  "Bash(xargs:*)", "Bash(tee:*)",
+  "Bash(more:*)", "Bash(less:*)", "Bash(nl:*)", "Bash(rev:*)",
+  "Bash(expand:*)", "Bash(unexpand:*)", "Bash(fold:*)", "Bash(fmt:*)",
+  "Bash(pr:*)", "Bash(column:*)", "Bash(paste:*)", "Bash(join:*)",
+  "Bash(comm:*)", "Bash(split:*)", "Bash(csplit:*)", "Bash(strings:*)",
+  "Bash(colrm:*)", "Bash(look:*)", "Bash(tsort:*)", "Bash(ptx:*)",
+
+  // ═══════════════════════════════════════════════════════════════════════════
+  // HASH & CHECKSUM - File integrity verification
+  // ═══════════════════════════════════════════════════════════════════════════
+  "Bash(md5sum:*)", "Bash(sha1sum:*)", "Bash(sha256sum:*)", "Bash(sha512sum:*)",
+  "Bash(shasum:*)", "Bash(md5:*)", "Bash(cksum:*)", "Bash(sum:*)",
+  "Bash(b2sum:*)", "Bash(sha224sum:*)", "Bash(sha384sum:*)",
+  "Bash(xxhsum:*)", "Bash(rhash:*)", "Bash(openssl dgst:*)",
+  "Bash(certutil -hashfile:*)",  // Windows
+
+  // ═══════════════════════════════════════════════════════════════════════════
+  // ARCHIVE & COMPRESSION - File archiving & compression
+  // ═══════════════════════════════════════════════════════════════════════════
+  "Bash(tar:*)", "Bash(zip:*)", "Bash(unzip:*)", "Bash(zipinfo:*)",
+  "Bash(gzip:*)", "Bash(gunzip:*)", "Bash(zcat:*)", "Bash(zless:*)", "Bash(zmore:*)",
+  "Bash(bzip2:*)", "Bash(bunzip2:*)", "Bash(bzcat:*)",
+  "Bash(xz:*)", "Bash(unxz:*)", "Bash(xzcat:*)", "Bash(lzma:*)", "Bash(unlzma:*)",
+  "Bash(zstd:*)", "Bash(unzstd:*)", "Bash(zstdcat:*)",
+  "Bash(lz4:*)", "Bash(unlz4:*)", "Bash(lz4cat:*)",
+  "Bash(7z:*)", "Bash(7za:*)", "Bash(7zr:*)",
+  "Bash(rar:*)", "Bash(unrar:*)",
+  "Bash(cpio:*)", "Bash(ar:*)", "Bash(pax:*)",
+  "Bash(compress:*)", "Bash(uncompress:*)",
+  "Bash(Expand-Archive:*)", "Bash(Compress-Archive:*)",  // PowerShell
+
+  // ═══════════════════════════════════════════════════════════════════════════
+  // ENCODING & DECODING - Data encoding/decoding
+  // ═══════════════════════════════════════════════════════════════════════════
+  "Bash(base64:*)", "Bash(base32:*)", "Bash(basenc:*)",
+  "Bash(xxd:*)", "Bash(od:*)", "Bash(hexdump:*)", "Bash(hd:*)",
+  "Bash(uuencode:*)", "Bash(uudecode:*)",
+  "Bash(iconv:*)", "Bash(dos2unix:*)", "Bash(unix2dos:*)",
+  "Bash(recode:*)", "Bash(ascii:*)",
+
+  // ═══════════════════════════════════════════════════════════════════════════
+  // PROCESS & TIME CONTROL - Process management & timing
+  // ═══════════════════════════════════════════════════════════════════════════
+  "Bash(timeout:*)", "Bash(sleep:*)", "Bash(time:*)", "Bash(watch:*)",
+  "Bash(wait:*)", "Bash(nohup:*)", "Bash(nice:*)", "Bash(ionice:*)",
+  "Bash(ps:*)", "Bash(top:*)", "Bash(htop:*)", "Bash(pgrep:*)",
+  "Bash(pidof:*)", "Bash(uptime:*)", "Bash(free:*)", "Bash(vmstat:*)",
+  "Bash(lscpu:*)", "Bash(nproc:*)", "Bash(getconf:*)",
+  "Bash(taskset:*)", "Bash(chrt:*)", "Bash(schedtool:*)",
+  "Bash(Start-Sleep:*)",  // PowerShell
+
+  // ═══════════════════════════════════════════════════════════════════════════
+  // DISK & STORAGE INFO - Disk usage & storage information
+  // ═══════════════════════════════════════════════════════════════════════════
+  "Bash(du:*)", "Bash(df:*)", "Bash(lsblk:*)", "Bash(blkid:*)",
+  "Bash(findmnt:*)", "Bash(mount:*)", "Bash(mountpoint:*)",
+  "Bash(quota:*)", "Bash(ncdu:*)", "Bash(duf:*)",
+
+  // ═══════════════════════════════════════════════════════════════════════════
+  // NETWORK - Network utilities (read-only/safe)
+  // ═══════════════════════════════════════════════════════════════════════════
+  "Bash(ping:*)", "Bash(ping6:*)", "Bash(traceroute:*)", "Bash(tracepath:*)",
+  "Bash(mtr:*)", "Bash(pathping:*)",  // Windows
+  "Bash(curl:*)", "Bash(wget:*)", "Bash(http:*)", "Bash(httpie:*)",
+  "Bash(nc:*)", "Bash(netcat:*)", "Bash(ncat:*)", "Bash(socat:*)",
+  "Bash(nslookup:*)", "Bash(dig:*)", "Bash(host:*)", "Bash(whois:*)",
+  "Bash(getent:*)", "Bash(resolvectl:*)",
+  "Bash(ifconfig:*)", "Bash(ip:*)", "Bash(ipconfig:*)",  // Windows
+  "Bash(netstat:*)", "Bash(ss:*)", "Bash(lsof:*)", "Bash(fuser:*)",
+  "Bash(arp:*)", "Bash(route:*)", "Bash(iwconfig:*)", "Bash(iwlist:*)",
+  "Bash(nmcli:*)", "Bash(networksetup:*)",  // macOS
+  "Bash(Test-Connection:*)", "Bash(Test-NetConnection:*)",  // PowerShell
+
+  // ═══════════════════════════════════════════════════════════════════════════
+  // SYSTEM INFO - System information & diagnostics
+  // ═══════════════════════════════════════════════════════════════════════════
+  "Bash(env:*)", "Bash(printenv:*)", "Bash(export:*)", "Bash(set:*)",
+  "Bash(date:*)", "Bash(cal:*)", "Bash(ncal:*)", "Bash(timedatectl:*)",
+  "Bash(whoami:*)", "Bash(id:*)", "Bash(groups:*)", "Bash(users:*)", "Bash(who:*)", "Bash(w:*)",
+  "Bash(hostname:*)", "Bash(hostnamectl:*)", "Bash(domainname:*)",
+  "Bash(uname:*)", "Bash(arch:*)", "Bash(lsb_release:*)", "Bash(hostinfo:*)",  // macOS
+  "Bash(sw_vers:*)", "Bash(system_profiler:*)",  // macOS
+  "Bash(systeminfo:*)", "Bash(ver:*)",  // Windows
+  "Bash(locale:*)", "Bash(localectl:*)", "Bash(getopt:*)",
+  "Bash(dmesg:*)", "Bash(journalctl:*)", "Bash(sysctl:*)",
+  "Bash(lshw:*)", "Bash(lspci:*)", "Bash(lsusb:*)", "Bash(lsmod:*)",
+  "Bash(dmidecode:*)", "Bash(inxi:*)", "Bash(neofetch:*)", "Bash(screenfetch:*)",
+
+  // ═══════════════════════════════════════════════════════════════════════════
+  // MATH & CALCULATION - Numeric operations
+  // ═══════════════════════════════════════════════════════════════════════════
+  "Bash(bc:*)", "Bash(dc:*)", "Bash(expr:*)", "Bash(factor:*)",
+  "Bash(seq:*)", "Bash(shuf:*)", "Bash(numfmt:*)",
+  "Bash(yes:*)", "Bash(true:*)", "Bash(false:*)",
+
+  // ═══════════════════════════════════════════════════════════════════════════
+  // TERMINAL & DISPLAY - Terminal control & output
+  // ═══════════════════════════════════════════════════════════════════════════
+  "Bash(printf:*)", "Bash(tput:*)", "Bash(stty:*)", "Bash(reset:*)",
+  "Bash(clear:*)", "Bash(cls:*)",  // Windows
+  "Bash(tty:*)", "Bash(script:*)", "Bash(screen:*)", "Bash(tmux:*)",
+  "Bash(tabs:*)", "Bash(infocmp:*)", "Bash(tic:*)",
+
+  // ═══════════════════════════════════════════════════════════════════════════
+  // FILE PERMISSIONS & ATTRIBUTES (read-only checks)
+  // ═══════════════════════════════════════════════════════════════════════════
+  "Bash(test:*)", "Bash([:*)",
+  "Bash(getfacl:*)", "Bash(lsattr:*)",
+  "Bash(namei:*)", "Bash(access:*)",
+  "Bash(attrib:*)", "Bash(icacls:*)",  // Windows (read-only usage)
+
+  // ═══════════════════════════════════════════════════════════════════════════
+  // WINDOWS-SPECIFIC COMMANDS
+  // ═══════════════════════════════════════════════════════════════════════════
+  "Bash(findstr:*)", "Bash(fc:*)", "Bash(comp:*)", "Bash(path:*)",
+  "Bash(tasklist:*)", "Bash(wmic:*)", "Bash(query:*)",
+  "Bash(reg query:*)", "Bash(schtasks /query:*)",
+  "Bash(Get-Content:*)", "Bash(Get-ChildItem:*)", "Bash(Get-Item:*)",
+  "Bash(Get-Process:*)", "Bash(Get-Service:*)", "Bash(Get-Command:*)",
+  "Bash(Get-Help:*)", "Bash(Get-Member:*)", "Bash(Get-Location:*)",
+  "Bash(Get-Date:*)", "Bash(Get-Host:*)", "Bash(Get-Culture:*)",
+  "Bash(Get-FileHash:*)", "Bash(Get-Acl:*)", "Bash(Get-ItemProperty:*)",
+  "Bash(Select-String:*)", "Bash(Select-Object:*)", "Bash(Where-Object:*)",
+  "Bash(Format-List:*)", "Bash(Format-Table:*)", "Bash(Out-String:*)",
+  "Bash(Measure-Object:*)", "Bash(Compare-Object:*)", "Bash(Sort-Object:*)",
+  "Bash(Group-Object:*)", "Bash(ConvertTo-Json:*)", "Bash(ConvertFrom-Json:*)",
+  "Bash(Test-Path:*)", "Bash(Resolve-Path:*)", "Bash(Split-Path:*)", "Bash(Join-Path:*)",
+
+  // ═══════════════════════════════════════════════════════════════════════════
+  // CCO AGENTS - Claude Code Optimizer agent commands
+  // ═══════════════════════════════════════════════════════════════════════════
+  "Bash(cco-agent-action)", "Bash(cco cco-agent-action:*)"
+];
 ```
 
-**Global scope (~/.claude/settings.json):**
-Home directory with critical path protection:
-```json
-"allow": [
-  "Read", "Glob", "Grep", "WebSearch", "WebFetch", "Task", "TodoWrite",
-  "Edit(~/**)", "Write(~/**)", "NotebookEdit(~/**)"
-]
-// + OS-specific critical paths in deny (see Critical Path Protection)
-```
+**Stack-specific (added by cco-agent-detect):**
+```javascript
+const stackCommands = {
+  // ═══════════════════════════════════════════════════════════════════════════
+  // PYTHON - Python ecosystem
+  // ═══════════════════════════════════════════════════════════════════════════
+  python: [
+    // Runtime & package managers
+    "Bash(python:*)", "Bash(python3:*)", "Bash(pip:*)", "Bash(pip3:*)",
+    "Bash(poetry:*)", "Bash(uv:*)", "Bash(pdm:*)", "Bash(pipenv:*)", "Bash(pipx:*)",
+    "Bash(conda:*)", "Bash(mamba:*)", "Bash(pyenv:*)",
+    // Testing
+    "Bash(pytest:*)", "Bash(pytest-cov:*)", "Bash(coverage:*)", "Bash(tox:*)", "Bash(nox:*)",
+    "Bash(hypothesis:*)", "Bash(ward:*)", "Bash(nose2:*)",
+    // Linting & formatting
+    "Bash(ruff:*)", "Bash(ruff check:*)", "Bash(ruff format:*)",
+    "Bash(mypy:*)", "Bash(pyright:*)", "Bash(pyre:*)", "Bash(pytype:*)",
+    "Bash(black:*)", "Bash(isort:*)", "Bash(autopep8:*)", "Bash(yapf:*)", "Bash(blue:*)",
+    "Bash(flake8:*)", "Bash(pylint:*)", "Bash(pyflakes:*)", "Bash(pydocstyle:*)",
+    // Security
+    "Bash(bandit:*)", "Bash(safety:*)", "Bash(pip-audit:*)", "Bash(snyk:*)",
+    // Documentation
+    "Bash(sphinx:*)", "Bash(sphinx-build:*)", "Bash(mkdocs:*)", "Bash(pdoc:*)", "Bash(pydoc:*)",
+    // Frameworks & servers
+    "Bash(django-admin:*)", "Bash(flask:*)", "Bash(fastapi:*)", "Bash(streamlit:*)",
+    "Bash(uvicorn:*)", "Bash(gunicorn:*)", "Bash(hypercorn:*)", "Bash(daphne:*)",
+    // Task queues
+    "Bash(celery:*)", "Bash(dramatiq:*)", "Bash(rq:*)", "Bash(huey:*)",
+    // Data science / ML
+    "Bash(ipython:*)", "Bash(jupyter:*)", "Bash(notebook:*)", "Bash(jupyterlab:*)",
+    "Bash(papermill:*)", "Bash(nbconvert:*)", "Bash(nbstripout:*)",
+    // Database tools
+    "Bash(alembic:*)", "Bash(sqlalchemy:*)", "Bash(django:*)",
+    // Build
+    "Bash(build:*)", "Bash(twine:*)", "Bash(flit:*)", "Bash(hatch:*)", "Bash(setuptools:*)"
+  ],
 
-⚠️ **Important:**
-- Local: Use `./**` (project) + `~/.claude/**` (config) patterns
-- Global: Use `~/**` (home) + Critical Path Protection in deny
-- NEVER allow unrestricted `Edit` or `Write` without path constraints
+  // ═══════════════════════════════════════════════════════════════════════════
+  // NODE.JS - JavaScript/TypeScript ecosystem
+  // ═══════════════════════════════════════════════════════════════════════════
+  node: [
+    // Runtime & package managers
+    "Bash(node:*)", "Bash(npm:*)", "Bash(npx:*)", "Bash(yarn:*)", "Bash(pnpm:*)", "Bash(bun:*)",
+    "Bash(corepack:*)", "Bash(nvm:*)", "Bash(fnm:*)", "Bash(volta:*)", "Bash(n:*)",
+    // Linting & formatting
+    "Bash(eslint:*)", "Bash(prettier:*)", "Bash(biome:*)", "Bash(oxlint:*)",
+    "Bash(standard:*)", "Bash(xo:*)", "Bash(dprint:*)",
+    // TypeScript
+    "Bash(tsc:*)", "Bash(tsconfig:*)", "Bash(tsx:*)", "Bash(ts-node:*)", "Bash(tsup:*)",
+    // Testing
+    "Bash(jest:*)", "Bash(vitest:*)", "Bash(mocha:*)", "Bash(ava:*)", "Bash(tap:*)",
+    "Bash(playwright:*)", "Bash(cypress:*)", "Bash(puppeteer:*)", "Bash(nightwatch:*)",
+    "Bash(nyc:*)", "Bash(c8:*)",  // coverage
+    // Bundlers
+    "Bash(webpack:*)", "Bash(vite:*)", "Bash(rollup:*)", "Bash(esbuild:*)", "Bash(swc:*)",
+    "Bash(parcel:*)", "Bash(turbopack:*)", "Bash(rspack:*)", "Bash(tsup:*)",
+    // Frameworks
+    "Bash(next:*)", "Bash(nuxt:*)", "Bash(astro:*)", "Bash(remix:*)", "Bash(svelte:*)",
+    "Bash(gatsby:*)", "Bash(angular:*)", "Bash(ng:*)", "Bash(vue:*)", "Bash(react-scripts:*)",
+    "Bash(create-react-app:*)", "Bash(create-next-app:*)", "Bash(create-vite:*)",
+    "Bash(nest:*)", "Bash(express:*)", "Bash(fastify:*)", "Bash(hono:*)",
+    // Database / ORM
+    "Bash(prisma:*)", "Bash(drizzle:*)", "Bash(typeorm:*)", "Bash(sequelize:*)",
+    "Bash(knex:*)", "Bash(mongoose:*)", "Bash(mikro-orm:*)",
+    // Dev tools
+    "Bash(nodemon:*)", "Bash(pm2:*)", "Bash(concurrently:*)", "Bash(cross-env:*)",
+    "Bash(npm-check:*)", "Bash(depcheck:*)", "Bash(madge:*)", "Bash(npm-run-all:*)",
+    // Documentation
+    "Bash(typedoc:*)", "Bash(jsdoc:*)", "Bash(storybook:*)", "Bash(docusaurus:*)",
+    // Monorepo
+    "Bash(lerna:*)", "Bash(nx:*)", "Bash(turbo:*)", "Bash(changesets:*)"
+  ],
+
+  // ═══════════════════════════════════════════════════════════════════════════
+  // RUST - Rust ecosystem
+  // ═══════════════════════════════════════════════════════════════════════════
+  rust: [
+    "Bash(cargo:*)", "Bash(rustc:*)", "Bash(rustup:*)",
+    "Bash(rustfmt:*)", "Bash(clippy:*)", "Bash(cargo-clippy:*)",
+    "Bash(cargo-fmt:*)", "Bash(cargo-test:*)", "Bash(cargo-build:*)", "Bash(cargo-run:*)",
+    "Bash(cargo-check:*)", "Bash(cargo-doc:*)", "Bash(cargo-bench:*)",
+    "Bash(cargo-audit:*)", "Bash(cargo-deny:*)", "Bash(cargo-outdated:*)",
+    "Bash(cargo-watch:*)", "Bash(cargo-expand:*)", "Bash(cargo-tree:*)",
+    "Bash(cargo-add:*)", "Bash(cargo-rm:*)", "Bash(cargo-update:*)",
+    "Bash(cargo-nextest:*)", "Bash(cargo-llvm-cov:*)", "Bash(cargo-tarpaulin:*)",
+    "Bash(miri:*)", "Bash(bacon:*)", "Bash(wasm-pack:*)", "Bash(trunk:*)"
+  ],
+
+  // ═══════════════════════════════════════════════════════════════════════════
+  // GO - Go ecosystem
+  // ═══════════════════════════════════════════════════════════════════════════
+  go: [
+    "Bash(go:*)", "Bash(gofmt:*)", "Bash(goimports:*)",
+    "Bash(golint:*)", "Bash(golangci-lint:*)", "Bash(staticcheck:*)", "Bash(revive:*)",
+    "Bash(go build:*)", "Bash(go test:*)", "Bash(go run:*)", "Bash(go mod:*)",
+    "Bash(go vet:*)", "Bash(go doc:*)", "Bash(go generate:*)", "Bash(go get:*)",
+    "Bash(go install:*)", "Bash(go work:*)", "Bash(go env:*)",
+    "Bash(govulncheck:*)", "Bash(delve:*)", "Bash(dlv:*)",
+    "Bash(air:*)", "Bash(swag:*)", "Bash(mockgen:*)", "Bash(wire:*)",
+    "Bash(gotestsum:*)", "Bash(ginkgo:*)", "Bash(gomega:*)"
+  ],
+
+  // ═══════════════════════════════════════════════════════════════════════════
+  // JAVA / JVM - Java ecosystem
+  // ═══════════════════════════════════════════════════════════════════════════
+  java: [
+    "Bash(java:*)", "Bash(javac:*)", "Bash(jar:*)", "Bash(javadoc:*)", "Bash(jshell:*)",
+    "Bash(mvn:*)", "Bash(mvnw:*)", "Bash(gradle:*)", "Bash(gradlew:*)",
+    "Bash(ant:*)", "Bash(sbt:*)", "Bash(mill:*)",
+    "Bash(checkstyle:*)", "Bash(pmd:*)", "Bash(spotbugs:*)", "Bash(findbugs:*)",
+    "Bash(google-java-format:*)", "Bash(spotless:*)",
+    "Bash(junit:*)", "Bash(testng:*)", "Bash(jacoco:*)", "Bash(pitest:*)",
+    "Bash(jmeter:*)", "Bash(gatling:*)",
+    "Bash(spring:*)", "Bash(spring-boot:*)", "Bash(quarkus:*)", "Bash(micronaut:*)",
+    "Bash(jbang:*)", "Bash(sdkman:*)"
+  ],
+
+  // ═══════════════════════════════════════════════════════════════════════════
+  // .NET - .NET ecosystem
+  // ═══════════════════════════════════════════════════════════════════════════
+  dotnet: [
+    "Bash(dotnet:*)", "Bash(nuget:*)", "Bash(msbuild:*)",
+    "Bash(dotnet build:*)", "Bash(dotnet test:*)", "Bash(dotnet run:*)",
+    "Bash(dotnet publish:*)", "Bash(dotnet restore:*)", "Bash(dotnet clean:*)",
+    "Bash(dotnet format:*)", "Bash(dotnet watch:*)", "Bash(dotnet ef:*)",
+    "Bash(dotnet new:*)", "Bash(dotnet add:*)", "Bash(dotnet remove:*)",
+    "Bash(dotnet tool:*)", "Bash(dotnet pack:*)", "Bash(dotnet sln:*)",
+    "Bash(csharp:*)", "Bash(fsharp:*)", "Bash(fsharpc:*)",
+    "Bash(xunit:*)", "Bash(nunit:*)", "Bash(coverlet:*)"
+  ],
+
+  // ═══════════════════════════════════════════════════════════════════════════
+  // RUBY - Ruby ecosystem
+  // ═══════════════════════════════════════════════════════════════════════════
+  ruby: [
+    "Bash(ruby:*)", "Bash(gem:*)", "Bash(bundle:*)", "Bash(bundler:*)",
+    "Bash(rake:*)", "Bash(rails:*)", "Bash(rspec:*)", "Bash(minitest:*)",
+    "Bash(rubocop:*)", "Bash(erb:*)", "Bash(irb:*)", "Bash(pry:*)",
+    "Bash(yard:*)", "Bash(solargraph:*)", "Bash(sorbet:*)", "Bash(srb:*)",
+    "Bash(rbenv:*)", "Bash(rvm:*)", "Bash(chruby:*)", "Bash(asdf:*)",
+    "Bash(reek:*)", "Bash(brakeman:*)", "Bash(simplecov:*)",
+    "Bash(foreman:*)", "Bash(puma:*)", "Bash(unicorn:*)", "Bash(passenger:*)"
+  ],
+
+  // ═══════════════════════════════════════════════════════════════════════════
+  // PHP - PHP ecosystem
+  // ═══════════════════════════════════════════════════════════════════════════
+  php: [
+    "Bash(php:*)", "Bash(composer:*)", "Bash(artisan:*)",
+    "Bash(phpunit:*)", "Bash(pest:*)", "Bash(phpstan:*)", "Bash(psalm:*)",
+    "Bash(php-cs-fixer:*)", "Bash(phpcs:*)", "Bash(phpcbf:*)", "Bash(pint:*)",
+    "Bash(laravel:*)", "Bash(symfony:*)", "Bash(wp:*)", "Bash(wp-cli:*)",
+    "Bash(phpmd:*)", "Bash(phploc:*)", "Bash(phpmetrics:*)",
+    "Bash(pecl:*)", "Bash(pear:*)", "Bash(phive:*)"
+  ],
+
+  // ═══════════════════════════════════════════════════════════════════════════
+  // SWIFT - Swift/Apple ecosystem
+  // ═══════════════════════════════════════════════════════════════════════════
+  swift: [
+    "Bash(swift:*)", "Bash(swiftc:*)", "Bash(swift build:*)", "Bash(swift test:*)",
+    "Bash(swift run:*)", "Bash(swift package:*)",
+    "Bash(swiftlint:*)", "Bash(swiftformat:*)", "Bash(sourcery:*)",
+    "Bash(xcodebuild:*)", "Bash(xcrun:*)", "Bash(simctl:*)", "Bash(xcpretty:*)",
+    "Bash(fastlane:*)", "Bash(gym:*)", "Bash(scan:*)", "Bash(match:*)",
+    "Bash(pod:*)", "Bash(carthage:*)", "Bash(mint:*)", "Bash(tuist:*)"
+  ],
+
+  // ═══════════════════════════════════════════════════════════════════════════
+  // KOTLIN - Kotlin ecosystem
+  // ═══════════════════════════════════════════════════════════════════════════
+  kotlin: [
+    "Bash(kotlin:*)", "Bash(kotlinc:*)", "Bash(kapt:*)",
+    "Bash(ktlint:*)", "Bash(detekt:*)", "Bash(diktat:*)",
+    "Bash(kscript:*)", "Bash(amper:*)"
+  ],
+
+  // ═══════════════════════════════════════════════════════════════════════════
+  // SCALA - Scala ecosystem
+  // ═══════════════════════════════════════════════════════════════════════════
+  scala: [
+    "Bash(scala:*)", "Bash(scalac:*)", "Bash(sbt:*)", "Bash(mill:*)",
+    "Bash(scalafmt:*)", "Bash(scalafix:*)", "Bash(amm:*)", "Bash(bloop:*)",
+    "Bash(metals:*)", "Bash(coursier:*)", "Bash(cs:*)"
+  ],
+
+  // ═══════════════════════════════════════════════════════════════════════════
+  // ELIXIR - Elixir ecosystem
+  // ═══════════════════════════════════════════════════════════════════════════
+  elixir: [
+    "Bash(elixir:*)", "Bash(mix:*)", "Bash(iex:*)", "Bash(erl:*)",
+    "Bash(mix test:*)", "Bash(mix compile:*)", "Bash(mix deps:*)",
+    "Bash(mix format:*)", "Bash(mix ecto:*)", "Bash(mix phx:*)",
+    "Bash(credo:*)", "Bash(dialyzer:*)", "Bash(sobelow:*)"
+  ],
+
+  // ═══════════════════════════════════════════════════════════════════════════
+  // HASKELL - Haskell ecosystem
+  // ═══════════════════════════════════════════════════════════════════════════
+  haskell: [
+    "Bash(ghc:*)", "Bash(ghci:*)", "Bash(cabal:*)", "Bash(stack:*)",
+    "Bash(hlint:*)", "Bash(ormolu:*)", "Bash(stylish-haskell:*)", "Bash(fourmolu:*)",
+    "Bash(haddock:*)", "Bash(hpack:*)", "Bash(ghcup:*)"
+  ],
+
+  // ═══════════════════════════════════════════════════════════════════════════
+  // CLOJURE - Clojure ecosystem
+  // ═══════════════════════════════════════════════════════════════════════════
+  clojure: [
+    "Bash(clj:*)", "Bash(clojure:*)", "Bash(lein:*)", "Bash(boot:*)",
+    "Bash(clj-kondo:*)", "Bash(cljfmt:*)", "Bash(zprint:*)",
+    "Bash(babashka:*)", "Bash(bb:*)", "Bash(deps:*)"
+  ],
+
+  // ═══════════════════════════════════════════════════════════════════════════
+  // C/C++ - C/C++ ecosystem
+  // ═══════════════════════════════════════════════════════════════════════════
+  cpp: [
+    "Bash(gcc:*)", "Bash(g++:*)", "Bash(clang:*)", "Bash(clang++:*)",
+    "Bash(make:*)", "Bash(cmake:*)", "Bash(ninja:*)", "Bash(meson:*)",
+    "Bash(conan:*)", "Bash(vcpkg:*)", "Bash(pkg-config:*)",
+    "Bash(clang-format:*)", "Bash(clang-tidy:*)", "Bash(cppcheck:*)",
+    "Bash(valgrind:*)", "Bash(gdb:*)", "Bash(lldb:*)",
+    "Bash(ctest:*)", "Bash(gtest:*)", "Bash(catch2:*)",
+    "Bash(doxygen:*)", "Bash(bear:*)", "Bash(ccache:*)"
+  ],
+
+  // ═══════════════════════════════════════════════════════════════════════════
+  // ZIG - Zig ecosystem
+  // ═══════════════════════════════════════════════════════════════════════════
+  zig: [
+    "Bash(zig:*)", "Bash(zig build:*)", "Bash(zig test:*)", "Bash(zig run:*)",
+    "Bash(zig fmt:*)", "Bash(zls:*)"
+  ],
+
+  // ═══════════════════════════════════════════════════════════════════════════
+  // DOCKER - Container ecosystem
+  // ═══════════════════════════════════════════════════════════════════════════
+  docker: [
+    "Bash(docker:*)", "Bash(docker-compose:*)", "Bash(docker compose:*)",
+    "Bash(docker build:*)", "Bash(docker run:*)", "Bash(docker ps:*)",
+    "Bash(docker images:*)", "Bash(docker logs:*)", "Bash(docker exec:*)",
+    "Bash(docker inspect:*)", "Bash(docker network:*)", "Bash(docker volume:*)",
+    "Bash(docker system:*)", "Bash(docker container:*)", "Bash(docker image:*)",
+    "Bash(podman:*)", "Bash(podman-compose:*)", "Bash(buildah:*)", "Bash(skopeo:*)",
+    "Bash(nerdctl:*)", "Bash(containerd:*)", "Bash(ctr:*)",
+    "Bash(dive:*)", "Bash(hadolint:*)", "Bash(trivy:*)", "Bash(grype:*)", "Bash(syft:*)",
+    "Bash(docker-slim:*)", "Bash(lazydocker:*)"
+  ],
+
+  // ═══════════════════════════════════════════════════════════════════════════
+  // KUBERNETES - Kubernetes ecosystem
+  // ═══════════════════════════════════════════════════════════════════════════
+  kubernetes: [
+    "Bash(kubectl:*)", "Bash(helm:*)", "Bash(k9s:*)", "Bash(kustomize:*)",
+    "Bash(kubectl get:*)", "Bash(kubectl describe:*)", "Bash(kubectl logs:*)",
+    "Bash(kubectl apply:*)", "Bash(kubectl delete:*)", "Bash(kubectl exec:*)",
+    "Bash(kubectl port-forward:*)", "Bash(kubectl rollout:*)", "Bash(kubectl scale:*)",
+    "Bash(kubectl config:*)", "Bash(kubectl auth:*)", "Bash(kubectl api-resources:*)",
+    "Bash(minikube:*)", "Bash(kind:*)", "Bash(k3d:*)", "Bash(k3s:*)",
+    "Bash(kubectx:*)", "Bash(kubens:*)", "Bash(stern:*)", "Bash(lens:*)",
+    "Bash(kubeseal:*)", "Bash(argocd:*)", "Bash(flux:*)", "Bash(fluxctl:*)",
+    "Bash(kubeconform:*)", "Bash(kubeval:*)", "Bash(polaris:*)", "Bash(kube-score:*)",
+    "Bash(kube-linter:*)", "Bash(datree:*)", "Bash(pluto:*)",
+    "Bash(velero:*)", "Bash(kops:*)", "Bash(eksctl:*)", "Bash(gke:*)"
+  ],
+
+  // ═══════════════════════════════════════════════════════════════════════════
+  // TERRAFORM / IaC - Infrastructure as Code
+  // ═══════════════════════════════════════════════════════════════════════════
+  terraform: [
+    "Bash(terraform:*)", "Bash(tofu:*)", "Bash(opentofu:*)",
+    "Bash(terraform init:*)", "Bash(terraform plan:*)", "Bash(terraform apply:*)",
+    "Bash(terraform destroy:*)", "Bash(terraform fmt:*)", "Bash(terraform validate:*)",
+    "Bash(terraform output:*)", "Bash(terraform state:*)", "Bash(terraform import:*)",
+    "Bash(terraform workspace:*)", "Bash(terraform graph:*)", "Bash(terraform providers:*)",
+    "Bash(terragrunt:*)", "Bash(tflint:*)", "Bash(tfsec:*)", "Bash(checkov:*)",
+    "Bash(terrascan:*)", "Bash(infracost:*)", "Bash(atlantis:*)", "Bash(terraform-docs:*)",
+    "Bash(cdktf:*)", "Bash(tfenv:*)", "Bash(tfswitch:*)"
+  ],
+
+  // ═══════════════════════════════════════════════════════════════════════════
+  // CLOUD - Cloud provider CLIs
+  // ═══════════════════════════════════════════════════════════════════════════
+  cloud: [
+    // AWS
+    "Bash(aws:*)", "Bash(aws-cli:*)", "Bash(sam:*)", "Bash(cdk:*)", "Bash(amplify:*)",
+    "Bash(copilot:*)", "Bash(eb:*)", "Bash(ecs-cli:*)", "Bash(eksctl:*)",
+    // GCP
+    "Bash(gcloud:*)", "Bash(gsutil:*)", "Bash(bq:*)", "Bash(firebase:*)",
+    // Azure
+    "Bash(az:*)", "Bash(azd:*)", "Bash(func:*)",
+    // Multi-cloud / Serverless
+    "Bash(pulumi:*)", "Bash(serverless:*)", "Bash(sls:*)", "Bash(sst:*)",
+    // PaaS
+    "Bash(vercel:*)", "Bash(netlify:*)", "Bash(fly:*)", "Bash(flyctl:*)",
+    "Bash(railway:*)", "Bash(render:*)", "Bash(heroku:*)", "Bash(dokku:*)",
+    // DigitalOcean / Others
+    "Bash(doctl:*)", "Bash(linode-cli:*)", "Bash(vultr-cli:*)",
+    "Bash(hcloud:*)", "Bash(oci:*)", "Bash(ibmcloud:*)"
+  ],
+
+  // ═══════════════════════════════════════════════════════════════════════════
+  // DATABASE - Database CLIs
+  // ═══════════════════════════════════════════════════════════════════════════
+  database: [
+    // PostgreSQL
+    "Bash(psql:*)", "Bash(pg_dump:*)", "Bash(pg_restore:*)", "Bash(pg_dumpall:*)",
+    "Bash(createdb:*)", "Bash(dropdb:*)", "Bash(createuser:*)", "Bash(pgcli:*)",
+    // MySQL/MariaDB
+    "Bash(mysql:*)", "Bash(mysqldump:*)", "Bash(mysqlimport:*)", "Bash(mycli:*)",
+    "Bash(mariadb:*)", "Bash(mariadb-dump:*)",
+    // SQLite
+    "Bash(sqlite3:*)", "Bash(litecli:*)",
+    // Redis
+    "Bash(redis-cli:*)", "Bash(redis-server:*)", "Bash(redis-benchmark:*)",
+    // MongoDB
+    "Bash(mongo:*)", "Bash(mongosh:*)", "Bash(mongodump:*)", "Bash(mongorestore:*)",
+    "Bash(mongoexport:*)", "Bash(mongoimport:*)",
+    // Cassandra
+    "Bash(cqlsh:*)", "Bash(nodetool:*)",
+    // SQL Server
+    "Bash(sqlcmd:*)", "Bash(bcp:*)", "Bash(mssql-cli:*)",
+    // Others
+    "Bash(influx:*)", "Bash(clickhouse-client:*)", "Bash(cockroach:*)",
+    "Bash(etcdctl:*)", "Bash(consul:*)", "Bash(vault:*)"
+  ],
+
+  // ═══════════════════════════════════════════════════════════════════════════
+  // ANSIBLE - Ansible ecosystem
+  // ═══════════════════════════════════════════════════════════════════════════
+  ansible: [
+    "Bash(ansible:*)", "Bash(ansible-playbook:*)", "Bash(ansible-galaxy:*)",
+    "Bash(ansible-vault:*)", "Bash(ansible-inventory:*)", "Bash(ansible-lint:*)",
+    "Bash(ansible-doc:*)", "Bash(ansible-config:*)", "Bash(ansible-pull:*)",
+    "Bash(molecule:*)"
+  ],
+
+  // ═══════════════════════════════════════════════════════════════════════════
+  // DATA / ML - Data science & machine learning
+  // ═══════════════════════════════════════════════════════════════════════════
+  data: [
+    "Bash(dvc:*)", "Bash(mlflow:*)", "Bash(wandb:*)", "Bash(neptune:*)",
+    "Bash(kedro:*)", "Bash(dagster:*)", "Bash(prefect:*)", "Bash(airflow:*)",
+    "Bash(dbt:*)", "Bash(great_expectations:*)", "Bash(pandera:*)",
+    "Bash(spark-submit:*)", "Bash(pyspark:*)", "Bash(databricks:*)",
+    "Bash(ray:*)", "Bash(dask:*)", "Bash(vaex:*)"
+  ]
+};
+```
 
 ### Permission Levels
 
-**Safe:** Maximum security
+**Safe (whitelist, ask everything):**
+```json
+{
+  "allow": [
+    "Read", "Glob", "Grep", "WebSearch", "WebFetch", "Task", "TodoWrite",
+    "SlashCommand", "Skill", "AskUserQuestion"
+  ],
+  "ask": ["Edit", "Write", "NotebookEdit", "Bash"],
+  "deny": [/* see Always Deny */]
+}
 ```
-allow: [always allow read-only tools]
-ask: Edit, Write, NotebookEdit, all Bash
-deny: dangerous commands
-```
-⚠️ Every file change and command needs approval.
 
-**Balanced (default):** Normal workflow
+**Balanced (whitelist, core + stack):**
+```javascript
+{
+  "allow": [
+    "Read", "Glob", "Grep", "WebSearch", "WebFetch", "Task", "TodoWrite",
+    "SlashCommand", "Skill", "AskUserQuestion",
+    "Edit(./**)", "Write(./**)", "NotebookEdit(./**)",
+    "Edit(~/.claude/**)", "Write(~/.claude/**)", "Read(~/.claude/**)",
+    ...coreCommands,
+    ...stackCommands[detected]  // Added by cco-agent-detect
+  ],
+  "ask": [
+    "Bash(rm:*)", "Bash(rmdir:*)", "Bash(del:*)",
+    "Bash(pip install:*)", "Bash(npm install:*)", "Bash(yarn add:*)",
+    "Bash(git push:*)"
+  ],
+  "deny": [/* see Always Deny */]
+}
 ```
-allow: [always allow read-only tools]
-       Local: Edit(.**), Write(.**), Edit(~/.claude/**), Write(~/.claude/**)
-       Global: Edit(~/**), Write(~/**), NotebookEdit(~/**)
-       Bash: git:*, ruff:*, pytest:*, npm test:*, cargo:*, etc.
-ask: Bash(rm:*), Bash(del:*), Bash(pip install:*), Bash(npm install:*), Bash(git push:*)
-deny: [baseDeny + OS-specific] (see Combined deny array)
-```
-✓ Code changes auto, destructive/install commands ask.
 
-**Permissive:** Trusted projects
+**Permissive (blacklist, allow all):**
+```json
+{
+  "allow": [
+    "Read", "Glob", "Grep", "WebSearch", "WebFetch", "Task", "TodoWrite",
+    "SlashCommand", "Skill", "AskUserQuestion",
+    "Edit(./**)", "Write(./**)", "NotebookEdit(./**)",
+    "Edit(~/.claude/**)", "Write(~/.claude/**)", "Read(~/.claude/**)",
+    "Bash"
+  ],
+  "ask": ["Bash(git push:*)", "Bash(npm publish:*)", "Bash(docker push:*)"],
+  "deny": [/* see Always Deny - CRITICAL for this level */]
+}
 ```
-allow: [always allow read-only tools]
-       Local: Edit(.**), Write(.**), Edit(~/.claude/**), Write(~/.claude/**)
-       Global: Edit(~/**), Write(~/**), NotebookEdit(~/**)
-       Bash: almost everything
-ask: Bash(git push:*), Bash(npm publish:*), Bash(sudo:*)
-deny: [baseDeny + OS-specific] (see Combined deny array)
-```
-✓ Even rm/install auto, only publish/push asks.
+
+### Security Comparison
+
+| Aspect | Safe | Balanced | Permissive |
+|--------|------|----------|------------|
+| Unknown cmd | Blocked | Blocked | Allowed |
+| New threat | Safe | Safe | Risk |
+| Flexibility | Low | Medium | High |
 
 ### Difference Table
 

@@ -124,52 +124,41 @@ Output sorted by priority, grouped by category.
 
 ## Fix Approval Process
 
-After analysis, present issues grouped by priority. Use **separate AskUserQuestion for each priority level** to give user granular control:
+After analysis, present all issues in a **single AskUserQuestion call** with up to 4 questions (one per priority level). This provides granular control without multiple interruptions:
 
-### Step 1: Critical Issues (if any)
 ```
-AskUserQuestion (multiSelect=true):
+AskUserQuestion (single call, multiple questions):
+
+Question 1 - header: "Critical"
 "Found X critical issues. Which to fix?"
-- "All Critical" (first option per CCO rules)
-- Individual issue options...
-```
+multiSelect=true
+- "All" (first option per CCO rules)
+- Individual critical issues...
 
-### Step 2: High Priority Issues (if any)
-```
-AskUserQuestion (multiSelect=true):
+Question 2 - header: "High"
 "Found X high priority issues. Which to fix?"
-- "All High" (first option)
-- Individual issue options...
-```
+multiSelect=true
+- "All"
+- Individual high issues...
 
-### Step 3: Medium Priority Issues (if any)
-```
-AskUserQuestion (multiSelect=true):
+Question 3 - header: "Medium"
 "Found X medium priority issues. Which to fix?"
-- "All Medium" (first option)
-- Individual issue options...
-```
+multiSelect=true
+- "All"
+- Individual medium issues...
 
-### Step 4: Low Priority Issues (if any)
-```
-AskUserQuestion (multiSelect=true):
+Question 4 - header: "Low"
 "Found X low priority issues. Which to fix?"
-- "All Low" (first option)
-- Individual issue options...
+multiSelect=true
+- "All"
+- Individual low issues...
 ```
 
-### Alternative: Single Combined Question
-For fewer total issues (<10), use single multiSelect:
-```
-AskUserQuestion (multiSelect=true):
-"Select issues to fix:"
-- "All Issues"
-- "All Critical (X)"
-- "All High (Y)"
-- "All Medium (Z)"
-- "All Low (W)"
-- Individual issues by priority...
-```
+**Rules:**
+- Only include questions for priority levels that have issues
+- Skip empty priority levels (don't ask about priorities with 0 issues)
+- If only 1 priority level has issues, use single question
+- Max 4 options per question - group if needed ("5 more medium issues...")
 
 ## Fix Behavior
 

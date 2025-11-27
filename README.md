@@ -119,6 +119,91 @@ Finds ALL references, updates in order, verifies with grep.
 
 ---
 
+## Configuration
+
+`/cco-config` manages statusline display and permission settings for Claude Code.
+
+### Statusline
+
+Rich terminal status display with git integration:
+
+```
+📁 project/src |👤 user    | 2.1M |CC 1.0.23|🤖 Opus 4.5
+┌──────────────┬───────────┬──────┬─────────┬────────────┐
+│🔗 repo:main  │Conflicts:0│Stash:2│Ahead: 3 │Last: 02:45 │
+├──────────────┼───────────┼──────┼─────────┼────────────┤
+│Unstaged +  42 -  18      │edit 3│new  2   │del  0│move 0│
+│Staged   +  15 -   3      │edit 1│new  1   │del  0│move 0│
+└──────────────┴───────────┴──────┴─────────┴────────────┘
+```
+
+**Features:** Path, user, project size, CC version, model, git branch, conflicts, stash, commits ahead, last commit time, unstaged/staged changes with line counts.
+
+### Permission Levels
+
+| Level | Model | Security | Flexibility | Use Case |
+|-------|-------|----------|-------------|----------|
+| **Safe** | Whitelist | High | Low | Maximum security, manual approval |
+| **Balanced** | Whitelist | High | Medium | Normal workflow (recommended) |
+| **Permissive** | Blacklist | Medium | High | Minimal prompts, trusted projects |
+
+### Core Commands (300+ pre-approved)
+
+Cross-platform CLI tools auto-approved in Balanced/Permissive modes:
+
+| Category | Commands |
+|----------|----------|
+| **Git** | status, diff, log, show, branch, commit, stash, blame, bisect, reflog... |
+| **File System** | ls, dir, cat, head, tail, find, tree, ln, stat, file, mktemp... |
+| **Text Processing** | grep, rg, sed, awk, jq, yq, sort, uniq, cut, tr, column, paste... |
+| **Hash/Checksum** | md5sum, sha256sum, sha512sum, shasum, cksum, b2sum, openssl dgst |
+| **Archive** | tar, zip, gzip, bzip2, xz, zstd, lz4, 7z, rar, cpio |
+| **Encoding** | base64, base32, xxd, od, hexdump, iconv, dos2unix |
+| **Process/Time** | timeout, sleep, time, watch, nohup, nice, ps, top, htop, uptime |
+| **Disk/Storage** | du, df, lsblk, findmnt, mount, ncdu, duf |
+| **Network** | ping, curl, wget, nc, nslookup, dig, whois, netstat, ss, lsof |
+| **System Info** | env, date, whoami, hostname, uname, arch, neofetch |
+| **Math** | bc, dc, expr, factor, seq, shuf, numfmt |
+| **Terminal** | printf, tput, stty, clear, screen, tmux |
+| **Windows/PowerShell** | findstr, tasklist, wmic, Get-*, Select-*, Format-*, ConvertTo-Json |
+
+### Stack-Specific Commands
+
+Auto-detected based on project files, added to allow list:
+
+| Stack | Tools |
+|-------|-------|
+| **Python** | python, pip, poetry, uv, conda, pytest, ruff, mypy, black, bandit, sphinx, uvicorn, celery, jupyter |
+| **Node.js** | node, npm, yarn, pnpm, bun, eslint, prettier, tsc, jest, vitest, playwright, webpack, vite, prisma |
+| **Rust** | cargo, rustc, rustfmt, clippy, cargo-audit, cargo-nextest, miri, wasm-pack |
+| **Go** | go, gofmt, golangci-lint, govulncheck, delve, air, wire |
+| **Java** | java, javac, mvn, gradle, checkstyle, junit, spring-boot, quarkus |
+| **.NET** | dotnet, nuget, msbuild, xunit, nunit |
+| **Ruby** | ruby, gem, bundle, rake, rails, rspec, rubocop |
+| **PHP** | php, composer, phpunit, phpstan, laravel |
+| **Swift** | swift, swiftlint, xcodebuild, fastlane, pod |
+| **C/C++** | gcc, clang, cmake, ninja, meson, valgrind, gdb |
+| **Docker** | docker, docker-compose, podman, buildah, trivy, hadolint |
+| **Kubernetes** | kubectl, helm, k9s, kustomize, minikube, argocd, flux |
+| **Terraform** | terraform, tofu, terragrunt, tflint, tfsec, checkov |
+| **Cloud** | aws, gcloud, az, pulumi, vercel, netlify, fly |
+| **Database** | psql, mysql, redis-cli, mongosh, sqlite3 |
+| **Data/ML** | dvc, mlflow, airflow, dbt, spark-submit |
+
+### Always Denied (Security)
+
+These are blocked at all permission levels:
+
+| Category | Blocked Commands |
+|----------|------------------|
+| **Destructive** | `rm -rf /`, `rm -rf ~/`, `format`, `mkfs`, `dd if=` |
+| **Privilege** | `sudo`, `su`, `chmod 777`, `chown root` |
+| **System** | `shutdown`, `reboot`, `halt` |
+| **Git Dangerous** | `git push --force`, `git reset --hard`, `git clean -fdx` |
+| **Sensitive Files** | Edit `~/.ssh/`, `~/.aws/`, `**/.env*`, `**/secrets/**` |
+
+---
+
 ## Design Principles
 
 CCO provides 10 commands, 3 agents, and rules added to `~/.claude/`.
