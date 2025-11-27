@@ -81,33 +81,21 @@ def remove_claude_md_standards(verbose: bool = True) -> list[str]:
     content = claude_md.read_text(encoding="utf-8")
     removed = []
 
-    if "<!-- CCO_STANDARDS_START -->" in content:
-        content = re.sub(
-            r"<!-- CCO_STANDARDS_START -->.*?<!-- CCO_STANDARDS_END -->\n?",
-            "",
-            content,
-            flags=re.DOTALL,
-        )
-        removed.append("CCO Standards")
-
-    # Legacy cleanup
-    if "<!-- CCO_RULES_START -->" in content:
-        content = re.sub(
-            r"<!-- CCO_RULES_START -->.*?<!-- CCO_RULES_END -->\n?",
-            "",
-            content,
-            flags=re.DOTALL,
-        )
-        removed.append("CCO Rules (legacy)")
-
-    if "<!-- CCO_PRINCIPLES_START -->" in content:
-        content = re.sub(
-            r"<!-- CCO_PRINCIPLES_START -->.*?<!-- CCO_PRINCIPLES_END -->\n?",
-            "",
-            content,
-            flags=re.DOTALL,
-        )
-        removed.append("CCO Principles (legacy)")
+    # Remove all CCO markers (current + legacy)
+    markers = [
+        ("CCO_STANDARDS", "CCO Standards"),
+        ("CCO_RULES", "CCO Rules (legacy)"),
+        ("CCO_PRINCIPLES", "CCO Principles (legacy)"),
+    ]
+    for marker, label in markers:
+        if f"<!-- {marker}_START -->" in content:
+            content = re.sub(
+                rf"<!-- {marker}_START -->.*?<!-- {marker}_END -->\n?",
+                "",
+                content,
+                flags=re.DOTALL,
+            )
+            removed.append(label)
 
     if removed:
         content = re.sub(r"\n{3,}", "\n\n", content)
@@ -156,23 +144,18 @@ def main() -> int:
             print(f"  claudecodeoptimizer ({method})")
             print()
 
-        if files["commands"]:
-            print("Commands:")
-            for f in files["commands"]:
-                print(f"  - {f}")
-            print()
-
-        if files["agents"]:
-            print("Agents:")
-            for f in files["agents"]:
-                print(f"  - {f}")
-            print()
-
-        if standards:
-            print("CLAUDE.md sections:")
-            for section in standards:
-                print(f"  - {section}")
-            print()
+        # Print file categories
+        categories = [
+            ("Commands", files["commands"]),
+            ("Agents", files["agents"]),
+            ("CLAUDE.md sections", standards),
+        ]
+        for title, items in categories:
+            if items:
+                print(f"{title}:")
+                for item in items:
+                    print(f"  - {item}")
+                print()
 
         # Summary
         print("=" * 50)
