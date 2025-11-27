@@ -112,7 +112,9 @@ class TestRemoveClaudeMdRules:
 
     def test_remove_rules(self, tmp_path, capsys):
         claude_md = tmp_path / "CLAUDE.md"
-        claude_md.write_text("# My\n<!-- CCO_STANDARDS_START -->standards<!-- CCO_STANDARDS_END -->\nOther")
+        claude_md.write_text(
+            "# My\n<!-- CCO_STANDARDS_START -->standards<!-- CCO_STANDARDS_END -->\nOther"
+        )
         with patch("claudecodeoptimizer.cco_remove.CLAUDE_DIR", tmp_path):
             removed = remove_claude_md_standards(verbose=True)
         assert "CCO Standards" in removed
