@@ -8,6 +8,13 @@ requires: detection
 
 **Convention-following generation** - Detect conventions → generate consistent components.
 
+## Agent Delegation
+
+| Phase | Agent | Purpose |
+|-------|-------|---------|
+| Detect | `cco-agent-detect` | Identify conventions, patterns |
+| Generate | `cco-agent-action` | Create files following conventions |
+
 ## Pre-Operation Safety
 
 If uncommitted changes exist, AskUserQuestion:

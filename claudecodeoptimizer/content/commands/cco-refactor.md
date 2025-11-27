@@ -7,6 +7,13 @@ description: Verified transformations with rollback
 
 **Risk mitigation** - Find ALL references → transform in order → verify → rollback on failure.
 
+## Agent Delegation
+
+| Phase | Agent | Purpose |
+|-------|-------|---------|
+| Map | `cco-agent-scan` | Find all references (read-only) |
+| Transform | `cco-agent-action` | Apply changes with verification |
+
 ## Pre-Operation Safety
 
 Requires clean git state. If uncommitted changes exist, AskUserQuestion:

@@ -7,6 +7,14 @@ description: Measurable efficiency improvements
 
 **Efficiency optimization** - Reduce waste → improve efficiency → measure impact → verify.
 
+## Agent Delegation
+
+| Phase | Agent | Purpose |
+|-------|-------|---------|
+| Detect | `cco-agent-detect` | Identify stack, tools |
+| Analyze | `cco-agent-scan` | Find optimization opportunities |
+| Apply | `cco-agent-action` | Apply with before/after metrics |
+
 ## Pre-Operation Safety
 
 If uncommitted changes exist, AskUserQuestion:
