@@ -137,6 +137,32 @@ CCO provides 9 commands, 3 agents, and rules added to `~/.claude/`.
 
 ---
 
+## Enforced Standards
+
+CCO injects **118 standards across 17 categories** into `CLAUDE.md`:
+
+| Category | What it enforces |
+|----------|------------------|
+| **Core** | Forward slash paths, find-all-refs before rename, verification accounting |
+| **Code Quality** | Cyclomatic <10, tech debt <5%, no orphans, type annotations, SemVer |
+| **Security** | Input validation (Pydantic/Zod), Zero Trust auth, secrets rotation, OWASP Top 10 |
+| **AI-Assisted** | Treat AI output as junior code, Plan→Act→Review workflow, test before integrate |
+| **Architecture** | Async event-driven, dependency injection, circuit breakers, bounded contexts |
+| **Operations** | Infrastructure as Code, GitOps deploys, OpenTelemetry observability, feature flags |
+| **Testing** | 80% coverage minimum, CI gates before merge, contract testing between services |
+| **Performance** | DB indexing, N+1 prevention, cache-aside pattern, async I/O only |
+| **Data** | Automated backups with RPO/RTO, versioned migrations, retention policies |
+| **API** | RESTful conventions, cursor pagination, OpenAPI docs, consistent error format |
+| **Accessibility** | WCAG 2.2 AA compliance, semantic HTML, keyboard navigation, screen reader support |
+| **i18n** | UTF-8 everywhere, RTL support, locale-aware formatting, proper pluralization |
+| **Reliability** | Chaos engineering, explicit timeouts, exponential backoff, graceful degradation |
+| **Cost** | FinOps monitoring, resource tagging, auto-scale to zero, carbon-aware scheduling |
+| **Docs** | README structure, OpenAPI specs, Architecture Decision Records, runbooks |
+| **DX** | Local-prod parity, fast feedback loops, self-service infra, golden paths |
+| **Compliance** | License tracking, SOC2/HIPAA/PCI-DSS controls, data classification |
+
+---
+
 ## Structure
 
 After `cco-setup`, the following is added to `~/.claude/`:
@@ -147,7 +173,7 @@ After `cco-setup`, the following is added to `~/.claude/`:
 │   └── cco-*.md          # 9 slash commands
 ├── agents/
 │   └── cco-*.md          # 3 specialized agents
-└── CLAUDE.md             # CCO rules appended
+└── CLAUDE.md             # 118 standards (17 categories)
 ```
 
 ---

@@ -1,4 +1,4 @@
-"""ClaudeCodeOptimizer - Enhance Claude Code with commands, agents, and rules."""
+"""ClaudeCodeOptimizer - Enhance Claude Code with commands, agents, and standards."""
 
 import sys
 

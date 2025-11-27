@@ -10,7 +10,7 @@ from claudecodeoptimizer.cco_status import (
     count_files,
     get_claude_dir,
     get_version_info,
-    has_rules,
+    has_standards,
     main,
     print_status,
 )
@@ -39,13 +39,13 @@ class TestCountFiles:
 class TestHasRules:
     def test_no_claude_md(self, tmp_path):
         with patch("claudecodeoptimizer.cco_status.CLAUDE_DIR", tmp_path):
-            assert has_rules() is False
+            assert has_standards() is False
 
     def test_with_rules(self, tmp_path):
         tmp_path.mkdir(exist_ok=True)
-        (tmp_path / "CLAUDE.md").write_text("<!-- CCO_RULES_START -->rules<!-- CCO_RULES_END -->")
+        (tmp_path / "CLAUDE.md").write_text("<!-- CCO_STANDARDS_START -->standards<!-- CCO_STANDARDS_END -->")
         with patch("claudecodeoptimizer.cco_status.CLAUDE_DIR", tmp_path):
-            assert has_rules() is True
+            assert has_standards() is True
 
 
 class TestPrintStatus:
@@ -61,7 +61,7 @@ class TestPrintStatus:
         (tmp_path / "commands" / "cco-help.md").touch()
         (tmp_path / "commands" / "cco-audit.md").touch()
         (tmp_path / "agents" / "cco-agent-scan.md").touch()
-        (tmp_path / "CLAUDE.md").write_text("<!-- CCO_RULES_START -->rules<!-- CCO_RULES_END -->")
+        (tmp_path / "CLAUDE.md").write_text("<!-- CCO_STANDARDS_START -->standards<!-- CCO_STANDARDS_END -->")
         with patch("claudecodeoptimizer.cco_status.CLAUDE_DIR", tmp_path):
             with patch("claudecodeoptimizer.cco_status.COMMANDS_DIR", tmp_path / "commands"):
                 with patch("claudecodeoptimizer.cco_status.AGENTS_DIR", tmp_path / "agents"):
@@ -71,7 +71,7 @@ class TestPrintStatus:
         assert "CCO v" in captured.out
         assert "Commands: 2" in captured.out
         assert "Agents: 1" in captured.out
-        assert "Rules: yes" in captured.out
+        assert "Standards: yes" in captured.out
 
 
 class TestMain:
