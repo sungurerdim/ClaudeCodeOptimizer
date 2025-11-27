@@ -13,38 +13,31 @@ def get_content_dir() -> Path:
     return Path(__file__).parent / "content"
 
 
-def setup_commands(verbose: bool = True) -> list[str]:
-    """Copy cco-*.md commands to ~/.claude/commands/"""
-    src = get_content_dir() / "commands"
+def _setup_content(src_subdir: str, dest_dir: Path, verbose: bool = True) -> list[str]:
+    """Copy cco-*.md files from source to destination directory."""
+    src = get_content_dir() / src_subdir
     if not src.exists():
         return []
-    COMMANDS_DIR.mkdir(parents=True, exist_ok=True)
-    for old in COMMANDS_DIR.glob("cco-*.md"):
+    dest_dir.mkdir(parents=True, exist_ok=True)
+    for old in dest_dir.glob("cco-*.md"):
         old.unlink()
     installed = []
     for f in sorted(src.glob("cco-*.md")):
-        shutil.copy2(f, COMMANDS_DIR / f.name)
+        shutil.copy2(f, dest_dir / f.name)
         installed.append(f.name)
         if verbose:
             print(f"  + {f.name}")
     return installed
+
+
+def setup_commands(verbose: bool = True) -> list[str]:
+    """Copy cco-*.md commands to ~/.claude/commands/"""
+    return _setup_content("commands", COMMANDS_DIR, verbose)
 
 
 def setup_agents(verbose: bool = True) -> list[str]:
     """Copy cco-*.md agents to ~/.claude/agents/"""
-    src = get_content_dir() / "agents"
-    if not src.exists():
-        return []
-    AGENTS_DIR.mkdir(parents=True, exist_ok=True)
-    for old in AGENTS_DIR.glob("cco-*.md"):
-        old.unlink()
-    installed = []
-    for f in sorted(src.glob("cco-*.md")):
-        shutil.copy2(f, AGENTS_DIR / f.name)
-        installed.append(f.name)
-        if verbose:
-            print(f"  + {f.name}")
-    return installed
+    return _setup_content("agents", AGENTS_DIR, verbose)
 
 
 def setup_claude_md(verbose: bool = True) -> None:
