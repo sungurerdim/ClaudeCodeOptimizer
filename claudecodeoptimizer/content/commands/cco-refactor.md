@@ -14,6 +14,21 @@ description: Verified transformations with rollback
 | Map | `cco-agent-scan` | Find all references (read-only) |
 | Transform | `cco-agent-action` | Apply changes with verification |
 
+### MANDATORY Agent Rules
+
+1. **NEVER use direct Edit/Write tools** - delegate to agents
+2. **ALWAYS use agents as first choice**, not fallback after errors
+3. Map phase → `cco-agent-scan`
+4. Transform phase → `cco-agent-action`
+
+### Error Recovery
+
+On "File unexpectedly modified" or tool errors:
+1. Do NOT retry with direct tools
+2. Immediately delegate to `cco-agent-action`
+3. Agent reads fresh and applies changes
+4. If still fails, rollback and report
+
 ## Pre-Operation Safety
 
 Requires clean git state. If uncommitted changes exist, AskUserQuestion:
