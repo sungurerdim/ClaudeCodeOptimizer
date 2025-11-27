@@ -17,8 +17,10 @@ class TestConstants:
     """Test module constants."""
 
     def test_version(self):
-        """Test VERSION is set."""
-        assert VERSION == "1.0.0"
+        """Test VERSION matches __version__."""
+        from claudecodeoptimizer import __version__
+
+        assert VERSION == __version__
 
     def test_claude_dir(self):
         """Test CLAUDE_DIR is ~/.claude/"""

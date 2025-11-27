@@ -2,9 +2,11 @@
 
 from pathlib import Path
 
+from . import __version__
+
 __all__ = ["VERSION", "CLAUDE_DIR", "COMMANDS_DIR", "AGENTS_DIR"]
 
-VERSION = "1.0.0"
+VERSION = __version__  # Single source: __init__.py
 CLAUDE_DIR = Path.home() / ".claude"
 COMMANDS_DIR = CLAUDE_DIR / "commands"
 AGENTS_DIR = CLAUDE_DIR / "agents"
