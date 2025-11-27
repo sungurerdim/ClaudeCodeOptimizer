@@ -96,16 +96,16 @@ class TestSetupClaudeMd:
             claude_md = tmp_path / "CLAUDE.md"
             assert claude_md.exists()
             content = claude_md.read_text()
-            assert "<!-- CCO_RULES_START -->" in content
-            assert "<!-- CCO_RULES_END -->" in content
+            assert "<!-- CCO_STANDARDS_START -->" in content
+            assert "<!-- CCO_STANDARDS_END -->" in content
 
-    def test_updates_existing_rules(self, tmp_path):
-        """Test updates existing CCO rules."""
+    def test_updates_existing_standards(self, tmp_path):
+        """Test updates existing CCO standards."""
         with patch("claudecodeoptimizer.install_hook.CLAUDE_DIR", tmp_path):
             claude_md = tmp_path / "CLAUDE.md"
             tmp_path.mkdir(exist_ok=True)
             claude_md.write_text(
-                "# My Rules\n\n<!-- CCO_RULES_START -->PLACEHOLDER_TEXT<!-- CCO_RULES_END -->"
+                "# My Rules\n\n<!-- CCO_STANDARDS_START -->PLACEHOLDER_TEXT<!-- CCO_STANDARDS_END -->"
             )
 
             setup_claude_md()
@@ -113,7 +113,7 @@ class TestSetupClaudeMd:
             content = claude_md.read_text()
             assert "# My Rules" in content
             assert "PLACEHOLDER_TEXT" not in content
-            assert "CCO Rules" in content
+            assert "## Core" in content
 
     def test_appends_to_existing_file(self, tmp_path):
         """Test appends rules to existing CLAUDE.md."""
@@ -126,7 +126,7 @@ class TestSetupClaudeMd:
 
             content = claude_md.read_text()
             assert "# My Custom Rules" in content
-            assert "<!-- CCO_RULES_START -->" in content
+            assert "<!-- CCO_STANDARDS_START -->" in content
 
     def test_removes_old_principles(self, tmp_path):
         """Test removes old CCO_PRINCIPLES markers."""

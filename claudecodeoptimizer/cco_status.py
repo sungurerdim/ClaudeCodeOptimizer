@@ -15,13 +15,13 @@ def count_files() -> dict[str, int]:
     }
 
 
-def has_rules() -> bool:
-    """Check if CLAUDE.md has CCO rules."""
+def has_standards() -> bool:
+    """Check if CLAUDE.md has CCO standards."""
     claude_md = CLAUDE_DIR / "CLAUDE.md"
     if not claude_md.exists():
         return False
     content = claude_md.read_text(encoding="utf-8")
-    return "CCO_RULES_START" in content
+    return "CCO_STANDARDS_START" in content or "CCO_RULES_START" in content
 
 
 def print_status() -> int:
@@ -38,7 +38,7 @@ def print_status() -> int:
     print(f"Location: {CLAUDE_DIR}")
     print(f"Commands: {counts['commands']}")
     print(f"Agents: {counts['agents']}")
-    print(f"Rules: {'yes' if has_rules() else 'no'}")
+    print(f"Standards: {'yes' if has_standards() else 'no'}")
     print("\nTry: /cco-help")
     return 0
 
@@ -73,7 +73,7 @@ def get_version_info() -> dict[str, Any]:
 
 
 def check_claude_md(claude_dir: Path) -> bool:
-    return has_rules()
+    return has_standards()
 
 
 if __name__ == "__main__":

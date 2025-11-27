@@ -5,11 +5,11 @@ from unittest.mock import MagicMock, patch
 
 from claudecodeoptimizer.cco_remove import (
     detect_install_method,
-    has_claude_md_rules,
+    has_claude_md_standards,
     list_cco_files,
     main,
     remove_cco_files,
-    remove_claude_md_rules,
+    remove_claude_md_standards,
     uninstall_package,
 )
 
@@ -61,20 +61,20 @@ class TestListCcoFiles:
 class TestHasClaudeMdRules:
     def test_no_file(self, tmp_path):
         with patch("claudecodeoptimizer.cco_remove.CLAUDE_DIR", tmp_path):
-            assert has_claude_md_rules() == []
+            assert has_claude_md_standards() == []
 
     def test_with_rules(self, tmp_path):
         claude_md = tmp_path / "CLAUDE.md"
-        claude_md.write_text("<!-- CCO_RULES_START -->rules<!-- CCO_RULES_END -->")
+        claude_md.write_text("<!-- CCO_STANDARDS_START -->standards<!-- CCO_STANDARDS_END -->")
         with patch("claudecodeoptimizer.cco_remove.CLAUDE_DIR", tmp_path):
-            sections = has_claude_md_rules()
-            assert "CCO Rules" in sections
+            sections = has_claude_md_standards()
+            assert "CCO Standards" in sections
 
     def test_with_principles(self, tmp_path):
         claude_md = tmp_path / "CLAUDE.md"
         claude_md.write_text("<!-- CCO_PRINCIPLES_START -->old<!-- CCO_PRINCIPLES_END -->")
         with patch("claudecodeoptimizer.cco_remove.CLAUDE_DIR", tmp_path):
-            sections = has_claude_md_rules()
+            sections = has_claude_md_standards()
             assert "CCO Principles (legacy)" in sections
 
 
@@ -107,21 +107,21 @@ class TestRemoveCcoFiles:
 class TestRemoveClaudeMdRules:
     def test_no_file(self, tmp_path):
         with patch("claudecodeoptimizer.cco_remove.CLAUDE_DIR", tmp_path):
-            removed = remove_claude_md_rules()
+            removed = remove_claude_md_standards()
             assert removed == []
 
     def test_remove_rules(self, tmp_path, capsys):
         claude_md = tmp_path / "CLAUDE.md"
-        claude_md.write_text("# My\n<!-- CCO_RULES_START -->rules<!-- CCO_RULES_END -->\nOther")
+        claude_md.write_text("# My\n<!-- CCO_STANDARDS_START -->standards<!-- CCO_STANDARDS_END -->\nOther")
         with patch("claudecodeoptimizer.cco_remove.CLAUDE_DIR", tmp_path):
-            removed = remove_claude_md_rules(verbose=True)
-        assert "CCO Rules" in removed
+            removed = remove_claude_md_standards(verbose=True)
+        assert "CCO Standards" in removed
 
     def test_remove_principles(self, tmp_path):
         claude_md = tmp_path / "CLAUDE.md"
         claude_md.write_text("<!-- CCO_PRINCIPLES_START -->old<!-- CCO_PRINCIPLES_END -->")
         with patch("claudecodeoptimizer.cco_remove.CLAUDE_DIR", tmp_path):
-            removed = remove_claude_md_rules(verbose=False)
+            removed = remove_claude_md_standards(verbose=False)
         assert "CCO Principles (legacy)" in removed
 
 
@@ -150,11 +150,11 @@ class TestUninstallPackage:
 class TestMain:
     @patch("claudecodeoptimizer.cco_remove.detect_install_method")
     @patch("claudecodeoptimizer.cco_remove.list_cco_files")
-    @patch("claudecodeoptimizer.cco_remove.has_claude_md_rules")
-    def test_not_installed(self, mock_rules, mock_list, mock_detect, capsys):
+    @patch("claudecodeoptimizer.cco_remove.has_claude_md_standards")
+    def test_not_installed(self, mock_standards, mock_list, mock_detect, capsys):
         mock_detect.return_value = None
         mock_list.return_value = {"agents": [], "commands": []}
-        mock_rules.return_value = []
+        mock_standards.return_value = []
         result = main()
         assert result == 0
         captured = capsys.readouterr()
@@ -162,12 +162,12 @@ class TestMain:
 
     @patch("claudecodeoptimizer.cco_remove.detect_install_method")
     @patch("claudecodeoptimizer.cco_remove.list_cco_files")
-    @patch("claudecodeoptimizer.cco_remove.has_claude_md_rules")
+    @patch("claudecodeoptimizer.cco_remove.has_claude_md_standards")
     @patch("builtins.input")
-    def test_cancelled(self, mock_input, mock_rules, mock_list, mock_detect, capsys):
+    def test_cancelled(self, mock_input, mock_standards, mock_list, mock_detect, capsys):
         mock_detect.return_value = "pip"
         mock_list.return_value = {"agents": ["a.md"], "commands": ["c.md"]}
-        mock_rules.return_value = ["CCO Rules"]
+        mock_standards.return_value = ["CCO Standards"]
         mock_input.return_value = "n"
         result = main()
         assert result == 0
@@ -176,10 +176,10 @@ class TestMain:
 
     @patch("claudecodeoptimizer.cco_remove.detect_install_method")
     @patch("claudecodeoptimizer.cco_remove.list_cco_files")
-    @patch("claudecodeoptimizer.cco_remove.has_claude_md_rules")
+    @patch("claudecodeoptimizer.cco_remove.has_claude_md_standards")
     @patch("claudecodeoptimizer.cco_remove.uninstall_package")
     @patch("claudecodeoptimizer.cco_remove.remove_cco_files")
-    @patch("claudecodeoptimizer.cco_remove.remove_claude_md_rules")
+    @patch("claudecodeoptimizer.cco_remove.remove_claude_md_standards")
     @patch("builtins.input")
     def test_full_removal(
         self,
@@ -187,18 +187,18 @@ class TestMain:
         mock_rm_rules,
         mock_rm_files,
         mock_uninstall,
-        mock_rules,
+        mock_standards,
         mock_list,
         mock_detect,
         capsys,
     ):
         mock_detect.return_value = "pip"
         mock_list.return_value = {"commands": ["c.md"], "agents": ["a.md"]}
-        mock_rules.return_value = ["CCO Rules"]
+        mock_standards.return_value = ["CCO Standards"]
         mock_input.return_value = "y"
         mock_uninstall.return_value = True
         mock_rm_files.return_value = {"commands": 1, "agents": 1}
-        mock_rm_rules.return_value = ["CCO Rules"]
+        mock_rm_rules.return_value = ["CCO Standards"]
         result = main()
         assert result == 0
         captured = capsys.readouterr()
@@ -206,15 +206,15 @@ class TestMain:
 
     @patch("claudecodeoptimizer.cco_remove.detect_install_method")
     @patch("claudecodeoptimizer.cco_remove.list_cco_files")
-    @patch("claudecodeoptimizer.cco_remove.has_claude_md_rules")
+    @patch("claudecodeoptimizer.cco_remove.has_claude_md_standards")
     @patch("claudecodeoptimizer.cco_remove.uninstall_package")
     @patch("builtins.input")
     def test_package_removal_failure(
-        self, mock_input, mock_uninstall, mock_rules, mock_list, mock_detect, capsys
+        self, mock_input, mock_uninstall, mock_standards, mock_list, mock_detect, capsys
     ):
         mock_detect.return_value = "pip"
         mock_list.return_value = {"commands": [], "agents": []}
-        mock_rules.return_value = []
+        mock_standards.return_value = []
         mock_input.return_value = "y"
         mock_uninstall.return_value = False
         result = main()

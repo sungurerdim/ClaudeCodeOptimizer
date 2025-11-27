@@ -13,7 +13,7 @@ def main() -> None:
 
     print(f"\nCCO v{__version__}")
     print("-" * 40)
-    print("Commands, agents, and rules for Claude Code")
+    print("Commands, agents, and standards for Claude Code")
     print()
     print("Setup:   cco-setup")
     print("Status:  cco-status")

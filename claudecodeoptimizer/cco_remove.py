@@ -33,15 +33,17 @@ def list_cco_files() -> dict[str, list[str]]:
     return files
 
 
-def has_claude_md_rules() -> list[str]:
+def has_claude_md_standards() -> list[str]:
     """Check which CCO sections exist in CLAUDE.md."""
     claude_md = CLAUDE_DIR / "CLAUDE.md"
     if not claude_md.exists():
         return []
     content = claude_md.read_text(encoding="utf-8")
     sections = []
+    if "<!-- CCO_STANDARDS_START -->" in content:
+        sections.append("CCO Standards")
     if "<!-- CCO_RULES_START -->" in content:
-        sections.append("CCO Rules")
+        sections.append("CCO Rules (legacy)")
     if "<!-- CCO_PRINCIPLES_START -->" in content:
         sections.append("CCO Principles (legacy)")
     return sections
@@ -70,8 +72,8 @@ def remove_cco_files(verbose: bool = True) -> dict[str, int]:
     return removed
 
 
-def remove_claude_md_rules(verbose: bool = True) -> list[str]:
-    """Remove CCO rules from CLAUDE.md with detailed output."""
+def remove_claude_md_standards(verbose: bool = True) -> list[str]:
+    """Remove CCO standards from CLAUDE.md with detailed output."""
     claude_md = CLAUDE_DIR / "CLAUDE.md"
     if not claude_md.exists():
         return []
@@ -79,6 +81,16 @@ def remove_claude_md_rules(verbose: bool = True) -> list[str]:
     content = claude_md.read_text(encoding="utf-8")
     removed = []
 
+    if "<!-- CCO_STANDARDS_START -->" in content:
+        content = re.sub(
+            r"<!-- CCO_STANDARDS_START -->.*?<!-- CCO_STANDARDS_END -->\n?",
+            "",
+            content,
+            flags=re.DOTALL,
+        )
+        removed.append("CCO Standards")
+
+    # Legacy cleanup
     if "<!-- CCO_RULES_START -->" in content:
         content = re.sub(
             r"<!-- CCO_RULES_START -->.*?<!-- CCO_RULES_END -->\n?",
@@ -86,7 +98,7 @@ def remove_claude_md_rules(verbose: bool = True) -> list[str]:
             content,
             flags=re.DOTALL,
         )
-        removed.append("CCO Rules")
+        removed.append("CCO Rules (legacy)")
 
     if "<!-- CCO_PRINCIPLES_START -->" in content:
         content = re.sub(
@@ -126,10 +138,10 @@ def main() -> int:
     try:
         method = detect_install_method()
         files = list_cco_files()
-        rules = has_claude_md_rules()
+        standards = has_claude_md_standards()
         total_files = sum(len(f) for f in files.values())
 
-        if not method and total_files == 0 and not rules:
+        if not method and total_files == 0 and not standards:
             print("CCO is not installed.")
             return 0
 
@@ -156,9 +168,9 @@ def main() -> int:
                 print(f"  - {f}")
             print()
 
-        if rules:
+        if standards:
             print("CLAUDE.md sections:")
-            for section in rules:
+            for section in standards:
                 print(f"  - {section}")
             print()
 
@@ -170,7 +182,7 @@ def main() -> int:
             print("  Package:   1")
         print(f"  Commands:  {len(files['commands'])}")
         print(f"  Agents:    {len(files['agents'])}")
-        print(f"  Rules:     {len(rules)} sections in CLAUDE.md")
+        print(f"  Standards: {len(standards)} sections in CLAUDE.md")
         print()
 
         # Confirmation
@@ -196,10 +208,10 @@ def main() -> int:
             remove_cco_files()
             print()
 
-        # Remove rules
-        if rules:
+        # Remove standards
+        if standards:
             print("Removing CLAUDE.md sections...")
-            remove_claude_md_rules()
+            remove_claude_md_standards()
             print()
 
         print("=" * 50)
