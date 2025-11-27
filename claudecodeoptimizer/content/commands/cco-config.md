@@ -11,7 +11,25 @@ description: Configure statusline and permissions
 
 | Phase | Agent | Purpose |
 |-------|-------|---------|
+| Detect | `cco-agent-detect` | Check existing config files |
 | Write | `cco-agent-action` | Create/update config files |
+
+### MANDATORY Agent Rules
+
+1. **NEVER use direct Edit/Write tools** for config files
+2. **ALWAYS delegate to agents** as first choice, not last resort
+3. Detection phase → `cco-agent-detect`
+4. Write phase → `cco-agent-action`
+5. If agent fails, report error - do NOT fallback to direct tools
+
+### Execution Order
+
+```
+1. Delegate detection to cco-agent-detect
+2. Process agent results, ask user questions
+3. Delegate writes to cco-agent-action
+4. Report agent results to user
+```
 
 ## Pre-Check
 
@@ -609,37 +627,70 @@ Target: `{scope}/settings.json`
 - `cco-agent-scan`: + Bash (read-only: ruff check, pytest --collect-only, git log)
 - `cco-agent-action`: + Edit, Write, NotebookEdit, Bash (format, lint, test runners)
 
-### Always Allow (all levels)
+### Always Allow (all scopes, all levels)
 
-These safe tools are always in allow list:
+These safe read-only tools are ALWAYS in allow list for BOTH global and local:
 ```
 Read, Glob, Grep, WebSearch, WebFetch, Task, TodoWrite,
 SlashCommand, Skill, AskUserQuestion
 ```
 
+### Scope-Based Write Patterns
+
+**Local scope (.claude/settings.local.json):**
+Project + global .claude folder access:
+```json
+"allow": [
+  "Read", "Glob", "Grep", "WebSearch", "WebFetch", "Task", "TodoWrite",
+  "Edit(./**)", "Write(./**)", "NotebookEdit(./**)",
+  "Edit(~/.claude/**)", "Write(~/.claude/**)", "Read(~/.claude/**)"
+]
+```
+
+**Global scope (~/.claude/settings.json):**
+Home directory with critical path protection:
+```json
+"allow": [
+  "Read", "Glob", "Grep", "WebSearch", "WebFetch", "Task", "TodoWrite",
+  "Edit(~/**)", "Write(~/**)", "NotebookEdit(~/**)"
+]
+// + OS-specific critical paths in deny (see Critical Path Protection)
+```
+
+⚠️ **Important:**
+- Local: Use `./**` (project) + `~/.claude/**` (config) patterns
+- Global: Use `~/**` (home) + Critical Path Protection in deny
+- NEVER allow unrestricted `Edit` or `Write` without path constraints
+
+### Permission Levels
+
 **Safe:** Maximum security
 ```
-allow: [always allow]
-ask: Write, Edit, NotebookEdit, all Bash
+allow: [always allow read-only tools]
+ask: Edit, Write, NotebookEdit, all Bash
 deny: dangerous commands
 ```
 ⚠️ Every file change and command needs approval.
 
 **Balanced (default):** Normal workflow
 ```
-allow: [always allow] + Write, Edit, NotebookEdit
-       Bash: git, ruff, pytest, npm test, cargo check, etc.
-ask: rm/del, pip install, npm install, git push
-deny: dangerous commands
+allow: [always allow read-only tools]
+       Local: Edit(.**), Write(.**), Edit(~/.claude/**), Write(~/.claude/**)
+       Global: Edit(~/**), Write(~/**), NotebookEdit(~/**)
+       Bash: git:*, ruff:*, pytest:*, npm test:*, cargo:*, etc.
+ask: Bash(rm:*), Bash(del:*), Bash(pip install:*), Bash(npm install:*), Bash(git push:*)
+deny: [baseDeny + OS-specific] (see Combined deny array)
 ```
 ✓ Code changes auto, destructive/install commands ask.
 
 **Permissive:** Trusted projects
 ```
-allow: [always allow] + Write, Edit, NotebookEdit
-       Bash: everything except push and system
-ask: git push, npm publish, sudo, system commands
-deny: dangerous commands
+allow: [always allow read-only tools]
+       Local: Edit(.**), Write(.**), Edit(~/.claude/**), Write(~/.claude/**)
+       Global: Edit(~/**), Write(~/**), NotebookEdit(~/**)
+       Bash: almost everything
+ask: Bash(git push:*), Bash(npm publish:*), Bash(sudo:*)
+deny: [baseDeny + OS-specific] (see Combined deny array)
 ```
 ✓ Even rm/install auto, only publish/push asks.
 
@@ -656,8 +707,60 @@ deny: dangerous commands
 | npm publish | ask | ask | **ask** |
 | rm -rf, format, dd | **deny** | **deny** | **deny** |
 | sudo, su, chmod 777 | **deny** | **deny** | **deny** |
-| curl\|bash, eval | **deny** | **deny** | **deny** |
+| curl/wget \| shell | **deny** | **deny** | **deny** |
 | .env, secrets, keys | **deny** | **deny** | **deny** |
+
+### OS Detection
+
+Detect OS at runtime and apply platform-specific patterns:
+
+```javascript
+const isWindows = process.platform === 'win32';
+const isMac = process.platform === 'darwin';
+const isLinux = process.platform === 'linux';
+```
+
+### Critical Path Protection (all scopes, all levels)
+
+These paths are ALWAYS denied regardless of scope or permission level:
+
+**Cross-Platform (credentials & secrets):**
+```
+Edit(~/.ssh/**)          # SSH keys
+Edit(~/.gnupg/**)        # GPG keys
+Edit(~/.aws/**)          # AWS credentials
+Edit(~/.kube/**)         # Kubernetes config
+Edit(~/.docker/**)       # Docker credentials
+Edit(**/.env*)           # Environment files
+Edit(**/secrets/**)      # Secrets directories
+Edit(**/*.pem)           # Private keys
+Edit(**/*.key)           # Key files
+```
+
+**Unix/Linux/Mac only:**
+```
+Edit(/etc/**)            # System config
+Edit(/usr/**)            # System binaries
+Edit(/var/**)            # System data
+Edit(/root/**)           # Root home
+Edit(/boot/**)           # Boot files
+```
+
+**Windows only:**
+```
+Edit(C:/Windows/**)      # Windows system
+Edit(C:/Program Files/**) # Program files
+Edit(C:/Program Files (x86)/**) # Program files x86
+Edit(C:/ProgramData/**)  # Program data
+Edit(C:/Users/*/AppData/Local/Microsoft/**) # Windows settings
+```
+
+**Mac only (additional):**
+```
+Edit(/System/**)         # macOS system
+Edit(/Library/**)        # System library
+Edit(~/Library/Keychains/**) # Keychain
+```
 
 ### Always Deny (all levels)
 
@@ -696,22 +799,20 @@ Bash(git rebase -i:*)         # Interactive rebase
 
 **Remote Code Execution:**
 ```
-Bash(curl*|*sh:*)        # Pipe to shell
-Bash(curl*|*bash:*)      # Pipe to bash
-Bash(wget*|*sh:*)        # Wget pipe to shell
-Bash(eval:*)             # Eval command
+Bash(eval:*)                       # Eval command
 ```
+
+**Note:** Pipe patterns (e.g., `curl | sh`) are NOT supported by Claude Code.
+Use more specific command patterns or rely on other security measures.
 
 **Sensitive Files:**
 ```
-Edit(**/.env)            # Environment files
-Edit(**/.env.*)          # Environment variants
+Edit(**/.env*)           # Environment files (.env, .env.local, etc.)
 Edit(**/secrets/**)      # Secrets directory
 Edit(**/*.pem)           # Private keys
 Edit(**/*.key)           # Key files
 Edit(**/*secret*)        # Secret files
-Write(**/.env)           # Write env
-Write(**/.env.*)         # Write env variants
+Write(**/.env*)          # Write env files
 Write(**/secrets/**)     # Write secrets
 Read(**/.ssh/id_*)       # SSH private keys
 Read(**/.aws/credentials)# AWS credentials
@@ -719,31 +820,139 @@ Read(**/.kube/config)    # Kubernetes config
 Read(**/*password*)      # Password files
 ```
 
-**Combined deny array:**
-```json
-"deny": [
+**Combined deny array (build dynamically):**
+
+```javascript
+// Base deny (all platforms)
+const baseDeny = [
+  // Destructive commands
   "Bash(rm -rf /*:*)", "Bash(rm -rf ~/*:*)", "Bash(rm -rf .:*)",
   "Bash(del /s /q:*)", "Bash(format:*)", "Bash(mkfs:*)", "Bash(dd if=:*)",
+  // System/Privilege
   "Bash(sudo:*)", "Bash(su:*)", "Bash(chmod 777:*)", "Bash(chown root:*)",
   "Bash(shutdown:*)", "Bash(reboot:*)", "Bash(halt:*)",
+  // Git dangerous
   "Bash(git push --force:*)", "Bash(git push -f:*)",
   "Bash(git reset --hard:*)", "Bash(git clean -fdx:*)",
-  "Bash(curl*|*sh:*)", "Bash(curl*|*bash:*)", "Bash(wget*|*sh:*)", "Bash(eval:*)",
-  "Edit(**/.env)", "Edit(**/.env.*)", "Edit(**/secrets/**)", "Edit(**/*.pem)",
-  "Edit(**/*.key)", "Edit(**/*secret*)",
-  "Write(**/.env)", "Write(**/.env.*)", "Write(**/secrets/**)",
+  // Remote code execution
+  "Bash(eval:*)",
+  // Credentials (cross-platform)
+  "Edit(~/.ssh/**)", "Write(~/.ssh/**)",
+  "Edit(~/.gnupg/**)", "Write(~/.gnupg/**)",
+  "Edit(~/.aws/**)", "Write(~/.aws/**)",
+  "Edit(~/.kube/**)", "Write(~/.kube/**)",
+  "Edit(~/.docker/**)", "Write(~/.docker/**)",
+  // Sensitive files
+  "Edit(**/.env*)", "Edit(**/secrets/**)", "Edit(**/*.pem)", "Edit(**/*.key)",
+  "Write(**/.env*)", "Write(**/secrets/**)",
   "Read(**/.ssh/id_*)", "Read(**/.aws/credentials)", "Read(**/.kube/config)"
-]
+];
+
+// Unix/Linux/Mac additions
+const unixDeny = [
+  "Edit(/etc/**)", "Write(/etc/**)",
+  "Edit(/usr/**)", "Write(/usr/**)",
+  "Edit(/var/**)", "Write(/var/**)",
+  "Edit(/root/**)", "Write(/root/**)",
+  "Edit(/boot/**)", "Write(/boot/**)"
+];
+
+// Windows additions
+const windowsDeny = [
+  "Edit(C:/Windows/**)", "Write(C:/Windows/**)",
+  "Edit(C:/Program Files/**)", "Write(C:/Program Files/**)",
+  "Edit(C:/Program Files (x86)/**)", "Write(C:/Program Files (x86)/**)",
+  "Edit(C:/ProgramData/**)", "Write(C:/ProgramData/**)"
+];
+
+// Mac additions
+const macDeny = [
+  "Edit(/System/**)", "Write(/System/**)",
+  "Edit(/Library/**)", "Write(/Library/**)",
+  "Edit(~/Library/Keychains/**)", "Write(~/Library/Keychains/**)"
+];
+
+// Build final deny array
+const deny = [
+  ...baseDeny,
+  ...(isWindows ? windowsDeny : unixDeny),
+  ...(isMac ? macDeny : [])
+];
 ```
+
+## Settings Syntax Rules
+
+Claude Code permission patterns follow specific syntax. Invalid patterns cause startup errors.
+
+### Pattern Format
+
+| Tool Type | Syntax | Example | Matches |
+|-----------|--------|---------|---------|
+| Bash prefix | `Bash(cmd:*)` | `Bash(git:*)` | `git status`, `git push`, etc. |
+| Bash with args | `Bash(cmd arg:*)` | `Bash(npm run:*)` | `npm run dev`, `npm run build` |
+| File glob | `Tool(**/pattern)` | `Edit(**/.env)` | Any `.env` file in tree |
+| File glob ext | `Tool(**/*.ext)` | `Read(**/*.pem)` | Any `.pem` file |
+
+### Syntax Rules
+
+1. **Prefix Matching** - Use `:*` suffix for prefix matching
+   - ✅ `Bash(git:*)` - matches any git command
+   - ❌ `Bash(git*)` - INVALID, causes error
+
+2. **Pipe Patterns** - NOT SUPPORTED
+   - ❌ `Bash(curl:* | sh)` - INVALID, pipe patterns don't work
+   - ❌ `Bash(curl:* | sh|bash|zsh)` - INVALID, pipe patterns don't work
+   - Use more specific command patterns or rely on other security measures
+
+3. **File Globs** - Use `**/` for recursive matching
+   - ✅ `Edit(**/.env)` - any .env file
+   - ✅ `Edit(**/*.key)` - any .key file
+   - ❌ `Edit(.env)` - only root .env
+
+4. **No Duplicates** - Avoid patterns that are subsets of each other
+   - If `Bash(curl:*)` exists, don't add `Bash(curl -s:*)`
+   - More generic pattern covers all specific cases
+
+### Common Errors
+
+| Error | Cause | Fix |
+|-------|-------|-----|
+| `Use ":*" for prefix matching` | Using `*` instead of `:*` | Change `Bash(git*)` → `Bash(git:*)` |
+| `Invalid pattern syntax` | Wildcards in middle | Use prefix or pipe patterns |
+| `Conflicting patterns` | Same pattern in allow+deny | Remove from one list |
 
 ## Validation
 
 Before writing:
 1. **JSON Syntax** - Must be parseable
-2. **Conflicts** - Same pattern cannot be in allow AND deny
-3. **Security** - Dangerous commands must be in deny
+2. **Pattern Syntax** - Must follow Claude Code pattern rules (see above)
+3. **Conflicts** - Same pattern cannot be in allow AND deny
+4. **Security** - Dangerous commands must be in deny
 
 On failure: show issues, offer auto-fix for safe issues
+
+## Health Check
+
+After writing settings, validate with Claude Code:
+
+```bash
+# Test if settings file is valid
+claude --version 2>&1
+
+# If error contains "Invalid Settings", parse and fix:
+# - Check pattern syntax rules above
+# - Look for ":*" vs "*" issues
+# - Check pipe pattern format
+```
+
+**Validation steps:**
+1. Write settings.json
+2. Run `claude --version` to trigger validation
+3. If "Invalid Settings" error appears:
+   - Parse error message for specific patterns
+   - Apply syntax fixes from rules above
+   - Re-write and re-validate
+4. Repeat until no errors
 
 ## Usage
 

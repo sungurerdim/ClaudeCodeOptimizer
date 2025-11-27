@@ -13,6 +13,18 @@ Check CCO installation and configuration health.
 |-------|-------|---------|
 | Validate | `cco-agent-scan` | Check files, validate configs |
 
+### MANDATORY Agent Rules
+
+1. **ALWAYS use `cco-agent-scan`** for validation
+2. Do NOT use direct file reads for config validation
+3. Agent handles JSON parsing and pattern checking
+
+### Error Recovery
+
+On validation errors:
+1. Delegate to `cco-agent-scan` for fresh validation
+2. Report issues with specific file:line references
+
 ## Installation Check
 
 1. Count files in ~/.claude/commands/cco-*.md
