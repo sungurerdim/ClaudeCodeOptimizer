@@ -113,12 +113,42 @@ operations:
 
 ```
 
-## Step 3: Proceed
+## Step 3: Use Context
 
-Context is now available. The calling command should:
+Context is now available. Commands MUST follow these output requirements:
 
-1. Read context values
-2. Calibrate analysis/recommendations based on context
-3. Explain in output how context affected decisions
+### Context-Justified Recommendations
 
-**Key principle:** AI dynamically evaluates - no hardcoded thresholds.
+Every recommendation/finding MUST include:
+
+1. **What**: The recommendation itself
+2. **Why**: Which context field(s) led to this recommendation
+3. **Trade-off**: What would be different in another context
+
+Format:
+```
+[Recommendation]
+↳ Context: {field}: {value} → {why this matters}
+```
+
+### Examples of Context Justification
+
+```
+⚠️ Test coverage %60 - normalde düşük ama kabul edilebilir
+↳ Context: time_pressure: urgent, affected: self → hızlı ship öncelikli
+
+❌ SQL injection riski - MUTLAKA düzeltilmeli
+↳ Context: data_sensitivity: financial, compliance: pci-dss → güvenlik kritik
+
+ℹ️ Refactoring önerisi - şimdi değil, backlog'a eklenebilir
+↳ Context: time_pressure: deadline, rollback: db_migration → riskli değişiklik ertelenebilir
+```
+
+### Anti-patterns (YAPMA)
+
+- ❌ Context'e referans vermeden öneri yapmak
+- ❌ "Best practice" deyip bağlamı yok saymak
+- ❌ Tüm projelere aynı standartları uygulamak
+- ❌ Context'i okuyup sonra görmezden gelmek
+
+**Key principle:** AI dynamically evaluates - recommendations without context justification are incomplete.
