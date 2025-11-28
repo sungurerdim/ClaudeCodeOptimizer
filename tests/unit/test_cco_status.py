@@ -14,8 +14,8 @@ from claudecodeoptimizer.cco_status import (
 
 class TestCountFiles:
     def test_count_empty(self, tmp_path):
-        with patch("claudecodeoptimizer.cco_status.COMMANDS_DIR", tmp_path / "commands"):
-            with patch("claudecodeoptimizer.cco_status.AGENTS_DIR", tmp_path / "agents"):
+        with patch("claudecodeoptimizer.cco_status.get_cco_commands", return_value=[]):
+            with patch("claudecodeoptimizer.cco_status.get_cco_agents", return_value=[]):
                 counts = count_files()
                 assert counts["commands"] == 0
                 assert counts["agents"] == 0
@@ -23,10 +23,12 @@ class TestCountFiles:
     def test_count_with_files(self, tmp_path):
         (tmp_path / "commands").mkdir()
         (tmp_path / "agents").mkdir()
-        (tmp_path / "commands" / "cco-help.md").touch()
-        (tmp_path / "agents" / "cco-agent-scan.md").touch()
-        with patch("claudecodeoptimizer.cco_status.COMMANDS_DIR", tmp_path / "commands"):
-            with patch("claudecodeoptimizer.cco_status.AGENTS_DIR", tmp_path / "agents"):
+        cmd_file = tmp_path / "commands" / "cco-help.md"
+        cmd_file.touch()
+        agent_file = tmp_path / "agents" / "cco-agent-scan.md"
+        agent_file.touch()
+        with patch("claudecodeoptimizer.cco_status.get_cco_commands", return_value=[cmd_file]):
+            with patch("claudecodeoptimizer.cco_status.get_cco_agents", return_value=[agent_file]):
                 counts = count_files()
                 assert counts["commands"] == 1
                 assert counts["agents"] == 1
@@ -49,22 +51,30 @@ class TestHasRules:
 class TestPrintStatus:
     def test_not_installed(self, tmp_path):
         with patch("claudecodeoptimizer.cco_status.CLAUDE_DIR", tmp_path):
-            with patch("claudecodeoptimizer.cco_status.COMMANDS_DIR", tmp_path / "commands"):
-                with patch("claudecodeoptimizer.cco_status.AGENTS_DIR", tmp_path / "agents"):
+            with patch("claudecodeoptimizer.cco_status.get_cco_commands", return_value=[]):
+                with patch("claudecodeoptimizer.cco_status.get_cco_agents", return_value=[]):
                     assert print_status() == 1
 
     def test_installed(self, tmp_path, capsys):
         (tmp_path / "commands").mkdir()
         (tmp_path / "agents").mkdir()
-        (tmp_path / "commands" / "cco-help.md").touch()
-        (tmp_path / "commands" / "cco-audit.md").touch()
-        (tmp_path / "agents" / "cco-agent-scan.md").touch()
+        cmd_file1 = tmp_path / "commands" / "cco-help.md"
+        cmd_file1.touch()
+        cmd_file2 = tmp_path / "commands" / "cco-audit.md"
+        cmd_file2.touch()
+        agent_file = tmp_path / "agents" / "cco-agent-scan.md"
+        agent_file.touch()
         (tmp_path / "CLAUDE.md").write_text(
             "<!-- CCO_STANDARDS_START -->standards<!-- CCO_STANDARDS_END -->"
         )
         with patch("claudecodeoptimizer.cco_status.CLAUDE_DIR", tmp_path):
-            with patch("claudecodeoptimizer.cco_status.COMMANDS_DIR", tmp_path / "commands"):
-                with patch("claudecodeoptimizer.cco_status.AGENTS_DIR", tmp_path / "agents"):
+            with patch(
+                "claudecodeoptimizer.cco_status.get_cco_commands",
+                return_value=[cmd_file1, cmd_file2],
+            ):
+                with patch(
+                    "claudecodeoptimizer.cco_status.get_cco_agents", return_value=[agent_file]
+                ):
                     result = print_status()
         assert result == 0
         captured = capsys.readouterr()

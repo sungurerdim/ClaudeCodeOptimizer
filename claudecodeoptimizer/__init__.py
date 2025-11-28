@@ -6,9 +6,10 @@ __version__ = "1.0.0"
 __author__ = "Sungur Zahid Erdim"
 
 # Windows UTF-8 fix
-if sys.platform == "win32" and hasattr(sys.stdout, "reconfigure"):
-    try:
-        sys.stdout.reconfigure(encoding="utf-8")  # type: ignore[union-attr]
-        sys.stderr.reconfigure(encoding="utf-8")  # type: ignore[union-attr]
-    except Exception:
-        pass
+if sys.platform == "win32":
+    for stream in (sys.stdout, sys.stderr):
+        if hasattr(stream, "reconfigure"):
+            try:
+                stream.reconfigure(encoding="utf-8")  # type: ignore[union-attr]
+            except Exception:
+                pass

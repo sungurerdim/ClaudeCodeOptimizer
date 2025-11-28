@@ -2,14 +2,14 @@
 
 import sys
 
-from .config import AGENTS_DIR, CLAUDE_DIR, COMMANDS_DIR, VERSION
+from .config import CLAUDE_DIR, VERSION, get_cco_agents, get_cco_commands
 
 
 def count_files() -> dict[str, int]:
     """Count CCO files."""
     return {
-        "commands": sum(1 for _ in COMMANDS_DIR.glob("cco-*.md")) if COMMANDS_DIR.exists() else 0,
-        "agents": sum(1 for _ in AGENTS_DIR.glob("cco-*.md")) if AGENTS_DIR.exists() else 0,
+        "commands": len(get_cco_commands()),
+        "agents": len(get_cco_agents()),
     }
 
 
