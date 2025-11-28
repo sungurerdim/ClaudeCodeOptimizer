@@ -144,10 +144,10 @@ Target: `{scope}/statusline.js`
 
 Features:
 - 5-column grid with box drawing
-- Row 1: Path | User | Size | CC Version | Model
-- Row 2: Repo:Branch | Conflicts | Stash | Ahead | Last
+- Row 1: Dir | User | Size | CC Version | Model
+- Row 2: Branch | Conflicts | Stash | Ahead | Last
 - Row 3-4: Unstaged/Staged changes with line counts
-- Configurable: pathSegments, showHostname, emojiWidth
+- Configurable: showHostname, emojiWidth
 
 ### Full Code
 
@@ -168,7 +168,6 @@ const os = require('os');
 // CONFIGURATION
 // ============================================================================
 const CONFIG = {
-  pathSegments: 2,      // Show last N path segments (0 = hide)
   showHostname: false,  // true = user@host, false = just user
   emojiWidth: 2,        // Terminal emoji width (1 or 2, try 1 if alignment is off)
 };
@@ -256,16 +255,6 @@ function execCmd(cmd) {
   try {
     return execSync(cmd, { encoding: 'utf-8', stdio: ['pipe', 'pipe', 'ignore'], timeout: 3000 }).replace(/\n$/, '');
   } catch { return null; }
-}
-
-// ============================================================================
-// PATH FORMATTING
-// ============================================================================
-function formatPath(fullPath) {
-  if (CONFIG.pathSegments === 0) return '';
-  const parts = fullPath.replace(/\\/g, '/').split('/').filter(Boolean);
-  if (parts.length <= CONFIG.pathSegments) return parts.join('/');
-  return parts.slice(-CONFIG.pathSegments).join('/');
 }
 
 // ============================================================================
@@ -418,16 +407,12 @@ function getGitInfo() {
   const stashList = execCmd('git stash list');
   const stash = stashList ? stashList.split('\n').filter(x => x.trim()).length : 0;
 
-  // Repo name
-  const gitRoot = execCmd('git rev-parse --show-toplevel');
-  const repoName = gitRoot ? path.basename(gitRoot) : null;
-
   // Last commit time (Unix timestamp)
   const lastCommitTs = execCmd('git log -1 --format=%ct');
   const lastCommit = lastCommitTs ? parseInt(lastCommitTs, 10) : null;
 
   return {
-    branch, repoName,
+    branch,
     mod, add, del, ren,
     sMod, sAdd, sDel, sRen,
     unstAdd, unstRem,
@@ -447,7 +432,7 @@ function formatStatusline(input, git) {
   const userDisplay = CONFIG.showHostname ? `${username}@${host}` : username;
 
   const fullPath = input.cwd || process.cwd();
-  const pathDisplay = formatPath(fullPath);
+  const dirName = path.basename(fullPath);
   const modelDisplay = formatModelName(input.model);
   const ccVersion = getClaudeCodeVersion();
   const projectSize = getProjectSize();
@@ -455,13 +440,13 @@ function formatStatusline(input, git) {
   // ─────────────────────────────────────────────────────────────────────────
   // BUILD 5-COLUMN GRID
   // ─────────────────────────────────────────────────────────────────────────
-  // Row 1: Path | User | Size | CC | Model
-  // Row 2: Repo:Branch | Conflicts | Stash | Ahead | Last
+  // Row 1: Dir | User | Size | CC | Model
+  // Row 2: Branch | Conflicts | Stash | Ahead | Last
   // Row 3: Unstaged +/- | edit | new | del | move
   // Row 4: Staged +/- | edit | new | del | move
 
   const row1 = [
-    `${ICON.folder} ${c(pathDisplay, 'white')}`,
+    `${ICON.folder} ${c(dirName, 'white')}`,
     `${ICON.user} ${c(userDisplay, 'cyan')}`,
     projectSize ? c(projectSize, 'blue') : c('?', 'gray'),
     ccVersion ? c('CC ' + ccVersion, 'yellow') : c('CC ?', 'gray'),
@@ -470,7 +455,6 @@ function formatStatusline(input, git) {
 
   let row2;
   if (git) {
-    const repoText = git.repoName ? `${git.repoName}:${git.branch}` : git.branch;
     const issueColor = git.conflict > 0 ? 'red' : 'gray';
     const savedColor = git.stash > 0 ? 'cyan' : 'gray';
     const syncColor = git.unpushed > 0 ? 'magenta' : 'gray';
@@ -497,7 +481,7 @@ function formatStatusline(input, git) {
     }
 
     row2 = [
-      `${ICON.repo} ${c(repoText, 'green')}`,
+      `${ICON.repo} ${c(git.branch, 'green')}`,
       `${c('Conflicts:', issueColor)} ${c(String(git.conflict), issueColor)}`,
       `${c('Stash:', savedColor)} ${c(String(git.stash), savedColor)}`,
       `${c('Ahead:', syncColor)} ${c(String(git.unpushed), syncColor)}`,
