@@ -17,40 +17,9 @@ Before starting:
 
 ## Project Context
 
-Load or gather project context before running quality checks.
+**Run context check first:** See `content/shared/context-check.md`
 
-### Check Existing Context
-
-```bash
-cat .claude/cco_context.yaml 2>/dev/null
-```
-
-### Context Flow
-
-**If exists:** Ask if still valid (Yes, use this / Update fields / Start fresh)
-**If not exists:** Gather with conditional questions (see content/shared/project-context.md)
-
-### Context-Calibrated Quality Gates
-
-Adjust thresholds based on context:
-
-| Context | Test Coverage | Complexity | Security Depth |
-|---------|--------------|------------|----------------|
-| Solo MVP | 40%+ critical paths | Max 15 | Basic checks |
-| Team Startup | 70%+ | Max 12 | OWASP Top 10 |
-| Enterprise | 85%+ | Max 8 | Full scan + pentest |
-
-**Note:** These are guidelines. AI dynamically evaluates based on full context - don't apply rigidly.
-
-### Using Context
-
-When reporting issues, consider:
-- **Time pressure: urgent** → Flag only critical/blocking issues
-- **Data: financial/health** → Elevate security issues to critical
-- **Team: solo** → Relax documentation requirements
-- **Rollback: user_data** → Extra scrutiny on data changes
-
-Explain in report how context affected prioritization.
+Context calibrates quality gate thresholds and issue prioritization.
 
 ## Flow
 

@@ -15,78 +15,9 @@ Before starting:
 
 ## Project Context
 
-Before analysis, establish project context for calibrated recommendations.
+**Run context check first:** See `content/shared/context-check.md`
 
-### Check Existing Context
-
-First, check if context already exists:
-
-```bash
-cat .claude/cco_context.yaml 2>/dev/null
-```
-
-### If Context Exists
-
-Show the current context summary and ask:
-
-```
-AskUserQuestion:
-header: "Context"
-question: "Found existing project context:\n\n[show key values: affected, scale, data sensitivity, team size, time pressure]\n\nIs this still accurate?"
-options:
-  - label: "Yes, use this"
-    description: "Proceed with existing context"
-  - label: "Update some fields"
-    description: "Select which fields to update"
-  - label: "Start fresh"
-    description: "Re-answer all context questions"
-```
-
-If "Update some fields", ask multiselect:
-```
-AskUserQuestion:
-header: "Update"
-question: "Which sections need updating?"
-multiSelect: true
-options:
-  - label: "Impact & Scale"
-    description: "Who affected, how many users"
-  - label: "Risk & Compliance"
-    description: "Data sensitivity, compliance requirements"
-  - label: "Team"
-    description: "Team size, ownership model"
-  - label: "Operations"
-    description: "Rollback complexity, time pressure"
-```
-
-Then re-ask only selected sections' questions.
-
-### If No Context Exists
-
-Gather context with conditional questions (see content/shared/project-context.md for full question flow):
-
-**Always ask:** Impact → Downtime → Team Size → Rollback → Time Pressure
-
-**Conditional:**
-- Scale (if team+)
-- Data Sensitivity (if customers+)
-- Compliance (if PII+)
-- Revenue Impact (if minutes+)
-- Code Ownership (if 2+ devs)
-
-After gathering, write to `.claude/cco_context.yaml`
-
-### Using Context
-
-Include the gathered/loaded context in your analysis. Calibrate all recommendations based on:
-- **Impact level** → How rigorous should review be?
-- **Data sensitivity** → Security focus depth
-- **Team size** → Documentation and review needs
-- **Time pressure** → Trade-off recommendations
-- **Rollback complexity** → Risk assessment for changes
-
-**DO NOT** apply fixed standards regardless of context.
-**DO** explain how context affects your recommendations.
+This ensures project context is loaded/gathered before analysis. Context calibrates review rigor and recommendations.
 
 ## Flow
 
