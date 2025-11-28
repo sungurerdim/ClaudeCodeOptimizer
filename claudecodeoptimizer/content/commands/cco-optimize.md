@@ -12,6 +12,41 @@ description: Measurable efficiency improvements
 If uncommitted changes exist, AskUserQuestion:
 → Commit first (cco-commit) / Stash / Continue anyway
 
+## Project Context
+
+Load project context to calibrate optimization aggressiveness.
+
+### Check Existing Context
+
+```bash
+cat .claude/cco_context.yaml 2>/dev/null
+```
+
+### Context Flow
+
+**If exists:** Ask if still valid (Yes / Update / Refresh)
+**If not exists:** Gather with conditional questions (see content/shared/project-context.md)
+
+### Context-Calibrated Optimization
+
+Adjust optimization approach based on context:
+
+| Context | Approach | Focus |
+|---------|----------|-------|
+| Solo MVP + Urgent | Conservative only | Quick wins that unblock |
+| Team + Normal | Balanced | DRY, readability |
+| Enterprise + Relaxed | Can be aggressive | Full optimization |
+
+### Using Context
+
+When recommending optimizations:
+- **Time pressure: urgent** → Only critical optimizations
+- **Team: large** → Prioritize readability over cleverness
+- **Rollback: complex** → Prefer conservative mode
+- **Scale: 1M+** → Prioritize performance optimizations
+
+Explain how context affects your optimization choices.
+
 ## Categories
 
 - `--context` - CLAUDE.md optimization, remove system-prompt duplicates
