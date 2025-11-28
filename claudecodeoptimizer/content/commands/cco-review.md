@@ -15,7 +15,7 @@ Before starting:
 
 ## Project Context
 
-**Run context check first:** See `content/shared/context-check.md`
+**Run context check first:** See `/cco-context`
 
 This ensures project context is loaded/gathered before analysis. Context calibrates review rigor and recommendations.
 

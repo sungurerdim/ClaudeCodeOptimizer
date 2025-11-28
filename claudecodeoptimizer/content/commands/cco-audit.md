@@ -17,7 +17,7 @@ Before starting:
 
 ## Project Context
 
-**Run context check first:** See `content/shared/context-check.md`
+**Run context check first:** See `/cco-context`
 
 Context calibrates quality gate thresholds and issue prioritization.
 
