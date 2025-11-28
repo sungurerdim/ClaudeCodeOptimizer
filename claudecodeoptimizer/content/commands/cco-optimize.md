@@ -14,38 +14,9 @@ If uncommitted changes exist, AskUserQuestion:
 
 ## Project Context
 
-Load project context to calibrate optimization aggressiveness.
+**Run context check first:** See `content/shared/context-check.md`
 
-### Check Existing Context
-
-```bash
-cat .claude/cco_context.yaml 2>/dev/null
-```
-
-### Context Flow
-
-**If exists:** Ask if still valid (Yes / Update / Refresh)
-**If not exists:** Gather with conditional questions (see content/shared/project-context.md)
-
-### Context-Calibrated Optimization
-
-Adjust optimization approach based on context:
-
-| Context | Approach | Focus |
-|---------|----------|-------|
-| Solo MVP + Urgent | Conservative only | Quick wins that unblock |
-| Team + Normal | Balanced | DRY, readability |
-| Enterprise + Relaxed | Can be aggressive | Full optimization |
-
-### Using Context
-
-When recommending optimizations:
-- **Time pressure: urgent** → Only critical optimizations
-- **Team: large** → Prioritize readability over cleverness
-- **Rollback: complex** → Prefer conservative mode
-- **Scale: 1M+** → Prioritize performance optimizations
-
-Explain how context affects your optimization choices.
+Context calibrates optimization aggressiveness and trade-off recommendations.
 
 ## Categories
 

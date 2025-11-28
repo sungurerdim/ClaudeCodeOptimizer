@@ -14,35 +14,9 @@ Requires clean git state. If uncommitted changes exist, AskUserQuestion:
 
 ## Project Context
 
-Load project context to calibrate refactoring risk assessment.
+**Run context check first:** See `content/shared/context-check.md`
 
-### Check Existing Context
-
-```bash
-cat .claude/cco_context.yaml 2>/dev/null
-```
-
-### Context Flow
-
-**If exists:** Ask if still valid (Yes / Update / Refresh)
-**If not exists:** Gather with conditional questions (see content/shared/project-context.md)
-
-### Context-Aware Risk Assessment
-
-Adjust risk tolerance based on context:
-
-- **Rollback: git** → More aggressive refactors acceptable
-- **Rollback: user_data** → Extra caution, smaller steps
-- **Time pressure: urgent** → Defer non-critical refactors
-- **Team: 6+** → Consider breaking change impact on others
-- **Data: financial** → Extra verification steps for data-touching code
-
-### Using Context
-
-When planning refactors:
-- Factor context into "Proceed / Cancel" recommendation
-- Suggest deferral if context indicates high risk
-- Adjust verification depth based on impact level
+Context calibrates risk assessment and rollback recommendations.
 
 ## Flow
 
