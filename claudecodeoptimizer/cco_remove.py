@@ -4,7 +4,13 @@ import re
 import subprocess
 import sys
 
-from .config import AGENTS_DIR, CLAUDE_DIR, COMMANDS_DIR
+from .config import (
+    CCO_MARKER_PATTERNS,
+    CLAUDE_DIR,
+    SUBPROCESS_TIMEOUT,
+    get_cco_agents,
+    get_cco_commands,
+)
 
 
 def detect_install_method() -> str | None:
@@ -15,7 +21,9 @@ def detect_install_method() -> str | None:
         ("pip", ["show", "claudecodeoptimizer"]),
     ]:
         try:
-            result = subprocess.run([cmd] + args, capture_output=True, text=True, timeout=5)
+            result = subprocess.run(
+                [cmd] + args, capture_output=True, text=True, timeout=SUBPROCESS_TIMEOUT
+            )
             if "claudecodeoptimizer" in result.stdout:
                 return cmd
         except (subprocess.TimeoutExpired, FileNotFoundError):
@@ -26,10 +34,8 @@ def detect_install_method() -> str | None:
 def list_cco_files() -> dict[str, list[str]]:
     """List CCO files in ~/.claude/ by category."""
     files: dict[str, list[str]] = {"commands": [], "agents": []}
-    if COMMANDS_DIR.exists():
-        files["commands"] = sorted(f.name for f in COMMANDS_DIR.glob("cco-*.md"))
-    if AGENTS_DIR.exists():
-        files["agents"] = sorted(f.name for f in AGENTS_DIR.glob("cco-*.md"))
+    files["commands"] = sorted(f.name for f in get_cco_commands())
+    files["agents"] = sorted(f.name for f in get_cco_agents())
     return files
 
 
@@ -54,20 +60,18 @@ def remove_cco_files(verbose: bool = True) -> dict[str, int]:
     removed = {"commands": 0, "agents": 0}
 
     # Commands
-    if COMMANDS_DIR.exists():
-        for f in sorted(COMMANDS_DIR.glob("cco-*.md")):
-            f.unlink()
-            removed["commands"] += 1
-            if verbose:
-                print(f"  - {f.name}")
+    for f in get_cco_commands():
+        f.unlink()
+        removed["commands"] += 1
+        if verbose:
+            print(f"  - {f.name}")
 
     # Agents
-    if AGENTS_DIR.exists():
-        for f in sorted(AGENTS_DIR.glob("cco-*.md")):
-            f.unlink()
-            removed["agents"] += 1
-            if verbose:
-                print(f"  - {f.name}")
+    for f in get_cco_agents():
+        f.unlink()
+        removed["agents"] += 1
+        if verbose:
+            print(f"  - {f.name}")
 
     return removed
 
@@ -83,18 +87,14 @@ def remove_claude_md_standards(verbose: bool = True) -> list[str]:
 
     # Remove all CCO markers (current + legacy)
     markers = [
-        ("CCO_STANDARDS", "CCO Standards"),
-        ("CCO_RULES", "CCO Rules (legacy)"),
-        ("CCO_PRINCIPLES", "CCO Principles (legacy)"),
+        ("standards", "CCO Standards"),
+        ("rules", "CCO Rules (legacy)"),
+        ("principles", "CCO Principles (legacy)"),
     ]
-    for marker, label in markers:
-        if f"<!-- {marker}_START -->" in content:
-            content = re.sub(
-                rf"<!-- {marker}_START -->.*?<!-- {marker}_END -->\n?",
-                "",
-                content,
-                flags=re.DOTALL,
-            )
+    for marker_key, label in markers:
+        pattern, flags = CCO_MARKER_PATTERNS[marker_key]
+        if re.search(pattern, content, flags=flags):
+            content = re.sub(pattern, "", content, flags=flags)
             removed.append(label)
 
     if removed:

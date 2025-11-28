@@ -39,8 +39,8 @@ class TestDetectInstallMethod:
 class TestListCcoFiles:
     def test_list_empty(self, tmp_path):
         with patch("claudecodeoptimizer.cco_remove.CLAUDE_DIR", tmp_path):
-            with patch("claudecodeoptimizer.cco_remove.COMMANDS_DIR", tmp_path / "commands"):
-                with patch("claudecodeoptimizer.cco_remove.AGENTS_DIR", tmp_path / "agents"):
+            with patch("claudecodeoptimizer.cco_remove.get_cco_commands", return_value=[]):
+                with patch("claudecodeoptimizer.cco_remove.get_cco_agents", return_value=[]):
                     files = list_cco_files()
                     assert files["commands"] == []
                     assert files["agents"] == []
@@ -48,11 +48,15 @@ class TestListCcoFiles:
     def test_list_with_files(self, tmp_path):
         (tmp_path / "commands").mkdir()
         (tmp_path / "agents").mkdir()
-        (tmp_path / "commands" / "cco-help.md").touch()
-        (tmp_path / "agents" / "cco-agent-scan.md").touch()
+        cmd_file = tmp_path / "commands" / "cco-help.md"
+        agent_file = tmp_path / "agents" / "cco-agent-scan.md"
+        cmd_file.touch()
+        agent_file.touch()
         with patch("claudecodeoptimizer.cco_remove.CLAUDE_DIR", tmp_path):
-            with patch("claudecodeoptimizer.cco_remove.COMMANDS_DIR", tmp_path / "commands"):
-                with patch("claudecodeoptimizer.cco_remove.AGENTS_DIR", tmp_path / "agents"):
+            with patch("claudecodeoptimizer.cco_remove.get_cco_commands", return_value=[cmd_file]):
+                with patch(
+                    "claudecodeoptimizer.cco_remove.get_cco_agents", return_value=[agent_file]
+                ):
                     files = list_cco_files()
                     assert files["commands"] == ["cco-help.md"]
                     assert files["agents"] == ["cco-agent-scan.md"]
@@ -81,24 +85,30 @@ class TestHasClaudeMdRules:
 class TestRemoveCcoFiles:
     def test_remove_files(self, tmp_path):
         (tmp_path / "commands").mkdir()
-        (tmp_path / "commands" / "cco-help.md").touch()
-        (tmp_path / "commands" / "user-custom.md").touch()
+        cco_file = tmp_path / "commands" / "cco-help.md"
+        user_file = tmp_path / "commands" / "user-custom.md"
+        cco_file.touch()
+        user_file.touch()
         with patch("claudecodeoptimizer.cco_remove.CLAUDE_DIR", tmp_path):
-            with patch("claudecodeoptimizer.cco_remove.COMMANDS_DIR", tmp_path / "commands"):
-                with patch("claudecodeoptimizer.cco_remove.AGENTS_DIR", tmp_path / "agents"):
+            with patch("claudecodeoptimizer.cco_remove.get_cco_commands", return_value=[cco_file]):
+                with patch("claudecodeoptimizer.cco_remove.get_cco_agents", return_value=[]):
                     removed = remove_cco_files(verbose=False)
         assert removed["commands"] == 1
-        assert not (tmp_path / "commands" / "cco-help.md").exists()
-        assert (tmp_path / "commands" / "user-custom.md").exists()
+        assert not cco_file.exists()
+        assert user_file.exists()
 
     def test_remove_files_verbose(self, tmp_path, capsys):
         (tmp_path / "commands").mkdir()
         (tmp_path / "agents").mkdir()
-        (tmp_path / "commands" / "cco-help.md").touch()
-        (tmp_path / "agents" / "cco-agent.md").touch()
+        cmd_file = tmp_path / "commands" / "cco-help.md"
+        agent_file = tmp_path / "agents" / "cco-agent.md"
+        cmd_file.touch()
+        agent_file.touch()
         with patch("claudecodeoptimizer.cco_remove.CLAUDE_DIR", tmp_path):
-            with patch("claudecodeoptimizer.cco_remove.COMMANDS_DIR", tmp_path / "commands"):
-                with patch("claudecodeoptimizer.cco_remove.AGENTS_DIR", tmp_path / "agents"):
+            with patch("claudecodeoptimizer.cco_remove.get_cco_commands", return_value=[cmd_file]):
+                with patch(
+                    "claudecodeoptimizer.cco_remove.get_cco_agents", return_value=[agent_file]
+                ):
                     removed = remove_cco_files(verbose=True)
         assert removed["commands"] == 1
         assert removed["agents"] == 1
