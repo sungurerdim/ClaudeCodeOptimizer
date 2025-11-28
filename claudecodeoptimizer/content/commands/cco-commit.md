@@ -7,24 +7,6 @@ description: Atomic traceable change management
 
 **Change management** - Quality gates → analyze → group atomically → commit with traceability.
 
-## Agent Delegation
-
-| Phase | Agent | Purpose |
-|-------|-------|---------|
-| Detect | `cco-agent-detect` | Find project tools (format, lint, test) |
-
-### MANDATORY Agent Rules
-
-1. **ALWAYS use `cco-agent-detect`** for tool detection
-2. Do NOT hardcode tool names - detect from config files
-3. Git commands (add, commit) can be direct Bash
-
-### Error Recovery
-
-On tool detection errors:
-1. Delegate to `cco-agent-detect` for fresh scan
-2. Report detected tools to user
-
 ## Pre-Commit Quality Gates
 
 Before committing, automatically run quality checks:

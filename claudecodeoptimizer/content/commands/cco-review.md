@@ -7,30 +7,6 @@ description: Strategic architecture review with fresh perspective
 
 **Strategic review** - Understand intent → analyze architecture → compare with ideal → recommend improvements.
 
-## Agent Delegation
-
-| Phase | Agent | Purpose |
-|-------|-------|---------|
-| 1. Detect | `cco-agent-detect` | Identify stack, conventions |
-| 1-3. Analysis | `cco-agent-scan` | Read docs, map architecture, find gaps |
-| Apply | `cco-agent-action` | Apply approved improvements |
-
-### MANDATORY Agent Rules
-
-1. **NEVER use direct Edit/Write/Bash tools** - delegate to agents
-2. **ALWAYS use agents as first choice**, not fallback after errors
-3. Detect phase → `cco-agent-detect`
-4. Analysis phase → `cco-agent-scan`
-5. Apply phase → `cco-agent-action`
-
-### Error Recovery
-
-On "File unexpectedly modified" or tool errors:
-1. Do NOT retry with direct tools
-2. Immediately delegate to appropriate agent
-3. Agent reads fresh and applies changes
-4. Report agent results to user
-
 ## Pre-Operation
 
 Before starting:

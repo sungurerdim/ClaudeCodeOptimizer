@@ -7,29 +7,47 @@ description: Configure statusline and permissions
 
 **Configuration** - Detect existing → show details → remove/update/add.
 
-## Agent Delegation
-
-| Phase | Agent | Purpose |
-|-------|-------|---------|
-| Detect | `cco-agent-detect` | Check existing config files |
-| Write | `cco-agent-action` | Create/update config files |
-
-### MANDATORY Agent Rules
-
-1. **NEVER use direct Edit/Write tools** for config files
-2. **ALWAYS delegate to agents** as first choice, not last resort
-3. Detection phase → `cco-agent-detect`
-4. Write phase → `cco-agent-action`
-5. If agent fails, report error - do NOT fallback to direct tools
-
-### Execution Order
+## Decision Tree
 
 ```
-1. Delegate detection to cco-agent-detect
-2. Process agent results, ask user questions
-3. Delegate writes to cco-agent-action
-4. Report agent results to user
+User runs /cco-config
+  │
+  ├─► Pre-check: Glob + Read (NO agent)
+  │
+  ├─► AskUserQuestion: Scope + Features
+  │     │
+  │     ├─► Statusline only?
+  │     │     └─► Write + Edit (NO agent, NO tech stack)
+  │     │
+  │     └─► Permissions included?
+  │           │
+  │           ├─► AskUserQuestion: Permission level
+  │           │     │
+  │           │     ├─► Safe or Permissive?
+  │           │     │     └─► Edit with predefined lists (NO agent)
+  │           │     │
+  │           │     └─► Balanced?
+  │           │           └─► cco-agent-detect (tech stack) → Edit
+  │           │
+  │           └─► Done
+  │
+  └─► Done
 ```
+
+## Tool Selection
+
+Use the **minimum tool** for each task:
+
+| Task | Tool | Why |
+|------|------|-----|
+| Pre-check config exists | `Read` + `Glob` | Simple file checks |
+| Write statusline.js | `Write` | Single file, fixed content |
+| Update settings.json | `Read` then `Edit` | Preserve existing settings |
+| Tech stack detection | `cco-agent-detect` | Only for Balanced permissions |
+
+**Do NOT use agents for:**
+- Statusline (fixed content, no analysis needed)
+- Safe/Permissive permissions (no stack detection needed)
 
 ## Pre-Check
 
@@ -57,12 +75,12 @@ Local (./.claude/):
 
 ## Flow
 
-1. **Detect** - Check global/local for statusline.js and settings.json
+1. **Detect** - Read + Glob to check config files (no agent needed)
 2. **Action** - If exists: AskUserQuestion → Remove / Update / Add
 3. **Remove** - Show details, select items, delete, EXIT
-4. **Configure** - Scope + Features + Permission level (single question set)
-5. **Validate** - JSON syntax, conflicts, security rules
-6. **Write** - Apply changes, preserve non-CCO settings
+4. **Configure** - Scope + Features (then Permission level only if Permissions selected)
+5. **Execute** - Direct Write/Edit for statusline; agent only for Balanced permissions
+6. **Validate** - JSON syntax, conflicts, security rules
 
 ## Remove Flow
 
@@ -97,13 +115,28 @@ Actions:
 
 ## Configure Flow
 
-AskUserQuestion with 3 questions:
+**Step 1:** AskUserQuestion with 2 questions:
 
 **Scope:** Global (~/.claude/) | Local (./.claude/)
 
 **Features (multiSelect):** All | Statusline | Permissions
 
+**Step 2:** If Permissions selected, ask:
+
 **Permission level:** Safe | Balanced | Permissive
+
+**Step 3:** Execute based on selections:
+
+```
+Statusline selected?
+  → Write({scope}/statusline.js)
+  → Edit({scope}/settings.json) to add statusLine setting
+
+Permissions selected?
+  → If Balanced: cco-agent-detect for tech stack → build allow list
+  → If Safe/Permissive: use predefined lists directly
+  → Edit({scope}/settings.json) to add permissions
+```
 
 ## Statusline
 
@@ -813,7 +846,11 @@ const coreCommands = [
 ];
 ```
 
-**Stack-specific (added by cco-agent-detect):**
+**Stack-specific (added by cco-agent-detect for Balanced level ONLY):**
+
+When to detect: `Permissions selected` AND `level == Balanced`
+When NOT to detect: Statusline only, Safe, or Permissive
+
 ```javascript
 const stackCommands = {
   // ═══════════════════════════════════════════════════════════════════════════
