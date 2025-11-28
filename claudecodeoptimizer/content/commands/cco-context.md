@@ -1,6 +1,13 @@
-# Context Check
+---
+name: cco-context
+description: Project context for calibrated recommendations
+---
 
-Run this flow before context-aware commands.
+# /cco-context
+
+**Project context** - Gather/update context for calibrated AI recommendations.
+
+Can be run standalone or automatically by context-aware commands (review, audit, optimize, refactor).
 
 ## Step 1: Load Context
 
