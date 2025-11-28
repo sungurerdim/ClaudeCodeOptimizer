@@ -7,30 +7,6 @@ description: Measurable efficiency improvements
 
 **Efficiency optimization** - Reduce waste → improve efficiency → measure impact → verify.
 
-## Agent Delegation
-
-| Phase | Agent | Purpose |
-|-------|-------|---------|
-| Detect | `cco-agent-detect` | Identify stack, tools |
-| Analyze | `cco-agent-scan` | Find optimization opportunities |
-| Apply | `cco-agent-action` | Apply with before/after metrics |
-
-### MANDATORY Agent Rules
-
-1. **NEVER use direct Edit/Write tools** - delegate to agents
-2. **ALWAYS use agents as first choice**, not fallback after errors
-3. Detect phase → `cco-agent-detect`
-4. Analyze phase → `cco-agent-scan`
-5. Apply phase → `cco-agent-action`
-
-### Error Recovery
-
-On "File unexpectedly modified" or tool errors:
-1. Do NOT retry with direct tools
-2. Immediately delegate to appropriate agent
-3. Agent reads fresh and applies changes
-4. Report agent results to user
-
 ## Pre-Operation Safety
 
 If uncommitted changes exist, AskUserQuestion:

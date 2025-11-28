@@ -8,30 +8,6 @@ requires: detection
 
 **Quality gates** - Detect stack → run standardized checks → prioritize → offer fixes.
 
-## Agent Delegation
-
-| Phase | Agent | Purpose |
-|-------|-------|---------|
-| 1. Detect | `cco-agent-detect` | Identify stack, filter applicable checks |
-| 2-4. Scan | `cco-agent-scan` | Find issues with file:line refs |
-| 5. Fix | `cco-agent-action` | Apply approved fixes with verification |
-
-### MANDATORY Agent Rules
-
-1. **NEVER use direct Edit/Write/Bash tools** - delegate to agents
-2. **ALWAYS use agents as first choice**, not fallback after errors
-3. Detect phase → `cco-agent-detect`
-4. Scan phase → `cco-agent-scan`
-5. Fix phase → `cco-agent-action`
-
-### Error Recovery
-
-On "File unexpectedly modified" or tool errors:
-1. Do NOT retry with direct tools
-2. Immediately delegate to appropriate agent
-3. Agent reads fresh and applies changes
-4. Report agent results to user
-
 ## Pre-Operation Safety
 
 Before starting:
