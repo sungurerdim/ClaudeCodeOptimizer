@@ -7,6 +7,22 @@ A process and standards layer for Claude Code.
 
 ---
 
+## Quickstart
+
+```bash
+pip install git+https://github.com/sungurerdim/ClaudeCodeOptimizer.git
+cco-setup
+cco-status
+```
+
+Then inside Claude Code:
+
+```
+/cco-audit --security
+```
+
+---
+
 ## What CCO Is (and Isn't)
 
 **Claude Code with Opus 4.5 is already powerful.** It can analyze code, find bugs, refactor safely, and generate quality output. CCO doesn't replace or enhance these capabilities—they're already excellent.
@@ -136,7 +152,7 @@ This is **on-demand quality**—you decide when to run it, CCO ensures it's thor
 ```bash
 /cco-refactor rename oldName newName
 ```
-Finds ALL references, updates in order, verifies with grep.
+Guides Claude to find all references, update them in order, and verify with grep.
 
 **Optimize context:**
 ```bash
@@ -170,17 +186,17 @@ Sets team size, scale, data sensitivity for calibrated recommendations.
 
 | Flag | Checks |
 |------|--------|
-| `--security` | OWASP, secrets, CVEs |
-| `--ai-security` | Prompt injection, PII |
-| `--ai-quality` | Hallucinated APIs, AI patterns |
+| `--security` | OWASP-inspired patterns, secrets, CVE patterns |
+| `--ai-security` | Prompt injection, PII handling |
+| `--ai-quality` | Hallucinated APIs, AI code patterns |
 | `--database` | N+1, indexes, queries |
 | `--tests` | Coverage, isolation, flaky |
 | `--tech-debt` | Dead code, complexity |
 | `--performance` | Caching, algorithms |
 | `--hygiene` | TODOs, orphans, hardcoded |
 | `--self-compliance` | Check against project's own stated rules |
-| `--dora` | Deploy frequency, MTTR |
-| `--compliance` | GDPR, licenses |
+| `--dora` | DORA-style indicators (deploy frequency, MTTR hints) |
+| `--compliance` | GDPR-related risks, license checks (not legal advice) |
 | `--api-contract` | Breaking changes |
 | `--docs` | Docstrings, API docs |
 | `--cicd` | Pipeline, quality gates |
@@ -212,6 +228,8 @@ Optional status display with git integration:
 **Features:** Path, user, project size, CC version, model, git branch, conflicts, stash, commits ahead, last commit time, unstaged/staged changes with line counts.
 
 ### Permission Levels
+
+CCO never tells Claude to "do anything it wants". Every command runs inside an allow-list and deny-list model so that risky actions are explicit, reviewable, and easy to disable.
 
 | Level | Model | Security | Flexibility | Use Case |
 |-------|-------|----------|-------------|----------|
@@ -348,6 +366,14 @@ pip uninstall claudecodeoptimizer
 
 - Python 3.11+
 - Claude Code
+
+---
+
+## What CCO Doesn't Do
+
+CCO is not a magic "fix everything" button. It's a thin, opinionated layer on top of Claude Code that standardizes how you ask for audits, refactors, fixes, and reviews—and how Claude reports back what it did.
+
+CCO doesn't directly modify your codebase. It gives Claude Code a consistent workflow and standards to follow, so that each command produces structured, reproducible results.
 
 ---
 
