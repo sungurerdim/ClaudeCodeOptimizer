@@ -1,67 +1,59 @@
 # ClaudeCodeOptimizer
 
-Project-aware commands for Claude Code.
+A process and standards layer for Claude Code.
 
 [![Python 3.11+](https://img.shields.io/badge/python-3.11+-blue.svg)](https://www.python.org/downloads/)
 [![MIT License](https://img.shields.io/badge/license-MIT-green.svg)](LICENSE)
 
 ---
 
-## What is CCO?
+## What CCO Is (and Isn't)
 
-CCO is a **process orchestration and quality standards** tool for Claude Code. It provides consistent quality gates, verified change management, and measurable efficiency improvements.
+**Claude Code with Opus 4.5 is already powerful.** It can analyze code, find bugs, refactor safely, and generate quality output. CCO doesn't replace or enhance these capabilities—they're already excellent.
 
-**Covers 25 pain points from 2025 developer surveys:**
+**CCO adds process structure:**
 
-| Category | Issues |
-|----------|--------|
-| Security | OWASP vulnerabilities, secret exposure, dependency CVEs |
-| AI Code | Hallucinated APIs, prompt injection, PII exposure |
-| Quality | Dead code, complexity, duplication, missing tests |
-| Database | N+1 queries, missing indexes, query optimization |
-| Operations | DORA metrics, CI/CD gaps, container issues |
-| Maintenance | Old TODOs, orphan files, hardcoded values, API breaking changes |
+- **Consistent workflows** - Same audit categories, same verification patterns, every time
+- **Quality guardrails** - Standards injected into `CLAUDE.md` that the AI follows
+- **Project calibration** - Context-aware thresholds based on your team size, scale, and data sensitivity
+
+Think of it this way: Opus 4.5 knows *how* to fix a security issue. CCO provides a *systematic process* for finding all issues, prioritizing them, getting approval, and verifying fixes.
 
 ---
 
-## Context-Aware AI
+## Project Calibration
 
-CCO doesn't apply one-size-fits-all rules. It **calibrates AI recommendations** to your project's specific context.
+Different projects have different needs. A solo side project doesn't need the same rigor as a team building a fintech API.
 
-**How it works:**
+**How `/cco-calibrate` works:**
 
-1. **Auto-detect** - Analyzes your project: stack, tools, conventions, team size, scale, data sensitivity
-2. **Confirm** - You review and adjust detected values
+1. **Detect** - Scans your project for stack, tools, team indicators
+2. **Confirm** - You review and adjust the detected values
 3. **Store** - Context saved to your project's `CLAUDE.md`
-4. **Apply** - All commands read context and adjust their behavior
+4. **Apply** - Commands adjust thresholds based on this context
 
-**Why it matters:**
+**Example thresholds:**
 
-| Project Type | CCO Behavior |
-|--------------|--------------|
-| **Solo, <100 users** | Relaxed thresholds, simple solutions preferred, self-review sufficient |
-| **Team of 6+, 10K+ users** | Strict thresholds, performance critical, formal review required |
-| **Handles PII** | Security issues prioritized, encryption required, audit logging |
-| **Library/API** | API stability warnings, semantic versioning enforced |
-| **CLI tool** | Clear error messages, help documentation emphasized |
+| Context | Effect |
+|---------|--------|
+| Solo developer | Self-review sufficient, simpler solutions preferred |
+| Team of 6+ | Formal review patterns, stricter quality gates |
+| Handles PII | Security checks prioritized, encryption guidance |
+| Public API | API stability warnings, versioning reminders |
 
-**Calibration output (stored in your project's CLAUDE.md):**
+**Stored format:**
 
 ```markdown
 <!-- CCO_CONTEXT_START -->
 ## Strategic Context
-Purpose: {detected_from_readme}
+Purpose: {detected}
 Team: {Solo|2-5|6+} | Scale: {<100|100-10K|10K+} | Data: {Public|PII|Regulated}
-Stack: {detected_languages_and_tools} | Type: {detected_project_type}
+Stack: {detected} | Type: {detected}
 
 ## Guidelines
-- {generated_based_on_team_size}
-- {generated_based_on_scale}
-- {generated_based_on_data_sensitivity}
+- {context-specific guidance}
 <!-- CCO_CONTEXT_END -->
 ```
-
-Every CCO command reads this context and follows the guidelines. No more generic "best practices" - only recommendations calibrated to your reality.
 
 ---
 
@@ -76,18 +68,18 @@ cco-setup
 
 ## Commands
 
-| Command | Purpose |
-|---------|---------|
-| `/cco-audit` | **Quality gates** - standardized checks, prioritized fixes |
-| `/cco-review` | **Strategic review** - architecture analysis, fresh perspective |
-| `/cco-generate` | **Generation** - convention-following, verified |
-| `/cco-health` | **Visibility** - actionable metrics dashboard |
-| `/cco-refactor` | **Risk mitigation** - verified transformations |
-| `/cco-optimize` | **Efficiency** - measurable improvements |
-| `/cco-commit` | **Change management** - quality gates, atomic commits |
-| `/cco-calibrate` | **Project calibration** - calibrated AI recommendations |
-| `/cco-config` | **Settings** - statusline, permissions (global/local) |
-| `/cco-status` | Installation check |
+| Command | What it does |
+|---------|--------------|
+| `/cco-audit` | Run categorized checks, get prioritized fix suggestions |
+| `/cco-review` | Architecture analysis with structured output |
+| `/cco-generate` | Generate tests, docs, CI configs following project conventions |
+| `/cco-health` | Metrics dashboard (coverage, complexity, issues) |
+| `/cco-refactor` | Rename/restructure with reference verification |
+| `/cco-optimize` | Reduce context size, remove dead code |
+| `/cco-commit` | Commit with quality checks |
+| `/cco-calibrate` | Set project context for threshold calibration |
+| `/cco-config` | Configure statusline and permissions |
+| `/cco-status` | Check installation |
 | `/cco-help` | Command reference |
 
 ---
@@ -169,11 +161,11 @@ Sets team size, scale, data sensitivity for calibrated recommendations.
 
 ## Configuration
 
-`/cco-config` manages statusline display and permission settings for Claude Code.
+`/cco-config` helps configure Claude Code's statusline and permission settings.
 
 ### Statusline
 
-Rich terminal status display with git integration:
+Optional status display with git integration:
 
 ```
 📁 project/src |👤 user    | 2.1M |CC 1.0.23|🤖 Opus 4.5
@@ -252,55 +244,38 @@ These are blocked at all permission levels:
 
 ---
 
-## Design Principles
+## Behaviors
 
-CCO provides 11 commands, 3 agents, and rules added to `~/.claude/`.
-
-**Core principles:**
-- Perfect UX/DX, maximum efficiency
-- Maximum output quality, maximum simplicity
-- Zero overengineering, zero overlap with AI capabilities
-
-**What this means:**
-- CCO tells AI WHAT, not HOW (Opus 4.5 already knows how)
-- Workflow orchestration only (detect → scan → fix)
-- Verification patterns only (accounting, grep checks)
-- Project-specific context only (conventions, thresholds)
-
-**Key behaviors:**
-- Pre-operation safety: offer commit before major changes
-- Self-compliance: check code against project's stated rules
+- Offers to commit before major changes
 - Auto-detects stack, skips non-applicable checks
-- Safe fixes auto-apply, risky ones need approval
+- Safe fixes can auto-apply; risky ones need approval
 - Verification: `done + skip + fail + cannot_do = total`
-- Reference integrity: find ALL refs → update → verify
-- Priority scoring: impact/effort ratio for actionability
+- Reference integrity: find ALL refs → update in order → verify with grep
 
 ---
 
-## Enforced Standards
+## Included Standards
 
-CCO injects **122 standards across 17 categories** into `CLAUDE.md`:
+CCO adds standards to `~/.claude/CLAUDE.md` that guide the AI's recommendations. These are guidelines, not rigid rules—the AI applies them with judgment based on your project context.
 
-| Category | What it enforces |
-|----------|------------------|
-| **Core** | Forward slash paths, find-all-refs before rename, verification accounting |
-| **Code Quality** | Cyclomatic <10, tech debt <5%, no orphans, type annotations, SemVer |
-| **Security** | Input validation (Pydantic/Zod), Zero Trust auth, secrets rotation, OWASP Top 10 |
-| **AI-Assisted** | Treat AI output as junior code, Plan→Act→Review workflow, test before integrate |
-| **Architecture** | Async event-driven, dependency injection, circuit breakers, bounded contexts |
-| **Operations** | Infrastructure as Code, GitOps deploys, OpenTelemetry observability, feature flags |
-| **Testing** | 80% coverage minimum, CI gates before merge, contract testing between services |
-| **Performance** | DB indexing, N+1 prevention, cache-aside pattern, async I/O only |
-| **Data** | Automated backups with RPO/RTO, versioned migrations, retention policies |
-| **API** | RESTful conventions, cursor pagination, OpenAPI docs, consistent error format |
-| **Accessibility** | WCAG 2.2 AA compliance, semantic HTML, keyboard navigation, screen reader support |
-| **i18n** | UTF-8 everywhere, RTL support, locale-aware formatting, proper pluralization |
-| **Reliability** | Chaos engineering, explicit timeouts, exponential backoff, graceful degradation |
-| **Cost** | FinOps monitoring, resource tagging, auto-scale to zero, carbon-aware scheduling |
-| **Docs** | README structure, OpenAPI specs, Architecture Decision Records, runbooks |
-| **DX** | Local-prod parity, fast feedback loops, self-service infra, golden paths |
-| **Compliance** | License tracking, SOC2/HIPAA/PCI-DSS controls, data classification |
+**18 categories, 132 guidelines** — [view full list](claudecodeoptimizer/content/standards/cco-standards.md)
+
+| Category | Examples |
+|----------|----------|
+| **Core** | Path conventions, reference integrity, verification accounting |
+| **Approval Flow** | Priority tabs, risk labels, multiselect options |
+| **Code Quality** | Complexity limits, type annotations, SemVer |
+| **Security** | Input validation, OWASP patterns, secrets management |
+| **AI-Assisted** | Review AI output, Plan→Act→Review workflow |
+| **Architecture** | Event-driven patterns, dependency injection |
+| **Operations** | Infrastructure as Code, observability |
+| **Testing** | Coverage targets, CI gates, contract testing |
+| **Performance** | Indexing, N+1 prevention, caching patterns |
+| **API** | REST conventions, pagination, error formats |
+| **Accessibility** | WCAG guidance, semantic HTML |
+| **Reliability** | Timeouts, retries, graceful degradation |
+
+Not all standards apply to every project. The AI uses your project context (from `/cco-calibrate`) to decide which are relevant.
 
 ---
 
