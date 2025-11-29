@@ -1,12 +1,11 @@
 ---
 name: cco-audit
 description: Standardized quality gates with prioritized fixes
-requires: detection
 ---
 
 # /cco-audit
 
-**Quality gates** - Detect stack → run standardized checks → prioritize → offer fixes.
+**Quality gates** - Read context → run applicable checks → prioritize → offer fixes.
 
 ## Pre-Operation Safety
 
@@ -23,7 +22,7 @@ Read `CCO_CONTEXT_START` block from CLAUDE.md. Follow the Guidelines listed ther
 
 ## Flow
 
-1. **Detect** - Identify stack, filter applicable checks
+1. **Read Context** - Get applicable checks from Operational section
 2. **Extract Rules** - Find project docs, extract stated principles/rules
 3. **Scan** - Run checks including self-compliance
 4. **Report** - Scores, issues with file:line, priority

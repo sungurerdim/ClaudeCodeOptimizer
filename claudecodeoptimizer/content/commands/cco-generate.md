@@ -1,17 +1,22 @@
 ---
 name: cco-generate
 description: Convention-following automated generation
-requires: detection
 ---
 
 # /cco-generate
 
-**Convention-following generation** - Detect conventions → generate consistent components.
+**Convention-following generation** - Read conventions from context → generate consistent components.
 
 ## Pre-Operation Safety
 
 If uncommitted changes exist, AskUserQuestion:
 → Commit first (cco-commit) / Stash / Continue anyway
+
+## Project Context
+
+**First:** Run `/cco-context` to ensure context is loaded.
+
+Read `CCO_CONTEXT_START` block from CLAUDE.md. Use Conventions from Operational section.
 
 ## Types
 
@@ -31,14 +36,14 @@ If uncommitted changes exist, AskUserQuestion:
 - `--dockerfile` - Multi-stage Dockerfile
 - `--pre-commit` - Pre-commit hooks
 
-## Convention Detection
+## Convention Enforcement
 
-Before generating, detect existing patterns:
-- Test file naming (test_*.py vs *_test.py)
-- Import style, directory structure
-- Existing framework preferences
+Use conventions from context (stored in Operational section):
+- Test file naming (testNaming)
+- Import style (importStyle)
+- Existing tools and frameworks
 
-Follow detected conventions, don't impose new ones.
+Follow stored conventions, don't impose new ones.
 
 ## Verification
 
