@@ -12,18 +12,46 @@ All context-aware commands (review, audit, optimize, refactor) run this first.
 ## Step 1: Check Existing Context
 
 ```bash
-grep -A3 "CCO_CONTEXT_START" CLAUDE.md 2>/dev/null
+grep -A20 "CCO_CONTEXT_START" CLAUDE.md 2>/dev/null
 ```
 
-If context exists, show current values and ask:
+If context exists, **first display it clearly to the user**, then ask for confirmation:
+
+**Display format:**
+
+```
+### Current Project Context
+
+| Field | Value |
+|-------|-------|
+| Purpose | {purpose from context} |
+| Team | {team} |
+| Scale | {scale} |
+| Data | {data} |
+| Compliance | {compliance} |
+| Stack | {stack} |
+| Type | {type} |
+| Database | {db} |
+| Rollback | {rollback} |
+
+**Guidelines:**
+- {guideline 1}
+- {guideline 2}
+...
+
+**Tools:** {tools}
+**Applicable:** {applicable checks}
+```
+
+Then ask:
 
 ```
 AskUserQuestion:
 header: "Context"
-question: "Project context found. What would you like to do?"
+question: "Use this context or update it?"
 options:
   - label: "Use as-is"
-    description: "Continue with current context"
+    description: "Continue with current context shown above"
   - label: "Update"
     description: "Re-detect and confirm all values"
 ```
