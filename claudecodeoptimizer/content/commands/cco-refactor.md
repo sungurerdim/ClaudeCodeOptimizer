@@ -14,9 +14,13 @@ Requires clean git state. If uncommitted changes exist, AskUserQuestion:
 
 ## Project Context
 
-**Run context check first:** See `/cco-context`
+**First:** Run `/cco-context` to ensure context is loaded.
 
-Context calibrates risk assessment and rollback recommendations.
+Read `CCO_CONTEXT_START` block from CLAUDE.md. Calibrate risk:
+- Team: 6+ → consider impact on others, communicate changes
+- Type: library → extra care with public API changes
+- DB: sql/nosql → plan migration strategy
+- Rollback: user-data → require backup, staged rollout
 
 ## Flow
 
