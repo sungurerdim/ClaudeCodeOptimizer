@@ -50,8 +50,14 @@ Show impact after optimization:
 ## Modes
 
 - `--conservative` - Safe changes only (auto-apply)
-- `--balanced` - Safe + low-risk
-- `--aggressive` - All (requires review)
+- `--balanced` - Safe + low-risk (default)
+- `--aggressive` - All optimizations (requires review)
+
+## Approval Flow
+
+**Follow CCO Approval Flow standard from cco-standards.**
+
+Apply to: optimizations found during analysis.
 
 ## Verification
 

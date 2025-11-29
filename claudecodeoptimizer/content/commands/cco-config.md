@@ -99,12 +99,9 @@ When "Remove" selected, show detailed summary:
   Other: alwaysThinkingEnabled (preserved)
 ```
 
-AskUserQuestion (multiSelect):
-- **All** - Remove all CCO configuration
-- **Global Statusline** - statusline.js + statusLine setting
-- **Global Permissions** - permissions section only
-- **Local Statusline** - local statusline.js + setting
-- **Local Permissions** - local permissions section
+**Follow CCO Approval Flow standard from cco-standards.**
+
+Apply to: CCO configuration items to remove.
 
 Actions:
 - Delete statusline.js files
@@ -119,7 +116,7 @@ Actions:
 
 **Scope:** Global (~/.claude/) | Local (./.claude/)
 
-**Features (multiSelect):** All | Statusline | Permissions
+**Features (multiSelect):** All (2) | Statusline | Permissions
 
 **Step 2:** If Permissions selected, ask:
 

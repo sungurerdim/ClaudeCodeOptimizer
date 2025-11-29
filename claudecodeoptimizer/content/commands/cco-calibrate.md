@@ -184,20 +184,9 @@ If block exists → replace. If not → append after first heading.
 
 If gaps were found in project docs:
 
-```
-AskUserQuestion:
-header: "Docs"
-question: "Update project documentation with context info?"
-multiSelect: true
-options:
-  - label: "All"
-  - label: "Add scale/users to README"
-  - label: "Add SECURITY.md with data policy"
-  - label: "Add CONTRIBUTING.md with team info"
-  - label: "Skip"
-```
+**Follow CCO Approval Flow standard from cco-standards.**
 
-Apply selected documentation updates.
+Apply to: documentation updates based on detected gaps.
 
 ## Step 7: Proceed
 
