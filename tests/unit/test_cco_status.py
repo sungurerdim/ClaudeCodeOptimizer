@@ -75,13 +75,16 @@ class TestPrintStatus:
                 with patch(
                     "claudecodeoptimizer.cco_status.get_cco_agents", return_value=[agent_file]
                 ):
-                    result = print_status()
+                    with patch(
+                        "claudecodeoptimizer.cco_status.get_standards_count", return_value=(122, 17)
+                    ):
+                        result = print_status()
         assert result == 0
         captured = capsys.readouterr()
         assert "CCO v" in captured.out
-        assert "Commands: 2" in captured.out
-        assert "Agents: 1" in captured.out
-        assert "Standards: yes" in captured.out
+        assert "Commands:  2" in captured.out
+        assert "Agents:    1" in captured.out
+        assert "Standards: 122 (17 categories)" in captured.out
 
 
 class TestMain:

@@ -26,30 +26,32 @@ Analyze codebase for issues, metrics, and patterns without modification.
 
 ## Output Format
 
+All values are populated based on actual scan results:
+
 ```json
 {
   "findings": [
     {
-      "category": "security",
-      "priority": "critical",
-      "title": "Hardcoded secret",
-      "location": "src/config.py:42",
-      "details": "API key in source code",
-      "fixable": true,
-      "safe": true
+      "category": "{detected_category}",
+      "priority": "{critical|high|medium|low}",
+      "title": "{issue_title}",
+      "location": "{file_path}:{line_number}",
+      "details": "{issue_description}",
+      "fixable": true | false,
+      "safe": true | false
     }
   ],
   "summary": {
-    "critical": 0,
-    "high": 0,
-    "medium": 0,
-    "low": 0,
-    "total": 0
+    "critical": "{count}",
+    "high": "{count}",
+    "medium": "{count}",
+    "low": "{count}",
+    "total": "{count}"
   },
   "metrics": {
-    "security": 85,
-    "techDebt": 92,
-    "coverage": 78
+    "security": "{0-100}",
+    "techDebt": "{0-100}",
+    "coverage": "{0-100}"
   }
 }
 ```

@@ -42,23 +42,27 @@ After each change:
 
 ## Output Format
 
+All values are populated based on actual operation results:
+
 ```json
 {
   "results": [
     {
-      "item": "Hardcoded secret in config.py:42",
-      "status": "done",
-      "verification": "moved to .env, grep API_KEY=0"
+      "item": "{issue_description} in {file_path}:{line}",
+      "status": "{done|skip|fail}",
+      "verification": "{verification_details}"
     }
   ],
   "accounting": {
-    "done": 5,
-    "skip": 1,
-    "fail": 0,
-    "total": 6
+    "done": "{count}",
+    "skip": "{count}",
+    "fail": "{count}",
+    "total": "{count}"
   }
 }
 ```
+
+**Invariant:** `done + skip + fail = total` must always be true.
 
 ## Principles
 

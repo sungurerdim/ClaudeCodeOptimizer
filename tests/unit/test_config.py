@@ -11,6 +11,7 @@ from claudecodeoptimizer.config import (
     VERSION,
     get_cco_agents,
     get_cco_commands,
+    get_standards_count,
 )
 
 
@@ -44,8 +45,6 @@ class TestConstants:
         """Test CCO_MARKER_PATTERNS is defined correctly."""
         assert isinstance(CCO_MARKER_PATTERNS, dict)
         assert "standards" in CCO_MARKER_PATTERNS
-        assert "rules" in CCO_MARKER_PATTERNS
-        assert "principles" in CCO_MARKER_PATTERNS
         # Each pattern should be a tuple of (regex_string, flags)
         for key, value in CCO_MARKER_PATTERNS.items():
             assert isinstance(value, tuple)
@@ -78,3 +77,11 @@ class TestFunctions:
             # Should match cco-*.md pattern
             assert item.name.startswith("cco-")
             assert item.suffix == ".md"
+
+    def test_get_standards_count(self):
+        """Test get_standards_count returns tuple of counts."""
+        standards, categories = get_standards_count()
+        assert isinstance(standards, int)
+        assert isinstance(categories, int)
+        assert standards > 0
+        assert categories > 0

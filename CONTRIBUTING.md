@@ -204,27 +204,43 @@ ClaudeCodeOptimizer/
     └── integration/         # Integration tests
 ```
 
-## CLAUDE.md Generation
+## CLAUDE.md Marker System
 
-CLAUDE.md uses a **marker-based system** for CCO Rules:
+CLAUDE.md uses a **marker-based system** for two distinct purposes:
 
-### Marker Structure
+### CCO_STANDARDS (Global)
 
-CCO Rules content is within HTML comment markers:
+Quality standards injected into `~/.claude/CLAUDE.md`:
 ```markdown
-<!-- CCO_RULES_START -->
-# CCO Rules
+<!-- CCO_STANDARDS_START -->
+## Core
+- Paths: forward slash (/), relative, quote spaces
 ...
-<!-- CCO_RULES_END -->
+<!-- CCO_STANDARDS_END -->
 ```
+
+**Location:** `~/.claude/CLAUDE.md` (global, applies to all projects)
+
+### CCO_CONTEXT (Local)
+
+Project-specific context stored in `./CLAUDE.md`:
+```markdown
+<!-- CCO_CONTEXT_START -->
+## Strategic Context
+Purpose: {purpose}
+Team: {team} | Scale: {scale} | ...
+<!-- CCO_CONTEXT_END -->
+```
+
+**Location:** `./CLAUDE.md` (project root, project-specific)
 
 ### Generator Rules
 
 1. **Original Content Preservation**: Content outside markers is NEVER modified
 2. **Empty Line Normalization**: Multiple consecutive empty lines → single empty line
 3. **Update Strategy**:
-   - New file: Create with CCO Rules markers
-   - Existing file: Update marker content only
+   - Standards: Global ~/.claude/CLAUDE.md
+   - Context: Local ./CLAUDE.md per project
 
 ## Getting Help
 

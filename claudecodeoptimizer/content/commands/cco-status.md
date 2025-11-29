@@ -11,7 +11,16 @@ Check CCO installation and configuration health.
 
 1. Count files in ~/.claude/commands/cco-*.md
 2. Count files in ~/.claude/agents/cco-*.md
-3. Verify CLAUDE.md has CCO_RULES markers
+3. Verify CLAUDE.md has CCO_STANDARDS markers
+
+## Calibration Check
+
+Check for project calibration context:
+
+1. Check ./CLAUDE.md for CCO_CONTEXT markers (project-specific)
+2. If no context found, suggest running `/cco-calibrate`
+
+**Note:** CCO_CONTEXT is always local (project root), never global. Each project has its own calibration.
 
 ## Config Health Check
 
@@ -37,9 +46,12 @@ Check both global (~/.claude/) and local (./.claude/) scopes:
 ```
 CCO Status: OK
 Location: ~/.claude/
-Commands: 9
+Commands: 11
 Agents: 3
-Rules: inline
+Standards: inline
+
+Calibration:
+  Project context: OK (Team: solo, Scale: <100, Type: cli)
 
 Config Health:
   Global settings.json: OK
@@ -47,7 +59,7 @@ Config Health:
   Local settings.json: OK (overrides global)
   Local statusline.js: not configured
 
-Quick start: /cco-audit --smart
+Quick start: /cco-calibrate → /cco-audit --smart
 ```
 
 ### If Issues Found
@@ -56,12 +68,16 @@ Quick start: /cco-audit --smart
 CCO Status: WARNING
 Location: ~/.claude/
 
+Calibration Issues:
+  ⚠ No project context found - AI recommendations not calibrated
+  → Run /cco-calibrate to set project context
+
 Config Issues:
   ⚠ Global settings.json: "rm -rf" in allow list (security risk)
   ⚠ Local settings.json: invalid JSON at line 15
   ⚠ Conflict: "Bash(npm:*)" in global deny, local allow
 
-Run /cco-config to fix issues
+Run /cco-calibrate to set context, /cco-config to fix config issues
 ```
 
 ## Usage

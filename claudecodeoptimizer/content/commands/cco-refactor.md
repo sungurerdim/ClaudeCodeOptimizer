@@ -14,7 +14,7 @@ Requires clean git state. If uncommitted changes exist, AskUserQuestion:
 
 ## Project Context
 
-**First:** Run `/cco-context` to ensure context is loaded.
+**First:** Run `/cco-calibrate` to ensure context is loaded.
 
 Read `CCO_CONTEXT_START` block from CLAUDE.md:
 - **Guidelines** - Follow listed guidelines
@@ -39,11 +39,13 @@ After each file change:
 ## Operations
 
 ```bash
-/cco-refactor rename oldName newName
-/cco-refactor move old/path.py new/path.py
-/cco-refactor extract "code" new_module.py
-/cco-refactor inline helperFunction
+/cco-refactor rename {old_name} {new_name}
+/cco-refactor move {old_path} {new_path}
+/cco-refactor extract "{code_block}" {new_module}
+/cco-refactor inline {function_name}
 ```
+
+All operations work with any file type - paths and names are detected from your project.
 
 ## Rollback
 

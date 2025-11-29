@@ -16,7 +16,7 @@ Before starting:
 
 ## Project Context
 
-**First:** Run `/cco-context` to ensure context is loaded.
+**First:** Run `/cco-calibrate` to ensure context is loaded.
 
 Read `CCO_CONTEXT_START` block from CLAUDE.md:
 - **Guidelines** - Follow listed guidelines

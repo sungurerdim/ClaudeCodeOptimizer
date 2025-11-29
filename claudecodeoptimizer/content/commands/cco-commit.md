@@ -19,7 +19,7 @@ Before committing, automatically run quality checks:
    ```markdown
    <!-- CCO_CONTEXT_START -->
    ## Operational
-   Tools: ruff (format+lint), mypy (types), pytest --cov (test)
+   Tools: {format_command}, {lint_command}, {test_command}
    ```
    Parse the Tools line to extract format, lint, and test commands.
 

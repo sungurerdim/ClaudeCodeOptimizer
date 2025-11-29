@@ -1,11 +1,11 @@
 ---
-name: cco-context
-description: Project context for calibrated recommendations
+name: cco-calibrate
+description: Calibrate AI recommendations to project context
 ---
 
-# /cco-context
+# /cco-calibrate
 
-**Project context** - Auto-detect + confirm project context for calibrated AI recommendations.
+**Project calibration** - Auto-detect + confirm project context for calibrated AI recommendations.
 
 All context-aware commands (review, audit, optimize, refactor) run this first.
 
@@ -44,7 +44,7 @@ Run `cco-agent-detect` with `scope: full` to get complete project analysis:
 **Strategic:**
 - Purpose, Team, Scale, Data, Type, Rollback
 
-All detection logic lives in the detect agent. Context command only processes results.
+All detection logic lives in the detect agent. Calibrate command only processes results.
 
 ## Step 3: Confirm All Values
 
@@ -121,7 +121,9 @@ Based on confirmed values, generate strategic guidelines:
 
 ## Step 5: Store in CLAUDE.md
 
-Insert or replace context block in `CLAUDE.md` (project root):
+Insert or replace context block in `./CLAUDE.md` (project root only, never global):
+
+**Important:** Context is always project-specific. Store in project's CLAUDE.md, not ~/.claude/CLAUDE.md.
 
 ```markdown
 <!-- CCO_CONTEXT_START -->
@@ -139,6 +141,7 @@ Stack: {stack} | Type: {type} | DB: {db} | Rollback: {rollback}
 Tools: {format}, {lint}, {test}
 Conventions: {testNaming}, {importStyle}
 Applicable: {applicable checks list}
+Not Applicable: {not applicable checks list}
 <!-- CCO_CONTEXT_END -->
 ```
 

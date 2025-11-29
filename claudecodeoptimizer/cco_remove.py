@@ -48,10 +48,6 @@ def has_claude_md_standards() -> list[str]:
     sections = []
     if "<!-- CCO_STANDARDS_START -->" in content:
         sections.append("CCO Standards")
-    if "<!-- CCO_RULES_START -->" in content:
-        sections.append("CCO Rules (legacy)")
-    if "<!-- CCO_PRINCIPLES_START -->" in content:
-        sections.append("CCO Principles (legacy)")
     return sections
 
 
@@ -85,17 +81,11 @@ def remove_claude_md_standards(verbose: bool = True) -> list[str]:
     content = claude_md.read_text(encoding="utf-8")
     removed = []
 
-    # Remove all CCO markers (current + legacy)
-    markers = [
-        ("standards", "CCO Standards"),
-        ("rules", "CCO Rules (legacy)"),
-        ("principles", "CCO Principles (legacy)"),
-    ]
-    for marker_key, label in markers:
-        pattern, flags = CCO_MARKER_PATTERNS[marker_key]
-        if re.search(pattern, content, flags=flags):
-            content = re.sub(pattern, "", content, flags=flags)
-            removed.append(label)
+    # Remove CCO standards marker
+    pattern, flags = CCO_MARKER_PATTERNS["standards"]
+    if re.search(pattern, content, flags=flags):
+        content = re.sub(pattern, "", content, flags=flags)
+        removed.append("CCO Standards")
 
     if removed:
         content = re.sub(r"\n{3,}", "\n\n", content)

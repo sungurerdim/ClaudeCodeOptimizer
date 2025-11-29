@@ -9,7 +9,7 @@ description: Actionable metrics dashboard
 
 ## Project Context
 
-**First:** Run `/cco-context` to ensure context is loaded.
+**First:** Run `/cco-calibrate` to ensure context is loaded.
 
 Read `CCO_CONTEXT_START` block from CLAUDE.md:
 - **Applicable** - Only show relevant scores from Operational section

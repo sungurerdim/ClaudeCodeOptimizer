@@ -2,7 +2,7 @@
 
 import sys
 
-from .config import CLAUDE_DIR, VERSION, get_cco_agents, get_cco_commands
+from .config import CLAUDE_DIR, VERSION, get_cco_agents, get_cco_commands, get_standards_count
 
 
 def count_files() -> dict[str, int]:
@@ -19,7 +19,7 @@ def has_standards() -> bool:
     if not claude_md.exists():
         return False
     content = claude_md.read_text(encoding="utf-8")
-    return "CCO_STANDARDS_START" in content or "CCO_RULES_START" in content
+    return "CCO_STANDARDS_START" in content
 
 
 def print_status() -> int:
@@ -31,12 +31,18 @@ def print_status() -> int:
         print("CCO not installed. Run: cco-setup")
         return 1
 
+    standards, categories = get_standards_count()
+    has_std = has_standards()
+
     print(f"\nCCO v{VERSION}")
     print("-" * 40)
     print(f"Location: {CLAUDE_DIR}")
-    print(f"Commands: {counts['commands']}")
-    print(f"Agents: {counts['agents']}")
-    print(f"Standards: {'yes' if has_standards() else 'no'}")
+    print(f"Commands:  {counts['commands']}")
+    print(f"Agents:    {counts['agents']}")
+    if has_std:
+        print(f"Standards: {standards} ({categories} categories)")
+    else:
+        print("Standards: not installed")
     print("\nTry: /cco-help")
     return 0
 
