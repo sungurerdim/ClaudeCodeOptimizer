@@ -17,9 +17,13 @@ Before starting:
 
 ## Project Context
 
-**Run context check first:** See `/cco-context`
+**First:** Run `/cco-context` to ensure context is loaded.
 
-Context calibrates quality gate thresholds and issue prioritization.
+Read `CCO_CONTEXT_START` block from CLAUDE.md. Calibrate thresholds:
+- Team: solo → relaxed review, 6+ → strict review
+- Scale: 10K+ → stricter performance checks
+- Data: pii/regulated → stricter security checks
+- Rollback: user-data → extra caution on data changes
 
 ## Flow
 

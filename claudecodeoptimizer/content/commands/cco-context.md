@@ -5,150 +5,179 @@ description: Project context for calibrated recommendations
 
 # /cco-context
 
-**Project context** - Gather/update context for calibrated AI recommendations.
+**Project context** - Auto-detect + confirm project context for calibrated AI recommendations.
 
-Can be run standalone or automatically by context-aware commands (review, audit, optimize, refactor).
+All context-aware commands (review, audit, optimize, refactor) run this first.
 
-## Step 1: Load Context
+## Step 1: Check Existing Context
 
 ```bash
-cat .claude/cco_context.yaml 2>/dev/null
+grep -A3 "CCO_CONTEXT_START" .claude/CLAUDE.md 2>/dev/null
 ```
 
-## Step 2: Validate or Gather
-
-### If Context Exists
-
-Show current values and ask:
+If context exists, show current values and ask:
 
 ```
 AskUserQuestion:
 header: "Context"
-question: "Proje context'i bulundu. Güncellemek istediğiniz alanlar:"
+question: "Project context found. What would you like to do?"
+options:
+  - label: "Use as-is"
+    description: "Continue with current context"
+  - label: "Update"
+    description: "Re-detect and confirm all values"
+```
+
+If "Use as-is" → proceed to Step 4.
+
+## Step 2: Auto-Detect
+
+Scan project to detect values:
+
+| Field | Detection Method |
+|-------|------------------|
+| Purpose | README.md first paragraph, package description |
+| Team | `git shortlog -sn` contributor count |
+| Scale | README mentions, user docs, analytics config |
+| Data | Model fields (email, password, PII patterns) |
+| Stack | File extensions, package.json, pyproject.toml, go.mod |
+| Type | Entry points, folder structure, framework markers |
+| DB | migrations/, prisma/, sqlalchemy, mongoose imports |
+| Rollback | Has migrations + user models = user-data, has migrations = db, else git |
+
+## Step 3: Confirm All Values
+
+Present ALL questions with detected values marked. User confirms or corrects.
+
+```
+AskUserQuestion (single call, all questions):
+
+Q1 - header: "Purpose"
+question: "What is the project's purpose?"
+(Show detected value as default, allow edit)
+
+Q2 - header: "Team"
+question: "Team size?"
+options:
+  - label: "Solo" (detected if 1 contributor)
+  - label: "2-5" (detected if 2-5 contributors)
+  - label: "6+" (detected if 6+ contributors)
+
+Q3 - header: "Scale"
+question: "Expected user scale?"
+options:
+  - label: "<100" - Internal tool, personal use
+  - label: "100-10K" - Growing product, startup
+  - label: "10K+" - Large scale, public platform
+
+Q4 - header: "Data"
+question: "Most sensitive data handled?"
+options:
+  - label: "Public" - No sensitive data
+  - label: "Internal" - Business data, not personal
+  - label: "PII" - Personal identifiable info (detected if user/email/password models)
+  - label: "Regulated" - Financial, health data
+
+Q5 - header: "Compliance" (skip if Data=Public)
+question: "Compliance requirements?"
 multiSelect: true
 options:
-  - label: "Hepsi geçerli"
-    description: "Mevcut context ile devam et"
-  - label: "Impact & Scale"
-    description: "Kim etkilenir, kaç kişi"
-  - label: "Risk & Compliance"
-    description: "Veri hassasiyeti, uyumluluk, downtime"
-  - label: "Team"
-    description: "Takım büyüklüğü, ownership"
-  - label: "Operations"
-    description: "Rollback, zaman baskısı"
+  - label: "None"
+  - label: "GDPR"
+  - label: "SOC2"
+  - label: "HIPAA"
+  - label: "PCI-DSS"
+
+Q6 - header: "Stack"
+question: "Tech stack?"
+(Show detected: "Python, FastAPI, PostgreSQL")
+(Allow correction)
+
+Q7 - header: "Type"
+question: "Project type?"
+options:
+  - label: "backend-api" (detected if no frontend, has routes)
+  - label: "frontend" (detected if React/Vue/Angular)
+  - label: "fullstack" (detected if both)
+  - label: "cli" (detected if argparse/click/commander)
+  - label: "library" (detected if no entry point, has exports)
+  - label: "mobile" (detected if React Native/Flutter)
+  - label: "desktop" (detected if Electron/Tauri)
+
+Q8 - header: "Database"
+question: "Database type?"
+options:
+  - label: "None" (detected if no db imports)
+  - label: "SQL" (detected if sqlalchemy/prisma/pg)
+  - label: "NoSQL" (detected if mongo/redis/firebase)
+
+Q9 - header: "Rollback"
+question: "Rollback complexity?"
+options:
+  - label: "Git" - Code only, easy revert (detected if no migrations)
+  - label: "DB" - Has migrations (detected if migrations/ exists)
+  - label: "User-data" - Affects user data (detected if migrations + user models)
 ```
 
-- If "Hepsi geçerli" → proceed to Step 3
-- If specific sections selected → re-ask only those sections, update file, proceed
+## Step 4: Store in CLAUDE.md
 
-### If No Context
+Insert or replace context block in `.claude/CLAUDE.md`:
 
-Gather with conditional questions:
-
-**Q1 - Impact (always):**
-"Bir şeyler ters giderse kim etkilenir?"
-→ Sadece ben | Takımım | Müşteriler | Genel halk
-
-**Q2 - Scale (if team+):**
-"Kaç kişi etkilenir?"
-→ <100 | 100-10K | 10K-1M | 1M+
-
-**Q3 - Data (if customers+):**
-"En hassas veri türü?"
-→ Public | Internal | PII | Financial/Health
-
-**Q4 - Compliance (if PII+):**
-"Hangi uyumluluk gereksinimleri var?" (multiSelect)
-→ GDPR/KVKK | SOC2 | HIPAA | PCI-DSS
-
-**Q5 - Downtime (always):**
-"Uptime ne kadar kritik?"
-→ Downtime OK | Saatler | Dakikalar | Saniyeler
-
-**Q6 - Revenue (if minutes+):**
-"Downtime'ın finansal etkisi?"
-→ Yok/Dolaylı | Saatlik | Dakikalık
-
-**Q7 - Team (always):**
-"Kaç geliştirici çalışıyor?"
-→ Solo | 2-5 | 6-15 | 15+
-
-**Q8 - Ownership (if 2+):**
-"Kod sahipliği nasıl?"
-→ Herkes her yere | Alan sahipliği | Strict CODEOWNERS
-
-**Q9 - Rollback (always):**
-"Kötü deploy'u geri almak ne kadar zor?"
-→ Git revert | DB migration | User data riski
-
-**Q10 - Pressure (always):**
-"Mevcut zaman baskısı?"
-→ Rahat | Normal | Deadline var | Acil
-
-After gathering, write to `.claude/cco_context.yaml`:
-
-```yaml
-# CCO Project Context - Auto-generated
-version: 1
-updated: {ISO_DATE}
-
-impact:
-  affected: {q1}
-  scale: {q2}  # if applicable
-
-risk:
-  data_sensitivity: {q3}  # if applicable
-  compliance: {q4}  # if applicable
-  downtime_tolerance: {q5}
-  revenue_impact: {q6}  # if applicable
-
-team:
-  size: {q7}
-  ownership: {q8}  # if applicable
-
-operations:
-  rollback: {q9}
-  time_pressure: {q10}
-
+```markdown
+<!-- CCO_CONTEXT_START -->
+Purpose: {confirmed purpose}
+Team: {solo|2-5|6+} | Scale: {<100|100-10K|10K+} | Data: {public|internal|pii|regulated} | Compliance: {none|gdpr|soc2|hipaa|pci-dss}
+Stack: {langs, frameworks} | Type: {type} | DB: {none|sql|nosql} | Rollback: {git|db|user-data}
+<!-- CCO_CONTEXT_END -->
 ```
 
-## Step 3: Use Context
+If block exists → replace. If not → append after first heading.
 
-Context is now available. Commands MUST follow these output requirements:
+## Step 5: Offer Documentation Updates
 
-### Context-Justified Recommendations
+If gaps were found in project docs:
 
-Every recommendation/finding MUST include:
+```
+AskUserQuestion:
+header: "Docs"
+question: "Update project documentation with context info?"
+multiSelect: true
+options:
+  - label: "All"
+  - label: "Add scale/users to README"
+  - label: "Add SECURITY.md with data policy"
+  - label: "Add CONTRIBUTING.md with team info"
+  - label: "Skip"
+```
 
-1. **What**: The recommendation itself
-2. **Why**: Which context field(s) led to this recommendation
-3. **Trade-off**: What would be different in another context
+Apply selected documentation updates.
 
-Format:
+## Step 6: Proceed
+
+Context is now available in CLAUDE.md. Commands read and apply it.
+
+---
+
+## Context Usage in Commands
+
+All commands MUST:
+
+1. Read `<!-- CCO_CONTEXT_START -->` block from CLAUDE.md
+2. Calibrate recommendations based on context values
+3. Reference context in every recommendation
+
+### Recommendation Format
+
 ```
 [Recommendation]
 ↳ Context: {field}: {value} → {why this matters}
 ```
 
-### Examples of Context Justification
+### Anti-patterns
 
-```
-⚠️ Test coverage %60 - normalde düşük ama kabul edilebilir
-↳ Context: time_pressure: urgent, affected: self → hızlı ship öncelikli
+- ❌ Recommending without context reference
+- ❌ "Best practice" while ignoring context
+- ❌ Same standards for all projects
+- ❌ Treating documented architecture as "correct"
 
-❌ SQL injection riski - MUTLAKA düzeltilmeli
-↳ Context: data_sensitivity: financial, compliance: pci-dss → güvenlik kritik
-
-ℹ️ Refactoring önerisi - şimdi değil, backlog'a eklenebilir
-↳ Context: time_pressure: deadline, rollback: db_migration → riskli değişiklik ertelenebilir
-```
-
-### Anti-patterns (YAPMA)
-
-- ❌ Context'e referans vermeden öneri yapmak
-- ❌ "Best practice" deyip bağlamı yok saymak
-- ❌ Tüm projelere aynı standartları uygulamak
-- ❌ Context'i okuyup sonra görmezden gelmek
-
-**Key principle:** AI dynamically evaluates - recommendations without context justification are incomplete.
+**Principle:** Context defines the appropriate level of rigor, not universal standards.

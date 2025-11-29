@@ -15,39 +15,22 @@ Before starting:
 
 ## Project Context
 
-**Run context check first:** See `/cco-context`
+**First:** Run `/cco-context` to ensure context is loaded.
 
-This ensures project context is loaded/gathered before analysis. Context calibrates review rigor and recommendations.
+Context provides: Purpose, Team, Scale, Data, Compliance, Stack, Type, DB, Rollback.
+
+All recommendations must be calibrated to this context.
 
 ## Flow
 
-1. **Understand Intent** - Read all docs, extract goals and constraints
-2. **Map Current State** - Analyze architecture, patterns, dependencies
-3. **Identify Gaps** - Compare intent vs implementation
+1. **Map Current State** - Analyze architecture, patterns, dependencies
+2. **Identify Gaps** - Compare purpose vs implementation
+3. **Stack Fitness** - Evaluate tech choices against purpose
 4. **Fresh Perspective** - "If building from scratch" recommendations
 5. **Prioritize** - Quick wins vs major refactors, risk assessment
 6. **Report** - Structured findings with actionable items
 
-## Phase 1: Understand Intent
-
-Read and synthesize:
-- README.md - Project purpose, features, usage
-- CONTRIBUTING.md - Development guidelines, conventions
-- CLAUDE.md - AI-specific rules, principles
-- docs/ - Architecture decisions, design docs
-- pyproject.toml / package.json - Dependencies, scripts, config
-- .github/ - CI/CD, templates, workflows
-
-Extract:
-- Stated goals and non-goals
-- Target users and use cases
-- Design principles and constraints
-- Stated architecture decisions
-- Success criteria
-
-Output: **Intent Summary** (what the project aims to be)
-
-## Phase 2: Map Current State
+## Phase 1: Map Current State
 
 Analyze:
 - Directory structure and organization
@@ -60,7 +43,7 @@ Analyze:
 
 Output: **Architecture Map** (what the project actually is)
 
-## Phase 3: Gap Analysis
+## Phase 2: Gap Analysis
 
 Compare Intent vs Implementation:
 - Features promised but not implemented
@@ -79,7 +62,41 @@ Check against CLAUDE.md principles:
 
 Output: **Gap Report** with file:line references
 
-## Phase 4: Fresh Perspective
+## Phase 3: Stack Fitness & Fresh Perspective
+
+### 3a: Stack Fitness (Purpose vs Current Choices)
+
+Evaluate current technology choices against North Star purpose and constraints:
+
+**Evaluate each major choice:**
+
+| Current Choice | Serves Purpose? | Better Alternative? | Why? |
+|----------------|-----------------|---------------------|------|
+| Language (Python, Go, etc.) | ✓/✗ | If ✗, suggest | Reasoning |
+| Framework (Flask, FastAPI) | ✓/✗ | If ✗, suggest | Reasoning |
+| Database (Postgres, Mongo) | ✓/✗ | If ✗, suggest | Reasoning |
+| Architecture (monolith, micro) | ✓/✗ | If ✗, suggest | Reasoning |
+| Key dependencies | ✓/✗ | If ✗, suggest | Reasoning |
+
+**Questions to ask:**
+- Is this language/framework the best fit for this purpose?
+- Is it compatible with stated constraints (performance, team size)?
+- Does it make meeting success criteria easier or harder?
+- Is there a simpler/better alternative?
+
+**Example output:**
+```
+❌ Flask → FastAPI recommended
+↳ Purpose: "High-performance async API"
+↳ Flask sync-first, FastAPI async-native
+↳ Context: scale: 1M+ users → performance critical
+
+✓ PostgreSQL appropriate
+↳ Purpose: "Relational data with complex queries"
+↳ Current choice aligns with purpose
+```
+
+### 3b: From Scratch Perspective
 
 Answer: "If I were building this project from scratch today, knowing everything I now know..."
 
@@ -87,22 +104,20 @@ Consider:
 - Would I use the same directory structure?
 - Would I organize modules differently?
 - Are there simpler patterns for the same goals?
-- Which dependencies would I keep/replace/remove?
 - What abstractions are over/under-engineered?
 - Which decisions were right vs accidental complexity?
 
 Categories:
 - **Structure** - Directory layout, module organization
 - **Patterns** - Design patterns, conventions, idioms
-- **Dependencies** - External libs, internal coupling
 - **Abstractions** - Too much, too little, wrong level
 - **Data Flow** - How data moves through the system
 - **Testing** - Strategy, coverage, maintainability
 - **DX** - Developer experience, onboarding, tooling
 
-Output: **"From Scratch" Recommendations**
+Output: **Stack Fitness Report** + **"From Scratch" Recommendations**
 
-## Phase 5: Prioritization
+## Phase 4: Prioritization
 
 Classify each recommendation:
 
@@ -129,33 +144,32 @@ Priority = Impact / Effort (prefer high impact, low effort, low risk)
 ## Report Structure
 
 ```
-## Context Summary
-[Brief summary of project context and how it affects this review]
-- Impact: {affected} ({scale} users)
-- Risk Profile: {data_sensitivity}, {compliance}
-- Team: {size}, {ownership}
-- Current Pressure: {time_pressure}
+## Context
+Team: {team} | Scale: {scale} | Data: {data} | Type: {type}
+Purpose: {purpose}
 
-**Review Calibration:** Based on this context, this review [applies standard rigor / relaxes certain standards / applies strict standards] because [reason].
-
-## Intent Summary
-[What the project aims to be - 3-5 sentences]
+**Calibration:** [Standard/Relaxed/Strict rigor] because [context reason].
 
 ## Architecture Overview
 [Current state - structure, patterns, key decisions]
 
-## Gap Analysis
-### Docs vs Code Mismatches
-- [gap]: [file:line] - [details]
+## Stack Fitness
+| Choice | Verdict | Recommendation |
+|--------|---------|----------------|
+| Language | ✓/✗ | Alternative if needed |
+| Framework | ✓/✗ | Alternative if needed |
+| Database | ✓/✗ | Alternative if needed |
+| Architecture | ✓/✗ | Alternative if needed |
 
-### Principle Violations
-- [principle]: [file:line] - [details]
+## Gap Analysis
+- [gap]: [file:line] - [details]
+  ↳ Context: {field}: {value} → {why}
 
 ## Recommendations by Priority
-[Grouped for approval]
+[Grouped by: Critical → Quick Wins → Medium → Nice to Have]
 
 ## What's Working Well
-[Positive observations - patterns to keep, good decisions]
+[Positive observations - patterns to keep]
 ```
 
 ## Approval & Apply Flow

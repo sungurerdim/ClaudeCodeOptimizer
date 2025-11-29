@@ -14,9 +14,13 @@ If uncommitted changes exist, AskUserQuestion:
 
 ## Project Context
 
-**Run context check first:** See `/cco-context`
+**First:** Run `/cco-context` to ensure context is loaded.
 
-Context calibrates optimization aggressiveness and trade-off recommendations.
+Read `CCO_CONTEXT_START` block from CLAUDE.md. Calibrate approach:
+- Team: solo → aggressive OK, 6+ → prefer readability
+- Scale: 10K+ → prioritize performance optimizations
+- Type: library → API stability over internal refactors
+- Rollback: user-data → conservative mode only
 
 ## Categories
 
