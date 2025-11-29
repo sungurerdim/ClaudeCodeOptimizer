@@ -16,7 +16,7 @@ If uncommitted changes exist, AskUserQuestion:
 
 **First:** Run `/cco-calibrate` to ensure context is loaded.
 
-Read `CCO_CONTEXT_START` block from CLAUDE.md:
+Read `CCO_CONTEXT_START` block from project root `CLAUDE.md` (NOT `.claude/CLAUDE.md`):
 - **Conventions** - Use testNaming, importStyle from Operational section
 - **Type** - Adapt templates: CLI (argparse/click), API (endpoints), frontend (components)
 - **Stack** - Use detected frameworks for idiomatic generation

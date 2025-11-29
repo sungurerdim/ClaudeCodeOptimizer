@@ -12,7 +12,7 @@ All context-aware commands (review, audit, optimize, refactor) run this first.
 ## Step 1: Check Existing Context
 
 ```bash
-grep -A20 "CCO_CONTEXT_START" CLAUDE.md 2>/dev/null
+grep -A20 "CCO_CONTEXT_START" ./CLAUDE.md 2>/dev/null
 ```
 
 If context exists, **first display it clearly to the user**, then ask for confirmation:
@@ -147,11 +147,18 @@ Based on confirmed values, generate strategic guidelines:
 | Rollback: db | Test rollback scripts, staged deployments |
 | Rollback: user-data | Backup before changes, soft deletes preferred |
 
-## Step 5: Store in CLAUDE.md
+## Step 5: Store in Project Root CLAUDE.md
 
-Insert or replace context block in `./CLAUDE.md` (project root only, never global):
+Insert or replace context block in project root `CLAUDE.md`:
 
-**Important:** Context is always project-specific. Store in project's CLAUDE.md, not ~/.claude/CLAUDE.md.
+**Path:** `{project_root}/CLAUDE.md` (e.g., `/home/user/myproject/CLAUDE.md`)
+
+**CRITICAL - Correct vs Wrong paths:**
+- ✅ CORRECT: `./CLAUDE.md` or `CLAUDE.md` (project root)
+- ❌ WRONG: `./.claude/CLAUDE.md` or `.claude/CLAUDE.md`
+- ❌ WRONG: `~/.claude/CLAUDE.md` (global, not project-specific)
+
+The `.claude/` directory is for Claude Code settings (statusline.js, settings.json), NOT for CLAUDE.md.
 
 ```markdown
 <!-- CCO_CONTEXT_START -->
@@ -190,7 +197,7 @@ Apply to: documentation updates based on detected gaps.
 
 ## Step 7: Proceed
 
-Context is now available in CLAUDE.md. Commands read and apply it.
+Context is now available in project root `CLAUDE.md`. Commands read and apply it.
 
 ---
 
@@ -198,7 +205,7 @@ Context is now available in CLAUDE.md. Commands read and apply it.
 
 All commands MUST:
 
-1. Read `<!-- CCO_CONTEXT_START -->` block from CLAUDE.md
+1. Read `<!-- CCO_CONTEXT_START -->` block from project root `CLAUDE.md` (NOT `.claude/CLAUDE.md`)
 2. Follow the Guidelines listed in context
 3. Reference context when making recommendations
 

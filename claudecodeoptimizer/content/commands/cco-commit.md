@@ -15,7 +15,7 @@ Before committing, automatically run quality checks:
 
 **Priority order:**
 
-1. **CCO Context** (preferred) - Read from `CLAUDE.md`:
+1. **CCO Context** (preferred) - Read from project root `CLAUDE.md` (NOT `.claude/CLAUDE.md`):
    ```markdown
    <!-- CCO_CONTEXT_START -->
    ## Operational
@@ -91,7 +91,7 @@ Bad: `fix: fixed bug`
 
 ## Flow
 
-1. **Resolve Tools** - Read CCO context from CLAUDE.md, fallback to auto-detect
+1. **Resolve Tools** - Read CCO context from `./CLAUDE.md`, fallback to auto-detect
 2. **Quality Gates** - Run format → lint → test (stop on failure)
 3. **Analyze** - `git status`, `git diff`, detect change types
 4. **Group** - Apply atomic grouping rules, detect dependencies

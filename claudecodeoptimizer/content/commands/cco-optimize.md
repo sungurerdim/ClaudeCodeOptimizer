@@ -16,7 +16,7 @@ If uncommitted changes exist, AskUserQuestion:
 
 **First:** Run `/cco-calibrate` to ensure context is loaded.
 
-Read `CCO_CONTEXT_START` block from CLAUDE.md:
+Read `CCO_CONTEXT_START` block from project root `CLAUDE.md` (NOT `.claude/CLAUDE.md`):
 - **Guidelines** - Follow listed guidelines
 - **Scale** - If 10K+ → prioritize performance optimizations
 - **Type** - CLI: startup time, API: response time, library: memory footprint
