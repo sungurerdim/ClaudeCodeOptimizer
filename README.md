@@ -25,7 +25,7 @@ Then inside Claude Code:
 
 ## What CCO Is (and Isn't)
 
-**Claude Code with Opus 4.5 is already powerful.** It can analyze code, find bugs, refactor safely, and generate quality output. CCO doesn't replace or enhance these capabilities—they're already excellent.
+**Claude Code with Opus 4.5 is already powerful.** It can analyze code, find bugs, refactor safely and generate quality output. CCO doesn't replace or enhance these capabilities. They're already excellent.
 
 **CCO turns that power into repeatable workflows:**
 
@@ -33,7 +33,7 @@ Then inside Claude Code:
 - **Structured processes** - Same audit categories, same verification patterns, every time
 - **Approval flow** - Priority-based suggestions with risk labels, you decide what to apply
 
-Think of it this way: Opus 4.5 knows *how* to fix a security issue. CCO provides *structured commands* that scan systematically, prioritize by impact, get your approval, and verify the fixes.
+Think of it this way: Opus 4.5 knows *how* to fix a security issue. CCO provides *structured commands* that scan systematically, prioritize by impact, get your approval and verify the fixes.
 
 ---
 
@@ -110,7 +110,7 @@ You can always ask Claude Code directly: *"Check my code for security issues"*. 
 7. Summary: "5 done, 1 skipped, 0 failed"
 ```
 
-This is **on-demand quality**—you decide when to run it, CCO ensures it's thorough and consistent.
+This is **on-demand quality**: you decide when to run it, CCO ensures it's thorough and consistent.
 
 ---
 
@@ -152,7 +152,7 @@ This is **on-demand quality**—you decide when to run it, CCO ensures it's thor
 ```bash
 /cco-refactor rename oldName newName
 ```
-Guides Claude to find all references, update them in order, and verify with grep.
+Guides Claude to find all references, update them in order and verify with grep.
 
 **Optimize context:**
 ```bash
@@ -229,7 +229,7 @@ Optional status display with git integration:
 
 ### Permission Levels
 
-CCO never tells Claude to "do anything it wants". Every command runs inside an allow-list and deny-list model so that risky actions are explicit, reviewable, and easy to disable.
+CCO never tells Claude to "do anything it wants". Every command runs inside an allow-list and deny-list model so that risky actions are explicit, reviewable and easy to disable.
 
 | Level | Model | Security | Flexibility | Use Case |
 |-------|-------|----------|-------------|----------|
@@ -300,15 +300,15 @@ These are blocked at all permission levels:
 - Auto-detects stack, skips non-applicable checks
 - Safe fixes can auto-apply; risky ones need approval
 - Verification: `done + skip + fail + cannot_do = total`
-- Reference integrity: find ALL refs → update in order → verify with grep
+- Reference integrity: find all refs, update in order, verify with grep
 
 ---
 
 ## Included Standards
 
-CCO adds standards to `~/.claude/CLAUDE.md` that guide the AI's recommendations. These are guidelines, not rigid rules—the AI applies them with judgment based on your project context.
+CCO adds standards to `~/.claude/CLAUDE.md` that guide the AI's recommendations. These are guidelines, not rigid rules. The AI applies them with judgment based on your project context.
 
-**18 categories, 132 guidelines** — [view full list](claudecodeoptimizer/content/standards/cco-standards.md)
+**18 categories, 132 guidelines**: [view full list](claudecodeoptimizer/content/standards/cco-standards.md)
 
 | Category | Examples |
 |----------|----------|
@@ -371,7 +371,7 @@ pip uninstall claudecodeoptimizer
 
 ## What CCO Doesn't Do
 
-CCO is not a magic "fix everything" button. It's a thin, opinionated layer on top of Claude Code that standardizes how you ask for audits, refactors, fixes, and reviews—and how Claude reports back what it did.
+CCO is not a magic "fix everything" button. It's a thin, opinionated layer on top of Claude Code that standardizes how you ask for audits, refactors, fixes and reviews, and how Claude reports back what it did.
 
 CCO doesn't directly modify your codebase. It gives Claude Code a consistent workflow and standards to follow, so that each command produces structured, reproducible results.
 
