@@ -17,7 +17,7 @@ Before starting:
 
 **First:** Run `/cco-calibrate` to ensure context is loaded.
 
-Read `CCO_CONTEXT_START` block from CLAUDE.md. Follow the Guidelines listed there.
+Read `CCO_CONTEXT_START` block from project root `CLAUDE.md` (NOT `.claude/CLAUDE.md`). Follow the Guidelines listed there.
 
 ## Flow
 

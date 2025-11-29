@@ -17,10 +17,10 @@ Check CCO installation and configuration health.
 
 Check for project calibration context:
 
-1. Check ./CLAUDE.md for CCO_CONTEXT markers (project-specific)
+1. Check project root `CLAUDE.md` for CCO_CONTEXT markers (NOT `.claude/CLAUDE.md`)
 2. If no context found, suggest running `/cco-calibrate`
 
-**Note:** CCO_CONTEXT is always local (project root), never global. Each project has its own calibration.
+**Note:** CCO_CONTEXT is stored in project root `CLAUDE.md`, never in `.claude/` directory or global `~/.claude/`.
 
 ## Config Health Check
 

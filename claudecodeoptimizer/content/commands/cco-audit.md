@@ -18,7 +18,7 @@ Before starting:
 
 **First:** Run `/cco-calibrate` to ensure context is loaded.
 
-Read `CCO_CONTEXT_START` block from CLAUDE.md:
+Read `CCO_CONTEXT_START` block from project root `CLAUDE.md` (NOT `.claude/CLAUDE.md`):
 - **Guidelines** - Follow listed guidelines
 - **Applicable** - Only run applicable checks
 - **Data** - If PII/Regulated → prioritize security issues higher
