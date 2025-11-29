@@ -30,94 +30,67 @@ options:
 
 If "Use as-is" → proceed to Step 4.
 
-## Step 2: Auto-Detect
+## Step 2: Run Detection
 
-Scan project to detect values:
+Run `cco-agent-detect` to get complete project analysis:
 
-| Field | Detection Method |
-|-------|------------------|
-| Purpose | README.md first paragraph, package description |
-| Team | `git shortlog -sn` contributor count |
-| Scale | README mentions, user docs, analytics config |
-| Data | Model fields (email, password, PII patterns) |
-| Stack | File extensions, package.json, pyproject.toml, go.mod |
-| Type | Entry points, folder structure, framework markers |
-| DB | migrations/, prisma/, sqlalchemy, mongoose imports |
-| Rollback | Has migrations + user models = user-data, has migrations = db, else git |
+**Technical:**
+- Stack (languages, frameworks, databases, infrastructure, cicd, testing)
+- Tools (format, lint, test)
+- Conventions (testNaming, importStyle)
+- Applicable checks list
+
+**Strategic:**
+- Purpose, Team, Scale, Data, Type, Rollback
+
+All detection logic lives in the detect agent. Context command only processes results.
 
 ## Step 3: Confirm All Values
 
-Present ALL questions with detected values marked. User confirms or corrects.
+Present detected values for user confirmation. Show detect agent results as defaults.
 
 ```
 AskUserQuestion (single call, all questions):
 
 Q1 - header: "Purpose"
 question: "What is the project's purpose?"
-(Show detected value as default, allow edit)
+(Show detected value, allow edit)
 
 Q2 - header: "Team"
 question: "Team size?"
-options:
-  - label: "Solo" (detected if 1 contributor)
-  - label: "2-5" (detected if 2-5 contributors)
-  - label: "6+" (detected if 6+ contributors)
+options: Solo | 2-5 | 6+ (pre-select detected)
 
 Q3 - header: "Scale"
 question: "Expected user scale?"
-options:
-  - label: "<100" - Internal tool, personal use
-  - label: "100-10K" - Growing product, startup
-  - label: "10K+" - Large scale, public platform
+options: <100 | 100-10K | 10K+ (pre-select detected)
 
 Q4 - header: "Data"
 question: "Most sensitive data handled?"
-options:
-  - label: "Public" - No sensitive data
-  - label: "Internal" - Business data, not personal
-  - label: "PII" - Personal identifiable info (detected if user/email/password models)
-  - label: "Regulated" - Financial, health data
+options: Public | Internal | PII | Regulated (pre-select detected)
 
 Q5 - header: "Compliance" (skip if Data=Public)
 question: "Compliance requirements?"
 multiSelect: true
-options:
-  - label: "None"
-  - label: "GDPR"
-  - label: "SOC2"
-  - label: "HIPAA"
-  - label: "PCI-DSS"
+options: None | GDPR | SOC2 | HIPAA | PCI-DSS
 
 Q6 - header: "Stack"
 question: "Tech stack?"
-(Show detected: "Python, FastAPI, PostgreSQL")
-(Allow correction)
+(Show detected, allow correction)
 
 Q7 - header: "Type"
 question: "Project type?"
-options:
-  - label: "backend-api" (detected if no frontend, has routes)
-  - label: "frontend" (detected if React/Vue/Angular)
-  - label: "fullstack" (detected if both)
-  - label: "cli" (detected if argparse/click/commander)
-  - label: "library" (detected if no entry point, has exports)
-  - label: "mobile" (detected if React Native/Flutter)
-  - label: "desktop" (detected if Electron/Tauri)
+options: backend-api | frontend | fullstack | cli | library | mobile | desktop
 
 Q8 - header: "Database"
 question: "Database type?"
-options:
-  - label: "None" (detected if no db imports)
-  - label: "SQL" (detected if sqlalchemy/prisma/pg)
-  - label: "NoSQL" (detected if mongo/redis/firebase)
+options: None | SQL | NoSQL (pre-select detected)
 
 Q9 - header: "Rollback"
 question: "Rollback complexity?"
-options:
-  - label: "Git" - Code only, easy revert (detected if no migrations)
-  - label: "DB" - Has migrations (detected if migrations/ exists)
-  - label: "User-data" - Affects user data (detected if migrations + user models)
+options: Git | DB | User-data (pre-select detected)
 ```
+
+Detection logic is in `cco-agent-detect`. This step only confirms.
 
 ## Step 4: Generate Guidelines
 
@@ -151,15 +124,20 @@ Insert or replace context block in `.claude/CLAUDE.md`:
 
 ```markdown
 <!-- CCO_CONTEXT_START -->
+## Strategic Context
 Purpose: {purpose}
 Team: {team} | Scale: {scale} | Data: {data} | Compliance: {compliance}
 Stack: {stack} | Type: {type} | DB: {db} | Rollback: {rollback}
 
-Guidelines:
+## Guidelines
 - {generated guideline 1}
 - {generated guideline 2}
-- {generated guideline 3}
 ...
+
+## Operational (from detect agent)
+Tools: {format}, {lint}, {test}
+Conventions: {testNaming}, {importStyle}
+Applicable: {applicable checks list}
 <!-- CCO_CONTEXT_END -->
 ```
 

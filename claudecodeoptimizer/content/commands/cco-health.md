@@ -1,12 +1,17 @@
 ---
 name: cco-health
 description: Actionable metrics dashboard
-requires: detection
 ---
 
 # /cco-health
 
 **Process visibility** - Single view of project health with actionable next steps.
+
+## Project Context
+
+**First:** Run `/cco-context` to ensure context is loaded.
+
+Read `CCO_CONTEXT_START` block from CLAUDE.md. Use Operational section for applicable checks.
 
 ## Scores (0-100)
 
