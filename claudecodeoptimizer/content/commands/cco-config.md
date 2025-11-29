@@ -27,7 +27,7 @@ User runs /cco-config
   │           │     │     └─► Edit with predefined lists (NO agent)
   │           │     │
   │           │     └─► Balanced?
-  │           │           └─► cco-agent-detect (tech stack) → Edit
+  │           │           └─► cco-agent-detect (scope: technical) → Edit
   │           │
   │           └─► Done
   │
@@ -43,7 +43,7 @@ Use the **minimum tool** for each task:
 | Pre-check config exists | `Read` + `Glob` | Simple file checks |
 | Write statusline.js | `Write` | Single file, fixed content |
 | Update settings.json | `Read` then `Edit` | Preserve existing settings |
-| Tech stack detection | `cco-agent-detect` | Only for Balanced permissions |
+| Tech stack detection | `cco-agent-detect` (scope: technical) | Only for Balanced permissions |
 
 **Do NOT use agents for:**
 - Statusline (fixed content, no analysis needed)
@@ -133,7 +133,7 @@ Statusline selected?
   → Edit({scope}/settings.json) to add statusLine setting
 
 Permissions selected?
-  → If Balanced: cco-agent-detect for tech stack → build allow list
+  → If Balanced: cco-agent-detect (scope: technical) → build allow list
   → If Safe/Permissive: use predefined lists directly
   → Edit({scope}/settings.json) to add permissions
 ```
@@ -830,7 +830,7 @@ const coreCommands = [
 ];
 ```
 
-**Stack-specific (added by cco-agent-detect for Balanced level ONLY):**
+**Stack-specific (added by cco-agent-detect scope: technical, for Balanced level ONLY):**
 
 When to detect: `Permissions selected` AND `level == Balanced`
 When NOT to detect: Statusline only, Safe, or Permissive
@@ -1208,7 +1208,7 @@ const stackCommands = {
     "Edit(./**)", "Write(./**)", "NotebookEdit(./**)",
     "Edit(~/.claude/**)", "Write(~/.claude/**)", "Read(~/.claude/**)",
     ...coreCommands,
-    ...stackCommands[detected]  // Added by cco-agent-detect
+    ...stackCommands[detected]  // Added by cco-agent-detect (scope: technical)
   ],
   "ask": [
     "Bash(rm:*)", "Bash(rmdir:*)", "Bash(del:*)",

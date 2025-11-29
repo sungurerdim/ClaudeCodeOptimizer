@@ -18,7 +18,11 @@ Before starting:
 
 **First:** Run `/cco-context` to ensure context is loaded.
 
-Read `CCO_CONTEXT_START` block from CLAUDE.md. Follow the Guidelines listed there.
+Read `CCO_CONTEXT_START` block from CLAUDE.md:
+- **Guidelines** - Follow listed guidelines
+- **Applicable** - Only run applicable checks
+- **Data** - If PII/Regulated → prioritize security issues higher
+- **Scale** - If 10K+ → prioritize performance issues higher
 
 ## Flow
 

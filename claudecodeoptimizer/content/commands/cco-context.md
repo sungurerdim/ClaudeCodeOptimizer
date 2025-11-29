@@ -12,7 +12,7 @@ All context-aware commands (review, audit, optimize, refactor) run this first.
 ## Step 1: Check Existing Context
 
 ```bash
-grep -A3 "CCO_CONTEXT_START" .claude/CLAUDE.md 2>/dev/null
+grep -A3 "CCO_CONTEXT_START" CLAUDE.md 2>/dev/null
 ```
 
 If context exists, show current values and ask:
@@ -28,11 +28,12 @@ options:
     description: "Re-detect and confirm all values"
 ```
 
-If "Use as-is" → proceed to Step 4.
+If "Use as-is" → skip to Step 7 (context already complete).
+If "Update" → continue to Step 2 (full re-detection).
 
 ## Step 2: Run Detection
 
-Run `cco-agent-detect` to get complete project analysis:
+Run `cco-agent-detect` with `scope: full` to get complete project analysis:
 
 **Technical:**
 - Stack (languages, frameworks, databases, infrastructure, cicd, testing)
@@ -120,7 +121,7 @@ Based on confirmed values, generate strategic guidelines:
 
 ## Step 5: Store in CLAUDE.md
 
-Insert or replace context block in `.claude/CLAUDE.md`:
+Insert or replace context block in `CLAUDE.md` (project root):
 
 ```markdown
 <!-- CCO_CONTEXT_START -->
@@ -140,6 +141,11 @@ Conventions: {testNaming}, {importStyle}
 Applicable: {applicable checks list}
 <!-- CCO_CONTEXT_END -->
 ```
+
+**IMPORTANT:** Store ONLY the template above. Do NOT add:
+- Development instructions (belongs in README)
+- Setup commands (belongs in README)
+- Any sections outside the template
 
 If block exists → replace. If not → append after first heading.
 

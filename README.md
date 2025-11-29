@@ -44,6 +44,7 @@ cco-setup
 | `/cco-refactor` | **Risk mitigation** - verified transformations |
 | `/cco-optimize` | **Efficiency** - measurable improvements |
 | `/cco-commit` | **Change management** - quality gates, atomic commits |
+| `/cco-context` | **Project context** - calibrated AI recommendations |
 | `/cco-config` | **Settings** - statusline, permissions (global/local) |
 | `/cco-status` | Installation check |
 | `/cco-help` | Command reference |
@@ -84,6 +85,12 @@ Finds ALL references, updates in order, verifies with grep.
 /cco-review --quick             # Gap analysis only
 /cco-review --focus=structure   # Focus on organization
 ```
+
+**Project context:**
+```bash
+/cco-context                    # Auto-detect and confirm project context
+```
+Sets team size, scale, data sensitivity for calibrated recommendations.
 
 **Configure settings:**
 ```bash
@@ -206,7 +213,7 @@ These are blocked at all permission levels:
 
 ## Design Principles
 
-CCO provides 10 commands, 3 agents, and rules added to `~/.claude/`.
+CCO provides 11 commands, 3 agents, and rules added to `~/.claude/`.
 
 **Core principles:**
 - Perfect UX/DX, maximum efficiency
@@ -232,7 +239,7 @@ CCO provides 10 commands, 3 agents, and rules added to `~/.claude/`.
 
 ## Enforced Standards
 
-CCO injects **118 standards across 17 categories** into `CLAUDE.md`:
+CCO injects **121 standards across 17 categories** into `CLAUDE.md`:
 
 | Category | What it enforces |
 |----------|------------------|
@@ -263,10 +270,10 @@ After `cco-setup`, the following is added to `~/.claude/`:
 ```
 ~/.claude/
 ├── commands/
-│   └── cco-*.md          # 10 slash commands
+│   └── cco-*.md          # 11 slash commands
 ├── agents/
 │   └── cco-*.md          # 3 specialized agents
-└── CLAUDE.md             # 118 standards (17 categories)
+└── CLAUDE.md             # 121 standards (17 categories)
 ```
 
 ---
