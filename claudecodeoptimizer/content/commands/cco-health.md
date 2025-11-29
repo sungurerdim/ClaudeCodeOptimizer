@@ -31,7 +31,10 @@ Read `CCO_CONTEXT_START` block from CLAUDE.md:
 After scores, show top 3 actionable items:
 - Highest impact, lowest effort
 - With specific file:line locations
-- One-click fix option via AskUserQuestion
+
+**Follow CCO Approval Flow standard from cco-standards.**
+
+Apply to: "Fix First" actionable items.
 
 ## Output
 

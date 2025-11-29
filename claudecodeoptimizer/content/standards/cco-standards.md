@@ -3,7 +3,22 @@
 - Paths: forward slash (/), relative, quote spaces
 - Reference Integrity: find ALL refs → update in order → verify (grep old=0, new=expected)
 - Verification: total = done + skip + fail + cannot_do, no "fixed" without Read proof
-- MultiSelect: "All" as first option
+
+## Approval Flow (all commands)
+- Single call, 4 tabs: one AskUserQuestion with 4 questions max (Critical/High/Medium/Low)
+- Each priority = one tab: user sees all levels at once, selects per-tab
+- Header format: "{Priority} ({count})" - e.g., "Critical (2)", "High (5)"
+- Options per tab (max 4):
+  - Option 1: "All ({N})" - always first, includes all items in this priority
+  - Options 2-4: top 3 individual items by impact, format: "{desc} [{loc}] [{risk}]"
+  - If >3 items: remaining are included in "All" (count shows total)
+- Risk labels: [safe], [risky], or [extensive] per item
+- MultiSelect: true - "All" + individual items can be combined
+- Skip empty tabs: don't show priority levels with 0 items
+- Summary before apply: "Applying {selected}/{total} items"
+- No silent skipping: ALL items accessible via "All ({N})" option
+- Apply all selected: user selection = commitment, fix everything chosen
+- Blocked items: report as "cannot_do" with reason after attempt
 
 ## Code Quality
 - Fail-Fast: immediate visible failure, no silent fallbacks

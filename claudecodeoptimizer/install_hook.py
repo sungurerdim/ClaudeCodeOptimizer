@@ -71,9 +71,9 @@ def setup_claude_md(verbose: bool = True) -> None:
     claude_md.write_text(content, encoding="utf-8")
 
     if verbose:
-        standards, categories = get_standards_count()
+        standards_count, categories = get_standards_count()
         print(f"  CLAUDE.md: CCO Standards {action}")
-        print(f"    {standards} standards ({categories} categories)")
+        print(f"    {standards_count} standards ({categories} categories)")
 
 
 def post_install() -> int:

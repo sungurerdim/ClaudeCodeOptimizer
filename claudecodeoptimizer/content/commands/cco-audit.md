@@ -109,41 +109,9 @@ Output sorted by priority, grouped by category.
 
 ## Fix Approval Process
 
-After analysis, present all issues in a **single AskUserQuestion call** with up to 4 questions (one per priority level). This provides granular control without multiple interruptions:
+**Follow CCO Approval Flow standard from cco-standards.**
 
-```
-AskUserQuestion (single call, multiple questions):
-
-Question 1 - header: "Critical"
-"Found X critical issues. Which to fix?"
-multiSelect=true
-- "All" (first option per CCO rules)
-- Individual critical issues...
-
-Question 2 - header: "High"
-"Found X high priority issues. Which to fix?"
-multiSelect=true
-- "All"
-- Individual high issues...
-
-Question 3 - header: "Medium"
-"Found X medium priority issues. Which to fix?"
-multiSelect=true
-- "All"
-- Individual medium issues...
-
-Question 4 - header: "Low"
-"Found X low priority issues. Which to fix?"
-multiSelect=true
-- "All"
-- Individual low issues...
-```
-
-**Rules:**
-- Only include questions for priority levels that have issues
-- Skip empty priority levels (don't ask about priorities with 0 issues)
-- If only 1 priority level has issues, use single question
-- Max 4 options per question - group if needed ("5 more medium issues...")
+Apply to: issues found during audit.
 
 ## Fix Behavior
 
