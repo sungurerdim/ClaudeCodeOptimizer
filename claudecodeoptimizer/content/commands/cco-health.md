@@ -11,7 +11,10 @@ description: Actionable metrics dashboard
 
 **First:** Run `/cco-context` to ensure context is loaded.
 
-Read `CCO_CONTEXT_START` block from CLAUDE.md. Use Operational section for applicable checks.
+Read `CCO_CONTEXT_START` block from CLAUDE.md:
+- **Applicable** - Only show relevant scores from Operational section
+- **Scale** - Adjust thresholds: <100 (relaxed), 100-10K (standard), 10K+ (strict)
+- **Type** - Emphasize relevant metrics: API (response time), CLI (startup), library (coverage)
 
 ## Scores (0-100)
 

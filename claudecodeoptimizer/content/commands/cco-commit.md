@@ -11,15 +11,21 @@ description: Atomic traceable change management
 
 Before committing, automatically run quality checks:
 
-### Tool Detection
+### Tool Resolution
 
-Detect project tools from config files (no hardcoded tool names):
-- `pyproject.toml` → extract [tool.*] sections
-- `package.json` → extract scripts and devDependencies
-- `Cargo.toml` → Rust toolchain
-- `go.mod` → Go toolchain
-- `Makefile` → check for lint/test/format targets
-- `.pre-commit-config.yaml` → use pre-commit if configured
+**Priority order:**
+
+1. **CCO Context** (preferred) - Read from `CLAUDE.md`:
+   ```markdown
+   <!-- CCO_CONTEXT_START -->
+   ## Operational
+   Tools: ruff (format+lint), mypy (types), pytest --cov (test)
+   ```
+   Parse the Tools line to extract format, lint, and test commands.
+
+2. **Fallback: Auto-detect** - If no CCO context, run `cco-agent-detect` with `scope: tools`
+
+   The detect agent checks: pyproject.toml, package.json, Cargo.toml, go.mod, Makefile, .pre-commit-config.yaml
 
 ### Check Order
 
@@ -85,7 +91,7 @@ Bad: `fix: fixed bug`
 
 ## Flow
 
-1. **Detect Tools** - Find formatters, linters, test runners from config
+1. **Resolve Tools** - Read CCO context from CLAUDE.md, fallback to auto-detect
 2. **Quality Gates** - Run format → lint → test (stop on failure)
 3. **Analyze** - `git status`, `git diff`, detect change types
 4. **Group** - Apply atomic grouping rules, detect dependencies

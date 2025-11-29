@@ -7,11 +7,25 @@ safe: true
 
 # Agent: Detect
 
-Read-only project detection. Returns complete detection result for context.
+Read-only project detection. Returns scoped detection result.
 
-## Purpose
+## Scope Parameter
 
-Detect ALL project characteristics - both technical (stack, tools) and strategic (team, scale, data sensitivity).
+Commands specify detection scope in prompt. Only run detection for requested scope.
+
+| Scope | Includes | Use Case |
+|-------|----------|----------|
+| `tools` | format, lint, test commands only | cco-commit (fallback when no context) |
+| `technical` | stack + tools + conventions + applicable | cco-config (permission allow lists) |
+| `full` | technical + strategic (purpose, team, scale, data, type, rollback) | cco-context |
+
+**Note:** Most commands read from CLAUDE.md (stored by cco-context), not from detect agent directly.
+
+**Default:** If no scope specified, assume `full`.
+
+**Example prompts:**
+- `"Detect project tools (scope: tools)"` → only tools detection
+- `"Full project detection (scope: full)"` → everything
 
 ## Technical Detection
 
@@ -44,29 +58,51 @@ Extract existing patterns for generation consistency:
 - Directory structure: flat vs nested
 - Naming: snake_case vs camelCase
 
-## Output Format
+## Output Format (by scope)
 
+### scope: tools
+```json
+{
+  "tools": {
+    "format": "ruff format .",
+    "lint": "ruff check .",
+    "test": "pytest tests/"
+  }
+}
+```
+
+### scope: technical
+```json
+{
+  "stack": {
+    "languages": [],
+    "frameworks": [],
+    "databases": [],
+    "infrastructure": [],
+    "cicd": [],
+    "testing": []
+  },
+  "tools": {
+    "format": null,
+    "lint": null,
+    "test": null
+  },
+  "conventions": {
+    "testNaming": null,
+    "importStyle": null
+  },
+  "applicable": ["security", "tech-debt", "tests"]
+}
+```
+
+### scope: full
 ```json
 {
   "technical": {
-    "stack": {
-      "languages": [],
-      "frameworks": [],
-      "databases": [],
-      "infrastructure": [],
-      "cicd": [],
-      "testing": []
-    },
-    "tools": {
-      "format": null,
-      "lint": null,
-      "test": null
-    },
-    "conventions": {
-      "testNaming": null,
-      "importStyle": null
-    },
-    "applicable": ["security", "tech-debt", "tests"]
+    "stack": { "languages": [], "frameworks": [], "databases": [], "infrastructure": [], "cicd": [], "testing": [] },
+    "tools": { "format": null, "lint": null, "test": null },
+    "conventions": { "testNaming": null, "importStyle": null },
+    "applicable": []
   },
   "strategic": {
     "purpose": null,
@@ -82,6 +118,6 @@ Extract existing patterns for generation consistency:
 ## Principles
 
 1. **Read-only** - Never modify files
-2. **Fast** - Skip deep analysis, use file presence and configs
-3. **Deterministic** - Same input → same output
-4. **Complete** - Return all fields, use null for undetectable
+2. **Scoped** - Only detect what's requested, skip the rest
+3. **Fast** - Skip deep analysis, use file presence and configs
+4. **Deterministic** - Same input → same output

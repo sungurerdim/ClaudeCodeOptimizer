@@ -16,7 +16,10 @@ Requires clean git state. If uncommitted changes exist, AskUserQuestion:
 
 **First:** Run `/cco-context` to ensure context is loaded.
 
-Read `CCO_CONTEXT_START` block from CLAUDE.md. Follow the Guidelines listed there.
+Read `CCO_CONTEXT_START` block from CLAUDE.md:
+- **Guidelines** - Follow listed guidelines
+- **Rollback** - If DB/User-data → extra caution, suggest backup first
+- **Type** - Library: warn about public API changes
 
 ## Flow
 
