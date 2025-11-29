@@ -52,6 +52,7 @@
 - Context Files: CLAUDE.md, plan.md, arch docs
 - Human-AI: humans architect, AI implements, humans review
 - Challenge: "are you sure?" for perfect-looking solutions
+- No Example Fixation: use placeholders, avoid anchoring bias from hardcoded examples
 
 ## Architecture
 - Event-Driven: async patterns, communicate via events

@@ -5,7 +5,7 @@ import shutil
 import sys
 from pathlib import Path
 
-from .config import AGENTS_DIR, CCO_MARKER_PATTERNS, CLAUDE_DIR, COMMANDS_DIR
+from .config import AGENTS_DIR, CCO_MARKER_PATTERNS, CLAUDE_DIR, COMMANDS_DIR, get_standards_count
 
 
 def get_content_dir() -> Path:
@@ -55,9 +55,6 @@ def setup_claude_md(verbose: bool = True) -> None:
     action = "created"
     if claude_md.exists():
         content = claude_md.read_text(encoding="utf-8")
-        # Remove legacy principles marker
-        pattern, flags = CCO_MARKER_PATTERNS["principles"]
-        content = re.sub(pattern, "", content, flags=flags)
 
         # Check if standards marker exists and update or append
         if "<!-- CCO_STANDARDS_START -->" in content:
@@ -74,8 +71,9 @@ def setup_claude_md(verbose: bool = True) -> None:
     claude_md.write_text(content, encoding="utf-8")
 
     if verbose:
-        print(f"  CLAUDE.md: CCO Principles {action}")
-        print("    17 categories, 118 principles")
+        standards, categories = get_standards_count()
+        print(f"  CLAUDE.md: CCO Standards {action}")
+        print(f"    {standards} standards ({categories} categories)")
 
 
 def post_install() -> int:
@@ -111,12 +109,13 @@ def post_install() -> int:
         print()
 
         # Summary
+        standards, categories = get_standards_count()
         print("=" * 50)
         print("Summary")
         print("=" * 50)
         print(f"  Commands:  {len(cmds)}")
         print(f"  Agents:    {len(agents)}")
-        print("  Principles: 17 categories in CLAUDE.md")
+        print(f"  Standards: {standards} ({categories} categories)")
         print()
         print("CCO ready! Try: /cco-help")
         print()

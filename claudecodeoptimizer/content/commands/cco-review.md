@@ -15,7 +15,7 @@ Before starting:
 
 ## Project Context
 
-**First:** Run `/cco-context` to ensure context is loaded.
+**First:** Run `/cco-calibrate` to ensure context is loaded.
 
 Read `CCO_CONTEXT_START` block from CLAUDE.md. Follow the Guidelines listed there.
 
@@ -70,10 +70,10 @@ Evaluate current technology choices against North Star purpose and constraints:
 
 | Current Choice | Serves Purpose? | Better Alternative? | Why? |
 |----------------|-----------------|---------------------|------|
-| Language (Python, Go, etc.) | ✓/✗ | If ✗, suggest | Reasoning |
-| Framework (Flask, FastAPI) | ✓/✗ | If ✗, suggest | Reasoning |
-| Database (Postgres, Mongo) | ✓/✗ | If ✗, suggest | Reasoning |
-| Architecture (monolith, micro) | ✓/✗ | If ✗, suggest | Reasoning |
+| Language | ✓/✗ | If ✗, suggest | Reasoning |
+| Framework | ✓/✗ | If ✗, suggest | Reasoning |
+| Database | ✓/✗ | If ✗, suggest | Reasoning |
+| Architecture | ✓/✗ | If ✗, suggest | Reasoning |
 | Key dependencies | ✓/✗ | If ✗, suggest | Reasoning |
 
 **Questions to ask:**
@@ -82,15 +82,15 @@ Evaluate current technology choices against North Star purpose and constraints:
 - Does it make meeting success criteria easier or harder?
 - Is there a simpler/better alternative?
 
-**Example output:**
+**Example output format:**
 ```
-❌ Flask → FastAPI recommended
-↳ Purpose: "High-performance async API"
-↳ Flask sync-first, FastAPI async-native
-↳ Context: scale: 1M+ users → performance critical
+❌ {current_choice} → {recommended_alternative}
+↳ Purpose: "{project_purpose}"
+↳ {reason_current_doesnt_fit}
+↳ Context: {relevant_context_from_calibration}
 
-✓ PostgreSQL appropriate
-↳ Purpose: "Relational data with complex queries"
+✓ {current_choice} appropriate
+↳ Purpose: "{project_purpose}"
 ↳ Current choice aligns with purpose
 ```
 

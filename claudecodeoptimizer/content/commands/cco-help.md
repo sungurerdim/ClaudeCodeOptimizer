@@ -9,6 +9,7 @@ description: Command reference
 
 | Command | Purpose |
 |---------|---------|
+| `/cco-calibrate` | **Project calibration** - calibrate AI recommendations to project context |
 | `/cco-audit` | **Quality gates** - standardized checks, prioritized fixes |
 | `/cco-review` | **Strategic review** - architecture analysis, fresh perspective, apply improvements |
 | `/cco-generate` | **Generation** - convention-following, verified |
@@ -22,6 +23,7 @@ description: Command reference
 ## Quick Start
 
 ```bash
+/cco-calibrate           # Set project context for calibrated AI recommendations
 /cco-audit --smart       # Quality gates → offer fixes
 /cco-review              # Strategic review → apply improvements
 /cco-health              # Metrics dashboard

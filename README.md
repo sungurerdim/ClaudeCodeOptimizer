@@ -24,6 +24,47 @@ CCO is a **process orchestration and quality standards** tool for Claude Code. I
 
 ---
 
+## Context-Aware AI
+
+CCO doesn't apply one-size-fits-all rules. It **calibrates AI recommendations** to your project's specific context.
+
+**How it works:**
+
+1. **Auto-detect** - Analyzes your project: stack, tools, conventions, team size, scale, data sensitivity
+2. **Confirm** - You review and adjust detected values
+3. **Store** - Context saved to your project's `CLAUDE.md`
+4. **Apply** - All commands read context and adjust their behavior
+
+**Why it matters:**
+
+| Project Type | CCO Behavior |
+|--------------|--------------|
+| **Solo, <100 users** | Relaxed thresholds, simple solutions preferred, self-review sufficient |
+| **Team of 6+, 10K+ users** | Strict thresholds, performance critical, formal review required |
+| **Handles PII** | Security issues prioritized, encryption required, audit logging |
+| **Library/API** | API stability warnings, semantic versioning enforced |
+| **CLI tool** | Clear error messages, help documentation emphasized |
+
+**Calibration output (stored in your project's CLAUDE.md):**
+
+```markdown
+<!-- CCO_CONTEXT_START -->
+## Strategic Context
+Purpose: {detected_from_readme}
+Team: {Solo|2-5|6+} | Scale: {<100|100-10K|10K+} | Data: {Public|PII|Regulated}
+Stack: {detected_languages_and_tools} | Type: {detected_project_type}
+
+## Guidelines
+- {generated_based_on_team_size}
+- {generated_based_on_scale}
+- {generated_based_on_data_sensitivity}
+<!-- CCO_CONTEXT_END -->
+```
+
+Every CCO command reads this context and follows the guidelines. No more generic "best practices" - only recommendations calibrated to your reality.
+
+---
+
 ## Installation
 
 ```bash
@@ -44,7 +85,7 @@ cco-setup
 | `/cco-refactor` | **Risk mitigation** - verified transformations |
 | `/cco-optimize` | **Efficiency** - measurable improvements |
 | `/cco-commit` | **Change management** - quality gates, atomic commits |
-| `/cco-context` | **Project context** - calibrated AI recommendations |
+| `/cco-calibrate` | **Project calibration** - calibrated AI recommendations |
 | `/cco-config` | **Settings** - statusline, permissions (global/local) |
 | `/cco-status` | Installation check |
 | `/cco-help` | Command reference |
@@ -88,7 +129,7 @@ Finds ALL references, updates in order, verifies with grep.
 
 **Project context:**
 ```bash
-/cco-context                    # Auto-detect and confirm project context
+/cco-calibrate                  # Auto-detect and confirm project context
 ```
 Sets team size, scale, data sensitivity for calibrated recommendations.
 
@@ -239,7 +280,7 @@ CCO provides 11 commands, 3 agents, and rules added to `~/.claude/`.
 
 ## Enforced Standards
 
-CCO injects **121 standards across 17 categories** into `CLAUDE.md`:
+CCO injects **122 standards across 17 categories** into `CLAUDE.md`:
 
 | Category | What it enforces |
 |----------|------------------|
@@ -273,7 +314,7 @@ After `cco-setup`, the following is added to `~/.claude/`:
 │   └── cco-*.md          # 11 slash commands
 ├── agents/
 │   └── cco-*.md          # 3 specialized agents
-└── CLAUDE.md             # 121 standards (17 categories)
+└── CLAUDE.md             # Standards (17 categories)
 ```
 
 ---

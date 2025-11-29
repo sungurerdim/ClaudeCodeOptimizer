@@ -128,20 +128,6 @@ class TestSetupClaudeMd:
             assert "# My Custom Rules" in content
             assert "<!-- CCO_STANDARDS_START -->" in content
 
-    def test_removes_old_principles(self, tmp_path):
-        """Test removes old CCO_PRINCIPLES markers."""
-        with patch("claudecodeoptimizer.install_hook.CLAUDE_DIR", tmp_path):
-            claude_md = tmp_path / "CLAUDE.md"
-            tmp_path.mkdir(exist_ok=True)
-            claude_md.write_text(
-                "<!-- CCO_PRINCIPLES_START -->old<!-- CCO_PRINCIPLES_END -->\n# Rules"
-            )
-
-            setup_claude_md()
-
-            content = claude_md.read_text()
-            assert "CCO_PRINCIPLES" not in content
-
 
 class TestPostInstall:
     """Test post_install function."""

@@ -74,13 +74,6 @@ class TestHasClaudeMdRules:
             sections = has_claude_md_standards()
             assert "CCO Standards" in sections
 
-    def test_with_principles(self, tmp_path):
-        claude_md = tmp_path / "CLAUDE.md"
-        claude_md.write_text("<!-- CCO_PRINCIPLES_START -->old<!-- CCO_PRINCIPLES_END -->")
-        with patch("claudecodeoptimizer.cco_remove.CLAUDE_DIR", tmp_path):
-            sections = has_claude_md_standards()
-            assert "CCO Principles (legacy)" in sections
-
 
 class TestRemoveCcoFiles:
     def test_remove_files(self, tmp_path):
@@ -128,13 +121,6 @@ class TestRemoveClaudeMdRules:
         with patch("claudecodeoptimizer.cco_remove.CLAUDE_DIR", tmp_path):
             removed = remove_claude_md_standards(verbose=True)
         assert "CCO Standards" in removed
-
-    def test_remove_principles(self, tmp_path):
-        claude_md = tmp_path / "CLAUDE.md"
-        claude_md.write_text("<!-- CCO_PRINCIPLES_START -->old<!-- CCO_PRINCIPLES_END -->")
-        with patch("claudecodeoptimizer.cco_remove.CLAUDE_DIR", tmp_path):
-            removed = remove_claude_md_standards(verbose=False)
-        assert "CCO Principles (legacy)" in removed
 
 
 class TestUninstallPackage:
