@@ -17,6 +17,6 @@ Stack: Python 3.11+ (stdlib only), ruff, mypy, pytest | Type: CLI | DB: None | R
 ## Operational
 Tools: ruff (format+lint), mypy (types), pytest --cov (test)
 Conventions: test_*.py naming, relative imports internal, snake_case
-Applicable: security, tech-debt, tests, hygiene, cicd, docs, ai-quality, supply-chain
-Not Applicable: database, performance, containers, api-contract, dora
+Applicable: security, tech-debt, tests, hygiene, cicd, docs, ai-quality, supply-chain, self-compliance
+Not Applicable: database, performance, containers, api-contract, dora, ai-security, compliance
 <!-- CCO_CONTEXT_END -->
