@@ -16,11 +16,7 @@ If uncommitted changes exist, AskUserQuestion:
 
 **First:** Run `/cco-context` to ensure context is loaded.
 
-Read `CCO_CONTEXT_START` block from CLAUDE.md. Calibrate approach:
-- Team: solo → aggressive OK, 6+ → prefer readability
-- Scale: 10K+ → prioritize performance optimizations
-- Type: library → API stability over internal refactors
-- Rollback: user-data → conservative mode only
+Read `CCO_CONTEXT_START` block from CLAUDE.md. Follow the Guidelines listed there.
 
 ## Categories
 

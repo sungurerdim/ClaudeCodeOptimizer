@@ -17,9 +17,7 @@ Before starting:
 
 **First:** Run `/cco-context` to ensure context is loaded.
 
-Context provides: Purpose, Team, Scale, Data, Compliance, Stack, Type, DB, Rollback.
-
-All recommendations must be calibrated to this context.
+Read `CCO_CONTEXT_START` block from CLAUDE.md. Follow the Guidelines listed there.
 
 ## Flow
 

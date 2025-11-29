@@ -16,11 +16,7 @@ Requires clean git state. If uncommitted changes exist, AskUserQuestion:
 
 **First:** Run `/cco-context` to ensure context is loaded.
 
-Read `CCO_CONTEXT_START` block from CLAUDE.md. Calibrate risk:
-- Team: 6+ → consider impact on others, communicate changes
-- Type: library → extra care with public API changes
-- DB: sql/nosql → plan migration strategy
-- Rollback: user-data → require backup, staged rollout
+Read `CCO_CONTEXT_START` block from CLAUDE.md. Follow the Guidelines listed there.
 
 ## Flow
 

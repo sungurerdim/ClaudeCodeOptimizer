@@ -119,21 +119,53 @@ options:
   - label: "User-data" - Affects user data (detected if migrations + user models)
 ```
 
-## Step 4: Store in CLAUDE.md
+## Step 4: Generate Guidelines
+
+Based on confirmed values, generate strategic guidelines:
+
+| If Value | Add Guideline |
+|----------|---------------|
+| Team: solo | Self-review sufficient, aggressive refactors OK |
+| Team: 2-5 | Informal review recommended, document key decisions |
+| Team: 6+ | Formal review required, consider change impact on others |
+| Scale: <100 | Simple solutions preferred, optimize for clarity |
+| Scale: 100-10K | Add monitoring, consider caching |
+| Scale: 10K+ | Performance critical, load test changes |
+| Data: public | Basic input validation sufficient |
+| Data: internal | Add authentication, audit logs |
+| Data: pii | Encryption required, minimize data retention |
+| Data: regulated | Full compliance controls, external audit trail |
+| Compliance: gdpr | Data deletion capability, consent tracking |
+| Compliance: hipaa | PHI encryption, access logging |
+| Compliance: pci-dss | No card data in logs, secure key management |
+| Type: library | API stability critical, semantic versioning |
+| Type: cli | Clear error messages, help documentation |
+| DB: sql | Plan migrations, backward compatible changes |
+| DB: nosql | Schema versioning, data migration strategy |
+| Rollback: db | Test rollback scripts, staged deployments |
+| Rollback: user-data | Backup before changes, soft deletes preferred |
+
+## Step 5: Store in CLAUDE.md
 
 Insert or replace context block in `.claude/CLAUDE.md`:
 
 ```markdown
 <!-- CCO_CONTEXT_START -->
-Purpose: {confirmed purpose}
-Team: {solo|2-5|6+} | Scale: {<100|100-10K|10K+} | Data: {public|internal|pii|regulated} | Compliance: {none|gdpr|soc2|hipaa|pci-dss}
-Stack: {langs, frameworks} | Type: {type} | DB: {none|sql|nosql} | Rollback: {git|db|user-data}
+Purpose: {purpose}
+Team: {team} | Scale: {scale} | Data: {data} | Compliance: {compliance}
+Stack: {stack} | Type: {type} | DB: {db} | Rollback: {rollback}
+
+Guidelines:
+- {generated guideline 1}
+- {generated guideline 2}
+- {generated guideline 3}
+...
 <!-- CCO_CONTEXT_END -->
 ```
 
 If block exists → replace. If not → append after first heading.
 
-## Step 5: Offer Documentation Updates
+## Step 6: Offer Documentation Updates
 
 If gaps were found in project docs:
 
@@ -152,7 +184,7 @@ options:
 
 Apply selected documentation updates.
 
-## Step 6: Proceed
+## Step 7: Proceed
 
 Context is now available in CLAUDE.md. Commands read and apply it.
 
@@ -163,21 +195,20 @@ Context is now available in CLAUDE.md. Commands read and apply it.
 All commands MUST:
 
 1. Read `<!-- CCO_CONTEXT_START -->` block from CLAUDE.md
-2. Calibrate recommendations based on context values
-3. Reference context in every recommendation
+2. Follow the Guidelines listed in context
+3. Reference context when making recommendations
 
 ### Recommendation Format
 
 ```
 [Recommendation]
-↳ Context: {field}: {value} → {why this matters}
+↳ Guideline: {relevant guideline from context}
 ```
 
 ### Anti-patterns
 
-- ❌ Recommending without context reference
-- ❌ "Best practice" while ignoring context
-- ❌ Same standards for all projects
+- ❌ Ignoring context Guidelines
+- ❌ Applying universal "best practices"
 - ❌ Treating documented architecture as "correct"
 
-**Principle:** Context defines the appropriate level of rigor, not universal standards.
+**Principle:** Guidelines in context define the rules. Commands follow them.
