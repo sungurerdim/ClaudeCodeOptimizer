@@ -11,13 +11,13 @@ A process and standards layer for Claude Code.
 
 **Claude Code with Opus 4.5 is already powerful.** It can analyze code, find bugs, refactor safely, and generate quality output. CCO doesn't replace or enhance these capabilities—they're already excellent.
 
-**CCO adds process structure:**
+**CCO turns that power into repeatable workflows:**
 
-- **Consistent workflows** - Same audit categories, same verification patterns, every time
-- **Quality guardrails** - Standards injected into `CLAUDE.md` that the AI follows
-- **Project calibration** - Context-aware thresholds based on your team size, scale, and data sensitivity
+- **Context-aware commands** - Each command reads your project profile and adjusts its behavior
+- **Structured processes** - Same audit categories, same verification patterns, every time
+- **Approval flow** - Priority-based suggestions with risk labels, you decide what to apply
 
-Think of it this way: Opus 4.5 knows *how* to fix a security issue. CCO provides a *systematic process* for finding all issues, prioritizing them, getting approval, and verifying fixes.
+Think of it this way: Opus 4.5 knows *how* to fix a security issue. CCO provides *structured commands* that scan systematically, prioritize by impact, get your approval, and verify the fixes.
 
 ---
 
@@ -63,6 +63,38 @@ Stack: {detected} | Type: {detected}
 pip install git+https://github.com/sungurerdim/ClaudeCodeOptimizer.git
 cco-setup
 ```
+
+---
+
+## Why Commands?
+
+You can always ask Claude Code directly: *"Check my code for security issues"*. It works. So why use `/cco-audit --security`?
+
+**The difference:**
+
+| Manual Prompt | CCO Command |
+|---------------|-------------|
+| Results vary each time | Same structured output every time |
+| You remember what to check | Categories defined, nothing missed |
+| Generic suggestions | Calibrated to your project context |
+| You track what's done | Verification: `done + skip + fail = total` |
+| Approval is implicit | Priority tabs with risk labels |
+
+**Example flow:**
+
+```
+/cco-audit --security
+
+1. Read project context (team size, data sensitivity, stack)
+2. Scan with applicable checks (skip non-relevant)
+3. Prioritize findings (Critical → High → Medium → Low)
+4. Present with risk labels ([safe], [risky], [extensive])
+5. You select what to fix
+6. Apply fixes, verify each one
+7. Summary: "5 done, 1 skipped, 0 failed"
+```
+
+This is **on-demand quality**—you decide when to run it, CCO ensures it's thorough and consistent.
 
 ---
 
@@ -289,7 +321,7 @@ After `cco-setup`, the following is added to `~/.claude/`:
 │   └── cco-*.md          # 11 slash commands
 ├── agents/
 │   └── cco-*.md          # 3 specialized agents
-└── CLAUDE.md             # Standards (17 categories)
+└── CLAUDE.md             # Standards (18 categories)
 ```
 
 ---
