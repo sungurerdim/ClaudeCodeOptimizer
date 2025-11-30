@@ -9,9 +9,9 @@ description: Actionable metrics dashboard
 
 ## Project Context
 
-**First:** Run `/cco-calibrate` to ensure context is loaded.
+**Follow Context Read from cco-standards Workflow section.**
 
-Read `CCO_CONTEXT_START` block from project root `CLAUDE.md` (NOT `.claude/CLAUDE.md`):
+From context apply:
 - **Applicable** - Only show relevant scores from Operational section
 - **Scale** - Adjust thresholds: <100 (relaxed), 100-10K (standard), 10K+ (strict)
 - **Type** - Emphasize relevant metrics: API (response time), CLI (startup), library (coverage)
@@ -32,9 +32,7 @@ After scores, show top 3 actionable items:
 - Highest impact, lowest effort
 - With specific file:line locations
 
-**Follow CCO Approval Flow standard from cco-standards.**
-
-Apply to: "Fix First" actionable items.
+**Follow Approval Flow from cco-standards** for "Fix First" items.
 
 ## Output
 

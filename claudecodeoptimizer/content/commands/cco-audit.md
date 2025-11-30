@@ -7,22 +7,49 @@ description: Standardized quality gates with prioritized fixes
 
 **Quality gates** - Read context → run applicable checks → prioritize → offer fixes.
 
-## Pre-Operation Safety
+## Pre-Operation
 
-Before starting:
-1. Check `git status` for uncommitted changes
-2. If dirty, AskUserQuestion: → Commit first (cco-commit) / Stash / Continue anyway
-3. This ensures safe rollback if needed
+**Follow Pre-Operation Safety from cco-standards Workflow section.**
 
 ## Project Context
 
-**First:** Run `/cco-calibrate` to ensure context is loaded.
+**Follow Context Read from cco-standards Workflow section.**
 
-Read `CCO_CONTEXT_START` block from project root `CLAUDE.md` (NOT `.claude/CLAUDE.md`):
+From context apply:
 - **Guidelines** - Follow listed guidelines
 - **Applicable** - Only run applicable checks
 - **Data** - If PII/Regulated → prioritize security issues higher
 - **Scale** - If 10K+ → prioritize performance issues higher
+
+## Default Behavior
+
+When called without flags, AskUserQuestion:
+
+```
+header: "Scope"
+question: "What scope to audit?"
+options:
+  - label: "Quick"
+    description: "Security + critical issues only"
+  - label: "Smart"
+    description: "Auto-detect applicable checks (recommended)"
+  - label: "Full"
+    description: "All checks regardless of applicability"
+```
+
+Then ask:
+
+```
+header: "Auto-fix"
+question: "Auto-fix safe issues?"
+options:
+  - label: "Yes"
+    description: "Apply safe fixes automatically"
+  - label: "No"
+    description: "Show all issues, ask before fixing"
+```
+
+Explicit flags (`--smart`, `--security`, etc.) skip these questions.
 
 ## Flow
 
@@ -30,7 +57,7 @@ Read `CCO_CONTEXT_START` block from project root `CLAUDE.md` (NOT `.claude/CLAUD
 2. **Extract Rules** - Find project docs, extract stated principles/rules
 3. **Scan** - Run checks including self-compliance
 4. **Report** - Scores, issues with file:line, priority
-5. **Fix** - Offer fixes via AskUserQuestion
+5. **Fix** - Offer fixes via approval flow
 
 ## Categories
 
@@ -56,37 +83,18 @@ Read `CCO_CONTEXT_START` block from project root `CLAUDE.md` (NOT `.claude/CLAUD
 
 ## Self-Compliance Check
 
-Detect project documentation:
-- README.md, CLAUDE.md, CONTRIBUTING.md
-- docs/, .github/, pyproject.toml, package.json
+Detect project documentation (README.md, CLAUDE.md, CONTRIBUTING.md, docs/).
 
-Extract stated:
-- Principles, goals, design decisions
-- Rules, standards, constraints
-- Required patterns, forbidden patterns
+Extract stated: Principles, goals, rules, constraints, required/forbidden patterns.
 
-Check all files against extracted rules:
-- Code matches stated principles?
-- No violations of stated rules?
-- Missing implementations of stated features?
-- Excess/unused code vs stated scope?
-
-Report as: `[SELF-COMPLIANCE] <rule> violated in <file:line>`
+Check all files against extracted rules. Report as: `[SELF-COMPLIANCE] <rule> violated in <file:line>`
 
 ## SSOT Resolution
 
 When mismatches found, AskUserQuestion for Single Source of Truth:
-
-**SSOT=docs** - Align code to documentation
-- Code is wrong, docs are right
-- Update code to match stated rules
-
-**SSOT=code** - Align documentation to code
-- Code is right, docs are outdated
-- Update docs to match actual implementation
-
-**SSOT=discuss** - Need to decide
-- Show both sides, ask user to choose direction
+- **SSOT=docs** - Align code to documentation
+- **SSOT=code** - Align documentation to code
+- **SSOT=discuss** - Need to decide
 
 ## Meta-flags
 
@@ -99,33 +107,16 @@ When mismatches found, AskUserQuestion for Single Source of Truth:
 
 ## Priority Scoring
 
-Each issue gets priority based on impact/effort ratio:
 - **CRITICAL** - Security vulnerabilities, data exposure (fix immediately)
 - **HIGH** - High impact, low effort (fix first)
 - **MEDIUM** - Balanced impact/effort
 - **LOW** - Low impact or high effort (fix if time permits)
 
-Output sorted by priority, grouped by category.
+## Fix Approval
 
-## Fix Approval Process
+**Follow Approval Flow from cco-standards.**
 
-**Follow CCO Approval Flow standard from cco-standards.**
-
-Apply to: issues found during audit.
-
-## Fix Behavior
-
-**Safe (auto-apply with --auto-fix):**
-- Parameterize SQL queries
-- Remove unused imports/code
-- Move secrets to env vars
-- Fix linting issues
-
-**Risky (always require approval):**
-- Auth/CSRF changes
-- DB schema changes
-- API contract changes
-- Self-compliance fixes (may need design decision)
+**Follow Safety Classification from cco-standards Workflow section** for safe vs risky determination.
 
 ## Verification
 
@@ -134,7 +125,8 @@ After fixes: done + skip + fail + cannot_do = total
 ## Usage
 
 ```bash
-/cco-audit --smart
-/cco-audit --self-compliance
+/cco-audit                   # Interactive: ask scope + auto-fix
+/cco-audit --smart           # Auto-detect applicable
+/cco-audit --self-compliance # Check against project's own rules
 /cco-audit --critical --auto-fix
 ```

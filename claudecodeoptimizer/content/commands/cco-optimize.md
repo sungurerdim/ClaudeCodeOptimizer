@@ -7,19 +7,36 @@ description: Measurable efficiency improvements
 
 **Efficiency optimization** - Reduce waste → improve efficiency → measure impact → verify.
 
-## Pre-Operation Safety
+## Pre-Operation
 
-If uncommitted changes exist, AskUserQuestion:
-→ Commit first (cco-commit) / Stash / Continue anyway
+**Follow Pre-Operation Safety from cco-standards Workflow section.**
 
 ## Project Context
 
-**First:** Run `/cco-calibrate` to ensure context is loaded.
+**Follow Context Read from cco-standards Workflow section.**
 
-Read `CCO_CONTEXT_START` block from project root `CLAUDE.md` (NOT `.claude/CLAUDE.md`):
+From context apply:
 - **Guidelines** - Follow listed guidelines
 - **Scale** - If 10K+ → prioritize performance optimizations
 - **Type** - CLI: startup time, API: response time, library: memory footprint
+
+## Default Behavior
+
+When called without flags, AskUserQuestion:
+
+```
+header: "Mode"
+question: "Optimization mode?"
+options:
+  - label: "Conservative"
+    description: "Safe changes only, auto-apply"
+  - label: "Balanced"
+    description: "Safe + low-risk (recommended)"
+  - label: "Aggressive"
+    description: "All optimizations, requires review"
+```
+
+Explicit flags (`--conservative`, `--balanced`, `--aggressive`) skip this question.
 
 ## Categories
 
@@ -45,19 +62,12 @@ Show impact after optimization:
 - Lines: before → after (% reduction)
 - Tokens: before → after (for context files)
 - Complexity: before → after (for code)
-- Readability: before → after (if applicable)
-
-## Modes
-
-- `--conservative` - Safe changes only (auto-apply)
-- `--balanced` - Safe + low-risk (default)
-- `--aggressive` - All optimizations (requires review)
 
 ## Approval Flow
 
-**Follow CCO Approval Flow standard from cco-standards.**
+**Follow Approval Flow from cco-standards.**
 
-Apply to: optimizations found during analysis.
+**Follow Safety Classification from cco-standards Workflow section.**
 
 ## Verification
 
@@ -70,8 +80,8 @@ After optimization:
 ## Usage
 
 ```bash
-/cco-optimize --context
-/cco-optimize --code-quality
-/cco-optimize --code-efficiency
-/cco-optimize --all --balanced
+/cco-optimize                  # Interactive: ask mode
+/cco-optimize --context        # Context file optimization
+/cco-optimize --code-quality   # Dead code removal
+/cco-optimize --all --balanced # All categories, balanced mode
 ```

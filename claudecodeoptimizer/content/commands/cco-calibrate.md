@@ -7,46 +7,15 @@ description: Calibrate AI recommendations to project context
 
 **Project calibration** - Auto-detect + confirm project context for calibrated AI recommendations.
 
-All context-aware commands (review, audit, optimize, refactor) run this first.
+All context-aware commands (review, audit, optimize, refactor) read context from here.
 
-## Step 1: Check Existing Context
+## Default Behavior
 
-```bash
-grep -A20 "CCO_CONTEXT_START" ./CLAUDE.md 2>/dev/null
-```
+### If Context Exists
 
-If context exists, **first display it clearly to the user**, then ask for confirmation:
-
-**Display format:**
+Display current context clearly, then ask:
 
 ```
-### Current Project Context
-
-| Field | Value |
-|-------|-------|
-| Purpose | {purpose from context} |
-| Team | {team} |
-| Scale | {scale} |
-| Data | {data} |
-| Compliance | {compliance} |
-| Stack | {stack} |
-| Type | {type} |
-| Database | {db} |
-| Rollback | {rollback} |
-
-**Guidelines:**
-- {guideline 1}
-- {guideline 2}
-...
-
-**Tools:** {tools}
-**Applicable:** {applicable checks}
-```
-
-Then ask:
-
-```
-AskUserQuestion:
 header: "Context"
 question: "Use this context or update it?"
 options:
@@ -56,12 +25,52 @@ options:
     description: "Re-detect and confirm all values"
 ```
 
-If "Use as-is" → skip to Step 7 (context already complete).
-If "Update" → continue to Step 2 (full re-detection).
+If "Use as-is" → display status and exit.
+If "Update" → continue to detection flow.
 
-## Step 2: Run Detection
+### If No Context
 
-Run `cco-agent-detect` with `scope: full` to get complete project analysis:
+Run full detection → confirm → store → display status.
+
+## Step 1: Installation Check
+
+Verify CCO installation:
+- Commands in ~/.claude/commands/cco-*.md
+- Agents in ~/.claude/agents/cco-*.md
+- Standards in ~/.claude/CLAUDE.md
+
+If issues found, show:
+```
+CCO Status: WARNING
+  Commands: {count}/10
+  Agents: {count}/3
+  Standards: {OK|MISSING}
+
+→ Run: pip install claudecodeoptimizer && cco-setup
+```
+
+## Step 2: Config Health Check
+
+Check both global (~/.claude/) and local (./.claude/) scopes:
+
+**settings.json:**
+- JSON syntax valid
+- No conflicting rules (same pattern in allow and deny)
+- Dangerous commands properly denied
+
+**statusline.js:**
+- JavaScript syntax valid (if exists)
+
+If issues found, show:
+```
+Config Issues:
+  ⚠ {scope} settings.json: {issue}
+→ Run /cco-config to fix
+```
+
+## Step 3: Run Detection
+
+Run `cco-agent-detect` with `scope: full`:
 
 **Technical:**
 - Stack (languages, frameworks, databases, infrastructure, cicd, testing)
@@ -72,74 +81,45 @@ Run `cco-agent-detect` with `scope: full` to get complete project analysis:
 **Strategic:**
 - Purpose, Team, Scale, Data, Type, Rollback
 
-All detection logic lives in the detect agent. Calibrate command only processes results.
+## Step 4: Confirm Values
 
-## Step 3: Confirm All Values
-
-Present detected values for user confirmation. Show detect agent results as defaults.
+Present detected values for user confirmation:
 
 ```
-AskUserQuestion (single call, all questions):
+AskUserQuestion (single call):
 
 Q1 - header: "Purpose"
 question: "What is the project's purpose?"
 (Show detected value, allow edit)
 
 Q2 - header: "Team"
-question: "Team size?"
 options: Solo | 2-5 | 6+ (pre-select detected)
 
 Q3 - header: "Scale"
-question: "Expected user scale?"
 options: <100 | 100-10K | 10K+ (pre-select detected)
 
 Q4 - header: "Data"
-question: "Most sensitive data handled?"
 options: Public | Internal | PII | Regulated (pre-select detected)
-
-Q5 - header: "Compliance" (skip if Data=Public)
-question: "Compliance requirements?"
-multiSelect: true
-options: None | GDPR | SOC2 | HIPAA | PCI-DSS
-
-Q6 - header: "Stack"
-question: "Tech stack?"
-(Show detected, allow correction)
-
-Q7 - header: "Type"
-question: "Project type?"
-options: backend-api | frontend | fullstack | cli | library | mobile | desktop
-
-Q8 - header: "Database"
-question: "Database type?"
-options: None | SQL | NoSQL (pre-select detected)
-
-Q9 - header: "Rollback"
-question: "Rollback complexity?"
-options: Git | DB | User-data (pre-select detected)
 ```
 
-Detection logic is in `cco-agent-detect`. This step only confirms.
+Additional questions if needed: Compliance, Stack, Type, Database, Rollback.
 
-## Step 4: Generate Guidelines
+## Step 5: Generate Guidelines
 
-Based on confirmed values, generate strategic guidelines:
+Based on confirmed values:
 
 | If Value | Add Guideline |
 |----------|---------------|
 | Team: solo | Self-review sufficient, aggressive refactors OK |
 | Team: 2-5 | Informal review recommended, document key decisions |
-| Team: 6+ | Formal review required, consider change impact on others |
+| Team: 6+ | Formal review required, consider change impact |
 | Scale: <100 | Simple solutions preferred, optimize for clarity |
 | Scale: 100-10K | Add monitoring, consider caching |
 | Scale: 10K+ | Performance critical, load test changes |
 | Data: public | Basic input validation sufficient |
 | Data: internal | Add authentication, audit logs |
-| Data: pii | Encryption required, minimize data retention |
+| Data: pii | Encryption required, minimize retention |
 | Data: regulated | Full compliance controls, external audit trail |
-| Compliance: gdpr | Data deletion capability, consent tracking |
-| Compliance: hipaa | PHI encryption, access logging |
-| Compliance: pci-dss | No card data in logs, secure key management |
 | Type: library | API stability critical, semantic versioning |
 | Type: cli | Clear error messages, help documentation |
 | DB: sql | Plan migrations, backward compatible changes |
@@ -147,18 +127,11 @@ Based on confirmed values, generate strategic guidelines:
 | Rollback: db | Test rollback scripts, staged deployments |
 | Rollback: user-data | Backup before changes, soft deletes preferred |
 
-## Step 5: Store in Project Root CLAUDE.md
+## Step 6: Store Context
 
 Insert or replace context block in project root `CLAUDE.md`:
 
-**Path:** `{project_root}/CLAUDE.md` (e.g., `/home/user/myproject/CLAUDE.md`)
-
-**CRITICAL - Correct vs Wrong paths:**
-- ✅ CORRECT: `./CLAUDE.md` or `CLAUDE.md` (project root)
-- ❌ WRONG: `./.claude/CLAUDE.md` or `.claude/CLAUDE.md`
-- ❌ WRONG: `~/.claude/CLAUDE.md` (global, not project-specific)
-
-The `.claude/` directory is for Claude Code settings (statusline.js, settings.json), NOT for CLAUDE.md.
+**Path:** `{project_root}/CLAUDE.md` (NOT `.claude/CLAUDE.md`)
 
 ```markdown
 <!-- CCO_CONTEXT_START -->
@@ -172,7 +145,7 @@ Stack: {stack} | Type: {type} | DB: {db} | Rollback: {rollback}
 - {generated guideline 2}
 ...
 
-## Operational (from detect agent)
+## Operational
 Tools: {format}, {lint}, {test}
 Conventions: {testNaming}, {importStyle}
 Applicable: {applicable checks list}
@@ -180,46 +153,44 @@ Not Applicable: {not applicable checks list}
 <!-- CCO_CONTEXT_END -->
 ```
 
-**IMPORTANT:** Store ONLY the template above. Do NOT add:
-- Development instructions (belongs in README)
-- Setup commands (belongs in README)
-- Any sections outside the template
+## Step 7: Display Status
 
-If block exists → replace. If not → append after first heading.
+Show complete status:
 
-## Step 6: Offer Documentation Updates
+```
+CCO Status: OK
+Location: ~/.claude/
+Commands: 10 | Agents: 3 | Standards: inline
 
-If gaps were found in project docs:
+Project Context: OK
+  Team: {team} | Scale: {scale} | Type: {type}
+  Applicable: {count} checks
 
-**Follow CCO Approval Flow standard from cco-standards.**
+Config Health:
+  Global settings.json: OK
+  Local settings.json: {OK|not configured}
 
-Apply to: documentation updates based on detected gaps.
+Quick start: /cco-audit --smart
+```
 
-## Step 7: Proceed
-
-Context is now available in project root `CLAUDE.md`. Commands read and apply it.
-
----
-
-## Context Usage in Commands
+## Context Usage
 
 All commands MUST:
-
-1. Read `<!-- CCO_CONTEXT_START -->` block from project root `CLAUDE.md` (NOT `.claude/CLAUDE.md`)
+1. Read `<!-- CCO_CONTEXT_START -->` block from project root `CLAUDE.md`
 2. Follow the Guidelines listed in context
 3. Reference context when making recommendations
 
-### Recommendation Format
+## Anti-patterns
 
-```
-[Recommendation]
-↳ Guideline: {relevant guideline from context}
-```
-
-### Anti-patterns
-
-- ❌ Ignoring context Guidelines
-- ❌ Applying universal "best practices"
-- ❌ Treating documented architecture as "correct"
+- Ignoring context Guidelines
+- Applying universal "best practices"
+- Treating documented architecture as "correct"
 
 **Principle:** Guidelines in context define the rules. Commands follow them.
+
+## Usage
+
+```bash
+/cco-calibrate           # Full flow or status display
+/cco-calibrate --update  # Force re-detection
+```

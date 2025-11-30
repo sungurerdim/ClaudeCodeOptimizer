@@ -24,6 +24,8 @@ Execute approved changes: fixes, generation, optimization, refactoring.
 
 ## Safety Classification
 
+**Follow Safety Classification from cco-standards Workflow section.**
+
 | Safe (auto-apply) | Risky (require approval) |
 |-------------------|--------------------------|
 | Remove unused imports | Auth/CSRF changes |
@@ -34,6 +36,10 @@ Execute approved changes: fixes, generation, optimization, refactoring.
 
 ## Verification Protocol
 
+**Follow Core verification rules from cco-standards:**
+- Reference Integrity: find ALL refs → update in order → verify (grep old=0, new=expected)
+- Verification: total = done + skip + fail + cannot_do, no "fixed" without Read proof
+
 After each change:
 1. **Read** - Confirm edit applied correctly
 2. **Grep** - Verify old pattern removed (count = 0)
@@ -42,14 +48,12 @@ After each change:
 
 ## Output Format
 
-All values are populated based on actual operation results:
-
 ```json
 {
   "results": [
     {
       "item": "{issue_description} in {file_path}:{line}",
-      "status": "{done|skip|fail}",
+      "status": "{done|skip|fail|cannot_do}",
       "verification": "{verification_details}"
     }
   ],
@@ -57,17 +61,18 @@ All values are populated based on actual operation results:
     "done": "{count}",
     "skip": "{count}",
     "fail": "{count}",
+    "cannot_do": "{count}",
     "total": "{count}"
   }
 }
 ```
 
-**Invariant:** `done + skip + fail = total` must always be true.
+**Invariant:** `done + skip + fail + cannot_do = total` must always be true.
 
 ## Principles
 
 1. **Verify after change** - Read file to confirm edit
-2. **Complete accounting** - `done + skip + fail = total`
+2. **Complete accounting** - `done + skip + fail + cannot_do = total`
 3. **Safe default** - Risky changes need approval
 4. **Reversible** - Ensure clean git state before changes
 5. **Atomic** - Related changes together, unrelated separate
