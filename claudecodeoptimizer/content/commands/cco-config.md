@@ -169,27 +169,7 @@ const CONFIG = {
   emojiWidth: 2,        // Terminal emoji width (1 or 2, try 1 if alignment is off)
 };
 
-// ============================================================================
-// ICONS
-// ============================================================================
-const ICON = {
-  user: '👤',
-  folder: '📁',
-  model: '🤖',
-  cc: '🔷',
-  repo: '🔗',
-  stage: '📤',
-  commit: '📦',
-  push: '🚀',
-  modified: '📝',
-  new: '✨',
-  deleted: '🗑️',
-  renamed: '📎',
-  conflict: '⚠️',
-  stash: '📚',
-  time: '🕐',
-  lastCommit: '⏰',
-};
+const ICON = { user: '👤', folder: '📁', model: '🤖', repo: '🔗' };
 
 // ============================================================================
 // BOX DRAWING
@@ -248,6 +228,15 @@ function padLeft(str, len) {
   return visible >= len ? str : ' '.repeat(len - visible) + str;
 }
 
+function padCenter(str, len) {
+  const visible = getVisibleLength(str);
+  if (visible >= len) return str;
+  const total = len - visible;
+  const left = Math.floor(total / 2);
+  const right = total - left;
+  return ' '.repeat(left) + str + ' '.repeat(right);
+}
+
 function execCmd(cmd) {
   try {
     return execSync(cmd, { encoding: 'utf-8', stdio: ['pipe', 'pipe', 'ignore'], timeout: 3000 }).replace(/\n$/, '');
@@ -278,11 +267,11 @@ function getClaudeCodeVersion() {
 // ============================================================================
 function formatBytes(bytes) {
   if (bytes >= 1073741824) {
-    return (bytes / 1073741824).toFixed(1) + 'G';
+    return (bytes / 1073741824).toFixed(1) + 'GB';
   } else if (bytes >= 1048576) {
-    return (bytes / 1048576).toFixed(1) + 'M';
+    return (bytes / 1048576).toFixed(1) + 'MB';
   } else if (bytes >= 1024) {
-    return (bytes / 1024).toFixed(0) + 'K';
+    return (bytes / 1024).toFixed(0) + 'KB';
   }
   return bytes + 'B';
 }
@@ -479,10 +468,10 @@ function formatStatusline(input, git) {
 
     row2 = [
       `${ICON.repo} ${c(git.branch, 'green')}`,
-      `${c('Conflicts:', issueColor)} ${c(String(git.conflict), issueColor)}`,
-      `${c('Stash:', savedColor)} ${c(String(git.stash), savedColor)}`,
-      `${c('Ahead:', syncColor)} ${c(String(git.unpushed), syncColor)}`,
-      `${c('Last:', 'gray')} ${c(lastCommitShort, 'gray')}`
+      `${c('Conf', issueColor)} ${c(String(git.conflict), issueColor)}`,
+      `${c('Stash', savedColor)} ${c(String(git.stash), savedColor)}`,
+      `${c('Ahead', syncColor)} ${c(String(git.unpushed), syncColor)}`,
+      `${c('Last', 'gray')} ${c(lastCommitShort, 'gray')}`
     ];
   } else {
     row2 = [
@@ -539,7 +528,7 @@ function formatStatusline(input, git) {
         maxWidth = Math.max(maxWidth, getVisibleLength(row[i]));
       }
     }
-    colWidths[i] = maxWidth + 1;
+    colWidths[i] = maxWidth;
   }
 
   // ─────────────────────────────────────────────────────────────────────────
@@ -548,12 +537,15 @@ function formatStatusline(input, git) {
   const lines = [];
 
   // Helper to build a row with columns
-  function buildRow(cells, leftChar, sepChar, rightChar) {
+  // centerExceptFirst: if true, first cell left-aligned, others centered; if false, all left-aligned
+  function buildRow(cells, leftChar, sepChar, rightChar, centerExceptFirst = false) {
     let result = c(leftChar, 'gray');
     for (let i = 0; i < cells.length; i++) {
       const content = cells[i];
-      const pad = colWidths[i] - getVisibleLength(content);
-      result += ` ${content}${' '.repeat(pad)}`;
+      const padded = (centerExceptFirst && i > 0)
+        ? padCenter(content, colWidths[i])
+        : padRight(content, colWidths[i]);
+      result += ` ${padded} `;
       if (i < cells.length - 1) {
         result += c(sepChar, 'gray');
       }
@@ -566,7 +558,7 @@ function formatStatusline(input, git) {
   function buildSep(leftChar, midChar, rightChar, fillChar) {
     let result = c(leftChar, 'gray');
     for (let i = 0; i < colWidths.length; i++) {
-      result += c(fillChar.repeat(colWidths[i] + 1), 'gray');
+      result += c(fillChar.repeat(colWidths[i] + 2), 'gray');
       if (i < colWidths.length - 1) {
         result += c(midChar, 'gray');
       }
@@ -575,8 +567,8 @@ function formatStatusline(input, git) {
     return result;
   }
 
-  // Title row (same structure as buildRow, but with space/| instead of │)
-  lines.push(buildRow(row1, ' ', c('|', 'gray'), ' '));
+  // Title row (first cell left-aligned, others centered)
+  lines.push(buildRow(row1, ' ', c('|', 'gray'), ' ', true));
 
   // Top border of table
   lines.push(buildSep('┌', '┬', '┐', '─'));
@@ -637,7 +629,7 @@ Target: `{scope}/settings.json`
 | Permissive | ✓ | ✓ | ✓ | Minimal prompts, trusted projects |
 
 **Agent tool requirements:**
-- `cco-agent-detect`: Read, Glob, Grep (all read-only)
+- `cco-agent-detect`: Read, Glob, Grep, Bash (read-only: git shortlog, git log for team detection)
 - `cco-agent-scan`: + Bash (read-only: ruff check, pytest --collect-only, git log)
 - `cco-agent-action`: + Edit, Write, NotebookEdit, Bash (format, lint, test runners)
 
