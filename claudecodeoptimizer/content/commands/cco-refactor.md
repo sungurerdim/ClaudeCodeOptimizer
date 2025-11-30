@@ -20,6 +20,8 @@ Requires clean git state. If uncommitted changes exist → Commit / Stash / Canc
 From context apply:
 - **Rollback** - If DB/User-data → extra caution, suggest backup first
 - **Type** - Library: warn about public API changes
+- **Breaking** - If Never → require deprecation path; if Allowed → clean rename OK
+- **Maturity** - If Legacy → prefer wrap over modify; if Greenfield → aggressive OK
 
 ## Flow
 

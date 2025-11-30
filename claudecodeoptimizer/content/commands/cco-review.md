@@ -15,6 +15,11 @@ description: Strategic architecture review with fresh perspective
 
 **Follow Context Read from cco-standards Workflow section.**
 
+From context apply:
+- **Maturity** - If Legacy → focus on safe incremental improvements; if Greenfield → can suggest restructuring
+- **Breaking** - If Never → flag any interface changes; if Allowed → suggest API simplifications
+- **Priority** - If Speed → quick wins only; if Quality → comprehensive analysis
+
 ## Flow
 
 1. **Map Current State** - Analyze architecture, patterns, dependencies

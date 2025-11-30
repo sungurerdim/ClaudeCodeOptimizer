@@ -68,6 +68,28 @@ Detect ALL languages, frameworks, databases dynamically from project files.
 | namingStyle | Analyze function/variable names |
 | docStyle | Analyze existing documentation |
 
+## Auto-Detected Flags
+
+Detect project characteristics without user input. These inform applicable checks and guidelines.
+
+| Flag | Detection Method | Output |
+|------|------------------|--------|
+| **monorepo** | `packages/`, `apps/`, `lerna.json`, `nx.json`, `pnpm-workspace.yaml` | `true` / `false` |
+| **preCommitHooks** | `.pre-commit-config.yaml`, `.husky/`, `package.json:husky` | `true` / `false` |
+| **currentCoverage** | Parse `coverage/`, `.coverage`, `lcov.info`, CI badges | `0-100` or `null` |
+| **lintingConfigured** | `.eslintrc*`, `ruff.toml`, `pyproject.toml[tool.ruff]`, `.pylintrc` | `true` / `false` |
+| **apiEndpoints** | `@app.route`, `@Get()`, `router.get`, `openapi.yaml`, `swagger.json` | `true` / `false` |
+| **containerSetup** | `Dockerfile`, `docker-compose.yml`, `k8s/`, `helm/` | `true` / `false` |
+| **i18nSetup** | `locales/`, `i18n/`, `*.po`, `messages.json`, `react-intl` | `true` / `false` |
+| **authPatterns** | JWT imports, OAuth config, `passport`, session middleware | `true` / `false` |
+| **licenseType** | `LICENSE` file, `package.json:license`, `pyproject.toml:license` | `"MIT"` / `"Apache-2.0"` / `"GPL"` / `null` |
+| **secretsDetected** | `.env` in git, hardcoded API keys, `password=` patterns | `true` / `false` |
+| **depsOutdated** | `npm outdated --json`, `pip list --outdated --format=json` (count) | `0-N` or `null` |
+| **gitDefaultBranch** | `git symbolic-ref refs/remotes/origin/HEAD` | `"main"` / `"master"` / `null` |
+| **hasReadme** | `README.md`, `README.rst`, `README` exists | `true` / `false` |
+| **hasChangelog** | `CHANGELOG.md`, `HISTORY.md`, `CHANGES` exists | `true` / `false` |
+| **deadCodeRisk** | Exports without imports, unused dependencies | `"low"` / `"medium"` / `"high"` |
+
 ## Applicable Checks
 
 Based on detected stack, determine which audit categories apply:
@@ -118,6 +140,23 @@ Based on detected stack, determine which audit categories apply:
     "data": "{public|internal|pii|regulated}",
     "type": "{detected_type}",
     "rollback": "{git|db|user-data}"
+  },
+  "autoDetected": {
+    "monorepo": false,
+    "preCommitHooks": true,
+    "currentCoverage": 78,
+    "lintingConfigured": true,
+    "apiEndpoints": false,
+    "containerSetup": false,
+    "i18nSetup": false,
+    "authPatterns": false,
+    "licenseType": "MIT",
+    "secretsDetected": false,
+    "depsOutdated": 3,
+    "gitDefaultBranch": "main",
+    "hasReadme": true,
+    "hasChangelog": false,
+    "deadCodeRisk": "low"
   }
 }
 ```

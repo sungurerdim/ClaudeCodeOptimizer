@@ -49,6 +49,15 @@ Different projects have different needs. A solo side project doesn't need the sa
 4. **Store** - Context saved to your project's `CLAUDE.md`
 5. **Status** - Display complete CCO status and next steps
 
+**What gets confirmed (12 questions):**
+
+| Call | Questions |
+|------|-----------|
+| Core | Purpose, Team, Scale, Data |
+| Technical | Stack, Type, Database, Rollback |
+| Approach | Maturity, Breaking Changes, Priority |
+| Compliance | Requirements (if Data≠Public) |
+
 **Example thresholds:**
 
 | Context | Effect |
@@ -56,7 +65,13 @@ Different projects have different needs. A solo side project doesn't need the sa
 | Solo developer | Self-review sufficient, simpler solutions preferred |
 | Team of 6+ | Formal review patterns, stricter quality gates |
 | Handles PII | Security checks prioritized, encryption guidance |
-| Public API | API stability warnings, versioning reminders |
+| Maturity: Legacy | Wrap don't modify, strangler pattern preferred |
+| Priority: Speed | MVP mindset, ship fast, iterate |
+| Breaking: Never | Adapters required, full backward compatibility |
+
+**Auto-detected (no questions asked):**
+
+Monorepo structure, pre-commit hooks, current coverage, linting setup, API endpoints, containers, i18n, auth patterns, license type, secrets in repo, outdated deps.
 
 **Stored format:**
 
@@ -65,7 +80,8 @@ Different projects have different needs. A solo side project doesn't need the sa
 ## Strategic Context
 Purpose: {detected}
 Team: {Solo|2-5|6+} | Scale: {<100|100-10K|10K+} | Data: {Public|PII|Regulated}
-Stack: {detected} | Type: {detected}
+Stack: {detected} | Type: {detected} | DB: {None|SQL|NoSQL} | Rollback: {Git|DB|User-data}
+Maturity: {Greenfield|Active|Maintenance|Legacy} | Breaking: {Allowed|Minimize|Never} | Priority: {Speed|Balanced|Quality}
 
 ## Guidelines
 - {context-specific guidance}
@@ -73,6 +89,10 @@ Stack: {detected} | Type: {detected}
 ## Operational
 Tools: {format}, {lint}, {test}
 Applicable: {checks list}
+
+## Auto-Detected
+Structure: {monorepo|single-repo} | Hooks: {pre-commit|none} | Coverage: {N%}
+License: {type} | Secrets: {yes|no} | Outdated: {N deps}
 <!-- CCO_CONTEXT_END -->
 ```
 

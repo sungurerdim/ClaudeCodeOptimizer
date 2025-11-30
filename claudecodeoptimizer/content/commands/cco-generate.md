@@ -19,6 +19,8 @@ From context apply:
 - **Conventions** - Use testNaming, importStyle from Operational section
 - **Type** - Adapt templates: CLI (argparse/click), API (endpoints), frontend (components)
 - **Stack** - Use detected frameworks for idiomatic generation
+- **Priority** - If Speed → minimal scaffolding; if Quality → comprehensive with edge cases
+- **Maturity** - If Legacy → match existing patterns exactly; if Greenfield → use modern idioms
 
 ## Types
 
