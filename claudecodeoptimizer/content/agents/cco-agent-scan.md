@@ -62,6 +62,22 @@ Analyze codebase for issues, metrics, and patterns without modification.
 | techDebt | 100 - (complexity_violations×5 + dead_code_ratio×2), min 0 |
 | coverage | Direct from coverage tool output, or estimated from test file ratio |
 
+### Calculation Details
+
+**complexity_violations:** Count of functions with cyclomatic complexity > 10
+- Use AST analysis or tool output (radon, eslint, gocyclo)
+- Each violation = 5 points deduction
+
+**dead_code_ratio:** Percentage of unused code (0-100)
+- Count: unused imports + unused functions + unused variables
+- Ratio = (unused_items / total_items) × 100
+- Each 1% = 2 points deduction
+
+**coverage estimation** (when no tool output):
+- Count test files matching patterns (`test_*.py`, `*.test.ts`, etc.)
+- Estimate = (test_files / source_files) × 80, capped at 80
+- Note: Always prefer actual coverage tool output when available
+
 ## Priority Rules
 
 | Priority | Criteria |
