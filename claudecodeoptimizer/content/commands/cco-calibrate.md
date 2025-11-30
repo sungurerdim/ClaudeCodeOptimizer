@@ -42,7 +42,7 @@ Verify CCO installation:
 If issues found, show:
 ```
 CCO Status: WARNING
-  Commands: {count}/10
+  Commands: {count}/9
   Agents: {count}/3
   Standards: {OK|MISSING}
 
@@ -160,7 +160,7 @@ Show complete status:
 ```
 CCO Status: OK
 Location: ~/.claude/
-Commands: 10 | Agents: 3 | Standards: inline
+Commands: 9 | Agents: 3 | Standards: inline
 
 Project Context: OK
   Team: {team} | Scale: {scale} | Type: {type}

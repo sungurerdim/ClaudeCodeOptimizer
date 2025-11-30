@@ -24,6 +24,7 @@
 - Paths: forward slash (/), relative, quote spaces
 - Reference Integrity: find ALL refs → update in order → verify (grep old=0, new=expected)
 - Verification: total = done + skip + fail + cannot_do, no "fixed" without Read proof
+- Error Format: `❌ {What} → ↳ {Why} → → {Fix}` (consistent across all commands)
 
 ## Approval Flow (all commands)
 - Single call, 4 tabs: one AskUserQuestion with 4 questions max (Critical/High/Medium/Low)

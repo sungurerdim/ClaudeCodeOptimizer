@@ -43,9 +43,8 @@ class TestMain:
         captured = capsys.readouterr()
         assert "CCO v" in captured.out
         assert "cco-setup" in captured.out
-        assert "cco-status" in captured.out
         assert "cco-remove" in captured.out
-        assert "/cco-help" in captured.out
+        assert "/cco-calibrate" in captured.out
 
 
 if __name__ == "__main__":

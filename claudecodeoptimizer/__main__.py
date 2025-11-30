@@ -16,10 +16,9 @@ def main() -> None:
     print("Commands, agents, and standards for Claude Code")
     print()
     print("Setup:   cco-setup")
-    print("Status:  cco-status")
     print("Remove:  cco-remove")
     print()
-    print("In Claude Code: /cco-help")
+    print("In Claude Code: /cco-calibrate")
 
 
 if __name__ == "__main__":

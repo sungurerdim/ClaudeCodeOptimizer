@@ -47,6 +47,47 @@ Use conventions from context (stored in Operational section):
 
 Follow stored conventions, don't impose new ones.
 
+## Generation Guidelines
+
+### Tests (`--tests`)
+
+Analyze existing test patterns first:
+1. Discover test directory structure (`tests/`, `test/`, `__tests__/`, `*.test.*`)
+2. Match naming convention (`test_*.py`, `*.test.ts`, `*_test.go`)
+3. Use same assertion library (pytest, jest, testing, etc.)
+4. Follow AAA pattern: Arrange → Act → Assert
+
+Generate for:
+- Public functions without tests
+- Edge cases for existing tested functions
+- Integration tests for API endpoints
+
+### Documentation (`--openapi`, `--docs`)
+
+**OpenAPI:** Extract from code:
+- Route decorators/handlers → paths
+- Request/response types → schemas
+- Validation rules → constraints
+- Auth middleware → security schemes
+
+**Docstrings:** Match existing style:
+- Google style, NumPy style, or JSDoc
+- Include types if not using type annotations
+- Document exceptions/errors
+
+### Infrastructure (`--cicd`, `--dockerfile`)
+
+**CI/CD:** Detect platform and create:
+- `.github/workflows/ci.yml` for GitHub
+- `.gitlab-ci.yml` for GitLab
+- Include: lint → test → build stages
+
+**Dockerfile:** Multi-stage build:
+- Base image from stack detection
+- Dev dependencies in build stage only
+- Non-root user in final stage
+- Health check if applicable
+
 ## Verification
 
 After generation:
