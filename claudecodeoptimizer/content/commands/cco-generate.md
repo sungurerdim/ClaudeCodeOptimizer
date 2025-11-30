@@ -7,16 +7,15 @@ description: Convention-following automated generation
 
 **Convention-following generation** - Read conventions from context → generate consistent components.
 
-## Pre-Operation Safety
+## Pre-Operation
 
-If uncommitted changes exist, AskUserQuestion:
-→ Commit first (cco-commit) / Stash / Continue anyway
+**Follow Pre-Operation Safety from cco-standards Workflow section.**
 
 ## Project Context
 
-**First:** Run `/cco-calibrate` to ensure context is loaded.
+**Follow Context Read from cco-standards Workflow section.**
 
-Read `CCO_CONTEXT_START` block from project root `CLAUDE.md` (NOT `.claude/CLAUDE.md`):
+From context apply:
 - **Conventions** - Use testNaming, importStyle from Operational section
 - **Type** - Adapt templates: CLI (argparse/click), API (endpoints), frontend (components)
 - **Stack** - Use detected frameworks for idiomatic generation

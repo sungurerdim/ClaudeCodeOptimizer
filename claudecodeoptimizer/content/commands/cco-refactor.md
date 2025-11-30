@@ -7,17 +7,17 @@ description: Verified transformations with rollback
 
 **Risk mitigation** - Find ALL references → transform in order → verify → rollback on failure.
 
-## Pre-Operation Safety
+## Pre-Operation
 
-Requires clean git state. If uncommitted changes exist, AskUserQuestion:
-→ Commit first (cco-commit) / Stash / Cancel
+**Follow Pre-Operation Safety from cco-standards Workflow section.**
+
+Requires clean git state. If uncommitted changes exist → Commit / Stash / Cancel
 
 ## Project Context
 
-**First:** Run `/cco-calibrate` to ensure context is loaded.
+**Follow Context Read from cco-standards Workflow section.**
 
-Read `CCO_CONTEXT_START` block from project root `CLAUDE.md` (NOT `.claude/CLAUDE.md`):
-- **Guidelines** - Follow listed guidelines
+From context apply:
 - **Rollback** - If DB/User-data → extra caution, suggest backup first
 - **Type** - Library: warn about public API changes
 
@@ -36,6 +36,8 @@ After each file change:
 - If mismatch: rollback, report which file failed
 - Continue only if all checks pass
 
+**Follow Core verification rules from cco-standards.**
+
 ## Operations
 
 ```bash
@@ -44,8 +46,6 @@ After each file change:
 /cco-refactor extract "{code_block}" {new_module}
 /cco-refactor inline {function_name}
 ```
-
-All operations work with any file type - paths and names are detected from your project.
 
 ## Rollback
 

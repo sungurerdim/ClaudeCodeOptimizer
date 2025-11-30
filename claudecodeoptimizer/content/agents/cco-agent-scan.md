@@ -24,19 +24,17 @@ Analyze codebase for issues, metrics, and patterns without modification.
 | Hygiene | Old TODOs (>30 days), hardcoded values, orphan imports |
 | Self-Compliance | Violations of project's stated rules in docs |
 
-## Output Format
-
-All values are populated based on actual scan results:
+## Output Format (JSON Schema)
 
 ```json
 {
   "findings": [
     {
-      "category": "{detected_category}",
+      "category": "{category}",
       "priority": "{critical|high|medium|low}",
-      "title": "{issue_title}",
-      "location": "{file_path}:{line_number}",
-      "details": "{issue_description}",
+      "title": "{title}",
+      "location": "{file_path}:{line}",
+      "details": "{description}",
       "fixable": true | false,
       "safe": true | false
     }
@@ -55,6 +53,14 @@ All values are populated based on actual scan results:
   }
 }
 ```
+
+## Metrics Calculation
+
+| Metric | Calculation |
+|--------|-------------|
+| security | 100 - (critical×25 + high×10 + medium×5 + low×1), min 0 |
+| techDebt | 100 - (complexity_violations×5 + dead_code_ratio×2), min 0 |
+| coverage | Direct from coverage tool output, or estimated from test file ratio |
 
 ## Priority Rules
 

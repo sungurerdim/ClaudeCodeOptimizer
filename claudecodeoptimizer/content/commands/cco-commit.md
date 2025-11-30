@@ -9,13 +9,13 @@ description: Atomic traceable change management
 
 ## Pre-Commit Quality Gates
 
-Before committing, automatically run quality checks:
+Before committing, automatically run quality checks.
 
 ### Tool Resolution
 
 **Priority order:**
 
-1. **CCO Context** (preferred) - Read from project root `CLAUDE.md` (NOT `.claude/CLAUDE.md`):
+1. **CCO Context** (preferred) - Read from project root `CLAUDE.md`:
    ```markdown
    <!-- CCO_CONTEXT_START -->
    ## Operational
@@ -24,8 +24,6 @@ Before committing, automatically run quality checks:
    Parse the Tools line to extract format, lint, and test commands.
 
 2. **Fallback: Auto-detect** - If no CCO context, run `cco-agent-detect` with `scope: tools`
-
-   The detect agent checks: pyproject.toml, package.json, Cargo.toml, go.mod, Makefile, .pre-commit-config.yaml
 
 ### Check Order
 
@@ -43,10 +41,7 @@ Before committing, automatically run quality checks:
 
 ### Skip Option
 
-Use `--skip-checks` to bypass (use with caution):
-```bash
-/cco-commit --skip-checks  # Skip quality gates
-```
+Use `--skip-checks` to bypass (use with caution).
 
 ## Atomic Grouping Rules
 
@@ -84,14 +79,11 @@ If changes have dependencies, commit in order:
 <type>(<scope>): <imperative verb> <specific change>
 ```
 
-Good: `fix(auth): handle expired token in refresh flow`
-Bad: `fix: fixed bug`
-
 **Types:** feat, fix, refactor, perf, test, docs, style, build, ci, chore
 
 ## Flow
 
-1. **Resolve Tools** - Read CCO context from `./CLAUDE.md`, fallback to auto-detect
+1. **Resolve Tools** - Read CCO context, fallback to auto-detect
 2. **Quality Gates** - Run format → lint → test (stop on failure)
 3. **Analyze** - `git status`, `git diff`, detect change types
 4. **Group** - Apply atomic grouping rules, detect dependencies

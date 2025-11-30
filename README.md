@@ -12,13 +12,13 @@ A process and standards layer for Claude Code.
 ```bash
 pip install git+https://github.com/sungurerdim/ClaudeCodeOptimizer.git
 cco-setup
-cco-status
 ```
 
 Then inside Claude Code:
 
 ```
-/cco-audit --security
+/cco-calibrate
+/cco-audit --smart
 ```
 
 ---
@@ -43,10 +43,11 @@ Different projects have different needs. A solo side project doesn't need the sa
 
 **How `/cco-calibrate` works:**
 
-1. **Detect** - Scans your project for stack, tools, team indicators
-2. **Confirm** - You review and adjust the detected values
-3. **Store** - Context saved to your project's `CLAUDE.md`
-4. **Apply** - Commands adjust thresholds based on this context
+1. **Check** - Verify CCO installation and config health
+2. **Detect** - Scan your project for stack, tools, team indicators
+3. **Confirm** - You review and adjust the detected values
+4. **Store** - Context saved to your project's `CLAUDE.md`
+5. **Status** - Display complete CCO status and next steps
 
 **Example thresholds:**
 
@@ -68,6 +69,10 @@ Stack: {detected} | Type: {detected}
 
 ## Guidelines
 - {context-specific guidance}
+
+## Operational
+Tools: {format}, {lint}, {test}
+Applicable: {checks list}
 <!-- CCO_CONTEXT_END -->
 ```
 
@@ -118,6 +123,7 @@ This is **on-demand quality**: you decide when to run it, CCO ensures it's thoro
 
 | Command | What it does |
 |---------|--------------|
+| `/cco-calibrate` | Set project context + check installation + show status |
 | `/cco-audit` | Run categorized checks, get prioritized fix suggestions |
 | `/cco-review` | Architecture analysis with structured output |
 | `/cco-generate` | Generate tests, docs, CI configs following project conventions |
@@ -125,10 +131,7 @@ This is **on-demand quality**: you decide when to run it, CCO ensures it's thoro
 | `/cco-refactor` | Rename/restructure with reference verification |
 | `/cco-optimize` | Reduce context size, remove dead code |
 | `/cco-commit` | Commit with quality checks |
-| `/cco-calibrate` | Set project context for threshold calibration |
 | `/cco-config` | Configure statusline and permissions |
-| `/cco-status` | Check installation |
-| `/cco-help` | Command reference |
 
 ---
 
@@ -136,6 +139,7 @@ This is **on-demand quality**: you decide when to run it, CCO ensures it's thoro
 
 **Find and fix issues:**
 ```bash
+/cco-audit                      # Interactive: choose scope + auto-fix
 /cco-audit --smart              # Auto-detect stack, find issues, offer fixes
 /cco-audit --security --auto-fix  # Auto-fix safe security issues
 /cco-audit --critical           # security + ai-security + database + tests
@@ -156,6 +160,7 @@ Guides Claude to find all references, update them in order and verify with grep.
 
 **Optimize context:**
 ```bash
+/cco-optimize                   # Interactive: choose mode
 /cco-optimize --context         # Reduce CLAUDE.md tokens
 /cco-optimize --code-quality    # Remove dead code, unused imports
 ```
@@ -170,6 +175,7 @@ Guides Claude to find all references, update them in order and verify with grep.
 **Project context:**
 ```bash
 /cco-calibrate                  # Auto-detect and confirm project context
+/cco-calibrate --update         # Force re-detection
 ```
 Sets team size, scale, data sensitivity for calibrated recommendations.
 
@@ -296,36 +302,47 @@ These are blocked at all permission levels:
 
 ## Behaviors
 
-- Offers to commit before major changes
+- Offers to commit before major changes (Pre-Operation Safety)
 - Auto-detects stack, skips non-applicable checks
-- Safe fixes can auto-apply; risky ones need approval
+- Safe fixes can auto-apply; risky ones need approval (Safety Classification)
 - Verification: `done + skip + fail + cannot_do = total`
 - Reference integrity: find all refs, update in order, verify with grep
 
 ---
 
-## Included Standards
+## Standards Structure
 
 CCO adds standards to `~/.claude/CLAUDE.md` that guide the AI's recommendations. These are guidelines, not rigid rules. The AI applies them with judgment based on your project context.
 
-**18 categories, 132 guidelines**: [view full list](claudecodeoptimizer/content/standards/cco-standards.md)
+### Core Standards (Always Apply)
 
-| Category | Examples |
-|----------|----------|
+| Section | Purpose |
+|---------|---------|
+| **Workflow** | Pre-Operation Safety, Context Read, Safety Classification |
 | **Core** | Path conventions, reference integrity, verification accounting |
 | **Approval Flow** | Priority tabs, risk labels, multiselect options |
-| **Code Quality** | Complexity limits, type annotations, SemVer |
-| **Security** | Input validation, OWASP patterns, secrets management |
 | **AI-Assisted** | Review AI output, Plan→Act→Review workflow |
-| **Architecture** | Event-driven patterns, dependency injection |
-| **Operations** | Infrastructure as Code, observability |
-| **Testing** | Coverage targets, CI gates, contract testing |
-| **Performance** | Indexing, N+1 prevention, caching patterns |
-| **API** | REST conventions, pagination, error formats |
-| **Accessibility** | WCAG guidance, semantic HTML |
-| **Reliability** | Timeouts, retries, graceful degradation |
+| **Quality** | Code quality, testing, security core (always applicable) |
+| **Docs** | README, API docs, ADR, comments |
 
-Not all standards apply to every project. The AI uses your project context (from `/cco-calibrate`) to decide which are relevant.
+### Conditional Standards (Apply When Relevant)
+
+| Section | When Applied |
+|---------|--------------|
+| **Security Extended** | Container/K8s detected, Scale 10K+, PII/Regulated data |
+| **Architecture** | Scale 10K+, microservices detected |
+| **Operations** | Scale 10K+, CI/CD detected |
+| **Performance** | Scale 100-10K+, performance critical |
+| **Data** | Database detected |
+| **API** | REST/GraphQL endpoints detected |
+| **Frontend** | Frontend frameworks detected |
+| **i18n** | Multi-language requirement detected |
+| **Reliability** | Scale 10K+, SLA requirements |
+| **Cost** | Cloud/Container infrastructure detected |
+| **DX** | Team size 2-5+ |
+| **Compliance** | Compliance requirements detected |
+
+[View full standards](claudecodeoptimizer/content/standards/cco-standards.md)
 
 ---
 
@@ -336,10 +353,10 @@ After `cco-setup`, the following is added to `~/.claude/`:
 ```
 ~/.claude/
 ├── commands/
-│   └── cco-*.md          # 11 slash commands
+│   └── cco-*.md          # 9 slash commands
 ├── agents/
 │   └── cco-*.md          # 3 specialized agents
-└── CLAUDE.md             # Standards (18 categories)
+└── CLAUDE.md             # Standards (Core + Conditional)
 ```
 
 ---
@@ -347,8 +364,7 @@ After `cco-setup`, the following is added to `~/.claude/`:
 ## Verification
 
 ```bash
-cco-status     # Terminal
-/cco-status    # Claude Code
+/cco-calibrate    # Check installation, config health, project context
 ```
 
 ---

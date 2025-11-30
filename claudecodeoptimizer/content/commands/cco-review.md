@@ -9,15 +9,11 @@ description: Strategic architecture review with fresh perspective
 
 ## Pre-Operation
 
-Before starting:
-1. Check `git status` for uncommitted changes
-2. If dirty, AskUserQuestion: → Commit first / Stash / Continue anyway
+**Follow Pre-Operation Safety from cco-standards Workflow section.**
 
 ## Project Context
 
-**First:** Run `/cco-calibrate` to ensure context is loaded.
-
-Read `CCO_CONTEXT_START` block from project root `CLAUDE.md` (NOT `.claude/CLAUDE.md`). Follow the Guidelines listed there.
+**Follow Context Read from cco-standards Workflow section.**
 
 ## Flow
 
@@ -62,80 +58,32 @@ Output: **Gap Report** with file:line references
 
 ## Phase 3: Stack Fitness & Fresh Perspective
 
-### 3a: Stack Fitness (Purpose vs Current Choices)
+### 3a: Stack Fitness
 
-Evaluate current technology choices against North Star purpose and constraints:
-
-**Evaluate each major choice:**
+Evaluate current technology choices against purpose and constraints:
 
 | Current Choice | Serves Purpose? | Better Alternative? | Why? |
 |----------------|-----------------|---------------------|------|
-| Language | ✓/✗ | If ✗, suggest | Reasoning |
-| Framework | ✓/✗ | If ✗, suggest | Reasoning |
-| Database | ✓/✗ | If ✗, suggest | Reasoning |
-| Architecture | ✓/✗ | If ✗, suggest | Reasoning |
-| Key dependencies | ✓/✗ | If ✗, suggest | Reasoning |
-
-**Questions to ask:**
-- Is this language/framework the best fit for this purpose?
-- Is it compatible with stated constraints (performance, team size)?
-- Does it make meeting success criteria easier or harder?
-- Is there a simpler/better alternative?
-
-**Example output format:**
-```
-❌ {current_choice} → {recommended_alternative}
-↳ Purpose: "{project_purpose}"
-↳ {reason_current_doesnt_fit}
-↳ Context: {relevant_context_from_calibration}
-
-✓ {current_choice} appropriate
-↳ Purpose: "{project_purpose}"
-↳ Current choice aligns with purpose
-```
+| Language | Y/N | If N, suggest | Reasoning |
+| Framework | Y/N | If N, suggest | Reasoning |
+| Database | Y/N | If N, suggest | Reasoning |
+| Architecture | Y/N | If N, suggest | Reasoning |
 
 ### 3b: From Scratch Perspective
 
-Answer: "If I were building this project from scratch today, knowing everything I now know..."
+Answer: "If I were building this project from scratch today..."
 
-Consider:
-- Would I use the same directory structure?
-- Would I organize modules differently?
-- Are there simpler patterns for the same goals?
-- What abstractions are over/under-engineered?
-- Which decisions were right vs accidental complexity?
-
-Categories:
-- **Structure** - Directory layout, module organization
-- **Patterns** - Design patterns, conventions, idioms
-- **Abstractions** - Too much, too little, wrong level
-- **Data Flow** - How data moves through the system
-- **Testing** - Strategy, coverage, maintainability
-- **DX** - Developer experience, onboarding, tooling
+Categories: Structure, Patterns, Abstractions, Data Flow, Testing, DX
 
 Output: **Stack Fitness Report** + **"From Scratch" Recommendations**
 
 ## Phase 4: Prioritization
 
-Classify each recommendation:
+**By Effort:** Quick Win (<1h) | Small (<1d) | Medium (<1w) | Major (>1w)
 
-**By Effort:**
-- Quick Win (< 1 hour, single file)
-- Small Refactor (< 1 day, few files)
-- Medium Refactor (< 1 week, module-level)
-- Major Refactor (> 1 week, cross-cutting)
+**By Impact:** Critical | High | Medium | Low
 
-**By Impact:**
-- Critical - Blocks goals or causes failures
-- High - Significantly improves quality/DX
-- Medium - Noticeable improvement
-- Low - Nice to have
-
-**By Risk:**
-- Safe - No behavior change, easy rollback
-- Low - Minimal behavior change
-- Medium - Some behavior change, needs testing
-- High - Significant change, needs careful review
+**By Risk:** Safe | Low | Medium | High
 
 Priority = Impact / Effort (prefer high impact, low effort, low risk)
 
@@ -146,22 +94,14 @@ Priority = Impact / Effort (prefer high impact, low effort, low risk)
 Team: {team} | Scale: {scale} | Data: {data} | Type: {type}
 Purpose: {purpose}
 
-**Calibration:** [Standard/Relaxed/Strict rigor] because [context reason].
-
 ## Architecture Overview
 [Current state - structure, patterns, key decisions]
 
 ## Stack Fitness
-| Choice | Verdict | Recommendation |
-|--------|---------|----------------|
-| Language | ✓/✗ | Alternative if needed |
-| Framework | ✓/✗ | Alternative if needed |
-| Database | ✓/✗ | Alternative if needed |
-| Architecture | ✓/✗ | Alternative if needed |
+[Table of choices and verdicts]
 
 ## Gap Analysis
 - [gap]: [file:line] - [details]
-  ↳ Context: {field}: {value} → {why}
 
 ## Recommendations by Priority
 [Grouped by: Critical → Quick Wins → Medium → Nice to Have]
@@ -170,34 +110,17 @@ Purpose: {purpose}
 [Positive observations - patterns to keep]
 ```
 
-## Approval & Apply Flow
+## Approval & Apply
 
-**Follow CCO Approval Flow standard from cco-standards.**
+**Follow Approval Flow from cco-standards.**
 
-Apply to: recommendations from review analysis.
-
-### Apply Selected
+**Follow Safety Classification from cco-standards Workflow section.**
 
 For each approved recommendation:
-1. Show what will change (files, scope)
+1. Show what will change
 2. Make the changes
 3. Verify (tests pass, lint clean)
 4. Report: done + skipped + failed = total
-
-### Recommendation Types
-
-**Auto-applicable (can apply directly):**
-- Directory restructuring
-- File moves/renames
-- Pattern standardization
-- Dead code removal
-- Import reorganization
-
-**Requires discussion (present plan, ask before each):**
-- API changes
-- Data model changes
-- Major refactors
-- Dependency changes
 
 ## Flags
 
@@ -213,6 +136,5 @@ For each approved recommendation:
 /cco-review                    # Full review → approve → apply
 /cco-review --quick            # Gap analysis only
 /cco-review --focus=structure  # Focus on organization
-/cco-review --report-only      # Just show findings, don't apply
-/cco-review --deep             # Include detailed code review
+/cco-review --report-only      # Just show findings
 ```

@@ -1,4 +1,25 @@
 <!-- CCO_STANDARDS_START -->
+## Workflow
+
+### Pre-Operation Safety
+1. Check `git status` for uncommitted changes
+2. If dirty: AskUserQuestion → Commit (cco-commit) / Stash / Continue
+3. Clean state enables safe rollback
+
+### Context Read
+1. Read `CCO_CONTEXT_START` from `./CLAUDE.md` (NOT `.claude/`)
+2. If missing → suggest `/cco-calibrate`
+3. Apply: Guidelines, Thresholds, Applicable checks
+
+### Safety Classification
+| Safe (auto-apply) | Risky (require approval) |
+|-------------------|--------------------------|
+| Remove unused imports | Auth/CSRF changes |
+| Parameterize SQL | DB schema changes |
+| Move secrets to env | API contract changes |
+| Fix linting issues | Delete files |
+| Add type annotations | Rename public APIs |
+
 ## Core
 - Paths: forward slash (/), relative, quote spaces
 - Reference Integrity: find ALL refs → update in order → verify (grep old=0, new=expected)
@@ -20,44 +41,6 @@
 - Apply all selected: user selection = commitment, fix everything chosen
 - Blocked items: report as "cannot_do" with reason after attempt
 
-## Code Quality
-- Fail-Fast: immediate visible failure, no silent fallbacks
-- DRY: single source of truth, zero duplicates
-- No Orphans: every function called, every import used
-- Type Safety: annotations + strict static analysis (mypy/pyright)
-- Complexity: cyclomatic <10 per function
-- Tech Debt: ratio <5%, track via SonarQube
-- Maintainability: index >65
-- Linting: ruff/eslint + SAST (Semgrep/CodeQL)
-- Evidence-Based: command output + exit code proof
-- No Overengineering: minimum for current task, no hypotheticals
-- Clean Code: meaningful names, single responsibility
-- Code Review: standardized checklist
-- Immutability: prefer immutable, mutate only for performance
-- Profile First: measure before optimize
-- Version: single source, SemVer (MAJOR.MINOR.PATCH)
-
-## Security
-- Input Validation: Pydantic/Joi/Zod at all entry points
-- Privacy-First: PII managed, cleaned from memory, GDPR/CCPA
-- Encryption: AES-256-GCM for data at rest
-- Zero Disk: sensitive data in RAM only
-- Auth: OAuth2 + RBAC + mTLS, verify every request (Zero Trust)
-- SQL: parameterized queries only
-- Secrets: Vault/AWS, rotate 30-90 days, never hardcode
-- Rate Limit: all endpoints, per-user/IP, return headers
-- XSS: sanitize all user input
-- Supply Chain: SBOM, Sigstore signing, lockfiles
-- AI Security: validate prompts/outputs, prevent injection
-- Container: distroless, non-root, CVE scan (Trivy)
-- K8s: RBAC least privilege, NetworkPolicy, PodSecurity
-- Policy-as-Code: OPA/Sentinel
-- CORS: configure allowed origins/methods
-- Audit Log: all security events, immutable
-- OWASP: API Top 10 compliance
-- Dependencies: Dependabot, scan in CI
-- Incident Response: IR plan, SIEM, DR tested
-
 ## AI-Assisted (2025)
 - Review AI Code: treat as junior output, verify
 - Workflow: Plan → Act → Review → Repeat
@@ -69,7 +52,63 @@
 - Challenge: "are you sure?" for perfect-looking solutions
 - No Example Fixation: use placeholders, avoid anchoring bias from hardcoded examples
 
-## Architecture
+## Quality (always apply, thresholds from context)
+
+### Code Quality
+- Fail-Fast: immediate visible failure, no silent fallbacks
+- DRY: single source of truth, zero duplicates
+- No Orphans: every function called, every import used
+- Type Safety: annotations + strict static analysis
+- Complexity: cyclomatic <10 per function (context may override)
+- Tech Debt: ratio <5%
+- Maintainability: index >65
+- Evidence-Based: command output + exit code proof
+- No Overengineering: minimum for current task, no hypotheticals
+- Clean Code: meaningful names, single responsibility
+- Immutability: prefer immutable, mutate only for performance
+- Profile First: measure before optimize
+- Version: single source, SemVer (MAJOR.MINOR.PATCH)
+
+### Testing
+- Coverage: 80% min (context may adjust: solo 60%, enterprise 90%)
+- Integration: e2e for critical workflows
+- CI Gates: lint + test + coverage + security before merge
+- Isolation: no dependencies between tests
+- TDD: tests first, code satisfies
+
+### Security Core (always apply)
+- Input Validation: Pydantic/Joi/Zod at all entry points
+- SQL: parameterized queries only
+- Secrets: never hardcode, use env vars or vault
+- XSS: sanitize all user input
+- OWASP: API Top 10 compliance
+- Dependencies: Dependabot, scan in CI
+
+## Docs
+- README: description, setup, usage, contributing
+- API Docs: complete, accurate, auto-generated
+- ADR: decisions + context + consequences
+- Comments: why not what
+
+## Conditional (apply when applicable)
+
+### Security Extended
+**When:** Container/K8s detected OR Scale: 10K+ OR Data: PII/Regulated
+- Privacy-First: PII managed, cleaned from memory, GDPR/CCPA
+- Encryption: AES-256-GCM for data at rest
+- Zero Disk: sensitive data in RAM only
+- Auth: OAuth2 + RBAC + mTLS, verify every request (Zero Trust)
+- Rate Limit: all endpoints, per-user/IP, return headers
+- Supply Chain: SBOM, Sigstore signing, lockfiles
+- AI Security: validate prompts/outputs, prevent injection
+- Container: distroless, non-root, CVE scan (Trivy)
+- K8s: RBAC least privilege, NetworkPolicy, PodSecurity
+- Policy-as-Code: OPA/Sentinel
+- Audit Log: all security events, immutable
+- Incident Response: IR plan, SIEM, DR tested
+
+### Architecture
+**When:** Scale: 10K+ OR Type: backend-api with microservices
 - Event-Driven: async patterns, communicate via events
 - Service Mesh: Istio/Linkerd for mTLS, observability
 - Separation: one aspect per module/class
@@ -81,7 +120,8 @@
 - Idempotency: safe to retry without side effects
 - Event Sourcing: state as event sequence
 
-## Operations
+### Operations
+**When:** Scale: 10K+ OR CI/CD detected
 - Zero Maintenance: auto-manage lifecycle
 - Config as Code: versioned, validated, env-aware
 - IaC + GitOps: Terraform/Pulumi + ArgoCD/Flux
@@ -93,15 +133,8 @@
 - Feature Flags: decouple deploy from release
 - Incremental Safety: stash → change → test → rollback on fail
 
-## Testing
-- Coverage: 80% min, 100% critical paths
-- Integration: e2e for critical workflows
-- CI Gates: lint + test + coverage + security before merge
-- Isolation: no dependencies between tests
-- TDD: tests first, code satisfies
-- Contract: verify API contracts between services
-
-## Performance
+### Performance
+**When:** Scale: 100-10K+ OR Performance applicable
 - DB: indexing, N+1 prevention, explain plans
 - Async I/O: no blocking in async context
 - Caching: cache-aside/write-through, TTL, invalidation
@@ -110,19 +143,23 @@
 - Lazy Load: defer until needed
 - Compression: gzip/brotli responses
 
-## Data
+### Data
+**When:** DB detected
 - Backup: automated, defined RPO/RTO, tested restore
 - Migrations: versioned, backward compatible, rollback
 - Retention: defined periods, auto-cleanup
 
-## API
+### API
+**When:** API detected (REST/GraphQL endpoints)
 - REST: proper methods, status codes, resource naming
 - Pagination: cursor-based for large datasets
 - Docs: OpenAPI spec, examples, synced with code
 - Errors: consistent format, no stack traces in prod
 - GraphQL: complexity limits, depth limits, persisted queries
+- Contract: verify API contracts between services
 
-## Accessibility
+### Frontend
+**When:** Frontend detected
 - WCAG 2.2 AA: perceivable, operable, understandable, robust
 - Semantic HTML: native elements (button, nav, form)
 - ARIA: only when HTML insufficient
@@ -131,14 +168,16 @@
 - Contrast: 4.5:1 normal, 3:1 large text
 - Focus: logical order, trap in modals
 
-## i18n
+### i18n
+**When:** i18n detected OR multi-language requirement
 - Externalized: no hardcoded user text
 - Unicode: UTF-8 everywhere
 - RTL: support Arabic, Hebrew
 - Locale: date/time/number formatting
 - Pluralization: proper rules per language
 
-## Reliability
+### Reliability
+**When:** Scale: 10K+ OR Type: backend-api with SLA
 - Chaos: inject failures in production
 - Resilience: validate failure scenarios
 - Timeouts: explicit for all external calls
@@ -146,27 +185,25 @@
 - Bulkhead: isolate failures
 - Fallback: graceful degradation
 
-## Cost
+### Cost
+**When:** Cloud/Container detected
 - FinOps: monitor, right-size, spot instances
 - Tagging: all cloud resources
 - Auto-Scale: scale to zero when idle
 - Green: energy-efficient, carbon-aware
 
-## Docs
-- README: description, setup, usage, contributing
-- API Docs: complete, accurate, auto-generated
-- ADR: decisions + context + consequences
-- Comments: why not what
-- Runbooks: ops procedures
-
-## DX
+### DX
+**When:** Team: 2-5+
 - Local Parity: match production
 - Fast Feedback: quick builds, fast tests
 - Self-Service: provision without tickets
 - Golden Paths: recommended approaches
+- Runbooks: ops procedures
 
-## Compliance
+### Compliance
+**When:** Compliance: not None
 - License: track deps, no GPL without review
 - Frameworks: SOC2/HIPAA/PCI-DSS as applicable
 - Classification: data by sensitivity
+- CORS: configure allowed origins/methods
 <!-- CCO_STANDARDS_END -->
