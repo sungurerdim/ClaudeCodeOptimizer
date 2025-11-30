@@ -20,6 +20,8 @@ From context apply:
 - **Applicable** - Only run applicable checks
 - **Data** - If PII/Regulated → prioritize security issues higher
 - **Scale** - If 10K+ → prioritize performance issues higher
+- **Priority** - If Speed → focus on critical only; if Quality → flag all issues
+- **Maturity** - If Legacy → conservative fixes; if Greenfield → can suggest restructuring
 
 ## Default Behavior
 

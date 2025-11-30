@@ -81,28 +81,88 @@ Run `cco-agent-detect` with `scope: full`:
 **Strategic:**
 - Purpose, Team, Scale, Data, Type, Rollback
 
+**Auto-Detected (no user input needed):**
+- monorepo, preCommitHooks, currentCoverage, lintingConfigured
+- apiEndpoints, containerSetup, i18nSetup, authPatterns
+- licenseType, secretsDetected, depsOutdated, gitDefaultBranch
+- hasReadme, hasChangelog, deadCodeRisk
+
 ## Step 4: Confirm Values
 
-Present detected values for user confirmation:
+Present ALL detected values for user confirmation. Use multiple AskUserQuestion calls (max 4 questions each).
 
+**Call 1 - Core Context:**
 ```
-AskUserQuestion (single call):
-
 Q1 - header: "Purpose"
 question: "What is the project's purpose?"
-(Show detected value, allow edit)
+options: Show detected + 2-3 alternatives (pre-select detected)
 
 Q2 - header: "Team"
+question: "Team size?"
 options: Solo | 2-5 | 6+ (pre-select detected)
 
 Q3 - header: "Scale"
+question: "Expected user scale?"
 options: <100 | 100-10K | 10K+ (pre-select detected)
 
 Q4 - header: "Data"
+question: "Most sensitive data handled?"
 options: Public | Internal | PII | Regulated (pre-select detected)
 ```
 
-Additional questions if needed: Compliance, Stack, Type, Database, Rollback.
+**Call 2 - Technical Context:**
+```
+Q5 - header: "Stack"
+question: "Tech stack correct?"
+options: Show detected stack + "Edit" option (pre-select detected)
+
+Q6 - header: "Type"
+question: "Project type?"
+options: backend-api | frontend | fullstack | cli | library | mobile | desktop (pre-select detected)
+
+Q7 - header: "Database"
+question: "Database type?"
+options: None | SQL | NoSQL (pre-select detected)
+
+Q8 - header: "Rollback"
+question: "Rollback complexity?"
+options: Git | DB | User-data (pre-select detected)
+```
+
+**Call 3 - Project Approach:**
+```
+Q9 - header: "Maturity"
+question: "Project maturity phase?"
+options:
+  - Greenfield: New project, aggressive changes OK
+  - Active: Growing project, balanced approach
+  - Maintenance: Stable, minimize changes
+  - Legacy: Old codebase, wrap don't modify
+
+Q10 - header: "Breaking"
+question: "Breaking changes tolerance?"
+options:
+  - Allowed: Can rename, restructure freely
+  - Minimize: Deprecate first, provide migration
+  - Never: Full backward compatibility required
+
+Q11 - header: "Priority"
+question: "Quality vs speed priority?"
+options:
+  - Speed: Ship fast, iterate, fix later OK
+  - Balanced: Standard practices, reasonable coverage
+  - Quality: Thorough review, high coverage, no shortcuts
+```
+
+**Call 4 - Compliance (skip if Data=Public):**
+```
+Q12 - header: "Compliance"
+question: "Compliance requirements?"
+multiSelect: true
+options: None | GDPR | SOC2 | HIPAA | PCI-DSS (pre-select detected)
+```
+
+**Important:** All fields must be confirmed. Detected values are defaults, not auto-accepted.
 
 ## Step 5: Generate Guidelines
 
@@ -110,7 +170,7 @@ Based on confirmed values:
 
 | If Value | Add Guideline |
 |----------|---------------|
-| Team: solo | Self-review sufficient, aggressive refactors OK |
+| Team: solo | Self-review sufficient |
 | Team: 2-5 | Informal review recommended, document key decisions |
 | Team: 6+ | Formal review required, consider change impact |
 | Scale: <100 | Simple solutions preferred, optimize for clarity |
@@ -126,6 +186,16 @@ Based on confirmed values:
 | DB: nosql | Schema versioning, data migration strategy |
 | Rollback: db | Test rollback scripts, staged deployments |
 | Rollback: user-data | Backup before changes, soft deletes preferred |
+| Maturity: greenfield | Aggressive refactors OK, establish patterns early |
+| Maturity: active | Balanced refactors, maintain momentum |
+| Maturity: maintenance | Conservative changes, stability over improvement |
+| Maturity: legacy | Wrap don't modify, strangler pattern preferred |
+| Breaking: allowed | Clean API over compatibility, rename freely |
+| Breaking: minimize | Deprecate first, provide migration path |
+| Breaking: never | Adapters required, never break existing consumers |
+| Priority: speed | MVP mindset, ship fast, iterate |
+| Priority: balanced | Standard practices, reasonable coverage |
+| Priority: quality | Thorough review, high coverage, no shortcuts |
 
 ## Step 6: Store Context
 
@@ -139,6 +209,7 @@ Insert or replace context block in project root `CLAUDE.md`:
 Purpose: {purpose}
 Team: {team} | Scale: {scale} | Data: {data} | Compliance: {compliance}
 Stack: {stack} | Type: {type} | DB: {db} | Rollback: {rollback}
+Maturity: {maturity} | Breaking: {breaking} | Priority: {priority}
 
 ## Guidelines
 - {generated guideline 1}
@@ -150,6 +221,17 @@ Tools: {format}, {lint}, {test}
 Conventions: {testNaming}, {importStyle}
 Applicable: {applicable checks list}
 Not Applicable: {not applicable checks list}
+
+## Auto-Detected
+Structure: {monorepo|single-repo} | Hooks: {pre-commit|none} | Coverage: {N%|unknown}
+- [x] Linting configured
+- [x] Pre-commit hooks
+- [ ] API endpoints
+- [ ] Container setup
+- [ ] i18n setup
+License: {MIT|Apache-2.0|GPL|unknown}
+Secrets detected: {yes|no}
+Outdated deps: {N|unknown}
 <!-- CCO_CONTEXT_END -->
 ```
 

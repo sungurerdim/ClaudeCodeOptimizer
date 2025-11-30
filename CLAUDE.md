@@ -15,8 +15,8 @@ Stack: Python 3.11+ (stdlib only), ruff, mypy, pytest | Type: CLI | DB: None | R
 - Simple git revert for rollback
 
 ## Operational
-Tools: ruff (format+lint), mypy (types), pytest --cov (test)
-Conventions: test_*.py naming, relative imports internal, snake_case
+Tools: ruff format . (format), ruff check . && mypy claudecodeoptimizer/ (lint), pytest tests/ --cov (test)
+Conventions: test_*.py in tests/unit/ and tests/integration/, relative imports internal, snake_case
 Applicable: security, tech-debt, tests, hygiene, cicd, docs, ai-quality, supply-chain, self-compliance
 Not Applicable: database, performance, containers, api-contract, dora, ai-security, compliance
 <!-- CCO_CONTEXT_END -->

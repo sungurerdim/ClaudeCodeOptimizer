@@ -19,6 +19,9 @@ From context apply:
 - **Guidelines** - Follow listed guidelines
 - **Scale** - If 10K+ → prioritize performance optimizations
 - **Type** - CLI: startup time, API: response time, library: memory footprint
+- **Maturity** - If Legacy → minimal changes; if Greenfield → can restructure
+- **Priority** - If Speed → quick wins only; if Quality → thorough optimization
+- **Breaking** - If Never → preserve all interfaces; if Allowed → can simplify APIs
 
 ## Default Behavior
 
