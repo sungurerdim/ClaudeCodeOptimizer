@@ -11,13 +11,11 @@ Maturity: Greenfield | Breaking: Allowed | Priority: Speed
 Thinking: 8K | MCP: 25K | Caching: on
 
 ## Guidelines
-- Self-review sufficient, aggressive refactors OK
+- Self-review sufficient, aggressive refactors OK, establish patterns early
 - Simple solutions preferred, optimize for clarity
 - Basic input validation sufficient
 - Clear error messages, help documentation
-- No database migrations needed
-- Simple git revert for rollback
-- Aggressive refactors OK, establish patterns early
+- No database migrations needed, simple git revert for rollback
 - Clean API over compatibility, rename freely
 - MVP mindset, ship fast, iterate
 

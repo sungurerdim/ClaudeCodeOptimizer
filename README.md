@@ -1,10 +1,19 @@
 # ClaudeCodeOptimizer
 
-A process and standards layer for Claude Code.
+A process and standards layer for Claude Code in the Opus 4.5 era.
 
 [![Python 3.11+](https://img.shields.io/badge/python-3.11+-blue.svg)](https://www.python.org/downloads/)
 [![License: MIT](https://img.shields.io/badge/license-MIT-green.svg)](LICENSE)
 [![Version](https://img.shields.io/badge/version-1.0.0-blue.svg)]()
+
+Claude Code already gives you strong refactors, tests and multi-file edits with Opus-class models.
+CCO sits on top of that and adds three things you usually have to build by hand:
+
+1. **Project-aware tuning** with a single `/cco-tune` flow that writes your context and AI settings into `CLAUDE.md`
+2. **Standards-driven commands** that all read from one shared `cco-standards.md` file
+3. **Risk-based approval flow** so no change is applied silently and git safety checks are always part of the workflow
+
+No servers, no dashboards, no extra dependencies. Just a thin standards layer on top of the tools you already use every day.
 
 ---
 
@@ -24,14 +33,18 @@ Then inside Claude Code:
 
 ---
 
-## What CCO Does
+## Why CCO?
 
-**Claude Code with Opus 4.5 is already powerful.** CCO adds structured workflows on top:
+The Claude Code ecosystem is full of powerful workflows: built-in refactors and tests, Opus 4.5 and newer Opus-class models, large orchestration frameworks with many agents and dashboards.
 
-- **Project tuning** - Configure context, AI performance, statusline and permissions in one flow
-- **Structured commands** - Same audit categories, same verification patterns, every time
-- **Approval flow** - Priority-based suggestions with risk labels, you decide what to apply
-- **Context management** - Thinking budget, MCP limits matched to project complexity
+CCO does not try to replace any of that.
+
+Instead, it focuses on one missing layer:
+- A **single standards file** that all commands follow
+- A **lightweight process layer** for audits, reviews, refactors and generators
+- A **predictable approval flow** on top of Claude Code, not instead of it
+
+> All the power of Claude Code + Opus 4.5, plus a small layer that makes it repeatable, auditable and safe across every repo.
 
 ---
 
