@@ -23,11 +23,6 @@ cd ClaudeCodeOptimizer
 pip install -e ".[dev]"
 ```
 
-3. Install pre-commit hooks:
-```bash
-pre-commit install
-```
-
 ## Code Style Requirements
 
 We enforce strict code quality standards:
@@ -73,7 +68,6 @@ pytest -n auto
 - **Critical Modules**: 90%+ coverage required
   - `install_hook.py`
   - `cco_remove.py`
-  - `cco_status.py`
   - `config.py`
 
 ### Writing Tests
@@ -180,8 +174,7 @@ Before submitting a PR, verify:
 - [ ] Coverage meets minimum: `pytest --cov`
 - [ ] No linting errors: `ruff check .`
 - [ ] No type errors: `mypy claudecodeoptimizer/`
-- [ ] Code formatted: `ruff format .`
-- [ ] Pre-commit hooks pass: `pre-commit run --all-files`
+- [ ] Code formatted: `ruff format --check .`
 - [ ] Documentation updated (if applicable)
 - [ ] Commit messages follow convention
 
@@ -197,7 +190,6 @@ ClaudeCodeOptimizer/
 │   ├── __main__.py          # CLI entry
 │   ├── config.py            # Configuration paths
 │   ├── install_hook.py      # Setup/deployment
-│   ├── cco_status.py        # Status command
 │   └── cco_remove.py        # Remove command
 └── tests/                   # Test suite
     ├── unit/                # Unit tests

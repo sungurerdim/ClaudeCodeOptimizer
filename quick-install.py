@@ -105,7 +105,7 @@ def main() -> int:
     print("=" * 60)
     print("\nNext steps:")
     print("  1. Open/Restart Claude Code")
-    print("  2. Try: /cco-help")
+    print("  2. Try: /cco-tune")
     print("=" * 60 + "\n")
 
     return 0

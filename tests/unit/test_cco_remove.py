@@ -48,7 +48,7 @@ class TestListCcoFiles:
     def test_list_with_files(self, tmp_path):
         (tmp_path / "commands").mkdir()
         (tmp_path / "agents").mkdir()
-        cmd_file = tmp_path / "commands" / "cco-help.md"
+        cmd_file = tmp_path / "commands" / "cco-tune.md"
         agent_file = tmp_path / "agents" / "cco-agent-scan.md"
         cmd_file.touch()
         agent_file.touch()
@@ -58,7 +58,7 @@ class TestListCcoFiles:
                     "claudecodeoptimizer.cco_remove.get_cco_agents", return_value=[agent_file]
                 ):
                     files = list_cco_files()
-                    assert files["commands"] == ["cco-help.md"]
+                    assert files["commands"] == ["cco-tune.md"]
                     assert files["agents"] == ["cco-agent-scan.md"]
 
 
@@ -78,7 +78,7 @@ class TestHasClaudeMdRules:
 class TestRemoveCcoFiles:
     def test_remove_files(self, tmp_path):
         (tmp_path / "commands").mkdir()
-        cco_file = tmp_path / "commands" / "cco-help.md"
+        cco_file = tmp_path / "commands" / "cco-tune.md"
         user_file = tmp_path / "commands" / "user-custom.md"
         cco_file.touch()
         user_file.touch()
@@ -93,7 +93,7 @@ class TestRemoveCcoFiles:
     def test_remove_files_verbose(self, tmp_path, capsys):
         (tmp_path / "commands").mkdir()
         (tmp_path / "agents").mkdir()
-        cmd_file = tmp_path / "commands" / "cco-help.md"
+        cmd_file = tmp_path / "commands" / "cco-tune.md"
         agent_file = tmp_path / "agents" / "cco-agent.md"
         cmd_file.touch()
         agent_file.touch()
