@@ -11,7 +11,7 @@ A process and standards layer for Claude Code.
 ## Quickstart
 
 ```bash
-pip install claudecodeoptimizer
+pip install git+https://github.com/sungurerdim/ClaudeCodeOptimizer.git
 cco-setup
 ```
 
@@ -244,8 +244,14 @@ After `cco-setup`:
 ## Installation
 
 ```bash
-pip install claudecodeoptimizer
+pip install git+https://github.com/sungurerdim/ClaudeCodeOptimizer.git
 cco-setup
+```
+
+Or use the quick installer:
+
+```bash
+curl -sSL https://raw.githubusercontent.com/sungurerdim/ClaudeCodeOptimizer/main/quick-install.py | python3
 ```
 
 ## Uninstallation
