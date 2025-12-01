@@ -87,6 +87,11 @@ Analyze codebase for issues, metrics, and patterns without modification.
 | Medium | Balanced impact/effort |
 | Low | Low impact or high effort |
 
+## Error Reporting
+
+**Follow Error Format from cco-standards Core section:**
+`❌ {What} → ↳ {Why} → → {Fix}`
+
 ## Principles
 
 1. **Read-only** - Never modify files

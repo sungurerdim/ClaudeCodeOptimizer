@@ -115,6 +115,11 @@ Purpose: {purpose}
 [Positive observations - patterns to keep]
 ```
 
+## Error Reporting
+
+**Follow Error Format from cco-standards Core section:**
+`❌ {What} → ↳ {Why} → → {Fix}`
+
 ## Approval & Apply
 
 **Follow Approval Flow from cco-standards.**

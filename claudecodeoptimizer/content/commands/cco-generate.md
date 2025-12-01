@@ -90,6 +90,11 @@ Generate for:
 - Non-root user in final stage
 - Health check if applicable
 
+## Error Reporting
+
+**Follow Error Format from cco-standards Core section:**
+`❌ {What} → ↳ {Why} → → {Fix}`
+
 ## Verification
 
 After generation:

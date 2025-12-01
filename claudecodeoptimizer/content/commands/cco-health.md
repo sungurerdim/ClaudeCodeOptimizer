@@ -34,6 +34,11 @@ After scores, show top 3 actionable items:
 
 **Follow Approval Flow from cco-standards** for "Fix First" items.
 
+## Error Reporting
+
+**Follow Error Format from cco-standards Core section:**
+`❌ {What} → ↳ {Why} → → {Fix}`
+
 ## Output
 
 Dashboard with scores → critical issues → "Fix first" items → next actions.

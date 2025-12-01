@@ -170,6 +170,11 @@ Based on detected stack, determine which audit categories apply:
 | Empty project | Return minimal structure with nulls |
 | Detection conflict | Prefer explicit config over heuristics |
 
+## Error Reporting
+
+**Follow Error Format from cco-standards Core section:**
+`❌ {What} → ↳ {Why} → → {Fix}`
+
 ## Principles
 
 1. **Read-only** - Never modify files

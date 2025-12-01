@@ -31,12 +31,9 @@ When called without flags, AskUserQuestion:
 header: "Mode"
 question: "Optimization mode?"
 options:
-  - label: "Conservative"
-    description: "Safe changes only, auto-apply"
-  - label: "Balanced"
-    description: "Safe + low-risk (recommended)"
-  - label: "Aggressive"
-    description: "All optimizations, requires review"
+  - Conservative: "{base_description} {labels}"
+  - Balanced: "{base_description} {labels}" [recommended]
+  - Aggressive: "{base_description} {labels}"
 ```
 
 Explicit flags (`--conservative`, `--balanced`, `--aggressive`) skip this question.
@@ -71,6 +68,11 @@ Show impact after optimization:
 **Follow Approval Flow from cco-standards.**
 
 **Follow Safety Classification from cco-standards Workflow section.**
+
+## Error Reporting
+
+**Follow Error Format from cco-standards Core section:**
+`❌ {What} → ↳ {Why} → → {Fix}`
 
 ## Verification
 

@@ -36,7 +36,7 @@ Structure: single-repo | Hooks: none | Coverage: 96%
 - [ ] SLA requirements
 License: MIT
 Secrets detected: no
-Outdated deps: 3
+Outdated deps: 0
 
 ## Conditional Standards (auto-applied)
 **Operations** (CI/CD detected):

@@ -7,6 +7,18 @@ description: Atomic traceable change management
 
 **Change management** - Quality gates → analyze → group atomically → commit with traceability.
 
+## Pre-Operation
+
+**Follow Pre-Operation Safety from cco-standards Workflow section.**
+
+## Project Context
+
+**Follow Context Read from cco-standards Workflow section.**
+
+From context apply:
+- **Tools** - Use format, lint, test commands from Operational section
+- **Maturity** - If Legacy → conservative grouping; if Greenfield → aggressive refactors OK
+
 ## Pre-Commit Quality Gates
 
 Before committing, automatically run quality checks.
@@ -15,13 +27,9 @@ Before committing, automatically run quality checks.
 
 **Priority order:**
 
-1. **CCO Context** (preferred) - Read from project root `CLAUDE.md`:
-   ```markdown
-   <!-- CCO_CONTEXT_START -->
-   ## Operational
-   Tools: {format_command}, {lint_command}, {test_command}
-   ```
-   Parse the Tools line to extract format, lint, and test commands.
+1. **CCO Context** (preferred) - Read from `./CLAUDE.md`:
+   - Parse `Tools:` line from Operational section
+   - Extract: `{format_command}`, `{lint_command}`, `{test_command}`
 
 2. **Fallback: Auto-detect** - If no CCO context, run `cco-agent-detect` with `scope: tools`
 
@@ -91,6 +99,11 @@ If changes have dependencies, commit in order:
 6. **Confirm** - AskUserQuestion: Accept / Modify / Custom
 7. **Execute** - Stage and commit each group in order
 8. **Verify** - `git log` count = planned count
+
+## Error Reporting
+
+**Follow Error Format from cco-standards Core section:**
+`❌ {What} → ↳ {Why} → → {Fix}`
 
 ## Flags
 
