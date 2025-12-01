@@ -9,6 +9,8 @@ safe: true
 
 Read-only codebase analysis. Returns findings with file:line references.
 
+**Standards:** Verification | Error Format
+
 ## Purpose
 
 Analyze codebase for issues, metrics, and patterns without modification.
@@ -86,11 +88,6 @@ Analyze codebase for issues, metrics, and patterns without modification.
 | High | High impact, low effort to fix |
 | Medium | Balanced impact/effort |
 | Low | Low impact or high effort |
-
-## Error Reporting
-
-**Follow Error Format from cco-standards Core section:**
-`❌ {What} → ↳ {Why} → → {Fix}`
 
 ## Principles
 

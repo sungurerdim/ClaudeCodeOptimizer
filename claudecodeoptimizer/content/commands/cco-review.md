@@ -7,15 +7,9 @@ description: Strategic architecture review with fresh perspective
 
 **Strategic review** - Understand intent → analyze architecture → compare with ideal → recommend improvements.
 
-## Pre-Operation
+**Standards:** Pre-Operation Safety | Context Read | Approval Flow | Safety Classification | Verification | Error Format
 
-**Follow Pre-Operation Safety from cco-standards Workflow section.**
-
-## Project Context
-
-**Follow Context Read from cco-standards Workflow section.**
-
-From context apply:
+## Context Application
 - **Maturity** - If Legacy → focus on safe incremental improvements; if Greenfield → can suggest restructuring
 - **Breaking** - If Never → flag any interface changes; if Allowed → suggest API simplifications
 - **Priority** - If Speed → quick wins only; if Quality → comprehensive analysis
@@ -115,16 +109,7 @@ Purpose: {purpose}
 [Positive observations - patterns to keep]
 ```
 
-## Error Reporting
-
-**Follow Error Format from cco-standards Core section:**
-`❌ {What} → ↳ {Why} → → {Fix}`
-
-## Approval & Apply
-
-**Follow Approval Flow from cco-standards.**
-
-**Follow Safety Classification from cco-standards Workflow section.**
+## Apply
 
 For each approved recommendation:
 1. Show what will change

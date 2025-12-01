@@ -28,7 +28,7 @@ User runs /cco-tune
   │     ├─ Call 1: Core Context (Purpose, Team, Scale, Data)
   │     ├─ Call 2: Technical (Stack, Type, DB, Rollback)
   │     ├─ Call 3: Approach (Maturity, Breaking, Priority)
-  │     └─ Call 4: AI Performance (Thinking, MCP, Compact, Caching)
+  │     └─ Call 4: AI Performance (Thinking, MCP, Caching)
   │
   ├─► Step 5: Configuration (AskUserQuestion)
   │     ├─ Scope: Global / Local
@@ -215,18 +215,22 @@ description_template: "{base_description} {labels}"
 |---------|----------|----------|-----|
 | simple | Scale <100, Type: cli/library | Off | 25K |
 | medium | Scale 100-10K | 8K | 25K |
-| complex | Scale 10K+ OR Maturity: legacy | 32K | 50K |
+| complex | Scale 10K+ OR Maturity: legacy | 16K-32K | 50K |
+
+**Extended Thinking Reference:**
+- Min: 1,024 tokens | Max: 32K
+- Ideal for: math, coding challenges, multi-step logic, research synthesis
 
 ```
 Q12 - header: "Thinking"
 question: "Extended thinking budget?"
 options:
-  - Off: "{base_description} {labels}" [recommended:simple]
-  - 8K: "{base_description} {labels}" [recommended:medium]
-  - 32K: "{base_description} {labels}" [recommended:complex]
-  - 64K: "{base_description} {labels}"
+  - Off: "Simple tasks, retrieval {labels}" [recommended:simple]
+  - 8K: "Standard coding, moderate complexity {labels}" [recommended:medium]
+  - 16K: "Complex logic, deep analysis {labels}"
+  - 32K: "Maximum budget {labels}" [recommended:complex]
 
-Q13 - header: "MCP Limit"
+Q13 - header: "MCP"
 question: "MCP tool output limit?"
 options:
   - 25K: "{base_description} {labels}" [recommended:simple,medium]
@@ -240,7 +244,7 @@ options:
   - Disabled: "{base_description} {labels}"
 ```
 
-**Note:** Auto-compact can only be toggled via `/config` UI, not programmatically.
+**Note:** Auto-compact can only be toggled via `/config` UI.
 
 ## Step 5: Configuration
 
@@ -272,6 +276,10 @@ options:
 
 ### Write CCO_CONTEXT to ./CLAUDE.md
 
+**Source files:**
+- Global: `cco-standards.md` → Universal + Claude-Specific (already in ~/.claude/CLAUDE.md)
+- Conditional: `cco-standards-conditional.md` → filtered by detection, written to local only
+
 ```markdown
 <!-- CCO_CONTEXT_START -->
 ## Strategic Context
@@ -280,11 +288,11 @@ Team: {team} | Scale: {scale} | Data: {data} | Compliance: {compliance}
 Stack: {stack} | Type: {type} | DB: {db} | Rollback: {rollback}
 Maturity: {maturity} | Breaking: {breaking} | Priority: {priority}
 
+## AI Performance
+Thinking: {off|8K|16K|32K} | MCP: {25K|50K|100K} | Caching: {on|off}
+
 ## Guidelines
 {generated from confirmed values}
-
-## AI Performance
-Thinking: {off|1K|8K|32K|64K} | MCP: {25K|50K|100K} | Caching: {on|off}
 
 ## Operational
 Tools: {format}, {lint}, {test}
@@ -302,8 +310,32 @@ Structure: {monorepo|single-repo} | Hooks: {pre-commit|none} | Coverage: {N%}
 License: {type}
 Secrets detected: {yes|no}
 Outdated deps: {N}
+
+## Conditional Standards (auto-applied)
+{Only sections from cco-standards-conditional.md where "When:" matches detected values}
 <!-- CCO_CONTEXT_END -->
 ```
+
+### Conditional Selection Logic
+
+Read `cco-standards-conditional.md` and include sections where "When:" condition matches:
+
+| Conditional | Include When |
+|-------------|--------------|
+| Security Extended | Container/K8s detected OR Scale: 10K+ OR Data: PII/Regulated |
+| Architecture | Scale: 10K+ OR Type: backend-api with microservices |
+| Operations | Scale: 10K+ OR CI/CD detected |
+| Performance | Scale: 100-10K+ OR Performance in Applicable |
+| Data | DB != None |
+| API | API endpoints detected |
+| Frontend | Type: frontend/fullstack |
+| i18n | i18n setup detected |
+| Reliability | Scale: 10K+ OR SLA requirements |
+| Cost | Container/Cloud setup detected |
+| DX | Team: 2-5+ |
+| Compliance | Compliance != None |
+
+**Write only matching sections** - do not include conditionals that don't apply.
 
 ### Write Statusline (if selected)
 

@@ -9,6 +9,8 @@ safe: true
 
 Read-only project detection. Returns **structured JSON** for CCO commands.
 
+**Standards:** Error Format
+
 **Why this agent exists:** CCO commands need predictable, parseable project data. Unlike general exploration, this agent returns structured output that commands can programmatically consume.
 
 ## Scope Parameter
@@ -169,11 +171,6 @@ Based on detected stack, determine which audit categories apply:
 | No config files | `tools: { format: null, lint: null, test: null }` |
 | Empty project | Return minimal structure with nulls |
 | Detection conflict | Prefer explicit config over heuristics |
-
-## Error Reporting
-
-**Follow Error Format from cco-standards Core section:**
-`❌ {What} → ↳ {Why} → → {Fix}`
 
 ## Principles
 
