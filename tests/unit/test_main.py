@@ -44,7 +44,7 @@ class TestMain:
         assert "CCO v" in captured.out
         assert "cco-setup" in captured.out
         assert "cco-remove" in captured.out
-        assert "/cco-calibrate" in captured.out
+        assert "/cco-tune" in captured.out
 
 
 if __name__ == "__main__":

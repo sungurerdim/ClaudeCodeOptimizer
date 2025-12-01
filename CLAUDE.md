@@ -7,6 +7,9 @@ Team: Solo | Scale: <100 | Data: Public | Compliance: None
 Stack: Python 3.11+ (stdlib only), ruff, mypy, pytest | Type: CLI | DB: None | Rollback: Git
 Maturity: Greenfield | Breaking: Allowed | Priority: Speed
 
+## AI Performance
+Thinking: 8K | MCP: 25K | Caching: on
+
 ## Guidelines
 - Self-review sufficient, aggressive refactors OK
 - Simple solutions preferred, optimize for clarity

@@ -18,8 +18,8 @@ Commands specify detection scope in prompt. Only detect what's requested.
 | Scope | Includes | Use Case | Performance |
 |-------|----------|----------|-------------|
 | `tools` | format, lint, test commands only | cco-commit (fallback) | ~2s |
-| `technical` | stack + tools + conventions + applicable | cco-config (permissions) | ~5s |
-| `full` | technical + strategic fields | cco-calibrate | ~10s |
+| `technical` | stack + tools + conventions + applicable | cco-tune (permissions) | ~5s |
+| `full` | technical + strategic fields | cco-tune | ~10s |
 
 **Default:** If no scope specified, assume `full`.
 

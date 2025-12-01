@@ -18,7 +18,7 @@ def main() -> None:
     print("Setup:   cco-setup")
     print("Remove:  cco-remove")
     print()
-    print("In Claude Code: /cco-calibrate")
+    print("In Claude Code: /cco-tune")
 
 
 if __name__ == "__main__":
