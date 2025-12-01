@@ -33,10 +33,10 @@ def detect_install_method() -> str | None:
 
 def list_cco_files() -> dict[str, list[str]]:
     """List CCO files in ~/.claude/ by category."""
-    files: dict[str, list[str]] = {"commands": [], "agents": []}
-    files["commands"] = sorted(f.name for f in get_cco_commands())
-    files["agents"] = sorted(f.name for f in get_cco_agents())
-    return files
+    return {
+        "commands": sorted(f.name for f in get_cco_commands()),
+        "agents": sorted(f.name for f in get_cco_agents()),
+    }
 
 
 def has_claude_md_standards() -> list[str]:
@@ -54,21 +54,12 @@ def has_claude_md_standards() -> list[str]:
 def remove_cco_files(verbose: bool = True) -> dict[str, int]:
     """Remove CCO files with detailed output."""
     removed = {"commands": 0, "agents": 0}
-
-    # Commands
-    for f in get_cco_commands():
-        f.unlink()
-        removed["commands"] += 1
-        if verbose:
-            print(f"  - {f.name}")
-
-    # Agents
-    for f in get_cco_agents():
-        f.unlink()
-        removed["agents"] += 1
-        if verbose:
-            print(f"  - {f.name}")
-
+    for key, getter in [("commands", get_cco_commands), ("agents", get_cco_agents)]:
+        for f in getter():
+            f.unlink()
+            removed[key] += 1
+            if verbose:
+                print(f"  - {f.name}")
     return removed
 
 

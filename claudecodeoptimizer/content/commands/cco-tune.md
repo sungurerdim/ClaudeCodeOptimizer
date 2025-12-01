@@ -381,7 +381,7 @@ See `claudecodeoptimizer/content/permissions/` for Safe/Balanced/Permissive defi
 
 | If Value | Add Guideline |
 |----------|---------------|
-| Team: solo | Self-review sufficient, aggressive refactors OK |
+| Team: solo | Self-review sufficient |
 | Team: 2-5 | Informal review, document decisions |
 | Team: 6+ | Formal review required |
 | Scale: <100 | Simple solutions, optimize for clarity |
