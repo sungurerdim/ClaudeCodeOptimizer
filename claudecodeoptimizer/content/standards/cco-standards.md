@@ -8,8 +8,8 @@
 
 ### Context Read
 1. Read `CCO_CONTEXT_START` from `./CLAUDE.md` (NOT `.claude/`)
-2. If missing → suggest `/cco-calibrate`
-3. Apply: Guidelines, Thresholds, Applicable checks
+2. If missing → suggest `/cco-tune`
+3. Apply: Guidelines, Thresholds, AI Performance, Applicable checks
 
 ### Safety Classification
 | Safe (auto-apply) | Risky (require approval) |
@@ -48,10 +48,16 @@
 - Test AI Output: unit tests before integration
 - Decompose: break complex tasks for AI
 - No Vibe Coding: avoid rare langs/new frameworks
-- Context Files: CLAUDE.md, plan.md, arch docs
 - Human-AI: humans architect, AI implements, humans review
 - Challenge: "are you sure?" for perfect-looking solutions
 - No Example Fixation: use placeholders, avoid anchoring bias from hardcoded examples
+
+## Context Management
+- Thinking Budget: match to complexity (off → simple, 8K → medium, 32K+ → complex)
+- MCP Limits: 25K default, increase for large tool responses
+- Compact Focus: use /compact with instructions for what to preserve/discard
+- Session Hygiene: /clear between unrelated tasks, /context to monitor
+- Context Files: CLAUDE.md (project), plan.md (task), arch docs (reference)
 
 ## Quality (always apply, thresholds from context)
 
