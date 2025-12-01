@@ -8,7 +8,7 @@ Stack: Python 3.11+ (stdlib only), ruff, mypy, pytest | Type: CLI | DB: None | R
 Maturity: Greenfield | Breaking: Allowed | Priority: Speed
 
 ## AI Performance
-Thinking: 8K | MCP: 25K | Caching: on
+Thinking: 8K | MCP: 50K | Caching: on
 
 ## Guidelines
 - Self-review sufficient, aggressive refactors OK, establish patterns early
@@ -28,11 +28,18 @@ Not Applicable: database, performance, containers, api-contract, dora, ai-securi
 ## Auto-Detected
 Structure: single-repo | Hooks: none | Coverage: 96%
 - [x] Linting configured
+- [x] CI/CD configured
 - [ ] Pre-commit hooks
 - [ ] API endpoints
-- [ ] Container setup
+- [ ] Container/Cloud setup
 - [ ] i18n setup
+- [ ] SLA requirements
 License: MIT
 Secrets detected: no
-Outdated deps: 0
+Outdated deps: 3
+
+## Conditional Standards (auto-applied)
+**Operations** (CI/CD detected):
+- Config as Code: versioned, validated, env-aware
+- Incremental Safety: stash → change → test → rollback on fail
 <!-- CCO_CONTEXT_END -->
