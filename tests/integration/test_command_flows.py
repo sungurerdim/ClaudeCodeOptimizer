@@ -2,8 +2,7 @@
 Integration tests for CCO command execution flows
 
 Tests end-to-end command workflows including:
-- cco-status: Installation health check
-- cco-help: Command reference
+- cco-tune: Project tuning and status
 - cco-update: Update flow (mocked)
 - cco-generate: File generation workflow
 
@@ -17,71 +16,19 @@ from typing import Any
 import pytest
 
 
-class TestCCOStatusCommand:
-    """Test cco-status command flow"""
+class TestCCOTuneCommand:
+    """Test cco-tune command flow"""
 
-    def test_status_with_clean_installation(self, tmp_path: Path) -> None:
-        """Test status command shows healthy installation"""
-        # Setup CCO structure in tmp_path
-        claude_dir = tmp_path / ".claude"
-        claude_dir.mkdir()
-
-        commands_dir = claude_dir / "commands"
-        commands_dir.mkdir()
-
-        agents_dir = claude_dir / "agents"
-        agents_dir.mkdir()
-
-        # Create a few sample files
-        (commands_dir / "cco-help.md").write_text("# Help command")
-        (agents_dir / "cco-agent-scan.md").write_text("# Scan agent")
-
-        # Verify structure exists
-        assert commands_dir.exists()
-        assert agents_dir.exists()
-
-        # Count files
-        command_count = len(list(commands_dir.glob("*.md")))
-        agent_count = len(list(agents_dir.glob("*.md")))
-
-        assert command_count == 1
-        assert agent_count == 1
-
-    def test_status_with_missing_directories(self, tmp_path: Path) -> None:
-        """Test status command detects missing directories"""
-        claude_dir = tmp_path / ".claude"
-        claude_dir.mkdir()
-
-        # Only create commands directory
-        commands_dir = claude_dir / "commands"
-        commands_dir.mkdir()
-
-        # Verify missing directories
-        assert commands_dir.exists()
-        assert not (claude_dir / "agents").exists()
-
-    def test_status_with_no_installation(self, tmp_path: Path) -> None:
-        """Test status command with no CCO installation"""
-        claude_dir = tmp_path / ".claude"
-
-        # Verify .claude directory doesn't exist
-        assert not claude_dir.exists()
-
-
-class TestCCOHelpCommand:
-    """Test cco-help command flow"""
-
-    def test_help_displays_command_list(self, tmp_path: Path) -> None:
-        """Test help command shows all available commands"""
+    def test_tune_displays_command_list(self, tmp_path: Path) -> None:
+        """Test tune command shows available options"""
         commands_dir = tmp_path / "commands"
         commands_dir.mkdir()
 
         # Create sample command files
         commands = {
-            "cco-help": "Command reference guide",
-            "cco-status": "Installation health check",
+            "cco-tune": "Project tuning and status",
             "cco-audit": "Codebase audit",
-            "cco-fix": "Automated fixes",
+            "cco-refactor": "Automated refactoring",
             "cco-generate": "Generate missing components",
         }
 
@@ -95,7 +42,7 @@ class TestCCOHelpCommand:
 
         # Count commands
         command_files = list(commands_dir.glob("cco-*.md"))
-        assert len(command_files) == 5
+        assert len(command_files) == 4
 
 
 class TestCCOGenerateCommand:
@@ -252,20 +199,20 @@ class TestCCOUpdateCommand:
         commands_dir.mkdir(parents=True)
 
         # Create existing command
-        existing_cmd = commands_dir / "cco-help.md"
-        existing_cmd.write_text("# Old Help Content")
+        existing_cmd = commands_dir / "cco-tune.md"
+        existing_cmd.write_text("# Old Tune Content")
 
         # Create backup directory
         backup_dir = tmp_path / "backups"
         backup_dir.mkdir()
 
         # Simulate backup
-        backup_file = backup_dir / "cco-help.md.backup"
+        backup_file = backup_dir / "cco-tune.md.backup"
         backup_file.write_text(existing_cmd.read_text())
 
         # Verify backup created
         assert backup_file.exists()
-        assert backup_file.read_text() == "# Old Help Content"
+        assert backup_file.read_text() == "# Old Tune Content"
 
 
 class TestMetadataTracking:

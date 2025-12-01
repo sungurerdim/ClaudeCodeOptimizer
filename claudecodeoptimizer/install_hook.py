@@ -117,7 +117,7 @@ def post_install() -> int:
         print(f"  Agents:    {len(agents)}")
         print(f"  Standards: {standards} ({categories} categories)")
         print()
-        print("CCO ready! Try: /cco-help")
+        print("CCO ready! Try: /cco-tune")
         print()
         return 0
 
