@@ -69,6 +69,11 @@ After each change:
 
 **Invariant:** `done + skip + fail + cannot_do = total` must always be true.
 
+## Error Reporting
+
+**Follow Error Format from cco-standards Core section:**
+`❌ {What} → ↳ {Why} → → {Fix}`
+
 ## Principles
 
 1. **Verify after change** - Read file to confirm edit

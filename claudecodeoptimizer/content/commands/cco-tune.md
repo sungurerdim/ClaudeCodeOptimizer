@@ -125,108 +125,120 @@ Run `cco-agent-detect` with `scope: full`:
 
 ## Step 4: Confirmation
 
+**Label System (apply to ALL options):**
+```
+[current]               - Value from existing CCO_CONTEXT
+[detected]              - Auto-detected from codebase analysis
+[recommended:{profile}] - Recommended for complexity profile
+```
+
+**Label Rules:**
+- Append matching labels to description: `"{base_description} {labels}"`
+- Multiple labels allowed when applicable
+- Omit labels that don't apply (no empty brackets)
+- Order: base description, then [current], [detected], [recommended:{profile}]
+
 ### Call 1 - Core Context
 ```
 Q1 - header: "Purpose"
 question: "Project purpose?"
-options: [detected] + 2-3 alternatives
+options:
+  - label: "{detected.purpose}"
+    description: "Detected from codebase {labels}"
+  - 2-3 alternatives based on {detected.type}
 
 Q2 - header: "Team"
 question: "Team size?"
 options: Solo | 2-5 | 6+
+description_template: "{base_description} {labels}"
 
 Q3 - header: "Scale"
 question: "Expected users?"
 options: <100 | 100-10K | 10K+
+description_template: "{base_description} {labels}"
 
 Q4 - header: "Data"
 question: "Most sensitive data?"
 options: Public | Internal | PII | Regulated
+description_template: "{base_description} {labels}"
 ```
 
 ### Call 2 - Technical
 ```
 Q5 - header: "Stack"
 question: "Tech stack correct?"
-options: [detected stack] | Edit
+options:
+  - label: "{detected.stack}"
+    description: "{labels}"
+  - label: "Edit"
+    description: "Modify the detected stack"
 
 Q6 - header: "Type"
 question: "Project type?"
 options: backend-api | frontend | fullstack | cli | library | mobile | desktop
+description_template: "{base_description} {labels}"
+note: Show 4 most relevant based on {detected.type}
 
 Q7 - header: "Database"
 question: "Database type?"
 options: None | SQL | NoSQL
+description_template: "{base_description} {labels}"
 
 Q8 - header: "Rollback"
 question: "Rollback complexity?"
 options: Git | DB | User-data
+description_template: "{base_description} {labels}"
 ```
 
 ### Call 3 - Approach
 ```
 Q9 - header: "Maturity"
 question: "Project phase?"
-options:
-  - Greenfield: New, aggressive changes OK
-  - Active: Growing, balanced approach
-  - Maintenance: Stable, minimize changes
-  - Legacy: Old, wrap don't modify
+options: Greenfield | Active | Maintenance | Legacy
+description_template: "{base_description} {labels}"
 
 Q10 - header: "Breaking"
 question: "Breaking changes tolerance?"
-options:
-  - Allowed: Rename/restructure freely
-  - Minimize: Deprecate first
-  - Never: Full backward compatibility
+options: Allowed | Minimize | Never
+description_template: "{base_description} {labels}"
 
 Q11 - header: "Priority"
 question: "Quality vs speed?"
-options:
-  - Speed: Ship fast, iterate
-  - Balanced: Standard practices
-  - Quality: Thorough, no shortcuts
+options: Speed | Balanced | Quality
+description_template: "{base_description} {labels}"
 ```
 
 ### Call 4 - AI Performance
+
+**Complexity Profile Mapping:**
+| Profile | Criteria | Thinking | MCP |
+|---------|----------|----------|-----|
+| simple | Scale <100, Type: cli/library | Off | 25K |
+| medium | Scale 100-10K | 8K | 25K |
+| complex | Scale 10K+ OR Maturity: legacy | 32K | 50K |
+
 ```
 Q12 - header: "Thinking"
 question: "Extended thinking budget?"
 options:
-  - label: "Off"
-    description: "Disabled (default)"
-  - label: "1K"
-    description: "Minimum - basic reasoning"
-  - label: "8K"
-    description: "Moderate - most tasks [recommended: medium projects]"
-  - label: "32K"
-    description: "Deep - complex analysis [recommended: complex projects]"
-  - label: "64K"
-    description: "Benchmark-level analysis"
+  - Off: "{base_description} {labels}" [recommended:simple]
+  - 8K: "{base_description} {labels}" [recommended:medium]
+  - 32K: "{base_description} {labels}" [recommended:complex]
+  - 64K: "{base_description} {labels}"
 
 Q13 - header: "MCP Limit"
 question: "MCP tool output limit?"
 options:
-  - label: "25K"
-    description: "Default (warns at 10K)"
-  - label: "50K"
-    description: "Extended for larger outputs"
-  - label: "100K"
-    description: "Maximum for complex tools"
+  - 25K: "{base_description} {labels}" [recommended:simple,medium]
+  - 50K: "{base_description} {labels}" [recommended:complex]
+  - 100K: "{base_description} {labels}"
 
 Q14 - header: "Caching"
 question: "Prompt caching?"
 options:
-  - label: "Enabled"
-    description: "Faster, cheaper (default)"
-  - label: "Disabled"
-    description: "Fresh reasoning, higher cost"
+  - Enabled: "{base_description} {labels}" [recommended:all]
+  - Disabled: "{base_description} {labels}"
 ```
-
-**Complexity-based recommendations:**
-- Simple (Scale <100, Type: cli/library): Thinking Off, MCP 25K, Caching Enabled
-- Medium (Scale 100-10K): Thinking 8K, MCP 25K, Caching Enabled
-- Complex (Scale 10K+ OR Maturity: legacy): Thinking 32K, MCP 50K, Caching Enabled
 
 **Note:** Auto-compact can only be toggled via `/config` UI, not programmatically.
 
@@ -234,37 +246,26 @@ options:
 
 ### Scope & Features
 ```
-Q16 - header: "Scope"
+Q15 - header: "Scope"
 question: "Configuration scope?"
-options:
-  - label: "Global"
-    description: "~/.claude/ - applies to all projects"
-  - label: "Local"
-    description: "./.claude/ - this project only"
+options: Global | Local
+description_template: "{base_description} {labels}"
 
-Q17 - header: "Features"
+Q16 - header: "Features"
 question: "What to configure?"
 multiSelect: true
-options:
-  - label: "Statusline"
-    description: "Visual status bar with git info"
-  - label: "Permissions"
-    description: "Tool access rules"
-  - label: "Skip"
-    description: "Context only, no config changes"
+options: Statusline | Permissions | Skip
+description_template: "{base_description} {labels}"
 ```
 
 ### Permission Level (if Permissions selected)
 ```
-Q18 - header: "Permissions"
+Q17 - header: "Permissions"
 question: "Permission level?"
 options:
-  - label: "Safe"
-    description: "Ask for all writes/commands"
-  - label: "Balanced"
-    description: "Allow safe commands, ask risky [recommended]"
-  - label: "Permissive"
-    description: "Allow most, deny dangerous"
+  - Safe: "{base_description} {labels}"
+  - Balanced: "{base_description} {labels}" [recommended:all]
+  - Permissive: "{base_description} {labels}"
 ```
 
 ## Step 6: Apply Changes

@@ -31,24 +31,15 @@ When called without flags, AskUserQuestion:
 header: "Scope"
 question: "What scope to audit?"
 options:
-  - label: "Quick"
-    description: "Security + critical issues only"
-  - label: "Smart"
-    description: "Auto-detect applicable checks (recommended)"
-  - label: "Full"
-    description: "All checks regardless of applicability"
-```
+  - Quick: "{base_description} {labels}"
+  - Smart: "{base_description} {labels}" [recommended]
+  - Full: "{base_description} {labels}"
 
-Then ask:
-
-```
 header: "Auto-fix"
 question: "Auto-fix safe issues?"
 options:
-  - label: "Yes"
-    description: "Apply safe fixes automatically"
-  - label: "No"
-    description: "Show all issues, ask before fixing"
+  - Yes: "{base_description} {labels}" [recommended]
+  - No: "{base_description} {labels}"
 ```
 
 Explicit flags (`--smart`, `--security`, etc.) skip these questions.
@@ -119,6 +110,11 @@ When mismatches found, AskUserQuestion for Single Source of Truth:
 **Follow Approval Flow from cco-standards.**
 
 **Follow Safety Classification from cco-standards Workflow section** for safe vs risky determination.
+
+## Error Reporting
+
+**Follow Error Format from cco-standards Core section:**
+`❌ {What} → ↳ {Why} → → {Fix}`
 
 ## Verification
 
