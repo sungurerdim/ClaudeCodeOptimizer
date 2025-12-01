@@ -179,11 +179,22 @@ Optional status display with git integration:
 
 ---
 
-## Standards
+## Standards Architecture
 
-CCO adds standards to `~/.claude/CLAUDE.md`:
+CCO uses a two-file standards system to minimize context usage:
 
-### Core (Always Apply)
+```
+~/.claude/CLAUDE.md (Global)          ./CLAUDE.md (Local)
+├── Core Standards (56 rules)         ├── Project Context
+│   ├── Workflow                      │   ├── Strategic (purpose, team, scale)
+│   ├── Approval Flow                 │   ├── AI Performance (thinking, MCP)
+│   ├── AI-Assisted                   │   ├── Guidelines (project-specific)
+│   ├── Context Management            │   └── Auto-Detected (CI/CD, coverage)
+│   └── Quality (code, test, security)│
+└── Conditional Reference             └── Applicable Conditionals (auto-added)
+```
+
+### Core Standards (Always Apply)
 
 | Section | Purpose |
 |---------|---------|
@@ -194,17 +205,26 @@ CCO adds standards to `~/.claude/CLAUDE.md`:
 | Context Management | Thinking, MCP, session hygiene |
 | Quality | Code quality, testing, security |
 
-### Conditional (Apply When Relevant)
+### Conditional Standards (Project-Specific)
 
-| Section | Trigger |
-|---------|---------|
-| Security Extended | Container/K8s, Scale 10K+, PII |
-| Architecture | Scale 10K+, microservices |
-| Operations | CI/CD detected |
-| Performance | Scale 100-10K+ |
-| API | REST/GraphQL endpoints |
-| Frontend | Frontend frameworks |
-| Reliability | SLA requirements |
+`/cco-tune` detects project characteristics and adds only applicable conditionals to local `./CLAUDE.md`:
+
+| Conditional | Trigger | Context Field |
+|-------------|---------|---------------|
+| Security Extended | Container/K8s, Scale 10K+, PII | `Container/Cloud`, `Scale`, `Data` |
+| Architecture | Scale 10K+, microservices | `Scale`, `Type` |
+| Operations | CI/CD detected | `CI/CD configured` |
+| Performance | Scale 100-10K+ | `Scale` |
+| Data | Database detected | `DB` |
+| API | REST/GraphQL endpoints | `API endpoints` |
+| Frontend | Frontend frameworks | `Type` |
+| i18n | Multi-language | `i18n setup` |
+| Reliability | SLA requirements | `SLA requirements` |
+| Cost | Cloud/Container | `Container/Cloud setup` |
+| DX | Team 2-5+ | `Team` |
+| Compliance | SOC2/HIPAA/PCI | `Compliance` |
+
+**Result:** Only relevant rules load into context. A CLI project won't carry Frontend or API standards.
 
 ---
 
@@ -213,12 +233,24 @@ CCO adds standards to `~/.claude/CLAUDE.md`:
 After `cco-setup`:
 
 ```
-~/.claude/
+~/.claude/                              # Global (all projects)
 ├── commands/
-│   └── cco-*.md          # 8 slash commands
+│   └── cco-*.md                        # 8 slash commands
 ├── agents/
-│   └── cco-*.md          # 3 specialized agents
-└── CLAUDE.md             # Standards
+│   └── cco-*.md                        # 3 specialized agents
+├── statusline.js                       # Optional statusline
+├── settings.json                       # AI performance + permissions
+└── CLAUDE.md                           # Core standards (56 rules)
+
+./CLAUDE.md                             # Local (per project, after /cco-tune)
+├── CCO_CONTEXT_START
+│   ├── Strategic Context               # Purpose, team, scale, stack
+│   ├── AI Performance                  # Thinking, MCP, caching
+│   ├── Guidelines                      # Project-specific rules
+│   ├── Operational                     # Tools, conventions
+│   ├── Auto-Detected                   # CI/CD, coverage, flags
+│   └── Conditional Standards           # Only applicable rules
+└── CCO_CONTEXT_END
 ```
 
 ---
