@@ -1,0 +1,138 @@
+<!-- CCO_CONDITIONALS_START -->
+# Conditional Standards
+*Domain-specific rules - selected by /cco-tune based on project detection*
+*These are written to local ./CLAUDE.md, NOT global ~/.claude/CLAUDE.md*
+
+## Security Extended
+**When:** Container/K8s detected OR Scale: 10K+ OR Data: PII/Regulated
+- Privacy-First: PII managed, cleaned from memory, GDPR/CCPA
+- Encryption: AES-256-GCM for data at rest
+- Zero Disk: sensitive data in RAM only
+- Auth: OAuth2 + RBAC + mTLS, verify every request (Zero Trust)
+- Rate Limit: all endpoints, per-user/IP, return headers
+- Supply Chain: SBOM, SLSA L2+, Sigstore signing, lockfiles
+- AI Security: validate prompts/outputs, prevent injection
+- Container: distroless, non-root, CVE scan (Trivy)
+- K8s: RBAC least privilege, NetworkPolicy, PodSecurity
+- Policy-as-Code: OPA/Sentinel
+- Audit Log: all security events, immutable
+- Incident Response: IR plan, SIEM, DR tested
+
+## Architecture
+**When:** Scale: 10K+ OR Type: backend-api with microservices
+- Event-Driven: async patterns, communicate via events
+- Service Mesh: Istio/Linkerd for mTLS, observability
+- Separation: one aspect per module/class
+- DI: inject dependencies, enable testing
+- Dependency Rule: inward only toward business logic
+- Circuit Breaker: fail fast on unhealthy downstream
+- Bounded Contexts: DDD, own models/rules per context
+- API Versioning: explicit versions, backward compatible
+- Idempotency: safe to retry without side effects
+- Event Sourcing: state as event sequence
+
+## Operations
+**When:** Scale: 10K+ OR CI/CD detected
+- Zero Maintenance: auto-manage lifecycle
+- Config as Code: versioned, validated, env-aware
+- IaC + GitOps: Terraform/Pulumi + ArgoCD/Flux
+- Observability: OpenTelemetry (metrics, traces, logs)
+- Health: /health + /ready endpoints
+- Graceful Shutdown: SIGTERM → drain → close
+- Blue/Green: zero downtime, instant rollback
+- Canary: progressive rollout, auto-rollback on errors
+- Feature Flags: decouple deploy from release
+- Incremental Safety: stash → change → test → rollback on fail
+
+## Performance
+**When:** Scale: 100-10K+ OR Performance applicable
+- DB: indexing, N+1 prevention, explain plans
+- Async I/O: no blocking in async context
+- Caching: cache-aside/write-through, TTL, invalidation
+- Cache Hit: >80% target
+- Connection Pool: reuse, size based on load
+- Lazy Load: defer until needed
+- Compression: gzip/brotli responses
+
+## Data
+**When:** DB detected
+- Backup: automated, defined RPO/RTO, tested restore
+- Migrations: versioned, backward compatible, rollback
+- Retention: defined periods, auto-cleanup
+
+## API
+**When:** API detected (REST/GraphQL endpoints)
+- REST: proper methods, status codes, resource naming
+- Pagination: cursor-based for large datasets
+- Docs: OpenAPI spec, examples, synced with code
+- Errors: consistent format, no stack traces in prod
+- GraphQL: complexity limits, depth limits, persisted queries
+- Contract: verify API contracts between services
+- CORS: allowed origins/methods, credentials handling
+
+## Frontend
+**When:** Frontend detected
+
+### Accessibility
+- WCAG 2.2 AA: perceivable, operable, understandable, robust
+- Semantic HTML: native elements (button, nav, form)
+- ARIA: only when HTML insufficient
+- Keyboard: all interactive elements accessible
+- Screen Reader: alt text, heading hierarchy, labels
+- Contrast: 4.5:1 normal, 3:1 large text
+- Focus: logical order, trap in modals
+- A11y Testing: axe-core/pa11y in CI, zero critical violations
+
+### Performance
+- Core Web Vitals: LCP, FID, CLS targets
+- Bundle Size: code splitting, tree shaking
+- Lazy Loading: defer non-critical resources
+
+### Design Quality (Avoid AI Slop)
+- Typography: choose beautiful, unique fonts; avoid defaults (Arial, Inter, Roboto, system fonts)
+- Color & Theme: CSS variables for consistency; dominant colors with sharp accents
+- Motion: prioritize high-impact moments; one well-orchestrated page load with staggered reveals
+- Backgrounds: create atmosphere and depth; avoid solid color defaults
+- Distinctive Design: make unexpected choices that feel genuinely designed for context
+  - Avoid clichéd color schemes (especially purple gradients)
+  - Avoid predictable layouts without context-specific character
+  - Vary aesthetics across implementations; avoid convergence on common AI patterns
+
+## i18n
+**When:** i18n detected OR multi-language requirement
+- Externalized: no hardcoded user text
+- Unicode: UTF-8 everywhere
+- RTL: support Arabic, Hebrew
+- Locale: date/time/number formatting
+- Pluralization: proper rules per language
+
+## Reliability
+**When:** Scale: 10K+ OR Type: backend-api with SLA
+- Chaos: inject failures in production
+- Resilience: validate failure scenarios
+- Timeouts: explicit for all external calls
+- Retry: exponential backoff + jitter
+- Bulkhead: isolate failures
+- Fallback: graceful degradation
+
+## Cost
+**When:** Cloud/Container detected
+- FinOps: monitor, right-size, spot instances
+- Tagging: all cloud resources
+- Auto-Scale: scale to zero when idle
+- Green: energy-efficient, carbon-aware
+
+## DX
+**When:** Team: 2-5+
+- Local Parity: match production
+- Fast Feedback: quick builds, fast tests
+- Self-Service: provision without tickets
+- Golden Paths: recommended approaches
+- Runbooks: ops procedures
+
+## Compliance
+**When:** Compliance: not None
+- License: track deps, no GPL without review
+- Frameworks: SOC2/HIPAA/PCI-DSS as applicable
+- Classification: data by sensitivity
+<!-- CCO_CONDITIONALS_END -->

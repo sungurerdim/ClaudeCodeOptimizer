@@ -9,6 +9,8 @@ safe: false
 
 Apply changes with verification. Reports accounting.
 
+**Standards:** Safety Classification | Reference Integrity | Verification | Error Format
+
 ## Purpose
 
 Execute approved changes: fixes, generation, optimization, refactoring.
@@ -22,10 +24,6 @@ Execute approved changes: fixes, generation, optimization, refactoring.
 | Optimize | Analysis result | Reduced code |
 | Refactor | Map + transform | Updated refs |
 
-## Safety Classification
-
-**Follow Safety Classification from cco-standards Workflow section.**
-
 | Safe (auto-apply) | Risky (require approval) |
 |-------------------|--------------------------|
 | Remove unused imports | Auth/CSRF changes |
@@ -35,10 +33,6 @@ Execute approved changes: fixes, generation, optimization, refactoring.
 | Add type annotations | Rename public APIs |
 
 ## Verification Protocol
-
-**Follow Core verification rules from cco-standards:**
-- Reference Integrity: find ALL refs → update in order → verify (grep old=0, new=expected)
-- Verification: total = done + skip + fail + cannot_do, no "fixed" without Read proof
 
 After each change:
 1. **Read** - Confirm edit applied correctly
@@ -68,11 +62,6 @@ After each change:
 ```
 
 **Invariant:** `done + skip + fail + cannot_do = total` must always be true.
-
-## Error Reporting
-
-**Follow Error Format from cco-standards Core section:**
-`❌ {What} → ↳ {Why} → → {Fix}`
 
 ## Principles
 

@@ -7,25 +7,15 @@ description: Verified transformations with rollback
 
 **Risk mitigation** - Find ALL references → transform in order → verify → rollback on failure.
 
-## Pre-Operation
-
-**Follow Pre-Operation Safety from cco-standards Workflow section.**
+**Standards:** Pre-Operation Safety | Context Read | Approval Flow | Reference Integrity | Verification | Error Format
 
 Requires clean git state. If uncommitted changes exist → Commit / Stash / Cancel
 
-## Project Context
-
-**Follow Context Read from cco-standards Workflow section.**
-
-From context apply:
+## Context Application
 - **Rollback** - If DB/User-data → extra caution, suggest backup first
 - **Type** - Library: warn about public API changes
 - **Breaking** - If Never → require deprecation path; if Allowed → clean rename OK
 - **Maturity** - If Legacy → prefer wrap over modify; if Greenfield → aggressive OK
-
-## Approval Flow
-
-**Follow Approval Flow from cco-standards** for confirmation step.
 
 ## Flow
 
@@ -42,8 +32,6 @@ After each file change:
 - If mismatch: rollback, report which file failed
 - Continue only if all checks pass
 
-**Follow Core verification rules from cco-standards.**
-
 ## Operations
 
 ```bash
@@ -52,11 +40,6 @@ After each file change:
 /cco-refactor extract "{code_block}" {new_module}
 /cco-refactor inline {function_name}
 ```
-
-## Error Reporting
-
-**Follow Error Format from cco-standards Core section:**
-`❌ {What} → ↳ {Why} → → {Fix}`
 
 ## Rollback
 

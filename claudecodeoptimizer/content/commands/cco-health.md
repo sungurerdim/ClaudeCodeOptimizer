@@ -7,11 +7,9 @@ description: Actionable metrics dashboard
 
 **Process visibility** - Single view of project health with actionable next steps.
 
-## Project Context
+**Standards:** Context Read | Approval Flow | Error Format
 
-**Follow Context Read from cco-standards Workflow section.**
-
-From context apply:
+## Context Application
 - **Applicable** - Only show relevant scores from Operational section
 - **Scale** - Adjust thresholds: <100 (relaxed), 100-10K (standard), 10K+ (strict)
 - **Type** - Emphasize relevant metrics: API (response time), CLI (startup), library (coverage)
@@ -31,13 +29,6 @@ From context apply:
 After scores, show top 3 actionable items:
 - Highest impact, lowest effort
 - With specific file:line locations
-
-**Follow Approval Flow from cco-standards** for "Fix First" items.
-
-## Error Reporting
-
-**Follow Error Format from cco-standards Core section:**
-`❌ {What} → ↳ {Why} → → {Fix}`
 
 ## Output
 

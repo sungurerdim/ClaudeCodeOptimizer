@@ -5,6 +5,9 @@ A process and standards layer for Claude Code in the Opus 4.5 era.
 [![Python 3.11+](https://img.shields.io/badge/python-3.11+-blue.svg)](https://www.python.org/downloads/)
 [![License: MIT](https://img.shields.io/badge/license-MIT-green.svg)](LICENSE)
 [![Version](https://img.shields.io/badge/version-1.0.0-blue.svg)]()
+[![Claude 4 Best Practices](https://img.shields.io/badge/Claude_4-Best_Practices-blueviolet.svg)](https://platform.claude.com/docs/en/build-with-claude/prompt-engineering/claude-4-best-practices)
+
+> **Fully aligned with [Claude 4 Best Practices](https://platform.claude.com/docs/en/build-with-claude/prompt-engineering/claude-4-best-practices)** - Agentic coding, extended thinking, parallel tools, context management, and design quality standards.
 
 Claude Code already gives you strong refactors, tests and multi-file edits with Opus-class models.
 CCO sits on top of that and adds three things you usually have to build by hand:
@@ -48,6 +51,50 @@ Instead, it focuses on one missing layer:
 
 ---
 
+## How CCO Works
+
+### What CCO Does NOT Do
+
+CCO is not teaching Claude how to code. Opus 4.5 already knows:
+- How to write clean, maintainable code
+- Security best practices
+- Testing patterns
+- Refactoring techniques
+
+### What CCO Actually Does
+
+CCO adds **process layers** around what Claude already does well:
+
+| Layer | What It Adds | Example |
+|-------|--------------|---------|
+| **Pre-** | Safety checks before action | `git status` check, dirty state handling |
+| **Process** | Standardized workflows | Approval flow format, priority tabs |
+| **Post-** | Verification and reporting | `done + skip + fail = total`, error format |
+| **Context** | Project-aware behavior | Scale, team size, data sensitivity → adjusted thresholds |
+
+```
+Claude/Opus 4.5 already knows:       CCO adds:
+────────────────────────────         ─────────────────────────
+• Writing good code                  • Pre: git safety checks
+• Security best practices            • Process: approval workflows
+• Refactoring patterns               • Post: verification accounting
+• Test generation                    • Context: project parameters
+```
+
+### Why Explicit Standards?
+
+CCO lists 171 standards explicitly (30 universal + 53 Claude-specific + 88 conditional). Why, if Claude already knows them?
+
+| Benefit | Explanation |
+|---------|-------------|
+| **Transparency** | Users see exactly what rules apply to their project |
+| **Consistency** | Same standards across all projects, every session |
+| **Overridability** | Context can adjust thresholds (coverage: 60% solo → 90% enterprise) |
+| **Auditability** | Clear reference for code reviews and compliance |
+| **Predictability** | No surprises - behavior is documented and reproducible |
+
+---
+
 ## Commands
 
 | Command | Purpose |
@@ -85,14 +132,20 @@ Instead, it focuses on one missing layer:
 
 | Setting | Options | Default |
 |---------|---------|---------|
-| **Thinking Budget** | Off, 1K, 8K, 32K, 64K | Off |
+| **Thinking Budget** | Off, 8K, 16K, 32K | Off |
 | **MCP Output Limit** | 25K, 50K, 100K | 25K |
 | **Prompt Caching** | Enabled, Disabled | Enabled |
+
+**When to use extended thinking:**
+- Off: simple questions, file lookups
+- 8K: standard coding, single-file changes
+- 16K+: multi-file refactors, complex debugging
+- 32K: algorithm design, deep multi-step analysis
 
 **Complexity-based recommendations:**
 - Simple projects (solo, <100 users): Thinking Off, MCP 25K
 - Medium projects: Thinking 8K, MCP 25K
-- Complex projects (10K+ users, legacy): Thinking 32K, MCP 50K
+- Complex projects (10K+ users, legacy): Thinking 16K-32K, MCP 50K
 
 ### Stored Format
 
@@ -181,48 +234,61 @@ Optional status display with git integration:
 
 ## Standards Architecture
 
-CCO uses a two-file standards system to minimize context usage:
+CCO uses a three-category standards system for minimal context usage:
 
 ```
-~/.claude/CLAUDE.md (Global)          ./CLAUDE.md (Local)
-├── Core Standards (56 rules)         ├── Project Context
-│   ├── Workflow                      │   ├── Strategic (purpose, team, scale)
-│   ├── Approval Flow                 │   ├── AI Performance (thinking, MCP)
-│   ├── AI-Assisted                   │   ├── Guidelines (project-specific)
-│   ├── Context Management            │   └── Auto-Detected (CI/CD, coverage)
-│   └── Quality (code, test, security)│
-└── Conditional Reference             └── Applicable Conditionals (auto-added)
+Source Files                              Destination
+────────────────────────────────────────────────────────────────
+cco-standards.md                        → ~/.claude/CLAUDE.md
+├── Universal Standards (30 rules)         (loaded for ALL projects)
+│   └── Quality (code, testing, security) + Docs
+└── Claude-Specific Standards (53 rules)
+    └── Workflow, Core, Approval, Agentic Coding, AI-Assisted, Context
+
+cco-standards-conditional.md            → ./CLAUDE.md (filtered)
+└── Conditional Standards (88 rules)       (only matching rules)
+    └── Security, Architecture, API, Frontend, etc.
 ```
 
-### Core Standards (Always Apply)
+### Universal Standards (30 rules)
+*Software engineering best practices - any project, any language*
 
-| Section | Purpose |
-|---------|---------|
-| Workflow | Pre-Operation Safety, Context Read |
-| Core | Paths, reference integrity, verification |
-| Approval Flow | Priority tabs, risk labels |
-| AI-Assisted | Plan→Act→Review workflow |
-| Context Management | Thinking, MCP, session hygiene |
-| Quality | Code quality, testing, security |
+| Section | Rules | Purpose |
+|---------|-------|---------|
+| Quality > Code | 13 | DRY, complexity, type safety, no overengineering |
+| Quality > Testing | 6 | Coverage, isolation, CI gates, test integrity |
+| Quality > Security | 6 | Input validation, SQL, secrets, OWASP |
+| Docs | 5 | README, CHANGELOG, API docs, ADR |
 
-### Conditional Standards (Project-Specific)
+### Claude-Specific Standards (53 rules)
+*AI assistant behavior and workflow patterns*
 
-`/cco-tune` detects project characteristics and adds only applicable conditionals to local `./CLAUDE.md`:
+| Section | Rules | Purpose |
+|---------|-------|---------|
+| Workflow | 3 | Pre-Operation Safety, Context Read, Safety Classification |
+| Core | 7 | Paths, reference integrity, verification, parallel tools |
+| Approval Flow | 12 | Priority tabs, risk labels, multi-select |
+| Agentic Coding | 6 | Read first, no speculation, positive framing |
+| AI-Assisted | 10 | Plan→Act→Review, thinking escalation, subagent delegation |
+| Context Management | 15 | When to use thinking, MCP limits, session practices |
 
-| Conditional | Trigger | Context Field |
-|-------------|---------|---------------|
-| Security Extended | Container/K8s, Scale 10K+, PII | `Container/Cloud`, `Scale`, `Data` |
-| Architecture | Scale 10K+, microservices | `Scale`, `Type` |
-| Operations | CI/CD detected | `CI/CD configured` |
-| Performance | Scale 100-10K+ | `Scale` |
-| Data | Database detected | `DB` |
-| API | REST/GraphQL endpoints | `API endpoints` |
-| Frontend | Frontend frameworks | `Type` |
-| i18n | Multi-language | `i18n setup` |
-| Reliability | SLA requirements | `SLA requirements` |
-| Cost | Cloud/Container | `Container/Cloud setup` |
-| DX | Team 2-5+ | `Team` |
-| Compliance | SOC2/HIPAA/PCI | `Compliance` |
+### Conditional Standards (88 rules)
+*Domain-specific rules - selected by /cco-tune, written to local CLAUDE.md only*
+
+| Conditional | Rules | Trigger |
+|-------------|-------|---------|
+| Security Extended | 12 | Container/K8s, Scale 10K+, PII/Regulated |
+| Architecture | 10 | Scale 10K+, microservices |
+| Operations | 10 | CI/CD detected |
+| Performance | 7 | Scale 100-10K+ |
+| Data | 3 | Database detected |
+| API | 7 | REST/GraphQL endpoints |
+| Frontend | 16 | Frontend frameworks |
+| i18n | 5 | Multi-language setup |
+| Reliability | 6 | SLA requirements |
+| Cost | 4 | Cloud/Container |
+| DX | 5 | Team 2-5+ |
+| Compliance | 3 | SOC2/HIPAA/PCI |
 
 **Result:** Only relevant rules load into context. A CLI project won't carry Frontend or API standards.
 

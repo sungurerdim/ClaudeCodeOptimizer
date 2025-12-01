@@ -7,15 +7,9 @@ description: Standardized quality gates with prioritized fixes
 
 **Quality gates** - Read context → run applicable checks → prioritize → offer fixes.
 
-## Pre-Operation
+**Standards:** Pre-Operation Safety | Context Read | Approval Flow | Safety Classification | Verification | Error Format
 
-**Follow Pre-Operation Safety from cco-standards Workflow section.**
-
-## Project Context
-
-**Follow Context Read from cco-standards Workflow section.**
-
-From context apply:
+## Context Application
 - **Guidelines** - Follow listed guidelines
 - **Applicable** - Only run applicable checks
 - **Data** - If PII/Regulated → prioritize security issues higher
@@ -104,17 +98,6 @@ When mismatches found, AskUserQuestion for Single Source of Truth:
 - **HIGH** - High impact, low effort (fix first)
 - **MEDIUM** - Balanced impact/effort
 - **LOW** - Low impact or high effort (fix if time permits)
-
-## Fix Approval
-
-**Follow Approval Flow from cco-standards.**
-
-**Follow Safety Classification from cco-standards Workflow section** for safe vs risky determination.
-
-## Error Reporting
-
-**Follow Error Format from cco-standards Core section:**
-`❌ {What} → ↳ {Why} → → {Fix}`
 
 ## Verification
 

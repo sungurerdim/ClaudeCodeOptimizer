@@ -7,15 +7,9 @@ description: Convention-following automated generation
 
 **Convention-following generation** - Read conventions from context → generate consistent components.
 
-## Pre-Operation
+**Standards:** Pre-Operation Safety | Context Read | Verification | Error Format
 
-**Follow Pre-Operation Safety from cco-standards Workflow section.**
-
-## Project Context
-
-**Follow Context Read from cco-standards Workflow section.**
-
-From context apply:
+## Context Application
 - **Conventions** - Use testNaming, importStyle from Operational section
 - **Type** - Adapt templates: CLI (argparse/click), API (endpoints), frontend (components)
 - **Stack** - Use detected frameworks for idiomatic generation
@@ -89,11 +83,6 @@ Generate for:
 - Dev dependencies in build stage only
 - Non-root user in final stage
 - Health check if applicable
-
-## Error Reporting
-
-**Follow Error Format from cco-standards Core section:**
-`❌ {What} → ↳ {Why} → → {Fix}`
 
 ## Verification
 

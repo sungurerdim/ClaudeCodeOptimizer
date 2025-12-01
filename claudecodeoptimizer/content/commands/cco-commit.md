@@ -7,15 +7,9 @@ description: Atomic traceable change management
 
 **Change management** - Quality gates → analyze → group atomically → commit with traceability.
 
-## Pre-Operation
+**Standards:** Pre-Operation Safety | Context Read | Error Format
 
-**Follow Pre-Operation Safety from cco-standards Workflow section.**
-
-## Project Context
-
-**Follow Context Read from cco-standards Workflow section.**
-
-From context apply:
+## Context Application
 - **Tools** - Use format, lint, test commands from Operational section
 - **Maturity** - If Legacy → conservative grouping; if Greenfield → aggressive refactors OK
 
@@ -99,11 +93,6 @@ If changes have dependencies, commit in order:
 6. **Confirm** - AskUserQuestion: Accept / Modify / Custom
 7. **Execute** - Stage and commit each group in order
 8. **Verify** - `git log` count = planned count
-
-## Error Reporting
-
-**Follow Error Format from cco-standards Core section:**
-`❌ {What} → ↳ {Why} → → {Fix}`
 
 ## Flags
 

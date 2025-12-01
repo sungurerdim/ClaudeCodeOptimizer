@@ -7,15 +7,9 @@ description: Measurable efficiency improvements
 
 **Efficiency optimization** - Reduce waste → improve efficiency → measure impact → verify.
 
-## Pre-Operation
+**Standards:** Pre-Operation Safety | Context Read | Approval Flow | Safety Classification | Verification | Error Format
 
-**Follow Pre-Operation Safety from cco-standards Workflow section.**
-
-## Project Context
-
-**Follow Context Read from cco-standards Workflow section.**
-
-From context apply:
+## Context Application
 - **Guidelines** - Follow listed guidelines
 - **Scale** - If 10K+ → prioritize performance optimizations
 - **Type** - CLI: startup time, API: response time, library: memory footprint
@@ -62,17 +56,6 @@ Show impact after optimization:
 - Lines: before → after (% reduction)
 - Tokens: before → after (for context files)
 - Complexity: before → after (for code)
-
-## Approval Flow
-
-**Follow Approval Flow from cco-standards.**
-
-**Follow Safety Classification from cco-standards Workflow section.**
-
-## Error Reporting
-
-**Follow Error Format from cco-standards Core section:**
-`❌ {What} → ↳ {Why} → → {Fix}`
 
 ## Verification
 
