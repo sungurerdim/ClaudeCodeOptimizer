@@ -10,6 +10,7 @@ from .config import (
     CCO_MARKER_PATTERNS,
     CLAUDE_DIR,
     COMMANDS_DIR,
+    SEPARATOR,
     get_standards_breakdown,
 )
 
@@ -97,9 +98,9 @@ def post_install() -> int:
         return 0
 
     try:
-        print("\n" + "=" * 50)
+        print("\n" + SEPARATOR)
         print("CCO Setup")
-        print("=" * 50)
+        print(SEPARATOR)
         print(f"\nLocation: {CLAUDE_DIR}\n")
 
         # Commands
@@ -124,10 +125,10 @@ def post_install() -> int:
         # Summary
         installed = standards["universal"] + standards["claude_specific"]
         breakdown = get_standards_breakdown()
-        print("=" * 50)
+        print(SEPARATOR)
         print(f"Installed: {len(cmds)} commands, {len(agents)} agents, {installed} standards")
         print(f"Available: +{breakdown['conditional']} conditional standards via /cco-tune")
-        print("=" * 50)
+        print(SEPARATOR)
         print()
         print("⚠️  Restart Claude Code for changes to take effect.")
         print()

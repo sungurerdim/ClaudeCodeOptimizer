@@ -10,6 +10,7 @@ __all__ = [
     "CLAUDE_DIR",
     "COMMANDS_DIR",
     "AGENTS_DIR",
+    "SEPARATOR",
     "get_cco_commands",
     "get_cco_agents",
     "get_standards_breakdown",
@@ -21,6 +22,7 @@ VERSION = __version__  # Single source: __init__.py
 CLAUDE_DIR = Path.home() / ".claude"
 COMMANDS_DIR = CLAUDE_DIR / "commands"
 AGENTS_DIR = CLAUDE_DIR / "agents"
+SEPARATOR = "=" * 50
 
 # Marker patterns for content removal
 CCO_MARKER_PATTERNS: dict[str, tuple[str, int]] = {
