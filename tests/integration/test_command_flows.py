@@ -3,7 +3,6 @@ Integration tests for CCO command execution flows
 
 Tests end-to-end command workflows including:
 - cco-tune: Project tuning and status
-- cco-update: Update flow (mocked)
 - cco-generate: File generation workflow
 
 Uses tmp_path pytest fixture for isolated testing.
@@ -187,32 +186,6 @@ Use HTML comment markers for automatic content injection.
         assert "Pull Request" in content
         assert "AI-Generated Code Checks" in content
         assert "No hallucinated functions" in content
-
-
-class TestCCOUpdateCommand:
-    """Test cco-update command flow"""
-
-    def test_update_backups_existing_content(self, tmp_path: Path) -> None:
-        """Test update command creates backup before updating"""
-        claude_dir = tmp_path / ".claude"
-        commands_dir = claude_dir / "commands"
-        commands_dir.mkdir(parents=True)
-
-        # Create existing command
-        existing_cmd = commands_dir / "cco-tune.md"
-        existing_cmd.write_text("# Old Tune Content")
-
-        # Create backup directory
-        backup_dir = tmp_path / "backups"
-        backup_dir.mkdir()
-
-        # Simulate backup
-        backup_file = backup_dir / "cco-tune.md.backup"
-        backup_file.write_text(existing_cmd.read_text())
-
-        # Verify backup created
-        assert backup_file.exists()
-        assert backup_file.read_text() == "# Old Tune Content"
 
 
 class TestMetadataTracking:

@@ -1,6 +1,6 @@
 <!-- CCO_STANDARDS_START -->
 # Universal Standards
-*Software engineering best practices - any project, any language, any tool*
+*Software engineering best practices - any project, any AI*
 
 ## Quality
 
@@ -12,28 +12,27 @@
 - Complexity: cyclomatic <10 per function (context may override)
 - Tech Debt: ratio <5%
 - Maintainability: index >65
-- No Overengineering: only changes directly requested or clearly necessary
-  - Don't add features, refactor, or improve beyond what was asked
-  - Don't create helpers/utilities for one-time operations
-  - Don't design for hypothetical future requirements
-  - Minimum complexity needed for current task
-- General Solutions: implement for all valid inputs, not just test cases
-  - Don't hard-code values that make tests pass
-  - Focus on correct algorithms, not passing specific tests
-  - No helper scripts or workarounds; use standard tools
+- No Overengineering: only requested changes, no one-time helpers, no hypothetical futures, minimum complexity
+- Minimal Touch: only files required for task, no "while I'm here" improvements
+- General Solutions: correct algorithms for all inputs, no test-specific hacks, use standard tools
 - Clean Code: meaningful names, single responsibility
 - Immutability: prefer immutable, mutate only for performance
 - Profile First: measure before optimize
 - Version: single source, SemVer (MAJOR.MINOR.PATCH)
+- Paths: forward slash (/), relative, quote spaces
+- No Unsolicited Files: never create unless requested; prefer editing existing
+- Cleanup: remove temporary files created during iteration
+- Timeouts: explicit for all external calls; never wait indefinitely
+- Retry: exponential backoff + jitter for transient failures
 
 ### Testing
 - Coverage: 80% min (context may adjust: solo 60%, enterprise 90%)
+- Pyramid: 70% unit (<1ms), 20% integration (~100ms), 10% E2E (seconds)
 - Integration: e2e for critical workflows
 - CI Gates: lint + test + coverage + security before merge
 - Isolation: no dependencies between tests
 - TDD: tests first, code satisfies
-- Test Integrity: never remove or edit tests to make code pass
-  - Tests define expected behavior; code must satisfy them
+- Test Integrity: tests define behavior; never edit tests to make code pass
 
 ### Security
 - Input Validation: Pydantic/Joi/Zod at all entry points
@@ -50,12 +49,23 @@
 - ADR: decisions + context + consequences
 - Comments: why not what
 
+## Workflow
+- Read First: read files before proposing edits; never speculate about uninspected code
+- Review Conventions: match existing patterns; be rigorous in searching for key facts
+- Reference Integrity: find ALL refs → update in order → verify (grep old=0, new=expected)
+- Verification: total = done + skip + fail + cannot_do, no "fixed" without proof
+- Workflow: Plan → Act → Review → Repeat
+- Decompose: break complex tasks into smaller steps
+- No Vibe Coding: avoid rare langs/new frameworks without solid foundation
+- Challenge: "are you sure?" for perfect-looking solutions
+- No Example Fixation: use placeholders; misaligned examples encourage unwanted patterns
+
 ---
 
 # Claude-Specific Standards
-*AI assistant behavior, workflow, and interaction patterns*
+*Claude Code architecture, tools, and features*
 
-## Workflow
+## CCO Workflow
 
 ### Pre-Operation Safety
 1. Check `git status` for uncommitted changes
@@ -78,71 +88,32 @@
 | Add type annotations | Rename public APIs |
 
 ## Core
-- Paths: forward slash (/), relative, quote spaces
-- Reference Integrity: find ALL refs → update in order → verify (grep old=0, new=expected)
-- Verification: total = done + skip + fail + cannot_do, no "fixed" without Read proof
+- Exclusions: skip .git, node_modules, __pycache__, venv, dist, build, lockfiles, *.min.js
 - Error Format: `❌ {What} → ↳ {Why} → → {Fix}` (consistent across all commands)
-- Parallel Tools: make all independent tool calls in parallel for efficiency
-  - If no dependencies between calls, batch them in single message
-  - Sequential only when outputs inform subsequent inputs
-- Moderate Triggers: use "when..." phrasing for tool guidance
-  - Avoid aggressive language like "CRITICAL: You MUST use this tool"
-  - Prefer: "Use this tool when..." or "Consider using..."
-- Cleanup: remove temporary files created during iteration at task end
+- Parallel Tools: batch independent calls in single message; sequential only when outputs inform inputs
+- Moderate Triggers: "Use when..." not "CRITICAL: You MUST..."
 
 ## Approval Flow
-- Single call, 4 tabs: one AskUserQuestion with 4 questions max (Critical/High/Medium/Low)
-- Each priority = one tab: user sees all levels at once, selects per-tab
-- Header format: "{Priority} ({count})" - e.g., "Critical (2)", "High (5)"
-- Options per tab (max 4):
-  - Option 1: "All ({N})" - always first, includes all items in this priority
-  - Options 2-4: top 3 individual items by impact, format: "{desc} [{loc}] [{risk}]"
-  - If >3 items: remaining are included in "All" (count shows total)
-- Risk labels: [safe], [risky], or [extensive] per item
-- MultiSelect: true - "All" + individual items can be combined
-- Skip empty tabs: don't show priority levels with 0 items
-- Summary before apply: "Applying {selected}/{total} items"
-- No silent skipping: ALL items accessible via "All ({N})" option
-- Apply all selected: user selection = commitment, fix everything chosen
-- Blocked items: report as "cannot_do" with reason after attempt
+- Single AskUserQuestion, 4 priority tabs (Critical/High/Medium/Low), skip empty
+- Header: "{Priority} ({count})" | Options: "All ({N})" first, then top 3 by impact
+- Format: "{desc} [{loc}] [{risk}]" with risk labels [safe]/[risky]/[extensive]
+- MultiSelect enabled | Summary: "Applying {selected}/{total}"
+- All items accessible via "All" option; blocked items report as "cannot_do"
 
-## Agentic Coding
-- Read First: ALWAYS read and understand relevant files before proposing code edits
-  - Never speculate about code you have not inspected
-  - Inspect specific files referenced by users before explaining or proposing fixes
-- No Speculation: never make claims about code before investigating
-  - Investigate relevant files before answering code questions
-  - Provide grounded, hallucination-free answers
-- Review Conventions: thoroughly review codebase style, conventions, and abstractions before implementing
-  - Be rigorous and persistent in searching code for key facts
-  - Match existing patterns in the codebase
-- Positive Framing: tell what to do, not what to avoid
-  - "Write in flowing prose" vs "Don't use markdown"
-  - Negative framing can paradoxically increase unwanted behavior
-- Action vs Suggest: be explicit about when to act vs suggest
-  - For proactive: "Implement changes rather than only suggesting them"
-  - For conservative: "Provide recommendations unless explicitly requested to change"
-- Contextual Motivation: explain WHY a behavior matters
-  - Helps Claude understand goals and apply judgment appropriately
+## Prompt Engineering
+- Positive Framing: tell what to do ("write prose") not what to avoid ("don't use markdown")
+- Action vs Suggest: explicit mode—proactive implements, conservative recommends
+- Contextual Motivation: explain WHY behaviors matter for better judgment
+- Thinking Escalation: start at context default → escalate on errors/complexity → ceiling 64K/32K/8K by project size
+- Subagent Delegation: delegate when separate context benefits; ensure tool descriptions are well-defined
 
-## AI-Assisted
-- Review AI Code: treat as junior output, verify
-- Workflow: Plan → Act → Review → Repeat
-- Test AI Output: unit tests before integration
-- Decompose: break complex tasks for AI
-- No Vibe Coding: avoid rare langs/new frameworks without solid foundation
-- Human-AI: humans architect, AI implements, humans review
-- Challenge: "are you sure?" for perfect-looking solutions
-- No Example Fixation: use placeholders, avoid anchoring bias from hardcoded examples
-  - Examples are scrutinized carefully; ensure they align with desired behaviors
-  - Misaligned examples encourage unwanted patterns
-- Thinking Escalation: auto-increase budget on complexity/errors
-  - Start: context default (off/8K/32K from AI Performance)
-  - Escalate: error_count > 2 OR multi-file refactor OR architectural decision
-  - Ceiling: 64K for complex, 32K for medium, 8K for simple projects
-- Subagent Delegation: recognize when tasks benefit from specialized subagents
-  - Ensure subagent tools are well-defined in descriptions
-  - For conservative: "Only delegate when task clearly benefits from separate context"
+## Frontend Generation (Avoid AI Slop)
+- Typography: choose beautiful, unique fonts; avoid defaults (Arial, Inter, Roboto, system fonts)
+- Color & Theme: CSS variables for consistency; dominant colors with sharp accents
+- Motion: prioritize high-impact moments; one well-orchestrated page load with staggered reveals
+- Backgrounds: create atmosphere and depth; avoid solid color defaults
+- Distinctive Design: unexpected choices that feel genuinely designed, not generic AI output
+- Avoid: clichéd purple gradients, predictable layouts, convergence on common AI patterns
 
 ## Context Management
 
