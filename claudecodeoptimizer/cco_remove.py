@@ -7,6 +7,7 @@ import sys
 from .config import (
     CCO_MARKER_PATTERNS,
     CLAUDE_DIR,
+    SEPARATOR,
     SUBPROCESS_TIMEOUT,
     get_cco_agents,
     get_cco_commands,
@@ -102,82 +103,97 @@ def uninstall_package(method: str) -> bool:
         return False
 
 
+def _collect_removal_items() -> dict[str, object]:
+    """Collect all items to be removed."""
+    method = detect_install_method()
+    files = list_cco_files()
+    standards = has_claude_md_standards()
+    total_files = sum(len(f) for f in files.values())
+    total = (1 if method else 0) + total_files + len(standards)
+
+    return {
+        "method": method,
+        "files": files,
+        "standards": standards,
+        "total_files": total_files,
+        "total": total,
+    }
+
+
+def _display_removal_plan(items: dict[str, object]) -> None:
+    """Display what will be removed."""
+    print("\n" + SEPARATOR)
+    print("CCO Uninstall")
+    print(SEPARATOR)
+    print(f"\nLocation: {CLAUDE_DIR}\n")
+
+    if items["method"]:
+        print("Package:")
+        print(f"  claudecodeoptimizer ({items['method']})")
+        print()
+
+    categories = [
+        ("Commands", items["files"]["commands"]),  # type: ignore[index]
+        ("Agents", items["files"]["agents"]),  # type: ignore[index]
+        ("CLAUDE.md sections", items["standards"]),
+    ]
+    for title, category_items in categories:
+        if category_items:
+            print(f"{title}:")
+            for item in category_items:  # type: ignore[union-attr]
+                print(f"  - {item}")
+            print()
+
+    print(SEPARATOR)
+    print(f"Total: {items['total']} items to remove")
+    print(SEPARATOR)
+    print()
+
+
+def _execute_removal(items: dict[str, object]) -> None:
+    """Execute the removal of all items."""
+    if items["method"]:
+        print("Removing package...")
+        if uninstall_package(items["method"]):  # type: ignore[arg-type]
+            print("  Package removed")
+        else:
+            print("  Failed to remove package")
+        print()
+
+    if items["total_files"]:
+        print("Removing files...")
+        remove_cco_files()
+        print()
+
+    if items["standards"]:
+        print("Removing CLAUDE.md sections...")
+        remove_claude_md_standards()
+        print()
+
+    print(SEPARATOR)
+    print("CCO removed successfully.")
+    print(SEPARATOR)
+    print()
+
+
 def main() -> int:
     """CLI entry point."""
     try:
-        method = detect_install_method()
-        files = list_cco_files()
-        standards = has_claude_md_standards()
-        total_files = sum(len(f) for f in files.values())
+        items = _collect_removal_items()
 
-        if not method and total_files == 0 and not standards:
+        if items["total"] == 0:
             print("CCO is not installed.")
             return 0
 
-        # Show what will be removed
-        print("\n" + "=" * 50)
-        print("CCO Uninstall")
-        print("=" * 50)
-        print(f"\nLocation: {CLAUDE_DIR}\n")
+        _display_removal_plan(items)
 
-        if method:
-            print("Package:")
-            print(f"  claudecodeoptimizer ({method})")
-            print()
-
-        # Print file categories
-        categories = [
-            ("Commands", files["commands"]),
-            ("Agents", files["agents"]),
-            ("CLAUDE.md sections", standards),
-        ]
-        for title, items in categories:
-            if items:
-                print(f"{title}:")
-                for item in items:
-                    print(f"  - {item}")
-                print()
-
-        # Summary
-        print("=" * 50)
-        total = (1 if method else 0) + total_files + len(standards)
-        print(f"Total: {total} items to remove")
-        print("=" * 50)
-        print()
-
-        # Confirmation
         confirm = input("Remove all CCO components? [y/N]: ").strip().lower()
         if confirm != "y":
             print("Cancelled.")
             return 0
 
         print()
-
-        # Remove package
-        if method:
-            print("Removing package...")
-            if uninstall_package(method):
-                print("  Package removed")
-            else:
-                print("  Failed to remove package")
-            print()
-
-        # Remove files
-        if total_files > 0:
-            print("Removing files...")
-            remove_cco_files()
-            print()
-
-        # Remove standards
-        if standards:
-            print("Removing CLAUDE.md sections...")
-            remove_claude_md_standards()
-            print()
-
-        print("=" * 50)
-        print("CCO removed successfully.")
-        print("=" * 50)
-        print()
+        _execute_removal(items)
         return 0
 
     except KeyboardInterrupt:
