@@ -1,113 +1,71 @@
 #!/usr/bin/env python3
 """
-ClaudeCodeOptimizer - Quick Remote Installer
-
-Single command installation without git clone.
+ClaudeCodeOptimizer - Quick Installer
 
 Usage:
     curl -sSL https://raw.githubusercontent.com/sungurerdim/ClaudeCodeOptimizer/main/quick-install.py | python3
 
-Or:
-    python3 -c "$(curl -fsSL https://raw.githubusercontent.com/sungurerdim/ClaudeCodeOptimizer/main/quick-install.py)"
-
 What it does:
-    1. Installs directly from GitHub
-    2. Runs cco-setup automatically
-    3. Verifies installation
+    1. Installs CCO package from GitHub
+    2. Runs cco-setup (installs commands, agents, standards to ~/.claude/)
 """
 
 import subprocess
 import sys
-from pathlib import Path
+
+GITHUB_URL = "git+https://github.com/sungurerdim/ClaudeCodeOptimizer.git"
+MIN_PYTHON = (3, 11)
 
 
 def main() -> int:
     """Quick installer from GitHub."""
-    print("=" * 60)
-    print("ClaudeCodeOptimizer - Quick Install")
-    print("=" * 60)
-
     # Check Python version
+    if sys.version_info < MIN_PYTHON:
+        print(f"Error: Python {MIN_PYTHON[0]}.{MIN_PYTHON[1]}+ required")
+        print(f"Current: Python {sys.version_info.major}.{sys.version_info.minor}")
+        return 1
 
-    print(f"\n[OK] Python {sys.version_info.major}.{sys.version_info.minor}")
+    print("=" * 50)
+    print("CCO Quick Install")
+    print("=" * 50)
+    print(f"\nPython {sys.version_info.major}.{sys.version_info.minor} ✓")
 
-    # Check if package is already installed
-    print("\n> Checking existing installation...")
-    check_result = subprocess.run(
+    # Remove existing installation if present
+    check = subprocess.run(
         [sys.executable, "-m", "pip", "show", "claudecodeoptimizer"],
+        capture_output=True,
+    )
+    if check.returncode == 0:
+        print("\nRemoving previous installation...")
+        subprocess.run(
+            [sys.executable, "-m", "pip", "uninstall", "-y", "claudecodeoptimizer"],
+            capture_output=True,
+        )
+
+    # Install from GitHub
+    print("\nInstalling from GitHub...")
+    result = subprocess.run(
+        [sys.executable, "-m", "pip", "install", GITHUB_URL],
         capture_output=True,
         text=True,
     )
-
-    if check_result.returncode == 0:
-        # Package is installed, remove it first
-        print("[NOTICE] Existing installation found, removing...")
-        try:
-            subprocess.run(
-                [sys.executable, "-m", "pip", "uninstall", "-y", "claudecodeoptimizer"],
-                check=True,
-                capture_output=True,
-                text=True,
-            )
-            print("[OK] Previous installation removed")
-        except subprocess.CalledProcessError as e:
-            print("[ERROR] Removal failed:")
-            print(e.stderr)
-            return 1
-
-    # Install directly from GitHub
-    github_url = "git+https://github.com/sungurerdim/ClaudeCodeOptimizer.git"
-
-    print("\n> Installing from GitHub...")
-    try:
-        subprocess.run(
-            [sys.executable, "-m", "pip", "install", github_url],
-            check=True,
-            capture_output=True,
-            text=True,
-        )
-        print("[OK] Package installed")
-    except subprocess.CalledProcessError as e:
-        print("[ERROR] Installation failed:")
-        print(e.stderr)
+    if result.returncode != 0:
+        print("Error: pip install failed")
+        print(result.stderr)
         return 1
 
-    # Run setup
-    print("\n> Setting up ~/.claude/ directory...")
-    try:
-        subprocess.run(
-            [sys.executable, "-m", "claudecodeoptimizer.install_hook"],
-            check=True,
-        )
-    except subprocess.CalledProcessError:
-        print("[ERROR] Setup failed")
-        print("\nTry manually: cco-setup")
+    print("Package installed ✓")
+
+    # Run cco-setup (it prints its own detailed output)
+    print()
+    result = subprocess.run([sys.executable, "-m", "claudecodeoptimizer.install_hook"])
+    if result.returncode != 0:
+        print("\nSetup failed. Try manually: cco-setup")
         return 1
 
-    # Verify
-    print("\n" + "=" * 60)
-    print("Verifying installation...")
-    print("=" * 60)
-
-    claude_dir = Path.home() / ".claude"
-    commands_dir = claude_dir / "commands"
-    agents_dir = claude_dir / "agents"
-
-    cmd_count = len(list(commands_dir.glob("cco-*.md"))) if commands_dir.exists() else 0
-    agent_count = len(list(agents_dir.glob("cco-*.md"))) if agents_dir.exists() else 0
-
-    print(f"\n[OK] Commands: {cmd_count}")
-    print(f"[OK] Agents: {agent_count}")
-    print(f"[OK] Location: {claude_dir}")
-
-    print("\n" + "=" * 60)
-    print("Installation complete!")
-    print("=" * 60)
-    print("\nNext steps:")
-    print("  1. Open/Restart Claude Code")
-    print("  2. Try: /cco-tune")
-    print("=" * 60 + "\n")
-
+    # Next steps
+    print("Next: Open Claude Code and run /cco-tune")
+    print()
     return 0
 
 
