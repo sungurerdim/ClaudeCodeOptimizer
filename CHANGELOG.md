@@ -10,7 +10,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Added
 - 8 slash commands: `/cco-tune`, `/cco-health`, `/cco-audit`, `/cco-optimize`, `/cco-review`, `/cco-generate`, `/cco-refactor`, `/cco-commit`
 - 3 specialized agents: Detect, Scan, Action
-- 85 standards (51 universal + 34 Claude-specific)
+- 94 standards (51 universal + 43 Claude-specific)
 - Risk-based approval flow with AskUserQuestion
 - Project-aware tuning via `/cco-tune`
 - Doc-code mismatch detection with SSOT resolution
@@ -21,4 +21,4 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Python 3.10+ support (tested on 3.10-3.14)
 - Zero dependencies (stdlib only)
 - CLI and IDE extension compatible
-- 96% test coverage
+- 100% test coverage
