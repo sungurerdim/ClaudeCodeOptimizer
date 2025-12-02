@@ -9,6 +9,9 @@ A process and standards layer for Claude Code in the Opus 4.5 era.
 
 > **Fully aligned with [Claude 4 Best Practices](https://platform.claude.com/docs/en/build-with-claude/prompt-engineering/claude-4-best-practices)** - Agentic coding, extended thinking, parallel tools, context management, and design quality standards.
 
+![CCO Environment](docs/screenshots/environment.png)
+*ClaudeCodeOptimizer lives directly inside Claude Code + Opus 4.5, no extra UI.*
+
 **TL;DR**
 - Thin layer on top of Claude Code + Opus 4.5
 - Three-layer standards (universal, Claude-specific, project) shaping all Claude workflows—not just `/cco-*` commands and agents
@@ -120,7 +123,8 @@ CCO provides 85 core standards (51 universal + 34 Claude-specific) plus 80 condi
 
 ## Commands
 
-*Ordered by typical workflow: Setup → Observe → Fix → Improve → Create → Change*
+![CCO Commands](docs/screenshots/commands-list.png)
+*All CCO commands live as native slash commands inside Claude Code.*
 
 | Command | Purpose |
 |---------|---------|
@@ -139,6 +143,9 @@ CCO provides 85 core standards (51 universal + 34 Claude-specific) plus 80 condi
 
 ### `/cco-tune` - Project Tuning
 Central configuration: detects stack, sets AI performance, writes context to CLAUDE.md.
+
+![cco-tune](docs/screenshots/tune-flow.png)
+*/cco-tune runs health checks and builds a project-specific context in CLAUDE.md.*
 
 | Feature | Description |
 |---------|-------------|
