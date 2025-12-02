@@ -81,15 +81,34 @@ Config Issues:
 
 ## Step 2: Existing Context Check
 
-Read `<!-- CCO_CONTEXT_START -->` from `./CLAUDE.md`:
+### Dynamic Context Parsing
 
-If exists, display:
+Read content between `<!-- CCO_CONTEXT_START -->` and `<!-- CCO_CONTEXT_END -->` from `./CLAUDE.md`.
+
+**Parse dynamically** - extract ALL key-value pairs without hardcoded field assumptions:
+
+```python
+# Pseudocode - adapt to actual parsing
+context_block = extract_between(file, "CCO_CONTEXT_START", "CCO_CONTEXT_END")
+
+current = {}
+for line in context_block:
+    # Parse "Key: Value" patterns
+    if match := re.match(r'^(\w+):\s*(.+)$', line):
+        current[match[1].lower()] = match[2]
+    # Parse "Key: Val1 | Key2: Val2" patterns
+    if '|' in line:
+        for part in line.split('|'):
+            if ':' in part:
+                k, v = part.split(':', 1)
+                current[k.strip().lower()] = v.strip()
 ```
-Current Context:
-  Purpose: {purpose}
-  Team: {team} | Scale: {scale} | Type: {type}
-  AI: Thinking {budget} | MCP {limit} | Compact {mode}
-  Config: Statusline {Y/N} | Permissions {level}
+
+**Display whatever was parsed** - show actual content, not assumed fields:
+
+```
+Current Context (from ./CLAUDE.md):
+{display each parsed section with its content}
 ```
 
 Then ask:
@@ -161,6 +180,11 @@ Q4 - header: "Data"
 question: "Most sensitive data?"
 options: Public | Internal | PII | Regulated
 description_template: "{base_description} {labels}"
+
+Note: Compliance is AUTO-DERIVED from Data:
+  - Public/Internal → Compliance: None
+  - PII → Compliance: GDPR/CCPA
+  - Regulated → Compliance: SOC2/HIPAA/PCI (ask which)
 ```
 
 ### Call 2 - Technical
@@ -262,22 +286,22 @@ options:
 
 ## Step 5: Configuration
 
+### Scope (ALWAYS asked - applies to AI settings too)
+```
+Q15 - header: "Scope"
+question: "Where to save settings?"
+options:
+  - Global: "~/.claude/ - applies to all projects [recommended]"
+  - Local: "./.claude/ - this project only, overrides global"
+```
+
 ### Features
 ```
-Q15 - header: "Features"
-question: "What to configure?"
+Q16 - header: "Features"
+question: "Additional configuration?"
 multiSelect: true
 options: Statusline | Permissions | Skip
 description_template: "{base_description} {labels}"
-```
-
-### Scope (if Statusline or Permissions selected)
-```
-Q16 - header: "Scope"
-question: "Where to save statusline/permissions config?"
-options:
-  - Global: "~/.claude/ - applies to all projects"
-  - Local: "./.claude/ - this project only"
 ```
 
 ### Permission Level (if Permissions selected)
@@ -387,37 +411,109 @@ writeJSON('{scope}/settings.json', settings);
 
 Update `{scope}/settings.json` with permissions based on level.
 
-### Write AI Performance Settings
+### Write AI Performance Settings (ALWAYS)
 
-Update `{scope}/settings.json`:
+AI settings written to `{scope}/settings.json` based on user's Scope choice (Step 5):
+- **Global** (`~/.claude/`) - applies to all projects
+- **Local** (`./.claude/`) - this project only, overrides global
 
-```json
-{
-  "env": {
-    "MAX_THINKING_TOKENS": "{value or omit if off}",
-    "MAX_MCP_OUTPUT_TOKENS": "{value}",
-    "DISABLE_PROMPT_CACHING_OPUS": "{1 if disabled, omit if enabled}"
-  }
-}
+```python
+# Determine path based on scope choice
+if scope == "Global":
+    settings_path = Path.home() / ".claude" / "settings.json"
+else:
+    settings_path = Path.cwd() / ".claude" / "settings.json"
+    settings_path.parent.mkdir(parents=True, exist_ok=True)
+
+# Read existing settings, preserve non-CCO fields
+settings = json.loads(settings_path.read_text()) if settings_path.exists() else {}
+
+# Update env section
+if "env" not in settings:
+    settings["env"] = {}
+
+# Apply AI performance settings
+if thinking != "Off":
+    settings["env"]["MAX_THINKING_TOKENS"] = str(thinking_value)  # 8000, 16000, 32000
+elif "MAX_THINKING_TOKENS" in settings["env"]:
+    del settings["env"]["MAX_THINKING_TOKENS"]
+
+settings["env"]["MAX_MCP_OUTPUT_TOKENS"] = str(mcp_value)  # 25000, 50000, 100000
+
+if caching == "Disabled":
+    settings["env"]["DISABLE_PROMPT_CACHING"] = "1"
+elif "DISABLE_PROMPT_CACHING" in settings["env"]:
+    del settings["env"]["DISABLE_PROMPT_CACHING"]
+
+# Write back preserving formatting
+settings_path.write_text(json.dumps(settings, indent=2))
 ```
 
-## Step 7: Status Display
+## Step 7: Complete Report
+
+**ALWAYS show before/after for ALL categories:**
 
 ```
-CCO Tune Complete
+╔══════════════════════════════════════════════════════════════════╗
+║                        CCO Tune Complete                          ║
+╚══════════════════════════════════════════════════════════════════╝
 
-Project Context: ./CLAUDE.md
-  Team: {team} | Scale: {scale} | Type: {type}
-  AI: Thinking {budget} | MCP {limit}
+## Changes Applied
 
-Configuration: {scope}
-  Statusline: {configured|skipped}
-  Permissions: {level|skipped}
-  AI Settings: Applied to settings.json
+| Category | Field | Before | After | Changed |
+|----------|-------|--------|-------|:-------:|
+| **Strategic** | Purpose | {old} | {new} | {✓/—} |
+| | Team | {old} | {new} | {✓/—} |
+| | Scale | {old} | {new} | {✓/—} |
+| | Data | {old} | {new} | {✓/—} |
+| | Compliance | {old} | {new} | {auto} |
+| **Technical** | Stack | {old} | {new} | {✓/—} |
+| | Type | {old} | {new} | {✓/—} |
+| | DB | {old} | {new} | {✓/—} |
+| | Rollback | {old} | {new} | {✓/—} |
+| **Approach** | Maturity | {old} | {new} | {✓/—} |
+| | Breaking | {old} | {new} | {✓/—} |
+| | Priority | {old} | {new} | {✓/—} |
+| **AI Performance** | Thinking | {old} | {new} | {✓/—} |
+| | MCP | {old} | {new} | {✓/—} |
+| | Caching | {old} | {new} | {✓/—} |
+| **Config** | Scope | {old} | {new} | {✓/—} |
+| | Statusline | {old} | {new} | {✓/—} |
+| | Permissions | {old} | {new} | {✓/—} |
 
-Next steps:
+Legend: ✓ = changed, — = unchanged, auto = derived from other field
+
+## Files Modified
+
+| File | Action |
+|------|--------|
+| `./CLAUDE.md` | Updated CCO_CONTEXT |
+| `{scope}/settings.json` | Updated AI settings (env) |
+| `{scope}/statusline.js` | {Created/Skipped} |
+
+Note: {scope} = `~/.claude/` (Global) or `./.claude/` (Local) based on Q15
+
+## Summary
+
+- Total fields: {N}
+- Changed: {N}
+- Unchanged: {N}
+
+## Current Configuration
+
+```
+Project: {purpose}
+Team: {team} | Scale: {scale} | Type: {type}
+Maturity: {maturity} | Breaking: {breaking} | Priority: {priority}
+AI: Thinking {budget} | MCP {limit} | Caching {on/off}
+```
+
+## Next Steps
+
   /cco-health           # Observe: metrics dashboard
   /cco-audit --smart    # Fix: find and resolve issues
+
+⚠️  Restart Claude Code for changes to take effect.
 ```
 
 ## Statusline Code
