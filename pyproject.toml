@@ -5,7 +5,7 @@ build-backend = "setuptools.build_meta"
 [project]
 name = "claudecodeoptimizer"
 dynamic = ["version"]
-description = "Process orchestration and quality standards for Claude Code"
+description = "Process and standards layer for Claude Code"
 readme = "README.md"
 license = {text = "MIT"}
 authors = [

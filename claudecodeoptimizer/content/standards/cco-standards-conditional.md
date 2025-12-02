@@ -22,7 +22,6 @@
 **When:** Scale: 10K+ OR Type: backend-api with microservices
 - Event-Driven: async patterns, communicate via events
 - Service Mesh: Istio/Linkerd for mTLS, observability
-- Separation: one aspect per module/class
 - DI: inject dependencies, enable testing
 - Dependency Rule: inward only toward business logic
 - Circuit Breaker: fail fast on unhealthy downstream
@@ -88,16 +87,6 @@
 - Bundle Size: code splitting, tree shaking
 - Lazy Loading: defer non-critical resources
 
-### Design Quality (Avoid AI Slop)
-- Typography: choose beautiful, unique fonts; avoid defaults (Arial, Inter, Roboto, system fonts)
-- Color & Theme: CSS variables for consistency; dominant colors with sharp accents
-- Motion: prioritize high-impact moments; one well-orchestrated page load with staggered reveals
-- Backgrounds: create atmosphere and depth; avoid solid color defaults
-- Distinctive Design: make unexpected choices that feel genuinely designed for context
-  - Avoid clichéd color schemes (especially purple gradients)
-  - Avoid predictable layouts without context-specific character
-  - Vary aesthetics across implementations; avoid convergence on common AI patterns
-
 ## i18n
 **When:** i18n detected OR multi-language requirement
 - Externalized: no hardcoded user text
@@ -110,8 +99,6 @@
 **When:** Scale: 10K+ OR Type: backend-api with SLA
 - Chaos: inject failures in production
 - Resilience: validate failure scenarios
-- Timeouts: explicit for all external calls
-- Retry: exponential backoff + jitter
 - Bulkhead: isolate failures
 - Fallback: graceful degradation
 

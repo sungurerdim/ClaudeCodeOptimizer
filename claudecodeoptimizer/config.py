@@ -13,6 +13,7 @@ __all__ = [
     "get_cco_commands",
     "get_cco_agents",
     "get_standards_count",
+    "get_standards_breakdown",
     "CCO_MARKER_PATTERNS",
     "SUBPROCESS_TIMEOUT",
 ]
@@ -53,3 +54,32 @@ def get_standards_count() -> tuple[int, int]:
     standards = len(re.findall(r"^- ", content, re.MULTILINE))
     categories = len(re.findall(r"^## ", content, re.MULTILINE))
     return (standards, categories)
+
+
+def get_standards_breakdown() -> dict[str, int]:
+    """Get detailed breakdown of standards by category.
+
+    Returns:
+        Dictionary with universal, claude_specific, conditional counts
+    """
+    content_dir = Path(__file__).parent / "content" / "standards"
+    result = {"universal": 0, "claude_specific": 0, "conditional": 0, "total": 0}
+
+    # Count from cco-standards.md
+    standards_file = content_dir / "cco-standards.md"
+    if standards_file.exists():
+        content = standards_file.read_text(encoding="utf-8")
+        # Split at the separator between Universal and Claude-Specific
+        parts = content.split("# Claude-Specific Standards")
+        if len(parts) == 2:
+            result["universal"] = len(re.findall(r"^- ", parts[0], re.MULTILINE))
+            result["claude_specific"] = len(re.findall(r"^- ", parts[1], re.MULTILINE))
+
+    # Count from cco-standards-conditional.md
+    conditional_file = content_dir / "cco-standards-conditional.md"
+    if conditional_file.exists():
+        content = conditional_file.read_text(encoding="utf-8")
+        result["conditional"] = len(re.findall(r"^- ", content, re.MULTILINE))
+
+    result["total"] = result["universal"] + result["claude_specific"] + result["conditional"]
+    return result

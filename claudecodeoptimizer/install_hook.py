@@ -5,7 +5,13 @@ import shutil
 import sys
 from pathlib import Path
 
-from .config import AGENTS_DIR, CCO_MARKER_PATTERNS, CLAUDE_DIR, COMMANDS_DIR, get_standards_count
+from .config import (
+    AGENTS_DIR,
+    CCO_MARKER_PATTERNS,
+    CLAUDE_DIR,
+    COMMANDS_DIR,
+    get_standards_breakdown,
+)
 
 
 def get_content_dir() -> Path:
@@ -71,9 +77,12 @@ def setup_claude_md(verbose: bool = True) -> None:
     claude_md.write_text(content, encoding="utf-8")
 
     if verbose:
-        standards_count, categories = get_standards_count()
+        breakdown = get_standards_breakdown()
         print(f"  CLAUDE.md: CCO Standards {action}")
-        print(f"    {standards_count} standards ({categories} categories)")
+        print(
+            f"    {breakdown['universal']} universal + {breakdown['claude_specific']} Claude-specific"
+        )
+        print(f"    (+ {breakdown['conditional']} conditional via /cco-tune)")
 
 
 def post_install() -> int:
@@ -109,13 +118,16 @@ def post_install() -> int:
         print()
 
         # Summary
-        standards, categories = get_standards_count()
+        breakdown = get_standards_breakdown()
         print("=" * 50)
         print("Summary")
         print("=" * 50)
         print(f"  Commands:  {len(cmds)}")
         print(f"  Agents:    {len(agents)}")
-        print(f"  Standards: {standards} ({categories} categories)")
+        print(f"  Standards: {breakdown['total']} total")
+        print(
+            f"    {breakdown['universal']} universal + {breakdown['claude_specific']} Claude-specific + {breakdown['conditional']} conditional"
+        )
         print()
         print("CCO ready! Try: /cco-tune")
         print()

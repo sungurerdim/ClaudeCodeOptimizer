@@ -9,6 +9,13 @@ A process and standards layer for Claude Code in the Opus 4.5 era.
 
 > **Fully aligned with [Claude 4 Best Practices](https://platform.claude.com/docs/en/build-with-claude/prompt-engineering/claude-4-best-practices)** - Agentic coding, extended thinking, parallel tools, context management, and design quality standards.
 
+**TL;DR**
+- Thin layer on top of Claude Code + Opus 4.5
+- Three-layer standards (universal, Claude-specific, project) shaping all Claude workflows—not just `/cco-*` commands and agents
+- Risk-based approval flow, no silent changes
+
+---
+
 Claude Code already gives you strong refactors, tests and multi-file edits with Opus-class models.
 CCO sits on top of that and adds three things you usually have to build by hand:
 
@@ -27,7 +34,7 @@ pip install git+https://github.com/sungurerdim/ClaudeCodeOptimizer.git
 cco-setup
 ```
 
-Then inside Claude Code:
+Then inside Claude Code, run `/cco-tune` to detect your stack and tailor standards to your project:
 
 ```
 /cco-tune
@@ -83,7 +90,7 @@ Claude/Opus 4.5 already knows:       CCO adds:
 
 ### Why Explicit Standards?
 
-CCO lists 171 standards explicitly (30 universal + 53 Claude-specific + 88 conditional). Why, if Claude already knows them?
+CCO lists 161 standards explicitly (46 universal + 35 Claude-specific + 80 conditional). Why, if Claude already knows them?
 
 | Benefit | Explanation |
 |---------|-------------|
@@ -240,55 +247,56 @@ CCO uses a three-category standards system for minimal context usage:
 Source Files                              Destination
 ────────────────────────────────────────────────────────────────
 cco-standards.md                        → ~/.claude/CLAUDE.md
-├── Universal Standards (30 rules)         (loaded for ALL projects)
-│   └── Quality (code, testing, security) + Docs
-└── Claude-Specific Standards (53 rules)
-    └── Workflow, Core, Approval, Agentic Coding, AI-Assisted, Context
+├── Universal Standards (46 rules)         (loaded for ALL projects)
+│   └── Quality (code, testing, security) + Docs + Workflow
+└── Claude-Specific Standards (35 rules)
+    └── CCO Workflow, Core, Approval, Prompt Engineering, Frontend Gen, Context
 
 cco-standards-conditional.md            → ./CLAUDE.md (filtered)
-└── Conditional Standards (88 rules)       (only matching rules)
+└── Conditional Standards (80 rules)       (only matching rules)
     └── Security, Architecture, API, Frontend, etc.
 ```
 
-### Universal Standards (30 rules)
-*Software engineering best practices - any project, any language*
+### Universal Standards (46 rules)
+*Software engineering best practices - any project, any AI*
 
-| Section | Rules | Purpose |
-|---------|-------|---------|
-| Quality > Code | 13 | DRY, complexity, type safety, no overengineering |
-| Quality > Testing | 6 | Coverage, isolation, CI gates, test integrity |
-| Quality > Security | 6 | Input validation, SQL, secrets, OWASP |
-| Docs | 5 | README, CHANGELOG, API docs, ADR |
+| Section | # | Standards |
+|---------|---|-----------|
+| **Code** | 19 | Fail-Fast, DRY, No Orphans, Type Safety, Complexity, Tech Debt, Maintainability, No Overengineering, Minimal Touch, General Solutions, Clean Code, Immutability, Profile First, Version, Paths, No Unsolicited Files, Cleanup, Timeouts, Retry |
+| **Testing** | 7 | Coverage, Pyramid, Integration, CI Gates, Isolation, TDD, Test Integrity |
+| **Security** | 6 | Input Validation, SQL Params, Secrets, XSS, OWASP, Dependencies |
+| **Docs** | 5 | README, CHANGELOG, API Docs, ADR, Comments |
+| **Workflow** | 9 | Read First, Review Conventions, Reference Integrity, Verification, Plan-Act-Review, Decompose, No Vibe Coding, Challenge, No Example Fixation |
 
-### Claude-Specific Standards (53 rules)
-*AI assistant behavior and workflow patterns*
+### Claude-Specific Standards (35 rules)
+*Claude Code architecture, tools, and features*
 
-| Section | Rules | Purpose |
-|---------|-------|---------|
-| Workflow | 3 | Pre-Operation Safety, Context Read, Safety Classification |
-| Core | 7 | Paths, reference integrity, verification, parallel tools |
-| Approval Flow | 12 | Priority tabs, risk labels, multi-select |
-| Agentic Coding | 6 | Read first, no speculation, positive framing |
-| AI-Assisted | 10 | Plan→Act→Review, thinking escalation, subagent delegation |
-| Context Management | 15 | When to use thinking, MCP limits, session practices |
+| Section | # | Standards |
+|---------|---|-----------|
+| **CCO Workflow** | — | Pre-Op Safety, Context Read, Safety Classification *(process framework)* |
+| **Core** | 4 | Exclusions, Error Format, Parallel Tools, Moderate Triggers |
+| **Approval Flow** | 5 | Single Call, Priority Headers, Risk Format, MultiSelect, All Access |
+| **Prompt Engineering** | 5 | Positive Framing, Action vs Suggest, Contextual Motivation, Thinking Escalation, Subagent Delegation |
+| **Frontend Gen** | 6 | Typography, Color & Theme, Motion, Backgrounds, Distinctive Design, Avoid Clichés |
+| **Context Mgmt** | 15 | Thinking Off/8K/16K/32K, Budget Escalation, Word Sensitivity, MCP 25K/50K/100K, Don't Stop Early, Work Incrementally, Track State, Before /compact, Between Tasks, After Fresh Start |
 
-### Conditional Standards (88 rules)
+### Conditional Standards (80 rules)
 *Domain-specific rules - selected by /cco-tune, written to local CLAUDE.md only*
 
-| Conditional | Rules | Trigger |
-|-------------|-------|---------|
-| Security Extended | 12 | Container/K8s, Scale 10K+, PII/Regulated |
-| Architecture | 10 | Scale 10K+, microservices |
-| Operations | 10 | CI/CD detected |
-| Performance | 7 | Scale 100-10K+ |
-| Data | 3 | Database detected |
-| API | 7 | REST/GraphQL endpoints |
-| Frontend | 16 | Frontend frameworks |
-| i18n | 5 | Multi-language setup |
-| Reliability | 6 | SLA requirements |
-| Cost | 4 | Cloud/Container |
-| DX | 5 | Team 2-5+ |
-| Compliance | 3 | SOC2/HIPAA/PCI |
+| Conditional | # | Trigger | Standards |
+|-------------|---|---------|-----------|
+| **Security+** | 12 | Container/K8s, 10K+, PII | Privacy, Encryption, Zero Disk, Auth, Rate Limit, Supply Chain, AI Security, Container, K8s, Policy-as-Code, Audit Log, Incident Response |
+| **Architecture** | 9 | 10K+, microservices | Event-Driven, Service Mesh, DI, Dependency Rule, Circuit Breaker, Bounded Contexts, API Versioning, Idempotency, Event Sourcing |
+| **Operations** | 10 | CI/CD detected | Zero Maintenance, Config as Code, IaC + GitOps, Observability, Health, Graceful Shutdown, Blue/Green, Canary, Feature Flags, Incremental Safety |
+| **Performance** | 7 | Scale 100-10K+ | DB Indexing, Async I/O, Caching, Cache Hit, Connection Pool, Lazy Load, Compression |
+| **Data** | 3 | Database detected | Backup, Migrations, Retention |
+| **API** | 7 | REST/GraphQL | REST Methods, Pagination, Docs, Errors, GraphQL Limits, Contract, CORS |
+| **Frontend** | 11 | Frontend frameworks | WCAG 2.2, Semantic HTML, ARIA, Keyboard, Screen Reader, Contrast, Focus, A11y Testing, Core Web Vitals, Bundle Size, Lazy Loading |
+| **i18n** | 5 | Multi-language | Externalized, Unicode, RTL, Locale, Pluralization |
+| **Reliability** | 4 | SLA requirements | Chaos, Resilience, Bulkhead, Fallback |
+| **Cost** | 4 | Cloud/Container | FinOps, Tagging, Auto-Scale, Green |
+| **DX** | 5 | Team 2-5+ | Local Parity, Fast Feedback, Self-Service, Golden Paths, Runbooks |
+| **Compliance** | 3 | SOC2/HIPAA/PCI | License, Frameworks, Classification |
 
 **Result:** Only relevant rules load into context. A CLI project won't carry Frontend or API standards.
 
@@ -306,7 +314,7 @@ After `cco-setup`:
 │   └── cco-*.md                        # 3 specialized agents
 ├── statusline.js                       # Optional statusline
 ├── settings.json                       # AI performance + permissions
-└── CLAUDE.md                           # Core standards (56 rules)
+└── CLAUDE.md                           # 81 rules (46 universal + 35 Claude-specific)
 
 ./CLAUDE.md                             # Local (per project, after /cco-tune)
 ├── CCO_CONTEXT_START
@@ -315,7 +323,7 @@ After `cco-setup`:
 │   ├── Guidelines                      # Project-specific rules
 │   ├── Operational                     # Tools, conventions
 │   ├── Auto-Detected                   # CI/CD, coverage, flags
-│   └── Conditional Standards           # Only applicable rules
+│   └── Conditional Standards           # 0-80 rules (filtered by project type)
 └── CCO_CONTEXT_END
 ```
 
