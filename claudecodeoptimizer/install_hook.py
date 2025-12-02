@@ -129,6 +129,8 @@ def post_install() -> int:
         print(f"Available: +{breakdown['conditional']} conditional standards via /cco-tune")
         print("=" * 50)
         print()
+        print("⚠️  Restart Claude Code for changes to take effect.")
+        print()
         return 0
 
     except Exception as e:
