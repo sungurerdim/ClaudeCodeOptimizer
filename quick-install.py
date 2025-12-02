@@ -14,7 +14,7 @@ import subprocess
 import sys
 
 GITHUB_URL = "git+https://github.com/sungurerdim/ClaudeCodeOptimizer.git"
-MIN_PYTHON = (3, 11)
+MIN_PYTHON = (3, 10)
 
 
 def main() -> int:
@@ -34,12 +34,14 @@ def main() -> int:
     check = subprocess.run(
         [sys.executable, "-m", "pip", "show", "claudecodeoptimizer"],
         capture_output=True,
+        timeout=30,
     )
     if check.returncode == 0:
         print("\nRemoving previous installation...")
         subprocess.run(
             [sys.executable, "-m", "pip", "uninstall", "-y", "claudecodeoptimizer"],
             capture_output=True,
+            timeout=60,
         )
 
     # Install from GitHub
@@ -48,6 +50,7 @@ def main() -> int:
         [sys.executable, "-m", "pip", "install", GITHUB_URL],
         capture_output=True,
         text=True,
+        timeout=120,
     )
     if result.returncode != 0:
         print("Error: pip install failed")
@@ -58,7 +61,10 @@ def main() -> int:
 
     # Run cco-setup (it prints its own detailed output)
     print()
-    result = subprocess.run([sys.executable, "-m", "claudecodeoptimizer.install_hook"])
+    result = subprocess.run(
+        [sys.executable, "-m", "claudecodeoptimizer.install_hook"],
+        timeout=60,
+    )
     if result.returncode != 0:
         print("\nSetup failed. Try manually: cco-setup")
         return 1
