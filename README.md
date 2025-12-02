@@ -37,7 +37,7 @@ No servers, no dashboards, no extra dependencies. Just a thin standards layer on
 
 ```bash
 # 1. Install
-pip install git+https://github.com/sungurerdim/ClaudeCodeOptimizer.git
+pip install claudecodeoptimizer
 
 # 2. Setup (installs commands, agents, standards to ~/.claude/)
 cco-setup
@@ -500,7 +500,7 @@ After `cco-setup`:
 
 ## Requirements
 
-- Python 3.11+
+- Python 3.10+
 - Claude Code
 
 ---
@@ -509,13 +509,13 @@ After `cco-setup`:
 
 **Standard (pip):**
 ```bash
-pip install git+https://github.com/sungurerdim/ClaudeCodeOptimizer.git
+pip install claudecodeoptimizer
 cco-setup
 ```
 
 **Alternative (pipx - isolated environment):**
 ```bash
-pipx install git+https://github.com/sungurerdim/ClaudeCodeOptimizer.git
+pipx install claudecodeoptimizer
 cco-setup
 ```
 
