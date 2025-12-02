@@ -210,37 +210,51 @@ description_template: "{base_description} {labels}"
 
 ### Call 4 - AI Performance
 
-**Complexity Profile Mapping:**
-| Profile | Criteria | Thinking | MCP |
-|---------|----------|----------|-----|
-| simple | Scale <100, Type: cli/library | Off | 25K |
-| medium | Scale 100-10K | 8K | 25K |
-| complex | Scale 10K+ OR Maturity: legacy | 16K-32K | 50K |
+**Complexity Profile Detection:**
+
+Determine profile from confirmed values (Call 1-3):
+```
+if Scale == "<100" AND Type in [cli, library]:
+    profile = "simple"
+elif Scale == "10K+" OR Maturity == "Legacy":
+    profile = "complex"
+else:
+    profile = "medium"
+```
+
+**Profile Defaults:**
+| Profile | Thinking | MCP |
+|---------|----------|-----|
+| simple | Off | 25K |
+| medium | 8K | 25K |
+| complex | 16K | 50K |
 
 **Extended Thinking Reference:**
 - Min: 1,024 tokens | Max: 32K
 - Ideal for: math, coding challenges, multi-step logic, research synthesis
 
+Apply `[recommended]` only to the option matching detected profile:
+
 ```
 Q12 - header: "Thinking"
 question: "Extended thinking budget?"
 options:
-  - Off: "Simple tasks, retrieval {labels}" [recommended:simple]
-  - 8K: "Standard coding, moderate complexity {labels}" [recommended:medium]
+  - Off: "Simple tasks, retrieval {labels}"        # [recommended] if profile=simple
+  - 8K: "Standard coding, moderate complexity {labels}"  # [recommended] if profile=medium
   - 16K: "Complex logic, deep analysis {labels}"
-  - 32K: "Maximum budget {labels}" [recommended:complex]
+  - 32K: "Maximum budget {labels}"                 # [recommended] if profile=complex
 
 Q13 - header: "MCP"
 question: "MCP tool output limit?"
 options:
-  - 25K: "{base_description} {labels}" [recommended:simple,medium]
-  - 50K: "{base_description} {labels}" [recommended:complex]
+  - 25K: "{base_description} {labels}"   # [recommended] if profile=simple|medium
+  - 50K: "{base_description} {labels}"   # [recommended] if profile=complex
   - 100K: "{base_description} {labels}"
 
 Q14 - header: "Caching"
 question: "Prompt caching?"
 options:
-  - Enabled: "{base_description} {labels}" [recommended:all]
+  - Enabled: "{base_description} {labels}" [recommended]
   - Disabled: "{base_description} {labels}"
 ```
 
@@ -248,18 +262,22 @@ options:
 
 ## Step 5: Configuration
 
-### Scope & Features
+### Features
 ```
-Q15 - header: "Scope"
-question: "Configuration scope?"
-options: Global | Local
-description_template: "{base_description} {labels}"
-
-Q16 - header: "Features"
+Q15 - header: "Features"
 question: "What to configure?"
 multiSelect: true
 options: Statusline | Permissions | Skip
 description_template: "{base_description} {labels}"
+```
+
+### Scope (if Statusline or Permissions selected)
+```
+Q16 - header: "Scope"
+question: "Where to save statusline/permissions config?"
+options:
+  - Global: "~/.claude/ - applies to all projects"
+  - Local: "./.claude/ - this project only"
 ```
 
 ### Permission Level (if Permissions selected)
@@ -268,7 +286,7 @@ Q17 - header: "Permissions"
 question: "Permission level?"
 options:
   - Safe: "{base_description} {labels}"
-  - Balanced: "{base_description} {labels}" [recommended:all]
+  - Balanced: "{base_description} {labels}" [recommended]
   - Permissive: "{base_description} {labels}"
 ```
 
@@ -397,9 +415,9 @@ Configuration: {scope}
   Permissions: {level|skipped}
   AI Settings: Applied to settings.json
 
-Quick start:
-  /cco-audit --smart    # Run calibrated audit
-  /cco-review           # Strategic review
+Next steps:
+  /cco-health           # Observe: metrics dashboard
+  /cco-audit --smart    # Fix: find and resolve issues
 ```
 
 ## Statusline Code
