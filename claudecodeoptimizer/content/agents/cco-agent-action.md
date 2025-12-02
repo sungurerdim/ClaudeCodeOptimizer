@@ -24,14 +24,6 @@ Execute approved changes: fixes, generation, optimization, refactoring.
 | Optimize | Analysis result | Reduced code |
 | Refactor | Map + transform | Updated refs |
 
-| Safe (auto-apply) | Risky (require approval) |
-|-------------------|--------------------------|
-| Remove unused imports | Auth/CSRF changes |
-| Parameterize SQL | DB schema changes |
-| Move secrets to env | API contract changes |
-| Fix linting issues | Delete files |
-| Add type annotations | Rename public APIs |
-
 ## Verification Protocol
 
 After each change:
