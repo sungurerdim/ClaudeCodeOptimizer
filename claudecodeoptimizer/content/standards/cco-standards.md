@@ -100,6 +100,16 @@
 - Parallel Tools: batch independent calls in single message; sequential only when outputs inform inputs
 - Moderate Triggers: "Use when..." not "CRITICAL: You MUST..."
 
+## Output Formatting
+All command output tables use ASCII box-drawing in code blocks:
+- Characters: `─│┌┐└┘├┤┬┴┼` for borders
+- Double-line: `═║╔╗╚╝` for headers/emphasis
+- Alignment: numbers right-aligned, text left-aligned, 1-space cell padding
+- Status values: `OK`, `WARN`, `FAIL` (no emoji)
+- Progress bar: `████████████░░░░░░░░` (20 chars, proportional fill)
+- Consistent column widths within each table
+- Section headers outside table, not as row
+
 ## Approval Flow
 - Single AskUserQuestion, 4 priority tabs (Critical/High/Medium/Low), skip empty
 - Header: "{Priority} ({count})" | Options: "All ({N})" first, then top 3 by impact

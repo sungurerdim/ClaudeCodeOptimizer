@@ -31,7 +31,13 @@ After scores, show top 3 actionable items:
 
 ## Output
 
-Dashboard with scores → critical issues → "Fix first" items → next actions.
+**Standards:** Output Formatting
+
+Tables:
+1. **Header** - Project name, version, team/scale/type
+2. **Scores** - Category | Score | Bar + Summary (per applicable category + OVERALL)
+3. **Breakdown** - Metric | Value | Status (nested under categories)
+4. **Fix First** - # | Issue | Location | Effort (top 3 actionable)
 
 ## Usage
 

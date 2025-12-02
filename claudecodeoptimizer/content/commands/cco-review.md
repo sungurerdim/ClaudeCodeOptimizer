@@ -95,26 +95,15 @@ Priority = Impact / Effort (prefer high impact, low effort, low risk)
 
 ## Report Structure
 
-```
-## Context
-Team: {team} | Scale: {scale} | Data: {data} | Type: {type}
-Purpose: {purpose}
+**Standards:** Output Formatting
 
-## Architecture Overview
-[Current state - structure, patterns, key decisions]
-
-## Stack Fitness
-[Table of choices and verdicts]
-
-## Gap Analysis
-- [gap]: [file:line] - [details]
-
-## Recommendations by Priority
-[Grouped by: Critical → Quick Wins → Medium → Nice to Have]
-
-## What's Working Well
-[Positive observations - patterns to keep]
-```
+Sections:
+1. **Context** - Team, scale, data, type, purpose (inline)
+2. **Architecture Overview** - Prose description of current state
+3. **Stack Fitness** - Choice | Serves Purpose? | Alternative | Why
+4. **Gap Analysis** - Gap | Location | Details
+5. **Recommendations** - Priority | Recommendation | Effort | Risk
+6. **What's Working Well** - Prose list of positive observations
 
 ## Apply
 

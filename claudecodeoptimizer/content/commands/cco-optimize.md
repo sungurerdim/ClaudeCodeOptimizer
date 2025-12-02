@@ -181,12 +181,14 @@ Show: current implementation → suggested improvement → diff
 | **Library** | Memory footprint, lazy loading |
 | **Frontend** | Bundle size, render performance |
 
-## Before/After Metrics
+## Output
 
-Show impact after optimization:
-- Lines: before → after (% reduction)
-- Tokens: before → after (for context files)
-- Complexity: before → after (for code)
+**Standards:** Output Formatting
+
+Tables:
+1. **Optimization Results** - File | Before | After | Change % (with TOTAL row)
+2. **Optimizations Applied** - Type | Location | Description
+3. **Metrics** - Inline: Lines {before}→{after} ({%}) | Tokens {before}→{after} ({%})
 
 ## Verification
 
