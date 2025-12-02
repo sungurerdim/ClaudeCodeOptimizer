@@ -56,6 +56,32 @@ class TestSetupCommands:
 
                 assert installed == []
 
+    def test_removes_old_cco_files(self, tmp_path):
+        """Test removes existing cco-*.md files before installing new ones."""
+        dest_dir = tmp_path / "commands"
+        dest_dir.mkdir(parents=True)
+        # Create old files that should be deleted
+        old_file = dest_dir / "cco-old-command.md"
+        old_file.write_text("old content")
+        non_cco_file = dest_dir / "other-file.md"
+        non_cco_file.write_text("should remain")
+
+        with patch("claudecodeoptimizer.install_hook.COMMANDS_DIR", dest_dir):
+            with patch("claudecodeoptimizer.install_hook.get_content_dir") as mock_content:
+                mock_content.return_value = tmp_path / "pkg"
+                (tmp_path / "pkg" / "commands").mkdir(parents=True)
+                (tmp_path / "pkg" / "commands" / "cco-new.md").write_text("new content")
+
+                installed = setup_commands()
+
+                # Old cco-*.md file should be deleted
+                assert not old_file.exists()
+                # Non-cco file should remain
+                assert non_cco_file.exists()
+                # New file should be installed
+                assert (dest_dir / "cco-new.md").exists()
+                assert "cco-new.md" in installed
+
 
 class TestSetupAgents:
     """Test setup_agents function."""
