@@ -6,7 +6,7 @@ Thank you for your interest in contributing to ClaudeCodeOptimizer! This documen
 
 ### Prerequisites
 
-- Python 3.11 or higher
+- Python 3.10 or higher
 - Git
 - pip
 
@@ -64,7 +64,7 @@ pytest -n auto
 
 ### Test Coverage Standards
 
-- **Minimum Coverage**: 80% overall (current: 98%)
+- **Minimum Coverage**: 80% overall (current: 96%)
 - **Critical Modules**: 90%+ coverage required
   - `install_hook.py`
   - `cco_remove.py`
