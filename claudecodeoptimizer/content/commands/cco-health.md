@@ -10,17 +10,22 @@ description: Actionable metrics dashboard
 **Standards:** Context Read | Approval Flow | Error Format
 
 ## Context Application
-- **Applicable** - Only show relevant scores from Operational section
-- **Scale** - Adjust thresholds: <100 (relaxed), 100-10K (standard), 10K+ (strict)
-- **Type** - Emphasize relevant metrics: API (response time), CLI (startup), library (coverage)
+
+| Field | Effect |
+|-------|--------|
+| Applicable | Only show scores for applicable categories from context |
+| Scale | <100 → relaxed thresholds; 100-10K → standard; 10K+ → strict |
+| Type | API: response time; CLI: startup time; Library: coverage + API stability |
+| Team | Solo → simplified view; 6+ → add collaboration metrics |
+| Maturity | Legacy → weight stability higher; Greenfield → weight velocity higher |
+| Priority | Speed → highlight blockers only; Quality → show all metrics |
+| Data | PII/Regulated → security score weight ×2 |
 
 ## Scores (0-100)
 
-- **Security** - Based on vulnerabilities found
+- **Security** - Vulnerabilities, secrets, dependencies, AI security
 - **Tests** - Coverage percentage + quality
-- **Tech Debt** - Complexity, dead code, duplication
-- **Hygiene** - TODOs, orphans, hardcoded values
-- **AI Quality** - AI code patterns (if applicable)
+- **Tech Debt** - Complexity, dead code, duplication, orphans, TODOs, AI patterns
 - **Self-Compliance** - Alignment with stated rules
 
 ## Fix First Indicator
@@ -43,7 +48,7 @@ Tables:
 
 ```bash
 /cco-health                     # Full dashboard
-/cco-health --focus security    # Focus on specific score
-/cco-health --focus tests
-/cco-health --focus tech-debt
+/cco-health --focus=security    # Focus on security score
+/cco-health --focus=tests       # Focus on test coverage
+/cco-health --focus=tech-debt   # Focus on tech debt
 ```

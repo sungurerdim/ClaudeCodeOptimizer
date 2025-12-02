@@ -10,9 +10,16 @@ description: Strategic architecture review with fresh perspective
 **Standards:** Pre-Operation Safety | Context Read | Approval Flow | Safety Classification | Verification | Error Format
 
 ## Context Application
-- **Maturity** - If Legacy → focus on safe incremental improvements; if Greenfield → can suggest restructuring
-- **Breaking** - If Never → flag any interface changes; if Allowed → suggest API simplifications
-- **Priority** - If Speed → quick wins only; if Quality → comprehensive analysis
+
+| Field | Effect |
+|-------|--------|
+| Maturity | Legacy → safe incremental improvements; Greenfield → can suggest restructuring |
+| Breaking | Never → flag interface changes as blockers; Allowed → suggest API simplifications |
+| Priority | Speed → quick wins only; Quality → comprehensive analysis |
+| Scale | 10K+ → emphasize performance, caching, scaling patterns; <100 → simplicity focus |
+| Team | Solo → pragmatic suggestions; 6+ → consider coordination, documentation needs |
+| Data | PII/Regulated → security review mandatory, compliance check |
+| Type | API → contract stability; Library → backward compatibility; CLI → UX consistency |
 
 ## Flow
 
@@ -116,16 +123,15 @@ For each approved recommendation:
 ## Flags
 
 - `--quick` - Phase 1-3 only, skip "from scratch" analysis
-- `--deep` - Include line-by-line code review
 - `--focus=X` - Focus on specific area (structure, patterns, deps, tests, security, dx)
-- `--report-only` - Show report without offering to apply changes
-- `--auto-apply` - Auto-apply safe recommendations without asking
+
+Note: Use approval flow for apply behavior (select none = report-only, select all = auto-apply)
 
 ## Usage
 
 ```bash
 /cco-review                    # Full review → approve → apply
-/cco-review --quick            # Gap analysis only
+/cco-review --quick            # Quick analysis, skip from-scratch
 /cco-review --focus=structure  # Focus on organization
-/cco-review --report-only      # Just show findings
+/cco-review --focus=security   # Focus on security review
 ```

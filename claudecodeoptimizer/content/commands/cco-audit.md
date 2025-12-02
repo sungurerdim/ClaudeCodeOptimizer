@@ -5,143 +5,108 @@ description: Standardized quality gates with prioritized fixes
 
 # /cco-audit
 
-**Quality gates** - Read context → run applicable checks → prioritize → offer fixes.
+**Quality gates** - Read context → run checks → prioritize → fix.
 
 **Standards:** Pre-Operation Safety | Context Read | Approval Flow | Safety Classification | Verification | Error Format
 
 ## Context Application
-- **Guidelines** - Follow listed guidelines
-- **Applicable** - Only run applicable checks
-- **Data** - If PII/Regulated → prioritize security issues higher
-- **Scale** - If 10K+ → prioritize performance issues higher
-- **Priority** - If Speed → focus on critical only; if Quality → flag all issues
-- **Maturity** - If Legacy → conservative fixes; if Greenfield → can suggest restructuring
+
+| Field | Effect |
+|-------|--------|
+| Applicable | Only run checks from context's Applicable list |
+| Data | PII/Regulated → security weight ×2, compliance checks mandatory |
+| Scale | <100 → relaxed thresholds; 10K+ → strict, add performance checks |
+| Priority | Speed → critical only; Quality → all severity levels |
+| Maturity | Legacy → warn don't fail; Greenfield → strict enforcement |
+| Team | Solo → self-review OK; 6+ → require documented findings |
+| Compliance | If set → add compliance category, check against specific framework |
 
 ## Default Behavior
 
-When called without flags, AskUserQuestion:
+When called without flags, ask:
+1. **Scope**: Quick | Smart [recommended] | Full
+2. **Auto-fix**: Yes [recommended] | No
 
-```
-header: "Scope"
-question: "What scope to audit?"
-options:
-  - Quick: "{base_description} {labels}"
-  - Smart: "{base_description} {labels}" [recommended]
-  - Full: "{base_description} {labels}"
-
-header: "Auto-fix"
-question: "Auto-fix safe issues?"
-options:
-  - Yes: "{base_description} {labels}" [recommended]
-  - No: "{base_description} {labels}"
-```
-
-Explicit flags (`--smart`, `--security`, etc.) skip these questions.
+Explicit flags skip questions.
 
 ## Flow
 
-1. **Read Context** - Get applicable checks from Operational section
-2. **Extract Rules** - Find project docs, extract stated principles/rules
+1. **Read Context** - Get applicable checks
+2. **Extract Rules** - Parse project docs for stated rules
 3. **Scan** - Run checks including self-compliance
-4. **Report** - Scores, issues with file:line, priority
-5. **Fix** - Offer fixes via approval flow
+4. **Report** - Scores, issues with file:line
+5. **Fix** - Offer via approval flow
 
 ## Categories
 
-**Core (always run):**
-- `--security` - OWASP, secrets, CVEs
-- `--tech-debt` - Dead code, complexity, duplication
-- `--hygiene` - Old TODOs, orphans, hardcoded values
-- `--self-compliance` - Check against project's own stated rules
-- `--consistency` - Doc-code mismatch detection (features, APIs, configs, behaviors)
+**Core (always):**
+- `--security` - OWASP, secrets, CVEs, AI security (prompt injection), supply-chain (dependencies)
+- `--tech-debt` - Dead code, complexity, duplication, orphans, TODOs, hardcoded values, AI code patterns (hallucinations, over-engineering, generic solutions)
+- `--self-compliance` - Check against project's own rules
+- `--consistency` - Doc-code mismatch detection
 
-**Stack-dependent (auto-skip if not applicable):**
-- `--tests` - Coverage, isolation, flaky
-- `--database` - N+1, indexes, queries
-- `--performance` - Caching, algorithms
-- `--ai-security` - Prompt injection, PII exposure
-- `--ai-quality` - Hallucinated APIs, AI patterns
-- `--docs` - Docstrings, API docs
-- `--cicd` - Pipeline, quality gates
-- `--containers` - Dockerfile, K8s
-- `--supply-chain` - Dependency CVEs
-- `--compliance` - GDPR, licenses
-- `--api-contract` - Breaking changes
+**Stack-dependent (auto-skip if N/A):**
+`--tests` `--database` `--performance` `--docs` `--cicd` `--containers` `--compliance` `--api-contract`
 
-## Self-Compliance Check
+**Sub-category selection (only when single flag used):**
+- `--security` → ask (multiSelect): All | OWASP | Secrets | CVEs | AI-Security | Supply-Chain
+- `--tech-debt` → ask (multiSelect): All | Dead-Code | Complexity | Duplication | AI-Patterns
 
-Detect project documentation (README.md, CLAUDE.md, CONTRIBUTING.md, docs/).
+Note: Full/Smart/All modes include all sub-categories automatically (no sub-questions).
 
-Extract stated: Principles, goals, rules, constraints, required/forbidden patterns.
+## Self-Compliance
 
-Check all files against extracted rules. Report as: `[SELF-COMPLIANCE] <rule> violated in <file:line>`
+Extract from project docs (README, CLAUDE.md, CONTRIBUTING.md): principles, goals, rules, constraints.
 
-## Doc-Code Mismatch Detection
+Check all files. Report: `[SELF-COMPLIANCE] <rule> violated in <file:line>`
 
-### Mismatch Categories
+## Doc-Code Mismatch
 
-| Category | Doc Source | Code Source | Example |
-|----------|------------|-------------|---------|
-| **Feature Claims** | README features list | Actual implementation | "Supports X" but X not implemented |
-| **API Signatures** | OpenAPI/JSDoc/docstrings | Function signatures | Param types/names differ |
-| **Config Values** | README/docs defaults | Actual defaults in code | "Default: 100" but code uses 50 |
-| **Behavior Descriptions** | Comments/docs | Actual logic | "Returns null on error" but throws |
-| **Examples/Samples** | README code blocks | Working code | Example uses deprecated API |
-| **Dependencies** | README requirements | package.json/pyproject | Version mismatches |
+| Category | Check |
+|----------|-------|
+| Feature Claims | README says "supports X" but not implemented |
+| API Signatures | Docstring params ≠ actual function |
+| Config Values | Documented default ≠ actual default |
+| Behavior | Comment says X, code does Y |
+| Examples | README code uses deprecated API |
+| Dependencies | Documented version ≠ actual |
 
-### Detection Flow
+Report: `[DOC-CODE MISMATCH] {category}: {doc} ≠ {code} in {file:line}`
 
-1. **Extract Claims** - Parse docs for: features, API signatures, defaults, behaviors
-2. **Map to Code** - Find corresponding implementations
-3. **Compare** - Semantic comparison (not just string match)
-4. **Report** - `[DOC-CODE MISMATCH] {category}: {doc_claim} ≠ {code_reality} in {file:line}`
-
-## SSOT Resolution
-
-For each mismatch, AskUserQuestion:
-
-```
-header: "SSOT: {category}"
-question: "{doc_claim} ≠ {code_reality} — Which is correct?"
-options:
-  - Docs: "Update code to match documentation"
-  - Code: "Update documentation to match code"
-  - Discuss: "Need to decide the intended behavior"
-```
-
-Group related mismatches when possible (e.g., all API signature mismatches in one question).
+**SSOT Resolution:** For each mismatch, ask: "Docs" (update code) | "Code" (update docs) | "Discuss"
 
 ## Meta-flags
 
-- `--smart` - Auto-detect and run applicable (includes self-compliance + consistency)
-- `--critical` - security + ai-security + database + tests
-- `--weekly` - security + tech-debt + hygiene + tests + self-compliance + consistency
-- `--pre-release` - security + api-contract + docs + tests + consistency
-- `--all` - Everything applicable
-- `--auto-fix` - Skip asking, auto-fix safe issues
+| Flag | Includes |
+|------|----------|
+| `--smart` | Auto-detect applicable + self-compliance + consistency |
+| `--critical` | security + database + tests |
+| `--weekly` | security + tech-debt + tests + self-compliance + consistency |
+| `--pre-release` | security + api-contract + docs + tests + consistency |
+| `--all` | Everything applicable |
+| `--auto-fix` | Skip asking, auto-fix safe issues |
 
-## Priority Scoring
+## Priority
 
-- **CRITICAL** - Security vulnerabilities, data exposure (fix immediately)
-- **HIGH** - High impact, low effort (fix first)
-- **MEDIUM** - Balanced impact/effort
-- **LOW** - Low impact or high effort (fix if time permits)
+- **CRITICAL** - Security, data exposure
+- **HIGH** - High impact, low effort
+- **MEDIUM** - Balanced
+- **LOW** - Low impact or high effort
 
 ## Output
 
 **Standards:** Output Formatting
 
 Tables:
-1. **Audit Results** - Category | Score | Bar + Summary (per category + OVERALL)
-2. **Issues Found** - Priority | Issue | Location | Status (grouped by CRITICAL/HIGH/MEDIUM/LOW)
-3. **Verification** - Inline: {done} done + {skip} skip + {fail} fail = {total}
+1. **Audit Results** - Category | Score | Summary
+2. **Issues Found** - Priority | Issue | Location | Status
+3. **Verification** - {done} + {skip} + {fail} = {total}
 
 ## Usage
 
 ```bash
-/cco-audit                   # Interactive: ask scope + auto-fix
-/cco-audit --smart           # Auto-detect applicable (includes consistency)
-/cco-audit --consistency     # Doc-code mismatch detection
-/cco-audit --self-compliance # Check against project's own rules
+/cco-audit                   # Interactive
+/cco-audit --smart           # Auto-detect applicable
+/cco-audit --consistency     # Doc-code mismatch
 /cco-audit --critical --auto-fix
 ```

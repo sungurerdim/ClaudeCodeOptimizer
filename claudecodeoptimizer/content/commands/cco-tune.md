@@ -7,320 +7,93 @@ description: Project-specific AI tuning and configuration
 
 **Project tuning** - Context + AI Performance + Statusline + Permissions in one flow.
 
-## Decision Tree
+**Standards:** Output Formatting
 
-```
-User runs /cco-tune
-  │
-  ├─► Step 1: Health Check (no agent)
-  │     ├─ CCO installation status
-  │     └─ Config validation (settings.json, statusline.js)
-  │
-  ├─► Step 2: Existing Context?
-  │     ├─ Yes → Show summary, ask: Use / Update
-  │     └─ No → Continue to detection
-  │
-  ├─► Step 3: Detection (cco-agent-detect scope: full)
-  │     ├─ Technical: stack, tools, conventions
-  │     └─ Strategic: purpose, team, scale, data
-  │
-  ├─► Step 4: Confirmation (AskUserQuestion calls)
-  │     ├─ Call 1: Core Context (Purpose, Team, Scale, Data)
-  │     ├─ Call 2: Technical (Stack, Type, DB, Rollback)
-  │     ├─ Call 3: Approach (Maturity, Breaking, Priority)
-  │     └─ Call 4: AI Performance (Thinking, MCP, Caching)
-  │
-  ├─► Step 5: Configuration (AskUserQuestion)
-  │     ├─ Scope: Global / Local
-  │     ├─ Features: Statusline / Permissions / Both / Skip
-  │     └─ Permission Level (if selected): Safe / Balanced / Permissive
-  │
-  ├─► Step 6: Apply
-  │     ├─ Write CCO_CONTEXT to ./CLAUDE.md
-  │     ├─ Write statusline.js (if selected)
-  │     ├─ Update settings.json (statusLine + permissions + env)
-  │     └─ Validate all changes
-  │
-  └─► Step 7: Status Display
-```
+## Flow
+
+1. **Health Check** - Verify CCO installation, validate configs
+2. **Existing Context** - If exists in `./CLAUDE.md` → ask: Use / Update
+3. **Detection** - Run `cco-agent-detect scope:full`
+4. **Confirmation** - 4 AskUserQuestion calls for all settings
+5. **Configuration** - Scope + optional features (statusline/permissions)
+6. **Apply** - Write files, validate
+7. **Report** - Show changes table
 
 ## Step 1: Health Check
 
-### CCO Installation
-```
-globalCommands = count(~/.claude/commands/cco-*.md)
-globalAgents = count(~/.claude/agents/cco-*.md)
-globalStandards = exists(~/.claude/CLAUDE.md) with CCO_STANDARDS
-```
+**CCO Installation:** Count commands/agents in `~/.claude/`, check standards in CLAUDE.md.
 
-If issues:
-```
-CCO Status: WARNING
-  Commands: {count}/9 | Agents: {count}/3 | Standards: {OK|MISSING}
-→ Run: pip install claudecodeoptimizer && cco-setup
-```
+**Config Validation:** Check both scopes (`~/.claude/`, `./.claude/`):
+- settings.json: valid JSON, no conflicting rules
+- statusline.js: valid JS, activated in settings
 
-### Config Validation
-Check both scopes (~/.claude/ and ./.claude/):
+If issues → show warning with fix command.
 
-**settings.json:**
-- JSON syntax valid
-- No conflicting rules (same pattern in allow AND deny)
-- Dangerous commands in deny list
+## Step 2: Existing Context
 
-**statusline.js:**
-- JavaScript syntax valid (if exists)
-- settings.json has statusLine config pointing to it
+Parse `<!-- CCO_CONTEXT_START -->` to `<!-- CCO_CONTEXT_END -->` from `./CLAUDE.md`.
 
-If issues:
-```
-Config Issues:
-  ⚠ {scope} settings.json: {issue}
-  ⚠ {scope} statusline.js exists but not activated in settings
-```
-
-## Step 2: Existing Context Check
-
-### Dynamic Context Parsing
-
-Read content between `<!-- CCO_CONTEXT_START -->` and `<!-- CCO_CONTEXT_END -->` from `./CLAUDE.md`.
-
-**Parse dynamically** - extract ALL key-value pairs without hardcoded field assumptions:
-
-```python
-# Pseudocode - adapt to actual parsing
-context_block = extract_between(file, "CCO_CONTEXT_START", "CCO_CONTEXT_END")
-
-current = {}
-for line in context_block:
-    # Parse "Key: Value" patterns
-    if match := re.match(r'^(\w+):\s*(.+)$', line):
-        current[match[1].lower()] = match[2]
-    # Parse "Key: Val1 | Key2: Val2" patterns
-    if '|' in line:
-        for part in line.split('|'):
-            if ':' in part:
-                k, v = part.split(':', 1)
-                current[k.strip().lower()] = v.strip()
-```
-
-**Display whatever was parsed** - show actual content, not assumed fields:
-
-```
-Current Context (from ./CLAUDE.md):
-{display each parsed section with its content}
-```
-
-Then ask:
-```
-header: "Context"
-question: "Use existing context or update?"
-options:
-  - label: "Use as-is"
-    description: "Continue with current settings"
-  - label: "Update"
-    description: "Re-detect and reconfigure"
-```
-
-If "Use as-is" → display status and exit.
+Extract key-value pairs dynamically (don't hardcode fields). Display parsed content, ask: "Use as-is" / "Update".
 
 ## Step 3: Detection
 
-Run `cco-agent-detect` with `scope: full`:
-
-**Technical:**
-- Stack (languages, frameworks, databases, infrastructure)
-- Tools (format, lint, test commands)
-- Conventions (testNaming, importStyle)
-- Applicable checks list
-
-**Strategic:**
-- Purpose, Team, Scale, Data, Type, Rollback
-
-**Auto-Detected:**
-- monorepo, preCommitHooks, currentCoverage, lintingConfigured
-- apiEndpoints, containerSetup, i18nSetup, authPatterns
-- licenseType, secretsDetected, depsOutdated, gitDefaultBranch
+Run `cco-agent-detect scope:full` → returns technical + strategic + autoDetected JSON.
 
 ## Step 4: Confirmation
 
-**Label System (apply to ALL options):**
-```
-[current]               - Value from existing CCO_CONTEXT
-[detected]              - Auto-detected from codebase analysis
-[recommended:{profile}] - Recommended for complexity profile
-```
-
-**Label Rules:**
-- Append matching labels to description: `"{base_description} {labels}"`
-- Multiple labels allowed when applicable
-- Omit labels that don't apply (no empty brackets)
-- Order: base description, then [current], [detected], [recommended:{profile}]
+**Label System:** `[current]` `[detected]` `[recommended:{profile}]` - append to option descriptions.
 
 ### Call 1 - Core Context
-```
-Q1 - header: "Purpose"
-question: "Project purpose?"
-options:
-  - label: "{detected.purpose}"
-    description: "Detected from codebase {labels}"
-  - 2-3 alternatives based on {detected.type}
 
-Q2 - header: "Team"
-question: "Team size?"
-options: Solo | 2-5 | 6+
-description_template: "{base_description} {labels}"
+| Q | Header | Question | Options |
+|---|--------|----------|---------|
+| 1 | Purpose | Project purpose? | {detected} + 2-3 alternatives |
+| 2 | Team | Team size? | Solo \| 2-5 \| 6+ |
+| 3 | Scale | Expected users? | <100 \| 100-10K \| 10K+ |
+| 4 | Data | Most sensitive data? | Public \| Internal \| PII \| Regulated |
 
-Q3 - header: "Scale"
-question: "Expected users?"
-options: <100 | 100-10K | 10K+
-description_template: "{base_description} {labels}"
-
-Q4 - header: "Data"
-question: "Most sensitive data?"
-options: Public | Internal | PII | Regulated
-description_template: "{base_description} {labels}"
-
-Note: Compliance is AUTO-DERIVED from Data:
-  - Public/Internal → Compliance: None
-  - PII → Compliance: GDPR/CCPA
-  - Regulated → Compliance: SOC2/HIPAA/PCI (ask which)
-```
+Compliance auto-derived: Public/Internal→None, PII→GDPR/CCPA, Regulated→ask which.
 
 ### Call 2 - Technical
-```
-Q5 - header: "Stack"
-question: "Tech stack correct?"
-options:
-  - label: "{detected.stack}"
-    description: "{labels}"
-  - label: "Edit"
-    description: "Modify the detected stack"
 
-Q6 - header: "Type"
-question: "Project type?"
-options: backend-api | frontend | fullstack | cli | library | mobile | desktop
-description_template: "{base_description} {labels}"
-note: Show 4 most relevant based on {detected.type}
-
-Q7 - header: "Database"
-question: "Database type?"
-options: None | SQL | NoSQL
-description_template: "{base_description} {labels}"
-
-Q8 - header: "Rollback"
-question: "Rollback complexity?"
-options: Git | DB | User-data
-description_template: "{base_description} {labels}"
-```
+| Q | Header | Question | Options |
+|---|--------|----------|---------|
+| 5 | Stack | Tech stack correct? | {detected} \| Edit |
+| 6 | Type | Project type? | backend-api \| frontend \| fullstack \| cli \| library \| mobile \| desktop |
+| 7 | Database | Database type? | None \| SQL \| NoSQL |
+| 8 | Rollback | Rollback complexity? | Git \| DB \| User-data |
 
 ### Call 3 - Approach
-```
-Q9 - header: "Maturity"
-question: "Project phase?"
-options: Greenfield | Active | Maintenance | Legacy
-description_template: "{base_description} {labels}"
 
-Q10 - header: "Breaking"
-question: "Breaking changes tolerance?"
-options: Allowed | Minimize | Never
-description_template: "{base_description} {labels}"
-
-Q11 - header: "Priority"
-question: "Quality vs speed?"
-options: Speed | Balanced | Quality
-description_template: "{base_description} {labels}"
-```
+| Q | Header | Question | Options |
+|---|--------|----------|---------|
+| 9 | Maturity | Project phase? | Greenfield \| Active \| Maintenance \| Legacy |
+| 10 | Breaking | Breaking changes? | Allowed \| Minimize \| Never |
+| 11 | Priority | Quality vs speed? | Speed \| Balanced \| Quality |
 
 ### Call 4 - AI Performance
 
-**Complexity Profile Detection:**
+**Profile Detection:** `simple` (Scale<100 + cli/library), `complex` (Scale:10K+ or Legacy), else `medium`.
 
-Determine profile from confirmed values (Call 1-3):
-```
-if Scale == "<100" AND Type in [cli, library]:
-    profile = "simple"
-elif Scale == "10K+" OR Maturity == "Legacy":
-    profile = "complex"
-else:
-    profile = "medium"
-```
+**Defaults:** simple→Off/25K, medium→8K/25K, complex→16K/50K
 
-**Profile Defaults:**
-| Profile | Thinking | MCP |
-|---------|----------|-----|
-| simple | Off | 25K |
-| medium | 8K | 25K |
-| complex | 16K | 50K |
-
-**Extended Thinking Reference:**
-- Min: 1,024 tokens | Max: 32K
-- Ideal for: math, coding challenges, multi-step logic, research synthesis
-
-Apply `[recommended]` only to the option matching detected profile:
-
-```
-Q12 - header: "Thinking"
-question: "Extended thinking budget?"
-options:
-  - Off: "Simple tasks, retrieval {labels}"        # [recommended] if profile=simple
-  - 8K: "Standard coding, moderate complexity {labels}"  # [recommended] if profile=medium
-  - 16K: "Complex logic, deep analysis {labels}"
-  - 32K: "Maximum budget {labels}"                 # [recommended] if profile=complex
-
-Q13 - header: "MCP"
-question: "MCP tool output limit?"
-options:
-  - 25K: "{base_description} {labels}"   # [recommended] if profile=simple|medium
-  - 50K: "{base_description} {labels}"   # [recommended] if profile=complex
-  - 100K: "{base_description} {labels}"
-
-Q14 - header: "Caching"
-question: "Prompt caching?"
-options:
-  - Enabled: "{base_description} {labels}" [recommended]
-  - Disabled: "{base_description} {labels}"
-```
-
-**Note:** Auto-compact can only be toggled via `/config` UI.
+| Q | Header | Question | Options |
+|---|--------|----------|---------|
+| 12 | Thinking | Extended thinking? | Off \| 8K \| 16K \| 32K |
+| 13 | MCP | MCP output limit? | 25K \| 50K \| 100K |
+| 14 | Caching | Prompt caching? | Enabled \| Disabled |
 
 ## Step 5: Configuration
 
-### Scope (ALWAYS asked - applies to AI settings too)
-```
-Q15 - header: "Scope"
-question: "Where to save settings?"
-options:
-  - Global: "~/.claude/ - applies to all projects [recommended]"
-  - Local: "./.claude/ - this project only, overrides global"
-```
+| Q | Header | Question | Options |
+|---|--------|----------|---------|
+| 15 | Scope | Where to save? | Global (~/.claude/) \| Local (./.claude/) |
+| 16 | Features | Additional config? | Statusline \| Permissions \| Skip (multiSelect) |
+| 17 | Permissions | Permission level? | Safe \| Balanced \| Permissive (if selected) |
 
-### Features
-```
-Q16 - header: "Features"
-question: "Additional configuration?"
-multiSelect: true
-options: Statusline | Permissions | Skip
-description_template: "{base_description} {labels}"
-```
-
-### Permission Level (if Permissions selected)
-```
-Q17 - header: "Permissions"
-question: "Permission level?"
-options:
-  - Safe: "{base_description} {labels}"
-  - Balanced: "{base_description} {labels}" [recommended]
-  - Permissive: "{base_description} {labels}"
-```
-
-## Step 6: Apply Changes
+## Step 6: Apply
 
 ### Write CCO_CONTEXT to ./CLAUDE.md
-
-**Source files:**
-- Global: `cco-standards.md` → Universal + Claude-Specific (already in ~/.claude/CLAUDE.md)
-- Conditional: `cco-standards-conditional.md` → filtered by detection, written to local only
 
 ```markdown
 <!-- CCO_CONTEXT_START -->
@@ -331,153 +104,70 @@ Stack: {stack} | Type: {type} | DB: {db} | Rollback: {rollback}
 Maturity: {maturity} | Breaking: {breaking} | Priority: {priority}
 
 ## AI Performance
-Thinking: {off|8K|16K|32K} | MCP: {25K|50K|100K} | Caching: {on|off}
+Thinking: {value} | MCP: {value} | Caching: {on|off}
 
 ## Guidelines
-{generated from confirmed values}
+{generated from values - see Guidelines table}
 
 ## Operational
 Tools: {format}, {lint}, {test}
 Conventions: {testNaming}, {importStyle}
-Applicable: {checks list}
-Not Applicable: {excluded checks}
+Applicable: {checks}
+Not Applicable: {excluded}
 
 ## Auto-Detected
-Structure: {monorepo|single-repo} | Hooks: {pre-commit|none} | Coverage: {N%}
-- [x/] Linting configured
-- [x/] Pre-commit hooks
-- [x/] API endpoints
-- [x/] Container setup
-- [x/] i18n setup
-License: {type}
-Secrets detected: {yes|no}
-Outdated deps: {N}
+Structure: {monorepo|single-repo} | Hooks: {status} | Coverage: {N%}
+{checklist of detected features}
+License: {type} | Secrets: {yes|no} | Outdated: {N}
 
-## Conditional Standards (auto-applied)
-{Only sections from cco-standards-conditional.md where "When:" matches detected values}
+## Conditional Standards
+{filtered from cco-standards-conditional.md by detection}
 <!-- CCO_CONTEXT_END -->
 ```
 
-### Conditional Selection Logic
+### Conditional Selection
 
-Read `cco-standards-conditional.md` and include sections where "When:" condition matches:
+Include sections from `cco-standards-conditional.md` where conditions match:
 
-| Conditional | Include When |
-|-------------|--------------|
-| Security Extended | Container/K8s detected OR Scale: 10K+ OR Data: PII/Regulated |
-| Architecture | Scale: 10K+ OR Type: backend-api with microservices |
-| Operations | Scale: 10K+ OR CI/CD detected |
-| Performance | Scale: 100-10K+ OR Performance in Applicable |
+| Conditional | When |
+|-------------|------|
+| Security Extended | Container OR Scale:10K+ OR Data:PII/Regulated |
+| Operations | Scale:10K+ OR CI/CD detected |
+| Performance | Scale:100-10K+ |
 | Data | DB != None |
 | API | API endpoints detected |
 | Frontend | Type: frontend/fullstack |
-| i18n | i18n setup detected |
-| Reliability | Scale: 10K+ OR SLA requirements |
-| Cost | Container/Cloud setup detected |
-| DX | Team: 2-5+ |
 | Compliance | Compliance != None |
 
-**Write only matching sections** - do not include conditionals that don't apply.
+### Write Settings
 
-### Write Statusline (if selected)
+**AI Performance** → `{scope}/settings.json` env section:
+- MAX_THINKING_TOKENS (if not Off)
+- MAX_MCP_OUTPUT_TOKENS
+- DISABLE_PROMPT_CACHING (if disabled)
 
-1. Write `{scope}/statusline.js` (full code from cco-config)
-2. **Check and update** `{scope}/settings.json`:
+**Statusline** (if selected) → Write `{scope}/statusline.js`, update settings.json statusLine config.
 
-```javascript
-// Check if statusLine config exists
-const settings = readJSON('{scope}/settings.json') || {};
+**Permissions** (if selected) → Update settings.json with permission rules.
 
-// Ensure statusLine is configured
-if (!settings.statusLine) {
-  settings.statusLine = {
-    "type": "command",
-    "command": "node -e \"const p=require('path'),o=require('os'),{spawnSync:s}=require('child_process'),r=s('node',[p.join(o.homedir(),'.claude','statusline.js')],{stdio:['inherit','inherit','inherit']});process.exit(r.status||0)\""
-  };
-}
-
-// For local scope, adjust path
-if (scope === 'local') {
-  settings.statusLine.command = settings.statusLine.command.replace(
-    "o.homedir(),'.claude'",
-    "process.cwd(),'.claude'"
-  );
-}
-
-writeJSON('{scope}/settings.json', settings);
-```
-
-### Write Permissions (if selected)
-
-Update `{scope}/settings.json` with permissions based on level.
-
-### Write AI Performance Settings (ALWAYS)
-
-AI settings written to `{scope}/settings.json` based on user's Scope choice (Step 5):
-- **Global** (`~/.claude/`) - applies to all projects
-- **Local** (`./.claude/`) - this project only, overrides global
-
-```python
-# Determine path based on scope choice
-if scope == "Global":
-    settings_path = Path.home() / ".claude" / "settings.json"
-else:
-    settings_path = Path.cwd() / ".claude" / "settings.json"
-    settings_path.parent.mkdir(parents=True, exist_ok=True)
-
-# Read existing settings, preserve non-CCO fields
-settings = json.loads(settings_path.read_text()) if settings_path.exists() else {}
-
-# Update env section
-if "env" not in settings:
-    settings["env"] = {}
-
-# Apply AI performance settings
-if thinking != "Off":
-    settings["env"]["MAX_THINKING_TOKENS"] = str(thinking_value)  # 8000, 16000, 32000
-elif "MAX_THINKING_TOKENS" in settings["env"]:
-    del settings["env"]["MAX_THINKING_TOKENS"]
-
-settings["env"]["MAX_MCP_OUTPUT_TOKENS"] = str(mcp_value)  # 25000, 50000, 100000
-
-if caching == "Disabled":
-    settings["env"]["DISABLE_PROMPT_CACHING"] = "1"
-elif "DISABLE_PROMPT_CACHING" in settings["env"]:
-    del settings["env"]["DISABLE_PROMPT_CACHING"]
-
-# Write back preserving formatting
-settings_path.write_text(json.dumps(settings, indent=2))
-```
-
-## Step 7: Complete Report
+## Step 7: Report
 
 **Standards:** Output Formatting
 
-**ALWAYS show before/after for ALL categories:**
-
 Tables:
-1. **Header** - Double-line box with "CCO Tune Complete"
-2. **Changes Applied** - Category | Field | Before | After | Changed (Y/N/auto)
-   - Categories: Strategic, Technical, Approach, AI Performance, Config
+1. **Header** - Double-line box "CCO Tune Complete"
+2. **Changes Applied** - Category | Field | Before | After | Changed
 3. **Files Modified** - File | Action
-4. **Summary** - {changed}/{total} fields changed
-5. **Current Configuration** - Single box with key settings
-6. **Next Steps** - Suggested commands
+4. **Summary** - {changed}/{total} fields
+5. **Current Configuration** - Key settings box
+6. **Next Steps** - /cco-health, /cco-audit --smart
 
-Note: Include restart warning at end.
-
-## Statusline Code
-
-See `claudecodeoptimizer/content/statusline/statusline.js` for complete implementation.
-
-## Permission Lists
-
-See `claudecodeoptimizer/content/permissions/` for Safe/Balanced/Permissive definitions.
+Note: Include restart warning.
 
 ## Guidelines Generation
 
-| If Value | Add Guideline |
-|----------|---------------|
+| Value | Guideline |
+|-------|-----------|
 | Team: solo | Self-review sufficient |
 | Team: 2-5 | Informal review, document decisions |
 | Team: 6+ | Formal review required |
@@ -488,7 +178,7 @@ See `claudecodeoptimizer/content/permissions/` for Safe/Balanced/Permissive defi
 | Data: internal | Add authentication, audit logs |
 | Data: pii | Encryption required, minimize retention |
 | Data: regulated | Full compliance, external audit |
-| Maturity: greenfield | Aggressive refactors OK, establish patterns early |
+| Maturity: greenfield | Aggressive refactors OK |
 | Maturity: active | Balanced refactors, maintain momentum |
 | Maturity: maintenance | Conservative changes, stability first |
 | Maturity: legacy | Wrap don't modify, strangler pattern |
@@ -499,23 +189,10 @@ See `claudecodeoptimizer/content/permissions/` for Safe/Balanced/Permissive defi
 | Priority: balanced | Standard practices |
 | Priority: quality | Thorough, no shortcuts |
 
-## Compact Instructions Template
+## References
 
-When auto-compact is set to manual, add to CLAUDE.md:
-
-```markdown
-## Compact Instructions
-When using /compact, preserve:
-- All code changes with file paths
-- Error messages and stack traces
-- User requirements and decisions
-- Test results and coverage data
-
-Discard:
-- Exploratory searches that found nothing
-- Superseded plans
-- Verbose tool outputs already processed
-```
+- Statusline code: `claudecodeoptimizer/content/statusline/statusline.js`
+- Permission lists: `claudecodeoptimizer/content/permissions/`
 
 ## Usage
 
@@ -527,8 +204,7 @@ Discard:
 
 ## Rules
 
-1. NEVER auto-apply without user confirmation
-2. ALWAYS preserve non-CCO settings in JSON files
-3. ALWAYS validate JSON syntax before writing
-4. Backup before replacement if file exists
-5. Local scope overrides global for that project
+1. NEVER auto-apply without confirmation
+2. ALWAYS preserve non-CCO settings in JSON
+3. ALWAYS validate JSON before writing
+4. Local scope overrides global

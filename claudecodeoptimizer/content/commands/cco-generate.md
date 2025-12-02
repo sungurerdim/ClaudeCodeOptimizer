@@ -10,11 +10,16 @@ description: Convention-following automated generation
 **Standards:** Pre-Operation Safety | Context Read | Verification | Error Format
 
 ## Context Application
-- **Conventions** - Use testNaming, importStyle from Operational section
-- **Type** - Adapt templates: CLI (argparse/click), API (endpoints), frontend (components)
-- **Stack** - Use detected frameworks for idiomatic generation
-- **Priority** - If Speed → minimal scaffolding; if Quality → comprehensive with edge cases
-- **Maturity** - If Legacy → match existing patterns exactly; if Greenfield → use modern idioms
+
+| Field | Effect |
+|-------|--------|
+| Conventions | Use testNaming, importStyle from Operational section |
+| Type | CLI: argparse/click; API: endpoints + OpenAPI; Frontend: components + stories |
+| Stack | Use detected frameworks for idiomatic generation |
+| Priority | Speed → minimal scaffolding; Quality → comprehensive with edge cases |
+| Maturity | Legacy → match existing patterns exactly; Greenfield → modern idioms |
+| Scale | 10K+ → add monitoring, health checks, metrics; <100 → minimal infra |
+| Data | PII → encryption helpers, audit logging; Regulated → compliance boilerplate |
 
 ## Default Behavior
 
@@ -35,20 +40,12 @@ Explicit flags (`--tests`, `--docs`, `--infra`) skip this question.
 
 ## Types
 
-**Testing:** `--tests`
-- Unit/integration tests (default)
-- Contract tests (if API detected)
-- Load tests (if --load specified)
+**Sub-category selection (only when single flag used):**
+- `--tests` → ask (multiSelect): All | Unit/Integration | Contract | Load
+- `--docs` → ask (multiSelect): All | Docstrings | OpenAPI | ADR
+- `--infra` → ask (multiSelect): All | CI/CD | Docker | Hooks
 
-**Documentation:** `--docs`
-- Docstrings, README (default)
-- OpenAPI spec (if API detected)
-- ADR (if --adr specified)
-
-**Infrastructure:** `--infra`
-- CI/CD pipelines (default)
-- Dockerfile (if --docker specified)
-- Pre-commit hooks (if --hooks specified)
+Note: `--all` or interactive "All" selection includes all sub-categories automatically.
 
 ## Convention Enforcement
 
