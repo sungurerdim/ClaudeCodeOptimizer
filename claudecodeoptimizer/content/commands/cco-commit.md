@@ -10,12 +10,22 @@ description: Atomic traceable change management
 **Standards:** Pre-Operation Safety | Context Read | Error Format
 
 ## Context Application
-- **Tools** - Use format, lint, test commands from Operational section
-- **Maturity** - If Legacy → conservative grouping; if Greenfield → aggressive refactors OK
+
+| Field | Effect |
+|-------|--------|
+| Tools | Use format, lint, test commands from Operational section |
+| Maturity | Legacy → conservative grouping, smaller commits; Greenfield → batch related changes |
+| Scale | 10K+ → smaller atomic commits, detailed messages; <100 → can batch more |
+| Type | Library → extra care with public API changes; API → note contract impacts |
+| Priority | Speed → minimal commit message; Quality → detailed why + impact |
 
 ## Pre-Commit Quality Gates
 
 Before committing, automatically run quality checks.
+
+### Stale Lock Recovery
+
+Before any git operation: if `.git/index.lock` exists but no git process running → remove it.
 
 ### Tool Resolution
 
@@ -114,5 +124,6 @@ Tables:
 ```bash
 /cco-commit                 # Full flow: checks → analyze → commit
 /cco-commit --dry-run       # Preview only (still runs checks)
+/cco-commit --single        # Force all changes into one commit
 /cco-commit --skip-checks   # Skip quality gates (emergency use)
 ```

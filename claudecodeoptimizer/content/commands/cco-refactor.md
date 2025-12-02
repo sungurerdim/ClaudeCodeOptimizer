@@ -12,10 +12,15 @@ description: Verified transformations with rollback
 Requires clean git state. If uncommitted changes exist → Commit / Stash / Cancel
 
 ## Context Application
-- **Rollback** - If DB/User-data → extra caution, suggest backup first
-- **Type** - Library: warn about public API changes
-- **Breaking** - If Never → require deprecation path; if Allowed → clean rename OK
-- **Maturity** - If Legacy → prefer wrap over modify; if Greenfield → aggressive OK
+
+| Field | Effect |
+|-------|--------|
+| Rollback | DB/User-data → extra caution, suggest backup first |
+| Type | Library → warn about public API changes, check semver impact |
+| Breaking | Never → require deprecation path; Allowed → clean rename OK |
+| Maturity | Legacy → wrap don't modify, strangler pattern; Greenfield → aggressive OK |
+| Scale | 10K+ → incremental refactors, feature flags; <100 → batch changes OK |
+| Team | 6+ → document changes for team awareness, update ADRs |
 
 ## Default Behavior
 

@@ -107,8 +107,13 @@ All command output tables use ASCII box-drawing in code blocks:
 - Alignment: numbers right-aligned, text left-aligned, 1-space cell padding
 - Status values: `OK`, `WARN`, `FAIL` (no emoji)
 - Progress bar: `████████████░░░░░░░░` (20 chars, proportional fill)
-- Consistent column widths within each table
 - Section headers outside table, not as row
+
+**Column width rule (CRITICAL for vertical alignment):**
+All cells in a column must have identical width = widest cell in that column + 2 padding.
+- First: scan all values to find max width per column
+- Then: pad every cell to that exact width (text=trailing spaces, numbers=leading spaces)
+- Result: all `│` characters align vertically on every row
 
 ## Approval Flow
 - Single AskUserQuestion, 4 priority tabs (Critical/High/Medium/Low), skip empty
