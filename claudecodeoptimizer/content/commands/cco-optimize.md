@@ -58,15 +58,7 @@ Explicit mode flags (`--conservative`, `--balanced`, `--aggressive`) skip mode q
 
 Optimize files consumed by AI models for maximum understanding with minimum tokens.
 
-### Principles
-
-| Principle | Description | Example |
-|-----------|-------------|---------|
-| **Semantic Density** | Max meaning per token | "Auth: JWT + refresh" vs verbose explanation |
-| **Structured Format** | Tables/lists over prose | Comparison table vs paragraph |
-| **Eliminate Redundancy** | Say once, reference elsewhere | Single definition, multiple references |
-| **Front-load Critical** | Important info first | Purpose → Details → Edge cases |
-| **Scannable Hierarchy** | Clear headings, indentation | H2 → H3 → bullet points |
+**Standards:** AI Context (Universal) - Semantic Density, Structured Format, Front-load Critical, Scannable Hierarchy, No Filler
 
 ### Targets
 
