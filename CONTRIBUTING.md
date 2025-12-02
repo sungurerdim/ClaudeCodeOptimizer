@@ -64,7 +64,7 @@ pytest -n auto
 
 ### Test Coverage Standards
 
-- **Minimum Coverage**: 80% overall (current: 96%)
+- **Minimum Coverage**: 80% overall (current: 100%)
 - **Critical Modules**: 90%+ coverage required
   - `install_hook.py`
   - `cco_remove.py`

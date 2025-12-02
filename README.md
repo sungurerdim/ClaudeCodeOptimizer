@@ -56,7 +56,7 @@ cco-setup
 | Step | Command | Result |
 |------|---------|--------|
 | Install | `pip install ...` | Downloads CCO package |
-| Setup | `cco-setup` | Copies 8 commands, 3 agents, 85 standards to `~/.claude/` |
+| Setup | `cco-setup` | Copies 8 commands, 3 agents, 94 standards to `~/.claude/` |
 | Tune | `/cco-tune` | Detects stack, writes project context + conditional standards to `./CLAUDE.md` |
 | Use | `/cco-*` | All commands now follow your project's standards |
 
@@ -109,7 +109,7 @@ Claude/Opus 4.5 already knows:       CCO adds:
 
 ### Why Explicit Standards?
 
-CCO provides 85 core standards (51 universal + 34 Claude-specific) plus 80 conditional standards selected per-project. Why, if Claude already knows them?
+CCO provides 94 core standards (51 universal + 43 Claude-specific) plus 80 conditional standards selected per-project. Why, if Claude already knows them?
 
 | Benefit | Explanation |
 |---------|-------------|
@@ -466,7 +466,7 @@ After `cco-setup`:
 │   └── cco-*.md                        # 3 specialized agents
 ├── statusline.js                       # Optional statusline
 ├── settings.json                       # AI performance + permissions
-└── CLAUDE.md                           # 85 rules (51 universal + 34 Claude-specific)
+└── CLAUDE.md                           # 94 rules (51 universal + 43 Claude-specific)
 
 ./CLAUDE.md                             # Local (per project, after /cco-tune)
 ├── CCO_CONTEXT_START
