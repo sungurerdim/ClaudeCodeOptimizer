@@ -114,16 +114,134 @@ CCO provides 80 core standards (46 universal + 34 Claude-specific) plus 80 condi
 
 ## Commands
 
+*Ordered by typical workflow: Setup → Observe → Fix → Improve → Create → Change*
+
 | Command | Purpose |
 |---------|---------|
-| `/cco-tune` | Project tuning: context + AI performance + statusline + permissions |
-| `/cco-audit` | Categorized checks with prioritized fix suggestions |
-| `/cco-review` | Architecture analysis with structured output |
-| `/cco-generate` | Generate tests, docs, CI configs following conventions |
-| `/cco-health` | Metrics dashboard (coverage, complexity, issues) |
-| `/cco-refactor` | Rename/restructure with reference verification |
-| `/cco-optimize` | Reduce context size, remove dead code |
-| `/cco-commit` | Commit with quality checks |
+| `/cco-tune` | Project tuning: context + AI performance + configuration |
+| `/cco-health` | Metrics dashboard with actionable next steps |
+| `/cco-audit` | Quality gates with SSOT resolution |
+| `/cco-optimize` | AI context, docs, code, performance optimization |
+| `/cco-review` | Strategic architecture analysis |
+| `/cco-generate` | Convention-following generation |
+| `/cco-refactor` | Safe structural changes with rollback |
+| `/cco-commit` | Quality-gated atomic commits |
+
+---
+
+## Command Details
+
+### `/cco-tune` - Project Tuning
+Central configuration: detects stack, sets AI performance, writes context to CLAUDE.md.
+
+| Feature | Description |
+|---------|-------------|
+| **Auto-Detection** | Stack, tools, conventions, team size, scale |
+| **AI Performance** | Thinking budget, MCP limits, caching |
+| **Configuration** | Statusline, permissions (Safe/Balanced/Permissive) |
+
+**Flags:** `--status` (show current), `--update` (force re-detection)
+
+### `/cco-health` - Metrics Dashboard
+Single view of project health with actionable next steps.
+
+| Score | Based On |
+|-------|----------|
+| **Security** | Vulnerabilities found |
+| **Tests** | Coverage + quality |
+| **Tech Debt** | Complexity, dead code |
+| **Self-Compliance** | Alignment with stated rules |
+
+**Flags:** `--focus=X` (security/tests/tech-debt/hygiene/self-compliance)
+
+### `/cco-audit` - Quality Gates
+Find issues, resolve inconsistencies, fix with approval.
+
+| Feature | Description |
+|---------|-------------|
+| **Doc-Code Consistency** | Detect mismatches between documentation and code |
+| **SSOT Resolution** | Per-mismatch choice: align code→docs, docs→code, or discuss |
+| **Self-Compliance** | Check code against project's own stated rules |
+| **Prioritized Fixes** | Critical → High → Medium → Low with file:line |
+
+**Core:** `--security`, `--tech-debt`, `--hygiene`, `--self-compliance`, `--consistency`
+**Stack:** `--tests`, `--database`, `--performance`, `--ai-security`, `--ai-quality`, `--docs`, `--cicd`, `--containers`, `--supply-chain`, `--compliance`, `--api-contract`
+**Meta:** `--smart`, `--critical`, `--weekly`, `--pre-release`, `--all`, `--auto-fix`
+
+### `/cco-optimize` - Efficiency Optimization
+Reduce waste, improve quality, measure impact.
+
+| Category | What It Does |
+|----------|--------------|
+| **AI Context** | Optimize CLAUDE.md, prompts for max understanding with min tokens |
+| **Cross-File** | Detect duplicate/redundant/obsolete content across ALL files |
+| **Code Quality** | Apply standards: DRY, complexity, type safety |
+| **Performance** | N+1 queries, caching, blocking I/O |
+
+**Categories:** `--context`, `--docs`, `--code-quality`, `--code-efficiency`, `--performance`, `--cross-file`, `--all`
+**Modes:** `--conservative`, `--balanced`, `--aggressive`
+
+### `/cco-review` - Strategic Review
+Architecture analysis with fresh perspective.
+
+| Phase | Output |
+|-------|--------|
+| **Map Current State** | Structure, patterns, dependencies, data flow |
+| **Gap Analysis** | Intent vs implementation, principle violations |
+| **Stack Fitness** | Technology choices vs project needs |
+| **Fresh Perspective** | "If building from scratch" recommendations |
+
+**Flags:** `--quick`, `--deep`, `--focus=X`, `--report-only`, `--auto-apply`
+
+### `/cco-generate` - Convention-Following Generation
+Generate components that match existing project patterns.
+
+| Type | What It Generates |
+|------|-------------------|
+| **Tests** | Unit/integration tests (+ contract/load if applicable) |
+| **Docs** | Docstrings, README, OpenAPI (if API) |
+| **Infra** | CI/CD pipelines, Dockerfile, pre-commit |
+
+**Flags:** `--tests`, `--docs`, `--infra`, `--all`
+
+### `/cco-refactor` - Safe Refactoring
+Rename/restructure with reference verification and rollback.
+
+| Feature | Description |
+|---------|-------------|
+| **Reference Mapping** | Find ALL refs before changing |
+| **Ordered Transform** | Definition → types → callers → imports → tests |
+| **Verification** | Grep old=0, new=expected after each change |
+| **Rollback** | Auto-revert on any failure |
+
+**Operations:** `rename`, `move`, `extract`, `inline`
+
+### `/cco-commit` - Quality-Gated Commits
+Pre-commit checks + atomic grouping + traceability.
+
+| Step | What Happens |
+|------|--------------|
+| **Quality Gates** | Format → Lint → Test (stop on failure) |
+| **Atomic Grouping** | Related changes together, unrelated separate |
+| **Commit Order** | Types → Core → Dependent → Tests → Docs |
+
+**Flags:** `--dry-run`, `--single`, `--skip-checks`
+
+---
+
+## Agents
+
+Specialized subagents for CCO commands:
+
+| Agent | Purpose | Tools |
+|-------|---------|-------|
+| **cco-agent-detect** | Structured project detection (JSON output) | Glob, Read, Grep, Bash |
+| **cco-agent-scan** | Read-only analysis with file:line findings | Glob, Read, Grep, Bash |
+| **cco-agent-action** | Write operations with verification accounting | All tools |
+
+**Detection Scopes:** `tools` (2s) → `technical` (5s) → `full` (10s)
+
+**Action Accounting:** `done + skip + fail + cannot_do = total`
 
 ---
 
@@ -206,19 +324,21 @@ License: {type} | Secrets: {yes|no} | Outdated: {N deps}
 | Flag | Checks |
 |------|--------|
 | `--security` | OWASP patterns, secrets, CVE patterns |
+| `--consistency` | Doc-code mismatches with SSOT resolution |
+| `--self-compliance` | Project's own stated rules |
+| `--tech-debt` | Dead code, complexity |
+| `--hygiene` | TODOs, orphans, hardcoded |
+| `--tests` | Coverage, isolation, flaky |
+| `--performance` | Caching, algorithms |
+| `--database` | N+1, indexes, queries |
 | `--ai-security` | Prompt injection, PII handling |
 | `--ai-quality` | Hallucinated APIs, AI code patterns |
-| `--database` | N+1, indexes, queries |
-| `--tests` | Coverage, isolation, flaky |
-| `--tech-debt` | Dead code, complexity |
-| `--performance` | Caching, algorithms |
-| `--hygiene` | TODOs, orphans, hardcoded |
 | `--docs` | Docstrings, API docs |
 | `--cicd` | Pipeline, quality gates |
 | `--containers` | Dockerfile, K8s |
 | `--supply-chain` | Dependency CVEs |
 
-**Meta-flags:** `--smart`, `--critical`, `--all`, `--auto-fix`
+**Meta-flags:** `--smart` (all applicable), `--critical`, `--weekly`, `--pre-release`, `--all`, `--auto-fix`
 
 ---
 
