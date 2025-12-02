@@ -17,6 +17,22 @@ Requires clean git state. If uncommitted changes exist → Commit / Stash / Canc
 - **Breaking** - If Never → require deprecation path; if Allowed → clean rename OK
 - **Maturity** - If Legacy → prefer wrap over modify; if Greenfield → aggressive OK
 
+## Default Behavior
+
+When called without operation, AskUserQuestion:
+
+```
+header: "Operation"
+question: "What refactor operation?"
+options:
+  - Rename: "Rename function/class/variable across all references"
+  - Move: "Move file/module to new location, update imports"
+  - Extract: "Extract code block into new function/module"
+  - Inline: "Inline function calls, remove abstraction"
+```
+
+After selection, prompt for required parameters based on operation.
+
 ## Flow
 
 1. **Map** - Find all refs: definition, imports, calls, types, tests, docs
@@ -35,6 +51,7 @@ After each file change:
 ## Operations
 
 ```bash
+/cco-refactor                              # Interactive: ask operation
 /cco-refactor rename {old_name} {new_name}
 /cco-refactor move {old_path} {new_path}
 /cco-refactor extract "{code_block}" {new_module}

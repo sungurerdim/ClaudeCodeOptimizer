@@ -19,9 +19,8 @@ description: Actionable metrics dashboard
 - **Security** - Based on vulnerabilities found
 - **Tests** - Coverage percentage + quality
 - **Tech Debt** - Complexity, dead code, duplication
-- **AI Quality** - AI code patterns (if detected)
 - **Hygiene** - TODOs, orphans, hardcoded values
-- **DORA** - DevOps performance metrics
+- **AI Quality** - AI code patterns (if applicable)
 - **Self-Compliance** - Alignment with stated rules
 
 ## Fix First Indicator
@@ -37,6 +36,8 @@ Dashboard with scores → critical issues → "Fix first" items → next actions
 ## Usage
 
 ```bash
-/cco-health
-/cco-health --focus security
+/cco-health                     # Full dashboard
+/cco-health --focus security    # Focus on specific score
+/cco-health --focus tests
+/cco-health --focus tech-debt
 ```

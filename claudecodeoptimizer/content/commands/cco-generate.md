@@ -16,23 +16,38 @@ description: Convention-following automated generation
 - **Priority** - If Speed → minimal scaffolding; if Quality → comprehensive with edge cases
 - **Maturity** - If Legacy → match existing patterns exactly; if Greenfield → use modern idioms
 
+## Default Behavior
+
+When called without flags, AskUserQuestion:
+
+```
+header: "Generate"
+question: "What to generate?"
+multiSelect: true
+options:
+  - Tests: "Unit/integration tests for uncovered code"
+  - Docs: "Docstrings, README, OpenAPI (if API)"
+  - Infra: "CI/CD pipelines, Dockerfile, pre-commit"
+```
+
+Explicit flags (`--tests`, `--docs`, `--infra`) skip this question.
+
 ## Types
 
-**Testing:**
-- `--tests` - Unit/integration tests
-- `--contract-tests` - API contract tests
-- `--load-tests` - Performance tests
+**Testing:** `--tests`
+- Unit/integration tests (default)
+- Contract tests (if API detected)
+- Load tests (if --load specified)
 
-**Documentation:**
-- `--openapi` - API specification
-- `--docs` - Docstrings, README
-- `--adr` - Architecture Decision Records
-- `--runbook` - Operational runbooks
+**Documentation:** `--docs`
+- Docstrings, README (default)
+- OpenAPI spec (if API detected)
+- ADR (if --adr specified)
 
-**Infrastructure:**
-- `--cicd` - GitHub Actions / GitLab CI
-- `--dockerfile` - Multi-stage Dockerfile
-- `--pre-commit` - Pre-commit hooks
+**Infrastructure:** `--infra`
+- CI/CD pipelines (default)
+- Dockerfile (if --docker specified)
+- Pre-commit hooks (if --hooks specified)
 
 ## Convention Enforcement
 
@@ -94,7 +109,9 @@ After generation:
 ## Usage
 
 ```bash
-/cco-generate --tests
-/cco-generate --openapi
-/cco-generate --cicd
+/cco-generate              # Interactive: ask what to generate
+/cco-generate --tests      # Unit/integration tests (+ contract if API)
+/cco-generate --docs       # Docstrings, README (+ OpenAPI if API)
+/cco-generate --infra      # CI/CD pipelines
+/cco-generate --all        # Everything applicable
 ```

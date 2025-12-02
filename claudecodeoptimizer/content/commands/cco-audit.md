@@ -53,18 +53,18 @@ Explicit flags (`--smart`, `--security`, etc.) skip these questions.
 - `--tech-debt` - Dead code, complexity, duplication
 - `--hygiene` - Old TODOs, orphans, hardcoded values
 - `--self-compliance` - Check against project's own stated rules
+- `--consistency` - Doc-code mismatch detection (features, APIs, configs, behaviors)
 
 **Stack-dependent (auto-skip if not applicable):**
+- `--tests` - Coverage, isolation, flaky
+- `--database` - N+1, indexes, queries
+- `--performance` - Caching, algorithms
 - `--ai-security` - Prompt injection, PII exposure
 - `--ai-quality` - Hallucinated APIs, AI patterns
-- `--database` - N+1, indexes, queries
-- `--tests` - Coverage, isolation, flaky
-- `--performance` - Caching, algorithms
 - `--docs` - Docstrings, API docs
 - `--cicd` - Pipeline, quality gates
 - `--containers` - Dockerfile, K8s
 - `--supply-chain` - Dependency CVEs
-- `--dora` - Deploy frequency, lead time, MTTR
 - `--compliance` - GDPR, licenses
 - `--api-contract` - Breaking changes
 
@@ -76,19 +76,47 @@ Extract stated: Principles, goals, rules, constraints, required/forbidden patter
 
 Check all files against extracted rules. Report as: `[SELF-COMPLIANCE] <rule> violated in <file:line>`
 
+## Doc-Code Mismatch Detection
+
+### Mismatch Categories
+
+| Category | Doc Source | Code Source | Example |
+|----------|------------|-------------|---------|
+| **Feature Claims** | README features list | Actual implementation | "Supports X" but X not implemented |
+| **API Signatures** | OpenAPI/JSDoc/docstrings | Function signatures | Param types/names differ |
+| **Config Values** | README/docs defaults | Actual defaults in code | "Default: 100" but code uses 50 |
+| **Behavior Descriptions** | Comments/docs | Actual logic | "Returns null on error" but throws |
+| **Examples/Samples** | README code blocks | Working code | Example uses deprecated API |
+| **Dependencies** | README requirements | package.json/pyproject | Version mismatches |
+
+### Detection Flow
+
+1. **Extract Claims** - Parse docs for: features, API signatures, defaults, behaviors
+2. **Map to Code** - Find corresponding implementations
+3. **Compare** - Semantic comparison (not just string match)
+4. **Report** - `[DOC-CODE MISMATCH] {category}: {doc_claim} ≠ {code_reality} in {file:line}`
+
 ## SSOT Resolution
 
-When mismatches found, AskUserQuestion for Single Source of Truth:
-- **SSOT=docs** - Align code to documentation
-- **SSOT=code** - Align documentation to code
-- **SSOT=discuss** - Need to decide
+For each mismatch, AskUserQuestion:
+
+```
+header: "SSOT: {category}"
+question: "{doc_claim} ≠ {code_reality} — Which is correct?"
+options:
+  - Docs: "Update code to match documentation"
+  - Code: "Update documentation to match code"
+  - Discuss: "Need to decide the intended behavior"
+```
+
+Group related mismatches when possible (e.g., all API signature mismatches in one question).
 
 ## Meta-flags
 
-- `--smart` - Auto-detect and run applicable (includes self-compliance)
+- `--smart` - Auto-detect and run applicable (includes self-compliance + consistency)
 - `--critical` - security + ai-security + database + tests
-- `--weekly` - security + tech-debt + hygiene + tests + self-compliance
-- `--pre-release` - security + api-contract + docs + tests
+- `--weekly` - security + tech-debt + hygiene + tests + self-compliance + consistency
+- `--pre-release` - security + api-contract + docs + tests + consistency
 - `--all` - Everything applicable
 - `--auto-fix` - Skip asking, auto-fix safe issues
 
@@ -107,7 +135,8 @@ After fixes: done + skip + fail + cannot_do = total
 
 ```bash
 /cco-audit                   # Interactive: ask scope + auto-fix
-/cco-audit --smart           # Auto-detect applicable
+/cco-audit --smart           # Auto-detect applicable (includes consistency)
+/cco-audit --consistency     # Doc-code mismatch detection
 /cco-audit --self-compliance # Check against project's own rules
 /cco-audit --critical --auto-fix
 ```
