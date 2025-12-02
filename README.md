@@ -2,7 +2,7 @@
 
 A process and standards layer for Claude Code in the Opus 4.5 era.
 
-[![Python 3.11+](https://img.shields.io/badge/python-3.11+-blue.svg)](https://www.python.org/downloads/)
+[![Python 3.10+](https://img.shields.io/badge/python-3.10+-blue.svg)](https://www.python.org/downloads/)
 [![License: MIT](https://img.shields.io/badge/license-MIT-green.svg)](LICENSE)
 [![Version](https://img.shields.io/badge/version-1.0.0-blue.svg)]()
 [![Claude 4 Best Practices](https://img.shields.io/badge/Claude_4-Best_Practices-blueviolet.svg)](https://platform.claude.com/docs/en/build-with-claude/prompt-engineering/claude-4-best-practices)
@@ -26,6 +26,12 @@ CCO sits on top of that and adds three things you usually have to build by hand:
 No servers, no dashboards, no extra dependencies. Just a thin standards layer on top of the tools you already use every day.
 
 ---
+
+## Requirements
+
+- **Python 3.10+** (tested on 3.10, 3.11, 3.12, 3.13, 3.14)
+- **Claude Code** - CLI or IDE extension
+- **Zero Python dependencies** - uses only Python standard library
 
 ## Quickstart
 
