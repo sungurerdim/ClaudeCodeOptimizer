@@ -162,7 +162,7 @@ class TestPostInstall:
         assert result == 0
         captured = capsys.readouterr()
         assert "CCO Setup" in captured.out
-        assert "CCO ready" in captured.out
+        assert "Installed:" in captured.out
 
     def test_exception_handling(self, capsys):
         """Test exception during setup."""

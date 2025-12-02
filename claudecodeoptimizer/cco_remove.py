@@ -140,13 +140,9 @@ def main() -> int:
 
         # Summary
         print("=" * 50)
-        print("Summary")
+        total = (1 if method else 0) + total_files + len(standards)
+        print(f"Total: {total} items to remove")
         print("=" * 50)
-        if method:
-            print("  Package:   1")
-        print(f"  Commands:  {len(files['commands'])}")
-        print(f"  Agents:    {len(files['agents'])}")
-        print(f"  Standards: {len(standards)} sections in CLAUDE.md")
         print()
 
         # Confirmation

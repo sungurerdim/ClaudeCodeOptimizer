@@ -52,8 +52,12 @@ def _load_standards() -> str:
     return standards_file.read_text(encoding="utf-8")
 
 
-def setup_claude_md(verbose: bool = True) -> None:
-    """Add CCO Principles to ~/.claude/CLAUDE.md"""
+def setup_claude_md(verbose: bool = True) -> dict[str, int]:
+    """Add CCO Principles to ~/.claude/CLAUDE.md
+
+    Returns:
+        Dictionary with installed counts (universal, claude_specific)
+    """
     standards = _load_standards()
     claude_md = CLAUDE_DIR / "CLAUDE.md"
     CLAUDE_DIR.mkdir(parents=True, exist_ok=True)
@@ -76,13 +80,13 @@ def setup_claude_md(verbose: bool = True) -> None:
     content = re.sub(r"\n{3,}", "\n\n", content)
     claude_md.write_text(content, encoding="utf-8")
 
+    breakdown = get_standards_breakdown()
+    installed = breakdown["universal"] + breakdown["claude_specific"]
+
     if verbose:
-        breakdown = get_standards_breakdown()
-        print(f"  CLAUDE.md: CCO Standards {action}")
-        print(
-            f"    {breakdown['universal']} universal + {breakdown['claude_specific']} Claude-specific"
-        )
-        print(f"    (+ {breakdown['conditional']} conditional via /cco-tune)")
+        print(f"  CLAUDE.md: {installed} standards {action}")
+
+    return {"universal": breakdown["universal"], "claude_specific": breakdown["claude_specific"]}
 
 
 def post_install() -> int:
@@ -112,24 +116,18 @@ def post_install() -> int:
             print("  (none)")
         print()
 
-        # Rules
-        print("Rules:")
-        setup_claude_md()
+        # Standards
+        print("Standards:")
+        standards = setup_claude_md()
         print()
 
         # Summary
+        installed = standards["universal"] + standards["claude_specific"]
         breakdown = get_standards_breakdown()
         print("=" * 50)
-        print("Summary")
+        print(f"Installed: {len(cmds)} commands, {len(agents)} agents, {installed} standards")
+        print(f"Available: +{breakdown['conditional']} conditional standards via /cco-tune")
         print("=" * 50)
-        print(f"  Commands:  {len(cmds)}")
-        print(f"  Agents:    {len(agents)}")
-        print(f"  Standards: {breakdown['total']} total")
-        print(
-            f"    {breakdown['universal']} universal + {breakdown['claude_specific']} Claude-specific + {breakdown['conditional']} conditional"
-        )
-        print()
-        print("CCO ready! Try: /cco-tune")
         print()
         return 0
 

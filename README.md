@@ -30,16 +30,26 @@ No servers, no dashboards, no extra dependencies. Just a thin standards layer on
 ## Quickstart
 
 ```bash
+# 1. Install
 pip install git+https://github.com/sungurerdim/ClaudeCodeOptimizer.git
+
+# 2. Setup (installs commands, agents, standards to ~/.claude/)
 cco-setup
-```
 
-Then inside Claude Code, run `/cco-tune` to detect your stack and tailor standards to your project:
-
-```
+# 3. Inside Claude Code, tune for your project
 /cco-tune
+
+# 4. Start using
 /cco-audit --smart
 ```
+
+**What each step does:**
+| Step | Command | Result |
+|------|---------|--------|
+| Install | `pip install ...` | Downloads CCO package |
+| Setup | `cco-setup` | Copies 8 commands, 3 agents, 81 standards to `~/.claude/` |
+| Tune | `/cco-tune` | Detects stack, writes project context + conditional standards to `./CLAUDE.md` |
+| Use | `/cco-*` | All commands now follow your project's standards |
 
 ---
 
@@ -90,7 +100,7 @@ Claude/Opus 4.5 already knows:       CCO adds:
 
 ### Why Explicit Standards?
 
-CCO lists 161 standards explicitly (46 universal + 35 Claude-specific + 80 conditional). Why, if Claude already knows them?
+CCO provides 81 core standards (46 universal + 35 Claude-specific) plus 80 conditional standards selected per-project. Why, if Claude already knows them?
 
 | Benefit | Explanation |
 |---------|-------------|
@@ -362,22 +372,37 @@ After `cco-setup`:
 
 ## Installation
 
+**Standard (pip):**
 ```bash
 pip install git+https://github.com/sungurerdim/ClaudeCodeOptimizer.git
 cco-setup
 ```
 
-Or use the quick installer:
+**Alternative (pipx - isolated environment):**
+```bash
+pipx install git+https://github.com/sungurerdim/ClaudeCodeOptimizer.git
+cco-setup
+```
 
+**One-liner:**
 ```bash
 curl -sSL https://raw.githubusercontent.com/sungurerdim/ClaudeCodeOptimizer/main/quick-install.py | python3
 ```
 
 ## Uninstallation
 
+> **Note:** `pip uninstall` only removes the Python package. It does NOT remove files from `~/.claude/`. Use `cco-remove` for complete cleanup.
+
 ```bash
-cco-remove
-pip uninstall claudecodeoptimizer
+# Complete removal (recommended)
+cco-remove          # Removes commands, agents, standards from ~/.claude/
+                    # Also uninstalls the Python package (with confirmation)
+
+# Manual removal
+pip uninstall claudecodeoptimizer   # Package only
+rm ~/.claude/commands/cco-*.md      # Commands
+rm ~/.claude/agents/cco-*.md        # Agents
+# Edit ~/.claude/CLAUDE.md to remove CCO_STANDARDS section
 ```
 
 ---
