@@ -83,6 +83,15 @@ If changes have dependencies, commit in order:
 
 **Types:** feat, fix, refactor, perf, test, docs, style, build, ci, chore
 
+## Output
+
+**Standards:** Output Formatting
+
+Tables:
+1. **Quality Gates** - Check | Status | Details (Format, Lint, Test)
+2. **Changes Detected** - File | + | - (with total in header)
+3. **Commit Plan** - # | Type | Scope | Description | Files
+
 ## Flow
 
 1. **Resolve Tools** - Read CCO context, fallback to auto-detect

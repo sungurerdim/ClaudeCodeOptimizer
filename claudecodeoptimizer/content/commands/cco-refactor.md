@@ -58,6 +58,15 @@ After each file change:
 /cco-refactor inline {function_name}
 ```
 
+## Output
+
+**Standards:** Output Formatting
+
+Tables:
+1. **Reference Map** - Type | Location | Count (definition, imports, calls, types, tests, docs)
+2. **Plan** - # | File | References | Action
+3. **Verification** - File | Expected | Actual | Status (per file after transform)
+
 ## Rollback
 
 On any failure:

@@ -100,6 +100,15 @@ Generate for:
 - Non-root user in final stage
 - Health check if applicable
 
+## Output
+
+**Standards:** Output Formatting
+
+Tables:
+1. **Generation Plan** - Type | Target | Convention | Status
+2. **Files Created** - File | Lines | Description
+3. **Verification** - Inline: created = planned, tests pass, no import errors
+
 ## Verification
 
 After generation:

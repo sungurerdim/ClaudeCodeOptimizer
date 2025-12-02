@@ -127,9 +127,14 @@ Group related mismatches when possible (e.g., all API signature mismatches in on
 - **MEDIUM** - Balanced impact/effort
 - **LOW** - Low impact or high effort (fix if time permits)
 
-## Verification
+## Output
 
-After fixes: done + skip + fail + cannot_do = total
+**Standards:** Output Formatting
+
+Tables:
+1. **Audit Results** - Category | Score | Bar + Summary (per category + OVERALL)
+2. **Issues Found** - Priority | Issue | Location | Status (grouped by CRITICAL/HIGH/MEDIUM/LOW)
+3. **Verification** - Inline: {done} done + {skip} skip + {fail} fail = {total}
 
 ## Usage
 

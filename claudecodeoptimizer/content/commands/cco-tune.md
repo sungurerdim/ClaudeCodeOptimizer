@@ -451,70 +451,20 @@ settings_path.write_text(json.dumps(settings, indent=2))
 
 ## Step 7: Complete Report
 
+**Standards:** Output Formatting
+
 **ALWAYS show before/after for ALL categories:**
 
-```
-╔══════════════════════════════════════════════════════════════════╗
-║                        CCO Tune Complete                          ║
-╚══════════════════════════════════════════════════════════════════╝
+Tables:
+1. **Header** - Double-line box with "CCO Tune Complete"
+2. **Changes Applied** - Category | Field | Before | After | Changed (Y/N/auto)
+   - Categories: Strategic, Technical, Approach, AI Performance, Config
+3. **Files Modified** - File | Action
+4. **Summary** - {changed}/{total} fields changed
+5. **Current Configuration** - Single box with key settings
+6. **Next Steps** - Suggested commands
 
-## Changes Applied
-
-| Category | Field | Before | After | Changed |
-|----------|-------|--------|-------|:-------:|
-| **Strategic** | Purpose | {old} | {new} | {✓/—} |
-| | Team | {old} | {new} | {✓/—} |
-| | Scale | {old} | {new} | {✓/—} |
-| | Data | {old} | {new} | {✓/—} |
-| | Compliance | {old} | {new} | {auto} |
-| **Technical** | Stack | {old} | {new} | {✓/—} |
-| | Type | {old} | {new} | {✓/—} |
-| | DB | {old} | {new} | {✓/—} |
-| | Rollback | {old} | {new} | {✓/—} |
-| **Approach** | Maturity | {old} | {new} | {✓/—} |
-| | Breaking | {old} | {new} | {✓/—} |
-| | Priority | {old} | {new} | {✓/—} |
-| **AI Performance** | Thinking | {old} | {new} | {✓/—} |
-| | MCP | {old} | {new} | {✓/—} |
-| | Caching | {old} | {new} | {✓/—} |
-| **Config** | Scope | {old} | {new} | {✓/—} |
-| | Statusline | {old} | {new} | {✓/—} |
-| | Permissions | {old} | {new} | {✓/—} |
-
-Legend: ✓ = changed, — = unchanged, auto = derived from other field
-
-## Files Modified
-
-| File | Action |
-|------|--------|
-| `./CLAUDE.md` | Updated CCO_CONTEXT |
-| `{scope}/settings.json` | Updated AI settings (env) |
-| `{scope}/statusline.js` | {Created/Skipped} |
-
-Note: {scope} = `~/.claude/` (Global) or `./.claude/` (Local) based on Q15
-
-## Summary
-
-- Total fields: {N}
-- Changed: {N}
-- Unchanged: {N}
-
-## Current Configuration
-
-```
-Project: {purpose}
-Team: {team} | Scale: {scale} | Type: {type}
-Maturity: {maturity} | Breaking: {breaking} | Priority: {priority}
-AI: Thinking {budget} | MCP {limit} | Caching {on/off}
-```
-
-## Next Steps
-
-  /cco-health           # Observe: metrics dashboard
-  /cco-audit --smart    # Fix: find and resolve issues
-
-⚠️  Restart Claude Code for changes to take effect.
-```
+Note: Include restart warning at end.
 
 ## Statusline Code
 
