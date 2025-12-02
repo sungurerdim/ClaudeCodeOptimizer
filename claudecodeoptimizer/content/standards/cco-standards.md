@@ -49,6 +49,13 @@
 - ADR: decisions + context + consequences
 - Comments: why not what
 
+## AI Context
+- Semantic Density: max meaning per token; concise over verbose
+- Structured Format: tables/lists over prose for comparisons and options
+- Front-load Critical: important info first; Purpose → Details → Edge cases
+- Scannable Hierarchy: clear H2 → H3 → bullets; enable fast navigation
+- No Filler: remove verbose patterns ("Please note that..."), implicit info
+
 ## Workflow
 - Read First: read files before proposing edits; never speculate about uninspected code
 - Review Conventions: match existing patterns; be rigorous in searching for key facts

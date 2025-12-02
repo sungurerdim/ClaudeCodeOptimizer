@@ -47,7 +47,7 @@ cco-setup
 | Step | Command | Result |
 |------|---------|--------|
 | Install | `pip install ...` | Downloads CCO package |
-| Setup | `cco-setup` | Copies 8 commands, 3 agents, 80 standards to `~/.claude/` |
+| Setup | `cco-setup` | Copies 8 commands, 3 agents, 85 standards to `~/.claude/` |
 | Tune | `/cco-tune` | Detects stack, writes project context + conditional standards to `./CLAUDE.md` |
 | Use | `/cco-*` | All commands now follow your project's standards |
 
@@ -100,7 +100,7 @@ Claude/Opus 4.5 already knows:       CCO adds:
 
 ### Why Explicit Standards?
 
-CCO provides 80 core standards (46 universal + 34 Claude-specific) plus 80 conditional standards selected per-project. Why, if Claude already knows them?
+CCO provides 85 core standards (51 universal + 34 Claude-specific) plus 80 conditional standards selected per-project. Why, if Claude already knows them?
 
 | Benefit | Explanation |
 |---------|-------------|
@@ -385,7 +385,7 @@ CCO uses a three-category standards system for minimal context usage:
 Source Files                              Destination
 ────────────────────────────────────────────────────────────────
 cco-standards.md                        → ~/.claude/CLAUDE.md
-├── Universal Standards (46 rules)         (loaded for ALL projects)
+├── Universal Standards (51 rules)         (loaded for ALL projects)
 │   └── Quality (code, testing, security) + Docs + Workflow
 └── Claude-Specific Standards (34 rules)
     └── CCO Workflow, Core, Approval, Prompt Engineering, Frontend Gen, Context
@@ -395,7 +395,7 @@ cco-standards-conditional.md            → ./CLAUDE.md (filtered)
     └── Security, Architecture, API, Frontend, etc.
 ```
 
-### Universal Standards (46 rules)
+### Universal Standards (51 rules)
 *Software engineering best practices - any project, any AI*
 
 | Section | # | Standards |
@@ -404,6 +404,7 @@ cco-standards-conditional.md            → ./CLAUDE.md (filtered)
 | **Testing** | 7 | Coverage, Pyramid, Integration, CI Gates, Isolation, TDD, Test Integrity |
 | **Security** | 6 | Input Validation, SQL Params, Secrets, XSS, OWASP, Dependencies |
 | **Docs** | 5 | README, CHANGELOG, API Docs, ADR, Comments |
+| **AI Context** | 5 | Semantic Density, Structured Format, Front-load Critical, Scannable Hierarchy, No Filler |
 | **Workflow** | 9 | Read First, Review Conventions, Reference Integrity, Verification, Plan-Act-Review, Decompose, No Vibe Coding, Challenge, No Example Fixation |
 
 ### Claude-Specific Standards (34 rules)
@@ -452,7 +453,7 @@ After `cco-setup`:
 │   └── cco-*.md                        # 3 specialized agents
 ├── statusline.js                       # Optional statusline
 ├── settings.json                       # AI performance + permissions
-└── CLAUDE.md                           # 80 rules (46 universal + 34 Claude-specific)
+└── CLAUDE.md                           # 85 rules (51 universal + 34 Claude-specific)
 
 ./CLAUDE.md                             # Local (per project, after /cco-tune)
 ├── CCO_CONTEXT_START

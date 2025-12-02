@@ -68,13 +68,20 @@ Evaluate current technology choices against purpose and constraints:
 | Database | Y/N | If N, suggest | Reasoning |
 | Architecture | Y/N | If N, suggest | Reasoning |
 
-### 3b: From Scratch Perspective
+### 3b: From Scratch Perspective (Optimized)
 
-Answer: "If I were building this project from scratch today..."
+Answer: "If I were building this project from scratch today, optimized..."
+
+**Standards:** AI Context (Universal) - apply to all recommendations
 
 Categories: Structure, Patterns, Abstractions, Data Flow, Testing, DX
 
-Output: **Stack Fitness Report** + **"From Scratch" Recommendations**
+For each recommendation:
+- Apply AI Content Optimization principles (semantic density, no duplicates, structured format)
+- Present optimized ideal, not just "from scratch"
+- Show before/after comparison where applicable
+
+Output: **Stack Fitness Report** + **Optimized "From Scratch" Recommendations**
 
 ## Phase 4: Prioritization
 
