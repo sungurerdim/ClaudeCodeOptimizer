@@ -12,7 +12,6 @@ __all__ = [
     "AGENTS_DIR",
     "get_cco_commands",
     "get_cco_agents",
-    "get_standards_count",
     "get_standards_breakdown",
     "CCO_MARKER_PATTERNS",
     "SUBPROCESS_TIMEOUT",
