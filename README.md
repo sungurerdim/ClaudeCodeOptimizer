@@ -47,7 +47,7 @@ cco-setup
 | Step | Command | Result |
 |------|---------|--------|
 | Install | `pip install ...` | Downloads CCO package |
-| Setup | `cco-setup` | Copies 8 commands, 3 agents, 81 standards to `~/.claude/` |
+| Setup | `cco-setup` | Copies 8 commands, 3 agents, 80 standards to `~/.claude/` |
 | Tune | `/cco-tune` | Detects stack, writes project context + conditional standards to `./CLAUDE.md` |
 | Use | `/cco-*` | All commands now follow your project's standards |
 
@@ -100,7 +100,7 @@ Claude/Opus 4.5 already knows:       CCO adds:
 
 ### Why Explicit Standards?
 
-CCO provides 81 core standards (46 universal + 35 Claude-specific) plus 80 conditional standards selected per-project. Why, if Claude already knows them?
+CCO provides 80 core standards (46 universal + 34 Claude-specific) plus 80 conditional standards selected per-project. Why, if Claude already knows them?
 
 | Benefit | Explanation |
 |---------|-------------|
@@ -147,22 +147,30 @@ CCO provides 81 core standards (46 universal + 35 Claude-specific) plus 80 condi
 
 ### AI Performance Settings
 
-| Setting | Options | Default |
-|---------|---------|---------|
-| **Thinking Budget** | Off, 8K, 16K, 32K | Off |
-| **MCP Output Limit** | 25K, 50K, 100K | 25K |
-| **Prompt Caching** | Enabled, Disabled | Enabled |
+| Setting | Env Variable | Default |
+|---------|--------------|---------|
+| **Extended Thinking** | `MAX_THINKING_TOKENS` | Off |
+| **MCP Output Limit** | `MAX_MCP_OUTPUT_TOKENS` | 25000 |
+| **Prompt Caching** | `DISABLE_PROMPT_CACHING` | Enabled |
 
-**When to use extended thinking:**
+Set in `~/.claude/settings.json`:
+```json
+{
+  "env": {
+    "MAX_THINKING_TOKENS": "16000",
+    "MAX_MCP_OUTPUT_TOKENS": "50000"
+  }
+}
+```
+
+**When to increase thinking budget:**
 - Off: simple questions, file lookups
-- 8K: standard coding, single-file changes
-- 16K+: multi-file refactors, complex debugging
-- 32K: algorithm design, deep multi-step analysis
+- 8K-16K: standard coding, single-file changes
+- 16K-32K: multi-file refactors, complex debugging
+- 32K+: algorithm design, deep multi-step analysis
 
-**Complexity-based recommendations:**
-- Simple projects (solo, <100 users): Thinking Off, MCP 25K
-- Medium projects: Thinking 8K, MCP 25K
-- Complex projects (10K+ users, legacy): Thinking 16K-32K, MCP 50K
+**When to increase MCP limit:**
+- Check with `/doctor` - shows "Large MCP tools context" warning if needed
 
 ### Stored Format
 
@@ -259,7 +267,7 @@ Source Files                              Destination
 cco-standards.md                        → ~/.claude/CLAUDE.md
 ├── Universal Standards (46 rules)         (loaded for ALL projects)
 │   └── Quality (code, testing, security) + Docs + Workflow
-└── Claude-Specific Standards (35 rules)
+└── Claude-Specific Standards (34 rules)
     └── CCO Workflow, Core, Approval, Prompt Engineering, Frontend Gen, Context
 
 cco-standards-conditional.md            → ./CLAUDE.md (filtered)
@@ -278,7 +286,7 @@ cco-standards-conditional.md            → ./CLAUDE.md (filtered)
 | **Docs** | 5 | README, CHANGELOG, API Docs, ADR, Comments |
 | **Workflow** | 9 | Read First, Review Conventions, Reference Integrity, Verification, Plan-Act-Review, Decompose, No Vibe Coding, Challenge, No Example Fixation |
 
-### Claude-Specific Standards (35 rules)
+### Claude-Specific Standards (34 rules)
 *Claude Code architecture, tools, and features*
 
 | Section | # | Standards |
@@ -288,7 +296,7 @@ cco-standards-conditional.md            → ./CLAUDE.md (filtered)
 | **Approval Flow** | 5 | Single Call, Priority Headers, Risk Format, MultiSelect, All Access |
 | **Prompt Engineering** | 5 | Positive Framing, Action vs Suggest, Contextual Motivation, Thinking Escalation, Subagent Delegation |
 | **Frontend Gen** | 6 | Typography, Color & Theme, Motion, Backgrounds, Distinctive Design, Avoid Clichés |
-| **Context Mgmt** | 15 | Thinking Off/8K/16K/32K, Budget Escalation, Word Sensitivity, MCP 25K/50K/100K, Don't Stop Early, Work Incrementally, Track State, Before /compact, Between Tasks, After Fresh Start |
+| **Context Mgmt** | 14 | Extended Thinking (Off/8K-32K+), MCP Output Limit, Don't Stop Early, Work Incrementally, Track State, Before /compact, Between Tasks, After Fresh Start |
 
 ### Conditional Standards (80 rules)
 *Domain-specific rules - selected by /cco-tune, written to local CLAUDE.md only*
@@ -324,7 +332,7 @@ After `cco-setup`:
 │   └── cco-*.md                        # 3 specialized agents
 ├── statusline.js                       # Optional statusline
 ├── settings.json                       # AI performance + permissions
-└── CLAUDE.md                           # 81 rules (46 universal + 35 Claude-specific)
+└── CLAUDE.md                           # 80 rules (46 universal + 34 Claude-specific)
 
 ./CLAUDE.md                             # Local (per project, after /cco-tune)
 ├── CCO_CONTEXT_START

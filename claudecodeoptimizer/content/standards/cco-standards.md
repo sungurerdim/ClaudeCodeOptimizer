@@ -104,7 +104,7 @@
 - Positive Framing: tell what to do ("write prose") not what to avoid ("don't use markdown")
 - Action vs Suggest: explicit mode—proactive implements, conservative recommends
 - Contextual Motivation: explain WHY behaviors matter for better judgment
-- Thinking Escalation: start at context default → escalate on errors/complexity → ceiling 64K/32K/8K by project size
+- Thinking Escalation: start at context default → increase on errors/complexity (set via MAX_THINKING_TOKENS)
 - Subagent Delegation: delegate when separate context benefits; ensure tool descriptions are well-defined
 
 ## Frontend Generation (Avoid AI Slop)
@@ -117,18 +117,17 @@
 
 ## Context Management
 
-### When to Use Extended Thinking
-- Use Off for: simple questions, file lookups, straightforward edits
-- Use 8K for: standard coding, moderate refactors, single-file changes
-- Use 16K+ for: multi-file refactors, complex debugging, architectural decisions
-- Use 32K for: algorithm design, complex math, deep analysis requiring multiple steps
-- Increase budget when: errors persist after 2+ attempts, task spans many files
-- Word sensitivity: when thinking is off, say "consider/evaluate" instead of "think"
+### Extended Thinking (MAX_THINKING_TOKENS)
+- Off (default): simple questions, file lookups, straightforward edits
+- 8K-16K: standard coding, moderate refactors, single-file changes
+- 16K-32K: multi-file refactors, complex debugging, architectural decisions
+- 32K+: algorithm design, complex math, deep multi-step analysis
+- Increase when: errors persist after 2+ attempts, task spans many files
 
-### When to Increase MCP Limit
-- Keep 25K for: normal tool responses, standard file reads
-- Use 50K for: large file analysis, multiple tool results
-- Use 100K for: codebase-wide searches, extensive grep results
+### MCP Output Limit (MAX_MCP_OUTPUT_TOKENS)
+- Default 25K: normal tool responses, standard file reads
+- Increase when: /doctor shows "Large MCP tools context" warning
+- Set in: ~/.claude/settings.json → env → MAX_MCP_OUTPUT_TOKENS
 
 ### Long Session Practices
 - Don't stop tasks early: context auto-compacts, work can continue indefinitely
