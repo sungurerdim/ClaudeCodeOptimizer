@@ -2,22 +2,22 @@
 
 <!-- CCO_CONTEXT_START -->
 ## Strategic Context
-Purpose: Process orchestration and quality standards for Claude Code
+Purpose: Process and standards layer for Claude Code
 Team: Solo | Scale: <100 | Data: Public | Compliance: None
 Stack: Python 3.10+, ruff, mypy, pytest (stdlib only) | Type: CLI | DB: None | Rollback: Git
-Maturity: Greenfield | Breaking: Allowed | Priority: Speed
+Maturity: Active | Breaking: Minimize | Priority: Quality
 
 ## AI Performance
-Thinking: 8K | MCP: 25K | Caching: on
+Thinking: 16K | MCP: 50K | Caching: on
 
 ## Guidelines
-- Self-review sufficient, aggressive refactors OK, establish patterns early
+- Self-review sufficient, balanced refactors, maintain momentum
 - Simple solutions preferred, optimize for clarity
 - Basic input validation sufficient
 - Clear error messages, help documentation
 - No database migrations needed, simple git revert for rollback
-- Clean API over compatibility, rename freely
-- MVP mindset, ship fast, iterate
+- Deprecate first, provide migration path
+- Thorough approach, no shortcuts
 
 ## Operational
 Tools: ruff format . (format), ruff check . && mypy claudecodeoptimizer/ (lint), pytest tests/ --cov (test)
@@ -26,7 +26,7 @@ Applicable: security, tech-debt, tests, hygiene, cicd, docs, supply-chain, self-
 Not Applicable: database, performance, containers, api-contract, dora, ai-security, ai-quality, compliance
 
 ## Auto-Detected
-Structure: single-repo | Hooks: none | Coverage: 87%
+Structure: single-repo | Hooks: none | Coverage: 96%
 - [x] Linting configured
 - [x] CI/CD configured
 - [ ] Pre-commit hooks
@@ -36,7 +36,7 @@ Structure: single-repo | Hooks: none | Coverage: 87%
 - [ ] SLA requirements
 License: MIT
 Secrets detected: no
-Outdated deps: 3
+Outdated deps: 0
 
 ## Conditional Standards (auto-applied)
 **Operations** (CI/CD detected):
