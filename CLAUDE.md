@@ -4,11 +4,11 @@
 ## Strategic Context
 Purpose: Process orchestration and quality standards for Claude Code
 Team: Solo | Scale: <100 | Data: Public | Compliance: None
-Stack: Python 3.11+ (stdlib only), ruff, mypy, pytest | Type: CLI | DB: None | Rollback: Git
+Stack: Python 3.10+, ruff, mypy, pytest (stdlib only) | Type: CLI | DB: None | Rollback: Git
 Maturity: Greenfield | Breaking: Allowed | Priority: Speed
 
 ## AI Performance
-Thinking: 8K | MCP: 50K | Caching: on
+Thinking: 8K | MCP: 25K | Caching: on
 
 ## Guidelines
 - Self-review sufficient, aggressive refactors OK, establish patterns early
@@ -22,11 +22,11 @@ Thinking: 8K | MCP: 50K | Caching: on
 ## Operational
 Tools: ruff format . (format), ruff check . && mypy claudecodeoptimizer/ (lint), pytest tests/ --cov (test)
 Conventions: test_*.py in tests/unit/ and tests/integration/, relative imports internal, snake_case
-Applicable: security, tech-debt, tests, hygiene, cicd, docs, ai-quality, supply-chain, self-compliance
-Not Applicable: database, performance, containers, api-contract, dora, ai-security, compliance
+Applicable: security, tech-debt, tests, hygiene, cicd, docs, supply-chain, self-compliance
+Not Applicable: database, performance, containers, api-contract, dora, ai-security, ai-quality, compliance
 
 ## Auto-Detected
-Structure: single-repo | Hooks: none | Coverage: 96%
+Structure: single-repo | Hooks: none | Coverage: 87%
 - [x] Linting configured
 - [x] CI/CD configured
 - [ ] Pre-commit hooks
@@ -36,7 +36,7 @@ Structure: single-repo | Hooks: none | Coverage: 96%
 - [ ] SLA requirements
 License: MIT
 Secrets detected: no
-Outdated deps: 0
+Outdated deps: 3
 
 ## Conditional Standards (auto-applied)
 **Operations** (CI/CD detected):
