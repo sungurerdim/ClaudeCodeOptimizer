@@ -31,6 +31,10 @@ CCO_MARKER_PATTERNS: dict[str, tuple[str, int]] = {
 
 SUBPROCESS_TIMEOUT = 5  # seconds
 
+# Pre-compiled regex patterns for performance
+_STANDARD_PATTERN = re.compile(r"^- ", re.MULTILINE)
+_CATEGORY_PATTERN = re.compile(r"^## ", re.MULTILINE)
+
 
 def get_cco_commands() -> list[Path]:
     """Get all CCO command files."""
@@ -52,8 +56,8 @@ def get_standards_count() -> tuple[int, int]:
     if not standards_file.exists():
         return (0, 0)
     content = standards_file.read_text(encoding="utf-8")
-    standards = len(re.findall(r"^- ", content, re.MULTILINE))
-    categories = len(re.findall(r"^## ", content, re.MULTILINE))
+    standards = len(_STANDARD_PATTERN.findall(content))
+    categories = len(_CATEGORY_PATTERN.findall(content))
     return (standards, categories)
 
 
@@ -73,14 +77,14 @@ def get_standards_breakdown() -> dict[str, int]:
         # Split at the separator between Universal and Claude-Specific
         parts = content.split("# Claude-Specific Standards")
         if len(parts) == 2:
-            result["universal"] = len(re.findall(r"^- ", parts[0], re.MULTILINE))
-            result["claude_specific"] = len(re.findall(r"^- ", parts[1], re.MULTILINE))
+            result["universal"] = len(_STANDARD_PATTERN.findall(parts[0]))
+            result["claude_specific"] = len(_STANDARD_PATTERN.findall(parts[1]))
 
     # Count from cco-standards-conditional.md
     conditional_file = content_dir / "cco-standards-conditional.md"
     if conditional_file.exists():
         content = conditional_file.read_text(encoding="utf-8")
-        result["conditional"] = len(re.findall(r"^- ", content, re.MULTILINE))
+        result["conditional"] = len(_STANDARD_PATTERN.findall(content))
 
     result["total"] = result["universal"] + result["claude_specific"] + result["conditional"]
     return result

@@ -3,6 +3,7 @@
 import re
 import subprocess
 import sys
+from typing import TypedDict
 
 from .config import (
     CCO_MARKER_PATTERNS,
@@ -12,6 +13,16 @@ from .config import (
     get_cco_agents,
     get_cco_commands,
 )
+
+
+class RemovalItems(TypedDict):
+    """Type-safe container for removal items."""
+
+    method: str | None
+    files: dict[str, list[str]]
+    standards: list[str]
+    total_files: int
+    total: int
 
 
 def detect_install_method() -> str | None:
@@ -103,7 +114,7 @@ def uninstall_package(method: str) -> bool:
         return False
 
 
-def _collect_removal_items() -> dict[str, object]:
+def _collect_removal_items() -> RemovalItems:
     """Collect all items to be removed."""
     method = detect_install_method()
     files = list_cco_files()
@@ -120,7 +131,7 @@ def _collect_removal_items() -> dict[str, object]:
     }
 
 
-def _display_removal_plan(items: dict[str, object]) -> None:
+def _display_removal_plan(items: RemovalItems) -> None:
     """Display what will be removed."""
     print("\n" + SEPARATOR)
     print("CCO Uninstall")
@@ -133,14 +144,14 @@ def _display_removal_plan(items: dict[str, object]) -> None:
         print()
 
     categories = [
-        ("Commands", items["files"]["commands"]),  # type: ignore[index]
-        ("Agents", items["files"]["agents"]),  # type: ignore[index]
+        ("Commands", items["files"]["commands"]),
+        ("Agents", items["files"]["agents"]),
         ("CLAUDE.md sections", items["standards"]),
     ]
     for title, category_items in categories:
         if category_items:
             print(f"{title}:")
-            for item in category_items:  # type: ignore[union-attr]
+            for item in category_items:
                 print(f"  - {item}")
             print()
 
@@ -150,11 +161,11 @@ def _display_removal_plan(items: dict[str, object]) -> None:
     print()
 
 
-def _execute_removal(items: dict[str, object]) -> None:
+def _execute_removal(items: RemovalItems) -> None:
     """Execute the removal of all items."""
     if items["method"]:
         print("Removing package...")
-        if uninstall_package(items["method"]):  # type: ignore[arg-type]
+        if uninstall_package(items["method"]):
             print("  Package removed")
         else:
             print("  Failed to remove package")
