@@ -26,6 +26,7 @@ header: "Categories"
 question: "What to optimize?"
 multiSelect: true
 options:
+  - All: "Run all applicable categories"
   - Context: "AI context files (CLAUDE.md, prompts, agents)"
   - Docs: "Documentation (README, comments, docstrings)"
   - Code Quality: "Standards compliance, dead code, complexity"
