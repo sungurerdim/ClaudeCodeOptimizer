@@ -2,7 +2,7 @@
 
 import sys
 
-from . import __version__
+from . import __description__, __version__
 
 
 def main() -> None:
@@ -13,7 +13,7 @@ def main() -> None:
 
     print(f"\nCCO v{__version__}")
     print("-" * 40)
-    print("Commands, agents, and standards for Claude Code")
+    print(__description__)
     print()
     print("Setup:   cco-setup")
     print("Remove:  cco-remove")
