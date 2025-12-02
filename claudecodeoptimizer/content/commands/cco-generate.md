@@ -25,6 +25,7 @@ header: "Generate"
 question: "What to generate?"
 multiSelect: true
 options:
+  - All: "Generate all applicable types"
   - Tests: "Unit/integration tests for uncovered code"
   - Docs: "Docstrings, README, OpenAPI (if API)"
   - Infra: "CI/CD pipelines, Dockerfile, pre-commit"
