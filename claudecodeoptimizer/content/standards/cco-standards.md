@@ -1,6 +1,6 @@
 <!-- CCO_STANDARDS_START -->
 # Universal Standards
-*Software engineering best practices - any project, any AI*
+*Applies to ALL software projects regardless of language, framework, or domain*
 
 ## Quality
 
@@ -12,18 +12,19 @@
 - Complexity: cyclomatic <10 per function (context may override)
 - Tech Debt: ratio <5%
 - Maintainability: index >65
-- No Overengineering: only requested changes, no one-time helpers, no hypothetical futures, minimum complexity
-- Minimal Touch: only files required for task, no "while I'm here" improvements
-- General Solutions: correct algorithms for all inputs, no test-specific hacks, use standard tools
+- No Overengineering: only requested changes, minimum complexity
+- Minimal Touch: only files required for task
+- General Solutions: correct algorithms for all inputs
 - Clean Code: meaningful names, single responsibility
 - Immutability: prefer immutable, mutate only for performance
 - Profile First: measure before optimize
 - Version: single source, SemVer (MAJOR.MINOR.PATCH)
 - Paths: forward slash (/), relative, quote spaces
-- No Unsolicited Files: never create unless requested; prefer editing existing
+- No Unsolicited Files: never create unless requested
 - Cleanup: remove temporary files created during iteration
-- Timeouts: explicit for all external calls; never wait indefinitely
+- Timeouts: explicit for all external calls
 - Retry: exponential backoff + jitter for transient failures
+- Exclusions: skip .git, node_modules, __pycache__, venv, dist, build, *.min.js
 
 ### Testing
 - Coverage: 80% min (context may adjust: solo 60%, enterprise 90%)
@@ -35,12 +36,11 @@
 - Test Integrity: tests define behavior; never edit tests to make code pass
 
 ### Security
-- Input Validation: Pydantic/Joi/Zod at all entry points
-- SQL: parameterized queries only
 - Secrets: never hardcode, use env vars or vault
-- XSS: sanitize all user input
-- OWASP: API Top 10 compliance
-- Dependencies: Dependabot, scan in CI
+- Dependencies: scan in CI, keep updated
+- Input Boundaries: validate at system entry points
+- Least Privilege: minimum necessary access/permissions
+- Defense in Depth: multiple layers, don't trust single control
 
 ## Docs
 - README: description, setup, usage, contributing
@@ -49,39 +49,70 @@
 - ADR: decisions + context + consequences
 - Comments: why not what
 
-## AI Context
+## AI Content
+Optimize content for AI consumption (any AI model):
 - Semantic Density: max meaning per token; concise over verbose
-- Structured Format: tables/lists over prose for comparisons and options
+- Structured Format: tables/lists over prose; JSON for data exchange
 - Front-load Critical: important info first; Purpose → Details → Edge cases
-- Scannable Hierarchy: clear H2 → H3 → bullets; enable fast navigation
-- No Filler: remove verbose patterns ("Please note that..."), implicit info
+- Scannable Hierarchy: clear H2 → H3 → bullets
+- No Filler: remove verbose patterns, implicit info, redundancy
+- Reference Over Repeat: cite by name instead of duplicating
+- Positive Framing: tell what to do, not what to avoid
+- Contextual Motivation: explain WHY behaviors matter
 
 ## Workflow
-- Read First: read files before proposing edits; never speculate about uninspected code
-- Review Conventions: match existing patterns; be rigorous in searching for key facts
-- Reference Integrity: find ALL refs → update in order → verify (grep old=0, new=expected)
-- Verification: total = done + skip + fail + cannot_do, no "fixed" without proof
-- Workflow: Plan → Act → Review → Repeat
+- Read First: read files before proposing edits
+- Review Conventions: match existing patterns
+- Reference Integrity: find ALL refs → update in order → verify
+- Plan-Act-Review: iterate until complete
+- Work Incrementally: complete one step fully before next
 - Decompose: break complex tasks into smaller steps
-- No Vibe Coding: avoid rare langs/new frameworks without solid foundation
+- No Vibe Coding: avoid rare langs/new frameworks without foundation
 - Challenge: "are you sure?" for perfect-looking solutions
-- No Example Fixation: use placeholders; misaligned examples encourage unwanted patterns
+- No Example Fixation: use placeholders
+
+## Error Handling
+- Fail Gracefully: catch, log context, recover or propagate
+- No Silent Failures: never swallow exceptions without logging
+- User-Friendly Messages: technical details in logs, clarity for users
+- Rollback on Failure: leave system in consistent state
+
+## Logging
+- Structured Logs: JSON format, machine-parseable
+- Log Levels: ERROR/WARN/INFO/DEBUG used correctly
+- Context Rich: include request ID, user, operation
+- No Sensitive Data: never log passwords, tokens, PII
+
+## Configuration
+- Externalize Config: no hardcoded env-specific values
+- Env-Aware: dev/staging/prod configurations
+- Validate Early: fail fast on invalid config at startup
+- Defaults: sensible defaults, override via env vars
+
+## UX/DX
+All software should prioritize:
+- Minimum friction: fewest steps to goal
+- Maximum clarity: unambiguous output, clear next actions
+- Fast feedback: progress indicators, incremental results
+- Error recovery: actionable messages with fix suggestions
+- Predictability: consistent behavior across invocations
+- Transparency: show what will happen before doing it
 
 ---
 
 # Claude-Specific Standards
-*Claude Code architecture, tools, and features*
+*Specific to Claude's tools, settings, and capabilities*
 
 ## CCO Workflow
 
 ### Pre-Operation Safety
 1. Check `git status` for uncommitted changes
-2. If dirty: AskUserQuestion → Commit (cco-commit) / Stash / Continue
+2. If dirty: AskUserQuestion → Commit / Stash / Continue
 3. Clean state enables safe rollback
 4. Use git for state persistence across sessions
 
 ### Context Read
-1. Read `CCO_CONTEXT_START` from `./CLAUDE.md` (NOT `.claude/`)
+1. Read `CCO_CONTEXT_START` from `./CLAUDE.md`
 2. If missing → suggest `/cco-tune`
 3. Apply: Guidelines, Thresholds, AI Performance, Applicable checks
 
@@ -94,80 +125,81 @@
 | Fix linting issues | Delete files |
 | Add type annotations | Rename public APIs |
 
-## Core
-- Exclusions: skip .git, node_modules, __pycache__, venv, dist, build, lockfiles, *.min.js
-- Error Format: `❌ {What} → ↳ {Why} → → {Fix}` (consistent across all commands)
-- Parallel Tools: batch independent calls in single message; sequential only when outputs inform inputs
+## Claude Tools
+- Parallel Tools: batch independent calls; sequential when outputs inform inputs
+- Subagent Delegation: use Task tool when separate context benefits
+- Error Format: `[SEVERITY] {What} in {file:line} -> {Fix}`
 - Moderate Triggers: "Use when..." not "CRITICAL: You MUST..."
 
+## Resource Scaling
+Scale thinking with task complexity:
+
+| Complexity | Thinking | Use Case |
+|------------|----------|----------|
+| Simple | Off | File lookups, straightforward edits |
+| Standard | 8K-16K | Single-file changes, moderate refactors |
+| Complex | 16K-32K | Multi-file refactors, debugging, architecture |
+| Deep | 32K+ | Algorithm design, complex math, multi-step analysis |
+
+Increase when: errors persist 2+ attempts, task spans many files
+
+## Session Management
+- Track state: JSON for data, plain text for progress
+- Before /compact: specify what to preserve/discard
+- After fresh start: review filesystem state
+- MCP Output: default 25K; increase when `/doctor` warns
+
 ## Output Formatting
-All command output tables use ASCII box-drawing in code blocks:
-- Characters: `─│┌┐└┘├┤┬┴┼` for borders
-- Double-line: `═║╔╗╚╝` for headers/emphasis
-- Alignment: numbers right-aligned, text left-aligned, 1-space cell padding
-- Status values: `OK`, `WARN`, `FAIL` (no emoji)
-- Progress bar: `████████████░░░░░░░░` (20 chars, proportional fill)
-- Section headers outside table, not as row
+ASCII box-drawing tables in code blocks:
+- Characters: `─│┌┐└┘├┤┬┴┼` borders, `═║╔╗╚╝` headers
+- Column width: max cell width + 2 padding; scan all values first
+- Alignment: numbers right, text left, 1-space cell padding
+- Status: `OK`, `WARN`, `FAIL`, `PASS`, `SKIP` (text only, no emoji)
+- Progress: `████████░░░░░░░░░░░░` (20 chars proportional)
+- ASCII-only: no emojis in tables (cause width misalignment)
 
-**Column width rule (CRITICAL for vertical alignment):**
-All cells in a column must have identical width = widest cell in that column + 2 padding.
-- First: scan all values to find max width per column
-- Then: pad every cell to that exact width (text=trailing spaces, numbers=leading spaces)
-- Result: all `│` characters align vertically on every row
+## Priority & Approval
 
-## Priority Classification
-- **CRITICAL** - Security vulnerabilities, data exposure
-- **HIGH** - High impact, low effort fixes
-- **MEDIUM** - Balanced impact/effort
-- **LOW** - Low impact or high effort
+### Priority Levels
+| Level | Criteria | Examples |
+|-------|----------|----------|
+| CRITICAL | Security, data exposure | SQL injection, leaked secrets |
+| HIGH | High impact, low effort | Dead code, missing validation |
+| MEDIUM | Balanced impact/effort | Complexity, duplication |
+| LOW | Low impact or high effort | Style, minor optimization |
 
-## Approval Flow
-AskUserQuestion for user confirmation (used by multiple commands):
-- multiSelect: true
-- First option: "All ({N})" to select everything
-- Never skip: always require explicit user confirmation
+### Approval Flow
+Single AskUserQuestion with severity tabs:
+- multiSelect: true; First option: "All ({N})"
+- Format: `{desc} [{file:line}] [{safe|risky|extensive}]`
+- Empty severities skipped; never skip approval
 
-## Detection Report
-For fix commands (audit, optimize, review) - show before Approval Flow:
+**Pagination (when >4 per severity or >16 total):**
+- Separate questions per severity level
+- Per-severity pagination: 8 fixes → 2 questions (4+4)
+- Sequential AskUserQuestion calls until all shown
 
-| # | Issue (what + context) | Location | Impact | Fix (specific action) |
+### Option Labels
+When presenting options in AskUserQuestion:
+- `[current]` - Value from existing context/config
+- `[detected]` - Value discovered by detection agent
+- `[recommended]` - Single best-fit option based on detection
 
-Format: `### {Category} ({count})` → table → summary → then Approval Flow
+**[recommended] Rules:**
+1. Only ONE option per question can have `[recommended]`
+2. Only use when detection provides clear reasoning
+3. If no clear winner, show no recommendation
+4. Never mark multiple options as recommended
 
-## Prompt Engineering
-- Positive Framing: tell what to do ("write prose") not what to avoid ("don't use markdown")
-- Action vs Suggest: explicit mode—proactive implements, conservative recommends
-- Contextual Motivation: explain WHY behaviors matter for better judgment
-- Thinking Escalation: start at context default → increase on errors/complexity (set via MAX_THINKING_TOKENS)
-- Subagent Delegation: delegate when separate context benefits; ensure tool descriptions are well-defined
+## Fix Workflow
+All fix commands follow: **Analyze → Report → Approve → Apply → Verify**
 
-## Frontend Generation (Avoid AI Slop)
-- Typography: choose beautiful, unique fonts; avoid defaults (Arial, Inter, Roboto, system fonts)
-- Color & Theme: CSS variables for consistency; dominant colors with sharp accents
-- Motion: prioritize high-impact moments; one well-orchestrated page load with staggered reveals
-- Backgrounds: create atmosphere and depth; avoid solid color defaults
-- Distinctive Design: unexpected choices that feel genuinely designed, not generic AI output
-- Avoid: clichéd purple gradients, predictable layouts, convergence on common AI patterns
-
-## Context Management
-
-### Extended Thinking (MAX_THINKING_TOKENS)
-- Off (default): simple questions, file lookups, straightforward edits
-- 8K-16K: standard coding, moderate refactors, single-file changes
-- 16K-32K: multi-file refactors, complex debugging, architectural decisions
-- 32K+: algorithm design, complex math, deep multi-step analysis
-- Increase when: errors persist after 2+ attempts, task spans many files
-
-### MCP Output Limit (MAX_MCP_OUTPUT_TOKENS)
-- Default 25K: normal tool responses, standard file reads
-- Increase when: /doctor shows "Large MCP tools context" warning
-- Set in: ~/.claude/settings.json → env → MAX_MCP_OUTPUT_TOKENS
-
-### Long Session Practices
-- Don't stop tasks early: context auto-compacts, work can continue indefinitely
-- Work incrementally: complete one step fully before starting next
-- Track state: use JSON for structured data, plain text for progress notes
-- Before using /compact: specify what to preserve (errors, decisions) and discard (exploration)
-- Between unrelated tasks: use /clear to reset context
-- After fresh start: review filesystem state, don't assume previous context
+1. **Analyze**: Full scan of target area
+2. **Report**: Detection table with priority, location, fix action
+3. **Approve**: Paginated approval per Priority & Approval standard
+4. **Apply**: ONLY user-selected fixes; respect Safety Classification
+5. **Verify**: Before/after comparison + accounting
+   ```
+   Applied: N | Skipped: N | Failed: N | Total: N
+   ```
 <!-- CCO_STANDARDS_END -->

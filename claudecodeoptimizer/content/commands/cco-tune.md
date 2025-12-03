@@ -7,17 +7,49 @@ description: Project-specific AI tuning and configuration
 
 **Project tuning** - Context + AI Performance + Statusline + Permissions in one flow.
 
-**Standards:** Output Formatting
+**Standards:** Output Formatting | Priority & Approval | Resource Scaling | UX/DX
+
+## Required Context Elements
+
+Complete context requires ALL of these elements:
+
+| Category | Element | Required | Options |
+|----------|---------|----------|---------|
+| **Strategic** | Purpose | YES | Free text description |
+| | Team | YES | Solo / 2-5 / 6+ |
+| | Scale | YES | <100 / 100-10K / 10K+ |
+| | Data | YES | Public / Internal / PII / Regulated |
+| | Compliance | YES | None / GDPR / HIPAA / PCI-DSS / SOC2 |
+| **Technical** | Stack | YES | Languages, frameworks, tools |
+| | Type | YES | backend-api / frontend / fullstack / cli / library / mobile / desktop |
+| | DB | YES | None / SQL / NoSQL |
+| | Rollback | YES | Git / DB / User-data |
+| **Approach** | Maturity | YES | Greenfield / Active / Maintenance / Legacy |
+| | Breaking | YES | Allowed / Minimize / Never |
+| | Priority | YES | Speed / Balanced / Quality |
+| **AI Perf** | Thinking | YES | Off / 8K / 16K / 32K |
+| | MCP | YES | 25K / 50K / 100K |
+| | Caching | YES | on / off |
+| **Operational** | Tools | YES | format, lint, test commands |
+| | Conventions | AUTO | Detected from codebase |
+| | Applicable | AUTO | Checks that apply |
+| **Auto** | Structure | AUTO | Detected |
+| | Coverage | AUTO | Detected |
+| | License | AUTO | Detected |
+
+**Total:** 15 required + 5 auto-detected = 20 elements
 
 ## Flow
 
 1. **Health Check** - Verify CCO installation, validate configs
-2. **Existing Context** - If exists in `./CLAUDE.md` → ask: Use / Update
+2. **Context Analysis** - Parse existing context, show completeness status
 3. **Detection** - Run `cco-agent-detect scope:full`
-4. **Confirmation** - 4 AskUserQuestion calls for all settings
+4. **Gap Fill** - Ask ONLY for missing/incomplete elements
 5. **Configuration** - Scope + optional features (statusline/permissions)
 6. **Apply** - Write files, validate
-7. **Report** - Show changes table
+7. **Report** - Show changes, ask restart
+
+**--status Mode:** Steps 1-2 only → if incomplete, ask to complete → if user accepts, continue flow
 
 ## Step 1: Health Check
 
@@ -29,59 +61,119 @@ description: Project-specific AI tuning and configuration
 
 If issues → show warning with fix command.
 
-## Step 2: Existing Context
+## Step 2: Context Analysis
 
 Parse `<!-- CCO_CONTEXT_START -->` to `<!-- CCO_CONTEXT_END -->` from `./CLAUDE.md`.
 
-Extract key-value pairs dynamically (don't hardcode fields). Display parsed content, ask: "Use as-is" / "Update".
+### If Context Exists
+
+Show completeness status with required elements checklist:
+
+```
+╔══════════════════════════════════════════════════════════════╗
+║                    CONTEXT STATUS                            ║
+╠══════════════════════════════════════════════════════════════╣
+║ Completeness: 14/15 required elements (93%)                  ║
+╠══════════════════════════════════════════════════════════════╣
+║ Category    │ Element    │ Status │ Value                    ║
+╠═════════════╪════════════╪════════╪══════════════════════════╣
+║ Strategic   │ Purpose    │ OK     │ Process and standards... ║
+║             │ Team       │ OK     │ Solo                     ║
+║             │ Scale      │ OK     │ <100                     ║
+║             │ Data       │ OK     │ Public                   ║
+║             │ Compliance │ OK     │ None                     ║
+╠═════════════╪════════════╪════════╪══════════════════════════╣
+║ Technical   │ Stack      │ OK     │ Python 3.10+, ruff...    ║
+║             │ Type       │ OK     │ CLI                      ║
+║             │ DB         │ OK     │ None                     ║
+║             │ Rollback   │ OK     │ Git                      ║
+╠═════════════╪════════════╪════════╪══════════════════════════╣
+║ Approach    │ Maturity   │ OK     │ Active                   ║
+║             │ Breaking   │ OK     │ Minimize                 ║
+║             │ Priority   │ OK     │ Quality                  ║
+╠═════════════╪════════════╪════════╪══════════════════════════╣
+║ AI Perf     │ Thinking   │ OK     │ 16K                      ║
+║             │ MCP        │ OK     │ 50K                      ║
+║             │ Caching    │ MISS   │ -                        ║
+╠═════════════╪════════════╪════════╪══════════════════════════╣
+║ Operational │ Tools      │ OK     │ ruff format, pytest...   ║
+╚══════════════════════════════════════════════════════════════╝
+
+Missing: Caching
+```
+
+Then ask: "Context is 93% complete. What to do?"
+- **Complete missing** - Fill only missing elements
+- **Update all** - Re-run full configuration
+- **Use as-is** - Continue with current (warn if incomplete)
+
+### If No Context
+
+Show empty status, proceed to full detection and configuration.
 
 ## Step 3: Detection
 
 Run `cco-agent-detect scope:full` → returns technical + strategic + autoDetected JSON.
 
-## Step 4: Confirmation
+## Step 4: Gap Fill (or Full Configuration)
 
-**Label System:** `[current]` `[detected]` `[recommended:{profile}]` - append to option descriptions.
+**Mode:** If "Complete missing" → ask only missing elements. If "Update all" or no context → full flow.
 
-### Call 1 - Core Context
+**Labels:** Per Option Labels standard (`[current]`, `[detected]`, `[recommended]`)
 
-| Q | Header | Question | Options |
-|---|--------|----------|---------|
-| 1 | Purpose | Project purpose? | {detected} + 2-3 alternatives |
-| 2 | Team | Team size? | Solo \| 2-5 \| 6+ |
-| 3 | Scale | Expected users? | <100 \| 100-10K \| 10K+ |
-| 4 | Data | Most sensitive data? | Public \| Internal \| PII \| Regulated |
+### Strategic Elements (if missing)
 
-Compliance auto-derived: Public/Internal→None, PII→GDPR/CCPA, Regulated→ask which.
+| Element | Question | Options |
+|---------|----------|---------|
+| Purpose | Project purpose? | {detected} + 2-3 alternatives |
+| Team | Team size? | Solo \| 2-5 \| 6+ |
+| Scale | Expected users? | <100 \| 100-10K \| 10K+ |
+| Data | Most sensitive data? | Public \| Internal \| PII \| Regulated |
+| Compliance | Compliance requirements? | None \| GDPR \| HIPAA \| PCI-DSS \| SOC2 |
 
-### Call 2 - Technical
+*Note: Compliance auto-derived if Data=Public/Internal→None, ask explicitly otherwise*
 
-| Q | Header | Question | Options |
-|---|--------|----------|---------|
-| 5 | Stack | Tech stack correct? | {detected} \| Edit |
-| 6 | Type | Project type? | backend-api \| frontend \| fullstack \| cli \| library \| mobile \| desktop |
-| 7 | Database | Database type? | None \| SQL \| NoSQL |
-| 8 | Rollback | Rollback complexity? | Git \| DB \| User-data |
+### Technical Elements (if missing)
 
-### Call 3 - Approach
+| Element | Question | Options |
+|---------|----------|---------|
+| Stack | Tech stack correct? | {detected} \| Edit |
+| Type | Project type? | backend-api \| frontend \| fullstack \| cli \| library \| mobile \| desktop |
+| DB | Database type? | None \| SQL \| NoSQL |
+| Rollback | Rollback complexity? | Git \| DB \| User-data |
 
-| Q | Header | Question | Options |
-|---|--------|----------|---------|
-| 9 | Maturity | Project phase? | Greenfield \| Active \| Maintenance \| Legacy |
-| 10 | Breaking | Breaking changes? | Allowed \| Minimize \| Never |
-| 11 | Priority | Quality vs speed? | Speed \| Balanced \| Quality |
+### Approach Elements (if missing)
 
-### Call 4 - AI Performance
+| Element | Question | Options |
+|---------|----------|---------|
+| Maturity | Project phase? | Greenfield \| Active \| Maintenance \| Legacy |
+| Breaking | Breaking changes? | Allowed \| Minimize \| Never |
+| Priority | Quality vs speed? | Speed \| Balanced \| Quality |
 
-**Profile Detection:** `simple` (Scale<100 + cli/library), `complex` (Scale:10K+ or Legacy), else `medium`.
+### AI Performance Elements (if missing)
 
-**Defaults:** simple→Off/25K, medium→8K/25K, complex→16K/50K
+**Profile Detection:** Based on Scale + Type + Maturity:
+| Profile | Condition | Thinking | MCP |
+|---------|-----------|----------|-----|
+| simple | Scale:<100 + cli/library | Off | 25K |
+| complex | Scale:10K+ OR Legacy | 16K | 50K |
+| medium | else | 8K | 25K |
 
-| Q | Header | Question | Options |
-|---|--------|----------|---------|
-| 12 | Thinking | Extended thinking? | Off \| 8K \| 16K \| 32K |
-| 13 | MCP | MCP output limit? | 25K \| 50K \| 100K |
-| 14 | Caching | Prompt caching? | Enabled \| Disabled |
+Mark the profile-matched value as `[recommended]` per Option Labels standard.
+
+| Element | Question | Options |
+|---------|----------|---------|
+| Thinking | Extended thinking? | Off \| 8K \| 16K \| 32K |
+| MCP | MCP output limit? | 25K \| 50K \| 100K |
+| Caching | Prompt caching? | on \| off |
+
+### Operational Elements (if missing)
+
+| Element | Question | Options |
+|---------|----------|---------|
+| Tools | Tool commands correct? | {detected format/lint/test} \| Edit |
+
+**Batch into AskUserQuestion calls:** Group up to 4 questions per call. Skip elements that already have values (unless "Update all" mode).
 
 ## Step 5: Configuration
 
@@ -160,9 +252,41 @@ Tables:
 3. **Files Modified** - File | Action
 4. **Summary** - {changed}/{total} fields
 5. **Current Configuration** - Key settings box
-6. **Next Steps** - /cco-health, /cco-audit --smart
 
-Note: Include restart warning.
+### Context Activation
+
+If any changes were made, show warning and ask:
+
+```
+╔══════════════════════════════════════════════════════════════╗
+║ ⚠️  CONTEXT UPDATED                                          ║
+╠══════════════════════════════════════════════════════════════╣
+║ Changes saved to ./CLAUDE.md                                 ║
+║                                                              ║
+║ To activate new context:                                     ║
+║ • Option 1: Restart Claude Code (recommended)                ║
+║ • Option 2: Continue - commands will re-read context         ║
+║             explicitly but cached values may persist         ║
+╚══════════════════════════════════════════════════════════════╝
+```
+
+**AskUserQuestion:**
+```
+header: "Activation"
+question: "How to proceed?"
+options:
+  - Restart: "End session now - run 'claude' to start fresh with new context"
+  - Continue: "Stay in session - subsequent commands will re-read context"
+```
+
+**If Restart selected:**
+1. Output: "Session ending. To start with updated context, run: `claude`"
+2. End command execution immediately
+3. Do NOT show "Next Steps"
+
+**If Continue selected:**
+1. Show: "Continuing. Commands will re-read CCO_CONTEXT from file."
+2. Show Next Steps: /cco-health, /cco-audit --smart
 
 ## Guidelines Generation
 

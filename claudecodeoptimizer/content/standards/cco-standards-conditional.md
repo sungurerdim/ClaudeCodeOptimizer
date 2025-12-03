@@ -1,7 +1,14 @@
 <!-- CCO_CONDITIONALS_START -->
 # Conditional Standards
-*Domain-specific rules - selected by /cco-tune based on project detection*
+*Domain-specific standards - selected by /cco-tune based on project detection*
 *These are written to local ./CLAUDE.md, NOT global ~/.claude/CLAUDE.md*
+
+## Security Implementation
+**When:** Based on detected stack (implements Universal Security principles)
+- Input Validation: Pydantic (Python), Zod/Joi (JS/TS), JSON Schema (API)
+- SQL Injection: parameterized queries, ORM safe methods
+- XSS Prevention: sanitize output, CSP headers, template escaping
+- OWASP API: Top 10 compliance checklist
 
 ## Security Extended
 **When:** Container/K8s detected OR Scale: 10K+ OR Data: PII/Regulated
@@ -50,7 +57,7 @@
 - Caching: cache-aside/write-through, TTL, invalidation
 - Cache Hit: >80% target
 - Connection Pool: reuse, size based on load
-- Lazy Load: defer until needed
+- Lazy Load: defer non-critical resources until needed
 - Compression: gzip/brotli responses
 
 ## Data
@@ -63,7 +70,7 @@
 **When:** API detected (REST/GraphQL endpoints)
 - REST: proper methods, status codes, resource naming
 - Pagination: cursor-based for large datasets
-- Docs: OpenAPI spec, examples, synced with code
+- OpenAPI: spec with examples, synced with code
 - Errors: consistent format, no stack traces in prod
 - GraphQL: complexity limits, depth limits, persisted queries
 - Contract: verify API contracts between services
@@ -71,6 +78,14 @@
 
 ## Frontend
 **When:** Frontend detected
+
+### AI Generation Quality
+Avoid AI slop - create distinctive designs:
+- Typography: unique fonts; avoid Arial, Inter, Roboto, system defaults
+- Color: CSS variables; dominant colors with sharp accents
+- Motion: high-impact moments; orchestrated page load with staggered reveals
+- Backgrounds: atmosphere and depth; avoid solid color defaults
+- Avoid: purple gradients, predictable layouts, generic AI patterns
 
 ### Accessibility
 - WCAG 2.2 AA: perceivable, operable, understandable, robust
@@ -85,7 +100,6 @@
 ### Performance
 - Core Web Vitals: LCP, FID, CLS targets
 - Bundle Size: code splitting, tree shaking
-- Lazy Loading: defer non-critical resources
 
 ## i18n
 **When:** i18n detected OR multi-language requirement
@@ -112,7 +126,7 @@
 ## DX
 **When:** Team: 2-5+
 - Local Parity: match production
-- Fast Feedback: quick builds, fast tests
+- Build Speed: quick builds, fast tests
 - Self-Service: provision without tickets
 - Golden Paths: recommended approaches
 - Runbooks: ops procedures

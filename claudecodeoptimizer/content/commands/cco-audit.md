@@ -7,7 +7,7 @@ description: Standardized quality gates with prioritized fixes
 
 **Quality gates** - Read context → run checks → prioritize → fix.
 
-**Standards:** Pre-Operation Safety | Context Read | Detection Report | Approval Flow | Safety Classification | Verification | Error Format
+**Standards:** Pre-Operation Safety | Context Read | Fix Workflow | Priority & Approval | Safety Classification | UX/DX
 
 ## Context Application
 
@@ -31,8 +31,9 @@ Explicit flags skip questions.
 
 ## Flow
 
-1. **Read Context** - Get applicable checks
-2. **Extract Rules** - Parse project docs for stated rules
+0. **Context Check** - Run `/cco-tune --status`; handle completion/restart per cco-tune flow
+1. **Read Context** - Read `./CLAUDE.md`, extract CCO_CONTEXT markers only, parse values
+2. **Extract Standards** - Parse project docs for stated standards
 3. **Scan** - Run checks including self-compliance
 4. **Detection Report** - Per Detection Report standard
 5. **Approval** - AskUserQuestion referencing report IDs
@@ -44,7 +45,7 @@ Explicit flags skip questions.
 **Core (always):**
 - `--security` - OWASP, secrets, CVEs, AI security (prompt injection), supply-chain (dependencies)
 - `--tech-debt` - Dead code, complexity, duplication, orphans, TODOs, hardcoded values, AI code patterns (hallucinations, over-engineering, generic solutions)
-- `--self-compliance` - Check against project's own rules
+- `--self-compliance` - Check against project's own standards
 - `--consistency` - Doc-code mismatch detection
 
 **Stack-dependent (auto-skip if N/A):**
@@ -58,9 +59,9 @@ Note: Full/Smart/All modes include all sub-categories automatically (no sub-ques
 
 ## Self-Compliance
 
-Extract from project docs (README, CLAUDE.md, CONTRIBUTING.md): principles, goals, rules, constraints.
+Extract from project docs (README, CLAUDE.md, CONTRIBUTING.md): stated standards, goals, constraints.
 
-Check all files. Report: `[SELF-COMPLIANCE] <rule> violated in <file:line>`
+Check all files. Report: `[SELF-COMPLIANCE] <standard> violated in <file:line>`
 
 ## Doc-Code Mismatch
 

@@ -7,7 +7,7 @@ description: Actionable metrics dashboard
 
 **Process visibility** - Single view of project health with actionable next steps.
 
-**Standards:** Context Read | Approval Flow | Error Format
+**Standards:** Context Read | Output Formatting | Claude Tools | UX/DX
 
 ## Context Application
 
@@ -21,12 +21,17 @@ description: Actionable metrics dashboard
 | Priority | Speed → highlight blockers only; Quality → show all metrics |
 | Data | PII/Regulated → security score weight ×2 |
 
+## Flow
+
+0. **Context Check** - Run `/cco-tune --status`; handle completion/restart per cco-tune flow
+1. **Read Context** - Read `./CLAUDE.md`, extract CCO_CONTEXT markers only, parse values
+
 ## Scores (0-100)
 
 - **Security** - Vulnerabilities, secrets, dependencies, AI security
 - **Tests** - Coverage percentage + quality
 - **Tech Debt** - Complexity, dead code, duplication, orphans, TODOs, AI patterns
-- **Self-Compliance** - Alignment with stated rules
+- **Self-Compliance** - Alignment with stated standards
 
 ## Fix First Indicator
 

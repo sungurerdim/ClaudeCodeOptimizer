@@ -9,7 +9,7 @@ safe: false
 
 Apply changes with verification. Reports accounting.
 
-**Standards:** Safety Classification | Reference Integrity | Verification | Error Format
+**Standards:** Safety Classification | Fix Workflow | Claude Tools | Resource Scaling
 
 ## Purpose
 
