@@ -613,6 +613,12 @@ pipx install claudecodeoptimizer
 cco-setup
 ```
 
+**Development (latest from GitHub):**
+```bash
+pip install git+https://github.com/sungurerdim/ClaudeCodeOptimizer.git
+cco-setup
+```
+
 **One-liner:**
 ```bash
 curl -sSL https://raw.githubusercontent.com/sungurerdim/ClaudeCodeOptimizer/main/quick-install.py | python3
