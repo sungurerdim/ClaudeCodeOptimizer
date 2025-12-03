@@ -7,7 +7,7 @@ description: Strategic architecture review with fresh perspective
 
 **Strategic review** - Understand intent → analyze architecture → compare with ideal → recommend improvements.
 
-**Standards:** Pre-Operation Safety | Context Read | Approval Flow | Safety Classification | Verification | Error Format
+**Standards:** Pre-Operation Safety | Context Read | Detection Report | Approval Flow | Safety Classification | Verification | Error Format
 
 ## Context Application
 
