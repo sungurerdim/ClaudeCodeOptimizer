@@ -37,7 +37,7 @@ Complete context requires ALL of these elements:
 | | Coverage | AUTO | Detected |
 | | License | AUTO | Detected |
 
-**Total:** 15 required + 5 auto-detected = 20 elements
+**Total:** 16 required + 5 auto-detected = 21 elements
 
 ## Flow
 
