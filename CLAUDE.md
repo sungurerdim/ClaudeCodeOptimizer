@@ -3,16 +3,16 @@
 <!-- CCO_CONTEXT_START -->
 ## Strategic Context
 Purpose: Process and standards layer for Claude Code
-Team: Solo | Scale: <100 | Data: Public | Compliance: None
+Team: Solo | Scale: 100-10K | Data: Public | Compliance: None
 Stack: Python 3.10+, ruff, mypy, pytest (stdlib only) | Type: CLI | DB: None | Rollback: Git
 Maturity: Active | Breaking: Minimize | Priority: Quality
 
 ## AI Performance
-Thinking: 16K | MCP: 50K | Caching: on
+Thinking: 8K | MCP: 25K | Caching: on
 
 ## Guidelines
 - Self-review sufficient, balanced refactors, maintain momentum
-- Simple solutions preferred, optimize for clarity
+- Consider caching strategies, add usage monitoring
 - Basic input validation sufficient
 - Clear error messages, help documentation
 - No database migrations needed, simple git revert for rollback
@@ -26,7 +26,7 @@ Applicable: security, tech-debt, tests, hygiene, cicd, docs, supply-chain, self-
 Not Applicable: database, performance, containers, api-contract, dora, ai-security, ai-quality, compliance
 
 ## Auto-Detected
-Structure: single-repo | Hooks: none | Coverage: 100%
+Structure: single-repo | Hooks: none | Coverage: 89%
 - [x] Linting configured
 - [x] CI/CD configured
 - [ ] Pre-commit hooks
