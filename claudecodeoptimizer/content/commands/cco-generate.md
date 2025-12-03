@@ -7,7 +7,7 @@ description: Convention-following automated generation
 
 **Convention-following generation** - Read conventions from context → generate consistent components.
 
-**Standards:** Pre-Operation Safety | Context Read | Verification | Error Format
+**Standards:** Pre-Operation Safety | Context Read | Priority & Approval | Output Formatting | UX/DX
 
 ## Context Application
 
@@ -20,6 +20,11 @@ description: Convention-following automated generation
 | Maturity | Legacy → match existing patterns exactly; Greenfield → modern idioms |
 | Scale | 10K+ → add monitoring, health checks, metrics; <100 → minimal infra |
 | Data | PII → encryption helpers, audit logging; Regulated → compliance boilerplate |
+
+## Flow
+
+0. **Context Check** - Run `/cco-tune --status`; handle completion/restart per cco-tune flow
+1. **Read Context** - Read `./CLAUDE.md`, extract CCO_CONTEXT markers only, parse values
 
 ## Default Behavior
 

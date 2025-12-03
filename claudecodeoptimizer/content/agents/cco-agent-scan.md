@@ -9,7 +9,7 @@ safe: true
 
 Read-only codebase analysis. Returns findings with file:line references.
 
-**Standards:** Verification | Error Format
+**Standards:** Priority & Approval | Claude Tools | Resource Scaling
 
 ## Purpose
 
@@ -24,7 +24,7 @@ Analyze codebase for issues, metrics, and patterns without modification.
 | Tests | Coverage gaps, missing tests for public functions |
 | Performance | N+1 patterns, missing indexes, blocking I/O in async |
 | Hygiene | Old TODOs (>30 days), hardcoded values, orphan imports |
-| Self-Compliance | Violations of project's stated rules in docs |
+| Self-Compliance | Violations of project's stated standards |
 
 ## Output Format (JSON Schema)
 

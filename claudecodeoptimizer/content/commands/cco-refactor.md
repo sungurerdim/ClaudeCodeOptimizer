@@ -7,7 +7,7 @@ description: Verified transformations with rollback
 
 **Risk mitigation** - Find ALL references → transform in order → verify → rollback on failure.
 
-**Standards:** Pre-Operation Safety | Context Read | Approval Flow | Reference Integrity | Verification | Error Format
+**Standards:** Pre-Operation Safety | Context Read | Priority & Approval | Reference Integrity | Fix Workflow | UX/DX
 
 Requires clean git state. If uncommitted changes exist → Commit / Stash / Cancel
 
@@ -21,6 +21,11 @@ Requires clean git state. If uncommitted changes exist → Commit / Stash / Canc
 | Maturity | Legacy → wrap don't modify, strangler pattern; Greenfield → aggressive OK |
 | Scale | 10K+ → incremental refactors, feature flags; <100 → batch changes OK |
 | Team | 6+ → document changes for team awareness, update ADRs |
+
+## Flow
+
+0. **Context Check** - Run `/cco-tune --status`; handle completion/restart per cco-tune flow
+1. **Read Context** - Read `./CLAUDE.md`, extract CCO_CONTEXT markers only, parse values
 
 ## Default Behavior
 

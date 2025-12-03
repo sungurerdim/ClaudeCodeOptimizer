@@ -7,7 +7,7 @@ description: Strategic architecture review with fresh perspective
 
 **Strategic review** - Understand intent → analyze architecture → compare with ideal → recommend improvements.
 
-**Standards:** Pre-Operation Safety | Context Read | Detection Report | Approval Flow | Safety Classification | Verification | Error Format
+**Standards:** Pre-Operation Safety | Context Read | Fix Workflow | Priority & Approval | Safety Classification | UX/DX
 
 ## Context Application
 
@@ -23,12 +23,14 @@ description: Strategic architecture review with fresh perspective
 
 ## Flow
 
-1. **Map Current State** - Analyze architecture, patterns, dependencies
-2. **Identify Gaps** - Compare purpose vs implementation
-3. **Stack Fitness** - Evaluate tech choices against purpose
-4. **Fresh Perspective** - "If building from scratch" recommendations
-5. **Prioritize** - Quick wins vs major refactors, risk assessment
-6. **Report** - Structured findings with actionable items
+0. **Context Check** - Run `/cco-tune --status`; handle completion/restart per cco-tune flow
+1. **Read Context** - Read `./CLAUDE.md`, extract CCO_CONTEXT markers only, parse values
+2. **Map Current State** - Analyze architecture, patterns, dependencies
+3. **Identify Gaps** - Compare purpose vs implementation
+4. **Stack Fitness** - Evaluate tech choices against purpose
+5. **Fresh Perspective** - "If building from scratch" recommendations
+6. **Prioritize** - Quick wins vs major refactors, risk assessment
+7. **Report** - Structured findings with actionable items
 
 ## Phase 1: Map Current State
 
@@ -52,13 +54,13 @@ Compare Intent vs Implementation:
 - Missing vs stated patterns
 - Scope creep beyond stated goals
 
-Check against CLAUDE.md principles:
+Check against CLAUDE.md standards:
 - DRY violations
 - Orphan code (unused functions, dead imports)
 - Complexity violations (cyclomatic >10)
 - Missing type annotations
 - Test coverage gaps
-- Security principle violations
+- Security standard violations
 
 Output: **Gap Report** with file:line references
 
@@ -84,7 +86,7 @@ Answer: "If I were building this project from scratch today, optimized..."
 Categories: Structure, Patterns, Abstractions, Data Flow, Testing, DX
 
 For each recommendation:
-- Apply AI Content Optimization principles (semantic density, no duplicates, structured format)
+- Apply AI Content standards (semantic density, no duplicates, structured format)
 - Present optimized ideal, not just "from scratch"
 - Show before/after comparison where applicable
 

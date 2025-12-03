@@ -10,7 +10,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Added
 - 8 slash commands: `/cco-tune`, `/cco-health`, `/cco-audit`, `/cco-optimize`, `/cco-review`, `/cco-generate`, `/cco-refactor`, `/cco-commit`
 - 3 specialized agents: Detect, Scan, Action
-- 94 standards (51 universal + 43 Claude-specific)
+- 95 core standards (72 universal + 23 Claude-specific) + 88 conditional
 - Risk-based approval flow with AskUserQuestion
 - Project-aware tuning via `/cco-tune`
 - Doc-code mismatch detection with SSOT resolution

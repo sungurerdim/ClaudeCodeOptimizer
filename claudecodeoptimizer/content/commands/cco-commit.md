@@ -7,7 +7,7 @@ description: Atomic traceable change management
 
 **Change management** - Quality gates → analyze → group atomically → commit with traceability.
 
-**Standards:** Pre-Operation Safety | Context Read | Error Format
+**Standards:** Pre-Operation Safety | Context Read | Output Formatting | Claude Tools | UX/DX
 
 ## Context Application
 
@@ -104,14 +104,16 @@ Tables:
 
 ## Flow
 
-1. **Resolve Tools** - Read CCO context, fallback to auto-detect
-2. **Quality Gates** - Run format → lint → test (stop on failure)
-3. **Analyze** - `git status`, `git diff`, detect change types
-4. **Group** - Apply atomic grouping rules, detect dependencies
-5. **Plan** - Show commit plan with files per commit
-6. **Confirm** - AskUserQuestion: Accept / Modify / Custom
-7. **Execute** - Stage and commit each group in order
-8. **Verify** - `git log` count = planned count
+0. **Context Check** - Run `/cco-tune --status`; handle completion/restart per cco-tune flow
+1. **Read Context** - Read `./CLAUDE.md`, extract CCO_CONTEXT markers only, parse values
+2. **Resolve Tools** - Use Tools from context, fallback to auto-detect
+3. **Quality Gates** - Run format → lint → test (stop on failure)
+4. **Analyze** - `git status`, `git diff`, detect change types
+5. **Group** - Apply atomic grouping rules, detect dependencies
+6. **Plan** - Show commit plan with files per commit
+7. **Confirm** - AskUserQuestion: Accept / Modify / Custom
+8. **Execute** - Stage and commit each group in order
+9. **Verify** - `git log` count = planned count
 
 ## Flags
 

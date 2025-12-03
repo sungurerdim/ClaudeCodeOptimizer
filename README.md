@@ -56,7 +56,7 @@ cco-setup
 | Step | Command | Result |
 |------|---------|--------|
 | Install | `pip install ...` | Downloads CCO package |
-| Setup | `cco-setup` | Copies 8 commands, 3 agents, 94 standards to `~/.claude/` |
+| Setup | `cco-setup` | Copies commands, agents, standards to `~/.claude/` |
 | Tune | `/cco-tune` | Detects stack, writes project context + conditional standards to `./CLAUDE.md` |
 | Use | `/cco-*` | All commands now follow your project's standards |
 
@@ -109,15 +109,81 @@ Claude/Opus 4.5 already knows:       CCO adds:
 
 ### Why Explicit Standards?
 
-CCO provides 94 core standards (51 universal + 43 Claude-specific) plus 80 conditional standards selected per-project. Why, if Claude already knows them?
+CCO provides explicit standards (see [Standard Counts](#standard-counts-single-source-of-truth)). Why, if Claude already knows them?
 
 | Benefit | Explanation |
 |---------|-------------|
-| **Transparency** | Users see exactly what rules apply to their project |
+| **Transparency** | Users see exactly what standards apply to their project |
 | **Consistency** | Same standards across all projects, every session |
 | **Overridability** | Context can adjust thresholds (coverage: 60% solo → 90% enterprise) |
 | **Auditability** | Clear reference for code reviews and compliance |
 | **Predictability** | No surprises - behavior is documented and reproducible |
+
+---
+
+## Standard Behaviors
+
+All CCO commands follow consistent behavioral patterns:
+
+### Fix Workflow
+
+```
+┌─────────────────────────────────────────────────────────────────┐
+│ 1. ANALYZE   Full scan of target area                          │
+│ 2. REPORT    Clear, concise findings with severity + location  │
+│ 3. APPROVE   Paginated multiselect by severity                 │
+│ 4. APPLY     Only user-selected fixes executed                 │
+│ 5. VERIFY    Before/after comparison + accounting              │
+└─────────────────────────────────────────────────────────────────┘
+```
+
+### Priority & Approval
+
+When fixes exceed limits, approval uses severity-based pagination:
+
+| Scenario | Behavior |
+|----------|----------|
+| ≤4 fixes per severity | Single question with all options |
+| >4 fixes per severity | Multiple questions (4 per page) |
+| >16 total fixes | Sequential questions until all shown |
+
+Each severity level gets its own tab/page:
+- **Critical** - Security vulnerabilities, data exposure
+- **High** - High impact, low effort fixes
+- **Medium** - Balanced impact/effort
+- **Low** - Low impact or high effort
+
+Format: `{description} [{file:line}] [{safe|risky|extensive}]`
+
+### Table Formatting
+
+All output tables follow strict formatting:
+- ASCII box-drawing characters only (no emojis)
+- Column width = widest cell + 2 padding (1 space each side)
+- Status values: `OK`, `WARN`, `FAIL`, `PASS`, `SKIP`
+- Vertical alignment guaranteed across all rows
+
+### Before/After Comparison
+
+After applying fixes:
+
+```
++----------+----------------------+----------------------+
+| File     | Before               | After                |
++----------+----------------------+----------------------+
+| foo.py   | unused import `os`   | import removed       |
+| bar.py   | complexity: 15       | complexity: 8        |
++----------+----------------------+----------------------+
+Applied: 2 | Skipped: 0 | Failed: 0
+```
+
+### AI Context Optimization
+
+Commands optimize context usage (per Universal AI Context standard):
+- Reference standards by name instead of repeating
+- Batch parallel tool calls
+- Progressive disclosure (summary → details)
+- Structured data over prose
 
 ---
 
@@ -163,7 +229,7 @@ Single view of project health with actionable next steps.
 | **Security** | Vulnerabilities found |
 | **Tests** | Coverage + quality |
 | **Tech Debt** | Complexity, dead code |
-| **Self-Compliance** | Alignment with stated rules |
+| **Self-Compliance** | Alignment with stated standards |
 
 **Flags:** `--focus=X` (security/tests/tech-debt/hygiene/self-compliance)
 
@@ -174,7 +240,7 @@ Find issues, resolve inconsistencies, fix with approval.
 |---------|-------------|
 | **Doc-Code Consistency** | Detect mismatches between documentation and code |
 | **SSOT Resolution** | Per-mismatch choice: align code→docs, docs→code, or discuss |
-| **Self-Compliance** | Check code against project's own stated rules |
+| **Self-Compliance** | Check code against project's own stated standards |
 | **Prioritized Fixes** | Critical → High → Medium → Low with file:line |
 
 **Core:** `--security`, `--tech-debt`, `--hygiene`, `--self-compliance`, `--consistency`
@@ -338,7 +404,7 @@ License: {type} | Secrets: {yes|no} | Outdated: {N deps}
 |------|--------|
 | `--security` | OWASP patterns, secrets, CVE patterns |
 | `--consistency` | Doc-code mismatches with SSOT resolution |
-| `--self-compliance` | Project's own stated rules |
+| `--self-compliance` | Project's own stated standards |
 | `--tech-debt` | Dead code, complexity |
 | `--hygiene` | TODOs, orphans, hardcoded |
 | `--tests` | Coverage, isolation, flaky |
@@ -392,65 +458,86 @@ Optional status display with git integration:
 
 ## Standards Architecture
 
-CCO uses a three-category standards system for minimal context usage:
+CCO uses a three-tier standards system. All counts are derived from source files:
+
+### Standard Counts (Single Source of Truth)
+
+| Category | Count | Loaded | Source |
+|----------|-------|--------|--------|
+| **Universal** | 72 | All projects | `cco-standards.md` |
+| **Claude-Specific** | 23 | All projects | `cco-standards.md` |
+| **Core Total** | **95** | All projects | — |
+| **Conditional** | 88 | Per-project | `cco-standards-conditional.md` |
+| **Grand Total** | **183** | — | — |
+
+### Categorization Criteria
+
+| Category | Criterion | Examples |
+|----------|-----------|----------|
+| **Universal** | Foundational standards for ANY project | DRY, Testing, Security, Documentation |
+| **Claude-Specific** | How Claude Code operates (process) | Thinking tokens, /compact, AskUserQuestion |
+| **Conditional** | Technology-specific implementations | Pydantic (Python), WCAG (frontend), REST (API) |
+
+**Key distinction:** Universal = "WHAT to achieve" | Conditional = "HOW to implement"
+
+### File Structure
 
 ```
-Source Files                              Destination
-────────────────────────────────────────────────────────────────
 cco-standards.md                        → ~/.claude/CLAUDE.md
-├── Universal Standards (51 rules)         (loaded for ALL projects)
-│   └── Quality (code, testing, security) + Docs + Workflow
-└── Claude-Specific Standards (34 rules)
-    └── CCO Workflow, Core, Approval, Prompt Engineering, Frontend Gen, Context
+├── Universal Standards                    (loaded for ALL projects)
+│   └── Quality + Docs + AI Content + Workflow + Error/Logging/Config + UX/DX
+└── Claude-Specific Standards
+    └── CCO Workflow, Claude Tools, Session Mgmt, Output, Approval
 
-cco-standards-conditional.md            → ./CLAUDE.md (filtered)
-└── Conditional Standards (80 rules)       (only matching rules)
-    └── Security, Architecture, API, Frontend, etc.
+cco-standards-conditional.md            → ./CLAUDE.md (filtered by /cco-tune)
+└── Conditional Standards                  (only matching standards loaded)
+    └── Security, Architecture, API, Frontend, Performance, etc.
 ```
 
-### Universal Standards (51 rules)
-*Software engineering best practices - any project, any AI*
+### Universal Standards
 
-| Section | # | Standards |
-|---------|---|-----------|
-| **Code** | 19 | Fail-Fast, DRY, No Orphans, Type Safety, Complexity, Tech Debt, Maintainability, No Overengineering, Minimal Touch, General Solutions, Clean Code, Immutability, Profile First, Version, Paths, No Unsolicited Files, Cleanup, Timeouts, Retry |
-| **Testing** | 7 | Coverage, Pyramid, Integration, CI Gates, Isolation, TDD, Test Integrity |
-| **Security** | 6 | Input Validation, SQL Params, Secrets, XSS, OWASP, Dependencies |
-| **Docs** | 5 | README, CHANGELOG, API Docs, ADR, Comments |
-| **AI Context** | 5 | Semantic Density, Structured Format, Front-load Critical, Scannable Hierarchy, No Filler |
-| **Workflow** | 9 | Read First, Review Conventions, Reference Integrity, Verification, Plan-Act-Review, Decompose, No Vibe Coding, Challenge, No Example Fixation |
+| Section | Standards |
+|---------|-----------|
+| **Code** | Fail-Fast, DRY, No Orphans, Type Safety, Complexity, Tech Debt, Maintainability, No Overengineering, Minimal Touch, General Solutions, Clean Code, Immutability, Profile First, Version, Paths, No Unsolicited Files, Cleanup, Timeouts, Retry, Exclusions |
+| **Testing** | Coverage, Pyramid, Integration, CI Gates, Isolation, TDD, Test Integrity |
+| **Security** | Secrets, Dependencies, Input Boundaries, Least Privilege, Defense in Depth |
+| **Docs** | README, CHANGELOG, API Docs, ADR, Comments |
+| **AI Content** | Semantic Density, Structured Format, Front-load Critical, Scannable Hierarchy, No Filler, Reference Over Repeat, Positive Framing, Contextual Motivation |
+| **Workflow** | Read First, Review Conventions, Reference Integrity, Plan-Act-Review, Work Incrementally, Decompose, No Vibe Coding, Challenge, No Example Fixation |
+| **Error Handling** | Fail Gracefully, No Silent Failures, User-Friendly Messages, Rollback on Failure |
+| **Logging** | Structured Logs, Log Levels, Context Rich, No Sensitive Data |
+| **Configuration** | Externalize Config, Env-Aware, Validate Early, Defaults |
+| **UX/DX** | Minimum friction, Maximum clarity, Fast feedback, Error recovery, Predictability, Transparency |
 
-### Claude-Specific Standards (34 rules)
-*Claude Code architecture, tools, and features*
+### Claude-Specific Standards
 
-| Section | # | Standards |
-|---------|---|-----------|
-| **CCO Workflow** | — | Pre-Op Safety, Context Read, Safety Classification *(process framework)* |
-| **Core** | 4 | Exclusions, Error Format, Parallel Tools, Moderate Triggers |
-| **Approval Flow** | 5 | Single Call, Priority Headers, Risk Format, MultiSelect, All Access |
-| **Prompt Engineering** | 5 | Positive Framing, Action vs Suggest, Contextual Motivation, Thinking Escalation, Subagent Delegation |
-| **Frontend Gen** | 6 | Typography, Color & Theme, Motion, Backgrounds, Distinctive Design, Avoid Clichés |
-| **Context Mgmt** | 14 | Extended Thinking (Off/8K-32K+), MCP Output Limit, Don't Stop Early, Work Incrementally, Track State, Before /compact, Between Tasks, After Fresh Start |
+| Section | Standards |
+|---------|-----------|
+| **CCO Workflow** | Pre-Op Safety, Context Read, Safety Classification *(process framework)* |
+| **Claude Tools** | Parallel Tools, Subagent Delegation, Error Format, Moderate Triggers |
+| **Session Management** | Track state, /compact, Fresh start, MCP output |
+| **Output Formatting** | Box-drawing, Column width, Alignment, Status values, Progress bar, ASCII-only |
+| **Priority & Approval** | multiSelect, Format, Empty severities, Pagination, Option Labels |
 
-### Conditional Standards (80 rules)
-*Domain-specific rules - selected by /cco-tune, written to local CLAUDE.md only*
+### Conditional Standards
 
-| Conditional | # | Trigger | Standards |
-|-------------|---|---------|-----------|
-| **Security+** | 12 | Container/K8s, 10K+, PII | Privacy, Encryption, Zero Disk, Auth, Rate Limit, Supply Chain, AI Security, Container, K8s, Policy-as-Code, Audit Log, Incident Response |
-| **Architecture** | 9 | 10K+, microservices | Event-Driven, Service Mesh, DI, Dependency Rule, Circuit Breaker, Bounded Contexts, API Versioning, Idempotency, Event Sourcing |
-| **Operations** | 10 | CI/CD detected | Zero Maintenance, Config as Code, IaC + GitOps, Observability, Health, Graceful Shutdown, Blue/Green, Canary, Feature Flags, Incremental Safety |
-| **Performance** | 7 | Scale 100-10K+ | DB Indexing, Async I/O, Caching, Cache Hit, Connection Pool, Lazy Load, Compression |
-| **Data** | 3 | Database detected | Backup, Migrations, Retention |
-| **API** | 7 | REST/GraphQL | REST Methods, Pagination, Docs, Errors, GraphQL Limits, Contract, CORS |
-| **Frontend** | 11 | Frontend frameworks | WCAG 2.2, Semantic HTML, ARIA, Keyboard, Screen Reader, Contrast, Focus, A11y Testing, Core Web Vitals, Bundle Size, Lazy Loading |
-| **i18n** | 5 | Multi-language | Externalized, Unicode, RTL, Locale, Pluralization |
-| **Reliability** | 4 | SLA requirements | Chaos, Resilience, Bulkhead, Fallback |
-| **Cost** | 4 | Cloud/Container | FinOps, Tagging, Auto-Scale, Green |
-| **DX** | 5 | Team 2-5+ | Local Parity, Fast Feedback, Self-Service, Golden Paths, Runbooks |
-| **Compliance** | 3 | SOC2/HIPAA/PCI | License, Frameworks, Classification |
+| Category | Trigger | Examples |
+|----------|---------|----------|
+| **Security Impl** | Based on stack | Pydantic/Zod validation, SQL params, XSS, OWASP |
+| **Security Extended** | Container/K8s, 10K+, PII | Privacy, Encryption, Auth, Supply Chain |
+| **Architecture** | 10K+, microservices | Event-Driven, Circuit Breaker, DDD |
+| **Operations** | CI/CD detected | GitOps, Observability, Blue/Green |
+| **Performance** | Scale 100-10K+ | Caching, Async I/O, Lazy Load |
+| **Data** | DB detected | Backup, Migrations, Retention |
+| **API** | REST/GraphQL | Methods, Pagination, OpenAPI, CORS |
+| **Frontend** | Frontend detected | AI Generation Quality, WCAG, Core Web Vitals |
+| **i18n** | Multi-language | Unicode, RTL, Locale |
+| **Reliability** | SLA requirements | Chaos, Resilience, Fallback |
+| **Cost** | Cloud/Container | FinOps, Auto-Scale |
+| **DX** | Team 2-5+ | Local Parity, Build Speed |
+| **Compliance** | SOC2/HIPAA/PCI | License, Frameworks |
 
-**Result:** Only relevant rules load into context. A CLI project won't carry Frontend or API standards.
+**Result:** Only relevant standards load into context. A Python CLI won't carry Frontend or API standards.
 
 ---
 
@@ -466,16 +553,16 @@ After `cco-setup`:
 │   └── cco-*.md                        # 3 specialized agents
 ├── statusline.js                       # Optional statusline
 ├── settings.json                       # AI performance + permissions
-└── CLAUDE.md                           # 94 rules (51 universal + 43 Claude-specific)
+└── CLAUDE.md                           # Core standards (universal + Claude-specific)
 
 ./CLAUDE.md                             # Local (per project, after /cco-tune)
 ├── CCO_CONTEXT_START
 │   ├── Strategic Context               # Purpose, team, scale, stack
 │   ├── AI Performance                  # Thinking, MCP, caching
-│   ├── Guidelines                      # Project-specific rules
+│   ├── Guidelines                      # Project-specific guidance
 │   ├── Operational                     # Tools, conventions
 │   ├── Auto-Detected                   # CI/CD, coverage, flags
-│   └── Conditional Standards           # 0-80 rules (filtered by project type)
+│   └── Conditional Standards           # Filtered by project type
 └── CCO_CONTEXT_END
 ```
 
