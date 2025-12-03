@@ -86,7 +86,7 @@ Analyze existing files for: testNaming, importStyle, namingStyle, docStyle.
 
 | Condition | Category |
 |-----------|----------|
-| Always | security, tech-debt, hygiene, self-compliance |
+| Always | security, tech-debt, self-compliance |
 | Any language | tests |
 | DB detected | database |
 | AI/LLM usage | ai-security, ai-quality |

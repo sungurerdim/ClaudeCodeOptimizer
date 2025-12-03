@@ -22,7 +22,7 @@ Thinking: 8K | MCP: 25K | Caching: on
 ## Operational
 Tools: ruff format . (format), ruff check . && mypy claudecodeoptimizer/ (lint), pytest tests/ --cov (test)
 Conventions: test_*.py in tests/unit/ and tests/integration/, relative imports internal, snake_case
-Applicable: security, tech-debt, tests, hygiene, cicd, docs, supply-chain, self-compliance
+Applicable: security, tech-debt, tests, cicd, docs, supply-chain, self-compliance
 Not Applicable: database, performance, containers, api-contract, dora, ai-security, ai-quality, compliance
 
 ## Auto-Detected

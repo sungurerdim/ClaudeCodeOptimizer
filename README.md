@@ -231,7 +231,7 @@ Single view of project health with actionable next steps.
 | **Tech Debt** | Complexity, dead code |
 | **Self-Compliance** | Alignment with stated standards |
 
-**Flags:** `--focus=X` (security/tests/tech-debt/hygiene/self-compliance)
+**Flags:** `--focus=X` (security/tests/tech-debt/self-compliance)
 
 ### `/cco-audit` - Quality Gates
 Find issues, resolve inconsistencies, fix with approval.
@@ -243,7 +243,7 @@ Find issues, resolve inconsistencies, fix with approval.
 | **Self-Compliance** | Check code against project's own stated standards |
 | **Prioritized Fixes** | Critical → High → Medium → Low with file:line |
 
-**Core:** `--security`, `--tech-debt`, `--hygiene`, `--self-compliance`, `--consistency`
+**Core:** `--security`, `--tech-debt`, `--self-compliance`, `--consistency`
 **Stack:** `--tests`, `--database`, `--performance`, `--ai-security`, `--ai-quality`, `--docs`, `--cicd`, `--containers`, `--supply-chain`, `--compliance`, `--api-contract`
 **Meta:** `--smart`, `--critical`, `--weekly`, `--pre-release`, `--all`, `--auto-fix`
 
@@ -406,7 +406,6 @@ License: {type} | Secrets: {yes|no} | Outdated: {N deps}
 | `--consistency` | Doc-code mismatches with SSOT resolution |
 | `--self-compliance` | Project's own stated standards |
 | `--tech-debt` | Dead code, complexity |
-| `--hygiene` | TODOs, orphans, hardcoded |
 | `--tests` | Coverage, isolation, flaky |
 | `--performance` | Caching, algorithms |
 | `--database` | N+1, indexes, queries |
