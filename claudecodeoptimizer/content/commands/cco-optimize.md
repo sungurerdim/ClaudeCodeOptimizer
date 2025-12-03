@@ -7,7 +7,7 @@ description: Measurable efficiency improvements
 
 **Efficiency optimization** - Reduce waste → measure impact → verify.
 
-**Standards:** Pre-Operation Safety | Context Read | Approval Flow | Safety Classification | Verification | Error Format
+**Standards:** Pre-Operation Safety | Context Read | Detection Report | Approval Flow | Safety Classification | Verification | Error Format
 
 ## Context Application
 
@@ -53,6 +53,14 @@ Note: `--all` or interactive "All" selection includes all sub-categories automat
 | Overlap | Partial duplication | Merge |
 
 Report format: `[CROSS-FILE] {type}: "{summary}" → {file1}:{line} ↔ {file2}:{line}`
+
+## Flow
+
+1. **Scan** - Analyze selected categories
+2. **Detection Report** - Per Detection Report standard
+3. **Approval** - AskUserQuestion referencing report IDs
+4. **Apply** - Execute approved optimizations
+5. **Verify** - Confirm behavior unchanged, show metrics
 
 ## Output
 

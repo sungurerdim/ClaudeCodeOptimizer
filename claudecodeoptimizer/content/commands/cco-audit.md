@@ -7,7 +7,7 @@ description: Standardized quality gates with prioritized fixes
 
 **Quality gates** - Read context → run checks → prioritize → fix.
 
-**Standards:** Pre-Operation Safety | Context Read | Approval Flow | Safety Classification | Verification | Error Format
+**Standards:** Pre-Operation Safety | Context Read | Detection Report | Approval Flow | Safety Classification | Verification | Error Format
 
 ## Context Application
 
@@ -34,8 +34,10 @@ Explicit flags skip questions.
 1. **Read Context** - Get applicable checks
 2. **Extract Rules** - Parse project docs for stated rules
 3. **Scan** - Run checks including self-compliance
-4. **Report** - Scores, issues with file:line
-5. **Fix** - Offer via approval flow
+4. **Detection Report** - Per Detection Report standard
+5. **Approval** - AskUserQuestion referencing report IDs
+6. **Fix** - Execute approved fixes
+7. **Verify** - Confirm all changes, show verification table
 
 ## Categories
 
@@ -85,13 +87,6 @@ Report: `[DOC-CODE MISMATCH] {category}: {doc} ≠ {code} in {file:line}`
 | `--pre-release` | security + api-contract + docs + tests + consistency |
 | `--all` | Everything applicable |
 | `--auto-fix` | Skip asking, auto-fix safe issues |
-
-## Priority
-
-- **CRITICAL** - Security, data exposure
-- **HIGH** - High impact, low effort
-- **MEDIUM** - Balanced
-- **LOW** - Low impact or high effort
 
 ## Output
 

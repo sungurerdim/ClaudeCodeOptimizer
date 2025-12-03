@@ -115,12 +115,24 @@ All cells in a column must have identical width = widest cell in that column + 2
 - Then: pad every cell to that exact width (text=trailing spaces, numbers=leading spaces)
 - Result: all `│` characters align vertically on every row
 
+## Priority Classification
+- **CRITICAL** - Security vulnerabilities, data exposure
+- **HIGH** - High impact, low effort fixes
+- **MEDIUM** - Balanced impact/effort
+- **LOW** - Low impact or high effort
+
 ## Approval Flow
-- Single AskUserQuestion, 4 priority tabs (Critical/High/Medium/Low), skip empty
-- Header: "{Priority} ({count})" | Options: "All ({N})" first, then top 3 by impact
-- Format: "{desc} [{loc}] [{risk}]" with risk labels [safe]/[risky]/[extensive]
-- MultiSelect enabled | Summary: "Applying {selected}/{total}"
-- All items accessible via "All" option; blocked items report as "cannot_do"
+AskUserQuestion for user confirmation (used by multiple commands):
+- multiSelect: true
+- First option: "All ({N})" to select everything
+- Never skip: always require explicit user confirmation
+
+## Detection Report
+For fix commands (audit, optimize, review) - show before Approval Flow:
+
+| # | Issue (what + context) | Location | Impact | Fix (specific action) |
+
+Format: `### {Category} ({count})` → table → summary → then Approval Flow
 
 ## Prompt Engineering
 - Positive Framing: tell what to do ("write prose") not what to avoid ("don't use markdown")
