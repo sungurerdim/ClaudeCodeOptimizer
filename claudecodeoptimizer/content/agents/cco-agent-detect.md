@@ -53,7 +53,7 @@ Analyze existing files for: testNaming, importStyle, namingStyle, docStyle.
 |------|-----------|
 | monorepo | packages/, apps/, lerna.json, nx.json |
 | preCommitHooks | .pre-commit-config.yaml, .husky/ |
-| currentCoverage | coverage/, .coverage, lcov.info |
+| currentCoverage | Run test with coverage, parse % from output |
 | lintingConfigured | .eslintrc*, ruff.toml, pyproject.toml |
 | apiEndpoints | @app.route, @Get(), router.get |
 | containerSetup | Dockerfile, docker-compose.yml, k8s/ |
@@ -65,6 +65,22 @@ Analyze existing files for: testNaming, importStyle, namingStyle, docStyle.
 | gitDefaultBranch | git symbolic-ref |
 | hasReadme/Changelog | File existence |
 | deadCodeRisk | Unused exports/imports ratio |
+
+## Coverage Detection
+
+**Always run fresh** - never read stale coverage files.
+
+| Stack | Command | Parse |
+|-------|---------|-------|
+| Python (pytest) | `pytest --cov --cov-report=term-missing -q` | "TOTAL" line, last % |
+| Python (coverage) | `coverage run -m pytest && coverage report` | "TOTAL" line |
+| Node (jest) | `npm test -- --coverage --coverageReporters=text-summary` | "Statements" % |
+| Node (vitest) | `npx vitest run --coverage` | "All files" line |
+| Go | `go test -cover ./...` | "coverage:" % |
+
+**Fallback:** If no test framework detected or command fails → return `null`, don't estimate.
+
+**Timeout:** 60s max - if tests take longer, skip coverage detection.
 
 ## Applicable Checks
 
@@ -107,8 +123,8 @@ Analyze existing files for: testNaming, importStyle, namingStyle, docStyle.
 
 ## Principles
 
-1. **Read-only** - Never modify files
+1. **Read-only** - Never modify project files
 2. **Scoped** - Only detect what's requested
-3. **Fast** - Use file presence, skip deep analysis
-4. **Deterministic** - Same input → same output
+3. **Fast** - File presence over deep analysis (exception: coverage runs tests)
+4. **Accurate** - Fresh data over stale files
 5. **Graceful** - Return nulls for undetectable, never fail
