@@ -62,7 +62,7 @@ Analyze codebase for issues, metrics, and patterns without modification.
 |--------|-------------|
 | security | 100 - (critical×25 + high×10 + medium×5 + low×1), min 0 |
 | techDebt | 100 - (complexity_violations×5 + dead_code_ratio×2), min 0 |
-| coverage | Direct from coverage tool output, or estimated from test file ratio |
+| coverage | Run test with coverage flag, parse % from output (see cco-agent-detect) |
 
 ### Calculation Details
 
@@ -75,10 +75,7 @@ Analyze codebase for issues, metrics, and patterns without modification.
 - Ratio = (unused_items / total_items) × 100
 - Each 1% = 2 points deduction
 
-**coverage estimation** (when no tool output):
-- Count test files matching patterns (`test_*.py`, `*.test.ts`, etc.)
-- Estimate = (test_files / source_files) × 80, capped at 80
-- Note: Always prefer actual coverage tool output when available
+**coverage:** Always run fresh - never estimate from file ratios or read stale reports. If test command fails or times out (60s), return `null`.
 
 ## Priority Rules
 
