@@ -13,10 +13,37 @@ description: Project-specific AI tuning and configuration
 
 | Tool | Location | What It Does |
 |------|----------|--------------|
-| `cco-setup` | `~/.claude/` (global) | Universal + AI-Specific standards |
-| `cco-tune` | `./` (project only) | Project-specific context + standards |
+| `cco-setup` | `~/.claude/` (global) | Standards + global statusline |
+| `cco-tune` | `./` (project local) | Project context + local statusline/permissions |
+| `cco-remove` | `~/.claude/` (global) | Uninstall CCO completely |
 
-**cco-tune never modifies files outside the current project directory.**
+### Global vs Local
+
+**cco-setup installs global files:**
+- `~/.claude/CLAUDE.md` - Universal + AI-Specific + CCO-Specific standards
+- `~/.claude/statusline.js` - Global statusline (Full mode)
+- `~/.claude/settings.json` - Global statusLine config
+- `~/.claude/commands/cco-*.md` - CCO commands
+- `~/.claude/agents/cco-*.md` - CCO agents
+
+**cco-tune creates local project files:**
+- `./CLAUDE.md` - Project context + conditional standards
+- `./.claude/statusline.js` - Local statusline (overrides global)
+- `./.claude/settings.json` - Local permissions (overrides global)
+
+### Content Sources
+
+Files are sourced from `claudecodeoptimizer/content/`:
+
+| Content | Source | Target |
+|---------|--------|--------|
+| Statusline Full | `content/statusline/full.js` | `statusline.js` |
+| Statusline Minimal | `content/statusline/minimal.js` | `statusline.js` |
+| Permissions Safe | `content/permissions/safe.json` | `settings.json` |
+| Permissions Balanced | `content/permissions/balanced.json` | `settings.json` |
+| Permissions Permissive | `content/permissions/permissive.json` | `settings.json` |
+
+Global `~/.claude/` files are never modified by cco-tune.
 
 ## Usage
 
@@ -59,10 +86,10 @@ Show current project state before asking anything:
 ║ Stack/Type      │ {stack} | {type}                                             ║
 ║ AI Performance  │ Thinking {thinking} | MCP {mcp} | Caching {caching}          ║
 ╠════════════════════════════════════════════════════════════════════════════════╣
-║ FEATURES        │ Status                                                       ║
-├─────────────────┼──────────────────────────────────────────────────────────────┤
-║ Statusline      │ {statusline_status}                                          ║
-║ Permissions     │ {permissions_status}                                         ║
+║ LOCAL FEATURES  │ Status                           │ Location                  ║
+├─────────────────┼──────────────────────────────────┼───────────────────────────┤
+║ Statusline      │ {statusline_status}              │ ./.claude/statusline.js   ║
+║ Permissions     │ {permissions_status}             │ ./.claude/settings.json   ║
 ╠════════════════════════════════════════════════════════════════════════════════╣
 ║ STANDARDS       │ {base} base + {project} project-specific = {total}           ║
 ╚════════════════════════════════════════════════════════════════════════════════╝
@@ -77,7 +104,7 @@ Show current project state before asking anything:
 ║ PROJECT: {project_name}                                                        ║
 ╠════════════════════════════════════════════════════════════════════════════════╣
 ║ CONTEXT         │ Not configured                                               ║
-║ FEATURES        │ Not configured                                               ║
+║ LOCAL FEATURES  │ Not configured                                               ║
 ║ STANDARDS       │ {base} base only (no project-specific)                       ║
 ╚════════════════════════════════════════════════════════════════════════════════╝
 ```
@@ -94,8 +121,8 @@ Based on status, show options with smart defaults. **All configuration questions
 │ What would you like to do?                                              │
 ├─────────────────────────────────────────────────────────────────────────┤
 │ ☐ Update Detection   Re-detect stack and update standards               │
-│ ☐ Statusline         Configure status bar                               │
-│ ☐ Permissions        Configure permission levels                        │
+│ ☐ Statusline         Configure local status bar (./.claude/)            │
+│ ☐ Permissions        Configure local permission levels (./.claude/)     │
 │ ○ Nothing            Exit without changes                               │
 └─────────────────────────────────────────────────────────────────────────┘
 ```
@@ -106,8 +133,8 @@ Based on status, show options with smart defaults. **All configuration questions
 │ What would you like to configure?                                       │
 ├─────────────────────────────────────────────────────────────────────────┤
 │ ☑ Project Detection  [recommended] Detect and apply standards           │
-│ ☐ Statusline         Rich status bar with git info                      │
-│ ☐ Permissions        Quick permission cycling (shift+tab)               │
+│ ☐ Statusline         Local status bar with git info (./.claude/)        │
+│ ☐ Permissions        Local permission levels (./.claude/)               │
 └─────────────────────────────────────────────────────────────────────────┘
 ```
 
@@ -119,17 +146,18 @@ Based on status, show options with smart defaults. **All configuration questions
 **If Statusline selected**, ask immediately:
 ```
 ┌─────────────────────────────────────────────────────────────────────────┐
-│ Statusline mode                                                         │
+│ Local statusline mode (./.claude/statusline.js)                         │
 ├─────────────────────────────────────────────────────────────────────────┤
-│ ○ Full        [recommended] Project, git, changes, permissions          │
+│ ○ Full        [recommended] Project, git branch, changes                │
 │ ○ Minimal     Project + git branch only                                 │
+│ ○ Disable     Remove local statusline                                   │
 └─────────────────────────────────────────────────────────────────────────┘
 ```
 
 **If Permissions selected**, ask immediately:
 ```
 ┌─────────────────────────────────────────────────────────────────────────┐
-│ Permission level                                                        │
+│ Local permission level (./.claude/settings.json)                        │
 ├─────────────────────────────────────────────────────────────────────────┤
 │ ○ Safe        [recommended] Auto: reads, lint | Ask: writes, deletes   │
 │ ○ Balanced    Auto: reads | Ask: all writes                             │
@@ -144,6 +172,8 @@ After all questions answered → proceed to detection/apply (no more questions)
 ## Step 3: Detection (if selected)
 
 **Location:** `./CLAUDE.md` (project only)
+
+**IMPORTANT:** Detection always scans from scratch, ignoring any existing CCO_CONTEXT values. Each element is freshly detected from actual project files. The Source column shows where the value was found.
 
 ### Auto-Detect Elements
 
@@ -197,32 +227,37 @@ After all questions answered → proceed to detection/apply (no more questions)
 Show unified table with dynamic standard counts:
 
 ```
-╔════════════════════════════════════════════════════════════════════════════════╗
-║                              CCO PROJECT TUNE                                  ║
-╠════════════════════════════════════════════════════════════════════════════════╣
-║  #  │ Element      │ Value                │ Source              │ Standards   ║
-╠═════╪══════════════╪══════════════════════╪═════════════════════╪═════════════╣
-║     │ AUTO-DETECTED                                                            ║
-├─────┼──────────────┼──────────────────────┼─────────────────────┼─────────────┤
-║  1  │ Purpose      │ {purpose}            │ {source}            │ -           ║
-║  2  │ Stack        │ {languages/tools}    │ {config_file}       │ -           ║
-║  3  │ Type         │ {project_type}       │ {detection_source}  │ +{N} {cat}  ║
-║  4  │ DB           │ {db_type|None}       │ {detection_method}  │ -           ║
-║  5  │ CI/CD        │ {ci_platform|None}   │ {ci_path}           │ +{N} Ops    ║
-║  6  │ API          │ {api_type|None}      │ {detection_method}  │ -           ║
-║ ... │ ...          │ ...                  │ ...                 │ ...         ║
-╠═════╪══════════════╪══════════════════════╪═════════════════════╪═════════════╣
-║     │ DEFAULTS                                                                 ║
-├─────┼──────────────┼──────────────────────┼─────────────────────┼─────────────┤
-║ 21  │ Team         │ Solo                 │ default             │ -           ║
-║ 22  │ Scale        │ <100                 │ default             │ -           ║
-║ 23  │ Data         │ Public               │ default             │ -           ║
-║ ... │ ...          │ ...                  │ ...                 │ ...         ║
-╠════════════════════════════════════════════════════════════════════════════════╣
-║ STANDARDS: +{N} project-specific ({matched categories})                        ║
-║ TOTAL: {base} base + {project} selected = {total}                              ║
-╚════════════════════════════════════════════════════════════════════════════════╝
+╔══════════════════════════════════════════════════════════════════════════════════════╗
+║                                CCO PROJECT TUNE                                      ║
+╠══════════════════════════════════════════════════════════════════════════════════════╣
+║  #  │ Element       │ Value                  │ Source                  │ Standards   ║
+╠═════╪═══════════════╪════════════════════════╪═════════════════════════╪═════════════╣
+║     │ AUTO-DETECTED                                                                  ║
+├─────┼───────────────┼────────────────────────┼─────────────────────────┼─────────────┤
+║  1  │ Purpose       │ CLI tool for X         │ README.md:1             │ -           ║
+║  2  │ Stack         │ Python 3.10+, ruff     │ pyproject.toml          │ -           ║
+║  3  │ Type          │ CLI                    │ __main__.py detected    │ +5 Apps     ║
+║  4  │ DB            │ None                   │ no db deps found        │ -           ║
+║  5  │ CI/CD         │ GitHub Actions         │ .github/workflows/      │ +7 Ops      ║
+║  6  │ API           │ None                   │ no routes found         │ -           ║
+║ ... │ ...           │ ...                    │ ...                     │ ...         ║
+╠═════╪═══════════════╪════════════════════════╪═════════════════════════╪═════════════╣
+║     │ DEFAULTS (editable)                                                            ║
+├─────┼───────────────┼────────────────────────┼─────────────────────────┼─────────────┤
+║ 21  │ Team          │ Solo                   │ default (not detected)  │ -           ║
+║ 22  │ Scale         │ <100                   │ default (not detected)  │ -           ║
+║ 23  │ Data          │ Public                 │ default (not detected)  │ -           ║
+║ ... │ ...           │ ...                    │ ...                     │ ...         ║
+╠══════════════════════════════════════════════════════════════════════════════════════╣
+║ STANDARDS: +{N} project-specific ({matched categories})                              ║
+║ TOTAL: {base} base + {project} selected = {total}                                    ║
+╚══════════════════════════════════════════════════════════════════════════════════════╝
 ```
+
+**Source column rules:**
+- Auto-detected: Show actual file path or detection method (e.g., `README.md:1`, `pyproject.toml`, `.github/workflows/`)
+- Defaults: Show `default (not detected)` - indicates value was not found in project files
+- Never use `current` as a source - always perform fresh detection
 
 **Standard counts are calculated dynamically** from `cco-standards-conditional.md` based on triggers.
 
@@ -233,13 +268,29 @@ Show unified table with dynamic standard counts:
 │ Detection complete. What would you like to do?                  │
 ├─────────────────────────────────────────────────────────────────┤
 │ ○ Accept        Apply this configuration                        │
-│ ○ Edit          Change specific items (enter: 21,22,23)         │
-│ ○ Edit all      Configure all items interactively               │
+│ ○ Edit          Change specific items                           │
 │ ○ Cancel        Exit without changes                            │
 └─────────────────────────────────────────────────────────────────┘
 ```
 
-**If Edit**: Show options with recommendations and affected standards:
+**If Edit selected**, ask which items to change:
+```
+┌─────────────────────────────────────────────────────────────────┐
+│ Which items would you like to edit?                             │
+├─────────────────────────────────────────────────────────────────┤
+│ ☐ Edit all      Configure all editable items                    │
+│ ☐ 21: Team      Currently: Solo                                 │
+│ ☐ 22: Scale     Currently: <100                                 │
+│ ☐ 23: Data      Currently: Public                               │
+└─────────────────────────────────────────────────────────────────┘
+```
+
+- First option "Edit all" selects all editable items
+- Other options show item number, name, and current value
+- User selects which items to edit (multiSelect: true)
+- Then show individual questions for each selected item
+
+**For each selected item**, show options with recommendations and affected standards:
 
 ```
 ┌─────────────────────────────────────────────────────────────────┐
@@ -262,8 +313,97 @@ Write all selected configurations to project-local files:
 | Selection | Target | Content |
 |-----------|--------|---------|
 | Detection | `./CLAUDE.md` | CCO_CONTEXT block |
-| Statusline | `./.claude/statusline.js` | Status bar script |
+| Statusline | `./.claude/statusline.js` + `./.claude/settings.json` | Status bar script + settings |
 | Permissions | `./.claude/settings.json` | Permission config |
+
+### Statusline Files
+
+**Source:** `claudecodeoptimizer/content/statusline/`
+
+| Mode | Source File | Output |
+|------|-------------|--------|
+| Full | `statusline/full.js` | `Project \| Branch \| Changes` |
+| Minimal | `statusline/minimal.js` | `Project \| Branch` |
+| Disable | Remove files | No statusline |
+
+**Target:** `./.claude/statusline.js`
+
+**Local Settings for Statusline** - `./.claude/settings.json`:
+```json
+{
+  "statusLine": {
+    "type": "command",
+    "command": "node ./.claude/statusline.js"
+  }
+}
+```
+
+**Disable Mode**: Delete `./.claude/statusline.js` and remove `statusLine` from `./.claude/settings.json`.
+
+### Statusline Verification
+
+After writing statusline files, verify:
+1. `./.claude/statusline.js` exists and is executable
+2. `./.claude/settings.json` contains `statusLine` config pointing to local script
+3. Local settings match the format used in global `~/.claude/settings.json`
+
+---
+
+### Permission Files
+
+**Source:** `claudecodeoptimizer/content/permissions/`
+
+| Level | Source File | Description |
+|-------|-------------|-------------|
+| Safe | `permissions/safe.json` | Most restrictive - read-only auto-approved |
+| Balanced | `permissions/balanced.json` | Read + lint/test auto-approved, writes require approval |
+| Permissive | `permissions/permissive.json` | Most operations auto-approved, only dangerous ops blocked |
+
+**Target:** `./.claude/settings.json` → `permissions` key
+
+**Permission Structure:**
+```json
+{
+  "permissions": {
+    "allow": [
+      "# Allowed patterns - auto-approved",
+      "git status *",
+      "npm test"
+    ],
+    "deny": [
+      "# Denied patterns - blocked or require approval",
+      "rm -rf *",
+      "git push --force *"
+    ]
+  }
+}
+```
+
+**Permission Levels Summary:**
+
+| Category | Safe | Balanced | Permissive |
+|----------|------|----------|------------|
+| Git read (status, log, diff) | Auto | Auto | Auto |
+| Git write (commit, push) | Ask | Ask | Auto |
+| Git dangerous (force push, reset --hard) | Deny | Deny | Deny |
+| Lint/Format (check mode) | Ask | Auto | Auto |
+| Lint/Format (write mode) | Ask | Ask | Auto |
+| Test execution | Ask | Auto | Auto |
+| Package install | Ask | Ask | Auto |
+| File read (ls, cat) | Auto | Auto | Auto |
+| File write (touch, mkdir) | Ask | Ask | Auto |
+| File delete (rm) | Ask | Ask | Ask |
+| File delete recursive (rm -rf) | Deny | Deny | Deny |
+| Docker (non-privileged) | Ask | Ask | Auto |
+| Docker (privileged) | Deny | Deny | Deny |
+| System (sudo, chmod 777) | Deny | Deny | Deny |
+
+### Permission Verification
+
+After writing permission config, verify:
+1. `./.claude/settings.json` contains valid `permissions` object
+2. No conflicting patterns (same pattern in both allow and deny)
+3. JSON syntax is valid
 
 ### CCO_CONTEXT Format
 
@@ -373,6 +513,27 @@ Exports the full CCO_CONTEXT block including CCO-Specific standards for use in o
 
 ---
 
+## Standards Count Structure
+
+Standards are organized in 4 categories:
+
+| Category | Source File | Count | Scope |
+|----------|-------------|-------|-------|
+| Universal | `cco-standards.md` | ~47 | All projects |
+| AI-Specific | `cco-standards.md` | ~31 | All AI assistants |
+| CCO-Specific | `cco-standards.md` | ~23 | CCO users only |
+| Project-Specific | `cco-standards-conditional.md` | ~108 | Triggered by detection |
+
+**Base standards:** Universal + AI-Specific + CCO-Specific = ~101 standards
+**Project-specific:** Up to ~108 additional standards based on detected features
+
+**Count calculation:**
+- Count `^- ` lines in each standards file section
+- Tables count as guidance, not individual standards
+- Counts are approximate and may change as standards evolve
+
+---
+
 ## Detection → Standards Mapping
 
 | Detection | Category |
@@ -387,7 +548,7 @@ Exports the full CCO_CONTEXT block including CCO-Specific standards for use in o
 | ML/AI OR Game engine detected | Specialized |
 | Team: 2+ OR i18n detected | Collaboration |
 
-Standard counts calculated dynamically at runtime.
+Standard counts calculated dynamically at runtime from source files.
 
 ---
 

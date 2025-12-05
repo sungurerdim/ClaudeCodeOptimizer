@@ -149,10 +149,12 @@ class TestMain:
     @patch("claudecodeoptimizer.cco_remove.detect_install_method")
     @patch("claudecodeoptimizer.cco_remove.list_cco_files")
     @patch("claudecodeoptimizer.cco_remove.has_claude_md_standards")
-    def test_not_installed(self, mock_standards, mock_list, mock_detect, capsys):
+    @patch("claudecodeoptimizer.cco_remove.has_cco_statusline")
+    def test_not_installed(self, mock_statusline, mock_standards, mock_list, mock_detect, capsys):
         mock_detect.return_value = None
         mock_list.return_value = {"agents": [], "commands": []}
         mock_standards.return_value = []
+        mock_statusline.return_value = False
         result = main()
         assert result == 0
         captured = capsys.readouterr()
@@ -161,11 +163,15 @@ class TestMain:
     @patch("claudecodeoptimizer.cco_remove.detect_install_method")
     @patch("claudecodeoptimizer.cco_remove.list_cco_files")
     @patch("claudecodeoptimizer.cco_remove.has_claude_md_standards")
+    @patch("claudecodeoptimizer.cco_remove.has_cco_statusline")
     @patch("builtins.input")
-    def test_cancelled(self, mock_input, mock_standards, mock_list, mock_detect, capsys):
+    def test_cancelled(
+        self, mock_input, mock_statusline, mock_standards, mock_list, mock_detect, capsys
+    ):
         mock_detect.return_value = "pip"
         mock_list.return_value = {"agents": ["a.md"], "commands": ["c.md"]}
         mock_standards.return_value = ["CCO Standards"]
+        mock_statusline.return_value = False
         mock_input.return_value = "n"
         result = main()
         assert result == 0
@@ -175,6 +181,7 @@ class TestMain:
     @patch("claudecodeoptimizer.cco_remove.detect_install_method")
     @patch("claudecodeoptimizer.cco_remove.list_cco_files")
     @patch("claudecodeoptimizer.cco_remove.has_claude_md_standards")
+    @patch("claudecodeoptimizer.cco_remove.has_cco_statusline")
     @patch("claudecodeoptimizer.cco_remove.uninstall_package")
     @patch("claudecodeoptimizer.cco_remove.remove_cco_files")
     @patch("claudecodeoptimizer.cco_remove.remove_claude_md_standards")
@@ -185,6 +192,7 @@ class TestMain:
         mock_rm_rules,
         mock_rm_files,
         mock_uninstall,
+        mock_statusline,
         mock_standards,
         mock_list,
         mock_detect,
@@ -193,6 +201,7 @@ class TestMain:
         mock_detect.return_value = "pip"
         mock_list.return_value = {"commands": ["c.md"], "agents": ["a.md"]}
         mock_standards.return_value = ["CCO Standards"]
+        mock_statusline.return_value = False
         mock_input.return_value = "y"
         mock_uninstall.return_value = True
         mock_rm_files.return_value = {"commands": 1, "agents": 1}
@@ -205,14 +214,23 @@ class TestMain:
     @patch("claudecodeoptimizer.cco_remove.detect_install_method")
     @patch("claudecodeoptimizer.cco_remove.list_cco_files")
     @patch("claudecodeoptimizer.cco_remove.has_claude_md_standards")
+    @patch("claudecodeoptimizer.cco_remove.has_cco_statusline")
     @patch("claudecodeoptimizer.cco_remove.uninstall_package")
     @patch("builtins.input")
     def test_package_removal_failure(
-        self, mock_input, mock_uninstall, mock_standards, mock_list, mock_detect, capsys
+        self,
+        mock_input,
+        mock_uninstall,
+        mock_statusline,
+        mock_standards,
+        mock_list,
+        mock_detect,
+        capsys,
     ):
         mock_detect.return_value = "pip"
         mock_list.return_value = {"commands": [], "agents": []}
         mock_standards.return_value = []
+        mock_statusline.return_value = False
         mock_input.return_value = "y"
         mock_uninstall.return_value = False
         result = main()
