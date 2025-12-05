@@ -56,10 +56,10 @@ CCO uses a 4-category standards system:
 |----------|-------|-------|--------|
 | **Universal** | 47 | All projects, AI/human agnostic | Both |
 | **AI-Specific** | 31 | All AI assistants, model agnostic | Both |
-| **CCO-Specific** | 11 | CCO workflow mechanisms | CLAUDE.md only |
+| **CCO-Specific** | 23 | CCO workflow mechanisms | CLAUDE.md only |
 | **Project-Specific** | ~15-35 | Selected by /cco-tune from 108 pool | Both |
 
-**Typical active: ~104-124 standards** (only relevant ones load)
+**Typical active: ~116-136 standards** (only relevant ones load)
 
 ### Categories Explained
 
