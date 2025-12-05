@@ -1,5 +1,6 @@
 """CCO Setup - Install commands, agents, and standards to ~/.claude/"""
 
+import json
 import re
 import shutil
 import sys
@@ -11,6 +12,9 @@ from .config import (
     CLAUDE_DIR,
     COMMANDS_DIR,
     SEPARATOR,
+    SETTINGS_FILE,
+    STATUSLINE_FILE,
+    get_content_path,
     get_standards_breakdown,
 )
 
@@ -18,6 +22,53 @@ from .config import (
 def get_content_dir() -> Path:
     """Get package content directory."""
     return Path(__file__).parent / "content"
+
+
+def setup_statusline(verbose: bool = True) -> bool:
+    """Copy statusline.js to ~/.claude/ and configure settings.json.
+
+    Returns:
+        True if statusline was installed/updated
+    """
+    src = get_content_path("statusline") / "full.js"
+    if not src.exists():
+        if verbose:
+            print("  (statusline source not found)")
+        return False
+
+    # Copy statusline.js
+    CLAUDE_DIR.mkdir(parents=True, exist_ok=True)
+    shutil.copy2(src, STATUSLINE_FILE)
+
+    # Update settings.json with statusLine config
+    settings: dict = {}
+    if SETTINGS_FILE.exists():
+        try:
+            settings = json.loads(SETTINGS_FILE.read_text(encoding="utf-8"))
+        except json.JSONDecodeError:
+            settings = {}
+
+    # Set statusLine to point to the file
+    settings["statusLine"] = {
+        "type": "command",
+        "command": f"node {STATUSLINE_FILE}",
+    }
+
+    SETTINGS_FILE.write_text(json.dumps(settings, indent=2) + "\n", encoding="utf-8")
+
+    if verbose:
+        print("  + statusline.js (Full mode)")
+        print("  + settings.json (statusLine configured)")
+
+    return True
+
+
+def has_statusline() -> bool:
+    """Check if CCO statusline is installed."""
+    if not STATUSLINE_FILE.exists():
+        return False
+    content = STATUSLINE_FILE.read_text(encoding="utf-8")
+    return "CCO Statusline" in content
 
 
 def _setup_content(src_subdir: str, dest_dir: Path, verbose: bool = True) -> list[str]:
@@ -97,9 +148,14 @@ def setup_claude_md(verbose: bool = True) -> dict[str, int]:
 def post_install() -> int:
     """CLI entry point for cco-setup."""
     if "--help" in sys.argv or "-h" in sys.argv:
-        print("Usage: cco-setup")
-        print("Install CCO commands, agents, and standards to ~/.claude/")
+        print("Usage: cco-setup [--no-statusline]")
+        print("Install CCO commands, agents, standards, and statusline to ~/.claude/")
+        print()
+        print("Options:")
+        print("  --no-statusline  Skip statusline installation")
         return 0
+
+    skip_statusline = "--no-statusline" in sys.argv
 
     try:
         print("\n" + SEPARATOR)
@@ -126,11 +182,21 @@ def post_install() -> int:
         standards = setup_claude_md()
         print()
 
+        # Statusline
+        statusline_installed = False
+        if not skip_statusline:
+            print("Statusline:")
+            statusline_installed = setup_statusline()
+            print()
+
         # Summary
         installed = standards["universal"] + standards["ai_specific"] + standards["cco_specific"]
         breakdown = get_standards_breakdown()
         print(SEPARATOR)
-        print(f"Installed: {len(cmds)} commands, {len(agents)} agents, {installed} standards")
+        summary_parts = [f"{len(cmds)} commands", f"{len(agents)} agents", f"{installed} standards"]
+        if statusline_installed:
+            summary_parts.append("statusline")
+        print(f"Installed: {', '.join(summary_parts)}")
         print(
             f"  Universal: {standards['universal']} | AI-Specific: {standards['ai_specific']} | CCO-Specific: {standards['cco_specific']}"
         )
@@ -139,7 +205,9 @@ def post_install() -> int:
         )
         print(SEPARATOR)
         print()
-        print("⚠️  Restart Claude Code for changes to take effect.")
+        print("Restart Claude Code for changes to take effect.")
+        print()
+        print("Next: /cco-tune to configure project-specific settings")
         print()
         return 0
 

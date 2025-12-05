@@ -14,15 +14,33 @@ __all__ = [
     "get_cco_commands",
     "get_cco_agents",
     "get_standards_breakdown",
+    "get_content_path",
     "CCO_MARKER_PATTERNS",
     "SUBPROCESS_TIMEOUT",
+    "STATUSLINE_FILE",
+    "SETTINGS_FILE",
 ]
 
 VERSION = __version__  # Single source: __init__.py
 CLAUDE_DIR = Path.home() / ".claude"
 COMMANDS_DIR = CLAUDE_DIR / "commands"
 AGENTS_DIR = CLAUDE_DIR / "agents"
+STATUSLINE_FILE = CLAUDE_DIR / "statusline.js"
+SETTINGS_FILE = CLAUDE_DIR / "settings.json"
 SEPARATOR = "=" * 50
+
+
+def get_content_path(subdir: str) -> Path:
+    """Get path to content subdirectory.
+
+    Args:
+        subdir: One of 'commands', 'agents', 'standards', 'statusline', 'permissions'
+
+    Returns:
+        Path to the content subdirectory
+    """
+    return Path(__file__).parent / "content" / subdir
+
 
 # Marker patterns for content removal
 CCO_MARKER_PATTERNS: dict[str, tuple[str, int]] = {
