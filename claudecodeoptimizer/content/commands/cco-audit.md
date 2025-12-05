@@ -7,7 +7,7 @@ description: Standardized quality gates with prioritized fixes
 
 **Quality gates** - Read context → run checks → prioritize → fix.
 
-**Standards:** Pre-Operation Safety | Context Read | Fix Workflow | Priority & Approval | Safety Classification | UX/DX
+**Standards:** Pre-Operation Safety | Context Read | Fix Workflow | Priority & Approval | Safety Classification | Status Updates | UX/DX
 
 ## Context Application
 

@@ -7,7 +7,7 @@ description: Convention-following automated generation
 
 **Convention-following generation** - Read conventions from context → generate consistent components.
 
-**Standards:** Pre-Operation Safety | Context Read | Priority & Approval | Output Formatting | UX/DX
+**Standards:** Pre-Operation Safety | Context Read | Priority & Approval | Output Formatting | Status Updates | UX/DX
 
 ## Context Application
 

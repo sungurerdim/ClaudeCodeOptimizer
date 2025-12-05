@@ -7,7 +7,7 @@ description: Actionable metrics dashboard
 
 **Process visibility** - Single view of project health with actionable next steps.
 
-**Standards:** Context Read | Output Formatting | Claude Tools | UX/DX
+**Standards:** Context Read | Output Formatting | Status Updates | Claude Tools | UX/DX
 
 ## Context Application
 

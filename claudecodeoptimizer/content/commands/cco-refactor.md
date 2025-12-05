@@ -7,7 +7,7 @@ description: Verified transformations with rollback
 
 **Risk mitigation** - Find ALL references → transform in order → verify → rollback on failure.
 
-**Standards:** Pre-Operation Safety | Context Read | Priority & Approval | Reference Integrity | Fix Workflow | UX/DX
+**Standards:** Pre-Operation Safety | Context Read | Priority & Approval | Reference Integrity | Fix Workflow | Status Updates | UX/DX
 
 Requires clean git state. If uncommitted changes exist → Commit / Stash / Cancel
 

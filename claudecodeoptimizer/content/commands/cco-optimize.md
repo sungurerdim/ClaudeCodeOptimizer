@@ -7,7 +7,7 @@ description: Measurable efficiency improvements
 
 **Efficiency optimization** - Reduce waste → measure impact → verify.
 
-**Standards:** Pre-Operation Safety | Context Read | Fix Workflow | Priority & Approval | Safety Classification | UX/DX
+**Standards:** Pre-Operation Safety | Context Read | Fix Workflow | Priority & Approval | Safety Classification | Status Updates | UX/DX
 
 ## Context Application
 
