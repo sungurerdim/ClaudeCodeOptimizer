@@ -65,13 +65,13 @@ def get_standards_breakdown() -> dict[str, int]:
     """Get detailed breakdown of standards by category.
 
     Returns:
-        Dictionary with universal, ai_specific, cco_workflow, project_specific counts
+        Dictionary with universal, ai_specific, cco_specific, project_specific counts
     """
     content_dir = Path(__file__).parent / "content" / "standards"
     result = {
         "universal": 0,
         "ai_specific": 0,
-        "cco_workflow": 0,
+        "cco_specific": 0,
         "project_specific": 0,
         "total": 0,
     }
@@ -84,10 +84,10 @@ def get_standards_breakdown() -> dict[str, int]:
         parts = content.split("# AI-Specific Standards")
         if len(parts) >= 2:
             result["universal"] = len(_STANDARD_PATTERN.findall(parts[0]))
-            ai_and_cco = parts[1].split("# CCO-Workflow")
+            ai_and_cco = parts[1].split("# CCO-Specific Standards")
             if len(ai_and_cco) >= 2:
                 result["ai_specific"] = len(_STANDARD_PATTERN.findall(ai_and_cco[0]))
-                result["cco_workflow"] = len(_STANDARD_PATTERN.findall(ai_and_cco[1]))
+                result["cco_specific"] = len(_STANDARD_PATTERN.findall(ai_and_cco[1]))
             else:
                 result["ai_specific"] = len(_STANDARD_PATTERN.findall(parts[1]))
 
@@ -100,7 +100,7 @@ def get_standards_breakdown() -> dict[str, int]:
     result["total"] = (
         result["universal"]
         + result["ai_specific"]
-        + result["cco_workflow"]
+        + result["cco_specific"]
         + result["project_specific"]
     )
     return result
