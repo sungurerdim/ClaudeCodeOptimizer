@@ -7,84 +7,73 @@ A process and standards layer for Claude Code in the Opus 4.5 era.
 [![PyPI version](https://img.shields.io/pypi/v/claudecodeoptimizer.svg)](https://pypi.org/project/claudecodeoptimizer/)
 [![Claude 4 Best Practices](https://img.shields.io/badge/Claude_4-Best_Practices-blueviolet.svg)](https://platform.claude.com/docs/en/build-with-claude/prompt-engineering/claude-4-best-practices)
 
-> **Fully aligned with [Claude 4 Best Practices](https://platform.claude.com/docs/en/build-with-claude/prompt-engineering/claude-4-best-practices)** - Agentic coding, extended thinking, parallel tools, context management.
+> Claude already knows how to code. **CCO adds safety, approval, and consistency.**
 
-> Claude already knows how to code. CCO adds safety, approval, and consistency.
-
-> **Claude Code exclusive.** CCO runs only inside Claude Code (CLI or IDE extension). Standards can be exported to AGENTS.md for use with other AI tools, but CCO itself requires Claude Code.
+> **~110 standards active** per project (not 206 - only relevant ones load)
 
 ![CCO Environment](docs/screenshots/environment.png)
 *CCO lives directly inside Claude Code, no extra UI.*
 
 ---
 
-## Design Principles
-
-CCO is built on these core principles that guide all development and usage:
-
-### Transparency
-- **Announce Before Action**: Always state what will be done before starting
-- **Progress Signals**: Clear "Starting...", "In progress...", "Completed" messages
-- **No Silent Operations**: User should always know what's happening
-- **Phase Transitions**: Clear signals when moving between workflow phases
-
-### Single Source of Truth (SSOT)
-- **No Hardcoded Values**: Use placeholders like `{value}` instead of fixed examples
-- **Reference Over Repeat**: Standards are defined once, referenced by name
-- **Context-Driven**: All thresholds and behaviors come from project context
-
-### DRY (Don't Repeat Yourself)
-- **Standards Reference**: Commands reference `**Standards:** X | Y | Z` instead of duplicating
-- **Shared Agents**: Three agents (detect, scan, action) serve all commands
-- **Conditional Loading**: Project-specific standards loaded only when relevant
-
-### User Control
-- **Approval Required**: No silent changes to codebase
-- **Priority Classification**: CRITICAL > HIGH > MEDIUM > LOW
-- **Safety Classification**: Safe (auto-apply) vs Risky (require approval)
-- **Rollback Support**: Clean git state enables safe recovery
-
-### AI Efficiency
-- **Semantic Density**: Maximum meaning per token
-- **Structured Format**: Tables/lists over prose for clarity
-- **Front-load Critical**: Important info first (Purpose → Details → Edge cases)
-- **Bounded Context**: Relevant scope only, not entire codebase
-
----
-
-## What CCO Does (and Does NOT Do)
-
-**CCO is NOT teaching Claude how to code.** Opus 4.5 already knows:
-- How to write clean, maintainable code
-- Security best practices
-- Testing patterns
-- Refactoring techniques
-
-**CCO adds process layers** around what Claude already does well:
-
-| Layer | What It Adds | Example |
-|-------|--------------|---------|
-| **Pre-** | Safety checks before action | Git status check, dirty state handling |
-| **Process** | Standardized workflows | Approval flow, priority levels |
-| **Post-** | Verification and reporting | `done + skip + fail = total` |
-| **Context** | Project-aware behavior | Scale, team size → adjusted thresholds |
-
----
-
 ## Quickstart
 
 ```bash
-# Install + setup (one-time, copies to ~/.claude/)
 pip install claudecodeoptimizer && cco-setup
-
-# Inside Claude Code, tune for your project (auto-detect, one confirmation)
-/cco-tune --quick
-
-# Start using
-/cco-audit --smart
 ```
 
-**That's it.** The `--quick` flag auto-detects your project and applies sensible defaults with a single confirmation. Use `/cco-tune` (without flag) for full interactive configuration.
+Inside Claude Code:
+```
+/cco-tune      # Auto-detect your project, confirm once
+/cco-health    # See your scores
+```
+
+**That's it.** Start coding with safety nets in place.
+
+---
+
+## Why CCO vs Plain Rules?
+
+| Plain Rules (.cursorrules, CLAUDE.md) | CCO |
+|---------------------------------------|-----|
+| Static text files | Dynamic project detection |
+| Load everything always | Only relevant standards load |
+| No verification | `Applied: N \| Skipped: N \| Failed: N` |
+| Trust the AI completely | Git safety + approval flow + rollback |
+| Manual copy-paste setup | `pip install && cco-setup` |
+| Tool-specific | Export to AGENTS.md for any AI tool |
+
+---
+
+## Design Principles
+
+- **Transparency** - Announce before action, progress signals, no silent operations
+- **User Control** - Approval required, priority levels (CRITICAL→LOW), safe vs risky classification
+- **Context-Aware** - Project detection drives thresholds and standards
+- **Token Efficient** - Semantic density, bounded context, conditional loading
+
+*[Full principles documentation](docs/design-principles.md)*
+
+---
+
+## What CCO Does
+
+| Layer | What It Adds | Example |
+|-------|--------------|---------|
+| **Pre-** | Safety checks before action | Git status, impact preview |
+| **Process** | Standardized workflows | Approval flow, AI-pattern detection |
+| **Post-** | Verification and reporting | Session stats, accounting |
+| **Context** | Project-aware behavior | Production readiness, adjusted thresholds |
+
+## What CCO Does NOT Do
+
+| Anti-Pattern | Why Not |
+|--------------|---------|
+| Teach Claude to code | Opus 4.5 already knows - CCO adds process, not knowledge |
+| Replace your judgment | Every change requires your approval |
+| Add overhead to simple tasks | Standards are guidance, not blockers |
+| Lock you into Claude Code | Export to AGENTS.md anytime |
+| Require configuration | Works with sensible defaults after `/cco-tune` |
 
 ---
 
@@ -98,112 +87,40 @@ pip install claudecodeoptimizer && cco-setup
 
 ## Standards Architecture
 
-CCO uses a **four-category standards system** designed for clarity and portability:
-
 ```
-┌─────────────────────────────────────────────────────────────────────────────┐
-│                         STANDARDS ARCHITECTURE                              │
-├─────────────────────────────────────────────────────────────────────────────┤
-│                                                                             │
-│  ┌─────────────────────────────────────────────────────────────────────┐   │
-│  │ 1. UNIVERSAL (48 standards)                        [Always Active]  │   │
-│  │    • Applies to ALL projects, AI or human                           │   │
-│  │    • Fundamental principles: DRY, Fail-Fast, Clean Code             │   │
-│  │    • Location: ~/.claude/CLAUDE.md                                  │   │
-│  └─────────────────────────────────────────────────────────────────────┘   │
-│                              ↓                                              │
-│  ┌─────────────────────────────────────────────────────────────────────┐   │
-│  │ 2. AI-SPECIFIC (31 standards)                      [Always Active]  │   │
-│  │    • Standards that help AI assistants work more effectively        │   │
-│  │    • AI efficiency: Semantic Density, Read First, No Hallucination  │   │
-│  │    • Location: ~/.claude/CLAUDE.md                                  │   │
-│  └─────────────────────────────────────────────────────────────────────┘   │
-│                              ↓                                              │
-│  ┌─────────────────────────────────────────────────────────────────────┐   │
-│  │ 3. CCO-WORKFLOW (19 standards)                     [Always Active]  │   │
-│  │    • CCO-specific mechanisms: Git safety, Approval flow             │   │
-│  │    • Location: ~/.claude/CLAUDE.md                                  │   │
-│  └─────────────────────────────────────────────────────────────────────┘   │
-│                              ↓                                              │
-│  ┌─────────────────────────────────────────────────────────────────────┐   │
-│  │ 4. PROJECT-SPECIFIC (108 standards pool)           [Selective]      │   │
-│  │    • /cco-tune selects ~10-25 based on YOUR project                 │   │
-│  │    • 17 categories: Frontend, Mobile, API, ML/AI, Game, etc.        │   │
-│  │    • Location: ./CLAUDE.md (per-project)                            │   │
-│  └─────────────────────────────────────────────────────────────────────┘   │
-│                                                                             │
-│  BASE: 98 standards (always active)                                         │
-│  TYPICAL: ~110-125 standards (base + project-specific selections)           │
-│  POOL: 206 standards (full library, never all active at once)               │
-│                                                                             │
-└─────────────────────────────────────────────────────────────────────────────┘
+┌────────────────────────────────────────────────────────────────┐
+│  ALWAYS ACTIVE (98)           │  PROJECT-SPECIFIC (~10-25)    │
+├───────────────────────────────┼────────────────────────────────┤
+│  Universal (48)               │  Selected by /cco-tune based   │
+│  AI-Specific (31)             │  on what's detected in YOUR    │
+│  CCO-Workflow (19)            │  project (9 categories)        │
+├───────────────────────────────┴────────────────────────────────┤
+│  TYPICAL TOTAL: ~110-125 standards active                      │
+│  (from 206 pool - you never load all of them)                  │
+└────────────────────────────────────────────────────────────────┘
 ```
 
-**Key insight:** You never have 206 standards active. The base 98 are always on, then /cco-tune adds only the ~10-25 that match your project type.
+### Base Standards (Always Active)
 
-### Category Details
+| Category | Count | Examples |
+|----------|-------|----------|
+| **Universal** | 48 | DRY, Fail-Fast, Clean Code, Security, Testing |
+| **AI-Specific** | 31 | Semantic Density, No Hallucination, Read First |
+| **CCO-Workflow** | 19 | Git Safety, Approval Flow, Verification |
 
-#### Universal Standards
-*Applies to ALL software projects regardless of language, framework, or team size.*
-
-| Section | Standards | Examples |
-|---------|-----------|----------|
-| Code Quality | 12 | Fail-Fast, DRY, No Orphans, Type Safety, Complexity <10 |
-| File & Resource | 6 | Minimal Touch, Cleanup, Resource Disposal |
-| Security | 6 | Secrets, Input Boundaries, Least Privilege |
-| Testing | 5 | Coverage, Isolation, Reproducible |
-| Error Handling | 5 | Fail Gracefully, No Silent Failures, Actionable Errors |
-| Documentation | 4 | README, CHANGELOG, Comments |
-| Workflow | 4 | Reference Integrity, Decompose, SemVer |
-| UX/DX | 6 | Minimum Friction, Fast Feedback, Transparency |
-
-#### AI-Specific Standards
-*Applies to ALL AI coding assistants for better quality and efficiency. AGENTS.md compatible.*
-
-| Section | Standards | Examples |
-|---------|-----------|----------|
-| Context Optimization | 6 | Semantic Density, Front-load Critical, Bounded Context |
-| AI Behavior | 7 | Read First, Plan Before Act, Ask When Uncertain |
-| Quality Control | 5 | No Vibe Coding, No Hallucination, Positive Framing |
-| Status Updates | 5 | Announce Before Action, Progress Signals, Timing Accuracy |
-| Multi-Model | 4 | Model-Agnostic, Tool-Agnostic Patterns |
-| Output | 4 | Error Format, Status Values, Accounting |
-
-#### Project-Specific Standards
-*Selected by /cco-tune based on detection. Only relevant standards load.*
+### Project-Specific Standards (Conditional)
 
 | Category | Trigger | Standards |
 |----------|---------|-----------|
-| Security Enhanced | PII/Regulated OR 10K+ | 8 |
-| Architecture | 10K+ OR microservices | 6 |
-| Operations | CI/CD detected | 7 |
-| Performance | Scale 100+ | 6 |
-| Data | DB detected | 5 |
-| API | REST/GraphQL/gRPC | 6 |
-| Frontend | React/Vue/Angular/etc. | 10 |
-| Mobile | iOS/Android/RN/Flutter | 6 |
-| Desktop | Electron/Tauri/native | 4 |
-| CLI | CLI tool | 5 |
-| Library | Package/library | 5 |
-| ML/AI Projects | PyTorch/TF/sklearn | 6 |
-| Game Dev | Unity/Unreal/Godot | 4 |
-| Serverless | Lambda/Functions | 4 |
-| Monorepo | nx/turborepo/lerna | 4 |
-| Container/K8s | Docker/K8s | 5 |
-| Team Collaboration | Team 2+ | 8 |
-| Compliance | SOC2/HIPAA/PCI/GDPR | 4 |
-| i18n | Multi-language | 5 |
-
-#### CCO-Workflow
-*CCO-specific mechanisms for safety and approval.*
-
-| Section | Purpose |
-|---------|---------|
-| Pre-Operation Safety | Git status check, dirty state handling |
-| Safety Classification | Safe vs risky changes |
-| Fix Workflow | Analyze → Report → Approve → Apply → Verify |
-| Priority & Approval | CRITICAL/HIGH/MEDIUM/LOW, pagination |
-| Claude Code Integration | Parallel tools, subagents, resource scaling |
+| Security & Compliance | PII/Regulated data OR 10K+ scale | 12 |
+| Scale & Architecture | 10K+ OR microservices | 12 |
+| Backend Services | API + DB + CI/CD detected | 18 |
+| Frontend | React/Vue/Angular/Svelte/etc. | 10 |
+| Apps | Mobile + Desktop + CLI | 15 |
+| Library | Package/library project | 5 |
+| Infrastructure | Containers + Serverless + Monorepo | 13 |
+| Specialized | ML/AI + Game Dev | 10 |
+| Collaboration | Team 2+ OR i18n | 13 |
 
 ### Export Standards
 
@@ -230,9 +147,9 @@ Choose export format:
 |---------|---------|
 | `/cco-tune` | Project tuning: context + AI settings + configuration |
 | `/cco-health` | Metrics dashboard with actionable next steps |
-| `/cco-audit` | Quality gates with prioritized fixes |
+| `/cco-audit` | Quality gates with AI-pattern detection |
+| `/cco-review` | Architecture analysis + production readiness |
 | `/cco-optimize` | AI context, docs, code efficiency |
-| `/cco-review` | Strategic architecture analysis |
 | `/cco-generate` | Convention-following generation |
 | `/cco-refactor` | Safe structural changes with rollback |
 | `/cco-commit` | Quality-gated atomic commits |
@@ -273,7 +190,7 @@ Tools: ruff format, pytest
 Applicable: security, tech-debt, tests, docs
 
 ## Project-Specific Standards
-{selected from 17 categories based on detection}
+{selected from 9 categories based on detection}
 <!-- CCO_CONTEXT_END -->
 ```
 
@@ -285,6 +202,7 @@ Applicable: security, tech-debt, tests, docs
 |------|----------------|
 | `--security` | OWASP, secrets, CVEs, supply chain |
 | `--tech-debt` | Dead code, complexity, duplication |
+| `--ai-patterns` | Almost-right logic, hallucinated APIs, over-engineering |
 | `--self-compliance` | Code vs project's stated standards |
 | `--consistency` | Doc-code mismatches |
 | `--tests` | Coverage, isolation, flaky tests |
@@ -297,16 +215,12 @@ Applicable: security, tech-debt, tests, docs
 
 ## Safety Features
 
-### Git Safety
-- Checks `git status` before changes
-- Offers: Commit / Stash / Continue
-- Enables rollback on failure
-
-### Approval Flow
-- No silent changes
-- Risk classification: safe vs risky
-- Priority levels: CRITICAL → HIGH → MEDIUM → LOW
-- Verification: `Applied: N | Skipped: N | Failed: N`
+| Feature | What It Does |
+|---------|--------------|
+| **Git Safety** | Checks status before changes, enables rollback |
+| **Impact Preview** | Shows affected files, dependents, test coverage before apply |
+| **Approval Flow** | Priority-based (CRITICAL→LOW), safe vs risky classification |
+| **Verification** | `Applied: N \| Skipped: N \| Failed: N` accounting |
 
 ---
 
@@ -337,20 +251,6 @@ pip install -U claudecodeoptimizer && cco-setup
 ```bash
 cco-remove  # Complete removal with confirmation
 ```
-
----
-
-## How CCO Differs
-
-| Aspect | Typical AI Rules | CCO Approach |
-|--------|------------------|--------------|
-| Scope | Static rule files | Context-aware, project-detected |
-| Safety | Trust the AI | Git checks, approval flow, rollback |
-| Standards | Generic guidelines | Base + selective project-specific |
-| Workflow | Rules only | Full process: Analyze → Approve → Apply → Verify |
-| Portability | Tool-specific | AGENTS.md export for other tools |
-
-**CCO adds process layers** (safety, approval, verification) on top of what AI already does well.
 
 ---
 
