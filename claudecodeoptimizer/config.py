@@ -65,26 +65,42 @@ def get_standards_breakdown() -> dict[str, int]:
     """Get detailed breakdown of standards by category.
 
     Returns:
-        Dictionary with universal, claude_specific, conditional counts
+        Dictionary with universal, ai_specific, cco_workflow, project_specific counts
     """
     content_dir = Path(__file__).parent / "content" / "standards"
-    result = {"universal": 0, "claude_specific": 0, "conditional": 0, "total": 0}
+    result = {
+        "universal": 0,
+        "ai_specific": 0,
+        "cco_workflow": 0,
+        "project_specific": 0,
+        "total": 0,
+    }
 
-    # Count from cco-standards.md
+    # Count from cco-standards.md (Universal + AI-Specific + CCO-Workflow)
     standards_file = content_dir / "cco-standards.md"
     if standards_file.exists():
         content = standards_file.read_text(encoding="utf-8")
-        # Split at the separator between Universal and Claude-Specific
-        parts = content.split("# Claude-Specific Standards")
-        if len(parts) == 2:
+        # Split at category headers
+        parts = content.split("# AI-Specific Standards")
+        if len(parts) >= 2:
             result["universal"] = len(_STANDARD_PATTERN.findall(parts[0]))
-            result["claude_specific"] = len(_STANDARD_PATTERN.findall(parts[1]))
+            ai_and_cco = parts[1].split("# CCO-Workflow")
+            if len(ai_and_cco) >= 2:
+                result["ai_specific"] = len(_STANDARD_PATTERN.findall(ai_and_cco[0]))
+                result["cco_workflow"] = len(_STANDARD_PATTERN.findall(ai_and_cco[1]))
+            else:
+                result["ai_specific"] = len(_STANDARD_PATTERN.findall(parts[1]))
 
-    # Count from cco-standards-conditional.md
+    # Count from cco-standards-conditional.md (Project-Specific)
     conditional_file = content_dir / "cco-standards-conditional.md"
     if conditional_file.exists():
         content = conditional_file.read_text(encoding="utf-8")
-        result["conditional"] = len(_STANDARD_PATTERN.findall(content))
+        result["project_specific"] = len(_STANDARD_PATTERN.findall(content))
 
-    result["total"] = result["universal"] + result["claude_specific"] + result["conditional"]
+    result["total"] = (
+        result["universal"]
+        + result["ai_specific"]
+        + result["cco_workflow"]
+        + result["project_specific"]
+    )
     return result
