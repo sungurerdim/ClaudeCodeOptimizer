@@ -44,7 +44,8 @@ Explicit flags skip questions.
 
 **Core (always):**
 - `--security` - OWASP, secrets, CVEs, AI security (prompt injection), supply-chain (dependencies)
-- `--tech-debt` - Dead code, complexity, duplication, orphans, TODOs, hardcoded values, AI code patterns (hallucinations, over-engineering, generic solutions)
+- `--tech-debt` - Dead code, complexity, duplication, orphans, TODOs, hardcoded values
+- `--ai-patterns` - AI-generated code quality issues (see AI-Patterns Detection below)
 - `--self-compliance` - Check against project's own standards
 - `--consistency` - Doc-code mismatch detection
 
@@ -53,9 +54,27 @@ Explicit flags skip questions.
 
 **Sub-category selection (only when single flag used):**
 - `--security` → ask (multiSelect): All | OWASP | Secrets | CVEs | AI-Security | Supply-Chain
-- `--tech-debt` → ask (multiSelect): All | Dead-Code | Complexity | Duplication | AI-Patterns
+- `--tech-debt` → ask (multiSelect): All | Dead-Code | Complexity | Duplication
+- `--ai-patterns` → ask (multiSelect): All | Almost-Right | Over-Engineering | Generic-Solutions | Hallucinations
 
 Note: Full/Smart/All modes include all sub-categories automatically (no sub-questions).
+
+## AI-Patterns Detection
+
+Detects common issues in AI-generated code that appears correct but has subtle problems:
+
+| Pattern | Detection | Example |
+|---------|-----------|---------|
+| **Almost-Right Logic** | Edge cases not handled, off-by-one errors, incorrect operator | `<=` vs `<`, missing null check |
+| **Over-Engineering** | Unnecessary abstractions, premature optimization | Factory for single implementation |
+| **Generic Solutions** | Copy-paste patterns that don't fit context | Redux for 3-field form |
+| **Hallucinated APIs** | Non-existent methods, wrong signatures | `array.flatten()` in wrong language |
+| **Incomplete Error Handling** | Happy path only, missing catch blocks | Try without proper catch |
+| **Style Inconsistency** | Doesn't match project conventions | camelCase in snake_case project |
+
+Report: `[AI-PATTERN] {type}: {description} in {file:line}`
+
+**Confidence indicator:** Each finding includes confidence level (HIGH/MEDIUM/LOW) based on pattern match strength.
 
 ## Self-Compliance
 
