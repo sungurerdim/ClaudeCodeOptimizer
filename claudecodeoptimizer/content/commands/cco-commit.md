@@ -7,7 +7,7 @@ description: Atomic traceable change management
 
 **Change management** - Quality gates → analyze → group atomically → commit with traceability.
 
-**Standards:** Pre-Operation Safety | Context Read | Output Formatting | Claude Tools | UX/DX
+**Standards:** Pre-Operation Safety | Context Read | Output Formatting | Status Updates | Claude Tools | UX/DX
 
 ## Context Application
 
@@ -49,7 +49,7 @@ Before any git operation: if `.git/index.lock` exists but no git process running
 - If format modifies files, include in commit
 - If lint fails with unfixable errors, stop and report
 - If tests fail, stop and report - never commit broken code
-- Show summary: `Format: OK | Lint: OK | Tests: 47 passed`
+- Show summary: `Format: {status} | Lint: {status} | Tests: {count} passed`
 
 ### Skip Option
 

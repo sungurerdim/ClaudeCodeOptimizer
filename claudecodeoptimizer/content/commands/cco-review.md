@@ -7,7 +7,7 @@ description: Strategic architecture review with fresh perspective
 
 **Strategic review** - Understand intent → analyze architecture → compare with ideal → recommend improvements.
 
-**Standards:** Pre-Operation Safety | Context Read | Fix Workflow | Priority & Approval | Safety Classification | UX/DX
+**Standards:** Pre-Operation Safety | Context Read | Fix Workflow | Priority & Approval | Safety Classification | Status Updates | UX/DX
 
 ## Context Application
 
