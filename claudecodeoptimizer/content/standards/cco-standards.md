@@ -138,16 +138,39 @@
 | Add type annotations | Rename public APIs |
 
 ## Fix Workflow
-All fix commands follow: **Analyze → Report → Approve → Apply → Verify**
+All fix commands follow: **Analyze → Report → Preview → Approve → Apply → Verify**
 
 1. **Analyze**: Full scan of target area
 2. **Report**: Detection table with priority, location, fix action
-3. **Approve**: Paginated approval per Priority & Approval standard
-4. **Apply**: ONLY user-selected fixes; respect Safety Classification
-5. **Verify**: Before/after comparison + accounting
+3. **Preview**: Show impact analysis before approval (see Impact Preview)
+4. **Approve**: Paginated approval per Priority & Approval standard
+5. **Apply**: ONLY user-selected fixes; respect Safety Classification
+6. **Verify**: Before/after comparison + accounting
    ```
    Applied: N | Skipped: N | Failed: N | Total: N
    ```
+
+## Impact Preview
+Before applying changes, show potential ripple effects:
+
+| Analysis | What It Shows |
+|----------|---------------|
+| **Direct Changes** | Files that will be modified |
+| **Dependents** | Files that import/use changed code |
+| **Test Coverage** | Which tests cover affected code |
+| **Risk Score** | LOW/MEDIUM/HIGH based on scope |
+
+Format:
+```
+┌─ IMPACT PREVIEW ─────────────────────────────────────┐
+│ Direct:     {N} files                                │
+│ Dependents: {N} files may be affected                │
+│ Tests:      {N} tests cover this code                │
+│ Risk:       {LOW|MEDIUM|HIGH} ({reason})             │
+└──────────────────────────────────────────────────────┘
+```
+
+**Skip preview:** For LOW risk changes affecting ≤2 files with full test coverage.
 
 ## Priority & Approval
 
