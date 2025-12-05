@@ -9,7 +9,7 @@ safe: true
 
 Read-only project detection. Returns **structured JSON** for CCO commands.
 
-**Standards:** Claude Tools | Resource Scaling
+**Standards:** Claude Tools | Resource Scaling | Status Updates
 
 ## Scope Parameter
 
