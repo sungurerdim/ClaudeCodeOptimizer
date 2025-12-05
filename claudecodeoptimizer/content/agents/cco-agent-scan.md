@@ -9,7 +9,7 @@ safe: true
 
 Read-only codebase analysis. Returns findings with file:line references.
 
-**Standards:** Priority & Approval | Claude Tools | Resource Scaling
+**Standards:** Priority & Approval | Claude Tools | Resource Scaling | Status Updates
 
 ## Purpose
 
