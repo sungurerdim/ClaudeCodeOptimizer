@@ -5,9 +5,9 @@ description: Project-specific AI tuning and configuration
 
 # /cco-tune
 
-**Project tuning** - Detection, statusline, permissions for the current project.
+**Project tuning** - Detection, configuration, and export for the current project.
 
-**Standards:** Output Formatting | Priority & Approval | Status Updates | UX/DX
+**Standards:** Approval Flow | Output Formatting
 
 ## Scope
 
@@ -329,14 +329,24 @@ Export current configuration to portable format.
 │ Export format                                                   │
 ├─────────────────────────────────────────────────────────────────┤
 │ ○ AGENTS.md     For other AI tools (Cursor, Windsurf, etc.)     │
-│                 Prose format, universally readable              │
+│                 Universal + AI-Specific + Project-Specific      │
+│                 (CCO-Specific excluded - not portable)          │
 │                                                                 │
-│ ○ CLAUDE.md     For sharing Claude Code context                 │
-│                 Minimal format, CCO-compatible                  │
+│ ○ CLAUDE.md     For sharing with other Claude Code projects     │
+│                 All categories including CCO-Specific           │
 └─────────────────────────────────────────────────────────────────┘
 ```
 
-### AGENTS.md Export (Prose Format)
+### Export Content by Format
+
+| Category | AGENTS.md | CLAUDE.md |
+|----------|-----------|-----------|
+| Universal | Included | Included |
+| AI-Specific | Included | Included |
+| CCO-Specific | **Excluded** | Included |
+| Project-Specific | Included (triggered only) | Included (triggered only) |
+
+### AGENTS.md Format (Prose)
 
 ```markdown
 # Project Standards
@@ -344,32 +354,22 @@ Export current configuration to portable format.
 > Exported from CCO (ClaudeCodeOptimizer)
 
 ## Project Context
-
-This is a **{type}** project built with {stack}.
-
-### Development Profile
-- **{team} developer** - {team_guideline}
-- **{scale} scale** - {scale_guideline}
-- **{data} data** - {data_guideline}
-
-### Technical Stack
-{detected stack details in prose}
-
----
+{type} project built with {stack}
+Team: {team} | Scale: {scale} | Data: {data}
 
 ## Universal Standards
-{all universal standards in prose format}
+{all universal standards}
 
 ## AI-Specific Standards
-{all AI-specific standards in prose format}
+{all AI-specific standards}
 
 ## Project-Specific Standards
-{matched standards based on detection}
+{triggered standards only}
 ```
 
-### CLAUDE.md Export
+### CLAUDE.md Format
 
-Exports the CCO_CONTEXT block for sharing with other Claude Code users or projects.
+Exports the full CCO_CONTEXT block including CCO-Specific standards for use in other Claude Code projects.
 
 ---
 

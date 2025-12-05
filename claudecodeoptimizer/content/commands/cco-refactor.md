@@ -5,11 +5,11 @@ description: Verified transformations with rollback
 
 # /cco-refactor
 
-**Risk mitigation** - Find ALL references → transform in order → verify → rollback on failure.
+**Safe refactoring** - Find ALL references → transform in order → verify → rollback on failure.
 
-**Standards:** Pre-Operation Safety | Context Read | Priority & Approval | Reference Integrity | Fix Workflow | Status Updates | UX/DX
+**Standards:** Command Flow | Pre-Operation Safety | Approval Flow | Output Formatting
 
-Requires clean git state. If uncommitted changes exist → Commit / Stash / Cancel
+Requires clean git state per Pre-Operation Safety standard.
 
 ## Context Application
 
@@ -24,8 +24,7 @@ Requires clean git state. If uncommitted changes exist → Commit / Stash / Canc
 
 ## Flow
 
-0. **Context Check** - Run `/cco-tune --status`; handle completion/restart per cco-tune flow
-1. **Read Context** - Read `./CLAUDE.md`, extract CCO_CONTEXT markers only, parse values
+Per Command Flow standard.
 
 ## Default Behavior
 

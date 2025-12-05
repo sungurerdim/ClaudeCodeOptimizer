@@ -1,8 +1,8 @@
 <!-- CCO_CONDITIONALS_START -->
 # Project-Specific Standards
-*Selected by /cco-tune based on project detection*
-*Written to local ./CLAUDE.md, filtered by triggers*
-*AGENTS.md compatible - selected standards are exported*
+*Dynamically selected by /cco-tune based on project analysis*
+*Written to local ./CLAUDE.md, only triggered standards load*
+*Included in both CLAUDE.md and AGENTS.md exports*
 
 ## Security & Compliance
 **When:** Data: PII/Regulated OR Scale: 10K+ OR Compliance != None

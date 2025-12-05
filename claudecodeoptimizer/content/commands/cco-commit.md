@@ -5,9 +5,9 @@ description: Atomic traceable change management
 
 # /cco-commit
 
-**Change management** - Quality gates → analyze → group atomically → commit with traceability.
+**Change management** - Quality gates → analyze → group atomically → commit.
 
-**Standards:** Pre-Operation Safety | Context Read | Output Formatting | Status Updates | Claude Tools | UX/DX
+**Standards:** Command Flow | Pre-Operation Safety | Approval Flow | Output Formatting
 
 ## Context Application
 
@@ -35,7 +35,7 @@ Before any git operation: if `.git/index.lock` exists but no git process running
    - Parse `Tools:` line from Operational section
    - Extract: `{format_command}`, `{lint_command}`, `{test_command}`
 
-2. **Fallback: Auto-detect** - If no CCO context, run `cco-agent-detect` with `scope: tools`
+2. **Fallback: Auto-detect** - If no CCO context, run `cco-agent-analyze` with `scope: detect`
 
 ### Check Order
 
@@ -104,16 +104,14 @@ Tables:
 
 ## Flow
 
-0. **Context Check** - Run `/cco-tune --status`; handle completion/restart per cco-tune flow
-1. **Read Context** - Read `./CLAUDE.md`, extract CCO_CONTEXT markers only, parse values
-2. **Resolve Tools** - Use Tools from context, fallback to auto-detect
-3. **Quality Gates** - Run format → lint → test (stop on failure)
-4. **Analyze** - `git status`, `git diff`, detect change types
-5. **Group** - Apply atomic grouping rules, detect dependencies
-6. **Plan** - Show commit plan with files per commit
-7. **Confirm** - AskUserQuestion: Accept / Modify / Custom
-8. **Execute** - Stage and commit each group in order
-9. **Verify** - `git log` count = planned count
+Per Command Flow standard, then:
+1. **Quality Gates** - Run format → lint → test (stop on failure)
+2. **Analyze** - `git status`, `git diff`, detect change types
+3. **Group** - Apply atomic grouping rules
+4. **Plan** - Show commit plan with files per commit
+5. **Confirm** - AskUserQuestion: Accept / Modify / Custom
+6. **Execute** - Stage and commit each group in order
+7. **Verify** - `git log` count = planned count
 
 ## Flags
 

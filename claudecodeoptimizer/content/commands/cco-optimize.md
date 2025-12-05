@@ -7,7 +7,7 @@ description: Measurable efficiency improvements
 
 **Efficiency optimization** - Reduce waste → measure impact → verify.
 
-**Standards:** Pre-Operation Safety | Context Read | Fix Workflow | Priority & Approval | Safety Classification | Status Updates | UX/DX
+**Standards:** Command Flow | Fix Workflow | Approval Flow | Safety Classification | Output Formatting
 
 ## Context Application
 
@@ -56,13 +56,7 @@ Report format: `[CROSS-FILE] {type}: "{summary}" → {file1}:{line} ↔ {file2}:
 
 ## Flow
 
-0. **Context Check** - Run `/cco-tune --status`; handle completion/restart per cco-tune flow
-1. **Read Context** - Read `./CLAUDE.md`, extract CCO_CONTEXT markers only, parse values
-2. **Scan** - Analyze selected categories
-3. **Detection Report** - Per Detection Report standard
-4. **Approval** - AskUserQuestion referencing report IDs
-5. **Apply** - Execute approved optimizations
-6. **Verify** - Confirm behavior unchanged, show metrics
+Per Command Flow standard, then Fix Workflow for applying changes.
 
 ## Output
 
