@@ -375,27 +375,17 @@ Exports the CCO_CONTEXT block for sharing with other Claude Code users or projec
 
 ## Detection → Standards Mapping
 
-| Detection | Triggers |
+| Detection | Category |
 |-----------|----------|
-| Data: PII/Regulated OR Scale: 10K+ | Security Enhanced |
-| Scale: 10K+ OR Microservices | Architecture |
-| CI/CD detected | Operations |
-| Scale: 100+ | Performance |
-| DB: SQL/NoSQL | Data |
-| API: REST/GraphQL/gRPC | API |
-| Frontend detected | Frontend |
-| Mobile detected | Mobile |
-| Desktop detected | Desktop |
-| Type: cli | CLI |
+| Data: PII/Regulated OR Scale: 10K+ OR Compliance != None | Security & Compliance |
+| Scale: 10K+ OR Microservices OR Scale: 100+ | Scale & Architecture |
+| API OR DB OR CI/CD detected | Backend Services |
+| Frontend detected (React/Vue/Angular/Svelte/etc.) | Frontend |
+| Mobile OR Desktop OR CLI detected | Apps |
 | Type: library | Library |
-| ML/AI detected | ML/AI |
-| Game engine detected | Game Dev |
-| Serverless detected | Serverless |
-| Monorepo detected | Monorepo |
-| Container/K8s detected | Container/K8s |
-| Team: 2+ | Team Collaboration |
-| Compliance: not None | Compliance |
-| i18n detected | i18n |
+| Container/K8s OR Serverless OR Monorepo detected | Infrastructure |
+| ML/AI OR Game engine detected | Specialized |
+| Team: 2+ OR i18n detected | Collaboration |
 
 Standard counts calculated dynamically at runtime.
 

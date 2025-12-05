@@ -4,8 +4,8 @@
 *Written to local ./CLAUDE.md, filtered by triggers*
 *AGENTS.md compatible - selected standards are exported*
 
-## Security Enhanced
-**When:** Data: PII/Regulated OR Scale: 10K+
+## Security & Compliance
+**When:** Data: PII/Regulated OR Scale: 10K+ OR Compliance != None
 - Input Validation: Pydantic (Python), Zod (JS/TS), JSON Schema
 - SQL Safety: parameterized queries, ORM safe methods
 - XSS Prevention: sanitize output, CSP headers
@@ -14,28 +14,19 @@
 - Encryption: AES-256 for sensitive data at rest
 - Audit Log: security events, immutable, queryable
 - CORS: explicit origins, no wildcard in production
+- License: track deps, no GPL without review
+- Frameworks: implement required controls (SOC2/HIPAA/PCI/GDPR)
+- Data Classification: by sensitivity level
+- Retention Policy: documented, enforced
 
-## Architecture
-**When:** Scale: 10K+ OR Type: microservices
+## Scale & Architecture
+**When:** Scale: 10K+ OR Type: microservices OR Scale: 100+
 - Circuit Breaker: fail fast on unhealthy downstream
 - Idempotency: safe to retry without side effects
 - API Versioning: explicit versions, backward compatible
 - DI: inject dependencies, enable testing
 - Event-Driven: async communication between services
 - Bounded Contexts: own models/rules per domain
-
-## Operations
-**When:** CI/CD detected
-- Config as Code: versioned, validated, env-aware
-- Health Endpoints: /health + /ready
-- Graceful Shutdown: drain connections on SIGTERM
-- Observability: metrics, logs, traces (OpenTelemetry)
-- CI Gates: lint + test + coverage before merge
-- Blue/Green or Canary: zero-downtime deployments
-- Feature Flags: decouple deploy from release
-
-## Performance
-**When:** Scale: 100+
 - Caching: TTL, invalidation strategy, cache-aside pattern
 - Async I/O: no blocking in async context
 - Connection Pool: reuse connections, appropriate sizing
@@ -43,22 +34,31 @@
 - Compression: gzip/brotli for responses
 - Indexing: proper indexes, query optimization
 
-## Data
-**When:** DB detected
-- Backup: automated, tested restore, defined RPO/RTO
-- Migrations: versioned, backward compatible, rollback
-- N+1 Prevention: batch queries, eager loading
-- Retention: defined periods, auto-cleanup
-- Transactions: ACID where needed, eventual consistency where acceptable
-
-## API
-**When:** REST/GraphQL/gRPC detected
+## Backend Services
+**When:** REST/GraphQL/gRPC detected OR DB detected OR CI/CD detected
+### API
 - REST: proper methods, status codes, resource naming
 - Pagination: cursor-based for large datasets
 - OpenAPI/AsyncAPI: spec with examples, synced with code
 - Errors: consistent format, no stack traces in prod
 - GraphQL: complexity limits, depth limits, persisted queries
 - gRPC: proto versioning, backward compatibility
+
+### Data
+- Backup: automated, tested restore, defined RPO/RTO
+- Migrations: versioned, backward compatible, rollback
+- N+1 Prevention: batch queries, eager loading
+- Retention: defined periods, auto-cleanup
+- Transactions: ACID where needed, eventual consistency where acceptable
+
+### Operations
+- Config as Code: versioned, validated, env-aware
+- Health Endpoints: /health + /ready
+- Graceful Shutdown: drain connections on SIGTERM
+- Observability: metrics, logs, traces (OpenTelemetry)
+- CI Gates: lint + test + coverage before merge
+- Blue/Green or Canary: zero-downtime deployments
+- Feature Flags: decouple deploy from release
 
 ## Frontend
 **When:** Frontend detected (React, Vue, Angular, Svelte, etc.)
@@ -79,8 +79,10 @@
 - AI Slop Prevention: unique typography, intentional design, no generic patterns
 - Progressive Enhancement: core functionality without JS
 
-## Mobile
-**When:** iOS/Android/React Native/Flutter detected
+## Apps
+**When:** iOS/Android/React Native/Flutter OR Electron/Tauri/native desktop OR CLI tool detected
+
+### Mobile
 - Offline-First: local storage, sync when connected
 - Battery Efficiency: minimize background work, batch operations
 - Deep Linking: universal links, app links
@@ -88,15 +90,13 @@
 - Platform Guidelines: iOS HIG, Material Design compliance
 - App Size: asset optimization, on-demand resources
 
-## Desktop
-**When:** Electron/Tauri/native desktop detected
+### Desktop
 - Auto-Update: secure update mechanism
 - Native Integration: OS notifications, file associations
 - Multi-Window: proper window management
 - Memory Management: prevent memory leaks, proper cleanup
 
-## CLI
-**When:** CLI tool detected
+### CLI
 - Help: --help with examples for every command
 - Exit Codes: 0 success, non-zero failure with meaning
 - Signals: handle SIGINT/SIGTERM gracefully
@@ -111,8 +111,32 @@
 - Changelog: document breaking changes clearly
 - Deprecation: warn before removal, provide migration path
 
-## ML/AI Projects
-**When:** ML/AI stack detected (PyTorch, TensorFlow, scikit-learn, etc.)
+## Infrastructure
+**When:** Docker/Kubernetes OR Lambda/Functions OR Monorepo detected
+
+### Container/K8s
+- Image Size: multi-stage builds, distroless base
+- Security: non-root user, CVE scanning (Trivy)
+- Resource Limits: CPU/memory limits and requests
+- Pod Security: SecurityContext, NetworkPolicy
+- Secrets: external secrets, not in images
+
+### Serverless
+- Cold Start: minimize bundle size, lazy init
+- Timeout Handling: graceful timeout, cleanup
+- Stateless: no local state between invocations
+- Cost Optimization: right-size memory, avoid over-provisioning
+
+### Monorepo
+- Workspace Management: clear package boundaries
+- Selective Testing: only test affected packages
+- Shared Dependencies: consistent versions, hoisting
+- Build Caching: incremental builds, remote cache
+
+## Specialized
+**When:** ML/AI stack detected OR Game engine detected
+
+### ML/AI Projects
 - Reproducibility: seed everything, version data + code + model
 - Experiment Tracking: log hyperparameters, metrics, artifacts
 - Data Versioning: DVC or similar for dataset management
@@ -120,37 +144,16 @@
 - Inference Optimization: quantization, batching, caching
 - Bias Monitoring: fairness metrics, drift detection
 
-## Game Development
-**When:** Game engine detected (Unity, Unreal, Godot, etc.)
+### Game Development
 - Frame Budget: 16ms for 60fps, profile regularly
 - Asset Pipeline: LOD, compression, streaming
 - Input Handling: responsive, rebindable controls
 - Save System: versioned saves, corruption recovery
 
-## Serverless
-**When:** Lambda/Functions/Cloud Functions detected
-- Cold Start: minimize bundle size, lazy init
-- Timeout Handling: graceful timeout, cleanup
-- Stateless: no local state between invocations
-- Cost Optimization: right-size memory, avoid over-provisioning
+## Collaboration
+**When:** Team: 2+ OR Multi-language requirement detected
 
-## Monorepo
-**When:** Monorepo detected (nx, turborepo, lerna, pnpm workspaces)
-- Workspace Management: clear package boundaries
-- Selective Testing: only test affected packages
-- Shared Dependencies: consistent versions, hoisting
-- Build Caching: incremental builds, remote cache
-
-## Container/K8s
-**When:** Docker/Kubernetes detected
-- Image Size: multi-stage builds, distroless base
-- Security: non-root user, CVE scanning (Trivy)
-- Resource Limits: CPU/memory limits and requests
-- Pod Security: SecurityContext, NetworkPolicy
-- Secrets: external secrets, not in images
-
-## Team Collaboration
-**When:** Team: 2+
+### Team
 - ADR: decisions + context + consequences
 - Local Parity: match production environment
 - Golden Paths: recommended approaches documented
@@ -160,15 +163,7 @@
 - PR Templates: consistent PR descriptions
 - Atomic Commits: one logical change per commit
 
-## Compliance
-**When:** Compliance != None (SOC2, HIPAA, PCI-DSS, GDPR)
-- License: track deps, no GPL without review
-- Frameworks: implement required controls
-- Data Classification: by sensitivity level
-- Retention Policy: documented, enforced
-
-## i18n
-**When:** Multi-language requirement detected
+### i18n
 - Externalized: no hardcoded user text
 - Unicode: UTF-8 everywhere
 - RTL: support Arabic, Hebrew layouts
