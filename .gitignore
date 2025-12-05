@@ -193,6 +193,7 @@ nul                       # Windows null device output
 # Temporary files
 *.tmp
 .tmp/                # CCO temporary files (sandboxed)
+temp/                # Benchmark test projects
 
 # Lock files
 *.lock
@@ -204,4 +205,5 @@ requirements.txt.lock
 # VS Code
 .vscode/content/principles_backup/
 
-.claude/*
+.claude/
+benchmarks/
