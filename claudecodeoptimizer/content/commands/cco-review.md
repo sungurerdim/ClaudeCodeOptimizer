@@ -126,8 +126,44 @@ For each approved recommendation:
 
 - `--quick` - Phase 1-3 only, skip "from scratch" analysis
 - `--focus=X` - Focus on specific area (structure, patterns, deps, tests, security, dx)
+- `--production` - Production readiness checklist (see below)
 
 Note: Use approval flow for apply behavior (select none = report-only, select all = auto-apply)
+
+## Production Readiness Mode
+
+`/cco-review --production` runs a comprehensive checklist for prototype-to-production transition:
+
+### Checklist Categories
+
+| Category | Checks |
+|----------|--------|
+| **Error Handling** | All try/catch complete, no swallowed exceptions, user-friendly messages |
+| **Edge Cases** | Empty inputs, null values, boundary conditions, concurrent access |
+| **Security** | Input validation, auth on all routes, secrets externalized, HTTPS |
+| **Performance** | N+1 queries, missing indexes, unbounded loops, memory leaks |
+| **Observability** | Logging, metrics, health endpoints, error tracking |
+| **Configuration** | Env-based config, no hardcoded values, feature flags |
+| **Testing** | Coverage ≥80%, integration tests, no skipped tests |
+| **Documentation** | API docs, deployment guide, runbook |
+
+### Output
+
+```
+╔══════════════════════════════════════════════════════════════════╗
+║                    PRODUCTION READINESS                          ║
+╠══════════════════════════════════════════════════════════════════╣
+║ Category         │ Status │ Score │ Blockers                     ║
+╠══════════════════╪════════╪═══════╪══════════════════════════════╣
+║ {category}       │ {status}│ {N}% │ {blocker or -}               ║
+║ ...              │ ...    │ ...   │ ...                          ║
+╠══════════════════════════════════════════════════════════════════╣
+║ OVERALL: {N}% - {READY|NOT READY} ({N} blockers)                 ║
+╚══════════════════════════════════════════════════════════════════╝
+```
+
+**Blockers:** FAIL status items must be resolved before production.
+**Warnings:** WARN items are recommended but not blocking.
 
 ## Usage
 
@@ -136,4 +172,5 @@ Note: Use approval flow for apply behavior (select none = report-only, select al
 /cco-review --quick            # Quick analysis, skip from-scratch
 /cco-review --focus=structure  # Focus on organization
 /cco-review --focus=security   # Focus on security review
+/cco-review --production       # Production readiness checklist
 ```
