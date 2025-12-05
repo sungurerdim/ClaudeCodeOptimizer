@@ -5,9 +5,9 @@ description: Actionable metrics dashboard
 
 # /cco-health
 
-**Process visibility** - Single view of project health with actionable next steps.
+**Metrics dashboard** - Single view of project health with actionable next steps.
 
-**Standards:** Context Read | Output Formatting | Status Updates | Claude Tools | UX/DX
+**Standards:** Command Flow | Output Formatting
 
 ## Context Application
 
@@ -23,8 +23,7 @@ description: Actionable metrics dashboard
 
 ## Flow
 
-0. **Context Check** - Run `/cco-tune --status`; handle completion/restart per cco-tune flow
-1. **Read Context** - Read `./CLAUDE.md`, extract CCO_CONTEXT markers only, parse values
+Per Command Flow standard (read-only, no fixes).
 
 ## Scores (0-100)
 

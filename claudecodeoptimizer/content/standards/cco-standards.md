@@ -9,21 +9,20 @@
 - No Orphans: every function called, every import used
 - Type Safety: annotations where language supports
 - Complexity: cyclomatic <10 per function
-- Clean Code: meaningful names, single responsibility
+- Clean Code: meaningful names, single responsibility, consistent style
 - Immutability: prefer immutable, mutate only when necessary
 - No Overengineering: only requested changes, minimum complexity
-- General Solutions: correct algorithms for all inputs
+- General Solutions: correct algorithms for all inputs, not just test cases
 - Explicit Over Implicit: clear intent, no magic values
 - Separation of Concerns: distinct responsibilities per module
-- Consistent Style: follow language/framework idioms
 
 ## File & Resource Management
 - Minimal Touch: only files required for task
-- Paths: forward slash (/), relative, quote spaces
+- Paths: forward slash (/), relative paths, quote spaces
 - No Unsolicited Files: never create unless requested
 - Cleanup: remove temporary files after iteration
-- Exclusions: skip .git, node_modules, __pycache__, venv, dist, build
 - Resource Cleanup: close handles, release connections, dispose properly
+- Exclusions: skip .git, node_modules, __pycache__, venv, dist, build
 
 ## Security Fundamentals
 - Secrets: never hardcode, use env vars or vault
@@ -49,8 +48,8 @@
 
 ## Documentation
 - README: description, setup, usage
-- CHANGELOG: version history
-- Comments: why not what
+- CHANGELOG: version history with breaking changes
+- Comments: explain why, not what
 - Examples: working examples for common use cases
 
 ## Workflow
@@ -64,14 +63,14 @@
 - Maximum Clarity: unambiguous output, clear next actions
 - Fast Feedback: progress indicators, incremental results
 - Error Recovery: actionable messages with fix suggestions
-- Predictability: consistent behavior
+- Predictability: consistent behavior across sessions
 - Transparency: show what will happen before doing it
 
 ---
 
 # AI-Specific Standards
-*Applies to ALL AI coding assistants for better quality/efficiency*
-*AGENTS.md compatible - portable across AI tools*
+*Applies to ALL AI coding assistants regardless of provider or model*
+*AGENTS.md compatible - portable across Claude/Codex/Gemini/etc.*
 
 ## Context Optimization
 - Semantic Density: max meaning per token, concise over verbose
@@ -113,20 +112,26 @@
 ## Output Standards
 - Error Format: [SEVERITY] {What} in {file:line}
 - Status Values: OK/WARN/FAIL (consistent terminology)
-- Accounting: done + skip + fail = total
+- Accounting: done + skip + fail = total (always verify)
 - Structured Results: JSON/table for machine-parseable output when needed
 
 ---
 
-# CCO-Workflow
-*CCO-specific mechanisms - only for CCO users*
-*Not exported to AGENTS.md*
+# CCO-Specific Standards
+*CCO workflow mechanisms - only for CCO users*
+*Included in CLAUDE.md export, excluded from AGENTS.md export*
+
+## Command Flow
+All CCO commands follow this flow:
+1. **Context Check** - Verify CCO_CONTEXT exists; suggest `/cco-tune` if missing
+2. **Read Context** - Parse `./CLAUDE.md` for CCO_CONTEXT markers
+3. **Execute** - Run command-specific logic
+4. **Report** - Show results with verification accounting
 
 ## Pre-Operation Safety
-1. Check `git status` for uncommitted changes
-2. If dirty: AskUserQuestion → Commit / Stash / Continue
-3. Clean state enables safe rollback
-4. Use git for state persistence across sessions
+- Check `git status` for uncommitted changes before modifications
+- If dirty: prompt user → Commit / Stash / Continue
+- Clean state enables safe rollback via `git checkout .`
 
 ## Safety Classification
 | Safe (auto-apply) | Risky (require approval) |
@@ -138,14 +143,13 @@
 | Add type annotations | Rename public APIs |
 
 ## Fix Workflow
-All fix commands follow: **Analyze → Report → Preview → Approve → Apply → Verify**
+All fix operations follow: **Analyze → Report → Approve → Apply → Verify**
 
-1. **Analyze**: Full scan of target area
-2. **Report**: Detection table with priority, location, fix action
-3. **Preview**: Show impact analysis before approval (see Impact Preview)
-4. **Approve**: Paginated approval per Priority & Approval standard
-5. **Apply**: ONLY user-selected fixes; respect Safety Classification
-6. **Verify**: Before/after comparison + accounting
+1. **Analyze**: Scan target area for issues
+2. **Report**: Show findings with priority, location, suggested fix
+3. **Approve**: User selects which fixes to apply (AskUserQuestion)
+4. **Apply**: Execute only approved fixes; respect Safety Classification
+5. **Verify**: Confirm changes applied correctly
    ```
    Applied: N | Skipped: N | Failed: N | Total: N
    ```
@@ -172,9 +176,7 @@ Format:
 
 **Skip preview:** For LOW risk changes affecting ≤2 files with full test coverage.
 
-## Priority & Approval
-
-### Priority Levels
+## Priority Levels
 | Level | Criteria | Examples |
 |-------|----------|----------|
 | CRITICAL | Security, data exposure | SQL injection, leaked secrets |
@@ -182,26 +184,12 @@ Format:
 | MEDIUM | Balanced impact/effort | Complexity, duplication |
 | LOW | Low impact or high effort | Style, minor optimization |
 
-### Approval Flow
-- AskUserQuestion with severity tabs
-- multiSelect: true; First option: "All ({N})"
-- Format: `{desc} [{file:line}] [{safe|risky}]`
-- Never skip approval for risky changes
-
-**Pagination (when >4 per severity or >16 total):**
-- Separate questions per severity level
-- Per-severity pagination: 8 fixes → 2 questions (4+4)
-
-## Context Read
-1. Read `CCO_CONTEXT_START` from `./CLAUDE.md`
-2. If missing → suggest `/cco-tune`
-3. Apply: Guidelines, Thresholds, AI Performance, Applicable checks
-
-## Claude Code Integration
-- Parallel Tools: batch independent calls; sequential when outputs inform inputs
-- Subagent Delegation: use Task tool when separate context benefits
-- Resource Scaling: thinking tokens Off/8K/16K/32K based on complexity
-- MCP Output: default 25K; increase for large outputs
+## Approval Flow
+- Use AskUserQuestion with multiSelect: true
+- Priority tabs: CRITICAL → HIGH → MEDIUM → LOW
+- Format: `{description} [{file:line}] [{safe|risky}]`
+- First option: "All ({N})" for batch selection
+- **Pagination**: Max 4 questions × 4 options each; paginate larger sets by priority
 
 ## Output Formatting
 ASCII box-drawing tables in code blocks:
@@ -210,12 +198,21 @@ ASCII box-drawing tables in code blocks:
 - Alignment: numbers right, text left
 - Status: `OK`, `WARN`, `FAIL`, `PASS`, `SKIP` (text only)
 - Progress: `████████░░░░░░░░░░░░` (proportional bar)
-- ASCII-only: no emojis in tables
+- No emojis in tables
+
+## Context Integration
+- Read `CCO_CONTEXT_START` markers from `./CLAUDE.md`
+- Apply: Guidelines, Thresholds, Applicable checks
+- Context fields affect command behavior (Scale → thresholds, Data → security weight)
+
+## Claude Code Integration
+- Parallel Tools: batch independent calls; sequential when outputs inform inputs
+- Subagent Delegation: use Task tool for separate context benefits
+- Resource Scaling: thinking tokens based on complexity (8K standard, 16K+ complex)
 
 ## Option Labels
 When presenting options in AskUserQuestion:
 - `[current]` - Value from existing context/config
-- `[detected]` - Value discovered by detection agent
-- `[recommended]` - Single best-fit option based on detection
-Only ONE option per question can have `[recommended]`
+- `[detected]` - Value discovered by detection
+- `[recommended]` - Single best-fit option (only ONE per question)
 <!-- CCO_STANDARDS_END -->

@@ -49,7 +49,7 @@ class TestListCcoFiles:
         (tmp_path / "commands").mkdir()
         (tmp_path / "agents").mkdir()
         cmd_file = tmp_path / "commands" / "cco-tune.md"
-        agent_file = tmp_path / "agents" / "cco-agent-scan.md"
+        agent_file = tmp_path / "agents" / "cco-agent-analyze.md"
         cmd_file.touch()
         agent_file.touch()
         with patch("claudecodeoptimizer.cco_remove.CLAUDE_DIR", tmp_path):
@@ -59,7 +59,7 @@ class TestListCcoFiles:
                 ):
                     files = list_cco_files()
                     assert files["commands"] == ["cco-tune.md"]
-                    assert files["agents"] == ["cco-agent-scan.md"]
+                    assert files["agents"] == ["cco-agent-analyze.md"]
 
 
 class TestHasClaudeMdRules:

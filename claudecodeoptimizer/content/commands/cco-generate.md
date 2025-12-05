@@ -5,9 +5,9 @@ description: Convention-following automated generation
 
 # /cco-generate
 
-**Convention-following generation** - Read conventions from context → generate consistent components.
+**Convention-following generation** - Read conventions → generate consistent components.
 
-**Standards:** Pre-Operation Safety | Context Read | Priority & Approval | Output Formatting | Status Updates | UX/DX
+**Standards:** Command Flow | Approval Flow | Output Formatting
 
 ## Context Application
 
@@ -23,8 +23,7 @@ description: Convention-following automated generation
 
 ## Flow
 
-0. **Context Check** - Run `/cco-tune --status`; handle completion/restart per cco-tune flow
-1. **Read Context** - Read `./CLAUDE.md`, extract CCO_CONTEXT markers only, parse values
+Per Command Flow standard.
 
 ## Default Behavior
 
