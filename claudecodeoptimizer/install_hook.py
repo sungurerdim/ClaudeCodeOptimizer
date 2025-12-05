@@ -57,7 +57,7 @@ def setup_claude_md(verbose: bool = True) -> dict[str, int]:
     """Add CCO Standards to ~/.claude/CLAUDE.md
 
     Returns:
-        Dictionary with installed counts (universal, ai_specific, cco_workflow)
+        Dictionary with installed counts (universal, ai_specific, cco_specific)
     """
     standards = _load_standards()
     claude_md = CLAUDE_DIR / "CLAUDE.md"
@@ -82,7 +82,7 @@ def setup_claude_md(verbose: bool = True) -> dict[str, int]:
     claude_md.write_text(content, encoding="utf-8")
 
     breakdown = get_standards_breakdown()
-    installed = breakdown["universal"] + breakdown["ai_specific"] + breakdown["cco_workflow"]
+    installed = breakdown["universal"] + breakdown["ai_specific"] + breakdown["cco_specific"]
 
     if verbose:
         print(f"  CLAUDE.md: {installed} standards {action}")
@@ -90,7 +90,7 @@ def setup_claude_md(verbose: bool = True) -> dict[str, int]:
     return {
         "universal": breakdown["universal"],
         "ai_specific": breakdown["ai_specific"],
-        "cco_workflow": breakdown["cco_workflow"],
+        "cco_specific": breakdown["cco_specific"],
     }
 
 
@@ -127,12 +127,12 @@ def post_install() -> int:
         print()
 
         # Summary
-        installed = standards["universal"] + standards["ai_specific"] + standards["cco_workflow"]
+        installed = standards["universal"] + standards["ai_specific"] + standards["cco_specific"]
         breakdown = get_standards_breakdown()
         print(SEPARATOR)
         print(f"Installed: {len(cmds)} commands, {len(agents)} agents, {installed} standards")
         print(
-            f"  Universal: {standards['universal']} | AI-Specific: {standards['ai_specific']} | CCO-Workflow: {standards['cco_workflow']}"
+            f"  Universal: {standards['universal']} | AI-Specific: {standards['ai_specific']} | CCO-Specific: {standards['cco_specific']}"
         )
         print(
             f"Available: +{breakdown['project_specific']} project-specific standards via /cco-tune"
