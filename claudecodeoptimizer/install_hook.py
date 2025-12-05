@@ -54,10 +54,10 @@ def _load_standards() -> str:
 
 
 def setup_claude_md(verbose: bool = True) -> dict[str, int]:
-    """Add CCO Principles to ~/.claude/CLAUDE.md
+    """Add CCO Standards to ~/.claude/CLAUDE.md
 
     Returns:
-        Dictionary with installed counts (universal, claude_specific)
+        Dictionary with installed counts (universal, ai_specific, cco_workflow)
     """
     standards = _load_standards()
     claude_md = CLAUDE_DIR / "CLAUDE.md"
@@ -82,12 +82,16 @@ def setup_claude_md(verbose: bool = True) -> dict[str, int]:
     claude_md.write_text(content, encoding="utf-8")
 
     breakdown = get_standards_breakdown()
-    installed = breakdown["universal"] + breakdown["claude_specific"]
+    installed = breakdown["universal"] + breakdown["ai_specific"] + breakdown["cco_workflow"]
 
     if verbose:
         print(f"  CLAUDE.md: {installed} standards {action}")
 
-    return {"universal": breakdown["universal"], "claude_specific": breakdown["claude_specific"]}
+    return {
+        "universal": breakdown["universal"],
+        "ai_specific": breakdown["ai_specific"],
+        "cco_workflow": breakdown["cco_workflow"],
+    }
 
 
 def post_install() -> int:
@@ -123,11 +127,16 @@ def post_install() -> int:
         print()
 
         # Summary
-        installed = standards["universal"] + standards["claude_specific"]
+        installed = standards["universal"] + standards["ai_specific"] + standards["cco_workflow"]
         breakdown = get_standards_breakdown()
         print(SEPARATOR)
         print(f"Installed: {len(cmds)} commands, {len(agents)} agents, {installed} standards")
-        print(f"Available: +{breakdown['conditional']} conditional standards via /cco-tune")
+        print(
+            f"  Universal: {standards['universal']} | AI-Specific: {standards['ai_specific']} | CCO-Workflow: {standards['cco_workflow']}"
+        )
+        print(
+            f"Available: +{breakdown['project_specific']} project-specific standards via /cco-tune"
+        )
         print(SEPARATOR)
         print()
         print("⚠️  Restart Claude Code for changes to take effect.")

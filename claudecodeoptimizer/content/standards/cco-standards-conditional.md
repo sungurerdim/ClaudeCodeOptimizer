@@ -1,139 +1,177 @@
 <!-- CCO_CONDITIONALS_START -->
-# Conditional Standards
-*Domain-specific standards - selected by /cco-tune based on project detection*
-*These are written to local ./CLAUDE.md, NOT global ~/.claude/CLAUDE.md*
+# Project-Specific Standards
+*Selected by /cco-tune based on project detection*
+*Written to local ./CLAUDE.md, filtered by triggers*
+*AGENTS.md compatible - selected standards are exported*
 
-## Security Implementation
-**When:** Based on detected stack (implements Universal Security principles)
-- Input Validation: Pydantic (Python), Zod/Joi (JS/TS), JSON Schema (API)
-- SQL Injection: parameterized queries, ORM safe methods
-- XSS Prevention: sanitize output, CSP headers, template escaping
-- OWASP API: Top 10 compliance checklist
-
-## Security Extended
-**When:** Container/K8s detected OR Scale: 10K+ OR Data: PII/Regulated
-- Privacy-First: PII managed, cleaned from memory, GDPR/CCPA
-- Encryption: AES-256-GCM for data at rest
-- Zero Disk: sensitive data in RAM only
-- Auth: OAuth2 + RBAC + mTLS, verify every request (Zero Trust)
-- Rate Limit: all endpoints, per-user/IP, return headers
-- Supply Chain: SBOM, SLSA L2+, Sigstore signing, lockfiles
-- AI Security: validate prompts/outputs, prevent injection
-- Container: distroless, non-root, CVE scan (Trivy)
-- K8s: RBAC least privilege, NetworkPolicy, PodSecurity
-- Policy-as-Code: OPA/Sentinel
-- Audit Log: all security events, immutable
-- Incident Response: IR plan, SIEM, DR tested
+## Security Enhanced
+**When:** Data: PII/Regulated OR Scale: 10K+
+- Input Validation: Pydantic (Python), Zod (JS/TS), JSON Schema
+- SQL Safety: parameterized queries, ORM safe methods
+- XSS Prevention: sanitize output, CSP headers
+- Auth: OAuth2/OIDC + RBAC, verify every request
+- Rate Limit: all endpoints, per-user/IP with headers
+- Encryption: AES-256 for sensitive data at rest
+- Audit Log: security events, immutable, queryable
+- CORS: explicit origins, no wildcard in production
 
 ## Architecture
-**When:** Scale: 10K+ OR Type: backend-api with microservices
-- Event-Driven: async patterns, communicate via events
-- Service Mesh: Istio/Linkerd for mTLS, observability
-- DI: inject dependencies, enable testing
-- Dependency Rule: inward only toward business logic
+**When:** Scale: 10K+ OR Type: microservices
 - Circuit Breaker: fail fast on unhealthy downstream
-- Bounded Contexts: DDD, own models/rules per context
-- API Versioning: explicit versions, backward compatible
 - Idempotency: safe to retry without side effects
-- Event Sourcing: state as event sequence
+- API Versioning: explicit versions, backward compatible
+- DI: inject dependencies, enable testing
+- Event-Driven: async communication between services
+- Bounded Contexts: own models/rules per domain
 
 ## Operations
-**When:** Scale: 10K+ OR CI/CD detected
-- Zero Maintenance: auto-manage lifecycle
+**When:** CI/CD detected
 - Config as Code: versioned, validated, env-aware
-- IaC + GitOps: Terraform/Pulumi + ArgoCD/Flux
-- Observability: OpenTelemetry (metrics, traces, logs)
-- Health: /health + /ready endpoints
-- Graceful Shutdown: SIGTERM → drain → close
-- Blue/Green: zero downtime, instant rollback
-- Canary: progressive rollout, auto-rollback on errors
+- Health Endpoints: /health + /ready
+- Graceful Shutdown: drain connections on SIGTERM
+- Observability: metrics, logs, traces (OpenTelemetry)
+- CI Gates: lint + test + coverage before merge
+- Blue/Green or Canary: zero-downtime deployments
 - Feature Flags: decouple deploy from release
-- Incremental Safety: stash → change → test → rollback on fail
 
 ## Performance
-**When:** Scale: 100-10K+ OR Performance applicable
-- DB: indexing, N+1 prevention, explain plans
+**When:** Scale: 100+
+- Caching: TTL, invalidation strategy, cache-aside pattern
 - Async I/O: no blocking in async context
-- Caching: cache-aside/write-through, TTL, invalidation
-- Cache Hit: >80% target
-- Connection Pool: reuse, size based on load
-- Lazy Load: defer non-critical resources until needed
-- Compression: gzip/brotli responses
+- Connection Pool: reuse connections, appropriate sizing
+- Lazy Load: defer non-critical resources
+- Compression: gzip/brotli for responses
+- Indexing: proper indexes, query optimization
 
 ## Data
 **When:** DB detected
-- Backup: automated, defined RPO/RTO, tested restore
+- Backup: automated, tested restore, defined RPO/RTO
 - Migrations: versioned, backward compatible, rollback
+- N+1 Prevention: batch queries, eager loading
 - Retention: defined periods, auto-cleanup
+- Transactions: ACID where needed, eventual consistency where acceptable
 
 ## API
-**When:** API detected (REST/GraphQL endpoints)
+**When:** REST/GraphQL/gRPC detected
 - REST: proper methods, status codes, resource naming
 - Pagination: cursor-based for large datasets
-- OpenAPI: spec with examples, synced with code
+- OpenAPI/AsyncAPI: spec with examples, synced with code
 - Errors: consistent format, no stack traces in prod
 - GraphQL: complexity limits, depth limits, persisted queries
-- Contract: verify API contracts between services
-- CORS: allowed origins/methods, credentials handling
+- gRPC: proto versioning, backward compatibility
 
 ## Frontend
-**When:** Frontend detected
-
-### AI Generation Quality
-Avoid AI slop - create distinctive designs:
-- Typography: unique fonts; avoid Arial, Inter, Roboto, system defaults
-- Color: CSS variables; dominant colors with sharp accents
-- Motion: high-impact moments; orchestrated page load with staggered reveals
-- Backgrounds: atmosphere and depth; avoid solid color defaults
-- Avoid: purple gradients, predictable layouts, generic AI patterns
+**When:** Frontend detected (React, Vue, Angular, Svelte, etc.)
 
 ### Accessibility
 - WCAG 2.2 AA: perceivable, operable, understandable, robust
 - Semantic HTML: native elements (button, nav, form)
-- ARIA: only when HTML insufficient
-- Keyboard: all interactive elements accessible
-- Screen Reader: alt text, heading hierarchy, labels
+- Keyboard Nav: all interactive elements accessible
 - Contrast: 4.5:1 normal, 3:1 large text
-- Focus: logical order, trap in modals
-- A11y Testing: axe-core/pa11y in CI, zero critical violations
 
 ### Performance
-- Core Web Vitals: LCP, FID, CLS targets
-- Bundle Size: code splitting, tree shaking
+- Core Web Vitals: LCP <2.5s, FID <100ms, CLS <0.1
+- Bundle Size: code splitting, tree shaking, lazy loading
+- Responsive: mobile-first, fluid layouts
 
-## i18n
-**When:** i18n detected OR multi-language requirement
-- Externalized: no hardcoded user text
-- Unicode: UTF-8 everywhere
-- RTL: support Arabic, Hebrew
-- Locale: date/time/number formatting
-- Pluralization: proper rules per language
+### Quality
+- State Management: predictable state, single source of truth
+- AI Slop Prevention: unique typography, intentional design, no generic patterns
+- Progressive Enhancement: core functionality without JS
 
-## Reliability
-**When:** Scale: 10K+ OR Type: backend-api with SLA
-- Chaos: inject failures in production
-- Resilience: validate failure scenarios
-- Bulkhead: isolate failures
-- Fallback: graceful degradation
+## Mobile
+**When:** iOS/Android/React Native/Flutter detected
+- Offline-First: local storage, sync when connected
+- Battery Efficiency: minimize background work, batch operations
+- Deep Linking: universal links, app links
+- Push Notifications: permission handling, payload optimization
+- Platform Guidelines: iOS HIG, Material Design compliance
+- App Size: asset optimization, on-demand resources
 
-## Cost
-**When:** Cloud/Container detected
-- FinOps: monitor, right-size, spot instances
-- Tagging: all cloud resources
-- Auto-Scale: scale to zero when idle
-- Green: energy-efficient, carbon-aware
+## Desktop
+**When:** Electron/Tauri/native desktop detected
+- Auto-Update: secure update mechanism
+- Native Integration: OS notifications, file associations
+- Multi-Window: proper window management
+- Memory Management: prevent memory leaks, proper cleanup
 
-## DX
-**When:** Team: 2-5+
-- Local Parity: match production
-- Build Speed: quick builds, fast tests
-- Self-Service: provision without tickets
-- Golden Paths: recommended approaches
-- Runbooks: ops procedures
+## CLI
+**When:** CLI tool detected
+- Help: --help with examples for every command
+- Exit Codes: 0 success, non-zero failure with meaning
+- Signals: handle SIGINT/SIGTERM gracefully
+- Output Modes: human-readable default, --json for scripts
+- Config Precedence: env vars > config file > CLI args > defaults
+
+## Library
+**When:** Library/package detected
+- Minimal Dependencies: reduce transitive dependency burden
+- Tree-Shakeable: ES modules, no side effects in imports
+- Type Definitions: TypeScript types or JSDoc
+- Changelog: document breaking changes clearly
+- Deprecation: warn before removal, provide migration path
+
+## ML/AI Projects
+**When:** ML/AI stack detected (PyTorch, TensorFlow, scikit-learn, etc.)
+- Reproducibility: seed everything, version data + code + model
+- Experiment Tracking: log hyperparameters, metrics, artifacts
+- Data Versioning: DVC or similar for dataset management
+- Model Registry: versioned models with metadata
+- Inference Optimization: quantization, batching, caching
+- Bias Monitoring: fairness metrics, drift detection
+
+## Game Development
+**When:** Game engine detected (Unity, Unreal, Godot, etc.)
+- Frame Budget: 16ms for 60fps, profile regularly
+- Asset Pipeline: LOD, compression, streaming
+- Input Handling: responsive, rebindable controls
+- Save System: versioned saves, corruption recovery
+
+## Serverless
+**When:** Lambda/Functions/Cloud Functions detected
+- Cold Start: minimize bundle size, lazy init
+- Timeout Handling: graceful timeout, cleanup
+- Stateless: no local state between invocations
+- Cost Optimization: right-size memory, avoid over-provisioning
+
+## Monorepo
+**When:** Monorepo detected (nx, turborepo, lerna, pnpm workspaces)
+- Workspace Management: clear package boundaries
+- Selective Testing: only test affected packages
+- Shared Dependencies: consistent versions, hoisting
+- Build Caching: incremental builds, remote cache
+
+## Container/K8s
+**When:** Docker/Kubernetes detected
+- Image Size: multi-stage builds, distroless base
+- Security: non-root user, CVE scanning (Trivy)
+- Resource Limits: CPU/memory limits and requests
+- Pod Security: SecurityContext, NetworkPolicy
+- Secrets: external secrets, not in images
+
+## Team Collaboration
+**When:** Team: 2+
+- ADR: decisions + context + consequences
+- Local Parity: match production environment
+- Golden Paths: recommended approaches documented
+- Code Owners: CODEOWNERS for review assignment
+- Onboarding: documented setup, first-task guides
+- Branch Protection: require reviews, status checks
+- PR Templates: consistent PR descriptions
+- Atomic Commits: one logical change per commit
 
 ## Compliance
-**When:** Compliance: not None
+**When:** Compliance != None (SOC2, HIPAA, PCI-DSS, GDPR)
 - License: track deps, no GPL without review
-- Frameworks: SOC2/HIPAA/PCI-DSS as applicable
-- Classification: data by sensitivity
+- Frameworks: implement required controls
+- Data Classification: by sensitivity level
+- Retention Policy: documented, enforced
+
+## i18n
+**When:** Multi-language requirement detected
+- Externalized: no hardcoded user text
+- Unicode: UTF-8 everywhere
+- RTL: support Arabic, Hebrew layouts
+- Locale: date/time/number/currency formatting
+- Pluralization: proper rules per language
 <!-- CCO_CONDITIONALS_END -->
