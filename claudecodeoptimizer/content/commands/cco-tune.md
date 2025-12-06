@@ -28,8 +28,24 @@ description: Project-specific AI tuning and configuration
 
 **cco-tune creates local project files:**
 - `./CLAUDE.md` - Project context + conditional standards
-- `./.claude/statusline.js` - Local statusline (overrides global)
-- `./.claude/settings.json` - Local permissions (overrides global)
+- `./.claude/statusline.js` - Local statusline script
+- `./.claude/settings.json` - Local settings (AI Performance + Statusline + Permissions)
+
+**Local settings.json merges all configurations:**
+```json
+{
+  "env": {
+    "MAX_THINKING_TOKENS": "8000",
+    "MAX_MCP_OUTPUT_TOKENS": "25000"
+  },
+  "promptCachingEnabled": true,
+  "statusLine": {
+    "type": "command",
+    "command": "test -f .claude/statusline.js && node .claude/statusline.js"
+  },
+  "permissions": { "allow": [...], "deny": [...], "ask": [...] }
+}
+```
 
 ### Content Sources
 
@@ -87,8 +103,9 @@ Show current project state before asking anything:
 ║ Stack/Type      │ {stack} | {type}                                             ║
 ║ AI Performance  │ Thinking {thinking} | MCP {mcp} | Caching {caching}          ║
 ╠════════════════════════════════════════════════════════════════════════════════╣
-║ LOCAL FEATURES  │ Status                           │ Location                  ║
+║ LOCAL SETTINGS  │ Status                           │ Location                  ║
 ├─────────────────┼──────────────────────────────────┼───────────────────────────┤
+║ AI Performance  │ Thinking {thinking} | MCP {mcp}  │ ./.claude/settings.json   ║
 ║ Statusline      │ {statusline_status}              │ ./.claude/statusline.js   ║
 ║ Permissions     │ {permissions_status}             │ ./.claude/settings.json   ║
 ╠════════════════════════════════════════════════════════════════════════════════╣
@@ -122,6 +139,7 @@ Based on status, show options with smart defaults. **All configuration questions
 │ What would you like to do?                                              │
 ├─────────────────────────────────────────────────────────────────────────┤
 │ ☐ Update Detection   Re-detect stack and update standards               │
+│ ☐ AI Performance     Thinking tokens, MCP output, caching               │
 │ ☐ Statusline         Local status bar (./.claude/)                      │
 │ ☐ Permissions        Local permission levels (./.claude/)               │
 │ ○ Nothing            Exit without changes                               │
@@ -134,6 +152,7 @@ Based on status, show options with smart defaults. **All configuration questions
 │ What would you like to configure?                                       │
 ├─────────────────────────────────────────────────────────────────────────┤
 │ ☑ Project Detection  [recommended] Detect and apply standards           │
+│ ☐ AI Performance     Thinking tokens, MCP output, caching               │
 │ ☐ Statusline         Local status bar (./.claude/)                      │
 │ ☐ Permissions        Local permission levels (./.claude/)               │
 └─────────────────────────────────────────────────────────────────────────┘
@@ -144,6 +163,27 @@ Based on status, show options with smart defaults. **All configuration questions
 - **cco-tune NEVER modifies global ~/.claude/ files**
 
 ### Inline Configuration Questions
+
+**If AI Performance selected**, ask settings:
+```
+┌─────────────────────────────────────────────────────────────────────────┐
+│ AI Performance Settings (./.claude/settings.json)                       │
+├─────────────────────────────────────────────────────────────────────────┤
+│ Thinking Tokens:                                                        │
+│ ○ 8K    [current] Standard complexity                                   │
+│ ○ 16K   Complex multi-file changes                                      │
+│ ○ 32K   Architectural decisions                                         │
+│                                                                         │
+│ MCP Output Tokens:                                                      │
+│ ○ 25K   [current] Standard output                                       │
+│ ○ 50K   Large file operations                                           │
+│ ○ 100K  Maximum output                                                  │
+│                                                                         │
+│ Prompt Caching:                                                         │
+│ ● On    [recommended] Reduces cost and latency                          │
+│ ○ Off   Disable caching                                                 │
+└─────────────────────────────────────────────────────────────────────────┘
+```
 
 **If Statusline selected**, ask mode:
 ```
@@ -440,11 +480,23 @@ These elements cannot be auto-detected and require user input. Each option inclu
 
 ### AI Performance (Calculated)
 
-| Element | Description | Default |
-|---------|-------------|---------|
-| Thinking | Claude extended thinking | 8K |
-| MCP | MCP output limit | 25K |
-| Caching | Prompt caching (reduces cost) | on |
+| Element | Description | Default | Settings Key |
+|---------|-------------|---------|--------------|
+| Thinking | Claude extended thinking | 8K | `env.MAX_THINKING_TOKENS` |
+| MCP | MCP output limit | 25K | `env.MAX_MCP_OUTPUT_TOKENS` |
+| Caching | Prompt caching (reduces cost) | on | `promptCachingEnabled` |
+
+**Written to:** `./.claude/settings.json` (local only, never global)
+
+```json
+{
+  "env": {
+    "MAX_THINKING_TOKENS": "8000",
+    "MAX_MCP_OUTPUT_TOKENS": "25000"
+  },
+  "promptCachingEnabled": true
+}
+```
 
 ---
 
@@ -536,13 +588,16 @@ Show unified table with dynamic standard counts:
 
 ## Step 5: Apply
 
-Write all selected configurations to project-local files:
+Write all selected configurations to **project-local files only**:
 
 | Selection | Target | Content |
 |-----------|--------|---------|
 | Detection | `./CLAUDE.md` | CCO_CONTEXT block |
-| Statusline | `./.claude/statusline.js` + `./.claude/settings.json` | Status bar script + settings |
-| Permissions | `./.claude/settings.json` | Permission config |
+| AI Performance | `./.claude/settings.json` | env.MAX_THINKING_TOKENS, env.MAX_MCP_OUTPUT_TOKENS, promptCachingEnabled |
+| Statusline | `./.claude/statusline.js` + `./.claude/settings.json` | Status bar script + statusLine config |
+| Permissions | `./.claude/settings.json` | permissions.allow, permissions.deny, permissions.ask |
+
+**IMPORTANT:** cco-tune NEVER modifies global `~/.claude/` files. All settings are project-local.
 
 ### Statusline Files
 
@@ -561,15 +616,15 @@ Write all selected configurations to project-local files:
 {
   "statusLine": {
     "type": "command",
-    "command": "node \"$(test -f .claude/statusline.js && echo .claude/statusline.js || echo ~/.claude/statusline.js)\""
+    "command": "test -f .claude/statusline.js && node .claude/statusline.js"
   }
 }
 ```
 
-**Dynamic Path Logic:**
-- First checks for local `.claude/statusline.js` in current directory
-- Falls back to global `~/.claude/statusline.js` if local doesn't exist
-- This allows per-project statusline customization
+**Local-Only Behavior:**
+- Only runs if `.claude/statusline.js` exists in project directory
+- No global fallback - project isolation maintained
+- If file doesn't exist, no statusline is shown
 
 **Disable Mode**: Delete `./.claude/statusline.js` and remove `statusLine` from `./.claude/settings.json`.
 
@@ -578,7 +633,7 @@ Write all selected configurations to project-local files:
 After writing statusline files, verify:
 1. `./.claude/statusline.js` exists and is executable
 2. `./.claude/settings.json` contains `statusLine` config pointing to local script
-3. Local settings match the format used in global `~/.claude/settings.json`
+3. JSON structure is valid (same format as Claude Code settings)
 
 ---
 
@@ -676,11 +731,12 @@ Structure: {type} | Coverage: {N}% | License: {type}
 ╔════════════════════════════════════════════════════════════════════════════════╗
 ║                            CCO TUNE COMPLETE                                   ║
 ╠════════════════════════════════════════════════════════════════════════════════╣
-║ CONFIGURED                                                                     ║
+║ CONFIGURED (all local, no global modifications)                                ║
 ├────────────────────────────────────────────────────────────────────────────────┤
 ║ ✓ Project Detection  → ./CLAUDE.md                                             ║
+║ ✓ AI Performance     → ./.claude/settings.json (Thinking: 8K, MCP: 25K)        ║
 ║ ✓ Statusline         → ./.claude/statusline.js                                 ║
-║ ✓ Permissions        → ./.claude/settings.json (Safe mode)                     ║
+║ ✓ Permissions        → ./.claude/settings.json (Full mode)                     ║
 ╠════════════════════════════════════════════════════════════════════════════════╣
 ║ STANDARDS: {base} base + {project} project-specific = {total}                  ║
 ╠════════════════════════════════════════════════════════════════════════════════╣
@@ -936,10 +992,11 @@ Guidelines are generated based on user-configured values to provide context-awar
 ## Rules
 
 1. **All questions at the start** - no mid-process interruptions
-2. **Local files only** - statusline/permissions in `./.claude/`, not global
+2. **Local files only** - AI Performance, statusline, permissions ALL in `./.claude/settings.json`, NEVER touch `~/.claude/`
 3. **Dynamic counts** - standard counts calculated from source files
 4. **Show affected standards** - when editing, show what standards change
 5. **Preserve existing** - never overwrite non-CCO content in files
 6. **Always overwrite on apply** - statusline, permissions, and context are ALWAYS overwritten with final selections, even if they already exist (may be outdated versions)
 7. **Granular standard selection** - each subsection is independently evaluated, not atomic categories
 8. **No duplicate standards** - each standard is added exactly once; deduplicate before writing to CLAUDE.md
+9. **Never modify global** - cco-tune has NO permission to read/write/modify any file in `~/.claude/` directory
