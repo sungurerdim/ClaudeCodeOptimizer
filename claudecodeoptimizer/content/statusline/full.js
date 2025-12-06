@@ -12,7 +12,7 @@ const os = require('os');
 // CONFIGURATION
 // ============================================================================
 const CONFIG = {
-  pathSegments: 2,      // Show last N path segments (0 = hide)
+  pathSegments: 1,      // Show last N path segments (1 = root dir only, 0 = hide)
   showHostname: false,  // true = user@host, false = just user
   emojiWidth: 2,        // Terminal emoji width (1 or 2, try 1 if alignment is off)
 };
@@ -295,7 +295,7 @@ function formatStatusline(input, git) {
   // BUILD 5-COLUMN GRID
   // ─────────────────────────────────────────────────────────────────────────
   // Row 1: Path | User | Size | CC | Model
-  // Row 2: Repo:Branch | Conflicts | Stash | Ahead | Last
+  // Row 2: Repo:Branch | Conf | Stash | Ahead | Last
   // Row 3: Unstaged +/- | edit | new | del | move
   // Row 4: Staged +/- | edit | new | del | move
 
@@ -337,7 +337,7 @@ function formatStatusline(input, git) {
 
     row2 = [
       `${ICON.repo} ${c(repoText, 'green')}`,
-      `${c('Conflicts:', issueColor)} ${c(String(git.conflict), issueColor)}`,
+      `${c('Conf:', issueColor)} ${c(String(git.conflict), issueColor)}`,
       `${c('Stash:', savedColor)} ${c(String(git.stash), savedColor)}`,
       `${c('Ahead:', syncColor)} ${c(String(git.unpushed), syncColor)}`,
       `${c('Last:', 'gray')} ${c(lastCommitShort, 'gray')}`
