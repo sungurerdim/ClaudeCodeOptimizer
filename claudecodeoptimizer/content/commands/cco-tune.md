@@ -37,11 +37,12 @@ Files are sourced from `claudecodeoptimizer/content/`:
 
 | Content | Source | Target |
 |---------|--------|--------|
-| Statusline Full | `content/statusline/full.js` | `statusline.js` |
-| Statusline Minimal | `content/statusline/minimal.js` | `statusline.js` |
-| Permissions Safe | `content/permissions/safe.json` | `settings.json` |
-| Permissions Balanced | `content/permissions/balanced.json` | `settings.json` |
-| Permissions Permissive | `content/permissions/permissive.json` | `settings.json` |
+| Statusline Full | `content/statusline/full.js` | `.claude/statusline.js` |
+| Statusline Minimal | `content/statusline/minimal.js` | `.claude/statusline.js` |
+| Permissions Safe | `content/permissions/safe.json` | `.claude/settings.json` |
+| Permissions Balanced | `content/permissions/balanced.json` | `.claude/settings.json` |
+| Permissions Permissive | `content/permissions/permissive.json` | `.claude/settings.json` |
+| Permissions Full | `content/permissions/full.json` | `.claude/settings.json` |
 
 Global `~/.claude/` files are never modified by cco-tune.
 
@@ -121,8 +122,8 @@ Based on status, show options with smart defaults. **All configuration questions
 │ What would you like to do?                                              │
 ├─────────────────────────────────────────────────────────────────────────┤
 │ ☐ Update Detection   Re-detect stack and update standards               │
-│ ☐ Statusline         Configure local status bar (./.claude/)            │
-│ ☐ Permissions        Configure local permission levels (./.claude/)     │
+│ ☐ Statusline         Local status bar (./.claude/)                      │
+│ ☐ Permissions        Local permission levels (./.claude/)               │
 │ ○ Nothing            Exit without changes                               │
 └─────────────────────────────────────────────────────────────────────────┘
 ```
@@ -133,35 +134,50 @@ Based on status, show options with smart defaults. **All configuration questions
 │ What would you like to configure?                                       │
 ├─────────────────────────────────────────────────────────────────────────┤
 │ ☑ Project Detection  [recommended] Detect and apply standards           │
-│ ☐ Statusline         Local status bar with git info (./.claude/)        │
+│ ☐ Statusline         Local status bar (./.claude/)                      │
 │ ☐ Permissions        Local permission levels (./.claude/)               │
 └─────────────────────────────────────────────────────────────────────────┘
 ```
 
 - Detection is pre-selected and marked `[recommended]` when no context exists
 - User can select multiple options
+- **cco-tune NEVER modifies global ~/.claude/ files**
 
 ### Inline Configuration Questions
 
-**If Statusline selected**, ask immediately:
+**If Statusline selected**, ask mode:
 ```
 ┌─────────────────────────────────────────────────────────────────────────┐
 │ Local statusline mode (./.claude/statusline.js)                         │
 ├─────────────────────────────────────────────────────────────────────────┤
-│ ○ Full        [recommended] Project, git branch, changes                │
+│ ● Full        [recommended] 5-column table with git info                │
 │ ○ Minimal     Project + git branch only                                 │
 │ ○ Disable     Remove local statusline                                   │
 └─────────────────────────────────────────────────────────────────────────┘
 ```
 
-**If Permissions selected**, ask immediately:
+**When statusline is installed:**
+- Copies `content/statusline/full.js` → `./.claude/statusline.js`
+- Creates/updates `./.claude/settings.json` with local-only statusLine config:
+```json
+{
+  "statusLine": {
+    "type": "command",
+    "command": "test -f .claude/statusline.js && node .claude/statusline.js"
+  }
+}
+```
+- **Local-only:** If `.claude/statusline.js` doesn't exist, nothing runs (no global fallback)
+
+**If Permissions selected**, ask level (narrow → wide):
 ```
 ┌─────────────────────────────────────────────────────────────────────────┐
 │ Local permission level (./.claude/settings.json)                        │
 ├─────────────────────────────────────────────────────────────────────────┤
-│ ○ Safe        [recommended] Auto: reads, lint | Ask: writes, deletes   │
-│ ○ Balanced    Auto: reads | Ask: all writes                             │
+│ ○ Safe        Most restrictive | Auto: reads | Ask: everything else     │
+│ ○ Balanced    Auto: reads, lint | Ask: writes, deletes                  │
 │ ○ Permissive  Auto: most ops | Ask: deletes, security-sensitive         │
+│ ○ Full        [recommended] 300+ allow rules, comprehensive deny/ask   │
 └─────────────────────────────────────────────────────────────────────────┘
 ```
 
