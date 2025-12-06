@@ -197,7 +197,7 @@ Based on status, show options with smart defaults. **All configuration questions
 ┌─────────────────────────────────────────────────────────────────────────┐
 │ Local statusline mode (./.claude/statusline.js)                         │
 ├─────────────────────────────────────────────────────────────────────────┤
-│ ● Full        [recommended] 5-column table with git info                │
+│ ● Full        5-column table with git info                              │
 │ ○ Minimal     Project + git branch only                                 │
 │ ○ Disable     Remove local statusline                                   │
 └─────────────────────────────────────────────────────────────────────────┘
@@ -220,13 +220,24 @@ Based on status, show options with smart defaults. **All configuration questions
 ```
 ┌─────────────────────────────────────────────────────────────────────────┐
 │ Local permission level (./.claude/settings.json)                        │
+│ Recommended based on: Team {team} | Data {data} | Compliance {compliance}│
 ├─────────────────────────────────────────────────────────────────────────┤
-│ ○ Safe        Most restrictive | Auto: reads | Ask: everything else     │
-│ ○ Balanced    Auto: reads, lint | Ask: writes, deletes                  │
+│ ○ Safe        [recommended if Regulated/PII] Most restrictive           │
+│ ○ Balanced    [recommended if Team 2+] Auto: reads, lint | Ask: writes  │
 │ ○ Permissive  Auto: most ops | Ask: deletes, security-sensitive         │
-│ ○ Full        [recommended] 300+ allow rules, comprehensive deny/ask   │
+│ ○ Full        [recommended if Solo+Public] 300+ allow rules             │
 └─────────────────────────────────────────────────────────────────────────┘
 ```
+
+**Permission Level Auto-Detection:**
+
+| Condition | Recommended Level | Rationale |
+|-----------|-------------------|-----------|
+| Data: Regulated or Compliance: Any | Safe | Security-first for compliance |
+| Data: PII or Confidential | Safe | Protect sensitive data |
+| Team: 2+ (not Solo) | Balanced | Team coordination needs review |
+| Team: Solo + Data: Public | Full | Maximum productivity for solo devs |
+| Default | Balanced | Safe middle ground |
 
 After all questions answered → proceed to detection/apply (no more questions)
 
