@@ -7,7 +7,7 @@ import sys
 from typing import TypedDict
 
 from .config import (
-    CCO_MARKER_PATTERNS,
+    CCO_UNIVERSAL_PATTERN,
     CLAUDE_DIR,
     SEPARATOR,
     SETTINGS_FILE,
@@ -91,15 +91,21 @@ def remove_statusline(verbose: bool = True) -> bool:
 
 
 def has_claude_md_standards() -> list[str]:
-    """Check which CCO sections exist in CLAUDE.md."""
+    """Check which CCO sections exist in CLAUDE.md.
+
+    Uses universal pattern to detect ANY CCO marker for backward compatibility.
+    """
     claude_md = CLAUDE_DIR / "CLAUDE.md"
     if not claude_md.exists():
         return []
     content = claude_md.read_text(encoding="utf-8")
-    sections = []
-    if "<!-- CCO_STANDARDS_START -->" in content:
-        sections.append("CCO Standards")
-    return sections
+
+    # Use universal pattern to find all CCO markers
+    pattern, flags = CCO_UNIVERSAL_PATTERN
+    matches = re.findall(pattern, content, flags=flags)
+    if matches:
+        return [f"CCO Content ({len(matches)} section(s))"]
+    return []
 
 
 def remove_cco_files(verbose: bool = True) -> dict[str, int]:
@@ -115,28 +121,30 @@ def remove_cco_files(verbose: bool = True) -> dict[str, int]:
 
 
 def remove_claude_md_standards(verbose: bool = True) -> list[str]:
-    """Remove CCO standards from CLAUDE.md with detailed output."""
+    """Remove ALL CCO content from CLAUDE.md.
+
+    Uses universal pattern to remove any CCO marker for backward compatibility.
+    Ensures complete cleanup regardless of marker names from previous versions.
+    """
     claude_md = CLAUDE_DIR / "CLAUDE.md"
     if not claude_md.exists():
         return []
 
     content = claude_md.read_text(encoding="utf-8")
-    removed = []
 
-    # Remove CCO standards marker
-    pattern, flags = CCO_MARKER_PATTERNS["standards"]
-    if re.search(pattern, content, flags=flags):
+    # Use universal pattern to remove ALL CCO markers
+    pattern, flags = CCO_UNIVERSAL_PATTERN
+    matches = re.findall(pattern, content, flags=flags)
+
+    if matches:
         content = re.sub(pattern, "", content, flags=flags)
-        removed.append("CCO Standards")
-
-    if removed:
         content = re.sub(r"\n{3,}", "\n\n", content)
         claude_md.write_text(content, encoding="utf-8")
         if verbose:
-            for section in removed:
-                print(f"  - {section}")
+            print(f"  - CCO Content ({len(matches)} section(s) removed)")
+        return [f"CCO Content ({len(matches)} section(s))"]
 
-    return removed
+    return []
 
 
 def uninstall_package(method: str) -> bool:

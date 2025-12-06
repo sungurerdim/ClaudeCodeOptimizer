@@ -10,7 +10,7 @@ Maturity: Active | Breaking: Minimize | Priority: Quality
 Testing: Standard | SLA: None | Real-time: None
 
 ## AI Performance
-Thinking: 8K | MCP: 25K | Caching: on
+Thinking: 8K | MCP: 35K | Caching: on
 
 ## Guidelines
 - Self-review sufficient, document for future
