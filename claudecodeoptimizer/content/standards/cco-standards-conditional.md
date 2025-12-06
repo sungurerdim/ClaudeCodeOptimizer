@@ -153,7 +153,13 @@
 ## Collaboration
 **When:** Team: 2+ OR Multi-language requirement detected
 
-### Team
+### Team Basics (2-5)
+- Informal Review: async PR reviews acceptable
+- Shared Docs: README, CONTRIBUTING, basic docs
+- Communication: Slack/Discord for quick decisions
+- Git Flow: feature branches, clean history
+
+### Team Full (6+)
 - ADR: decisions + context + consequences
 - Local Parity: match production environment
 - Golden Paths: recommended approaches documented
@@ -169,4 +175,97 @@
 - RTL: support Arabic, Hebrew layouts
 - Locale: date/time/number/currency formatting
 - Pluralization: proper rules per language
+
+## Real-time
+**When:** WebSocket/SSE detected OR Real-time requirement selected
+
+### Basic Real-time
+- Connection Management: reconnect logic, heartbeat
+- State Sync: handle stale data gracefully
+
+### Standard Real-time
+- WebSocket: proper handshake, ping/pong
+- Event Ordering: sequence numbers, causality
+- Backpressure: handle slow consumers
+- Graceful Degradation: fallback to polling
+- Connection Pooling: reuse connections
+
+### Low-latency
+- Binary Protocols: protobuf, msgpack
+- Edge Compute: minimize round trips
+- Connection Affinity: sticky sessions
+- Pre-warming: eliminate cold starts
+- Memory Optimization: zero-copy where possible
+- Jitter Reduction: consistent latency
+- Geographic Distribution: regional endpoints
+- Hardware Acceleration: DPDK, kernel bypass
+
+## Testing
+**When:** Testing strategy selected
+
+### Testing Basics
+- Unit Tests: isolated, fast, deterministic
+- Mocking: external dependencies mocked
+- Coverage Target: >60% line coverage
+
+### Testing Standard
+- Integration Tests: test component interactions
+- Test Fixtures: reusable, maintainable
+- Coverage Target: >80% line coverage
+- CI Integration: tests run on every PR
+- Snapshot Testing: UI component stability
+
+### Testing Full
+- E2E Tests: critical user journeys
+- Visual Regression: catch UI changes
+- Contract Testing: API compatibility
+- Mutation Testing: test quality validation
+- Coverage Target: >90% line coverage
+- Flaky Test Detection: quarantine unreliable tests
+- Test Parallelization: fast feedback loops
+- Test Data Management: factories, fixtures
+
+### Performance Testing
+- Load Testing: expected traffic patterns
+- Stress Testing: breaking point identification
+- Benchmark Suite: track regressions
+- Profiling: identify bottlenecks
+
+## Observability
+**When:** SLA level selected
+
+### Monitoring Basics
+- Health Checks: /health endpoint
+- Error Tracking: Sentry or equivalent
+- Basic Alerting: critical failures only
+
+### Observability Standard
+- Structured Logging: JSON, correlation IDs
+- Metrics: RED method (Rate, Errors, Duration)
+- Distributed Tracing: request flow visibility
+- Alerting: tiered severity levels
+
+### High Availability
+- Redundancy: no single points of failure
+- Failover: automatic recovery
+- Health Probes: liveness + readiness
+- Circuit Breakers: prevent cascade failures
+- Load Balancing: distribute traffic
+- Auto-scaling: respond to demand
+- Backup Strategy: RPO/RTO defined
+- Incident Response: runbooks documented
+
+### Full Resilience
+- Multi-region: geographic redundancy
+- Chaos Engineering: regular failure injection
+- Disaster Recovery: tested DR plans
+- Global Load Balancing: anycast, GeoDNS
+- Data Replication: synchronous/async based on requirements
+- Zero Downtime Deploys: blue/green, canary
+- Capacity Planning: proactive scaling
+- SLO/SLI Tracking: error budgets
+- Post-mortem Culture: blameless analysis
+- On-call Rotation: defined escalation
+- Status Page: public incident communication
+- Dependency Mapping: understand blast radius
 <!-- CCO_CONDITIONALS_END -->
