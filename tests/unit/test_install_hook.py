@@ -182,8 +182,10 @@ class TestPostInstall:
             with patch("claudecodeoptimizer.install_hook.COMMANDS_DIR", tmp_path / "commands"):
                 with patch("claudecodeoptimizer.install_hook.AGENTS_DIR", tmp_path / "agents"):
                     with patch("claudecodeoptimizer.install_hook.get_content_dir") as mock_content:
-                        mock_content.return_value = tmp_path / "pkg"
-                        result = post_install()
+                        # Skip statusline to avoid STATUSLINE_FILE path issues
+                        with patch.object(sys, "argv", ["cco-setup", "--no-statusline"]):
+                            mock_content.return_value = tmp_path / "pkg"
+                            result = post_install()
 
         assert result == 0
         captured = capsys.readouterr()
