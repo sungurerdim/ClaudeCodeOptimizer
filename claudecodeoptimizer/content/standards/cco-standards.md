@@ -208,7 +208,7 @@ ASCII box-drawing tables in code blocks:
 ## Claude Code Integration
 - Parallel Tools: batch independent calls; sequential when outputs inform inputs
 - Subagent Delegation: use Task tool for separate context benefits
-- Resource Scaling: thinking tokens based on complexity (8K standard, 16K+ complex)
+- Resource Scaling: thinking tokens based on complexity (CCO: 5K standard, 8K medium, 10K complex)
 
 ## Option Labels
 When presenting options in AskUserQuestion:

@@ -1075,7 +1075,7 @@ Guidelines are generated based on user-configured values to provide context-awar
 3. **Dynamic counts** - standard counts calculated from source files
 4. **Show affected standards** - when editing, show what standards change
 5. **Preserve existing** - never overwrite non-CCO content in files
-6. **Always overwrite on apply** - statusline, permissions, and context are ALWAYS overwritten with final selections, even if they already exist (may be outdated versions)
+6. **Always overwrite on apply** - AI Performance, statusline, permissions, and context are ALWAYS overwritten with final selections in `./.claude/settings.json`, even if they already exist (may be outdated versions)
 7. **Granular standard selection** - each subsection is independently evaluated, not atomic categories
 8. **No duplicate standards** - each standard is added exactly once; deduplicate before writing to CLAUDE.md
 9. **Never modify global** - cco-tune has NO permission to read/write/modify any file in `~/.claude/` directory
