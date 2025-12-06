@@ -35,8 +35,8 @@ description: Project-specific AI tuning and configuration
 ```json
 {
   "env": {
-    "MAX_THINKING_TOKENS": "8000",
-    "MAX_MCP_OUTPUT_TOKENS": "25000"
+    "MAX_THINKING_TOKENS": "{auto-detected: 8000|16000|32000}",
+    "MAX_MCP_OUTPUT_TOKENS": "{auto-detected: 25000|50000|100000}"
   },
   "promptCachingEnabled": true,
   "statusLine": {
@@ -46,6 +46,8 @@ description: Project-specific AI tuning and configuration
   "permissions": { "allow": [...], "deny": [...], "ask": [...] }
 }
 ```
+
+Values are auto-detected based on project complexity. See [AI Performance Auto-Detection](#ai-performance-auto-detection).
 
 ### Content Sources
 
@@ -138,8 +140,8 @@ Based on status, show options with smart defaults. **All configuration questions
 ┌─────────────────────────────────────────────────────────────────────────┐
 │ What would you like to do?                                              │
 ├─────────────────────────────────────────────────────────────────────────┤
-│ ☐ Update Detection   Re-detect stack and update standards               │
-│ ☐ AI Performance     Thinking tokens, MCP output, caching               │
+│ ☐ Update Detection   Re-detect stack, standards, and AI Performance     │
+│ ☐ AI Performance     Override auto-detected thinking/MCP tokens         │
 │ ☐ Statusline         Local status bar (./.claude/)                      │
 │ ☐ Permissions        Local permission levels (./.claude/)               │
 │ ○ Nothing            Exit without changes                               │
@@ -151,39 +153,44 @@ Based on status, show options with smart defaults. **All configuration questions
 ┌─────────────────────────────────────────────────────────────────────────┐
 │ What would you like to configure?                                       │
 ├─────────────────────────────────────────────────────────────────────────┤
-│ ☑ Project Detection  [recommended] Detect and apply standards           │
-│ ☐ AI Performance     Thinking tokens, MCP output, caching               │
+│ ☑ Project Detection  [recommended] Detect stack, standards, AI Perf     │
+│ ☐ AI Performance     Override auto-detected thinking/MCP tokens         │
 │ ☐ Statusline         Local status bar (./.claude/)                      │
 │ ☐ Permissions        Local permission levels (./.claude/)               │
 └─────────────────────────────────────────────────────────────────────────┘
 ```
 
 - Detection is pre-selected and marked `[recommended]` when no context exists
+- **Detection includes AI Performance auto-calculation** (see [AI Performance Auto-Detection](#ai-performance-auto-detection))
+- AI Performance option is only for manual override of auto-detected values
 - User can select multiple options
 - **cco-tune NEVER modifies global ~/.claude/ files**
 
 ### Inline Configuration Questions
 
-**If AI Performance selected**, ask settings:
+**If AI Performance selected** (override auto-detected values):
 ```
 ┌─────────────────────────────────────────────────────────────────────────┐
-│ AI Performance Settings (./.claude/settings.json)                       │
+│ AI Performance Override (./.claude/settings.json)                       │
+│ Auto-detected: Thinking {detected_thinking} | MCP {detected_mcp}        │
 ├─────────────────────────────────────────────────────────────────────────┤
 │ Thinking Tokens:                                                        │
-│ ○ 8K    [current] Standard complexity                                   │
-│ ○ 16K   Complex multi-file changes                                      │
-│ ○ 32K   Architectural decisions                                         │
+│ ○ 8K    Standard complexity (CLI, Library, Monolith)                    │
+│ ○ 16K   [detected if K8s/ML/AI] Medium complexity                       │
+│ ○ 32K   [detected if Microservices+Monorepo] High complexity            │
 │                                                                         │
 │ MCP Output Tokens:                                                      │
-│ ○ 25K   [current] Standard output                                       │
-│ ○ 50K   Large file operations                                           │
-│ ○ 100K  Maximum output                                                  │
+│ ○ 25K   Standard output (<100 files)                                    │
+│ ○ 50K   [detected if 100-500 files] Large output                        │
+│ ○ 100K  [detected if Monorepo/500+ files] Maximum output                │
 │                                                                         │
 │ Prompt Caching:                                                         │
-│ ● On    [recommended] Reduces cost and latency                          │
+│ ● On    [recommended] Reduces cost and latency (~90% savings)           │
 │ ○ Off   Disable caching                                                 │
 └─────────────────────────────────────────────────────────────────────────┘
 ```
+
+**Note:** AI Performance is auto-detected during project detection. This option is only for manual override.
 
 **If Statusline selected**, ask mode:
 ```
@@ -255,8 +262,52 @@ After all questions answered → proceed to detection/apply (no more questions)
 | 18 | License | LICENSE file | - | - |
 | 19 | Coverage | pytest-cov, coverage reports | - | - |
 | 20 | Secrets Risk | .env patterns, hardcoded | Security | +12 |
+| 21 | AI Performance | Complexity score from above | → settings.json | - |
 
 **GRANULAR:** Each detection triggers only its specific subsection. Multiple detections stack additively.
+
+---
+
+### AI Performance Auto-Detection
+
+AI Performance settings are **automatically calculated** based on detected project complexity:
+
+#### Thinking Tokens (MAX_THINKING_TOKENS)
+
+| Complexity Score | Value | Detected When |
+|------------------|-------|---------------|
+| High (3+) | 32K | Microservices + Monorepo, or Enterprise team, or Hyperscale |
+| Medium (1-2) | 16K | K8s, ML/AI, Multiple APIs, Large team (16+), or Large scale (100K+) |
+| Standard (0) | 8K | Default for CLI, Library, Monolith, Solo/Small team |
+
+**Scoring Logic:**
+- +2: Microservices detected
+- +2: Monorepo detected
+- +1: K8s/Helm detected
+- +1: ML/AI detected
+- +1: Multiple API styles (REST + GraphQL + gRPC)
+- +1: Team size Large (16+) or Enterprise (51+)
+- +1: Scale Large (100K+) or Hyperscale (1M+)
+
+#### MCP Output Tokens (MAX_MCP_OUTPUT_TOKENS)
+
+| Codebase Size | Value | Detected When |
+|---------------|-------|---------------|
+| Very Large | 100K | Monorepo, or Hyperscale, or 500+ files |
+| Large | 50K | 100-500 files, or Multiple services, or Large team |
+| Standard | 25K | Default for smaller projects |
+
+**Scoring Logic:**
+- File count via `find . -type f -name "*.{py,js,ts,go,rs}" | wc -l`
+- Monorepo triggers 100K
+- Multiple services (>3 package.json/pyproject.toml) triggers 50K
+
+#### Prompt Caching
+
+| Setting | Value | When |
+|---------|-------|------|
+| Enabled | on | Always recommended (reduces cost ~90%) |
+| Disabled | off | Only if explicitly requested |
 
 ---
 
@@ -478,16 +529,30 @@ These elements cannot be auto-detected and require user input. Each option inclu
 
 **Impact:** Affects review rigor, testing requirements, documentation depth.
 
-### AI Performance (Calculated)
+### AI Performance (Auto-Detected)
 
-| Element | Description | Default | Settings Key |
-|---------|-------------|---------|--------------|
-| Thinking | Claude extended thinking | 8K | `env.MAX_THINKING_TOKENS` |
-| MCP | MCP output limit | 25K | `env.MAX_MCP_OUTPUT_TOKENS` |
-| Caching | Prompt caching (reduces cost) | on | `promptCachingEnabled` |
+AI Performance is **automatically calculated** during detection. See [AI Performance Auto-Detection](#ai-performance-auto-detection) for scoring logic.
+
+| Element | Settings Key | Auto-Detect Range | Source |
+|---------|--------------|-------------------|--------|
+| Thinking | `env.MAX_THINKING_TOKENS` | 8K / 16K / 32K | Complexity score |
+| MCP | `env.MAX_MCP_OUTPUT_TOKENS` | 25K / 50K / 100K | Codebase size |
+| Caching | `promptCachingEnabled` | on (always) | Recommended |
 
 **Written to:** `./.claude/settings.json` (local only, never global)
 
+**Example for complex project (Microservices + Monorepo):**
+```json
+{
+  "env": {
+    "MAX_THINKING_TOKENS": "32000",
+    "MAX_MCP_OUTPUT_TOKENS": "100000"
+  },
+  "promptCachingEnabled": true
+}
+```
+
+**Example for simple project (CLI tool):**
 ```json
 {
   "env": {
@@ -520,11 +585,17 @@ Show unified table with dynamic standard counts:
 ║  6  │ API           │ {framework|None}       │ {routes_path}           │ +6 API      ║
 ║ ... │ ...           │ ...                    │ ...                     │ ...         ║
 ╠═════╪═══════════════╪════════════════════════╪═════════════════════════╪═════════════╣
+║     │ AI PERFORMANCE (auto-calculated from complexity score)                         ║
+├─────┼───────────────┼────────────────────────┼─────────────────────────┼─────────────┤
+║ 21  │ Thinking      │ {8K|16K|32K}           │ complexity: {score}     │ → settings  ║
+║ 21  │ MCP Output    │ {25K|50K|100K}         │ files: {count}          │ → settings  ║
+║ 21  │ Caching       │ on                     │ recommended             │ → settings  ║
+╠═════╪═══════════════╪════════════════════════╪═════════════════════════╪═════════════╣
 ║     │ DEFAULTS (editable)                                                            ║
 ├─────┼───────────────┼────────────────────────┼─────────────────────────┼─────────────┤
-║ 21  │ Team          │ {Solo|2-5|6+}          │ default (not detected)  │ +8 Team     ║
-║ 22  │ Scale         │ {<100|100-10K|10K+}    │ default (not detected)  │ +12 Scale   ║
-║ 23  │ Data          │ {Public|Internal|...}  │ default (not detected)  │ +12 Sec     ║
+║ 22  │ Team          │ {Solo|2-5|6+}          │ default (not detected)  │ +8 Team     ║
+║ 23  │ Scale         │ {<100|100-10K|10K+}    │ default (not detected)  │ +12 Scale   ║
+║ 24  │ Data          │ {Public|Internal|...}  │ default (not detected)  │ +12 Sec     ║
 ║ ... │ ...           │ ...                    │ ...                     │ ...         ║
 ╠══════════════════════════════════════════════════════════════════════════════════════╣
 ║ STANDARDS: +{N} project-specific ({triggered_subsections})                           ║
@@ -734,7 +805,8 @@ Structure: {type} | Coverage: {N}% | License: {type}
 ║ CONFIGURED (all local, no global modifications)                                ║
 ├────────────────────────────────────────────────────────────────────────────────┤
 ║ ✓ Project Detection  → ./CLAUDE.md                                             ║
-║ ✓ AI Performance     → ./.claude/settings.json (Thinking: 8K, MCP: 25K)        ║
+║ ✓ AI Performance     → ./.claude/settings.json                                 ║
+║   └─ Thinking: {detected}K (complexity: {score}) | MCP: {detected}K            ║
 ║ ✓ Statusline         → ./.claude/statusline.js                                 ║
 ║ ✓ Permissions        → ./.claude/settings.json (Full mode)                     ║
 ╠════════════════════════════════════════════════════════════════════════════════╣
