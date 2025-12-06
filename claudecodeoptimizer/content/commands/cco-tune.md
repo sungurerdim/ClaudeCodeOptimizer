@@ -35,8 +35,8 @@ description: Project-specific AI tuning and configuration
 ```json
 {
   "env": {
-    "MAX_THINKING_TOKENS": "{CCO: 5000|8000|10000}",
-    "MAX_MCP_OUTPUT_TOKENS": "{CCO: 25000|35000|50000}"
+    "MAX_THINKING_TOKENS": "{detected_thinking}",
+    "MAX_MCP_OUTPUT_TOKENS": "{detected_mcp}"
   },
   "promptCachingEnabled": true,
   "statusLine": {
@@ -47,7 +47,7 @@ description: Project-specific AI tuning and configuration
 }
 ```
 
-Values are CCO recommendations based on project complexity. See [AI Performance Auto-Detection](#ai-performance-auto-detection).
+All values are auto-detected based on project complexity. See [AI Performance Auto-Detection](#ai-performance-auto-detection).
 
 ### Content Sources
 
@@ -175,22 +175,22 @@ Based on status, show options with smart defaults. **All configuration questions
 │ Auto-detected: Thinking {detected_thinking} | MCP {detected_mcp}        │
 ├─────────────────────────────────────────────────────────────────────────┤
 │ Thinking Tokens (CCO recommended, no official tiers):                   │
-│ ○ 5000   Standard complexity (CLI, Library, Monolith)                   │
-│ ○ 8000   [detected if K8s/ML/AI] Medium complexity                      │
-│ ○ 10000  [detected if Microservices+Monorepo] High complexity           │
+│ ○ {low}    [detected if score=0] Standard complexity                    │
+│ ○ {medium} [detected if score=1-2] Medium complexity                    │
+│ ○ {high}   [detected if score=3+] High complexity                       │
 │                                                                         │
-│ MCP Output Tokens (official default: 25000):                            │
-│ ○ 25000  [default] Standard output (<100 files)                         │
-│ ○ 35000  [detected if 100-500 files] Large output                       │
-│ ○ 50000  [detected if Monorepo/500+ files] Very large output            │
+│ MCP Output Tokens:                                                      │
+│ ○ {small}  [detected if <100 files] Standard output                     │
+│ ○ {medium} [detected if 100-500 files] Large output                     │
+│ ○ {large}  [detected if 500+ files] Very large output                   │
 │                                                                         │
 │ Prompt Caching:                                                         │
-│ ● On    [recommended] Reduces cost and latency (~90% savings)           │
+│ ● On    [recommended] Reduces cost and latency                          │
 │ ○ Off   Disable caching                                                 │
 └─────────────────────────────────────────────────────────────────────────┘
 ```
 
-**Note:** AI Performance is auto-detected during project detection. This option is only for manual override. Values are CCO recommendations, not official Claude Code tiers.
+**Note:** AI Performance is auto-detected during project detection. This option is only for manual override. See [AI Performance Auto-Detection](#ai-performance-auto-detection) for actual values.
 
 **If Statusline selected**, ask mode:
 ```
@@ -559,27 +559,18 @@ AI Performance is **automatically calculated** during detection. See [AI Perform
 
 **Written to:** `./.claude/settings.json` (local only, never global)
 
-**Example for complex project (Microservices + Monorepo):**
+**Output format:**
 ```json
 {
   "env": {
-    "MAX_THINKING_TOKENS": "10000",
-    "MAX_MCP_OUTPUT_TOKENS": "50000"
+    "MAX_THINKING_TOKENS": "{detected_thinking}",
+    "MAX_MCP_OUTPUT_TOKENS": "{detected_mcp}"
   },
   "promptCachingEnabled": true
 }
 ```
 
-**Example for simple project (CLI tool):**
-```json
-{
-  "env": {
-    "MAX_THINKING_TOKENS": "5000",
-    "MAX_MCP_OUTPUT_TOKENS": "25000"
-  },
-  "promptCachingEnabled": true
-}
-```
+Values are calculated from complexity score and file count. See tables above for mapping.
 
 ---
 
