@@ -15,7 +15,7 @@ __all__ = [
     "get_cco_agents",
     "get_standards_breakdown",
     "get_content_path",
-    "CCO_MARKER_PATTERNS",
+    "CCO_UNIVERSAL_PATTERN",
     "SUBPROCESS_TIMEOUT",
     "STATUSLINE_FILE",
     "SETTINGS_FILE",
@@ -42,10 +42,14 @@ def get_content_path(subdir: str) -> Path:
     return Path(__file__).parent / "content" / subdir
 
 
-# Marker patterns for content removal
-CCO_MARKER_PATTERNS: dict[str, tuple[str, int]] = {
-    "standards": (r"<!-- CCO_STANDARDS_START -->.*?<!-- CCO_STANDARDS_END -->\n?", re.DOTALL),
-}
+# Universal CCO marker pattern - matches ANY cco_* marker block (case-insensitive)
+# Used for backward compatibility: removes all CCO content regardless of marker name
+# Matches: <!-- CCO_anything_START -->...<!-- CCO_anything_END -->
+# Also: <!-- cco-anything-start -->...<!-- cco-anything-end -->
+CCO_UNIVERSAL_PATTERN = (
+    r"<!--\s*CCO[_-]\w+[_-]START\s*-->.*?<!--\s*CCO[_-]\w+[_-]END\s*-->\n?",
+    re.DOTALL | re.IGNORECASE,
+)
 
 SUBPROCESS_TIMEOUT = 5  # seconds
 

@@ -8,7 +8,7 @@ from pathlib import Path
 
 from .config import (
     AGENTS_DIR,
-    CCO_MARKER_PATTERNS,
+    CCO_UNIVERSAL_PATTERN,
     CLAUDE_DIR,
     COMMANDS_DIR,
     SEPARATOR,
@@ -105,8 +105,27 @@ def _load_standards() -> str:
     return standards_file.read_text(encoding="utf-8")
 
 
+def _remove_all_cco_markers(content: str) -> tuple[str, int]:
+    """Remove ALL CCO markers from content for backward compatibility.
+
+    Uses universal pattern to match any CCO marker regardless of name.
+    Ensures clean upgrade from any previous CCO version.
+
+    Returns:
+        Tuple of (cleaned_content, removed_count)
+    """
+    pattern, flags = CCO_UNIVERSAL_PATTERN
+    matches = re.findall(pattern, content, flags=flags)
+    cleaned = re.sub(pattern, "", content, flags=flags)
+    return cleaned, len(matches)
+
+
 def setup_claude_md(verbose: bool = True) -> dict[str, int]:
     """Add CCO Standards to ~/.claude/CLAUDE.md
+
+    For backward compatibility:
+    1. Remove ALL existing CCO markers (any name/format)
+    2. Append fresh standards content
 
     Returns:
         Dictionary with installed counts (universal, ai_specific, cco_specific)
@@ -116,17 +135,17 @@ def setup_claude_md(verbose: bool = True) -> dict[str, int]:
     CLAUDE_DIR.mkdir(parents=True, exist_ok=True)
 
     action = "created"
+    removed_count = 0
+
     if claude_md.exists():
         content = claude_md.read_text(encoding="utf-8")
 
-        # Check if standards marker exists and update or append
-        if "<!-- CCO_STANDARDS_START -->" in content:
-            pattern, flags = CCO_MARKER_PATTERNS["standards"]
-            content = re.sub(pattern, standards, content, flags=flags)
-            action = "updated"
-        else:
-            content = content.rstrip() + "\n\n" + standards
-            action = "appended"
+        # Remove ALL CCO markers for backward compatibility
+        content, removed_count = _remove_all_cco_markers(content)
+
+        # Append fresh standards
+        content = content.rstrip() + "\n\n" + standards
+        action = "updated" if removed_count > 0 else "appended"
     else:
         content = standards
 
@@ -137,7 +156,12 @@ def setup_claude_md(verbose: bool = True) -> dict[str, int]:
     installed = breakdown["universal"] + breakdown["ai_specific"] + breakdown["cco_specific"]
 
     if verbose:
-        print(f"  CLAUDE.md: {installed} standards {action}")
+        if removed_count > 0:
+            print(
+                f"  CLAUDE.md: {installed} standards {action} (cleaned {removed_count} old marker(s))"
+            )
+        else:
+            print(f"  CLAUDE.md: {installed} standards {action}")
 
     return {
         "universal": breakdown["universal"],

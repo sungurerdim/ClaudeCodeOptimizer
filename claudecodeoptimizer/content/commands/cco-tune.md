@@ -1081,3 +1081,4 @@ Guidelines are generated based on user-configured values to provide context-awar
 7. **Granular standard selection** - each subsection is independently evaluated, not atomic categories
 8. **No duplicate standards** - each standard is added exactly once; deduplicate before writing to CLAUDE.md
 9. **Never modify global** - cco-tune has NO permission to read/write/modify any file in `~/.claude/` directory
+10. **Backward compatibility** - all CCO markers (`<!-- CCO_*_START -->...<!-- CCO_*_END -->`) are removed before inserting new content; ensures clean upgrades from any previous CCO version

@@ -72,7 +72,9 @@ class TestHasClaudeMdRules:
         claude_md.write_text("<!-- CCO_STANDARDS_START -->standards<!-- CCO_STANDARDS_END -->")
         with patch("claudecodeoptimizer.cco_remove.CLAUDE_DIR", tmp_path):
             sections = has_claude_md_standards()
-            assert "CCO Standards" in sections
+            # Universal pattern returns "CCO Content (N section(s))"
+            assert len(sections) == 1
+            assert "CCO Content" in sections[0]
 
 
 class TestRemoveCcoFiles:
@@ -120,7 +122,9 @@ class TestRemoveClaudeMdRules:
         )
         with patch("claudecodeoptimizer.cco_remove.CLAUDE_DIR", tmp_path):
             removed = remove_claude_md_standards(verbose=True)
-        assert "CCO Standards" in removed
+        # Universal pattern returns "CCO Content (N section(s))"
+        assert len(removed) == 1
+        assert "CCO Content" in removed[0]
 
 
 class TestUninstallPackage:

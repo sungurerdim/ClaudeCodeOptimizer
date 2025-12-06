@@ -4,7 +4,7 @@ from pathlib import Path
 
 from claudecodeoptimizer.config import (
     AGENTS_DIR,
-    CCO_MARKER_PATTERNS,
+    CCO_UNIVERSAL_PATTERN,
     CLAUDE_DIR,
     COMMANDS_DIR,
     SUBPROCESS_TIMEOUT,
@@ -41,16 +41,25 @@ class TestConstants:
         assert isinstance(SUBPROCESS_TIMEOUT, int)
         assert SUBPROCESS_TIMEOUT > 0
 
-    def test_cco_marker_patterns(self):
-        """Test CCO_MARKER_PATTERNS is defined correctly."""
-        assert isinstance(CCO_MARKER_PATTERNS, dict)
-        assert "standards" in CCO_MARKER_PATTERNS
-        # Each pattern should be a tuple of (regex_string, flags)
-        for key, value in CCO_MARKER_PATTERNS.items():
-            assert isinstance(value, tuple)
-            assert len(value) == 2
-            assert isinstance(value[0], str)
-            assert isinstance(value[1], int)
+    def test_cco_universal_pattern(self):
+        """Test CCO_UNIVERSAL_PATTERN is defined correctly."""
+        import re
+
+        assert isinstance(CCO_UNIVERSAL_PATTERN, tuple)
+        assert len(CCO_UNIVERSAL_PATTERN) == 2
+        pattern, flags = CCO_UNIVERSAL_PATTERN
+        assert isinstance(pattern, str)
+        assert isinstance(flags, int)
+
+        # Test that pattern matches various CCO marker formats
+        test_cases = [
+            "<!-- CCO_STANDARDS_START -->content<!-- CCO_STANDARDS_END -->",
+            "<!-- CCO_CONTEXT_START -->content<!-- CCO_CONTEXT_END -->",
+            "<!-- cco-standards-start -->content<!-- cco-standards-end -->",
+            "<!-- CCO_ANY_NAME_START -->content<!-- CCO_ANY_NAME_END -->",
+        ]
+        for test in test_cases:
+            assert re.search(pattern, test, flags=flags), f"Pattern should match: {test}"
 
 
 class TestFunctions:
