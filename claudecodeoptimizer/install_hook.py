@@ -48,10 +48,11 @@ def setup_statusline(verbose: bool = True) -> bool:
         except json.JSONDecodeError:
             settings = {}
 
-    # Set statusLine to point to the file
+    # Set statusLine with dynamic path: local first, then global fallback
+    # This allows projects to override the global statusline
     settings["statusLine"] = {
         "type": "command",
-        "command": f"node {STATUSLINE_FILE}",
+        "command": 'node "$(test -f .claude/statusline.js && echo .claude/statusline.js || echo ~/.claude/statusline.js)"',
     }
 
     SETTINGS_FILE.write_text(json.dumps(settings, indent=2) + "\n", encoding="utf-8")
