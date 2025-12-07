@@ -1019,22 +1019,53 @@ Exports the full CCO_CONTEXT block including CCO-Specific standards for use in o
 
 ## Standards Count Structure
 
-Standards are organized in 4 categories. **All counts are dynamically calculated from source files.**
+Standards are organized in 4 categories. **All counts are dynamically calculated at runtime.**
 
-| Category | Source File | Scope |
-|----------|-------------|-------|
-| Universal | `cco-standards.md` | All projects |
-| AI-Specific | `cco-standards.md` | All AI assistants |
-| CCO-Specific | `cco-standards.md` | CCO users only |
-| Project-Specific | `cco-standards-conditional.md` | Triggered by detection |
+### Source Files
 
-**Base standards:** Universal + AI-Specific + CCO-Specific = ~{base_count} (count `^- ` lines in source)
-**Project-specific:** Up to ~{max_conditional} additional (count `^- ` lines in conditional source)
+| Category | Source (Original) | Installed Location |
+|----------|-------------------|-------------------|
+| Universal | `content/standards/cco-standards.md` | `~/.claude/CLAUDE.md` |
+| AI-Specific | `content/standards/cco-standards.md` | `~/.claude/CLAUDE.md` |
+| CCO-Specific | `content/standards/cco-standards.md` | `~/.claude/CLAUDE.md` |
+| Project-Specific | `content/standards/cco-standards-conditional.md` | `./CLAUDE.md` (triggered only) |
 
-**Count calculation:**
-- Count `^- ` lines (bullet points starting with `- `) in each section
-- Tables count as guidance, not individual standards
-- Counts are dynamic - always recalculate from source files
+### Dynamic Count Commands
+
+**MANDATORY:** Execute these to get accurate counts before displaying:
+
+```bash
+# Base standards (from installed ~/.claude/CLAUDE.md)
+UNIVERSAL=$(sed -n '/^# Universal Standards/,/^---$/p' ~/.claude/CLAUDE.md | grep -c "^- ")
+AI_SPECIFIC=$(sed -n '/^# AI-Specific Standards/,/^---$/p' ~/.claude/CLAUDE.md | grep -c "^- ")
+CCO_SPECIFIC=$(sed -n '/^# CCO-Specific Standards/,/<!-- CCO_STANDARDS_END -->/p' ~/.claude/CLAUDE.md | grep -c "^- ")
+BASE_TOTAL=$((UNIVERSAL + AI_SPECIFIC + CCO_SPECIFIC))
+
+# Conditional pool (from source file - all available)
+# Path relative to CCO package installation
+CONDITIONAL_POOL=$(grep -c "^- " claudecodeoptimizer/content/standards/cco-standards-conditional.md)
+
+# Project-specific triggered (from local ./CLAUDE.md after cco-tune)
+PROJECT_SPECIFIC=$(sed -n '/^## Conditional Standards/,/<!-- CCO_CONTEXT_END -->/p' ./CLAUDE.md 2>/dev/null | grep -c "^- " || echo 0)
+
+# Total active
+TOTAL=$((BASE_TOTAL + PROJECT_SPECIFIC))
+```
+
+### Display Format
+
+```
+STANDARDS: {BASE_TOTAL} base + {PROJECT_SPECIFIC} project-specific = {TOTAL} active
+```
+
+### Count Rules
+
+1. **Always execute commands** - Never use memorized or estimated values
+2. **Use section boundaries** - `sed` extracts specific sections before counting
+3. **Count `^- ` only** - Lines starting with `- ` are standards
+4. **Tables are not standards** - Rows with `|` are guidance/reference
+5. **Verify math** - `BASE = UNIVERSAL + AI_SPECIFIC + CCO_SPECIFIC`
+6. **Handle missing files** - Use `|| echo 0` for optional files
 
 ---
 
