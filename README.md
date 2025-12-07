@@ -52,14 +52,14 @@ Inside Claude Code:
 
 CCO uses a 4-category standards system:
 
-| Category | Count | Scope | Export |
-|----------|-------|-------|--------|
-| **Universal** | 43 | All projects, AI/human agnostic | Both |
-| **AI-Specific** | 31 | All AI assistants, model agnostic | Both |
-| **CCO-Specific** | 37 | CCO workflow mechanisms | CLAUDE.md only |
-| **Project-Specific** | ~15-35 | Selected by /cco-tune from 167 pool | Both |
+| Category | Scope | Export |
+|----------|-------|--------|
+| **Universal** | All projects, AI/human agnostic | Both |
+| **AI-Specific** | All AI assistants, model agnostic | Both |
+| **CCO-Specific** | CCO workflow mechanisms | CLAUDE.md only |
+| **Project-Specific** | Selected by /cco-tune based on detection | Both |
 
-**Typical active: ~126-146 standards** (only relevant ones load)
+**~112 base + ~15-35 project-specific = ~127-147 active** (run `/cco-tune` for exact counts)
 
 ### Categories Explained
 

@@ -8,30 +8,28 @@ Complete reference of all CCO standards organized by category.
 
 ```
 ┌─────────────────────────────────────────────────────────────────┐
-│  ALWAYS ACTIVE                                                  │
+│  ALWAYS ACTIVE (Base Standards)                                 │
 ├─────────────────────────────────────────────────────────────────┤
-│  Universal (43)      - All projects, AI/human agnostic          │
-│  AI-Specific (31)    - All AI assistants, model agnostic        │
-│  CCO-Specific (37)   - CCO workflow mechanisms                  │
+│  Universal      - All projects, AI/human agnostic               │
+│  AI-Specific    - All AI assistants, model agnostic             │
+│  CCO-Specific   - CCO workflow mechanisms                       │
 ├─────────────────────────────────────────────────────────────────┤
-│  BASE TOTAL: 111 standards                                      │
+│  DYNAMICALLY LOADED (Project-Specific)                          │
 ├─────────────────────────────────────────────────────────────────┤
-│  DYNAMICALLY LOADED                                             │
-├─────────────────────────────────────────────────────────────────┤
-│  Project-Specific (167 pool) - Selected by /cco-tune triggers   │
-│  Typical: 15-35 standards per project                           │
-├─────────────────────────────────────────────────────────────────┤
-│  TYPICAL ACTIVE: ~126-146 standards                             │
+│  Selected by /cco-tune based on project detection               │
+│  Only relevant standards are loaded per project                 │
 └─────────────────────────────────────────────────────────────────┘
+
+Counts are dynamically calculated. Run /cco-tune to see current totals.
 ```
 
 ---
 
-## Universal Standards (43)
+## Universal Standards
 
 *Applies to ALL software projects regardless of language, framework, or team size.*
 
-### Code Quality (11)
+### Code Quality
 | Standard | Description |
 |----------|-------------|
 | Fail-Fast | Immediate visible failure, no silent fallbacks |
@@ -46,7 +44,7 @@ Complete reference of all CCO standards organized by category.
 | Explicit Over Implicit | Clear intent, no magic values |
 | Separation of Concerns | Distinct responsibilities per module |
 
-### File & Resource Management (5)
+### File & Resource Management
 | Standard | Description |
 |----------|-------------|
 | Minimal Touch | Only files required for task |
@@ -55,7 +53,7 @@ Complete reference of all CCO standards organized by category.
 | Resource Management | Cleanup temp files, close handles, release connections |
 | Exclusions | Skip .git, node_modules, __pycache__, venv, dist, build |
 
-### Security Fundamentals (6)
+### Security Fundamentals
 | Standard | Description |
 |----------|-------------|
 | Secrets | Never hardcode, use env vars or vault |
@@ -65,7 +63,7 @@ Complete reference of all CCO standards organized by category.
 | Defense in Depth | Multiple layers, don't trust single control |
 | Secure Defaults | Opt-in to less secure, not opt-out |
 
-### Testing Fundamentals (5)
+### Testing Fundamentals
 | Standard | Description |
 |----------|-------------|
 | Coverage | Meaningful coverage (context-adjusted: 60-90%) |
@@ -74,7 +72,7 @@ Complete reference of all CCO standards organized by category.
 | Critical Paths | E2E for critical workflows |
 | Reproducible | Same input → same result, no flaky tests |
 
-### Error Handling (5)
+### Error Handling
 | Standard | Description |
 |----------|-------------|
 | Fail Gracefully | Catch, log context, recover or propagate |
@@ -83,7 +81,7 @@ Complete reference of all CCO standards organized by category.
 | Rollback on Failure | Leave system in consistent state |
 | Actionable Errors | Include what went wrong and how to fix |
 
-### Documentation (4)
+### Documentation
 | Standard | Description |
 |----------|-------------|
 | README | Description, setup, usage |
@@ -91,7 +89,7 @@ Complete reference of all CCO standards organized by category.
 | Comments | Explain why, not what |
 | Examples | Working examples for common use cases |
 
-### Workflow (4)
+### Workflow
 | Standard | Description |
 |----------|-------------|
 | Review Conventions | Match existing patterns |
@@ -99,7 +97,7 @@ Complete reference of all CCO standards organized by category.
 | Decompose | Break complex tasks into smaller steps |
 | Version | SemVer (MAJOR.MINOR.PATCH) |
 
-### UX/DX (3)
+### UX/DX
 | Standard | Description |
 |----------|-------------|
 | Minimum Friction | Fewest steps to goal |
@@ -108,11 +106,11 @@ Complete reference of all CCO standards organized by category.
 
 ---
 
-## AI-Specific Standards (31)
+## AI-Specific Standards
 
 *Applies to ALL AI coding assistants regardless of provider or model.*
 
-### Context Optimization (6)
+### Context Optimization
 | Standard | Description |
 |----------|-------------|
 | Semantic Density | Max meaning per token, concise over verbose |
@@ -122,7 +120,7 @@ Complete reference of all CCO standards organized by category.
 | Reference Over Repeat | Cite by name instead of duplicating |
 | Bounded Context | Provide relevant scope, not entire codebase |
 
-### AI Behavior (7)
+### AI Behavior
 | Standard | Description |
 |----------|-------------|
 | Read First | Always read files before proposing edits |
@@ -133,7 +131,7 @@ Complete reference of all CCO standards organized by category.
 | Ask When Uncertain | Clarify ambiguous requirements before proceeding |
 | State Confidence | Indicate certainty level for non-obvious suggestions |
 
-### Quality Control (5)
+### Quality Control
 | Standard | Description |
 |----------|-------------|
 | No Vibe Coding | Avoid unfamiliar frameworks without understanding |
@@ -142,7 +140,7 @@ Complete reference of all CCO standards organized by category.
 | Positive Framing | Tell what to do, not what to avoid |
 | Contextual Motivation | Explain WHY behaviors matter |
 
-### Status Updates (5)
+### Status Updates
 | Standard | Description |
 |----------|-------------|
 | Announce Before Action | State what will be done before starting |
@@ -151,7 +149,7 @@ Complete reference of all CCO standards organized by category.
 | Phase Transitions | Clear signals when moving between workflow phases |
 | No Silent Operations | User should always know what's happening |
 
-### Multi-Model Compatibility (4)
+### Multi-Model Compatibility
 | Standard | Description |
 |----------|-------------|
 | Model-Agnostic Instructions | No model-specific syntax in shared rules |
@@ -159,7 +157,7 @@ Complete reference of all CCO standards organized by category.
 | Graceful Degradation | Work with models that lack certain features |
 | Tool-Agnostic Patterns | Patterns that work across Claude/Codex/Gemini/etc. |
 
-### Output Standards (4)
+### Output Standards
 | Standard | Description |
 |----------|-------------|
 | Error Format | [SEVERITY] {What} in {file:line} |
@@ -169,7 +167,7 @@ Complete reference of all CCO standards organized by category.
 
 ---
 
-## CCO-Specific Standards (37)
+## CCO-Specific Standards
 
 *CCO workflow mechanisms - only for CCO users.*
 
