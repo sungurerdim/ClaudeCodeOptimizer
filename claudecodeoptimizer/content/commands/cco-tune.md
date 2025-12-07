@@ -145,101 +145,79 @@ Show current project state before asking anything. Status shows **current values
 
 Based on status, show options with smart defaults. **All configuration questions are asked in this step.**
 
-**If context exists:**
-```
-┌─────────────────────────────────────────────────────────────────────────┐
-│ What would you like to do?                                              │
-├─────────────────────────────────────────────────────────────────────────┤
-│ ☐ Update Detection   Re-detect stack, standards, and AI Performance     │
-│ ☐ AI Performance     Override auto-detected thinking/MCP tokens         │
-│ ☐ Statusline         Local status bar (./.claude/)                      │
-│ ☐ Permissions        Local permission levels (./.claude/)               │
-│ ○ Nothing            Exit without changes                               │
-└─────────────────────────────────────────────────────────────────────────┘
-```
+Follow CCO "Question Formatting" standard.
 
-**If no context (first run):**
-```
-┌─────────────────────────────────────────────────────────────────────────┐
-│ What would you like to configure?                                       │
-├─────────────────────────────────────────────────────────────────────────┤
-│ ☑ Project Detection  [recommended] Detect stack, standards, AI Perf     │
-│ ☐ AI Performance     Override auto-detected thinking/MCP tokens         │
-│ ☐ Statusline         Local status bar (./.claude/)                      │
-│ ☐ Permissions        Local permission levels (./.claude/)               │
-└─────────────────────────────────────────────────────────────────────────┘
-```
+| Question | Options (multiSelect) |
+|----------|----------------------|
+| What to configure? | Update Detection, AI Performance, Statusline, Permissions, Nothing |
 
-- Detection is pre-selected and marked `[recommended]` when no context exists
-- **Detection includes AI Performance auto-calculation** (see [AI Performance Auto-Detection](#ai-performance-auto-detection))
-- AI Performance option is only for manual override of auto-detected values
-- User can select multiple options
+**Option descriptions:**
+- Update Detection: Re-scan project, recalculate AI Performance
+- AI Performance: Override detected thinking/MCP tokens
+- Statusline: Local status bar configuration
+- Permissions: Local permission levels
+- Nothing: Exit without changes
+
+**`[recommended]` placement:** First run (no context) → "Update Detection"
+
+**Notes:**
+- Detection includes AI Performance auto-calculation (see [AI Performance Auto-Detection](#ai-performance-auto-detection))
+- AI Performance option is for manual override only
 - **cco-tune NEVER modifies global ~/.claude/ files**
 
 ### Inline Configuration Questions
 
 **If AI Performance selected** (override auto-detected values):
-```
-┌─────────────────────────────────────────────────────────────────────────┐
-│ AI Performance Override (./.claude/settings.json)                       │
-│ Auto-detected: Thinking {detected} | MCP {detected}                     │
-├─────────────────────────────────────────────────────────────────────────┤
-│ Thinking Tokens: (see AI Performance Auto-Detection for values)         │
-│ ○ Standard [detected if score=0]    Simple operations                   │
-│ ○ Medium [detected if score=1-2]    Multi-file changes                  │
-│ ○ High [detected if score=3+]       Complex reasoning                   │
-│                                                                         │
-│ MCP Output Tokens: (see AI Performance Auto-Detection for values)       │
-│ ○ Standard [detected if <100]       Official default                    │
-│ ○ Large [detected if 100-500]       Multiple services                   │
-│ ○ Very Large [detected if 500+]     Monorepo/Hyperscale                 │
-│                                                                         │
-│ Prompt Caching (DISABLE_PROMPT_CACHING):                                │
-│ ● On [recommended]                  Reduces cost ~90%                   │
-│ ○ Off                               Disable caching                     │
-└─────────────────────────────────────────────────────────────────────────┘
-```
 
-**Note:** AI Performance is auto-detected during project detection. This option is only for manual override. See [AI Performance Auto-Detection](#ai-performance-auto-detection) for actual values.
+Ask 3 separate questions. Follow CCO "Question Formatting" standard.
 
-**If Statusline selected**, ask mode:
-```
-┌─────────────────────────────────────────────────────────────────────────┐
-│ Local statusline mode (./.claude/statusline.js)                         │
-├─────────────────────────────────────────────────────────────────────────┤
-│ ● Full [current]      5-column table with git info                      │
-│ ○ Minimal             Project + git branch only                         │
-│ ○ Disable             Remove local statusline                           │
-└─────────────────────────────────────────────────────────────────────────┘
-```
+**Questions (options: small → large):**
+
+| Question | Options |
+|----------|---------|
+| Thinking Tokens? | Standard, Medium, High |
+| MCP Output Tokens? | Standard, Large, Very Large |
+| Prompt Caching? | Off, On |
+
+**Option descriptions:**
+- Thinking: Simple ops → Multi-file → Complex reasoning
+- MCP Output: Small codebase → Medium → Monorepo/large
+- Caching: On always `[recommended]`
+
+**Labels:** Apply per CCO "Question Formatting" standard.
+
+**Tier → value mapping:** See [AI Performance Auto-Detection](#ai-performance-auto-detection).
+
+**If Statusline selected** (options: narrow → wide):
+
+| Question | Options |
+|----------|---------|
+| Statusline mode? | Disable, Minimal, Full |
+
+**Option descriptions:** Remove → Basic info → Full details
 
 **When statusline is installed:**
 - Copies `content/statusline/full.js` → `./.claude/statusline.js`
 - Adds `statusLine` config to `./.claude/settings.json`
 - **Local-only:** If `.claude/statusline.js` doesn't exist, nothing runs (no global fallback)
 
-**If Permissions selected**, ask level (narrow → wide):
-```
-┌─────────────────────────────────────────────────────────────────────────┐
-│ Local permission level (./.claude/settings.json)                        │
-│ Recommended based on: Team {team} | Data {data} | Compliance {compliance}│
-├─────────────────────────────────────────────────────────────────────────┤
-│ ○ Safe [recommended if Regulated/PII]        Most restrictive           │
-│ ○ Balanced [recommended if Team 2+]          Auto: reads, lint/test     │
-│ ○ Permissive                                 Auto: most ops | Ask: del  │
-│ ○ Full [recommended if Solo+Public]          300+ allow rules           │
-└─────────────────────────────────────────────────────────────────────────┘
-```
+**If Permissions selected** (options: narrow → wide):
 
-**Permission Level Auto-Detection:**
+| Question | Options |
+|----------|---------|
+| Permission level? | Safe, Balanced, Permissive, Full |
 
-| Condition | Recommended Level | Rationale |
-|-----------|-------------------|-----------|
-| Data: Regulated or Compliance: Any | Safe | Security-first for compliance |
-| Data: PII or Confidential | Safe | Protect sensitive data |
-| Team: 2+ (not Solo) | Balanced | Team coordination needs review |
-| Team: Solo + Data: Public | Full | Maximum productivity for solo devs |
-| Default | Balanced | Safe middle ground |
+**Option descriptions:** Most restrictive → Balanced → Liberal → Maximum auto-approval
+
+**`[recommended]` placement** (based on detection):
+
+| Condition | Recommended |
+|-----------|-------------|
+| Data: Regulated or Compliance: Any | Safe |
+| Data: PII or Confidential | Safe |
+| Team: 2+ (not Solo) | Balanced |
+| Team: Solo + Data: Public | Full |
+| Default | Balanced |
 
 After all questions answered → proceed to detection/apply (no more questions)
 
@@ -1228,5 +1206,5 @@ Guidelines are generated based on user-configured values to provide context-awar
 8. **No duplicate standards** - each standard is added exactly once; deduplicate before writing to CLAUDE.md
 9. **Never modify global** - cco-tune has NO permission to read/write/modify any file in `~/.claude/` directory
 10. **Backward compatibility** - all CCO markers (`<!-- CCO_*_START -->...<!-- CCO_*_END -->`) are removed before inserting new content; ensures clean upgrades from any previous CCO version
-11. **Labels on right** - All labels (`[recommended]`, `[detected]`, `[current]`) appear on the RIGHT side of option names, not in descriptions
+11. **Question Labels** - Follow CCO "Question Labels" standard: labels on OPTIONS only (`○ Option [label]`), never in question text
 12. **String env values** - All `env` values in settings.json must be strings per official Claude Code docs
