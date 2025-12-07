@@ -20,15 +20,15 @@ Testing: Standard | SLA: None | Real-time: None
 ## Operational
 Tools: ruff format . (format), ruff check . && mypy claudecodeoptimizer/ (lint), pytest tests/ --cov (test)
 Conventions: test_*.py in tests/unit/ and tests/integration/, relative imports internal, snake_case
-Applicable: security, tech-debt, tests, cicd, docs, supply-chain, self-compliance, containers
-Not Applicable: database, performance, api-contract, dora, ai-security, ai-quality, compliance
+Applicable: security, tech-debt, tests, cicd, docs, supply-chain, self-compliance
+Not Applicable: database, performance, containers, api-contract, dora, ai-security, ai-quality, compliance
 
 ## Auto-Detected
 Structure: single-repo | Hooks: none | Coverage: 100%
 - [x] Linting configured
 - [x] CI/CD configured
 - [x] Test framework
-- [x] Container/Cloud setup
+- [ ] Container/Cloud setup
 - [ ] Pre-commit hooks
 - [ ] API endpoints
 - [ ] i18n setup
@@ -38,7 +38,7 @@ Secrets detected: no
 Outdated deps: 0
 
 ## Conditional Standards (auto-applied)
-**TOTAL: +24 project-specific (CLI +5, Ops +7, Container +4, Caching +3, Testing +5)**
+**TOTAL: +20 project-specific (CLI +5, Ops +7, Caching +3, Testing +5)**
 
 ### Apps > CLI (+5) - Type: CLI detected
 - Help: --help with examples for every command
@@ -55,12 +55,6 @@ Outdated deps: 0
 - CI Gates: lint + test + coverage before merge
 - Blue/Green or Canary: zero-downtime deployments
 - Feature Flags: decouple deploy from release
-
-### Backend > Container (+4) - Dockerfile detected
-- Multi-stage Builds: separate build and runtime stages
-- Non-root User: run as unprivileged user
-- Minimal Base Image: use slim/alpine variants
-- Health Checks: HEALTHCHECK instruction in Dockerfile
 
 ### Scale > Caching Basics (+3) - Scale: Small (100-1K)
 - Caching: TTL, invalidation strategy, cache-aside pattern

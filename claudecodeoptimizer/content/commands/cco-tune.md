@@ -211,6 +211,29 @@ After all questions answered → proceed to detection/apply (no more questions)
 
 **IMPORTANT:** Detection always scans from scratch, ignoring any existing CCO_CONTEXT values. Each element is freshly detected from actual project files. The Source column shows where the value was found.
 
+### Detection Exclusions
+
+**Always exclude these directories from infrastructure detection:**
+
+| Category | Excluded Paths |
+|----------|----------------|
+| Version Control | `.git/`, `.svn/`, `.hg/` |
+| Dependencies | `node_modules/`, `vendor/`, `third_party/`, `.venv/`, `venv/` |
+| Build Output | `dist/`, `build/`, `out/`, `target/`, `.next/`, `__pycache__/` |
+| Test/Examples | `benchmarks/`, `examples/`, `samples/`, `demo/`, `fixtures/`, `testdata/` |
+| Temporary | `tmp/`, `temp/`, `.tmp/`, `.cache/` |
+| IDE/Editor | `.idea/`, `.vscode/`, `.vs/` |
+
+**Detection scope:**
+- Only scan **project root** and **main source directories** (src/, lib/, app/, pkg/)
+- Files in excluded paths should NOT trigger standards
+- Exception: `.github/workflows/` IS scanned for CI/CD detection
+
+**Example:**
+- `./Dockerfile` → triggers Container standards ✓
+- `./benchmarks/Dockerfile` → ignored (test/example) ✗
+- `./examples/docker-compose.yml` → ignored (sample code) ✗
+
 ### Auto-Detect Elements
 
 Every detection triggers a specific action. No detection is informational-only.
