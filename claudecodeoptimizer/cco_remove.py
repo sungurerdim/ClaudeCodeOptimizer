@@ -4,11 +4,15 @@ import json
 import re
 import subprocess
 import sys
+from pathlib import Path
 from typing import TypedDict
 
 from .config import (
+    CCO_PERMISSIONS_MARKER,
     CCO_UNIVERSAL_PATTERN,
     CLAUDE_DIR,
+    LOCAL_SETTINGS_FILE,
+    LOCAL_STATUSLINE_FILE,
     SEPARATOR,
     SETTINGS_FILE,
     STATUSLINE_FILE,
@@ -25,6 +29,9 @@ class RemovalItems(TypedDict):
     files: dict[str, list[str]]
     standards: list[str]
     statusline: bool
+    permissions: bool
+    local_statusline: bool
+    local_permissions: bool
     total_files: int
     total: int
 
@@ -88,6 +95,72 @@ def remove_statusline(verbose: bool = True) -> bool:
             pass
 
     return removed
+
+
+def has_cco_permissions(settings_file: Path = SETTINGS_FILE) -> bool:
+    """Check if CCO permissions are installed in settings.json."""
+    if not settings_file.exists():
+        return False
+    try:
+        settings = json.loads(settings_file.read_text(encoding="utf-8"))
+        permissions = settings.get("permissions", {})
+        # Check for CCO marker or _meta field (from permissions JSON)
+        if CCO_PERMISSIONS_MARKER in settings:
+            return True
+        if isinstance(permissions, dict) and "_meta" in permissions:
+            return True
+    except json.JSONDecodeError:
+        pass
+    return False
+
+
+def remove_permissions(settings_file: Path = SETTINGS_FILE, verbose: bool = True) -> bool:
+    """Remove CCO permissions from settings.json."""
+    if not settings_file.exists():
+        return False
+
+    try:
+        settings = json.loads(settings_file.read_text(encoding="utf-8"))
+        removed = False
+
+        # Remove permissions key
+        if "permissions" in settings:
+            del settings["permissions"]
+            removed = True
+
+        # Remove CCO marker
+        if CCO_PERMISSIONS_MARKER in settings:
+            del settings[CCO_PERMISSIONS_MARKER]
+            removed = True
+
+        if removed:
+            settings_file.write_text(json.dumps(settings, indent=2) + "\n", encoding="utf-8")
+            if verbose:
+                location = "local" if settings_file == LOCAL_SETTINGS_FILE else "global"
+                print(f"  - settings.json ({location} permissions removed)")
+
+        return removed
+    except json.JSONDecodeError:
+        return False
+
+
+def has_local_cco_statusline() -> bool:
+    """Check if CCO statusline is installed locally."""
+    if not LOCAL_STATUSLINE_FILE.exists():
+        return False
+    content = LOCAL_STATUSLINE_FILE.read_text(encoding="utf-8")
+    return "CCO Statusline" in content
+
+
+def remove_local_statusline(verbose: bool = True) -> bool:
+    """Remove local CCO statusline.js."""
+    if not has_local_cco_statusline():
+        return False
+
+    LOCAL_STATUSLINE_FILE.unlink()
+    if verbose:
+        print("  - .claude/statusline.js (local)")
+    return True
 
 
 def has_claude_md_standards() -> list[str]:
@@ -167,14 +240,28 @@ def _collect_removal_items() -> RemovalItems:
     files = list_cco_files()
     standards = has_claude_md_standards()
     statusline = has_cco_statusline()
+    permissions = has_cco_permissions(SETTINGS_FILE)
+    local_statusline = has_local_cco_statusline()
+    local_permissions = has_cco_permissions(LOCAL_SETTINGS_FILE)
     total_files = sum(len(f) for f in files.values())
-    total = (1 if method else 0) + total_files + len(standards) + (1 if statusline else 0)
+    total = (
+        (1 if method else 0)
+        + total_files
+        + len(standards)
+        + (1 if statusline else 0)
+        + (1 if permissions else 0)
+        + (1 if local_statusline else 0)
+        + (1 if local_permissions else 0)
+    )
 
     return {
         "method": method,
         "files": files,
         "standards": standards,
         "statusline": statusline,
+        "permissions": permissions,
+        "local_statusline": local_statusline,
+        "local_permissions": local_permissions,
         "total_files": total_files,
         "total": total,
     }
@@ -204,10 +291,21 @@ def _display_removal_plan(items: RemovalItems) -> None:
                 print(f"  - {item}")
             print()
 
-    if items["statusline"]:
-        print("Statusline:")
-        print("  - statusline.js")
-        print("  - settings.json (statusLine config)")
+    if items["statusline"] or items["permissions"]:
+        print("Global (~/.claude/):")
+        if items["statusline"]:
+            print("  - statusline.js")
+            print("  - settings.json (statusLine config)")
+        if items["permissions"]:
+            print("  - settings.json (permissions)")
+        print()
+
+    if items["local_statusline"] or items["local_permissions"]:
+        print("Local (./.claude/):")
+        if items["local_statusline"]:
+            print("  - statusline.js")
+        if items["local_permissions"]:
+            print("  - settings.json (permissions)")
         print()
 
     print(SEPARATOR)
@@ -236,9 +334,20 @@ def _execute_removal(items: RemovalItems) -> None:
         remove_claude_md_standards()
         print()
 
-    if items["statusline"]:
-        print("Removing statusline...")
-        remove_statusline()
+    if items["statusline"] or items["permissions"]:
+        print("Removing global settings...")
+        if items["statusline"]:
+            remove_statusline()
+        if items["permissions"]:
+            remove_permissions(SETTINGS_FILE)
+        print()
+
+    if items["local_statusline"] or items["local_permissions"]:
+        print("Removing local settings...")
+        if items["local_statusline"]:
+            remove_local_statusline()
+        if items["local_permissions"]:
+            remove_permissions(LOCAL_SETTINGS_FILE)
         print()
 
     print(SEPARATOR)

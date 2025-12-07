@@ -315,10 +315,9 @@ function formatStatusline(input, git) {
   // ─────────────────────────────────────────────────────────────────────────
   const hasAlerts = git && (git.unpushed > 0 || git.conflict > 0 || git.stash > 0);
 
-  // Row 1: Repo + optional release tag (full width, no path)
-  const repoContent = releaseDisplay
-    ? `${ICON.repo} ${c(repoDisplay, 'green')}  ${releaseDisplay}`
-    : `${ICON.repo} ${c(repoDisplay, 'green')}`;
+  // Row 1: Repo (left) + optional release tag (right-aligned)
+  const repoLeft = `${ICON.repo} ${c(repoDisplay, 'green')}`;
+  const repoRight = releaseDisplay || '';
 
   // Row 2: Version/Model (left) + User/Size (right) - matches minimal layout
   const versionStr = ccVersion ? c(`v${ccVersion}`, 'yellow') : c('v?', 'gray');
@@ -483,9 +482,12 @@ function formatStatusline(input, git) {
   // Top empty line
   lines.push(emptyLine);
 
-  // Row 1: Repo (full width)
-  const totalWidth = headerLeftWidth + 3 + headerRightWidth; // +3 for ` │ `
-  lines.push(padRight(repoContent, totalWidth));
+  // Row 1: Repo (left) + Release tag (right-aligned)
+  const totalWidth = headerLeftWidth + 3 + headerRightWidth; // +3 for ` · `
+  const repoLeftLen = getVisibleLength(repoLeft);
+  const repoRightLen = getVisibleLength(repoRight);
+  const row1Padding = totalWidth - repoLeftLen - repoRightLen;
+  lines.push(repoLeft + ' '.repeat(Math.max(1, row1Padding)) + repoRight);
 
   // Row 2: Version+Model | User+Size
   lines.push(row2(row2Left, row2Right, headerLeftWidth, headerRightWidth));

@@ -19,6 +19,10 @@ __all__ = [
     "SUBPROCESS_TIMEOUT",
     "STATUSLINE_FILE",
     "SETTINGS_FILE",
+    "LOCAL_CLAUDE_DIR",
+    "LOCAL_SETTINGS_FILE",
+    "LOCAL_STATUSLINE_FILE",
+    "CCO_PERMISSIONS_MARKER",
 ]
 
 VERSION = __version__  # Single source: __init__.py
@@ -28,6 +32,15 @@ AGENTS_DIR = CLAUDE_DIR / "agents"
 STATUSLINE_FILE = CLAUDE_DIR / "statusline.js"
 SETTINGS_FILE = CLAUDE_DIR / "settings.json"
 SEPARATOR = "=" * 50
+
+# Local project paths (relative to cwd)
+LOCAL_CLAUDE_DIR = Path(".claude")
+LOCAL_SETTINGS_FILE = LOCAL_CLAUDE_DIR / "settings.json"
+LOCAL_STATUSLINE_FILE = LOCAL_CLAUDE_DIR / "statusline.js"
+
+# CCO Permissions marker - used to identify CCO-installed permissions
+# Permissions JSON has _meta.level field when installed by CCO
+CCO_PERMISSIONS_MARKER = "_cco_managed"
 
 
 def get_content_path(subdir: str) -> Path:

@@ -1,5 +1,6 @@
 """CCO Setup - Install commands, agents, and standards to ~/.claude/"""
 
+import argparse
 import json
 import re
 import shutil
@@ -8,6 +9,7 @@ from pathlib import Path
 
 from .config import (
     AGENTS_DIR,
+    CCO_PERMISSIONS_MARKER,
     CCO_UNIVERSAL_PATTERN,
     CLAUDE_DIR,
     COMMANDS_DIR,
@@ -17,6 +19,10 @@ from .config import (
     get_content_path,
     get_standards_breakdown,
 )
+
+# Valid options for local mode
+STATUSLINE_MODES = ("full", "minimal")
+PERMISSION_LEVELS = ("safe", "balanced", "permissive", "full")
 
 
 def get_content_dir() -> Path:
@@ -170,18 +176,203 @@ def setup_claude_md(verbose: bool = True) -> dict[str, int]:
     }
 
 
+# ============================================================================
+# LOCAL MODE FUNCTIONS (for cco-tune)
+# ============================================================================
+
+
+def setup_local_statusline(project_path: Path, mode: str, verbose: bool = True) -> bool:
+    """Copy statusline to project's .claude/ directory.
+
+    Args:
+        project_path: Project root directory
+        mode: 'full' or 'minimal'
+        verbose: Print progress messages
+
+    Returns:
+        True if statusline was installed/updated
+    """
+    if mode not in STATUSLINE_MODES:
+        if verbose:
+            print(f"  Error: Invalid mode '{mode}'. Use: {', '.join(STATUSLINE_MODES)}")
+        return False
+
+    src = get_content_path("statusline") / f"{mode}.js"
+    if not src.exists():
+        if verbose:
+            print(f"  Error: Statusline source not found: {src}")
+        return False
+
+    # Create .claude/ directory and copy statusline
+    local_claude = project_path / ".claude"
+    local_claude.mkdir(parents=True, exist_ok=True)
+    dest = local_claude / "statusline.js"
+    shutil.copy2(src, dest)
+
+    # Update local settings.json with statusLine config
+    settings_file = local_claude / "settings.json"
+    settings: dict = {}
+    if settings_file.exists():
+        try:
+            settings = json.loads(settings_file.read_text(encoding="utf-8"))
+        except json.JSONDecodeError:
+            settings = {}
+
+    # Local statusline - direct path, no fallback
+    settings["statusLine"] = {
+        "type": "command",
+        "command": "node .claude/statusline.js",
+    }
+
+    settings_file.write_text(json.dumps(settings, indent=2) + "\n", encoding="utf-8")
+
+    if verbose:
+        print(f"  + .claude/statusline.js ({mode} mode)")
+        print("  + .claude/settings.json (statusLine configured)")
+
+    return True
+
+
+def setup_local_permissions(project_path: Path, level: str, verbose: bool = True) -> bool:
+    """Set permissions in project's .claude/settings.json.
+
+    Args:
+        project_path: Project root directory
+        level: 'safe', 'balanced', 'permissive', or 'full'
+        verbose: Print progress messages
+
+    Returns:
+        True if permissions were set
+    """
+    if level not in PERMISSION_LEVELS:
+        if verbose:
+            print(f"  Error: Invalid level '{level}'. Use: {', '.join(PERMISSION_LEVELS)}")
+        return False
+
+    src = get_content_path("permissions") / f"{level}.json"
+    if not src.exists():
+        if verbose:
+            print(f"  Error: Permissions source not found: {src}")
+        return False
+
+    # Load permissions from source
+    try:
+        perm_data = json.loads(src.read_text(encoding="utf-8"))
+    except json.JSONDecodeError as e:
+        if verbose:
+            print(f"  Error: Invalid permissions JSON: {e}")
+        return False
+
+    # Create .claude/ directory
+    local_claude = project_path / ".claude"
+    local_claude.mkdir(parents=True, exist_ok=True)
+
+    # Load or create settings.json
+    settings_file = local_claude / "settings.json"
+    settings: dict = {}
+    if settings_file.exists():
+        try:
+            settings = json.loads(settings_file.read_text(encoding="utf-8"))
+        except json.JSONDecodeError:
+            settings = {}
+
+    # Set permissions (keep _meta for tracking)
+    settings["permissions"] = perm_data.get("permissions", {})
+    settings[CCO_PERMISSIONS_MARKER] = True
+
+    settings_file.write_text(json.dumps(settings, indent=2) + "\n", encoding="utf-8")
+
+    if verbose:
+        print(f"  + .claude/settings.json (permissions: {level})")
+
+    return True
+
+
+def _run_local_mode(args: argparse.Namespace) -> int:
+    """Handle --local mode for cco-tune integration."""
+    project_path = Path(args.local).resolve()
+
+    if not project_path.exists():
+        print(f"Error: Project path does not exist: {project_path}", file=sys.stderr)
+        return 1
+
+    if not project_path.is_dir():
+        print(f"Error: Not a directory: {project_path}", file=sys.stderr)
+        return 1
+
+    print(f"\nCCO Local Setup: {project_path}\n")
+
+    success = True
+
+    if args.statusline:
+        print("Statusline:")
+        if not setup_local_statusline(project_path, args.statusline):
+            success = False
+        print()
+
+    if args.permissions:
+        print("Permissions:")
+        if not setup_local_permissions(project_path, args.permissions):
+            success = False
+        print()
+
+    if not args.statusline and not args.permissions:
+        # Just create .claude/ directory
+        local_claude = project_path / ".claude"
+        local_claude.mkdir(parents=True, exist_ok=True)
+        print(f"  Created: {local_claude}/")
+        print()
+
+    if success:
+        print("Local setup complete.")
+    else:
+        print("Local setup completed with errors.", file=sys.stderr)
+
+    return 0 if success else 1
+
+
 def post_install() -> int:
     """CLI entry point for cco-setup."""
-    if "--help" in sys.argv or "-h" in sys.argv:
-        print("Usage: cco-setup [--no-statusline]")
-        print("Install CCO commands, agents, standards, and statusline to ~/.claude/")
-        print()
-        print("Options:")
-        print("  --no-statusline  Skip statusline installation")
-        return 0
+    parser = argparse.ArgumentParser(
+        prog="cco-setup",
+        description="Install CCO commands, agents, and standards to ~/.claude/",
+        formatter_class=argparse.RawDescriptionHelpFormatter,
+        epilog="""
+Local mode (for cco-tune):
+  cco-setup --local . --statusline full --permissions balanced
 
-    skip_statusline = "--no-statusline" in sys.argv
+Statusline modes: full, minimal
+Permission levels: safe, balanced, permissive, full
+""",
+    )
 
+    parser.add_argument(
+        "--local",
+        metavar="PATH",
+        help="Project path for local setup (used by /cco-tune)",
+    )
+    parser.add_argument(
+        "--statusline",
+        choices=STATUSLINE_MODES,
+        help="Statusline mode (requires --local)",
+    )
+    parser.add_argument(
+        "--permissions",
+        choices=PERMISSION_LEVELS,
+        help="Permission level (requires --local)",
+    )
+
+    args = parser.parse_args()
+
+    # Local mode - used by cco-tune
+    if args.local:
+        return _run_local_mode(args)
+
+    # Validate: --statusline and --permissions require --local
+    if args.statusline or args.permissions:
+        parser.error("--statusline and --permissions require --local")
+
+    # Global mode - default behavior
     try:
         print("\n" + SEPARATOR)
         print("CCO Setup")
@@ -207,21 +398,11 @@ def post_install() -> int:
         standards = setup_claude_md()
         print()
 
-        # Statusline
-        statusline_installed = False
-        if not skip_statusline:
-            print("Statusline:")
-            statusline_installed = setup_statusline()
-            print()
-
         # Summary
         installed = standards["universal"] + standards["ai_specific"] + standards["cco_specific"]
         breakdown = get_standards_breakdown()
         print(SEPARATOR)
-        summary_parts = [f"{len(cmds)} commands", f"{len(agents)} agents", f"{installed} standards"]
-        if statusline_installed:
-            summary_parts.append("statusline")
-        print(f"Installed: {', '.join(summary_parts)}")
+        print(f"Installed: {len(cmds)} commands, {len(agents)} agents, {installed} standards")
         print(
             f"  Universal: {standards['universal']} | AI-Specific: {standards['ai_specific']} | CCO-Specific: {standards['cco_specific']}"
         )
@@ -232,7 +413,7 @@ def post_install() -> int:
         print()
         print("Restart Claude Code for changes to take effect.")
         print()
-        print("Next: /cco-tune to configure project-specific settings")
+        print("Next: /cco-tune to configure statusline, permissions, and project settings")
         print()
         return 0
 

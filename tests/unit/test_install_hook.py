@@ -14,6 +14,8 @@ from claudecodeoptimizer.install_hook import (
     setup_agents,
     setup_claude_md,
     setup_commands,
+    setup_local_permissions,
+    setup_local_statusline,
     setup_statusline,
 )
 
@@ -285,26 +287,499 @@ class TestSetupStatusline:
         assert "statusLine" in settings
 
 
+class TestSetupLocalStatusline:
+    """Test setup_local_statusline function."""
+
+    def test_success(self, tmp_path):
+        """Test successfully sets up local statusline."""
+        src_dir = tmp_path / "pkg" / "statusline"
+        src_dir.mkdir(parents=True)
+        (src_dir / "full.js").write_text("// CCO Statusline\nconsole.log('full');")
+        (src_dir / "minimal.js").write_text("// CCO Statusline\nconsole.log('minimal');")
+
+        project_path = tmp_path / "project"
+        project_path.mkdir()
+
+        with patch("claudecodeoptimizer.install_hook.get_content_path", return_value=src_dir):
+            from claudecodeoptimizer.install_hook import setup_local_statusline
+
+            result = setup_local_statusline(project_path, "full", verbose=False)
+
+        assert result is True
+        assert (project_path / ".claude" / "statusline.js").exists()
+        assert (project_path / ".claude" / "settings.json").exists()
+        settings = json.loads((project_path / ".claude" / "settings.json").read_text())
+        assert settings["statusLine"]["command"] == "node .claude/statusline.js"
+
+    def test_minimal_mode(self, tmp_path):
+        """Test minimal statusline mode."""
+        src_dir = tmp_path / "pkg" / "statusline"
+        src_dir.mkdir(parents=True)
+        (src_dir / "minimal.js").write_text("// CCO Statusline\nconsole.log('minimal');")
+
+        project_path = tmp_path / "project"
+        project_path.mkdir()
+
+        with patch("claudecodeoptimizer.install_hook.get_content_path", return_value=src_dir):
+            from claudecodeoptimizer.install_hook import setup_local_statusline
+
+            result = setup_local_statusline(project_path, "minimal", verbose=False)
+
+        assert result is True
+        content = (project_path / ".claude" / "statusline.js").read_text()
+        assert "minimal" in content
+
+    def test_invalid_mode(self, tmp_path, capsys):
+        """Test returns False for invalid mode."""
+
+        project_path = tmp_path / "project"
+        project_path.mkdir()
+
+        result = setup_local_statusline(project_path, "invalid", verbose=True)
+
+        assert result is False
+        captured = capsys.readouterr()
+        assert "Invalid mode" in captured.out
+
+    def test_source_not_found(self, tmp_path, capsys):
+        """Test returns False when source file doesn't exist."""
+        project_path = tmp_path / "project"
+        project_path.mkdir()
+
+        with patch(
+            "claudecodeoptimizer.install_hook.get_content_path",
+            return_value=tmp_path / "nonexistent",
+        ):
+            from claudecodeoptimizer.install_hook import setup_local_statusline
+
+            result = setup_local_statusline(project_path, "full", verbose=True)
+
+        assert result is False
+        captured = capsys.readouterr()
+        assert "Statusline source not found" in captured.out
+
+    def test_preserves_existing_settings(self, tmp_path):
+        """Test preserves existing settings.json content."""
+        src_dir = tmp_path / "pkg" / "statusline"
+        src_dir.mkdir(parents=True)
+        (src_dir / "full.js").write_text("// CCO Statusline")
+
+        project_path = tmp_path / "project"
+        local_claude = project_path / ".claude"
+        local_claude.mkdir(parents=True)
+        (local_claude / "settings.json").write_text(json.dumps({"existingKey": "value"}))
+
+        with patch("claudecodeoptimizer.install_hook.get_content_path", return_value=src_dir):
+            from claudecodeoptimizer.install_hook import setup_local_statusline
+
+            result = setup_local_statusline(project_path, "full", verbose=False)
+
+        assert result is True
+        settings = json.loads((local_claude / "settings.json").read_text())
+        assert settings["existingKey"] == "value"
+        assert "statusLine" in settings
+
+    def test_handles_invalid_json(self, tmp_path):
+        """Test handles invalid JSON in existing settings."""
+        src_dir = tmp_path / "pkg" / "statusline"
+        src_dir.mkdir(parents=True)
+        (src_dir / "full.js").write_text("// CCO Statusline")
+
+        project_path = tmp_path / "project"
+        local_claude = project_path / ".claude"
+        local_claude.mkdir(parents=True)
+        (local_claude / "settings.json").write_text("invalid json {{{")
+
+        with patch("claudecodeoptimizer.install_hook.get_content_path", return_value=src_dir):
+            from claudecodeoptimizer.install_hook import setup_local_statusline
+
+            result = setup_local_statusline(project_path, "full", verbose=False)
+
+        assert result is True
+        settings = json.loads((local_claude / "settings.json").read_text())
+        assert "statusLine" in settings
+
+    def test_verbose_output(self, tmp_path, capsys):
+        """Test verbose output."""
+        src_dir = tmp_path / "pkg" / "statusline"
+        src_dir.mkdir(parents=True)
+        (src_dir / "full.js").write_text("// CCO Statusline")
+
+        project_path = tmp_path / "project"
+        project_path.mkdir()
+
+        with patch("claudecodeoptimizer.install_hook.get_content_path", return_value=src_dir):
+            from claudecodeoptimizer.install_hook import setup_local_statusline
+
+            result = setup_local_statusline(project_path, "full", verbose=True)
+
+        assert result is True
+        captured = capsys.readouterr()
+        assert "statusline.js" in captured.out
+        assert "full mode" in captured.out
+        assert "settings.json" in captured.out
+
+
+class TestSetupLocalPermissions:
+    """Test setup_local_permissions function."""
+
+    def test_success(self, tmp_path):
+        """Test successfully sets up local permissions."""
+        src_dir = tmp_path / "pkg" / "permissions"
+        src_dir.mkdir(parents=True)
+        perm_data = {"permissions": {"allow": ["Read(./**)"], "deny": []}}
+        (src_dir / "balanced.json").write_text(json.dumps(perm_data))
+
+        project_path = tmp_path / "project"
+        project_path.mkdir()
+
+        with patch("claudecodeoptimizer.install_hook.get_content_path", return_value=src_dir):
+            from claudecodeoptimizer.install_hook import setup_local_permissions
+
+            result = setup_local_permissions(project_path, "balanced", verbose=False)
+
+        assert result is True
+        settings = json.loads((project_path / ".claude" / "settings.json").read_text())
+        assert "permissions" in settings
+        assert settings["_cco_managed"] is True
+
+    def test_all_levels(self, tmp_path):
+        """Test all permission levels work."""
+        src_dir = tmp_path / "pkg" / "permissions"
+        src_dir.mkdir(parents=True)
+
+        for level in ("safe", "balanced", "permissive", "full"):
+            perm_data = {"permissions": {"allow": [f"{level}_perm"]}}
+            (src_dir / f"{level}.json").write_text(json.dumps(perm_data))
+
+            project_path = tmp_path / f"project_{level}"
+            project_path.mkdir()
+
+            with patch("claudecodeoptimizer.install_hook.get_content_path", return_value=src_dir):
+                from claudecodeoptimizer.install_hook import setup_local_permissions
+
+                result = setup_local_permissions(project_path, level, verbose=False)
+
+            assert result is True
+
+    def test_invalid_level(self, tmp_path, capsys):
+        """Test returns False for invalid level."""
+        from claudecodeoptimizer.install_hook import setup_local_permissions
+
+        project_path = tmp_path / "project"
+        project_path.mkdir()
+
+        result = setup_local_permissions(project_path, "invalid", verbose=True)
+
+        assert result is False
+        captured = capsys.readouterr()
+        assert "Invalid level" in captured.out
+
+    def test_source_not_found(self, tmp_path, capsys):
+        """Test returns False when source file doesn't exist."""
+        project_path = tmp_path / "project"
+        project_path.mkdir()
+
+        with patch(
+            "claudecodeoptimizer.install_hook.get_content_path",
+            return_value=tmp_path / "nonexistent",
+        ):
+            from claudecodeoptimizer.install_hook import setup_local_permissions
+
+            result = setup_local_permissions(project_path, "balanced", verbose=True)
+
+        assert result is False
+        captured = capsys.readouterr()
+        assert "Permissions source not found" in captured.out
+
+    def test_invalid_json_source(self, tmp_path, capsys):
+        """Test returns False for invalid JSON in source."""
+        src_dir = tmp_path / "pkg" / "permissions"
+        src_dir.mkdir(parents=True)
+        (src_dir / "balanced.json").write_text("invalid json {{{")
+
+        project_path = tmp_path / "project"
+        project_path.mkdir()
+
+        with patch("claudecodeoptimizer.install_hook.get_content_path", return_value=src_dir):
+            from claudecodeoptimizer.install_hook import setup_local_permissions
+
+            result = setup_local_permissions(project_path, "balanced", verbose=True)
+
+        assert result is False
+        captured = capsys.readouterr()
+        assert "Invalid permissions JSON" in captured.out
+
+    def test_preserves_existing_settings(self, tmp_path):
+        """Test preserves existing settings.json content."""
+        src_dir = tmp_path / "pkg" / "permissions"
+        src_dir.mkdir(parents=True)
+        (src_dir / "balanced.json").write_text(json.dumps({"permissions": {"allow": []}}))
+
+        project_path = tmp_path / "project"
+        local_claude = project_path / ".claude"
+        local_claude.mkdir(parents=True)
+        (local_claude / "settings.json").write_text(
+            json.dumps({"existingKey": "value", "statusLine": {"type": "command"}})
+        )
+
+        with patch("claudecodeoptimizer.install_hook.get_content_path", return_value=src_dir):
+            from claudecodeoptimizer.install_hook import setup_local_permissions
+
+            result = setup_local_permissions(project_path, "balanced", verbose=False)
+
+        assert result is True
+        settings = json.loads((local_claude / "settings.json").read_text())
+        assert settings["existingKey"] == "value"
+        assert settings["statusLine"]["type"] == "command"
+        assert "permissions" in settings
+
+    def test_verbose_output(self, tmp_path, capsys):
+        """Test verbose output."""
+        src_dir = tmp_path / "pkg" / "permissions"
+        src_dir.mkdir(parents=True)
+        (src_dir / "balanced.json").write_text(json.dumps({"permissions": {}}))
+
+        project_path = tmp_path / "project"
+        project_path.mkdir()
+
+        with patch("claudecodeoptimizer.install_hook.get_content_path", return_value=src_dir):
+            from claudecodeoptimizer.install_hook import setup_local_permissions
+
+            result = setup_local_permissions(project_path, "balanced", verbose=True)
+
+        assert result is True
+        captured = capsys.readouterr()
+        assert "settings.json" in captured.out
+        assert "permissions: balanced" in captured.out
+
+    def test_handles_invalid_json_in_existing_settings(self, tmp_path):
+        """Test handles invalid JSON in existing settings.json."""
+        src_dir = tmp_path / "pkg" / "permissions"
+        src_dir.mkdir(parents=True)
+        (src_dir / "balanced.json").write_text(json.dumps({"permissions": {"allow": []}}))
+
+        project_path = tmp_path / "project"
+        local_claude = project_path / ".claude"
+        local_claude.mkdir(parents=True)
+        (local_claude / "settings.json").write_text("invalid json {{{")
+
+        with patch("claudecodeoptimizer.install_hook.get_content_path", return_value=src_dir):
+            result = setup_local_permissions(project_path, "balanced", verbose=False)
+
+        assert result is True
+        settings = json.loads((local_claude / "settings.json").read_text())
+        assert "permissions" in settings
+        assert settings["_cco_managed"] is True
+
+
+class TestRunLocalMode:
+    """Test _run_local_mode function."""
+
+    def test_nonexistent_path(self, tmp_path, capsys):
+        """Test error for nonexistent path."""
+        with patch.object(sys, "argv", ["cco-setup", "--local", str(tmp_path / "nonexistent")]):
+            result = post_install()
+
+        assert result == 1
+        captured = capsys.readouterr()
+        assert "does not exist" in captured.err
+
+    def test_not_a_directory(self, tmp_path, capsys):
+        """Test error when path is not a directory."""
+        file_path = tmp_path / "file.txt"
+        file_path.touch()
+
+        with patch.object(sys, "argv", ["cco-setup", "--local", str(file_path)]):
+            result = post_install()
+
+        assert result == 1
+        captured = capsys.readouterr()
+        assert "Not a directory" in captured.err
+
+    def test_creates_claude_dir_only(self, tmp_path, capsys):
+        """Test creates .claude directory when no options specified."""
+        project_path = tmp_path / "project"
+        project_path.mkdir()
+
+        with patch.object(sys, "argv", ["cco-setup", "--local", str(project_path)]):
+            result = post_install()
+
+        assert result == 0
+        assert (project_path / ".claude").exists()
+        captured = capsys.readouterr()
+        assert "Created:" in captured.out
+
+    def test_with_statusline(self, tmp_path, capsys):
+        """Test local mode with statusline option."""
+        src_dir = tmp_path / "pkg" / "statusline"
+        src_dir.mkdir(parents=True)
+        (src_dir / "full.js").write_text("// CCO Statusline")
+
+        project_path = tmp_path / "project"
+        project_path.mkdir()
+
+        with patch("claudecodeoptimizer.install_hook.get_content_path", return_value=src_dir):
+            with patch.object(
+                sys, "argv", ["cco-setup", "--local", str(project_path), "--statusline", "full"]
+            ):
+                result = post_install()
+
+        assert result == 0
+        assert (project_path / ".claude" / "statusline.js").exists()
+        captured = capsys.readouterr()
+        assert "Statusline:" in captured.out
+
+    def test_with_permissions(self, tmp_path, capsys):
+        """Test local mode with permissions option."""
+        src_dir = tmp_path / "pkg" / "permissions"
+        src_dir.mkdir(parents=True)
+        (src_dir / "balanced.json").write_text(json.dumps({"permissions": {}}))
+
+        project_path = tmp_path / "project"
+        project_path.mkdir()
+
+        with patch("claudecodeoptimizer.install_hook.get_content_path", return_value=src_dir):
+            with patch.object(
+                sys,
+                "argv",
+                ["cco-setup", "--local", str(project_path), "--permissions", "balanced"],
+            ):
+                result = post_install()
+
+        assert result == 0
+        captured = capsys.readouterr()
+        assert "Permissions:" in captured.out
+
+    def test_with_both_options(self, tmp_path, capsys):
+        """Test local mode with both statusline and permissions."""
+        statusline_dir = tmp_path / "pkg" / "statusline"
+        statusline_dir.mkdir(parents=True)
+        (statusline_dir / "minimal.js").write_text("// CCO Statusline")
+
+        perm_dir = tmp_path / "pkg" / "permissions"
+        perm_dir.mkdir(parents=True)
+        (perm_dir / "safe.json").write_text(json.dumps({"permissions": {}}))
+
+        project_path = tmp_path / "project"
+        project_path.mkdir()
+
+        def mock_content_path(subdir):
+            if subdir == "statusline":
+                return statusline_dir
+            return perm_dir
+
+        with patch(
+            "claudecodeoptimizer.install_hook.get_content_path", side_effect=mock_content_path
+        ):
+            with patch.object(
+                sys,
+                "argv",
+                [
+                    "cco-setup",
+                    "--local",
+                    str(project_path),
+                    "--statusline",
+                    "minimal",
+                    "--permissions",
+                    "safe",
+                ],
+            ):
+                result = post_install()
+
+        assert result == 0
+        captured = capsys.readouterr()
+        assert "Statusline:" in captured.out
+        assert "Permissions:" in captured.out
+        assert "Local setup complete" in captured.out
+
+    def test_failure_returns_error_code(self, tmp_path, capsys):
+        """Test returns error code on failure."""
+        project_path = tmp_path / "project"
+        project_path.mkdir()
+
+        # Use invalid source path to trigger failure
+        with patch(
+            "claudecodeoptimizer.install_hook.get_content_path",
+            return_value=tmp_path / "nonexistent",
+        ):
+            with patch.object(
+                sys, "argv", ["cco-setup", "--local", str(project_path), "--statusline", "full"]
+            ):
+                result = post_install()
+
+        assert result == 1
+        captured = capsys.readouterr()
+        assert "completed with errors" in captured.err
+
+    def test_permissions_failure(self, tmp_path, capsys):
+        """Test returns error code when permissions fail."""
+        project_path = tmp_path / "project"
+        project_path.mkdir()
+
+        # Use invalid source path to trigger permissions failure
+        with patch(
+            "claudecodeoptimizer.install_hook.get_content_path",
+            return_value=tmp_path / "nonexistent",
+        ):
+            with patch.object(
+                sys,
+                "argv",
+                ["cco-setup", "--local", str(project_path), "--permissions", "balanced"],
+            ):
+                result = post_install()
+
+        assert result == 1
+        captured = capsys.readouterr()
+        assert "completed with errors" in captured.err
+
+
+class TestPostInstallValidation:
+    """Test post_install argument validation."""
+
+    def test_statusline_requires_local(self, capsys):
+        """Test --statusline without --local raises error."""
+        with patch.object(sys, "argv", ["cco-setup", "--statusline", "full"]):
+            with pytest.raises(SystemExit) as exc_info:
+                post_install()
+
+        assert exc_info.value.code == 2  # argparse error code
+        captured = capsys.readouterr()
+        assert "require --local" in captured.err
+
+    def test_permissions_requires_local(self, capsys):
+        """Test --permissions without --local raises error."""
+        with patch.object(sys, "argv", ["cco-setup", "--permissions", "balanced"]):
+            with pytest.raises(SystemExit) as exc_info:
+                post_install()
+
+        assert exc_info.value.code == 2
+        captured = capsys.readouterr()
+        assert "require --local" in captured.err
+
+
 class TestPostInstall:
     """Test post_install function."""
 
     def test_help_flag(self, capsys):
         """Test --help shows usage."""
         with patch.object(sys, "argv", ["cco-setup", "--help"]):
-            result = post_install()
+            with pytest.raises(SystemExit) as exc_info:
+                post_install()
 
-        assert result == 0
+        assert exc_info.value.code == 0
         captured = capsys.readouterr()
-        assert "Usage: cco-setup" in captured.out
+        assert "cco-setup" in captured.out
 
     def test_h_flag(self, capsys):
         """Test -h shows usage."""
         with patch.object(sys, "argv", ["cco-setup", "-h"]):
-            result = post_install()
+            with pytest.raises(SystemExit) as exc_info:
+                post_install()
 
-        assert result == 0
+        assert exc_info.value.code == 0
         captured = capsys.readouterr()
-        assert "Usage: cco-setup" in captured.out
+        assert "cco-setup" in captured.out
 
     def test_successful_setup(self, tmp_path, capsys):
         """Test successful setup."""
@@ -312,8 +787,7 @@ class TestPostInstall:
             with patch("claudecodeoptimizer.install_hook.COMMANDS_DIR", tmp_path / "commands"):
                 with patch("claudecodeoptimizer.install_hook.AGENTS_DIR", tmp_path / "agents"):
                     with patch("claudecodeoptimizer.install_hook.get_content_dir") as mock_content:
-                        # Skip statusline to avoid STATUSLINE_FILE path issues
-                        with patch.object(sys, "argv", ["cco-setup", "--no-statusline"]):
+                        with patch.object(sys, "argv", ["cco-setup"]):
                             mock_content.return_value = tmp_path / "pkg"
                             result = post_install()
 
@@ -321,53 +795,30 @@ class TestPostInstall:
         captured = capsys.readouterr()
         assert "CCO Setup" in captured.out
         assert "Installed:" in captured.out
+        # Statusline is no longer installed by cco-setup
+        assert "statusline" not in captured.out.lower() or "cco-tune" in captured.out
 
-    def test_exception_handling(self, capsys):
+    def test_exception_handling(self, tmp_path, capsys):
         """Test exception during setup."""
-        with patch(
-            "claudecodeoptimizer.install_hook.setup_commands", side_effect=Exception("Test error")
-        ):
-            result = post_install()
+        with patch.object(sys, "argv", ["cco-setup"]):
+            with patch(
+                "claudecodeoptimizer.install_hook.setup_commands",
+                side_effect=Exception("Test error"),
+            ):
+                result = post_install()
 
         assert result == 1
         captured = capsys.readouterr()
         assert "Setup failed" in captured.err
 
-    def test_successful_setup_with_statusline(self, tmp_path, capsys):
-        """Test successful setup with statusline enabled."""
-        # Create source statusline
-        src_dir = tmp_path / "pkg" / "statusline"
-        src_dir.mkdir(parents=True)
-        src_file = src_dir / "full.js"
-        src_file.write_text("// CCO Statusline\nconsole.log('status');")
+    def test_help_mentions_cco_tune(self, capsys):
+        """Test help mentions cco-tune for statusline/permissions."""
+        with patch.object(sys, "argv", ["cco-setup", "--help"]):
+            with pytest.raises(SystemExit):
+                post_install()
 
-        with patch("claudecodeoptimizer.install_hook.CLAUDE_DIR", tmp_path):
-            with patch("claudecodeoptimizer.install_hook.COMMANDS_DIR", tmp_path / "commands"):
-                with patch("claudecodeoptimizer.install_hook.AGENTS_DIR", tmp_path / "agents"):
-                    with patch(
-                        "claudecodeoptimizer.install_hook.STATUSLINE_FILE",
-                        tmp_path / "statusline.js",
-                    ):
-                        with patch(
-                            "claudecodeoptimizer.install_hook.SETTINGS_FILE",
-                            tmp_path / "settings.json",
-                        ):
-                            with patch(
-                                "claudecodeoptimizer.install_hook.get_content_dir"
-                            ) as mock_content:
-                                with patch(
-                                    "claudecodeoptimizer.install_hook.get_content_path",
-                                    return_value=src_dir,
-                                ):
-                                    with patch.object(sys, "argv", ["cco-setup"]):
-                                        mock_content.return_value = tmp_path / "pkg"
-                                        result = post_install()
-
-        assert result == 0
         captured = capsys.readouterr()
-        assert "CCO Setup" in captured.out
-        assert "Installed:" in captured.out
-        assert "statusline" in captured.out
+        assert "cco-tune" in captured.out
 
 
 if __name__ == "__main__":
