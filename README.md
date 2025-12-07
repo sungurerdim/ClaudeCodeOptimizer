@@ -54,12 +54,12 @@ CCO uses a 4-category standards system:
 
 | Category | Count | Scope | Export |
 |----------|-------|-------|--------|
-| **Universal** | 47 | All projects, AI/human agnostic | Both |
+| **Universal** | 43 | All projects, AI/human agnostic | Both |
 | **AI-Specific** | 31 | All AI assistants, model agnostic | Both |
-| **CCO-Specific** | 23 | CCO workflow mechanisms | CLAUDE.md only |
-| **Project-Specific** | ~15-35 | Selected by /cco-tune from 108 pool | Both |
+| **CCO-Specific** | 37 | CCO workflow mechanisms | CLAUDE.md only |
+| **Project-Specific** | ~15-35 | Selected by /cco-tune from 167 pool | Both |
 
-**Typical active: ~116-136 standards** (only relevant ones load)
+**Typical active: ~126-146 standards** (only relevant ones load)
 
 ### Categories Explained
 
@@ -85,6 +85,21 @@ CCO uses a 4-category standards system:
 | `/cco-refactor` | Safe structural changes with rollback |
 | `/cco-commit` | Quality-gated atomic commits |
 
+### /cco-commit Features
+
+- **Secrets Detection** - Blocks commits with API keys, tokens, passwords, private keys
+- **Breaking Change Detection** - Warns on public API changes, prompts for BREAKING CHANGE footer
+- **Staged/Unstaged Handling** - Smart analysis based on what user has staged
+- **Atomic Grouping** - Auto-groups related changes (impl + tests, renames across files)
+- **Large File Warning** - Warns on >1MB files, suggests Git LFS for binaries
+
+### /cco-tune Features
+
+- **AI Performance Auto-Detection** - Sets thinking/MCP tokens based on project complexity
+- **Statusline Configuration** - Full or Minimal mode per project
+- **Permission Levels** - Safe, Balanced, Permissive, Full per project
+- **Standards Export** - Export to AGENTS.md for other AI tools
+
 *[Full commands documentation](docs/commands.md)*
 
 ---
@@ -108,6 +123,27 @@ CCO uses a 4-category standards system:
 2. **Selects** relevant Project-Specific standards
 3. **Writes** context to `./CLAUDE.md`
 4. **Configures** AI settings (thinking tokens, MCP limits)
+
+### AI Performance Auto-Detection
+
+Thinking and MCP output tokens are automatically set based on project complexity:
+
+| Setting | Standard | Medium | High |
+|---------|----------|--------|------|
+| Thinking Tokens | 5000 | 8000 | 10000 |
+| MCP Output Tokens | 25000 | 35000 | 50000 |
+
+**Complexity scoring:**
+- Microservices, Monorepo → +2 each
+- K8s/Helm, ML/AI → +1 each
+- Multiple API styles, Large team → +1 each
+
+### Local Settings
+
+All settings are written to `./.claude/settings.json` (project-local):
+- AI Performance: `env.MAX_THINKING_TOKENS`, `env.MAX_MCP_OUTPUT_TOKENS`
+- Statusline: `statusLine.command`
+- Permissions: `permissions.allow`, `permissions.deny`
 
 ### Export
 
@@ -153,6 +189,31 @@ pip install git+https://github.com/sungurerdim/ClaudeCodeOptimizer.git && cco-se
 # Upgrade
 pip install -U claudecodeoptimizer && cco-setup
 ```
+
+### Local Mode (Project-Specific)
+
+```bash
+# Install statusline and permissions to current project
+cco-setup --local . --statusline full --permissions balanced
+
+# Statusline only
+cco-setup --local . --statusline minimal
+
+# Permissions only
+cco-setup --local . --permissions safe
+```
+
+| Statusline | Description |
+|------------|-------------|
+| `full` | Project, Branch, Changes, Git status |
+| `minimal` | Project, Branch only |
+
+| Permissions | Description |
+|-------------|-------------|
+| `safe` | Read-only auto-approved, writes require approval |
+| `balanced` | Read + lint/test auto-approved, writes require approval |
+| `permissive` | Most operations auto-approved, dangerous ops blocked |
+| `full` | Maximum auto-approval, only destructive ops blocked |
 
 ## Uninstallation
 
