@@ -195,13 +195,20 @@ Format:
 Rules for AskUserQuestion across all CCO commands:
 
 **Labels** - indicate option status, appear on OPTIONS only:
-- `[detected]` - auto-detected from project analysis
+- `[detected]` - auto-detected from project analysis (runtime only)
 - `[current]` - matches existing configuration
-- `[recommended]` - best practice (max ONE per question)
+- `[recommended]` - best practice based on context (max ONE per question)
+
+**Label precedence** (when multiple apply to same option):
+- `[detected]` + `[current]` → show only `[current]`
+- `[current]` + `[recommended]` → show both (user should always see AI recommendation)
+- `[detected]` + `[recommended]` → show both
+- All three → show `[current] [recommended]`
+
+**`[recommended]` is ALWAYS shown** - even when option is already `[current]` or `[detected]`. User must always know what AI recommends.
 
 **Label placement:**
 - Labels appear RIGHT of option name: `○ {Option} [label]`
-- If `[detected]` = `[current]` → show only `[current]`
 - Never put detection info in question text (wrong: "auto-detected: X")
 
 **Option ordering:**
@@ -209,12 +216,13 @@ Rules for AskUserQuestion across all CCO commands:
 - Severity/risk: ascending (safest → riskiest)
 - Scope: ascending (narrowest → widest)
 
-**Spec examples:**
-- Use tables or lists for question/option structure
+**Spec conventions:**
+- Use tables for question/option structure in command specs
 - Use placeholders `{value}`, `{N}`, `{name}` for variable data
-- Never show labels in examples (labels are runtime, not spec)
-- Never show hardcoded values that come from detection
+- Never show labels in spec examples (labels are runtime, not spec)
+- Never hardcode detection values in specs
 - Tier names (Standard, Medium, High) are OK; actual values are not
+- Each command spec defines WHAT determines `[recommended]`, not HOW labels work
 
 ## Output Formatting
 ASCII box-drawing tables in code blocks:
@@ -234,10 +242,4 @@ ASCII box-drawing tables in code blocks:
 - Parallel Tools: batch independent calls; sequential when outputs inform inputs
 - Subagent Delegation: use Task tool for separate context benefits
 - Resource Scaling: thinking tokens based on complexity (CCO: 5K standard, 8K medium, 10K complex)
-
-## Option Labels
-When presenting options in AskUserQuestion:
-- `[current]` - Value from existing context/config
-- `[detected]` - Value discovered by detection
-- `[recommended]` - Single best-fit option (only ONE per question)
 <!-- CCO_STANDARDS_END -->
