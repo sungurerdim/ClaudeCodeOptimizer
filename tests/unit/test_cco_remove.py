@@ -1,15 +1,20 @@
 """Unit tests for cco_remove module."""
 
+import json
 import subprocess
 from unittest.mock import MagicMock, patch
 
 from claudecodeoptimizer.cco_remove import (
+    _display_removal_plan,
+    _execute_removal,
     detect_install_method,
+    has_cco_statusline,
     has_claude_md_standards,
     list_cco_files,
     main,
     remove_cco_files,
     remove_claude_md_standards,
+    remove_statusline,
     uninstall_package,
 )
 
@@ -147,6 +152,155 @@ class TestUninstallPackage:
     def test_uninstall_not_found(self, mock_run):
         mock_run.side_effect = FileNotFoundError()
         assert uninstall_package("pip") is False
+
+
+class TestHasCcoStatusline:
+    """Test has_cco_statusline function."""
+
+    def test_no_file(self, tmp_path):
+        """Test returns False when statusline file doesn't exist."""
+        with patch("claudecodeoptimizer.cco_remove.STATUSLINE_FILE", tmp_path / "statusline.js"):
+            assert has_cco_statusline() is False
+
+    def test_file_exists_with_cco_content(self, tmp_path):
+        """Test returns True when statusline file exists with CCO content."""
+        statusline = tmp_path / "statusline.js"
+        statusline.write_text("// CCO Statusline\nconsole.log('test');")
+        with patch("claudecodeoptimizer.cco_remove.STATUSLINE_FILE", statusline):
+            assert has_cco_statusline() is True
+
+    def test_file_exists_without_cco_content(self, tmp_path):
+        """Test returns False when statusline file exists but without CCO marker."""
+        statusline = tmp_path / "statusline.js"
+        statusline.write_text("// Custom statusline\nconsole.log('test');")
+        with patch("claudecodeoptimizer.cco_remove.STATUSLINE_FILE", statusline):
+            assert has_cco_statusline() is False
+
+
+class TestRemoveStatusline:
+    """Test remove_statusline function."""
+
+    def test_remove_statusline_file(self, tmp_path):
+        """Test removes statusline.js when it's a CCO file."""
+        statusline = tmp_path / "statusline.js"
+        statusline.write_text("// CCO Statusline\nconsole.log('test');")
+        settings = tmp_path / "settings.json"
+        settings.write_text(json.dumps({"statusLine": {"type": "command"}}))
+
+        with patch("claudecodeoptimizer.cco_remove.STATUSLINE_FILE", statusline):
+            with patch("claudecodeoptimizer.cco_remove.SETTINGS_FILE", settings):
+                result = remove_statusline(verbose=False)
+
+        assert result is True
+        assert not statusline.exists()
+        # Check settings.json was updated
+        updated_settings = json.loads(settings.read_text())
+        assert "statusLine" not in updated_settings
+
+    def test_remove_statusline_verbose(self, tmp_path, capsys):
+        """Test verbose output during statusline removal."""
+        statusline = tmp_path / "statusline.js"
+        statusline.write_text("// CCO Statusline\nconsole.log('test');")
+        settings = tmp_path / "settings.json"
+        settings.write_text(json.dumps({"statusLine": {"type": "command"}}))
+
+        with patch("claudecodeoptimizer.cco_remove.STATUSLINE_FILE", statusline):
+            with patch("claudecodeoptimizer.cco_remove.SETTINGS_FILE", settings):
+                result = remove_statusline(verbose=True)
+
+        assert result is True
+        captured = capsys.readouterr()
+        assert "statusline.js" in captured.out
+        assert "statusLine removed" in captured.out
+
+    def test_no_statusline_to_remove(self, tmp_path):
+        """Test returns False when nothing to remove."""
+        with patch("claudecodeoptimizer.cco_remove.STATUSLINE_FILE", tmp_path / "nonexistent.js"):
+            with patch(
+                "claudecodeoptimizer.cco_remove.SETTINGS_FILE", tmp_path / "nonexistent.json"
+            ):
+                result = remove_statusline(verbose=False)
+        assert result is False
+
+    def test_settings_json_decode_error(self, tmp_path):
+        """Test handles invalid JSON in settings.json gracefully."""
+        statusline = tmp_path / "statusline.js"
+        statusline.write_text("// CCO Statusline\nconsole.log('test');")
+        settings = tmp_path / "settings.json"
+        settings.write_text("not valid json {{{")
+
+        with patch("claudecodeoptimizer.cco_remove.STATUSLINE_FILE", statusline):
+            with patch("claudecodeoptimizer.cco_remove.SETTINGS_FILE", settings):
+                result = remove_statusline(verbose=False)
+
+        assert result is True  # Statusline file was removed
+        assert not statusline.exists()
+
+
+class TestDisplayRemovalPlan:
+    """Test _display_removal_plan function."""
+
+    def test_display_with_statusline(self, capsys):
+        """Test displays statusline section when present."""
+        items = {
+            "method": None,
+            "files": {"commands": [], "agents": []},
+            "standards": [],
+            "statusline": True,
+            "total_files": 0,
+            "total": 1,
+        }
+        _display_removal_plan(items)
+        captured = capsys.readouterr()
+        assert "Statusline:" in captured.out
+        assert "statusline.js" in captured.out
+        assert "settings.json" in captured.out
+
+
+class TestExecuteRemoval:
+    """Test _execute_removal function."""
+
+    def test_execute_with_statusline(self, capsys):
+        """Test executes statusline removal when present."""
+        items = {
+            "method": None,
+            "files": {"commands": [], "agents": []},
+            "standards": [],
+            "statusline": True,
+            "total_files": 0,
+            "total": 1,
+        }
+        with patch("claudecodeoptimizer.cco_remove.remove_statusline") as mock_remove:
+            mock_remove.return_value = True
+            _execute_removal(items)
+
+        mock_remove.assert_called_once()
+        captured = capsys.readouterr()
+        assert "Removing statusline" in captured.out
+
+
+class TestHasClaudeMdStandardsNoMatches:
+    """Test has_claude_md_standards when no CCO markers found."""
+
+    def test_file_without_cco_markers(self, tmp_path):
+        """Test returns empty list when file has no CCO markers."""
+        claude_md = tmp_path / "CLAUDE.md"
+        claude_md.write_text("# My Project\n\nSome content without CCO markers")
+        with patch("claudecodeoptimizer.cco_remove.CLAUDE_DIR", tmp_path):
+            result = has_claude_md_standards()
+        assert result == []
+
+
+class TestRemoveClaudeMdStandardsNoMatches:
+    """Test remove_claude_md_standards when no CCO markers found."""
+
+    def test_file_without_cco_markers(self, tmp_path):
+        """Test returns empty list when file has no CCO markers."""
+        claude_md = tmp_path / "CLAUDE.md"
+        claude_md.write_text("# My Project\n\nSome content without CCO markers")
+        with patch("claudecodeoptimizer.cco_remove.CLAUDE_DIR", tmp_path):
+            result = remove_claude_md_standards(verbose=False)
+        assert result == []
 
 
 class TestMain:

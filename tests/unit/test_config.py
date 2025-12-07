@@ -1,6 +1,7 @@
 """Unit tests for config module."""
 
 from pathlib import Path
+from unittest.mock import patch
 
 from claudecodeoptimizer.config import (
     AGENTS_DIR,
@@ -11,6 +12,8 @@ from claudecodeoptimizer.config import (
     VERSION,
     get_cco_agents,
     get_cco_commands,
+    get_content_path,
+    get_standards_breakdown,
     get_standards_count,
 )
 
@@ -97,7 +100,7 @@ class TestFunctions:
 
     def test_get_standards_count_missing_file(self, tmp_path):
         """Test get_standards_count returns (0, 0) when standards file doesn't exist."""
-        from unittest.mock import MagicMock, patch
+        from unittest.mock import MagicMock
 
         # Create a mock path that doesn't exist
         mock_path = MagicMock()
@@ -127,3 +130,78 @@ class TestFunctions:
 
             result = get_standards_count()
             assert result == (0, 0)
+
+    def test_get_content_path(self):
+        """Test get_content_path returns correct path for subdirectory."""
+        result = get_content_path("commands")
+        assert isinstance(result, Path)
+        assert result.name == "commands"
+        assert "content" in str(result)
+
+    def test_get_content_path_various_subdirs(self):
+        """Test get_content_path works for all expected subdirectories."""
+        for subdir in ["commands", "agents", "standards", "statusline", "permissions"]:
+            result = get_content_path(subdir)
+            assert result.name == subdir
+
+    def test_get_standards_breakdown(self):
+        """Test get_standards_breakdown returns correct structure."""
+        result = get_standards_breakdown()
+        assert isinstance(result, dict)
+        assert "universal" in result
+        assert "ai_specific" in result
+        assert "cco_specific" in result
+        assert "project_specific" in result
+        assert "total" in result
+        # Total should be sum of all categories
+        assert result["total"] == (
+            result["universal"]
+            + result["ai_specific"]
+            + result["cco_specific"]
+            + result["project_specific"]
+        )
+
+    def test_get_standards_breakdown_no_cco_specific_split(self, tmp_path):
+        """Test get_standards_breakdown when CCO-Specific section doesn't exist (line 114)."""
+        # This tests line 114: when ai_and_cco split returns only 1 part
+        # (file has AI-Specific but no CCO-Specific section)
+
+        # Create test file structure
+        standards_dir = tmp_path / "content" / "standards"
+        standards_dir.mkdir(parents=True)
+
+        # Create mock file with AI-Specific but NO CCO-Specific section
+        standards_file = standards_dir / "cco-standards.md"
+        standards_file.write_text(
+            "# Universal Standards\n- Rule 1\n- Rule 2\n\n"
+            "# AI-Specific Standards\n- AI Rule 1\n- AI Rule 2\n"
+        )
+
+        # We need to test the actual function with a modified file
+        # The simplest way is to temporarily modify the actual file and restore it
+        import importlib
+
+        from claudecodeoptimizer import config
+
+        # Get the actual standards file path
+        actual_file = Path(config.__file__).parent / "content" / "standards" / "cco-standards.md"
+        original_content = actual_file.read_text(encoding="utf-8")
+
+        try:
+            # Temporarily replace with content that has no CCO-Specific section
+            test_content = (
+                "# Universal Standards\n- Rule 1\n\n# AI-Specific Standards\n- AI Rule 1\n"
+            )
+            actual_file.write_text(test_content, encoding="utf-8")
+
+            # Reload to pick up changes
+            importlib.reload(config)
+            result = config.get_standards_breakdown()
+
+            # Should have ai_specific counted (line 114 executed)
+            assert result["ai_specific"] == 1
+            assert result["cco_specific"] == 0
+        finally:
+            # Restore original content
+            actual_file.write_text(original_content, encoding="utf-8")
+            importlib.reload(config)
