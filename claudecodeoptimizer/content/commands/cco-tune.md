@@ -167,53 +167,35 @@ Follow CCO "Question Formatting" standard.
 
 ### Inline Configuration Questions
 
-**If AI Performance selected** (override auto-detected values):
+Follow CCO "Question Formatting" standard for all questions below.
 
-Ask 3 separate questions. Follow CCO "Question Formatting" standard.
+**If AI Performance selected:**
 
-**Questions (options: small → large):**
+| Question | Options | `[recommended]` when |
+|----------|---------|---------------------|
+| Thinking Tokens? | Standard (5000), Medium (8000), High (10000) | complexity score: 0→Standard, 1-2→Medium, 3+→High |
+| MCP Output Tokens? | Standard (25000), Large (35000), Very Large (50000) | files: <100→Standard, 100-500→Large, 500+→Very Large |
+| Prompt Caching? | Off, On | always→On |
 
-| Question | Options |
-|----------|---------|
-| Thinking Tokens? | Standard, Medium, High |
-| MCP Output Tokens? | Standard, Large, Very Large |
-| Prompt Caching? | Off, On |
+See [AI Performance Auto-Detection](#ai-performance-auto-detection) for scoring logic.
 
-**Option descriptions:**
-- Thinking: Simple ops → Multi-file → Complex reasoning
-- MCP Output: Small codebase → Medium → Monorepo/large
-- Caching: On always `[recommended]`
+**If Statusline selected:**
 
-**Labels:** Apply per CCO "Question Formatting" standard.
+| Question | Options | `[recommended]` when |
+|----------|---------|---------------------|
+| Statusline mode? | Disable, Minimal, Full | first-time→Full |
 
-**Tier → value mapping:** See [AI Performance Auto-Detection](#ai-performance-auto-detection).
+**If Permissions selected:**
 
-**If Statusline selected** (options: narrow → wide):
+| Question | Options | `[recommended]` when |
+|----------|---------|---------------------|
+| Permission level? | Safe, Balanced, Permissive, Full | see table below |
 
-| Question | Options |
-|----------|---------|
-| Statusline mode? | Disable, Minimal, Full |
-
-**Option descriptions:** Remove → Basic info → Full details
-
-**When statusline is installed:**
-- Copies `content/statusline/full.js` → `./.claude/statusline.js`
-- Adds `statusLine` config to `./.claude/settings.json`
-- **Local-only:** If `.claude/statusline.js` doesn't exist, nothing runs (no global fallback)
-
-**If Permissions selected** (options: narrow → wide):
-
-| Question | Options |
-|----------|---------|
-| Permission level? | Safe, Balanced, Permissive, Full |
-
-**Option descriptions:** Most restrictive → Balanced → Liberal → Maximum auto-approval
-
-**`[recommended]` placement** (based on detection):
+**Permissions `[recommended]` (first match wins):**
 
 | Condition | Recommended |
 |-----------|-------------|
-| Data: Regulated or Compliance: Any | Safe |
+| Data: Regulated OR Compliance: Any | Safe |
 | Data: PII or Confidential | Safe |
 | Team: 2+ (not Solo) | Balanced |
 | Team: Solo + Data: Public | Full |
@@ -430,10 +412,7 @@ AI Performance settings are **automatically calculated** based on detected proje
 
 ### User-Configurable Elements
 
-These elements cannot be auto-detected and require user input. Each option includes:
-- **Description**: When to choose this option
-- **Impact**: What standards/guidelines are activated
-- **Labels**: `[detected]` from code, `[recommended]` best fit, `[current]` existing value
+Elements requiring user input. Follow CCO "Question Formatting" standard.
 
 ---
 
@@ -441,15 +420,15 @@ These elements cannot be auto-detected and require user input. Each option inclu
 
 **Question:** How many people actively contribute to this codebase?
 
-| Value | Label | Description | Triggers |
-|-------|-------|-------------|----------|
-| Solo | `[recommended if no CODEOWNERS]` | Single developer, no code review needed | Guidelines only |
-| Small (2-5) | `[recommended if small CODEOWNERS]` | Informal reviews, async communication works | Team standards |
-| Medium (6-15) | - | Formal reviews needed, communication overhead grows | Team standards |
-| Large (16-50) | - | Multiple teams, need CODEOWNERS, ADRs mandatory | Team + ADR |
-| Enterprise (51+) | - | Scaling frameworks (SAFe/LeSS), cross-team coordination | Team + Scaling |
+| Value | `[recommended]` when | Triggers |
+|-------|---------------------|----------|
+| Solo | no CODEOWNERS, 1 git author | Guidelines only |
+| Small (2-5) | small CODEOWNERS | Team standards |
+| Medium (6-15) | - | Team standards |
+| Large (16-50) | - | Team + ADR |
+| Enterprise (51+) | - | Team + Scaling |
 
-**Detection hints:** CODEOWNERS file, git log unique authors, team config files
+**Detection hints:** CODEOWNERS file, git log unique authors
 
 ---
 
@@ -457,15 +436,13 @@ These elements cannot be auto-detected and require user input. Each option inclu
 
 **Question:** How many concurrent users or requests per second does your system handle?
 
-| Value | Label | Description | Triggers |
-|-------|-------|-------------|----------|
-| Prototype (<100) | `[recommended for new projects]` | Development/testing, no production traffic | - |
-| Small (100-1K) | - | Early production, single instance sufficient | Caching basics |
-| Medium (1K-100K) | - | Growth stage, need horizontal scaling | Scale & Arch |
-| Large (100K-1M) | - | High traffic, requires sophisticated architecture | Scale + Security |
-| Hyperscale (1M+) | - | Massive scale, distributed systems expertise required | Scale + Security + Performance |
-
-**Impact:** Higher scale activates circuit breakers, caching strategies, connection pooling, load balancing patterns.
+| Value | `[recommended]` when | Triggers |
+|-------|---------------------|----------|
+| Prototype (<100) | new project, no prod traffic | - |
+| Small (100-1K) | - | Caching basics |
+| Medium (1K-100K) | - | Scale & Arch |
+| Large (100K-1M) | - | Scale + Security |
+| Hyperscale (1M+) | - | Scale + Security + Performance |
 
 ---
 
@@ -473,15 +450,13 @@ These elements cannot be auto-detected and require user input. Each option inclu
 
 **Question:** What is the most sensitive type of data your system processes?
 
-| Value | Label | Description | Triggers |
-|-------|-------|-------------|----------|
-| Public | `[recommended if no auth]` | Open data, no login required, no personal info | - |
-| Internal | - | Company data, requires authentication | Auth basics |
-| Confidential | - | Business-sensitive, NDA-level protection | Auth + Encryption |
-| PII | `[recommended if user accounts]` | Personal Identifiable Information (names, emails, addresses) | Security |
-| Regulated | - | Healthcare (PHI), financial, or government data | Security + Compliance |
-
-**Impact:** Activates encryption at rest, audit logging, data retention policies, access controls.
+| Value | `[recommended]` when | Triggers |
+|-------|---------------------|----------|
+| Public | no auth patterns | - |
+| Internal | - | Auth basics |
+| Confidential | - | Auth + Encryption |
+| PII | user accounts detected | Security |
+| Regulated | - | Security + Compliance |
 
 ---
 
@@ -489,20 +464,18 @@ These elements cannot be auto-detected and require user input. Each option inclu
 
 **Question:** Which compliance frameworks must your system satisfy? (multi-select)
 
-| Value | Label | Description | Triggers |
-|-------|-------|-------------|----------|
-| None | `[recommended if B2C/internal]` | No formal compliance requirements | - |
-| SOC2 | - | B2B SaaS, enterprise customers require security attestation | Security + Audit |
-| HIPAA | `[recommended if healthcare]` | US healthcare data (PHI) protection | Security + PHI controls |
-| PCI-DSS | `[recommended if payments]` | Payment card data processing | Security + PCI controls |
-| GDPR | `[recommended if EU users]` | EU user data, privacy rights, consent management | Security + Privacy |
-| CCPA | - | California consumer privacy, similar to GDPR | Security + Privacy |
-| ISO27001 | - | International security management standard | Security + ISMS |
-| HITRUST | - | Healthcare + security combined framework | Security + Full audit |
-| FedRAMP | - | US federal government cloud services | Security + Gov controls |
-| DORA | - | EU financial services digital resilience (2025+) | Security + Resilience |
-
-**Impact:** Activates specific control frameworks, audit logging, data handling procedures, documentation requirements.
+| Value | `[recommended]` when | Triggers |
+|-------|---------------------|----------|
+| None | B2C/internal tool | - |
+| SOC2 | - | Security + Audit |
+| HIPAA | healthcare detected | Security + PHI controls |
+| PCI-DSS | payments detected | Security + PCI controls |
+| GDPR | EU users detected | Security + Privacy |
+| CCPA | - | Security + Privacy |
+| ISO27001 | - | Security + ISMS |
+| HITRUST | - | Security + Full audit |
+| FedRAMP | - | Security + Gov controls |
+| DORA | - | Security + Resilience |
 
 ---
 
@@ -510,15 +483,13 @@ These elements cannot be auto-detected and require user input. Each option inclu
 
 **Question:** What is the primary architecture pattern of your system?
 
-| Value | Label | Description | Triggers |
-|-------|-------|-------------|----------|
-| Monolith | `[recommended for small teams]` | Single deployable unit, simpler operations | - |
-| Modular Monolith | - | Monolith with clear module boundaries, prep for splitting | Bounded Contexts |
-| Microservices | `[detected if multiple services]` | Independent services, complex but scalable | Scale & Arch |
-| Serverless | `[detected if Lambda/Functions]` | Event-driven functions, pay-per-use | Serverless |
-| Hybrid | - | Mix of patterns based on domain needs | Context-dependent |
-
-**Impact:** Microservices activates service mesh, API versioning, distributed tracing, circuit breakers.
+| Value | `[recommended]` when | `[detected]` when | Triggers |
+|-------|---------------------|-------------------|----------|
+| Monolith | small teams | single service | - |
+| Modular Monolith | - | - | Bounded Contexts |
+| Microservices | - | multiple services | Scale & Arch |
+| Serverless | - | Lambda/Functions | Serverless |
+| Hybrid | - | - | Context-dependent |
 
 ---
 
@@ -526,16 +497,14 @@ These elements cannot be auto-detected and require user input. Each option inclu
 
 **Question:** What API protocol does your system expose? (multi-select)
 
-| Value | Label | Description | Triggers |
-|-------|-------|-------------|----------|
-| None | `[recommended for CLI/desktop]` | No external API, internal only | - |
-| REST | `[detected if routes/endpoints]` | Standard HTTP APIs, resource-oriented | API |
-| GraphQL | `[detected if graphql deps]` | Flexible queries, single endpoint | API + GraphQL |
-| gRPC | `[detected if proto files]` | High-performance RPC, binary protocol | API + gRPC |
-| WebSocket | `[detected if ws deps]` | Real-time bidirectional communication | Real-time |
-| Webhook | - | Event callbacks to external systems | Webhook patterns |
-
-**Impact:** Activates OpenAPI specs, rate limiting, pagination, error handling standards.
+| Value | `[recommended]` when | `[detected]` when | Triggers |
+|-------|---------------------|-------------------|----------|
+| None | CLI/desktop type | - | - |
+| REST | - | routes/endpoints | API |
+| GraphQL | - | graphql deps | API + GraphQL |
+| gRPC | - | proto files | API + gRPC |
+| WebSocket | - | ws deps | Real-time |
+| Webhook | - | - | Webhook patterns |
 
 ---
 
@@ -543,14 +512,12 @@ These elements cannot be auto-detected and require user input. Each option inclu
 
 **Question:** How is your application deployed to production?
 
-| Value | Label | Description | Triggers |
-|-------|-------|-------------|----------|
-| Manual | - | SSH/FTP deploys, no automation | - |
-| CI/CD | `[detected if workflows]` | Automated build, test, deploy pipeline | Operations |
-| GitOps | - | Git as source of truth, ArgoCD/Flux | Operations + GitOps |
-| Platform | - | PaaS (Heroku, Vercel, Railway) handles deployment | Operations + Platform |
-
-**Impact:** Activates CI gates, deployment strategies (blue/green, canary), rollback procedures.
+| Value | `[recommended]` when | `[detected]` when | Triggers |
+|-------|---------------------|-------------------|----------|
+| Manual | - | - | - |
+| CI/CD | - | workflows exist | Operations |
+| GitOps | - | argocd/flux config | Operations + GitOps |
+| Platform | - | vercel/netlify config | Operations + Platform |
 
 ---
 
@@ -558,15 +525,13 @@ These elements cannot be auto-detected and require user input. Each option inclu
 
 **Question:** What level of testing does your project maintain?
 
-| Value | Label | Description | Triggers |
-|-------|-------|-------------|----------|
-| Minimal | - | Ad-hoc testing, no formal coverage | - |
-| Unit | `[detected if test framework]` | Unit tests only, >60% coverage target | Testing basics |
-| Standard | `[recommended]` | Unit + integration tests, >80% coverage | Testing |
-| Comprehensive | - | Unit + integration + E2E + visual regression | Full testing |
-| Performance | - | Above + load testing, benchmarks | Testing + Performance |
-
-**Impact:** Activates coverage requirements, test isolation, CI gates, performance benchmarks.
+| Value | `[recommended]` when | `[detected]` when | Triggers |
+|-------|---------------------|-------------------|----------|
+| Minimal | - | - | - |
+| Unit | - | test framework | Testing basics |
+| Standard | default | - | Testing |
+| Comprehensive | - | - | Full testing |
+| Performance | - | - | Testing + Performance |
 
 ---
 
@@ -574,15 +539,13 @@ These elements cannot be auto-detected and require user input. Each option inclu
 
 **Question:** What uptime commitment does your system have?
 
-| Value | Label | Description | Triggers |
-|-------|-------|-------------|----------|
-| None | `[recommended for internal tools]` | No formal SLA, best-effort availability | - |
-| Standard (99%) | - | ~7h downtime/month acceptable | Monitoring basics |
-| High (99.9%) | - | ~43min downtime/month, needs redundancy | Observability |
-| Critical (99.99%) | - | ~4min downtime/month, HA required | HA + DR |
-| Mission-Critical (99.999%) | - | ~26sec downtime/month, global redundancy | Full resilience |
-
-**Impact:** Activates health endpoints, alerting, disaster recovery, multi-region deployment patterns.
+| Value | `[recommended]` when | Triggers |
+|-------|---------------------|----------|
+| None | internal tools | - |
+| Standard (99%) | - | Monitoring basics |
+| High (99.9%) | - | Observability |
+| Critical (99.99%) | - | HA + DR |
+| Mission-Critical (99.999%) | - | Full resilience |
 
 ---
 
@@ -590,14 +553,12 @@ These elements cannot be auto-detected and require user input. Each option inclu
 
 **Question:** Does your system require real-time data updates?
 
-| Value | Label | Description | Triggers |
-|-------|-------|-------------|----------|
-| None | `[recommended for CRUD apps]` | Request-response only, polling acceptable | - |
-| Soft (seconds) | - | Near real-time, SSE or polling every few seconds | Basic real-time |
-| Hard (100ms) | `[detected if websocket]` | WebSocket, immediate updates required | Real-time |
-| Ultra-low (<10ms) | - | Gaming, trading, requires specialized infrastructure | Low-latency |
-
-**Impact:** Activates WebSocket patterns, event-driven architecture, message queuing.
+| Value | `[recommended]` when | `[detected]` when | Triggers |
+|-------|---------------------|-------------------|----------|
+| None | CRUD apps | - | - |
+| Soft (seconds) | - | - | Basic real-time |
+| Hard (100ms) | - | websocket deps | Real-time |
+| Ultra-low (<10ms) | - | - | Low-latency |
 
 ---
 
@@ -605,16 +566,14 @@ These elements cannot be auto-detected and require user input. Each option inclu
 
 **Question:** What is the current development stage of your project?
 
-| Value | Label | Description | Guidelines |
-|-------|-------|-------------|------------|
-| Prototype | - | Proof of concept, may be discarded | Move fast, skip docs |
-| Greenfield | `[recommended for new repos]` | New project, no legacy constraints | Aggressive refactoring OK |
-| Active | - | Ongoing development, regular releases | Balanced approach |
-| Stable | - | Feature-complete, maintenance mode | Conservative changes |
-| Legacy | - | Old codebase, minimal changes | Wrap don't modify |
-| Sunset | - | End of life, planning deprecation | Document for migration |
-
-**Impact:** Affects refactoring aggressiveness, documentation requirements, testing rigor.
+| Value | `[recommended]` when | `[detected]` when | Guidelines |
+|-------|---------------------|-------------------|------------|
+| Prototype | - | - | Move fast, skip docs |
+| Greenfield | - | new repo (<3mo) | Aggressive refactoring OK |
+| Active | default | recent commits | Balanced approach |
+| Stable | - | - | Conservative changes |
+| Legacy | - | old repo, low activity | Wrap don't modify |
+| Sunset | - | - | Document for migration |
 
 ---
 
@@ -622,13 +581,11 @@ These elements cannot be auto-detected and require user input. Each option inclu
 
 **Question:** How should breaking changes be handled?
 
-| Value | Label | Description | Guidelines |
-|-------|-------|-------------|------------|
-| Allowed | `[recommended for v0.x]` | Breaking changes in any release | Clean API over compat |
-| Minimize | `[recommended for v1.x+]` | Deprecate first, provide migration path | SemVer strictly |
-| Never | - | Zero breaking changes (enterprise libraries) | Adapters required |
-
-**Impact:** Affects API versioning, deprecation policies, migration tooling.
+| Value | `[recommended]` when | `[detected]` when | Guidelines |
+|-------|---------------------|-------------------|------------|
+| Allowed | - | version 0.x | Clean API over compat |
+| Minimize | default | version 1.x+ | SemVer strictly |
+| Never | - | - | Adapters required |
 
 ---
 
@@ -636,15 +593,13 @@ These elements cannot be auto-detected and require user input. Each option inclu
 
 **Question:** What is the primary development priority?
 
-| Value | Label | Description | Guidelines |
-|-------|-------|-------------|------------|
-| Speed | - | Ship fast, iterate quickly | MVP mindset |
-| Balanced | `[recommended]` | Standard practices, reasonable coverage | Normal workflow |
-| Quality | - | Thorough testing, extensive review | No shortcuts |
-| Security | - | Security-first development | Threat modeling |
-| Cost | - | Optimize for infrastructure costs | Efficiency focus |
-
-**Impact:** Affects review rigor, testing requirements, documentation depth.
+| Value | `[recommended]` when | Guidelines |
+|-------|---------------------|------------|
+| Speed | - | MVP mindset |
+| Balanced | default | Normal workflow |
+| Quality | - | No shortcuts |
+| Security | - | Threat modeling |
+| Cost | - | Efficiency focus |
 
 ---
 
@@ -733,15 +688,34 @@ Show unified table with confidence indicators. **Every row shows what action it 
 
 ### Review Options
 
+After detection results table, show **Configuration Summary** box, then the approval question.
+
+**Output sequence:**
+1. Detection results table (shown above)
+2. Configuration Summary box (markdown, before AskUserQuestion)
+3. AskUserQuestion with approval options
+
+**Configuration Summary box** (show user selections from Step 2):
 ```
-┌─────────────────────────────────────────────────────────────────┐
-│ Detection complete. What would you like to do?                  │
-├─────────────────────────────────────────────────────────────────┤
-│ ○ Accept        Apply this configuration                        │
-│ ○ Edit          Change specific items                           │
-│ ○ Cancel        Exit without changes                            │
-└─────────────────────────────────────────────────────────────────┘
+┌─ CONFIGURATION SUMMARY ──────────────────────────────────────────┐
+│ AI Performance: {thinking}/{mcp} tokens, caching {on|off}        │
+│ Statusline:     {Full|Minimal|Disable}                           │
+│ Permissions:    {Safe|Balanced|Permissive|Full}                  │
+└──────────────────────────────────────────────────────────────────┘
 ```
+
+Only show rows for options user selected in Step 2. If user didn't select AI Performance/Statusline/Permissions, omit those rows.
+
+**Approval question** (AskUserQuestion):
+
+| Question | Options |
+|----------|---------|
+| Apply this configuration? | Accept, Edit, Cancel |
+
+**Option descriptions:**
+- Accept: Apply configuration to project
+- Edit: Change specific context items
+- Cancel: Exit without changes
 
 **If Edit selected**, ask which items to change:
 ```
@@ -804,7 +778,12 @@ cco-setup --local . --permissions {level}
 
 This ensures templates are read from the installed package, not generated by AI.
 
-**CRITICAL:** All files are ALWAYS overwritten with the latest content from source files, even if they appear unchanged. This ensures any subtle differences from older versions are corrected.
+**CRITICAL - ALWAYS OVERWRITE:**
+- Statusline: `.claude/statusline.js` → overwrite entirely with source template
+- Permissions: `.claude/settings.json` permissions section → overwrite with source template
+- AI Performance: `.claude/settings.json` env section → overwrite with user selections
+- Context: `./CLAUDE.md` CCO_CONTEXT block → overwrite with detection results
+- **Never skip** because "file exists", "content unchanged", or "already configured"
 
 **IMPORTANT:** cco-tune NEVER modifies global `~/.claude/` files. All settings are project-local.
 
@@ -820,16 +799,22 @@ This ensures templates are read from the installed package, not generated by AI.
 
 **Target:** `./.claude/statusline.js` + `statusLine` config in `./.claude/settings.json`
 
-**Local-Only Behavior:** Only runs if local `.claude/statusline.js` exists. No global fallback.
+**Install Behavior:**
+- ALWAYS overwrite `.claude/statusline.js` with fresh content from source template
+- ALWAYS update `statusLine` config in `.claude/settings.json`
+- Create `.claude/` directory if it doesn't exist
+- Never skip because "file already exists" or "content looks same"
+
+**Runtime Behavior (Claude Code):** Only executes if local `.claude/statusline.js` exists. No global fallback.
 
 **Disable Mode:** Delete statusline.js and remove `statusLine` from settings.json.
 
 ### Statusline Verification
 
 After writing statusline files, verify:
-1. `./.claude/statusline.js` exists and is executable
+1. `./.claude/statusline.js` exists (created/overwritten)
 2. `./.claude/settings.json` contains `statusLine` config pointing to local script
-3. JSON structure is valid (same format as Claude Code settings)
+3. File content matches source template exactly
 
 ---
 
@@ -844,6 +829,11 @@ After writing statusline files, verify:
 | Permissive | `permissions/permissive.json` | Most operations auto-approved, only dangerous ops blocked |
 
 **Target:** `./.claude/settings.json` → `permissions` key
+
+**Install Behavior:**
+- ALWAYS overwrite `permissions` section in `.claude/settings.json` with fresh content from source template
+- Merge with existing settings.json (preserve `env`, `statusLine` if present)
+- Never skip because "permissions already configured"
 
 **Permission Structure:**
 ```json
@@ -1200,11 +1190,16 @@ Guidelines are generated based on user-configured values to provide context-awar
 2. **Local files only** - AI Performance, statusline, permissions ALL in `./.claude/settings.json`, NEVER touch `~/.claude/`
 3. **Dynamic counts** - standard counts calculated from source files
 4. **Show affected standards** - when editing, show what standards change
-5. **Preserve existing** - never overwrite non-CCO content in files
-6. **ALWAYS overwrite files** - All selected configurations (AI Performance, statusline, permissions, context) are ALWAYS written to files from source content, even if files appear identical. Never skip writing because "files are up to date". This ensures any subtle differences from older CCO versions are corrected.
+5. **Preserve non-CCO content** - In CLAUDE.md, preserve user content outside `<!-- CCO_*_START/END -->` markers
+6. **ALWAYS overwrite CCO content** - All CCO-managed content is ALWAYS overwritten with fresh source:
+   - `.claude/statusline.js` → overwrite entirely
+   - `.claude/settings.json` → overwrite `env`, `statusLine`, `permissions` sections
+   - `./CLAUDE.md` → overwrite `<!-- CCO_CONTEXT_START -->...<!-- CCO_CONTEXT_END -->` block
+   - Never skip because "file exists" or "content unchanged" - always write fresh
 7. **Granular standard selection** - each subsection is independently evaluated, not atomic categories
 8. **No duplicate standards** - each standard is added exactly once; deduplicate before writing to CLAUDE.md
 9. **Never modify global** - cco-tune has NO permission to read/write/modify any file in `~/.claude/` directory
 10. **Backward compatibility** - all CCO markers (`<!-- CCO_*_START -->...<!-- CCO_*_END -->`) are removed before inserting new content; ensures clean upgrades from any previous CCO version
-11. **Question Labels** - Follow CCO "Question Labels" standard: labels on OPTIONS only (`○ Option [label]`), never in question text
-12. **String env values** - All `env` values in settings.json must be strings per official Claude Code docs
+11. **Question Labels** - Follow CCO "Question Formatting" standard (labels, precedence, ordering)
+12. **Review Sequence** - Detection results → Configuration Summary box → Approval question
+13. **String env values** - All `env` values in settings.json must be strings per official Claude Code docs
