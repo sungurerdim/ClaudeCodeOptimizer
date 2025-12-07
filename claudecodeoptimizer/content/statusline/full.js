@@ -19,14 +19,9 @@ const CONFIG = {
 // ICONS
 // ============================================================================
 const ICON = {
-  folder: '📁',  // U+1F4C1 - wide (2 cells)
+  // Header emojis only (first 2 rows)
   repo: '🔗',    // U+1F517 - wide (2 cells)
   user: '👤',    // U+1F464 - wide (2 cells)
-  model: '🤖',   // U+1F916 - wide (2 cells)
-  synced: '✓',   // U+2713 - narrow (1 cell)
-  unpushed: '↑', // U+2191 - narrow (1 cell)
-  conflict: '⚠', // U+26A0 - narrow (1 cell)
-  stash: '📦',   // U+1F4E6 - wide (2 cells) - changed from 📚 for consistency
 };
 
 // ============================================================================
@@ -117,10 +112,11 @@ function execCmd(cmd) {
 // PROJECT SIZE
 // ============================================================================
 function formatBytes(bytes) {
-  if (bytes >= 1073741824) return (bytes / 1073741824).toFixed(1) + 'G';
-  if (bytes >= 1048576) return (bytes / 1048576).toFixed(1) + 'M';
-  if (bytes >= 1024) return (bytes / 1024).toFixed(0) + 'K';
-  return bytes + 'B';
+  // Returns { num, unit } for separate styling
+  if (bytes >= 1073741824) return { num: (bytes / 1073741824).toFixed(1), unit: 'GB' };
+  if (bytes >= 1048576) return { num: (bytes / 1048576).toFixed(1), unit: 'MB' };
+  if (bytes >= 1024) return { num: (bytes / 1024).toFixed(0), unit: 'KB' };
+  return { num: bytes.toString(), unit: 'B' };
 }
 
 function getProjectSize() {
@@ -140,7 +136,7 @@ function getProjectSize() {
       if (stat.isFile()) totalBytes += stat.size;
     } catch {}
   }
-  return totalBytes > 0 ? formatBytes(totalBytes) : null;
+  return totalBytes > 0 ? formatBytes(totalBytes) : null;  // Returns { num, unit }
 }
 
 // ============================================================================
@@ -162,6 +158,15 @@ function formatModelName(modelData) {
   const name = modelData?.display_name || 'Unknown';
   // Shorten common prefixes
   return name.replace(/^Claude\s+/, '');
+}
+
+// ============================================================================
+// GIT RELEASE VERSION
+// ============================================================================
+function getLatestRelease() {
+  // Try to get the most recent tag (release version)
+  const tag = execCmd('git describe --tags --abbrev=0 2>/dev/null');
+  return tag || null;
 }
 
 // ============================================================================
@@ -299,151 +304,220 @@ function formatStatusline(input, git) {
   const modelDisplay = formatModelName(input.model);
   const ccVersion = getClaudeCodeVersion();
   const projectSize = getProjectSize();
+  const latestRelease = getLatestRelease();
 
-  // Repo display
+  // Repo display with optional release tag
   const repoDisplay = git ? `${git.repoName || projectName}:${git.branch}` : 'Not a git repo';
+  const releaseDisplay = latestRelease ? c(latestRelease, 'cyan') : null;
 
   // ─────────────────────────────────────────────────────────────────────────
-  // CALCULATE WIDTHS (dynamic based on content)
+  // BUILD CONTENT
   // ─────────────────────────────────────────────────────────────────────────
-  // Narrow columns for edit/new/del/rename
-  const narrowColWidth = 8;
-  const narrowTotalWidth = narrowColWidth * 4 + 3; // 4 cols + 3 separators
-
-  // Check for alerts
   const hasAlerts = git && (git.unpushed > 0 || git.conflict > 0 || git.stash > 0);
 
-  // Build ALL content with colors first, then measure
-  // Row 1
-  const pathContent = ` ${ICON.folder} ${c(projectName, 'whiteBold')} `;
-  const repoContent = ` ${ICON.repo} ${c(repoDisplay, 'green')} `;
+  // Row 1: Repo + optional release tag (full width, no path)
+  const repoContent = releaseDisplay
+    ? `${ICON.repo} ${c(repoDisplay, 'green')}  ${releaseDisplay}`
+    : `${ICON.repo} ${c(repoDisplay, 'green')}`;
 
-  // Row 2
-  const sizeStr = projectSize ? c(projectSize, 'blue') : c('?', 'gray');
-  const userContent = ` ${ICON.user} ${c(username, 'cyan')}  ${sizeStr} `;
-  const ccStr = ccVersion ? c(`CC ${ccVersion}`, 'yellow') : c('CC ?', 'gray');
-  const modelContent = ` ${ccStr}  ${ICON.model} ${c(modelDisplay, 'magenta')} `;
+  // Row 2: Version/Model (left) + User/Size (right) - matches minimal layout
+  const versionStr = ccVersion ? c(`v${ccVersion}`, 'yellow') : c('v?', 'gray');
+  const leftContent = `${versionStr} ${c('·', 'gray')} ${c(modelDisplay, 'magenta')}`;
+  const sizeDisplay = projectSize ? c(`${projectSize.num} ${projectSize.unit}`, 'blue') : c('?', 'gray');
+  const rightContent = `${ICON.user} ${c(username, 'cyan')} ${c('·', 'gray')} ${sizeDisplay}`;
+  const leftContentMin = leftContent;
+  const rightContentMin = rightContent;
 
   // Row 3: Sync
   let syncContent;
   if (!git) {
-    syncContent = ` ${c('Not a git repository', 'gray')} `;
+    syncContent = `${c('Not a git repository', 'gray')}`;
   } else if (hasAlerts) {
     const alerts = [];
-    if (git.unpushed > 0) alerts.push(`${ICON.unpushed}${git.unpushed} ${c('unpushed', 'yellow')}`);
-    if (git.conflict > 0) alerts.push(`${ICON.conflict}${git.conflict} ${c('conflict', 'redBold')}`);
-    if (git.stash > 0) alerts.push(`${ICON.stash}${git.stash} ${c('stash', 'blue')}`);
-    syncContent = ` ${alerts.join('  ')} `;
+    if (git.unpushed > 0) alerts.push(`${c(git.unpushed + ' pending commit' + (git.unpushed > 1 ? 's' : ''), 'yellow')}`);
+    if (git.conflict > 0) alerts.push(`${c(git.conflict + ' conflict' + (git.conflict > 1 ? 's' : ''), 'redBold')}`);
+    if (git.stash > 0) alerts.push(`${c(git.stash + ' stash' + (git.stash > 1 ? 'es' : ''), 'blue')}`);
+    syncContent = `${alerts.join('  ')}`;
   } else {
-    syncContent = ` ${c(ICON.synced, 'green')} ${c('Synced with remote', 'green')} `;
+    syncContent = `${c('No pending commits', 'green')}`;
   }
 
-  // Row 4+: Unstaged/Staged
+  // Row 4+: Unstaged/Staged - calculate max widths for dynamic sizing
+  const allAddLines = git ? [git.unstAdd, git.hasStaged ? git.stAdd : 0] : [0];
+  const allRemLines = git ? [git.unstRem, git.hasStaged ? git.stRem : 0] : [0];
+  const maxAddWidth = Math.max(...allAddLines.map(n => n.toString().length));
+  const maxRemWidth = Math.max(...allRemLines.map(n => n.toString().length));
+
   function buildDataRow(label, addLines, remLines, edit, newFiles, delFiles, renameFiles) {
-    const addStr = c('+' + addLines.toString().padStart(4), 'green');
-    const remStr = c('-' + remLines.toString().padStart(4), 'red');
-    const labelContent = ` ${c(label, 'white')}  ${addStr}  ${remStr} `;
+    const addStr = c('+' + addLines.toString().padStart(maxAddWidth), addLines > 0 ? 'green' : 'gray');
+    const remStr = c('-' + remLines.toString().padStart(maxRemWidth), remLines > 0 ? 'red' : 'gray');
+    const labelLeft = `${c(label, 'white')}`;
+    const labelRight = `${addStr} ${remStr}`;
 
     const editVal = edit > 0 ? c(edit.toString(), 'yellow') : c('0', 'gray');
     const newVal = newFiles > 0 ? c(newFiles.toString(), 'green') : c('0', 'gray');
     const delVal = delFiles > 0 ? c(delFiles.toString(), 'red') : c('0', 'gray');
     const renameVal = renameFiles > 0 ? c(renameFiles.toString(), 'cyan') : c('0', 'gray');
 
-    return { labelContent, editVal, newVal, delVal, renameVal };
+    return { labelLeft, labelRight, editVal, newVal, delVal, renameVal, edit, newFiles, delFiles, renameFiles };
   }
 
-  const unstaged = git ? buildDataRow('Unstaged', git.unstAdd, git.unstRem, git.mod, git.add, git.del, git.ren) : null;
+  const unstaged = git ? buildDataRow('Local', git.unstAdd, git.unstRem, git.mod, git.add, git.del, git.ren) : null;
   const staged = git?.hasStaged ? buildDataRow('Staged', git.stAdd, git.stRem, git.sMod, git.sAdd, git.sDel, git.sRen) : null;
+  const noGitRow = !git ? { editVal: c('-', 'gray'), newVal: c('-', 'gray'), delVal: c('-', 'gray'), renameVal: c('-', 'gray') } : null;
 
-  // Calculate widths from actual colored content
-  const leftContents = [pathContent, userContent, syncContent];
-  if (unstaged) leftContents.push(unstaged.labelContent);
-  if (staged) leftContents.push(staged.labelContent);
-  const bodyWideWidth = Math.max(...leftContents.map(s => getVisibleLength(s)));
+  // Column headers - dim if all values are 0, colored otherwise
+  const hasEdit = (unstaged?.edit || 0) + (staged?.edit || 0) > 0;
+  const hasNew = (unstaged?.newFiles || 0) + (staged?.newFiles || 0) > 0;
+  const hasDel = (unstaged?.delFiles || 0) + (staged?.delFiles || 0) > 0;
+  const hasRename = (unstaged?.renameFiles || 0) + (staged?.renameFiles || 0) > 0;
 
-  const rightContents = [repoContent, modelContent];
-  const maxRightWidth = Math.max(...rightContents.map(s => getVisibleLength(s)));
-  const headerRightWidth = Math.max(maxRightWidth, narrowTotalWidth);
-  const headerLeftWidth = bodyWideWidth;
+  const editHeader = hasEdit ? c('mod', 'yellow') : c('mod', 'gray');
+  const newHeader = hasNew ? c('add', 'green') : c('add', 'gray');
+  const delHeader = hasDel ? c('rm', 'red') : c('rm', 'gray');
+  const renameHeader = hasRename ? c('mv', 'cyan') : c('mv', 'gray');
 
-  // Column headers (centered)
-  const editHeader = c('edit', 'yellow');
-  const newHeader = c('new', 'green');
-  const delHeader = c('del', 'red');
-  const renameHeader = c('rename', 'cyan');
+  // ─────────────────────────────────────────────────────────────────────────
+  // CALCULATE WIDTHS (each column = max cell width, no padding - separator handles spacing)
+  // ─────────────────────────────────────────────────────────────────────────
+  const colPadding = 0;
+
+  // Collect cells per column region
+  // LEFT: all rows share same left column (row 1 is full-width, not included)
+  // For data rows, calculate min width as labelLeft + 2 spaces + labelRight
+  const leftCells = [leftContentMin, syncContent];
+  if (unstaged) leftCells.push(unstaged.labelLeft + '  ' + unstaged.labelRight);
+  if (staged) leftCells.push(staged.labelLeft + '  ' + staged.labelRight);
+  if (noGitRow) leftCells.push(`${c('No git data available', 'gray')}`);
+
+  // RIGHT HEADER: row 2 only (row 1 is full-width)
+  const rightHeaderCells = [rightContentMin];
+
+  // NARROW COLUMNS: rows 3+ (4 separate columns, include headers for width calc)
+  const col0Cells = [editHeader, unstaged?.editVal, staged?.editVal, noGitRow?.editVal].filter(Boolean);
+  const col1Cells = [newHeader, unstaged?.newVal, staged?.newVal, noGitRow?.newVal].filter(Boolean);
+  const col2Cells = [delHeader, unstaged?.delVal, staged?.delVal, noGitRow?.delVal].filter(Boolean);
+  const col3Cells = [renameHeader, unstaged?.renameVal, staged?.renameVal, noGitRow?.renameVal].filter(Boolean);
+
+  // Calculate base widths
+  const leftWidth = Math.max(...leftCells.map(s => getVisibleLength(s)));
+  const rightHeaderWidth = Math.max(...rightHeaderCells.map(s => getVisibleLength(s)));
+
+  // Narrow column widths: max content + padding
+  const colWidths = [
+    Math.max(...col0Cells.map(s => getVisibleLength(s))) + colPadding,
+    Math.max(...col1Cells.map(s => getVisibleLength(s))) + colPadding,
+    Math.max(...col2Cells.map(s => getVisibleLength(s))) + colPadding,
+    Math.max(...col3Cells.map(s => getVisibleLength(s))) + colPadding,
+  ];
+  const narrowTotal = colWidths.reduce((a, b) => a + b, 0) + 6; // +6: row5 has 1 sep (3) + 3 double-spaces (6) = 9, row2 has 1 sep (3), diff = 6
+
+  // CONSTRAINT: right header area = narrow columns area
+  // If right header is wider, distribute extra space:
+  // 1. First equalize all columns to the widest one
+  // 2. Then distribute remainder round-robin
+  if (rightHeaderWidth > narrowTotal) {
+    let extra = rightHeaderWidth - narrowTotal;
+
+    // Phase 1: Equalize to max width
+    while (extra > 0) {
+      const maxWidth = Math.max(...colWidths);
+      const minWidth = Math.min(...colWidths);
+      if (minWidth === maxWidth) break; // All equal
+
+      const minIndex = colWidths.indexOf(minWidth);
+      colWidths[minIndex]++;
+      extra--;
+    }
+
+    // Phase 2: Round-robin distribution
+    let i = 0;
+    while (extra > 0) {
+      colWidths[i % 4]++;
+      extra--;
+      i++;
+    }
+  }
+
+  // Final widths: row2 has 1 sep (3), row5 has 1 sep (3) + 3 double-spaces (6) = 9, diff = 6
+  const finalNarrowTotal = colWidths.reduce((a, b) => a + b, 0) + 6;
+  const headerLeftWidth = leftWidth;
+  const headerRightWidth = Math.max(rightHeaderWidth, finalNarrowTotal);
+  const bodyWideWidth = leftWidth;
+
+  // Build row 2 content with proper padding
+  const row2Left = leftContent;
+  const row2Right = rightContent;
 
   // ─────────────────────────────────────────────────────────────────────────
   // RENDER LINES
   // ─────────────────────────────────────────────────────────────────────────
   const lines = [];
 
-  // Helper: horizontal line with specific corner/junction chars
-  function hLine(left, mid, right, width1, width2) {
-    return c(left + BOX.h.repeat(width1) + mid + BOX.h.repeat(width2) + right, 'gray');
+  // Separator: adds space only on sides with content
+  const sep = ' ' + c(BOX.v, 'gray') + ' ';
+
+  // Row with 2 columns (centerRight: center the right cell)
+  // Uses dot separator instead of vertical line
+  const dotSep = ' ' + c('·', 'gray') + ' ';
+  function row2(content1, content2, width1, width2, centerRight = false) {
+    const pad2 = centerRight ? padCenter : padRight;
+    return padRight(content1, width1) + dotSep + pad2(content2, width2);
   }
 
-  function hLine5(left, j1, j2, j3, j4, right, w1, w2, w3, w4, w5) {
-    return c(
-      left + BOX.h.repeat(w1) + j1 + BOX.h.repeat(w2) + j2 + BOX.h.repeat(w3) + j3 + BOX.h.repeat(w4) + j4 + BOX.h.repeat(w5) + right,
-      'gray'
-    );
-  }
-
-  // Row with 2 columns
-  function row2(content1, content2, width1, width2) {
-    return c(BOX.v, 'gray') + padRight(content1, width1) + c(BOX.v, 'gray') + padRight(content2, width2) + c(BOX.v, 'gray');
-  }
-
-  // Row with 5 columns (1 wide + 4 narrow, narrow cells centered)
+  // Row with 5 columns (1 wide + 4 narrow, narrow cells right-aligned)
+  // Only first separator is vertical line, rest are spaces
   function row5(wideContent, c1, c2, c3, c4, wideWidth) {
     return (
-      c(BOX.v, 'gray') + padRight(wideContent, wideWidth) +
-      c(BOX.v, 'gray') + padCenter(c1, narrowColWidth) +
-      c(BOX.v, 'gray') + padCenter(c2, narrowColWidth) +
-      c(BOX.v, 'gray') + padCenter(c3, narrowColWidth) +
-      c(BOX.v, 'gray') + padCenter(c4, narrowColWidth) +
-      c(BOX.v, 'gray')
+      padRight(wideContent, wideWidth) +
+      sep + padLeft(c1, colWidths[0]) +
+      '  ' + padLeft(c2, colWidths[1]) +
+      '  ' + padLeft(c3, colWidths[2]) +
+      '  ' + padLeft(c4, colWidths[3])
     );
   }
 
-  // Top border
-  lines.push(hLine(BOX.tl, BOX.mt, BOX.tr, headerLeftWidth, headerRightWidth));
+  // Empty line that Node will process (zero-width space)
+  const emptyLine = '\u200B';
 
-  // Row 1: Path | Repo
-  lines.push(row2(pathContent, repoContent, headerLeftWidth, headerRightWidth));
+  // Top empty line
+  lines.push(emptyLine);
 
-  // Separator
-  lines.push(hLine(BOX.ml, BOX.mc, BOX.mr, headerLeftWidth, headerRightWidth));
+  // Row 1: Repo (full width)
+  const totalWidth = headerLeftWidth + 3 + headerRightWidth; // +3 for ` │ `
+  lines.push(padRight(repoContent, totalWidth));
 
-  // Row 2: User+Size | CC+Model
-  lines.push(row2(userContent, modelContent, headerLeftWidth, headerRightWidth));
+  // Row 2: Version+Model | User+Size
+  lines.push(row2(row2Left, row2Right, headerLeftWidth, headerRightWidth));
 
-  // Separator (transition from 2-col to 5-col)
-  lines.push(hLine5(BOX.ml, BOX.mc, BOX.mt, BOX.mt, BOX.mt, BOX.mr,
-    bodyWideWidth, narrowColWidth, narrowColWidth, narrowColWidth, narrowColWidth));
+  // Middle separator (plain horizontal line)
+  lines.push(c(BOX.h.repeat(totalWidth), 'gray'));
 
   // Row 3: Sync | headers
   lines.push(row5(syncContent, editHeader, newHeader, delHeader, renameHeader, bodyWideWidth));
 
-  // Separator
-  lines.push(hLine5(BOX.ml, BOX.mc, BOX.mc, BOX.mc, BOX.mc, BOX.mr,
-    bodyWideWidth, narrowColWidth, narrowColWidth, narrowColWidth, narrowColWidth));
+  // Helper: build data row content with right-aligned +/- values
+  function buildLabelContent(row) {
+    const leftLen = getVisibleLength(row.labelLeft);
+    const rightLen = getVisibleLength(row.labelRight);
+    const padding = bodyWideWidth - leftLen - rightLen;
+    return row.labelLeft + ' '.repeat(Math.max(1, padding)) + row.labelRight;
+  }
 
-  // Row 4: Unstaged
+  // Row 4: Unstaged (or no-git placeholder)
   if (unstaged) {
-    lines.push(row5(unstaged.labelContent, unstaged.editVal, unstaged.newVal, unstaged.delVal, unstaged.renameVal, bodyWideWidth));
+    lines.push(row5(buildLabelContent(unstaged), unstaged.editVal, unstaged.newVal, unstaged.delVal, unstaged.renameVal, bodyWideWidth));
 
     // Row 5: Staged (only if has staged changes)
     if (staged) {
-      lines.push(row5(staged.labelContent, staged.editVal, staged.newVal, staged.delVal, staged.renameVal, bodyWideWidth));
+      lines.push(row5(buildLabelContent(staged), staged.editVal, staged.newVal, staged.delVal, staged.renameVal, bodyWideWidth));
     }
-  } else {
-    lines.push(row5(` ${c('No git data available', 'gray')} `, c('-', 'gray'), c('-', 'gray'), c('-', 'gray'), c('-', 'gray'), bodyWideWidth));
+  } else if (noGitRow) {
+    lines.push(row5(`${c('No git data available', 'gray')}`, noGitRow.editVal, noGitRow.newVal, noGitRow.delVal, noGitRow.renameVal, bodyWideWidth));
   }
 
-  // Bottom border
-  lines.push(hLine5(BOX.bl, BOX.mb, BOX.mb, BOX.mb, BOX.mb, BOX.br,
-    bodyWideWidth, narrowColWidth, narrowColWidth, narrowColWidth, narrowColWidth));
+  // Bottom empty line
+  lines.push(emptyLine);
 
   return lines.join('\n');
 }
