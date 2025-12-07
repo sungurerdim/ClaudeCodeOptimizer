@@ -87,7 +87,7 @@ Global `~/.claude/` files are never modified by cco-tune.
 
 ## Step 1: Status (Always Runs)
 
-Show current project state before asking anything:
+Show current project state before asking anything. Status shows **current values and locations only** - no reasoning (that comes in detection results).
 
 ```
 ╔════════════════════════════════════════════════════════════════════════════════╗
@@ -95,20 +95,22 @@ Show current project state before asking anything:
 ╠════════════════════════════════════════════════════════════════════════════════╣
 ║ PROJECT: {project_name}                                                        ║
 ╠════════════════════════════════════════════════════════════════════════════════╣
-║ CONTEXT         │ ./CLAUDE.md                                                  ║
-├─────────────────┼──────────────────────────────────────────────────────────────┤
+║ CONTEXT (./CLAUDE.md)                                                          ║
+├────────────────────────────────────────────────────────────────────────────────┤
 ║ Purpose         │ {purpose}                                                    ║
 ║ Team/Scale/Data │ {team} | {scale} | {data}                                    ║
 ║ Stack/Type      │ {stack} | {type}                                             ║
-║ AI Performance  │ Thinking {thinking} | MCP {mcp} | Caching {caching}          ║
+║ Maturity        │ {maturity} | Breaking: {breaking} | Priority: {priority}     ║
 ╠════════════════════════════════════════════════════════════════════════════════╣
-║ LOCAL SETTINGS  │ Status                           │ Location                  ║
-├─────────────────┼──────────────────────────────────┼───────────────────────────┤
-║ AI Performance  │ Thinking {thinking} | MCP {mcp}  │ ./.claude/settings.json   ║
-║ Statusline      │ {statusline_status}              │ ./.claude/statusline.js   ║
-║ Permissions     │ {permissions_status}             │ ./.claude/settings.json   ║
+║ ACTIVE SETTINGS (./.claude/settings.json)                                      ║
+├────────────────┬──────────────────────────────────────────────────────────────┤
+║ Thinking       │ {value} tokens                                               ║
+║ MCP Output     │ {value} tokens                                               ║
+║ Caching        │ {on|off}                                                     ║
+║ Statusline     │ {Full|Minimal|None}                    ./.claude/statusline.js║
+║ Permissions    │ {level} ({N} rules)                                          ║
 ╠════════════════════════════════════════════════════════════════════════════════╣
-║ STANDARDS       │ {base} base + {project} project-specific = {total}           ║
+║ STANDARDS      │ ~{base} base + {N} project-specific = ~{total}               ║
 ╚════════════════════════════════════════════════════════════════════════════════╝
 ```
 
@@ -121,8 +123,8 @@ Show current project state before asking anything:
 ║ PROJECT: {project_name}                                                        ║
 ╠════════════════════════════════════════════════════════════════════════════════╣
 ║ CONTEXT         │ Not configured                                               ║
-║ LOCAL FEATURES  │ Not configured                                               ║
-║ STANDARDS       │ {base} base only (no project-specific)                       ║
+║ ACTIVE SETTINGS │ Not configured                                               ║
+║ STANDARDS       │ ~{base_count} base only (no project-specific)                ║
 ╚════════════════════════════════════════════════════════════════════════════════╝
 ```
 
@@ -554,48 +556,74 @@ AI Performance is **automatically calculated** during detection. See [AI Perform
 
 ## Step 4: Review Detection Results
 
-Show unified table with dynamic standard counts:
+Show unified table with dynamic standard counts. **Source column shows where value was detected; Standards column shows what gets triggered.**
 
 ```
 ╔══════════════════════════════════════════════════════════════════════════════════════╗
-║                                CCO PROJECT TUNE                                      ║
+║                            CCO DETECTION RESULTS                                     ║
 ╠══════════════════════════════════════════════════════════════════════════════════════╣
 ║  #  │ Element       │ Value                  │ Source                  │ Standards   ║
 ╠═════╪═══════════════╪════════════════════════╪═════════════════════════╪═════════════╣
-║     │ AUTO-DETECTED                                                                  ║
+║     │ AUTO-DETECTED (from project files)                                             ║
 ├─────┼───────────────┼────────────────────────┼─────────────────────────┼─────────────┤
-║  1  │ Purpose       │ {detected_purpose}     │ {file:line}             │ -           ║
-║  2  │ Stack         │ {detected_stack}       │ {config_file}           │ -           ║
-║  3  │ Type          │ {CLI|Library|...}      │ {detection_source}      │ +N {type}   ║
-║  4  │ DB            │ {db_type|None}         │ {detection_source}      │ +5 Data     ║
+║  1  │ Purpose       │ {purpose}              │ {file}:{line}           │ -           ║
+║  2  │ Stack         │ {stack}                │ {config_file}           │ -           ║
+║  3  │ Type          │ {type}                 │ {detection_method}      │ +{N} {cat}  ║
+║  4  │ DB            │ {db|None}              │ {source|(not detected)} │ +5 Data     ║
 ║  5  │ CI/CD         │ {provider|None}        │ {workflow_path}         │ +7 Ops      ║
-║  6  │ API           │ {framework|None}       │ {routes_path}           │ +6 API      ║
-║ ... │ ...           │ ...                    │ ...                     │ ...         ║
+║  6  │ API           │ {style|None}           │ {source|(not detected)} │ +6 API      ║
+║  7  │ Frontend      │ {framework|None}       │ {source|(not detected)} │ +10 Frontend║
+║  8  │ Container     │ {yes|None}             │ {source|(not detected)} │ +5 Container║
+║  9  │ License       │ {license_type}         │ {license_file}          │ -           ║
+║ 10  │ Coverage      │ {N}%                   │ {coverage_source}       │ -           ║
+║ 11  │ Secrets Risk  │ {yes|no}               │ {scan_result}           │ +12 Security║
 ╠═════╪═══════════════╪════════════════════════╪═════════════════════════╪═════════════╣
-║     │ AI PERFORMANCE (see AI Performance Auto-Detection)                              ║
+║     │ AI PERFORMANCE (auto-calculated → ./.claude/settings.json)                     ║
 ├─────┼───────────────┼────────────────────────┼─────────────────────────┼─────────────┤
-║ 21  │ Thinking      │ {Standard|Medium|High} │ complexity: {score}     │ → settings  ║
-║ 21  │ MCP Output    │ {Std|Large|VeryLarge}  │ files: {count}          │ → settings  ║
-║ 21  │ Caching       │ on                     │ recommended             │ → settings  ║
+║ 12  │ Thinking      │ {value} ({tier})       │ complexity: {score}     │ → env       ║
+║ 13  │ MCP Output    │ {value} ({tier})       │ files: {count}          │ → env       ║
+║ 14  │ Caching       │ {on|off}               │ {reason}                │ → env       ║
 ╠═════╪═══════════════╪════════════════════════╪═════════════════════════╪═════════════╣
-║     │ DEFAULTS (editable)                                                            ║
+║     │ USER CONFIGURABLE (defaults shown, editable)                                   ║
 ├─────┼───────────────┼────────────────────────┼─────────────────────────┼─────────────┤
-║ 22  │ Team          │ {Solo|2-5|6+}          │ default (not detected)  │ +8 Team     ║
-║ 23  │ Scale         │ {<100|100-10K|10K+}    │ default (not detected)  │ +12 Scale   ║
-║ 24  │ Data          │ {Public|Internal|...}  │ default (not detected)  │ +12 Sec     ║
-║ ... │ ...           │ ...                    │ ...                     │ ...         ║
+║ 15  │ Team          │ {team_size}            │ {detection_hint}        │ {standards} ║
+║ 16  │ Scale         │ {scale}                │ {source|default}        │ {standards} ║
+║ 17  │ Data          │ {sensitivity}          │ {detection_hint}        │ {standards} ║
+║ 18  │ Compliance    │ {frameworks|None}      │ {source|default}        │ {standards} ║
+║ 19  │ Architecture  │ {pattern}              │ {detection_hint}        │ {standards} ║
+║ 20  │ Deployment    │ {strategy}             │ {source}                │ (in #5)     ║
+║ 21  │ Testing       │ {level}                │ {detection_hint}        │ {standards} ║
+║ 22  │ Maturity      │ {stage}                │ {detection_hint}        │ guidelines  ║
+║ 23  │ Breaking      │ {policy}               │ {detection_hint}        │ guidelines  ║
+║ 24  │ Priority      │ {focus}                │ {source|default}        │ guidelines  ║
+║ 25  │ SLA           │ {level|None}           │ {source|default}        │ {standards} ║
+║ 26  │ Real-time     │ {requirement|None}     │ {detection_hint}        │ {standards} ║
 ╠══════════════════════════════════════════════════════════════════════════════════════╣
-║ STANDARDS: +{N} project-specific ({triggered_subsections})                           ║
-║ TOTAL: ~101 base + ~{N} selected = ~{total}                                          ║
+║ STANDARDS TRIGGERED                                                                  ║
+├──────────────────────────────────────────────────────────────────────────────────────┤
+║ {subsection} (+{N}) │ {subsection} (+{N}) │ ... = +{total} project-specific          ║
+╠══════════════════════════════════════════════════════════════════════════════════════╣
+║ TOTAL: ~{base_count} base + {N} project-specific = ~{total} standards                ║
 ╚══════════════════════════════════════════════════════════════════════════════════════╝
 ```
 
-**Standards column:** Show `+N {subsection}` only when triggered, `-` otherwise.
+**Source column values:**
+| Source Type | Format | Description |
+|-------------|--------|-------------|
+| File detected | `{filename}` or `{filename}:{line}` | Specific file where value was found |
+| Directory detected | `{path}/` | Directory pattern matched |
+| Pattern matched | `{pattern} detected` | Code pattern or file structure matched |
+| Not found | `(not detected)` | Element not present in project |
+| Default value | `default` | User-configurable with no detection hint |
+| Derived | `{derivation_source}` | Inferred from other project characteristics |
+| Recommended | `recommended ({reason})` | CCO recommendation with rationale |
 
-**Source column rules:**
-- Auto-detected: Show actual file path or detection method (e.g., `README.md:1`, `pyproject.toml`, `.github/workflows/`)
-- Defaults: Show `default (not detected)` - indicates value was not found in project files
-- Never use `current` as a source - always perform fresh detection
+**Standards column values:**
+- `+N {subsection}` - triggers N standards from named subsection
+- `→ env` - writes to settings.json env section
+- `guidelines` - affects guidelines generation, not standards count
+- `(in #N)` - already counted in row N
+- `-` - no standards triggered
 
 **Standard counts are calculated dynamically** from `cco-standards-conditional.md` based on triggers.
 
@@ -748,50 +776,78 @@ After writing permission config, verify:
 Purpose: {purpose}
 Team: {team} | Scale: {scale} | Data: {data} | Compliance: {compliance}
 Stack: {stack} | Type: {type} | DB: {db} | Rollback: Git
+Architecture: {pattern} | API: {style} | Deployment: {strategy}
 Maturity: {maturity} | Breaking: {breaking} | Priority: {priority}
-
-## AI Performance
-Thinking: {value} | MCP: {value} | Caching: {on|off}
+Testing: {strategy} | SLA: {level} | Real-time: {requirement}
 
 ## Guidelines
-{generated based on values}
+{generated based on values - see Guidelines Generation section}
 
 ## Operational
 Tools: {format}, {lint}, {test}
 Conventions: {detected patterns}
 Applicable: {check categories}
+Not Applicable: {excluded categories}
 
 ## Auto-Detected
-Structure: {type} | Coverage: {N}% | License: {type}
+Structure: {type} | Hooks: {status} | Coverage: {N}%
 {checklist of detected features}
+License: {type}
+Secrets detected: {yes|no}
+Outdated deps: {N}
 
-## Conditional Standards
-{matched project-specific standards}
+## Conditional Standards (auto-applied)
+**TOTAL: +{N} project-specific ({subsections})**
+
+{matched project-specific standards with counts}
 <!-- CCO_CONTEXT_END -->
 ```
+
+**Note:** AI Performance settings are NOT stored in CLAUDE.md - they are only in `./.claude/settings.json` where Claude Code reads them. The CCO_CONTEXT documents project characteristics that inform AI Performance auto-detection.
 
 ---
 
 ## Step 6: Report
 
+Show before/after comparison for all changed settings:
+
 ```
 ╔════════════════════════════════════════════════════════════════════════════════╗
 ║                            CCO TUNE COMPLETE                                   ║
 ╠════════════════════════════════════════════════════════════════════════════════╣
-║ CONFIGURED (all local, no global modifications)                                ║
-├────────────────────────────────────────────────────────────────────────────────┤
-║ ✓ Project Detection  → ./CLAUDE.md                                             ║
-║ ✓ AI Performance     → ./.claude/settings.json                                 ║
-║   └─ Thinking: {detected}K (complexity: {score}) | MCP: {detected}K            ║
-║ ✓ Statusline         → ./.claude/statusline.js                                 ║
-║ ✓ Permissions        → ./.claude/settings.json (Full mode)                     ║
+║ CHANGES APPLIED (all local, no global modifications)                           ║
+├────────────────┬───────────────────┬───────────────────┬───────────────────────┤
+║ Setting        │ Before            │ After             │ Reason                ║
+├────────────────┼───────────────────┼───────────────────┼───────────────────────┤
+║ Context        │ {before|none}     │ {after}           │ {reason}              ║
+║ Thinking       │ {before|none}     │ {value} tokens    │ complexity: {score}   ║
+║ MCP Output     │ {before|none}     │ {value} tokens    │ files: {count}        ║
+║ Caching        │ {before|none}     │ {on|off}          │ {reason}              ║
+║ Statusline     │ {before|none}     │ {mode}            │ {reason}              ║
+║ Permissions    │ {before|none}     │ {level} ({N})     │ {reason}              ║
 ╠════════════════════════════════════════════════════════════════════════════════╣
-║ STANDARDS: {base} base + {project} project-specific = {total}                  ║
+║ STANDARDS                                                                      ║
+├────────────────┬───────────────────────────────────────────────────────────────┤
+║ Base           │ ~{base_count} (Universal + AI + CCO)                          ║
+║ Project        │ +{N} ({triggered_subsections})                                ║
+║ Total          │ ~{total} standards                                            ║
+╠════════════════════════════════════════════════════════════════════════════════╣
+║ FILES WRITTEN                                                                  ║
+├────────────────────────────────────────────────────────────────────────────────┤
+║ ./CLAUDE.md                    Project context + conditional standards         ║
+║ ./.claude/settings.json        env + statusLine + permissions                  ║
+║ ./.claude/statusline.js        Status bar script (if statusline configured)    ║
 ╠════════════════════════════════════════════════════════════════════════════════╣
 ║ Restart Claude Code for changes to take effect                                 ║
 ║ Next: /cco-health to verify | /cco-audit --smart to check                      ║
 ╚════════════════════════════════════════════════════════════════════════════════╝
 ```
+
+**Before/After rules:**
+- `{none}` - setting didn't exist before
+- `{unchanged}` - value is the same (skip row or show for reference)
+- Only show rows for settings that were actually configured in this session
+- Reason column shows detection source or user choice
 
 ---
 
@@ -852,22 +908,22 @@ Exports the full CCO_CONTEXT block including CCO-Specific standards for use in o
 
 ## Standards Count Structure
 
-Standards are organized in 4 categories:
+Standards are organized in 4 categories. **All counts are dynamically calculated from source files.**
 
-| Category | Source File | Count | Scope |
-|----------|-------------|-------|-------|
-| Universal | `cco-standards.md` | ~47 | All projects |
-| AI-Specific | `cco-standards.md` | ~31 | All AI assistants |
-| CCO-Specific | `cco-standards.md` | ~23 | CCO users only |
-| Project-Specific | `cco-standards-conditional.md` | ~108 | Triggered by detection |
+| Category | Source File | Scope |
+|----------|-------------|-------|
+| Universal | `cco-standards.md` | All projects |
+| AI-Specific | `cco-standards.md` | All AI assistants |
+| CCO-Specific | `cco-standards.md` | CCO users only |
+| Project-Specific | `cco-standards-conditional.md` | Triggered by detection |
 
-**Base standards:** Universal + AI-Specific + CCO-Specific = ~101 standards
-**Project-specific:** Up to ~108 additional standards based on detected features
+**Base standards:** Universal + AI-Specific + CCO-Specific = ~{base_count} (count `^- ` lines in source)
+**Project-specific:** Up to ~{max_conditional} additional (count `^- ` lines in conditional source)
 
 **Count calculation:**
-- Count `^- ` lines in each standards file section
+- Count `^- ` lines (bullet points starting with `- `) in each section
 - Tables count as guidance, not individual standards
-- Counts are approximate and may change as standards evolve
+- Counts are dynamic - always recalculate from source files
 
 ---
 
@@ -929,9 +985,13 @@ See [User-Configurable Elements](#user-configurable-elements) (sections 1-13) fo
 | Collaboration | Team (4-8) + i18n (5) | 13 |
 | Real-time | Basic (2) / Standard (5) / Low-latency (8) | 8 |
 | Testing | Basic (3) / Standard (5) / Full (8) + Perf (4) | 12 |
-| Observability | Basic (2) / Standard (4) / HA+DR (8) / Full (12) | 12 |
+| Observability | Basic (3) / Standard (4) / HA (8) / Full (12) | 12 |
+
+**Note:** "/" means OR (tiered - only one selected), "+" means AND (stacking).
 
 Standard counts from `^- ` lines in `cco-standards-conditional.md`.
+
+**Dynamic calculation:** Count actual bullet points in source file, don't use hardcoded values.
 
 ---
 
