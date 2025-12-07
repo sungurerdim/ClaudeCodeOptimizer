@@ -10,24 +10,24 @@ Complete reference of all CCO standards organized by category.
 ┌─────────────────────────────────────────────────────────────────┐
 │  ALWAYS ACTIVE                                                  │
 ├─────────────────────────────────────────────────────────────────┤
-│  Universal (47)      - All projects, AI/human agnostic          │
+│  Universal (43)      - All projects, AI/human agnostic          │
 │  AI-Specific (31)    - All AI assistants, model agnostic        │
-│  CCO-Specific (11)   - CCO workflow mechanisms                  │
+│  CCO-Specific (37)   - CCO workflow mechanisms                  │
 ├─────────────────────────────────────────────────────────────────┤
-│  BASE TOTAL: 89 standards                                       │
+│  BASE TOTAL: 111 standards                                      │
 ├─────────────────────────────────────────────────────────────────┤
 │  DYNAMICALLY LOADED                                             │
 ├─────────────────────────────────────────────────────────────────┤
-│  Project-Specific (108 pool) - Selected by /cco-tune triggers   │
+│  Project-Specific (167 pool) - Selected by /cco-tune triggers   │
 │  Typical: 15-35 standards per project                           │
 ├─────────────────────────────────────────────────────────────────┤
-│  TYPICAL ACTIVE: ~104-124 standards                             │
+│  TYPICAL ACTIVE: ~126-146 standards                             │
 └─────────────────────────────────────────────────────────────────┘
 ```
 
 ---
 
-## Universal Standards (47)
+## Universal Standards (43)
 
 *Applies to ALL software projects regardless of language, framework, or team size.*
 
@@ -46,14 +46,13 @@ Complete reference of all CCO standards organized by category.
 | Explicit Over Implicit | Clear intent, no magic values |
 | Separation of Concerns | Distinct responsibilities per module |
 
-### File & Resource Management (6)
+### File & Resource Management (5)
 | Standard | Description |
 |----------|-------------|
 | Minimal Touch | Only files required for task |
 | Paths | Forward slash (/), relative paths, quote spaces |
 | No Unsolicited Files | Never create unless requested |
-| Cleanup | Remove temporary files after iteration |
-| Resource Cleanup | Close handles, release connections, dispose properly |
+| Resource Management | Cleanup temp files, close handles, release connections |
 | Exclusions | Skip .git, node_modules, __pycache__, venv, dist, build |
 
 ### Security Fundamentals (6)
@@ -100,15 +99,12 @@ Complete reference of all CCO standards organized by category.
 | Decompose | Break complex tasks into smaller steps |
 | Version | SemVer (MAJOR.MINOR.PATCH) |
 
-### UX/DX (6)
+### UX/DX (3)
 | Standard | Description |
 |----------|-------------|
 | Minimum Friction | Fewest steps to goal |
 | Maximum Clarity | Unambiguous output, clear next actions |
-| Fast Feedback | Progress indicators, incremental results |
-| Error Recovery | Actionable messages with fix suggestions |
 | Predictability | Consistent behavior across sessions |
-| Transparency | Show what will happen before doing it |
 
 ---
 
@@ -173,7 +169,7 @@ Complete reference of all CCO standards organized by category.
 
 ---
 
-## CCO-Specific Standards (11)
+## CCO-Specific Standards (37)
 
 *CCO workflow mechanisms - only for CCO users.*
 
@@ -193,7 +189,7 @@ Complete reference of all CCO standards organized by category.
 
 ---
 
-## Project-Specific Standards (108 pool)
+## Project-Specific Standards (167 pool)
 
 *Dynamically selected by /cco-tune based on project detection.*
 
@@ -203,13 +199,16 @@ Complete reference of all CCO standards organized by category.
 |----------|---------|-------|
 | Security & Compliance | PII/Regulated data, 10K+ scale, Compliance set | 12 |
 | Scale & Architecture | 10K+ scale, Microservices | 12 |
-| Backend Services | API, DB, or CI/CD detected | 18 |
+| Backend Services | API, DB, or CI/CD detected | 17 |
 | Frontend | React/Vue/Angular/Svelte detected | 10 |
 | Apps | Mobile, Desktop, or CLI detected | 15 |
-| Library | Type: library | 5 |
+| Library | Type: library | 4 |
 | Infrastructure | Container/K8s, Serverless, Monorepo | 13 |
 | Specialized | ML/AI or Game Dev detected | 10 |
-| Collaboration | Team 2+, i18n detected | 13 |
+| Collaboration | Team 2+, i18n detected | 17 |
+| Real-time | WebSocket/SSE detected | 14 |
+| Testing | Testing strategy selected | 20 |
+| Observability | SLA level selected | 23 |
 
 ### Full list
 

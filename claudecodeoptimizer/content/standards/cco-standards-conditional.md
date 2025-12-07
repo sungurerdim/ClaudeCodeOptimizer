@@ -48,14 +48,13 @@
 - Backup: automated, tested restore, defined RPO/RTO
 - Migrations: versioned, backward compatible, rollback
 - N+1 Prevention: batch queries, eager loading
-- Retention: defined periods, auto-cleanup
 - Transactions: ACID where needed, eventual consistency where acceptable
 
 ### Operations
 - Config as Code: versioned, validated, env-aware
 - Health Endpoints: /health + /ready
 - Graceful Shutdown: drain connections on SIGTERM
-- Observability: metrics, logs, traces (OpenTelemetry)
+- Observability Stack: metrics, logs, traces (OpenTelemetry)
 - CI Gates: lint + test + coverage before merge
 - Blue/Green or Canary: zero-downtime deployments
 - Feature Flags: decouple deploy from release
@@ -108,7 +107,6 @@
 - Minimal Dependencies: reduce transitive dependency burden
 - Tree-Shakeable: ES modules, no side effects in imports
 - Type Definitions: TypeScript types or JSDoc
-- Changelog: document breaking changes clearly
 - Deprecation: warn before removal, provide migration path
 
 ## Infrastructure
@@ -188,7 +186,6 @@
 - Event Ordering: sequence numbers, causality
 - Backpressure: handle slow consumers
 - Graceful Degradation: fallback to polling
-- Connection Pooling: reuse connections
 
 ### Low-latency
 - Binary Protocols: protobuf, msgpack
@@ -235,7 +232,6 @@
 **When:** SLA level selected
 
 ### Monitoring Basics
-- Health Checks: /health endpoint
 - Error Tracking: Sentry or equivalent
 - Basic Alerting: critical failures only
 
@@ -249,10 +245,8 @@
 - Redundancy: no single points of failure
 - Failover: automatic recovery
 - Health Probes: liveness + readiness
-- Circuit Breakers: prevent cascade failures
 - Load Balancing: distribute traffic
 - Auto-scaling: respond to demand
-- Backup Strategy: RPO/RTO defined
 - Incident Response: runbooks documented
 
 ### Full Resilience
@@ -261,7 +255,6 @@
 - Disaster Recovery: tested DR plans
 - Global Load Balancing: anycast, GeoDNS
 - Data Replication: synchronous/async based on requirements
-- Zero Downtime Deploys: blue/green, canary
 - Capacity Planning: proactive scaling
 - SLO/SLI Tracking: error budgets
 - Post-mortem Culture: blameless analysis

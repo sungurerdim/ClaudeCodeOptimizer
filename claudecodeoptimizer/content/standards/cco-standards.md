@@ -20,8 +20,7 @@
 - Minimal Touch: only files required for task
 - Paths: forward slash (/), relative paths, quote spaces
 - No Unsolicited Files: never create unless requested
-- Cleanup: remove temporary files after iteration
-- Resource Cleanup: close handles, release connections, dispose properly
+- Resource Management: cleanup temp files, close handles, release connections
 - Exclusions: skip .git, node_modules, __pycache__, venv, dist, build
 
 ## Security Fundamentals
@@ -61,10 +60,7 @@
 ## UX/DX
 - Minimum Friction: fewest steps to goal
 - Maximum Clarity: unambiguous output, clear next actions
-- Fast Feedback: progress indicators, incremental results
-- Error Recovery: actionable messages with fix suggestions
 - Predictability: consistent behavior across sessions
-- Transparency: show what will happen before doing it
 
 ---
 
