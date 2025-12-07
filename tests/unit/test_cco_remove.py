@@ -237,6 +237,155 @@ class TestRemoveStatusline:
         assert not statusline.exists()
 
 
+class TestHasCcoPermissions:
+    """Test has_cco_permissions function."""
+
+    def test_no_file(self, tmp_path):
+        """Test returns False when settings.json doesn't exist."""
+        from claudecodeoptimizer.cco_remove import has_cco_permissions
+
+        result = has_cco_permissions(tmp_path / "settings.json")
+        assert result is False
+
+    def test_with_cco_marker(self, tmp_path):
+        """Test returns True when CCO marker is present."""
+        from claudecodeoptimizer.cco_remove import has_cco_permissions
+
+        settings = tmp_path / "settings.json"
+        settings.write_text(json.dumps({"_cco_managed": True, "permissions": {}}))
+        result = has_cco_permissions(settings)
+        assert result is True
+
+    def test_with_meta_in_permissions(self, tmp_path):
+        """Test returns True when _meta is in permissions."""
+        from claudecodeoptimizer.cco_remove import has_cco_permissions
+
+        settings = tmp_path / "settings.json"
+        settings.write_text(
+            json.dumps({"permissions": {"_meta": {"level": "balanced"}, "allow": []}})
+        )
+        result = has_cco_permissions(settings)
+        assert result is True
+
+    def test_without_cco_content(self, tmp_path):
+        """Test returns False when no CCO markers present."""
+        from claudecodeoptimizer.cco_remove import has_cco_permissions
+
+        settings = tmp_path / "settings.json"
+        settings.write_text(json.dumps({"permissions": {"allow": []}}))
+        result = has_cco_permissions(settings)
+        assert result is False
+
+    def test_invalid_json(self, tmp_path):
+        """Test returns False on invalid JSON."""
+        from claudecodeoptimizer.cco_remove import has_cco_permissions
+
+        settings = tmp_path / "settings.json"
+        settings.write_text("invalid json {{{")
+        result = has_cco_permissions(settings)
+        assert result is False
+
+
+class TestRemovePermissions:
+    """Test remove_permissions function."""
+
+    def test_remove_permissions(self, tmp_path):
+        """Test removes permissions from settings.json."""
+        from claudecodeoptimizer.cco_remove import remove_permissions
+
+        settings = tmp_path / "settings.json"
+        settings.write_text(
+            json.dumps({"_cco_managed": True, "permissions": {"allow": []}, "other": "data"})
+        )
+        result = remove_permissions(settings, verbose=False)
+        assert result is True
+
+        content = json.loads(settings.read_text())
+        assert "permissions" not in content
+        assert "_cco_managed" not in content
+        assert content["other"] == "data"
+
+    def test_no_file(self, tmp_path):
+        """Test returns False when file doesn't exist."""
+        from claudecodeoptimizer.cco_remove import remove_permissions
+
+        result = remove_permissions(tmp_path / "nonexistent.json", verbose=False)
+        assert result is False
+
+    def test_remove_permissions_verbose(self, tmp_path, capsys):
+        """Test verbose output during permissions removal."""
+        from claudecodeoptimizer.cco_remove import remove_permissions
+
+        settings = tmp_path / "settings.json"
+        settings.write_text(json.dumps({"permissions": {"allow": []}}))
+        result = remove_permissions(settings, verbose=True)
+
+        assert result is True
+        captured = capsys.readouterr()
+        assert "permissions removed" in captured.out
+
+    def test_invalid_json(self, tmp_path):
+        """Test returns False on invalid JSON."""
+        from claudecodeoptimizer.cco_remove import remove_permissions
+
+        settings = tmp_path / "settings.json"
+        settings.write_text("invalid json {{{")
+        result = remove_permissions(settings, verbose=False)
+        assert result is False
+
+
+class TestHasLocalCcoStatusline:
+    """Test has_local_cco_statusline function."""
+
+    def test_no_file(self, tmp_path):
+        """Test returns False when local statusline doesn't exist."""
+        from claudecodeoptimizer.cco_remove import has_local_cco_statusline
+
+        with patch(
+            "claudecodeoptimizer.cco_remove.LOCAL_STATUSLINE_FILE", tmp_path / "statusline.js"
+        ):
+            result = has_local_cco_statusline()
+        assert result is False
+
+    def test_with_cco_content(self, tmp_path):
+        """Test returns True when local statusline has CCO marker."""
+        from claudecodeoptimizer.cco_remove import has_local_cco_statusline
+
+        statusline = tmp_path / "statusline.js"
+        statusline.write_text("// CCO Statusline\nconsole.log('test');")
+        with patch("claudecodeoptimizer.cco_remove.LOCAL_STATUSLINE_FILE", statusline):
+            result = has_local_cco_statusline()
+        assert result is True
+
+
+class TestRemoveLocalStatusline:
+    """Test remove_local_statusline function."""
+
+    def test_remove_local_statusline(self, tmp_path, capsys):
+        """Test removes local statusline.js."""
+        from claudecodeoptimizer.cco_remove import remove_local_statusline
+
+        statusline = tmp_path / "statusline.js"
+        statusline.write_text("// CCO Statusline\nconsole.log('test');")
+        with patch("claudecodeoptimizer.cco_remove.LOCAL_STATUSLINE_FILE", statusline):
+            result = remove_local_statusline(verbose=True)
+
+        assert result is True
+        assert not statusline.exists()
+        captured = capsys.readouterr()
+        assert ".claude/statusline.js" in captured.out
+
+    def test_no_local_statusline(self, tmp_path):
+        """Test returns False when no local statusline to remove."""
+        from claudecodeoptimizer.cco_remove import remove_local_statusline
+
+        with patch(
+            "claudecodeoptimizer.cco_remove.LOCAL_STATUSLINE_FILE", tmp_path / "nonexistent.js"
+        ):
+            result = remove_local_statusline(verbose=False)
+        assert result is False
+
+
 class TestDisplayRemovalPlan:
     """Test _display_removal_plan function."""
 
@@ -247,14 +396,54 @@ class TestDisplayRemovalPlan:
             "files": {"commands": [], "agents": []},
             "standards": [],
             "statusline": True,
+            "permissions": False,
+            "local_statusline": False,
+            "local_permissions": False,
             "total_files": 0,
             "total": 1,
         }
         _display_removal_plan(items)
         captured = capsys.readouterr()
-        assert "Statusline:" in captured.out
+        assert "Global (~/.claude/):" in captured.out
         assert "statusline.js" in captured.out
         assert "settings.json" in captured.out
+
+    def test_display_with_permissions(self, capsys):
+        """Test displays permissions section when present."""
+        items = {
+            "method": None,
+            "files": {"commands": [], "agents": []},
+            "standards": [],
+            "statusline": False,
+            "permissions": True,
+            "local_statusline": False,
+            "local_permissions": False,
+            "total_files": 0,
+            "total": 1,
+        }
+        _display_removal_plan(items)
+        captured = capsys.readouterr()
+        assert "Global (~/.claude/):" in captured.out
+        assert "permissions" in captured.out
+
+    def test_display_with_local_items(self, capsys):
+        """Test displays local section when present."""
+        items = {
+            "method": None,
+            "files": {"commands": [], "agents": []},
+            "standards": [],
+            "statusline": False,
+            "permissions": False,
+            "local_statusline": True,
+            "local_permissions": True,
+            "total_files": 0,
+            "total": 2,
+        }
+        _display_removal_plan(items)
+        captured = capsys.readouterr()
+        assert "Local (./.claude/):" in captured.out
+        assert "statusline.js" in captured.out
+        assert "permissions" in captured.out
 
 
 class TestExecuteRemoval:
@@ -267,6 +456,9 @@ class TestExecuteRemoval:
             "files": {"commands": [], "agents": []},
             "standards": [],
             "statusline": True,
+            "permissions": False,
+            "local_statusline": False,
+            "local_permissions": False,
             "total_files": 0,
             "total": 1,
         }
@@ -276,7 +468,52 @@ class TestExecuteRemoval:
 
         mock_remove.assert_called_once()
         captured = capsys.readouterr()
-        assert "Removing statusline" in captured.out
+        assert "Removing global settings" in captured.out
+
+    def test_execute_with_permissions(self, capsys):
+        """Test executes permissions removal when present."""
+        items = {
+            "method": None,
+            "files": {"commands": [], "agents": []},
+            "standards": [],
+            "statusline": False,
+            "permissions": True,
+            "local_statusline": False,
+            "local_permissions": False,
+            "total_files": 0,
+            "total": 1,
+        }
+        with patch("claudecodeoptimizer.cco_remove.remove_permissions") as mock_remove:
+            mock_remove.return_value = True
+            _execute_removal(items)
+
+        mock_remove.assert_called_once()
+        captured = capsys.readouterr()
+        assert "Removing global settings" in captured.out
+
+    def test_execute_with_local_items(self, capsys):
+        """Test executes local removal when present."""
+        items = {
+            "method": None,
+            "files": {"commands": [], "agents": []},
+            "standards": [],
+            "statusline": False,
+            "permissions": False,
+            "local_statusline": True,
+            "local_permissions": True,
+            "total_files": 0,
+            "total": 2,
+        }
+        with patch("claudecodeoptimizer.cco_remove.remove_local_statusline") as mock_statusline:
+            with patch("claudecodeoptimizer.cco_remove.remove_permissions") as mock_permissions:
+                mock_statusline.return_value = True
+                mock_permissions.return_value = True
+                _execute_removal(items)
+
+        mock_statusline.assert_called_once()
+        mock_permissions.assert_called_once()
+        captured = capsys.readouterr()
+        assert "Removing local settings" in captured.out
 
 
 class TestHasClaudeMdStandardsNoMatches:
