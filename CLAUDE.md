@@ -27,7 +27,7 @@ Applicable: security, tech-debt, tests, cicd, docs, supply-chain, self-complianc
 Not Applicable: database, performance, containers, api-contract, dora, ai-security, ai-quality, compliance
 
 ## Auto-Detected
-Structure: single-repo | Hooks: none | Coverage: 99%
+Structure: single-repo | Hooks: none | Coverage: 100%
 - [x] Linting configured
 - [x] CI/CD configured
 - [x] Test framework
