@@ -22,9 +22,14 @@ description: Measurable efficiency improvements
 
 ## Default Behavior
 
-When called without flags, ask:
-1. **Categories** (multiSelect): All | Context | Docs | Code | Cross-file
-2. **Mode**: Conservative | Balanced [recommended] | Aggressive
+When called without flags, ask (follow CCO "Question Formatting" standard):
+
+| Question | Options (small → large) |
+|----------|-------------------------|
+| Categories? (multiSelect) | Context, Docs, Code, Cross-file, All |
+| Mode? | Conservative, Balanced, Aggressive |
+
+**`[recommended]` placement:** Mode → Balanced
 
 Explicit flags skip questions.
 

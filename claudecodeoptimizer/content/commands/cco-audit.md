@@ -22,9 +22,14 @@ description: Standardized quality gates with prioritized fixes
 
 ## Default Behavior
 
-When called without flags, ask:
-1. **Scope**: Quick | Smart [recommended] | Full
-2. **Auto-fix**: Yes [recommended] | No
+When called without flags, ask (follow CCO "Question Formatting" standard):
+
+| Question | Options (small → large) |
+|----------|-------------------------|
+| Scope? | Quick, Smart, Full |
+| Auto-fix? | No, Yes |
+
+**`[recommended]` placement:** Scope → Smart, Auto-fix → Yes
 
 Explicit flags skip questions.
 

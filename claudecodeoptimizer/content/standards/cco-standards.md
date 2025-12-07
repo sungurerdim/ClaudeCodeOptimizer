@@ -191,6 +191,31 @@ Format:
 - First option: "All ({N})" for batch selection
 - **Pagination**: Max 4 questions × 4 options each; paginate larger sets by priority
 
+## Question Formatting
+Rules for AskUserQuestion across all CCO commands:
+
+**Labels** - indicate option status, appear on OPTIONS only:
+- `[detected]` - auto-detected from project analysis
+- `[current]` - matches existing configuration
+- `[recommended]` - best practice (max ONE per question)
+
+**Label placement:**
+- Labels appear RIGHT of option name: `○ {Option} [label]`
+- If `[detected]` = `[current]` → show only `[current]`
+- Never put detection info in question text (wrong: "auto-detected: X")
+
+**Option ordering:**
+- Numeric values: ascending (smallest → largest)
+- Severity/risk: ascending (safest → riskiest)
+- Scope: ascending (narrowest → widest)
+
+**Spec examples:**
+- Use tables or lists for question/option structure
+- Use placeholders `{value}`, `{N}`, `{name}` for variable data
+- Never show labels in examples (labels are runtime, not spec)
+- Never show hardcoded values that come from detection
+- Tier names (Standard, Medium, High) are OK; actual values are not
+
 ## Output Formatting
 ASCII box-drawing tables in code blocks:
 - Characters: `─│┌┐└┘├┤┬┴┼` borders, `═║╔╗╚╝` headers
