@@ -293,7 +293,10 @@ AI Performance settings are **automatically calculated** based on detected proje
 - +1: Team size Large (16+) or Enterprise (51+)
 - +1: Scale Large (100K+) or Hyperscale (1M+)
 
-**Score → Value:** 0 = 5000, 1-2 = 8000, 3+ = 10000
+**Score → Value mapping (CCO defaults, adjust per project):**
+- Score 0 → Standard tier
+- Score 1-2 → Medium tier
+- Score 3+ → High tier
 
 #### MCP Output Tokens (MAX_MCP_OUTPUT_TOKENS)
 
@@ -305,9 +308,9 @@ AI Performance settings are **automatically calculated** based on detected proje
 
 **Scoring Logic:**
 - File count via `find . -type f -name "*.{py,js,ts,go,rs}" | wc -l`
-- Monorepo → 50000
-- 100-500 files → 35000
-- <100 files → 25000 (official default)
+- Monorepo → Very Large tier
+- 100-500 files → Large tier
+- <100 files → Standard tier (official default)
 
 #### Prompt Caching (DISABLE_PROMPT_CACHING)
 
