@@ -242,31 +242,145 @@ After all questions answered → proceed to detection/apply (no more questions)
 
 ### Auto-Detect Elements
 
-| # | Element | Detection Source | Triggers | Standards |
-|---|---------|------------------|----------|-----------|
-| 1 | Purpose | README.md first paragraph | - | - |
-| 2 | Stack | package.json, pyproject.toml, go.mod | - | - |
-| 3 | Type | Entry points, project structure | CLI or Library | +5 |
-| 4 | DB | Dependencies, config files | Backend > Data | +5 |
-| 5 | CI/CD | .github/workflows/, .gitlab-ci.yml | Backend > Operations | +7 |
-| 6 | API | Routes, endpoints, OpenAPI | Backend > API | +6 |
-| 7 | Frontend | react, vue, angular in deps | Frontend | +10 |
-| 8 | Mobile | Podfile, build.gradle, pubspec | Apps > Mobile | +6 |
-| 9 | Desktop | electron, tauri in deps | Apps > Desktop | +4 |
-| 10 | ML/AI | torch, tensorflow, sklearn | Specialized > ML/AI | +6 |
-| 11 | Game | Unity, Unreal, Godot files | Specialized > Game | +4 |
-| 12 | Serverless | serverless.yml, sam.yaml | Infra > Serverless | +4 |
-| 13 | Monorepo | nx.json, turbo.json, lerna | Infra > Monorepo | +4 |
-| 14 | Container | Dockerfile, docker-compose | Infra > Container | +5 |
-| 15 | K8s | k8s/, helm/, kustomization | Infra > Container | +5 |
-| 16 | i18n | locales/, i18n config | Collab > i18n | +5 |
-| 17 | Microservices | Multiple services detected | Scale & Arch | +12 |
-| 18 | License | LICENSE file | - | - |
-| 19 | Coverage | pytest-cov, coverage reports | - | - |
-| 20 | Secrets Risk | .env patterns, hardcoded | Security | +12 |
-| 21 | AI Performance | Complexity score from above | → settings.json | - |
+Every detection triggers a specific action. No detection is informational-only.
+
+#### Core Detection (Always Run)
+
+| # | Element | Detection Method | Confidence | Action |
+|---|---------|------------------|------------|--------|
+| 1 | Purpose | README.md first H1/paragraph | HIGH if found | → Context purpose field |
+| 2 | Stack | package.json, pyproject.toml, go.mod, Cargo.toml | HIGH | → Context stack field, tool commands |
+| 3 | Type | Entry points vs exports analysis | HIGH | → CLI or Library standards (evaluate each) |
+| 4 | License | LICENSE, LICENSE.md, package.json license | HIGH if found | → Context, compliance check |
+
+#### Infrastructure Detection
+
+| # | Element | Detection Method | Confidence | Action |
+|---|---------|------------------|------------|--------|
+| 5 | CI/CD | .github/workflows/, .gitlab-ci.yml, .circleci/ | HIGH | → Operations standards (evaluate each) |
+| 6 | Container | Dockerfile, docker-compose.yml | HIGH | → Container standards (evaluate each) |
+| 7 | K8s | k8s/, helm/, kustomization.yaml, *-deployment.yaml | HIGH | → Container standards + complexity score +1 |
+| 8 | Serverless | serverless.yml, sam.yaml, netlify.toml, vercel.json | HIGH | → Serverless standards (evaluate each) |
+| 9 | Monorepo | nx.json, turbo.json, lerna.json, pnpm-workspace.yaml | HIGH | → Monorepo standards + MCP tier bump |
+
+#### Backend Detection
+
+| # | Element | Detection Method | Confidence | Action |
+|---|---------|------------------|------------|--------|
+| 10 | DB | ORM deps, migrations/, connection strings, prisma/schema | HIGH | → Data standards (evaluate each) |
+| 11 | API:REST | routes/, endpoints/, @Get/@Post decorators, OpenAPI | HIGH | → API standards (evaluate each) |
+| 12 | API:GraphQL | graphql deps, schema.graphql, resolvers/ | HIGH | → API + GraphQL standards |
+| 13 | API:gRPC | .proto files, grpc deps | HIGH | → API + gRPC standards |
+| 14 | API:WebSocket | ws/socket.io deps, @WebSocket decorators | HIGH | → Real-time standards (evaluate each) |
+| 15 | Microservices | Multiple */Dockerfile or services/ with separate configs | HIGH | → Scale & Arch standards |
+
+#### Frontend/Apps Detection
+
+| # | Element | Detection Method | Confidence | Action |
+|---|---------|------------------|------------|--------|
+| 16 | Frontend | react/vue/angular/svelte in deps | HIGH | → Frontend standards (evaluate each) |
+| 17 | Mobile | Podfile, android/build.gradle, pubspec.yaml | HIGH | → Mobile standards (evaluate each) |
+| 18 | Desktop | electron/tauri deps | HIGH | → Desktop standards (evaluate each) |
+
+#### Specialized Detection
+
+| # | Element | Detection Method | Confidence | Action |
+|---|---------|------------------|------------|--------|
+| 19 | ML/AI | torch, tensorflow, sklearn, transformers deps | HIGH | → ML/AI standards + complexity +1 |
+| 20 | Game | Unity/, *.unity, Unreal/, *.uproject, Godot/ | HIGH | → Game standards (evaluate each) |
+| 21 | i18n | locales/, i18n/, messages/, translations/ | HIGH | → i18n standards (evaluate each) |
+
+#### Quality & Security Detection
+
+| # | Element | Detection Method | Confidence | Action |
+|---|---------|------------------|------------|--------|
+| 22 | Test Framework | pytest/jest/vitest/mocha config or deps | HIGH | → Testing level hint |
+| 23 | Coverage | coverage reports, pytest-cov, nyc, c8 | HIGH | → Context coverage %, testing tier |
+| 24 | Linting | .eslintrc, ruff.toml, .pylintrc, golangci.yaml | HIGH | → Operational tools |
+| 25 | Formatting | prettier, black, ruff format, gofmt config | HIGH | → Operational tools |
+| 26 | Pre-commit | .pre-commit-config.yaml | HIGH | → Context hooks field |
+| 27 | Security Scan | dependabot.yml, .snyk, trivy.yaml, codeql | HIGH | → Security posture |
+| 28 | Secrets Risk | .env with values, hardcoded API keys, credentials | HIGH | → Security standards (evaluate each) |
+
+#### Inferred Detection (Heuristics)
+
+| # | Element | Detection Method | Confidence | Action |
+|---|---------|------------------|------------|--------|
+| 29 | Team Size | `git shortlog -sn --all` unique authors | MEDIUM | → Team guidelines, permission level |
+| 30 | Scale | replicas config, HPA, load balancer, CDN config | MEDIUM | → Scale guidelines, caching standards |
+| 31 | Maturity | First commit age, release frequency, CHANGELOG | MEDIUM | → Maturity guidelines |
+| 32 | Breaking | Version in config (0.x vs 1.x+) | MEDIUM | → Breaking policy guideline |
+| 33 | Data Sensitivity | auth/, login/, encryption usage, GDPR keywords | LOW | → Data guidelines, security weight |
+| 34 | Compliance | SECURITY.md, security scans in CI, audit logs | LOW | → Compliance hint |
+
+#### AI Performance (Auto-Calculated)
+
+| # | Element | Detection Method | Action |
+|---|---------|------------------|--------|
+| 35 | Thinking Tokens | Complexity score from #7,9,15,19 | → settings.json env |
+| 36 | MCP Output | File count + monorepo detection | → settings.json env |
+| 37 | Caching | Always on unless explicitly disabled | → settings.json env |
 
 **GRANULAR:** Each detection triggers only its specific subsection. Multiple detections stack additively.
+
+### Confidence Levels
+
+| Level | Symbol | Meaning | Review Behavior |
+|-------|--------|---------|-----------------|
+| HIGH | ●●● | Explicit file/config found | Auto-accept |
+| MEDIUM | ●●○ | Pattern inference | Show in review, suggest confirm |
+| LOW | ●○○ | Heuristic only | Highlight, prompt for edit |
+
+**Review table shows confidence:** LOW items get ⚠ marker to draw attention.
+
+---
+
+### Smart Defaults
+
+User-configurable elements get intelligent defaults based on detected context, not generic values.
+
+#### Context-Aware Inference
+
+| If Detected | Then Default | Rationale |
+|-------------|--------------|-----------|
+| No auth patterns, no login/ | Data: Public | No sensitive data handling |
+| auth/, login/, user accounts | Data: PII | User data requires protection |
+| `stripe`, `payment` in deps | Compliance: PCI-DSS hint | Payment processing |
+| Healthcare keywords, HIPAA in docs | Compliance: HIPAA hint | Medical data |
+| GDPR in docs, EU privacy patterns | Compliance: GDPR hint | EU users |
+| Single Dockerfile at root | Architecture: Monolith | Single service |
+| Multiple */Dockerfile | Architecture: Microservices | Multi-service |
+| No Dockerfile, no k8s | Architecture: Monolith | Simple deployment |
+| `argocd`, `flux` in config | Deployment: GitOps | GitOps pattern |
+| Vercel/Netlify/Railway config | Deployment: Platform | PaaS deployment |
+| .github/workflows/deploy* | Deployment: CI/CD | Pipeline deployment |
+| 1 git author (90 days) | Team: Solo | Single contributor |
+| 2-5 git authors | Team: Small | Small team |
+| CODEOWNERS exists | Team: 2+ (not Solo) | Review required |
+| Version 0.x in config | Breaking: Allowed | Pre-stable |
+| Version 1.x+ in config | Breaking: Minimize | Stable API |
+| First commit < 3 months | Maturity: Greenfield | New project |
+| First commit > 2 years, low activity | Maturity: Legacy | Old codebase |
+| No scaling config | Scale: Prototype or Small | Simple scale |
+| HPA, replicas > 1 | Scale: Medium+ | Scaling needed |
+| WebSocket deps | Real-time: Hard | Real-time required |
+| No WS, no SSE | Real-time: None | Request-response only |
+
+#### Default Derivation Chain
+
+For each user-configurable element, apply in order:
+
+1. **Explicit detection** (HIGH confidence) → Use detected value
+2. **Context inference** (MEDIUM) → Use smart default from table above
+3. **Safe fallback** (LOW) → Use conservative default, mark for review
+
+**Example flow:**
+```
+Team Size:
+  1. Check CODEOWNERS → if exists: Team 2+ (HIGH)
+  2. Check git authors → if 1: Solo (MEDIUM)
+  3. Fallback → Solo [needs review] (LOW)
+```
 
 ---
 
@@ -338,13 +452,13 @@ These elements cannot be auto-detected and require user input. Each option inclu
 
 **Question:** How many people actively contribute to this codebase?
 
-| Value | Label | Description | Standards |
-|-------|-------|-------------|-----------|
+| Value | Label | Description | Triggers |
+|-------|-------|-------------|----------|
 | Solo | `[recommended if no CODEOWNERS]` | Single developer, no code review needed | Guidelines only |
-| Small (2-5) | `[recommended if small CODEOWNERS]` | Informal reviews, async communication works | +4 Team basics |
-| Medium (6-15) | - | Formal reviews needed, communication overhead grows | +8 Team |
-| Large (16-50) | - | Multiple teams, need CODEOWNERS, ADRs mandatory | +8 Team + ADR |
-| Enterprise (51+) | - | Scaling frameworks (SAFe/LeSS), cross-team coordination | +8 Team + Scaling |
+| Small (2-5) | `[recommended if small CODEOWNERS]` | Informal reviews, async communication works | Team standards |
+| Medium (6-15) | - | Formal reviews needed, communication overhead grows | Team standards |
+| Large (16-50) | - | Multiple teams, need CODEOWNERS, ADRs mandatory | Team + ADR |
+| Enterprise (51+) | - | Scaling frameworks (SAFe/LeSS), cross-team coordination | Team + Scaling |
 
 **Detection hints:** CODEOWNERS file, git log unique authors, team config files
 
@@ -354,13 +468,13 @@ These elements cannot be auto-detected and require user input. Each option inclu
 
 **Question:** How many concurrent users or requests per second does your system handle?
 
-| Value | Label | Description | Standards |
-|-------|-------|-------------|-----------|
+| Value | Label | Description | Triggers |
+|-------|-------|-------------|----------|
 | Prototype (<100) | `[recommended for new projects]` | Development/testing, no production traffic | - |
-| Small (100-1K) | - | Early production, single instance sufficient | +3 Caching basics |
-| Medium (1K-100K) | - | Growth stage, need horizontal scaling | +12 Scale & Arch |
-| Large (100K-1M) | - | High traffic, requires sophisticated architecture | +12 Scale + +12 Security |
-| Hyperscale (1M+) | - | Massive scale, distributed systems expertise required | +12 Scale + +12 Security + +6 Performance |
+| Small (100-1K) | - | Early production, single instance sufficient | Caching basics |
+| Medium (1K-100K) | - | Growth stage, need horizontal scaling | Scale & Arch |
+| Large (100K-1M) | - | High traffic, requires sophisticated architecture | Scale + Security |
+| Hyperscale (1M+) | - | Massive scale, distributed systems expertise required | Scale + Security + Performance |
 
 **Impact:** Higher scale activates circuit breakers, caching strategies, connection pooling, load balancing patterns.
 
@@ -370,13 +484,13 @@ These elements cannot be auto-detected and require user input. Each option inclu
 
 **Question:** What is the most sensitive type of data your system processes?
 
-| Value | Label | Description | Standards |
-|-------|-------|-------------|-----------|
+| Value | Label | Description | Triggers |
+|-------|-------|-------------|----------|
 | Public | `[recommended if no auth]` | Open data, no login required, no personal info | - |
-| Internal | - | Company data, requires authentication | +2 Auth basics |
-| Confidential | - | Business-sensitive, NDA-level protection | +4 Auth + Encryption |
-| PII | `[recommended if user accounts]` | Personal Identifiable Information (names, emails, addresses) | +12 Security |
-| Regulated | - | Healthcare (PHI), financial, or government data | +12 Security + Compliance |
+| Internal | - | Company data, requires authentication | Auth basics |
+| Confidential | - | Business-sensitive, NDA-level protection | Auth + Encryption |
+| PII | `[recommended if user accounts]` | Personal Identifiable Information (names, emails, addresses) | Security |
+| Regulated | - | Healthcare (PHI), financial, or government data | Security + Compliance |
 
 **Impact:** Activates encryption at rest, audit logging, data retention policies, access controls.
 
@@ -386,18 +500,18 @@ These elements cannot be auto-detected and require user input. Each option inclu
 
 **Question:** Which compliance frameworks must your system satisfy? (multi-select)
 
-| Value | Label | Description | Standards |
-|-------|-------|-------------|-----------|
+| Value | Label | Description | Triggers |
+|-------|-------|-------------|----------|
 | None | `[recommended if B2C/internal]` | No formal compliance requirements | - |
-| SOC2 | - | B2B SaaS, enterprise customers require security attestation | +12 Security + Audit |
-| HIPAA | `[recommended if healthcare]` | US healthcare data (PHI) protection | +12 Security + PHI controls |
-| PCI-DSS | `[recommended if payments]` | Payment card data processing | +12 Security + PCI controls |
-| GDPR | `[recommended if EU users]` | EU user data, privacy rights, consent management | +12 Security + Privacy |
-| CCPA | - | California consumer privacy, similar to GDPR | +12 Security + Privacy |
-| ISO27001 | - | International security management standard | +12 Security + ISMS |
-| HITRUST | - | Healthcare + security combined framework | +12 Security + Full audit |
-| FedRAMP | - | US federal government cloud services | +12 Security + Gov controls |
-| DORA | - | EU financial services digital resilience (2025+) | +12 Security + Resilience |
+| SOC2 | - | B2B SaaS, enterprise customers require security attestation | Security + Audit |
+| HIPAA | `[recommended if healthcare]` | US healthcare data (PHI) protection | Security + PHI controls |
+| PCI-DSS | `[recommended if payments]` | Payment card data processing | Security + PCI controls |
+| GDPR | `[recommended if EU users]` | EU user data, privacy rights, consent management | Security + Privacy |
+| CCPA | - | California consumer privacy, similar to GDPR | Security + Privacy |
+| ISO27001 | - | International security management standard | Security + ISMS |
+| HITRUST | - | Healthcare + security combined framework | Security + Full audit |
+| FedRAMP | - | US federal government cloud services | Security + Gov controls |
+| DORA | - | EU financial services digital resilience (2025+) | Security + Resilience |
 
 **Impact:** Activates specific control frameworks, audit logging, data handling procedures, documentation requirements.
 
@@ -407,12 +521,12 @@ These elements cannot be auto-detected and require user input. Each option inclu
 
 **Question:** What is the primary architecture pattern of your system?
 
-| Value | Label | Description | Standards |
-|-------|-------|-------------|-----------|
+| Value | Label | Description | Triggers |
+|-------|-------|-------------|----------|
 | Monolith | `[recommended for small teams]` | Single deployable unit, simpler operations | - |
-| Modular Monolith | - | Monolith with clear module boundaries, prep for splitting | +2 Bounded Contexts |
-| Microservices | `[detected if multiple services]` | Independent services, complex but scalable | +12 Scale & Arch |
-| Serverless | `[detected if Lambda/Functions]` | Event-driven functions, pay-per-use | +4 Serverless |
+| Modular Monolith | - | Monolith with clear module boundaries, prep for splitting | Bounded Contexts |
+| Microservices | `[detected if multiple services]` | Independent services, complex but scalable | Scale & Arch |
+| Serverless | `[detected if Lambda/Functions]` | Event-driven functions, pay-per-use | Serverless |
 | Hybrid | - | Mix of patterns based on domain needs | Context-dependent |
 
 **Impact:** Microservices activates service mesh, API versioning, distributed tracing, circuit breakers.
@@ -423,14 +537,14 @@ These elements cannot be auto-detected and require user input. Each option inclu
 
 **Question:** What API protocol does your system expose? (multi-select)
 
-| Value | Label | Description | Standards |
-|-------|-------|-------------|-----------|
+| Value | Label | Description | Triggers |
+|-------|-------|-------------|----------|
 | None | `[recommended for CLI/desktop]` | No external API, internal only | - |
-| REST | `[detected if routes/endpoints]` | Standard HTTP APIs, resource-oriented | +6 API |
-| GraphQL | `[detected if graphql deps]` | Flexible queries, single endpoint | +6 API + GraphQL |
-| gRPC | `[detected if proto files]` | High-performance RPC, binary protocol | +6 API + gRPC |
-| WebSocket | `[detected if ws deps]` | Real-time bidirectional communication | +3 Real-time |
-| Webhook | - | Event callbacks to external systems | +2 Webhook patterns |
+| REST | `[detected if routes/endpoints]` | Standard HTTP APIs, resource-oriented | API |
+| GraphQL | `[detected if graphql deps]` | Flexible queries, single endpoint | API + GraphQL |
+| gRPC | `[detected if proto files]` | High-performance RPC, binary protocol | API + gRPC |
+| WebSocket | `[detected if ws deps]` | Real-time bidirectional communication | Real-time |
+| Webhook | - | Event callbacks to external systems | Webhook patterns |
 
 **Impact:** Activates OpenAPI specs, rate limiting, pagination, error handling standards.
 
@@ -440,12 +554,12 @@ These elements cannot be auto-detected and require user input. Each option inclu
 
 **Question:** How is your application deployed to production?
 
-| Value | Label | Description | Standards |
-|-------|-------|-------------|-----------|
+| Value | Label | Description | Triggers |
+|-------|-------|-------------|----------|
 | Manual | - | SSH/FTP deploys, no automation | - |
-| CI/CD | `[detected if workflows]` | Automated build, test, deploy pipeline | +7 Operations |
-| GitOps | - | Git as source of truth, ArgoCD/Flux | +7 Ops + +3 GitOps |
-| Platform | - | PaaS (Heroku, Vercel, Railway) handles deployment | +7 Ops + +2 Platform |
+| CI/CD | `[detected if workflows]` | Automated build, test, deploy pipeline | Operations |
+| GitOps | - | Git as source of truth, ArgoCD/Flux | Operations + GitOps |
+| Platform | - | PaaS (Heroku, Vercel, Railway) handles deployment | Operations + Platform |
 
 **Impact:** Activates CI gates, deployment strategies (blue/green, canary), rollback procedures.
 
@@ -455,13 +569,13 @@ These elements cannot be auto-detected and require user input. Each option inclu
 
 **Question:** What level of testing does your project maintain?
 
-| Value | Label | Description | Standards |
-|-------|-------|-------------|-----------|
+| Value | Label | Description | Triggers |
+|-------|-------|-------------|----------|
 | Minimal | - | Ad-hoc testing, no formal coverage | - |
-| Unit | `[detected if test framework]` | Unit tests only, >60% coverage target | +3 Testing basics |
-| Standard | `[recommended]` | Unit + integration tests, >80% coverage | +5 Testing |
-| Comprehensive | - | Unit + integration + E2E + visual regression | +8 Full testing |
-| Performance | - | Above + load testing, benchmarks | +8 Testing + +4 Perf |
+| Unit | `[detected if test framework]` | Unit tests only, >60% coverage target | Testing basics |
+| Standard | `[recommended]` | Unit + integration tests, >80% coverage | Testing |
+| Comprehensive | - | Unit + integration + E2E + visual regression | Full testing |
+| Performance | - | Above + load testing, benchmarks | Testing + Performance |
 
 **Impact:** Activates coverage requirements, test isolation, CI gates, performance benchmarks.
 
@@ -471,13 +585,13 @@ These elements cannot be auto-detected and require user input. Each option inclu
 
 **Question:** What uptime commitment does your system have?
 
-| Value | Label | Description | Standards |
-|-------|-------|-------------|-----------|
+| Value | Label | Description | Triggers |
+|-------|-------|-------------|----------|
 | None | `[recommended for internal tools]` | No formal SLA, best-effort availability | - |
-| Standard (99%) | - | ~7h downtime/month acceptable | +2 Monitoring basics |
-| High (99.9%) | - | ~43min downtime/month, needs redundancy | +4 Observability |
-| Critical (99.99%) | - | ~4min downtime/month, HA required | +8 HA + DR |
-| Mission-Critical (99.999%) | - | ~26sec downtime/month, global redundancy | +12 Full resilience |
+| Standard (99%) | - | ~7h downtime/month acceptable | Monitoring basics |
+| High (99.9%) | - | ~43min downtime/month, needs redundancy | Observability |
+| Critical (99.99%) | - | ~4min downtime/month, HA required | HA + DR |
+| Mission-Critical (99.999%) | - | ~26sec downtime/month, global redundancy | Full resilience |
 
 **Impact:** Activates health endpoints, alerting, disaster recovery, multi-region deployment patterns.
 
@@ -487,12 +601,12 @@ These elements cannot be auto-detected and require user input. Each option inclu
 
 **Question:** Does your system require real-time data updates?
 
-| Value | Label | Description | Standards |
-|-------|-------|-------------|-----------|
+| Value | Label | Description | Triggers |
+|-------|-------|-------------|----------|
 | None | `[recommended for CRUD apps]` | Request-response only, polling acceptable | - |
-| Soft (seconds) | - | Near real-time, SSE or polling every few seconds | +2 Basic real-time |
-| Hard (100ms) | `[detected if websocket]` | WebSocket, immediate updates required | +5 Real-time |
-| Ultra-low (<10ms) | - | Gaming, trading, requires specialized infrastructure | +8 Low-latency |
+| Soft (seconds) | - | Near real-time, SSE or polling every few seconds | Basic real-time |
+| Hard (100ms) | `[detected if websocket]` | WebSocket, immediate updates required | Real-time |
+| Ultra-low (<10ms) | - | Gaming, trading, requires specialized infrastructure | Low-latency |
 
 **Impact:** Activates WebSocket patterns, event-driven architecture, message queuing.
 
@@ -543,90 +657,88 @@ These elements cannot be auto-detected and require user input. Each option inclu
 
 **Impact:** Affects review rigor, testing requirements, documentation depth.
 
-### AI Performance (Auto-Detected)
-
-AI Performance is **automatically calculated** during detection. See [AI Performance Auto-Detection](#ai-performance-auto-detection) for values and scoring logic.
-
-| Element | Settings Key | Tiers | Official Default |
-|---------|--------------|-------|------------------|
-| Thinking | `env.MAX_THINKING_TOKENS` | Standard / Medium / High | Disabled |
-| MCP | `env.MAX_MCP_OUTPUT_TOKENS` | Standard / Large / Very Large | Standard |
-| Caching | `env.DISABLE_PROMPT_CACHING` | `"0"` = on, `"1"` = off | on (not set) |
-
-**Written to:** `./.claude/settings.json` (local only, never global)
-
 ---
 
 ## Step 4: Review Detection Results
 
-Show unified table with dynamic standard counts. **Source column shows where value was detected; Standards column shows what gets triggered.**
+Show unified table with confidence indicators. **Every row shows what action it triggers.**
 
 ```
-╔══════════════════════════════════════════════════════════════════════════════════════╗
-║                            CCO DETECTION RESULTS                                     ║
-╠══════════════════════════════════════════════════════════════════════════════════════╣
-║  #  │ Element       │ Value                  │ Source                  │ Standards   ║
-╠═════╪═══════════════╪════════════════════════╪═════════════════════════╪═════════════╣
-║     │ AUTO-DETECTED (from project files)                                             ║
-├─────┼───────────────┼────────────────────────┼─────────────────────────┼─────────────┤
-║  1  │ Purpose       │ {purpose}              │ {file}:{line}           │ -           ║
-║  2  │ Stack         │ {stack}                │ {config_file}           │ -           ║
-║  3  │ Type          │ {type}                 │ {detection_method}      │ +{N} {cat}  ║
-║  4  │ DB            │ {db|None}              │ {source|(not detected)} │ +5 Data     ║
-║  5  │ CI/CD         │ {provider|None}        │ {workflow_path}         │ +7 Ops      ║
-║  6  │ API           │ {style|None}           │ {source|(not detected)} │ +6 API      ║
-║  7  │ Frontend      │ {framework|None}       │ {source|(not detected)} │ +10 Frontend║
-║  8  │ Container     │ {yes|None}             │ {source|(not detected)} │ +5 Container║
-║  9  │ License       │ {license_type}         │ {license_file}          │ -           ║
-║ 10  │ Coverage      │ {N}%                   │ {coverage_source}       │ -           ║
-║ 11  │ Secrets Risk  │ {yes|no}               │ {scan_result}           │ +12 Security║
-╠═════╪═══════════════╪════════════════════════╪═════════════════════════╪═════════════╣
-║     │ AI PERFORMANCE (auto-calculated → ./.claude/settings.json)                     ║
-├─────┼───────────────┼────────────────────────┼─────────────────────────┼─────────────┤
-║ 12  │ Thinking      │ {value} ({tier})       │ complexity: {score}     │ → env       ║
-║ 13  │ MCP Output    │ {value} ({tier})       │ files: {count}          │ → env       ║
-║ 14  │ Caching       │ {on|off}               │ {reason}                │ → env       ║
-╠═════╪═══════════════╪════════════════════════╪═════════════════════════╪═════════════╣
-║     │ USER CONFIGURABLE (defaults shown, editable)                                   ║
-├─────┼───────────────┼────────────────────────┼─────────────────────────┼─────────────┤
-║ 15  │ Team          │ {team_size}            │ {detection_hint}        │ {standards} ║
-║ 16  │ Scale         │ {scale}                │ {source|default}        │ {standards} ║
-║ 17  │ Data          │ {sensitivity}          │ {detection_hint}        │ {standards} ║
-║ 18  │ Compliance    │ {frameworks|None}      │ {source|default}        │ {standards} ║
-║ 19  │ Architecture  │ {pattern}              │ {detection_hint}        │ {standards} ║
-║ 20  │ Deployment    │ {strategy}             │ {source}                │ (in #5)     ║
-║ 21  │ Testing       │ {level}                │ {detection_hint}        │ {standards} ║
-║ 22  │ Maturity      │ {stage}                │ {detection_hint}        │ guidelines  ║
-║ 23  │ Breaking      │ {policy}               │ {detection_hint}        │ guidelines  ║
-║ 24  │ Priority      │ {focus}                │ {source|default}        │ guidelines  ║
-║ 25  │ SLA           │ {level|None}           │ {source|default}        │ {standards} ║
-║ 26  │ Real-time     │ {requirement|None}     │ {detection_hint}        │ {standards} ║
-╠══════════════════════════════════════════════════════════════════════════════════════╣
-║ STANDARDS TRIGGERED                                                                  ║
-├──────────────────────────────────────────────────────────────────────────────────────┤
-║ {subsection} (+{N}) │ {subsection} (+{N}) │ ... = +{total} project-specific          ║
-╠══════════════════════════════════════════════════════════════════════════════════════╣
-║ TOTAL: ~{base_count} base + {N} project-specific = ~{total} standards                ║
-╚══════════════════════════════════════════════════════════════════════════════════════╝
+╔══════════════════════════════════════════════════════════════════════════════════════════════╗
+║                                  CCO DETECTION RESULTS                                       ║
+╠══════════════════════════════════════════════════════════════════════════════════════════════╣
+║  #  │ Element       │ Value                │ Conf │ Source              │ Action            ║
+╠═════╪═══════════════╪══════════════════════╪══════╪═════════════════════╪═══════════════════╣
+║     │ CORE (always detected)                                                                 ║
+├─────┼───────────────┼──────────────────────┼──────┼─────────────────────┼───────────────────┤
+║  1  │ Purpose       │ {purpose}            │ ●●●  │ README.md:1         │ → context         ║
+║  2  │ Stack         │ Python 3.10+         │ ●●●  │ pyproject.toml      │ → tools, context  ║
+║  3  │ Type          │ CLI                  │ ●●●  │ __main__.py         │ → CLI standards   ║
+║  4  │ License       │ MIT                  │ ●●●  │ LICENSE             │ → context         ║
+╠═════╪═══════════════╪══════════════════════╪══════╪═════════════════════╪═══════════════════╣
+║     │ INFRASTRUCTURE                                                                         ║
+├─────┼───────────────┼──────────────────────┼──────┼─────────────────────┼───────────────────┤
+║  5  │ CI/CD         │ GitHub Actions       │ ●●●  │ .github/workflows/  │ → Ops standards   ║
+║  6  │ Container     │ -                    │ -    │ (not detected)      │ -                 ║
+║  7  │ K8s           │ -                    │ -    │ (not detected)      │ -                 ║
+╠═════╪═══════════════╪══════════════════════╪══════╪═════════════════════╪═══════════════════╣
+║     │ QUALITY & SECURITY                                                                     ║
+├─────┼───────────────┼──────────────────────┼──────┼─────────────────────┼───────────────────┤
+║  8  │ Test Framework│ pytest               │ ●●●  │ pyproject.toml      │ → testing tier    ║
+║  9  │ Coverage      │ 100%                 │ ●●●  │ .coverage           │ → context         ║
+║ 10  │ Linting       │ ruff, mypy           │ ●●●  │ pyproject.toml      │ → tools           ║
+║ 11  │ Pre-commit    │ -                    │ -    │ (not detected)      │ → hooks: none     ║
+║ 12  │ Security Scan │ -                    │ -    │ (not detected)      │ -                 ║
+║ 13  │ Secrets Risk  │ no                   │ ●●●  │ scan complete       │ -                 ║
+╠═════╪═══════════════╪══════════════════════╪══════╪═════════════════════╪═══════════════════╣
+║     │ AI PERFORMANCE (auto-calculated → ./.claude/settings.json)                             ║
+├─────┼───────────────┼──────────────────────┼──────┼─────────────────────┼───────────────────┤
+║ 14  │ Thinking      │ 5000 (Standard)      │ ●●●  │ complexity: 0       │ → env             ║
+║ 15  │ MCP Output    │ 25000 (Standard)     │ ●●●  │ files: 47           │ → env             ║
+║ 16  │ Caching       │ on                   │ ●●●  │ recommended         │ → env             ║
+╠═════╪═══════════════╪══════════════════════╪══════╪═════════════════════╪═══════════════════╣
+║     │ CONTEXT (smart defaults applied, editable)                                             ║
+├─────┼───────────────┼──────────────────────┼──────┼─────────────────────┼───────────────────┤
+║ 17  │ Team          │ Solo                 │ ●●○  │ 1 git author        │ → guidelines      ║
+║ 18  │ Scale         │ Small (100-1K)       │ ●○○  │ (default)           │ → Caching     ⚠   ║
+║ 19  │ Data          │ Public               │ ●●○  │ no auth patterns    │ → guidelines      ║
+║ 20  │ Compliance    │ None                 │ ●○○  │ (default)           │ -             ⚠   ║
+║ 21  │ Architecture  │ Monolith             │ ●●○  │ single service      │ → guidelines      ║
+║ 22  │ Testing       │ Standard             │ ●●●  │ pytest + 100%       │ → Testing stds    ║
+║ 23  │ Maturity      │ Active               │ ●●○  │ recent commits      │ → guidelines      ║
+║ 24  │ Breaking      │ Minimize             │ ●●○  │ version 1.x         │ → guidelines      ║
+║ 25  │ Priority      │ Quality              │ ●○○  │ (default)           │ → guidelines  ⚠   ║
+╠══════════════════════════════════════════════════════════════════════════════════════════════╣
+║ ⚠ LOW CONFIDENCE: Items 18, 20, 25 may need review                                          ║
+╠══════════════════════════════════════════════════════════════════════════════════════════════╣
+║ STANDARDS TRIGGERED (each evaluated individually for relevance)                              ║
+├──────────────────────────────────────────────────────────────────────────────────────────────┤
+║ CLI │ Operations │ Testing │ Caching = {N} project-specific (counted after evaluation)      ║
+╠══════════════════════════════════════════════════════════════════════════════════════════════╣
+║ TOTAL: ~{base} base + {N} project-specific = ~{total} standards                              ║
+╚══════════════════════════════════════════════════════════════════════════════════════════════╝
 ```
 
-**Source column values:**
-| Source Type | Format | Description |
-|-------------|--------|-------------|
-| File detected | `{filename}` or `{filename}:{line}` | Specific file where value was found |
-| Directory detected | `{path}/` | Directory pattern matched |
-| Pattern matched | `{pattern} detected` | Code pattern or file structure matched |
-| Not found | `(not detected)` | Element not present in project |
-| Default value | `default` | User-configurable with no detection hint |
-| Derived | `{derivation_source}` | Inferred from other project characteristics |
-| Recommended | `recommended ({reason})` | CCO recommendation with rationale |
+### Confidence Indicators
 
-**Standards column values:**
-- `+N {subsection}` - triggers N standards from named subsection
-- `→ env` - writes to settings.json env section
-- `guidelines` - affects guidelines generation, not standards count
-- `(in #N)` - already counted in row N
-- `-` - no standards triggered
+| Symbol | Level | Meaning | User Action |
+|--------|-------|---------|-------------|
+| ●●● | HIGH | Explicit file/config found | Auto-accepted |
+| ●●○ | MEDIUM | Pattern inference | Review recommended |
+| ●○○ | LOW | Heuristic/default | ⚠ Marked, prompt edit |
+| - | N/A | Not detected | No action needed |
+
+### Action Column Values
+
+| Format | Meaning |
+|--------|---------|
+| `+N {category}` | Triggers N standards from category |
+| `→ context` | Written to CCO_CONTEXT in CLAUDE.md |
+| `→ env` | Written to settings.json env section |
+| `→ tools` | Added to Operational tools list |
+| `→ guidelines` | Affects guidelines generation |
+| `→ hooks: {value}` | Sets hooks field in context |
+| `-` | No action (not detected or no impact) |
 
 **Standard counts are calculated dynamically** from `cco-standards-conditional.md` based on triggers.
 
@@ -930,71 +1042,74 @@ Standards are organized in 4 categories. **All counts are dynamically calculated
 
 ---
 
-## Detection → Standards Mapping
+## Detection → Action Mapping
 
-**GRANULAR APPROACH:** Each subsection is independently evaluated. Only matching subsections are activated.
+**PRINCIPLE:** Every detection triggers exactly one action type. No informational-only detections.
 
-### Complete Trigger → Standards Mapping
+### Action Types
 
-#### Auto-Detected Triggers
+| Action Type | Target | Example |
+|-------------|--------|---------|
+| `→ {category} standards` | CLAUDE.md conditional standards | `→ CLI standards` evaluates CLI subsection |
+| `→ context` | CLAUDE.md CCO_CONTEXT fields | Purpose, Stack, License |
+| `→ tools` | CLAUDE.md Operational section | format, lint, test commands |
+| `→ guidelines` | CLAUDE.md Guidelines section | Team-based recommendations |
+| `→ env` | settings.json env section | Thinking tokens, MCP tokens |
+| `→ permissions` | settings.json permissions | Based on Team/Data |
+| `complexity +N` | AI Performance calculation | Bumps thinking token tier |
 
-| Trigger | Detection Method | Standards Activated |
-|---------|------------------|---------------------|
-| **Type: CLI** | `__main__.py`, `[project.scripts]`, `bin/` | Apps > CLI (+5) |
-| **Type: Library** | No entry point, exports only | Library (+5) |
-| **API: REST** | Routes, endpoints, OpenAPI spec | Backend > API (+6) |
-| **API: GraphQL** | graphql deps, schema files | Backend > API (+6) + GraphQL |
-| **API: gRPC** | `.proto` files, grpc deps | Backend > API (+6) + gRPC |
-| **API: WebSocket** | ws/socket.io deps | Real-time (+5) |
-| **DB detected** | ORM, migrations, connection strings | Backend > Data (+5) |
-| **CI/CD detected** | `.github/workflows/`, `.gitlab-ci.yml` | Backend > Operations (+7) |
-| **Frontend detected** | React/Vue/Angular/Svelte deps | Frontend (+10) |
-| **Mobile detected** | Podfile, build.gradle, pubspec | Apps > Mobile (+6) |
-| **Desktop detected** | Electron, Tauri deps | Apps > Desktop (+4) |
-| **Container detected** | Dockerfile, docker-compose | Infra > Container (+5) |
-| **K8s detected** | k8s/, helm/, kustomization | Infra > Container (+5) |
-| **Serverless detected** | serverless.yml, sam.yaml | Infra > Serverless (+4) |
-| **Monorepo detected** | nx.json, turbo.json, lerna | Infra > Monorepo (+4) |
-| **ML/AI detected** | torch, tensorflow, sklearn | Specialized > ML/AI (+6) |
-| **Game detected** | Unity, Unreal, Godot files | Specialized > Game (+4) |
-| **i18n detected** | locales/, i18n config | Collab > i18n (+5) |
-| **Microservices** | Multiple services detected | Scale & Arch (+12) |
-| **Secrets Risk** | .env patterns, hardcoded | Security (+12) |
+### Detection → Action Reference
 
-#### User-Configured Triggers
+| Detection | Confidence | Primary Action | Secondary Action |
+|-----------|------------|----------------|------------------|
+| Purpose | HIGH | → context | - |
+| Stack | HIGH | → context | → tools (commands) |
+| Type: CLI | HIGH | → CLI standards | - |
+| Type: Library | HIGH | → Library standards | - |
+| CI/CD | HIGH | → Operations standards | → tools |
+| Container | HIGH | → Container standards | - |
+| K8s | HIGH | → Container standards | complexity +1 |
+| Serverless | HIGH | → Serverless standards | - |
+| Monorepo | HIGH | → Monorepo standards | MCP tier bump |
+| DB | HIGH | → Data standards | - |
+| API: REST | HIGH | → API standards | - |
+| API: GraphQL | HIGH | → API standards | GraphQL patterns |
+| API: gRPC | HIGH | → API standards | gRPC patterns |
+| API: WebSocket | HIGH | → Real-time standards | - |
+| Microservices | HIGH | → Scale & Arch standards | complexity +2 |
+| Frontend | HIGH | → Frontend standards | - |
+| Mobile | HIGH | → Mobile standards | - |
+| Desktop | HIGH | → Desktop standards | - |
+| ML/AI | HIGH | → ML/AI standards | complexity +1 |
+| Game | HIGH | → Game standards | - |
+| i18n | HIGH | → i18n standards | - |
+| Test Framework | HIGH | → testing tier | - |
+| Coverage | HIGH | → context | - |
+| Linting | HIGH | → tools | - |
+| Formatting | HIGH | → tools | - |
+| Pre-commit | HIGH | → context (hooks) | - |
+| Security Scan | HIGH | security posture | - |
+| Secrets Risk | HIGH | → Security standards | - |
+| Team Size | MEDIUM | → guidelines | → permissions level |
+| Scale | MEDIUM | → guidelines | → Caching standards |
+| Data Sensitivity | LOW | → guidelines | security weight |
+| Compliance | LOW | compliance hint | - |
+| Maturity | MEDIUM | → guidelines | - |
+| Breaking | MEDIUM | → guidelines | - |
+| AI Perf | HIGH | → env | - |
 
-See [User-Configurable Elements](#user-configurable-elements) (sections 1-13) for complete options and their standards. The "Standards" column in each table shows what gets activated.
+**Standard Selection:** For each category, evaluate every standard individually against project context. Include only standards that are relevant and actionable for this specific project.
 
 ### Key Principles
 
-1. **Granular selection** - Each trigger is independently evaluated
-2. **No false positives** - CI/CD alone does NOT trigger API or Data standards
-3. **Stacking allowed** - Multiple triggers stack additively
-4. **No duplicates** - Each standard added exactly once
-5. **Project-specific** - Only relevant standards applied
+1. **Every detection has action** - No informational-only fields
+2. **Granular selection** - Each trigger independently evaluated
+3. **No false positives** - CI/CD does NOT trigger API or Data
+4. **Stacking allowed** - Multiple triggers stack additively
+5. **No duplicates** - Each standard added exactly once
+6. **Confidence-aware** - LOW confidence items highlighted for review
 
-### Standard Count Reference
-
-| Category | Subsections | Max Total |
-|----------|-------------|-----------|
-| Security & Compliance | - | 12 |
-| Scale & Architecture | - | 12 |
-| Backend Services | API (6) + Data (5) + Operations (7) | 18 |
-| Frontend | Accessibility (4) + Performance (3) + Quality (3) | 10 |
-| Apps | Mobile (6) + Desktop (4) + CLI (5) | 15 |
-| Library | - | 5 |
-| Infrastructure | Container (5) + Serverless (4) + Monorepo (4) | 13 |
-| Specialized | ML/AI (6) + Game (4) | 10 |
-| Collaboration | Team (4-8) + i18n (5) | 13 |
-| Real-time | Basic (2) / Standard (5) / Low-latency (8) | 8 |
-| Testing | Basic (3) / Standard (5) / Full (8) + Perf (4) | 12 |
-| Observability | Basic (3) / Standard (4) / HA (8) / Full (12) | 12 |
-
-**Note:** "/" means OR (tiered - only one selected), "+" means AND (stacking).
-
-Standard counts from `^- ` lines in `cco-standards-conditional.md`.
-
-**Dynamic calculation:** Count actual bullet points in source file, don't use hardcoded values.
+**Dynamic calculation:** Count `^- ` lines in `cco-standards-conditional.md`. Never use hardcoded counts.
 
 ---
 

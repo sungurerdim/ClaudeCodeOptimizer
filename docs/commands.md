@@ -71,12 +71,17 @@ Detailed documentation for all CCO slash commands.
 /cco-audit --smart           # Auto-detect applicable
 /cco-audit --pre-release     # Production readiness
 /cco-audit --critical        # Security + tests + database
+/cco-audit --hygiene         # Orphans + stale-refs + consistency
+/cco-audit --orphans         # Find unreferenced code
+/cco-audit --stale-refs      # Find broken references
 /cco-audit --auto-fix        # Auto-fix safe issues
 ```
 
 **Categories:**
-- Core: `--security`, `--tech-debt`, `--self-compliance`, `--consistency`
+- Core: `--security`, `--tech-debt`, `--self-compliance`, `--consistency`, `--orphans`, `--stale-refs`
 - Stack-dependent: `--tests`, `--database`, `--performance`, `--docs`, etc.
+
+**Detection:** Orphan files/functions/imports, broken imports, dead links, stale docs.
 
 ---
 
@@ -111,11 +116,16 @@ Detailed documentation for all CCO slash commands.
 /cco-optimize --context          # AI context files
 /cco-optimize --docs             # Documentation
 /cco-optimize --code             # Source files
-/cco-optimize --cross-file       # Duplicate detection
+/cco-optimize --cross-file       # Full cross-file analysis
+/cco-optimize --dedupe           # Focus on duplicate detection
+/cco-optimize --consolidate      # Merge overlapping content
+/cco-optimize --prune            # Remove obsolete/orphan content
 /cco-optimize --all              # Everything
 ```
 
 **Modes:** Conservative | Balanced | Aggressive
+
+**Detection:** Exact/near/semantic duplicates, redundant code/config/docs, obsolete refs, overlaps.
 
 ---
 
