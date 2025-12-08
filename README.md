@@ -213,6 +213,7 @@ Run `/cco-tune` to see which project-specific standards apply to your project.
 |-------|---------|------|
 | **cco-agent-analyze** | Project detection and issue scanning | Read-only |
 | **cco-agent-apply** | Execute changes with verification | Write |
+| **cco-agent-research** | External source research with reliability scoring | Read-only |
 
 *[Full agents documentation](docs/agents.md)*
 
