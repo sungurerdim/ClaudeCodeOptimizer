@@ -1,7 +1,7 @@
 #!/usr/bin/env node
 
-// Claude Code Statusline - Minimal Mode
-// Single line: repo:branch  +N  -N | CC X.X.X  Model
+// CCO Statusline - Minimal Mode
+// Claude Code Statusline - Single line: repo:branch  +N  -N | CC X.X.X  Model
 
 const fs = require('fs');
 const path = require('path');

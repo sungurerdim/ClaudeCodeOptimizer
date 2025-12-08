@@ -3,18 +3,18 @@
 *AI/human agnostic - fundamental principles for all software projects*
 
 ## Code Quality
-- Fail-Fast: no silent fallbacks
-- DRY: single source of truth
+- Fail-Fast: no silent fallbacks, immediate visible failure
+- DRY: single source of truth, no duplicates
 - No Orphans: every function called, every import used
 - Type-Safe: annotations where supported, prefer immutable
-- Complexity: cyclomatic <10/function
+- Complexity: cyclomatic <10 per function
 - Clean: meaningful names, single responsibility, consistent style
 - Explicit: no magic values, clear intent
 - Scope: only requested changes, general solutions
 
 ## File & Resource
-- Minimal Touch: only required files
-- No Unsolicited: never create unrequested files
+- Minimal Touch: only files required for task
+- No Unsolicited: never create files unless requested
 - Paths: forward slash, relative, quote spaces
 - Cleanup: temp files, handles, connections
 - Skip: .git, node_modules, __pycache__, venv, dist, build
@@ -24,7 +24,7 @@
 - Input: validate at system boundaries
 - Access: least privilege, secure defaults
 - Deps: review before adding, keep updated
-- Defense: multiple layers
+- Defense: multiple layers, don't trust single control
 
 ## Testing
 - Coverage: 60-90% context-adjusted
@@ -69,13 +69,23 @@
 - Scope: bounded, reference over repeat
 
 ## AI Behavior
-- Read First: before proposing edits
-- Plan Before Act: understand scope first
-- Incremental: one step fully before next
-- Verify: changes match intent
-- Challenge: question perfect-looking solutions
-- Ask: when uncertain, clarify first
-- Confidence: state level for non-obvious
+
+### Execution Order [CRITICAL]
+1. **Read First**: NEVER propose edits to unread files
+2. **Plan Before Act**: understand full scope before any action
+3. **Incremental**: complete one step fully before starting next
+4. **Verify**: confirm changes match stated intent
+
+### Decision Making
+- Challenge: question solutions that seem too perfect
+- Ask: when uncertain, clarify before proceeding
+- Confidence: explicitly state uncertainty level for non-obvious conclusions
+
+### Prohibited Patterns
+- Guessing file contents without reading
+- Starting implementation before understanding scope
+- Skipping verification steps
+- Assuming user intent without confirmation
 
 ## Quality Control
 - Understand First: no vibe coding
@@ -118,54 +128,147 @@
 - Rollback: clean state enables git checkout
 
 ### Classification
-| Safe (auto-apply) | Risky (require approval) |
-|-------------------|--------------------------|
-| Remove unused imports | Auth/CSRF changes |
-| Parameterize SQL | DB schema changes |
-| Move secrets to env | API contract changes |
-| Fix linting issues | Delete files |
-| Add type annotations | Rename public APIs |
+**Safe (auto-apply):**
+- Remove unused imports
+- Parameterize SQL
+- Move secrets to env
+- Fix linting issues
+- Add type annotations
+
+**Risky (require approval):**
+- Auth/CSRF changes
+- DB schema changes
+- API contract changes
+- Delete files
+- Rename public APIs
 
 ## Fix Workflow
 Flow: Analyze > Report > Approve > Apply > Verify
 Output: `Applied: N | Skipped: N | Failed: N | Total: N`
 
 ## Impact Preview
-| Field | Description |
-|-------|-------------|
-| Direct | files to modify |
-| Dependents | files that import/use |
-| Tests | coverage of affected code |
-| Risk | LOW / MEDIUM / HIGH |
-| Skip | LOW risk, <=2 files, full coverage |
+- Direct: files to modify
+- Dependents: files that import/use
+- Tests: coverage of affected code
+- Risk: LOW / MEDIUM / HIGH
+- Skip: LOW risk, <=2 files, full coverage
 
 ## Priority
-CRITICAL (security, data exposure) > HIGH (high-impact, low-effort) > MEDIUM (balanced) > LOW (style, minor)
+- CRITICAL: security, data exposure
+- HIGH: high-impact, low-effort
+- MEDIUM: balanced impact/effort
+- LOW: style, minor optimization
 
 ## Approval Flow
-- Tool: AskUserQuestion (multiSelect: true)
-- Order: CRITICAL > HIGH > MEDIUM > LOW
-- Format: `{description} [{file:line}] [{safe|risky}]`
-- Batch: "All ({N})" first option
-- Pagination: max 4 questions x 4 options
+
+### Tool Configuration [STRICT]
+```
+Tool: AskUserQuestion
+multiSelect: true (always)
+```
+
+### Ordering [REQUIRED]
+Present items in priority order: CRITICAL → HIGH → MEDIUM → LOW
+
+### Format [EXACT]
+`{description} [{file:line}] [{safe|risky}]`
+
+### Batch Options [REQUIRED]
+- First option MUST be: "All ({N})" where N = total items
+- Remaining options: individual items
+
+### Pagination [LIMITS]
+- Max 4 questions per AskUserQuestion call
+- Max 4 options per question
+- If more items: use multiple sequential calls
 
 ## Question Formatting
-| Label | Usage |
-|-------|-------|
-| `[detected]` | auto-detected from analysis |
-| `[current]` | matches existing config |
-| `[recommended]` | best practice (max 1/question) |
 
-**Precedence:** detected+current → show current only | Always show recommended
-**Ordering:** Numeric ascending | Severity safest→riskiest | Scope narrow→wide
-**Specs:** Tables for structure | Placeholders: `{value}`, `{N}`, `{name}` | No hardcoded values
+### Separation Rules [CRITICAL]
+**YOU MUST present different question categories in SEPARATE batches.**
+
+| Category Type | Examples | Batch |
+|---------------|----------|-------|
+| Settings | strictMode, timeout, format | Batch 1 |
+| Permissions | readOnly, allowDelete | Batch 2 |
+| Thresholds | coverage%, complexity | Batch 3 |
+
+### Labels [MANDATORY]
+Each option receives **exactly ONE** label (right side):
+
+| Label | When to Use | Priority |
+|-------|-------------|----------|
+| `[current]` | Matches existing config | 1 (wins over detected) |
+| `[detected]` | Auto-detected, not in config | 2 |
+| `[recommended]` | Best practice, max 1/question | 3 (always show) |
+
+**Precedence:** If detected AND current both apply → show `[current]` only
+
+### Ordering [REQUIRED]
+- Numeric values: ascending (60 → 70 → 80 → 90)
+- Severity: safest → riskiest
+- Scope: narrowest → widest
+
+### Verification [PRE-OUTPUT]
+Before calling AskUserQuestion, verify:
+1. Categories separated into distinct question batches
+2. Each option has exactly ONE label
+3. Maximum ONE `[recommended]` per question
+4. Options ordered per rules above
+
+### Examples
+
+<example type="correct">
+**Batch 1 - Settings:**
+Q: "Select output format"
+- JSON [current]
+- YAML
+- XML [recommended]
+
+**Batch 2 - Permissions:**
+Q: "Select access level"
+- Read-only [detected]
+- Full access
+</example>
+
+<example type="incorrect" reason="Mixed categories">
+Q: "Configure options"
+- JSON output [current]
+- Full access [detected]
+- Strict mode
+</example>
+
+<example type="incorrect" reason="Multiple labels">
+- JSON [current] [recommended]
+</example>
+
+<example type="incorrect" reason="Missing label on detected item">
+- JSON (detected but no label shown)
+</example>
 
 ## Output Formatting
-- Borders: `─│┌┐└┘├┤┬┴┼` | Headers: `═║╔╗╚╝`
-- Align: numbers right, text left
-- Status: OK / WARN / FAIL / PASS / SKIP
-- Progress: `████░░░░` proportional
+
+### Table Characters [STRICT]
+| Type | Characters |
+|------|------------|
+| Borders | `─│┌┐└┘├┤┬┴┼` |
+| Headers | `═║╔╗╚╝` |
+
+### Alignment [REQUIRED]
+- Numbers: right-aligned
+- Text: left-aligned
+- Status indicators: centered
+
+### Status Indicators [EXACT]
+Use ONLY these values: `OK` | `WARN` | `FAIL` | `PASS` | `SKIP`
+
+### Progress Bars [FORMULA]
+`filled = round(percentage / 100 * 8)` → `████░░░░`
+
+### Prohibited
 - No emojis in tables
+- No unicode decorations beyond specified characters
+- No ASCII art headers
 
 ## Integration
 - Context: read CCO_CONTEXT_START markers
