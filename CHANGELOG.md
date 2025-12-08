@@ -5,29 +5,59 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
-## [Unreleased]
+## [1.1.0] - 2025-12-08
+
+### Added
+- **New command `/cco-research`** - Multi-source research with reliability scoring, contradiction detection, consensus mapping, bias detection, and AI-synthesized recommendations
+- **New command `/cco-commit`** - Secrets detection, large file warnings, breaking change detection, and staged/unstaged handling with Modify/Merge/Split/Edit options
+- **Local mode for `/cco-tune`** - Project-specific statusline and permissions via `cco-setup --local`
+- **Statusline enhancements** - Git release tag display, improved layout with dot separators, Full/Minimal modes
+- **Permissions system** - Four levels (safe/balanced/permissive/full) derived from full.json template
+- **AI Performance config** - Auto-detection based on project complexity in `/cco-tune`
+- **Impact Preview** - Direct files, dependents, test coverage, and risk assessment in Fix Workflow
+- **Detection exclusions** - Prevent false positives from benchmarks/, examples/, test fixtures
+- **Unified /cco-tune flow** - Configure, Remove, and Export in single multiSelect question
+- **Remove Configuration** - Remove any setting (AI Performance, Statusline, Permissions, Standards)
+- **Export content selection** - User chooses which sections to include in export
+- **Standards exemplars** - Correct/incorrect examples for Question Formatting to improve AI consistency
+- **Verification checkpoints** - Pre-output verification rules for consistent behavior
 
 ### Changed
-- **Standards restructured** into 4 clear categories: Universal (43), AI-Specific (31), CCO-Specific (38), Project-Specific (167 pool)
+- **Standards restructured** into 4 categories: Universal (43), AI-Specific (31), CCO-Specific (38), Project-Specific (170 pool)
+- **Standards optimized** - Table format with inheritance pattern, -37.7% lines, -26.8% tokens
+- **Export integrated into main flow** - No separate `--export` flag needed, select from Export section
+- **Export reads installed files** - Reads from `~/.claude/CLAUDE.md` + `./CLAUDE.md`, not command specs
+- **Question Formatting enhanced** - CRITICAL markers, exemplars, verification checkpoints for consistency
 - **Agents consolidated**: `cco-agent-detect` + `cco-agent-scan` → `cco-agent-analyze`; `cco-agent-action` → `cco-agent-apply`
-- **Commands simplified**: Removed AI-patterns detection, merged production readiness into `--pre-release` flag
-- **Export logic clarified**: AGENTS.md excludes CCO-Specific, CLAUDE.md includes all
-- **Documentation expanded**: Added `docs/commands.md`, `docs/agents.md`, `docs/standards.md`
-- **CCO-Specific standards expanded**: Comprehensive workflow mechanisms (Command Flow, Fix Workflow, Approval Flow, Question Formatting, Output Formatting, Safety Classification, Impact Preview, Priority Levels, Context Integration, Claude Code Integration)
+- **Question Formatting** - Standardized labels ([detected], [current], [recommended]), ascending option ordering
+- **Standard counts** - Now calculated dynamically at runtime (no hardcoded values)
+- **Cumulative tier system** - Scale, Testing, Observability tiers properly include lower tier standards
+- **Documentation expanded** - Added `docs/commands.md`, `docs/agents.md`, `docs/standards.md`
+- **CCO-Specific standards** - Comprehensive workflow mechanisms (Command Flow, Fix Workflow, Approval Flow, Question Formatting, Output Formatting, Safety Classification, Impact Preview, Priority Levels)
+- **CCO marker pattern** - Universal backward-compatible pattern for clean upgrades from any version
+
+### Fixed
+- Standard counts consistent across all documentation (114 base + 170 pool)
+- Detection exclusions for test/example directories prevent false Container triggers
+- Statusline emoji width calculation for proper alignment
+- CLI/Library projects excluded from Operations standards (use CI Only instead)
+- Snapshot Testing requires Frontend detection
+- Kubernetes separated from Container standards
+- Connection Pool duplication removed
+- AI performance settings cleaned from permission files
+- Quick-install Python version and timeouts corrected
 
 ### Removed
 - AI-Patterns Detection category from `/cco-audit` (Claude already handles this)
 - Production Readiness Mode from `/cco-review` (use `/cco-audit --pre-release`)
-- Redundant standard references from commands (now use CCO-Specific standards)
-
-### Fixed
-- Standard counts now consistent across all documentation (112 base + 167 pool)
-- Removed overlap between standards categories
+- Redundant standard references from commands (use CCO-Specific standards)
+- Hardcoded standard counts (now dynamic)
+- Duplicate standards across categories
 
 ## [1.0.0] - 2025-12-02
 
 ### Added
-- 8 slash commands: `/cco-tune`, `/cco-health`, `/cco-audit`, `/cco-optimize`, `/cco-review`, `/cco-generate`, `/cco-refactor`, `/cco-commit`
+- 7 slash commands: `/cco-tune`, `/cco-health`, `/cco-audit`, `/cco-review`, `/cco-optimize`, `/cco-generate`, `/cco-refactor`
 - 3 specialized agents: Detect, Scan, Action
 - Standards system with Universal, AI-Specific, and Conditional categories
 - Risk-based approval flow with AskUserQuestion

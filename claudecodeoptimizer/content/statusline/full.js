@@ -1,5 +1,6 @@
 #!/usr/bin/env node
 
+// CCO Statusline - Full Mode
 // Claude Code Statusline - Compact & Alert-Focused
 // 2-column header, dynamic sync alerts, conditional staged row
 

@@ -89,6 +89,7 @@ Run `/cco-tune` to see which project-specific standards apply to your project.
 | `/cco-health` | Metrics dashboard with actionable next steps |
 | `/cco-audit` | Quality gates with prioritized fixes |
 | `/cco-review` | Architecture analysis with recommendations |
+| `/cco-research` | Multi-source research with reliability scoring |
 | `/cco-optimize` | Efficiency improvements (context, docs, code) |
 | `/cco-generate` | Convention-following generation |
 | `/cco-refactor` | Safe structural changes with rollback |
@@ -101,6 +102,15 @@ Run `/cco-tune` to see which project-specific standards apply to your project.
 - **Doc-Code Mismatch** - Detect when documentation doesn't match implementation
 - **Self-Compliance** - Check against project's own stated standards
 - **Smart Mode** - Auto-detect applicable checks based on project context
+
+### /cco-research Features
+
+- **Tiered Reliability Scoring** - 6-tier system (T1-T6) with 0-100 scores
+- **Dynamic Modifiers** - Freshness, engagement, author credibility, cross-verification
+- **Contradiction Detection** - Identifies conflicting information across sources
+- **Consensus Mapping** - Weighted agreement analysis by source tier
+- **Bias Detection** - Flags vendor self-promotion, sponsored content
+- **AI Synthesis** - Confidence-rated recommendations with reasoning and caveats
 
 ### /cco-commit Features
 
@@ -119,10 +129,12 @@ Run `/cco-tune` to see which project-specific standards apply to your project.
 
 ### /cco-tune Features
 
+- **Unified Flow** - Configure, Remove, and Export in a single command
 - **AI Performance Auto-Detection** - Sets thinking/MCP tokens based on project complexity
 - **Statusline Configuration** - Full or Minimal mode per project
 - **Permission Levels** - Safe, Balanced, Permissive, Full per project
-- **Standards Export** - Export to AGENTS.md for other AI tools
+- **Remove Configuration** - Remove any setting (AI Performance, Statusline, Permissions, Standards)
+- **Standards Export** - Export to AGENTS.md or CLAUDE.md with selectable content
 
 *[Full commands documentation](docs/commands.md)*
 
@@ -141,12 +153,21 @@ Run `/cco-tune` to see which project-specific standards apply to your project.
 
 ## Project Tuning
 
-`/cco-tune` is the central configuration command:
+`/cco-tune` is the central configuration command with three action types:
 
-1. **Detects** your project: stack, type, scale, team size
-2. **Selects** relevant Project-Specific standards
-3. **Writes** context to `./CLAUDE.md`
-4. **Configures** AI settings (thinking tokens, MCP limits)
+**Configure:**
+- Detection & Standards - Scan project, write context to `./CLAUDE.md`
+- AI Performance - Set thinking/MCP tokens in `./.claude/settings.json`
+- Statusline - Configure status bar (Full or Minimal)
+- Permissions - Set permission level (Safe, Balanced, Permissive, Full)
+
+**Remove:**
+- Remove any configuration (AI Performance, Statusline, Permissions, Standards)
+- Mixed operations supported (e.g., Configure Standards + Remove AI Performance)
+
+**Export:**
+- CLAUDE.md - For other Claude Code projects (all standards)
+- AGENTS.md - For other AI tools (CCO-Specific excluded)
 
 ### AI Performance Auto-Detection
 
@@ -171,12 +192,21 @@ All settings are written to `./.claude/settings.json` (project-local):
 
 ### Export
 
-```bash
-/cco-tune --export
-```
+Export is integrated into `/cco-tune` main flow. Select CLAUDE.md or AGENTS.md from the Export section.
 
-- **AGENTS.md** - For other AI tools (Universal + AI-Specific + Project-Specific)
-- **CLAUDE.md** - For Claude Code (includes CCO-Specific)
+**What gets exported (user-selectable):**
+- Universal Standards
+- AI-Specific Standards
+- CCO-Specific Standards (CLAUDE.md only)
+- Project Context
+- Conditional Standards
+
+**What is NEVER exported:**
+- AI Performance settings
+- Statusline configuration
+- Permission rules
+
+Export reads from installed files (`~/.claude/CLAUDE.md` + `./CLAUDE.md`), not from command specs.
 
 ---
 

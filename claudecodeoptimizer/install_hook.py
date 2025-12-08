@@ -20,6 +20,16 @@ from .config import (
     get_standards_breakdown,
 )
 
+# Legacy keys that may exist from older CCO versions
+# These are cleaned during reinstall for a fresh start
+LEGACY_SETTINGS_KEYS = [
+    "_cco_managed",
+    "_cco_version",
+    "_cco_installed",
+    "cco_config",
+    "ccoSettings",
+]
+
 # Valid options for local mode
 STATUSLINE_MODES = ("full", "minimal")
 PERMISSION_LEVELS = ("safe", "balanced", "permissive", "full")
@@ -28,6 +38,93 @@ PERMISSION_LEVELS = ("safe", "balanced", "permissive", "full")
 def get_content_dir() -> Path:
     """Get package content directory."""
     return Path(__file__).parent / "content"
+
+
+def clean_previous_installation(verbose: bool = True) -> dict[str, int]:
+    """Remove all traces of previous CCO installation.
+
+    This ensures a clean reinstall by removing:
+    - All cco-*.md files in commands/ and agents/
+    - CCO markers from CLAUDE.md
+    - CCO-related keys from settings.json
+    - CCO statusline.js (if it's a CCO file)
+
+    Returns:
+        Dictionary with counts of removed items
+    """
+    removed = {"commands": 0, "agents": 0, "standards": 0, "settings_keys": 0, "statusline": 0}
+
+    # 1. Remove all cco-*.md files from commands/
+    if COMMANDS_DIR.exists():
+        for f in COMMANDS_DIR.glob("cco-*.md"):
+            f.unlink()
+            removed["commands"] += 1
+
+    # 2. Remove all cco-*.md files from agents/
+    if AGENTS_DIR.exists():
+        for f in AGENTS_DIR.glob("cco-*.md"):
+            f.unlink()
+            removed["agents"] += 1
+
+    # 3. Remove CCO markers from CLAUDE.md
+    claude_md = CLAUDE_DIR / "CLAUDE.md"
+    if claude_md.exists():
+        content = claude_md.read_text(encoding="utf-8")
+        content, count = _remove_all_cco_markers(content)
+        if count > 0:
+            content = re.sub(r"\n{3,}", "\n\n", content)
+            claude_md.write_text(content, encoding="utf-8")
+            removed["standards"] = count
+
+    # 4. Clean CCO-related keys from settings.json
+    if SETTINGS_FILE.exists():
+        try:
+            settings = json.loads(SETTINGS_FILE.read_text(encoding="utf-8"))
+            keys_removed = 0
+
+            # Remove legacy CCO keys
+            for key in LEGACY_SETTINGS_KEYS:
+                if key in settings:
+                    del settings[key]
+                    keys_removed += 1
+
+            # Remove CCO permissions marker
+            if CCO_PERMISSIONS_MARKER in settings:
+                del settings[CCO_PERMISSIONS_MARKER]
+                keys_removed += 1
+
+            if keys_removed > 0:
+                SETTINGS_FILE.write_text(json.dumps(settings, indent=2) + "\n", encoding="utf-8")
+                removed["settings_keys"] = keys_removed
+        except json.JSONDecodeError:
+            pass
+
+    # 5. Remove CCO statusline.js (check if it's a CCO file)
+    if STATUSLINE_FILE.exists():
+        try:
+            content = STATUSLINE_FILE.read_text(encoding="utf-8")
+            if "CCO Statusline" in content:
+                STATUSLINE_FILE.unlink()
+                removed["statusline"] = 1
+        except (OSError, UnicodeDecodeError):
+            pass
+
+    total = sum(removed.values())
+    if verbose and total > 0:
+        print("Cleaning previous installation...")
+        if removed["commands"]:
+            print(f"  - Removed {removed['commands']} command(s)")
+        if removed["agents"]:
+            print(f"  - Removed {removed['agents']} agent(s)")
+        if removed["standards"]:
+            print(f"  - Removed {removed['standards']} CLAUDE.md section(s)")
+        if removed["settings_keys"]:
+            print(f"  - Cleaned {removed['settings_keys']} legacy setting(s)")
+        if removed["statusline"]:
+            print("  - Removed old statusline.js")
+        print()
+
+    return removed
 
 
 def setup_statusline(verbose: bool = True) -> bool:
@@ -79,11 +176,16 @@ def has_statusline() -> bool:
 
 
 def _setup_content(src_subdir: str, dest_dir: Path, verbose: bool = True) -> list[str]:
-    """Copy cco-*.md files from source to destination directory."""
+    """Copy cco-*.md files from source to destination directory.
+
+    Idempotent: removes existing cco-*.md files before copying new ones.
+    Safe for reinstall - always results in fresh content from current version.
+    """
     src = get_content_dir() / src_subdir
     if not src.exists():
         return []
     dest_dir.mkdir(parents=True, exist_ok=True)
+    # Remove existing cco-*.md files (idempotent reinstall)
     for old in dest_dir.glob("cco-*.md"):
         old.unlink()
     installed = []
@@ -379,7 +481,10 @@ Permission levels: safe, balanced, permissive, full
         print(SEPARATOR)
         print(f"\nLocation: {CLAUDE_DIR}\n")
 
-        # Commands
+        # Step 1: Clean previous installation (ensures fresh state)
+        clean_previous_installation()
+
+        # Step 2: Install commands
         print("Commands:")
         cmds = setup_commands()
         if not cmds:
