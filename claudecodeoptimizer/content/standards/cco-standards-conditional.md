@@ -1,333 +1,152 @@
 <!-- CCO_CONDITIONALS_START -->
 # Project-Specific Standards
-*Dynamically selected by /cco-tune based on project analysis*
-*Written to local ./CLAUDE.md - included in CLAUDE.md and AGENTS.md exports*
+*Dynamically selected by /cco-tune - written to ./CLAUDE.md*
+
+## Trigger Legend
+`D`=Data | `S`=Scale | `T`=Type | `A`=Arch | `C`=Compliance | `+`=inherits previous tier
 
 ---
 
-## Security & Compliance
-**When:** Data: PII/Regulated OR Scale: 10K+ OR Compliance != None
-- Input Validation: Pydantic/Zod/JSON Schema
-- SQL Safety: parameterized queries, ORM safe methods
-- XSS Prevention: sanitize output, CSP headers
-- Auth: OAuth2/OIDC + RBAC, verify every request
+## Security & Compliance [D:PII/Regulated | S:10K+ | C:*]
+- Input: Pydantic/Zod/JSON Schema validation
+- SQL: parameterized queries, ORM safe methods
+- XSS: sanitize output, CSP headers
+- Auth: OAuth2/OIDC+RBAC, verify every request
 - Rate Limit: all endpoints, per-user/IP
-- Encryption: AES-256 at rest for sensitive data
-- Audit Log: security events, immutable
+- Encrypt: AES-256 at rest for sensitive data
+- Audit: security events, immutable log
 - CORS: explicit origins, no wildcard in prod
 - License: track deps, review GPL
 - Compliance: implement required controls
-- Data Classification: by sensitivity level
+- Data Class: by sensitivity level
 - Retention: documented, enforced
 
 ---
 
-## Scale Standards
-
-### Scale > Small (100-1K)
-**When:** Scale: 100-1K OR Scale: 1K-10K OR Scale: 10K+
-- Caching: TTL, invalidation, cache-aside
-- Lazy Load: defer non-critical resources
-
-### Scale > Medium (1K-10K)
-**When:** Scale: 1K-10K OR Scale: 10K+
-- Connection Pool: reuse, appropriate sizing
-- Async I/O: no blocking in async context
-
-### Scale > Large (10K+)
-**When:** Scale: 10K+ OR Architecture: Microservices
-- Circuit Breaker: fail fast on unhealthy downstream
-- Idempotency: safe to retry
-- API Versioning: explicit, backward compatible
-- DI: inject dependencies for testing
-- Event-Driven: async between services
-- Bounded Contexts: own models per domain
-- Compression: gzip/brotli responses
-- Indexing: proper indexes, query optimization
+## Scale [cumulative]
+| Tier | Trigger | Standards |
+|------|---------|-----------|
+| Small | S:100+ | Caching(TTL,invalidation,cache-aside), LazyLoad |
+| Medium | S:1K+ | +ConnPool(reuse,sizing), +AsyncIO(no blocking) |
+| Large | S:10K+ \| A:Microservices | +CircuitBreaker, +Idempotency, +APIVersion, +DI, +EventDriven, +BoundedContexts, +Compression(gzip/brotli), +Indexing |
 
 ---
 
-## Backend Standards
+## Backend
 
-### Backend > API
-**When:** API: REST OR API: GraphQL OR API: gRPC
+### API [API:REST | API:GraphQL | API:gRPC]
 - REST: proper methods, status codes, resource naming
 - Pagination: cursor-based for large datasets
 - OpenAPI/AsyncAPI: spec with examples, synced
 - Errors: consistent format, no stack traces in prod
 
-### Backend > API GraphQL
-**When:** API: GraphQL
-- GraphQL: complexity limits, depth limits, persisted queries
+### API Extensions
+| Type | Trigger | Standards |
+|------|---------|-----------|
+| GraphQL | API:GraphQL | complexity limits, depth limits, persisted queries |
+| gRPC | API:gRPC | proto versioning, backward compatibility |
 
-### Backend > API gRPC
-**When:** API: gRPC
-- gRPC: proto versioning, backward compatibility
-
-### Backend > Data
-**When:** DB != None
+### Data [DB:*]
 - Backup: automated, tested restore, RPO/RTO
 - Migrations: versioned, backward compatible, rollback
-- N+1 Prevention: batch queries, eager loading
+- N+1: batch queries, eager loading
 - Transactions: ACID or eventual consistency
-- Connection Pool: reuse, appropriate sizing
+- ConnPool: reuse, appropriate sizing
 
-### Backend > Operations
-**When:** CI/CD detected AND Type != CLI AND Type != Library
-- Config as Code: versioned, validated, env-aware
-- Health Endpoints: /health + /ready
-- Graceful Shutdown: drain connections on SIGTERM
-- Observability: metrics, logs, traces
-- CI Gates: lint + test + coverage before merge
-- Blue/Green or Canary: zero-downtime deploys
-- Feature Flags: decouple deploy from release
-
-### Backend > CI Only
-**When:** CI/CD detected AND (Type: CLI OR Type: Library)
-- Config as Code: versioned, validated
-- CI Gates: lint + test + coverage before merge
+### Operations
+| Type | Trigger | Standards |
+|------|---------|-----------|
+| Full | CI/CD & T:!CLI & T:!Library | Config-as-Code, /health+/ready, GracefulShutdown, Observability, CI-Gates, Blue/Green, FeatureFlags |
+| CI-Only | CI/CD & (T:CLI \| T:Library) | Config-as-Code(versioned), CI-Gates(lint+test+coverage) |
 
 ---
 
-## Frontend Standards
-**When:** Frontend detected (React/Vue/Angular/Svelte/Next/Nuxt/etc.)
+## Frontend [React/Vue/Angular/Svelte/Next/Nuxt detected]
 
-### Frontend > Accessibility
-- WCAG 2.2 AA: perceivable, operable, understandable
-- Semantic HTML: native elements
-- Keyboard Nav: all interactive accessible
-- Contrast: 4.5:1 normal, 3:1 large
-
-### Frontend > Performance
-- Core Web Vitals: LCP <2.5s, INP <200ms, CLS <0.1
-- Bundle Size: code splitting, tree shaking, lazy load
-- Responsive: mobile-first, fluid layouts
-
-### Frontend > Quality
-- State Management: predictable, single source
-- AI Slop Prevention: unique design, no generic patterns
-- Progressive Enhancement: core works without JS
+| Category | Standards |
+|----------|-----------|
+| A11y | WCAG 2.2 AA, semantic HTML, keyboard nav, contrast 4.5:1/3:1 |
+| Perf | LCP<2.5s, INP<200ms, CLS<0.1, code-split, tree-shake, lazy |
+| Quality | predictable state, unique design (no AI slop), progressive enhancement |
 
 ---
 
-## App Standards
+## Apps
 
-### Apps > Mobile
-**When:** iOS/Android/React Native/Flutter detected
-- Offline-First: local storage, sync when connected
-- Battery: minimize background, batch operations
-- Deep Linking: universal/app links
-- Push: permission handling, payload optimization
-- Platform: iOS HIG, Material Design compliance
-- App Size: asset optimization, on-demand resources
-
-### Apps > Desktop
-**When:** Electron/Tauri/native desktop detected
-- Auto-Update: secure update mechanism
-- Native: OS notifications, file associations
-- Multi-Window: proper management
-- Memory: prevent leaks, proper cleanup
-
-### Apps > CLI
-**When:** Type: CLI
-- Help: --help with examples for every command
-- Exit Codes: 0 success, non-zero with meaning
-- Signals: handle SIGINT/SIGTERM gracefully
-- Output: human-readable default, --json for scripts
-- Config: env > config file > CLI args > defaults
+| Type | Trigger | Standards |
+|------|---------|-----------|
+| Mobile | iOS/Android/RN/Flutter | Offline-first, battery-optimize, deep-links, push, platform-guidelines, app-size |
+| Desktop | Electron/Tauri/native | Auto-update, native-integration, multi-window, memory-cleanup |
+| CLI | T:CLI | --help+examples, exit-codes, SIGINT/SIGTERM, human+json output, config-precedence |
 
 ---
 
-## Library Standards
-**When:** Type: Library
+## Library [T:Library]
 - Minimal Deps: reduce transitive burden
 - Tree-Shakeable: ES modules, no side effects
-- Type Definitions: TypeScript or JSDoc
+- Types: TypeScript or JSDoc
 - Deprecation: warn before removal, migration path
 
 ---
 
-## Infrastructure Standards
+## Infrastructure
 
-### Infra > Container
-**When:** Docker detected (NOT in examples/, benchmarks/, test/)
-- Image Size: multi-stage, distroless base
-- Security: non-root user, CVE scanning
-- Resource Limits: CPU/memory limits and requests
-- Secrets: external, not in images
-
-### Infra > Kubernetes
-**When:** Kubernetes/Helm detected
-- Pod Security: SecurityContext, NetworkPolicy
-- Health Probes: liveness + readiness configured
-- Resource Quotas: namespace limits defined
-
-### Infra > Serverless
-**When:** Lambda/Functions/Vercel/Netlify detected
-- Cold Start: minimize bundle, lazy init
-- Timeout: graceful handling, cleanup
-- Stateless: no local state between invocations
-- Cost: right-size memory
-
-### Infra > Monorepo
-**When:** nx.json/turbo.json/lerna.json/pnpm-workspace.yaml detected
-- Workspace: clear package boundaries
-- Selective Testing: only affected packages
-- Shared Deps: consistent versions, hoisting
-- Build Cache: incremental, remote cache
+| Type | Trigger | Standards |
+|------|---------|-----------|
+| Container | Docker (not in examples/benchmarks/test) | multi-stage, distroless, non-root, CVE-scan, resource-limits, external-secrets |
+| K8s | Kubernetes/Helm | SecurityContext, NetworkPolicy, probes, ResourceQuotas |
+| Serverless | Lambda/Functions/Vercel/Netlify | minimize-bundle, graceful-timeout, stateless, right-size-memory |
+| Monorepo | nx/turbo/lerna/pnpm-workspace | package-boundaries, selective-test, shared-deps, build-cache |
 
 ---
 
-## Specialized Standards
+## Specialized
 
-### ML/AI Projects
-**When:** torch/tensorflow/sklearn/transformers/langchain detected
-- Reproducibility: seed everything, version data+code+model
-- Experiment Tracking: log params, metrics, artifacts
-- Data Versioning: DVC or similar
-- Model Registry: versioned with metadata
-- Inference: quantization, batching, caching
-- Bias: fairness metrics, drift detection
-
-### Game Development
-**When:** Unity/Unreal/Godot detected
-- Frame Budget: 16ms for 60fps, profile regularly
-- Asset Pipeline: LOD, compression, streaming
-- Input: responsive, rebindable controls
-- Save System: versioned, corruption recovery
+| Domain | Trigger | Standards |
+|--------|---------|-----------|
+| ML/AI | torch/tf/sklearn/transformers/langchain | reproducibility(seed+version), experiment-tracking, data-versioning, model-registry, inference-optimize, bias-detection |
+| Game | Unity/Unreal/Godot | 16ms-frame-budget, LOD+compression+streaming, rebindable-input, versioned-saves |
 
 ---
 
-## Team Standards
-
-### Team > Small (2-5)
-**When:** Team: 2-5 OR Team: 6+
-- Review: async PR reviews acceptable
-- Docs: README, CONTRIBUTING
-- Communication: Slack/Discord for quick decisions
-- Git Flow: feature branches, clean history
-
-### Team > Medium-Large (6+)
-**When:** Team: 6+
-- ADR: decisions + context + consequences
-- Local Parity: match production environment
-- Golden Paths: recommended approaches documented
-- Code Owners: CODEOWNERS for review assignment
-- Onboarding: documented setup, first-task guides
-- Branch Protection: require reviews, status checks
-- PR Templates: consistent descriptions
-- Atomic Commits: one logical change per commit
+## Team [cumulative]
+| Size | Trigger | Standards |
+|------|---------|-----------|
+| Small | Team:2+ | async-PR-review, README+CONTRIBUTING, Slack/Discord, feature-branches |
+| Large | Team:6+ | +ADR, +local-parity, +golden-paths, +CODEOWNERS, +onboarding, +branch-protection, +PR-templates, +atomic-commits |
 
 ---
 
-## i18n Standards
-**When:** locales/i18n/messages/translations/ detected OR i18n deps
-- Externalized: no hardcoded user text
-- Unicode: UTF-8 everywhere
-- RTL: support Arabic, Hebrew layouts
-- Locale: date/time/number/currency formatting
-- Pluralization: proper rules per language
+## i18n [locales/i18n/messages/translations detected | i18n deps]
+Externalized strings | UTF-8 | RTL support | locale formatting | pluralization rules
 
 ---
 
-## Real-time Standards
-
-### Real-time > Basic
-**When:** WebSocket/SSE/socket.io detected
-- Connection: reconnect logic, heartbeat
-- State Sync: handle stale data gracefully
-
-### Real-time > Standard
-**When:** Real-time: Standard OR Real-time: Low-latency selected
-- WebSocket: proper handshake, ping/pong
-- Event Ordering: sequence numbers, causality
-- Backpressure: handle slow consumers
-- Fallback: degrade to polling
-
-### Real-time > Low-latency
-**When:** Real-time: Low-latency selected
-- Binary Protocols: protobuf, msgpack
-- Edge Compute: minimize round trips
-- Connection Affinity: sticky sessions
-- Pre-warming: eliminate cold starts
-- Memory: zero-copy where possible
-- Jitter: consistent latency
-- Geographic: regional endpoints
+## Real-time [cumulative]
+| Tier | Trigger | Standards |
+|------|---------|-----------|
+| Basic | WebSocket/SSE/socket.io | reconnect-logic, heartbeat, stale-data-handling |
+| Standard | RT:Standard+ | +handshake, +event-ordering, +backpressure, +polling-fallback |
+| Low-latency | RT:Low-latency | +binary(protobuf/msgpack), +edge-compute, +sticky-sessions, +pre-warm, +zero-copy, +jitter-control, +geo-endpoints |
 
 ---
 
-## Testing Standards
-
-### Testing > Basics
-**When:** Testing: Basics OR Testing: Standard OR Testing: Full selected
-- Unit Tests: isolated, fast, deterministic
-- Mocking: external deps mocked
-- Coverage: >60% line
-
-### Testing > Standard
-**When:** Testing: Standard OR Testing: Full selected
-- Integration: test component interactions
-- Fixtures: reusable, maintainable
-- Coverage: >80% line
-- CI: tests run on every PR
-
-### Testing > Standard + UI
-**When:** (Testing: Standard OR Testing: Full) AND Frontend detected
-- Snapshot: UI component stability
-
-### Testing > Full
-**When:** Testing: Full selected
-- E2E: critical user journeys
-- Visual Regression: catch UI changes
-- Contract Testing: API compatibility
-- Mutation Testing: test quality validation
-- Coverage: >90% line
-- Flaky Detection: quarantine unreliable
-- Parallelization: fast feedback
-- Test Data: factories, fixtures
-
-### Testing > Performance
-**When:** Performance testing required OR Scale: 10K+
-- Load: expected traffic patterns
-- Stress: breaking point identification
-- Benchmark: track regressions
-- Profiling: identify bottlenecks
+## Testing [cumulative]
+| Tier | Trigger | Standards |
+|------|---------|-----------|
+| Basics | Testing:Basics+ | unit(isolated,fast,deterministic), mocking, coverage>60% |
+| Standard | Testing:Standard+ | +integration, +fixtures, +coverage>80%, +CI-on-PR |
+| Standard+UI | Standard+ & Frontend | +snapshot-testing |
+| Full | Testing:Full | +e2e, +visual-regression, +contract, +mutation, +coverage>90%, +flaky-detection, +parallel, +test-data-factories |
+| Perf | Perf-required \| S:10K+ | load, stress, benchmark, profiling |
 
 ---
 
-## Observability Standards
-
-### Observability > Basics
-**When:** SLA: None OR SLA: Standard OR SLA: High OR SLA: Critical
-- Error Tracking: Sentry or equivalent
-- Alerting: critical failures only
-
-### Observability > Standard
-**When:** SLA: Standard OR SLA: High OR SLA: Critical
-- Structured Logging: JSON, correlation IDs
-- Metrics: RED method (Rate, Errors, Duration)
-- Distributed Tracing: request flow visibility
-- Alerting: tiered severity
-
-### Observability > High Availability
-**When:** SLA: High OR SLA: Critical
-- Redundancy: no single points of failure
-- Failover: automatic recovery
-- Load Balancing: distribute traffic
-- Auto-scaling: respond to demand
-- Incident Response: runbooks documented
-
-### Observability > Full Resilience
-**When:** SLA: Critical
-- Multi-region: geographic redundancy
-- Chaos Engineering: regular failure injection
-- Disaster Recovery: tested DR plans
-- Global LB: anycast, GeoDNS
-- Data Replication: sync/async per requirements
-- Capacity Planning: proactive scaling
-- SLO/SLI: error budgets
-- Post-mortem: blameless analysis
-- On-call: defined escalation
-- Status Page: public incident communication
-- Dependency Mapping: understand blast radius
+## Observability [cumulative]
+| Tier | Trigger | Standards |
+|------|---------|-----------|
+| Basics | SLA:* | error-tracking(Sentry), critical-alerting |
+| Standard | SLA:Standard+ | +structured-logs(JSON+correlationID), +RED-metrics, +distributed-tracing, +tiered-alerting |
+| HA | SLA:High+ | +redundancy, +auto-failover, +load-balancing, +auto-scaling, +runbooks |
+| Critical | SLA:Critical | +multi-region, +chaos-engineering, +DR-tested, +global-LB, +data-replication, +capacity-planning, +SLO/SLI, +post-mortem, +on-call, +status-page, +dependency-mapping |
 <!-- CCO_CONDITIONALS_END -->

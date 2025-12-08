@@ -3,18 +3,18 @@
 *AI/human agnostic - fundamental principles for all software projects*
 
 ## Code Quality
-- Fail-Fast: no silent fallbacks, immediate visible failure
-- DRY: single source of truth, no duplicates
+- Fail-Fast: no silent fallbacks
+- DRY: single source of truth
 - No Orphans: every function called, every import used
 - Type-Safe: annotations where supported, prefer immutable
-- Complexity: cyclomatic <10 per function
+- Complexity: cyclomatic <10/function
 - Clean: meaningful names, single responsibility, consistent style
 - Explicit: no magic values, clear intent
 - Scope: only requested changes, general solutions
 
 ## File & Resource
-- Minimal Touch: only files required for task
-- No Unsolicited: never create files unless requested
+- Minimal Touch: only required files
+- No Unsolicited: never create unrequested files
 - Paths: forward slash, relative, quote spaces
 - Cleanup: temp files, handles, connections
 - Skip: .git, node_modules, __pycache__, venv, dist, build
@@ -24,7 +24,7 @@
 - Input: validate at system boundaries
 - Access: least privilege, secure defaults
 - Deps: review before adding, keep updated
-- Defense: multiple layers, don't trust single control
+- Defense: multiple layers
 
 ## Testing
 - Coverage: 60-90% context-adjusted
@@ -118,36 +118,29 @@
 - Rollback: clean state enables git checkout
 
 ### Classification
-**Safe (auto-apply):**
-- Remove unused imports
-- Parameterize SQL
-- Move secrets to env
-- Fix linting issues
-- Add type annotations
-
-**Risky (require approval):**
-- Auth/CSRF changes
-- DB schema changes
-- API contract changes
-- Delete files
-- Rename public APIs
+| Safe (auto-apply) | Risky (require approval) |
+|-------------------|--------------------------|
+| Remove unused imports | Auth/CSRF changes |
+| Parameterize SQL | DB schema changes |
+| Move secrets to env | API contract changes |
+| Fix linting issues | Delete files |
+| Add type annotations | Rename public APIs |
 
 ## Fix Workflow
 Flow: Analyze > Report > Approve > Apply > Verify
 Output: `Applied: N | Skipped: N | Failed: N | Total: N`
 
 ## Impact Preview
-- Direct: files to modify
-- Dependents: files that import/use
-- Tests: coverage of affected code
-- Risk: LOW / MEDIUM / HIGH
-- Skip: LOW risk, <=2 files, full coverage
+| Field | Description |
+|-------|-------------|
+| Direct | files to modify |
+| Dependents | files that import/use |
+| Tests | coverage of affected code |
+| Risk | LOW / MEDIUM / HIGH |
+| Skip | LOW risk, <=2 files, full coverage |
 
 ## Priority
-- CRITICAL: security, data exposure
-- HIGH: high-impact, low-effort
-- MEDIUM: balanced impact/effort
-- LOW: style, minor optimization
+CRITICAL (security, data exposure) > HIGH (high-impact, low-effort) > MEDIUM (balanced) > LOW (style, minor)
 
 ## Approval Flow
 - Tool: AskUserQuestion (multiSelect: true)
@@ -157,28 +150,18 @@ Output: `Applied: N | Skipped: N | Failed: N | Total: N`
 - Pagination: max 4 questions x 4 options
 
 ## Question Formatting
-**Labels (right of option):**
-- `[detected]` - auto-detected from analysis
-- `[current]` - matches existing config
-- `[recommended]` - best practice (max 1/question)
+| Label | Usage |
+|-------|-------|
+| `[detected]` | auto-detected from analysis |
+| `[current]` | matches existing config |
+| `[recommended]` | best practice (max 1/question) |
 
-**Precedence:**
-- detected + current: show current only
-- Always show recommended
-
-**Ordering:**
-- Numeric: ascending
-- Severity: safest to riskiest
-- Scope: narrowest to widest
-
-**Specs:**
-- Tables for structure
-- Placeholders: `{value}`, `{N}`, `{name}`
-- No hardcoded values in specs
+**Precedence:** detected+current → show current only | Always show recommended
+**Ordering:** Numeric ascending | Severity safest→riskiest | Scope narrow→wide
+**Specs:** Tables for structure | Placeholders: `{value}`, `{N}`, `{name}` | No hardcoded values
 
 ## Output Formatting
-- Borders: `─│┌┐└┘├┤┬┴┼`
-- Headers: `═║╔╗╚╝`
+- Borders: `─│┌┐└┘├┤┬┴┼` | Headers: `═║╔╗╚╝`
 - Align: numbers right, text left
 - Status: OK / WARN / FAIL / PASS / SKIP
 - Progress: `████░░░░` proportional
