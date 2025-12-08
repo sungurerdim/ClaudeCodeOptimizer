@@ -193,10 +193,10 @@ Counts are dynamically calculated. Run /cco-tune to see current totals.
 
 ### Categories
 
-| Category | Trigger | Count |
-|----------|---------|-------|
+| Category | Trigger | Standards |
+|----------|---------|-----------|
 | Security & Compliance | PII/Regulated data, 10K+ scale, Compliance set | 12 |
-| Scale & Architecture | 10K+ scale, Microservices | 12 |
+| Scale & Architecture | 10K+ scale, Microservices, 100+ | 12 |
 | Backend Services | API, DB, or CI/CD detected | 17 |
 | Frontend | React/Vue/Angular/Svelte detected | 10 |
 | Apps | Mobile, Desktop, or CLI detected | 15 |
@@ -207,6 +207,8 @@ Counts are dynamically calculated. Run /cco-tune to see current totals.
 | Real-time | WebSocket/SSE detected | 14 |
 | Testing | Testing strategy selected | 20 |
 | Observability | SLA level selected | 23 |
+
+**Total pool:** 167 standards (only triggered ones are loaded per project)
 
 ### Full list
 

@@ -1,6 +1,18 @@
 # CCO Design Principles
 
-These core principles guide all CCO development and usage.
+These core principles guide all CCO development and usage. They are implemented through the [CCO Standards](standards.md).
+
+---
+
+## Core Philosophy
+
+> **Claude already knows how to code. CCO adds safety, approval, and consistency.**
+
+CCO is a process layer, not a teaching layer. It provides:
+- **Pre-operation safety** - Check before act
+- **Standardized workflows** - Consistent patterns
+- **Post-operation verification** - Confirm results
+- **Context-aware behavior** - Project-specific tuning
 
 ---
 
@@ -8,36 +20,12 @@ These core principles guide all CCO development and usage.
 
 All operations are visible and predictable.
 
-| Principle | Description |
-|-----------|-------------|
-| **Announce Before Action** | Always state what will be done before starting |
-| **Progress Signals** | Clear "Starting...", "In progress...", "Completed" messages |
-| **No Silent Operations** | User should always know what's happening |
-| **Phase Transitions** | Clear signals when moving between workflow phases |
-
----
-
-## Single Source of Truth (SSOT)
-
-Avoid duplication and inconsistency.
-
-| Principle | Description |
-|-----------|-------------|
-| **No Hardcoded Values** | Use placeholders like `{value}` instead of fixed examples |
-| **Reference Over Repeat** | Standards are defined once, referenced by name |
-| **Context-Driven** | All thresholds and behaviors come from project context |
-
----
-
-## DRY (Don't Repeat Yourself)
-
-Minimize redundancy in code and configuration.
-
-| Principle | Description |
-|-----------|-------------|
-| **Standards Reference** | Commands reference `**Standards:** X \| Y \| Z` instead of duplicating |
-| **Shared Agents** | Three agents (detect, scan, action) serve all commands |
-| **Conditional Loading** | Project-specific standards loaded only when relevant |
+| Principle | Implemented In |
+|-----------|----------------|
+| Announce Before Action | AI-Specific: Status Updates |
+| Progress Signals | AI-Specific: Status Updates |
+| No Silent Operations | AI-Specific: Status Updates |
+| Phase Transitions | AI-Specific: Status Updates |
 
 ---
 
@@ -45,38 +33,38 @@ Minimize redundancy in code and configuration.
 
 The user is always in charge.
 
-| Principle | Description |
-|-----------|-------------|
-| **Approval Required** | No silent changes to codebase |
-| **Priority Classification** | CRITICAL > HIGH > MEDIUM > LOW |
-| **Safety Classification** | Safe (auto-apply) vs Risky (require approval) |
-| **Rollback Support** | Clean git state enables safe recovery |
-
----
-
-## AI Efficiency
-
-Optimize for context window and token usage.
-
-| Principle | Description |
-|-----------|-------------|
-| **Semantic Density** | Maximum meaning per token |
-| **Structured Format** | Tables/lists over prose for clarity |
-| **Front-load Critical** | Important info first (Purpose → Details → Edge cases) |
-| **Bounded Context** | Relevant scope only, not entire codebase |
-
----
-
-## Token-Conscious Design
-
-Every standard, command, and output is designed with context limits in mind.
-
-| Technique | Implementation |
+| Principle | Implemented In |
 |-----------|----------------|
-| **Conditional Loading** | Only load standards relevant to detected project type |
-| **Compact Notation** | `Team: Solo \| Scale: <100` instead of prose |
-| **Reference by Name** | `**Standards:** Fix Workflow` instead of repeating content |
-| **Structured Output** | Tables with consistent columns for easy parsing |
+| Approval Required | CCO-Specific: Approval Flow |
+| Priority Classification | CCO-Specific: Priority Levels |
+| Safety Classification | CCO-Specific: Safety Classification |
+| Rollback Support | CCO-Specific: Pre-Operation Safety |
+
+---
+
+## DRY + SSOT
+
+Single source of truth, no duplication.
+
+| Principle | Implemented In |
+|-----------|----------------|
+| No Hardcoded Values | CCO-Specific: Question Formatting |
+| Reference Over Repeat | All commands use `**Standards:** X \| Y` |
+| Conditional Loading | CCO-Specific: Context Integration |
+| Context-Driven Thresholds | CCO-Specific: Context Integration |
+
+---
+
+## Token Efficiency
+
+Optimize for context window usage.
+
+| Principle | Implemented In |
+|-----------|----------------|
+| Semantic Density | AI-Specific: Context Optimization |
+| Structured Format | AI-Specific: Context Optimization |
+| Front-load Critical | AI-Specific: Context Optimization |
+| Bounded Context | AI-Specific: Context Optimization |
 
 ---
 
@@ -84,15 +72,31 @@ Every standard, command, and output is designed with context limits in mind.
 
 All changes follow a consistent safety pattern.
 
-```
-1. Pre-Check   → Git status, dirty state handling
-2. Analyze     → Full scan of target area
-3. Report      → Detection table with priority, location, action
-4. Approve     → User selects which fixes to apply
-5. Apply       → Execute only approved changes
-6. Verify      → Before/after comparison + accounting
-```
+| Step | Standard |
+|------|----------|
+| 1. Pre-Check | CCO-Specific: Pre-Operation Safety |
+| 2. Analyze | CCO-Specific: Command Flow |
+| 3. Report | CCO-Specific: Output Formatting |
+| 4. Approve | CCO-Specific: Approval Flow |
+| 5. Apply | CCO-Specific: Fix Workflow |
+| 6. Verify | CCO-Specific: Fix Workflow (Accounting) |
 
 ---
+
+## Standard Categories
+
+| Category | Count | Scope |
+|----------|-------|-------|
+| Universal | 43 | All projects, AI/human agnostic |
+| AI-Specific | 31 | All AI assistants, model agnostic |
+| CCO-Specific | 38 | CCO workflow mechanisms |
+| Project-Specific | 167 pool | Dynamically selected by /cco-tune |
+
+**Base:** 112 standards always active
+**With project:** ~127-147 depending on detection
+
+---
+
+*See [Standards Documentation](standards.md) for full details*
 
 *Back to [README](../README.md)*
