@@ -115,7 +115,15 @@ def has_cco_permissions(settings_file: Path = SETTINGS_FILE) -> bool:
 
 
 def remove_permissions(settings_file: Path = SETTINGS_FILE, verbose: bool = True) -> bool:
-    """Remove CCO permissions from settings.json."""
+    """Remove CCO permissions from settings.json.
+
+    Args:
+        settings_file: Path to settings.json file. Defaults to global settings.
+        verbose: If True, print progress messages.
+
+    Returns:
+        True if permissions were removed, False otherwise.
+    """
     if not settings_file.exists():
         return False
 
@@ -198,6 +206,12 @@ def remove_claude_md_standards(verbose: bool = True) -> list[str]:
 
     Uses universal pattern to remove any CCO marker for backward compatibility.
     Ensures complete cleanup regardless of marker names from previous versions.
+
+    Args:
+        verbose: If True, print progress messages.
+
+    Returns:
+        List of removed section descriptions, empty if none found.
     """
     claude_md = CLAUDE_DIR / "CLAUDE.md"
     if not claude_md.exists():

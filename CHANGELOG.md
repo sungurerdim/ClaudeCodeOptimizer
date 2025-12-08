@@ -23,7 +23,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - **Verification checkpoints** - Pre-output verification rules for consistent behavior
 
 ### Changed
-- **Standards restructured** into 4 categories: Universal (43), AI-Specific (31), CCO-Specific (38), Project-Specific (170 pool)
+- **Standards restructured** into 4 categories: Universal (38), AI-Specific (28), CCO-Specific (50), Project-Specific (170 pool)
 - **Standards optimized** - Table format with inheritance pattern, -37.7% lines, -26.8% tokens
 - **Export integrated into main flow** - No separate `--export` flag needed, select from Export section
 - **Export reads installed files** - Reads from `~/.claude/CLAUDE.md` + `./CLAUDE.md`, not command specs
@@ -37,7 +37,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - **CCO marker pattern** - Universal backward-compatible pattern for clean upgrades from any version
 
 ### Fixed
-- Standard counts consistent across all documentation (114 base + 170 pool)
+- Standard counts consistent across all documentation (116 base + 170 pool)
 - Detection exclusions for test/example directories prevent false Container triggers
 - Statusline emoji width calculation for proper alignment
 - CLI/Library projects excluded from Operations standards (use CI Only instead)
@@ -70,4 +70,4 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Python 3.10+ support (tested on 3.10-3.14)
 - Zero dependencies (stdlib only)
 - CLI and IDE extension compatible
-- 100% test coverage
+- 99% test coverage
