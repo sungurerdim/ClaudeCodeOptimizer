@@ -5,7 +5,7 @@ description: Project-specific AI tuning and configuration
 
 # /cco-tune
 
-**Project tuning** - Detection, configuration, and export for the current project.
+**Project tuning** - Detection, configuration, removal, and export for the current project. Export uses currently installed standards from `~/.claude/CLAUDE.md` and `./CLAUDE.md`.
 
 **Standards:** Approval Flow | Output Formatting
 
@@ -75,8 +75,7 @@ Global `~/.claude/` files are never modified by cco-tune.
 ## Usage
 
 ```bash
-/cco-tune              # Show status, then choose what to configure
-/cco-tune --export     # Export standards (AGENTS.md or CLAUDE.md)
+/cco-tune              # Show status, then choose: Configure / Remove / Export
 ```
 
 ---
@@ -87,11 +86,11 @@ Global `~/.claude/` files are never modified by cco-tune.
 
 ```
 1. STATUS     → Always show current project state first
-2. CHOOSE     → What to configure? + ALL config questions
-3. DETECT     → Run detection (if selected, no questions)
+2. CHOOSE     → Configure / Remove / Export + ALL sub-questions
+3. DETECT     → Run detection (if Configure selected)
 4. REVIEW     → Accept/Edit/Cancel (single confirmation)
-5. APPLY      → Write all selected configurations
-6. REPORT     → Summary
+5. APPLY      → Write configurations, remove items, export files
+6. REPORT     → Summary with all changes
 ```
 
 ---
@@ -172,18 +171,45 @@ Based on status, show options with smart defaults. **All configuration questions
 
 Follow CCO "Question Formatting" standard.
 
+### Main Question (Single multiSelect)
+
 | Question | Options (multiSelect) |
 |----------|----------------------|
-| What to configure? | Update Detection, AI Performance, Statusline, Permissions, Nothing |
+| What to configure? | *See grouped options below* |
 
-**Option descriptions:**
-- Update Detection: Re-scan project, recalculate AI Performance
-- AI Performance: Override detected thinking/MCP tokens
-- Statusline: Local status bar configuration
-- Permissions: Local permission levels
-- Nothing: Exit without changes
+**Grouped Options:**
 
-**`[recommended]` placement:** First run (no context) → "Update Detection"
+```
+┌─ Configure ────────────────────────────────────────────────────────┐
+│ ☐ Detection & Standards    Scan project, update context            │
+│ ☐ AI Performance           Configure thinking/MCP tokens           │
+│ ☐ Statusline               Configure status bar                    │
+│ ☐ Permissions              Configure permission rules              │
+├─ Remove ───────────────────────────────────────────────────────────┤
+│ ☐ Remove AI Performance    Reset to Claude Code defaults           │
+│ ☐ Remove Statusline        Delete statusline.js, disable bar       │
+│ ☐ Remove Permissions       Remove all permission rules             │
+│ ☐ Remove Standards         Remove CCO_CONTEXT from CLAUDE.md       │
+├─ Export (standards only, no settings) ─────────────────────────────┤
+│ ☐ CLAUDE.md                Standards for other Claude Code projects │
+│ ☐ AGENTS.md                Standards for other AI tools (Cursor)    │
+├────────────────────────────────────────────────────────────────────┤
+│ ☐ Nothing                  Exit without changes                    │
+└────────────────────────────────────────────────────────────────────┘
+```
+
+**Dynamic visibility:**
+- Remove options only shown if corresponding item is currently configured
+- If nothing is configured, Remove section is hidden
+
+**`[recommended]` placement:** First run (no context) → "Detection & Standards"
+
+**Conflict Rule:** If same item selected for both Configure AND Remove → Configure wins (user wants to reconfigure)
+
+**Execution Order:**
+1. Remove operations (clean first)
+2. Configure operations (then set up)
+3. Export (last)
 
 **Notes:**
 - Detection includes AI Performance auto-calculation (see [AI Performance Auto-Detection](#ai-performance-auto-detection))
@@ -208,13 +234,39 @@ See [AI Performance Auto-Detection](#ai-performance-auto-detection) for scoring 
 
 | Question | Options | `[recommended]` when |
 |----------|---------|---------------------|
-| Statusline mode? | Disable, Minimal, Full | first-time→Full |
+| Statusline mode? | Minimal, Full | first-time→Full |
 
 **If Permissions selected:**
 
 | Question | Options | `[recommended]` when |
 |----------|---------|---------------------|
 | Permission level? | Safe, Balanced, Permissive, Full | see table below |
+
+**If CLAUDE.md or AGENTS.md export selected:**
+
+| Question | Options (multiSelect) | Default |
+|----------|----------------------|---------|
+| What to include in export? | *See below* | All selected |
+
+**Export content options:**
+
+```
+┌─ Standards ────────────────────────────────────────────────────────┐
+│ ☐ Universal Standards      Core principles for all projects        │
+│ ☐ AI-Specific Standards    AI behavior and output rules            │
+│ ☐ CCO-Specific Standards   CCO workflow mechanisms (CLAUDE.md only)│
+├─ Project ──────────────────────────────────────────────────────────┤
+│ ☐ Project Context          Strategic context (team, scale, etc.)   │
+│ ☐ Conditional Standards    Project-specific standards              │
+├────────────────────────────────────────────────────────────────────┤
+│ ☐ All                      Include everything available            │
+└────────────────────────────────────────────────────────────────────┘
+```
+
+**Notes:**
+- CCO-Specific Standards only available for CLAUDE.md export (not portable)
+- Project Context and Conditional Standards require `./CLAUDE.md` to exist
+- "All" is pre-selected by default
 
 **Permissions `[recommended]` (first match wins):**
 
@@ -802,12 +854,41 @@ Only show rows for options user selected in Step 2. If user didn't select AI Per
 
 Write all selected configurations to **project-local files only**:
 
+### Configure Operations
+
 | Selection | Target | Method |
 |-----------|--------|--------|
 | Detection | `./CLAUDE.md` | Write tool (CCO_CONTEXT block) |
 | AI Performance | `./.claude/settings.json` | Write tool (env section) |
 | Statusline | `./.claude/statusline.js` + `./.claude/settings.json` | `cco-setup --local . --statusline {mode}` |
 | Permissions | `./.claude/settings.json` | `cco-setup --local . --permissions {level}` |
+
+### Export Operations
+
+| Selection | Source | Target | Method |
+|-----------|--------|--------|--------|
+| CLAUDE.md | `~/.claude/CLAUDE.md` + `./CLAUDE.md` | `./CLAUDE.export.md` | Read + combine + Write |
+| AGENTS.md | `~/.claude/CLAUDE.md` + `./CLAUDE.md` | `./AGENTS.md` | Read + transform + Write |
+
+**Export includes only user-selected content** (Universal, AI-Specific, CCO-Specific, Project Context, Conditional Standards).
+
+### Removal Operations
+
+| Remove | Target | Method |
+|--------|--------|--------|
+| Remove Standards | `./CLAUDE.md` | Remove `<!-- CCO_CONTEXT_START -->...<!-- CCO_CONTEXT_END -->` block |
+| Remove AI Performance | `./.claude/settings.json` | Remove `env` section from JSON |
+| Remove Statusline | `./.claude/statusline.js` + `./.claude/settings.json` | Delete statusline.js, remove `statusLine` from JSON |
+| Remove Permissions | `./.claude/settings.json` | Remove `permissions` section from JSON |
+
+**Removal behavior:**
+- Standards: Removes CCO_CONTEXT block from `./CLAUDE.md`, preserves other content
+- AI Performance: Removes `env` key entirely → Claude Code uses built-in defaults
+- Statusline: Deletes `.claude/statusline.js` file AND removes `statusLine` key from settings.json
+- Permissions: Removes `permissions` key entirely → all operations require approval
+- If settings.json becomes empty (`{}`), delete the file
+- If `.claude/` directory becomes empty, optionally delete it
+- If `./CLAUDE.md` becomes empty after CCO_CONTEXT removal, delete the file
 
 ### Statusline & Permissions Installation
 
@@ -855,7 +936,7 @@ This ensures templates are read from the installed package, not generated by AI.
 
 **Runtime Behavior (Claude Code):** Only executes if local `.claude/statusline.js` exists. No global fallback.
 
-**Disable Mode:** Delete statusline.js and remove `statusLine` from settings.json.
+**Disable Mode:** Delete `.claude/statusline.js` and remove `statusLine` key from settings.json. Same behavior as "Remove Configuration > Statusline".
 
 ### Statusline Verification
 
@@ -1004,30 +1085,96 @@ Show before/after comparison for all changed settings:
 
 **Before/After rules:**
 - `{none}` - setting didn't exist before
+- `{removed}` - setting was removed (After column shows "removed")
 - `{unchanged}` - value is the same (skip row or show for reference)
-- Only show rows for settings that were actually configured in this session
-- Reason column shows detection source or user choice
+- Only show rows for settings that were actually configured or removed in this session
+- Reason column shows detection source, user choice, or "user requested removal"
+
+**Removal display example:**
+```
+║ Standards      │ configured        │ removed           │ user requested    ║
+║ AI Performance │ 8000 tokens       │ removed           │ user requested    ║
+║ Statusline     │ Full              │ removed           │ user requested    ║
+║ Permissions    │ Balanced (12)     │ removed           │ user requested    ║
+```
+
+**Mixed operations example (Remove + Configure in same run):**
+```
+║ Setting        │ Before            │ After             │ Reason            ║
+├────────────────┼───────────────────┼───────────────────┼───────────────────┤
+║ Standards      │ none              │ configured        │ detection         ║
+║ AI Performance │ 8000 tokens       │ removed           │ user requested    ║
+║ Statusline     │ none              │ Full              │ user selected     ║
+║ Permissions    │ Balanced (12)     │ removed           │ user requested    ║
+```
+
+**Export section (if export selected):**
+```
+╠════════════════════════════════════════════════════════════════════════════════╣
+║ EXPORTED FILES                                                                 ║
+├────────────────┬───────────────────────────────────────────────────────────────┤
+║ ./AGENTS.md    │ Universal + AI-Specific + Project Context + Conditional       ║
+║ ./CLAUDE.export.md │ All standards including CCO-Specific                      ║
+╠════════════════════════════════════════════════════════════════════════════════╣
+║ EXPORT CONTENT (user selected)                                                 ║
+├────────────────────────────────────────────────────────────────────────────────┤
+║ ✓ Universal Standards       ✓ AI-Specific Standards                            ║
+║ ✓ Project Context           ✗ Conditional Standards (not selected)             ║
+╚════════════════════════════════════════════════════════════════════════════════╝
+```
 
 ---
 
-## Export Mode (--export)
+## Export Mode
 
-Export current configuration to portable format.
+Export **standards only** to portable format. Select directly from main question:
+- **CLAUDE.md**: For sharing with other Claude Code projects (all categories)
+- **AGENTS.md**: For other AI tools - Cursor, Windsurf, Copilot, etc. (CCO-Specific excluded)
 
-### Export Choice
+Both can be selected together to export to both formats.
 
-```
-┌─────────────────────────────────────────────────────────────────┐
-│ Export format                                                   │
-├─────────────────────────────────────────────────────────────────┤
-│ ○ AGENTS.md     For other AI tools (Cursor, Windsurf, etc.)     │
-│                 Universal + AI-Specific + Project-Specific      │
-│                 (CCO-Specific excluded - not portable)          │
-│                                                                 │
-│ ○ CLAUDE.md     For sharing with other Claude Code projects     │
-│                 All categories including CCO-Specific           │
-└─────────────────────────────────────────────────────────────────┘
-```
+### What Can Be Exported (User Selectable)
+
+| Selectable Content | Source | AGENTS.md | CLAUDE.md |
+|--------------------|--------|-----------|-----------|
+| Universal Standards | `~/.claude/CLAUDE.md` | ✓ | ✓ |
+| AI-Specific Standards | `~/.claude/CLAUDE.md` | ✓ | ✓ |
+| CCO-Specific Standards | `~/.claude/CLAUDE.md` | ✗ (not portable) | ✓ |
+| Project Context | `./CLAUDE.md` | ✓ | ✓ |
+| Conditional Standards | `./CLAUDE.md` | ✓ | ✓ |
+
+### What Is NEVER Exported
+
+| NOT Exported | Reason |
+|--------------|--------|
+| AI Performance (env) | Project-specific tuning |
+| Statusline config | Local preference |
+| Permission rules | Security policy varies |
+| settings.json | Not portable |
+| statusline.js | Not portable |
+
+**In short:** Export = Standards & Context (user choice). Local settings are project-specific and never exported.
+
+### Source Files [CRITICAL]
+
+**Export reads from installed files, NOT from command specs:**
+
+| Source | Content | Location |
+|--------|---------|----------|
+| Global standards | Universal + AI-Specific + CCO-Specific | `~/.claude/CLAUDE.md` |
+| Project context | Strategic Context + Conditional Standards | `./CLAUDE.md` |
+
+**Prerequisites:**
+- `~/.claude/CLAUDE.md` MUST exist (run `cco-setup` first if missing)
+- `./CLAUDE.md` with CCO_CONTEXT is optional (export will include global standards only)
+
+**Export process:**
+1. Check `~/.claude/CLAUDE.md` exists → error if missing: "Run cco-setup first"
+2. Ask user what to include (multiSelect with "All" default)
+3. Read selected sections from `~/.claude/CLAUDE.md`
+4. Read selected sections from `./CLAUDE.md` (if exists and selected)
+5. Combine based on export format and user selection
+6. Write to target file
 
 ### Export Content by Format
 
@@ -1038,30 +1185,49 @@ Export current configuration to portable format.
 | CCO-Specific | **Excluded** | Included |
 | Project-Specific | Included (triggered only) | Included (triggered only) |
 
-### AGENTS.md Format (Prose)
+### AGENTS.md Export
 
+**Source:** `~/.claude/CLAUDE.md` + `./CLAUDE.md`
+**Target:** `./AGENTS.md`
+
+**Process:**
+1. Read Universal Standards section from `~/.claude/CLAUDE.md`
+2. Read AI-Specific Standards section from `~/.claude/CLAUDE.md`
+3. Skip CCO-Specific Standards (not portable to other AI tools)
+4. Read Conditional Standards from `./CLAUDE.md` CCO_CONTEXT block
+5. Transform to prose format (remove CCO markers, simplify structure)
+
+**Output format:**
 ```markdown
 # Project Standards
 
 > Exported from CCO (ClaudeCodeOptimizer)
 
 ## Project Context
-{type} project built with {stack}
-Team: {team} | Scale: {scale} | Data: {data}
+{from ./CLAUDE.md Strategic Context}
 
 ## Universal Standards
-{all universal standards}
+{from ~/.claude/CLAUDE.md}
 
 ## AI-Specific Standards
-{all AI-specific standards}
+{from ~/.claude/CLAUDE.md}
 
 ## Project-Specific Standards
-{triggered standards only}
+{from ./CLAUDE.md Conditional Standards}
 ```
 
-### CLAUDE.md Format
+### CLAUDE.md Export
 
-Exports the full CCO_CONTEXT block including CCO-Specific standards for use in other Claude Code projects.
+**Source:** `~/.claude/CLAUDE.md` + `./CLAUDE.md`
+**Target:** `./CLAUDE.export.md` (to avoid overwriting project's CLAUDE.md)
+
+**Process:**
+1. Read ALL sections from `~/.claude/CLAUDE.md` (including CCO-Specific)
+2. Read CCO_CONTEXT block from `./CLAUDE.md`
+3. Combine with markers preserved
+4. Write to `./CLAUDE.export.md`
+
+For use in other Claude Code projects - copy content to target project's `./CLAUDE.md`.
 
 ---
 
@@ -1247,14 +1413,22 @@ Guidelines are generated based on user-configured values to provide context-awar
 4. **Show affected standards** - when editing, show what standards change
 5. **Preserve non-CCO content** - In CLAUDE.md, preserve user content outside `<!-- CCO_*_START/END -->` markers
 6. **ALWAYS overwrite CCO content** - All CCO-managed content is ALWAYS overwritten with fresh source:
-   - `.claude/statusline.js` → overwrite entirely
+   - `.claude/statusline.js` → overwrite entirely (check for "CCO Statusline" marker)
    - `.claude/settings.json` → overwrite `env`, `statusLine`, `permissions` sections
+   - `.claude/settings.json` → remove legacy keys: `_cco_managed`, `_cco_version`, `_cco_installed`, `cco_config`, `ccoSettings`
    - `./CLAUDE.md` → overwrite `<!-- CCO_CONTEXT_START -->...<!-- CCO_CONTEXT_END -->` block
    - Never skip because "file exists" or "content unchanged" - always write fresh
 7. **Granular standard selection** - each subsection is independently evaluated, not atomic categories
 8. **No duplicate standards** - each standard is added exactly once; deduplicate before writing to CLAUDE.md
 9. **Never modify global** - cco-tune may READ `~/.claude/CLAUDE.md` for counting, but NEVER write/modify any file in `~/.claude/`
-10. **Backward compatibility** - all CCO markers (`<!-- CCO_*_START -->...<!-- CCO_*_END -->`) are removed before inserting new content; ensures clean upgrades from any previous CCO version
+10. **Version-agnostic updates** - Clean upgrade from ANY previous CCO version:
+   - Remove ALL CCO markers (`<!-- CCO_*_START -->...<!-- CCO_*_END -->`) before inserting new content
+   - Pattern: `<!--\s*CCO[_-]\w+[_-]START\s*-->.*?<!--\s*CCO[_-]\w+[_-]END\s*-->` (case-insensitive)
+   - Handles legacy marker formats (CCO_RULES, CCO_WORKFLOW, cco-context, etc.)
+   - No version checks - always apply fresh content regardless of installed version
 11. **Question Labels** - Follow CCO "Question Formatting" standard (labels, precedence, ordering)
 12. **Review Sequence** - Detection results → Configuration Summary box → Approval question
 13. **String env values** - All `env` values in settings.json must be strings per official Claude Code docs
+14. **Export reads installed files** - Export reads from `~/.claude/CLAUDE.md` and `./CLAUDE.md`, NOT from command specs
+15. **Export content is user-selectable** - User chooses which sections to include (Universal, AI-Specific, CCO-Specific, Project Context, Conditional)
+16. **Export never includes settings** - AI Performance, Statusline, Permissions are NEVER exported (project-specific, not portable)

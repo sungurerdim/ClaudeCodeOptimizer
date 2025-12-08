@@ -12,6 +12,7 @@ Detailed documentation for all CCO slash commands.
 | `/cco-health` | Metrics dashboard | Command Flow, Output Formatting |
 | `/cco-audit` | Quality gates with fixes | Fix Workflow, Safety Classification |
 | `/cco-review` | Architecture analysis | Fix Workflow, Approval Flow |
+| `/cco-research` | Multi-source research with AI synthesis | Command Flow, Output Formatting |
 | `/cco-optimize` | Efficiency improvements | Fix Workflow, Safety Classification |
 | `/cco-generate` | Convention-following generation | Approval Flow, Output Formatting |
 | `/cco-refactor` | Safe structural changes | Pre-Operation Safety, Approval Flow |
@@ -21,23 +22,41 @@ Detailed documentation for all CCO slash commands.
 
 ## /cco-tune
 
-**Purpose:** Central configuration command for project detection, AI settings, and export.
+**Purpose:** Central configuration command for project detection, settings, removal, and export.
 
 **Usage:**
 ```bash
-/cco-tune              # Interactive tuning
-/cco-tune --export     # Export standards
+/cco-tune              # Interactive: Configure / Remove / Export
 ```
 
-**What it does:**
-1. Shows current project status
-2. Offers configuration options (Detection, Statusline, Permissions)
-3. Runs detection if selected
-4. Writes context to `./CLAUDE.md`
+**Flow:**
+1. **STATUS** - Shows current project state
+2. **CHOOSE** - Select actions from grouped options
+3. **DETECT** - Run detection (if Configure selected)
+4. **REVIEW** - Accept/Edit/Cancel
+5. **APPLY** - Write configurations, remove items, export files
+6. **REPORT** - Summary with all changes
 
-**Export formats:**
-- **AGENTS.md** - For other AI tools (Universal + AI-Specific + Project-Specific)
-- **CLAUDE.md** - For Claude Code (includes CCO-Specific)
+**Actions (single multiSelect question):**
+
+| Section | Options |
+|---------|---------|
+| **Configure** | Detection & Standards, AI Performance, Statusline, Permissions |
+| **Remove** | Remove AI Performance, Remove Statusline, Remove Permissions, Remove Standards |
+| **Export** | CLAUDE.md, AGENTS.md |
+
+**Features:**
+- Mixed operations in single run (e.g., Configure + Remove + Export)
+- Remove options only shown if item is configured
+- Export content is user-selectable (Universal, AI-Specific, CCO-Specific, Project Context, Conditional)
+
+**Export sources:**
+- Reads from installed files: `~/.claude/CLAUDE.md` + `./CLAUDE.md`
+- Never exports: AI Performance, Statusline, Permissions (project-specific)
+
+**Export targets:**
+- **AGENTS.md** → `./AGENTS.md` (CCO-Specific excluded)
+- **CLAUDE.md** → `./CLAUDE.export.md` (all standards)
 
 ---
 
@@ -103,6 +122,53 @@ Detailed documentation for all CCO slash commands.
 3. Stack Fitness - Tech choices evaluation
 4. Fresh Perspective - "If building from scratch"
 5. Prioritization - Quick wins vs major refactors
+
+---
+
+## /cco-research
+
+**Purpose:** Multi-source research with reliability scoring and AI-synthesized recommendations.
+
+**Usage:**
+```bash
+/cco-research "query"                    # Standard research
+/cco-research "query" --quick            # T1-T2 only, 5 sources
+/cco-research "query" --deep             # All tiers, 20+ sources
+/cco-research "A vs B" --compare         # Comparison mode
+/cco-research "query" --focus=official   # Official sources only
+/cco-research "query" --focus=community  # Include community perspectives
+```
+
+**Source Tiers:**
+| Tier | Score | Source Type |
+|------|-------|-------------|
+| T1 | 95-100 | Official docs (MDN, react.dev, docs.python.org) |
+| T2 | 85-94 | Official repos, changelogs, RFCs |
+| T3 | 70-84 | Core contributors, library authors |
+| T4 | 55-69 | Stack Overflow (high votes), verified Medium |
+| T5 | 40-54 | Dev.to, Hashnode, Reddit, blogs |
+| T6 | 0-39 | Unverified, AI-generated, outdated |
+
+**Dynamic Modifiers:**
+- Freshness: 0-3 months (+10), 3-12 months (0), >12 months (-15)
+- Engagement: High stars/votes (+5)
+- Author: Core maintainer (+10)
+- Cross-verified by T1-T2 (+10)
+- Bias detected: Vendor self-promo (-5), Sponsored (-15)
+
+**Analysis Features:**
+- Contradiction Detection: Identifies conflicting information
+- Consensus Mapping: Weighted agreement by tier
+- Bias Detection: Flags promotional content
+- Evidence Chain: Shows source verification trail
+
+**Output Sections:**
+1. Source Summary - Tier breakdown with counts and scores
+2. Key Findings - Ranked findings with freshness
+3. Contradictions - Conflicting views with resolution
+4. Consensus Map - Agreement percentages by tier weight
+5. AI Recommendation - Confidence level, reasoning, caveats, alternatives
+6. Sources - Full citations with key quotes
 
 ---
 
