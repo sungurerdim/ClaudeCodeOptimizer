@@ -2,6 +2,8 @@
 
 Complete reference of all CCO standards organized by category.
 
+For standard counts, see [README](../README.md#standards).
+
 ---
 
 ## Standards Architecture
@@ -19,196 +21,206 @@ Complete reference of all CCO standards organized by category.
 │  Selected by /cco-tune based on project detection               │
 │  Only relevant standards are loaded per project                 │
 └─────────────────────────────────────────────────────────────────┘
-
-Counts are dynamically calculated. Run /cco-tune to see current totals.
 ```
 
 ---
 
 ## Universal Standards
 
-*Applies to ALL software projects regardless of language, framework, or team size.*
+*AI/human agnostic - fundamental principles for all software projects.*
 
 ### Code Quality
 | Standard | Description |
 |----------|-------------|
-| Fail-Fast | Immediate visible failure, no silent fallbacks |
-| DRY | Single source of truth, zero duplicates |
+| Fail-Fast | No silent fallbacks, immediate visible failure |
+| DRY | Single source of truth, no duplicates |
 | No Orphans | Every function called, every import used |
-| Type Safety | Annotations where language supports |
+| Type-Safe | Annotations where supported, prefer immutable |
 | Complexity | Cyclomatic <10 per function |
-| Clean Code | Meaningful names, single responsibility, consistent style |
-| Immutability | Prefer immutable, mutate only when necessary |
-| No Overengineering | Only requested changes, minimum complexity |
-| General Solutions | Correct algorithms for all inputs, not just test cases |
-| Explicit Over Implicit | Clear intent, no magic values |
-| Separation of Concerns | Distinct responsibilities per module |
+| Clean | Meaningful names, single responsibility, consistent style |
+| Explicit | No magic values, clear intent |
+| Scope | Only requested changes, general solutions |
 
-### File & Resource Management
+### File & Resource
 | Standard | Description |
 |----------|-------------|
 | Minimal Touch | Only files required for task |
-| Paths | Forward slash (/), relative paths, quote spaces |
-| No Unsolicited Files | Never create unless requested |
-| Resource Management | Cleanup temp files, close handles, release connections |
-| Exclusions | Skip .git, node_modules, __pycache__, venv, dist, build |
+| No Unsolicited | Never create files unless requested |
+| Paths | Forward slash, relative, quote spaces |
+| Cleanup | Temp files, handles, connections |
+| Skip | .git, node_modules, __pycache__, venv, dist, build |
 
-### Security Fundamentals
+### Security
 | Standard | Description |
 |----------|-------------|
-| Secrets | Never hardcode, use env vars or vault |
-| Input Boundaries | Validate at system entry points |
-| Least Privilege | Minimum necessary access/permissions |
-| Dependencies | Keep updated, review before adding |
-| Defense in Depth | Multiple layers, don't trust single control |
-| Secure Defaults | Opt-in to less secure, not opt-out |
+| Secrets | Env vars or vault only |
+| Input | Validate at system boundaries |
+| Access | Least privilege, secure defaults |
+| Deps | Review before adding, keep updated |
+| Defense | Multiple layers, don't trust single control |
 
-### Testing Fundamentals
+### Testing
 | Standard | Description |
 |----------|-------------|
-| Coverage | Meaningful coverage (context-adjusted: 60-90%) |
-| Isolation | No dependencies between tests |
-| Test Integrity | Never edit tests to make code pass |
+| Coverage | 60-90% context-adjusted |
+| Isolation | No inter-test deps, reproducible |
+| Integrity | Never edit tests to pass code |
 | Critical Paths | E2E for critical workflows |
-| Reproducible | Same input → same result, no flaky tests |
 
 ### Error Handling
 | Standard | Description |
 |----------|-------------|
-| Fail Gracefully | Catch, log context, recover or propagate |
-| No Silent Failures | Never swallow exceptions without logging |
-| User-Friendly | Technical details in logs, clarity for users |
-| Rollback on Failure | Leave system in consistent state |
-| Actionable Errors | Include what went wrong and how to fix |
+| Catch | Log context, recover or propagate |
+| No Silent | Never swallow exceptions |
+| User-Facing | Clarity + actionable |
+| Logs | Technical details only |
+| Rollback | Consistent state on failure |
 
 ### Documentation
 | Standard | Description |
 |----------|-------------|
 | README | Description, setup, usage |
-| CHANGELOG | Version history with breaking changes |
-| Comments | Explain why, not what |
-| Examples | Working examples for common use cases |
+| CHANGELOG | Versions with breaking changes |
+| Comments | Why not what |
+| Examples | Working, common use cases |
 
 ### Workflow
 | Standard | Description |
 |----------|-------------|
-| Review Conventions | Match existing patterns |
-| Reference Integrity | Find ALL refs → update in order → verify |
-| Decompose | Break complex tasks into smaller steps |
+| Conventions | Match existing patterns |
+| Reference Integrity | Find ALL refs, update, verify |
+| Decompose | Break complex tasks into steps |
 | Version | SemVer (MAJOR.MINOR.PATCH) |
 
 ### UX/DX
 | Standard | Description |
 |----------|-------------|
 | Minimum Friction | Fewest steps to goal |
-| Maximum Clarity | Unambiguous output, clear next actions |
-| Predictability | Consistent behavior across sessions |
+| Maximum Clarity | Unambiguous output |
+| Predictable | Consistent behavior |
 
 ---
 
 ## AI-Specific Standards
 
-*Applies to ALL AI coding assistants regardless of provider or model.*
+*Portable across Claude/Codex/Gemini - AGENTS.md compatible.*
 
 ### Context Optimization
 | Standard | Description |
 |----------|-------------|
-| Semantic Density | Max meaning per token, concise over verbose |
-| Structured Format | Tables/lists over prose for clarity |
-| Front-load Critical | Important info first (Purpose → Details → Edge cases) |
-| Scannable Hierarchy | Clear H2 → H3 → bullets |
-| Reference Over Repeat | Cite by name instead of duplicating |
-| Bounded Context | Provide relevant scope, not entire codebase |
+| Semantic Density | Concise over verbose |
+| Structured | Tables/lists over prose |
+| Front-load | Critical info first |
+| Hierarchy | H2 > H3 > bullets |
+| Scope | Bounded, reference over repeat |
 
 ### AI Behavior
 | Standard | Description |
 |----------|-------------|
-| Read First | Always read files before proposing edits |
-| Plan Before Act | Understand scope before making changes |
-| Work Incrementally | Complete one step fully before next |
-| Verify Changes | Confirm changes match intent |
-| Challenge Assumptions | Question "perfect-looking" solutions |
-| Ask When Uncertain | Clarify ambiguous requirements before proceeding |
-| State Confidence | Indicate certainty level for non-obvious suggestions |
+| Read First | Before proposing edits |
+| Plan Before Act | Understand scope first |
+| Incremental | One step fully before next |
+| Verify | Changes match intent |
+| Challenge | Question perfect-looking solutions |
+| Ask | When uncertain, clarify first |
+| Confidence | State level for non-obvious |
 
 ### Quality Control
 | Standard | Description |
 |----------|-------------|
-| No Vibe Coding | Avoid unfamiliar frameworks without understanding |
-| No Example Fixation | Adapt examples to context, don't copy blindly |
-| No Hallucination | Don't invent APIs, methods, or features that don't exist |
-| Positive Framing | Tell what to do, not what to avoid |
-| Contextual Motivation | Explain WHY behaviors matter |
+| Understand First | No vibe coding |
+| Adapt | Examples to context, don't copy blind |
+| No Hallucination | Only existing APIs/features |
+| Positive | What to do, not what to avoid |
+| Motivate | Explain why behaviors matter |
 
 ### Status Updates
 | Standard | Description |
 |----------|-------------|
-| Announce Before Action | State what will be done before starting |
-| Progress Signals | "Starting...", "In progress...", "Completed" |
-| Timing Accuracy | Announce at the right moment (not after completion) |
-| Phase Transitions | Clear signals when moving between workflow phases |
-| No Silent Operations | User should always know what's happening |
+| Announce | Before action, not after |
+| Progress | Starting > In progress > Completed |
+| Transitions | Clear phase signals |
+| No Silent | User always knows state |
 
-### Multi-Model Compatibility
+### Multi-Model
 | Standard | Description |
 |----------|-------------|
-| Model-Agnostic Instructions | No model-specific syntax in shared rules |
-| Capability Awareness | Account for different model strengths |
-| Graceful Degradation | Work with models that lack certain features |
-| Tool-Agnostic Patterns | Patterns that work across Claude/Codex/Gemini/etc. |
+| Agnostic | No model-specific syntax |
+| Graceful | Account for different capabilities |
+| Portable | Patterns work across models |
 
 ### Output Standards
 | Standard | Description |
 |----------|-------------|
-| Error Format | [SEVERITY] {What} in {file:line} |
-| Status Values | OK/WARN/FAIL (consistent terminology) |
-| Accounting | done + skip + fail = total (always verify) |
-| Structured Results | JSON/table for machine-parseable output |
+| Error | `[SEVERITY] {What} in {file:line}` |
+| Status | OK / WARN / FAIL |
+| Accounting | done + skip + fail = total |
+| Structured | JSON/table when needed |
 
 ---
 
 ## CCO-Specific Standards
 
-*CCO workflow mechanisms - only for CCO users.*
+*CCO workflow mechanisms - excluded from AGENTS.md export.*
 
 | Standard | Description |
 |----------|-------------|
-| Command Flow | Context Check → Read Context → Execute → Report |
-| Pre-Operation Safety | Git status check, dirty state handling, rollback support |
-| Safety Classification | Safe (auto-apply) vs Risky (require approval) |
-| Fix Workflow | Analyze → Report → Approve → Apply → Verify |
-| Impact Preview | Show direct changes, dependents, test coverage, risk score |
-| Priority Levels | CRITICAL/HIGH/MEDIUM/LOW based on security and impact |
-| Approval Flow | AskUserQuestion, multiSelect, priority tabs, pagination |
-| Output Formatting | ASCII tables, column alignment, status indicators |
-| Context Integration | Read CCO_CONTEXT, apply thresholds and guidelines |
-| Claude Code Integration | Parallel tools, subagent delegation, resource scaling |
-| Option Labels | [current], [detected], [recommended] markers |
+| Command Flow | Context Check > Read > Execute > Report |
+| Safety | Git status check, dirty handling, rollback |
+| Classification | Safe (auto) vs Risky (approval) |
+| Fix Workflow | Analyze > Report > Approve > Apply > Verify |
+| Impact Preview | Direct, dependents, tests, risk |
+| Priority | CRITICAL > HIGH > MEDIUM > LOW |
+| Approval Flow | AskUserQuestion, multiSelect, pagination |
+| Output Formatting | ASCII tables, alignment, status |
+| Question Formatting | Labels, precedence, ordering |
+| Context Integration | Read markers, apply thresholds |
+| Tool Integration | Parallel/sequential, subagents |
 
 ---
 
-## Project-Specific Standards (167 pool)
+## Project-Specific Standards
 
 *Dynamically selected by /cco-tune based on project detection.*
 
+### Tier System
+
+**Cumulative tiers:** Higher tiers include all standards from lower tiers.
+
+| Category | Tiers | Behavior |
+|----------|-------|----------|
+| Scale | Small → Medium → Large | Large includes Medium + Small |
+| Testing | Basics → Standard → Full | Full includes Standard + Basics |
+| Observability | Basics → Standard → HA → Resilience | Each includes lower tiers |
+| Team | Small → Medium-Large | Medium-Large includes Small |
+| Real-time | Basic → Standard → Low-latency | Higher includes lower |
+
 ### Categories
 
-| Category | Trigger | Standards |
-|----------|---------|-----------|
-| Security & Compliance | PII/Regulated data, 10K+ scale, Compliance set | 12 |
-| Scale & Architecture | 10K+ scale, Microservices, 100+ | 12 |
-| Backend Services | API, DB, or CI/CD detected | 17 |
-| Frontend | React/Vue/Angular/Svelte detected | 10 |
-| Apps | Mobile, Desktop, or CLI detected | 15 |
-| Library | Type: library | 4 |
-| Infrastructure | Container/K8s, Serverless, Monorepo | 13 |
-| Specialized | ML/AI or Game Dev detected | 10 |
-| Collaboration | Team 2+, i18n detected | 17 |
-| Real-time | WebSocket/SSE detected | 14 |
-| Testing | Testing strategy selected | 20 |
-| Observability | SLA level selected | 23 |
-
-**Total pool:** 167 standards (only triggered ones are loaded per project)
+| Category | Trigger |
+|----------|---------|
+| Security & Compliance | PII/Regulated data, 10K+ scale, Compliance set |
+| Scale | 100+ users (cumulative tiers) |
+| Backend > API | REST/GraphQL/gRPC detected |
+| Backend > Data | DB != None |
+| Backend > Operations | CI/CD AND NOT CLI/Library |
+| Backend > CI Only | CI/CD AND (CLI OR Library) |
+| Frontend | React/Vue/Angular/Svelte/Next/Nuxt detected |
+| Apps > Mobile | iOS/Android/RN/Flutter |
+| Apps > Desktop | Electron/Tauri/native |
+| Apps > CLI | Type: CLI |
+| Library | Type: Library |
+| Infra > Container | Docker detected (not in examples/) |
+| Infra > Kubernetes | K8s/Helm detected |
+| Infra > Serverless | Lambda/Functions/Vercel/Netlify |
+| Infra > Monorepo | nx/turbo/lerna/pnpm-workspace |
+| ML/AI | torch/tensorflow/sklearn/transformers/langchain |
+| Game | Unity/Unreal/Godot |
+| Team | Team 2+ (cumulative tiers) |
+| i18n | locales/i18n/messages/ detected |
+| Real-time | WebSocket/SSE detected (cumulative tiers) |
+| Testing | User-selected (cumulative tiers) |
+| Observability | SLA-based (cumulative tiers) |
 
 ### Full list
 
@@ -220,8 +232,8 @@ See [cco-standards-conditional.md](../claudecodeoptimizer/content/standards/cco-
 
 | Format | Universal | AI-Specific | CCO-Specific | Project-Specific |
 |--------|-----------|-------------|--------------|------------------|
-| **AGENTS.md** | ✓ | ✓ | ✗ | ✓ (triggered) |
-| **CLAUDE.md** | ✓ | ✓ | ✓ | ✓ (triggered) |
+| **AGENTS.md** | Yes | Yes | No | Yes (triggered) |
+| **CLAUDE.md** | Yes | Yes | Yes | Yes (triggered) |
 
 CCO-Specific standards are excluded from AGENTS.md export because they depend on CCO's approval flow and tools.
 

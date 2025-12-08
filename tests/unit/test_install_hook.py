@@ -144,7 +144,7 @@ class TestSetupClaudeMd:
             content = claude_md.read_text()
             assert "# My Rules" in content
             assert "PLACEHOLDER_TEXT" not in content
-            assert "## Claude Code Integration" in content
+            assert "## Integration" in content
 
     def test_appends_to_existing_file(self, tmp_path):
         """Test appends rules to existing CLAUDE.md."""

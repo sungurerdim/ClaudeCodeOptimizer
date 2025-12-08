@@ -59,7 +59,16 @@ CCO uses a 4-category standards system:
 | **CCO-Specific** | CCO workflow mechanisms | CLAUDE.md only |
 | **Project-Specific** | Selected by /cco-tune based on detection | Both |
 
-**~112 base + ~15-35 project-specific = ~127-147 active** (run `/cco-tune` for exact counts)
+| Type | Count |
+|------|-------|
+| Universal | 38 |
+| AI-Specific | 28 |
+| CCO-Specific | 48 |
+| **Base Total** | **114** |
+| Project-Specific Pool | 170 |
+| **Total Pool** | **284** |
+
+Run `/cco-tune` to see which project-specific standards apply to your project.
 
 ### Categories Explained
 
