@@ -29,9 +29,40 @@ Meta command that orchestrates other CCO commands for release preparation.
 | Git state | Clean working directory | YES |
 | Branch | On main/master or release branch | WARN |
 | Version | Valid semver in manifest | YES |
+| Version sync | `__version__` = CHANGELOG = pyproject.toml | YES |
 | Changelog | Updated for this version | WARN |
 | Dependencies | No outdated with vulnerabilities | WARN |
 | Breaking changes | Documented in changelog | WARN |
+| Leftover markers | No TODO/WIP/FIXME/Experimental in src | WARN |
+| Feature trace | New CHANGELOG items exist in README/docs | WARN |
+| Install self-test | `cco-setup --dry-run` passes (if CCO project) | YES |
+| Semver review | Changes appropriate for version bump type | WARN |
+
+**Version Sync:** Cross-file version matching
+```bash
+# Must all match
+grep "__version__" src/__init__.py
+grep "version" pyproject.toml
+grep "^\[" CHANGELOG.md | head -1
+```
+
+**Leftover Markers:** Scan for incomplete work
+```bash
+grep -rn "TODO\|FIXME\|WIP\|HACK\|XXX" src/ --include="*.py"
+grep -rn "Experimental\|DRAFT\|PLACEHOLDER" docs/
+```
+
+**Feature Trace:** For each Added item in CHANGELOG:
+1. Mentioned in README.md?
+2. Documented in docs/?
+3. Implementation exists?
+
+**Semver Review:**
+| Version Bump | Appropriate Changes |
+|--------------|---------------------|
+| PATCH (x.x.1) | Bug fixes only, no new features |
+| MINOR (x.1.0) | New features, backward compatible |
+| MAJOR (1.0.0) | Breaking changes, API removals |
 
 ```
 ┌─ PRE-FLIGHT ─────────────────────────────────────────────────┐
@@ -40,9 +71,14 @@ Meta command that orchestrates other CCO commands for release preparation.
 │ Git Clean      │ OK     │ No uncommitted changes             │
 │ Branch         │ OK     │ main                               │
 │ Version        │ OK     │ 1.2.0 (valid semver)              │
+│ Version Sync   │ OK     │ All 3 sources match               │
 │ Changelog      │ WARN   │ Last entry: 1.1.0                 │
 │ Dependencies   │ OK     │ 0 outdated, 0 vulnerabilities     │
 │ Breaking       │ OK     │ None detected                      │
+│ Markers        │ WARN   │ 2 TODOs in src/utils.py           │
+│ Feature Trace  │ OK     │ 5/5 features documented           │
+│ Install Test   │ SKIP   │ Not a CCO project                 │
+│ Semver         │ OK     │ MINOR appropriate                 │
 └────────────────┴────────┴────────────────────────────────────┘
 ```
 

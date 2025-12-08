@@ -16,6 +16,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - **4 new scopes for `cco-agent-analyze`** - `references` (cross-file mapping), `architecture` (dependency graphs), `conventions` (pattern discovery), `trends` (historical metrics)
 - **Agent Integration sections** - All commands now document which agents and scopes they use
 - **`--hygiene` flag for `/cco-optimize`** - Quick cleanup combining orphans + stale-refs + duplicates
+- **Enhanced `/cco-release` pre-flight** - Version sync, leftover markers, feature trace, install self-test, semver review
 - **Cleanliness category in `/cco-optimize`** - Orphans, stale references, and duplicates moved from audit
 - **Dynamic Context Injection** - Commands use `!` backtick syntax for real-time context at load time (git status, branch, project info available instantly)
 - **Tool Restrictions** - `allowed-tools` frontmatter limits each command to declared tools only, preventing accidental destructive operations
