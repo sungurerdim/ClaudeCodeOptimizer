@@ -298,8 +298,8 @@ class TestSetupCommands:
         with patch("claudecodeoptimizer.install_hook.COMMANDS_DIR", tmp_path / "commands"):
             with patch("claudecodeoptimizer.install_hook.get_content_dir") as mock_content:
                 mock_content.return_value = tmp_path / "pkg"
-                (tmp_path / "pkg" / "commands").mkdir(parents=True)
-                (tmp_path / "pkg" / "commands" / "cco-test.md").touch()
+                (tmp_path / "pkg" / "slash-commands").mkdir(parents=True)
+                (tmp_path / "pkg" / "slash-commands" / "cco-test.md").touch()
 
                 installed = setup_commands()
 
@@ -330,8 +330,8 @@ class TestSetupCommands:
         with patch("claudecodeoptimizer.install_hook.COMMANDS_DIR", dest_dir):
             with patch("claudecodeoptimizer.install_hook.get_content_dir") as mock_content:
                 mock_content.return_value = tmp_path / "pkg"
-                (tmp_path / "pkg" / "commands").mkdir(parents=True)
-                (tmp_path / "pkg" / "commands" / "cco-new.md").write_text("new content")
+                (tmp_path / "pkg" / "slash-commands").mkdir(parents=True)
+                (tmp_path / "pkg" / "slash-commands" / "cco-new.md").write_text("new content")
 
                 installed = setup_commands()
 
@@ -352,8 +352,8 @@ class TestSetupAgents:
         with patch("claudecodeoptimizer.install_hook.AGENTS_DIR", tmp_path / "agents"):
             with patch("claudecodeoptimizer.install_hook.get_content_dir") as mock_content:
                 mock_content.return_value = tmp_path / "pkg"
-                (tmp_path / "pkg" / "agents").mkdir(parents=True)
-                (tmp_path / "pkg" / "agents" / "cco-agent-test.md").touch()
+                (tmp_path / "pkg" / "agent-templates").mkdir(parents=True)
+                (tmp_path / "pkg" / "agent-templates" / "cco-agent-test.md").touch()
 
                 installed = setup_agents()
 
