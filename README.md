@@ -85,6 +85,14 @@ CCO uses a 4-category standards system:
 | `/cco-refactor` | Safe structural changes with rollback |
 | `/cco-commit` | Quality-gated atomic commits |
 
+### /cco-audit Features
+
+- **Orphan Detection** - Find unreferenced files, functions, imports, exports
+- **Stale Reference Detection** - Find broken imports, dead links, phantom tests
+- **Doc-Code Mismatch** - Detect when documentation doesn't match implementation
+- **Self-Compliance** - Check against project's own stated standards
+- **Smart Mode** - Auto-detect applicable checks based on project context
+
 ### /cco-commit Features
 
 - **Secrets Detection** - Blocks commits with API keys, tokens, passwords, private keys
@@ -92,6 +100,13 @@ CCO uses a 4-category standards system:
 - **Staged/Unstaged Handling** - Smart analysis based on what user has staged
 - **Atomic Grouping** - Auto-groups related changes (impl + tests, renames across files)
 - **Large File Warning** - Warns on >1MB files, suggests Git LFS for binaries
+
+### /cco-optimize Features
+
+- **Cross-File Analysis** - Detect duplicates, redundant code, obsolete references
+- **Deduplication** - Exact, near-duplicate (>80%), and semantic duplicate detection
+- **Consolidation** - Merge overlapping content into single source
+- **Metrics** - Before/after comparison with lines, tokens, and KB saved
 
 ### /cco-tune Features
 
@@ -163,6 +178,20 @@ All settings are written to `./.claude/settings.json` (project-local):
 | **Git Safety** | Checks status before changes, enables rollback |
 | **Approval Flow** | Priority-based (CRITICAL→LOW), safe vs risky classification |
 | **Verification** | `Applied: N \| Skipped: N \| Failed: N` accounting |
+
+### Fix Workflow
+
+All fix operations follow: **Analyze → Report → Approve → Apply → Verify**
+
+### Safety Classification
+
+| Safe (auto-apply) | Risky (require approval) |
+|-------------------|--------------------------|
+| Remove unused imports | Auth/CSRF changes |
+| Parameterize SQL | DB schema changes |
+| Move secrets to env | API contract changes |
+| Fix linting issues | Delete files |
+| Add type annotations | Rename public APIs |
 
 ---
 

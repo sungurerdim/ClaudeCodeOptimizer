@@ -8,11 +8,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## [Unreleased]
 
 ### Changed
-- **Standards restructured** into 4 clear categories: Universal (47), AI-Specific (31), CCO-Specific (11), Project-Specific (108 pool)
+- **Standards restructured** into 4 clear categories: Universal (43), AI-Specific (31), CCO-Specific (38), Project-Specific (167 pool)
 - **Agents consolidated**: `cco-agent-detect` + `cco-agent-scan` → `cco-agent-analyze`; `cco-agent-action` → `cco-agent-apply`
 - **Commands simplified**: Removed AI-patterns detection, merged production readiness into `--pre-release` flag
 - **Export logic clarified**: AGENTS.md excludes CCO-Specific, CLAUDE.md includes all
 - **Documentation expanded**: Added `docs/commands.md`, `docs/agents.md`, `docs/standards.md`
+- **CCO-Specific standards expanded**: Comprehensive workflow mechanisms (Command Flow, Fix Workflow, Approval Flow, Question Formatting, Output Formatting, Safety Classification, Impact Preview, Priority Levels, Context Integration, Claude Code Integration)
 
 ### Removed
 - AI-Patterns Detection category from `/cco-audit` (Claude already handles this)
@@ -20,7 +21,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Redundant standard references from commands (now use CCO-Specific standards)
 
 ### Fixed
-- Standard counts now consistent across all documentation
+- Standard counts now consistent across all documentation (112 base + 167 pool)
 - Removed overlap between standards categories
 
 ## [1.0.0] - 2025-12-02
