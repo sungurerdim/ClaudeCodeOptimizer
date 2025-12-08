@@ -85,15 +85,14 @@ All changes follow a consistent safety pattern.
 
 ## Standard Categories
 
-| Category | Count | Scope |
-|----------|-------|-------|
-| Universal | 43 | All projects, AI/human agnostic |
-| AI-Specific | 31 | All AI assistants, model agnostic |
-| CCO-Specific | 38 | CCO workflow mechanisms |
-| Project-Specific | 167 pool | Dynamically selected by /cco-tune |
+| Category | Scope |
+|----------|-------|
+| Universal | All projects, AI/human agnostic |
+| AI-Specific | All AI assistants, model agnostic |
+| CCO-Specific | CCO workflow mechanisms |
+| Project-Specific | Dynamically selected by /cco-tune |
 
-**Base:** 112 standards always active
-**With project:** ~127-147 depending on detection
+For standard counts, see [README](../README.md#standards).
 
 ---
 
