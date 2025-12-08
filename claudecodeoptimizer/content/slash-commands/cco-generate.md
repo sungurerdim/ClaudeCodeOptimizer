@@ -1,13 +1,23 @@
 ---
 name: cco-generate
-description: Convention-following automated generation
+description: Convention-following code and artifact generation
+allowed-tools: Read(*), Grep(*), Glob(*), Write(*), Bash(git:*), Bash(pytest:*), Bash(npm:*), Task(*)
 ---
 
 # /cco-generate
 
-**Convention-following generation** - Read conventions → generate consistent components.
+**Smart Generation** - Analyze patterns → generate consistent code → verify.
+
+End-to-end: Discovers conventions, generates matching code, verifies it works.
 
 **Standards:** Command Flow | Approval Flow | Output Formatting
+
+## Context
+
+- Stack: !`grep "^Stack:" ./CLAUDE.md 2>/dev/null`
+- Type: !`grep "^Type:" ./CLAUDE.md 2>/dev/null`
+- Conventions: !`grep -A2 "^Conventions:" ./CLAUDE.md 2>/dev/null`
+- Test framework: !`ls **/test*.py **/test*.ts **/*.test.* 2>/dev/null | head -3`
 
 ## Context Application
 
@@ -21,108 +31,150 @@ description: Convention-following automated generation
 | Scale | 10K+ → add monitoring, health checks, metrics; <100 → minimal infra |
 | Data | PII → encryption helpers, audit logging; Regulated → compliance boilerplate |
 
-## Flow
-
-Per Command Flow standard.
-
 ## Default Behavior
 
-When called without flags, AskUserQuestion:
+When called without flags, ask:
 
-```
-header: "Generate"
-question: "What to generate?"
-multiSelect: true
-options:
-  - All: "Generate all applicable types"
-  - Tests: "Unit/integration tests for uncovered code"
-  - Docs: "Docstrings, README, OpenAPI (if API)"
-  - Infra: "CI/CD pipelines, Dockerfile, pre-commit"
-```
+| Question | Options (multiSelect) |
+|----------|----------------------|
+| What to generate? | Tests, Docs, Infra, Boilerplate, All |
 
-Explicit flags (`--tests`, `--docs`, `--infra`) skip this question.
+Explicit flags skip questions.
 
-## Types
-
-**Sub-category selection (only when single flag used):**
-- `--tests` → ask (multiSelect): All | Unit/Integration | Contract | Load
-- `--docs` → ask (multiSelect): All | Docstrings | OpenAPI | ADR
-- `--infra` → ask (multiSelect): All | CI/CD | Docker | Hooks
-
-Note: `--all` or interactive "All" selection includes all sub-categories automatically.
-
-## Convention Enforcement
-
-Use conventions from context (stored in Operational section):
-- Test file naming (testNaming)
-- Import style (importStyle)
-- Existing tools and frameworks
-
-Follow stored conventions, don't impose new ones.
-
-## Generation Guidelines
+## Categories
 
 ### Tests (`--tests`)
 
-Analyze existing test patterns first:
-1. Discover test directory structure (`tests/`, `test/`, `__tests__/`, `*.test.*`)
-2. Match naming convention (`test_*.py`, `*.test.ts`, `*_test.go`)
-3. Use same assertion library (pytest, jest, testing, etc.)
+Generate tests matching existing patterns:
+
+| Type | Generation |
+|------|------------|
+| Unit tests | For uncovered public functions |
+| Edge cases | Boundary conditions for existing tests |
+| Integration | API endpoint tests |
+| Property-based | Hypothesis/fast-check for pure functions |
+| Snapshot | UI component stability tests |
+
+**Sub-categories:** All | Unit | Integration | Property | Snapshot
+
+Convention enforcement:
+1. Discover test structure (`tests/`, `__tests__/`, `*.test.*`)
+2. Match naming (`test_*.py`, `*.test.ts`)
+3. Use same assertion library
 4. Follow AAA pattern: Arrange → Act → Assert
 
-Generate for:
-- Public functions without tests
-- Edge cases for existing tested functions
-- Integration tests for API endpoints
+### Docs (`--docs`)
 
-### Documentation (`--openapi`, `--docs`)
+Generate documentation:
 
-**OpenAPI:** Extract from code:
-- Route decorators/handlers → paths
-- Request/response types → schemas
-- Validation rules → constraints
-- Auth middleware → security schemes
+| Type | Generation |
+|------|------------|
+| Docstrings | Match project style (Google, NumPy, JSDoc) |
+| README sections | Usage, API, Examples |
+| OpenAPI | Extract from route decorators (if API) |
+| Changelog entries | From git commits since last tag |
+| Type stubs | `.pyi` files for untyped code |
 
-**Docstrings:** Match existing style:
-- Google style, NumPy style, or JSDoc
-- Include types if not using type annotations
-- Document exceptions/errors
+**Sub-categories:** All | Docstrings | README | OpenAPI | Changelog | Types
 
-### Infrastructure (`--cicd`, `--dockerfile`)
+### Infra (`--infra`)
 
-**CI/CD:** Detect platform and create:
-- `.github/workflows/ci.yml` for GitHub
-- `.gitlab-ci.yml` for GitLab
-- Include: lint → test → build stages
+Generate infrastructure:
 
-**Dockerfile:** Multi-stage build:
-- Base image from stack detection
-- Dev dependencies in build stage only
-- Non-root user in final stage
-- Health check if applicable
+| Type | Generation |
+|------|------------|
+| CI/CD | GitHub Actions, GitLab CI, etc. |
+| Dockerfile | Multi-stage, non-root, health check |
+| Pre-commit | Hooks for lint, format, test |
+| Makefile/Taskfile | Common commands |
+| devcontainer | VS Code dev container config |
+
+**Sub-categories:** All | CI/CD | Docker | Hooks | Makefile | Devcontainer
+
+### Boilerplate (`--boilerplate`)
+
+Generate new components from patterns:
+
+| Type | Generation |
+|------|------------|
+| Module | New module from existing patterns |
+| Endpoint | New API endpoint (if API type) |
+| Component | New UI component (if Frontend type) |
+| Command | New CLI command (if CLI type) |
+
+Interactive prompts for specifics (name, location, etc.)
+
+## Convention Enforcement
+
+Before generating:
+1. Analyze existing patterns
+2. Match naming conventions exactly
+3. Use same libraries/frameworks
+4. Follow project structure
+5. Never impose new conventions
+
+## Flow
+
+1. **Discover** - Analyze existing patterns
+2. **Plan** - Show what will be generated
+3. **Confirm** - User approval
+4. **Generate** - Create files
+5. **Verify** - Tests pass, no import errors
 
 ## Output
 
-**Standards:** Output Formatting
+### Generation Plan
+```
+┌─ GENERATION PLAN ────────────────────────────────────────────┐
+│ Type       │ Target              │ Convention    │ Status    │
+├────────────┼─────────────────────┼───────────────┼───────────┤
+│ Unit Test  │ auth.py             │ test_*.py     │ PLANNED   │
+│ Unit Test  │ api.py              │ test_*.py     │ PLANNED   │
+│ Docstring  │ utils.py:parse()    │ Google style  │ PLANNED   │
+│ OpenAPI    │ routes/             │ openapi.yaml  │ PLANNED   │
+└────────────┴─────────────────────┴───────────────┴───────────┘
+```
 
-Tables:
-1. **Generation Plan** - Type | Target | Convention | Status
-2. **Files Created** - File | Lines | Description
-3. **Verification** - Inline: created = planned, tests pass, no import errors
+### Files Created
+```
+┌─ FILES CREATED ──────────────────────────────────────────────┐
+│ File                    │ Lines │ Description                │
+├─────────────────────────┼───────┼────────────────────────────┤
+│ tests/test_auth.py      │ 45    │ 3 test cases              │
+│ tests/test_api.py       │ 82    │ 5 test cases              │
+│ docs/openapi.yaml       │ 120   │ 8 endpoints               │
+└─────────────────────────┴───────┴────────────────────────────┘
+```
 
-## Verification
+### Verification
+```
+Created: 3 | Tests: PASS | Imports: OK | Lint: CLEAN
+```
 
-After generation:
-- created = planned
-- generated tests pass
-- no import errors
+## Flags
+
+| Flag | Effect |
+|------|--------|
+| `--tests` | Generate tests |
+| `--docs` | Generate documentation |
+| `--infra` | Generate infrastructure |
+| `--boilerplate` | Generate new components |
+| `--all` | Everything applicable |
+| `--dry-run` | Show plan without creating |
 
 ## Usage
 
 ```bash
-/cco-generate              # Interactive: ask what to generate
-/cco-generate --tests      # Unit/integration tests (+ contract if API)
-/cco-generate --docs       # Docstrings, README (+ OpenAPI if API)
-/cco-generate --infra      # CI/CD pipelines
-/cco-generate --all        # Everything applicable
+/cco-generate                  # Interactive
+/cco-generate --tests          # Unit/integration tests
+/cco-generate --docs           # Docstrings, README, OpenAPI
+/cco-generate --infra          # CI/CD, Dockerfile, hooks
+/cco-generate --boilerplate    # New module/component
+/cco-generate --all            # Everything applicable
+/cco-generate --tests --dry-run
 ```
+
+## Related Commands
+
+- `/cco-audit --tests` - Check test coverage gaps
+- `/cco-commit` - Commit generated files

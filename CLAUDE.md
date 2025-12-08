@@ -38,33 +38,44 @@ Secrets detected: no
 Outdated deps: 0
 
 ## Conditional Standards (auto-applied)
-**TOTAL: +20 project-specific (CLI +5, Ops +7, Caching +3, Testing +5)**
 
-### Apps > CLI (+5) - Type: CLI detected
-- Help: --help with examples for every command
-- Exit Codes: 0 success, non-zero failure with meaning
-- Signals: handle SIGINT/SIGTERM gracefully
-- Output Modes: human-readable default, --json for scripts
-- Config Precedence: env vars > config file > CLI args > defaults
+### Apps > CLI - Type: CLI detected
 
-### Backend > Operations (+7) - CI/CD detected
-- Config as Code: versioned, validated, env-aware
-- Health Endpoints: /health + /ready
-- Graceful Shutdown: drain connections on SIGTERM
-- Observability: metrics, logs, traces (OpenTelemetry)
-- CI Gates: lint + test + coverage before merge
-- Blue/Green or Canary: zero-downtime deployments
-- Feature Flags: decouple deploy from release
+| Standard | Rule |
+|----------|------|
+| * Help | --help with examples for every command |
+| * Exit-Codes | 0 success, non-zero failure with meaning |
+| * Signals | Handle SIGINT/SIGTERM gracefully |
+| * Output-Modes | Human-readable default, --json for scripts |
+| * Config-Precedence | env vars > config file > CLI args > defaults |
 
-### Scale > Caching Basics (+3) - Scale: Small (100-1K)
-- Caching: TTL, invalidation strategy, cache-aside pattern
-- Lazy Load: defer non-critical resources
-- Connection Pool: reuse connections, appropriate sizing
+### Backend > Operations - CI/CD detected
 
-### Testing > Standard (+5) - Testing: Standard
-- Integration Tests: test component interactions
-- Test Fixtures: reusable, maintainable
-- Coverage Target: >80% line coverage
-- CI Integration: tests run on every PR
-- Snapshot Testing: UI component stability
+| Standard | Rule |
+|----------|------|
+| * Config-as-Code | Versioned, validated, env-aware |
+| * Health-Endpoints | /health + /ready |
+| * Graceful-Shutdown | Drain connections on SIGTERM |
+| * Observability | Metrics, logs, traces (OpenTelemetry) |
+| * CI-Gates | lint + test + coverage before merge |
+| * Blue-Green | Zero-downtime deployments |
+| * Feature-Flags | Decouple deploy from release |
+
+### Scale > Caching Basics - Scale: Small (100-1K)
+
+| Standard | Rule |
+|----------|------|
+| * Caching | TTL, invalidation strategy, cache-aside pattern |
+| * Lazy-Load | Defer non-critical resources |
+| * Connection-Pool | Reuse connections, appropriate sizing |
+
+### Testing > Standard - Testing: Standard
+
+| Standard | Rule |
+|----------|------|
+| * Integration-Tests | Test component interactions |
+| * Test-Fixtures | Reusable, maintainable |
+| * Coverage-Target | >80% line coverage |
+| * CI-Integration | Tests run on every PR |
+| * Snapshot-Testing | UI component stability |
 <!-- CCO_CONTEXT_END -->

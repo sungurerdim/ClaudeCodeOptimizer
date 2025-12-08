@@ -1,13 +1,22 @@
 ---
 name: cco-audit
-description: Standardized quality gates with prioritized fixes
+description: Security and code quality analysis with auto-fix
+allowed-tools: Bash(git:*), Bash(grep:*), Bash(find:*), Read(*), Grep(*), Glob(*), Edit(*), Task(*)
 ---
 
 # /cco-audit
 
-**Quality gates** - Scan → prioritize → approve → fix → verify.
+**Security & Code Quality** - Analyze → prioritize → fix → verify.
+
+End-to-end: Detects security and quality issues AND fixes them.
 
 **Standards:** Command Flow | Fix Workflow | Approval Flow | Safety Classification | Output Formatting
+
+## Context
+
+- Project type: !`grep "^Type:" ./CLAUDE.md 2>/dev/null | head -1`
+- Applicable checks: !`grep "^Applicable:" ./CLAUDE.md 2>/dev/null`
+- Git status: !`git status --short`
 
 ## Context Application
 
@@ -35,84 +44,106 @@ Explicit flags skip questions.
 
 ## Categories
 
-**Core (always):**
-- `--security` - OWASP, secrets, CVEs, supply-chain (dependencies)
-- `--tech-debt` - Dead code, complexity, duplication, orphans, TODOs, hardcoded values
-- `--self-compliance` - Check against project's own standards
-- `--consistency` - Doc-code mismatch detection
-- `--orphans` - Unreferenced files, functions, imports, exports
-- `--stale-refs` - References to non-existent code, broken imports
+### Security (`--security`)
 
-**Stack-dependent (auto-skip if N/A):**
-`--tests` `--database` `--performance` `--docs` `--cicd` `--containers` `--compliance` `--api-contract`
+Detect and fix security vulnerabilities:
 
-**Sub-category selection (only when single flag used):**
-- `--security` → ask (multiSelect): All | OWASP | Secrets | CVEs | Supply-Chain
-- `--tech-debt` → ask (multiSelect): All | Dead-Code | Complexity | Duplication | Orphans
-- `--consistency` → ask (multiSelect): All | Doc-Code | Config | API-Signature | Examples
+| Check | Detection | Auto-fix |
+|-------|-----------|----------|
+| OWASP vulnerabilities | Pattern matching, taint analysis | Suggest secure alternatives |
+| Secrets detection | Regex patterns, entropy analysis | Remove + add to .gitignore |
+| CVE/dependency vulnerabilities | Dependency scan | Upgrade commands |
+| Supply-chain risks | Lock file analysis, typosquatting | Pin versions |
+| Input validation gaps | Entry point analysis | Add validation boilerplate |
 
-Note: Full/Smart/All modes include all sub-categories automatically.
+Report: `[SECURITY] {severity}: {issue} in {file:line}`
 
-## Self-Compliance
+**Sub-categories (when --security used alone):**
+Ask (multiSelect): All | OWASP | Secrets | CVEs | Supply-Chain | Input-Validation
 
-Extract from project docs (README, CLAUDE.md, CONTRIBUTING.md): stated standards, goals, constraints.
+### Tech Debt (`--tech-debt`)
 
-Check all files. Report: `[SELF-COMPLIANCE] <standard> violated in <file:line>`
+Detect and fix technical debt:
 
-## Doc-Code Mismatch
+| Check | Detection | Auto-fix |
+|-------|-----------|----------|
+| Dead code | Unreachable code analysis | Remove with confirmation |
+| Complexity | Cyclomatic complexity >10 | Suggest refactor + generate issue |
+| TODO/FIXME tracking | Comment scanning | Prioritize + create issues |
+| Hardcoded values | Magic number/string detection | Extract to constants/config |
+| Type coverage gaps | Missing type annotations | Generate type stubs |
 
-| Category | Check |
-|----------|-------|
-| Feature Claims | README says "supports X" but not implemented |
-| API Signatures | Docstring params ≠ actual function |
-| Config Values | Documented default ≠ actual default |
-| Behavior | Comment says X, code does Y |
-| Examples | README code uses deprecated API |
-| Dependencies | Documented version ≠ actual |
+Report: `[TECH-DEBT] {severity}: {issue} in {file:line}`
 
-Report: `[DOC-CODE MISMATCH] {category}: {doc} ≠ {code} in {file:line}`
+**Sub-categories (when --tech-debt used alone):**
+Ask (multiSelect): All | Dead-Code | Complexity | TODOs | Hardcoded | Types
+
+### Consistency (`--consistency`)
+
+Detect and fix doc-code mismatches:
+
+| Category | Check | Resolution |
+|----------|-------|------------|
+| Feature Claims | README says "supports X" but not implemented | Update docs or implement |
+| API Signatures | Docstring params ≠ actual function | Sync docstring |
+| Config Values | Documented default ≠ actual default | Sync config docs |
+| Behavior | Comment says X, code does Y | Update comment |
+| Examples | README code uses deprecated API | Update examples |
+| Dependencies | Documented version ≠ actual | Sync versions |
+
+Report: `[CONSISTENCY] {category}: {doc} ≠ {code} in {file:line}`
 
 **SSOT Resolution:** For each mismatch, ask: "Docs" (update code) | "Code" (update docs) | "Discuss"
 
-## Orphan Detection
+### Self-Compliance (`--self-compliance`)
 
-Build dependency graph → find unreferenced items:
+Check code against project's own stated standards:
 
-| Type | Detection Method | Example |
-|------|------------------|---------|
-| Orphan file | No imports pointing to it | `old_utils.py` never imported |
-| Orphan function | Defined but never called | `def legacy_parse():` unused |
-| Orphan export | Exported but never imported | `export { unusedHelper }` |
-| Orphan import | Imported but never used | `import { never_used }` |
-| Orphan config | Config key not referenced | `OLD_API_KEY` in .env |
+| Source | Checks |
+|--------|--------|
+| README.md | Feature claims, installation steps, examples |
+| CLAUDE.md | CCO standards, guidelines, conventions |
+| CONTRIBUTING.md | Contribution guidelines, code style |
+| Custom standards | Project-specific rules |
 
-Report: `[ORPHAN] {type}: {name} in {file:line} (last modified: {date})`
+Report: `[SELF-COMPLIANCE] {standard} violated in {file:line}`
 
-**Resolution:** For each orphan, ask: "Delete" | "Keep (add reference)" | "Skip"
+### Tests (`--tests`)
 
-## Stale Reference Detection
+Analyze test quality and coverage:
 
-Scan all references → verify targets exist:
+| Check | Detection | Auto-fix |
+|-------|-----------|----------|
+| Coverage gaps | Uncovered functions/branches | Generate test stubs (→ generate --tests) |
+| Flaky tests | Inconsistent pass/fail patterns | Flag for review |
+| Test quality | Assert count, mock usage | Suggest improvements |
+| Missing edge cases | Boundary analysis | Generate edge case tests |
+| Test isolation | Shared state detection | Suggest refactor |
 
-| Type | Detection | Example |
-|------|-----------|---------|
-| Broken import | Import path doesn't exist | `from deleted_module import x` |
-| Dead link | URL returns 404 | `[docs](http://old.url/gone)` |
-| Missing ref | Code references undefined | `config.REMOVED_KEY` |
-| Obsolete comment | Comment references deleted code | `// see old_function()` |
-| Phantom test | Test for non-existent function | `test_removed_feature()` |
+Report: `[TESTS] {severity}: {issue} in {file:line}`
 
-Report: `[STALE-REF] {type}: {reference} → {missing_target} in {file:line}`
+### Stack-Dependent Categories
+
+Auto-skip if not applicable:
+
+| Flag | When Applicable | Checks |
+|------|-----------------|--------|
+| `--database` | DB detected | SQL injection, N+1, migrations |
+| `--performance` | Scale > Small | Bottlenecks, memory leaks |
+| `--docs` | Always | Completeness, freshness |
+| `--cicd` | CI/CD detected | Pipeline quality, secrets in CI |
+| `--containers` | Docker detected | Image security, best practices |
+| `--compliance` | Compliance set | Framework-specific checks |
+| `--api-contract` | API detected | Breaking changes, versioning |
 
 ## Meta-flags
 
 | Flag | Includes |
 |------|----------|
-| `--smart` | Auto-detect applicable + self-compliance + consistency + orphans |
-| `--critical` | security + tests + database + stale-refs |
-| `--weekly` | security + tech-debt + tests + self-compliance + orphans |
-| `--pre-release` | security + tests + docs + api-contract + consistency + stale-refs |
-| `--hygiene` | orphans + stale-refs + consistency (codebase cleanliness) |
+| `--smart` | Auto-detect applicable + self-compliance + consistency |
+| `--critical` | security + tests + database |
+| `--weekly` | security + tech-debt + tests + self-compliance |
+| `--pre-release` | security + tests + consistency + self-compliance + api-contract |
 | `--all` | Everything applicable |
 | `--auto-fix` | Auto-fix safe issues without asking |
 
@@ -125,11 +156,10 @@ Report: `[STALE-REF] {type}: {reference} → {missing_target} in {file:line}`
 ├───────────────┼───────┼────────┼──────────────┼─────────────┤
 │ Security      │ 92%   │ 2      │ 1            │ WARN        │
 │ Tech-Debt     │ 85%   │ 5      │ 4            │ WARN        │
-│ Orphans       │ 100%  │ 0      │ 0            │ OK          │
-│ Stale-Refs    │ 78%   │ 3      │ 2            │ WARN        │
 │ Consistency   │ 95%   │ 1      │ 0            │ WARN        │
+│ Tests         │ 88%   │ 3      │ 2            │ WARN        │
 ├───────────────┼───────┼────────┼──────────────┼─────────────┤
-│ OVERALL       │ 88%   │ 11     │ 7            │ WARN        │
+│ OVERALL       │ 90%   │ 11     │ 7            │ WARN        │
 └───────────────┴───────┴────────┴──────────────┴─────────────┘
 ```
 
@@ -139,10 +169,10 @@ Report: `[STALE-REF] {type}: {reference} → {missing_target} in {file:line}`
 │ Priority │ Type       │ Issue              │ Location       │
 ├──────────┼────────────┼────────────────────┼────────────────┤
 │ CRITICAL │ Security   │ Hardcoded secret   │ config.py:42   │
-│ HIGH     │ Stale-Ref  │ Broken import      │ api.py:15      │
-│ HIGH     │ Orphan     │ Unused function    │ utils.py:88    │
-│ MEDIUM   │ Tech-Debt  │ Code duplication   │ auth.py:20     │
-│ LOW      │ Consistency│ Doc mismatch       │ README.md:35   │
+│ HIGH     │ Security   │ SQL injection risk │ api.py:15      │
+│ HIGH     │ Tech-Debt  │ Complexity: 15     │ utils.py:88    │
+│ MEDIUM   │ Consistency│ Doc mismatch       │ README.md:35   │
+│ LOW      │ Tech-Debt  │ Missing types      │ auth.py:20     │
 └──────────┴────────────┴────────────────────┴────────────────┘
 ```
 
@@ -157,8 +187,13 @@ Applied: 7 | Skipped: 2 | Failed: 0 | Manual: 2 | Total: 11
 /cco-audit                   # Interactive
 /cco-audit --smart           # Auto-detect applicable
 /cco-audit --pre-release     # Production readiness check
-/cco-audit --hygiene         # Orphans + stale-refs + consistency
-/cco-audit --orphans         # Find unreferenced code
-/cco-audit --stale-refs      # Find broken references
+/cco-audit --security        # Security focus
+/cco-audit --tech-debt       # Tech debt focus
 /cco-audit --critical --auto-fix
 ```
+
+## Related Commands
+
+- `/cco-optimize` - For orphans, stale-refs, duplicates (code cleanliness)
+- `/cco-health` - For metrics dashboard
+- `/cco-release` - For full pre-release workflow

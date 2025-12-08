@@ -8,6 +8,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## [1.1.0] - 2025-12-08
 
 ### Added
+- **Dynamic Context Injection** - Commands use `!` backtick syntax for real-time context at load time (git status, branch, project info available instantly)
+- **Tool Restrictions** - `allowed-tools` frontmatter limits each command to declared tools only, preventing accidental destructive operations
+- **7 new CCO-Specific standards** - Parallel Execution, Quick Mode, Conservative Judgment, Skip Criteria, Task Tracking, Dynamic Context, Tool Restrictions
+- **Unified table format** - All standards now use `| * Standard | Rule |` format for consistent counting with `grep -c "| \* "`
 - **New command `/cco-research`** - Multi-source research with reliability scoring, contradiction detection, consensus mapping, bias detection, and AI-synthesized recommendations
 - **New command `/cco-commit`** - Secrets detection, large file warnings, breaking change detection, and staged/unstaged handling with Modify/Merge/Split/Edit options
 - **Local mode for `/cco-tune`** - Project-specific statusline and permissions via `cco-setup --local`

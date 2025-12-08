@@ -179,8 +179,8 @@ class TestFunctions:
         # Create mock file with AI-Specific but NO CCO-Specific section
         standards_file = standards_dir / "cco-standards.md"
         standards_file.write_text(
-            "# Universal Standards\n- Rule 1\n- Rule 2\n\n"
-            "# AI-Specific Standards\n- AI Rule 1\n- AI Rule 2\n"
+            "# Universal Standards\n| * Rule1 | Desc |\n| * Rule2 | Desc |\n\n"
+            "# AI-Specific Standards\n| * AIRule1 | Desc |\n| * AIRule2 | Desc |\n"
         )
 
         # We need to test the actual function with a modified file
@@ -195,9 +195,8 @@ class TestFunctions:
 
         try:
             # Temporarily replace with content that has no CCO-Specific section
-            test_content = (
-                "# Universal Standards\n- Rule 1\n\n# AI-Specific Standards\n- AI Rule 1\n"
-            )
+            # Using new table format: | * Standard | Rule |
+            test_content = "# Universal Standards\n| * Rule1 | Desc |\n\n# AI-Specific Standards\n| * AIRule1 | Desc |\n"
             actual_file.write_text(test_content, encoding="utf-8")
 
             # Reload to pick up changes

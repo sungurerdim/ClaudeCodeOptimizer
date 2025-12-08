@@ -1,13 +1,23 @@
 ---
 name: cco-review
 description: Strategic architecture review with fresh perspective
+allowed-tools: Read(*), Grep(*), Glob(*), Bash(git:*), Bash(wc:*), Bash(find:*), Edit(*), Task(*)
 ---
 
 # /cco-review
 
-**Strategic review** - Map current state → identify gaps → recommend improvements.
+**Strategic Review** - "If I built this from scratch, how would I do it?"
+
+Analyzes architecture, identifies gaps, and provides actionable recommendations.
 
 **Standards:** Command Flow | Fix Workflow | Approval Flow | Output Formatting
+
+## Context
+
+- Project purpose: !`head -5 README.md 2>/dev/null`
+- CCO context: !`sed -n '/^## Strategic Context/,/^## /p' ./CLAUDE.md 2>/dev/null | head -10`
+- Structure: !`ls -d */ 2>/dev/null | head -10`
+- Git activity: !`git log --oneline -5 2>/dev/null`
 
 ## Context Application
 
@@ -23,117 +33,218 @@ description: Strategic architecture review with fresh perspective
 
 ## Flow
 
-Per Command Flow standard, then:
 1. **Map Current State** - Analyze architecture, patterns, dependencies
 2. **Identify Gaps** - Compare purpose vs implementation
 3. **Stack Fitness** - Evaluate tech choices against purpose
 4. **Fresh Perspective** - "If building from scratch" recommendations
-5. **Prioritize** - Quick wins vs major refactors, risk assessment
+5. **Prioritize** - Effort/impact matrix, risk assessment
 6. **Report** - Structured findings with actionable items
+7. **Apply** - Optional: implement approved recommendations
 
 ## Phase 1: Map Current State
 
-Analyze:
+### Architecture Analysis
 - Directory structure and organization
 - Module boundaries and responsibilities
-- Dependency graph (internal and external)
 - Entry points and data flow
 - Patterns in use (design patterns, conventions)
 - Test structure and coverage areas
 - Configuration and environment handling
 
-Output: **Architecture Map** (what the project actually is)
+### Dependency Analysis
+- Internal dependency graph
+- External dependencies (packages)
+- Circular dependency detection
+- Dependency depth analysis
+
+### Coupling & Cohesion Analysis
+
+| Metric | Detection | Healthy Range |
+|--------|-----------|---------------|
+| Afferent coupling (Ca) | Incoming dependencies | Lower is better |
+| Efferent coupling (Ce) | Outgoing dependencies | <10 per module |
+| Instability (I) | Ce / (Ca + Ce) | 0-1, balanced mix |
+| Abstractness (A) | Abstract types / total | 0.3-0.7 ideal |
+| Distance from main | \|A + I - 1\| | <0.3 |
+
+Report: Modules in "zone of pain" (concrete + stable) or "zone of uselessness" (abstract + unstable)
+
+Output: **Architecture Map**
 
 ## Phase 2: Gap Analysis
 
 Compare Intent vs Implementation:
-- Features promised but not implemented
-- Implemented but not documented
-- Overcomplicated vs stated simplicity goals
-- Missing vs stated patterns
-- Scope creep beyond stated goals
 
-Check against CLAUDE.md standards:
+| Gap Type | Detection |
+|----------|-----------|
+| Features promised | README claims vs actual code |
+| Undocumented features | Code exists but no docs |
+| Overcomplicated | Complexity vs stated goals |
+| Missing patterns | Stated patterns not implemented |
+| Scope creep | Beyond stated purpose |
+
+Standards check:
 - DRY violations
-- Orphan code (unused functions, dead imports)
-- Complexity violations (cyclomatic >10)
+- Complexity violations (>10)
 - Missing type annotations
 - Test coverage gaps
-- Security standard violations
+- Security issues
 
 Output: **Gap Report** with file:line references
 
-## Phase 3: Stack Fitness & Fresh Perspective
+## Phase 3: Stack Fitness
 
-### 3a: Stack Fitness
+Evaluate current technology choices:
 
-Evaluate current technology choices against purpose and constraints:
+| Category | Evaluation |
+|----------|------------|
+| Language | Fits purpose? Alternatives? |
+| Framework | Overhead vs benefit? |
+| Database | Fits data model? Scale? |
+| Architecture | Monolith vs services fit? |
+| Dependencies | Necessary? Maintained? |
 
-| Current Choice | Serves Purpose? | Better Alternative? | Why? |
-|----------------|-----------------|---------------------|------|
-| Language | Y/N | If N, suggest | Reasoning |
-| Framework | Y/N | If N, suggest | Reasoning |
-| Database | Y/N | If N, suggest | Reasoning |
-| Architecture | Y/N | If N, suggest | Reasoning |
+### Migration Paths
 
-### 3b: From Scratch Perspective (Optimized)
+For each suboptimal choice, provide:
 
-Answer: "If I were building this project from scratch today, optimized..."
+```
+Current: Express.js
+Issue: Heavy for simple CLI tool
+Alternative: Native Node.js or minimal framework
+Migration Path:
+  1. Identify Express-specific code (routes, middleware)
+  2. Abstract HTTP layer
+  3. Replace incrementally
+  4. Remove Express dependency
+Effort: Medium (1-2 days)
+Risk: Low (well-tested patterns)
+```
 
-**Standards:** AI Context (Universal) - apply to all recommendations
+## Phase 4: Fresh Perspective
 
-Categories: Structure, Patterns, Abstractions, Data Flow, Testing, DX
+"If I were building this project from scratch today..."
+
+### Categories
+
+| Area | Analysis |
+|------|----------|
+| Structure | Optimal directory layout |
+| Patterns | Modern idioms for this stack |
+| Abstractions | What to abstract, what to inline |
+| Data Flow | Cleaner data pipelines |
+| Testing | Better test strategy |
+| DX | Developer experience improvements |
 
 For each recommendation:
-- Apply AI Content standards (semantic density, no duplicates, structured format)
-- Present optimized ideal, not just "from scratch"
-- Show before/after comparison where applicable
+- Before/after comparison
+- Concrete implementation steps
+- Expected benefits
 
-Output: **Stack Fitness Report** + **Optimized "From Scratch" Recommendations**
+## Phase 5: Prioritization
 
-## Phase 4: Prioritization
+### Effort/Impact Matrix
 
-**By Effort:** Quick Win (<1h) | Small (<1d) | Medium (<1w) | Major (>1w)
+```
+┌─ EFFORT/IMPACT MATRIX ───────────────────────────────────────┐
+│                                                              │
+│  HIGH   │ ★ Restructure auth  │ ○ Rewrite core    │         │
+│  IMPACT │ ★ Add caching       │                   │         │
+│         ├────────────────────┼───────────────────┤         │
+│  LOW    │ ★ Fix imports       │ ○ Migrate DB      │         │
+│  IMPACT │ ★ Update deps       │                   │         │
+│         └────────────────────┴───────────────────┘         │
+│              LOW EFFORT           HIGH EFFORT               │
+│                                                              │
+│  ★ = Recommended (high impact, low effort)                  │
+│  ○ = Consider later                                          │
+└──────────────────────────────────────────────────────────────┘
+```
 
-**By Impact:** Critical | High | Medium | Low
+### Priority Levels
 
-**By Risk:** Safe | Low | Medium | High
+| Priority | Criteria |
+|----------|----------|
+| Do Now | High impact, low effort, low risk |
+| Plan | High impact, medium effort |
+| Consider | Medium impact, any effort |
+| Backlog | Low impact or high risk |
 
-Priority = Impact / Effort (prefer high impact, low effort, low risk)
+## Phase 6: Report
 
-## Report Structure
+### Output Structure
 
-**Standards:** Output Formatting
+```
+┌─ REVIEW SUMMARY ─────────────────────────────────────────────┐
+│ Project: my-project | Type: CLI | Maturity: Active           │
+│ Files: 45 | Modules: 8 | Dependencies: 12                    │
+└──────────────────────────────────────────────────────────────┘
 
-Sections:
-1. **Context** - Team, scale, data, type, purpose (inline)
-2. **Architecture Overview** - Prose description of current state
-3. **Stack Fitness** - Choice | Serves Purpose? | Alternative | Why
-4. **Gap Analysis** - Gap | Location | Details
-5. **Recommendations** - Priority | Recommendation | Effort | Risk
-6. **What's Working Well** - Prose list of positive observations
+┌─ ARCHITECTURE HEALTH ────────────────────────────────────────┐
+│ Metric           │ Value   │ Status                          │
+├──────────────────┼─────────┼─────────────────────────────────┤
+│ Avg Coupling     │ 4.2     │ OK                              │
+│ Max Coupling     │ 12      │ WARN (utils.py)                 │
+│ Circular Deps    │ 0       │ OK                              │
+│ Cohesion Score   │ 78%     │ OK                              │
+└──────────────────┴─────────┴─────────────────────────────────┘
 
-## Apply
+┌─ GAPS FOUND ─────────────────────────────────────────────────┐
+│ Type          │ Gap                    │ Location            │
+├───────────────┼────────────────────────┼─────────────────────┤
+│ Undocumented  │ Export feature         │ exporter.py         │
+│ Overcomplicated│ Auth flow             │ auth/:42            │
+│ Missing       │ Error handling pattern │ api/                │
+└───────────────┴────────────────────────┴─────────────────────┘
+
+┌─ RECOMMENDATIONS ────────────────────────────────────────────┐
+│ # │ Recommendation           │ Impact │ Effort │ Priority   │
+├───┼──────────────────────────┼────────┼────────┼────────────┤
+│ 1 │ Simplify auth flow       │ HIGH   │ 2h     │ Do Now     │
+│ 2 │ Add error boundaries     │ HIGH   │ 4h     │ Do Now     │
+│ 3 │ Extract shared utils     │ MEDIUM │ 1d     │ Plan       │
+│ 4 │ Migrate to async/await   │ LOW    │ 3d     │ Backlog    │
+└───┴──────────────────────────┴────────┴────────┴────────────┘
+
+┌─ WHAT'S WORKING WELL ────────────────────────────────────────┐
+│ • Clean separation between CLI and core logic                │
+│ • Consistent naming conventions throughout                   │
+│ • Good test coverage for critical paths (92%)                │
+│ • Well-structured configuration management                   │
+│ • Clear module boundaries                                    │
+└──────────────────────────────────────────────────────────────┘
+```
+
+## Phase 7: Apply (Optional)
 
 For each approved recommendation:
-1. Show what will change
-2. Make the changes
+1. Show detailed change plan
+2. Implement changes
 3. Verify (tests pass, lint clean)
 4. Report: done + skipped + failed = total
 
 ## Flags
 
-- `--quick` - Phase 1-3 only, skip "from scratch" analysis
-- `--focus=X` - Focus on specific area (structure, patterns, deps, tests, security, dx)
-
-Note: Use approval flow for apply behavior (select none = report-only, select all = auto-apply).
-For production readiness checks, use `/cco-audit --pre-release`.
+| Flag | Effect |
+|------|--------|
+| `--quick` | Skip from-scratch analysis, faster |
+| `--focus=X` | Focus area: structure, patterns, deps, tests, security, dx |
+| `--no-apply` | Report only, skip apply phase |
+| `--matrix` | Show effort/impact matrix visualization |
 
 ## Usage
 
 ```bash
 /cco-review                    # Full review → approve → apply
-/cco-review --quick            # Quick analysis, skip from-scratch
+/cco-review --quick            # Quick analysis
 /cco-review --focus=structure  # Focus on organization
-/cco-review --focus=security   # Focus on security review
+/cco-review --focus=deps       # Focus on dependencies
+/cco-review --focus=dx         # Focus on developer experience
+/cco-review --matrix           # Show prioritization matrix
 ```
+
+## Related Commands
+
+- `/cco-audit` - For specific quality/security checks
+- `/cco-refactor` - For safe structural changes
+- `/cco-release` - For pre-release review

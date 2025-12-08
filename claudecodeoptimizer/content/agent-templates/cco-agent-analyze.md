@@ -9,7 +9,7 @@ safe: true
 
 Read-only project analysis. Returns structured data for CCO commands.
 
-**Standards:** Output Standards | Context Optimization
+**Standards:** Output Standards | Context Optimization | Parallel Execution | Conservative Judgment | Skip Criteria | Task Tracking
 
 ## Scope Parameter
 

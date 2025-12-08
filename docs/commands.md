@@ -6,17 +6,26 @@ Detailed documentation for all CCO slash commands.
 
 ## Command Overview
 
+### Base Commands
+
 | Command | Purpose | Key Standards |
 |---------|---------|---------------|
 | `/cco-tune` | Project tuning and configuration | Approval Flow, Output Formatting |
-| `/cco-health` | Metrics dashboard | Command Flow, Output Formatting |
-| `/cco-audit` | Quality gates with fixes | Fix Workflow, Safety Classification |
+| `/cco-health` | Metrics dashboard with trends | Command Flow, Output Formatting |
+| `/cco-audit` | Security + code quality gates | Fix Workflow, Safety Classification |
 | `/cco-review` | Architecture analysis | Fix Workflow, Approval Flow |
 | `/cco-research` | Multi-source research with AI synthesis | Command Flow, Output Formatting |
-| `/cco-optimize` | Efficiency improvements | Fix Workflow, Safety Classification |
+| `/cco-optimize` | Cleanliness + efficiency improvements | Fix Workflow, Safety Classification |
 | `/cco-generate` | Convention-following generation | Approval Flow, Output Formatting |
 | `/cco-refactor` | Safe structural changes | Pre-Operation Safety, Approval Flow |
 | `/cco-commit` | Quality-gated commits | Pre-Operation Safety, Approval Flow |
+
+### Meta Commands
+
+| Command | Purpose | Orchestrates |
+|---------|---------|--------------|
+| `/cco-release` | Pre-release workflow | audit + optimize + review + verify |
+| `/cco-checkup` | Regular maintenance | health + audit --smart + optimize --hygiene |
 
 ---
 
@@ -82,25 +91,25 @@ Detailed documentation for all CCO slash commands.
 
 ## /cco-audit
 
-**Purpose:** Find issues, prioritize, and fix with approval.
+**Purpose:** Security and code quality checks with prioritized fixes.
 
 **Usage:**
 ```bash
 /cco-audit                   # Interactive
 /cco-audit --smart           # Auto-detect applicable
 /cco-audit --pre-release     # Production readiness
-/cco-audit --critical        # Security + tests + database
-/cco-audit --hygiene         # Orphans + stale-refs + consistency
-/cco-audit --orphans         # Find unreferenced code
-/cco-audit --stale-refs      # Find broken references
+/cco-audit --security        # OWASP, secrets, CVEs
+/cco-audit --tech-debt       # Complexity, dead code
+/cco-audit --tests           # Coverage, quality, edge cases
 /cco-audit --auto-fix        # Auto-fix safe issues
 ```
 
 **Categories:**
-- Core: `--security`, `--tech-debt`, `--self-compliance`, `--consistency`, `--orphans`, `--stale-refs`
-- Stack-dependent: `--tests`, `--database`, `--performance`, `--docs`, etc.
+- Security: `--security` (OWASP, secrets, CVEs, dependency vulnerabilities)
+- Quality: `--tech-debt`, `--tests`, `--consistency`, `--self-compliance`
+- Stack-dependent: `--database`, `--performance`, `--docs`, etc.
 
-**Detection:** Orphan files/functions/imports, broken imports, dead links, stale docs.
+**Detection:** Input validation gaps, type coverage, test quality, doc-code mismatch.
 
 ---
 
@@ -174,24 +183,28 @@ Detailed documentation for all CCO slash commands.
 
 ## /cco-optimize
 
-**Purpose:** Reduce waste, measure impact, verify.
+**Purpose:** Cleanliness and efficiency improvements.
 
 **Usage:**
 ```bash
 /cco-optimize                    # Interactive
+/cco-optimize --hygiene          # Quick cleanup (orphans + stale-refs + duplicates)
+/cco-optimize --orphans          # Find unreferenced code
+/cco-optimize --stale-refs       # Find/fix broken references
+/cco-optimize --duplicates       # Detect and merge duplicates
 /cco-optimize --context          # AI context files
 /cco-optimize --docs             # Documentation
 /cco-optimize --code             # Source files
 /cco-optimize --cross-file       # Full cross-file analysis
-/cco-optimize --dedupe           # Focus on duplicate detection
-/cco-optimize --consolidate      # Merge overlapping content
-/cco-optimize --prune            # Remove obsolete/orphan content
 /cco-optimize --all              # Everything
+/cco-optimize --auto-fix         # Auto-fix safe issues
 ```
 
-**Modes:** Conservative | Balanced | Aggressive
+**Categories:**
+- Cleanliness: `--orphans`, `--stale-refs`, `--duplicates` (or `--hygiene` for all three)
+- Efficiency: `--context`, `--docs`, `--code`, `--cross-file`
 
-**Detection:** Exact/near/semantic duplicates, redundant code/config/docs, obsolete refs, overlaps.
+**Detection:** Orphan files/functions/imports, broken imports/links, exact/near/semantic duplicates.
 
 ---
 
@@ -242,6 +255,62 @@ Detailed documentation for all CCO slash commands.
 ```
 
 **Quality gates:** Format → Lint → Test (stop on failure)
+
+---
+
+## /cco-release
+
+**Purpose:** Pre-release workflow orchestration.
+
+**Usage:**
+```bash
+/cco-release                   # Full release workflow
+/cco-release --dry-run         # Check without fixing
+/cco-release --strict          # Fail on any warning
+/cco-release --tag             # Auto-create git tag
+/cco-release --tag --push      # Tag and push
+```
+
+**Phases:**
+1. **Pre-flight** - Git state, branch, version, changelog, dependencies
+2. **Quality Gate** - via `/cco-audit --pre-release --auto-fix`
+3. **Cleanliness** - via `/cco-optimize --hygiene --auto-fix`
+4. **Architecture** - via `/cco-review --quick`
+5. **Final Verification** - Full test suite, build, lint, type check
+6. **Go/No-Go** - Blockers vs warnings summary, next steps
+
+**Classification:**
+- **Blockers** - Must fix before release (dirty git, invalid version, tests fail)
+- **Warnings** - Should fix (coverage below target, outdated changelog)
+
+---
+
+## /cco-checkup
+
+**Purpose:** Regular maintenance routine.
+
+**Usage:**
+```bash
+/cco-checkup                   # Standard maintenance
+/cco-checkup --dry-run         # Preview without changes
+/cco-checkup --no-fix          # Report only
+/cco-checkup --deep            # Thorough checkup
+/cco-checkup --trends          # With trend history
+```
+
+**Phases:**
+1. **Health Dashboard** - via `/cco-health --brief`
+2. **Smart Audit** - via `/cco-audit --smart --auto-fix`
+3. **Quick Cleanup** - via `/cco-optimize --hygiene --auto-fix`
+4. **Summary** - Changes since last checkup, auto-fixed vs manual needed
+
+**Scheduling:**
+| Frequency | Use Case |
+|-----------|----------|
+| Weekly | Active development |
+| Bi-weekly | Stable projects |
+| Before PR | Quality gate |
+| Monthly | Maintenance mode |
 
 ---
 

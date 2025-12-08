@@ -1,13 +1,22 @@
 ---
 name: cco-health
-description: Actionable metrics dashboard
+description: Project health dashboard with trends and actionable insights
+allowed-tools: Read(*), Grep(*), Glob(*), Bash(git:*), Bash(pytest:*), Bash(npm:*), Task(*)
 ---
 
 # /cco-health
 
-**Metrics dashboard** - Single view of project health with actionable next steps.
+**Health Dashboard** - Single view of project health with trends and actionable next steps.
+
+Read-only metrics collection and visualization.
 
 **Standards:** Command Flow | Output Formatting
+
+## Context
+
+- Applicable categories: !`grep "^Applicable:" ./CLAUDE.md 2>/dev/null`
+- Coverage: !`grep "Coverage:" ./CLAUDE.md 2>/dev/null`
+- Scale/Type: !`grep -E "^(Scale|Type):" ./CLAUDE.md 2>/dev/null`
 
 ## Context Application
 
@@ -25,34 +34,178 @@ description: Actionable metrics dashboard
 
 Per Command Flow standard (read-only, no fixes).
 
-## Scores (0-100)
+## Score Categories (0-100)
 
-- **Security** - Vulnerabilities, secrets, dependencies, AI security
-- **Tests** - Coverage percentage + quality
-- **Tech Debt** - Complexity, dead code, duplication, orphans, TODOs, AI patterns
-- **Self-Compliance** - Alignment with stated standards
+### Security
+- Vulnerabilities (OWASP, CVEs)
+- Secrets exposure
+- Dependency health
+- Input validation coverage
 
-## Fix First Indicator
+### Tests
+- Line coverage percentage
+- Branch coverage
+- Test quality (assertions, mocks)
+- Edge case coverage
 
-After scores, show top 3 actionable items:
-- Highest impact, lowest effort
-- With specific file:line locations
+### Tech Debt
+- Complexity score (cyclomatic)
+- Dead code percentage
+- TODO/FIXME count
+- Hardcoded values
+- Type coverage
+
+### Cleanliness
+- Orphan count (files, functions, imports)
+- Stale reference count
+- Duplicate percentage
+- Redundancy score
+
+### Documentation
+- README completeness
+- Docstring coverage
+- Example validity
+- API documentation (if applicable)
+
+### Self-Compliance
+- Standards adherence
+- Convention consistency
+- Guideline violations
+
+## Trends
+
+Track changes over time:
+
+| Metric | Tracking |
+|--------|----------|
+| Last run | Previous health check results |
+| Week over week | 7-day comparison |
+| Degradation alerts | Score drops >5% flagged |
+| Velocity | Issues fixed per period |
+
+Storage: `.cco/health-history.json` (auto-created)
+
+### Trend Indicators
+
+| Symbol | Meaning |
+|--------|---------|
+| `↑` | Improved since last check |
+| `↓` | Degraded since last check |
+| `→` | Unchanged |
+| `⚠` | Significant degradation (>5%) |
+
+## Fix First
+
+Top 3 actionable items prioritized by:
+- Highest impact
+- Lowest effort
+- Specific file:line locations
+- Estimated fix time
+
+## Comparisons
+
+### vs Thresholds
+
+| Score | Status | Meaning |
+|-------|--------|---------|
+| 90-100 | OK | Excellent |
+| 70-89 | WARN | Needs attention |
+| 50-69 | FAIL | Action required |
+| 0-49 | CRITICAL | Immediate action |
+
+### vs Benchmarks (when available)
+
+Compare against:
+- Industry averages (by project type)
+- Similar projects (by stack/scale)
+- Project's own historical best
 
 ## Output
 
-**Standards:** Output Formatting
+### Header
+```
+┌─ PROJECT HEALTH ─────────────────────────────────────────────┐
+│ Project: my-project v1.2.3                                   │
+│ Team: Solo | Scale: Small | Type: CLI                        │
+│ Last Check: 2025-12-07 14:30 | Trend: ↑ improving            │
+└──────────────────────────────────────────────────────────────┘
+```
 
-Tables:
-1. **Header** - Project name, version, team/scale/type
-2. **Scores** - Category | Score | Bar + Summary (per applicable category + OVERALL)
-3. **Breakdown** - Metric | Value | Status (nested under categories)
-4. **Fix First** - # | Issue | Location | Effort (top 3 actionable)
+### Scores Dashboard
+```
+┌─ HEALTH SCORES ──────────────────────────────────────────────┐
+│ Category      │ Score │ Bar        │ Trend │ Status          │
+├───────────────┼───────┼────────────┼───────┼─────────────────┤
+│ Security      │ 95    │ █████████░ │ →     │ OK              │
+│ Tests         │ 88    │ ████████░░ │ ↑     │ WARN            │
+│ Tech Debt     │ 72    │ ███████░░░ │ ↓     │ WARN            │
+│ Cleanliness   │ 85    │ ████████░░ │ ↑     │ WARN            │
+│ Documentation │ 78    │ ███████░░░ │ →     │ WARN            │
+│ Self-Compliance│ 90   │ █████████░ │ →     │ OK              │
+├───────────────┼───────┼────────────┼───────┼─────────────────┤
+│ OVERALL       │ 85    │ ████████░░ │ ↑     │ WARN            │
+└───────────────┴───────┴────────────┴───────┴─────────────────┘
+```
+
+### Category Breakdown (when --focus used)
+```
+┌─ TECH DEBT BREAKDOWN ────────────────────────────────────────┐
+│ Metric          │ Value    │ Threshold │ Status              │
+├─────────────────┼──────────┼───────────┼─────────────────────┤
+│ Avg Complexity  │ 8.2      │ <10       │ OK                  │
+│ Max Complexity  │ 15       │ <15       │ WARN                │
+│ Dead Code       │ 2.3%     │ <5%       │ OK                  │
+│ TODOs           │ 12       │ <20       │ OK                  │
+│ Hardcoded       │ 5        │ <10       │ OK                  │
+│ Type Coverage   │ 78%      │ >80%      │ WARN                │
+└─────────────────┴──────────┴───────────┴─────────────────────┘
+```
+
+### Fix First
+```
+┌─ FIX FIRST (highest impact, lowest effort) ──────────────────┐
+│ # │ Issue                    │ Location      │ Effort │ Impact│
+├───┼──────────────────────────┼───────────────┼────────┼───────┤
+│ 1 │ High complexity (15)     │ utils.py:42   │ 30min  │ HIGH  │
+│ 2 │ Missing type annotations │ api.py:15-30  │ 15min  │ MEDIUM│
+│ 3 │ Orphan function          │ helpers.py:88 │ 5min   │ LOW   │
+└───┴──────────────────────────┴───────────────┴────────┴───────┘
+```
+
+### Trend History (when --trends used)
+```
+┌─ TREND HISTORY ──────────────────────────────────────────────┐
+│ Date       │ Overall │ Security │ Tests │ Debt │ Clean      │
+├────────────┼─────────┼──────────┼───────┼──────┼────────────┤
+│ 2025-12-08 │ 85 ↑    │ 95 →     │ 88 ↑  │ 72 ↓ │ 85 ↑       │
+│ 2025-12-01 │ 82      │ 95       │ 85    │ 75   │ 80         │
+│ 2025-11-24 │ 80      │ 92       │ 82    │ 78   │ 78         │
+└────────────┴─────────┴──────────┴───────┴──────┴────────────┘
+```
+
+## Flags
+
+| Flag | Effect |
+|------|--------|
+| `--focus=X` | Detailed breakdown for category (security, tests, debt, clean, docs) |
+| `--trends` | Show historical trends |
+| `--json` | Output as JSON for scripting |
+| `--brief` | Summary only, no breakdown |
 
 ## Usage
 
 ```bash
 /cco-health                     # Full dashboard
-/cco-health --focus=security    # Focus on security score
-/cco-health --focus=tests       # Focus on test coverage
-/cco-health --focus=tech-debt   # Focus on tech debt
+/cco-health --focus=security    # Security breakdown
+/cco-health --focus=tests       # Test coverage breakdown
+/cco-health --focus=debt        # Tech debt breakdown
+/cco-health --focus=clean       # Cleanliness breakdown
+/cco-health --trends            # Show trend history
+/cco-health --brief             # Quick summary
 ```
+
+## Related Commands
+
+- `/cco-audit` - Fix security and quality issues
+- `/cco-optimize` - Fix cleanliness issues
+- `/cco-checkup` - Full maintenance routine

@@ -48,6 +48,40 @@ Inside Claude Code:
 
 ---
 
+## Dynamic Context Injection
+
+CCO commands use Claude Code's `!` backtick syntax for **real-time context at load time**:
+
+```markdown
+## Context
+- Git status: !`git status --short`
+- Current branch: !`git branch --show-current`
+- Project type: !`grep "^Type:" ./CLAUDE.md`
+```
+
+### How It Works
+
+| Traditional | With Dynamic Context |
+|-------------|---------------------|
+| 1. Load command | 1. Load command |
+| 2. AI calls `git status` tool | 2. Context **already injected** |
+| 3. Wait for response | 3. AI starts immediately |
+| 4. AI processes result | |
+| 5. AI continues | |
+
+### Benefits
+
+| Benefit | Description |
+|---------|-------------|
+| **Speed** | No tool call round-trip, context ready instantly |
+| **Accuracy** | AI sees real data, no assumptions or guessing |
+| **Token savings** | Eliminates "Let me check..." dialogue |
+| **Reduced hallucination** | Facts over inference |
+
+*Inspired by official Claude Code command patterns.*
+
+---
+
 ## Standards
 
 CCO uses a 4-category standards system:
@@ -62,11 +96,13 @@ CCO uses a 4-category standards system:
 | Type | Count |
 |------|-------|
 | Universal | 38 |
-| AI-Specific | 28 |
-| CCO-Specific | 50 |
-| **Base Total** | **116** |
-| Project-Specific Pool | 170 |
-| **Total Pool** | **286** |
+| AI-Specific | 32 |
+| CCO-Specific | 108 |
+| **Base Total** | **178** |
+| Project-Specific Pool | 63 |
+| **Total Pool** | **241** |
+
+**Counting:** `grep -c "| \* " <file>` - each standard row starts with `| * `
 
 Run `/cco-tune` to see which project-specific standards apply to your project.
 
@@ -83,22 +119,33 @@ Run `/cco-tune` to see which project-specific standards apply to your project.
 
 ## Commands
 
+### Base Commands
+
 | Command | Purpose |
 |---------|---------|
 | `/cco-tune` | Project tuning: detection + configuration + export |
-| `/cco-health` | Metrics dashboard with actionable next steps |
-| `/cco-audit` | Quality gates with prioritized fixes |
-| `/cco-review` | Architecture analysis with recommendations |
+| `/cco-health` | Metrics dashboard with trends and actionable next steps |
+| `/cco-audit` | Security + code quality gates with prioritized fixes |
+| `/cco-review` | Architecture analysis with fresh perspective |
 | `/cco-research` | Multi-source research with reliability scoring |
-| `/cco-optimize` | Efficiency improvements (context, docs, code) |
+| `/cco-optimize` | Cleanliness + efficiency improvements |
 | `/cco-generate` | Convention-following generation |
 | `/cco-refactor` | Safe structural changes with rollback |
 | `/cco-commit` | Quality-gated atomic commits |
 
+### Meta Commands
+
+| Command | Purpose | Orchestrates |
+|---------|---------|--------------|
+| `/cco-release` | Pre-release workflow | audit + optimize + review + verify |
+| `/cco-checkup` | Regular maintenance | health + audit --smart + optimize --hygiene |
+
 ### /cco-audit Features
 
-- **Orphan Detection** - Find unreferenced files, functions, imports, exports
-- **Stale Reference Detection** - Find broken imports, dead links, phantom tests
+- **Security Checks** - OWASP patterns, secrets, CVEs, dependency vulnerabilities
+- **Input Validation** - Entry point analysis, validation gap detection
+- **Type Coverage** - Missing annotations, any/unknown usage
+- **Test Quality** - Flaky tests, coverage gaps, edge case detection
 - **Doc-Code Mismatch** - Detect when documentation doesn't match implementation
 - **Self-Compliance** - Check against project's own stated standards
 - **Smart Mode** - Auto-detect applicable checks based on project context
@@ -122,8 +169,11 @@ Run `/cco-tune` to see which project-specific standards apply to your project.
 
 ### /cco-optimize Features
 
-- **Cross-File Analysis** - Detect duplicates, redundant code, obsolete references
-- **Deduplication** - Exact, near-duplicate (>80%), and semantic duplicate detection
+- **Orphan Detection** - Find unreferenced files, functions, imports, exports
+- **Stale Reference Cleanup** - Fix broken imports, dead links, phantom tests
+- **Duplicate Detection** - Exact, near-duplicate (>80%), and semantic duplicates
+- **Hygiene Mode** - Quick cleanup with `--hygiene` (orphans + stale-refs + duplicates)
+- **Cross-File Analysis** - Detect redundant code, obsolete references
 - **Consolidation** - Merge overlapping content into single source
 - **Metrics** - Before/after comparison with lines, tokens, and KB saved
 
@@ -135,6 +185,23 @@ Run `/cco-tune` to see which project-specific standards apply to your project.
 - **Permission Levels** - Safe, Balanced, Permissive, Full per project
 - **Remove Configuration** - Remove any setting (AI Performance, Statusline, Permissions, Standards)
 - **Standards Export** - Export to AGENTS.md or CLAUDE.md with selectable content
+
+### /cco-release Features
+
+- **Pre-flight Checks** - Git state, branch, version, changelog, dependencies
+- **Quality Gate** - Security, tests, consistency via `/cco-audit --pre-release`
+- **Cleanliness** - Orphans, stale refs, duplicates via `/cco-optimize --hygiene`
+- **Architecture Review** - Quick gap analysis via `/cco-review --quick`
+- **Final Verification** - Full test suite, build, lint, type check
+- **Go/No-Go Summary** - Blockers vs warnings, clear next steps
+
+### /cco-checkup Features
+
+- **Health Dashboard** - Quick scores via `/cco-health --brief`
+- **Smart Audit** - Context-aware checks via `/cco-audit --smart --auto-fix`
+- **Quick Cleanup** - Hygiene fixes via `/cco-optimize --hygiene --auto-fix`
+- **Trend Tracking** - Health score changes since last checkup
+- **Scheduling** - Weekly recommended for active development
 
 *[Full commands documentation](docs/commands.md)*
 
