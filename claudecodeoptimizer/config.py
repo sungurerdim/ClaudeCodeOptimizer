@@ -67,7 +67,8 @@ CCO_UNIVERSAL_PATTERN = (
 SUBPROCESS_TIMEOUT = 5  # seconds
 
 # Pre-compiled regex patterns for performance
-_STANDARD_PATTERN = re.compile(r"^- ", re.MULTILINE)
+# Standards use table format: | * Name | Rule |
+_STANDARD_PATTERN = re.compile(r"\| \* ", re.MULTILINE)
 _CATEGORY_PATTERN = re.compile(r"^## ", re.MULTILINE)
 
 

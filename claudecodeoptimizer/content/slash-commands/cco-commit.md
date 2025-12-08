@@ -1,13 +1,24 @@
 ---
 name: cco-commit
-description: Atomic traceable change management
+description: Atomic traceable change management with quality gates
+allowed-tools: Bash(git:*), Bash(ruff:*), Bash(npm:*), Bash(pytest:*), Read(*), Grep(*), Edit(*)
 ---
 
 # /cco-commit
 
-**Change management** - Quality gates → analyze → group atomically → commit.
+**Smart Commits** - Quality gates → analyze → group atomically → commit.
+
+End-to-end: Runs checks, analyzes changes, creates atomic commits.
 
 **Standards:** Command Flow | Pre-Operation Safety | Approval Flow | Output Formatting
+
+## Context
+
+- Git status: !`git status --short`
+- Staged files: !`git diff --cached --name-only`
+- Current branch: !`git branch --show-current`
+- Recent commits: !`git log --oneline -3`
+- CCO tools: !`grep -A1 "^Tools:" ./CLAUDE.md 2>/dev/null | tail -1`
 
 ## Context Application
 
@@ -43,7 +54,8 @@ Before any git operation: if `.git/index.lock` exists but no git process running
 2. **Large Files** - Warn on files >1MB or binaries (requires confirmation)
 3. **Format** - Auto-fix style issues (modifies files)
 4. **Lint** - Static analysis (may auto-fix)
-5. **Test** - Verify behavior (read-only)
+5. **Type Check** - Verify type consistency (if typed language)
+6. **Test** - Verify behavior (read-only)
 
 ### Secrets Detection
 
@@ -72,12 +84,26 @@ Scan staged files for potential secrets before commit:
 - Run checks in order, stop on blocking failure
 - If format modifies files, include in commit
 - If lint fails with unfixable errors, stop and report
+- If type check fails, stop and report
 - If tests fail, stop and report - never commit broken code
-- Show summary: `Secrets: {status} | Format: {status} | Lint: {status} | Tests: {count} passed`
+- Show summary: `Secrets: {status} | Format: {status} | Lint: {status} | Types: {status} | Tests: {count} passed`
 
 ### Skip Option
 
 Use `--skip-checks` to bypass (use with caution).
+
+## Dependency Impact Analysis
+
+For changes that modify interfaces or exports:
+
+| Change Type | Analysis |
+|-------------|----------|
+| Function signature | Find all callers, verify compatibility |
+| Export removal | Find all importers, warn if external |
+| Type change | Check downstream type compatibility |
+| Config change | Verify dependent configs |
+
+Report: `[IMPACT] {change} affects {N} files: {file1}, {file2}...`
 
 ## Staged vs Unstaged Handling
 
@@ -130,13 +156,30 @@ If changes have dependencies, commit in order:
 
 ## Output
 
-**Standards:** Output Formatting
+### Quality Gates
+```
+┌─ QUALITY GATES ──────────────────────────────────────────────┐
+│ Check       │ Status │ Details                               │
+├─────────────┼────────┼───────────────────────────────────────┤
+│ Secrets     │ OK     │ No secrets detected                   │
+│ Large Files │ OK     │ No large files                        │
+│ Format      │ OK     │ 2 files formatted                     │
+│ Lint        │ OK     │ Clean                                 │
+│ Types       │ OK     │ No type errors                        │
+│ Tests       │ OK     │ 42 passed                             │
+└─────────────┴────────┴───────────────────────────────────────┘
+```
 
-Tables:
-1. **Quality Gates** - Check | Status | Details (Secrets, Large Files, Format, Lint, Test)
-2. **Changes Detected** - File | + | - (with total in header)
-3. **Commit Plan** - # | Type | Scope | Description | Files
-4. **Breaking Changes** - File | Change | Impact (only if detected)
+### Commit Plan
+```
+┌─ COMMIT PLAN ────────────────────────────────────────────────┐
+│ # │ Type     │ Scope   │ Description          │ Files        │
+├───┼──────────┼─────────┼──────────────────────┼──────────────┤
+│ 1 │ feat     │ auth    │ add login endpoint   │ 3            │
+│ 2 │ fix      │ ui      │ correct alignment    │ 1            │
+│ 3 │ docs     │ -       │ update README        │ 1            │
+└───┴──────────┴─────────┴──────────────────────┴──────────────┘
+```
 
 ## Breaking Change Detection
 
@@ -160,12 +203,11 @@ Detect breaking changes and prompt for proper documentation:
 
 ## Flow
 
-Per Command Flow standard, then:
-1. **Quality Gates** - Run secrets → large files → format → lint → test (stop on failure)
-2. **Analyze** - `git status`, `git diff`, detect change types + breaking changes
+1. **Quality Gates** - Run secrets → large files → format → lint → types → test (stop on failure)
+2. **Analyze** - `git status`, `git diff`, detect change types + breaking changes + impacts
 3. **Group** - Apply atomic grouping rules
 4. **Plan** - Show commit plan with files per commit
-5. **Confirm** - AskUserQuestion (see options below)
+5. **Confirm** - User approval
 6. **Execute** - Stage and commit each group in order
 7. **Verify** - `git log` count = planned count
 
@@ -174,23 +216,11 @@ Per Command Flow standard, then:
 | Option | Behavior |
 |--------|----------|
 | Accept | Execute plan as shown |
-| Modify | Show file list, let user reassign files to different commits |
+| Modify | Reassign files to different commits |
 | Merge | Combine selected commits into one |
 | Split | Break a commit into smaller pieces |
 | Edit message | Change commit type/scope/description |
 | Cancel | Abort without committing |
-
-**Modify flow:**
-```
-Current plan: 3 commits
-[1] feat(auth): add login endpoint — auth.ts, auth.test.ts
-[2] fix(ui): correct button alignment — button.css
-[3] docs: update README — README.md
-
-Move files between commits or type 'done':
-> move auth.test.ts to 3
-> done
-```
 
 ## Flags
 
@@ -201,6 +231,15 @@ Move files between commits or type 'done':
 | `--skip-checks` | Skip quality gates (emergency use) |
 | `--force-large` | Allow files >10MB (use with caution) |
 | `--no-verify` | Skip pre-commit hooks (if any) |
+| `--amend` | Amend last commit (with safety checks) |
+
+### Amend Safety
+
+Before `--amend`:
+1. Check HEAD commit authorship matches current user
+2. Verify commit not pushed to remote
+3. Show what will be amended
+4. Require explicit confirmation
 
 ## Usage
 
@@ -209,5 +248,10 @@ Move files between commits or type 'done':
 /cco-commit --dry-run       # Preview plan without committing
 /cco-commit --single        # Force all changes into one commit
 /cco-commit --skip-checks   # Skip quality gates (emergency use)
-/cco-commit --force-large   # Allow large files (>10MB)
+/cco-commit --amend         # Amend last commit
 ```
+
+## Related Commands
+
+- `/cco-audit` - For pre-commit quality checks
+- `/cco-release` - For release commits

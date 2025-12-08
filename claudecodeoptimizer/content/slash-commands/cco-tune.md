@@ -1,13 +1,14 @@
 ---
 name: cco-tune
 description: Project-specific AI tuning and configuration
+allowed-tools: Read(*), Write(*), Edit(*), Grep(*), Glob(*), Bash(git:*), Bash(cco-setup:*), Bash(sed:*), Bash(find:*), Bash(wc:*)
 ---
 
 # /cco-tune
 
 **Project tuning** - Detection, configuration, removal, and export for the current project. Export uses currently installed standards from `~/.claude/CLAUDE.md` and `./CLAUDE.md`.
 
-**Standards:** Approval Flow | Output Formatting
+**Standards:** Approval Flow | Output Formatting | Dynamic Context | Skip Criteria | Task Tracking
 
 ## Scope
 
@@ -105,16 +106,17 @@ Show current project state before asking anything. Status shows **current values
 
 ```bash
 # Run these 4 commands separately via Bash tool:
-sed -n '/^# Universal Standards/,/^---$/p' ~/.claude/CLAUDE.md | grep -c "^- "
+# Standards use table format: | * Name | Rule |
+sed -n '/^# Universal Standards/,/^---$/p' ~/.claude/CLAUDE.md | grep -c "| \* "
 # → UNIVERSAL (e.g., 38)
 
-sed -n '/^# AI-Specific Standards/,/^---$/p' ~/.claude/CLAUDE.md | grep -c "^- "
-# → AI_SPECIFIC (e.g., 28)
+sed -n '/^# AI-Specific Standards/,/^---$/p' ~/.claude/CLAUDE.md | grep -c "| \* "
+# → AI_SPECIFIC (e.g., 32)
 
-sed -n '/^# CCO-Specific Standards/,/<!-- CCO_STANDARDS_END -->/p' ~/.claude/CLAUDE.md | grep -c "^- "
-# → CCO_SPECIFIC (e.g., 48)
+sed -n '/^# CCO-Specific Standards/,/<!-- CCO_STANDARDS_END -->/p' ~/.claude/CLAUDE.md | grep -c "| \* "
+# → CCO_SPECIFIC (e.g., 108)
 
-sed -n '/^## Conditional Standards/,/<!-- CCO_CONTEXT_END -->/p' ./CLAUDE.md | grep -c "^- "
+sed -n '/^## Conditional Standards/,/<!-- CCO_CONTEXT_END -->/p' ./CLAUDE.md | grep -c "| \* "
 # → PROJECT_SPECIFIC (e.g., 20) - returns 0 if no context
 ```
 
@@ -1037,10 +1039,40 @@ Secrets detected: {yes|no}
 Outdated deps: {N}
 
 ## Conditional Standards (auto-applied)
-**TOTAL: +{N} project-specific ({subsections})**
+**TOTAL: +{N} project-specific ({Category1} +{n1}, {Category2} +{n2}, ...)**
 
-{matched project-specific standards with counts}
+### {Category} (+{n}) - {trigger reason}
+- {Standard1}: {rule description}
+- {Standard2}: {rule description}
+...
+
+### {Category2} (+{n}) - {trigger reason}
+- {Standard1}: {rule description}
+...
 <!-- CCO_CONTEXT_END -->
+```
+
+**Example Conditional Standards format:**
+
+```markdown
+## Conditional Standards (auto-applied)
+**TOTAL: +20 project-specific (CLI +5, Ops +7, Caching +3, Testing +5)**
+
+### Apps > CLI (+5) - Type: CLI detected
+- Help: --help with examples for every command
+- Exit Codes: 0 success, non-zero failure with meaning
+- Signals: handle SIGINT/SIGTERM gracefully
+- Output Modes: human-readable default, --json for scripts
+- Config Precedence: env vars > config file > CLI args > defaults
+
+### Backend > Operations (+7) - CI/CD detected
+- Config as Code: versioned, validated, env-aware
+- Health Endpoints: /health + /ready
+- Graceful Shutdown: drain connections on SIGTERM
+- Observability: metrics, logs, traces (OpenTelemetry)
+- CI Gates: lint + test + coverage before merge
+- Blue/Green or Canary: zero-downtime deployments
+- Feature Flags: decouple deploy from release
 ```
 
 **Note:** AI Performance settings are NOT stored in CLAUDE.md - they are only in `./.claude/settings.json` where Claude Code reads them. The CCO_CONTEXT documents project characteristics that inform AI Performance auto-detection.
@@ -1252,8 +1284,8 @@ Standards are organized in 4 categories. **All counts are dynamically calculated
 
 1. **Always execute commands** - Never use memorized or estimated values
 2. **Use section boundaries** - `sed` extracts specific sections before counting
-3. **Count `^- ` only** - Lines starting with `- ` are standards
-4. **Tables are not standards** - Rows with `|` are guidance/reference
+3. **Count `| * ` pattern** - Table rows starting with `| * ` are standards
+4. **Use grep command** - `grep -c "| \* "` counts standard rows
 5. **Verify math** - `BASE_TOTAL = UNIVERSAL + AI_SPECIFIC + CCO_SPECIFIC`
 6. **Display exact values** - No `~` prefix, no approximations
 
@@ -1326,7 +1358,7 @@ Standards are organized in 4 categories. **All counts are dynamically calculated
 5. **No duplicates** - Each standard added exactly once
 6. **Confidence-aware** - LOW confidence items highlighted for review
 
-**Dynamic calculation:** Count `^- ` lines in `cco-standards-conditional.md`. Never use hardcoded counts.
+**Dynamic calculation:** Count `| * ` pattern in standards files. Command: `grep -c "| \* " <file>`. Never use hardcoded counts.
 
 ---
 

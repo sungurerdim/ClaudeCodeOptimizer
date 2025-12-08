@@ -1,13 +1,23 @@
 ---
 name: cco-optimize
-description: Measurable efficiency improvements
+description: Code cleanliness and efficiency optimization with auto-fix
+allowed-tools: Read(*), Grep(*), Glob(*), Edit(*), Bash(git:*), Bash(wc:*), Task(*)
 ---
 
 # /cco-optimize
 
-**Efficiency optimization** - Reduce waste → measure impact → verify.
+**Cleanliness & Efficiency** - Analyze → clean → optimize → verify.
+
+End-to-end: Detects waste (orphans, duplicates, stale refs) AND removes/optimizes them.
 
 **Standards:** Command Flow | Fix Workflow | Approval Flow | Safety Classification | Output Formatting
+
+## Context
+
+- Scale: !`grep "^Scale:" ./CLAUDE.md 2>/dev/null`
+- Maturity: !`grep "^Maturity:" ./CLAUDE.md 2>/dev/null`
+- File count: !`find . -type f -name "*.py" -o -name "*.ts" -o -name "*.js" 2>/dev/null | wc -l`
+- Git status: !`git status --short`
 
 ## Context Application
 
@@ -26,86 +36,127 @@ When called without flags, ask (follow CCO "Question Formatting" standard):
 
 | Question | Options (small → large) |
 |----------|-------------------------|
-| Categories? (multiSelect) | Context, Docs, Code, Cross-file, All |
+| Focus? (multiSelect) | Hygiene, Efficiency, All |
 | Mode? | Conservative, Balanced, Aggressive |
 
-**`[recommended]` placement:** Mode → Balanced
+**`[recommended]` placement:** Focus → Hygiene, Mode → Balanced
 
 Explicit flags skip questions.
 
 ## Categories
 
-| Flag | Target | Checks |
-|------|--------|--------|
-| `--context` | CLAUDE.md, prompts, agents | Duplicates, verbose patterns, implicit info, format inefficiency, dead instructions |
-| `--docs` | README, comments, docstrings | Stale content, redundant sections, verbose explanations |
-| `--code` | Source files | Quality (DRY, orphans, complexity, types) + Efficiency (loops, conditionals, algorithms) + Performance (N+1, indexes, I/O, memory) |
-| `--cross-file` | All files | Duplicate, redundant, obsolete, overlapping content |
-| `--dedupe` | All files | Focus on exact and near-duplicate detection |
-| `--consolidate` | All files | Merge overlapping content into single source |
-| `--prune` | All files | Remove obsolete, orphan, and dead content |
-| `--all` | Everything | All applicable categories |
+### Orphans (`--orphans`)
 
-**Sub-category selection (only when single flag used):**
-- `--code` → ask (multiSelect): All | Quality | Efficiency | Performance
-- `--cross-file` → ask (multiSelect): All | Duplicates | Redundant | Obsolete | Overlap
-- `--dedupe` → ask (multiSelect): All | Exact | Near-duplicate | Semantic
+Detect and remove unreferenced code:
 
-Note: `--all` or interactive "All" selection includes all sub-categories automatically.
+| Type | Detection | Action |
+|------|-----------|--------|
+| Orphan file | No imports pointing to it | Delete with confirmation |
+| Orphan function | Defined but never called | Delete or flag |
+| Orphan export | Exported but never imported | Remove export |
+| Orphan import | Imported but never used | Remove import |
+| Orphan config | Config key not referenced | Remove or flag |
 
-## Cross-File Detection
+Report: `[ORPHAN] {type}: {name} in {file:line} (last modified: {date})`
 
-### Detection Types
+**Resolution:** For each orphan, ask: "Delete" | "Keep (add reference)" | "Skip"
 
-| Type | Sub-type | Definition | Action |
-|------|----------|------------|--------|
-| Duplicate | Exact | 100% identical content | Consolidate → single source |
-| Duplicate | Near (>80%) | Minor differences | Review → merge or justify |
-| Duplicate | Semantic | Different code, same logic | Extract shared abstraction |
-| Redundant | Code | Same functionality | Keep best, redirect others |
-| Redundant | Config | Same value in multiple configs | Single source + reference |
-| Redundant | Doc | Same info in multiple docs | Consolidate or cross-reference |
-| Obsolete | Dead ref | References deleted code | Remove reference |
-| Obsolete | Stale doc | Documents removed feature | Update or remove |
-| Obsolete | Orphan | No references to it | Delete or reconnect |
-| Overlap | Partial code | Shared logic extractable | Extract common module |
-| Overlap | Doc sections | Partially same content | Merge sections |
+### Stale References (`--stale-refs`)
 
-### Detection Methods
+Detect and fix broken references:
 
-| Method | Detects | Algorithm |
-|--------|---------|-----------|
-| Content hash | Exact duplicates | MD5/SHA256 of normalized content |
-| Fuzzy match | Near-duplicates | Levenshtein distance, Jaccard similarity (threshold: 80%) |
-| AST compare | Semantic duplicates | Parse → normalize → structural comparison |
-| Token analysis | Logic duplicates | Tokenize → n-gram → similarity score |
-| Dep graph | Orphans | Build import graph → find unreachable nodes |
-| Ref scan | Obsolete refs | Grep all identifiers → verify target exists |
-| Doc extraction | Stale docs | Extract claims → verify against codebase |
+| Type | Detection | Action |
+|------|-----------|--------|
+| Broken import | Import path doesn't exist | Remove or fix path |
+| Dead link | URL returns 404 | Update or remove |
+| Missing ref | Code references undefined | Fix or remove |
+| Obsolete comment | Comment references deleted code | Update comment |
+| Phantom test | Test for non-existent function | Remove test |
 
-### Report Format
+Report: `[STALE-REF] {type}: {reference} → {missing_target} in {file:line}`
 
-Single-line: `[CROSS-FILE] {type}: "{summary}" → {file1}:{line} ↔ {file2}:{line}`
+### Duplicates (`--duplicates`)
 
-Detailed:
-```
-┌─ DUPLICATE FOUND ────────────────────────────────────────────┐
-│ Type: Near-duplicate (87% similar)                           │
-│ File A: src/utils/auth.py:45-67 (22 lines)                   │
-│ File B: src/helpers/login.py:12-35 (24 lines)                │
-├──────────────────────────────────────────────────────────────┤
-│ Differences:                                                 │
-│   - auth.py uses 'user_id', login.py uses 'userId'           │
-│   - login.py has extra logging statement                     │
-├──────────────────────────────────────────────────────────────┤
-│ Suggestion: Extract to src/core/auth_base.py                 │
-│ Risk: LOW (internal modules, full test coverage)             │
-└──────────────────────────────────────────────────────────────┘
-```
+Detect and consolidate duplicate content:
 
-## Flow
+| Type | Similarity | Action |
+|------|------------|--------|
+| Exact duplicate | 100% | Consolidate → single source + re-export |
+| Near-duplicate | >80% | Review → merge or justify differences |
+| Semantic duplicate | Same logic | Extract shared abstraction |
 
-Per Command Flow standard, then Fix Workflow for applying changes.
+Detection methods:
+- Content hash (MD5/SHA256) for exact matches
+- Fuzzy match (Levenshtein, Jaccard) for near-duplicates
+- AST comparison for semantic duplicates
+
+Report: `[DUPLICATE] {type} ({similarity}%): {file1}:{line} ↔ {file2}:{line}`
+
+### Redundancy (`--redundancy`)
+
+Detect and eliminate redundant content:
+
+| Type | Detection | Action |
+|------|-----------|--------|
+| Redundant code | Same functionality in different places | Keep best, redirect others |
+| Redundant config | Same value in multiple configs | Single source + reference |
+| Redundant docs | Same info in multiple places | Consolidate or cross-reference |
+
+### Context (`--context`)
+
+Optimize AI context files:
+
+| Target | Optimization |
+|--------|-------------|
+| CLAUDE.md | Remove duplicates, compress verbose patterns |
+| Prompts | Implicit info removal, format efficiency |
+| Agent configs | Dead instruction removal |
+
+### Docs (`--docs`)
+
+Optimize documentation:
+
+| Target | Optimization |
+|--------|-------------|
+| Stale content | Update or remove outdated sections |
+| Redundant sections | Merge overlapping content |
+| Verbose explanations | Trim to essential |
+| Broken examples | Fix or remove |
+
+### Code Efficiency (`--code`)
+
+Optimize code performance:
+
+| Category | Optimizations |
+|----------|---------------|
+| Loops | Unnecessary iterations, early exits |
+| Conditionals | Simplification, guard clauses |
+| Algorithms | Better complexity alternatives |
+| N+1 queries | Batch database calls |
+| Memory | Reduce allocations, streaming |
+| Imports | Tree-shaking hints, lazy loading |
+
+### Cross-File (`--cross-file`)
+
+Full codebase analysis combining all above:
+
+| Analysis | Scope |
+|----------|-------|
+| Dependency graph | All imports/exports |
+| Duplication map | All files |
+| Orphan detection | All code |
+| Stale ref scan | All references |
+
+## Meta-flags
+
+| Flag | Includes |
+|------|----------|
+| `--hygiene` | orphans + stale-refs + duplicates (quick cleanup) |
+| `--efficiency` | code + context + docs (optimization focus) |
+| `--deep` | All categories, thorough analysis |
+| `--prune` | Focus on removal (orphans + stale-refs + dead content) |
+| `--all` | Everything applicable |
+| `--auto-fix` | Apply safe fixes without asking |
 
 ## Resolution Actions
 
@@ -116,26 +167,24 @@ Per Command Flow standard, then Fix Workflow for applying changes.
 | Semantic duplicate | Suggest extraction | Refactor both |
 | Orphan file | Warn, suggest deletion | Delete file |
 | Orphan function | Remove from exports | Delete function |
-| Stale doc | Flag for review | Remove section |
+| Stale ref | Flag for review | Remove reference |
+| Broken import | Fix path if obvious | Remove import |
 | Config redundancy | Single source + env ref | Merge configs |
-| Overlap | Suggest extraction point | Auto-extract |
 
 ## Output
 
-### Cross-File Analysis Table
+### Cleanliness Summary
 ```
-┌─ CROSS-FILE ANALYSIS ────────────────────────────────────────┐
-│ Type       │ Sim%  │ Files                    │ Action       │
-├────────────┼───────┼──────────────────────────┼──────────────┤
-│ Duplicate  │ 100%  │ utils.py ↔ helpers.py    │ Consolidate  │
-│ Near-dup   │ 87%   │ auth.py ↔ login.py       │ Review       │
-│ Semantic   │ ~75%  │ parse_v1.py ↔ parse_v2.py│ Extract      │
-│ Orphan     │ -     │ old_api.py               │ Delete?      │
-│ Stale ref  │ -     │ README.md:42             │ Update       │
-│ Overlap    │ 45%   │ config.json ↔ .env       │ Merge        │
-├────────────┼───────┼──────────────────────────┼──────────────┤
-│ Total: 6 issues │ Safe: 3 │ Review: 3           │              │
-└────────────┴───────┴──────────────────────────┴──────────────┘
+┌─ CLEANLINESS SUMMARY ────────────────────────────────────────┐
+│ Category      │ Found │ Fixed │ Skipped │ Status            │
+├───────────────┼───────┼───────┼─────────┼───────────────────┤
+│ Orphans       │ 5     │ 4     │ 1       │ WARN              │
+│ Stale-Refs    │ 3     │ 3     │ 0       │ OK                │
+│ Duplicates    │ 2     │ 2     │ 0       │ OK                │
+│ Redundancy    │ 1     │ 1     │ 0       │ OK                │
+├───────────────┼───────┼───────┼─────────┼───────────────────┤
+│ TOTAL         │ 11    │ 10    │ 1       │ WARN              │
+└───────────────┴───────┴───────┴─────────┴───────────────────┘
 ```
 
 ### Optimization Results
@@ -166,18 +215,24 @@ After optimization:
 - [ ] Same behavior (functional equivalence)
 - [ ] No broken imports (all refs valid)
 - [ ] Metrics improved (lines/tokens reduced)
-- [ ] No orphans created (consolidation complete)
+- [ ] No new orphans created (consolidation complete)
 
 ## Usage
 
 ```bash
 /cco-optimize                    # Interactive
-/cco-optimize --context          # AI context files
-/cco-optimize --docs             # README, comments, docstrings
-/cco-optimize --code             # Source files (quality + efficiency + performance)
+/cco-optimize --hygiene          # Quick cleanup (orphans + stale-refs + duplicates)
+/cco-optimize --orphans          # Find and remove unreferenced code
+/cco-optimize --stale-refs       # Find and fix broken references
+/cco-optimize --duplicates       # Find and consolidate duplicates
+/cco-optimize --code             # Code efficiency optimization
 /cco-optimize --cross-file       # Full cross-file analysis
-/cco-optimize --dedupe           # Focus on duplicate detection
-/cco-optimize --consolidate      # Merge overlapping content
-/cco-optimize --prune            # Remove obsolete/orphan content
-/cco-optimize --all              # Everything, balanced mode
+/cco-optimize --prune            # Remove all dead content
+/cco-optimize --all --auto-fix   # Everything, auto-apply safe fixes
 ```
+
+## Related Commands
+
+- `/cco-audit` - For security and quality checks
+- `/cco-refactor` - For structural transformations (rename, move, extract)
+- `/cco-checkup` - For regular maintenance routine

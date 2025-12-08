@@ -3,58 +3,82 @@
 *AI/human agnostic - fundamental principles for all software projects*
 
 ## Code Quality
-- Fail-Fast: no silent fallbacks, immediate visible failure
-- DRY: single source of truth, no duplicates
-- No Orphans: every function called, every import used
-- Type-Safe: annotations where supported, prefer immutable
-- Complexity: cyclomatic <10 per function
-- Clean: meaningful names, single responsibility, consistent style
-- Explicit: no magic values, clear intent
-- Scope: only requested changes, general solutions
+
+| Standard | Rule |
+|----------|------|
+| * Fail-Fast | No silent fallbacks, immediate visible failure |
+| * DRY | Single source of truth, no duplicates |
+| * No-Orphans | Every function called, every import used |
+| * Type-Safe | Annotations where supported, prefer immutable |
+| * Complexity | Cyclomatic <10 per function |
+| * Clean | Meaningful names, single responsibility, consistent style |
+| * Explicit | No magic values, clear intent |
+| * Scope | Only requested changes, general solutions |
 
 ## File & Resource
-- Minimal Touch: only files required for task
-- No Unsolicited: never create files unless requested
-- Paths: forward slash, relative, quote spaces
-- Cleanup: temp files, handles, connections
-- Skip: .git, node_modules, __pycache__, venv, dist, build
+
+| Standard | Rule |
+|----------|------|
+| * Minimal-Touch | Only files required for task |
+| * No-Unsolicited | Never create files unless requested |
+| * Paths | Forward slash, relative, quote spaces |
+| * Cleanup | Temp files, handles, connections |
+| * Skip | .git, node_modules, __pycache__, venv, dist, build |
 
 ## Security
-- Secrets: env vars or vault only
-- Input: validate at system boundaries
-- Access: least privilege, secure defaults
-- Deps: review before adding, keep updated
-- Defense: multiple layers, don't trust single control
+
+| Standard | Rule |
+|----------|------|
+| * Secrets | Env vars or vault only |
+| * Input | Validate at system boundaries |
+| * Access | Least privilege, secure defaults |
+| * Deps | Review before adding, keep updated |
+| * Defense | Multiple layers, don't trust single control |
 
 ## Testing
-- Coverage: 60-90% context-adjusted
-- Isolation: no inter-test deps, reproducible
-- Integrity: never edit tests to pass code
-- Critical Paths: e2e for critical workflows
+
+| Standard | Rule |
+|----------|------|
+| * Coverage | 60-90% context-adjusted |
+| * Isolation | No inter-test deps, reproducible |
+| * Integrity | Never edit tests to pass code |
+| * Critical-Paths | E2E for critical workflows |
 
 ## Error Handling
-- Catch: log context, recover or propagate
-- No Silent: never swallow exceptions
-- User-Facing: clarity + actionable
-- Logs: technical details only
-- Rollback: consistent state on failure
+
+| Standard | Rule |
+|----------|------|
+| * Catch | Log context, recover or propagate |
+| * No-Silent | Never swallow exceptions |
+| * User-Facing | Clarity + actionable |
+| * Logs | Technical details only |
+| * Rollback | Consistent state on failure |
 
 ## Documentation
-- README: description, setup, usage
-- CHANGELOG: versions with breaking changes
-- Comments: why not what
-- Examples: working, common use cases
+
+| Standard | Rule |
+|----------|------|
+| * README | Description, setup, usage |
+| * CHANGELOG | Versions with breaking changes |
+| * Comments | Why not what |
+| * Examples | Working, common use cases |
 
 ## Workflow
-- Conventions: match existing patterns
-- Reference Integrity: find ALL refs, update, verify
-- Decompose: break complex tasks into steps
-- Version: SemVer (MAJOR.MINOR.PATCH)
+
+| Standard | Rule |
+|----------|------|
+| * Conventions | Match existing patterns |
+| * Reference-Integrity | Find ALL refs, update, verify |
+| * Decompose | Break complex tasks into steps |
+| * Version | SemVer (MAJOR.MINOR.PATCH) |
 
 ## UX/DX
-- Minimum Friction: fewest steps to goal
-- Maximum Clarity: unambiguous output
-- Predictable: consistent behavior
+
+| Standard | Rule |
+|----------|------|
+| * Minimum-Friction | Fewest steps to goal |
+| * Maximum-Clarity | Unambiguous output |
+| * Predictable | Consistent behavior |
 
 ---
 
@@ -62,54 +86,78 @@
 *Portable across Claude/Codex/Gemini - AGENTS.md compatible*
 
 ## Context Optimization
-- Semantic Density: concise over verbose
-- Structured: tables/lists over prose
-- Front-load: critical info first
-- Hierarchy: H2 > H3 > bullets
-- Scope: bounded, reference over repeat
+
+| Standard | Rule |
+|----------|------|
+| * Semantic-Density | Concise over verbose |
+| * Structured | Tables/lists over prose |
+| * Front-load | Critical info first |
+| * Hierarchy | H2 > H3 > bullets |
+| * Scope | Bounded, reference over repeat |
 
 ## AI Behavior
 
 ### Execution Order [CRITICAL]
-1. **Read First**: NEVER propose edits to unread files
-2. **Plan Before Act**: understand full scope before any action
-3. **Incremental**: complete one step fully before starting next
-4. **Verify**: confirm changes match stated intent
+
+| Standard | Rule |
+|----------|------|
+| * Read-First | NEVER propose edits to unread files |
+| * Plan-Before-Act | Understand full scope before any action |
+| * Incremental | Complete one step fully before starting next |
+| * Verify | Confirm changes match stated intent |
 
 ### Decision Making
-- Challenge: question solutions that seem too perfect
-- Ask: when uncertain, clarify before proceeding
-- Confidence: explicitly state uncertainty level for non-obvious conclusions
+
+| Standard | Rule |
+|----------|------|
+| * Challenge | Question solutions that seem too perfect |
+| * Ask | When uncertain, clarify before proceeding |
+| * Confidence | Explicitly state uncertainty level for non-obvious conclusions |
 
 ### Prohibited Patterns
-- Guessing file contents without reading
-- Starting implementation before understanding scope
-- Skipping verification steps
-- Assuming user intent without confirmation
+
+| Pattern | Rule |
+|---------|------|
+| * No-Guessing | Never guess file contents without reading |
+| * No-Premature | Never start implementation before understanding scope |
+| * No-Skip | Never skip verification steps |
+| * No-Assume | Never assume user intent without confirmation |
 
 ## Quality Control
-- Understand First: no vibe coding
-- Adapt: examples to context, don't copy blind
-- No Hallucination: only existing APIs/features
-- Positive: what to do, not what to avoid
-- Motivate: explain why behaviors matter
+
+| Standard | Rule |
+|----------|------|
+| * Understand-First | No vibe coding |
+| * Adapt | Examples to context, don't copy blind |
+| * No-Hallucination | Only existing APIs/features |
+| * Positive | What to do, not what to avoid |
+| * Motivate | Explain why behaviors matter |
 
 ## Status Updates
-- Announce: before action, not after
-- Progress: Starting > In progress > Completed
-- Transitions: clear phase signals
-- No Silent: user always knows state
+
+| Standard | Rule |
+|----------|------|
+| * Announce | Before action, not after |
+| * Progress | Starting > In progress > Completed |
+| * Transitions | Clear phase signals |
+| * No-Silent | User always knows state |
 
 ## Multi-Model
-- Agnostic: no model-specific syntax
-- Graceful: account for different capabilities
-- Portable: patterns work across models
+
+| Standard | Rule |
+|----------|------|
+| * Agnostic | No model-specific syntax |
+| * Graceful | Account for different capabilities |
+| * Portable | Patterns work across models |
 
 ## Output Standards
-- Error: `[SEVERITY] {What} in {file:line}`
-- Status: OK / WARN / FAIL
-- Accounting: done + skip + fail = total
-- Structured: JSON/table when needed
+
+| Standard | Rule |
+|----------|------|
+| * Error | `[SEVERITY] {What} in {file:line}` |
+| * Status | OK / WARN / FAIL |
+| * Accounting | done + skip + fail = total |
+| * Structured | JSON/table when needed |
 
 ---
 
@@ -117,75 +165,113 @@
 *CCO workflow mechanisms - excluded from AGENTS.md export*
 
 ## Command Flow
-1. Context Check: verify CCO_CONTEXT, suggest /cco-tune if missing
-2. Read Context: parse ./CLAUDE.md markers
-3. Execute: command-specific logic
-4. Report: results with accounting
+
+| Standard | Rule |
+|----------|------|
+| * Context-Check | Verify CCO_CONTEXT, suggest /cco-tune if missing |
+| * Read-Context | Parse ./CLAUDE.md markers |
+| * Execute | Command-specific logic |
+| * Report | Results with accounting |
 
 ## Safety
-- Pre-op: git status before modifications
-- Dirty: prompt Commit / Stash / Continue
-- Rollback: clean state enables git checkout
+
+| Standard | Rule |
+|----------|------|
+| * Pre-op | Git status before modifications |
+| * Dirty | Prompt Commit / Stash / Continue |
+| * Rollback | Clean state enables git checkout |
 
 ### Classification
+
 **Safe (auto-apply):**
-- Remove unused imports
-- Parameterize SQL
-- Move secrets to env
-- Fix linting issues
-- Add type annotations
+
+| Standard | Rule |
+|----------|------|
+| * Remove-Imports | Remove unused imports |
+| * Parameterize-SQL | Parameterize SQL queries |
+| * Move-Secrets | Move secrets to env |
+| * Fix-Lint | Fix linting issues |
+| * Add-Types | Add type annotations |
 
 **Risky (require approval):**
-- Auth/CSRF changes
-- DB schema changes
-- API contract changes
-- Delete files
-- Rename public APIs
+
+| Standard | Rule |
+|----------|------|
+| * Auth-Changes | Auth/CSRF changes |
+| * DB-Schema | DB schema changes |
+| * API-Contract | API contract changes |
+| * Delete-Files | Delete files |
+| * Rename-Public | Rename public APIs |
 
 ## Fix Workflow
-Flow: Analyze > Report > Approve > Apply > Verify
-Output: `Applied: N | Skipped: N | Failed: N | Total: N`
+
+| Standard | Rule |
+|----------|------|
+| * Flow | Analyze > Report > Approve > Apply > Verify |
+| * Output | `Applied: N \| Skipped: N \| Failed: N \| Total: N` |
 
 ## Impact Preview
-- Direct: files to modify
-- Dependents: files that import/use
-- Tests: coverage of affected code
-- Risk: LOW / MEDIUM / HIGH
-- Skip: LOW risk, <=2 files, full coverage
+
+| Standard | Rule |
+|----------|------|
+| * Direct | Files to modify |
+| * Dependents | Files that import/use |
+| * Tests | Coverage of affected code |
+| * Risk | LOW / MEDIUM / HIGH |
+| * Skip | LOW risk, <=2 files, full coverage |
 
 ## Priority
-- CRITICAL: security, data exposure
-- HIGH: high-impact, low-effort
-- MEDIUM: balanced impact/effort
-- LOW: style, minor optimization
+
+| Standard | Rule |
+|----------|------|
+| * CRITICAL | Security, data exposure |
+| * HIGH | High-impact, low-effort |
+| * MEDIUM | Balanced impact/effort |
+| * LOW | Style, minor optimization |
 
 ## Approval Flow
 
 ### Tool Configuration [STRICT]
-```
-Tool: AskUserQuestion
-multiSelect: true (always)
-```
+
+| Standard | Rule |
+|----------|------|
+| * Tool | AskUserQuestion |
+| * MultiSelect | true (always) |
 
 ### Ordering [REQUIRED]
-Present items in priority order: CRITICAL → HIGH → MEDIUM → LOW
+
+| Standard | Rule |
+|----------|------|
+| * Priority-Order | CRITICAL → HIGH → MEDIUM → LOW |
 
 ### Format [EXACT]
-`{description} [{file:line}] [{safe|risky}]`
+
+| Standard | Rule |
+|----------|------|
+| * Item-Format | `{description} [{file:line}] [{safe\|risky}]` |
 
 ### Batch Options [REQUIRED]
-- First option MUST be: "All ({N})" where N = total items
-- Remaining options: individual items
+
+| Standard | Rule |
+|----------|------|
+| * All-Option | First option MUST be: "All ({N})" where N = total items |
+| * Individual | Remaining options: individual items |
 
 ### Pagination [LIMITS]
-- Max 4 questions per AskUserQuestion call
-- Max 4 options per question
-- If more items: use multiple sequential calls
+
+| Standard | Rule |
+|----------|------|
+| * Max-Questions | Max 4 questions per AskUserQuestion call |
+| * Max-Options | Max 4 options per question |
+| * Overflow | If more items: use multiple sequential calls |
 
 ## Question Formatting
 
 ### Separation Rules [CRITICAL]
-**YOU MUST present different question categories in SEPARATE batches.**
+
+| Standard | Rule |
+|----------|------|
+| * Separate-Categories | Present different categories in SEPARATE batches |
 
 | Category Type | Examples | Batch |
 |---------------|----------|-------|
@@ -194,27 +280,31 @@ Present items in priority order: CRITICAL → HIGH → MEDIUM → LOW
 | Thresholds | coverage%, complexity | Batch 3 |
 
 ### Labels [MANDATORY]
-Each option receives **exactly ONE** label (right side):
 
-| Label | When to Use | Priority |
-|-------|-------------|----------|
-| `[current]` | Matches existing config | 1 (wins over detected) |
-| `[detected]` | Auto-detected, not in config | 2 |
-| `[recommended]` | Best practice, max 1/question | 3 (always show) |
-
-**Precedence:** If detected AND current both apply → show `[current]` only
+| Standard | Rule |
+|----------|------|
+| * One-Label | Each option receives exactly ONE label |
+| * Current | `[current]` - Matches existing config (priority 1) |
+| * Detected | `[detected]` - Auto-detected, not in config (priority 2) |
+| * Recommended | `[recommended]` - Best practice, max 1/question (priority 3) |
+| * Precedence | If detected AND current both apply → show `[current]` only |
 
 ### Ordering [REQUIRED]
-- Numeric values: ascending (60 → 70 → 80 → 90)
-- Severity: safest → riskiest
-- Scope: narrowest → widest
+
+| Standard | Rule |
+|----------|------|
+| * Numeric | Ascending (60 → 70 → 80 → 90) |
+| * Severity | Safest → riskiest |
+| * Scope | Narrowest → widest |
 
 ### Verification [PRE-OUTPUT]
-Before calling AskUserQuestion, verify:
-1. Categories separated into distinct question batches
-2. Each option has exactly ONE label
-3. Maximum ONE `[recommended]` per question
-4. Options ordered per rules above
+
+| Standard | Rule |
+|----------|------|
+| * Check-Categories | Categories separated into distinct batches |
+| * Check-Labels | Each option has exactly ONE label |
+| * Check-Recommended | Maximum ONE `[recommended]` per question |
+| * Check-Order | Options ordered per rules above |
 
 ### Examples
 
@@ -249,30 +339,240 @@ Q: "Configure options"
 ## Output Formatting
 
 ### Table Characters [STRICT]
-| Type | Characters |
-|------|------------|
-| Borders | `─│┌┐└┘├┤┬┴┼` |
-| Headers | `═║╔╗╚╝` |
+
+| Standard | Rule |
+|----------|------|
+| * Borders | `─│┌┐└┘├┤┬┴┼` |
+| * Headers | `═║╔╗╚╝` |
 
 ### Alignment [REQUIRED]
-- Numbers: right-aligned
-- Text: left-aligned
-- Status indicators: centered
+
+| Standard | Rule |
+|----------|------|
+| * Numbers | Right-aligned |
+| * Text | Left-aligned |
+| * Status | Centered |
 
 ### Status Indicators [EXACT]
-Use ONLY these values: `OK` | `WARN` | `FAIL` | `PASS` | `SKIP`
+
+| Standard | Rule |
+|----------|------|
+| * Values | OK \| WARN \| FAIL \| PASS \| SKIP |
 
 ### Progress Bars [FORMULA]
-`filled = round(percentage / 100 * 8)` → `████░░░░`
+
+| Standard | Rule |
+|----------|------|
+| * Formula | `filled = round(percentage / 100 * 8)` → `████░░░░` |
 
 ### Prohibited
-- No emojis in tables
-- No unicode decorations beyond specified characters
-- No ASCII art headers
+
+| Standard | Rule |
+|----------|------|
+| * No-Emojis | No emojis in tables |
+| * No-Unicode | No unicode decorations beyond specified |
+| * No-ASCII-Art | No ASCII art headers |
+
+## Dynamic Context
+
+### Injection Syntax [REQUIRED]
+
+| Standard | Rule |
+|----------|------|
+| * Syntax | Use `!` backtick for real-time context |
+| * Git-Status | `!`git status --short`` |
+| * Branch | `!`git branch --show-current`` |
+| * CCO-Context | `!`head -30 ./CLAUDE.md 2>/dev/null`` |
+
+### When to Use
+
+| Context Type | Command | Example |
+|--------------|---------|---------|
+| Git state | commit, refactor | `!`git status`` |
+| File content | audit, review | `!`head -50 ./CLAUDE.md`` |
+| Dependencies | audit, health | `!`cat package.json \| jq .dependencies`` |
+| Recent changes | commit, review | `!`git log --oneline -5`` |
+
+### Benefits
+
+| Standard | Rule |
+|----------|------|
+| * Accuracy | Real-time accuracy over stale assumptions |
+| * Anti-Hallucination | Reduces hallucination risk |
+| * Efficiency | Eliminates redundant file reads |
+
+## Tool Restrictions
+
+### Frontmatter Format [STRICT]
+
+| Standard | Rule |
+|----------|------|
+| * Name | `name: command-name` |
+| * Description | `description: Brief description` |
+| * Tools | `allowed-tools: Tool1(*), Tool2(pattern:*)` |
+
+### Pattern Syntax
+
+| Pattern | Matches | Example |
+|---------|---------|---------|
+| `Tool(*)` | All uses of tool | `Read(*)` |
+| `Tool(path/*)` | Path prefix | `Edit(src/*)` |
+| `Bash(cmd:*)` | Specific command | `Bash(git:*)` |
+| `Bash(cmd1:*, cmd2:*)` | Multiple commands | `Bash(git:*, npm:*)` |
+
+### Security Benefit
+
+| Standard | Rule |
+|----------|------|
+| * Scope | Commands can only use declared tools |
+| * Prevention | Prevents accidental destructive operations |
+| * Explicit | Explicit scope = predictable behavior |
+
+## Parallel Execution
+
+### When to Parallelize [REQUIRED]
+
+| Scenario | Action |
+|----------|--------|
+| Independent scans | Launch parallel agents |
+| Multiple file reads | Batch in single call |
+| Unrelated checks | Run simultaneously |
+| Dependent operations | Run sequentially |
+
+### Agent Parallelization Pattern
+
+| Standard | Rule |
+|----------|------|
+| * Launch | Launch agents simultaneously |
+| * Scope | Each agent handles distinct scope |
+| * Merge | Merge results after all complete |
+
+### Benefits
+
+| Standard | Rule |
+|----------|------|
+| * Speed | Faster execution (N agents = ~1/N time) |
+| * Coverage | Better coverage (diverse search strategies) |
+| * Context | Reduced context switching |
+
+## Quick Mode
+
+### Single-Message Enforcement [STRICT]
+
+| Standard | Rule |
+|----------|------|
+| * No-Questions | Do not ask questions |
+| * Defaults | Use smart defaults for all options |
+| * No-Intermediate | Do not output intermediate text |
+| * Summary | Only tool calls, then final summary |
+
+### Applicable Commands
+
+| Command | Quick Behavior |
+|---------|----------------|
+| commit | Stage all, single commit, push |
+| generate | Use detected conventions |
+| audit | Smart scope, auto-fix safe |
+| optimize | Balanced mode, all categories |
+
+### Output Restriction
+
+| Standard | Rule |
+|----------|------|
+| * Single-Message | Complete ALL steps in a single message |
+| * No-Extra-Tools | Do not use any other tools |
+| * No-Extra-Text | Do not send any other text besides tool calls and final summary |
+
+## Conservative Judgment
+
+### Severity Assignment [CRITICAL]
+
+| Keyword | Severity | Confidence Required |
+|---------|----------|---------------------|
+| crash, data loss, security breach | CRITICAL | HIGH |
+| broken, blocked, cannot use | HIGH | HIGH |
+| error, fail, incorrect | MEDIUM | MEDIUM |
+| style, minor, cosmetic | LOW | LOW |
+
+### False Positive Prevention
+
+| Standard | Rule |
+|----------|------|
+| * Trust | False positives erode user trust faster than missed issues |
+| * Lower | When uncertain between two severities, choose lower |
+| * Genuine | Only flag issues that genuinely block users |
+| * Evidence | Require explicit evidence, not inference |
+
+### Prohibited Escalations
+
+| Standard | Rule |
+|----------|------|
+| * Style | Style issues → never CRITICAL or HIGH |
+| * Unverified | Unverified claims → never above MEDIUM |
+| * Single | Single occurrence → never CRITICAL unless security |
+
+## Skip Criteria
+
+### Always Skip [STRICT]
+
+| Category | Paths/Patterns |
+|----------|----------------|
+| Version Control | `.git/`, `.svn/`, `.hg/` |
+| Dependencies | `node_modules/`, `vendor/`, `.venv/`, `venv/` |
+| Build Output | `dist/`, `build/`, `out/`, `target/`, `.next/` |
+| Cache | `__pycache__/`, `.cache/`, `.tmp/` |
+| IDE | `.idea/`, `.vscode/`, `.vs/` |
+| Test Fixtures | `fixtures/`, `testdata/`, `__snapshots__/` |
+| Examples | `examples/`, `samples/`, `demo/`, `benchmarks/` |
+
+### Inline Skip Markers
+
+| Standard | Rule |
+|----------|------|
+| * Line | `// cco-ignore` or `# cco-ignore` - skip this line |
+| * File | `// cco-ignore-file` or `# cco-ignore-file` - skip entire file |
+| * Markdown | `<!-- cco-ignore -->` - skip in markdown |
+
+### Generated File Detection
+
+| Standard | Rule |
+|----------|------|
+| * Minified | `*.min.js`, `*.min.css` |
+| * Generated | `*.generated.*`, `*.auto.*` |
+| * Header | Files with `// @generated` or `# Generated by` header |
+
+## Task Tracking
+
+### Pre-Execution Requirement [REQUIRED]
+
+| Standard | Rule |
+|----------|------|
+| * Create | Create TODO list with ALL items |
+| * Status | Mark each as: pending → in_progress → completed |
+| * No-Skip | Never skip items - update status instead |
+| * Single | Exactly ONE item in_progress at a time |
+
+### Accounting Verification
+
+| Standard | Rule |
+|----------|------|
+| * Total | Final output MUST satisfy: `done + skip + fail = total` |
+
+### Progress Visibility
+
+| Phase | Action |
+|-------|--------|
+| Start | List all items with pending status |
+| Process | Update to in_progress before working |
+| Complete | Mark completed immediately after |
+| Report | Show final accounting |
 
 ## Integration
-- Context: read CCO_CONTEXT_START markers
-- Apply: Guidelines, Thresholds, Applicable
-- Tools: parallel independent, sequential dependent
-- Thinking: 5K standard, 8K medium, 10K complex
+
+| Standard | Rule |
+|----------|------|
+| * Context | Read CCO_CONTEXT_START markers |
+| * Apply | Guidelines, Thresholds, Applicable |
+| * Tools | Parallel independent, sequential dependent |
+| * Thinking | 5K standard, 8K medium, 10K complex |
 <!-- CCO_STANDARDS_END -->
