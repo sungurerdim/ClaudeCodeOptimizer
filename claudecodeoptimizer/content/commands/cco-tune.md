@@ -100,6 +100,31 @@ Global `~/.claude/` files are never modified by cco-tune.
 
 Show current project state before asking anything. Status shows **current values and locations only** - no reasoning (that comes in detection results).
 
+### 1.1 Count Standards First (MANDATORY)
+
+**CRITICAL:** Before displaying status, you MUST run these commands and use the EXACT results. NEVER estimate or guess.
+
+```bash
+# Run these 4 commands separately via Bash tool:
+sed -n '/^# Universal Standards/,/^---$/p' ~/.claude/CLAUDE.md | grep -c "^- "
+# → UNIVERSAL (e.g., 38)
+
+sed -n '/^# AI-Specific Standards/,/^---$/p' ~/.claude/CLAUDE.md | grep -c "^- "
+# → AI_SPECIFIC (e.g., 28)
+
+sed -n '/^# CCO-Specific Standards/,/<!-- CCO_STANDARDS_END -->/p' ~/.claude/CLAUDE.md | grep -c "^- "
+# → CCO_SPECIFIC (e.g., 48)
+
+sed -n '/^## Conditional Standards/,/<!-- CCO_CONTEXT_END -->/p' ./CLAUDE.md | grep -c "^- "
+# → PROJECT_SPECIFIC (e.g., 20) - returns 0 if no context
+```
+
+**Calculate totals:**
+- `BASE_TOTAL = UNIVERSAL + AI_SPECIFIC + CCO_SPECIFIC`
+- `TOTAL = BASE_TOTAL + PROJECT_SPECIFIC`
+
+### 1.2 Display Status
+
 ```
 ╔════════════════════════════════════════════════════════════════════════════════╗
 ║                              CCO PROJECT STATUS                                ║
@@ -114,14 +139,14 @@ Show current project state before asking anything. Status shows **current values
 ║ Maturity        │ {maturity} | Breaking: {breaking} | Priority: {priority}     ║
 ╠════════════════════════════════════════════════════════════════════════════════╣
 ║ ACTIVE SETTINGS (./.claude/settings.json)                                      ║
-├────────────────┬──────────────────────────────────────────────────────────────┤
-║ Thinking       │ {value} tokens                                               ║
-║ MCP Output     │ {value} tokens                                               ║
-║ Caching        │ {on|off}                                                     ║
-║ Statusline     │ {Full|Minimal|None}                    ./.claude/statusline.js║
-║ Permissions    │ {level} ({N} rules)                                          ║
+├────────────────┬───────────────────────────────────────────────────────────────┤
+║ Thinking       │ {value} tokens                                                ║
+║ MCP Output     │ {value} tokens                                                ║
+║ Caching        │ {on|off}                                                      ║
+║ Statusline     │ {Full|Minimal|None}                     ./.claude/statusline.js║
+║ Permissions    │ {level} ({N} rules)                                           ║
 ╠════════════════════════════════════════════════════════════════════════════════╣
-║ STANDARDS      │ ~{base} base + {N} project-specific = ~{total}               ║
+║ STANDARDS      │ {BASE_TOTAL} base + {PROJECT_SPECIFIC} project = {TOTAL}      ║
 ╚════════════════════════════════════════════════════════════════════════════════╝
 ```
 
@@ -135,7 +160,7 @@ Show current project state before asking anything. Status shows **current values
 ╠════════════════════════════════════════════════════════════════════════════════╣
 ║ CONTEXT         │ Not configured                                               ║
 ║ ACTIVE SETTINGS │ Not configured                                               ║
-║ STANDARDS       │ ~{base_count} base only (no project-specific)                ║
+║ STANDARDS       │ {BASE_TOTAL} base only (no project-specific)                 ║
 ╚════════════════════════════════════════════════════════════════════════════════╝
 ```
 
@@ -682,7 +707,7 @@ Show unified table with confidence indicators. **Every row shows what action it 
 ├──────────────────────────────────────────────────────────────────────────────────────────────┤
 ║ CLI │ Operations │ Testing │ Caching = {N} project-specific (counted after evaluation)      ║
 ╠══════════════════════════════════════════════════════════════════════════════════════════════╣
-║ TOTAL: ~{base} base + {N} project-specific = ~{total} standards                              ║
+║ TOTAL: {BASE_TOTAL} base + {PROJECT_SPECIFIC} project-specific = {TOTAL} standards           ║
 ╚══════════════════════════════════════════════════════════════════════════════════════════════╝
 ```
 
@@ -962,9 +987,9 @@ Show before/after comparison for all changed settings:
 ╠════════════════════════════════════════════════════════════════════════════════╣
 ║ STANDARDS                                                                      ║
 ├────────────────┬───────────────────────────────────────────────────────────────┤
-║ Base           │ ~{base_count} (Universal + AI + CCO)                          ║
-║ Project        │ +{N} ({triggered_subsections})                                ║
-║ Total          │ ~{total} standards                                            ║
+║ Base           │ {BASE_TOTAL} (Universal + AI + CCO)                           ║
+║ Project        │ +{PROJECT_SPECIFIC} ({triggered_subsections})                 ║
+║ Total          │ {TOTAL} standards                                             ║
 ╠════════════════════════════════════════════════════════════════════════════════╣
 ║ FILES WRITTEN                                                                  ║
 ├────────────────────────────────────────────────────────────────────────────────┤
@@ -1053,33 +1078,9 @@ Standards are organized in 4 categories. **All counts are dynamically calculated
 | CCO-Specific | `content/standards/cco-standards.md` | `~/.claude/CLAUDE.md` |
 | Project-Specific | `content/standards/cco-standards-conditional.md` | `./CLAUDE.md` (triggered only) |
 
-### Dynamic Count Commands
+### Count Commands
 
-**MANDATORY:** Execute these to get accurate counts before displaying:
-
-```bash
-# Base standards (from installed ~/.claude/CLAUDE.md)
-UNIVERSAL=$(sed -n '/^# Universal Standards/,/^---$/p' ~/.claude/CLAUDE.md | grep -c "^- ")
-AI_SPECIFIC=$(sed -n '/^# AI-Specific Standards/,/^---$/p' ~/.claude/CLAUDE.md | grep -c "^- ")
-CCO_SPECIFIC=$(sed -n '/^# CCO-Specific Standards/,/<!-- CCO_STANDARDS_END -->/p' ~/.claude/CLAUDE.md | grep -c "^- ")
-BASE_TOTAL=$((UNIVERSAL + AI_SPECIFIC + CCO_SPECIFIC))
-
-# Conditional pool (from source file - all available)
-# Path relative to CCO package installation
-CONDITIONAL_POOL=$(grep -c "^- " claudecodeoptimizer/content/standards/cco-standards-conditional.md)
-
-# Project-specific triggered (from local ./CLAUDE.md after cco-tune)
-PROJECT_SPECIFIC=$(sed -n '/^## Conditional Standards/,/<!-- CCO_CONTEXT_END -->/p' ./CLAUDE.md 2>/dev/null | grep -c "^- " || echo 0)
-
-# Total active
-TOTAL=$((BASE_TOTAL + PROJECT_SPECIFIC))
-```
-
-### Display Format
-
-```
-STANDARDS: {BASE_TOTAL} base + {PROJECT_SPECIFIC} project-specific = {TOTAL} active
-```
+**See [Step 1.1](#11-count-standards-first-mandatory) for the MANDATORY commands to run.**
 
 ### Count Rules
 
@@ -1087,8 +1088,8 @@ STANDARDS: {BASE_TOTAL} base + {PROJECT_SPECIFIC} project-specific = {TOTAL} act
 2. **Use section boundaries** - `sed` extracts specific sections before counting
 3. **Count `^- ` only** - Lines starting with `- ` are standards
 4. **Tables are not standards** - Rows with `|` are guidance/reference
-5. **Verify math** - `BASE = UNIVERSAL + AI_SPECIFIC + CCO_SPECIFIC`
-6. **Handle missing files** - Use `|| echo 0` for optional files
+5. **Verify math** - `BASE_TOTAL = UNIVERSAL + AI_SPECIFIC + CCO_SPECIFIC`
+6. **Display exact values** - No `~` prefix, no approximations
 
 ---
 
@@ -1242,7 +1243,7 @@ Guidelines are generated based on user-configured values to provide context-awar
 
 1. **All questions at the start** - no mid-process interruptions
 2. **Local files only** - AI Performance, statusline, permissions ALL in `./.claude/settings.json`, NEVER touch `~/.claude/`
-3. **Dynamic counts** - standard counts calculated from source files
+3. **Dynamic counts** - ALWAYS run Step 1.1 commands before displaying any count. Never estimate or use hardcoded values
 4. **Show affected standards** - when editing, show what standards change
 5. **Preserve non-CCO content** - In CLAUDE.md, preserve user content outside `<!-- CCO_*_START/END -->` markers
 6. **ALWAYS overwrite CCO content** - All CCO-managed content is ALWAYS overwritten with fresh source:
@@ -1252,7 +1253,7 @@ Guidelines are generated based on user-configured values to provide context-awar
    - Never skip because "file exists" or "content unchanged" - always write fresh
 7. **Granular standard selection** - each subsection is independently evaluated, not atomic categories
 8. **No duplicate standards** - each standard is added exactly once; deduplicate before writing to CLAUDE.md
-9. **Never modify global** - cco-tune has NO permission to read/write/modify any file in `~/.claude/` directory
+9. **Never modify global** - cco-tune may READ `~/.claude/CLAUDE.md` for counting, but NEVER write/modify any file in `~/.claude/`
 10. **Backward compatibility** - all CCO markers (`<!-- CCO_*_START -->...<!-- CCO_*_END -->`) are removed before inserting new content; ensures clean upgrades from any previous CCO version
 11. **Question Labels** - Follow CCO "Question Formatting" standard (labels, precedence, ordering)
 12. **Review Sequence** - Detection results → Configuration Summary box → Approval question
