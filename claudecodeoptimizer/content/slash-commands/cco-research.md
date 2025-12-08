@@ -27,6 +27,17 @@ End-to-end: Searches multiple sources, scores reliability, synthesizes findings.
 | Priority | Speed → quick mode default; Quality → deep mode default |
 | Data | PII/Regulated → include compliance/security sources in research |
 
+## Agent Integration
+
+| Phase | Agent | Scope | Purpose |
+|-------|-------|-------|---------|
+| Search | `cco-agent-research` | `search` | Multi-source discovery with tiering |
+| Analyze | `cco-agent-research` | `analyze` | Deep source analysis, contradiction detection |
+| Synthesize | `cco-agent-research` | `synthesize` | Generate weighted recommendation |
+| Full | `cco-agent-research` | `full` | All phases combined (standard flow) |
+
+**Local Mode:** For `--local` flag, uses `cco-agent-analyze` with `scope: scan` instead (codebase-only search).
+
 ## Default Behavior
 
 When called without query, ask:

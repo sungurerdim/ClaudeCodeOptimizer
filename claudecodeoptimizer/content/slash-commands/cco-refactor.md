@@ -32,6 +32,15 @@ Requires clean git state per Pre-Operation Safety standard.
 | Scale | 10K+ → incremental refactors, feature flags; <100 → batch changes OK |
 | Team | 6+ → document changes for team awareness, update ADRs |
 
+## Agent Integration
+
+| Phase | Agent | Scope | Purpose |
+|-------|-------|-------|---------|
+| Map | `cco-agent-analyze` | `references` | Cross-file reference mapping |
+| Transform | `cco-agent-apply` | `refactor` | Execute approved changes |
+
+**Reference Mapping:** Before any refactor operation, use `cco-agent-analyze` with `scope: references` to get complete reference map including definition, imports, calls, types, tests, and docs.
+
 ## Default Behavior
 
 When called without operation, ask:

@@ -30,6 +30,15 @@ Read-only metrics collection and visualization.
 | Priority | Speed → highlight blockers only; Quality → show all metrics |
 | Data | PII/Regulated → security score weight ×2 |
 
+## Agent Integration
+
+| Phase | Agent | Scope | Purpose |
+|-------|-------|-------|---------|
+| Metrics | `cco-agent-analyze` | `scan` | Collect current metrics |
+| Trends | `cco-agent-analyze` | `trends` | Historical comparison |
+
+**Trend Tracking:** Use `cco-agent-analyze` with `scope: trends` to get historical metrics and delta indicators (↑↓→⚠). Metrics are stored in `.cco/metrics.json`.
+
 ## Flow
 
 Per Command Flow standard (read-only, no fixes).

@@ -31,6 +31,16 @@ Analyzes architecture, identifies gaps, and provides actionable recommendations.
 | Data | PII/Regulated → security review mandatory, compliance check |
 | Type | API → contract stability; Library → backward compatibility; CLI → UX consistency |
 
+## Agent Integration
+
+| Phase | Agent | Scope | Purpose |
+|-------|-------|-------|---------|
+| Map | `cco-agent-analyze` | `architecture` | Dependency graph, coupling metrics, pattern detection |
+| Analyze | `cco-agent-analyze` | `scan` | Issue detection for findings |
+| Apply | `cco-agent-apply` | `fix` | Implement approved recommendations |
+
+**Architecture Analysis:** Use `cco-agent-analyze` with `scope: architecture` to get dependency graph, coupling/cohesion metrics, and detected architectural patterns.
+
 ## Flow
 
 1. **Map Current State** - Analyze architecture, patterns, dependencies
