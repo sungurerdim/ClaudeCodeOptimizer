@@ -30,6 +30,15 @@ End-to-end: Detects waste (orphans, duplicates, stale refs) AND removes/optimize
 | Data | PII → no caching user data, careful with logging; Regulated → audit trail |
 | Priority | Speed → quick wins only; Quality → comprehensive analysis |
 
+## Agent Integration
+
+| Phase | Agent | Scope | Purpose |
+|-------|-------|-------|---------|
+| Scan | `cco-agent-analyze` | `scan` | Detect orphans, duplicates, stale refs |
+| Optimize | `cco-agent-apply` | `optimize` | Execute approved cleanups |
+
+**Scan Phase:** Use `cco-agent-analyze` with `scope: scan` category filters for orphans, duplicates, and stale references.
+
 ## Default Behavior
 
 When called without flags, ask (follow CCO "Question Formatting" standard):

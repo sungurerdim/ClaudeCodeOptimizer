@@ -31,6 +31,15 @@ End-to-end: Discovers conventions, generates matching code, verifies it works.
 | Scale | 10K+ → add monitoring, health checks, metrics; <100 → minimal infra |
 | Data | PII → encryption helpers, audit logging; Regulated → compliance boilerplate |
 
+## Agent Integration
+
+| Phase | Agent | Scope | Purpose |
+|-------|-------|-------|---------|
+| Discover | `cco-agent-analyze` | `conventions` | Pattern and convention discovery |
+| Generate | `cco-agent-apply` | `generate` | Create files following conventions |
+
+**Convention Discovery:** Use `cco-agent-analyze` with `scope: conventions` to discover naming patterns, test styles, import conventions, docstring formats, and error handling patterns before generating any code.
+
 ## Default Behavior
 
 When called without flags, ask:

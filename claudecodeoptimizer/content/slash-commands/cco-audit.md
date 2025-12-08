@@ -29,6 +29,15 @@ End-to-end: Detects security and quality issues AND fixes them.
 | Maturity | Legacy → warn don't fail; Greenfield → strict enforcement |
 | Team | Solo → self-review OK; 6+ → require documented findings |
 
+## Agent Integration
+
+| Phase | Agent | Scope | Purpose |
+|-------|-------|-------|---------|
+| Scan | `cco-agent-analyze` | `scan` | Issue detection with metrics |
+| Fix | `cco-agent-apply` | `fix` | Execute approved fixes |
+
+**Scan Phase:** Use `cco-agent-analyze` with `scope: scan` to detect security issues, tech debt, test gaps, and self-compliance violations with file:line locations.
+
 ## Default Behavior
 
 When called without flags, ask (follow CCO "Question Formatting" standard):
