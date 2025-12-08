@@ -10,14 +10,12 @@ import pytest
 from claudecodeoptimizer.install_hook import (
     clean_previous_installation,
     get_content_dir,
-    has_statusline,
     post_install,
     setup_agents,
     setup_claude_md,
     setup_commands,
     setup_local_permissions,
     setup_local_statusline,
-    setup_statusline,
 )
 
 
@@ -416,133 +414,6 @@ class TestSetupClaudeMd:
             content = claude_md.read_text()
             assert "# My Custom Rules" in content
             assert "<!-- CCO_STANDARDS_START -->" in content
-
-
-class TestHasStatusline:
-    """Test has_statusline function."""
-
-    def test_no_file(self, tmp_path):
-        """Test returns False when statusline file doesn't exist."""
-        with patch("claudecodeoptimizer.install_hook.STATUSLINE_FILE", tmp_path / "statusline.js"):
-            assert has_statusline() is False
-
-    def test_file_exists_with_cco_content(self, tmp_path):
-        """Test returns True when statusline file exists with CCO content."""
-        statusline = tmp_path / "statusline.js"
-        statusline.write_text("// CCO Statusline\nconsole.log('test');")
-        with patch("claudecodeoptimizer.install_hook.STATUSLINE_FILE", statusline):
-            assert has_statusline() is True
-
-    def test_file_exists_without_cco_content(self, tmp_path):
-        """Test returns False when statusline file exists but without CCO marker."""
-        statusline = tmp_path / "statusline.js"
-        statusline.write_text("// Custom statusline\nconsole.log('test');")
-        with patch("claudecodeoptimizer.install_hook.STATUSLINE_FILE", statusline):
-            assert has_statusline() is False
-
-
-class TestSetupStatusline:
-    """Test setup_statusline function."""
-
-    def test_setup_statusline_success(self, tmp_path):
-        """Test successfully sets up statusline."""
-        # Create source statusline file
-        src_dir = tmp_path / "pkg" / "statusline"
-        src_dir.mkdir(parents=True)
-        src_file = src_dir / "full.js"
-        src_file.write_text("// CCO Statusline\nconsole.log('status');")
-
-        dest_statusline = tmp_path / "statusline.js"
-        dest_settings = tmp_path / "settings.json"
-
-        with patch("claudecodeoptimizer.install_hook.get_content_path", return_value=src_dir):
-            with patch("claudecodeoptimizer.install_hook.CLAUDE_DIR", tmp_path):
-                with patch("claudecodeoptimizer.install_hook.STATUSLINE_FILE", dest_statusline):
-                    with patch("claudecodeoptimizer.install_hook.SETTINGS_FILE", dest_settings):
-                        result = setup_statusline(verbose=False)
-
-        assert result is True
-        assert dest_statusline.exists()
-        assert dest_settings.exists()
-        settings = json.loads(dest_settings.read_text())
-        assert "statusLine" in settings
-
-    def test_setup_statusline_verbose(self, tmp_path, capsys):
-        """Test verbose output during statusline setup."""
-        src_dir = tmp_path / "pkg" / "statusline"
-        src_dir.mkdir(parents=True)
-        src_file = src_dir / "full.js"
-        src_file.write_text("// CCO Statusline\nconsole.log('status');")
-
-        dest_statusline = tmp_path / "statusline.js"
-        dest_settings = tmp_path / "settings.json"
-
-        with patch("claudecodeoptimizer.install_hook.get_content_path", return_value=src_dir):
-            with patch("claudecodeoptimizer.install_hook.CLAUDE_DIR", tmp_path):
-                with patch("claudecodeoptimizer.install_hook.STATUSLINE_FILE", dest_statusline):
-                    with patch("claudecodeoptimizer.install_hook.SETTINGS_FILE", dest_settings):
-                        result = setup_statusline(verbose=True)
-
-        assert result is True
-        captured = capsys.readouterr()
-        assert "statusline.js" in captured.out
-        assert "settings.json" in captured.out
-
-    def test_setup_statusline_no_source(self, tmp_path, capsys):
-        """Test returns False when source file doesn't exist."""
-        src_dir = tmp_path / "nonexistent"
-
-        with patch("claudecodeoptimizer.install_hook.get_content_path", return_value=src_dir):
-            result = setup_statusline(verbose=True)
-
-        assert result is False
-        captured = capsys.readouterr()
-        assert "statusline source not found" in captured.out
-
-    def test_setup_statusline_updates_existing_settings(self, tmp_path):
-        """Test updates existing settings.json."""
-        src_dir = tmp_path / "pkg" / "statusline"
-        src_dir.mkdir(parents=True)
-        src_file = src_dir / "full.js"
-        src_file.write_text("// CCO Statusline\nconsole.log('status');")
-
-        dest_statusline = tmp_path / "statusline.js"
-        dest_settings = tmp_path / "settings.json"
-        # Pre-existing settings
-        dest_settings.write_text(json.dumps({"existingKey": "value"}))
-
-        with patch("claudecodeoptimizer.install_hook.get_content_path", return_value=src_dir):
-            with patch("claudecodeoptimizer.install_hook.CLAUDE_DIR", tmp_path):
-                with patch("claudecodeoptimizer.install_hook.STATUSLINE_FILE", dest_statusline):
-                    with patch("claudecodeoptimizer.install_hook.SETTINGS_FILE", dest_settings):
-                        result = setup_statusline(verbose=False)
-
-        assert result is True
-        settings = json.loads(dest_settings.read_text())
-        assert "existingKey" in settings  # Preserved
-        assert "statusLine" in settings  # Added
-
-    def test_setup_statusline_handles_invalid_json(self, tmp_path):
-        """Test handles invalid JSON in existing settings.json."""
-        src_dir = tmp_path / "pkg" / "statusline"
-        src_dir.mkdir(parents=True)
-        src_file = src_dir / "full.js"
-        src_file.write_text("// CCO Statusline\nconsole.log('status');")
-
-        dest_statusline = tmp_path / "statusline.js"
-        dest_settings = tmp_path / "settings.json"
-        dest_settings.write_text("invalid json {{{")
-
-        with patch("claudecodeoptimizer.install_hook.get_content_path", return_value=src_dir):
-            with patch("claudecodeoptimizer.install_hook.CLAUDE_DIR", tmp_path):
-                with patch("claudecodeoptimizer.install_hook.STATUSLINE_FILE", dest_statusline):
-                    with patch("claudecodeoptimizer.install_hook.SETTINGS_FILE", dest_settings):
-                        result = setup_statusline(verbose=False)
-
-        assert result is True
-        # Should overwrite with valid JSON
-        settings = json.loads(dest_settings.read_text())
-        assert "statusLine" in settings
 
 
 class TestSetupLocalStatusline:

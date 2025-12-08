@@ -63,10 +63,10 @@ CCO uses a 4-category standards system:
 |------|-------|
 | Universal | 38 |
 | AI-Specific | 28 |
-| CCO-Specific | 48 |
-| **Base Total** | **114** |
+| CCO-Specific | 50 |
+| **Base Total** | **116** |
 | Project-Specific Pool | 170 |
-| **Total Pool** | **284** |
+| **Total Pool** | **286** |
 
 Run `/cco-tune` to see which project-specific standards apply to your project.
 

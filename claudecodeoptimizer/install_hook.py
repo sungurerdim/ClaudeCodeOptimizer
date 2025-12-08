@@ -6,6 +6,7 @@ import re
 import shutil
 import sys
 from pathlib import Path
+from typing import Any
 
 from .config import (
     AGENTS_DIR,
@@ -48,6 +49,9 @@ def clean_previous_installation(verbose: bool = True) -> dict[str, int]:
     - CCO markers from CLAUDE.md
     - CCO-related keys from settings.json
     - CCO statusline.js (if it's a CCO file)
+
+    Args:
+        verbose: If True, print progress messages during cleanup.
 
     Returns:
         Dictionary with counts of removed items
@@ -127,54 +131,6 @@ def clean_previous_installation(verbose: bool = True) -> dict[str, int]:
     return removed
 
 
-def setup_statusline(verbose: bool = True) -> bool:
-    """Copy statusline.js to ~/.claude/ and configure settings.json.
-
-    Returns:
-        True if statusline was installed/updated
-    """
-    src = get_content_path("statusline") / "full.js"
-    if not src.exists():
-        if verbose:
-            print("  (statusline source not found)")
-        return False
-
-    # Copy statusline.js
-    CLAUDE_DIR.mkdir(parents=True, exist_ok=True)
-    shutil.copy2(src, STATUSLINE_FILE)
-
-    # Update settings.json with statusLine config
-    settings: dict = {}
-    if SETTINGS_FILE.exists():
-        try:
-            settings = json.loads(SETTINGS_FILE.read_text(encoding="utf-8"))
-        except json.JSONDecodeError:
-            settings = {}
-
-    # Set statusLine with dynamic path: local first, then global fallback
-    # This allows projects to override the global statusline
-    settings["statusLine"] = {
-        "type": "command",
-        "command": 'node "$(test -f .claude/statusline.js && echo .claude/statusline.js || echo ~/.claude/statusline.js)"',
-    }
-
-    SETTINGS_FILE.write_text(json.dumps(settings, indent=2) + "\n", encoding="utf-8")
-
-    if verbose:
-        print("  + statusline.js (Full mode)")
-        print("  + settings.json (statusLine configured)")
-
-    return True
-
-
-def has_statusline() -> bool:
-    """Check if CCO statusline is installed."""
-    if not STATUSLINE_FILE.exists():
-        return False
-    content = STATUSLINE_FILE.read_text(encoding="utf-8")
-    return "CCO Statusline" in content
-
-
 def _setup_content(src_subdir: str, dest_dir: Path, verbose: bool = True) -> list[str]:
     """Copy cco-*.md files from source to destination directory.
 
@@ -234,6 +190,9 @@ def setup_claude_md(verbose: bool = True) -> dict[str, int]:
     For backward compatibility:
     1. Remove ALL existing CCO markers (any name/format)
     2. Append fresh standards content
+
+    Args:
+        verbose: If True, print progress messages during setup.
 
     Returns:
         Dictionary with installed counts (universal, ai_specific, cco_specific)
@@ -313,7 +272,7 @@ def setup_local_statusline(project_path: Path, mode: str, verbose: bool = True) 
 
     # Update local settings.json with statusLine config
     settings_file = local_claude / "settings.json"
-    settings: dict = {}
+    settings: dict[str, Any] = {}
     if settings_file.exists():
         try:
             settings = json.loads(settings_file.read_text(encoding="utf-8"))
@@ -371,7 +330,7 @@ def setup_local_permissions(project_path: Path, level: str, verbose: bool = True
 
     # Load or create settings.json
     settings_file = local_claude / "settings.json"
-    settings: dict = {}
+    settings: dict[str, Any] = {}
     if settings_file.exists():
         try:
             settings = json.loads(settings_file.read_text(encoding="utf-8"))

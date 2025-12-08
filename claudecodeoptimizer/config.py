@@ -100,7 +100,7 @@ def get_standards_breakdown() -> dict[str, int]:
     """Get detailed breakdown of standards by category.
 
     Returns:
-        Dictionary with universal, ai_specific, cco_specific, project_specific counts
+        Dictionary with universal, ai_specific, cco_specific, project_specific, total counts
     """
     content_dir = Path(__file__).parent / "content" / "standards"
     result = {
