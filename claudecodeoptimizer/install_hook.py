@@ -155,12 +155,12 @@ def _setup_content(src_subdir: str, dest_dir: Path, verbose: bool = True) -> lis
 
 def setup_commands(verbose: bool = True) -> list[str]:
     """Copy cco-*.md commands to ~/.claude/commands/"""
-    return _setup_content("commands", COMMANDS_DIR, verbose)
+    return _setup_content("slash-commands", COMMANDS_DIR, verbose)
 
 
 def setup_agents(verbose: bool = True) -> list[str]:
     """Copy cco-*.md agents to ~/.claude/agents/"""
-    return _setup_content("agents", AGENTS_DIR, verbose)
+    return _setup_content("agent-templates", AGENTS_DIR, verbose)
 
 
 def _load_standards() -> str:

@@ -133,14 +133,20 @@ class TestFunctions:
 
     def test_get_content_path(self):
         """Test get_content_path returns correct path for subdirectory."""
-        result = get_content_path("commands")
+        result = get_content_path("slash-commands")
         assert isinstance(result, Path)
-        assert result.name == "commands"
+        assert result.name == "slash-commands"
         assert "content" in str(result)
 
     def test_get_content_path_various_subdirs(self):
         """Test get_content_path works for all expected subdirectories."""
-        for subdir in ["commands", "agents", "standards", "statusline", "permissions"]:
+        for subdir in [
+            "slash-commands",
+            "agent-templates",
+            "standards",
+            "statusline",
+            "permissions",
+        ]:
             result = get_content_path(subdir)
             assert result.name == subdir
 
