@@ -13,7 +13,7 @@ External source research with reliability scoring. Returns synthesized findings.
 
 ## Purpose
 
-Research external sources (web, docs, forums) and return scored, synthesized findings for cco-research command.
+Research external sources (web, docs, forums) and return scored, synthesized findings.
 
 ## Scope Parameter
 
@@ -225,6 +225,85 @@ Focus on vulnerabilities:
 - Patch availability
 
 Prioritize: Official sources, recency critical.
+
+### Dependency Mode
+
+Check package versions, breaking changes, and security advisories.
+
+#### Registry Endpoints
+
+| Ecosystem | Registry | Query Pattern |
+|-----------|----------|---------------|
+| **Python** | pypi.org | `https://pypi.org/pypi/{package}/json` |
+| **Node.js** | npmjs.com | `https://registry.npmjs.org/{package}` |
+| **Rust** | crates.io | `https://crates.io/api/v1/crates/{package}` |
+| **Go** | pkg.go.dev | `https://pkg.go.dev/{package}?tab=versions` |
+| **Ruby** | rubygems.org | `https://rubygems.org/api/v1/gems/{package}.json` |
+| **PHP** | packagist.org | `https://repo.packagist.org/p2/{vendor}/{package}.json` |
+
+#### Version Analysis Flow
+
+1. **Fetch latest** - Query registry for current stable version
+2. **SemVer compare** - Determine patch/minor/major delta
+3. **Changelog search** - Find breaking changes for major updates
+4. **CVE check** - Search for security advisories on current version
+5. **Deprecation check** - Verify package is not EOL/archived
+
+#### Breaking Change Sources
+
+| Source | Query Strategy | Priority |
+|--------|----------------|----------|
+| GitHub Releases | `site:github.com/{owner}/{repo}/releases` | T1 |
+| CHANGELOG.md | `site:github.com/{owner}/{repo} CHANGELOG` | T1 |
+| Migration Guide | `{package} migration guide {from_version} to {to_version}` | T1 |
+| Release Notes | `{package} {to_version} release notes` | T2 |
+| Breaking Issues | `site:github.com/{owner}/{repo}/issues breaking {to_version}` | T3 |
+
+#### Output Schema (dependency)
+
+```json
+{
+  "package": "{name}",
+  "ecosystem": "python|node|rust|go|ruby|php",
+  "current": "{semver}",
+  "latest": "{semver}",
+  "updateType": "patch|minor|major",
+  "risk": "safe|low|breaking|critical|deprecated",
+  "breakingChanges": [
+    {
+      "description": "",
+      "source": "",
+      "tier": "T1-T3",
+      "migrationUrl": ""
+    }
+  ],
+  "securityAdvisories": [
+    {
+      "cve": "",
+      "severity": "low|medium|high|critical",
+      "description": "",
+      "fixedIn": ""
+    }
+  ],
+  "deprecation": {
+    "status": "active|deprecated|eol|archived",
+    "alternative": "",
+    "reason": ""
+  },
+  "changelog": {
+    "url": "",
+    "highlights": []
+  }
+}
+```
+
+#### Batch Processing
+
+When checking multiple packages:
+1. Group by ecosystem
+2. Parallel fetch from same registry
+3. Sequential changelog analysis for major updates only
+4. Aggregate results by risk level
 
 ---
 

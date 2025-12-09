@@ -175,6 +175,13 @@ Focus on security advisories:
 - Vulnerability disclosures
 - Patch availability
 
+### Dependency Mode (`--dependency`)
+Focus on package version research:
+- Registry version queries (pypi, npm, crates.io, etc.)
+- Breaking change detection
+- Migration guide discovery
+- CVE checks for specific versions
+
 ### Comparison Mode (`--compare`)
 When query contains "vs", "or", "compared to":
 - Side-by-side comparison
@@ -222,6 +229,7 @@ Auto-detected when query contains "error", "not working", "fix":
 | `--local` | Search in codebase only |
 | `--changelog` | Focus on breaking changes |
 | `--security` | Focus on CVEs and advisories |
+| `--dependency` | Package version and breaking change research |
 | `--compare` | A vs B comparison mode |
 | `--focus=official` | Only T1-T2 sources |
 | `--focus=community` | Include T4-T5 sources |
