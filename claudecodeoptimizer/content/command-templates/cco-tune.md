@@ -6,7 +6,7 @@ allowed-tools: Read(*), Write(*), Edit(*), Grep(*), Glob(*), Bash(git:*), Bash(c
 
 # /cco-tune
 
-**Project tuning** - Detection, configuration, removal, and export for the current project. Export uses currently installed standards from `~/.claude/CLAUDE.md` and `./CLAUDE.md`.
+**Project tuning** - Detection, configuration, removal, and export for the current project. Export uses currently installed rules from `~/.claude/CLAUDE.md` and `./CLAUDE.md`.
 
 **Standards:** User Input | Approval Flow | Output Formatting | Dynamic Context | Skip Criteria | Task Tracking
 
@@ -21,12 +21,12 @@ allowed-tools: Read(*), Write(*), Edit(*), Grep(*), Glob(*), Bash(git:*), Bash(c
 ### Global vs Local
 
 **cco-setup installs global files:**
-- `~/.claude/CLAUDE.md` - Universal + AI-Specific + CCO-Specific standards
+- `~/.claude/CLAUDE.md` - Universal + AI-Specific + CCO-Specific rules
 - `~/.claude/commands/cco-*.md` - CCO commands
 - `~/.claude/agents/cco-*.md` - CCO agents
 
 **cco-tune creates local project files:**
-- `./CLAUDE.md` - Project context + conditional standards
+- `./CLAUDE.md` - Project context + conditional rules
 - `./.claude/statusline.js` - Local statusline script (Full or Minimal)
 - `./.claude/settings.json` - Local settings (AI Performance + Statusline + Permissions)
 
@@ -151,12 +151,17 @@ sed -n '/<!-- CCO_ADAPTIVE_START -->/,/<!-- CCO_ADAPTIVE_END -->/p' ./CLAUDE.md 
 ║ Thinking       │ {value} tokens                                                ║
 ║ MCP Output     │ {value} tokens                                                ║
 ║ Caching        │ {on|off}                                                      ║
-║ Statusline     │ {Full|Minimal|None}                     ./.claude/statusline.js║
+║ Statusline     │ {Full|Minimal|Broken|None}              ./.claude/statusline.js║
 ║ Permissions    │ {level} ({N} rules)                                           ║
 ╠════════════════════════════════════════════════════════════════════════════════╣
 ║ STANDARDS      │ {BASE_TOTAL} base + {PROJECT_SPECIFIC} project = {TOTAL}      ║
 ╚════════════════════════════════════════════════════════════════════════════════╝
 ```
+
+**Statusline status determination (run verification before display):**
+- `Full` or `Minimal`: All 4 verification checks pass (see [Statusline Verification](#statusline-verification-critical))
+- `Broken`: settings.json references statusline but verification fails
+- `None`: No statusLine config in settings.json
 
 **If no context exists (first run):**
 
@@ -178,7 +183,7 @@ sed -n '/<!-- CCO_ADAPTIVE_START -->/,/<!-- CCO_ADAPTIVE_END -->/p' ./CLAUDE.md 
 
 Based on status, show options with smart defaults. **All configuration questions are asked in this step.**
 
-Follow CCO "Question Formatting" standard.
+Follow CCO "Question Formatting" rule.
 
 ### Main Question (Single multiSelect)
 
@@ -199,7 +204,7 @@ Follow CCO "Question Formatting" standard.
 │ ☐ Remove Statusline        Delete statusline.js, disable bar       │
 │ ☐ Remove Permissions       Remove all permission rules             │
 │ ☐ Remove Standards         Remove CCO_ADAPTIVE from CLAUDE.md       │
-├─ Export (standards only, no settings) ─────────────────────────────┤
+├─ Export (rules only, no settings) ─────────────────────────────┤
 │ ☐ CLAUDE.md                Standards for other Claude Code projects │
 │ ☐ AGENTS.md                Standards for other AI tools (Cursor)    │
 ├────────────────────────────────────────────────────────────────────┤
@@ -225,9 +230,15 @@ Follow CCO "Question Formatting" standard.
 - AI Performance option is for manual override only
 - **cco-tune NEVER modifies global ~/.claude/ files**
 
+**Configure = Update behavior:**
+- Selecting any Configure option when that item already exists → overwrites with fresh content
+- This applies to ALL configurable items: Detection, AI Performance, Statusline, Permissions
+- No separate "Update" action needed - Configure always installs fresh from source templates
+- When item exists, `[recommended]` defaults to current value (for continuity)
+
 ### Inline Configuration Questions
 
-Follow CCO "Question Formatting" standard for all questions below.
+Follow CCO "Question Formatting" rule for all questions below.
 
 **If AI Performance selected:**
 
@@ -243,13 +254,13 @@ See [AI Performance Auto-Detection](#ai-performance-auto-detection) for scoring 
 
 | Question | Options | `[recommended]` when |
 |----------|---------|---------------------|
-| Statusline mode? | Minimal, Full | first-time→Full |
+| Statusline mode? | Minimal, Full | first-time→Full; exists→current mode |
 
 **If Permissions selected:**
 
 | Question | Options | `[recommended]` when |
 |----------|---------|---------------------|
-| Permission level? | Safe, Balanced, Permissive, Full | see table below |
+| Permission level? | Safe, Balanced, Permissive, Full | see table below; exists→current level |
 
 **If CLAUDE.md or AGENTS.md export selected:**
 
@@ -266,7 +277,7 @@ See [AI Performance Auto-Detection](#ai-performance-auto-detection) for scoring 
 │ ☐ CCO-Specific Standards   CCO workflow mechanisms (CLAUDE.md only)│
 ├─ Project ──────────────────────────────────────────────────────────┤
 │ ☐ Project Context          Strategic context (team, scale, etc.)   │
-│ ☐ Conditional Standards    Project-specific standards              │
+│ ☐ Conditional Rules    Project-specific rules              │
 ├────────────────────────────────────────────────────────────────────┤
 │ ☐ All                      Include everything available            │
 └────────────────────────────────────────────────────────────────────┘
@@ -274,7 +285,7 @@ See [AI Performance Auto-Detection](#ai-performance-auto-detection) for scoring 
 
 **Notes:**
 - CCO-Specific Standards only available for CLAUDE.md export (not portable)
-- Project Context and Conditional Standards require `./CLAUDE.md` to exist
+- Project Context and Conditional Rules require `./CLAUDE.md` to exist
 - "All" is pre-selected by default
 
 **Permissions `[recommended]` (first match wins):**
@@ -312,11 +323,11 @@ After all questions answered → proceed to detection/apply (no more questions)
 
 **Detection scope:**
 - Only scan **project root** and **main source directories** (src/, lib/, app/, pkg/)
-- Files in excluded paths should NOT trigger standards
+- Files in excluded paths should NOT trigger rules
 - Exception: `.github/workflows/` IS scanned for CI/CD detection
 
 **Example:**
-- `./Dockerfile` → triggers Container standards ✓
+- `./Dockerfile` → triggers Container rules ✓
 - `./benchmarks/Dockerfile` → ignored (test/example) ✗
 - `./examples/docker-compose.yml` → ignored (sample code) ✗
 
@@ -330,45 +341,45 @@ Every detection triggers a specific action. No detection is informational-only.
 |---|---------|------------------|------------|--------|
 | 1 | Purpose | README.md first H1/paragraph | HIGH if found | → Context purpose field |
 | 2 | Stack | package.json, pyproject.toml, go.mod, Cargo.toml | HIGH | → Context stack field, tool commands |
-| 3 | Type | Entry points vs exports analysis | HIGH | → CLI or Library standards (evaluate each) |
+| 3 | Type | Entry points vs exports analysis | HIGH | → CLI or Library rules (evaluate each) |
 | 4 | License | LICENSE, LICENSE.md, package.json license | HIGH if found | → Context, compliance check |
 
 #### Infrastructure Detection
 
 | # | Element | Detection Method | Confidence | Action |
 |---|---------|------------------|------------|--------|
-| 5 | CI/CD | .github/workflows/, .gitlab-ci.yml, .circleci/ | HIGH | → Operations standards (evaluate each) |
-| 6 | Container | Dockerfile, docker-compose.yml | HIGH | → Container standards (evaluate each) |
-| 7 | K8s | k8s/, helm/, kustomization.yaml, *-deployment.yaml | HIGH | → Container standards + complexity score +1 |
-| 8 | Serverless | serverless.yml, sam.yaml, netlify.toml, vercel.json | HIGH | → Serverless standards (evaluate each) |
-| 9 | Monorepo | nx.json, turbo.json, lerna.json, pnpm-workspace.yaml | HIGH | → Monorepo standards + MCP tier bump |
+| 5 | CI/CD | .github/workflows/, .gitlab-ci.yml, .circleci/ | HIGH | → Operations rules (evaluate each) |
+| 6 | Container | Dockerfile, docker-compose.yml | HIGH | → Container rules (evaluate each) |
+| 7 | K8s | k8s/, helm/, kustomization.yaml, *-deployment.yaml | HIGH | → Container rules + complexity score +1 |
+| 8 | Serverless | serverless.yml, sam.yaml, netlify.toml, vercel.json | HIGH | → Serverless rules (evaluate each) |
+| 9 | Monorepo | nx.json, turbo.json, lerna.json, pnpm-workspace.yaml | HIGH | → Monorepo rules + MCP tier bump |
 
 #### Backend Detection
 
 | # | Element | Detection Method | Confidence | Action |
 |---|---------|------------------|------------|--------|
-| 10 | DB | ORM deps, migrations/, connection strings, prisma/schema | HIGH | → Data standards (evaluate each) |
-| 11 | API:REST | routes/, endpoints/, @Get/@Post decorators, OpenAPI | HIGH | → API standards (evaluate each) |
-| 12 | API:GraphQL | graphql deps, schema.graphql, resolvers/ | HIGH | → API + GraphQL standards |
-| 13 | API:gRPC | .proto files, grpc deps | HIGH | → API + gRPC standards |
-| 14 | API:WebSocket | ws/socket.io deps, @WebSocket decorators | HIGH | → Real-time standards (evaluate each) |
-| 15 | Microservices | Multiple */Dockerfile or services/ with separate configs | HIGH | → Scale & Arch standards |
+| 10 | DB | ORM deps, migrations/, connection strings, prisma/schema | HIGH | → Data rules (evaluate each) |
+| 11 | API:REST | routes/, endpoints/, @Get/@Post decorators, OpenAPI | HIGH | → API rules (evaluate each) |
+| 12 | API:GraphQL | graphql deps, schema.graphql, resolvers/ | HIGH | → API + GraphQL rules |
+| 13 | API:gRPC | .proto files, grpc deps | HIGH | → API + gRPC rules |
+| 14 | API:WebSocket | ws/socket.io deps, @WebSocket decorators | HIGH | → Real-time rules (evaluate each) |
+| 15 | Microservices | Multiple */Dockerfile or services/ with separate configs | HIGH | → Scale & Arch rules |
 
 #### Frontend/Apps Detection
 
 | # | Element | Detection Method | Confidence | Action |
 |---|---------|------------------|------------|--------|
-| 16 | Frontend | react/vue/angular/svelte in deps | HIGH | → Frontend standards (evaluate each) |
-| 17 | Mobile | Podfile, android/build.gradle, pubspec.yaml | HIGH | → Mobile standards (evaluate each) |
-| 18 | Desktop | electron/tauri deps | HIGH | → Desktop standards (evaluate each) |
+| 16 | Frontend | react/vue/angular/svelte in deps | HIGH | → Frontend rules (evaluate each) |
+| 17 | Mobile | Podfile, android/build.gradle, pubspec.yaml | HIGH | → Mobile rules (evaluate each) |
+| 18 | Desktop | electron/tauri deps | HIGH | → Desktop rules (evaluate each) |
 
 #### Specialized Detection
 
 | # | Element | Detection Method | Confidence | Action |
 |---|---------|------------------|------------|--------|
-| 19 | ML/AI | torch, tensorflow, sklearn, transformers deps | HIGH | → ML/AI standards + complexity +1 |
-| 20 | Game | Unity/, *.unity, Unreal/, *.uproject, Godot/ | HIGH | → Game standards (evaluate each) |
-| 21 | i18n | locales/, i18n/, messages/, translations/ | HIGH | → i18n standards (evaluate each) |
+| 19 | ML/AI | torch, tensorflow, sklearn, transformers deps | HIGH | → ML/AI rules + complexity +1 |
+| 20 | Game | Unity/, *.unity, Unreal/, *.uproject, Godot/ | HIGH | → Game rules (evaluate each) |
+| 21 | i18n | locales/, i18n/, messages/, translations/ | HIGH | → i18n rules (evaluate each) |
 
 #### Quality & Security Detection
 
@@ -380,14 +391,14 @@ Every detection triggers a specific action. No detection is informational-only.
 | 25 | Formatting | prettier, black, ruff format, gofmt config | HIGH | → Operational tools |
 | 26 | Pre-commit | .pre-commit-config.yaml | HIGH | → Context hooks field |
 | 27 | Security Scan | dependabot.yml, .snyk, trivy.yaml, codeql | HIGH | → Security posture |
-| 28 | Secrets Risk | .env with values, hardcoded API keys, credentials | HIGH | → Security standards (evaluate each) |
+| 28 | Secrets Risk | .env with values, hardcoded API keys, credentials | HIGH | → Security rules (evaluate each) |
 
 #### Inferred Detection (Heuristics)
 
 | # | Element | Detection Method | Confidence | Action |
 |---|---------|------------------|------------|--------|
 | 29 | Team Size | `git shortlog -sn --all` unique authors | MEDIUM | → Team guidelines, permission level |
-| 30 | Scale | replicas config, HPA, load balancer, CDN config | MEDIUM | → Scale guidelines, caching standards |
+| 30 | Scale | replicas config, HPA, load balancer, CDN config | MEDIUM | → Scale guidelines, caching rules |
 | 31 | Maturity | First commit age, release frequency, CHANGELOG | MEDIUM | → Maturity guidelines |
 | 32 | Breaking | Version in config (0.x vs 1.x+) | MEDIUM | → Breaking policy guideline |
 | 33 | Data Sensitivity | auth/, login/, encryption usage, GDPR keywords | LOW | → Data guidelines, security weight |
@@ -543,7 +554,7 @@ AI Performance settings are **automatically calculated** based on detected proje
 
 ### User-Configurable Elements
 
-Elements requiring user input. Follow CCO "Question Formatting" standard.
+Elements requiring user input. Follow CCO "Question Formatting" rule.
 
 ---
 
@@ -554,8 +565,8 @@ Elements requiring user input. Follow CCO "Question Formatting" standard.
 | Value | `[recommended]` when | Triggers |
 |-------|---------------------|----------|
 | Solo | no CODEOWNERS, 1 git author | Guidelines only |
-| Small (2-5) | small CODEOWNERS | Team standards |
-| Medium (6-15) | - | Team standards |
+| Small (2-5) | small CODEOWNERS | Team rules |
+| Medium (6-15) | - | Team rules |
 | Large (16-50) | - | Team + ADR |
 | Enterprise (51+) | - | Team + Scaling |
 
@@ -748,12 +759,12 @@ Show unified table with confidence indicators. **Every row shows what action it 
 ├─────┼───────────────┼──────────────────────┼──────┼─────────────────────┼───────────────────┤
 ║  1  │ Purpose       │ {purpose}            │ ●●●  │ README.md:1         │ → context         ║
 ║  2  │ Stack         │ Python 3.10+         │ ●●●  │ pyproject.toml      │ → tools, context  ║
-║  3  │ Type          │ CLI                  │ ●●●  │ __main__.py         │ → CLI standards   ║
+║  3  │ Type          │ CLI                  │ ●●●  │ __main__.py         │ → CLI rules   ║
 ║  4  │ License       │ MIT                  │ ●●●  │ LICENSE             │ → context         ║
 ╠═════╪═══════════════╪══════════════════════╪══════╪═════════════════════╪═══════════════════╣
 ║     │ INFRASTRUCTURE                                                                         ║
 ├─────┼───────────────┼──────────────────────┼──────┼─────────────────────┼───────────────────┤
-║  5  │ CI/CD         │ GitHub Actions       │ ●●●  │ .github/workflows/  │ → Ops standards   ║
+║  5  │ CI/CD         │ GitHub Actions       │ ●●●  │ .github/workflows/  │ → Ops rules   ║
 ║  6  │ Container     │ -                    │ -    │ (not detected)      │ -                 ║
 ║  7  │ K8s           │ -                    │ -    │ (not detected)      │ -                 ║
 ╠═════╪═══════════════╪══════════════════════╪══════╪═════════════════════╪═══════════════════╣
@@ -790,7 +801,7 @@ Show unified table with confidence indicators. **Every row shows what action it 
 ├──────────────────────────────────────────────────────────────────────────────────────────────┤
 ║ CLI │ Operations │ Testing │ Caching = {N} project-specific (counted after evaluation)      ║
 ╠══════════════════════════════════════════════════════════════════════════════════════════════╣
-║ TOTAL: {BASE_TOTAL} base + {PROJECT_SPECIFIC} project-specific = {TOTAL} standards           ║
+║ TOTAL: {BASE_TOTAL} base + {PROJECT_SPECIFIC} project-specific = {TOTAL} rules           ║
 ╚══════════════════════════════════════════════════════════════════════════════════════════════╝
 ```
 
@@ -807,7 +818,7 @@ Show unified table with confidence indicators. **Every row shows what action it 
 
 | Format | Meaning |
 |--------|---------|
-| `+N {category}` | Triggers N standards from category |
+| `+N {category}` | Triggers N rules from category |
 | `→ context` | Written to CCO_ADAPTIVE in CLAUDE.md |
 | `→ env` | Written to settings.json env section |
 | `→ tools` | Added to Operational tools list |
@@ -865,7 +876,7 @@ Only show rows for options user selected in Step 2. If user didn't select AI Per
 - User selects which items to edit (multiSelect: true)
 - Then show individual questions for each selected item
 
-**For each selected item**, show options with recommendations and affected standards:
+**For each selected item**, show options with recommendations and affected rules:
 
 ```
 ┌─────────────────────────────────────────────────────────────────┐
@@ -901,7 +912,7 @@ Write all selected configurations to **project-local files only**:
 | CLAUDE.md | `~/.claude/CLAUDE.md` + `./CLAUDE.md` | `./CLAUDE.export.md` | Read + combine + Write |
 | AGENTS.md | `~/.claude/CLAUDE.md` + `./CLAUDE.md` | `./AGENTS.md` | Read + transform + Write |
 
-**Export includes only user-selected content** (Universal, AI-Specific, CCO-Specific, Project Context, Conditional Standards).
+**Export includes only user-selected content** (Universal, AI-Specific, CCO-Specific, Project Context, Conditional Rules).
 
 ### Removal Operations
 
@@ -969,12 +980,57 @@ This ensures templates are read from the installed package, not generated by AI.
 
 **Disable Mode:** Delete `.claude/statusline.js` and remove `statusLine` key from settings.json. Same behavior as "Remove Configuration > Statusline".
 
-### Statusline Verification
+### Statusline Verification [CRITICAL]
 
-After writing statusline files, verify:
-1. `./.claude/statusline.js` exists (created/overwritten)
-2. `./.claude/settings.json` contains `statusLine` config pointing to local script
-3. File content matches source template exactly
+**Before displaying "Statusline: Full/Minimal" in status, ALL checks must pass:**
+
+| Check | Command | Pass Condition |
+|-------|---------|----------------|
+| 1. File exists | `test -f ./.claude/statusline.js && echo "exists"` | Returns "exists" |
+| 2. Settings reference | `grep -q "statusline.js" ./.claude/settings.json && echo "referenced"` | Returns "referenced" |
+| 3. Path correct | `jq -r '.statusLine.command' ./.claude/settings.json` | Contains `.claude/statusline.js` |
+| 4. Test render | `echo '{"cwd":"'$(pwd)'","model":{"display_name":"Test"}}' \| node ./.claude/statusline.js` | Returns output without error |
+
+**Verification flow:**
+```bash
+# Run via Bash tool before displaying status
+STATUSLINE_FILE="./.claude/statusline.js"
+SETTINGS_FILE="./.claude/settings.json"
+
+# Check 1: File exists
+if [ ! -f "$STATUSLINE_FILE" ]; then
+  echo "FAIL: statusline.js not found"
+  exit 1
+fi
+
+# Check 2: Settings reference exists
+if ! grep -q "statusline.js" "$SETTINGS_FILE" 2>/dev/null; then
+  echo "FAIL: statusline not referenced in settings.json"
+  exit 1
+fi
+
+# Check 3: Path is correct (relative to project)
+COMMAND=$(jq -r '.statusLine.command // empty' "$SETTINGS_FILE" 2>/dev/null)
+if [[ ! "$COMMAND" =~ ".claude/statusline.js" ]]; then
+  echo "FAIL: statusLine.command path incorrect"
+  exit 1
+fi
+
+# Check 4: Test render
+if ! echo '{"cwd":"'"$(pwd)"'","model":{"display_name":"Test"}}' | node "$STATUSLINE_FILE" >/dev/null 2>&1; then
+  echo "FAIL: statusline.js render failed"
+  exit 1
+fi
+
+echo "OK: Statusline verified"
+```
+
+**Status display rules:**
+- All 4 checks pass → Show `Statusline: Full` or `Statusline: Minimal`
+- Any check fails → Show `Statusline: Broken (run /cco-tune to fix)`
+- No statusline configured → Show `Statusline: None`
+
+**After writing statusline files, re-run verification to confirm installation.**
 
 ---
 
@@ -1067,7 +1123,7 @@ License: {type}
 Secrets detected: {yes|no}
 Outdated deps: {N}
 
-## Conditional Standards (auto-applied)
+## Conditional Rules (auto-applied)
 
 ### {Category} - {trigger reason}
 
@@ -1082,10 +1138,10 @@ Outdated deps: {N}
 
 Each rule in adaptive.md has an "Applicability Check". Only include rules where the check passes for this specific project.
 
-**Example Conditional Standards (granular):**
+**Example Conditional Rules (granular):**
 
 ```markdown
-## Conditional Standards (auto-applied)
+## Conditional Rules (auto-applied)
 
 ### Apps > CLI - T:CLI detected
 
@@ -1146,11 +1202,11 @@ Show before/after comparison for all changed settings:
 ├────────────────┬───────────────────────────────────────────────────────────────┤
 ║ Base           │ {BASE_TOTAL} (Universal + AI + CCO)                           ║
 ║ Project        │ +{PROJECT_SPECIFIC} ({triggered_subsections})                 ║
-║ Total          │ {TOTAL} standards                                             ║
+║ Total          │ {TOTAL} rules                                             ║
 ╠════════════════════════════════════════════════════════════════════════════════╣
 ║ FILES WRITTEN                                                                  ║
 ├────────────────────────────────────────────────────────────────────────────────┤
-║ ./CLAUDE.md                    Project context + conditional standards         ║
+║ ./CLAUDE.md                    Project context + conditional rules         ║
 ║ ./.claude/settings.json        env + statusLine + permissions                  ║
 ║ ./.claude/statusline.js        Status bar script (if statusline configured)    ║
 ╠════════════════════════════════════════════════════════════════════════════════╣
@@ -1190,12 +1246,12 @@ Show before/after comparison for all changed settings:
 ║ EXPORTED FILES                                                                 ║
 ├────────────────┬───────────────────────────────────────────────────────────────┤
 ║ ./AGENTS.md    │ Universal + AI-Specific + Project Context + Conditional       ║
-║ ./CLAUDE.export.md │ All standards including CCO-Specific                      ║
+║ ./CLAUDE.export.md │ All rules including CCO-Specific                      ║
 ╠════════════════════════════════════════════════════════════════════════════════╣
 ║ EXPORT CONTENT (user selected)                                                 ║
 ├────────────────────────────────────────────────────────────────────────────────┤
 ║ ✓ Universal Standards       ✓ AI-Specific Standards                            ║
-║ ✓ Project Context           ✗ Conditional Standards (not selected)             ║
+║ ✓ Project Context           ✗ Conditional Rules (not selected)             ║
 ╚════════════════════════════════════════════════════════════════════════════════╝
 ```
 
@@ -1203,7 +1259,7 @@ Show before/after comparison for all changed settings:
 
 ## Export Mode
 
-Export **standards only** to portable format. Select directly from main question:
+Export **rules only** to portable format. Select directly from main question:
 - **CLAUDE.md**: For sharing with other Claude Code projects (all categories)
 - **AGENTS.md**: For other AI tools - Cursor, Windsurf, Copilot, etc. (CCO-Specific excluded)
 
@@ -1217,7 +1273,7 @@ Both can be selected together to export to both formats.
 | AI-Specific Standards | `~/.claude/CLAUDE.md` | ✓ | ✓ |
 | CCO-Specific Standards | `~/.claude/CLAUDE.md` | ✗ (not portable) | ✓ |
 | Project Context | `./CLAUDE.md` | ✓ | ✓ |
-| Conditional Standards | `./CLAUDE.md` | ✓ | ✓ |
+| Conditional Rules | `./CLAUDE.md` | ✓ | ✓ |
 
 ### What Is NEVER Exported
 
@@ -1237,12 +1293,12 @@ Both can be selected together to export to both formats.
 
 | Source | Content | Location |
 |--------|---------|----------|
-| Global standards | Universal + AI-Specific + CCO-Specific | `~/.claude/CLAUDE.md` |
-| Project context | Strategic Context + Conditional Standards | `./CLAUDE.md` |
+| Global rules | Universal + AI-Specific + CCO-Specific | `~/.claude/CLAUDE.md` |
+| Project context | Strategic Context + Conditional Rules | `./CLAUDE.md` |
 
 **Prerequisites:**
 - `~/.claude/CLAUDE.md` MUST exist (run `cco-setup` first if missing)
-- `./CLAUDE.md` with CCO_ADAPTIVE is optional (export will include global standards only)
+- `./CLAUDE.md` with CCO_ADAPTIVE is optional (export will include global rules only)
 
 **Export process:**
 1. Check `~/.claude/CLAUDE.md` exists → error if missing: "Run cco-setup first"
@@ -1270,7 +1326,7 @@ Both can be selected together to export to both formats.
 1. Read Universal Standards section from `~/.claude/CLAUDE.md`
 2. Read AI-Specific Standards section from `~/.claude/CLAUDE.md`
 3. Skip CCO-Specific Standards (not portable to other AI tools)
-4. Read Conditional Standards from `./CLAUDE.md` CCO_ADAPTIVE block
+4. Read Conditional Rules from `./CLAUDE.md` CCO_ADAPTIVE block
 5. Transform to prose format (remove CCO markers, simplify structure)
 
 **Output format:**
@@ -1289,7 +1345,7 @@ Both can be selected together to export to both formats.
 {from ~/.claude/CLAUDE.md}
 
 ## Project-Specific Standards
-{from ./CLAUDE.md Conditional Standards}
+{from ./CLAUDE.md Conditional Rules}
 ```
 
 ### CLAUDE.md Export
@@ -1322,14 +1378,14 @@ Standards are organized in 4 categories. **All counts are dynamically calculated
 
 ### Count Commands
 
-**See [Step 1.1](#11-count-standards-first-mandatory) for the MANDATORY commands to run.**
+**See [Step 1.1](#11-count-rules-first-mandatory) for the MANDATORY commands to run.**
 
 ### Count Rules
 
 1. **Always execute commands** - Never use memorized or estimated values
 2. **Use section boundaries** - `sed` extracts specific sections before counting
-3. **Count `| * ` pattern** - Table rows starting with `| * ` are standards
-4. **Use grep command** - `grep -c "| \* "` counts standard rows
+3. **Count `| * ` pattern** - Table rows starting with `| * ` are rules
+4. **Use grep command** - `grep -c "| \* "` counts rule rows
 5. **Verify math** - `BASE_TOTAL = UNIVERSAL + AI_SPECIFIC + CCO_SPECIFIC`
 6. **Display exact values** - No `~` prefix, no approximations
 
@@ -1343,7 +1399,7 @@ Standards are organized in 4 categories. **All counts are dynamically calculated
 
 | Action Type | Target | Example |
 |-------------|--------|---------|
-| `→ {category} standards` | CLAUDE.md conditional standards | `→ CLI standards` evaluates CLI subsection |
+| `→ {category} rules` | CLAUDE.md conditional rules | `→ CLI rules` evaluates CLI subsection |
 | `→ context` | CLAUDE.md CCO_ADAPTIVE fields | Purpose, Stack, License |
 | `→ tools` | CLAUDE.md Operational section | format, lint, test commands |
 | `→ guidelines` | CLAUDE.md Guidelines section | Team-based recommendations |
@@ -1357,41 +1413,41 @@ Standards are organized in 4 categories. **All counts are dynamically calculated
 |-----------|------------|----------------|------------------|
 | Purpose | HIGH | → context | - |
 | Stack | HIGH | → context | → tools (commands) |
-| Type: CLI | HIGH | → CLI standards | - |
-| Type: Library | HIGH | → Library standards | - |
-| CI/CD | HIGH | → Operations standards | → tools |
-| Container | HIGH | → Container standards | - |
-| K8s | HIGH | → Container standards | complexity +1 |
-| Serverless | HIGH | → Serverless standards | - |
-| Monorepo | HIGH | → Monorepo standards | MCP tier bump |
-| DB | HIGH | → Data standards | - |
-| API: REST | HIGH | → API standards | - |
-| API: GraphQL | HIGH | → API standards | GraphQL patterns |
-| API: gRPC | HIGH | → API standards | gRPC patterns |
-| API: WebSocket | HIGH | → Real-time standards | - |
-| Microservices | HIGH | → Scale & Arch standards | complexity +2 |
-| Frontend | HIGH | → Frontend standards | - |
-| Mobile | HIGH | → Mobile standards | - |
-| Desktop | HIGH | → Desktop standards | - |
-| ML/AI | HIGH | → ML/AI standards | complexity +1 |
-| Game | HIGH | → Game standards | - |
-| i18n | HIGH | → i18n standards | - |
+| Type: CLI | HIGH | → CLI rules | - |
+| Type: Library | HIGH | → Library rules | - |
+| CI/CD | HIGH | → Operations rules | → tools |
+| Container | HIGH | → Container rules | - |
+| K8s | HIGH | → Container rules | complexity +1 |
+| Serverless | HIGH | → Serverless rules | - |
+| Monorepo | HIGH | → Monorepo rules | MCP tier bump |
+| DB | HIGH | → Data rules | - |
+| API: REST | HIGH | → API rules | - |
+| API: GraphQL | HIGH | → API rules | GraphQL patterns |
+| API: gRPC | HIGH | → API rules | gRPC patterns |
+| API: WebSocket | HIGH | → Real-time rules | - |
+| Microservices | HIGH | → Scale & Arch rules | complexity +2 |
+| Frontend | HIGH | → Frontend rules | - |
+| Mobile | HIGH | → Mobile rules | - |
+| Desktop | HIGH | → Desktop rules | - |
+| ML/AI | HIGH | → ML/AI rules | complexity +1 |
+| Game | HIGH | → Game rules | - |
+| i18n | HIGH | → i18n rules | - |
 | Test Framework | HIGH | → testing tier | - |
 | Coverage | HIGH | → context | - |
 | Linting | HIGH | → tools | - |
 | Formatting | HIGH | → tools | - |
 | Pre-commit | HIGH | → context (hooks) | - |
 | Security Scan | HIGH | security posture | - |
-| Secrets Risk | HIGH | → Security standards | - |
+| Secrets Risk | HIGH | → Security rules | - |
 | Team Size | MEDIUM | → guidelines | → permissions level |
-| Scale | MEDIUM | → guidelines | → Caching standards |
+| Scale | MEDIUM | → guidelines | → Caching rules |
 | Data Sensitivity | LOW | → guidelines | security weight |
 | Compliance | LOW | compliance hint | - |
 | Maturity | MEDIUM | → guidelines | - |
 | Breaking | MEDIUM | → guidelines | - |
 | AI Perf | HIGH | → env | - |
 
-**Standard Selection:** For each category, evaluate every standard individually against project context. Include only standards that are relevant and actionable for this specific project.
+**Standard Selection:** For each category, evaluate every rule individually against project context. Include only rules that are relevant and actionable for this specific project.
 
 ### Key Principles
 
@@ -1399,10 +1455,10 @@ Standards are organized in 4 categories. **All counts are dynamically calculated
 2. **Granular selection** - Each trigger independently evaluated
 3. **No false positives** - CI/CD does NOT trigger API or Data
 4. **Stacking allowed** - Multiple triggers stack additively
-5. **No duplicates** - Each standard added exactly once
+5. **No duplicates** - Each rule added exactly once
 6. **Confidence-aware** - LOW confidence items highlighted for review
 
-**Dynamic calculation:** Count `| * ` pattern in standards files. Command: `grep -c "| \* " <file>`. Never use hardcoded counts.
+**Dynamic calculation:** Count `| * ` pattern in rules files. Command: `grep -c "| \* " <file>`. Never use hardcoded counts.
 
 ---
 
@@ -1486,7 +1542,7 @@ Guidelines are generated based on user-configured values to provide context-awar
 1. **All questions at the start** - no mid-process interruptions
 2. **Local files only** - AI Performance, statusline, permissions ALL in `./.claude/settings.json`, NEVER touch `~/.claude/`
 3. **Dynamic counts** - ALWAYS run Step 1.1 commands before displaying any count. Never estimate or use hardcoded values
-4. **Show affected standards** - when editing, show what standards change
+4. **Show affected rules** - when editing, show what rules change
 5. **Preserve non-CCO content** - In CLAUDE.md, preserve user content outside `<!-- CCO_*_START/END -->` markers
 6. **ALWAYS overwrite CCO content** - All CCO-managed content is ALWAYS overwritten with fresh source:
    - `.claude/statusline.js` → overwrite entirely (check for "CCO Statusline" marker)
@@ -1494,15 +1550,15 @@ Guidelines are generated based on user-configured values to provide context-awar
    - `.claude/settings.json` → remove legacy keys: `_cco_managed`, `_cco_version`, `_cco_installed`, `cco_config`, `ccoSettings`
    - `./CLAUDE.md` → overwrite `<!-- CCO_ADAPTIVE_START -->...<!-- CCO_ADAPTIVE_END -->` block
    - Never skip because "file exists" or "content unchanged" - always write fresh
-7. **Granular standard selection** - each subsection is independently evaluated, not atomic categories
-8. **No duplicate standards** - each standard is added exactly once; deduplicate before writing to CLAUDE.md
+7. **Granular rule selection** - each subsection is independently evaluated, not atomic categories
+8. **No duplicate rules** - each rule is added exactly once; deduplicate before writing to CLAUDE.md
 9. **Never modify global** - cco-tune may READ `~/.claude/CLAUDE.md` for counting, but NEVER write/modify any file in `~/.claude/`
 10. **Version-agnostic updates** - Clean upgrade from ANY previous CCO version:
    - Remove ALL CCO markers (`<!-- CCO_*_START -->...<!-- CCO_*_END -->`) before inserting new content
    - Pattern: `<!--\s*CCO[_-]\w+[_-]START\s*-->.*?<!--\s*CCO[_-]\w+[_-]END\s*-->` (case-insensitive)
    - Handles legacy marker formats (CCO_RULES, CCO_WORKFLOW, cco-context, etc.)
    - No version checks - always apply fresh content regardless of installed version
-11. **Question Labels** - Follow CCO "Question Formatting" standard (labels, precedence, ordering)
+11. **Question Labels** - Follow CCO "Question Formatting" rule (labels, precedence, ordering)
 12. **Review Sequence** - Detection results → Configuration Summary box → Approval question
 13. **String env values** - All `env` values in settings.json must be strings per official Claude Code docs
 14. **Export reads installed files** - Export reads from `~/.claude/CLAUDE.md` and `./CLAUDE.md`, NOT from command specs
