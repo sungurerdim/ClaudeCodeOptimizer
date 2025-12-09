@@ -41,7 +41,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - **Token optimization** - Only core + ai rules always loaded; tools rules on-demand (~3000 tokens saved)
 - **Markers updated** - `CCO_CORE_START`, `CCO_AI_START`, `CCO_TOOLS_START`, `CCO_ADAPTIVE_START`
 - **On-demand tool rules** - Commands/agents load tools.md via `!` backtick syntax when needed
-- **Rules restructured** into 4 categories: Core (38), AI (28), Tools (50), Adaptive (170 pool)
+- **Rules restructured** into 4 categories: Core (38), AI (32), Tools (110), Adaptive (120 pool)
 - **Rules optimized** - Table format with inheritance pattern, -37.7% lines, -26.8% tokens
 - **Export integrated into main flow** - No separate `--export` flag needed, select from Export section
 - **Export reads installed files** - Reads from `~/.claude/CLAUDE.md` + `./CLAUDE.md`, not command specs
@@ -55,7 +55,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - **CCO marker pattern** - Universal backward-compatible pattern for clean upgrades from any version
 
 ### Fixed
-- Standard counts consistent across all documentation (116 base + 170 pool)
+- Rule counts consistent across all documentation (70 base + 110 tools + 120 adaptive pool)
 - Detection exclusions for test/example directories prevent false Container triggers
 - Statusline emoji width calculation for proper alignment
 - CLI/Library projects excluded from Operations standards (use CI Only instead)

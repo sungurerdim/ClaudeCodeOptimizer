@@ -100,29 +100,36 @@ Global `~/.claude/` files are never modified by cco-tune.
 
 Show current project state before asking anything. Status shows **current values and locations only** - no reasoning (that comes in detection results).
 
-### 1.1 Count Standards First (MANDATORY)
+### 1.1 Count Rules First (MANDATORY)
 
 **CRITICAL:** Before displaying status, you MUST run these commands and use the EXACT results. NEVER estimate or guess.
 
 ```bash
-# Run these 4 commands separately via Bash tool:
-# Standards use table format: | * Name | Rule |
-sed -n '/^# Universal Standards/,/^---$/p' ~/.claude/CLAUDE.md | grep -c "| \* "
-# → UNIVERSAL (e.g., 38)
+# Run these commands via Bash tool:
+# Rules use table format: | * Name | Description |
+# Use wildcard patterns to match CCO_*_START and CCO_*_END markers
 
-sed -n '/^# AI-Specific Standards/,/^---$/p' ~/.claude/CLAUDE.md | grep -c "| \* "
-# → AI_SPECIFIC (e.g., 32)
+# Core rules (from CCO_CORE block)
+sed -n '/<!-- CCO_CORE_START -->/,/<!-- CCO_CORE_END -->/p' ~/.claude/CLAUDE.md | grep -c "| \* "
+# → CORE (e.g., 38)
 
-sed -n '/^# CCO-Specific Standards/,/<!-- CCO_STANDARDS_END -->/p' ~/.claude/CLAUDE.md | grep -c "| \* "
-# → CCO_SPECIFIC (e.g., 108)
+# AI rules (from CCO_AI block)
+sed -n '/<!-- CCO_AI_START -->/,/<!-- CCO_AI_END -->/p' ~/.claude/CLAUDE.md | grep -c "| \* "
+# → AI (e.g., 32)
 
-sed -n '/^## Conditional Standards/,/<!-- CCO_ADAPTIVE_END -->/p' ./CLAUDE.md | grep -c "| \* "
-# → PROJECT_SPECIFIC (e.g., 20) - returns 0 if no context
+# Tools rules (from ~/.claude/rules/tools.md)
+grep -c "| \* " ~/.claude/rules/tools.md 2>/dev/null || echo "0"
+# → TOOLS (e.g., 110) - on-demand, not in CLAUDE.md
+
+# Adaptive rules (from CCO_ADAPTIVE block in project CLAUDE.md)
+sed -n '/<!-- CCO_ADAPTIVE_START -->/,/<!-- CCO_ADAPTIVE_END -->/p' ./CLAUDE.md 2>/dev/null | grep -c "| \* " || echo "0"
+# → ADAPTIVE (e.g., 20) - returns 0 if no context
 ```
 
 **Calculate totals:**
-- `BASE_TOTAL = UNIVERSAL + AI_SPECIFIC + CCO_SPECIFIC`
-- `TOTAL = BASE_TOTAL + PROJECT_SPECIFIC`
+- `BASE = CORE + AI` (always loaded in ~/.claude/CLAUDE.md)
+- `ON_DEMAND = TOOLS` (loaded by commands when needed)
+- `PROJECT = ADAPTIVE` (project-specific in ./CLAUDE.md)
 
 ### 1.2 Display Status
 
