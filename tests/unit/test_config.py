@@ -16,8 +16,6 @@ from claudecodeoptimizer.config import (
     get_content_path,
     get_rules_breakdown,
     get_rules_count,
-    get_standards_breakdown,
-    get_standards_count,
 )
 
 
@@ -101,14 +99,6 @@ class TestFunctions:
         assert rules > 0
         assert categories > 0
 
-    def test_get_standards_count(self):
-        """Test get_standards_count (deprecated alias) returns tuple of counts."""
-        standards, categories = get_standards_count()
-        assert isinstance(standards, int)
-        assert isinstance(categories, int)
-        assert standards > 0
-        assert categories > 0
-
     def test_get_rules_count_missing_file(self, tmp_path):
         """Test get_rules_count returns (0, 0) when rules file doesn't exist."""
         from unittest.mock import MagicMock
@@ -174,14 +164,6 @@ class TestFunctions:
         assert result["total"] == (
             result["core"] + result["ai"] + result["tools"] + result["adaptive"]
         )
-
-    def test_get_standards_breakdown(self):
-        """Test get_standards_breakdown (deprecated alias) returns correct structure."""
-        result = get_standards_breakdown()
-        assert isinstance(result, dict)
-        # Deprecated alias maps to new keys
-        assert "universal" in result or "core" in result
-        assert "total" in result
 
     def test_rules_dir_constant(self):
         """Test RULES_DIR constant is defined correctly."""

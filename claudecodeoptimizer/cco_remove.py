@@ -258,17 +258,6 @@ def remove_claude_md_rules(verbose: bool = True) -> list[str]:
     return []
 
 
-# Backward compatibility aliases
-def has_claude_md_standards() -> list[str]:
-    """Deprecated: Use has_claude_md_rules instead."""
-    return has_claude_md_rules()
-
-
-def remove_claude_md_standards(verbose: bool = True) -> list[str]:
-    """Deprecated: Use remove_claude_md_rules instead."""
-    return remove_claude_md_rules(verbose)
-
-
 def uninstall_package(method: str) -> bool:
     """Uninstall CCO package."""
     cmds = {

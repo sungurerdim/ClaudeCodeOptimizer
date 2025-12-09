@@ -2,7 +2,7 @@
 
 <!-- CCO_ADAPTIVE_START -->
 ## Strategic Context
-Purpose: Process and standards layer for Claude Code
+Purpose: Process and rules layer for Claude Code
 Team: Solo | Scale: Small (100-1K) | Data: Public | Compliance: None
 Stack: Python 3.10+, ruff, mypy, pytest (stdlib only) | Type: CLI | DB: None | Rollback: Git
 Architecture: Monolith | API: None | Deployment: CI/CD

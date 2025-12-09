@@ -107,7 +107,7 @@ Read-only project analysis. Returns structured data for CCO commands.
 | Tech Debt | Cyclomatic >10, dead code, duplication, orphans |
 | Tests | Coverage gaps, missing tests for public functions |
 | Performance | N+1 patterns, missing indexes, blocking I/O |
-| Self-Compliance | Violations of project's stated standards |
+| Self-Compliance | Violations of project's stated rules |
 
 ### Metrics Calculation
 

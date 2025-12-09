@@ -32,7 +32,7 @@ Run /cco-tune first to configure project context, then restart CLI.
 ```
 **Stop execution immediately.**
 
-Requires clean git state per Pre-Operation Safety standard.
+Requires clean git state per Pre-Operation Safety rule.
 
 ## Context Application
 

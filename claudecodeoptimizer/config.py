@@ -138,21 +138,3 @@ def get_rules_breakdown() -> dict[str, int]:
 
     result["total"] = result["core"] + result["ai"] + result["tools"] + result["adaptive"]
     return result
-
-
-# Backward compatibility aliases
-def get_standards_breakdown() -> dict[str, int]:
-    """Deprecated: Use get_rules_breakdown instead."""
-    breakdown = get_rules_breakdown()
-    return {
-        "universal": breakdown["core"],
-        "ai_specific": breakdown["ai"],
-        "cco_specific": breakdown["tools"],
-        "project_specific": breakdown["adaptive"],
-        "total": breakdown["total"],
-    }
-
-
-def get_standards_count() -> tuple[int, int]:
-    """Deprecated: Use get_rules_count instead."""
-    return get_rules_count()

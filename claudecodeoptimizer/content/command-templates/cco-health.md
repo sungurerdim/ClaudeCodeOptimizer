@@ -35,7 +35,7 @@ Run /cco-tune first to configure project context, then restart CLI.
 | Field | Effect |
 |-------|--------|
 | Applicable | Only show scores for applicable categories from context |
-| Scale | <100 → relaxed thresholds; 100-10K → standard; 10K+ → strict |
+| Scale | <100 → relaxed thresholds; 100-10K → moderate; 10K+ → strict |
 | Type | API: response time; CLI: startup time; Library: coverage + API stability |
 | Team | Solo → simplified view; 6+ → add collaboration metrics |
 | Maturity | Legacy → weight stability higher; Greenfield → weight velocity higher |
@@ -53,7 +53,7 @@ Run /cco-tune first to configure project context, then restart CLI.
 
 ## Flow
 
-Per Command Flow standard (read-only, no fixes).
+Per Command Flow rule (read-only, no fixes).
 
 ## Score Categories (0-100)
 

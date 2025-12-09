@@ -143,16 +143,16 @@ Report: `[CONSISTENCY] {category}: {doc} ≠ {code} in {file:line}`
 
 ### Self-Compliance (`--self-compliance`)
 
-Check code against project's own stated standards:
+Check code against project's own stated rules:
 
 | Source | Checks |
 |--------|--------|
 | README.md | Feature claims, installation steps, examples |
-| CLAUDE.md | CCO standards, guidelines, conventions |
+| CLAUDE.md | CCO rules, guidelines, conventions |
 | CONTRIBUTING.md | Contribution guidelines, code style |
-| Custom standards | Project-specific rules |
+| Custom rules | Project-specific rules |
 
-Report: `[SELF-COMPLIANCE] {standard} violated in {file:line}`
+Report: `[SELF-COMPLIANCE] {rule} violated in {file:line}`
 
 ### Tests (`--tests`)
 
