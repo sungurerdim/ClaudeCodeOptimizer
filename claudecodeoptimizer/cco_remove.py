@@ -48,7 +48,11 @@ def detect_install_method() -> str | None:
     ]:
         try:
             result = subprocess.run(
-                [cmd] + args, capture_output=True, text=True, timeout=SUBPROCESS_TIMEOUT
+                [cmd] + args,
+                capture_output=True,
+                text=True,
+                timeout=SUBPROCESS_TIMEOUT,
+                shell=False,
             )
             if "claudecodeoptimizer" in result.stdout:
                 return cmd
@@ -273,7 +277,9 @@ def uninstall_package(method: str) -> bool:
         "pip": ["pip", "uninstall", "-y", "claudecodeoptimizer"],
     }
     try:
-        result = subprocess.run(cmds[method], capture_output=True, text=True, timeout=30)
+        result = subprocess.run(
+            cmds[method], capture_output=True, text=True, timeout=30, shell=False
+        )
         return result.returncode == 0
     except (subprocess.TimeoutExpired, FileNotFoundError):
         return False
