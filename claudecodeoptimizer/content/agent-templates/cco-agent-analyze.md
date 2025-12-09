@@ -1,13 +1,13 @@
 ---
 name: cco-agent-analyze
-description: Read-only project analysis and issue detection for CCO commands
+description: Read-only project analysis and issue detection
 tools: Glob, Read, Grep, Bash
 safe: true
 ---
 
 # Agent: Analyze
 
-Read-only project analysis. Returns structured data for CCO commands.
+Read-only project analysis. Returns structured JSON data.
 
 **Tool Rules:** !`cat ~/.claude/rules/tools.md 2>/dev/null`
 
@@ -15,13 +15,13 @@ Read-only project analysis. Returns structured data for CCO commands.
 
 | Scope | Returns | Use Case |
 |-------|---------|----------|
-| `detect` | Project structure, stack, tools (JSON) | cco-tune, cco-commit fallback |
-| `scan` | Issues with file:line, metrics (JSON) | cco-audit, cco-health, cco-optimize |
-| `full` | Both detect + scan combined | cco-tune first run |
-| `references` | Cross-file reference map (JSON) | cco-refactor |
-| `architecture` | Dependency graph, coupling metrics (JSON) | cco-review |
-| `conventions` | Code patterns and conventions (JSON) | cco-generate |
-| `trends` | Historical metrics with deltas (JSON) | cco-health --trends |
+| `detect` | Project structure, stack, tools (JSON) | Project setup, configuration |
+| `scan` | Issues with file:line, metrics (JSON) | Auditing, health checks, optimization |
+| `full` | Both detect + scan combined | Comprehensive first-run analysis |
+| `references` | Cross-file reference map (JSON) | Refactoring, rename operations |
+| `architecture` | Dependency graph, coupling metrics (JSON) | Architecture review, tech debt |
+| `conventions` | Code patterns and conventions (JSON) | Code generation, consistency |
+| `trends` | Historical metrics with deltas (JSON) | Progress tracking, reporting |
 
 ---
 

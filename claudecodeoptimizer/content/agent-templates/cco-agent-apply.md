@@ -1,6 +1,6 @@
 ---
 name: cco-agent-apply
-description: Write operations with verification for CCO commands
+description: Write operations with verification
 tools: Grep, Read, Glob, Bash, Edit, Write, NotebookEdit
 safe: false
 ---
