@@ -10,7 +10,7 @@ allowed-tools: Read(*), Grep(*), Glob(*), Edit(*), Bash(git:*), Task(*)
 
 End-to-end: Maps references, transforms safely, verifies each step.
 
-**Standards:** Command Flow | Pre-Operation Safety | Approval Flow | Output Formatting
+**Standards:** Command Flow | Pre-Operation Safety | User Input | Approval Flow | Output Formatting
 
 ## Context
 
@@ -56,13 +56,14 @@ Requires clean git state per Pre-Operation Safety standard.
 
 ## Default Behavior
 
-When called without operation, ask:
+When called without operation:
 
-| Question | Options |
-|----------|---------|
-| Operation? | Rename, Move, Extract, Inline, Restructure |
+**Use AskUserQuestion:**
+| Question | Options | MultiSelect |
+|----------|---------|-------------|
+| Operation? | Rename, Move, Extract, Inline, Restructure | false |
 
-After selection, prompt for required parameters.
+After selection, prompt for required parameters using AskUserQuestion.
 
 ## Operations
 

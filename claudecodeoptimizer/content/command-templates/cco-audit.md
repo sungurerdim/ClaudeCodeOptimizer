@@ -10,7 +10,7 @@ allowed-tools: Bash(git:*), Bash(grep:*), Bash(find:*), Read(*), Grep(*), Glob(*
 
 End-to-end: Detects security and quality issues AND fixes them.
 
-**Standards:** Command Flow | Fix Workflow | Approval Flow | Safety Classification | Output Formatting
+**Standards:** Command Flow | Fix Workflow | User Input | Approval Flow | Safety Classification | Output Formatting
 
 ## Context
 
@@ -74,9 +74,10 @@ When called without flags:
 - Runs ALL categories from `Applicable:` field
 - Skips ALL categories from `Not Applicable:` field
 
-| Question | Options |
-|----------|---------|
-| Auto-fix? | No, Yes `[recommended]` |
+**Use AskUserQuestion:**
+| Question | Options | MultiSelect |
+|----------|---------|-------------|
+| Auto-fix detected issues? | No, Yes `[recommended]` | false |
 
 Explicit flags narrow scope (but must be in Applicable list).
 
@@ -96,8 +97,10 @@ Detect and fix security vulnerabilities:
 
 Report: `[SECURITY] {severity}: {issue} in {file:line}`
 
-**Sub-categories (when --security used alone):**
-Ask (multiSelect): All | OWASP | Secrets | CVEs | Supply-Chain | Input-Validation
+**Sub-categories (when --security used alone) - Use AskUserQuestion:**
+| Question | Options | MultiSelect |
+|----------|---------|-------------|
+| Security sub-categories? | All, OWASP, Secrets, CVEs, Supply-Chain, Input-Validation | true |
 
 ### Tech Debt (`--tech-debt`)
 
@@ -113,8 +116,10 @@ Detect and fix technical debt:
 
 Report: `[TECH-DEBT] {severity}: {issue} in {file:line}`
 
-**Sub-categories (when --tech-debt used alone):**
-Ask (multiSelect): All | Dead-Code | Complexity | TODOs | Hardcoded | Types
+**Sub-categories (when --tech-debt used alone) - Use AskUserQuestion:**
+| Question | Options | MultiSelect |
+|----------|---------|-------------|
+| Tech-debt sub-categories? | All, Dead-Code, Complexity, TODOs, Hardcoded, Types | true |
 
 ### Consistency (`--consistency`)
 
@@ -131,7 +136,10 @@ Detect and fix doc-code mismatches:
 
 Report: `[CONSISTENCY] {category}: {doc} ≠ {code} in {file:line}`
 
-**SSOT Resolution:** For each mismatch, ask: "Docs" (update code) | "Code" (update docs) | "Discuss"
+**SSOT Resolution - Use AskUserQuestion:**
+| Question | Options | MultiSelect |
+|----------|---------|-------------|
+| Mismatch in {file:line}: {doc} ≠ {code}. Source of truth? | Docs (update code), Code (update docs), Skip | false |
 
 ### Self-Compliance (`--self-compliance`)
 

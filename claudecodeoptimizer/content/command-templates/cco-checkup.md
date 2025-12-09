@@ -10,7 +10,7 @@ allowed-tools: Read(*), Grep(*), Glob(*), Edit(*), Bash(git:*), Bash(pytest:*), 
 
 Meta command for regular project maintenance (weekly recommended).
 
-**Standards:** Command Flow | Output Formatting
+**Standards:** Command Flow | User Input | Output Formatting
 
 ## Context
 

@@ -8,7 +8,7 @@ allowed-tools: Read(*), Write(*), Edit(*), Grep(*), Glob(*), Bash(git:*), Bash(c
 
 **Project tuning** - Detection, configuration, removal, and export for the current project. Export uses currently installed standards from `~/.claude/CLAUDE.md` and `./CLAUDE.md`.
 
-**Standards:** Approval Flow | Output Formatting | Dynamic Context | Skip Criteria | Task Tracking
+**Standards:** User Input | Approval Flow | Output Formatting | Dynamic Context | Skip Criteria | Task Tracking
 
 ## Scope
 

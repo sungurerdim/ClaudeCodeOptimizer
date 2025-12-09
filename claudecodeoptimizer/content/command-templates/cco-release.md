@@ -10,7 +10,7 @@ allowed-tools: Read(*), Grep(*), Glob(*), Edit(*), Bash(git:*), Bash(pytest:*), 
 
 Meta command that orchestrates other CCO commands for release preparation.
 
-**Standards:** Command Flow | Output Formatting
+**Standards:** Command Flow | User Input | Output Formatting
 
 ## Context
 
