@@ -16,21 +16,9 @@ from .config import (
     COMMANDS_DIR,
     RULES_DIR,
     SEPARATOR,
-    SETTINGS_FILE,
-    STATUSLINE_FILE,
     get_content_path,
     get_rules_breakdown,
 )
-
-# Legacy keys that may exist from older CCO versions
-# These are cleaned during reinstall for a fresh start
-LEGACY_SETTINGS_KEYS = [
-    "_cco_managed",
-    "_cco_version",
-    "_cco_installed",
-    "cco_config",
-    "ccoSettings",
-]
 
 # Valid options for local mode
 STATUSLINE_MODES = ("full", "minimal")
@@ -43,14 +31,15 @@ def get_content_dir() -> Path:
 
 
 def clean_previous_installation(verbose: bool = True) -> dict[str, int]:
-    """Remove all traces of previous CCO installation.
+    """Remove previous CCO commands, agents, and rules.
 
     This ensures a clean reinstall by removing:
     - All cco-*.md files in commands/ and agents/
     - CCO markers from CLAUDE.md
-    - CCO-related keys from settings.json
-    - CCO statusline.js (if it's a CCO file)
     - Rules directory
+
+    NOTE: Does NOT touch settings.json or statusline.js.
+    v1.0.0 never installed these globally, and v1.1.0+ uses local ./.claude/ only.
 
     Args:
         verbose: If True, print progress messages during cleanup.
@@ -58,7 +47,7 @@ def clean_previous_installation(verbose: bool = True) -> dict[str, int]:
     Returns:
         Dictionary with counts of removed items
     """
-    removed = {"commands": 0, "agents": 0, "rules": 0, "settings_keys": 0, "statusline": 0}
+    removed = {"commands": 0, "agents": 0, "rules": 0}
 
     # 1. Remove all cco-*.md files from commands/
     if COMMANDS_DIR.exists():
@@ -88,34 +77,6 @@ def clean_previous_installation(verbose: bool = True) -> dict[str, int]:
             claude_md.write_text(content, encoding="utf-8")
             removed["rules"] += count
 
-    # 5. Clean CCO-related keys from settings.json
-    if SETTINGS_FILE.exists():
-        try:
-            settings = json.loads(SETTINGS_FILE.read_text(encoding="utf-8"))
-            keys_removed = 0
-
-            # Remove legacy CCO keys (includes CCO_PERMISSIONS_MARKER)
-            for key in LEGACY_SETTINGS_KEYS:
-                if key in settings:
-                    del settings[key]
-                    keys_removed += 1
-
-            if keys_removed > 0:
-                SETTINGS_FILE.write_text(json.dumps(settings, indent=2) + "\n", encoding="utf-8")
-                removed["settings_keys"] = keys_removed
-        except json.JSONDecodeError:
-            pass
-
-    # 6. Remove CCO statusline.js (check if it's a CCO file)
-    if STATUSLINE_FILE.exists():
-        try:
-            content = STATUSLINE_FILE.read_text(encoding="utf-8")
-            if "CCO Statusline" in content:
-                STATUSLINE_FILE.unlink()
-                removed["statusline"] = 1
-        except (OSError, UnicodeDecodeError):
-            pass
-
     total = sum(removed.values())
     if verbose and total > 0:
         print("Cleaning previous installation...")
@@ -125,10 +86,6 @@ def clean_previous_installation(verbose: bool = True) -> dict[str, int]:
             print(f"  - Removed {removed['agents']} agent(s)")
         if removed["rules"]:
             print(f"  - Removed {removed['rules']} rule file(s)/section(s)")
-        if removed["settings_keys"]:
-            print(f"  - Cleaned {removed['settings_keys']} legacy setting(s)")
-        if removed["statusline"]:
-            print("  - Removed old statusline.js")
         print()
 
     return removed
