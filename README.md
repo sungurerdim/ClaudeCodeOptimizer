@@ -88,10 +88,10 @@ CCO uses a 4-category rules system:
 
 | Category | Scope | Loading |
 |----------|-------|---------|
-| **Core** | All projects, fundamental principles | Always (CLAUDE.md) |
-| **AI** | All AI assistants, model agnostic | Always (CLAUDE.md) |
-| **Tools** | CCO command/agent mechanisms | On-demand (~/.claude/rules/) |
-| **Adaptive** | Selected by /cco-tune based on detection | Project-specific |
+| **Core** | Fundamental principles | Always active in CLAUDE.md |
+| **AI** | Model agnostic behavior | Always active in CLAUDE.md |
+| **Tools** | CCO command/agent mechanisms | Loaded when commands/agents run |
+| **Adaptive** | Stack-based rules pool | Only matching rules selected per project |
 
 **Counting:** `grep -c "| \* " <file>` - each rule row starts with `| * `
 

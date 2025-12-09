@@ -518,12 +518,10 @@ Permission levels: safe, balanced, permissive, full
         breakdown = get_rules_breakdown()
         base_count = base_rules["core"] + base_rules["ai"]
         print(SEPARATOR)
-        print(f"Installed: {len(cmds)} commands, {len(agents)} agents, {breakdown['total']} rules")
-        print(
-            f"  Base (always active): {base_count} (Core: {base_rules['core']} | AI: {base_rules['ai']})"
-        )
-        print(f"  Tools (on-demand): {breakdown['tools']}")
-        print(f"  Adaptive (project-specific): {breakdown['adaptive']} via /cco-tune")
+        print(f"Installed: {len(cmds)} commands, {len(agents)} agents")
+        print(f"  Base rules: {base_count} (Core: {base_rules['core']} + AI: {base_rules['ai']})")
+        print(f"  Tools rules: {breakdown['tools']} (loaded when commands/agents run)")
+        print(f"  Adaptive pool: {breakdown['adaptive']} (only matching rules selected per project)")
         print(SEPARATOR)
         print()
         print("Restart Claude Code for changes to take effect.")
