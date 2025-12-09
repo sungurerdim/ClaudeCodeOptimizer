@@ -35,8 +35,14 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - **Verification checkpoints** - Pre-output verification rules for consistent behavior
 
 ### Changed
-- **Standards restructured** into 4 categories: Universal (38), AI-Specific (28), CCO-Specific (50), Project-Specific (170 pool)
-- **Standards optimized** - Table format with inheritance pattern, -37.7% lines, -26.8% tokens
+- **Standards → Rules restructure** - Renamed "standards" to "rules" throughout the project
+- **Directory renamed** - `content/slash-commands/` → `content/command-templates/` for consistency with `agent-templates/`
+- **4-category rules system** - `core.md`, `ai.md`, `tools.md`, `adaptive.md` in `~/.claude/rules/`
+- **Token optimization** - Only core + ai rules always loaded; tools rules on-demand (~3000 tokens saved)
+- **Markers updated** - `CCO_CORE_START`, `CCO_AI_START`, `CCO_TOOLS_START`, `CCO_ADAPTIVE_START`
+- **On-demand tool rules** - Commands/agents load tools.md via `!` backtick syntax when needed
+- **Rules restructured** into 4 categories: Core (38), AI (28), Tools (50), Adaptive (170 pool)
+- **Rules optimized** - Table format with inheritance pattern, -37.7% lines, -26.8% tokens
 - **Export integrated into main flow** - No separate `--export` flag needed, select from Export section
 - **Export reads installed files** - Reads from `~/.claude/CLAUDE.md` + `./CLAUDE.md`, not command specs
 - **Question Formatting enhanced** - CRITICAL markers, exemplars, verification checkpoints for consistency
@@ -44,7 +50,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - **Question Formatting** - Standardized labels ([detected], [current], [recommended]), ascending option ordering
 - **Standard counts** - Now calculated dynamically at runtime (no hardcoded values)
 - **Cumulative tier system** - Scale, Testing, Observability tiers properly include lower tier standards
-- **Documentation expanded** - Added `docs/commands.md`, `docs/agents.md`, `docs/standards.md`
+- **Documentation expanded** - Added `docs/commands.md`, `docs/agents.md`, `docs/rules.md`
 - **CCO-Specific standards** - Comprehensive workflow mechanisms (Command Flow, Fix Workflow, Approval Flow, Question Formatting, Output Formatting, Safety Classification, Impact Preview, Priority Levels)
 - **CCO marker pattern** - Universal backward-compatible pattern for clean upgrades from any version
 

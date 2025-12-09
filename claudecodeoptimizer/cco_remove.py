@@ -2,6 +2,7 @@
 
 import json
 import re
+import shutil
 import subprocess
 import sys
 from pathlib import Path
@@ -13,6 +14,7 @@ from .config import (
     CLAUDE_DIR,
     LOCAL_SETTINGS_FILE,
     LOCAL_STATUSLINE_FILE,
+    RULES_DIR,
     SEPARATOR,
     SETTINGS_FILE,
     STATUSLINE_FILE,
@@ -27,7 +29,8 @@ class RemovalItems(TypedDict):
 
     method: str | None
     files: dict[str, list[str]]
-    standards: list[str]
+    rules: list[str]
+    rules_dir: bool
     statusline: bool
     permissions: bool
     local_statusline: bool
@@ -171,7 +174,24 @@ def remove_local_statusline(verbose: bool = True) -> bool:
     return True
 
 
-def has_claude_md_standards() -> list[str]:
+def has_rules_dir() -> bool:
+    """Check if ~/.claude/rules/ directory exists."""
+    return RULES_DIR.exists() and any(RULES_DIR.glob("*.md"))
+
+
+def remove_rules_dir(verbose: bool = True) -> bool:
+    """Remove ~/.claude/rules/ directory."""
+    if not RULES_DIR.exists():
+        return False
+
+    rule_count = len(list(RULES_DIR.glob("*.md")))
+    shutil.rmtree(RULES_DIR)
+    if verbose:
+        print(f"  - rules/ ({rule_count} files)")
+    return True
+
+
+def has_claude_md_rules() -> list[str]:
     """Check which CCO sections exist in CLAUDE.md.
 
     Uses universal pattern to detect ANY CCO marker for backward compatibility.
@@ -201,7 +221,7 @@ def remove_cco_files(verbose: bool = True) -> dict[str, int]:
     return removed
 
 
-def remove_claude_md_standards(verbose: bool = True) -> list[str]:
+def remove_claude_md_rules(verbose: bool = True) -> list[str]:
     """Remove ALL CCO content from CLAUDE.md.
 
     Uses universal pattern to remove any CCO marker for backward compatibility.
@@ -234,6 +254,17 @@ def remove_claude_md_standards(verbose: bool = True) -> list[str]:
     return []
 
 
+# Backward compatibility aliases
+def has_claude_md_standards() -> list[str]:
+    """Deprecated: Use has_claude_md_rules instead."""
+    return has_claude_md_rules()
+
+
+def remove_claude_md_standards(verbose: bool = True) -> list[str]:
+    """Deprecated: Use remove_claude_md_rules instead."""
+    return remove_claude_md_rules(verbose)
+
+
 def uninstall_package(method: str) -> bool:
     """Uninstall CCO package."""
     cmds = {
@@ -252,7 +283,8 @@ def _collect_removal_items() -> RemovalItems:
     """Collect all items to be removed."""
     method = detect_install_method()
     files = list_cco_files()
-    standards = has_claude_md_standards()
+    rules = has_claude_md_rules()
+    rules_dir = has_rules_dir()
     statusline = has_cco_statusline()
     permissions = has_cco_permissions(SETTINGS_FILE)
     local_statusline = has_local_cco_statusline()
@@ -261,7 +293,8 @@ def _collect_removal_items() -> RemovalItems:
     total = (
         (1 if method else 0)
         + total_files
-        + len(standards)
+        + len(rules)
+        + (1 if rules_dir else 0)
         + (1 if statusline else 0)
         + (1 if permissions else 0)
         + (1 if local_statusline else 0)
@@ -271,7 +304,8 @@ def _collect_removal_items() -> RemovalItems:
     return {
         "method": method,
         "files": files,
-        "standards": standards,
+        "rules": rules,
+        "rules_dir": rules_dir,
         "statusline": statusline,
         "permissions": permissions,
         "local_statusline": local_statusline,
@@ -296,7 +330,7 @@ def _display_removal_plan(items: RemovalItems) -> None:
     categories = [
         ("Commands", items["files"]["commands"]),
         ("Agents", items["files"]["agents"]),
-        ("CLAUDE.md sections", items["standards"]),
+        ("CLAUDE.md sections", items["rules"]),
     ]
     for title, category_items in categories:
         if category_items:
@@ -304,6 +338,11 @@ def _display_removal_plan(items: RemovalItems) -> None:
             for item in category_items:
                 print(f"  - {item}")
             print()
+
+    if items["rules_dir"]:
+        print("Rules directory:")
+        print("  - ~/.claude/rules/")
+        print()
 
     if items["statusline"] or items["permissions"]:
         print("Global (~/.claude/):")
@@ -343,9 +382,14 @@ def _execute_removal(items: RemovalItems) -> None:
         remove_cco_files()
         print()
 
-    if items["standards"]:
+    if items["rules"]:
         print("Removing CLAUDE.md sections...")
-        remove_claude_md_standards()
+        remove_claude_md_rules()
+        print()
+
+    if items["rules_dir"]:
+        print("Removing rules directory...")
+        remove_rules_dir()
         print()
 
     if items["statusline"] or items["permissions"]:

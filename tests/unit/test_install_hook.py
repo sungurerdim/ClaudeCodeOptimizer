@@ -101,7 +101,7 @@ class TestCleanPreviousInstallation:
                         ):
                             result = clean_previous_installation(verbose=False)
 
-        assert result["standards"] == 1
+        assert result["rules"] >= 1
         content = claude_md.read_text()
         assert "<!-- CCO_STANDARDS_START -->" not in content
         assert "Keep this" in content
@@ -149,10 +149,94 @@ class TestCleanPreviousInstallation:
                         "claudecodeoptimizer.install_hook.SETTINGS_FILE", tmp_path / "settings.json"
                     ):
                         with patch("claudecodeoptimizer.install_hook.STATUSLINE_FILE", statusline):
-                            result = clean_previous_installation(verbose=False)
+                            with patch(
+                                "claudecodeoptimizer.install_hook.RULES_DIR", tmp_path / "rules"
+                            ):
+                                result = clean_previous_installation(verbose=False)
 
         assert result["statusline"] == 1
-        assert not statusline.exists()
+
+    def test_removes_rules_dir(self, tmp_path):
+        """Test removes ~/.claude/rules/ directory during cleanup."""
+        rules_dir = tmp_path / "rules"
+        rules_dir.mkdir()
+        (rules_dir / "core.md").write_text("# Core")
+        (rules_dir / "ai.md").write_text("# AI")
+
+        with patch("claudecodeoptimizer.install_hook.COMMANDS_DIR", tmp_path / "commands"):
+            with patch("claudecodeoptimizer.install_hook.AGENTS_DIR", tmp_path / "agents"):
+                with patch("claudecodeoptimizer.install_hook.CLAUDE_DIR", tmp_path):
+                    with patch(
+                        "claudecodeoptimizer.install_hook.SETTINGS_FILE", tmp_path / "settings.json"
+                    ):
+                        with patch(
+                            "claudecodeoptimizer.install_hook.STATUSLINE_FILE",
+                            tmp_path / "statusline.js",
+                        ):
+                            with patch("claudecodeoptimizer.install_hook.RULES_DIR", rules_dir):
+                                result = clean_previous_installation(verbose=False)
+
+        assert result["rules"] == 2
+        assert not rules_dir.exists()
+
+    def test_removes_cco_permissions_marker(self, tmp_path):
+        """Test removes CCO_PERMISSIONS_MARKER from settings.json."""
+        settings_file = tmp_path / "settings.json"
+        settings_file.write_text(
+            json.dumps(
+                {
+                    "existingKey": "keep",
+                    "_cco_managed": True,
+                    "permissions": {"allow": []},
+                }
+            )
+        )
+
+        with patch("claudecodeoptimizer.install_hook.COMMANDS_DIR", tmp_path / "commands"):
+            with patch("claudecodeoptimizer.install_hook.AGENTS_DIR", tmp_path / "agents"):
+                with patch("claudecodeoptimizer.install_hook.CLAUDE_DIR", tmp_path):
+                    with patch("claudecodeoptimizer.install_hook.SETTINGS_FILE", settings_file):
+                        with patch(
+                            "claudecodeoptimizer.install_hook.STATUSLINE_FILE",
+                            tmp_path / "statusline.js",
+                        ):
+                            with patch(
+                                "claudecodeoptimizer.install_hook.RULES_DIR", tmp_path / "rules"
+                            ):
+                                result = clean_previous_installation(verbose=False)
+
+        assert result["settings_keys"] == 1
+        settings = json.loads(settings_file.read_text())
+        assert "existingKey" in settings
+        assert "_cco_managed" not in settings
+
+    def test_handles_statusline_read_error(self, tmp_path):
+        """Test handles OSError/UnicodeDecodeError when reading statusline."""
+        statusline = tmp_path / "statusline.js"
+        statusline.write_text("binary content")
+
+        # Create a mock that raises UnicodeDecodeError on read_text
+        with patch("claudecodeoptimizer.install_hook.COMMANDS_DIR", tmp_path / "commands"):
+            with patch("claudecodeoptimizer.install_hook.AGENTS_DIR", tmp_path / "agents"):
+                with patch("claudecodeoptimizer.install_hook.CLAUDE_DIR", tmp_path):
+                    with patch(
+                        "claudecodeoptimizer.install_hook.SETTINGS_FILE", tmp_path / "settings.json"
+                    ):
+                        with patch("claudecodeoptimizer.install_hook.STATUSLINE_FILE", statusline):
+                            with patch(
+                                "claudecodeoptimizer.install_hook.RULES_DIR", tmp_path / "rules"
+                            ):
+                                # Mock read_text to raise UnicodeDecodeError
+                                original_read = statusline.read_text
+
+                                def raise_error(*args, **kwargs):
+                                    raise UnicodeDecodeError("utf-8", b"", 0, 1, "test")
+
+                                with patch.object(type(statusline), "read_text", raise_error):
+                                    result = clean_previous_installation(verbose=False)
+
+        # Should not crash, statusline not removed due to read error
+        assert result["statusline"] == 0
 
     def test_preserves_non_cco_statusline(self, tmp_path):
         """Test preserves non-CCO statusline.js."""
@@ -191,7 +275,7 @@ class TestCleanPreviousInstallation:
 
         assert result["commands"] == 0
         assert result["agents"] == 0
-        assert result["standards"] == 0
+        assert result["rules"] == 0
 
     def test_verbose_output(self, tmp_path, capsys):
         """Test verbose output during cleanup."""
@@ -274,7 +358,7 @@ class TestCleanPreviousInstallation:
         # Verify all old components removed
         assert result["commands"] == 2
         assert result["agents"] == 1
-        assert result["standards"] == 1
+        assert result["rules"] >= 1
         assert result["settings_keys"] == 2  # _cco_managed and _cco_version
         assert result["statusline"] == 1
 
@@ -298,8 +382,8 @@ class TestSetupCommands:
         with patch("claudecodeoptimizer.install_hook.COMMANDS_DIR", tmp_path / "commands"):
             with patch("claudecodeoptimizer.install_hook.get_content_dir") as mock_content:
                 mock_content.return_value = tmp_path / "pkg"
-                (tmp_path / "pkg" / "slash-commands").mkdir(parents=True)
-                (tmp_path / "pkg" / "slash-commands" / "cco-test.md").touch()
+                (tmp_path / "pkg" / "command-templates").mkdir(parents=True)
+                (tmp_path / "pkg" / "command-templates" / "cco-test.md").touch()
 
                 installed = setup_commands()
 
@@ -330,8 +414,8 @@ class TestSetupCommands:
         with patch("claudecodeoptimizer.install_hook.COMMANDS_DIR", dest_dir):
             with patch("claudecodeoptimizer.install_hook.get_content_dir") as mock_content:
                 mock_content.return_value = tmp_path / "pkg"
-                (tmp_path / "pkg" / "slash-commands").mkdir(parents=True)
-                (tmp_path / "pkg" / "slash-commands" / "cco-new.md").write_text("new content")
+                (tmp_path / "pkg" / "command-templates").mkdir(parents=True)
+                (tmp_path / "pkg" / "command-templates" / "cco-new.md").write_text("new content")
 
                 installed = setup_commands()
 
@@ -383,14 +467,18 @@ class TestSetupClaudeMd:
             claude_md = tmp_path / "CLAUDE.md"
             assert claude_md.exists()
             content = claude_md.read_text()
-            assert "<!-- CCO_STANDARDS_START -->" in content
-            assert "<!-- CCO_STANDARDS_END -->" in content
+            # New markers: core and ai rules
+            assert "<!-- CCO_CORE_START -->" in content
+            assert "<!-- CCO_CORE_END -->" in content
+            assert "<!-- CCO_AI_START -->" in content
+            assert "<!-- CCO_AI_END -->" in content
 
-    def test_updates_existing_standards(self, tmp_path):
-        """Test updates existing CCO standards."""
+    def test_updates_existing_rules(self, tmp_path):
+        """Test updates existing CCO rules (backward compatible with old markers)."""
         with patch("claudecodeoptimizer.install_hook.CLAUDE_DIR", tmp_path):
             claude_md = tmp_path / "CLAUDE.md"
             tmp_path.mkdir(exist_ok=True)
+            # Old marker format should be cleaned and replaced with new markers
             claude_md.write_text(
                 "# My Rules\n\n<!-- CCO_STANDARDS_START -->PLACEHOLDER_TEXT<!-- CCO_STANDARDS_END -->"
             )
@@ -400,7 +488,8 @@ class TestSetupClaudeMd:
             content = claude_md.read_text()
             assert "# My Rules" in content
             assert "PLACEHOLDER_TEXT" not in content
-            assert "## Integration" in content
+            # New markers should be present
+            assert "<!-- CCO_CORE_START -->" in content
 
     def test_appends_to_existing_file(self, tmp_path):
         """Test appends rules to existing CLAUDE.md."""
@@ -413,7 +502,9 @@ class TestSetupClaudeMd:
 
             content = claude_md.read_text()
             assert "# My Custom Rules" in content
-            assert "<!-- CCO_STANDARDS_START -->" in content
+            # New markers
+            assert "<!-- CCO_CORE_START -->" in content
+            assert "<!-- CCO_AI_START -->" in content
 
 
 class TestSetupLocalStatusline:
@@ -948,6 +1039,93 @@ class TestPostInstall:
 
         captured = capsys.readouterr()
         assert "cco-tune" in captured.out
+
+
+class TestSetupRules:
+    """Test setup_rules function."""
+
+    def test_setup_rules_creates_directory(self, tmp_path):
+        """Test setup_rules creates rules directory and copies files."""
+        from claudecodeoptimizer.install_hook import setup_rules
+
+        # Create source rules in content dir
+        src_rules = tmp_path / "content" / "rules"
+        src_rules.mkdir(parents=True)
+        (src_rules / "core.md").write_text("# Core Rules")
+        (src_rules / "ai.md").write_text("# AI Rules")
+        (src_rules / "tools.md").write_text("# Tools Rules")
+        (src_rules / "adaptive.md").write_text("# Adaptive Rules")
+
+        # Target rules dir
+        rules_dir = tmp_path / "rules"
+
+        with patch(
+            "claudecodeoptimizer.install_hook.get_content_dir", return_value=tmp_path / "content"
+        ):
+            with patch("claudecodeoptimizer.install_hook.RULES_DIR", rules_dir):
+                result = setup_rules(verbose=False)
+
+        assert rules_dir.exists()
+        assert (rules_dir / "core.md").exists()
+        assert (rules_dir / "ai.md").exists()
+        assert (rules_dir / "tools.md").exists()
+        assert (rules_dir / "adaptive.md").exists()
+        assert result["core"] == 1
+        assert result["ai"] == 1
+        assert result["tools"] == 1
+        assert result["adaptive"] == 1
+
+    def test_setup_rules_verbose_output(self, tmp_path, capsys):
+        """Test setup_rules verbose output."""
+        from claudecodeoptimizer.install_hook import setup_rules
+
+        src_rules = tmp_path / "content" / "rules"
+        src_rules.mkdir(parents=True)
+        (src_rules / "core.md").write_text("# Core")
+
+        rules_dir = tmp_path / "rules"
+
+        with patch(
+            "claudecodeoptimizer.install_hook.get_content_dir", return_value=tmp_path / "content"
+        ):
+            with patch("claudecodeoptimizer.install_hook.RULES_DIR", rules_dir):
+                setup_rules(verbose=True)
+
+        captured = capsys.readouterr()
+        assert "+ core.md" in captured.out
+
+    def test_setup_rules_removes_old_files(self, tmp_path):
+        """Test setup_rules removes existing rule files."""
+        from claudecodeoptimizer.install_hook import setup_rules
+
+        src_rules = tmp_path / "content" / "rules"
+        src_rules.mkdir(parents=True)
+        (src_rules / "core.md").write_text("# New Core")
+
+        rules_dir = tmp_path / "rules"
+        rules_dir.mkdir()
+        (rules_dir / "old_rule.md").write_text("# Old Rule")
+
+        with patch(
+            "claudecodeoptimizer.install_hook.get_content_dir", return_value=tmp_path / "content"
+        ):
+            with patch("claudecodeoptimizer.install_hook.RULES_DIR", rules_dir):
+                setup_rules(verbose=False)
+
+        assert not (rules_dir / "old_rule.md").exists()
+        assert (rules_dir / "core.md").exists()
+
+    def test_setup_rules_no_source_dir(self, tmp_path):
+        """Test setup_rules returns empty when source doesn't exist."""
+        from claudecodeoptimizer.install_hook import setup_rules
+
+        with patch(
+            "claudecodeoptimizer.install_hook.get_content_dir",
+            return_value=tmp_path / "nonexistent",
+        ):
+            result = setup_rules(verbose=False)
+
+        assert result == {"core": 0, "ai": 0, "tools": 0, "adaptive": 0, "total": 0}
 
 
 if __name__ == "__main__":

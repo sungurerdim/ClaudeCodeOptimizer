@@ -8,8 +8,8 @@ Detailed documentation for all CCO slash commands.
 
 ### Base Commands
 
-| Command | Purpose | Key Standards |
-|---------|---------|---------------|
+| Command | Purpose | Key Rules |
+|---------|---------|-----------|
 | `/cco-tune` | Project tuning and configuration | Approval Flow, Output Formatting |
 | `/cco-health` | Metrics dashboard with trends | Command Flow, Output Formatting |
 | `/cco-audit` | Security + code quality gates | Fix Workflow, Safety Classification |
@@ -50,22 +50,22 @@ Detailed documentation for all CCO slash commands.
 
 | Section | Options |
 |---------|---------|
-| **Configure** | Detection & Standards, AI Performance, Statusline, Permissions |
-| **Remove** | Remove AI Performance, Remove Statusline, Remove Permissions, Remove Standards |
+| **Configure** | Detection & Rules, AI Performance, Statusline, Permissions |
+| **Remove** | Remove AI Performance, Remove Statusline, Remove Permissions, Remove Rules |
 | **Export** | CLAUDE.md, AGENTS.md |
 
 **Features:**
 - Mixed operations in single run (e.g., Configure + Remove + Export)
 - Remove options only shown if item is configured
-- Export content is user-selectable (Universal, AI-Specific, CCO-Specific, Project Context, Conditional)
+- Export content is user-selectable (Core Rules, AI Rules, Tool Rules, Project Context, Adaptive Rules)
 
 **Export sources:**
 - Reads from installed files: `~/.claude/CLAUDE.md` + `./CLAUDE.md`
 - Never exports: AI Performance, Statusline, Permissions (project-specific)
 
 **Export targets:**
-- **AGENTS.md** → `./AGENTS.md` (CCO-Specific excluded)
-- **CLAUDE.md** → `./CLAUDE.export.md` (all standards)
+- **AGENTS.md** → `./AGENTS.md` (Tool Rules excluded)
+- **CLAUDE.md** → `./CLAUDE.export.md` (all rules)
 
 ---
 
@@ -85,7 +85,7 @@ Detailed documentation for all CCO slash commands.
 - Security - Vulnerabilities, secrets, dependencies
 - Tests - Coverage + quality
 - Tech Debt - Complexity, dead code, duplication
-- Self-Compliance - Alignment with stated standards
+- Self-Compliance - Alignment with stated rules
 
 ---
 

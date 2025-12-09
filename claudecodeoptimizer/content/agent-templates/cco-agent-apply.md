@@ -9,7 +9,7 @@ safe: false
 
 Execute approved changes with verification. Reports accounting.
 
-**Standards:** Safety Classification | Fix Workflow | Output Standards | Task Tracking
+**Tool Rules:** !`cat ~/.claude/rules/tools.md 2>/dev/null`
 
 ## Purpose
 

@@ -1,4 +1,4 @@
-"""CCO Setup - Install commands, agents, and standards to ~/.claude/"""
+"""CCO Setup - Install commands, agents, and rules to ~/.claude/"""
 
 import argparse
 import json
@@ -14,11 +14,12 @@ from .config import (
     CCO_UNIVERSAL_PATTERN,
     CLAUDE_DIR,
     COMMANDS_DIR,
+    RULES_DIR,
     SEPARATOR,
     SETTINGS_FILE,
     STATUSLINE_FILE,
     get_content_path,
-    get_standards_breakdown,
+    get_rules_breakdown,
 )
 
 # Legacy keys that may exist from older CCO versions
@@ -49,6 +50,7 @@ def clean_previous_installation(verbose: bool = True) -> dict[str, int]:
     - CCO markers from CLAUDE.md
     - CCO-related keys from settings.json
     - CCO statusline.js (if it's a CCO file)
+    - Rules directory
 
     Args:
         verbose: If True, print progress messages during cleanup.
@@ -56,7 +58,7 @@ def clean_previous_installation(verbose: bool = True) -> dict[str, int]:
     Returns:
         Dictionary with counts of removed items
     """
-    removed = {"commands": 0, "agents": 0, "standards": 0, "settings_keys": 0, "statusline": 0}
+    removed = {"commands": 0, "agents": 0, "rules": 0, "settings_keys": 0, "statusline": 0}
 
     # 1. Remove all cco-*.md files from commands/
     if COMMANDS_DIR.exists():
@@ -70,7 +72,13 @@ def clean_previous_installation(verbose: bool = True) -> dict[str, int]:
             f.unlink()
             removed["agents"] += 1
 
-    # 3. Remove CCO markers from CLAUDE.md
+    # 3. Remove rules directory
+    if RULES_DIR.exists():
+        rule_count = len(list(RULES_DIR.glob("*.md")))
+        shutil.rmtree(RULES_DIR)
+        removed["rules"] = rule_count
+
+    # 4. Remove CCO markers from CLAUDE.md
     claude_md = CLAUDE_DIR / "CLAUDE.md"
     if claude_md.exists():
         content = claude_md.read_text(encoding="utf-8")
@@ -78,24 +86,19 @@ def clean_previous_installation(verbose: bool = True) -> dict[str, int]:
         if count > 0:
             content = re.sub(r"\n{3,}", "\n\n", content)
             claude_md.write_text(content, encoding="utf-8")
-            removed["standards"] = count
+            removed["rules"] += count
 
-    # 4. Clean CCO-related keys from settings.json
+    # 5. Clean CCO-related keys from settings.json
     if SETTINGS_FILE.exists():
         try:
             settings = json.loads(SETTINGS_FILE.read_text(encoding="utf-8"))
             keys_removed = 0
 
-            # Remove legacy CCO keys
+            # Remove legacy CCO keys (includes CCO_PERMISSIONS_MARKER)
             for key in LEGACY_SETTINGS_KEYS:
                 if key in settings:
                     del settings[key]
                     keys_removed += 1
-
-            # Remove CCO permissions marker
-            if CCO_PERMISSIONS_MARKER in settings:
-                del settings[CCO_PERMISSIONS_MARKER]
-                keys_removed += 1
 
             if keys_removed > 0:
                 SETTINGS_FILE.write_text(json.dumps(settings, indent=2) + "\n", encoding="utf-8")
@@ -103,7 +106,7 @@ def clean_previous_installation(verbose: bool = True) -> dict[str, int]:
         except json.JSONDecodeError:
             pass
 
-    # 5. Remove CCO statusline.js (check if it's a CCO file)
+    # 6. Remove CCO statusline.js (check if it's a CCO file)
     if STATUSLINE_FILE.exists():
         try:
             content = STATUSLINE_FILE.read_text(encoding="utf-8")
@@ -120,8 +123,8 @@ def clean_previous_installation(verbose: bool = True) -> dict[str, int]:
             print(f"  - Removed {removed['commands']} command(s)")
         if removed["agents"]:
             print(f"  - Removed {removed['agents']} agent(s)")
-        if removed["standards"]:
-            print(f"  - Removed {removed['standards']} CLAUDE.md section(s)")
+        if removed["rules"]:
+            print(f"  - Removed {removed['rules']} rule file(s)/section(s)")
         if removed["settings_keys"]:
             print(f"  - Cleaned {removed['settings_keys']} legacy setting(s)")
         if removed["statusline"]:
@@ -155,7 +158,7 @@ def _setup_content(src_subdir: str, dest_dir: Path, verbose: bool = True) -> lis
 
 def setup_commands(verbose: bool = True) -> list[str]:
     """Copy cco-*.md commands to ~/.claude/commands/"""
-    return _setup_content("slash-commands", COMMANDS_DIR, verbose)
+    return _setup_content("command-templates", COMMANDS_DIR, verbose)
 
 
 def setup_agents(verbose: bool = True) -> list[str]:
@@ -163,10 +166,55 @@ def setup_agents(verbose: bool = True) -> list[str]:
     return _setup_content("agent-templates", AGENTS_DIR, verbose)
 
 
-def _load_standards() -> str:
-    """Load CCO standards from file."""
-    standards_file = Path(__file__).parent / "content" / "standards" / "cco-standards.md"
-    return standards_file.read_text(encoding="utf-8")
+def setup_rules(verbose: bool = True) -> dict[str, int]:
+    """Copy rule files to ~/.claude/rules/
+
+    Installs:
+    - core.md (always active)
+    - ai.md (always active)
+    - tools.md (on-demand by commands)
+    - adaptive.md (project-specific, used by cco-tune)
+
+    Returns:
+        Dictionary with installed counts per category
+    """
+    src_dir = get_content_dir() / "rules"
+    if not src_dir.exists():
+        return {"core": 0, "ai": 0, "tools": 0, "adaptive": 0, "total": 0}
+
+    RULES_DIR.mkdir(parents=True, exist_ok=True)
+
+    # Remove existing rule files
+    for old in RULES_DIR.glob("*.md"):
+        old.unlink()
+
+    # Copy all rule files
+    rule_files = ["core.md", "ai.md", "tools.md", "adaptive.md"]
+    installed = {}
+
+    for filename in rule_files:
+        src_file = src_dir / filename
+        if src_file.exists():
+            shutil.copy2(src_file, RULES_DIR / filename)
+            key = filename.replace(".md", "")
+            installed[key] = 1
+            if verbose:
+                print(f"  + {filename}")
+
+    return installed
+
+
+def _load_base_rules() -> str:
+    """Load base rules (core + ai) for CLAUDE.md."""
+    rules_dir = Path(__file__).parent / "content" / "rules"
+    content_parts = []
+
+    for filename in ["core.md", "ai.md"]:
+        file_path = rules_dir / filename
+        if file_path.exists():
+            content_parts.append(file_path.read_text(encoding="utf-8"))
+
+    return "\n\n".join(content_parts)
 
 
 def _remove_all_cco_markers(content: str) -> tuple[str, int]:
@@ -185,19 +233,19 @@ def _remove_all_cco_markers(content: str) -> tuple[str, int]:
 
 
 def setup_claude_md(verbose: bool = True) -> dict[str, int]:
-    """Add CCO Standards to ~/.claude/CLAUDE.md
+    """Add CCO base rules to ~/.claude/CLAUDE.md
 
     For backward compatibility:
     1. Remove ALL existing CCO markers (any name/format)
-    2. Append fresh standards content
+    2. Append fresh base rules (core + ai)
 
     Args:
         verbose: If True, print progress messages during setup.
 
     Returns:
-        Dictionary with installed counts (universal, ai_specific, cco_specific)
+        Dictionary with installed counts (core, ai)
     """
-    standards = _load_standards()
+    base_rules = _load_base_rules()
     claude_md = CLAUDE_DIR / "CLAUDE.md"
     CLAUDE_DIR.mkdir(parents=True, exist_ok=True)
 
@@ -210,30 +258,29 @@ def setup_claude_md(verbose: bool = True) -> dict[str, int]:
         # Remove ALL CCO markers for backward compatibility
         content, removed_count = _remove_all_cco_markers(content)
 
-        # Append fresh standards
-        content = content.rstrip() + "\n\n" + standards
+        # Append fresh base rules
+        content = content.rstrip() + "\n\n" + base_rules
         action = "updated" if removed_count > 0 else "appended"
     else:
-        content = standards
+        content = base_rules
 
     content = re.sub(r"\n{3,}", "\n\n", content)
     claude_md.write_text(content, encoding="utf-8")
 
-    breakdown = get_standards_breakdown()
-    installed = breakdown["universal"] + breakdown["ai_specific"] + breakdown["cco_specific"]
+    breakdown = get_rules_breakdown()
 
     if verbose:
+        installed = breakdown["core"] + breakdown["ai"]
         if removed_count > 0:
             print(
-                f"  CLAUDE.md: {installed} standards {action} (cleaned {removed_count} old marker(s))"
+                f"  CLAUDE.md: {installed} rules {action} (cleaned {removed_count} old marker(s))"
             )
         else:
-            print(f"  CLAUDE.md: {installed} standards {action}")
+            print(f"  CLAUDE.md: {installed} rules {action}")
 
     return {
-        "universal": breakdown["universal"],
-        "ai_specific": breakdown["ai_specific"],
-        "cco_specific": breakdown["cco_specific"],
+        "core": breakdown["core"],
+        "ai": breakdown["ai"],
     }
 
 
@@ -396,7 +443,7 @@ def post_install() -> int:
     """CLI entry point for cco-setup."""
     parser = argparse.ArgumentParser(
         prog="cco-setup",
-        description="Install CCO commands, agents, and standards to ~/.claude/",
+        description="Install CCO commands, agents, and rules to ~/.claude/",
         formatter_class=argparse.RawDescriptionHelpFormatter,
         epilog="""
 Local mode (for cco-tune):
@@ -450,34 +497,38 @@ Permission levels: safe, balanced, permissive, full
             print("  (none)")
         print()
 
-        # Agents
+        # Step 3: Install agents
         print("Agents:")
         agents = setup_agents()
         if not agents:
             print("  (none)")
         print()
 
-        # Standards
-        print("Standards:")
-        standards = setup_claude_md()
+        # Step 4: Install rules to ~/.claude/rules/
+        print("Rules:")
+        setup_rules()
+        print()
+
+        # Step 5: Add base rules to CLAUDE.md
+        print("CLAUDE.md:")
+        base_rules = setup_claude_md()
         print()
 
         # Summary
-        installed = standards["universal"] + standards["ai_specific"] + standards["cco_specific"]
-        breakdown = get_standards_breakdown()
+        breakdown = get_rules_breakdown()
+        base_count = base_rules["core"] + base_rules["ai"]
         print(SEPARATOR)
-        print(f"Installed: {len(cmds)} commands, {len(agents)} agents, {installed} standards")
+        print(f"Installed: {len(cmds)} commands, {len(agents)} agents, {breakdown['total']} rules")
         print(
-            f"  Universal: {standards['universal']} | AI-Specific: {standards['ai_specific']} | CCO-Specific: {standards['cco_specific']}"
+            f"  Base (always active): {base_count} (Core: {base_rules['core']} | AI: {base_rules['ai']})"
         )
-        print(
-            f"Available: +{breakdown['project_specific']} project-specific standards via /cco-tune"
-        )
+        print(f"  Tools (on-demand): {breakdown['tools']}")
+        print(f"  Adaptive (project-specific): {breakdown['adaptive']} via /cco-tune")
         print(SEPARATOR)
         print()
         print("Restart Claude Code for changes to take effect.")
         print()
-        print("Next: /cco-tune to configure statusline, permissions, and project settings")
+        print("Next: /cco-tune to configure statusline, permissions, and project context")
         print()
         return 0
 

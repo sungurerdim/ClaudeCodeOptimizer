@@ -4,7 +4,7 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "claudecodeoptimizer"
-description = "A process and standards layer for Claude Code in the Opus 4.5 era"
+description = "A process and rules layer for Claude Code in the Opus 4.5 era"
 dynamic = ["version"]
 readme = "README.md"
 license = {text = "MIT"}

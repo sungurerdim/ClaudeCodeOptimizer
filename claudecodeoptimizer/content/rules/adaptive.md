@@ -1,11 +1,11 @@
-<!-- CCO_CONDITIONALS_START -->
-# Project-Specific Standards
-*Dynamically selected by /cco-tune - written to ./CLAUDE.md*
+<!-- CCO_ADAPTIVE_START -->
+# Adaptive Rules
+*Project-specific rules selected by /cco-tune*
 
-## Application Rules [CRITICAL]
+## Application [CRITICAL]
 
 ### Trigger Evaluation [REQUIRED]
-Evaluate triggers in order. Apply ALL matching standards.
+Evaluate triggers in order. Apply ALL matching rules.
 
 | Symbol | Meaning | Example |
 |--------|---------|---------|
@@ -14,11 +14,11 @@ Evaluate triggers in order. Apply ALL matching standards.
 | `T:` | Application type | T:CLI, T:Library, T:API |
 | `A:` | Architecture | A:Microservices, A:Monolith |
 | `C:` | Compliance | C:HIPAA, C:SOC2, C:GDPR |
-| `+` | Inherits previous tier | All lower tier standards apply |
+| `+` | Inherits previous tier | All lower tier rules apply |
 
 ### Inheritance [STRICT]
 Cumulative sections (marked `[cumulative]`) inherit ALL lower tiers.
-- S:10K+ includes S:1K+ AND S:100+ standards
+- S:10K+ includes S:1K+ AND S:100+ rules
 - Testing:Full includes Testing:Standard+ AND Testing:Basics+
 
 ---
@@ -26,8 +26,8 @@ Cumulative sections (marked `[cumulative]`) inherit ALL lower tiers.
 ## Security & Compliance
 **Triggers:** `D:PII` | `D:Regulated` | `S:10K+` | `C:*`
 
-| Category | Standards |
-|----------|-----------|
+| Category | Rules |
+|----------|-------|
 | * Input | Pydantic/Zod/JSON Schema validation |
 | * SQL | Parameterized queries, ORM safe methods |
 | * XSS | Sanitize output, CSP headers |
@@ -45,14 +45,14 @@ Cumulative sections (marked `[cumulative]`) inherit ALL lower tiers.
 
 ## Scale [cumulative]
 
-| Tier | Trigger | Standards |
-|------|---------|-----------|
+| Tier | Trigger | Rules |
+|------|---------|-------|
 | * Small | S:100+ | Caching (TTL, invalidation, cache-aside), LazyLoad |
 | * Medium | S:1K+ | +ConnPool (reuse, sizing), +AsyncIO (no blocking) |
 | * Large | S:10K+ \| A:Microservices | +CircuitBreaker, +Idempotency, +APIVersion, +DI, +EventDriven, +BoundedContexts, +Compression, +Indexing |
 
 **Inheritance Example:**
-- Project with S:10K+ gets: Small + Medium + Large standards (all 3 tiers)
+- Project with S:10K+ gets: Small + Medium + Large rules (all 3 tiers)
 
 ---
 
@@ -61,8 +61,8 @@ Cumulative sections (marked `[cumulative]`) inherit ALL lower tiers.
 ### API
 **Triggers:** `API:REST` | `API:GraphQL` | `API:gRPC`
 
-| Standard | Description |
-|----------|-------------|
+| Rule | Description |
+|------|-------------|
 | * REST | Proper methods, status codes, resource naming |
 | * Pagination | Cursor-based for large datasets |
 | * OpenAPI/AsyncAPI | Spec with examples, synced |
@@ -70,16 +70,16 @@ Cumulative sections (marked `[cumulative]`) inherit ALL lower tiers.
 
 ### API Extensions
 
-| Type | Trigger | Standards |
-|------|---------|-----------|
+| Type | Trigger | Rules |
+|------|---------|-------|
 | * GraphQL | API:GraphQL | Complexity limits, depth limits, persisted queries |
 | * gRPC | API:gRPC | Proto versioning, backward compatibility |
 
 ### Data
 **Triggers:** `DB:*`
 
-| Standard | Description |
-|----------|-------------|
+| Rule | Description |
+|------|-------------|
 | * Backup | Automated, tested restore, RPO/RTO |
 | * Migrations | Versioned, backward compatible, rollback |
 | * N+1 | Batch queries, eager loading |
@@ -88,8 +88,8 @@ Cumulative sections (marked `[cumulative]`) inherit ALL lower tiers.
 
 ### Operations
 
-| Type | Trigger | Standards |
-|------|---------|-----------|
+| Type | Trigger | Rules |
+|------|---------|-------|
 | * Full | CI/CD & T:!CLI & T:!Library | Config-as-Code, /health+/ready, GracefulShutdown, Observability, CI-Gates, Blue/Green, FeatureFlags |
 | * CI-Only | CI/CD & (T:CLI \| T:Library) | Config-as-Code (versioned), CI-Gates (lint+test+coverage) |
 
@@ -98,8 +98,8 @@ Cumulative sections (marked `[cumulative]`) inherit ALL lower tiers.
 ## Frontend
 **Triggers:** React/Vue/Angular/Svelte/Next/Nuxt detected
 
-| Category | Standards |
-|----------|-----------|
+| Category | Rules |
+|----------|-------|
 | * A11y | WCAG 2.2 AA, semantic HTML, keyboard nav, contrast 4.5:1/3:1 |
 | * Perf | LCP<2.5s, INP<200ms, CLS<0.1, code-split, tree-shake, lazy |
 | * Quality | Predictable state, unique design (no AI slop), progressive enhancement |
@@ -108,8 +108,8 @@ Cumulative sections (marked `[cumulative]`) inherit ALL lower tiers.
 
 ## Apps
 
-| Type | Trigger | Standards |
-|------|---------|-----------|
+| Type | Trigger | Rules |
+|------|---------|-------|
 | * Mobile | iOS/Android/RN/Flutter | Offline-first, battery-optimize, deep-links, push, platform-guidelines, app-size |
 | * Desktop | Electron/Tauri/native | Auto-update, native-integration, multi-window, memory-cleanup |
 | * CLI | T:CLI | --help+examples, exit-codes, SIGINT/SIGTERM, human+json output, config-precedence |
@@ -119,8 +119,8 @@ Cumulative sections (marked `[cumulative]`) inherit ALL lower tiers.
 ## Library
 **Triggers:** `T:Library`
 
-| Standard | Description |
-|----------|-------------|
+| Rule | Description |
+|------|-------------|
 | * Minimal-Deps | Reduce transitive burden |
 | * Tree-Shakeable | ES modules, no side effects |
 | * Types | TypeScript or JSDoc |
@@ -130,8 +130,8 @@ Cumulative sections (marked `[cumulative]`) inherit ALL lower tiers.
 
 ## Infrastructure
 
-| Type | Trigger | Standards |
-|------|---------|-----------|
+| Type | Trigger | Rules |
+|------|---------|-------|
 | * Container | Docker (not in examples/benchmarks/test) | Multi-stage, distroless, non-root, CVE-scan, resource-limits, external-secrets |
 | * K8s | Kubernetes/Helm | SecurityContext, NetworkPolicy, probes, ResourceQuotas |
 | * Serverless | Lambda/Functions/Vercel/Netlify | Minimize-bundle, graceful-timeout, stateless, right-size-memory |
@@ -141,8 +141,8 @@ Cumulative sections (marked `[cumulative]`) inherit ALL lower tiers.
 
 ## Specialized
 
-| Domain | Trigger | Standards |
-|--------|---------|-----------|
+| Domain | Trigger | Rules |
+|--------|---------|-------|
 | * ML/AI | torch/tf/sklearn/transformers/langchain | Reproducibility (seed+version), experiment-tracking, data-versioning, model-registry, inference-optimize, bias-detection |
 | * Game | Unity/Unreal/Godot | 16ms-frame-budget, LOD+compression+streaming, rebindable-input, versioned-saves |
 
@@ -150,8 +150,8 @@ Cumulative sections (marked `[cumulative]`) inherit ALL lower tiers.
 
 ## Team [cumulative]
 
-| Size | Trigger | Standards |
-|------|---------|-----------|
+| Size | Trigger | Rules |
+|------|---------|-------|
 | * Small | Team:2+ | Async-PR-review, README+CONTRIBUTING, Slack/Discord, feature-branches |
 | * Large | Team:6+ | +ADR, +local-parity, +golden-paths, +CODEOWNERS, +onboarding, +branch-protection, +PR-templates, +atomic-commits |
 
@@ -160,8 +160,8 @@ Cumulative sections (marked `[cumulative]`) inherit ALL lower tiers.
 ## i18n
 **Triggers:** locales/i18n/messages/translations detected | i18n deps
 
-| Standard | Description |
-|----------|-------------|
+| Rule | Description |
+|------|-------------|
 | * Strings | Externalized |
 | * Encoding | UTF-8 |
 | * RTL | Support enabled |
@@ -172,8 +172,8 @@ Cumulative sections (marked `[cumulative]`) inherit ALL lower tiers.
 
 ## Real-time [cumulative]
 
-| Tier | Trigger | Standards |
-|------|---------|-----------|
+| Tier | Trigger | Rules |
+|------|---------|-------|
 | * Basic | WebSocket/SSE/socket.io | Reconnect-logic, heartbeat, stale-data-handling |
 | * Standard | RT:Standard+ | +handshake, +event-ordering, +backpressure, +polling-fallback |
 | * Low-latency | RT:Low-latency | +binary (protobuf/msgpack), +edge-compute, +sticky-sessions, +pre-warm, +zero-copy, +jitter-control, +geo-endpoints |
@@ -182,8 +182,8 @@ Cumulative sections (marked `[cumulative]`) inherit ALL lower tiers.
 
 ## Testing [cumulative]
 
-| Tier | Trigger | Standards |
-|------|---------|-----------|
+| Tier | Trigger | Rules |
+|------|---------|-------|
 | * Basics | Testing:Basics+ | Unit (isolated, fast, deterministic), mocking, coverage>60% |
 | * Standard | Testing:Standard+ | +integration, +fixtures, +coverage>80%, +CI-on-PR |
 | * Standard+UI | Standard+ & Frontend | +snapshot-testing |
@@ -194,10 +194,10 @@ Cumulative sections (marked `[cumulative]`) inherit ALL lower tiers.
 
 ## Observability [cumulative]
 
-| Tier | Trigger | Standards |
-|------|---------|-----------|
+| Tier | Trigger | Rules |
+|------|---------|-------|
 | * Basics | SLA:* | Error-tracking (Sentry), critical-alerting |
 | * Standard | SLA:Standard+ | +structured-logs (JSON+correlationID), +RED-metrics, +distributed-tracing, +tiered-alerting |
 | * HA | SLA:High+ | +redundancy, +auto-failover, +load-balancing, +auto-scaling, +runbooks |
 | * Critical | SLA:Critical | +multi-region, +chaos-engineering, +DR-tested, +global-LB, +data-replication, +capacity-planning, +SLO/SLI, +post-mortem, +on-call, +status-page, +dependency-mapping |
-<!-- CCO_CONDITIONALS_END -->
+<!-- CCO_ADAPTIVE_END -->

@@ -10,10 +10,11 @@ __all__ = [
     "CLAUDE_DIR",
     "COMMANDS_DIR",
     "AGENTS_DIR",
+    "RULES_DIR",
     "SEPARATOR",
     "get_cco_commands",
     "get_cco_agents",
-    "get_standards_breakdown",
+    "get_rules_breakdown",
     "get_content_path",
     "CCO_UNIVERSAL_PATTERN",
     "SUBPROCESS_TIMEOUT",
@@ -29,6 +30,7 @@ VERSION = __version__  # Single source: __init__.py
 CLAUDE_DIR = Path.home() / ".claude"
 COMMANDS_DIR = CLAUDE_DIR / "commands"
 AGENTS_DIR = CLAUDE_DIR / "agents"
+RULES_DIR = CLAUDE_DIR / "rules"
 STATUSLINE_FILE = CLAUDE_DIR / "statusline.js"
 SETTINGS_FILE = CLAUDE_DIR / "settings.json"
 SEPARATOR = "=" * 50
@@ -47,7 +49,7 @@ def get_content_path(subdir: str) -> Path:
     """Get path to content subdirectory.
 
     Args:
-        subdir: One of 'commands', 'agents', 'standards', 'statusline', 'permissions'
+        subdir: One of 'commands', 'agents', 'rules', 'statusline', 'permissions'
 
     Returns:
         Path to the content subdirectory
@@ -67,8 +69,8 @@ CCO_UNIVERSAL_PATTERN = (
 SUBPROCESS_TIMEOUT = 5  # seconds
 
 # Pre-compiled regex patterns for performance
-# Standards use table format: | * Name | Rule |
-_STANDARD_PATTERN = re.compile(r"\| \* ", re.MULTILINE)
+# Rules use table format: | * Name | Description |
+_RULE_PATTERN = re.compile(r"\| \* ", re.MULTILINE)
 _CATEGORY_PATTERN = re.compile(r"^## ", re.MULTILINE)
 
 
@@ -82,61 +84,75 @@ def get_cco_agents() -> list[Path]:
     return sorted(AGENTS_DIR.glob("cco-*.md")) if AGENTS_DIR.exists() else []
 
 
-def get_standards_count() -> tuple[int, int]:
-    """Count standards and categories from source file.
+def get_rules_count() -> tuple[int, int]:
+    """Count rules and categories from source files.
 
     Returns:
-        Tuple of (standards_count, categories_count)
+        Tuple of (rules_count, categories_count)
     """
-    standards_file = Path(__file__).parent / "content" / "standards" / "cco-standards.md"
-    if not standards_file.exists():
+    rules_dir = Path(__file__).parent / "content" / "rules"
+    if not rules_dir.exists():
         return (0, 0)
-    content = standards_file.read_text(encoding="utf-8")
-    standards = len(_STANDARD_PATTERN.findall(content))
-    categories = len(_CATEGORY_PATTERN.findall(content))
-    return (standards, categories)
+
+    total_rules = 0
+    total_categories = 0
+
+    for rule_file in ["core.md", "ai.md", "tools.md", "adaptive.md"]:
+        file_path = rules_dir / rule_file
+        if file_path.exists():
+            content = file_path.read_text(encoding="utf-8")
+            total_rules += len(_RULE_PATTERN.findall(content))
+            total_categories += len(_CATEGORY_PATTERN.findall(content))
+
+    return (total_rules, total_categories)
 
 
-def get_standards_breakdown() -> dict[str, int]:
-    """Get detailed breakdown of standards by category.
+def get_rules_breakdown() -> dict[str, int]:
+    """Get detailed breakdown of rules by category.
 
     Returns:
-        Dictionary with universal, ai_specific, cco_specific, project_specific, total counts
+        Dictionary with core, ai, tools, adaptive, total counts
     """
-    content_dir = Path(__file__).parent / "content" / "standards"
+    rules_dir = Path(__file__).parent / "content" / "rules"
     result = {
-        "universal": 0,
-        "ai_specific": 0,
-        "cco_specific": 0,
-        "project_specific": 0,
+        "core": 0,
+        "ai": 0,
+        "tools": 0,
+        "adaptive": 0,
         "total": 0,
     }
 
-    # Count from cco-standards.md (Universal + AI-Specific + CCO-Workflow)
-    standards_file = content_dir / "cco-standards.md"
-    if standards_file.exists():
-        content = standards_file.read_text(encoding="utf-8")
-        # Split at category headers
-        parts = content.split("# AI-Specific Standards")
-        if len(parts) >= 2:
-            result["universal"] = len(_STANDARD_PATTERN.findall(parts[0]))
-            ai_and_cco = parts[1].split("# CCO-Specific Standards")
-            if len(ai_and_cco) >= 2:
-                result["ai_specific"] = len(_STANDARD_PATTERN.findall(ai_and_cco[0]))
-                result["cco_specific"] = len(_STANDARD_PATTERN.findall(ai_and_cco[1]))
-            else:
-                result["ai_specific"] = len(_STANDARD_PATTERN.findall(parts[1]))
+    # Count from each rule file
+    file_mapping = {
+        "core": "core.md",
+        "ai": "ai.md",
+        "tools": "tools.md",
+        "adaptive": "adaptive.md",
+    }
 
-    # Count from cco-standards-conditional.md (Project-Specific)
-    conditional_file = content_dir / "cco-standards-conditional.md"
-    if conditional_file.exists():
-        content = conditional_file.read_text(encoding="utf-8")
-        result["project_specific"] = len(_STANDARD_PATTERN.findall(content))
+    for key, filename in file_mapping.items():
+        file_path = rules_dir / filename
+        if file_path.exists():
+            content = file_path.read_text(encoding="utf-8")
+            result[key] = len(_RULE_PATTERN.findall(content))
 
-    result["total"] = (
-        result["universal"]
-        + result["ai_specific"]
-        + result["cco_specific"]
-        + result["project_specific"]
-    )
+    result["total"] = result["core"] + result["ai"] + result["tools"] + result["adaptive"]
     return result
+
+
+# Backward compatibility aliases
+def get_standards_breakdown() -> dict[str, int]:
+    """Deprecated: Use get_rules_breakdown instead."""
+    breakdown = get_rules_breakdown()
+    return {
+        "universal": breakdown["core"],
+        "ai_specific": breakdown["ai"],
+        "cco_specific": breakdown["tools"],
+        "project_specific": breakdown["adaptive"],
+        "total": breakdown["total"],
+    }
+
+
+def get_standards_count() -> tuple[int, int]:
+    """Deprecated: Use get_rules_count instead."""
+    return get_rules_count()

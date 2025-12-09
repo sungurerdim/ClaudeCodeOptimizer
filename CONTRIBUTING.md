@@ -184,8 +184,11 @@ Before submitting a PR, verify:
 ClaudeCodeOptimizer/
 ├── claudecodeoptimizer/     # Main package
 │   ├── content/             # Knowledge base (deployed to ~/.claude/)
-│   │   ├── commands/        # Slash commands (cco-*.md)
-│   │   └── agents/          # Autonomous agents (cco-agent-*.md)
+│   │   ├── command-templates/  # Slash commands (cco-*.md)
+│   │   ├── agent-templates/    # Autonomous agents (cco-agent-*.md)
+│   │   ├── rules/              # Rules files (core.md, ai.md, tools.md, adaptive.md)
+│   │   ├── permissions/        # Permission presets (safe.json, balanced.json, etc.)
+│   │   └── statusline/         # Statusline configs (full.js, minimal.js)
 │   ├── __init__.py          # Package init, version
 │   ├── __main__.py          # CLI entry
 │   ├── config.py            # Configuration paths

@@ -786,7 +786,7 @@ Show unified table with confidence indicators. **Every row shows what action it 
 | `→ hooks: {value}` | Sets hooks field in context |
 | `-` | No action (not detected or no impact) |
 
-**Standard counts are calculated dynamically** from `cco-standards-conditional.md` based on triggers.
+**Standard counts are calculated dynamically** from `adaptive.md` based on triggers.
 
 ### Review Options
 
@@ -1271,10 +1271,10 @@ Standards are organized in 4 categories. **All counts are dynamically calculated
 
 | Category | Source (Original) | Installed Location |
 |----------|-------------------|-------------------|
-| Universal | `content/standards/cco-standards.md` | `~/.claude/CLAUDE.md` |
-| AI-Specific | `content/standards/cco-standards.md` | `~/.claude/CLAUDE.md` |
-| CCO-Specific | `content/standards/cco-standards.md` | `~/.claude/CLAUDE.md` |
-| Project-Specific | `content/standards/cco-standards-conditional.md` | `./CLAUDE.md` (triggered only) |
+| Core | `content/rules/core.md` | `~/.claude/rules/core.md` + `~/.claude/CLAUDE.md` |
+| AI | `content/rules/ai.md` | `~/.claude/rules/ai.md` + `~/.claude/CLAUDE.md` |
+| Tools | `content/rules/tools.md` | `~/.claude/rules/tools.md` (on-demand) |
+| Adaptive | `content/rules/adaptive.md` | `~/.claude/rules/adaptive.md` + `./CLAUDE.md` (triggered only) |
 
 ### Count Commands
 

@@ -7,7 +7,7 @@ Usage:
 
 What it does:
     1. Installs CCO package from GitHub
-    2. Runs cco-setup (installs commands, agents, standards to ~/.claude/)
+    2. Runs cco-setup (installs commands, agents, rules to ~/.claude/)
 """
 
 import subprocess
