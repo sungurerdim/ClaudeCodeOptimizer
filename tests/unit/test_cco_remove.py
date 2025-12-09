@@ -650,24 +650,38 @@ class TestRemoveClaudeMdRulesNoMatches:
 
 
 class TestMain:
+    @patch("claudecodeoptimizer.cco_remove.has_cco_permissions")
+    @patch("claudecodeoptimizer.cco_remove.has_local_cco_statusline")
     @patch("claudecodeoptimizer.cco_remove.has_rules_dir")
     @patch("claudecodeoptimizer.cco_remove.detect_install_method")
     @patch("claudecodeoptimizer.cco_remove.list_cco_files")
     @patch("claudecodeoptimizer.cco_remove.has_claude_md_rules")
     @patch("claudecodeoptimizer.cco_remove.has_cco_statusline")
     def test_not_installed(
-        self, mock_statusline, mock_rules, mock_list, mock_detect, mock_rules_dir, capsys
+        self,
+        mock_statusline,
+        mock_rules,
+        mock_list,
+        mock_detect,
+        mock_rules_dir,
+        mock_local_statusline,
+        mock_permissions,
+        capsys,
     ):
         mock_detect.return_value = None
         mock_list.return_value = {"agents": [], "commands": []}
         mock_rules.return_value = []
         mock_rules_dir.return_value = False
         mock_statusline.return_value = False
+        mock_local_statusline.return_value = False
+        mock_permissions.return_value = False
         result = main()
         assert result == 0
         captured = capsys.readouterr()
         assert "not installed" in captured.out
 
+    @patch("claudecodeoptimizer.cco_remove.has_cco_permissions")
+    @patch("claudecodeoptimizer.cco_remove.has_local_cco_statusline")
     @patch("claudecodeoptimizer.cco_remove.has_rules_dir")
     @patch("claudecodeoptimizer.cco_remove.detect_install_method")
     @patch("claudecodeoptimizer.cco_remove.list_cco_files")
@@ -682,6 +696,8 @@ class TestMain:
         mock_list,
         mock_detect,
         mock_rules_dir,
+        mock_local_statusline,
+        mock_permissions,
         capsys,
     ):
         mock_detect.return_value = "pip"
@@ -689,12 +705,16 @@ class TestMain:
         mock_rules.return_value = ["CCO Rules"]
         mock_rules_dir.return_value = False
         mock_statusline.return_value = False
+        mock_local_statusline.return_value = False
+        mock_permissions.return_value = False
         mock_input.return_value = "n"
         result = main()
         assert result == 0
         captured = capsys.readouterr()
         assert "Cancelled" in captured.out
 
+    @patch("claudecodeoptimizer.cco_remove.has_cco_permissions")
+    @patch("claudecodeoptimizer.cco_remove.has_local_cco_statusline")
     @patch("claudecodeoptimizer.cco_remove.has_rules_dir")
     @patch("claudecodeoptimizer.cco_remove.detect_install_method")
     @patch("claudecodeoptimizer.cco_remove.list_cco_files")
@@ -715,6 +735,8 @@ class TestMain:
         mock_list,
         mock_detect,
         mock_rules_dir,
+        mock_local_statusline,
+        mock_permissions,
         capsys,
     ):
         mock_detect.return_value = "pip"
@@ -722,6 +744,8 @@ class TestMain:
         mock_rules.return_value = ["CCO Rules"]
         mock_rules_dir.return_value = False
         mock_statusline.return_value = False
+        mock_local_statusline.return_value = False
+        mock_permissions.return_value = False
         mock_input.return_value = "y"
         mock_uninstall.return_value = True
         mock_rm_files.return_value = {"commands": 1, "agents": 1}
@@ -731,6 +755,8 @@ class TestMain:
         captured = capsys.readouterr()
         assert "removed successfully" in captured.out
 
+    @patch("claudecodeoptimizer.cco_remove.has_cco_permissions")
+    @patch("claudecodeoptimizer.cco_remove.has_local_cco_statusline")
     @patch("claudecodeoptimizer.cco_remove.has_rules_dir")
     @patch("claudecodeoptimizer.cco_remove.detect_install_method")
     @patch("claudecodeoptimizer.cco_remove.list_cco_files")
@@ -747,6 +773,8 @@ class TestMain:
         mock_list,
         mock_detect,
         mock_rules_dir,
+        mock_local_statusline,
+        mock_permissions,
         capsys,
     ):
         mock_detect.return_value = "pip"
@@ -754,6 +782,8 @@ class TestMain:
         mock_rules.return_value = []
         mock_rules_dir.return_value = False
         mock_statusline.return_value = False
+        mock_local_statusline.return_value = False
+        mock_permissions.return_value = False
         mock_input.return_value = "y"
         mock_uninstall.return_value = False
         result = main()

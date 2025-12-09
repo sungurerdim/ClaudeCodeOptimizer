@@ -818,12 +818,16 @@ class TestPostInstall:
 
     def test_exception_handling(self, tmp_path, capsys):
         """Test exception during setup."""
-        with patch.object(sys, "argv", ["cco-setup"]):
-            with patch(
-                "claudecodeoptimizer.install_hook.setup_commands",
-                side_effect=Exception("Test error"),
-            ):
-                result = post_install()
+        with patch("claudecodeoptimizer.install_hook.CLAUDE_DIR", tmp_path):
+            with patch("claudecodeoptimizer.install_hook.COMMANDS_DIR", tmp_path / "commands"):
+                with patch("claudecodeoptimizer.install_hook.AGENTS_DIR", tmp_path / "agents"):
+                    with patch("claudecodeoptimizer.install_hook.RULES_DIR", tmp_path / "rules"):
+                        with patch.object(sys, "argv", ["cco-setup"]):
+                            with patch(
+                                "claudecodeoptimizer.install_hook.setup_commands",
+                                side_effect=Exception("Test error"),
+                            ):
+                                result = post_install()
 
         assert result == 1
         captured = capsys.readouterr()
