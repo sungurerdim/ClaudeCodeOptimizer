@@ -14,11 +14,25 @@ End-to-end: Runs checks, analyzes changes, creates atomic commits.
 
 ## Context
 
+- Context check: !`grep -c "CCO_ADAPTIVE_START" ./CLAUDE.md 2>/dev/null || echo "0"`
 - Git status: !`git status --short`
 - Staged files: !`git diff --cached --name-only`
 - Current branch: !`git branch --show-current`
 - Recent commits: !`git log --oneline -3`
-- CCO tools: !`grep -A1 "^Tools:" ./CLAUDE.md 2>/dev/null | tail -1`
+
+**Static context (Tools, Type, Maturity, Priority) is read from ./CLAUDE.md already in context.**
+
+## Context Requirement [CRITICAL]
+
+**This command requires CCO_ADAPTIVE in ./CLAUDE.md.**
+
+If context check returns "0":
+```
+CCO_ADAPTIVE not found in ./CLAUDE.md
+
+Run /cco-tune first to configure project context, then restart CLI.
+```
+**Stop execution immediately.**
 
 ## Context Application
 

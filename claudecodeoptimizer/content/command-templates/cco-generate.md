@@ -14,10 +14,22 @@ End-to-end: Discovers conventions, generates matching code, verifies it works.
 
 ## Context
 
-- Stack: !`grep "^Stack:" ./CLAUDE.md 2>/dev/null`
-- Type: !`grep "^Type:" ./CLAUDE.md 2>/dev/null`
-- Conventions: !`grep -A2 "^Conventions:" ./CLAUDE.md 2>/dev/null`
-- Test framework: !`ls **/test*.py **/test*.ts **/*.test.* 2>/dev/null | head -3`
+- Context check: !`grep -c "CCO_ADAPTIVE_START" ./CLAUDE.md 2>/dev/null || echo "0"`
+- Test files: !`ls **/test*.py **/test*.ts **/*.test.* 2>/dev/null | head -3`
+
+**Static context (Stack, Type, Conventions, Priority, Maturity) is read from ./CLAUDE.md already in context.**
+
+## Context Requirement [CRITICAL]
+
+**This command requires CCO_ADAPTIVE in ./CLAUDE.md.**
+
+If context check returns "0":
+```
+CCO_ADAPTIVE not found in ./CLAUDE.md
+
+Run /cco-tune first to configure project context, then restart CLI.
+```
+**Stop execution immediately.**
 
 ## Context Application
 

@@ -14,17 +14,47 @@ End-to-end: Detects security and quality issues AND fixes them.
 
 ## Context
 
-- Project type: !`grep "^Type:" ./CLAUDE.md 2>/dev/null | head -1`
-- Applicable checks: !`grep "^Applicable:" ./CLAUDE.md 2>/dev/null`
+- Context check: !`grep -c "CCO_ADAPTIVE_START" ./CLAUDE.md 2>/dev/null || echo "0"`
 - Git status: !`git status --short`
+
+**Static context (Applicable, Type, Scale, Data) is read from ./CLAUDE.md already in context.**
+
+## Context Requirement [CRITICAL]
+
+**This command requires CCO_ADAPTIVE in ./CLAUDE.md.**
+
+If context check returns "0":
+```
+CCO_ADAPTIVE not found in ./CLAUDE.md
+
+Run /cco-tune first to configure project context, then restart CLI.
+```
+**Stop execution immediately.**
+
+## Flag Validation [CRITICAL]
+
+**All flags must be validated against context before execution.**
+
+When user provides explicit flag (e.g., `--security`, `--containers`):
+1. Check if category is in `Applicable:` field
+2. If NOT applicable → reject with explanation:
+```
+Category '{flag}' is not applicable for this project.
+Applicable: {applicable_list}
+Not Applicable: {not_applicable_list}
+
+To add this category, run /cco-tune and reconfigure.
+```
+**Stop execution immediately.**
 
 ## Context Application
 
 | Field | Effect |
 |-------|--------|
-| Applicable | Only run checks from context's Applicable list |
-| Data | PII/Regulated → security weight ×2, compliance checks mandatory |
-| Scale | <100 → relaxed thresholds; 10K+ → strict |
+| Applicable | Only these categories can run, others rejected |
+| Not Applicable | These categories always rejected, even with explicit flag |
+| Data | PII/Regulated → security weight ×2 |
+| Scale | <1K → relaxed thresholds; 10K+ → strict |
 | Priority | Speed → critical only; Quality → all severity levels |
 | Maturity | Legacy → warn don't fail; Greenfield → strict enforcement |
 | Team | Solo → self-review OK; 6+ → require documented findings |
@@ -36,20 +66,19 @@ End-to-end: Detects security and quality issues AND fixes them.
 | Scan | `cco-agent-analyze` | `scan` | Issue detection with metrics |
 | Fix | `cco-agent-apply` | `fix` | Execute approved fixes |
 
-**Scan Phase:** Use `cco-agent-analyze` with `scope: scan` to detect security issues, tech debt, test gaps, and self-compliance violations with file:line locations.
+**Scan Phase:** Use `cco-agent-analyze` with `scope: scan` to detect issues only for applicable categories.
 
 ## Default Behavior
 
-When called without flags, ask (follow CCO "Question Formatting" standard):
+When called without flags:
+- Runs ALL categories from `Applicable:` field
+- Skips ALL categories from `Not Applicable:` field
 
-| Question | Options (small → large) |
-|----------|-------------------------|
-| Scope? | Quick, Smart, Full |
-| Auto-fix? | No, Yes |
+| Question | Options |
+|----------|---------|
+| Auto-fix? | No, Yes `[recommended]` |
 
-**`[recommended]` placement:** Scope → Smart, Auto-fix → Yes
-
-Explicit flags skip questions.
+Explicit flags narrow scope (but must be in Applicable list).
 
 ## Categories
 
@@ -147,14 +176,15 @@ Auto-skip if not applicable:
 
 ## Meta-flags
 
-| Flag | Includes |
-|------|----------|
-| `--smart` | Auto-detect applicable + self-compliance + consistency |
-| `--critical` | security + tests + database |
-| `--weekly` | security + tech-debt + tests + self-compliance |
-| `--pre-release` | security + tests + consistency + self-compliance + api-contract |
-| `--all` | Everything applicable |
-| `--auto-fix` | Auto-fix safe issues without asking |
+| Flag | Includes | Validation |
+|------|----------|------------|
+| `--critical` | security + tests + database | Each checked against Applicable |
+| `--weekly` | security + tech-debt + tests + self-compliance | Each checked against Applicable |
+| `--pre-release` | security + tests + consistency + self-compliance + api-contract | Each checked against Applicable |
+| `--all` | All categories from Applicable field | No validation needed |
+| `--auto-fix` | Auto-fix safe issues without asking | N/A |
+
+**Meta-flag Validation:** For composite flags, each included category is validated. Non-applicable categories are silently skipped with note in output.
 
 ## Output
 
@@ -193,13 +223,14 @@ Applied: 7 | Skipped: 2 | Failed: 0 | Manual: 2 | Total: 11
 ## Usage
 
 ```bash
-/cco-audit                   # Interactive
-/cco-audit --smart           # Auto-detect applicable
-/cco-audit --pre-release     # Production readiness check
-/cco-audit --security        # Security focus
-/cco-audit --tech-debt       # Tech debt focus
-/cco-audit --critical --auto-fix
+/cco-audit                   # All applicable categories
+/cco-audit --security        # Security focus (if applicable)
+/cco-audit --tech-debt       # Tech debt focus (if applicable)
+/cco-audit --pre-release     # Pre-release checks (applicable only)
+/cco-audit --all --auto-fix  # All applicable + auto-fix
 ```
+
+**Note:** All flags validated against context. Non-applicable categories rejected.
 
 ## Related Commands
 

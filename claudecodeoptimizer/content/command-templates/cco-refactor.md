@@ -14,10 +14,23 @@ End-to-end: Maps references, transforms safely, verifies each step.
 
 ## Context
 
+- Context check: !`grep -c "CCO_ADAPTIVE_START" ./CLAUDE.md 2>/dev/null || echo "0"`
 - Git status: !`git status --short`
 - Current branch: !`git branch --show-current`
-- Breaking policy: !`grep "^Breaking:" ./CLAUDE.md 2>/dev/null`
-- Type: !`grep "^Type:" ./CLAUDE.md 2>/dev/null`
+
+**Static context (Type, Breaking, Maturity, Scale, Team) is read from ./CLAUDE.md already in context.**
+
+## Context Requirement [CRITICAL]
+
+**This command requires CCO_ADAPTIVE in ./CLAUDE.md.**
+
+If context check returns "0":
+```
+CCO_ADAPTIVE not found in ./CLAUDE.md
+
+Run /cco-tune first to configure project context, then restart CLI.
+```
+**Stop execution immediately.**
 
 Requires clean git state per Pre-Operation Safety standard.
 
