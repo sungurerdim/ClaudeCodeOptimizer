@@ -297,7 +297,7 @@ All fix operations follow: **Analyze → Report → Approve → Apply → Verify
 
 - **Python 3.10+** (tested on 3.10–3.14)
 - **Claude Code** CLI or IDE extension
-- **Zero Python dependencies** - stdlib only
+- **Zero runtime dependencies** - stdlib only
 
 ---
 
