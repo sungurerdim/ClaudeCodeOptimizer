@@ -14,9 +14,21 @@ Read-only metrics collection and visualization.
 
 ## Context
 
-- Applicable categories: !`grep "^Applicable:" ./CLAUDE.md 2>/dev/null`
-- Coverage: !`grep "Coverage:" ./CLAUDE.md 2>/dev/null`
-- Scale/Type: !`grep -E "^(Scale|Type):" ./CLAUDE.md 2>/dev/null`
+- Context check: !`grep -c "CCO_ADAPTIVE_START" ./CLAUDE.md 2>/dev/null || echo "0"`
+
+**Static context (Applicable, Scale, Type, Team, Data, Coverage) is read from ./CLAUDE.md already in context.**
+
+## Context Requirement [CRITICAL]
+
+**This command requires CCO_ADAPTIVE in ./CLAUDE.md.**
+
+If context check returns "0":
+```
+CCO_ADAPTIVE not found in ./CLAUDE.md
+
+Run /cco-tune first to configure project context, then restart CLI.
+```
+**Stop execution immediately.**
 
 ## Context Application
 
@@ -37,7 +49,7 @@ Read-only metrics collection and visualization.
 | Metrics | `cco-agent-analyze` | `scan` | Collect current metrics |
 | Trends | `cco-agent-analyze` | `trends` | Historical comparison |
 
-**Trend Tracking:** Use `cco-agent-analyze` with `scope: trends` to get historical metrics and delta indicators (↑↓→⚠). Metrics are stored in `.cco/metrics.json`.
+**Trend Tracking:** Use `cco-agent-analyze` with `scope: trends` to get historical metrics and delta indicators (↑↓→⚠). Trends are derived from git history and tags.
 
 ## Flow
 
@@ -92,7 +104,7 @@ Track changes over time:
 | Degradation alerts | Score drops >5% flagged |
 | Velocity | Issues fixed per period |
 
-Storage: `.cco/health-history.json` (auto-created)
+Storage: Git tags and commit history (no separate files)
 
 ### Trend Indicators
 

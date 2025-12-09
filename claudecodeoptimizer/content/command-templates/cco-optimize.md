@@ -14,10 +14,23 @@ End-to-end: Detects waste (orphans, duplicates, stale refs) AND removes/optimize
 
 ## Context
 
-- Scale: !`grep "^Scale:" ./CLAUDE.md 2>/dev/null`
-- Maturity: !`grep "^Maturity:" ./CLAUDE.md 2>/dev/null`
-- File count: !`find . -type f -name "*.py" -o -name "*.ts" -o -name "*.js" 2>/dev/null | wc -l`
+- Context check: !`grep -c "CCO_ADAPTIVE_START" ./CLAUDE.md 2>/dev/null || echo "0"`
+- File count: !`find . -type f \( -name "*.py" -o -name "*.ts" -o -name "*.js" \) 2>/dev/null | wc -l`
 - Git status: !`git status --short`
+
+**Static context (Scale, Maturity, Type, Breaking) is read from ./CLAUDE.md already in context.**
+
+## Context Requirement [CRITICAL]
+
+**This command requires CCO_ADAPTIVE in ./CLAUDE.md.**
+
+If context check returns "0":
+```
+CCO_ADAPTIVE not found in ./CLAUDE.md
+
+Run /cco-tune first to configure project context, then restart CLI.
+```
+**Stop execution immediately.**
 
 ## Context Application
 

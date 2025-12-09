@@ -14,10 +14,24 @@ Analyzes architecture, identifies gaps, and provides actionable recommendations.
 
 ## Context
 
+- Context check: !`grep -c "CCO_ADAPTIVE_START" ./CLAUDE.md 2>/dev/null || echo "0"`
 - Project purpose: !`head -5 README.md 2>/dev/null`
-- CCO context: !`sed -n '/^## Strategic Context/,/^## /p' ./CLAUDE.md 2>/dev/null | head -10`
 - Structure: !`ls -d */ 2>/dev/null | head -10`
 - Git activity: !`git log --oneline -5 2>/dev/null`
+
+**Static context (Type, Maturity, Scale, Strategic Context) is read from ./CLAUDE.md already in context.**
+
+## Context Requirement [CRITICAL]
+
+**This command requires CCO_ADAPTIVE in ./CLAUDE.md.**
+
+If context check returns "0":
+```
+CCO_ADAPTIVE not found in ./CLAUDE.md
+
+Run /cco-tune first to configure project context, then restart CLI.
+```
+**Stop execution immediately.**
 
 ## Context Application
 

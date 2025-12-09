@@ -14,9 +14,24 @@ Meta command for regular project maintenance (weekly recommended).
 
 ## Context
 
-- Last checkup: !`cat .cco/last-checkup.txt 2>/dev/null || echo "Never"`
+- Context check: !`grep -c "CCO_ADAPTIVE_START" ./CLAUDE.md 2>/dev/null || echo "0"`
+- Last health tag: !`git tag -l "health-*" --sort=-creatordate | head -1 || echo "None"`
 - Git status: !`git status --short`
 - Recent activity: !`git log --oneline -5`
+
+**Static context (Applicable) is read from ./CLAUDE.md already in context.**
+
+## Context Requirement [CRITICAL]
+
+**This command requires CCO_ADAPTIVE in ./CLAUDE.md.**
+
+If context check returns "0":
+```
+CCO_ADAPTIVE not found in ./CLAUDE.md
+
+Run /cco-tune first to configure project context, then restart CLI.
+```
+**Stop execution immediately.**
 
 ## Flow
 
@@ -42,17 +57,17 @@ Quick overview of project health scores.
 └───────────────┴───────┴───────┴──────────────────────────────┘
 ```
 
-### Phase 2: Smart Audit
+### Phase 2: Quality Audit
 
-Orchestrates: `/cco-audit --smart --auto-fix`
+Orchestrates: `/cco-audit --auto-fix`
 
-Runs only applicable checks based on project context.
+Runs all applicable checks from context.
 
 ```
-┌─ SMART AUDIT ────────────────────────────────────────────────┐
-│ → Running: /cco-audit --smart --auto-fix                     │
+┌─ QUALITY AUDIT ──────────────────────────────────────────────┐
+│ → Running: /cco-audit --auto-fix                             │
 ├──────────────────────────────────────────────────────────────┤
-│ Applicable checks: security, tech-debt, self-compliance     │
+│ Applicable: security, tech-debt, tests, self-compliance     │
 │ Issues found: 3 | Auto-fixed: 2 | Manual: 1                 │
 ├──────────────────────────────────────────────────────────────┤
 │ Manual action needed:                                        │

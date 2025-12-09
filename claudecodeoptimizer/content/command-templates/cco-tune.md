@@ -116,7 +116,7 @@ sed -n '/^# AI-Specific Standards/,/^---$/p' ~/.claude/CLAUDE.md | grep -c "| \*
 sed -n '/^# CCO-Specific Standards/,/<!-- CCO_STANDARDS_END -->/p' ~/.claude/CLAUDE.md | grep -c "| \* "
 # → CCO_SPECIFIC (e.g., 108)
 
-sed -n '/^## Conditional Standards/,/<!-- CCO_CONTEXT_END -->/p' ./CLAUDE.md | grep -c "| \* "
+sed -n '/^## Conditional Standards/,/<!-- CCO_ADAPTIVE_END -->/p' ./CLAUDE.md | grep -c "| \* "
 # → PROJECT_SPECIFIC (e.g., 20) - returns 0 if no context
 ```
 
@@ -191,7 +191,7 @@ Follow CCO "Question Formatting" standard.
 │ ☐ Remove AI Performance    Reset to Claude Code defaults           │
 │ ☐ Remove Statusline        Delete statusline.js, disable bar       │
 │ ☐ Remove Permissions       Remove all permission rules             │
-│ ☐ Remove Standards         Remove CCO_CONTEXT from CLAUDE.md       │
+│ ☐ Remove Standards         Remove CCO_ADAPTIVE from CLAUDE.md       │
 ├─ Export (standards only, no settings) ─────────────────────────────┤
 │ ☐ CLAUDE.md                Standards for other Claude Code projects │
 │ ☐ AGENTS.md                Standards for other AI tools (Cursor)    │
@@ -288,7 +288,7 @@ After all questions answered → proceed to detection/apply (no more questions)
 
 **Location:** `./CLAUDE.md` (project only)
 
-**IMPORTANT:** Detection always scans from scratch, ignoring any existing CCO_CONTEXT values. Each element is freshly detected from actual project files. The Source column shows where the value was found.
+**IMPORTANT:** Detection always scans from scratch, ignoring any existing CCO_ADAPTIVE values. Each element is freshly detected from actual project files. The Source column shows where the value was found.
 
 ### Detection Exclusions
 
@@ -394,7 +394,29 @@ Every detection triggers a specific action. No detection is informational-only.
 | 36 | MCP Output | File count + monorepo detection | → settings.json env |
 | 37 | Caching | Always on unless explicitly disabled | → settings.json env |
 
-**GRANULAR:** Each detection triggers only its specific subsection. Multiple detections stack additively.
+**GRANULAR SELECTION [CRITICAL]:**
+
+Each detection triggers a category in adaptive.md. For each triggered category:
+1. Read all rules in that category
+2. Check "Applicability Check" column for each rule
+3. Include ONLY rules where the check passes for THIS project
+4. Skip rules where the check does not apply
+
+**Example:**
+```
+Detection: T:CLI detected
+Category: Apps > CLI from adaptive.md
+Rules evaluation:
+  ✓ Help-Examples     - Check: "Has commands" → YES (argparse found)
+  ✓ Exit-Codes        - Check: "Always" → YES
+  ✗ Signal-Handle     - Check: "Long-running commands" → NO (simple CLI)
+  ✓ Output-Modes      - Check: "User-facing" → YES
+  ✗ Config-Precedence - Check: "Has config" → NO (no config system)
+
+Result: Only 3 rules included in context, not all 5
+```
+
+Multiple detections stack additively but each rule is still individually evaluated.
 
 ### Confidence Levels
 
@@ -779,7 +801,7 @@ Show unified table with confidence indicators. **Every row shows what action it 
 | Format | Meaning |
 |--------|---------|
 | `+N {category}` | Triggers N standards from category |
-| `→ context` | Written to CCO_CONTEXT in CLAUDE.md |
+| `→ context` | Written to CCO_ADAPTIVE in CLAUDE.md |
 | `→ env` | Written to settings.json env section |
 | `→ tools` | Added to Operational tools list |
 | `→ guidelines` | Affects guidelines generation |
@@ -860,7 +882,7 @@ Write all selected configurations to **project-local files only**:
 
 | Selection | Target | Method |
 |-----------|--------|--------|
-| Detection | `./CLAUDE.md` | Write tool (CCO_CONTEXT block) |
+| Detection | `./CLAUDE.md` | Write tool (CCO_ADAPTIVE block) |
 | AI Performance | `./.claude/settings.json` | Write tool (env section) |
 | Statusline | `./.claude/statusline.js` + `./.claude/settings.json` | `cco-setup --local . --statusline {mode}` |
 | Permissions | `./.claude/settings.json` | `cco-setup --local . --permissions {level}` |
@@ -878,19 +900,19 @@ Write all selected configurations to **project-local files only**:
 
 | Remove | Target | Method |
 |--------|--------|--------|
-| Remove Standards | `./CLAUDE.md` | Remove `<!-- CCO_CONTEXT_START -->...<!-- CCO_CONTEXT_END -->` block |
+| Remove Standards | `./CLAUDE.md` | Remove `<!-- CCO_ADAPTIVE_START -->...<!-- CCO_ADAPTIVE_END -->` block |
 | Remove AI Performance | `./.claude/settings.json` | Remove `env` section from JSON |
 | Remove Statusline | `./.claude/statusline.js` + `./.claude/settings.json` | Delete statusline.js, remove `statusLine` from JSON |
 | Remove Permissions | `./.claude/settings.json` | Remove `permissions` section from JSON |
 
 **Removal behavior:**
-- Standards: Removes CCO_CONTEXT block from `./CLAUDE.md`, preserves other content
+- Standards: Removes CCO_ADAPTIVE block from `./CLAUDE.md`, preserves other content
 - AI Performance: Removes `env` key entirely → Claude Code uses built-in defaults
 - Statusline: Deletes `.claude/statusline.js` file AND removes `statusLine` key from settings.json
 - Permissions: Removes `permissions` key entirely → all operations require approval
 - If settings.json becomes empty (`{}`), delete the file
 - If `.claude/` directory becomes empty, optionally delete it
-- If `./CLAUDE.md` becomes empty after CCO_CONTEXT removal, delete the file
+- If `./CLAUDE.md` becomes empty after CCO_ADAPTIVE removal, delete the file
 
 ### Statusline & Permissions Installation
 
@@ -913,7 +935,7 @@ This ensures templates are read from the installed package, not generated by AI.
 - Statusline: `.claude/statusline.js` → overwrite entirely with source template
 - Permissions: `.claude/settings.json` permissions section → overwrite with source template
 - AI Performance: `.claude/settings.json` env section → overwrite with user selections
-- Context: `./CLAUDE.md` CCO_CONTEXT block → overwrite with detection results
+- Context: `./CLAUDE.md` CCO_ADAPTIVE block → overwrite with detection results
 - **Never skip** because "file exists", "content unchanged", or "already configured"
 
 **IMPORTANT:** cco-tune NEVER modifies global `~/.claude/` files. All settings are project-local.
@@ -1010,10 +1032,10 @@ After writing permission config, verify:
 2. No conflicting patterns (same pattern in both allow and deny)
 3. JSON syntax is valid
 
-### CCO_CONTEXT Format
+### CCO_ADAPTIVE Format
 
 ```markdown
-<!-- CCO_CONTEXT_START -->
+<!-- CCO_ADAPTIVE_START -->
 ## Strategic Context
 Purpose: {purpose}
 Team: {team} | Scale: {scale} | Data: {data} | Compliance: {compliance}
@@ -1039,43 +1061,58 @@ Secrets detected: {yes|no}
 Outdated deps: {N}
 
 ## Conditional Standards (auto-applied)
-**TOTAL: +{N} project-specific ({Category1} +{n1}, {Category2} +{n2}, ...)**
 
-### {Category} (+{n}) - {trigger reason}
-- {Standard1}: {rule description}
-- {Standard2}: {rule description}
-...
+### {Category} - {trigger reason}
 
-### {Category2} (+{n}) - {trigger reason}
-- {Standard1}: {rule description}
+| Standard | Rule |
+|----------|------|
+| * {Name} | {concise description} |
 ...
-<!-- CCO_CONTEXT_END -->
+<!-- CCO_ADAPTIVE_END -->
 ```
 
-**Example Conditional Standards format:**
+**CRITICAL - Granular Selection:**
+
+Each rule in adaptive.md has an "Applicability Check". Only include rules where the check passes for this specific project.
+
+**Example Conditional Standards (granular):**
 
 ```markdown
 ## Conditional Standards (auto-applied)
-**TOTAL: +20 project-specific (CLI +5, Ops +7, Caching +3, Testing +5)**
 
-### Apps > CLI (+5) - Type: CLI detected
-- Help: --help with examples for every command
-- Exit Codes: 0 success, non-zero failure with meaning
-- Signals: handle SIGINT/SIGTERM gracefully
-- Output Modes: human-readable default, --json for scripts
-- Config Precedence: env vars > config file > CLI args > defaults
+### Apps > CLI - T:CLI detected
 
-### Backend > Operations (+7) - CI/CD detected
-- Config as Code: versioned, validated, env-aware
-- Health Endpoints: /health + /ready
-- Graceful Shutdown: drain connections on SIGTERM
-- Observability: metrics, logs, traces (OpenTelemetry)
-- CI Gates: lint + test + coverage before merge
-- Blue/Green or Canary: zero-downtime deployments
-- Feature Flags: decouple deploy from release
+| Standard | Rule |
+|----------|------|
+| * Help-Examples | --help with usage for every command |
+| * Exit-Codes | 0 success, non-zero with meaning |
+| * Output-Modes | Human default, --json for scripts |
+
+### Backend > Operations - CI/CD detected
+
+| Standard | Rule |
+|----------|------|
+| * Config-as-Code | Versioned, env-aware |
+| * CI-Gates | lint + test + coverage before merge |
+
+### Testing > Standard - pytest detected
+
+| Standard | Rule |
+|----------|------|
+| * Integration | Test component interactions |
+| * Coverage-80 | >80% line coverage |
+| * CI-on-PR | Tests run on every PR |
 ```
 
-**Note:** AI Performance settings are NOT stored in CLAUDE.md - they are only in `./.claude/settings.json` where Claude Code reads them. The CCO_CONTEXT documents project characteristics that inform AI Performance auto-detection.
+**Granular Evaluation Process:**
+1. For each triggered category (e.g., T:CLI), read rules from adaptive.md
+2. For each rule, check "Applicability Check" column
+3. Only include rules where check passes
+4. Use "Concise" column value for the Rule description
+
+**Note:** AI Performance settings are NOT stored in CLAUDE.md - they are only in `./.claude/settings.json` where Claude Code reads them.
+
+**IMPORTANT:** CCO_ADAPTIVE is the foundation for ALL other CCO commands. They validate against this context and refuse to run operations outside its scope.
 
 ---
 
@@ -1111,7 +1148,7 @@ Show before/after comparison for all changed settings:
 ║ ./.claude/statusline.js        Status bar script (if statusline configured)    ║
 ╠════════════════════════════════════════════════════════════════════════════════╣
 ║ Restart Claude Code for changes to take effect                                 ║
-║ Next: /cco-health to verify | /cco-audit --smart to check                      ║
+║ Next: /cco-health to verify | /cco-audit to check                              ║
 ╚════════════════════════════════════════════════════════════════════════════════╝
 ```
 
@@ -1198,7 +1235,7 @@ Both can be selected together to export to both formats.
 
 **Prerequisites:**
 - `~/.claude/CLAUDE.md` MUST exist (run `cco-setup` first if missing)
-- `./CLAUDE.md` with CCO_CONTEXT is optional (export will include global standards only)
+- `./CLAUDE.md` with CCO_ADAPTIVE is optional (export will include global standards only)
 
 **Export process:**
 1. Check `~/.claude/CLAUDE.md` exists → error if missing: "Run cco-setup first"
@@ -1226,7 +1263,7 @@ Both can be selected together to export to both formats.
 1. Read Universal Standards section from `~/.claude/CLAUDE.md`
 2. Read AI-Specific Standards section from `~/.claude/CLAUDE.md`
 3. Skip CCO-Specific Standards (not portable to other AI tools)
-4. Read Conditional Standards from `./CLAUDE.md` CCO_CONTEXT block
+4. Read Conditional Standards from `./CLAUDE.md` CCO_ADAPTIVE block
 5. Transform to prose format (remove CCO markers, simplify structure)
 
 **Output format:**
@@ -1255,7 +1292,7 @@ Both can be selected together to export to both formats.
 
 **Process:**
 1. Read ALL sections from `~/.claude/CLAUDE.md` (including CCO-Specific)
-2. Read CCO_CONTEXT block from `./CLAUDE.md`
+2. Read CCO_ADAPTIVE block from `./CLAUDE.md`
 3. Combine with markers preserved
 4. Write to `./CLAUDE.export.md`
 
@@ -1300,7 +1337,7 @@ Standards are organized in 4 categories. **All counts are dynamically calculated
 | Action Type | Target | Example |
 |-------------|--------|---------|
 | `→ {category} standards` | CLAUDE.md conditional standards | `→ CLI standards` evaluates CLI subsection |
-| `→ context` | CLAUDE.md CCO_CONTEXT fields | Purpose, Stack, License |
+| `→ context` | CLAUDE.md CCO_ADAPTIVE fields | Purpose, Stack, License |
 | `→ tools` | CLAUDE.md Operational section | format, lint, test commands |
 | `→ guidelines` | CLAUDE.md Guidelines section | Team-based recommendations |
 | `→ env` | settings.json env section | Thinking tokens, MCP tokens |
@@ -1448,7 +1485,7 @@ Guidelines are generated based on user-configured values to provide context-awar
    - `.claude/statusline.js` → overwrite entirely (check for "CCO Statusline" marker)
    - `.claude/settings.json` → overwrite `env`, `statusLine`, `permissions` sections
    - `.claude/settings.json` → remove legacy keys: `_cco_managed`, `_cco_version`, `_cco_installed`, `cco_config`, `ccoSettings`
-   - `./CLAUDE.md` → overwrite `<!-- CCO_CONTEXT_START -->...<!-- CCO_CONTEXT_END -->` block
+   - `./CLAUDE.md` → overwrite `<!-- CCO_ADAPTIVE_START -->...<!-- CCO_ADAPTIVE_END -->` block
    - Never skip because "file exists" or "content unchanged" - always write fresh
 7. **Granular standard selection** - each subsection is independently evaluated, not atomic categories
 8. **No duplicate standards** - each standard is added exactly once; deduplicate before writing to CLAUDE.md

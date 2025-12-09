@@ -14,11 +14,28 @@ Meta command that orchestrates other CCO commands for release preparation.
 
 ## Context
 
+- Context check: !`grep -c "CCO_ADAPTIVE_START" ./CLAUDE.md 2>/dev/null || echo "0"`
 - Version: !`grep -E "version|__version__|VERSION" pyproject.toml package.json setup.py 2>/dev/null | head -1`
 - Branch: !`git branch --show-current`
 - Changelog: !`head -20 CHANGELOG.md 2>/dev/null || echo "No CHANGELOG.md"`
 - Git status: !`git status --short`
 - Last tag: !`git describe --tags --abbrev=0 2>/dev/null || echo "No tags"`
+
+**Static context (Applicable, Type) is read from ./CLAUDE.md already in context.**
+
+## Context Requirement [CRITICAL]
+
+**This command requires CCO_ADAPTIVE in ./CLAUDE.md.**
+
+If context check returns "0":
+```
+CCO_ADAPTIVE not found in ./CLAUDE.md
+
+Run /cco-tune first to configure project context, then restart CLI.
+```
+**Stop execution immediately.**
+
+**Phase Validation:** Sub-commands (cco-audit, cco-optimize, cco-review) inherit context validation and only run applicable checks.
 
 ## Flow
 

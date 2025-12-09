@@ -14,9 +14,22 @@ End-to-end: Searches multiple sources, scores reliability, synthesizes findings.
 
 ## Context
 
-- Stack: !`grep "^Stack:" ./CLAUDE.md 2>/dev/null`
-- Type: !`grep "^Type:" ./CLAUDE.md 2>/dev/null`
+- Context check: !`grep -c "CCO_ADAPTIVE_START" ./CLAUDE.md 2>/dev/null || echo "0"`
 - Current date: !`date +%Y-%m-%d`
+
+**Static context (Stack, Type, Priority, Data) is read from ./CLAUDE.md already in context.**
+
+## Context Requirement [CRITICAL]
+
+**This command requires CCO_ADAPTIVE in ./CLAUDE.md.**
+
+If context check returns "0":
+```
+CCO_ADAPTIVE not found in ./CLAUDE.md
+
+Run /cco-tune first to configure project context, then restart CLI.
+```
+**Stop execution immediately.**
 
 ## Context Application
 
