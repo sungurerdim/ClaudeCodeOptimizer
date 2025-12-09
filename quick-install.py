@@ -35,6 +35,7 @@ def main() -> int:
         [sys.executable, "-m", "pip", "show", "claudecodeoptimizer"],
         capture_output=True,
         timeout=30,
+        shell=False,
     )
     if check.returncode == 0:
         print("\nRemoving previous installation...")
@@ -42,6 +43,7 @@ def main() -> int:
             [sys.executable, "-m", "pip", "uninstall", "-y", "claudecodeoptimizer"],
             capture_output=True,
             timeout=60,
+            shell=False,
         )
 
     # Install from GitHub
@@ -51,6 +53,7 @@ def main() -> int:
         capture_output=True,
         text=True,
         timeout=120,
+        shell=False,
     )
     if result.returncode != 0:
         print("Error: pip install failed")
@@ -64,6 +67,7 @@ def main() -> int:
     result = subprocess.run(
         [sys.executable, "-m", "claudecodeoptimizer.install_hook"],
         timeout=60,
+        shell=False,
     )
     if result.returncode != 0:
         print("\nSetup failed. Try manually: cco-setup")
