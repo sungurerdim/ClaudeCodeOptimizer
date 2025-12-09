@@ -478,7 +478,9 @@ Permission levels: safe, balanced, permissive, full
         print(f"Installed: {len(cmds)} commands, {len(agents)} agents")
         print(f"  Base rules: {base_count} (Core: {base_rules['core']} + AI: {base_rules['ai']})")
         print(f"  Tools rules: {breakdown['tools']} (loaded when commands/agents run)")
-        print(f"  Adaptive pool: {breakdown['adaptive']} (only matching rules selected per project)")
+        print(
+            f"  Adaptive pool: {breakdown['adaptive']} (only matching rules selected per project)"
+        )
         print(SEPARATOR)
         print()
         print("Restart Claude Code for changes to take effect.")
