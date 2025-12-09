@@ -1,6 +1,6 @@
 # ClaudeCodeOptimizer
 
-<!-- CCO_CONTEXT_START -->
+<!-- CCO_ADAPTIVE_START -->
 ## Strategic Context
 Purpose: Process and standards layer for Claude Code
 Team: Solo | Scale: Small (100-1K) | Data: Public | Compliance: None
@@ -24,7 +24,7 @@ Applicable: security, tech-debt, tests, cicd, docs, supply-chain, self-complianc
 Not Applicable: database, performance, containers, api-contract, dora, ai-security, ai-quality, compliance
 
 ## Auto-Detected
-Structure: single-repo | Hooks: none | Coverage: 99%
+Structure: single-repo | Hooks: none | Coverage: 100%
 - [x] Linting configured
 - [x] CI/CD configured
 - [x] Test framework
@@ -78,4 +78,4 @@ Outdated deps: 0
 | * Coverage-Target | >80% line coverage |
 | * CI-Integration | Tests run on every PR |
 | * Snapshot-Testing | UI component stability |
-<!-- CCO_CONTEXT_END -->
+<!-- CCO_ADAPTIVE_END -->

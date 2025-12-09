@@ -60,7 +60,7 @@ class TestConstants:
         # Test that pattern matches various CCO marker formats
         test_cases = [
             "<!-- CCO_STANDARDS_START -->content<!-- CCO_STANDARDS_END -->",
-            "<!-- CCO_CONTEXT_START -->content<!-- CCO_CONTEXT_END -->",
+            "<!-- CCO_ADAPTIVE_START -->content<!-- CCO_ADAPTIVE_END -->",
             "<!-- cco-standards-start -->content<!-- cco-standards-end -->",
             "<!-- CCO_ANY_NAME_START -->content<!-- CCO_ANY_NAME_END -->",
         ]
