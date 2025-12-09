@@ -1,7 +1,7 @@
 ---
 name: cco-research
 description: Multi-source research with reliability scoring and AI synthesis
-allowed-tools: WebSearch(*), WebFetch(*), Read(*), Grep(*), Glob(*), Task(*)
+allowed-tools: WebSearch(*), WebFetch(*), Read(*), Grep(*), Glob(*), Task(*), TodoWrite
 ---
 
 # /cco-research
@@ -49,6 +49,29 @@ Run /cco-tune first to configure project context, then restart CLI.
 | Synthesize | `cco-agent-research` | `synthesize` | Generate weighted recommendation |
 | Full | `cco-agent-research` | `full` | All phases combined (standard flow) |
 
+### Parallel Search Pattern [REQUIRED]
+
+For deep research, launch **5 parallel agents** with diverse search strategies:
+
+```
+Launch simultaneously:
+- Agent 1: Official docs search (site:docs.*, site:*.dev)
+- Agent 2: GitHub issues/discussions search
+- Agent 3: Stack Overflow/community search
+- Agent 4: Blog/article search (Medium, Dev.to)
+- Agent 5: Alternative keyword variations
+```
+
+### Agent Propagation
+
+When spawning search agents, include:
+```
+Context: {Stack, Type from CCO_ADAPTIVE}
+Rules: Source reliability tiers, freshness scoring
+Output: {url} | {tier} | {score} | {key_claim}
+Note: Make a todo list first, use diverse keywords
+```
+
 **Local Mode:** For `--local` flag, uses `cco-agent-analyze` with `scope: scan` instead (codebase-only search).
 
 ## Default Behavior
@@ -58,7 +81,7 @@ When called without query:
 **Use AskUserQuestion:**
 | Question | Options | MultiSelect |
 |----------|---------|-------------|
-| Depth? | Quick, Standard `[recommended]`, Deep | false |
+| Depth? | Standard (Recommended), Quick, Deep | false |
 
 *Note: Research topic is free text - use AskUserQuestion with text input option.*
 

@@ -1,7 +1,7 @@
 ---
 name: cco-review
 description: Strategic architecture review with fresh perspective
-allowed-tools: Read(*), Grep(*), Glob(*), Bash(git:*), Bash(wc:*), Bash(find:*), Edit(*), Task(*)
+allowed-tools: Read(*), Grep(*), Glob(*), Bash(git:*), Bash(wc:*), Bash(find:*), Edit(*), Task(*), TodoWrite
 ---
 
 # /cco-review

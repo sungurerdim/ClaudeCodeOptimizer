@@ -1,7 +1,7 @@
 ---
 name: cco-audit
 description: Security and code quality analysis with auto-fix
-allowed-tools: Bash(git:*), Bash(grep:*), Bash(find:*), Read(*), Grep(*), Glob(*), Edit(*), Task(*)
+allowed-tools: Bash(git:*), Bash(grep:*), Bash(find:*), Read(*), Grep(*), Glob(*), Edit(*), Task(*), TodoWrite
 ---
 
 # /cco-audit
@@ -66,7 +66,26 @@ To add this category, run /cco-tune and reconfigure.
 | Scan | `cco-agent-analyze` | `scan` | Issue detection with metrics |
 | Fix | `cco-agent-apply` | `fix` | Execute approved fixes |
 
-**Scan Phase:** Use `cco-agent-analyze` with `scope: scan` to detect issues only for applicable categories.
+### Parallel Scan Pattern [REQUIRED]
+
+When scanning multiple categories, launch **parallel agents** in a single message:
+
+```
+Launch simultaneously:
+- Agent 1: cco-agent-analyze scope=security
+- Agent 2: cco-agent-analyze scope=tech-debt
+- Agent 3: cco-agent-analyze scope=tests
+```
+
+### Agent Propagation
+
+When spawning agents, include:
+```
+Context: {Applicable categories from CCO_ADAPTIVE}
+Rules: Conservative judgment, exact output format
+Output: [CATEGORY] {severity}: {issue} in {file:line}
+Note: Make a todo list first, process systematically
+```
 
 ## Default Behavior
 
@@ -77,7 +96,7 @@ When called without flags:
 **Use AskUserQuestion:**
 | Question | Options | MultiSelect |
 |----------|---------|-------------|
-| Auto-fix detected issues? | No, Yes `[recommended]` | false |
+| Auto-fix detected issues? | Yes (Recommended), No | false |
 
 Explicit flags narrow scope (but must be in Applicable list).
 
@@ -195,6 +214,8 @@ Auto-skip if not applicable:
 **Meta-flag Validation:** For composite flags, each included category is validated. Non-applicable categories are silently skipped with note in output.
 
 ## Output
+
+**Follow output formats precisely.**
 
 ### Summary Table
 ```

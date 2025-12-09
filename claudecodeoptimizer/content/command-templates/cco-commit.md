@@ -1,7 +1,7 @@
 ---
 name: cco-commit
 description: Atomic traceable change management with quality gates
-allowed-tools: Bash(git:*), Bash(ruff:*), Bash(npm:*), Bash(pytest:*), Read(*), Grep(*), Edit(*)
+allowed-tools: Bash(git:*), Bash(ruff:*), Bash(npm:*), Bash(pytest:*), Read(*), Grep(*), Edit(*), TodoWrite
 ---
 
 # /cco-commit
@@ -180,6 +180,8 @@ If changes have dependencies, commit in order:
 
 ## Output
 
+**Follow output formats precisely.**
+
 ### Quality Gates
 ```
 ┌─ QUALITY GATES ──────────────────────────────────────────────┐
@@ -262,10 +264,26 @@ Detect breaking changes and prompt for proper documentation:
 |------|--------|
 | `--dry-run` | Show plan without committing |
 | `--single` | Force all changes into one commit |
+| `--quick` | Single-message execution: stage all, commit, no questions |
 | `--skip-checks` | Skip quality gates (emergency use) |
 | `--force-large` | Allow files >10MB (use with caution) |
 | `--no-verify` | Skip pre-commit hooks (if any) |
 | `--amend` | Amend last commit (with safety checks) |
+
+### Quick Mode (`--quick`) [SINGLE-MESSAGE]
+
+**You MUST do all steps in a single message. Do not use any other tools beyond allowed.**
+
+```
+[Single message with all tool calls:]
+1. Bash: git status
+2. Bash: git diff --cached --name-only
+3. Bash: git add -A (if nothing staged)
+4. Bash: git commit -m "type(scope): message"
+5. [Final summary only]
+```
+
+No questions, no intermediate text, smart defaults for commit message.
 
 ### Amend Safety
 

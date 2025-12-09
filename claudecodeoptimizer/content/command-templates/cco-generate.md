@@ -1,7 +1,7 @@
 ---
 name: cco-generate
 description: Convention-following code and artifact generation
-allowed-tools: Read(*), Grep(*), Glob(*), Write(*), Bash(git:*), Bash(pytest:*), Bash(npm:*), Task(*)
+allowed-tools: Read(*), Grep(*), Glob(*), Write(*), Bash(git:*), Bash(pytest:*), Bash(npm:*), Task(*), TodoWrite
 ---
 
 # /cco-generate
@@ -144,6 +144,8 @@ Before generating:
 5. **Verify** - Tests pass, no import errors
 
 ## Output
+
+**Follow output formats precisely.**
 
 ### Generation Plan
 ```
