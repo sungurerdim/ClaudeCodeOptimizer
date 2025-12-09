@@ -201,24 +201,24 @@ ClaudeCodeOptimizer/
 
 ## CLAUDE.md Marker System
 
-CLAUDE.md uses a **marker-based system** for two distinct purposes:
+CLAUDE.md uses a **marker-based system** with 4 rule categories:
 
-### CCO_STANDARDS (Global)
+### Global Rules (`~/.claude/CLAUDE.md`)
 
-Quality standards injected into `~/.claude/CLAUDE.md`:
 ```markdown
-<!-- CCO_STANDARDS_START -->
-## Core
-- Paths: forward slash (/), relative, quote spaces
+<!-- CCO_CORE_START -->
+# Core Rules
 ...
-<!-- CCO_STANDARDS_END -->
+<!-- CCO_CORE_END -->
+
+<!-- CCO_AI_START -->
+# AI Rules
+...
+<!-- CCO_AI_END -->
 ```
 
-**Location:** `~/.claude/CLAUDE.md` (global, applies to all projects)
+### Project Rules (`./CLAUDE.md`)
 
-### CCO_ADAPTIVE (Local)
-
-Project-specific context stored in `./CLAUDE.md`:
 ```markdown
 <!-- CCO_ADAPTIVE_START -->
 ## Strategic Context
@@ -227,7 +227,9 @@ Team: {team} | Scale: {scale} | ...
 <!-- CCO_ADAPTIVE_END -->
 ```
 
-**Location:** `./CLAUDE.md` (project root, project-specific)
+### Tools Rules (loaded on-demand by commands/agents)
+
+Located in `~/.claude/rules/tools.md`, loaded via `!` backtick syntax.
 
 ### Generator Rules
 

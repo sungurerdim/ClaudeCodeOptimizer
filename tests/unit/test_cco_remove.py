@@ -9,11 +9,11 @@ from claudecodeoptimizer.cco_remove import (
     _execute_removal,
     detect_install_method,
     has_cco_statusline,
-    has_claude_md_standards,
+    has_claude_md_rules,
     list_cco_files,
     main,
     remove_cco_files,
-    remove_claude_md_standards,
+    remove_claude_md_rules,
     remove_statusline,
     uninstall_package,
 )
@@ -70,13 +70,13 @@ class TestListCcoFiles:
 class TestHasClaudeMdRules:
     def test_no_file(self, tmp_path):
         with patch("claudecodeoptimizer.cco_remove.CLAUDE_DIR", tmp_path):
-            assert has_claude_md_standards() == []
+            assert has_claude_md_rules() == []
 
     def test_with_rules(self, tmp_path):
         claude_md = tmp_path / "CLAUDE.md"
         claude_md.write_text("<!-- CCO_STANDARDS_START -->standards<!-- CCO_STANDARDS_END -->")
         with patch("claudecodeoptimizer.cco_remove.CLAUDE_DIR", tmp_path):
-            sections = has_claude_md_standards()
+            sections = has_claude_md_rules()
             # Universal pattern returns "CCO Content (N section(s))"
             assert len(sections) == 1
             assert "CCO Content" in sections[0]
@@ -117,7 +117,7 @@ class TestRemoveCcoFiles:
 class TestRemoveClaudeMdRules:
     def test_no_file(self, tmp_path):
         with patch("claudecodeoptimizer.cco_remove.CLAUDE_DIR", tmp_path):
-            removed = remove_claude_md_standards()
+            removed = remove_claude_md_rules()
             assert removed == []
 
     def test_remove_rules(self, tmp_path, capsys):
@@ -126,7 +126,7 @@ class TestRemoveClaudeMdRules:
             "# My\n<!-- CCO_STANDARDS_START -->standards<!-- CCO_STANDARDS_END -->\nOther"
         )
         with patch("claudecodeoptimizer.cco_remove.CLAUDE_DIR", tmp_path):
-            removed = remove_claude_md_standards(verbose=True)
+            removed = remove_claude_md_rules(verbose=True)
         # Universal pattern returns "CCO Content (N section(s))"
         assert len(removed) == 1
         assert "CCO Content" in removed[0]
@@ -625,27 +625,27 @@ class TestExecuteRemoval:
         assert "Removing local settings" in captured.out
 
 
-class TestHasClaudeMdStandardsNoMatches:
-    """Test has_claude_md_standards when no CCO markers found."""
+class TestHasClaudeMdRulesNoMatches:
+    """Test has_claude_md_rules when no CCO markers found."""
 
     def test_file_without_cco_markers(self, tmp_path):
         """Test returns empty list when file has no CCO markers."""
         claude_md = tmp_path / "CLAUDE.md"
         claude_md.write_text("# My Project\n\nSome content without CCO markers")
         with patch("claudecodeoptimizer.cco_remove.CLAUDE_DIR", tmp_path):
-            result = has_claude_md_standards()
+            result = has_claude_md_rules()
         assert result == []
 
 
-class TestRemoveClaudeMdStandardsNoMatches:
-    """Test remove_claude_md_standards when no CCO markers found."""
+class TestRemoveClaudeMdRulesNoMatches:
+    """Test remove_claude_md_rules when no CCO markers found."""
 
     def test_file_without_cco_markers(self, tmp_path):
         """Test returns empty list when file has no CCO markers."""
         claude_md = tmp_path / "CLAUDE.md"
         claude_md.write_text("# My Project\n\nSome content without CCO markers")
         with patch("claudecodeoptimizer.cco_remove.CLAUDE_DIR", tmp_path):
-            result = remove_claude_md_standards(verbose=False)
+            result = remove_claude_md_rules(verbose=False)
         assert result == []
 
 
