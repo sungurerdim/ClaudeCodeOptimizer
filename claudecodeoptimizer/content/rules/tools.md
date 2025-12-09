@@ -1,4 +1,3 @@
-<!-- CCO_TOOLS_START -->
 # Tools Rules
 *On-demand loading for CCO commands and agents*
 
@@ -6,7 +5,7 @@
 
 | Rule | Description |
 |------|-------------|
-| * Context-Check | Verify CCO_CONTEXT, suggest /cco-tune if missing |
+| * Context-Check | Verify CCO_ADAPTIVE, suggest /cco-tune if missing |
 | * Read-Context | Parse ./CLAUDE.md markers |
 | * Execute | Command-specific logic |
 | * Report | Results with accounting |
@@ -379,8 +378,7 @@
 
 | Rule | Description |
 |------|-------------|
-| * Context | Read CCO_CONTEXT_START markers |
+| * Context | Read CCO_ADAPTIVE_START markers |
 | * Apply | Guidelines, Thresholds, Applicable |
 | * Tools | Parallel independent, sequential dependent |
 | * Thinking | 5K standard, 8K medium, 10K complex |
-<!-- CCO_TOOLS_END -->

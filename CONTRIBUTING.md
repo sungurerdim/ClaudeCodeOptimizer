@@ -216,15 +216,15 @@ Quality standards injected into `~/.claude/CLAUDE.md`:
 
 **Location:** `~/.claude/CLAUDE.md` (global, applies to all projects)
 
-### CCO_CONTEXT (Local)
+### CCO_ADAPTIVE (Local)
 
 Project-specific context stored in `./CLAUDE.md`:
 ```markdown
-<!-- CCO_CONTEXT_START -->
+<!-- CCO_ADAPTIVE_START -->
 ## Strategic Context
 Purpose: {purpose}
 Team: {team} | Scale: {scale} | ...
-<!-- CCO_CONTEXT_END -->
+<!-- CCO_ADAPTIVE_END -->
 ```
 
 **Location:** `./CLAUDE.md` (project root, project-specific)

@@ -310,9 +310,9 @@ Historical metrics tracking for health trends.
 
 | Source | Data |
 |--------|------|
-| `.cco/metrics.json` | Previous metric snapshots |
-| Git history | Commit frequency, file churn |
+| Git history | Commit frequency, file churn, tag-based snapshots |
 | Coverage reports | Historical coverage data |
+| Git tags | Version milestones for metric comparison |
 
 ### Tracked Metrics
 
@@ -360,16 +360,12 @@ Historical metrics tracking for health trends.
 
 ### Storage
 
-Metrics are stored in `.cco/metrics.json`:
-```json
-{
-  "snapshots": [
-    { "date": "ISO", "metrics": {}, "source": "cco-health|cco-checkup" }
-  ]
-}
-```
+**No persistent storage.** Trends are derived from:
+- Git tags (version milestones)
+- Git log timestamps (activity patterns)
+- Coverage reports in CI artifacts (if available)
 
-**Retention:** Keep last 12 snapshots (≈3 months weekly).
+Each analysis runs fresh against current state.
 
 ---
 
