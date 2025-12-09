@@ -8,11 +8,14 @@ from claudecodeoptimizer.config import (
     CCO_UNIVERSAL_PATTERN,
     CLAUDE_DIR,
     COMMANDS_DIR,
+    RULES_DIR,
     SUBPROCESS_TIMEOUT,
     VERSION,
     get_cco_agents,
     get_cco_commands,
     get_content_path,
+    get_rules_breakdown,
+    get_rules_count,
     get_standards_breakdown,
     get_standards_count,
 )
@@ -90,16 +93,24 @@ class TestFunctions:
             assert item.name.startswith("cco-")
             assert item.suffix == ".md"
 
+    def test_get_rules_count(self):
+        """Test get_rules_count returns tuple of counts."""
+        rules, categories = get_rules_count()
+        assert isinstance(rules, int)
+        assert isinstance(categories, int)
+        assert rules > 0
+        assert categories > 0
+
     def test_get_standards_count(self):
-        """Test get_standards_count returns tuple of counts."""
+        """Test get_standards_count (deprecated alias) returns tuple of counts."""
         standards, categories = get_standards_count()
         assert isinstance(standards, int)
         assert isinstance(categories, int)
         assert standards > 0
         assert categories > 0
 
-    def test_get_standards_count_missing_file(self, tmp_path):
-        """Test get_standards_count returns (0, 0) when standards file doesn't exist."""
+    def test_get_rules_count_missing_file(self, tmp_path):
+        """Test get_rules_count returns (0, 0) when rules file doesn't exist."""
         from unittest.mock import MagicMock
 
         # Create a mock path that doesn't exist
@@ -126,87 +137,76 @@ class TestFunctions:
             mock_path_cls.return_value.parent.__truediv__.return_value.__truediv__.return_value.__truediv__.return_value = mock_file
 
             # Call the function - it will use our mocked Path
-            from claudecodeoptimizer.config import get_standards_count
+            from claudecodeoptimizer.config import get_rules_count
 
-            result = get_standards_count()
+            result = get_rules_count()
             assert result == (0, 0)
 
     def test_get_content_path(self):
         """Test get_content_path returns correct path for subdirectory."""
-        result = get_content_path("slash-commands")
+        result = get_content_path("command-templates")
         assert isinstance(result, Path)
-        assert result.name == "slash-commands"
+        assert result.name == "command-templates"
         assert "content" in str(result)
 
     def test_get_content_path_various_subdirs(self):
         """Test get_content_path works for all expected subdirectories."""
         for subdir in [
-            "slash-commands",
+            "command-templates",
             "agent-templates",
-            "standards",
+            "rules",
             "statusline",
             "permissions",
         ]:
             result = get_content_path(subdir)
             assert result.name == subdir
 
-    def test_get_standards_breakdown(self):
-        """Test get_standards_breakdown returns correct structure."""
-        result = get_standards_breakdown()
+    def test_get_rules_breakdown(self):
+        """Test get_rules_breakdown returns correct structure."""
+        result = get_rules_breakdown()
         assert isinstance(result, dict)
-        assert "universal" in result
-        assert "ai_specific" in result
-        assert "cco_specific" in result
-        assert "project_specific" in result
+        assert "core" in result
+        assert "ai" in result
+        assert "tools" in result
+        assert "adaptive" in result
         assert "total" in result
         # Total should be sum of all categories
         assert result["total"] == (
-            result["universal"]
-            + result["ai_specific"]
-            + result["cco_specific"]
-            + result["project_specific"]
+            result["core"] + result["ai"] + result["tools"] + result["adaptive"]
         )
 
-    def test_get_standards_breakdown_no_cco_specific_split(self, tmp_path):
-        """Test get_standards_breakdown when CCO-Specific section doesn't exist (line 114)."""
-        # This tests line 114: when ai_and_cco split returns only 1 part
-        # (file has AI-Specific but no CCO-Specific section)
+    def test_get_standards_breakdown(self):
+        """Test get_standards_breakdown (deprecated alias) returns correct structure."""
+        result = get_standards_breakdown()
+        assert isinstance(result, dict)
+        # Deprecated alias maps to new keys
+        assert "universal" in result or "core" in result
+        assert "total" in result
 
-        # Create test file structure
-        standards_dir = tmp_path / "content" / "standards"
-        standards_dir.mkdir(parents=True)
+    def test_rules_dir_constant(self):
+        """Test RULES_DIR constant is defined correctly."""
+        assert RULES_DIR == CLAUDE_DIR / "rules"
 
-        # Create mock file with AI-Specific but NO CCO-Specific section
-        standards_file = standards_dir / "cco-standards.md"
-        standards_file.write_text(
-            "# Universal Standards\n| * Rule1 | Desc |\n| * Rule2 | Desc |\n\n"
-            "# AI-Specific Standards\n| * AIRule1 | Desc |\n| * AIRule2 | Desc |\n"
-        )
+    def test_get_rules_count_no_dir(self, tmp_path):
+        """Test get_rules_count returns (0, 0) when rules dir doesn't exist."""
+        # Patch the path to a nonexistent directory
+        with patch("claudecodeoptimizer.config.Path") as mock_path:
+            # Create a mock that returns a path that doesn't exist
+            mock_path.return_value.parent.__truediv__.return_value.__truediv__.return_value.exists.return_value = False
+            # We need to mock __file__ to point to a nonexistent location
+            # Since Path(__file__).parent / "content" / "rules" is used
 
-        # We need to test the actual function with a modified file
-        # The simplest way is to temporarily modify the actual file and restore it
-        import importlib
+            # Use a different approach - mock the internal path construction
+            import claudecodeoptimizer.config as config_module
 
-        from claudecodeoptimizer import config
+            original_file = config_module.__file__
 
-        # Get the actual standards file path
-        actual_file = Path(config.__file__).parent / "content" / "standards" / "cco-standards.md"
-        original_content = actual_file.read_text(encoding="utf-8")
+            # Temporarily change __file__ to point somewhere without rules
+            config_module.__file__ = str(tmp_path / "nonexistent" / "config.py")
 
-        try:
-            # Temporarily replace with content that has no CCO-Specific section
-            # Using new table format: | * Standard | Rule |
-            test_content = "# Universal Standards\n| * Rule1 | Desc |\n\n# AI-Specific Standards\n| * AIRule1 | Desc |\n"
-            actual_file.write_text(test_content, encoding="utf-8")
+            result = get_rules_count()
 
-            # Reload to pick up changes
-            importlib.reload(config)
-            result = config.get_standards_breakdown()
+            # Restore
+            config_module.__file__ = original_file
 
-            # Should have ai_specific counted (line 114 executed)
-            assert result["ai_specific"] == 1
-            assert result["cco_specific"] == 0
-        finally:
-            # Restore original content
-            actual_file.write_text(original_content, encoding="utf-8")
-            importlib.reload(config)
+        assert result == (0, 0)

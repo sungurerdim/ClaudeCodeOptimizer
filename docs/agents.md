@@ -62,7 +62,7 @@ CCO uses three specialized agents with clear separation of concerns:
 - Tech Debt - Complexity >10, dead code, duplication
 - Tests - Coverage gaps, missing tests
 - Performance - N+1, missing indexes
-- Self-Compliance - Violations of stated standards
+- Self-Compliance - Violations of stated rules
 
 ### Output
 

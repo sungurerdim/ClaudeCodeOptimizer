@@ -1,6 +1,6 @@
 # CCO Design Principles
 
-These core principles guide all CCO development and usage. They are implemented through the [CCO Standards](standards.md).
+These core principles guide all CCO development and usage. They are implemented through the [CCO Rules](rules.md).
 
 ---
 
@@ -22,10 +22,10 @@ All operations are visible and predictable.
 
 | Principle | Implemented In |
 |-----------|----------------|
-| Announce Before Action | AI-Specific: Status Updates |
-| Progress Signals | AI-Specific: Status Updates |
-| No Silent Operations | AI-Specific: Status Updates |
-| Phase Transitions | AI-Specific: Status Updates |
+| Announce Before Action | AI Rules: Status Updates |
+| Progress Signals | AI Rules: Status Updates |
+| No Silent Operations | AI Rules: Status Updates |
+| Phase Transitions | AI Rules: Status Updates |
 
 ---
 
@@ -35,10 +35,10 @@ The user is always in charge.
 
 | Principle | Implemented In |
 |-----------|----------------|
-| Approval Required | CCO-Specific: Approval Flow |
-| Priority Classification | CCO-Specific: Priority Levels |
-| Safety Classification | CCO-Specific: Safety Classification |
-| Rollback Support | CCO-Specific: Pre-Operation Safety |
+| Approval Required | Tool Rules: Approval Flow |
+| Priority Classification | Tool Rules: Priority Levels |
+| Safety Classification | Tool Rules: Safety Classification |
+| Rollback Support | Tool Rules: Pre-Operation Safety |
 
 ---
 
@@ -48,10 +48,10 @@ Single source of truth, no duplication.
 
 | Principle | Implemented In |
 |-----------|----------------|
-| No Hardcoded Values | CCO-Specific: Question Formatting |
-| Reference Over Repeat | All commands use `**Standards:** X \| Y` |
-| Conditional Loading | CCO-Specific: Context Integration |
-| Context-Driven Thresholds | CCO-Specific: Context Integration |
+| No Hardcoded Values | Tool Rules: Question Formatting |
+| Reference Over Repeat | All commands use `**Tool Rules:** !cat...` |
+| Conditional Loading | Tool Rules: Context Integration |
+| Context-Driven Thresholds | Tool Rules: Context Integration |
 
 ---
 
@@ -61,10 +61,10 @@ Optimize for context window usage.
 
 | Principle | Implemented In |
 |-----------|----------------|
-| Semantic Density | AI-Specific: Context Optimization |
-| Structured Format | AI-Specific: Context Optimization |
-| Front-load Critical | AI-Specific: Context Optimization |
-| Bounded Context | AI-Specific: Context Optimization |
+| Semantic Density | AI Rules: Context Optimization |
+| Structured Format | AI Rules: Context Optimization |
+| Front-load Critical | AI Rules: Context Optimization |
+| Bounded Context | AI Rules: Context Optimization |
 
 ---
 
@@ -72,30 +72,30 @@ Optimize for context window usage.
 
 All changes follow a consistent safety pattern.
 
-| Step | Standard |
-|------|----------|
-| 1. Pre-Check | CCO-Specific: Pre-Operation Safety |
-| 2. Analyze | CCO-Specific: Command Flow |
-| 3. Report | CCO-Specific: Output Formatting |
-| 4. Approve | CCO-Specific: Approval Flow |
-| 5. Apply | CCO-Specific: Fix Workflow |
-| 6. Verify | CCO-Specific: Fix Workflow (Accounting) |
+| Step | Rule |
+|------|------|
+| 1. Pre-Check | Tool Rules: Pre-Operation Safety |
+| 2. Analyze | Tool Rules: Command Flow |
+| 3. Report | Tool Rules: Output Formatting |
+| 4. Approve | Tool Rules: Approval Flow |
+| 5. Apply | Tool Rules: Fix Workflow |
+| 6. Verify | Tool Rules: Fix Workflow (Accounting) |
 
 ---
 
-## Standard Categories
+## Rule Categories
 
 | Category | Scope |
 |----------|-------|
-| Universal | All projects, AI/human agnostic |
-| AI-Specific | All AI assistants, model agnostic |
-| CCO-Specific | CCO workflow mechanisms |
-| Project-Specific | Dynamically selected by /cco-tune |
+| Core | All projects, AI/human agnostic |
+| AI | All AI assistants, model agnostic |
+| Tools | CCO workflow mechanisms (on-demand) |
+| Adaptive | Dynamically selected by /cco-tune |
 
-For standard counts, see [README](../README.md#standards).
+For rule counts, see [README](../README.md#rules).
 
 ---
 
-*See [Standards Documentation](standards.md) for full details*
+*See [Rules Documentation](rules.md) for full details*
 
 *Back to [README](../README.md)*

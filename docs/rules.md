@@ -1,39 +1,43 @@
-# CCO Standards
+# CCO Rules
 
-Complete reference of all CCO standards organized by category.
+Complete reference of all CCO rules organized by category.
 
-For standard counts, see [README](../README.md#standards).
+For rule counts, see [README](../README.md#rules).
 
-**Counting:** `grep -c "| \* " <file>` - each standard row starts with `| * `
+**Counting:** `grep -c "| \* " <file>` - each rule row starts with `| * `
 
 ---
 
-## Standards Architecture
+## Rules Architecture
 
 ```
 ┌─────────────────────────────────────────────────────────────────┐
-│  ALWAYS ACTIVE (Base Standards)                                 │
+│  ALWAYS ACTIVE (Core + AI Rules)                                │
 ├─────────────────────────────────────────────────────────────────┤
-│  Universal      - All projects, AI/human agnostic               │
-│  AI-Specific    - All AI assistants, model agnostic             │
-│  CCO-Specific   - CCO workflow mechanisms                       │
+│  Core         - All projects, AI/human agnostic                 │
+│  AI           - All AI assistants, model agnostic               │
 ├─────────────────────────────────────────────────────────────────┤
-│  DYNAMICALLY LOADED (Project-Specific)                          │
+│  ON-DEMAND (Tool Rules)                                         │
+├─────────────────────────────────────────────────────────────────┤
+│  Tools        - CCO command/agent workflow mechanisms           │
+│  Loaded via: !`cat ~/.claude/rules/tools.md 2>/dev/null`        │
+├─────────────────────────────────────────────────────────────────┤
+│  DYNAMICALLY LOADED (Adaptive Rules)                            │
 ├─────────────────────────────────────────────────────────────────┤
 │  Selected by /cco-tune based on project detection               │
-│  Only relevant standards are loaded per project                 │
+│  Only relevant rules are loaded per project                     │
 └─────────────────────────────────────────────────────────────────┘
 ```
 
 ---
 
-## Universal Standards
+## Core Rules
 
 *AI/human agnostic - fundamental principles for all software projects.*
 
 ### Code Quality
-| Standard | Rule |
-|----------|------|
+| Rule | Description |
+|------|-------------|
 | * Fail-Fast | No silent fallbacks, immediate visible failure |
 | * DRY | Single source of truth, no duplicates |
 | * No-Orphans | Every function called, every import used |
@@ -44,8 +48,8 @@ For standard counts, see [README](../README.md#standards).
 | * Scope | Only requested changes, general solutions |
 
 ### File & Resource
-| Standard | Rule |
-|----------|------|
+| Rule | Description |
+|------|-------------|
 | * Minimal-Touch | Only files required for task |
 | * No-Unsolicited | Never create files unless requested |
 | * Paths | Forward slash, relative, quote spaces |
@@ -53,8 +57,8 @@ For standard counts, see [README](../README.md#standards).
 | * Skip | .git, node_modules, __pycache__, venv, dist, build |
 
 ### Security
-| Standard | Rule |
-|----------|------|
+| Rule | Description |
+|------|-------------|
 | * Secrets | Env vars or vault only |
 | * Input | Validate at system boundaries |
 | * Access | Least privilege, secure defaults |
@@ -62,16 +66,16 @@ For standard counts, see [README](../README.md#standards).
 | * Defense | Multiple layers, don't trust single control |
 
 ### Testing
-| Standard | Rule |
-|----------|------|
+| Rule | Description |
+|------|-------------|
 | * Coverage | 60-90% context-adjusted |
 | * Isolation | No inter-test deps, reproducible |
 | * Integrity | Never edit tests to pass code |
 | * Critical-Paths | E2E for critical workflows |
 
 ### Error Handling
-| Standard | Rule |
-|----------|------|
+| Rule | Description |
+|------|-------------|
 | * Catch | Log context, recover or propagate |
 | * No-Silent | Never swallow exceptions |
 | * User-Facing | Clarity + actionable |
@@ -79,37 +83,37 @@ For standard counts, see [README](../README.md#standards).
 | * Rollback | Consistent state on failure |
 
 ### Documentation
-| Standard | Rule |
-|----------|------|
+| Rule | Description |
+|------|-------------|
 | * README | Description, setup, usage |
 | * CHANGELOG | Versions with breaking changes |
 | * Comments | Why not what |
 | * Examples | Working, common use cases |
 
 ### Workflow
-| Standard | Rule |
-|----------|------|
+| Rule | Description |
+|------|-------------|
 | * Conventions | Match existing patterns |
 | * Reference-Integrity | Find ALL refs, update, verify |
 | * Decompose | Break complex tasks into steps |
 | * Version | SemVer (MAJOR.MINOR.PATCH) |
 
 ### UX/DX
-| Standard | Rule |
-|----------|------|
+| Rule | Description |
+|------|-------------|
 | * Minimum-Friction | Fewest steps to goal |
 | * Maximum-Clarity | Unambiguous output |
 | * Predictable | Consistent behavior |
 
 ---
 
-## AI-Specific Standards
+## AI Rules
 
 *Portable across Claude/Codex/Gemini - AGENTS.md compatible.*
 
 ### Context Optimization
-| Standard | Rule |
-|----------|------|
+| Rule | Description |
+|------|-------------|
 | * Semantic-Density | Concise over verbose |
 | * Structured | Tables/lists over prose |
 | * Front-load | Critical info first |
@@ -117,8 +121,8 @@ For standard counts, see [README](../README.md#standards).
 | * Scope | Bounded, reference over repeat |
 
 ### AI Behavior
-| Standard | Rule |
-|----------|------|
+| Rule | Description |
+|------|-------------|
 | * Read-First | NEVER propose edits to unread files |
 | * Plan-Before-Act | Understand full scope before any action |
 | * Incremental | Complete one step fully before starting next |
@@ -128,8 +132,8 @@ For standard counts, see [README](../README.md#standards).
 | * Confidence | Explicitly state uncertainty level |
 
 ### Quality Control
-| Standard | Rule |
-|----------|------|
+| Rule | Description |
+|------|-------------|
 | * Understand-First | No vibe coding |
 | * Adapt | Examples to context, don't copy blind |
 | * No-Hallucination | Only existing APIs/features |
@@ -137,23 +141,23 @@ For standard counts, see [README](../README.md#standards).
 | * Motivate | Explain why behaviors matter |
 
 ### Status Updates
-| Standard | Rule |
-|----------|------|
+| Rule | Description |
+|------|-------------|
 | * Announce | Before action, not after |
 | * Progress | Starting > In progress > Completed |
 | * Transitions | Clear phase signals |
 | * No-Silent | User always knows state |
 
 ### Multi-Model
-| Standard | Rule |
-|----------|------|
+| Rule | Description |
+|------|-------------|
 | * Agnostic | No model-specific syntax |
 | * Graceful | Account for different capabilities |
 | * Portable | Patterns work across models |
 
-### Output Standards
-| Standard | Rule |
-|----------|------|
+### Output Rules
+| Rule | Description |
+|------|-------------|
 | * Error | `[SEVERITY] {What} in {file:line}` |
 | * Status | OK / WARN / FAIL |
 | * Accounting | done + skip + fail = total |
@@ -161,13 +165,13 @@ For standard counts, see [README](../README.md#standards).
 
 ---
 
-## CCO-Specific Standards
+## Tool Rules
 
-*CCO workflow mechanisms - excluded from AGENTS.md export.*
+*CCO workflow mechanisms - excluded from AGENTS.md export. Loaded on-demand by commands/agents.*
 
 ### Core Workflow
-| Standard | Rule |
-|----------|------|
+| Rule | Description |
+|------|-------------|
 | * Command-Flow | Context Check > Read > Execute > Report |
 | * Safety | Git status check, dirty handling, rollback |
 | * Classification | Safe (auto) vs Risky (approval) |
@@ -176,15 +180,15 @@ For standard counts, see [README](../README.md#standards).
 | * Priority | CRITICAL > HIGH > MEDIUM > LOW |
 
 ### Approval & Output
-| Standard | Rule |
-|----------|------|
+| Rule | Description |
+|------|-------------|
 | * Approval-Flow | AskUserQuestion, multiSelect, pagination |
 | * Output-Formatting | ASCII tables, alignment, status |
 | * Question-Formatting | Labels, precedence, ordering |
 
-### New Standards (v1.1.0)
-| Standard | Rule |
-|----------|------|
+### Workflow Enhancements (v1.1.0+)
+| Rule | Description |
+|------|-------------|
 | * Dynamic-Context | `!` backtick syntax for real-time context injection |
 | * Tool-Restrictions | `allowed-tools` frontmatter for command security |
 | * Parallel-Execution | Launch multiple agents simultaneously |
@@ -194,20 +198,20 @@ For standard counts, see [README](../README.md#standards).
 | * Task-Tracking | TodoWrite with accounting verification |
 
 ### Integration
-| Standard | Rule |
-|----------|------|
+| Rule | Description |
+|------|-------------|
 | * Context-Integration | Read markers, apply thresholds |
 | * Tool-Integration | Parallel/sequential, subagents |
 
 ---
 
-## Project-Specific Standards
+## Adaptive Rules
 
 *Dynamically selected by /cco-tune based on project detection.*
 
 ### Tier System
 
-**Cumulative tiers:** Higher tiers include all standards from lower tiers.
+**Cumulative tiers:** Higher tiers include all rules from lower tiers.
 
 | Category | Tiers | Behavior |
 |----------|-------|----------|
@@ -246,18 +250,18 @@ For standard counts, see [README](../README.md#standards).
 
 ### Full list
 
-See [cco-standards-conditional.md](../claudecodeoptimizer/content/standards/cco-standards-conditional.md) for complete standard definitions.
+See [adaptive.md](../claudecodeoptimizer/content/rules/adaptive.md) for complete rule definitions.
 
 ---
 
 ## Export Behavior
 
-| Format | Universal | AI-Specific | CCO-Specific | Project-Specific |
-|--------|-----------|-------------|--------------|------------------|
+| Format | Core | AI | Tool | Adaptive |
+|--------|------|-----|------|----------|
 | **AGENTS.md** | Yes | Yes | No | Yes (triggered) |
 | **CLAUDE.md** | Yes | Yes | Yes | Yes (triggered) |
 
-CCO-Specific standards are excluded from AGENTS.md export because they depend on CCO's approval flow and tools.
+Tool rules are excluded from AGENTS.md export because they depend on CCO's approval flow and tools.
 
 ---
 

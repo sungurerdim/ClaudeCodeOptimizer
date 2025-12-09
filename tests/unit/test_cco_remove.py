@@ -386,15 +386,97 @@ class TestRemoveLocalStatusline:
         assert result is False
 
 
+class TestHasRulesDir:
+    """Test has_rules_dir function."""
+
+    def test_no_dir(self, tmp_path):
+        """Test returns False when rules dir doesn't exist."""
+        from claudecodeoptimizer.cco_remove import has_rules_dir
+
+        with patch("claudecodeoptimizer.cco_remove.RULES_DIR", tmp_path / "nonexistent"):
+            result = has_rules_dir()
+        assert result is False
+
+    def test_empty_dir(self, tmp_path):
+        """Test returns False when rules dir exists but is empty."""
+        from claudecodeoptimizer.cco_remove import has_rules_dir
+
+        rules_dir = tmp_path / "rules"
+        rules_dir.mkdir()
+        with patch("claudecodeoptimizer.cco_remove.RULES_DIR", rules_dir):
+            result = has_rules_dir()
+        assert result is False
+
+    def test_with_rules(self, tmp_path):
+        """Test returns True when rules dir has .md files."""
+        from claudecodeoptimizer.cco_remove import has_rules_dir
+
+        rules_dir = tmp_path / "rules"
+        rules_dir.mkdir()
+        (rules_dir / "core.md").write_text("# Core Rules")
+        with patch("claudecodeoptimizer.cco_remove.RULES_DIR", rules_dir):
+            result = has_rules_dir()
+        assert result is True
+
+
+class TestRemoveRulesDir:
+    """Test remove_rules_dir function."""
+
+    def test_remove_rules_dir(self, tmp_path, capsys):
+        """Test removes rules directory."""
+        from claudecodeoptimizer.cco_remove import remove_rules_dir
+
+        rules_dir = tmp_path / "rules"
+        rules_dir.mkdir()
+        (rules_dir / "core.md").write_text("# Core")
+        (rules_dir / "ai.md").write_text("# AI")
+
+        with patch("claudecodeoptimizer.cco_remove.RULES_DIR", rules_dir):
+            result = remove_rules_dir(verbose=True)
+
+        assert result is True
+        assert not rules_dir.exists()
+        captured = capsys.readouterr()
+        assert "rules/ (2 files)" in captured.out
+
+    def test_no_dir_to_remove(self, tmp_path):
+        """Test returns False when no rules dir exists."""
+        from claudecodeoptimizer.cco_remove import remove_rules_dir
+
+        with patch("claudecodeoptimizer.cco_remove.RULES_DIR", tmp_path / "nonexistent"):
+            result = remove_rules_dir(verbose=False)
+        assert result is False
+
+
 class TestDisplayRemovalPlan:
     """Test _display_removal_plan function."""
+
+    def test_display_with_rules_dir(self, capsys):
+        """Test displays rules directory section when present."""
+        items = {
+            "method": None,
+            "files": {"commands": [], "agents": []},
+            "rules": [],
+            "rules_dir": True,
+            "statusline": False,
+            "permissions": False,
+            "local_statusline": False,
+            "local_permissions": False,
+            "total_files": 0,
+            "total": 1,
+        }
+        _display_removal_plan(items)
+        captured = capsys.readouterr()
+        assert "Rules directory:" in captured.out
+        assert "~/.claude/rules/" in captured.out
 
     def test_display_with_statusline(self, capsys):
         """Test displays statusline section when present."""
         items = {
             "method": None,
             "files": {"commands": [], "agents": []},
-            "standards": [],
+            "rules": [],
+            "rules_dir": False,
             "statusline": True,
             "permissions": False,
             "local_statusline": False,
@@ -413,7 +495,8 @@ class TestDisplayRemovalPlan:
         items = {
             "method": None,
             "files": {"commands": [], "agents": []},
-            "standards": [],
+            "rules": [],
+            "rules_dir": False,
             "statusline": False,
             "permissions": True,
             "local_statusline": False,
@@ -431,7 +514,8 @@ class TestDisplayRemovalPlan:
         items = {
             "method": None,
             "files": {"commands": [], "agents": []},
-            "standards": [],
+            "rules": [],
+            "rules_dir": False,
             "statusline": False,
             "permissions": False,
             "local_statusline": True,
@@ -449,12 +533,35 @@ class TestDisplayRemovalPlan:
 class TestExecuteRemoval:
     """Test _execute_removal function."""
 
+    def test_execute_with_rules_dir(self, capsys):
+        """Test executes rules directory removal when present."""
+        items = {
+            "method": None,
+            "files": {"commands": [], "agents": []},
+            "rules": [],
+            "rules_dir": True,
+            "statusline": False,
+            "permissions": False,
+            "local_statusline": False,
+            "local_permissions": False,
+            "total_files": 0,
+            "total": 1,
+        }
+        with patch("claudecodeoptimizer.cco_remove.remove_rules_dir") as mock_remove:
+            mock_remove.return_value = True
+            _execute_removal(items)
+
+        mock_remove.assert_called_once()
+        captured = capsys.readouterr()
+        assert "Removing rules directory" in captured.out
+
     def test_execute_with_statusline(self, capsys):
         """Test executes statusline removal when present."""
         items = {
             "method": None,
             "files": {"commands": [], "agents": []},
-            "standards": [],
+            "rules": [],
+            "rules_dir": False,
             "statusline": True,
             "permissions": False,
             "local_statusline": False,
@@ -475,7 +582,8 @@ class TestExecuteRemoval:
         items = {
             "method": None,
             "files": {"commands": [], "agents": []},
-            "standards": [],
+            "rules": [],
+            "rules_dir": False,
             "statusline": False,
             "permissions": True,
             "local_statusline": False,
@@ -496,7 +604,8 @@ class TestExecuteRemoval:
         items = {
             "method": None,
             "files": {"commands": [], "agents": []},
-            "standards": [],
+            "rules": [],
+            "rules_dir": False,
             "statusline": False,
             "permissions": False,
             "local_statusline": True,
@@ -541,31 +650,44 @@ class TestRemoveClaudeMdStandardsNoMatches:
 
 
 class TestMain:
+    @patch("claudecodeoptimizer.cco_remove.has_rules_dir")
     @patch("claudecodeoptimizer.cco_remove.detect_install_method")
     @patch("claudecodeoptimizer.cco_remove.list_cco_files")
-    @patch("claudecodeoptimizer.cco_remove.has_claude_md_standards")
+    @patch("claudecodeoptimizer.cco_remove.has_claude_md_rules")
     @patch("claudecodeoptimizer.cco_remove.has_cco_statusline")
-    def test_not_installed(self, mock_statusline, mock_standards, mock_list, mock_detect, capsys):
+    def test_not_installed(
+        self, mock_statusline, mock_rules, mock_list, mock_detect, mock_rules_dir, capsys
+    ):
         mock_detect.return_value = None
         mock_list.return_value = {"agents": [], "commands": []}
-        mock_standards.return_value = []
+        mock_rules.return_value = []
+        mock_rules_dir.return_value = False
         mock_statusline.return_value = False
         result = main()
         assert result == 0
         captured = capsys.readouterr()
         assert "not installed" in captured.out
 
+    @patch("claudecodeoptimizer.cco_remove.has_rules_dir")
     @patch("claudecodeoptimizer.cco_remove.detect_install_method")
     @patch("claudecodeoptimizer.cco_remove.list_cco_files")
-    @patch("claudecodeoptimizer.cco_remove.has_claude_md_standards")
+    @patch("claudecodeoptimizer.cco_remove.has_claude_md_rules")
     @patch("claudecodeoptimizer.cco_remove.has_cco_statusline")
     @patch("builtins.input")
     def test_cancelled(
-        self, mock_input, mock_statusline, mock_standards, mock_list, mock_detect, capsys
+        self,
+        mock_input,
+        mock_statusline,
+        mock_rules,
+        mock_list,
+        mock_detect,
+        mock_rules_dir,
+        capsys,
     ):
         mock_detect.return_value = "pip"
         mock_list.return_value = {"agents": ["a.md"], "commands": ["c.md"]}
-        mock_standards.return_value = ["CCO Standards"]
+        mock_rules.return_value = ["CCO Rules"]
+        mock_rules_dir.return_value = False
         mock_statusline.return_value = False
         mock_input.return_value = "n"
         result = main()
@@ -573,13 +695,14 @@ class TestMain:
         captured = capsys.readouterr()
         assert "Cancelled" in captured.out
 
+    @patch("claudecodeoptimizer.cco_remove.has_rules_dir")
     @patch("claudecodeoptimizer.cco_remove.detect_install_method")
     @patch("claudecodeoptimizer.cco_remove.list_cco_files")
-    @patch("claudecodeoptimizer.cco_remove.has_claude_md_standards")
+    @patch("claudecodeoptimizer.cco_remove.has_claude_md_rules")
     @patch("claudecodeoptimizer.cco_remove.has_cco_statusline")
     @patch("claudecodeoptimizer.cco_remove.uninstall_package")
     @patch("claudecodeoptimizer.cco_remove.remove_cco_files")
-    @patch("claudecodeoptimizer.cco_remove.remove_claude_md_standards")
+    @patch("claudecodeoptimizer.cco_remove.remove_claude_md_rules")
     @patch("builtins.input")
     def test_full_removal(
         self,
@@ -588,27 +711,30 @@ class TestMain:
         mock_rm_files,
         mock_uninstall,
         mock_statusline,
-        mock_standards,
+        mock_rules,
         mock_list,
         mock_detect,
+        mock_rules_dir,
         capsys,
     ):
         mock_detect.return_value = "pip"
         mock_list.return_value = {"commands": ["c.md"], "agents": ["a.md"]}
-        mock_standards.return_value = ["CCO Standards"]
+        mock_rules.return_value = ["CCO Rules"]
+        mock_rules_dir.return_value = False
         mock_statusline.return_value = False
         mock_input.return_value = "y"
         mock_uninstall.return_value = True
         mock_rm_files.return_value = {"commands": 1, "agents": 1}
-        mock_rm_rules.return_value = ["CCO Standards"]
+        mock_rm_rules.return_value = ["CCO Rules"]
         result = main()
         assert result == 0
         captured = capsys.readouterr()
         assert "removed successfully" in captured.out
 
+    @patch("claudecodeoptimizer.cco_remove.has_rules_dir")
     @patch("claudecodeoptimizer.cco_remove.detect_install_method")
     @patch("claudecodeoptimizer.cco_remove.list_cco_files")
-    @patch("claudecodeoptimizer.cco_remove.has_claude_md_standards")
+    @patch("claudecodeoptimizer.cco_remove.has_claude_md_rules")
     @patch("claudecodeoptimizer.cco_remove.has_cco_statusline")
     @patch("claudecodeoptimizer.cco_remove.uninstall_package")
     @patch("builtins.input")
@@ -617,14 +743,16 @@ class TestMain:
         mock_input,
         mock_uninstall,
         mock_statusline,
-        mock_standards,
+        mock_rules,
         mock_list,
         mock_detect,
+        mock_rules_dir,
         capsys,
     ):
         mock_detect.return_value = "pip"
         mock_list.return_value = {"commands": [], "agents": []}
-        mock_standards.return_value = []
+        mock_rules.return_value = []
+        mock_rules_dir.return_value = False
         mock_statusline.return_value = False
         mock_input.return_value = "y"
         mock_uninstall.return_value = False

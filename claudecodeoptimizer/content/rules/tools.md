@@ -1,173 +1,11 @@
-<!-- CCO_STANDARDS_START -->
-# Universal Standards
-*AI/human agnostic - fundamental principles for all software projects*
-
-## Code Quality
-
-| Standard | Rule |
-|----------|------|
-| * Fail-Fast | No silent fallbacks, immediate visible failure |
-| * DRY | Single source of truth, no duplicates |
-| * No-Orphans | Every function called, every import used |
-| * Type-Safe | Annotations where supported, prefer immutable |
-| * Complexity | Cyclomatic <10 per function |
-| * Clean | Meaningful names, single responsibility, consistent style |
-| * Explicit | No magic values, clear intent |
-| * Scope | Only requested changes, general solutions |
-
-## File & Resource
-
-| Standard | Rule |
-|----------|------|
-| * Minimal-Touch | Only files required for task |
-| * No-Unsolicited | Never create files unless requested |
-| * Paths | Forward slash, relative, quote spaces |
-| * Cleanup | Temp files, handles, connections |
-| * Skip | .git, node_modules, __pycache__, venv, dist, build |
-
-## Security
-
-| Standard | Rule |
-|----------|------|
-| * Secrets | Env vars or vault only |
-| * Input | Validate at system boundaries |
-| * Access | Least privilege, secure defaults |
-| * Deps | Review before adding, keep updated |
-| * Defense | Multiple layers, don't trust single control |
-
-## Testing
-
-| Standard | Rule |
-|----------|------|
-| * Coverage | 60-90% context-adjusted |
-| * Isolation | No inter-test deps, reproducible |
-| * Integrity | Never edit tests to pass code |
-| * Critical-Paths | E2E for critical workflows |
-
-## Error Handling
-
-| Standard | Rule |
-|----------|------|
-| * Catch | Log context, recover or propagate |
-| * No-Silent | Never swallow exceptions |
-| * User-Facing | Clarity + actionable |
-| * Logs | Technical details only |
-| * Rollback | Consistent state on failure |
-
-## Documentation
-
-| Standard | Rule |
-|----------|------|
-| * README | Description, setup, usage |
-| * CHANGELOG | Versions with breaking changes |
-| * Comments | Why not what |
-| * Examples | Working, common use cases |
-
-## Workflow
-
-| Standard | Rule |
-|----------|------|
-| * Conventions | Match existing patterns |
-| * Reference-Integrity | Find ALL refs, update, verify |
-| * Decompose | Break complex tasks into steps |
-| * Version | SemVer (MAJOR.MINOR.PATCH) |
-
-## UX/DX
-
-| Standard | Rule |
-|----------|------|
-| * Minimum-Friction | Fewest steps to goal |
-| * Maximum-Clarity | Unambiguous output |
-| * Predictable | Consistent behavior |
-
----
-
-# AI-Specific Standards
-*Portable across Claude/Codex/Gemini - AGENTS.md compatible*
-
-## Context Optimization
-
-| Standard | Rule |
-|----------|------|
-| * Semantic-Density | Concise over verbose |
-| * Structured | Tables/lists over prose |
-| * Front-load | Critical info first |
-| * Hierarchy | H2 > H3 > bullets |
-| * Scope | Bounded, reference over repeat |
-
-## AI Behavior
-
-### Execution Order [CRITICAL]
-
-| Standard | Rule |
-|----------|------|
-| * Read-First | NEVER propose edits to unread files |
-| * Plan-Before-Act | Understand full scope before any action |
-| * Incremental | Complete one step fully before starting next |
-| * Verify | Confirm changes match stated intent |
-
-### Decision Making
-
-| Standard | Rule |
-|----------|------|
-| * Challenge | Question solutions that seem too perfect |
-| * Ask | When uncertain, clarify before proceeding |
-| * Confidence | Explicitly state uncertainty level for non-obvious conclusions |
-
-### Prohibited Patterns
-
-| Pattern | Rule |
-|---------|------|
-| * No-Guessing | Never guess file contents without reading |
-| * No-Premature | Never start implementation before understanding scope |
-| * No-Skip | Never skip verification steps |
-| * No-Assume | Never assume user intent without confirmation |
-
-## Quality Control
-
-| Standard | Rule |
-|----------|------|
-| * Understand-First | No vibe coding |
-| * Adapt | Examples to context, don't copy blind |
-| * No-Hallucination | Only existing APIs/features |
-| * Positive | What to do, not what to avoid |
-| * Motivate | Explain why behaviors matter |
-
-## Status Updates
-
-| Standard | Rule |
-|----------|------|
-| * Announce | Before action, not after |
-| * Progress | Starting > In progress > Completed |
-| * Transitions | Clear phase signals |
-| * No-Silent | User always knows state |
-
-## Multi-Model
-
-| Standard | Rule |
-|----------|------|
-| * Agnostic | No model-specific syntax |
-| * Graceful | Account for different capabilities |
-| * Portable | Patterns work across models |
-
-## Output Standards
-
-| Standard | Rule |
-|----------|------|
-| * Error | `[SEVERITY] {What} in {file:line}` |
-| * Status | OK / WARN / FAIL |
-| * Accounting | done + skip + fail = total |
-| * Structured | JSON/table when needed |
-
----
-
-# CCO-Specific Standards
-*CCO workflow mechanisms - excluded from AGENTS.md export*
+<!-- CCO_TOOLS_START -->
+# Tools Rules
+*On-demand loading for CCO commands and agents*
 
 ## Command Flow
 
-| Standard | Rule |
-|----------|------|
+| Rule | Description |
+|------|-------------|
 | * Context-Check | Verify CCO_CONTEXT, suggest /cco-tune if missing |
 | * Read-Context | Parse ./CLAUDE.md markers |
 | * Execute | Command-specific logic |
@@ -175,8 +13,8 @@
 
 ## Safety
 
-| Standard | Rule |
-|----------|------|
+| Rule | Description |
+|------|-------------|
 | * Pre-op | Git status before modifications |
 | * Dirty | Prompt Commit / Stash / Continue |
 | * Rollback | Clean state enables git checkout |
@@ -185,8 +23,8 @@
 
 **Safe (auto-apply):**
 
-| Standard | Rule |
-|----------|------|
+| Rule | Description |
+|------|-------------|
 | * Remove-Imports | Remove unused imports |
 | * Parameterize-SQL | Parameterize SQL queries |
 | * Move-Secrets | Move secrets to env |
@@ -195,8 +33,8 @@
 
 **Risky (require approval):**
 
-| Standard | Rule |
-|----------|------|
+| Rule | Description |
+|------|-------------|
 | * Auth-Changes | Auth/CSRF changes |
 | * DB-Schema | DB schema changes |
 | * API-Contract | API contract changes |
@@ -205,15 +43,15 @@
 
 ## Fix Workflow
 
-| Standard | Rule |
-|----------|------|
+| Rule | Description |
+|------|-------------|
 | * Flow | Analyze > Report > Approve > Apply > Verify |
 | * Output | `Applied: N \| Skipped: N \| Failed: N \| Total: N` |
 
 ## Impact Preview
 
-| Standard | Rule |
-|----------|------|
+| Rule | Description |
+|------|-------------|
 | * Direct | Files to modify |
 | * Dependents | Files that import/use |
 | * Tests | Coverage of affected code |
@@ -222,8 +60,8 @@
 
 ## Priority
 
-| Standard | Rule |
-|----------|------|
+| Rule | Description |
+|------|-------------|
 | * CRITICAL | Security, data exposure |
 | * HIGH | High-impact, low-effort |
 | * MEDIUM | Balanced impact/effort |
@@ -233,34 +71,34 @@
 
 ### Tool Configuration [STRICT]
 
-| Standard | Rule |
-|----------|------|
+| Rule | Description |
+|------|-------------|
 | * Tool | AskUserQuestion |
 | * MultiSelect | true (always) |
 
 ### Ordering [REQUIRED]
 
-| Standard | Rule |
-|----------|------|
-| * Priority-Order | CRITICAL → HIGH → MEDIUM → LOW |
+| Rule | Description |
+|------|-------------|
+| * Priority-Order | CRITICAL -> HIGH -> MEDIUM -> LOW |
 
 ### Format [EXACT]
 
-| Standard | Rule |
-|----------|------|
+| Rule | Description |
+|------|-------------|
 | * Item-Format | `{description} [{file:line}] [{safe\|risky}]` |
 
 ### Batch Options [REQUIRED]
 
-| Standard | Rule |
-|----------|------|
+| Rule | Description |
+|------|-------------|
 | * All-Option | First option MUST be: "All ({N})" where N = total items |
 | * Individual | Remaining options: individual items |
 
 ### Pagination [LIMITS]
 
-| Standard | Rule |
-|----------|------|
+| Rule | Description |
+|------|-------------|
 | * Max-Questions | Max 4 questions per AskUserQuestion call |
 | * Max-Options | Max 4 options per question |
 | * Overflow | If more items: use multiple sequential calls |
@@ -269,8 +107,8 @@
 
 ### Separation Rules [CRITICAL]
 
-| Standard | Rule |
-|----------|------|
+| Rule | Description |
+|------|-------------|
 | * Separate-Categories | Present different categories in SEPARATE batches |
 
 | Category Type | Examples | Batch |
@@ -281,94 +119,64 @@
 
 ### Labels [MANDATORY]
 
-| Standard | Rule |
-|----------|------|
+| Rule | Description |
+|------|-------------|
 | * One-Label | Each option receives exactly ONE label |
 | * Current | `[current]` - Matches existing config (priority 1) |
 | * Detected | `[detected]` - Auto-detected, not in config (priority 2) |
 | * Recommended | `[recommended]` - Best practice, max 1/question (priority 3) |
-| * Precedence | If detected AND current both apply → show `[current]` only |
+| * Precedence | If detected AND current both apply -> show `[current]` only |
 
 ### Ordering [REQUIRED]
 
-| Standard | Rule |
-|----------|------|
-| * Numeric | Ascending (60 → 70 → 80 → 90) |
-| * Severity | Safest → riskiest |
-| * Scope | Narrowest → widest |
+| Rule | Description |
+|------|-------------|
+| * Numeric | Ascending (60 -> 70 -> 80 -> 90) |
+| * Severity | Safest -> riskiest |
+| * Scope | Narrowest -> widest |
 
 ### Verification [PRE-OUTPUT]
 
-| Standard | Rule |
-|----------|------|
+| Rule | Description |
+|------|-------------|
 | * Check-Categories | Categories separated into distinct batches |
 | * Check-Labels | Each option has exactly ONE label |
 | * Check-Recommended | Maximum ONE `[recommended]` per question |
 | * Check-Order | Options ordered per rules above |
 
-### Examples
-
-<example type="correct">
-**Batch 1 - Settings:**
-Q: "Select output format"
-- JSON [current]
-- YAML
-- XML [recommended]
-
-**Batch 2 - Permissions:**
-Q: "Select access level"
-- Read-only [detected]
-- Full access
-</example>
-
-<example type="incorrect" reason="Mixed categories">
-Q: "Configure options"
-- JSON output [current]
-- Full access [detected]
-- Strict mode
-</example>
-
-<example type="incorrect" reason="Multiple labels">
-- JSON [current] [recommended]
-</example>
-
-<example type="incorrect" reason="Missing label on detected item">
-- JSON (detected but no label shown)
-</example>
-
 ## Output Formatting
 
 ### Table Characters [STRICT]
 
-| Standard | Rule |
-|----------|------|
+| Rule | Description |
+|------|-------------|
 | * Borders | `─│┌┐└┘├┤┬┴┼` |
 | * Headers | `═║╔╗╚╝` |
 
 ### Alignment [REQUIRED]
 
-| Standard | Rule |
-|----------|------|
+| Rule | Description |
+|------|-------------|
 | * Numbers | Right-aligned |
 | * Text | Left-aligned |
 | * Status | Centered |
 
 ### Status Indicators [EXACT]
 
-| Standard | Rule |
-|----------|------|
+| Rule | Description |
+|------|-------------|
 | * Values | OK \| WARN \| FAIL \| PASS \| SKIP |
 
 ### Progress Bars [FORMULA]
 
-| Standard | Rule |
-|----------|------|
-| * Formula | `filled = round(percentage / 100 * 8)` → `████░░░░` |
+| Rule | Description |
+|------|-------------|
+| * Formula | `filled = round(percentage / 100 * 8)` -> `████░░░░` |
 
 ### Prohibited
 
-| Standard | Rule |
-|----------|------|
+| Rule | Description |
+|------|-------------|
 | * No-Emojis | No emojis in tables |
 | * No-Unicode | No unicode decorations beyond specified |
 | * No-ASCII-Art | No ASCII art headers |
@@ -377,8 +185,8 @@ Q: "Configure options"
 
 ### Injection Syntax [REQUIRED]
 
-| Standard | Rule |
-|----------|------|
+| Rule | Description |
+|------|-------------|
 | * Syntax | Use `!` backtick for real-time context |
 | * Git-Status | `!`git status --short`` |
 | * Branch | `!`git branch --show-current`` |
@@ -395,8 +203,8 @@ Q: "Configure options"
 
 ### Benefits
 
-| Standard | Rule |
-|----------|------|
+| Rule | Description |
+|------|-------------|
 | * Accuracy | Real-time accuracy over stale assumptions |
 | * Anti-Hallucination | Reduces hallucination risk |
 | * Efficiency | Eliminates redundant file reads |
@@ -405,8 +213,8 @@ Q: "Configure options"
 
 ### Frontmatter Format [STRICT]
 
-| Standard | Rule |
-|----------|------|
+| Rule | Description |
+|------|-------------|
 | * Name | `name: command-name` |
 | * Description | `description: Brief description` |
 | * Tools | `allowed-tools: Tool1(*), Tool2(pattern:*)` |
@@ -422,8 +230,8 @@ Q: "Configure options"
 
 ### Security Benefit
 
-| Standard | Rule |
-|----------|------|
+| Rule | Description |
+|------|-------------|
 | * Scope | Commands can only use declared tools |
 | * Prevention | Prevents accidental destructive operations |
 | * Explicit | Explicit scope = predictable behavior |
@@ -441,16 +249,16 @@ Q: "Configure options"
 
 ### Agent Parallelization Pattern
 
-| Standard | Rule |
-|----------|------|
+| Rule | Description |
+|------|-------------|
 | * Launch | Launch agents simultaneously |
 | * Scope | Each agent handles distinct scope |
 | * Merge | Merge results after all complete |
 
 ### Benefits
 
-| Standard | Rule |
-|----------|------|
+| Rule | Description |
+|------|-------------|
 | * Speed | Faster execution (N agents = ~1/N time) |
 | * Coverage | Better coverage (diverse search strategies) |
 | * Context | Reduced context switching |
@@ -459,8 +267,8 @@ Q: "Configure options"
 
 ### Single-Message Enforcement [STRICT]
 
-| Standard | Rule |
-|----------|------|
+| Rule | Description |
+|------|-------------|
 | * No-Questions | Do not ask questions |
 | * Defaults | Use smart defaults for all options |
 | * No-Intermediate | Do not output intermediate text |
@@ -477,8 +285,8 @@ Q: "Configure options"
 
 ### Output Restriction
 
-| Standard | Rule |
-|----------|------|
+| Rule | Description |
+|------|-------------|
 | * Single-Message | Complete ALL steps in a single message |
 | * No-Extra-Tools | Do not use any other tools |
 | * No-Extra-Text | Do not send any other text besides tool calls and final summary |
@@ -496,8 +304,8 @@ Q: "Configure options"
 
 ### False Positive Prevention
 
-| Standard | Rule |
-|----------|------|
+| Rule | Description |
+|------|-------------|
 | * Trust | False positives erode user trust faster than missed issues |
 | * Lower | When uncertain between two severities, choose lower |
 | * Genuine | Only flag issues that genuinely block users |
@@ -505,11 +313,11 @@ Q: "Configure options"
 
 ### Prohibited Escalations
 
-| Standard | Rule |
-|----------|------|
-| * Style | Style issues → never CRITICAL or HIGH |
-| * Unverified | Unverified claims → never above MEDIUM |
-| * Single | Single occurrence → never CRITICAL unless security |
+| Rule | Description |
+|------|-------------|
+| * Style | Style issues -> never CRITICAL or HIGH |
+| * Unverified | Unverified claims -> never above MEDIUM |
+| * Single | Single occurrence -> never CRITICAL unless security |
 
 ## Skip Criteria
 
@@ -527,16 +335,16 @@ Q: "Configure options"
 
 ### Inline Skip Markers
 
-| Standard | Rule |
-|----------|------|
+| Rule | Description |
+|------|-------------|
 | * Line | `// cco-ignore` or `# cco-ignore` - skip this line |
 | * File | `// cco-ignore-file` or `# cco-ignore-file` - skip entire file |
 | * Markdown | `<!-- cco-ignore -->` - skip in markdown |
 
 ### Generated File Detection
 
-| Standard | Rule |
-|----------|------|
+| Rule | Description |
+|------|-------------|
 | * Minified | `*.min.js`, `*.min.css` |
 | * Generated | `*.generated.*`, `*.auto.*` |
 | * Header | Files with `// @generated` or `# Generated by` header |
@@ -545,17 +353,17 @@ Q: "Configure options"
 
 ### Pre-Execution Requirement [REQUIRED]
 
-| Standard | Rule |
-|----------|------|
+| Rule | Description |
+|------|-------------|
 | * Create | Create TODO list with ALL items |
-| * Status | Mark each as: pending → in_progress → completed |
+| * Status | Mark each as: pending -> in_progress -> completed |
 | * No-Skip | Never skip items - update status instead |
 | * Single | Exactly ONE item in_progress at a time |
 
 ### Accounting Verification
 
-| Standard | Rule |
-|----------|------|
+| Rule | Description |
+|------|-------------|
 | * Total | Final output MUST satisfy: `done + skip + fail = total` |
 
 ### Progress Visibility
@@ -569,10 +377,10 @@ Q: "Configure options"
 
 ## Integration
 
-| Standard | Rule |
-|----------|------|
+| Rule | Description |
+|------|-------------|
 | * Context | Read CCO_CONTEXT_START markers |
 | * Apply | Guidelines, Thresholds, Applicable |
 | * Tools | Parallel independent, sequential dependent |
 | * Thinking | 5K standard, 8K medium, 10K complex |
-<!-- CCO_STANDARDS_END -->
+<!-- CCO_TOOLS_END -->

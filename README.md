@@ -1,6 +1,6 @@
 # ClaudeCodeOptimizer
 
-A process and standards layer for Claude Code in the Opus 4.5 era.
+A process and rules layer for Claude Code in the Opus 4.5 era.
 
 [![Python 3.10+](https://img.shields.io/badge/python-3.10+-blue.svg)](https://www.python.org/downloads/)
 [![License: MIT](https://img.shields.io/badge/license-MIT-green.svg)](LICENSE)
@@ -43,7 +43,7 @@ Inside Claude Code:
 
 - **Teach Claude to code** - Opus 4.5 already knows
 - **Replace your judgment** - Every change requires approval
-- **Add overhead** - Standards are guidance, not blockers
+- **Add overhead** - Rules are guidance, not blockers
 - **Lock you in** - Export to AGENTS.md anytime
 
 ---
@@ -82,38 +82,29 @@ CCO commands use Claude Code's `!` backtick syntax for **real-time context at lo
 
 ---
 
-## Standards
+## Rules
 
-CCO uses a 4-category standards system:
+CCO uses a 4-category rules system:
 
-| Category | Scope | Export |
-|----------|-------|--------|
-| **Universal** | All projects, AI/human agnostic | Both |
-| **AI-Specific** | All AI assistants, model agnostic | Both |
-| **CCO-Specific** | CCO workflow mechanisms | CLAUDE.md only |
-| **Project-Specific** | Selected by /cco-tune based on detection | Both |
+| Category | Scope | Loading |
+|----------|-------|---------|
+| **Core** | All projects, fundamental principles | Always (CLAUDE.md) |
+| **AI** | All AI assistants, model agnostic | Always (CLAUDE.md) |
+| **Tools** | CCO command/agent mechanisms | On-demand (~/.claude/rules/) |
+| **Adaptive** | Selected by /cco-tune based on detection | Project-specific |
 
-| Type | Count |
-|------|-------|
-| Universal | 38 |
-| AI-Specific | 32 |
-| CCO-Specific | 108 |
-| **Base Total** | **178** |
-| Project-Specific Pool | 63 |
-| **Total Pool** | **241** |
+**Counting:** `grep -c "| \* " <file>` - each rule row starts with `| * `
 
-**Counting:** `grep -c "| \* " <file>` - each standard row starts with `| * `
-
-Run `/cco-tune` to see which project-specific standards apply to your project.
+Run `/cco-tune` to see which adaptive rules apply to your project.
 
 ### Categories Explained
 
-- **Universal** - Core software principles: DRY, Fail-Fast, Clean Code, Security, Testing
-- **AI-Specific** - AI behavior patterns: Read First, No Hallucination, Semantic Density
-- **CCO-Specific** - CCO workflow: Approval Flow, Fix Workflow, Safety Classification
-- **Project-Specific** - Stack-based: Frontend accessibility, API standards, Container security
+- **Core** - Fundamental software principles: DRY, Fail-Fast, Clean Code, Security, Testing
+- **AI** - AI behavior patterns: Read First, No Hallucination, Semantic Density
+- **Tools** - CCO workflow: Approval Flow, Fix Workflow, Safety Classification
+- **Adaptive** - Stack-based: Frontend accessibility, API rules, Container security
 
-*[Full standards documentation](docs/standards.md)*
+*[Full rules documentation](docs/rules.md)*
 
 ---
 
@@ -147,7 +138,7 @@ Run `/cco-tune` to see which project-specific standards apply to your project.
 - **Type Coverage** - Missing annotations, any/unknown usage
 - **Test Quality** - Flaky tests, coverage gaps, edge case detection
 - **Doc-Code Mismatch** - Detect when documentation doesn't match implementation
-- **Self-Compliance** - Check against project's own stated standards
+- **Self-Compliance** - Check against project's own stated rules
 - **Smart Mode** - Auto-detect applicable checks based on project context
 
 ### /cco-research Features
@@ -183,8 +174,8 @@ Run `/cco-tune` to see which project-specific standards apply to your project.
 - **AI Performance Auto-Detection** - Sets thinking/MCP tokens based on project complexity
 - **Statusline Configuration** - Full or Minimal mode per project
 - **Permission Levels** - Safe, Balanced, Permissive, Full per project
-- **Remove Configuration** - Remove any setting (AI Performance, Statusline, Permissions, Standards)
-- **Standards Export** - Export to AGENTS.md or CLAUDE.md with selectable content
+- **Remove Configuration** - Remove any setting (AI Performance, Statusline, Permissions, Rules)
+- **Rules Export** - Export to AGENTS.md or CLAUDE.md with selectable content
 
 ### /cco-release Features
 
@@ -224,18 +215,18 @@ Run `/cco-tune` to see which project-specific standards apply to your project.
 `/cco-tune` is the central configuration command with three action types:
 
 **Configure:**
-- Detection & Standards - Scan project, write context to `./CLAUDE.md`
+- Detection & Rules - Scan project, write context to `./CLAUDE.md`
 - AI Performance - Set thinking/MCP tokens in `./.claude/settings.json`
 - Statusline - Configure status bar (Full or Minimal)
 - Permissions - Set permission level (Safe, Balanced, Permissive, Full)
 
 **Remove:**
-- Remove any configuration (AI Performance, Statusline, Permissions, Standards)
-- Mixed operations supported (e.g., Configure Standards + Remove AI Performance)
+- Remove any configuration (AI Performance, Statusline, Permissions, Rules)
+- Mixed operations supported (e.g., Configure Rules + Remove AI Performance)
 
 **Export:**
-- CLAUDE.md - For other Claude Code projects (all standards)
-- AGENTS.md - For other AI tools (CCO-Specific excluded)
+- CLAUDE.md - For other Claude Code projects (all rules)
+- AGENTS.md - For other AI tools (Tool Rules excluded)
 
 ### AI Performance Auto-Detection
 
@@ -263,11 +254,11 @@ All settings are written to `./.claude/settings.json` (project-local):
 Export is integrated into `/cco-tune` main flow. Select CLAUDE.md or AGENTS.md from the Export section.
 
 **What gets exported (user-selectable):**
-- Universal Standards
-- AI-Specific Standards
-- CCO-Specific Standards (CLAUDE.md only)
+- Core Rules
+- AI Rules
+- Tool Rules (CLAUDE.md only)
 - Project Context
-- Conditional Standards
+- Adaptive Rules
 
 **What is NEVER exported:**
 - AI Performance settings
@@ -363,7 +354,7 @@ cco-remove  # Complete removal with confirmation
 
 - **Transparency** - Announce before action, progress signals, no silent operations
 - **User Control** - Approval required, priority levels, safe vs risky classification
-- **Context-Aware** - Project detection drives thresholds and standards
+- **Context-Aware** - Project detection drives thresholds and rules
 - **Token Efficient** - Semantic density, conditional loading, bounded context
 
 *[Full principles documentation](docs/design-principles.md)*
