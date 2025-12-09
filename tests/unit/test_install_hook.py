@@ -47,14 +47,8 @@ class TestCleanPreviousInstallation:
         with patch("claudecodeoptimizer.install_hook.COMMANDS_DIR", commands_dir):
             with patch("claudecodeoptimizer.install_hook.AGENTS_DIR", tmp_path / "agents"):
                 with patch("claudecodeoptimizer.install_hook.CLAUDE_DIR", tmp_path):
-                    with patch(
-                        "claudecodeoptimizer.install_hook.SETTINGS_FILE", tmp_path / "settings.json"
-                    ):
-                        with patch(
-                            "claudecodeoptimizer.install_hook.STATUSLINE_FILE",
-                            tmp_path / "statusline.js",
-                        ):
-                            result = clean_previous_installation(verbose=False)
+                    with patch("claudecodeoptimizer.install_hook.RULES_DIR", tmp_path / "rules"):
+                        result = clean_previous_installation(verbose=False)
 
         assert result["commands"] == 2
         assert not (commands_dir / "cco-old.md").exists()
@@ -70,14 +64,8 @@ class TestCleanPreviousInstallation:
         with patch("claudecodeoptimizer.install_hook.COMMANDS_DIR", tmp_path / "commands"):
             with patch("claudecodeoptimizer.install_hook.AGENTS_DIR", agents_dir):
                 with patch("claudecodeoptimizer.install_hook.CLAUDE_DIR", tmp_path):
-                    with patch(
-                        "claudecodeoptimizer.install_hook.SETTINGS_FILE", tmp_path / "settings.json"
-                    ):
-                        with patch(
-                            "claudecodeoptimizer.install_hook.STATUSLINE_FILE",
-                            tmp_path / "statusline.js",
-                        ):
-                            result = clean_previous_installation(verbose=False)
+                    with patch("claudecodeoptimizer.install_hook.RULES_DIR", tmp_path / "rules"):
+                        result = clean_previous_installation(verbose=False)
 
         assert result["agents"] == 1
         assert not (agents_dir / "cco-agent-old.md").exists()
@@ -92,69 +80,13 @@ class TestCleanPreviousInstallation:
         with patch("claudecodeoptimizer.install_hook.COMMANDS_DIR", tmp_path / "commands"):
             with patch("claudecodeoptimizer.install_hook.AGENTS_DIR", tmp_path / "agents"):
                 with patch("claudecodeoptimizer.install_hook.CLAUDE_DIR", tmp_path):
-                    with patch(
-                        "claudecodeoptimizer.install_hook.SETTINGS_FILE", tmp_path / "settings.json"
-                    ):
-                        with patch(
-                            "claudecodeoptimizer.install_hook.STATUSLINE_FILE",
-                            tmp_path / "statusline.js",
-                        ):
-                            result = clean_previous_installation(verbose=False)
+                    with patch("claudecodeoptimizer.install_hook.RULES_DIR", tmp_path / "rules"):
+                        result = clean_previous_installation(verbose=False)
 
         assert result["rules"] >= 1
         content = claude_md.read_text()
         assert "<!-- CCO_STANDARDS_START -->" not in content
         assert "Keep this" in content
-
-    def test_removes_legacy_settings_keys(self, tmp_path):
-        """Test removes legacy CCO keys from settings.json."""
-        settings_file = tmp_path / "settings.json"
-        settings_file.write_text(
-            json.dumps(
-                {
-                    "existingKey": "keep",
-                    "_cco_managed": True,
-                    "_cco_version": "1.0.0",
-                    "cco_config": {"old": "config"},
-                }
-            )
-        )
-
-        with patch("claudecodeoptimizer.install_hook.COMMANDS_DIR", tmp_path / "commands"):
-            with patch("claudecodeoptimizer.install_hook.AGENTS_DIR", tmp_path / "agents"):
-                with patch("claudecodeoptimizer.install_hook.CLAUDE_DIR", tmp_path):
-                    with patch("claudecodeoptimizer.install_hook.SETTINGS_FILE", settings_file):
-                        with patch(
-                            "claudecodeoptimizer.install_hook.STATUSLINE_FILE",
-                            tmp_path / "statusline.js",
-                        ):
-                            result = clean_previous_installation(verbose=False)
-
-        assert result["settings_keys"] == 3
-        settings = json.loads(settings_file.read_text())
-        assert "existingKey" in settings
-        assert "_cco_managed" not in settings
-        assert "_cco_version" not in settings
-        assert "cco_config" not in settings
-
-    def test_removes_cco_statusline(self, tmp_path):
-        """Test removes CCO statusline.js."""
-        statusline = tmp_path / "statusline.js"
-        statusline.write_text("// CCO Statusline\nconsole.log('old');")
-
-        with patch("claudecodeoptimizer.install_hook.COMMANDS_DIR", tmp_path / "commands"):
-            with patch("claudecodeoptimizer.install_hook.AGENTS_DIR", tmp_path / "agents"):
-                with patch("claudecodeoptimizer.install_hook.CLAUDE_DIR", tmp_path):
-                    with patch(
-                        "claudecodeoptimizer.install_hook.SETTINGS_FILE", tmp_path / "settings.json"
-                    ):
-                        with patch("claudecodeoptimizer.install_hook.STATUSLINE_FILE", statusline):
-                            with patch(
-                                "claudecodeoptimizer.install_hook.RULES_DIR", tmp_path / "rules"
-                            ):
-                                result = clean_previous_installation(verbose=False)
-
-        assert result["statusline"] == 1
 
     def test_removes_rules_dir(self, tmp_path):
         """Test removes ~/.claude/rules/ directory during cleanup."""
@@ -166,94 +98,11 @@ class TestCleanPreviousInstallation:
         with patch("claudecodeoptimizer.install_hook.COMMANDS_DIR", tmp_path / "commands"):
             with patch("claudecodeoptimizer.install_hook.AGENTS_DIR", tmp_path / "agents"):
                 with patch("claudecodeoptimizer.install_hook.CLAUDE_DIR", tmp_path):
-                    with patch(
-                        "claudecodeoptimizer.install_hook.SETTINGS_FILE", tmp_path / "settings.json"
-                    ):
-                        with patch(
-                            "claudecodeoptimizer.install_hook.STATUSLINE_FILE",
-                            tmp_path / "statusline.js",
-                        ):
-                            with patch("claudecodeoptimizer.install_hook.RULES_DIR", rules_dir):
-                                result = clean_previous_installation(verbose=False)
+                    with patch("claudecodeoptimizer.install_hook.RULES_DIR", rules_dir):
+                        result = clean_previous_installation(verbose=False)
 
         assert result["rules"] == 2
         assert not rules_dir.exists()
-
-    def test_removes_cco_permissions_marker(self, tmp_path):
-        """Test removes CCO_PERMISSIONS_MARKER from settings.json."""
-        settings_file = tmp_path / "settings.json"
-        settings_file.write_text(
-            json.dumps(
-                {
-                    "existingKey": "keep",
-                    "_cco_managed": True,
-                    "permissions": {"allow": []},
-                }
-            )
-        )
-
-        with patch("claudecodeoptimizer.install_hook.COMMANDS_DIR", tmp_path / "commands"):
-            with patch("claudecodeoptimizer.install_hook.AGENTS_DIR", tmp_path / "agents"):
-                with patch("claudecodeoptimizer.install_hook.CLAUDE_DIR", tmp_path):
-                    with patch("claudecodeoptimizer.install_hook.SETTINGS_FILE", settings_file):
-                        with patch(
-                            "claudecodeoptimizer.install_hook.STATUSLINE_FILE",
-                            tmp_path / "statusline.js",
-                        ):
-                            with patch(
-                                "claudecodeoptimizer.install_hook.RULES_DIR", tmp_path / "rules"
-                            ):
-                                result = clean_previous_installation(verbose=False)
-
-        assert result["settings_keys"] == 1
-        settings = json.loads(settings_file.read_text())
-        assert "existingKey" in settings
-        assert "_cco_managed" not in settings
-
-    def test_handles_statusline_read_error(self, tmp_path):
-        """Test handles OSError/UnicodeDecodeError when reading statusline."""
-        statusline = tmp_path / "statusline.js"
-        statusline.write_text("binary content")
-
-        # Create a mock that raises UnicodeDecodeError on read_text
-        with patch("claudecodeoptimizer.install_hook.COMMANDS_DIR", tmp_path / "commands"):
-            with patch("claudecodeoptimizer.install_hook.AGENTS_DIR", tmp_path / "agents"):
-                with patch("claudecodeoptimizer.install_hook.CLAUDE_DIR", tmp_path):
-                    with patch(
-                        "claudecodeoptimizer.install_hook.SETTINGS_FILE", tmp_path / "settings.json"
-                    ):
-                        with patch("claudecodeoptimizer.install_hook.STATUSLINE_FILE", statusline):
-                            with patch(
-                                "claudecodeoptimizer.install_hook.RULES_DIR", tmp_path / "rules"
-                            ):
-                                # Mock read_text to raise UnicodeDecodeError
-                                original_read = statusline.read_text
-
-                                def raise_error(*args, **kwargs):
-                                    raise UnicodeDecodeError("utf-8", b"", 0, 1, "test")
-
-                                with patch.object(type(statusline), "read_text", raise_error):
-                                    result = clean_previous_installation(verbose=False)
-
-        # Should not crash, statusline not removed due to read error
-        assert result["statusline"] == 0
-
-    def test_preserves_non_cco_statusline(self, tmp_path):
-        """Test preserves non-CCO statusline.js."""
-        statusline = tmp_path / "statusline.js"
-        statusline.write_text("// Custom statusline\nconsole.log('custom');")
-
-        with patch("claudecodeoptimizer.install_hook.COMMANDS_DIR", tmp_path / "commands"):
-            with patch("claudecodeoptimizer.install_hook.AGENTS_DIR", tmp_path / "agents"):
-                with patch("claudecodeoptimizer.install_hook.CLAUDE_DIR", tmp_path):
-                    with patch(
-                        "claudecodeoptimizer.install_hook.SETTINGS_FILE", tmp_path / "settings.json"
-                    ):
-                        with patch("claudecodeoptimizer.install_hook.STATUSLINE_FILE", statusline):
-                            result = clean_previous_installation(verbose=False)
-
-        assert result["statusline"] == 0
-        assert statusline.exists()
 
     def test_handles_nonexistent_dirs(self, tmp_path):
         """Test handles nonexistent directories gracefully."""
@@ -264,14 +113,8 @@ class TestCleanPreviousInstallation:
                 "claudecodeoptimizer.install_hook.AGENTS_DIR", tmp_path / "nonexistent_agents"
             ):
                 with patch("claudecodeoptimizer.install_hook.CLAUDE_DIR", tmp_path / "nonexistent"):
-                    with patch(
-                        "claudecodeoptimizer.install_hook.SETTINGS_FILE", tmp_path / "settings.json"
-                    ):
-                        with patch(
-                            "claudecodeoptimizer.install_hook.STATUSLINE_FILE",
-                            tmp_path / "statusline.js",
-                        ):
-                            result = clean_previous_installation(verbose=False)
+                    with patch("claudecodeoptimizer.install_hook.RULES_DIR", tmp_path / "rules"):
+                        result = clean_previous_installation(verbose=False)
 
         assert result["commands"] == 0
         assert result["agents"] == 0
@@ -282,40 +125,16 @@ class TestCleanPreviousInstallation:
         commands_dir = tmp_path / "commands"
         commands_dir.mkdir()
         (commands_dir / "cco-old.md").write_text("old")
-        statusline = tmp_path / "statusline.js"
-        statusline.write_text("// CCO Statusline")
 
         with patch("claudecodeoptimizer.install_hook.COMMANDS_DIR", commands_dir):
             with patch("claudecodeoptimizer.install_hook.AGENTS_DIR", tmp_path / "agents"):
                 with patch("claudecodeoptimizer.install_hook.CLAUDE_DIR", tmp_path):
-                    with patch(
-                        "claudecodeoptimizer.install_hook.SETTINGS_FILE", tmp_path / "settings.json"
-                    ):
-                        with patch("claudecodeoptimizer.install_hook.STATUSLINE_FILE", statusline):
-                            clean_previous_installation(verbose=True)
+                    with patch("claudecodeoptimizer.install_hook.RULES_DIR", tmp_path / "rules"):
+                        clean_previous_installation(verbose=True)
 
         captured = capsys.readouterr()
         assert "Cleaning previous installation" in captured.out
         assert "Removed 1 command" in captured.out
-        assert "Removed old statusline" in captured.out
-
-    def test_handles_invalid_settings_json(self, tmp_path):
-        """Test handles invalid JSON in settings.json."""
-        settings_file = tmp_path / "settings.json"
-        settings_file.write_text("invalid json {{{")
-
-        with patch("claudecodeoptimizer.install_hook.COMMANDS_DIR", tmp_path / "commands"):
-            with patch("claudecodeoptimizer.install_hook.AGENTS_DIR", tmp_path / "agents"):
-                with patch("claudecodeoptimizer.install_hook.CLAUDE_DIR", tmp_path):
-                    with patch("claudecodeoptimizer.install_hook.SETTINGS_FILE", settings_file):
-                        with patch(
-                            "claudecodeoptimizer.install_hook.STATUSLINE_FILE",
-                            tmp_path / "statusline.js",
-                        ):
-                            result = clean_previous_installation(verbose=False)
-
-        # Should not crash, just skip settings cleanup
-        assert result["settings_keys"] == 0
 
     def test_full_cleanup_scenario(self, tmp_path, capsys):
         """Test complete cleanup with all components present."""
@@ -334,44 +153,23 @@ class TestCleanPreviousInstallation:
             "# User content\n\n<!-- CCO_STANDARDS_START -->\nOld\n<!-- CCO_STANDARDS_END -->"
         )
 
-        settings_file = tmp_path / "settings.json"
-        settings_file.write_text(
-            json.dumps(
-                {
-                    "statusLine": {"type": "command"},
-                    "_cco_managed": True,
-                    "_cco_version": "1.0.0",
-                }
-            )
-        )
-
-        statusline = tmp_path / "statusline.js"
-        statusline.write_text("// CCO Statusline\nconsole.log('old');")
+        rules_dir = tmp_path / "rules"
 
         with patch("claudecodeoptimizer.install_hook.COMMANDS_DIR", commands_dir):
             with patch("claudecodeoptimizer.install_hook.AGENTS_DIR", agents_dir):
                 with patch("claudecodeoptimizer.install_hook.CLAUDE_DIR", tmp_path):
-                    with patch("claudecodeoptimizer.install_hook.SETTINGS_FILE", settings_file):
-                        with patch("claudecodeoptimizer.install_hook.STATUSLINE_FILE", statusline):
-                            result = clean_previous_installation(verbose=True)
+                    with patch("claudecodeoptimizer.install_hook.RULES_DIR", rules_dir):
+                        result = clean_previous_installation(verbose=True)
 
         # Verify all old components removed
         assert result["commands"] == 2
         assert result["agents"] == 1
         assert result["rules"] >= 1
-        assert result["settings_keys"] == 2  # _cco_managed and _cco_version
-        assert result["statusline"] == 1
 
         # Files should be removed or cleaned
         assert not list(commands_dir.glob("cco-*.md"))
         assert not list(agents_dir.glob("cco-*.md"))
         assert "CCO_STANDARDS_START" not in claude_md.read_text()
-        assert not statusline.exists()
-
-        # Settings should be cleaned
-        settings = json.loads(settings_file.read_text())
-        assert "_cco_managed" not in settings
-        assert "statusLine" in settings  # This is preserved by design
 
 
 class TestSetupCommands:
