@@ -93,7 +93,7 @@ jobs:
 
       - name: Run Safety dependency scan
         run: safety check --json > safety-report.json
-        continue-on-error: true  # Report vulnerabilities but don't block on known issues
+        continue-on-error: true  # Dev deps only (zero runtime deps) - report but don't block CI
 
       - name: Upload Safety report
         if: always()
