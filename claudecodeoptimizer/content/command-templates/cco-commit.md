@@ -10,7 +10,7 @@ allowed-tools: Bash(git:*), Bash(ruff:*), Bash(npm:*), Bash(pytest:*), Read(*), 
 
 End-to-end: Runs checks, analyzes changes, creates atomic commits.
 
-**Standards:** Command Flow | Pre-Operation Safety | Approval Flow | Output Formatting
+**Standards:** Command Flow | Pre-Operation Safety | User Input | Approval Flow | Output Formatting
 
 ## Context
 
@@ -89,9 +89,14 @@ Scan staged files for potential secrets before commit:
 
 | Condition | Action |
 |-----------|--------|
-| File > 1MB | Warn, ask confirmation |
+| File > 1MB | Warn, use AskUserQuestion for confirmation |
 | Binary file (non-text) | Warn, suggest Git LFS |
 | File > 10MB | Block, require `--force-large` |
+
+**Use AskUserQuestion:**
+| Question | Options | MultiSelect |
+|----------|---------|-------------|
+| Large file detected ({file}, {size}). Continue? | Yes, No | false |
 
 ### Behavior
 
@@ -124,9 +129,14 @@ Report: `[IMPACT] {change} affects {N} files: {file1}, {file2}...`
 | State | Behavior |
 |-------|----------|
 | Nothing staged, has unstaged | Analyze all unstaged, propose grouping |
-| Has staged, has unstaged | Ask: "Include unstaged?" → Yes: analyze all, No: commit staged only |
+| Has staged, has unstaged | Use AskUserQuestion (see below) |
 | Has staged, no unstaged | Commit staged as-is (user already decided) |
 | Nothing staged, nothing unstaged | Show "No changes to commit" and exit |
+
+**Use AskUserQuestion:**
+| Question | Options | MultiSelect |
+|----------|---------|-------------|
+| Include unstaged changes? | Yes (analyze all), No (staged only) | false |
 
 **Respect user intent:** If user explicitly staged files, don't second-guess unless asked.
 
@@ -209,11 +219,16 @@ Detect breaking changes and prompt for proper documentation:
 
 **On detection:**
 1. Warn user: "Breaking change detected in {file}"
-2. Ask: "Add BREAKING CHANGE footer?" → Yes/No
+2. Use AskUserQuestion (see below)
 3. If Yes, append to commit body:
    ```
    BREAKING CHANGE: {description of what breaks and migration path}
    ```
+
+**Use AskUserQuestion:**
+| Question | Options | MultiSelect |
+|----------|---------|-------------|
+| Add BREAKING CHANGE footer? | Yes, No | false |
 
 ## Flow
 
@@ -226,6 +241,11 @@ Detect breaking changes and prompt for proper documentation:
 7. **Verify** - `git log` count = planned count
 
 ### Confirm Options
+
+**Use AskUserQuestion:**
+| Question | Options | MultiSelect |
+|----------|---------|-------------|
+| Commit plan ready. Action? | Accept, Modify, Merge, Split, Edit message, Cancel | false |
 
 | Option | Behavior |
 |--------|----------|
@@ -253,7 +273,12 @@ Before `--amend`:
 1. Check HEAD commit authorship matches current user
 2. Verify commit not pushed to remote
 3. Show what will be amended
-4. Require explicit confirmation
+4. Use AskUserQuestion for confirmation
+
+**Use AskUserQuestion:**
+| Question | Options | MultiSelect |
+|----------|---------|-------------|
+| Amend commit "{hash}: {message}"? | Yes, No | false |
 
 ## Usage
 

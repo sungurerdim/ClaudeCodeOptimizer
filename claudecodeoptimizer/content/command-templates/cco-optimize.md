@@ -10,7 +10,7 @@ allowed-tools: Read(*), Grep(*), Glob(*), Edit(*), Bash(git:*), Bash(wc:*), Task
 
 End-to-end: Detects waste (orphans, duplicates, stale refs) AND removes/optimizes them.
 
-**Standards:** Command Flow | Fix Workflow | Approval Flow | Safety Classification | Output Formatting
+**Standards:** Command Flow | Fix Workflow | User Input | Approval Flow | Safety Classification | Output Formatting
 
 ## Context
 
@@ -54,14 +54,13 @@ Run /cco-tune first to configure project context, then restart CLI.
 
 ## Default Behavior
 
-When called without flags, ask (follow CCO "Question Formatting" standard):
+When called without flags:
 
-| Question | Options (small → large) |
-|----------|-------------------------|
-| Focus? (multiSelect) | Hygiene, Efficiency, All |
-| Mode? | Conservative, Balanced, Aggressive |
-
-**`[recommended]` placement:** Focus → Hygiene, Mode → Balanced
+**Use AskUserQuestion:**
+| Question | Options | MultiSelect |
+|----------|---------|-------------|
+| Focus? | Hygiene `[recommended]`, Efficiency, All | true |
+| Mode? | Conservative, Balanced `[recommended]`, Aggressive | false |
 
 Explicit flags skip questions.
 
@@ -81,7 +80,10 @@ Detect and remove unreferenced code:
 
 Report: `[ORPHAN] {type}: {name} in {file:line} (last modified: {date})`
 
-**Resolution:** For each orphan, ask: "Delete" | "Keep (add reference)" | "Skip"
+**Resolution - Use AskUserQuestion:**
+| Question | Options | MultiSelect |
+|----------|---------|-------------|
+| Orphan: {name} in {file:line}. Action? | Delete, Keep (add reference), Skip | false |
 
 ### Stale References (`--stale-refs`)
 

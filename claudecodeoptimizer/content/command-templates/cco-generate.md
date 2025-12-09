@@ -10,7 +10,7 @@ allowed-tools: Read(*), Grep(*), Glob(*), Write(*), Bash(git:*), Bash(pytest:*),
 
 End-to-end: Discovers conventions, generates matching code, verifies it works.
 
-**Standards:** Command Flow | Approval Flow | Output Formatting
+**Standards:** Command Flow | User Input | Approval Flow | Output Formatting
 
 ## Context
 
@@ -54,11 +54,12 @@ Run /cco-tune first to configure project context, then restart CLI.
 
 ## Default Behavior
 
-When called without flags, ask:
+When called without flags:
 
-| Question | Options (multiSelect) |
-|----------|----------------------|
-| What to generate? | Tests, Docs, Infra, Boilerplate, All |
+**Use AskUserQuestion:**
+| Question | Options | MultiSelect |
+|----------|---------|-------------|
+| What to generate? | Tests, Docs, Infra, Boilerplate, All | true |
 
 Explicit flags skip questions.
 

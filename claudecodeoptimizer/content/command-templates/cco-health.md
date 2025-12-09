@@ -10,7 +10,7 @@ allowed-tools: Read(*), Grep(*), Glob(*), Bash(git:*), Bash(pytest:*), Bash(npm:
 
 Read-only metrics collection and visualization.
 
-**Standards:** Command Flow | Output Formatting
+**Standards:** Command Flow | User Input | Output Formatting
 
 ## Context
 

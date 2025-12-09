@@ -10,7 +10,7 @@ allowed-tools: WebSearch(*), WebFetch(*), Read(*), Grep(*), Glob(*), Task(*)
 
 End-to-end: Searches multiple sources, scores reliability, synthesizes findings.
 
-**Standards:** Command Flow | Output Formatting
+**Standards:** Command Flow | User Input | Output Formatting
 
 ## Context
 
@@ -53,12 +53,14 @@ Run /cco-tune first to configure project context, then restart CLI.
 
 ## Default Behavior
 
-When called without query, ask:
+When called without query:
 
-| Question | Options |
-|----------|---------|
-| Research topic? | Free text input required |
-| Depth? | Quick, Standard `[recommended]`, Deep |
+**Use AskUserQuestion:**
+| Question | Options | MultiSelect |
+|----------|---------|-------------|
+| Depth? | Quick, Standard `[recommended]`, Deep | false |
+
+*Note: Research topic is free text - use AskUserQuestion with text input option.*
 
 Explicit flags skip questions.
 

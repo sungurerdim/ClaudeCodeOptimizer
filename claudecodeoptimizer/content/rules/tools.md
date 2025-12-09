@@ -1,6 +1,36 @@
 # Tools Rules
 *On-demand loading for CCO commands and agents*
 
+## User Input [CRITICAL]
+
+### Tool Requirement [STRICT]
+
+| Rule | Description |
+|------|-------------|
+| * Tool | ALL user inputs MUST use AskUserQuestion tool |
+| * No-Exceptions | Never use plain text prompts for user decisions |
+| * MultiSelect | Use multiSelect: true when multiple selections valid |
+
+### Applies To
+
+| Scenario | Example | MultiSelect |
+|----------|---------|-------------|
+| Confirmations | "Apply this configuration?" | false |
+| Scope selection | "What to audit?" | true |
+| Option selection | "Which files to include?" | true |
+| Yes/No decisions | "Add BREAKING CHANGE footer?" | false |
+| Action selection | "Accept / Modify / Cancel" | false |
+
+### Reference Pattern
+
+Commands MUST explicitly state tool usage:
+```markdown
+**Use AskUserQuestion:**
+| Question | Options | MultiSelect |
+|----------|---------|-------------|
+| {question}? | {opt1}, {opt2}, ... | true/false |
+```
+
 ## Command Flow
 
 | Rule | Description |
@@ -68,12 +98,13 @@
 
 ## Approval Flow
 
-### Tool Configuration [STRICT]
+*Inherits User Input [CRITICAL] - all approvals use AskUserQuestion.*
+
+### Configuration [STRICT]
 
 | Rule | Description |
 |------|-------------|
-| * Tool | AskUserQuestion |
-| * MultiSelect | true (always) |
+| * MultiSelect | true (for batch approvals) |
 
 ### Ordering [REQUIRED]
 

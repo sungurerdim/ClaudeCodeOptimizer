@@ -10,7 +10,7 @@ allowed-tools: Read(*), Grep(*), Glob(*), Bash(git:*), Bash(wc:*), Bash(find:*),
 
 Analyzes architecture, identifies gaps, and provides actionable recommendations.
 
-**Standards:** Command Flow | Fix Workflow | Approval Flow | Output Formatting
+**Standards:** Command Flow | Fix Workflow | User Input | Approval Flow | Output Formatting
 
 ## Context
 
