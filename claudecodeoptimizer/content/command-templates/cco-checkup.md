@@ -1,7 +1,7 @@
 ---
 name: cco-checkup
 description: Regular maintenance routine
-allowed-tools: Read(*), Grep(*), Glob(*), Edit(*), Bash(git:*), Bash(pytest:*), Task(*)
+allowed-tools: Read(*), Grep(*), Glob(*), Edit(*), Bash(git:*), Bash(pytest:*), Task(*), TodoWrite
 ---
 
 # /cco-checkup

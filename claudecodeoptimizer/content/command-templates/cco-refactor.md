@@ -1,7 +1,7 @@
 ---
 name: cco-refactor
 description: Safe structural transformations with automatic rollback
-allowed-tools: Read(*), Grep(*), Glob(*), Edit(*), Bash(git:*), Task(*)
+allowed-tools: Read(*), Grep(*), Glob(*), Edit(*), Bash(git:*), Task(*), TodoWrite
 ---
 
 # /cco-refactor
@@ -213,6 +213,8 @@ After each file change:
 - Continue only if all checks pass
 
 ## Output
+
+**Follow output formats precisely.**
 
 ### Reference Map
 ```

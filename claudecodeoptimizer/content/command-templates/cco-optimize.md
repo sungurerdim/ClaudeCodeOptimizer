@@ -1,7 +1,7 @@
 ---
 name: cco-optimize
 description: Code cleanliness and efficiency optimization with auto-fix
-allowed-tools: Read(*), Grep(*), Glob(*), Edit(*), Bash(git:*), Bash(wc:*), Task(*)
+allowed-tools: Read(*), Grep(*), Glob(*), Edit(*), Bash(git:*), Bash(wc:*), Task(*), TodoWrite
 ---
 
 # /cco-optimize
@@ -50,7 +50,26 @@ Run /cco-tune first to configure project context, then restart CLI.
 | Scan | `cco-agent-analyze` | `scan` | Detect orphans, duplicates, stale refs |
 | Optimize | `cco-agent-apply` | `optimize` | Execute approved cleanups |
 
-**Scan Phase:** Use `cco-agent-analyze` with `scope: scan` category filters for orphans, duplicates, and stale references.
+### Parallel Scan Pattern [REQUIRED]
+
+When scanning multiple categories, launch **parallel agents** in a single message:
+
+```
+Launch simultaneously:
+- Agent 1: cco-agent-analyze scope=orphans
+- Agent 2: cco-agent-analyze scope=duplicates
+- Agent 3: cco-agent-analyze scope=stale-refs
+```
+
+### Agent Propagation
+
+When spawning agents, include:
+```
+Context: {Scale, Maturity, Breaking from CCO_ADAPTIVE}
+Rules: Safe vs risky classification, exact output format
+Output: [CATEGORY] {type}: {name} in {file:line}
+Note: Make a todo list first, process systematically
+```
 
 ## Default Behavior
 
@@ -59,8 +78,8 @@ When called without flags:
 **Use AskUserQuestion:**
 | Question | Options | MultiSelect |
 |----------|---------|-------------|
-| Focus? | Hygiene `[recommended]`, Efficiency, All | true |
-| Mode? | Conservative, Balanced `[recommended]`, Aggressive | false |
+| Focus? | Hygiene (Recommended), Efficiency, All | true |
+| Mode? | Conservative, Balanced (Recommended), Aggressive | false |
 
 Explicit flags skip questions.
 
@@ -196,6 +215,8 @@ Full codebase analysis combining all above:
 | Config redundancy | Single source + env ref | Merge configs |
 
 ## Output
+
+**Follow output formats precisely.**
 
 ### Cleanliness Summary
 ```

@@ -1,7 +1,7 @@
 ---
 name: cco-release
 description: Pre-release workflow orchestration
-allowed-tools: Read(*), Grep(*), Glob(*), Edit(*), Bash(git:*), Bash(pytest:*), Bash(npm:*), Task(*)
+allowed-tools: Read(*), Grep(*), Glob(*), Edit(*), Bash(git:*), Bash(pytest:*), Bash(npm:*), Task(*), TodoWrite
 ---
 
 # /cco-release

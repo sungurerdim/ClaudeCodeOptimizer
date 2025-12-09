@@ -1,7 +1,7 @@
 ---
 name: cco-tune
 description: Project-specific AI tuning and configuration
-allowed-tools: Read(*), Write(*), Edit(*), Grep(*), Glob(*), Bash(git:*), Bash(cco-setup:*), Bash(sed:*), Bash(find:*), Bash(wc:*)
+allowed-tools: Read(*), Write(*), Edit(*), Grep(*), Glob(*), Bash(git:*), Bash(cco-setup:*), Bash(sed:*), Bash(find:*), Bash(wc:*), Task(*), TodoWrite
 ---
 
 # /cco-tune

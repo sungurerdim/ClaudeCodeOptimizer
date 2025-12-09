@@ -1,7 +1,7 @@
 ---
 name: cco-health
 description: Project health dashboard with trends and actionable insights
-allowed-tools: Read(*), Grep(*), Glob(*), Bash(git:*), Bash(pytest:*), Bash(npm:*), Task(*)
+allowed-tools: Read(*), Grep(*), Glob(*), Bash(git:*), Bash(pytest:*), Bash(npm:*), Task(*), TodoWrite
 ---
 
 # /cco-health
@@ -142,6 +142,8 @@ Compare against:
 - Project's own historical best
 
 ## Output
+
+**Follow output formats precisely.**
 
 ### Header
 ```

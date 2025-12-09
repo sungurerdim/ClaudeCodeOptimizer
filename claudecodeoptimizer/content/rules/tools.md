@@ -154,7 +154,7 @@ Commands MUST explicitly state tool usage:
 | * One-Label | Each option receives exactly ONE label |
 | * Current | `[current]` - Matches existing config (priority 1) |
 | * Detected | `[detected]` - Auto-detected, not in config (priority 2) |
-| * Recommended | `[recommended]` - Best practice, max 1/question (priority 3) |
+| * Recommended | `(Recommended)` - Best practice, max 1/question, auto-sorted to top (priority 3) |
 | * Precedence | If detected AND current both apply -> show `[current]` only |
 
 ### Ordering [REQUIRED]
@@ -171,10 +171,12 @@ Commands MUST explicitly state tool usage:
 |------|-------------|
 | * Check-Categories | Categories separated into distinct batches |
 | * Check-Labels | Each option has exactly ONE label |
-| * Check-Recommended | Maximum ONE `[recommended]` per question |
+| * Check-Recommended | Maximum ONE `(Recommended)` per question |
 | * Check-Order | Options ordered per rules above |
 
 ## Output Formatting
+
+**Follow output formats precisely. Exact formatting ensures consistency and parseability.**
 
 ### Table Characters [STRICT]
 
@@ -249,6 +251,13 @@ Commands MUST explicitly state tool usage:
 | * Description | `description: Brief description` |
 | * Tools | `allowed-tools: Tool1(*), Tool2(pattern:*)` |
 
+### Required Tools [MANDATORY]
+
+| Rule | Description |
+|------|-------------|
+| * TodoWrite | ALL commands MUST include `TodoWrite` in allowed-tools |
+| * Task | Commands using agents MUST include `Task(*)` |
+
 ### Pattern Syntax
 
 | Pattern | Matches | Example |
@@ -281,9 +290,27 @@ Commands MUST explicitly state tool usage:
 
 | Rule | Description |
 |------|-------------|
-| * Launch | Launch agents simultaneously |
+| * Launch | Launch agents simultaneously in single message |
 | * Scope | Each agent handles distinct scope |
+| * Diverse | Use varied search strategies per agent |
 | * Merge | Merge results after all complete |
+
+### Agent Propagation [REQUIRED]
+
+| Rule | Description |
+|------|-------------|
+| * Context-Pass | Pass CCO_ADAPTIVE summary to all agents |
+| * Rules-Pass | Include applicable rules from context |
+| * Format-Pass | Specify exact output format expected |
+| * Todo-Pass | Tell agents: "Make a todo list first" |
+
+**Template for agent instructions:**
+```
+Context: {relevant CCO_ADAPTIVE fields}
+Rules: {applicable rules from this file}
+Output: {expected format - follow precisely}
+Note: Make a todo list first, then process systematically
+```
 
 ### Benefits
 
@@ -303,6 +330,7 @@ Commands MUST explicitly state tool usage:
 | * Defaults | Use smart defaults for all options |
 | * No-Intermediate | Do not output intermediate text |
 | * Summary | Only tool calls, then final summary |
+| * MUST-Single | You MUST do all steps in a single message |
 
 ### Applicable Commands
 
@@ -318,8 +346,37 @@ Commands MUST explicitly state tool usage:
 | Rule | Description |
 |------|-------------|
 | * Single-Message | Complete ALL steps in a single message |
-| * No-Extra-Tools | Do not use any other tools |
-| * No-Extra-Text | Do not send any other text besides tool calls and final summary |
+| * No-Extra-Tools | Do not use any other tools beyond allowed |
+| * No-Extra-Text | Do not send any text besides tool calls and final summary |
+
+## Bash Execution [EFFICIENCY]
+
+### Loop Avoidance [REQUIRED]
+
+| Rule | Description |
+|------|-------------|
+| * No-Loops | Avoid `for f in *; do ...; done` patterns |
+| * Individual | Use individual commands to avoid approval prompts |
+| * Batch-Tools | Call multiple Bash tools in single message instead |
+
+### Anti-Patterns
+
+| Pattern | Problem | Solution |
+|---------|---------|----------|
+| `for f in *.py; do ruff check "$f"; done` | Multiple approvals | `ruff check src/` |
+| `while read f; do ...; done` | Sequential approvals | Parallel tool calls |
+| `find . -exec {} \;` | Hidden iterations | Glob tool + individual calls |
+
+### Correct Pattern
+
+```bash
+# ✅ Single command covering scope
+ruff check src/
+pytest tests/
+
+# ✅ Multiple parallel tool calls in one message
+[Bash: git status] [Bash: git diff] [Bash: git log -3]
+```
 
 ## Conservative Judgment
 
