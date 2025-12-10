@@ -96,7 +96,7 @@ Scan staged files for potential secrets before commit:
 **Use AskUserQuestion:**
 | Question | Options | MultiSelect |
 |----------|---------|-------------|
-| Large file detected ({file}, {size}). Continue? | Yes, No | false |
+| Large file detected ({file}, {size}). Continue? | Yes; No | false |
 
 ### Behavior
 
@@ -136,7 +136,7 @@ Report: `[IMPACT] {change} affects {N} files: {file1}, {file2}...`
 **Use AskUserQuestion:**
 | Question | Options | MultiSelect |
 |----------|---------|-------------|
-| Include unstaged changes? | Yes (analyze all), No (staged only) | false |
+| Include unstaged changes? | Yes (analyze all); No (staged only) | false |
 
 **Respect user intent:** If user explicitly staged files, don't second-guess unless asked.
 
@@ -230,7 +230,7 @@ Detect breaking changes and prompt for proper documentation:
 **Use AskUserQuestion:**
 | Question | Options | MultiSelect |
 |----------|---------|-------------|
-| Add BREAKING CHANGE footer? | Yes, No | false |
+| Add BREAKING CHANGE footer? | Yes; No | false |
 
 ## Flow
 
@@ -247,7 +247,7 @@ Detect breaking changes and prompt for proper documentation:
 **Use AskUserQuestion:**
 | Question | Options | MultiSelect |
 |----------|---------|-------------|
-| Commit plan ready. Action? | Accept, Modify, Merge, Split, Edit message, Cancel | false |
+| Commit plan ready. Action? | Accept; Modify; Merge; Split; Edit message; Cancel | false |
 
 | Option | Behavior |
 |--------|----------|
@@ -296,7 +296,7 @@ Before `--amend`:
 **Use AskUserQuestion:**
 | Question | Options | MultiSelect |
 |----------|---------|-------------|
-| Amend commit "{hash}: {message}"? | Yes, No | false |
+| Amend commit "{hash}: {message}"? | Yes; No | false |
 
 ## Usage
 

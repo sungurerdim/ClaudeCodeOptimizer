@@ -96,7 +96,7 @@ When called without flags:
 **Use AskUserQuestion:**
 | Question | Options | MultiSelect |
 |----------|---------|-------------|
-| Auto-fix detected issues? | Yes (Recommended), No | false |
+| Auto-fix detected issues? | Yes (Recommended); No | false |
 
 Explicit flags narrow scope (but must be in Applicable list).
 
@@ -119,7 +119,7 @@ Report: `[SECURITY] {severity}: {issue} in {file:line}`
 **Sub-categories (when --security used alone) - Use AskUserQuestion:**
 | Question | Options | MultiSelect |
 |----------|---------|-------------|
-| Security sub-categories? | All, OWASP, Secrets, CVEs, Supply-Chain, Input-Validation | true |
+| Security sub-categories? | All; OWASP; Secrets; CVEs; Supply-Chain; Input-Validation | true |
 
 ### Tech Debt (`--tech-debt`)
 
@@ -138,7 +138,7 @@ Report: `[TECH-DEBT] {severity}: {issue} in {file:line}`
 **Sub-categories (when --tech-debt used alone) - Use AskUserQuestion:**
 | Question | Options | MultiSelect |
 |----------|---------|-------------|
-| Tech-debt sub-categories? | All, Dead-Code, Complexity, TODOs, Hardcoded, Types | true |
+| Tech-debt sub-categories? | All; Dead-Code; Complexity; TODOs; Hardcoded; Types | true |
 
 ### Consistency (`--consistency`)
 
@@ -158,7 +158,7 @@ Report: `[CONSISTENCY] {category}: {doc} ≠ {code} in {file:line}`
 **SSOT Resolution - Use AskUserQuestion:**
 | Question | Options | MultiSelect |
 |----------|---------|-------------|
-| Mismatch in {file:line}: {doc} ≠ {code}. Source of truth? | Docs (update code), Code (update docs), Skip | false |
+| Mismatch in {file:line}: {doc} ≠ {code}. Source of truth? | Docs (update code); Code (update docs); Skip | false |
 
 ### Self-Compliance (`--self-compliance`)
 
