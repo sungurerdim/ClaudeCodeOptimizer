@@ -10,7 +10,7 @@ allowed-tools: WebSearch(*), WebFetch(*), Read(*), Grep(*), Glob(*), Task(*), To
 
 End-to-end: Searches multiple sources, scores reliability, synthesizes findings.
 
-**Standards:** Command Flow | User Input | Output Formatting
+**Rules:** User Input | Source Reliability | Quick Mode | Task Tracking
 
 ## Context
 
@@ -252,3 +252,36 @@ Auto-detected when query contains "error", "not working", "fix":
 
 - `/cco-audit --security` - For security checks
 - `/cco-review` - For architecture decisions
+
+---
+
+## Behavior Rules
+
+### User Input [CRITICAL]
+
+- **AskUserQuestion**: ALL user decisions MUST use this tool
+- **Separator**: Use semicolon (`;`) to separate options
+- **Prohibited**: Never use plain text questions ("Would you like...", "Should I...")
+
+### Source Reliability
+
+| Tier | Sources | Weight |
+|------|---------|--------|
+| T1 | Official docs | 1.0 |
+| T2 | GitHub repos | 0.9 |
+| T3 | Stack Overflow | 0.7 |
+| T4 | Blog posts | 0.5 |
+| T5 | Forums | 0.3 |
+
+### Quick Mode
+
+When `--quick` flag:
+- **No-Questions**: Use smart defaults
+- **T1-T2 Only**: Skip lower tier sources
+- **Brief-Output**: Summary only
+
+### Task Tracking
+
+- **Create**: TODO list with research phases
+- **Status**: pending → in_progress → completed
+- **Accounting**: sources + findings = total

@@ -10,7 +10,7 @@ allowed-tools: Read(*), Grep(*), Glob(*), Edit(*), Bash(git:*), Bash(wc:*), Task
 
 End-to-end: Detects waste (orphans, duplicates, stale refs) AND removes/optimizes them.
 
-**Standards:** Command Flow | Fix Workflow | User Input | Approval Flow | Safety Classification | Output Formatting
+**Rules:** User Input | Safety | Classification | Approval Flow | Skip Criteria | Task Tracking
 
 ## Context
 
@@ -470,3 +470,44 @@ When optimization reveals actionable recommendations (e.g., pinning versions, re
 - `/cco-audit` - For security and quality checks
 - `/cco-refactor` - For structural transformations (rename, move, extract)
 - `/cco-checkup` - For regular maintenance routine
+
+---
+
+## Behavior Rules
+
+### User Input [CRITICAL]
+
+- **AskUserQuestion**: ALL user decisions MUST use this tool
+- **Separator**: Use semicolon (`;`) to separate options
+- **Prohibited**: Never use plain text questions ("Would you like...", "Should I...")
+
+### Safety
+
+- **Pre-op**: Check git status before any modifications
+- **Dirty**: If uncommitted changes → prompt: `Commit; Stash; Continue anyway`
+- **Rollback**: Clean git state enables `git checkout` on failure
+
+### Classification
+
+| Type | Examples | Action |
+|------|----------|--------|
+| Safe | Remove unused imports, dead code, stale refs | Auto-apply |
+| Risky | Consolidate duplicates, dependency updates | Require approval |
+
+### Approval Flow
+
+- **Batch**: First option = "All (N)" for bulk approval
+- **Priority**: CRITICAL → HIGH → MEDIUM → LOW
+- **Format**: `{description} [{file:line}] [{safe|risky}]`
+
+### Skip Criteria
+
+- **Inline**: `// cco-ignore` or `# cco-ignore` skips line
+- **File**: `// cco-ignore-file` skips entire file
+- **Paths**: fixtures/, testdata/, examples/, benchmarks/
+
+### Task Tracking
+
+- **Create**: TODO list with all items before starting
+- **Status**: pending → in_progress → completed
+- **Accounting**: done + skip + fail = total

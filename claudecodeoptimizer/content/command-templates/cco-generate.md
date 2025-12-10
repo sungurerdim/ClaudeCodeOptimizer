@@ -10,7 +10,7 @@ allowed-tools: Read(*), Grep(*), Glob(*), Write(*), Bash(git:*), Bash(pytest:*),
 
 End-to-end: Discovers conventions, generates matching code, verifies it works.
 
-**Standards:** Command Flow | User Input | Approval Flow | Output Formatting
+**Rules:** User Input | Convention Following | Approval Flow | Task Tracking
 
 ## Context
 
@@ -202,3 +202,31 @@ Created: 3 | Tests: PASS | Imports: OK | Lint: CLEAN
 
 - `/cco-audit --tests` - Check test coverage gaps
 - `/cco-commit` - Commit generated files
+
+---
+
+## Behavior Rules
+
+### User Input [CRITICAL]
+
+- **AskUserQuestion**: ALL user decisions MUST use this tool
+- **Separator**: Use semicolon (`;`) to separate options
+- **Prohibited**: Never use plain text questions ("Would you like...", "Should I...")
+
+### Convention Following
+
+- **Detect-First**: Analyze existing code for patterns before generating
+- **Match-Style**: Follow project's naming, structure, formatting
+- **No-Invention**: Use project's existing patterns, don't introduce new ones
+
+### Approval Flow
+
+- **Preview**: Show generated code before writing
+- **Confirm**: Use AskUserQuestion for write approval
+- **Location**: Confirm file path before creation
+
+### Task Tracking
+
+- **Create**: TODO list with generation targets
+- **Status**: pending → in_progress → completed
+- **Accounting**: generated + skipped = total

@@ -10,7 +10,7 @@ allowed-tools: Read(*), Grep(*), Glob(*), Bash(git:*), Bash(pytest:*), Bash(npm:
 
 Read-only metrics collection and visualization.
 
-**Standards:** Command Flow | User Input | Output Formatting
+**Rules:** User Input | Output Format | Conservative Scoring | Task Tracking
 
 ## Context
 
@@ -232,3 +232,32 @@ Compare against:
 - `/cco-audit` - Fix security and quality issues
 - `/cco-optimize` - Fix cleanliness issues
 - `/cco-checkup` - Full maintenance routine
+
+---
+
+## Behavior Rules
+
+### User Input [CRITICAL]
+
+- **AskUserQuestion**: ALL user decisions MUST use this tool
+- **Separator**: Use semicolon (`;`) to separate options
+- **Prohibited**: Never use plain text questions ("Would you like...", "Should I...")
+
+### Output Format
+
+- **Scores**: 0-100 range, right-aligned
+- **Status**: OK (≥80) | WARN (60-79) | FAIL (<60)
+- **Progress**: `████░░░░` (8 chars, filled = score/100*8)
+- **No modification**: This is READ-ONLY analysis
+
+### Conservative Scoring
+
+- **Lower**: When uncertain, score conservatively
+- **Evidence**: Require explicit metrics, not inference
+- **Trends**: Show improvement/degradation objectively
+
+### Task Tracking
+
+- **Create**: TODO list with analysis categories
+- **Status**: pending → in_progress → completed
+- **Accounting**: analyzed + skipped = total
