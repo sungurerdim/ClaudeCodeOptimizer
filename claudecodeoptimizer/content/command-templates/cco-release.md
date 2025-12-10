@@ -10,7 +10,7 @@ allowed-tools: Read(*), Grep(*), Glob(*), Edit(*), Bash(git:*), Bash(pytest:*), 
 
 Meta command that orchestrates other CCO commands for release preparation.
 
-**Standards:** Command Flow | User Input | Output Formatting
+**Rules:** User Input | Git Safety | Go/No-Go Decision | Task Tracking
 
 ## Context
 
@@ -245,3 +245,33 @@ If warnings exist and "Proceed" selected:
 - `/cco-optimize` - Cleanliness (used in Phase 3)
 - `/cco-review` - Architecture (used in Phase 4)
 - `/cco-commit` - For committing fixes
+
+---
+
+## Behavior Rules
+
+### User Input [CRITICAL]
+
+- **AskUserQuestion**: ALL user decisions MUST use this tool
+- **Separator**: Use semicolon (`;`) to separate options
+- **Prohibited**: Never use plain text questions ("Would you like...", "Should I...")
+
+### Git Safety
+
+- **Clean-State**: Require clean git state before release
+- **Version-Sync**: Verify version in all files matches
+- **No-Force**: Never force push release branches
+
+### Go/No-Go Decision
+
+| Status | Meaning | Action |
+|--------|---------|--------|
+| Blocker (red) | Must fix | Cannot release |
+| Warning (yellow) | Should fix | Can override |
+| Pass (green) | All clear | Ready to release |
+
+### Task Tracking
+
+- **Create**: TODO list with release phases
+- **Status**: pending → in_progress → completed
+- **Accounting**: passed + fixed + blocked = total

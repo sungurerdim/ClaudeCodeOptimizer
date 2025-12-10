@@ -10,7 +10,7 @@ allowed-tools: Bash(git:*), Bash(grep:*), Bash(find:*), Read(*), Grep(*), Glob(*
 
 End-to-end: Detects security and quality issues AND fixes them.
 
-**Standards:** Command Flow | Fix Workflow | User Input | Approval Flow | Safety Classification | Output Formatting
+**Rules:** User Input | Safety | Classification | Priority Assignment | Conservative Judgment | Skip Criteria | Task Tracking
 
 ## Context
 
@@ -266,3 +266,53 @@ Applied: 7 | Skipped: 2 | Failed: 0 | Manual: 2 | Total: 11
 - `/cco-optimize` - For orphans, stale-refs, duplicates (code cleanliness)
 - `/cco-health` - For metrics dashboard
 - `/cco-release` - For full pre-release workflow
+
+---
+
+## Behavior Rules
+
+### User Input [CRITICAL]
+
+- **AskUserQuestion**: ALL user decisions MUST use this tool
+- **Separator**: Use semicolon (`;`) to separate options
+- **Prohibited**: Never use plain text questions ("Would you like...", "Should I...")
+
+### Safety
+
+- **Pre-op**: Check git status before any modifications
+- **Dirty**: If uncommitted changes → prompt: `Commit; Stash; Continue anyway`
+- **Rollback**: Clean git state enables `git checkout` on failure
+
+### Classification
+
+| Type | Examples | Action |
+|------|----------|--------|
+| Safe | Remove unused imports, fix lint, add types | Auto-apply |
+| Risky | Auth changes, API contract, delete files | Require approval |
+
+### Priority Assignment
+
+| Severity | Criteria | Confidence |
+|----------|----------|------------|
+| CRITICAL | Security breach, data loss | HIGH required |
+| HIGH | Broken functionality, blocked user | HIGH required |
+| MEDIUM | Error, incorrect behavior | MEDIUM ok |
+| LOW | Style, cosmetic | LOW ok |
+
+### Conservative Judgment
+
+- **Lower**: When uncertain, choose lower severity
+- **Evidence**: Require explicit evidence, not inference
+- **No escalation**: Style issues → never CRITICAL/HIGH
+
+### Skip Criteria
+
+- **Inline**: `// cco-ignore` or `# cco-ignore` skips line
+- **File**: `// cco-ignore-file` skips entire file
+- **Paths**: fixtures/, testdata/, examples/, benchmarks/
+
+### Task Tracking
+
+- **Create**: TODO list with all items before starting
+- **Status**: pending → in_progress → completed
+- **Accounting**: done + skip + fail = total

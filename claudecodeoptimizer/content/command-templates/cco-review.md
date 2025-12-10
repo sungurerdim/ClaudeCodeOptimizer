@@ -10,7 +10,7 @@ allowed-tools: Read(*), Grep(*), Glob(*), Bash(git:*), Bash(wc:*), Bash(find:*),
 
 Analyzes architecture, identifies gaps, and provides actionable recommendations.
 
-**Standards:** Command Flow | Fix Workflow | User Input | Approval Flow | Output Formatting
+**Rules:** User Input | Safety | Priority Assignment | Conservative Judgment | Quick Mode | Task Tracking
 
 ## Context
 
@@ -284,3 +284,47 @@ For each approved recommendation:
 - `/cco-audit` - For specific quality/security checks
 - `/cco-refactor` - For safe structural changes
 - `/cco-release` - For pre-release review
+
+---
+
+## Behavior Rules
+
+### User Input [CRITICAL]
+
+- **AskUserQuestion**: ALL user decisions MUST use this tool
+- **Separator**: Use semicolon (`;`) to separate options
+- **Prohibited**: Never use plain text questions ("Would you like...", "Should I...")
+
+### Safety
+
+- **Pre-op**: Check git status before Apply phase
+- **Dirty**: If uncommitted changes → prompt: `Commit; Stash; Continue anyway`
+- **Rollback**: Clean git state enables `git checkout` on failure
+
+### Priority Assignment
+
+| Priority | Criteria |
+|----------|----------|
+| Do Now | High impact, low effort, blocking |
+| Plan | High impact, medium effort |
+| Consider | Medium impact, various effort |
+| Backlog | Low impact or high effort |
+
+### Conservative Judgment
+
+- **Lower**: When uncertain, lower the priority
+- **Evidence**: Require explicit evidence for recommendations
+- **No escalation**: Cosmetic issues → never "Do Now"
+
+### Quick Mode
+
+When `--quick` flag:
+- **No-Questions**: Use smart defaults
+- **Single-Message**: Complete analysis in one message
+- **Brief-Output**: Summary only, skip detailed breakdown
+
+### Task Tracking
+
+- **Create**: TODO list with review phases
+- **Status**: pending → in_progress → completed
+- **Accounting**: reviewed + applied + skipped = total

@@ -10,7 +10,7 @@ allowed-tools: Read(*), Grep(*), Glob(*), Edit(*), Bash(git:*), Task(*), TodoWri
 
 End-to-end: Maps references, transforms safely, verifies each step.
 
-**Standards:** Command Flow | Pre-Operation Safety | User Input | Approval Flow | Output Formatting
+**Rules:** User Input | Safety | Reference Integrity | Task Tracking
 
 ## Context
 
@@ -274,3 +274,32 @@ On any failure:
 - `/cco-optimize` - For removing orphans and duplicates
 - `/cco-audit` - For detecting complexity issues
 - `/cco-review` - For architectural recommendations
+
+---
+
+## Behavior Rules
+
+### User Input [CRITICAL]
+
+- **AskUserQuestion**: ALL user decisions MUST use this tool
+- **Separator**: Use semicolon (`;`) to separate options
+- **Prohibited**: Never use plain text questions ("Would you like...", "Should I...")
+
+### Safety [CRITICAL]
+
+- **Pre-op**: Check git status before any modifications
+- **Dirty**: If uncommitted changes → prompt: `Commit; Stash; Continue anyway`
+- **Rollback**: On ANY failure → `git checkout .` immediately
+- **Verify**: After each step, verify grep counts match expected
+
+### Reference Integrity
+
+- **Map-First**: Build complete reference map BEFORE any changes
+- **All-Refs**: Find ALL references (imports, calls, tests, docs, strings)
+- **Verify-Count**: Before/after grep counts MUST match
+
+### Task Tracking
+
+- **Create**: TODO list with all transformation steps
+- **Status**: pending → in_progress → completed
+- **Accounting**: done + skip + fail = total

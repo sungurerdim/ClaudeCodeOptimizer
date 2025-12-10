@@ -10,7 +10,7 @@ allowed-tools: Read(*), Grep(*), Glob(*), Edit(*), Bash(git:*), Bash(pytest:*), 
 
 Meta command for regular project maintenance (weekly recommended).
 
-**Standards:** Command Flow | User Input | Output Formatting
+**Rules:** User Input | Orchestration | Task Tracking
 
 ## Context
 
@@ -156,3 +156,25 @@ Removes orphans, stale refs, and duplicates.
 - `/cco-audit` - Full quality audit
 - `/cco-optimize` - Full optimization
 - `/cco-release` - Pre-release workflow
+
+---
+
+## Behavior Rules
+
+### User Input [CRITICAL]
+
+- **AskUserQuestion**: ALL user decisions MUST use this tool
+- **Separator**: Use semicolon (`;`) to separate options
+- **Prohibited**: Never use plain text questions ("Would you like...", "Should I...")
+
+### Orchestration
+
+- **Delegate**: Run sub-commands, collect results
+- **Aggregate**: Combine outputs into unified report
+- **No-Duplicate**: Don't repeat work already done by sub-commands
+
+### Task Tracking
+
+- **Create**: TODO list with checkup phases
+- **Status**: pending → in_progress → completed
+- **Accounting**: health + audit + optimize = total

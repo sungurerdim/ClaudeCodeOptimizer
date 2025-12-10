@@ -10,7 +10,7 @@ allowed-tools: Bash(git:*), Bash(ruff:*), Bash(npm:*), Bash(pytest:*), Read(*), 
 
 End-to-end: Runs checks, analyzes changes, creates atomic commits.
 
-**Standards:** Command Flow | Pre-Operation Safety | User Input | Approval Flow | Output Formatting
+**Rules:** User Input | Git Safety | Quick Mode | Task Tracking
 
 ## Context
 
@@ -312,3 +312,32 @@ Before `--amend`:
 
 - `/cco-audit` - For pre-commit quality checks
 - `/cco-release` - For release commits
+
+---
+
+## Behavior Rules
+
+### User Input [CRITICAL]
+
+- **AskUserQuestion**: ALL user decisions MUST use this tool
+- **Separator**: Use semicolon (`;`) to separate options
+- **Prohibited**: Never use plain text questions ("Would you like...", "Should I...")
+
+### Git Safety
+
+- **Pre-op**: Check git status before operations
+- **No-Force**: Never force push unless explicitly requested
+- **Amend-Check**: Verify authorship before amending
+
+### Quick Mode
+
+When `--quick` flag or single-message mode:
+- **No-Questions**: Use smart defaults
+- **Single-Message**: Complete ALL steps in one message
+- **No-Intermediate**: Only tool calls, then final summary
+
+### Task Tracking
+
+- **Create**: TODO list with commit plan
+- **Status**: pending → in_progress → completed
+- **Accounting**: staged + committed + skipped = total
