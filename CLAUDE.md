@@ -37,12 +37,12 @@ License: MIT
 Secrets detected: no
 Outdated deps: 0
 
-## Conditional Standards (auto-applied)
+## Conditional Rules (auto-applied)
 
 ### Apps > CLI - Type: CLI detected
 
-| Standard | Rule |
-|----------|------|
+| Rule | Description |
+|------|-------------|
 | * Help | --help with examples for every command |
 | * Exit-Codes | 0 success, non-zero failure with meaning |
 | * Signals | Handle SIGINT/SIGTERM gracefully |
@@ -51,8 +51,8 @@ Outdated deps: 0
 
 ### Backend > Operations - CI/CD detected
 
-| Standard | Rule |
-|----------|------|
+| Rule | Description |
+|------|-------------|
 | * Config-as-Code | Versioned, validated, env-aware |
 | * Health-Endpoints | /health + /ready |
 | * Graceful-Shutdown | Drain connections on SIGTERM |
@@ -63,16 +63,16 @@ Outdated deps: 0
 
 ### Scale > Caching Basics - Scale: Small (100-1K)
 
-| Standard | Rule |
-|----------|------|
+| Rule | Description |
+|------|-------------|
 | * Caching | TTL, invalidation strategy, cache-aside pattern |
 | * Lazy-Load | Defer non-critical resources |
 | * Connection-Pool | Reuse connections, appropriate sizing |
 
 ### Testing > Standard - Testing: Standard
 
-| Standard | Rule |
-|----------|------|
+| Rule | Description |
+|------|-------------|
 | * Integration-Tests | Test component interactions |
 | * Test-Fixtures | Reusable, maintainable |
 | * Coverage-Target | >80% line coverage |
