@@ -10,10 +10,10 @@ from typing import TypedDict
 from .config import (
     CCO_PERMISSIONS_MARKER,
     CCO_RULE_FILES,
+    CCO_RULE_NAMES,
     CCO_UNIVERSAL_PATTERN,
     CLAUDE_DIR,
-    LOCAL_SETTINGS_FILE,
-    LOCAL_STATUSLINE_FILE,
+    OLD_RULES_ROOT,
     RULES_DIR,
     SEPARATOR,
     SETTINGS_FILE,
@@ -25,16 +25,19 @@ from .config import (
 
 
 class RemovalItems(TypedDict):
-    """Type-safe container for removal items."""
+    """Type-safe container for removal items.
+
+    Note: cco-remove only handles global ~/.claude/ files.
+    Local project files (./.claude/) are managed by cco-tune.
+    """
 
     method: str | None
     files: dict[str, list[str]]
     rules: list[str]
     rules_dir: bool
+    rules_dir_old: bool  # v1.x backward compat: ~/.claude/rules/cco-*.md
     statusline: bool
     permissions: bool
-    local_statusline: bool
-    local_permissions: bool
     total_files: int
     total: int
 
@@ -151,48 +154,63 @@ def remove_permissions(settings_file: Path = SETTINGS_FILE, verbose: bool = True
         if removed:
             settings_file.write_text(json.dumps(settings, indent=2) + "\n", encoding="utf-8")
             if verbose:
-                location = "local" if settings_file == LOCAL_SETTINGS_FILE else "global"
-                print(f"  - settings.json ({location} permissions removed)")
+                print("  - settings.json (permissions removed)")
 
         return removed
     except json.JSONDecodeError:
         return False
 
 
-def has_local_cco_statusline() -> bool:
-    """Check if CCO statusline is installed locally."""
-    if not LOCAL_STATUSLINE_FILE.exists():
-        return False
-    content = LOCAL_STATUSLINE_FILE.read_text(encoding="utf-8")
-    return "CCO Statusline" in content
-
-
-def remove_local_statusline(verbose: bool = True) -> bool:
-    """Remove local CCO statusline.js."""
-    if not has_local_cco_statusline():
-        return False
-
-    LOCAL_STATUSLINE_FILE.unlink()
-    if verbose:
-        print("  - .claude/statusline.js (local)")
-    return True
-
-
 def has_rules_dir() -> bool:
-    """Check if any CCO rule files exist in ~/.claude/rules/."""
+    """Check if any CCO rule files exist in ~/.claude/rules/cco/ (v2.x)."""
     if not RULES_DIR.exists():
         return False
-    return any((RULES_DIR / f).exists() for f in CCO_RULE_FILES)
+    # Check for new v2.x structure: ~/.claude/rules/cco/{core,ai,tools}.md
+    return any((RULES_DIR / f).exists() for f in CCO_RULE_NAMES)
+
+
+def has_rules_dir_old() -> bool:
+    """Check if any old CCO rule files exist in ~/.claude/rules/ (v1.x backward compat)."""
+    if not OLD_RULES_ROOT.exists():
+        return False
+    # Check for old v1.x structure: ~/.claude/rules/cco-{core,ai,tools,adaptive}.md
+    old_files = list(CCO_RULE_FILES) + ["cco-adaptive.md"]
+    return any((OLD_RULES_ROOT / f).exists() for f in old_files)
 
 
 def remove_rules_dir(verbose: bool = True) -> bool:
-    """Remove only CCO rule files from ~/.claude/rules/ (preserve user's custom rules)."""
+    """Remove CCO rule files from ~/.claude/rules/cco/ (v2.x)."""
     if not RULES_DIR.exists():
         return False
 
     removed_count = 0
-    for rule_file in CCO_RULE_FILES:
-        rule_path = RULES_DIR / rule_file
+    for rule_name in CCO_RULE_NAMES:
+        rule_path = RULES_DIR / rule_name
+        if rule_path.exists():
+            rule_path.unlink()
+            removed_count += 1
+
+    # Remove empty cco/ directory
+    if RULES_DIR.exists() and not any(RULES_DIR.iterdir()):
+        RULES_DIR.rmdir()
+
+    if removed_count == 0:
+        return False
+
+    if verbose:
+        print(f"  - rules/cco/ ({removed_count} files)")
+    return True
+
+
+def remove_rules_dir_old(verbose: bool = True) -> bool:
+    """Remove old CCO rule files from ~/.claude/rules/ root (v1.x backward compat)."""
+    if not OLD_RULES_ROOT.exists():
+        return False
+
+    removed_count = 0
+    old_files = list(CCO_RULE_FILES) + ["cco-adaptive.md"]
+    for rule_file in old_files:
+        rule_path = OLD_RULES_ROOT / rule_file
         if rule_path.exists():
             rule_path.unlink()
             removed_count += 1
@@ -201,7 +219,7 @@ def remove_rules_dir(verbose: bool = True) -> bool:
         return False
 
     if verbose:
-        print(f"  - rules/ ({removed_count} CCO files)")
+        print(f"  - rules/ root ({removed_count} old CCO files)")
     return True
 
 
@@ -285,25 +303,27 @@ def uninstall_package(method: str) -> bool:
 
 
 def _collect_removal_items() -> RemovalItems:
-    """Collect all items to be removed."""
+    """Collect all items to be removed.
+
+    Note: Only collects global ~/.claude/ items.
+    Local project files are managed by cco-tune.
+    """
     method = detect_install_method()
     files = list_cco_files()
     rules = has_claude_md_rules()
     rules_dir = has_rules_dir()
+    rules_dir_old = has_rules_dir_old()
     statusline = has_cco_statusline()
     permissions = has_cco_permissions(SETTINGS_FILE)
-    local_statusline = has_local_cco_statusline()
-    local_permissions = has_cco_permissions(LOCAL_SETTINGS_FILE)
     total_files = sum(len(f) for f in files.values())
     total = (
         (1 if method else 0)
         + total_files
         + len(rules)
         + (1 if rules_dir else 0)
+        + (1 if rules_dir_old else 0)
         + (1 if statusline else 0)
         + (1 if permissions else 0)
-        + (1 if local_statusline else 0)
-        + (1 if local_permissions else 0)
     )
 
     return {
@@ -311,10 +331,9 @@ def _collect_removal_items() -> RemovalItems:
         "files": files,
         "rules": rules,
         "rules_dir": rules_dir,
+        "rules_dir_old": rules_dir_old,
         "statusline": statusline,
         "permissions": permissions,
-        "local_statusline": local_statusline,
-        "local_permissions": local_permissions,
         "total_files": total_files,
         "total": total,
     }
@@ -344,25 +363,20 @@ def _display_removal_plan(items: RemovalItems) -> None:
                 print(f"  - {item}")
             print()
 
-    if items["rules_dir"]:
+    if items["rules_dir"] or items["rules_dir_old"]:
         print("Rules directory:")
-        print("  - ~/.claude/rules/")
+        if items["rules_dir"]:
+            print("  - ~/.claude/rules/cco/ (v2.x)")
+        if items["rules_dir_old"]:
+            print("  - ~/.claude/rules/ root (v1.x old files)")
         print()
 
     if items["statusline"] or items["permissions"]:
-        print("Global (~/.claude/):")
+        print("Settings (~/.claude/):")
         if items["statusline"]:
             print("  - statusline.js")
             print("  - settings.json (statusLine config)")
         if items["permissions"]:
-            print("  - settings.json (permissions)")
-        print()
-
-    if items["local_statusline"] or items["local_permissions"]:
-        print("Local (./.claude/):")
-        if items["local_statusline"]:
-            print("  - statusline.js")
-        if items["local_permissions"]:
             print("  - settings.json (permissions)")
         print()
 
@@ -392,29 +406,26 @@ def _execute_removal(items: RemovalItems) -> None:
         remove_claude_md_rules()
         print()
 
-    if items["rules_dir"]:
+    if items["rules_dir"] or items["rules_dir_old"]:
         print("Removing rules directory...")
-        remove_rules_dir()
+        if items["rules_dir"]:
+            remove_rules_dir()
+        if items["rules_dir_old"]:
+            remove_rules_dir_old()
         print()
 
     if items["statusline"] or items["permissions"]:
-        print("Removing global settings...")
+        print("Removing settings...")
         if items["statusline"]:
             remove_statusline()
         if items["permissions"]:
             remove_permissions(SETTINGS_FILE)
         print()
 
-    if items["local_statusline"] or items["local_permissions"]:
-        print("Removing local settings...")
-        if items["local_statusline"]:
-            remove_local_statusline()
-        if items["local_permissions"]:
-            remove_permissions(LOCAL_SETTINGS_FILE)
-        print()
-
     print(SEPARATOR)
     print("CCO removed successfully.")
+    print()
+    print("Note: Local project files (./.claude/) are managed by /cco-tune.")
     print(SEPARATOR)
     print()
 
