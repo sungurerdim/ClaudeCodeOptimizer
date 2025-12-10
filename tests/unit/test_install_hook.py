@@ -88,12 +88,13 @@ class TestCleanPreviousInstallation:
         assert "<!-- CCO_STANDARDS_START -->" not in content
         assert "Keep this" in content
 
-    def test_removes_rules_dir(self, tmp_path):
-        """Test removes ~/.claude/rules/ directory during cleanup."""
+    def test_removes_cco_rules_only(self, tmp_path):
+        """Test removes only CCO rule files, preserves custom rules during cleanup."""
         rules_dir = tmp_path / "rules"
         rules_dir.mkdir()
-        (rules_dir / "core.md").write_text("# Core")
-        (rules_dir / "ai.md").write_text("# AI")
+        (rules_dir / "cco-core.md").write_text("# Core")
+        (rules_dir / "cco-ai.md").write_text("# AI")
+        (rules_dir / "custom-rule.md").write_text("# Custom")
 
         with patch("claudecodeoptimizer.install_hook.COMMANDS_DIR", tmp_path / "commands"):
             with patch("claudecodeoptimizer.install_hook.AGENTS_DIR", tmp_path / "agents"):
@@ -102,7 +103,11 @@ class TestCleanPreviousInstallation:
                         result = clean_previous_installation(verbose=False)
 
         assert result["rules"] == 2
-        assert not rules_dir.exists()
+        # Directory still exists with custom rule
+        assert rules_dir.exists()
+        assert not (rules_dir / "cco-core.md").exists()
+        assert not (rules_dir / "cco-ai.md").exists()
+        assert (rules_dir / "custom-rule.md").exists()
 
     def test_handles_nonexistent_dirs(self, tmp_path):
         """Test handles nonexistent directories gracefully."""
@@ -853,10 +858,10 @@ class TestSetupRules:
         # Create source rules in content dir
         src_rules = tmp_path / "content" / "rules"
         src_rules.mkdir(parents=True)
-        (src_rules / "core.md").write_text("# Core Rules")
-        (src_rules / "ai.md").write_text("# AI Rules")
-        (src_rules / "tools.md").write_text("# Tools Rules")
-        (src_rules / "adaptive.md").write_text("# Adaptive Rules")
+        (src_rules / "cco-core.md").write_text("# Core Rules")
+        (src_rules / "cco-ai.md").write_text("# AI Rules")
+        (src_rules / "cco-tools.md").write_text("# Tools Rules")
+        (src_rules / "cco-adaptive.md").write_text("# Adaptive Rules")
 
         # Target rules dir
         rules_dir = tmp_path / "rules"
@@ -868,10 +873,10 @@ class TestSetupRules:
                 result = setup_rules(verbose=False)
 
         assert rules_dir.exists()
-        assert (rules_dir / "core.md").exists()
-        assert (rules_dir / "ai.md").exists()
-        assert (rules_dir / "tools.md").exists()
-        assert (rules_dir / "adaptive.md").exists()
+        assert (rules_dir / "cco-core.md").exists()
+        assert (rules_dir / "cco-ai.md").exists()
+        assert (rules_dir / "cco-tools.md").exists()
+        assert (rules_dir / "cco-adaptive.md").exists()
         assert result["core"] == 1
         assert result["ai"] == 1
         assert result["tools"] == 1
@@ -883,7 +888,7 @@ class TestSetupRules:
 
         src_rules = tmp_path / "content" / "rules"
         src_rules.mkdir(parents=True)
-        (src_rules / "core.md").write_text("# Core")
+        (src_rules / "cco-core.md").write_text("# Core")
 
         rules_dir = tmp_path / "rules"
 
@@ -894,19 +899,20 @@ class TestSetupRules:
                 setup_rules(verbose=True)
 
         captured = capsys.readouterr()
-        assert "+ core.md" in captured.out
+        assert "+ cco-core.md" in captured.out
 
-    def test_setup_rules_removes_old_files(self, tmp_path):
-        """Test setup_rules removes existing rule files."""
+    def test_setup_rules_removes_old_cco_files_only(self, tmp_path):
+        """Test setup_rules removes existing CCO rule files, preserves custom rules."""
         from claudecodeoptimizer.install_hook import setup_rules
 
         src_rules = tmp_path / "content" / "rules"
         src_rules.mkdir(parents=True)
-        (src_rules / "core.md").write_text("# New Core")
+        (src_rules / "cco-core.md").write_text("# New Core")
 
         rules_dir = tmp_path / "rules"
         rules_dir.mkdir()
-        (rules_dir / "old_rule.md").write_text("# Old Rule")
+        (rules_dir / "cco-core.md").write_text("# Old CCO Core")
+        (rules_dir / "custom-rule.md").write_text("# Custom Rule")
 
         with patch(
             "claudecodeoptimizer.install_hook.get_content_dir", return_value=tmp_path / "content"
@@ -914,8 +920,10 @@ class TestSetupRules:
             with patch("claudecodeoptimizer.install_hook.RULES_DIR", rules_dir):
                 setup_rules(verbose=False)
 
-        assert not (rules_dir / "old_rule.md").exists()
-        assert (rules_dir / "core.md").exists()
+        # Custom rule preserved, CCO rule updated
+        assert (rules_dir / "custom-rule.md").exists()
+        assert (rules_dir / "cco-core.md").exists()
+        assert (rules_dir / "cco-core.md").read_text() == "# New Core"
 
     def test_setup_rules_no_source_dir(self, tmp_path):
         """Test setup_rules returns empty when source doesn't exist."""

@@ -37,10 +37,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Changed
 - **Standards → Rules restructure** - Renamed "standards" to "rules" throughout the project
 - **Directory renamed** - `content/slash-commands/` → `content/command-templates/` for consistency with `agent-templates/`
-- **4-category rules system** - `core.md`, `ai.md`, `tools.md`, `adaptive.md` in `~/.claude/rules/`
+- **4-category rules system** - `cco-core.md`, `cco-ai.md`, `cco-tools.md`, `cco-adaptive.md` in `~/.claude/rules/`
 - **Token optimization** - Only core + ai rules always loaded; tools rules on-demand (~3000 tokens saved)
 - **Markers updated** - `CCO_CORE_START`, `CCO_AI_START`, `CCO_TOOLS_START`, `CCO_ADAPTIVE_START`
-- **On-demand tool rules** - Commands/agents load tools.md via `!` backtick syntax when needed
+- **On-demand tool rules** - Commands/agents load cco-tools.md via `!` backtick syntax when needed
 - **Rules restructured** into 4 categories: Core (38), AI (32), Tools (110), Adaptive (120 pool)
 - **Rules optimized** - Table format with inheritance pattern, -37.7% lines, -26.8% tokens
 - **Export integrated into main flow** - No separate `--export` flag needed, select from Export section

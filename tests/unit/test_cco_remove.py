@@ -407,37 +407,53 @@ class TestHasRulesDir:
             result = has_rules_dir()
         assert result is False
 
-    def test_with_rules(self, tmp_path):
-        """Test returns True when rules dir has .md files."""
+    def test_with_cco_rules(self, tmp_path):
+        """Test returns True when rules dir has CCO rule files."""
         from claudecodeoptimizer.cco_remove import has_rules_dir
 
         rules_dir = tmp_path / "rules"
         rules_dir.mkdir()
-        (rules_dir / "core.md").write_text("# Core Rules")
+        (rules_dir / "cco-core.md").write_text("# Core Rules")
         with patch("claudecodeoptimizer.cco_remove.RULES_DIR", rules_dir):
             result = has_rules_dir()
         assert result is True
+
+    def test_with_non_cco_rules_only(self, tmp_path):
+        """Test returns False when rules dir has only non-CCO .md files."""
+        from claudecodeoptimizer.cco_remove import has_rules_dir
+
+        rules_dir = tmp_path / "rules"
+        rules_dir.mkdir()
+        (rules_dir / "custom-rule.md").write_text("# Custom Rule")
+        with patch("claudecodeoptimizer.cco_remove.RULES_DIR", rules_dir):
+            result = has_rules_dir()
+        assert result is False
 
 
 class TestRemoveRulesDir:
     """Test remove_rules_dir function."""
 
-    def test_remove_rules_dir(self, tmp_path, capsys):
-        """Test removes rules directory."""
+    def test_remove_cco_rules_only(self, tmp_path, capsys):
+        """Test removes only CCO rule files, preserves custom rules."""
         from claudecodeoptimizer.cco_remove import remove_rules_dir
 
         rules_dir = tmp_path / "rules"
         rules_dir.mkdir()
-        (rules_dir / "core.md").write_text("# Core")
-        (rules_dir / "ai.md").write_text("# AI")
+        (rules_dir / "cco-core.md").write_text("# Core")
+        (rules_dir / "cco-ai.md").write_text("# AI")
+        (rules_dir / "custom-rule.md").write_text("# Custom")
 
         with patch("claudecodeoptimizer.cco_remove.RULES_DIR", rules_dir):
             result = remove_rules_dir(verbose=True)
 
         assert result is True
-        assert not rules_dir.exists()
+        # Directory still exists with custom rule
+        assert rules_dir.exists()
+        assert not (rules_dir / "cco-core.md").exists()
+        assert not (rules_dir / "cco-ai.md").exists()
+        assert (rules_dir / "custom-rule.md").exists()
         captured = capsys.readouterr()
-        assert "rules/ (2 files)" in captured.out
+        assert "rules/ (2 CCO files)" in captured.out
 
     def test_no_dir_to_remove(self, tmp_path):
         """Test returns False when no rules dir exists."""

@@ -2,7 +2,6 @@
 
 import json
 import re
-import shutil
 import subprocess
 import sys
 from pathlib import Path
@@ -10,6 +9,7 @@ from typing import TypedDict
 
 from .config import (
     CCO_PERMISSIONS_MARKER,
+    CCO_RULE_FILES,
     CCO_UNIVERSAL_PATTERN,
     CLAUDE_DIR,
     LOCAL_SETTINGS_FILE,
@@ -179,19 +179,29 @@ def remove_local_statusline(verbose: bool = True) -> bool:
 
 
 def has_rules_dir() -> bool:
-    """Check if ~/.claude/rules/ directory exists."""
-    return RULES_DIR.exists() and any(RULES_DIR.glob("*.md"))
+    """Check if any CCO rule files exist in ~/.claude/rules/."""
+    if not RULES_DIR.exists():
+        return False
+    return any((RULES_DIR / f).exists() for f in CCO_RULE_FILES)
 
 
 def remove_rules_dir(verbose: bool = True) -> bool:
-    """Remove ~/.claude/rules/ directory."""
+    """Remove only CCO rule files from ~/.claude/rules/ (preserve user's custom rules)."""
     if not RULES_DIR.exists():
         return False
 
-    rule_count = len(list(RULES_DIR.glob("*.md")))
-    shutil.rmtree(RULES_DIR)
+    removed_count = 0
+    for rule_file in CCO_RULE_FILES:
+        rule_path = RULES_DIR / rule_file
+        if rule_path.exists():
+            rule_path.unlink()
+            removed_count += 1
+
+    if removed_count == 0:
+        return False
+
     if verbose:
-        print(f"  - rules/ ({rule_count} files)")
+        print(f"  - rules/ ({removed_count} CCO files)")
     return True
 
 

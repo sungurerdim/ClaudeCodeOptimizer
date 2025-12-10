@@ -186,7 +186,7 @@ ClaudeCodeOptimizer/
 │   ├── content/             # Knowledge base (deployed to ~/.claude/)
 │   │   ├── command-templates/  # Slash commands (cco-*.md)
 │   │   ├── agent-templates/    # Autonomous agents (cco-agent-*.md)
-│   │   ├── rules/              # Rules files (core.md, ai.md, tools.md, adaptive.md)
+│   │   ├── rules/              # Rules files (cco-core.md, cco-ai.md, cco-tools.md, cco-adaptive.md)
 │   │   ├── permissions/        # Permission presets (safe.json, balanced.json, etc.)
 │   │   └── statusline/         # Statusline configs (full.js, minimal.js)
 │   ├── __init__.py          # Package init, version
@@ -229,7 +229,7 @@ Team: {team} | Scale: {scale} | ...
 
 ### Tools Rules (loaded on-demand by commands/agents)
 
-Located in `~/.claude/rules/tools.md`, loaded via `!` backtick syntax.
+Located in `~/.claude/rules/cco-tools.md`, loaded via `!` backtick syntax.
 
 ### Generator Rules
 
