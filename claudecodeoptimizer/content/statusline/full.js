@@ -190,7 +190,8 @@ function getGitInfo() {
     if (idx === 'U' || wt === 'U' || (idx === 'D' && wt === 'D') || (idx === 'A' && wt === 'A')) {
       conflict++; continue;
     }
-    if (idx === '?' && wt === '?') { untracked++; continue; }
+    // Skip untracked here - will count via ls-files for accuracy
+    if (idx === '?' && wt === '?') { continue; }
 
     // Working tree changes
     if (wt === 'M') mod++;
@@ -204,6 +205,10 @@ function getGitInfo() {
     if (idx === 'C') sAdd++;
   }
 
+  // Count untracked files via ls-files (handles directories correctly)
+  const untrackedList = execCmd('git ls-files --others --exclude-standard');
+  const untrackedFiles = untrackedList ? untrackedList.split('\n').filter(f => f.trim()) : [];
+  untracked = untrackedFiles.length;
   add = untracked;
 
   // Line counts
@@ -221,11 +226,13 @@ function getGitInfo() {
     }
   }
 
-  if (untracked > 0 && untracked <= 100) {
-    const untrackedLines = execCmd('bash -c "git ls-files --others --exclude-standard | head -100 | xargs cat 2>/dev/null | wc -l"');
-    if (untrackedLines) {
-      const lines = parseInt(untrackedLines, 10);
-      if (!isNaN(lines)) unstAdd += lines;
+  // Count lines in untracked files
+  if (untrackedFiles.length > 0 && untrackedFiles.length <= 100) {
+    for (const file of untrackedFiles) {
+      try {
+        const content = fs.readFileSync(file, 'utf-8');
+        unstAdd += content.split('\n').length;
+      } catch {}
     }
   }
 
