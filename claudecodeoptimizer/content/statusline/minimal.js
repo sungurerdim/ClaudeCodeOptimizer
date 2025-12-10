@@ -115,9 +115,14 @@ try {
   const modelStr = c(modelDisplay, 'magenta');
   const sep = c('·', 'gray');
 
-  // Two line output
-  console.log(repoDisplay + releaseStr);
-  console.log(`${addStr} ${remStr} ${sep} ${versionStr} ${sep} ${modelStr}`);
+  // Zero-width space for top/bottom padding (prevents empty line collapse)
+  const emptyLine = '\u200B';
+  const lines = [];
+  lines.push(emptyLine);  // Top padding
+  lines.push(repoDisplay + releaseStr);
+  lines.push(`${addStr} ${remStr} ${sep} ${versionStr} ${sep} ${modelStr}`);
+  lines.push(emptyLine);  // Bottom padding
+  console.log(lines.join('\n'));
 } catch (error) {
   console.log(`[Statusline Error: ${error.message}]`);
 }
