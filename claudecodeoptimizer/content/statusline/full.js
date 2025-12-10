@@ -307,6 +307,9 @@ function formatStatusline(input, git) {
   const projectSize = getProjectSize();
   const latestRelease = getLatestRelease();
 
+  // Zero-width space for top/bottom padding (prevents empty line collapse)
+  const emptyLine = '\u200B';
+
   // Repo display with optional release tag
   const repoDisplay = git ? `${git.repoName || projectName}:${git.branch}` : 'Not a git repo';
   const releaseDisplay = latestRelease ? c(latestRelease, 'cyan') : null;
@@ -453,6 +456,7 @@ function formatStatusline(input, git) {
   // RENDER LINES
   // ─────────────────────────────────────────────────────────────────────────
   const lines = [];
+  lines.push(emptyLine);  // Top padding
 
   // Separator: adds space only on sides with content
   const sep = ' ' + c(BOX.v, 'gray') + ' ';
@@ -476,12 +480,6 @@ function formatStatusline(input, git) {
       '  ' + padLeft(c4, colWidths[3])
     );
   }
-
-  // Empty line that Node will process (zero-width space)
-  const emptyLine = '\u200B';
-
-  // Top empty line
-  lines.push(emptyLine);
 
   // Row 1: Repo (left) + Release tag (right-aligned)
   const totalWidth = headerLeftWidth + 3 + headerRightWidth; // +3 for ` · `
@@ -519,9 +517,7 @@ function formatStatusline(input, git) {
     lines.push(row5(`${c('No git data available', 'gray')}`, noGitRow.editVal, noGitRow.newVal, noGitRow.delVal, noGitRow.renameVal, bodyWideWidth));
   }
 
-  // Bottom empty line
-  lines.push(emptyLine);
-
+  lines.push(emptyLine);  // Bottom padding
   return lines.join('\n');
 }
 
