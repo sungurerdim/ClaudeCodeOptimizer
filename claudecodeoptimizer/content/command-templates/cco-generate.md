@@ -59,7 +59,7 @@ When called without flags:
 **Use AskUserQuestion:**
 | Question | Options | MultiSelect |
 |----------|---------|-------------|
-| What to generate? | Tests, Docs, Infra, Boilerplate, All | true |
+| What to generate? | Tests; Docs; Infra; Boilerplate; All | true |
 
 Explicit flags skip questions.
 

@@ -10,6 +10,8 @@
 | * Tool | ALL user inputs MUST use AskUserQuestion tool |
 | * No-Exceptions | Never use plain text prompts for user decisions |
 | * MultiSelect | Use multiSelect: true when multiple selections valid |
+| * All-Stages | Applies to ALL stages: start, middle, end of command |
+| * Follow-up | Post-execution recommendations MUST use AskUserQuestion |
 
 ### Applies To
 
@@ -20,6 +22,32 @@
 | Option selection | "Which files to include?" | true |
 | Yes/No decisions | "Add BREAKING CHANGE footer?" | false |
 | Action selection | "Accept / Modify / Cancel" | false |
+| Follow-up actions | "Apply recommendations?" | true |
+| Final decisions | "Proceed with release?" | false |
+
+### Prohibited Patterns [STRICT]
+
+| Pattern | Problem |
+|---------|---------|
+| "Would you like me to...?" | Plain text question |
+| "Do you want to...?" | Plain text question |
+| "Should I...?" | Plain text question |
+| "Let me know if..." | Implicit question |
+| Ending with a question mark without AskUserQuestion | VIOLATION |
+
+### Option Separator [STRICT]
+
+| Rule | Description |
+|------|-------------|
+| * Separator | Use semicolon (`;`) to separate options |
+| * No-Comma | Never use comma - ambiguous with multi-word options |
+| * Consistent | Same format across all commands |
+
+**Examples:**
+- ✓ `Accept; Modify; Cancel`
+- ✓ `Yes, proceed anyway; No, fix first` (comma OK within single option)
+- ✗ `Accept, Modify, Cancel` (ambiguous)
+- ✗ `Yes, proceed anyway, No, fix first` (very ambiguous)
 
 ### Reference Pattern
 
@@ -28,7 +56,7 @@ Commands MUST explicitly state tool usage:
 **Use AskUserQuestion:**
 | Question | Options | MultiSelect |
 |----------|---------|-------------|
-| {question}? | {opt1}, {opt2}, ... | true/false |
+| {question}? | {opt1}; {opt2}; ... | true/false |
 ```
 
 ## Command Flow

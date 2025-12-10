@@ -244,9 +244,9 @@ Follow CCO "Question Formatting" rule for all questions below.
 
 | Question | Options | `[recommended]` when |
 |----------|---------|---------------------|
-| Thinking Tokens? | Standard (5000), Medium (8000), High (10000) | complexity score: 0→Standard, 1-2→Medium, 3+→High |
-| MCP Output Tokens? | Standard (25000), Large (35000), Very Large (50000) | files: <100→Standard, 100-500→Large, 500+→Very Large |
-| Prompt Caching? | Off, On | always→On |
+| Thinking Tokens? | Standard (5000); Medium (8000); High (10000) | complexity score: 0→Standard, 1-2→Medium, 3+→High |
+| MCP Output Tokens? | Standard (25000); Large (35000); Very Large (50000) | files: <100→Standard, 100-500→Large, 500+→Very Large |
+| Prompt Caching? | Off; On | always→On |
 
 See [AI Performance Auto-Detection](#ai-performance-auto-detection) for scoring logic.
 
@@ -254,13 +254,13 @@ See [AI Performance Auto-Detection](#ai-performance-auto-detection) for scoring 
 
 | Question | Options | `[recommended]` when |
 |----------|---------|---------------------|
-| Statusline mode? | Minimal, Full | first-time→Full; exists→current mode |
+| Statusline mode? | Minimal; Full | first-time→Full; exists→current mode |
 
 **If Permissions selected:**
 
 | Question | Options | `[recommended]` when |
 |----------|---------|---------------------|
-| Permission level? | Safe, Balanced, Permissive, Full | see table below; exists→current level |
+| Permission level? | Safe; Balanced; Permissive; Full | see table below; exists→current level |
 
 **If CLAUDE.md or AGENTS.md export selected:**
 
@@ -852,7 +852,7 @@ Only show rows for options user selected in Step 2. If user didn't select AI Per
 
 | Question | Options |
 |----------|---------|
-| Apply this configuration? | Accept, Edit, Cancel |
+| Apply this configuration? | Accept; Edit; Cancel |
 
 **Option descriptions:**
 - Accept: Apply configuration to project

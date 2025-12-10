@@ -81,7 +81,7 @@ When called without query:
 **Use AskUserQuestion:**
 | Question | Options | MultiSelect |
 |----------|---------|-------------|
-| Depth? | Standard (Recommended), Quick, Deep | false |
+| Depth? | Standard (Recommended); Quick; Deep | false |
 
 *Note: Research topic is free text - use AskUserQuestion with text input option.*
 

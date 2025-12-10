@@ -241,6 +241,18 @@ For each recommendation:
 
 ## Phase 7: Apply (Optional)
 
+**Use AskUserQuestion:**
+| Question | Options | MultiSelect |
+|----------|---------|-------------|
+| Apply recommendations? | All ({N}); Select individual; Skip | false |
+
+If "Select individual" chosen:
+
+**Use AskUserQuestion:**
+| Question | Options | MultiSelect |
+|----------|---------|-------------|
+| Which recommendations to apply? | {rec1} [{priority}]; {rec2} [{priority}]; ... | true |
+
 For each approved recommendation:
 1. Show detailed change plan
 2. Implement changes

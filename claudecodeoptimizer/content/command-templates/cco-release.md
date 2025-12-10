@@ -207,6 +207,18 @@ Includes:
 └──────────────────────────────────────────────────────────────┘
 ```
 
+**Use AskUserQuestion:**
+| Question | Options | MultiSelect |
+|----------|---------|-------------|
+| Release decision? | Proceed (create tag); Fix warnings first; Abort | false |
+
+If warnings exist and "Proceed" selected:
+
+**Use AskUserQuestion:**
+| Question | Options | MultiSelect |
+|----------|---------|-------------|
+| Confirm release with {N} warnings? | Yes, proceed anyway; No, fix first | false |
+
 ## Flags
 
 | Flag | Effect |

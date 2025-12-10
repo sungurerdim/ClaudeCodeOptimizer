@@ -91,8 +91,8 @@ When called without flags:
 **Use AskUserQuestion:**
 | Question | Options | MultiSelect |
 |----------|---------|-------------|
-| Focus? | Hygiene (Recommended), Efficiency, All | true |
-| Mode? | Conservative, Balanced (Recommended), Aggressive | false |
+| Focus? | Hygiene (Recommended); Efficiency; All | true |
+| Mode? | Conservative; Balanced (Recommended); Aggressive | false |
 
 Explicit flags skip questions.
 
@@ -115,7 +115,7 @@ Report: `[ORPHAN] {type}: {name} in {file:line} (last modified: {date})`
 **Resolution - Use AskUserQuestion:**
 | Question | Options | MultiSelect |
 |----------|---------|-------------|
-| Orphan: {name} in {file:line}. Action? | Delete, Keep (add reference), Skip | false |
+| Orphan: {name} in {file:line}. Action? | Delete; Keep (add reference); Skip | false |
 
 ### Stale References (`--stale-refs`)
 
@@ -276,12 +276,12 @@ For Major updates, perform changelog analysis:
 **Use AskUserQuestion for each update:**
 | Question | Options | MultiSelect |
 |----------|---------|-------------|
-| Update {pkg} {current} → {latest}? | Update, Skip, Details | false |
+| Update {pkg} {current} → {latest}? | Update; Skip; Details | false |
 
 **Batch approval option:**
 | Question | Options | MultiSelect |
 |----------|---------|-------------|
-| Apply selected updates? | Confirm, Review again, Cancel all | false |
+| Apply selected updates? | Confirm; Review again; Cancel all | false |
 
 #### Sub-flags
 
@@ -432,6 +432,15 @@ After dependency updates:
 - [ ] Tests pass with new versions
 - [ ] No breaking API changes in codebase
 - [ ] CI/CD pipeline passes
+
+## Follow-up Actions [CRITICAL]
+
+When optimization reveals actionable recommendations (e.g., pinning versions, refactoring complex functions), ALWAYS use AskUserQuestion - never ask as plain text.
+
+**Use AskUserQuestion:**
+| Question | Options | MultiSelect |
+|----------|---------|-------------|
+| Follow-up actions? | Apply recommendations; Create issues; Skip | true |
 
 ## Usage
 

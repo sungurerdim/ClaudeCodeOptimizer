@@ -61,7 +61,7 @@ When called without operation:
 **Use AskUserQuestion:**
 | Question | Options | MultiSelect |
 |----------|---------|-------------|
-| Operation? | Rename, Move, Extract, Inline, Restructure | false |
+| Operation? | Rename; Move; Extract; Inline; Restructure | false |
 
 After selection, prompt for required parameters using AskUserQuestion.
 
