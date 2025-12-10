@@ -96,6 +96,43 @@ For rule counts, see [README](../README.md#rules).
 
 ---
 
+## Command Authoring
+
+CCO commands use YAML frontmatter for metadata and tool restrictions.
+
+### Frontmatter Format
+
+```yaml
+---
+name: command-name
+description: Brief description
+allowed-tools: Tool1(*), Tool2(pattern:*)
+---
+```
+
+### Required Tools
+
+| Tool | When Required |
+|------|---------------|
+| `TodoWrite` | ALL commands (progress tracking) |
+| `Task(*)` | Commands using sub-agents |
+
+### Tool Pattern Syntax
+
+| Pattern | Matches | Example |
+|---------|---------|---------|
+| `Tool(*)` | All uses | `Read(*)` |
+| `Tool(path/*)` | Path prefix | `Edit(src/*)` |
+| `Bash(cmd:*)` | Specific command | `Bash(git:*)` |
+
+### Security Benefit
+
+- **Scope**: Commands can only use declared tools
+- **Prevention**: Prevents accidental destructive operations
+- **Explicit**: Explicit scope = predictable behavior
+
+---
+
 *See [Rules Documentation](rules.md) for full details*
 
 *Back to [README](../README.md)*

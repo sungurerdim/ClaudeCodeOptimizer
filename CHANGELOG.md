@@ -20,8 +20,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - **Cleanliness category in `/cco-optimize`** - Orphans, stale references, and duplicates moved from audit
 - **Dynamic Context Injection** - Commands use `!` backtick syntax for real-time context at load time (git status, branch, project info available instantly)
 - **Tool Restrictions** - `allowed-tools` frontmatter limits each command to declared tools only, preventing accidental destructive operations
-- **7 new CCO-Specific standards** - Parallel Execution, Quick Mode, Conservative Judgment, Skip Criteria, Task Tracking, Dynamic Context, Tool Restrictions
-- **Unified table format** - All standards now use `| * Standard | Rule |` format for consistent counting with `grep -c "| \* "`
+- **7 new CCO-Specific rules** - Parallel Execution, Quick Mode, Conservative Judgment, Skip Criteria, Task Tracking, Dynamic Context, Tool Restrictions
+- **Unified table format** - All rules now use `| * Rule | Description |` format for consistent counting
 - **Local mode for `/cco-tune`** - Project-specific statusline and permissions via `cco-setup --local`
 - **Statusline enhancements** - Git release tag display, improved layout with dot separators, Full/Minimal modes
 - **Permissions system** - Four levels (safe/balanced/permissive/full) derived from full.json template
@@ -29,9 +29,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - **Impact Preview** - Direct files, dependents, test coverage, and risk assessment in Fix Workflow
 - **Detection exclusions** - Prevent false positives from benchmarks/, examples/, test fixtures
 - **Unified /cco-tune flow** - Configure, Remove, and Export in single multiSelect question
-- **Remove Configuration** - Remove any setting (AI Performance, Statusline, Permissions, Standards)
+- **Remove Configuration** - Remove any setting (AI Performance, Statusline, Permissions, Rules)
 - **Export content selection** - User chooses which sections to include in export
-- **Standards exemplars** - Correct/incorrect examples for Question Formatting to improve AI consistency
+- **Rule exemplars** - Correct/incorrect examples for Question Formatting to improve AI consistency
 - **Verification checkpoints** - Pre-output verification rules for consistent behavior
 
 ### Changed
@@ -48,19 +48,19 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - **Question Formatting enhanced** - CRITICAL markers, exemplars, verification checkpoints for consistency
 - **Agents consolidated**: `cco-agent-detect` + `cco-agent-scan` → `cco-agent-analyze`; `cco-agent-action` → `cco-agent-apply`
 - **Question Formatting** - Standardized labels ([detected], [current], [recommended]), ascending option ordering
-- **Standard counts** - Now calculated dynamically at runtime (no hardcoded values)
-- **Cumulative tier system** - Scale, Testing, Observability tiers properly include lower tier standards
+- **Rule counts** - Now calculated dynamically at runtime (no hardcoded values)
+- **Cumulative tier system** - Scale, Testing, Observability tiers properly include lower tier rules
 - **Documentation expanded** - Added `docs/commands.md`, `docs/agents.md`, `docs/rules.md`
-- **CCO-Specific standards** - Comprehensive workflow mechanisms (Command Flow, Fix Workflow, Approval Flow, Question Formatting, Output Formatting, Safety Classification, Impact Preview, Priority Levels)
+- **CCO-Specific rules** - Comprehensive workflow mechanisms (Command Flow, Fix Workflow, Approval Flow, Question Formatting, Output Formatting, Safety Classification, Impact Preview, Priority Levels)
 - **CCO marker pattern** - Universal backward-compatible pattern for clean upgrades from any version
 
 ### Fixed
 - Rule counts consistent across all documentation (70 base + 110 tools + 120 adaptive pool)
 - Detection exclusions for test/example directories prevent false Container triggers
 - Statusline emoji width calculation for proper alignment
-- CLI/Library projects excluded from Operations standards (use CI Only instead)
+- CLI/Library projects excluded from Operations rules (use CI Only instead)
 - Snapshot Testing requires Frontend detection
-- Kubernetes separated from Container standards
+- Kubernetes separated from Container rules
 - Connection Pool duplication removed
 - AI performance settings cleaned from permission files
 - Quick-install Python version and timeouts corrected
@@ -68,9 +68,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Removed
 - AI-Patterns Detection category from `/cco-audit` (Claude already handles this)
 - Production Readiness Mode from `/cco-review` (use `/cco-audit --pre-release`)
-- Redundant standard references from commands (use CCO-Specific standards)
-- Hardcoded standard counts (now dynamic)
-- Duplicate standards across categories
+- Redundant rule references from commands (use CCO-Specific rules)
+- Hardcoded rule counts (now dynamic)
+- Duplicate rules across categories
 
 ## [1.0.0] - 2025-12-02
 
