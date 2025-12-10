@@ -12,9 +12,11 @@ from .config import (
     AGENTS_DIR,
     CCO_PERMISSIONS_MARKER,
     CCO_RULE_FILES,
+    CCO_RULE_NAMES,
     CCO_UNIVERSAL_PATTERN,
     CLAUDE_DIR,
     COMMANDS_DIR,
+    OLD_RULES_ROOT,
     RULES_DIR,
     SEPARATOR,
     get_content_path,
@@ -37,7 +39,8 @@ def clean_previous_installation(verbose: bool = True) -> dict[str, int]:
     This ensures a clean reinstall by removing:
     - All cco-*.md files in commands/ and agents/
     - CCO markers from CLAUDE.md
-    - Rules directory
+    - Old rules from ~/.claude/rules/ root (v1.x backward compat)
+    - New rules from ~/.claude/rules/cco/ (v2.x)
 
     NOTE: Does NOT touch settings.json or statusline.js.
     v1.0.0 never installed these globally, and v1.1.0+ uses local ./.claude/ only.
@@ -62,13 +65,28 @@ def clean_previous_installation(verbose: bool = True) -> dict[str, int]:
             f.unlink()
             removed["agents"] += 1
 
-    # 3. Remove only CCO rule files (preserve user's custom rules)
-    if RULES_DIR.exists():
-        for rule_file in CCO_RULE_FILES:
-            rule_path = RULES_DIR / rule_file
+    # 3a. Remove old CCO rule files from root (v1.x backward compat)
+    # Include all possible rule files from any previous CCO version
+    old_rule_files = CCO_RULE_FILES + ("cco-adaptive.md", "cco-tools.md")
+    if OLD_RULES_ROOT.exists():
+        for rule_file in old_rule_files:
+            rule_path = OLD_RULES_ROOT / rule_file
             if rule_path.exists():
                 rule_path.unlink()
                 removed["rules"] += 1
+
+    # 3b. Remove CCO rules from cco/ subdirectory (v2.x)
+    # Include tools.md from previous v2.x installs (no longer installed globally)
+    old_rule_names = CCO_RULE_NAMES + ("tools.md", "adaptive.md")
+    if RULES_DIR.exists():
+        for rule_name in old_rule_names:
+            rule_path = RULES_DIR / rule_name
+            if rule_path.exists():
+                rule_path.unlink()
+                removed["rules"] += 1
+        # Remove empty cco/ directory
+        if RULES_DIR.exists() and not any(RULES_DIR.iterdir()):
+            RULES_DIR.rmdir()
 
     # 4. Remove CCO markers from CLAUDE.md
     claude_md = CLAUDE_DIR / "CLAUDE.md"
@@ -127,47 +145,50 @@ def setup_agents(verbose: bool = True) -> list[str]:
 
 
 def setup_rules(verbose: bool = True) -> dict[str, int]:
-    """Copy rule files to ~/.claude/rules/
+    """Copy rule files to ~/.claude/rules/cco/
 
-    Installs:
-    - cco-core.md (always active)
-    - cco-ai.md (always active)
-    - cco-tools.md (on-demand by commands)
-    - cco-adaptive.md (project-specific, used by cco-tune)
+    Installs to cco/ subdirectory (namespaced to preserve user's custom rules):
+    - core.md (always active)
+    - ai.md (always active)
+    - tools.md (on-demand by commands)
+
+    Note: adaptive.md stays in pip package - used by cco-tune as a template pool.
 
     Returns:
         Dictionary with installed counts per category
     """
     src_dir = get_content_dir() / "rules"
     if not src_dir.exists():
-        return {"core": 0, "ai": 0, "tools": 0, "adaptive": 0, "total": 0}
+        return {"core": 0, "ai": 0, "tools": 0, "total": 0}
 
+    # Create cco/ subdirectory
     RULES_DIR.mkdir(parents=True, exist_ok=True)
 
-    # Remove only existing CCO rule files (preserve user's custom rules)
-    for rule_file in CCO_RULE_FILES:
-        rule_path = RULES_DIR / rule_file
+    # Remove existing CCO rule files from cco/ subdirectory
+    for rule_name in CCO_RULE_NAMES:
+        rule_path = RULES_DIR / rule_name
         if rule_path.exists():
             rule_path.unlink()
 
-    # Copy all CCO rule files
+    # Copy CCO rule files with new names (cco-core.md -> core.md)
     installed = {}
 
-    for filename in CCO_RULE_FILES:
-        src_file = src_dir / filename
+    for src_filename, dest_filename in zip(CCO_RULE_FILES, CCO_RULE_NAMES, strict=True):
+        src_file = src_dir / src_filename
         if src_file.exists():
-            shutil.copy2(src_file, RULES_DIR / filename)
-            # Extract key: cco-core.md -> core
-            key = filename.replace("cco-", "").replace(".md", "")
+            shutil.copy2(src_file, RULES_DIR / dest_filename)
+            # Extract key: core.md -> core
+            key = dest_filename.replace(".md", "")
             installed[key] = 1
             if verbose:
-                print(f"  + {filename}")
+                print(f"  + cco/{dest_filename}")
 
+    installed["total"] = sum(installed.values())
     return installed
 
 
 def _load_base_rules() -> str:
-    """Load base rules (core + ai) for CLAUDE.md."""
+    """Load base rules (core + ai) - kept for backward compatibility testing."""
     rules_dir = Path(__file__).parent / "content" / "rules"
     content_parts = []
 
@@ -194,55 +215,53 @@ def _remove_all_cco_markers(content: str) -> tuple[str, int]:
     return cleaned, len(matches)
 
 
-def setup_claude_md(verbose: bool = True) -> dict[str, int]:
-    """Add CCO base rules to ~/.claude/CLAUDE.md
+def clean_claude_md(verbose: bool = True) -> int:
+    """Clean CCO markers from ~/.claude/CLAUDE.md (backward compatibility).
 
-    For backward compatibility:
-    1. Remove ALL existing CCO markers (any name/format)
-    2. Append fresh base rules (core + ai)
+    v2.x no longer writes rules to CLAUDE.md - they're in ~/.claude/rules/cco/.
+    This function only removes old CCO markers from previous installations.
 
     Args:
-        verbose: If True, print progress messages during setup.
+        verbose: If True, print progress messages during cleanup.
 
     Returns:
-        Dictionary with installed counts (core, ai)
+        Number of markers removed
     """
-    base_rules = _load_base_rules()
     claude_md = CLAUDE_DIR / "CLAUDE.md"
-    CLAUDE_DIR.mkdir(parents=True, exist_ok=True)
 
-    action = "created"
-    removed_count = 0
+    if not claude_md.exists():
+        return 0
 
-    if claude_md.exists():
-        content = claude_md.read_text(encoding="utf-8")
+    content = claude_md.read_text(encoding="utf-8")
+    content, removed_count = _remove_all_cco_markers(content)
 
-        # Remove ALL CCO markers for backward compatibility
-        content, removed_count = _remove_all_cco_markers(content)
-
-        # Append fresh base rules
-        content = content.rstrip() + "\n\n" + base_rules
-        action = "updated" if removed_count > 0 else "appended"
-    else:
-        content = base_rules
-
-    content = re.sub(r"\n{3,}", "\n\n", content)
-    claude_md.write_text(content, encoding="utf-8")
-
-    breakdown = get_rules_breakdown()
-
-    if verbose:
-        installed = breakdown["core"] + breakdown["ai"]
-        if removed_count > 0:
-            print(
-                f"  CLAUDE.md: {installed} rules {action} (cleaned {removed_count} old marker(s))"
-            )
+    if removed_count > 0:
+        content = re.sub(r"\n{3,}", "\n\n", content)
+        content = content.strip()
+        if content:
+            claude_md.write_text(content + "\n", encoding="utf-8")
         else:
-            print(f"  CLAUDE.md: {installed} rules {action}")
+            # File is empty after removing CCO content - delete it
+            claude_md.unlink()
 
+        if verbose:
+            print(f"  CLAUDE.md: cleaned {removed_count} old CCO marker(s)")
+
+    return removed_count
+
+
+# Keep setup_claude_md as alias for backward compatibility in tests
+def setup_claude_md(verbose: bool = True) -> dict[str, int]:
+    """Deprecated: Use clean_claude_md instead.
+
+    Kept for backward compatibility. Now only cleans old markers,
+    does not write new rules (they're in ~/.claude/rules/cco/).
+    """
+    removed = clean_claude_md(verbose)
+    breakdown = get_rules_breakdown()
     return {
-        "core": breakdown["core"],
-        "ai": breakdown["ai"],
+        "core": breakdown["core"] if removed else 0,
+        "ai": breakdown["ai"] if removed else 0,
     }
 
 
@@ -292,6 +311,7 @@ def setup_local_statusline(project_path: Path, mode: str, verbose: bool = True) 
     settings["statusLine"] = {
         "type": "command",
         "command": "node .claude/statusline.js",
+        "padding": 1,
     }
 
     settings_file.write_text(json.dumps(settings, indent=2) + "\n", encoding="utf-8")
@@ -466,26 +486,27 @@ Permission levels: safe, balanced, permissive, full
             print("  (none)")
         print()
 
-        # Step 4: Install rules to ~/.claude/rules/
-        print("Rules:")
-        setup_rules()
+        # Step 4: Install rules to ~/.claude/rules/cco/
+        print("Rules (to cco/ subdirectory):")
+        rules_installed = setup_rules()
         print()
 
-        # Step 5: Add base rules to CLAUDE.md
-        print("CLAUDE.md:")
-        base_rules = setup_claude_md()
+        # Step 5: Clean old CCO markers from CLAUDE.md (backward compat)
+        markers_cleaned = clean_claude_md(verbose=True)
+        if markers_cleaned == 0:
+            print("  CLAUDE.md: no old markers to clean")
         print()
 
         # Summary
         breakdown = get_rules_breakdown()
-        base_count = base_rules["core"] + base_rules["ai"]
         print(SEPARATOR)
         print(f"Installed: {len(cmds)} commands, {len(agents)} agents")
-        print(f"  Base rules: {base_count} (Core: {base_rules['core']} + AI: {base_rules['ai']})")
-        print(f"  Tools rules: {breakdown['tools']} (loaded when commands/agents run)")
-        print(
-            f"  Adaptive pool: {breakdown['adaptive']} (only matching rules selected per project)"
-        )
+        print(f"  Global rules (in cco/): {rules_installed.get('total', 0)}")
+        print(f"    - core.md: {breakdown['core']} rules (always loaded)")
+        print(f"    - ai.md: {breakdown['ai']} rules (always loaded)")
+        print("  On-demand rules (in package):")
+        print(f"    - tools.md: {breakdown['tools']} rules (loaded by CCO commands)")
+        print(f"    - adaptive.md: {breakdown['adaptive']} rules (used by /cco-tune)")
         print(SEPARATOR)
         print()
         print("Restart Claude Code for changes to take effect.")

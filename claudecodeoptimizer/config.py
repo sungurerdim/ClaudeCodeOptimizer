@@ -11,7 +11,11 @@ __all__ = [
     "COMMANDS_DIR",
     "AGENTS_DIR",
     "RULES_DIR",
+    "CCO_RULES_SUBDIR",
+    "OLD_RULES_ROOT",
     "CCO_RULE_FILES",
+    "CCO_RULE_NAMES",
+    "CCO_ADAPTIVE_SOURCE",
     "SEPARATOR",
     "get_cco_commands",
     "get_cco_agents",
@@ -24,15 +28,30 @@ __all__ = [
     "LOCAL_CLAUDE_DIR",
     "LOCAL_SETTINGS_FILE",
     "LOCAL_STATUSLINE_FILE",
+    "LOCAL_RULES_DIR",
     "CCO_PERMISSIONS_MARKER",
+    "PATH_PATTERNS",
 ]
 
 VERSION = __version__  # Single source: __init__.py
 CLAUDE_DIR = Path.home() / ".claude"
 COMMANDS_DIR = CLAUDE_DIR / "commands"
 AGENTS_DIR = CLAUDE_DIR / "agents"
-RULES_DIR = CLAUDE_DIR / "rules"
-CCO_RULE_FILES = ("cco-core.md", "cco-ai.md", "cco-tools.md", "cco-adaptive.md")
+
+# CCO rules are namespaced in cco/ subdirectory to preserve user's custom rules
+CCO_RULES_SUBDIR = "cco"
+RULES_DIR = CLAUDE_DIR / "rules" / CCO_RULES_SUBDIR  # ~/.claude/rules/cco/
+OLD_RULES_ROOT = CLAUDE_DIR / "rules"  # For backward compat cleanup
+
+# Rule files installed to ~/.claude/rules/cco/ (without cco- prefix)
+# Only core.md and ai.md are installed globally (always active)
+# tools.md and adaptive.md stay in pip package - loaded on-demand by commands
+CCO_RULE_NAMES = ("core.md", "ai.md")  # Installed globally
+CCO_RULE_FILES = ("cco-core.md", "cco-ai.md")  # Source filenames
+# On-demand rules (NOT installed globally - accessed via get_content_path())
+CCO_TOOLS_SOURCE = "cco-tools.md"  # Used by CCO commands
+CCO_ADAPTIVE_SOURCE = "cco-adaptive.md"  # Used by cco-tune for rule selection
+
 STATUSLINE_FILE = CLAUDE_DIR / "statusline.js"
 SETTINGS_FILE = CLAUDE_DIR / "settings.json"
 SEPARATOR = "=" * 50
@@ -41,6 +60,23 @@ SEPARATOR = "=" * 50
 LOCAL_CLAUDE_DIR = Path(".claude")
 LOCAL_SETTINGS_FILE = LOCAL_CLAUDE_DIR / "settings.json"
 LOCAL_STATUSLINE_FILE = LOCAL_CLAUDE_DIR / "statusline.js"
+LOCAL_RULES_DIR = LOCAL_CLAUDE_DIR / "rules"  # .claude/rules/
+
+# Path patterns for conditional rule loading (auto-detection based)
+PATH_PATTERNS: dict[str, str] = {
+    "python": "**/*.py",
+    "typescript": "**/*.{ts,tsx}",
+    "javascript": "**/*.{js,jsx}",
+    "go": "**/*.go",
+    "rust": "**/*.rs",
+    "cli": "**/__main__.py, **/cli/**/*",
+    "library": "**/src/**/*",
+    "api": "**/routes/**/*, **/api/**/*",
+    "operations": ".github/**/*, .gitlab-ci.yml",
+    "testing": "tests/**/*.*, **/*.test.*, **/*_test.*",
+    "frontend": "**/components/**/*, **/pages/**/*",
+    "database": "**/models/**/*, **/migrations/**/*",
+}
 
 # CCO Permissions marker - used to identify CCO-installed permissions
 # Permissions JSON has _meta.level field when installed by CCO
@@ -71,8 +107,9 @@ CCO_UNIVERSAL_PATTERN = (
 SUBPROCESS_TIMEOUT = 5  # seconds
 
 # Pre-compiled regex patterns for performance
-# Rules use table format: | * Name | Description |
-_RULE_PATTERN = re.compile(r"\| \* ", re.MULTILINE)
+# Rules use list format: - **Name**: Description
+# OR table format (adaptive): | * Name | Check | Description |
+_RULE_PATTERN = re.compile(r"(?:^- \*\*\w+\*\*:|\| \* )", re.MULTILINE)
 _CATEGORY_PATTERN = re.compile(r"^## ", re.MULTILINE)
 
 
