@@ -166,8 +166,8 @@ class TestFunctions:
         )
 
     def test_rules_dir_constant(self):
-        """Test RULES_DIR constant is defined correctly."""
-        assert RULES_DIR == CLAUDE_DIR / "rules"
+        """Test RULES_DIR constant is defined correctly (v2.x: cco/ subdirectory)."""
+        assert RULES_DIR == CLAUDE_DIR / "rules" / "cco"
 
     def test_get_rules_count_no_dir(self, tmp_path):
         """Test get_rules_count returns (0, 0) when rules dir doesn't exist."""
