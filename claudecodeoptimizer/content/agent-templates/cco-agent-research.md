@@ -9,7 +9,7 @@ safe: true
 
 External source research with reliability scoring. Returns synthesized findings.
 
-**Tool Rules:** !`cat ~/.claude/rules/tools.md 2>/dev/null`
+**Tool Rules:** !`cat ~/.claude/rules/cco-tools.md 2>/dev/null`
 
 ## Purpose
 

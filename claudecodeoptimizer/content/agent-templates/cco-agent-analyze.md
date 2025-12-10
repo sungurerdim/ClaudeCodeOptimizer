@@ -9,7 +9,7 @@ safe: true
 
 Read-only project analysis. Returns structured JSON data.
 
-**Tool Rules:** !`cat ~/.claude/rules/tools.md 2>/dev/null`
+**Tool Rules:** !`cat ~/.claude/rules/cco-tools.md 2>/dev/null`
 
 ## Scope Parameter
 

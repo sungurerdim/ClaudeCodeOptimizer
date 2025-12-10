@@ -11,6 +11,7 @@ __all__ = [
     "COMMANDS_DIR",
     "AGENTS_DIR",
     "RULES_DIR",
+    "CCO_RULE_FILES",
     "SEPARATOR",
     "get_cco_commands",
     "get_cco_agents",
@@ -31,6 +32,7 @@ CLAUDE_DIR = Path.home() / ".claude"
 COMMANDS_DIR = CLAUDE_DIR / "commands"
 AGENTS_DIR = CLAUDE_DIR / "agents"
 RULES_DIR = CLAUDE_DIR / "rules"
+CCO_RULE_FILES = ("cco-core.md", "cco-ai.md", "cco-tools.md", "cco-adaptive.md")
 STATUSLINE_FILE = CLAUDE_DIR / "statusline.js"
 SETTINGS_FILE = CLAUDE_DIR / "settings.json"
 SEPARATOR = "=" * 50
@@ -97,7 +99,7 @@ def get_rules_count() -> tuple[int, int]:
     total_rules = 0
     total_categories = 0
 
-    for rule_file in ["core.md", "ai.md", "tools.md", "adaptive.md"]:
+    for rule_file in CCO_RULE_FILES:
         file_path = rules_dir / rule_file
         if file_path.exists():
             content = file_path.read_text(encoding="utf-8")
@@ -124,10 +126,10 @@ def get_rules_breakdown() -> dict[str, int]:
 
     # Count from each rule file
     file_mapping = {
-        "core": "core.md",
-        "ai": "ai.md",
-        "tools": "tools.md",
-        "adaptive": "adaptive.md",
+        "core": "cco-core.md",
+        "ai": "cco-ai.md",
+        "tools": "cco-tools.md",
+        "adaptive": "cco-adaptive.md",
     }
 
     for key, filename in file_mapping.items():

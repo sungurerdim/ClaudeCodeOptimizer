@@ -9,7 +9,7 @@ safe: false
 
 Execute approved changes with verification. Reports accounting.
 
-**Tool Rules:** !`cat ~/.claude/rules/tools.md 2>/dev/null`
+**Tool Rules:** !`cat ~/.claude/rules/cco-tools.md 2>/dev/null`
 
 ## Purpose
 

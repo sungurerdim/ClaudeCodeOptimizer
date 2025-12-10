@@ -11,6 +11,7 @@ from typing import Any
 from .config import (
     AGENTS_DIR,
     CCO_PERMISSIONS_MARKER,
+    CCO_RULE_FILES,
     CCO_UNIVERSAL_PATTERN,
     CLAUDE_DIR,
     COMMANDS_DIR,
@@ -61,11 +62,13 @@ def clean_previous_installation(verbose: bool = True) -> dict[str, int]:
             f.unlink()
             removed["agents"] += 1
 
-    # 3. Remove rules directory
+    # 3. Remove only CCO rule files (preserve user's custom rules)
     if RULES_DIR.exists():
-        rule_count = len(list(RULES_DIR.glob("*.md")))
-        shutil.rmtree(RULES_DIR)
-        removed["rules"] = rule_count
+        for rule_file in CCO_RULE_FILES:
+            rule_path = RULES_DIR / rule_file
+            if rule_path.exists():
+                rule_path.unlink()
+                removed["rules"] += 1
 
     # 4. Remove CCO markers from CLAUDE.md
     claude_md = CLAUDE_DIR / "CLAUDE.md"
@@ -127,10 +130,10 @@ def setup_rules(verbose: bool = True) -> dict[str, int]:
     """Copy rule files to ~/.claude/rules/
 
     Installs:
-    - core.md (always active)
-    - ai.md (always active)
-    - tools.md (on-demand by commands)
-    - adaptive.md (project-specific, used by cco-tune)
+    - cco-core.md (always active)
+    - cco-ai.md (always active)
+    - cco-tools.md (on-demand by commands)
+    - cco-adaptive.md (project-specific, used by cco-tune)
 
     Returns:
         Dictionary with installed counts per category
@@ -141,19 +144,21 @@ def setup_rules(verbose: bool = True) -> dict[str, int]:
 
     RULES_DIR.mkdir(parents=True, exist_ok=True)
 
-    # Remove existing rule files
-    for old in RULES_DIR.glob("*.md"):
-        old.unlink()
+    # Remove only existing CCO rule files (preserve user's custom rules)
+    for rule_file in CCO_RULE_FILES:
+        rule_path = RULES_DIR / rule_file
+        if rule_path.exists():
+            rule_path.unlink()
 
-    # Copy all rule files
-    rule_files = ["core.md", "ai.md", "tools.md", "adaptive.md"]
+    # Copy all CCO rule files
     installed = {}
 
-    for filename in rule_files:
+    for filename in CCO_RULE_FILES:
         src_file = src_dir / filename
         if src_file.exists():
             shutil.copy2(src_file, RULES_DIR / filename)
-            key = filename.replace(".md", "")
+            # Extract key: cco-core.md -> core
+            key = filename.replace("cco-", "").replace(".md", "")
             installed[key] = 1
             if verbose:
                 print(f"  + {filename}")
@@ -166,7 +171,7 @@ def _load_base_rules() -> str:
     rules_dir = Path(__file__).parent / "content" / "rules"
     content_parts = []
 
-    for filename in ["core.md", "ai.md"]:
+    for filename in ["cco-core.md", "cco-ai.md"]:
         file_path = rules_dir / filename
         if file_path.exists():
             content_parts.append(file_path.read_text(encoding="utf-8"))

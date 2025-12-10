@@ -117,8 +117,8 @@ sed -n '/<!-- CCO_CORE_START -->/,/<!-- CCO_CORE_END -->/p' ~/.claude/CLAUDE.md 
 sed -n '/<!-- CCO_AI_START -->/,/<!-- CCO_AI_END -->/p' ~/.claude/CLAUDE.md | grep -c "| \* "
 # → AI (e.g., 32)
 
-# Tools rules (from ~/.claude/rules/tools.md)
-grep -c "| \* " ~/.claude/rules/tools.md 2>/dev/null || echo "0"
+# Tools rules (from ~/.claude/rules/cco-tools.md)
+grep -c "| \* " ~/.claude/rules/cco-tools.md 2>/dev/null || echo "0"
 # → TOOLS (e.g., 110) - on-demand, not in CLAUDE.md
 
 # Adaptive rules (from CCO_ADAPTIVE block in project CLAUDE.md)
@@ -1371,10 +1371,10 @@ Standards are organized in 4 categories. **All counts are dynamically calculated
 
 | Category | Source (Original) | Installed Location |
 |----------|-------------------|-------------------|
-| Core | `content/rules/core.md` | `~/.claude/rules/core.md` + `~/.claude/CLAUDE.md` |
-| AI | `content/rules/ai.md` | `~/.claude/rules/ai.md` + `~/.claude/CLAUDE.md` |
-| Tools | `content/rules/tools.md` | `~/.claude/rules/tools.md` (on-demand) |
-| Adaptive | `content/rules/adaptive.md` | `~/.claude/rules/adaptive.md` + `./CLAUDE.md` (triggered only) |
+| Core | `content/rules/cco-core.md` | `~/.claude/rules/cco-core.md` + `~/.claude/CLAUDE.md` |
+| AI | `content/rules/cco-ai.md` | `~/.claude/rules/cco-ai.md` + `~/.claude/CLAUDE.md` |
+| Tools | `content/rules/cco-tools.md` | `~/.claude/rules/cco-tools.md` (on-demand) |
+| Adaptive | `content/rules/cco-adaptive.md` | `~/.claude/rules/cco-adaptive.md` + `./CLAUDE.md` (triggered only) |
 
 ### Count Commands
 

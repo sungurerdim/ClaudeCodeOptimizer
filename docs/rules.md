@@ -20,7 +20,7 @@ For rule counts, see [README](../README.md#rules).
 │  ON-DEMAND (Tool Rules)                                         │
 ├─────────────────────────────────────────────────────────────────┤
 │  Tools        - CCO command/agent workflow mechanisms           │
-│  Loaded via: !`cat ~/.claude/rules/tools.md 2>/dev/null`        │
+│  Loaded via: !`cat ~/.claude/rules/cco-tools.md 2>/dev/null`    │
 ├─────────────────────────────────────────────────────────────────┤
 │  DYNAMICALLY LOADED (Adaptive Rules)                            │
 ├─────────────────────────────────────────────────────────────────┤
@@ -250,7 +250,7 @@ For rule counts, see [README](../README.md#rules).
 
 ### Full list
 
-See [adaptive.md](../claudecodeoptimizer/content/rules/adaptive.md) for complete rule definitions.
+See [cco-adaptive.md](../claudecodeoptimizer/content/rules/cco-adaptive.md) for complete rule definitions.
 
 ---
 
