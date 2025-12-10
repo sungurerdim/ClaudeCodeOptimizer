@@ -1,5 +1,37 @@
 # Adaptive Rules
 *Selected by /cco-tune based on detection. Each rule evaluated individually.*
+*Used as template pool for generating .claude/rules/ files with path-specific frontmatter.*
+
+## Path Pattern Templates
+
+When cco-tune generates project-level rules, it creates separate files with YAML frontmatter:
+
+| Category | Output File | Paths Pattern |
+|----------|-------------|---------------|
+| Python stack | `python.md` | `**/*.py` |
+| TypeScript | `typescript.md` | `**/*.{ts,tsx}` |
+| JavaScript | `javascript.md` | `**/*.{js,jsx}` |
+| Go | `go.md` | `**/*.go` |
+| Rust | `rust.md` | `**/*.rs` |
+| T:CLI | `cli.md` | `**/__main__.py, **/cli/**/*` |
+| T:Library | `library.md` | `**/src/**/*` |
+| API:REST | `api.md` | `**/routes/**/*`, `**/api/**/*` |
+| CI/CD | `operations.md` | `.github/**/*`, `.gitlab-ci.yml` |
+| Testing | `testing.md` | `tests/**/*`, `**/*.test.*`, `**/*_test.*` |
+| Frontend | `frontend.md` | `**/components/**/*`, `**/pages/**/*` |
+| DB:* | `database.md` | `**/models/**/*`, `**/migrations/**/*` |
+
+**Generated file format:**
+```markdown
+---
+paths: **/*.py
+---
+# Python Rules
+
+| Rule | Description |
+|------|-------------|
+| * Type-Hints | Type annotations for public APIs |
+```
 
 ## Trigger Reference
 
@@ -21,8 +53,8 @@ Each rule has an **Applicability Check**. Only include rules where check passes.
 **Format in context:**
 ```markdown
 ### {Category} - {Trigger reason}
-| Standard | Rule |
-|----------|------|
+| Rule | Description |
+|------|-------------|
 | * {Name} | {Concise description} |
 ```
 
