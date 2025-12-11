@@ -90,6 +90,20 @@ function formatModelName(modelData) {
   return name.replace(/^Claude\s+/, '');
 }
 
+function formatContextUsage(contextWindow) {
+  if (!contextWindow) return null;
+  const inputTokens = contextWindow.total_input_tokens || 0;
+  const outputTokens = contextWindow.total_output_tokens || 0;
+  const contextSize = contextWindow.context_window_size || 0;
+  if (contextSize === 0) return null;
+
+  const totalUsed = inputTokens + outputTokens;
+  const percent = Math.round(totalUsed * 100 / contextSize);
+  const formatK = n => n >= 1000 ? Math.round(n / 1000) + 'K' : n.toString();
+
+  return `${formatK(totalUsed)}/${formatK(contextSize)} - ${percent}%`;
+}
+
 function getLatestRelease() {
   const tag = execCmd('git describe --tags --abbrev=0 2>/dev/null');
   return tag || null;
@@ -104,6 +118,7 @@ try {
   const ccVersion = getClaudeCodeVersion();
   const modelDisplay = formatModelName(input.model);
   const latestRelease = getLatestRelease();
+  const contextUsage = formatContextUsage(input.context_window);
 
   // Build output parts - dynamic width, no padding
   const repoDisplay = repo ? `${repo.repoName}:${repo.branch}` : 'no-git';
@@ -117,7 +132,9 @@ try {
   // Zero-width space for top/bottom padding (prevents empty line collapse)
   const emptyLine = '\u200B';
   const lines = [];
-  lines.push(emptyLine);  // Top padding
+  // Top line: Context usage or empty padding
+  const contextLine = contextUsage ? c(contextUsage, 'cyan') : emptyLine;
+  lines.push(contextLine);
   lines.push(repoDisplay + releaseStr);
   lines.push(`${addStr} ${remStr} ${sep} ${versionStr} ${sep} ${modelStr}`);
   lines.push(emptyLine);  // Bottom padding

@@ -162,6 +162,23 @@ function formatModelName(modelData) {
 }
 
 // ============================================================================
+// CONTEXT USAGE
+// ============================================================================
+function formatContextUsage(contextWindow) {
+  if (!contextWindow) return null;
+  const inputTokens = contextWindow.total_input_tokens || 0;
+  const outputTokens = contextWindow.total_output_tokens || 0;
+  const contextSize = contextWindow.context_window_size || 0;
+  if (contextSize === 0) return null;
+
+  const totalUsed = inputTokens + outputTokens;
+  const percent = Math.round(totalUsed * 100 / contextSize);
+  const formatK = n => n >= 1000 ? Math.round(n / 1000) + 'K' : n.toString();
+
+  return `${formatK(totalUsed)}/${formatK(contextSize)} - ${percent}% Context Usage`;
+}
+
+// ============================================================================
 // GIT RELEASE VERSION
 // ============================================================================
 function getLatestRelease() {
@@ -313,6 +330,7 @@ function formatStatusline(input, git) {
   const ccVersion = getClaudeCodeVersion();
   const projectSize = getProjectSize();
   const latestRelease = getLatestRelease();
+  const contextUsage = formatContextUsage(input.context_window);
 
   // Zero-width space for top/bottom padding (prevents empty line collapse)
   const emptyLine = '\u200B';
@@ -463,7 +481,9 @@ function formatStatusline(input, git) {
   // RENDER LINES
   // ─────────────────────────────────────────────────────────────────────────
   const lines = [];
-  lines.push(emptyLine);  // Top padding
+  // Top line: Context usage or empty padding
+  const contextLine = contextUsage ? c(contextUsage, 'cyan') : emptyLine;
+  lines.push(contextLine);
 
   // Separator: adds space only on sides with content
   const sep = ' ' + c(BOX.v, 'gray') + ' ';
