@@ -14,7 +14,7 @@ Meta command for regular project maintenance (weekly recommended).
 
 ## Context
 
-- Context check: !`grep -c "CCO_ADAPTIVE_START" ./CLAUDE.md 2>/dev/null || echo "0"`
+- Context check: !`test -f ./.claude/rules/cco/context.md && echo "1" || echo "0"`
 - Last health tag: !`git tag -l "health-*" --sort=-creatordate | head -1 || echo "None"`
 - Git status: !`git status --short`
 - Recent activity: !`git log --oneline -5`
@@ -23,11 +23,11 @@ Meta command for regular project maintenance (weekly recommended).
 
 ## Context Requirement [CRITICAL]
 
-**This command requires CCO_ADAPTIVE in ./CLAUDE.md.**
+**This command requires CCO context in ./.claude/rules/cco/context.md.**
 
 If context check returns "0":
 ```
-CCO_ADAPTIVE not found in ./CLAUDE.md
+CCO context not found.
 
 Run /cco-tune first to configure project context, then restart CLI.
 ```

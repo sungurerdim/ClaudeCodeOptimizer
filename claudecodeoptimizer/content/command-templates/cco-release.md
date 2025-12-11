@@ -14,7 +14,7 @@ Meta command that orchestrates other CCO commands for release preparation.
 
 ## Context
 
-- Context check: !`grep -c "CCO_ADAPTIVE_START" ./CLAUDE.md 2>/dev/null || echo "0"`
+- Context check: !`test -f ./.claude/rules/cco/context.md && echo "1" || echo "0"`
 - Version: !`grep -E "version|__version__|VERSION" pyproject.toml package.json setup.py 2>/dev/null | head -1`
 - Branch: !`git branch --show-current`
 - Changelog: !`head -20 CHANGELOG.md 2>/dev/null || echo "No CHANGELOG.md"`
@@ -25,17 +25,35 @@ Meta command that orchestrates other CCO commands for release preparation.
 
 ## Context Requirement [CRITICAL]
 
-**This command requires CCO_ADAPTIVE in ./CLAUDE.md.**
+**This command requires CCO context in ./.claude/rules/cco/context.md.**
 
 If context check returns "0":
 ```
-CCO_ADAPTIVE not found in ./CLAUDE.md
+CCO context not found.
 
 Run /cco-tune first to configure project context, then restart CLI.
 ```
 **Stop execution immediately.**
 
 **Phase Validation:** Sub-commands (cco-audit, cco-optimize, cco-review) inherit context validation and only run applicable checks.
+
+## Execution Optimization
+
+<use_parallel_tool_calls>
+When calling multiple tools with no dependencies between them, make all independent
+calls in a single message. For example:
+- Multiple cco-agent-analyze scopes → launch simultaneously
+- Multiple file reads → batch in parallel
+- Multiple grep searches → parallel calls
+
+Never use placeholders or guess missing parameters.
+</use_parallel_tool_calls>
+
+<context_awareness>
+Your context window will be automatically compacted as it approaches its limit.
+Do NOT stop tasks early due to token budget concerns.
+Complete tasks fully - be as persistent and autonomous as possible.
+</context_awareness>
 
 ## Flow
 

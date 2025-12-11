@@ -14,18 +14,18 @@ End-to-end: Detects security and quality issues AND fixes them.
 
 ## Context
 
-- Context check: !`grep -c "CCO_ADAPTIVE_START" ./CLAUDE.md 2>/dev/null || echo "0"`
+- Context check: !`test -f ./.claude/rules/cco/context.md && echo "1" || echo "0"`
 - Git status: !`git status --short`
 
 **Static context (Applicable, Type, Scale, Data) is read from ./CLAUDE.md already in context.**
 
 ## Context Requirement [CRITICAL]
 
-**This command requires CCO_ADAPTIVE in ./CLAUDE.md.**
+**This command requires CCO context in ./.claude/rules/cco/context.md.**
 
 If context check returns "0":
 ```
-CCO_ADAPTIVE not found in ./CLAUDE.md
+CCO context not found.
 
 Run /cco-tune first to configure project context, then restart CLI.
 ```
@@ -58,6 +58,18 @@ To add this category, run /cco-tune and reconfigure.
 | Priority | Speed → critical only; Quality → all severity levels |
 | Maturity | Legacy → warn don't fail; Greenfield → strict enforcement |
 | Team | Solo → self-review OK; 6+ → require documented findings |
+
+## Execution Optimization
+
+<use_parallel_tool_calls>
+When calling multiple tools with no dependencies between them, make all independent
+calls in a single message. For example:
+- Multiple cco-agent-analyze scopes → launch simultaneously
+- Multiple file reads → batch in parallel
+- Multiple grep searches → parallel calls
+
+Never use placeholders or guess missing parameters.
+</use_parallel_tool_calls>
 
 ## Agent Integration
 
@@ -299,11 +311,25 @@ Applied: 7 | Skipped: 2 | Failed: 0 | Manual: 2 | Total: 11
 | MEDIUM | Error, incorrect behavior | MEDIUM ok |
 | LOW | Style, cosmetic | LOW ok |
 
-### Conservative Judgment
+### Conservative Judgment [CRITICAL]
 
-- **Lower**: When uncertain, choose lower severity
+| Keyword | Severity | Confidence Required |
+|---------|----------|---------------------|
+| crash, data loss, security breach | CRITICAL | HIGH |
+| broken, blocked, cannot use | HIGH | HIGH |
+| error, fail, incorrect | MEDIUM | MEDIUM |
+| style, minor, cosmetic | LOW | LOW |
+
+- **Lower**: When uncertain between two severities, choose lower
 - **Evidence**: Require explicit evidence, not inference
-- **No escalation**: Style issues → never CRITICAL/HIGH
+- **No-Escalate**: Style issues → never CRITICAL or HIGH
+
+### Batch Approval
+
+- **MultiSelect**: true for batch approvals
+- **All-Option**: First option = "All ({N})" for bulk
+- **Priority-Order**: CRITICAL → HIGH → MEDIUM → LOW
+- **Item-Format**: `{description} [{file:line}] [{safe|risky}]`
 
 ### Skip Criteria
 

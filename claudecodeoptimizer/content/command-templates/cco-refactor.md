@@ -14,7 +14,7 @@ End-to-end: Maps references, transforms safely, verifies each step.
 
 ## Context
 
-- Context check: !`grep -c "CCO_ADAPTIVE_START" ./CLAUDE.md 2>/dev/null || echo "0"`
+- Context check: !`test -f ./.claude/rules/cco/context.md && echo "1" || echo "0"`
 - Git status: !`git status --short`
 - Current branch: !`git branch --show-current`
 
@@ -22,11 +22,11 @@ End-to-end: Maps references, transforms safely, verifies each step.
 
 ## Context Requirement [CRITICAL]
 
-**This command requires CCO_ADAPTIVE in ./CLAUDE.md.**
+**This command requires CCO context in ./.claude/rules/cco/context.md.**
 
 If context check returns "0":
 ```
-CCO_ADAPTIVE not found in ./CLAUDE.md
+CCO context not found.
 
 Run /cco-tune first to configure project context, then restart CLI.
 ```
@@ -297,6 +297,13 @@ On any failure:
 - **Map-First**: Build complete reference map BEFORE any changes
 - **All-Refs**: Find ALL references (imports, calls, tests, docs, strings)
 - **Verify-Count**: Before/after grep counts MUST match
+
+### Batch Approval
+
+- **MultiSelect**: true for batch approvals
+- **All-Option**: First option = "All ({N})" for bulk
+- **Priority-Order**: CRITICAL → HIGH → MEDIUM → LOW
+- **Item-Format**: `{description} [{file:line}] [{safe|risky}]`
 
 ### Task Tracking
 
