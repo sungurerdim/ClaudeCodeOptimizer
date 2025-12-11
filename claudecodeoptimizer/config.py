@@ -33,7 +33,10 @@ __all__ = [
     "LOCAL_STATUSLINE_FILE",
     "LOCAL_RULES_DIR",
     "CCO_PERMISSIONS_MARKER",
-    "PATH_PATTERNS",
+    # Removed from __all__ (not imported elsewhere):
+    # - CCO_TOOLS_SOURCE: internal constant
+    # - PATH_PATTERNS: reserved for future conditional rule loading
+    # - get_rules_count: test-only, use get_rules_breakdown() instead
 ]
 
 VERSION = __version__  # Single source: __init__.py

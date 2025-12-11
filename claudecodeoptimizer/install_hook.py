@@ -28,6 +28,39 @@ STATUSLINE_MODES = ("full", "minimal")
 PERMISSION_LEVELS = ("safe", "balanced", "permissive", "full")
 
 
+def _load_settings_json(settings_file: Path) -> dict[str, Any]:
+    """Load settings.json, returning empty dict if missing or invalid.
+
+    Args:
+        settings_file: Path to settings.json file
+
+    Returns:
+        Parsed JSON dict, or empty dict if file missing/invalid
+    """
+    if not settings_file.exists():
+        return {}
+    try:
+        return json.loads(settings_file.read_text(encoding="utf-8"))
+    except json.JSONDecodeError:
+        return {}
+
+
+def _is_safe_path(target: Path) -> bool:
+    """Check if target path is within home directory or current working directory.
+
+    Security measure to prevent path traversal attacks in --local mode.
+
+    Args:
+        target: Path to validate
+
+    Returns:
+        True if path is safe (within home or cwd)
+    """
+    home = Path.home()
+    cwd = Path.cwd().resolve()
+    return target == home or target == cwd or home in target.parents or cwd in target.parents
+
+
 def get_content_dir() -> Path:
     """Get package content directory."""
     return Path(__file__).parent / "content"
@@ -294,12 +327,7 @@ def setup_local_statusline(project_path: Path, mode: str, verbose: bool = True) 
 
     # Update local settings.json with statusLine config
     settings_file = local_claude / "settings.json"
-    settings: dict[str, Any] = {}
-    if settings_file.exists():
-        try:
-            settings = json.loads(settings_file.read_text(encoding="utf-8"))
-        except json.JSONDecodeError:
-            settings = {}
+    settings = _load_settings_json(settings_file)
 
     # Local statusline - direct path, no fallback
     settings["statusLine"] = {
@@ -353,12 +381,7 @@ def setup_local_permissions(project_path: Path, level: str, verbose: bool = True
 
     # Load or create settings.json
     settings_file = local_claude / "settings.json"
-    settings: dict[str, Any] = {}
-    if settings_file.exists():
-        try:
-            settings = json.loads(settings_file.read_text(encoding="utf-8"))
-        except json.JSONDecodeError:
-            settings = {}
+    settings = _load_settings_json(settings_file)
 
     # Set permissions (keep _meta for tracking)
     settings["permissions"] = perm_data.get("permissions", {})
@@ -385,14 +408,7 @@ def _run_local_mode(args: argparse.Namespace) -> int:
         return 1
 
     # Security: Validate path is within user's home directory or current working directory
-    home = Path.home()
-    cwd = Path.cwd().resolve()
-    if not (
-        project_path == home
-        or project_path == cwd
-        or home in project_path.parents
-        or cwd in project_path.parents
-    ):
+    if not _is_safe_path(project_path):
         print(
             "Error: Path must be within home directory or current working directory",
             file=sys.stderr,
