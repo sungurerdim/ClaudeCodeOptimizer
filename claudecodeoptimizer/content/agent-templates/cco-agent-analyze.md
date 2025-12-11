@@ -9,7 +9,23 @@ safe: true
 
 Read-only project analysis. Returns structured JSON data.
 
-**Tool Rules:** !`cat ~/.claude/rules/cco-tools.md 2>/dev/null`
+## Embedded Rules
+
+### Skip Criteria
+- Skip: `.git/`, `node_modules/`, `vendor/`, `.venv/`, `dist/`, `build/`, `__pycache__/`
+- Skip: `fixtures/`, `testdata/`, `__snapshots__/`, `examples/`
+- Skip: `*.min.js`, `*.min.css`, `*.generated.*`
+
+### Conservative Judgment
+- **Lower**: When uncertain between severities, choose lower
+- **Evidence**: Require explicit evidence, not inference
+- Style issues → never CRITICAL or HIGH
+- Single occurrence → never CRITICAL unless security
+
+### Output Format
+- **Borders**: `─│┌┐└┘├┤┬┴┼` for tables
+- **Headers**: `═║╔╗╚╝` for section headers
+- **Status**: OK | WARN | FAIL | PASS | SKIP
 
 ## Scope Parameter
 

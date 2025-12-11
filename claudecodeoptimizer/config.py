@@ -60,7 +60,7 @@ SEPARATOR = "=" * 50
 LOCAL_CLAUDE_DIR = Path(".claude")
 LOCAL_SETTINGS_FILE = LOCAL_CLAUDE_DIR / "settings.json"
 LOCAL_STATUSLINE_FILE = LOCAL_CLAUDE_DIR / "statusline.js"
-LOCAL_RULES_DIR = LOCAL_CLAUDE_DIR / "rules"  # .claude/rules/
+LOCAL_RULES_DIR = LOCAL_CLAUDE_DIR / "rules" / CCO_RULES_SUBDIR  # .claude/rules/cco/
 
 # Path patterns for conditional rule loading (auto-detection based)
 PATH_PATTERNS: dict[str, str] = {
