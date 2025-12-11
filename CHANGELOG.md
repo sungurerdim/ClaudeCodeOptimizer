@@ -5,6 +5,19 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [Unreleased]
+
+### Fixed
+- **Migration cleanup** - Added `cco-tools.md` to old rule file cleanup list
+- **Complete rule cleanup** - `remove_rules_dir()` now removes `tools.md` and `adaptive.md` from cco/ subdirectory
+- **Detection completeness** - `has_rules_dir()` checks for all possible CCO rule files
+- **Local CLAUDE.md cleanup** - `/cco-tune` now removes ALL CCO markers (CCO_CONTEXT, CCO_STANDARDS, CCO_ADAPTIVE) for v1.0.0 compatibility
+
+### Changed
+- **README expanded** - Added comprehensive Claude Code Integration section with feature sources
+- **Best practices documentation** - Added Claude 4 Best Practices compliance table with official links
+- **Universal marker cleanup** - cco-tune uses pattern matching for all `CCO_*_START/END` markers
+
 ## [1.1.0] - 2025-12-08
 
 ### Added
