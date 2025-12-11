@@ -23,6 +23,9 @@ __all__ = [
     "get_content_path",
     "CCO_UNIVERSAL_PATTERN",
     "SUBPROCESS_TIMEOUT",
+    "SUBPROCESS_TIMEOUT_PACKAGE",
+    "SUBPROCESS_TIMEOUT_TESTS",
+    "MAX_CLAUDE_MD_SIZE",
     "STATUSLINE_FILE",
     "SETTINGS_FILE",
     "LOCAL_CLAUDE_DIR",
@@ -104,7 +107,13 @@ CCO_UNIVERSAL_PATTERN = (
     re.DOTALL | re.IGNORECASE,
 )
 
-SUBPROCESS_TIMEOUT = 5  # seconds
+# Timeout constants (seconds)
+SUBPROCESS_TIMEOUT = 5  # Default for quick operations
+SUBPROCESS_TIMEOUT_PACKAGE = 30  # Package install/uninstall operations
+SUBPROCESS_TIMEOUT_TESTS = 300  # Test execution
+
+# File size limits for safety
+MAX_CLAUDE_MD_SIZE = 1_000_000  # 1MB - prevent ReDoS on large files
 
 # Pre-compiled regex patterns for performance
 # Rules use list format: - **Name**: Description

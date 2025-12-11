@@ -652,8 +652,9 @@ class TestRunLocalMode:
         project_path = tmp_path / "project"
         project_path.mkdir()
 
-        with patch.object(sys, "argv", ["cco-setup", "--local", str(project_path)]):
-            result = post_install()
+        with patch("pathlib.Path.cwd", return_value=tmp_path):
+            with patch.object(sys, "argv", ["cco-setup", "--local", str(project_path)]):
+                result = post_install()
 
         assert result == 0
         assert (project_path / ".claude").exists()
@@ -669,11 +670,12 @@ class TestRunLocalMode:
         project_path = tmp_path / "project"
         project_path.mkdir()
 
-        with patch("claudecodeoptimizer.install_hook.get_content_path", return_value=src_dir):
-            with patch.object(
-                sys, "argv", ["cco-setup", "--local", str(project_path), "--statusline", "full"]
-            ):
-                result = post_install()
+        with patch("pathlib.Path.cwd", return_value=tmp_path):
+            with patch("claudecodeoptimizer.install_hook.get_content_path", return_value=src_dir):
+                with patch.object(
+                    sys, "argv", ["cco-setup", "--local", str(project_path), "--statusline", "full"]
+                ):
+                    result = post_install()
 
         assert result == 0
         assert (project_path / ".claude" / "statusline.js").exists()
@@ -689,13 +691,14 @@ class TestRunLocalMode:
         project_path = tmp_path / "project"
         project_path.mkdir()
 
-        with patch("claudecodeoptimizer.install_hook.get_content_path", return_value=src_dir):
-            with patch.object(
-                sys,
-                "argv",
-                ["cco-setup", "--local", str(project_path), "--permissions", "balanced"],
-            ):
-                result = post_install()
+        with patch("pathlib.Path.cwd", return_value=tmp_path):
+            with patch("claudecodeoptimizer.install_hook.get_content_path", return_value=src_dir):
+                with patch.object(
+                    sys,
+                    "argv",
+                    ["cco-setup", "--local", str(project_path), "--permissions", "balanced"],
+                ):
+                    result = post_install()
 
         assert result == 0
         captured = capsys.readouterr()
@@ -719,23 +722,24 @@ class TestRunLocalMode:
                 return statusline_dir
             return perm_dir
 
-        with patch(
-            "claudecodeoptimizer.install_hook.get_content_path", side_effect=mock_content_path
-        ):
-            with patch.object(
-                sys,
-                "argv",
-                [
-                    "cco-setup",
-                    "--local",
-                    str(project_path),
-                    "--statusline",
-                    "minimal",
-                    "--permissions",
-                    "safe",
-                ],
+        with patch("pathlib.Path.cwd", return_value=tmp_path):
+            with patch(
+                "claudecodeoptimizer.install_hook.get_content_path", side_effect=mock_content_path
             ):
-                result = post_install()
+                with patch.object(
+                    sys,
+                    "argv",
+                    [
+                        "cco-setup",
+                        "--local",
+                        str(project_path),
+                        "--statusline",
+                        "minimal",
+                        "--permissions",
+                        "safe",
+                    ],
+                ):
+                    result = post_install()
 
         assert result == 0
         captured = capsys.readouterr()
@@ -749,14 +753,15 @@ class TestRunLocalMode:
         project_path.mkdir()
 
         # Use invalid source path to trigger failure
-        with patch(
-            "claudecodeoptimizer.install_hook.get_content_path",
-            return_value=tmp_path / "nonexistent",
-        ):
-            with patch.object(
-                sys, "argv", ["cco-setup", "--local", str(project_path), "--statusline", "full"]
+        with patch("pathlib.Path.cwd", return_value=tmp_path):
+            with patch(
+                "claudecodeoptimizer.install_hook.get_content_path",
+                return_value=tmp_path / "nonexistent",
             ):
-                result = post_install()
+                with patch.object(
+                    sys, "argv", ["cco-setup", "--local", str(project_path), "--statusline", "full"]
+                ):
+                    result = post_install()
 
         assert result == 1
         captured = capsys.readouterr()
@@ -768,20 +773,39 @@ class TestRunLocalMode:
         project_path.mkdir()
 
         # Use invalid source path to trigger permissions failure
-        with patch(
-            "claudecodeoptimizer.install_hook.get_content_path",
-            return_value=tmp_path / "nonexistent",
-        ):
-            with patch.object(
-                sys,
-                "argv",
-                ["cco-setup", "--local", str(project_path), "--permissions", "balanced"],
+        with patch("pathlib.Path.cwd", return_value=tmp_path):
+            with patch(
+                "claudecodeoptimizer.install_hook.get_content_path",
+                return_value=tmp_path / "nonexistent",
             ):
-                result = post_install()
+                with patch.object(
+                    sys,
+                    "argv",
+                    ["cco-setup", "--local", str(project_path), "--permissions", "balanced"],
+                ):
+                    result = post_install()
 
         assert result == 1
         captured = capsys.readouterr()
         assert "completed with errors" in captured.err
+
+    def test_path_traversal_rejected(self, tmp_path, capsys):
+        """Test path outside home/cwd is rejected."""
+        project_path = tmp_path / "project"
+        project_path.mkdir()
+
+        # Mock both home and cwd to be different from tmp_path
+        fake_home = Path("/nonexistent/home")
+        fake_cwd = Path("/nonexistent/cwd")
+
+        with patch("pathlib.Path.home", return_value=fake_home):
+            with patch("pathlib.Path.cwd", return_value=fake_cwd):
+                with patch.object(sys, "argv", ["cco-setup", "--local", str(project_path)]):
+                    result = post_install()
+
+        assert result == 1
+        captured = capsys.readouterr()
+        assert "Path must be within home directory or current working directory" in captured.err
 
 
 class TestPostInstallValidation:

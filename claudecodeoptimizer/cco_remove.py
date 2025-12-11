@@ -13,12 +13,14 @@ from .config import (
     CCO_RULE_NAMES,
     CCO_UNIVERSAL_PATTERN,
     CLAUDE_DIR,
+    MAX_CLAUDE_MD_SIZE,
     OLD_RULES_ROOT,
     RULES_DIR,
     SEPARATOR,
     SETTINGS_FILE,
     STATUSLINE_FILE,
     SUBPROCESS_TIMEOUT,
+    SUBPROCESS_TIMEOUT_PACKAGE,
     get_cco_agents,
     get_cco_commands,
 )
@@ -234,10 +236,16 @@ def has_claude_md_rules() -> list[str]:
     """Check which CCO sections exist in CLAUDE.md.
 
     Uses universal pattern to detect ANY CCO marker for backward compatibility.
+    Includes file size check to prevent ReDoS on very large files.
     """
     claude_md = CLAUDE_DIR / "CLAUDE.md"
     if not claude_md.exists():
         return []
+
+    # Safety: Skip regex on very large files
+    if claude_md.stat().st_size > MAX_CLAUDE_MD_SIZE:
+        return ["CLAUDE.md (file too large for pattern matching)"]
+
     content = claude_md.read_text(encoding="utf-8")
 
     # Use universal pattern to find all CCO markers
@@ -302,7 +310,11 @@ def uninstall_package(method: str) -> bool:
     }
     try:
         result = subprocess.run(
-            cmds[method], capture_output=True, text=True, timeout=30, shell=False
+            cmds[method],
+            capture_output=True,
+            text=True,
+            timeout=SUBPROCESS_TIMEOUT_PACKAGE,
+            shell=False,
         )
         return result.returncode == 0
     except (subprocess.TimeoutExpired, FileNotFoundError):
@@ -448,7 +460,7 @@ def main() -> int:
 
         _display_removal_plan(items)
 
-        confirm = input("Remove all CCO components? [y/N]: ").strip().lower()
+        confirm = input("Remove all CCO components? [y/N]: ").strip().lower()[:10]
         if confirm != "y":
             print("Cancelled.")
             return 0

@@ -117,6 +117,14 @@ def _setup_content(src_subdir: str, dest_dir: Path, verbose: bool = True) -> lis
 
     Idempotent: removes existing cco-*.md files before copying new ones.
     Safe for reinstall - always results in fresh content from current version.
+
+    Args:
+        src_subdir: Subdirectory name under content/ (e.g., 'command-templates', 'agent-templates')
+        dest_dir: Target directory path (e.g., ~/.claude/commands/)
+        verbose: If True, print progress messages during installation
+
+    Returns:
+        List of installed filenames (e.g., ['cco-audit.md', 'cco-tune.md'])
     """
     src = get_content_dir() / src_subdir
     if not src.exists():
@@ -184,19 +192,6 @@ def setup_rules(verbose: bool = True) -> dict[str, int]:
 
     installed["total"] = sum(installed.values())
     return installed
-
-
-def _load_base_rules() -> str:
-    """Load base rules (core + ai) - kept for backward compatibility testing."""
-    rules_dir = Path(__file__).parent / "content" / "rules"
-    content_parts = []
-
-    for filename in ["cco-core.md", "cco-ai.md"]:
-        file_path = rules_dir / filename
-        if file_path.exists():
-            content_parts.append(file_path.read_text(encoding="utf-8"))
-
-    return "\n\n".join(content_parts)
 
 
 def _remove_all_cco_markers(content: str) -> tuple[str, int]:
@@ -387,6 +382,21 @@ def _run_local_mode(args: argparse.Namespace) -> int:
 
     if not project_path.is_dir():
         print(f"Error: Not a directory: {project_path}", file=sys.stderr)
+        return 1
+
+    # Security: Validate path is within user's home directory or current working directory
+    home = Path.home()
+    cwd = Path.cwd().resolve()
+    if not (
+        project_path == home
+        or project_path == cwd
+        or home in project_path.parents
+        or cwd in project_path.parents
+    ):
+        print(
+            "Error: Path must be within home directory or current working directory",
+            file=sys.stderr,
+        )
         return 1
 
     print(f"\nCCO Local Setup: {project_path}\n")
