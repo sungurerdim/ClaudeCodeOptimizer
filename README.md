@@ -104,6 +104,44 @@ Run `/cco-tune` to see which adaptive rules apply to your project.
 - **Tools** - CCO workflow: Approval Flow, Fix Workflow, Safety Classification
 - **Adaptive** - Stack-based: Frontend accessibility, API rules, Container security
 
+### Adaptive Rules: 40+ Project Types
+
+`/cco-tune` scans your dependencies and project structure, then activates **only relevant rules**. No manual configuration needed.
+
+<details>
+<summary><b>Supported Project Types</b> (click to expand)</summary>
+
+| Category | Types | Example Rules |
+|----------|-------|---------------|
+| **Languages** | Python, TypeScript, JavaScript, Go, Rust | Type hints, import order, error handling patterns |
+| **App Types** | CLI, Library, API, Frontend, Mobile, Desktop | Exit codes, tree-shaking, REST methods, a11y |
+| **Game Dev** | Pygame/Arcade, Phaser/Three.js, Unity/Unreal/Godot | Frame budget, asset loading, input mapping |
+| **AI/ML** | Transformers, LangChain, Whisper, OpenAI, Anthropic | Lazy model load, quantization, batch inference |
+| **Data** | Pandas, Polars, Dask, Spark | Chunked reading, lazy eval, memory optimization |
+| **Media** | Audio (Whisper, Librosa), Video (FFmpeg, MoviePy), Image (OpenCV, Pillow) | Streaming, format handling, GPU acceleration |
+| **Infrastructure** | Docker, K8s, Serverless, Monorepo | Multi-stage builds, probes, selective testing |
+| **Backend** | REST, GraphQL, gRPC, WebSocket | Pagination, rate limiting, reconnect logic |
+| **Database** | SQLAlchemy, Prisma, TypeORM + Redis, Memcached | N+1 prevention, migrations, cache invalidation |
+| **Auth & Payment** | NextAuth, Clerk, Auth0 + Stripe, PayPal | Token security, webhook verification, audit trails |
+| **Communication** | SendGrid, Twilio, Firebase, Elasticsearch | Bounce handling, delivery status, search indexing |
+| **Blockchain** | Web3, Ethers, Hardhat | Gas estimation, nonce management, testnet-first |
+| **XR** | OpenXR, WebXR, AR Foundation | 90fps budget, comfort settings, device fallbacks |
+| **IoT** | MicroPython, MQTT, ESPHome | Reconnect logic, OTA updates, power management |
+
+</details>
+
+### Why Adaptive Rules Matter
+
+| Without CCO | With CCO |
+|-------------|----------|
+| Claude applies generic patterns | Claude applies **domain-specific best practices** |
+| "Add caching somewhere" | "Use TTL + invalidation for this data fetch" |
+| Misses GPU memory management | Knows to clear CUDA cache, use context managers |
+| Generic error handling | Language-specific: `raise from` (Python), `?` operator (Rust) |
+| No awareness of dependencies | Sees `faster-whisper` → activates audio chunking, progress callbacks |
+
+**Result:** Fewer iterations, domain-aware suggestions, production-ready code from the first try.
+
 *[Full rules documentation](docs/rules.md)*
 
 ---

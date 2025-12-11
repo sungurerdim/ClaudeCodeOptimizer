@@ -350,7 +350,7 @@ Every detection triggers a specific action. No detection is informational-only.
 | # | Element | Detection Method | Confidence | Action |
 |---|---------|------------------|------------|--------|
 | 1 | Purpose | README.md first H1/paragraph | HIGH if found | → Context purpose field |
-| 2 | Stack | package.json, pyproject.toml, go.mod, Cargo.toml | HIGH | → Context stack field, tool commands |
+| 2 | Stack | package.json, pyproject.toml, go.mod, Cargo.toml | HIGH | → Language rules ({lang}.md) + context + tools |
 | 3 | Type | Entry points vs exports analysis | HIGH | → CLI or Library rules (evaluate each) |
 | 4 | License | LICENSE, LICENSE.md, package.json license | HIGH if found | → Context, compliance check |
 
@@ -390,6 +390,59 @@ Every detection triggers a specific action. No detection is informational-only.
 | 19 | ML/AI | torch, tensorflow, sklearn, transformers deps | HIGH | → ML/AI rules + complexity +1 |
 | 20 | Game | Unity/, *.unity, Unreal/, *.uproject, Godot/ | HIGH | → Game rules (evaluate each) |
 | 21 | i18n | locales/, i18n/, messages/, translations/ | HIGH | → i18n rules (evaluate each) |
+
+#### Dependency-Based Detection [CRITICAL]
+
+**ALWAYS scan project dependencies from manifest files.** This catches domain-specific patterns that file structure alone cannot detect.
+
+| # | Element | Detection Method (deps in manifest) | Confidence | Action |
+|---|---------|-------------------------------------|------------|--------|
+| **Compute & Processing** ||||
+| 22 | DEP:GPU | cuda-python, cupy, torch+cuda, tensorflow-gpu, numba, triton, jax | HIGH | → gpu.md rules |
+| 23 | DEP:Audio | faster-whisper, whisper, pydub, librosa, soundfile, pyaudio | HIGH | → audio.md rules |
+| 24 | DEP:Video | ffmpeg-python, moviepy, opencv (VideoCapture), decord, av | HIGH | → video.md rules |
+| 25 | DEP:Image | opencv-python, pillow, scikit-image, albumentations, kornia | HIGH | → image.md rules |
+| 26 | DEP:HeavyModel | transformers, langchain, llama-cpp, vllm, ollama, openai, anthropic | HIGH | → heavy-model.md rules |
+| 27 | DEP:DataHeavy | pandas, polars, dask, pyspark, ray, vaex, arrow | HIGH | → data-heavy.md rules |
+| **Game Development** ||||
+| 28 | DEP:GamePython | pygame, arcade, ursina, panda3d, pyglet, raylib | HIGH | → game-python.md rules |
+| 29 | DEP:GameJS | phaser, three.js, pixi.js, babylon.js, kaboom | HIGH | → game-js.md rules |
+| 30 | DEP:GameEngine | Unity (.csproj), Unreal (*.uproject), Godot (project.godot) | HIGH | → game-engine.md rules |
+| **Web & API** ||||
+| 31 | DEP:HTTP | requests, httpx, aiohttp, axios, got, ky | HIGH | → http-client.md rules |
+| 32 | DEP:ORM | sqlalchemy, prisma, drizzle, typeorm, sequelize, peewee | HIGH | → orm.md rules |
+| 33 | DEP:Auth | authlib, next-auth, clerk, auth0, supabase-auth, passlib | HIGH | → auth.md rules |
+| 34 | DEP:Payment | stripe, paypal, square, paddle, braintree | HIGH | → payment.md rules |
+| **Communication** ||||
+| 35 | DEP:Email | sendgrid, mailgun, resend, nodemailer, postmark | HIGH | → email.md rules |
+| 36 | DEP:Search | elasticsearch, meilisearch, algolia, typesense | HIGH | → search.md rules |
+| **Infrastructure** ||||
+| 37 | DEP:Queue | celery, rq, dramatiq, bull, bullmq | HIGH | → queue.md rules |
+| 38 | DEP:Cache | redis, memcached, aiocache, diskcache, ioredis | HIGH | → cache.md rules |
+| 39 | DEP:Logging | loguru, structlog, winston, pino | HIGH | → logging.md rules |
+| 40 | DEP:ObjectStore | boto3/s3, minio, cloudinary, uploadthing | HIGH | → object-store.md rules |
+| **Documents** ||||
+| 41 | DEP:PDF | reportlab, weasyprint, pdfkit, puppeteer (pdf) | HIGH | → pdf.md rules |
+| **Emerging Tech** ||||
+| 42 | DEP:Blockchain | web3, ethers, hardhat, brownie, solana-py | HIGH | → blockchain.md rules |
+| 43 | DEP:ARVR | openxr, webxr, ar-foundation | HIGH | → arvr.md rules |
+| 44 | DEP:IoT | micropython, paho-mqtt, esphome | HIGH | → iot.md rules |
+| **Security** ||||
+| 45 | DEP:Scraping | scrapy, beautifulsoup4, selenium, playwright, puppeteer | HIGH | → scraping.md rules |
+
+**Dependency Scanning Command (Python example):**
+```bash
+# Extract deps from pyproject.toml
+grep -A 100 '\[project.dependencies\]' pyproject.toml 2>/dev/null | grep -E "^[a-z]" | cut -d'=' -f1 | tr -d ' "'
+
+# Or from requirements.txt
+cat requirements.txt 2>/dev/null | grep -v "^#" | cut -d'=' -f1 | cut -d'>' -f1 | cut -d'<' -f1 | tr -d ' '
+
+# For package.json
+jq -r '.dependencies // {} | keys[]' package.json 2>/dev/null
+```
+
+**Multiple categories can match:** A project with `faster-whisper` + `cuda` triggers both DEP:Audio AND DEP:GPU rules.
 
 #### Quality & Security Detection
 
@@ -438,51 +491,128 @@ Each detection triggers a category in adaptive.md. For each triggered category:
 
 Each detection maps to a specific section in `cco-adaptive.md`. Read these sections:
 
-| Detection | adaptive.md Section | Expected Rules |
-|-----------|---------------------|----------------|
-| T:CLI | `## Apps > CLI` | Help-Examples, Exit-Codes, Signal-Handle, Output-Modes, Config-Precedence |
-| T:Library | `## Apps > Library` | Minimal-Deps, Tree-Shakeable, Types-Included, Deprecation-Path |
-| CI/CD (CLI/Library) | `### CI-Only Operations` | Config-as-Code, CI-Gates |
-| CI/CD (API/Frontend) | `### Full Operations` | Config-as-Code, Health-Endpoints, Graceful-Shutdown, Observability, CI-Gates, Zero-Downtime, Feature-Flags |
-| S:Small (100+) | `### Small (S:100+)` | Caching, Lazy-Load |
-| S:Medium (1K+) | `### Medium (S:1K+)` | + Conn-Pool, Async-IO |
-| S:Large (10K+) | `### Large (S:10K+)` | + Circuit-Breaker, Idempotency, API-Version, Compression |
-| Testing:Basics | `### Basics` | Unit-Isolated, Mocking, Coverage-60 |
-| Testing:Standard | `### Standard` | + Integration, Fixtures, Coverage-80, CI-on-PR |
-| Testing:Full | `### Full` | + E2E, Contract, Mutation, Coverage-90 |
-| Container | `## Infrastructure > Container` | Multi-Stage, Non-Root, CVE-Scan, Resource-Limits, Distroless |
-| K8s | `## Infrastructure > K8s` | Security-Context, Network-Policy, Probes, Resource-Quotas |
-| Serverless | `## Infrastructure > Serverless` | Minimize-Bundle, Graceful-Timeout, Stateless, Right-Size |
-| Monorepo | `## Infrastructure > Monorepo` | Package-Boundaries, Selective-Test, Shared-Deps, Build-Cache |
-| API:REST | `## Backend > API` | REST-Methods, Pagination, OpenAPI-Spec, Error-Format |
-| API:GraphQL | `### GraphQL Extension` | + GQL-Limits, GQL-Persisted |
-| API:gRPC | `### gRPC Extension` | + Proto-Version |
-| DB:* | `## Backend > Data` | Backup-Strategy, Migration-Safe, N+1-Prevent, Transaction-Safe |
-| Frontend | `## Frontend` | A11y-WCAG, Perf-Core-Vitals, State-Predictable, Code-Split |
-| Mobile | `## Apps > Mobile` | Offline-First, Battery-Optimize, Deep-Links, Platform-Guidelines |
-| Desktop | `## Apps > Desktop` | Auto-Update, Native-Integration, Memory-Cleanup |
-| ML/AI | `## Specialized > ML/AI` | Reproducibility, Experiment-Track, Model-Registry, Bias-Detection |
-| Game | `## Specialized > Game` | Frame-Budget, Asset-Streaming, Input-Rebind, Save-Versioned |
-| i18n | `## i18n` | Strings-External, UTF8-Encoding, RTL-Support, Locale-Format |
-| RT:Basic | `### Basic (RT:Basic)` | Reconnect-Logic, Heartbeat, Stale-Data |
-| RT:Low-latency | `### Low-Latency` | + Binary-Protocol, Edge-Compute |
-| Team:Small | `### Small (Team:2-5)` | PR-Review, README-Contributing |
-| Team:Large | `### Large (Team:6+)` | + ADR, CODEOWNERS, PR-Templates, Branch-Protection |
-| SLA:Any | `### Basics (SLA:Any)` | Error-Tracking, Critical-Alerts |
-| SLA:99%+ | `### Standard (SLA:99%+)` | + Structured-Logs, RED-Metrics, Distributed-Trace |
-| SLA:99.9%+ | `### HA (SLA:99.9%+)` | + Redundancy, Auto-Failover, Runbooks |
-| SLA:99.99%+ | `### Critical (SLA:99.99%+)` | + Multi-Region, Chaos-Engineering, DR-Tested |
-| D:PII/Regulated | `## Security` | Input-Validation, SQL-Safe, XSS-Prevent, Auth-Verify, Rate-Limit, Encrypt-Rest, Audit-Log, CORS-Strict, License-Track |
+| Detection | adaptive.md Section | Output File | Expected Rules |
+|-----------|---------------------|-------------|----------------|
+| **Language/Stack (ALWAYS evaluate when detected)** ||||
+| L:Python | `### Python (L:Python)` | `python.md` | Type-Hints, Docstrings, Import-Order, Exception-Context |
+| L:TypeScript | `### TypeScript (L:TypeScript)` | `typescript.md` | Strict-Mode, Explicit-Return, No-Any, Null-Safety |
+| L:JavaScript | `### JavaScript (L:JavaScript)` | `javascript.md` | JSDoc-Types, ES-Modules, Const-Default |
+| L:Go | `### Go (L:Go)` | `go.md` | Error-Wrap, Interface-Small, Goroutine-Safe, Defer-Cleanup |
+| L:Rust | `### Rust (L:Rust)` | `rust.md` | Result-Propagate, Ownership-Clear, Clippy-Clean, Unsafe-Minimize |
+| **Application Type** ||||
+| T:CLI | `## Apps > CLI` | `cli.md` | Help-Examples, Exit-Codes, Signal-Handle, Output-Modes, Config-Precedence |
+| T:Library | `## Apps > Library` | `library.md` | Minimal-Deps, Tree-Shakeable, Types-Included, Deprecation-Path |
+| **Scale (ALWAYS evaluate - default Small for non-prototype)** ||||
+| S:Small (100+) | `### Small (S:100+)` | `scale.md` | Caching, Lazy-Load |
+| S:Medium (1K+) | `### Medium (S:1K+)` | `scale.md` | + Conn-Pool, Async-IO |
+| S:Large (10K+) | `### Large (S:10K+)` | `scale.md` | + Circuit-Breaker, Idempotency, API-Version, Compression |
+| **Operations** ||||
+| CI/CD (CLI/Library) | `### CI-Only Operations` | `operations.md` | Config-as-Code, CI-Gates |
+| CI/CD (API/Frontend) | `### Full Operations` | `operations.md` | Config-as-Code, Health-Endpoints, Graceful-Shutdown, Observability, CI-Gates, Zero-Downtime, Feature-Flags |
+| **Testing** ||||
+| Testing:Basics | `### Basics` | `testing.md` | Unit-Isolated, Mocking, Coverage-60 |
+| Testing:Standard | `### Standard` | `testing.md` | + Integration, Fixtures, Coverage-80, CI-on-PR |
+| Testing:Full | `### Full` | `testing.md` | + E2E, Contract, Mutation, Coverage-90 |
+| **Infrastructure** ||||
+| Container | `## Infrastructure > Container` | `container.md` | Multi-Stage, Non-Root, CVE-Scan, Resource-Limits, Distroless |
+| K8s | `## Infrastructure > K8s` | `k8s.md` | Security-Context, Network-Policy, Probes, Resource-Quotas |
+| Serverless | `## Infrastructure > Serverless` | `serverless.md` | Minimize-Bundle, Graceful-Timeout, Stateless, Right-Size |
+| Monorepo | `## Infrastructure > Monorepo` | `monorepo.md` | Package-Boundaries, Selective-Test, Shared-Deps, Build-Cache |
+| **Backend** ||||
+| API:REST | `## Backend > API` | `api.md` | REST-Methods, Pagination, OpenAPI-Spec, Error-Format |
+| API:GraphQL | `### GraphQL Extension` | `api.md` | + GQL-Limits, GQL-Persisted |
+| API:gRPC | `### gRPC Extension` | `api.md` | + Proto-Version |
+| DB:* | `## Backend > Data` | `database.md` | Backup-Strategy, Migration-Safe, N+1-Prevent, Transaction-Safe |
+| **Frontend/Apps** ||||
+| Frontend | `## Frontend` | `frontend.md` | A11y-WCAG, Perf-Core-Vitals, State-Predictable, Code-Split |
+| Mobile | `## Apps > Mobile` | `mobile.md` | Offline-First, Battery-Optimize, Deep-Links, Platform-Guidelines |
+| Desktop | `## Apps > Desktop` | `desktop.md` | Auto-Update, Native-Integration, Memory-Cleanup |
+| **Specialized** ||||
+| ML/AI | `## Specialized > ML/AI` | `ml-ai.md` | Reproducibility, Experiment-Track, Model-Registry, Bias-Detection |
+| Game | `## Specialized > Game` | `game.md` | Frame-Budget, Asset-Streaming, Input-Rebind, Save-Versioned |
+| i18n | `## i18n` | `i18n.md` | Strings-External, UTF8-Encoding, RTL-Support, Locale-Format |
+| **Real-time** ||||
+| RT:Basic | `### Basic (RT:Basic)` | `realtime.md` | Reconnect-Logic, Heartbeat, Stale-Data |
+| RT:Low-latency | `### Low-Latency` | `realtime.md` | + Binary-Protocol, Edge-Compute |
+| **Team** ||||
+| Team:Small | `### Small (Team:2-5)` | `team.md` | PR-Review, README-Contributing |
+| Team:Large | `### Large (Team:6+)` | `team.md` | + ADR, CODEOWNERS, PR-Templates, Branch-Protection |
+| **Observability/SLA** ||||
+| SLA:Any | `### Basics (SLA:Any)` | `observability.md` | Error-Tracking, Critical-Alerts |
+| SLA:99%+ | `### Standard (SLA:99%+)` | `observability.md` | + Structured-Logs, RED-Metrics, Distributed-Trace |
+| SLA:99.9%+ | `### HA (SLA:99.9%+)` | `observability.md` | + Redundancy, Auto-Failover, Runbooks |
+| SLA:99.99%+ | `### Critical (SLA:99.99%+)` | `observability.md` | + Multi-Region, Chaos-Engineering, DR-Tested |
+| **Security** ||||
+| D:PII/Regulated | `## Security` | `security.md` | Input-Validation, SQL-Safe, XSS-Prevent, Auth-Verify, Rate-Limit, Encrypt-Rest, Audit-Log, CORS-Strict, License-Track |
+| **Dependency-Based (scan manifest files)** ||||
+| **Compute & Processing** ||||
+| DEP:GPU | `### GPU (DEP:GPU)` | `gpu.md` | Device-Selection, Memory-Management, Batch-Sizing, Mixed-Precision, Fallback-CPU, Stream-Async |
+| DEP:Audio | `### Audio (DEP:Audio)` | `audio.md` | Chunk-Processing, Sample-Rate, Format-Agnostic, Memory-Stream, Silence-Detection, Progress-Callback |
+| DEP:Video | `### Video (DEP:Video)` | `video.md` | Frame-Iterator, Codec-Fallback, Resolution-Aware, Temp-Cleanup, Seek-Efficient, Hardware-Accel |
+| DEP:Image | `### Image Processing (DEP:Image)` | `image.md` | Lazy-Decode, Size-Validate, Format-Preserve, EXIF-Handle, Memory-Map |
+| DEP:HeavyModel | `### Heavy Models (DEP:HeavyModel)` | `heavy-model.md` | Lazy-Model-Load, Model-Singleton, Quantization-Aware, Batch-Inference, Timeout-Guard, Memory-Cleanup, Download-Cache |
+| DEP:DataHeavy | `### Data Heavy (DEP:DataHeavy)` | `data-heavy.md` | Chunk-Read, Lazy-Eval, Type-Optimize, Index-Usage, Parallel-Process, Spill-Disk |
+| **Game Development** ||||
+| DEP:GamePython | `### Game Python (DEP:GamePython)` | `game-python.md` | Game-Loop, Asset-Preload, Input-Mapping, State-Machine, Delta-Time |
+| DEP:GameJS | `### Game JS (DEP:GameJS)` | `game-js.md` | Sprite-Atlas, Object-Pool, RAF-Loop, WebGL-Fallback, Audio-Context |
+| DEP:GameEngine | `### Game Engine (DEP:GameEngine)` | `game-engine.md` | Scene-Organization, Prefab-Usage, Build-Profiles, Version-Control, Performance-Budget |
+| **Web & API** ||||
+| DEP:HTTP | `### HTTP Client (DEP:HTTP)` | `http-client.md` | Timeout-Always, Retry-Transient, Session-Reuse, Error-Handle, Response-Validate |
+| DEP:ORM | `### ORM (DEP:ORM)` | `orm.md` | Migration-Always, Query-Optimize, Relationship-Lazy, Transaction-Scope, Index-Define |
+| DEP:Auth | `### Auth (DEP:Auth)` | `auth.md` | Token-Secure, Refresh-Flow, RBAC-Clear, Session-Invalidate, MFA-Support |
+| DEP:Payment | `### Payment (DEP:Payment)` | `payment.md` | Webhook-Verify, Idempotency-Key, Amount-Server, Error-Handle, Audit-Trail |
+| **Communication** ||||
+| DEP:Email | `### Email (DEP:Email)` | `email.md` | Template-System, Queue-Async, Bounce-Handle, Rate-Aware, Unsubscribe |
+| DEP:SMS | `### SMS (DEP:SMS)` | `sms.md` | Delivery-Status, Rate-Throttle, Opt-Out, Fallback-Provider, Message-Template |
+| DEP:Notification | `### Notification (DEP:Notification)` | `notification.md` | Channel-Preference, Batch-Send, Silent-Push, Token-Refresh, Fallback-Channel |
+| DEP:Search | `### Search (DEP:Search)` | `search.md` | Index-Strategy, Sync-Mechanism, Relevance-Tune, Typo-Tolerance, Facet-Design |
+| **Infrastructure** ||||
+| DEP:Queue | `### Queue/Workers (DEP:Queue)` | `queue.md` | Idempotent-Tasks, Result-Backend, Timeout-Task, Dead-Letter, Priority-Queues |
+| DEP:Cache | `### Cache (DEP:Cache)` | `cache.md` | TTL-Strategy, Key-Namespace, Serialization, Cache-Aside, Invalidation |
+| DEP:Logging | `### Logging (DEP:Logging)` | `logging.md` | Structured-Format, Level-Config, Context-Inject, Sensitive-Redact, Rotation-Strategy |
+| DEP:ObjectStore | `### Object Store (DEP:ObjectStore)` | `object-store.md` | Presigned-URLs, Content-Type, Size-Limit, Path-Structure, Lifecycle-Rules |
+| **Documents** ||||
+| DEP:PDF | `### PDF (DEP:PDF)` | `pdf.md` | Template-Based, Async-Generate, Stream-Output, Font-Embed, Accessibility |
+| DEP:Excel | `### Excel (DEP:Excel)` | `excel.md` | Stream-Write, Formula-Safe, Style-Template, Memory-Optimize, Sheet-Naming |
+| **Emerging Tech** ||||
+| DEP:Blockchain | `### Blockchain (DEP:Blockchain)` | `blockchain.md` | Gas-Estimate, Nonce-Manage, Event-Listen, Testnet-First, Key-Security |
+| DEP:ARVR | `### AR/VR (DEP:ARVR)` | `arvr.md` | Frame-Budget, Comfort-Settings, Fallback-Mode, Input-Abstract, Performance-Tier |
+| DEP:IoT | `### IoT (DEP:IoT)` | `iot.md` | Reconnect-Logic, Power-Aware, OTA-Update, Data-Buffer, Watchdog |
+| **Security** ||||
+| DEP:Crypto | `### Crypto (DEP:Crypto)` | `crypto.md` | Algorithm-Modern, Key-Rotation, IV-Unique, Timing-Safe, Key-Derivation |
+| DEP:Scraping | `### Web Scraping (DEP:Scraping)` | `scraping.md` | Politeness-Delay, Robots-Respect, User-Agent-Honest, Selector-Resilient, Headless-Default, Anti-Block |
 
 ### Rule Selection Process
 
+**MANDATORY EVALUATIONS [CRITICAL]:**
+These categories MUST be evaluated for EVERY project, regardless of other detections:
+
+1. **Language/Stack** - If pyproject.toml exists → MUST create python.md
+   - If package.json exists → MUST create typescript.md or javascript.md
+   - If go.mod exists → MUST create go.md
+   - If Cargo.toml exists → MUST create rust.md
+
+2. **Scale** - ALWAYS create scale.md (default: S:Small rules)
+   - Only skip for explicit Prototype scale selection
+
+3. **Testing** - If test framework detected → MUST create testing.md
+
 ```
 1. Read cco-adaptive.md from package
-2. For each detection → find matching section in adaptive.md
-3. Evaluate each rule's "Check" condition against project
-4. Include rules where condition is met
-5. Write to .claude/rules/cco/{category}.md files
+2. FIRST: Evaluate mandatory categories (Language, Scale, Testing)
+3. THEN: For each additional detection → find matching section in adaptive.md
+4. Evaluate each rule's "Check" condition against project
+5. Include rules where condition is met
+6. Write to .claude/rules/cco/{category}.md files
 ```
+
+**Example: faster-whisper CLI (Python + CLI + Scale:Small)**
+Must generate:
+- `python.md` (Language detection: pyproject.toml)
+- `cli.md` (Type detection: __main__.py)
+- `scale.md` (Scale: Small default - model loading = lazy load candidate)
+- `testing.md` (if pytest detected)
+- `operations.md` (if .github/workflows/ exists)
 
 Multiple detections stack additively. Each rule is evaluated once (no duplicates).
 
@@ -1526,41 +1656,84 @@ Rules are organized in 4 categories. **All counts are dynamically calculated at 
 
 | Detection | Confidence | Primary Action | Secondary Action |
 |-----------|------------|----------------|------------------|
+| **Core (ALWAYS evaluate)** |||
 | Purpose | HIGH | → context | - |
-| Stack | HIGH | → context | → tools (commands) |
-| Type: CLI | HIGH | → CLI rules | - |
-| Type: Library | HIGH | → Library rules | - |
-| CI/CD | HIGH | → Operations rules | → tools |
-| Container | HIGH | → Container rules | - |
-| K8s | HIGH | → Container rules | complexity +1 |
-| Serverless | HIGH | → Serverless rules | - |
-| Monorepo | HIGH | → Monorepo rules | MCP tier bump |
-| DB | HIGH | → Data rules | - |
-| API: REST | HIGH | → API rules | - |
-| API: GraphQL | HIGH | → API rules | GraphQL patterns |
-| API: gRPC | HIGH | → API rules | gRPC patterns |
-| API: WebSocket | HIGH | → Real-time rules | - |
-| Microservices | HIGH | → Scale & Arch rules | complexity +2 |
-| Frontend | HIGH | → Frontend rules | - |
-| Mobile | HIGH | → Mobile rules | - |
-| Desktop | HIGH | → Desktop rules | - |
-| ML/AI | HIGH | → ML/AI rules | complexity +1 |
-| Game | HIGH | → Game rules | - |
-| i18n | HIGH | → i18n rules | - |
-| Test Framework | HIGH | → testing tier | - |
+| Stack: Python | HIGH | → python.md rules | → context + tools |
+| Stack: TypeScript | HIGH | → typescript.md rules | → context + tools |
+| Stack: JavaScript | HIGH | → javascript.md rules | → context + tools |
+| Stack: Go | HIGH | → go.md rules | → context + tools |
+| Stack: Rust | HIGH | → rust.md rules | → context + tools |
+| Type: CLI | HIGH | → cli.md rules | - |
+| Type: Library | HIGH | → library.md rules | - |
+| **Scale (ALWAYS evaluate - default S:Small)** |||
+| Scale | MEDIUM | → scale.md rules | → guidelines |
+| **Infrastructure** |||
+| CI/CD | HIGH | → operations.md rules | → tools |
+| Container | HIGH | → container.md rules | - |
+| K8s | HIGH | → k8s.md rules | complexity +1 |
+| Serverless | HIGH | → serverless.md rules | - |
+| Monorepo | HIGH | → monorepo.md rules | MCP tier bump |
+| **Backend** |||
+| DB | HIGH | → database.md rules | - |
+| API: REST | HIGH | → api.md rules | - |
+| API: GraphQL | HIGH | → api.md rules | + GraphQL rules |
+| API: gRPC | HIGH | → api.md rules | + gRPC rules |
+| API: WebSocket | HIGH | → realtime.md rules | - |
+| Microservices | HIGH | → scale.md (Large) | complexity +2 |
+| **Frontend/Apps** |||
+| Frontend | HIGH | → frontend.md rules | - |
+| Mobile | HIGH | → mobile.md rules | - |
+| Desktop | HIGH | → desktop.md rules | - |
+| **Specialized** |||
+| ML/AI | HIGH | → ml-ai.md rules | complexity +1 |
+| Game | HIGH | → game.md rules | - |
+| i18n | HIGH | → i18n.md rules | - |
+| **Quality** |||
+| Test Framework | HIGH | → testing.md rules | - |
 | Coverage | HIGH | → context | - |
 | Linting | HIGH | → tools | - |
 | Formatting | HIGH | → tools | - |
 | Pre-commit | HIGH | → context (hooks) | - |
 | Security Scan | HIGH | security posture | - |
-| Secrets Risk | HIGH | → Security rules | - |
-| Team Size | MEDIUM | → guidelines | → permissions level |
-| Scale | MEDIUM | → guidelines | → Caching rules |
-| Data Sensitivity | LOW | → guidelines | security weight |
-| Compliance | LOW | compliance hint | - |
+| Secrets Risk | HIGH | → security.md rules | - |
+| **Team/Org** |||
+| Team Size | MEDIUM | → team.md rules | → guidelines |
+| SLA | MEDIUM | → observability.md rules | - |
+| **Context (user-configurable)** |||
+| Data Sensitivity | LOW | → guidelines | → security weight |
+| Compliance | LOW | → compliance hint | - |
 | Maturity | MEDIUM | → guidelines | - |
 | Breaking | MEDIUM | → guidelines | - |
 | AI Perf | HIGH | → env | - |
+| **Dependency-Based (scan manifest)** |||
+| DEP:GPU | HIGH | → gpu.md rules | complexity +1 |
+| DEP:Audio | HIGH | → audio.md rules | - |
+| DEP:Video | HIGH | → video.md rules | - |
+| DEP:Image | HIGH | → image.md rules | - |
+| DEP:HeavyModel | HIGH | → heavy-model.md rules | complexity +1 |
+| DEP:DataHeavy | HIGH | → data-heavy.md rules | - |
+| DEP:GamePython | HIGH | → game-python.md rules | - |
+| DEP:GameJS | HIGH | → game-js.md rules | - |
+| DEP:GameEngine | HIGH | → game-engine.md rules | complexity +1 |
+| DEP:HTTP | HIGH | → http-client.md rules | - |
+| DEP:ORM | HIGH | → orm.md rules | - |
+| DEP:Auth | HIGH | → auth.md rules | - |
+| DEP:Payment | HIGH | → payment.md rules | - |
+| DEP:Email | HIGH | → email.md rules | - |
+| DEP:SMS | HIGH | → sms.md rules | - |
+| DEP:Notification | HIGH | → notification.md rules | - |
+| DEP:Search | HIGH | → search.md rules | - |
+| DEP:Queue | HIGH | → queue.md rules | - |
+| DEP:Cache | HIGH | → cache.md rules | - |
+| DEP:Logging | HIGH | → logging.md rules | - |
+| DEP:ObjectStore | HIGH | → object-store.md rules | - |
+| DEP:PDF | HIGH | → pdf.md rules | - |
+| DEP:Excel | HIGH | → excel.md rules | - |
+| DEP:Crypto | HIGH | → crypto.md rules | - |
+| DEP:Blockchain | HIGH | → blockchain.md rules | complexity +1 |
+| DEP:ARVR | HIGH | → arvr.md rules | complexity +1 |
+| DEP:IoT | HIGH | → iot.md rules | - |
+| DEP:Scraping | HIGH | → scraping.md rules | - |
 
 **Rule Selection:** For each category, evaluate every rule individually against project context. Include only rules that are relevant and actionable for this specific project.
 
