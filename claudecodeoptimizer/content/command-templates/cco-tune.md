@@ -1080,12 +1080,12 @@ Write all selected configurations to **project-local files only**:
 
 | Selection | Target | Method |
 |-----------|--------|--------|
-| Detection | `./.claude/rules/cco/` + `./CLAUDE.md` cleanup | Write tool (context.md + category files) + Edit tool (remove CCO_ADAPTIVE) |
+| Detection | `./.claude/rules/cco/` + `./CLAUDE.md` cleanup | Write tool (context.md + category files) + Edit tool (remove ALL CCO markers) |
 | AI Performance | `./.claude/settings.json` | Write tool (env section) |
 | Statusline | `./.claude/statusline.js` + `./.claude/settings.json` | `cco-setup --local . --statusline {mode}` |
 | Permissions | `./.claude/settings.json` | `cco-setup --local . --permissions {level}` |
 
-**CLAUDE.md cleanup only** - Remove CCO_ADAPTIVE block, add nothing new.
+**CLAUDE.md cleanup only** - Remove ALL CCO marker blocks (CCO_ADAPTIVE, CCO_CONTEXT, CCO_STANDARDS, etc.), add nothing new.
 
 ### Export Operations
 
@@ -1100,13 +1100,13 @@ Write all selected configurations to **project-local files only**:
 
 | Remove | Target | Method |
 |--------|--------|--------|
-| Remove Rules | `./.claude/rules/cco/` + `./CLAUDE.md` | Delete rules dir + remove CCO_ADAPTIVE block |
+| Remove Rules | `./.claude/rules/cco/` + `./CLAUDE.md` | Delete rules dir + remove ALL CCO marker blocks |
 | Remove AI Performance | `./.claude/settings.json` | Remove `env` section from JSON |
 | Remove Statusline | `./.claude/statusline.js` + `./.claude/settings.json` | Delete statusline.js, remove `statusLine` from JSON |
 | Remove Permissions | `./.claude/settings.json` | Remove `permissions` section from JSON |
 
 **Removal behavior:**
-- Rules: Removes all `.md` files from `./.claude/rules/cco/` AND removes CCO_ADAPTIVE block from `./CLAUDE.md`
+- Rules: Removes all `.md` files from `./.claude/rules/cco/` AND removes ALL CCO marker blocks from `./CLAUDE.md`
 - AI Performance: Removes `env` key entirely → Claude Code uses built-in defaults
 - Statusline: Deletes `.claude/statusline.js` file AND removes `statusLine` key from settings.json
 - Permissions: Removes `permissions` key entirely → all operations require approval
@@ -1115,29 +1115,39 @@ Write all selected configurations to **project-local files only**:
 
 ### CLAUDE.md Cleanup [CRITICAL]
 
-**When Detection & Rules is selected, ALWAYS clean CLAUDE.md CCO_ADAPTIVE block:**
+**When Detection & Rules is selected, ALWAYS clean ALL CCO markers from CLAUDE.md:**
 
-The new rule system stores project rules in `./.claude/rules/cco/`, NOT in `./CLAUDE.md`. Any existing CCO_ADAPTIVE block in CLAUDE.md is legacy and MUST be removed.
+The new rule system stores project rules in `./.claude/rules/cco/`, NOT in `./CLAUDE.md`. Any existing CCO marker blocks in CLAUDE.md are legacy and MUST be removed.
+
+**Supported legacy markers (all must be cleaned):**
+- `CCO_ADAPTIVE_START/END` - current version
+- `CCO_CONTEXT_START/END` - v1.0.0
+- `CCO_STANDARDS_START/END` - v1.0.0
+- Any `CCO_*_START/END` pattern
 
 **Cleanup steps (run via Edit tool):**
-1. Check if `./CLAUDE.md` contains `<!-- CCO_ADAPTIVE_START -->` marker
-2. If found, remove everything between `<!-- CCO_ADAPTIVE_START -->` and `<!-- CCO_ADAPTIVE_END -->` (inclusive)
-3. Preserve any content BEFORE CCO_ADAPTIVE_START and AFTER CCO_ADAPTIVE_END
+1. Check if `./CLAUDE.md` contains any `<!-- CCO_*_START -->` marker (case-insensitive)
+2. If found, remove ALL blocks matching `<!-- CCO_*_START -->...<!-- CCO_*_END -->`
+3. Preserve any content BEFORE first CCO marker and AFTER last CCO marker
 4. Do NOT add anything to CLAUDE.md - only remove
 
 **Example transformation:**
 ```markdown
 # MyProject                          # MyProject
 
-<!-- CCO_ADAPTIVE_START -->    →     (CCO_ADAPTIVE block removed)
+<!-- CCO_CONTEXT_START -->     →     (ALL CCO blocks removed)
 ## Strategic Context
+...
+<!-- CCO_CONTEXT_END -->
+
+<!-- CCO_ADAPTIVE_START -->
 ...
 <!-- CCO_ADAPTIVE_END -->
 ```
 
 **Bash command to check:**
 ```bash
-grep -q "CCO_ADAPTIVE_START" ./CLAUDE.md && echo "NEEDS_CLEANUP" || echo "CLEAN"
+grep -qiE "CCO_[A-Z]+_START" ./CLAUDE.md && echo "NEEDS_CLEANUP" || echo "CLEAN"
 ```
 
 **IMPORTANT:** This cleanup is MANDATORY when:
@@ -1848,7 +1858,7 @@ Guidelines are generated based on user-configured values to provide context-awar
 14. **Export reads installed files** - Export reads from `~/.claude/rules/cco/` and `./.claude/rules/cco/`, NOT from command specs
 15. **Export content is user-selectable** - User chooses which sections to include (Universal, AI-Specific, CCO-Specific, Project Context, Conditional)
 16. **Export never includes settings** - AI Performance, Statusline, Permissions are NEVER exported (project-specific, not portable)
-17. **CLAUDE.md cleanup only** - Remove CCO_ADAPTIVE block from `./CLAUDE.md`, never add content
+17. **CLAUDE.md cleanup only** - Remove ALL CCO marker blocks from `./CLAUDE.md`, never add content
 18. **Read adaptive.md for rules** - ALWAYS read `cco-adaptive.md` from package to select project rules
 
 ---
