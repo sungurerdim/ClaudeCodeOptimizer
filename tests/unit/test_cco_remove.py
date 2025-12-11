@@ -334,6 +334,101 @@ class TestRemovePermissions:
         assert result is False
 
 
+class TestHasRulesDirOld:
+    """Test has_rules_dir_old function (v1.x backward compat)."""
+
+    def test_no_dir(self, tmp_path):
+        """Test returns False when old rules root doesn't exist."""
+        from claudecodeoptimizer.cco_remove import has_rules_dir_old
+
+        with patch("claudecodeoptimizer.cco_remove.OLD_RULES_ROOT", tmp_path / "nonexistent"):
+            result = has_rules_dir_old()
+        assert result is False
+
+    def test_empty_dir(self, tmp_path):
+        """Test returns False when rules dir exists but has no CCO files."""
+        from claudecodeoptimizer.cco_remove import has_rules_dir_old
+
+        rules_dir = tmp_path / "rules"
+        rules_dir.mkdir()
+        (rules_dir / "custom-rule.md").write_text("# Custom")  # Not a CCO file
+        with patch("claudecodeoptimizer.cco_remove.OLD_RULES_ROOT", rules_dir):
+            result = has_rules_dir_old()
+        assert result is False
+
+    def test_with_old_cco_rules(self, tmp_path):
+        """Test returns True when old CCO rule files exist in root."""
+        from claudecodeoptimizer.cco_remove import has_rules_dir_old
+
+        rules_dir = tmp_path / "rules"
+        rules_dir.mkdir()
+        (rules_dir / "cco-core.md").write_text("# Old Core")
+        with patch("claudecodeoptimizer.cco_remove.OLD_RULES_ROOT", rules_dir):
+            result = has_rules_dir_old()
+        assert result is True
+
+
+class TestRemoveRulesDirOld:
+    """Test remove_rules_dir_old function (v1.x backward compat)."""
+
+    def test_no_dir(self, tmp_path):
+        """Test returns False when no rules dir exists."""
+        from claudecodeoptimizer.cco_remove import remove_rules_dir_old
+
+        with patch("claudecodeoptimizer.cco_remove.OLD_RULES_ROOT", tmp_path / "nonexistent"):
+            result = remove_rules_dir_old(verbose=False)
+        assert result is False
+
+    def test_remove_old_cco_rules(self, tmp_path, capsys):
+        """Test removes old CCO rule files from root."""
+        from claudecodeoptimizer.cco_remove import remove_rules_dir_old
+
+        rules_dir = tmp_path / "rules"
+        rules_dir.mkdir()
+        (rules_dir / "cco-core.md").write_text("# Old Core")
+        (rules_dir / "cco-ai.md").write_text("# Old AI")
+        (rules_dir / "custom-rule.md").write_text("# Keep")
+
+        with patch("claudecodeoptimizer.cco_remove.OLD_RULES_ROOT", rules_dir):
+            result = remove_rules_dir_old(verbose=True)
+
+        assert result is True
+        assert not (rules_dir / "cco-core.md").exists()
+        assert not (rules_dir / "cco-ai.md").exists()
+        assert (rules_dir / "custom-rule.md").exists()
+        captured = capsys.readouterr()
+        assert "old CCO files" in captured.out
+
+    def test_no_cco_files_to_remove(self, tmp_path):
+        """Test returns False when no CCO files exist."""
+        from claudecodeoptimizer.cco_remove import remove_rules_dir_old
+
+        rules_dir = tmp_path / "rules"
+        rules_dir.mkdir()
+        (rules_dir / "custom-rule.md").write_text("# Custom")
+
+        with patch("claudecodeoptimizer.cco_remove.OLD_RULES_ROOT", rules_dir):
+            result = remove_rules_dir_old(verbose=False)
+        assert result is False
+
+
+class TestHasClaudeMdRulesLargeFile:
+    """Test has_claude_md_rules with large file safety check."""
+
+    def test_large_file_skipped(self, tmp_path):
+        """Test returns special message for files larger than MAX_CLAUDE_MD_SIZE."""
+        claude_md = tmp_path / "CLAUDE.md"
+        # Create a file larger than 1MB would be too slow, so mock the stat
+        claude_md.write_text("small content")
+
+        with patch("claudecodeoptimizer.cco_remove.CLAUDE_DIR", tmp_path):
+            with patch("claudecodeoptimizer.cco_remove.MAX_CLAUDE_MD_SIZE", 5):  # 5 bytes limit
+                result = has_claude_md_rules()
+
+        assert len(result) == 1
+        assert "too large" in result[0]
+
+
 class TestHasRulesDir:
     """Test has_rules_dir function."""
 
