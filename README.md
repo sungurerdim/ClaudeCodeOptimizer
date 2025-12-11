@@ -419,68 +419,26 @@ CCO leverages the full spectrum of Claude Code features with official documentat
 | **[Statusline][cc-changelog]** | Custom status bar (Full/Minimal modes) |
 | **[Settings.json][cc-changelog]** | Local project settings with env vars |
 
-### Claude 4 Best Practices Compliance
+### Built on Claude 4 Best Practices
 
-CCO implements patterns from [Claude 4 Best Practices][claude4-bp]:
+CCO implements official [Claude 4 Best Practices][claude4-bp] and [Opus 4.5][opus-4-5] optimizations:
 
-| Practice | CCO Implementation |
-|----------|-------------------|
-| **Parallel Tool Execution** | Independent operations run simultaneously |
-| **Explicit Instructions** | Commands specify exact behaviors, not vague guidance |
-| **Context Motivation** | Rules explain "why" not just "what" |
-| **Conservative Judgment** | Evidence-based severity, never guesses |
-| **Long-horizon State Tracking** | TodoWrite for progress, git for state |
-| **Structured Output** | Consistent formats (`Applied: N \| Skipped: N \| Failed: N`) |
-| **Model Self-Knowledge** | Agent descriptions match capabilities |
-| **Subagent Orchestration** | Automatic delegation based on task type |
+| Feature | Benefit |
+|---------|---------|
+| **Parallel Execution** | Multiple agents run simultaneously for faster results |
+| **Conservative Judgment** | Evidence-based severity prevents false positives |
+| **Context Awareness** | Long tasks complete fully without token budget concerns |
+| **Automatic Model Selection** | Claude Code picks optimal model per task |
 
-### Agent Model Selection
-
-Model selection is handled automatically by Claude Code based on task complexity and type. CCO agents specify their purpose and tool requirements; Claude Code selects the optimal model:
-
-| Agent | Purpose | Tools |
-|-------|---------|-------|
-| `cco-agent-analyze` | Read-only analysis | Glob, Read, Grep, Bash |
-| `cco-agent-apply` | Write operations with verification | Grep, Read, Glob, Bash, Edit, Write |
-| `cco-agent-research` | External research | WebSearch, WebFetch, Read, Grep, Glob |
-
-### YAML Frontmatter
-
-Commands use Claude Code's [frontmatter options][slash-commands]:
-
-```yaml
----
-name: cco-audit
-description: Security and code quality analysis
-allowed-tools: Read(*), Grep(*), Glob(*), Task(*)
----
-```
-
-### Context Awareness
-
-CCO commands leverage Claude 4.5's [context awareness][claude4-bp]:
-- Commands check git state before operations
-- Progress saved with TodoWrite for long tasks
-- State tracking via structured files (context.md, settings.json)
-
-### Opus 4.5 Optimizations
-
-Built for [Claude Opus 4.5][opus-4-5]:
-- Precise instruction following without over-prompting
-- Reduced verbosity with XML format indicators
-- Parallel tool calling for maximum efficiency
-- Context-aware token budget management
+See [docs/claude-4-best-practices.md](docs/claude-4-best-practices.md) for implementation details.
 
 ### References
 
-| Source | Features |
-|--------|----------|
-| [Slash Commands][slash-commands] | Commands, Dynamic Context, Tool Restrictions, Frontmatter |
-| [Sub-agents][sub-agents] | Agents, Model Selection |
-| [Memory & Rules][memory] | Rules Directory |
-| [Claude Code CHANGELOG][cc-changelog] | Permissions, Statusline, Settings.json |
-| [Claude 4 Best Practices][claude4-bp] | Parallel Execution, Instructions, State Tracking |
-| [Claude Opus 4.5][opus-4-5] | Model optimizations |
+| Documentation | Topics |
+|---------------|--------|
+| [Claude 4 Best Practices][claude4-bp] | Prompt patterns, parallel execution, state tracking |
+| [Claude Code Docs][slash-commands] | Commands, sub-agents, rules, permissions |
+| [Opus 4.5 Announcement][opus-4-5] | Model capabilities and optimizations |
 
 [slash-commands]: https://code.claude.com/docs/en/slash-commands
 [sub-agents]: https://code.claude.com/docs/en/sub-agents
