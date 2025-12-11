@@ -9,7 +9,18 @@ safe: true
 
 External source research with reliability scoring. Returns synthesized findings.
 
-**Tool Rules:** !`cat ~/.claude/rules/cco-tools.md 2>/dev/null`
+## Embedded Rules
+
+### Conservative Judgment
+- **Lower**: When uncertain, choose lower confidence
+- **Evidence**: Require explicit evidence, not inference
+- **Bias-conscious**: Detect and penalize promotional content
+- Trust: False positives erode user trust faster than missed issues
+
+### Output Format
+- **Borders**: `─│┌┐└┘├┤┬┴┼` for tables
+- **Headers**: `═║╔╗╚╝` for section headers
+- **Status**: OK | WARN | FAIL | PASS | SKIP
 
 ## Purpose
 

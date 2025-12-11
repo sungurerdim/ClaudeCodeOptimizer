@@ -150,9 +150,8 @@ def setup_rules(verbose: bool = True) -> dict[str, int]:
     Installs to cco/ subdirectory (namespaced to preserve user's custom rules):
     - core.md (always active)
     - ai.md (always active)
-    - tools.md (on-demand by commands)
 
-    Note: adaptive.md stays in pip package - used by cco-tune as a template pool.
+    Note: tools.md and adaptive.md stay in pip package - embedded in commands/agents.
 
     Returns:
         Dictionary with installed counts per category
@@ -504,9 +503,9 @@ Permission levels: safe, balanced, permissive, full
         print(f"  Global rules (in cco/): {rules_installed.get('total', 0)}")
         print(f"    - core.md: {breakdown['core']} rules (always loaded)")
         print(f"    - ai.md: {breakdown['ai']} rules (always loaded)")
-        print("  On-demand rules (in package):")
-        print(f"    - tools.md: {breakdown['tools']} rules (loaded by CCO commands)")
-        print(f"    - adaptive.md: {breakdown['adaptive']} rules (used by /cco-tune)")
+        print("  Embedded in commands/agents:")
+        print(f"    - tools rules: {breakdown['tools']} (workflow rules)")
+        print(f"    - adaptive rules: {breakdown['adaptive']} (project-specific)")
         print(SEPARATOR)
         print()
         print("Restart Claude Code for changes to take effect.")

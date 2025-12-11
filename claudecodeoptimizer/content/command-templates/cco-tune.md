@@ -6,7 +6,7 @@ allowed-tools: Read(*), Write(*), Edit(*), Grep(*), Glob(*), Bash(git:*), Bash(c
 
 # /cco-tune
 
-**Project tuning** - Detection, configuration, removal, and export for the current project. Export uses currently installed rules from `~/.claude/CLAUDE.md` and `./CLAUDE.md`.
+**Project tuning** - Detection, configuration, removal, and export for the current project.
 
 **Rules:** User Input | Question Formatting | Option Ordering | Pagination | Task Tracking
 
@@ -23,13 +23,12 @@ allowed-tools: Read(*), Write(*), Edit(*), Grep(*), Glob(*), Bash(git:*), Bash(c
 **cco-setup installs global files:**
 - `~/.claude/rules/cco/core.md` - Core rules (always loaded)
 - `~/.claude/rules/cco/ai.md` - AI behavior rules (always loaded)
-- `~/.claude/rules/cco/tools.md` - On-demand tool rules
-- `~/.claude/commands/cco-*.md` - CCO commands
-- `~/.claude/agents/cco-*.md` - CCO agents
+- `~/.claude/commands/cco-*.md` - CCO commands (with embedded tool rules)
+- `~/.claude/agents/cco-*.md` - CCO agents (with embedded tool rules)
 
 **cco-tune creates local project files:**
-- `./.claude/rules/context.md` - Project strategic context (always loaded)
-- `./.claude/rules/{category}.md` - Path-specific rules with YAML frontmatter
+- `./.claude/rules/cco/context.md` - Project strategic context (always loaded)
+- `./.claude/rules/cco/{category}.md` - Path-specific rules with YAML frontmatter
 - `./.claude/statusline.js` - Local statusline script (Full or Minimal)
 - `./.claude/settings.json` - Local settings (AI Performance + Statusline + Permissions)
 
@@ -109,33 +108,34 @@ Show current project state before asking anything. Status shows **current values
 
 ```bash
 # Run these commands via Bash tool:
-# Rules use list format: - **Name**: Description
+# Rules use list format: - **Name**: Description (Name can have hyphens like Type-Hints)
 # OR table format (adaptive): | * Name | Check | Description |
 
 # Core rules (from ~/.claude/rules/cco/core.md)
-grep -cE "^- \*\*\w+\*\*:" ~/.claude/rules/cco/core.md 2>/dev/null || echo "0"
-# → CORE (e.g., 38)
+# Pattern matches: - **Word-Word**: or - **Word**:
+grep -cE "^- \*\*[A-Za-z][-A-Za-z0-9]*\*\*:" ~/.claude/rules/cco/core.md 2>/dev/null || echo "0"
+# → CORE (e.g., 26)
 
 # AI rules (from ~/.claude/rules/cco/ai.md)
-grep -cE "^- \*\*\w+\*\*:" ~/.claude/rules/cco/ai.md 2>/dev/null || echo "0"
-# → AI (e.g., 32)
+grep -cE "^- \*\*[A-Za-z][-A-Za-z0-9]*\*\*:" ~/.claude/rules/cco/ai.md 2>/dev/null || echo "0"
+# → AI (e.g., 21)
 
-# Tools rules (from ~/.claude/rules/cco/tools.md)
-grep -cE "^- \*\*\w+\*\*:" ~/.claude/rules/cco/tools.md 2>/dev/null || echo "0"
-# → TOOLS (e.g., 110) - on-demand, not always loaded
+# Project rules (from ./.claude/rules/cco/*.md files, excluding context.md which has no rules)
+for f in ./.claude/rules/cco/*.md; do
+  [ "$(basename "$f")" != "context.md" ] && grep -cE "^- \*\*[A-Za-z][-A-Za-z0-9]*\*\*:" "$f" 2>/dev/null
+done | awk '{sum+=$1} END {print sum+0}'
+# → PROJECT (e.g., 15-20) - returns 0 if no rules
 
-# Project rules (from ./.claude/rules/*.md files)
-find ./.claude/rules -name "*.md" -exec grep -cE "^- \*\*\w+\*\*:" {} \; 2>/dev/null | awk '{sum+=$1} END {print sum+0}'
-# → PROJECT (e.g., 20) - returns 0 if no rules
-
-# Or count individual project rule files:
-for f in ./.claude/rules/*.md; do grep -cE "^- \*\*\w+\*\*:" "$f" 2>/dev/null; done | awk '{sum+=$1} END {print sum+0}'
+# Alternative: count with file names
+for f in ./.claude/rules/cco/*.md; do
+  [ "$(basename "$f")" != "context.md" ] && echo -n "$(basename "$f"): " && grep -cE "^- \*\*[A-Za-z][-A-Za-z0-9]*\*\*:" "$f" 2>/dev/null || echo "0"
+done
 ```
 
 **Calculate totals:**
 - `BASE = CORE + AI` (always loaded from ~/.claude/rules/cco/)
 - `ON_DEMAND = TOOLS` (loaded by commands when needed)
-- `PROJECT = rules in ./.claude/rules/` (project-specific)
+- `PROJECT = rules in ./.claude/rules/cco/` (project-specific)
 
 ### 1.2 Display Status
 
@@ -145,14 +145,14 @@ for f in ./.claude/rules/*.md; do grep -cE "^- \*\*\w+\*\*:" "$f" 2>/dev/null; d
 ╠════════════════════════════════════════════════════════════════════════════════╣
 ║ PROJECT: {project_name}                                                        ║
 ╠════════════════════════════════════════════════════════════════════════════════╣
-║ CONTEXT (./.claude/rules/context.md)                                           ║
+║ CONTEXT (./.claude/rules/cco/context.md)                                           ║
 ├────────────────────────────────────────────────────────────────────────────────┤
 ║ Purpose         │ {purpose}                                                    ║
 ║ Team/Scale/Data │ {team} | {scale} | {data}                                    ║
 ║ Stack/Type      │ {stack} | {type}                                             ║
 ║ Maturity        │ {maturity} | Breaking: {breaking} | Priority: {priority}     ║
 ╠════════════════════════════════════════════════════════════════════════════════╣
-║ PROJECT RULES (./.claude/rules/)                                               ║
+║ PROJECT RULES (./.claude/rules/cco/)                                               ║
 ├────────────────────────────────────────────────────────────────────────────────┤
 ║ {list of .md files: context.md, cli.md, operations.md, etc.}                   ║
 ╠════════════════════════════════════════════════════════════════════════════════╣
@@ -205,7 +205,7 @@ Follow CCO "Question Formatting" rule.
 
 ```
 ┌─ Configure ────────────────────────────────────────────────────────┐
-│ ☐ Detection & Rules        Scan project, update context            │
+│ ☐ Detection & Rules        Scan project, write to .claude/rules/cco/   │
 │ ☐ AI Performance           Configure thinking/MCP tokens           │
 │ ☐ Statusline               Configure status bar                    │
 │ ☐ Permissions              Configure permission rules              │
@@ -213,7 +213,7 @@ Follow CCO "Question Formatting" rule.
 │ ☐ Remove AI Performance    Reset to Claude Code defaults           │
 │ ☐ Remove Statusline        Delete statusline.js, disable bar       │
 │ ☐ Remove Permissions       Remove all permission rules             │
-│ ☐ Remove Rules             Remove CCO_ADAPTIVE from CLAUDE.md       │
+│ ☐ Remove Rules             Delete .claude/rules/cco/ + clean CLAUDE.md  │
 ├─ Export (rules only, no settings) ─────────────────────────────┤
 │ ☐ CLAUDE.md                Rules for other Claude Code projects      │
 │ ☐ AGENTS.md                Rules for other AI tools (Cursor)        │
@@ -295,7 +295,7 @@ See [AI Performance Auto-Detection](#ai-performance-auto-detection) for scoring 
 
 **Notes:**
 - CCO-Specific Rules only available for CLAUDE.md export (not portable)
-- Project Context and Conditional Rules require `./CLAUDE.md` to exist
+- Project Context and Conditional Rules require `./.claude/rules/cco/` to exist
 - "All" is pre-selected by default
 
 **Permissions `[recommended]` (first match wins):**
@@ -314,9 +314,9 @@ After all questions answered → proceed to detection/apply (no more questions)
 
 ## Step 3: Detection (if selected)
 
-**Location:** `./CLAUDE.md` (project only)
+**Output:** `./.claude/rules/cco/` (context.md + category files)
 
-**IMPORTANT:** Detection always scans from scratch, ignoring any existing CCO_ADAPTIVE values. Each element is freshly detected from actual project files. The Source column shows where the value was found.
+**IMPORTANT:** Detection always scans from scratch. Each element is freshly detected from actual project files. The Source column shows where the value was found.
 
 ### Detection Exclusions
 
@@ -425,26 +425,66 @@ Every detection triggers a specific action. No detection is informational-only.
 **GRANULAR SELECTION [CRITICAL]:**
 
 Each detection triggers a category in adaptive.md. For each triggered category:
-1. Read all rules in that category
+1. Read ALL rules in that category from `cco-adaptive.md`
 2. Check "Applicability Check" column for each rule
 3. Include ONLY rules where the check passes for THIS project
 4. Skip rules where the check does not apply
 
-**Example:**
-```
-Detection: T:CLI detected
-Category: Apps > CLI from adaptive.md
-Rules evaluation:
-  ✓ Help-Examples     - Check: "Has commands" → YES (argparse found)
-  ✓ Exit-Codes        - Check: "Always" → YES
-  ✗ Signal-Handle     - Check: "Long-running commands" → NO (simple CLI)
-  ✓ Output-Modes      - Check: "User-facing" → YES
-  ✗ Config-Precedence - Check: "Has config" → NO (no config system)
+**IMPORTANT: Read the actual adaptive.md file** - Do NOT rely on memory or estimates. The source file is at:
+- Package: `claudecodeoptimizer/content/rules/cco-adaptive.md`
+- Use Glob/Read tools to find and read it
 
-Result: Only 3 rules included in context, not all 5
+### Detection → Rules Mapping (from adaptive.md)
+
+Each detection maps to a specific section in `cco-adaptive.md`. Read these sections:
+
+| Detection | adaptive.md Section | Expected Rules |
+|-----------|---------------------|----------------|
+| T:CLI | `## Apps > CLI` | Help-Examples, Exit-Codes, Signal-Handle, Output-Modes, Config-Precedence |
+| T:Library | `## Apps > Library` | Minimal-Deps, Tree-Shakeable, Types-Included, Deprecation-Path |
+| CI/CD (CLI/Library) | `### CI-Only Operations` | Config-as-Code, CI-Gates |
+| CI/CD (API/Frontend) | `### Full Operations` | Config-as-Code, Health-Endpoints, Graceful-Shutdown, Observability, CI-Gates, Zero-Downtime, Feature-Flags |
+| S:Small (100+) | `### Small (S:100+)` | Caching, Lazy-Load |
+| S:Medium (1K+) | `### Medium (S:1K+)` | + Conn-Pool, Async-IO |
+| S:Large (10K+) | `### Large (S:10K+)` | + Circuit-Breaker, Idempotency, API-Version, Compression |
+| Testing:Basics | `### Basics` | Unit-Isolated, Mocking, Coverage-60 |
+| Testing:Standard | `### Standard` | + Integration, Fixtures, Coverage-80, CI-on-PR |
+| Testing:Full | `### Full` | + E2E, Contract, Mutation, Coverage-90 |
+| Container | `## Infrastructure > Container` | Multi-Stage, Non-Root, CVE-Scan, Resource-Limits, Distroless |
+| K8s | `## Infrastructure > K8s` | Security-Context, Network-Policy, Probes, Resource-Quotas |
+| Serverless | `## Infrastructure > Serverless` | Minimize-Bundle, Graceful-Timeout, Stateless, Right-Size |
+| Monorepo | `## Infrastructure > Monorepo` | Package-Boundaries, Selective-Test, Shared-Deps, Build-Cache |
+| API:REST | `## Backend > API` | REST-Methods, Pagination, OpenAPI-Spec, Error-Format |
+| API:GraphQL | `### GraphQL Extension` | + GQL-Limits, GQL-Persisted |
+| API:gRPC | `### gRPC Extension` | + Proto-Version |
+| DB:* | `## Backend > Data` | Backup-Strategy, Migration-Safe, N+1-Prevent, Transaction-Safe |
+| Frontend | `## Frontend` | A11y-WCAG, Perf-Core-Vitals, State-Predictable, Code-Split |
+| Mobile | `## Apps > Mobile` | Offline-First, Battery-Optimize, Deep-Links, Platform-Guidelines |
+| Desktop | `## Apps > Desktop` | Auto-Update, Native-Integration, Memory-Cleanup |
+| ML/AI | `## Specialized > ML/AI` | Reproducibility, Experiment-Track, Model-Registry, Bias-Detection |
+| Game | `## Specialized > Game` | Frame-Budget, Asset-Streaming, Input-Rebind, Save-Versioned |
+| i18n | `## i18n` | Strings-External, UTF8-Encoding, RTL-Support, Locale-Format |
+| RT:Basic | `### Basic (RT:Basic)` | Reconnect-Logic, Heartbeat, Stale-Data |
+| RT:Low-latency | `### Low-Latency` | + Binary-Protocol, Edge-Compute |
+| Team:Small | `### Small (Team:2-5)` | PR-Review, README-Contributing |
+| Team:Large | `### Large (Team:6+)` | + ADR, CODEOWNERS, PR-Templates, Branch-Protection |
+| SLA:Any | `### Basics (SLA:Any)` | Error-Tracking, Critical-Alerts |
+| SLA:99%+ | `### Standard (SLA:99%+)` | + Structured-Logs, RED-Metrics, Distributed-Trace |
+| SLA:99.9%+ | `### HA (SLA:99.9%+)` | + Redundancy, Auto-Failover, Runbooks |
+| SLA:99.99%+ | `### Critical (SLA:99.99%+)` | + Multi-Region, Chaos-Engineering, DR-Tested |
+| D:PII/Regulated | `## Security` | Input-Validation, SQL-Safe, XSS-Prevent, Auth-Verify, Rate-Limit, Encrypt-Rest, Audit-Log, CORS-Strict, License-Track |
+
+### Rule Selection Process
+
+```
+1. Read cco-adaptive.md from package
+2. For each detection → find matching section in adaptive.md
+3. Evaluate each rule's "Check" condition against project
+4. Include rules where condition is met
+5. Write to .claude/rules/cco/{category}.md files
 ```
 
-Multiple detections stack additively but each rule is still individually evaluated.
+Multiple detections stack additively. Each rule is evaluated once (no duplicates).
 
 ### Confidence Levels
 
@@ -829,7 +869,7 @@ Show unified table with confidence indicators. **Every row shows what action it 
 | Format | Meaning |
 |--------|---------|
 | `+N {category}` | Triggers N rules from category |
-| `→ context` | Written to CCO_ADAPTIVE in CLAUDE.md |
+| `→ context` | Written to .claude/rules/context.md |
 | `→ env` | Written to settings.json env section |
 | `→ tools` | Added to Operational tools list |
 | `→ guidelines` | Affects guidelines generation |
@@ -910,36 +950,69 @@ Write all selected configurations to **project-local files only**:
 
 | Selection | Target | Method |
 |-----------|--------|--------|
-| Detection | `./.claude/rules/` | Write tool (context.md + category files) |
+| Detection | `./.claude/rules/cco/` + `./CLAUDE.md` cleanup | Write tool (context.md + category files) + Edit tool (remove CCO_ADAPTIVE) |
 | AI Performance | `./.claude/settings.json` | Write tool (env section) |
 | Statusline | `./.claude/statusline.js` + `./.claude/settings.json` | `cco-setup --local . --statusline {mode}` |
 | Permissions | `./.claude/settings.json` | `cco-setup --local . --permissions {level}` |
+
+**CLAUDE.md cleanup only** - Remove CCO_ADAPTIVE block, add nothing new.
 
 ### Export Operations
 
 | Selection | Source | Target | Method |
 |-----------|--------|--------|--------|
-| CLAUDE.md | `~/.claude/CLAUDE.md` + `./CLAUDE.md` | `./CLAUDE.export.md` | Read + combine + Write |
-| AGENTS.md | `~/.claude/CLAUDE.md` + `./CLAUDE.md` | `./AGENTS.md` | Read + transform + Write |
+| CLAUDE.md | `~/.claude/rules/cco/` + `./.claude/rules/cco/` | `./CLAUDE.export.md` | Read + combine + Write |
+| AGENTS.md | `~/.claude/rules/cco/` + `./.claude/rules/cco/` | `./AGENTS.md` | Read + transform + Write |
 
-**Export includes only user-selected content** (Universal Rules, AI-Specific Rules, CCO-Specific Rules, Project Context, Conditional Rules).
+**Export includes only user-selected content** from rules/ folders.
 
 ### Removal Operations
 
 | Remove | Target | Method |
 |--------|--------|--------|
-| Remove Rules | `./.claude/rules/` | Delete all .md files in rules directory |
+| Remove Rules | `./.claude/rules/cco/` + `./CLAUDE.md` | Delete rules dir + remove CCO_ADAPTIVE block |
 | Remove AI Performance | `./.claude/settings.json` | Remove `env` section from JSON |
 | Remove Statusline | `./.claude/statusline.js` + `./.claude/settings.json` | Delete statusline.js, remove `statusLine` from JSON |
 | Remove Permissions | `./.claude/settings.json` | Remove `permissions` section from JSON |
 
 **Removal behavior:**
-- Rules: Removes all `.md` files from `./.claude/rules/`, deletes empty directory
+- Rules: Removes all `.md` files from `./.claude/rules/cco/` AND removes CCO_ADAPTIVE block from `./CLAUDE.md`
 - AI Performance: Removes `env` key entirely → Claude Code uses built-in defaults
 - Statusline: Deletes `.claude/statusline.js` file AND removes `statusLine` key from settings.json
 - Permissions: Removes `permissions` key entirely → all operations require approval
 - If settings.json becomes empty (`{}`), delete the file
 - If `.claude/` directory becomes empty, optionally delete it
+
+### CLAUDE.md Cleanup [CRITICAL]
+
+**When Detection & Rules is selected, ALWAYS clean CLAUDE.md CCO_ADAPTIVE block:**
+
+The new rule system stores project rules in `./.claude/rules/cco/`, NOT in `./CLAUDE.md`. Any existing CCO_ADAPTIVE block in CLAUDE.md is legacy and MUST be removed.
+
+**Cleanup steps (run via Edit tool):**
+1. Check if `./CLAUDE.md` contains `<!-- CCO_ADAPTIVE_START -->` marker
+2. If found, remove everything between `<!-- CCO_ADAPTIVE_START -->` and `<!-- CCO_ADAPTIVE_END -->` (inclusive)
+3. Preserve any content BEFORE CCO_ADAPTIVE_START and AFTER CCO_ADAPTIVE_END
+4. Do NOT add anything to CLAUDE.md - only remove
+
+**Example transformation:**
+```markdown
+# MyProject                          # MyProject
+
+<!-- CCO_ADAPTIVE_START -->    →     (CCO_ADAPTIVE block removed)
+## Strategic Context
+...
+<!-- CCO_ADAPTIVE_END -->
+```
+
+**Bash command to check:**
+```bash
+grep -q "CCO_ADAPTIVE_START" ./CLAUDE.md && echo "NEEDS_CLEANUP" || echo "CLEAN"
+```
+
+**IMPORTANT:** This cleanup is MANDATORY when:
+- "Detection & Rules" is selected (new rules go to .claude/rules/cco/)
+- "Remove Rules" is selected (full cleanup)
 
 ### Statusline & Permissions Installation
 
@@ -962,7 +1035,7 @@ This ensures templates are read from the installed package, not generated by AI.
 - Statusline: `.claude/statusline.js` → overwrite entirely with source template
 - Permissions: `.claude/settings.json` permissions section → overwrite with source template
 - AI Performance: `.claude/settings.json` env section → overwrite with user selections
-- Context: `./CLAUDE.md` CCO_ADAPTIVE block → overwrite with detection results
+- Context: `./.claude/rules/cco/context.md` → overwrite with detection results
 - **Never skip** because "file exists", "content unchanged", or "already configured"
 
 **IMPORTANT:** cco-tune NEVER modifies global `~/.claude/` files. All settings are project-local.
@@ -1106,7 +1179,7 @@ After writing permission config, verify:
 
 ### Project Rules Directory Format
 
-cco-tune generates files in `./.claude/rules/` using path-specific YAML frontmatter:
+cco-tune generates files in `./.claude/rules/cco/` using path-specific YAML frontmatter:
 
 **1. context.md (always loaded - no paths frontmatter):**
 ```markdown
@@ -1171,7 +1244,7 @@ Each rule in adaptive.md has an "Applicability Check". Only include rules where 
 
 **Example output files:**
 
-`./.claude/rules/cli.md`:
+`./.claude/rules/cco/cli.md`:
 ```markdown
 ---
 paths: **/__main__.py, **/cli/**/*
@@ -1183,7 +1256,7 @@ paths: **/__main__.py, **/cli/**/*
 - **Output-Modes**: Human default, --json for scripts
 ```
 
-`./.claude/rules/operations.md`:
+`./.claude/rules/cco/operations.md`:
 ```markdown
 ---
 paths: .github/**/*
@@ -1200,8 +1273,8 @@ paths: .github/**/*
 3. Only include rules where check passes
 4. **Transform format**: adaptive.md has 3 columns → output has list format
    - Source: `| * Rule-Name | Applicability Check | Concise description |`
-   - Output: `- **Rule-Name**: Concise description` (same format as core.md, ai.md, tools.md)
-5. Write to appropriate `.claude/rules/{category}.md` file with paths frontmatter
+   - Output: `- **Rule-Name**: Concise description` (same format as core.md, ai.md)
+5. Write to appropriate `.claude/rules/cco/{category}.md` file with paths frontmatter
 
 **Format Consistency [CRITICAL]:**
 All CCO rule files use the same list format:
@@ -1210,12 +1283,11 @@ All CCO rule files use the same list format:
 ```
 - `~/.claude/rules/cco/core.md` - list format
 - `~/.claude/rules/cco/ai.md` - list format
-- `~/.claude/rules/cco/tools.md` - list format
-- `./.claude/rules/*.md` - list format (same format)
+- `./.claude/rules/cco/*.md` - list format (same format)
 
 **Note:** AI Performance settings are NOT stored in rules - they are only in `./.claude/settings.json` where Claude Code reads them.
 
-**IMPORTANT:** Project rules in `.claude/rules/` are the foundation for ALL other CCO commands. They validate against this context and refuse to run operations outside its scope.
+**IMPORTANT:** Project rules in `.claude/rules/cco/` are the foundation for ALL other CCO commands. They validate against this context and refuse to run operations outside its scope.
 
 ---
 
@@ -1246,8 +1318,8 @@ Show before/after comparison for all changed settings:
 ╠════════════════════════════════════════════════════════════════════════════════╣
 ║ FILES WRITTEN                                                                  ║
 ├────────────────────────────────────────────────────────────────────────────────┤
-║ ./.claude/rules/context.md     Project strategic context (always loaded)       ║
-║ ./.claude/rules/{category}.md  Path-specific rules (python.md, cli.md, etc.)   ║
+║ ./.claude/rules/cco/context.md     Project strategic context (always loaded)       ║
+║ ./.claude/rules/cco/{category}.md  Path-specific rules (python.md, cli.md, etc.)   ║
 ║ ./.claude/settings.json        env + statusLine + permissions                  ║
 ║ ./.claude/statusline.js        Status bar script (if statusline configured)    ║
 ╠════════════════════════════════════════════════════════════════════════════════╣
@@ -1312,9 +1384,8 @@ Both can be selected together to export to both formats.
 |--------------------|--------|-----------|-----------|
 | Universal Rules | `~/.claude/rules/cco/core.md` | ✓ | ✓ |
 | AI-Specific Rules | `~/.claude/rules/cco/ai.md` | ✓ | ✓ |
-| CCO-Specific Rules | `~/.claude/rules/cco/tools.md` | ✗ (not portable) | ✓ |
-| Project Context | `./.claude/rules/context.md` | ✓ | ✓ |
-| Conditional Rules | `./.claude/rules/*.md` | ✓ | ✓ |
+| Project Context | `./.claude/rules/cco/context.md` | ✓ | ✓ |
+| Conditional Rules | `./.claude/rules/cco/*.md` | ✓ | ✓ |
 
 ### What Is NEVER Exported
 
@@ -1335,18 +1406,18 @@ Both can be selected together to export to both formats.
 | Source | Content | Location |
 |--------|---------|----------|
 | Global rules | Universal + AI-Specific + CCO-Specific | `~/.claude/rules/cco/` |
-| Project context | Strategic Context | `./.claude/rules/context.md` |
-| Project rules | Conditional Rules | `./.claude/rules/*.md` |
+| Project context | Strategic Context | `./.claude/rules/cco/context.md` |
+| Project rules | Conditional Rules | `./.claude/rules/cco/*.md` |
 
 **Prerequisites:**
 - `~/.claude/rules/cco/` MUST exist with core.md, ai.md (run `cco-setup` first if missing)
-- `./.claude/rules/` is optional (export will include global rules only)
+- `./.claude/rules/cco/` is optional (export will include global rules only)
 
 **Export process:**
 1. Check `~/.claude/rules/cco/core.md` exists → error if missing: "Run cco-setup first"
 2. Ask user what to include (multiSelect with "All" default)
 3. Read selected sections from `~/.claude/rules/cco/`
-4. Read selected sections from `./.claude/rules/` (if exists and selected)
+4. Read selected sections from `./.claude/rules/cco/` (if exists and selected)
 5. Combine based on export format and user selection
 6. Write to target file
 
@@ -1361,15 +1432,15 @@ Both can be selected together to export to both formats.
 
 ### AGENTS.md Export
 
-**Source:** `~/.claude/rules/cco/` + `./.claude/rules/`
+**Source:** `~/.claude/rules/cco/` + `./.claude/rules/cco/`
 **Target:** `./AGENTS.md`
 
 **Process:**
 1. Read Universal Rules from `~/.claude/rules/cco/core.md`
 2. Read AI-Specific Rules from `~/.claude/rules/cco/ai.md`
 3. Skip CCO-Specific Rules (not portable to other AI tools)
-4. Read Project Context from `./.claude/rules/context.md`
-5. Read Conditional Rules from `./.claude/rules/*.md` (excluding context.md)
+4. Read Project Context from `./.claude/rules/cco/context.md`
+5. Read Conditional Rules from `./.claude/rules/cco/*.md` (excluding context.md)
 6. Transform to prose format (remove frontmatter, simplify structure)
 
 **Output format:**
@@ -1379,7 +1450,7 @@ Both can be selected together to export to both formats.
 > Exported from CCO (ClaudeCodeOptimizer)
 
 ## Project Context
-{from ./.claude/rules/context.md}
+{from ./.claude/rules/cco/context.md}
 
 ## Universal Rules
 {from ~/.claude/rules/cco/core.md}
@@ -1388,17 +1459,17 @@ Both can be selected together to export to both formats.
 {from ~/.claude/rules/cco/ai.md}
 
 ## Project-Specific Rules
-{from ./.claude/rules/*.md Conditional Rules}
+{from ./.claude/rules/cco/*.md Conditional Rules}
 ```
 
 ### CLAUDE.md Export
 
-**Source:** `~/.claude/rules/cco/` + `./.claude/rules/`
+**Source:** `~/.claude/rules/cco/` + `./.claude/rules/cco/`
 **Target:** `./CLAUDE.export.md` (to avoid overwriting project's CLAUDE.md)
 
 **Process:**
-1. Read ALL rules from `~/.claude/rules/cco/` (core.md, ai.md, tools.md)
-2. Read all rules from `./.claude/rules/` (context.md + category files)
+1. Read ALL rules from `~/.claude/rules/cco/` (core.md, ai.md)
+2. Read all rules from `./.claude/rules/cco/` (context.md + category files)
 3. Combine with CCO markers preserved
 4. Write to `./CLAUDE.export.md`
 
@@ -1416,8 +1487,8 @@ Rules are organized in 4 categories. **All counts are dynamically calculated at 
 |----------|-------------------|-------------------|
 | Core | `content/rules/cco-core.md` | `~/.claude/rules/cco/core.md` |
 | AI | `content/rules/cco-ai.md` | `~/.claude/rules/cco/ai.md` |
-| Tools | `content/rules/cco-tools.md` | `~/.claude/rules/cco/tools.md` (on-demand) |
-| Adaptive | `content/rules/cco-adaptive.md` | `./.claude/rules/*.md` (project-specific, path-filtered) |
+| Tools | `content/rules/cco-tools.md` | Embedded in commands/agents |
+| Adaptive | `content/rules/cco-adaptive.md` | `./.claude/rules/cco/*.md` (project-specific) |
 
 ### Count Commands
 
@@ -1427,10 +1498,11 @@ Rules are organized in 4 categories. **All counts are dynamically calculated at 
 
 1. **Always execute commands** - Never use memorized or estimated values
 2. **Use section boundaries** - `sed` extracts specific sections before counting
-3. **Count list pattern** - Lines starting with `- **Name**:` are rules
-4. **Use grep command** - `grep -cE "^- \*\*\w+\*\*:"` counts rule lines
-5. **Verify math** - `BASE_TOTAL = UNIVERSAL + AI_SPECIFIC + CCO_SPECIFIC`
+3. **Count list pattern** - Lines starting with `- **Name**:` are rules (Name can have hyphens)
+4. **Use grep command** - `grep -cE "^- \*\*[A-Za-z][-A-Za-z0-9]*\*\*:"` counts rule lines
+5. **Verify math** - `BASE_TOTAL = CORE + AI` (tools is on-demand)
 6. **Display exact values** - No `~` prefix, no approximations
+7. **Exclude context.md** - context.md contains project info, not rules
 
 ---
 
@@ -1442,10 +1514,10 @@ Rules are organized in 4 categories. **All counts are dynamically calculated at 
 
 | Action Type | Target | Example |
 |-------------|--------|---------|
-| `→ {category} rules` | CLAUDE.md conditional rules | `→ CLI rules` evaluates CLI subsection |
-| `→ context` | CLAUDE.md CCO_ADAPTIVE fields | Purpose, Stack, License |
-| `→ tools` | CLAUDE.md Operational section | format, lint, test commands |
-| `→ guidelines` | CLAUDE.md Guidelines section | Team-based recommendations |
+| `→ {category} rules` | .claude/rules/cco/{category}.md | `→ CLI rules` evaluates CLI subsection |
+| `→ context` | .claude/rules/context.md | Purpose, Stack, License |
+| `→ tools` | .claude/rules/context.md Operational | format, lint, test commands |
+| `→ guidelines` | .claude/rules/context.md Guidelines | Team-based recommendations |
 | `→ env` | settings.json env section | Thinking tokens, MCP tokens |
 | `→ permissions` | settings.json permissions | Based on Team/Data |
 | `complexity +N` | AI Performance calculation | Bumps thinking token tier |
@@ -1583,7 +1655,7 @@ Guidelines are generated based on user-configured values to provide context-awar
 ## Rules
 
 1. **All questions at the start** - no mid-process interruptions
-2. **Local files only** - AI Performance, statusline, permissions ALL in `./.claude/settings.json`, project rules in `./.claude/rules/`, NEVER touch `~/.claude/`
+2. **Local files only** - AI Performance, statusline, permissions ALL in `./.claude/settings.json`, project rules in `./.claude/rules/cco/`, NEVER touch `~/.claude/`
 3. **Dynamic counts** - ALWAYS run Step 1.1 commands before displaying any count. Never estimate or use hardcoded values
 4. **Show affected rules** - when editing, show what rules change
 5. **Path-specific rules** - Category rules use YAML frontmatter with `paths:` for conditional loading
@@ -1591,18 +1663,20 @@ Guidelines are generated based on user-configured values to provide context-awar
    - `.claude/statusline.js` → overwrite entirely (check for "CCO Statusline" marker)
    - `.claude/settings.json` → overwrite `env`, `statusLine`, `permissions` sections
    - `.claude/settings.json` → remove legacy keys: `_cco_managed`, `_cco_version`, `_cco_installed`, `cco_config`, `ccoSettings`
-   - `.claude/rules/*.md` → overwrite category files with fresh detection results
+   - `.claude/rules/cco/*.md` → overwrite category files with fresh detection results
    - Never skip because "file exists" or "content unchanged" - always write fresh
 7. **Granular rule selection** - each subsection is independently evaluated, not atomic categories
 8. **No duplicate rules** - each rule is added exactly once; deduplicate before writing to rules files
 9. **Never modify global** - cco-tune may READ `~/.claude/rules/cco/` for counting, but NEVER write/modify any file in `~/.claude/`
-10. **Clean project rules on update** - When updating, remove all existing `.claude/rules/*.md` files before writing new ones
+10. **Clean project rules on update** - When updating, remove all existing `.claude/rules/cco/*.md` files before writing new ones
 11. **Question Labels** - Follow CCO "Question Formatting" rule (labels, precedence, ordering)
 12. **Review Sequence** - Detection results → Configuration Summary box → Approval question
 13. **String env values** - All `env` values in settings.json must be strings per official Claude Code docs
-14. **Export reads installed files** - Export reads from `~/.claude/rules/cco/` and `./.claude/rules/`, NOT from command specs
+14. **Export reads installed files** - Export reads from `~/.claude/rules/cco/` and `./.claude/rules/cco/`, NOT from command specs
 15. **Export content is user-selectable** - User chooses which sections to include (Universal, AI-Specific, CCO-Specific, Project Context, Conditional)
 16. **Export never includes settings** - AI Performance, Statusline, Permissions are NEVER exported (project-specific, not portable)
+17. **CLAUDE.md cleanup only** - Remove CCO_ADAPTIVE block from `./CLAUDE.md`, never add content
+18. **Read adaptive.md for rules** - ALWAYS read `cco-adaptive.md` from package to select project rules
 
 ---
 

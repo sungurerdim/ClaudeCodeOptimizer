@@ -9,7 +9,22 @@ safe: false
 
 Execute approved changes with verification. Reports accounting.
 
-**Tool Rules:** !`cat ~/.claude/rules/cco-tools.md 2>/dev/null`
+## Embedded Rules
+
+### Safety
+- **Pre-op**: Check git status before modifications
+- **Dirty**: Prompt Commit / Stash / Continue if uncommitted changes
+- **Rollback**: Clean state enables git checkout
+
+### Task Tracking
+- Create TODO list with ALL items before starting
+- Status: pending → in_progress → completed
+- Exactly ONE item in_progress at a time
+- Final accounting: `done + skip + fail = total`
+
+### Skip Criteria
+- Skip: `.git/`, `node_modules/`, `vendor/`, `.venv/`, `dist/`, `build/`
+- Skip: `fixtures/`, `testdata/`, `__snapshots__/`, `examples/`
 
 ## Purpose
 
