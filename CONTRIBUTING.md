@@ -117,18 +117,18 @@ Co-Authored-By: Claude <noreply@anthropic.com>
 
 ✅ **Good:**
 ```
-feat(wizard): add native Claude Code UI support
+feat(security): add path traversal and ReDoS protection
 
-- Create UIAdapter for AskUserQuestion tool integration
-- Add automatic fallback to terminal prompts
-- Implement rich option formatting with context
+- Add path validation for --local mode setup
+- Add file size limits to prevent regex attacks
+- Extract timeout constants to config.py
 ```
 
 ❌ **Bad:**
 ```
 Update files
 
-- Changed wizard.py
+- Changed install_hook.py
 - Fixed some bugs
 - Updated docs
 - Refactored code

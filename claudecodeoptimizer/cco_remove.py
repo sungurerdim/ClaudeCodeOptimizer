@@ -25,6 +25,10 @@ from .config import (
     get_cco_commands,
 )
 
+# Consolidated rule name lists (extracted from duplicated code)
+ALL_RULE_NAMES = list(CCO_RULE_NAMES) + ["tools.md", "adaptive.md"]
+OLD_RULE_FILES = list(CCO_RULE_FILES) + ["cco-adaptive.md", "cco-tools.md"]
+
 
 class RemovalItems(TypedDict):
     """Type-safe container for removal items.
@@ -169,8 +173,7 @@ def has_rules_dir() -> bool:
         return False
     # Check for new v2.x structure: ~/.claude/rules/cco/{core,ai}.md
     # Also check for old intermediate files: tools.md, adaptive.md
-    all_rule_names = list(CCO_RULE_NAMES) + ["tools.md", "adaptive.md"]
-    return any((RULES_DIR / f).exists() for f in all_rule_names)
+    return any((RULES_DIR / f).exists() for f in ALL_RULE_NAMES)
 
 
 def has_rules_dir_old() -> bool:
@@ -179,8 +182,7 @@ def has_rules_dir_old() -> bool:
         return False
     # Check for old v1.x structure: ~/.claude/rules/cco-{core,ai,tools,adaptive}.md
     # Includes cco-tools.md which existed in intermediate versions
-    old_files = list(CCO_RULE_FILES) + ["cco-adaptive.md", "cco-tools.md"]
-    return any((OLD_RULES_ROOT / f).exists() for f in old_files)
+    return any((OLD_RULES_ROOT / f).exists() for f in OLD_RULE_FILES)
 
 
 def remove_rules_dir(verbose: bool = True) -> bool:
@@ -191,8 +193,7 @@ def remove_rules_dir(verbose: bool = True) -> bool:
     removed_count = 0
     # Include all possible rule files from any CCO version
     # CCO_RULE_NAMES has current files, plus old files from intermediate versions
-    all_rule_names = list(CCO_RULE_NAMES) + ["tools.md", "adaptive.md"]
-    for rule_name in all_rule_names:
+    for rule_name in ALL_RULE_NAMES:
         rule_path = RULES_DIR / rule_name
         if rule_path.exists():
             rule_path.unlink()
@@ -217,8 +218,7 @@ def remove_rules_dir_old(verbose: bool = True) -> bool:
 
     removed_count = 0
     # Include all possible old CCO rule files from any previous version
-    old_files = list(CCO_RULE_FILES) + ["cco-adaptive.md", "cco-tools.md"]
-    for rule_file in old_files:
+    for rule_file in OLD_RULE_FILES:
         rule_path = OLD_RULES_ROOT / rule_file
         if rule_path.exists():
             rule_path.unlink()
