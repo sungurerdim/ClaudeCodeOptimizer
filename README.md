@@ -399,21 +399,93 @@ cco-remove  # Complete removal with confirmation
 
 ---
 
-## Best Practices Compliance
+## Claude Code Integration
 
-CCO commands and agents are designed following official Claude documentation:
+CCO leverages the full spectrum of Claude Code features with official documentation compliance:
 
-- [Claude 4 Best Practices](https://platform.claude.com/docs/en/build-with-claude/prompt-engineering/claude-4-best-practices) - Prompt engineering patterns
-- [Sub-agents](https://code.claude.com/docs/en/sub-agents) - Agent architecture and delegation
-- [Skills](https://code.claude.com/docs/en/skills) - Capability extension patterns
-- [Slash Commands](https://code.claude.com/docs/en/slash-commands) - Command syntax and features
+### Supported Claude Code Features
 
-Key implementations:
-- Parallel tool execution for independent operations
-- Conservative judgment with evidence-based severity
+| Feature | CCO Usage |
+|---------|-----------|
+| **[Slash Commands][slash-commands]** | 11 commands in `~/.claude/commands/` |
+| ↳ Dynamic Context | `!backtick` syntax for real-time injection |
+| ↳ Tool Restrictions | `allowed-tools` frontmatter per command |
+| **[Sub-agents][sub-agents]** | 3 agents with model selection (Haiku/Sonnet) |
+| ↳ Model Selection | Per-agent model override in frontmatter |
+| **[Rules Directory][memory]** | Global rules in `~/.claude/rules/cco/` |
+| **[Permissions][cc-changelog]** | 4 levels (safe/balanced/permissive/full) |
+| **[Statusline][cc-changelog]** | Custom status bar (Full/Minimal modes) |
+| **[Settings.json][cc-changelog]** | Local project settings with env vars |
+
+### Claude 4 Best Practices Compliance
+
+CCO implements patterns from [Claude 4 Best Practices][claude4-bp]:
+
+| Practice | CCO Implementation |
+|----------|-------------------|
+| **Parallel Tool Execution** | Independent operations run simultaneously |
+| **Explicit Instructions** | Commands specify exact behaviors, not vague guidance |
+| **Context Motivation** | Rules explain "why" not just "what" |
+| **Conservative Judgment** | Evidence-based severity, never guesses |
+| **Long-horizon State Tracking** | TodoWrite for progress, git for state |
+| **Structured Output** | Consistent formats (`Applied: N \| Skipped: N \| Failed: N`) |
+| **Model Self-Knowledge** | Agent descriptions match capabilities |
+| **Subagent Orchestration** | Automatic delegation based on task type |
+
+### Agent Model Selection
+
+Following [Sub-agents documentation][sub-agents]:
+
+| Agent | Model | Rationale |
+|-------|-------|-----------|
+| `cco-agent-analyze` | Haiku | Fast read-only operations |
+| `cco-agent-apply` | Sonnet | Careful write operations |
+| `cco-agent-research` | Haiku | Efficient web search |
+
+### YAML Frontmatter
+
+Commands use Claude Code's [frontmatter options][slash-commands]:
+
+```yaml
+---
+name: cco-audit
+description: Security and code quality analysis
+allowed-tools: Read(*), Grep(*), Glob(*), Task(*)
+---
+```
+
+### Context Awareness
+
+CCO commands leverage Claude 4.5's [context awareness][claude4-bp]:
+- Commands check git state before operations
+- Progress saved with TodoWrite for long tasks
+- State tracking via structured files (context.md, settings.json)
+
+### Opus 4.5 Optimizations
+
+Built for [Claude Opus 4.5][opus-4-5]:
+- Precise instruction following without over-prompting
+- Reduced verbosity with XML format indicators
+- Parallel tool calling for maximum efficiency
 - Context-aware token budget management
-- Model-appropriate agent selection (Haiku for read, Sonnet for write)
-- Structured output formats for parseability
+
+### References
+
+| Source | Features |
+|--------|----------|
+| [Slash Commands][slash-commands] | Commands, Dynamic Context, Tool Restrictions, Frontmatter |
+| [Sub-agents][sub-agents] | Agents, Model Selection |
+| [Memory & Rules][memory] | Rules Directory |
+| [Claude Code CHANGELOG][cc-changelog] | Permissions, Statusline, Settings.json |
+| [Claude 4 Best Practices][claude4-bp] | Parallel Execution, Instructions, State Tracking |
+| [Claude Opus 4.5][opus-4-5] | Model optimizations |
+
+[slash-commands]: https://code.claude.com/docs/en/slash-commands
+[sub-agents]: https://code.claude.com/docs/en/sub-agents
+[memory]: https://code.claude.com/docs/en/memory
+[cc-changelog]: https://github.com/anthropics/claude-code/blob/main/CHANGELOG.md
+[claude4-bp]: https://platform.claude.com/docs/en/build-with-claude/prompt-engineering/claude-4-best-practices
+[opus-4-5]: https://www.anthropic.com/news/claude-opus-4-5
 
 ---
 
