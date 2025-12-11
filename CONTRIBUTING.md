@@ -157,7 +157,7 @@ Update files
 
 ## Development Principles
 
-This project follows CCO Rules documented in `~/.claude/CLAUDE.md`:
+This project follows CCO Rules documented in `~/.claude/rules/cco/`:
 
 - **Cross-Platform**: Forward slashes, relative paths, Git Bash commands
 - **Reference Integrity**: Find ALL refs before delete/rename/move/modify
@@ -199,45 +199,45 @@ ClaudeCodeOptimizer/
     └── integration/         # Integration tests
 ```
 
-## CLAUDE.md Marker System
+## Rules Architecture (v2.x)
 
-CLAUDE.md uses a **marker-based system** with 4 rule categories:
+CCO v2.x uses a **directory-based system** instead of CLAUDE.md markers:
 
-### Global Rules (`~/.claude/CLAUDE.md`)
+### Global Rules (`~/.claude/rules/cco/`)
 
-```markdown
-<!-- CCO_CORE_START -->
-# Core Rules
-...
-<!-- CCO_CORE_END -->
+Rules are installed as separate files in the `cco/` subdirectory:
 
-<!-- CCO_AI_START -->
-# AI Rules
-...
-<!-- CCO_AI_END -->
+```
+~/.claude/rules/cco/
+├── core.md      # Fundamental principles (always loaded)
+└── ai.md        # AI behavior rules (always loaded)
 ```
 
-### Project Rules (`./CLAUDE.md`)
+### On-Demand Rules (embedded in commands/agents)
+
+Tools and adaptive rules are NOT installed globally. They stay in the pip package
+and are loaded on-demand when commands/agents run:
+
+- `cco-tools.md` - Workflow rules (embedded in commands)
+- `cco-adaptive.md` - Project-specific rules (used by /cco-tune)
+
+### Project Context (`./CLAUDE.md` or `./.claude/rules/cco/context.md`)
+
+Project-specific configuration is written to the local project:
 
 ```markdown
-<!-- CCO_ADAPTIVE_START -->
+# Project Context
+
 ## Strategic Context
 Purpose: {purpose}
-Team: {team} | Scale: {scale} | ...
-<!-- CCO_ADAPTIVE_END -->
+Team: {team} | Scale: {scale} | Data: {data} | Compliance: {compliance}
+...
 ```
 
-### Tools Rules (loaded on-demand by commands/agents)
+### Backward Compatibility
 
-Located in `~/.claude/rules/cco-tools.md`, loaded via `!` backtick syntax.
-
-### Generator Rules
-
-1. **Original Content Preservation**: Content outside markers is NEVER modified
-2. **Empty Line Normalization**: Multiple consecutive empty lines → single empty line
-3. **Update Strategy**:
-   - Standards: Global ~/.claude/CLAUDE.md
-   - Context: Local ./CLAUDE.md per project
+The old marker system (CCO_CORE_START, CCO_AI_START, etc.) is automatically
+cleaned up during installation. CCO v2.x removes these markers from CLAUDE.md.
 
 ## Getting Help
 

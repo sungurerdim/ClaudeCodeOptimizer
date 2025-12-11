@@ -93,7 +93,9 @@ CCO uses a 4-category rules system:
 | **Tools** | CCO command/agent mechanisms | Loaded when commands/agents run |
 | **Adaptive** | Stack-based rules pool | Only matching rules selected per project |
 
-**Counting:** `grep -c "| \* " <file>` - each rule row starts with `| * `
+**Counting:** Rules use two formats:
+- List format: `grep -c "^- \*\*" <file>` (core.md, ai.md)
+- Table format: `grep -c "| \* " <file>` (adaptive.md)
 
 Run `/cco-tune` to see which adaptive rules apply to your project.
 
@@ -410,8 +412,8 @@ CCO leverages the full spectrum of Claude Code features with official documentat
 | **[Slash Commands][slash-commands]** | 11 commands in `~/.claude/commands/` |
 | ↳ Dynamic Context | `!backtick` syntax for real-time injection |
 | ↳ Tool Restrictions | `allowed-tools` frontmatter per command |
-| **[Sub-agents][sub-agents]** | 3 agents with model selection (Haiku/Sonnet) |
-| ↳ Model Selection | Per-agent model override in frontmatter |
+| **[Sub-agents][sub-agents]** | 3 specialized agents (model selection by Claude Code) |
+| ↳ Model Selection | Automatic by Claude Code based on task type |
 | **[Rules Directory][memory]** | Global rules in `~/.claude/rules/cco/` |
 | **[Permissions][cc-changelog]** | 4 levels (safe/balanced/permissive/full) |
 | **[Statusline][cc-changelog]** | Custom status bar (Full/Minimal modes) |
@@ -434,13 +436,13 @@ CCO implements patterns from [Claude 4 Best Practices][claude4-bp]:
 
 ### Agent Model Selection
 
-Following [Sub-agents documentation][sub-agents]:
+Model selection is handled automatically by Claude Code based on task complexity and type. CCO agents specify their purpose and tool requirements; Claude Code selects the optimal model:
 
-| Agent | Model | Rationale |
-|-------|-------|-----------|
-| `cco-agent-analyze` | Haiku | Fast read-only operations |
-| `cco-agent-apply` | Sonnet | Careful write operations |
-| `cco-agent-research` | Haiku | Efficient web search |
+| Agent | Purpose | Tools |
+|-------|---------|-------|
+| `cco-agent-analyze` | Read-only analysis | Glob, Read, Grep, Bash |
+| `cco-agent-apply` | Write operations with verification | Grep, Read, Glob, Bash, Edit, Write |
+| `cco-agent-research` | External research | WebSearch, WebFetch, Read, Grep, Glob |
 
 ### YAML Frontmatter
 
