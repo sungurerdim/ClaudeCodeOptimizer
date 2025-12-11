@@ -14,7 +14,7 @@ End-to-end: Detects waste (orphans, duplicates, stale refs) AND removes/optimize
 
 ## Context
 
-- Context check: !`grep -c "CCO_ADAPTIVE_START" ./CLAUDE.md 2>/dev/null || echo "0"`
+- Context check: !`test -f ./.claude/rules/cco/context.md && echo "1" || echo "0"`
 - File count: !`find . -type f \( -name "*.py" -o -name "*.ts" -o -name "*.js" \) 2>/dev/null | wc -l`
 - Git status: !`git status --short`
 
@@ -22,11 +22,11 @@ End-to-end: Detects waste (orphans, duplicates, stale refs) AND removes/optimize
 
 ## Context Requirement [CRITICAL]
 
-**This command requires CCO_ADAPTIVE in ./CLAUDE.md.**
+**This command requires CCO context in ./.claude/rules/cco/context.md.**
 
 If context check returns "0":
 ```
-CCO_ADAPTIVE not found in ./CLAUDE.md
+CCO context not found.
 
 Run /cco-tune first to configure project context, then restart CLI.
 ```
@@ -505,6 +505,26 @@ When optimization reveals actionable recommendations (e.g., pinning versions, re
 - **Inline**: `// cco-ignore` or `# cco-ignore` skips line
 - **File**: `// cco-ignore-file` skips entire file
 - **Paths**: fixtures/, testdata/, examples/, benchmarks/
+
+### Conservative Judgment [CRITICAL]
+
+| Keyword | Severity | Confidence Required |
+|---------|----------|---------------------|
+| crash, data loss, security breach | CRITICAL | HIGH |
+| broken, blocked, cannot use | HIGH | HIGH |
+| error, fail, incorrect | MEDIUM | MEDIUM |
+| style, minor, cosmetic | LOW | LOW |
+
+- **Lower**: When uncertain between two severities, choose lower
+- **Evidence**: Require explicit evidence, not inference
+- **No-Escalate**: Style issues → never CRITICAL or HIGH
+
+### Batch Approval
+
+- **MultiSelect**: true for batch approvals
+- **All-Option**: First option = "All ({N})" for bulk
+- **Priority-Order**: CRITICAL → HIGH → MEDIUM → LOW
+- **Item-Format**: `{description} [{file:line}] [{safe|risky}]`
 
 ### Task Tracking
 

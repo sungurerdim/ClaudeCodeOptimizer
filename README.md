@@ -361,6 +361,24 @@ cco-remove  # Complete removal with confirmation
 
 ---
 
+## Best Practices Compliance
+
+CCO commands and agents are designed following official Claude documentation:
+
+- [Claude 4 Best Practices](https://platform.claude.com/docs/en/build-with-claude/prompt-engineering/claude-4-best-practices) - Prompt engineering patterns
+- [Sub-agents](https://code.claude.com/docs/en/sub-agents) - Agent architecture and delegation
+- [Skills](https://code.claude.com/docs/en/skills) - Capability extension patterns
+- [Slash Commands](https://code.claude.com/docs/en/slash-commands) - Command syntax and features
+
+Key implementations:
+- Parallel tool execution for independent operations
+- Conservative judgment with evidence-based severity
+- Context-aware token budget management
+- Model-appropriate agent selection (Haiku for read, Sonnet for write)
+- Structured output formats for parseability
+
+---
+
 ## License
 
 MIT License - see [LICENSE](LICENSE)

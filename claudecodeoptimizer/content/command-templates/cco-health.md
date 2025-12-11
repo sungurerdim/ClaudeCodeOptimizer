@@ -14,17 +14,17 @@ Read-only metrics collection and visualization.
 
 ## Context
 
-- Context check: !`grep -c "CCO_ADAPTIVE_START" ./CLAUDE.md 2>/dev/null || echo "0"`
+- Context check: !`test -f ./.claude/rules/cco/context.md && echo "1" || echo "0"`
 
 **Static context (Applicable, Scale, Type, Team, Data, Coverage) is read from ./CLAUDE.md already in context.**
 
 ## Context Requirement [CRITICAL]
 
-**This command requires CCO_ADAPTIVE in ./CLAUDE.md.**
+**This command requires CCO context in ./.claude/rules/cco/context.md.**
 
 If context check returns "0":
 ```
-CCO_ADAPTIVE not found in ./CLAUDE.md
+CCO context not found.
 
 Run /cco-tune first to configure project context, then restart CLI.
 ```
@@ -41,6 +41,18 @@ Run /cco-tune first to configure project context, then restart CLI.
 | Maturity | Legacy → weight stability higher; Greenfield → weight velocity higher |
 | Priority | Speed → highlight blockers only; Quality → show all metrics |
 | Data | PII/Regulated → security score weight ×2 |
+
+## Execution Optimization
+
+<use_parallel_tool_calls>
+When calling multiple tools with no dependencies between them, make all independent
+calls in a single message. For example:
+- Multiple cco-agent-analyze scopes → launch simultaneously
+- Multiple file reads → batch in parallel
+- Multiple grep searches → parallel calls
+
+Never use placeholders or guess missing parameters.
+</use_parallel_tool_calls>
 
 ## Agent Integration
 

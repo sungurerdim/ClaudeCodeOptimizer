@@ -26,6 +26,13 @@ Execute approved changes with verification. Reports accounting.
 - Skip: `.git/`, `node_modules/`, `vendor/`, `.venv/`, `dist/`, `build/`
 - Skip: `fixtures/`, `testdata/`, `__snapshots__/`, `examples/`
 
+### Output Formatting
+- **Borders**: `─│┌┐└┘├┤┬┴┼`
+- **Headers**: `═║╔╗╚╝`
+- **Numbers**: Right-aligned
+- **Text**: Left-aligned
+- **Status**: OK | WARN | FAIL | PASS | SKIP
+
 ## Purpose
 
 Execute changes approved by user: fixes, generation, optimization, refactoring.

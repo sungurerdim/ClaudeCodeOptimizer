@@ -14,7 +14,7 @@ Analyzes architecture, identifies gaps, and provides actionable recommendations.
 
 ## Context
 
-- Context check: !`grep -c "CCO_ADAPTIVE_START" ./CLAUDE.md 2>/dev/null || echo "0"`
+- Context check: !`test -f ./.claude/rules/cco/context.md && echo "1" || echo "0"`
 - Project purpose: !`head -5 README.md 2>/dev/null`
 - Structure: !`ls -d */ 2>/dev/null | head -10`
 - Git activity: !`git log --oneline -5 2>/dev/null`
@@ -23,11 +23,11 @@ Analyzes architecture, identifies gaps, and provides actionable recommendations.
 
 ## Context Requirement [CRITICAL]
 
-**This command requires CCO_ADAPTIVE in ./CLAUDE.md.**
+**This command requires CCO context in ./.claude/rules/cco/context.md.**
 
 If context check returns "0":
 ```
-CCO_ADAPTIVE not found in ./CLAUDE.md
+CCO context not found.
 
 Run /cco-tune first to configure project context, then restart CLI.
 ```
@@ -44,6 +44,18 @@ Run /cco-tune first to configure project context, then restart CLI.
 | Team | Solo → pragmatic suggestions; 6+ → consider coordination, documentation needs |
 | Data | PII/Regulated → security review mandatory, compliance check |
 | Type | API → contract stability; Library → backward compatibility; CLI → UX consistency |
+
+## Execution Optimization
+
+<use_parallel_tool_calls>
+When calling multiple tools with no dependencies between them, make all independent
+calls in a single message. For example:
+- Multiple cco-agent-analyze scopes → launch simultaneously
+- Multiple file reads → batch in parallel
+- Multiple grep searches → parallel calls
+
+Never use placeholders or guess missing parameters.
+</use_parallel_tool_calls>
 
 ## Agent Integration
 
@@ -310,11 +322,18 @@ For each approved recommendation:
 | Consider | Medium impact, various effort |
 | Backlog | Low impact or high effort |
 
-### Conservative Judgment
+### Conservative Judgment [CRITICAL]
 
-- **Lower**: When uncertain, lower the priority
-- **Evidence**: Require explicit evidence for recommendations
-- **No escalation**: Cosmetic issues → never "Do Now"
+| Keyword | Severity | Confidence Required |
+|---------|----------|---------------------|
+| crash, data loss, security breach | CRITICAL | HIGH |
+| broken, blocked, cannot use | HIGH | HIGH |
+| error, fail, incorrect | MEDIUM | MEDIUM |
+| style, minor, cosmetic | LOW | LOW |
+
+- **Lower**: When uncertain between two severities, choose lower
+- **Evidence**: Require explicit evidence, not inference
+- **No-Escalate**: Style issues → never CRITICAL or HIGH
 
 ### Quick Mode
 
