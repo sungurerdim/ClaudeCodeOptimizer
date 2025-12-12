@@ -22,18 +22,19 @@ When called without flags:
 
 | Question | Options | MultiSelect |
 |----------|---------|-------------|
-| Scope? | Security; Quality; Hygiene; All (Recommended) | true |
+| Scope? | Security; Quality; Hygiene; Best Practices; All (Recommended) | true |
 | Action? | Report Only; Auto-fix (Recommended); Interactive | false |
 
 ## Execution Flow
 
 ```
 ┌─────────────────────────────────────────────────────────────────────────────┐
-│ STEP 1: Spawn parallel agents (single message with 3 Task calls)            │
+│ STEP 1: Spawn parallel agents (single message with 4 Task calls)            │
 ├─────────────────────────────────────────────────────────────────────────────┤
-│ Task(cco-agent-analyze, scope=security)  ──┐                                │
-│ Task(cco-agent-analyze, scope=quality)   ──┼──→ All run simultaneously      │
-│ Task(cco-agent-analyze, scope=hygiene)   ──┘                                │
+│ Task(cco-agent-analyze, scope=security)       ──┐                           │
+│ Task(cco-agent-analyze, scope=quality)        ──┼──→ All run simultaneously │
+│ Task(cco-agent-analyze, scope=hygiene)        ──┤                           │
+│ Task(cco-agent-analyze, scope=best-practices) ──┘                           │
 ├─────────────────────────────────────────────────────────────────────────────┤
 │ STEP 2: Collect JSON results from all agents                                │
 ├─────────────────────────────────────────────────────────────────────────────┤
@@ -54,7 +55,25 @@ When called without flags:
 | cco-agent-analyze | `security` | OWASP, secrets, CVEs, input validation |
 | cco-agent-analyze | `quality` | Tech debt, consistency, test gaps |
 | cco-agent-analyze | `hygiene` | Orphans, stale refs, duplicates |
+| cco-agent-analyze | `best-practices` | Tool usage patterns, parallel execution, efficiency |
 | cco-agent-apply | `fix` | Execute approved fixes |
+
+## Best Practices Scope
+
+Analyzes optimal tool and pattern usage:
+
+| Category | Checks |
+|----------|--------|
+| **Claude Code Tools** | Parallel tool calls, single-message batching, subagent usage |
+| **Execution Patterns** | Sequential vs parallel, background tasks, batch operations |
+| **Code Patterns** | DRY, SOLID, error handling, async patterns |
+| **Performance** | N+1 queries, unnecessary iterations, caching opportunities |
+
+**Example findings:**
+- "3 sequential Bash calls could be parallelized" → suggest single message
+- "Subagent not used for complex search" → suggest Task tool
+- "Repeated pattern in 4 files" → suggest extraction
+- "Sync file operations in async context" → suggest async alternatives
 
 ## Context Application
 
@@ -95,14 +114,15 @@ P3 (<50): Backlog
 
 ```
 ┌─ OPTIMIZATION SUMMARY ───────────────────────────────────────┐
-│ Category      │ Score │ Issues │ Fixed │ Status              │
-├───────────────┼───────┼────────┼───────┼─────────────────────┤
-│ Security      │ {n}%  │ {n}    │ {n}   │ {OK|WARN|FAIL}      │
-│ Quality       │ {n}%  │ {n}    │ {n}   │ {OK|WARN|FAIL}      │
-│ Hygiene       │ {n}%  │ {n}    │ {n}   │ {OK|WARN|FAIL}      │
-├───────────────┼───────┼────────┼───────┼─────────────────────┤
-│ OVERALL       │ {n}%  │ {n}    │ {n}   │ {status}            │
-└───────────────┴───────┴────────┴───────┴─────────────────────┘
+│ Category        │ Score │ Issues │ Fixed │ Status            │
+├─────────────────┼───────┼────────┼───────┼───────────────────┤
+│ Security        │ {n}%  │ {n}    │ {n}   │ {OK|WARN|FAIL}    │
+│ Quality         │ {n}%  │ {n}    │ {n}   │ {OK|WARN|FAIL}    │
+│ Hygiene         │ {n}%  │ {n}    │ {n}   │ {OK|WARN|FAIL}    │
+│ Best Practices  │ {n}%  │ {n}    │ {n}   │ {OK|WARN|FAIL}    │
+├─────────────────┼───────┼────────┼───────┼───────────────────┤
+│ OVERALL         │ {n}%  │ {n}    │ {n}   │ {status}          │
+└─────────────────┴───────┴────────┴───────┴───────────────────┘
 
 Applied: {n} | Skipped: {n} | Manual: {n}
 ```
@@ -114,7 +134,8 @@ Applied: {n} | Skipped: {n} | Manual: {n}
 | `--security` | Security scope only |
 | `--quality` | Quality scope only |
 | `--hygiene` | Hygiene scope only |
+| `--best-practices` | Best practices scope only |
 | `--report` | No fixes |
 | `--fix` | Auto-fix safe (default) |
 | `--critical` | Security + tests only |
-| `--pre-release` | Security + quality + consistency |
+| `--pre-release` | Security + quality + consistency + best practices |

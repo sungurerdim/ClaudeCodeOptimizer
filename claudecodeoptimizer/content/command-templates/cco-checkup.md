@@ -35,7 +35,7 @@ Run /cco-config first to configure project context, then restart CLI.
 
 ## Phase Selection
 
-When called without flags, use **AskUserQuestion**:
+When called without flags → **AskUserQuestion** (mandatory):
 
 | Question | Options | multiSelect |
 |----------|---------|-------------|
@@ -173,11 +173,7 @@ Removes orphans, stale refs, and duplicates.
 
 ## Behavior Rules
 
-### User Input [CRITICAL]
-
-- **AskUserQuestion**: ALL user decisions MUST use this tool
-- **Separator**: Use semicolon (`;`) to separate options
-- **Prohibited**: Never use plain text questions ("Would you like...", "Should I...")
+*Inherits: User Input rules from cco-tools.md*
 
 ### Orchestration
 

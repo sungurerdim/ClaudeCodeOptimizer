@@ -76,14 +76,13 @@ Note: Make a todo list first, use diverse keywords
 
 ## Default Behavior
 
-When called without query:
+When called without query → **AskUserQuestion** (mandatory):
 
-**Use AskUserQuestion:**
 | Question | Options | MultiSelect |
 |----------|---------|-------------|
 | Depth? | Standard (Recommended); Quick; Deep | false |
 
-*Note: Research topic is free text - use AskUserQuestion with text input option.*
+*Research topic: free text via AskUserQuestion.*
 
 Explicit flags skip questions.
 
@@ -436,11 +435,7 @@ Auto-detected when query contains "error", "not working", "fix":
 
 ## Behavior Rules
 
-### User Input [CRITICAL]
-
-- **AskUserQuestion**: ALL user decisions MUST use this tool
-- **Separator**: Use semicolon (`;`) to separate options
-- **Prohibited**: Never use plain text questions ("Would you like...", "Should I...")
+*Inherits: User Input rules from cco-tools.md*
 
 ### Source Reliability
 
