@@ -52,7 +52,7 @@ Repository = "https://github.com/sungurerdim/ClaudeCodeOptimizer"
 Issues = "https://github.com/sungurerdim/ClaudeCodeOptimizer/issues"
 
 [project.scripts]
-cco-setup = "claudecodeoptimizer.install_hook:post_install"
+cco-install = "claudecodeoptimizer.install_hook:post_install"
 cco-remove = "claudecodeoptimizer.cco_remove:main"
 
 [tool.setuptools]

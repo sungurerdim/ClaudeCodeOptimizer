@@ -2,8 +2,8 @@
 Integration tests for CCO command execution flows
 
 Tests end-to-end command workflows including:
-- cco-tune: Project tuning and status
-- cco-generate: File generation workflow
+- cco-config: Project configuration and tuning
+- cco-optimize: Code quality audit and optimization
 
 Uses tmp_path pytest fixture for isolated testing.
 All tests verify file creation, content correctness, and error handling.
@@ -15,20 +15,24 @@ from typing import Any
 import pytest
 
 
-class TestCCOTuneCommand:
-    """Test cco-tune command flow"""
+class TestCCOConfigCommand:
+    """Test cco-config command flow"""
 
-    def test_tune_displays_command_list(self, tmp_path: Path) -> None:
-        """Test tune command shows available options"""
+    def test_config_displays_command_list(self, tmp_path: Path) -> None:
+        """Test config command shows available options"""
         commands_dir = tmp_path / "commands"
         commands_dir.mkdir()
 
-        # Create sample command files
+        # Create sample command files (current CCO command structure)
         commands = {
-            "cco-tune": "Project tuning and status",
-            "cco-audit": "Codebase audit",
-            "cco-refactor": "Automated refactoring",
-            "cco-generate": "Generate missing components",
+            "cco-config": "Project configuration and tuning",
+            "cco-status": "Project status dashboard",
+            "cco-optimize": "Code quality and optimization",
+            "cco-review": "Architecture review",
+            "cco-research": "Multi-source research",
+            "cco-commit": "Atomic commit workflow",
+            "cco-preflight": "Pre-release checks",
+            "cco-checkup": "Regular maintenance",
         }
 
         for cmd_name, description in commands.items():
@@ -39,13 +43,13 @@ class TestCCOTuneCommand:
         for cmd_name in commands:
             assert (commands_dir / f"{cmd_name}.md").exists()
 
-        # Count commands
+        # Count commands (8 commands in current structure)
         command_files = list(commands_dir.glob("cco-*.md"))
-        assert len(command_files) == 4
+        assert len(command_files) == 8
 
 
-class TestCCOGenerateCommand:
-    """Test cco-generate command flow - the command currently running!"""
+class TestCCOOptimizeCommand:
+    """Test cco-optimize command flow"""
 
     def test_generate_creates_missing_tests(self, tmp_path: Path) -> None:
         """Test generate command creates missing test files"""
@@ -199,10 +203,10 @@ class TestMetadataTracking:
 
         # Create metadata
         metadata: dict[str, Any] = {
-            "version": "1.0.0",
+            "version": "1.1.0",
             "installed_at": "2025-01-01T12:00:00",
-            "commands_count": 11,
-            "agents_count": 4,
+            "commands_count": 8,
+            "agents_count": 3,
         }
 
         # Save metadata
@@ -210,9 +214,9 @@ class TestMetadataTracking:
 
         # Load and verify
         loaded = json.loads(metadata_file.read_text())
-        assert loaded["version"] == "1.0.0"
-        assert loaded["commands_count"] == 11
-        assert loaded["agents_count"] == 4
+        assert loaded["version"] == "1.1.0"
+        assert loaded["commands_count"] == 8
+        assert loaded["agents_count"] == 3
 
     def test_metadata_handles_missing_file(self, tmp_path: Path) -> None:
         """Test handling of missing metadata file"""

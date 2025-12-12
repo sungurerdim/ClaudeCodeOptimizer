@@ -10,32 +10,29 @@ Detailed documentation for all CCO slash commands.
 
 | Command | Purpose | Key Rules |
 |---------|---------|-----------|
-| `/cco-tune` | Project tuning and configuration | Approval Flow, Output Formatting |
-| `/cco-health` | Metrics dashboard with trends | Command Flow, Output Formatting |
-| `/cco-audit` | Security + code quality gates | Fix Workflow, Safety Classification |
+| `/cco-config` | Project configuration and settings | Approval Flow, Output Formatting |
+| `/cco-status` | Metrics dashboard with trends | Command Flow, Output Formatting |
+| `/cco-optimize` | Security + Quality + Hygiene | Fix Workflow, Safety Classification |
 | `/cco-review` | Architecture analysis | Fix Workflow, Approval Flow |
 | `/cco-research` | Multi-source research with AI synthesis | Command Flow, Output Formatting |
-| `/cco-optimize` | Cleanliness + efficiency improvements | Fix Workflow, Safety Classification |
-| `/cco-generate` | Convention-following generation | Approval Flow, Output Formatting |
-| `/cco-refactor` | Safe structural changes | Pre-Operation Safety, Approval Flow |
 | `/cco-commit` | Quality-gated commits | Pre-Operation Safety, Approval Flow |
 
 ### Meta Commands
 
 | Command | Purpose | Orchestrates |
 |---------|---------|--------------|
-| `/cco-release` | Pre-release workflow | audit + optimize + review + verify |
-| `/cco-checkup` | Regular maintenance | health + audit --smart + optimize --hygiene |
+| `/cco-preflight` | Pre-release workflow | optimize + review + verify |
+| `/cco-checkup` | Regular maintenance | status + optimize --all --fix |
 
 ---
 
-## /cco-tune
+## /cco-config
 
 **Purpose:** Central configuration command for project detection, settings, removal, and export.
 
 **Usage:**
 ```bash
-/cco-tune              # Interactive: Configure / Remove / Export
+/cco-config              # Interactive: Configure / Remove / Export
 ```
 
 **Flow:**
@@ -69,16 +66,17 @@ Detailed documentation for all CCO slash commands.
 
 ---
 
-## /cco-health
+## /cco-status
 
 **Purpose:** Single view of project health with actionable next steps.
 
 **Usage:**
 ```bash
-/cco-health                     # Full dashboard
-/cco-health --focus=security    # Focus on security
-/cco-health --focus=tests       # Focus on tests
-/cco-health --focus=tech-debt   # Focus on tech debt
+/cco-status                     # Full dashboard
+/cco-status --focus=security    # Focus on security
+/cco-status --focus=tests       # Focus on tests
+/cco-status --focus=tech-debt   # Focus on tech debt
+/cco-status --brief             # Summary only
 ```
 
 **Scores (0-100):**
@@ -89,27 +87,60 @@ Detailed documentation for all CCO slash commands.
 
 ---
 
-## /cco-audit
+## /cco-optimize
 
-**Purpose:** Security and code quality checks with prioritized fixes.
+**Purpose:** Full-stack optimization combining security, code quality, and hygiene checks.
 
 **Usage:**
 ```bash
-/cco-audit                   # Interactive
-/cco-audit --smart           # Auto-detect applicable
-/cco-audit --pre-release     # Production readiness
-/cco-audit --security        # OWASP, secrets, CVEs
-/cco-audit --tech-debt       # Complexity, dead code
-/cco-audit --tests           # Coverage, quality, edge cases
-/cco-audit --auto-fix        # Auto-fix safe issues
+/cco-optimize                      # Interactive 2-tab selection
+/cco-optimize --all --fix          # Full optimization with auto-fix
+/cco-optimize --security           # Security focus only
+/cco-optimize --quality            # Quality focus only
+/cco-optimize --hygiene            # Hygiene focus (orphans, stale, dupes)
+/cco-optimize --quick              # Fast hygiene cleanup
+/cco-optimize --pre-release        # Pre-release gate checks
+/cco-optimize --deps               # Dependency freshness check
+/cco-optimize --all --report       # Full scan, no changes
 ```
 
-**Categories:**
-- Security: `--security` (OWASP, secrets, CVEs, dependency vulnerabilities)
-- Quality: `--tech-debt`, `--tests`, `--consistency`, `--self-compliance`
-- Stack-dependent: `--database`, `--performance`, `--docs`, etc.
+**Interactive 2-Tab Selection:**
 
-**Detection:** Input validation gaps, type coverage, test quality, doc-code mismatch.
+| Tab | Question | Options |
+|-----|----------|---------|
+| Scope | What to check? | Security; Quality; Hygiene; All (Recommended) |
+| Action | How to handle? | Report Only; Auto-fix (Recommended); Full Auto-fix; Interactive |
+
+**Scope Categories:**
+
+| Scope | Includes |
+|-------|----------|
+| **Security** | OWASP vulnerabilities, secrets, CVEs, supply-chain, input validation |
+| **Quality** | Complexity, type coverage, test quality, consistency, self-compliance |
+| **Hygiene** | Orphans, stale-refs, duplicates, dead code, dependencies |
+
+**Sub-Scope Flags:**
+
+| Flag | Scope | Checks |
+|------|-------|--------|
+| `--owasp` | Security | OWASP Top 10 |
+| `--secrets` | Security | Secret detection |
+| `--cves` | Security | Dependency CVEs |
+| `--tech-debt` | Quality | Complexity, TODOs |
+| `--consistency` | Quality | Doc-code mismatch |
+| `--tests` | Quality | Coverage, flaky tests |
+| `--orphans` | Hygiene | Unreferenced code |
+| `--stale-refs` | Hygiene | Broken references |
+| `--duplicates` | Hygiene | Duplicate code |
+| `--deps` | Hygiene | Dependency freshness |
+
+**Key Features:**
+- OWASP risk rating for priority
+- Root cause correlation (N findings → 1 root cause)
+- False positive reduction
+- Safe removal verification
+- Cascading impact analysis
+- Remediation verification
 
 ---
 
@@ -123,6 +154,7 @@ Detailed documentation for all CCO slash commands.
 /cco-review --quick            # Skip from-scratch analysis
 /cco-review --focus=structure  # Focus on organization
 /cco-review --focus=security   # Focus on security
+/cco-review --focus=deps       # Focus on dependencies
 ```
 
 **Phases:**
@@ -131,6 +163,7 @@ Detailed documentation for all CCO slash commands.
 3. Stack Fitness - Tech choices evaluation
 4. Fresh Perspective - "If building from scratch"
 5. Prioritization - Quick wins vs major refactors
+6. Apply (optional) - Implement approved recommendations
 
 ---
 
@@ -145,7 +178,8 @@ Detailed documentation for all CCO slash commands.
 /cco-research "query" --deep             # All tiers, 20+ sources
 /cco-research "A vs B" --compare         # Comparison mode
 /cco-research "query" --focus=official   # Official sources only
-/cco-research "query" --focus=community  # Include community perspectives
+/cco-research "query" --local            # Codebase-only search
+/cco-research "query" --security         # Security advisories
 ```
 
 **Source Tiers:**
@@ -158,87 +192,13 @@ Detailed documentation for all CCO slash commands.
 | T5 | 40-54 | Dev.to, Hashnode, Reddit, blogs |
 | T6 | 0-39 | Unverified, AI-generated, outdated |
 
-**Dynamic Modifiers:**
-- Freshness: 0-3 months (+10), 3-12 months (0), >12 months (-15)
-- Engagement: High stars/votes (+5)
-- Author: Core maintainer (+10)
-- Cross-verified by T1-T2 (+10)
-- Bias detected: Vendor self-promo (-5), Sponsored (-15)
-
-**Analysis Features:**
-- Contradiction Detection: Identifies conflicting information
-- Consensus Mapping: Weighted agreement by tier
-- Bias Detection: Flags promotional content
-- Evidence Chain: Shows source verification trail
-
-**Output Sections:**
-1. Source Summary - Tier breakdown with counts and scores
-2. Key Findings - Ranked findings with freshness
-3. Contradictions - Conflicting views with resolution
-4. Consensus Map - Agreement percentages by tier weight
-5. AI Recommendation - Confidence level, reasoning, caveats, alternatives
-6. Sources - Full citations with key quotes
-
----
-
-## /cco-optimize
-
-**Purpose:** Cleanliness and efficiency improvements.
-
-**Usage:**
-```bash
-/cco-optimize                    # Interactive
-/cco-optimize --hygiene          # Quick cleanup (orphans + stale-refs + duplicates)
-/cco-optimize --orphans          # Find unreferenced code
-/cco-optimize --stale-refs       # Find/fix broken references
-/cco-optimize --duplicates       # Detect and merge duplicates
-/cco-optimize --context          # AI context files
-/cco-optimize --docs             # Documentation
-/cco-optimize --code             # Source files
-/cco-optimize --cross-file       # Full cross-file analysis
-/cco-optimize --all              # Everything
-/cco-optimize --auto-fix         # Auto-fix safe issues
-```
-
-**Categories:**
-- Cleanliness: `--orphans`, `--stale-refs`, `--duplicates` (or `--hygiene` for all three)
-- Efficiency: `--context`, `--docs`, `--code`, `--cross-file`
-
-**Detection:** Orphan files/functions/imports, broken imports/links, exact/near/semantic duplicates.
-
----
-
-## /cco-generate
-
-**Purpose:** Generate components following project conventions.
-
-**Usage:**
-```bash
-/cco-generate              # Interactive
-/cco-generate --tests      # Unit/integration tests
-/cco-generate --docs       # Documentation
-/cco-generate --infra      # CI/CD, Docker
-/cco-generate --all        # Everything applicable
-```
-
-**Convention enforcement:** Uses patterns from existing code, not imposing new ones.
-
----
-
-## /cco-refactor
-
-**Purpose:** Safe structural changes with reference verification.
-
-**Usage:**
-```bash
-/cco-refactor                              # Interactive
-/cco-refactor rename oldName newName       # Rename
-/cco-refactor move old/path new/path       # Move
-/cco-refactor extract "code" newModule     # Extract
-/cco-refactor inline functionName          # Inline
-```
-
-**Safety:** Requires clean git state. Auto-rollback on failure.
+**Quality Features:**
+- CRAAP+ scoring framework (Currency, Relevance, Authority, Accuracy, Purpose)
+- Adaptive source replacement (discard low-quality, find better)
+- Iterative deepening (seed → backward snowballing → forward snowballing)
+- Saturation detection (stop when no new info)
+- Contradiction resolution
+- Knowledge gap identification
 
 ---
 
@@ -256,28 +216,34 @@ Detailed documentation for all CCO slash commands.
 
 **Quality gates:** Format → Lint → Test (stop on failure)
 
+**Features:**
+- Vague message detection and rejection
+- Change type classification verification
+- Atomic commit verification
+- Semantic versioning impact tracking
+- Commit history style matching
+
 ---
 
-## /cco-release
+## /cco-preflight
 
 **Purpose:** Pre-release workflow orchestration.
 
 **Usage:**
 ```bash
-/cco-release                   # Full release workflow
-/cco-release --dry-run         # Check without fixing
-/cco-release --strict          # Fail on any warning
-/cco-release --tag             # Auto-create git tag
-/cco-release --tag --push      # Tag and push
+/cco-preflight                   # Full release workflow
+/cco-preflight --dry-run         # Check without fixing
+/cco-preflight --strict          # Fail on any warning
+/cco-preflight --tag             # Auto-create git tag
+/cco-preflight --tag --push      # Tag and push
 ```
 
 **Phases:**
 1. **Pre-flight** - Git state, branch, version, changelog, dependencies
-2. **Quality Gate** - via `/cco-audit --pre-release --auto-fix`
-3. **Cleanliness** - via `/cco-optimize --hygiene --auto-fix`
-4. **Architecture** - via `/cco-review --quick`
-5. **Final Verification** - Full test suite, build, lint, type check
-6. **Go/No-Go** - Blockers vs warnings summary, next steps
+2. **Quality Gate** - via `/cco-optimize --all`
+3. **Architecture** - via `/cco-review --quick`
+4. **Final Verification** - Full test suite, build, lint, type check
+5. **Go/No-Go** - Blockers vs warnings summary, next steps
 
 **Classification:**
 - **Blockers** - Must fix before release (dirty git, invalid version, tests fail)
@@ -299,10 +265,9 @@ Detailed documentation for all CCO slash commands.
 ```
 
 **Phases:**
-1. **Health Dashboard** - via `/cco-health --brief`
-2. **Smart Audit** - via `/cco-audit --smart --auto-fix`
-3. **Quick Cleanup** - via `/cco-optimize --hygiene --auto-fix`
-4. **Summary** - Changes since last checkup, auto-fixed vs manual needed
+1. **Health Dashboard** - via `/cco-status --brief`
+2. **Full Optimization** - via `/cco-optimize --all --fix`
+3. **Summary** - Changes since last checkup, auto-fixed vs manual needed
 
 **Scheduling:**
 | Frequency | Use Case |

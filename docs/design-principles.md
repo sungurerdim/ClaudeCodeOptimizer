@@ -90,7 +90,7 @@ All changes follow a consistent safety pattern.
 | Core | All projects, AI/human agnostic |
 | AI | All AI assistants, model agnostic |
 | Tools | CCO workflow mechanisms (on-demand) |
-| Adaptive | Dynamically selected by /cco-tune |
+| Adaptive | Dynamically selected by /cco-config |
 
 For rule counts, see [README](../README.md#rules).
 

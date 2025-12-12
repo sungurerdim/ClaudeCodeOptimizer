@@ -7,7 +7,7 @@ Usage:
 
 What it does:
     1. Installs CCO package from GitHub
-    2. Runs cco-setup (installs commands, agents, rules to ~/.claude/)
+    2. Runs cco-install (installs commands, agents, rules to ~/.claude/)
 """
 
 import subprocess
@@ -62,7 +62,7 @@ def main() -> int:
 
     print("Package installed ✓")
 
-    # Run cco-setup (it prints its own detailed output)
+    # Run cco-install (it prints its own detailed output)
     print()
     result = subprocess.run(
         [sys.executable, "-m", "claudecodeoptimizer.install_hook"],
@@ -70,11 +70,11 @@ def main() -> int:
         shell=False,
     )
     if result.returncode != 0:
-        print("\nSetup failed. Try manually: cco-setup")
+        print("\nSetup failed. Try manually: cco-install")
         return 1
 
     # Next steps
-    print("Next: Open Claude Code and run /cco-tune")
+    print("Next: Open Claude Code and run /cco-config")
     print()
     return 0
 

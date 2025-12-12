@@ -11,7 +11,7 @@ CCO v{__version__}
 
 Usage:
   python -m claudecodeoptimizer [OPTIONS]
-  cco-setup                      Install CCO to ~/.claude/
+  cco-install                    Install CCO to ~/.claude/
   cco-remove                     Remove CCO from ~/.claude/
 
 Options:
@@ -19,9 +19,9 @@ Options:
   --help, -h                     Show this help
 
 In Claude Code:
-  /cco-tune                      Configure project settings
-  /cco-health                    View project health dashboard
-  /cco-audit                     Run security and quality audit
+  /cco-config                    Configure project settings
+  /cco-status                    View project health dashboard
+  /cco-optimize                  Run quality and hygiene checks
 """
 
 

@@ -57,7 +57,7 @@ Commands MUST explicitly state tool usage:
 
 ## Command Flow
 
-- **Context-Check**: Verify CCO_ADAPTIVE, suggest /cco-tune if missing
+- **Context-Check**: Verify CCO_ADAPTIVE, suggest /cco-config if missing
 - **Read-Context**: Parse ./CLAUDE.md markers
 - **Execute**: Command-specific logic
 - **Report**: Results with accounting

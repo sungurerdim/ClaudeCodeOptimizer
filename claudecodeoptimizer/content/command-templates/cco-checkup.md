@@ -29,49 +29,61 @@ If context check returns "0":
 ```
 CCO context not found.
 
-Run /cco-tune first to configure project context, then restart CLI.
+Run /cco-config first to configure project context, then restart CLI.
 ```
 **Stop execution immediately.**
+
+## Phase Selection
+
+When called without flags, use **AskUserQuestion**:
+
+| Question | Options | multiSelect |
+|----------|---------|-------------|
+| Which phases to run? | Health Dashboard; Quality Audit; Quick Cleanup; All (Recommended) | true |
+
+**Default:** All (if user doesn't specify)
+
+Flags `--health-only`, `--audit-only`, `--cleanup-only` skip this question.
 
 ## Flow
 
 ### Phase 1: Health Dashboard
 
-Orchestrates: `/cco-health --brief`
+Orchestrates: `/cco-status --brief`
 
 Quick overview of project health scores.
 
 ```
 ┌─ HEALTH CHECK ───────────────────────────────────────────────┐
-│ → Running: /cco-health --brief                               │
+│ → Running: /cco-status --brief                               │
 ├──────────────────────────────────────────────────────────────┤
 │ Category      │ Score │ Trend │ Status                       │
 ├───────────────┼───────┼───────┼──────────────────────────────┤
-│ Security      │ 95    │ →     │ OK                           │
-│ Tests         │ 88    │ ↑     │ WARN                         │
-│ Tech Debt     │ 82    │ ↓     │ WARN                         │
-│ Cleanliness   │ 90    │ ↑     │ OK                           │
-│ Documentation │ 78    │ →     │ WARN                         │
+│ Security      │ {n}   │ {t}   │ {status}                     │
+│ Tests         │ {n}   │ {t}   │ {status}                     │
+│ Tech Debt     │ {n}   │ {t}   │ {status}                     │
+│ Cleanliness   │ {n}   │ {t}   │ {status}                     │
+│ Documentation │ {n}   │ {t}   │ {status}                     │
 ├───────────────┼───────┼───────┼──────────────────────────────┤
-│ OVERALL       │ 87    │ →     │ WARN                         │
+│ OVERALL       │ {n}   │ {t}   │ {status}                     │
 └───────────────┴───────┴───────┴──────────────────────────────┘
 ```
 
 ### Phase 2: Quality Audit
 
-Orchestrates: `/cco-audit --auto-fix`
+Orchestrates: `/cco-optimize --auto-fix`
 
 Runs all applicable checks from context.
 
 ```
 ┌─ QUALITY AUDIT ──────────────────────────────────────────────┐
-│ → Running: /cco-audit --auto-fix                             │
+│ → Running: /cco-optimize --auto-fix                          │
 ├──────────────────────────────────────────────────────────────┤
-│ Applicable: security, tech-debt, tests, self-compliance     │
-│ Issues found: 3 | Auto-fixed: 2 | Manual: 1                 │
+│ Applicable: {applicable_categories}                          │
+│ Issues found: {n} | Auto-fixed: {n} | Manual: {n}            │
 ├──────────────────────────────────────────────────────────────┤
 │ Manual action needed:                                        │
-│   • HIGH: Complexity 12 in utils.py:42 (refactor needed)    │
+│   • {priority}: {issue} in {file}:{line}                    │
 └──────────────────────────────────────────────────────────────┘
 ```
 
@@ -85,11 +97,11 @@ Removes orphans, stale refs, and duplicates.
 ┌─ QUICK CLEANUP ──────────────────────────────────────────────┐
 │ → Running: /cco-optimize --hygiene --auto-fix                │
 ├──────────────────────────────────────────────────────────────┤
-│ Orphans removed: 1 (unused_helper.py)                       │
-│ Stale refs fixed: 2                                          │
-│ Duplicates merged: 0                                         │
+│ Orphans removed: {n} ({files})                               │
+│ Stale refs fixed: {n}                                        │
+│ Duplicates merged: {n}                                       │
 ├──────────────────────────────────────────────────────────────┤
-│ Space saved: 45 lines                                        │
+│ Space saved: {n} lines                                       │
 └──────────────────────────────────────────────────────────────┘
 ```
 
@@ -97,18 +109,18 @@ Removes orphans, stale refs, and duplicates.
 
 ```
 ┌─ CHECKUP SUMMARY ────────────────────────────────────────────┐
-│ Duration: 45 seconds                                         │
-│ Last checkup: 7 days ago                                     │
+│ Duration: {duration}                                         │
+│ Last checkup: {time_ago}                                     │
 ├──────────────────────────────────────────────────────────────┤
 │ Changes since last:                                          │
-│   • 12 commits                                               │
-│   • 8 files changed                                          │
-│   • Health: 85 → 87 (+2)                                    │
+│   • {n} commits                                              │
+│   • {n} files changed                                        │
+│   • Health: {before} → {after} ({delta})                    │
 ├──────────────────────────────────────────────────────────────┤
-│ Auto-fixed: 3 issues                                         │
-│ Manual needed: 1 issue                                       │
+│ Auto-fixed: {n} issues                                       │
+│ Manual needed: {n} issues                                    │
 ├──────────────────────────────────────────────────────────────┤
-│ Next recommended checkup: 2025-12-15                        │
+│ Next recommended checkup: {date}                             │
 └──────────────────────────────────────────────────────────────┘
 ```
 
@@ -117,8 +129,8 @@ Removes orphans, stale refs, and duplicates.
 | Need | Use |
 |------|-----|
 | Quick weekly maintenance | `/cco-checkup` |
-| Pre-release checks | `/cco-release` |
-| Deep quality audit | `/cco-audit --all` |
+| Pre-release checks | `/cco-preflight` |
+| Deep quality audit | `/cco-optimize --all` |
 | Thorough cleanup | `/cco-optimize --deep` |
 | Strategic review | `/cco-review` |
 
@@ -152,10 +164,10 @@ Removes orphans, stale refs, and duplicates.
 
 ## Related Commands
 
-- `/cco-health` - Health dashboard only
-- `/cco-audit` - Full quality audit
+- `/cco-status` - Health dashboard only
+- `/cco-optimize` - Full quality audit
 - `/cco-optimize` - Full optimization
-- `/cco-release` - Pre-release workflow
+- `/cco-preflight` - Pre-release workflow
 
 ---
 

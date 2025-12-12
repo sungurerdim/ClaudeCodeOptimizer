@@ -24,7 +24,7 @@ For rule counts, see [README](../README.md#rules).
 ├─────────────────────────────────────────────────────────────────┤
 │  DYNAMICALLY LOADED (Adaptive Rules)                            │
 ├─────────────────────────────────────────────────────────────────┤
-│  Selected by /cco-tune based on project detection               │
+│  Selected by /cco-config based on project detection               │
 │  Only relevant rules are loaded per project                     │
 └─────────────────────────────────────────────────────────────────┘
 ```
@@ -207,7 +207,7 @@ For rule counts, see [README](../README.md#rules).
 
 ## Adaptive Rules
 
-*Dynamically selected by /cco-tune based on project detection.*
+*Dynamically selected by /cco-config based on project detection.*
 
 ### Tier System
 

@@ -1,24 +1,24 @@
 ---
 name: cco-optimize
-description: Code cleanliness and efficiency optimization with auto-fix
-allowed-tools: Read(*), Grep(*), Glob(*), Edit(*), Bash(git:*), Bash(wc:*), Task(*), TodoWrite
+description: Security and code quality analysis with auto-fix
+allowed-tools: Read(*), Grep(*), Glob(*), Edit(*), Bash(git:*), Bash(wc:*), Bash(grep:*), Bash(find:*), Task(*), TodoWrite
 ---
 
 # /cco-optimize
 
-**Cleanliness & Efficiency** - Analyze → clean → optimize → verify.
+**Full-Stack Optimization** - Security + Quality + Hygiene in one command.
 
-End-to-end: Detects waste (orphans, duplicates, stale refs) AND removes/optimizes them.
+End-to-end: Detects security vulnerabilities, code quality issues, and hygiene problems AND fixes them.
 
-**Rules:** User Input | Safety | Classification | Approval Flow | Skip Criteria | Task Tracking
+**Rules:** User Input | Safety | Classification | Priority Assignment | Conservative Judgment | Skip Criteria | Task Tracking
 
 ## Context
 
 - Context check: !`test -f ./.claude/rules/cco/context.md && echo "1" || echo "0"`
-- File count: !`find . -type f \( -name "*.py" -o -name "*.ts" -o -name "*.js" \) 2>/dev/null | wc -l`
 - Git status: !`git status --short`
+- File count: !`find . -type f \( -name "*.py" -o -name "*.ts" -o -name "*.js" \) 2>/dev/null | wc -l`
 
-**Static context (Scale, Maturity, Type, Breaking) is read from ./CLAUDE.md already in context.**
+**Static context (Applicable, Type, Scale, Data, Maturity, Breaking) is read from ./CLAUDE.md already in context.**
 
 ## Context Requirement [CRITICAL]
 
@@ -28,7 +28,7 @@ If context check returns "0":
 ```
 CCO context not found.
 
-Run /cco-tune first to configure project context, then restart CLI.
+Run /cco-config first to configure project context, then restart CLI.
 ```
 **Stop execution immediately.**
 
@@ -36,71 +36,185 @@ Run /cco-tune first to configure project context, then restart CLI.
 
 | Field | Effect |
 |-------|--------|
-| Scale | <100 → clarity over performance; 10K+ → performance critical |
-| Type | CLI: startup time; API: response time; Library: memory; Frontend: bundle size |
-| Maturity | Legacy → safe optimizations only; Greenfield → aggressive restructuring OK |
-| Breaking | Never → preserve all interfaces; Allowed → simplify APIs, remove compat |
-| Data | PII → no caching user data, careful with logging; Regulated → audit trail |
-| Priority | Speed → quick wins only; Quality → comprehensive analysis |
+| Applicable | Only these categories can run, others rejected |
+| Data | PII/Regulated → security weight ×2 |
+| Scale | <1K → relaxed thresholds; 10K+ → strict, smaller batches |
+| Priority | Speed → critical only; Quality → all severity levels |
+| Maturity | Legacy → warn don't fail, safe only; Greenfield → aggressive OK |
+| Breaking | Never → preserve all interfaces; Allowed → simplify APIs |
+| Type | CLI: startup time; API: response time; Library: bundle size |
+
+## Execution Optimization
+
+<use_parallel_tool_calls>
+When calling multiple tools with no dependencies between them, make all independent
+calls in a single message. For example:
+- Multiple cco-agent-analyze scopes → launch simultaneously
+- Multiple file reads → batch in parallel
+- Multiple grep searches → parallel calls
+
+Never use placeholders or guess missing parameters.
+</use_parallel_tool_calls>
+
+## Default Behavior: 2-Tab Selection
+
+When called without flags, use AskUserQuestion with 2 tabs:
+
+**Tab 1: Scope**
+
+| Question | Options | MultiSelect |
+|----------|---------|-------------|
+| What to check? | Security; Quality; Hygiene; All (Recommended) | true |
+
+**Tab 2: Action**
+
+| Question | Options | MultiSelect |
+|----------|---------|-------------|
+| How to handle findings? | Report Only; Auto-fix (Recommended); Full Auto-fix; Interactive | false |
+
+**Option Descriptions:**
+
+| Scope Option | Includes |
+|--------------|----------|
+| **Security** | OWASP vulnerabilities, secrets, CVEs, supply-chain, input validation |
+| **Quality** | Complexity, type coverage, test quality, consistency, self-compliance |
+| **Hygiene** | Orphans, stale-refs, duplicates, dead code, redundancy |
+| **All** | Security + Quality + Hygiene (recommended) |
+
+| Action Option | Behavior |
+|---------------|----------|
+| **Report Only** | Scan and report, no changes |
+| **Auto-fix** | Fix safe issues automatically, ask for risky |
+| **Full Auto-fix** | Fix all with confirmation for each risky issue |
+| **Interactive** | Ask for every issue individually |
+
+**Explicit flags skip questions.**
 
 ## Agent Integration
 
 | Phase | Agent | Scope | Purpose |
 |-------|-------|-------|---------|
-| Scan | `cco-agent-analyze` | `scan` | Detect orphans, duplicates, stale refs |
-| Deps | `cco-agent-research` | `dependency` | Check versions, breaking changes, CVEs |
-| Optimize | `cco-agent-apply` | `optimize` | Execute approved cleanups |
+| Security Scan | `cco-agent-analyze` | `security` | Vulnerability detection |
+| Quality Scan | `cco-agent-analyze` | `quality` | Tech debt, consistency |
+| Hygiene Scan | `cco-agent-analyze` | `hygiene` | Orphans, duplicates |
+| Fix | `cco-agent-apply` | `fix` | Execute approved fixes |
+| Deps | `cco-agent-research` | `dependency` | Version analysis, CVEs |
 
 ### Parallel Scan Pattern [REQUIRED]
 
-When scanning multiple categories, launch **parallel agents** in a single message:
+Launch parallel agents in a single message:
 
 ```
 Launch simultaneously:
-- Agent 1: cco-agent-analyze scope=orphans
-- Agent 2: cco-agent-analyze scope=duplicates
-- Agent 3: cco-agent-analyze scope=stale-refs
+- Agent 1: cco-agent-analyze scope=security
+- Agent 2: cco-agent-analyze scope=quality
+- Agent 3: cco-agent-analyze scope=hygiene
 ```
 
-### Dependency Check Pattern [REQUIRED]
+---
 
-For `--deps` flag, launch research agents per ecosystem:
+# SECURITY SCOPE
 
-```
-Launch simultaneously:
-- Agent 1: cco-agent-research mode=dependency ecosystem=python
-- Agent 2: cco-agent-research mode=dependency ecosystem=node
-- Agent 3: cco-agent-research mode=dependency ecosystem=rust
-(only for detected ecosystems)
-```
+## Security Categories (`--security`)
 
-### Agent Propagation
+### OWASP Vulnerabilities
 
-When spawning agents, include:
-```
-Context: {Scale, Maturity, Breaking from CCO_ADAPTIVE}
-Rules: Safe vs risky classification, exact output format
-Output: [CATEGORY] {type}: {name} in {file:line}
-Note: Make a todo list first, process systematically
-```
+| Check | Detection | Auto-fix |
+|-------|-----------|----------|
+| SQL Injection (CWE-89) | Pattern matching, taint analysis | Parameterized queries |
+| XSS (CWE-79) | Output encoding analysis | Escape functions |
+| Command Injection (CWE-78) | Shell call analysis | Safe subprocess calls |
+| Path Traversal (CWE-22) | File path analysis | Path validation |
+| SSRF (CWE-918) | URL construction analysis | Allowlist validation |
 
-## Default Behavior
+### Secrets Detection
 
-When called without flags:
+| Pattern | Examples | Auto-fix |
+|---------|----------|----------|
+| API keys | `sk-`, `api_key=`, `apiKey:` | Remove + .gitignore |
+| Tokens | `ghp_`, `gho_`, `Bearer ` | Environment variable |
+| Passwords | `password=`, `passwd:`, `secret=` | Vault reference |
+| Private keys | `-----BEGIN.*PRIVATE KEY-----` | Remove + warn |
+| Connection strings | `mongodb://`, `postgres://` | Environment variable |
 
-**Use AskUserQuestion:**
-| Question | Options | MultiSelect |
-|----------|---------|-------------|
-| Focus? | Hygiene (Recommended); Efficiency; All | true |
-| Mode? | Conservative; Balanced (Recommended); Aggressive | false |
+### CVE/Dependency Vulnerabilities
 
-Explicit flags skip questions.
+| Check | Detection | Auto-fix |
+|-------|-----------|----------|
+| Known CVEs | Dependency scan against NVD | Upgrade commands |
+| Supply-chain risks | Lock file analysis, typosquatting | Pin versions |
+| Outdated with vulns | Version comparison | Update manifest |
 
-## Categories
+### Input Validation Gaps
+
+| Check | Detection | Auto-fix |
+|-------|-----------|----------|
+| Entry points | Route/handler analysis | Add validation schema |
+| Missing sanitization | Taint tracking | Add sanitize wrapper |
+| Type coercion | Dynamic type analysis | Add type checks |
+
+Report: `[SECURITY] {severity}: {issue} in {file:line}`
+
+---
+
+# QUALITY SCOPE
+
+## Quality Categories (`--quality`)
+
+### Tech Debt (`--tech-debt`)
+
+| Check | Detection | Auto-fix |
+|-------|-----------|----------|
+| Dead code | Unreachable code analysis | Remove with confirmation |
+| Complexity | Cyclomatic complexity >10 | Suggest refactor |
+| TODO/FIXME | Comment scanning | Create tracking issues |
+| Hardcoded values | Magic number detection | Extract to constants |
+| Type coverage | Missing annotations | Generate type stubs |
+
+Report: `[TECH-DEBT] {severity}: {issue} in {file:line}`
+
+### Consistency (`--consistency`)
+
+| Category | Check | Resolution |
+|----------|-------|------------|
+| Feature Claims | README says X, not implemented | Update docs or implement |
+| API Signatures | Docstring ≠ function | Sync docstring |
+| Config Values | Documented ≠ actual | Sync config docs |
+| Behavior | Comment says X, code does Y | Update comment |
+| Examples | Deprecated API in docs | Update examples |
+
+Report: `[CONSISTENCY] {category}: {doc} ≠ {code} in {file:line}`
+
+### Self-Compliance (`--self-compliance`)
+
+Check code against project's own stated rules:
+
+| Source | Checks |
+|--------|--------|
+| README.md | Feature claims, examples |
+| CLAUDE.md | CCO rules, conventions |
+| CONTRIBUTING.md | Code style, guidelines |
+
+Report: `[SELF-COMPLIANCE] {rule} violated in {file:line}`
+
+### Tests (`--tests`)
+
+| Check | Detection | Auto-fix |
+|-------|-----------|----------|
+| Coverage gaps | Uncovered functions | Generate test stubs |
+| Flaky tests | Inconsistent results | Flag for review |
+| Test quality | Assert count, mocks | Suggest improvements |
+| Missing edge cases | Boundary analysis | Generate edge tests |
+
+Report: `[TESTS] {severity}: {issue} in {file:line}`
+
+---
+
+# HYGIENE SCOPE
+
+## Hygiene Categories (`--hygiene`)
 
 ### Orphans (`--orphans`)
-
-Detect and remove unreferenced code:
 
 | Type | Detection | Action |
 |------|-----------|--------|
@@ -112,363 +226,348 @@ Detect and remove unreferenced code:
 
 Report: `[ORPHAN] {type}: {name} in {file:line} (last modified: {date})`
 
-**Resolution - Use AskUserQuestion:**
-| Question | Options | MultiSelect |
-|----------|---------|-------------|
-| Orphan: {name} in {file:line}. Action? | Delete; Keep (add reference); Skip | false |
-
 ### Stale References (`--stale-refs`)
-
-Detect and fix broken references:
 
 | Type | Detection | Action |
 |------|-----------|--------|
 | Broken import | Import path doesn't exist | Remove or fix path |
 | Dead link | URL returns 404 | Update or remove |
 | Missing ref | Code references undefined | Fix or remove |
-| Obsolete comment | Comment references deleted code | Update comment |
+| Obsolete comment | References deleted code | Update comment |
 | Phantom test | Test for non-existent function | Remove test |
 
 Report: `[STALE-REF] {type}: {reference} → {missing_target} in {file:line}`
 
 ### Duplicates (`--duplicates`)
 
-Detect and consolidate duplicate content:
-
 | Type | Similarity | Action |
 |------|------------|--------|
-| Exact duplicate | 100% | Consolidate → single source + re-export |
-| Near-duplicate | >80% | Review → merge or justify differences |
+| Exact duplicate | 100% | Consolidate → single source |
+| Near-duplicate | >80% | Review → merge or justify |
 | Semantic duplicate | Same logic | Extract shared abstraction |
 
-Detection methods:
-- Content hash (MD5/SHA256) for exact matches
-- Fuzzy match (Levenshtein, Jaccard) for near-duplicates
-- AST comparison for semantic duplicates
-
 Report: `[DUPLICATE] {type} ({similarity}%): {file1}:{line} ↔ {file2}:{line}`
-
-### Redundancy (`--redundancy`)
-
-Detect and eliminate redundant content:
-
-| Type | Detection | Action |
-|------|-----------|--------|
-| Redundant code | Same functionality in different places | Keep best, redirect others |
-| Redundant config | Same value in multiple configs | Single source + reference |
-| Redundant docs | Same info in multiple places | Consolidate or cross-reference |
-
-### Context (`--context`)
-
-Optimize AI context files:
-
-| Target | Optimization |
-|--------|-------------|
-| CLAUDE.md | Remove duplicates, compress verbose patterns |
-| Prompts | Implicit info removal, format efficiency |
-| Agent configs | Dead instruction removal |
-
-### Docs (`--docs`)
-
-Optimize documentation:
-
-| Target | Optimization |
-|--------|-------------|
-| Stale content | Update or remove outdated sections |
-| Redundant sections | Merge overlapping content |
-| Verbose explanations | Trim to essential |
-| Broken examples | Fix or remove |
-
-### Code Efficiency (`--code`)
-
-Optimize code performance:
-
-| Category | Optimizations |
-|----------|---------------|
-| Loops | Unnecessary iterations, early exits |
-| Conditionals | Simplification, guard clauses |
-| Algorithms | Better complexity alternatives |
-| N+1 queries | Batch database calls |
-| Memory | Reduce allocations, streaming |
-| Imports | Tree-shaking hints, lazy loading |
-
-### Cross-File (`--cross-file`)
-
-Full codebase analysis combining all above:
-
-| Analysis | Scope |
-|----------|-------|
-| Dependency graph | All imports/exports |
-| Duplication map | All files |
-| Orphan detection | All code |
-| Stale ref scan | All references |
 
 ### Dependencies (`--deps`)
 
 Analyze dependency freshness and suggest safe updates.
 
-**IMPORTANT:** No auto-fix for this category. Every version change requires explicit user approval.
+**No auto-fix for dependencies. Every update requires explicit approval.**
 
-#### Supported Ecosystems
+| Type | SemVer | Risk | Action |
+|------|--------|------|--------|
+| Patch | `x.y.Z+n` | 🟢 Safe | Review |
+| Minor | `x.Y+n.z` | 🟡 Low | Review |
+| Major | `X+n.y.z` | 🔴 Breaking | Review + changelog |
+| CVE | Security fix | 🔴 Critical | Urgent review |
 
-| Ecosystem | Manifest Files | Registry | Version Source |
-|-----------|----------------|----------|----------------|
-| **Python** | `requirements.txt`, `pyproject.toml`, `setup.py`, `Pipfile` | pypi.org | `info.version` |
-| **Node.js** | `package.json`, `package-lock.json`, `yarn.lock`, `pnpm-lock.yaml` | npmjs.com | `dist-tags.latest` |
-| **Rust** | `Cargo.toml`, `Cargo.lock` | crates.io | `max_stable_version` |
-| **Go** | `go.mod`, `go.sum` | pkg.go.dev | latest tag |
-| **Ruby** | `Gemfile`, `Gemfile.lock` | rubygems.org | `version` |
-| **PHP** | `composer.json`, `composer.lock` | packagist.org | `version` |
+Report: `[DEP] {risk}: {package} {current} → {latest} in {manifest}`
 
-#### Detection Flow
+---
 
-1. **Scan** - Detect manifest files in project
-2. **Parse** - Extract package names and current versions
-3. **Fetch** - Query registries for latest stable versions (web search)
-4. **Compare** - SemVer analysis (patch/minor/major)
-5. **Analyze** - Changelog/release notes for breaking changes
-6. **Report** - Present findings with risk classification
-7. **Approve** - User selects which updates to apply
-8. **Apply** - Update manifest files
+# RIGOR & VERIFICATION
 
-#### Risk Classification
+## Audit Rigor [CRITICAL]
 
-| Type | SemVer Change | Risk | Indicator |
-|------|---------------|------|-----------|
-| **Patch** | `x.y.Z` → `x.y.Z+n` | 🟢 Safe | Bug fixes only |
-| **Minor** | `x.Y.z` → `x.Y+n.z` | 🟡 Low | New features, backward compatible |
-| **Major** | `X.y.z` → `X+n.y.z` | 🔴 Breaking | API changes, migration needed |
-| **Security** | CVE exists in current | 🔴 Critical | Vulnerability fix available |
-| **Deprecated** | Package EOL/archived | ⚫ Replace | Find alternative |
-| **Pinned** | Exact version constraint | 🔵 Intentional | Skip unless security |
+### Read-First Rule
 
-#### Breaking Change Detection
+**NEVER report an issue without reading the actual code.** Grep matches alone are insufficient.
 
-For Major updates, perform changelog analysis:
+### Context Verification
 
-| Source | Priority | Check For |
-|--------|----------|-----------|
-| GitHub Releases | T1 | Breaking changes section |
-| CHANGELOG.md | T1 | `BREAKING:` prefixed entries |
-| Migration Guide | T1 | Required code changes |
-| Release Notes | T2 | Deprecation notices |
-| GitHub Issues | T3 | Common upgrade problems |
+Before flagging:
+1. Is this intentional? Check surrounding comments
+2. Is there a `# noqa`, `// eslint-disable`, `cco-ignore`?
+3. Does commit history explain the choice?
 
-#### Approval Flow [REQUIRED]
+### Confidence Thresholds
 
-**Every update requires explicit user approval:**
+| Severity | Min Confidence | Evidence Required |
+|----------|---------------|-------------------|
+| CRITICAL | 95% | Verified in code + reproducible |
+| HIGH | 85% | Strong evidence, multiple indicators |
+| MEDIUM | 70% | Probable issue, single indicator |
+| LOW | 50% | Possible issue, style concern |
+
+**False Positive Guard:** When uncertain, choose LOWER severity.
+
+## Finding Correlation & Deduplication [CRITICAL]
+
+### Root Cause Analysis
+
+Group findings by root cause:
+
+| Symptom Type | Root Cause | Dedup Action |
+|--------------|------------|--------------|
+| SQL injection in 5 endpoints | Missing input sanitization | 1 root cause + 5 locations |
+| XSS in 3 templates | No output encoding | 1 root cause + 3 locations |
+
+### Deduplication Rules
+
+1. **Same CWE + Same File** → Merge into single finding
+2. **Same CWE + Related Files** → Group under root cause
+3. **Different CWE + Same Location** → Keep separate
+
+**Benefit:** N findings → 1 actionable root cause
+
+## False Positive Reduction [CRITICAL]
+
+### Pre-Report Verification
+
+| FP Indicator | Check | Action |
+|--------------|-------|--------|
+| Sanitization present | Is input sanitized upstream? | Skip if yes |
+| Framework protection | Does framework auto-escape? | Skip if yes |
+| Test/Mock code | Is this in test fixtures? | Skip if yes |
+| Dead code path | Is this code reachable? | Skip if unreachable |
+| Intentional pattern | Is there a security comment? | Skip if explained |
+
+**Report FP Stats:** `Confirmed: {N} / Reported: {M} ({%} accuracy)`
+
+## Business Impact Prioritization [OWASP Risk Rating]
+
+### Risk Calculation
+
+**Risk = Likelihood × Impact**
+
+| Factor | Weight | Scoring |
+|--------|--------|---------|
+| Exploitability | 25% | Easy: 100, Medium: 60, Hard: 20 |
+| Attack Surface | 25% | Public: 100, Authenticated: 60, Internal: 20 |
+| Data Sensitivity | 25% | PII/Financial: 100, Internal: 50, Public: 10 |
+| Business Criticality | 25% | Core: 100, Supporting: 50, Non-critical: 20 |
+
+### Priority Levels
+
+| Risk Score | Priority | SLA |
+|------------|----------|-----|
+| 90-100 | 🔴 P0 - Immediate | Fix within 24h |
+| 70-89 | 🟠 P1 - Critical | Fix within 1 week |
+| 50-69 | 🟡 P2 - High | Fix within 1 month |
+| 30-49 | 🟢 P3 - Medium | Fix in next release |
+| <30 | ⚪ P4 - Low | Backlog |
+
+## Safe Removal Pattern [CRITICAL]
+
+### Multi-Pattern Search
+
+Before marking ANYTHING as orphan/removable, search ALL reference types:
+
+| Pattern Type | Search Method |
+|-------------|---------------|
+| Direct imports | `import X`, `from X import`, `require('X')` |
+| String references | `"module_name"`, `'function_name'` |
+| Dynamic imports | `importlib.import_module`, `__import__` |
+| Config references | JSON/YAML files, env vars |
+| Test references | Test files, fixtures, mocks |
+| Doc references | README, docstrings, comments |
+
+### Confidence Gate
+
+| Confidence | Action |
+|------------|--------|
+| 100% (zero refs) | Safe to suggest removal |
+| 95-99% | Warn user, show what WAS found |
+| <95% | Do NOT suggest removal |
+
+**When in doubt, do NOT suggest removal.**
+
+## Impact Analysis & Cascading Effects [CRITICAL]
+
+### Dependency Chain Mapping
 
 ```
-┌─ PENDING UPDATE ─────────────────────────────────────────────┐
-│ Package: pytest                                               │
-│ Current: 7.4.0 → Latest: 8.3.4                               │
-│ Type: MAJOR (breaking)                                        │
+Target: utils/helpers.py::format_date()
+
+Direct Dependents (Tier 1):
+├─ api/users.py (import format_date)
+├─ api/orders.py (import format_date)
+└─ services/notification.py (import format_date)
+
+Indirect Dependents (Tier 2):
+├─ api/users.py → routes/user_routes.py
+└─ services/notification.py → workers/email_worker.py
+
+Impact Scope: 6 files | 3 modules | 2 entry points
+```
+
+### Impact Classification
+
+| Dependents | Impact | Action |
+|------------|--------|--------|
+| 0 | 🟢 Safe | Auto-remove OK |
+| 1-3 | 🟡 Low | Show impact, ask confirmation |
+| 4-10 | 🟠 Medium | Detailed impact report |
+| 10+ | 🔴 High | Manual review mandatory |
+
+## Regression Risk Assessment [CRITICAL]
+
+### Risk Score Calculation
+
+```
+Risk Score = (Impact × Probability) - Coverage Mitigation
+
+Impact: dependents × criticality (0-100)
+Probability: recently_used ? 0.8 : 0.2
+Coverage Mitigation: has_tests ? 30 : 0
+```
+
+### Decision Matrix
+
+| Risk Score | Test Coverage | Action |
+|------------|---------------|--------|
+| LOW (<30) | Any | ✅ Auto-remove |
+| MEDIUM (30-60) | HIGH | ⚠️ Ask confirmation |
+| MEDIUM (30-60) | LOW | ⚠️ Add test first |
+| HIGH (>60) | HIGH | ⚠️ Manual review |
+| HIGH (>60) | LOW | ❌ Do not remove |
+
+## Remediation Verification [CRITICAL]
+
+### Post-Fix Verification Loop
+
+After applying ANY fix:
+
+1. **Re-scan** - Same vulnerability still detected?
+2. **Regression check** - Did fix introduce new issues?
+3. **Completeness** - All instances of root cause fixed?
+
+### Verification Report
+
+```
+┌─ REMEDIATION VERIFICATION ────────────────────────────────────┐
+│ Finding: {finding_type} ({file}:{line})                       │
+│ Fix Applied: {fix_description}                                │
 ├───────────────────────────────────────────────────────────────┤
-│ Breaking Changes Detected:                                    │
-│ • pytest.fixture scope parameter default changed              │
-│ • Python 3.7 support dropped                                  │
-│ • Several deprecated APIs removed                             │
-├───────────────────────────────────────────────────────────────┤
-│ Migration: https://docs.pytest.org/en/8.0.x/changelog.html   │
+│ {check_icon} Re-scan: {rescan_result}                         │
+│ {check_icon} Regression: {regression_result}                  │
+│ {check_icon} Completeness: {completeness_result}              │
+│ Status: {verification_status}                                  │
 └───────────────────────────────────────────────────────────────┘
 ```
 
-**Use AskUserQuestion for each update:**
-| Question | Options | MultiSelect |
-|----------|---------|-------------|
-| Update {pkg} {current} → {latest}? | Update; Skip; Details | false |
+**Never mark as fixed without verification.**
 
-**Batch approval option:**
-| Question | Options | MultiSelect |
-|----------|---------|-------------|
-| Apply selected updates? | Confirm; Review again; Cancel all | false |
+## Completion Verification [CRITICAL]
 
-#### Sub-flags
+### Quality Gates
+
+| Gate | Requirement | Status |
+|------|-------------|--------|
+| Tests pass | 100% green | Required |
+| No new orphans | Re-scan clean | Required |
+| No broken imports | Import check clean | Required |
+| Metrics improved | Lines/tokens reduced | Expected |
+| No regressions | Same functionality | Required |
+
+---
+
+# OUTPUT FORMAT
+
+## Summary Table
+
+```
+┌─ OPTIMIZATION SUMMARY ───────────────────────────────────────┐
+│ Category      │ Score │ Issues │ Fixed │ Status              │
+├───────────────┼───────┼────────┼───────┼─────────────────────┤
+│ Security      │ {n}%  │ {n}    │ {n}   │ {status}            │
+│ Quality       │ {n}%  │ {n}    │ {n}   │ {status}            │
+│ Hygiene       │ {n}%  │ {n}    │ {n}   │ {status}            │
+├───────────────┼───────┼────────┼───────┼─────────────────────┤
+│ OVERALL       │ {n}%  │ {n}    │ {n}   │ {status}            │
+└───────────────┴───────┴────────┴───────┴─────────────────────┘
+```
+
+## Issues Table
+
+```
+┌─ PRIORITIZED FINDINGS ───────────────────────────────────────┐
+│ Priority │ Scope    │ Issue              │ Location          │
+├──────────┼──────────┼────────────────────┼───────────────────┤
+│ {P}      │ {scope}  │ {issue}            │ {file}:{line}     │
+│ {P}      │ {scope}  │ {issue}            │ {file}:{line}     │
+│ ...                                                          │
+└──────────┴──────────┴────────────────────┴───────────────────┘
+```
+
+## Metrics Summary
+
+```
+Before: {n} lines | {n} tokens | {n} KB
+After:  {n} lines | {n} tokens | {n} KB
+Saved:  {n} lines ({n}%) | {n} tokens ({n}%) | {n} KB ({n}%)
+```
+
+## Verification Summary
+
+```
+Applied: {n} | Skipped: {n} | Failed: {n} | Manual: {n} | Total: {n}
+```
+
+---
+
+# FLAGS
+
+## Scope Flags
+
+| Flag | Scope |
+|------|-------|
+| `--security` | OWASP, secrets, CVEs, supply-chain, input validation |
+| `--quality` | Tech-debt, consistency, self-compliance, tests |
+| `--hygiene` | Orphans, stale-refs, duplicates, dead code |
+| `--all` | All scopes (default when interactive) |
+
+## Sub-Scope Flags
+
+| Flag | Parent | Checks |
+|------|--------|--------|
+| `--owasp` | security | OWASP Top 10 vulnerabilities |
+| `--secrets` | security | Secret detection |
+| `--cves` | security | Dependency CVEs |
+| `--tech-debt` | quality | Complexity, dead code, TODOs |
+| `--consistency` | quality | Doc-code mismatches |
+| `--tests` | quality | Coverage, flaky tests |
+| `--orphans` | hygiene | Unreferenced code |
+| `--stale-refs` | hygiene | Broken references |
+| `--duplicates` | hygiene | Duplicate code |
+| `--deps` | hygiene | Dependency freshness |
+
+## Action Flags
 
 | Flag | Effect |
 |------|--------|
-| `--deps` | All dependency checks |
-| `--deps-patch` | Only patch updates (safest) |
-| `--deps-minor` | Patch + minor updates |
-| `--deps-major` | Include major updates |
-| `--deps-security` | Only security-related updates |
-| `--deps-outdated` | Show outdated without updating |
+| `--report` | Report only, no fixes |
+| `--fix` | Auto-fix safe issues (default when interactive) |
+| `--fix-all` | Fix all with confirmation for risky |
+| `--interactive` | Ask for each issue |
 
-Report: `[DEP] {risk}: {package} {current} → {latest} ({type}) in {manifest}`
-
-## Meta-flags
+## Meta Flags
 
 | Flag | Includes |
 |------|----------|
-| `--hygiene` | orphans + stale-refs + duplicates (quick cleanup) |
-| `--efficiency` | code + context + docs (optimization focus) |
-| `--freshness` | deps + outdated checks (dependency health) |
-| `--deep` | All categories, thorough analysis |
-| `--prune` | Focus on removal (orphans + stale-refs + dead content) |
-| `--all` | Everything applicable (excludes deps, requires explicit flag) |
-| `--auto-fix` | Apply safe fixes without asking (NOT applicable to --deps) |
-
-## Resolution Actions
-
-| Finding | Safe (auto-apply) | Risky (approval needed) |
-|---------|-------------------|-------------------------|
-| Exact duplicate | Consolidate + re-export | Delete one copy |
-| Near-duplicate | Show diff, suggest merge | Auto-merge |
-| Semantic duplicate | Suggest extraction | Refactor both |
-| Orphan file | Warn, suggest deletion | Delete file |
-| Orphan function | Remove from exports | Delete function |
-| Stale ref | Flag for review | Remove reference |
-| Broken import | Fix path if obvious | Remove import |
-| Config redundancy | Single source + env ref | Merge configs |
-| Dep patch update | — | Always ask (no auto) |
-| Dep minor update | — | Always ask (no auto) |
-| Dep major update | — | Always ask + show breaking |
-| Dep security fix | — | Always ask (urgent flag) |
-
-## Output
-
-**Follow output formats precisely.**
-
-### Cleanliness Summary
-```
-┌─ CLEANLINESS SUMMARY ────────────────────────────────────────┐
-│ Category      │ Found │ Fixed │ Skipped │ Status            │
-├───────────────┼───────┼───────┼─────────┼───────────────────┤
-│ Orphans       │ 5     │ 4     │ 1       │ WARN              │
-│ Stale-Refs    │ 3     │ 3     │ 0       │ OK                │
-│ Duplicates    │ 2     │ 2     │ 0       │ OK                │
-│ Redundancy    │ 1     │ 1     │ 0       │ OK                │
-├───────────────┼───────┼───────┼─────────┼───────────────────┤
-│ TOTAL         │ 11    │ 10    │ 1       │ WARN              │
-└───────────────┴───────┴───────┴─────────┴───────────────────┘
-```
-
-### Optimization Results
-```
-┌─ OPTIMIZATION RESULTS ───────────────────────────────────────┐
-│ File              │ Before │ After  │ Change │ Status        │
-├───────────────────┼────────┼────────┼────────┼───────────────┤
-│ utils.py          │ 245 L  │ 198 L  │ -19%   │ Consolidated  │
-│ helpers.py        │ 180 L  │ 12 L   │ -93%   │ Re-exports    │
-│ README.md         │ 420 L  │ 385 L  │ -8%    │ Deduplicated  │
-│ old_api.py        │ 89 L   │ 0 L    │ -100%  │ Deleted       │
-├───────────────────┼────────┼────────┼────────┼───────────────┤
-│ TOTAL             │ 934 L  │ 595 L  │ -36%   │               │
-└───────────────────┴────────┴────────┴────────┴───────────────┘
-```
-
-### Metrics Summary
-```
-Before: 2,450 lines | 48,200 tokens | 156 KB
-After:  1,890 lines | 37,100 tokens | 121 KB
-Saved:  560 lines (23%) | 11,100 tokens (23%) | 35 KB (22%)
-```
-
-### Dependency Freshness Report
-```
-┌─ DEPENDENCY FRESHNESS ───────────────────────────────────────┐
-│ Scanned: package.json, requirements.txt                       │
-│ Date: 2025-12-09 | Packages: 24 | Outdated: 8                │
-└───────────────────────────────────────────────────────────────┘
-
-┌─ UPDATES AVAILABLE ──────────────────────────────────────────┐
-│ Package         │ Current │ Latest  │ Type   │ Risk │ Status │
-├─────────────────┼─────────┼─────────┼────────┼──────┼────────┤
-│ pytest          │ 7.4.0   │ 8.3.4   │ MAJOR  │ 🔴   │ REVIEW │
-│ ruff            │ 0.6.0   │ 0.8.4   │ MINOR  │ 🟡   │ REVIEW │
-│ requests        │ 2.31.0  │ 2.32.3  │ PATCH  │ 🟢   │ REVIEW │
-│ lodash          │ 4.17.20 │ 4.17.21 │ PATCH  │ 🟢   │ REVIEW │
-│ express         │ 4.18.2  │ 4.21.2  │ MINOR  │ 🟡   │ REVIEW │
-│ django (CVE)    │ 4.2.0   │ 4.2.17  │ PATCH  │ 🔴   │ URGENT │
-├─────────────────┼─────────┼─────────┼────────┼──────┼────────┤
-│ Up-to-date: 16  │ Patch: 2│ Minor: 2│ Major:1│ CVE:1│        │
-└─────────────────┴─────────┴─────────┴────────┴──────┴────────┘
-
-┌─ BREAKING CHANGES (Major Updates) ───────────────────────────┐
-│ pytest 7.4.0 → 8.3.4                                          │
-│ ├─ Python 3.7 support dropped                                 │
-│ ├─ pytest.fixture scope default changed                       │
-│ └─ Migration: https://docs.pytest.org/en/8.0.x/changelog     │
-└───────────────────────────────────────────────────────────────┘
-
-┌─ SECURITY ADVISORIES ────────────────────────────────────────┐
-│ django 4.2.0 - CVE-2024-XXXXX (HIGH)                         │
-│ └─ SQL injection in QuerySet.values() - Fixed in 4.2.17      │
-└───────────────────────────────────────────────────────────────┘
-```
-
-### Dependency Update Summary
-```
-┌─ UPDATE SUMMARY ─────────────────────────────────────────────┐
-│ Action          │ Count │ Packages                           │
-├─────────────────┼───────┼────────────────────────────────────┤
-│ Updated         │ 4     │ requests, lodash, ruff, django     │
-│ Skipped         │ 1     │ pytest (user choice)               │
-│ Skipped         │ 1     │ express (user choice)              │
-├─────────────────┼───────┼────────────────────────────────────┤
-│ TOTAL           │ 6     │ 4 updated, 2 skipped               │
-└─────────────────┴───────┴────────────────────────────────────┘
-
-Modified files:
-- requirements.txt (3 packages)
-- package.json (1 package)
-
-Next steps:
-- Run tests to verify compatibility
-- Review pytest changelog before major upgrade
-```
-
-## Verification
-
-After optimization:
-- [ ] Tests pass (no regressions)
-- [ ] Same behavior (functional equivalence)
-- [ ] No broken imports (all refs valid)
-- [ ] Metrics improved (lines/tokens reduced)
-- [ ] No new orphans created (consolidation complete)
-
-After dependency updates:
-- [ ] Lock files regenerated (pip freeze, npm install, etc.)
-- [ ] Tests pass with new versions
-- [ ] No breaking API changes in codebase
-- [ ] CI/CD pipeline passes
-
-## Follow-up Actions [CRITICAL]
-
-When optimization reveals actionable recommendations (e.g., pinning versions, refactoring complex functions), ALWAYS use AskUserQuestion - never ask as plain text.
-
-**Use AskUserQuestion:**
-| Question | Options | MultiSelect |
-|----------|---------|-------------|
-| Follow-up actions? | Apply recommendations; Create issues; Skip | true |
+| `--critical` | security + tests (pre-commit essentials) |
+| `--pre-release` | security + quality + consistency (release gate) |
+| `--quick` | hygiene only, auto-fix (fast cleanup) |
+| `--deep` | All scopes, thorough analysis |
 
 ## Usage
 
 ```bash
-/cco-optimize                    # Interactive
-/cco-optimize --hygiene          # Quick cleanup (orphans + stale-refs + duplicates)
-/cco-optimize --orphans          # Find and remove unreferenced code
-/cco-optimize --stale-refs       # Find and fix broken references
-/cco-optimize --duplicates       # Find and consolidate duplicates
-/cco-optimize --code             # Code efficiency optimization
-/cco-optimize --cross-file       # Full cross-file analysis
-/cco-optimize --prune            # Remove all dead content
-/cco-optimize --all --auto-fix   # Everything, auto-apply safe fixes
-
-# Dependency Freshness (always requires approval)
-/cco-optimize --deps             # Check all dependencies
-/cco-optimize --deps-patch       # Only safe patch updates
-/cco-optimize --deps-minor       # Patch + minor updates
-/cco-optimize --deps-major       # Include breaking changes analysis
-/cco-optimize --deps-security    # Only security-related updates
-/cco-optimize --deps-outdated    # Report only, no update prompts
-/cco-optimize --freshness        # Full dependency health check
+/cco-optimize                      # Interactive 2-tab selection
+/cco-optimize --all --fix          # Full optimization with auto-fix
+/cco-optimize --security           # Security focus only
+/cco-optimize --quality            # Quality focus only
+/cco-optimize --hygiene            # Hygiene focus only (orphans, stale, dupes)
+/cco-optimize --quick              # Fast hygiene cleanup
+/cco-optimize --pre-release        # Pre-release gate checks
+/cco-optimize --deps               # Dependency freshness check
+/cco-optimize --all --report       # Full scan, no changes
 ```
 
 ## Related Commands
 
-- `/cco-audit` - For security and quality checks
-- `/cco-refactor` - For structural transformations (rename, move, extract)
+- `/cco-status` - For metrics dashboard
+- `/cco-preflight` - For full pre-release workflow
 - `/cco-checkup` - For regular maintenance routine
 
 ---
@@ -491,29 +590,19 @@ When optimization reveals actionable recommendations (e.g., pinning versions, re
 
 | Type | Examples | Action |
 |------|----------|--------|
-| Safe | Remove unused imports, dead code, stale refs | Auto-apply |
-| Risky | Consolidate duplicates, dependency updates | Require approval |
+| Safe | Remove unused imports, fix lint, add types | Auto-apply |
+| Risky | Auth changes, API contract, delete files | Require approval |
 
-### Approval Flow
+### Priority Assignment
 
-- **Batch**: First option = "All (N)" for bulk approval
-- **Priority**: CRITICAL → HIGH → MEDIUM → LOW
-- **Format**: `{description} [{file:line}] [{safe|risky}]`
-
-### Skip Criteria
-
-- **Inline**: `// cco-ignore` or `# cco-ignore` skips line
-- **File**: `// cco-ignore-file` skips entire file
-- **Paths**: fixtures/, testdata/, examples/, benchmarks/
+| Severity | Criteria | Confidence |
+|----------|----------|------------|
+| CRITICAL | Security breach, data loss | HIGH required |
+| HIGH | Broken functionality | HIGH required |
+| MEDIUM | Error, incorrect behavior | MEDIUM ok |
+| LOW | Style, cosmetic | LOW ok |
 
 ### Conservative Judgment [CRITICAL]
-
-| Keyword | Severity | Confidence Required |
-|---------|----------|---------------------|
-| crash, data loss, security breach | CRITICAL | HIGH |
-| broken, blocked, cannot use | HIGH | HIGH |
-| error, fail, incorrect | MEDIUM | MEDIUM |
-| style, minor, cosmetic | LOW | LOW |
 
 - **Lower**: When uncertain between two severities, choose lower
 - **Evidence**: Require explicit evidence, not inference
@@ -525,6 +614,12 @@ When optimization reveals actionable recommendations (e.g., pinning versions, re
 - **All-Option**: First option = "All ({N})" for bulk
 - **Priority-Order**: CRITICAL → HIGH → MEDIUM → LOW
 - **Item-Format**: `{description} [{file:line}] [{safe|risky}]`
+
+### Skip Criteria
+
+- **Inline**: `// cco-ignore` or `# cco-ignore` skips line
+- **File**: `// cco-ignore-file` skips entire file
+- **Paths**: fixtures/, testdata/, examples/, benchmarks/
 
 ### Task Tracking
 

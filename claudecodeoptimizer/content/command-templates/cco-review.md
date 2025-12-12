@@ -1,14 +1,14 @@
 ---
 name: cco-review
-description: Strategic architecture review with fresh perspective
+description: Architecture review with pragmatic optimization
 allowed-tools: Read(*), Grep(*), Glob(*), Bash(git:*), Bash(wc:*), Bash(find:*), Edit(*), Task(*), TodoWrite
 ---
 
 # /cco-review
 
-**Strategic Review** - "If I built this from scratch, how would I do it?"
+**Strategic Review** - Fresh perspective diagnosis + pragmatic optimization.
 
-Analyzes architecture, identifies gaps, and provides actionable recommendations.
+Two-layer analysis: First identify what's wrong (including fundamental issues), then solve with minimum effort for maximum impact.
 
 **Rules:** User Input | Safety | Priority Assignment | Conservative Judgment | Quick Mode | Task Tracking
 
@@ -29,9 +29,19 @@ If context check returns "0":
 ```
 CCO context not found.
 
-Run /cco-tune first to configure project context, then restart CLI.
+Run /cco-config first to configure project context, then restart CLI.
 ```
 **Stop execution immediately.**
+
+## Focus Selection
+
+When called without flags, use **AskUserQuestion**:
+
+| Question | Options | multiSelect |
+|----------|---------|-------------|
+| What areas to review? | Foundation (architecture, patterns); Code Quality (complexity, DRY, standards); Dependencies (coupling, external deps); Testing (coverage, strategy); DX (developer experience); All | true |
+
+**Default:** All (if user doesn't specify)
 
 ## Context Application
 
@@ -67,15 +77,43 @@ Never use placeholders or guess missing parameters.
 
 **Architecture Analysis:** Use `cco-agent-analyze` with `scope: architecture` to get dependency graph, coupling/cohesion metrics, and detected architectural patterns.
 
+## Review Rigor [CRITICAL]
+
+### Evidence-Based Recommendations
+
+**Every recommendation MUST cite specific evidence:**
+
+| Recommendation Type | Required Evidence |
+|--------------------|-------------------|
+| "Code is complex" | Specific `file:line` with complexity metric |
+| "Pattern inconsistent" | 3+ examples showing the inconsistency |
+| "Should refactor X" | Current behavior verified by reading code |
+| "Missing abstraction" | 2+ places where duplication exists |
+
+### Pattern Discovery Rule
+
+Before concluding "this is a pattern" or "this is inconsistent":
+1. Read at least **3 examples** of similar code
+2. Document where each example is (`file:line`)
+3. Only then make pattern-based recommendations
+
+### No Speculation
+
+**Do NOT recommend changes to code you haven't read.**
+
+Wrong: "The auth module probably needs refactoring"
+Right: "auth/handler.py:45-120 has cyclomatic complexity 15, consider extracting validation"
+
 ## Flow
 
 1. **Map Current State** - Analyze architecture, patterns, dependencies
 2. **Identify Gaps** - Compare purpose vs implementation
 3. **Stack Fitness** - Evaluate tech choices against purpose
-4. **Fresh Perspective** - "If building from scratch" recommendations
-5. **Prioritize** - Effort/impact matrix, risk assessment
-6. **Report** - Structured findings with actionable items
-7. **Apply** - Optional: implement approved recommendations
+4. **Fresh Eye Diagnosis** - Is the foundation sound? Identify structural issues
+5. **Pragmatic Solutions** - Minimum effort, maximum impact fixes
+6. **Prioritize** - Effort/impact matrix with 80/20 focus
+7. **Report** - Structured findings with actionable items
+8. **Apply** - Optional: implement approved recommendations
 
 ## Phase 1: Map Current State
 
@@ -145,113 +183,168 @@ Evaluate current technology choices:
 For each suboptimal choice, provide:
 
 ```
-Current: Express.js
-Issue: Heavy for simple CLI tool
-Alternative: Native Node.js or minimal framework
+Current: {current_tech}
+Issue: {why_suboptimal}
+Alternative: {better_option}
 Migration Path:
-  1. Identify Express-specific code (routes, middleware)
-  2. Abstract HTTP layer
-  3. Replace incrementally
-  4. Remove Express dependency
-Effort: Medium (1-2 days)
-Risk: Low (well-tested patterns)
+  1. {step_1}
+  2. {step_2}
+  3. {step_3}
+  ...
+Effort: {effort_level}
+Risk: {risk_level}
 ```
 
-## Phase 4: Fresh Perspective
+## Phase 4: Fresh Eye Diagnosis
 
-"If I were building this project from scratch today..."
+**Question: "Is the foundation sound, or fundamentally flawed?"**
 
-### Categories
+Evaluate with fresh eyes, unconstrained by current implementation:
 
-| Area | Analysis |
-|------|----------|
-| Structure | Optimal directory layout |
-| Patterns | Modern idioms for this stack |
-| Abstractions | What to abstract, what to inline |
-| Data Flow | Cleaner data pipelines |
-| Testing | Better test strategy |
-| DX | Developer experience improvements |
+### Foundation Check
 
-For each recommendation:
-- Before/after comparison
-- Concrete implementation steps
-- Expected benefits
+| Check | Question | If Flawed |
+|-------|----------|-----------|
+| Architecture | Does the structure fit the purpose? | Flag as STRUCTURAL |
+| Patterns | Are core patterns appropriate? | Flag as STRUCTURAL |
+| Abstractions | Right level of abstraction? | Flag as STRUCTURAL |
+| Data Model | Does data structure match domain? | Flag as STRUCTURAL |
+| Tech Stack | Right tools for the job? | Flag as STACK |
 
-## Phase 5: Prioritization
+### Structural Issue Detection
 
-### Effort/Impact Matrix
+```
+┌─ FOUNDATION ASSESSMENT ──────────────────────────────────────┐
+│ Foundation Status: SOUND / HAS ISSUES                        │
+├──────────────────────────────────────────────────────────────┤
+│ If SOUND: Proceed to pragmatic optimization                  │
+│ If HAS ISSUES: List structural problems first                │
+└──────────────────────────────────────────────────────────────┘
+```
+
+**Structural issues require attention before optimization.**
+
+Example structural issues:
+- Wrong architectural pattern (monolith for highly distributed needs)
+- Missing core abstraction (auth scattered everywhere)
+- Inverted dependencies (core depends on UI)
+- Data model mismatch (relational for graph data)
+
+## Phase 5: Pragmatic Solutions
+
+**Principle: Minimum effort for maximum impact (80/20 rule)**
+
+### Solution Types
+
+| Foundation | Solution Approach |
+|------------|-------------------|
+| SOUND | Optimize within current structure |
+| HAS ISSUES | Targeted structural fixes (not rewrites) |
+
+### Anti-Overengineering Rules
+
+| Instead of... | Do this... |
+|---------------|------------|
+| Full rewrite | Incremental refactor |
+| New abstraction layer | Fix existing layer |
+| Framework migration | Configuration change |
+| Custom solution | Standard library/pattern |
+| Premature optimization | Measure first, optimize bottlenecks |
+
+### Pragmatic Fix Template
+
+```
+Issue: [What's wrong - from Fresh Eye]
+Impact: HIGH/MEDIUM/LOW
+Current: [How it works now]
+Proposed: [Minimum change to fix]
+Effort: [Hours/days, not weeks]
+Risk: LOW/MEDIUM (HIGH = reconsider)
+Steps:
+  1. [Concrete step]
+  2. [Concrete step]
+  ...
+```
+
+**YAGNI Check:** Before recommending, ask "Is this needed NOW or hypothetically?"
+
+## Phase 6: Prioritization
+
+### 80/20 Focus
+
+**Target: 80% of improvement with 20% of effort**
 
 ```
 ┌─ EFFORT/IMPACT MATRIX ───────────────────────────────────────┐
 │                                                              │
-│  HIGH   │ ★ Restructure auth  │ ○ Rewrite core    │         │
-│  IMPACT │ ★ Add caching       │                   │         │
-│         ├────────────────────┼───────────────────┤         │
-│  LOW    │ ★ Fix imports       │ ○ Migrate DB      │         │
-│  IMPACT │ ★ Update deps       │                   │         │
-│         └────────────────────┴───────────────────┘         │
-│              LOW EFFORT           HIGH EFFORT               │
+│  HIGH   │ ★ {quick_win_1}      │ ○ {big_project_1} │         │
+│  IMPACT │ ★ {quick_win_2}      │                   │         │
+│         ├─────────────────────┼───────────────────┤         │
+│  LOW    │ ★ {small_fix_1}      │ ○ {defer_item_1}  │         │
+│  IMPACT │ ★ {small_fix_2}      │                   │         │
+│         └─────────────────────┴───────────────────┘         │
+│              LOW EFFORT            HIGH EFFORT               │
 │                                                              │
-│  ★ = Recommended (high impact, low effort)                  │
-│  ○ = Consider later                                          │
+│  ★ = Do Now (high impact / low effort ratio)                │
+│  ○ = Backlog (low ratio or high risk)                       │
 └──────────────────────────────────────────────────────────────┘
 ```
 
 ### Priority Levels
 
-| Priority | Criteria |
-|----------|----------|
-| Do Now | High impact, low effort, low risk |
-| Plan | High impact, medium effort |
-| Consider | Medium impact, any effort |
-| Backlog | Low impact or high risk |
+| Priority | Criteria | Action |
+|----------|----------|--------|
+| Do Now | High impact, low effort, low risk | Implement immediately |
+| Plan | High impact, medium effort | Schedule for next sprint |
+| Consider | Medium impact, needs discussion | Review with team |
+| Backlog | Low ratio or high risk | Document, defer |
 
-## Phase 6: Report
+**Reject recommendations where effort > impact.**
+
+## Phase 7: Report
 
 ### Output Structure
 
 ```
 ┌─ REVIEW SUMMARY ─────────────────────────────────────────────┐
-│ Project: my-project | Type: CLI | Maturity: Active           │
-│ Files: 45 | Modules: 8 | Dependencies: 12                    │
+│ Project: {project} | Type: {type} | Maturity: {maturity}     │
+│ Files: {n} | Modules: {n} | Dependencies: {n}                │
+└──────────────────────────────────────────────────────────────┘
+
+┌─ FOUNDATION STATUS ──────────────────────────────────────────┐
+│ Status: SOUND ✓ | HAS ISSUES ⚠                               │
+│ {foundation_assessment}                                       │
+│ (if issues:)                                                  │
+│ • {structural_issue_1}                                        │
+│ • {structural_issue_2}                                        │
 └──────────────────────────────────────────────────────────────┘
 
 ┌─ ARCHITECTURE HEALTH ────────────────────────────────────────┐
 │ Metric           │ Value   │ Status                          │
 ├──────────────────┼─────────┼─────────────────────────────────┤
-│ Avg Coupling     │ 4.2     │ OK                              │
-│ Max Coupling     │ 12      │ WARN (utils.py)                 │
-│ Circular Deps    │ 0       │ OK                              │
-│ Cohesion Score   │ 78%     │ OK                              │
+│ Avg Coupling     │ {n}     │ {status}                        │
+│ Max Coupling     │ {n}     │ {status} ({file})               │
+│ Circular Deps    │ {n}     │ {status}                        │
+│ Cohesion Score   │ {n}%    │ {status}                        │
 └──────────────────┴─────────┴─────────────────────────────────┘
 
-┌─ GAPS FOUND ─────────────────────────────────────────────────┐
-│ Type          │ Gap                    │ Location            │
-├───────────────┼────────────────────────┼─────────────────────┤
-│ Undocumented  │ Export feature         │ exporter.py         │
-│ Overcomplicated│ Auth flow             │ auth/:42            │
-│ Missing       │ Error handling pattern │ api/                │
-└───────────────┴────────────────────────┴─────────────────────┘
-
-┌─ RECOMMENDATIONS ────────────────────────────────────────────┐
+┌─ RECOMMENDATIONS (80/20 filtered) ───────────────────────────┐
 │ # │ Recommendation           │ Impact │ Effort │ Priority   │
 ├───┼──────────────────────────┼────────┼────────┼────────────┤
-│ 1 │ Simplify auth flow       │ HIGH   │ 2h     │ Do Now     │
-│ 2 │ Add error boundaries     │ HIGH   │ 4h     │ Do Now     │
-│ 3 │ Extract shared utils     │ MEDIUM │ 1d     │ Plan       │
-│ 4 │ Migrate to async/await   │ LOW    │ 3d     │ Backlog    │
+│ 1 │ {recommendation}         │ {imp}  │ {time} │ {priority} │
+│ 2 │ {recommendation}         │ {imp}  │ {time} │ {priority} │
+│ ...                                                          │
 └───┴──────────────────────────┴────────┴────────┴────────────┘
+│ Filtered out: {n} low-impact items (see --verbose)           │
 
 ┌─ WHAT'S WORKING WELL ────────────────────────────────────────┐
-│ • Clean separation between CLI and core logic                │
-│ • Consistent naming conventions throughout                   │
-│ • Good test coverage for critical paths (92%)                │
-│ • Well-structured configuration management                   │
-│ • Clear module boundaries                                    │
+│ • {positive_finding_1}                                       │
+│ • {positive_finding_2}                                       │
+│ • {positive_finding_3}                                       │
 └──────────────────────────────────────────────────────────────┘
 ```
 
-## Phase 7: Apply (Optional)
+## Phase 8: Apply (Optional)
 
 **Use AskUserQuestion:**
 | Question | Options | MultiSelect |
@@ -293,9 +386,9 @@ For each approved recommendation:
 
 ## Related Commands
 
-- `/cco-audit` - For specific quality/security checks
-- `/cco-refactor` - For safe structural changes
-- `/cco-release` - For pre-release review
+- `/cco-optimize` - For specific quality/security checks
+- `/cco-optimize` - For safe structural changes
+- `/cco-preflight` - For pre-release review
 
 ---
 

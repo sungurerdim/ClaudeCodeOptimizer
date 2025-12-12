@@ -24,13 +24,14 @@ CCO uses three specialized agents with clear separation of concerns:
 
 | Scope | Returns | Use Case |
 |-------|---------|----------|
-| `detect` | Project structure, stack, tools | cco-tune, cco-commit fallback |
-| `scan` | Issues with file:line, metrics | cco-audit, cco-health, cco-optimize |
-| `full` | Both combined | cco-tune first run |
-| `references` | Cross-file reference map | cco-refactor |
+| `detect` | Project structure, stack, tools | cco-config, cco-commit fallback |
+| `scan` | Issues with file:line, metrics | cco-optimize, cco-status |
+| `full` | Both combined | cco-config first run |
+| `security` | Security vulnerabilities, secrets | cco-optimize --security |
+| `quality` | Tech debt, consistency, tests | cco-optimize --quality |
+| `hygiene` | Orphans, duplicates, stale refs | cco-optimize --hygiene |
 | `architecture` | Dependency graph, coupling metrics | cco-review |
-| `conventions` | Code patterns and conventions | cco-generate |
-| `trends` | Historical metrics with deltas | cco-health --trends |
+| `trends` | Historical metrics with deltas | cco-status --trends |
 
 ### Detection Capabilities
 
@@ -58,10 +59,10 @@ CCO uses three specialized agents with clear separation of concerns:
 
 ### Scan Categories
 
-- Security - OWASP Top 10, secrets, SQL injection
-- Tech Debt - Complexity >10, dead code, duplication
-- Tests - Coverage gaps, missing tests
-- Performance - N+1, missing indexes
+- Security - OWASP Top 10, secrets, CVEs, input validation
+- Quality - Complexity >10, type coverage, consistency
+- Hygiene - Orphans, stale-refs, duplicates, dead code
+- Tests - Coverage gaps, flaky tests, test quality
 - Self-Compliance - Violations of stated rules
 
 ### Output
@@ -71,7 +72,7 @@ Returns structured JSON with:
 - `strategic` - Purpose, team, scale, data, type
 - `autoDetected` - All detected flags
 - `findings` - Issues with priority, location, details
-- `metrics` - Security, tech debt, coverage scores
+- `metrics` - Security, quality, hygiene scores
 
 ---
 
@@ -86,7 +87,6 @@ Returns structured JSON with:
 | Fix | Finding from analyze | Fixed file + verification |
 | Generate | Convention + target | New file(s) |
 | Optimize | Analysis result | Reduced code |
-| Refactor | Reference map | Updated references |
 
 ### Verification Protocol
 
@@ -122,6 +122,7 @@ Always reports: `done + skip + fail = total`
 | `analyze` | Deep analysis, contradictions | Follow-up on top sources |
 | `synthesize` | Consolidated recommendation | Final answer |
 | `full` | All three combined | Standard research flow |
+| `dependency` | Package version, CVE, breaking changes | cco-optimize --deps |
 
 ### Source Tiers
 
@@ -136,8 +137,10 @@ Always reports: `done + skip + fail = total`
 
 ### Features
 
+- **CRAAP+ Scoring** - Currency, Relevance, Authority, Accuracy, Purpose
+- **Adaptive Replacement** - Discard low-quality sources, find better
 - **Contradiction Detection** - Identifies conflicting claims
-- **Dynamic Modifiers** - Freshness, engagement, author credibility
+- **Saturation Detection** - Stop when no new information
 - **Bias Detection** - Flags vendor self-promotion
 - **Confidence Scoring** - HIGH/MEDIUM/LOW with reasoning
 
@@ -147,17 +150,14 @@ Always reports: `done + skip + fail = total`
 
 | Command | Analyze Scope | Apply | Research |
 |---------|---------------|-------|----------|
-| `/cco-tune` | `detect` or `full` | No | No |
-| `/cco-health` | `scan`, `trends` | No | No |
-| `/cco-audit` | `scan` | Yes | No |
+| `/cco-config` | `detect` or `full` | No | No |
+| `/cco-status` | `scan`, `trends` | No | No |
+| `/cco-optimize` | `security`, `quality`, `hygiene` | Yes | `dependency` |
 | `/cco-review` | `architecture`, `scan` | Yes | No |
-| `/cco-optimize` | `scan` | Yes | No |
-| `/cco-generate` | `conventions` | Yes | No |
-| `/cco-refactor` | `references` | Yes | No |
 | `/cco-commit` | `detect` (fallback) | No | No |
 | `/cco-research` | - | No | `full` |
-| `/cco-release` | (orchestrates other commands) | (orchestrates) | No |
-| `/cco-checkup` | (orchestrates other commands) | (orchestrates) | No |
+| `/cco-preflight` | (orchestrates) | (orchestrates) | No |
+| `/cco-checkup` | (orchestrates) | (orchestrates) | No |
 
 ---
 

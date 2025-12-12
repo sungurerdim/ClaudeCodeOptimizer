@@ -1,10 +1,10 @@
 ---
-name: cco-release
-description: Pre-release workflow orchestration
+name: cco-preflight
+description: Pre-release checks and workflow
 allowed-tools: Read(*), Grep(*), Glob(*), Edit(*), Bash(git:*), Bash(pytest:*), Bash(npm:*), Task(*), TodoWrite
 ---
 
-# /cco-release
+# /cco-preflight
 
 **Release Workflow** - Pre-flight → quality → cleanliness → review → verify → go/no-go.
 
@@ -31,11 +31,21 @@ If context check returns "0":
 ```
 CCO context not found.
 
-Run /cco-tune first to configure project context, then restart CLI.
+Run /cco-config first to configure project context, then restart CLI.
 ```
 **Stop execution immediately.**
 
-**Phase Validation:** Sub-commands (cco-audit, cco-optimize, cco-review) inherit context validation and only run applicable checks.
+**Phase Validation:** Sub-commands (cco-optimize, cco-review) inherit context validation and only run applicable checks.
+
+## Phase Selection
+
+When called without flags, use **AskUserQuestion**:
+
+| Question | Options | multiSelect |
+|----------|---------|-------------|
+| Which phases to run? | Pre-flight Checks; Quality Audit; Cleanliness Check; Architecture Review; Final Verification; All (Recommended) | true |
+
+**Default:** All (if user doesn't specify)
 
 ## Execution Optimization
 
@@ -48,12 +58,6 @@ calls in a single message. For example:
 
 Never use placeholders or guess missing parameters.
 </use_parallel_tool_calls>
-
-<context_awareness>
-Your context window will be automatically compacted as it approaches its limit.
-Do NOT stop tasks early due to token budget concerns.
-Complete tasks fully - be as persistent and autonomous as possible.
-</context_awareness>
 
 ## Flow
 
@@ -70,7 +74,7 @@ Complete tasks fully - be as persistent and autonomous as possible.
 | Breaking changes | Documented in changelog | WARN |
 | Leftover markers | No TODO/WIP/FIXME/Experimental in src | WARN |
 | Feature trace | New CHANGELOG items exist in README/docs | WARN |
-| Install self-test | `cco-setup --dry-run` passes (if CCO project) | YES |
+| Install self-test | `cco-install --dry-run` passes (if CCO project) | YES |
 | Semver review | Changes appropriate for version bump type | WARN |
 
 **Version Sync:** Cross-file version matching
@@ -103,23 +107,23 @@ grep -rn "Experimental\|DRAFT\|PLACEHOLDER" docs/
 ┌─ PRE-FLIGHT ─────────────────────────────────────────────────┐
 │ Check          │ Status │ Details                            │
 ├────────────────┼────────┼────────────────────────────────────┤
-│ Git Clean      │ OK     │ No uncommitted changes             │
-│ Branch         │ OK     │ main                               │
-│ Version        │ OK     │ 1.2.0 (valid semver)              │
-│ Version Sync   │ OK     │ All 3 sources match               │
-│ Changelog      │ WARN   │ Last entry: 1.1.0                 │
-│ Dependencies   │ OK     │ 0 outdated, 0 vulnerabilities     │
-│ Breaking       │ OK     │ None detected                      │
-│ Markers        │ WARN   │ 2 TODOs in src/utils.py           │
-│ Feature Trace  │ OK     │ 5/5 features documented           │
-│ Install Test   │ SKIP   │ Not a CCO project                 │
-│ Semver         │ OK     │ MINOR appropriate                 │
+│ Git Clean      │ {s}    │ {details}                          │
+│ Branch         │ {s}    │ {branch}                           │
+│ Version        │ {s}    │ {version} ({validation})           │
+│ Version Sync   │ {s}    │ {sync_details}                     │
+│ Changelog      │ {s}    │ {changelog_details}                │
+│ Dependencies   │ {s}    │ {dep_details}                      │
+│ Breaking       │ {s}    │ {breaking_details}                 │
+│ Markers        │ {s}    │ {marker_details}                   │
+│ Feature Trace  │ {s}    │ {trace_details}                    │
+│ Install Test   │ {s}    │ {install_details}                  │
+│ Semver         │ {s}    │ {semver_details}                   │
 └────────────────┴────────┴────────────────────────────────────┘
 ```
 
 ### Phase 2: Quality Gate
 
-Orchestrates: `/cco-audit --pre-release --auto-fix`
+Orchestrates: `/cco-optimize --pre-release --auto-fix`
 
 Includes:
 - Security checks (OWASP, secrets, CVEs)
@@ -129,14 +133,14 @@ Includes:
 
 ```
 ┌─ QUALITY GATE ───────────────────────────────────────────────┐
-│ → Running: /cco-audit --pre-release --auto-fix               │
+│ → Running: /cco-optimize --pre-release --auto-fix            │
 ├──────────────────────────────────────────────────────────────┤
-│ Security      │ 95%   │ OK                                   │
-│ Tests         │ 88%   │ WARN (coverage below 90%)           │
-│ Consistency   │ 100%  │ OK                                   │
-│ Compliance    │ 92%   │ OK                                   │
+│ Security      │ {n}%  │ {status}                             │
+│ Tests         │ {n}%  │ {status}                             │
+│ Consistency   │ {n}%  │ {status}                             │
+│ Compliance    │ {n}%  │ {status}                             │
 ├──────────────────────────────────────────────────────────────┤
-│ Issues: 2 | Fixed: 1 | Manual: 1                             │
+│ Issues: {n} | Fixed: {n} | Manual: {n}                       │
 └──────────────────────────────────────────────────────────────┘
 ```
 
@@ -153,11 +157,11 @@ Includes:
 ┌─ CLEANLINESS ────────────────────────────────────────────────┐
 │ → Running: /cco-optimize --hygiene --auto-fix                │
 ├──────────────────────────────────────────────────────────────┤
-│ Orphans       │ 0     │ OK                                   │
-│ Stale-Refs    │ 0     │ OK                                   │
-│ Duplicates    │ 0     │ OK                                   │
+│ Orphans       │ {n}   │ {status}                             │
+│ Stale-Refs    │ {n}   │ {status}                             │
+│ Duplicates    │ {n}   │ {status}                             │
 ├──────────────────────────────────────────────────────────────┤
-│ Cleaned: 0 | Skipped: 0                                      │
+│ Cleaned: {n} | Skipped: {n}                                  │
 └──────────────────────────────────────────────────────────────┘
 ```
 
@@ -250,16 +254,16 @@ If warnings exist and "Proceed" selected:
 ## Usage
 
 ```bash
-/cco-release                   # Full release workflow
-/cco-release --dry-run         # Check without fixing
-/cco-release --strict          # Fail on any warning
-/cco-release --tag             # Auto-create git tag
-/cco-release --tag --push      # Tag and push
+/cco-preflight                   # Full release workflow
+/cco-preflight --dry-run         # Check without fixing
+/cco-preflight --strict          # Fail on any warning
+/cco-preflight --tag             # Auto-create git tag
+/cco-preflight --tag --push      # Tag and push
 ```
 
 ## Related Commands
 
-- `/cco-audit` - Quality checks (used in Phase 2)
+- `/cco-optimize` - Quality checks (used in Phase 2)
 - `/cco-optimize` - Cleanliness (used in Phase 3)
 - `/cco-review` - Architecture (used in Phase 4)
 - `/cco-commit` - For committing fixes
