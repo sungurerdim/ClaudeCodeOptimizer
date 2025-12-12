@@ -34,7 +34,7 @@ class RemovalItems(TypedDict):
     """Type-safe container for removal items.
 
     Note: cco-remove only handles global ~/.claude/ files.
-    Local project files (./.claude/) are managed by cco-tune.
+    Local project files (./.claude/) are managed by cco-config.
     """
 
     method: str | None
@@ -325,7 +325,7 @@ def _collect_removal_items() -> RemovalItems:
     """Collect all items to be removed.
 
     Note: Only collects global ~/.claude/ items.
-    Local project files are managed by cco-tune.
+    Local project files are managed by cco-config.
     """
     method = detect_install_method()
     files = list_cco_files()
@@ -444,7 +444,7 @@ def _execute_removal(items: RemovalItems) -> None:
     print(SEPARATOR)
     print("CCO removed successfully.")
     print()
-    print("Note: Local project files (./.claude/) are managed by /cco-tune.")
+    print("Note: Local project files (./.claude/) are managed by /cco-config.")
     print(SEPARATOR)
     print()
 

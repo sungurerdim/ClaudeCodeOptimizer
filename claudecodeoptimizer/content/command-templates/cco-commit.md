@@ -1,6 +1,6 @@
 ---
 name: cco-commit
-description: Atomic traceable change management with quality gates
+description: Atomic commits with quality gates
 allowed-tools: Bash(git:*), Bash(ruff:*), Bash(npm:*), Bash(pytest:*), Read(*), Grep(*), Edit(*), TodoWrite
 ---
 
@@ -30,7 +30,7 @@ If context check returns "0":
 ```
 CCO context not found.
 
-Run /cco-tune first to configure project context, then restart CLI.
+Run /cco-config first to configure project context, then restart CLI.
 ```
 **Stop execution immediately.**
 
@@ -170,6 +170,159 @@ If changes have dependencies, commit in order:
 - Body: wrap at 72 chars, explain WHY not just WHAT
 - Scope: derive from directory/module name
 
+## Commit Message Quality [CRITICAL]
+
+### Vague Message Detection
+
+**Do NOT accept generic or vague commit messages.**
+
+| Pattern | Example | Action |
+|---------|---------|--------|
+| Generic verbs only | "update code", "fix bug", "make changes" | ❌ REJECT |
+| No context | "changes", "updates", "stuff" | ❌ REJECT |
+| Too short (<10 chars) | "fix", "wip", "done" | ❌ REJECT |
+| Non-imperative | "fixed", "adding", "updated" | ⚠️ WARN + fix |
+| File names only | "update main.py" | ❌ REJECT |
+
+### Quality Checklist
+
+Before finalizing ANY commit message:
+1. **Specificity**: Does it describe WHAT changed specifically?
+2. **Context**: Does it explain WHERE the change is (scope)?
+3. **Purpose**: Does body explain WHY (if non-obvious)?
+4. **Searchability**: Would you find this in `git log --grep`?
+
+### Message Transform Examples
+
+| ❌ Bad | ✅ Good |
+|--------|---------|
+| "fix bug" | "fix(auth): prevent session timeout on token refresh" |
+| "update tests" | "test(api): add edge case coverage for rate limiting" |
+| "refactor code" | "refactor(parser): extract validation into separate module" |
+| "add feature" | "feat(export): add CSV export option for reports" |
+
+## Change Type Classification [CRITICAL]
+
+### Type Definitions
+
+| Type | Definition | Detection Signals |
+|------|------------|-------------------|
+| **feat** | New capability for users | New export, new endpoint, new command, new option |
+| **fix** | Bug correction | Error handling added, null check, off-by-one, crash fix |
+| **refactor** | Structure change, SAME behavior | Rename, extract, inline, move (no new tests needed) |
+| **perf** | Performance improvement | Cache added, algorithm optimized, lazy load |
+| **test** | Test changes only | Files in test/, spec/, __tests__ ONLY |
+| **docs** | Documentation only | .md, docstrings, comments ONLY |
+| **style** | Formatting only | Whitespace, semicolons, quotes (no logic change) |
+| **build** | Build system/deps | package.json, pyproject.toml, Makefile, Dockerfile |
+| **ci** | CI configuration | .github/, .gitlab-ci.yml, .circleci/ |
+| **chore** | Maintenance tasks | .gitignore, editor config, tooling |
+
+### Classification Verification [REQUIRED]
+
+**Read the actual diff** before assigning type:
+- Behavior changes → NOT refactor (use fix or feat)
+- New test for existing code → test (not feat)
+- Fixing broken test → fix (not test)
+- Security dependency update → fix (not chore)
+- New test + implementation → feat (not test)
+
+### Ambiguous Cases
+
+| Change | Looks Like | Actually Is | Why |
+|--------|------------|-------------|-----|
+| Add validation | feat | fix | Prevents existing bug |
+| Rename public API | refactor | feat + BREAKING | Changes user interface |
+| Add error message | feat | fix | Improves existing error |
+| Update README usage | docs | feat | If new feature documented |
+
+## Atomic Commit Verification [CRITICAL]
+
+### Pre-Commit Atomicity Check
+
+Before finalizing each commit group, verify:
+
+| Check | Question | Fail Action |
+|-------|----------|-------------|
+| **Self-contained** | Is implementation complete? | Merge remaining work or defer |
+| **Independent** | Can this be reverted alone? | Reorder commits |
+| **Complete** | Are related tests included? | Add tests or mark as tech debt |
+| **Working** | Does codebase work after this commit? | Don't commit broken state |
+
+### Rollback Simulation
+
+For each commit, mentally verify:
+```
+IF git revert {this-commit}:
+  → Codebase still compiles/runs?
+  → Other commits still apply cleanly?
+  → No orphaned code/imports left?
+```
+
+If ANY answer is NO → Commit is not atomic, restructure grouping.
+
+### Dependency Chain Warning
+
+When commits have dependencies:
+```
+Commit 1: Add interface       ← Base (reverting breaks 2,3)
+Commit 2: Implement interface ← Depends on 1
+Commit 3: Use implementation  ← Depends on 2
+
+Output:
+⚠️ Commit chain detected: 1 → 2 → 3
+   Reverting commit 1 will require reverting 2, 3
+   Consider: Squash if tightly coupled
+```
+
+## Semantic Versioning Impact
+
+### Commit-to-Version Mapping
+
+| Commit Type | Version Impact | Changelog Section |
+|-------------|----------------|-------------------|
+| feat | MINOR (0.X.0) | Added |
+| fix | PATCH (0.0.X) | Fixed |
+| perf | PATCH (0.0.X) | Changed |
+| refactor | PATCH (0.0.X) | Changed |
+| BREAKING CHANGE | MAJOR (X.0.0) | Breaking |
+| docs/style/test/ci | None | - |
+
+### Version Impact Summary
+
+After generating commit plan, show:
+```
+┌─ VERSION IMPACT ─────────────────────────────────────────────┐
+│ Highest impact: MINOR (feat detected)                        │
+│ Breakdown: 1 feat, 2 fix, 1 refactor, 1 test                │
+│ Suggested: v1.3.0 → v1.4.0                                   │
+└──────────────────────────────────────────────────────────────┘
+```
+
+## Commit History Consistency
+
+### Style Detection
+
+Before generating messages, analyze last 10 commits:
+- Scope usage: always / sometimes / never
+- Capitalization: lowercase / Sentence case
+- Issue references: none / footer (#123) / inline
+- Emoji: none / prefix / suffix
+
+### Match Existing Style
+
+```
+Detected from history:
+- Scope: Always used ✓
+- Case: lowercase ✓
+- Issues: Footer (Fixes #123)
+- Emoji: None
+
+→ Generated messages follow detected style
+```
+
+**If no history or inconsistent:** Default to conventional commits standard.
+
 ## Title Format
 
 ```
@@ -187,12 +340,12 @@ If changes have dependencies, commit in order:
 ┌─ QUALITY GATES ──────────────────────────────────────────────┐
 │ Check       │ Status │ Details                               │
 ├─────────────┼────────┼───────────────────────────────────────┤
-│ Secrets     │ OK     │ No secrets detected                   │
-│ Large Files │ OK     │ No large files                        │
-│ Format      │ OK     │ 2 files formatted                     │
-│ Lint        │ OK     │ Clean                                 │
-│ Types       │ OK     │ No type errors                        │
-│ Tests       │ OK     │ 42 passed                             │
+│ Secrets     │ {s}    │ {details}                             │
+│ Large Files │ {s}    │ {details}                             │
+│ Format      │ {s}    │ {details}                             │
+│ Lint        │ {s}    │ {details}                             │
+│ Types       │ {s}    │ {details}                             │
+│ Tests       │ {s}    │ {details}                             │
 └─────────────┴────────┴───────────────────────────────────────┘
 ```
 
@@ -201,9 +354,9 @@ If changes have dependencies, commit in order:
 ┌─ COMMIT PLAN ────────────────────────────────────────────────┐
 │ # │ Type     │ Scope   │ Description          │ Files        │
 ├───┼──────────┼─────────┼──────────────────────┼──────────────┤
-│ 1 │ feat     │ auth    │ add login endpoint   │ 3            │
-│ 2 │ fix      │ ui      │ correct alignment    │ 1            │
-│ 3 │ docs     │ -       │ update README        │ 1            │
+│ 1 │ {type}   │ {scope} │ {description}        │ {n}          │
+│ 2 │ {type}   │ {scope} │ {description}        │ {n}          │
+│ ...                                                          │
 └───┴──────────┴─────────┴──────────────────────┴──────────────┘
 ```
 
@@ -258,6 +411,23 @@ Detect breaking changes and prompt for proper documentation:
 | Edit message | Change commit type/scope/description |
 | Cancel | Abort without committing |
 
+### Follow-up Questions (multiSelect)
+
+**If Merge selected:**
+| Question | Options | multiSelect |
+|----------|---------|-------------|
+| Which commits to merge? | Commit 1: {desc}; Commit 2: {desc}; ... | true |
+
+**If Modify selected:**
+| Question | Options | multiSelect |
+|----------|---------|-------------|
+| Which commits to modify? | Commit 1: {desc}; Commit 2: {desc}; ... | true |
+
+**If Edit message selected:**
+| Question | Options | multiSelect |
+|----------|---------|-------------|
+| Which messages to edit? | Commit 1: {desc}; Commit 2: {desc}; ... | true |
+
 ## Flags
 
 | Flag | Effect |
@@ -310,8 +480,8 @@ Before `--amend`:
 
 ## Related Commands
 
-- `/cco-audit` - For pre-commit quality checks
-- `/cco-release` - For release commits
+- `/cco-optimize` - For pre-commit quality checks
+- `/cco-preflight` - For release commits
 
 ---
 

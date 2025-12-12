@@ -157,7 +157,7 @@ def _setup_content(src_subdir: str, dest_dir: Path, verbose: bool = True) -> lis
         verbose: If True, print progress messages during installation
 
     Returns:
-        List of installed filenames (e.g., ['cco-audit.md', 'cco-tune.md'])
+        List of installed filenames (e.g., ['cco-optimize.md', 'cco-config.md'])
     """
     src = get_content_dir() / src_subdir
     if not src.exists():
@@ -293,7 +293,7 @@ def setup_claude_md(verbose: bool = True) -> dict[str, int]:
 
 
 # ============================================================================
-# LOCAL MODE FUNCTIONS (for cco-tune)
+# LOCAL MODE FUNCTIONS (for cco-config)
 # ============================================================================
 
 
@@ -396,7 +396,7 @@ def setup_local_permissions(project_path: Path, level: str, verbose: bool = True
 
 
 def _run_local_mode(args: argparse.Namespace) -> int:
-    """Handle --local mode for cco-tune integration."""
+    """Handle --local mode for cco-config integration."""
     project_path = Path(args.local).resolve()
 
     if not project_path.exists():
@@ -447,14 +447,14 @@ def _run_local_mode(args: argparse.Namespace) -> int:
 
 
 def post_install() -> int:
-    """CLI entry point for cco-setup."""
+    """CLI entry point for cco-install."""
     parser = argparse.ArgumentParser(
-        prog="cco-setup",
+        prog="cco-install",
         description="Install CCO commands, agents, and rules to ~/.claude/",
         formatter_class=argparse.RawDescriptionHelpFormatter,
         epilog="""
-Local mode (for cco-tune):
-  cco-setup --local . --statusline full --permissions balanced
+Local mode (for cco-config):
+  cco-install --local . --statusline full --permissions balanced
 
 Statusline modes: full, minimal
 Permission levels: safe, balanced, permissive, full
@@ -464,7 +464,7 @@ Permission levels: safe, balanced, permissive, full
     parser.add_argument(
         "--local",
         metavar="PATH",
-        help="Project path for local setup (used by /cco-tune)",
+        help="Project path for local setup (used by /cco-config)",
     )
     parser.add_argument(
         "--statusline",
@@ -479,7 +479,7 @@ Permission levels: safe, balanced, permissive, full
 
     args = parser.parse_args()
 
-    # Local mode - used by cco-tune
+    # Local mode - used by cco-config
     if args.local:
         return _run_local_mode(args)
 
@@ -536,7 +536,7 @@ Permission levels: safe, balanced, permissive, full
         print()
         print("Restart Claude Code for changes to take effect.")
         print()
-        print("Next: /cco-tune to configure statusline, permissions, and project context")
+        print("Next: /cco-config to configure statusline, permissions, and project context")
         print()
         return 0
 

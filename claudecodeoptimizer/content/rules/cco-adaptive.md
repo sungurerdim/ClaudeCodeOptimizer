@@ -1,10 +1,10 @@
 # Adaptive Rules
-*Selected by /cco-tune based on detection. Each rule evaluated individually.*
+*Selected by /cco-config based on detection. Each rule evaluated individually.*
 *Used as template pool for generating .claude/rules/ files with path-specific frontmatter.*
 
 ## Path Pattern Templates
 
-When cco-tune generates project-level rules, it creates separate files with YAML frontmatter:
+When cco-config generates project-level rules, it creates separate files with YAML frontmatter:
 
 | Category | Output File | Paths Pattern | Trigger |
 |----------|-------------|---------------|---------|

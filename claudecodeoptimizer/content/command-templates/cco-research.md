@@ -1,6 +1,6 @@
 ---
 name: cco-research
-description: Multi-source research with reliability scoring and AI synthesis
+description: Multi-source research with reliability scoring
 allowed-tools: WebSearch(*), WebFetch(*), Read(*), Grep(*), Glob(*), Task(*), TodoWrite
 ---
 
@@ -27,7 +27,7 @@ If context check returns "0":
 ```
 CCO context not found.
 
-Run /cco-tune first to configure project context, then restart CLI.
+Run /cco-config first to configure project context, then restart CLI.
 ```
 **Stop execution immediately.**
 
@@ -111,6 +111,161 @@ Explicit flags skip questions.
 | **Bias detected** | Vendor blog about own product | -5 |
 | **Bias detected** | Sponsored content | -15 |
 | **Conflict** | Competing product comparison | -10 |
+
+## Research Quality [CRITICAL]
+
+### Adaptive Source Replacement [CRITICAL]
+
+**Do NOT stop at a fixed source count.** Quality over quantity.
+
+| Source Evaluation | Action |
+|-------------------|--------|
+| Score < 50 | **DISCARD** - Search for replacement |
+| Irrelevant to query | **DISCARD** - Refine search terms |
+| Duplicate information | **SKIP** - Already covered |
+| Outdated (>2y for tech) | **FLAG** - Seek newer alternative |
+
+**Replacement Loop:**
+```
+FOR each source:
+  IF score < 50 OR irrelevant:
+    DISCARD source
+    SEARCH with refined keywords
+    CONTINUE until quality source found
+  END
+END
+
+GOAL: {N} HIGH-QUALITY sources, not just {N} sources
+```
+
+**Never declare "research complete" with insufficient quality sources.**
+
+### Hypothesis Tracking
+
+Maintain competing hypotheses throughout research:
+
+```
+H1: [Primary hypothesis] - Confidence: {%}
+  Evidence: {sources supporting}
+  Counter: {sources against}
+H2: [Alternative hypothesis] - Confidence: {%}
+  Evidence: {sources supporting}
+  Counter: {sources against}
+```
+
+### Self-Critique Loop
+
+After gathering sources, explicitly ask:
+1. What evidence would **disprove** my current conclusion?
+2. Which sources **contradict** each other and why?
+3. Am I missing a **major perspective** or source type?
+
+### Cross-Verification Rule
+
+| Confidence | Requirement |
+|------------|-------------|
+| HIGH (85%+) | Confirmed by 2+ T1-T2 sources |
+| MEDIUM (60-84%) | Confirmed by T1-T3, or single T1 |
+| LOW (<60%) | Single source or T4-T6 only |
+
+**Never report HIGH confidence without cross-verification.**
+
+## Iterative Deepening Strategy [DEEP MODE]
+
+### Round 1: Seed Search
+- Execute 5 parallel searches (existing pattern)
+- Collect initial 10-15 sources
+
+### Round 2: Backward Snowballing
+- Extract references from Round 1's T1-T2 sources
+- Identify "frequently cited" foundational sources
+- Add high-value references to source pool
+
+### Round 3: Forward Snowballing
+- Find newer sources citing Round 1 results
+- Discover recent developments and updates
+- Capture latest perspectives
+
+### Round 4: Keyword Expansion
+- Extract new terms from collected sources
+- Example: "React hooks" → "useEffect cleanup", "stale closure"
+- Search with expanded vocabulary
+
+### Saturation Detection
+
+| Indicator | Detection | Action |
+|-----------|-----------|--------|
+| **Thematic Saturation** | Last 3 sources repeat same themes | Stop searching |
+| **Code Saturation** | No new terms/concepts emerging | Stop expanding |
+| **Information Redundancy** | 80%+ overlap with existing | Skip source |
+
+**Stopping Criterion:**
+1. Collect minimum sources (Quick=5, Standard=10, Deep=15)
+2. After each new source: "Does this add new information?"
+3. Three consecutive "no" → Research saturated
+
+**Report:** "Saturation reached after {N} sources, {M} unique findings"
+
+## CRAAP+ Scoring Framework
+
+Multi-dimensional source evaluation:
+
+| Dimension | Weight | Scoring |
+|-----------|--------|---------|
+| **Currency** | 20% | <3mo: 100, 3-12mo: 70, 1-2y: 40, >2y: 10 |
+| **Relevance** | 25% | Direct: 100, Related: 70, Tangential: 30 |
+| **Authority** | 25% | T1: 100, T2: 85, T3: 70, T4: 50, T5: 30 |
+| **Accuracy** | 20% | Cross-verified: 100, Single: 60, Unverified: 30 |
+| **Purpose** | 10% | Educational: 100, Info: 80, Commercial: 40 |
+
+**Final Score = Σ(dimension × weight)**
+
+| Quality Band | Score | Usage |
+|--------------|-------|-------|
+| ⭐⭐⭐ Primary | 85-100 | Core evidence |
+| ⭐⭐ Supporting | 70-84 | Supplementary |
+| ⭐ Supplementary | 50-69 | Background only |
+| ⚠️ Caution | <50 | **REPLACE** |
+
+## Contradiction Resolution
+
+When contradictions detected:
+
+### Step 1: Classify Type
+
+| Type | Example | Resolution |
+|------|---------|------------|
+| **Version-based** | "Use X" vs "X deprecated" | Newer wins |
+| **Context-based** | "Always X" vs "Never X" | Identify contexts |
+| **Opinion-based** | Expert A vs B | Weight by authority |
+| **Factual error** | One source wrong | Cross-verify T1 |
+
+### Step 2: Resolution Hierarchy
+
+1. Official docs (T1) override all
+2. Newer source wins (if both T1-T2)
+3. Higher engagement wins (if same tier/date)
+4. Note as "Unresolved - context dependent"
+
+### Step 3: Report Format
+
+```
+⚠️ RESOLVED CONTRADICTION
+Claim A: "{claim}" ({source} {date})
+Claim B: "{claim}" ({source} {date})
+Resolution: {A|B} wins - {reason}
+Context: {when other might apply}
+```
+
+## Knowledge Gap Detection
+
+After research, explicitly identify:
+
+| Gap Type | Question | Report As |
+|----------|----------|-----------|
+| **Unanswered** | Which sub-questions remain? | "No sources addressed {X}" |
+| **Edge cases** | What scenarios not covered? | "Limited info on {Y}" |
+| **Limitations** | When might this not apply? | "May not apply to {Z}" |
 
 ## Flow
 
@@ -197,26 +352,50 @@ Auto-detected when query contains "error", "not working", "fix":
 ## Output Format
 
 ```
-┌─ RESEARCH REPORT ────────────────────────────────────────────┐
+┌─ EXECUTIVE SUMMARY ─────────────────────────────────────────┐
 │ Query: {question}                                            │
-│ Date: {date} | Sources: {N} | Depth: {mode}                  │
-└──────────────────────────────────────────────────────────────┘
+│ Confidence: {HIGH|MEDIUM|LOW} ({%}) | Saturation: {✓|○}     │
+│ Sources: {N} analyzed | {M} high-quality | {K} replaced     │
+├─────────────────────────────────────────────────────────────┤
+│ TL;DR: {One sentence definitive answer}                      │
+└─────────────────────────────────────────────────────────────┘
 
-┌─ KEY FINDINGS ───────────────────────────────────────────────┐
-│ # │ Finding                    │ Score │ Sources │ Fresh     │
-├───┼────────────────────────────┼───────┼─────────┼───────────┤
-│ 1 │ {main finding}             │ 95    │ T1x2    │ Current   │
-│ 2 │ {supporting finding}       │ 82    │ T2,T3   │ Recent    │
-└───┴────────────────────────────┴───────┴─────────┴───────────┘
+┌─ EVIDENCE HIERARCHY ────────────────────────────────────────┐
+│ ⭐⭐⭐ PRIMARY EVIDENCE (Score 85+)                           │
+│ • {Finding} [source] [CRAAP: {score}] [{date}]               │
+│ • {Finding} [source] [CRAAP: {score}] [{date}]               │
+├─────────────────────────────────────────────────────────────┤
+│ ⭐⭐ SUPPORTING EVIDENCE (Score 70-84)                        │
+│ • {Finding} [source] [CRAAP: {score}] [{date}]               │
+├─────────────────────────────────────────────────────────────┤
+│ ⚠️ CONTRADICTIONS RESOLVED                                   │
+│ • {Claim A} vs {Claim B} → {Winner}: {reason}                │
+├─────────────────────────────────────────────────────────────┤
+│ ❓ KNOWLEDGE GAPS                                            │
+│ • No sources addressed: {topic}                              │
+│ • Limited information on: {topic} (only {N} T4+ sources)     │
+└─────────────────────────────────────────────────────────────┘
 
-┌─ AI RECOMMENDATION ──────────────────────────────────────────┐
-│ Confidence: {HIGH|MEDIUM|LOW} ({%})                          │
-├──────────────────────────────────────────────────────────────┤
-│ {Synthesized recommendation}                                  │
-│                                                               │
-│ Caveats: {when this might not apply}                         │
-│ Alternatives: {other valid approaches}                        │
-└──────────────────────────────────────────────────────────────┘
+┌─ ACTIONABLE RECOMMENDATION ─────────────────────────────────┐
+│ ✅ DO: {specific action with confidence}                     │
+│ ❌ DON'T: {what to avoid and why}                            │
+│ 🤔 CONSIDER: {context-dependent alternatives}                │
+│                                                              │
+│ Caveats: {when this recommendation doesn't apply}           │
+│ Next Steps: {if user needs deeper research}                  │
+└─────────────────────────────────────────────────────────────┘
+
+┌─ SOURCE CITATIONS ──────────────────────────────────────────┐
+│ [1] {title} | {url}                                          │
+│     T{tier} | CRAAP: {score} | {date} | {quality_band}       │
+│ [2] ...                                                      │
+└─────────────────────────────────────────────────────────────┘
+
+┌─ RESEARCH METADATA ─────────────────────────────────────────┐
+│ Iterations: {N} | Sources discarded: {M} | Saturation: {Y/N}│
+│ Search strategy: {keywords used}                             │
+│ Time context: Research valid as of {date}                    │
+└─────────────────────────────────────────────────────────────┘
 ```
 
 ## Flags
@@ -250,7 +429,7 @@ Auto-detected when query contains "error", "not working", "fix":
 
 ## Related Commands
 
-- `/cco-audit --security` - For security checks
+- `/cco-optimize --security` - For security checks
 - `/cco-review` - For architecture decisions
 
 ---

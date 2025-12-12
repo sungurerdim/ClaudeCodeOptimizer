@@ -77,9 +77,9 @@ class TestMain:
         assert result == 0
         captured = capsys.readouterr()
         assert "CCO v" in captured.out
-        assert "cco-setup" in captured.out
+        assert "cco-install" in captured.out
         assert "cco-remove" in captured.out
-        assert "/cco-tune" in captured.out
+        assert "/cco-config" in captured.out
 
     def test_keyboard_interrupt(self, capsys):
         """Test KeyboardInterrupt handling."""

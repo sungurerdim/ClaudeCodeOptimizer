@@ -17,13 +17,13 @@ A process and rules layer for Claude Code in the Opus 4.5 era.
 ## Quickstart
 
 ```bash
-pip install claudecodeoptimizer && cco-setup
+pip install claudecodeoptimizer && cco-install
 ```
 
 Inside Claude Code:
 ```
-/cco-tune      # Auto-detect your project, confirm once
-/cco-health    # See your scores
+/cco-config    # Auto-detect your project, confirm once
+/cco-status    # See your scores
 ```
 
 **That's it.** Start coding with safety nets in place.
@@ -97,7 +97,7 @@ CCO uses a 4-category rules system:
 - List format: `grep -c "^- \*\*" <file>` (core.md, ai.md)
 - Table format: `grep -c "| \* " <file>` (adaptive.md)
 
-Run `/cco-tune` to see which adaptive rules apply to your project.
+Run `/cco-config` to see which adaptive rules apply to your project.
 
 ### Categories Explained
 
@@ -108,7 +108,7 @@ Run `/cco-tune` to see which adaptive rules apply to your project.
 
 ### Adaptive Rules: 40+ Project Types
 
-`/cco-tune` scans your dependencies and project structure, then activates **only relevant rules**. No manual configuration needed.
+`/cco-config` scans your dependencies and project structure, then activates **only relevant rules**. No manual configuration needed.
 
 <details>
 <summary><b>Supported Project Types</b> (click to expand)</summary>
@@ -154,32 +154,28 @@ Run `/cco-tune` to see which adaptive rules apply to your project.
 
 | Command | Purpose |
 |---------|---------|
-| `/cco-tune` | Project tuning: detection + configuration + export |
-| `/cco-health` | Metrics dashboard with trends and actionable next steps |
-| `/cco-audit` | Security + code quality gates with prioritized fixes |
+| `/cco-config` | Project configuration: detection + settings + export |
+| `/cco-status` | Metrics dashboard with trends and actionable next steps |
+| `/cco-optimize` | Quality + Security + Hygiene (merged audit + optimize) |
 | `/cco-review` | Architecture analysis with fresh perspective |
 | `/cco-research` | Multi-source research with reliability scoring |
-| `/cco-optimize` | Cleanliness + efficiency improvements |
-| `/cco-generate` | Convention-following generation |
-| `/cco-refactor` | Safe structural changes with rollback |
 | `/cco-commit` | Quality-gated atomic commits |
 
 ### Meta Commands
 
 | Command | Purpose | Orchestrates |
 |---------|---------|--------------|
-| `/cco-release` | Pre-release workflow | audit + optimize + review + verify |
-| `/cco-checkup` | Regular maintenance | health + audit --smart + optimize --hygiene |
+| `/cco-preflight` | Pre-release workflow | optimize + review + verify |
+| `/cco-checkup` | Regular maintenance | status + optimize --all --fix |
 
-### /cco-audit Features
+### /cco-optimize Features
 
 - **Security Checks** - OWASP patterns, secrets, CVEs, dependency vulnerabilities
-- **Input Validation** - Entry point analysis, validation gap detection
-- **Type Coverage** - Missing annotations, any/unknown usage
-- **Test Quality** - Flaky tests, coverage gaps, edge case detection
-- **Doc-Code Mismatch** - Detect when documentation doesn't match implementation
-- **Self-Compliance** - Check against project's own stated rules
+- **Quality Checks** - Complexity, type coverage, test quality, consistency
+- **Hygiene Checks** - Orphan detection, stale refs, duplicates, dead code
+- **2-Tab Selection** - Scope (Security/Quality/Hygiene/All) + Action (Report/Fix)
 - **Smart Mode** - Auto-detect applicable checks based on project context
+- **Auto-fix** - Safe fixes applied automatically, risky ones require approval
 
 ### /cco-research Features
 
@@ -198,17 +194,7 @@ Run `/cco-tune` to see which adaptive rules apply to your project.
 - **Atomic Grouping** - Auto-groups related changes (impl + tests, renames across files)
 - **Large File Warning** - Warns on >1MB files, suggests Git LFS for binaries
 
-### /cco-optimize Features
-
-- **Orphan Detection** - Find unreferenced files, functions, imports, exports
-- **Stale Reference Cleanup** - Fix broken imports, dead links, phantom tests
-- **Duplicate Detection** - Exact, near-duplicate (>80%), and semantic duplicates
-- **Hygiene Mode** - Quick cleanup with `--hygiene` (orphans + stale-refs + duplicates)
-- **Cross-File Analysis** - Detect redundant code, obsolete references
-- **Consolidation** - Merge overlapping content into single source
-- **Metrics** - Before/after comparison with lines, tokens, and KB saved
-
-### /cco-tune Features
+### /cco-config Features
 
 - **Unified Flow** - Configure, Remove, and Export in a single command
 - **AI Performance Auto-Detection** - Sets thinking/MCP tokens based on project complexity
@@ -217,20 +203,18 @@ Run `/cco-tune` to see which adaptive rules apply to your project.
 - **Remove Configuration** - Remove any setting (AI Performance, Statusline, Permissions, Rules)
 - **Rules Export** - Export to AGENTS.md or CLAUDE.md with selectable content
 
-### /cco-release Features
+### /cco-preflight Features
 
 - **Pre-flight Checks** - Git state, branch, version, changelog, dependencies
-- **Quality Gate** - Security, tests, consistency via `/cco-audit --pre-release`
-- **Cleanliness** - Orphans, stale refs, duplicates via `/cco-optimize --hygiene`
+- **Quality Gate** - Security, tests, consistency via `/cco-optimize --all`
 - **Architecture Review** - Quick gap analysis via `/cco-review --quick`
 - **Final Verification** - Full test suite, build, lint, type check
 - **Go/No-Go Summary** - Blockers vs warnings, clear next steps
 
 ### /cco-checkup Features
 
-- **Health Dashboard** - Quick scores via `/cco-health --brief`
-- **Smart Audit** - Context-aware checks via `/cco-audit --smart --auto-fix`
-- **Quick Cleanup** - Hygiene fixes via `/cco-optimize --hygiene --auto-fix`
+- **Health Dashboard** - Quick scores via `/cco-status --brief`
+- **Full Optimization** - All checks via `/cco-optimize --all --fix`
 - **Trend Tracking** - Health score changes since last checkup
 - **Scheduling** - Weekly recommended for active development
 
@@ -250,9 +234,9 @@ Run `/cco-tune` to see which adaptive rules apply to your project.
 
 ---
 
-## Project Tuning
+## Project Configuration
 
-`/cco-tune` is the central configuration command with three action types:
+`/cco-config` is the central configuration command with three action types:
 
 **Configure:**
 - Detection & Rules - Scan project, write context to `./CLAUDE.md`
@@ -277,6 +261,8 @@ Thinking and MCP output tokens are automatically set based on project complexity
 | Thinking Tokens | 5000 | 8000 | 10000 |
 | MCP Output Tokens | 25000 | 35000 | 50000 |
 
+> **Note:** Thinking mode toggle moved to `/config` in v2.0.67 (Tab to toggle). Enabled by default for Opus 4.5. `MAX_THINKING_TOKENS` controls token budget when enabled.
+
 **Complexity scoring:**
 - Microservices, Monorepo → +2 each
 - K8s/Helm, ML/AI → +1 each
@@ -291,7 +277,7 @@ All settings are written to `./.claude/settings.json` (project-local):
 
 ### Export
 
-Export is integrated into `/cco-tune` main flow. Select CLAUDE.md or AGENTS.md from the Export section.
+Export is integrated into `/cco-config` main flow. Select CLAUDE.md or AGENTS.md from the Export section.
 
 **What gets exported (user-selectable):**
 - Core Rules
@@ -345,29 +331,29 @@ All fix operations follow: **Analyze → Report → Approve → Apply → Verify
 
 ```bash
 # pip (recommended)
-pip install claudecodeoptimizer && cco-setup
+pip install claudecodeoptimizer && cco-install
 
 # pipx (isolated)
-pipx install claudecodeoptimizer && cco-setup
+pipx install claudecodeoptimizer && cco-install
 
 # Development
-pip install git+https://github.com/sungurerdim/ClaudeCodeOptimizer.git && cco-setup
+pip install git+https://github.com/sungurerdim/ClaudeCodeOptimizer.git && cco-install
 
 # Upgrade
-pip install -U claudecodeoptimizer && cco-setup
+pip install -U claudecodeoptimizer && cco-install
 ```
 
 ### Local Mode (Project-Specific)
 
 ```bash
 # Install statusline and permissions to current project
-cco-setup --local . --statusline full --permissions balanced
+cco-install --local . --statusline full --permissions balanced
 
 # Statusline only
-cco-setup --local . --statusline minimal
+cco-install --local . --statusline minimal
 
 # Permissions only
-cco-setup --local . --permissions safe
+cco-install --local . --permissions safe
 ```
 
 | Statusline | Description |
@@ -409,7 +395,7 @@ CCO leverages the full spectrum of Claude Code features with official documentat
 
 | Feature | CCO Usage |
 |---------|-----------|
-| **[Slash Commands][slash-commands]** | 11 commands in `~/.claude/commands/` |
+| **[Slash Commands][slash-commands]** | 8 commands in `~/.claude/commands/` |
 | ↳ Dynamic Context | `!backtick` syntax for real-time injection |
 | ↳ Tool Restrictions | `allowed-tools` frontmatter per command |
 | **[Sub-agents][sub-agents]** | 3 specialized agents (model selection by Claude Code) |

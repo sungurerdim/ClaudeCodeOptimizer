@@ -160,8 +160,8 @@ class TestCleanPreviousInstallation:
         # Setup old installation
         commands_dir = tmp_path / "commands"
         commands_dir.mkdir()
-        (commands_dir / "cco-tune.md").write_text("old tune")
-        (commands_dir / "cco-audit.md").write_text("old audit")
+        (commands_dir / "cco-config.md").write_text("old tune")
+        (commands_dir / "cco-optimize.md").write_text("old audit")
 
         agents_dir = tmp_path / "agents"
         agents_dir.mkdir()
@@ -628,7 +628,7 @@ class TestRunLocalMode:
 
     def test_nonexistent_path(self, tmp_path, capsys):
         """Test error for nonexistent path."""
-        with patch.object(sys, "argv", ["cco-setup", "--local", str(tmp_path / "nonexistent")]):
+        with patch.object(sys, "argv", ["cco-install", "--local", str(tmp_path / "nonexistent")]):
             result = post_install()
 
         assert result == 1
@@ -640,7 +640,7 @@ class TestRunLocalMode:
         file_path = tmp_path / "file.txt"
         file_path.touch()
 
-        with patch.object(sys, "argv", ["cco-setup", "--local", str(file_path)]):
+        with patch.object(sys, "argv", ["cco-install", "--local", str(file_path)]):
             result = post_install()
 
         assert result == 1
@@ -653,7 +653,7 @@ class TestRunLocalMode:
         project_path.mkdir()
 
         with patch("pathlib.Path.cwd", return_value=tmp_path):
-            with patch.object(sys, "argv", ["cco-setup", "--local", str(project_path)]):
+            with patch.object(sys, "argv", ["cco-install", "--local", str(project_path)]):
                 result = post_install()
 
         assert result == 0
@@ -673,7 +673,7 @@ class TestRunLocalMode:
         with patch("pathlib.Path.cwd", return_value=tmp_path):
             with patch("claudecodeoptimizer.install_hook.get_content_path", return_value=src_dir):
                 with patch.object(
-                    sys, "argv", ["cco-setup", "--local", str(project_path), "--statusline", "full"]
+                    sys, "argv", ["cco-install", "--local", str(project_path), "--statusline", "full"]
                 ):
                     result = post_install()
 
@@ -696,7 +696,7 @@ class TestRunLocalMode:
                 with patch.object(
                     sys,
                     "argv",
-                    ["cco-setup", "--local", str(project_path), "--permissions", "balanced"],
+                    ["cco-install", "--local", str(project_path), "--permissions", "balanced"],
                 ):
                     result = post_install()
 
@@ -730,7 +730,7 @@ class TestRunLocalMode:
                     sys,
                     "argv",
                     [
-                        "cco-setup",
+                        "cco-install",
                         "--local",
                         str(project_path),
                         "--statusline",
@@ -759,7 +759,7 @@ class TestRunLocalMode:
                 return_value=tmp_path / "nonexistent",
             ):
                 with patch.object(
-                    sys, "argv", ["cco-setup", "--local", str(project_path), "--statusline", "full"]
+                    sys, "argv", ["cco-install", "--local", str(project_path), "--statusline", "full"]
                 ):
                     result = post_install()
 
@@ -781,7 +781,7 @@ class TestRunLocalMode:
                 with patch.object(
                     sys,
                     "argv",
-                    ["cco-setup", "--local", str(project_path), "--permissions", "balanced"],
+                    ["cco-install", "--local", str(project_path), "--permissions", "balanced"],
                 ):
                     result = post_install()
 
@@ -800,7 +800,7 @@ class TestRunLocalMode:
 
         with patch("pathlib.Path.home", return_value=fake_home):
             with patch("pathlib.Path.cwd", return_value=fake_cwd):
-                with patch.object(sys, "argv", ["cco-setup", "--local", str(project_path)]):
+                with patch.object(sys, "argv", ["cco-install", "--local", str(project_path)]):
                     result = post_install()
 
         assert result == 1
@@ -813,7 +813,7 @@ class TestPostInstallValidation:
 
     def test_statusline_requires_local(self, capsys):
         """Test --statusline without --local raises error."""
-        with patch.object(sys, "argv", ["cco-setup", "--statusline", "full"]):
+        with patch.object(sys, "argv", ["cco-install", "--statusline", "full"]):
             with pytest.raises(SystemExit) as exc_info:
                 post_install()
 
@@ -823,7 +823,7 @@ class TestPostInstallValidation:
 
     def test_permissions_requires_local(self, capsys):
         """Test --permissions without --local raises error."""
-        with patch.object(sys, "argv", ["cco-setup", "--permissions", "balanced"]):
+        with patch.object(sys, "argv", ["cco-install", "--permissions", "balanced"]):
             with pytest.raises(SystemExit) as exc_info:
                 post_install()
 
@@ -837,23 +837,23 @@ class TestPostInstall:
 
     def test_help_flag(self, capsys):
         """Test --help shows usage."""
-        with patch.object(sys, "argv", ["cco-setup", "--help"]):
+        with patch.object(sys, "argv", ["cco-install", "--help"]):
             with pytest.raises(SystemExit) as exc_info:
                 post_install()
 
         assert exc_info.value.code == 0
         captured = capsys.readouterr()
-        assert "cco-setup" in captured.out
+        assert "cco-install" in captured.out
 
     def test_h_flag(self, capsys):
         """Test -h shows usage."""
-        with patch.object(sys, "argv", ["cco-setup", "-h"]):
+        with patch.object(sys, "argv", ["cco-install", "-h"]):
             with pytest.raises(SystemExit) as exc_info:
                 post_install()
 
         assert exc_info.value.code == 0
         captured = capsys.readouterr()
-        assert "cco-setup" in captured.out
+        assert "cco-install" in captured.out
 
     def test_successful_setup(self, tmp_path, capsys):
         """Test successful setup."""
@@ -861,7 +861,7 @@ class TestPostInstall:
             with patch("claudecodeoptimizer.install_hook.COMMANDS_DIR", tmp_path / "commands"):
                 with patch("claudecodeoptimizer.install_hook.AGENTS_DIR", tmp_path / "agents"):
                     with patch("claudecodeoptimizer.install_hook.get_content_dir") as mock_content:
-                        with patch.object(sys, "argv", ["cco-setup"]):
+                        with patch.object(sys, "argv", ["cco-install"]):
                             mock_content.return_value = tmp_path / "pkg"
                             result = post_install()
 
@@ -869,8 +869,8 @@ class TestPostInstall:
         captured = capsys.readouterr()
         assert "CCO Setup" in captured.out
         assert "Installed:" in captured.out
-        # Statusline is no longer installed by cco-setup
-        assert "statusline" not in captured.out.lower() or "cco-tune" in captured.out
+        # Statusline is no longer installed by cco-install
+        assert "statusline" not in captured.out.lower() or "cco-config" in captured.out
 
     def test_exception_handling(self, tmp_path, capsys):
         """Test exception during setup."""
@@ -878,7 +878,7 @@ class TestPostInstall:
             with patch("claudecodeoptimizer.install_hook.COMMANDS_DIR", tmp_path / "commands"):
                 with patch("claudecodeoptimizer.install_hook.AGENTS_DIR", tmp_path / "agents"):
                     with patch("claudecodeoptimizer.install_hook.RULES_DIR", tmp_path / "rules"):
-                        with patch.object(sys, "argv", ["cco-setup"]):
+                        with patch.object(sys, "argv", ["cco-install"]):
                             with patch(
                                 "claudecodeoptimizer.install_hook.setup_commands",
                                 side_effect=Exception("Test error"),
@@ -890,13 +890,13 @@ class TestPostInstall:
         assert "Setup failed" in captured.err
 
     def test_help_mentions_cco_tune(self, capsys):
-        """Test help mentions cco-tune for statusline/permissions."""
-        with patch.object(sys, "argv", ["cco-setup", "--help"]):
+        """Test help mentions cco-config for statusline/permissions."""
+        with patch.object(sys, "argv", ["cco-install", "--help"]):
             with pytest.raises(SystemExit):
                 post_install()
 
         captured = capsys.readouterr()
-        assert "cco-tune" in captured.out
+        assert "cco-config" in captured.out
 
 
 class TestSetupRules:

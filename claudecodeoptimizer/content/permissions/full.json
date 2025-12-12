@@ -3,7 +3,7 @@
     "level": "full",
     "description": "Comprehensive permissions - 300+ allow rules, deny dangerous, ask sensitive",
     "use_case": "Trusted environments, experienced users, maximum automation",
-    "note": "AI Performance settings (thinking, MCP) are separate - see cco-tune"
+    "note": "AI Performance settings (thinking, MCP) are separate - see /cco-config"
   },
   "permissions": {
     "allow": [

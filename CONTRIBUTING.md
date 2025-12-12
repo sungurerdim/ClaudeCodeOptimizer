@@ -219,7 +219,7 @@ Tools and adaptive rules are NOT installed globally. They stay in the pip packag
 and are loaded on-demand when commands/agents run:
 
 - `cco-tools.md` - Workflow rules (embedded in commands)
-- `cco-adaptive.md` - Project-specific rules (used by /cco-tune)
+- `cco-adaptive.md` - Project-specific rules (used by /cco-config)
 
 ### Project Context (`./CLAUDE.md` or `./.claude/rules/cco/context.md`)
 

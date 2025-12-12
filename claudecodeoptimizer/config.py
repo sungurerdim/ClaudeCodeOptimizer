@@ -56,7 +56,7 @@ CCO_RULE_NAMES = ("core.md", "ai.md")  # Installed globally
 CCO_RULE_FILES = ("cco-core.md", "cco-ai.md")  # Source filenames
 # On-demand rules (NOT installed globally - accessed via get_content_path())
 CCO_TOOLS_SOURCE = "cco-tools.md"  # Used by CCO commands
-CCO_ADAPTIVE_SOURCE = "cco-adaptive.md"  # Used by cco-tune for rule selection
+CCO_ADAPTIVE_SOURCE = "cco-adaptive.md"  # Used by cco-config for rule selection
 
 STATUSLINE_FILE = CLAUDE_DIR / "statusline.js"
 SETTINGS_FILE = CLAUDE_DIR / "settings.json"

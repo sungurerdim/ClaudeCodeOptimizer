@@ -30,7 +30,7 @@ This document details how CCO implements official Claude 4 best practices and Op
 
 ### Parallel Tool Execution
 
-Commands that spawn multiple agents use explicit XML blocks to ensure ~100% parallelization:
+Commands that spawn multiple agents use explicit XML blocks for context-specific parallelization:
 
 ```markdown
 <use_parallel_tool_calls>
@@ -44,21 +44,24 @@ Never use placeholders or guess missing parameters.
 </use_parallel_tool_calls>
 ```
 
-**Applied in:** `cco-audit.md`, `cco-health.md`, `cco-review.md`, `cco-release.md`
+**Applied in:** `cco-optimize.md`, `cco-status.md`, `cco-review.md`, `cco-preflight.md`, `cco-optimize.md`, `cco-research.md`
 
-### Context Awareness
+### Efficiency (Global AI Rules)
 
-Long-running commands include token budget awareness:
+Efficiency patterns are **global AI rules** in `~/.claude/rules/cco/ai.md`:
 
 ```markdown
-<context_awareness>
-Your context window will be automatically compacted as it approaches its limit.
-Do NOT stop tasks early due to token budget concerns.
-Complete tasks fully - be as persistent and autonomous as possible.
-</context_awareness>
+## Efficiency
+
+- **Parallel-Independent**: Run unrelated operations simultaneously
+- **Sequential-Dependent**: Chain operations that depend on prior results
+- **Batch-Reads**: Multiple file reads in single call when possible
+- **No-Bash-Loops**: Avoid `for f in *; do..done` - use single commands or parallel tool calls
+- **Background-Long**: Long-running commands (servers, tails) → background, continue working
+- **Complete-Fully**: Never stop early due to context concerns - auto-compaction handles limits
 ```
 
-**Applied in:** `cco-release.md`
+These rules apply to ALL CCO commands automatically. Command-specific `<use_parallel_tool_calls>` blocks provide context-specific examples only (no duplication of global rules).
 
 CCO commands also leverage context awareness through:
 - Checking git state before operations
@@ -94,7 +97,7 @@ Commands that report findings embed severity rules:
 - Require explicit evidence, not inference
 - Style issues never escalate to CRITICAL or HIGH
 
-**Applied in:** `cco-audit.md`, `cco-optimize.md`, `cco-review.md`
+**Applied in:** `cco-optimize.md`, `cco-optimize.md`, `cco-review.md`
 
 ### Batch Approval Pattern
 
@@ -105,7 +108,7 @@ Commands with multi-item fixes use consistent approval UX:
 - Priority order: CRITICAL → HIGH → MEDIUM → LOW
 - Item format: `{description} [{file:line}] [{safe|risky}]`
 
-**Applied in:** `cco-audit.md`, `cco-optimize.md`, `cco-refactor.md`
+**Applied in:** `cco-optimize.md`, `cco-optimize.md`, `cco-optimize.md`
 
 ### Output Formatting
 
@@ -127,7 +130,7 @@ Commands use Claude Code's frontmatter options:
 
 ```yaml
 ---
-name: cco-audit
+name: cco-optimize
 description: Security and code quality analysis
 allowed-tools: Read(*), Grep(*), Glob(*), Task(*)
 ---

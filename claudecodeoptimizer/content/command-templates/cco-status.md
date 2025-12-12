@@ -1,10 +1,10 @@
 ---
-name: cco-health
-description: Project health dashboard with trends and actionable insights
+name: cco-status
+description: Project health dashboard
 allowed-tools: Read(*), Grep(*), Glob(*), Bash(git:*), Bash(pytest:*), Bash(npm:*), Task(*), TodoWrite
 ---
 
-# /cco-health
+# /cco-status
 
 **Health Dashboard** - Single view of project health with trends and actionable next steps.
 
@@ -26,7 +26,7 @@ If context check returns "0":
 ```
 CCO context not found.
 
-Run /cco-tune first to configure project context, then restart CLI.
+Run /cco-config first to configure project context, then restart CLI.
 ```
 **Stop execution immediately.**
 
@@ -160,9 +160,9 @@ Compare against:
 ### Header
 ```
 ┌─ PROJECT HEALTH ─────────────────────────────────────────────┐
-│ Project: my-project v1.2.3                                   │
-│ Team: Solo | Scale: Small | Type: CLI                        │
-│ Last Check: 2025-12-07 14:30 | Trend: ↑ improving            │
+│ Project: {project} {version}                                 │
+│ Team: {team} | Scale: {scale} | Type: {type}                 │
+│ Last Check: {date} {time} | Trend: {trend_icon} {trend_text} │
 └──────────────────────────────────────────────────────────────┘
 ```
 
@@ -171,28 +171,24 @@ Compare against:
 ┌─ HEALTH SCORES ──────────────────────────────────────────────┐
 │ Category      │ Score │ Bar        │ Trend │ Status          │
 ├───────────────┼───────┼────────────┼───────┼─────────────────┤
-│ Security      │ 95    │ █████████░ │ →     │ OK              │
-│ Tests         │ 88    │ ████████░░ │ ↑     │ WARN            │
-│ Tech Debt     │ 72    │ ███████░░░ │ ↓     │ WARN            │
-│ Cleanliness   │ 85    │ ████████░░ │ ↑     │ WARN            │
-│ Documentation │ 78    │ ███████░░░ │ →     │ WARN            │
-│ Self-Compliance│ 90   │ █████████░ │ →     │ OK              │
+│ Security      │ {n}   │ {bar}      │ {t}   │ {status}        │
+│ Tests         │ {n}   │ {bar}      │ {t}   │ {status}        │
+│ Tech Debt     │ {n}   │ {bar}      │ {t}   │ {status}        │
+│ Cleanliness   │ {n}   │ {bar}      │ {t}   │ {status}        │
+│ Documentation │ {n}   │ {bar}      │ {t}   │ {status}        │
+│ Self-Compliance│ {n}  │ {bar}      │ {t}   │ {status}        │
 ├───────────────┼───────┼────────────┼───────┼─────────────────┤
-│ OVERALL       │ 85    │ ████████░░ │ ↑     │ WARN            │
+│ OVERALL       │ {n}   │ {bar}      │ {t}   │ {status}        │
 └───────────────┴───────┴────────────┴───────┴─────────────────┘
 ```
 
 ### Category Breakdown (when --focus used)
 ```
-┌─ TECH DEBT BREAKDOWN ────────────────────────────────────────┐
+┌─ {CATEGORY} BREAKDOWN ───────────────────────────────────────┐
 │ Metric          │ Value    │ Threshold │ Status              │
 ├─────────────────┼──────────┼───────────┼─────────────────────┤
-│ Avg Complexity  │ 8.2      │ <10       │ OK                  │
-│ Max Complexity  │ 15       │ <15       │ WARN                │
-│ Dead Code       │ 2.3%     │ <5%       │ OK                  │
-│ TODOs           │ 12       │ <20       │ OK                  │
-│ Hardcoded       │ 5        │ <10       │ OK                  │
-│ Type Coverage   │ 78%      │ >80%      │ WARN                │
+│ {metric_name}   │ {value}  │ {thresh}  │ {status}            │
+│ ...             │ ...      │ ...       │ ...                 │
 └─────────────────┴──────────┴───────────┴─────────────────────┘
 ```
 
@@ -201,9 +197,9 @@ Compare against:
 ┌─ FIX FIRST (highest impact, lowest effort) ──────────────────┐
 │ # │ Issue                    │ Location      │ Effort │ Impact│
 ├───┼──────────────────────────┼───────────────┼────────┼───────┤
-│ 1 │ High complexity (15)     │ utils.py:42   │ 30min  │ HIGH  │
-│ 2 │ Missing type annotations │ api.py:15-30  │ 15min  │ MEDIUM│
-│ 3 │ Orphan function          │ helpers.py:88 │ 5min   │ LOW   │
+│ 1 │ {issue_description}      │ {file}:{line} │ {time} │ {imp} │
+│ 2 │ {issue_description}      │ {file}:{line} │ {time} │ {imp} │
+│ ...                                                           │
 └───┴──────────────────────────┴───────────────┴────────┴───────┘
 ```
 
@@ -212,9 +208,8 @@ Compare against:
 ┌─ TREND HISTORY ──────────────────────────────────────────────┐
 │ Date       │ Overall │ Security │ Tests │ Debt │ Clean      │
 ├────────────┼─────────┼──────────┼───────┼──────┼────────────┤
-│ 2025-12-08 │ 85 ↑    │ 95 →     │ 88 ↑  │ 72 ↓ │ 85 ↑       │
-│ 2025-12-01 │ 82      │ 95       │ 85    │ 75   │ 80         │
-│ 2025-11-24 │ 80      │ 92       │ 82    │ 78   │ 78         │
+│ {date}     │ {n} {t} │ {n} {t}  │ {n}{t}│ {n}{t}│ {n} {t}   │
+│ ...        │ ...     │ ...      │ ...   │ ...  │ ...        │
 └────────────┴─────────┴──────────┴───────┴──────┴────────────┘
 ```
 
@@ -230,18 +225,18 @@ Compare against:
 ## Usage
 
 ```bash
-/cco-health                     # Full dashboard
-/cco-health --focus=security    # Security breakdown
-/cco-health --focus=tests       # Test coverage breakdown
-/cco-health --focus=debt        # Tech debt breakdown
-/cco-health --focus=clean       # Cleanliness breakdown
-/cco-health --trends            # Show trend history
-/cco-health --brief             # Quick summary
+/cco-status                     # Full dashboard
+/cco-status --focus=security    # Security breakdown
+/cco-status --focus=tests       # Test coverage breakdown
+/cco-status --focus=debt        # Tech debt breakdown
+/cco-status --focus=clean       # Cleanliness breakdown
+/cco-status --trends            # Show trend history
+/cco-status --brief             # Quick summary
 ```
 
 ## Related Commands
 
-- `/cco-audit` - Fix security and quality issues
+- `/cco-optimize` - Fix security and quality issues
 - `/cco-optimize` - Fix cleanliness issues
 - `/cco-checkup` - Full maintenance routine
 

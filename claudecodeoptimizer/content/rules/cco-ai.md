@@ -65,3 +65,5 @@
 - **Sequential-Dependent**: Chain operations that depend on prior results
 - **Batch-Reads**: Multiple file reads in single call when possible
 - **No-Bash-Loops**: Avoid `for f in *; do..done` - use single commands or parallel tool calls
+- **Background-Long**: Long-running commands (servers, tails) → background, continue working
+- **Complete-Fully**: Never stop early due to context concerns - auto-compaction handles limits
