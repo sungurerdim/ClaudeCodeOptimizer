@@ -22,16 +22,17 @@ When called without flags:
 
 | Question | Options | MultiSelect |
 |----------|---------|-------------|
-| Focus areas? | Foundation; Code Quality; Dependencies; Testing; DX; All (Recommended) | true |
+| Focus areas? | Foundation; Code Quality; Dependencies; Testing; DX; Best Practices; All (Recommended) | true |
 
 ## Execution Flow
 
 ```
 ┌─────────────────────────────────────────────────────────────────────────────┐
-│ STEP 1: Spawn parallel agents (single message with 2 Task calls)            │
+│ STEP 1: Spawn parallel agents (single message with 3 Task calls)            │
 ├─────────────────────────────────────────────────────────────────────────────┤
-│ Task(cco-agent-analyze, scope=architecture) ──┬──→ Both run simultaneously  │
-│ Task(cco-agent-analyze, scope=scan)         ──┘                             │
+│ Task(cco-agent-analyze, scope=architecture)   ──┐                           │
+│ Task(cco-agent-analyze, scope=scan)           ──┼──→ All run simultaneously │
+│ Task(cco-agent-analyze, scope=best-practices) ──┘                           │
 ├─────────────────────────────────────────────────────────────────────────────┤
 │ STEP 2: Merge agent results                                                 │
 ├─────────────────────────────────────────────────────────────────────────────┤
@@ -51,7 +52,25 @@ When called without flags:
 |-------|-------|---------|
 | cco-agent-analyze | `architecture` | Dependency graph, coupling metrics, patterns, layers |
 | cco-agent-analyze | `scan` | Issues with file:line, complexity violations |
+| cco-agent-analyze | `best-practices` | Tool usage, execution patterns, efficiency opportunities |
 | cco-agent-apply | `fix` | Implement approved recommendations |
+
+## Best Practices Scope
+
+Reviews optimal patterns for both code and AI tool usage:
+
+| Category | Reviews |
+|----------|---------|
+| **Execution Efficiency** | Parallel vs sequential, batching, background tasks |
+| **Tool Selection** | Right tool for task, subagent usage, single-message multi-tool |
+| **Code Patterns** | Async handling, error boundaries, state management |
+| **Architecture** | Layer separation, dependency direction, abstraction levels |
+
+**Recommends:**
+- Converting sequential tool calls to parallel where independent
+- Using Task tool for complex multi-step searches
+- Extracting repeated patterns into shared utilities
+- Optimizing hot paths and removing unnecessary operations
 
 ## Context Application
 
@@ -120,7 +139,8 @@ Applied: {n} | Skipped: {n} | Manual: {n}
 | Flag | Effect |
 |------|--------|
 | `--quick` | Single-message analysis, smart defaults |
-| `--focus=X` | Focus: structure, deps, tests, security, dx |
+| `--focus=X` | Focus: structure, deps, tests, security, dx, best-practices |
+| `--best-practices` | Best practices focus only |
 | `--no-apply` | Report only |
 | `--matrix` | Show effort/impact matrix |
 

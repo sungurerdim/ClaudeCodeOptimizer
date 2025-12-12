@@ -67,3 +67,28 @@
 - **No-Bash-Loops**: Avoid `for f in *; do..done` - use single commands or parallel tool calls
 - **Background-Long**: Long-running commands (servers, tails) → background, continue working
 - **Complete-Fully**: Never stop early due to context concerns - auto-compaction handles limits
+
+## Strategy Evolution
+
+- **Learn-From-Failures**: Record recurring errors in context.md `## Learnings` section
+- **Pattern-Recognition**: Check Avoid patterns before repeating same approach
+- **Adaptive-Weight**: Increase caution on previously failed patterns
+- **Root-Cause-Focus**: Log why it failed, not just what failed
+- **Session-Continuity**: Learnings persist via context.md across sessions
+
+## Artifact Handling
+
+- **Handle-Large-Objects**: Reference large outputs by path/ID, not inline
+- **Tokenize-Efficiently**: Use `[artifact:path]` notation for files >500 lines
+- **Summarize-First**: Provide digest before full artifact access
+- **Chunk-Processing**: Process large data in manageable segments
+- **Cache-Artifacts**: Reuse analyzed artifacts within session
+
+## System-Level Analysis
+
+- **Architecture-First**: Before fixing symptoms, understand system design
+- **Dependency-Mapping**: Trace impact through component relationships
+- **Root-Cause-Hunt**: Ask "why does this pattern exist?" not just "what's wrong?"
+- **Cross-Cutting-Concerns**: Check for issues that span multiple modules
+- **Systemic-Patterns**: Identify recurring problems indicating design flaws
+- **Holistic-Review**: One bug may reveal architectural debt elsewhere

@@ -59,7 +59,7 @@ Read existing files only - no detection, no Bash commands for counting.
 
 ## Step 2: User Questions
 
-Single AskUserQuestion with multiSelect for all options:
+**AskUserQuestion** (mandatory) with multiSelect for all options:
 
 ```
 ┌─ Configure ──────────────────────────────────────────────────────────┐
@@ -125,11 +125,11 @@ Rules: {list from agent.rules[].file}
 AI Performance: {agent.aiPerf.thinking}/{agent.aiPerf.mcpOutput} tokens
 ```
 
-**Ask approval:**
-```
-AskUserQuestion: "Apply this configuration?"
-Options: Accept; Edit; Cancel
-```
+**Approval → AskUserQuestion** (mandatory):
+
+| Question | Options | MultiSelect |
+|----------|---------|-------------|
+| Apply this configuration? | Accept; Edit; Cancel | false |
 
 ---
 

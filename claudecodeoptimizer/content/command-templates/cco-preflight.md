@@ -39,7 +39,7 @@ Run /cco-config first to configure project context, then restart CLI.
 
 ## Phase Selection
 
-When called without flags, use **AskUserQuestion**:
+When called without flags → **AskUserQuestion** (mandatory):
 
 | Question | Options | multiSelect |
 |----------|---------|-------------|
@@ -229,14 +229,14 @@ Includes:
 └──────────────────────────────────────────────────────────────┘
 ```
 
-**Use AskUserQuestion:**
+**→ AskUserQuestion** (mandatory):
+
 | Question | Options | MultiSelect |
 |----------|---------|-------------|
 | Release decision? | Proceed (create tag); Fix warnings first; Abort | false |
 
-If warnings exist and "Proceed" selected:
+If warnings exist and "Proceed" selected **→ AskUserQuestion** (mandatory):
 
-**Use AskUserQuestion:**
 | Question | Options | MultiSelect |
 |----------|---------|-------------|
 | Confirm release with {N} warnings? | Yes, proceed anyway; No, fix first | false |
@@ -272,11 +272,7 @@ If warnings exist and "Proceed" selected:
 
 ## Behavior Rules
 
-### User Input [CRITICAL]
-
-- **AskUserQuestion**: ALL user decisions MUST use this tool
-- **Separator**: Use semicolon (`;`) to separate options
-- **Prohibited**: Never use plain text questions ("Would you like...", "Should I...")
+*Inherits: User Input rules from cco-tools.md*
 
 ### Git Safety
 

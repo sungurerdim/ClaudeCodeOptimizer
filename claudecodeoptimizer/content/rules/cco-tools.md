@@ -1,17 +1,21 @@
 # Tools Rules
 *On-demand loading for CCO commands and agents*
 
-## User Input [CRITICAL]
+## User Input [MANDATORY - NO ALTERNATIVES]
 
-### Tool Requirement [STRICT]
+### AskUserQuestion Tool Requirement [ABSOLUTE]
 
-- **Tool**: ALL user inputs MUST use AskUserQuestion tool
-- **No-Exceptions**: Never use plain text prompts for user decisions
-- **MultiSelect**: Use multiSelect: true when multiple selections valid
-- **All-Stages**: Applies to ALL stages: start, middle, end of command
-- **Follow-up**: Post-execution recommendations MUST use AskUserQuestion
+**RULE:** Every user interaction MUST use `AskUserQuestion` native tool. No exceptions. No alternatives.
 
-### Applies To
+| Requirement | Enforcement |
+|-------------|-------------|
+| **Mandatory** | ALL questions, confirmations, selections → AskUserQuestion |
+| **No Alternatives** | Plain text questions = VIOLATION, stop command |
+| **No Workarounds** | Cannot skip by rephrasing as statement |
+| **All Stages** | Start, middle, end, follow-up → all use tool |
+| **MultiSelect** | Use `multiSelect: true` when multiple selections valid |
+
+### Applies To (ALL of these)
 
 | Scenario | Example | MultiSelect |
 |----------|---------|-------------|
@@ -22,16 +26,20 @@
 | Action selection | "Accept / Modify / Cancel" | false |
 | Follow-up actions | "Apply recommendations?" | true |
 | Final decisions | "Proceed with release?" | false |
+| Clarifications | "Which module do you mean?" | false |
+| Error recovery | "How to proceed?" | false |
 
-### Prohibited Patterns [STRICT]
+### Prohibited Patterns [VIOLATION = STOP]
 
-| Pattern | Problem |
-|---------|---------|
-| "Would you like me to...?" | Plain text question |
-| "Do you want to...?" | Plain text question |
-| "Should I...?" | Plain text question |
-| "Let me know if..." | Implicit question |
-| Ending with a question mark without AskUserQuestion | VIOLATION |
+| Pattern | Why Prohibited | Action |
+|---------|----------------|--------|
+| "Would you like me to...?" | Plain text question | STOP |
+| "Do you want to...?" | Plain text question | STOP |
+| "Should I...?" | Plain text question | STOP |
+| "Let me know if..." | Implicit question | STOP |
+| "Feel free to..." | Passive request | STOP |
+| Any `?` without AskUserQuestion | Bypassing tool | STOP |
+| Statements expecting response | Disguised question | STOP |
 
 ### Option Separator [STRICT]
 
@@ -45,15 +53,27 @@
 - ✗ `Accept, Modify, Cancel` (ambiguous)
 - ✗ `Yes, proceed anyway, No, fix first` (very ambiguous)
 
-### Reference Pattern
+### Command Template Standard [REQUIRED]
 
-Commands MUST explicitly state tool usage:
+All command templates MUST define interactions as tables:
+
 ```markdown
-**Use AskUserQuestion:**
+## User Input
+
 | Question | Options | MultiSelect |
 |----------|---------|-------------|
 | {question}? | {opt1}; {opt2}; ... | true/false |
 ```
+
+**Execution:** When command reaches this table → call `AskUserQuestion` with exact parameters.
+
+### Self-Check Before Response
+
+Before ANY response that expects user input:
+1. Does it contain `?` → Must use AskUserQuestion
+2. Does it offer choices → Must use AskUserQuestion
+3. Does it need confirmation → Must use AskUserQuestion
+4. Is it a statement but waits for reply → Must use AskUserQuestion
 
 ## Command Flow
 
@@ -108,7 +128,7 @@ Commands MUST explicitly state tool usage:
 
 ## Question Patterns
 
-*All questions inherit User Input [CRITICAL] - must use AskUserQuestion.*
+*All questions inherit User Input [MANDATORY] rules above.*
 
 ### Pagination [LIMITS]
 
@@ -324,3 +344,39 @@ Note: Make a todo list first, then process systematically
 | Process | Update to in_progress before working |
 | Complete | Mark completed immediately after |
 | Report | Show final accounting |
+
+## Strategy Evolution
+
+### Learnings Section [REQUIRED]
+
+**Location:** `.claude/rules/cco/context.md` → `## Learnings` section
+
+**Format:**
+```markdown
+## Learnings
+
+### Avoid
+- {pattern}: {why it failed} → {what works instead}
+
+### Prefer
+- {pattern}: {why it works} [{impact: high|medium|low}]
+
+### Systemic
+- {issue}: {root cause} → {recommendation}
+```
+
+### Usage Flow
+
+| Phase | Action |
+|-------|--------|
+| Session Start | Read context.md, note Learnings section |
+| Analysis | Check Avoid patterns before recommending |
+| Failure | Add to Avoid with root cause |
+| Success | Add to Prefer with context |
+| Systemic | Add architectural findings to Systemic |
+
+### Rules
+
+- **Max Items**: 5 per category (remove oldest when full)
+- **Duplicates**: Update existing instead of adding new
+- **Format**: Single line per learning, concise
