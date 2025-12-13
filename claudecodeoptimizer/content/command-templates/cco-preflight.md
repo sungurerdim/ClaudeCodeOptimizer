@@ -70,37 +70,19 @@ calls in a single message. For example:
 Never use placeholders or guess missing parameters.
 </use_parallel_tool_calls>
 
-## Step Progress UX [CRITICAL]
+## Phase Announcements [CRITICAL]
 
-**Before starting ANY phase, display the full progress overview:**
+**Before starting each phase, announce:** `▶ Phase X/7: Phase Name`
 
-```
-┌─ PREFLIGHT PROGRESS ─────────────────────────────────────────┐
-│ Phase 1/7: Pre-flight Checks          ◉ In Progress          │
-│ Phase 2/7: Quality Gate               ○ Pending               │
-│ Phase 3/7: Cleanliness                ○ Pending               │
-│ Phase 4/7: Architecture               ○ Pending               │
-│ Phase 5/7: Final Verification         ○ Pending               │
-│ Phase 6/7: Changelog & Docs           ○ Pending               │
-│ Phase 7/7: Go/No-Go Summary           ○ Pending               │
-└──────────────────────────────────────────────────────────────┘
-```
-
-**Before each phase transition, announce clearly:**
-```
-━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-▶ Phase 2/7: Quality Gate
-━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-```
-
-**Status symbols:**
-| Symbol | Meaning |
-|--------|---------|
-| ◉ | In Progress |
-| ✓ | Completed |
-| ✗ | Failed |
-| ○ | Pending |
-| ⊘ | Skipped |
+| Phase | Name |
+|-------|------|
+| 1 | Pre-flight Checks |
+| 2 | Quality Gate |
+| 3 | Cleanliness |
+| 4 | Architecture |
+| 5 | Final Verification |
+| 6 | Changelog & Docs |
+| 7 | Go/No-Go Summary |
 
 ## Flow
 

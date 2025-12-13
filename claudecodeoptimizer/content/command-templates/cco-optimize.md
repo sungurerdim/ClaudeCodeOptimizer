@@ -27,6 +27,18 @@ When called without flags:
 
 *MultiSelect: Kullanıcı birden fazla scope seçebilir. Tümü seçilirse = Full optimization.*
 
+## Step Announcements [CRITICAL]
+
+**Before starting each step, announce:** `▶ Step X/5: Step Name`
+
+| Step | Name |
+|------|------|
+| 1 | Spawn Parallel Agents |
+| 2 | Collect Results |
+| 3 | Merge & Deduplicate |
+| 4 | Apply Fixes |
+| 5 | Show Summary |
+
 ## Execution Flow
 
 ```

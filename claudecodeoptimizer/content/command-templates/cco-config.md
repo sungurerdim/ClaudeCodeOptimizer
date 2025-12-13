@@ -29,6 +29,19 @@ allowed-tools: Read(*), Write(*), Edit(*), Bash(cco-install:*), Task(*), TodoWri
 - Parallel execution within agent
 - Faster, less context pollution
 
+## Step Announcements [CRITICAL]
+
+**Before starting each step, announce:** `▶ Step X/6: Step Name`
+
+| Step | Name |
+|------|------|
+| 1 | Quick Status |
+| 2 | User Questions |
+| 3 | Detection |
+| 4 | Review |
+| 5 | Apply |
+| 6 | Report |
+
 ---
 
 ## Step 1: Quick Status

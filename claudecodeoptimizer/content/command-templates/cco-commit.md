@@ -16,35 +16,17 @@ test -f ./.claude/rules/cco/context.md && echo "OK" || echo "Run /cco-config fir
 
 If not found: Stop immediately with message to run /cco-config.
 
-## Step Progress UX [CRITICAL]
+## Step Announcements [CRITICAL]
 
-**Before starting ANY step, display the full progress overview:**
+**Before starting each step, announce:** `▶ Step X/5: Step Name`
 
-```
-┌─ COMMIT PROGRESS ────────────────────────────────────────────┐
-│ Step 1/5: Git Info Collection         ◉ In Progress          │
-│ Step 2/5: Quality Gates               ○ Pending               │
-│ Step 3/5: Change Analysis             ○ Pending               │
-│ Step 4/5: Plan Approval               ○ Pending               │
-│ Step 5/5: Execute Commits             ○ Pending               │
-└──────────────────────────────────────────────────────────────┘
-```
-
-**Before each step transition, announce clearly:**
-```
-━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-▶ Step 2/5: Quality Gates
-━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-```
-
-**Status symbols:**
-| Symbol | Meaning |
-|--------|---------|
-| ◉ | In Progress |
-| ✓ | Completed |
-| ✗ | Failed |
-| ○ | Pending |
-| ⊘ | Skipped |
+| Step | Name |
+|------|------|
+| 1 | Git Info Collection |
+| 2 | Quality Gates |
+| 3 | Change Analysis |
+| 4 | Plan Approval |
+| 5 | Execute Commits |
 
 ## Execution Flow
 

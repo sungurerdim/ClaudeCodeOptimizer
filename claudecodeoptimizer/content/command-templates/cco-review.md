@@ -26,6 +26,18 @@ When called without flags:
 
 *MultiSelect: Kullanıcı birden fazla alan seçebilir. Tümü seçilirse = Full review.*
 
+## Step Announcements [CRITICAL]
+
+**Before starting each step, announce:** `▶ Step X/5: Step Name`
+
+| Step | Name |
+|------|------|
+| 1 | Spawn Parallel Agents |
+| 2 | Merge Results |
+| 3 | Foundation Assessment |
+| 4 | Generate Recommendations |
+| 5 | Apply Changes |
+
 ### Option Mapping
 
 | Option | Covers | Agent Scope |
