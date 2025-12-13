@@ -308,7 +308,7 @@ class TestErrorHandling:
         else:
             missing = False
 
-        assert missing is True  # Directory doesn't exist
+        assert missing  # Directory doesn't exist
 
     def test_validates_file_paths(self, tmp_path: Path) -> None:
         """Test validation of file paths before operations"""
@@ -323,7 +323,7 @@ class TestErrorHandling:
         except ValueError:
             is_safe = False
 
-        assert is_safe is True
+        assert is_safe
 
         # Invalid path should fail
         try:
@@ -332,7 +332,7 @@ class TestErrorHandling:
         except ValueError:
             is_safe = False
 
-        assert is_safe is False
+        assert not is_safe
 
 
 class TestFileGeneration:
