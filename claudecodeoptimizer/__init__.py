@@ -4,7 +4,7 @@ import sys
 
 __all__ = ["__version__", "__description__", "__author__"]
 
-__version__ = "1.1.0"
+__version__ = "2.0.0"
 __description__ = "A process and rules layer for Claude Code in the Opus 4.5 era"
 __author__ = "Sungur Zahid Erdim"
 

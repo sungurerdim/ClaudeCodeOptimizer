@@ -7,7 +7,17 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
-## [1.1.0] - 2025-12-13
+## [2.0.0] - 2025-12-13
+
+### Breaking Changes
+- **Command renames** - All commands renamed for consistency:
+  - `/cco-tune` → `/cco-config`
+  - `/cco-health` → `/cco-status`
+  - `/cco-audit` → `/cco-optimize`
+  - `/cco-refactor` → `/cco-review`
+  - `/cco-generate` → `/cco-research`
+- **Agent consolidation** - `cco-agent-detect` + `cco-agent-scan` → `cco-agent-analyze`; `cco-agent-action` → `cco-agent-apply`
+- **Deprecated `setup_claude_md` function** - Use `clean_claude_md` instead
 
 ### Added
 - **Meta command `/cco-preflight`** - Pre-release workflow with quality gate, architecture review, changelog & docs sync, and go/no-go summary
@@ -89,7 +99,6 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - **README statusline params** - Aligned documentation with CLI (`cco-full`/`cco-minimal` instead of `full`/`minimal`)
 
 ### Removed
-- **Deprecated `setup_claude_md` function** - Use `clean_claude_md` instead (breaking change for direct API users)
 - AI-Patterns Detection category from `/cco-optimize` (Claude already handles this)
 - Production Readiness Mode from `/cco-review` (use `/cco-optimize --pre-release`)
 - Redundant rule references from commands (use CCO-Specific rules)
