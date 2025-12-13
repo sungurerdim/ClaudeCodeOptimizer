@@ -310,7 +310,7 @@ Note: Make a todo list first, then process systematically
 
 ## Skip Criteria
 
-*Base skip paths defined in Core Rules (Skip-VCS, Skip-Deps, Skip-Build, Skip-IDE, Skip-Generated).*
+*Base skip paths defined in Core Rules (Skip).*
 
 ### CCO Skip Markers
 
@@ -352,6 +352,14 @@ TodoWrite([
 | **No-Skip** | Never skip items - update status instead |
 | **activeForm** | Use present continuous (-ing form) |
 | **content** | Use imperative form |
+
+## Artifact Handling
+
+- **Reference-Large**: Reference large outputs by path/ID, not inline
+- **Tokenize-Efficiently**: Use `[artifact:path]` notation for files >500 lines
+- **Summarize-First**: Provide digest before full artifact access
+- **Chunk-Processing**: Process large data in manageable segments
+- **Cache-Artifacts**: Reuse analyzed artifacts within session
 
 ## Strategy Evolution
 

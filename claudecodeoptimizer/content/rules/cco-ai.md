@@ -7,28 +7,21 @@
 - **Structured**: Tables/lists over prose
 - **Front-load**: Critical info first
 - **Hierarchy**: H2 > H3 > bullets
-- **Scope**: Bounded, reference over repeat
+- **Reference**: Cite by name, don't duplicate
 
-## AI Behavior
-
-### Execution Order [CRITICAL]
+## Execution Order [CRITICAL]
 
 - **Read-First**: NEVER propose edits to unread files
 - **Plan-Before-Act**: Understand full scope before any action
 - **Incremental**: Complete one step fully before starting next
 - **Verify**: Confirm changes match stated intent
 
-### Decision Making
+## Decision Making
 
 - **Challenge**: Question solutions that seem too perfect
 - **Ask**: When uncertain, clarify before proceeding
-- **Confidence**: Explicitly state uncertainty level for non-obvious conclusions
-
-### Prohibited Patterns
-
+- **Confidence**: State uncertainty level for non-obvious conclusions
 - **No-Guessing**: Never guess file contents without reading
-- **No-Premature**: Never start implementation before understanding scope
-- **No-Skip**: Never skip verification steps
 - **No-Assume**: Never assume user intent without confirmation
 
 ## Quality Control
@@ -41,10 +34,10 @@
 
 ## Status Updates
 
-- **Announce**: Before action, not after
-- **Progress**: Starting > In progress > Completed
+- **Announce-Before**: State action before starting
+- **Progress-Track**: Starting > In progress > Completed
 - **Transitions**: Clear phase signals
-- **No-Silent**: User always knows state
+- **Visible-State**: User always knows current state
 
 ## Multi-Model
 
@@ -54,41 +47,7 @@
 
 ## Output Standards
 
-- **Error**: `[SEVERITY] {What} in {file:line}`
-- **Status**: OK / WARN / FAIL
+- **Error-Format**: `[SEVERITY] {What} in {file:line}`
+- **Status-Values**: OK / WARN / FAIL
 - **Accounting**: done + skip + fail = total
 - **Structured**: JSON/table when needed
-
-## Efficiency
-
-- **Parallel-Independent**: Run unrelated operations simultaneously
-- **Sequential-Dependent**: Chain operations that depend on prior results
-- **Batch-Reads**: Multiple file reads in single call when possible
-- **No-Bash-Loops**: Avoid `for f in *; do..done` - use single commands or parallel tool calls
-- **Background-Long**: Long-running commands (servers, tails) → background, continue working
-- **Complete-Fully**: Never stop early due to context concerns - auto-compaction handles limits
-
-## Strategy Evolution
-
-- **Learn-From-Failures**: Record recurring errors in context.md `## Learnings` section
-- **Pattern-Recognition**: Check Avoid patterns before repeating same approach
-- **Adaptive-Weight**: Increase caution on previously failed patterns
-- **Root-Cause-Focus**: Log why it failed, not just what failed
-- **Session-Continuity**: Learnings persist via context.md across sessions
-
-## Artifact Handling
-
-- **Handle-Large-Objects**: Reference large outputs by path/ID, not inline
-- **Tokenize-Efficiently**: Use `[artifact:path]` notation for files >500 lines
-- **Summarize-First**: Provide digest before full artifact access
-- **Chunk-Processing**: Process large data in manageable segments
-- **Cache-Artifacts**: Reuse analyzed artifacts within session
-
-## System-Level Analysis
-
-- **Architecture-First**: Before fixing symptoms, understand system design
-- **Dependency-Mapping**: Trace impact through component relationships
-- **Root-Cause-Hunt**: Ask "why does this pattern exist?" not just "what's wrong?"
-- **Cross-Cutting-Concerns**: Check for issues that span multiple modules
-- **Systemic-Patterns**: Identify recurring problems indicating design flaws
-- **Holistic-Review**: One bug may reveal architectural debt elsewhere
