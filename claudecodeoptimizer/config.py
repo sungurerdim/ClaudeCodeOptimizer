@@ -31,8 +31,6 @@ __all__ = [
     "STATUSLINE_FILE",
     "SETTINGS_FILE",
     "CCO_PERMISSIONS_MARKER",
-    "load_json_file",
-    "save_json_file",
 ]
 
 VERSION = __version__  # Single source: __init__.py
@@ -55,7 +53,7 @@ CCO_RULE_FILES = ("cco-core.md", "cco-ai.md")  # Source filenames
 ALL_RULE_NAMES: list[str] = list(CCO_RULE_NAMES) + ["tools.md", "adaptive.md"]
 OLD_RULE_FILES: list[str] = list(CCO_RULE_FILES) + ["cco-adaptive.md", "cco-tools.md"]
 
-STATUSLINE_FILE = CLAUDE_DIR / "statusline.js"
+STATUSLINE_FILE = CLAUDE_DIR / "cco-statusline.js"
 SETTINGS_FILE = CLAUDE_DIR / "settings.json"
 SEPARATOR = "=" * 50
 

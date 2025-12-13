@@ -373,10 +373,10 @@ class TestSetupLocalStatusline:
             result = setup_local_statusline(project_path, "cco-full", verbose=False)
 
         assert result is True
-        assert (project_path / ".claude" / "statusline.js").exists()
+        assert (project_path / ".claude" / "cco-statusline.js").exists()
         assert (project_path / ".claude" / "settings.json").exists()
         settings = json.loads((project_path / ".claude" / "settings.json").read_text())
-        assert settings["statusLine"]["command"] == "node .claude/statusline.js"
+        assert settings["statusLine"]["command"] == "node .claude/cco-statusline.js"
 
     def test_minimal_mode(self, tmp_path):
         """Test minimal statusline mode."""
@@ -393,7 +393,7 @@ class TestSetupLocalStatusline:
             result = setup_local_statusline(project_path, "cco-minimal", verbose=False)
 
         assert result is True
-        content = (project_path / ".claude" / "statusline.js").read_text()
+        content = (project_path / ".claude" / "cco-statusline.js").read_text()
         assert "cco-minimal" in content
 
     def test_invalid_mode(self, tmp_path, capsys):
@@ -482,7 +482,7 @@ class TestSetupLocalStatusline:
 
         assert result is True
         captured = capsys.readouterr()
-        assert "statusline.js" in captured.out
+        assert "cco-statusline.js" in captured.out
         assert "full mode" in captured.out
         assert "settings.json" in captured.out
 
@@ -697,7 +697,7 @@ class TestRunLocalMode:
                     result = post_install()
 
         assert result == 0
-        assert (project_path / ".claude" / "statusline.js").exists()
+        assert (project_path / ".claude" / "cco-statusline.js").exists()
         captured = capsys.readouterr()
         assert "Statusline:" in captured.out
 

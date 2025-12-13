@@ -187,7 +187,7 @@ Write to `.claude/settings.json`:
 ### Remove Operations
 - Remove Rules: `rm -rf .claude/rules/cco/`
 - Remove AI Perf: Remove `env` from settings.json
-- Remove Statusline: `rm .claude/statusline.js`, remove `statusLine` from settings.json
+- Remove Statusline: `rm .claude/cco-statusline.js`, remove `statusLine` from settings.json
 - Remove Permissions: Remove `permissions` from settings.json
 
 ---

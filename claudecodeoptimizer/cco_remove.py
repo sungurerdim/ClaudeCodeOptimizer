@@ -1,5 +1,6 @@
 """CCO Remove - Uninstall CCO files from ~/.claude/"""
 
+import argparse
 import json
 import re
 import subprocess
@@ -87,15 +88,15 @@ def has_cco_statusline() -> bool:
 
 
 def remove_statusline(verbose: bool = True) -> bool:
-    """Remove CCO statusline.js and clean settings.json."""
+    """Remove CCO cco-statusline.js and clean settings.json."""
     removed = False
 
-    # Remove statusline.js if it's a CCO file
+    # Remove cco-statusline.js if it's a CCO file
     if has_cco_statusline():
         STATUSLINE_FILE.unlink()
         removed = True
         if verbose:
-            print("  - statusline.js")
+            print("  - cco-statusline.js")
 
     # Clean statusLine from settings.json
     if SETTINGS_FILE.exists():
@@ -421,7 +422,7 @@ def _display_settings(items: RemovalItems) -> None:
     if items["statusline"] or items["permissions"]:
         print("Settings (~/.claude/):")
         if items["statusline"]:
-            print("  - statusline.js")
+            print("  - cco-statusline.js")
             print("  - settings.json (statusLine config)")
         if items["permissions"]:
             print("  - settings.json (permissions)")
@@ -534,6 +535,18 @@ def _execute_removal(items: RemovalItems) -> None:
 
 def main() -> int:
     """CLI entry point."""
+    parser = argparse.ArgumentParser(
+        prog="cco-remove",
+        description="Uninstall CCO files from ~/.claude/",
+    )
+    parser.add_argument(
+        "-y",
+        "--yes",
+        action="store_true",
+        help="Skip confirmation prompt (for scripting)",
+    )
+    args = parser.parse_args()
+
     try:
         items = _collect_removal_items()
 
@@ -543,10 +556,11 @@ def main() -> int:
 
         _display_removal_plan(items)
 
-        confirm = input("Remove all CCO components? [y/N]: ").strip().lower()[:10]
-        if confirm != "y":
-            print("Cancelled.")
-            return 0
+        if not args.yes:
+            confirm = input("Remove all CCO components? [y/N]: ").strip().lower()
+            if confirm != "y":
+                print("Cancelled.")
+                return 0
 
         print()
         _execute_removal(items)

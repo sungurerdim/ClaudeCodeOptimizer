@@ -5,6 +5,7 @@ import json
 import re
 import shutil
 import sys
+import warnings
 from pathlib import Path
 from typing import Any
 
@@ -332,6 +333,11 @@ def setup_claude_md(verbose: bool = True) -> dict[str, int]:
     Kept for backward compatibility. Now only cleans old markers,
     does not write new rules (they're in ~/.claude/rules/cco/).
     """
+    warnings.warn(
+        "setup_claude_md is deprecated, use clean_claude_md instead",
+        DeprecationWarning,
+        stacklevel=2,
+    )
     removed = clean_claude_md(verbose)
     breakdown = get_rules_breakdown()
     return {
@@ -367,10 +373,10 @@ def setup_local_statusline(project_path: Path, mode: str, verbose: bool = True) 
             print(f"  Error: Statusline source not found: {src}")
         return False
 
-    # Create .claude/ directory and copy statusline
+    # Create .claude/ directory and copy statusline (always overwrite)
     local_claude = project_path / ".claude"
     local_claude.mkdir(parents=True, exist_ok=True)
-    dest = local_claude / "statusline.js"
+    dest = local_claude / "cco-statusline.js"
     shutil.copy2(src, dest)
 
     # Update local settings.json with statusLine config
@@ -380,14 +386,14 @@ def setup_local_statusline(project_path: Path, mode: str, verbose: bool = True) 
     # Local statusline - direct path, no fallback
     settings["statusLine"] = {
         "type": "command",
-        "command": "node .claude/statusline.js",
+        "command": "node .claude/cco-statusline.js",
         "padding": 1,
     }
 
     settings_file.write_text(json.dumps(settings, indent=2) + "\n", encoding="utf-8")
 
     if verbose:
-        print(f"  + .claude/statusline.js ({mode} mode)")
+        print(f"  + .claude/cco-statusline.js ({mode} mode)")
         print("  + .claude/settings.json (statusLine configured)")
 
     return True
