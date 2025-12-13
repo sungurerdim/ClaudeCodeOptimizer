@@ -1,6 +1,10 @@
 # CCO Design Principles
 
-These core principles guide all CCO development and usage. They are implemented through the [CCO Rules](rules.md).
+The philosophy and patterns that guide CCO development and usage.
+
+For complete rule definitions, see [Rules Documentation](rules.md).
+
+For software engineering principle definitions (SSOT, DRY, YAGNI, etc.), see [Principles Reference](principles-reference.md).
 
 ---
 
@@ -16,83 +20,47 @@ CCO is a process layer, not a teaching layer. It provides:
 
 ---
 
-## Transparency
+## Design Goals
 
-All operations are visible and predictable.
+### Transparency
+All operations are visible and predictable. Users always know what's happening.
 
-| Principle | Implemented In |
-|-----------|----------------|
-| Announce Before Action | AI Rules: Status Updates |
-| Progress Signals | AI Rules: Status Updates |
-| No Silent Operations | AI Rules: Status Updates |
-| Phase Transitions | AI Rules: Status Updates |
+### User Control
+The user is always in charge. All risky changes require approval.
 
----
+### DRY + SSOT
+Single source of truth, no duplication. Rules defined once, referenced everywhere.
 
-## User Control
-
-The user is always in charge.
-
-| Principle | Implemented In |
-|-----------|----------------|
-| Approval Required | Tool Rules: Approval Flow |
-| Priority Classification | Tool Rules: Priority Levels |
-| Safety Classification | Tool Rules: Safety Classification |
-| Rollback Support | Tool Rules: Pre-Operation Safety |
-
----
-
-## DRY + SSOT
-
-Single source of truth, no duplication.
-
-| Principle | Implemented In |
-|-----------|----------------|
-| No Hardcoded Values | Tool Rules: Question Formatting |
-| Reference Over Repeat | All commands use `**Tool Rules:** !cat...` |
-| Conditional Loading | Tool Rules: Context Integration |
-| Context-Driven Thresholds | Tool Rules: Context Integration |
-
----
-
-## Token Efficiency
-
-Optimize for context window usage.
-
-| Principle | Implemented In |
-|-----------|----------------|
-| Semantic Density | AI Rules: Context Optimization |
-| Structured Format | AI Rules: Context Optimization |
-| Front-load Critical | AI Rules: Context Optimization |
-| Bounded Context | AI Rules: Context Optimization |
+### Token Efficiency
+Optimize for context window usage. Semantic density over verbosity.
 
 ---
 
 ## Safety-First Workflow
 
-All changes follow a consistent safety pattern.
+All changes follow a consistent safety pattern:
 
-| Step | Rule |
-|------|------|
-| 1. Pre-Check | Tool Rules: Pre-Operation Safety |
-| 2. Analyze | Tool Rules: Command Flow |
-| 3. Report | Tool Rules: Output Formatting |
-| 4. Approve | Tool Rules: Approval Flow |
-| 5. Apply | Tool Rules: Fix Workflow |
-| 6. Verify | Tool Rules: Fix Workflow (Accounting) |
+```
+Pre-Check → Analyze → Report → Approve → Apply → Verify
+```
+
+1. **Pre-Check** - Git status, dirty state handling
+2. **Analyze** - Identify issues/opportunities
+3. **Report** - Present findings with evidence
+4. **Approve** - User confirms (safe = auto, risky = ask)
+5. **Apply** - Execute changes
+6. **Verify** - Confirm success with accounting
 
 ---
 
 ## Rule Categories
 
-| Category | Scope |
-|----------|-------|
-| Core | All projects, AI/human agnostic |
-| AI | All AI assistants, model agnostic |
-| Tools | CCO workflow mechanisms (on-demand) |
-| Adaptive | Dynamically selected by /cco-config |
-
-For rule counts, see [README](../README.md#rules).
+| Category | Scope | Loading |
+|----------|-------|---------|
+| **Core** | All projects, AI/human agnostic | Always active |
+| **AI** | All AI assistants, model agnostic | Always active |
+| **Tools** | CCO workflow mechanisms | On-demand |
+| **Adaptive** | Stack-based rules | Selected by /cco-config |
 
 ---
 
@@ -127,12 +95,12 @@ allowed-tools: Tool1(*), Tool2(pattern:*)
 
 ### Security Benefit
 
-- **Scope**: Commands can only use declared tools
-- **Prevention**: Prevents accidental destructive operations
-- **Explicit**: Explicit scope = predictable behavior
+- **Scope** - Commands can only use declared tools
+- **Prevention** - Prevents accidental destructive operations
+- **Explicit** - Explicit scope = predictable behavior
 
 ---
 
-*See [Rules Documentation](rules.md) for full details*
+*See [Rules Documentation](rules.md) for complete rule definitions*
 
 *Back to [README](../README.md)*
