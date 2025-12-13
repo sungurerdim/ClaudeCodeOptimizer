@@ -294,6 +294,23 @@ class TestSetupClaudeMd:
             assert "Keep this" in content
             assert "CCO_STANDARDS_START" not in content
 
+    def test_cleans_old_markers_verbose(self, tmp_path, capsys):
+        """Test cleans old CCO markers with verbose output."""
+        from claudecodeoptimizer.install_hook import clean_claude_md
+
+        with patch("claudecodeoptimizer.install_hook.CLAUDE_DIR", tmp_path):
+            claude_md = tmp_path / "CLAUDE.md"
+            claude_md.write_text(
+                "# My Rules\n\n<!-- CCO_STANDARDS_START -->Old content<!-- CCO_STANDARDS_END -->\n\nKeep this"
+            )
+
+            removed = clean_claude_md(verbose=True)
+
+            assert removed == 1
+            captured = capsys.readouterr()
+            assert "CLAUDE.md: cleaned" in captured.out
+            assert "old CCO marker" in captured.out
+
     def test_removes_empty_file(self, tmp_path):
         """Test removes CLAUDE.md if empty after cleaning."""
         from claudecodeoptimizer.install_hook import clean_claude_md
@@ -673,7 +690,9 @@ class TestRunLocalMode:
         with patch("pathlib.Path.cwd", return_value=tmp_path):
             with patch("claudecodeoptimizer.install_hook.get_content_path", return_value=src_dir):
                 with patch.object(
-                    sys, "argv", ["cco-install", "--local", str(project_path), "--statusline", "full"]
+                    sys,
+                    "argv",
+                    ["cco-install", "--local", str(project_path), "--statusline", "full"],
                 ):
                     result = post_install()
 
@@ -759,7 +778,9 @@ class TestRunLocalMode:
                 return_value=tmp_path / "nonexistent",
             ):
                 with patch.object(
-                    sys, "argv", ["cco-install", "--local", str(project_path), "--statusline", "full"]
+                    sys,
+                    "argv",
+                    ["cco-install", "--local", str(project_path), "--statusline", "full"],
                 ):
                     result = post_install()
 

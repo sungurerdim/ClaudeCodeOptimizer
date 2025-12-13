@@ -43,9 +43,20 @@ When called without flags → **AskUserQuestion** (mandatory):
 
 | Question | Options | multiSelect |
 |----------|---------|-------------|
-| Which phases to run? | Pre-flight Checks; Quality Audit; Cleanliness Check; Architecture Review; Final Verification; All (Recommended) | true |
+| Which phases to run? | Verification (Recommended); Quality & Cleanup; Architecture; Changelog & Docs | true |
 
-**Default:** All (if user doesn't specify)
+*MultiSelect: Kullanıcı birden fazla faz seçebilir. Tümü seçilirse = Full preflight.*
+
+### Option Mapping
+
+| Option | Covers | Phases |
+|--------|--------|--------|
+| Verification | Pre-flight checks + Final verification | 1, 5 |
+| Quality & Cleanup | Quality audit + Cleanliness check | 2, 3 |
+| Architecture | Architecture review | 4 |
+| Changelog & Docs | Release notes + Documentation sync | 6 (NEW) |
+
+**Default:** All phases if user doesn't specify
 
 ## Execution Optimization
 
@@ -58,6 +69,38 @@ calls in a single message. For example:
 
 Never use placeholders or guess missing parameters.
 </use_parallel_tool_calls>
+
+## Step Progress UX [CRITICAL]
+
+**Before starting ANY phase, display the full progress overview:**
+
+```
+┌─ PREFLIGHT PROGRESS ─────────────────────────────────────────┐
+│ Phase 1/7: Pre-flight Checks          ◉ In Progress          │
+│ Phase 2/7: Quality Gate               ○ Pending               │
+│ Phase 3/7: Cleanliness                ○ Pending               │
+│ Phase 4/7: Architecture               ○ Pending               │
+│ Phase 5/7: Final Verification         ○ Pending               │
+│ Phase 6/7: Changelog & Docs           ○ Pending               │
+│ Phase 7/7: Go/No-Go Summary           ○ Pending               │
+└──────────────────────────────────────────────────────────────┘
+```
+
+**Before each phase transition, announce clearly:**
+```
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+▶ Phase 2/7: Quality Gate
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+```
+
+**Status symbols:**
+| Symbol | Meaning |
+|--------|---------|
+| ◉ | In Progress |
+| ✓ | Completed |
+| ✗ | Failed |
+| ○ | Pending |
+| ⊘ | Skipped |
 
 ## Flow
 
@@ -197,35 +240,131 @@ Includes:
 ┌─ FINAL VERIFICATION ─────────────────────────────────────────┐
 │ Check       │ Command              │ Status │ Details        │
 ├─────────────┼──────────────────────┼────────┼────────────────┤
-│ Tests       │ pytest tests/        │ PASS   │ 142 passed     │
-│ Build       │ python -m build      │ PASS   │ dist/ created  │
-│ Lint        │ ruff check .         │ PASS   │ Clean          │
-│ Types       │ mypy src/            │ PASS   │ No errors      │
+│ Tests       │ {test_cmd}           │ {s}    │ {details}      │
+│ Build       │ {build_cmd}          │ {s}    │ {details}      │
+│ Lint        │ {lint_cmd}           │ {s}    │ {details}      │
+│ Types       │ {type_cmd}           │ {s}    │ {details}      │
 └─────────────┴──────────────────────┴────────┴────────────────┘
 ```
 
-### Phase 6: Go/No-Go Summary
+*Commands from context.md Operational section*
+
+### Phase 6: Changelog & Docs Update (Release-Specific)
+
+Analyzes all changes since last release tag and updates documentation:
+
+| Step | Action | Output |
+|------|--------|--------|
+| 1. Diff Analysis | `git log {last_tag}..HEAD --oneline` | Commit list |
+| 2. Change Classification | Categorize: Added, Changed, Fixed, Removed, Breaking | Grouped changes |
+| 3. Version Suggestion | Analyze changes → suggest SemVer bump | Recommended version |
+| 4. CHANGELOG Update | Generate/update entries for new version | CHANGELOG.md |
+| 5. Docs Sync | Check README, docs/ for feature coverage | Missing docs list |
+| 6. Apply Updates | Write changes (if auto-fix enabled) | Updated files |
+
+**Change Classification:**
+
+| Type | Detection | CHANGELOG Section |
+|------|-----------|-------------------|
+| Breaking | `BREAKING:`, API removal, signature change | ⚠️ Breaking Changes |
+| Added | `feat:`, new files, new exports | Added |
+| Changed | `refactor:`, `perf:`, modified behavior | Changed |
+| Fixed | `fix:`, bug corrections | Fixed |
+| Removed | Deleted files, removed exports | Removed |
+| Security | `security:`, CVE fixes | Security |
+
+**Version Suggestion (SemVer):**
+
+| Change Type | Version Bump | Example |
+|-------------|--------------|---------|
+| Breaking changes | MAJOR (X.0.0) | 1.2.3 → 2.0.0 |
+| New features (no breaking) | MINOR (x.Y.0) | 1.2.3 → 1.3.0 |
+| Bug fixes only | PATCH (x.y.Z) | 1.2.3 → 1.2.4 |
+| Pre-release | Keep suffix | 1.0.0-alpha → 1.0.0-beta |
+
+**Version Analysis Logic:**
+```
+1. Check current version: pyproject.toml / package.json / __version__
+2. Scan commits since last tag:
+   - Any BREAKING: or removed exports? → MAJOR
+   - Any feat: or new exports? → MINOR
+   - Only fix: or refactor:? → PATCH
+3. Cross-check with existing CHANGELOG entries
+4. Suggest: {current} → {suggested} ({reason})
+```
+
+**Beginner-Friendly Explanation:**
+```
+┌─ VERSION SUGGESTION ─────────────────────────────────────────┐
+│ Current: {current_version}                                   │
+│ Suggested: {suggested_version} ({bump_type} bump)            │
+├──────────────────────────────────────────────────────────────┤
+│ Why {bump_type}?                                             │
+│   {analysis_points}                                          │
+├──────────────────────────────────────────────────────────────┤
+│ SemVer Guide:                                                │
+│   MAJOR (X.0.0): Breaking changes, removed features          │
+│   MINOR (x.Y.0): New features, backward compatible           │
+│   PATCH (x.y.Z): Bug fixes, no new features                  │
+└──────────────────────────────────────────────────────────────┘
+```
+
+**Docs Sync Check:**
+
+| Check | Source | Target |
+|-------|--------|--------|
+| New features | CHANGELOG Added | README.md, docs/ |
+| API changes | Changed exports | API docs |
+| Config changes | New options | Configuration docs |
+| Breaking changes | BREAKING section | Migration guide |
+
+```
+┌─ CHANGELOG & DOCS ───────────────────────────────────────────┐
+│ Analyzing changes since {last_tag}...                        │
+├──────────────────────────────────────────────────────────────┤
+│ Commits: {n} │ Files: {n} │ Breaking: {n} │ Features: {n}    │
+├──────────────────────────────────────────────────────────────┤
+│ VERSION SUGGESTION                                           │
+│   Current: {current} → Suggested: {suggested} ({bump_type})  │
+│   Reason: {reason}                                           │
+├──────────────────────────────────────────────────────────────┤
+│ CHANGELOG entries generated:                                 │
+│   {entries_list}                                             │
+├──────────────────────────────────────────────────────────────┤
+│ Docs requiring update:                                       │
+│   {docs_status_list}                                         │
+├──────────────────────────────────────────────────────────────┤
+│ Action: {Applied {n} updates | Review required | Up to date} │
+└──────────────────────────────────────────────────────────────┘
+```
+
+**→ AskUserQuestion** (if updates needed):
+
+| Question | Options | MultiSelect |
+|----------|---------|-------------|
+| Apply documentation updates? | Apply all; Review each; Skip | false |
+
+### Phase 7: Go/No-Go Summary
 
 ```
 ┌─ RELEASE SUMMARY ────────────────────────────────────────────┐
-│ Version: 1.2.0                                               │
-│ Branch: main                                                 │
-│ Previous: 1.1.0 (15 commits ago)                            │
+│ Version: {version}                                           │
+│ Branch: {branch}                                             │
+│ Previous: {prev_version} ({n} commits ago)                   │
 ├──────────────────────────────────────────────────────────────┤
 │ BLOCKERS (must fix before release):                          │
-│   (none)                                                     │
+│   {blockers_list}                                            │
 ├──────────────────────────────────────────────────────────────┤
 │ WARNINGS (should fix):                                       │
-│   • Test coverage 88% (target: 90%)                         │
-│   • Changelog not updated for 1.2.0                         │
+│   {warnings_list}                                            │
 ├──────────────────────────────────────────────────────────────┤
-│ READY TO RELEASE: YES (with warnings)                       │
+│ READY TO RELEASE: {YES|NO} {(with warnings)}                 │
 ├──────────────────────────────────────────────────────────────┤
 │ Next Steps:                                                  │
-│   1. Update CHANGELOG.md                                    │
-│   2. git tag v1.2.0                                         │
-│   3. git push origin main --tags                            │
-│   4. Publish: python -m twine upload dist/*                 │
+│   1. {pending_actions}                                       │
+│   2. git tag v{version}                                      │
+│   3. git push origin {branch} --tags                         │
+│   4. {publish_cmd}                                           │
 └──────────────────────────────────────────────────────────────┘
 ```
 
@@ -250,6 +389,9 @@ If warnings exist and "Proceed" selected **→ AskUserQuestion** (mandatory):
 | `--skip-tests` | Skip test suite (not recommended) |
 | `--tag` | Create git tag after success |
 | `--push` | Push to remote after success |
+| `--changelog` | Generate/update CHANGELOG entries only |
+| `--docs` | Check and update documentation only |
+| `--skip-docs` | Skip changelog & docs phase |
 
 ## Usage
 

@@ -22,8 +22,10 @@ When called without flags:
 
 | Question | Options | MultiSelect |
 |----------|---------|-------------|
-| Scope? | Security; Quality; Hygiene; Best Practices; All (Recommended) | true |
+| Scope? | Security (Recommended); Quality (Recommended); Hygiene; Best Practices | true |
 | Action? | Report Only; Auto-fix (Recommended); Interactive | false |
+
+*MultiSelect: Kullanıcı birden fazla scope seçebilir. Tümü seçilirse = Full optimization.*
 
 ## Execution Flow
 
@@ -69,10 +71,10 @@ Analyzes optimal tool and pattern usage:
 | **Code Patterns** | DRY, SOLID, error handling, async patterns |
 | **Performance** | N+1 queries, unnecessary iterations, caching opportunities |
 
-**Example findings:**
-- "3 sequential Bash calls could be parallelized" → suggest single message
+**Finding patterns:**
+- "{n} sequential tool calls could be parallelized" → suggest single message
 - "Subagent not used for complex search" → suggest Task tool
-- "Repeated pattern in 4 files" → suggest extraction
+- "Repeated pattern in {n} files" → suggest extraction
 - "Sync file operations in async context" → suggest async alternatives
 
 ## Context Application

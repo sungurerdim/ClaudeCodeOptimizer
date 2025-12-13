@@ -508,6 +508,40 @@ class TestRemoveRulesDir:
             result = remove_rules_dir(verbose=False)
         assert result is False
 
+    def test_remove_empty_cco_dir(self, tmp_path, capsys):
+        """Test removes empty cco/ directory after all CCO files removed."""
+        from claudecodeoptimizer.cco_remove import remove_rules_dir
+
+        # Create cco/ dir with only CCO files
+        cco_dir = tmp_path / "rules" / "cco"
+        cco_dir.mkdir(parents=True)
+        (cco_dir / "core.md").write_text("# Core")
+        (cco_dir / "ai.md").write_text("# AI")
+
+        with patch("claudecodeoptimizer.cco_remove.RULES_DIR", cco_dir):
+            result = remove_rules_dir(verbose=True)
+
+        assert result is True
+        # Directory should be removed since it's empty
+        assert not cco_dir.exists()
+
+    def test_no_cco_files_returns_false(self, tmp_path):
+        """Test returns False when cco/ dir exists but has no CCO files."""
+        from claudecodeoptimizer.cco_remove import remove_rules_dir
+
+        # Create cco/ dir with only non-CCO files
+        cco_dir = tmp_path / "rules" / "cco"
+        cco_dir.mkdir(parents=True)
+        (cco_dir / "custom-rule.md").write_text("# Custom")
+
+        with patch("claudecodeoptimizer.cco_remove.RULES_DIR", cco_dir):
+            result = remove_rules_dir(verbose=False)
+
+        assert result is False
+        # Directory should still exist
+        assert cco_dir.exists()
+        assert (cco_dir / "custom-rule.md").exists()
+
 
 class TestDisplayRemovalPlan:
     """Test _display_removal_plan function."""
@@ -566,6 +600,24 @@ class TestDisplayRemovalPlan:
         captured = capsys.readouterr()
         assert "Settings (~/.claude/):" in captured.out
         assert "permissions" in captured.out
+
+    def test_display_with_rules_dir_old(self, capsys):
+        """Test displays rules_dir_old section when present (v1.x)."""
+        items = {
+            "method": None,
+            "files": {"commands": [], "agents": []},
+            "rules": [],
+            "rules_dir": False,
+            "rules_dir_old": True,
+            "statusline": False,
+            "permissions": False,
+            "total_files": 0,
+            "total": 1,
+        }
+        _display_removal_plan(items)
+        captured = capsys.readouterr()
+        assert "Rules directory:" in captured.out
+        assert "v1.x old files" in captured.out
 
 
 class TestExecuteRemoval:
@@ -633,6 +685,27 @@ class TestExecuteRemoval:
         mock_remove.assert_called_once()
         captured = capsys.readouterr()
         assert "Removing settings" in captured.out
+
+    def test_execute_with_rules_dir_old(self, capsys):
+        """Test executes rules_dir_old removal when present (v1.x)."""
+        items = {
+            "method": None,
+            "files": {"commands": [], "agents": []},
+            "rules": [],
+            "rules_dir": False,
+            "rules_dir_old": True,
+            "statusline": False,
+            "permissions": False,
+            "total_files": 0,
+            "total": 1,
+        }
+        with patch("claudecodeoptimizer.cco_remove.remove_rules_dir_old") as mock_remove:
+            mock_remove.return_value = True
+            _execute_removal(items)
+
+        mock_remove.assert_called_once()
+        captured = capsys.readouterr()
+        assert "Removing rules directory" in captured.out
 
 
 class TestHasClaudeMdRulesNoMatches:

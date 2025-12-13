@@ -16,6 +16,36 @@ test -f ./.claude/rules/cco/context.md && echo "OK" || echo "Run /cco-config fir
 
 If not found: Stop immediately with message to run /cco-config.
 
+## Step Progress UX [CRITICAL]
+
+**Before starting ANY step, display the full progress overview:**
+
+```
+┌─ COMMIT PROGRESS ────────────────────────────────────────────┐
+│ Step 1/5: Git Info Collection         ◉ In Progress          │
+│ Step 2/5: Quality Gates               ○ Pending               │
+│ Step 3/5: Change Analysis             ○ Pending               │
+│ Step 4/5: Plan Approval               ○ Pending               │
+│ Step 5/5: Execute Commits             ○ Pending               │
+└──────────────────────────────────────────────────────────────┘
+```
+
+**Before each step transition, announce clearly:**
+```
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+▶ Step 2/5: Quality Gates
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+```
+
+**Status symbols:**
+| Symbol | Meaning |
+|--------|---------|
+| ◉ | In Progress |
+| ✓ | Completed |
+| ✗ | Failed |
+| ○ | Pending |
+| ⊘ | Skipped |
+
 ## Execution Flow
 
 ```
@@ -48,18 +78,34 @@ If not found: Stop immediately with message to run /cco-config.
 | Maturity | Legacy → smaller commits; Greenfield → batch related |
 | Type | Library → careful with public API; API → note contract impacts |
 
-## Quality Gates
+## Quality Gates [CRITICAL]
 
-Run sequentially, stop on failure:
+**Read tools from context.md Operational section:**
+```
+Tools: {format_cmd} (format), {lint_cmd} (lint), {test_cmd} (test)
+```
 
-| Gate | Detection | Action |
-|------|-----------|--------|
-| Secrets | `sk-`, `ghp_`, `password=`, private keys | BLOCK |
-| Large Files | >1MB warn, >10MB block | ASK |
-| Format | Auto-fix style | MODIFY |
-| Lint | Static analysis | STOP on unfixable |
-| Types | Type consistency | STOP on failure |
-| Tests | Behavior verification | STOP on failure |
+**Run sequentially, stop on failure:**
+
+| Gate | Command Source | Action |
+|------|----------------|--------|
+| Secrets | `grep -rn "sk-\|ghp_\|password=" --include="*.py"` | BLOCK if found |
+| Large Files | `find . -size +1M -type f` | WARN >1MB, BLOCK >10MB |
+| Format | `{format_cmd}` from context | Auto-fix, stage changes |
+| Lint | `{lint_cmd}` from context | STOP on unfixable |
+| Types | (included in lint if mypy configured) | STOP on failure |
+| Tests | `{test_cmd}` from context | STOP on failure |
+
+**Execution order:**
+```
+Step 2 runs:
+  1. Secrets check (grep for patterns)
+  2. {format_cmd} from context        # Format (auto-fix)
+  3. {lint_cmd} from context          # Lint + Types
+  4. {test_cmd} from context          # Tests
+```
+
+**If any gate fails:** Stop immediately, show error, do NOT proceed to Step 3.
 
 ## Atomic Grouping
 
@@ -74,9 +120,11 @@ Run sequentially, stop on failure:
 
 | ❌ Reject | ✅ Accept |
 |-----------|-----------|
-| "fix bug" | "fix(auth): prevent session timeout on refresh" |
-| "update code" | "refactor(parser): extract validation module" |
-| "changes" | "feat(export): add CSV export for reports" |
+| "fix bug" | "fix({scope}): {specific_what_and_why}" |
+| "update code" | "refactor({scope}): {what_changed}" |
+| "changes" | "feat({scope}): {new_capability}" |
+
+*Format: `{type}({scope}): {description}` - scope from affected module/feature*
 
 ## Type Classification
 
@@ -118,12 +166,22 @@ Run sequentially, stop on failure:
 
 ## User Decisions
 
-| Question | Options |
-|----------|---------|
-| Include unstaged? | Yes; No |
-| Commit plan action? | Accept; Modify; Merge; Split; Edit message; Cancel |
-| Large file ({file})? | Yes; No |
-| Add BREAKING CHANGE? | Yes; No |
+### Primary Decisions
+
+| Question | Options | MultiSelect |
+|----------|---------|-------------|
+| Include unstaged? | Yes (Recommended); No | false |
+| Commit plan action? | Accept (Recommended); Modify; Edit message; Cancel | false |
+| Large file ({file})? | Include; Exclude | false |
+| Add BREAKING CHANGE? | Yes; No | false |
+
+### Follow-up: Modify Options
+
+*Only shown if "Modify" selected:*
+
+| Question | Options | MultiSelect |
+|----------|---------|-------------|
+| How to modify? | Merge commits; Split commit; Reorder; Edit files | false |
 
 ## Flags
 

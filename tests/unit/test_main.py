@@ -81,14 +81,24 @@ class TestMain:
         assert "cco-remove" in captured.out
         assert "/cco-config" in captured.out
 
-    def test_keyboard_interrupt(self, capsys):
+    def test_keyboard_interrupt(self, capsys, monkeypatch):
         """Test KeyboardInterrupt handling."""
-        with patch.object(sys, "argv", ["cco"]):
-            with patch("claudecodeoptimizer.__main__.__version__", side_effect=KeyboardInterrupt):
-                # Force KeyboardInterrupt during execution
-                pass
-        # KeyboardInterrupt is caught and returns 130
-        # We can't easily test this without more complex mocking
+        # Create a flag to track if this is first call
+        call_count = {"value": 0}
+        original_print = print
+
+        def mock_print(*args, **kwargs):
+            call_count["value"] += 1
+            if call_count["value"] == 1:
+                raise KeyboardInterrupt
+            return original_print(*args, **kwargs)
+
+        monkeypatch.setattr("builtins.print", mock_print)
+        monkeypatch.setattr(sys, "argv", ["cco", "--version"])
+
+        result = main()
+
+        assert result == 130
 
     def test_exit_code_on_version(self):
         """Test returns 0 exit code on --version."""
