@@ -266,6 +266,21 @@ def clean_claude_md(verbose: bool = True) -> int:
 # ============================================================================
 
 
+def _get_local_claude_dir(project_path: Path) -> Path:
+    """Get or create the local .claude directory."""
+    local_claude = project_path / ".claude"
+    local_claude.mkdir(parents=True, exist_ok=True)
+    return local_claude
+
+
+def _load_local_settings(project_path: Path) -> tuple[Path, dict]:
+    """Load settings.json from project's .claude directory."""
+    local_claude = _get_local_claude_dir(project_path)
+    settings_file = local_claude / "settings.json"
+    settings = load_json_file(settings_file) if settings_file.exists() else {}
+    return settings_file, settings
+
+
 def setup_local_statusline(project_path: Path, mode: str, verbose: bool = True) -> bool:
     """Copy statusline to project's .claude/ directory.
 
@@ -289,14 +304,12 @@ def setup_local_statusline(project_path: Path, mode: str, verbose: bool = True) 
         return False
 
     # Create .claude/ directory and copy statusline (always overwrite)
-    local_claude = project_path / ".claude"
-    local_claude.mkdir(parents=True, exist_ok=True)
+    local_claude = _get_local_claude_dir(project_path)
     dest = local_claude / "cco-statusline.js"
     shutil.copy2(src, dest)
 
     # Update local settings.json with statusLine config
-    settings_file = local_claude / "settings.json"
-    settings = load_json_file(settings_file)
+    settings_file, settings = _load_local_settings(project_path)
 
     # Local statusline - direct path, no fallback
     settings["statusLine"] = {
@@ -344,13 +357,8 @@ def setup_local_permissions(project_path: Path, level: str, verbose: bool = True
             print(f"  Error: Invalid permissions JSON: {e}")
         return False
 
-    # Create .claude/ directory
-    local_claude = project_path / ".claude"
-    local_claude.mkdir(parents=True, exist_ok=True)
-
     # Load or create settings.json
-    settings_file = local_claude / "settings.json"
-    settings = load_json_file(settings_file)
+    settings_file, settings = _load_local_settings(project_path)
 
     # Set permissions (keep _meta for tracking)
     settings["permissions"] = perm_data.get("permissions", {})

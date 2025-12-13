@@ -1,11 +1,11 @@
-"""Unit tests for cco_remove module."""
+"""Unit tests for cco_uninstall module."""
 
 import json
 import subprocess
 import sys
 from unittest.mock import MagicMock, patch
 
-from claudecodeoptimizer.cco_remove import (
+from claudecodeoptimizer.cco_uninstall import (
     _execute_removal,
     detect_install_method,
     has_cco_statusline,
@@ -44,9 +44,9 @@ class TestDetectInstallMethod:
 
 class TestListCcoFiles:
     def test_list_empty(self, tmp_path):
-        with patch("claudecodeoptimizer.cco_remove.CLAUDE_DIR", tmp_path):
-            with patch("claudecodeoptimizer.cco_remove.get_cco_commands", return_value=[]):
-                with patch("claudecodeoptimizer.cco_remove.get_cco_agents", return_value=[]):
+        with patch("claudecodeoptimizer.cco_uninstall.CLAUDE_DIR", tmp_path):
+            with patch("claudecodeoptimizer.cco_uninstall.get_cco_commands", return_value=[]):
+                with patch("claudecodeoptimizer.cco_uninstall.get_cco_agents", return_value=[]):
                     files = list_cco_files()
                     assert files["commands"] == []
                     assert files["agents"] == []
@@ -58,10 +58,12 @@ class TestListCcoFiles:
         agent_file = tmp_path / "agents" / "cco-agent-analyze.md"
         cmd_file.touch()
         agent_file.touch()
-        with patch("claudecodeoptimizer.cco_remove.CLAUDE_DIR", tmp_path):
-            with patch("claudecodeoptimizer.cco_remove.get_cco_commands", return_value=[cmd_file]):
+        with patch("claudecodeoptimizer.cco_uninstall.CLAUDE_DIR", tmp_path):
+            with patch(
+                "claudecodeoptimizer.cco_uninstall.get_cco_commands", return_value=[cmd_file]
+            ):
                 with patch(
-                    "claudecodeoptimizer.cco_remove.get_cco_agents", return_value=[agent_file]
+                    "claudecodeoptimizer.cco_uninstall.get_cco_agents", return_value=[agent_file]
                 ):
                     files = list_cco_files()
                     assert files["commands"] == ["cco-config.md"]
@@ -70,13 +72,13 @@ class TestListCcoFiles:
 
 class TestHasClaudeMdRules:
     def test_no_file(self, tmp_path):
-        with patch("claudecodeoptimizer.cco_remove.CLAUDE_DIR", tmp_path):
+        with patch("claudecodeoptimizer.cco_uninstall.CLAUDE_DIR", tmp_path):
             assert has_claude_md_rules() == []
 
     def test_with_rules(self, tmp_path):
         claude_md = tmp_path / "CLAUDE.md"
         claude_md.write_text("<!-- CCO_STANDARDS_START -->standards<!-- CCO_STANDARDS_END -->")
-        with patch("claudecodeoptimizer.cco_remove.CLAUDE_DIR", tmp_path):
+        with patch("claudecodeoptimizer.cco_uninstall.CLAUDE_DIR", tmp_path):
             sections = has_claude_md_rules()
             # Universal pattern returns "CCO Content (N section(s))"
             assert len(sections) == 1
@@ -90,9 +92,11 @@ class TestRemoveCcoFiles:
         user_file = tmp_path / "commands" / "user-custom.md"
         cco_file.touch()
         user_file.touch()
-        with patch("claudecodeoptimizer.cco_remove.CLAUDE_DIR", tmp_path):
-            with patch("claudecodeoptimizer.cco_remove.get_cco_commands", return_value=[cco_file]):
-                with patch("claudecodeoptimizer.cco_remove.get_cco_agents", return_value=[]):
+        with patch("claudecodeoptimizer.cco_uninstall.CLAUDE_DIR", tmp_path):
+            with patch(
+                "claudecodeoptimizer.cco_uninstall.get_cco_commands", return_value=[cco_file]
+            ):
+                with patch("claudecodeoptimizer.cco_uninstall.get_cco_agents", return_value=[]):
                     removed = remove_cco_files(verbose=False)
         assert removed["commands"] == 1
         assert not cco_file.exists()
@@ -105,10 +109,12 @@ class TestRemoveCcoFiles:
         agent_file = tmp_path / "agents" / "cco-agent.md"
         cmd_file.touch()
         agent_file.touch()
-        with patch("claudecodeoptimizer.cco_remove.CLAUDE_DIR", tmp_path):
-            with patch("claudecodeoptimizer.cco_remove.get_cco_commands", return_value=[cmd_file]):
+        with patch("claudecodeoptimizer.cco_uninstall.CLAUDE_DIR", tmp_path):
+            with patch(
+                "claudecodeoptimizer.cco_uninstall.get_cco_commands", return_value=[cmd_file]
+            ):
                 with patch(
-                    "claudecodeoptimizer.cco_remove.get_cco_agents", return_value=[agent_file]
+                    "claudecodeoptimizer.cco_uninstall.get_cco_agents", return_value=[agent_file]
                 ):
                     removed = remove_cco_files(verbose=True)
         assert removed["commands"] == 1
@@ -117,7 +123,7 @@ class TestRemoveCcoFiles:
 
 class TestRemoveClaudeMdRules:
     def test_no_file(self, tmp_path):
-        with patch("claudecodeoptimizer.cco_remove.CLAUDE_DIR", tmp_path):
+        with patch("claudecodeoptimizer.cco_uninstall.CLAUDE_DIR", tmp_path):
             removed = remove_claude_md_rules()
             assert removed == []
 
@@ -126,7 +132,7 @@ class TestRemoveClaudeMdRules:
         claude_md.write_text(
             "# My\n<!-- CCO_STANDARDS_START -->standards<!-- CCO_STANDARDS_END -->\nOther"
         )
-        with patch("claudecodeoptimizer.cco_remove.CLAUDE_DIR", tmp_path):
+        with patch("claudecodeoptimizer.cco_uninstall.CLAUDE_DIR", tmp_path):
             removed = remove_claude_md_rules(verbose=True)
         # Universal pattern returns "CCO Content (N section(s))"
         assert len(removed) == 1
@@ -160,21 +166,21 @@ class TestHasCcoStatusline:
 
     def test_no_file(self, tmp_path):
         """Test returns False when statusline file doesn't exist."""
-        with patch("claudecodeoptimizer.cco_remove.STATUSLINE_FILE", tmp_path / "statusline.js"):
+        with patch("claudecodeoptimizer.cco_uninstall.STATUSLINE_FILE", tmp_path / "statusline.js"):
             assert has_cco_statusline() is False
 
     def test_file_exists_with_cco_content(self, tmp_path):
         """Test returns True when statusline file exists with CCO content."""
         statusline = tmp_path / "statusline.js"
         statusline.write_text("// CCO Statusline\nconsole.log('test');")
-        with patch("claudecodeoptimizer.cco_remove.STATUSLINE_FILE", statusline):
+        with patch("claudecodeoptimizer.cco_uninstall.STATUSLINE_FILE", statusline):
             assert has_cco_statusline() is True
 
     def test_file_exists_without_cco_content(self, tmp_path):
         """Test returns False when statusline file exists but without CCO marker."""
         statusline = tmp_path / "statusline.js"
         statusline.write_text("// Custom statusline\nconsole.log('test');")
-        with patch("claudecodeoptimizer.cco_remove.STATUSLINE_FILE", statusline):
+        with patch("claudecodeoptimizer.cco_uninstall.STATUSLINE_FILE", statusline):
             assert has_cco_statusline() is False
 
 
@@ -188,8 +194,8 @@ class TestRemoveStatusline:
         settings = tmp_path / "settings.json"
         settings.write_text(json.dumps({"statusLine": {"type": "command"}}))
 
-        with patch("claudecodeoptimizer.cco_remove.STATUSLINE_FILE", statusline):
-            with patch("claudecodeoptimizer.cco_remove.SETTINGS_FILE", settings):
+        with patch("claudecodeoptimizer.cco_uninstall.STATUSLINE_FILE", statusline):
+            with patch("claudecodeoptimizer.cco_uninstall.SETTINGS_FILE", settings):
                 result = remove_statusline(verbose=False)
 
         assert result is True
@@ -205,8 +211,8 @@ class TestRemoveStatusline:
         settings = tmp_path / "settings.json"
         settings.write_text(json.dumps({"statusLine": {"type": "command"}}))
 
-        with patch("claudecodeoptimizer.cco_remove.STATUSLINE_FILE", statusline):
-            with patch("claudecodeoptimizer.cco_remove.SETTINGS_FILE", settings):
+        with patch("claudecodeoptimizer.cco_uninstall.STATUSLINE_FILE", statusline):
+            with patch("claudecodeoptimizer.cco_uninstall.SETTINGS_FILE", settings):
                 result = remove_statusline(verbose=True)
 
         assert result is True
@@ -216,9 +222,11 @@ class TestRemoveStatusline:
 
     def test_no_statusline_to_remove(self, tmp_path):
         """Test returns False when nothing to remove."""
-        with patch("claudecodeoptimizer.cco_remove.STATUSLINE_FILE", tmp_path / "nonexistent.js"):
+        with patch(
+            "claudecodeoptimizer.cco_uninstall.STATUSLINE_FILE", tmp_path / "nonexistent.js"
+        ):
             with patch(
-                "claudecodeoptimizer.cco_remove.SETTINGS_FILE", tmp_path / "nonexistent.json"
+                "claudecodeoptimizer.cco_uninstall.SETTINGS_FILE", tmp_path / "nonexistent.json"
             ):
                 result = remove_statusline(verbose=False)
         assert result is False
@@ -230,8 +238,8 @@ class TestRemoveStatusline:
         settings = tmp_path / "settings.json"
         settings.write_text("not valid json {{{")
 
-        with patch("claudecodeoptimizer.cco_remove.STATUSLINE_FILE", statusline):
-            with patch("claudecodeoptimizer.cco_remove.SETTINGS_FILE", settings):
+        with patch("claudecodeoptimizer.cco_uninstall.STATUSLINE_FILE", statusline):
+            with patch("claudecodeoptimizer.cco_uninstall.SETTINGS_FILE", settings):
                 result = remove_statusline(verbose=False)
 
         assert result is True  # Statusline file was removed
@@ -243,14 +251,14 @@ class TestHasCcoPermissions:
 
     def test_no_file(self, tmp_path):
         """Test returns False when settings.json doesn't exist."""
-        from claudecodeoptimizer.cco_remove import has_cco_permissions
+        from claudecodeoptimizer.cco_uninstall import has_cco_permissions
 
         result = has_cco_permissions(tmp_path / "settings.json")
         assert result is False
 
     def test_with_cco_marker(self, tmp_path):
         """Test returns True when CCO marker is present."""
-        from claudecodeoptimizer.cco_remove import has_cco_permissions
+        from claudecodeoptimizer.cco_uninstall import has_cco_permissions
 
         settings = tmp_path / "settings.json"
         settings.write_text(json.dumps({"_cco_managed": True, "permissions": {}}))
@@ -259,7 +267,7 @@ class TestHasCcoPermissions:
 
     def test_with_meta_in_permissions(self, tmp_path):
         """Test returns True when _meta is in permissions."""
-        from claudecodeoptimizer.cco_remove import has_cco_permissions
+        from claudecodeoptimizer.cco_uninstall import has_cco_permissions
 
         settings = tmp_path / "settings.json"
         settings.write_text(
@@ -270,7 +278,7 @@ class TestHasCcoPermissions:
 
     def test_without_cco_content(self, tmp_path):
         """Test returns False when no CCO markers present."""
-        from claudecodeoptimizer.cco_remove import has_cco_permissions
+        from claudecodeoptimizer.cco_uninstall import has_cco_permissions
 
         settings = tmp_path / "settings.json"
         settings.write_text(json.dumps({"permissions": {"allow": []}}))
@@ -279,7 +287,7 @@ class TestHasCcoPermissions:
 
     def test_invalid_json(self, tmp_path):
         """Test returns False on invalid JSON."""
-        from claudecodeoptimizer.cco_remove import has_cco_permissions
+        from claudecodeoptimizer.cco_uninstall import has_cco_permissions
 
         settings = tmp_path / "settings.json"
         settings.write_text("invalid json {{{")
@@ -292,7 +300,7 @@ class TestRemovePermissions:
 
     def test_remove_permissions(self, tmp_path):
         """Test removes permissions from settings.json."""
-        from claudecodeoptimizer.cco_remove import remove_permissions
+        from claudecodeoptimizer.cco_uninstall import remove_permissions
 
         settings = tmp_path / "settings.json"
         settings.write_text(
@@ -308,14 +316,14 @@ class TestRemovePermissions:
 
     def test_no_file(self, tmp_path):
         """Test returns False when file doesn't exist."""
-        from claudecodeoptimizer.cco_remove import remove_permissions
+        from claudecodeoptimizer.cco_uninstall import remove_permissions
 
         result = remove_permissions(tmp_path / "nonexistent.json", verbose=False)
         assert result is False
 
     def test_remove_permissions_verbose(self, tmp_path, capsys):
         """Test verbose output during permissions removal."""
-        from claudecodeoptimizer.cco_remove import remove_permissions
+        from claudecodeoptimizer.cco_uninstall import remove_permissions
 
         settings = tmp_path / "settings.json"
         settings.write_text(json.dumps({"permissions": {"allow": []}}))
@@ -327,7 +335,7 @@ class TestRemovePermissions:
 
     def test_invalid_json(self, tmp_path):
         """Test returns False on invalid JSON."""
-        from claudecodeoptimizer.cco_remove import remove_permissions
+        from claudecodeoptimizer.cco_uninstall import remove_permissions
 
         settings = tmp_path / "settings.json"
         settings.write_text("invalid json {{{")
@@ -340,31 +348,31 @@ class TestHasRulesDirOld:
 
     def test_no_dir(self, tmp_path):
         """Test returns False when old rules root doesn't exist."""
-        from claudecodeoptimizer.cco_remove import has_rules_dir_old
+        from claudecodeoptimizer.cco_uninstall import has_rules_dir_old
 
-        with patch("claudecodeoptimizer.cco_remove.OLD_RULES_ROOT", tmp_path / "nonexistent"):
+        with patch("claudecodeoptimizer.cco_uninstall.OLD_RULES_ROOT", tmp_path / "nonexistent"):
             result = has_rules_dir_old()
         assert result is False
 
     def test_empty_dir(self, tmp_path):
         """Test returns False when rules dir exists but has no CCO files."""
-        from claudecodeoptimizer.cco_remove import has_rules_dir_old
+        from claudecodeoptimizer.cco_uninstall import has_rules_dir_old
 
         rules_dir = tmp_path / "rules"
         rules_dir.mkdir()
         (rules_dir / "custom-rule.md").write_text("# Custom")  # Not a CCO file
-        with patch("claudecodeoptimizer.cco_remove.OLD_RULES_ROOT", rules_dir):
+        with patch("claudecodeoptimizer.cco_uninstall.OLD_RULES_ROOT", rules_dir):
             result = has_rules_dir_old()
         assert result is False
 
     def test_with_old_cco_rules(self, tmp_path):
         """Test returns True when old CCO rule files exist in root."""
-        from claudecodeoptimizer.cco_remove import has_rules_dir_old
+        from claudecodeoptimizer.cco_uninstall import has_rules_dir_old
 
         rules_dir = tmp_path / "rules"
         rules_dir.mkdir()
         (rules_dir / "cco-core.md").write_text("# Old Core")
-        with patch("claudecodeoptimizer.cco_remove.OLD_RULES_ROOT", rules_dir):
+        with patch("claudecodeoptimizer.cco_uninstall.OLD_RULES_ROOT", rules_dir):
             result = has_rules_dir_old()
         assert result is True
 
@@ -374,15 +382,15 @@ class TestRemoveRulesDirOld:
 
     def test_no_dir(self, tmp_path):
         """Test returns False when no rules dir exists."""
-        from claudecodeoptimizer.cco_remove import remove_rules_dir_old
+        from claudecodeoptimizer.cco_uninstall import remove_rules_dir_old
 
-        with patch("claudecodeoptimizer.cco_remove.OLD_RULES_ROOT", tmp_path / "nonexistent"):
+        with patch("claudecodeoptimizer.cco_uninstall.OLD_RULES_ROOT", tmp_path / "nonexistent"):
             result = remove_rules_dir_old(verbose=False)
         assert result is False
 
     def test_remove_old_cco_rules(self, tmp_path, capsys):
         """Test removes old CCO rule files from root."""
-        from claudecodeoptimizer.cco_remove import remove_rules_dir_old
+        from claudecodeoptimizer.cco_uninstall import remove_rules_dir_old
 
         rules_dir = tmp_path / "rules"
         rules_dir.mkdir()
@@ -390,7 +398,7 @@ class TestRemoveRulesDirOld:
         (rules_dir / "cco-ai.md").write_text("# Old AI")
         (rules_dir / "custom-rule.md").write_text("# Keep")
 
-        with patch("claudecodeoptimizer.cco_remove.OLD_RULES_ROOT", rules_dir):
+        with patch("claudecodeoptimizer.cco_uninstall.OLD_RULES_ROOT", rules_dir):
             result = remove_rules_dir_old(verbose=True)
 
         assert result is True
@@ -402,13 +410,13 @@ class TestRemoveRulesDirOld:
 
     def test_no_cco_files_to_remove(self, tmp_path):
         """Test returns False when no CCO files exist."""
-        from claudecodeoptimizer.cco_remove import remove_rules_dir_old
+        from claudecodeoptimizer.cco_uninstall import remove_rules_dir_old
 
         rules_dir = tmp_path / "rules"
         rules_dir.mkdir()
         (rules_dir / "custom-rule.md").write_text("# Custom")
 
-        with patch("claudecodeoptimizer.cco_remove.OLD_RULES_ROOT", rules_dir):
+        with patch("claudecodeoptimizer.cco_uninstall.OLD_RULES_ROOT", rules_dir):
             result = remove_rules_dir_old(verbose=False)
         assert result is False
 
@@ -422,8 +430,8 @@ class TestHasClaudeMdRulesLargeFile:
         # Create a file larger than 1MB would be too slow, so mock the stat
         claude_md.write_text("small content")
 
-        with patch("claudecodeoptimizer.cco_remove.CLAUDE_DIR", tmp_path):
-            with patch("claudecodeoptimizer.cco_remove.MAX_CLAUDE_MD_SIZE", 5):  # 5 bytes limit
+        with patch("claudecodeoptimizer.cco_uninstall.CLAUDE_DIR", tmp_path):
+            with patch("claudecodeoptimizer.cco_uninstall.MAX_CLAUDE_MD_SIZE", 5):  # 5 bytes limit
                 result = has_claude_md_rules()
 
         assert len(result) == 1
@@ -435,42 +443,42 @@ class TestHasRulesDir:
 
     def test_no_dir(self, tmp_path):
         """Test returns False when rules dir doesn't exist."""
-        from claudecodeoptimizer.cco_remove import has_rules_dir
+        from claudecodeoptimizer.cco_uninstall import has_rules_dir
 
-        with patch("claudecodeoptimizer.cco_remove.RULES_DIR", tmp_path / "nonexistent"):
+        with patch("claudecodeoptimizer.cco_uninstall.RULES_DIR", tmp_path / "nonexistent"):
             result = has_rules_dir()
         assert result is False
 
     def test_empty_dir(self, tmp_path):
         """Test returns False when rules dir exists but is empty."""
-        from claudecodeoptimizer.cco_remove import has_rules_dir
+        from claudecodeoptimizer.cco_uninstall import has_rules_dir
 
         rules_dir = tmp_path / "rules"
         rules_dir.mkdir()
-        with patch("claudecodeoptimizer.cco_remove.RULES_DIR", rules_dir):
+        with patch("claudecodeoptimizer.cco_uninstall.RULES_DIR", rules_dir):
             result = has_rules_dir()
         assert result is False
 
     def test_with_cco_rules(self, tmp_path):
         """Test returns True when rules dir has CCO rule files (core.md in cco/)."""
-        from claudecodeoptimizer.cco_remove import has_rules_dir
+        from claudecodeoptimizer.cco_uninstall import has_rules_dir
 
         # Rules are in ~/.claude/rules/cco/{core,ai}.md
         rules_dir = tmp_path / "rules" / "cco"
         rules_dir.mkdir(parents=True)
         (rules_dir / "core.md").write_text("# Core Rules")
-        with patch("claudecodeoptimizer.cco_remove.RULES_DIR", rules_dir):
+        with patch("claudecodeoptimizer.cco_uninstall.RULES_DIR", rules_dir):
             result = has_rules_dir()
         assert result is True
 
     def test_with_non_cco_rules_only(self, tmp_path):
         """Test returns False when rules dir has only non-CCO .md files."""
-        from claudecodeoptimizer.cco_remove import has_rules_dir
+        from claudecodeoptimizer.cco_uninstall import has_rules_dir
 
         rules_dir = tmp_path / "rules"
         rules_dir.mkdir()
         (rules_dir / "custom-rule.md").write_text("# Custom Rule")
-        with patch("claudecodeoptimizer.cco_remove.RULES_DIR", rules_dir):
+        with patch("claudecodeoptimizer.cco_uninstall.RULES_DIR", rules_dir):
             result = has_rules_dir()
         assert result is False
 
@@ -480,7 +488,7 @@ class TestRemoveRulesDir:
 
     def test_remove_cco_rules_only(self, tmp_path, capsys):
         """Test removes only CCO rule files from cco/ subdir."""
-        from claudecodeoptimizer.cco_remove import remove_rules_dir
+        from claudecodeoptimizer.cco_uninstall import remove_rules_dir
 
         # Rules are in ~/.claude/rules/cco/{core,ai}.md
         cco_dir = tmp_path / "rules" / "cco"
@@ -489,7 +497,7 @@ class TestRemoveRulesDir:
         (cco_dir / "ai.md").write_text("# AI")
         (cco_dir / "custom-rule.md").write_text("# Custom")  # User file in cco/ dir
 
-        with patch("claudecodeoptimizer.cco_remove.RULES_DIR", cco_dir):
+        with patch("claudecodeoptimizer.cco_uninstall.RULES_DIR", cco_dir):
             result = remove_rules_dir(verbose=True)
 
         assert result is True
@@ -503,15 +511,15 @@ class TestRemoveRulesDir:
 
     def test_no_dir_to_remove(self, tmp_path):
         """Test returns False when no rules dir exists."""
-        from claudecodeoptimizer.cco_remove import remove_rules_dir
+        from claudecodeoptimizer.cco_uninstall import remove_rules_dir
 
-        with patch("claudecodeoptimizer.cco_remove.RULES_DIR", tmp_path / "nonexistent"):
+        with patch("claudecodeoptimizer.cco_uninstall.RULES_DIR", tmp_path / "nonexistent"):
             result = remove_rules_dir(verbose=False)
         assert result is False
 
     def test_remove_empty_cco_dir(self, tmp_path, capsys):
         """Test removes empty cco/ directory after all CCO files removed."""
-        from claudecodeoptimizer.cco_remove import remove_rules_dir
+        from claudecodeoptimizer.cco_uninstall import remove_rules_dir
 
         # Create cco/ dir with only CCO files
         cco_dir = tmp_path / "rules" / "cco"
@@ -519,7 +527,7 @@ class TestRemoveRulesDir:
         (cco_dir / "core.md").write_text("# Core")
         (cco_dir / "ai.md").write_text("# AI")
 
-        with patch("claudecodeoptimizer.cco_remove.RULES_DIR", cco_dir):
+        with patch("claudecodeoptimizer.cco_uninstall.RULES_DIR", cco_dir):
             result = remove_rules_dir(verbose=True)
 
         assert result is True
@@ -528,14 +536,14 @@ class TestRemoveRulesDir:
 
     def test_no_cco_files_returns_false(self, tmp_path):
         """Test returns False when cco/ dir exists but has no CCO files."""
-        from claudecodeoptimizer.cco_remove import remove_rules_dir
+        from claudecodeoptimizer.cco_uninstall import remove_rules_dir
 
         # Create cco/ dir with only non-CCO files
         cco_dir = tmp_path / "rules" / "cco"
         cco_dir.mkdir(parents=True)
         (cco_dir / "custom-rule.md").write_text("# Custom")
 
-        with patch("claudecodeoptimizer.cco_remove.RULES_DIR", cco_dir):
+        with patch("claudecodeoptimizer.cco_uninstall.RULES_DIR", cco_dir):
             result = remove_rules_dir(verbose=False)
 
         assert result is False
@@ -633,7 +641,7 @@ class TestExecuteRemoval:
             "total_files": 0,
             "total": 1,
         }
-        with patch("claudecodeoptimizer.cco_remove.remove_rules_dir") as mock_remove:
+        with patch("claudecodeoptimizer.cco_uninstall.remove_rules_dir") as mock_remove:
             mock_remove.return_value = True
             _execute_removal(items)
 
@@ -654,7 +662,7 @@ class TestExecuteRemoval:
             "total_files": 0,
             "total": 1,
         }
-        with patch("claudecodeoptimizer.cco_remove.remove_statusline") as mock_remove:
+        with patch("claudecodeoptimizer.cco_uninstall.remove_statusline") as mock_remove:
             mock_remove.return_value = True
             _execute_removal(items)
 
@@ -675,7 +683,7 @@ class TestExecuteRemoval:
             "total_files": 0,
             "total": 1,
         }
-        with patch("claudecodeoptimizer.cco_remove.remove_permissions") as mock_remove:
+        with patch("claudecodeoptimizer.cco_uninstall.remove_permissions") as mock_remove:
             mock_remove.return_value = True
             _execute_removal(items)
 
@@ -696,7 +704,7 @@ class TestExecuteRemoval:
             "total_files": 0,
             "total": 1,
         }
-        with patch("claudecodeoptimizer.cco_remove.remove_rules_dir_old") as mock_remove:
+        with patch("claudecodeoptimizer.cco_uninstall.remove_rules_dir_old") as mock_remove:
             mock_remove.return_value = True
             _execute_removal(items)
 
@@ -712,7 +720,7 @@ class TestHasClaudeMdRulesNoMatches:
         """Test returns empty list when file has no CCO markers."""
         claude_md = tmp_path / "CLAUDE.md"
         claude_md.write_text("# My Project\n\nSome content without CCO markers")
-        with patch("claudecodeoptimizer.cco_remove.CLAUDE_DIR", tmp_path):
+        with patch("claudecodeoptimizer.cco_uninstall.CLAUDE_DIR", tmp_path):
             result = has_claude_md_rules()
         assert result == []
 
@@ -724,21 +732,21 @@ class TestRemoveClaudeMdRulesNoMatches:
         """Test returns empty list when file has no CCO markers."""
         claude_md = tmp_path / "CLAUDE.md"
         claude_md.write_text("# My Project\n\nSome content without CCO markers")
-        with patch("claudecodeoptimizer.cco_remove.CLAUDE_DIR", tmp_path):
+        with patch("claudecodeoptimizer.cco_uninstall.CLAUDE_DIR", tmp_path):
             result = remove_claude_md_rules(verbose=False)
         assert result == []
 
 
 class TestMain:
-    """Test main function - cco-remove only handles global ~/.claude/ files."""
+    """Test main function - cco-uninstall only handles global ~/.claude/ files."""
 
-    @patch("claudecodeoptimizer.cco_remove.has_cco_permissions")
-    @patch("claudecodeoptimizer.cco_remove.has_rules_dir_old")
-    @patch("claudecodeoptimizer.cco_remove.has_rules_dir")
-    @patch("claudecodeoptimizer.cco_remove.detect_install_method")
-    @patch("claudecodeoptimizer.cco_remove.list_cco_files")
-    @patch("claudecodeoptimizer.cco_remove.has_claude_md_rules")
-    @patch("claudecodeoptimizer.cco_remove.has_cco_statusline")
+    @patch("claudecodeoptimizer.cco_uninstall.has_cco_permissions")
+    @patch("claudecodeoptimizer.cco_uninstall.has_rules_dir_old")
+    @patch("claudecodeoptimizer.cco_uninstall.has_rules_dir")
+    @patch("claudecodeoptimizer.cco_uninstall.detect_install_method")
+    @patch("claudecodeoptimizer.cco_uninstall.list_cco_files")
+    @patch("claudecodeoptimizer.cco_uninstall.has_claude_md_rules")
+    @patch("claudecodeoptimizer.cco_uninstall.has_cco_statusline")
     def test_not_installed(
         self,
         mock_statusline,
@@ -757,19 +765,19 @@ class TestMain:
         mock_rules_dir_old.return_value = False
         mock_statusline.return_value = False
         mock_permissions.return_value = False
-        with patch.object(sys, "argv", ["cco-remove"]):
+        with patch.object(sys, "argv", ["cco-uninstall"]):
             result = main()
         assert result == 0
         captured = capsys.readouterr()
         assert "not installed" in captured.out
 
-    @patch("claudecodeoptimizer.cco_remove.has_cco_permissions")
-    @patch("claudecodeoptimizer.cco_remove.has_rules_dir_old")
-    @patch("claudecodeoptimizer.cco_remove.has_rules_dir")
-    @patch("claudecodeoptimizer.cco_remove.detect_install_method")
-    @patch("claudecodeoptimizer.cco_remove.list_cco_files")
-    @patch("claudecodeoptimizer.cco_remove.has_claude_md_rules")
-    @patch("claudecodeoptimizer.cco_remove.has_cco_statusline")
+    @patch("claudecodeoptimizer.cco_uninstall.has_cco_permissions")
+    @patch("claudecodeoptimizer.cco_uninstall.has_rules_dir_old")
+    @patch("claudecodeoptimizer.cco_uninstall.has_rules_dir")
+    @patch("claudecodeoptimizer.cco_uninstall.detect_install_method")
+    @patch("claudecodeoptimizer.cco_uninstall.list_cco_files")
+    @patch("claudecodeoptimizer.cco_uninstall.has_claude_md_rules")
+    @patch("claudecodeoptimizer.cco_uninstall.has_cco_statusline")
     @patch("builtins.input")
     def test_cancelled(
         self,
@@ -791,22 +799,22 @@ class TestMain:
         mock_statusline.return_value = False
         mock_permissions.return_value = False
         mock_input.return_value = "n"
-        with patch.object(sys, "argv", ["cco-remove"]):
+        with patch.object(sys, "argv", ["cco-uninstall"]):
             result = main()
         assert result == 0
         captured = capsys.readouterr()
         assert "Cancelled" in captured.out
 
-    @patch("claudecodeoptimizer.cco_remove.has_cco_permissions")
-    @patch("claudecodeoptimizer.cco_remove.has_rules_dir_old")
-    @patch("claudecodeoptimizer.cco_remove.has_rules_dir")
-    @patch("claudecodeoptimizer.cco_remove.detect_install_method")
-    @patch("claudecodeoptimizer.cco_remove.list_cco_files")
-    @patch("claudecodeoptimizer.cco_remove.has_claude_md_rules")
-    @patch("claudecodeoptimizer.cco_remove.has_cco_statusline")
-    @patch("claudecodeoptimizer.cco_remove.uninstall_package")
-    @patch("claudecodeoptimizer.cco_remove.remove_cco_files")
-    @patch("claudecodeoptimizer.cco_remove.remove_claude_md_rules")
+    @patch("claudecodeoptimizer.cco_uninstall.has_cco_permissions")
+    @patch("claudecodeoptimizer.cco_uninstall.has_rules_dir_old")
+    @patch("claudecodeoptimizer.cco_uninstall.has_rules_dir")
+    @patch("claudecodeoptimizer.cco_uninstall.detect_install_method")
+    @patch("claudecodeoptimizer.cco_uninstall.list_cco_files")
+    @patch("claudecodeoptimizer.cco_uninstall.has_claude_md_rules")
+    @patch("claudecodeoptimizer.cco_uninstall.has_cco_statusline")
+    @patch("claudecodeoptimizer.cco_uninstall.uninstall_package")
+    @patch("claudecodeoptimizer.cco_uninstall.remove_cco_files")
+    @patch("claudecodeoptimizer.cco_uninstall.remove_claude_md_rules")
     @patch("builtins.input")
     def test_full_removal(
         self,
@@ -834,22 +842,22 @@ class TestMain:
         mock_uninstall.return_value = True
         mock_rm_files.return_value = {"commands": 1, "agents": 1}
         mock_rm_rules.return_value = ["CCO Rules"]
-        with patch.object(sys, "argv", ["cco-remove"]):
+        with patch.object(sys, "argv", ["cco-uninstall"]):
             result = main()
         assert result == 0
         captured = capsys.readouterr()
         assert "removed successfully" in captured.out
 
-    @patch("claudecodeoptimizer.cco_remove.has_cco_permissions")
-    @patch("claudecodeoptimizer.cco_remove.has_rules_dir_old")
-    @patch("claudecodeoptimizer.cco_remove.has_rules_dir")
-    @patch("claudecodeoptimizer.cco_remove.detect_install_method")
-    @patch("claudecodeoptimizer.cco_remove.list_cco_files")
-    @patch("claudecodeoptimizer.cco_remove.has_claude_md_rules")
-    @patch("claudecodeoptimizer.cco_remove.has_cco_statusline")
-    @patch("claudecodeoptimizer.cco_remove.uninstall_package")
-    @patch("claudecodeoptimizer.cco_remove.remove_cco_files")
-    @patch("claudecodeoptimizer.cco_remove.remove_claude_md_rules")
+    @patch("claudecodeoptimizer.cco_uninstall.has_cco_permissions")
+    @patch("claudecodeoptimizer.cco_uninstall.has_rules_dir_old")
+    @patch("claudecodeoptimizer.cco_uninstall.has_rules_dir")
+    @patch("claudecodeoptimizer.cco_uninstall.detect_install_method")
+    @patch("claudecodeoptimizer.cco_uninstall.list_cco_files")
+    @patch("claudecodeoptimizer.cco_uninstall.has_claude_md_rules")
+    @patch("claudecodeoptimizer.cco_uninstall.has_cco_statusline")
+    @patch("claudecodeoptimizer.cco_uninstall.uninstall_package")
+    @patch("claudecodeoptimizer.cco_uninstall.remove_cco_files")
+    @patch("claudecodeoptimizer.cco_uninstall.remove_claude_md_rules")
     def test_full_removal_with_yes_flag(
         self,
         mock_rm_rules,
@@ -876,20 +884,20 @@ class TestMain:
         mock_rm_files.return_value = {"commands": 1, "agents": 1}
         mock_rm_rules.return_value = ["CCO Rules"]
         # No mock_input needed - should not be called with -y flag
-        with patch.object(sys, "argv", ["cco-remove", "-y"]):
+        with patch.object(sys, "argv", ["cco-uninstall", "-y"]):
             result = main()
         assert result == 0
         captured = capsys.readouterr()
         assert "removed successfully" in captured.out
 
-    @patch("claudecodeoptimizer.cco_remove.has_cco_permissions")
-    @patch("claudecodeoptimizer.cco_remove.has_rules_dir_old")
-    @patch("claudecodeoptimizer.cco_remove.has_rules_dir")
-    @patch("claudecodeoptimizer.cco_remove.detect_install_method")
-    @patch("claudecodeoptimizer.cco_remove.list_cco_files")
-    @patch("claudecodeoptimizer.cco_remove.has_claude_md_rules")
-    @patch("claudecodeoptimizer.cco_remove.has_cco_statusline")
-    @patch("claudecodeoptimizer.cco_remove.uninstall_package")
+    @patch("claudecodeoptimizer.cco_uninstall.has_cco_permissions")
+    @patch("claudecodeoptimizer.cco_uninstall.has_rules_dir_old")
+    @patch("claudecodeoptimizer.cco_uninstall.has_rules_dir")
+    @patch("claudecodeoptimizer.cco_uninstall.detect_install_method")
+    @patch("claudecodeoptimizer.cco_uninstall.list_cco_files")
+    @patch("claudecodeoptimizer.cco_uninstall.has_claude_md_rules")
+    @patch("claudecodeoptimizer.cco_uninstall.has_cco_statusline")
+    @patch("claudecodeoptimizer.cco_uninstall.uninstall_package")
     @patch("builtins.input")
     def test_package_removal_failure(
         self,
@@ -913,25 +921,25 @@ class TestMain:
         mock_permissions.return_value = False
         mock_input.return_value = "y"
         mock_uninstall.return_value = False
-        with patch.object(sys, "argv", ["cco-remove"]):
+        with patch.object(sys, "argv", ["cco-uninstall"]):
             result = main()
         assert result == 0
         captured = capsys.readouterr()
         assert "Failed to remove package" in captured.out
 
-    @patch("claudecodeoptimizer.cco_remove.detect_install_method")
+    @patch("claudecodeoptimizer.cco_uninstall.detect_install_method")
     def test_keyboard_interrupt(self, mock_detect, capsys):
         mock_detect.side_effect = KeyboardInterrupt()
-        with patch.object(sys, "argv", ["cco-remove"]):
+        with patch.object(sys, "argv", ["cco-uninstall"]):
             result = main()
         assert result == 130
         captured = capsys.readouterr()
         assert "Cancelled" in captured.out
 
-    @patch("claudecodeoptimizer.cco_remove.detect_install_method")
+    @patch("claudecodeoptimizer.cco_uninstall.detect_install_method")
     def test_exception(self, mock_detect, capsys):
         mock_detect.side_effect = Exception("Test error")
-        with patch.object(sys, "argv", ["cco-remove"]):
+        with patch.object(sys, "argv", ["cco-uninstall"]):
             result = main()
         assert result == 1
         captured = capsys.readouterr()

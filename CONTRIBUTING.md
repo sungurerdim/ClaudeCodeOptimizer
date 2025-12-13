@@ -67,7 +67,7 @@ pytest -n auto
 - **Minimum Coverage**: 80% overall (current: 100%)
 - **Critical Modules**: 90%+ coverage required
   - `install_hook.py`
-  - `cco_remove.py`
+  - `cco_uninstall.py`
   - `config.py`
 
 ### Writing Tests
@@ -193,7 +193,7 @@ ClaudeCodeOptimizer/
 │   ├── __main__.py          # CLI entry
 │   ├── config.py            # Configuration paths
 │   ├── install_hook.py      # Setup/deployment
-│   └── cco_remove.py        # Remove command
+│   └── cco_uninstall.py     # Uninstall command
 └── tests/                   # Test suite
     ├── unit/                # Unit tests
     └── integration/         # Integration tests

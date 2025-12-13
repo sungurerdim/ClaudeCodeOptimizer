@@ -379,7 +379,7 @@ cco-install --local . --permissions safe
 ## Uninstallation
 
 ```bash
-cco-remove  # Complete removal with confirmation
+cco-uninstall  # Complete removal with confirmation
 ```
 
 ---

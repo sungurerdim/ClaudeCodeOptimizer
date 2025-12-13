@@ -12,7 +12,7 @@ CCO v{__version__}
 Usage:
   python -m claudecodeoptimizer [OPTIONS]
   cco-install                    Install CCO to ~/.claude/
-  cco-remove                     Remove CCO from ~/.claude/
+  cco-uninstall                  Remove CCO from ~/.claude/
 
 Options:
   --version, -v                  Show version
