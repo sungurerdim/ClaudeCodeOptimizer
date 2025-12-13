@@ -7,14 +7,13 @@ import shutil
 import sys
 import warnings
 from pathlib import Path
-from typing import Any
 
 from .config import (
     AGENTS_DIR,
     CCO_PERMISSIONS_MARKER,
     CCO_RULE_FILES,
     CCO_RULE_NAMES,
-    CCO_UNIVERSAL_PATTERN,
+    CCO_UNIVERSAL_PATTERN_COMPILED,
     CLAUDE_DIR,
     COMMANDS_DIR,
     OLD_RULES_ROOT,
@@ -22,28 +21,12 @@ from .config import (
     SEPARATOR,
     get_content_path,
     get_rules_breakdown,
+    load_json_file,
 )
 
 # Valid options for local mode
 STATUSLINE_MODES = ("cco-full", "cco-minimal")
 PERMISSION_LEVELS = ("safe", "balanced", "permissive", "full")
-
-
-def _load_settings_json(settings_file: Path) -> dict[str, Any]:
-    """Load settings.json, returning empty dict if missing or invalid.
-
-    Args:
-        settings_file: Path to settings.json file
-
-    Returns:
-        Parsed JSON dict, or empty dict if file missing/invalid
-    """
-    if not settings_file.exists():
-        return {}
-    try:
-        return json.loads(settings_file.read_text(encoding="utf-8"))
-    except json.JSONDecodeError:
-        return {}
 
 
 def _is_safe_path(target: Path) -> bool:
@@ -285,9 +268,8 @@ def _remove_all_cco_markers(content: str) -> tuple[str, int]:
     Returns:
         Tuple of (cleaned_content, removed_count)
     """
-    pattern, flags = CCO_UNIVERSAL_PATTERN
-    matches = re.findall(pattern, content, flags=flags)
-    cleaned = re.sub(pattern, "", content, flags=flags)
+    matches = CCO_UNIVERSAL_PATTERN_COMPILED.findall(content)
+    cleaned = CCO_UNIVERSAL_PATTERN_COMPILED.sub("", content)
     return cleaned, len(matches)
 
 
@@ -381,7 +363,7 @@ def setup_local_statusline(project_path: Path, mode: str, verbose: bool = True) 
 
     # Update local settings.json with statusLine config
     settings_file = local_claude / "settings.json"
-    settings = _load_settings_json(settings_file)
+    settings = load_json_file(settings_file)
 
     # Local statusline - direct path, no fallback
     settings["statusLine"] = {
@@ -435,7 +417,7 @@ def setup_local_permissions(project_path: Path, level: str, verbose: bool = True
 
     # Load or create settings.json
     settings_file = local_claude / "settings.json"
-    settings = _load_settings_json(settings_file)
+    settings = load_json_file(settings_file)
 
     # Set permissions (keep _meta for tracking)
     settings["permissions"] = perm_data.get("permissions", {})

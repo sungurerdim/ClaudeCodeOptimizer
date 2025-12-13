@@ -9,12 +9,12 @@ from pathlib import Path
 from typing import TypedDict
 
 from .config import (
+    ALL_RULE_NAMES,
     CCO_PERMISSIONS_MARKER,
-    CCO_RULE_FILES,
-    CCO_RULE_NAMES,
-    CCO_UNIVERSAL_PATTERN,
+    CCO_UNIVERSAL_PATTERN_COMPILED,
     CLAUDE_DIR,
     MAX_CLAUDE_MD_SIZE,
+    OLD_RULE_FILES,
     OLD_RULES_ROOT,
     RULES_DIR,
     SEPARATOR,
@@ -25,10 +25,6 @@ from .config import (
     get_cco_agents,
     get_cco_commands,
 )
-
-# Consolidated rule name lists (extracted from duplicated code)
-ALL_RULE_NAMES = list(CCO_RULE_NAMES) + ["tools.md", "adaptive.md"]
-OLD_RULE_FILES = list(CCO_RULE_FILES) + ["cco-adaptive.md", "cco-tools.md"]
 
 
 class RemovalItems(TypedDict):
@@ -265,8 +261,7 @@ def has_claude_md_rules() -> list[str]:
         return []
 
     # Use universal pattern to find all CCO markers
-    pattern, flags = CCO_UNIVERSAL_PATTERN
-    matches = re.findall(pattern, content, flags=flags)
+    matches = CCO_UNIVERSAL_PATTERN_COMPILED.findall(content)
     if matches:
         return [f"CCO Content ({len(matches)} section(s))"]
     return []
@@ -301,11 +296,10 @@ def remove_claude_md_rules(verbose: bool = True) -> list[str]:
         return []
 
     # Use universal pattern to remove ALL CCO markers
-    pattern, flags = CCO_UNIVERSAL_PATTERN
-    matches = re.findall(pattern, content, flags=flags)
+    matches = CCO_UNIVERSAL_PATTERN_COMPILED.findall(content)
 
     if matches:
-        content = re.sub(pattern, "", content, flags=flags)
+        content = CCO_UNIVERSAL_PATTERN_COMPILED.sub("", content)
         content = re.sub(r"\n{3,}", "\n\n", content)
         claude_md = CLAUDE_DIR / "CLAUDE.md"
         claude_md.write_text(content, encoding="utf-8")
