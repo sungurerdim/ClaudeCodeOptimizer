@@ -2,6 +2,7 @@
 
 import json
 import subprocess
+import sys
 from unittest.mock import MagicMock, patch
 
 from claudecodeoptimizer.cco_remove import (
@@ -210,7 +211,7 @@ class TestRemoveStatusline:
 
         assert result is True
         captured = capsys.readouterr()
-        assert "statusline.js" in captured.out
+        assert "cco-statusline.js" in captured.out
         assert "statusLine removed" in captured.out
 
     def test_no_statusline_to_remove(self, tmp_path):
@@ -580,7 +581,7 @@ class TestDisplayRemovalPlan:
         _display_removal_plan(items)
         captured = capsys.readouterr()
         assert "Settings (~/.claude/):" in captured.out
-        assert "statusline.js" in captured.out
+        assert "cco-statusline.js" in captured.out
         assert "settings.json" in captured.out
 
     def test_display_with_permissions(self, capsys):
@@ -760,7 +761,8 @@ class TestMain:
         mock_rules_dir_old.return_value = False
         mock_statusline.return_value = False
         mock_permissions.return_value = False
-        result = main()
+        with patch.object(sys, "argv", ["cco-remove"]):
+            result = main()
         assert result == 0
         captured = capsys.readouterr()
         assert "not installed" in captured.out
@@ -793,7 +795,8 @@ class TestMain:
         mock_statusline.return_value = False
         mock_permissions.return_value = False
         mock_input.return_value = "n"
-        result = main()
+        with patch.object(sys, "argv", ["cco-remove"]):
+            result = main()
         assert result == 0
         captured = capsys.readouterr()
         assert "Cancelled" in captured.out
@@ -835,7 +838,50 @@ class TestMain:
         mock_uninstall.return_value = True
         mock_rm_files.return_value = {"commands": 1, "agents": 1}
         mock_rm_rules.return_value = ["CCO Rules"]
-        result = main()
+        with patch.object(sys, "argv", ["cco-remove"]):
+            result = main()
+        assert result == 0
+        captured = capsys.readouterr()
+        assert "removed successfully" in captured.out
+
+    @patch("claudecodeoptimizer.cco_remove.has_cco_permissions")
+    @patch("claudecodeoptimizer.cco_remove.has_rules_dir_old")
+    @patch("claudecodeoptimizer.cco_remove.has_rules_dir")
+    @patch("claudecodeoptimizer.cco_remove.detect_install_method")
+    @patch("claudecodeoptimizer.cco_remove.list_cco_files")
+    @patch("claudecodeoptimizer.cco_remove.has_claude_md_rules")
+    @patch("claudecodeoptimizer.cco_remove.has_cco_statusline")
+    @patch("claudecodeoptimizer.cco_remove.uninstall_package")
+    @patch("claudecodeoptimizer.cco_remove.remove_cco_files")
+    @patch("claudecodeoptimizer.cco_remove.remove_claude_md_rules")
+    def test_full_removal_with_yes_flag(
+        self,
+        mock_rm_rules,
+        mock_rm_files,
+        mock_uninstall,
+        mock_statusline,
+        mock_rules,
+        mock_list,
+        mock_detect,
+        mock_rules_dir,
+        mock_rules_dir_old,
+        mock_permissions,
+        capsys,
+    ):
+        """Test -y flag skips confirmation prompt."""
+        mock_detect.return_value = "pip"
+        mock_list.return_value = {"commands": ["c.md"], "agents": ["a.md"]}
+        mock_rules.return_value = ["CCO Rules"]
+        mock_rules_dir.return_value = False
+        mock_rules_dir_old.return_value = False
+        mock_statusline.return_value = False
+        mock_permissions.return_value = False
+        mock_uninstall.return_value = True
+        mock_rm_files.return_value = {"commands": 1, "agents": 1}
+        mock_rm_rules.return_value = ["CCO Rules"]
+        # No mock_input needed - should not be called with -y flag
+        with patch.object(sys, "argv", ["cco-remove", "-y"]):
+            result = main()
         assert result == 0
         captured = capsys.readouterr()
         assert "removed successfully" in captured.out
@@ -871,7 +917,8 @@ class TestMain:
         mock_permissions.return_value = False
         mock_input.return_value = "y"
         mock_uninstall.return_value = False
-        result = main()
+        with patch.object(sys, "argv", ["cco-remove"]):
+            result = main()
         assert result == 0
         captured = capsys.readouterr()
         assert "Failed to remove package" in captured.out
@@ -879,7 +926,8 @@ class TestMain:
     @patch("claudecodeoptimizer.cco_remove.detect_install_method")
     def test_keyboard_interrupt(self, mock_detect, capsys):
         mock_detect.side_effect = KeyboardInterrupt()
-        result = main()
+        with patch.object(sys, "argv", ["cco-remove"]):
+            result = main()
         assert result == 130
         captured = capsys.readouterr()
         assert "Cancelled" in captured.out
@@ -887,7 +935,8 @@ class TestMain:
     @patch("claudecodeoptimizer.cco_remove.detect_install_method")
     def test_exception(self, mock_detect, capsys):
         mock_detect.side_effect = Exception("Test error")
-        result = main()
+        with patch.object(sys, "argv", ["cco-remove"]):
+            result = main()
         assert result == 1
         captured = capsys.readouterr()
         assert "Error: Test error" in captured.err
