@@ -113,10 +113,10 @@ Step 2 runs:
 
 | ❌ Reject | ✅ Accept |
 |-----------|-----------|
-| "fix bug" | "fix(auth): validate token expiry" |
-| "update code" | "refactor(api): extract handler" |
-| "changes" | "feat(ui): add dark mode toggle" |
-| "refactor(commands): replace Step Announcements with TodoWrite" | "refactor(commands): use TodoWrite" |
+| "fix bug" | "fix({scope}): {specific_fix}" |
+| "update code" | "refactor({scope}): {what_changed}" |
+| "changes" | "feat({scope}): {new_capability}" |
+| "{type}({scope}): {very_long_description_exceeding_50_chars}" | "{type}({scope}): {short}" |
 
 ## Type Classification
 
