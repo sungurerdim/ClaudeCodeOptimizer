@@ -78,7 +78,7 @@ class TestMain:
         captured = capsys.readouterr()
         assert "CCO v" in captured.out
         assert "cco-install" in captured.out
-        assert "cco-remove" in captured.out
+        assert "cco-uninstall" in captured.out
         assert "/cco-config" in captured.out
 
     def test_keyboard_interrupt(self, capsys, monkeypatch):

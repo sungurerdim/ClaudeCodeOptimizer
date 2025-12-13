@@ -53,7 +53,7 @@ Issues = "https://github.com/sungurerdim/ClaudeCodeOptimizer/issues"
 
 [project.scripts]
 cco-install = "claudecodeoptimizer.install_hook:post_install"
-cco-remove = "claudecodeoptimizer.cco_remove:main"
+cco-uninstall = "claudecodeoptimizer.cco_uninstall:main"
 
 [tool.setuptools]
 packages = {find = {}}

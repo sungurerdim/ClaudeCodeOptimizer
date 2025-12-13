@@ -206,33 +206,35 @@ class TestSetupCommands:
 
     def test_creates_commands_dir(self, tmp_path):
         """Test creates commands directory."""
-        with patch("claudecodeoptimizer.install_hook.COMMANDS_DIR", tmp_path / "commands"):
-            with patch("claudecodeoptimizer.install_hook.get_content_path") as mock_content:
-                mock_content.side_effect = (
-                    lambda subdir="": tmp_path / "pkg" / subdir if subdir else tmp_path / "pkg"
-                )
-                (tmp_path / "pkg" / "command-templates").mkdir(parents=True)
-                (tmp_path / "pkg" / "command-templates" / "cco-test.md").touch()
+        with patch("claudecodeoptimizer.install_hook.CLAUDE_DIR", tmp_path):
+            with patch("claudecodeoptimizer.install_hook.COMMANDS_DIR", tmp_path / "commands"):
+                with patch("claudecodeoptimizer.install_hook.get_content_path") as mock_content:
+                    mock_content.side_effect = (
+                        lambda subdir="": tmp_path / "pkg" / subdir if subdir else tmp_path / "pkg"
+                    )
+                    (tmp_path / "pkg" / "command-templates").mkdir(parents=True)
+                    (tmp_path / "pkg" / "command-templates" / "cco-test.md").touch()
 
-                installed = setup_commands()
+                    installed = setup_commands()
 
-                assert (tmp_path / "commands").exists()
-                assert len(installed) == 1
-                assert "cco-test.md" in installed
+                    assert (tmp_path / "commands").exists()
+                    assert len(installed) == 1
+                    assert "cco-test.md" in installed
 
     def test_returns_empty_if_no_source(self, tmp_path):
         """Test returns empty list if source dir doesn't exist."""
-        with patch("claudecodeoptimizer.install_hook.COMMANDS_DIR", tmp_path / "commands"):
-            with patch("claudecodeoptimizer.install_hook.get_content_path") as mock_content:
-                mock_content.side_effect = (
-                    lambda subdir="": tmp_path / "nonexistent" / subdir
-                    if subdir
-                    else tmp_path / "nonexistent"
-                )
+        with patch("claudecodeoptimizer.install_hook.CLAUDE_DIR", tmp_path):
+            with patch("claudecodeoptimizer.install_hook.COMMANDS_DIR", tmp_path / "commands"):
+                with patch("claudecodeoptimizer.install_hook.get_content_path") as mock_content:
+                    mock_content.side_effect = (
+                        lambda subdir="": tmp_path / "nonexistent" / subdir
+                        if subdir
+                        else tmp_path / "nonexistent"
+                    )
 
-                installed = setup_commands()
+                    installed = setup_commands()
 
-                assert installed == []
+                    assert installed == []
 
     def test_removes_old_cco_files(self, tmp_path):
         """Test removes existing cco-*.md files before installing new ones."""
@@ -244,23 +246,26 @@ class TestSetupCommands:
         non_cco_file = dest_dir / "other-file.md"
         non_cco_file.write_text("should remain")
 
-        with patch("claudecodeoptimizer.install_hook.COMMANDS_DIR", dest_dir):
-            with patch("claudecodeoptimizer.install_hook.get_content_path") as mock_content:
-                mock_content.side_effect = (
-                    lambda subdir="": tmp_path / "pkg" / subdir if subdir else tmp_path / "pkg"
-                )
-                (tmp_path / "pkg" / "command-templates").mkdir(parents=True)
-                (tmp_path / "pkg" / "command-templates" / "cco-new.md").write_text("new content")
+        with patch("claudecodeoptimizer.install_hook.CLAUDE_DIR", tmp_path):
+            with patch("claudecodeoptimizer.install_hook.COMMANDS_DIR", dest_dir):
+                with patch("claudecodeoptimizer.install_hook.get_content_path") as mock_content:
+                    mock_content.side_effect = (
+                        lambda subdir="": tmp_path / "pkg" / subdir if subdir else tmp_path / "pkg"
+                    )
+                    (tmp_path / "pkg" / "command-templates").mkdir(parents=True)
+                    (tmp_path / "pkg" / "command-templates" / "cco-new.md").write_text(
+                        "new content"
+                    )
 
-                installed = setup_commands()
+                    installed = setup_commands()
 
-                # Old cco-*.md file should be deleted
-                assert not old_file.exists()
-                # Non-cco file should remain
-                assert non_cco_file.exists()
-                # New file should be installed
-                assert (dest_dir / "cco-new.md").exists()
-                assert "cco-new.md" in installed
+                    # Old cco-*.md file should be deleted
+                    assert not old_file.exists()
+                    # Non-cco file should remain
+                    assert non_cco_file.exists()
+                    # New file should be installed
+                    assert (dest_dir / "cco-new.md").exists()
+                    assert "cco-new.md" in installed
 
 
 class TestSetupAgents:
@@ -268,33 +273,35 @@ class TestSetupAgents:
 
     def test_creates_agents_dir(self, tmp_path):
         """Test creates agents directory."""
-        with patch("claudecodeoptimizer.install_hook.AGENTS_DIR", tmp_path / "agents"):
-            with patch("claudecodeoptimizer.install_hook.get_content_path") as mock_content:
-                mock_content.side_effect = (
-                    lambda subdir="": tmp_path / "pkg" / subdir if subdir else tmp_path / "pkg"
-                )
-                (tmp_path / "pkg" / "agent-templates").mkdir(parents=True)
-                (tmp_path / "pkg" / "agent-templates" / "cco-agent-test.md").touch()
+        with patch("claudecodeoptimizer.install_hook.CLAUDE_DIR", tmp_path):
+            with patch("claudecodeoptimizer.install_hook.AGENTS_DIR", tmp_path / "agents"):
+                with patch("claudecodeoptimizer.install_hook.get_content_path") as mock_content:
+                    mock_content.side_effect = (
+                        lambda subdir="": tmp_path / "pkg" / subdir if subdir else tmp_path / "pkg"
+                    )
+                    (tmp_path / "pkg" / "agent-templates").mkdir(parents=True)
+                    (tmp_path / "pkg" / "agent-templates" / "cco-agent-test.md").touch()
 
-                installed = setup_agents()
+                    installed = setup_agents()
 
-                assert (tmp_path / "agents").exists()
-                assert len(installed) == 1
-                assert "cco-agent-test.md" in installed
+                    assert (tmp_path / "agents").exists()
+                    assert len(installed) == 1
+                    assert "cco-agent-test.md" in installed
 
     def test_returns_empty_if_no_source(self, tmp_path):
         """Test returns empty list if source dir doesn't exist."""
-        with patch("claudecodeoptimizer.install_hook.AGENTS_DIR", tmp_path / "agents"):
-            with patch("claudecodeoptimizer.install_hook.get_content_path") as mock_content:
-                mock_content.side_effect = (
-                    lambda subdir="": tmp_path / "nonexistent" / subdir
-                    if subdir
-                    else tmp_path / "nonexistent"
-                )
+        with patch("claudecodeoptimizer.install_hook.CLAUDE_DIR", tmp_path):
+            with patch("claudecodeoptimizer.install_hook.AGENTS_DIR", tmp_path / "agents"):
+                with patch("claudecodeoptimizer.install_hook.get_content_path") as mock_content:
+                    mock_content.side_effect = (
+                        lambda subdir="": tmp_path / "nonexistent" / subdir
+                        if subdir
+                        else tmp_path / "nonexistent"
+                    )
 
-                installed = setup_agents()
+                    installed = setup_agents()
 
-                assert installed == []
+                    assert installed == []
 
 
 class TestCleanClaudeMd:
@@ -956,14 +963,15 @@ class TestSetupRules:
         # Target rules dir (cco/ subdirectory)
         rules_dir = tmp_path / "rules" / "cco"
 
-        with patch(
-            "claudecodeoptimizer.install_hook.get_content_path",
-            side_effect=lambda subdir="": tmp_path / "content" / subdir
-            if subdir
-            else tmp_path / "content",
-        ):
-            with patch("claudecodeoptimizer.install_hook.RULES_DIR", rules_dir):
-                result = setup_rules(verbose=False)
+        with patch("claudecodeoptimizer.install_hook.CLAUDE_DIR", tmp_path):
+            with patch(
+                "claudecodeoptimizer.install_hook.get_content_path",
+                side_effect=lambda subdir="": tmp_path / "content" / subdir
+                if subdir
+                else tmp_path / "content",
+            ):
+                with patch("claudecodeoptimizer.install_hook.RULES_DIR", rules_dir):
+                    result = setup_rules(verbose=False)
 
         assert rules_dir.exists()
         # Files are renamed (cco-core.md -> core.md)
@@ -986,14 +994,15 @@ class TestSetupRules:
 
         rules_dir = tmp_path / "rules" / "cco"
 
-        with patch(
-            "claudecodeoptimizer.install_hook.get_content_path",
-            side_effect=lambda subdir="": tmp_path / "content" / subdir
-            if subdir
-            else tmp_path / "content",
-        ):
-            with patch("claudecodeoptimizer.install_hook.RULES_DIR", rules_dir):
-                setup_rules(verbose=True)
+        with patch("claudecodeoptimizer.install_hook.CLAUDE_DIR", tmp_path):
+            with patch(
+                "claudecodeoptimizer.install_hook.get_content_path",
+                side_effect=lambda subdir="": tmp_path / "content" / subdir
+                if subdir
+                else tmp_path / "content",
+            ):
+                with patch("claudecodeoptimizer.install_hook.RULES_DIR", rules_dir):
+                    setup_rules(verbose=True)
 
         captured = capsys.readouterr()
         # Output now shows "cco/core.md" instead of "cco-core.md"
@@ -1013,14 +1022,15 @@ class TestSetupRules:
         (rules_dir / "core.md").write_text("# Old Core")
         (rules_dir / "custom-rule.md").write_text("# Custom Rule")
 
-        with patch(
-            "claudecodeoptimizer.install_hook.get_content_path",
-            side_effect=lambda subdir="": tmp_path / "content" / subdir
-            if subdir
-            else tmp_path / "content",
-        ):
-            with patch("claudecodeoptimizer.install_hook.RULES_DIR", rules_dir):
-                setup_rules(verbose=False)
+        with patch("claudecodeoptimizer.install_hook.CLAUDE_DIR", tmp_path):
+            with patch(
+                "claudecodeoptimizer.install_hook.get_content_path",
+                side_effect=lambda subdir="": tmp_path / "content" / subdir
+                if subdir
+                else tmp_path / "content",
+            ):
+                with patch("claudecodeoptimizer.install_hook.RULES_DIR", rules_dir):
+                    setup_rules(verbose=False)
 
         # Custom rule preserved, CCO rule updated
         assert (rules_dir / "custom-rule.md").exists()
@@ -1031,13 +1041,14 @@ class TestSetupRules:
         """Test setup_rules returns empty when source doesn't exist."""
         from claudecodeoptimizer.install_hook import setup_rules
 
-        with patch(
-            "claudecodeoptimizer.install_hook.get_content_path",
-            side_effect=lambda subdir="": tmp_path / "nonexistent" / subdir
-            if subdir
-            else tmp_path / "nonexistent",
-        ):
-            result = setup_rules(verbose=False)
+        with patch("claudecodeoptimizer.install_hook.CLAUDE_DIR", tmp_path):
+            with patch(
+                "claudecodeoptimizer.install_hook.get_content_path",
+                side_effect=lambda subdir="": tmp_path / "nonexistent" / subdir
+                if subdir
+                else tmp_path / "nonexistent",
+            ):
+                result = setup_rules(verbose=False)
 
         # adaptive.md is no longer installed globally
         assert result == {"core": 0, "ai": 0, "tools": 0, "total": 0}

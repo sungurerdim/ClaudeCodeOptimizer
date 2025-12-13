@@ -1,7 +1,6 @@
-"""CCO Remove - Uninstall CCO files from ~/.claude/"""
+"""CCO Uninstall - Uninstall CCO files from ~/.claude/"""
 
 import argparse
-import json
 import subprocess
 import sys
 from pathlib import Path
@@ -23,6 +22,7 @@ from .config import (
     SUBPROCESS_TIMEOUT_PACKAGE,
     get_cco_agents,
     get_cco_commands,
+    load_json_file,
     save_json_file,
 )
 from .operations import remove_all_cco_markers
@@ -32,7 +32,7 @@ from .ui import display_removal_plan
 class RemovalItems(TypedDict):
     """Type-safe container for removal items.
 
-    Note: cco-remove only handles global ~/.claude/ files.
+    Note: cco-uninstall only handles global ~/.claude/ files.
     Local project files (./.claude/) are managed by cco-config.
     """
 
@@ -98,16 +98,13 @@ def remove_statusline(verbose: bool = True) -> bool:
 
     # Clean statusLine from settings.json
     if SETTINGS_FILE.exists():
-        try:
-            settings = json.loads(SETTINGS_FILE.read_text(encoding="utf-8"))
-            if "statusLine" in settings:
-                del settings["statusLine"]
-                save_json_file(SETTINGS_FILE, settings)
-                if verbose:
-                    print("  - settings.json (statusLine removed)")
-                removed = True
-        except json.JSONDecodeError:
-            pass
+        settings = load_json_file(SETTINGS_FILE)
+        if "statusLine" in settings:
+            del settings["statusLine"]
+            save_json_file(SETTINGS_FILE, settings)
+            if verbose:
+                print("  - settings.json (statusLine removed)")
+            removed = True
 
     return removed
 
@@ -116,16 +113,13 @@ def has_cco_permissions(settings_file: Path = SETTINGS_FILE) -> bool:
     """Check if CCO permissions are installed in settings.json."""
     if not settings_file.exists():
         return False
-    try:
-        settings = json.loads(settings_file.read_text(encoding="utf-8"))
-        permissions = settings.get("permissions", {})
-        # Check for CCO marker or _meta field (from permissions JSON)
-        if CCO_PERMISSIONS_MARKER in settings:
-            return True
-        if isinstance(permissions, dict) and "_meta" in permissions:
-            return True
-    except json.JSONDecodeError:
-        pass
+    settings = load_json_file(settings_file)
+    permissions = settings.get("permissions", {})
+    # Check for CCO marker or _meta field (from permissions JSON)
+    if CCO_PERMISSIONS_MARKER in settings:
+        return True
+    if isinstance(permissions, dict) and "_meta" in permissions:
+        return True
     return False
 
 
@@ -142,28 +136,25 @@ def remove_permissions(settings_file: Path = SETTINGS_FILE, verbose: bool = True
     if not settings_file.exists():
         return False
 
-    try:
-        settings = json.loads(settings_file.read_text(encoding="utf-8"))
-        removed = False
+    settings = load_json_file(settings_file)
+    removed = False
 
-        # Remove permissions key
-        if "permissions" in settings:
-            del settings["permissions"]
-            removed = True
+    # Remove permissions key
+    if "permissions" in settings:
+        del settings["permissions"]
+        removed = True
 
-        # Remove CCO marker
-        if CCO_PERMISSIONS_MARKER in settings:
-            del settings[CCO_PERMISSIONS_MARKER]
-            removed = True
+    # Remove CCO marker
+    if CCO_PERMISSIONS_MARKER in settings:
+        del settings[CCO_PERMISSIONS_MARKER]
+        removed = True
 
-        if removed:
-            save_json_file(settings_file, settings)
-            if verbose:
-                print("  - settings.json (permissions removed)")
+    if removed:
+        save_json_file(settings_file, settings)
+        if verbose:
+            print("  - settings.json (permissions removed)")
 
-        return removed
-    except json.JSONDecodeError:
-        return False
+    return removed
 
 
 def has_rules_dir() -> bool:
@@ -460,7 +451,7 @@ def _execute_removal(items: RemovalItems) -> None:
 def main() -> int:
     """CLI entry point."""
     parser = argparse.ArgumentParser(
-        prog="cco-remove",
+        prog="cco-uninstall",
         description="Uninstall CCO files from ~/.claude/",
     )
     parser.add_argument(
