@@ -45,33 +45,15 @@ When called without flags → **AskUserQuestion** (mandatory):
 
 Flags `--health-only`, `--audit-only`, `--cleanup-only` skip this question.
 
-## Step Progress UX [CRITICAL]
+## Phase Announcements [CRITICAL]
 
-**Before starting ANY phase, display the full progress overview:**
+**Before starting each phase, announce:** `▶ Phase X/3: Phase Name`
 
-```
-┌─ CHECKUP PROGRESS ───────────────────────────────────────────┐
-│ Phase 1/3: Health Dashboard           ◉ In Progress          │
-│ Phase 2/3: Quality Audit              ○ Pending               │
-│ Phase 3/3: Quick Cleanup              ○ Pending               │
-└──────────────────────────────────────────────────────────────┘
-```
-
-**Before each phase transition, announce clearly:**
-```
-━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-▶ Phase 2/3: Quality Audit
-━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-```
-
-**Status symbols:**
-| Symbol | Meaning |
-|--------|---------|
-| ◉ | In Progress |
-| ✓ | Completed |
-| ✗ | Failed |
-| ○ | Pending |
-| ⊘ | Skipped |
+| Phase | Name |
+|-------|------|
+| 1 | Health Dashboard |
+| 2 | Quality Audit |
+| 3 | Quick Cleanup |
 
 ## Flow
 
