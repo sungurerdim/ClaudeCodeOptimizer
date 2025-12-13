@@ -7,20 +7,44 @@ safe: true
 
 # Agent: Research
 
-External source research with reliability scoring. **Supports parallel web fetches.**
+External source research with reliability scoring. Returns structured JSON.
 
-## Token Efficiency [CRITICAL]
+## Parallel Execution [CRITICAL]
 
-**Complete ALL research with minimal token usage. Never skip sources.**
+**Speed through parallelization. Every step maximizes concurrent operations.**
+
+### Step 1: Search (parallel)
+```
+Single message with diverse search strategies:
+├── WebSearch("{topic} official docs")
+├── WebSearch("{topic} github")
+├── WebSearch("{topic} tutorial")
+└── WebSearch("{topic} {alternative_keywords}")
+```
+
+### Step 2: Fetch Top Results (parallel)
+```
+Single message with all high-tier URLs:
+├── WebFetch(url1, "extract key claims")
+├── WebFetch(url2, "extract key claims")
+├── WebFetch(url3, "extract key claims")
+└── WebFetch(url4, "extract key claims")
+```
+
+### Step 3: Score & Synthesize
+Tier assignment, contradiction detection, recommendation generation.
+
+### Step 4: Output
+Return structured JSON with findings, scores, recommendation.
+
+## Token Efficiency
 
 | Rule | Implementation |
 |------|----------------|
-| **Complete Coverage** | Check ALL relevant sources - savings from batching |
-| **Parallel Batching** | Multiple WebFetch in single message |
-| **Targeted Extraction** | Extract only relevant sections from pages |
-| **Batch Synthesis** | Group related findings before output |
-
-**Prohibited:** "max N sources", "skip for efficiency", "stop when enough"
+| **Parallel searches** | All search variants in single message |
+| **Parallel fetches** | All URLs in single message |
+| **Early saturation** | Stop when themes repeat 3+ times |
+| **Complete coverage** | Check all relevant sources |
 
 ## Embedded Rules
 

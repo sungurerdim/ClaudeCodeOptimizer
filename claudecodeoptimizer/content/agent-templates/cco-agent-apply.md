@@ -15,18 +15,51 @@ Every finding passed to this agent MUST be fixed. There is no "manual" or "skip"
 1. User explicitly declined in AskUserQuestion
 2. Fix would break working code (verified by tests)
 
-## Token Efficiency [CRITICAL]
+## Parallel Execution [CRITICAL]
 
-**Complete ALL fixes with minimal token usage. Never skip issues.**
+**Speed through parallelization. Every step maximizes concurrent operations.**
+
+### Step 1: Pre-check
+```
+Bash(git status --short)  # Single call
+```
+
+### Step 2: Read Context (parallel)
+```
+Single message - all affected files:
+├── Read(file1, offset=X, limit=30)
+├── Read(file2, offset=Y, limit=30)
+└── Read(file3, offset=Z, limit=30)
+```
+
+### Step 3: Apply Fixes (parallel)
+```
+Single message - all independent file edits:
+├── Edit(file1, fix1)
+├── Edit(file2, fix2)
+├── Edit(file3, fix3)
+└── Edit(file1, fix4)  # Same file edits are sequential
+```
+
+### Step 4: Verify (parallel)
+```
+Single message with all verification:
+├── Bash({lint_command})
+├── Bash({type_command})
+└── Bash({test_command})  # Or background if slow
+```
+
+### Step 5: Cascade (if needed)
+If new errors → repeat Step 3-4 for cascade fixes.
+
+## Token Efficiency
 
 | Rule | Implementation |
 |------|----------------|
-| **Complete Coverage** | Fix ALL issues - savings from efficiency, not skipping |
-| **Parallel Batching** | Multiple tool calls in single message |
-| **Targeted Reads** | Read only affected file sections (offset/limit) |
-| **Batch Verification** | Group lint/type checks per file |
-
-**Prohibited:** "max N fixes", "skip for efficiency", "stop when enough"
+| **Complete coverage** | Fix ALL issues - never skip |
+| **Parallel reads** | All affected files in single message |
+| **Parallel edits** | All independent file edits in single message |
+| **Parallel verification** | Lint + type + test in single message |
 
 ## Embedded Rules
 
@@ -77,14 +110,14 @@ Every finding passed to this agent MUST be fixed. There is no "manual" or "skip"
 
 | Error | Fix |
 |-------|-----|
-| Missing stubs | `pip install types-{package}` via Bash |
+| Missing stubs | Install type stubs via package manager |
 | Missing annotation | Add explicit type hint |
 | Type mismatch | Fix type or add `cast()` |
 | Any type | Replace with specific type |
 | Optional handling | Add null check or assert |
 | Import errors | Fix import path |
 
-After fixing, verify with `mypy --strict`.
+After fixing, verify with `{type_command}`.
 
 ### Quality Fixes
 
@@ -95,17 +128,13 @@ After fixing, verify with `mypy --strict`.
 | Magic numbers | Extract to constants |
 | Missing docstring | Add docstring |
 
-## Verification Protocol
+## Verification
 
-After each change:
-1. **Read** - Confirm edit applied correctly
-2. **Grep** - Verify old pattern removed (count = 0)
-3. **Grep** - Verify new pattern exists (count = expected)
-4. **Lint** - Run `ruff check {file}` or equivalent
-5. **Type** - Run `mypy {file}` if Python
-6. **Test** - Run relevant tests if available
+**All verification runs in parallel (Step 4 above).**
 
-**If verification fails:** Fix the issue, don't skip.
+- If any check fails → cascade fix → re-verify
+- Commands from context.md Operational section
+- Tests can run in background if slow (`run_in_background: true`)
 
 ## Cascade Fixes
 
