@@ -24,7 +24,7 @@ from .config import (
 )
 
 # Valid options for local mode
-STATUSLINE_MODES = ("full", "minimal")
+STATUSLINE_MODES = ("cco-full", "cco-minimal")
 PERMISSION_LEVELS = ("safe", "balanced", "permissive", "full")
 
 
@@ -66,6 +66,83 @@ def get_content_dir() -> Path:
     return Path(__file__).parent / "content"
 
 
+def _remove_command_files(commands_dir: Path, removed: dict[str, int]) -> None:
+    """Remove all cco-*.md files from commands directory.
+
+    Args:
+        commands_dir: Path to commands directory
+        removed: Dictionary to update with count of removed items
+    """
+    if commands_dir.exists():
+        for f in commands_dir.glob("cco-*.md"):
+            f.unlink()
+            removed["commands"] += 1
+
+
+def _remove_agent_files(agents_dir: Path, removed: dict[str, int]) -> None:
+    """Remove all cco-*.md files from agents directory.
+
+    Args:
+        agents_dir: Path to agents directory
+        removed: Dictionary to update with count of removed items
+    """
+    if agents_dir.exists():
+        for f in agents_dir.glob("cco-*.md"):
+            f.unlink()
+            removed["agents"] += 1
+
+
+def _remove_old_rules(old_rules_dir: Path, removed: dict[str, int]) -> None:
+    """Remove old CCO rule files from root (v1.x backward compat).
+
+    Args:
+        old_rules_dir: Path to old rules root directory
+        removed: Dictionary to update with count of removed items
+    """
+    old_rule_files = CCO_RULE_FILES + ("cco-adaptive.md", "cco-tools.md")
+    if old_rules_dir.exists():
+        for rule_file in old_rule_files:
+            rule_path = old_rules_dir / rule_file
+            if rule_path.exists():
+                rule_path.unlink()
+                removed["rules"] += 1
+
+
+def _remove_new_rules(new_rules_dir: Path, removed: dict[str, int]) -> None:
+    """Remove CCO rules from cco/ subdirectory (v2.x).
+
+    Args:
+        new_rules_dir: Path to new rules cco/ subdirectory
+        removed: Dictionary to update with count of removed items
+    """
+    old_rule_names = CCO_RULE_NAMES + ("tools.md", "adaptive.md")
+    if new_rules_dir.exists():
+        for rule_name in old_rule_names:
+            rule_path = new_rules_dir / rule_name
+            if rule_path.exists():
+                rule_path.unlink()
+                removed["rules"] += 1
+        # Remove empty cco/ directory
+        if new_rules_dir.exists() and not any(new_rules_dir.iterdir()):
+            new_rules_dir.rmdir()
+
+
+def _clean_claude_md_markers(claude_md: Path, removed: dict[str, int]) -> None:
+    """Remove CCO markers from CLAUDE.md.
+
+    Args:
+        claude_md: Path to CLAUDE.md file
+        removed: Dictionary to update with count of removed items
+    """
+    if claude_md.exists():
+        content = claude_md.read_text(encoding="utf-8")
+        content, count = _remove_all_cco_markers(content)
+        if count > 0:
+            content = re.sub(r"\n{3,}", "\n\n", content)
+            claude_md.write_text(content, encoding="utf-8")
+            removed["rules"] += count
+
+
 def clean_previous_installation(verbose: bool = True) -> dict[str, int]:
     """Remove previous CCO commands, agents, and rules.
 
@@ -87,49 +164,20 @@ def clean_previous_installation(verbose: bool = True) -> dict[str, int]:
     removed = {"commands": 0, "agents": 0, "rules": 0}
 
     # 1. Remove all cco-*.md files from commands/
-    if COMMANDS_DIR.exists():
-        for f in COMMANDS_DIR.glob("cco-*.md"):
-            f.unlink()
-            removed["commands"] += 1
+    _remove_command_files(COMMANDS_DIR, removed)
 
     # 2. Remove all cco-*.md files from agents/
-    if AGENTS_DIR.exists():
-        for f in AGENTS_DIR.glob("cco-*.md"):
-            f.unlink()
-            removed["agents"] += 1
+    _remove_agent_files(AGENTS_DIR, removed)
 
     # 3a. Remove old CCO rule files from root (v1.x backward compat)
-    # Include all possible rule files from any previous CCO version
-    old_rule_files = CCO_RULE_FILES + ("cco-adaptive.md", "cco-tools.md")
-    if OLD_RULES_ROOT.exists():
-        for rule_file in old_rule_files:
-            rule_path = OLD_RULES_ROOT / rule_file
-            if rule_path.exists():
-                rule_path.unlink()
-                removed["rules"] += 1
+    _remove_old_rules(OLD_RULES_ROOT, removed)
 
     # 3b. Remove CCO rules from cco/ subdirectory (v2.x)
-    # Include tools.md from previous v2.x installs (no longer installed globally)
-    old_rule_names = CCO_RULE_NAMES + ("tools.md", "adaptive.md")
-    if RULES_DIR.exists():
-        for rule_name in old_rule_names:
-            rule_path = RULES_DIR / rule_name
-            if rule_path.exists():
-                rule_path.unlink()
-                removed["rules"] += 1
-        # Remove empty cco/ directory
-        if RULES_DIR.exists() and not any(RULES_DIR.iterdir()):
-            RULES_DIR.rmdir()
+    _remove_new_rules(RULES_DIR, removed)
 
     # 4. Remove CCO markers from CLAUDE.md
     claude_md = CLAUDE_DIR / "CLAUDE.md"
-    if claude_md.exists():
-        content = claude_md.read_text(encoding="utf-8")
-        content, count = _remove_all_cco_markers(content)
-        if count > 0:
-            content = re.sub(r"\n{3,}", "\n\n", content)
-            claude_md.write_text(content, encoding="utf-8")
-            removed["rules"] += count
+    _clean_claude_md_markers(claude_md, removed)
 
     total = sum(removed.values())
     if verbose and total > 0:
@@ -395,45 +443,53 @@ def setup_local_permissions(project_path: Path, level: str, verbose: bool = True
     return True
 
 
-def _run_local_mode(args: argparse.Namespace) -> int:
-    """Handle --local mode for cco-config integration."""
-    project_path = Path(args.local).resolve()
+def _validate_local_path(path: Path) -> str | None:
+    """Validate project path for local setup.
 
-    if not project_path.exists():
-        print(f"Error: Project path does not exist: {project_path}", file=sys.stderr)
-        return 1
+    Args:
+        path: Project path to validate
 
-    if not project_path.is_dir():
-        print(f"Error: Not a directory: {project_path}", file=sys.stderr)
-        return 1
+    Returns:
+        Error message if invalid, None if valid
+    """
+    if not path.exists():
+        return f"Project path does not exist: {path}"
+    if not path.is_dir():
+        return f"Not a directory: {path}"
+    if not _is_safe_path(path):
+        return "Path must be within home directory or current working directory"
+    return None
 
-    # Security: Validate path is within user's home directory or current working directory
-    if not _is_safe_path(project_path):
-        print(
-            "Error: Path must be within home directory or current working directory",
-            file=sys.stderr,
-        )
-        return 1
 
-    print(f"\nCCO Local Setup: {project_path}\n")
+def _execute_local_setup(path: Path, args: argparse.Namespace) -> int:
+    """Execute local setup for statusline and/or permissions.
+
+    Args:
+        path: Validated project path
+        args: Command line arguments
+
+    Returns:
+        Exit code (0 for success, 1 for failure)
+    """
+    print(f"\nCCO Local Setup: {path}\n")
 
     success = True
 
     if args.statusline:
         print("Statusline:")
-        if not setup_local_statusline(project_path, args.statusline):
+        if not setup_local_statusline(path, args.statusline):
             success = False
         print()
 
     if args.permissions:
         print("Permissions:")
-        if not setup_local_permissions(project_path, args.permissions):
+        if not setup_local_permissions(path, args.permissions):
             success = False
         print()
 
     if not args.statusline and not args.permissions:
         # Just create .claude/ directory
-        local_claude = project_path / ".claude"
+        local_claude = path / ".claude"
         local_claude.mkdir(parents=True, exist_ok=True)
         print(f"  Created: {local_claude}/")
         print()
@@ -444,6 +500,20 @@ def _run_local_mode(args: argparse.Namespace) -> int:
         print("Local setup completed with errors.", file=sys.stderr)
 
     return 0 if success else 1
+
+
+def _run_local_mode(args: argparse.Namespace) -> int:
+    """Handle --local mode for cco-config integration."""
+    project_path = Path(args.local).resolve()
+
+    # Validate path
+    error = _validate_local_path(project_path)
+    if error:
+        print(f"Error: {error}", file=sys.stderr)
+        return 1
+
+    # Execute setup
+    return _execute_local_setup(project_path, args)
 
 
 def post_install() -> int:
