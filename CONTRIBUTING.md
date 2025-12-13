@@ -199,9 +199,9 @@ ClaudeCodeOptimizer/
     └── integration/         # Integration tests
 ```
 
-## Rules Architecture (v2.x)
+## Rules Architecture
 
-CCO v2.x uses a **directory-based system** instead of CLAUDE.md markers:
+CCO uses a **directory-based system**:
 
 ### Global Rules (`~/.claude/rules/cco/`)
 
@@ -221,7 +221,7 @@ and are loaded on-demand when commands/agents run:
 - `cco-tools.md` - Workflow rules (embedded in commands)
 - `cco-adaptive.md` - Project-specific rules (used by /cco-config)
 
-### Project Context (`./CLAUDE.md` or `./.claude/rules/cco/context.md`)
+### Project Context (`./.claude/rules/cco/context.md`)
 
 Project-specific configuration is written to the local project:
 
@@ -233,11 +233,6 @@ Purpose: {purpose}
 Team: {team} | Scale: {scale} | Data: {data} | Compliance: {compliance}
 ...
 ```
-
-### Backward Compatibility
-
-The old marker system (CCO_CORE_START, CCO_AI_START, etc.) is automatically
-cleaned up during installation. CCO v2.x removes these markers from CLAUDE.md.
 
 ## Getting Help
 

@@ -49,20 +49,26 @@ Detailed documentation for all CCO slash commands.
 |---------|---------|
 | **Configure** | Detection & Rules, AI Performance, Statusline, Permissions |
 | **Remove** | Remove AI Performance, Remove Statusline, Remove Permissions, Remove Rules |
-| **Export** | CLAUDE.md, AGENTS.md |
+| **Export** | AGENTS.md (recommended), CLAUDE.md |
 
 **Features:**
 - Mixed operations in single run (e.g., Configure + Remove + Export)
 - Remove options only shown if item is configured
-- Export content is user-selectable (Core Rules, AI Rules, Tool Rules, Project Context, Adaptive Rules)
+
+**Export formats:**
+
+| Format | Target | Content | Output |
+|--------|--------|---------|--------|
+| AGENTS.md | Universal (Codex, Cursor, Copilot, Cline, etc.) | Core + AI, model-agnostic | `./AGENTS.md` |
+| CLAUDE.md | Claude Code only | Core + AI + Tools, full | `./CLAUDE.export.md` |
 
 **Export sources:**
-- Reads from installed files: `~/.claude/CLAUDE.md` + `./CLAUDE.md`
-- Never exports: AI Performance, Statusline, Permissions (project-specific)
+- Reads from: `~/.claude/rules/cco/` + `.claude/rules/cco/`
+- Never exports: AI Performance, Statusline, Permissions
 
-**Export targets:**
-- **AGENTS.md** → `./AGENTS.md` (Tool Rules excluded)
-- **CLAUDE.md** → `./CLAUDE.export.md` (all rules)
+**AGENTS.md content filtering:**
+- Removes Claude-specific: tool names, `.claude/` paths, CCO references
+- Preserves: model-agnostic principles (DRY, Fail-Fast, Read-First)
 
 ---
 

@@ -77,8 +77,8 @@ Before ANY response that expects user input:
 
 ## Command Flow
 
-- **Context-Check**: Verify CCO_ADAPTIVE, suggest /cco-config if missing
-- **Read-Context**: Parse ./CLAUDE.md markers
+- **Context-Check**: Verify context.md exists, suggest /cco-config if missing
+- **Read-Context**: Load `.claude/rules/cco/context.md`
 - **Execute**: Command-specific logic
 - **Report**: Results with accounting
 
@@ -203,14 +203,14 @@ Present different categories in SEPARATE batches:
 - **Syntax**: Use `!` backtick for real-time context
 - **Git-Status**: `` `git status --short` ``
 - **Branch**: `` `git branch --show-current` ``
-- **CCO-Context**: `` `head -30 ./CLAUDE.md 2>/dev/null` ``
+- **CCO-Context**: `` `head -30 .claude/rules/cco/context.md 2>/dev/null` ``
 
 ### When to Use
 
 | Context Type | Command | Example |
 |--------------|---------|---------|
 | Git state | commit, refactor | `` `git status` `` |
-| File content | audit, review | `` `head -50 ./CLAUDE.md` `` |
+| File content | audit, review | `` `head -50 .claude/rules/cco/context.md` `` |
 | Dependencies | audit, health | `` `cat package.json \| jq .dependencies` `` |
 | Recent changes | commit, review | `` `git log --oneline -5` `` |
 
@@ -240,14 +240,14 @@ Present different categories in SEPARATE batches:
 
 ### Agent Propagation [REQUIRED]
 
-- **Context-Pass**: Pass CCO_ADAPTIVE summary to all agents
+- **Context-Pass**: Pass context.md summary to all agents
 - **Rules-Pass**: Include applicable rules from context
 - **Format-Pass**: Specify exact output format expected
 - **Todo-Pass**: Tell agents: "Make a todo list first"
 
 **Template for agent instructions:**
 ```
-Context: {relevant CCO_ADAPTIVE fields}
+Context: {relevant context.md fields}
 Rules: {applicable rules from this file}
 Output: {expected format - follow precisely}
 Note: Make a todo list first, then process systematically

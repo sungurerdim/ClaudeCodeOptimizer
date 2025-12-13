@@ -256,12 +256,32 @@ See [cco-adaptive.md](../claudecodeoptimizer/content/rules/cco-adaptive.md) for 
 
 ## Export Behavior
 
-| Format | Core | AI | Tool | Adaptive |
-|--------|------|-----|------|----------|
-| **AGENTS.md** | Yes | Yes | No | Yes (triggered) |
-| **CLAUDE.md** | Yes | Yes | Yes | Yes (triggered) |
+### Format Comparison
 
-Tool rules are excluded from AGENTS.md export because they depend on CCO's approval flow and tools.
+| Format | Target | Core | AI | Tool | Adaptive |
+|--------|--------|------|-----|------|----------|
+| **AGENTS.md** | Universal (Codex, Cursor, Copilot, Cline, etc.) | Yes | Yes | No | Yes (triggered) |
+| **CLAUDE.md** | Claude Code only | Yes | Yes | Yes | Yes (triggered) |
+
+### Why AGENTS.md Excludes Tool Rules
+
+Tool rules depend on Claude Code specific features:
+- `AskUserQuestion`, `TodoWrite`, `Task` tool references
+- `.claude/` directory structure
+- CCO command integration (`/cco-*`)
+
+### Content Filtering (AGENTS.md)
+
+AGENTS.md export filters Claude-specific content for cross-tool compatibility:
+
+| Category | Filtered | Reason |
+|----------|----------|--------|
+| Tool names | `Read`, `Write`, `Edit`, `Bash`, `Task`, etc. | Claude Code specific |
+| Paths | `~/.claude/`, `.claude/` | Claude directory structure |
+| Product refs | "Claude Code", "Claude" | Vendor-specific |
+| CCO refs | `cco-*`, `/cco-*` | CCO-specific features |
+
+Model-agnostic principles (DRY, Fail-Fast, Read-First) are preserved.
 
 ---
 

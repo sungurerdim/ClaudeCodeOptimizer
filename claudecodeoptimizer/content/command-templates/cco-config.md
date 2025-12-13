@@ -102,7 +102,7 @@ Read existing files only - no detection, no Bash commands for counting.
 
 | Question | Options | MultiSelect |
 |----------|---------|-------------|
-| Export format? | CLAUDE.md (Recommended); AGENTS.md; Both | false |
+| Export format? | AGENTS.md (Recommended); CLAUDE.md | false |
 
 ### Question 3: Detail Options (only if applicable)
 
@@ -219,12 +219,54 @@ Write to `.claude/settings.json`:
 
 ## Export Mode
 
-Export reads from existing `.claude/rules/cco/` files (no agent needed):
+Export reads from existing `.claude/rules/cco/` files (no agent needed).
+
+### Source Files
 
 1. Read global rules: `~/.claude/rules/cco/core.md`, `~/.claude/rules/cco/ai.md`
-2. Read project rules: `.claude/rules/cco/*.md`
-3. Combine based on user selection
-4. Write to `./CLAUDE.export.md` or `./AGENTS.md`
+2. Read project rules: `.claude/rules/cco/*.md` (context.md, language/*.md, etc.)
+
+### Format Differences
+
+| Aspect | AGENTS.md | CLAUDE.md |
+|--------|-----------|-----------|
+| **Target** | Universal (Codex, Cursor, Copilot, Cline, etc.) | Claude Code only |
+| **Rules** | Core + AI only | Core + AI + Tools |
+| **Output** | `./AGENTS.md` | `./CLAUDE.export.md` |
+
+### Content Filtering (AGENTS.md only)
+
+**Remove Claude-specific references:**
+
+| Category | Examples | Action |
+|----------|----------|--------|
+| Tool names | `Read`, `Write`, `Edit`, `Bash`, `Task`, `TodoWrite`, `AskUserQuestion` | Remove lines/sections |
+| Paths | `~/.claude/`, `.claude/` | Generalize or remove |
+| Product refs | "Claude Code", "Claude" | Remove or generalize to "AI agent" |
+| CCO-specific | `cco-*`, `/cco-*` | Remove |
+
+**Keep model-agnostic content:**
+- General principles (DRY, Fail-Fast, Type-Safe)
+- Behavior rules (Read-First, Plan-Before-Act)
+- Output formats (JSON, tables, error format)
+- Workflow patterns (Conventions, Reference-Integrity)
+
+### Export Process
+
+```
+1. Read source files
+2. If AGENTS.md → apply content filtering
+3. Combine: header + core + ai + (tools if CLAUDE.md) + context
+4. Write to output file (no markers)
+```
+
+### Output Header
+
+```markdown
+# Project Rules
+*Exported from CCO - {date}*
+*Format: {AGENTS.md|CLAUDE.md}*
+```
 
 ---
 

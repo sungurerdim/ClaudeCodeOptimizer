@@ -38,7 +38,7 @@ class RemovalItems(TypedDict):
     files: dict[str, list[str]]
     rules: list[str]
     rules_dir: bool
-    rules_dir_old: bool  # v1.x backward compat: ~/.claude/rules/cco-*.md
+    rules_dir_old: bool  # Old root-level: ~/.claude/rules/cco-*.md
     statusline: bool
     permissions: bool
     total_files: int
@@ -165,31 +165,28 @@ def remove_permissions(settings_file: Path = SETTINGS_FILE, verbose: bool = True
 
 
 def has_rules_dir() -> bool:
-    """Check if any CCO rule files exist in ~/.claude/rules/cco/ (v2.x)."""
+    """Check if any CCO rule files exist in ~/.claude/rules/cco/."""
     if not RULES_DIR.exists():
         return False
-    # Check for new v2.x structure: ~/.claude/rules/cco/{core,ai}.md
-    # Also check for old intermediate files: tools.md, adaptive.md
+    # Check for current structure: ~/.claude/rules/cco/{core,ai}.md
     return any((RULES_DIR / f).exists() for f in ALL_RULE_NAMES)
 
 
 def has_rules_dir_old() -> bool:
-    """Check if any old CCO rule files exist in ~/.claude/rules/ (v1.x backward compat)."""
+    """Check if any old CCO rule files exist in ~/.claude/rules/ root."""
     if not OLD_RULES_ROOT.exists():
         return False
-    # Check for old v1.x structure: ~/.claude/rules/cco-{core,ai,tools,adaptive}.md
-    # Includes cco-tools.md which existed in intermediate versions
+    # Check for old root-level: ~/.claude/rules/cco-{core,ai,tools,adaptive}.md
     return any((OLD_RULES_ROOT / f).exists() for f in OLD_RULE_FILES)
 
 
 def remove_rules_dir(verbose: bool = True) -> bool:
-    """Remove CCO rule files from ~/.claude/rules/cco/ (v2.x)."""
+    """Remove CCO rule files from ~/.claude/rules/cco/."""
     if not RULES_DIR.exists():
         return False
 
     removed_count = 0
-    # Include all possible rule files from any CCO version
-    # CCO_RULE_NAMES has current files, plus old files from intermediate versions
+    # Include all possible rule files
     for rule_name in ALL_RULE_NAMES:
         rule_path = RULES_DIR / rule_name
         if rule_path.exists():
@@ -209,12 +206,12 @@ def remove_rules_dir(verbose: bool = True) -> bool:
 
 
 def remove_rules_dir_old(verbose: bool = True) -> bool:
-    """Remove old CCO rule files from ~/.claude/rules/ root (v1.x backward compat)."""
+    """Remove old CCO rule files from ~/.claude/rules/ root."""
     if not OLD_RULES_ROOT.exists():
         return False
 
     removed_count = 0
-    # Include all possible old CCO rule files from any previous version
+    # Include all old root-level CCO rule files
     for rule_file in OLD_RULE_FILES:
         rule_path = OLD_RULES_ROOT / rule_file
         if rule_path.exists():
@@ -249,7 +246,7 @@ def _read_claude_md() -> str | None:
 def has_claude_md_rules() -> list[str]:
     """Check which CCO sections exist in CLAUDE.md.
 
-    Uses universal pattern to detect ANY CCO marker for backward compatibility.
+    Uses universal pattern to detect ANY CCO marker.
     Includes file size check to prevent ReDoS on very large files.
     """
     content = _read_claude_md()
@@ -282,8 +279,8 @@ def remove_cco_files(verbose: bool = True) -> dict[str, int]:
 def remove_claude_md_rules(verbose: bool = True) -> list[str]:
     """Remove ALL CCO content from CLAUDE.md.
 
-    Uses universal pattern to remove any CCO marker for backward compatibility.
-    Ensures complete cleanup regardless of marker names from previous versions.
+    Uses universal pattern to remove any CCO marker.
+    Ensures complete cleanup regardless of marker names.
 
     Args:
         verbose: If True, print progress messages.
@@ -415,9 +412,9 @@ def _display_rules_directories(items: RemovalItems) -> None:
     if items["rules_dir"] or items["rules_dir_old"]:
         print("Rules directory:")
         if items["rules_dir"]:
-            print("  - ~/.claude/rules/cco/ (v2.x)")
+            print("  - ~/.claude/rules/cco/")
         if items["rules_dir_old"]:
-            print("  - ~/.claude/rules/ root (v1.x old files)")
+            print("  - ~/.claude/rules/ root (old files)")
         print()
 
 
