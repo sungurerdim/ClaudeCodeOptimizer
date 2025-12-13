@@ -101,7 +101,7 @@ function formatContextUsage(contextWindow) {
   const percent = Math.round(totalUsed * 100 / contextSize);
   const formatK = n => n >= 1000 ? Math.round(n / 1000) + 'K' : n.toString();
 
-  return `${formatK(totalUsed)}/${formatK(contextSize)} - ${percent}%`;
+  return `${formatK(totalUsed)}/${formatK(contextSize)} · ${percent}%`;
 }
 
 function getLatestRelease() {

@@ -186,8 +186,8 @@ class TestCleanPreviousInstallation:
         assert result["rules"] >= 1
 
         # Files should be removed or cleaned
-        assert not list(commands_dir.glob("cco-*.md"))
-        assert not list(agents_dir.glob("cco-*.md"))
+        assert not any(commands_dir.glob("cco-*.md"))
+        assert not any(agents_dir.glob("cco-*.md"))
         assert "CCO_STANDARDS_START" not in claude_md.read_text()
 
 
@@ -361,8 +361,8 @@ class TestSetupLocalStatusline:
         """Test successfully sets up local statusline."""
         src_dir = tmp_path / "pkg" / "statusline"
         src_dir.mkdir(parents=True)
-        (src_dir / "full.js").write_text("// CCO Statusline\nconsole.log('full');")
-        (src_dir / "minimal.js").write_text("// CCO Statusline\nconsole.log('minimal');")
+        (src_dir / "cco-full.js").write_text("// CCO Statusline\nconsole.log('cco-full');")
+        (src_dir / "cco-minimal.js").write_text("// CCO Statusline\nconsole.log('cco-minimal');")
 
         project_path = tmp_path / "project"
         project_path.mkdir()
@@ -370,7 +370,7 @@ class TestSetupLocalStatusline:
         with patch("claudecodeoptimizer.install_hook.get_content_path", return_value=src_dir):
             from claudecodeoptimizer.install_hook import setup_local_statusline
 
-            result = setup_local_statusline(project_path, "full", verbose=False)
+            result = setup_local_statusline(project_path, "cco-full", verbose=False)
 
         assert result is True
         assert (project_path / ".claude" / "statusline.js").exists()
@@ -382,7 +382,7 @@ class TestSetupLocalStatusline:
         """Test minimal statusline mode."""
         src_dir = tmp_path / "pkg" / "statusline"
         src_dir.mkdir(parents=True)
-        (src_dir / "minimal.js").write_text("// CCO Statusline\nconsole.log('minimal');")
+        (src_dir / "cco-minimal.js").write_text("// CCO Statusline\nconsole.log('cco-minimal');")
 
         project_path = tmp_path / "project"
         project_path.mkdir()
@@ -390,11 +390,11 @@ class TestSetupLocalStatusline:
         with patch("claudecodeoptimizer.install_hook.get_content_path", return_value=src_dir):
             from claudecodeoptimizer.install_hook import setup_local_statusline
 
-            result = setup_local_statusline(project_path, "minimal", verbose=False)
+            result = setup_local_statusline(project_path, "cco-minimal", verbose=False)
 
         assert result is True
         content = (project_path / ".claude" / "statusline.js").read_text()
-        assert "minimal" in content
+        assert "cco-minimal" in content
 
     def test_invalid_mode(self, tmp_path, capsys):
         """Test returns False for invalid mode."""
@@ -419,7 +419,7 @@ class TestSetupLocalStatusline:
         ):
             from claudecodeoptimizer.install_hook import setup_local_statusline
 
-            result = setup_local_statusline(project_path, "full", verbose=True)
+            result = setup_local_statusline(project_path, "cco-full", verbose=True)
 
         assert result is False
         captured = capsys.readouterr()
@@ -429,7 +429,7 @@ class TestSetupLocalStatusline:
         """Test preserves existing settings.json content."""
         src_dir = tmp_path / "pkg" / "statusline"
         src_dir.mkdir(parents=True)
-        (src_dir / "full.js").write_text("// CCO Statusline")
+        (src_dir / "cco-full.js").write_text("// CCO Statusline")
 
         project_path = tmp_path / "project"
         local_claude = project_path / ".claude"
@@ -439,7 +439,7 @@ class TestSetupLocalStatusline:
         with patch("claudecodeoptimizer.install_hook.get_content_path", return_value=src_dir):
             from claudecodeoptimizer.install_hook import setup_local_statusline
 
-            result = setup_local_statusline(project_path, "full", verbose=False)
+            result = setup_local_statusline(project_path, "cco-full", verbose=False)
 
         assert result is True
         settings = json.loads((local_claude / "settings.json").read_text())
@@ -450,7 +450,7 @@ class TestSetupLocalStatusline:
         """Test handles invalid JSON in existing settings."""
         src_dir = tmp_path / "pkg" / "statusline"
         src_dir.mkdir(parents=True)
-        (src_dir / "full.js").write_text("// CCO Statusline")
+        (src_dir / "cco-full.js").write_text("// CCO Statusline")
 
         project_path = tmp_path / "project"
         local_claude = project_path / ".claude"
@@ -460,7 +460,7 @@ class TestSetupLocalStatusline:
         with patch("claudecodeoptimizer.install_hook.get_content_path", return_value=src_dir):
             from claudecodeoptimizer.install_hook import setup_local_statusline
 
-            result = setup_local_statusline(project_path, "full", verbose=False)
+            result = setup_local_statusline(project_path, "cco-full", verbose=False)
 
         assert result is True
         settings = json.loads((local_claude / "settings.json").read_text())
@@ -470,7 +470,7 @@ class TestSetupLocalStatusline:
         """Test verbose output."""
         src_dir = tmp_path / "pkg" / "statusline"
         src_dir.mkdir(parents=True)
-        (src_dir / "full.js").write_text("// CCO Statusline")
+        (src_dir / "cco-full.js").write_text("// CCO Statusline")
 
         project_path = tmp_path / "project"
         project_path.mkdir()
@@ -478,7 +478,7 @@ class TestSetupLocalStatusline:
         with patch("claudecodeoptimizer.install_hook.get_content_path", return_value=src_dir):
             from claudecodeoptimizer.install_hook import setup_local_statusline
 
-            result = setup_local_statusline(project_path, "full", verbose=True)
+            result = setup_local_statusline(project_path, "cco-full", verbose=True)
 
         assert result is True
         captured = capsys.readouterr()
@@ -682,7 +682,7 @@ class TestRunLocalMode:
         """Test local mode with statusline option."""
         src_dir = tmp_path / "pkg" / "statusline"
         src_dir.mkdir(parents=True)
-        (src_dir / "full.js").write_text("// CCO Statusline")
+        (src_dir / "cco-full.js").write_text("// CCO Statusline")
 
         project_path = tmp_path / "project"
         project_path.mkdir()
@@ -692,7 +692,7 @@ class TestRunLocalMode:
                 with patch.object(
                     sys,
                     "argv",
-                    ["cco-install", "--local", str(project_path), "--statusline", "full"],
+                    ["cco-install", "--local", str(project_path), "--statusline", "cco-full"],
                 ):
                     result = post_install()
 
@@ -727,7 +727,7 @@ class TestRunLocalMode:
         """Test local mode with both statusline and permissions."""
         statusline_dir = tmp_path / "pkg" / "statusline"
         statusline_dir.mkdir(parents=True)
-        (statusline_dir / "minimal.js").write_text("// CCO Statusline")
+        (statusline_dir / "cco-minimal.js").write_text("// CCO Statusline")
 
         perm_dir = tmp_path / "pkg" / "permissions"
         perm_dir.mkdir(parents=True)
@@ -753,7 +753,7 @@ class TestRunLocalMode:
                         "--local",
                         str(project_path),
                         "--statusline",
-                        "minimal",
+                        "cco-minimal",
                         "--permissions",
                         "safe",
                     ],
@@ -780,7 +780,7 @@ class TestRunLocalMode:
                 with patch.object(
                     sys,
                     "argv",
-                    ["cco-install", "--local", str(project_path), "--statusline", "full"],
+                    ["cco-install", "--local", str(project_path), "--statusline", "cco-full"],
                 ):
                     result = post_install()
 
@@ -834,7 +834,7 @@ class TestPostInstallValidation:
 
     def test_statusline_requires_local(self, capsys):
         """Test --statusline without --local raises error."""
-        with patch.object(sys, "argv", ["cco-install", "--statusline", "full"]):
+        with patch.object(sys, "argv", ["cco-install", "--statusline", "cco-full"]):
             with pytest.raises(SystemExit) as exc_info:
                 post_install()
 

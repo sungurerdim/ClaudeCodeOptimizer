@@ -17,15 +17,6 @@ const CONFIG = {
 };
 
 // ============================================================================
-// ICONS
-// ============================================================================
-const ICON = {
-  // Header emojis only (first 2 rows)
-  repo: '🔗',    // U+1F517 - wide (2 cells)
-  user: '👤',    // U+1F464 - wide (2 cells)
-};
-
-// ============================================================================
 // BOX DRAWING
 // ============================================================================
 const BOX = {
@@ -175,7 +166,7 @@ function formatContextUsage(contextWindow) {
   const percent = Math.round(totalUsed * 100 / contextSize);
   const formatK = n => n >= 1000 ? Math.round(n / 1000) + 'K' : n.toString();
 
-  return `${formatK(totalUsed)}/${formatK(contextSize)} - ${percent}% Context Usage`;
+  return `${formatK(totalUsed)}/${formatK(contextSize)} · ${percent}% Context`;
 }
 
 // ============================================================================
@@ -345,16 +336,18 @@ function formatStatusline(input, git) {
   const hasAlerts = git && (git.unpushed > 0 || git.conflict > 0 || git.stash > 0);
 
   // Row 1: Repo (left) + optional release tag (right-aligned)
-  const repoLeft = `${ICON.repo} ${c(repoDisplay, 'green')}`;
+  const repoLeft = c(repoDisplay, 'green');
   const repoRight = releaseDisplay || '';
 
   // Row 2: User/Size (left) + Version/Model (right)
+  // Size and Version will be centered in their respective areas
   const versionStr = ccVersion ? c(`v${ccVersion}`, 'yellow') : c('v?', 'gray');
   const sizeDisplay = projectSize ? c(`${projectSize.num} ${projectSize.unit}`, 'blue') : c('?', 'gray');
-  const leftContent = `${ICON.user} ${c(username, 'cyan')} ${c('·', 'gray')} ${sizeDisplay}`;
-  const rightContent = `${versionStr} ${c('·', 'gray')} ${c(modelDisplay, 'magenta')}`;
-  const leftContentMin = leftContent;
-  const rightContentMin = rightContent;
+  const usernameStr = c(username, 'cyan');
+  const modelStr = c(modelDisplay, 'magenta');
+
+  // Store individual elements for width calculation and centering
+  const row2Elements = { usernameStr, sizeDisplay, versionStr, modelStr };
 
   // Row 3: Sync
   let syncContent;
@@ -413,13 +406,17 @@ function formatStatusline(input, git) {
   // Collect cells per column region
   // LEFT: all rows share same left column (row 1 is full-width, not included)
   // For data rows, calculate min width as labelLeft + 2 spaces + labelRight
-  const leftCells = [leftContentMin, syncContent];
+  // Row 2 left: username · size (3 chars for dot separator)
+  const row2LeftMin = row2Elements.usernameStr + ' · ' + row2Elements.sizeDisplay;
+  const leftCells = [row2LeftMin, syncContent];
   if (unstaged) leftCells.push(unstaged.labelLeft + '  ' + unstaged.labelRight);
   if (staged) leftCells.push(staged.labelLeft + '  ' + staged.labelRight);
   if (noGitRow) leftCells.push(`${c('No git data available', 'gray')}`);
 
   // RIGHT HEADER: row 2 only (row 1 is full-width)
-  const rightHeaderCells = [rightContentMin];
+  // Row 2 right: version · model (3 chars for dot separator)
+  const row2RightMin = row2Elements.versionStr + ' · ' + row2Elements.modelStr;
+  const rightHeaderCells = [row2RightMin];
 
   // NARROW COLUMNS: rows 3+ (4 separate columns, include headers for width calc)
   const col0Cells = [editHeader, unstaged?.editVal, staged?.editVal, noGitRow?.editVal].filter(Boolean);
@@ -473,9 +470,31 @@ function formatStatusline(input, git) {
   const headerRightWidth = Math.max(rightHeaderWidth, finalNarrowTotal);
   const bodyWideWidth = leftWidth;
 
-  // Build row 2 content with proper padding
-  const row2Left = leftContent;
-  const row2Right = rightContent;
+  // Build row 2 content: user · size (left) | version · model (right)
+  // Size and version are centered in their available space between dots
+  const dotChar = c('·', 'gray');
+
+  // Calculate widths for centering
+  const usernameLen = getVisibleLength(row2Elements.usernameStr);
+  const sizeLen = getVisibleLength(row2Elements.sizeDisplay);
+  const versionLen = getVisibleLength(row2Elements.versionStr);
+  const modelLen = getVisibleLength(row2Elements.modelStr);
+
+  // Left: username · [centered size]
+  // Available space for size = headerLeftWidth - usernameLen - 3 (for " · ")
+  const leftSizeSpace = headerLeftWidth - usernameLen - 3;
+  const sizePadL = Math.max(0, Math.floor((leftSizeSpace - sizeLen) / 2));
+  const sizePadR = Math.max(0, leftSizeSpace - sizeLen - sizePadL);
+  const row2Left = row2Elements.usernameStr + ' ' + dotChar + ' ' +
+    ' '.repeat(sizePadL) + row2Elements.sizeDisplay + ' '.repeat(sizePadR);
+
+  // Right: [centered version] · model
+  // Available space for version = headerRightWidth - modelLen - 3 (for " · ")
+  const rightVersionSpace = headerRightWidth - modelLen - 3;
+  const versionPadL = Math.max(0, Math.floor((rightVersionSpace - versionLen) / 2));
+  const versionPadR = Math.max(0, rightVersionSpace - versionLen - versionPadL);
+  const row2Right = ' '.repeat(versionPadL) + row2Elements.versionStr + ' '.repeat(versionPadR) +
+    ' ' + dotChar + ' ' + row2Elements.modelStr;
 
   // ─────────────────────────────────────────────────────────────────────────
   // RENDER LINES
@@ -485,15 +504,14 @@ function formatStatusline(input, git) {
   const contextLine = contextUsage ? c(contextUsage, 'cyan') : emptyLine;
   lines.push(contextLine);
 
-  // Separator: adds space only on sides with content
+  // Separator: adds space only on sides with content (vertical line for data rows)
   const sep = ' ' + c(BOX.v, 'gray') + ' ';
-
-  // Row with 2 columns (centerRight: center the right cell)
-  // Uses dot separator instead of vertical line
+  // Dot separator for row 2 (same width as vertical line separator)
   const dotSep = ' ' + c('·', 'gray') + ' ';
-  function row2(content1, content2, width1, width2, centerRight = false) {
-    const pad2 = centerRight ? padCenter : padRight;
-    return padRight(content1, width1) + dotSep + pad2(content2, width2);
+
+  // Row 2: already padded content, just join with separator
+  function row2(content1, content2) {
+    return content1 + dotSep + content2;
   }
 
   // Row with 5 columns (1 wide + 4 narrow, narrow cells right-aligned)
@@ -515,11 +533,8 @@ function formatStatusline(input, git) {
   const row1Padding = totalWidth - repoLeftLen - repoRightLen;
   lines.push(repoLeft + ' '.repeat(Math.max(1, row1Padding)) + repoRight);
 
-  // Row 2: Version+Model | User+Size
-  lines.push(row2(row2Left, row2Right, headerLeftWidth, headerRightWidth));
-
-  // Middle separator (plain horizontal line)
-  lines.push(c(BOX.h.repeat(totalWidth), 'gray'));
+  // Row 2: User/Size · Version/Model (centered size and version)
+  lines.push(row2(row2Left, row2Right));
 
   // Row 3: Sync | headers
   lines.push(row5(syncContent, editHeader, newHeader, delHeader, renameHeader, bodyWideWidth));
