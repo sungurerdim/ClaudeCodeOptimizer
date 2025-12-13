@@ -24,7 +24,9 @@ __all__ = [
     "get_cco_agents",
     "get_rules_breakdown",
     "get_content_path",
+    "load_json_file",
     "CCO_UNIVERSAL_PATTERN",
+    "CCO_UNIVERSAL_PATTERN_COMPILED",
     "SUBPROCESS_TIMEOUT",
     "SUBPROCESS_TIMEOUT_PACKAGE",
     "MAX_CLAUDE_MD_SIZE",
@@ -82,6 +84,12 @@ def get_content_path(subdir: str = "") -> Path:
 # ReDoS mitigation: File size limited to MAX_CLAUDE_MD_SIZE (1MB) before pattern application.
 # The .*? quantifier is safe given this size constraint.
 CCO_UNIVERSAL_PATTERN = (
+    r"<!--\s*CCO[_-]\w+[_-]START\s*-->.*?<!--\s*CCO[_-]\w+[_-]END\s*-->\n?",
+    re.DOTALL | re.IGNORECASE,
+)
+
+# Pre-compiled pattern for performance
+CCO_UNIVERSAL_PATTERN_COMPILED = re.compile(
     r"<!--\s*CCO[_-]\w+[_-]START\s*-->.*?<!--\s*CCO[_-]\w+[_-]END\s*-->\n?",
     re.DOTALL | re.IGNORECASE,
 )
