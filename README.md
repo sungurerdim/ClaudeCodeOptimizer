@@ -6,6 +6,8 @@ A process and rules layer for Claude Code in the Opus 4.5 era.
 [![License: MIT](https://img.shields.io/badge/license-MIT-green.svg)](LICENSE)
 [![PyPI version](https://img.shields.io/pypi/v/claudecodeoptimizer.svg)](https://pypi.org/project/claudecodeoptimizer/)
 [![Claude 4 Best Practices](https://img.shields.io/badge/Claude_4-Best_Practices-blueviolet.svg)](https://platform.claude.com/docs/en/build-with-claude/prompt-engineering/claude-4-best-practices)
+[![Opus 4.5 Ready](https://img.shields.io/badge/Opus_4.5-Ready-8A2BE2.svg)](https://www.anthropic.com/news/claude-opus-4-5)
+[![Claude Code 2.0+](https://img.shields.io/badge/Claude_Code-2.0+-00A67E.svg)](https://github.com/anthropics/claude-code)
 
 > Claude already knows how to code. **CCO adds safety, approval, and consistency.**
 
@@ -391,48 +393,68 @@ cco-uninstall  # Complete removal with confirmation
 - **Context-Aware** - Project detection drives thresholds and rules
 - **Token Efficient** - Semantic density, conditional loading, bounded context
 
+CCO implements fundamental software engineering principles including SSOT, DRY, YAGNI, KISS, Idempotent, and more. See [Principles Reference](docs/principles-reference.md) for detailed definitions and examples.
+
 *[Full principles documentation](docs/design-principles.md)*
 
 ---
 
-## Claude Code Integration
+## Standards & Compliance
 
-CCO leverages the full spectrum of Claude Code features with official documentation compliance:
+CCO is built on official Anthropic documentation and Claude Code best practices:
 
-### Supported Claude Code Features
+### Claude Code 2.0+ Native Features
 
-| Feature | CCO Usage |
+| Feature | CCO Implementation | Reference |
+|---------|-------------------|-----------|
+| **[Slash Commands][slash-commands]** | 8 commands with YAML frontmatter | Dynamic context, tool restrictions |
+| **[Sub-agents][sub-agents]** | 3 single-responsibility agents | Separate context, limited tools |
+| **[Rules Directory][memory]** | 4-category rule system | `~/.claude/rules/cco/` |
+| **[Settings.json][cc-changelog]** | Project-local configuration | AI tokens, statusline, permissions |
+| **[Permissions][cc-changelog]** | 4 levels (safe→full) | Auto-approve/deny patterns |
+| **[Statusline][cc-changelog]** | Custom status bar | Full/Minimal modes |
+| **[Background Agents][cc-changelog]** | Parallel execution | Independent context windows |
+
+### Claude 4 Best Practices
+
+| Practice | CCO Implementation |
+|----------|-------------------|
+| **Parallel Tool Execution** | Independent operations run simultaneously |
+| **Explicit Instructions** | Commands specify exact behaviors |
+| **Context Motivation** | Rules explain "why" not just "what" |
+| **Conservative Judgment** | Evidence-based severity, never guesses |
+| **Long-horizon State Tracking** | TodoWrite for progress, git for state |
+| **Structured Output** | Consistent `Applied: N \| Skipped: N \| Failed: N` |
+| **Subagent Orchestration** | Automatic delegation based on task type |
+
+### Opus 4.5 Optimizations
+
+| Feature | Alignment |
 |---------|-----------|
-| **[Slash Commands][slash-commands]** | 8 commands in `~/.claude/commands/` |
-| ↳ Dynamic Context | `!backtick` syntax for real-time injection |
-| ↳ Tool Restrictions | `allowed-tools` frontmatter per command |
-| **[Sub-agents][sub-agents]** | 3 specialized agents (model selection by Claude Code) |
-| ↳ Model Selection | Automatic by Claude Code based on task type |
-| **[Rules Directory][memory]** | Global rules in `~/.claude/rules/cco/` |
-| **[Permissions][cc-changelog]** | 4 levels (safe/balanced/permissive/full) |
-| **[Statusline][cc-changelog]** | Custom status bar (Full/Minimal modes) |
-| **[Settings.json][cc-changelog]** | Local project settings with env vars |
+| **Multi-agent Coordination** | Parallel agent spawning |
+| **Context Management** | Awareness prompts in commands |
+| **Plan Mode Precision** | Commands structured for planning |
+| **Tool Use Improvements** | Explicit tool lists in frontmatter |
+| **Thinking Mode** | Token budget auto-detection |
 
-### Built on Claude 4 Best Practices
+### 217+ Rules Based On
 
-CCO implements official [Claude 4 Best Practices][claude4-bp] and [Opus 4.5][opus-4-5] optimizations:
-
-| Feature | Benefit |
-|---------|---------|
-| **Parallel Execution** | Multiple agents run simultaneously for faster results |
-| **Conservative Judgment** | Evidence-based severity prevents false positives |
-| **Context Awareness** | Long tasks complete fully without token budget concerns |
-| **Automatic Model Selection** | Claude Code picks optimal model per task |
+- **SSOT, DRY, YAGNI, KISS** - Fundamental software principles
+- **Read-First, No-Hallucination** - AI behavior patterns
+- **Fail-Fast, Idempotent** - Reliability patterns
+- **OWASP, Least-Privilege** - Security standards
+- **40+ Project Types** - Stack-specific best practices
 
 See [docs/claude-4-best-practices.md](docs/claude-4-best-practices.md) for implementation details.
 
 ### References
 
-| Documentation | Topics |
-|---------------|--------|
+| Resource | Topics |
+|----------|--------|
 | [Claude 4 Best Practices][claude4-bp] | Prompt patterns, parallel execution, state tracking |
 | [Claude Code Docs][slash-commands] | Commands, sub-agents, rules, permissions |
-| [Opus 4.5 Announcement][opus-4-5] | Model capabilities and optimizations |
+| [Claude Code Changelog][cc-changelog] | Feature history, new capabilities |
+| [Opus 4.5 Announcement][opus-4-5] | Model capabilities |
 
 [slash-commands]: https://code.claude.com/docs/en/slash-commands
 [sub-agents]: https://code.claude.com/docs/en/sub-agents
