@@ -8,13 +8,24 @@ allowed-tools: Read(*), Grep(*), Glob(*), Bash(git:*), Edit(*), Task(*), TodoWri
 
 **Strategic Review** - Fresh perspective diagnosis + pragmatic optimization via parallel agents.
 
-## Context Requirement
+## Context
 
-```
-test -f ./.claude/rules/cco/context.md && echo "OK" || echo "Run /cco-config first"
-```
+- Context check: !`test -f ./.claude/rules/cco/context.md && echo "1" || echo "0"`
+- Git status: !`git status --short`
 
-If not found: Stop immediately with message to run /cco-config.
+**Static context (Maturity, Breaking, Priority, Scale) is read from ./CLAUDE.md already in context.**
+
+## Context Requirement [CRITICAL]
+
+**This command requires CCO context in ./.claude/rules/cco/context.md.**
+
+If context check returns "0":
+```
+CCO context not found.
+
+Run /cco-config first to configure project context, then restart CLI.
+```
+**Stop execution immediately.**
 
 ## User Input
 
@@ -172,6 +183,18 @@ Applied: {n} | Declined: {n}
 | `--best-practices` | Best practices focus only |
 | `--no-apply` | Report only |
 | `--matrix` | Show effort/impact matrix |
+
+## Strategy Evolution
+
+After review, update `.claude/rules/cco/context.md` Learnings section:
+
+| Pattern | Action |
+|---------|--------|
+| Architectural anti-pattern | Add to `Systemic`: pattern + root cause + fix |
+| High-impact recommendation accepted | Add to `Prefer`: pattern + impact |
+| Recommendation rejected (wrong context) | Add to `Avoid`: pattern + why it failed |
+
+**Max items:** 5 per category (remove oldest when full)
 
 ## Rules
 

@@ -10,13 +10,24 @@ allowed-tools: Read(*), Grep(*), Glob(*), Bash(git:*), Task(*), TodoWrite
 
 Read-only metrics collection and visualization.
 
-## Context Requirement
+## Context
 
-```
-test -f ./.claude/rules/cco/context.md && echo "OK" || echo "Run /cco-config first"
-```
+- Context check: !`test -f ./.claude/rules/cco/context.md && echo "1" || echo "0"`
+- Last health tag: !`git tag -l "health-*" --sort=-creatordate | head -1 || echo "None"`
 
-If not found: Stop immediately with message to run /cco-config.
+**Static context (Stack, Type, Scale) is read from ./CLAUDE.md already in context.**
+
+## Context Requirement [CRITICAL]
+
+**This command requires CCO context in ./.claude/rules/cco/context.md.**
+
+If context check returns "0":
+```
+CCO context not found.
+
+Run /cco-config first to configure project context, then restart CLI.
+```
+**Stop execution immediately.**
 
 ## Token Efficiency [CRITICAL]
 

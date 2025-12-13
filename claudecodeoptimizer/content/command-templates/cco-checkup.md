@@ -176,3 +176,15 @@ Runs all applicable checks (security, quality, hygiene, best-practices) from con
 ### Progress Tracking
 
 *See Progress Tracking section above. Use TodoWrite for all phases.*
+
+### Strategy Evolution
+
+After checkup, update `.claude/rules/cco/context.md` Learnings section:
+
+| Pattern | Action |
+|---------|--------|
+| Recurring issue across checkups | Add to `Systemic`: root cause + permanent fix |
+| Health score degraded category | Add to `Avoid`: what caused regression |
+| Health score improved category | Add to `Prefer`: what caused improvement |
+
+**Max items:** 5 per category (remove oldest when full)

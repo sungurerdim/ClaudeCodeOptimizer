@@ -8,13 +8,32 @@ allowed-tools: Bash(git:*), Bash(ruff:*), Bash(npm:*), Bash(pytest:*), Read(*), 
 
 **Smart Commits** - Quality gates → analyze → group atomically → commit.
 
-## Context Requirement
+## Context
 
-```
-test -f ./.claude/rules/cco/context.md && echo "OK" || echo "Run /cco-config first"
-```
+- Context check: !`test -f ./.claude/rules/cco/context.md && echo "1" || echo "0"`
+- Git status: !`git status --short`
+- Branch: !`git branch --show-current`
+- Recent commits: !`git log --oneline -5`
 
-If not found: Stop immediately with message to run /cco-config.
+**Static context (Tools, Conventions) is read from ./CLAUDE.md already in context.**
+
+## Context Requirement [CRITICAL]
+
+**This command requires CCO context in ./.claude/rules/cco/context.md.**
+
+If context check returns "0":
+```
+CCO context not found.
+
+Run /cco-config first to configure project context, then restart CLI.
+```
+**Stop execution immediately.**
+
+## Pre-collected Git Info
+
+**Git status, branch, and recent commits are already available above via dynamic context.**
+
+Use this pre-collected info instead of running git commands again in Step 1.
 
 ## Progress Tracking [CRITICAL]
 

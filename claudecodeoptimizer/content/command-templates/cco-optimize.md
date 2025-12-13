@@ -16,13 +16,24 @@ allowed-tools: Read(*), Grep(*), Glob(*), Edit(*), Bash(git:*), Bash(ruff:*), Ba
 
 If an issue can be fixed by editing code, it MUST be fixed (with approval if needed).
 
-## Context Requirement
+## Context
 
-```
-test -f ./.claude/rules/cco/context.md && echo "OK" || echo "Run /cco-config first"
-```
+- Context check: !`test -f ./.claude/rules/cco/context.md && echo "1" || echo "0"`
+- Git status: !`git status --short`
 
-If not found: Stop immediately with message to run /cco-config.
+**Static context (Tools, Stack, Maturity) is read from ./CLAUDE.md already in context.**
+
+## Context Requirement [CRITICAL]
+
+**This command requires CCO context in ./.claude/rules/cco/context.md.**
+
+If context check returns "0":
+```
+CCO context not found.
+
+Run /cco-config first to configure project context, then restart CLI.
+```
+**Stop execution immediately.**
 
 ## User Input
 
@@ -189,3 +200,15 @@ Verification:
 | `--fix-all` | Fix everything with approval |
 | `--critical` | Security + tests only |
 | `--pre-release` | All scopes, strict verification |
+
+## Strategy Evolution
+
+After optimization, update `.claude/rules/cco/context.md` Learnings section:
+
+| Pattern | Action |
+|---------|--------|
+| Same issue in 3+ files | Add to `Systemic`: root cause + recommendation |
+| Fix caused cascade errors | Add to `Avoid`: pattern + what works instead |
+| Effective fix pattern | Add to `Prefer`: pattern + impact level |
+
+**Max items:** 5 per category (remove oldest when full)
