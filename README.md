@@ -355,10 +355,10 @@ pip install -U claudecodeoptimizer && cco-install
 
 ```bash
 # Install statusline and permissions to current project
-cco-install --local . --statusline full --permissions balanced
+cco-install --local . --statusline cco-full --permissions balanced
 
 # Statusline only
-cco-install --local . --statusline minimal
+cco-install --local . --statusline cco-minimal
 
 # Permissions only
 cco-install --local . --permissions safe
@@ -366,8 +366,8 @@ cco-install --local . --permissions safe
 
 | Statusline | Description |
 |------------|-------------|
-| `full` | Project, Branch, Changes, Git status |
-| `minimal` | Project, Branch only |
+| `cco-full` | Project, Branch, Changes, Git status |
+| `cco-minimal` | Project, Branch only |
 
 | Permissions | Description |
 |-------------|-------------|
