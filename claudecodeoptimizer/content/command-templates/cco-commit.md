@@ -79,7 +79,7 @@ Tools: {format_cmd} (format), {lint_cmd} (lint), {test_cmd} (test)
 | Large Files | `find . -size +1M -type f` | WARN >1MB, BLOCK >10MB |
 | Format | `{format_cmd}` from context | Auto-fix, stage changes |
 | Lint | `{lint_cmd}` from context | STOP on unfixable |
-| Types | (included in lint if mypy configured) | STOP on failure |
+| Types | `{type_cmd}` from context (if configured) | STOP on failure |
 | Tests | `{test_cmd}` from context | STOP on failure |
 
 **Execution order:**

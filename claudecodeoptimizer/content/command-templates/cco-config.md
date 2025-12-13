@@ -66,7 +66,7 @@ Read existing files only - no detection, no Bash commands for counting.
 ╠══════════════════════════════════════════════════════════════════════════════╣
 ║ Context:     {Configured|Not configured}                                     ║
 ║ AI Perf:     {tokens|Not configured}                                         ║
-║ Statusline:  {Full|Minimal|Broken|None}                                      ║
+║ Statusline:  {cco-full|cco-minimal|Broken|None}                              ║
 ║ Permissions: {level|None}                                                    ║
 ║ Rules:       {list of .md files or "None"}                                   ║
 ╚══════════════════════════════════════════════════════════════════════════════╝
@@ -108,7 +108,7 @@ Read existing files only - no detection, no Bash commands for counting.
 
 | Selection | Question | Options | MultiSelect |
 |-----------|----------|---------|-------------|
-| Statusline | Mode? | Full (Recommended); Minimal | false |
+| Statusline | Mode? | cco-full (Recommended); cco-minimal | false |
 | AI Performance | Thinking tokens? | Standard 5K; Medium 8K (Recommended); High 10K | false |
 | AI Performance | MCP Output tokens? | Standard 25K; Large 35K (Recommended); Very Large 50K | false |
 | Permissions | Level? | Safe; Balanced (Recommended); Permissive; Full | false |

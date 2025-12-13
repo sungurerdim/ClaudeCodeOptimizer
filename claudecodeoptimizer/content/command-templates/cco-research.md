@@ -37,9 +37,7 @@ Run /cco-config first to configure project context, then restart CLI.
 
 ```
 TodoWrite([
-  { content: "Search sources", status: "in_progress", activeForm: "Searching sources" },
-  { content: "Score reliability", status: "pending", activeForm: "Scoring reliability" },
-  { content: "Detect contradictions", status: "pending", activeForm: "Detecting contradictions" },
+  { content: "Research topic", status: "in_progress", activeForm: "Researching topic" },
   { content: "Synthesize findings", status: "pending", activeForm: "Synthesizing findings" },
   { content: "Generate recommendation", status: "pending", activeForm: "Generating recommendation" }
 ])
@@ -56,37 +54,36 @@ TodoWrite([
 | Priority | Speed → quick mode default; Quality → deep mode default |
 | Data | PII/Regulated → include compliance/security sources in research |
 
+## Token Efficiency [CRITICAL]
+
+| Rule | Implementation |
+|------|----------------|
+| **Single agent** | One research agent handles search + analyze + synthesize |
+| **Parallel fetches** | Multiple WebSearch/WebFetch in single message |
+| **Targeted extraction** | Extract relevant sections only |
+| **Early saturation** | Stop when themes repeat 3+ times |
+
 ## Agent Integration
 
-| Phase | Agent | Scope | Purpose |
-|-------|-------|-------|---------|
-| Search | `cco-agent-research` | `search` | Multi-source discovery with tiering |
-| Analyze | `cco-agent-research` | `analyze` | Deep source analysis, contradiction detection |
-| Synthesize | `cco-agent-research` | `synthesize` | Generate weighted recommendation |
-| Full | `cco-agent-research` | `full` | All phases combined (standard flow) |
+| Agent | Input | Output |
+|-------|-------|--------|
+| cco-agent-research | `mode: full, query: ...` | Combined search + analysis + synthesis |
 
-### Parallel Search Pattern [REQUIRED]
-
-For deep research, launch **5 parallel agents** with diverse search strategies:
+### Execution Flow
 
 ```
-Launch simultaneously:
-- Agent 1: Official docs search (site:docs.*, site:*.dev)
-- Agent 2: GitHub issues/discussions search
-- Agent 3: Stack Overflow/community search
-- Agent 4: Blog/article search (Medium, Dev.to)
-- Agent 5: Alternative keyword variations
+┌─────────────────────────────────────────────────────────────────────────────┐
+│ 1. Spawn SINGLE research agent with full mode                                │
+├─────────────────────────────────────────────────────────────────────────────┤
+│ Task(cco-agent-research, mode=full, query="...")                             │
+│ → Agent handles: multi-source search, tiering, synthesis                     │
+│ → Uses parallel WebSearch + WebFetch internally                              │
+├─────────────────────────────────────────────────────────────────────────────┤
+│ 2. Return structured recommendation                                          │
+└─────────────────────────────────────────────────────────────────────────────┘
 ```
 
-### Agent Propagation
-
-When spawning search agents, include:
-```
-Context: {Stack, Type from CCO_ADAPTIVE}
-Rules: Source reliability tiers, freshness scoring
-Output: {url} | {tier} | {score} | {key_claim}
-Note: Make a todo list first, use diverse keywords
-```
+**CRITICAL:** Use ONE research agent. Never spawn per-source or per-strategy agents.
 
 **Local Mode:** For `--local` flag, uses `cco-agent-analyze` with `scope: scan` instead (codebase-only search).
 

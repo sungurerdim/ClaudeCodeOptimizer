@@ -39,52 +39,64 @@ When called without flags:
 
 ```
 TodoWrite([
-  { content: "Spawn parallel agents", status: "in_progress", activeForm: "Spawning parallel agents" },
-  { content: "Collect results", status: "pending", activeForm: "Collecting results" },
-  { content: "Merge & deduplicate", status: "pending", activeForm: "Merging & deduplicating" },
+  { content: "Analyze codebase", status: "in_progress", activeForm: "Analyzing codebase" },
   { content: "Apply safe fixes", status: "pending", activeForm: "Applying safe fixes" },
-  { content: "Request approval for remaining", status: "pending", activeForm: "Requesting approval" },
+  { content: "Request approval", status: "pending", activeForm: "Requesting approval" },
   { content: "Show summary", status: "pending", activeForm: "Showing summary" }
 ])
 ```
 
 **Update status:** Mark `completed` immediately after each step finishes, mark next `in_progress`.
 
+## Token Efficiency [CRITICAL]
+
+| Rule | Implementation |
+|------|----------------|
+| **Single agent** | One analyze agent with all scopes, one apply agent with all fixes |
+| **Linter-first** | Run linters before grep - skip patterns linters catch |
+| **Batch calls** | Multiple tool calls in single message |
+| **Targeted reads** | Use offset/limit for large files |
+
 ## Execution Flow
 
 ```
 ┌─────────────────────────────────────────────────────────────────────────────┐
-│ Spawn parallel agents (single message with selected scopes)                  │
+│ 1. Spawn SINGLE analyze agent with ALL selected scopes                       │
 ├─────────────────────────────────────────────────────────────────────────────┤
-│ Task(cco-agent-analyze, scope=security)       ──┐                           │
-│ Task(cco-agent-analyze, scope=quality)        ──┼──→ Run simultaneously     │
-│ Task(cco-agent-analyze, scope=hygiene)        ──┤                           │
-│ Task(cco-agent-analyze, scope=best-practices) ──┘                           │
+│ Task(cco-agent-analyze, scopes=[security, quality, hygiene, best-practices]) │
+│ → Agent runs linters first, then targeted greps per scope                    │
+│ → Returns combined JSON with all findings                                    │
 ├─────────────────────────────────────────────────────────────────────────────┤
-│ Collect JSON results from all agents                                         │
+│ 2. Deduplicate findings by root cause                                        │
 ├─────────────────────────────────────────────────────────────────────────────┤
-│ Merge findings, deduplicate by root cause                                    │
+│ 3. Spawn SINGLE apply agent with ALL safe fixes                              │
+│ Task(cco-agent-apply, fixes=[...all safe fixes...])                          │
+│ → Agent applies all in parallel batches, verifies after each                 │
 ├─────────────────────────────────────────────────────────────────────────────┤
-│ Apply safe fixes via Task(cco-agent-apply)                                   │
+│ 4. AskUserQuestion for approval-required fixes (paginated, max 4 per page)   │
+│ → If any approved, Task(cco-agent-apply, fixes=[...approved...])             │
 ├─────────────────────────────────────────────────────────────────────────────┤
-│ AskUserQuestion for approval-required fixes (paginated)                      │
-│ → If approved, apply fixes                                                   │
-├─────────────────────────────────────────────────────────────────────────────┤
-│ Show summary                                                                 │
+│ 5. Show summary                                                              │
 └─────────────────────────────────────────────────────────────────────────────┘
 ```
 
-**CRITICAL:** Parallel agents MUST be spawned in a single message with multiple Task tool calls.
+**CRITICAL:** Use ONE analyze agent and ONE apply agent. Never spawn per-scope or per-fix agents.
 
-## Agent Scopes
+## Agent Usage
 
-| Agent | Scope | Returns |
-|-------|-------|---------|
-| cco-agent-analyze | `security` | OWASP, secrets, CVEs, input validation |
-| cco-agent-analyze | `quality` | Tech debt, type errors, test gaps |
-| cco-agent-analyze | `hygiene` | Orphans, stale refs, duplicates |
-| cco-agent-analyze | `best-practices` | Patterns, efficiency, consistency |
-| cco-agent-apply | `fix` | Execute approved fixes |
+| Agent | Input | Output |
+|-------|-------|--------|
+| cco-agent-analyze | `scopes: [security, quality, ...]` | Combined findings JSON |
+| cco-agent-apply | `fixes: [finding1, finding2, ...]` | Results + verification |
+
+### Scope Coverage
+
+| Scope | Checks |
+|-------|--------|
+| `security` | OWASP, secrets, CVEs, input validation |
+| `quality` | Tech debt, type errors, test gaps |
+| `hygiene` | Orphans, stale refs, duplicates |
+| `best-practices` | Patterns, efficiency, consistency |
 
 ## Step 5: Approval Flow [CRITICAL]
 
@@ -158,8 +170,8 @@ For each approved issue:
 Applied: {n} | Declined: {n}
 
 Verification:
-- ruff check: {PASS|FAIL}
-- mypy --strict: {PASS|FAIL}
+- {lint_command}: {PASS|FAIL}
+- {type_command}: {PASS|FAIL}
 ```
 
 **No "Manual" category.** All issues either fixed or declined by user.
