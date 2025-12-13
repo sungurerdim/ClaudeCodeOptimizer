@@ -522,8 +522,12 @@ def _run_local_mode(args: argparse.Namespace) -> int:
     return _execute_local_setup(project_path, args)
 
 
-def post_install() -> int:
-    """CLI entry point for cco-install."""
+def _create_install_parser() -> argparse.ArgumentParser:
+    """Create and configure the argument parser for cco-install.
+
+    Returns:
+        Configured ArgumentParser instance.
+    """
     parser = argparse.ArgumentParser(
         prog="cco-install",
         description="Install CCO commands, agents, and rules to ~/.claude/",
@@ -553,17 +557,29 @@ Permission levels: safe, balanced, permissive, full
         help="Permission level (requires --local)",
     )
 
-    args = parser.parse_args()
+    return parser
 
-    # Local mode - used by cco-config
-    if args.local:
-        return _run_local_mode(args)
 
-    # Validate: --statusline and --permissions require --local
+def _validate_global_mode_args(parser: argparse.ArgumentParser, args: argparse.Namespace) -> None:
+    """Validate arguments for global installation mode.
+
+    Args:
+        parser: ArgumentParser instance for error reporting.
+        args: Parsed command-line arguments.
+
+    Raises:
+        SystemExit: If validation fails (via parser.error).
+    """
     if args.statusline or args.permissions:
         parser.error("--statusline and --permissions require --local")
 
-    # Global mode - default behavior
+
+def _run_global_install() -> int:
+    """Execute global installation to ~/.claude/.
+
+    Returns:
+        Exit code: 0 on success, 1 on failure.
+    """
     try:
         print("\n" + SEPARATOR)
         print("CCO Setup")
@@ -619,6 +635,32 @@ Permission levels: safe, balanced, permissive, full
     except Exception as e:
         print(f"Setup failed: {e}", file=sys.stderr)
         return 1
+
+
+def post_install() -> int:
+    """CLI entry point for cco-install.
+
+    Orchestrates the installation process by:
+    1. Parsing command-line arguments
+    2. Routing to local or global installation mode
+    3. Validating arguments for global mode
+    4. Executing the appropriate installation
+
+    Returns:
+        Exit code: 0 on success, 1 on failure.
+    """
+    parser = _create_install_parser()
+    args = parser.parse_args()
+
+    # Local mode - used by cco-config
+    if args.local:
+        return _run_local_mode(args)
+
+    # Validate: --statusline and --permissions require --local
+    _validate_global_mode_args(parser, args)
+
+    # Global mode - default behavior
+    return _run_global_install()
 
 
 if __name__ == "__main__":

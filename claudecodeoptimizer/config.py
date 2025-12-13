@@ -171,7 +171,7 @@ def get_rules_breakdown() -> dict[str, int]:
 
 
 # Internal function (test-only, use get_rules_breakdown() instead)
-def get_rules_count() -> tuple[int, int]:
+def _get_rules_count() -> tuple[int, int]:
     """Count rules and categories from source files.
 
     Returns:
