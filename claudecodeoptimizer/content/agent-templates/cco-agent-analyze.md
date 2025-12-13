@@ -259,6 +259,27 @@ data: Detect data sensitivity (PII, regulated, public)
 
 **Output:** `{ detections: [...], context: "generated context.md content", rules: [...] }`
 
+## Artifact Handling
+
+| Rule | Implementation |
+|------|----------------|
+| **Reference-Large** | Reference outputs by path/ID, not inline |
+| **Summarize-First** | Return summary.count before full findings array |
+| **Chunk-Processing** | For >100 findings, process in batches |
+| **Cache-Artifacts** | Reuse file reads within session |
+
+## Strategy Evolution
+
+When systemic issues detected, note in output for context.md Learnings:
+
+| Pattern | Action |
+|---------|--------|
+| Same error 3+ files | Add to `Systemic` section |
+| Recurring false positive | Add to `Avoid` section |
+| Effective pattern found | Add to `Prefer` section |
+
+**Output field:** `learnings: [{ type: "systemic|avoid|prefer", pattern, reason }]`
+
 ## Principles
 
 1. **Token-first** - Minimize reads, maximize parallel

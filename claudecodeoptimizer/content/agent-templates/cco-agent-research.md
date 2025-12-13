@@ -225,6 +225,15 @@ After research, explicitly identify:
 
 ---
 
+## Artifact Handling
+
+| Rule | Implementation |
+|------|----------------|
+| **Reference-Large** | Store full page content by URL, return summaries |
+| **Summarize-First** | Extract key claims before full content analysis |
+| **Chunk-Processing** | For long pages, process sections sequentially |
+| **Cache-Artifacts** | Never re-fetch same URL within session |
+
 ## Principles
 
 1. **Tier-aware** - Score and rank by reliability
