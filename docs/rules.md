@@ -1,8 +1,6 @@
 # CCO Rules
 
-Complete reference of all CCO rules organized by category.
-
-For rule counts, see [README](../README.md#rules).
+**Single Source of Truth** for all CCO rules organized by category.
 
 **Counting:** `grep -c "| \* " <file>` - each rule row starts with `| * `
 
@@ -24,7 +22,7 @@ For rule counts, see [README](../README.md#rules).
 ├─────────────────────────────────────────────────────────────────┤
 │  DYNAMICALLY LOADED (Adaptive Rules)                            │
 ├─────────────────────────────────────────────────────────────────┤
-│  Selected by /cco-config based on project detection               │
+│  Selected by /cco-config based on project detection             │
 │  Only relevant rules are loaded per project                     │
 └─────────────────────────────────────────────────────────────────┘
 ```
@@ -35,17 +33,30 @@ For rule counts, see [README](../README.md#rules).
 
 *AI/human agnostic - fundamental principles for all software projects.*
 
+### Design Principles
+| Rule | Description |
+|------|-------------|
+| * SSOT | Single source of truth for every piece of data/logic |
+| * DRY | Don't repeat yourself, extract common patterns |
+| * YAGNI | Only build what's needed now, not hypotheticals |
+| * KISS | Simplest solution that works |
+| * Separation-of-Concerns | Distinct responsibilities per module |
+| * Composition | Prefer composition over inheritance |
+| * Idempotent | Same operation, same result, safe to retry |
+| * Least-Astonishment | Behavior matches user expectations |
+
 ### Code Quality
 | Rule | Description |
 |------|-------------|
-| * Fail-Fast | No silent fallbacks, immediate visible failure |
-| * DRY | Single source of truth, no duplicates |
+| * Fail-Fast | Immediate visible failure, no silent fallbacks |
 | * No-Orphans | Every function called, every import used |
-| * Type-Safe | Annotations where supported, prefer immutable |
+| * Type-Safe | Annotations where supported |
+| * Immutable | Prefer immutable, mutate only when necessary |
 | * Complexity | Cyclomatic <10 per function |
-| * Clean | Meaningful names, single responsibility, consistent style |
+| * Clean | Meaningful names, single responsibility |
 | * Explicit | No magic values, clear intent |
 | * Scope | Only requested changes, general solutions |
+| * Defensive | Validate assumptions, handle edge cases |
 
 ### File & Resource
 | Rule | Description |
@@ -54,16 +65,25 @@ For rule counts, see [README](../README.md#rules).
 | * No-Unsolicited | Never create files unless requested |
 | * Paths | Forward slash, relative, quote spaces |
 | * Cleanup | Temp files, handles, connections |
-| * Skip | .git, node_modules, __pycache__, venv, dist, build |
+| * Skip | VCS, deps, build, IDE, generated |
+
+### Efficiency
+| Rule | Description |
+|------|-------------|
+| * Parallel-Independent | Run unrelated operations simultaneously |
+| * Sequential-Dependent | Chain dependent operations |
+| * Lazy-Evaluation | Defer work until needed |
+| * Cache-Reuse | Don't recompute, cache results |
+| * Batch-Operations | Group similar operations |
 
 ### Security
 | Rule | Description |
 |------|-------------|
 | * Secrets | Env vars or vault only |
-| * Input | Validate at system boundaries |
-| * Access | Least privilege, secure defaults |
-| * Deps | Review before adding, keep updated |
-| * Defense | Multiple layers, don't trust single control |
+| * Input-Boundary | Validate at system entry points |
+| * Least-Privilege | Minimum necessary access |
+| * Deps-Audit | Review before adding, keep updated |
+| * Defense-in-Depth | Multiple layers, don't trust single control |
 
 ### Testing
 | Rule | Description |
@@ -76,27 +96,36 @@ For rule counts, see [README](../README.md#rules).
 ### Error Handling
 | Rule | Description |
 |------|-------------|
-| * Catch | Log context, recover or propagate |
-| * No-Silent | Never swallow exceptions |
-| * User-Facing | Clarity + actionable |
-| * Logs | Technical details only |
-| * Rollback | Consistent state on failure |
+| * Catch-Context | Log context, recover or propagate |
+| * No-Swallow | Never swallow exceptions silently |
+| * User-Actionable | Clarity + next steps for users |
+| * Logs-Technical | Technical details only in logs |
+| * Rollback-State | Consistent state on failure |
+
+### Analysis
+| Rule | Description |
+|------|-------------|
+| * Architecture-First | Before fixing symptoms, understand system design |
+| * Dependency-Mapping | Trace impact through component relationships |
+| * Root-Cause-Hunt | Ask "why does this pattern exist?" |
+| * Cross-Cutting-Concerns | Check for issues spanning modules |
+| * Systemic-Patterns | Identify recurring problems indicating design flaws |
 
 ### Documentation
 | Rule | Description |
 |------|-------------|
 | * README | Description, setup, usage |
 | * CHANGELOG | Versions with breaking changes |
-| * Comments | Why not what |
+| * Comments-Why | Explain why, not what |
 | * Examples | Working, common use cases |
 
 ### Workflow
 | Rule | Description |
 |------|-------------|
-| * Conventions | Match existing patterns |
+| * Match-Conventions | Follow existing patterns |
 | * Reference-Integrity | Find ALL refs, update, verify |
 | * Decompose | Break complex tasks into steps |
-| * Version | SemVer (MAJOR.MINOR.PATCH) |
+| * SemVer | MAJOR.MINOR.PATCH |
 
 ### UX/DX
 | Rule | Description |
@@ -104,6 +133,7 @@ For rule counts, see [README](../README.md#rules).
 | * Minimum-Friction | Fewest steps to goal |
 | * Maximum-Clarity | Unambiguous output |
 | * Predictable | Consistent behavior |
+| * Fast-Feedback | Progress indicators, incremental results |
 
 ---
 
@@ -118,18 +148,24 @@ For rule counts, see [README](../README.md#rules).
 | * Structured | Tables/lists over prose |
 | * Front-load | Critical info first |
 | * Hierarchy | H2 > H3 > bullets |
-| * Scope | Bounded, reference over repeat |
+| * Reference | Cite by name, don't duplicate |
 
-### AI Behavior
+### Execution Order [CRITICAL]
 | Rule | Description |
 |------|-------------|
 | * Read-First | NEVER propose edits to unread files |
 | * Plan-Before-Act | Understand full scope before any action |
 | * Incremental | Complete one step fully before starting next |
 | * Verify | Confirm changes match stated intent |
+
+### Decision Making
+| Rule | Description |
+|------|-------------|
 | * Challenge | Question solutions that seem too perfect |
 | * Ask | When uncertain, clarify before proceeding |
-| * Confidence | Explicitly state uncertainty level |
+| * Confidence | State uncertainty level for non-obvious |
+| * No-Guessing | Never guess file contents without reading |
+| * No-Assume | Never assume user intent without confirmation |
 
 ### Quality Control
 | Rule | Description |
@@ -143,10 +179,10 @@ For rule counts, see [README](../README.md#rules).
 ### Status Updates
 | Rule | Description |
 |------|-------------|
-| * Announce | Before action, not after |
-| * Progress | Starting > In progress > Completed |
+| * Announce-Before | State action before starting |
+| * Progress-Track | Starting > In progress > Completed |
 | * Transitions | Clear phase signals |
-| * No-Silent | User always knows state |
+| * Visible-State | User always knows current state |
 
 ### Multi-Model
 | Rule | Description |
@@ -155,11 +191,11 @@ For rule counts, see [README](../README.md#rules).
 | * Graceful | Account for different capabilities |
 | * Portable | Patterns work across models |
 
-### Output Rules
+### Output Standards
 | Rule | Description |
 |------|-------------|
-| * Error | `[SEVERITY] {What} in {file:line}` |
-| * Status | OK / WARN / FAIL |
+| * Error-Format | `[SEVERITY] {What} in {file:line}` |
+| * Status-Values | OK / WARN / FAIL |
 | * Accounting | done + skip + fail = total |
 | * Structured | JSON/table when needed |
 
@@ -169,39 +205,188 @@ For rule counts, see [README](../README.md#rules).
 
 *CCO workflow mechanisms - excluded from AGENTS.md export. Loaded on-demand by commands/agents.*
 
-### Core Workflow
+### User Input [MANDATORY]
 | Rule | Description |
 |------|-------------|
-| * Command-Flow | Context Check > Read > Execute > Report |
-| * Safety | Git status check, dirty handling, rollback |
-| * Classification | Safe (auto) vs Risky (approval) |
-| * Fix-Workflow | Analyze > Report > Approve > Apply > Verify |
-| * Impact-Preview | Direct, dependents, tests, risk |
-| * Priority | CRITICAL > HIGH > MEDIUM > LOW |
+| * AskUserQuestion-Required | ALL questions/confirmations → AskUserQuestion tool |
+| * No-Plain-Text-Questions | Plain text questions = VIOLATION, stop command |
+| * No-Workarounds | Cannot skip by rephrasing as statement |
+| * All-Stages | Start, middle, end, follow-up → all use tool |
+| * MultiSelect-When-Valid | Use `multiSelect: true` when multiple selections valid |
+| * Semicolon-Separator | Use `;` to separate options, never comma |
+| * Self-Check | Before `?` or choices → must use AskUserQuestion |
 
-### Approval & Output
+### Command Flow
 | Rule | Description |
 |------|-------------|
-| * Approval-Flow | AskUserQuestion, multiSelect, pagination |
-| * Output-Formatting | ASCII tables, alignment, status |
-| * Question-Formatting | Labels, precedence, ordering |
+| * Context-Check | Verify context.md exists, suggest /cco-config if missing |
+| * Read-Context | Load `.claude/rules/cco/context.md` |
+| * Execute | Command-specific logic |
+| * Report | Results with accounting |
 
-### Workflow Enhancements (v1.1.0+)
+### Safety
 | Rule | Description |
 |------|-------------|
-| * Dynamic-Context | `!` backtick syntax for real-time context injection |
-| * Tool-Restrictions | `allowed-tools` frontmatter for command security |
-| * Parallel-Execution | Launch multiple agents simultaneously |
-| * Quick-Mode | Single-message execution with `--quick` flag |
-| * Conservative-Judgment | Prefer lower severity when uncertain |
-| * Skip-Criteria | Standard paths/patterns to always skip |
-| * Task-Tracking | TodoWrite with accounting verification |
+| * Pre-op | Git status before modifications |
+| * Dirty-Handling | Prompt Commit / Stash / Continue |
+| * Rollback | Clean state enables git checkout |
+| * Safe-Auto | Remove imports, parameterize SQL, move secrets, fix lint, add types |
+| * Risky-Approval | Auth changes, DB schema, API contract, delete files, rename public |
 
-### Integration
+### Fix Workflow
 | Rule | Description |
 |------|-------------|
-| * Context-Integration | Read markers, apply thresholds |
-| * Tool-Integration | Parallel/sequential, subagents |
+| * Flow | Analyze > Report > Approve > Apply > Verify |
+| * Output-Accounting | `Applied: N \| Skipped: N \| Failed: N \| Total: N` |
+
+### Impact Preview
+| Rule | Description |
+|------|-------------|
+| * Direct | Files to modify |
+| * Dependents | Files that import/use |
+| * Tests | Coverage of affected code |
+| * Risk | LOW / MEDIUM / HIGH |
+| * Skip-Preview | LOW risk, <=2 files, full coverage |
+
+### Priority
+| Rule | Description |
+|------|-------------|
+| * CRITICAL | Security, data exposure |
+| * HIGH | High-impact, low-effort |
+| * MEDIUM | Balanced impact/effort |
+| * LOW | Style, minor optimization |
+
+### Question Patterns
+| Rule | Description |
+|------|-------------|
+| * Max-Questions | 4 per AskUserQuestion call |
+| * Max-Options | 4 per question |
+| * Overflow | Use multiple sequential calls |
+| * MultiSelect-Batch | true for batch approvals |
+| * All-Option | First option = "All ({N})" for bulk |
+| * Priority-Order | CRITICAL → HIGH → MEDIUM → LOW |
+| * Item-Format | `{description} [{file:line}] [{safe\|risky}]` |
+
+### Labels
+| Rule | Description |
+|------|-------------|
+| * One-Label | Each option has exactly ONE label |
+| * Current | `[current]` - matches existing config (priority 1) |
+| * Detected | `[detected]` - auto-detected (priority 2) |
+| * Recommended | `(Recommended)` - max 1/question (priority 3) |
+| * Precedence | detected AND current → show `[current]` only |
+
+### Ordering
+| Rule | Description |
+|------|-------------|
+| * Numeric | Ascending (60 → 70 → 80 → 90) |
+| * Severity | Safest → riskiest |
+| * Scope | Narrowest → widest |
+
+### Output Formatting
+| Rule | Description |
+|------|-------------|
+| * Table-Borders | `─│┌┐└┘├┤┬┴┼` |
+| * Table-Headers | `═║╔╗╚╝` |
+| * Numbers-Right | Right-aligned |
+| * Text-Left | Left-aligned |
+| * Status-Center | Centered |
+| * Status-Values | OK \| WARN \| FAIL \| PASS \| SKIP |
+| * Progress-Bar | `filled = round(percentage / 100 * 8)` → `████░░░░` |
+| * No-Emojis | No emojis in tables |
+| * No-Extra-Unicode | No unicode decorations beyond specified |
+
+### Dynamic Context
+| Rule | Description |
+|------|-------------|
+| * Backtick-Syntax | Use `!` backtick for real-time context |
+| * Git-Status | `` `git status --short` `` |
+| * Branch | `` `git branch --show-current` `` |
+| * CCO-Context | `` `head -30 .claude/rules/cco/context.md` `` |
+| * Accuracy | Real-time accuracy over stale assumptions |
+| * Anti-Hallucination | Reduces hallucination risk |
+
+### Parallel Execution
+| Rule | Description |
+|------|-------------|
+| * Independent-Parallel | Launch parallel agents for independent scans |
+| * Batch-Reads | Multiple file reads in single call |
+| * Unrelated-Simultaneous | Run unrelated checks simultaneously |
+| * Dependent-Sequential | Run dependent operations sequentially |
+| * Agent-Launch | Launch agents simultaneously in single message |
+| * Agent-Scope | Each agent handles distinct scope |
+| * Agent-Diverse | Use varied search strategies per agent |
+| * Agent-Merge | Merge results after all complete |
+
+### Agent Propagation
+| Rule | Description |
+|------|-------------|
+| * Context-Pass | Pass context.md summary to all agents |
+| * Rules-Pass | Include applicable rules from context |
+| * Format-Pass | Specify exact output format expected |
+| * Todo-Pass | Tell agents: "Make a todo list first" |
+
+### Quick Mode
+| Rule | Description |
+|------|-------------|
+| * No-Questions | Do not ask questions |
+| * Defaults | Use smart defaults for all options |
+| * No-Intermediate | Do not output intermediate text |
+| * Summary-Only | Only tool calls, then final summary |
+| * Single-Message | Complete ALL steps in a single message |
+
+### Conservative Judgment
+| Rule | Description |
+|------|-------------|
+| * Severity-Keywords | crash/data loss → CRITICAL, broken → HIGH, error → MEDIUM, style → LOW |
+| * False-Positive-Prevention | False positives erode trust faster than missed issues |
+| * Lower-When-Uncertain | When uncertain between severities, choose lower |
+| * Genuine-Issues | Only flag issues that genuinely block users |
+| * Evidence-Required | Require explicit evidence, not inference |
+| * Style-Never-High | Style issues → never CRITICAL or HIGH |
+| * Single-Never-Critical | Single occurrence → never CRITICAL unless security |
+
+### Skip Criteria
+| Rule | Description |
+|------|-------------|
+| * Line-Ignore | `// cco-ignore` or `# cco-ignore` - skip line |
+| * File-Ignore | `// cco-ignore-file` or `# cco-ignore-file` - skip file |
+| * Markdown-Ignore | `<!-- cco-ignore -->` - skip in markdown |
+| * Test-Fixtures | Skip `fixtures/`, `testdata/`, `__snapshots__/` |
+| * Examples | Skip `examples/`, `samples/`, `demo/`, `benchmarks/` |
+
+### Progress Tracking (TodoWrite)
+| Rule | Description |
+|------|-------------|
+| * Start-With-Todo | Create todo list with ALL steps at command start |
+| * Track-In-Progress | Mark `in_progress` before starting each step |
+| * Update-Completed | Mark `completed` immediately after each step |
+| * Single-Active | Exactly ONE item `in_progress` at a time |
+| * Immediate-Update | Update status immediately, not batched |
+| * No-Skip-Items | Never skip items - update status instead |
+| * ActiveForm-Continuous | Use present continuous (-ing form) |
+| * Content-Imperative | Use imperative form |
+
+### Artifact Handling
+| Rule | Description |
+|------|-------------|
+| * Reference-Large | Reference large outputs by path/ID, not inline |
+| * Tokenize-Efficiently | Use `[artifact:path]` notation for files >500 lines |
+| * Summarize-First | Provide digest before full artifact access |
+| * Chunk-Processing | Process large data in manageable segments |
+| * Cache-Artifacts | Reuse analyzed artifacts within session |
+
+### Strategy Evolution
+| Rule | Description |
+|------|-------------|
+| * Learnings-Location | `.claude/rules/cco/context.md` → `## Learnings` section |
+| * Avoid-Section | Pattern + why it failed + what works instead |
+| * Prefer-Section | Pattern + why it works + impact level |
+| * Systemic-Section | Issue + root cause + recommendation |
+| * Session-Start | Read context.md, note Learnings section |
+| * Check-Avoid | Check Avoid patterns before recommending |
+| * Max-Items | 5 per category (remove oldest when full) |
+| * Update-Existing | Update existing instead of adding duplicate |
 
 ---
 
@@ -221,7 +406,7 @@ For rule counts, see [README](../README.md#rules).
 | Team | Small → Large | Large includes Small |
 | Real-time | Basic → Standard → Low-latency | Higher includes lower |
 
-### Categories
+### Categories & Triggers
 
 | Category | Trigger |
 |----------|---------|
@@ -248,9 +433,9 @@ For rule counts, see [README](../README.md#rules).
 | * Testing | User-selected (cumulative tiers) |
 | * Observability | SLA-based (cumulative tiers) |
 
-### Full list
+### Full Adaptive Rules List
 
-See [cco-adaptive.md](../claudecodeoptimizer/content/rules/cco-adaptive.md) for complete rule definitions.
+For complete rule definitions per category, see [cco-adaptive.md](../claudecodeoptimizer/content/rules/cco-adaptive.md).
 
 ---
 
