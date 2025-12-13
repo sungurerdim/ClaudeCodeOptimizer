@@ -30,6 +30,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - **AI Performance config** - Auto-detection based on project complexity in `/cco-config`
 - **Impact Preview** - Direct files, dependents, test coverage, and risk assessment in Fix Workflow
 - **Detection exclusions** - Prevent false positives from benchmarks/, examples/, test fixtures
+- **Pre-check validation** - Setup functions fail fast with helpful message if `~/.claude/` doesn't exist
+- **Module-level VERBOSE flag** - Centralized verbose control in install_hook.py
 - **Unified /cco-config flow** - Configure, Remove, and Export in single multiSelect question
 - **Remove Configuration** - Remove any setting (AI Performance, Statusline, Permissions, Rules)
 - **Export content selection** - User chooses which sections to include in export
@@ -62,6 +64,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - **Flag consistency** - Standardized on `--fix` flag across all commands (replaced `--auto-fix`)
 - **Help text expanded** - `__main__.py` now lists all 8 commands with descriptions
 - **Agent Selection table** - Updated with correct scope assignments and orchestration notes
+- **Architecture refactoring** - Extracted `operations.py` (shared removal functions) and `ui.py` (display functions) for better separation of concerns
+- **DRY improvements** - `save_json_file` utility now used consistently across all modules (replaces inline json.dumps patterns)
+- **Error handling** - `save_json_file` now wraps IO errors in RuntimeError with context
 
 ### Fixed
 - Rule counts consistent across all documentation (70 base + 110 tools + 120 adaptive pool)
@@ -81,8 +86,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - **v1.0.0 CHANGELOG** - Corrected command list to match actual release
 - **README expanded** - Added comprehensive Claude Code Integration section with feature sources
 - **Universal marker cleanup** - cco-config uses pattern matching for all `CCO_*_START/END` markers
+- **README statusline params** - Aligned documentation with CLI (`cco-full`/`cco-minimal` instead of `full`/`minimal`)
 
 ### Removed
+- **Deprecated `setup_claude_md` function** - Use `clean_claude_md` instead (breaking change for direct API users)
 - AI-Patterns Detection category from `/cco-optimize` (Claude already handles this)
 - Production Readiness Mode from `/cco-review` (use `/cco-optimize --pre-release`)
 - Redundant rule references from commands (use CCO-Specific rules)

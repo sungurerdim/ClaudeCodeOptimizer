@@ -6,7 +6,6 @@ import sys
 from unittest.mock import MagicMock, patch
 
 from claudecodeoptimizer.cco_remove import (
-    _display_removal_plan,
     _execute_removal,
     detect_install_method,
     has_cco_statusline,
@@ -18,6 +17,7 @@ from claudecodeoptimizer.cco_remove import (
     remove_statusline,
     uninstall_package,
 )
+from claudecodeoptimizer.ui import display_removal_plan
 
 
 class TestDetectInstallMethod:
@@ -545,40 +545,38 @@ class TestRemoveRulesDir:
 
 
 class TestDisplayRemovalPlan:
-    """Test _display_removal_plan function."""
+    """Test display_removal_plan function."""
 
     def test_display_with_rules_dir(self, capsys):
         """Test displays rules directory section when present (cco/ subdir)."""
-        items = {
-            "method": None,
-            "files": {"commands": [], "agents": []},
-            "rules": [],
-            "rules_dir": True,
-            "rules_dir_old": False,
-            "statusline": False,
-            "permissions": False,
-            "total_files": 0,
-            "total": 1,
-        }
-        _display_removal_plan(items)
+        display_removal_plan(
+            method=None,
+            commands=[],
+            agents=[],
+            rules=[],
+            rules_dir=True,
+            rules_dir_old=False,
+            statusline=False,
+            permissions=False,
+            total=1,
+        )
         captured = capsys.readouterr()
         assert "Rules directory:" in captured.out
         assert "~/.claude/rules/cco/" in captured.out
 
     def test_display_with_statusline(self, capsys):
         """Test displays statusline section when present."""
-        items = {
-            "method": None,
-            "files": {"commands": [], "agents": []},
-            "rules": [],
-            "rules_dir": False,
-            "rules_dir_old": False,
-            "statusline": True,
-            "permissions": False,
-            "total_files": 0,
-            "total": 1,
-        }
-        _display_removal_plan(items)
+        display_removal_plan(
+            method=None,
+            commands=[],
+            agents=[],
+            rules=[],
+            rules_dir=False,
+            rules_dir_old=False,
+            statusline=True,
+            permissions=False,
+            total=1,
+        )
         captured = capsys.readouterr()
         assert "Settings (~/.claude/):" in captured.out
         assert "cco-statusline.js" in captured.out
@@ -586,36 +584,34 @@ class TestDisplayRemovalPlan:
 
     def test_display_with_permissions(self, capsys):
         """Test displays permissions section when present."""
-        items = {
-            "method": None,
-            "files": {"commands": [], "agents": []},
-            "rules": [],
-            "rules_dir": False,
-            "rules_dir_old": False,
-            "statusline": False,
-            "permissions": True,
-            "total_files": 0,
-            "total": 1,
-        }
-        _display_removal_plan(items)
+        display_removal_plan(
+            method=None,
+            commands=[],
+            agents=[],
+            rules=[],
+            rules_dir=False,
+            rules_dir_old=False,
+            statusline=False,
+            permissions=True,
+            total=1,
+        )
         captured = capsys.readouterr()
         assert "Settings (~/.claude/):" in captured.out
         assert "permissions" in captured.out
 
     def test_display_with_rules_dir_old(self, capsys):
         """Test displays rules_dir_old section when present (old root-level)."""
-        items = {
-            "method": None,
-            "files": {"commands": [], "agents": []},
-            "rules": [],
-            "rules_dir": False,
-            "rules_dir_old": True,
-            "statusline": False,
-            "permissions": False,
-            "total_files": 0,
-            "total": 1,
-        }
-        _display_removal_plan(items)
+        display_removal_plan(
+            method=None,
+            commands=[],
+            agents=[],
+            rules=[],
+            rules_dir=False,
+            rules_dir_old=True,
+            statusline=False,
+            permissions=False,
+            total=1,
+        )
         captured = capsys.readouterr()
         assert "Rules directory:" in captured.out
         assert "old files" in captured.out

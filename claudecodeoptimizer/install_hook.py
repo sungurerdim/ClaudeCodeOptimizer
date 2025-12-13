@@ -2,10 +2,8 @@
 
 import argparse
 import json
-import re
 import shutil
 import sys
-import warnings
 from pathlib import Path
 
 from .config import (
@@ -13,20 +11,29 @@ from .config import (
     CCO_PERMISSIONS_MARKER,
     CCO_RULE_FILES,
     CCO_RULE_NAMES,
-    CCO_UNIVERSAL_PATTERN_COMPILED,
     CLAUDE_DIR,
     COMMANDS_DIR,
-    OLD_RULES_ROOT,
     RULES_DIR,
     SEPARATOR,
     get_content_path,
     get_rules_breakdown,
     load_json_file,
+    save_json_file,
+)
+from .operations import (
+    clean_claude_md_markers,
+    remove_agent_files,
+    remove_command_files,
+    remove_new_rules,
+    remove_old_rules,
 )
 
 # Valid options for local mode
 STATUSLINE_MODES = ("cco-full", "cco-minimal")
 PERMISSION_LEVELS = ("safe", "balanced", "permissive", "full")
+
+# Module-level verbose flag (set by CLI, used by all functions)
+VERBOSE = True
 
 
 def _is_safe_path(target: Path) -> bool:
@@ -45,86 +52,15 @@ def _is_safe_path(target: Path) -> bool:
     return target == home or target == cwd or home in target.parents or cwd in target.parents
 
 
-def get_content_dir() -> Path:
-    """Get package content directory."""
-    return Path(__file__).parent / "content"
+def _check_claude_dir() -> str | None:
+    """Check if ~/.claude/ directory exists.
 
-
-def _remove_command_files(commands_dir: Path, removed: dict[str, int]) -> None:
-    """Remove all cco-*.md files from commands directory.
-
-    Args:
-        commands_dir: Path to commands directory
-        removed: Dictionary to update with count of removed items
+    Returns:
+        Error message if directory doesn't exist, None if valid.
     """
-    if commands_dir.exists():
-        for f in commands_dir.glob("cco-*.md"):
-            f.unlink()
-            removed["commands"] += 1
-
-
-def _remove_agent_files(agents_dir: Path, removed: dict[str, int]) -> None:
-    """Remove all cco-*.md files from agents directory.
-
-    Args:
-        agents_dir: Path to agents directory
-        removed: Dictionary to update with count of removed items
-    """
-    if agents_dir.exists():
-        for f in agents_dir.glob("cco-*.md"):
-            f.unlink()
-            removed["agents"] += 1
-
-
-def _remove_old_rules(old_rules_dir: Path, removed: dict[str, int]) -> None:
-    """Remove old CCO rule files from rules root directory.
-
-    Args:
-        old_rules_dir: Path to old rules root directory
-        removed: Dictionary to update with count of removed items
-    """
-    old_rule_files = CCO_RULE_FILES + ("cco-adaptive.md", "cco-tools.md")
-    if old_rules_dir.exists():
-        for rule_file in old_rule_files:
-            rule_path = old_rules_dir / rule_file
-            if rule_path.exists():
-                rule_path.unlink()
-                removed["rules"] += 1
-
-
-def _remove_new_rules(new_rules_dir: Path, removed: dict[str, int]) -> None:
-    """Remove CCO rules from cco/ subdirectory.
-
-    Args:
-        new_rules_dir: Path to rules cco/ subdirectory
-        removed: Dictionary to update with count of removed items
-    """
-    old_rule_names = CCO_RULE_NAMES + ("tools.md", "adaptive.md")
-    if new_rules_dir.exists():
-        for rule_name in old_rule_names:
-            rule_path = new_rules_dir / rule_name
-            if rule_path.exists():
-                rule_path.unlink()
-                removed["rules"] += 1
-        # Remove empty cco/ directory
-        if new_rules_dir.exists() and not any(new_rules_dir.iterdir()):
-            new_rules_dir.rmdir()
-
-
-def _clean_claude_md_markers(claude_md: Path, removed: dict[str, int]) -> None:
-    """Remove CCO markers from CLAUDE.md.
-
-    Args:
-        claude_md: Path to CLAUDE.md file
-        removed: Dictionary to update with count of removed items
-    """
-    if claude_md.exists():
-        content = claude_md.read_text(encoding="utf-8")
-        content, count = _remove_all_cco_markers(content)
-        if count > 0:
-            content = re.sub(r"\n{3,}", "\n\n", content)
-            claude_md.write_text(content, encoding="utf-8")
-            removed["rules"] += count
+    if not CLAUDE_DIR.exists():
+        return "~/.claude/ not found. Run 'claude' first to initialize."
+    return None
 
 
 def clean_previous_installation(verbose: bool = True) -> dict[str, int]:
@@ -148,20 +84,20 @@ def clean_previous_installation(verbose: bool = True) -> dict[str, int]:
     removed = {"commands": 0, "agents": 0, "rules": 0}
 
     # 1. Remove all cco-*.md files from commands/
-    _remove_command_files(COMMANDS_DIR, removed)
+    removed["commands"] = remove_command_files(COMMANDS_DIR)
 
     # 2. Remove all cco-*.md files from agents/
-    _remove_agent_files(AGENTS_DIR, removed)
+    removed["agents"] = remove_agent_files(AGENTS_DIR)
 
     # 3a. Remove old CCO rule files from root
-    _remove_old_rules(OLD_RULES_ROOT, removed)
+    removed["rules"] += remove_old_rules()
 
     # 3b. Remove CCO rules from cco/ subdirectory (current)
-    _remove_new_rules(RULES_DIR, removed)
+    removed["rules"] += remove_new_rules(RULES_DIR)
 
     # 4. Remove CCO markers from CLAUDE.md
     claude_md = CLAUDE_DIR / "CLAUDE.md"
-    _clean_claude_md_markers(claude_md, removed)
+    removed["rules"] += clean_claude_md_markers(claude_md)
 
     total = sum(removed.values())
     if verbose and total > 0:
@@ -191,7 +127,7 @@ def _setup_content(src_subdir: str, dest_dir: Path, verbose: bool = True) -> lis
     Returns:
         List of installed filenames (e.g., ['cco-optimize.md', 'cco-config.md'])
     """
-    src = get_content_dir() / src_subdir
+    src = get_content_path(src_subdir)
     if not src.exists():
         return []
     dest_dir.mkdir(parents=True, exist_ok=True)
@@ -208,12 +144,32 @@ def _setup_content(src_subdir: str, dest_dir: Path, verbose: bool = True) -> lis
 
 
 def setup_commands(verbose: bool = True) -> list[str]:
-    """Copy cco-*.md commands to ~/.claude/commands/"""
+    """Copy cco-*.md commands to ~/.claude/commands/
+
+    Returns:
+        List of installed filenames.
+
+    Raises:
+        RuntimeError: If ~/.claude/ directory doesn't exist.
+    """
+    error = _check_claude_dir()
+    if error:
+        raise RuntimeError(error)
     return _setup_content("command-templates", COMMANDS_DIR, verbose)
 
 
 def setup_agents(verbose: bool = True) -> list[str]:
-    """Copy cco-*.md agents to ~/.claude/agents/"""
+    """Copy cco-*.md agents to ~/.claude/agents/
+
+    Returns:
+        List of installed filenames.
+
+    Raises:
+        RuntimeError: If ~/.claude/ directory doesn't exist.
+    """
+    error = _check_claude_dir()
+    if error:
+        raise RuntimeError(error)
     return _setup_content("agent-templates", AGENTS_DIR, verbose)
 
 
@@ -228,8 +184,15 @@ def setup_rules(verbose: bool = True) -> dict[str, int]:
 
     Returns:
         Dictionary with installed counts per category
+
+    Raises:
+        RuntimeError: If ~/.claude/ directory doesn't exist.
     """
-    src_dir = get_content_dir() / "rules"
+    error = _check_claude_dir()
+    if error:
+        raise RuntimeError(error)
+
+    src_dir = get_content_path("rules")
     if not src_dir.exists():
         return {"core": 0, "ai": 0, "tools": 0, "total": 0}
 
@@ -259,20 +222,6 @@ def setup_rules(verbose: bool = True) -> dict[str, int]:
     return installed
 
 
-def _remove_all_cco_markers(content: str) -> tuple[str, int]:
-    """Remove ALL CCO markers from content.
-
-    Uses universal pattern to match any CCO marker regardless of name.
-    Ensures clean upgrade from any previous installation.
-
-    Returns:
-        Tuple of (cleaned_content, removed_count)
-    """
-    matches = CCO_UNIVERSAL_PATTERN_COMPILED.findall(content)
-    cleaned = CCO_UNIVERSAL_PATTERN_COMPILED.sub("", content)
-    return cleaned, len(matches)
-
-
 def clean_claude_md(verbose: bool = True) -> int:
     """Clean CCO markers from ~/.claude/CLAUDE.md.
 
@@ -285,15 +234,19 @@ def clean_claude_md(verbose: bool = True) -> int:
     Returns:
         Number of markers removed
     """
+    from .operations import remove_all_cco_markers
+
     claude_md = CLAUDE_DIR / "CLAUDE.md"
 
     if not claude_md.exists():
         return 0
 
     content = claude_md.read_text(encoding="utf-8")
-    content, removed_count = _remove_all_cco_markers(content)
+    content, removed_count = remove_all_cco_markers(content)
 
     if removed_count > 0:
+        import re
+
         content = re.sub(r"\n{3,}", "\n\n", content)
         content = content.strip()
         if content:
@@ -306,26 +259,6 @@ def clean_claude_md(verbose: bool = True) -> int:
             print(f"  CLAUDE.md: cleaned {removed_count} old CCO marker(s)")
 
     return removed_count
-
-
-# Keep setup_claude_md as alias for existing tests
-def setup_claude_md(verbose: bool = True) -> dict[str, int]:
-    """Deprecated: Use clean_claude_md instead.
-
-    Kept for test compatibility. Now only cleans old markers,
-    does not write new rules (they're in ~/.claude/rules/cco/).
-    """
-    warnings.warn(
-        "setup_claude_md is deprecated, use clean_claude_md instead",
-        DeprecationWarning,
-        stacklevel=2,
-    )
-    removed = clean_claude_md(verbose)
-    breakdown = get_rules_breakdown()
-    return {
-        "core": breakdown["core"] if removed else 0,
-        "ai": breakdown["ai"] if removed else 0,
-    }
 
 
 # ============================================================================
@@ -372,7 +305,7 @@ def setup_local_statusline(project_path: Path, mode: str, verbose: bool = True) 
         "padding": 1,
     }
 
-    settings_file.write_text(json.dumps(settings, indent=2) + "\n", encoding="utf-8")
+    save_json_file(settings_file, settings)
 
     if verbose:
         print(f"  + .claude/cco-statusline.js ({mode} mode)")
@@ -423,7 +356,7 @@ def setup_local_permissions(project_path: Path, level: str, verbose: bool = True
     settings["permissions"] = perm_data.get("permissions", {})
     settings[CCO_PERMISSIONS_MARKER] = True
 
-    settings_file.write_text(json.dumps(settings, indent=2) + "\n", encoding="utf-8")
+    save_json_file(settings_file, settings)
 
     if verbose:
         print(f"  + .claude/settings.json (permissions: {level})")

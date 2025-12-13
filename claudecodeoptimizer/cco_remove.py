@@ -2,7 +2,6 @@
 
 import argparse
 import json
-import re
 import subprocess
 import sys
 from pathlib import Path
@@ -24,7 +23,10 @@ from .config import (
     SUBPROCESS_TIMEOUT_PACKAGE,
     get_cco_agents,
     get_cco_commands,
+    save_json_file,
 )
+from .operations import remove_all_cco_markers
+from .ui import display_removal_plan
 
 
 class RemovalItems(TypedDict):
@@ -100,7 +102,7 @@ def remove_statusline(verbose: bool = True) -> bool:
             settings = json.loads(SETTINGS_FILE.read_text(encoding="utf-8"))
             if "statusLine" in settings:
                 del settings["statusLine"]
-                SETTINGS_FILE.write_text(json.dumps(settings, indent=2) + "\n", encoding="utf-8")
+                save_json_file(SETTINGS_FILE, settings)
                 if verbose:
                     print("  - settings.json (statusLine removed)")
                 removed = True
@@ -155,7 +157,7 @@ def remove_permissions(settings_file: Path = SETTINGS_FILE, verbose: bool = True
             removed = True
 
         if removed:
-            settings_file.write_text(json.dumps(settings, indent=2) + "\n", encoding="utf-8")
+            save_json_file(settings_file, settings)
             if verbose:
                 print("  - settings.json (permissions removed)")
 
@@ -288,21 +290,22 @@ def remove_claude_md_rules(verbose: bool = True) -> list[str]:
     Returns:
         List of removed section descriptions, empty if none found.
     """
+    import re
+
     content = _read_claude_md()
     if content is None:
         return []
 
     # Use universal pattern to remove ALL CCO markers
-    matches = CCO_UNIVERSAL_PATTERN_COMPILED.findall(content)
+    content, count = remove_all_cco_markers(content)
 
-    if matches:
-        content = CCO_UNIVERSAL_PATTERN_COMPILED.sub("", content)
+    if count > 0:
         content = re.sub(r"\n{3,}", "\n\n", content)
         claude_md = CLAUDE_DIR / "CLAUDE.md"
         claude_md.write_text(content, encoding="utf-8")
         if verbose:
-            print(f"  - CCO Content ({len(matches)} section(s) removed)")
-        return [f"CCO Content ({len(matches)} section(s))"]
+            print(f"  - CCO Content ({count} section(s) removed)")
+        return [f"CCO Content ({count} section(s))"]
 
     return []
 
@@ -362,90 +365,6 @@ def _collect_removal_items() -> RemovalItems:
         "total_files": total_files,
         "total": total,
     }
-
-
-def _print_removal_header() -> None:
-    """Print header for removal plan."""
-    print("\n" + SEPARATOR)
-    print("CCO Uninstall")
-    print(SEPARATOR)
-    print(f"\nLocation: {CLAUDE_DIR}\n")
-
-
-def _display_package_info(items: RemovalItems) -> None:
-    """Display package information.
-
-    Args:
-        items: Removal items containing package method
-    """
-    if items["method"]:
-        print("Package:")
-        print(f"  claudecodeoptimizer ({items['method']})")
-        print()
-
-
-def _display_file_categories(items: RemovalItems) -> None:
-    """Display file categories (commands, agents, CLAUDE.md sections).
-
-    Args:
-        items: Removal items containing files and rules
-    """
-    categories = [
-        ("Commands", items["files"]["commands"]),
-        ("Agents", items["files"]["agents"]),
-        ("CLAUDE.md sections", items["rules"]),
-    ]
-    for title, category_items in categories:
-        if category_items:
-            print(f"{title}:")
-            for item in category_items:
-                print(f"  - {item}")
-            print()
-
-
-def _display_rules_directories(items: RemovalItems) -> None:
-    """Display rules directories to be removed.
-
-    Args:
-        items: Removal items containing rules_dir and rules_dir_old flags
-    """
-    if items["rules_dir"] or items["rules_dir_old"]:
-        print("Rules directory:")
-        if items["rules_dir"]:
-            print("  - ~/.claude/rules/cco/")
-        if items["rules_dir_old"]:
-            print("  - ~/.claude/rules/ root (old files)")
-        print()
-
-
-def _display_settings(items: RemovalItems) -> None:
-    """Display settings to be removed.
-
-    Args:
-        items: Removal items containing statusline and permissions flags
-    """
-    if items["statusline"] or items["permissions"]:
-        print("Settings (~/.claude/):")
-        if items["statusline"]:
-            print("  - cco-statusline.js")
-            print("  - settings.json (statusLine config)")
-        if items["permissions"]:
-            print("  - settings.json (permissions)")
-        print()
-
-
-def _display_removal_plan(items: RemovalItems) -> None:
-    """Display what will be removed."""
-    _print_removal_header()
-    _display_package_info(items)
-    _display_file_categories(items)
-    _display_rules_directories(items)
-    _display_settings(items)
-
-    print(SEPARATOR)
-    print(f"Total: {items['total']} items to remove")
-    print(SEPARATOR)
-    print()
 
 
 def _remove_package(items: RemovalItems) -> None:
@@ -559,7 +478,17 @@ def main() -> int:
             print("CCO is not installed.")
             return 0
 
-        _display_removal_plan(items)
+        display_removal_plan(
+            items["method"],
+            items["files"]["commands"],
+            items["files"]["agents"],
+            items["rules"],
+            items["rules_dir"],
+            items["rules_dir_old"],
+            items["statusline"],
+            items["permissions"],
+            items["total"],
+        )
 
         if not args.yes:
             confirm = input("Remove all CCO components? [y/N]: ").strip().lower()
