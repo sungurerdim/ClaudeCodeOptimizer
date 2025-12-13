@@ -165,17 +165,18 @@ Run `/cco-config` to see which adaptive rules apply to your project.
 
 | Command | Purpose | Orchestrates |
 |---------|---------|--------------|
-| `/cco-preflight` | Pre-release workflow | optimize + review + verify |
-| `/cco-checkup` | Regular maintenance | status + optimize --all --fix |
+| `/cco-preflight` | Pre-release workflow | optimize + review + changelog + verify |
+| `/cco-checkup` | Regular maintenance | status + optimize --fix |
 
 ### /cco-optimize Features
 
 - **Security Checks** - OWASP patterns, secrets, CVEs, dependency vulnerabilities
 - **Quality Checks** - Complexity, type coverage, test quality, consistency
 - **Hygiene Checks** - Orphan detection, stale refs, duplicates, dead code
-- **2-Tab Selection** - Scope (Security/Quality/Hygiene/All) + Action (Report/Fix)
+- **Best Practices Checks** - Pattern adherence, efficiency, naming, error handling
+- **2-Tab Selection** - Scope (Security/Quality/Hygiene/Best Practices) + Action (Report/Fix)
 - **Smart Mode** - Auto-detect applicable checks based on project context
-- **Auto-fix** - Safe fixes applied automatically, risky ones require approval
+- **Fix Mode** - Safe fixes applied automatically, risky ones require approval
 
 ### /cco-research Features
 
@@ -206,15 +207,16 @@ Run `/cco-config` to see which adaptive rules apply to your project.
 ### /cco-preflight Features
 
 - **Pre-flight Checks** - Git state, branch, version, changelog, dependencies
-- **Quality Gate** - Security, tests, consistency via `/cco-optimize --all`
+- **Quality Gate** - All scopes (security, quality, hygiene, best-practices) via `/cco-optimize --pre-release --fix`
 - **Architecture Review** - Quick gap analysis via `/cco-review --quick`
 - **Final Verification** - Full test suite, build, lint, type check
+- **Changelog & Docs** - Automatic release notes and documentation sync
 - **Go/No-Go Summary** - Blockers vs warnings, clear next steps
 
 ### /cco-checkup Features
 
 - **Health Dashboard** - Quick scores via `/cco-status --brief`
-- **Full Optimization** - All checks via `/cco-optimize --all --fix`
+- **Quality Audit** - All scopes (security, quality, hygiene, best-practices) via `/cco-optimize --fix`
 - **Trend Tracking** - Health score changes since last checkup
 - **Scheduling** - Weekly recommended for active development
 

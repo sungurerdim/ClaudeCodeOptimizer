@@ -43,7 +43,7 @@ When called without flags → **AskUserQuestion** (mandatory):
 
 | Question | Options | multiSelect |
 |----------|---------|-------------|
-| Which phases to run? | Verification (Recommended); Quality & Cleanup; Architecture; Changelog & Docs | true |
+| Which phases to run? | Verification (Recommended); Quality (Recommended); Architecture; Changelog & Docs | true |
 
 *MultiSelect: Kullanıcı birden fazla faz seçebilir. Tümü seçilirse = Full preflight.*
 
@@ -51,10 +51,10 @@ When called without flags → **AskUserQuestion** (mandatory):
 
 | Option | Covers | Phases |
 |--------|--------|--------|
-| Verification | Pre-flight checks + Final verification | 1, 5 |
-| Quality & Cleanup | Quality audit + Cleanliness check | 2, 3 |
-| Architecture | Architecture review | 4 |
-| Changelog & Docs | Release notes + Documentation sync | 6 (NEW) |
+| Verification | Pre-flight checks + Final verification | 1, 4 |
+| Quality | Full quality gate (all scopes) | 2 |
+| Architecture | Architecture review | 3 |
+| Changelog & Docs | Release notes + Documentation sync | 5 |
 
 **Default:** All phases if user doesn't specify
 
@@ -78,7 +78,6 @@ Never use placeholders or guess missing parameters.
 TodoWrite([
   { content: "Run pre-flight checks", status: "in_progress", activeForm: "Running pre-flight checks" },
   { content: "Run quality gate", status: "pending", activeForm: "Running quality gate" },
-  { content: "Check cleanliness", status: "pending", activeForm: "Checking cleanliness" },
   { content: "Review architecture", status: "pending", activeForm: "Reviewing architecture" },
   { content: "Run final verification", status: "pending", activeForm: "Running final verification" },
   { content: "Update changelog & docs", status: "pending", activeForm: "Updating changelog & docs" },
@@ -152,49 +151,24 @@ grep -rn "Experimental\|DRAFT\|PLACEHOLDER" docs/
 
 ### Phase 2: Quality Gate
 
-Orchestrates: `/cco-optimize --pre-release --auto-fix`
+Orchestrates: `/cco-optimize --pre-release --fix`
 
-Includes:
-- Security checks (OWASP, secrets, CVEs)
-- Test quality and coverage
-- Consistency (doc-code mismatch)
-- Self-compliance
+Includes all scopes: Security, Quality, Hygiene, Best Practices.
 
 ```
 ┌─ QUALITY GATE ───────────────────────────────────────────────┐
-│ → Running: /cco-optimize --pre-release --auto-fix            │
+│ → Running: /cco-optimize --pre-release --fix                 │
 ├──────────────────────────────────────────────────────────────┤
 │ Security      │ {n}%  │ {status}                             │
-│ Tests         │ {n}%  │ {status}                             │
-│ Consistency   │ {n}%  │ {status}                             │
-│ Compliance    │ {n}%  │ {status}                             │
+│ Quality       │ {n}%  │ {status}                             │
+│ Hygiene       │ {n}%  │ {status}                             │
+│ Best Practices│ {n}%  │ {status}                             │
 ├──────────────────────────────────────────────────────────────┤
 │ Issues: {n} | Fixed: {n} | Declined: {n}                     │
 └──────────────────────────────────────────────────────────────┘
 ```
 
-### Phase 3: Cleanliness
-
-Orchestrates: `/cco-optimize --hygiene --auto-fix`
-
-Includes:
-- Orphan removal
-- Stale reference cleanup
-- Duplicate consolidation
-
-```
-┌─ CLEANLINESS ────────────────────────────────────────────────┐
-│ → Running: /cco-optimize --hygiene --auto-fix                │
-├──────────────────────────────────────────────────────────────┤
-│ Orphans       │ {n}   │ {status}                             │
-│ Stale-Refs    │ {n}   │ {status}                             │
-│ Duplicates    │ {n}   │ {status}                             │
-├──────────────────────────────────────────────────────────────┤
-│ Cleaned: {n} | Skipped: {n}                                  │
-└──────────────────────────────────────────────────────────────┘
-```
-
-### Phase 4: Architecture Review
+### Phase 3: Architecture Review
 
 Orchestrates: `/cco-review --quick`
 
@@ -213,7 +187,7 @@ Includes:
 └──────────────────────────────────────────────────────────────┘
 ```
 
-### Phase 5: Final Verification (Release-Specific)
+### Phase 4: Final Verification (Release-Specific)
 
 | Check | Command | Blocker? |
 |-------|---------|----------|
@@ -235,7 +209,7 @@ Includes:
 
 *Commands from context.md Operational section*
 
-### Phase 6: Changelog & Docs Update (Release-Specific)
+### Phase 5: Changelog & Docs Update (Release-Specific)
 
 Analyzes all changes since last release tag and updates documentation:
 
@@ -330,7 +304,7 @@ Analyzes all changes since last release tag and updates documentation:
 |----------|---------|-------------|
 | Apply documentation updates? | Apply all; Review each; Skip | false |
 
-### Phase 7: Go/No-Go Summary
+### Phase 6: Go/No-Go Summary
 
 ```
 ┌─ RELEASE SUMMARY ────────────────────────────────────────────┐
@@ -391,9 +365,8 @@ If warnings exist and "Proceed" selected **→ AskUserQuestion** (mandatory):
 
 ## Related Commands
 
-- `/cco-optimize` - Quality checks (used in Phase 2)
-- `/cco-optimize` - Cleanliness (used in Phase 3)
-- `/cco-review` - Architecture (used in Phase 4)
+- `/cco-optimize` - Quality gate (used in Phase 2)
+- `/cco-review` - Architecture review (used in Phase 3)
 - `/cco-commit` - For committing fixes
 
 ---

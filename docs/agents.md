@@ -25,11 +25,12 @@ CCO uses three specialized agents with clear separation of concerns:
 | Scope | Returns | Use Case |
 |-------|---------|----------|
 | `detect` | Project structure, stack, tools | cco-config, cco-commit fallback |
-| `scan` | Issues with file:line, metrics | cco-optimize, cco-status |
+| `scan` | Issues with file:line, metrics | cco-status |
 | `full` | Both combined | cco-config first run |
 | `security` | Security vulnerabilities, secrets | cco-optimize --security |
 | `quality` | Tech debt, consistency, tests | cco-optimize --quality |
 | `hygiene` | Orphans, duplicates, stale refs | cco-optimize --hygiene |
+| `best-practices` | Pattern adherence, efficiency | cco-optimize --best-practices |
 | `architecture` | Dependency graph, coupling metrics | cco-review |
 | `trends` | Historical metrics with deltas | cco-status --trends |
 
@@ -146,18 +147,36 @@ Always reports: `done + skip + fail = total`
 
 ---
 
+## Scope Reference
+
+Complete list of all scopes with their purpose and coverage:
+
+| Scope | Purpose | Coverage |
+|-------|---------|----------|
+| `detect` | Project discovery | Stack, tools, conventions, structure |
+| `scan` | Dashboard metrics | Security, tests, debt, cleanliness scores |
+| `full` | Combined detect+scan | All detection + all metrics |
+| `security` | Vulnerability detection | OWASP, secrets, CVEs, input validation |
+| `quality` | Code quality issues | Complexity, types, consistency, tech debt |
+| `hygiene` | Codebase cleanliness | Orphans, stale refs, duplicates, dead code |
+| `best-practices` | Pattern adherence | Efficiency, naming, error handling, magic numbers |
+| `architecture` | Structural analysis | Dependencies, coupling, layers, patterns |
+| `trends` | Historical tracking | Metric deltas with ↑↓→⚠ indicators |
+
+---
+
 ## Agent Selection by Command
 
 | Command | Analyze Scope | Apply | Research |
 |---------|---------------|-------|----------|
 | `/cco-config` | `detect` or `full` | No | No |
 | `/cco-status` | `scan`, `trends` | No | No |
-| `/cco-optimize` | `security`, `quality`, `hygiene` | Yes | `dependency` |
-| `/cco-review` | `architecture`, `scan` | Yes | No |
+| `/cco-optimize` | `security`, `quality`, `hygiene`, `best-practices` | Yes | `dependency` |
+| `/cco-review` | `architecture`, `best-practices` | Yes | No |
 | `/cco-commit` | `detect` (fallback) | No | No |
 | `/cco-research` | - | No | `full` |
-| `/cco-preflight` | (orchestrates) | (orchestrates) | No |
-| `/cco-checkup` | (orchestrates) | (orchestrates) | No |
+| `/cco-preflight` | (orchestrates optimize + review) | (orchestrates) | No |
+| `/cco-checkup` | (orchestrates status + optimize) | (orchestrates) | No |
 
 ---
 

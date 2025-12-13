@@ -39,11 +39,11 @@ When called without flags → **AskUserQuestion** (mandatory):
 
 | Question | Options | multiSelect |
 |----------|---------|-------------|
-| Which phases to run? | Health Dashboard (Recommended); Quality Audit (Recommended); Quick Cleanup | true |
+| Which phases to run? | Health Dashboard (Recommended); Quality Audit (Recommended) | true |
 
-*MultiSelect: Kullanıcı birden fazla faz seçebilir. Tümü seçilirse = Full checkup.*
+*MultiSelect: User can select multiple phases. All selected = Full checkup.*
 
-Flags `--health-only`, `--audit-only`, `--cleanup-only` skip this question.
+Flags `--health-only`, `--audit-only` skip this question.
 
 ## Progress Tracking [CRITICAL]
 
@@ -53,7 +53,7 @@ Flags `--health-only`, `--audit-only`, `--cleanup-only` skip this question.
 TodoWrite([
   { content: "Run health dashboard", status: "in_progress", activeForm: "Running health dashboard" },
   { content: "Run quality audit", status: "pending", activeForm: "Running quality audit" },
-  { content: "Run quick cleanup", status: "pending", activeForm: "Running quick cleanup" }
+  { content: "Show summary", status: "pending", activeForm: "Showing summary" }
 ])
 ```
 
@@ -85,34 +85,18 @@ Quick overview of project health scores.
 
 ### Phase 2: Quality Audit
 
-Orchestrates: `/cco-optimize --auto-fix`
+Orchestrates: `/cco-optimize --fix`
 
-Runs all applicable checks from context.
+Runs all applicable checks (security, quality, hygiene, best-practices) from context.
 
 ```
 ┌─ QUALITY AUDIT ──────────────────────────────────────────────┐
-│ → Running: /cco-optimize --auto-fix                          │
+│ → Running: /cco-optimize --fix                               │
 ├──────────────────────────────────────────────────────────────┤
-│ Applicable: {applicable_categories}                          │
+│ Scopes: Security │ Quality │ Hygiene │ Best Practices        │
 │ Issues found: {n} | Fixed: {n} | Declined: {n}               │
-└──────────────────────────────────────────────────────────────┘
-```
-
-### Phase 3: Quick Cleanup
-
-Orchestrates: `/cco-optimize --hygiene --auto-fix`
-
-Removes orphans, stale refs, and duplicates.
-
-```
-┌─ QUICK CLEANUP ──────────────────────────────────────────────┐
-│ → Running: /cco-optimize --hygiene --auto-fix                │
 ├──────────────────────────────────────────────────────────────┤
-│ Orphans removed: {n} ({files})                               │
-│ Stale refs fixed: {n}                                        │
-│ Duplicates merged: {n}                                       │
-├──────────────────────────────────────────────────────────────┤
-│ Space saved: {n} lines                                       │
+│ Orphans: {n} │ Stale refs: {n} │ Duplicates: {n}             │
 └──────────────────────────────────────────────────────────────┘
 ```
 
@@ -140,8 +124,7 @@ Removes orphans, stale refs, and duplicates.
 |------|-----|
 | Quick weekly maintenance | `/cco-checkup` |
 | Pre-release checks | `/cco-preflight` |
-| Deep quality audit | `/cco-optimize --all` |
-| Thorough cleanup | `/cco-optimize --deep` |
+| Deep quality audit | `/cco-optimize` |
 | Strategic review | `/cco-review` |
 
 ## Flags
@@ -175,8 +158,7 @@ Removes orphans, stale refs, and duplicates.
 ## Related Commands
 
 - `/cco-status` - Health dashboard only
-- `/cco-optimize` - Full quality audit
-- `/cco-optimize` - Full optimization
+- `/cco-optimize` - Full quality audit and optimization
 - `/cco-preflight` - Pre-release workflow
 
 ---
