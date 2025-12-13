@@ -11,11 +11,11 @@ from claudecodeoptimizer.config import (
     RULES_DIR,
     SUBPROCESS_TIMEOUT,
     VERSION,
+    _get_rules_count,
     get_cco_agents,
     get_cco_commands,
     get_content_path,
     get_rules_breakdown,
-    get_rules_count,
 )
 
 
@@ -92,15 +92,15 @@ class TestFunctions:
             assert item.suffix == ".md"
 
     def test_get_rules_count(self):
-        """Test get_rules_count returns tuple of counts."""
-        rules, categories = get_rules_count()
+        """Test _get_rules_count returns tuple of counts."""
+        rules, categories = _get_rules_count()
         assert isinstance(rules, int)
         assert isinstance(categories, int)
         assert rules > 0
         assert categories > 0
 
     def test_get_rules_count_missing_file(self, tmp_path):
-        """Test get_rules_count returns (0, 0) when rules file doesn't exist."""
+        """Test _get_rules_count returns (0, 0) when rules file doesn't exist."""
         from unittest.mock import MagicMock
 
         # Create a mock path that doesn't exist
@@ -127,9 +127,9 @@ class TestFunctions:
             mock_path_cls.return_value.parent.__truediv__.return_value.__truediv__.return_value.__truediv__.return_value = mock_file
 
             # Call the function - it will use our mocked Path
-            from claudecodeoptimizer.config import get_rules_count
+            from claudecodeoptimizer.config import _get_rules_count
 
-            result = get_rules_count()
+            result = _get_rules_count()
             assert result == (0, 0)
 
     def test_get_content_path(self):
@@ -170,7 +170,7 @@ class TestFunctions:
         assert RULES_DIR == CLAUDE_DIR / "rules" / "cco"
 
     def test_get_rules_count_no_dir(self, tmp_path):
-        """Test get_rules_count returns (0, 0) when rules dir doesn't exist."""
+        """Test _get_rules_count returns (0, 0) when rules dir doesn't exist."""
         # Patch the path to a nonexistent directory
         with patch("claudecodeoptimizer.config.Path") as mock_path:
             # Create a mock that returns a path that doesn't exist
@@ -186,7 +186,7 @@ class TestFunctions:
             # Temporarily change __file__ to point somewhere without rules
             config_module.__file__ = str(tmp_path / "nonexistent" / "config.py")
 
-            result = get_rules_count()
+            result = _get_rules_count()
 
             # Restore
             config_module.__file__ = original_file

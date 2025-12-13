@@ -233,21 +233,36 @@ def remove_rules_dir_old(verbose: bool = True) -> bool:
     return True
 
 
+def _read_claude_md() -> str | None:
+    """Read CLAUDE.md content if it exists and is not too large.
+
+    Returns:
+        File content as string if exists and is safe to read, None otherwise.
+    """
+    claude_md = CLAUDE_DIR / "CLAUDE.md"
+    if not claude_md.exists():
+        return None
+
+    # Safety: Skip regex on very large files
+    if claude_md.stat().st_size > MAX_CLAUDE_MD_SIZE:
+        return None
+
+    return claude_md.read_text(encoding="utf-8")
+
+
 def has_claude_md_rules() -> list[str]:
     """Check which CCO sections exist in CLAUDE.md.
 
     Uses universal pattern to detect ANY CCO marker for backward compatibility.
     Includes file size check to prevent ReDoS on very large files.
     """
-    claude_md = CLAUDE_DIR / "CLAUDE.md"
-    if not claude_md.exists():
+    content = _read_claude_md()
+    if content is None:
+        # Check if file exists but is too large
+        claude_md = CLAUDE_DIR / "CLAUDE.md"
+        if claude_md.exists():
+            return ["CLAUDE.md (file too large for pattern matching)"]
         return []
-
-    # Safety: Skip regex on very large files
-    if claude_md.stat().st_size > MAX_CLAUDE_MD_SIZE:
-        return ["CLAUDE.md (file too large for pattern matching)"]
-
-    content = claude_md.read_text(encoding="utf-8")
 
     # Use universal pattern to find all CCO markers
     pattern, flags = CCO_UNIVERSAL_PATTERN
@@ -281,11 +296,9 @@ def remove_claude_md_rules(verbose: bool = True) -> list[str]:
     Returns:
         List of removed section descriptions, empty if none found.
     """
-    claude_md = CLAUDE_DIR / "CLAUDE.md"
-    if not claude_md.exists():
+    content = _read_claude_md()
+    if content is None:
         return []
-
-    content = claude_md.read_text(encoding="utf-8")
 
     # Use universal pattern to remove ALL CCO markers
     pattern, flags = CCO_UNIVERSAL_PATTERN
@@ -294,6 +307,7 @@ def remove_claude_md_rules(verbose: bool = True) -> list[str]:
     if matches:
         content = re.sub(pattern, "", content, flags=flags)
         content = re.sub(r"\n{3,}", "\n\n", content)
+        claude_md = CLAUDE_DIR / "CLAUDE.md"
         claude_md.write_text(content, encoding="utf-8")
         if verbose:
             print(f"  - CCO Content ({len(matches)} section(s) removed)")
