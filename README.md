@@ -202,7 +202,7 @@ Run `/cco-config` to see which adaptive rules apply to your project.
 - **Statusline Configuration** - Full or Minimal mode per project
 - **Permission Levels** - Safe, Balanced, Permissive, Full per project
 - **Remove Configuration** - Remove any setting (AI Performance, Statusline, Permissions, Rules)
-- **Rules Export** - Export to AGENTS.md or CLAUDE.md with selectable content
+- **Rules Export** - Export to AGENTS.md (universal) or CLAUDE.md (Claude-specific)
 
 ### /cco-preflight Features
 
@@ -241,7 +241,7 @@ Run `/cco-config` to see which adaptive rules apply to your project.
 `/cco-config` is the central configuration command with three action types:
 
 **Configure:**
-- Detection & Rules - Scan project, write context to `./CLAUDE.md`
+- Detection & Rules - Scan project, write context to `.claude/rules/cco/`
 - AI Performance - Set thinking/MCP tokens in `./.claude/settings.json`
 - Statusline - Configure status bar (Full or Minimal)
 - Permissions - Set permission level (Safe, Balanced, Permissive, Full)
@@ -251,8 +251,8 @@ Run `/cco-config` to see which adaptive rules apply to your project.
 - Mixed operations supported (e.g., Configure Rules + Remove AI Performance)
 
 **Export:**
-- CLAUDE.md - For other Claude Code projects (all rules)
-- AGENTS.md - For other AI tools (Tool Rules excluded)
+- AGENTS.md - Universal format for all AI tools (Codex, Cursor, Copilot, Cline, etc.)
+- CLAUDE.md - Full export including Claude-specific tool rules
 
 ### AI Performance Auto-Detection
 
@@ -263,7 +263,7 @@ Thinking and MCP output tokens are automatically set based on project complexity
 | Thinking Tokens | 5000 | 8000 | 10000 |
 | MCP Output Tokens | 25000 | 35000 | 50000 |
 
-> **Note:** Thinking mode toggle moved to `/config` in v2.0.67 (Tab to toggle). Enabled by default for Opus 4.5. `MAX_THINKING_TOKENS` controls token budget when enabled.
+> **Note:** Thinking mode toggle is in Claude Code `/config` (Tab to toggle). Enabled by default for Opus 4.5. `MAX_THINKING_TOKENS` controls token budget when enabled.
 
 **Complexity scoring:**
 - Microservices, Monorepo → +2 each
@@ -279,21 +279,27 @@ All settings are written to `./.claude/settings.json` (project-local):
 
 ### Export
 
-Export is integrated into `/cco-config` main flow. Select CLAUDE.md or AGENTS.md from the Export section.
+Export is integrated into `/cco-config` main flow. Select AGENTS.md (recommended) or CLAUDE.md.
 
-**What gets exported (user-selectable):**
-- Core Rules
-- AI Rules
-- Tool Rules (CLAUDE.md only)
-- Project Context
-- Adaptive Rules
+**Format differences:**
+
+| Format | Target | Content |
+|--------|--------|---------|
+| AGENTS.md | Universal (Codex, Cursor, Copilot, Cline, etc.) | Core + AI rules, model-agnostic |
+| CLAUDE.md | Claude Code only | Core + AI + Tool rules, full content |
+
+**AGENTS.md content filtering:**
+- Removes Claude-specific tool references (`Read`, `Write`, `Task`, etc.)
+- Removes `.claude/` path references
+- Removes CCO-specific content (`/cco-*`, `cco-*`)
+- Preserves model-agnostic principles (DRY, Fail-Fast, Read-First)
 
 **What is NEVER exported:**
 - AI Performance settings
 - Statusline configuration
 - Permission rules
 
-Export reads from installed files (`~/.claude/CLAUDE.md` + `./CLAUDE.md`), not from command specs.
+Export reads from installed files (`~/.claude/rules/cco/` + `.claude/rules/cco/`).
 
 ---
 

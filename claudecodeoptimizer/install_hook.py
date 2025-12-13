@@ -77,7 +77,7 @@ def _remove_agent_files(agents_dir: Path, removed: dict[str, int]) -> None:
 
 
 def _remove_old_rules(old_rules_dir: Path, removed: dict[str, int]) -> None:
-    """Remove old CCO rule files from root (v1.x backward compat).
+    """Remove old CCO rule files from rules root directory.
 
     Args:
         old_rules_dir: Path to old rules root directory
@@ -93,10 +93,10 @@ def _remove_old_rules(old_rules_dir: Path, removed: dict[str, int]) -> None:
 
 
 def _remove_new_rules(new_rules_dir: Path, removed: dict[str, int]) -> None:
-    """Remove CCO rules from cco/ subdirectory (v2.x).
+    """Remove CCO rules from cco/ subdirectory.
 
     Args:
-        new_rules_dir: Path to new rules cco/ subdirectory
+        new_rules_dir: Path to rules cco/ subdirectory
         removed: Dictionary to update with count of removed items
     """
     old_rule_names = CCO_RULE_NAMES + ("tools.md", "adaptive.md")
@@ -133,11 +133,11 @@ def clean_previous_installation(verbose: bool = True) -> dict[str, int]:
     This ensures a clean reinstall by removing:
     - All cco-*.md files in commands/ and agents/
     - CCO markers from CLAUDE.md
-    - Old rules from ~/.claude/rules/ root (v1.x backward compat)
-    - New rules from ~/.claude/rules/cco/ (v2.x)
+    - Rules from ~/.claude/rules/ root (old location)
+    - Rules from ~/.claude/rules/cco/ (current location)
 
     NOTE: Does NOT touch settings.json or statusline.js.
-    v1.0.0 never installed these globally, and v1.1.0+ uses local ./.claude/ only.
+    These are project-local in ./.claude/ only.
 
     Args:
         verbose: If True, print progress messages during cleanup.
@@ -153,10 +153,10 @@ def clean_previous_installation(verbose: bool = True) -> dict[str, int]:
     # 2. Remove all cco-*.md files from agents/
     _remove_agent_files(AGENTS_DIR, removed)
 
-    # 3a. Remove old CCO rule files from root (v1.x backward compat)
+    # 3a. Remove old CCO rule files from root
     _remove_old_rules(OLD_RULES_ROOT, removed)
 
-    # 3b. Remove CCO rules from cco/ subdirectory (v2.x)
+    # 3b. Remove CCO rules from cco/ subdirectory (current)
     _remove_new_rules(RULES_DIR, removed)
 
     # 4. Remove CCO markers from CLAUDE.md
@@ -260,10 +260,10 @@ def setup_rules(verbose: bool = True) -> dict[str, int]:
 
 
 def _remove_all_cco_markers(content: str) -> tuple[str, int]:
-    """Remove ALL CCO markers from content for backward compatibility.
+    """Remove ALL CCO markers from content.
 
     Uses universal pattern to match any CCO marker regardless of name.
-    Ensures clean upgrade from any previous CCO version.
+    Ensures clean upgrade from any previous installation.
 
     Returns:
         Tuple of (cleaned_content, removed_count)
@@ -274,10 +274,10 @@ def _remove_all_cco_markers(content: str) -> tuple[str, int]:
 
 
 def clean_claude_md(verbose: bool = True) -> int:
-    """Clean CCO markers from ~/.claude/CLAUDE.md (backward compatibility).
+    """Clean CCO markers from ~/.claude/CLAUDE.md.
 
-    v2.x no longer writes rules to CLAUDE.md - they're in ~/.claude/rules/cco/.
-    This function only removes old CCO markers from previous installations.
+    CCO no longer writes rules to CLAUDE.md - they're in ~/.claude/rules/cco/.
+    This function removes old CCO markers from previous installations.
 
     Args:
         verbose: If True, print progress messages during cleanup.
@@ -308,11 +308,11 @@ def clean_claude_md(verbose: bool = True) -> int:
     return removed_count
 
 
-# Keep setup_claude_md as alias for backward compatibility in tests
+# Keep setup_claude_md as alias for existing tests
 def setup_claude_md(verbose: bool = True) -> dict[str, int]:
     """Deprecated: Use clean_claude_md instead.
 
-    Kept for backward compatibility. Now only cleans old markers,
+    Kept for test compatibility. Now only cleans old markers,
     does not write new rules (they're in ~/.claude/rules/cco/).
     """
     warnings.warn(
@@ -590,7 +590,7 @@ def _run_global_install() -> int:
         rules_installed = setup_rules()
         print()
 
-        # Step 5: Clean old CCO markers from CLAUDE.md (backward compat)
+        # Step 5: Clean old CCO markers from CLAUDE.md
         markers_cleaned = clean_claude_md(verbose=True)
         if markers_cleaned == 0:
             print("  CLAUDE.md: no old markers to clean")

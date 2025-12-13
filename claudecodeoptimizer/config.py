@@ -43,7 +43,7 @@ AGENTS_DIR = CLAUDE_DIR / "agents"
 # CCO rules are namespaced in cco/ subdirectory to preserve user's custom rules
 CCO_RULES_SUBDIR = "cco"
 RULES_DIR = CLAUDE_DIR / "rules" / CCO_RULES_SUBDIR  # ~/.claude/rules/cco/
-OLD_RULES_ROOT = CLAUDE_DIR / "rules"  # For backward compat cleanup
+OLD_RULES_ROOT = CLAUDE_DIR / "rules"  # For cleanup of old root-level rules
 
 # Rule files installed to ~/.claude/rules/cco/ (without cco- prefix)
 # Only core.md and ai.md are installed globally (always active)
@@ -78,7 +78,7 @@ def get_content_path(subdir: str = "") -> Path:
 
 
 # Universal CCO marker pattern - matches ANY cco_* marker block (case-insensitive)
-# Used for backward compatibility: removes all CCO content regardless of marker name
+# Universal pattern: removes all CCO content regardless of marker name
 # Matches: <!-- CCO_anything_START -->...<!-- CCO_anything_END -->
 # Also: <!-- cco-anything-start -->...<!-- cco-anything-end -->
 # ReDoS mitigation: File size limited to MAX_CLAUDE_MD_SIZE (1MB) before pattern application.

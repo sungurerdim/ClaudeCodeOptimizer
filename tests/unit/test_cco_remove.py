@@ -336,7 +336,7 @@ class TestRemovePermissions:
 
 
 class TestHasRulesDirOld:
-    """Test has_rules_dir_old function (v1.x backward compat)."""
+    """Test has_rules_dir_old function (old root-level rules)."""
 
     def test_no_dir(self, tmp_path):
         """Test returns False when old rules root doesn't exist."""
@@ -370,7 +370,7 @@ class TestHasRulesDirOld:
 
 
 class TestRemoveRulesDirOld:
-    """Test remove_rules_dir_old function (v1.x backward compat)."""
+    """Test remove_rules_dir_old function (old root-level rules)."""
 
     def test_no_dir(self, tmp_path):
         """Test returns False when no rules dir exists."""
@@ -452,10 +452,10 @@ class TestHasRulesDir:
         assert result is False
 
     def test_with_cco_rules(self, tmp_path):
-        """Test returns True when rules dir has CCO rule files (v2.x: core.md in cco/)."""
+        """Test returns True when rules dir has CCO rule files (core.md in cco/)."""
         from claudecodeoptimizer.cco_remove import has_rules_dir
 
-        # v2.x: rules are in ~/.claude/rules/cco/{core,ai,tools}.md
+        # Rules are in ~/.claude/rules/cco/{core,ai}.md
         rules_dir = tmp_path / "rules" / "cco"
         rules_dir.mkdir(parents=True)
         (rules_dir / "core.md").write_text("# Core Rules")
@@ -479,10 +479,10 @@ class TestRemoveRulesDir:
     """Test remove_rules_dir function."""
 
     def test_remove_cco_rules_only(self, tmp_path, capsys):
-        """Test removes only CCO rule files from cco/ subdir (v2.x)."""
+        """Test removes only CCO rule files from cco/ subdir."""
         from claudecodeoptimizer.cco_remove import remove_rules_dir
 
-        # v2.x: rules are in ~/.claude/rules/cco/{core,ai,tools}.md
+        # Rules are in ~/.claude/rules/cco/{core,ai}.md
         cco_dir = tmp_path / "rules" / "cco"
         cco_dir.mkdir(parents=True)
         (cco_dir / "core.md").write_text("# Core")
@@ -548,7 +548,7 @@ class TestDisplayRemovalPlan:
     """Test _display_removal_plan function."""
 
     def test_display_with_rules_dir(self, capsys):
-        """Test displays rules directory section when present (v2.x cco/ subdir)."""
+        """Test displays rules directory section when present (cco/ subdir)."""
         items = {
             "method": None,
             "files": {"commands": [], "agents": []},
@@ -603,7 +603,7 @@ class TestDisplayRemovalPlan:
         assert "permissions" in captured.out
 
     def test_display_with_rules_dir_old(self, capsys):
-        """Test displays rules_dir_old section when present (v1.x)."""
+        """Test displays rules_dir_old section when present (old root-level)."""
         items = {
             "method": None,
             "files": {"commands": [], "agents": []},
@@ -618,14 +618,14 @@ class TestDisplayRemovalPlan:
         _display_removal_plan(items)
         captured = capsys.readouterr()
         assert "Rules directory:" in captured.out
-        assert "v1.x old files" in captured.out
+        assert "old files" in captured.out
 
 
 class TestExecuteRemoval:
     """Test _execute_removal function."""
 
     def test_execute_with_rules_dir(self, capsys):
-        """Test executes rules directory removal when present (v2.x)."""
+        """Test executes rules directory removal when present."""
         items = {
             "method": None,
             "files": {"commands": [], "agents": []},
@@ -688,7 +688,7 @@ class TestExecuteRemoval:
         assert "Removing settings" in captured.out
 
     def test_execute_with_rules_dir_old(self, capsys):
-        """Test executes rules_dir_old removal when present (v1.x)."""
+        """Test executes rules_dir_old removal when present (old root-level)."""
         items = {
             "method": None,
             "files": {"commands": [], "agents": []},

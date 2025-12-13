@@ -90,18 +90,18 @@ class TestCleanPreviousInstallation:
 
     def test_removes_cco_rules_only(self, tmp_path):
         """Test removes only CCO rule files, preserves custom rules during cleanup."""
-        # Setup: old rules in root (v1.x), new rules in cco/ subdir (v2.x)
+        # Setup: old rules in root, current rules in cco/ subdir
         rules_root = tmp_path / "rules"
         rules_root.mkdir()
         cco_subdir = rules_root / "cco"
         cco_subdir.mkdir()
 
-        # Old format (v1.x) - in root
+        # Old format - in root
         (rules_root / "cco-core.md").write_text("# Old Core")
         (rules_root / "cco-ai.md").write_text("# Old AI")
         # Custom user rule (should be preserved)
         (rules_root / "custom-rule.md").write_text("# Custom")
-        # New format (v2.x) - in cco/ subdir
+        # Current format - in cco/ subdir
         (cco_subdir / "core.md").write_text("# New Core")
         (cco_subdir / "ai.md").write_text("# New AI")
 
@@ -340,8 +340,8 @@ class TestSetupClaudeMd:
             content = claude_md.read_text()
             assert "# My Custom Rules" in content
 
-    def test_backward_compat_setup_claude_md(self, tmp_path):
-        """Test setup_claude_md still works for backward compatibility."""
+    def test_deprecated_setup_claude_md(self, tmp_path):
+        """Test setup_claude_md still works (deprecated alias)."""
         with patch("claudecodeoptimizer.install_hook.CLAUDE_DIR", tmp_path):
             claude_md = tmp_path / "CLAUDE.md"
             claude_md.write_text("# My Rules\n\n<!-- CCO_OLD_START -->Old<!-- CCO_OLD_END -->")
@@ -924,7 +924,7 @@ class TestPostInstall:
 
 
 class TestSetupRules:
-    """Test setup_rules function (v2.x: installs to cco/ subdirectory)."""
+    """Test setup_rules function (installs to cco/ subdirectory)."""
 
     def test_setup_rules_creates_directory(self, tmp_path):
         """Test setup_rules creates cco/ subdirectory and copies files with new names."""
