@@ -881,10 +881,13 @@ class TestPostInstall:
         with patch("claudecodeoptimizer.install_hook.CLAUDE_DIR", tmp_path):
             with patch("claudecodeoptimizer.install_hook.COMMANDS_DIR", tmp_path / "commands"):
                 with patch("claudecodeoptimizer.install_hook.AGENTS_DIR", tmp_path / "agents"):
-                    with patch("claudecodeoptimizer.install_hook.get_content_dir") as mock_content:
-                        with patch.object(sys, "argv", ["cco-install"]):
-                            mock_content.return_value = tmp_path / "pkg"
-                            result = post_install()
+                    with patch("claudecodeoptimizer.install_hook.RULES_DIR", tmp_path / "rules"):
+                        with patch(
+                            "claudecodeoptimizer.install_hook.get_content_dir"
+                        ) as mock_content:
+                            with patch.object(sys, "argv", ["cco-install"]):
+                                mock_content.return_value = tmp_path / "pkg"
+                                result = post_install()
 
         assert result == 0
         captured = capsys.readouterr()
