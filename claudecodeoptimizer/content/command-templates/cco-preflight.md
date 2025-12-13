@@ -10,7 +10,7 @@ allowed-tools: Read(*), Grep(*), Glob(*), Edit(*), Bash(git:*), Bash(pytest:*), 
 
 Meta command that orchestrates other CCO commands for release preparation.
 
-**Rules:** User Input | Git Safety | Go/No-Go Decision | Task Tracking
+**Rules:** User Input | Git Safety | Go/No-Go Decision | Progress Tracking
 
 ## Context
 
@@ -70,19 +70,23 @@ calls in a single message. For example:
 Never use placeholders or guess missing parameters.
 </use_parallel_tool_calls>
 
-## Phase Announcements [CRITICAL]
+## Progress Tracking [CRITICAL]
 
-**Before starting each phase, announce:** `▶ Phase X/7: Phase Name`
+**Use TodoWrite to track progress.** Create todo list at start, update status for each phase.
 
-| Phase | Name |
-|-------|------|
-| 1 | Pre-flight Checks |
-| 2 | Quality Gate |
-| 3 | Cleanliness |
-| 4 | Architecture |
-| 5 | Final Verification |
-| 6 | Changelog & Docs |
-| 7 | Go/No-Go Summary |
+```
+TodoWrite([
+  { content: "Run pre-flight checks", status: "in_progress", activeForm: "Running pre-flight checks" },
+  { content: "Run quality gate", status: "pending", activeForm: "Running quality gate" },
+  { content: "Check cleanliness", status: "pending", activeForm: "Checking cleanliness" },
+  { content: "Review architecture", status: "pending", activeForm: "Reviewing architecture" },
+  { content: "Run final verification", status: "pending", activeForm: "Running final verification" },
+  { content: "Update changelog & docs", status: "pending", activeForm: "Updating changelog & docs" },
+  { content: "Show go/no-go summary", status: "pending", activeForm: "Showing go/no-go summary" }
+])
+```
+
+**Update status:** Mark `completed` immediately after each phase finishes, mark next `in_progress`.
 
 ## Flow
 
@@ -165,7 +169,7 @@ Includes:
 │ Consistency   │ {n}%  │ {status}                             │
 │ Compliance    │ {n}%  │ {status}                             │
 ├──────────────────────────────────────────────────────────────┤
-│ Issues: {n} | Fixed: {n} | Manual: {n}                       │
+│ Issues: {n} | Fixed: {n} | Declined: {n}                     │
 └──────────────────────────────────────────────────────────────┘
 ```
 
@@ -412,8 +416,6 @@ If warnings exist and "Proceed" selected **→ AskUserQuestion** (mandatory):
 | Warning (yellow) | Should fix | Can override |
 | Pass (green) | All clear | Ready to release |
 
-### Task Tracking
+### Progress Tracking
 
-- **Create**: TODO list with release phases
-- **Status**: pending → in_progress → completed
-- **Accounting**: passed + fixed + blocked = total
+*See Progress Tracking section above. Use TodoWrite for all phases.*

@@ -18,22 +18,36 @@ test -f ./.claude/rules/cco/context.md && echo "OK" || echo "Run /cco-config fir
 
 If not found: Stop immediately with message to run /cco-config.
 
+## Progress Tracking [CRITICAL]
+
+**Use TodoWrite to track progress.** Create todo list at start, update status for each step.
+
+```
+TodoWrite([
+  { content: "Spawn parallel agents", status: "in_progress", activeForm: "Spawning parallel agents" },
+  { content: "Merge metrics", status: "pending", activeForm: "Merging metrics" },
+  { content: "Generate dashboard", status: "pending", activeForm: "Generating dashboard" }
+])
+```
+
+**Update status:** Mark `completed` immediately after each step finishes, mark next `in_progress`.
+
 ## Execution Flow
 
 ```
 ┌─────────────────────────────────────────────────────────────────────────────┐
-│ STEP 1: Spawn parallel agents (single message with 2 Task calls)            │
+│ Spawn parallel agents (single message with 2 Task calls)                     │
 ├─────────────────────────────────────────────────────────────────────────────┤
 │ Task(cco-agent-analyze, scope=scan)   ──┬──→ Both run simultaneously        │
 │ Task(cco-agent-analyze, scope=trends) ──┘                                   │
 ├─────────────────────────────────────────────────────────────────────────────┤
-│ STEP 2: Merge metrics + trend data                                          │
+│ Merge metrics + trend data                                                   │
 ├─────────────────────────────────────────────────────────────────────────────┤
-│ STEP 3: Generate dashboard output                                           │
+│ Generate dashboard output                                                    │
 └─────────────────────────────────────────────────────────────────────────────┘
 ```
 
-**CRITICAL:** Step 1 MUST be a single message with multiple Task tool calls.
+**CRITICAL:** Parallel agents MUST be spawned in a single message with multiple Task tool calls.
 
 ## Agent Scopes
 
@@ -49,34 +63,6 @@ If not found: Stop immediately with message to run /cco-config.
 | Scale | <100 → relaxed; 100-10K → moderate; 10K+ → strict thresholds |
 | Data | PII/Regulated → security weight ×2 |
 | Priority | Speed → blockers only; Quality → all metrics |
-
-## Score Categories
-
-| Category | Metrics |
-|----------|---------|
-| Security | OWASP, secrets, CVEs, input validation |
-| Tests | Coverage %, branch coverage, quality |
-| Tech Debt | Complexity, dead code, TODO count |
-| Cleanliness | Orphans, duplicates, stale refs |
-| Documentation | README, docstrings, examples |
-
-## Status Thresholds
-
-| Score | Status |
-|-------|--------|
-| 90-100 | OK |
-| 70-89 | WARN |
-| 50-69 | FAIL |
-| 0-49 | CRITICAL |
-
-## Trend Indicators
-
-| Symbol | Meaning |
-|--------|---------|
-| ↑ | Improved (>5% better) |
-| → | Stable (±5%) |
-| ↓ | Degraded (>5% worse) |
-| ⚠ | Rapid decline (>15% worse) |
 
 ## Output
 

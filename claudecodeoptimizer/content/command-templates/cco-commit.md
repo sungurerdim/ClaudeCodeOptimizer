@@ -16,41 +16,45 @@ test -f ./.claude/rules/cco/context.md && echo "OK" || echo "Run /cco-config fir
 
 If not found: Stop immediately with message to run /cco-config.
 
-## Step Announcements [CRITICAL]
+## Progress Tracking [CRITICAL]
 
-**Before starting each step, announce:** `▶ Step X/5: Step Name`
+**Use TodoWrite to track progress.** Create todo list at start, update status for each step.
 
-| Step | Name |
-|------|------|
-| 1 | Git Info Collection |
-| 2 | Quality Gates |
-| 3 | Change Analysis |
-| 4 | Plan Approval |
-| 5 | Execute Commits |
+```
+TodoWrite([
+  { content: "Collect git info", status: "in_progress", activeForm: "Collecting git info" },
+  { content: "Run quality gates", status: "pending", activeForm: "Running quality gates" },
+  { content: "Analyze changes", status: "pending", activeForm: "Analyzing changes" },
+  { content: "Get plan approval", status: "pending", activeForm: "Getting plan approval" },
+  { content: "Execute commits", status: "pending", activeForm: "Executing commits" }
+])
+```
+
+**Update status:** Mark `completed` immediately after each step finishes, mark next `in_progress`.
 
 ## Execution Flow
 
 ```
 ┌─────────────────────────────────────────────────────────────────────────────┐
-│ STEP 1: Parallel git info (single message with 4 Bash calls)                │
+│ Collect git info (single message with 4 Bash calls)                          │
 ├─────────────────────────────────────────────────────────────────────────────┤
 │ Bash(git status --short)        ──┐                                         │
 │ Bash(git diff --cached --stat)  ──┼──→ All run simultaneously               │
 │ Bash(git branch --show-current) ──┤                                         │
 │ Bash(git log --oneline -5)      ──┘                                         │
 ├─────────────────────────────────────────────────────────────────────────────┤
-│ STEP 2: Quality gates (sequential - stop on failure)                        │
-│         Secrets → Large files → Format → Lint → Types → Tests               │
+│ Quality gates (sequential - stop on failure)                                 │
+│ Secrets → Large files → Format → Lint → Types → Tests                        │
 ├─────────────────────────────────────────────────────────────────────────────┤
-│ STEP 3: Analyze + Group changes atomically                                  │
+│ Analyze + Group changes atomically                                           │
 ├─────────────────────────────────────────────────────────────────────────────┤
-│ STEP 4: Show plan, get approval                                             │
+│ Show plan, get approval                                                      │
 ├─────────────────────────────────────────────────────────────────────────────┤
-│ STEP 5: Execute commits                                                     │
+│ Execute commits                                                              │
 └─────────────────────────────────────────────────────────────────────────────┘
 ```
 
-**CRITICAL:** Step 1 MUST be a single message with multiple Bash tool calls.
+**CRITICAL:** Git info MUST be collected in a single message with multiple Bash tool calls.
 
 ## Context Application
 
@@ -100,13 +104,19 @@ Step 2 runs:
 
 ## Message Quality
 
+| Rule | Requirement |
+|------|-------------|
+| Length | Title ≤50 chars (hard limit: 72) |
+| Format | `{type}({scope}): {description}` |
+| Scope | From affected module/feature |
+| Description | Action verb, no period |
+
 | ❌ Reject | ✅ Accept |
 |-----------|-----------|
-| "fix bug" | "fix({scope}): {specific_what_and_why}" |
-| "update code" | "refactor({scope}): {what_changed}" |
-| "changes" | "feat({scope}): {new_capability}" |
-
-*Format: `{type}({scope}): {description}` - scope from affected module/feature*
+| "fix bug" | "fix(auth): validate token expiry" |
+| "update code" | "refactor(api): extract handler" |
+| "changes" | "feat(ui): add dark mode toggle" |
+| "refactor(commands): replace Step Announcements with TodoWrite" | "refactor(commands): use TodoWrite" |
 
 ## Type Classification
 

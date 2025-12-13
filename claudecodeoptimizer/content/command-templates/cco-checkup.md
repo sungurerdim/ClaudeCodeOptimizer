@@ -10,7 +10,7 @@ allowed-tools: Read(*), Grep(*), Glob(*), Edit(*), Bash(git:*), Bash(pytest:*), 
 
 Meta command for regular project maintenance (weekly recommended).
 
-**Rules:** User Input | Orchestration | Task Tracking
+**Rules:** User Input | Orchestration | Progress Tracking
 
 ## Context
 
@@ -45,15 +45,19 @@ When called without flags → **AskUserQuestion** (mandatory):
 
 Flags `--health-only`, `--audit-only`, `--cleanup-only` skip this question.
 
-## Phase Announcements [CRITICAL]
+## Progress Tracking [CRITICAL]
 
-**Before starting each phase, announce:** `▶ Phase X/3: Phase Name`
+**Use TodoWrite to track progress.** Create todo list at start, update status for each phase.
 
-| Phase | Name |
-|-------|------|
-| 1 | Health Dashboard |
-| 2 | Quality Audit |
-| 3 | Quick Cleanup |
+```
+TodoWrite([
+  { content: "Run health dashboard", status: "in_progress", activeForm: "Running health dashboard" },
+  { content: "Run quality audit", status: "pending", activeForm: "Running quality audit" },
+  { content: "Run quick cleanup", status: "pending", activeForm: "Running quick cleanup" }
+])
+```
+
+**Update status:** Mark `completed` immediately after each phase finishes, mark next `in_progress`.
 
 ## Flow
 
@@ -90,10 +94,7 @@ Runs all applicable checks from context.
 │ → Running: /cco-optimize --auto-fix                          │
 ├──────────────────────────────────────────────────────────────┤
 │ Applicable: {applicable_categories}                          │
-│ Issues found: {n} | Auto-fixed: {n} | Manual: {n}            │
-├──────────────────────────────────────────────────────────────┤
-│ Manual action needed:                                        │
-│   • {priority}: {issue} in {file}:{line}                    │
+│ Issues found: {n} | Fixed: {n} | Declined: {n}               │
 └──────────────────────────────────────────────────────────────┘
 ```
 
@@ -127,8 +128,7 @@ Removes orphans, stale refs, and duplicates.
 │   • {n} files changed                                        │
 │   • Health: {before} → {after} ({delta})                    │
 ├──────────────────────────────────────────────────────────────┤
-│ Auto-fixed: {n} issues                                       │
-│ Manual needed: {n} issues                                    │
+│ Fixed: {n} issues | Declined: {n} issues                     │
 ├──────────────────────────────────────────────────────────────┤
 │ Next recommended checkup: {date}                             │
 └──────────────────────────────────────────────────────────────┘
@@ -191,8 +191,6 @@ Removes orphans, stale refs, and duplicates.
 - **Aggregate**: Combine outputs into unified report
 - **No-Duplicate**: Don't repeat work already done by sub-commands
 
-### Task Tracking
+### Progress Tracking
 
-- **Create**: TODO list with checkup phases
-- **Status**: pending → in_progress → completed
-- **Accounting**: health + audit + optimize = total
+*See Progress Tracking section above. Use TodoWrite for all phases.*

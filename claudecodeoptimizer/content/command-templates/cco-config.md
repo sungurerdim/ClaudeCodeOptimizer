@@ -29,18 +29,22 @@ allowed-tools: Read(*), Write(*), Edit(*), Bash(cco-install:*), Task(*), TodoWri
 - Parallel execution within agent
 - Faster, less context pollution
 
-## Step Announcements [CRITICAL]
+## Progress Tracking [CRITICAL]
 
-**Before starting each step, announce:** `▶ Step X/6: Step Name`
+**Use TodoWrite to track progress.** Create todo list at start, update status for each step.
 
-| Step | Name |
-|------|------|
-| 1 | Quick Status |
-| 2 | User Questions |
-| 3 | Detection |
-| 4 | Review |
-| 5 | Apply |
-| 6 | Report |
+```
+TodoWrite([
+  { content: "Show quick status", status: "in_progress", activeForm: "Showing quick status" },
+  { content: "Ask user questions", status: "pending", activeForm: "Asking user questions" },
+  { content: "Run detection", status: "pending", activeForm: "Running detection" },
+  { content: "Review results", status: "pending", activeForm: "Reviewing results" },
+  { content: "Apply configuration", status: "pending", activeForm: "Applying configuration" },
+  { content: "Show report", status: "pending", activeForm: "Showing report" }
+])
+```
+
+**Update status:** Mark `completed` immediately after each step finishes, mark next `in_progress`.
 
 ---
 

@@ -26,17 +26,21 @@ When called without flags:
 
 *MultiSelect: Kullanıcı birden fazla alan seçebilir. Tümü seçilirse = Full review.*
 
-## Step Announcements [CRITICAL]
+## Progress Tracking [CRITICAL]
 
-**Before starting each step, announce:** `▶ Step X/5: Step Name`
+**Use TodoWrite to track progress.** Create todo list at start, update status for each step.
 
-| Step | Name |
-|------|------|
-| 1 | Spawn Parallel Agents |
-| 2 | Merge Results |
-| 3 | Foundation Assessment |
-| 4 | Generate Recommendations |
-| 5 | Apply Changes |
+```
+TodoWrite([
+  { content: "Spawn parallel agents", status: "in_progress", activeForm: "Spawning parallel agents" },
+  { content: "Merge results", status: "pending", activeForm: "Merging results" },
+  { content: "Assess foundation", status: "pending", activeForm: "Assessing foundation" },
+  { content: "Generate recommendations", status: "pending", activeForm: "Generating recommendations" },
+  { content: "Apply changes", status: "pending", activeForm: "Applying changes" }
+])
+```
+
+**Update status:** Mark `completed` immediately after each step finishes, mark next `in_progress`.
 
 ### Option Mapping
 
@@ -51,23 +55,23 @@ When called without flags:
 
 ```
 ┌─────────────────────────────────────────────────────────────────────────────┐
-│ STEP 1: Spawn parallel agents (single message with 3 Task calls)            │
+│ Spawn parallel agents (single message with 3 Task calls)                     │
 ├─────────────────────────────────────────────────────────────────────────────┤
 │ Task(cco-agent-analyze, scope=architecture)   ──┐                           │
 │ Task(cco-agent-analyze, scope=scan)           ──┼──→ All run simultaneously │
 │ Task(cco-agent-analyze, scope=best-practices) ──┘                           │
 ├─────────────────────────────────────────────────────────────────────────────┤
-│ STEP 2: Merge agent results                                                 │
+│ Merge agent results                                                          │
 ├─────────────────────────────────────────────────────────────────────────────┤
-│ STEP 3: Foundation assessment (SOUND vs HAS ISSUES)                         │
+│ Foundation assessment (SOUND vs HAS ISSUES)                                  │
 ├─────────────────────────────────────────────────────────────────────────────┤
-│ STEP 4: Generate 80/20 recommendations                                      │
+│ Generate 80/20 recommendations                                               │
 ├─────────────────────────────────────────────────────────────────────────────┤
-│ STEP 5: Apply via Task(cco-agent-apply) or show report                      │
+│ Apply via Task(cco-agent-apply) or show report                               │
 └─────────────────────────────────────────────────────────────────────────────┘
 ```
 
-**CRITICAL:** Step 1 MUST be a single message with multiple Task tool calls.
+**CRITICAL:** Parallel agents MUST be spawned in a single message with multiple Task tool calls.
 
 ## Agent Scopes
 
@@ -105,14 +109,6 @@ Reviews optimal patterns for both code and AI tool usage:
 | Scale | 10K+ → performance focus; <100 → simplicity focus |
 | Data | PII/Regulated → security review mandatory |
 
-## Review Rigor
-
-| Requirement | Rule |
-|-------------|------|
-| Evidence | Every recommendation cites `file:line` |
-| Pattern Discovery | 3+ examples before concluding pattern |
-| No Speculation | Never recommend changes to unread code |
-
 ## Foundation Assessment
 
 From agent results, classify:
@@ -148,7 +144,7 @@ From agent results, classify:
 │ 1 │ {recommendation}         │ {imp}  │ {eff}  │ {priority}  │
 └───┴──────────────────────────┴────────┴────────┴─────────────┘
 
-Applied: {n} | Skipped: {n} | Manual: {n}
+Applied: {n} | Declined: {n}
 ```
 
 ## Apply Phase

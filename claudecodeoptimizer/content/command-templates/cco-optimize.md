@@ -1,12 +1,20 @@
 ---
 name: cco-optimize
 description: Security and code quality analysis with auto-fix
-allowed-tools: Read(*), Grep(*), Glob(*), Edit(*), Bash(git:*), Task(*), TodoWrite, AskUserQuestion
+allowed-tools: Read(*), Grep(*), Glob(*), Edit(*), Bash(git:*), Bash(ruff:*), Bash(mypy:*), Bash(pip:*), Task(*), TodoWrite, AskUserQuestion
 ---
 
 # /cco-optimize
 
-**Full-Stack Optimization** - Security + Quality + Hygiene via parallel agents.
+**Full-Stack Optimization** - Detect and fix ALL issues, leave nothing behind.
+
+## Core Principle [CRITICAL]
+
+**Fix everything that can be fixed.** There is no "manual review" category. All issues fall into:
+1. **Auto-fix**: Safe to apply without asking
+2. **Approval Required**: Ask user, then fix if approved
+
+If an issue can be fixed by editing code, it MUST be fixed (with approval if needed).
 
 ## Context Requirement
 
@@ -25,69 +33,104 @@ When called without flags:
 | Scope? | Security (Recommended); Quality (Recommended); Hygiene; Best Practices | true |
 | Action? | Report Only; Auto-fix (Recommended); Interactive | false |
 
-*MultiSelect: Kullanıcı birden fazla scope seçebilir. Tümü seçilirse = Full optimization.*
+## Progress Tracking [CRITICAL]
 
-## Step Announcements [CRITICAL]
+**Use TodoWrite to track progress.** Create todo list at start, update status for each step.
 
-**Before starting each step, announce:** `▶ Step X/5: Step Name`
+```
+TodoWrite([
+  { content: "Spawn parallel agents", status: "in_progress", activeForm: "Spawning parallel agents" },
+  { content: "Collect results", status: "pending", activeForm: "Collecting results" },
+  { content: "Merge & deduplicate", status: "pending", activeForm: "Merging & deduplicating" },
+  { content: "Apply safe fixes", status: "pending", activeForm: "Applying safe fixes" },
+  { content: "Request approval for remaining", status: "pending", activeForm: "Requesting approval" },
+  { content: "Show summary", status: "pending", activeForm: "Showing summary" }
+])
+```
 
-| Step | Name |
-|------|------|
-| 1 | Spawn Parallel Agents |
-| 2 | Collect Results |
-| 3 | Merge & Deduplicate |
-| 4 | Apply Fixes |
-| 5 | Show Summary |
+**Update status:** Mark `completed` immediately after each step finishes, mark next `in_progress`.
 
 ## Execution Flow
 
 ```
 ┌─────────────────────────────────────────────────────────────────────────────┐
-│ STEP 1: Spawn parallel agents (single message with 4 Task calls)            │
+│ Spawn parallel agents (single message with selected scopes)                  │
 ├─────────────────────────────────────────────────────────────────────────────┤
 │ Task(cco-agent-analyze, scope=security)       ──┐                           │
-│ Task(cco-agent-analyze, scope=quality)        ──┼──→ All run simultaneously │
+│ Task(cco-agent-analyze, scope=quality)        ──┼──→ Run simultaneously     │
 │ Task(cco-agent-analyze, scope=hygiene)        ──┤                           │
 │ Task(cco-agent-analyze, scope=best-practices) ──┘                           │
 ├─────────────────────────────────────────────────────────────────────────────┤
-│ STEP 2: Collect JSON results from all agents                                │
+│ Collect JSON results from all agents                                         │
 ├─────────────────────────────────────────────────────────────────────────────┤
-│ STEP 3: Merge findings, deduplicate by root cause                           │
+│ Merge findings, deduplicate by root cause                                    │
 ├─────────────────────────────────────────────────────────────────────────────┤
-│ STEP 4: Apply fixes via Task(cco-agent-apply) or show report                │
+│ Apply safe fixes via Task(cco-agent-apply)                                   │
 ├─────────────────────────────────────────────────────────────────────────────┤
-│ STEP 5: Show summary                                                        │
+│ AskUserQuestion for approval-required fixes (paginated)                      │
+│ → If approved, apply fixes                                                   │
+├─────────────────────────────────────────────────────────────────────────────┤
+│ Show summary                                                                 │
 └─────────────────────────────────────────────────────────────────────────────┘
 ```
 
-**CRITICAL:** Step 1 MUST be a single message with multiple Task tool calls.
+**CRITICAL:** Parallel agents MUST be spawned in a single message with multiple Task tool calls.
 
 ## Agent Scopes
 
 | Agent | Scope | Returns |
 |-------|-------|---------|
 | cco-agent-analyze | `security` | OWASP, secrets, CVEs, input validation |
-| cco-agent-analyze | `quality` | Tech debt, consistency, test gaps |
+| cco-agent-analyze | `quality` | Tech debt, type errors, test gaps |
 | cco-agent-analyze | `hygiene` | Orphans, stale refs, duplicates |
-| cco-agent-analyze | `best-practices` | Tool usage patterns, parallel execution, efficiency |
+| cco-agent-analyze | `best-practices` | Patterns, efficiency, consistency |
 | cco-agent-apply | `fix` | Execute approved fixes |
 
-## Best Practices Scope
+## Step 5: Approval Flow [CRITICAL]
 
-Analyzes optimal tool and pattern usage:
+When approval-required issues exist, present them in **paginated format** (max 4 per page):
 
-| Category | Checks |
-|----------|--------|
-| **Claude Code Tools** | Parallel tool calls, single-message batching, subagent usage |
-| **Execution Patterns** | Sequential vs parallel, background tasks, batch operations |
-| **Code Patterns** | DRY, SOLID, error handling, async patterns |
-| **Performance** | N+1 queries, unnecessary iterations, caching opportunities |
+### AskUserQuestion Format
 
-**Finding patterns:**
-- "{n} sequential tool calls could be parallelized" → suggest single message
-- "Subagent not used for complex search" → suggest Task tool
-- "Repeated pattern in {n} files" → suggest extraction
-- "Sync file operations in async context" → suggest async alternatives
+```
+| Question | Options (max 4) | MultiSelect |
+|----------|-----------------|-------------|
+| Fix {category}? | {issue1}; {issue2}; {issue3}; {issue4} | true |
+```
+
+**Pagination:** If >4 issues in a category, add pages:
+- Page 1: Issues 1-4
+- Page 2: Issues 5-8
+- Continue until all issues shown
+
+**Each option format:**
+```
+label: "{ID}: {short_title}"
+description: "{location} - {fix_description}"
+```
+
+### Example
+
+```
+Question: "Fix security issues? (Page 1/2)"
+Options:
+  - "{SCOPE}-001: {title}" → "{file}:{line} - {fix_description}"
+  - "{SCOPE}-002: {title}" → "{file}:{line} - {fix_description}"
+  - "{SCOPE}-003: {title}" → "{file}:{line} - {fix_description}"
+  - "{SCOPE}-004: {title}" → "{file}:{line} - {fix_description}"
+
+Question: "Fix security issues? (Page 2/2)"
+Options:
+  - "{SCOPE}-005: {title}" → "{file}:{line} - {fix_description}"
+```
+
+### After Approval
+
+For each approved issue:
+1. Task(cco-agent-apply) to fix
+2. Verify fix applied
+3. Run relevant linter/type checker
+4. If new errors introduced, fix those too
 
 ## Context Application
 
@@ -97,32 +140,6 @@ Analyzes optimal tool and pattern usage:
 | Scale | 10K+ → stricter thresholds |
 | Maturity | Legacy → safe fixes only |
 | Priority | Speed → critical only; Quality → all levels |
-
-## Findings Processing
-
-### Deduplication
-- Same CWE + Same File → merge
-- Same CWE + Related Files → group by root cause
-
-### Priority (OWASP Risk Rating)
-```
-Risk = Likelihood × Impact
-P0 (90-100): Fix within 24h
-P1 (70-89): Fix within 1 week
-P2 (50-69): Fix within 1 month
-P3 (<50): Backlog
-```
-
-## Fix Modes
-
-| Mode | Behavior |
-|------|----------|
-| Report Only | No changes |
-| Auto-fix | Fix safe issues, ask for risky |
-| Interactive | Ask for each |
-
-**Safe fixes:** Formatting, unused imports, simple refactors
-**Risky fixes:** Deletions, API changes, security patches
 
 ## Output
 
@@ -138,8 +155,14 @@ P3 (<50): Backlog
 │ OVERALL         │ {n}%  │ {n}    │ {n}   │ {status}          │
 └─────────────────┴───────┴────────┴───────┴───────────────────┘
 
-Applied: {n} | Skipped: {n} | Manual: {n}
+Applied: {n} | Declined: {n}
+
+Verification:
+- ruff check: {PASS|FAIL}
+- mypy --strict: {PASS|FAIL}
 ```
+
+**No "Manual" category.** All issues either fixed or declined by user.
 
 ## Flags
 
@@ -150,6 +173,7 @@ Applied: {n} | Skipped: {n} | Manual: {n}
 | `--hygiene` | Hygiene scope only |
 | `--best-practices` | Best practices scope only |
 | `--report` | No fixes |
-| `--fix` | Auto-fix safe (default) |
+| `--fix` | Auto-fix safe, ask for approval on rest (default) |
+| `--fix-all` | Fix everything with approval |
 | `--critical` | Security + tests only |
-| `--pre-release` | Security + quality + consistency + best practices |
+| `--pre-release` | All scopes, strict verification |
