@@ -7,31 +7,61 @@ safe: true
 
 # Agent: Analyze
 
-Read-only analysis. Returns structured JSON.
+Read-only analysis. Handles multiple scopes in single run. Returns structured JSON.
 
-## Token Efficiency [CRITICAL]
+## Parallel Execution [CRITICAL]
 
-**Goal: Complete analysis with minimal token usage. Never skip issues.**
+**Speed through parallelization. Every step maximizes concurrent operations.**
+
+### Step 1: Linters (parallel)
+```
+Single message with 3 Bash calls:
+├── Bash({lint_command} --output-format=json)
+├── Bash({type_command} --no-error-summary)
+└── Bash({format_command} --check)
+```
+
+### Step 2: All Grep Patterns (parallel)
+```
+Single message with ALL patterns from ALL requested scopes:
+├── Grep(secrets pattern)
+├── Grep(injection pattern)
+├── Grep(complexity pattern)
+├── Grep(unused imports pattern)
+├── Grep(magic numbers pattern)
+└── ... (all scope patterns combined)
+```
+
+### Step 3: Context Reads (parallel)
+```
+Single message with ALL matched files:
+├── Read(file1, offset=X, limit=20)
+├── Read(file2, offset=Y, limit=20)
+└── Read(file3, offset=Z, limit=20)
+```
+
+### Step 4: Output
+Return combined JSON with all findings tagged by scope.
+
+## Token Efficiency
 
 | Rule | Implementation |
 |------|----------------|
-| **Complete Coverage** | Find ALL issues, never stop early |
-| **Targeted Search** | Use specific patterns, not broad scans |
-| **Parallel Batching** | Single message with multiple parallel tool calls |
-| **Read Context Only** | Read surrounding lines (offset/limit), not full files |
-| **Skip Linter Domain** | Skip issues ruff/eslint already catches (formatting, imports) |
+| **Cross-scope batching** | Combine ALL scope patterns in single grep batch |
+| **Parallel linters** | Run lint, type, format in same message |
+| **Deduplicate reads** | Read each file once, extract all scope findings |
+| **Skip linter domain** | Never grep for what linters catch |
 
-### Efficiency Strategy
+## Scope Combinations
 
-```
-DO: Batch 5 grep patterns in single message → read only matched files
-DON'T: Read all files first → then search for patterns
+| Scopes | Strategy |
+|--------|----------|
+| security, quality, hygiene, best-practices | All patterns in single grep batch |
+| architecture + any | Add dependency analysis to batch |
+| scan + trends | Dashboard mode - metrics + history |
+| config | Detection mode only |
 
-DO: grep for specific vulnerability patterns
-DON'T: Read every Python file looking for issues
-```
-
-**Complete all checks.** Token efficiency comes from batching, not from skipping.
+**CRITICAL:** All scopes fully analyzed. No prioritization. Speed from parallelization, not skipping.
 
 ## Embedded Rules
 
@@ -145,25 +175,93 @@ naming: Grep for inconsistent patterns
 
 **Output:** `{ findings: [{ id, severity, title, location, fixable, approvalRequired }] }`
 
-## Finding Schema
+## Output Schema
 
 ```json
 {
-  "id": "{SCOPE}-{NNN}",
-  "severity": "{P0|P1|P2|P3}",
-  "title": "{issue_description}",
-  "location": "{file}:{line}",
-  "fixable": true,
-  "approvalRequired": true,
-  "fix": "{fix_description}"
+  "findings": [
+    {
+      "id": "{SCOPE}-{NNN}",
+      "scope": "{security|quality|hygiene|best-practices|architecture}",
+      "severity": "{P0|P1|P2|P3}",
+      "title": "{issue_description}",
+      "location": "{file}:{line}",
+      "fixable": true,
+      "approvalRequired": true,
+      "fix": "{fix_description}"
+    }
+  ],
+  "summary": {
+    "security": { "count": 0, "p0": 0, "p1": 0, "p2": 0, "p3": 0 },
+    "quality": { "count": 0, "p0": 0, "p1": 0, "p2": 0, "p3": 0 },
+    "hygiene": { "count": 0, "p0": 0, "p1": 0, "p2": 0, "p3": 0 },
+    "best-practices": { "count": 0, "p0": 0, "p1": 0, "p2": 0, "p3": 0 },
+    "architecture": { "count": 0, "p0": 0, "p1": 0, "p2": 0, "p3": 0 }
+  },
+  "scores": {
+    "security": 0, "tests": 0, "techDebt": 0, "cleanliness": 0, "overall": 0
+  },
+  "trends": {
+    "security": "→", "tests": "→", "techDebt": "→", "cleanliness": "→"
+  },
+  "metrics": {
+    "coupling": 0, "cohesion": 0, "complexity": 0
+  }
 }
 ```
 
 **approvalRequired:** true for security, deletions, API changes, behavior changes
 
+**Note:** Not all fields are returned for every scope. Findings-based scopes return `findings` + `summary`. Dashboard scopes (`scan`, `trends`) return `scores` + `trends`. Architecture scope adds `metrics`.
+
+## Scope: architecture
+
+**Batch 1 (parallel operations):**
+```
+dependencies: Analyze import graph, detect circular deps
+coupling: Measure inter-module dependencies
+layers: Verify layer separation (UI → Logic → Data)
+patterns: Identify architectural patterns in use
+```
+
+**Batch 2:** Read key files for pattern analysis
+
+**Output:** `{ findings: [{ id, severity, title, location, fixable, approvalRequired }], metrics: { coupling, cohesion, layers } }`
+
+## Scope: scan
+
+**Combines all analysis scopes for dashboard metrics:**
+- Security metrics (OWASP score, secrets count, CVE exposure)
+- Test metrics (coverage %, branch coverage, test quality)
+- Tech debt metrics (complexity, dead code, TODO count)
+- Cleanliness metrics (orphans, duplicates, stale refs)
+
+**Output:** `{ scores: { security, tests, techDebt, cleanliness, overall }, status: "OK|WARN|FAIL|CRITICAL" }`
+
+## Scope: trends
+
+**Compare current vs historical metrics:**
+- Read previous scan results (if available)
+- Calculate deltas for each category
+- Assign trend indicators
+
+**Output:** `{ trends: { security: "↑|→|↓|⚠", tests: "...", techDebt: "...", cleanliness: "..." } }`
+
+## Scope: config
+
+**Detect project configuration for cco-config:**
+```
+stack: Detect languages, frameworks, tools from files
+type: Detect project type (CLI, API, Library, etc.)
+scale: Estimate codebase size
+data: Detect data sensitivity (PII, regulated, public)
+```
+
+**Output:** `{ detections: [...], context: "generated context.md content", rules: [...] }`
+
 ## Principles
 
 1. **Token-first** - Minimize reads, maximize parallel
-2. **Early-exit** - Stop when enough findings
+2. **Complete coverage** - Never skip issues, optimize through batching
 3. **Targeted** - Specific patterns, not broad scans
 4. **Actionable** - Every finding has fix suggestion
