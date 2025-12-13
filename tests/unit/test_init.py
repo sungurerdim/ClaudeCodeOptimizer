@@ -22,11 +22,11 @@ class TestVersionInfo:
         parts = __version__.split(".")
         assert len(parts) >= 2  # At least major.minor
 
-    def test_version_is_1_1_0(self):
-        """Test __version__ is 1.1.0."""
+    def test_version_is_2_0_0(self):
+        """Test __version__ is 2.0.0."""
         from claudecodeoptimizer import __version__
 
-        assert __version__ == "1.1.0"
+        assert __version__ == "2.0.0"
 
     def test_author_exists(self):
         """Test __author__ is defined."""
