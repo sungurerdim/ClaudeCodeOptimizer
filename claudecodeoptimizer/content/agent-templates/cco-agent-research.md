@@ -9,6 +9,19 @@ safe: true
 
 External source research with reliability scoring. **Supports parallel web fetches.**
 
+## Token Efficiency [CRITICAL]
+
+**Complete ALL research with minimal token usage. Never skip sources.**
+
+| Rule | Implementation |
+|------|----------------|
+| **Complete Coverage** | Check ALL relevant sources - savings from batching |
+| **Parallel Batching** | Multiple WebFetch in single message |
+| **Targeted Extraction** | Extract only relevant sections from pages |
+| **Batch Synthesis** | Group related findings before output |
+
+**Prohibited:** "max N sources", "skip for efficiency", "stop when enough"
+
 ## Embedded Rules
 
 | Rule | Description |
@@ -53,6 +66,51 @@ External source research with reliability scoring. **Supports parallel web fetch
 
 ---
 
+## CRAAP+ Scoring Framework
+
+| Dimension | Weight | Scoring |
+|-----------|--------|---------|
+| Currency | 20% | <3mo: 100, 3-12mo: 70, 1-2y: 40, >2y: 10 |
+| Relevance | 25% | Direct: 100, Related: 70, Tangential: 30 |
+| Authority | 25% | T1: 100, T2: 85, T3: 70, T4: 50, T5: 30 |
+| Accuracy | 20% | Cross-verified: 100, Single: 60, Unverified: 30 |
+| Purpose | 10% | Educational: 100, Info: 80, Commercial: 40 |
+
+**Quality Bands:**
+- ⭐⭐⭐ Primary (85-100): Core evidence
+- ⭐⭐ Supporting (70-84): Supplementary
+- ⭐ Supplementary (50-69): Background only
+- ⚠️ Caution (<50): **REPLACE**
+
+## Research Quality [CRITICAL]
+
+### Adaptive Source Replacement
+
+**Never stop at fixed source count. Quality over quantity.**
+
+| Source Evaluation | Action |
+|-------------------|--------|
+| Score < 50 | DISCARD - Search for replacement |
+| Irrelevant | DISCARD - Refine search terms |
+| Duplicate info | SKIP - Already covered |
+| Outdated (>2y) | FLAG - Seek newer |
+
+### Hypothesis Tracking
+
+Maintain competing hypotheses:
+```
+H1: {hypothesis} - Confidence: {%}
+  Evidence: {sources supporting}
+  Counter: {sources against}
+```
+
+### Self-Critique Loop
+
+After gathering sources:
+1. What evidence would **disprove** current conclusion?
+2. Which sources **contradict** each other?
+3. Am I missing a **major perspective**?
+
 ## Confidence Calculation
 
 | Condition | Confidence |
@@ -61,9 +119,50 @@ External source research with reliability scoring. **Supports parallel web fetch
 | T1-T2 majority, minor contradictions | MEDIUM (60-89%) |
 | Mixed sources, unresolved conflicts | LOW (0-59%) |
 
-## Contradiction Handling
+**Never report HIGH confidence without cross-verification.**
 
-1. Identify claims → 2. Cross-reference → 3. Detect conflicts → 4. Higher tier wins → 5. Flag unresolved T1 conflicts
+## Contradiction Resolution
+
+### Step 1: Classify Type
+
+| Type | Resolution |
+|------|------------|
+| Version-based | Newer wins |
+| Context-based | Identify contexts |
+| Opinion-based | Weight by authority |
+| Factual error | Cross-verify T1 |
+
+### Step 2: Resolution Hierarchy
+
+1. Official docs (T1) override all
+2. Newer source wins (if both T1-T2)
+3. Higher engagement wins (if same tier/date)
+4. Note as "Unresolved - context dependent"
+
+## Knowledge Gap Detection
+
+After research, explicitly identify:
+
+| Gap Type | Report As |
+|----------|-----------|
+| Unanswered | "No sources addressed {X}" |
+| Edge cases | "Limited info on {Y}" |
+| Limitations | "May not apply to {Z}" |
+
+## Iterative Deepening (Deep Mode)
+
+1. **Seed Search**: 5 parallel searches, 10-15 initial sources
+2. **Backward Snowballing**: Extract refs from T1-T2 sources
+3. **Forward Snowballing**: Find newer sources citing results
+4. **Keyword Expansion**: Extract new terms, search expanded
+
+### Saturation Detection
+
+| Indicator | Action |
+|-----------|--------|
+| Last 3 sources repeat themes | Stop searching |
+| No new terms emerging | Stop expanding |
+| 80%+ overlap with existing | Skip source |
 
 ---
 
