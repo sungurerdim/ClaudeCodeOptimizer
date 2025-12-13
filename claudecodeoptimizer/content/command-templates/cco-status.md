@@ -18,14 +18,21 @@ test -f ./.claude/rules/cco/context.md && echo "OK" || echo "Run /cco-config fir
 
 If not found: Stop immediately with message to run /cco-config.
 
+## Token Efficiency [CRITICAL]
+
+| Rule | Implementation |
+|------|----------------|
+| **Single agent** | One analyze agent with scan + trends scopes |
+| **Linter-first** | Run linters for metrics |
+| **Batch calls** | Multiple tool calls in single message |
+
 ## Progress Tracking [CRITICAL]
 
 **Use TodoWrite to track progress.** Create todo list at start, update status for each step.
 
 ```
 TodoWrite([
-  { content: "Spawn parallel agents", status: "in_progress", activeForm: "Spawning parallel agents" },
-  { content: "Merge metrics", status: "pending", activeForm: "Merging metrics" },
+  { content: "Collect metrics", status: "in_progress", activeForm: "Collecting metrics" },
   { content: "Generate dashboard", status: "pending", activeForm: "Generating dashboard" }
 ])
 ```
@@ -36,25 +43,30 @@ TodoWrite([
 
 ```
 ┌─────────────────────────────────────────────────────────────────────────────┐
-│ Spawn parallel agents (single message with 2 Task calls)                     │
+│ 1. Spawn SINGLE analyze agent with scan + trends scopes                      │
 ├─────────────────────────────────────────────────────────────────────────────┤
-│ Task(cco-agent-analyze, scope=scan)   ──┬──→ Both run simultaneously        │
-│ Task(cco-agent-analyze, scope=trends) ──┘                                   │
+│ Task(cco-agent-analyze, scopes=[scan, trends])                               │
+│ → Agent runs linters first for metrics                                       │
+│ → Returns combined scan + trend data                                         │
 ├─────────────────────────────────────────────────────────────────────────────┤
-│ Merge metrics + trend data                                                   │
-├─────────────────────────────────────────────────────────────────────────────┤
-│ Generate dashboard output                                                    │
+│ 2. Generate dashboard output                                                 │
 └─────────────────────────────────────────────────────────────────────────────┘
 ```
 
-**CRITICAL:** Parallel agents MUST be spawned in a single message with multiple Task tool calls.
+**CRITICAL:** Use ONE analyze agent. Never spawn separate scan/trends agents.
 
-## Agent Scopes
+## Agent Usage
 
-| Agent | Scope | Returns |
-|-------|-------|---------|
-| cco-agent-analyze | `scan` | Security, tests, debt, cleanliness metrics |
-| cco-agent-analyze | `trends` | Historical deltas with ↑↓→⚠ indicators |
+| Agent | Input | Output |
+|-------|-------|--------|
+| cco-agent-analyze | `scopes: [scan, trends]` | Combined metrics + trends JSON |
+
+### Scope Coverage
+
+| Scope | Returns |
+|-------|---------|
+| `scan` | Security, tests, debt, cleanliness metrics |
+| `trends` | Historical deltas with ↑↓→⚠ indicators |
 
 ## Context Application
 

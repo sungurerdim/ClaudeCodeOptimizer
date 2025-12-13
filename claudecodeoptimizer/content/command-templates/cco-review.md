@@ -32,9 +32,7 @@ When called without flags:
 
 ```
 TodoWrite([
-  { content: "Spawn parallel agents", status: "in_progress", activeForm: "Spawning parallel agents" },
-  { content: "Merge results", status: "pending", activeForm: "Merging results" },
-  { content: "Assess foundation", status: "pending", activeForm: "Assessing foundation" },
+  { content: "Analyze codebase", status: "in_progress", activeForm: "Analyzing codebase" },
   { content: "Generate recommendations", status: "pending", activeForm: "Generating recommendations" },
   { content: "Apply changes", status: "pending", activeForm: "Applying changes" }
 ])
@@ -51,36 +49,48 @@ TodoWrite([
 | Testing & DX | Test coverage, Test quality, Developer experience, Errors | scan (focus=testing,dx) |
 | Best Practices | Tool usage, Parallel execution, Efficiency, Code patterns | best-practices |
 
+## Token Efficiency [CRITICAL]
+
+| Rule | Implementation |
+|------|----------------|
+| **Single agent** | One analyze agent with all scopes, one apply agent with all fixes |
+| **Linter-first** | Run linters before manual analysis |
+| **Batch calls** | Multiple tool calls in single message |
+
 ## Execution Flow
 
 ```
 ┌─────────────────────────────────────────────────────────────────────────────┐
-│ Spawn parallel agents (single message with 3 Task calls)                     │
+│ 1. Spawn SINGLE analyze agent with ALL selected scopes                       │
 ├─────────────────────────────────────────────────────────────────────────────┤
-│ Task(cco-agent-analyze, scope=architecture)   ──┐                           │
-│ Task(cco-agent-analyze, scope=scan)           ──┼──→ All run simultaneously │
-│ Task(cco-agent-analyze, scope=best-practices) ──┘                           │
+│ Task(cco-agent-analyze, scopes=[architecture, scan, best-practices])         │
+│ → Agent runs linters first, then targeted analysis per scope                 │
+│ → Returns combined findings with scope tags                                  │
 ├─────────────────────────────────────────────────────────────────────────────┤
-│ Merge agent results                                                          │
+│ 2. Foundation assessment (SOUND vs HAS ISSUES)                               │
 ├─────────────────────────────────────────────────────────────────────────────┤
-│ Foundation assessment (SOUND vs HAS ISSUES)                                  │
+│ 3. Generate 80/20 recommendations                                            │
 ├─────────────────────────────────────────────────────────────────────────────┤
-│ Generate 80/20 recommendations                                               │
-├─────────────────────────────────────────────────────────────────────────────┤
-│ Apply via Task(cco-agent-apply) or show report                               │
+│ 4. Apply via Task(cco-agent-apply) or show report                            │
 └─────────────────────────────────────────────────────────────────────────────┘
 ```
 
-**CRITICAL:** Parallel agents MUST be spawned in a single message with multiple Task tool calls.
+**CRITICAL:** Use ONE analyze agent and ONE apply agent. Never spawn per-scope agents.
 
-## Agent Scopes
+## Agent Usage
 
-| Agent | Scope | Returns |
-|-------|-------|---------|
-| cco-agent-analyze | `architecture` | Dependency graph, coupling metrics, patterns, layers |
-| cco-agent-analyze | `scan` | Issues with file:line, complexity violations |
-| cco-agent-analyze | `best-practices` | Tool usage, execution patterns, efficiency opportunities |
-| cco-agent-apply | `fix` | Implement approved recommendations |
+| Agent | Input | Output |
+|-------|-------|--------|
+| cco-agent-analyze | `scopes: [architecture, scan, ...]` | Combined findings JSON |
+| cco-agent-apply | `fixes: [finding1, ...]` | Results + verification |
+
+### Scope Coverage
+
+| Scope | Returns |
+|-------|---------|
+| `architecture` | Dependency graph, coupling metrics, patterns, layers |
+| `scan` | Issues with file:line, complexity violations |
+| `best-practices` | Tool usage, execution patterns, efficiency opportunities |
 
 ## Best Practices Scope
 
