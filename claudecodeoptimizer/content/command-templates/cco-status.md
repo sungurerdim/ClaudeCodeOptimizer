@@ -86,7 +86,7 @@ If not found: Stop immediately with message to run /cco-config.
 ├───────────────┬───────┬────────────┬───────┬─────────────────┤
 │ Category      │ Score │ Bar        │ Trend │ Status          │
 ├───────────────┼───────┼────────────┼───────┼─────────────────┤
-│ Security      │ {n}   │ ████░░░░   │ {t}   │ {status}        │
+│ Security      │ {n}   │ {bar}      │ {t}   │ {status}        │
 │ Tests         │ {n}   │ {bar}      │ {t}   │ {status}        │
 │ Tech Debt     │ {n}   │ {bar}      │ {t}   │ {status}        │
 │ Cleanliness   │ {n}   │ {bar}      │ {t}   │ {status}        │

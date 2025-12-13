@@ -22,7 +22,18 @@ When called without flags:
 
 | Question | Options | MultiSelect |
 |----------|---------|-------------|
-| Focus areas? | Foundation; Code Quality; Dependencies; Testing; DX; Best Practices; All (Recommended) | true |
+| Focus areas? | Architecture (Recommended); Code Quality (Recommended); Testing & DX; Best Practices | true |
+
+*MultiSelect: Kullanıcı birden fazla alan seçebilir. Tümü seçilirse = Full review.*
+
+### Option Mapping
+
+| Option | Covers | Agent Scope |
+|--------|--------|-------------|
+| Architecture | Foundation, Dependencies, Structure, Layers | architecture |
+| Code Quality | Issues, Complexity, Patterns, Consistency | scan (focus=quality) |
+| Testing & DX | Test coverage, Test quality, Developer experience, Errors | scan (focus=testing,dx) |
+| Best Practices | Tool usage, Parallel execution, Efficiency, Code patterns | best-practices |
 
 ## Execution Flow
 
@@ -139,7 +150,7 @@ Applied: {n} | Skipped: {n} | Manual: {n}
 | Flag | Effect |
 |------|--------|
 | `--quick` | Single-message analysis, smart defaults |
-| `--focus=X` | Focus: structure, deps, tests, security, dx, best-practices |
+| `--focus=X` | Focus: architecture, quality, testing, dx, best-practices |
 | `--best-practices` | Best practices focus only |
 | `--no-apply` | Report only |
 | `--matrix` | Show effort/impact matrix |

@@ -57,35 +57,44 @@ Read existing files only - no detection, no Bash commands for counting.
 
 ---
 
-## Step 2: User Questions
+## Step 2: User Questions (Multi-Step)
 
-**AskUserQuestion** (mandatory) with multiSelect for all options:
+### Question 1: Action Type
 
-```
-┌─ Configure ──────────────────────────────────────────────────────────┐
-│ ☐ Detection & Rules    (Recommended) Scan project, generate rules    │
-│ ☐ AI Performance       Manual override thinking/MCP tokens           │
-│ ☐ Statusline           Configure status bar                          │
-│ ☐ Permissions          Configure permission rules                    │
-├─ Remove ─────────────────────────────────────────────────────────────┤
-│ ☐ Remove Rules         Delete .claude/rules/cco/                     │
-│ ☐ Remove AI Perf       Reset to Claude Code defaults                 │
-│ ☐ Remove Statusline    Delete statusline.js                          │
-│ ☐ Remove Permissions   Remove permission rules                       │
-├─ Export ─────────────────────────────────────────────────────────────┤
-│ ☐ CLAUDE.md            Export rules for other Claude Code projects   │
-│ ☐ AGENTS.md            Export rules for other AI tools               │
-└──────────────────────────────────────────────────────────────────────┘
-```
+**AskUserQuestion** (mandatory):
 
-**Follow-up questions (only if selected):**
+| Question | Options | MultiSelect |
+|----------|---------|-------------|
+| What do you want to do? | Configure (Recommended); Remove; Export | false |
 
-| Selection | Question | Options |
-|-----------|----------|---------|
-| Statusline | Mode? | Full; Minimal |
-| AI Performance | Thinking? | Standard (5000); Medium (8000); High (10000) |
-| AI Performance | MCP Output? | Standard (25000); Large (35000); Very Large (50000) |
-| Permissions | Level? | Safe; Balanced; Permissive; Full |
+### Question 2: Scope Selection (based on Q1 answer)
+
+**If Configure selected:**
+
+| Question | Options | MultiSelect |
+|----------|---------|-------------|
+| What to configure? | Detection & Rules (Recommended); AI Performance; Statusline; Permissions | true |
+
+**If Remove selected:**
+
+| Question | Options | MultiSelect |
+|----------|---------|-------------|
+| What to remove? | Rules; AI Performance; Statusline; Permissions | true |
+
+**If Export selected:**
+
+| Question | Options | MultiSelect |
+|----------|---------|-------------|
+| Export format? | CLAUDE.md (Recommended); AGENTS.md; Both | false |
+
+### Question 3: Detail Options (only if applicable)
+
+| Selection | Question | Options | MultiSelect |
+|-----------|----------|---------|-------------|
+| Statusline | Mode? | Full (Recommended); Minimal | false |
+| AI Performance | Thinking tokens? | Standard 5K; Medium 8K (Recommended); High 10K | false |
+| AI Performance | MCP Output tokens? | Standard 25K; Large 35K (Recommended); Very Large 50K | false |
+| Permissions | Level? | Safe; Balanced (Recommended); Permissive; Full | false |
 
 ---
 

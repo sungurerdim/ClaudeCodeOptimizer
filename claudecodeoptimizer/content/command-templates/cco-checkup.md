@@ -39,11 +39,39 @@ When called without flags → **AskUserQuestion** (mandatory):
 
 | Question | Options | multiSelect |
 |----------|---------|-------------|
-| Which phases to run? | Health Dashboard; Quality Audit; Quick Cleanup; All (Recommended) | true |
+| Which phases to run? | Health Dashboard (Recommended); Quality Audit (Recommended); Quick Cleanup | true |
 
-**Default:** All (if user doesn't specify)
+*MultiSelect: Kullanıcı birden fazla faz seçebilir. Tümü seçilirse = Full checkup.*
 
 Flags `--health-only`, `--audit-only`, `--cleanup-only` skip this question.
+
+## Step Progress UX [CRITICAL]
+
+**Before starting ANY phase, display the full progress overview:**
+
+```
+┌─ CHECKUP PROGRESS ───────────────────────────────────────────┐
+│ Phase 1/3: Health Dashboard           ◉ In Progress          │
+│ Phase 2/3: Quality Audit              ○ Pending               │
+│ Phase 3/3: Quick Cleanup              ○ Pending               │
+└──────────────────────────────────────────────────────────────┘
+```
+
+**Before each phase transition, announce clearly:**
+```
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+▶ Phase 2/3: Quality Audit
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+```
+
+**Status symbols:**
+| Symbol | Meaning |
+|--------|---------|
+| ◉ | In Progress |
+| ✓ | Completed |
+| ✗ | Failed |
+| ○ | Pending |
+| ⊘ | Skipped |
 
 ## Flow
 
