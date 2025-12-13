@@ -141,8 +141,14 @@ def save_json_file(path: Path, data: dict[str, Any]) -> None:
     Args:
         path: Path to JSON file
         data: Dictionary to save
+
+    Raises:
+        RuntimeError: If file write fails
     """
-    path.write_text(json.dumps(data, indent=2) + "\n", encoding="utf-8")
+    try:
+        path.write_text(json.dumps(data, indent=2) + "\n", encoding="utf-8")
+    except OSError as e:
+        raise RuntimeError(f"Failed to write JSON to {path}: {e}") from e
 
 
 def get_rules_breakdown() -> dict[str, int]:
