@@ -10,7 +10,7 @@ allowed-tools: WebSearch(*), WebFetch(*), Read(*), Grep(*), Glob(*), Task(*), To
 
 End-to-end: Searches multiple sources, scores reliability, synthesizes findings.
 
-**Rules:** User Input | Source Reliability | Quick Mode | Task Tracking
+**Rules:** User Input | Source Reliability | Quick Mode | Progress Tracking
 
 ## Context
 
@@ -30,6 +30,22 @@ CCO context not found.
 Run /cco-config first to configure project context, then restart CLI.
 ```
 **Stop execution immediately.**
+
+## Progress Tracking [CRITICAL]
+
+**Use TodoWrite to track progress.** Create todo list at start, update status for each phase.
+
+```
+TodoWrite([
+  { content: "Search sources", status: "in_progress", activeForm: "Searching sources" },
+  { content: "Score reliability", status: "pending", activeForm: "Scoring reliability" },
+  { content: "Detect contradictions", status: "pending", activeForm: "Detecting contradictions" },
+  { content: "Synthesize findings", status: "pending", activeForm: "Synthesizing findings" },
+  { content: "Generate recommendation", status: "pending", activeForm: "Generating recommendation" }
+])
+```
+
+**Update status:** Mark `completed` immediately after each phase finishes, mark next `in_progress`.
 
 ## Context Application
 
@@ -85,186 +101,6 @@ When called without query → **AskUserQuestion** (mandatory):
 *Research topic: free text via AskUserQuestion.*
 
 Explicit flags skip questions.
-
-## Source Reliability Tiers
-
-| Tier | Score | Source Type | Examples |
-|------|-------|-------------|----------|
-| **T1** | 95-100 | Official Documentation | docs.python.org, react.dev, MDN, RFC |
-| **T2** | 85-94 | Official Repo/Changelog | GitHub releases, CHANGELOG.md, migration guides |
-| **T3** | 70-84 | Recognized Experts | Core contributors, library authors, RFCs |
-| **T4** | 55-69 | Community Curated | Stack Overflow (high votes), verified Medium |
-| **T5** | 40-54 | General Community | Dev.to, Hashnode, Reddit, blog posts |
-| **T6** | 0-39 | Unverified | AI-generated, outdated (>12mo), unknown source |
-
-### Dynamic Score Modifiers
-
-| Modifier | Condition | Effect |
-|----------|-----------|--------|
-| **Freshness** | 0-3 months | +10 |
-| **Freshness** | 3-12 months | 0 |
-| **Freshness** | >12 months | -15 |
-| **Engagement** | High stars/votes | +5 |
-| **Author** | Core maintainer | +10 |
-| **Cross-verified** | Confirmed by T1-T2 | +10 |
-| **Bias detected** | Vendor blog about own product | -5 |
-| **Bias detected** | Sponsored content | -15 |
-| **Conflict** | Competing product comparison | -10 |
-
-## Research Quality [CRITICAL]
-
-### Adaptive Source Replacement [CRITICAL]
-
-**Do NOT stop at a fixed source count.** Quality over quantity.
-
-| Source Evaluation | Action |
-|-------------------|--------|
-| Score < 50 | **DISCARD** - Search for replacement |
-| Irrelevant to query | **DISCARD** - Refine search terms |
-| Duplicate information | **SKIP** - Already covered |
-| Outdated (>2y for tech) | **FLAG** - Seek newer alternative |
-
-**Replacement Loop:**
-```
-FOR each source:
-  IF score < 50 OR irrelevant:
-    DISCARD source
-    SEARCH with refined keywords
-    CONTINUE until quality source found
-  END
-END
-
-GOAL: {N} HIGH-QUALITY sources, not just {N} sources
-```
-
-**Never declare "research complete" with insufficient quality sources.**
-
-### Hypothesis Tracking
-
-Maintain competing hypotheses throughout research:
-
-```
-H1: [Primary hypothesis] - Confidence: {%}
-  Evidence: {sources supporting}
-  Counter: {sources against}
-H2: [Alternative hypothesis] - Confidence: {%}
-  Evidence: {sources supporting}
-  Counter: {sources against}
-```
-
-### Self-Critique Loop
-
-After gathering sources, explicitly ask:
-1. What evidence would **disprove** my current conclusion?
-2. Which sources **contradict** each other and why?
-3. Am I missing a **major perspective** or source type?
-
-### Cross-Verification Rule
-
-| Confidence | Requirement |
-|------------|-------------|
-| HIGH (85%+) | Confirmed by 2+ T1-T2 sources |
-| MEDIUM (60-84%) | Confirmed by T1-T3, or single T1 |
-| LOW (<60%) | Single source or T4-T6 only |
-
-**Never report HIGH confidence without cross-verification.**
-
-## Iterative Deepening Strategy [DEEP MODE]
-
-### Round 1: Seed Search
-- Execute 5 parallel searches (existing pattern)
-- Collect initial 10-15 sources
-
-### Round 2: Backward Snowballing
-- Extract references from Round 1's T1-T2 sources
-- Identify "frequently cited" foundational sources
-- Add high-value references to source pool
-
-### Round 3: Forward Snowballing
-- Find newer sources citing Round 1 results
-- Discover recent developments and updates
-- Capture latest perspectives
-
-### Round 4: Keyword Expansion
-- Extract new terms from collected sources
-- Example: "React hooks" → "useEffect cleanup", "stale closure"
-- Search with expanded vocabulary
-
-### Saturation Detection
-
-| Indicator | Detection | Action |
-|-----------|-----------|--------|
-| **Thematic Saturation** | Last 3 sources repeat same themes | Stop searching |
-| **Code Saturation** | No new terms/concepts emerging | Stop expanding |
-| **Information Redundancy** | 80%+ overlap with existing | Skip source |
-
-**Stopping Criterion:**
-1. Collect minimum sources (Quick=5, Standard=10, Deep=15)
-2. After each new source: "Does this add new information?"
-3. Three consecutive "no" → Research saturated
-
-**Report:** "Saturation reached after {N} sources, {M} unique findings"
-
-## CRAAP+ Scoring Framework
-
-Multi-dimensional source evaluation:
-
-| Dimension | Weight | Scoring |
-|-----------|--------|---------|
-| **Currency** | 20% | <3mo: 100, 3-12mo: 70, 1-2y: 40, >2y: 10 |
-| **Relevance** | 25% | Direct: 100, Related: 70, Tangential: 30 |
-| **Authority** | 25% | T1: 100, T2: 85, T3: 70, T4: 50, T5: 30 |
-| **Accuracy** | 20% | Cross-verified: 100, Single: 60, Unverified: 30 |
-| **Purpose** | 10% | Educational: 100, Info: 80, Commercial: 40 |
-
-**Final Score = Σ(dimension × weight)**
-
-| Quality Band | Score | Usage |
-|--------------|-------|-------|
-| ⭐⭐⭐ Primary | 85-100 | Core evidence |
-| ⭐⭐ Supporting | 70-84 | Supplementary |
-| ⭐ Supplementary | 50-69 | Background only |
-| ⚠️ Caution | <50 | **REPLACE** |
-
-## Contradiction Resolution
-
-When contradictions detected:
-
-### Step 1: Classify Type
-
-| Type | Example | Resolution |
-|------|---------|------------|
-| **Version-based** | "Use X" vs "X deprecated" | Newer wins |
-| **Context-based** | "Always X" vs "Never X" | Identify contexts |
-| **Opinion-based** | Expert A vs B | Weight by authority |
-| **Factual error** | One source wrong | Cross-verify T1 |
-
-### Step 2: Resolution Hierarchy
-
-1. Official docs (T1) override all
-2. Newer source wins (if both T1-T2)
-3. Higher engagement wins (if same tier/date)
-4. Note as "Unresolved - context dependent"
-
-### Step 3: Report Format
-
-```
-⚠️ RESOLVED CONTRADICTION
-Claim A: "{claim}" ({source} {date})
-Claim B: "{claim}" ({source} {date})
-Resolution: {A|B} wins - {reason}
-Context: {when other might apply}
-```
-
-## Knowledge Gap Detection
-
-After research, explicitly identify:
-
-| Gap Type | Question | Report As |
-|----------|----------|-----------|
-| **Unanswered** | Which sub-questions remain? | "No sources addressed {X}" |
-| **Edge cases** | What scenarios not covered? | "Limited info on {Y}" |
-| **Limitations** | When might this not apply? | "May not apply to {Z}" |
 
 ## Flow
 
@@ -435,17 +271,7 @@ Auto-detected when query contains "error", "not working", "fix":
 
 ## Behavior Rules
 
-*Inherits: User Input rules from cco-tools.md*
-
-### Source Reliability
-
-| Tier | Sources | Weight |
-|------|---------|--------|
-| T1 | Official docs | 1.0 |
-| T2 | GitHub repos | 0.9 |
-| T3 | Stack Overflow | 0.7 |
-| T4 | Blog posts | 0.5 |
-| T5 | Forums | 0.3 |
+*Analysis/scoring rules in cco-agent-research. Orchestration rules here.*
 
 ### Quick Mode
 
@@ -454,8 +280,6 @@ When `--quick` flag:
 - **T1-T2 Only**: Skip lower tier sources
 - **Brief-Output**: Summary only
 
-### Task Tracking
+### Progress Tracking
 
-- **Create**: TODO list with research phases
-- **Status**: pending → in_progress → completed
-- **Accounting**: sources + findings = total
+*Use TodoWrite for research phases: search → analyze → synthesize.*
