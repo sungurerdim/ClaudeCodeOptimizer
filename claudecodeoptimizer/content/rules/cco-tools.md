@@ -323,27 +323,35 @@ Note: Make a todo list first, then process systematically
 - **Test Fixtures**: `fixtures/`, `testdata/`, `__snapshots__/`
 - **Examples**: `examples/`, `samples/`, `demo/`, `benchmarks/`
 
-## Task Tracking
+## Progress Tracking (TodoWrite)
 
-### Pre-Execution Requirement [REQUIRED]
+**All CCO commands use TodoWrite for progress visibility.** No custom step announcements.
 
-- **Create**: Create TODO list with ALL items
-- **Status**: Mark each as: pending -> in_progress -> completed
-- **No-Skip**: Never skip items - update status instead
-- **Single**: Exactly ONE item in_progress at a time
+### Requirement [CRITICAL]
 
-### Accounting Verification
+1. **Start**: Create todo list with ALL steps/phases at command start
+2. **Track**: Mark `in_progress` before starting each step
+3. **Update**: Mark `completed` immediately after each step finishes
+4. **Single**: Exactly ONE item `in_progress` at a time
 
-- **Total**: Final output MUST satisfy: `done + skip + fail = total`
+### Format
 
-### Progress Visibility
+```
+TodoWrite([
+  { content: "{step_name}", status: "in_progress", activeForm: "{step_name_ing}" },
+  { content: "{step_name}", status: "pending", activeForm: "{step_name_ing}" },
+  ...
+])
+```
 
-| Phase | Action |
-|-------|--------|
-| Start | List all items with pending status |
-| Process | Update to in_progress before working |
-| Complete | Mark completed immediately after |
-| Report | Show final accounting |
+### Rules
+
+| Rule | Description |
+|------|-------------|
+| **Immediate** | Update status immediately, not batched |
+| **No-Skip** | Never skip items - update status instead |
+| **activeForm** | Use present continuous (-ing form) |
+| **content** | Use imperative form |
 
 ## Strategy Evolution
 
