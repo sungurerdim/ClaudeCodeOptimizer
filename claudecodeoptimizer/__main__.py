@@ -21,7 +21,12 @@ Options:
 In Claude Code:
   /cco-config                    Configure project settings
   /cco-status                    View project health dashboard
-  /cco-optimize                  Run quality and hygiene checks
+  /cco-optimize                  Security and code quality analysis
+  /cco-review                    Architecture review
+  /cco-commit                    Atomic commits with quality gates
+  /cco-research                  Multi-source research
+  /cco-checkup                   Regular maintenance routine
+  /cco-preflight                 Pre-release workflow
 """
 
 

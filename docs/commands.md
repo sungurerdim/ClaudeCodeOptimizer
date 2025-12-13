@@ -22,7 +22,7 @@ Detailed documentation for all CCO slash commands.
 | Command | Purpose | Orchestrates |
 |---------|---------|--------------|
 | `/cco-preflight` | Pre-release workflow | optimize + review + verify |
-| `/cco-checkup` | Regular maintenance | status + optimize --all --fix |
+| `/cco-checkup` | Regular maintenance | status + optimize --fix |
 
 ---
 
@@ -94,7 +94,7 @@ Detailed documentation for all CCO slash commands.
 **Usage:**
 ```bash
 /cco-optimize                      # Interactive 2-tab selection
-/cco-optimize --all --fix          # Full optimization with auto-fix
+/cco-optimize --all --fix          # Full optimization with fix
 /cco-optimize --security           # Security focus only
 /cco-optimize --quality            # Quality focus only
 /cco-optimize --hygiene            # Hygiene focus (orphans, stale, dupes)
@@ -240,10 +240,11 @@ Detailed documentation for all CCO slash commands.
 
 **Phases:**
 1. **Pre-flight** - Git state, branch, version, changelog, dependencies
-2. **Quality Gate** - via `/cco-optimize --all`
+2. **Quality Gate** - via `/cco-optimize --pre-release --fix` (all scopes)
 3. **Architecture** - via `/cco-review --quick`
 4. **Final Verification** - Full test suite, build, lint, type check
-5. **Go/No-Go** - Blockers vs warnings summary, next steps
+5. **Changelog & Docs** - Release notes and documentation sync
+6. **Go/No-Go** - Blockers vs warnings summary, next steps
 
 **Classification:**
 - **Blockers** - Must fix before release (dirty git, invalid version, tests fail)
@@ -266,8 +267,8 @@ Detailed documentation for all CCO slash commands.
 
 **Phases:**
 1. **Health Dashboard** - via `/cco-status --brief`
-2. **Full Optimization** - via `/cco-optimize --all --fix`
-3. **Summary** - Changes since last checkup, auto-fixed vs manual needed
+2. **Quality Audit** - via `/cco-optimize --fix` (all scopes)
+3. **Summary** - Changes since last checkup, fixed vs declined
 
 **Scheduling:**
 | Frequency | Use Case |

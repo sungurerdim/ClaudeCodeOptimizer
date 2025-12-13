@@ -7,22 +7,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
-### Fixed
-- **Migration cleanup** - Added `cco-tools.md` to old rule file cleanup list
-- **Complete rule cleanup** - `remove_rules_dir()` now removes `tools.md` and `adaptive.md` from cco/ subdirectory
-- **Detection completeness** - `has_rules_dir()` checks for all possible CCO rule files
-- **Local CLAUDE.md cleanup** - `/cco-config` now removes ALL CCO markers (CCO_CONTEXT, CCO_STANDARDS, CCO_ADAPTIVE) for v1.0.0 compatibility
-
-### Changed
-- **README expanded** - Added comprehensive Claude Code Integration section with feature sources
-- **Best practices documentation** - Added Claude 4 Best Practices compliance table with official links
-- **Universal marker cleanup** - cco-config uses pattern matching for all `CCO_*_START/END` markers
-
-## [1.1.0] - 2025-12-08
+## [1.1.0] - 2025-12-13
 
 ### Added
-- **Meta command `/cco-preflight`** - Pre-release workflow orchestrating audit, optimize, review with go/no-go summary
-- **Meta command `/cco-checkup`** - Regular maintenance routine with health dashboard, smart audit, and quick cleanup
+- **Meta command `/cco-preflight`** - Pre-release workflow with quality gate, architecture review, changelog & docs sync, and go/no-go summary
+- **Meta command `/cco-checkup`** - Regular maintenance routine with health dashboard and full quality audit
 - **New command `/cco-research`** - Multi-source research with reliability scoring, contradiction detection, consensus mapping, bias detection, and AI-synthesized recommendations
 - **New command `/cco-commit`** - Secrets detection, large file warnings, breaking change detection, and staged/unstaged handling with Modify/Merge/Split/Edit options
 - **New agent `cco-agent-research`** - External source research with tiered reliability scoring (T1-T6), contradiction detection, and AI synthesis
@@ -46,6 +35,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - **Export content selection** - User chooses which sections to include in export
 - **Rule exemplars** - Correct/incorrect examples for Question Formatting to improve AI consistency
 - **Verification checkpoints** - Pre-output verification rules for consistent behavior
+- **Scope Reference table** - Complete scope documentation in `docs/agents.md` with purpose and coverage
+- **best-practices scope** - Added to all relevant commands (optimize, review) for pattern adherence checks
 
 ### Changed
 - **Standards → Rules restructure** - Renamed "standards" to "rules" throughout the project
@@ -66,6 +57,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - **Documentation expanded** - Added `docs/commands.md`, `docs/agents.md`, `docs/rules.md`
 - **CCO-Specific rules** - Comprehensive workflow mechanisms (Command Flow, Fix Workflow, Approval Flow, Question Formatting, Output Formatting, Safety Classification, Impact Preview, Priority Levels)
 - **CCO marker pattern** - Universal backward-compatible pattern for clean upgrades from any version
+- **Command consolidation** - `/cco-checkup` Phase 2 now runs all scopes (security, quality, hygiene, best-practices) in single pass, Phase 3 removed
+- **Command consolidation** - `/cco-preflight` Phase 2 now runs all scopes in single pass, Phase 3 (Cleanliness) merged, phases renumbered (7→6)
+- **Flag consistency** - Standardized on `--fix` flag across all commands (replaced `--auto-fix`)
+- **Help text expanded** - `__main__.py` now lists all 8 commands with descriptions
+- **Agent Selection table** - Updated with correct scope assignments and orchestration notes
 
 ### Fixed
 - Rule counts consistent across all documentation (70 base + 110 tools + 120 adaptive pool)
@@ -77,6 +73,14 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Connection Pool duplication removed
 - AI performance settings cleaned from permission files
 - Quick-install Python version and timeouts corrected
+- **Migration cleanup** - Added `cco-tools.md` to old rule file cleanup list
+- **Complete rule cleanup** - `remove_rules_dir()` now removes `tools.md` and `adaptive.md` from cco/ subdirectory
+- **Detection completeness** - `has_rules_dir()` checks for all possible CCO rule files
+- **Local CLAUDE.md cleanup** - `/cco-config` now removes ALL CCO markers for v1.0.0 compatibility
+- **Related Commands duplicates** - Removed duplicate entries in cco-checkup.md and cco-preflight.md
+- **v1.0.0 CHANGELOG** - Corrected command list to match actual release
+- **README expanded** - Added comprehensive Claude Code Integration section with feature sources
+- **Universal marker cleanup** - cco-config uses pattern matching for all `CCO_*_START/END` markers
 
 ### Removed
 - AI-Patterns Detection category from `/cco-optimize` (Claude already handles this)
@@ -88,11 +92,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## [1.0.0] - 2025-12-02
 
 ### Added
-- 7 slash commands: `/cco-config`, `/cco-status`, `/cco-optimize`, `/cco-review`, `/cco-optimize`, `/cco-optimize`, `/cco-optimize`
+- 8 slash commands: `/cco-tune`, `/cco-health`, `/cco-audit`, `/cco-review`, `/cco-optimize`, `/cco-refactor`, `/cco-generate`, `/cco-commit`
 - 3 specialized agents: Detect, Scan, Action
 - Standards system with Universal, AI-Specific, and Conditional categories
 - Risk-based approval flow with AskUserQuestion
-- Project-aware tuning via `/cco-config`
+- Project-aware tuning via `/cco-tune`
 - Doc-code mismatch detection with SSOT resolution
 - AI context optimization principles
 - Full alignment with Claude 4 Best Practices
