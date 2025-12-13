@@ -348,11 +348,11 @@ function formatStatusline(input, git) {
   const repoLeft = `${ICON.repo} ${c(repoDisplay, 'green')}`;
   const repoRight = releaseDisplay || '';
 
-  // Row 2: Version/Model (left) + User/Size (right) - matches minimal layout
+  // Row 2: User/Size (left) + Version/Model (right)
   const versionStr = ccVersion ? c(`v${ccVersion}`, 'yellow') : c('v?', 'gray');
-  const leftContent = `${versionStr} ${c('·', 'gray')} ${c(modelDisplay, 'magenta')}`;
   const sizeDisplay = projectSize ? c(`${projectSize.num} ${projectSize.unit}`, 'blue') : c('?', 'gray');
-  const rightContent = `${ICON.user} ${c(username, 'cyan')} ${c('·', 'gray')} ${sizeDisplay}`;
+  const leftContent = `${ICON.user} ${c(username, 'cyan')} ${c('·', 'gray')} ${sizeDisplay}`;
+  const rightContent = `${versionStr} ${c('·', 'gray')} ${c(modelDisplay, 'magenta')}`;
   const leftContentMin = leftContent;
   const rightContentMin = rightContent;
 
