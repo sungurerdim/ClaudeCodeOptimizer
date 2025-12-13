@@ -358,18 +358,32 @@ def _collect_removal_items() -> RemovalItems:
     }
 
 
-def _display_removal_plan(items: RemovalItems) -> None:
-    """Display what will be removed."""
+def _print_removal_header() -> None:
+    """Print header for removal plan."""
     print("\n" + SEPARATOR)
     print("CCO Uninstall")
     print(SEPARATOR)
     print(f"\nLocation: {CLAUDE_DIR}\n")
 
+
+def _display_package_info(items: RemovalItems) -> None:
+    """Display package information.
+
+    Args:
+        items: Removal items containing package method
+    """
     if items["method"]:
         print("Package:")
         print(f"  claudecodeoptimizer ({items['method']})")
         print()
 
+
+def _display_file_categories(items: RemovalItems) -> None:
+    """Display file categories (commands, agents, CLAUDE.md sections).
+
+    Args:
+        items: Removal items containing files and rules
+    """
     categories = [
         ("Commands", items["files"]["commands"]),
         ("Agents", items["files"]["agents"]),
@@ -382,6 +396,13 @@ def _display_removal_plan(items: RemovalItems) -> None:
                 print(f"  - {item}")
             print()
 
+
+def _display_rules_directories(items: RemovalItems) -> None:
+    """Display rules directories to be removed.
+
+    Args:
+        items: Removal items containing rules_dir and rules_dir_old flags
+    """
     if items["rules_dir"] or items["rules_dir_old"]:
         print("Rules directory:")
         if items["rules_dir"]:
@@ -390,6 +411,13 @@ def _display_removal_plan(items: RemovalItems) -> None:
             print("  - ~/.claude/rules/ root (v1.x old files)")
         print()
 
+
+def _display_settings(items: RemovalItems) -> None:
+    """Display settings to be removed.
+
+    Args:
+        items: Removal items containing statusline and permissions flags
+    """
     if items["statusline"] or items["permissions"]:
         print("Settings (~/.claude/):")
         if items["statusline"]:
@@ -399,47 +427,102 @@ def _display_removal_plan(items: RemovalItems) -> None:
             print("  - settings.json (permissions)")
         print()
 
+
+def _display_removal_plan(items: RemovalItems) -> None:
+    """Display what will be removed."""
+    _print_removal_header()
+    _display_package_info(items)
+    _display_file_categories(items)
+    _display_rules_directories(items)
+    _display_settings(items)
+
     print(SEPARATOR)
     print(f"Total: {items['total']} items to remove")
     print(SEPARATOR)
     print()
 
 
+def _remove_package(items: RemovalItems) -> None:
+    """Remove package via package manager.
+
+    Args:
+        items: Removal items containing method
+    """
+    method = items["method"]
+    if method is None:
+        return
+
+    print("Removing package...")
+    if uninstall_package(method):
+        print("  Package removed")
+    else:
+        print("  Failed to remove package")
+    print()
+
+
+def _remove_files(items: RemovalItems) -> None:
+    """Remove CCO files (commands and agents).
+
+    Args:
+        items: Removal items (unused but kept for consistency)
+    """
+    print("Removing files...")
+    remove_cco_files()
+    print()
+
+
+def _remove_claude_md(items: RemovalItems) -> None:
+    """Remove CLAUDE.md sections.
+
+    Args:
+        items: Removal items (unused but kept for consistency)
+    """
+    print("Removing CLAUDE.md sections...")
+    remove_claude_md_rules()
+    print()
+
+
+def _remove_rules_directories(items: RemovalItems) -> None:
+    """Remove rules directories.
+
+    Args:
+        items: Removal items containing rules_dir flags
+    """
+    print("Removing rules directory...")
+    if items["rules_dir"]:
+        remove_rules_dir()
+    if items["rules_dir_old"]:
+        remove_rules_dir_old()
+    print()
+
+
+def _remove_settings(items: RemovalItems) -> None:
+    """Remove settings (statusline and permissions).
+
+    Args:
+        items: Removal items containing statusline and permissions flags
+    """
+    print("Removing settings...")
+    if items["statusline"]:
+        remove_statusline()
+    if items["permissions"]:
+        remove_permissions(SETTINGS_FILE)
+    print()
+
+
 def _execute_removal(items: RemovalItems) -> None:
     """Execute the removal of all items."""
-    if items["method"]:
-        print("Removing package...")
-        if uninstall_package(items["method"]):
-            print("  Package removed")
-        else:
-            print("  Failed to remove package")
-        print()
+    operations = [
+        (_remove_package, items["method"]),
+        (_remove_files, items["total_files"]),
+        (_remove_claude_md, items["rules"]),
+        (_remove_rules_directories, items["rules_dir"] or items["rules_dir_old"]),
+        (_remove_settings, items["statusline"] or items["permissions"]),
+    ]
 
-    if items["total_files"]:
-        print("Removing files...")
-        remove_cco_files()
-        print()
-
-    if items["rules"]:
-        print("Removing CLAUDE.md sections...")
-        remove_claude_md_rules()
-        print()
-
-    if items["rules_dir"] or items["rules_dir_old"]:
-        print("Removing rules directory...")
-        if items["rules_dir"]:
-            remove_rules_dir()
-        if items["rules_dir_old"]:
-            remove_rules_dir_old()
-        print()
-
-    if items["statusline"] or items["permissions"]:
-        print("Removing settings...")
-        if items["statusline"]:
-            remove_statusline()
-        if items["permissions"]:
-            remove_permissions(SETTINGS_FILE)
-        print()
+    for operation, condition in operations:
+        if condition:
+            operation(items)
 
     print(SEPARATOR)
     print("CCO removed successfully.")

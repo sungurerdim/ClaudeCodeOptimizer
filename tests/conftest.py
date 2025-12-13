@@ -14,12 +14,6 @@ def project_root() -> Path:
 
 
 @pytest.fixture
-def content_dir(project_root: Path) -> Path:
-    """Return the content directory."""
-    return project_root / "content"
-
-
-@pytest.fixture
 def temp_dir():
     """Create a temporary directory for testing"""
     temp_path = Path(tempfile.mkdtemp())
