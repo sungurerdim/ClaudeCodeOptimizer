@@ -8,13 +8,13 @@ allowed-tools: Read(*), Write(*), Edit(*), Bash(cco-install:*), Task(*), TodoWri
 
 **Project tuning** - Lightweight orchestrator using sub-agents for heavy work.
 
-## Context
+## Dynamic Context (Pre-collected)
 
 - Context exists: !`test -f ./.claude/rules/cco/context.md && echo "1" || echo "0"`
 - Existing rules: !`ls .claude/rules/cco/*.md 2>/dev/null | xargs -I{} basename {} | tr '\n' ' ' || echo "None"`
 - Settings exists: !`test -f ./.claude/settings.json && echo "1" || echo "0"`
 
-**Pre-collected status enables quick display in Step 1 without additional reads.**
+**DO NOT re-run these commands. Use the pre-collected values above.**
 
 ## Architecture
 

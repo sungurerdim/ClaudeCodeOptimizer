@@ -12,13 +12,14 @@ Meta command for regular project maintenance (weekly recommended).
 
 **Rules:** User Input | Orchestration | Progress Tracking
 
-## Context
+## Dynamic Context (Pre-collected)
 
 - Context check: !`test -f ./.claude/rules/cco/context.md && echo "1" || echo "0"`
 - Last health tag: !`git tag -l "health-*" --sort=-creatordate | head -1 || echo "None"`
 - Git status: !`git status --short`
 - Recent activity: !`git log --oneline -5`
 
+**DO NOT re-run these commands. Use the pre-collected values above.**
 **Static context (Applicable) is read from ./CLAUDE.md already in context.**
 
 ## Context Requirement [CRITICAL]

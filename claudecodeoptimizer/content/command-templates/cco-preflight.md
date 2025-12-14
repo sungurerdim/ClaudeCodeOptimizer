@@ -12,7 +12,7 @@ Meta command that orchestrates other CCO commands for release preparation.
 
 **Rules:** User Input | Git Safety | Go/No-Go Decision | Progress Tracking
 
-## Context
+## Dynamic Context (Pre-collected)
 
 - Context check: !`test -f ./.claude/rules/cco/context.md && echo "1" || echo "0"`
 - Version: !`grep -E "version|__version__|VERSION" pyproject.toml package.json setup.py 2>/dev/null | head -1`
@@ -21,6 +21,7 @@ Meta command that orchestrates other CCO commands for release preparation.
 - Git status: !`git status --short`
 - Last tag: !`git describe --tags --abbrev=0 2>/dev/null || echo "No tags"`
 
+**DO NOT re-run these commands. Use the pre-collected values above.**
 **Static context (Applicable, Type) is read from ./CLAUDE.md already in context.**
 
 ## Context Requirement [CRITICAL]
@@ -181,9 +182,9 @@ Includes:
 ┌─ ARCHITECTURE ───────────────────────────────────────────────┐
 │ → Running: /cco-review --quick                               │
 ├──────────────────────────────────────────────────────────────┤
-│ Gaps Found    │ 1     │ Minor: undocumented export          │
-│ DX Score      │ Good  │ Clear CLI, good errors              │
-│ Working Well  │ 5     │ Clean separation, good tests        │
+│ Gaps Found    │ {n}   │ {gap_details}                       │
+│ DX Score      │ {s}   │ {dx_details}                        │
+│ Working Well  │ {n}   │ {strengths}                         │
 └──────────────────────────────────────────────────────────────┘
 ```
 
