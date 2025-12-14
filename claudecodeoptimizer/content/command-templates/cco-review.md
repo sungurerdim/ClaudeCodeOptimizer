@@ -8,11 +8,12 @@ allowed-tools: Read(*), Grep(*), Glob(*), Bash(git:*), Edit(*), Task(*), TodoWri
 
 **Strategic Review** - Fresh perspective diagnosis + pragmatic optimization via parallel agents.
 
-## Context
+## Dynamic Context (Pre-collected)
 
 - Context check: !`test -f ./.claude/rules/cco/context.md && echo "1" || echo "0"`
 - Git status: !`git status --short`
 
+**DO NOT re-run these commands. Use the pre-collected values above.**
 **Static context (Maturity, Breaking, Priority, Scale) is read from ./CLAUDE.md already in context.**
 
 ## Context Requirement [CRITICAL]

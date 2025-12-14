@@ -12,11 +12,12 @@ End-to-end: Searches multiple sources, scores reliability, synthesizes findings.
 
 **Rules:** User Input | Source Reliability | Quick Mode | Progress Tracking
 
-## Context
+## Dynamic Context (Pre-collected)
 
 - Context check: !`test -f ./.claude/rules/cco/context.md && echo "1" || echo "0"`
 - Current date: !`date +%Y-%m-%d`
 
+**DO NOT re-run these commands. Use the pre-collected values above.**
 **Static context (Stack, Type, Priority, Data) is read from ./CLAUDE.md already in context.**
 
 ## Context Requirement [CRITICAL]

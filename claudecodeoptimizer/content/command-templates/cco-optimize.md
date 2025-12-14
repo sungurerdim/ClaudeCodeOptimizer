@@ -16,11 +16,12 @@ allowed-tools: Read(*), Grep(*), Glob(*), Edit(*), Bash(git:*), Bash(ruff:*), Ba
 
 If an issue can be fixed by editing code, it MUST be fixed (with approval if needed).
 
-## Context
+## Dynamic Context (Pre-collected)
 
 - Context check: !`test -f ./.claude/rules/cco/context.md && echo "1" || echo "0"`
 - Git status: !`git status --short`
 
+**DO NOT re-run these commands. Use the pre-collected values above.**
 **Static context (Tools, Stack, Maturity) is read from ./CLAUDE.md already in context.**
 
 ## Context Requirement [CRITICAL]

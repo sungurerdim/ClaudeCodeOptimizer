@@ -10,11 +10,12 @@ allowed-tools: Read(*), Grep(*), Glob(*), Bash(git:*), Task(*), TodoWrite
 
 Read-only metrics collection and visualization.
 
-## Context
+## Dynamic Context (Pre-collected)
 
 - Context check: !`test -f ./.claude/rules/cco/context.md && echo "1" || echo "0"`
 - Last health tag: !`git tag -l "health-*" --sort=-creatordate | head -1 || echo "None"`
 
+**DO NOT re-run these commands. Use the pre-collected values above.**
 **Static context (Stack, Type, Scale) is read from ./CLAUDE.md already in context.**
 
 ## Context Requirement [CRITICAL]
