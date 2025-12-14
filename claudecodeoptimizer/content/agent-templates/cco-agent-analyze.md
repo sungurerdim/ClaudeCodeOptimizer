@@ -172,10 +172,12 @@ Compare current vs historical: Read previous → Calculate deltas → Assign ind
 language: Python, TypeScript, Go, Rust, etc.
 framework: React, FastAPI, Express, etc.
 type: CLI, API, Library, Web App, Mobile
-scale: File count, LOC estimate
-team: Solo, Small (2-5), Large (5+)
+scale: Small (100+), Medium (1K+), Large (10K+) - user count
+team: Solo (1), Small (2-5), Large (6+)
 testing: pytest, jest, go test, etc.
 deployment: Docker, K8s, serverless, etc.
+data: Public, Internal, PII, Regulated
+compliance: None, SOC2, HIPAA, GDPR, PCI
 ```
 
 **Mark detections:** `[from docs]` for documentation-sourced findings
