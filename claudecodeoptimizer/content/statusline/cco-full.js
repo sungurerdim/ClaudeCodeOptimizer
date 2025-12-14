@@ -117,7 +117,8 @@ function formatContextUsage(contextWindow) {
 // ============================================================================
 function getGitInfo() {
   // Single command for: branch, upstream, ahead/behind, stash, all file changes
-  const statusV2 = execCmd('git status --porcelain=v2 -b --show-stash 2>/dev/null');
+  // Note: execCmd already uses stdio: 'ignore' for stderr (cross-platform)
+  const statusV2 = execCmd('git status --porcelain=v2 -b --show-stash');
   if (!statusV2) return null;
 
   let branch = null, upstream = null, ahead = 0, behind = 0;
@@ -174,7 +175,7 @@ function getGitInfo() {
   const repoName = gitRoot ? path.basename(gitRoot) : null;
 
   // Release tag (1 additional call)
-  const releaseTag = execCmd('git describe --tags --abbrev=0 2>/dev/null') || null;
+  const releaseTag = execCmd('git describe --tags --abbrev=0') || null;
 
   const hasStaged = sMod > 0 || sAdd > 0 || sDel > 0 || sRen > 0;
 
