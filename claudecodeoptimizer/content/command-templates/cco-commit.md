@@ -14,9 +14,9 @@ allowed-tools: Bash(git:*), Bash(ruff:*), Bash(npm:*), Bash(pytest:*), Read(*), 
 - Git status: !`git status --short`
 - Branch: !`git branch --show-current`
 - Recent commits: !`git log --oneline -5`
-- Stash list: !`git stash list --oneline 2>/dev/null | head -3`
-- Line counts: !`git diff --shortstat 2>/dev/null`
-- Staged lines: !`git diff --cached --shortstat 2>/dev/null`
+- Stash list: !`git stash list --oneline | head -3`
+- Line counts: !`git diff --shortstat`
+- Staged lines: !`git diff --cached --shortstat`
 
 **Static context (Tools, Conventions) from ./CLAUDE.md already in context.**
 
