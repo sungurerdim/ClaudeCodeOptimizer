@@ -9,86 +9,40 @@ safe: true
 
 External source research with reliability scoring. Returns structured JSON.
 
-## Parallel Execution [CRITICAL]
+## Execution [CRITICAL]
 
-**Speed through parallelization. Every step maximizes concurrent operations.**
+**Maximize parallelization at every step.**
 
-### Step 1: Search (parallel)
-```
-Single message with diverse search strategies:
-├── WebSearch("{topic} official docs")
-├── WebSearch("{topic} github")
-├── WebSearch("{topic} tutorial")
-└── WebSearch("{topic} {alternative_keywords}")
-```
+| Step | Action | Tool Calls |
+|------|--------|------------|
+| 1. Search | Diverse strategies in single message | `WebSearch(docs)`, `WebSearch(github)`, `WebSearch(tutorial)` |
+| 2. Fetch | All high-tier URLs in single message | `WebFetch(url, "extract key claims")` × N |
+| 3. Score | Tier assignment, contradiction detection | Process results |
+| 4. Output | Structured JSON | Return findings |
 
-### Step 2: Fetch Top Results (parallel)
-```
-Single message with all high-tier URLs:
-├── WebFetch(url1, "extract key claims")
-├── WebFetch(url2, "extract key claims")
-├── WebFetch(url3, "extract key claims")
-└── WebFetch(url4, "extract key claims")
-```
-
-### Step 3: Score & Synthesize
-Tier assignment, contradiction detection, recommendation generation.
-
-### Step 4: Output
-Return structured JSON with findings, scores, recommendation.
-
-## Token Efficiency
-
-| Rule | Implementation |
-|------|----------------|
-| **Parallel searches** | All search variants in single message |
-| **Parallel fetches** | All URLs in single message |
-| **Early saturation** | Stop when themes repeat 3+ times |
-| **Complete coverage** | Check all relevant sources |
-
-## Embedded Rules
-
-| Rule | Description |
-|------|-------------|
-| Judgment | Uncertain → lower confidence; Require evidence, not inference |
-| Bias | Detect and penalize promotional/sponsored content |
-| Trust | False positives erode trust faster than missed issues |
+**Rules:** Parallel all independent calls │ Stop when themes repeat 3× │ Uncertain → lower confidence │ Penalize promotional content
 
 ## Scope Parameter
 
-| Scope | Returns | Parallel Strategy |
-|-------|---------|-------------------|
-| `search` | Ranked sources | Batch 1: Multiple WebSearch; Batch 2: Parallel WebFetch top results |
-| `analyze` | Deep analysis | Parallel WebFetch for all sources |
-| `synthesize` | Recommendation | Process only (no new fetches) |
+| Scope | Returns | Strategy |
+|-------|---------|----------|
+| `search` | Ranked sources | WebSearch batch → WebFetch top results |
+| `analyze` | Deep analysis | Parallel WebFetch all sources |
+| `synthesize` | Recommendation | Process only (no fetches) |
 | `full` | All combined | Search → Analyze → Synthesize |
 
----
-
-## Source Tiers
+## Source Tiers & Modifiers
 
 | Tier | Score | Type |
 |------|-------|------|
-| T1 | 95-100 | Official docs (MDN, RFC, vendor docs) |
-| T2 | 85-94 | Official repo (GitHub releases, CHANGELOG) |
+| T1 | 95-100 | Official docs (MDN, RFC, vendor) |
+| T2 | 85-94 | Official repo (releases, CHANGELOG) |
 | T3 | 70-84 | Recognized experts (core contributors) |
 | T4 | 55-69 | Community curated (SO high votes) |
 | T5 | 40-54 | General community (blogs, Reddit) |
 | T6 | 0-39 | Unverified (AI-gen, >12mo, unknown) |
 
-## Score Modifiers
-
-| Modifier | Effect |
-|----------|--------|
-| Fresh (0-3mo) | +10 |
-| Dated (>12mo) | -15 |
-| High engagement | +5 |
-| Core maintainer | +10 |
-| Cross-verified by T1-T2 | +10 |
-| Vendor self-promotion | -5 |
-| Sponsored content | -15 |
-
----
+**Modifiers:** Fresh 0-3mo +10 │ Dated >12mo -15 │ High engagement +5 │ Core maintainer +10 │ Cross-verified T1-T2 +10 │ Vendor self-promo -5 │ Sponsored -15
 
 ## CRAAP+ Scoring Framework
 
@@ -100,28 +54,20 @@ Return structured JSON with findings, scores, recommendation.
 | Accuracy | 20% | Cross-verified: 100, Single: 60, Unverified: 30 |
 | Purpose | 10% | Educational: 100, Info: 80, Commercial: 40 |
 
-**Quality Bands:**
-- ⭐⭐⭐ Primary (85-100): Core evidence
-- ⭐⭐ Supporting (70-84): Supplementary
-- ⭐ Supplementary (50-69): Background only
-- ⚠️ Caution (<50): **REPLACE**
+**Quality Bands:** ⭐⭐⭐ Primary (85-100) │ ⭐⭐ Supporting (70-84) │ ⭐ Background (50-69) │ ⚠️ Caution (<50): **REPLACE**
 
 ## Research Quality [CRITICAL]
 
 ### Adaptive Source Replacement
 
-**Never stop at fixed source count. Quality over quantity.**
-
-| Source Evaluation | Action |
-|-------------------|--------|
-| Score < 50 | DISCARD - Search for replacement |
-| Irrelevant | DISCARD - Refine search terms |
-| Duplicate info | SKIP - Already covered |
-| Outdated (>2y) | FLAG - Seek newer |
+| Evaluation | Action |
+|------------|--------|
+| Score < 50 | DISCARD - Search replacement |
+| Irrelevant | DISCARD - Refine search |
+| Duplicate | SKIP - Already covered |
+| Outdated >2y | FLAG - Seek newer |
 
 ### Hypothesis Tracking
-
-Maintain competing hypotheses:
 ```
 H1: {hypothesis} - Confidence: {%}
   Evidence: {sources supporting}
@@ -129,25 +75,21 @@ H1: {hypothesis} - Confidence: {%}
 ```
 
 ### Self-Critique Loop
-
-After gathering sources:
 1. What evidence would **disprove** current conclusion?
 2. Which sources **contradict** each other?
 3. Am I missing a **major perspective**?
 
-## Confidence Calculation
+## Confidence & Contradictions
 
 | Condition | Confidence |
 |-----------|------------|
-| T1 sources agree, no contradictions | HIGH (90-100%) |
+| T1 agree, no contradictions | HIGH (90-100%) |
 | T1-T2 majority, minor contradictions | MEDIUM (60-89%) |
 | Mixed sources, unresolved conflicts | LOW (0-59%) |
 
-**Never report HIGH confidence without cross-verification.**
+**Never report HIGH without cross-verification.**
 
-## Contradiction Resolution
-
-### Step 1: Classify Type
+### Contradiction Resolution
 
 | Type | Resolution |
 |------|------------|
@@ -156,19 +98,12 @@ After gathering sources:
 | Opinion-based | Weight by authority |
 | Factual error | Cross-verify T1 |
 
-### Step 2: Resolution Hierarchy
+**Hierarchy:** T1 overrides all → Newer wins (same tier) → Higher engagement → Note unresolved
 
-1. Official docs (T1) override all
-2. Newer source wins (if both T1-T2)
-3. Higher engagement wins (if same tier/date)
-4. Note as "Unresolved - context dependent"
+### Knowledge Gaps
 
-## Knowledge Gap Detection
-
-After research, explicitly identify:
-
-| Gap Type | Report As |
-|----------|-----------|
+| Gap | Report As |
+|-----|-----------|
 | Unanswered | "No sources addressed {X}" |
 | Edge cases | "Limited info on {Y}" |
 | Limitations | "May not apply to {Z}" |
@@ -180,13 +115,7 @@ After research, explicitly identify:
 3. **Forward Snowballing**: Find newer sources citing results
 4. **Keyword Expansion**: Extract new terms, search expanded
 
-### Saturation Detection
-
-| Indicator | Action |
-|-----------|--------|
-| Last 3 sources repeat themes | Stop searching |
-| No new terms emerging | Stop expanding |
-| 80%+ overlap with existing | Skip source |
+**Saturation:** Stop when last 3 sources repeat themes │ No new terms │ 80%+ overlap
 
 ---
 
@@ -229,16 +158,11 @@ After research, explicitly identify:
 
 | Rule | Implementation |
 |------|----------------|
-| **Reference-Large** | Store full page content by URL, return summaries |
-| **Summarize-First** | Extract key claims before full content analysis |
-| **Chunk-Processing** | For long pages, process sections sequentially |
-| **Cache-Artifacts** | Never re-fetch same URL within session |
+| Reference-Large | Store by URL, return summaries |
+| Summarize-First | Extract key claims before full analysis |
+| Chunk-Processing | Long pages → process sections sequentially |
+| Cache-Artifacts | Never re-fetch same URL within session |
 
 ## Principles
 
-1. **Tier-aware** - Score and rank by reliability
-2. **Bias-conscious** - Penalize promotional content
-3. **Freshness-first** - Outdated info marked
-4. **Contradiction-aware** - Never hide conflicts
-5. **Confidence-honest** - Low when uncertain
-6. **Source-traceable** - Every claim linked
+Tier-aware │ Bias-conscious │ Freshness-first │ Contradiction-aware │ Confidence-honest │ Source-traceable

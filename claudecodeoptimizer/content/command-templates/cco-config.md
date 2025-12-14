@@ -8,38 +8,26 @@ allowed-tools: Read(*), Write(*), Edit(*), Bash(cco-install:*), Task(*), TodoWri
 
 **Project tuning** - Lightweight orchestrator using sub-agents for heavy work.
 
-## Dynamic Context (Pre-collected)
+## Context
 
 - Context exists: !`test -f ./.claude/rules/cco/context.md && echo "1" || echo "0"`
 - Existing rules: !`ls .claude/rules/cco/*.md 2>/dev/null | xargs -I{} basename {} | tr '\n' ' ' || echo "None"`
 - Settings exists: !`test -f ./.claude/settings.json && echo "1" || echo "0"`
 
-**DO NOT re-run these commands. Use the pre-collected values above.**
-
 ## Architecture
 
-```
-┌─────────────────────────────────────────────────────────────────────────────┐
-│ /cco-config (this command) - Orchestrator                                   │
-├─────────────────────────────────────────────────────────────────────────────┤
-│ 1. Quick Status    → Read existing files only (no detection)                │
-│ 2. User Questions  → AskUserQuestion for all choices                        │
-│ 3. Detection       → Task(cco-agent-analyze, scope=config) - returns JSON   │
-│ 4. Review          → Show detection results, ask approval                   │
-│ 5. Apply           → Task(cco-agent-apply) OR cco-install --local           │
-│ 6. Report          → Summary of changes                                     │
-└─────────────────────────────────────────────────────────────────────────────┘
-```
+| Step | Action |
+|------|--------|
+| 1. Status | Read existing files only |
+| 2. Questions | AskUserQuestion for choices |
+| 3. Detection | `Task(cco-agent-analyze, scope=config)` → JSON |
+| 4. Review | Show results, ask approval |
+| 5. Apply | `Task(cco-agent-apply)` OR `cco-install --local` |
+| 6. Report | Summary of changes |
 
-**Benefits:**
-- Main session: ~3K tokens (vs ~15K before)
-- Detection runs in isolated agent
-- Parallel execution within agent
-- Faster, less context pollution
+**Benefits:** ~3K tokens (vs ~15K) │ Isolated detection │ Parallel within agent
 
 ## Progress Tracking [CRITICAL]
-
-**Use TodoWrite to track progress.** Create todo list at start, update status for each step.
 
 ```
 TodoWrite([
@@ -52,258 +40,110 @@ TodoWrite([
 ])
 ```
 
-**Update status:** Mark `completed` immediately after each step finishes, mark next `in_progress`.
-
 ---
 
 ## Step 1: Quick Status
 
-Read existing files only - no detection, no Bash commands for counting.
-
-**Read in parallel:**
-- `.claude/rules/cco/context.md` → Extract context values
-- `.claude/settings.json` → Extract env values, statusline config
-- List `.claude/rules/cco/*.md` files
-
-**Display:**
-```
-╔══════════════════════════════════════════════════════════════════════════════╗
-║                           CCO PROJECT STATUS                                 ║
-╠══════════════════════════════════════════════════════════════════════════════╣
-║ PROJECT: {basename of cwd}                                                   ║
-╠══════════════════════════════════════════════════════════════════════════════╣
-║ Context:     {Configured|Not configured}                                     ║
-║ AI Perf:     {tokens|Not configured}                                         ║
-║ Statusline:  {cco-full|cco-minimal|Broken|None}                              ║
-║ Permissions: {level|None}                                                    ║
-║ Rules:       {list of .md files or "None"}                                   ║
-╚══════════════════════════════════════════════════════════════════════════════╝
-```
+Read existing files in parallel: context.md, settings.json, rules list
+Display: Project, Context, AI Perf, Statusline, Permissions, Rules
 
 ---
 
-## Step 2: User Questions (Multi-Step)
+## Step 2: User Questions
 
-### Question 1: Action Type
-
-**AskUserQuestion** (mandatory):
+### Q1: Action Type
 
 | Question | Options | MultiSelect |
 |----------|---------|-------------|
-| What do you want to do? | Configure (Recommended); Remove; Export | false |
+| What to do? | Configure (Recommended); Remove; Export | false |
 
-### Question 2: Scope Selection (based on Q1 answer)
+### Q2: Scope (based on Q1)
 
-**If Configure selected:**
+| Action | Options |
+|--------|---------|
+| Configure | Detection & Rules (Recommended); AI Performance; Statusline; Permissions |
+| Remove | Rules; AI Performance; Statusline; Permissions |
+| Export | AGENTS.md (Recommended); CLAUDE.md |
 
-| Question | Options | MultiSelect |
-|----------|---------|-------------|
-| What to configure? | Detection & Rules (Recommended); AI Performance; Statusline; Permissions | true |
+### Q3: Details (if applicable)
 
-**If Remove selected:**
-
-| Question | Options | MultiSelect |
-|----------|---------|-------------|
-| What to remove? | Rules; AI Performance; Statusline; Permissions | true |
-
-**If Export selected:**
-
-| Question | Options | MultiSelect |
-|----------|---------|-------------|
-| Export format? | AGENTS.md (Recommended); CLAUDE.md | false |
-
-### Question 3: Detail Options (only if applicable)
-
-| Selection | Question | Options | MultiSelect |
-|-----------|----------|---------|-------------|
-| Statusline | Mode? | cco-full (Recommended); cco-minimal | false |
-| AI Performance | Thinking tokens? | Standard 5K; Medium 8K (Recommended); High 10K | false |
-| AI Performance | MCP Output tokens? | Standard 25K; Large 35K (Recommended); Very Large 50K | false |
-| Permissions | Level? | Safe; Balanced (Recommended); Permissive; Full | false |
+| Selection | Question | Options |
+|-----------|----------|---------|
+| Statusline | Mode? | cco-full (Recommended); cco-minimal |
+| AI Perf | Thinking? | 5K; 8K (Recommended); 10K |
+| AI Perf | MCP Output? | 25K; 35K (Recommended); 50K |
+| Permissions | Level? | Safe; Balanced (Recommended); Permissive; Full |
 
 ---
 
-## Step 3: Detection (if selected)
-
-**Spawn analyze agent with config scope:**
+## Step 3: Detection
 
 ```
-Task(cco-agent-analyze, prompt="scope=config - Detect project configuration")
+Task(cco-agent-analyze, prompt="scope=config")
+→ Returns: status, detections, context, aiPerf, rules, guidelines
 ```
-
-Agent returns JSON with:
-- `status`: Current state
-- `detections`: All detected elements with confidence
-- `context`: Generated context.md content
-- `aiPerf`: Calculated AI performance values
-- `rules`: Generated rule files with content
-- `guidelines`: Generated guidelines
 
 ---
 
 ## Step 4: Review
 
-Show detection results table from agent output:
-
-```
-╔══════════════════════════════════════════════════════════════════════════════╗
-║                           DETECTION RESULTS                                  ║
-╠══════════════════════════════════════════════════════════════════════════════╣
-║  # │ Element       │ Value              │ Conf │ Source              │ Action║
-╠════╪═══════════════╪════════════════════╪══════╪═════════════════════╪═══════╣
-║  1 │ Purpose       │ {from agent}       │ ●●●  │ {source}            │ ...   ║
-║ .. │ ...           │ ...                │ ...  │ ...                 │ ...   ║
-╚══════════════════════════════════════════════════════════════════════════════╝
-
-Rules: {list from agent.rules[].file}
-AI Performance: {agent.aiPerf.thinking}/{agent.aiPerf.mcpOutput} tokens
-```
-
-**Approval → AskUserQuestion** (mandatory):
+Show detection results table, then:
 
 | Question | Options | MultiSelect |
 |----------|---------|-------------|
-| Apply this configuration? | Accept; Edit; Cancel | false |
+| Apply configuration? | Accept; Edit; Cancel | false |
 
 ---
 
 ## Step 5: Apply
 
-### Rules & Context
-Write files from agent output:
-- `.claude/rules/cco/context.md` ← agent.context
-- `.claude/rules/cco/{file}.md` ← agent.rules[]
-
-### Statusline & Permissions
-Use cco-install CLI (reads from package templates):
-```bash
-cco-install --local . --statusline {mode} --permissions {level}
-```
-
-### AI Performance
-Write to `.claude/settings.json`:
-```json
-{
-  "env": {
-    "MAX_THINKING_TOKENS": "{value}",
-    "MAX_MCP_OUTPUT_TOKENS": "{value}",
-    "DISABLE_PROMPT_CACHING": "0"
-  }
-}
-```
-
-### Remove Operations
-- Remove Rules: `rm -rf .claude/rules/cco/`
-- Remove AI Perf: Remove `env` from settings.json
-- Remove Statusline: `rm .claude/cco-statusline.js`, remove `statusLine` from settings.json
-- Remove Permissions: Remove `permissions` from settings.json
+| Target | Method |
+|--------|--------|
+| Rules & Context | Write files from agent output |
+| Statusline & Permissions | `cco-install --local . --statusline {mode} --permissions {level}` |
+| AI Performance | Write to `.claude/settings.json` env section |
+| Remove | Delete files or remove keys from settings.json |
 
 ---
 
 ## Step 6: Report
 
-```
-╔══════════════════════════════════════════════════════════════════════════════╗
-║                           CCO TUNE COMPLETE                                  ║
-╠══════════════════════════════════════════════════════════════════════════════╣
-║ CHANGES                                                                      ║
-├──────────────┬───────────────────┬───────────────────┬───────────────────────┤
-║ Setting      │ Before            │ After             │ Reason                ║
-├──────────────┼───────────────────┼───────────────────┼───────────────────────┤
-║ Context      │ {before}          │ {after}           │ {reason}              ║
-║ AI Perf      │ {before}          │ {after}           │ complexity: {score}   ║
-║ Statusline   │ {before}          │ {after}           │ {reason}              ║
-║ Permissions  │ {before}          │ {after}           │ {reason}              ║
-╠══════════════════════════════════════════════════════════════════════════════╣
-║ FILES WRITTEN                                                                ║
-├──────────────────────────────────────────────────────────────────────────────┤
-║ {list of written files}                                                      ║
-╠══════════════════════════════════════════════════════════════════════════════╣
-║ Restart Claude Code for changes to take effect                               ║
-╚══════════════════════════════════════════════════════════════════════════════╝
-```
+Shows: Changes (before/after), Files written, Restart reminder
 
 ---
 
 ## Export Mode
 
-Export reads from existing `.claude/rules/cco/` files (no agent needed).
+No agent needed. Read global + project rules.
 
-### Source Files
+| Format | Target | Rules | Output |
+|--------|--------|-------|--------|
+| AGENTS.md | Universal (Codex, Cursor, etc.) | Core + AI | ./AGENTS.md |
+| CLAUDE.md | Claude Code only | Core + AI + Tools | ./CLAUDE.export.md |
 
-1. Read global rules: `~/.claude/rules/cco/core.md`, `~/.claude/rules/cco/ai.md`
-2. Read project rules: `.claude/rules/cco/*.md` (context.md, language/*.md, etc.)
-
-### Format Differences
-
-| Aspect | AGENTS.md | CLAUDE.md |
-|--------|-----------|-----------|
-| **Target** | Universal (Codex, Cursor, Copilot, Cline, etc.) | Claude Code only |
-| **Rules** | Core + AI only | Core + AI + Tools |
-| **Output** | `./AGENTS.md` | `./CLAUDE.export.md` |
-
-### Content Filtering (AGENTS.md only)
-
-**Remove Claude-specific references:**
-
-| Category | Examples | Action |
-|----------|----------|--------|
-| Tool names | `Read`, `Write`, `Edit`, `Bash`, `Task`, `TodoWrite`, `AskUserQuestion` | Remove lines/sections |
-| Paths | `~/.claude/`, `.claude/` | Generalize or remove |
-| Product refs | "Claude Code", "Claude" | Remove or generalize to "AI agent" |
-| CCO-specific | `cco-*`, `/cco-*` | Remove |
-
-**Keep model-agnostic content:**
-- General principles (DRY, Fail-Fast, Type-Safe)
-- Behavior rules (Read-First, Plan-Before-Act)
-- Output formats (JSON, tables, error format)
-- Workflow patterns (Conventions, Reference-Integrity)
-
-### Export Process
-
-```
-1. Read source files
-2. If AGENTS.md → apply content filtering
-3. Combine: header + core + ai + (tools if CLAUDE.md) + context
-4. Write to output file (no markers)
-```
-
-### Output Header
-
-```markdown
-# Project Rules
-*Exported from CCO - {date}*
-*Format: {AGENTS.md|CLAUDE.md}*
-```
+**AGENTS.md filtering:** Remove tool names, paths, product refs, CCO-specific. Keep principles, behavior rules, formats.
 
 ---
 
-## Rules
+## Reference
 
-1. **Agent for detection** - Never run detection commands directly, use Task(cco-agent-detect)
-2. **cco-install for templates** - Statusline/permissions via CLI, not generated
-3. **Parallel reads** - Read existing files in parallel for status
-4. **Minimal orchestration** - This command is coordinator only
-5. **JSON handoff** - Agent returns structured data, command displays it
-
----
-
-## Reference: Question Formatting
+### Question Formatting
 
 | Rule | Description |
 |------|-------------|
-| `[current]` | Matches existing config (priority 1) |
-| `[detected]` | Auto-detected, not in config (priority 2) |
-| `(Recommended)` | Best practice, max 1/question (priority 3) |
-| Precedence | If detected AND current → show `[current]` only |
+| `[current]` | Matches existing (priority 1) |
+| `[detected]` | Auto-detected (priority 2) |
+| `(Recommended)` | Best practice (priority 3) |
 
----
+### Permissions Levels
 
-## Reference: Permissions Levels
+| Level | Auto-approved |
+|-------|---------------|
+| Safe | Read-only |
+| Balanced | Read + lint/test |
+| Permissive | Most operations |
+| Full | All (Solo + Public only) |
 
-| Level | Description |
-|-------|-------------|
-| Safe | Read-only auto-approved |
-| Balanced | Read + lint/test auto-approved |
-| Permissive | Most operations auto-approved |
-| Full | All operations auto-approved (Solo + Public only) |
+## Rules
+
+Agent for detection │ cco-install for templates │ Parallel reads │ Minimal orchestration │ JSON handoff
