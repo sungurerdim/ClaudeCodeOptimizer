@@ -83,6 +83,34 @@ Task(cco-agent-analyze, prompt="scope=config")
 → Returns: status, detections, context, aiPerf, rules, guidelines
 ```
 
+### Detection Priority
+
+| Priority | Source | Confidence | Examples |
+|----------|--------|------------|----------|
+| 1 | Manifest files | HIGH | pyproject.toml, package.json, Cargo.toml, go.mod |
+| 2 | Code files | HIGH | *.py, *.ts, *.go, *.rs |
+| 3 | Config files | MEDIUM | .eslintrc, tsconfig.json, Dockerfile |
+| 4 | Documentation | LOW | See below |
+
+### Documentation Fallback
+
+When code/config files are missing or sparse, scan documentation for project info:
+
+| Source | Look for |
+|--------|----------|
+| README.md, README.rst | Stack, language, framework, project type |
+| CONTRIBUTING.md | Dev setup, tools, workflow |
+| docs/, documentation/ | Architecture, API, design decisions |
+| ARCHITECTURE.md, DESIGN.md | System design, patterns |
+| Manifest descriptions | pyproject.toml [project.description], package.json description |
+| Code comments | Module docstrings, header comments |
+
+**Extraction targets:** Language, framework, project type (CLI/API/web/library), team size hints, testing approach, deployment hints.
+
+**Mark as:** `[from docs]` in results to indicate lower confidence.
+
+**Always confirm:** Documentation-based detections require user confirmation.
+
 ---
 
 ## Step 4: Review
