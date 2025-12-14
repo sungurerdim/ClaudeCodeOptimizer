@@ -146,13 +146,41 @@ Compare current vs historical: Read previous → Calculate deltas → Assign ind
 **Output:** `{ trends: { security: "↑|→|↓|⚠", ... } }`
 
 ### config
+
+**Detection Priority Order [CRITICAL]:**
+
+| Priority | Source | Confidence | Action |
+|----------|--------|------------|--------|
+| 1 | Manifest files | HIGH | pyproject.toml, package.json, Cargo.toml, go.mod |
+| 2 | Code files | HIGH | *.py, *.ts, *.go, *.rs (sample 5-10 files) |
+| 3 | Config files | MEDIUM | .eslintrc, tsconfig.json, Dockerfile, .github/ |
+| 4 | Documentation | LOW | See fallback below |
+
+**Documentation Fallback (when code/config sparse or missing):**
+
+| Source | Extract |
+|--------|---------|
+| README.md, README.rst, README.txt | Language, framework, project type |
+| CONTRIBUTING.md, DEVELOPMENT.md | Dev tools, workflow, test approach |
+| docs/, documentation/, wiki/ | Architecture, patterns, decisions |
+| ARCHITECTURE.md, DESIGN.md | System design, components |
+| Manifest descriptions | [project.description], package.json description |
+| Module docstrings | __init__.py, main.py header comments |
+
+**Extraction targets:**
 ```
-stack: Languages, frameworks, tools
-type: CLI, API, Library, etc.
-scale: Codebase size estimate
-data: PII, regulated, public
+language: Python, TypeScript, Go, Rust, etc.
+framework: React, FastAPI, Express, etc.
+type: CLI, API, Library, Web App, Mobile
+scale: File count, LOC estimate
+team: Solo, Small (2-5), Large (5+)
+testing: pytest, jest, go test, etc.
+deployment: Docker, K8s, serverless, etc.
 ```
-**Output:** `{ detections, context, rules }`
+
+**Mark detections:** `[from docs]` for documentation-sourced findings
+
+**Output:** `{ detections, context, rules, sources: [{file, confidence}] }`
 
 ## Artifact Handling
 
