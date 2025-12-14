@@ -203,7 +203,7 @@ Present different categories in SEPARATE batches:
 - **Syntax**: Use `!` backtick for real-time context
 - **Git-Status**: `` `git status --short` ``
 - **Branch**: `` `git branch --show-current` ``
-- **CCO-Context**: `` `head -30 .claude/rules/cco/context.md 2>/dev/null` ``
+- **CCO-Context**: `` `test -f .claude/rules/cco/context.md && head -30 .claude/rules/cco/context.md` ``
 
 ### When to Use
 

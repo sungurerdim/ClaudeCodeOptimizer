@@ -15,11 +15,11 @@ Meta command that orchestrates other CCO commands for release preparation.
 ## Context
 
 - Context check: !`test -f ./.claude/rules/cco/context.md && echo "1" || echo "0"`
-- Version: !`grep -E "version|__version__|VERSION" pyproject.toml package.json setup.py 2>/dev/null | head -1`
+- Version: !`for f in pyproject.toml package.json setup.py; do test -f "$f" && grep -E "version|__version__|VERSION" "$f"; done | head -1`
 - Branch: !`git branch --show-current`
-- Changelog: !`head -20 CHANGELOG.md 2>/dev/null || echo "No CHANGELOG.md"`
+- Changelog: !`test -f CHANGELOG.md && head -20 CHANGELOG.md || echo "No CHANGELOG.md"`
 - Git status: !`git status --short`
-- Last tag: !`git describe --tags --abbrev=0 2>/dev/null || echo "No tags"`
+- Last tag: !`git describe --tags --abbrev=0 || echo "No tags"`
 
 **Static context (Applicable, Type) from ./CLAUDE.md already in context.**
 

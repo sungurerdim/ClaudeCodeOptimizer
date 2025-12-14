@@ -11,7 +11,7 @@ allowed-tools: Read(*), Write(*), Edit(*), Bash(cco-install:*), Task(*), TodoWri
 ## Context
 
 - Context exists: !`test -f ./.claude/rules/cco/context.md && echo "1" || echo "0"`
-- Existing rules: !`ls .claude/rules/cco/*.md 2>/dev/null | xargs -I{} basename {} | tr '\n' ' ' || echo "None"`
+- Existing rules: !`test -d .claude/rules/cco && ls .claude/rules/cco/*.md | xargs -I{} basename {} | tr '\n' ' ' | grep . || echo "None"`
 - Settings exists: !`test -f ./.claude/settings.json && echo "1" || echo "0"`
 
 ## Architecture
