@@ -8,39 +8,31 @@ allowed-tools: Read(*), Grep(*), Glob(*), Bash(git:*), Edit(*), Task(*), TodoWri
 
 **Strategic Review** - Fresh perspective diagnosis + pragmatic optimization via parallel agents.
 
-## Dynamic Context (Pre-collected)
+## Context
 
 - Context check: !`test -f ./.claude/rules/cco/context.md && echo "1" || echo "0"`
 - Git status: !`git status --short`
 
-**DO NOT re-run these commands. Use the pre-collected values above.**
-**Static context (Maturity, Breaking, Priority, Scale) is read from ./CLAUDE.md already in context.**
+**Static context (Maturity, Breaking, Priority, Scale) from ./CLAUDE.md already in context.**
 
 ## Context Requirement [CRITICAL]
 
-**This command requires CCO context in ./.claude/rules/cco/context.md.**
-
-If context check returns "0":
-```
-CCO context not found.
-
-Run /cco-config first to configure project context, then restart CLI.
-```
-**Stop execution immediately.**
+If context check returns "0": `CCO context not found. Run /cco-config first.` **Stop immediately.**
 
 ## User Input
-
-When called without flags:
 
 | Question | Options | MultiSelect |
 |----------|---------|-------------|
 | Focus areas? | Architecture (Recommended); Code Quality (Recommended); Testing & DX; Best Practices | true |
 
-*MultiSelect: Kullanıcı birden fazla alan seçebilir. Tümü seçilirse = Full review.*
+| Option | Agent Scope |
+|--------|-------------|
+| Architecture | architecture |
+| Code Quality | scan (focus=quality) |
+| Testing & DX | scan (focus=testing,dx) |
+| Best Practices | best-practices |
 
 ## Progress Tracking [CRITICAL]
-
-**Use TodoWrite to track progress.** Create todo list at start, update status for each step.
 
 ```
 TodoWrite([
@@ -50,124 +42,63 @@ TodoWrite([
 ])
 ```
 
-**Update status:** Mark `completed` immediately after each step finishes, mark next `in_progress`.
-
-### Option Mapping
-
-| Option | Covers | Agent Scope |
-|--------|--------|-------------|
-| Architecture | Foundation, Dependencies, Structure, Layers | architecture |
-| Code Quality | Issues, Complexity, Patterns, Consistency | scan (focus=quality) |
-| Testing & DX | Test coverage, Test quality, Developer experience, Errors | scan (focus=testing,dx) |
-| Best Practices | Tool usage, Parallel execution, Efficiency, Code patterns | best-practices |
-
 ## Token Efficiency [CRITICAL]
 
-| Rule | Implementation |
-|------|----------------|
-| **Single agent** | One analyze agent with all scopes, one apply agent with all fixes |
-| **Linter-first** | Run linters before manual analysis |
-| **Batch calls** | Multiple tool calls in single message |
+Single analyze agent │ Single apply agent │ Linter-first │ Batch calls
 
 ## Execution Flow
 
-```
-┌─────────────────────────────────────────────────────────────────────────────┐
-│ 1. Spawn SINGLE analyze agent with ALL selected scopes                       │
-├─────────────────────────────────────────────────────────────────────────────┤
-│ Task(cco-agent-analyze, scopes=[architecture, scan, best-practices])         │
-│ → Agent runs linters first, then targeted analysis per scope                 │
-│ → Returns combined findings with scope tags                                  │
-├─────────────────────────────────────────────────────────────────────────────┤
-│ 2. Foundation assessment (SOUND vs HAS ISSUES)                               │
-├─────────────────────────────────────────────────────────────────────────────┤
-│ 3. Generate 80/20 recommendations                                            │
-├─────────────────────────────────────────────────────────────────────────────┤
-│ 4. Apply via Task(cco-agent-apply) or show report                            │
-└─────────────────────────────────────────────────────────────────────────────┘
-```
+| Step | Action |
+|------|--------|
+| 1. Analyze | `Task(cco-agent-analyze, scopes=[...])` → Combined findings |
+| 2. Foundation | Assess SOUND vs HAS ISSUES |
+| 3. Recommendations | Generate 80/20 filtered list |
+| 4. Apply | `Task(cco-agent-apply)` or report only |
 
-**CRITICAL:** Use ONE analyze agent and ONE apply agent. Never spawn per-scope agents.
+**CRITICAL:** ONE analyze agent, ONE apply agent. Never per-scope.
 
-## Agent Usage
-
-| Agent | Input | Output |
-|-------|-------|--------|
-| cco-agent-analyze | `scopes: [architecture, scan, ...]` | Combined findings JSON |
-| cco-agent-apply | `fixes: [finding1, ...]` | Results + verification |
-
-### Scope Coverage
+## Scope Coverage
 
 | Scope | Returns |
 |-------|---------|
-| `architecture` | Dependency graph, coupling metrics, patterns, layers |
-| `scan` | Issues with file:line, complexity violations |
-| `best-practices` | Tool usage, execution patterns, efficiency opportunities |
+| `architecture` | Dependency graph, coupling, patterns, layers |
+| `scan` | Issues with file:line, complexity |
+| `best-practices` | Tool usage, execution patterns, efficiency |
 
 ## Best Practices Scope
 
-Reviews optimal patterns for both code and AI tool usage:
-
 | Category | Reviews |
 |----------|---------|
-| **Execution Efficiency** | Parallel vs sequential, batching, background tasks |
-| **Tool Selection** | Right tool for task, subagent usage, single-message multi-tool |
-| **Code Patterns** | Async handling, error boundaries, state management |
-| **Architecture** | Layer separation, dependency direction, abstraction levels |
-
-**Recommends:**
-- Converting sequential tool calls to parallel where independent
-- Using Task tool for complex multi-step searches
-- Extracting repeated patterns into shared utilities
-- Optimizing hot paths and removing unnecessary operations
+| Execution | Parallel vs sequential, batching |
+| Tool Selection | Right tool, subagent usage |
+| Code Patterns | Async, error boundaries, state |
+| Architecture | Layer separation, dependencies |
 
 ## Context Application
 
 | Field | Effect |
 |-------|--------|
-| Maturity | Legacy → safe incremental; Greenfield → allow restructuring |
-| Breaking | Never → flag interface changes as blockers |
-| Priority | Speed → quick wins only; Quality → comprehensive |
-| Scale | 10K+ → performance focus; <100 → simplicity focus |
-| Data | PII/Regulated → security review mandatory |
+| Maturity | Legacy → safe; Greenfield → restructure |
+| Breaking | Never → flag as blockers |
+| Priority | Speed → quick wins; Quality → comprehensive |
+| Scale | 10K+ → performance; <100 → simplicity |
+| Data | PII/Regulated → security mandatory |
 
 ## Foundation Assessment
 
-From agent results, classify:
-
-| Status | Criteria | Action |
-|--------|----------|--------|
-| SOUND | Architecture fits purpose, patterns appropriate | Optimize within structure |
-| HAS ISSUES | Wrong pattern, missing abstraction, inverted deps | Targeted fixes (not rewrites) |
+| Status | Action |
+|--------|--------|
+| SOUND | Optimize within structure |
+| HAS ISSUES | Targeted fixes (not rewrites) |
 
 ## Prioritization (80/20)
 
 | Priority | Criteria |
 |----------|----------|
-| Do Now | High impact, low effort, low risk |
+| Do Now | High impact, low effort |
 | Plan | High impact, medium effort |
-| Consider | Medium impact, needs discussion |
+| Consider | Medium impact |
 | Backlog | Low impact or high effort |
-
-**Reject:** Recommendations where effort > impact.
-
-## Output
-
-```
-┌─ REVIEW SUMMARY ─────────────────────────────────────────────┐
-│ Project: {name} | Type: {type} | Foundation: {SOUND|ISSUES}  │
-├──────────────────────────────────────────────────────────────┤
-│ Coupling: {n} avg | Circular Deps: {n} | Cohesion: {n}%      │
-├──────────────────────────────────────────────────────────────┤
-│ RECOMMENDATIONS (80/20 filtered)                             │
-├───┬──────────────────────────┬────────┬────────┬─────────────┤
-│ # │ Recommendation           │ Impact │ Effort │ Priority    │
-├───┼──────────────────────────┼────────┼────────┼─────────────┤
-│ 1 │ {recommendation}         │ {imp}  │ {eff}  │ {priority}  │
-└───┴──────────────────────────┴────────┴────────┴─────────────┘
-
-Applied: {n} | Declined: {n}
-```
 
 ## Apply Phase
 
@@ -179,27 +110,20 @@ Applied: {n} | Declined: {n}
 
 | Flag | Effect |
 |------|--------|
-| `--quick` | Single-message analysis, smart defaults |
-| `--focus=X` | Focus: architecture, quality, testing, dx, best-practices |
-| `--best-practices` | Best practices focus only |
+| `--quick` | Smart defaults |
+| `--focus=X` | architecture, quality, testing, dx, best-practices |
+| `--best-practices` | Best practices only |
 | `--no-apply` | Report only |
-| `--matrix` | Show effort/impact matrix |
+| `--matrix` | Effort/impact matrix |
 
 ## Strategy Evolution
 
-After review, update `.claude/rules/cco/context.md` Learnings section:
-
 | Pattern | Action |
 |---------|--------|
-| Architectural anti-pattern | Add to `Systemic`: pattern + root cause + fix |
-| High-impact recommendation accepted | Add to `Prefer`: pattern + impact |
-| Recommendation rejected (wrong context) | Add to `Avoid`: pattern + why it failed |
-
-**Max items:** 5 per category (remove oldest when full)
+| Architectural anti-pattern | Add to `Systemic` |
+| High-impact accepted | Add to `Prefer` |
+| Rejected (wrong context) | Add to `Avoid` |
 
 ## Rules
 
-1. **Parallel agents** - Architecture + scan agents run simultaneously
-2. **Evidence required** - No recommendations without file:line proof
-3. **80/20 filter** - High impact / low effort prioritized
-4. **Git safety** - Check status before apply phase
+Parallel agents │ Evidence required │ 80/20 filter │ Git safety

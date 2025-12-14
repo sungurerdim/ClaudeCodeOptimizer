@@ -10,37 +10,22 @@ allowed-tools: Read(*), Grep(*), Glob(*), Bash(git:*), Task(*), TodoWrite
 
 Read-only metrics collection and visualization.
 
-## Dynamic Context (Pre-collected)
+## Context
 
 - Context check: !`test -f ./.claude/rules/cco/context.md && echo "1" || echo "0"`
 - Last health tag: !`git tag -l "health-*" --sort=-creatordate | head -1 || echo "None"`
 
-**DO NOT re-run these commands. Use the pre-collected values above.**
-**Static context (Stack, Type, Scale) is read from ./CLAUDE.md already in context.**
+**Static context (Stack, Type, Scale) from ./CLAUDE.md already in context.**
 
 ## Context Requirement [CRITICAL]
 
-**This command requires CCO context in ./.claude/rules/cco/context.md.**
-
-If context check returns "0":
-```
-CCO context not found.
-
-Run /cco-config first to configure project context, then restart CLI.
-```
-**Stop execution immediately.**
+If context check returns "0": `CCO context not found. Run /cco-config first.` **Stop immediately.**
 
 ## Token Efficiency [CRITICAL]
 
-| Rule | Implementation |
-|------|----------------|
-| **Single agent** | One analyze agent with scan + trends scopes |
-| **Linter-first** | Run linters for metrics |
-| **Batch calls** | Multiple tool calls in single message |
+Single analyze agent (scan + trends) │ Linter-first │ Batch calls
 
 ## Progress Tracking [CRITICAL]
-
-**Use TodoWrite to track progress.** Create todo list at start, update status for each step.
 
 ```
 TodoWrite([
@@ -49,80 +34,37 @@ TodoWrite([
 ])
 ```
 
-**Update status:** Mark `completed` immediately after each step finishes, mark next `in_progress`.
-
 ## Execution Flow
 
 ```
-┌─────────────────────────────────────────────────────────────────────────────┐
-│ 1. Spawn SINGLE analyze agent with scan + trends scopes                      │
-├─────────────────────────────────────────────────────────────────────────────┤
-│ Task(cco-agent-analyze, scopes=[scan, trends])                               │
-│ → Agent runs linters first for metrics                                       │
-│ → Returns combined scan + trend data                                         │
-├─────────────────────────────────────────────────────────────────────────────┤
-│ 2. Generate dashboard output                                                 │
-└─────────────────────────────────────────────────────────────────────────────┘
+Task(cco-agent-analyze, scopes=[scan, trends])
+→ Linters first → Combined scan + trends data → Dashboard output
 ```
 
-**CRITICAL:** Use ONE analyze agent. Never spawn separate scan/trends agents.
-
-## Agent Usage
-
-| Agent | Input | Output |
-|-------|-------|--------|
-| cco-agent-analyze | `scopes: [scan, trends]` | Combined metrics + trends JSON |
-
-### Scope Coverage
+**CRITICAL:** Use ONE analyze agent. Never spawn separate agents.
 
 | Scope | Returns |
 |-------|---------|
 | `scan` | Security, tests, debt, cleanliness metrics |
-| `trends` | Historical deltas with ↑↓→⚠ indicators |
+| `trends` | Historical deltas (↑↓→⚠) |
 
 ## Context Application
 
 | Field | Effect |
 |-------|--------|
-| Scale | <100 → relaxed; 100-10K → moderate; 10K+ → strict thresholds |
-| Data | PII/Regulated → security weight ×2 |
-| Priority | Speed → blockers only; Quality → all metrics |
-
-## Output
-
-```
-┌─ PROJECT HEALTH ─────────────────────────────────────────────┐
-│ Project: {name} | Type: {type} | Trend: {icon}               │
-├───────────────┬───────┬────────────┬───────┬─────────────────┤
-│ Category      │ Score │ Bar        │ Trend │ Status          │
-├───────────────┼───────┼────────────┼───────┼─────────────────┤
-│ Security      │ {n}   │ {bar}      │ {t}   │ {status}        │
-│ Tests         │ {n}   │ {bar}      │ {t}   │ {status}        │
-│ Tech Debt     │ {n}   │ {bar}      │ {t}   │ {status}        │
-│ Cleanliness   │ {n}   │ {bar}      │ {t}   │ {status}        │
-├───────────────┼───────┼────────────┼───────┼─────────────────┤
-│ OVERALL       │ {n}   │ {bar}      │ {t}   │ {status}        │
-└───────────────┴───────┴────────────┴───────┴─────────────────┘
-
-┌─ FIX FIRST ──────────────────────────────────────────────────┐
-│ # │ Issue              │ Location      │ Effort │ Impact     │
-├───┼────────────────────┼───────────────┼────────┼────────────┤
-│ 1 │ {issue}            │ {file}:{line} │ {eff}  │ {imp}      │
-└───┴────────────────────┴───────────────┴────────┴────────────┘
-```
+| Scale | <100 → relaxed; 100-10K → moderate; 10K+ → strict |
+| Data | PII/Regulated → security ×2 |
+| Priority | Speed → blockers only; Quality → all |
 
 ## Flags
 
 | Flag | Effect |
 |------|--------|
-| `--focus=X` | Detailed breakdown: security, tests, debt, clean |
-| `--trends` | Show historical trend table |
-| `--json` | Output as JSON |
+| `--focus=X` | Detailed: security, tests, debt, clean |
+| `--trends` | Historical trend table |
+| `--json` | JSON output |
 | `--brief` | Summary only |
 
 ## Rules
 
-1. **Parallel agents** - Scan + trends agents run simultaneously
-2. **Read-only** - No modifications, metrics only
-3. **Conservative** - When uncertain, score lower
-4. **Evidence** - Require explicit metrics, not inference
+Single agent │ Read-only │ Conservative scores │ Evidence-based
