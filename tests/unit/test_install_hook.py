@@ -8,11 +8,13 @@ from unittest.mock import patch
 import pytest
 
 from claudecodeoptimizer.config import get_content_path
-from claudecodeoptimizer.install_hook import (
+from claudecodeoptimizer.install import (
     clean_previous_installation,
-    post_install,
     setup_agents,
     setup_commands,
+)
+from claudecodeoptimizer.install_hook import post_install
+from claudecodeoptimizer.local import (
     setup_local_permissions,
     setup_local_statusline,
 )
@@ -43,10 +45,10 @@ class TestCleanPreviousInstallation:
         (commands_dir / "cco-another.md").write_text("another old")
         (commands_dir / "other.md").write_text("keep this")
 
-        with patch("claudecodeoptimizer.install_hook.COMMANDS_DIR", commands_dir):
-            with patch("claudecodeoptimizer.install_hook.AGENTS_DIR", tmp_path / "agents"):
-                with patch("claudecodeoptimizer.install_hook.CLAUDE_DIR", tmp_path):
-                    with patch("claudecodeoptimizer.install_hook.RULES_DIR", tmp_path / "rules"):
+        with patch("claudecodeoptimizer.install.COMMANDS_DIR", commands_dir):
+            with patch("claudecodeoptimizer.install.AGENTS_DIR", tmp_path / "agents"):
+                with patch("claudecodeoptimizer.install.CLAUDE_DIR", tmp_path):
+                    with patch("claudecodeoptimizer.install.RULES_DIR", tmp_path / "rules"):
                         result = clean_previous_installation(verbose=False)
 
         assert result["commands"] == 2
@@ -60,10 +62,10 @@ class TestCleanPreviousInstallation:
         agents_dir.mkdir()
         (agents_dir / "cco-agent-old.md").write_text("old agent")
 
-        with patch("claudecodeoptimizer.install_hook.COMMANDS_DIR", tmp_path / "commands"):
-            with patch("claudecodeoptimizer.install_hook.AGENTS_DIR", agents_dir):
-                with patch("claudecodeoptimizer.install_hook.CLAUDE_DIR", tmp_path):
-                    with patch("claudecodeoptimizer.install_hook.RULES_DIR", tmp_path / "rules"):
+        with patch("claudecodeoptimizer.install.COMMANDS_DIR", tmp_path / "commands"):
+            with patch("claudecodeoptimizer.install.AGENTS_DIR", agents_dir):
+                with patch("claudecodeoptimizer.install.CLAUDE_DIR", tmp_path):
+                    with patch("claudecodeoptimizer.install.RULES_DIR", tmp_path / "rules"):
                         result = clean_previous_installation(verbose=False)
 
         assert result["agents"] == 1
@@ -76,10 +78,10 @@ class TestCleanPreviousInstallation:
             "# My Rules\n\n<!-- CCO_STANDARDS_START -->\nOld content\n<!-- CCO_STANDARDS_END -->\n\nKeep this"
         )
 
-        with patch("claudecodeoptimizer.install_hook.COMMANDS_DIR", tmp_path / "commands"):
-            with patch("claudecodeoptimizer.install_hook.AGENTS_DIR", tmp_path / "agents"):
-                with patch("claudecodeoptimizer.install_hook.CLAUDE_DIR", tmp_path):
-                    with patch("claudecodeoptimizer.install_hook.RULES_DIR", tmp_path / "rules"):
+        with patch("claudecodeoptimizer.install.COMMANDS_DIR", tmp_path / "commands"):
+            with patch("claudecodeoptimizer.install.AGENTS_DIR", tmp_path / "agents"):
+                with patch("claudecodeoptimizer.install.CLAUDE_DIR", tmp_path):
+                    with patch("claudecodeoptimizer.install.RULES_DIR", tmp_path / "rules"):
                         result = clean_previous_installation(verbose=False)
 
         assert result["rules"] >= 1
@@ -104,9 +106,9 @@ class TestCleanPreviousInstallation:
         (cco_subdir / "core.md").write_text("# New Core")
         (cco_subdir / "ai.md").write_text("# New AI")
 
-        with patch("claudecodeoptimizer.install_hook.COMMANDS_DIR", tmp_path / "commands"):
-            with patch("claudecodeoptimizer.install_hook.AGENTS_DIR", tmp_path / "agents"):
-                with patch("claudecodeoptimizer.install_hook.CLAUDE_DIR", tmp_path):
+        with patch("claudecodeoptimizer.install.COMMANDS_DIR", tmp_path / "commands"):
+            with patch("claudecodeoptimizer.install.AGENTS_DIR", tmp_path / "agents"):
+                with patch("claudecodeoptimizer.install.CLAUDE_DIR", tmp_path):
                     with patch("claudecodeoptimizer.operations.OLD_RULES_ROOT", rules_root):
                         with patch(
                             "claudecodeoptimizer.operations.COMMANDS_DIR", tmp_path / "commands"
@@ -114,9 +116,7 @@ class TestCleanPreviousInstallation:
                             with patch(
                                 "claudecodeoptimizer.operations.AGENTS_DIR", tmp_path / "agents"
                             ):
-                                with patch(
-                                    "claudecodeoptimizer.install_hook.RULES_DIR", cco_subdir
-                                ):
+                                with patch("claudecodeoptimizer.install.RULES_DIR", cco_subdir):
                                     with patch(
                                         "claudecodeoptimizer.operations.RULES_DIR", cco_subdir
                                     ):
@@ -135,14 +135,10 @@ class TestCleanPreviousInstallation:
 
     def test_handles_nonexistent_dirs(self, tmp_path):
         """Test handles nonexistent directories gracefully."""
-        with patch(
-            "claudecodeoptimizer.install_hook.COMMANDS_DIR", tmp_path / "nonexistent_commands"
-        ):
-            with patch(
-                "claudecodeoptimizer.install_hook.AGENTS_DIR", tmp_path / "nonexistent_agents"
-            ):
-                with patch("claudecodeoptimizer.install_hook.CLAUDE_DIR", tmp_path / "nonexistent"):
-                    with patch("claudecodeoptimizer.install_hook.RULES_DIR", tmp_path / "rules"):
+        with patch("claudecodeoptimizer.install.COMMANDS_DIR", tmp_path / "nonexistent_commands"):
+            with patch("claudecodeoptimizer.install.AGENTS_DIR", tmp_path / "nonexistent_agents"):
+                with patch("claudecodeoptimizer.install.CLAUDE_DIR", tmp_path / "nonexistent"):
+                    with patch("claudecodeoptimizer.install.RULES_DIR", tmp_path / "rules"):
                         result = clean_previous_installation(verbose=False)
 
         assert result["commands"] == 0
@@ -155,10 +151,10 @@ class TestCleanPreviousInstallation:
         commands_dir.mkdir()
         (commands_dir / "cco-old.md").write_text("old")
 
-        with patch("claudecodeoptimizer.install_hook.COMMANDS_DIR", commands_dir):
-            with patch("claudecodeoptimizer.install_hook.AGENTS_DIR", tmp_path / "agents"):
-                with patch("claudecodeoptimizer.install_hook.CLAUDE_DIR", tmp_path):
-                    with patch("claudecodeoptimizer.install_hook.RULES_DIR", tmp_path / "rules"):
+        with patch("claudecodeoptimizer.install.COMMANDS_DIR", commands_dir):
+            with patch("claudecodeoptimizer.install.AGENTS_DIR", tmp_path / "agents"):
+                with patch("claudecodeoptimizer.install.CLAUDE_DIR", tmp_path):
+                    with patch("claudecodeoptimizer.install.RULES_DIR", tmp_path / "rules"):
                         clean_previous_installation(verbose=True)
 
         captured = capsys.readouterr()
@@ -184,10 +180,10 @@ class TestCleanPreviousInstallation:
 
         rules_dir = tmp_path / "rules"
 
-        with patch("claudecodeoptimizer.install_hook.COMMANDS_DIR", commands_dir):
-            with patch("claudecodeoptimizer.install_hook.AGENTS_DIR", agents_dir):
-                with patch("claudecodeoptimizer.install_hook.CLAUDE_DIR", tmp_path):
-                    with patch("claudecodeoptimizer.install_hook.RULES_DIR", rules_dir):
+        with patch("claudecodeoptimizer.install.COMMANDS_DIR", commands_dir):
+            with patch("claudecodeoptimizer.install.AGENTS_DIR", agents_dir):
+                with patch("claudecodeoptimizer.install.CLAUDE_DIR", tmp_path):
+                    with patch("claudecodeoptimizer.install.RULES_DIR", rules_dir):
                         result = clean_previous_installation(verbose=True)
 
         # Verify all old components removed
@@ -206,9 +202,9 @@ class TestSetupCommands:
 
     def test_creates_commands_dir(self, tmp_path):
         """Test creates commands directory."""
-        with patch("claudecodeoptimizer.install_hook.CLAUDE_DIR", tmp_path):
-            with patch("claudecodeoptimizer.install_hook.COMMANDS_DIR", tmp_path / "commands"):
-                with patch("claudecodeoptimizer.install_hook.get_content_path") as mock_content:
+        with patch("claudecodeoptimizer.install.CLAUDE_DIR", tmp_path):
+            with patch("claudecodeoptimizer.install.COMMANDS_DIR", tmp_path / "commands"):
+                with patch("claudecodeoptimizer.install.get_content_path") as mock_content:
                     mock_content.side_effect = (
                         lambda subdir="": tmp_path / "pkg" / subdir if subdir else tmp_path / "pkg"
                     )
@@ -223,9 +219,9 @@ class TestSetupCommands:
 
     def test_returns_empty_if_no_source(self, tmp_path):
         """Test returns empty list if source dir doesn't exist."""
-        with patch("claudecodeoptimizer.install_hook.CLAUDE_DIR", tmp_path):
-            with patch("claudecodeoptimizer.install_hook.COMMANDS_DIR", tmp_path / "commands"):
-                with patch("claudecodeoptimizer.install_hook.get_content_path") as mock_content:
+        with patch("claudecodeoptimizer.install.CLAUDE_DIR", tmp_path):
+            with patch("claudecodeoptimizer.install.COMMANDS_DIR", tmp_path / "commands"):
+                with patch("claudecodeoptimizer.install.get_content_path") as mock_content:
                     mock_content.side_effect = (
                         lambda subdir="": tmp_path / "nonexistent" / subdir
                         if subdir
@@ -246,9 +242,9 @@ class TestSetupCommands:
         non_cco_file = dest_dir / "other-file.md"
         non_cco_file.write_text("should remain")
 
-        with patch("claudecodeoptimizer.install_hook.CLAUDE_DIR", tmp_path):
-            with patch("claudecodeoptimizer.install_hook.COMMANDS_DIR", dest_dir):
-                with patch("claudecodeoptimizer.install_hook.get_content_path") as mock_content:
+        with patch("claudecodeoptimizer.install.CLAUDE_DIR", tmp_path):
+            with patch("claudecodeoptimizer.install.COMMANDS_DIR", dest_dir):
+                with patch("claudecodeoptimizer.install.get_content_path") as mock_content:
                     mock_content.side_effect = (
                         lambda subdir="": tmp_path / "pkg" / subdir if subdir else tmp_path / "pkg"
                     )
@@ -273,9 +269,9 @@ class TestSetupAgents:
 
     def test_creates_agents_dir(self, tmp_path):
         """Test creates agents directory."""
-        with patch("claudecodeoptimizer.install_hook.CLAUDE_DIR", tmp_path):
-            with patch("claudecodeoptimizer.install_hook.AGENTS_DIR", tmp_path / "agents"):
-                with patch("claudecodeoptimizer.install_hook.get_content_path") as mock_content:
+        with patch("claudecodeoptimizer.install.CLAUDE_DIR", tmp_path):
+            with patch("claudecodeoptimizer.install.AGENTS_DIR", tmp_path / "agents"):
+                with patch("claudecodeoptimizer.install.get_content_path") as mock_content:
                     mock_content.side_effect = (
                         lambda subdir="": tmp_path / "pkg" / subdir if subdir else tmp_path / "pkg"
                     )
@@ -290,9 +286,9 @@ class TestSetupAgents:
 
     def test_returns_empty_if_no_source(self, tmp_path):
         """Test returns empty list if source dir doesn't exist."""
-        with patch("claudecodeoptimizer.install_hook.CLAUDE_DIR", tmp_path):
-            with patch("claudecodeoptimizer.install_hook.AGENTS_DIR", tmp_path / "agents"):
-                with patch("claudecodeoptimizer.install_hook.get_content_path") as mock_content:
+        with patch("claudecodeoptimizer.install.CLAUDE_DIR", tmp_path):
+            with patch("claudecodeoptimizer.install.AGENTS_DIR", tmp_path / "agents"):
+                with patch("claudecodeoptimizer.install.get_content_path") as mock_content:
                     mock_content.side_effect = (
                         lambda subdir="": tmp_path / "nonexistent" / subdir
                         if subdir
@@ -309,9 +305,9 @@ class TestCleanClaudeMd:
 
     def test_cleans_old_markers(self, tmp_path):
         """Test cleans old CCO markers from CLAUDE.md."""
-        from claudecodeoptimizer.install_hook import clean_claude_md
+        from claudecodeoptimizer.install import clean_claude_md
 
-        with patch("claudecodeoptimizer.install_hook.CLAUDE_DIR", tmp_path):
+        with patch("claudecodeoptimizer.install.CLAUDE_DIR", tmp_path):
             claude_md = tmp_path / "CLAUDE.md"
             claude_md.write_text(
                 "# My Rules\n\n<!-- CCO_STANDARDS_START -->Old content<!-- CCO_STANDARDS_END -->\n\nKeep this"
@@ -327,9 +323,9 @@ class TestCleanClaudeMd:
 
     def test_cleans_old_markers_verbose(self, tmp_path, capsys):
         """Test cleans old CCO markers with verbose output."""
-        from claudecodeoptimizer.install_hook import clean_claude_md
+        from claudecodeoptimizer.install import clean_claude_md
 
-        with patch("claudecodeoptimizer.install_hook.CLAUDE_DIR", tmp_path):
+        with patch("claudecodeoptimizer.install.CLAUDE_DIR", tmp_path):
             claude_md = tmp_path / "CLAUDE.md"
             claude_md.write_text(
                 "# My Rules\n\n<!-- CCO_STANDARDS_START -->Old content<!-- CCO_STANDARDS_END -->\n\nKeep this"
@@ -344,9 +340,9 @@ class TestCleanClaudeMd:
 
     def test_removes_empty_file(self, tmp_path):
         """Test removes CLAUDE.md if empty after cleaning."""
-        from claudecodeoptimizer.install_hook import clean_claude_md
+        from claudecodeoptimizer.install import clean_claude_md
 
-        with patch("claudecodeoptimizer.install_hook.CLAUDE_DIR", tmp_path):
+        with patch("claudecodeoptimizer.install.CLAUDE_DIR", tmp_path):
             claude_md = tmp_path / "CLAUDE.md"
             # File with only CCO content
             claude_md.write_text("<!-- CCO_CORE_START -->Content<!-- CCO_CORE_END -->")
@@ -359,9 +355,9 @@ class TestCleanClaudeMd:
 
     def test_no_markers_to_clean(self, tmp_path):
         """Test handles file with no CCO markers."""
-        from claudecodeoptimizer.install_hook import clean_claude_md
+        from claudecodeoptimizer.install import clean_claude_md
 
-        with patch("claudecodeoptimizer.install_hook.CLAUDE_DIR", tmp_path):
+        with patch("claudecodeoptimizer.install.CLAUDE_DIR", tmp_path):
             claude_md = tmp_path / "CLAUDE.md"
             claude_md.write_text("# My Custom Rules\n\nSome content")
 
@@ -385,9 +381,7 @@ class TestSetupLocalStatusline:
         project_path = tmp_path / "project"
         project_path.mkdir()
 
-        with patch("claudecodeoptimizer.install_hook.get_content_path", return_value=src_dir):
-            from claudecodeoptimizer.install_hook import setup_local_statusline
-
+        with patch("claudecodeoptimizer.local.get_content_path", return_value=src_dir):
             result = setup_local_statusline(project_path, "cco-full", verbose=False)
 
         assert result is True
@@ -405,9 +399,7 @@ class TestSetupLocalStatusline:
         project_path = tmp_path / "project"
         project_path.mkdir()
 
-        with patch("claudecodeoptimizer.install_hook.get_content_path", return_value=src_dir):
-            from claudecodeoptimizer.install_hook import setup_local_statusline
-
+        with patch("claudecodeoptimizer.local.get_content_path", return_value=src_dir):
             result = setup_local_statusline(project_path, "cco-minimal", verbose=False)
 
         assert result is True
@@ -432,11 +424,9 @@ class TestSetupLocalStatusline:
         project_path.mkdir()
 
         with patch(
-            "claudecodeoptimizer.install_hook.get_content_path",
+            "claudecodeoptimizer.local.get_content_path",
             return_value=tmp_path / "nonexistent",
         ):
-            from claudecodeoptimizer.install_hook import setup_local_statusline
-
             result = setup_local_statusline(project_path, "cco-full", verbose=True)
 
         assert result is False
@@ -454,9 +444,7 @@ class TestSetupLocalStatusline:
         local_claude.mkdir(parents=True)
         (local_claude / "settings.json").write_text(json.dumps({"existingKey": "value"}))
 
-        with patch("claudecodeoptimizer.install_hook.get_content_path", return_value=src_dir):
-            from claudecodeoptimizer.install_hook import setup_local_statusline
-
+        with patch("claudecodeoptimizer.local.get_content_path", return_value=src_dir):
             result = setup_local_statusline(project_path, "cco-full", verbose=False)
 
         assert result is True
@@ -475,9 +463,7 @@ class TestSetupLocalStatusline:
         local_claude.mkdir(parents=True)
         (local_claude / "settings.json").write_text("invalid json {{{")
 
-        with patch("claudecodeoptimizer.install_hook.get_content_path", return_value=src_dir):
-            from claudecodeoptimizer.install_hook import setup_local_statusline
-
+        with patch("claudecodeoptimizer.local.get_content_path", return_value=src_dir):
             result = setup_local_statusline(project_path, "cco-full", verbose=False)
 
         assert result is True
@@ -493,9 +479,7 @@ class TestSetupLocalStatusline:
         project_path = tmp_path / "project"
         project_path.mkdir()
 
-        with patch("claudecodeoptimizer.install_hook.get_content_path", return_value=src_dir):
-            from claudecodeoptimizer.install_hook import setup_local_statusline
-
+        with patch("claudecodeoptimizer.local.get_content_path", return_value=src_dir):
             result = setup_local_statusline(project_path, "cco-full", verbose=True)
 
         assert result is True
@@ -518,9 +502,7 @@ class TestSetupLocalPermissions:
         project_path = tmp_path / "project"
         project_path.mkdir()
 
-        with patch("claudecodeoptimizer.install_hook.get_content_path", return_value=src_dir):
-            from claudecodeoptimizer.install_hook import setup_local_permissions
-
+        with patch("claudecodeoptimizer.local.get_content_path", return_value=src_dir):
             result = setup_local_permissions(project_path, "balanced", verbose=False)
 
         assert result is True
@@ -540,16 +522,13 @@ class TestSetupLocalPermissions:
             project_path = tmp_path / f"project_{level}"
             project_path.mkdir()
 
-            with patch("claudecodeoptimizer.install_hook.get_content_path", return_value=src_dir):
-                from claudecodeoptimizer.install_hook import setup_local_permissions
-
+            with patch("claudecodeoptimizer.local.get_content_path", return_value=src_dir):
                 result = setup_local_permissions(project_path, level, verbose=False)
 
             assert result is True
 
     def test_invalid_level(self, tmp_path, capsys):
         """Test returns False for invalid level."""
-        from claudecodeoptimizer.install_hook import setup_local_permissions
 
         project_path = tmp_path / "project"
         project_path.mkdir()
@@ -566,11 +545,9 @@ class TestSetupLocalPermissions:
         project_path.mkdir()
 
         with patch(
-            "claudecodeoptimizer.install_hook.get_content_path",
+            "claudecodeoptimizer.local.get_content_path",
             return_value=tmp_path / "nonexistent",
         ):
-            from claudecodeoptimizer.install_hook import setup_local_permissions
-
             result = setup_local_permissions(project_path, "balanced", verbose=True)
 
         assert result is False
@@ -586,9 +563,7 @@ class TestSetupLocalPermissions:
         project_path = tmp_path / "project"
         project_path.mkdir()
 
-        with patch("claudecodeoptimizer.install_hook.get_content_path", return_value=src_dir):
-            from claudecodeoptimizer.install_hook import setup_local_permissions
-
+        with patch("claudecodeoptimizer.local.get_content_path", return_value=src_dir):
             result = setup_local_permissions(project_path, "balanced", verbose=True)
 
         assert result is False
@@ -608,9 +583,7 @@ class TestSetupLocalPermissions:
             json.dumps({"existingKey": "value", "statusLine": {"type": "command"}})
         )
 
-        with patch("claudecodeoptimizer.install_hook.get_content_path", return_value=src_dir):
-            from claudecodeoptimizer.install_hook import setup_local_permissions
-
+        with patch("claudecodeoptimizer.local.get_content_path", return_value=src_dir):
             result = setup_local_permissions(project_path, "balanced", verbose=False)
 
         assert result is True
@@ -628,9 +601,7 @@ class TestSetupLocalPermissions:
         project_path = tmp_path / "project"
         project_path.mkdir()
 
-        with patch("claudecodeoptimizer.install_hook.get_content_path", return_value=src_dir):
-            from claudecodeoptimizer.install_hook import setup_local_permissions
-
+        with patch("claudecodeoptimizer.local.get_content_path", return_value=src_dir):
             result = setup_local_permissions(project_path, "balanced", verbose=True)
 
         assert result is True
@@ -649,7 +620,7 @@ class TestSetupLocalPermissions:
         local_claude.mkdir(parents=True)
         (local_claude / "settings.json").write_text("invalid json {{{")
 
-        with patch("claudecodeoptimizer.install_hook.get_content_path", return_value=src_dir):
+        with patch("claudecodeoptimizer.local.get_content_path", return_value=src_dir):
             result = setup_local_permissions(project_path, "balanced", verbose=False)
 
         assert result is True
@@ -706,7 +677,7 @@ class TestRunLocalMode:
         project_path.mkdir()
 
         with patch("pathlib.Path.cwd", return_value=tmp_path):
-            with patch("claudecodeoptimizer.install_hook.get_content_path", return_value=src_dir):
+            with patch("claudecodeoptimizer.local.get_content_path", return_value=src_dir):
                 with patch.object(
                     sys,
                     "argv",
@@ -729,7 +700,7 @@ class TestRunLocalMode:
         project_path.mkdir()
 
         with patch("pathlib.Path.cwd", return_value=tmp_path):
-            with patch("claudecodeoptimizer.install_hook.get_content_path", return_value=src_dir):
+            with patch("claudecodeoptimizer.local.get_content_path", return_value=src_dir):
                 with patch.object(
                     sys,
                     "argv",
@@ -760,9 +731,7 @@ class TestRunLocalMode:
             return perm_dir
 
         with patch("pathlib.Path.cwd", return_value=tmp_path):
-            with patch(
-                "claudecodeoptimizer.install_hook.get_content_path", side_effect=mock_content_path
-            ):
+            with patch("claudecodeoptimizer.local.get_content_path", side_effect=mock_content_path):
                 with patch.object(
                     sys,
                     "argv",
@@ -792,7 +761,7 @@ class TestRunLocalMode:
         # Use invalid source path to trigger failure
         with patch("pathlib.Path.cwd", return_value=tmp_path):
             with patch(
-                "claudecodeoptimizer.install_hook.get_content_path",
+                "claudecodeoptimizer.local.get_content_path",
                 return_value=tmp_path / "nonexistent",
             ):
                 with patch.object(
@@ -814,7 +783,7 @@ class TestRunLocalMode:
         # Use invalid source path to trigger permissions failure
         with patch("pathlib.Path.cwd", return_value=tmp_path):
             with patch(
-                "claudecodeoptimizer.install_hook.get_content_path",
+                "claudecodeoptimizer.local.get_content_path",
                 return_value=tmp_path / "nonexistent",
             ):
                 with patch.object(
@@ -896,13 +865,11 @@ class TestPostInstall:
 
     def test_successful_setup(self, tmp_path, capsys):
         """Test successful setup."""
-        with patch("claudecodeoptimizer.install_hook.CLAUDE_DIR", tmp_path):
-            with patch("claudecodeoptimizer.install_hook.COMMANDS_DIR", tmp_path / "commands"):
-                with patch("claudecodeoptimizer.install_hook.AGENTS_DIR", tmp_path / "agents"):
-                    with patch("claudecodeoptimizer.install_hook.RULES_DIR", tmp_path / "rules"):
-                        with patch(
-                            "claudecodeoptimizer.install_hook.get_content_path"
-                        ) as mock_content:
+        with patch("claudecodeoptimizer.install.CLAUDE_DIR", tmp_path):
+            with patch("claudecodeoptimizer.install.COMMANDS_DIR", tmp_path / "commands"):
+                with patch("claudecodeoptimizer.install.AGENTS_DIR", tmp_path / "agents"):
+                    with patch("claudecodeoptimizer.install.RULES_DIR", tmp_path / "rules"):
+                        with patch("claudecodeoptimizer.install.get_content_path") as mock_content:
                             with patch.object(sys, "argv", ["cco-install"]):
                                 mock_content.side_effect = (
                                     lambda subdir="": tmp_path / "pkg" / subdir
@@ -920,10 +887,10 @@ class TestPostInstall:
 
     def test_exception_handling(self, tmp_path, capsys):
         """Test exception during setup."""
-        with patch("claudecodeoptimizer.install_hook.CLAUDE_DIR", tmp_path):
-            with patch("claudecodeoptimizer.install_hook.COMMANDS_DIR", tmp_path / "commands"):
-                with patch("claudecodeoptimizer.install_hook.AGENTS_DIR", tmp_path / "agents"):
-                    with patch("claudecodeoptimizer.install_hook.RULES_DIR", tmp_path / "rules"):
+        with patch("claudecodeoptimizer.install.CLAUDE_DIR", tmp_path):
+            with patch("claudecodeoptimizer.install.COMMANDS_DIR", tmp_path / "commands"):
+                with patch("claudecodeoptimizer.install.AGENTS_DIR", tmp_path / "agents"):
+                    with patch("claudecodeoptimizer.install.RULES_DIR", tmp_path / "rules"):
                         with patch.object(sys, "argv", ["cco-install"]):
                             with patch(
                                 "claudecodeoptimizer.install_hook.setup_commands",
@@ -950,7 +917,7 @@ class TestSetupRules:
 
     def test_setup_rules_creates_directory(self, tmp_path):
         """Test setup_rules creates cco/ subdirectory and copies files with new names."""
-        from claudecodeoptimizer.install_hook import setup_rules
+        from claudecodeoptimizer.install import setup_rules
 
         # Create source rules in content dir (source files have cco- prefix)
         src_rules = tmp_path / "content" / "rules"
@@ -963,14 +930,14 @@ class TestSetupRules:
         # Target rules dir (cco/ subdirectory)
         rules_dir = tmp_path / "rules" / "cco"
 
-        with patch("claudecodeoptimizer.install_hook.CLAUDE_DIR", tmp_path):
+        with patch("claudecodeoptimizer.install.CLAUDE_DIR", tmp_path):
             with patch(
-                "claudecodeoptimizer.install_hook.get_content_path",
+                "claudecodeoptimizer.install.get_content_path",
                 side_effect=lambda subdir="": tmp_path / "content" / subdir
                 if subdir
                 else tmp_path / "content",
             ):
-                with patch("claudecodeoptimizer.install_hook.RULES_DIR", rules_dir):
+                with patch("claudecodeoptimizer.install.RULES_DIR", rules_dir):
                     result = setup_rules(verbose=False)
 
         assert rules_dir.exists()
@@ -986,7 +953,7 @@ class TestSetupRules:
 
     def test_setup_rules_verbose_output(self, tmp_path, capsys):
         """Test setup_rules verbose output shows cco/ prefix."""
-        from claudecodeoptimizer.install_hook import setup_rules
+        from claudecodeoptimizer.install import setup_rules
 
         src_rules = tmp_path / "content" / "rules"
         src_rules.mkdir(parents=True)
@@ -994,14 +961,14 @@ class TestSetupRules:
 
         rules_dir = tmp_path / "rules" / "cco"
 
-        with patch("claudecodeoptimizer.install_hook.CLAUDE_DIR", tmp_path):
+        with patch("claudecodeoptimizer.install.CLAUDE_DIR", tmp_path):
             with patch(
-                "claudecodeoptimizer.install_hook.get_content_path",
+                "claudecodeoptimizer.install.get_content_path",
                 side_effect=lambda subdir="": tmp_path / "content" / subdir
                 if subdir
                 else tmp_path / "content",
             ):
-                with patch("claudecodeoptimizer.install_hook.RULES_DIR", rules_dir):
+                with patch("claudecodeoptimizer.install.RULES_DIR", rules_dir):
                     setup_rules(verbose=True)
 
         captured = capsys.readouterr()
@@ -1010,7 +977,7 @@ class TestSetupRules:
 
     def test_setup_rules_removes_old_cco_files_only(self, tmp_path):
         """Test setup_rules removes existing CCO rule files in cco/ subdir."""
-        from claudecodeoptimizer.install_hook import setup_rules
+        from claudecodeoptimizer.install import setup_rules
 
         src_rules = tmp_path / "content" / "rules"
         src_rules.mkdir(parents=True)
@@ -1022,14 +989,14 @@ class TestSetupRules:
         (rules_dir / "core.md").write_text("# Old Core")
         (rules_dir / "custom-rule.md").write_text("# Custom Rule")
 
-        with patch("claudecodeoptimizer.install_hook.CLAUDE_DIR", tmp_path):
+        with patch("claudecodeoptimizer.install.CLAUDE_DIR", tmp_path):
             with patch(
-                "claudecodeoptimizer.install_hook.get_content_path",
+                "claudecodeoptimizer.install.get_content_path",
                 side_effect=lambda subdir="": tmp_path / "content" / subdir
                 if subdir
                 else tmp_path / "content",
             ):
-                with patch("claudecodeoptimizer.install_hook.RULES_DIR", rules_dir):
+                with patch("claudecodeoptimizer.install.RULES_DIR", rules_dir):
                     setup_rules(verbose=False)
 
         # Custom rule preserved, CCO rule updated
@@ -1039,11 +1006,11 @@ class TestSetupRules:
 
     def test_setup_rules_no_source_dir(self, tmp_path):
         """Test setup_rules returns empty when source doesn't exist."""
-        from claudecodeoptimizer.install_hook import setup_rules
+        from claudecodeoptimizer.install import setup_rules
 
-        with patch("claudecodeoptimizer.install_hook.CLAUDE_DIR", tmp_path):
+        with patch("claudecodeoptimizer.install.CLAUDE_DIR", tmp_path):
             with patch(
-                "claudecodeoptimizer.install_hook.get_content_path",
+                "claudecodeoptimizer.install.get_content_path",
                 side_effect=lambda subdir="": tmp_path / "nonexistent" / subdir
                 if subdir
                 else tmp_path / "nonexistent",
