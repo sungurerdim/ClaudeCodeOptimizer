@@ -68,7 +68,9 @@ Task(cco-agent-research, scope=full, query="...")
 
 | Question | Options | MultiSelect |
 |----------|---------|-------------|
-| Depth? | Standard (Recommended); Quick; Deep | false |
+| Depth? | Standard; Quick; Deep | false |
+
+**Dynamic labels:** AI adds `(Recommended)` based on query complexity.
 
 Explicit flags skip questions.
 

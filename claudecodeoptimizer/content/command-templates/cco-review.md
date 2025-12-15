@@ -30,7 +30,9 @@ Run /cco-config first to configure project context, then restart CLI.
 
 | Question | Options | MultiSelect |
 |----------|---------|-------------|
-| Focus areas? | Architecture (Recommended); Code Quality (Recommended); Testing & DX; Best Practices | true |
+| Focus areas? | Architecture; Code Quality; Testing & DX; Best Practices | true |
+
+**Dynamic labels:** AI adds `(Recommended)` based on project context.
 
 | Option | Agent Scope |
 |--------|-------------|
@@ -57,12 +59,16 @@ Single analyze agent │ Single apply agent │ Linter-first │ Batch calls
 
 | Step | Action |
 |------|--------|
-| 1. Analyze | `Task(cco-agent-analyze, scopes=[...])` → Combined findings |
-| 2. Foundation | Assess SOUND vs HAS ISSUES |
-| 3. Recommendations | Generate 80/20 filtered list |
-| 4. Apply | `Task(cco-agent-apply)` or report only |
+| 1. Analyze | `Task(cco-agent-analyze, scopes=[...])` → findings JSON |
+| 2. Show | Display foundation assessment + findings summary |
+| 3. Recommendations | Generate 80/20 filtered list, show to user |
+| 4. Approval | **AskUserQuestion**: Apply recommendations? (select which) |
+| 5. Apply | `Task(cco-agent-apply, fixes=[...approved...])` or report only |
 
-**CRITICAL:** ONE analyze agent, ONE apply agent. Never per-scope.
+**CRITICAL:**
+- Agent returns findings → Command shows to user
+- Command asks which recommendations to apply via AskUserQuestion
+- ONE analyze agent, ONE apply agent
 
 ## Scope Coverage
 

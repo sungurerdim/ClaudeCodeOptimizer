@@ -42,7 +42,9 @@ When called without flags → **AskUserQuestion** (mandatory):
 
 | Question | Options | MultiSelect |
 |----------|---------|-------------|
-| Which phases to run? | Verification (Recommended); Quality (Recommended); Architecture; Changelog & Docs | true |
+| Which phases to run? | Verification; Quality; Architecture; Changelog & Docs | true |
+
+**Dynamic labels:** AI adds `(Recommended)` based on project priority and recent changes.
 
 | Option | Covers | Phases |
 |--------|--------|--------|

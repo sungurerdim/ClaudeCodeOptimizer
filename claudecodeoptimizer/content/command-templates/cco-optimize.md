@@ -38,8 +38,10 @@ Run /cco-config first to configure project context, then restart CLI.
 
 | Question | Options | MultiSelect |
 |----------|---------|-------------|
-| Scope? | Security (Recommended); Quality (Recommended); Hygiene; Best Practices | true |
-| Action? | Report Only; Auto-fix (Recommended); Interactive | false |
+| Scope? | Security; Quality; Hygiene; Best Practices | true |
+| Action? | Report Only; Auto-fix; Interactive | false |
+
+**Dynamic labels:** AI adds `(Recommended)` based on project Data/Priority context.
 
 ## Progress Tracking [CRITICAL]
 
@@ -60,13 +62,18 @@ Single analyze agent │ Single apply agent │ Linter-first │ Batch calls │
 
 | Step | Action |
 |------|--------|
-| 1. Analyze | `Task(cco-agent-analyze, scopes=[...])` → Combined findings JSON |
-| 2. Deduplicate | Group by root cause |
-| 3. Apply safe | `Task(cco-agent-apply, fixes=[...safe...])` → Parallel batches |
-| 4. Approval | AskUserQuestion for approval-required (paginated, max 4/page) |
-| 5. Summary | Applied + Declined counts, verification status |
+| 1. Analyze | `Task(cco-agent-analyze, scopes=[...])` → findings JSON |
+| 2. Show | Display findings summary to user (counts by scope/severity) |
+| 3. Apply safe | `Task(cco-agent-apply, fixes=[...auto-fixable...])` |
+| 4. Approval | **AskUserQuestion** for approval-required items (paginated) |
+| 5. Apply approved | `Task(cco-agent-apply, fixes=[...user-approved...])` |
+| 6. Summary | Applied + Declined counts, verification status |
 
-**CRITICAL:** ONE analyze agent, ONE apply agent. Never per-scope or per-fix.
+**CRITICAL:**
+- Agent returns findings → Command decides what to show/ask
+- Auto-fix items: applied without asking (safe changes)
+- Approval-required items: Command asks user via AskUserQuestion
+- ONE analyze agent, ONE apply agent
 
 ## Scope Coverage
 
@@ -100,7 +107,10 @@ MultiSelect: true
 
 **Pagination:** If >4 issues in category → add pages (Page 2/N, etc.)
 
-After approval: Apply via Task(cco-agent-apply) → Verify → Fix cascade errors if any
+**After user responds:**
+- Selected items → `Task(cco-agent-apply, fixes=[...approved...])`
+- Not selected → marked as `declined` in summary
+- Agent verifies each fix → cascades if new errors introduced
 
 ## Context Application
 

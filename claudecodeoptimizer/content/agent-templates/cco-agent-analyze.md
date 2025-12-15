@@ -1,7 +1,7 @@
 ---
 name: cco-agent-analyze
 description: Read-only project analysis and issue detection
-tools: Glob, Read, Grep, Bash, AskUserQuestion
+tools: Glob, Read, Grep, Bash
 safe: true
 ---
 
@@ -154,11 +154,12 @@ Config scope handles project detection and rule selection. Different execution f
 | Step | Action | Tool |
 |------|--------|------|
 | 1 | Auto-detect from manifest/code | `Glob`, `Read`, `Grep` |
-| 2 | Ask user-input questions (2 batches) | `AskUserQuestion` × 2 |
-| 3 | Read adaptive.md from pip package | `Bash(cco-install --cat rules/cco-adaptive.md)` |
-| 4 | Select rules based on detections + input | Internal |
-| 5 | Generate context.md + rule files | Internal |
-| 6 | Return structured output | JSON |
+| 2 | Read adaptive.md from pip package | `Bash(cco-install --cat rules/cco-adaptive.md)` |
+| 3 | Select rules based on detections + userInput | Internal |
+| 4 | Generate context.md + rule files | Internal |
+| 5 | Return structured output | JSON |
+
+**Note:** User questions are asked by the command (cco-config), not the agent. Agent receives `userInput` as parameter.
 
 #### Step 1: Auto-Detection
 
@@ -208,221 +209,9 @@ Config scope handles project detection and rule selection. Different execution f
 | docs/, documentation/ | Architecture, patterns, decisions |
 | Manifest descriptions | [project.description], package.json description |
 
-Mark as `[from docs]` - requires user confirmation.
+Mark as `[from docs]` with `confidence: LOW` - command will ask for confirmation if needed.
 
-#### Step 2: User-Input Questions [MANDATORY]
-
-**CRITICAL:** These questions MUST be asked via AskUserQuestion. Cannot be skipped or inferred.
-
-**FIRST ACTION after detection:** Immediately call AskUserQuestion for Batch 1. Do NOT proceed to rule selection without asking questions.
-
-##### AskUserQuestion Format [REQUIRED]
-
-**Batch 1 Example (Questions 1-4):**
-```json
-AskUserQuestion({
-  "questions": [
-    {
-      "question": "How many active contributors work on this project?",
-      "header": "Team",
-      "options": [
-        { "label": "Solo", "description": "Single developer, no formal review process" },
-        { "label": "2-5 Contributors", "description": "Small team with async PR reviews" },
-        { "label": "6+ Contributors", "description": "Large team requiring ADR and CODEOWNERS" }
-      ],
-      "multiSelect": false
-    },
-    {
-      "question": "What is the expected scale (concurrent users/requests)?",
-      "header": "Scale",
-      "options": [
-        { "label": "Prototype", "description": "Less than 100, development only" },
-        { "label": "Small", "description": "100-1K, basic caching needed" },
-        { "label": "Medium", "description": "1K-10K, connection pools and async required" },
-        { "label": "Large", "description": "10K+, circuit breakers and advanced patterns" }
-      ],
-      "multiSelect": false
-    },
-    {
-      "question": "What is the most sensitive data this project handles?",
-      "header": "Data",
-      "options": [
-        { "label": "Public", "description": "Open data, no sensitivity" },
-        { "label": "PII", "description": "Personal identifiable information" },
-        { "label": "Regulated", "description": "Healthcare, finance, or other regulated data" }
-      ],
-      "multiSelect": false
-    },
-    {
-      "question": "Which compliance frameworks are required?",
-      "header": "Compliance",
-      "options": [
-        { "label": "None", "description": "No specific compliance requirements" },
-        { "label": "SOC2", "description": "Service Organization Control 2" },
-        { "label": "HIPAA", "description": "Healthcare data protection" },
-        { "label": "GDPR", "description": "EU data privacy regulation" }
-      ],
-      "multiSelect": true
-    }
-  ]
-})
-```
-
-**Batch 2 Example (Questions 5-8):**
-```json
-AskUserQuestion({
-  "questions": [
-    {
-      "question": "What is the uptime commitment (SLA)?",
-      "header": "SLA",
-      "options": [
-        { "label": "None", "description": "Best effort, no formal commitment" },
-        { "label": "99%", "description": "~7 hours/month downtime acceptable" },
-        { "label": "99.9%", "description": "~43 minutes/month downtime" },
-        { "label": "99.99%", "description": "~4 minutes/month downtime" }
-      ],
-      "multiSelect": false
-    },
-    {
-      "question": "What is the current development stage?",
-      "header": "Maturity",
-      "options": [
-        { "label": "Prototype", "description": "May be discarded, rapid iteration" },
-        { "label": "Active", "description": "Regular releases, growing features" },
-        { "label": "Stable", "description": "Maintenance mode, bug fixes only" },
-        { "label": "Legacy", "description": "Minimal changes, keeping alive" }
-      ],
-      "multiSelect": false
-    },
-    {
-      "question": "What is the breaking change policy?",
-      "header": "Breaking",
-      "options": [
-        { "label": "Allowed", "description": "Pre-1.0, breaking changes acceptable" },
-        { "label": "Minimize", "description": "Deprecate first, provide migration path" },
-        { "label": "Never", "description": "Enterprise users, strict compatibility" }
-      ],
-      "multiSelect": false
-    },
-    {
-      "question": "What is the primary development focus?",
-      "header": "Priority",
-      "options": [
-        { "label": "Speed", "description": "Ship fast, iterate quickly" },
-        { "label": "Balanced", "description": "Standard practices" },
-        { "label": "Quality", "description": "Thorough testing and review" },
-        { "label": "Security", "description": "Security-first development" }
-      ],
-      "multiSelect": false
-    }
-  ]
-})
-```
-
-##### Question Classification
-
-| Type | Meaning | Action |
-|------|---------|--------|
-| **MANDATORY** | Cannot be auto-detected | Always ask, no exceptions |
-| **CONFIRM** | Can detect, needs validation | Show `[detected: X]`, ask to confirm |
-| **AUTO** | High-confidence detection | Don't ask unless conflicting signals |
-
-##### Mandatory Questions (MUST ASK)
-
-| # | Element | Question | Options (with hints for AskUserQuestion descriptions) | MultiSelect |
-|---|---------|----------|-------------------------------------------------------|-------------|
-| 1 | Team | How many active contributors? | Solo (no review); 2-5 (async PR); 6+ (ADR/CODEOWNERS) | false |
-| 2 | Scale | Expected concurrent users/requests? | Prototype (<100, dev only); Small (100+, basic cache); Medium (1K+, pools/async); Large (10K+, circuit breakers) | false |
-| 3 | Data | Most sensitive data handled? | Public (open); PII (personal data); Regulated (healthcare/finance) | false |
-| 4 | Compliance | Required compliance frameworks? | None; SOC2; HIPAA; PCI; GDPR; CCPA; ISO27001; FedRAMP; DORA; HITRUST | true |
-| 5 | SLA | Uptime commitment? | None (best effort); 99% (~7h/mo down); 99.9% (~43min/mo); 99.99% (~4min/mo) | false |
-| 6 | Maturity | Development stage? | Prototype (may discard); Active (regular releases); Stable (maintenance); Legacy (minimal changes) | false |
-| 7 | Breaking | Breaking change policy? | Allowed (v0.x); Minimize (deprecate first); Never (enterprise) | false |
-| 8 | Priority | Primary development focus? | Speed (ship fast); Balanced (standard); Quality (thorough); Security (security-first) | false |
-
-**Execution:**
-- **Batch 1:** Questions 1-4 (Team, Scale, Data, Compliance)
-- **Batch 2:** Questions 5-8 (SLA, Maturity, Breaking, Priority)
-- **Batch 3 (if detections exist):** Confirm questions (Testing, Type)
-
-**Hint Usage:** Parenthetical hints become `description` field in AskUserQuestion options.
-
-##### Confirm Questions (Batch 3 - Conditional)
-
-| Element | Detection Method | Confidence | Question |
-|---------|------------------|------------|----------|
-| Testing | Coverage config/reports | MEDIUM | Coverage target? |
-| Type | Entry points, exports | MEDIUM | Project type? |
-
-**Batch 3 Trigger Logic [CRITICAL]:**
-```
-mediumConfidenceCount = count(detections where confidence == "MEDIUM")
-
-if (mediumConfidenceCount > 0) {
-  // Ask Batch 3 for MEDIUM confidence items only
-  for each detection with confidence == "MEDIUM":
-    add to Batch 3 questions with [detected] marker
-} else {
-  // Skip Batch 3 entirely
-  // All HIGH confidence = trusted, no confirmation needed
-  // No detection = nothing to confirm
-}
-```
-
-**Decision Table:**
-| Scenario | Testing Confidence | Type Confidence | Batch 3 Action |
-|----------|-------------------|-----------------|----------------|
-| Both HIGH | HIGH | HIGH | Skip Batch 3 |
-| Both MEDIUM | MEDIUM | MEDIUM | Ask both Testing + Type |
-| Mixed | HIGH | MEDIUM | Ask Type only |
-| Mixed | MEDIUM | HIGH | Ask Testing only |
-| No detection | - | - | Skip Batch 3 |
-
-**Format:** Mark detected option with `[detected]` suffix:
-```
-Testing → "Standard (80%) [detected]"; "Basics (60%)"; "Full (90%)"
-Type → "CLI [detected]"; "Library"; "API"; "Frontend"
-```
-
-**Skip Batch 3 if:** No MEDIUM confidence detections found (all HIGH or no detection).
-
-##### Auto-Detected (Don't Ask)
-
-| Element | Confidence | Skip Condition |
-|---------|------------|----------------|
-| Language | HIGH | Clear manifest (pyproject.toml, package.json) |
-| Database | HIGH | ORM in dependencies |
-| Frontend | HIGH | Framework in dependencies |
-| Infra | HIGH | Dockerfile, k8s manifests present |
-
-**Default values (if user skips/cancels):** Team=Solo, Scale=Small, Data=Public, Compliance=None, Testing=Standard, SLA=None, Maturity=Active, Breaking=Minimize, Priority=Balanced
-
-##### Error Handling [CRITICAL]
-
-**questionsAsked must ALWAYS be true.** Only set to false if a code error prevents calling AskUserQuestion.
-
-| Scenario | Action | questionsAsked | userInput |
-|----------|--------|----------------|-----------|
-| User answers all questions | Store responses | `true` | User values |
-| User selects "Other" with custom input | Store custom value | `true` | Custom values |
-| User cancels mid-batch | Use defaults for remaining | `true` | Partial user + defaults |
-| User cancels before any question | Use all defaults, add warning | `true` | All defaults |
-| AskUserQuestion tool unavailable | Use all defaults, add error | `true` | All defaults |
-| AskUserQuestion times out | Use all defaults, add warning | `true` | All defaults |
-
-**Warning/Error Output:**
-```json
-{
-  "questionsAsked": true,
-  "userInput": { /* defaults or partial */ },
-  "warnings": ["User cancelled after Batch 1, defaults applied for Batch 2"],
-  "errors": []
-}
-```
-
-**NEVER set questionsAsked: false** unless you literally cannot call the AskUserQuestion tool due to a system error. User cancellation is NOT a reason to set false.
-
-#### Step 3-5: Rule Selection
+#### Step 2: Rule Selection (Using Provided userInput)
 
 1. Read adaptive rules template: `Bash(cco-install --cat rules/cco-adaptive.md)`
 2. Match detections → rule categories
@@ -473,12 +262,11 @@ Type → "CLI [detected]"; "Library"; "API"; "Frontend"
   ],
   "sources": [
     { "file": "{source_file}", "confidence": "{HIGH|MEDIUM|LOW}" }
-  ],
-  "questionsAsked": true
+  ]
 }
 ```
 
-**questionsAsked:** Must be `true`. If `false`, orchestrator rejects and re-runs agent.
+**Note:** `userInput` is passed TO the agent from the command (cco-config). Agent copies it to output for traceability.
 
 ## Artifact Handling
 
