@@ -154,8 +154,8 @@ Config scope handles project detection and rule selection. Different execution f
 | Step | Action | Tool |
 |------|--------|------|
 | 1 | Auto-detect from manifest/code | `Glob`, `Read`, `Grep` |
-| 2 | Ask user-input questions | `AskUserQuestion` |
-| 3 | Read adaptive.md template | `Read(~/.claude/rules/cco/adaptive.md)` |
+| 2 | Ask user-input questions (2 batches) | `AskUserQuestion` × 2 |
+| 3 | Read adaptive.md from pip package | `Bash(cco-install --cat rules/cco-adaptive.md)` |
 | 4 | Select rules based on detections + input | Internal |
 | 5 | Generate context.md + rule files | Internal |
 | 6 | Return structured output | JSON |
@@ -210,23 +210,63 @@ Config scope handles project detection and rule selection. Different execution f
 
 Mark as `[from docs]` - requires user confirmation.
 
-#### Step 2: User-Input Questions
+#### Step 2: User-Input Questions [MANDATORY]
 
-Use AskUserQuestion for non-detectable elements:
+**CRITICAL:** These questions MUST be asked via AskUserQuestion. Cannot be skipped or inferred.
 
-| Element | Question | Options |
-|---------|----------|---------|
-| Team | How many active contributors? | **Solo** (no review), **2-5** (async PR), **6+** (ADR/CODEOWNERS) |
-| Scale | Expected concurrent users? | **Prototype** (<100, dev only), **Small** (100+, basic cache), **Medium** (1K+, pools/async), **Large** (10K+, circuit breakers) |
-| Data | Most sensitive data? | **Public** (open), **PII** (personal data), **Regulated** (healthcare/financial) |
-| Compliance | Required frameworks? | **None**, **SOC2**, **HIPAA**, **PCI**, **GDPR**, **CCPA**, **ISO27001**, **FedRAMP**, **DORA**, **HITRUST** (multi-select) |
-| Testing | Coverage level? | **Basics** (60%, unit), **Standard** (80%, +integration), **Full** (90%, +E2E/contract) |
-| SLA | Uptime commitment? | **None** (best effort), **99%** (~7h/mo), **99.9%** (~43min/mo), **99.99%** (~4min/mo) |
-| Maturity | Development stage? | **Prototype**, **Active**, **Stable**, **Legacy** |
-| Breaking | Breaking change policy? | **Allowed** (v0.x), **Minimize** (deprecate first), **Never** (enterprise) |
-| Priority | Primary focus? | **Speed**, **Balanced**, **Quality**, **Security** |
+##### Question Classification
 
-**Default values:** Team=Solo, Scale=Small, Data=Public, Compliance=None, Testing=Standard, SLA=None, Maturity=Active, Breaking=Minimize, Priority=Balanced
+| Type | Meaning | Action |
+|------|---------|--------|
+| **MANDATORY** | Cannot be auto-detected | Always ask, no exceptions |
+| **CONFIRM** | Can detect, needs validation | Show `[detected: X]`, ask to confirm |
+| **AUTO** | High-confidence detection | Don't ask unless conflicting signals |
+
+##### Mandatory Questions (MUST ASK)
+
+| # | Element | Question | Options (with hints for AskUserQuestion descriptions) | MultiSelect |
+|---|---------|----------|-------------------------------------------------------|-------------|
+| 1 | Team | How many active contributors? | Solo (no review); 2-5 (async PR); 6+ (ADR/CODEOWNERS) | false |
+| 2 | Scale | Expected concurrent users/requests? | Prototype (<100, dev only); Small (100+, basic cache); Medium (1K+, pools/async); Large (10K+, circuit breakers) | false |
+| 3 | Data | Most sensitive data handled? | Public (open); PII (personal data); Regulated (healthcare/finance) | false |
+| 4 | Compliance | Required compliance frameworks? | None; SOC2; HIPAA; PCI; GDPR; CCPA; ISO27001; FedRAMP; DORA; HITRUST | true |
+| 5 | SLA | Uptime commitment? | None (best effort); 99% (~7h/mo down); 99.9% (~43min/mo); 99.99% (~4min/mo) | false |
+| 6 | Maturity | Development stage? | Prototype (may discard); Active (regular releases); Stable (maintenance); Legacy (minimal changes) | false |
+| 7 | Breaking | Breaking change policy? | Allowed (v0.x); Minimize (deprecate first); Never (enterprise) | false |
+| 8 | Priority | Primary development focus? | Speed (ship fast); Balanced (standard); Quality (thorough); Security (security-first) | false |
+
+**Execution:**
+- **Batch 1:** Questions 1-4 (Team, Scale, Data, Compliance)
+- **Batch 2:** Questions 5-8 (SLA, Maturity, Breaking, Priority)
+- **Batch 3 (if detections exist):** Confirm questions (Testing, Type)
+
+**Hint Usage:** Parenthetical hints become `description` field in AskUserQuestion options.
+
+##### Confirm Questions (Batch 3 - Only if detection exists)
+
+| Element | Detection Method | Confidence | Question |
+|---------|------------------|------------|----------|
+| Testing | Coverage config/reports | MEDIUM | Coverage target? |
+| Type | Entry points, exports | MEDIUM | Project type? |
+
+**Format:** Mark detected option with `[detected]` suffix:
+```
+Testing → "Standard (80%) [detected]"; "Basics (60%)"; "Full (90%)"
+Type → "CLI [detected]"; "Library"; "API"; "Frontend"
+```
+
+**Skip Batch 3 if:** No MEDIUM confidence detections found (all HIGH or no detection).
+
+##### Auto-Detected (Don't Ask)
+
+| Element | Confidence | Skip Condition |
+|---------|------------|----------------|
+| Language | HIGH | Clear manifest (pyproject.toml, package.json) |
+| Database | HIGH | ORM in dependencies |
+| Frontend | HIGH | Framework in dependencies |
+| Infra | HIGH | Dockerfile, k8s manifests present |
+
+**Default values (if user skips/cancels):** Team=Solo, Scale=Small, Data=Public, Compliance=None, Testing=Standard, SLA=None, Maturity=Active, Breaking=Minimize, Priority=Balanced
 
 #### Step 3-5: Rule Selection
 
@@ -274,11 +314,17 @@ Use AskUserQuestion for non-detectable elements:
     "breaking": "{user_breaking}",
     "priority": "{user_priority}"
   },
+  "triggeredCategories": [
+    { "category": "{category}", "trigger": "{trigger_code}", "rule": "{rule_file|null}", "source": "{auto|user|detected}" }
+  ],
   "sources": [
     { "file": "{source_file}", "confidence": "{HIGH|MEDIUM|LOW}" }
-  ]
+  ],
+  "questionsAsked": true
 }
 ```
+
+**questionsAsked:** Must be `true`. If `false`, orchestrator rejects and re-runs agent.
 
 ## Artifact Handling
 
