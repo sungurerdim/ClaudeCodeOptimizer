@@ -178,6 +178,33 @@ cco-install --local . --statusline cco-full --permissions balanced
 
 ---
 
+## Advanced
+
+<details>
+<summary><b>Dynamic Context Injection</b></summary>
+
+CCO commands use Claude Code's `!` backtick syntax for **real-time context at load time**:
+
+```markdown
+## Context
+- Git status: !`git status --short`
+- Current branch: !`git branch --show-current`
+- Project type: !`grep "^Type:" .claude/rules/cco/context.md`
+```
+
+| Traditional | With Dynamic Context |
+|-------------|---------------------|
+| 1. Load command | 1. Load command |
+| 2. AI calls `git status` tool | 2. Context **already injected** |
+| 3. Wait for response | 3. AI starts immediately |
+| 4. AI processes result | |
+
+**Benefits:** No tool call round-trip | Real data, no guessing | Reduced hallucination
+
+</details>
+
+---
+
 ## Standards & Compliance
 
 Built on official Anthropic documentation and Claude Code best practices:
