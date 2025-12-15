@@ -21,11 +21,18 @@ If an issue can be fixed by editing code, it MUST be fixed (with approval if nee
 - Context check: !`test -f ./.claude/rules/cco/context.md && echo "1" || echo "0"`
 - Git status: !`git status --short`
 
+**DO NOT re-run these commands. Use the pre-collected values above.**
 **Static context (Tools, Stack, Maturity) from ./CLAUDE.md already in context.**
 
 ## Context Requirement [CRITICAL]
 
-If context check returns "0": `CCO context not found. Run /cco-config first.` **Stop immediately.**
+If context check returns "0":
+```
+CCO context not found.
+
+Run /cco-config first to configure project context, then restart CLI.
+```
+**Stop immediately.**
 
 ## User Input
 
@@ -72,14 +79,20 @@ Single analyze agent │ Single apply agent │ Linter-first │ Batch calls │
 
 ## Approval Flow [CRITICAL]
 
-**Paginated AskUserQuestion (max 4 per page):**
+When approval-required issues exist, present them in **paginated format** (max 4 per page):
+
 ```
 Question: "Fix {category}? (Page 1/2)"
-Options: "{ID}: {title}" → "{file}:{line} - {fix}"
+Options:
+  - "{SCOPE}-001: {title}" → "{file}:{line} - {fix_description}"
+  - "{SCOPE}-002: {title}" → "{file}:{line} - {fix_description}"
+  ...
 MultiSelect: true
 ```
 
-After approval: Apply → Verify → Fix cascade errors if any
+**Pagination:** If >4 issues in category → add pages (Page 2/N, etc.)
+
+After approval: Apply via Task(cco-agent-apply) → Verify → Fix cascade errors if any
 
 ## Context Application
 

@@ -2,852 +2,795 @@
 *Selected by /cco-config based on detection. Each rule evaluated individually.*
 *Used as template pool for generating .claude/rules/ files with path-specific frontmatter.*
 
+## Detection System
+
+### Auto-Detect (Manifest/Code Scan)
+
+| Category | Trigger Files | Output |
+|----------|--------------|--------|
+| L:Python | pyproject.toml, setup.py, requirements.txt, *.py | `python.md` |
+| L:TypeScript | tsconfig.json, *.ts/*.tsx | `typescript.md` |
+| L:JavaScript | package.json (no TS), *.js/*.jsx | `javascript.md` |
+| L:Go | go.mod, *.go | `go.md` |
+| L:Rust | Cargo.toml, *.rs | `rust.md` |
+| T:CLI | __main__.py, bin/, cli/, "bin" in package.json | `cli.md` |
+| T:Library | exports in package.json, __init__.py with __all__ | `library.md` |
+| API:REST | routes/, @Get/@Post decorators, express.Router | `api.md` |
+| API:GraphQL | graphql deps, schema.graphql, resolvers/ | `api.md` |
+| API:gRPC | *.proto files, grpc deps | `api.md` |
+| DB:* | ORM deps, migrations/, prisma/schema.prisma | `database.md` |
+| Frontend | react/vue/angular/svelte in deps | `frontend.md` |
+| Mobile | Podfile, build.gradle, pubspec.yaml | `mobile.md` |
+| Desktop | electron/tauri in deps | `desktop.md` |
+| Container | Dockerfile (not in examples/test/) | `container.md` |
+| K8s | k8s/, helm/, kustomization.yaml | `k8s.md` |
+| Serverless | serverless.yml, sam.yaml, vercel.json, netlify.toml | `serverless.md` |
+| Monorepo | nx.json, turbo.json, lerna.json, pnpm-workspace.yaml | `monorepo.md` |
+| ML/AI | torch/tensorflow/sklearn/transformers/langchain | `ml.md` |
+| Game | Unity (.csproj), Unreal (*.uproject), Godot (project.godot) | `game.md` |
+| i18n | locales/, i18n/, messages/, translations/ | `i18n.md` |
+| RT:* | websocket/socket.io/sse deps | `realtime.md` |
+| DEP:* | See Dependency Categories below | `{dep}.md` |
+
+### User-Input (AskUserQuestion)
+
+| Element | Options | Default | Affects |
+|---------|---------|---------|---------|
+| Team | Solo; 2-5; 6+ | Solo | Team rules |
+| Scale | Prototype (<100); Small (100+); Medium (1K+); Large (10K+) | Small | Scale rules |
+| Data | Public; PII; Regulated | Public | Security rules |
+| Compliance | None; SOC2; HIPAA; PCI; GDPR; CCPA; ISO27001; FedRAMP; DORA; HITRUST | None | Compliance rules |
+| Testing | Basics (60%); Standard (80%); Full (90%) | Standard | Testing rules |
+| SLA | None; 99%; 99.9%; 99.99% | None | Observability rules |
+| Maturity | Prototype; Active; Stable; Legacy | Active | Guidelines |
+| Breaking | Allowed; Minimize; Never | Minimize | Guidelines |
+| Priority | Speed; Balanced; Quality; Security | Balanced | Guidelines |
+
+#### User-Input Descriptions
+
+**Team:** How many people actively contribute?
+- Solo: Single developer, no review process needed
+- 2-5: Small team, async PR reviews work well
+- 6+: Large team, needs ADR, CODEOWNERS, formal process
+
+**Scale:** Expected concurrent users or requests/second?
+- Prototype (<100): Dev/testing only, no production traffic
+- Small (100+): Early production, basic caching helps
+- Medium (1K+): Growth stage, connection pooling and async needed
+- Large (10K+): High traffic, circuit breakers and API versioning required
+
+**Data:** Most sensitive data your system handles?
+- Public: Open data, no login required
+- PII: Personal data (names, emails, addresses) - activates security rules
+- Regulated: Healthcare (HIPAA), financial (PCI), government - strictest rules
+
+**Compliance:** Required compliance frameworks? (multi-select)
+- SOC2: B2B SaaS with enterprise customers
+- HIPAA: US healthcare data (PHI)
+- PCI: Payment card processing
+- GDPR: EU user data, privacy rights
+- CCPA: California consumer privacy
+- ISO27001: International security standard
+- FedRAMP: US government cloud
+- DORA: EU financial services (2025+)
+- HITRUST: Healthcare + security combined
+
+**Testing:** Test coverage level?
+- Basics (60%): Unit tests, basic mocking
+- Standard (80%): + Integration tests, fixtures, CI gates
+- Full (90%): + E2E, contract testing, mutation testing
+
+**SLA:** Uptime commitment?
+- None: Best effort, no formal SLA
+- 99%: ~7h downtime/month, basic monitoring
+- 99.9%: ~43min/month, needs redundancy
+- 99.99%: ~4min/month, multi-region, chaos testing
+
+**Maturity:** Project development stage? (guideline only)
+- Prototype: Proof of concept, may be discarded
+- Active: Ongoing development, regular releases
+- Stable: Feature-complete, maintenance mode
+- Legacy: Old codebase, minimal changes
+
+**Breaking:** How to handle breaking changes? (guideline only)
+- Allowed: OK in any release (v0.x projects)
+- Minimize: Deprecate first, provide migration path (v1.x+)
+- Never: Zero breaking changes (enterprise libraries)
+
+**Priority:** Primary development focus? (guideline only)
+- Speed: Ship fast, iterate quickly
+- Balanced: Standard practices, reasonable coverage
+- Quality: Thorough testing, extensive review
+- Security: Security-first, threat modeling
+
+**Maturity/Breaking/Priority** are guidelines stored in context.md, not separate rule files.
+
+---
+
+## Dependency Sources
+
+| Language | Manifest Files | Parse Method |
+|----------|---------------|--------------|
+| Python | pyproject.toml, requirements.txt, setup.py, Pipfile | TOML/text |
+| Node | package.json | JSON (dependencies + devDependencies) |
+| Go | go.mod | require block |
+| Rust | Cargo.toml | [dependencies] section |
+
+---
+
 ## Path Pattern Templates
 
-When cco-config generates project-level rules, it creates separate files with YAML frontmatter:
+When generating rule files, use YAML frontmatter:
 
-| Category | Output File | Paths Pattern | Trigger |
-|----------|-------------|---------------|---------|
-| **Language (ALWAYS evaluate)** ||||
-| L:Python | `python.md` | `**/*.py` | pyproject.toml, setup.py, requirements.txt |
-| L:TypeScript | `typescript.md` | `**/*.{ts,tsx}` | tsconfig.json |
-| L:JavaScript | `javascript.md` | `**/*.{js,jsx}` | package.json (no TS) |
-| L:Go | `go.md` | `**/*.go` | go.mod |
-| L:Rust | `rust.md` | `**/*.rs` | Cargo.toml |
-| **Application Type** ||||
-| T:CLI | `cli.md` | `**/__main__.py, **/cli/**/*` | __main__.py, bin/, cli/ |
-| T:Library | `library.md` | `**/src/**/*` | exports in package.json, __init__.py |
-| **Scale (ALWAYS evaluate)** ||||
-| S:Small+ | `scale.md` | `**/*` | Default for non-prototype |
-| **Infrastructure** ||||
-| API:REST | `api.md` | `**/routes/**/*`, `**/api/**/*` | routes/, @Get/@Post decorators |
-| CI/CD | `operations.md` | `.github/**/*` | .github/workflows/ |
-| Testing | `testing.md` | `tests/**/*`, `**/*.test.*` | pytest/jest/vitest config |
-| Frontend | `frontend.md` | `**/components/**/*`, `**/pages/**/*` | react/vue/angular in deps |
-| DB:* | `database.md` | `**/models/**/*`, `**/migrations/**/*` | ORM deps, migrations/ |
-| **DEP: Compute & Processing** ||||
-| DEP:GPU | `gpu.md` | `**/*` | cuda-python, cupy, torch+cuda |
-| DEP:Audio | `audio.md` | `**/*` | faster-whisper, pydub, librosa |
-| DEP:Video | `video.md` | `**/*` | ffmpeg-python, moviepy |
-| DEP:Image | `image.md` | `**/*` | opencv-python, pillow |
-| DEP:HeavyModel | `heavy-model.md` | `**/*` | transformers, langchain |
-| DEP:DataHeavy | `data-heavy.md` | `**/*` | pandas, polars, dask |
-| **DEP: Game Development** ||||
-| DEP:GamePython | `game-python.md` | `**/*` | pygame, arcade, ursina |
-| DEP:GameJS | `game-js.md` | `**/*` | phaser, three.js, pixi.js |
-| DEP:GameEngine | `game-engine.md` | `**/*` | Unity, Unreal, Godot |
-| **DEP: Web & API** ||||
-| DEP:HTTP | `http-client.md` | `**/*` | requests, httpx, axios |
-| DEP:ORM | `orm.md` | `**/*` | sqlalchemy, prisma, typeorm |
-| DEP:Auth | `auth.md` | `**/*` | next-auth, clerk, auth0 |
-| DEP:Payment | `payment.md` | `**/*` | stripe, paypal, paddle |
-| **DEP: Communication** ||||
-| DEP:Email | `email.md` | `**/*` | sendgrid, resend, nodemailer |
-| DEP:SMS | `sms.md` | `**/*` | twilio, vonage |
-| DEP:Notification | `notification.md` | `**/*` | firebase-admin, onesignal |
-| DEP:Search | `search.md` | `**/*` | elasticsearch, meilisearch |
-| **DEP: Infrastructure** ||||
-| DEP:Queue | `queue.md` | `**/*` | celery, bull, dramatiq |
-| DEP:Cache | `cache.md` | `**/*` | redis, memcached |
-| DEP:Logging | `logging.md` | `**/*` | loguru, winston, pino |
-| DEP:ObjectStore | `object-store.md` | `**/*` | boto3, minio, cloudinary |
-| **DEP: Documents** ||||
-| DEP:PDF | `pdf.md` | `**/*` | reportlab, weasyprint |
-| DEP:Excel | `excel.md` | `**/*` | openpyxl, exceljs |
-| **DEP: Emerging Tech** ||||
-| DEP:Blockchain | `blockchain.md` | `**/*` | web3, ethers, hardhat |
-| DEP:ARVR | `arvr.md` | `**/*` | openxr, webxr |
-| DEP:IoT | `iot.md` | `**/*` | micropython, paho-mqtt |
-| **DEP: Security** ||||
-| DEP:Crypto | `crypto.md` | `**/*` | cryptography, pycryptodome |
-| DEP:Scraping | `scraping.md` | `**/*` | scrapy, selenium, playwright |
-
-**Generated file format:**
 ```markdown
 ---
 paths: **/*.py
 ---
 # Python Rules
 
-| Rule | Description |
-|------|-------------|
-| * Type-Hints | Type annotations for public APIs |
+- **Type-Hints**: Type annotations for public APIs
 ```
 
-## Trigger Reference
-
-| Symbol | Meaning | Detection Source |
-|--------|---------|------------------|
-| L: | Language/Stack | package.json, pyproject.toml, go.mod, Cargo.toml |
-| DEP: | Dependency category | Dependencies in manifest files |
-| D: | Data classification | Auth patterns, encryption usage |
-| S: | Scale (users/RPS) | Replicas, HPA, load balancer config |
-| T: | Application type | Entry points, exports analysis |
-| A: | Architecture | Service count, Dockerfile patterns |
-| C: | Compliance | SECURITY.md, audit logs, keywords |
-| DB: | Database | ORM deps, migrations/, prisma/schema |
-| API: | API style | Routes, decorators, proto files |
-| RT: | Real-time | WebSocket/SSE deps |
-
 ---
 
-## Dependency-Based Detection [CRITICAL]
-
-**ALWAYS scan project dependencies** from manifest files and trigger matching categories.
-
-### Dependency Sources by Language
-
-| Language | Manifest Files | Parse Method |
-|----------|---------------|--------------|
-| Python | pyproject.toml, requirements.txt, setup.py, Pipfile | TOML/text parse |
-| Node | package.json | JSON parse dependencies + devDependencies |
-| Go | go.mod | require block |
-| Rust | Cargo.toml | [dependencies] section |
-
-### Dependency Categories
-
-| Category | Trigger Dependencies | Output File |
-|----------|---------------------|-------------|
-| **Compute & Processing** |||
-| DEP:GPU | cuda-python, cupy, torch+cuda, tensorflow-gpu, numba, pycuda, triton, jax | `gpu.md` |
-| DEP:Audio | faster-whisper, openai-whisper, pydub, librosa, soundfile, pyaudio, speechrecognition, pedalboard | `audio.md` |
-| DEP:Video | ffmpeg-python, moviepy, opencv (VideoCapture), decord, av, imageio-ffmpeg | `video.md` |
-| DEP:Image | opencv-python, pillow, scikit-image, imageio, albumentations, kornia | `image.md` |
-| DEP:HeavyModel | transformers, sentence-transformers, langchain, llama-cpp-python, vllm, ollama, openai, anthropic | `heavy-model.md` |
-| DEP:DataHeavy | pandas, polars, dask, pyspark, ray, vaex, modin, arrow | `data-heavy.md` |
-| **Game Development** |||
-| DEP:GamePython | pygame, arcade, ursina, panda3d, pyglet, raylib | `game-python.md` |
-| DEP:GameJS | phaser, three.js, pixi.js, babylon.js, kaboom, excalibur | `game-js.md` |
-| DEP:GameEngine | Unity (detected via .csproj), Unreal (*.uproject), Godot (project.godot) | `game-engine.md` |
-| **Web & API** |||
-| DEP:HTTP | requests, httpx, aiohttp, axios, got, ky, node-fetch | `http-client.md` |
-| DEP:ORM | sqlalchemy, prisma, drizzle, typeorm, sequelize, tortoise-orm, peewee | `orm.md` |
-| DEP:Auth | authlib, python-jose, passlib, bcrypt, next-auth, clerk, auth0, supabase-auth | `auth.md` |
-| DEP:Payment | stripe, paypal, square, braintree, paddle, lemon-squeezy | `payment.md` |
-| **Communication** |||
-| DEP:Email | sendgrid, mailgun, resend, nodemailer, postmark, ses | `email.md` |
-| DEP:SMS | twilio, vonage, messagebird, plivo | `sms.md` |
-| DEP:Notification | firebase-admin, onesignal, pusher, novu | `notification.md` |
-| **Search & Storage** |||
-| DEP:Search | elasticsearch, meilisearch, algolia, typesense, opensearch | `search.md` |
-| DEP:ObjectStore | boto3/s3, minio, cloudinary, uploadthing, google-cloud-storage | `object-store.md` |
-| **Infrastructure** |||
-| DEP:Queue | celery, rq, dramatiq, huey, bull, bee-queue, bullmq | `queue.md` |
-| DEP:Cache | redis, memcached, aiocache, diskcache, keyv, ioredis | `cache.md` |
-| DEP:Logging | loguru, structlog, winston, pino, bunyan | `logging.md` |
-| **Documents & Output** |||
-| DEP:PDF | reportlab, weasyprint, pdfkit, puppeteer (pdf), playwright (pdf), fpdf2 | `pdf.md` |
-| DEP:Excel | openpyxl, xlsxwriter, pandas (excel), exceljs, sheetjs | `excel.md` |
-| **Emerging Tech** |||
-| DEP:Blockchain | web3, ethers, hardhat, brownie, ape, solana-py | `blockchain.md` |
-| DEP:ARVR | openxr, arvr-toolkit, ar-foundation, webxr | `arvr.md` |
-| DEP:IoT | micropython, esphome, homeassistant, paho-mqtt, aiocoap | `iot.md` |
-| **Security** |||
-| DEP:Crypto | cryptography, pycryptodome, nacl, jose, argon2 | `crypto.md` |
-| DEP:Scraping | scrapy, beautifulsoup4, selenium, playwright, puppeteer, crawlee | `scraping.md` |
-
----
-
-## Language-Specific Rules
-**Trigger:** Stack detection (pyproject.toml, package.json, go.mod, Cargo.toml)
+## Language Rules
 
 ### Python (L:Python)
-**Trigger:** pyproject.toml | setup.py | requirements.txt | *.py files
-| Rule | Applicability Check | Concise |
-|------|---------------------|---------|
-| * Type-Hints | Public APIs | Type annotations for functions, methods, classes |
-| * Docstrings | Public functions/classes | Google-style docstrings |
-| * Import-Order | Always | stdlib > third-party > local (isort) |
-| * Exception-Context | Exception handling | Use `raise X from Y` for chaining |
+**Trigger:** pyproject.toml | setup.py | requirements.txt | *.py
+
+- **Python-Type-Hints**: Type annotations for public APIs (functions, methods, classes)
+- **Docstrings**: Google-style docstrings for public functions/classes
+- **Import-Order**: stdlib > third-party > local (isort compatible)
+- **Exception-Context**: Use `raise X from Y` for exception chaining
 
 ### TypeScript (L:TypeScript)
-**Trigger:** tsconfig.json | *.ts/*.tsx files
-| Rule | Applicability Check | Concise |
-|------|---------------------|---------|
-| * Strict-Mode | Always | Enable strict in tsconfig |
-| * Explicit-Return | Public APIs | Return types on public functions |
-| * No-Any | Always | Avoid any, use unknown |
-| * Null-Safety | Always | Strict null checks |
+**Trigger:** tsconfig.json | *.ts/*.tsx
+
+- **Strict-Mode**: Enable strict in tsconfig.json
+- **Explicit-Return**: Return types on public functions
+- **No-Any**: Avoid any, use unknown for truly unknown types
+- **Null-Safety**: Strict null checks enabled
 
 ### JavaScript (L:JavaScript)
-**Trigger:** package.json without TS | *.js/*.jsx files only
-| Rule | Applicability Check | Concise |
-|------|---------------------|---------|
-| * JSDoc-Types | Public APIs | Type hints via JSDoc |
-| * ES-Modules | Always | ESM over CommonJS |
-| * Const-Default | Always | const > let > var |
+**Trigger:** package.json without TS | *.js/*.jsx only
+
+- **JSDoc-Types**: Type hints via JSDoc for public APIs
+- **ES-Modules**: ESM over CommonJS (import/export)
+- **Const-Default**: const > let > var preference
 
 ### Go (L:Go)
-**Trigger:** go.mod | *.go files
-| Rule | Applicability Check | Concise |
-|------|---------------------|---------|
-| * Error-Wrap | Error handling | Wrap with context |
-| * Interface-Small | Always | Small, focused interfaces |
-| * Goroutine-Safe | Concurrency | Channel or sync primitives |
-| * Defer-Cleanup | Resource handling | defer for cleanup |
+**Trigger:** go.mod | *.go
+
+- **Error-Wrap**: Wrap errors with context (fmt.Errorf %w)
+- **Interface-Small**: Small, focused interfaces (1-3 methods)
+- **Goroutine-Safe**: Channel or sync primitives for concurrency
+- **Defer-Cleanup**: defer for cleanup operations
 
 ### Rust (L:Rust)
-**Trigger:** Cargo.toml | *.rs files
-| Rule | Applicability Check | Concise |
-|------|---------------------|---------|
-| * Result-Propagate | Error handling | Use ? operator |
-| * Ownership-Clear | Always | Clear ownership patterns |
-| * Clippy-Clean | Always | No clippy warnings |
-| * Unsafe-Minimize | Always | Minimize unsafe blocks |
+**Trigger:** Cargo.toml | *.rs
 
-## Granular Selection [CRITICAL]
-
-Each rule has an **Applicability Check**. Only include rules where check passes.
-
-**Format in context:**
-```markdown
-### {Category} - {Trigger reason}
-| Rule | Description |
-|------|-------------|
-| * {Name} | {Concise description} |
-```
+- **Result-Propagate**: Use ? operator for error propagation
+- **Ownership-Clear**: Clear ownership patterns, minimize clones
+- **Clippy-Clean**: No clippy warnings in CI
+- **Unsafe-Minimize**: Minimize unsafe blocks, document when necessary
 
 ---
 
-## Security
-**Trigger:** D:PII | D:Regulated | C:*
+## Security Rules
+**Trigger:** D:PII | D:Regulated | Scale:Large | Compliance:*
 
-| Rule | Applicability Check | Concise |
-|------|---------------------|---------|
-| * Input-Validation | Has user input entry points | Validate at boundaries |
-| * SQL-Safe | Has DB queries | Parameterized only |
-| * XSS-Prevent | Outputs HTML/web | Sanitize + CSP |
-| * Auth-Verify | Has auth system | Verify every request |
-| * Rate-Limit | Has public endpoints | Per-user/IP limits |
-| * Encrypt-Rest | Stores sensitive data | AES-256 for PII |
-| * Audit-Log | Security-critical actions | Immutable logging |
-| * CORS-Strict | Web server with API | Explicit origins |
-| * License-Track | Has dependencies | Review GPL/AGPL |
+- **Input-Validation**: Validate at system entry points (Pydantic/Zod/JSON Schema)
+- **SQL-Safe**: Parameterized queries only, no string concatenation
+- **XSS-Prevent**: Sanitize output + CSP headers
+- **Auth-Verify**: Verify authentication on every request
+- **Rate-Limit**: Per-user/IP limits on public endpoints
+- **Encrypt-Rest**: AES-256 for PII/sensitive data at rest
+- **Audit-Log**: Immutable logging for security-critical actions
+- **CORS-Strict**: Explicit origins, no wildcard in production
+- **License-Track**: Review GPL/AGPL deps before adding
 
 ---
 
-## Scale
+## Compliance Rules
+**Trigger:** Compliance != None (multi-select, cumulative)
 
+### Base Compliance (Any)
+- **Data-Classification**: Classify data by sensitivity level
+- **Access-Control**: Role-based access with least privilege
+- **Incident-Response**: Documented incident response plan
+
+### SOC2
+- **SOC2-Audit-Trail**: Complete audit trail for all data access
+- **SOC2-Change-Mgmt**: Documented change management process
+- **SOC2-Access-Review**: Quarterly access reviews
+
+### HIPAA
+- **HIPAA-PHI-Encrypt**: Encrypt PHI at rest and in transit
+- **HIPAA-BAA**: Business Associate Agreements for vendors
+- **HIPAA-Access-Log**: Log all PHI access with user, time, purpose
+- **HIPAA-Minimum**: Minimum necessary access to PHI
+
+### PCI-DSS
+- **PCI-Card-Mask**: Mask PAN (show only last 4 digits)
+- **PCI-No-Storage**: Never store CVV/CVC
+- **PCI-Network-Seg**: Network segmentation for cardholder data
+- **PCI-Key-Mgmt**: Cryptographic key management procedures
+
+### GDPR
+- **GDPR-Consent**: Explicit consent with purpose specification
+- **GDPR-Right-Access**: Implement data subject access requests
+- **GDPR-Right-Delete**: Implement right to erasure
+- **GDPR-Data-Portability**: Export user data in portable format
+- **GDPR-Breach-Notify**: 72-hour breach notification procedure
+
+### CCPA
+- **CCPA-Opt-Out**: "Do Not Sell" opt-out mechanism
+- **CCPA-Disclosure**: Disclose categories of data collected
+- **CCPA-Delete**: Honor deletion requests within 45 days
+
+### ISO27001
+- **ISO-Risk-Assess**: Regular risk assessments
+- **ISO-Asset-Inventory**: Maintain information asset inventory
+- **ISO-Policy-Docs**: Documented security policies
+
+### FedRAMP
+- **FedRAMP-Boundary**: Documented system boundary
+- **FedRAMP-Continuous**: Continuous monitoring implementation
+- **FedRAMP-FIPS**: FIPS 140-2 validated cryptography
+
+### DORA (EU Financial)
+- **DORA-ICT-Risk**: ICT risk management framework
+- **DORA-Incident**: Major ICT incident reporting
+- **DORA-Resilience**: Digital operational resilience testing
+
+### HITRUST
+- **HITRUST-CSF**: Align with HITRUST CSF controls
+- **HITRUST-Inherit**: Leverage inherited controls from providers
+
+---
+
+## Scale Rules
 **Inheritance:** Higher tiers include all lower tier rules.
 
-### Small (S:100+)
-| Rule | Applicability Check | Concise |
-|------|---------------------|---------|
-| * Caching | Has data fetching | TTL + invalidation |
-| * Lazy-Load | Has non-critical resources | Defer loading |
+### Small (Scale:100+)
+- **Caching**: TTL + invalidation strategy for data fetching
+- **Lazy-Load**: Defer loading of non-critical resources
 
-### Medium (S:1K+)
-| Rule | Applicability Check | Concise |
-|------|---------------------|---------|
-| * Conn-Pool | Has DB/external connections | Reuse + sizing |
-| * Async-IO | Has I/O operations | Non-blocking |
+### Medium (Scale:1K+)
+- **Conn-Pool**: Connection pooling with appropriate sizing
+- **Async-IO**: Non-blocking I/O operations
 
-### Large (S:10K+ | A:Microservices)
-| Rule | Applicability Check | Concise |
-|------|---------------------|---------|
-| * Circuit-Breaker | Calls external services | Fail-fast pattern |
-| * Idempotency | Has write operations | Safe retries |
-| * API-Version | Has public API | Version in URL/header |
-| * Compression | Large responses | gzip/brotli |
+### Large (Scale:10K+ | Architecture:Microservices)
+- **Circuit-Breaker**: Fail-fast pattern for external services
+- **Idempotency**: Safe retries for write operations
+- **API-Version**: Version in URL or header for public APIs
+- **Compression**: gzip/brotli for large responses
+
+---
+
+## Team Rules
+**Inheritance:** Larger teams include smaller team rules.
+
+### Small (Team:2-5)
+- **PR-Review**: Async code review on all changes
+- **README-Contributing**: Clear contribution guidelines
+
+### Large (Team:6+)
+- **ADR**: Architecture Decision Records for significant decisions
+- **CODEOWNERS**: Clear ownership via CODEOWNERS file
+- **PR-Templates**: Standardized PR descriptions
+- **Branch-Protection**: Require reviews before merge
+
+---
+
+## Testing Rules
+**Inheritance:** Higher tiers include lower.
+
+### Basics (Testing:60%)
+- **Unit-Isolated**: Fast, deterministic unit tests
+- **Mocking**: Isolate tests from external dependencies
+- **Coverage-60**: Minimum 60% line coverage
+
+### Standard (Testing:80%)
+- **Integration**: Test component interactions
+- **Fixtures**: Reusable, maintainable test data
+- **Coverage-80**: Minimum 80% line coverage
+- **CI-on-PR**: Tests run on every PR
+
+### Full (Testing:90%)
+- **E2E**: End-to-end tests for critical user flows
+- **Contract**: Consumer-driven contract testing
+- **Mutation**: Mutation testing for test effectiveness
+- **Coverage-90**: Minimum 90% line coverage
+
+---
+
+## Observability Rules
+**Inheritance:** Higher SLA includes lower.
+
+### Basics (SLA:Any)
+- **Error-Tracking**: Sentry or similar error tracking
+- **Critical-Alerts**: Immediate notification for critical errors
+
+### Standard (SLA:99%+)
+- **Correlation-ID**: Request tracing across services
+- **RED-Metrics**: Rate, Error, Duration dashboards
+- **Distributed-Trace**: OpenTelemetry/Jaeger for multi-service
+
+### HA (SLA:99.9%+)
+- **Redundancy**: No single point of failure
+- **Auto-Failover**: Automatic recovery mechanisms
+- **Runbooks**: Documented incident response
+
+### Critical (SLA:99.99%+)
+- **Multi-Region**: Geographic redundancy
+- **Chaos-Engineering**: Fault injection testing
+- **DR-Tested**: Disaster recovery procedures tested
 
 ---
 
 ## Backend > API
 **Trigger:** API:REST | API:GraphQL | API:gRPC
 
-| Rule | Applicability Check | Concise |
-|------|---------------------|---------|
-| * REST-Methods | REST API | Proper verbs + status |
-| * Pagination | List endpoints exist | Cursor-based |
-| * OpenAPI-Spec | REST API | Synced with examples |
-| * Error-Format | Any API | Consistent, no stack trace |
+- **REST-Methods**: Proper HTTP verbs and status codes
+- **Pagination**: Cursor-based pagination for lists
+- **OpenAPI-Spec**: Synced spec with examples
+- **Error-Format**: Consistent format, no stack traces in prod
 
 ### GraphQL Extension
 **Trigger:** API:GraphQL
-| Rule | Applicability Check | Concise |
-|------|---------------------|---------|
-| * GQL-Limits | Always | Depth + complexity limits |
-| * GQL-Persisted | Production | Persisted queries |
+
+- **GQL-Limits**: Query depth and complexity limits
+- **GQL-Persisted**: Persisted queries in production
 
 ### gRPC Extension
 **Trigger:** API:gRPC
-| Rule | Applicability Check | Concise |
-|------|---------------------|---------|
-| * Proto-Version | Always | Backward compatible |
+
+- **Proto-Version**: Backward compatible proto changes
 
 ---
 
 ## Backend > Data
 **Trigger:** DB:*
-**Note:** For ORM-specific rules (queries, relationships), see DEP:ORM section.
 
-| Rule | Applicability Check | Concise |
-|------|---------------------|---------|
-| * Backup-Strategy | Has database | Automated + tested restore |
-| * Schema-Versioned | Has schema | Migration files + rollback plan |
-| * Connection-Secure | Production DB | SSL/TLS, credentials in env |
-| * Query-Timeout | All queries | Prevent runaway queries |
+- **Backup-Strategy**: Automated backups with tested restore
+- **Schema-Versioned**: Migration files with rollback plan
+- **Connection-Secure**: SSL/TLS, credentials in env vars
+- **Query-Timeout**: Prevent runaway queries
 
 ---
 
 ## Backend > Operations
 **Trigger:** CI/CD detected
 
-### Full Operations (T:API | T:Frontend | A:Microservices)
-| Rule | Applicability Check | Concise |
-|------|---------------------|---------|
-| * Config-as-Code | Always | Versioned, env-aware |
-| * Health-Endpoints | Has server | /health + /ready |
-| * Graceful-Shutdown | Long-running process | Drain on SIGTERM |
-| * Observability | Production deployment | Metrics + logs + traces |
-| * CI-Gates | Always | lint + test + coverage |
-| * Zero-Downtime | Has deployment | Blue-green or canary |
-| * Feature-Flags | Needs deploy/release separation | Decouple deploy |
+### Full Operations (T:API | T:Frontend | Architecture:Microservices)
+- **Config-as-Code**: Versioned, environment-aware config
+- **Health-Endpoints**: /health + /ready endpoints
+- **Graceful-Shutdown**: Drain connections on SIGTERM
+- **Observability**: Metrics + logs + traces
+- **CI-Gates**: lint + test + coverage gates
+- **Zero-Downtime**: Blue-green or canary deployments
+- **Feature-Flags**: Decouple deploy from release
 
 ### CI-Only Operations (T:CLI | T:Library)
-| Rule | Applicability Check | Concise |
-|------|---------------------|---------|
-| * Config-as-Code | Always | Versioned config |
-| * CI-Gates | Always | lint + test + coverage |
+- **Config-as-Code**: Versioned configuration
+- **CI-Gates**: lint + test + coverage gates
 
 ---
 
 ## Apps > CLI
 **Trigger:** T:CLI
 
-| Rule | Applicability Check | Concise |
-|------|---------------------|---------|
-| * Help-Examples | Has commands | --help with usage |
-| * Exit-Codes | Always | 0=success, N=specific |
-| * Signal-Handle | Long-running commands | SIGINT/SIGTERM graceful |
-| * Output-Modes | User-facing | Human + --json |
-| * Config-Precedence | Has config | env > file > args |
+- **Help-Examples**: --help with usage examples
+- **Exit-Codes**: 0=success, N=specific error codes
+- **Signal-Handle**: Graceful SIGINT/SIGTERM handling
+- **Output-Modes**: Human-readable + --json option
+- **Config-Precedence**: env > file > args > defaults
 
 ---
 
 ## Apps > Library
 **Trigger:** T:Library
 
-| Rule | Applicability Check | Concise |
-|------|---------------------|---------|
-| * Minimal-Deps | Always | Reduce transitive |
-| * Tree-Shakeable | JS/TS library | ESM, no side effects |
-| * Types-Included | Always | TS or JSDoc |
-| * Deprecation-Path | Has public API | Warn before remove |
+- **Minimal-Deps**: Minimize transitive dependencies
+- **Tree-Shakeable**: ESM with no side effects (JS/TS)
+- **Types-Included**: TypeScript types or JSDoc
+- **Deprecation-Path**: Warn before removing APIs
 
 ---
 
 ## Apps > Mobile
 **Trigger:** iOS/Android/RN/Flutter detected
 
-| Rule | Applicability Check | Concise |
-|------|---------------------|---------|
-| * Offline-First | Has data sync | Local-first + sync |
-| * Battery-Optimize | Background work | Minimize wake locks |
-| * Deep-Links | Has navigation | Universal/app links |
-| * Platform-Guidelines | Always | iOS HIG / Material |
+- **Offline-First**: Local-first with sync capability
+- **Battery-Optimize**: Minimize background work and wake locks
+- **Deep-Links**: Universal links / app links
+- **Platform-Guidelines**: iOS HIG / Material Design compliance
 
 ---
 
 ## Apps > Desktop
 **Trigger:** Electron/Tauri detected
 
-| Rule | Applicability Check | Concise |
-|------|---------------------|---------|
-| * Auto-Update | Distributed app | Silent + manual option |
-| * Native-Integration | Always | System tray, notifications |
-| * Memory-Cleanup | Long-running | Prevent leaks |
+- **Auto-Update**: Silent updates with manual option
+- **Native-Integration**: System tray, notifications
+- **Memory-Cleanup**: Prevent memory leaks in long-running apps
 
 ---
 
 ## Infrastructure > Container
-**Trigger:** Dockerfile detected (not in examples/test/benchmarks)
+**Trigger:** Dockerfile detected (not in examples/test/)
 
-| Rule | Applicability Check | Concise |
-|------|---------------------|---------|
-| * Multi-Stage | Always | Separate build/runtime |
-| * Non-Root | Always | Least privilege |
-| * CVE-Scan | Always | Automated in CI |
-| * Resource-Limits | Always | CPU/memory bounds |
-| * Distroless | Production | Minimal attack surface |
+- **Multi-Stage**: Separate build and runtime stages
+- **Non-Root**: Run as non-root user
+- **CVE-Scan**: Automated scanning in CI
+- **Resource-Limits**: CPU/memory bounds
+- **Distroless**: Minimal attack surface for production
 
 ---
 
 ## Infrastructure > K8s
 **Trigger:** Kubernetes/Helm detected
 
-| Rule | Applicability Check | Concise |
-|------|---------------------|---------|
-| * Security-Context | Always | Non-root, read-only fs |
-| * Network-Policy | Always | Explicit allow rules |
-| * Probes | Always | liveness + readiness |
-| * Resource-Quotas | Always | Namespace limits |
+- **Security-Context**: Non-root, read-only filesystem
+- **Network-Policy**: Explicit allow rules
+- **Probes**: liveness + readiness probes
+- **Resource-Quotas**: Namespace resource limits
 
 ---
 
 ## Infrastructure > Serverless
 **Trigger:** Lambda/Functions/Vercel/Netlify detected
 
-| Rule | Applicability Check | Concise |
-|------|---------------------|---------|
-| * Minimize-Bundle | Always | Reduce cold start |
-| * Graceful-Timeout | Always | Clean shutdown |
-| * Stateless | Always | No local state |
-| * Right-Size | Always | Memory optimization |
+- **Minimize-Bundle**: Reduce cold start time
+- **Graceful-Timeout**: Clean shutdown before timeout
+- **Stateless**: No local state between invocations
+- **Right-Size**: Memory optimization
 
 ---
 
 ## Infrastructure > Monorepo
 **Trigger:** nx/turbo/lerna/pnpm-workspace detected
 
-| Rule | Applicability Check | Concise |
-|------|---------------------|---------|
-| * Package-Boundaries | Always | Clear ownership |
-| * Selective-Test | Always | Affected only |
-| * Shared-Deps | Always | Hoisted + versioned |
-| * Build-Cache | Always | Remote cache |
+- **Package-Boundaries**: Clear ownership per package
+- **Selective-Test**: Test only affected packages
+- **Shared-Deps**: Hoisted and versioned dependencies
+- **Build-Cache**: Remote build cache
 
 ---
 
 ## Frontend
 **Trigger:** React/Vue/Angular/Svelte detected
 
-| Rule | Applicability Check | Concise |
-|------|---------------------|---------|
-| * A11y-WCAG | Always | AA level, keyboard nav |
-| * Perf-Core-Vitals | Always | LCP<2.5s, INP<200ms |
-| * State-Predictable | Has state management | Single source |
-| * Code-Split | Multiple routes | Lazy load routes |
+- **A11y-WCAG**: WCAG 2.2 AA, keyboard navigation
+- **Perf-Core-Vitals**: LCP<2.5s, INP<200ms, CLS<0.1
+- **State-Predictable**: Single source of truth for state
+- **Code-Split**: Lazy load routes and heavy components
 
 ---
 
 ## Specialized > ML/AI
-**Trigger:** torch/tf/sklearn/langchain detected
+**Trigger:** torch/tensorflow/sklearn/transformers/langchain detected
 
-| Rule | Applicability Check | Concise |
-|------|---------------------|---------|
-| * Reproducibility | Has training | Seed + version pin |
-| * Experiment-Track | Has training | MLflow/W&B |
-| * Model-Registry | Has models | Versioned artifacts |
-| * Bias-Detection | User-facing AI | Fairness metrics |
+- **Reproducibility**: Seed everything, pin versions
+- **Experiment-Track**: MLflow/W&B for experiments
+- **Model-Registry**: Versioned model artifacts
+- **Bias-Detection**: Fairness metrics for user-facing AI
 
 ---
 
 ## Specialized > Game
 **Trigger:** Unity/Unreal/Godot detected
-**Note:** For engine-specific rules, see DEP:GameEngine. For Python/JS game libs, see DEP:GamePython/DEP:GameJS.
 
-| Rule | Applicability Check | Concise |
-|------|---------------------|---------|
-| * Frame-Budget | Always | 16ms (60fps) or 8ms (120fps) target |
-| * Asset-LOD | Large assets | Level of detail + streaming |
-| * Save-Versioned | Has saves | Migration support for old saves |
-| * Determinism | Multiplayer/replay | Fixed timestep, no floats in logic |
-
----
-
-## Team
-
-**Inheritance:** Larger teams include smaller team rules.
-
-### Small (Team:2-5)
-| Rule | Applicability Check | Concise |
-|------|---------------------|---------|
-| * PR-Review | Always | Async review |
-| * README-Contributing | Always | Clear guidelines |
-
-### Large (Team:6+)
-| Rule | Applicability Check | Concise |
-|------|---------------------|---------|
-| * ADR | Always | Architecture decisions |
-| * CODEOWNERS | Always | Clear ownership |
-| * PR-Templates | Always | Standardized PRs |
-| * Branch-Protection | Always | Enforce reviews |
+- **Frame-Budget**: 16ms (60fps) or 8ms (120fps) target
+- **Asset-LOD**: Level of detail + streaming
+- **Save-Versioned**: Migration support for old saves
+- **Determinism**: Fixed timestep for multiplayer/replay
 
 ---
 
 ## i18n
 **Trigger:** locales/i18n/translations detected
 
-| Rule | Applicability Check | Concise |
-|------|---------------------|---------|
-| * Strings-External | Always | No hardcoded text |
-| * UTF8-Encoding | Always | Consistent encoding |
-| * RTL-Support | Multi-language | Bidirectional layout |
-| * Locale-Format | Dates/numbers | Culture-aware |
+- **Strings-External**: No hardcoded user-facing text
+- **UTF8-Encoding**: Consistent UTF-8 encoding
+- **RTL-Support**: Bidirectional layout for RTL languages
+- **Locale-Format**: Culture-aware date/time/number formatting
 
 ---
 
 ## Real-time
-
 **Inheritance:** Higher tiers include lower.
 
 ### Basic (RT:Basic)
 **Trigger:** WebSocket/SSE detected
-| Rule | Applicability Check | Concise |
-|------|---------------------|---------|
-| * Reconnect-Logic | Always | Auto-reconnect |
-| * Heartbeat | Always | Connection health |
-| * Stale-Data | Always | Handle disconnects |
+
+- **Reconnect-Logic**: Automatic reconnection with backoff
+- **Heartbeat**: Connection health monitoring
+- **Stale-Data**: Handle disconnection gracefully
 
 ### Low-Latency (RT:Low-latency)
-| Rule | Applicability Check | Concise |
-|------|---------------------|---------|
-| * Binary-Protocol | Performance critical | Protobuf/msgpack |
-| * Edge-Compute | Global users | Reduce latency |
-
----
-
-## Testing
-
-**Inheritance:** Higher tiers include lower.
-
-### Basics
-| Rule | Applicability Check | Concise |
-|------|---------------------|---------|
-| * Unit-Isolated | Always | Fast, deterministic |
-| * Mocking | External deps | Isolate tests |
-| * Coverage-60 | Always | >60% line coverage |
-
-### Standard
-| Rule | Applicability Check | Concise |
-|------|---------------------|---------|
-| * Integration | Component boundaries | Test interactions |
-| * Fixtures | Reusable data | Maintainable setup |
-| * Coverage-80 | Always | >80% line coverage |
-| * CI-on-PR | Has CI | Tests on every PR |
-
-### Full
-| Rule | Applicability Check | Concise |
-|------|---------------------|---------|
-| * E2E | User flows | Critical paths |
-| * Contract | API consumers | Consumer-driven |
-| * Mutation | High coverage | Test effectiveness |
-| * Coverage-90 | Always | >90% line coverage |
-
----
-
-## Observability
-
-**Inheritance:** Higher SLA includes lower.
-
-### Basics (SLA:Any)
-| Rule | Applicability Check | Concise |
-|------|---------------------|---------|
-| * Error-Tracking | Always | Sentry or similar |
-| * Critical-Alerts | Always | Immediate notify |
-
-### Standard (SLA:99%+)
-| Rule | Applicability Check | Concise |
-|------|---------------------|---------|
-| * Correlation-ID | Always | Request tracing across services |
-| * RED-Metrics | Has API | Rate, Error, Duration dashboards |
-| * Distributed-Trace | Multi-service | OpenTelemetry/Jaeger |
-
-### HA (SLA:99.9%+)
-| Rule | Applicability Check | Concise |
-|------|---------------------|---------|
-| * Redundancy | Always | No single point |
-| * Auto-Failover | Always | Automatic recovery |
-| * Runbooks | Always | Incident response |
-
-### Critical (SLA:99.99%+)
-| Rule | Applicability Check | Concise |
-|------|---------------------|---------|
-| * Multi-Region | Always | Geographic redundancy |
-| * Chaos-Engineering | Always | Fault injection |
-| * DR-Tested | Always | Disaster recovery |
+- **Binary-Protocol**: Protobuf/msgpack for performance
+- **Edge-Compute**: Edge deployment for global users
 
 ---
 
 ## Dependency-Based Rules
 
-### GPU (DEP:GPU)
-**Trigger:** cuda-python, cupy, torch (cuda), tensorflow-gpu, numba, pycuda, triton
-| Rule | Applicability Check | Concise |
-|------|---------------------|---------|
-| * Device-Selection | Multiple GPUs possible | Explicit CUDA_VISIBLE_DEVICES |
-| * Memory-Management | Large tensors | Clear cache, use context managers |
-| * Batch-Sizing | Training/inference | Dynamic batch based on VRAM |
-| * Mixed-Precision | Performance critical | FP16/BF16 where applicable |
-| * Fallback-CPU | Not all users have GPU | Graceful CPU fallback |
-| * Stream-Async | Multiple operations | CUDA streams for parallelism |
+### DEP:GPU
+**Trigger:** cuda-python, cupy, torch+cuda, tensorflow-gpu, numba, pycuda, triton, jax
 
-### Audio (DEP:Audio)
-**Trigger:** faster-whisper, whisper, pydub, librosa, soundfile, pyaudio
-| Rule | Applicability Check | Concise |
-|------|---------------------|---------|
-| * Chunk-Processing | Long audio files | Stream in chunks, don't load all |
-| * Sample-Rate | Multiple sources | Normalize sample rates |
-| * Format-Agnostic | User uploads | Support common formats (wav, mp3, m4a) |
-| * Memory-Stream | Large files | Use file handles, not full load |
-| * Silence-Detection | Pre-processing | VAD before heavy processing |
-| * Progress-Callback | Long operations | Report progress to user |
+- **Device-Selection**: Explicit CUDA_VISIBLE_DEVICES
+- **Memory-Management**: Clear cache, use context managers
+- **Batch-Sizing**: Dynamic batch based on VRAM
+- **Mixed-Precision**: FP16/BF16 where applicable
+- **Fallback-CPU**: Graceful CPU fallback
+- **Stream-Async**: CUDA streams for parallelism
 
-### Video (DEP:Video)
-**Trigger:** ffmpeg-python, moviepy, opencv (video), decord, av
-| Rule | Applicability Check | Concise |
-|------|---------------------|---------|
-| * Frame-Iterator | Large videos | Yield frames, don't load all |
-| * Codec-Fallback | Various inputs | Multiple codec support |
-| * Resolution-Aware | Processing | Scale before heavy ops |
-| * Temp-Cleanup | Intermediate files | Auto-cleanup temp files |
-| * Seek-Efficient | Random access | Use keyframe seeking |
-| * Hardware-Accel | Supported GPUs | NVENC/VAAPI when available |
+### DEP:Audio
+**Trigger:** faster-whisper, whisper, pydub, librosa, soundfile, pyaudio, speechrecognition, pedalboard
 
-### Heavy Models (DEP:HeavyModel)
-**Trigger:** transformers, sentence-transformers, langchain, llama-cpp, vllm
-| Rule | Applicability Check | Concise |
-|------|---------------------|---------|
-| * Lazy-Model-Load | CLI/API startup | Load on first use, not import |
-| * Model-Singleton | Multiple calls | Single instance, reuse |
-| * Quantization-Aware | Memory constrained | Support INT8/INT4 variants |
-| * Batch-Inference | Multiple inputs | Batch for throughput |
-| * Timeout-Guard | Inference calls | Max time limits |
-| * Memory-Cleanup | After heavy ops | Explicit garbage collection |
-| * Download-Cache | Model files | Cache models locally |
+- **Chunk-Processing**: Stream in chunks, don't load all
+- **Sample-Rate**: Normalize sample rates
+- **Format-Agnostic**: Support wav, mp3, m4a, etc.
+- **Memory-Stream**: Use file handles, not full load
+- **Silence-Detection**: VAD before heavy processing
+- **Progress-Callback**: Report progress for long operations
 
-### Image Processing (DEP:Image)
-**Trigger:** opencv-python, pillow, scikit-image, albumentations
-| Rule | Applicability Check | Concise |
-|------|---------------------|---------|
-| * Lazy-Decode | Multiple images | Decode on access |
-| * Size-Validate | User uploads | Max dimensions check |
-| * Format-Preserve | Editing | Maintain original format/quality |
-| * EXIF-Handle | Photos | Rotation, metadata handling |
-| * Memory-Map | Large images | mmap for huge files |
+### DEP:Video
+**Trigger:** ffmpeg-python, moviepy, opencv-video, decord, av, imageio-ffmpeg
 
-### Data Heavy (DEP:DataHeavy)
-**Trigger:** pandas, polars, dask, pyspark, ray, vaex
-| Rule | Applicability Check | Concise |
-|------|---------------------|---------|
-| * Chunk-Read | Large CSVs | chunksize parameter |
-| * Lazy-Eval | Transformations | Defer until needed (polars/dask) |
-| * Type-Optimize | Memory usage | Downcast dtypes |
-| * Index-Usage | Lookups | Set appropriate indexes |
-| * Parallel-Process | Multi-core | Use available cores |
-| * Spill-Disk | Memory limits | Allow disk spillover |
+- **Frame-Iterator**: Yield frames, don't load all
+- **Codec-Fallback**: Multiple codec support
+- **Resolution-Aware**: Scale before heavy processing
+- **Temp-Cleanup**: Auto-cleanup intermediate files
+- **Seek-Efficient**: Keyframe seeking for random access
+- **Hardware-Accel**: NVENC/VAAPI when available
 
-### Web Scraping (DEP:Scraping)
-**Trigger:** scrapy, beautifulsoup4, selenium, playwright, puppeteer
-**Note:** For HTTP basics (retry, timeout, session), see DEP:HTTP. These are scraping-specific.
-| Rule | Applicability Check | Concise |
-|------|---------------------|---------|
-| * Politeness-Delay | External sites | Respectful delays between requests |
-| * Robots-Respect | Public sites | Check and honor robots.txt |
-| * User-Agent-Honest | All requests | Identify your bot properly |
-| * Selector-Resilient | HTML parsing | Handle structure changes gracefully |
-| * Headless-Default | Browser automation | Headless unless debugging |
-| * Anti-Block | Production | Rotate IPs/proxies if needed |
+### DEP:HeavyModel
+**Trigger:** transformers, sentence-transformers, langchain, llama-cpp-python, vllm, ollama, openai, anthropic
 
-### Queue/Workers (DEP:Queue)
-**Trigger:** celery, rq, dramatiq, huey, bull
-| Rule | Applicability Check | Concise |
-|------|---------------------|---------|
-| * Idempotent-Tasks | Retries possible | Same input = same result |
-| * Result-Backend | Need results | Configure result storage |
-| * Timeout-Task | Long tasks | Per-task time limits |
-| * Dead-Letter | Failed tasks | DLQ for inspection |
-| * Priority-Queues | Mixed workloads | Separate by priority |
+- **Lazy-Model-Load**: Load on first use, not import
+- **Model-Singleton**: Single instance, reuse
+- **Quantization-Aware**: Support INT8/INT4 variants
+- **Batch-Inference**: Batch for throughput
+- **Timeout-Guard**: Max time limits on inference
+- **Model-Memory-Cleanup**: Explicit GC after heavy ops
+- **Download-Cache**: Cache models locally
 
-### Cache (DEP:Cache)
-**Trigger:** redis, memcached, aiocache, diskcache
-| Rule | Applicability Check | Concise |
-|------|---------------------|---------|
-| * TTL-Strategy | All cached data | Explicit expiration |
-| * Key-Namespace | Multiple apps | Prefixed keys |
-| * Serialization | Complex objects | Consistent serializer |
-| * Cache-Aside | Read-heavy | Load on miss pattern |
-| * Invalidation | Data changes | Clear related keys |
+### DEP:Image
+**Trigger:** opencv-python, pillow, scikit-image, imageio, albumentations, kornia
 
-### Game Python (DEP:GamePython)
-**Trigger:** pygame, arcade, ursina, panda3d, pyglet
-| Rule | Applicability Check | Concise |
-|------|---------------------|---------|
-| * Game-Loop | Always | Fixed timestep, variable render |
-| * Asset-Preload | Has assets | Load screens, progress bars |
-| * Input-Mapping | Has controls | Configurable keybindings |
-| * State-Machine | Multiple screens | Clean state transitions |
-| * Delta-Time | Movement/physics | Frame-independent movement |
+- **Lazy-Decode**: Decode on access
+- **Size-Validate**: Max dimensions check
+- **Format-Preserve**: Maintain original format/quality
+- **EXIF-Handle**: Rotation, metadata handling
+- **Memory-Map**: mmap for huge files
 
-### Game JS (DEP:GameJS)
-**Trigger:** phaser, three.js, pixi.js, babylon.js, kaboom
-| Rule | Applicability Check | Concise |
-|------|---------------------|---------|
-| * Sprite-Atlas | Multiple sprites | Texture packing |
-| * Object-Pool | Frequent create/destroy | Reuse objects |
-| * RAF-Loop | Animation | requestAnimationFrame |
-| * WebGL-Fallback | 3D content | Canvas 2D fallback |
-| * Audio-Context | Sound effects | Single AudioContext |
+### DEP:DataHeavy
+**Trigger:** pandas, polars, dask, pyspark, ray, vaex, modin, arrow
 
-### Game Engine (DEP:GameEngine)
+- **Chunk-Read**: chunksize parameter for large files
+- **Lazy-Eval**: Defer until needed (polars/dask)
+- **Type-Optimize**: Downcast dtypes
+- **Index-Usage**: Set appropriate indexes
+- **Parallel-Process**: Use available cores
+- **Spill-Disk**: Allow disk spillover
+
+### DEP:GamePython
+**Trigger:** pygame, arcade, ursina, panda3d, pyglet, raylib
+
+- **Game-Loop**: Fixed timestep, variable render
+- **Asset-Preload**: Load screens, progress bars
+- **Input-Mapping**: Configurable keybindings
+- **State-Machine**: Clean state transitions
+- **Delta-Time**: Frame-independent movement
+
+### DEP:GameJS
+**Trigger:** phaser, three.js, pixi.js, babylon.js, kaboom, excalibur
+
+- **Sprite-Atlas**: Texture packing
+- **Object-Pool**: Reuse frequently created objects
+- **RAF-Loop**: requestAnimationFrame
+- **WebGL-Fallback**: Canvas 2D fallback
+- **Audio-Context**: Single AudioContext
+
+### DEP:GameEngine
 **Trigger:** Unity (.csproj), Unreal (*.uproject), Godot (project.godot)
-| Rule | Applicability Check | Concise |
-|------|---------------------|---------|
-| * Scene-Organization | Multiple scenes | Clear hierarchy, naming convention |
-| * Prefab-Reuse | Reusable objects | Prefabs/scenes over copies |
-| * Build-Profiles | Multiple platforms | Platform-specific settings |
-| * Asset-LFS | Team project | Git LFS for binary assets |
-| * Input-System | Has controls | Input actions, rebindable keys |
-| * Platform-Optimize | Target platform | Quality presets per platform |
 
-### HTTP Client (DEP:HTTP)
-**Trigger:** requests, httpx, aiohttp, axios, got
-| Rule | Applicability Check | Concise |
-|------|---------------------|---------|
-| * Timeout-Always | External calls | Explicit timeouts |
-| * Retry-Transient | Network calls | Exponential backoff |
-| * Session-Reuse | Multiple requests | Connection pooling |
-| * Error-Handle | All requests | Status code handling |
-| * Response-Validate | API responses | Schema validation |
+- **Scene-Organization**: Clear hierarchy, naming convention
+- **Prefab-Reuse**: Prefabs/scenes over copies
+- **Build-Profiles**: Platform-specific settings
+- **Asset-LFS**: Git LFS for binary assets
+- **Input-System**: Input actions, rebindable keys
+- **Platform-Optimize**: Quality presets per platform
 
-### ORM (DEP:ORM)
-**Trigger:** sqlalchemy, prisma, drizzle, typeorm, sequelize
-| Rule | Applicability Check | Concise |
-|------|---------------------|---------|
-| * N+1-Prevent | Has relations | Eager load or batch queries |
-| * Query-Optimize | Complex queries | Analyze query plans, use EXPLAIN |
-| * Loading-Strategy | Has relations | Explicit eager/lazy per use case |
-| * Transaction-Boundary | Multi-write | Clear scope, rollback on error |
-| * Index-Design | Query patterns | Indexes for WHERE/JOIN columns |
-| * Bulk-Operations | Many records | Use bulk insert/update APIs |
+### DEP:HTTP
+**Trigger:** requests, httpx, aiohttp, axios, got, ky, node-fetch
 
-### Auth (DEP:Auth)
-**Trigger:** authlib, next-auth, clerk, auth0, supabase-auth
-| Rule | Applicability Check | Concise |
-|------|---------------------|---------|
-| * Token-Secure | JWT/sessions | HttpOnly, Secure flags |
-| * Refresh-Flow | Long sessions | Refresh token rotation |
-| * RBAC-Clear | Multiple roles | Role-based permissions |
-| * Session-Invalidate | Logout/revoke | Clear all sessions option |
-| * MFA-Support | Sensitive ops | Optional 2FA |
+- **Timeout-Always**: Explicit timeouts
+- **Retry-Transient**: Exponential backoff
+- **Session-Reuse**: Connection pooling
+- **Error-Handle**: Status code handling
+- **Response-Validate**: Schema validation
 
-### Payment (DEP:Payment)
-**Trigger:** stripe, paypal, square, paddle
-| Rule | Applicability Check | Concise |
-|------|---------------------|---------|
-| * Webhook-Verify | Payment events | Signature validation |
-| * Idempotency-Key | Create operations | Prevent duplicates |
-| * Amount-Server | Prices | Server-side price calculation |
-| * Error-Handle | All payments | User-friendly errors |
-| * Audit-Trail | Transactions | Complete payment logs |
+### DEP:ORM
+**Trigger:** sqlalchemy, prisma, drizzle, typeorm, sequelize, tortoise-orm, peewee
 
-### Email (DEP:Email)
-**Trigger:** sendgrid, mailgun, resend, nodemailer
-| Rule | Applicability Check | Concise |
-|------|---------------------|---------|
-| * Template-System | Multiple emails | Reusable templates |
-| * Queue-Async | Bulk/triggered | Background sending |
-| * Bounce-Handle | Production | Process bounces/complaints |
-| * Rate-Aware | Bulk sending | Respect provider limits |
-| * Unsubscribe | Marketing | One-click unsubscribe |
+- **N+1-Prevent**: Eager load or batch queries
+- **Query-Optimize**: EXPLAIN analysis
+- **Loading-Strategy**: Explicit eager/lazy per use case
+- **Transaction-Boundary**: Clear scope, rollback on error
+- **Index-Design**: Indexes for WHERE/JOIN columns
+- **Bulk-Operations**: Use bulk insert/update APIs
 
-### Search (DEP:Search)
-**Trigger:** elasticsearch, meilisearch, algolia, typesense
-| Rule | Applicability Check | Concise |
-|------|---------------------|---------|
-| * Index-Strategy | Document types | Separate vs combined |
-| * Sync-Mechanism | Data updates | Real-time vs batch |
-| * Relevance-Tune | User search | Custom ranking |
-| * Typo-Tolerance | User input | Fuzzy matching |
-| * Facet-Design | Filters | Efficient faceting |
+### DEP:Auth
+**Trigger:** authlib, python-jose, passlib, bcrypt, next-auth, clerk, auth0, supabase-auth
 
-### PDF (DEP:PDF)
-**Trigger:** reportlab, weasyprint, pdfkit, puppeteer
-| Rule | Applicability Check | Concise |
-|------|---------------------|---------|
-| * Template-Based | Multiple docs | HTML/template generation |
-| * Async-Generate | Large PDFs | Background processing |
-| * Stream-Output | Downloads | Stream don't buffer |
-| * Font-Embed | Custom fonts | Embed for consistency |
-| * Accessibility | Public docs | Tagged PDF when possible |
+- **Token-Secure**: HttpOnly, Secure flags
+- **Refresh-Flow**: Refresh token rotation
+- **RBAC-Clear**: Role-based permissions
+- **Session-Invalidate**: Clear all sessions option
+- **MFA-Support**: Optional 2FA for sensitive ops
 
-### Blockchain (DEP:Blockchain)
-**Trigger:** web3, ethers, hardhat, brownie
-| Rule | Applicability Check | Concise |
-|------|---------------------|---------|
-| * Gas-Estimate | Transactions | Pre-estimate gas |
-| * Nonce-Manage | Multiple tx | Track nonce locally |
-| * Event-Listen | Contract events | Indexed event handling |
-| * Testnet-First | Development | Test before mainnet |
-| * Key-Security | Private keys | Never in code/logs |
+### DEP:Payment
+**Trigger:** stripe, paypal, square, braintree, paddle, lemon-squeezy
 
-### AR/VR (DEP:ARVR)
-**Trigger:** openxr, webxr, ar-foundation
-| Rule | Applicability Check | Concise |
-|------|---------------------|---------|
-| * Frame-Budget | XR rendering | 90fps minimum |
-| * Comfort-Settings | VR | Teleport/snap turn options |
-| * Fallback-Mode | Device support | Non-XR fallback |
-| * Input-Abstract | Controllers | Abstract input layer |
-| * Performance-Tier | Device range | Quality presets |
+- **Webhook-Verify**: Signature validation
+- **Idempotency-Key**: Prevent duplicate charges
+- **Amount-Server**: Server-side price calculation
+- **Payment-Error-Handle**: User-friendly payment errors
+- **Audit-Trail**: Complete payment logs
 
-### IoT (DEP:IoT)
-**Trigger:** micropython, paho-mqtt, esphome
-| Rule | Applicability Check | Concise |
-|------|---------------------|---------|
-| * Reconnect-Logic | Network devices | Auto-reconnect |
-| * Power-Aware | Battery devices | Sleep modes |
-| * OTA-Update | Deployed devices | Remote updates |
-| * Data-Buffer | Unreliable network | Local buffer |
-| * Watchdog | Long-running | Hardware watchdog |
+### DEP:Email
+**Trigger:** sendgrid, mailgun, resend, nodemailer, postmark, ses
 
-### Logging (DEP:Logging)
-**Trigger:** loguru, structlog, winston, pino
-| Rule | Applicability Check | Concise |
-|------|---------------------|---------|
-| * Structured-Format | Production | JSON logging |
-| * Level-Config | Environments | Configurable log level |
-| * Context-Inject | Request handling | Request ID, user ID |
-| * Sensitive-Redact | User data | Mask PII |
-| * Rotation-Strategy | File logs | Size/time rotation |
+- **Template-System**: Reusable templates
+- **Queue-Async**: Background sending
+- **Bounce-Handle**: Process bounces/complaints
+- **Rate-Aware**: Respect provider limits
+- **Unsubscribe**: One-click unsubscribe
 
-### Object Store (DEP:ObjectStore)
-**Trigger:** boto3, minio, cloudinary, uploadthing
-| Rule | Applicability Check | Concise |
-|------|---------------------|---------|
-| * Presigned-URLs | Client uploads | Time-limited URLs |
-| * Content-Type | File uploads | Validate MIME type |
-| * Size-Limit | User uploads | Max file size |
-| * Path-Structure | Many files | Organized paths |
-| * Lifecycle-Rules | Temp files | Auto-expiry |
-
-### SMS (DEP:SMS)
+### DEP:SMS
 **Trigger:** twilio, vonage, messagebird, plivo
-| Rule | Applicability Check | Concise |
-|------|---------------------|---------|
-| * Delivery-Status | Critical messages | Track delivery callbacks |
-| * Rate-Throttle | Bulk sending | Respect carrier limits |
-| * Opt-Out | Marketing | Honor STOP requests |
-| * Fallback-Provider | High availability | Secondary provider |
-| * Message-Template | Multiple messages | Pre-approved templates |
 
-### Notification (DEP:Notification)
+- **Delivery-Status**: Track delivery callbacks
+- **Rate-Throttle**: Respect carrier limits
+- **Opt-Out**: Honor STOP requests
+- **Fallback-Provider**: Secondary provider
+- **Message-Template**: Pre-approved templates
+
+### DEP:Notification
 **Trigger:** firebase-admin, onesignal, pusher, novu
-| Rule | Applicability Check | Concise |
-|------|---------------------|---------|
-| * Channel-Preference | Multiple channels | User-configurable channels |
-| * Batch-Send | Many recipients | Batch API calls |
-| * Silent-Push | Data sync | Background updates |
-| * Token-Refresh | Mobile push | Handle token rotation |
-| * Fallback-Channel | Critical alerts | Email if push fails |
 
-### Excel (DEP:Excel)
-**Trigger:** openpyxl, xlsxwriter, exceljs, sheetjs
-| Rule | Applicability Check | Concise |
-|------|---------------------|---------|
-| * Stream-Write | Large files | Write in chunks |
-| * Formula-Safe | User data | Escape formula injection |
-| * Style-Template | Multiple reports | Reusable styles |
-| * Memory-Optimize | Large datasets | Use write-only mode |
-| * Sheet-Naming | Multiple sheets | Valid sheet names |
+- **Channel-Preference**: User-configurable channels
+- **Batch-Send**: Batch API calls
+- **Silent-Push**: Background updates
+- **Token-Refresh**: Handle token rotation
+- **Fallback-Channel**: Email if push fails
 
-### Crypto (DEP:Crypto)
-**Trigger:** cryptography, pycryptodome, nacl, jose
-| Rule | Applicability Check | Concise |
-|------|---------------------|---------|
-| * Algorithm-Modern | Encryption | AES-256-GCM, ChaCha20 |
-| * Key-Rotation | Long-lived keys | Scheduled rotation |
-| * IV-Unique | Each encryption | Never reuse IV/nonce |
-| * Timing-Safe | Comparisons | Constant-time compare |
-| * Key-Derivation | Passwords | Argon2/scrypt, not MD5/SHA1 |
+### DEP:Search
+**Trigger:** elasticsearch, meilisearch, algolia, typesense, opensearch
+
+- **Index-Strategy**: Separate vs combined indexes
+- **Sync-Mechanism**: Real-time vs batch sync
+- **Relevance-Tune**: Custom ranking
+- **Typo-Tolerance**: Fuzzy matching
+- **Facet-Design**: Efficient faceting
+
+### DEP:Queue
+**Trigger:** celery, rq, dramatiq, huey, bull, bee-queue, bullmq
+
+- **Idempotent-Tasks**: Same input = same result
+- **Result-Backend**: Configure result storage
+- **Timeout-Task**: Per-task time limits
+- **Dead-Letter**: DLQ for inspection
+- **Priority-Queues**: Separate by priority
+
+### DEP:Cache
+**Trigger:** redis, memcached, aiocache, diskcache, keyv, ioredis
+
+- **TTL-Strategy**: Explicit expiration
+- **Key-Namespace**: Prefixed keys
+- **Serialization**: Consistent serializer
+- **Cache-Aside**: Load on miss pattern
+- **Invalidation**: Clear related keys
+
+### DEP:Logging
+**Trigger:** loguru, structlog, winston, pino, bunyan
+
+- **Structured-Format**: JSON logging in production
+- **Level-Config**: Configurable log level
+- **Context-Inject**: Request ID, user ID
+- **Sensitive-Redact**: Mask PII
+- **Rotation-Strategy**: Size/time rotation
+
+### DEP:ObjectStore
+**Trigger:** boto3/s3, minio, cloudinary, uploadthing, google-cloud-storage
+
+- **Presigned-URLs**: Time-limited URLs
+- **Content-Type**: Validate MIME type
+- **Size-Limit**: Max file size
+- **Path-Structure**: Organized paths
+- **Lifecycle-Rules**: Auto-expiry for temp files
+
+### DEP:PDF
+**Trigger:** reportlab, weasyprint, pdfkit, puppeteer, playwright, fpdf2
+
+- **Template-Based**: HTML/template generation
+- **Async-Generate**: Background processing
+- **Stream-Output**: Stream don't buffer
+- **Font-Embed**: Embed for consistency
+- **Accessibility**: Tagged PDF when possible
+
+### DEP:Excel
+**Trigger:** openpyxl, xlsxwriter, pandas-excel, exceljs, sheetjs
+
+- **Stream-Write**: Write in chunks
+- **Formula-Safe**: Escape formula injection
+- **Style-Template**: Reusable styles
+- **Memory-Optimize**: Write-only mode
+- **Sheet-Naming**: Valid sheet names
+
+### DEP:Scraping
+**Trigger:** scrapy, beautifulsoup4, selenium, playwright, puppeteer, crawlee
+
+- **Politeness-Delay**: Respectful delays
+- **Robots-Respect**: Honor robots.txt
+- **User-Agent-Honest**: Identify your bot
+- **Selector-Resilient**: Handle structure changes
+- **Headless-Default**: Headless unless debugging
+- **Anti-Block**: Rotate IPs/proxies if needed
+
+### DEP:Blockchain
+**Trigger:** web3, ethers, hardhat, brownie, ape, solana-py
+
+- **Gas-Estimate**: Pre-estimate gas
+- **Nonce-Manage**: Track nonce locally
+- **Event-Listen**: Indexed event handling
+- **Testnet-First**: Test before mainnet
+- **Key-Security**: Never in code/logs
+
+### DEP:ARVR
+**Trigger:** openxr, webxr, ar-foundation, arvr-toolkit
+
+- **XR-Frame-Budget**: 90fps minimum
+- **Comfort-Settings**: Teleport/snap turn options
+- **Fallback-Mode**: Non-XR fallback
+- **Input-Abstract**: Abstract input layer
+- **Performance-Tier**: Quality presets per device
+
+### DEP:IoT
+**Trigger:** micropython, paho-mqtt, esphome, homeassistant, aiocoap
+
+- **IoT-Reconnect**: Auto-reconnect
+- **Power-Aware**: Sleep modes for battery
+- **OTA-Update**: Remote updates
+- **Data-Buffer**: Local buffer for unreliable network
+- **Watchdog**: Hardware watchdog
+
+### DEP:Crypto
+**Trigger:** cryptography, pycryptodome, nacl, jose, argon2
+
+- **Algorithm-Modern**: AES-256-GCM, ChaCha20
+- **Key-Rotation**: Scheduled rotation
+- **IV-Unique**: Never reuse IV/nonce
+- **Timing-Safe**: Constant-time compare
+- **Key-Derivation**: Argon2/scrypt, not MD5/SHA1
+
+---
+
+## Trigger Reference
+
+| Symbol | Meaning | Detection Source |
+|--------|---------|------------------|
+| L: | Language | Manifest files, code files |
+| T: | App Type | Entry points, exports |
+| API: | API Style | Routes, decorators, proto |
+| DB: | Database | ORM deps, migrations |
+| DEP: | Dependency | Dependencies in manifests |
+| D: | Data Class | Auth patterns, encryption |
+| S: | Scale | HPA, replicas, user input |
+| A: | Architecture | Service count, structure |
+| C: | Compliance | User input |
+| RT: | Real-time | WebSocket/SSE deps |

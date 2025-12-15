@@ -15,11 +15,18 @@ Read-only metrics collection and visualization.
 - Context check: !`test -f ./.claude/rules/cco/context.md && echo "1" || echo "0"`
 - Last health tag: !`git tag -l "health-*" --sort=-creatordate | head -1 || echo "None"`
 
+**DO NOT re-run these commands. Use the pre-collected values above.**
 **Static context (Stack, Type, Scale) from ./CLAUDE.md already in context.**
 
 ## Context Requirement [CRITICAL]
 
-If context check returns "0": `CCO context not found. Run /cco-config first.` **Stop immediately.**
+If context check returns "0":
+```
+CCO context not found.
+
+Run /cco-config first to configure project context, then restart CLI.
+```
+**Stop immediately.**
 
 ## Token Efficiency [CRITICAL]
 

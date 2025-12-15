@@ -21,11 +21,18 @@ Meta command that orchestrates other CCO commands for release preparation.
 - Git status: !`git status --short`
 - Last tag: !`git describe --tags --abbrev=0 || echo "No tags"`
 
+**DO NOT re-run these commands. Use the pre-collected values above.**
 **Static context (Applicable, Type) from ./CLAUDE.md already in context.**
 
 ## Context Requirement [CRITICAL]
 
-If context check returns "0": `CCO context not found. Run /cco-config first.` **Stop immediately.**
+If context check returns "0":
+```
+CCO context not found.
+
+Run /cco-config first to configure project context, then restart CLI.
+```
+**Stop immediately.**
 
 Sub-commands inherit context validation.
 
@@ -123,6 +130,17 @@ Orchestrates: `/cco-review --quick` (Gap analysis, DX review, What's working)
 | 4. CHANGELOG | Generate/update entries | CHANGELOG.md |
 | 5. Docs Sync | Check README, docs/ coverage | Missing docs |
 | 6. Apply | Write changes (if enabled) | Updated files |
+
+**Version Analysis Logic:**
+```
+1. Check current: pyproject.toml / package.json / __version__
+2. Scan commits since last tag:
+   - BREAKING: or removed exports? → MAJOR
+   - feat: or new exports? → MINOR
+   - Only fix: or refactor:? → PATCH
+3. Cross-check CHANGELOG entries
+4. Suggest: {current} → {suggested} ({reason})
+```
 
 **Change Classification:**
 

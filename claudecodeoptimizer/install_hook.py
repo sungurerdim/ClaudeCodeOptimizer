@@ -479,6 +479,16 @@ Permission levels: safe, balanced, permissive, full
         choices=PERMISSION_LEVELS,
         help="Permission level (requires --local)",
     )
+    parser.add_argument(
+        "--path",
+        metavar="SUBPATH",
+        help="Output pip package content path (e.g., rules/cco-adaptive.md)",
+    )
+    parser.add_argument(
+        "--cat",
+        metavar="SUBPATH",
+        help="Output file content from pip package (e.g., rules/cco-adaptive.md)",
+    )
 
     return parser
 
@@ -574,6 +584,24 @@ def post_install() -> int:
     """
     parser = _create_install_parser()
     args = parser.parse_args()
+
+    # Utility: output pip package content path
+    if args.path:
+        content_path = get_content_path() / args.path
+        if content_path.exists():
+            print(content_path)
+            return 0
+        print(f"Path not found: {args.path}", file=sys.stderr)
+        return 1
+
+    # Utility: output file content from pip package
+    if args.cat:
+        content_path = get_content_path() / args.cat
+        if content_path.exists() and content_path.is_file():
+            print(content_path.read_text(encoding="utf-8"))
+            return 0
+        print(f"File not found: {args.cat}", file=sys.stderr)
+        return 1
 
     # Local mode - used by cco-config
     if args.local:

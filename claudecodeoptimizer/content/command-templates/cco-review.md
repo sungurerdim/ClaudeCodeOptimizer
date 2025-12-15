@@ -13,11 +13,18 @@ allowed-tools: Read(*), Grep(*), Glob(*), Bash(git:*), Edit(*), Task(*), TodoWri
 - Context check: !`test -f ./.claude/rules/cco/context.md && echo "1" || echo "0"`
 - Git status: !`git status --short`
 
+**DO NOT re-run these commands. Use the pre-collected values above.**
 **Static context (Maturity, Breaking, Priority, Scale) from ./CLAUDE.md already in context.**
 
 ## Context Requirement [CRITICAL]
 
-If context check returns "0": `CCO context not found. Run /cco-config first.` **Stop immediately.**
+If context check returns "0":
+```
+CCO context not found.
+
+Run /cco-config first to configure project context, then restart CLI.
+```
+**Stop immediately.**
 
 ## User Input
 
