@@ -17,11 +17,18 @@ End-to-end: Searches multiple sources, scores reliability, synthesizes findings.
 - Context check: !`test -f ./.claude/rules/cco/context.md && echo "1" || echo "0"`
 - Current date: !`date +%Y-%m-%d`
 
+**DO NOT re-run these commands. Use the pre-collected values above.**
 **Static context (Stack, Type, Priority, Data) from ./CLAUDE.md already in context.**
 
 ## Context Requirement [CRITICAL]
 
-If context check returns "0": `CCO context not found. Run /cco-config first.` **Stop immediately.**
+If context check returns "0":
+```
+CCO context not found.
+
+Run /cco-config first to configure project context, then restart CLI.
+```
+**Stop immediately.**
 
 ## Progress Tracking [CRITICAL]
 
@@ -88,7 +95,14 @@ Explicit flags skip questions.
 
 ## Output Format
 
-**Sections:** Executive Summary (TL;DR + confidence) → Evidence Hierarchy (Primary 85+ / Supporting 70-84) → Contradictions Resolved → Knowledge Gaps → Actionable Recommendation (DO/DON'T/CONSIDER) → Source Citations → Metadata
+**Sections:**
+1. **Executive Summary** - TL;DR + confidence score + saturation indicator
+2. **Evidence Hierarchy** - Primary (85+) / Supporting (70-84) with CRAAP scores
+3. **Contradictions Resolved** - Claim A vs B → Winner with reason
+4. **Knowledge Gaps** - Topics with no/limited sources
+5. **Actionable Recommendation** - DO / DON'T / CONSIDER with caveats
+6. **Source Citations** - [N] title | url | tier | score | date
+7. **Metadata** - Iterations, discards, saturation status
 
 ## Flags
 

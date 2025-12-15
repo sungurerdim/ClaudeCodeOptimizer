@@ -46,9 +46,9 @@ RULES_DIR = CLAUDE_DIR / "rules" / CCO_RULES_SUBDIR  # ~/.claude/rules/cco/
 OLD_RULES_ROOT = CLAUDE_DIR / "rules"  # For cleanup of old root-level rules
 
 # Rule files installed to ~/.claude/rules/cco/ (without cco- prefix)
-# Only core.md and ai.md are installed globally (always active)
-# tools.md and adaptive.md stay in pip package - loaded on-demand by commands
-CCO_RULE_NAMES = ("core.md", "ai.md")  # Installed globally
+# ONLY core.md and ai.md - always active, small enough for context
+# tools.md and adaptive.md stay in pip package - read on-demand to avoid context bloat
+CCO_RULE_NAMES = ("core.md", "ai.md")  # Installed globally (always active)
 CCO_RULE_FILES = ("cco-core.md", "cco-ai.md")  # Source filenames
 
 # Consolidated rule name lists (for cleanup across all CCO versions)

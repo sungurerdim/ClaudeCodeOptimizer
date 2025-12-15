@@ -76,40 +76,20 @@ Display: Project, Context, AI Perf, Statusline, Permissions, Rules
 
 ---
 
-## Step 3: Detection
+## Step 3: Detection & User Questions
 
 ```
 Task(cco-agent-analyze, prompt="scope=config")
-→ Returns: status, detections, context, aiPerf, rules, guidelines
 ```
 
-### Detection Priority
+Agent handles all detection and user-input:
+1. **Auto-detect** from manifest/code/config/docs
+2. **Ask user** about Team, Scale, Data, Compliance, Testing, SLA, Maturity, Breaking, Priority
+3. **Read adaptive.md** via `cco-install --cat rules/cco-adaptive.md` (pip package)
+4. **Select rules** based on detections + user input
+5. **Return** detections, userInput, context, rules, guidelines, sources
 
-| Priority | Source | Confidence | Examples |
-|----------|--------|------------|----------|
-| 1 | Manifest files | HIGH | pyproject.toml, package.json, Cargo.toml, go.mod |
-| 2 | Code files | HIGH | *.py, *.ts, *.go, *.rs |
-| 3 | Config files | MEDIUM | .eslintrc, tsconfig.json, Dockerfile |
-| 4 | Documentation | LOW | See below |
-
-### Documentation Fallback
-
-When code/config files are missing or sparse, scan documentation for project info:
-
-| Source | Look for |
-|--------|----------|
-| README.md, README.rst | Stack, language, framework, project type |
-| CONTRIBUTING.md | Dev setup, tools, workflow |
-| docs/, documentation/ | Architecture, API, design decisions |
-| ARCHITECTURE.md, DESIGN.md | System design, patterns |
-| Manifest descriptions | pyproject.toml [project.description], package.json description |
-| Code comments | Module docstrings, header comments |
-
-**Extraction targets:** Language, framework, project type (CLI/API/web/library), team size hints, testing approach, deployment hints.
-
-**Mark as:** `[from docs]` in results to indicate lower confidence.
-
-**Always confirm:** Documentation-based detections require user confirmation.
+See `cco-agent-analyze.md` for full detection categories and question details.
 
 ---
 
@@ -125,12 +105,37 @@ Show detection results table, then:
 
 ## Step 5: Apply
 
-| Target | Method |
-|--------|--------|
-| Rules & Context | Write files from agent output |
-| Statusline & Permissions | `cco-install --local . --statusline {mode} --permissions {level}` |
-| AI Performance | Write to `.claude/settings.json` env section |
-| Remove | Delete files or remove keys from settings.json |
+### Rules & Context
+Write files from agent output:
+- `.claude/rules/cco/context.md` ← agent.context
+- `.claude/rules/cco/{file}.md` ← agent.rules[]
+
+### Statusline & Permissions
+**CRITICAL: Use cco-install CLI only. Do NOT use Task(statusline-setup) or write statusline files directly.**
+
+```bash
+cco-install --local . --statusline {mode} --permissions {level}
+```
+
+This copies pre-built templates from package. Never generate statusline code.
+
+### AI Performance
+Write to `.claude/settings.json`:
+```json
+{
+  "env": {
+    "MAX_THINKING_TOKENS": "{value}",
+    "MAX_MCP_OUTPUT_TOKENS": "{value}",
+    "DISABLE_PROMPT_CACHING": "0"
+  }
+}
+```
+
+### Remove Operations
+- Remove Rules: `rm -rf .claude/rules/cco/`
+- Remove AI Perf: Remove `env` from settings.json
+- Remove Statusline: `rm .claude/cco-statusline.js`, remove `statusLine` from settings.json
+- Remove Permissions: Remove `permissions` from settings.json
 
 ---
 
@@ -174,4 +179,8 @@ No agent needed. Read global + project rules.
 
 ## Rules
 
-Agent for detection │ cco-install for templates │ Parallel reads │ Minimal orchestration │ JSON handoff
+1. **Agent for detection** - Use Task(cco-agent-analyze) for detection
+2. **cco-install for templates** - Statusline/permissions via CLI only, never Task(statusline-setup)
+3. **Parallel reads** - Read existing files in parallel for status
+4. **Minimal orchestration** - This command is coordinator only
+5. **JSON handoff** - Agent returns structured data, command displays it

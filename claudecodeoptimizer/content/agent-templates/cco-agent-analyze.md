@@ -1,7 +1,7 @@
 ---
 name: cco-agent-analyze
 description: Read-only project analysis and issue detection
-tools: Glob, Read, Grep, Bash
+tools: Glob, Read, Grep, Bash, AskUserQuestion
 safe: true
 ---
 
@@ -147,42 +147,139 @@ Compare current vs historical: Read previous → Calculate deltas → Assign ind
 
 ### config
 
-**Detection Priority Order [CRITICAL]:**
+Config scope handles project detection and rule selection. Different execution flow from other scopes.
 
-| Priority | Source | Confidence | Action |
-|----------|--------|------------|--------|
+**Config Execution Flow:**
+
+| Step | Action | Tool |
+|------|--------|------|
+| 1 | Auto-detect from manifest/code | `Glob`, `Read`, `Grep` |
+| 2 | Ask user-input questions | `AskUserQuestion` |
+| 3 | Read adaptive.md template | `Read(~/.claude/rules/cco/adaptive.md)` |
+| 4 | Select rules based on detections + input | Internal |
+| 5 | Generate context.md + rule files | Internal |
+| 6 | Return structured output | JSON |
+
+#### Step 1: Auto-Detection
+
+**Priority Order [CRITICAL]:**
+
+| Priority | Source | Confidence | Files |
+|----------|--------|------------|-------|
 | 1 | Manifest files | HIGH | pyproject.toml, package.json, Cargo.toml, go.mod |
 | 2 | Code files | HIGH | *.py, *.ts, *.go, *.rs (sample 5-10 files) |
 | 3 | Config files | MEDIUM | .eslintrc, tsconfig.json, Dockerfile, .github/ |
-| 4 | Documentation | LOW | See fallback below |
+| 4 | Documentation | LOW | README.md, CONTRIBUTING.md, docs/ |
 
-**Documentation Fallback (when code/config sparse or missing):**
+**Auto-Detection Targets:**
+
+| Category | Trigger Files | Output |
+|----------|--------------|--------|
+| L:Python | pyproject.toml, setup.py, requirements.txt, *.py | `python.md` |
+| L:TypeScript | tsconfig.json, *.ts/*.tsx | `typescript.md` |
+| L:JavaScript | package.json (no TS), *.js/*.jsx | `javascript.md` |
+| L:Go | go.mod, *.go | `go.md` |
+| L:Rust | Cargo.toml, *.rs | `rust.md` |
+| T:CLI | __main__.py, bin/, cli/, "bin" in package.json | `cli.md` |
+| T:Library | exports in package.json, __init__.py with __all__ | `library.md` |
+| API:REST | routes/, @Get/@Post decorators, express.Router | `api.md` |
+| API:GraphQL | graphql deps, schema.graphql, resolvers/ | `api.md` |
+| API:gRPC | *.proto files, grpc deps | `api.md` |
+| DB:* | ORM deps, migrations/, prisma/schema.prisma | `database.md` |
+| Frontend | react/vue/angular/svelte in deps | `frontend.md` |
+| Mobile | Podfile, build.gradle, pubspec.yaml | `mobile.md` |
+| Desktop | electron/tauri in deps | `desktop.md` |
+| Container | Dockerfile (not in examples/test/) | `container.md` |
+| K8s | k8s/, helm/, kustomization.yaml | `k8s.md` |
+| Serverless | serverless.yml, sam.yaml, vercel.json, netlify.toml | `serverless.md` |
+| Monorepo | nx.json, turbo.json, lerna.json, pnpm-workspace.yaml | `monorepo.md` |
+| ML/AI | torch/tensorflow/sklearn/transformers/langchain | `ml.md` |
+| Game | Unity (.csproj), Unreal (*.uproject), Godot (project.godot) | `game.md` |
+| i18n | locales/, i18n/, messages/, translations/ | `i18n.md` |
+| RT:* | websocket/socket.io/sse deps | `realtime.md` |
+| DEP:* | Dependency-specific (29 categories) | `{dep}.md` |
+
+**Documentation Fallback (when code sparse):**
 
 | Source | Extract |
 |--------|---------|
-| README.md, README.rst, README.txt | Language, framework, project type |
-| CONTRIBUTING.md, DEVELOPMENT.md | Dev tools, workflow, test approach |
-| docs/, documentation/, wiki/ | Architecture, patterns, decisions |
-| ARCHITECTURE.md, DESIGN.md | System design, components |
+| README.md, README.rst | Language, framework, project type |
+| CONTRIBUTING.md | Dev tools, workflow, test approach |
+| docs/, documentation/ | Architecture, patterns, decisions |
 | Manifest descriptions | [project.description], package.json description |
-| Module docstrings | __init__.py, main.py header comments |
 
-**Extraction targets:**
+Mark as `[from docs]` - requires user confirmation.
+
+#### Step 2: User-Input Questions
+
+Use AskUserQuestion for non-detectable elements:
+
+| Element | Question | Options |
+|---------|----------|---------|
+| Team | How many active contributors? | **Solo** (no review), **2-5** (async PR), **6+** (ADR/CODEOWNERS) |
+| Scale | Expected concurrent users? | **Prototype** (<100, dev only), **Small** (100+, basic cache), **Medium** (1K+, pools/async), **Large** (10K+, circuit breakers) |
+| Data | Most sensitive data? | **Public** (open), **PII** (personal data), **Regulated** (healthcare/financial) |
+| Compliance | Required frameworks? | **None**, **SOC2**, **HIPAA**, **PCI**, **GDPR**, **CCPA**, **ISO27001**, **FedRAMP**, **DORA**, **HITRUST** (multi-select) |
+| Testing | Coverage level? | **Basics** (60%, unit), **Standard** (80%, +integration), **Full** (90%, +E2E/contract) |
+| SLA | Uptime commitment? | **None** (best effort), **99%** (~7h/mo), **99.9%** (~43min/mo), **99.99%** (~4min/mo) |
+| Maturity | Development stage? | **Prototype**, **Active**, **Stable**, **Legacy** |
+| Breaking | Breaking change policy? | **Allowed** (v0.x), **Minimize** (deprecate first), **Never** (enterprise) |
+| Priority | Primary focus? | **Speed**, **Balanced**, **Quality**, **Security** |
+
+**Default values:** Team=Solo, Scale=Small, Data=Public, Compliance=None, Testing=Standard, SLA=None, Maturity=Active, Breaking=Minimize, Priority=Balanced
+
+#### Step 3-5: Rule Selection
+
+1. Read adaptive rules template: `Bash(cco-install --cat rules/cco-adaptive.md)`
+2. Match detections → rule categories
+3. Apply cumulative tiers (Scale/Testing/SLA/Team higher includes lower)
+4. Generate context.md with Strategic Context section
+5. Generate rule files with YAML frontmatter paths
+
+**Rules Source:** Pip package via `cco-install --cat rules/cco-adaptive.md` (NOT from ~/.claude/rules/ to avoid context bloat)
+
+**Guidelines (Maturity/Breaking/Priority):** Store in context.md only, don't generate rule files.
+
+#### Output Schema
+
+```json
+{
+  "detections": {
+    "language": ["Python"],
+    "type": ["CLI"],
+    "api": null,
+    "database": null,
+    "frontend": null,
+    "infra": ["Container"],
+    "dependencies": ["DEP:HTTP", "DEP:Logging"]
+  },
+  "userInput": {
+    "team": "Solo",
+    "scale": "Small",
+    "data": "Public",
+    "compliance": [],
+    "testing": "Standard",
+    "sla": "None",
+    "maturity": "Active",
+    "breaking": "Minimize",
+    "priority": "Balanced"
+  },
+  "context": "# Project Context\n\n## Strategic Context\n...",
+  "rules": [
+    { "file": "python.md", "content": "---\npaths: **/*.py\n---\n# Python Rules\n..." },
+    { "file": "cli.md", "content": "..." }
+  ],
+  "guidelines": {
+    "maturity": "Active",
+    "breaking": "Minimize",
+    "priority": "Balanced"
+  },
+  "sources": [
+    { "file": "pyproject.toml", "confidence": "HIGH" },
+    { "file": "README.md", "confidence": "LOW" }
+  ]
+}
 ```
-language: Python, TypeScript, Go, Rust, etc.
-framework: React, FastAPI, Express, etc.
-type: CLI, API, Library, Web App, Mobile
-scale: Small (100+), Medium (1K+), Large (10K+) - user count
-team: Solo (1), Small (2-5), Large (6+)
-testing: pytest, jest, go test, etc.
-deployment: Docker, K8s, serverless, etc.
-data: Public, Internal, PII, Regulated
-compliance: None, SOC2, HIPAA, GDPR, PCI
-```
-
-**Mark detections:** `[from docs]` for documentation-sourced findings
-
-**Output:** `{ detections, context, rules, sources: [{file, confidence}] }`
 
 ## Artifact Handling
 

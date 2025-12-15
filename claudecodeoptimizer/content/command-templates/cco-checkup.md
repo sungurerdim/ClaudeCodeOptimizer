@@ -19,11 +19,18 @@ Meta command for regular project maintenance (weekly recommended).
 - Git status: !`git status --short`
 - Recent activity: !`git log --oneline -5`
 
+**DO NOT re-run these commands. Use the pre-collected values above.**
 **Static context (Applicable) from ./CLAUDE.md already in context.**
 
 ## Context Requirement [CRITICAL]
 
-If context check returns "0": `CCO context not found. Run /cco-config first.` **Stop immediately.**
+If context check returns "0":
+```
+CCO context not found.
+
+Run /cco-config first to configure project context, then restart CLI.
+```
+**Stop immediately.**
 
 ## Phase Selection
 

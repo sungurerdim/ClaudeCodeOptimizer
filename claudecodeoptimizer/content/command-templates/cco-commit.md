@@ -1,7 +1,7 @@
 ---
 name: cco-commit
 description: Atomic commits with quality gates
-allowed-tools: Bash(git:*), Bash(ruff:*), Bash(npm:*), Bash(pytest:*), Read(*), Grep(*), Edit(*), Task(*), TodoWrite, AskUserQuestion
+allowed-tools: Bash(git:*), Bash(ruff:*), Bash(npm:*), Bash(pytest:*), Read(*), Grep(*), Edit(*), TodoWrite, AskUserQuestion
 ---
 
 # /cco-commit
@@ -18,13 +18,18 @@ allowed-tools: Bash(git:*), Bash(ruff:*), Bash(npm:*), Bash(pytest:*), Read(*), 
 - Line counts: !`git diff --shortstat`
 - Staged lines: !`git diff --cached --shortstat`
 
+**DO NOT re-run these commands. Use the pre-collected values above.**
 **Static context (Tools, Conventions) from ./CLAUDE.md already in context.**
 
 ## Context Requirement [CRITICAL]
 
-If context check returns "0": `CCO context not found. Run /cco-config first.` **Stop immediately.**
+If context check returns "0":
+```
+CCO context not found.
 
-**Pre-collected git info available above - use instead of running commands again.**
+Run /cco-config first to configure project context, then restart CLI.
+```
+**Stop immediately.**
 
 ## Pre-commit Awareness
 
@@ -101,10 +106,22 @@ TodoWrite([
 
 ## Message Format
 
+```
+{type}({scope}): {title}
+
+{description}
+
+🤖 Generated with [Claude Code](https://claude.com/claude-code)
+
+Co-Authored-By: Claude <noreply@anthropic.com>
+```
+
 | Rule | Requirement |
 |------|-------------|
-| Length | ≤50 chars (hard: 72) |
-| Format | `{type}({scope}): {description}` |
+| Title | ≤50 chars (hard: 72), action verb, no period |
+| Description | What changed and why (1-3 lines) |
+| Scope | From affected module/feature |
+| Trailer | Always include Generated + Co-Authored-By |
 | Types | feat, fix, refactor, perf, test, docs, build, ci, chore |
 
 **Reject:** "fix bug", "update code", "changes" → Use specific descriptions
