@@ -1,7 +1,7 @@
 ---
 name: cco-research
 description: Multi-source research with reliability scoring
-allowed-tools: WebSearch(*), WebFetch(*), Read(*), Grep(*), Glob(*), Task(*), TodoWrite
+allowed-tools: WebSearch(*), WebFetch(*), Read(*), Grep(*), Glob(*), Task(*), TodoWrite, AskUserQuestion
 ---
 
 # /cco-research
@@ -56,7 +56,7 @@ Single research agent │ Parallel fetches │ Targeted extraction │ Early sat
 ## Agent Integration
 
 ```
-Task(cco-agent-research, mode=full, query="...")
+Task(cco-agent-research, scope=full, query="...")
 → Multi-source search → Tiering → Synthesis → Structured recommendation
 ```
 

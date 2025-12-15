@@ -77,6 +77,14 @@ Single analyze agent │ Single apply agent │ Linter-first │ Batch calls │
 | `hygiene` | Orphans, stale refs, duplicates |
 | `best-practices` | Patterns, efficiency, consistency |
 
+## Impact Preview
+
+For each fix, show impact before approval:
+- **Direct**: Files to modify
+- **Dependents**: Files that import/use
+- **Tests**: Coverage of affected code
+- **Risk**: LOW (auto-fix) / MEDIUM / HIGH (approval required)
+
 ## Approval Flow [CRITICAL]
 
 When approval-required issues exist, present them in **paginated format** (max 4 per page):
@@ -102,6 +110,14 @@ After approval: Apply via Task(cco-agent-apply) → Verify → Fix cascade error
 | Scale | 10K+ → stricter |
 | Maturity | Legacy → safe only |
 | Priority | Speed → critical; Quality → all |
+
+## Safety
+
+| Check | Action |
+|-------|--------|
+| Dirty working tree | Prompt: Commit / Stash / Continue |
+| Uncommitted changes | Warn before applying |
+| Rollback | Clean git state enables `git checkout` |
 
 ## Flags
 

@@ -1,7 +1,7 @@
 ---
 name: cco-preflight
 description: Pre-release checks and workflow
-allowed-tools: Read(*), Grep(*), Glob(*), Edit(*), Bash(git:*), Bash(pytest:*), Bash(npm:*), Task(*), TodoWrite
+allowed-tools: Read(*), Grep(*), Glob(*), Edit(*), Bash(git:*), Bash(pytest:*), Bash(npm:*), Task(*), TodoWrite, AskUserQuestion
 ---
 
 # /cco-preflight
@@ -40,7 +40,7 @@ Sub-commands inherit context validation.
 
 When called without flags → **AskUserQuestion** (mandatory):
 
-| Question | Options | multiSelect |
+| Question | Options | MultiSelect |
 |----------|---------|-------------|
 | Which phases to run? | Verification (Recommended); Quality (Recommended); Architecture; Changelog & Docs | true |
 
@@ -86,15 +86,15 @@ TodoWrite([
 
 **Version Sync:**
 ```bash
-grep "__version__" src/__init__.py
-grep "version" pyproject.toml
-grep "^\[" CHANGELOG.md | head -1
+grep "__version__" {src_dir}/__init__.py  # Python
+grep "version" {manifest_file}            # pyproject.toml/package.json
+grep "^\[" CHANGELOG.md | head -1         # Changelog
 ```
 
 **Leftover Markers:**
 ```bash
-grep -rn "TODO\|FIXME\|WIP\|HACK\|XXX" src/ --include="*.py"
-grep -rn "Experimental\|DRAFT\|PLACEHOLDER" docs/
+grep -rn "TODO\|FIXME\|WIP\|HACK\|XXX" {src_dir}/ --include="*.{ext}"
+grep -rn "Experimental\|DRAFT\|PLACEHOLDER" {docs_dir}/
 ```
 
 **Feature Trace:** For each Added in CHANGELOG: 1. README.md? 2. docs/? 3. Implementation?

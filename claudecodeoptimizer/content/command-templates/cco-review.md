@@ -131,6 +131,13 @@ Single analyze agent │ Single apply agent │ Linter-first │ Batch calls
 | High-impact accepted | Add to `Prefer` |
 | Rejected (wrong context) | Add to `Avoid` |
 
+## Quick Mode
+
+When `--quick` flag is used:
+- No questions - use smart defaults (Architecture + Code Quality)
+- Report only (no apply phase)
+- Complete in single message
+
 ## Rules
 
 Parallel agents │ Evidence required │ 80/20 filter │ Git safety

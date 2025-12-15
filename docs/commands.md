@@ -26,6 +26,37 @@ Detailed documentation for all CCO slash commands.
 
 ---
 
+## Common Features
+
+### Context Requirement
+
+All commands except `/cco-config` require CCO context. If context is missing:
+```
+CCO context not found.
+Run /cco-config first to configure project context, then restart CLI.
+```
+
+### Dynamic Context
+
+Commands pre-collect context at execution start:
+- Context check (file existence)
+- Git status (working tree state)
+- Branch, recent commits, tags
+- Version info (from manifest files)
+
+**Important:** Pre-collected values are used throughout execution - commands don't re-run these checks.
+
+### Strategy Evolution
+
+Commands learn from execution patterns:
+| Pattern | Action |
+|---------|--------|
+| Same issue 3+ files | Add to `Systemic` |
+| Fix caused cascade | Add to `Avoid` |
+| Effective pattern | Add to `Prefer` |
+
+---
+
 ## /cco-config
 
 **Purpose:** Central configuration command for project detection, settings, removal, and export.
@@ -76,6 +107,8 @@ Detailed documentation for all CCO slash commands.
 
 **Purpose:** Single view of project health with actionable next steps.
 
+**Requires:** CCO context (run `/cco-config` first)
+
 **Usage:**
 ```bash
 /cco-status                     # Full dashboard
@@ -83,19 +116,29 @@ Detailed documentation for all CCO slash commands.
 /cco-status --focus=tests       # Focus on tests
 /cco-status --focus=tech-debt   # Focus on tech debt
 /cco-status --brief             # Summary only
+/cco-status --trends            # With historical trends
+/cco-status --json              # JSON output
 ```
 
 **Scores (0-100):**
 - Security - Vulnerabilities, secrets, dependencies
 - Tests - Coverage + quality
 - Tech Debt - Complexity, dead code, duplication
-- Self-Compliance - Alignment with stated rules
+- Cleanliness - Orphans, duplicates, stale refs
+
+**Score Thresholds:** 90-100: OK │ 70-89: WARN │ 50-69: FAIL │ 0-49: CRITICAL
+
+**Trend Indicators:** ↑ Improved │ → Stable │ ↓ Degraded │ ⚠ Rapid decline
 
 ---
 
 ## /cco-optimize
 
 **Purpose:** Full-stack optimization combining security, code quality, and hygiene checks.
+
+**Requires:** CCO context (run `/cco-config` first)
+
+**Core Principle:** Fix everything that can be fixed. No "manual review" - all issues either auto-fixed or user-approved.
 
 **Usage:**
 ```bash
@@ -148,11 +191,23 @@ Detailed documentation for all CCO slash commands.
 - Cascading impact analysis
 - Remediation verification
 
+**Context Application:**
+| Field | Effect |
+|-------|--------|
+| Data | PII/Regulated → security ×2 |
+| Scale | 10K+ → stricter thresholds |
+| Maturity | Legacy → safe fixes only |
+| Priority | Speed → critical only; Quality → all |
+
+**Strategy Evolution:** Learns patterns (Systemic, Avoid, Prefer) for future runs
+
 ---
 
 ## /cco-review
 
 **Purpose:** Strategic architecture analysis with recommendations.
+
+**Requires:** CCO context (run `/cco-config` first)
 
 **Usage:**
 ```bash
@@ -176,6 +231,8 @@ Detailed documentation for all CCO slash commands.
 ## /cco-research
 
 **Purpose:** Multi-source research with reliability scoring and AI-synthesized recommendations.
+
+**Requires:** CCO context (run `/cco-config` first)
 
 **Usage:**
 ```bash
@@ -212,6 +269,8 @@ Detailed documentation for all CCO slash commands.
 
 **Purpose:** Quality-gated atomic commits.
 
+**Requires:** CCO context (run `/cco-config` first)
+
 **Usage:**
 ```bash
 /cco-commit                 # Full flow
@@ -234,6 +293,8 @@ Detailed documentation for all CCO slash commands.
 ## /cco-preflight
 
 **Purpose:** Pre-release workflow orchestration.
+
+**Requires:** CCO context (run `/cco-config` first)
 
 **Usage:**
 ```bash
@@ -261,6 +322,8 @@ Detailed documentation for all CCO slash commands.
 ## /cco-checkup
 
 **Purpose:** Regular maintenance routine.
+
+**Requires:** CCO context (run `/cco-config` first)
 
 **Usage:**
 ```bash

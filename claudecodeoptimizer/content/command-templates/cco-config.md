@@ -20,7 +20,7 @@ allowed-tools: Read(*), Write(*), Edit(*), Bash(cco-install:*), Task(*), TodoWri
 |------|--------|
 | 1. Status | Read existing files only |
 | 2. Questions | AskUserQuestion for choices |
-| 3. Detection | `Task(cco-agent-analyze, scope=config)` → JSON |
+| 3. Detection | `Task(cco-agent-analyze, "scope=config")` → JSON |
 | 4. Review | Show results, ask approval |
 | 5. Apply | `Task(cco-agent-apply)` OR `cco-install --local` |
 | 6. Report | Summary of changes |

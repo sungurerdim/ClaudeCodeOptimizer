@@ -72,6 +72,17 @@ Task(cco-agent-analyze, scopes=[scan, trends])
 | `--json` | JSON output |
 | `--brief` | Summary only |
 
+## Output Formatting
+
+| Element | Format |
+|---------|--------|
+| Scores | Right-aligned numbers |
+| Status | OK / WARN / FAIL / CRITICAL (centered) |
+| Trends | ↑ ↓ → ⚠ indicators |
+| Progress | `████░░░░` (8 chars, filled = score/100×8) |
+
+**Prohibited:** No emojis │ No ASCII art │ No unicode decorations
+
 ## Rules
 
 Single agent │ Read-only │ Conservative scores │ Evidence-based

@@ -112,10 +112,10 @@ naming: inconsistent patterns
 ```json
 {
   "findings": [{ "id": "{SCOPE}-{NNN}", "scope": "...", "severity": "{P0-P3}", "title": "...", "location": "{file}:{line}", "fixable": true, "approvalRequired": true, "fix": "..." }],
-  "summary": { "{scope}": { "count": 0, "p0": 0, "p1": 0, "p2": 0, "p3": 0 } },
-  "scores": { "security": 0, "tests": 0, "techDebt": 0, "cleanliness": 0, "overall": 0 },
-  "trends": { "security": "→", "tests": "→", "techDebt": "→", "cleanliness": "→" },
-  "metrics": { "coupling": 0, "cohesion": 0, "complexity": 0 },
+  "summary": { "{scope}": { "count": "{n}", "p0": "{n}", "p1": "{n}", "p2": "{n}", "p3": "{n}" } },
+  "scores": { "security": "{0-100}", "tests": "{0-100}", "techDebt": "{0-100}", "cleanliness": "{0-100}", "overall": "{0-100}" },
+  "trends": { "security": "{↑|→|↓|⚠}", "tests": "{↑|→|↓|⚠}", "techDebt": "{↑|→|↓|⚠}", "cleanliness": "{↑|→|↓|⚠}" },
+  "metrics": { "coupling": "{0-100}", "cohesion": "{0-100}", "complexity": "{0-100}" },
   "learnings": [{ "type": "systemic|avoid|prefer", "pattern": "...", "reason": "..." }]
 }
 ```
@@ -245,38 +245,37 @@ Use AskUserQuestion for non-detectable elements:
 ```json
 {
   "detections": {
-    "language": ["Python"],
-    "type": ["CLI"],
-    "api": null,
-    "database": null,
-    "frontend": null,
-    "infra": ["Container"],
-    "dependencies": ["DEP:HTTP", "DEP:Logging"]
+    "language": ["{detected_language}"],
+    "type": ["{detected_type}"],
+    "api": "{detected_api|null}",
+    "database": "{detected_db|null}",
+    "frontend": "{detected_frontend|null}",
+    "infra": ["{detected_infra}"],
+    "dependencies": ["{detected_deps}"]
   },
   "userInput": {
-    "team": "Solo",
-    "scale": "Small",
-    "data": "Public",
-    "compliance": [],
-    "testing": "Standard",
-    "sla": "None",
-    "maturity": "Active",
-    "breaking": "Minimize",
-    "priority": "Balanced"
+    "team": "{user_team}",
+    "scale": "{user_scale}",
+    "data": "{user_data}",
+    "compliance": ["{user_compliance}"],
+    "testing": "{user_testing}",
+    "sla": "{user_sla}",
+    "maturity": "{user_maturity}",
+    "breaking": "{user_breaking}",
+    "priority": "{user_priority}"
   },
-  "context": "# Project Context\n\n## Strategic Context\n...",
+  "context": "{generated_context_md}",
   "rules": [
-    { "file": "python.md", "content": "---\npaths: **/*.py\n---\n# Python Rules\n..." },
-    { "file": "cli.md", "content": "..." }
+    { "file": "{language}.md", "content": "{rule_content}" },
+    { "file": "{type}.md", "content": "{rule_content}" }
   ],
   "guidelines": {
-    "maturity": "Active",
-    "breaking": "Minimize",
-    "priority": "Balanced"
+    "maturity": "{user_maturity}",
+    "breaking": "{user_breaking}",
+    "priority": "{user_priority}"
   },
   "sources": [
-    { "file": "pyproject.toml", "confidence": "HIGH" },
-    { "file": "README.md", "confidence": "LOW" }
+    { "file": "{source_file}", "confidence": "{HIGH|MEDIUM|LOW}" }
   ]
 }
 ```

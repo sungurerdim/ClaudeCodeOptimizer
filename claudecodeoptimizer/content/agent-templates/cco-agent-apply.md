@@ -85,8 +85,8 @@ Fix {SCOPE}-{NNN} → mypy error → Add import → mypy clean → Done
 ```json
 {
   "results": [{ "item": "{id}: {desc} in {file}:{line}", "status": "done|declined|fail", "verification": "..." }],
-  "accounting": { "done": 0, "declined": 0, "fail": 0, "total": 0 },
-  "verification": { "ruff": "PASS|FAIL", "mypy": "PASS|FAIL", "tests": "PASS|FAIL|N/A" }
+  "accounting": { "done": "{n}", "declined": "{n}", "fail": "{n}", "total": "{n}" },
+  "verification": { "{linter}": "PASS|FAIL", "{type_checker}": "PASS|FAIL", "tests": "PASS|FAIL|N/A" }
 }
 ```
 
