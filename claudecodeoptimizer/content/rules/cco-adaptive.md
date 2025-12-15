@@ -32,19 +32,23 @@
 | RT:* | websocket/socket.io/sse deps | `realtime.md` |
 | DEP:* | See Dependency Categories below | `{dep}.md` |
 
-### User-Input (AskUserQuestion)
+### User-Input (AskUserQuestion) [MANDATORY]
 
-| Element | Options | Default | Affects |
-|---------|---------|---------|---------|
-| Team | Solo; 2-5; 6+ | Solo | Team rules |
-| Scale | Prototype (<100); Small (100+); Medium (1K+); Large (10K+) | Small | Scale rules |
-| Data | Public; PII; Regulated | Public | Security rules |
-| Compliance | None; SOC2; HIPAA; PCI; GDPR; CCPA; ISO27001; FedRAMP; DORA; HITRUST | None | Compliance rules |
-| Testing | Basics (60%); Standard (80%); Full (90%) | Standard | Testing rules |
-| SLA | None; 99%; 99.9%; 99.99% | None | Observability rules |
-| Maturity | Prototype; Active; Stable; Legacy | Active | Guidelines |
-| Breaking | Allowed; Minimize; Never | Minimize | Guidelines |
-| Priority | Speed; Balanced; Quality; Security | Balanced | Guidelines |
+**CRITICAL:** These questions MUST be asked. Cannot be skipped or auto-inferred.
+
+| Element | Options (hint = AskUserQuestion description) | Default | Affects | Ask |
+|---------|-----------------------------------------------|---------|---------|-----|
+| Team | Solo (no review); 2-5 (async PR); 6+ (ADR/CODEOWNERS) | Solo | Team rules | **MUST** |
+| Scale | Prototype (<100, dev only); Small (100+, basic cache); Medium (1K+, pools/async); Large (10K+, circuit breakers) | Small | Scale rules | **MUST** |
+| Data | Public (open); PII (personal data); Regulated (healthcare/finance) | Public | Security rules | **MUST** |
+| Compliance | None; SOC2; HIPAA; PCI; GDPR; CCPA; ISO27001; FedRAMP; DORA; HITRUST | None | Compliance rules | **MUST** |
+| Testing | Basics (60%, unit); Standard (80%, +integration); Full (90%, +E2E) | Standard | Testing rules | Confirm `[detected]` |
+| SLA | None (best effort); 99% (~7h/mo); 99.9% (~43min/mo); 99.99% (~4min/mo) | None | Observability rules | **MUST** |
+| Maturity | Prototype (may discard); Active (regular releases); Stable (maintenance); Legacy (minimal changes) | Active | Guidelines | **MUST** |
+| Breaking | Allowed (v0.x); Minimize (deprecate first); Never (enterprise) | Minimize | Guidelines | **MUST** |
+| Priority | Speed (ship fast); Balanced (standard); Quality (thorough); Security (security-first) | Balanced | Guidelines | **MUST** |
+
+**Execution:** Split into 2 AskUserQuestion calls (max 4 questions each).
 
 #### User-Input Descriptions
 

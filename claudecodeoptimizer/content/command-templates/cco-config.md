@@ -49,7 +49,9 @@ Display: Project, Context, AI Perf, Statusline, Permissions, Rules
 
 ---
 
-## Step 2: User Questions
+## Step 2: Orchestrator Questions (cco-config asks)
+
+These questions determine WHAT cco-config will do. Asked by orchestrator, not agent.
 
 ### Q1: Action Type
 
@@ -70,24 +72,44 @@ Display: Project, Context, AI Perf, Statusline, Permissions, Rules
 | Selection | Question | Options |
 |-----------|----------|---------|
 | Statusline | Mode? | cco-full (Recommended); cco-minimal |
-| AI Perf | Thinking? | 5K; 8K (Recommended); 10K |
-| AI Perf | MCP Output? | 25K; 35K (Recommended); 50K |
+| AI Perf | Extended Thinking Limit? | 5K; 8K; 10K |
+| AI Perf | Tool Output Limit? | 25K; 35K; 50K |
 | Permissions | Level? | Safe; Balanced (Recommended); Permissive; Full |
+
+**AI Performance: Dynamic Recommendations**
+Token limits are maximum budgets - unused tokens cost nothing. Mark `(Recommended)` based on:
+
+| Context | Thinking | Tool Output | Rationale |
+|---------|----------|-------------|-----------|
+| Scale: Small + Simple CLI | 5K | 25K | Minimal complexity |
+| Scale: Small-Medium + Standard | 8K | 35K | Balanced default |
+| Scale: Medium-Large OR Complex | 10K | 50K | Deep reasoning needed |
+| Type: Data/ML projects | 10K | 50K | Complex analysis |
+| Maturity: Greenfield | 10K | 35K | More planning needed |
+
+Detect from `context.md` (Scale, Type) or ask if unavailable.
 
 ---
 
-## Step 3: Detection & User Questions
+## Step 3: Agent Detection & Project Questions (agent asks)
+
+**Only runs if "Detection & Rules" selected in Step 2.**
 
 ```
 Task(cco-agent-analyze, prompt="scope=config")
 ```
 
-Agent handles all detection and user-input:
-1. **Auto-detect** from manifest/code/config/docs
-2. **Ask user** about Team, Scale, Data, Compliance, Testing, SLA, Maturity, Breaking, Priority
-3. **Read adaptive.md** via `cco-install --cat rules/cco-adaptive.md` (pip package)
+Agent handles project detection AND asks project-specific questions:
+1. **Auto-detect** from manifest/code/config/docs (Language, DB, Infra, etc.)
+2. **Ask user** (MANDATORY - cannot skip):
+   - **Batch 1:** Team, Scale, Data, Compliance (4 questions)
+   - **Batch 2:** SLA, Maturity, Breaking, Priority (4 questions)
+   - **Batch 3:** Testing, Type (only if MEDIUM confidence detection exists)
+3. **Read adaptive.md** via `cco-install --cat rules/cco-adaptive.md`
 4. **Select rules** based on detections + user input
-5. **Return** detections, userInput, context, rules, guidelines, sources
+5. **Return** JSON with detections, userInput, rules, triggeredCategories, questionsAsked
+
+**CRITICAL:** If `questionsAsked: false`, orchestrator rejects and re-runs agent.
 
 See `cco-agent-analyze.md` for full detection categories and question details.
 
@@ -131,6 +153,11 @@ Write to `.claude/settings.json`:
 }
 ```
 
+| Variable | Purpose | Values |
+|----------|---------|--------|
+| `MAX_THINKING_TOKENS` | Extended thinking budget | 5000, 8000, 10000 |
+| `MAX_MCP_OUTPUT_TOKENS` | Tool output limit | 25000, 35000, 50000 |
+
 ### Remove Operations
 - Remove Rules: `rm -rf .claude/rules/cco/`
 - Remove AI Perf: Remove `env` from settings.json
@@ -141,7 +168,49 @@ Write to `.claude/settings.json`:
 
 ## Step 6: Report
 
-Shows: Changes (before/after), Files written, Restart reminder
+Shows: Changes (before/after), Files written, Triggered Rules, Restart reminder
+
+### Report Format
+
+```
+## Configuration Applied
+
+### Files Written
+| File | Action |
+|------|--------|
+| .claude/rules/cco/context.md | {created|updated} |
+| .claude/rules/cco/{language}.md | {created|updated} |
+| .claude/rules/cco/{type}.md | {created|updated} |
+| .claude/settings.json | {created|updated} |
+
+### Triggered Rule Categories
+| Category | Trigger | Rules | Source |
+|----------|---------|-------|--------|
+| Language | L:{language} | {language}.md | auto |
+| Type | T:{type} | {type}.md | auto |
+| Scale | {scale} | scale.md ({tier}) | user |
+| Team | {team} | {team_rule|"-"} | user |
+| Testing | {testing} | testing.md ({tier}) | user |
+| Data | {data} | {security_rule|"-"} | user |
+| Compliance | {compliance} | {compliance_rules|"-"} | user |
+
+### User Inputs Applied
+| Element | Value | Effect |
+|---------|-------|--------|
+| Team | {team} | {team_effect} |
+| Scale | {scale} | {scale_effect} |
+| Data | {data} | {data_effect} |
+| Compliance | {compliance} | {compliance_effect} |
+| Testing | {testing} | {testing_effect} |
+| SLA | {sla} | {sla_effect} |
+| Maturity | {maturity} | {maturity_guideline} |
+| Breaking | {breaking} | {breaking_guideline} |
+| Priority | {priority} | {priority_guideline} |
+
+### Next Steps
+- Restart Claude Code to apply new rules
+- Run /cco-status to verify configuration
+```
 
 ---
 
