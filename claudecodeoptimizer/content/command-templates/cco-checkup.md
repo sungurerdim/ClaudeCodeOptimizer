@@ -10,8 +10,6 @@ allowed-tools: Read(*), Grep(*), Glob(*), Edit(*), Bash(git:*), Bash(pytest:*), 
 
 Meta command for regular project maintenance (weekly recommended).
 
-**Rules:** User Input | Orchestration | Progress Tracking
-
 ## Context
 
 - Context check: !`test -f ./.claude/rules/cco/context.md && echo "1" || echo "0"`
@@ -20,7 +18,6 @@ Meta command for regular project maintenance (weekly recommended).
 - Recent activity: !`git log --oneline -5`
 
 **DO NOT re-run these commands. Use the pre-collected values above.**
-**Static context (Applicable) from ./CLAUDE.md already in context.**
 
 ## Context Requirement [CRITICAL]
 
@@ -32,40 +29,110 @@ Run /cco-config first to configure project context, then restart CLI.
 ```
 **Stop immediately.**
 
-## Phase Selection
+## Architecture
 
-When called without flags → **AskUserQuestion**:
+| Step | Name | Action |
+|------|------|--------|
+| 1 | Phase Select | Ask which phases to run |
+| 2 | Health | Run /cco-status --brief |
+| 3 | Audit | Run /cco-optimize --fix |
+| 4 | Summary | Show results and next checkup |
 
-| Question | Options | MultiSelect |
-|----------|---------|-------------|
-| Which phases to run? | Health Dashboard; Quality Audit | true |
-
-**Dynamic labels:** AI adds `(Recommended)` based on last run date and context.
-
-Flags `--health-only`, `--audit-only` skip this question.
+---
 
 ## Progress Tracking [CRITICAL]
 
-```
+```javascript
 TodoWrite([
-  { content: "Run health dashboard", status: "in_progress", activeForm: "Running health dashboard" },
-  { content: "Run quality audit", status: "pending", activeForm: "Running quality audit" },
-  { content: "Show summary", status: "pending", activeForm: "Showing summary" }
+  { content: "Step-1: Select phases", status: "in_progress", activeForm: "Selecting phases" },
+  { content: "Step-2: Run health dashboard", status: "pending", activeForm: "Running health dashboard" },
+  { content: "Step-3: Run quality audit", status: "pending", activeForm: "Running quality audit" },
+  { content: "Step-4: Show summary", status: "pending", activeForm: "Showing summary" }
 ])
 ```
 
-## Flow
+---
 
-### Phase 1: Health Dashboard
-Orchestrates: `/cco-status --brief` (Security, Tests, Tech Debt, Cleanliness, Documentation scores)
+## Step-1: Phase Selection
 
-### Phase 2: Quality Audit
-Orchestrates: `/cco-optimize --fix` (Security, Quality, Hygiene, Best Practices)
+```javascript
+AskUserQuestion([{
+  question: "Which phases to run?",
+  header: "Phases",
+  options: [
+    { label: "Health Dashboard", description: "Security, tests, debt, cleanliness scores" },
+    { label: "Quality Audit", description: "Security, quality, hygiene, best practices fixes" }
+  ],
+  multiSelect: true
+}])
+```
 
-### Summary
-Shows: Duration, Changes since last, Fixed/Declined counts, Next recommended checkup
+**Dynamic labels:** Add `(Recommended)` based on last run date and context.
 
-## Comparison
+**Flags override:** `--health-only`, `--audit-only` skip this question.
+
+### Validation
+```
+[x] User selected phase(s)
+→ Store as: phases = {selections[]}
+→ If "Health Dashboard" not in phases: Skip Step-2
+→ If "Quality Audit" not in phases: Skip Step-3
+→ Proceed to Step-2 or Step-3
+```
+
+---
+
+## Step-2: Health Dashboard [SKIP if not selected]
+
+Orchestrates: `/cco-status --brief`
+
+Returns: Security, Tests, Tech Debt, Cleanliness, Documentation scores.
+
+### Validation
+```
+[x] Health scores collected
+→ Store as: healthScores = { security, tests, debt, clean, docs }
+→ Proceed to Step-3 (or Step-4 if audit not selected)
+```
+
+---
+
+## Step-3: Quality Audit [SKIP if not selected]
+
+Orchestrates: `/cco-optimize --fix`
+
+Runs all scopes: Security, Quality, Hygiene, Best Practices.
+
+### Validation
+```
+[x] Audit completed
+→ Store as: auditResults = { fixed, declined, total }
+→ Proceed to Step-4
+```
+
+---
+
+## Step-4: Summary
+
+Display:
+- Duration: {time}
+- Health Scores: {if run}
+- Fixed/Declined: {if audit run}
+- Changes since last checkup
+- Next recommended checkup: {date}
+
+### Validation
+```
+[x] Summary displayed
+[x] All todos marked completed
+→ Done
+```
+
+---
+
+## Reference
+
+### Comparison
 
 | Need | Command |
 |------|---------|
@@ -74,7 +141,7 @@ Shows: Duration, Changes since last, Fixed/Declined counts, Next recommended che
 | Deep audit | `/cco-optimize` |
 | Strategic review | `/cco-review` |
 
-## Flags
+### Flags
 
 | Flag | Effect |
 |------|--------|
@@ -82,15 +149,14 @@ Shows: Duration, Changes since last, Fixed/Declined counts, Next recommended che
 | `--no-fix` | Report only |
 | `--deep` | Full audit |
 | `--trends` | Trend history |
+| `--health-only` | Skip audit |
+| `--audit-only` | Skip health |
 
-## Strategy Evolution
-
-| Pattern | Action |
-|---------|--------|
-| Recurring issue | Add to `Systemic` |
-| Score degraded | Add to `Avoid` |
-| Score improved | Add to `Prefer` |
+---
 
 ## Rules
 
-Delegate to sub-commands │ Aggregate results │ No duplicate work │ Use TodoWrite │ Safety via /cco-optimize
+1. **Sequential execution** - Complete each step before proceeding
+2. **Validation gates** - Check validation block before next step
+3. **Delegate to sub-commands** - Don't duplicate /cco-status or /cco-optimize logic
+4. **No duplicate work** - Aggregate results from sub-commands

@@ -8,21 +8,62 @@ Detailed documentation for all CCO slash commands.
 
 ### Base Commands
 
-| Command | Purpose | Key Rules |
-|---------|---------|-----------|
-| `/cco-config` | Project configuration and settings | Approval Flow, Output Formatting |
-| `/cco-status` | Metrics dashboard with trends | Command Flow, Output Formatting |
-| `/cco-optimize` | Security + Quality + Hygiene | Fix Workflow, Safety Classification |
-| `/cco-review` | Architecture analysis | Fix Workflow, Approval Flow |
-| `/cco-research` | Multi-source research with AI synthesis | Command Flow, Output Formatting |
-| `/cco-commit` | Quality-gated commits | Pre-Operation Safety, Approval Flow |
+| Command | Purpose | Steps |
+|---------|---------|-------|
+| `/cco-config` | Project configuration and settings | 9 steps |
+| `/cco-status` | Metrics dashboard with trends | 3 steps |
+| `/cco-optimize` | Security + Quality + Hygiene | 9 steps |
+| `/cco-review` | Architecture analysis | 7 steps |
+| `/cco-research` | Multi-source research with AI synthesis | 5 steps |
+| `/cco-commit` | Quality-gated commits | 7 steps |
 
 ### Meta Commands
 
 | Command | Purpose | Orchestrates |
 |---------|---------|--------------|
-| `/cco-preflight` | Pre-release workflow | optimize + review + verify |
-| `/cco-checkup` | Regular maintenance | status + optimize --fix |
+| `/cco-preflight` | Pre-release workflow | optimize + review + verify (7 steps) |
+| `/cco-checkup` | Regular maintenance | status + optimize (4 steps) |
+
+---
+
+## Command Template Structure
+
+All commands follow a standardized structure for consistency and reliability.
+
+### Standard Sections
+
+```
+1. Architecture table     → All steps visible at a glance
+2. Progress Tracking      → TodoWrite with all Step-N items
+3. Step-N sections        → Each step contains:
+   - What to do
+   - AskUserQuestion (if applicable)
+   - ### Validation block
+4. Reference section      → Flags, tables, context application
+5. Rules section          → Sequential execution, validation gates
+```
+
+### Key Principles
+
+| Principle | Description |
+|-----------|-------------|
+| **TodoWrite ↔ Architecture alignment** | Same step count in both |
+| **Questions in flow** | Each question clearly placed in its step |
+| **Validation gates** | Every step ends with validation block |
+| **Conditional steps** | Marked with `[SKIP if X]` or `[MANDATORY if X]` |
+| **Sub-steps** | Complex steps use Step-N.1, Step-N.2 format |
+| **Rules enforcement** | "Sequential execution" and "Validation gates" in every command |
+
+### Validation Block Format
+
+```
+### Validation
+[x] Condition checked
+[x] Another condition
+→ Store as: variable = {value}
+→ If condition: Skip to Step-N
+→ Proceed to Step-N
+```
 
 ---
 
@@ -66,40 +107,40 @@ Commands learn from execution patterns:
 /cco-config              # Interactive: Configure / Remove / Export
 ```
 
-**Flow:**
-1. **STATUS** - Shows current project state
-2. **CHOOSE** - Select actions from grouped options
-3. **DETECT** - Run detection (if Configure selected)
-4. **REVIEW** - Accept/Edit/Cancel
-5. **APPLY** - Write configurations, remove items, export files
-6. **REPORT** - Summary with all changes
+### Steps
 
-**Actions (single multiSelect question):**
+| Step | Name | Action |
+|------|------|--------|
+| 1 | Status | Read existing files |
+| 2 | Action | Ask what to do |
+| 3 | Scope | Ask what to configure/remove/export |
+| 4 | Details | Ask specific options (if applicable) |
+| 5 | Context | Ask project context (if Detection selected) [MANDATORY] |
+| 6 | Detection | Run agent with userInput |
+| 7 | Review | Show results, ask approval |
+| 8 | Apply | Write files via agent/CLI |
+| 9 | Report | Summary of changes |
 
-| Section | Options |
-|---------|---------|
-| **Configure** | Detection & Rules, AI Performance, Statusline, Permissions |
-| **Remove** | Remove AI Performance, Remove Statusline, Remove Permissions, Remove Rules |
-| **Export** | AGENTS.md (recommended), CLAUDE.md |
+### Step-5: Project Context Questions
 
-**Features:**
-- Mixed operations in single run (e.g., Configure + Remove + Export)
-- Remove options only shown if item is configured
+**Step-5.1: Team & Data**
+- How many active contributors? (Solo / Small 2-5 / Large 6+)
+- Expected scale? (Prototype / Small / Medium / Large)
+- Most sensitive data? (Public / PII / Regulated)
+- Compliance frameworks? (None / SOC2 / HIPAA / GDPR)
 
-**Export formats:**
+**Step-5.2: Operations & Policy**
+- Uptime commitment (SLA)? (None / 99% / 99.9% / 99.99%)
+- Development stage? (Prototype / Active / Stable / Legacy)
+- Breaking change policy? (Allowed / Minimize / Never)
+- Primary focus? (Speed / Balanced / Quality / Security)
+
+### Export Formats
 
 | Format | Target | Content | Output |
 |--------|--------|---------|--------|
-| AGENTS.md | Universal (Codex, Cursor, Copilot, Cline, etc.) | Core + AI, model-agnostic | `./AGENTS.md` |
+| AGENTS.md | Universal (Codex, Cursor, Copilot, Cline) | Core + AI, model-agnostic | `./AGENTS.md` |
 | CLAUDE.md | Claude Code only | Core + AI + Tools, full | `./CLAUDE.export.md` |
-
-**Export sources:**
-- Reads from: `~/.claude/rules/cco/` + `.claude/rules/cco/`
-- Never exports: AI Performance, Statusline, Permissions
-
-**AGENTS.md content filtering:**
-- Removes Claude-specific: tool names, `.claude/` paths, CCO references
-- Preserves: model-agnostic principles (DRY, Fail-Fast, Read-First)
 
 ---
 
@@ -113,20 +154,36 @@ Commands learn from execution patterns:
 ```bash
 /cco-status                     # Full dashboard
 /cco-status --focus=security    # Focus on security
-/cco-status --focus=tests       # Focus on tests
-/cco-status --focus=tech-debt   # Focus on tech debt
 /cco-status --brief             # Summary only
 /cco-status --trends            # With historical trends
 /cco-status --json              # JSON output
 ```
 
-**Scores (0-100):**
-- Security - Vulnerabilities, secrets, dependencies
-- Tests - Coverage + quality
-- Tech Debt - Complexity, dead code, duplication
-- Cleanliness - Orphans, duplicates, stale refs
+### Steps
 
-**Score Thresholds:** 90-100: OK │ 70-89: WARN │ 50-69: FAIL │ 0-49: CRITICAL
+| Step | Name | Action |
+|------|------|--------|
+| 1 | Collect | Run agent for metrics |
+| 2 | Process | Calculate scores and trends |
+| 3 | Display | Show dashboard |
+
+### Scores
+
+| Category | Measures |
+|----------|----------|
+| Security | Vulnerabilities, secrets, dependencies |
+| Tests | Coverage + quality |
+| Tech Debt | Complexity, dead code, duplication |
+| Cleanliness | Orphans, duplicates, stale refs |
+
+### Score Thresholds
+
+| Score | Status |
+|-------|--------|
+| 80-100 | OK |
+| 60-79 | WARN |
+| 40-59 | FAIL |
+| 0-39 | CRITICAL |
 
 **Trend Indicators:** ↑ Improved │ → Stable │ ↓ Degraded │ ⚠ Rapid decline
 
@@ -142,64 +199,45 @@ Commands learn from execution patterns:
 
 **Usage:**
 ```bash
-/cco-optimize                      # Interactive 2-tab selection
-/cco-optimize --all --fix          # Full optimization with fix
+/cco-optimize                      # Interactive selection
 /cco-optimize --security           # Security focus only
 /cco-optimize --quality            # Quality focus only
-/cco-optimize --hygiene            # Hygiene focus (orphans, stale, dupes)
-/cco-optimize --quick              # Fast hygiene cleanup
-/cco-optimize --pre-release        # Pre-release gate checks
-/cco-optimize --deps               # Dependency freshness check
-/cco-optimize --all --report       # Full scan, no changes
+/cco-optimize --hygiene            # Hygiene focus
+/cco-optimize --report             # Report only, no fixes
+/cco-optimize --pre-release        # All scopes, strict
 ```
 
-**Interactive 2-Tab Selection:**
+### Steps
 
-| Tab | Question | Options |
-|-----|----------|---------|
-| Scope | What to check? | Security; Quality; Hygiene; All (Recommended) |
-| Action | How to handle? | Report Only; Auto-fix (Recommended); Full Auto-fix; Interactive |
+| Step | Name | Action |
+|------|------|--------|
+| 1 | Safety | Check git state, warn if dirty |
+| 2 | Scope | Ask what to optimize |
+| 3 | Action | Ask report/auto-fix/interactive |
+| 4 | Analyze | Run agent, get findings JSON |
+| 5 | Show | Display findings summary |
+| 6 | Auto-fix | Apply safe fixes [SKIP if report] |
+| 7 | Approval | Ask for approval-required items |
+| 8 | Apply | Apply user-approved fixes |
+| 9 | Summary | Show applied/declined counts |
 
-**Scope Categories:**
+### Scope Categories
 
-| Scope | Includes |
-|-------|----------|
-| **Security** | OWASP vulnerabilities, secrets, CVEs, supply-chain, input validation |
-| **Quality** | Complexity, type coverage, test quality, consistency, self-compliance |
-| **Hygiene** | Orphans, stale-refs, duplicates, dead code, dependencies |
+| Scope | Checks |
+|-------|--------|
+| Security | OWASP, secrets, CVEs, input validation |
+| Quality | Tech debt, type errors, test gaps |
+| Hygiene | Orphans, stale refs, duplicates |
+| Best Practices | Patterns, efficiency, consistency |
 
-**Sub-Scope Flags:**
+### Context Application
 
-| Flag | Scope | Checks |
-|------|-------|--------|
-| `--owasp` | Security | OWASP Top 10 |
-| `--secrets` | Security | Secret detection |
-| `--cves` | Security | Dependency CVEs |
-| `--tech-debt` | Quality | Complexity, TODOs |
-| `--consistency` | Quality | Doc-code mismatch |
-| `--tests` | Quality | Coverage, flaky tests |
-| `--orphans` | Hygiene | Unreferenced code |
-| `--stale-refs` | Hygiene | Broken references |
-| `--duplicates` | Hygiene | Duplicate code |
-| `--deps` | Hygiene | Dependency freshness |
-
-**Key Features:**
-- OWASP risk rating for priority
-- Root cause correlation (N findings → 1 root cause)
-- False positive reduction
-- Safe removal verification
-- Cascading impact analysis
-- Remediation verification
-
-**Context Application:**
 | Field | Effect |
 |-------|--------|
 | Data | PII/Regulated → security ×2 |
 | Scale | 10K+ → stricter thresholds |
 | Maturity | Legacy → safe fixes only |
 | Priority | Speed → critical only; Quality → all |
-
-**Strategy Evolution:** Learns patterns (Systemic, Avoid, Prefer) for future runs
 
 ---
 
@@ -212,19 +250,41 @@ Commands learn from execution patterns:
 **Usage:**
 ```bash
 /cco-review                    # Full review
-/cco-review --quick            # Skip from-scratch analysis
-/cco-review --focus=structure  # Focus on organization
-/cco-review --focus=security   # Focus on security
-/cco-review --focus=deps       # Focus on dependencies
+/cco-review --quick            # Smart defaults, report only
+/cco-review --focus=architecture
+/cco-review --focus=quality
+/cco-review --no-apply         # Report only
 ```
 
-**Phases:**
-1. Map Current State - Architecture, patterns, dependencies
-2. Gap Analysis - Purpose vs implementation
-3. Stack Fitness - Tech choices evaluation
-4. Fresh Perspective - "If building from scratch"
-5. Prioritization - Quick wins vs major refactors
-6. Apply (optional) - Implement approved recommendations
+### Steps
+
+| Step | Name | Action |
+|------|------|--------|
+| 1 | Focus | Ask focus areas |
+| 2 | Analyze | Run agent with scopes |
+| 3 | Assessment | Show foundation assessment |
+| 4 | Recommendations | Show prioritized 80/20 list |
+| 5 | Approval | Ask which to apply [SKIP if --no-apply] |
+| 6 | Apply | Execute approved changes |
+| 7 | Summary | Show results |
+
+### Focus Areas
+
+| Selection | Agent Scope |
+|-----------|-------------|
+| Architecture | Dependency graph, coupling, patterns, layers |
+| Code Quality | Issues with file:line, complexity |
+| Testing & DX | Test coverage, developer experience |
+| Best Practices | Tool usage, execution patterns, efficiency |
+
+### Prioritization (80/20)
+
+| Priority | Criteria |
+|----------|----------|
+| Do Now | High impact, low effort |
+| Plan | High impact, medium effort |
+| Consider | Medium impact |
+| Backlog | Low impact or high effort |
 
 ---
 
@@ -240,28 +300,39 @@ Commands learn from execution patterns:
 /cco-research "query" --quick            # T1-T2 only, 5 sources
 /cco-research "query" --deep             # All tiers, 20+ sources
 /cco-research "A vs B" --compare         # Comparison mode
-/cco-research "query" --focus=official   # Official sources only
 /cco-research "query" --local            # Codebase-only search
 /cco-research "query" --security         # Security advisories
 ```
 
-**Source Tiers:**
-| Tier | Score | Source Type |
-|------|-------|-------------|
-| T1 | 95-100 | Official docs (MDN, react.dev, docs.python.org) |
-| T2 | 85-94 | Official repos, changelogs, RFCs |
-| T3 | 70-84 | Core contributors, library authors |
-| T4 | 55-69 | Stack Overflow (high votes), verified Medium |
-| T5 | 40-54 | Dev.to, Hashnode, Reddit, blogs |
-| T6 | 0-39 | Unverified, AI-generated, outdated |
+### Steps
 
-**Quality Features:**
-- CRAAP+ scoring framework (Currency, Relevance, Authority, Accuracy, Purpose)
-- Adaptive source replacement (discard low-quality, find better)
-- Iterative deepening (seed → backward snowballing → forward snowballing)
-- Saturation detection (stop when no new info)
-- Contradiction resolution
-- Knowledge gap identification
+| Step | Name | Action |
+|------|------|--------|
+| 1 | Depth | Ask research depth |
+| 2 | Query | Parse and understand query |
+| 3 | Research | Run agent with query |
+| 4 | Synthesize | Process agent results |
+| 5 | Output | Show structured findings |
+
+### Source Tiers
+
+| Tier | Sources | Score Range |
+|------|---------|-------------|
+| T1 | Official docs, specs | 90-100 |
+| T2 | GitHub, changelogs | 80-90 |
+| T3 | Major blogs, tutorials | 70-80 |
+| T4 | Stack Overflow, forums | 60-70 |
+| T5 | Personal blogs | 50-60 |
+| T6 | Unknown | 40-50 |
+
+### Output Structure
+
+1. **Executive Summary** - TL;DR + confidence score
+2. **Evidence Hierarchy** - Primary (85+) / Supporting (70-84)
+3. **Contradictions Resolved** - Claim A vs B → Winner
+4. **Knowledge Gaps** - Topics with no/limited sources
+5. **Actionable Recommendation** - DO / DON'T / CONSIDER
+6. **Source Citations** - [N] title | url | tier | score
 
 ---
 
@@ -276,17 +347,44 @@ Commands learn from execution patterns:
 /cco-commit                 # Full flow
 /cco-commit --dry-run       # Preview only
 /cco-commit --single        # One commit for all
+/cco-commit --quick         # Smart defaults
 /cco-commit --skip-checks   # Skip quality gates
 ```
 
-**Quality gates:** Format → Lint → Test (stop on failure)
+### Steps
 
-**Features:**
-- Vague message detection and rejection
-- Change type classification verification
-- Atomic commit verification
-- Semantic versioning impact tracking
-- Commit history style matching
+| Step | Name | Action |
+|------|------|--------|
+| 1 | Pre-checks | Conflicts, stash, large changes |
+| 2 | Unstaged | Ask about unstaged changes |
+| 3 | Quality | Run format → lint → types → tests |
+| 4 | Analyze | Group changes atomically |
+| 5 | Plan | Show commit plan, ask approval |
+| 6 | Execute | Create commits |
+| 7 | Summary | Show results |
+
+### Quality Gates (Sequential)
+
+| Gate | Command | Action |
+|------|---------|--------|
+| 1. Secrets | Pattern detection | BLOCK if found |
+| 2. Large Files | Size check | WARN >1MB, BLOCK >10MB |
+| 3. Format | `{format_cmd}` | Auto-fix, re-stage |
+| 4. Lint | `{lint_cmd}` | STOP on unfixable |
+| 5. Types | `{type_cmd}` | STOP on failure |
+| 6. Tests | `{test_cmd}` | STOP on failure |
+
+### Commit Message Format
+
+```
+{type}({scope}): {title}
+
+{description}
+
+🤖 Generated with [Claude Code](https://claude.com/claude-code)
+
+Co-Authored-By: Claude <noreply@anthropic.com>
+```
 
 ---
 
@@ -305,17 +403,35 @@ Commands learn from execution patterns:
 /cco-preflight --tag --push      # Tag and push
 ```
 
-**Phases:**
-1. **Pre-flight** - Git state, branch, version, changelog, dependencies
-2. **Quality Gate** - via `/cco-optimize --pre-release --fix` (all scopes)
-3. **Architecture** - via `/cco-review --quick`
-4. **Final Verification** - Full test suite, build, lint, type check
-5. **Changelog & Docs** - Release notes and documentation sync
-6. **Go/No-Go** - Blockers vs warnings summary, next steps
+### Steps
 
-**Classification:**
-- **Blockers** - Must fix before release (dirty git, invalid version, tests fail)
-- **Warnings** - Should fix (coverage below target, outdated changelog)
+| Step | Name | Action |
+|------|------|--------|
+| 1 | Phase Select | Ask which phases to run |
+| 2 | Pre-flight | Release-specific checks [SKIP if not selected] |
+| 3 | Quality | Run /cco-optimize --pre-release [SKIP if not selected] |
+| 4 | Architecture | Run /cco-review --quick [SKIP if not selected] |
+| 5 | Verification | Full test/build/lint [SKIP if not selected] |
+| 6 | Changelog | Update changelog & docs [SKIP if not selected] |
+| 7 | Decision | Go/No-go summary |
+
+### Pre-flight Checks
+
+| Check | Type |
+|-------|------|
+| Clean working directory | BLOCKER |
+| On `{main_branch}` or release branch | WARN |
+| Version synced across files | BLOCKER |
+| Leftover markers (TODO, FIXME, WIP) | WARN |
+| SemVer matches changes | WARN |
+
+### Go/No-Go Status
+
+| Status | Action |
+|--------|--------|
+| Blocker (red) | Cannot release |
+| Warning (yellow) | Can override |
+| Pass (green) | Ready |
 
 ---
 
@@ -330,16 +446,21 @@ Commands learn from execution patterns:
 /cco-checkup                   # Standard maintenance
 /cco-checkup --dry-run         # Preview without changes
 /cco-checkup --no-fix          # Report only
-/cco-checkup --deep            # Thorough checkup
-/cco-checkup --trends          # With trend history
+/cco-checkup --health-only     # Skip audit
+/cco-checkup --audit-only      # Skip health
 ```
 
-**Phases:**
-1. **Health Dashboard** - via `/cco-status --brief`
-2. **Quality Audit** - via `/cco-optimize --fix` (all scopes)
-3. **Summary** - Changes since last checkup, fixed vs declined
+### Steps
 
-**Scheduling:**
+| Step | Name | Action |
+|------|------|--------|
+| 1 | Phase Select | Ask which phases to run |
+| 2 | Health | Run /cco-status --brief [SKIP if not selected] |
+| 3 | Audit | Run /cco-optimize --fix [SKIP if not selected] |
+| 4 | Summary | Show results and next checkup |
+
+### Scheduling
+
 | Frequency | Use Case |
 |-----------|----------|
 | Weekly | Active development |

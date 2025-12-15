@@ -10,15 +10,12 @@ allowed-tools: WebSearch(*), WebFetch(*), Read(*), Grep(*), Glob(*), Task(*), To
 
 End-to-end: Searches multiple sources, scores reliability, synthesizes findings.
 
-**Rules:** User Input | Source Reliability | Quick Mode | Progress Tracking
-
 ## Context
 
 - Context check: !`test -f ./.claude/rules/cco/context.md && echo "1" || echo "0"`
 - Current date: !`date +%Y-%m-%d`
 
 **DO NOT re-run these commands. Use the pre-collected values above.**
-**Static context (Stack, Type, Priority, Data) from ./CLAUDE.md already in context.**
 
 ## Context Requirement [CRITICAL]
 
@@ -30,83 +27,165 @@ Run /cco-config first to configure project context, then restart CLI.
 ```
 **Stop immediately.**
 
+## Architecture
+
+| Step | Name | Action |
+|------|------|--------|
+| 1 | Depth | Ask research depth |
+| 2 | Query | Parse and understand query |
+| 3 | Research | Run agent with query |
+| 4 | Synthesize | Process agent results |
+| 5 | Output | Show structured findings |
+
+---
+
 ## Progress Tracking [CRITICAL]
 
-```
+```javascript
 TodoWrite([
-  { content: "Research topic", status: "in_progress", activeForm: "Researching topic" },
-  { content: "Synthesize findings", status: "pending", activeForm: "Synthesizing findings" },
-  { content: "Generate recommendation", status: "pending", activeForm: "Generating recommendation" }
+  { content: "Step-1: Select depth", status: "in_progress", activeForm: "Selecting depth" },
+  { content: "Step-2: Parse query", status: "pending", activeForm: "Parsing query" },
+  { content: "Step-3: Run research", status: "pending", activeForm: "Running research" },
+  { content: "Step-4: Synthesize findings", status: "pending", activeForm: "Synthesizing findings" },
+  { content: "Step-5: Show output", status: "pending", activeForm: "Showing output" }
 ])
 ```
 
-## Context Application
+---
 
-| Field | Effect |
-|-------|--------|
-| Stack | Prioritize stack-specific (Python → docs.python.org, JS → MDN) |
-| Type | API → API docs; CLI → man pages; Library → README/changelog |
-| Priority | Speed → quick; Quality → deep |
-| Data | PII/Regulated → include compliance/security |
+## Step-1: Depth Selection
 
-## Token Efficiency [CRITICAL]
-
-Single research agent │ Parallel fetches │ Targeted extraction │ Early saturation (3×)
-
-## Agent Integration
-
+```javascript
+AskUserQuestion([{
+  question: "Research depth?",
+  header: "Depth",
+  options: [
+    { label: "Quick", description: "T1-T2 sources only, 5 max" },
+    { label: "Standard", description: "T1-T4 sources, 10 max" },
+    { label: "Deep", description: "All tiers, 20+ sources" }
+  ],
+  multiSelect: false
+}])
 ```
-Task(cco-agent-research, scope=full, query="...")
-→ Multi-source search → Tiering → Synthesis → Structured recommendation
+
+**Dynamic labels:** Add `(Recommended)` based on query complexity.
+
+**Flags override:** `--quick`, `--standard`, `--deep` skip this question.
+
+### Validation
+```
+[x] User selected depth
+→ Store as: depth = {selection}
+→ Proceed to Step-2
+```
+
+---
+
+## Step-2: Parse Query
+
+Parse query for:
+- Concepts: main topics
+- Date context: version, release date
+- Tech/framework: specific technologies
+- Comparison intent: "vs", "or", "compared to"
+- Mode detection: troubleshooting, changelog, security
+
+### Validation
+```
+[x] Query parsed
+→ Store as: parsedQuery = { concepts, date, tech, comparison, mode }
+→ Proceed to Step-3
+```
+
+---
+
+## Step-3: Research
+
+```javascript
+agentResponse = Task("cco-agent-research", `
+  scope: full
+  query: "${userQuery}"
+  depth: ${depth}
+  parsedQuery: ${JSON.stringify(parsedQuery)}
+
+  Multi-source search → Tiering → Synthesis → Structured recommendation
+`)
 ```
 
 **CRITICAL:** ONE research agent. Never per-source or per-strategy.
 
-**Local Mode (`--local`):** Uses `cco-agent-analyze` with `scope: scan` (codebase-only).
+**Local Mode (`--local`):** Uses `cco-agent-analyze` with `scope: scan`.
 
-## Default Behavior
+### Validation
+```
+[x] Agent returned results
+[x] results.sources exists
+[x] results.synthesis exists
+→ Proceed to Step-4
+```
 
-| Question | Options | MultiSelect |
-|----------|---------|-------------|
-| Depth? | Standard; Quick; Deep | false |
+---
 
-**Dynamic labels:** AI adds `(Recommended)` based on query complexity.
+## Step-4: Synthesize
 
-Explicit flags skip questions.
+Process agent results:
+- Weight by tier and score
+- Resolve contradictions
+- Identify knowledge gaps
+- Generate recommendation
 
-## Flow
+### Validation
+```
+[x] Synthesis complete
+→ Store as: synthesis = { summary, evidence, contradictions, gaps, recommendation }
+→ Proceed to Step-5
+```
 
-| Phase | Action |
-|-------|--------|
-| 1. Query | Parse concepts, date, tech/framework, comparison intent |
-| 2. Search | Parallel: Official (docs, GitHub) │ Discussion │ Articles │ Q&A │ Local |
-| 3. Score | Tier (T1-T6) + modifiers → final score (0-100) + claims + date |
-| 4. Contradictions | Identify → Map with scores → Analyze why → Resolve/note |
-| 5. Synthesize | Weighted consensus + contradiction resolution + freshness |
+---
 
-## Special Modes
+## Step-5: Output
 
-| Mode | Focus |
-|------|-------|
-| `--local` | Codebase only: existing impl, patterns, local solutions |
-| `--changelog` | Breaking changes: release notes, migration, deprecation |
-| `--security` | CVEs, advisories, vulnerabilities, patches |
-| `--dependency` | Package versions, breaking changes, CVE checks |
-| `--compare` | Side-by-side comparison ("vs", "or", "compared to") |
-| Troubleshooting | Auto-detect: GitHub Issues, SO, known bugs |
+Display structured output:
 
-## Output Format
-
-**Sections:**
 1. **Executive Summary** - TL;DR + confidence score + saturation indicator
-2. **Evidence Hierarchy** - Primary (85+) / Supporting (70-84) with CRAAP scores
+2. **Evidence Hierarchy** - Primary (85+) / Supporting (70-84) with scores
 3. **Contradictions Resolved** - Claim A vs B → Winner with reason
 4. **Knowledge Gaps** - Topics with no/limited sources
 5. **Actionable Recommendation** - DO / DON'T / CONSIDER with caveats
 6. **Source Citations** - [N] title | url | tier | score | date
 7. **Metadata** - Iterations, discards, saturation status
 
-## Flags
+### Validation
+```
+[x] Output displayed
+[x] All todos marked completed
+→ Done
+```
+
+---
+
+## Reference
+
+### Context Application
+
+| Field | Effect |
+|-------|--------|
+| Stack | Prioritize stack-specific sources |
+| Type | API → API docs; CLI → man pages |
+| Priority | Speed → quick; Quality → deep |
+| Data | PII/Regulated → include compliance |
+
+### Special Modes
+
+| Mode | Focus |
+|------|-------|
+| `--local` | Codebase only |
+| `--changelog` | Breaking changes, migration |
+| `--security` | CVEs, advisories |
+| `--dependency` | Package versions, CVEs |
+| `--compare` | Side-by-side comparison |
+
+### Flags
 
 | Flag | Effect |
 |------|--------|
@@ -118,15 +197,26 @@ Explicit flags skip questions.
 | `--security` | CVEs/advisories |
 | `--dependency` | Package versions |
 | `--compare` | A vs B mode |
-| `--focus=official` | T1-T2 only |
-| `--focus=community` | Include T4-T5 |
 | `--json` | JSON output |
 | `--sources-only` | No synthesis |
 
-## Quick Mode
+### Source Tiers
 
-No questions │ T1-T2 only │ Brief output
+| Tier | Sources | Score Range |
+|------|---------|-------------|
+| T1 | Official docs, specs | 90-100 |
+| T2 | GitHub, changelogs | 80-90 |
+| T3 | Major blogs, tutorials | 70-80 |
+| T4 | Stack Overflow, forums | 60-70 |
+| T5 | Personal blogs | 50-60 |
+| T6 | Unknown | 40-50 |
+
+---
 
 ## Rules
 
-Use TodoWrite for phases │ Analysis/scoring in cco-agent-research
+1. **Sequential execution** - Complete each step before proceeding
+2. **Validation gates** - Check validation block before next step
+3. **ONE research agent** - Never spawn multiple agents
+4. **Early saturation** - Stop when 3+ sources agree
+5. **Stack-aware** - Prioritize context-relevant sources
