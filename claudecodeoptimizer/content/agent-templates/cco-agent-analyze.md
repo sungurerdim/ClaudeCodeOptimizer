@@ -214,6 +214,111 @@ Mark as `[from docs]` - requires user confirmation.
 
 **CRITICAL:** These questions MUST be asked via AskUserQuestion. Cannot be skipped or inferred.
 
+**FIRST ACTION after detection:** Immediately call AskUserQuestion for Batch 1. Do NOT proceed to rule selection without asking questions.
+
+##### AskUserQuestion Format [REQUIRED]
+
+**Batch 1 Example (Questions 1-4):**
+```json
+AskUserQuestion({
+  "questions": [
+    {
+      "question": "How many active contributors work on this project?",
+      "header": "Team",
+      "options": [
+        { "label": "Solo", "description": "Single developer, no formal review process" },
+        { "label": "2-5 Contributors", "description": "Small team with async PR reviews" },
+        { "label": "6+ Contributors", "description": "Large team requiring ADR and CODEOWNERS" }
+      ],
+      "multiSelect": false
+    },
+    {
+      "question": "What is the expected scale (concurrent users/requests)?",
+      "header": "Scale",
+      "options": [
+        { "label": "Prototype", "description": "Less than 100, development only" },
+        { "label": "Small", "description": "100-1K, basic caching needed" },
+        { "label": "Medium", "description": "1K-10K, connection pools and async required" },
+        { "label": "Large", "description": "10K+, circuit breakers and advanced patterns" }
+      ],
+      "multiSelect": false
+    },
+    {
+      "question": "What is the most sensitive data this project handles?",
+      "header": "Data",
+      "options": [
+        { "label": "Public", "description": "Open data, no sensitivity" },
+        { "label": "PII", "description": "Personal identifiable information" },
+        { "label": "Regulated", "description": "Healthcare, finance, or other regulated data" }
+      ],
+      "multiSelect": false
+    },
+    {
+      "question": "Which compliance frameworks are required?",
+      "header": "Compliance",
+      "options": [
+        { "label": "None", "description": "No specific compliance requirements" },
+        { "label": "SOC2", "description": "Service Organization Control 2" },
+        { "label": "HIPAA", "description": "Healthcare data protection" },
+        { "label": "GDPR", "description": "EU data privacy regulation" }
+      ],
+      "multiSelect": true
+    }
+  ]
+})
+```
+
+**Batch 2 Example (Questions 5-8):**
+```json
+AskUserQuestion({
+  "questions": [
+    {
+      "question": "What is the uptime commitment (SLA)?",
+      "header": "SLA",
+      "options": [
+        { "label": "None", "description": "Best effort, no formal commitment" },
+        { "label": "99%", "description": "~7 hours/month downtime acceptable" },
+        { "label": "99.9%", "description": "~43 minutes/month downtime" },
+        { "label": "99.99%", "description": "~4 minutes/month downtime" }
+      ],
+      "multiSelect": false
+    },
+    {
+      "question": "What is the current development stage?",
+      "header": "Maturity",
+      "options": [
+        { "label": "Prototype", "description": "May be discarded, rapid iteration" },
+        { "label": "Active", "description": "Regular releases, growing features" },
+        { "label": "Stable", "description": "Maintenance mode, bug fixes only" },
+        { "label": "Legacy", "description": "Minimal changes, keeping alive" }
+      ],
+      "multiSelect": false
+    },
+    {
+      "question": "What is the breaking change policy?",
+      "header": "Breaking",
+      "options": [
+        { "label": "Allowed", "description": "Pre-1.0, breaking changes acceptable" },
+        { "label": "Minimize", "description": "Deprecate first, provide migration path" },
+        { "label": "Never", "description": "Enterprise users, strict compatibility" }
+      ],
+      "multiSelect": false
+    },
+    {
+      "question": "What is the primary development focus?",
+      "header": "Priority",
+      "options": [
+        { "label": "Speed", "description": "Ship fast, iterate quickly" },
+        { "label": "Balanced", "description": "Standard practices" },
+        { "label": "Quality", "description": "Thorough testing and review" },
+        { "label": "Security", "description": "Security-first development" }
+      ],
+      "multiSelect": false
+    }
+  ]
+})
+```
+
 ##### Question Classification
 
 | Type | Meaning | Action |
@@ -242,12 +347,36 @@ Mark as `[from docs]` - requires user confirmation.
 
 **Hint Usage:** Parenthetical hints become `description` field in AskUserQuestion options.
 
-##### Confirm Questions (Batch 3 - Only if detection exists)
+##### Confirm Questions (Batch 3 - Conditional)
 
 | Element | Detection Method | Confidence | Question |
 |---------|------------------|------------|----------|
 | Testing | Coverage config/reports | MEDIUM | Coverage target? |
 | Type | Entry points, exports | MEDIUM | Project type? |
+
+**Batch 3 Trigger Logic [CRITICAL]:**
+```
+mediumConfidenceCount = count(detections where confidence == "MEDIUM")
+
+if (mediumConfidenceCount > 0) {
+  // Ask Batch 3 for MEDIUM confidence items only
+  for each detection with confidence == "MEDIUM":
+    add to Batch 3 questions with [detected] marker
+} else {
+  // Skip Batch 3 entirely
+  // All HIGH confidence = trusted, no confirmation needed
+  // No detection = nothing to confirm
+}
+```
+
+**Decision Table:**
+| Scenario | Testing Confidence | Type Confidence | Batch 3 Action |
+|----------|-------------------|-----------------|----------------|
+| Both HIGH | HIGH | HIGH | Skip Batch 3 |
+| Both MEDIUM | MEDIUM | MEDIUM | Ask both Testing + Type |
+| Mixed | HIGH | MEDIUM | Ask Type only |
+| Mixed | MEDIUM | HIGH | Ask Testing only |
+| No detection | - | - | Skip Batch 3 |
 
 **Format:** Mark detected option with `[detected]` suffix:
 ```
@@ -267,6 +396,31 @@ Type → "CLI [detected]"; "Library"; "API"; "Frontend"
 | Infra | HIGH | Dockerfile, k8s manifests present |
 
 **Default values (if user skips/cancels):** Team=Solo, Scale=Small, Data=Public, Compliance=None, Testing=Standard, SLA=None, Maturity=Active, Breaking=Minimize, Priority=Balanced
+
+##### Error Handling [CRITICAL]
+
+**questionsAsked must ALWAYS be true.** Only set to false if a code error prevents calling AskUserQuestion.
+
+| Scenario | Action | questionsAsked | userInput |
+|----------|--------|----------------|-----------|
+| User answers all questions | Store responses | `true` | User values |
+| User selects "Other" with custom input | Store custom value | `true` | Custom values |
+| User cancels mid-batch | Use defaults for remaining | `true` | Partial user + defaults |
+| User cancels before any question | Use all defaults, add warning | `true` | All defaults |
+| AskUserQuestion tool unavailable | Use all defaults, add error | `true` | All defaults |
+| AskUserQuestion times out | Use all defaults, add warning | `true` | All defaults |
+
+**Warning/Error Output:**
+```json
+{
+  "questionsAsked": true,
+  "userInput": { /* defaults or partial */ },
+  "warnings": ["User cancelled after Batch 1, defaults applied for Batch 2"],
+  "errors": []
+}
+```
+
+**NEVER set questionsAsked: false** unless you literally cannot call the AskUserQuestion tool due to a system error. User cancellation is NOT a reason to set false.
 
 #### Step 3-5: Rule Selection
 

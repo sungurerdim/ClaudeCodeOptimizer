@@ -95,11 +95,14 @@ Detect from `context.md` (Scale, Type) or ask if unavailable.
 
 **Only runs if "Detection & Rules" selected in Step 2.**
 
+### Agent Invocation
+
 ```
-Task(cco-agent-analyze, prompt="scope=config")
+agentResponse = Task(cco-agent-analyze, prompt="scope=config")
 ```
 
-Agent handles project detection AND asks project-specific questions:
+### Agent Responsibilities
+
 1. **Auto-detect** from manifest/code/config/docs (Language, DB, Infra, etc.)
 2. **Ask user** (MANDATORY - cannot skip):
    - **Batch 1:** Team, Scale, Data, Compliance (4 questions)
@@ -109,7 +112,73 @@ Agent handles project detection AND asks project-specific questions:
 4. **Select rules** based on detections + user input
 5. **Return** JSON with detections, userInput, rules, triggeredCategories, questionsAsked
 
-**CRITICAL:** If `questionsAsked: false`, orchestrator rejects and re-runs agent.
+### Response Validation [CRITICAL]
+
+```
+// Validation logic after agent returns
+function validateAgentResponse(response) {
+  // 1. questionsAsked must be true
+  if (!response.questionsAsked) {
+    return { valid: false, reason: "Agent did not ask mandatory questions" }
+  }
+
+  // 2. userInput must have all 8 mandatory fields
+  const required = ["team", "scale", "data", "compliance", "sla", "maturity", "breaking", "priority"]
+  for (field of required) {
+    if (!response.userInput[field]) {
+      return { valid: false, reason: `Missing userInput.${field}` }
+    }
+  }
+
+  // 3. detections must have at least language
+  if (!response.detections?.language?.length) {
+    return { valid: false, reason: "No language detected" }
+  }
+
+  // 4. rules array must not be empty
+  if (!response.rules?.length) {
+    return { valid: false, reason: "No rules generated" }
+  }
+
+  return { valid: true }
+}
+```
+
+### Retry Logic [CRITICAL]
+
+```
+// Retry flow
+validation = validateAgentResponse(agentResponse)
+
+if (!validation.valid) {
+  console.warn(`Agent validation failed: ${validation.reason}`)
+  console.warn("Retrying agent with explicit instruction...")
+
+  // Retry ONCE with explicit instruction
+  retryResponse = Task(cco-agent-analyze,
+    prompt="scope=config. MANDATORY: You MUST call AskUserQuestion for Batch 1 and Batch 2. Do NOT skip questions."
+  )
+
+  retryValidation = validateAgentResponse(retryResponse)
+
+  if (!retryValidation.valid) {
+    // Fail after 1 retry - do not infinite loop
+    throw Error(`Agent failed after retry: ${retryValidation.reason}`)
+  }
+
+  agentResponse = retryResponse
+}
+
+// Proceed to Step 4 with validated response
+```
+
+**Retry Rules:**
+| Rule | Value |
+|------|-------|
+| Max retries | 1 |
+| Retry prompt | Add explicit "MANDATORY" instruction |
+| Failure action | Display error, abort config flow |
+| Success action | Proceed to Step 4 (Review) |
 
 See `cco-agent-analyze.md` for full detection categories and question details.
 
