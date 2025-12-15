@@ -19,7 +19,6 @@ allowed-tools: Bash(git:*), Bash(ruff:*), Bash(npm:*), Bash(pytest:*), Read(*), 
 - Staged lines: !`git diff --cached --shortstat`
 
 **DO NOT re-run these commands. Use the pre-collected values above.**
-**Static context (Tools, Conventions) from ./CLAUDE.md already in context.**
 
 ## Context Requirement [CRITICAL]
 
@@ -31,83 +30,244 @@ Run /cco-config first to configure project context, then restart CLI.
 ```
 **Stop immediately.**
 
-## Pre-commit Awareness
+## Architecture
 
-| Condition | Detection | Action |
-|-----------|-----------|--------|
-| Stash exists | Stash list not empty | Ask via AskUserQuestion |
-| Conflicts | `UU`/`AA`/`DD` in status | BLOCK - must resolve first |
-| Large changes | 500+ lines | WARN - consider splitting |
+| Step | Name | Action |
+|------|------|--------|
+| 1 | Pre-checks | Conflicts, stash, large changes |
+| 2 | Unstaged | Ask about unstaged changes |
+| 3 | Quality | Run format → lint → types → tests |
+| 4 | Analyze | Group changes atomically |
+| 5 | Plan | Show commit plan, ask approval |
+| 6 | Execute | Create commits |
+| 7 | Summary | Show results |
 
-### Stash Handling
-
-If stash exists → **AskUserQuestion**:
-
-| Question | Options | MultiSelect |
-|----------|---------|-------------|
-| You have stashed changes. What to do? | Keep stashed; Apply and include; Pop and include | false |
-
-- **Keep stashed**: Continue without stash (stash remains)
-- **Apply and include**: Apply to working tree, include in commit (stash kept)
-- **Pop and include**: Pop to working tree, include in commit (stash removed)
-
-### Conflict Handling
-
-If conflicts detected: `Cannot commit: {n} conflict(s). Resolve first.` **Stop immediately.**
+---
 
 ## Progress Tracking [CRITICAL]
 
-```
+```javascript
 TodoWrite([
-  { content: "Collect git info", status: "in_progress", activeForm: "Collecting git info" },
-  { content: "Run quality gates", status: "pending", activeForm: "Running quality gates" },
-  { content: "Analyze changes", status: "pending", activeForm: "Analyzing changes" },
-  { content: "Get plan approval", status: "pending", activeForm: "Getting plan approval" },
-  { content: "Execute commits", status: "pending", activeForm: "Executing commits" }
+  { content: "Step-1: Run pre-checks", status: "in_progress", activeForm: "Running pre-checks" },
+  { content: "Step-2: Handle unstaged", status: "pending", activeForm: "Handling unstaged changes" },
+  { content: "Step-3: Run quality gates", status: "pending", activeForm: "Running quality gates" },
+  { content: "Step-4: Analyze changes", status: "pending", activeForm: "Analyzing changes" },
+  { content: "Step-5: Get plan approval", status: "pending", activeForm: "Getting plan approval" },
+  { content: "Step-6: Execute commits", status: "pending", activeForm: "Executing commits" },
+  { content: "Step-7: Show summary", status: "pending", activeForm: "Showing summary" }
 ])
 ```
 
-## Execution Flow
+---
 
-| Step | Action |
-|------|--------|
-| 1. Git info | Single message: `status`, `diff --cached`, `branch`, `log` (parallel) |
-| 2. Quality gates | Sequential: Secrets → Large files → Format → Lint → Types → Tests |
-| 3. Analyze | Group changes atomically, show plan |
-| 4. Approval | **AskUserQuestion**: Proceed with commit(s)? (show plan, allow edit) |
-| 5. Commit | Execute approved commits |
+## Step-1: Pre-checks
 
-**User controls every decision via AskUserQuestion.** No commit without explicit approval.
+### Step-1.1: Conflict Check [BLOCKER]
 
-## Context Application
+If `UU`/`AA`/`DD` in git status:
+```
+Cannot commit: {n} conflict(s) detected. Resolve first.
+```
+**Stop immediately.**
 
-| Field | Effect |
-|-------|--------|
-| Tools | format/lint/test from context Operational |
-| Maturity | Legacy → smaller commits; Greenfield → batch |
-| Type | Library → careful with API; API → note contracts |
+### Step-1.2: Stash Check
 
-## Quality Gates [CRITICAL]
+If stash list not empty:
+
+```javascript
+AskUserQuestion([{
+  question: "You have stashed changes. What to do?",
+  header: "Stash",
+  options: [
+    { label: "Keep stashed", description: "Continue without stash (stash remains)" },
+    { label: "Apply and include", description: "Apply to working tree, include in commit (stash kept)" },
+    { label: "Pop and include", description: "Pop to working tree, include in commit (stash removed)" }
+  ],
+  multiSelect: false
+}])
+```
+
+### Step-1.3: Large Changes Check
+
+If 500+ lines changed:
+
+```javascript
+AskUserQuestion([{
+  question: "Large changeset (500+ lines). How to proceed?",
+  header: "Size",
+  options: [
+    { label: "Continue", description: "Proceed with large commit" },
+    { label: "Split", description: "Help me split into smaller commits" },
+    { label: "Cancel", description: "Abort and review manually" }
+  ],
+  multiSelect: false
+}])
+```
+
+### Validation
+```
+[x] No conflicts (or stopped)
+[x] Stash handled (if exists)
+[x] Large changes handled (if applicable)
+→ Proceed to Step-2
+```
+
+---
+
+## Step-2: Unstaged Changes
+
+If unstaged changes exist:
+
+```javascript
+AskUserQuestion([{
+  question: "Include unstaged changes?",
+  header: "Unstaged",
+  options: [
+    { label: "Yes, include all", description: "Stage and include all changes" },
+    { label: "No, staged only", description: "Commit only staged changes" },
+    { label: "Select files", description: "Choose which files to include" }
+  ],
+  multiSelect: false
+}])
+```
+
+If "Select files" → show file picker with multiSelect.
+
+### Validation
+```
+[x] Unstaged changes decision made
+[x] Files staged as needed
+→ Proceed to Step-3
+```
+
+---
+
+## Step-3: Quality Gates [SEQUENTIAL - stop on failure]
 
 | Gate | Command | Action |
 |------|---------|--------|
-| Secrets | `grep -rn "sk-\|ghp_\|password="` | BLOCK if found |
-| Large Files | `find . -size +1M` | WARN >1MB, BLOCK >10MB |
-| Format | `{format_cmd}` from context | Auto-fix, stage |
-| Lint | `{lint_cmd}` from context | STOP on unfixable |
-| Types | `{type_cmd}` from context | STOP on failure |
-| Tests | `{test_cmd}` from context | STOP on failure |
+| 1. Secrets | `grep -rn "sk-\|ghp_\|password="` | BLOCK if found |
+| 2. Large Files | `find . -size +1M` | WARN >1MB, BLOCK >10MB |
+| 3. Format | `{format_cmd}` from context | Auto-fix, re-stage |
+| 4. Lint | `{lint_cmd}` from context | STOP on unfixable |
+| 5. Types | `{type_cmd}` from context | STOP on failure |
+| 6. Tests | `{test_cmd}` from context | STOP on failure |
 
-**Sequential, stop on failure.** Commands from context.md Operational section.
+**Commands from context.md Operational section.**
 
-## Atomic Grouping
+### On Failure
 
-**Keep together:** Implementation + tests, renames, single logical change
-**Split apart:** Different features, unrelated files, config vs code, docs vs impl
-**Order:** Types/interfaces → Core impl → Dependent code → Tests → Docs
+```javascript
+AskUserQuestion([{
+  question: "{gate} failed: {error}. How to proceed?",
+  header: "Gate Failed",
+  options: [
+    { label: "Fix and retry", description: "I'll fix the issue, then retry" },
+    { label: "Skip gate", description: "Continue without this check" },
+    { label: "Cancel", description: "Abort commit" }
+  ],
+  multiSelect: false
+}])
+```
 
-## Message Format
+### Validation
+```
+[x] All gates passed (or skipped with user approval)
+→ Proceed to Step-4
+```
 
+---
+
+## Step-4: Analyze Changes
+
+Group changes atomically:
+- **Keep together:** Implementation + tests, renames, single logical change
+- **Split apart:** Different features, unrelated files, config vs code
+- **Order:** Types → Core → Dependent → Tests → Docs
+
+Generate commit plan with messages.
+
+### Validation
+```
+[x] Changes grouped atomically
+[x] Commit messages generated
+→ Store as: commitPlan = { commits: [...] }
+→ Proceed to Step-5
+```
+
+---
+
+## Step-5: Plan Approval
+
+Display commit plan, then ask:
+
+```javascript
+AskUserQuestion([{
+  question: "Commit plan ready. How to proceed?",
+  header: "Plan",
+  options: [
+    { label: "Accept", description: "Execute commits as planned" },
+    { label: "Modify", description: "Change grouping or order" },
+    { label: "Edit messages", description: "Modify commit messages" },
+    { label: "Cancel", description: "Abort without committing" }
+  ],
+  multiSelect: false
+}])
+```
+
+**Dynamic labels:** Add `(Recommended)` if clean history.
+
+### If Modify
+
+```javascript
+AskUserQuestion([{
+  question: "How to modify?",
+  header: "Modify",
+  options: [
+    { label: "Merge commits", description: "Combine multiple into one" },
+    { label: "Split commit", description: "Break one into multiple" },
+    { label: "Reorder", description: "Change commit sequence" },
+    { label: "Edit files", description: "Change file grouping" }
+  ],
+  multiSelect: false
+}])
+```
+
+### If Edit Messages
+
+Show each message for editing, then return to approval.
+
+### Breaking Change Detection
+
+If API removal/signature change detected:
+
+```javascript
+AskUserQuestion([{
+  question: "Breaking change detected. Add BREAKING CHANGE footer?",
+  header: "Breaking",
+  options: [
+    { label: "Yes", description: "Add BREAKING CHANGE: footer to commit" },
+    { label: "No", description: "Not a breaking change" }
+  ],
+  multiSelect: false
+}])
+```
+
+### Validation
+```
+[x] User approved plan (or modified and re-approved)
+[x] Breaking changes handled
+→ If Cancel: Exit
+→ Proceed to Step-6
+```
+
+---
+
+## Step-6: Execute Commits
+
+Execute approved commits sequentially.
+
+**Message Format:**
 ```
 {type}({scope}): {title}
 
@@ -120,30 +280,47 @@ Co-Authored-By: Claude <noreply@anthropic.com>
 
 | Rule | Requirement |
 |------|-------------|
-| Title | ≤50 chars (hard: 72), action verb, no period |
+| Title | ≤50 chars, action verb, no period |
 | Description | What changed and why (1-3 lines) |
 | Scope | From affected module/feature |
-| Trailer | Always include Generated + Co-Authored-By |
 | Types | feat, fix, refactor, perf, test, docs, build, ci, chore |
 
-**Reject:** "fix bug", "update code", "changes" → Use specific descriptions
+### Validation
+```
+[x] All commits created successfully
+→ Proceed to Step-7
+```
 
-**Breaking:** API removal/signature change → WARN + ask for BREAKING CHANGE footer
+---
 
-## User Decisions
+## Step-7: Summary
 
-| Question | Options | MultiSelect |
-|----------|---------|-------------|
-| Include unstaged? | Yes; No | false |
-| Commit plan action? | Accept; Modify; Edit message; Cancel | false |
-| Large file? | Include; Exclude | false |
-| Add BREAKING CHANGE? | Yes; No | false |
+Display:
+- Commits created: {count}
+- Files changed: {count}
+- Lines: +{added} -{removed}
+- Branch: {branch}
 
-**Dynamic labels:** AI adds `(Recommended)` based on context (e.g., clean history → Accept).
+### Validation
+```
+[x] Summary displayed
+[x] All todos marked completed
+→ Done
+```
 
-**Modify options:** Merge commits; Split commit; Reorder; Edit files
+---
 
-## Flags
+## Reference
+
+### Quick Mode (`--quick`)
+
+When `--quick` flag:
+- No questions - use smart defaults
+- Stage all changes
+- Single commit with auto-generated message
+- Complete in single message
+
+### Flags
 
 | Flag | Effect |
 |------|--------|
@@ -153,25 +330,20 @@ Co-Authored-By: Claude <noreply@anthropic.com>
 | `--skip-checks` | Skip quality gates |
 | `--amend` | Amend last (with safety) |
 
-## Default Behavior (No Flags)
+### Context Application
 
-Interactive mode with full control:
-1. Run all quality gates (format, lint, types, tests)
-2. Analyze changes and suggest atomic grouping
-3. Ask about unstaged changes
-4. Show commit plan for approval
-5. Execute approved commits
+| Field | Effect |
+|-------|--------|
+| Tools | format/lint/test from Operational |
+| Maturity | Legacy → smaller commits; Greenfield → batch |
+| Type | Library → careful with API; API → note contracts |
 
-**User controls every decision via AskUserQuestion.**
-
-## Quick Mode (`--quick`)
-
-When `--quick` flag is used:
-- No questions - use smart defaults
-- Stage all changes
-- Single commit with auto-generated message
-- Complete in single message
+---
 
 ## Rules
 
-Parallel git info │ Sequential gates │ Atomic commits │ No vague messages │ Git safety
+1. **Sequential execution** - Complete each step before proceeding
+2. **Validation gates** - Check validation block before next step
+3. **Sequential quality gates** - Stop on first failure
+4. **No vague messages** - Reject "fix bug", "update code", "changes"
+5. **Git safety** - Never force push, always verify

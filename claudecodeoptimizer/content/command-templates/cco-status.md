@@ -16,7 +16,6 @@ Read-only metrics collection and visualization.
 - Last health tag: !`git tag -l "health-*" --sort=-creatordate | head -1 || echo "None"`
 
 **DO NOT re-run these commands. Use the pre-collected values above.**
-**Static context (Stack, Type, Scale) from ./CLAUDE.md already in context.**
 
 ## Context Requirement [CRITICAL]
 
@@ -28,34 +27,59 @@ Run /cco-config first to configure project context, then restart CLI.
 ```
 **Stop immediately.**
 
-## Token Efficiency [CRITICAL]
+## Architecture
 
-Single analyze agent (scan + trends) │ Linter-first │ Batch calls
+| Step | Name | Action |
+|------|------|--------|
+| 1 | Collect | Run agent for metrics |
+| 2 | Process | Calculate scores and trends |
+| 3 | Display | Show dashboard |
+
+---
 
 ## Progress Tracking [CRITICAL]
 
-```
+```javascript
 TodoWrite([
-  { content: "Collect metrics", status: "in_progress", activeForm: "Collecting metrics" },
-  { content: "Generate dashboard", status: "pending", activeForm: "Generating dashboard" }
+  { content: "Step-1: Collect metrics", status: "in_progress", activeForm: "Collecting metrics" },
+  { content: "Step-2: Process scores", status: "pending", activeForm: "Processing scores" },
+  { content: "Step-3: Display dashboard", status: "pending", activeForm: "Displaying dashboard" }
 ])
 ```
 
-## Execution Flow
+---
 
+## Step-1: Collect Metrics
+
+```javascript
+agentResponse = Task("cco-agent-analyze", `
+  scopes: ["scan", "trends"]
+  Linters first → Combined scan + trends data
+  Return:
+  - metrics: { security, tests, debt, cleanliness, docs }
+  - trends: { security_delta, tests_delta, ... }
+  - details: { issues[], coverage, complexity }
+`)
 ```
-Task(cco-agent-analyze, scopes=[scan, trends])
-→ Linters first → Combined scan + trends data → Dashboard output
+
+**CRITICAL:** ONE analyze agent. Never spawn separate agents.
+
+### Validation
+```
+[x] Agent returned valid response
+[x] response.metrics exists
+[x] response.trends exists
+→ Proceed to Step-2
 ```
 
-**CRITICAL:** Use ONE analyze agent. Never spawn separate agents.
+---
 
-| Scope | Returns |
-|-------|---------|
-| `scan` | Security, tests, debt, cleanliness metrics |
-| `trends` | Historical deltas (↑↓→⚠) |
+## Step-2: Process Scores
 
-## Context Application
+Calculate final scores:
+- Apply context multipliers (Data: PII → security ×2)
+- Determine status (OK / WARN / FAIL / CRITICAL)
+- Calculate trend indicators (↑ ↓ → ⚠)
 
 | Field | Effect |
 |-------|--------|
@@ -63,16 +87,25 @@ Task(cco-agent-analyze, scopes=[scan, trends])
 | Data | PII/Regulated → security ×2 |
 | Priority | Speed → blockers only; Quality → all |
 
-## Flags
+### Validation
+```
+[x] Scores calculated
+[x] Status determined
+[x] Trends calculated
+→ Proceed to Step-3
+```
 
-| Flag | Effect |
-|------|--------|
-| `--focus=X` | Detailed: security, tests, debt, clean |
-| `--trends` | Historical trend table |
-| `--json` | JSON output |
-| `--brief` | Summary only |
+---
 
-## Output Formatting
+## Step-3: Display Dashboard
+
+Display formatted dashboard with:
+- Overall health score
+- Category scores (Security, Tests, Debt, Cleanliness, Docs)
+- Trend indicators
+- Top issues (if any)
+
+### Output Formatting
 
 | Element | Format |
 |---------|--------|
@@ -83,6 +116,42 @@ Task(cco-agent-analyze, scopes=[scan, trends])
 
 **Prohibited:** No emojis │ No ASCII art │ No unicode decorations
 
+### Validation
+```
+[x] Dashboard displayed
+[x] All todos marked completed
+→ Done
+```
+
+---
+
+## Reference
+
+### Flags
+
+| Flag | Effect |
+|------|--------|
+| `--focus=X` | Detailed: security, tests, debt, clean |
+| `--trends` | Historical trend table |
+| `--json` | JSON output |
+| `--brief` | Summary only |
+
+### Score Thresholds
+
+| Score | Status |
+|-------|--------|
+| 80-100 | OK |
+| 60-79 | WARN |
+| 40-59 | FAIL |
+| 0-39 | CRITICAL |
+
+---
+
 ## Rules
 
-Single agent │ Read-only │ Conservative scores │ Evidence-based
+1. **Sequential execution** - Complete each step before proceeding
+2. **Validation gates** - Check validation block before next step
+3. **ONE analyze agent** - Never spawn multiple agents
+4. **Read-only** - Never modify files
+5. **Conservative scores** - When uncertain, score lower
+6. **Evidence-based** - Every score needs justification

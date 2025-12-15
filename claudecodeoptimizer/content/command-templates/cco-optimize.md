@@ -10,7 +10,7 @@ allowed-tools: Read(*), Grep(*), Glob(*), Edit(*), Bash(git:*), Bash(ruff:*), Ba
 
 ## Core Principle [CRITICAL]
 
-**Fix everything that can be fixed.** There is no "manual review" category. All issues fall into:
+**Fix everything that can be fixed.** All issues fall into:
 1. **Auto-fix**: Safe to apply without asking
 2. **Approval Required**: Ask user, then fix if approved
 
@@ -22,7 +22,6 @@ If an issue can be fixed by editing code, it MUST be fixed (with approval if nee
 - Git status: !`git status --short`
 
 **DO NOT re-run these commands. Use the pre-collected values above.**
-**Static context (Tools, Stack, Maturity) from ./CLAUDE.md already in context.**
 
 ## Context Requirement [CRITICAL]
 
@@ -34,48 +33,253 @@ Run /cco-config first to configure project context, then restart CLI.
 ```
 **Stop immediately.**
 
-## User Input
+## Architecture
 
-| Question | Options | MultiSelect |
-|----------|---------|-------------|
-| Scope? | Security; Quality; Hygiene; Best Practices | true |
-| Action? | Report Only; Auto-fix; Interactive | false |
+| Step | Name | Action |
+|------|------|--------|
+| 1 | Safety | Check git state, warn if dirty |
+| 2 | Scope | Ask what to optimize |
+| 3 | Action | Ask report/auto-fix/interactive |
+| 4 | Analyze | Run agent, get findings JSON |
+| 5 | Show | Display findings summary |
+| 6 | Auto-fix | Apply safe fixes (if action != report) |
+| 7 | Approval | Ask for approval-required items |
+| 8 | Apply | Apply user-approved fixes |
+| 9 | Summary | Show applied/declined counts |
 
-**Dynamic labels:** AI adds `(Recommended)` based on project Data/Priority context.
+---
 
 ## Progress Tracking [CRITICAL]
 
-```
+```javascript
 TodoWrite([
-  { content: "Analyze codebase", status: "in_progress", activeForm: "Analyzing codebase" },
-  { content: "Apply safe fixes", status: "pending", activeForm: "Applying safe fixes" },
-  { content: "Request approval", status: "pending", activeForm: "Requesting approval" },
-  { content: "Show summary", status: "pending", activeForm: "Showing summary" }
+  { content: "Step-1: Check safety", status: "in_progress", activeForm: "Checking git safety" },
+  { content: "Step-2: Ask scope", status: "pending", activeForm: "Asking scope" },
+  { content: "Step-3: Ask action", status: "pending", activeForm: "Asking action type" },
+  { content: "Step-4: Run analysis", status: "pending", activeForm: "Running analysis" },
+  { content: "Step-5: Show findings", status: "pending", activeForm: "Showing findings" },
+  { content: "Step-6: Apply auto-fixes", status: "pending", activeForm: "Applying auto-fixes" },
+  { content: "Step-7: Get approval", status: "pending", activeForm: "Getting approval" },
+  { content: "Step-8: Apply approved", status: "pending", activeForm: "Applying approved fixes" },
+  { content: "Step-9: Show summary", status: "pending", activeForm: "Showing summary" }
 ])
 ```
 
-## Token Efficiency [CRITICAL]
+---
 
-Single analyze agent │ Single apply agent │ Linter-first │ Batch calls │ Targeted reads
+## Step-1: Safety
 
-## Execution Flow
+Check git working tree state.
 
-| Step | Action |
-|------|--------|
-| 1. Analyze | `Task(cco-agent-analyze, scopes=[...])` → findings JSON |
-| 2. Show | Display findings summary to user (counts by scope/severity) |
-| 3. Apply safe | `Task(cco-agent-apply, fixes=[...auto-fixable...])` |
-| 4. Approval | **AskUserQuestion** for approval-required items (paginated) |
-| 5. Apply approved | `Task(cco-agent-apply, fixes=[...user-approved...])` |
-| 6. Summary | Applied + Declined counts, verification status |
+| Condition | Action |
+|-----------|--------|
+| Clean | Proceed |
+| Dirty | AskUserQuestion below |
 
-**CRITICAL:**
-- Agent returns findings → Command decides what to show/ask
-- Auto-fix items: applied without asking (safe changes)
-- Approval-required items: Command asks user via AskUserQuestion
-- ONE analyze agent, ONE apply agent
+```javascript
+AskUserQuestion([{
+  question: "Working tree has uncommitted changes. How to proceed?",
+  header: "Git State",
+  options: [
+    { label: "Continue anyway", description: "Proceed with dirty working tree" },
+    { label: "Stash first", description: "Stash changes, continue, remind to pop" },
+    { label: "Cancel", description: "Abort optimization" }
+  ],
+  multiSelect: false
+}])
+```
 
-## Scope Coverage
+### Validation
+```
+[x] Git state checked
+[x] If dirty: user decision collected
+→ If Cancel: Exit
+→ Proceed to Step-2
+```
+
+---
+
+## Step-2: Scope
+
+```javascript
+AskUserQuestion([{
+  question: "What to optimize?",
+  header: "Scope",
+  options: [
+    { label: "Security", description: "OWASP, secrets, CVEs, input validation" },
+    { label: "Quality", description: "Tech debt, type errors, test gaps" },
+    { label: "Hygiene", description: "Orphans, stale refs, duplicates" },
+    { label: "Best Practices", description: "Patterns, efficiency, consistency" }
+  ],
+  multiSelect: true
+}])
+```
+
+**Dynamic labels:** Add `(Recommended)` based on Data/Priority context.
+
+### Validation
+```
+[x] User selected scope(s)
+→ Store as: scopes = {selections[]}
+→ Proceed to Step-3
+```
+
+---
+
+## Step-3: Action
+
+```javascript
+AskUserQuestion([{
+  question: "How to handle findings?",
+  header: "Action",
+  options: [
+    { label: "Report Only", description: "Show issues without fixing" },
+    { label: "Auto-fix", description: "Apply safe fixes automatically" },
+    { label: "Interactive", description: "Ask before each fix" }
+  ],
+  multiSelect: false
+}])
+```
+
+### Validation
+```
+[x] User selected action
+→ Store as: action = {selection}
+→ If Report Only: Skip Step-6, Step-7, Step-8
+→ Proceed to Step-4
+```
+
+---
+
+## Step-4: Analyze
+
+```javascript
+agentResponse = Task("cco-agent-analyze", `
+  scopes: ${JSON.stringify(scopes)}
+  Return findings JSON with:
+  - findings[]: { id, scope, severity, title, file, line, fix_description, auto_fixable, risk }
+  - summary: { total, by_scope, by_severity, auto_fixable_count }
+`)
+```
+
+### Validation
+```
+[x] Agent returned valid response
+[x] response.findings exists
+[x] response.summary exists
+→ Proceed to Step-5
+```
+
+---
+
+## Step-5: Show Findings
+
+Display findings summary to user:
+- Counts by scope (Security: N, Quality: N, ...)
+- Counts by severity (Critical: N, High: N, ...)
+- Auto-fixable vs Approval-required counts
+
+### Validation
+```
+[x] Summary displayed to user
+→ If action = "Report Only": Skip to Step-9
+→ Proceed to Step-6
+```
+
+---
+
+## Step-6: Apply Auto-fixes [SKIP if action = "Report Only"]
+
+```javascript
+autoFixable = findings.filter(f => f.auto_fixable && f.risk === "LOW")
+
+Task("cco-agent-apply", `
+  fixes: ${JSON.stringify(autoFixable)}
+  Apply all auto-fixable items. Verify each fix.
+`)
+```
+
+### Validation
+```
+[x] Auto-fixes applied
+[x] No cascading errors introduced
+→ Store as: autoFixed = {count}
+→ If no approval-required items: Skip to Step-9
+→ Proceed to Step-7
+```
+
+---
+
+## Step-7: Approval [SKIP if action = "Report Only" OR no approval-required items]
+
+**Paginated format (max 4 per page):**
+
+```javascript
+approvalRequired = findings.filter(f => !f.auto_fixable || f.risk !== "LOW")
+
+// Page 1
+AskUserQuestion([{
+  question: `Fix these issues? (Page 1/${totalPages})`,
+  header: "Approve",
+  options: approvalRequired.slice(0, 4).map(f => ({
+    label: `${f.id}: ${f.title}`,
+    description: `${f.file}:${f.line} - ${f.fix_description}`
+  })),
+  multiSelect: true
+}])
+
+// Continue for additional pages...
+```
+
+### Validation
+```
+[x] All pages presented
+[x] User selections collected
+→ Store as: approved = {selections[]}, declined = {unselected[]}
+→ Proceed to Step-8
+```
+
+---
+
+## Step-8: Apply Approved [SKIP if nothing approved]
+
+```javascript
+Task("cco-agent-apply", `
+  fixes: ${JSON.stringify(approved)}
+  Apply user-approved items. Verify each fix. Cascade if needed.
+`)
+```
+
+### Validation
+```
+[x] Approved fixes applied
+[x] Cascading errors handled
+→ Store as: appliedApproved = {count}
+→ Proceed to Step-9
+```
+
+---
+
+## Step-9: Summary
+
+Display final summary:
+- Auto-fixed: {autoFixed} items
+- User-approved: {appliedApproved} items
+- Declined: {declined.length} items
+- Verification status
+
+### Validation
+```
+[x] Summary displayed
+[x] All todos marked completed
+→ Done
+```
+
+---
+
+## Reference
+
+### Scope Coverage
 
 | Scope | Checks |
 |-------|--------|
@@ -84,35 +288,7 @@ Single analyze agent │ Single apply agent │ Linter-first │ Batch calls │
 | `hygiene` | Orphans, stale refs, duplicates |
 | `best-practices` | Patterns, efficiency, consistency |
 
-## Impact Preview
-
-For each fix, show impact before approval:
-- **Direct**: Files to modify
-- **Dependents**: Files that import/use
-- **Tests**: Coverage of affected code
-- **Risk**: LOW (auto-fix) / MEDIUM / HIGH (approval required)
-
-## Approval Flow [CRITICAL]
-
-When approval-required issues exist, present them in **paginated format** (max 4 per page):
-
-```
-Question: "Fix {category}? (Page 1/2)"
-Options:
-  - "{SCOPE}-001: {title}" → "{file}:{line} - {fix_description}"
-  - "{SCOPE}-002: {title}" → "{file}:{line} - {fix_description}"
-  ...
-MultiSelect: true
-```
-
-**Pagination:** If >4 issues in category → add pages (Page 2/N, etc.)
-
-**After user responds:**
-- Selected items → `Task(cco-agent-apply, fixes=[...approved...])`
-- Not selected → marked as `declined` in summary
-- Agent verifies each fix → cascades if new errors introduced
-
-## Context Application
+### Context Application
 
 | Field | Effect |
 |-------|--------|
@@ -121,32 +297,34 @@ MultiSelect: true
 | Maturity | Legacy → safe only |
 | Priority | Speed → critical; Quality → all |
 
-## Safety
+### Impact Preview
 
-| Check | Action |
-|-------|--------|
-| Dirty working tree | Prompt: Commit / Stash / Continue |
-| Uncommitted changes | Warn before applying |
-| Rollback | Clean git state enables `git checkout` |
+For each fix, show:
+- **Direct**: Files to modify
+- **Dependents**: Files that import/use
+- **Tests**: Coverage of affected code
+- **Risk**: LOW (auto-fix) / MEDIUM / HIGH (approval required)
 
-## Flags
+### Flags
 
 | Flag | Effect |
 |------|--------|
-| `--security` | Security only |
-| `--quality` | Quality only |
-| `--hygiene` | Hygiene only |
-| `--best-practices` | Best practices only |
-| `--report` | No fixes |
+| `--security` | Security scope only |
+| `--quality` | Quality scope only |
+| `--hygiene` | Hygiene scope only |
+| `--best-practices` | Best practices scope only |
+| `--report` | Report only (no fixes) |
 | `--fix` | Auto-fix safe (default) |
 | `--fix-all` | Fix all with approval |
-| `--critical` | Security + tests |
+| `--critical` | Security + tests only |
 | `--pre-release` | All scopes, strict |
 
-## Strategy Evolution
+---
 
-| Pattern | Action |
-|---------|--------|
-| Same issue 3+ files | Add to `Systemic` |
-| Fix caused cascade | Add to `Avoid` |
-| Effective pattern | Add to `Prefer` |
+## Rules
+
+1. **Sequential execution** - Complete each step before proceeding
+2. **Validation gates** - Check validation block before next step
+3. **ONE analyze agent** - Never spawn multiple analyze agents
+4. **ONE apply agent** - Never spawn multiple apply agents
+5. **Paginated approval** - Max 4 items per AskUserQuestion
