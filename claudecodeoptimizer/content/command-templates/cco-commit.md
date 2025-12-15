@@ -149,6 +149,25 @@ Co-Authored-By: Claude <noreply@anthropic.com>
 | `--skip-checks` | Skip quality gates |
 | `--amend` | Amend last (with safety) |
 
+## Default Behavior (No Flags)
+
+Interactive mode with full control:
+1. Run all quality gates (format, lint, types, tests)
+2. Analyze changes and suggest atomic grouping
+3. Ask about unstaged changes
+4. Show commit plan for approval
+5. Execute approved commits
+
+**User controls every decision via AskUserQuestion.**
+
+## Quick Mode (`--quick`)
+
+When `--quick` flag is used:
+- No questions - use smart defaults
+- Stage all changes
+- Single commit with auto-generated message
+- Complete in single message
+
 ## Rules
 
 Parallel git info │ Sequential gates │ Atomic commits │ No vague messages │ Git safety

@@ -82,6 +82,33 @@ Before ANY response that expects user input:
 - **Execute**: Command-specific logic
 - **Report**: Results with accounting
 
+## Context Requirement [CRITICAL]
+
+All commands (except `/cco-config`) require CCO context. Check at command start:
+
+```
+If context check returns "0":
+  CCO context not found.
+  Run /cco-config first to configure project context, then restart CLI.
+  **Stop immediately.**
+```
+
+**Enforcement:** No partial execution. No fallback. Stop and instruct user.
+
+## Token Efficiency [CRITICAL]
+
+Minimize token usage at every step:
+
+| Principle | Implementation |
+|-----------|----------------|
+| **Single-Agent** | ONE analyze agent, ONE apply agent per command |
+| **Linter-First** | Run linters before grep patterns (avoid duplication) |
+| **Batch-Calls** | Group multiple tool calls in single message |
+| **Targeted-Reads** | Read only matched files, use offset/limit |
+| **Early-Exit** | Stop when saturation reached (3× repeated themes) |
+
+**Anti-patterns:** Per-file agents │ Per-scope agents │ Full file reads │ Redundant searches
+
 ## Safety
 
 - **Pre-op**: Git status before modifications
@@ -109,7 +136,7 @@ Before ANY response that expects user input:
 ## Fix Workflow
 
 - **Flow**: Analyze > Report > Approve > Apply > Verify
-- **Output**: `Applied: N | Skipped: N | Failed: N | Total: N`
+- **Output**: `Applied: N | Declined: N | Failed: N | Total: N`
 
 ## Impact Preview
 
@@ -273,10 +300,10 @@ Note: Make a todo list first, then process systematically
 
 | Command | Quick Behavior |
 |---------|----------------|
-| commit | Stage all, single commit, push |
-| generate | Use detected conventions |
-| audit | Smart scope, auto-fix safe |
-| optimize | Balanced mode, all categories |
+| `/cco-commit` | Stage all, single commit, smart defaults |
+| `/cco-research` | T1-T2 only, brief output, no questions |
+| `/cco-review` | Smart defaults, report only |
+| `/cco-preflight` | (Not applicable - requires explicit decisions) |
 
 ### Output Restriction
 

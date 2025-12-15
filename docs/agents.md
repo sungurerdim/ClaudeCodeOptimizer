@@ -10,7 +10,7 @@ CCO uses three specialized agents with clear separation of concerns:
 
 | Agent | Purpose | Tools | Safe |
 |-------|---------|-------|------|
-| **cco-agent-analyze** | Read-only project analysis | Glob, Read, Grep, Bash | Yes |
+| **cco-agent-analyze** | Read-only project analysis | Glob, Read, Grep, Bash, AskUserQuestion | Yes |
 | **cco-agent-apply** | Write operations with verification | All tools | No |
 | **cco-agent-research** | External source research | WebSearch, WebFetch, Read, Grep, Glob | Yes |
 
@@ -33,6 +33,7 @@ CCO uses three specialized agents with clear separation of concerns:
 | `best-practices` | Pattern adherence, efficiency | cco-optimize --best-practices |
 | `architecture` | Dependency graph, coupling metrics | cco-review |
 | `trends` | Historical metrics with deltas | cco-status --trends |
+| `config` | Project detection and rule selection | cco-config |
 
 ### Detection Capabilities
 
@@ -66,6 +67,37 @@ CCO uses three specialized agents with clear separation of concerns:
 - Tests - Coverage gaps, flaky tests, test quality
 - Self-Compliance - Violations of stated rules
 
+### Config Scope
+
+Handles project detection and rule selection for `/cco-config`:
+
+**Execution Flow:**
+1. Auto-detect from manifest/code/config/docs (priority order)
+2. Ask user-input questions via AskUserQuestion
+3. Read adaptive rules template
+4. Select rules based on detections + user input
+5. Generate context.md + rule files
+6. Return structured output
+
+**User Questions:** Team, Scale, Data, Compliance, Testing, SLA, Maturity, Breaking, Priority
+
+### Artifact Handling
+
+| Rule | Implementation |
+|------|----------------|
+| Reference-Large | By path/ID, not inline |
+| Summarize-First | Return summary.count before full array |
+| Chunk-Processing | >100 findings → batches |
+| Cache-Artifacts | Reuse file reads within session |
+
+### Strategy Evolution
+
+| Pattern | Action |
+|---------|--------|
+| Same error 3+ files | Add to `Systemic` |
+| Recurring false positive | Add to `Avoid` |
+| Effective pattern found | Add to `Prefer` |
+
 ### Output
 
 Returns structured JSON with:
@@ -74,6 +106,7 @@ Returns structured JSON with:
 - `autoDetected` - All detected flags
 - `findings` - Issues with priority, location, details
 - `metrics` - Security, quality, hygiene scores
+- `learnings` - Strategy evolution patterns (systemic/avoid/prefer)
 
 ---
 
@@ -102,12 +135,12 @@ After each change:
 | Status | Meaning |
 |--------|---------|
 | `done` | Applied and verified |
-| `skip` | User declined or N/A |
+| `declined` | User explicitly declined |
 | `fail` | Attempted but failed |
 
 ### Accounting
 
-Always reports: `done + skip + fail = total`
+Always reports: `done + declined + fail = total`
 
 ---
 
@@ -162,6 +195,7 @@ Complete list of all scopes with their purpose and coverage:
 | `best-practices` | Pattern adherence | Efficiency, naming, error handling, magic numbers |
 | `architecture` | Structural analysis | Dependencies, coupling, layers, patterns |
 | `trends` | Historical tracking | Metric deltas with ↑↓→⚠ indicators |
+| `config` | Project configuration | Detection + user questions + rule selection |
 
 ---
 
@@ -169,7 +203,7 @@ Complete list of all scopes with their purpose and coverage:
 
 | Command | Analyze Scope | Apply | Research |
 |---------|---------------|-------|----------|
-| `/cco-config` | `detect` or `full` | No | No |
+| `/cco-config` | `config` | No | No |
 | `/cco-status` | `scan`, `trends` | No | No |
 | `/cco-optimize` | `security`, `quality`, `hygiene`, `best-practices` | Yes | `dependency` |
 | `/cco-review` | `architecture`, `best-practices` | Yes | No |

@@ -49,5 +49,5 @@
 
 - **Error-Format**: `[SEVERITY] {What} in {file:line}`
 - **Status-Values**: OK / WARN / FAIL
-- **Accounting**: done + skip + fail = total
+- **Accounting**: done + declined + fail = total
 - **Structured**: JSON/table when needed

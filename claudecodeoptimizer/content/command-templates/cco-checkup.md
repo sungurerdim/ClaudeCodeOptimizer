@@ -1,7 +1,7 @@
 ---
 name: cco-checkup
 description: Regular maintenance routine
-allowed-tools: Read(*), Grep(*), Glob(*), Edit(*), Bash(git:*), Bash(pytest:*), Task(*), TodoWrite
+allowed-tools: Read(*), Grep(*), Glob(*), Edit(*), Bash(git:*), Bash(pytest:*), Task(*), TodoWrite, AskUserQuestion
 ---
 
 # /cco-checkup
@@ -36,7 +36,7 @@ Run /cco-config first to configure project context, then restart CLI.
 
 When called without flags → **AskUserQuestion**:
 
-| Question | Options | multiSelect |
+| Question | Options | MultiSelect |
 |----------|---------|-------------|
 | Which phases to run? | Health Dashboard (Recommended); Quality Audit (Recommended) | true |
 
@@ -91,4 +91,4 @@ Shows: Duration, Changes since last, Fixed/Declined counts, Next recommended che
 
 ## Rules
 
-Delegate to sub-commands │ Aggregate results │ No duplicate work │ Use TodoWrite
+Delegate to sub-commands │ Aggregate results │ No duplicate work │ Use TodoWrite │ Safety via /cco-optimize
