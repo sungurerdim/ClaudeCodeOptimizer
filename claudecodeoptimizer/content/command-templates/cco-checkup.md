@@ -38,7 +38,9 @@ When called without flags → **AskUserQuestion**:
 
 | Question | Options | MultiSelect |
 |----------|---------|-------------|
-| Which phases to run? | Health Dashboard (Recommended); Quality Audit (Recommended) | true |
+| Which phases to run? | Health Dashboard; Quality Audit | true |
+
+**Dynamic labels:** AI adds `(Recommended)` based on last run date and context.
 
 Flags `--health-only`, `--audit-only` skip this question.
 

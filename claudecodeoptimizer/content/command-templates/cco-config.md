@@ -49,148 +49,273 @@ Display: Project, Context, AI Perf, Statusline, Permissions, Rules
 
 ---
 
-## Step 2: Orchestrator Questions (cco-config asks)
+## Step 2: User Questions (All in Command)
 
-These questions determine WHAT cco-config will do. Asked by orchestrator, not agent.
+**All user interaction happens here.** Agent only does detection, no questions.
 
 ### Q1: Action Type
 
-| Question | Options | MultiSelect |
-|----------|---------|-------------|
-| What to do? | Configure (Recommended); Remove; Export | false |
+```
+AskUserQuestion([
+  { question: "What would you like to do?", header: "Action",
+    options: [
+      { label: "Configure", description: "Set up or update project configuration" },
+      { label: "Remove", description: "Remove existing CCO configuration" },
+      { label: "Export", description: "Export rules to AGENTS.md or CLAUDE.md" }
+    ], multiSelect: false }
+])
+```
 
-### Q2: Scope (based on Q1)
+**Dynamic labels:** AI adds `(Recommended)` based on context (e.g., no existing config → Configure recommended).
 
-| Action | Options |
-|--------|---------|
-| Configure | Detection & Rules (Recommended); AI Performance; Statusline; Permissions |
-| Remove | Rules; AI Performance; Statusline; Permissions |
-| Export | AGENTS.md (Recommended); CLAUDE.md |
+### Q2: Scope (based on Q1 answer)
 
-### Q3: Details (if applicable)
+**If Configure:**
+```
+AskUserQuestion([
+  { question: "What to configure?", header: "Scope",
+    options: [
+      { label: "Detection & Rules", description: "Auto-detect stack, generate rules" },
+      { label: "AI Performance", description: "Extended thinking, tool output limits" },
+      { label: "Statusline", description: "Custom status bar display" },
+      { label: "Permissions", description: "Tool approval settings" }
+    ], multiSelect: true }
+])
+```
 
-| Selection | Question | Options |
-|-----------|----------|---------|
-| Statusline | Mode? | cco-full (Recommended); cco-minimal |
-| AI Perf | Extended Thinking Limit? | 5K; 8K; 10K |
-| AI Perf | Tool Output Limit? | 25K; 35K; 50K |
-| Permissions | Level? | Safe; Balanced (Recommended); Permissive; Full |
+**If Remove:**
+```
+AskUserQuestion([
+  { question: "What to remove?", header: "Scope",
+    options: [
+      { label: "Rules", description: "Remove .claude/rules/cco/" },
+      { label: "AI Performance", description: "Remove env settings" },
+      { label: "Statusline", description: "Remove cco-statusline.js" },
+      { label: "Permissions", description: "Remove permissions from settings" }
+    ], multiSelect: true }
+])
+```
 
-**AI Performance: Dynamic Recommendations**
-Token limits are maximum budgets - unused tokens cost nothing. Mark `(Recommended)` based on:
+**If Export:**
+```
+AskUserQuestion([
+  { question: "Export format?", header: "Format",
+    options: [
+      { label: "AGENTS.md", description: "Universal, works with Codex/Cursor" },
+      { label: "CLAUDE.md", description: "Claude Code specific format" }
+    ], multiSelect: false }
+])
+```
 
-| Context | Thinking | Tool Output | Rationale |
-|---------|----------|-------------|-----------|
-| Scale: Small + Simple CLI | 5K | 25K | Minimal complexity |
-| Scale: Small-Medium + Standard | 8K | 35K | Balanced default |
-| Scale: Medium-Large OR Complex | 10K | 50K | Deep reasoning needed |
-| Type: Data/ML projects | 10K | 50K | Complex analysis |
-| Maturity: Greenfield | 10K | 35K | More planning needed |
+### Q3: Details (based on Q2 selections)
 
-Detect from `context.md` (Scale, Type) or ask if unavailable.
+**If Statusline selected:**
+```
+AskUserQuestion([
+  { question: "Statusline mode?", header: "Mode",
+    options: [
+      { label: "cco-full", description: "Full status with all metrics" },
+      { label: "cco-minimal", description: "Compact single-line display" }
+    ], multiSelect: false }
+])
+```
+
+**If AI Performance selected:**
+```
+AskUserQuestion([
+  { question: "Extended thinking token limit?", header: "Thinking",
+    options: [
+      { label: "8K", description: "Standard projects" },
+      { label: "5K", description: "Simple CLI tools" },
+      { label: "10K", description: "Complex/large projects" }
+    ], multiSelect: false },
+  { question: "Tool output token limit?", header: "Output",
+    options: [
+      { label: "35K", description: "Standard projects" },
+      { label: "25K", description: "Simple projects" },
+      { label: "50K", description: "Large codebases" }
+    ], multiSelect: false }
+])
+```
+
+**Dynamic labels:** AI adds `(Recommended)` based on project Scale/Type from context.
+
+**If Permissions selected:**
+```
+AskUserQuestion([
+  { question: "Permission level?", header: "Level",
+    options: [
+      { label: "Safe", description: "Read-only operations" },
+      { label: "Balanced", description: "Read + lint/test auto-approved" },
+      { label: "Permissive", description: "Most operations auto-approved" },
+      { label: "Full", description: "All operations (Solo + Public only)" }
+    ], multiSelect: false }
+])
+```
+
+**Dynamic labels:** AI adds `(Recommended)` based on Team/Data context.
+
+**AI Performance Recommendations** (AI uses this table to determine recommendations):
+
+| Context | Thinking | Tool Output |
+|---------|----------|-------------|
+| Small + Simple CLI | 5K | 25K |
+| Small-Medium + Standard | 8K | 35K |
+| Medium-Large OR Complex | 10K | 50K |
+
+### Q4: Project Context (if "Detection & Rules" selected)
+
+**Batch 1 - Team & Data (4 questions, single AskUserQuestion call):**
+
+```
+AskUserQuestion([
+  { question: "How many active contributors?", header: "Team",
+    options: [
+      { label: "Solo", description: "Single developer, no formal review" },
+      { label: "Small (2-5)", description: "Small team with async PR reviews" },
+      { label: "Large (6+)", description: "Large team requiring ADR/CODEOWNERS" }
+    ], multiSelect: false },
+  { question: "Expected scale (concurrent users)?", header: "Scale",
+    options: [
+      { label: "Prototype (<100)", description: "Development only" },
+      { label: "Small (100-1K)", description: "Basic caching needed" },
+      { label: "Medium (1K-10K)", description: "Connection pools, async required" },
+      { label: "Large (10K+)", description: "Circuit breakers, advanced patterns" }
+    ], multiSelect: false },
+  { question: "Most sensitive data handled?", header: "Data",
+    options: [
+      { label: "Public", description: "Open data, no sensitivity" },
+      { label: "PII", description: "Personal identifiable information" },
+      { label: "Regulated", description: "Healthcare, finance, regulated data" }
+    ], multiSelect: false },
+  { question: "Required compliance frameworks?", header: "Compliance",
+    options: [
+      { label: "None", description: "No specific requirements" },
+      { label: "SOC2", description: "Service Organization Control 2" },
+      { label: "HIPAA", description: "Healthcare data protection" },
+      { label: "GDPR", description: "EU data privacy regulation" }
+    ], multiSelect: true }
+])
+```
+
+**Batch 2 - Operations & Policy (4 questions, single AskUserQuestion call):**
+
+```
+AskUserQuestion([
+  { question: "Uptime commitment (SLA)?", header: "SLA",
+    options: [
+      { label: "None", description: "Best effort, no commitment" },
+      { label: "99%", description: "~7 hours/month downtime" },
+      { label: "99.9%", description: "~43 minutes/month downtime" },
+      { label: "99.99%", description: "~4 minutes/month downtime" }
+    ], multiSelect: false },
+  { question: "Current development stage?", header: "Maturity",
+    options: [
+      { label: "Prototype", description: "May be discarded, rapid iteration" },
+      { label: "Active", description: "Regular releases, growing features" },
+      { label: "Stable", description: "Maintenance mode, bug fixes only" },
+      { label: "Legacy", description: "Minimal changes, keeping alive" }
+    ], multiSelect: false },
+  { question: "Breaking change policy?", header: "Breaking",
+    options: [
+      { label: "Allowed", description: "Pre-1.0, breaking changes OK" },
+      { label: "Minimize", description: "Deprecate first, migration path" },
+      { label: "Never", description: "Enterprise, strict compatibility" }
+    ], multiSelect: false },
+  { question: "Primary development focus?", header: "Priority",
+    options: [
+      { label: "Speed", description: "Ship fast, iterate quickly" },
+      { label: "Balanced", description: "Standard practices" },
+      { label: "Quality", description: "Thorough testing and review" },
+      { label: "Security", description: "Security-first development" }
+    ], multiSelect: false }
+])
+```
+
+**Store all answers as `userInput` object for agent.**
 
 ---
 
-## Step 3: Agent Detection & Project Questions (agent asks)
+## Step 3: Agent Detection (Detection Only)
 
 **Only runs if "Detection & Rules" selected in Step 2.**
 
 ### Agent Invocation
 
 ```
-agentResponse = Task(cco-agent-analyze, prompt="scope=config")
+agentResponse = Task(cco-agent-analyze, prompt=`
+  scope=config
+  userInput: ${JSON.stringify(userInput)}
+
+  Detection only - do NOT ask user questions (already collected).
+  Return detections, rules, context based on provided userInput.
+`)
 ```
 
-### Agent Responsibilities
+### Agent Responsibilities (No User Interaction)
 
 1. **Auto-detect** from manifest/code/config/docs (Language, DB, Infra, etc.)
-2. **Ask user** (MANDATORY - cannot skip):
-   - **Batch 1:** Team, Scale, Data, Compliance (4 questions)
-   - **Batch 2:** SLA, Maturity, Breaking, Priority (4 questions)
-   - **Batch 3:** Testing, Type (only if MEDIUM confidence detection exists)
-3. **Read adaptive.md** via `cco-install --cat rules/cco-adaptive.md`
-4. **Select rules** based on detections + user input
-5. **Return** JSON with detections, userInput, rules, triggeredCategories, questionsAsked
+2. **Read adaptive.md** via `cco-install --cat rules/cco-adaptive.md`
+3. **Select rules** based on detections + provided userInput
+4. **Return** JSON with detections, rules, triggeredCategories
 
-### Response Validation [CRITICAL]
+### Confirm Questions (Command asks after agent returns)
+
+**If agent returns MEDIUM confidence detections, ask user to confirm:**
 
 ```
-// Validation logic after agent returns
+// After agent returns - command builds confirmation questions dynamically
+// Labels with [detected] or [current] are added by AI based on agent response
+AskUserQuestion([
+  // For {category} (if MEDIUM confidence)
+  { question: "Confirm {category}?", header: "{Category}",
+    options: [
+      { label: "{detected_value}", description: "{detection_source}" },
+      { label: "{alternative_1}", description: "{alt_1_description}" },
+      { label: "{alternative_2}", description: "{alt_2_description}" }
+    ], multiSelect: false }
+])
+```
+
+| Confidence | Action |
+|------------|--------|
+| HIGH | Trust, don't ask (e.g., language from manifest) |
+| MEDIUM | **AskUserQuestion** - AI adds `[detected]` to detected option |
+| LOW | **AskUserQuestion** - no marker, needs user input |
+
+### Response Validation
+
+```
+// Minimal validation - no questionsAsked check needed
 function validateAgentResponse(response) {
-  // 1. questionsAsked must be true
-  if (!response.questionsAsked) {
-    return { valid: false, reason: "Agent did not ask mandatory questions" }
-  }
-
-  // 2. userInput must have all 8 mandatory fields
-  const required = ["team", "scale", "data", "compliance", "sla", "maturity", "breaking", "priority"]
-  for (field of required) {
-    if (!response.userInput[field]) {
-      return { valid: false, reason: `Missing userInput.${field}` }
-    }
-  }
-
-  // 3. detections must have at least language
   if (!response.detections?.language?.length) {
     return { valid: false, reason: "No language detected" }
   }
-
-  // 4. rules array must not be empty
   if (!response.rules?.length) {
     return { valid: false, reason: "No rules generated" }
   }
-
   return { valid: true }
 }
 ```
-
-### Retry Logic [CRITICAL]
-
-```
-// Retry flow
-validation = validateAgentResponse(agentResponse)
-
-if (!validation.valid) {
-  console.warn(`Agent validation failed: ${validation.reason}`)
-  console.warn("Retrying agent with explicit instruction...")
-
-  // Retry ONCE with explicit instruction
-  retryResponse = Task(cco-agent-analyze,
-    prompt="scope=config. MANDATORY: You MUST call AskUserQuestion for Batch 1 and Batch 2. Do NOT skip questions."
-  )
-
-  retryValidation = validateAgentResponse(retryResponse)
-
-  if (!retryValidation.valid) {
-    // Fail after 1 retry - do not infinite loop
-    throw Error(`Agent failed after retry: ${retryValidation.reason}`)
-  }
-
-  agentResponse = retryResponse
-}
-
-// Proceed to Step 4 with validated response
-```
-
-**Retry Rules:**
-| Rule | Value |
-|------|-------|
-| Max retries | 1 |
-| Retry prompt | Add explicit "MANDATORY" instruction |
-| Failure action | Display error, abort config flow |
-| Success action | Proceed to Step 4 (Review) |
-
-See `cco-agent-analyze.md` for full detection categories and question details.
 
 ---
 
 ## Step 4: Review
 
-Show detection results table, then:
+**Show detection results table to user**, then ask for approval:
 
-| Question | Options | MultiSelect |
-|----------|---------|-------------|
-| Apply configuration? | Accept; Edit; Cancel | false |
+```
+AskUserQuestion([
+  { question: "Apply this configuration?", header: "Apply",
+    options: [
+      { label: "Accept", description: "Apply all detected settings and rules" },
+      { label: "Edit", description: "Modify some settings before applying" },
+      { label: "Cancel", description: "Discard and exit" }
+    ], multiSelect: false }
+])
+```
+
+**If Edit selected:** Return to relevant question batch for modification.
 
 ---
 
@@ -298,13 +423,21 @@ No agent needed. Read global + project rules.
 
 ## Reference
 
-### Question Formatting
+### Dynamic Label Rules
 
-| Rule | Description |
-|------|-------------|
-| `[current]` | Matches existing (priority 1) |
-| `[detected]` | Auto-detected (priority 2) |
-| `(Recommended)` | Best practice (priority 3) |
+**AI applies these labels dynamically based on context - never hardcode in templates:**
+
+| Label | When AI Applies | Priority |
+|-------|-----------------|----------|
+| `[current]` | Option matches existing config value | 1 (highest) |
+| `[detected]` | Option matches agent detection result | 2 |
+| `(Recommended)` | Option matches best practice for context | 3 |
+
+**Label application logic:**
+- Read existing settings → mark matching option with `[current]`
+- Check agent detections → mark matching option with `[detected]`
+- Apply recommendation table → mark best option with `(Recommended)`
+- If multiple apply, use highest priority label only
 
 ### Permissions Levels
 

@@ -73,9 +73,11 @@ TodoWrite([
 |------|--------|
 | 1. Git info | Single message: `status`, `diff --cached`, `branch`, `log` (parallel) |
 | 2. Quality gates | Sequential: Secrets → Large files → Format → Lint → Types → Tests |
-| 3. Analyze | Group changes atomically |
-| 4. Approval | Show plan, get user approval |
-| 5. Commit | Execute commits |
+| 3. Analyze | Group changes atomically, show plan |
+| 4. Approval | **AskUserQuestion**: Proceed with commit(s)? (show plan, allow edit) |
+| 5. Commit | Execute approved commits |
+
+**User controls every decision via AskUserQuestion.** No commit without explicit approval.
 
 ## Context Application
 
@@ -132,10 +134,12 @@ Co-Authored-By: Claude <noreply@anthropic.com>
 
 | Question | Options | MultiSelect |
 |----------|---------|-------------|
-| Include unstaged? | Yes (Recommended); No | false |
-| Commit plan action? | Accept (Recommended); Modify; Edit message; Cancel | false |
+| Include unstaged? | Yes; No | false |
+| Commit plan action? | Accept; Modify; Edit message; Cancel | false |
 | Large file? | Include; Exclude | false |
 | Add BREAKING CHANGE? | Yes; No | false |
+
+**Dynamic labels:** AI adds `(Recommended)` based on context (e.g., clean history → Accept).
 
 **Modify options:** Merge commits; Split commit; Reorder; Edit files
 
