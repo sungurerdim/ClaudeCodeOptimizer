@@ -273,18 +273,67 @@ AskUserQuestion([
     multiSelect: false
   },
   {
-    question: "Required compliance frameworks?",
+    question: "Compliance requirements? (1/3: Common)",
     header: "Compliance",
     options: [
-      { label: "None", description: "No specific requirements" },
-      { label: "SOC2", description: "Service Organization Control 2" },
-      { label: "HIPAA", description: "Healthcare data protection" },
-      { label: "GDPR", description: "EU data privacy regulation" }
+      { label: "None", description: "No compliance requirements - skip remaining" },
+      { label: "SOC2", description: "B2B SaaS, enterprise customers" },
+      { label: "HIPAA", description: "US healthcare data (PHI)" },
+      { label: "PCI", description: "Payment card processing" }
     ],
     multiSelect: true
   }
 ])
 ```
+
+### Step-5.1b: Compliance (Privacy) - Skip if "None" selected above
+
+```javascript
+AskUserQuestion([{
+  question: "Compliance requirements? (2/3: Privacy)",
+  header: "Compliance",
+  options: [
+    { label: "GDPR", description: "EU data privacy, user rights" },
+    { label: "CCPA", description: "California consumer privacy" },
+    { label: "ISO27001", description: "International security standard" },
+    { label: "Skip", description: "No additional privacy requirements" }
+  ],
+  multiSelect: true
+}])
+```
+
+### Step-5.1c: Compliance (Specialized) - Skip if "None" selected in 5.1
+
+```javascript
+AskUserQuestion([{
+  question: "Compliance requirements? (3/3: Specialized)",
+  header: "Compliance",
+  options: [
+    { label: "FedRAMP", description: "US government cloud" },
+    { label: "DORA", description: "EU financial services (2025+)" },
+    { label: "HITRUST", description: "Healthcare + security combined" },
+    { label: "Skip", description: "No specialized requirements" }
+  ],
+  multiSelect: true
+}])
+```
+
+### Step-5.1d: Testing
+
+```javascript
+AskUserQuestion([{
+  question: "Test coverage level?",
+  header: "Testing",
+  options: [
+    { label: "Basics (60%)", description: "Unit tests, basic mocking" },
+    { label: "Standard (80%)", description: "+ Integration tests, fixtures, CI gates" },
+    { label: "Full (90%)", description: "+ E2E, contract testing, mutation testing" }
+  ],
+  multiSelect: false
+}])
+```
+
+**Dynamic label:** Add `[detected]` if coverage config found in CI/package.json.
 
 ### Step-5.2: Operations & Policy
 
@@ -338,9 +387,13 @@ AskUserQuestion([
 
 ### Validation
 ```
-[x] Step-5.1 completed: Team, Scale, Data, Compliance collected
+[x] Step-5.1 completed: Team, Scale, Data collected
+[x] Step-5.1 Compliance (1/3): Common frameworks collected
+[x] Step-5.1b Compliance (2/3): Privacy frameworks collected (skipped if "None" in 5.1)
+[x] Step-5.1c Compliance (3/3): Specialized frameworks collected (skipped if "None" in 5.1)
+[x] Step-5.1d completed: Testing level collected
 [x] Step-5.2 completed: SLA, Maturity, Breaking, Priority collected
-→ Store as: userInput = { team, scale, data, compliance, sla, maturity, breaking, priority }
+→ Store as: userInput = { team, scale, data, compliance[], testing, sla, maturity, breaking, priority }
 → Proceed to Step-6
 ```
 

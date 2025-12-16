@@ -136,7 +136,7 @@ Minimize token usage at every step:
 ## Fix Workflow
 
 - **Flow**: Analyze > Report > Approve > Apply > Verify
-- **Output**: `Applied: N | Declined: N | Failed: N | Total: N`
+- **Output-Accounting**: `Applied: N | Declined: N | Failed: N | Total: N`
 
 ## Impact Preview
 

@@ -191,7 +191,7 @@
 
 - **Error-Format**: `[SEVERITY] {What} in {file:line}`
 - **Status-Values**: OK / WARN / FAIL
-- **Accounting**: done + skip + fail = total
+- **Accounting**: done + declined + fail = total
 - **Structured**: JSON/table when needed
 
 ---
@@ -228,7 +228,7 @@
 ### Fix Workflow
 
 - **Flow**: Analyze > Report > Approve > Apply > Verify
-- **Output-Accounting**: `Applied: N | Skipped: N | Failed: N | Total: N`
+- **Output-Accounting**: `Applied: N | Declined: N | Failed: N | Total: N`
 
 ### Impact Preview
 
