@@ -7,7 +7,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
-## [2.0.0] - 2025-12-13
+## [2.0.0] - 2025-12-16
 
 ### Breaking Changes
 - **Command renames** - All commands renamed for consistency:
@@ -18,6 +18,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   - `/cco-generate` → `/cco-research`
 - **Agent consolidation** - `cco-agent-detect` + `cco-agent-scan` → `cco-agent-analyze`; `cco-agent-action` → `cco-agent-apply`
 - **Deprecated `setup_claude_md` function** - Use `clean_claude_md` instead
+
+### Security
+- **Path traversal fix** - Resolve paths before validation in `_is_safe_path` to prevent symlink/traversal bypasses
 
 ### Added
 - **Meta command `/cco-preflight`** - Pre-release workflow with quality gate, architecture review, changelog & docs sync, and go/no-go summary
@@ -42,6 +45,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - **Detection exclusions** - Prevent false positives from benchmarks/, examples/, test fixtures
 - **Pre-check validation** - Setup functions fail fast with helpful message if `~/.claude/` doesn't exist
 - **Module-level VERBOSE flag** - Centralized verbose control in install_hook.py
+- **Configurable subprocess timeouts** - `CCO_SUBPROCESS_TIMEOUT` and `CCO_SUBPROCESS_TIMEOUT_PACKAGE` environment variables
+- **`@cli_entrypoint` decorator** - Standardized exception handling for CLI entry points (KeyboardInterrupt → 130, Exception → 1)
+- **Option Batching** - Questions with >4 options now paginated with "All (N)" bulk selection on first page
 - **Unified /cco-config flow** - Configure, Remove, and Export in single multiSelect question
 - **Remove Configuration** - Remove any setting (AI Performance, Statusline, Permissions, Rules)
 - **Export content selection** - User chooses which sections to include in export
@@ -77,6 +83,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - **Architecture refactoring** - Extracted `operations.py` (shared removal functions) and `ui.py` (display functions) for better separation of concerns
 - **DRY improvements** - `save_json_file` utility now used consistently across all modules (replaces inline json.dumps patterns)
 - **Error handling** - `save_json_file` now wraps IO errors in RuntimeError with context
+- **Module restructure** - Split `cco_uninstall.py` (503 lines) into `uninstall/` package (detection.py, removal.py, __init__.py)
 
 ### Fixed
 - Rule counts consistent across all documentation (70 base + 110 tools + 120 adaptive pool)
