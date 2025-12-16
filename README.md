@@ -16,19 +16,39 @@ A process and rules layer for Claude Code in the Opus 4.5 era.
 
 ---
 
-## Quickstart
+## Quick Start
 
+### Step 1: Install
 ```bash
 pip install claudecodeoptimizer && cco-install
 ```
 
+### Step 2: Configure (First Run)
 Inside Claude Code:
 ```
-/cco-config    # Auto-detect your project, confirm once
-/cco-status    # See your scores
+/cco-config    # Auto-detect your project, confirm settings
+```
+This creates your project context in `.claude/rules/cco/context.md`. Restart Claude Code after.
+
+### Step 3: Verify
+```
+/cco-status    # See your project scores and metrics
 ```
 
-**That's it.** Start coding with safety nets in place.
+**Done.** Start coding with safety nets in place.
+
+### Common Workflows
+
+| I want to... | Use |
+|--------------|-----|
+| Set up a new project | `/cco-config` |
+| See project health | `/cco-status` |
+| Fix security/quality issues | `/cco-optimize` |
+| Review architecture | `/cco-review` |
+| Make a commit | `/cco-commit` |
+| Prepare a release | `/cco-preflight` |
+| Regular maintenance | `/cco-checkup` |
+| Research a topic | `/cco-research` |
 
 ---
 
