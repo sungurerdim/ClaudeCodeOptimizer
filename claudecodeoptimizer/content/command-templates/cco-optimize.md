@@ -212,23 +212,37 @@ Task("cco-agent-apply", `
 
 ## Step-7: Approval [SKIP if action = "Report Only" OR no approval-required items]
 
-**Paginated format (max 4 per page):**
+**Option Batching (max 4 per page):**
+
+| Total Items | Batches | Pattern |
+|-------------|---------|---------|
+| 5-8 | 2 | 4 + (1-4) |
+| 9-12 | 3 | 4 + 4 + (1-4) |
+| 13+ | N | Continue pattern |
+
+**Batch Rules:**
+- First batch includes "All ({N})" option for bulk approval
+- Each batch labeled "(Page X/Y)"
+- Group by severity: CRITICAL → HIGH → MEDIUM → LOW
 
 ```javascript
 approvalRequired = findings.filter(f => !f.auto_fixable || f.risk !== "LOW")
 
-// Page 1
+// Page 1 (with All option if many items)
 AskUserQuestion([{
   question: `Fix these issues? (Page 1/${totalPages})`,
   header: "Approve",
-  options: approvalRequired.slice(0, 4).map(f => ({
-    label: `${f.id}: ${f.title}`,
-    description: `${f.file}:${f.line} - ${f.fix_description}`
-  })),
+  options: [
+    ...(approvalRequired.length > 4 ? [{ label: `All (${approvalRequired.length})`, description: "Apply all fixes" }] : []),
+    ...approvalRequired.slice(0, approvalRequired.length > 4 ? 3 : 4).map(f => ({
+      label: `${f.id}: ${f.title}`,
+      description: `${f.file}:${f.line} - ${f.fix_description}`
+    }))
+  ],
   multiSelect: true
 }])
 
-// Continue for additional pages...
+// Continue for additional pages (4 items each, no All option)
 ```
 
 ### Validation

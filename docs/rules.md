@@ -8,9 +8,9 @@
 |----------|-------|----------|---------|
 | Core | 58 | `~/.claude/rules/cco/core.md` | Always active |
 | AI | 30 | `~/.claude/rules/cco/ai.md` | Always active |
-| Tools | 102 | pip package | Built into commands/agents |
+| Tools | 106 | pip package | Built into commands/agents |
 | Adaptive | 321 | pip package → `.claude/rules/cco/` | Per-project |
-| **Total** | **511** | | |
+| **Total** | **515** | | |
 
 **Counting:** `grep -c "^- \*\*" <file>` for all rule files
 
@@ -250,6 +250,11 @@
 - **Max-Questions**: 4 per AskUserQuestion call
 - **Max-Options**: 4 per question
 - **Overflow**: Use multiple sequential calls
+- **Option-Batching**: Split 5+ options into sequential questions (4+4+... pattern)
+- **First-Batch-Exit**: Include "None"/"Skip" in first batch for early exit
+- **Subsequent-Skip**: Include "Skip" in each subsequent batch
+- **Batch-Numbering**: Label as "(1/N)", "(2/N)", etc.
+- **Batch-Grouping**: Group related options (by category, region, severity)
 - **MultiSelect-Batch**: true for batch approvals
 - **All-Option**: First option = "All ({N})" for bulk
 - **Priority-Order**: CRITICAL → HIGH → MEDIUM → LOW
