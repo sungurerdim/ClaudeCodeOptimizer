@@ -71,13 +71,13 @@ Inside Claude Code:
 
 ## Rules
 
-CCO uses a 4-category rules system with **511 rules total**:
+CCO uses a 4-category rules system with **515 rules total**:
 
 | Category | Rules | Loading |
 |----------|-------|---------|
 | **Core** | 58 | Always active (`~/.claude/rules/cco/`) |
 | **AI** | 30 | Always active (`~/.claude/rules/cco/`) |
-| **Tools** | 102 | Built into commands/agents |
+| **Tools** | 106 | Built into commands/agents |
 | **Adaptive** | 321 | Selected per project → `.claude/rules/cco/` |
 
 **Categories:**
@@ -213,7 +213,7 @@ Built on official Anthropic documentation and Claude Code best practices:
 |---------|-------------------|
 | [Slash Commands][slash-commands] | 8 commands with YAML frontmatter |
 | [Sub-agents][sub-agents] | 3 single-responsibility agents |
-| [Rules Directory][memory] | 4-category rule system (511 rules) |
+| [Rules Directory][memory] | 4-category rule system (515 rules) |
 | [Permissions][cc-changelog] | 4 levels (safe→full) |
 
 **Rules Based On:** SSOT, DRY, YAGNI, KISS (Core) | Read-First, No-Hallucination (AI) | OWASP, Least-Privilege (Security)

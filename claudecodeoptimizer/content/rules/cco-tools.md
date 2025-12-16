@@ -163,6 +163,33 @@ Minimize token usage at every step:
 - **Max-Options**: 4 per question
 - **Overflow**: Use multiple sequential calls
 
+### Option Batching [CRITICAL]
+
+When options exceed 4, split into sequential questions:
+
+| Total Options | Batches | Pattern |
+|---------------|---------|---------|
+| 5-8 | 2 | 4 + (1-4) |
+| 9-12 | 3 | 4 + 4 + (1-4) |
+| 13-16 | 4 | 4 + 4 + 4 + (1-4) |
+
+**Batch Rules:**
+- **First-Batch-Exit**: Include "None" or "Skip" in first batch to allow early exit
+- **Subsequent-Skip**: Include "Skip" option in each subsequent batch
+- **Numbering**: Label batches as "(1/N)", "(2/N)", etc.
+- **Grouping**: Group related options together (e.g., by region, category, severity)
+
+**Example (10 compliance options):**
+```
+Batch 1/3 (Common): None, SOC2, HIPAA, PCI
+Batch 2/3 (Privacy): GDPR, CCPA, ISO27001, Skip  [skip if "None" in 1]
+Batch 3/3 (Specialized): FedRAMP, DORA, HITRUST, Skip  [skip if "None" in 1]
+```
+
+**Skip Logic:**
+- If "None" selected in first batch → skip all subsequent batches
+- If "Skip" selected → proceed to next batch (no selection from current)
+
 ### Batch Approval (for fix operations)
 
 - **MultiSelect**: true for batch approvals

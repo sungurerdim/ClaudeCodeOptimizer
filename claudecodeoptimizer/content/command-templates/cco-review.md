@@ -175,19 +175,35 @@ AskUserQuestion([{
 
 ### If Select Individual
 
-Show recommendations grouped by priority:
+**Option Batching by priority group (max 4 per question):**
+
+| Priority | Batch Pattern |
+|----------|---------------|
+| Do Now (5+ items) | Split: 4 + 4 + ... with "All Do Now ({N})" in first |
+| Plan (5+ items) | Split: 4 + 4 + ... with "All Plan ({N})" in first |
+| Consider/Backlog | Same pattern if needed |
+
+**Batch Rules:**
+- Each priority group is a separate question (or series if >4)
+- First batch of each group includes "All {Priority} ({N})" option
+- "Skip" option in first batch allows skipping entire group
 
 ```javascript
+// Do Now items (batch if > 4)
 AskUserQuestion([{
-  question: "Select 'Do Now' items to apply:",
+  question: `Select 'Do Now' items: (${doNowItems.length > 4 ? '1/' + Math.ceil(doNowItems.length/4) : ''})`,
   header: "Do Now",
-  options: doNowItems.map(item => ({
-    label: item.title,
-    description: `${item.file} - ${item.description}`
-  })),
+  options: [
+    ...(doNowItems.length > 4 ? [{ label: `All Do Now (${doNowItems.length})`, description: "Apply all high-priority items" }] : []),
+    ...doNowItems.slice(0, doNowItems.length > 4 ? 3 : 4).map(item => ({
+      label: item.title,
+      description: `${item.file} - ${item.description}`
+    })),
+    ...(doNowItems.length > 4 ? [] : [{ label: "Skip", description: "Skip Do Now items" }])
+  ],
   multiSelect: true
 }])
-// Repeat for Plan, Consider, Backlog if needed
+// Continue batches for remaining Do Now items, then Plan, Consider, Backlog
 ```
 
 ### Validation
