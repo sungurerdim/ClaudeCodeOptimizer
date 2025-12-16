@@ -1,7 +1,10 @@
 """CCO Configuration - Single source of truth."""
 
 import json
+import os
 import re
+import sys
+from collections.abc import Callable
 from pathlib import Path
 from typing import Any
 
@@ -33,6 +36,7 @@ __all__ = [
     "STATUSLINE_FILE",
     "SETTINGS_FILE",
     "CCO_PERMISSIONS_MARKER",
+    "cli_entrypoint",
 ]
 
 VERSION = __version__  # Single source: __init__.py
@@ -94,9 +98,9 @@ CCO_UNIVERSAL_PATTERN_COMPILED = re.compile(
     re.DOTALL | re.IGNORECASE,
 )
 
-# Timeout constants (seconds)
-SUBPROCESS_TIMEOUT = 5  # Default for quick operations
-SUBPROCESS_TIMEOUT_PACKAGE = 30  # Package install/uninstall operations
+# Timeout constants (seconds) - configurable via environment variables
+SUBPROCESS_TIMEOUT = int(os.getenv("CCO_SUBPROCESS_TIMEOUT", "5"))  # Default for quick operations
+SUBPROCESS_TIMEOUT_PACKAGE = int(os.getenv("CCO_SUBPROCESS_TIMEOUT_PACKAGE", "30"))  # Package install/uninstall operations
 
 # File size limits for safety
 MAX_CLAUDE_MD_SIZE = 1_000_000  # 1MB - prevent ReDoS on large files
@@ -206,3 +210,30 @@ def _get_rules_count() -> tuple[int, int]:
             total_categories += len(_CATEGORY_PATTERN.findall(content))
 
     return (total_rules, total_categories)
+
+
+def cli_entrypoint(func: Callable[..., int]) -> Callable[..., int]:
+    """Decorator for CLI entry points with standard exception handling.
+
+    Handles:
+    - KeyboardInterrupt: Returns exit code 130
+    - Exception: Prints error and returns exit code 1
+
+    Args:
+        func: CLI function to wrap
+
+    Returns:
+        Wrapped function with exception handling
+    """
+
+    def wrapper(*args: Any, **kwargs: Any) -> int:
+        try:
+            return func(*args, **kwargs)
+        except KeyboardInterrupt:
+            print("\nCancelled.")
+            return 130
+        except Exception as e:
+            print(f"Error: {e}", file=sys.stderr)
+            return 1
+
+    return wrapper
