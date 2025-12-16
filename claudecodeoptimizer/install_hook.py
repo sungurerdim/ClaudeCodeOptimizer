@@ -6,6 +6,7 @@ import sys
 from .config import (
     CLAUDE_DIR,
     SEPARATOR,
+    cli_entrypoint,
     get_content_path,
     get_rules_breakdown,
 )
@@ -94,63 +95,59 @@ def _run_global_install() -> int:
     Returns:
         Exit code: 0 on success, 1 on failure.
     """
-    try:
-        print("\n" + SEPARATOR)
-        print("CCO Setup")
-        print(SEPARATOR)
-        print(f"\nLocation: {CLAUDE_DIR}\n")
+    print("\n" + SEPARATOR)
+    print("CCO Setup")
+    print(SEPARATOR)
+    print(f"\nLocation: {CLAUDE_DIR}\n")
 
-        # Step 1: Clean previous installation (ensures fresh state)
-        clean_previous_installation()
+    # Step 1: Clean previous installation (ensures fresh state)
+    clean_previous_installation()
 
-        # Step 2: Install commands
-        print("Commands:")
-        cmds = setup_commands()
-        if not cmds:
-            print("  (none)")
-        print()
+    # Step 2: Install commands
+    print("Commands:")
+    cmds = setup_commands()
+    if not cmds:
+        print("  (none)")
+    print()
 
-        # Step 3: Install agents
-        print("Agents:")
-        agents = setup_agents()
-        if not agents:
-            print("  (none)")
-        print()
+    # Step 3: Install agents
+    print("Agents:")
+    agents = setup_agents()
+    if not agents:
+        print("  (none)")
+    print()
 
-        # Step 4: Install rules to ~/.claude/rules/cco/
-        print("Rules (to cco/ subdirectory):")
-        rules_installed = setup_rules()
-        print()
+    # Step 4: Install rules to ~/.claude/rules/cco/
+    print("Rules (to cco/ subdirectory):")
+    rules_installed = setup_rules()
+    print()
 
-        # Step 5: Clean old CCO markers from CLAUDE.md
-        markers_cleaned = clean_claude_md(verbose=True)
-        if markers_cleaned == 0:
-            print("  CLAUDE.md: no old markers to clean")
-        print()
+    # Step 5: Clean old CCO markers from CLAUDE.md
+    markers_cleaned = clean_claude_md(verbose=True)
+    if markers_cleaned == 0:
+        print("  CLAUDE.md: no old markers to clean")
+    print()
 
-        # Summary
-        breakdown = get_rules_breakdown()
-        print(SEPARATOR)
-        print(f"Installed: {len(cmds)} commands, {len(agents)} agents")
-        print(f"  Global rules (in cco/): {rules_installed.get('total', 0)}")
-        print(f"    - core.md: {breakdown['core']} rules (always loaded)")
-        print(f"    - ai.md: {breakdown['ai']} rules (always loaded)")
-        print("  Embedded in commands/agents:")
-        print(f"    - tools rules: {breakdown['tools']} (workflow rules)")
-        print(f"    - adaptive rules: {breakdown['adaptive']} (project-specific)")
-        print(SEPARATOR)
-        print()
-        print("Restart Claude Code for changes to take effect.")
-        print()
-        print("Next: /cco-config to configure statusline, permissions, and project context")
-        print()
-        return 0
-
-    except Exception as e:
-        print(f"Setup failed: {e}", file=sys.stderr)
-        return 1
+    # Summary
+    breakdown = get_rules_breakdown()
+    print(SEPARATOR)
+    print(f"Installed: {len(cmds)} commands, {len(agents)} agents")
+    print(f"  Global rules (in cco/): {rules_installed.get('total', 0)}")
+    print(f"    - core.md: {breakdown['core']} rules (always loaded)")
+    print(f"    - ai.md: {breakdown['ai']} rules (always loaded)")
+    print("  Embedded in commands/agents:")
+    print(f"    - tools rules: {breakdown['tools']} (workflow rules)")
+    print(f"    - adaptive rules: {breakdown['adaptive']} (project-specific)")
+    print(SEPARATOR)
+    print()
+    print("Restart Claude Code for changes to take effect.")
+    print()
+    print("Next: /cco-config to configure statusline, permissions, and project context")
+    print()
+    return 0
 
 
+@cli_entrypoint
 def post_install() -> int:
     """CLI entry point for cco-install.
 

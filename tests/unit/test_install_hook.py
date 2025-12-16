@@ -900,7 +900,7 @@ class TestPostInstall:
 
         assert result == 1
         captured = capsys.readouterr()
-        assert "Setup failed" in captured.err
+        assert "Error: Test error" in captured.err
 
     def test_help_mentions_cco_tune(self, capsys):
         """Test help mentions cco-config for statusline/permissions."""

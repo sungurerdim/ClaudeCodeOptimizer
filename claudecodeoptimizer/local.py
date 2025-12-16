@@ -29,6 +29,7 @@ def _is_safe_path(target: Path) -> bool:
     Returns:
         True if path is safe (within home or cwd)
     """
+    target = target.resolve()
     home = Path.home()
     cwd = Path.cwd().resolve()
     return target == home or target == cwd or home in target.parents or cwd in target.parents
