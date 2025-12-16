@@ -335,6 +335,23 @@ For each fix, show:
 
 ---
 
+## Recovery
+
+If something goes wrong during optimization:
+
+| Situation | Recovery |
+|-----------|----------|
+| Fix broke something | `git checkout -- {file}` to restore file from last commit |
+| Multiple files affected | `git checkout .` to restore all files (discards all changes) |
+| Want to undo all fixes | `git stash` to save, then `git checkout .`, review stash later |
+| Stashed at start | `git stash pop` to restore your original changes |
+| Analysis hung/crashed | Re-run `/cco-optimize` - analysis is stateless |
+| Partial apply completed | Check `git diff` to see what changed, continue or revert |
+
+**Safe pattern:** Always verify git status before and after. Use `git diff` to review changes before committing.
+
+---
+
 ## Rules
 
 1. **Sequential execution** - Complete each step before proceeding

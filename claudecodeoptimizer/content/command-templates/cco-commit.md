@@ -340,6 +340,22 @@ When `--quick` flag:
 
 ---
 
+## Recovery
+
+If something goes wrong during the commit process:
+
+| Situation | Recovery |
+|-----------|----------|
+| Commit failed mid-way | `git status` to see state, unstaged files remain safe |
+| Wrong files committed | `git reset --soft HEAD~1` to undo last commit (keeps changes staged) |
+| Bad commit message | `git commit --amend` to edit message (only if not pushed) |
+| Quality gate broke something | `git checkout -- {file}` to restore, or `git stash` to save work |
+| Need to abort completely | `git reset HEAD` to unstage all, working tree unchanged |
+
+**Safe rule:** Local commits can always be amended/reset. Once pushed, create a new commit instead.
+
+---
+
 ## Rules
 
 1. **Sequential execution** - Complete each step before proceeding

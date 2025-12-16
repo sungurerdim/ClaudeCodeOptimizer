@@ -578,6 +578,23 @@ Read global + project rules, apply format:
 
 ---
 
+## Recovery
+
+If something goes wrong during configuration:
+
+| Situation | Recovery |
+|-----------|----------|
+| Wrong rules generated | Re-run `/cco-config`, select "Detection & Rules", adjust answers |
+| Want to start fresh | Run `/cco-config` → Remove → Rules, then Configure again |
+| Settings.json corrupted | Delete `.claude/settings.json`, re-run `/cco-config` |
+| Detection crashed | Re-run `/cco-config` - detection is stateless |
+| Wrong AI Performance | `/cco-config` → Configure → AI Performance, select new values |
+| Applied wrong permissions | `cco-install --local . --permissions {correct-level}` |
+
+**Safe pattern:** CCO config files are additive. Removing and re-creating is always safe.
+
+---
+
 ## Rules
 
 1. **Sequential execution** - Complete each step before proceeding
