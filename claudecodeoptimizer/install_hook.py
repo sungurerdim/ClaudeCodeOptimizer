@@ -41,6 +41,9 @@ def _create_install_parser() -> argparse.ArgumentParser:
 Local mode (for cco-config):
   cco-install --local . --statusline full --permissions balanced
 
+Dry run mode:
+  cco-install --dry-run
+
 Statusline modes: full, minimal
 Permission levels: safe, balanced, permissive, full
 """,
@@ -71,6 +74,11 @@ Permission levels: safe, balanced, permissive, full
         metavar="SUBPATH",
         help="Output file content from pip package (e.g., rules/cco-adaptive.md)",
     )
+    parser.add_argument(
+        "--dry-run",
+        action="store_true",
+        help="Show what would be installed without making changes",
+    )
 
     return parser
 
@@ -89,50 +97,113 @@ def _validate_global_mode_args(parser: argparse.ArgumentParser, args: argparse.N
         parser.error("--statusline and --permissions require --local")
 
 
-def _run_global_install() -> int:
+def _run_global_install(dry_run: bool = False) -> int:
     """Execute global installation to ~/.claude/.
+
+    Args:
+        dry_run: If True, show what would be installed without making changes.
 
     Returns:
         Exit code: 0 on success, 1 on failure.
     """
-    print("\n" + SEPARATOR)
-    print("CCO Setup")
-    print(SEPARATOR)
-    print(f"\nLocation: {CLAUDE_DIR}\n")
+    if dry_run:
+        print("\n" + SEPARATOR)
+        print("CCO Setup (DRY RUN)")
+        print(SEPARATOR)
+        print(f"\nLocation: {CLAUDE_DIR}\n")
+        print("The following would be installed:\n")
+    else:
+        print("\n" + SEPARATOR)
+        print("CCO Setup")
+        print(SEPARATOR)
+        print(f"\nLocation: {CLAUDE_DIR}\n")
 
     # Step 1: Clean previous installation (ensures fresh state)
-    clean_previous_installation()
+    if not dry_run:
+        clean_previous_installation()
+    else:
+        print("Would clean previous installation:")
+        print("  - Remove old command files")
+        print("  - Remove old agent files")
+        print("  - Remove old rule files")
+        print()
 
     # Step 2: Install commands
     print("Commands:")
-    cmds = setup_commands()
-    if not cmds:
-        print("  (none)")
+    if not dry_run:
+        cmds = setup_commands()
+        if not cmds:
+            print("  (none)")
+    else:
+        # Show what would be installed
+        commands_src = get_content_path("command-templates")
+        if commands_src.exists():
+            cmd_files = sorted(commands_src.glob("cco-*.md"))
+            for f in cmd_files:
+                print(f"  + {f.name}")
+        else:
+            print("  (none)")
     print()
 
     # Step 3: Install agents
     print("Agents:")
-    agents = setup_agents()
-    if not agents:
-        print("  (none)")
+    if not dry_run:
+        agents = setup_agents()
+        if not agents:
+            print("  (none)")
+    else:
+        # Show what would be installed
+        agents_src = get_content_path("agent-templates")
+        if agents_src.exists():
+            agent_files = sorted(agents_src.glob("cco-*.md"))
+            for f in agent_files:
+                print(f"  + {f.name}")
+        else:
+            print("  (none)")
     print()
 
     # Step 4: Install rules to ~/.claude/rules/cco/
     print("Rules (to cco/ subdirectory):")
-    rules_installed = setup_rules()
+    if not dry_run:
+        rules_installed = setup_rules()
+    else:
+        # Show what would be installed
+        rules_src = get_content_path("rules")
+        if rules_src.exists():
+            print("  + cco/core.md")
+            print("  + cco/ai.md")
+        else:
+            print("  (none)")
     print()
 
     # Step 5: Clean old CCO markers from CLAUDE.md
-    markers_cleaned = clean_claude_md(verbose=True)
-    if markers_cleaned == 0:
-        print("  CLAUDE.md: no old markers to clean")
-    print()
+    if not dry_run:
+        markers_cleaned = clean_claude_md(verbose=True)
+        if markers_cleaned == 0:
+            print("  CLAUDE.md: no old markers to clean")
+        print()
+    else:
+        print("Would clean old CCO markers from CLAUDE.md")
+        print()
 
     # Summary
     breakdown = get_rules_breakdown()
     print(SEPARATOR)
-    print(f"Installed: {len(cmds)} commands, {len(agents)} agents")
-    print(f"  Global rules (in cco/): {rules_installed.get('total', 0)}")
+    if not dry_run:
+        cmds = setup_commands(verbose=False)
+        agents = setup_agents(verbose=False)
+        rules_installed = setup_rules(verbose=False)
+        print(f"Installed: {len(cmds)} commands, {len(agents)} agents")
+        print(f"  Global rules (in cco/): {rules_installed.get('total', 0)}")
+    else:
+        print("Would install:")
+        commands_src = get_content_path("command-templates")
+        agents_src = get_content_path("agent-templates")
+        cmd_count = len(list(commands_src.glob("cco-*.md"))) if commands_src.exists() else 0
+        agent_count = len(list(agents_src.glob("cco-*.md"))) if agents_src.exists() else 0
+        print(f"  {cmd_count} commands, {agent_count} agents")
+        print("  Global rules (in cco/): 2")
+
     print(f"    - core.md: {breakdown['core']} rules (always loaded)")
     print(f"    - ai.md: {breakdown['ai']} rules (always loaded)")
     print("  Embedded in commands/agents:")
@@ -140,10 +211,17 @@ def _run_global_install() -> int:
     print(f"    - adaptive rules: {breakdown['adaptive']} (project-specific)")
     print(SEPARATOR)
     print()
-    print("Restart Claude Code for changes to take effect.")
-    print()
-    print("Next: /cco-config to configure statusline, permissions, and project context")
-    print()
+
+    if not dry_run:
+        print("Restart Claude Code for changes to take effect.")
+        print()
+        print("Next: /cco-config to configure statusline, permissions, and project context")
+        print()
+    else:
+        print("This was a dry run. No changes were made.")
+        print("Run without --dry-run to perform the installation.")
+        print()
+
     return 0
 
 
@@ -189,7 +267,7 @@ def post_install() -> int:
     _validate_global_mode_args(parser, args)
 
     # Global mode - default behavior
-    return _run_global_install()
+    return _run_global_install(dry_run=args.dry_run)
 
 
 if __name__ == "__main__":
