@@ -28,10 +28,13 @@ __all__ = [
     "get_rules_breakdown",
     "get_content_path",
     "load_json_file",
+    "save_json_file",
     "CCO_UNIVERSAL_PATTERN",
     "CCO_UNIVERSAL_PATTERN_COMPILED",
     "SUBPROCESS_TIMEOUT",
     "SUBPROCESS_TIMEOUT_PACKAGE",
+    "SUBPROCESS_TIMEOUT_DEFAULT",
+    "SUBPROCESS_TIMEOUT_PACKAGE_OPS",
     "MAX_CLAUDE_MD_SIZE",
     "STATUSLINE_FILE",
     "SETTINGS_FILE",
@@ -99,8 +102,14 @@ CCO_UNIVERSAL_PATTERN_COMPILED = re.compile(
 )
 
 # Timeout constants (seconds) - configurable via environment variables
-SUBPROCESS_TIMEOUT = int(os.getenv("CCO_SUBPROCESS_TIMEOUT", "5"))  # Default for quick operations
-SUBPROCESS_TIMEOUT_PACKAGE = int(os.getenv("CCO_SUBPROCESS_TIMEOUT_PACKAGE", "30"))  # Package install/uninstall operations
+# SUBPROCESS_TIMEOUT_DEFAULT: For quick operations like git status, file operations (default: 5s)
+# SUBPROCESS_TIMEOUT_PACKAGE_OPS: For long-running package operations like pip install/uninstall (default: 30s)
+SUBPROCESS_TIMEOUT_DEFAULT = int(os.getenv("CCO_SUBPROCESS_TIMEOUT", "5"))
+SUBPROCESS_TIMEOUT_PACKAGE_OPS = int(os.getenv("CCO_SUBPROCESS_TIMEOUT_PACKAGE", "30"))
+
+# Legacy aliases for backward compatibility
+SUBPROCESS_TIMEOUT = SUBPROCESS_TIMEOUT_DEFAULT
+SUBPROCESS_TIMEOUT_PACKAGE = SUBPROCESS_TIMEOUT_PACKAGE_OPS
 
 # File size limits for safety
 MAX_CLAUDE_MD_SIZE = 1_000_000  # 1MB - prevent ReDoS on large files
