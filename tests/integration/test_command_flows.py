@@ -9,6 +9,7 @@ Uses tmp_path pytest fixture for isolated testing.
 All tests verify file creation, content correctness, and error handling.
 """
 
+import json
 from pathlib import Path
 from typing import Any
 
@@ -412,6 +413,201 @@ More content.
         assert read_content == unicode_content
         assert "世界" in read_content
         assert "🌍" in read_content
+
+
+class TestLocalSetup:
+    """Test local setup integration (TEST-005)."""
+
+    def test_local_statusline_setup_full_mode(self, tmp_path: Path) -> None:
+        """Test local statusline setup with full mode."""
+        from claudecodeoptimizer.local import setup_local_statusline
+
+        project = tmp_path / "project"
+        project.mkdir()
+
+        # Create mock statusline source
+        from unittest.mock import patch
+
+        src_dir = tmp_path / "statusline"
+        src_dir.mkdir()
+        (src_dir / "cco-full.js").write_text("console.log('full statusline');")
+
+        with patch("claudecodeoptimizer.local.get_content_path", return_value=src_dir):
+            result = setup_local_statusline(project, "cco-full", verbose=False)
+
+        # Verify success
+        assert result is True
+
+        # Verify files created
+        statusline_file = project / ".claude" / "cco-statusline.js"
+        settings_file = project / ".claude" / "settings.json"
+
+        assert statusline_file.exists()
+        assert settings_file.exists()
+
+        # Verify statusline content
+        assert "full statusline" in statusline_file.read_text()
+
+        # Verify settings.json configuration
+        import json
+
+        settings = json.loads(settings_file.read_text())
+        assert "statusLine" in settings
+        assert settings["statusLine"]["type"] == "command"
+        assert "node .claude/cco-statusline.js" in settings["statusLine"]["command"]
+        assert settings["statusLine"]["padding"] == 1
+
+    def test_local_statusline_setup_minimal_mode(self, tmp_path: Path) -> None:
+        """Test local statusline setup with minimal mode."""
+        from claudecodeoptimizer.local import setup_local_statusline
+
+        project = tmp_path / "project"
+        project.mkdir()
+
+        from unittest.mock import patch
+
+        src_dir = tmp_path / "statusline"
+        src_dir.mkdir()
+        (src_dir / "cco-minimal.js").write_text("console.log('minimal statusline');")
+
+        with patch("claudecodeoptimizer.local.get_content_path", return_value=src_dir):
+            result = setup_local_statusline(project, "cco-minimal", verbose=False)
+
+        assert result is True
+        statusline_file = project / ".claude" / "cco-statusline.js"
+        assert "minimal statusline" in statusline_file.read_text()
+
+    def test_local_permissions_setup_safe_level(self, tmp_path: Path) -> None:
+        """Test local permissions setup with safe level."""
+        from claudecodeoptimizer.local import setup_local_permissions
+
+        project = tmp_path / "project"
+        project.mkdir()
+
+        from unittest.mock import patch
+
+        src_dir = tmp_path / "permissions"
+        src_dir.mkdir()
+        perm_data = {"permissions": {"read": True, "write": False}}
+        (src_dir / "safe.json").write_text(json.dumps(perm_data))
+
+        with patch("claudecodeoptimizer.local.get_content_path", return_value=src_dir):
+            result = setup_local_permissions(project, "safe", verbose=False)
+
+        assert result is True
+        settings_file = project / ".claude" / "settings.json"
+        settings = json.loads(settings_file.read_text())
+
+        assert "permissions" in settings
+        assert settings["permissions"]["read"] is True
+        assert settings["permissions"]["write"] is False
+        assert settings["_cco_managed"] is True
+
+    def test_local_permissions_setup_balanced_level(self, tmp_path: Path) -> None:
+        """Test local permissions setup with balanced level."""
+        from claudecodeoptimizer.local import setup_local_permissions
+
+        project = tmp_path / "project"
+        project.mkdir()
+
+        from unittest.mock import patch
+
+        src_dir = tmp_path / "permissions"
+        src_dir.mkdir()
+        perm_data = {"permissions": {"bash": {"allowed": True}, "edit": {"allowed": True}}}
+        (src_dir / "balanced.json").write_text(json.dumps(perm_data))
+
+        with patch("claudecodeoptimizer.local.get_content_path", return_value=src_dir):
+            result = setup_local_permissions(project, "balanced", verbose=False)
+
+        assert result is True
+        settings_file = project / ".claude" / "settings.json"
+        settings = json.loads(settings_file.read_text())
+
+        assert "permissions" in settings
+        assert "bash" in settings["permissions"]
+        assert "edit" in settings["permissions"]
+
+    def test_combined_statusline_and_permissions_setup(self, tmp_path: Path) -> None:
+        """Test combined statusline and permissions setup."""
+        from claudecodeoptimizer.local import (
+            setup_local_permissions,
+            setup_local_statusline,
+        )
+
+        project = tmp_path / "project"
+        project.mkdir()
+
+        from unittest.mock import patch
+
+        # Setup statusline
+        statusline_dir = tmp_path / "statusline"
+        statusline_dir.mkdir()
+        (statusline_dir / "cco-full.js").write_text("console.log('test');")
+
+        # Setup permissions
+        permissions_dir = tmp_path / "permissions"
+        permissions_dir.mkdir()
+        perm_data = {"permissions": {"bash": {"allowed": True}}}
+        (permissions_dir / "permissive.json").write_text(json.dumps(perm_data))
+
+        def mock_get_content_path(subdir: str) -> Path:
+            if subdir == "statusline":
+                return statusline_dir
+            return permissions_dir
+
+        with patch("claudecodeoptimizer.local.get_content_path", side_effect=mock_get_content_path):
+            statusline_result = setup_local_statusline(project, "cco-full", verbose=False)
+            permissions_result = setup_local_permissions(project, "permissive", verbose=False)
+
+        # Both should succeed
+        assert statusline_result is True
+        assert permissions_result is True
+
+        # Verify both configurations exist
+        settings_file = project / ".claude" / "settings.json"
+        settings = json.loads(settings_file.read_text())
+
+        assert "statusLine" in settings
+        assert "permissions" in settings
+        assert "_cco_managed" in settings
+
+    def test_error_handling_invalid_statusline_mode(self, tmp_path: Path) -> None:
+        """Test error handling for invalid statusline mode."""
+        from claudecodeoptimizer.local import setup_local_statusline
+
+        project = tmp_path / "project"
+        project.mkdir()
+
+        result = setup_local_statusline(project, "invalid-mode", verbose=False)
+
+        assert result is False
+
+    def test_error_handling_invalid_permission_level(self, tmp_path: Path) -> None:
+        """Test error handling for invalid permission level."""
+        from claudecodeoptimizer.local import setup_local_permissions
+
+        project = tmp_path / "project"
+        project.mkdir()
+
+        result = setup_local_permissions(project, "invalid-level", verbose=False)
+
+        assert result is False
+
+    def test_error_handling_missing_source_files(self, tmp_path: Path) -> None:
+        """Test error handling when source files are missing."""
+        from claudecodeoptimizer.local import setup_local_statusline
+
+        project = tmp_path / "project"
+        project.mkdir()
+
+        from unittest.mock import patch
+
+        nonexistent = tmp_path / "nonexistent"
+        with patch("claudecodeoptimizer.local.get_content_path", return_value=nonexistent):
+            result = setup_local_statusline(project, "cco-full", verbose=False)
+
+        assert result is False
 
 
 if __name__ == "__main__":
