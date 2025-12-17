@@ -47,7 +47,9 @@ class TestListCcoFiles:
     def test_list_empty(self, tmp_path):
         with patch("claudecodeoptimizer.uninstall.detection.CLAUDE_DIR", tmp_path):
             with patch("claudecodeoptimizer.uninstall.detection.get_cco_commands", return_value=[]):
-                with patch("claudecodeoptimizer.uninstall.detection.get_cco_agents", return_value=[]):
+                with patch(
+                    "claudecodeoptimizer.uninstall.detection.get_cco_agents", return_value=[]
+                ):
                     files = list_cco_files()
                     assert files["commands"] == []
                     assert files["agents"] == []
@@ -64,7 +66,8 @@ class TestListCcoFiles:
                 "claudecodeoptimizer.uninstall.detection.get_cco_commands", return_value=[cmd_file]
             ):
                 with patch(
-                    "claudecodeoptimizer.uninstall.detection.get_cco_agents", return_value=[agent_file]
+                    "claudecodeoptimizer.uninstall.detection.get_cco_agents",
+                    return_value=[agent_file],
                 ):
                     files = list_cco_files()
                     assert files["commands"] == ["cco-config.md"]
@@ -115,7 +118,8 @@ class TestRemoveCcoFiles:
                 "claudecodeoptimizer.uninstall.removal.get_cco_commands", return_value=[cmd_file]
             ):
                 with patch(
-                    "claudecodeoptimizer.uninstall.removal.get_cco_agents", return_value=[agent_file]
+                    "claudecodeoptimizer.uninstall.removal.get_cco_agents",
+                    return_value=[agent_file],
                 ):
                     removed = remove_cco_files(verbose=True)
         assert removed["commands"] == 1
@@ -169,7 +173,9 @@ class TestHasCcoStatusline:
 
     def test_no_file(self, tmp_path):
         """Test returns False when statusline file doesn't exist."""
-        with patch("claudecodeoptimizer.uninstall.detection.STATUSLINE_FILE", tmp_path / "statusline.js"):
+        with patch(
+            "claudecodeoptimizer.uninstall.detection.STATUSLINE_FILE", tmp_path / "statusline.js"
+        ):
             assert has_cco_statusline() is False
 
     def test_file_exists_with_cco_content(self, tmp_path):
@@ -234,7 +240,8 @@ class TestRemoveStatusline:
                 "claudecodeoptimizer.uninstall.removal.STATUSLINE_FILE", tmp_path / "nonexistent.js"
             ):
                 with patch(
-                    "claudecodeoptimizer.uninstall.removal.SETTINGS_FILE", tmp_path / "nonexistent.json"
+                    "claudecodeoptimizer.uninstall.removal.SETTINGS_FILE",
+                    tmp_path / "nonexistent.json",
                 ):
                     result = remove_statusline(verbose=False)
         assert result is False
@@ -359,7 +366,9 @@ class TestHasRulesDirOld:
         """Test returns False when old rules root doesn't exist."""
         from claudecodeoptimizer.uninstall.detection import has_rules_dir_old
 
-        with patch("claudecodeoptimizer.uninstall.detection.OLD_RULES_ROOT", tmp_path / "nonexistent"):
+        with patch(
+            "claudecodeoptimizer.uninstall.detection.OLD_RULES_ROOT", tmp_path / "nonexistent"
+        ):
             result = has_rules_dir_old()
         assert result is False
 
@@ -393,7 +402,9 @@ class TestRemoveRulesDirOld:
         """Test returns False when no rules dir exists."""
         from claudecodeoptimizer.uninstall.removal import remove_rules_dir_old
 
-        with patch("claudecodeoptimizer.uninstall.removal.OLD_RULES_ROOT", tmp_path / "nonexistent"):
+        with patch(
+            "claudecodeoptimizer.uninstall.removal.OLD_RULES_ROOT", tmp_path / "nonexistent"
+        ):
             result = remove_rules_dir_old(verbose=False)
         assert result is False
 
@@ -440,7 +451,9 @@ class TestHasClaudeMdRulesLargeFile:
         claude_md.write_text("small content")
 
         with patch("claudecodeoptimizer.uninstall.detection.CLAUDE_DIR", tmp_path):
-            with patch("claudecodeoptimizer.uninstall.detection.MAX_CLAUDE_MD_SIZE", 5):  # 5 bytes limit
+            with patch(
+                "claudecodeoptimizer.uninstall.detection.MAX_CLAUDE_MD_SIZE", 5
+            ):  # 5 bytes limit
                 result = has_claude_md_rules()
 
         assert len(result) == 1

@@ -7,6 +7,16 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Added
+- Comprehensive test suite for install, local, operations, and ui modules (TEST-001, TEST-002, TEST-003, TEST-004)
+- Integration tests for local setup functionality (TEST-005)
+- Debug logging for Windows UTF-8 encoding fix (BEST-001)
+- --dry-run flag to cco-install for previewing installation changes (DX-003)
+
+### Changed
+- Improved timeout constant naming: SUBPROCESS_TIMEOUT_DEFAULT and SUBPROCESS_TIMEOUT_PACKAGE_OPS for clarity (QUALITY-002)
+- Standardized parameter ordering in operations.py functions (QUALITY-001)
+
 ## [2.0.0] - 2025-12-16
 
 ### Breaking Changes
