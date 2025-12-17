@@ -14,88 +14,92 @@ from .config import (
 )
 
 
-def remove_command_files(commands_dir: Path | None = None) -> int:
+def remove_command_files(path: Path | None = None, verbose: bool = True) -> int:
     """Remove all cco-*.md files from commands directory.
 
     Args:
-        commands_dir: Path to commands directory. If None, uses global COMMANDS_DIR.
+        path: Path to commands directory. If None, uses global COMMANDS_DIR.
+        verbose: If True, print progress messages during removal.
 
     Returns:
         Number of files removed.
     """
-    if commands_dir is None:
-        commands_dir = COMMANDS_DIR
+    if path is None:
+        path = COMMANDS_DIR
     count = 0
-    if commands_dir.exists():
-        for f in commands_dir.glob("cco-*.md"):
+    if path.exists():
+        for f in path.glob("cco-*.md"):
             f.unlink()
             count += 1
     return count
 
 
-def remove_agent_files(agents_dir: Path | None = None) -> int:
+def remove_agent_files(path: Path | None = None, verbose: bool = True) -> int:
     """Remove all cco-*.md files from agents directory.
 
     Args:
-        agents_dir: Path to agents directory. If None, uses global AGENTS_DIR.
+        path: Path to agents directory. If None, uses global AGENTS_DIR.
+        verbose: If True, print progress messages during removal.
 
     Returns:
         Number of files removed.
     """
-    if agents_dir is None:
-        agents_dir = AGENTS_DIR
+    if path is None:
+        path = AGENTS_DIR
     count = 0
-    if agents_dir.exists():
-        for f in agents_dir.glob("cco-*.md"):
+    if path.exists():
+        for f in path.glob("cco-*.md"):
             f.unlink()
             count += 1
     return count
 
 
-def remove_old_rules(old_rules_dir: Path | None = None) -> int:
+def remove_old_rules(path: Path | None = None, verbose: bool = True) -> int:
     """Remove old CCO rule files from rules root directory.
 
     Args:
-        old_rules_dir: Path to old rules root directory. If None, uses global OLD_RULES_ROOT.
+        path: Path to old rules root directory. If None, uses global OLD_RULES_ROOT.
+        verbose: If True, print progress messages during removal.
 
     Returns:
         Number of files removed.
     """
-    if old_rules_dir is None:
-        old_rules_dir = OLD_RULES_ROOT
+    if path is None:
+        path = OLD_RULES_ROOT
     old_rule_files = CCO_RULE_FILES + ("cco-adaptive.md", "cco-tools.md")
     count = 0
-    if old_rules_dir.exists():
+    if path.exists():
         for rule_file in old_rule_files:
-            rule_path = old_rules_dir / rule_file
+            rule_path = path / rule_file
             if rule_path.exists():
                 rule_path.unlink()
                 count += 1
     return count
 
 
-def remove_new_rules(new_rules_dir: Path | None = None) -> int:
+def remove_new_rules(path: Path | None = None, verbose: bool = True) -> int:
     """Remove CCO rules from cco/ subdirectory.
 
     Args:
-        new_rules_dir: Path to rules cco/ subdirectory. If None, uses global RULES_DIR.
+        path: Path to rules cco/ subdirectory. If None, uses global RULES_DIR.
+        verbose: If True, print progress messages during removal.
 
     Returns:
         Number of files removed.
     """
-    if new_rules_dir is None:
-        new_rules_dir = RULES_DIR
+    if path is None:
+        path = RULES_DIR
     old_rule_names = CCO_RULE_NAMES + ("tools.md", "adaptive.md")
     count = 0
-    if new_rules_dir.exists():
+    if path.exists():
         for rule_name in old_rule_names:
-            rule_path = new_rules_dir / rule_name
+            rule_path = path / rule_name
             if rule_path.exists():
                 rule_path.unlink()
                 count += 1
         # Remove empty cco/ directory
-        if new_rules_dir.exists() and not any(new_rules_dir.iterdir()):
-            new_rules_dir.rmdir()
+        if path.exists() and not any(path.iterdir()):
+            path.rmdir()
     return count
 
 

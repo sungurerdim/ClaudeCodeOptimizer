@@ -1,5 +1,6 @@
 """ClaudeCodeOptimizer - A process and rules layer for Claude Code in the Opus 4.5 era."""
 
+import logging
 import sys
 
 __all__ = ["__version__", "__description__", "__author__"]
@@ -15,5 +16,6 @@ if sys.platform == "win32":
             try:
                 # reconfigure exists due to hasattr check, but mypy doesn't track control flow
                 stream.reconfigure(encoding="utf-8")  # type: ignore[union-attr]
-            except (OSError, AttributeError):
-                pass  # Silently fail if reconfigure not supported
+                logging.debug(f"Successfully reconfigured {stream.name} to UTF-8 encoding")
+            except (OSError, AttributeError) as e:
+                logging.debug(f"Failed to reconfigure {stream.name} to UTF-8: {e}")
