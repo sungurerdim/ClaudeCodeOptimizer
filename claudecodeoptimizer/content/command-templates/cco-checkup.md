@@ -6,14 +6,13 @@ allowed-tools: Read(*), Grep(*), Glob(*), Edit(*), Bash(git:*), Bash(pytest:*), 
 
 # /cco-checkup
 
-**Maintenance Routine** - Health check → smart audit → quick cleanup.
+**Maintenance Routine** - Parallel health + audit for fast weekly checkups.
 
-Meta command for regular project maintenance (weekly recommended).
+Meta command running /cco-status and /cco-optimize in parallel.
 
 ## Context
 
 - Context check: !`test -f ./.claude/rules/cco/context.md && echo "1" || echo "0"`
-- Last health tag: !`git tag -l "health-*" --sort=-creatordate | head -1 || echo "None"`
 - Git status: !`git status --short`
 - Recent activity: !`git log --oneline -5`
 
@@ -31,12 +30,11 @@ Run /cco-config first to configure project context, then restart CLI.
 
 ## Architecture
 
-| Step | Name | Action |
-|------|------|--------|
-| 1 | Phase Select | Ask which phases to run |
-| 2 | Health | Run /cco-status --brief |
-| 3 | Audit | Run /cco-optimize --fix |
-| 4 | Summary | Show results and next checkup |
+| Step | Name | Action | Optimization |
+|------|------|--------|--------------|
+| 1 | Phase Select | Ask which phases | Skip with flags |
+| 2 | Execute | Parallel: health + audit | 2x faster |
+| 3 | Summary | Merge and display | Instant |
 
 ---
 
@@ -45,9 +43,8 @@ Run /cco-config first to configure project context, then restart CLI.
 ```javascript
 TodoWrite([
   { content: "Step-1: Select phases", status: "in_progress", activeForm: "Selecting phases" },
-  { content: "Step-2: Run health dashboard", status: "pending", activeForm: "Running health dashboard" },
-  { content: "Step-3: Run quality audit", status: "pending", activeForm: "Running quality audit" },
-  { content: "Step-4: Show summary", status: "pending", activeForm: "Showing summary" }
+  { content: "Step-2: Run health + audit (parallel)", status: "pending", activeForm: "Running health and audit" },
+  { content: "Step-3: Show summary", status: "pending", activeForm: "Showing summary" }
 ])
 ```
 
@@ -60,66 +57,91 @@ AskUserQuestion([{
   question: "Which phases to run?",
   header: "Phases",
   options: [
-    { label: "Health Dashboard", description: "Security, tests, debt, cleanliness scores" },
-    { label: "Quality Audit", description: "Security, quality, hygiene, best practices fixes" }
+    { label: "Both (Recommended)", description: "Health dashboard + quality audit in parallel" },
+    { label: "Health Dashboard", description: "Security, tests, debt, cleanliness scores only" },
+    { label: "Quality Audit", description: "Security, quality, hygiene fixes only" }
   ],
-  multiSelect: true
+  multiSelect: false
 }])
 ```
-
-**Dynamic labels:** Add `(Recommended)` based on last run date and context.
 
 **Flags override:** `--health-only`, `--audit-only` skip this question.
 
 ### Validation
 ```
 [x] User selected phase(s)
-→ Store as: phases = {selections[]}
-→ If "Health Dashboard" not in phases: Skip Step-2
-→ If "Quality Audit" not in phases: Skip Step-3
-→ Proceed to Step-2 or Step-3
+→ Store as: phases = {selection}
+→ Proceed to Step-2
 ```
 
 ---
 
-## Step-2: Health Dashboard [SKIP if not selected]
+## Step-2: Execute [PARALLEL]
 
-Orchestrates: `/cco-status --brief`
+**Launch both sub-commands in a SINGLE message if both selected:**
 
-Returns: Security, Tests, Tech Debt, Cleanliness, Documentation scores.
+```javascript
+// CRITICAL: Both Task calls in ONE message for true parallelism
+
+if (phases === "Both" || phases === "Health Dashboard") {
+  healthTask = Task("general-purpose", `
+    Execute /cco-status --brief
+    Return health scores: { security, tests, debt, clean, docs, overall }
+  `, { model: "haiku", run_in_background: phases === "Both" })
+}
+
+if (phases === "Both" || phases === "Quality Audit") {
+  auditTask = Task("general-purpose", `
+    Execute /cco-optimize --fix --hygiene --quality
+    Return audit results: { fixed, declined, total, by_scope }
+  `, { model: "sonnet", run_in_background: phases === "Both" })
+}
+
+// If both running, collect results
+if (phases === "Both") {
+  healthResults = await TaskOutput(healthTask.id)
+  auditResults = await TaskOutput(auditTask.id)
+}
+```
+
+**Parallel Execution:**
+- Health (read-only) uses Haiku for speed
+- Audit (writes) uses Sonnet for accuracy
+- Both complete in ~same time as single command
 
 ### Validation
 ```
-[x] Health scores collected
-→ Store as: healthScores = { security, tests, debt, clean, docs }
-→ Proceed to Step-3 (or Step-4 if audit not selected)
+[x] Selected tasks launched in parallel
+[x] Results collected
+→ Proceed to Step-3
 ```
 
 ---
 
-## Step-3: Quality Audit [SKIP if not selected]
+## Step-3: Summary
 
-Orchestrates: `/cco-optimize --fix`
-
-Runs all scopes: Security, Quality, Hygiene, Best Practices.
-
-### Validation
 ```
-[x] Audit completed
-→ Store as: auditResults = { fixed, declined, total }
-→ Proceed to Step-4
+## Checkup Complete
+
+### Health Dashboard
+| Category | Score | Status |
+|----------|-------|--------|
+| Security | {score} | {status} |
+| Tests | {score} | {status} |
+| Tech Debt | {score} | {status} |
+| Cleanliness | {score} | {status} |
+| **Overall** | **{score}** | **{status}** |
+
+### Quality Audit
+| Scope | Fixed | Declined |
+|-------|-------|----------|
+| Security | {n} | {n} |
+| Quality | {n} | {n} |
+| Hygiene | {n} | {n} |
+| **Total** | **{n}** | **{n}** |
+
+Duration: {n}s
 ```
-
----
-
-## Step-4: Summary
-
-Display:
-- Duration: {time}
-- Health Scores: {if run}
-- Fixed/Declined: {if audit run}
-- Changes since last checkup
-- Next recommended checkup: {date}
 
 ### Validation
 ```
@@ -146,17 +168,17 @@ Display:
 | Flag | Effect |
 |------|--------|
 | `--dry-run` | Preview only |
-| `--no-fix` | Report only |
-| `--deep` | Full audit |
-| `--trends` | Trend history |
+| `--no-fix` | Report only (health + audit report) |
+| `--deep` | Full deep audit |
 | `--health-only` | Skip audit |
 | `--audit-only` | Skip health |
+| `--sequential` | Disable parallel (debug) |
 
 ---
 
 ## Rules
 
-1. **Sequential execution** - Complete each step before proceeding
-2. **Validation gates** - Check validation block before next step
-3. **Delegate to sub-commands** - Don't duplicate /cco-status or /cco-optimize logic
-4. **No duplicate work** - Aggregate results from sub-commands
+1. **Parallel-first** - Launch health + audit in single message
+2. **Model strategy** - Haiku for health, Sonnet for audit
+3. **Delegate to sub-commands** - Don't duplicate logic
+4. **Aggregate results** - Merge outputs for summary

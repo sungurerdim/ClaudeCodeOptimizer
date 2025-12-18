@@ -6,7 +6,7 @@ allowed-tools: Read(*), Write(*), Edit(*), Bash(cco-install:*), Task(*), TodoWri
 
 # /cco-config
 
-**Project tuning** - Lightweight orchestrator using sub-agents for heavy work.
+**Project tuning** - Pre-detection reduces questions, parallel apply.
 
 ## Context
 
@@ -16,17 +16,16 @@ allowed-tools: Read(*), Write(*), Edit(*), Bash(cco-install:*), Task(*), TodoWri
 
 ## Architecture
 
-| Step | Name | Action |
-|------|------|--------|
-| 1 | Status | Read existing files |
-| 2 | Action | Ask what to do |
-| 3 | Scope | Ask what to configure/remove/export |
-| 4 | Details | Ask specific options (if applicable) |
-| 5 | Context | Ask project context (if Detection selected) |
-| 6 | Detection | Run agent with userInput |
-| 7 | Review | Show results, ask approval |
-| 8 | Apply | Write files via agent/CLI |
-| 9 | Report | Summary of changes |
+| Step | Name | Action | Optimization |
+|------|------|--------|--------------|
+| 1 | Pre-detect | cco-agent-analyze (config scope) | Skip questions |
+| 2 | Status | Show detected + existing | Instant |
+| 3 | Action | Ask what to do | Skip if --configure |
+| 4 | Scope | Ask what to configure | Skip detected |
+| 5 | Context | Only LOW confidence items | Fewer questions |
+| 6 | Review | Show + ask approval | Instant |
+| 7 | Apply | Write files | Background |
+| 8 | Report | Summary | Instant |
 
 ---
 
@@ -36,36 +35,110 @@ allowed-tools: Read(*), Write(*), Edit(*), Bash(cco-install:*), Task(*), TodoWri
 
 ```javascript
 TodoWrite([
-  { content: "Step-1: Read status", status: "in_progress", activeForm: "Reading project status" },
-  { content: "Step-2: Ask action type", status: "pending", activeForm: "Asking action type" },
-  { content: "Step-3: Ask scope", status: "pending", activeForm: "Asking scope selection" },
-  { content: "Step-4: Ask detail options", status: "pending", activeForm: "Asking detail options" },
-  { content: "Step-5: Ask project context", status: "pending", activeForm: "Asking project context" },
-  { content: "Step-6: Run detection", status: "pending", activeForm: "Running detection agent" },
-  { content: "Step-7: Review results", status: "pending", activeForm: "Reviewing detection results" },
-  { content: "Step-8: Apply configuration", status: "pending", activeForm: "Applying configuration" },
-  { content: "Step-9: Show report", status: "pending", activeForm: "Showing final report" }
+  { content: "Step-1: Pre-detect (parallel)", status: "in_progress", activeForm: "Running pre-detection" },
+  { content: "Step-2: Show status", status: "pending", activeForm: "Showing status" },
+  { content: "Step-3: Ask action", status: "pending", activeForm: "Asking action type" },
+  { content: "Step-4: Ask scope + context", status: "pending", activeForm: "Asking scope and context" },
+  { content: "Step-5: Review results", status: "pending", activeForm: "Reviewing results" },
+  { content: "Step-6: Apply configuration", status: "pending", activeForm: "Applying configuration" },
+  { content: "Step-7: Show report", status: "pending", activeForm: "Showing final report" }
 ])
 ```
 
 ---
 
-## Step-1: Status
+## Step-1: Pre-detect [PARALLEL]
 
-Read existing files in parallel: context.md, settings.json, rules list.
+**Launch cco-agent-analyze with config scope to auto-detect project context:**
 
-Display status box with: Project, Context, AI Perf, Statusline, Permissions, Rules.
+```javascript
+// CRITICAL: Single cco-agent-analyze call with config scope
+// Agent handles all detection internally with parallelization
+
+Task("cco-agent-analyze", `
+  scopes: ["config"]
+
+  Auto-detect from manifest files and code:
+  - Language, framework, runtime, packageManager
+  - Infrastructure: containerized, ci, cloud, deployment
+  - Testing: testFramework, coverage, linters, typeChecker
+  - Metadata: license, teamSize, maturity, lastActivity
+
+  Return: {
+    detections: {
+      language: ["{language}"],
+      type: ["{type}"],
+      api: "{api|null}",
+      database: "{db|null}",
+      frontend: "{frontend|null}",
+      infra: ["{infra}"],
+      dependencies: ["{deps}"]
+    },
+    sources: [{ file: "{file}", confidence: "{HIGH|MEDIUM|LOW}" }]
+  }
+`, { model: "haiku" })
+```
+
+**Result: Pre-fill answers based on detection confidence**
+
+| Confidence | Action |
+|------------|--------|
+| HIGH (90%+) | Auto-apply, don't ask |
+| MEDIUM (70-89%) | Pre-fill with `[detected]` label |
+| LOW (<70%) | Ask user |
 
 ### Validation
 ```
-[x] Files read: context.md, settings.json
-[x] Status displayed to user
+[x] All 4 detection agents completed
+[x] Confidence levels assigned
 → Proceed to Step-2
 ```
 
 ---
 
-## Step-2: Action
+## Step-2: Status
+
+Display detected + existing configuration:
+
+```
+## Project Status
+
+### Auto-Detected (HIGH confidence - won't ask)
+| Element | Value | Source |
+|---------|-------|--------|
+| Language | {language} | {source_file} |
+| Framework | {framework} | {source_file} |
+| Test Framework | {test_framework} | {source_file} |
+| CI | {ci} | {source_file} |
+
+### Needs Confirmation (MEDIUM confidence)
+| Element | Value | Source |
+|---------|-------|--------|
+| Coverage | {coverage}% | {source_file} [detected] |
+| Team Size | {team_size} | git contributors |
+
+### Will Ask (LOW confidence)
+- Data sensitivity
+- Compliance requirements
+- SLA commitment
+
+### Existing Configuration
+| File | Status |
+|------|--------|
+| .claude/rules/cco/context.md | {exists/missing} |
+| .claude/settings.json | {exists/missing} |
+```
+
+### Validation
+```
+[x] Detection results displayed
+[x] Existing config shown
+→ Proceed to Step-3
+```
+
+---
+
+## Step-3: Action
 
 **Ask what user wants to do.**
 
@@ -74,7 +147,7 @@ AskUserQuestion([{
   question: "What would you like to do?",
   header: "Action",
   options: [
-    { label: "Configure", description: "Set up or update project configuration" },
+    { label: "Configure (Recommended)", description: "Apply detected settings + ask remaining" },
     { label: "Remove", description: "Remove existing CCO configuration" },
     { label: "Export", description: "Export rules to AGENTS.md or CLAUDE.md" }
   ],
@@ -82,187 +155,49 @@ AskUserQuestion([{
 }])
 ```
 
-**Dynamic labels:** Add `(Recommended)` if no existing config → Configure recommended.
+**Flags override:** `--configure`, `--remove`, `--export` skip this question.
 
 ### Validation
 ```
 [x] User selected: Configure | Remove | Export
 → Store as: action = {selection}
-→ Proceed to Step-3
-```
-
----
-
-## Step-3: Scope
-
-**Ask what to configure/remove/export based on Step-2 answer.**
-
-### If action = Configure
-
-```javascript
-AskUserQuestion([{
-  question: "What to configure?",
-  header: "Scope",
-  options: [
-    { label: "Detection & Rules", description: "Auto-detect stack, generate rules" },
-    { label: "AI Performance", description: "Extended thinking, tool output limits" },
-    { label: "Statusline", description: "Custom status bar display" },
-    { label: "Permissions", description: "Tool approval settings" }
-  ],
-  multiSelect: true
-}])
-```
-
-### If action = Remove
-
-```javascript
-AskUserQuestion([{
-  question: "What to remove?",
-  header: "Scope",
-  options: [
-    { label: "Rules", description: "Remove .claude/rules/cco/" },
-    { label: "AI Performance", description: "Remove env settings" },
-    { label: "Statusline", description: "Remove cco-statusline.js" },
-    { label: "Permissions", description: "Remove permissions from settings" }
-  ],
-  multiSelect: true
-}])
-```
-
-### If action = Export
-
-```javascript
-AskUserQuestion([{
-  question: "Export format?",
-  header: "Format",
-  options: [
-    { label: "AGENTS.md", description: "Universal, works with Codex/Cursor" },
-    { label: "CLAUDE.md", description: "Claude Code specific format" }
-  ],
-  multiSelect: false
-}])
-```
-
-### Validation
-```
-[x] User selected scope items
-→ Store as: scope = {selections[]}
-→ If action=Export: Skip to Step-8
-→ If action=Remove: Skip to Step-8
+→ If Remove or Export: Skip to Step-6
 → Proceed to Step-4
 ```
 
 ---
 
-## Step-4: Details
+## Step-4: Scope + Context [ONLY LOW CONFIDENCE ITEMS]
 
-**Ask specific options for selected scope items. Skip if nothing applicable.**
+**Only ask questions for items NOT auto-detected or LOW confidence:**
 
-### If "Statusline" in scope
+### 4.1: Scope Selection (if not all detected)
 
 ```javascript
+// Only show options not auto-detected with HIGH confidence
 AskUserQuestion([{
-  question: "Statusline mode?",
-  header: "Mode",
+  question: "What else to configure?",
+  header: "Scope",
   options: [
-    { label: "cco-full", description: "Full status with all metrics" },
-    { label: "cco-minimal", description: "Compact single-line display" }
+    // Only include if not detected
+    ...(detected.aiPerf ? [] : [{ label: "AI Performance", description: "Extended thinking, tool output limits" }]),
+    ...(detected.statusline ? [] : [{ label: "Statusline", description: "Custom status bar display" }]),
+    ...(detected.permissions ? [] : [{ label: "Permissions", description: "Tool approval settings" }])
   ],
-  multiSelect: false
+  multiSelect: true
 }])
 ```
 
-### If "AI Performance" in scope
+### 4.2: Context Questions (LOW confidence only)
+
+**Only ask what wasn't detected:**
 
 ```javascript
-AskUserQuestion([
-  {
-    question: "Extended thinking token limit?",
-    header: "Thinking",
-    options: [
-      { label: "5K", description: "Simple CLI tools" },
-      { label: "8K", description: "Standard projects" },
-      { label: "10K", description: "Complex/large projects" }
-    ],
-    multiSelect: false
-  },
-  {
-    question: "Tool output token limit?",
-    header: "Output",
-    options: [
-      { label: "25K", description: "Simple projects" },
-      { label: "35K", description: "Standard projects" },
-      { label: "50K", description: "Large codebases" }
-    ],
-    multiSelect: false
-  }
-])
-```
+// Build question list dynamically based on detection confidence
+lowConfidenceQuestions = []
 
-**Recommendation table (for dynamic labels):**
-
-| Context | Thinking | Output |
-|---------|----------|--------|
-| Small + Simple CLI | 5K | 25K |
-| Small-Medium + Standard | 8K | 35K |
-| Medium-Large OR Complex | 10K | 50K |
-
-### If "Permissions" in scope
-
-```javascript
-AskUserQuestion([{
-  question: "Permission level?",
-  header: "Level",
-  options: [
-    { label: "Safe", description: "Read-only operations" },
-    { label: "Balanced", description: "Read + lint/test auto-approved" },
-    { label: "Permissive", description: "Most operations auto-approved" },
-    { label: "Full", description: "All operations (Solo + Public only)" }
-  ],
-  multiSelect: false
-}])
-```
-
-### Validation
-```
-[x] Detail options collected (or skipped if none applicable)
-→ Store as: details = { statusline?, aiPerf?, permissions? }
-→ If "Detection & Rules" NOT in scope: Skip to Step-8
-→ Proceed to Step-5
-```
-
----
-
-## Step-5: Project Context [MANDATORY if "Detection & Rules" in scope]
-
-**Collect userInput for detection agent. Two batches, 4 questions each.**
-
-### Step-5.1: Team & Data
-
-```javascript
-AskUserQuestion([
-  {
-    question: "How many active contributors?",
-    header: "Team",
-    options: [
-      { label: "Solo", description: "Single developer, no formal review" },
-      { label: "Small (2-5)", description: "Small team with async PR reviews" },
-      { label: "Large (6+)", description: "Large team requiring ADR/CODEOWNERS" }
-    ],
-    multiSelect: false
-  },
-  {
-    question: "Expected scale (concurrent users)?",
-    header: "Scale",
-    options: [
-      { label: "Prototype (<100)", description: "Development only" },
-      { label: "Small (100-1K)", description: "Basic caching needed" },
-      { label: "Medium (1K-10K)", description: "Connection pools, async required" },
-      { label: "Large (10K+)", description: "Circuit breakers, advanced patterns" }
-    ],
-    multiSelect: false
-  },
-  {
+if (detected.data.confidence < 70) {
+  lowConfidenceQuestions.push({
     question: "Most sensitive data handled?",
     header: "Data",
     options: [
@@ -271,187 +206,94 @@ AskUserQuestion([
       { label: "Regulated", description: "Healthcare, finance, regulated data" }
     ],
     multiSelect: false
-  },
-  {
-    question: "Compliance requirements? (1/3: Common)",
+  })
+}
+
+if (detected.compliance.confidence < 70) {
+  lowConfidenceQuestions.push({
+    question: "Compliance requirements?",
     header: "Compliance",
     options: [
-      { label: "None", description: "No compliance requirements - skip remaining" },
+      { label: "None", description: "No compliance requirements" },
       { label: "SOC2", description: "B2B SaaS, enterprise customers" },
-      { label: "HIPAA", description: "US healthcare data (PHI)" },
-      { label: "PCI", description: "Payment card processing" }
+      { label: "GDPR/CCPA", description: "Privacy regulations" },
+      { label: "HIPAA/PCI", description: "Healthcare or payments" }
     ],
     multiSelect: true
-  }
-])
-```
+  })
+}
 
-### Step-5.1b: Compliance (Privacy) - Skip if "None" selected above
-
-```javascript
-AskUserQuestion([{
-  question: "Compliance requirements? (2/3: Privacy)",
-  header: "Compliance",
-  options: [
-    { label: "GDPR", description: "EU data privacy, user rights" },
-    { label: "CCPA", description: "California consumer privacy" },
-    { label: "ISO27001", description: "International security standard" },
-    { label: "Skip", description: "No additional privacy requirements" }
-  ],
-  multiSelect: true
-}])
-```
-
-### Step-5.1c: Compliance (Specialized) - Skip if "None" selected in 5.1
-
-```javascript
-AskUserQuestion([{
-  question: "Compliance requirements? (3/3: Specialized)",
-  header: "Compliance",
-  options: [
-    { label: "FedRAMP", description: "US government cloud" },
-    { label: "DORA", description: "EU financial services (2025+)" },
-    { label: "HITRUST", description: "Healthcare + security combined" },
-    { label: "Skip", description: "No specialized requirements" }
-  ],
-  multiSelect: true
-}])
-```
-
-### Step-5.1d: Testing
-
-```javascript
-AskUserQuestion([{
-  question: "Test coverage level?",
-  header: "Testing",
-  options: [
-    { label: "Basics (60%)", description: "Unit tests, basic mocking" },
-    { label: "Standard (80%)", description: "+ Integration tests, fixtures, CI gates" },
-    { label: "Full (90%)", description: "+ E2E, contract testing, mutation testing" }
-  ],
-  multiSelect: false
-}])
-```
-
-**Dynamic label:** Add `[detected]` if coverage config found in CI/package.json.
-
-### Step-5.2: Operations & Policy
-
-```javascript
-AskUserQuestion([
-  {
+if (detected.sla.confidence < 70) {
+  lowConfidenceQuestions.push({
     question: "Uptime commitment (SLA)?",
     header: "SLA",
     options: [
-      { label: "None", description: "Best effort, no commitment" },
-      { label: "99%", description: "~7 hours/month downtime" },
-      { label: "99.9%", description: "~43 minutes/month downtime" },
-      { label: "99.99%", description: "~4 minutes/month downtime" }
+      { label: "None", description: "Best effort" },
+      { label: "99%+", description: "Production SLA" }
     ],
     multiSelect: false
-  },
-  {
-    question: "Current development stage?",
-    header: "Maturity",
-    options: [
-      { label: "Prototype", description: "May be discarded, rapid iteration" },
-      { label: "Active", description: "Regular releases, growing features" },
-      { label: "Stable", description: "Maintenance mode, bug fixes only" },
-      { label: "Legacy", description: "Minimal changes, keeping alive" }
-    ],
-    multiSelect: false
-  },
-  {
-    question: "Breaking change policy?",
-    header: "Breaking",
-    options: [
-      { label: "Allowed", description: "Pre-1.0, breaking changes OK" },
-      { label: "Minimize", description: "Deprecate first, migration path" },
-      { label: "Never", description: "Enterprise, strict compatibility" }
-    ],
-    multiSelect: false
-  },
-  {
-    question: "Primary development focus?",
-    header: "Priority",
-    options: [
-      { label: "Speed", description: "Ship fast, iterate quickly" },
-      { label: "Balanced", description: "Standard practices" },
-      { label: "Quality", description: "Thorough testing and review" },
-      { label: "Security", description: "Security-first development" }
-    ],
-    multiSelect: false
-  }
-])
+  })
+}
+
+// Ask all low-confidence questions in one batch (max 4)
+if (lowConfidenceQuestions.length > 0) {
+  AskUserQuestion(lowConfidenceQuestions.slice(0, 4))
+}
 ```
+
+**Result: Typically 0-2 questions instead of 8+**
 
 ### Validation
 ```
-[x] Step-5.1 completed: Team, Scale, Data collected
-[x] Step-5.1 Compliance (1/3): Common frameworks collected
-[x] Step-5.1b Compliance (2/3): Privacy frameworks collected (skipped if "None" in 5.1)
-[x] Step-5.1c Compliance (3/3): Specialized frameworks collected (skipped if "None" in 5.1)
-[x] Step-5.1d completed: Testing level collected
-[x] Step-5.2 completed: SLA, Maturity, Breaking, Priority collected
-→ Store as: userInput = { team, scale, data, compliance[], testing, sla, maturity, breaking, priority }
-→ Proceed to Step-6
+[x] Low confidence items asked
+[x] High confidence items auto-applied
+→ Proceed to Step-5
 ```
 
 ---
 
-## Step-6: Detection
+## Step-5: Review
 
-**Run agent with collected userInput. Agent does NOT ask questions.**
+**Show merged detection + user input results:**
 
-```javascript
-agentResponse = Task("cco-agent-analyze", `
-  scope=config
-  userInput: ${JSON.stringify(userInput)}
-
-  Detection only - do NOT ask user questions (already collected).
-  Return detections, rules, context based on provided userInput.
-`)
 ```
+## Configuration Preview
 
-### Agent Responsibilities
+### Auto-Detected (applied automatically)
+| Element | Value | Confidence |
+|---------|-------|------------|
+| Language | {language} | {confidence} |
+| Framework | {framework} | {confidence} |
+| Test Framework | {test_framework} | {confidence} |
+| Coverage | {coverage}% | {confidence} |
+| Team Size | {team_size} | {confidence} |
 
-1. **Auto-detect** from manifest/code/config/docs (Language, DB, Infra, etc.)
-2. **Read adaptive.md** via `cco-install --cat rules/cco-adaptive.md`
-3. **Select rules** based on detections + provided userInput
-4. **Return** JSON with detections, rules, context, triggeredCategories
+### User Confirmed
+| Element | Value |
+|---------|-------|
+| Data | {data} |
+| Compliance | {compliance} |
 
-### Confidence Handling (after agent returns)
+### Rules Selected
+- core.md (always)
+- {language}.md (detected)
+- {scale}.md (based on context)
+- {additional}.md (based on context)
 
-| Confidence | Action |
-|------------|--------|
-| HIGH | Trust, don't ask |
-| MEDIUM | AskUserQuestion with `[detected]` label |
-| LOW | AskUserQuestion, no marker |
-
-### Validation
+### Settings
+| Setting | Value |
+|---------|-------|
+| AI Thinking | {thinking} (auto: {reason}) |
+| Permissions | {permissions} |
 ```
-[x] Agent returned valid response
-[x] response.detections.language exists
-[x] response.rules.length > 0
-[x] MEDIUM confidence items confirmed with user (if any)
-→ Proceed to Step-7
-```
-
----
-
-## Step-7: Review
-
-**Show detection results table, then ask approval.**
-
-Display table with: Element, Value, Confidence, Source columns.
 
 ```javascript
 AskUserQuestion([{
   question: "Apply this configuration?",
   header: "Apply",
   options: [
-    { label: "Accept", description: "Apply all detected settings and rules" },
-    { label: "Edit", description: "Modify some settings before applying" },
+    { label: "Accept (Recommended)", description: "Apply all settings" },
+    { label: "Edit", description: "Modify before applying" },
     { label: "Cancel", description: "Discard and exit" }
   ],
   multiSelect: false
@@ -460,71 +302,61 @@ AskUserQuestion([{
 
 ### Validation
 ```
-[x] Results displayed to user
-[x] User selected: Accept | Edit | Cancel
-→ If Cancel: Exit with no changes
-→ If Edit: Return to relevant step (Step-4 or Step-5)
-→ If Accept: Proceed to Step-8
+[x] Preview displayed
+[x] User approved
+→ If Cancel: Exit
+→ If Edit: Return to Step-4
+→ Proceed to Step-6
 ```
 
 ---
 
-## Step-8: Apply
+## Step-6: Apply [BACKGROUND]
 
-### If action = Configure
+**Write all files in background:**
 
-**Rules & Context** (from agent output):
-- `.claude/rules/cco/context.md` ← agent.context
-- `.claude/rules/cco/{file}.md` ← agent.rules[]
+```javascript
+// Launch file writes in parallel
+Task("cco-agent-apply", `
+  Write files:
+  - .claude/rules/cco/context.md ← ${JSON.stringify(context)}
+  - .claude/rules/cco/${language}.md ← from template
+  - .claude/settings.json ← merge with existing
+`, { model: "sonnet", run_in_background: true })
 
-**Statusline & Permissions** (via CLI only):
-```bash
-cco-install --local . --statusline {mode} --permissions {level}
-```
-
-**AI Performance** (write to settings.json):
-```json
-{
-  "env": {
-    "MAX_THINKING_TOKENS": "{value}",
-    "MAX_MCP_OUTPUT_TOKENS": "{value}",
-    "DISABLE_PROMPT_CACHING": "0"
-  }
-}
+// CLI for statusline/permissions
+Bash("cco-install --local . --statusline ${mode} --permissions ${level}")
 ```
 
 ### If action = Remove
 
-| Selection | Action |
-|-----------|--------|
-| Rules | `rm -rf .claude/rules/cco/` |
-| AI Perf | Remove `env` from settings.json |
-| Statusline | `rm .claude/cco-*.js`, remove `statusLine` from settings.json |
-| Permissions | Remove `permissions` from settings.json |
+```javascript
+// Parallel removal
+Bash("rm -rf .claude/rules/cco/")
+// Edit settings.json to remove CCO entries
+```
 
 ### If action = Export
 
-Read global + project rules, apply format:
-
-| Format | Target | Rules | Output |
-|--------|--------|-------|--------|
-| AGENTS.md | Universal | Core + AI (filtered) | ./AGENTS.md |
-| CLAUDE.md | Claude Code | Core + AI + Tools | ./CLAUDE.export.md |
-
-**AGENTS.md filtering:** Remove tool names, paths, product refs, CCO-specific.
+```javascript
+Task("cco-agent-apply", `
+  Export rules to ${format}:
+  - Read all .claude/rules/cco/*.md
+  - Filter for target format
+  - Write to ./${format}
+`, { model: "sonnet" })
+```
 
 ### Validation
 ```
-[x] Files written/removed as specified
-[x] No errors during apply
-→ Proceed to Step-9
+[x] Files written/removed
+[x] No errors
+→ Proceed to Step-7
 ```
 
 ---
 
-## Step-9: Report
-
-### Format
+## Step-7: Report
 
 ```
 ## Configuration Applied
@@ -532,16 +364,14 @@ Read global + project rules, apply format:
 ### Files Written
 | File | Action |
 |------|--------|
-| .claude/rules/cco/context.md | {created|updated} |
-| .claude/rules/cco/{language}.md | {created|updated} |
-| .claude/settings.json | {created|updated} |
+| .claude/rules/cco/context.md | {action} |
+| .claude/rules/cco/{language}.md | {action} |
+| .claude/settings.json | {action} |
 
-### User Inputs Applied
-| Element | Value | Effect |
-|---------|-------|--------|
-| Team | {team} | {effect} |
-| Scale | {scale} | {effect} |
-| ... | ... | ... |
+### Detection Summary
+- Auto-detected: {n} elements
+- User confirmed: {n} elements
+- Questions asked: {n} (vs {n}+ traditional)
 
 ### Next Steps
 - Restart Claude Code to apply new rules
@@ -597,8 +427,8 @@ If something goes wrong during configuration:
 
 ## Rules
 
-1. **Sequential execution** - Complete each step before proceeding
-2. **Validation gates** - Check validation block before next step
-3. **Agent for detection** - Use Task(cco-agent-analyze), never detect directly
-4. **cco-install for templates** - Statusline/permissions via CLI only
-5. **No skipping** - Step-5 is MANDATORY when "Detection & Rules" selected
+1. **Use cco-agent-analyze** - Agent handles detection with config scope
+2. **Skip HIGH confidence** - Don't ask what's already detected
+3. **Batch LOW confidence** - Ask remaining questions in single batch
+4. **Use cco-agent-apply** - Agent handles file writing with verification
+5. **Background apply** - Write files while user sees report
