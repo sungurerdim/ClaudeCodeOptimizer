@@ -3,22 +3,38 @@ name: cco-agent-analyze
 description: Read-only project analysis and issue detection
 tools: Glob, Read, Grep, Bash
 safe: true
+model: haiku
 ---
 
 # Agent: Analyze
 
 Read-only analysis. Multiple scopes in single run. Returns structured JSON.
 
+**Model:** Haiku (fast, read-only operations)
+
 ## Execution [CRITICAL]
 
-**Maximize parallelization at every step.**
+**Maximize parallelization at every step. ALL independent tool calls in SINGLE message.**
 
-| Step | Action | Tool Calls |
-|------|--------|------------|
-| 1. Linters | Single message | `Bash(lint)`, `Bash(type)`, `Bash(format)` |
-| 2. Grep | ALL patterns from ALL scopes | `Grep(secrets)`, `Grep(injection)`, `Grep(complexity)`, ... |
-| 3. Context | ALL matched files | `Read(file, offset, limit=20)` × N |
-| 4. Output | Combined JSON | All findings tagged by scope |
+| Step | Action | Tool Calls | Execution |
+|------|--------|------------|-----------|
+| 1. Linters | Single message | `Bash(lint)`, `Bash(type)`, `Bash(format)` | **PARALLEL** |
+| 2. Grep | ALL patterns from ALL scopes | `Grep(secrets)`, `Grep(injection)`, `Grep(complexity)`, ... | **PARALLEL** |
+| 3. Context | ALL matched files | `Read(file, offset, limit=20)` × N | **PARALLEL** |
+| 4. Output | Combined JSON | All findings tagged by scope | Instant |
+
+**CRITICAL Parallelization Rules:**
+```javascript
+// Step 1: ALL linters in ONE message
+Bash("{lint_command} 2>&1")          // These calls
+Bash("{type_command} 2>&1")          // must be in
+Bash("{format_check_command} 2>&1")  // SINGLE message
+
+// Step 2: ALL grep patterns in ONE message
+Grep("{secret_patterns}")         // All patterns
+Grep("{injection_patterns}")      // in single
+Grep("{complexity_patterns}")     // message
+```
 
 **Rules:** Cross-scope batch greps │ Parallel linters │ Deduplicate reads │ Skip linter domain
 
@@ -72,7 +88,7 @@ Read-only analysis. Multiple scopes in single run. Returns structured JSON.
 
 **Status:** 90-100: OK │ 70-89: WARN │ 50-69: FAIL │ 0-49: CRITICAL
 
-**Trends:** ↑ Improved >5% │ → Stable ±5% │ ↓ Degraded >5% │ ⚠ Rapid decline >15%
+**Note:** No historical tracking - each run is independent snapshot.
 
 ## Scope Patterns
 
@@ -114,7 +130,6 @@ naming: inconsistent patterns
   "findings": [{ "id": "{SCOPE}-{NNN}", "scope": "...", "severity": "{P0-P3}", "title": "...", "location": "{file}:{line}", "fixable": true, "approvalRequired": true, "fix": "..." }],
   "summary": { "{scope}": { "count": "{n}", "p0": "{n}", "p1": "{n}", "p2": "{n}", "p3": "{n}" } },
   "scores": { "security": "{0-100}", "tests": "{0-100}", "techDebt": "{0-100}", "cleanliness": "{0-100}", "overall": "{0-100}" },
-  "trends": { "security": "{↑|→|↓|⚠}", "tests": "{↑|→|↓|⚠}", "techDebt": "{↑|→|↓|⚠}", "cleanliness": "{↑|→|↓|⚠}" },
   "metrics": { "coupling": "{0-100}", "cohesion": "{0-100}", "complexity": "{0-100}" },
   "learnings": [{ "type": "systemic|avoid|prefer", "pattern": "...", "reason": "..." }]
 }
@@ -122,7 +137,7 @@ naming: inconsistent patterns
 
 **approvalRequired:** true for security, deletions, API changes, behavior changes
 
-**Note:** Findings-based scopes return `findings` + `summary`. Dashboard scopes (`scan`, `trends`) return `scores` + `trends`. Architecture adds `metrics`.
+**Note:** Findings-based scopes return `findings` + `summary`. Dashboard scopes (`scan`) return `scores`. Architecture adds `metrics`. No historical data stored.
 
 ## Additional Scopes
 
@@ -140,10 +155,7 @@ Combines all analysis for dashboard: Security (OWASP, secrets, CVE) │ Tests (c
 
 **Output:** `{ scores, status: "OK|WARN|FAIL|CRITICAL" }`
 
-### trends
-Compare current vs historical: Read previous → Calculate deltas → Assign indicators
-
-**Output:** `{ trends: { security: "↑|→|↓|⚠", ... } }`
+**Note:** Snapshot only - no historical comparison, no trend tracking.
 
 ### config
 

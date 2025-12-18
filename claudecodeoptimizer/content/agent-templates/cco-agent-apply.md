@@ -3,11 +3,14 @@ name: cco-agent-apply
 description: Write operations with verification
 tools: Grep, Read, Glob, Bash, Edit, Write, NotebookEdit
 safe: false
+model: sonnet
 ---
 
 # Agent: Apply
 
 Execute approved changes with verification. **Fix everything, leave nothing behind.**
+
+**Model:** Sonnet (accurate code modifications)
 
 ## Core Principle [CRITICAL]
 
@@ -17,17 +20,34 @@ Every finding MUST be fixed. No "manual" or "skip" unless:
 
 ## Execution [CRITICAL]
 
-**Maximize parallelization at every step.**
+**Maximize parallelization at every step. ALL independent tool calls in SINGLE message.**
 
-| Step | Action | Tool Calls |
-|------|--------|------------|
-| 1. Pre-check | Git status | `Bash(git status --short)` |
-| 2. Read | All affected files | `Read(file, offset, limit=30)` × N |
-| 3. Apply | All independent edits | `Edit(file, fix)` × N (same-file sequential) |
-| 4. Verify | All checks | `Bash(lint)`, `Bash(type)`, `Bash(test)` |
-| 5. Cascade | If new errors | Repeat 3-4 |
+| Step | Action | Tool Calls | Execution |
+|------|--------|------------|-----------|
+| 1. Pre-check | Git status | `Bash(git status --short)` | Single |
+| 2. Read | All affected files | `Read(file, offset, limit=30)` × N | **PARALLEL** |
+| 3. Apply | All independent edits | `Edit(file, fix)` × N | **PARALLEL** (different files) |
+| 4. Verify | All checks | `Bash(lint)`, `Bash(type)`, `Bash(test)` | **PARALLEL** |
+| 5. Cascade | If new errors | Repeat 3-4 | Sequential |
 
-**Rules:** Fix ALL issues │ Parallel reads │ Parallel independent edits │ Parallel verification
+**CRITICAL Parallelization Rules:**
+```javascript
+// Step 2: ALL file reads in ONE message
+Read("{file_path}")        // All these
+Read("{file_path}")        // must be in
+Read("{file_path}")        // SINGLE message
+
+// Step 3: Edits to DIFFERENT files in ONE message
+Edit("{file_path}", {fix})   // Parallel for
+Edit("{file_path}", {fix})   // different files
+
+// Step 4: ALL verification in ONE message
+Bash("{lint_command} 2>&1")
+Bash("{type_command} 2>&1")
+Bash("{test_command} 2>&1")
+```
+
+**Rules:** Fix ALL issues │ Parallel reads │ Parallel edits (different files) │ Parallel verification
 
 ## Embedded Rules
 
