@@ -29,7 +29,7 @@ def remove_statusline(verbose: bool = True) -> bool:
 
     # Remove cco-statusline.js if it's a CCO file
     if has_cco_statusline():
-        STATUSLINE_FILE.unlink()
+        STATUSLINE_FILE.unlink(missing_ok=True)
         removed = True
         if verbose:
             print("  - cco-statusline.js")
@@ -91,12 +91,15 @@ def remove_rules_dir(verbose: bool = True) -> bool:
     for rule_name in ALL_RULE_NAMES:
         rule_path = RULES_DIR / rule_name
         if rule_path.exists():
-            rule_path.unlink()
+            rule_path.unlink(missing_ok=True)
             removed_count += 1
 
     # Remove empty cco/ directory
-    if RULES_DIR.exists() and not any(RULES_DIR.iterdir()):
-        RULES_DIR.rmdir()
+    try:
+        if RULES_DIR.exists() and not any(RULES_DIR.iterdir()):
+            RULES_DIR.rmdir()
+    except OSError:
+        pass  # Directory not empty or already removed
 
     if removed_count == 0:
         return False
@@ -116,7 +119,7 @@ def remove_rules_dir_old(verbose: bool = True) -> bool:
     for rule_file in OLD_RULE_FILES:
         rule_path = OLD_RULES_ROOT / rule_file
         if rule_path.exists():
-            rule_path.unlink()
+            rule_path.unlink(missing_ok=True)
             removed_count += 1
 
     if removed_count == 0:
@@ -132,7 +135,7 @@ def remove_cco_files(verbose: bool = True) -> dict[str, int]:
     removed = {"commands": 0, "agents": 0}
     for key, getter in [("commands", get_cco_commands), ("agents", get_cco_agents)]:
         for f in getter():
-            f.unlink()
+            f.unlink(missing_ok=True)
             removed[key] += 1
             if verbose:
                 print(f"  - {f.name}")

@@ -55,7 +55,7 @@ class TestRemoveCommandFiles:
         """Test remove_command_files uses global COMMANDS_DIR when path is None."""
         with patch("claudecodeoptimizer.operations.COMMANDS_DIR") as mock_dir:
             mock_dir.exists.return_value = False
-            count = remove_command_files(path=None, verbose=False)
+            count = remove_command_files(path=None)
             assert count == 0
 
 
@@ -101,7 +101,7 @@ class TestRemoveAgentFiles:
         """Test remove_agent_files uses global AGENTS_DIR when path is None."""
         with patch("claudecodeoptimizer.operations.AGENTS_DIR") as mock_dir:
             mock_dir.exists.return_value = False
-            count = remove_agent_files(path=None, verbose=False)
+            count = remove_agent_files(path=None)
             assert count == 0
 
 
@@ -151,7 +151,7 @@ class TestRemoveOldRules:
         """Test remove_old_rules uses global OLD_RULES_ROOT when path is None."""
         with patch("claudecodeoptimizer.operations.OLD_RULES_ROOT") as mock_dir:
             mock_dir.exists.return_value = False
-            count = remove_old_rules(path=None, verbose=False)
+            count = remove_old_rules(path=None)
             assert count == 0
 
 
@@ -230,7 +230,7 @@ class TestRemoveNewRules:
         """Test remove_new_rules uses global RULES_DIR when path is None."""
         with patch("claudecodeoptimizer.operations.RULES_DIR") as mock_dir:
             mock_dir.exists.return_value = False
-            count = remove_new_rules(path=None, verbose=False)
+            count = remove_new_rules(path=None)
             assert count == 0
 
 

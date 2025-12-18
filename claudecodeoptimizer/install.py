@@ -102,7 +102,7 @@ def _setup_content(src_subdir: str, dest_dir: Path, verbose: bool = True) -> lis
     dest_dir.mkdir(parents=True, exist_ok=True)
     # Remove existing cco-*.md files (idempotent reinstall)
     for old in dest_dir.glob("cco-*.md"):
-        old.unlink()
+        old.unlink(missing_ok=True)
     installed = []
     for f in sorted(src.glob("cco-*.md")):
         shutil.copy2(f, dest_dir / f.name)
@@ -172,7 +172,7 @@ def setup_rules(verbose: bool = True) -> dict[str, int]:
     for rule_name in CCO_RULE_NAMES:
         rule_path = RULES_DIR / rule_name
         if rule_path.exists():
-            rule_path.unlink()
+            rule_path.unlink(missing_ok=True)
 
     # Copy CCO rule files with new names (cco-core.md -> core.md)
     installed = {}
@@ -203,8 +203,6 @@ def clean_claude_md(verbose: bool = True) -> int:
     Returns:
         Number of markers removed
     """
-    import re
-
     from .operations import remove_all_cco_markers
 
     claude_md = CLAUDE_DIR / "CLAUDE.md"
@@ -216,13 +214,15 @@ def clean_claude_md(verbose: bool = True) -> int:
     content, removed_count = remove_all_cco_markers(content)
 
     if removed_count > 0:
+        import re
+
         content = re.sub(r"\n{3,}", "\n\n", content)
         content = content.strip()
         if content:
             claude_md.write_text(content + "\n", encoding="utf-8")
         else:
             # File is empty after removing CCO content - delete it
-            claude_md.unlink()
+            claude_md.unlink(missing_ok=True)
 
         if verbose:
             print(f"  CLAUDE.md: cleaned {removed_count} old CCO marker(s)")

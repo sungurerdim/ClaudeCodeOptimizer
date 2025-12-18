@@ -90,16 +90,11 @@ def get_content_path(subdir: str = "") -> Path:
 # Also: <!-- cco-anything-start -->...<!-- cco-anything-end -->
 # ReDoS mitigation: File size limited to MAX_CLAUDE_MD_SIZE (1MB) before pattern application.
 # The .*? quantifier is safe given this size constraint.
-CCO_UNIVERSAL_PATTERN = (
-    r"<!--\s*CCO[_-]\w+[_-]START\s*-->.*?<!--\s*CCO[_-]\w+[_-]END\s*-->\n?",
-    re.DOTALL | re.IGNORECASE,
-)
+_CCO_PATTERN_STRING = r"<!--\s*CCO[_-]\w+[_-]START\s*-->.*?<!--\s*CCO[_-]\w+[_-]END\s*-->\n?"
+CCO_UNIVERSAL_PATTERN = (_CCO_PATTERN_STRING, re.DOTALL | re.IGNORECASE)
 
 # Pre-compiled pattern for performance
-CCO_UNIVERSAL_PATTERN_COMPILED = re.compile(
-    r"<!--\s*CCO[_-]\w+[_-]START\s*-->.*?<!--\s*CCO[_-]\w+[_-]END\s*-->\n?",
-    re.DOTALL | re.IGNORECASE,
-)
+CCO_UNIVERSAL_PATTERN_COMPILED = re.compile(_CCO_PATTERN_STRING, re.DOTALL | re.IGNORECASE)
 
 # Timeout constants (seconds) - configurable via environment variables
 # SUBPROCESS_TIMEOUT_DEFAULT: For quick operations like git status, file operations (default: 5s)
@@ -236,6 +231,7 @@ def cli_entrypoint(func: Callable[..., int]) -> Callable[..., int]:
     """
 
     def wrapper(*args: Any, **kwargs: Any) -> int:
+        """Wrapper that handles exceptions and logging for CLI entry points."""
         try:
             return func(*args, **kwargs)
         except KeyboardInterrupt:
