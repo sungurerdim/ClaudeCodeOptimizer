@@ -6,7 +6,7 @@ allowed-tools: Bash(git:*), Bash(ruff:*), Bash(npm:*), Bash(pytest:*), Read(*), 
 
 # /cco-commit
 
-**Smart Commits** - Quality gates → analyze → group atomically → commit.
+**Smart Commits** - Parallel quality gates + atomic grouping.
 
 ## Context
 
@@ -32,15 +32,15 @@ Run /cco-config first to configure project context, then restart CLI.
 
 ## Architecture
 
-| Step | Name | Action |
-|------|------|--------|
-| 1 | Pre-checks | Conflicts, stash, large changes |
-| 2 | Unstaged | Ask about unstaged changes |
-| 3 | Quality | Run format → lint → types → tests |
-| 4 | Analyze | Group changes atomically |
-| 5 | Plan | Show commit plan, ask approval |
-| 6 | Execute | Create commits |
-| 7 | Summary | Show results |
+| Step | Name | Action | Optimization |
+|------|------|--------|--------------|
+| 1 | Pre-checks | Conflicts, stash, large | Instant |
+| 2 | Unstaged | Ask about unstaged | Skip if none |
+| 3 | Quality | Parallel: format+lint+types, background: tests | 3x faster |
+| 4 | Analyze | Group atomically | While tests run |
+| 5 | Plan | Show plan, ask approval | Instant |
+| 6 | Execute | Create commits | Sequential |
+| 7 | Summary | Show results | Instant |
 
 ---
 
@@ -142,16 +142,41 @@ If "Select files" → show file picker with multiSelect.
 
 ---
 
-## Step-3: Quality Gates [SEQUENTIAL - stop on failure]
+## Step-3: Quality Gates [PARALLEL + BACKGROUND]
 
-| Gate | Command | Action |
-|------|---------|--------|
-| 1. Secrets | `grep -rn "sk-\|ghp_\|password="` | BLOCK if found |
-| 2. Large Files | `find . -size +1M` | WARN >1MB, BLOCK >10MB |
-| 3. Format | `{format_cmd}` from context | Auto-fix, re-stage |
-| 4. Lint | `{lint_cmd}` from context | STOP on unfixable |
-| 5. Types | `{type_cmd}` from context | STOP on failure |
-| 6. Tests | `{test_cmd}` from context | STOP on failure |
+**Phase 1: Blocking checks (instant)**
+```javascript
+// These must pass before proceeding - run in parallel
+Bash("grep -rn '{secret_patterns}' --include='*.{extensions}' || true")  // Secrets
+Bash("find . -size +{max_size} -not -path './.git/*' 2>/dev/null || true")  // Large files
+```
+
+**Phase 2: Code quality (parallel)**
+```javascript
+// Run format, lint, types in PARALLEL - all in ONE message
+// Commands from context.md Operational section
+Bash("{format_command} 2>&1")    // Format - auto-fix
+Bash("{lint_command} 2>&1")      // Lint
+Bash("{type_command} 2>&1")      // Types
+```
+
+**Phase 3: Tests (background while continuing)**
+```javascript
+// Start tests in background - don't block
+testTask = Bash("{test_command} 2>&1", { run_in_background: true })
+
+// Continue to Step-4 while tests run
+// Check testTask.id before Step-6 (Execute)
+```
+
+| Gate | Execution | Action |
+|------|-----------|--------|
+| Secrets | Parallel Phase 1 | BLOCK if found |
+| Large Files | Parallel Phase 1 | BLOCK if >10MB |
+| Format | Parallel Phase 2 | Auto-fix, re-stage |
+| Lint | Parallel Phase 2 | STOP on unfixable |
+| Types | Parallel Phase 2 | STOP on failure |
+| Tests | Background Phase 3 | Check before commit |
 
 **Commands from context.md Operational section.**
 
@@ -172,8 +197,10 @@ AskUserQuestion([{
 
 ### Validation
 ```
-[x] All gates passed (or skipped with user approval)
-→ Proceed to Step-4
+[x] Phase 1 blocking checks passed
+[x] Phase 2 code quality passed (or skipped)
+[x] Phase 3 tests started in background
+→ Proceed to Step-4 (don't wait for tests)
 ```
 
 ---
@@ -265,7 +292,25 @@ AskUserQuestion([{
 
 ## Step-6: Execute Commits
 
-Execute approved commits sequentially.
+**First: Check background tests**
+```javascript
+// Wait for tests that started in Step-3
+testResults = await TaskOutput(testTask.id)
+
+if (testResults.failed) {
+  AskUserQuestion([{
+    question: "Tests failed. Proceed anyway?",
+    header: "Tests",
+    options: [
+      { label: "Fix first", description: "Cancel and fix failing tests" },
+      { label: "Commit anyway", description: "Proceed despite test failures" }
+    ],
+    multiSelect: false
+  }])
+}
+```
+
+**Then: Execute commits sequentially**
 
 **Message Format:**
 ```
@@ -287,6 +332,7 @@ Co-Authored-By: Claude <noreply@anthropic.com>
 
 ### Validation
 ```
+[x] Background tests checked
 [x] All commits created successfully
 → Proceed to Step-7
 ```
@@ -296,9 +342,9 @@ Co-Authored-By: Claude <noreply@anthropic.com>
 ## Step-7: Summary
 
 Display:
-- Commits created: {count}
-- Files changed: {count}
-- Lines: +{added} -{removed}
+- Commits created: {n}
+- Files changed: {n}
+- Lines: +{n} -{n}
 - Branch: {branch}
 
 ### Validation
@@ -358,8 +404,9 @@ If something goes wrong during the commit process:
 
 ## Rules
 
-1. **Sequential execution** - Complete each step before proceeding
-2. **Validation gates** - Check validation block before next step
-3. **Sequential quality gates** - Stop on first failure
+1. **Parallel quality gates** - Format+lint+types in single message
+2. **Background tests** - Start tests early, check before commit
+3. **Analyze while waiting** - Group changes while tests run
 4. **No vague messages** - Reject "fix bug", "update code", "changes"
 5. **Git safety** - Never force push, always verify
+6. **Skip flags** - `--skip-checks` bypasses quality gates

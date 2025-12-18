@@ -6,9 +6,9 @@ allowed-tools: WebSearch(*), WebFetch(*), Read(*), Grep(*), Glob(*), Task(*), To
 
 # /cco-research
 
-**Smart Research** - Search → score → synthesize → recommend.
+**Smart Research** - Parallel search → tier → synthesize → recommend.
 
-End-to-end: Searches multiple sources, scores reliability, synthesizes findings.
+Hybrid research: Local (Glob/Grep) + Web (cco-agent-research) with tiered model strategy.
 
 ## Context
 
@@ -29,13 +29,13 @@ Run /cco-config first to configure project context, then restart CLI.
 
 ## Architecture
 
-| Step | Name | Action |
-|------|------|--------|
-| 1 | Depth | Ask research depth |
-| 2 | Query | Parse and understand query |
-| 3 | Research | Run agent with query |
-| 4 | Synthesize | Process agent results |
-| 5 | Output | Show structured findings |
+| Step | Name | Action | Optimization |
+|------|------|--------|--------------|
+| 1 | Depth | Ask research depth | Skip with flags |
+| 2 | Query | Parse and understand | Instant |
+| 3 | Research | Parallel: Local (Glob/Grep) + cco-agent-research | Fast |
+| 4 | Synthesize | Opus 4.5 for T1-T2 sources | Higher accuracy |
+| 5 | Output | Progressive display | Real-time |
 
 ---
 
@@ -45,7 +45,7 @@ Run /cco-config first to configure project context, then restart CLI.
 TodoWrite([
   { content: "Step-1: Select depth", status: "in_progress", activeForm: "Selecting depth" },
   { content: "Step-2: Parse query", status: "pending", activeForm: "Parsing query" },
-  { content: "Step-3: Run research", status: "pending", activeForm: "Running research" },
+  { content: "Step-3: Run parallel research", status: "pending", activeForm: "Running parallel research" },
   { content: "Step-4: Synthesize findings", status: "pending", activeForm: "Synthesizing findings" },
   { content: "Step-5: Show output", status: "pending", activeForm: "Showing output" }
 ])
@@ -60,17 +60,21 @@ AskUserQuestion([{
   question: "Research depth?",
   header: "Depth",
   options: [
-    { label: "Quick", description: "T1-T2 sources only, 5 max" },
-    { label: "Standard", description: "T1-T4 sources, 10 max" },
-    { label: "Deep", description: "All tiers, 20+ sources" }
+    { label: "Quick", description: "T1-T2 sources, 3 parallel searches" },
+    { label: "Standard (Recommended)", description: "T1-T4 sources, 5 parallel searches" },
+    { label: "Deep", description: "All tiers, 7+ parallel searches, resumable" }
   ],
   multiSelect: false
 }])
 ```
 
-**Dynamic labels:** Add `(Recommended)` based on query complexity.
-
 **Flags override:** `--quick`, `--standard`, `--deep` skip this question.
+
+| Depth | Parallel Agents | Model Strategy |
+|-------|-----------------|----------------|
+| Quick | 3 | All Haiku |
+| Standard | 5 | Haiku search, Sonnet synthesis |
+| Deep | 7+ | Haiku search, Opus synthesis |
 
 ### Validation
 ```
@@ -83,12 +87,15 @@ AskUserQuestion([{
 
 ## Step-2: Parse Query
 
-Parse query for:
-- Concepts: main topics
-- Date context: version, release date
-- Tech/framework: specific technologies
-- Comparison intent: "vs", "or", "compared to"
-- Mode detection: troubleshooting, changelog, security
+Parse query for search strategy:
+
+| Element | Detection | Effect |
+|---------|-----------|--------|
+| Concepts | Main topics, keywords | Primary search terms |
+| Date | Version, year, "latest" | Add year to queries |
+| Tech | Framework, language | Domain filter |
+| Comparison | "vs", "or", "compared" | Multi-track search |
+| Mode | Troubleshoot, changelog, security | Specialized sources |
 
 ### Validation
 ```
@@ -99,45 +106,167 @@ Parse query for:
 
 ---
 
-## Step-3: Research
+## Step-3: Research [PARALLEL]
+
+**Launch all search agents in a SINGLE message:**
+
+### 3.1 Local Codebase Search (Always)
 
 ```javascript
-agentResponse = Task("cco-agent-research", `
-  scope: full
-  query: "${userQuery}"
-  depth: ${depth}
-  parsedQuery: ${JSON.stringify(parsedQuery)}
+// Use Glob + Grep for local codebase search
+// Parallel pattern searches in ONE message
 
-  Multi-source search → Tiering → Synthesis → Structured recommendation
-`)
+Glob("**/*.{py,ts,js,md}")  // Find relevant files
+Grep("{query_keywords}", { output_mode: "content", "-C": 3 })  // Find context
+Read("{relevant_files}")  // Read matched files
+
+// Return: { files: [], snippets: [], relevance: 0-100 }
 ```
 
-**CRITICAL:** ONE research agent. Never per-source or per-strategy.
+### 3.2 Web Search (Parallel by Source Type)
 
-**Local Mode (`--local`):** Uses `cco-agent-analyze` with `scope: scan`.
+```javascript
+// T1: Official Documentation
+Task("cco-agent-research", `
+  strategy: official-docs
+  query: "${parsedQuery.concepts} official documentation ${parsedQuery.date}"
+  allowed_domains: [docs.*, official.*, *.io/docs]
+  Return: { sources: [], tier: "T1" }
+`, { model: "haiku", run_in_background: depth === "deep" })
+
+// T2: GitHub & Changelogs
+Task("cco-agent-research", `
+  strategy: github
+  query: "${parsedQuery.concepts} github changelog release notes"
+  allowed_domains: [github.com, gitlab.com]
+  Return: { sources: [], tier: "T2" }
+`, { model: "haiku", run_in_background: depth === "deep" })
+
+// T3: Technical Blogs (Standard+)
+if (depth !== "quick") {
+  Task("cco-agent-research", `
+    strategy: tech-blogs
+    query: "${parsedQuery.concepts} tutorial guide best practices"
+    Return: { sources: [], tier: "T3" }
+  `, { model: "haiku", run_in_background: true })
+}
+
+// T4: Community (Standard+)
+if (depth !== "quick") {
+  Task("cco-agent-research", `
+    strategy: community
+    query: "${parsedQuery.concepts} stackoverflow discussion"
+    allowed_domains: [stackoverflow.com, reddit.com, dev.to]
+    Return: { sources: [], tier: "T4" }
+  `, { model: "haiku", run_in_background: true })
+}
+
+// Security Track (if --security or security-related query)
+if (parsedQuery.mode === "security") {
+  Task("cco-agent-research", `
+    strategy: security
+    query: "${parsedQuery.concepts} CVE vulnerability advisory"
+    allowed_domains: [nvd.nist.gov, cve.mitre.org, snyk.io]
+    Return: { sources: [], tier: "T1" }
+  `, { model: "haiku" })
+}
+```
+
+### 3.3 Comparison Mode (if detected)
+
+```javascript
+if (parsedQuery.comparison) {
+  // Split into separate tracks
+  Task("cco-agent-research", `
+    strategy: comparison-a
+    query: "${parsedQuery.comparison.optionA} features pros cons"
+  `, { model: "haiku", run_in_background: true })
+
+  Task("cco-agent-research", `
+    strategy: comparison-b
+    query: "${parsedQuery.comparison.optionB} features pros cons"
+  `, { model: "haiku", run_in_background: true })
+}
+```
+
+### Deep Mode: Resumable Research
+
+For `--deep` research that may take time:
+
+```javascript
+// Save agent IDs for potential resume
+researchSession = {
+  id: generateSessionId(),
+  agents: [agent1.id, agent2.id, ...],
+  completedSources: [],
+  pendingSources: []
+}
+
+// On interrupt: Can resume with
+// Task("cco-agent-research", prompt, { resume: researchSession.agents[0] })
+```
 
 ### Validation
 ```
-[x] Agent returned results
-[x] results.sources exists
-[x] results.synthesis exists
+[x] All search agents launched in parallel
+[x] Results collected (wait for all or timeout after 30s)
+[x] Sources deduplicated and tiered
 → Proceed to Step-4
 ```
 
 ---
 
-## Step-4: Synthesize
+## Step-4: Synthesize [TIERED MODEL]
 
-Process agent results:
-- Weight by tier and score
-- Resolve contradictions
-- Identify knowledge gaps
-- Generate recommendation
+**Model selection by source tier:**
+
+```javascript
+// Collect all results
+allSources = [...localResults, ...t1Results, ...t2Results, ...]
+
+// High-value synthesis (T1-T2) → Better model
+if (depth === "deep") {
+  synthesis = Task("general-purpose", `
+    sources: ${JSON.stringify(t1t2Sources)}
+    Create authoritative synthesis from official sources
+    Resolve contradictions, identify consensus
+  `, { model: "opus" })  // Opus for accuracy
+} else {
+  synthesis = Task("general-purpose", `
+    sources: ${JSON.stringify(t1t2Sources)}
+    Synthesize findings, weight by tier
+  `, { model: "sonnet" })
+}
+
+// Supporting evidence (T3+) → Fast model
+supportingEvidence = aggregateByTier(t3PlusSources)  // No agent needed
+```
+
+### Synthesis Process
+
+| Step | Action | Model |
+|------|--------|-------|
+| Dedupe | Remove duplicate sources | None (logic) |
+| Tier | Assign confidence by source | None (rules) |
+| Conflict | Resolve contradictions | Opus/Sonnet |
+| Gaps | Identify missing info | Sonnet |
+| Recommend | Generate actionable advice | Opus/Sonnet |
+
+### Early Saturation
+
+```javascript
+// Stop searching when confident
+if (t1Sources.filter(s => s.agrees).length >= 3) {
+  saturation = "HIGH"
+  // Can skip remaining background agents
+}
+```
 
 ### Validation
 ```
-[x] Synthesis complete
-→ Store as: synthesis = { summary, evidence, contradictions, gaps, recommendation }
+[x] All sources tiered and weighted
+[x] Contradictions resolved
+[x] Recommendation generated
 → Proceed to Step-5
 ```
 
@@ -145,19 +274,58 @@ Process agent results:
 
 ## Step-5: Output
 
-Display structured output:
+**Progressive display** - Show sections as they complete:
 
-1. **Executive Summary** - TL;DR + confidence score + saturation indicator
-2. **Evidence Hierarchy** - Primary (85+) / Supporting (70-84) with scores
-3. **Contradictions Resolved** - Claim A vs B → Winner with reason
-4. **Knowledge Gaps** - Topics with no/limited sources
-5. **Actionable Recommendation** - DO / DON'T / CONSIDER with caveats
-6. **Source Citations** - [N] title | url | tier | score | date
-7. **Metadata** - Iterations, discards, saturation status
+```
+## Executive Summary
+{summary}
+Confidence: {confidence} ({n} T1 sources agree) | Saturation: {saturation}%
+
+## Evidence Hierarchy
+
+### Primary (T1-T2, Score 85+)
+| # | Source | Tier | Score | Key Finding |
+|---|--------|------|-------|-------------|
+| {n} | {source} | {tier} | {score} | {finding} |
+...
+
+### Supporting (T3-T4, Score 70-84)
+| # | Source | Tier | Score | Key Finding |
+|---|--------|------|-------|-------------|
+| {n} | {source} | {tier} | {score} | {finding} |
+...
+
+## Contradictions Resolved
+- **{claim_a}** ({source_a}): {approach_a}
+- **{claim_b}** ({source_b}): {approach_b}
+- **Resolution**: {resolution}
+
+## Knowledge Gaps
+- No sources found for: {gap}
+- Limited coverage: {limitation}
+
+## Recommendation
+**DO**: {recommendation}
+**DON'T**: {anti_pattern}
+**CONSIDER**: {consideration}
+
+## Sources
+[{n}] {title} | {url} | {tier} | {score} | {date}
+...
+
+## Metadata
+- Parallel searches: {n}
+- Sources found: {n}
+- Sources used: {n}
+- Discarded (low quality): {n}
+- Saturation: {saturation}%
+- Research time: {n}s
+```
 
 ### Validation
 ```
-[x] Output displayed
+[x] Output displayed with all sections
+[x] Sources properly cited
 [x] All todos marked completed
 → Done
 ```
@@ -177,46 +345,57 @@ Display structured output:
 
 ### Special Modes
 
-| Mode | Focus |
-|------|-------|
-| `--local` | Codebase only |
-| `--changelog` | Breaking changes, migration |
-| `--security` | CVEs, advisories |
-| `--dependency` | Package versions, CVEs |
-| `--compare` | Side-by-side comparison |
+| Mode | Focus | Extra Agents |
+|------|-------|--------------|
+| `--local` | Codebase only | Glob/Grep only |
+| `--changelog` | Breaking changes | GitHub releases track |
+| `--security` | CVEs, advisories | Security DB track |
+| `--dependency` | Package versions | npm/PyPI track |
+| `--compare` | Side-by-side | Dual track search |
 
 ### Flags
 
 | Flag | Effect |
 |------|--------|
-| `--quick` | T1-T2 only, 5 sources |
-| `--standard` | T1-T4, 10 sources (default) |
-| `--deep` | All tiers, 20+ sources |
-| `--local` | Codebase only |
-| `--changelog` | Breaking changes |
-| `--security` | CVEs/advisories |
-| `--dependency` | Package versions |
-| `--compare` | A vs B mode |
+| `--quick` | 3 parallel, T1-T2, Haiku only |
+| `--standard` | 5 parallel, T1-T4, Sonnet synthesis |
+| `--deep` | 7+ parallel, all tiers, Opus synthesis, resumable |
+| `--local` | Local Glob/Grep only, no web |
+| `--changelog` | Focus on releases |
+| `--security` | Include CVE databases |
+| `--dependency` | Package registry search |
+| `--compare` | A vs B dual track |
 | `--json` | JSON output |
 | `--sources-only` | No synthesis |
+| `--resume=ID` | Resume previous deep research |
 
 ### Source Tiers
 
-| Tier | Sources | Score Range |
-|------|---------|-------------|
-| T1 | Official docs, specs | 90-100 |
-| T2 | GitHub, changelogs | 80-90 |
-| T3 | Major blogs, tutorials | 70-80 |
-| T4 | Stack Overflow, forums | 60-70 |
-| T5 | Personal blogs | 50-60 |
-| T6 | Unknown | 40-50 |
+| Tier | Sources | Score | Model |
+|------|---------|-------|-------|
+| T1 | Official docs, specs | 90-100 | Opus (deep) |
+| T2 | GitHub, changelogs | 80-90 | Opus (deep) |
+| T3 | Major blogs, tutorials | 70-80 | Sonnet |
+| T4 | Stack Overflow, forums | 60-70 | Haiku |
+| T5 | Personal blogs | 50-60 | Haiku |
+| T6 | Unknown | 40-50 | Skip |
+
+### Model Strategy
+
+| Task | Depth: Quick | Depth: Standard | Depth: Deep |
+|------|--------------|-----------------|-------------|
+| Search | Haiku | Haiku | Haiku |
+| Fetch | Haiku | Haiku | Haiku |
+| T1-T2 Synthesis | Haiku | Sonnet | Opus |
+| Recommendation | Haiku | Sonnet | Opus |
 
 ---
 
 ## Rules
 
-1. **Sequential execution** - Complete each step before proceeding
-2. **Validation gates** - Check validation block before next step
-3. **ONE research agent** - Never spawn multiple agents
-4. **Early saturation** - Stop when 3+ sources agree
-5. **Stack-aware** - Prioritize context-relevant sources
+1. **Parallel-first** - Launch all search agents in single message
+2. **Tiered synthesis** - Better model for higher-tier sources
+3. **Early saturation** - Stop when 3+ T1/T2 sources agree
+4. **Progressive display** - Show results as agents complete
+5. **Resumable** - Deep research saves state for continuation
+6. **Stack-aware** - Prioritize context-relevant sources

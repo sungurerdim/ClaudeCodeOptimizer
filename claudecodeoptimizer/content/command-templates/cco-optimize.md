@@ -6,15 +6,13 @@ allowed-tools: Read(*), Grep(*), Glob(*), Edit(*), Bash(git:*), Bash(ruff:*), Ba
 
 # /cco-optimize
 
-**Full-Stack Optimization** - Detect and fix ALL issues, leave nothing behind.
+**Full-Stack Optimization** - Parallel analysis + background fixes.
 
 ## Core Principle [CRITICAL]
 
 **Fix everything that can be fixed.** All issues fall into:
-1. **Auto-fix**: Safe to apply without asking
+1. **Auto-fix**: Safe to apply without asking (background)
 2. **Approval Required**: Ask user, then fix if approved
-
-If an issue can be fixed by editing code, it MUST be fixed (with approval if needed).
 
 ## Context
 
@@ -35,17 +33,17 @@ Run /cco-config first to configure project context, then restart CLI.
 
 ## Architecture
 
-| Step | Name | Action |
-|------|------|--------|
-| 1 | Safety | Check git state, warn if dirty |
-| 2 | Scope | Ask what to optimize |
-| 3 | Action | Ask report/auto-fix/interactive |
-| 4 | Analyze | Run agent, get findings JSON |
-| 5 | Show | Display findings summary |
-| 6 | Auto-fix | Apply safe fixes (if action != report) |
-| 7 | Approval | Ask for approval-required items |
-| 8 | Apply | Apply user-approved fixes |
-| 9 | Summary | Show applied/declined counts |
+| Step | Name | Action | Optimization |
+|------|------|--------|--------------|
+| 1 | Safety | Check git state | Instant |
+| 2 | Scope | Ask what to optimize | Skip with flags |
+| 3 | Action | Ask report/auto-fix | Skip with flags |
+| 4 | Analyze | cco-agent-analyze (parallel internally) | Fast |
+| 5 | Show | Progressive display | Real-time |
+| 6 | Auto-fix | cco-agent-apply (background) | Non-blocking |
+| 7 | Approval | Ask while fixes run | Parallel UX |
+| 8 | Apply | cco-agent-apply | Batched |
+| 9 | Summary | Show counts | Instant |
 
 ---
 
@@ -56,9 +54,9 @@ TodoWrite([
   { content: "Step-1: Check safety", status: "in_progress", activeForm: "Checking git safety" },
   { content: "Step-2: Ask scope", status: "pending", activeForm: "Asking scope" },
   { content: "Step-3: Ask action", status: "pending", activeForm: "Asking action type" },
-  { content: "Step-4: Run analysis", status: "pending", activeForm: "Running analysis" },
+  { content: "Step-4: Run parallel analysis", status: "pending", activeForm: "Running parallel analysis" },
   { content: "Step-5: Show findings", status: "pending", activeForm: "Showing findings" },
-  { content: "Step-6: Apply auto-fixes", status: "pending", activeForm: "Applying auto-fixes" },
+  { content: "Step-6: Apply auto-fixes (background)", status: "pending", activeForm: "Applying auto-fixes" },
   { content: "Step-7: Get approval", status: "pending", activeForm: "Getting approval" },
   { content: "Step-8: Apply approved", status: "pending", activeForm: "Applying approved fixes" },
   { content: "Step-9: Show summary", status: "pending", activeForm: "Showing summary" }
@@ -81,7 +79,7 @@ AskUserQuestion([{
   question: "Working tree has uncommitted changes. How to proceed?",
   header: "Git State",
   options: [
-    { label: "Continue anyway", description: "Proceed with dirty working tree" },
+    { label: "Continue anyway (Recommended)", description: "Proceed, changes will be visible in git diff" },
     { label: "Stash first", description: "Stash changes, continue, remind to pop" },
     { label: "Cancel", description: "Abort optimization" }
   ],
@@ -115,7 +113,12 @@ AskUserQuestion([{
 }])
 ```
 
-**Dynamic labels:** Add `(Recommended)` based on Data/Priority context.
+**Flags override:** `--security`, `--quality`, `--hygiene`, `--best-practices` skip this question.
+
+**Dynamic labels:** Add `(Recommended)` based on Data/Priority context:
+- PII/Regulated data → Security recommended
+- Legacy maturity → Quality recommended
+- Speed priority → Security + Quality recommended
 
 ### Validation
 ```
@@ -133,13 +136,15 @@ AskUserQuestion([{
   question: "How to handle findings?",
   header: "Action",
   options: [
+    { label: "Auto-fix (Recommended)", description: "Apply safe fixes automatically, ask for risky" },
     { label: "Report Only", description: "Show issues without fixing" },
-    { label: "Auto-fix", description: "Apply safe fixes automatically" },
     { label: "Interactive", description: "Ask before each fix" }
   ],
   multiSelect: false
 }])
 ```
+
+**Flags override:** `--report`, `--fix`, `--fix-all` skip this question.
 
 ### Validation
 ```
@@ -151,33 +156,64 @@ AskUserQuestion([{
 
 ---
 
-## Step-4: Analyze
+## Step-4: Analyze [PARALLEL]
+
+**Launch cco-agent-analyze in a SINGLE message with selected scopes:**
 
 ```javascript
-agentResponse = Task("cco-agent-analyze", `
-  scopes: ${JSON.stringify(scopes)}
-  Return findings JSON with:
-  - findings[]: { id, scope, severity, title, file, line, fix_description, auto_fixable, risk }
-  - summary: { total, by_scope, by_severity, auto_fixable_count }
-`)
+// CRITICAL: All selected scopes in ONE cco-agent-analyze call
+// Agent handles parallelization internally
+
+Task("cco-agent-analyze", `
+  scopes: ${JSON.stringify(scopes.map(s => s.toLowerCase().replace(" ", "-")))}
+
+  For each scope, find issues with:
+  - security: Hardcoded secrets, OWASP vulnerabilities, CVE patterns, input validation gaps
+  - quality: Type errors, tech debt markers, missing tests, complexity issues
+  - hygiene: Orphan files, unused imports, stale refs, dead code, duplicates
+  - best-practices: Anti-patterns, inefficient code, inconsistent styles, missing error handling
+
+  Return: {
+    findings: [{ id: "{SCOPE}-{NNN}", severity: "{P0-P3}", title, location: "{file}:{line}", fixable, approvalRequired, fix }],
+    summary: { "{scope}": { count, p0, p1, p2, p3 } }
+  }
+`, { model: "haiku" })
 ```
+
+**Parallel Execution:**
+- cco-agent-analyze handles parallelization internally
+- Returns combined findings for all scopes
+- Deduplication handled by agent
 
 ### Validation
 ```
-[x] Agent returned valid response
-[x] response.findings exists
-[x] response.summary exists
+[x] All scope agents launched in parallel
+[x] Results merged and deduplicated
+[x] Findings sorted by severity
 → Proceed to Step-5
 ```
 
 ---
 
-## Step-5: Show Findings
+## Step-5: Show Findings [PROGRESSIVE]
 
-Display findings summary to user:
-- Counts by scope (Security: N, Quality: N, ...)
-- Counts by severity (Critical: N, High: N, ...)
-- Auto-fixable vs Approval-required counts
+Display findings as analysis completes:
+
+```
+## Analysis Results
+
+| Scope | Critical | High | Medium | Low | Auto-fix |
+|-------|----------|------|--------|-----|----------|
+| Security | {n} | {n} | {n} | {n} | {n} |
+| Quality | {n} | {n} | {n} | {n} | {n} |
+| Hygiene | {n} | {n} | {n} | {n} | {n} |
+| Best Practices | {n} | {n} | {n} | {n} | {n} |
+| **Total** | **{n}** | **{n}** | **{n}** | **{n}** | **{n}** |
+
+Summary:
+- Auto-fixable (LOW risk): {n} items
+- Approval required (MEDIUM/HIGH risk): {n} items
+```
 
 ### Validation
 ```
@@ -188,61 +224,76 @@ Display findings summary to user:
 
 ---
 
-## Step-6: Apply Auto-fixes [SKIP if action = "Report Only"]
+## Step-6: Apply Auto-fixes [BACKGROUND]
+
+**Start auto-fix in background while preparing approval questions:**
 
 ```javascript
-autoFixable = findings.filter(f => f.auto_fixable && f.risk === "LOW")
+autoFixable = allFindings.filter(f => f.auto_fixable && f.risk === "LOW")
 
-Task("cco-agent-apply", `
+// Launch in background - non-blocking
+autoFixTask = Task("cco-agent-apply", `
   fixes: ${JSON.stringify(autoFixable)}
   Apply all auto-fixable items. Verify each fix.
-`)
+  Group by file for efficiency.
+`, { model: "sonnet", run_in_background: true })
+
+// Don't wait - proceed to Step-7 immediately
+// Will check autoFixTask.id later for results
 ```
+
+**Background Pattern:**
+- Auto-fixes run while user reviews approval items
+- Better UX - no waiting
+- Check results before summary
 
 ### Validation
 ```
-[x] Auto-fixes applied
-[x] No cascading errors introduced
-→ Store as: autoFixed = {count}
-→ If no approval-required items: Skip to Step-9
-→ Proceed to Step-7
+[x] Background task launched
+[x] Task ID saved for later
+→ Proceed to Step-7 immediately (don't wait)
 ```
 
 ---
 
-## Step-7: Approval [SKIP if action = "Report Only" OR no approval-required items]
+## Step-7: Approval [PARALLEL with Step-6]
+
+**Ask approval while auto-fixes run in background:**
+
+```javascript
+approvalRequired = allFindings.filter(f => !f.auto_fixable || f.risk !== "LOW")
+
+// Sort by severity: CRITICAL → HIGH → MEDIUM → LOW
+approvalRequired.sort((a, b) => severityOrder[a.severity] - severityOrder[b.severity])
+```
 
 **Option Batching (max 4 per page):**
 
-| Total Items | Batches | Pattern |
-|-------------|---------|---------|
-| 5-8 | 2 | 4 + (1-4) |
-| 9-12 | 3 | 4 + 4 + (1-4) |
-| 13+ | N | Continue pattern |
-
-**Batch Rules:**
-- First batch includes "All ({N})" option for bulk approval
-- Each batch labeled "(Page X/Y)"
-- Group by severity: CRITICAL → HIGH → MEDIUM → LOW
+| Total Items | Strategy |
+|-------------|----------|
+| 1-4 | Single page, no "All" option |
+| 5-8 | "All" + 3 items, then remaining |
+| 9+ | "All" + 3 items per page |
 
 ```javascript
-approvalRequired = findings.filter(f => !f.auto_fixable || f.risk !== "LOW")
-
 // Page 1 (with All option if many items)
 AskUserQuestion([{
-  question: `Fix these issues? (Page 1/${totalPages})`,
+  question: `Approve fixes? (${approvalRequired.length} items need review)`,
   header: "Approve",
   options: [
-    ...(approvalRequired.length > 4 ? [{ label: `All (${approvalRequired.length})`, description: "Apply all fixes" }] : []),
+    ...(approvalRequired.length > 4 ? [{
+      label: `All (${approvalRequired.length})`,
+      description: "Apply all - review git diff after"
+    }] : []),
     ...approvalRequired.slice(0, approvalRequired.length > 4 ? 3 : 4).map(f => ({
-      label: `${f.id}: ${f.title}`,
+      label: `[${f.severity}] ${f.title}`,
       description: `${f.file}:${f.line} - ${f.fix_description}`
     }))
   ],
   multiSelect: true
 }])
 
-// Continue for additional pages (4 items each, no All option)
+// Continue for additional pages if needed
 ```
 
 ### Validation
@@ -255,20 +306,27 @@ AskUserQuestion([{
 
 ---
 
-## Step-8: Apply Approved [SKIP if nothing approved]
+## Step-8: Apply Approved
 
 ```javascript
-Task("cco-agent-apply", `
-  fixes: ${JSON.stringify(approved)}
-  Apply user-approved items. Verify each fix. Cascade if needed.
-`)
+// First, check background auto-fix status
+autoFixResults = await TaskOutput(autoFixTask.id)
+
+// Then apply user-approved items
+if (approved.length > 0) {
+  Task("cco-agent-apply", `
+    fixes: ${JSON.stringify(approved)}
+    Apply user-approved items. Verify each fix.
+    Handle cascading errors.
+  `, { model: "sonnet" })
+}
 ```
 
 ### Validation
 ```
+[x] Background auto-fixes completed
 [x] Approved fixes applied
 [x] Cascading errors handled
-→ Store as: appliedApproved = {count}
 → Proceed to Step-9
 ```
 
@@ -276,11 +334,20 @@ Task("cco-agent-apply", `
 
 ## Step-9: Summary
 
-Display final summary:
-- Auto-fixed: {autoFixed} items
-- User-approved: {appliedApproved} items
-- Declined: {declined.length} items
-- Verification status
+```
+## Optimization Complete
+
+| Category | Count |
+|----------|-------|
+| Auto-fixed | {n} |
+| User-approved | {n} |
+| Declined | {n} |
+| **Total fixed** | **{n}** |
+
+Files modified: {n}
+Run `git diff` to review changes.
+Run `git checkout .` to revert all.
+```
 
 ### Validation
 ```
@@ -306,18 +373,17 @@ Display final summary:
 
 | Field | Effect |
 |-------|--------|
-| Data | PII/Regulated → security ×2 |
-| Scale | 10K+ → stricter |
-| Maturity | Legacy → safe only |
-| Priority | Speed → critical; Quality → all |
+| Data | PII/Regulated → security scope auto-selected |
+| Scale | 10K+ → stricter thresholds |
+| Maturity | Legacy → auto-fix only LOW risk |
+| Priority | Speed → critical only; Quality → all |
 
-### Impact Preview
+### Model Strategy
 
-For each fix, show:
-- **Direct**: Files to modify
-- **Dependents**: Files that import/use
-- **Tests**: Coverage of affected code
-- **Risk**: LOW (auto-fix) / MEDIUM / HIGH (approval required)
+| Agent | Model | Reason |
+|-------|-------|--------|
+| cco-agent-analyze | Haiku | Fast, read-only scanning |
+| cco-agent-apply | Sonnet | Accurate code modifications |
 
 ### Flags
 
@@ -330,8 +396,9 @@ For each fix, show:
 | `--report` | Report only (no fixes) |
 | `--fix` | Auto-fix safe (default) |
 | `--fix-all` | Fix all with approval |
-| `--critical` | Security + tests only |
-| `--pre-release` | All scopes, strict |
+| `--critical` | Security + critical severity only |
+| `--pre-release` | All scopes, strict thresholds |
+| `--sequential` | Disable parallel (debug mode) |
 
 ---
 
@@ -341,21 +408,19 @@ If something goes wrong during optimization:
 
 | Situation | Recovery |
 |-----------|----------|
-| Fix broke something | `git checkout -- {file}` to restore file from last commit |
-| Multiple files affected | `git checkout .` to restore all files (discards all changes) |
-| Want to undo all fixes | `git stash` to save, then `git checkout .`, review stash later |
-| Stashed at start | `git stash pop` to restore your original changes |
-| Analysis hung/crashed | Re-run `/cco-optimize` - analysis is stateless |
-| Partial apply completed | Check `git diff` to see what changed, continue or revert |
-
-**Safe pattern:** Always verify git status before and after. Use `git diff` to review changes before committing.
+| Fix broke something | `git checkout -- {file}` to restore |
+| Multiple files affected | `git checkout .` to restore all |
+| Want to review | `git diff` to see all changes |
+| Stashed at start | `git stash pop` to restore |
+| Analysis hung | Re-run - analysis is stateless |
+| Partial apply | `git diff` to see progress |
 
 ---
 
 ## Rules
 
-1. **Sequential execution** - Complete each step before proceeding
-2. **Validation gates** - Check validation block before next step
-3. **ONE analyze agent** - Never spawn multiple analyze agents
-4. **ONE apply agent** - Never spawn multiple apply agents
+1. **Use cco-agent-analyze** - Agent handles scope parallelization internally
+2. **Use cco-agent-apply** - Agent handles verification and cascading
+3. **Background apply** - Auto-fix runs while user reviews
+4. **Progressive display** - Show results as analysis completes
 5. **Paginated approval** - Max 4 items per AskUserQuestion

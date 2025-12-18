@@ -6,7 +6,7 @@ allowed-tools: Read(*), Grep(*), Glob(*), Bash(git:*), Edit(*), Task(*), TodoWri
 
 # /cco-review
 
-**Strategic Review** - Fresh perspective diagnosis + pragmatic optimization via parallel agents.
+**Strategic Review** - Parallel analysis with 80/20 prioritization.
 
 ## Context
 
@@ -27,15 +27,15 @@ Run /cco-config first to configure project context, then restart CLI.
 
 ## Architecture
 
-| Step | Name | Action |
-|------|------|--------|
-| 1 | Focus | Ask focus areas |
-| 2 | Analyze | Run agent with scopes |
-| 3 | Assessment | Show foundation assessment |
-| 4 | Recommendations | Show prioritized 80/20 list |
-| 5 | Approval | Ask which to apply |
-| 6 | Apply | Execute approved changes |
-| 7 | Summary | Show results |
+| Step | Name | Action | Optimization |
+|------|------|--------|--------------|
+| 1 | Focus | Ask focus areas | Skip with flags |
+| 2 | Analyze | cco-agent-analyze (parallel internally) | Fast |
+| 3 | Assessment | Show foundation status | Progressive |
+| 4 | Recommendations | 80/20 prioritized list | Instant |
+| 5 | Approval | Ask which to apply | Batched |
+| 6 | Apply | cco-agent-apply | Verified |
+| 7 | Summary | Show results | Instant |
 
 ---
 
@@ -44,7 +44,7 @@ Run /cco-config first to configure project context, then restart CLI.
 ```javascript
 TodoWrite([
   { content: "Step-1: Select focus areas", status: "in_progress", activeForm: "Selecting focus areas" },
-  { content: "Step-2: Run analysis", status: "pending", activeForm: "Running analysis" },
+  { content: "Step-2: Run parallel analysis", status: "pending", activeForm: "Running parallel analysis" },
   { content: "Step-3: Show assessment", status: "pending", activeForm: "Showing assessment" },
   { content: "Step-4: Show recommendations", status: "pending", activeForm: "Showing recommendations" },
   { content: "Step-5: Get approval", status: "pending", activeForm: "Getting approval" },
@@ -71,61 +71,86 @@ AskUserQuestion([{
 }])
 ```
 
-**Dynamic labels:** Add `(Recommended)` based on project context.
+**Flags override:** `--focus=X`, `--quick`, `--best-practices` skip this question.
 
-**Flags override:** `--focus=X` skips this question.
-
-| Selection | Agent Scope |
-|-----------|-------------|
-| Architecture | architecture |
-| Code Quality | scan (focus=quality) |
-| Testing & DX | scan (focus=testing,dx) |
-| Best Practices | best-practices |
+**Dynamic labels based on context:**
+- Greenfield maturity → Architecture recommended
+- Legacy maturity → Code Quality recommended
+- Speed priority → Best Practices recommended
 
 ### Validation
 ```
 [x] User selected focus area(s)
 → Store as: focusAreas = {selections[]}
-→ Map to agent scopes
 → Proceed to Step-2
 ```
 
 ---
 
-## Step-2: Analysis
+## Step-2: Analysis [PARALLEL]
+
+**Launch cco-agent-analyze with architecture scope + selected focus areas:**
 
 ```javascript
-agentResponse = Task("cco-agent-analyze", `
-  scopes: ${JSON.stringify(mappedScopes)}
-  Return findings JSON with:
-  - foundation: { status: "SOUND"|"HAS ISSUES", details }
-  - findings[]: { id, category, severity, title, file, line, description, recommendation, effort, impact }
-  - summary: { total, by_category, by_severity }
-`)
+// CRITICAL: All focus areas in ONE cco-agent-analyze call
+// Agent handles parallelization internally
+
+Task("cco-agent-analyze", `
+  scopes: ["architecture", ...focusAreas.map(f => f.toLowerCase().replace(" & ", "-").replace(" ", "-"))]
+
+  Analyze for each scope:
+  - architecture: Dependency graph, coupling metrics, layer violations, pattern consistency
+  - quality: Complexity hotspots, code smells, type coverage, error handling
+  - testing-dx: Test coverage by module, missing tests, DX friction, CI/CD gaps
+  - best-practices: Execution patterns, tool selection, code patterns, anti-patterns
+
+  Return: {
+    findings: [{ id: "{SCOPE}-{NNN}", scope, severity: "{P0-P3}", title, location: "{file}:{line}", description, recommendation, effort: "{LOW|MEDIUM|HIGH}", impact: "{LOW|MEDIUM|HIGH}" }],
+    metrics: { coupling: "{0-100}", cohesion: "{0-100}", complexity: "{0-100}" },
+    scores: { security, tests, techDebt, cleanliness, overall }
+  }
+`, { model: "haiku" })
 ```
 
-**CRITICAL:** ONE analyze agent. Never spawn multiple agents.
+**Parallel Execution:**
+- cco-agent-analyze handles parallelization internally
+- Returns combined findings with metrics
+- Deduplication handled by agent
 
 ### Validation
 ```
-[x] Agent returned valid response
-[x] response.foundation exists
-[x] response.findings exists
+[x] All focus area agents launched in parallel
+[x] Results merged
+[x] Foundation status determined
 → Proceed to Step-3
 ```
 
 ---
 
-## Step-3: Foundation Assessment
+## Step-3: Foundation Assessment [PROGRESSIVE]
 
-Display foundation status:
+Display foundation status as architecture agent completes:
 
-| Status | Meaning |
-|--------|---------|
-| SOUND | Optimize within structure |
-| HAS ISSUES | Targeted fixes (not rewrites) |
+```
+## Foundation Assessment
 
-Show key metrics: coupling, complexity, test coverage, etc.
+Status: {SOUND|HAS ISSUES}
+
+| Metric | Value | Status |
+|--------|-------|--------|
+| Coupling | {value} | {status} |
+| Complexity (avg) | {value} | {status} |
+| Test Coverage | {value}% | {status} |
+| Circular Deps | {n} | {status} |
+| Layer Violations | {n} | {status} |
+
+Verdict: Foundation is {status} - {recommendation}.
+```
+
+| Status | Meaning | Approach |
+|--------|---------|----------|
+| SOUND | Good base | Incremental improvements |
+| HAS ISSUES | Structural problems | Targeted fixes, not rewrites |
 
 ### Validation
 ```
@@ -135,38 +160,63 @@ Show key metrics: coupling, complexity, test coverage, etc.
 
 ---
 
-## Step-4: Recommendations
+## Step-4: Recommendations [80/20]
 
-Apply 80/20 filter and prioritize:
+Merge all findings and apply 80/20 prioritization:
 
-| Priority | Criteria |
-|----------|----------|
-| Do Now | High impact, low effort |
-| Plan | High impact, medium effort |
-| Consider | Medium impact |
-| Backlog | Low impact or high effort |
+```javascript
+// Calculate effort/impact scores
+findings.forEach(f => {
+  f.priority = calculatePriority(f.effort, f.impact)
+})
 
-Display prioritized list with effort/impact indicators.
+// Sort into buckets
+doNow = findings.filter(f => f.impact === "HIGH" && f.effort === "LOW")
+plan = findings.filter(f => f.impact === "HIGH" && f.effort === "MEDIUM")
+consider = findings.filter(f => f.impact === "MEDIUM")
+backlog = findings.filter(f => f.impact === "LOW" || f.effort === "HIGH")
+```
+
+Display prioritized recommendations:
+
+```
+## Recommendations (80/20 Prioritized)
+
+### Do Now (High Impact, Low Effort) - {n} items
+1. [{SCOPE}] {title} → {location}
+...
+
+### Plan (High Impact, Medium Effort) - {n} items
+{n}. [{SCOPE}] {title}
+...
+
+### Consider (Medium Impact) - {n} items
+{range}. [Various findings...]
+
+### Backlog (Low Impact or High Effort) - {n} items
+{range}. [Defer for later...]
+```
 
 ### Validation
 ```
 [x] Recommendations displayed
 [x] Prioritization applied
-→ If --no-apply flag: Skip to Step-7
+→ If --no-apply or --quick: Skip to Step-7
 → Proceed to Step-5
 ```
 
 ---
 
-## Step-5: Approval [SKIP if --no-apply]
+## Step-5: Approval [SKIP if --no-apply or --quick]
 
 ```javascript
 AskUserQuestion([{
   question: "Apply recommendations?",
   header: "Apply",
   options: [
-    { label: `All (${totalCount})`, description: "Apply all recommendations" },
-    { label: "Select individual", description: "Choose which to apply" },
+    { label: `All (${totalCount})`, description: "Apply all - review git diff after" },
+    { label: "Do Now only", description: `Apply ${doNow.length} high-impact, low-effort items` },
+    { label: "Select individual", description: "Choose specific items" },
     { label: "Skip", description: "Report only, no changes" }
   ],
   multiSelect: false
@@ -175,35 +225,30 @@ AskUserQuestion([{
 
 ### If Select Individual
 
-**Option Batching by priority group (max 4 per question):**
-
-| Priority | Batch Pattern |
-|----------|---------------|
-| Do Now (5+ items) | Split: 4 + 4 + ... with "All Do Now ({N})" in first |
-| Plan (5+ items) | Split: 4 + 4 + ... with "All Plan ({N})" in first |
-| Consider/Backlog | Same pattern if needed |
-
-**Batch Rules:**
-- Each priority group is a separate question (or series if >4)
-- First batch of each group includes "All {Priority} ({N})" option
-- "Skip" option in first batch allows skipping entire group
+**Batched by priority group:**
 
 ```javascript
-// Do Now items (batch if > 4)
-AskUserQuestion([{
-  question: `Select 'Do Now' items: (${doNowItems.length > 4 ? '1/' + Math.ceil(doNowItems.length/4) : ''})`,
-  header: "Do Now",
-  options: [
-    ...(doNowItems.length > 4 ? [{ label: `All Do Now (${doNowItems.length})`, description: "Apply all high-priority items" }] : []),
-    ...doNowItems.slice(0, doNowItems.length > 4 ? 3 : 4).map(item => ({
-      label: item.title,
-      description: `${item.file} - ${item.description}`
-    })),
-    ...(doNowItems.length > 4 ? [] : [{ label: "Skip", description: "Skip Do Now items" }])
-  ],
-  multiSelect: true
-}])
-// Continue batches for remaining Do Now items, then Plan, Consider, Backlog
+// Do Now items first (most valuable)
+if (doNow.length > 0) {
+  AskUserQuestion([{
+    question: `Apply 'Do Now' items? (${doNow.length} high-impact, low-effort)`,
+    header: "Do Now",
+    options: [
+      ...(doNow.length > 4 ? [{
+        label: `All Do Now (${doNow.length})`,
+        description: "Apply all high-priority items"
+      }] : []),
+      ...doNow.slice(0, doNow.length > 4 ? 3 : 4).map(item => ({
+        label: `[${item.category}] ${item.title}`,
+        description: `${item.file}:${item.line}`
+      }))
+    ],
+    multiSelect: true
+  }])
+}
+
+// Then Plan items if user wants more
+// Skip Consider/Backlog unless explicitly requested
 ```
 
 ### Validation
@@ -221,8 +266,10 @@ AskUserQuestion([{
 ```javascript
 Task("cco-agent-apply", `
   fixes: ${JSON.stringify(approved)}
-  Apply approved recommendations. Verify each change.
-`)
+  Apply approved recommendations.
+  Verify each change.
+  Handle dependencies between fixes.
+`, { model: "sonnet" })
 ```
 
 ### Validation
@@ -237,12 +284,22 @@ Task("cco-agent-apply", `
 
 ## Step-7: Summary
 
-Display:
-- Foundation: {status}
-- Total findings: {count}
-- Applied: {applied} items
-- Declined: {declined.length} items
-- By priority: Do Now ({n}), Plan ({n}), Consider ({n}), Backlog ({n})
+```
+## Review Complete
+
+Foundation: {status}
+
+| Priority | Found | Applied | Declined |
+|----------|-------|---------|----------|
+| Do Now | {n} | {n} | {n} |
+| Plan | {n} | {n} | {n} |
+| Consider | {n} | {n} | {n} |
+| Backlog | {n} | {n} | {n} |
+| **Total** | **{n}** | **{n}** | **{n}** |
+
+Files modified: {n}
+Run `git diff` to review changes.
+```
 
 ### Validation
 ```
@@ -259,45 +316,44 @@ Display:
 
 | Field | Effect |
 |-------|--------|
-| Maturity | Legacy → safe; Greenfield → restructure |
-| Breaking | Never → flag as blockers |
-| Priority | Speed → quick wins; Quality → comprehensive |
-| Scale | 10K+ → performance; <100 → simplicity |
-| Data | PII/Regulated → security mandatory |
+| Maturity | Legacy → safe fixes; Greenfield → restructure OK |
+| Breaking | Never → flag structural changes as blockers |
+| Priority | Speed → Do Now only; Quality → all priorities |
+| Scale | 10K+ → performance focus; <100 → simplicity |
+| Data | PII/Regulated → security findings elevated |
 
-### Best Practices Scope
+### Model Strategy
 
-| Category | Reviews |
-|----------|---------|
-| Execution | Parallel vs sequential, batching |
-| Tool Selection | Right tool, subagent usage |
-| Code Patterns | Async, error boundaries, state |
-| Architecture | Layer separation, dependencies |
+| Agent | Model | Reason |
+|-------|-------|--------|
+| cco-agent-analyze | Haiku | Fast, read-only analysis |
+| cco-agent-apply | Sonnet | Accurate code modifications |
 
 ### Quick Mode (`--quick`)
 
 When `--quick` flag:
-- No questions - use smart defaults (Architecture + Code Quality)
+- Auto-select: Architecture + Code Quality
 - Report only (no apply phase)
-- Complete in single message
+- Single output, no questions
 
 ### Flags
 
 | Flag | Effect |
 |------|--------|
-| `--quick` | Smart defaults |
+| `--quick` | Smart defaults, report only |
 | `--focus=X` | architecture, quality, testing, dx, best-practices |
 | `--best-practices` | Best practices only |
 | `--no-apply` | Report only |
-| `--matrix` | Effort/impact matrix |
+| `--matrix` | Show effort/impact matrix visualization |
+| `--do-now-only` | Apply only high-impact, low-effort items |
+| `--sequential` | Disable parallel (debug mode) |
 
 ---
 
 ## Rules
 
-1. **Sequential execution** - Complete each step before proceeding
-2. **Validation gates** - Check validation block before next step
-3. **ONE analyze agent** - Never spawn multiple agents
-4. **ONE apply agent** - Never spawn multiple agents
-5. **80/20 filter** - Prioritize high-impact, low-effort items
-6. **Evidence required** - Every recommendation needs justification
+1. **Use cco-agent-analyze** - Agent handles scope parallelization internally
+2. **Use cco-agent-apply** - Agent handles verification and cascading
+3. **Progressive display** - Show foundation assessment as it completes
+4. **80/20 filter** - Prioritize high-impact, low-effort items
+5. **Evidence required** - Every recommendation needs file:line reference
