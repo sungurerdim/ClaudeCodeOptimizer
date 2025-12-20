@@ -171,24 +171,42 @@ AskUserQuestion([{
 
 **Only ask questions for items NOT auto-detected or LOW confidence:**
 
-### 4.1: Scope Selection (if not all detected)
+### 4.1: Statusline Setup [ALWAYS ASK - MANDATORY QUESTION]
+
+**CRITICAL: This question MUST always be asked. Statusline is optional but the question is mandatory.**
 
 ```javascript
-// Only show options not auto-detected with HIGH confidence
+// Statusline question is MANDATORY - never skip
 AskUserQuestion([{
-  question: "What else to configure?",
-  header: "Scope",
+  question: "Install CCO statusline?",
+  header: "Statusline",
   options: [
-    // Only include if not detected
-    ...(detected.aiPerf ? [] : [{ label: "AI Performance", description: "Extended thinking, tool output limits" }]),
-    ...(detected.statusline ? [] : [{ label: "Statusline", description: "Custom status bar display" }]),
-    ...(detected.permissions ? [] : [{ label: "Permissions", description: "Tool approval settings" }])
+    { label: "Full (Recommended)", description: "All metrics: tokens, cost, session time, model" },
+    { label: "Compact", description: "Essential metrics only" },
+    { label: "Minimal", description: "Token count only" },
+    { label: "No", description: "Skip statusline installation" }
+  ],
+  multiSelect: false
+}])
+```
+
+### 4.2: Other Settings [OPTIONAL]
+
+```javascript
+// Additional settings - optional
+AskUserQuestion([{
+  question: "Configure additional settings?",
+  header: "Settings",
+  options: [
+    { label: "Permissions", description: "Tool approval levels: safe, balanced, permissive, full" },
+    { label: "AI Performance", description: "Extended thinking, tool output limits" },
+    { label: "Skip", description: "Only apply detected context rules" }
   ],
   multiSelect: true
 }])
 ```
 
-### 4.2: Context Questions (LOW confidence only)
+### 4.3: Context Questions (LOW confidence only)
 
 **Only ask what wasn't detected:**
 
@@ -243,10 +261,31 @@ if (lowConfidenceQuestions.length > 0) {
 
 **Result: Typically 0-2 questions instead of 8+**
 
+### 4.4: Permission Details [IF SELECTED IN 4.2]
+
+```javascript
+// If user selected Permissions in 4.2
+if (selectedSettings.includes("Permissions")) {
+  AskUserQuestion([{
+    question: "Permission approval level?",
+    header: "Permissions",
+    options: [
+      { label: "Balanced (Recommended)", description: "Auto-approve read + lint/test, ask for writes" },
+      { label: "Safe", description: "Auto-approve read-only operations" },
+      { label: "Permissive", description: "Auto-approve most operations" },
+      { label: "Full", description: "Auto-approve all (Solo + Public projects only)" }
+    ],
+    multiSelect: false
+  }])
+}
+```
+
 ### Validation
 ```
-[x] Low confidence items asked
-[x] High confidence items auto-applied
+[x] Statusline question asked (mandatory)
+[x] Other settings offered
+[x] Low confidence context items asked
+[x] Permission details collected (if selected)
 → Proceed to Step-5
 ```
 
