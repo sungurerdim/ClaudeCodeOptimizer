@@ -177,51 +177,230 @@ Config scope handles project detection and rule selection. Different execution f
 
 **Priority Order [CRITICAL]:**
 
-| Priority | Source | Confidence | Files |
-|----------|--------|------------|-------|
-| 1 | Manifest files | HIGH | pyproject.toml, package.json, Cargo.toml, go.mod |
-| 2 | Code files | HIGH | *.py, *.ts, *.go, *.rs (sample 5-10 files) |
-| 3 | Config files | MEDIUM | .eslintrc, tsconfig.json, Dockerfile, .github/ |
-| 4 | Documentation | LOW | README.md, CONTRIBUTING.md, docs/ |
+| Priority | Source | Confidence | Examples |
+|----------|--------|------------|----------|
+| 1 | Manifest files | HIGH | pyproject.toml, package.json, Cargo.toml, go.mod, pom.xml, Gemfile, composer.json |
+| 2 | Lock files | HIGH | package-lock.json, yarn.lock, pnpm-lock.yaml, Cargo.lock, poetry.lock, Pipfile.lock |
+| 3 | Config files | HIGH | tsconfig.json, .eslintrc*, biome.json, ruff.toml, Dockerfile, .github/ |
+| 4 | Code files | MEDIUM | *.py, *.ts, *.go, *.rs, *.java (sample 5-10 files for imports) |
+| 5 | Documentation | LOW | README.md, CONTRIBUTING.md, docs/ |
 
-**Auto-Detection Targets:**
+**Detection Categories:**
 
-| Category | Trigger Files | Output |
-|----------|--------------|--------|
-| L:Python | pyproject.toml, setup.py, requirements.txt, *.py | `python.md` |
-| L:TypeScript | tsconfig.json, *.ts/*.tsx | `typescript.md` |
-| L:JavaScript | package.json (no TS), *.js/*.jsx | `javascript.md` |
-| L:Go | go.mod, *.go | `go.md` |
-| L:Rust | Cargo.toml, *.rs | `rust.md` |
-| T:CLI | __main__.py, bin/, cli/, "bin" in package.json | `cli.md` |
-| T:Library | exports in package.json, __init__.py with __all__ | `library.md` |
-| API:REST | routes/, @Get/@Post decorators, express.Router | `api.md` |
-| API:GraphQL | graphql deps, schema.graphql, resolvers/ | `api.md` |
-| API:gRPC | *.proto files, grpc deps | `api.md` |
-| DB:* | ORM deps, migrations/, prisma/schema.prisma | `database.md` |
-| Frontend | react/vue/angular/svelte in deps | `frontend.md` |
-| Mobile | Podfile, build.gradle, pubspec.yaml | `mobile.md` |
-| Desktop | electron/tauri in deps | `desktop.md` |
-| Container | Dockerfile (not in examples/test/) | `container.md` |
-| K8s | k8s/, helm/, kustomization.yaml | `k8s.md` |
-| Serverless | serverless.yml, sam.yaml, vercel.json, netlify.toml | `serverless.md` |
-| Monorepo | nx.json, turbo.json, lerna.json, pnpm-workspace.yaml | `monorepo.md` |
-| ML/AI | torch/tensorflow/sklearn/transformers/langchain | `ml.md` |
-| Game | Unity (.csproj), Unreal (*.uproject), Godot (project.godot) | `game.md` |
-| i18n | locales/, i18n/, messages/, translations/ | `i18n.md` |
-| RT:* | websocket/socket.io/sse deps | `realtime.md` |
-| DEP:* | Dependency-specific (29 categories) | `{dep}.md` |
+##### Languages (L:*)
+| Category | Manifest | Lock/Config | Code Patterns |
+|----------|----------|-------------|---------------|
+| L:Python | pyproject.toml, setup.py, setup.cfg, requirements*.txt, Pipfile | poetry.lock, Pipfile.lock, uv.lock | *.py |
+| L:TypeScript | package.json + tsconfig.json | - | *.ts, *.tsx, *.mts, *.cts |
+| L:JavaScript | package.json (no tsconfig) | - | *.js, *.jsx, *.mjs, *.cjs |
+| L:Go | go.mod | go.sum | *.go |
+| L:Rust | Cargo.toml | Cargo.lock | *.rs |
+| L:Java | pom.xml, build.gradle, build.gradle.kts | - | *.java |
+| L:Kotlin | build.gradle.kts + kotlin | - | *.kt, *.kts |
+| L:Swift | Package.swift, *.xcodeproj | Package.resolved | *.swift |
+| L:CSharp | *.csproj, *.sln | packages.lock.json | *.cs |
+| L:Ruby | Gemfile, *.gemspec | Gemfile.lock | *.rb |
+| L:PHP | composer.json | composer.lock | *.php |
+| L:Elixir | mix.exs | mix.lock | *.ex, *.exs |
+| L:Gleam | gleam.toml | manifest.toml | *.gleam |
+| L:Scala | build.sbt | - | *.scala |
+| L:Zig | build.zig | build.zig.zon | *.zig |
+| L:Dart | pubspec.yaml | pubspec.lock | *.dart |
+
+##### Runtimes (R:*)
+| Category | Detection | Notes |
+|----------|-----------|-------|
+| R:Node | package.json, node_modules/ | Default JS runtime |
+| R:Bun | bun.lockb, bunfig.toml | 3-4x faster than Node |
+| R:Deno | deno.json, deno.lock, deno.jsonc | Secure by default |
+
+##### Project Types (T:*)
+| Category | Triggers | Notes |
+|----------|----------|-------|
+| T:CLI | `[project.scripts]`, `[project.entry-points]`, `__main__.py`, bin/, cli/, typer/click/argparse/fire imports, `"bin"` in package.json, cobra/urfave-cli imports (Go) | Entry point detection |
+| T:Library | `exports` in package.json, `__init__.py` with `__all__`, lib/ with index.ts, `[lib]` in Cargo.toml | Export detection |
+| T:Service | Dockerfile + exposed ports, `CMD`/`ENTRYPOINT`, long-running process patterns | Daemon detection |
+
+##### API Styles (API:*)
+| Category | Triggers |
+|----------|----------|
+| API:REST | routes/, controllers/, api/, `@Get`/`@Post`/`@router` decorators, express.Router, FastAPI/Flask/Django/Gin/Echo routes, `app.get(`/`app.post(` |
+| API:GraphQL | graphql/apollo/type-graphql deps, schema.graphql, *.graphql, resolvers/, `@Query`/`@Mutation` decorators |
+| API:gRPC | *.proto files, grpc/grpcio/tonic deps, protobuf, `service X { rpc` |
+| API:WebSocket | ws/socket.io/websockets deps, `@WebSocketGateway`, `upgrade: websocket` |
+
+##### Database (DB:*)
+| Category | Triggers |
+|----------|----------|
+| DB:SQL | sqlite3/psycopg2/pymysql/mysql-connector/pg imports, *.sql files, migrations/, alembic/, `CREATE TABLE` |
+| DB:ORM | sqlalchemy/prisma/drizzle/typeorm/sequelize/gorm/diesel/sqlx/peewee/tortoise-orm deps |
+| DB:NoSQL | pymongo/motor/mongoose/redis/ioredis/cassandra/dynamodb/firestore deps |
+| DB:Vector | pgvector/pinecone/weaviate/qdrant/milvus/chroma deps |
+
+##### Frontend
+| Category | Triggers |
+|----------|----------|
+| Frontend:React | react/react-dom deps, *.jsx/*.tsx, `useState`/`useEffect` hooks |
+| Frontend:Vue | vue deps, *.vue, `<script setup>`, Nuxt |
+| Frontend:Angular | @angular deps, *.component.ts, `@Component` |
+| Frontend:Svelte | svelte deps, *.svelte, SvelteKit |
+| Frontend:Solid | solid-js deps |
+| Frontend:Astro | astro deps, *.astro |
+| Frontend:HTMX | htmx deps, `hx-get`/`hx-post` attributes |
+
+##### Mobile
+| Category | Triggers |
+|----------|----------|
+| Mobile:Flutter | pubspec.yaml, lib/main.dart, *.dart |
+| Mobile:ReactNative | react-native/expo deps, app.json with expo, metro.config.js |
+| Mobile:iOS | *.xcodeproj, *.xcworkspace, Podfile, *.swift |
+| Mobile:Android | build.gradle + android/, AndroidManifest.xml, *.kt in app/src/ |
+| Mobile:KMP | kotlin-multiplatform, shared/ + iosApp/ + androidApp/ |
+
+##### Desktop
+| Category | Triggers |
+|----------|----------|
+| Desktop:Electron | electron deps, electron-builder.yml, main.js + preload.js |
+| Desktop:Tauri | tauri deps, tauri.conf.json, src-tauri/ |
+
+##### Infrastructure (Infra:*)
+| Category | Triggers |
+|----------|----------|
+| Infra:Docker | Dockerfile, docker-compose.yml, .dockerignore (not in examples/test/) |
+| Infra:K8s | k8s/, helm/, kustomization.yaml, *.yaml with `apiVersion:` + `kind:` |
+| Infra:Terraform | *.tf, .terraform/, terraform.tfstate |
+| Infra:Pulumi | Pulumi.yaml, pulumi/ |
+| Infra:Serverless | serverless.yml, sam.yaml |
+| Infra:Edge | wrangler.toml (CF Workers), vercel.json (Edge), deno.json (Deno Deploy) |
+| Infra:CDK | cdk.json, lib/*-stack.ts |
+| Infra:WASM | *.wasm, *.wit, wasm-pack.toml, Cargo.toml with `crate-type = ["cdylib"]` |
+
+##### Build/Tooling
+| Category | Triggers |
+|----------|----------|
+| Build:Monorepo | nx.json, turbo.json, lerna.json, pnpm-workspace.yaml, `workspaces` in package.json, Bazel/Pants |
+| Build:Bundler | vite.config.*, webpack.config.*, rollup.config.*, esbuild, tsup.config.* |
+| Build:Linter | .eslintrc*, biome.json, ruff.toml, [tool.ruff], golangci.yml, .rubocop.yml |
+| Build:Formatter | .prettierrc*, biome.json, ruff.toml, rustfmt.toml |
+| Build:TypeChecker | tsconfig.json (strict), mypy.ini, [tool.mypy], pyrightconfig.json |
+
+##### ML/AI
+| Category | Triggers |
+|----------|----------|
+| ML:Training | torch/tensorflow/jax/sklearn/keras deps, *.ipynb, models/, training/ |
+| ML:LLM | langchain/llamaindex/haystack/semantic-kernel deps, agents/, chains/, prompts/ |
+| ML:Inference | transformers/sentence-transformers/vllm/ollama/onnxruntime deps |
+| ML:SDK | openai/anthropic/google-generativeai/cohere deps |
+
+##### Testing
+| Category | Triggers |
+|----------|----------|
+| Test:Unit | pytest/unittest/jest/vitest/mocha/go test, tests/, __tests__/, *.test.*, *.spec.* |
+| Test:E2E | playwright/cypress/selenium/puppeteer deps, e2e/, integration/ |
+| Test:Coverage | [tool.coverage], .nycrc, jest --coverage, c8, istanbul |
+
+##### CI/CD
+| Category | Triggers |
+|----------|----------|
+| CI:GitHub | .github/workflows/*.yml |
+| CI:GitLab | .gitlab-ci.yml |
+| CI:Jenkins | Jenkinsfile |
+| CI:CircleCI | .circleci/config.yml |
+| CI:Azure | azure-pipelines.yml |
+| CI:ArgoCD | argocd/, Application.yaml with argocd.io |
+
+##### Other
+| Category | Triggers |
+|----------|----------|
+| i18n | locales/, i18n/, messages/, translations/, react-i18next/vue-i18n/formatjs deps |
+| Game:Unity | *.csproj + Assets/, ProjectSettings/ |
+| Game:Godot | project.godot |
+| Game:Python | pygame/arcade/ursina/panda3d deps |
+
+##### Dependency-Based Detection (DEP:*)
+
+Detect from manifest dependencies. Apply corresponding DEP rules from cco-adaptive.md.
+
+| Category | Dependency Triggers (any match) |
+|----------|--------------------------------|
+| DEP:CLI | typer, click, argparse, fire, argh, docopt, cobra, urfave/cli |
+| DEP:TUI | rich, textual, urwid, blessed, prompt-toolkit, questionary, inquirer |
+| DEP:Validation | pydantic, attrs, marshmallow, cerberus, zod, valibot, yup, joi |
+| DEP:Config | pydantic-settings, python-dotenv, dynaconf, omegaconf, hydra, dotenv |
+| DEP:Testing | pytest, unittest, jest, vitest, mocha, playwright, cypress |
+| DEP:Edge | @cloudflare/workers-types, wrangler, vercel/edge, hono, elysia |
+| DEP:WASM | wasm-pack, wasm-bindgen, wit-bindgen, wasmtime, wasmer |
+| DEP:EdgeFramework | hono, elysia, h3, nitro, itty-router |
+| DEP:GPU | cuda-python, cupy, torch+cuda, tensorflow-gpu, numba, triton, jax |
+| DEP:Audio | faster-whisper, whisper, pydub, librosa, soundfile, pyaudio |
+| DEP:Video | ffmpeg-python, moviepy, opencv-video, decord, av |
+| DEP:HeavyModel | transformers, sentence-transformers, langchain, llama-cpp, vllm, ollama |
+| DEP:Image | opencv-python, pillow, scikit-image, imageio, albumentations |
+| DEP:DataHeavy | pandas, polars, dask, pyspark, ray, vaex, arrow |
+| DEP:GamePython | pygame, arcade, ursina, panda3d, pyglet |
+| DEP:GameJS | phaser, three.js, pixi.js, babylon.js, kaboom |
+| DEP:HTTP | requests, httpx, aiohttp, axios, got, ky, node-fetch, fetch |
+| DEP:ORM | sqlalchemy, prisma, drizzle, typeorm, sequelize, gorm, diesel |
+| DEP:Auth | passlib, python-jose, authlib, passport, lucia, better-auth |
+| DEP:Payment | stripe, paypal, braintree, square, adyen |
+| DEP:Email | sendgrid, mailgun, postmark, resend, nodemailer, emails |
+| DEP:SMS | twilio, vonage, messagebird, plivo |
+| DEP:Notification | firebase-admin, onesignal, pusher, ably |
+| DEP:Search | elasticsearch, meilisearch, algolia, typesense, opensearch |
+| DEP:Queue | celery, rq, dramatiq, bull, bullmq, bee-queue |
+| DEP:Cache | redis, ioredis, memcached, aiocache, keyv |
+| DEP:Logging | loguru, structlog, winston, pino, bunyan |
+| DEP:ObjectStore | boto3, minio, cloudinary, uploadthing, google-cloud-storage |
+| DEP:PDF | reportlab, weasyprint, pdfkit, puppeteer, fpdf2 |
+| DEP:Excel | openpyxl, xlsxwriter, exceljs, sheetjs |
+| DEP:Scraping | scrapy, beautifulsoup4, selenium, playwright, crawlee |
+| DEP:Blockchain | web3, ethers, hardhat, brownie, solana-py |
+| DEP:Crypto | cryptography, pycryptodome, nacl, jose, argon2 |
 
 **Documentation Fallback (when code sparse):**
 
-| Source | Extract |
-|--------|---------|
-| README.md, README.rst | Language, framework, project type |
-| CONTRIBUTING.md | Dev tools, workflow, test approach |
-| docs/, documentation/ | Architecture, patterns, decisions |
-| Manifest descriptions | [project.description], package.json description |
+| Source | What to Extract |
+|--------|-----------------|
+| README.md | Language badges, "Built with", tech stack section |
+| CONTRIBUTING.md | Dev tools, test commands, linting setup |
+| docs/ | Architecture diagrams, ADRs |
+| Manifest description | [project.description], package.json description |
 
-Mark as `[from docs]` with `confidence: LOW` - command will ask for confirmation if needed.
+Mark as `[from docs]` with `confidence: LOW`.
+
+##### Confidence Scoring
+
+| Score | Criteria | Action |
+|-------|----------|--------|
+| **HIGH (0.9-1.0)** | Manifest + lock file match | Auto-apply rules |
+| **MEDIUM (0.6-0.8)** | Manifest OR multiple code patterns | Apply with note |
+| **LOW (0.3-0.5)** | Only code patterns or docs | Ask for confirmation |
+| **SKIP (<0.3)** | Single file, test/example only | Don't apply |
+
+**Confidence Modifiers:**
+- Lock file present: +0.2
+- Multiple matching files (>3): +0.1
+- In test/example/vendor dir: -0.3
+- Conflicting signals: -0.2
+
+##### Conflict Resolution
+
+| Conflict | Resolution |
+|----------|------------|
+| TS vs JS | tsconfig.json present → TypeScript wins |
+| Bun vs Node vs Deno | Lock file type determines: bun.lockb→Bun, deno.lock→Deno, else→Node |
+| React vs Vue vs Svelte | Only one framework per project, highest confidence wins |
+| Prisma vs Drizzle vs TypeORM | Can coexist (migration period), detect both |
+| FastAPI vs Flask vs Django | Only one per project, route patterns determine |
+| Jest vs Vitest | vitest.config.* → Vitest, else → Jest |
+| ESLint vs Biome | biome.json present → Biome wins (replaces ESLint) |
+| Prettier vs Biome | biome.json present → Biome wins |
+| npm vs yarn vs pnpm | Lock file determines: yarn.lock→yarn, pnpm-lock.yaml→pnpm, else→npm |
+
+**Polyglot Projects:**
+- Multiple languages allowed (e.g., Python backend + TypeScript frontend)
+- Each gets its own rule file
+- Monorepo detection enables multi-language mode
 
 #### Step 2: Rule Selection (Using Provided userInput)
 
