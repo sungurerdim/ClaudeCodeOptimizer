@@ -56,14 +56,16 @@ TodoWrite([
 agentResponse = Task("cco-agent-analyze", `
   scopes: ["scan"]
 
-  Collect metrics for all categories:
-  - Security: OWASP, secrets, CVEs, input validation
-  - Tests: Coverage %, branch coverage, quality
-  - Tech Debt: Complexity, dead code, TODO count
-  - Cleanliness: Orphans, duplicates, stale refs
+  Collect metrics for all categories (same as cco-optimize --score):
+  - Security: Secrets, OWASP (SQL/command injection, XSS, path traversal), CVEs, input validation, unsafe deserialization
+  - Quality: Type errors/hints, tech debt, test gaps/isolation, complexity, bare excepts, silent failures, exception chaining, dead code, unused imports, docstrings, magic values, naming
+  - Architecture: SOLID violations, god classes, circular imports, coupling, orphan files, separation of concerns, abstractions, over-engineering, nesting depth
+  - Best Practices: Anti-patterns, inefficient algorithms, inconsistent styles, context managers, resource/connection leaks, memory leaks, error handling, duplicates, stale refs, hardcoded config, logging, N+1 queries, caching
+
+  Scoring: Start at 100, deduct for issues (critical: -10, high: -5, medium: -2, low: -1)
 
   Return: {
-    scores: { security, tests, techDebt, cleanliness, overall },
+    scores: { security, quality, architecture, bestPractices, overall },
     status: "OK|WARN|FAIL|CRITICAL",
     topIssues: [{ category, title, location }]
   }
@@ -84,33 +86,35 @@ agentResponse = Task("cco-agent-analyze", `
 
 ## Step-2: Process Scores
 
-Merge parallel results and calculate:
+Apply context multipliers:
 
 ```javascript
-// Aggregate from 5 parallel responses
 metrics = {
-  security: securityAgent.score,
-  tests: testsAgent.score,
-  debt: debtAgent.score,
-  cleanliness: cleanlinessAgent.score,
-  docs: docsAgent.score
+  security: response.scores.security,
+  quality: response.scores.quality,
+  architecture: response.scores.architecture,
+  bestPractices: response.scores.bestPractices
 }
 
-// Apply context multipliers
+// Apply context multipliers from context.md
 if (context.data === "PII" || context.data === "Regulated") {
-  metrics.security *= 2  // Weight security higher
+  metrics.security = Math.max(0, metrics.security * 0.8)  // Stricter for sensitive data
 }
 
-// Calculate overall
-overall = weightedAverage(metrics, weights)
+if (context.scale === "10K+") {
+  metrics.architecture = Math.max(0, metrics.architecture * 0.9)  // Stricter for large scale
+}
+
+// Calculate overall (equal weights)
+overall = (metrics.security + metrics.quality + metrics.architecture + metrics.bestPractices) / 4
 status = getStatus(overall)  // OK/WARN/FAIL/CRITICAL
 ```
 
-| Field | Effect |
-|-------|--------|
-| Scale | <100 → relaxed; 100-10K → moderate; 10K+ → strict |
-| Data | PII/Regulated → security ×2 |
-| Priority | Speed → blockers only; Quality → all |
+| Context | Effect |
+|---------|--------|
+| Scale 10K+ | Architecture score stricter |
+| PII/Regulated | Security score stricter |
+| Speed priority | Show critical issues only |
 
 ### Validation
 ```
@@ -125,32 +129,32 @@ status = getStatus(overall)  // OK/WARN/FAIL/CRITICAL
 ## Step-3: Display Dashboard
 
 ```
-┌─────────────────────────────────────────────┐
-│  PROJECT HEALTH                   [{status}]│
-├─────────────────────────────────────────────┤
-│  Security    {progress}  {score}  {status}  │
-│  Tests       {progress}  {score}  {status}  │
-│  Tech Debt   {progress}  {score}  {status}  │
-│  Cleanliness {progress}  {score}  {status}  │
-├─────────────────────────────────────────────┤
-│  Overall     {progress}  {score}  {status}  │
-└─────────────────────────────────────────────┘
+## Quality Score: {overall}/100  [{status}]
+
+| Category       | Score | Status |
+|----------------|-------|--------|
+| Security       | {n}   | {OK/WARN/FAIL} |
+| Quality        | {n}   | {OK/WARN/FAIL} |
+| Architecture   | {n}   | {OK/WARN/FAIL} |
+| Best Practices | {n}   | {OK/WARN/FAIL} |
 
 Top Issues ({n}):
-1. [{CATEGORY}] {title} in {file}:{line}
-2. [{CATEGORY}] {title} in {file}:{line}
-3. [{CATEGORY}] {title} in {file}:{line}
+- [{CATEGORY}] {title} ({file}:{line})
+- [{CATEGORY}] {title} ({file}:{line})
+- [{CATEGORY}] {title} ({file}:{line})
+
+Run `/cco-optimize` to fix issues.
 ```
 
 ### Output Formatting
 
 | Element | Format |
 |---------|--------|
-| Scores | Right-aligned numbers |
-| Status | OK / WARN / FAIL / CRITICAL |
-| Progress | `████░░░░` (8 chars, filled = score/100×8) |
+| Scores | 0-100 integers |
+| Status | OK (80+) / WARN (60-79) / FAIL (40-59) / CRITICAL (<40) |
+| Issues | Max 5 shown, most critical first |
 
-**Prohibited:** No emojis │ No ASCII art │ No unicode decorations │ No trend indicators
+**Prohibited:** No emojis, No ASCII art, No trend indicators
 
 ### Validation
 ```
@@ -167,9 +171,9 @@ Top Issues ({n}):
 
 | Flag | Effect |
 |------|--------|
-| `--focus=X` | Detailed view: security, tests, debt, clean |
+| `--focus=X` | Detailed view: security, quality, architecture, best-practices |
 | `--json` | JSON output |
-| `--brief` | Summary only (overall score + status) |
+| `--brief` | Overall score + status only |
 
 ### Score Thresholds
 

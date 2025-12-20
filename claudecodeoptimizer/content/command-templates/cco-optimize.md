@@ -92,8 +92,55 @@ AskUserQuestion([{
 [x] Git state checked
 [x] If dirty: user decision collected
 → If Cancel: Exit
+→ If --score flag: Jump to Step-Score
 → Proceed to Step-2
 ```
+
+---
+
+## Step-Score: Quality Score [OPTIONAL]
+
+**When `--score` flag is used, skip Steps 2-8 and show quality score only:**
+
+```javascript
+Task("cco-agent-analyze", `
+  mode: "score"
+  Analyze all scopes and calculate overall quality score (0-100).
+
+  Scoring formula:
+  - Start at 100
+  - Critical issues: -10 each (max -40)
+  - High issues: -5 each (max -30)
+  - Medium issues: -2 each (max -20)
+  - Low issues: -1 each (max -10)
+
+  Return: {
+    score: 0-100,
+    breakdown: { security: 0-100, quality: 0-100, architecture: 0-100, best_practices: 0-100 },
+    critical_issues: [{title, location}],
+    summary: "2-3 sentence assessment"
+  }
+`, { model: "haiku" })
+```
+
+**Output:**
+```
+## Quality Score: {score}/100
+
+| Category | Score |
+|----------|-------|
+| Security | {n}/100 |
+| Quality | {n}/100 |
+| Architecture | {n}/100 |
+| Best Practices | {n}/100 |
+
+{summary}
+
+Critical Issues:
+- {issue.title} ({issue.location})
+```
+
+→ Exit after showing score
 
 ---
 
@@ -105,15 +152,15 @@ AskUserQuestion([{
   header: "Scope",
   options: [
     { label: "Security", description: "OWASP, secrets, CVEs, input validation" },
-    { label: "Quality", description: "Tech debt, type errors, test gaps" },
-    { label: "Hygiene", description: "Orphans, stale refs, duplicates" },
-    { label: "Best Practices", description: "Patterns, efficiency, consistency" }
+    { label: "Quality", description: "Tech debt, type errors, test gaps, error handling" },
+    { label: "Architecture", description: "SOLID violations, god classes, circular deps" },
+    { label: "Best Practices", description: "Resource management, patterns, consistency" }
   ],
   multiSelect: true
 }])
 ```
 
-**Flags override:** `--security`, `--quality`, `--hygiene`, `--best-practices` skip this question.
+**Flags override:** `--security`, `--quality`, `--architecture`, `--best-practices` skip this question.
 
 **Dynamic labels:** Add `(Recommended)` based on Data/Priority context:
 - PII/Regulated data → Security recommended
@@ -168,10 +215,10 @@ Task("cco-agent-analyze", `
   scopes: ${JSON.stringify(scopes.map(s => s.toLowerCase().replace(" ", "-")))}
 
   For each scope, find issues with:
-  - security: Hardcoded secrets, OWASP vulnerabilities, CVE patterns, input validation gaps
-  - quality: Type errors, tech debt markers, missing tests, complexity issues
-  - hygiene: Orphan files, unused imports, stale refs, dead code, duplicates
-  - best-practices: Anti-patterns, inefficient code, inconsistent styles, missing error handling
+  - security: Hardcoded secrets, OWASP vulnerabilities (SQL/command injection, XSS, path traversal), CVE patterns, input validation gaps, unsafe deserialization
+  - quality: Type errors, missing type hints, tech debt markers, missing tests, test isolation issues, complexity >10, bare excepts, silent failures, missing exception chaining (raise from), dead code, unused imports, missing docstrings on public APIs, magic values/literals, poor naming
+  - architecture: SOLID violations, god classes (>300 LOC), circular imports, tight coupling, orphan files, poor separation of concerns, missing abstractions, over-engineering, deep nesting
+  - best-practices: Anti-patterns, inefficient algorithms, inconsistent styles, missing context managers, resource leaks, connection cleanup, memory leaks, missing error handling, duplicates, stale refs, hardcoded paths/config, missing logging, N+1 queries, missing caching opportunities
 
   Return: {
     findings: [{ id: "{SCOPE}-{NNN}", severity: "{P0-P3}", title, location: "{file}:{line}", fixable, approvalRequired, fix }],
@@ -206,7 +253,7 @@ Display findings as analysis completes:
 |-------|----------|------|--------|-----|----------|
 | Security | {n} | {n} | {n} | {n} | {n} |
 | Quality | {n} | {n} | {n} | {n} | {n} |
-| Hygiene | {n} | {n} | {n} | {n} | {n} |
+| Architecture | {n} | {n} | {n} | {n} | {n} |
 | Best Practices | {n} | {n} | {n} | {n} | {n} |
 | **Total** | **{n}** | **{n}** | **{n}** | **{n}** | **{n}** |
 
@@ -364,10 +411,10 @@ Run `git checkout .` to revert all.
 
 | Scope | Checks |
 |-------|--------|
-| `security` | OWASP, secrets, CVEs, input validation |
-| `quality` | Tech debt, type errors, test gaps |
-| `hygiene` | Orphans, stale refs, duplicates |
-| `best-practices` | Patterns, efficiency, consistency |
+| `security` | Secrets, OWASP (SQL/command injection, XSS, path traversal), CVEs, input validation, unsafe deserialization |
+| `quality` | Type errors/hints, tech debt, test gaps/isolation, complexity, bare excepts, silent failures, exception chaining, dead code, unused imports, docstrings, magic values, naming |
+| `architecture` | SOLID violations, god classes, circular imports, coupling, orphan files, separation of concerns, abstractions, over-engineering, nesting depth |
+| `best-practices` | Anti-patterns, inefficient algorithms, inconsistent styles, context managers, resource/connection leaks, memory leaks, error handling, duplicates, stale refs, hardcoded config, logging, N+1 queries, caching |
 
 ### Context Application
 
@@ -391,11 +438,12 @@ Run `git checkout .` to revert all.
 |------|--------|
 | `--security` | Security scope only |
 | `--quality` | Quality scope only |
-| `--hygiene` | Hygiene scope only |
+| `--architecture` | Architecture scope only |
 | `--best-practices` | Best practices scope only |
 | `--report` | Report only (no fixes) |
 | `--fix` | Auto-fix safe (default) |
 | `--fix-all` | Fix all with approval |
+| `--score` | Quality score only (0-100), no fixes |
 | `--critical` | Security + critical severity only |
 | `--pre-release` | All scopes, strict thresholds |
 | `--sequential` | Disable parallel (debug mode) |
