@@ -616,7 +616,7 @@ Task("cco-agent-apply", `
 {
   "statusLine": {
     "type": "command",
-    "command": "node .claude/cco-${statusline_mode}.js",
+    "command": "node -e \"require('child_process').spawnSync('node',[require('path').join(process.cwd(),'.claude','cco-${statusline_mode}.js')],{stdio:'inherit'})\"",
     "padding": 1
   },
   "permissions": {
@@ -645,11 +645,17 @@ Task("cco-agent-apply", `
 
 **Statusline mode mapping:**
 
-| Mode | Command | Description |
-|------|---------|-------------|
-| Full | `node .claude/cco-full.js` | User, CC version, model, context %, git branch, ahead/behind, file changes |
-| Minimal | `node .claude/cco-minimal.js` | User, CC version, model, context % |
+| Mode | Script | Description |
+|------|--------|-------------|
+| Full | `cco-full.js` | User, CC version, model, context %, git branch, ahead/behind, file changes |
+| Minimal | `cco-minimal.js` | User, CC version, model, context % |
 | No | (don't write statusLine key) | Preserves global statusline if exists, otherwise uses Claude Code default |
+
+**Command format:** All statusline modes use dynamic path resolution:
+```
+node -e "require('child_process').spawnSync('node',[require('path').join(process.cwd(),'.claude','cco-{mode}.js')],{stdio:'inherit'})"
+```
+This ensures the script runs from the correct project directory regardless of where Claude Code is launched.
 
 **Note:** Statusline scripts require Node.js. If not available, select "No" to use default statusline.
 
