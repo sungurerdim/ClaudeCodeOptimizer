@@ -273,6 +273,9 @@ All rules are defined as sections within `cco-adaptive.md`. You must:
 
 **Detection Categories:**
 
+**[SSOT Note]:** Complete detection table defined in `cco-adaptive.md` (Detection System section).
+The tables below are a reference copy - `cco-adaptive.md` is authoritative for additions/changes.
+
 ##### Languages (L:*)
 | Category | Manifest | Lock/Config | Code Patterns |
 |----------|----------|-------------|---------------|
