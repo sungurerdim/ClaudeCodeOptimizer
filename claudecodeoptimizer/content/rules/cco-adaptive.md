@@ -11,132 +11,132 @@ Detection organized by category. See cco-agent-analyze.md for detailed trigger p
 | Category | Key Triggers | Output |
 |----------|--------------|--------|
 | **Languages** |||
-| L:Python | pyproject.toml, requirements*.txt, *.py | `python.md` |
-| L:TypeScript | tsconfig.json, *.ts/*.tsx | `typescript.md` |
-| L:JavaScript | package.json (no TS), *.js | `javascript.md` |
-| L:Go | go.mod, *.go | `go.md` |
-| L:Rust | Cargo.toml, *.rs | `rust.md` |
-| L:Java | pom.xml, build.gradle, *.java | `java.md` |
-| L:Kotlin | *.kt, kotlin in gradle | `kotlin.md` |
-| L:Swift | Package.swift, *.swift | `swift.md` |
-| L:CSharp | *.csproj, *.sln, *.cs | `csharp.md` |
-| L:Ruby | Gemfile, *.gemspec, *.rb | `ruby.md` |
-| L:PHP | composer.json, *.php | `php.md` |
-| L:Elixir | mix.exs, *.ex | `elixir.md` |
-| L:Gleam | gleam.toml, *.gleam | `gleam.md` |
-| L:Scala | build.sbt, *.scala | `scala.md` |
-| L:Zig | build.zig, *.zig | `zig.md` |
-| L:Dart | pubspec.yaml, *.dart | `dart.md` |
+| L:Python | {manifest}, {lock}, {code_ext} | `python.md` |
+| L:TypeScript | {ts_config}, {code_ext} | `typescript.md` |
+| L:JavaScript | {manifest} (no TS), {code_ext} | `javascript.md` |
+| L:Go | {manifest}, {code_ext} | `go.md` |
+| L:Rust | {manifest}, {code_ext} | `rust.md` |
+| L:Java | {manifest}, {code_ext} | `java.md` |
+| L:Kotlin | {code_ext}, {gradle_config} | `kotlin.md` |
+| L:Swift | {manifest}, {code_ext} | `swift.md` |
+| L:CSharp | {project_file}, {code_ext} | `csharp.md` |
+| L:Ruby | {manifest}, {code_ext} | `ruby.md` |
+| L:PHP | {manifest}, {code_ext} | `php.md` |
+| L:Elixir | {manifest}, {code_ext} | `elixir.md` |
+| L:Gleam | {manifest}, {code_ext} | `gleam.md` |
+| L:Scala | {manifest}, {code_ext} | `scala.md` |
+| L:Zig | {manifest}, {code_ext} | `zig.md` |
+| L:Dart | {manifest}, {code_ext} | `dart.md` |
 | **Project Types** |||
-| T:CLI | [project.scripts], typer/click/cobra, bin/ | `cli.md` |
-| T:Library | exports, __all__, [lib] | `library.md` |
-| T:Service | Dockerfile + ports, long-running | `service.md` |
+| T:CLI | {entry_points}, {cli_deps}, {bin_dir} | `cli.md` |
+| T:Library | {exports}, {lib_markers} | `library.md` |
+| T:Service | {container} + {ports}, {daemon_patterns} | `service.md` |
 | **API Styles** |||
-| API:REST | routes/, FastAPI/Express/Gin routes | `api.md` |
-| API:GraphQL | *.graphql, apollo/type-graphql | `api.md` |
-| API:gRPC | *.proto, grpc deps | `api.md` |
+| API:REST | {routes_dir}, {rest_framework_patterns} | `api.md` |
+| API:GraphQL | {schema_ext}, {graphql_deps} | `api.md` |
+| API:gRPC | {proto_ext}, {grpc_deps} | `api.md` |
 | **Database** |||
-| DB:SQL | sqlite3/psycopg2/pg, migrations/ | `database.md` |
-| DB:ORM | sqlalchemy/prisma/drizzle/gorm | `database.md` |
-| DB:NoSQL | pymongo/redis/dynamodb | `database.md` |
-| DB:Vector | pgvector/pinecone/chroma | `database.md` |
+| DB:SQL | {sql_drivers}, {migrations_dir} | `database.md` |
+| DB:ORM | {orm_deps} | `database.md` |
+| DB:NoSQL | {nosql_deps} | `database.md` |
+| DB:Vector | {vector_deps} | `database.md` |
 | **Frontend** |||
-| Frontend:React | react deps, *.jsx/*.tsx | `frontend.md` |
-| Frontend:Vue | vue deps, *.vue | `frontend.md` |
-| Frontend:Svelte | svelte deps, *.svelte | `frontend.md` |
-| Frontend:Angular | @angular deps, *.component.ts | `frontend.md` |
-| Frontend:Solid | solid-js deps | `frontend.md` |
-| Frontend:Astro | astro deps, *.astro | `frontend.md` |
-| Frontend:HTMX | htmx deps, hx-* in HTML | `frontend.md` |
+| Frontend:React | {framework_deps}, {component_ext} | `frontend.md` |
+| Frontend:Vue | {framework_deps}, {component_ext} | `frontend.md` |
+| Frontend:Svelte | {framework_deps}, {component_ext} | `frontend.md` |
+| Frontend:Angular | {framework_deps}, {component_ext} | `frontend.md` |
+| Frontend:Solid | {framework_deps} | `frontend.md` |
+| Frontend:Astro | {framework_deps}, {component_ext} | `frontend.md` |
+| Frontend:HTMX | {framework_deps}, {html_attrs} | `frontend.md` |
 | **Mobile** |||
-| Mobile:Flutter | pubspec.yaml, *.dart | `mobile.md` |
-| Mobile:ReactNative | react-native/expo deps | `mobile.md` |
-| Mobile:iOS | *.xcodeproj, Podfile, *.swift | `mobile.md` |
-| Mobile:Android | build.gradle, AndroidManifest.xml | `mobile.md` |
-| Mobile:KMP | kotlin-multiplatform, shared/ | `mobile.md` |
+| Mobile:Flutter | {manifest}, {code_ext} | `mobile.md` |
+| Mobile:ReactNative | {mobile_deps} | `mobile.md` |
+| Mobile:iOS | {project_file}, {code_ext} | `mobile.md` |
+| Mobile:Android | {build_config}, {manifest} | `mobile.md` |
+| Mobile:KMP | {multiplatform_config}, {shared_dir} | `mobile.md` |
 | **Infrastructure** |||
-| Infra:Docker | Dockerfile, docker-compose.yml | `container.md` |
-| Infra:K8s | k8s/, helm/, kustomization.yaml | `k8s.md` |
-| Infra:Terraform | *.tf files | `terraform.md` |
-| Infra:Pulumi | Pulumi.yaml | `pulumi.md` |
-| Infra:CDK | cdk.json, *-stack.ts | `cdk.md` |
-| Infra:Edge | wrangler.toml, vercel edge, deno deploy | `edge.md` |
-| Infra:WASM | *.wasm, wasm-pack, wit-bindgen | `wasm.md` |
-| Infra:Serverless | serverless.yml, sam.yaml | `serverless.md` |
+| Infra:Docker | {container_files} | `container.md` |
+| Infra:K8s | {k8s_dirs}, {k8s_configs} | `k8s.md` |
+| Infra:Terraform | {tf_ext} | `terraform.md` |
+| Infra:Pulumi | {pulumi_config} | `pulumi.md` |
+| Infra:CDK | {cdk_config}, {stack_files} | `cdk.md` |
+| Infra:Edge | {edge_configs} | `edge.md` |
+| Infra:WASM | {wasm_ext}, {wasm_tools} | `wasm.md` |
+| Infra:Serverless | {serverless_configs} | `serverless.md` |
 | **ML/AI** |||
-| ML:Training | torch/tensorflow/sklearn | `ml.md` |
-| ML:LLM | langchain/llamaindex/haystack | `ml.md` |
-| ML:Inference | transformers/onnxruntime/vllm | `ml.md` |
-| ML:SDK | openai/anthropic/cohere | `ml.md` |
+| ML:Training | {ml_training_deps} | `ml.md` |
+| ML:LLM | {llm_orchestration_deps} | `ml.md` |
+| ML:Inference | {inference_deps} | `ml.md` |
+| ML:SDK | {ai_sdk_deps} | `ml.md` |
 | **Build** |||
-| Build:Monorepo | nx.json, turbo.json, workspaces | `monorepo.md` |
-| Build:Bundler | vite/webpack/esbuild/tsup | `bundler.md` |
-| Build:Linter | .eslintrc*, biome.json, ruff.toml | `linter.md` |
-| Build:Formatter | .prettierrc*, biome.json | `formatter.md` |
-| Build:TypeChecker | tsconfig.json, mypy.ini | `typechecker.md` |
+| Build:Monorepo | {monorepo_configs} | `monorepo.md` |
+| Build:Bundler | {bundler_configs} | `bundler.md` |
+| Build:Linter | {linter_configs} | `linter.md` |
+| Build:Formatter | {formatter_configs} | `formatter.md` |
+| Build:TypeChecker | {typechecker_configs} | `typechecker.md` |
 | **Desktop** |||
-| Desktop:Electron | electron deps, electron-builder | `desktop.md` |
-| Desktop:Tauri | tauri deps, tauri.conf.json | `desktop.md` |
+| Desktop:Electron | {electron_deps}, {electron_config} | `desktop.md` |
+| Desktop:Tauri | {tauri_deps}, {tauri_config} | `desktop.md` |
 | **Runtimes** |||
-| R:Node | package.json, node_modules/ | `node.md` |
-| R:Bun | bun.lockb, bunfig.toml | `bun.md` |
-| R:Deno | deno.json, deno.lock | `deno.md` |
+| R:Node | {node_markers} | `node.md` |
+| R:Bun | {bun_markers} | `bun.md` |
+| R:Deno | {deno_markers} | `deno.md` |
 | **Testing** |||
-| Test:Unit | pytest/jest/vitest, tests/ | `testing.md` |
-| Test:E2E | playwright/cypress, e2e/ | `testing.md` |
-| Test:Coverage | [tool.coverage], .nycrc | `testing.md` |
+| Test:Unit | {unit_test_deps}, {test_dirs} | `testing.md` |
+| Test:E2E | {e2e_deps}, {e2e_dirs} | `testing.md` |
+| Test:Coverage | {coverage_configs} | `testing.md` |
 | **CI/CD** |||
-| CI:GitHub | .github/workflows/ | `ci-cd.md` |
-| CI:GitLab | .gitlab-ci.yml | `ci-cd.md` |
-| CI:Jenkins | Jenkinsfile | `ci-cd.md` |
-| CI:CircleCI | .circleci/config.yml | `ci-cd.md` |
-| CI:Azure | azure-pipelines.yml | `ci-cd.md` |
-| CI:ArgoCD | argocd/, Application.yaml | `ci-cd.md` |
+| CI:GitHub | {github_workflow_dir} | `ci-cd.md` |
+| CI:GitLab | {gitlab_config} | `ci-cd.md` |
+| CI:Jenkins | {jenkins_config} | `ci-cd.md` |
+| CI:CircleCI | {circleci_config} | `ci-cd.md` |
+| CI:Azure | {azure_config} | `ci-cd.md` |
+| CI:ArgoCD | {argocd_dir}, {argocd_config} | `ci-cd.md` |
 | **Specialized** |||
-| Game:Unity | *.csproj + Unity, Assets/ | `game.md` |
-| Game:Unreal | *.uproject, Source/ | `game.md` |
-| Game:Godot | project.godot, *.gd | `game.md` |
-| i18n | locales/, react-i18next | `i18n.md` |
-| RT:Basic | ws/socket.io/websockets | `realtime.md` |
-| RT:LowLatency | protobuf + ws, msgpack | `realtime.md` |
-| API:WebSocket | ws/socket.io/websockets | `api.md` |
-| **DEP:* (37 categories)** |||
-| DEP:CLI | typer/click/argparse/cobra | `dep-cli.md` |
-| DEP:TUI | rich/textual/urwid | `dep-tui.md` |
-| DEP:Validation | pydantic/zod/joi | `dep-validation.md` |
-| DEP:Config | pydantic-settings/dotenv | `dep-config.md` |
-| DEP:Testing | pytest/jest/playwright | `dep-testing.md` |
-| DEP:Edge | @cloudflare/workers/wrangler | `dep-edge.md` |
-| DEP:EdgeFramework | hono/elysia/h3/nitro | `dep-edgeframework.md` |
-| DEP:WASM | wasm-pack/wasm-bindgen | `dep-wasm.md` |
-| DEP:HTTP | requests/axios/httpx | `dep-http.md` |
-| DEP:ORM | sqlalchemy/prisma/drizzle | `dep-orm.md` |
-| DEP:Auth | passlib/passport/lucia | `dep-auth.md` |
-| DEP:Cache | redis/memcached/keyv | `dep-cache.md` |
-| DEP:Queue | celery/bull/dramatiq | `dep-queue.md` |
-| DEP:Search | elasticsearch/meilisearch | `dep-search.md` |
-| DEP:GPU | cuda/torch+cuda/jax | `dep-gpu.md` |
-| DEP:HeavyModel | transformers/langchain | `dep-heavymodel.md` |
-| DEP:DataHeavy | pandas/polars/dask | `dep-data.md` |
-| DEP:Image | pillow/opencv/imageio | `dep-image.md` |
-| DEP:Audio | pydub/librosa/whisper | `dep-audio.md` |
-| DEP:Video | ffmpeg/moviepy/decord | `dep-video.md` |
-| DEP:Logging | loguru/structlog/pino | `dep-logging.md` |
-| DEP:ObjectStore | boto3/minio/cloudinary | `dep-storage.md` |
-| DEP:Payment | stripe/paypal/braintree | `dep-payment.md` |
-| DEP:Email | sendgrid/resend/nodemailer | `dep-email.md` |
-| DEP:SMS | twilio/vonage/messagebird | `dep-sms.md` |
-| DEP:Notification | firebase/onesignal/pusher | `dep-notification.md` |
-| DEP:PDF | reportlab/weasyprint/pdfkit | `dep-pdf.md` |
-| DEP:Excel | openpyxl/xlsxwriter/sheetjs | `dep-excel.md` |
-| DEP:Scraping | scrapy/beautifulsoup/crawlee | `dep-scraping.md` |
-| DEP:Blockchain | web3/ethers/hardhat | `dep-blockchain.md` |
-| DEP:Crypto | cryptography/nacl/argon2 | `dep-crypto.md` |
-| DEP:GamePython | pygame/arcade/panda3d | `dep-game-python.md` |
-| DEP:GameJS | phaser/three.js/pixi.js | `dep-game-js.md` |
-| DEP:GameEngine | Unity/Unreal/Godot | `dep-gameengine.md` |
-| DEP:ARVR | openxr/webxr/ar-foundation | `dep-arvr.md` |
-| DEP:IoT | micropython/paho-mqtt/esphome | `dep-iot.md` |
+| Game:Unity | {unity_markers} | `game.md` |
+| Game:Unreal | {unreal_markers} | `game.md` |
+| Game:Godot | {godot_markers} | `game.md` |
+| i18n | {i18n_dirs}, {i18n_deps} | `i18n.md` |
+| RT:Basic | {websocket_deps} | `realtime.md` |
+| RT:LowLatency | {binary_protocol_deps} | `realtime.md` |
+| API:WebSocket | {websocket_deps} | `api.md` |
+| **DEP:* (36 categories)** | See Dependency-Based Rules section below ||
+| DEP:CLI | {cli_framework_deps} | `dep-cli.md` |
+| DEP:TUI | {tui_deps} | `dep-tui.md` |
+| DEP:Validation | {validation_deps} | `dep-validation.md` |
+| DEP:Config | {config_deps} | `dep-config.md` |
+| DEP:Testing | {testing_framework_deps} | `dep-testing.md` |
+| DEP:Edge | {edge_runtime_deps} | `dep-edge.md` |
+| DEP:EdgeFramework | {edge_framework_deps} | `dep-edgeframework.md` |
+| DEP:WASM | {wasm_toolchain_deps} | `dep-wasm.md` |
+| DEP:HTTP | {http_client_deps} | `dep-http.md` |
+| DEP:ORM | {orm_deps} | `dep-orm.md` |
+| DEP:Auth | {auth_deps} | `dep-auth.md` |
+| DEP:Cache | {cache_deps} | `dep-cache.md` |
+| DEP:Queue | {queue_deps} | `dep-queue.md` |
+| DEP:Search | {search_deps} | `dep-search.md` |
+| DEP:GPU | {gpu_deps} | `dep-gpu.md` |
+| DEP:HeavyModel | {heavy_model_deps} | `dep-heavymodel.md` |
+| DEP:DataHeavy | {data_processing_deps} | `dep-data.md` |
+| DEP:Image | {image_processing_deps} | `dep-image.md` |
+| DEP:Audio | {audio_processing_deps} | `dep-audio.md` |
+| DEP:Video | {video_processing_deps} | `dep-video.md` |
+| DEP:Logging | {logging_deps} | `dep-logging.md` |
+| DEP:ObjectStore | {object_storage_deps} | `dep-storage.md` |
+| DEP:Payment | {payment_deps} | `dep-payment.md` |
+| DEP:Email | {email_deps} | `dep-email.md` |
+| DEP:SMS | {sms_deps} | `dep-sms.md` |
+| DEP:Notification | {notification_deps} | `dep-notification.md` |
+| DEP:PDF | {pdf_deps} | `dep-pdf.md` |
+| DEP:Excel | {excel_deps} | `dep-excel.md` |
+| DEP:Scraping | {scraping_deps} | `dep-scraping.md` |
+| DEP:Blockchain | {blockchain_deps} | `dep-blockchain.md` |
+| DEP:Crypto | {crypto_deps} | `dep-crypto.md` |
+| DEP:GamePython | {python_game_deps} | `dep-game-python.md` |
+| DEP:GameJS | {js_game_deps} | `dep-game-js.md` |
+| DEP:GameEngine | {game_engine_markers} | `dep-gameengine.md` |
+| DEP:ARVR | {arvr_deps} | `dep-arvr.md` |
+| DEP:IoT | {iot_deps} | `dep-iot.md` |
 
 ### User-Input (AskUserQuestion) [MANDATORY]
 
@@ -1251,7 +1251,7 @@ When generating tests, always include:
 ## Dependency-Based Rules
 
 ### DEP:CLI
-**Trigger:** typer, click, argparse, fire, argh, docopt, cement, cliff, plac
+**Trigger:** typer, click, argparse, fire, argh, docopt, cement, cliff, plac, cobra, urfave/cli
 
 - **Help-Comprehensive**: --help with examples, subcommand help
 - **Exit-Codes**: Documented exit codes (0=success, 1=error, 2=usage)
@@ -1328,7 +1328,7 @@ When generating tests, always include:
 - **Reload-Support**: Hot reload for long-running apps
 
 ### DEP:Testing
-**Trigger:** pytest, unittest, nose2, hypothesis, ward, robot, behave, lettuce
+**Trigger:** pytest, unittest, nose2, hypothesis, ward, robot, behave, lettuce, jest, vitest, mocha, playwright, cypress
 
 - **Fixtures-Scoped**: Appropriate fixture scope (function/class/module/session)
 - **Mocks-Minimal**: Mock at boundaries, not internals
@@ -1433,7 +1433,7 @@ When generating tests, always include:
 - **Platform-Optimize**: Quality presets per platform
 
 ### DEP:HTTP
-**Trigger:** requests, httpx, aiohttp, axios, got, ky, node-fetch
+**Trigger:** requests, httpx, aiohttp, axios, got, ky, node-fetch, fetch
 
 - **Timeout-Always**: Explicit timeouts
 - **Retry-Transient**: Exponential backoff
@@ -1442,7 +1442,7 @@ When generating tests, always include:
 - **Response-Validate**: Schema validation
 
 ### DEP:ORM
-**Trigger:** sqlalchemy, prisma, drizzle, typeorm, sequelize, tortoise-orm, peewee
+**Trigger:** sqlalchemy, prisma, drizzle, typeorm, sequelize, tortoise-orm, peewee, gorm, diesel
 
 - **N+1-Prevent**: Eager load or batch queries
 - **Query-Optimize**: EXPLAIN analysis
@@ -1452,7 +1452,7 @@ When generating tests, always include:
 - **Bulk-Operations**: Use bulk insert/update APIs
 
 ### DEP:Auth
-**Trigger:** authlib, python-jose, passlib, bcrypt, next-auth, clerk, auth0, supabase-auth
+**Trigger:** authlib, python-jose, passlib, bcrypt, passport, lucia, next-auth, clerk, auth0, supabase-auth, better-auth
 
 - **Token-Secure**: HttpOnly, Secure flags
 - **Refresh-Flow**: Refresh token rotation
@@ -1461,7 +1461,7 @@ When generating tests, always include:
 - **MFA-Support**: Optional 2FA for sensitive ops
 
 ### DEP:Payment
-**Trigger:** stripe, paypal, square, braintree, paddle, lemon-squeezy
+**Trigger:** stripe, paypal, square, braintree, paddle, lemon-squeezy, adyen
 
 - **Webhook-Verify**: Signature validation
 - **Idempotency-Key**: Prevent duplicate charges
@@ -1488,7 +1488,7 @@ When generating tests, always include:
 - **Message-Template**: Pre-approved templates
 
 ### DEP:Notification
-**Trigger:** firebase-admin, onesignal, pusher, novu
+**Trigger:** firebase-admin, onesignal, pusher, novu, ably
 
 - **Channel-Preference**: User-configurable channels
 - **Batch-Send**: Batch API calls
