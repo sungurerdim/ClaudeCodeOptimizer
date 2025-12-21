@@ -174,24 +174,22 @@ AskUserQuestion([{
 
 ## Step-3: Action
 
-```javascript
-AskUserQuestion([{
-  question: "How to handle findings?",
-  header: "Action",
-  options: [
-    { label: "Auto-fix (Recommended)", description: "Apply safe fixes automatically, ask for risky" },
-    { label: "Report Only", description: "Show issues without fixing" },
-    { label: "Interactive", description: "Ask before each fix" }
-  ],
-  multiSelect: false
-}])
-```
+**Smart Default:** Auto-fix safe issues, ask for risky ones. No question needed.
 
-**Flags override:** `--report`, `--fix`, `--fix-all` skip this question.
+```javascript
+// Default: Auto-fix - no question needed
+action = "Auto-fix"
+
+// Flags override:
+// --report → action = "Report Only" (skip Steps 6-8)
+// --fix → action = "Auto-fix" (default)
+// --fix-all → action = "Fix All" (no approval needed)
+// --interactive → action = "Interactive" (ask before each)
+```
 
 ### Validation
 ```
-[x] User selected action
+[x] Action determined (default: Auto-fix)
 → Store as: action = {selection}
 → If Report Only: Skip Step-6, Step-7, Step-8
 → Proceed to Step-4

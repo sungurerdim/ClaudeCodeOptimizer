@@ -52,24 +52,20 @@ TodoWrite([
 
 ## Step-1: Phase Selection
 
-```javascript
-AskUserQuestion([{
-  question: "Which phases to run?",
-  header: "Phases",
-  options: [
-    { label: "Both (Recommended)", description: "Health dashboard + quality audit in parallel" },
-    { label: "Health Dashboard", description: "Security, tests, debt, cleanliness scores only" },
-    { label: "Quality Audit", description: "Security, quality, hygiene fixes only" }
-  ],
-  multiSelect: false
-}])
-```
+**Smart Default:** Run both phases (health + audit) without asking.
 
-**Flags override:** `--health-only`, `--audit-only` skip this question.
+```javascript
+// Default: Both phases - no question needed
+phases = "Both"
+
+// Flags override:
+// --health-only → phases = "Health Dashboard"
+// --audit-only → phases = "Quality Audit"
+```
 
 ### Validation
 ```
-[x] User selected phase(s)
+[x] Phases determined (default: Both)
 → Store as: phases = {selection}
 → Proceed to Step-2
 ```

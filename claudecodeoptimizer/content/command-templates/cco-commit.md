@@ -34,13 +34,12 @@ Run /cco-config first to configure project context, then restart CLI.
 
 | Step | Name | Action | Optimization |
 |------|------|--------|--------------|
-| 1 | Pre-checks | Conflicts, stash, large | Instant |
-| 2 | Unstaged | Ask about unstaged | Skip if none |
-| 3 | Quality | Parallel: format+lint+types, background: tests | 3x faster |
-| 4 | Analyze | Group atomically | While tests run |
-| 5 | Plan | Show plan, ask approval | Instant |
-| 6 | Execute | Create commits | Sequential |
-| 7 | Summary | Show results | Instant |
+| 1 | Pre-checks | Conflicts, stash | Instant |
+| 2 | Quality | Parallel: format+lint+types, background: tests | 3x faster |
+| 3 | Analyze | Group atomically | While tests run |
+| 4 | Plan | Show plan, ask approval | Instant |
+| 5 | Execute | Create commits | Sequential |
+| 6 | Summary | Show results | Instant |
 
 ---
 
@@ -49,12 +48,11 @@ Run /cco-config first to configure project context, then restart CLI.
 ```javascript
 TodoWrite([
   { content: "Step-1: Run pre-checks", status: "in_progress", activeForm: "Running pre-checks" },
-  { content: "Step-2: Handle unstaged", status: "pending", activeForm: "Handling unstaged changes" },
-  { content: "Step-3: Run quality gates", status: "pending", activeForm: "Running quality gates" },
-  { content: "Step-4: Analyze changes", status: "pending", activeForm: "Analyzing changes" },
-  { content: "Step-5: Get plan approval", status: "pending", activeForm: "Getting plan approval" },
-  { content: "Step-6: Execute commits", status: "pending", activeForm: "Executing commits" },
-  { content: "Step-7: Show summary", status: "pending", activeForm: "Showing summary" }
+  { content: "Step-2: Run quality gates", status: "pending", activeForm: "Running quality gates" },
+  { content: "Step-3: Analyze changes", status: "pending", activeForm: "Analyzing changes" },
+  { content: "Step-4: Get plan approval", status: "pending", activeForm: "Getting plan approval" },
+  { content: "Step-5: Execute commits", status: "pending", activeForm: "Executing commits" },
+  { content: "Step-6: Show summary", status: "pending", activeForm: "Showing summary" }
 ])
 ```
 
@@ -87,62 +85,18 @@ AskUserQuestion([{
 }])
 ```
 
-### Step-1.3: Large Changes Check
-
-If 500+ lines changed:
-
-```javascript
-AskUserQuestion([{
-  question: "Large changeset (500+ lines). How to proceed?",
-  header: "Size",
-  options: [
-    { label: "Continue", description: "Proceed with large commit" },
-    { label: "Split", description: "Help me split into smaller commits" },
-    { label: "Cancel", description: "Abort and review manually" }
-  ],
-  multiSelect: false
-}])
-```
-
 ### Validation
 ```
 [x] No conflicts (or stopped)
 [x] Stash handled (if exists)
-[x] Large changes handled (if applicable)
 → Proceed to Step-2
 ```
 
 ---
 
-## Step-2: Unstaged Changes
+## Step-2: Quality Gates [PARALLEL + BACKGROUND]
 
-If unstaged changes exist:
-
-```javascript
-AskUserQuestion([{
-  question: "Include unstaged changes?",
-  header: "Unstaged",
-  options: [
-    { label: "Yes, include all", description: "Stage and include all changes" },
-    { label: "No, staged only", description: "Commit only staged changes" },
-    { label: "Select files", description: "Choose which files to include" }
-  ],
-  multiSelect: false
-}])
-```
-
-If "Select files" → show file picker with multiSelect.
-
-### Validation
-```
-[x] Unstaged changes decision made
-[x] Files staged as needed
-→ Proceed to Step-3
-```
-
----
-
-## Step-3: Quality Gates [PARALLEL + BACKGROUND]
+**Smart Default:** Stage all unstaged changes automatically. Use `--staged-only` to commit only staged.
 
 **Phase 1: Blocking checks (instant)**
 ```javascript
@@ -200,12 +154,12 @@ AskUserQuestion([{
 [x] Phase 1 blocking checks passed
 [x] Phase 2 code quality passed (or skipped)
 [x] Phase 3 tests started in background
-→ Proceed to Step-4 (don't wait for tests)
+→ Proceed to Step-3 (don't wait for tests)
 ```
 
 ---
 
-## Step-4: Analyze Changes
+## Step-3: Analyze Changes
 
 Group changes atomically:
 - **Keep together:** Implementation + tests, renames, single logical change
@@ -219,12 +173,12 @@ Generate commit plan with messages.
 [x] Changes grouped atomically
 [x] Commit messages generated
 → Store as: commitPlan = { commits: [...] }
-→ Proceed to Step-5
+→ Proceed to Step-4
 ```
 
 ---
 
-## Step-5: Plan Approval
+## Step-4: Plan Approval
 
 Display commit plan, then ask:
 
@@ -285,16 +239,16 @@ AskUserQuestion([{
 [x] User approved plan (or modified and re-approved)
 [x] Breaking changes handled
 → If Cancel: Exit
-→ Proceed to Step-6
+→ Proceed to Step-5
 ```
 
 ---
 
-## Step-6: Execute Commits
+## Step-5: Execute Commits
 
 **First: Check background tests**
 ```javascript
-// Wait for tests that started in Step-3
+// Wait for tests that started in Step-2
 testResults = await TaskOutput(testTask.id)
 
 if (testResults.failed) {
@@ -334,12 +288,12 @@ Co-Authored-By: Claude <noreply@anthropic.com>
 ```
 [x] Background tests checked
 [x] All commits created successfully
-→ Proceed to Step-7
+→ Proceed to Step-6
 ```
 
 ---
 
-## Step-7: Summary
+## Step-6: Summary
 
 Display:
 - Commits created: {n}
@@ -375,6 +329,8 @@ When `--quick` flag:
 | `--quick` | Single-message, smart defaults |
 | `--skip-checks` | Skip quality gates |
 | `--amend` | Amend last (with safety) |
+| `--staged-only` | Commit only staged changes (default: include all) |
+| `--split` | Auto-split large changesets into atomic commits |
 
 ### Context Application
 

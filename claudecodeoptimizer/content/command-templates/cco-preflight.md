@@ -61,29 +61,24 @@ TodoWrite([
 
 ## Step-1: Phase Selection
 
+**Smart Default:** Run all phases without asking. Pre-release should be thorough.
+
 ```javascript
-AskUserQuestion([{
-  question: "Which phases to run?",
-  header: "Phases",
-  options: [
-    { label: "Verification", description: "Pre-flight + final verification (Steps 2, 5)" },
-    { label: "Quality", description: "Full quality gate (Step 3)" },
-    { label: "Architecture", description: "Architecture review (Step 4)" },
-    { label: "Changelog & Docs", description: "Release notes + docs sync (Step 6)" }
-  ],
-  multiSelect: true
-}])
+// Default: All phases - no question needed
+phases = ["Verification", "Quality", "Architecture", "Changelog & Docs"]
+
+// Flags override:
+// --verification-only → phases = ["Verification"]
+// --quality-only → phases = ["Quality"]
+// --architecture-only → phases = ["Architecture"]
+// --changelog-only → phases = ["Changelog & Docs"]
+// --skip-docs → exclude "Changelog & Docs"
 ```
-
-**Dynamic labels:** Add `(Recommended)` based on project priority and recent changes.
-
-**Default:** All phases selected.
 
 ### Validation
 ```
-[x] User selected phase(s)
+[x] Phases determined (default: All)
 → Store as: phases = {selections[]}
-→ Map phases to steps to skip
 → Proceed to Step-2
 ```
 
