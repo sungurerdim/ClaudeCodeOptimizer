@@ -625,48 +625,49 @@ Task("cco-agent-apply", `
 | SLA:* | `observability.md` | User selection |
 
 #### Dependency-Specific (DEP:*)
-| Detection | Rule File | Example Triggers |
-|-----------|-----------|------------------|
-| DEP:CLI | `dep-cli.md` | typer, click, argparse, cobra |
-| DEP:TUI | `dep-tui.md` | rich, textual, urwid, blessed |
-| DEP:Validation | `dep-validation.md` | pydantic, zod, joi, yup |
-| DEP:Config | `dep-config.md` | pydantic-settings, dotenv, dynaconf |
-| DEP:Testing | `dep-testing.md` | pytest, jest, playwright, hypothesis |
-| DEP:HTTP | `dep-http.md` | requests, httpx, axios, got |
-| DEP:ORM | `dep-orm.md` | sqlalchemy, prisma, drizzle, typeorm |
-| DEP:Auth | `dep-auth.md` | passlib, passport, lucia, next-auth |
-| DEP:Cache | `dep-cache.md` | redis, memcached, keyv, ioredis |
-| DEP:Queue | `dep-queue.md` | celery, bull, dramatiq, bullmq |
-| DEP:Search | `dep-search.md` | elasticsearch, meilisearch, algolia |
-| DEP:GPU | `dep-gpu.md` | cuda, torch+cuda, jax, triton |
-| DEP:HeavyModel | `dep-heavymodel.md` | transformers, langchain, vllm |
-| DEP:DataHeavy | `dep-data.md` | pandas, polars, dask, pyspark |
-| DEP:Image | `dep-image.md` | pillow, opencv, scikit-image |
-| DEP:Audio | `dep-audio.md` | pydub, librosa, whisper, soundfile |
-| DEP:Video | `dep-video.md` | ffmpeg-python, moviepy, decord |
-| DEP:Logging | `dep-logging.md` | loguru, structlog, pino, winston |
-| DEP:ObjectStore | `dep-storage.md` | boto3/s3, minio, cloudinary |
-| DEP:Payment | `dep-payment.md` | stripe, paypal, paddle |
-| DEP:Email | `dep-email.md` | sendgrid, resend, nodemailer |
-| DEP:SMS | `dep-sms.md` | twilio, vonage, messagebird |
-| DEP:Notification | `dep-notification.md` | firebase-admin, onesignal, pusher |
-| DEP:PDF | `dep-pdf.md` | reportlab, weasyprint, pdfkit |
-| DEP:Excel | `dep-excel.md` | openpyxl, xlsxwriter, sheetjs |
-| DEP:Scraping | `dep-scraping.md` | scrapy, beautifulsoup4, crawlee |
-| DEP:Blockchain | `dep-blockchain.md` | web3, ethers, hardhat |
-| DEP:Crypto | `dep-crypto.md` | cryptography, nacl, argon2 |
-| DEP:Edge | `dep-edge.md` | @cloudflare/workers, wrangler, vercel/edge |
-| DEP:EdgeFramework | `dep-edgeframework.md` | hono, elysia, h3, nitro |
-| DEP:WASM | `dep-wasm.md` | wasm-pack, wasm-bindgen, wasmtime |
-| DEP:GamePython | `dep-game-python.md` | pygame, arcade, panda3d |
-| DEP:GameJS | `dep-game-js.md` | phaser, three.js, pixi.js |
-| DEP:GameEngine | `dep-gameengine.md` | Unity, Unreal, Godot project files |
-| DEP:ARVR | `dep-arvr.md` | openxr, webxr, ar-foundation |
-| DEP:IoT | `dep-iot.md` | micropython, paho-mqtt, esphome |
+
+| Detection | Rule File | Trigger Reference |
+|-----------|-----------|-------------------|
+| DEP:CLI | `dep-cli.md` | {cli_framework_deps} |
+| DEP:TUI | `dep-tui.md` | {tui_deps} |
+| DEP:Validation | `dep-validation.md` | {validation_deps} |
+| DEP:Config | `dep-config.md` | {config_deps} |
+| DEP:Testing | `dep-testing.md` | {testing_framework_deps} |
+| DEP:HTTP | `dep-http.md` | {http_client_deps} |
+| DEP:ORM | `dep-orm.md` | {orm_deps} |
+| DEP:Auth | `dep-auth.md` | {auth_deps} |
+| DEP:Cache | `dep-cache.md` | {cache_deps} |
+| DEP:Queue | `dep-queue.md` | {queue_deps} |
+| DEP:Search | `dep-search.md` | {search_deps} |
+| DEP:GPU | `dep-gpu.md` | {gpu_deps} |
+| DEP:HeavyModel | `dep-heavymodel.md` | {heavy_model_deps} |
+| DEP:DataHeavy | `dep-data.md` | {data_processing_deps} |
+| DEP:Image | `dep-image.md` | {image_processing_deps} |
+| DEP:Audio | `dep-audio.md` | {audio_processing_deps} |
+| DEP:Video | `dep-video.md` | {video_processing_deps} |
+| DEP:Logging | `dep-logging.md` | {logging_deps} |
+| DEP:ObjectStore | `dep-storage.md` | {object_storage_deps} |
+| DEP:Payment | `dep-payment.md` | {payment_deps} |
+| DEP:Email | `dep-email.md` | {email_deps} |
+| DEP:SMS | `dep-sms.md` | {sms_deps} |
+| DEP:Notification | `dep-notification.md` | {notification_deps} |
+| DEP:PDF | `dep-pdf.md` | {pdf_deps} |
+| DEP:Excel | `dep-excel.md` | {excel_deps} |
+| DEP:Scraping | `dep-scraping.md` | {scraping_deps} |
+| DEP:Blockchain | `dep-blockchain.md` | {blockchain_deps} |
+| DEP:Crypto | `dep-crypto.md` | {crypto_deps} |
+| DEP:Edge | `dep-edge.md` | {edge_runtime_deps} |
+| DEP:EdgeFramework | `dep-edgeframework.md` | {edge_framework_deps} |
+| DEP:WASM | `dep-wasm.md` | {wasm_toolchain_deps} |
+| DEP:GamePython | `dep-game-python.md` | {python_game_deps} |
+| DEP:GameJS | `dep-game-js.md` | {js_game_deps} |
+| DEP:GameEngine | `dep-gameengine.md` | {game_engine_markers} |
+| DEP:ARVR | `dep-arvr.md` | {arvr_deps} |
+| DEP:IoT | `dep-iot.md` | {iot_deps} |
 
 **Pattern:** `dep-{category}.md` where `{category}` matches detected dependency categories
 
-**Rule content source:** cco-adaptive.md sections (read by cco-agent-analyze in Step-1)
+**Trigger values:** Defined in cco-adaptive.md Dependency-Based Rules `**Trigger:**` lines (SSOT)
 
 ### Settings.json Structure
 

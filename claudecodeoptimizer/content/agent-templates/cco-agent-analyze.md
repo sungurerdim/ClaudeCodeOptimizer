@@ -251,194 +251,199 @@ Config scope handles project detection and rule selection. **Two-phase execution
 
 **Priority Order [CRITICAL]:**
 
-| Priority | Source | Confidence | Examples |
-|----------|--------|------------|----------|
-| 1 | Manifest files | HIGH | pyproject.toml, package.json, Cargo.toml, go.mod, pom.xml, Gemfile, composer.json |
-| 2 | Lock files | HIGH | package-lock.json, yarn.lock, pnpm-lock.yaml, Cargo.lock, poetry.lock, Pipfile.lock |
-| 3 | Config files | HIGH | tsconfig.json, .eslintrc*, biome.json, ruff.toml, Dockerfile, .github/ |
-| 4 | Code files | MEDIUM | *.py, *.ts, *.go, *.rs, *.java (sample 5-10 files for imports) |
-| 5 | Documentation | LOW | README.md, CONTRIBUTING.md, docs/ |
+| Priority | Source | Confidence | File Patterns (SSOT) |
+|----------|--------|------------|----------------------|
+| 1 | Manifest files | HIGH | {lang_manifest} |
+| 2 | Lock files | HIGH | {lang_lock} |
+| 3 | Config files | HIGH | {tool_config} |
+| 4 | Code files | MEDIUM | {code_ext} (sample 5-10 files for imports) |
+| 5 | Documentation | LOW | {doc_files} |
+
+*Actual patterns defined per-category below. This table shows detection priority.*
 
 **Detection Categories:**
 
 ##### Languages (L:*)
 | Category | Manifest | Lock/Config | Code Patterns |
 |----------|----------|-------------|---------------|
-| L:Python | pyproject.toml, setup.py, setup.cfg, requirements*.txt, Pipfile | poetry.lock, Pipfile.lock, uv.lock | *.py |
-| L:TypeScript | package.json + tsconfig.json | - | *.ts, *.tsx, *.mts, *.cts |
-| L:JavaScript | package.json (no tsconfig) | - | *.js, *.jsx, *.mjs, *.cjs |
-| L:Go | go.mod | go.sum | *.go |
-| L:Rust | Cargo.toml | Cargo.lock | *.rs |
-| L:Java | pom.xml, build.gradle, build.gradle.kts | - | *.java |
-| L:Kotlin | build.gradle.kts + kotlin | - | *.kt, *.kts |
-| L:Swift | Package.swift, *.xcodeproj | Package.resolved | *.swift |
-| L:CSharp | *.csproj, *.sln | packages.lock.json | *.cs |
-| L:Ruby | Gemfile, *.gemspec | Gemfile.lock | *.rb |
-| L:PHP | composer.json | composer.lock | *.php |
-| L:Elixir | mix.exs | mix.lock | *.ex, *.exs |
-| L:Gleam | gleam.toml | manifest.toml | *.gleam |
-| L:Scala | build.sbt | - | *.scala |
-| L:Zig | build.zig | build.zig.zon | *.zig |
-| L:Dart | pubspec.yaml | pubspec.lock | *.dart |
+| L:Python | {py_manifest} | {py_lock} | {py_ext} |
+| L:TypeScript | {js_manifest} + {ts_config} | - | {ts_ext} |
+| L:JavaScript | {js_manifest} (no {ts_config}) | - | {js_ext} |
+| L:Go | {go_manifest} | {go_lock} | {go_ext} |
+| L:Rust | {rust_manifest} | {rust_lock} | {rust_ext} |
+| L:Java | {java_manifest} | - | {java_ext} |
+| L:Kotlin | {kotlin_config} | - | {kotlin_ext} |
+| L:Swift | {swift_manifest} | {swift_lock} | {swift_ext} |
+| L:CSharp | {csharp_project} | {csharp_lock} | {csharp_ext} |
+| L:Ruby | {ruby_manifest} | {ruby_lock} | {ruby_ext} |
+| L:PHP | {php_manifest} | {php_lock} | {php_ext} |
+| L:Elixir | {elixir_manifest} | {elixir_lock} | {elixir_ext} |
+| L:Gleam | {gleam_manifest} | {gleam_lock} | {gleam_ext} |
+| L:Scala | {scala_manifest} | - | {scala_ext} |
+| L:Zig | {zig_manifest} | {zig_lock} | {zig_ext} |
+| L:Dart | {dart_manifest} | {dart_lock} | {dart_ext} |
 
 ##### Runtimes (R:*)
 | Category | Detection | Notes |
 |----------|-----------|-------|
-| R:Node | package.json, node_modules/ | Default JS runtime |
-| R:Bun | bun.lockb, bunfig.toml | 3-4x faster than Node |
-| R:Deno | deno.json, deno.lock, deno.jsonc | Secure by default |
+| R:Node | {node_markers} | Default JS runtime |
+| R:Bun | {bun_markers} | 3-4x faster than Node |
+| R:Deno | {deno_markers} | Secure by default |
 
 ##### Project Types (T:*)
 | Category | Triggers | Notes |
 |----------|----------|-------|
-| T:CLI | `[project.scripts]`, `[project.entry-points]`, `__main__.py`, bin/, cli/, typer/click/argparse/fire imports, `"bin"` in package.json, cobra/urfave-cli imports (Go) | Entry point detection |
-| T:Library | `exports` in package.json, `__init__.py` with `__all__`, lib/ with index.ts, `[lib]` in Cargo.toml | Export detection |
-| T:Service | Dockerfile + exposed ports, `CMD`/`ENTRYPOINT`, long-running process patterns | Daemon detection |
+| T:CLI | {entry_points}, {cli_deps}, {bin_dir} | Entry point detection |
+| T:Library | {export_markers}, {lib_markers} | Export detection |
+| T:Service | {container} + {ports}, {daemon_patterns} | Daemon detection |
 
 ##### API Styles (API:*)
 | Category | Triggers |
 |----------|----------|
-| API:REST | routes/, controllers/, api/, `@Get`/`@Post`/`@router` decorators, express.Router, FastAPI/Flask/Django/Gin/Echo routes, `app.get(`/`app.post(` |
-| API:GraphQL | graphql/apollo/type-graphql deps, schema.graphql, *.graphql, resolvers/, `@Query`/`@Mutation` decorators |
-| API:gRPC | *.proto files, grpc/grpcio/tonic deps, protobuf, `service X { rpc` |
-| API:WebSocket | ws/socket.io/websockets deps, `@WebSocketGateway`, `upgrade: websocket` |
+| API:REST | {routes_dir}, {rest_decorators}, {rest_patterns} |
+| API:GraphQL | {graphql_deps}, {schema_files}, {graphql_decorators} |
+| API:gRPC | {proto_files}, {grpc_deps}, {proto_patterns} |
+| API:WebSocket | {websocket_deps}, {websocket_decorators} |
 
 ##### Database (DB:*)
 | Category | Triggers |
 |----------|----------|
-| DB:SQL | sqlite3/psycopg2/pymysql/mysql-connector/pg imports, *.sql files, migrations/, alembic/, `CREATE TABLE` |
-| DB:ORM | sqlalchemy/prisma/drizzle/typeorm/sequelize/gorm/diesel/sqlx/peewee/tortoise-orm deps |
-| DB:NoSQL | pymongo/motor/mongoose/redis/ioredis/cassandra/dynamodb/firestore deps |
-| DB:Vector | pgvector/pinecone/weaviate/qdrant/milvus/chroma deps |
+| DB:SQL | {sql_drivers}, {sql_files}, {migrations_dir}, {sql_patterns} |
+| DB:ORM | {orm_deps} |
+| DB:NoSQL | {nosql_deps} |
+| DB:Vector | {vector_deps} |
 
 ##### Frontend
 | Category | Triggers |
 |----------|----------|
-| Frontend:React | react/react-dom deps, *.jsx/*.tsx, `useState`/`useEffect` hooks |
-| Frontend:Vue | vue deps, *.vue, `<script setup>`, Nuxt |
-| Frontend:Angular | @angular deps, *.component.ts, `@Component` |
-| Frontend:Svelte | svelte deps, *.svelte, SvelteKit |
-| Frontend:Solid | solid-js deps |
-| Frontend:Astro | astro deps, *.astro |
-| Frontend:HTMX | htmx deps, `hx-get`/`hx-post` attributes |
+| Frontend:React | {react_deps}, {react_ext}, {react_patterns} |
+| Frontend:Vue | {vue_deps}, {vue_ext}, {vue_patterns} |
+| Frontend:Angular | {angular_deps}, {angular_ext}, {angular_patterns} |
+| Frontend:Svelte | {svelte_deps}, {svelte_ext} |
+| Frontend:Solid | {solid_deps} |
+| Frontend:Astro | {astro_deps}, {astro_ext} |
+| Frontend:HTMX | {htmx_deps}, {htmx_attrs} |
 
 ##### Mobile
 | Category | Triggers |
 |----------|----------|
-| Mobile:Flutter | pubspec.yaml, lib/main.dart, *.dart |
-| Mobile:ReactNative | react-native/expo deps, app.json with expo, metro.config.js |
-| Mobile:iOS | *.xcodeproj, *.xcworkspace, Podfile, *.swift |
-| Mobile:Android | build.gradle + android/, AndroidManifest.xml, *.kt in app/src/ |
-| Mobile:KMP | kotlin-multiplatform, shared/ + iosApp/ + androidApp/ |
+| Mobile:Flutter | {flutter_manifest}, {flutter_entry}, {dart_ext} |
+| Mobile:ReactNative | {rn_deps}, {rn_config} |
+| Mobile:iOS | {ios_project}, {ios_deps}, {swift_ext} |
+| Mobile:Android | {android_build}, {android_manifest}, {kotlin_ext} |
+| Mobile:KMP | {kmp_config}, {kmp_dirs} |
 
 ##### Desktop
 | Category | Triggers |
 |----------|----------|
-| Desktop:Electron | electron deps, electron-builder.yml, main.js + preload.js |
-| Desktop:Tauri | tauri deps, tauri.conf.json, src-tauri/ |
+| Desktop:Electron | {electron_deps}, {electron_config} |
+| Desktop:Tauri | {tauri_deps}, {tauri_config} |
 
 ##### Infrastructure (Infra:*)
 | Category | Triggers |
 |----------|----------|
-| Infra:Docker | Dockerfile, docker-compose.yml, .dockerignore (not in examples/test/) |
-| Infra:K8s | k8s/, helm/, kustomization.yaml, *.yaml with `apiVersion:` + `kind:` |
-| Infra:Terraform | *.tf, .terraform/, terraform.tfstate |
-| Infra:Pulumi | Pulumi.yaml, pulumi/ |
-| Infra:Serverless | serverless.yml, sam.yaml |
-| Infra:Edge | wrangler.toml (CF Workers), vercel.json (Edge), deno.json (Deno Deploy) |
-| Infra:CDK | cdk.json, lib/*-stack.ts |
-| Infra:WASM | *.wasm, *.wit, wasm-pack.toml, Cargo.toml with `crate-type = ["cdylib"]` |
+| Infra:Docker | {container_files} (not in {test_dirs}) |
+| Infra:K8s | {k8s_dirs}, {k8s_configs}, {k8s_patterns} |
+| Infra:Terraform | {tf_files}, {tf_state} |
+| Infra:Pulumi | {pulumi_config} |
+| Infra:Serverless | {serverless_configs} |
+| Infra:Edge | {edge_configs} |
+| Infra:CDK | {cdk_config}, {cdk_stack_files} |
+| Infra:WASM | {wasm_ext}, {wasm_config}, {wasm_crate_type} |
 
 ##### Build/Tooling
 | Category | Triggers |
 |----------|----------|
-| Build:Monorepo | nx.json, turbo.json, lerna.json, pnpm-workspace.yaml, `workspaces` in package.json, Bazel/Pants |
-| Build:Bundler | vite.config.*, webpack.config.*, rollup.config.*, esbuild, tsup.config.* |
-| Build:Linter | .eslintrc*, biome.json, ruff.toml, [tool.ruff], golangci.yml, .rubocop.yml |
-| Build:Formatter | .prettierrc*, biome.json, ruff.toml, rustfmt.toml |
-| Build:TypeChecker | tsconfig.json (strict), mypy.ini, [tool.mypy], pyrightconfig.json |
+| Build:Monorepo | {monorepo_configs}, {workspace_markers} |
+| Build:Bundler | {bundler_configs} |
+| Build:Linter | {linter_configs} |
+| Build:Formatter | {formatter_configs} |
+| Build:TypeChecker | {typechecker_configs} |
 
 ##### ML/AI
 | Category | Triggers |
 |----------|----------|
-| ML:Training | torch/tensorflow/jax/sklearn/keras deps, *.ipynb, models/, training/ |
-| ML:LLM | langchain/llamaindex/haystack/semantic-kernel deps, agents/, chains/, prompts/ |
-| ML:Inference | transformers/sentence-transformers/vllm/ollama/onnxruntime deps |
-| ML:SDK | openai/anthropic/google-generativeai/cohere deps |
+| ML:Training | {ml_training_deps}, {notebook_ext}, {ml_dirs} |
+| ML:LLM | {llm_orchestration_deps}, {llm_dirs} |
+| ML:Inference | {inference_deps} |
+| ML:SDK | {ai_sdk_deps} |
 
 ##### Testing
 | Category | Triggers |
 |----------|----------|
-| Test:Unit | pytest/unittest/jest/vitest/mocha/go test, tests/, __tests__/, *.test.*, *.spec.* |
-| Test:E2E | playwright/cypress/selenium/puppeteer deps, e2e/, integration/ |
-| Test:Coverage | [tool.coverage], .nycrc, jest --coverage, c8, istanbul |
+| Test:Unit | {unit_test_deps}, {test_dirs}, {test_patterns} |
+| Test:E2E | {e2e_deps}, {e2e_dirs} |
+| Test:Coverage | {coverage_configs} |
 
 ##### CI/CD
 | Category | Triggers |
 |----------|----------|
-| CI:GitHub | .github/workflows/*.yml |
-| CI:GitLab | .gitlab-ci.yml |
-| CI:Jenkins | Jenkinsfile |
-| CI:CircleCI | .circleci/config.yml |
-| CI:Azure | azure-pipelines.yml |
-| CI:ArgoCD | argocd/, Application.yaml with argocd.io |
+| CI:GitHub | {github_workflow_dir} |
+| CI:GitLab | {gitlab_config} |
+| CI:Jenkins | {jenkins_config} |
+| CI:CircleCI | {circleci_config} |
+| CI:Azure | {azure_config} |
+| CI:ArgoCD | {argocd_dir}, {argocd_config} |
 
 ##### Other
 | Category | Triggers |
 |----------|----------|
-| i18n | locales/, i18n/, messages/, translations/, react-i18next/vue-i18n/formatjs deps |
-| Game:Unity | *.csproj + Assets/, ProjectSettings/ |
-| Game:Godot | project.godot |
-| Game:Python | pygame/arcade/ursina/panda3d deps |
+| i18n | {i18n_dirs}, {i18n_deps} |
+| Game:Unity | {unity_markers} |
+| Game:Godot | {godot_markers} |
+| Game:Python | {python_game_deps} |
 
 ##### Dependency-Based Detection (DEP:*)
 
-Detect from manifest dependencies. Apply corresponding DEP rules from cco-adaptive.md.
+Detect from manifest dependencies. **Trigger values defined in cco-adaptive.md Dependency-Based Rules section.**
 
-| Category | Dependency Triggers (any match) |
-|----------|--------------------------------|
-| DEP:CLI | typer, click, argparse, fire, argh, docopt, cobra, urfave/cli |
-| DEP:TUI | rich, textual, urwid, blessed, prompt-toolkit, questionary, inquirer |
-| DEP:Validation | pydantic, attrs, marshmallow, cerberus, zod, valibot, yup, joi |
-| DEP:Config | pydantic-settings, python-dotenv, dynaconf, omegaconf, hydra, dotenv |
-| DEP:Testing | pytest, unittest, jest, vitest, mocha, playwright, cypress |
-| DEP:Edge | @cloudflare/workers-types, wrangler, vercel/edge, hono, elysia |
-| DEP:WASM | wasm-pack, wasm-bindgen, wit-bindgen, wasmtime, wasmer |
-| DEP:EdgeFramework | hono, elysia, h3, nitro, itty-router |
-| DEP:GPU | cuda-python, cupy, torch+cuda, tensorflow-gpu, numba, triton, jax |
-| DEP:Audio | faster-whisper, whisper, pydub, librosa, soundfile, pyaudio |
-| DEP:Video | ffmpeg-python, moviepy, opencv-video, decord, av |
-| DEP:HeavyModel | transformers, sentence-transformers, langchain, llama-cpp, vllm, ollama |
-| DEP:Image | opencv-python, pillow, scikit-image, imageio, albumentations |
-| DEP:DataHeavy | pandas, polars, dask, pyspark, ray, vaex, arrow |
-| DEP:GamePython | pygame, arcade, ursina, panda3d, pyglet |
-| DEP:GameJS | phaser, three.js, pixi.js, babylon.js, kaboom |
-| DEP:HTTP | requests, httpx, aiohttp, axios, got, ky, node-fetch, fetch |
-| DEP:ORM | sqlalchemy, prisma, drizzle, typeorm, sequelize, gorm, diesel |
-| DEP:Auth | passlib, python-jose, authlib, passport, lucia, better-auth |
-| DEP:Payment | stripe, paypal, braintree, square, adyen |
-| DEP:Email | sendgrid, mailgun, postmark, resend, nodemailer, emails |
-| DEP:SMS | twilio, vonage, messagebird, plivo |
-| DEP:Notification | firebase-admin, onesignal, pusher, ably |
-| DEP:Search | elasticsearch, meilisearch, algolia, typesense, opensearch |
-| DEP:Queue | celery, rq, dramatiq, bull, bullmq, bee-queue |
-| DEP:Cache | redis, ioredis, memcached, aiocache, keyv |
-| DEP:Logging | loguru, structlog, winston, pino, bunyan |
-| DEP:ObjectStore | boto3, minio, cloudinary, uploadthing, google-cloud-storage |
-| DEP:PDF | reportlab, weasyprint, pdfkit, puppeteer, fpdf2 |
-| DEP:Excel | openpyxl, xlsxwriter, exceljs, sheetjs |
-| DEP:Scraping | scrapy, beautifulsoup4, selenium, playwright, crawlee |
-| DEP:Blockchain | web3, ethers, hardhat, brownie, solana-py |
-| DEP:Crypto | cryptography, pycryptodome, nacl, jose, argon2 |
+| Category | Trigger Reference |
+|----------|-------------------|
+| DEP:CLI | {cli_framework_deps} |
+| DEP:TUI | {tui_deps} |
+| DEP:Validation | {validation_deps} |
+| DEP:Config | {config_deps} |
+| DEP:Testing | {testing_framework_deps} |
+| DEP:Edge | {edge_runtime_deps} |
+| DEP:WASM | {wasm_toolchain_deps} |
+| DEP:EdgeFramework | {edge_framework_deps} |
+| DEP:GPU | {gpu_deps} |
+| DEP:Audio | {audio_processing_deps} |
+| DEP:Video | {video_processing_deps} |
+| DEP:HeavyModel | {heavy_model_deps} |
+| DEP:Image | {image_processing_deps} |
+| DEP:DataHeavy | {data_processing_deps} |
+| DEP:GamePython | {python_game_deps} |
+| DEP:GameJS | {js_game_deps} |
+| DEP:HTTP | {http_client_deps} |
+| DEP:ORM | {orm_deps} |
+| DEP:Auth | {auth_deps} |
+| DEP:Payment | {payment_deps} |
+| DEP:Email | {email_deps} |
+| DEP:SMS | {sms_deps} |
+| DEP:Notification | {notification_deps} |
+| DEP:Search | {search_deps} |
+| DEP:Queue | {queue_deps} |
+| DEP:Cache | {cache_deps} |
+| DEP:Logging | {logging_deps} |
+| DEP:ObjectStore | {object_storage_deps} |
+| DEP:PDF | {pdf_deps} |
+| DEP:Excel | {excel_deps} |
+| DEP:Scraping | {scraping_deps} |
+| DEP:Blockchain | {blockchain_deps} |
+| DEP:Crypto | {crypto_deps} |
+| DEP:GameEngine | {game_engine_markers} |
+| DEP:ARVR | {arvr_deps} |
+| DEP:IoT | {iot_deps} |
 
 **Documentation Fallback (when code sparse):**
 
 | Source | What to Extract |
 |--------|-----------------|
-| README.md | Language badges, "Built with", tech stack section |
-| CONTRIBUTING.md | Dev tools, test commands, linting setup |
-| docs/ | Architecture diagrams, ADRs |
-| Manifest description | [project.description], package.json description |
+| {readme} | {tech_badges}, {tech_stack_section} |
+| {contributing} | {dev_tools}, {test_commands} |
+| {docs_dir} | {architecture_docs} |
+| {manifest_desc} | {project_description} |
 
 Mark as `[from docs]` with `confidence: LOW`.
 

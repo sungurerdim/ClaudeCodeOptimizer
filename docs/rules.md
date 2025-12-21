@@ -6,11 +6,11 @@
 
 | Category | Rules | Location | Loading |
 |----------|-------|----------|---------|
-| Core | 58 | `~/.claude/rules/cco/core.md` | Always active |
-| AI | 30 | `~/.claude/rules/cco/ai.md` | Always active |
+| Core | 62 | `~/.claude/rules/cco/core.md` | Always active |
+| AI | 39 | `~/.claude/rules/cco/ai.md` | Always active |
 | Tools | 106 | pip package | Built into commands/agents |
-| Adaptive | 321 | pip package → `.claude/rules/cco/` | Per-project |
-| **Total** | **515** | | |
+| Adaptive | 718 | pip package → `.claude/rules/cco/` | Per-project |
+| **Total** | **925** | | |
 
 **Counting:** `grep -c "^- \*\*" <file>` for all rule files
 
@@ -29,7 +29,7 @@
 │  ON-DEMAND (Tool + Adaptive Rules)                              │
 ├─────────────────────────────────────────────────────────────────┤
 │  Tools        - CCO command/agent workflow mechanisms           │
-│  Adaptive     - Project-specific rules template (321 rules)     │
+│  Adaptive     - Project-specific rules template (718 rules)     │
 │  Location:    pip package (NOT in rules/ to avoid context bloat)│
 │  Access via:  cco-install --cat rules/cco-{tools,adaptive}.md   │
 ├─────────────────────────────────────────────────────────────────┤
