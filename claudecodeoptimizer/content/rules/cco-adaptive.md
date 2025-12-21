@@ -47,6 +47,9 @@ Detection organized by category. Trigger values in `{placeholders}` are defined 
 | API:REST | {routes_dir}, {rest_decorators} | `api.md` |
 | API:GraphQL | {schema_files}, {graphql_deps} | `api.md` |
 | API:gRPC | {proto_files}, {grpc_deps} | `api.md` |
+| API:WebSocket | {websocket_deps}, {websocket_decorators} | `api.md` |
+| API:OpenAPI | {openapi_files}, {openapi_dir} | `api.md` |
+| API:AsyncAPI | {asyncapi_files} | `api.md` |
 | **Database** |||
 | DB:SQL | {sql_drivers}, {migrations_dir} | `database.md` |
 | DB:ORM | {orm_deps} | `database.md` |
@@ -68,6 +71,7 @@ Detection organized by category. Trigger values in `{placeholders}` are defined 
 | Mobile:KMP | {kmp_config}, {kmp_dirs} | `mobile.md` |
 | **Infrastructure** |||
 | Infra:Docker | {container_files} | `container.md` |
+| Infra:Podman | {podman_files} | `container.md` |
 | Infra:K8s | {k8s_dirs}, {k8s_configs} | `k8s.md` |
 | Infra:Terraform | {tf_files} | `terraform.md` |
 | Infra:Pulumi | {pulumi_config} | `pulumi.md` |
@@ -86,6 +90,39 @@ Detection organized by category. Trigger values in `{placeholders}` are defined 
 | Build:Linter | {linter_configs} | `linter.md` |
 | Build:Formatter | {formatter_configs} | `formatter.md` |
 | Build:TypeChecker | {typechecker_configs} | `typechecker.md` |
+| Build:Make | {makefile} | `taskrunner.md` |
+| Build:Just | {justfile} | `taskrunner.md` |
+| Build:Task | {taskfile} | `taskrunner.md` |
+| Build:Mise | {mise_config} | `taskrunner.md` |
+| **Backend Frameworks** |||
+| Backend:Django | {django_markers} | `backend.md` |
+| Backend:Flask | {flask_markers} | `backend.md` |
+| Backend:FastAPI | {fastapi_markers} | `backend.md` |
+| Backend:Express | {express_deps} | `backend.md` |
+| Backend:Fastify | {fastify_deps} | `backend.md` |
+| Backend:NestJS | {nestjs_deps} | `backend.md` |
+| Backend:Spring | {spring_boot_deps} | `backend.md` |
+| Backend:Rails | {rails_markers} | `backend.md` |
+| Backend:Laravel | {laravel_markers} | `backend.md` |
+| Backend:Phoenix | {phoenix_deps} | `backend.md` |
+| **Observability** |||
+| Observability:Prometheus | {prometheus_config} | `observability.md` |
+| Observability:Grafana | {grafana_config} | `observability.md` |
+| Observability:Datadog | {datadog_config} | `observability.md` |
+| Observability:ELK | {elk_config} | `observability.md` |
+| Observability:Jaeger | {jaeger_config} | `observability.md` |
+| Observability:OpenTelemetry | {otel_deps} | `observability.md` |
+| Observability:Sentry | {sentry_deps} | `observability.md` |
+| **Documentation** |||
+| Docs:Docusaurus | {docusaurus_config} | `documentation.md` |
+| Docs:VitePress | {vitepress_config} | `documentation.md` |
+| Docs:Sphinx | {sphinx_config} | `documentation.md` |
+| Docs:MkDocs | {mkdocs_config} | `documentation.md` |
+| **Deployment** |||
+| Deploy:Fly | {fly_config} | `deployment.md` |
+| Deploy:Railway | {railway_config} | `deployment.md` |
+| Deploy:Render | {render_config} | `deployment.md` |
+| Deploy:Heroku | {heroku_config} | `deployment.md` |
 | **Desktop** |||
 | Desktop:Electron | {electron_deps}, {electron_config} | `desktop.md` |
 | Desktop:Tauri | {tauri_deps}, {tauri_config} | `desktop.md` |

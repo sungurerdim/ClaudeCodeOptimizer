@@ -91,20 +91,20 @@ This creates your project context in `.claude/rules/cco/context.md`. Restart Cla
 
 ## Rules
 
-CCO uses a 4-category rules system with **1013 rules total**:
+CCO uses a 4-category rules system with **1017 rules total**:
 
 | Category | Rules | Loading |
 |----------|-------|---------|
 | **Core** | 62 | Always active (`~/.claude/rules/cco/`) |
 | **AI** | 39 | Always active (`~/.claude/rules/cco/`) |
 | **Tools** | 104 | Built into commands/agents |
-| **Adaptive** | 808 | Selected per project → `.claude/rules/cco/` |
+| **Adaptive** | 812 | Selected per project → `.claude/rules/cco/` |
 
 **Categories:**
 - **Core** - Fundamental principles: DRY, Fail-Fast, Clean Code, Security, Testing
 - **AI** - Behavior patterns: Read First, No Hallucination, Semantic Density
 - **Tools** - CCO workflow: Approval Flow, Fix Workflow, Safety Classification
-- **Adaptive** - Stack-based: 16 languages, 50+ frameworks, 42 dependency categories
+- **Adaptive** - Stack-based: 16 languages, 70+ frameworks, 42 dependency categories
 
 ### Supported Stacks
 
@@ -233,7 +233,7 @@ Built on official Anthropic documentation and Claude Code best practices:
 |---------|-------------------|
 | [Slash Commands][slash-commands] | 8 commands with YAML frontmatter |
 | [Sub-agents][sub-agents] | 3 single-responsibility agents |
-| [Rules Directory][memory] | 4-category rule system (1013 rules) |
+| [Rules Directory][memory] | 4-category rule system (1017 rules) |
 | [Permissions][cc-changelog] | 4 levels (safe→full) |
 
 **Rules Based On:** SSOT, DRY, YAGNI, KISS (Core) | Read-First, No-Hallucination (AI) | OWASP, Least-Privilege (Security)

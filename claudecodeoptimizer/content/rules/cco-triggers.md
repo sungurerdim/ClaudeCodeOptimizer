@@ -812,6 +812,168 @@ These generic placeholders are used across multiple categories. Each category se
 
 ---
 
+## Backend Framework Detection
+
+### Python Frameworks (Backend:Python)
+| Trigger | Values |
+|---------|--------|
+| `{django_markers}` | `django`, `django-admin`, `manage.py`, `settings.py`, `urls.py` |
+| `{flask_markers}` | `flask`, `Flask(__name__)`, `app.route` |
+| `{fastapi_markers}` | `fastapi`, `FastAPI()`, `@app.get`, `@app.post` |
+
+### Node.js Frameworks (Backend:Node)
+| Trigger | Values |
+|---------|--------|
+| `{express_deps}` | `express` |
+| `{fastify_deps}` | `fastify`, `@fastify/*` |
+| `{hapi_deps}` | `@hapi/hapi` |
+| `{koa_deps}` | `koa`, `@koa/*` |
+| `{nestjs_deps}` | `@nestjs/core`, `@nestjs/common` |
+
+### Java Frameworks (Backend:Java)
+| Trigger | Values |
+|---------|--------|
+| `{spring_boot_deps}` | `spring-boot-starter*`, `org.springframework.boot` |
+| `{quarkus_deps}` | `io.quarkus`, `quarkus-*` |
+| `{micronaut_deps}` | `io.micronaut`, `micronaut-*` |
+
+### Ruby Frameworks (Backend:Ruby)
+| Trigger | Values |
+|---------|--------|
+| `{rails_markers}` | `rails`, `config/routes.rb`, `app/controllers/`, `ActiveRecord` |
+| `{sinatra_deps}` | `sinatra` |
+
+### PHP Frameworks (Backend:PHP)
+| Trigger | Values |
+|---------|--------|
+| `{laravel_markers}` | `laravel/framework`, `artisan`, `app/Http/Controllers/` |
+| `{symfony_deps}` | `symfony/*`, `bin/console` |
+
+### Elixir Frameworks (Backend:Elixir)
+| Trigger | Values |
+|---------|--------|
+| `{phoenix_deps}` | `phoenix`, `phoenix_html`, `phoenix_live_view` |
+
+---
+
+## Observability Detection
+
+### Metrics (Observability:Metrics)
+| Trigger | Values |
+|---------|--------|
+| `{prometheus_config}` | `prometheus.yml`, `prometheus.yaml`, `prometheus/` |
+| `{grafana_config}` | `grafana/`, `dashboards/`, `provisioning/` |
+| `{datadog_config}` | `datadog.yaml`, `datadog-agent`, `dd-trace` |
+
+### Logging (Observability:Logging)
+| Trigger | Values |
+|---------|--------|
+| `{elk_config}` | `elasticsearch.yml`, `logstash.conf`, `filebeat.yml` |
+| `{loki_config}` | `loki-config.yaml`, `promtail-config.yaml` |
+
+### Tracing (Observability:Tracing)
+| Trigger | Values |
+|---------|--------|
+| `{jaeger_config}` | `jaeger-agent`, `jaeger-collector`, `opentelemetry` |
+| `{otel_deps}` | `opentelemetry-*`, `@opentelemetry/*`, `otel-*` |
+
+### APM (Observability:APM)
+| Trigger | Values |
+|---------|--------|
+| `{newrelic_config}` | `newrelic.ini`, `newrelic.yml`, `newrelic-agent` |
+| `{sentry_deps}` | `sentry-sdk`, `@sentry/*`, `sentry` |
+
+---
+
+## Documentation Detection
+
+### Static Site Generators (Docs:SSG)
+| Trigger | Values |
+|---------|--------|
+| `{docusaurus_config}` | `docusaurus.config.js`, `docusaurus.config.ts`, `sidebars.js` |
+| `{vitepress_config}` | `.vitepress/config.ts`, `.vitepress/config.js` |
+| `{sphinx_config}` | `conf.py`, `docs/source/`, `_build/` |
+| `{mkdocs_config}` | `mkdocs.yml`, `mkdocs.yaml` |
+| `{astro_docs}` | `astro.config.*` with `@astrojs/starlight` |
+
+---
+
+## API Specification Detection
+
+### OpenAPI (API:OpenAPI)
+| Trigger | Values |
+|---------|--------|
+| `{openapi_files}` | `openapi.yaml`, `openapi.json`, `swagger.yaml`, `swagger.json`, `*.openapi.yml` |
+| `{openapi_dir}` | `openapi/`, `swagger/`, `api-docs/` |
+
+### AsyncAPI (API:AsyncAPI)
+| Trigger | Values |
+|---------|--------|
+| `{asyncapi_files}` | `asyncapi.yaml`, `asyncapi.json`, `asyncapi.yml` |
+
+---
+
+## Task Runner Detection
+
+### Make (Build:Make)
+| Trigger | Values |
+|---------|--------|
+| `{makefile}` | `Makefile`, `makefile`, `GNUmakefile` |
+
+### Just (Build:Just)
+| Trigger | Values |
+|---------|--------|
+| `{justfile}` | `justfile`, `.justfile`, `Justfile` |
+
+### Task (Build:Task)
+| Trigger | Values |
+|---------|--------|
+| `{taskfile}` | `Taskfile.yml`, `Taskfile.yaml`, `taskfile.yml` |
+
+### Mise (Build:Mise)
+| Trigger | Values |
+|---------|--------|
+| `{mise_config}` | `.mise.toml`, `.mise.local.toml`, `mise.toml` |
+
+---
+
+## Deployment Platform Detection
+
+### PaaS (Deploy:PaaS)
+| Trigger | Values |
+|---------|--------|
+| `{fly_config}` | `fly.toml` |
+| `{railway_config}` | `railway.json`, `railway.toml` |
+| `{render_config}` | `render.yaml`, `render.yml` |
+| `{heroku_config}` | `Procfile`, `heroku.yml`, `app.json` |
+
+---
+
+## Container Alternative Detection
+
+### Podman (Infra:Podman)
+| Trigger | Values |
+|---------|--------|
+| `{podman_files}` | `Containerfile`, `podman-compose.yml`, `podman-compose.yaml` |
+
+---
+
+## Conflict Resolution Triggers
+
+*Specific triggers for conflict resolution logic in detection.*
+
+| Trigger | Values | Used For |
+|---------|--------|----------|
+| `{vitest_config}` | `vitest.config.*`, `vitest.workspace.*` | Jest vs Vitest |
+| `{oxlint_config}` | `.oxlintrc.json`, `oxlint.json` | ESLint vs Oxlint |
+| `{biome_config}` | `biome.json`, `biome.jsonc` | ESLint/Prettier vs Biome |
+| `{ruff_format_config}` | `ruff.toml[format]`, `pyproject.toml[tool.ruff.format]` | Prettier vs ruff |
+| `{yarn_lock}` | `yarn.lock` | Package manager detection |
+| `{pnpm_lock}` | `pnpm-lock.yaml` | Package manager detection |
+| `{bun_lock}` | `bun.lockb` | Package manager detection |
+
+---
+
 ## Notes
 
 - Trigger values are case-insensitive for package names
