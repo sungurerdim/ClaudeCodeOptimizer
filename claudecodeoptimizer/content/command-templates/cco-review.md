@@ -95,7 +95,7 @@ AskUserQuestion([{
 // CRITICAL: All focus areas in ONE cco-agent-analyze call
 // Agent handles parallelization internally
 
-Task("cco-agent-analyze", `
+agentResponse = Task("cco-agent-analyze", `
   scopes: ["architecture", ...focusAreas.map(f => f.toLowerCase().replace(" & ", "-").replace(" ", "-"))]
 
   Analyze for each scope:
@@ -103,13 +103,14 @@ Task("cco-agent-analyze", `
   - quality: Complexity hotspots, code smells, type coverage, error handling
   - testing-dx: Test coverage by module, missing tests, DX friction, CI/CD gaps
   - best-practices: Execution patterns, tool selection, code patterns, anti-patterns
-
-  Return: {
-    findings: [{ id: "{SCOPE}-{NNN}", scope, severity: "{P0-P3}", title, location: "{file}:{line}", description, recommendation, effort: "{LOW|MEDIUM|HIGH}", impact: "{LOW|MEDIUM|HIGH}" }],
-    metrics: { coupling: "{0-100}", cohesion: "{0-100}", complexity: "{0-100}" },
-    scores: { security, tests, techDebt, cleanliness, overall }
-  }
 `, { model: "haiku" })
+
+// Agent returns (matches cco-agent-analyze architecture output schema):
+// agentResponse = {
+//   findings: [{ id, scope, severity, title, location, description, recommendation, effort, impact }],
+//   metrics: { coupling, cohesion, complexity },
+//   scores: { security, tests, techDebt, cleanliness, overall }
+// }
 ```
 
 **Parallel Execution:**
@@ -151,6 +152,21 @@ Verdict: Foundation is {status} - {recommendation}.
 |--------|---------|----------|
 | SOUND | Good base | Incremental improvements |
 | HAS ISSUES | Structural problems | Targeted fixes, not rewrites |
+
+**Foundation Status Calculation:**
+```javascript
+// Calculate foundation status from metrics
+function getFoundationStatus(metrics) {
+  const issues = []
+  if (metrics.coupling > 70) issues.push("high coupling")
+  if (metrics.cohesion < 50) issues.push("low cohesion")
+  if (metrics.complexity > 60) issues.push("high complexity")
+
+  return issues.length === 0 ? "SOUND" : "HAS ISSUES"
+}
+
+foundation = getFoundationStatus(agentResponse.metrics)
+```
 
 ### Validation
 ```
@@ -311,6 +327,31 @@ Run `git diff` to review changes.
 ---
 
 ## Reference
+
+### Output Schema (when called as sub-command)
+
+When called via `/cco-review --quick --no-apply` (e.g., from cco-preflight):
+
+```json
+{
+  "foundation": "SOUND|HAS ISSUES",
+  "metrics": {
+    "coupling": "{0-100}",
+    "cohesion": "{0-100}",
+    "complexity": "{0-100}"
+  },
+  "doNow": [{ "title": "{title}", "location": "{file}:{line}" }],
+  "plan": [{ "title": "{title}", "location": "{file}:{line}" }],
+  "issues": [{ "severity": "{P0-P3}", "title": "{title}", "location": "{file}:{line}" }]
+}
+```
+
+**Mapping from agent response:**
+- `foundation` ← calculated from `metrics` (see Step-3)
+- `metrics` ← `agentResponse.metrics`
+- `doNow` ← `findings.filter(f => f.impact === "HIGH" && f.effort === "LOW")`
+- `plan` ← `findings.filter(f => f.impact === "HIGH" && f.effort === "MEDIUM")`
+- `issues` ← all findings with severity P0-P1
 
 ### Context Application
 

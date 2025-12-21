@@ -149,14 +149,23 @@ WARN if changes don't match version bump.
 if (phases.includes("Quality")) {
   qualityTask = Task("general-purpose", `
     Execute /cco-optimize --pre-release --fix
-    Return: { fixed, declined, total, blockers }
+    Return: {
+      accounting: { done, declined, fail, total },
+      blockers: [{ severity, title, location }]
+    }
   `, { model: "sonnet", run_in_background: true })
 }
 
 if (phases.includes("Architecture")) {
   reviewTask = Task("general-purpose", `
     Execute /cco-review --quick --no-apply
-    Return: { foundation, doNow, plan, issues }
+    Return: {
+      foundation: "SOUND|HAS ISSUES",
+      metrics: { coupling, cohesion, complexity },
+      doNow: [{ title, location }],
+      plan: [{ title, location }],
+      issues: [{ severity, title, location }]
+    }
   `, { model: "haiku", run_in_background: true })
 }
 ```
@@ -272,14 +281,14 @@ lintResults = await TaskOutput(verificationTasks.lint)
 
 // Aggregate blockers and warnings
 blockers = [
-  ...qualityResults.blockers,
-  ...(testResults.failed ? ["Tests failed"] : []),
-  ...(buildResults.failed ? ["Build failed"] : []),
-  ...(lintResults.failed ? ["Lint failed"] : [])
+  ...(qualityResults.blockers || []),
+  ...(testResults.failed ? [{ severity: "CRITICAL", title: "Tests failed", location: "-" }] : []),
+  ...(buildResults.failed ? [{ severity: "CRITICAL", title: "Build failed", location: "-" }] : []),
+  ...(lintResults.failed ? [{ severity: "HIGH", title: "Lint failed", location: "-" }] : [])
 ]
 warnings = [
-  ...preflightResults.warnings,
-  ...reviewResults.issues
+  ...(preflight.warnings || []),
+  ...(reviewResults.issues || [])
 ]
 ```
 
@@ -295,15 +304,15 @@ Previous: {last_tag}
 ### Results
 | Check | Status |
 |-------|--------|
-| Pre-flight | {status} |
-| Quality | Fixed {n}, Declined {n} |
-| Architecture | {foundation_status} |
-| Tests | {status} |
-| Build | {status} |
-| Lint | {status} |
+| Pre-flight | {preflight.status} |
+| Quality | Done {qualityResults.accounting.done}, Declined {qualityResults.accounting.declined} |
+| Architecture | {reviewResults.foundation} |
+| Tests | {testResults.failed ? "FAIL" : "PASS"} |
+| Build | {buildResults.failed ? "FAIL" : "PASS"} |
+| Lint | {lintResults.failed ? "FAIL" : "PASS"} |
 
-Blockers: {n} (must fix)
-Warnings: {n} (can override)
+Blockers: {blockers.length} (must fix)
+Warnings: {warnings.length} (can override)
 
 Ready: {YES|NO}
 ```

@@ -144,34 +144,108 @@ naming: inconsistent patterns
 ### architecture
 ```
 dependencies: Import graph, circular deps
-coupling: Inter-module dependencies
+coupling: Inter-module dependencies (0-100, lower is better)
+cohesion: Module cohesion (0-100, higher is better)
+complexity: Cyclomatic complexity (0-100, lower is better)
 layers: UI → Logic → Data separation
 patterns: Architectural patterns in use
 ```
-**Output:** `findings` + `metrics: { coupling, cohesion, layers }`
+**Output Schema:**
+```json
+{
+  "findings": [{ "id": "{SCOPE}-{NNN}", "scope": "architecture", "severity": "{P0-P3}", "title": "...", "location": "{file}:{line}", "description": "...", "recommendation": "...", "effort": "{LOW|MEDIUM|HIGH}", "impact": "{LOW|MEDIUM|HIGH}" }],
+  "metrics": {
+    "coupling": "{0-100}",
+    "cohesion": "{0-100}",
+    "complexity": "{0-100}"
+  },
+  "scores": {
+    "security": "{0-100}",
+    "tests": "{0-100}",
+    "techDebt": "{0-100}",
+    "cleanliness": "{0-100}",
+    "overall": "{0-100}"
+  }
+}
+```
 
 ### scan
 Combines all analysis for dashboard: Security (OWASP, secrets, CVE) │ Tests (coverage, quality) │ Tech debt (complexity, dead code) │ Cleanliness (orphans, duplicates)
 
-**Output:** `{ scores, status: "OK|WARN|FAIL|CRITICAL" }`
+**Output Schema:**
+```json
+{
+  "scores": {
+    "security": "{0-100}",
+    "quality": "{0-100}",
+    "architecture": "{0-100}",
+    "bestPractices": "{0-100}",
+    "overall": "{0-100}"
+  },
+  "status": "OK|WARN|FAIL|CRITICAL",
+  "topIssues": [
+    { "category": "{category}", "title": "{issue_title}", "location": "{file}:{line}" }
+  ],
+  "summary": "{2-3_sentence_assessment}"
+}
+```
 
 **Note:** Snapshot only - no historical comparison, no trend tracking.
 
 ### config
 
-Config scope handles project detection and rule selection. Different execution flow from other scopes.
+Config scope handles project detection and rule selection. **Two-phase execution.**
 
-**Config Execution Flow:**
+**Phase 1: detect** - Auto-detect project characteristics
+**Phase 2: generate** - Generate rules from detections + user input
+
+#### Phase 1: detect
 
 | Step | Action | Tool |
 |------|--------|------|
 | 1 | Auto-detect from manifest/code | `Glob`, `Read`, `Grep` |
-| 2 | Read adaptive.md from pip package | `Bash(cco-install --cat rules/cco-adaptive.md)` |
-| 3 | Select rules based on detections + userInput | Internal |
-| 4 | Generate context.md + rule files | Internal |
+| 2 | Return detections with confidence | JSON |
+
+**Output Schema (detect phase):**
+```json
+{
+  "detections": {
+    "language": ["{lang}"],
+    "type": ["{type}"],
+    "api": "{api|null}",
+    "database": "{db|null}",
+    "frontend": "{frontend|null}",
+    "infra": ["{infra}"],
+    "dependencies": ["{deps}"]
+  },
+  "sources": [{ "file": "{file}", "confidence": "HIGH|MEDIUM|LOW" }]
+}
+```
+
+#### Phase 2: generate
+
+**Input:** `detections` (from phase 1) + `userInput` (from cco-config questions)
+
+| Step | Action | Tool |
+|------|--------|------|
+| 1 | Read adaptive.md | `Bash(cco-install --cat rules/cco-adaptive.md)` |
+| 2 | Match detections + userInput → rules | Internal |
+| 3 | Extract rule content from adaptive.md | Internal |
+| 4 | Generate context.md content | Internal |
 | 5 | Return structured output | JSON |
 
-**Note:** User questions are asked by the command (cco-config), not the agent. Agent receives `userInput` as parameter.
+**Output Schema (generate phase):**
+```json
+{
+  "context": "{generated_context_md_content}",
+  "rules": [
+    { "file": "{category}.md", "content": "{content_from_adaptive}" }
+  ],
+  "triggeredCategories": [
+    { "category": "{cat}", "trigger": "{code}", "rule": "{file}", "source": "auto|user" }
+  ]
+}
+```
 
 #### Step 1: Auto-Detection
 
@@ -405,12 +479,43 @@ Mark as `[from docs]` with `confidence: LOW`.
 #### Step 2: Rule Selection (Using Provided userInput)
 
 1. Read adaptive rules template: `Bash(cco-install --cat rules/cco-adaptive.md)`
-2. Match detections → rule categories
+2. Match ALL detections → rule categories
 3. Apply cumulative tiers (Scale/Testing/SLA/Team higher includes lower)
 4. Generate context.md with Strategic Context section
 5. Generate rule files with YAML frontmatter paths
 
 **Rules Source:** Pip package via `cco-install --cat rules/cco-adaptive.md` (NOT from ~/.claude/rules/ to avoid context bloat)
+
+**CRITICAL: Generate rules for ALL detected categories. No orphan detections.**
+
+#### Detection → Rule Mapping
+
+| Category | Detection Pattern | Rule File | Content Source in cco-adaptive.md |
+|----------|-------------------|-----------|-----------------------------------|
+| Language | L:{lang} | `{lang}.md` | Language Rules → {Lang} section |
+| Runtime | R:{runtime} | `{runtime}.md` | (runtime-specific patterns) |
+| App Type | T:{type} | `{type}.md` | Apps > {Type} section |
+| API | API:{style} | `api.md` | Backend > API section |
+| Database | DB:{type} | `database.md` | Backend > Data section |
+| Frontend | Frontend:{fw} | `frontend.md` | (frontend patterns) |
+| Mobile | Mobile:{platform} | `mobile.md` | Apps > Mobile section |
+| Desktop | Desktop:{fw} | `desktop.md` | Apps > Desktop section |
+| Infra | Infra:{type} | `{type}.md` | (varies: container, k8s, edge, etc.) |
+| ML/AI | ML:{type} | `ml.md` | (ML patterns) |
+| Build | Build:{type} | `{type}.md` | (monorepo, bundler) |
+| Testing | Test:{type} | `testing.md` | Testing Rules section |
+| CI/CD | CI:{provider} | `ci-cd.md` | Backend > Operations section |
+| User:Scale | Scale:{tier} | `scale.md` | Scale Rules section |
+| User:Team | Team:{size} | `team.md` | Team Rules section |
+| User:Security | Data:PII/Regulated | `security.md` | Security Rules section |
+| User:Compliance | Compliance:{std} | `compliance.md` | Compliance Rules section |
+| User:SLA | SLA:{level} | `observability.md` | Observability Rules section |
+| Dependency | DEP:{category} | `dep-{category}.md` | DEP rules in Detection System |
+
+**Each rule file MUST include:**
+1. YAML frontmatter: `paths:` matching relevant files
+2. Trigger comment: `*Trigger: {detection_code}*`
+3. Rule content: Extracted from cco-adaptive.md section
 
 **Guidelines (Maturity/Breaking/Priority):** Store in context.md only, don't generate rule files.
 
@@ -440,8 +545,16 @@ Mark as `[from docs]` with `confidence: LOW`.
   },
   "context": "{generated_context_md}",
   "rules": [
-    { "file": "{language}.md", "content": "{rule_content}" },
-    { "file": "{type}.md", "content": "{rule_content}" }
+    // Array contains ALL detected rules - examples below show structure only
+    // Actual entries depend on what was detected in Step-1
+    { "file": "{detection_category}.md", "content": "{content_from_cco_adaptive}" }
+    // Common patterns:
+    // - Language detected → { file: "{lang}.md", content: "..." }
+    // - Type detected → { file: "{type}.md", content: "..." }
+    // - DB detected → { file: "database.md", content: "..." }
+    // - Test detected → { file: "testing.md", content: "..." }
+    // - User input → { file: "scale.md", content: "..." }
+    // ... one entry per detected category
   ],
   "guidelines": {
     "maturity": "{user_maturity}",

@@ -103,41 +103,37 @@ AskUserQuestion([{
 **When `--score` flag is used, skip Steps 2-8 and show quality score only:**
 
 ```javascript
-Task("cco-agent-analyze", `
-  mode: "score"
-  Analyze all scopes and calculate overall quality score (0-100).
+agentResponse = Task("cco-agent-analyze", `
+  scopes: ["scan"]
 
-  Scoring formula:
-  - Start at 100
-  - Critical issues: -10 each (max -40)
-  - High issues: -5 each (max -30)
-  - Medium issues: -2 each (max -20)
-  - Low issues: -1 each (max -10)
-
-  Return: {
-    score: 0-100,
-    breakdown: { security: 0-100, quality: 0-100, architecture: 0-100, best_practices: 0-100 },
-    critical_issues: [{title, location}],
-    summary: "2-3 sentence assessment"
-  }
+  Calculate overall quality score (0-100).
+  Scoring: Start at 100, deduct for issues (critical: -10, high: -5, medium: -2, low: -1)
 `, { model: "haiku" })
+
+// Agent returns (matches cco-agent-analyze scan output schema):
+// agentResponse = {
+//   scores: { security, quality, architecture, bestPractices, overall },
+//   status: "OK|WARN|FAIL|CRITICAL",
+//   topIssues: [{ category, title, location }],
+//   summary: "{assessment}"
+// }
 ```
 
 **Output:**
 ```
-## Quality Score: {score}/100
+## Quality Score: {agentResponse.scores.overall}/100
 
 | Category | Score |
 |----------|-------|
-| Security | {n}/100 |
-| Quality | {n}/100 |
-| Architecture | {n}/100 |
-| Best Practices | {n}/100 |
+| Security | {agentResponse.scores.security}/100 |
+| Quality | {agentResponse.scores.quality}/100 |
+| Architecture | {agentResponse.scores.architecture}/100 |
+| Best Practices | {agentResponse.scores.bestPractices}/100 |
 
-{summary}
+{agentResponse.summary}
 
-Critical Issues:
-- {issue.title} ({issue.location})
+Top Issues:
+{agentResponse.topIssues.map(i => `- ${i.title} (${i.location})`)}
 ```
 
 → Exit after showing score
@@ -406,6 +402,33 @@ Run `git checkout .` to revert all.
 ---
 
 ## Reference
+
+### Output Schema (when called as sub-command)
+
+When called via `/cco-optimize --fix` (e.g., from cco-checkup, cco-preflight):
+
+```json
+{
+  "accounting": {
+    "done": "{n}",
+    "declined": "{n}",
+    "fail": "{n}",
+    "total": "{n}"
+  },
+  "by_scope": {
+    "security": "{n}",
+    "quality": "{n}",
+    "architecture": "{n}",
+    "bestPractices": "{n}"
+  },
+  "blockers": [{ "severity": "{P0-P1}", "title": "{title}", "location": "{file}:{line}" }]
+}
+```
+
+**Mapping from agent responses:**
+- `accounting` ← `cco-agent-apply.accounting`
+- `by_scope` ← grouped count from `cco-agent-analyze.findings`
+- `blockers` ← `findings.filter(f => f.severity === "P0" || f.severity === "P1")`
 
 ### Scope Coverage
 

@@ -128,62 +128,62 @@ Read("{relevant_files}")  // Read matched files
 ```javascript
 // T1: Official Documentation
 Task("cco-agent-research", `
-  strategy: official-docs
+  scope: search
   query: "${parsedQuery.concepts} official documentation ${parsedQuery.date}"
   allowed_domains: [docs.*, official.*, *.io/docs]
-  Return: { sources: [], tier: "T1" }
 `, { model: "haiku", run_in_background: depth === "deep" })
 
 // T2: GitHub & Changelogs
 Task("cco-agent-research", `
-  strategy: github
+  scope: search
   query: "${parsedQuery.concepts} github changelog release notes"
   allowed_domains: [github.com, gitlab.com]
-  Return: { sources: [], tier: "T2" }
 `, { model: "haiku", run_in_background: depth === "deep" })
 
 // T3: Technical Blogs (Standard+)
 if (depth !== "quick") {
   Task("cco-agent-research", `
-    strategy: tech-blogs
+    scope: search
     query: "${parsedQuery.concepts} tutorial guide best practices"
-    Return: { sources: [], tier: "T3" }
   `, { model: "haiku", run_in_background: true })
 }
 
 // T4: Community (Standard+)
 if (depth !== "quick") {
   Task("cco-agent-research", `
-    strategy: community
+    scope: search
     query: "${parsedQuery.concepts} stackoverflow discussion"
     allowed_domains: [stackoverflow.com, reddit.com, dev.to]
-    Return: { sources: [], tier: "T4" }
   `, { model: "haiku", run_in_background: true })
 }
 
 // Security Track (if --security or security-related query)
 if (parsedQuery.mode === "security") {
   Task("cco-agent-research", `
-    strategy: security
+    scope: search
     query: "${parsedQuery.concepts} CVE vulnerability advisory"
     allowed_domains: [nvd.nist.gov, cve.mitre.org, snyk.io]
-    Return: { sources: [], tier: "T1" }
   `, { model: "haiku" })
 }
+
+// Agent returns per scope:
+// search: { query, sources: [{ url, title, tier, finalScore, date }], tierSummary, topSources }
+// analyze: { sources: [{ url, claims, codeExamples, caveats }], contradictions, consensus }
+// synthesize: { recommendation, keyFindings, caveats, alternatives, sources }
 ```
 
 ### 3.3 Comparison Mode (if detected)
 
 ```javascript
 if (parsedQuery.comparison) {
-  // Split into separate tracks
+  // Split into separate tracks for A vs B comparison
   Task("cco-agent-research", `
-    strategy: comparison-a
+    scope: search
     query: "${parsedQuery.comparison.optionA} features pros cons"
   `, { model: "haiku", run_in_background: true })
 
   Task("cco-agent-research", `
-    strategy: comparison-b
+    scope: search
     query: "${parsedQuery.comparison.optionB} features pros cons"
   `, { model: "haiku", run_in_background: true })
 }
@@ -221,25 +221,25 @@ researchSession = {
 **Model selection by source tier:**
 
 ```javascript
-// Collect all results
-allSources = [...localResults, ...t1Results, ...t2Results, ...]
+// Collect all search results from agents
+// Each agent returns: { query, sources: [{ url, title, tier, finalScore, date }], tierSummary, topSources }
+allSources = searchResults.flatMap(r => r.sources)
+
+// Filter by tier
+t1t2Sources = allSources.filter(s => s.tier === "T1" || s.tier === "T2")
+t3PlusSources = allSources.filter(s => ["T3", "T4", "T5"].includes(s.tier))
 
 // High-value synthesis (T1-T2) → Better model
-if (depth === "deep") {
-  synthesis = Task("general-purpose", `
-    sources: ${JSON.stringify(t1t2Sources)}
-    Create authoritative synthesis from official sources
-    Resolve contradictions, identify consensus
-  `, { model: "opus" })  // Opus for accuracy
-} else {
-  synthesis = Task("general-purpose", `
-    sources: ${JSON.stringify(t1t2Sources)}
-    Synthesize findings, weight by tier
-  `, { model: "sonnet" })
-}
+synthesis = Task("cco-agent-research", `
+  scope: synthesize
+  sources: ${JSON.stringify(t1t2Sources)}
+`, { model: depth === "deep" ? "opus" : "sonnet" })
 
-// Supporting evidence (T3+) → Fast model
-supportingEvidence = aggregateByTier(t3PlusSources)  // No agent needed
+// Agent returns (synthesize scope):
+// { recommendation: { summary, confidence, confidenceScore }, keyFindings, caveats, alternatives, sources }
+
+// Supporting evidence (T3+) → aggregate locally (no agent needed)
+supportingEvidence = aggregateByTier(t3PlusSources)
 ```
 
 ### Synthesis Process
