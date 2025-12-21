@@ -5,10 +5,22 @@ import os
 import re
 import sys
 from collections.abc import Callable
+from enum import StrEnum
 from pathlib import Path
 from typing import Any
 
 from . import __version__
+
+
+class ContentSubdir(StrEnum):
+    """Valid subdirectories under content/."""
+
+    COMMANDS = "command-templates"
+    AGENTS = "agent-templates"
+    RULES = "rules"
+    STATUSLINE = "statusline"
+    PERMISSIONS = "permissions"
+
 
 __all__ = [
     "VERSION",
@@ -23,6 +35,7 @@ __all__ = [
     "ALL_RULE_NAMES",
     "OLD_RULE_FILES",
     "SEPARATOR",
+    "ContentSubdir",
     "get_cco_commands",
     "get_cco_agents",
     "get_rules_breakdown",
@@ -71,17 +84,23 @@ SEPARATOR = "=" * 50
 CCO_PERMISSIONS_MARKER = "_cco_managed"
 
 
-def get_content_path(subdir: str = "") -> Path:
+def get_content_path(subdir: ContentSubdir | str = "") -> Path:
     """Get path to content subdirectory.
 
     Args:
-        subdir: One of 'commands', 'agents', 'rules', 'statusline', 'permissions', or '' for root
+        subdir: ContentSubdir enum or string path. Use ContentSubdir for type safety:
+            - ContentSubdir.COMMANDS -> 'command-templates'
+            - ContentSubdir.AGENTS -> 'agent-templates'
+            - ContentSubdir.RULES -> 'rules'
+            - ContentSubdir.STATUSLINE -> 'statusline'
+            - ContentSubdir.PERMISSIONS -> 'permissions'
+            - "" for content root
 
     Returns:
         Path to the content subdirectory or content root if subdir is empty
     """
     base = Path(__file__).parent / "content"
-    return base / subdir if subdir else base
+    return base / str(subdir) if subdir else base
 
 
 # Universal CCO marker pattern - matches ANY cco_* marker block (case-insensitive)
@@ -110,9 +129,8 @@ SUBPROCESS_TIMEOUT_PACKAGE = SUBPROCESS_TIMEOUT_PACKAGE_OPS
 MAX_CLAUDE_MD_SIZE = 1_000_000  # 1MB - prevent ReDoS on large files
 
 # Pre-compiled regex patterns for performance
-# Rules use list format: - **Name**: Description
-# OR table format (adaptive): | * Name | Check | Description |
-_RULE_PATTERN = re.compile(r"(?:^- \*\*\w+\*\*:|\| \* )", re.MULTILINE)
+# Rules use list format: - **Name**: Description (single format for simplicity)
+_RULE_PATTERN = re.compile(r"^- \*\*\w+(?:-\w+)*\*\*:", re.MULTILINE)
 _CATEGORY_PATTERN = re.compile(r"^## ", re.MULTILINE)
 
 
