@@ -10,6 +10,7 @@ from .config import (
     CLAUDE_DIR,
     COMMANDS_DIR,
     RULES_DIR,
+    ContentSubdir,
     get_content_path,
 )
 from .operations import (
@@ -124,7 +125,7 @@ def setup_commands(verbose: bool = True) -> list[str]:
     error = _check_claude_dir()
     if error:
         raise RuntimeError(error)
-    return _setup_content("command-templates", COMMANDS_DIR, verbose)
+    return _setup_content(ContentSubdir.COMMANDS, COMMANDS_DIR, verbose)
 
 
 def setup_agents(verbose: bool = True) -> list[str]:
@@ -139,7 +140,7 @@ def setup_agents(verbose: bool = True) -> list[str]:
     error = _check_claude_dir()
     if error:
         raise RuntimeError(error)
-    return _setup_content("agent-templates", AGENTS_DIR, verbose)
+    return _setup_content(ContentSubdir.AGENTS, AGENTS_DIR, verbose)
 
 
 def setup_rules(verbose: bool = True) -> dict[str, int]:
@@ -161,7 +162,7 @@ def setup_rules(verbose: bool = True) -> dict[str, int]:
     if error:
         raise RuntimeError(error)
 
-    src_dir = get_content_path("rules")
+    src_dir = get_content_path(ContentSubdir.RULES)
     if not src_dir.exists():
         return {"core": 0, "ai": 0, "tools": 0, "total": 0}
 

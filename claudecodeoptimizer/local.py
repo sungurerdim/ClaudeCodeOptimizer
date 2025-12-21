@@ -8,6 +8,7 @@ from pathlib import Path
 
 from .config import (
     CCO_PERMISSIONS_MARKER,
+    ContentSubdir,
     get_content_path,
     load_json_file,
     save_json_file,
@@ -66,7 +67,7 @@ def setup_local_statusline(project_path: Path, mode: str, verbose: bool = True) 
             print(f"  Error: Invalid mode '{mode}'. Use: {', '.join(STATUSLINE_MODES)}")
         return False
 
-    src = get_content_path("statusline") / f"{mode}.js"
+    src = get_content_path(ContentSubdir.STATUSLINE) / f"{mode}.js"
     if not src.exists():
         if verbose:
             print(f"  Error: Statusline source not found: {src}")
@@ -112,7 +113,7 @@ def setup_local_permissions(project_path: Path, level: str, verbose: bool = True
             print(f"  Error: Invalid level '{level}'. Use: {', '.join(PERMISSION_LEVELS)}")
         return False
 
-    src = get_content_path("permissions") / f"{level}.json"
+    src = get_content_path(ContentSubdir.PERMISSIONS) / f"{level}.json"
     if not src.exists():
         if verbose:
             print(f"  Error: Permissions source not found: {src}")

@@ -6,6 +6,7 @@ import sys
 from .config import (
     CLAUDE_DIR,
     SEPARATOR,
+    ContentSubdir,
     cli_entrypoint,
     get_content_path,
     get_rules_breakdown,
@@ -136,7 +137,7 @@ def _run_global_install(dry_run: bool = False) -> int:
             print("  (none)")
     else:
         # Show what would be installed
-        commands_src = get_content_path("command-templates")
+        commands_src = get_content_path(ContentSubdir.COMMANDS)
         if commands_src.exists():
             cmd_files = sorted(commands_src.glob("cco-*.md"))
             for f in cmd_files:
@@ -153,7 +154,7 @@ def _run_global_install(dry_run: bool = False) -> int:
             print("  (none)")
     else:
         # Show what would be installed
-        agents_src = get_content_path("agent-templates")
+        agents_src = get_content_path(ContentSubdir.AGENTS)
         if agents_src.exists():
             agent_files = sorted(agents_src.glob("cco-*.md"))
             for f in agent_files:
@@ -168,7 +169,7 @@ def _run_global_install(dry_run: bool = False) -> int:
         rules_installed = setup_rules()
     else:
         # Show what would be installed
-        rules_src = get_content_path("rules")
+        rules_src = get_content_path(ContentSubdir.RULES)
         if rules_src.exists():
             print("  + cco/core.md")
             print("  + cco/ai.md")
@@ -197,8 +198,8 @@ def _run_global_install(dry_run: bool = False) -> int:
         print(f"  Global rules (in cco/): {rules_installed.get('total', 0)}")
     else:
         print("Would install:")
-        commands_src = get_content_path("command-templates")
-        agents_src = get_content_path("agent-templates")
+        commands_src = get_content_path(ContentSubdir.COMMANDS)
+        agents_src = get_content_path(ContentSubdir.AGENTS)
         cmd_count = len(list(commands_src.glob("cco-*.md"))) if commands_src.exists() else 0
         agent_count = len(list(agents_src.glob("cco-*.md"))) if agents_src.exists() else 0
         print(f"  {cmd_count} commands, {agent_count} agents")
