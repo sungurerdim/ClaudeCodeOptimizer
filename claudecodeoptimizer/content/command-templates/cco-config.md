@@ -472,7 +472,12 @@ Task("cco-agent-apply", `
   3. Settings:
      - .claude/settings.json ← merge with existing
 
-  Total files: generateResult.rules.length + 2
+  4. Statusline (if user selected Full or Minimal):
+     - Get CCO package path: python3 -c "from claudecodeoptimizer.config import get_content_path; print(get_content_path('statusline'))"
+     - Copy template: cp $CCO_PATH/cco-{mode}.js .claude/cco-{mode}.js
+     - Do NOT generate statusline code - ALWAYS copy from CCO package
+
+  Total files: generateResult.rules.length + 2 + (statusline ? 1 : 0)
 `, { model: "sonnet", run_in_background: true })
 ```
 
@@ -706,11 +711,13 @@ Task("cco-agent-apply", `
 
 **Statusline mode mapping:**
 
-| Mode | Script | Description |
-|------|--------|-------------|
-| Full | `cco-full.js` | User, CC version, model, context %, git branch, ahead/behind, file changes |
-| Minimal | `cco-minimal.js` | User, CC version, model, context % |
-| No | (don't write statusLine key) | Preserves global statusline if exists, otherwise uses Claude Code default |
+**[CRITICAL - NO CODE GENERATION]** Statusline scripts are pre-built in CCO package. NEVER generate JavaScript code for statusline. ALWAYS copy from package templates.
+
+| Mode | Script | Action |
+|------|--------|--------|
+| Full | `cco-full.js` | Copy from CCO package → `.claude/cco-full.js` |
+| Minimal | `cco-minimal.js` | Copy from CCO package → `.claude/cco-minimal.js` |
+| No | (none) | Do not write statusLine key to settings.json |
 
 **Command format:** All statusline modes use dynamic path resolution:
 ```
@@ -722,15 +729,29 @@ This ensures the script runs from the correct project directory regardless of wh
 
 **Copy statusline script to project:**
 
-```javascript
-// Copy selected statusline script from CCO package to project
-if (statusline_mode !== "No") {
-  const scriptPath = `${CCO_PACKAGE}/content/statusline/cco-${statusline_mode.toLowerCase()}.js`
-  const targetPath = `.claude/cco-${statusline_mode.toLowerCase()}.js`
-  // Read from package, write to project
-  Read(scriptPath) → Write(targetPath)
-}
+```bash
+# Get CCO package path and copy statusline template
+CCO_STATUSLINE_DIR=$(python3 -c "from claudecodeoptimizer.config import get_content_path; print(get_content_path('statusline'))")
+
+# Copy the selected template (Full → cco-full.js, Minimal → cco-minimal.js)
+if [ "{statusline_mode}" != "No" ]; then
+  cp "$CCO_STATUSLINE_DIR/cco-{statusline_mode_lower}.js" .claude/cco-{statusline_mode_lower}.js
+fi
 ```
+
+**Alternative using Read/Write tools:**
+```
+# 1. First get the package path
+Bash: CCO_PATH=$(python3 -c "from claudecodeoptimizer.config import get_content_path; print(get_content_path('statusline'))")
+
+# 2. Read the template from package
+Read: $CCO_PATH/cco-{full|minimal}.js
+
+# 3. Write to project
+Write: .claude/cco-{full|minimal}.js (exact copy, no modifications)
+```
+
+**CRITICAL:** Do NOT generate statusline code from scratch. ALWAYS copy from CCO package templates.
 
 ### If action = Remove
 
