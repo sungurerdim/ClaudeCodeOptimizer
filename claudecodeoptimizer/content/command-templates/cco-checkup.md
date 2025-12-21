@@ -86,14 +86,20 @@ AskUserQuestion([{
 if (phases === "Both" || phases === "Health Dashboard") {
   healthTask = Task("general-purpose", `
     Execute /cco-status --brief
-    Return health scores: { security, tests, debt, clean, docs, overall }
+    Return: {
+      scores: { security, quality, architecture, bestPractices, overall },
+      status: "OK|WARN|FAIL|CRITICAL"
+    }
   `, { model: "haiku", run_in_background: phases === "Both" })
 }
 
 if (phases === "Both" || phases === "Quality Audit") {
   auditTask = Task("general-purpose", `
     Execute /cco-optimize --fix --hygiene --quality
-    Return audit results: { fixed, declined, total, by_scope }
+    Return: {
+      accounting: { done, declined, fail, total },
+      by_scope: { security: {n}, quality: {n}, hygiene: {n} }
+    }
   `, { model: "sonnet", run_in_background: phases === "Both" })
 }
 
@@ -126,19 +132,19 @@ if (phases === "Both") {
 ### Health Dashboard
 | Category | Score | Status |
 |----------|-------|--------|
-| Security | {score} | {status} |
-| Tests | {score} | {status} |
-| Tech Debt | {score} | {status} |
-| Cleanliness | {score} | {status} |
-| **Overall** | **{score}** | **{status}** |
+| Security | {scores.security} | {getStatus(scores.security)} |
+| Quality | {scores.quality} | {getStatus(scores.quality)} |
+| Architecture | {scores.architecture} | {getStatus(scores.architecture)} |
+| Best Practices | {scores.bestPractices} | {getStatus(scores.bestPractices)} |
+| **Overall** | **{scores.overall}** | **{status}** |
 
 ### Quality Audit
-| Scope | Fixed | Declined |
-|-------|-------|----------|
-| Security | {n} | {n} |
-| Quality | {n} | {n} |
-| Hygiene | {n} | {n} |
-| **Total** | **{n}** | **{n}** |
+| Scope | Done | Declined | Failed |
+|-------|------|----------|--------|
+| Security | {by_scope.security} | - | - |
+| Quality | {by_scope.quality} | - | - |
+| Hygiene | {by_scope.hygiene} | - | - |
+| **Total** | **{accounting.done}** | **{accounting.declined}** | **{accounting.fail}** |
 
 Duration: {n}s
 ```

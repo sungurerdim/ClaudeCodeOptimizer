@@ -29,16 +29,28 @@ function getClaudeCodeVersion() {
 
 function formatContextUsage(contextWindow) {
   if (!contextWindow) return null;
-  const inputTokens = contextWindow.total_input_tokens || 0;
-  const outputTokens = contextWindow.total_output_tokens || 0;
   const contextSize = contextWindow.context_window_size || 0;
   if (contextSize === 0) return null;
 
-  const totalUsed = inputTokens + outputTokens;
-  const percent = Math.round(totalUsed * 100 / contextSize);
+  // Use current_usage if available (more accurate), otherwise fallback to total_input_tokens
+  // NOTE: Output tokens are NOT counted - they don't consume context window
+  const currentUsage = contextWindow.current_usage;
+  let currentTokens;
+
+  if (currentUsage) {
+    // Accurate: input + cache tokens = actual context usage
+    currentTokens = (currentUsage.input_tokens || 0) +
+                    (currentUsage.cache_creation_input_tokens || 0) +
+                    (currentUsage.cache_read_input_tokens || 0);
+  } else {
+    // Fallback: only input tokens (not output!)
+    currentTokens = contextWindow.total_input_tokens || 0;
+  }
+
+  const percent = Math.round(currentTokens * 100 / contextSize);
   const formatK = n => n >= 1000 ? Math.round(n / 1000) + 'K' : n.toString();
 
-  return `${formatK(totalUsed)} ${percent}%`;
+  return `${formatK(currentTokens)} ${percent}%`;
 }
 
 try {

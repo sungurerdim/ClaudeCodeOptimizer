@@ -49,34 +49,37 @@ TodoWrite([
 
 ## Step-1: Pre-detect [PARALLEL]
 
-**Launch cco-agent-analyze with config scope to auto-detect project context:**
+**Launch cco-agent-analyze with config scope (detection phase):**
 
 ```javascript
-// CRITICAL: Single cco-agent-analyze call with config scope
-// Agent handles all detection internally with parallelization
+// CRITICAL: Config scope has TWO phases
+// Phase 1 (Step-1): Detection only - returns detections + sources
+// Phase 2 (Step-6): Rule generation - receives userInput, returns rules
 
-Task("cco-agent-analyze", `
+detectResult = Task("cco-agent-analyze", `
   scopes: ["config"]
+  phase: "detect"
 
   Auto-detect from manifest files and code:
   - Language, framework, runtime, packageManager
   - Infrastructure: containerized, ci, cloud, deployment
   - Testing: testFramework, coverage, linters, typeChecker
   - Metadata: license, teamSize, maturity, lastActivity
-
-  Return: {
-    detections: {
-      language: ["{language}"],
-      type: ["{type}"],
-      api: "{api|null}",
-      database: "{db|null}",
-      frontend: "{frontend|null}",
-      infra: ["{infra}"],
-      dependencies: ["{deps}"]
-    },
-    sources: [{ file: "{file}", confidence: "{HIGH|MEDIUM|LOW}" }]
-  }
 `, { model: "haiku" })
+
+// Agent returns (config scope, detect phase):
+// detectResult = {
+//   detections: {
+//     language: ["{lang}"],
+//     type: ["{type}"],
+//     api: "{api|null}",
+//     database: "{db|null}",
+//     frontend: "{frontend|null}",
+//     infra: ["{infra}"],
+//     dependencies: ["{deps}"]
+//   },
+//   sources: [{ file: "{file}", confidence: "HIGH|MEDIUM|LOW" }]
+// }
 ```
 
 **Result: Pre-fill answers based on detection confidence**
@@ -181,10 +184,9 @@ AskUserQuestion([{
   question: "Install CCO statusline?",
   header: "Statusline",
   options: [
-    { label: "Full (Recommended)", description: "All metrics: tokens, cost, session time, model" },
-    { label: "Compact", description: "Essential metrics only" },
-    { label: "Minimal", description: "Token count only" },
-    { label: "No", description: "Skip statusline installation" }
+    { label: "Full (Recommended)", description: "User, model, context %, git status, file changes" },
+    { label: "Minimal", description: "User, model, context % only" },
+    { label: "No", description: "Use Claude Code default statusline" }
   ],
   multiSelect: false
 }])
@@ -266,19 +268,84 @@ if (lowConfidenceQuestions.length > 0) {
 ```javascript
 // If user selected Permissions in 4.2
 if (selectedSettings.includes("Permissions")) {
-  AskUserQuestion([{
-    question: "Permission approval level?",
-    header: "Permissions",
-    options: [
-      { label: "Balanced (Recommended)", description: "Auto-approve read + lint/test, ask for writes" },
-      { label: "Safe", description: "Auto-approve read-only operations" },
-      { label: "Permissive", description: "Auto-approve most operations" },
-      { label: "Full", description: "Auto-approve all (Solo + Public projects only)" }
-    ],
-    multiSelect: false
-  }])
+  AskUserQuestion([
+    {
+      question: "Permission approval level?",
+      header: "Permissions",
+      options: [
+        { label: "Balanced (Recommended)", description: "Auto-approve read + lint/test, ask for writes" },
+        { label: "Safe", description: "Auto-approve read-only operations" },
+        { label: "Permissive", description: "Auto-approve most operations" },
+        { label: "Full", description: "Auto-approve all (Solo + Public projects only)" }
+      ],
+      multiSelect: false
+    },
+    {
+      question: "Enable LSP (code intelligence)?",
+      header: "LSP",
+      options: [
+        { label: "Yes (Recommended)", description: "go-to-definition, find-references, hover docs (+500 tokens)" },
+        { label: "No", description: "Use text-based search only" }
+      ],
+      multiSelect: false
+    }
+  ])
 }
 ```
+
+### 4.5: AI Performance Details [IF SELECTED IN 4.2]
+
+```javascript
+// If user selected AI Performance in 4.2
+if (selectedSettings.includes("AI Performance")) {
+  AskUserQuestion([
+    {
+      question: "Enable extended thinking for complex reasoning?",
+      header: "Thinking",
+      options: [
+        { label: "Enabled (Recommended)", description: "Better for complex code, architecture decisions" },
+        { label: "Disabled", description: "Faster responses, better prompt caching" }
+      ],
+      multiSelect: false
+    },
+    {
+      question: "Thinking token budget?",
+      header: "Budget",
+      options: [
+        { label: "8K (Recommended)", description: "Good balance for most tasks" },
+        { label: "16K", description: "Complex multi-file refactoring" },
+        { label: "32K", description: "Architecture design, large codebases" },
+        { label: "4K", description: "Simple tasks, faster responses" }
+      ],
+      multiSelect: false
+    },
+    {
+      question: "Tool output limits?",
+      header: "Output",
+      options: [
+        { label: "Default", description: "25K MCP tokens, standard bash output" },
+        { label: "Extended", description: "35K MCP tokens, 100K bash chars for large outputs" },
+        { label: "Minimal", description: "10K MCP tokens, reduced context usage" }
+      ],
+      multiSelect: false
+    }
+  ])
+}
+```
+
+**AI Performance settings map:**
+
+| Selection | Setting |
+|-----------|---------|
+| Thinking: Enabled | `alwaysThinkingEnabled: true` |
+| Thinking: Disabled | `alwaysThinkingEnabled: false` |
+| Budget: 8K | `env.MAX_THINKING_TOKENS: "8000"` |
+| Budget: 16K | `env.MAX_THINKING_TOKENS: "16000"` |
+| Budget: 32K | `env.MAX_THINKING_TOKENS: "32000"` |
+| Budget: 4K | `env.MAX_THINKING_TOKENS: "4000"` |
+| Output: Default | (no env override) |
+| Output: Extended | `env.MAX_MCP_OUTPUT_TOKENS: "35000"`, `env.BASH_MAX_OUTPUT_LENGTH: "100000"` |
+| Output: Minimal | `env.MAX_MCP_OUTPUT_TOKENS: "10000"` |
 
 ### Validation
 ```
@@ -322,8 +389,12 @@ if (selectedSettings.includes("Permissions")) {
 ### Settings
 | Setting | Value |
 |---------|-------|
-| AI Thinking | {thinking} (auto: {reason}) |
+| Statusline | {statusline_mode} |
 | Permissions | {permissions} |
+| LSP | {lsp_enabled} |
+| Extended Thinking | {thinking_enabled} |
+| Thinking Budget | {thinking_budget} |
+| Tool Output Limits | {output_limits} |
 ```
 
 ```javascript
@@ -352,19 +423,242 @@ AskUserQuestion([{
 
 ## Step-6: Apply [BACKGROUND]
 
-**Write all files in background:**
+**Write all files from detection results:**
+
+### 6.1: Generate Rules from Detection + User Input
+
+**CRITICAL:** Call cco-agent-analyze with config scope (generate phase) to create rules.
 
 ```javascript
-// Launch file writes in parallel
-Task("cco-agent-apply", `
-  Write files:
-  - .claude/rules/cco/context.md ← ${JSON.stringify(context)}
-  - .claude/rules/cco/${language}.md ← from template
-  - .claude/settings.json ← merge with existing
-`, { model: "sonnet", run_in_background: true })
+// Phase 2: Generate rules using detections from Step-1 + user input from Steps 3-4
+generateResult = Task("cco-agent-analyze", `
+  scopes: ["config"]
+  phase: "generate"
 
-// CLI for statusline/permissions
-Bash("cco-install --local . --statusline ${mode} --permissions ${level}")
+  Input:
+  - detections: ${JSON.stringify(detectResult.detections)}
+  - userInput: ${JSON.stringify(collectedUserInput)}
+
+  Generate:
+  1. context.md with project context
+  2. Rule files for each detected category
+  3. Rule content from cco-adaptive.md sections
+`, { model: "haiku" })
+
+// Agent returns (config scope, generate phase):
+// generateResult = {
+//   context: "{generated_context_md_content}",
+//   rules: [
+//     { file: "{category}.md", content: "{content_from_adaptive}" },
+//     ...
+//   ],
+//   triggeredCategories: [{ category, trigger, rule, source }]
+// }
+```
+
+### 6.2: Write Files
+
+```javascript
+Task("cco-agent-apply", `
+  Write ALL files from generateResult:
+
+  1. Context file:
+     - .claude/rules/cco/context.md ← generateResult.context
+
+  2. ALL rule files (from generateResult.rules array):
+     Loop: for each rule in generateResult.rules:
+       - .claude/rules/cco/{rule.file} ← {rule.content}
+
+  3. Settings:
+     - .claude/settings.json ← merge with existing
+
+  Total files: generateResult.rules.length + 2
+`, { model: "sonnet", run_in_background: true })
+```
+
+### Detection → Rule Mapping (Complete Reference)
+
+**CRITICAL:** All detections from cco-adaptive.md must map to rule files. No orphan detections.
+
+#### Languages (L:*)
+| Detection | Rule File | Triggers |
+|-----------|-----------|----------|
+| L:Python | `{lang}.md` | pyproject.toml, requirements*.txt, *.py |
+| L:TypeScript | `{lang}.md` | tsconfig.json, *.ts/*.tsx |
+| L:JavaScript | `{lang}.md` | package.json (no TS), *.js |
+| L:Go | `{lang}.md` | go.mod, *.go |
+| L:Rust | `{lang}.md` | Cargo.toml, *.rs |
+| L:Java | `{lang}.md` | pom.xml, build.gradle, *.java |
+| L:Kotlin | `{lang}.md` | *.kt, kotlin in gradle |
+| L:Swift | `{lang}.md` | Package.swift, *.swift |
+| L:CSharp | `{lang}.md` | *.csproj, *.sln |
+| L:Ruby | `{lang}.md` | Gemfile, *.rb |
+| L:PHP | `{lang}.md` | composer.json, *.php |
+| L:Elixir | `{lang}.md` | mix.exs, *.ex |
+| L:Gleam | `{lang}.md` | gleam.toml, *.gleam |
+| L:Scala | `{lang}.md` | build.sbt, *.scala |
+| L:Zig | `{lang}.md` | build.zig, *.zig |
+| L:Dart | `{lang}.md` | pubspec.yaml, *.dart |
+
+#### Runtimes (R:*)
+| Detection | Rule File | Triggers |
+|-----------|-----------|----------|
+| R:Bun | `bun.md` | bun.lockb, bunfig.toml |
+| R:Deno | `deno.md` | deno.json, deno.lock |
+
+#### App Types (T:*)
+| Detection | Rule File | Triggers |
+|-----------|-----------|----------|
+| T:CLI | `cli.md` | [project.scripts], typer/click/cobra |
+| T:Library | `library.md` | exports, __all__, [lib] |
+| T:Service | `service.md` | Dockerfile + ports |
+
+#### API Styles (API:*)
+| Detection | Rule File | Triggers |
+|-----------|-----------|----------|
+| API:REST | `api.md` | routes/, FastAPI/Express |
+| API:GraphQL | `api.md` | *.graphql, apollo |
+| API:gRPC | `api.md` | *.proto, grpc deps |
+
+#### Database (DB:*)
+| Detection | Rule File | Triggers |
+|-----------|-----------|----------|
+| DB:SQL | `database.md` | sqlite3/psycopg2, migrations/ |
+| DB:ORM | `database.md` | sqlalchemy/prisma/drizzle |
+| DB:NoSQL | `database.md` | pymongo/redis/dynamodb |
+| DB:Vector | `database.md` | pgvector/pinecone/chroma |
+
+#### Frontend
+| Detection | Rule File | Triggers |
+|-----------|-----------|----------|
+| Frontend:React | `frontend.md` | react deps, *.jsx/*.tsx |
+| Frontend:Vue | `frontend.md` | vue deps, *.vue |
+| Frontend:Svelte | `frontend.md` | svelte deps, *.svelte |
+| Frontend:Angular | `frontend.md` | @angular deps |
+
+#### Mobile
+| Detection | Rule File | Triggers |
+|-----------|-----------|----------|
+| Mobile:Flutter | `mobile.md` | pubspec.yaml, *.dart |
+| Mobile:ReactNative | `mobile.md` | react-native/expo deps |
+| Mobile:iOS | `mobile.md` | *.xcodeproj, Podfile |
+| Mobile:Android | `mobile.md` | AndroidManifest.xml |
+
+#### Desktop
+| Detection | Rule File | Triggers |
+|-----------|-----------|----------|
+| Desktop:Electron | `desktop.md` | electron deps |
+| Desktop:Tauri | `desktop.md` | tauri.conf.json |
+
+#### Infrastructure (Infra:*)
+| Detection | Rule File | Triggers |
+|-----------|-----------|----------|
+| Infra:Docker | `container.md` | Dockerfile, docker-compose.yml |
+| Infra:K8s | `k8s.md` | k8s/, helm/, kustomization.yaml |
+| Infra:Terraform | `terraform.md` | *.tf files |
+| Infra:Pulumi | `pulumi.md` | Pulumi.yaml |
+| Infra:CDK | `cdk.md` | cdk.json |
+| Infra:Edge | `edge.md` | wrangler.toml, vercel edge |
+| Infra:WASM | `wasm.md` | *.wasm, wasm-pack |
+| Infra:Serverless | `serverless.md` | serverless.yml, sam.yaml |
+
+#### ML/AI
+| Detection | Rule File | Triggers |
+|-----------|-----------|----------|
+| ML:Training | `ml.md` | torch/tensorflow/sklearn |
+| ML:LLM | `ml.md` | langchain/llamaindex |
+| ML:SDK | `ml.md` | openai/anthropic deps |
+
+#### Build Tools
+| Detection | Rule File | Triggers |
+|-----------|-----------|----------|
+| Build:Monorepo | `monorepo.md` | nx.json, turbo.json |
+| Build:Bundler | `bundler.md` | vite/webpack/esbuild |
+
+#### Testing (Test:*)
+| Detection | Rule File | Triggers |
+|-----------|-----------|----------|
+| Test:Unit | `testing.md` | pytest/jest/vitest, tests/ |
+| Test:E2E | `testing.md` | playwright/cypress, e2e/ |
+
+#### CI/CD
+| Detection | Rule File | Triggers |
+|-----------|-----------|----------|
+| CI:GitHub | `ci-cd.md` | .github/workflows/ |
+| CI:GitLab | `ci-cd.md` | .gitlab-ci.yml |
+| CI:Jenkins | `ci-cd.md` | Jenkinsfile |
+| CI:CircleCI | `ci-cd.md` | .circleci/config.yml |
+
+#### User Input (from Step-4)
+| Input | Rule File | Source |
+|-------|-----------|--------|
+| Scale:* | `scale.md` | User selection |
+| Team:* | `team.md` | User selection |
+| Testing:* | `testing.md` | User selection (merged with detected) |
+| Security | `security.md` | Data:PII/Regulated triggers |
+| Compliance:* | `compliance.md` | User selection |
+| SLA:* | `observability.md` | User selection |
+
+#### Dependency-Specific (DEP:*)
+| Detection | Rule File | Example Triggers |
+|-----------|-----------|------------------|
+| DEP:{category} | `dep-{category}.md` | Specific package detection |
+
+**Examples:** dep-cli.md, dep-validation.md, dep-orm.md, dep-auth.md, dep-http.md, etc.
+
+**Rule content source:** cco-adaptive.md sections (read by cco-agent-analyze in Step-1)
+
+### Settings.json Structure
+
+**Merge these settings into `.claude/settings.json`:**
+
+```json
+{
+  "statusLine": {
+    "type": "command",
+    "command": "node .claude/cco-${statusline_mode}.js",
+    "padding": 1
+  },
+  "permissions": {
+    "allow": ["Read", "Glob", "Grep", "LSP"],
+    "deny": []
+  },
+  "alwaysThinkingEnabled": ${thinking_enabled},
+  "env": {
+    "ENABLE_LSP_TOOL": "${lsp_enabled ? '1' : '0'}",
+    "MAX_THINKING_TOKENS": "${thinking_budget}",
+    "MAX_MCP_OUTPUT_TOKENS": "${mcp_output_tokens}",
+    "BASH_MAX_OUTPUT_LENGTH": "${bash_output_length}"
+  }
+}
+```
+
+**LSP Configuration:**
+
+| Setting | Value | Effect |
+|---------|-------|--------|
+| `ENABLE_LSP_TOOL=1` | Enabled | go-to-definition, find-references, hover (+500 tokens) |
+| `ENABLE_LSP_TOOL=0` | Disabled | Text-based search only |
+| `permissions.allow: ["LSP"]` | Permission | Auto-approve LSP tool calls |
+
+**Statusline mode mapping:**
+
+| Mode | Command | Description |
+|------|---------|-------------|
+| Full | `node .claude/cco-full.js` | User, CC version, model, context %, git branch, ahead/behind, file changes |
+| Minimal | `node .claude/cco-minimal.js` | User, CC version, model, context % |
+| No | (omit statusLine key) | Use Claude Code default statusline |
+
+**Copy statusline script to project:**
+
+```javascript
+// Copy selected statusline script from CCO package to project
+if (statusline_mode !== "No") {
+  const scriptPath = `${CCO_PACKAGE}/content/statusline/cco-${statusline_mode.toLowerCase()}.js`
+  const targetPath = `.claude/cco-${statusline_mode.toLowerCase()}.js`
+  // Read from package, write to project
+  Read(scriptPath) → Write(targetPath)
+}
 ```
 
 ### If action = Remove
@@ -440,10 +734,20 @@ Task("cco-agent-apply", `
 
 | Level | Auto-approved |
 |-------|---------------|
-| Safe | Read-only |
-| Balanced | Read + lint/test |
-| Permissive | Most operations |
+| Safe | Read, Glob, Grep |
+| Balanced | Read, Glob, Grep, LSP, lint/test commands |
+| Permissive | Most operations except destructive |
 | Full | All (Solo + Public only) |
+
+### LSP Features (v2.0.74+)
+
+| Operation | Description | Use Case |
+|-----------|-------------|----------|
+| goToDefinition | Jump to symbol definition | Navigate to function/class source |
+| findReferences | Find all usages | Understand impact of changes |
+| hover | Get type/documentation | Quick info without opening file |
+| documentSymbol | List symbols in file | File structure overview |
+| workspaceSymbol | Search symbols globally | Find any symbol in codebase |
 
 ---
 

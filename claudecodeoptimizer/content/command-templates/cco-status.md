@@ -56,20 +56,22 @@ TodoWrite([
 agentResponse = Task("cco-agent-analyze", `
   scopes: ["scan"]
 
-  Collect metrics for all categories (same as cco-optimize --score):
-  - Security: Secrets, OWASP (SQL/command injection, XSS, path traversal), CVEs, input validation, unsafe deserialization
-  - Quality: Type errors/hints, tech debt, test gaps/isolation, complexity, bare excepts, silent failures, exception chaining, dead code, unused imports, docstrings, magic values, naming
-  - Architecture: SOLID violations, god classes, circular imports, coupling, orphan files, separation of concerns, abstractions, over-engineering, nesting depth
-  - Best Practices: Anti-patterns, inefficient algorithms, inconsistent styles, context managers, resource/connection leaks, memory leaks, error handling, duplicates, stale refs, hardcoded config, logging, N+1 queries, caching
+  Collect metrics for all categories:
+  - Security: Secrets, OWASP, CVEs, input validation
+  - Quality: Type errors, tech debt, test gaps, complexity
+  - Architecture: SOLID violations, coupling, circular deps
+  - Best Practices: Resource management, patterns, consistency
 
   Scoring: Start at 100, deduct for issues (critical: -10, high: -5, medium: -2, low: -1)
-
-  Return: {
-    scores: { security, quality, architecture, bestPractices, overall },
-    status: "OK|WARN|FAIL|CRITICAL",
-    topIssues: [{ category, title, location }]
-  }
 `)
+
+// Agent returns (matches cco-agent-analyze scan output schema):
+// agentResponse = {
+//   scores: { security, quality, architecture, bestPractices, overall },
+//   status: "OK|WARN|FAIL|CRITICAL",
+//   topIssues: [{ category, title, location }],
+//   summary: "{assessment}"
+// }
 ```
 
 **Agent handles parallelization internally** (parallel grep patterns, parallel linters).
@@ -166,6 +168,27 @@ Run `/cco-optimize` to fix issues.
 ---
 
 ## Reference
+
+### Output Schema (when called as sub-command)
+
+When called via `/cco-status --brief` (e.g., from cco-checkup):
+
+```json
+{
+  "scores": {
+    "security": "{0-100}",
+    "quality": "{0-100}",
+    "architecture": "{0-100}",
+    "bestPractices": "{0-100}",
+    "overall": "{0-100}"
+  },
+  "status": "OK|WARN|FAIL|CRITICAL"
+}
+```
+
+**Mapping from agent response:**
+- `scores` ← `cco-agent-analyze.scores` (with context multipliers applied)
+- `status` ← calculated from `overall` score
 
 ### Flags
 
