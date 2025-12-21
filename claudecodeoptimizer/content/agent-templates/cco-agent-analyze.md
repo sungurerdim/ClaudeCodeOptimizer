@@ -249,17 +249,19 @@ Config scope handles project detection and rule selection. **Two-phase execution
 
 #### Step 1: Auto-Detection
 
+**Trigger Reference (SSOT):** All placeholder values defined in `cco-triggers.md`
+
 **Priority Order [CRITICAL]:**
 
-| Priority | Source | Confidence | File Patterns (SSOT) |
-|----------|--------|------------|----------------------|
+| Priority | Source | Confidence | File Patterns |
+|----------|--------|------------|---------------|
 | 1 | Manifest files | HIGH | {lang_manifest} |
 | 2 | Lock files | HIGH | {lang_lock} |
 | 3 | Config files | HIGH | {tool_config} |
 | 4 | Code files | MEDIUM | {code_ext} (sample 5-10 files for imports) |
 | 5 | Documentation | LOW | {doc_files} |
 
-*Actual patterns defined per-category below. This table shows detection priority.*
+*Trigger values in `{placeholders}` are defined in cco-triggers.md (SSOT).*
 
 **Detection Categories:**
 
@@ -385,13 +387,31 @@ Config scope handles project detection and rule selection. **Two-phase execution
 | CI:Azure | {azure_config} |
 | CI:ArgoCD | {argocd_dir}, {argocd_config} |
 
+##### Meta-Frameworks (Framework:*)
+| Category | Triggers |
+|----------|----------|
+| Framework:Next | {nextjs_deps}, {nextjs_config}, {nextjs_dirs} |
+| Framework:Nuxt | {nuxt_deps}, {nuxt_config} |
+| Framework:SvelteKit | {sveltekit_deps}, {sveltekit_config} |
+| Framework:Remix | {remix_deps}, {remix_patterns} |
+
+##### Game Engines (Game:*)
+| Category | Triggers |
+|----------|----------|
+| Game:Unity | {unity_markers} |
+| Game:Unreal | {unreal_markers} |
+| Game:Godot | {godot_markers} |
+
+##### Real-time (RT:*)
+| Category | Triggers |
+|----------|----------|
+| RT:Basic | {websocket_deps}, {sse_patterns} |
+| RT:LowLatency | {binary_protocol_deps}, {realtime_patterns} |
+
 ##### Other
 | Category | Triggers |
 |----------|----------|
 | i18n | {i18n_dirs}, {i18n_deps} |
-| Game:Unity | {unity_markers} |
-| Game:Godot | {godot_markers} |
-| Game:Python | {python_game_deps} |
 
 ##### Dependency-Based Detection (DEP:*)
 
@@ -435,6 +455,12 @@ Detect from manifest dependencies. **Trigger values defined in cco-adaptive.md D
 | DEP:GameEngine | {game_engine_markers} |
 | DEP:ARVR | {arvr_deps} |
 | DEP:IoT | {iot_deps} |
+| DEP:APITest | {api_test_deps} |
+| DEP:TypeSafeAPI | {typesafe_api_deps} |
+| DEP:DataQuery | {data_query_deps} |
+| DEP:CSS | {css_deps} |
+| DEP:WebSocket | {websocket_deps} |
+| DEP:StateManagement | {state_mgmt_deps} |
 
 **Documentation Fallback (when code sparse):**
 
@@ -498,24 +524,28 @@ Mark as `[from docs]` with `confidence: LOW`.
 | Category | Detection Pattern | Rule File | Content Source in cco-adaptive.md |
 |----------|-------------------|-----------|-----------------------------------|
 | Language | L:{lang} | `{lang}.md` | Language Rules → {Lang} section |
-| Runtime | R:{runtime} | `{runtime}.md` | (runtime-specific patterns) |
+| Runtime | R:{runtime} | `{runtime}.md` | Runtimes section |
 | App Type | T:{type} | `{type}.md` | Apps > {Type} section |
 | API | API:{style} | `api.md` | Backend > API section |
 | Database | DB:{type} | `database.md` | Backend > Data section |
-| Frontend | Frontend:{fw} | `frontend.md` | (frontend patterns) |
+| Frontend | Frontend:{fw} | `frontend.md` | Frontend section |
+| Framework | Framework:{name} | `{name}.md` | Meta-Frameworks section |
 | Mobile | Mobile:{platform} | `mobile.md` | Apps > Mobile section |
 | Desktop | Desktop:{fw} | `desktop.md` | Apps > Desktop section |
-| Infra | Infra:{type} | `{type}.md` | (varies: container, k8s, edge, etc.) |
-| ML/AI | ML:{type} | `ml.md` | (ML patterns) |
-| Build | Build:{type} | `{type}.md` | (monorepo, bundler) |
+| Infra | Infra:{type} | `{type}.md` | Infrastructure section |
+| ML/AI | ML:{type} | `ml.md` | ML/AI section |
+| Build | Build:{type} | `{type}.md` | Build Tools section |
 | Testing | Test:{type} | `testing.md` | Testing Rules section |
-| CI/CD | CI:{provider} | `ci-cd.md` | Backend > Operations section |
+| CI/CD | CI:{provider} | `ci-cd.md` | CI/CD section |
+| Game | Game:{engine} | `game.md` | Specialized > Game section (Base + Engine-specific: Unity/Unreal/Godot) |
+| RT | RT:{level} | `realtime.md` | Real-time section |
+| i18n | i18n | `i18n.md` | i18n section |
 | User:Scale | Scale:{tier} | `scale.md` | Scale Rules section |
 | User:Team | Team:{size} | `team.md` | Team Rules section |
 | User:Security | Data:PII/Regulated | `security.md` | Security Rules section |
 | User:Compliance | Compliance:{std} | `compliance.md` | Compliance Rules section |
 | User:SLA | SLA:{level} | `observability.md` | Observability Rules section |
-| Dependency | DEP:{category} | `dep-{category}.md` | DEP rules in Detection System |
+| Dependency | DEP:{category} | `dep-{category}.md` | Dependency-Based Rules section |
 
 **Each rule file MUST include:**
 1. YAML frontmatter: `paths:` matching relevant files
