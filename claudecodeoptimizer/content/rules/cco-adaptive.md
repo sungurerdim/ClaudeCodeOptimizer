@@ -2,6 +2,13 @@
 *Selected by /cco-config based on detection. Each rule evaluated individually.*
 *Used as template pool for generating .claude/rules/ files with path-specific frontmatter.*
 
+**[CRITICAL - Single Source Architecture]**
+This file is the **ONLY source** for all rule content. Separate rule files do **NOT exist** in the CCO package. When generating rules:
+1. Read THIS file (`cco-adaptive.md`)
+2. Extract relevant sections based on detections (e.g., `{Lang} (L:{Lang})` section → `{lang}.md`)
+3. Generate rule files with extracted content + YAML frontmatter
+**NEVER try to read separate `{category}.md` files from CCO package - they don't exist.**
+
 ## Detection System
 
 ### Trigger Reference (SSOT)

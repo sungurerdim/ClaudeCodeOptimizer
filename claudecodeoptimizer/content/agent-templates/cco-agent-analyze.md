@@ -226,13 +226,21 @@ Config scope handles project detection and rule selection. **Two-phase execution
 
 **Input:** `detections` (from phase 1) + `userInput` (from cco-config questions)
 
+**[CRITICAL] Rule files do NOT exist as separate files in the CCO package.**
+All rules are defined as sections within `cco-adaptive.md`. You must:
+1. Read the single `cco-adaptive.md` file
+2. Extract relevant sections based on detections
+3. Generate rule file content from those sections
+
+**NEVER try to read separate `{category}.md` files from CCO package - they don't exist.**
+
 | Step | Action | Tool |
 |------|--------|------|
-| 1 | Read adaptive.md | `Bash(cco-install --cat rules/cco-adaptive.md)` |
-| 2 | Match detections + userInput → rules | Internal |
-| 3 | Extract rule content from adaptive.md | Internal |
+| 1 | Read adaptive.md (single file, all rules) | `Bash(cco-install --cat rules/cco-adaptive.md)` |
+| 2 | Match detections + userInput → rule sections | Internal (parse sections from adaptive.md) |
+| 3 | Extract rule content from matched sections | Internal (copy section content) |
 | 4 | Generate context.md content | Internal |
-| 5 | Return structured output | JSON |
+| 5 | Return structured output with generated content | JSON |
 
 **Output Schema (generate phase):**
 ```json
@@ -492,15 +500,17 @@ Mark as `[from docs]` with `confidence: LOW`.
 
 | Conflict | Resolution |
 |----------|------------|
-| TS vs JS | tsconfig.json present → TypeScript wins |
-| Bun vs Node vs Deno | Lock file type determines: bun.lockb→Bun, deno.lock→Deno, else→Node |
+| TS vs JS | {ts_config} present → TypeScript wins |
+| Bun vs Node vs Deno | Lock file determines: {bun_markers}→Bun, {deno_markers}→Deno, else→Node |
 | React vs Vue vs Svelte | Only one framework per project, highest confidence wins |
 | Prisma vs Drizzle vs TypeORM | Can coexist (migration period), detect both |
 | FastAPI vs Flask vs Django | Only one per project, route patterns determine |
-| Jest vs Vitest | vitest.config.* → Vitest, else → Jest |
-| ESLint vs Biome | biome.json present → Biome wins (replaces ESLint) |
-| Prettier vs Biome | biome.json present → Biome wins |
-| npm vs yarn vs pnpm | Lock file determines: yarn.lock→yarn, pnpm-lock.yaml→pnpm, else→npm |
+| Jest vs Vitest | {vitest_config} → Vitest, else → Jest |
+| ESLint vs Oxlint | {oxlint_config} present → Oxlint wins (faster, Rust-based) |
+| ESLint vs Biome | {biome_config} present → Biome wins (unified linter+formatter) |
+| Prettier vs Biome | {biome_config} present → Biome wins |
+| Prettier vs ruff | {ruff_format_config} present → ruff wins (Python only) |
+| npm vs yarn vs pnpm vs bun | Lock file determines: {yarn_lock}→yarn, {pnpm_lock}→pnpm, {bun_lock}→bun, else→npm |
 
 **Polyglot Projects:**
 - Multiple languages allowed (e.g., Python backend + TypeScript frontend)
