@@ -16,7 +16,8 @@ else:
     class StrEnum(str, Enum):
         """String enum for Python 3.10 compatibility."""
 
-        pass
+        def __str__(self) -> str:
+            return str(self.value)
 
 
 from typing import Any
