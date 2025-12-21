@@ -91,20 +91,20 @@ This creates your project context in `.claude/rules/cco/context.md`. Restart Cla
 
 ## Rules
 
-CCO uses a 4-category rules system with **925 rules total**:
+CCO uses a 4-category rules system with **1013 rules total**:
 
 | Category | Rules | Loading |
 |----------|-------|---------|
 | **Core** | 62 | Always active (`~/.claude/rules/cco/`) |
 | **AI** | 39 | Always active (`~/.claude/rules/cco/`) |
-| **Tools** | 106 | Built into commands/agents |
-| **Adaptive** | 718 | Selected per project → `.claude/rules/cco/` |
+| **Tools** | 104 | Built into commands/agents |
+| **Adaptive** | 808 | Selected per project → `.claude/rules/cco/` |
 
 **Categories:**
 - **Core** - Fundamental principles: DRY, Fail-Fast, Clean Code, Security, Testing
 - **AI** - Behavior patterns: Read First, No Hallucination, Semantic Density
 - **Tools** - CCO workflow: Approval Flow, Fix Workflow, Safety Classification
-- **Adaptive** - Stack-based: 5 languages, 20+ frameworks, 25+ dependencies
+- **Adaptive** - Stack-based: 16 languages, 50+ frameworks, 42 dependency categories
 
 ### Supported Stacks
 
@@ -113,7 +113,7 @@ CCO uses a 4-category rules system with **925 rules total**:
 
 | Category | Supported | Example Rules |
 |----------|-----------|---------------|
-| **Languages** | Python, TypeScript, JavaScript, Go, Rust | Type hints, import order, error handling |
+| **Languages** | Python, TypeScript, JavaScript, Go, Rust, Java, Kotlin, Swift, C#, Ruby, PHP, Elixir, Gleam, Scala, Zig, Dart | Type hints, import order, error handling |
 | **App Types** | CLI, Library, API, Frontend, Mobile, Desktop | Exit codes, tree-shaking, REST methods, a11y |
 | **Game Dev** | Pygame, Phaser, Three.js, Unity, Unreal, Godot | Frame budget, asset loading, input mapping |
 | **AI/ML** | Transformers, LangChain, Whisper, OpenAI, Anthropic | Lazy model load, quantization, batch inference |
@@ -233,7 +233,7 @@ Built on official Anthropic documentation and Claude Code best practices:
 |---------|-------------------|
 | [Slash Commands][slash-commands] | 8 commands with YAML frontmatter |
 | [Sub-agents][sub-agents] | 3 single-responsibility agents |
-| [Rules Directory][memory] | 4-category rule system (925 rules) |
+| [Rules Directory][memory] | 4-category rule system (1013 rules) |
 | [Permissions][cc-changelog] | 4 levels (safe→full) |
 
 **Rules Based On:** SSOT, DRY, YAGNI, KISS (Core) | Read-First, No-Hallucination (AI) | OWASP, Least-Privilege (Security)

@@ -8,9 +8,9 @@
 |----------|-------|----------|---------|
 | Core | 62 | `~/.claude/rules/cco/core.md` | Always active |
 | AI | 39 | `~/.claude/rules/cco/ai.md` | Always active |
-| Tools | 106 | pip package | Built into commands/agents |
-| Adaptive | 718 | pip package → `.claude/rules/cco/` | Per-project |
-| **Total** | **925** | | |
+| Tools | 104 | pip package | Built into commands/agents |
+| Adaptive | 808 | pip package → `.claude/rules/cco/` | Per-project |
+| **Total** | **1013** | | |
 
 **Counting:** `grep -c "^- \*\*" <file>` for all rule files
 
@@ -29,7 +29,7 @@
 │  ON-DEMAND (Tool + Adaptive Rules)                              │
 ├─────────────────────────────────────────────────────────────────┤
 │  Tools        - CCO command/agent workflow mechanisms           │
-│  Adaptive     - Project-specific rules template (718 rules)     │
+│  Adaptive     - Project-specific rules template (808 rules)     │
 │  Location:    pip package (NOT in rules/ to avoid context bloat)│
 │  Access via:  cco-install --cat rules/cco-{tools,adaptive}.md   │
 ├─────────────────────────────────────────────────────────────────┤
@@ -477,7 +477,7 @@
 
 | Category | Trigger |
 |----------|---------|
-| Language | Manifest files detected (Python, TS, JS, Go, Rust) |
+| Language | Manifest files detected (16 languages: Python, TS, JS, Go, Rust, Java, Kotlin, Swift, C#, Ruby, PHP, Elixir, Gleam, Scala, Zig, Dart) |
 | Security | D:PII, D:Regulated, Scale:Large, Compliance:* |
 | Compliance | User-selected (SOC2, HIPAA, PCI, GDPR, CCPA, ISO27001, FedRAMP, DORA, HITRUST) |
 | Scale | 100+ users (cumulative tiers) |
@@ -501,7 +501,7 @@
 | Real-time | WebSocket/SSE detected (cumulative tiers) |
 | Testing | User-selected (cumulative tiers) |
 | Observability | SLA-based (cumulative tiers) |
-| DEP:* | 29 dependency categories (GPU, Audio, Video, etc.) |
+| DEP:* | 42 dependency categories (GPU, Audio, Video, HTTP, ORM, Auth, Cache, etc.) |
 
 ### Full Adaptive Rules List
 

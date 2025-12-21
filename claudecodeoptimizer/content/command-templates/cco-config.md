@@ -606,18 +606,23 @@ Task("cco-agent-apply", `
 | CI:Azure | `ci-cd.md` | azure-pipelines.yml |
 | CI:ArgoCD | `ci-cd.md` | argocd/, Application.yaml |
 
+#### Meta-Frameworks
+| Detection | Rule File | Triggers |
+|-----------|-----------|----------|
+| Framework:Next | `nextjs.md` | {nextjs_deps}, {nextjs_config} |
+| Framework:Nuxt | `nuxt.md` | {nuxt_deps}, {nuxt_config} |
+| Framework:SvelteKit | `sveltekit.md` | {sveltekit_deps}, {sveltekit_config} |
+| Framework:Remix | `remix.md` | {remix_deps}, {remix_patterns} |
+
 #### Specialized
 | Detection | Rule File | Triggers |
 |-----------|-----------|----------|
-| Game:Unity | `game.md` | *.csproj + Unity, Assets/, ProjectSettings/ |
-| Game:Unreal | `game.md` | *.uproject, Source/ |
-| Game:Godot | `game.md` | project.godot, *.gd |
-| Game:Python | `game.md` | pygame/arcade/panda3d deps |
-| Game:JS | `game.md` | phaser/three.js/pixi.js deps |
-| i18n | `i18n.md` | locales/, i18n/, react-i18next, i18next |
-| RT:Basic | `realtime.md` | ws, socket.io, websockets deps |
-| RT:LowLatency | `realtime.md` | protobuf + ws, msgpack |
-| API:WebSocket | `api.md` | ws, socket.io, websockets deps |
+| Game:Unity | `game.md` | {unity_markers} |
+| Game:Unreal | `game.md` | {unreal_markers} |
+| Game:Godot | `game.md` | {godot_markers} |
+| i18n | `i18n.md` | {i18n_dirs}, {i18n_deps} |
+| RT:Basic | `realtime.md` | {websocket_deps}, {sse_patterns} |
+| RT:LowLatency | `realtime.md` | {binary_protocol_deps}, {realtime_patterns} |
 
 #### User Input (from Step-4)
 | Input | Rule File | Source |
@@ -669,10 +674,16 @@ Task("cco-agent-apply", `
 | DEP:GameEngine | `dep-gameengine.md` | {game_engine_markers} |
 | DEP:ARVR | `dep-arvr.md` | {arvr_deps} |
 | DEP:IoT | `dep-iot.md` | {iot_deps} |
+| DEP:APITest | `dep-apitest.md` | {api_test_deps} |
+| DEP:TypeSafeAPI | `dep-typesafe-api.md` | {typesafe_api_deps} |
+| DEP:DataQuery | `dep-data-query.md` | {data_query_deps} |
+| DEP:CSS | `dep-css.md` | {css_deps} |
+| DEP:WebSocket | `dep-websocket.md` | {websocket_deps} |
+| DEP:StateManagement | `dep-state.md` | {state_mgmt_deps} |
 
 **Pattern:** `dep-{category}.md` where `{category}` matches detected dependency categories
 
-**Trigger values:** Defined in cco-adaptive.md Dependency-Based Rules `**Trigger:**` lines (SSOT)
+**Trigger values:** Defined in cco-triggers.md (SSOT)
 
 ### Settings.json Structure
 

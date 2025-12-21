@@ -4,64 +4,69 @@
 
 ## Detection System
 
+### Trigger Reference (SSOT)
+
+**All trigger patterns defined in cco-triggers.md** - the single source of truth.
+Reference format: `{trigger_name}` maps to values in cco-triggers.md.
+
 ### Auto-Detect (Manifest/Code Scan)
 
-Detection organized by category. See cco-agent-analyze.md for detailed trigger patterns.
+Detection organized by category. Trigger values in `{placeholders}` are defined in cco-triggers.md.
 
 | Category | Key Triggers | Output |
 |----------|--------------|--------|
 | **Languages** |||
-| L:Python | {manifest}, {lock}, {code_ext} | `python.md` |
-| L:TypeScript | {ts_config}, {code_ext} | `typescript.md` |
-| L:JavaScript | {manifest} (no TS), {code_ext} | `javascript.md` |
-| L:Go | {manifest}, {code_ext} | `go.md` |
-| L:Rust | {manifest}, {code_ext} | `rust.md` |
-| L:Java | {manifest}, {code_ext} | `java.md` |
-| L:Kotlin | {code_ext}, {gradle_config} | `kotlin.md` |
-| L:Swift | {manifest}, {code_ext} | `swift.md` |
-| L:CSharp | {project_file}, {code_ext} | `csharp.md` |
-| L:Ruby | {manifest}, {code_ext} | `ruby.md` |
-| L:PHP | {manifest}, {code_ext} | `php.md` |
-| L:Elixir | {manifest}, {code_ext} | `elixir.md` |
-| L:Gleam | {manifest}, {code_ext} | `gleam.md` |
-| L:Scala | {manifest}, {code_ext} | `scala.md` |
-| L:Zig | {manifest}, {code_ext} | `zig.md` |
-| L:Dart | {manifest}, {code_ext} | `dart.md` |
+| L:Python | {py_manifest}, {py_lock}, {py_ext} | `python.md` |
+| L:TypeScript | {js_manifest}, {ts_config}, {ts_ext} | `typescript.md` |
+| L:JavaScript | {js_manifest} (no TS), {js_ext} | `javascript.md` |
+| L:Go | {go_manifest}, {go_lock}, {go_ext} | `go.md` |
+| L:Rust | {rust_manifest}, {rust_lock}, {rust_ext} | `rust.md` |
+| L:Java | {java_manifest}, {java_ext} | `java.md` |
+| L:Kotlin | {kotlin_ext}, {kotlin_config} | `kotlin.md` |
+| L:Swift | {swift_manifest}, {swift_ext} | `swift.md` |
+| L:CSharp | {csharp_project}, {csharp_ext} | `csharp.md` |
+| L:Ruby | {ruby_manifest}, {ruby_ext} | `ruby.md` |
+| L:PHP | {php_manifest}, {php_ext} | `php.md` |
+| L:Elixir | {elixir_manifest}, {elixir_ext} | `elixir.md` |
+| L:Gleam | {gleam_manifest}, {gleam_ext} | `gleam.md` |
+| L:Scala | {scala_manifest}, {scala_ext} | `scala.md` |
+| L:Zig | {zig_manifest}, {zig_ext} | `zig.md` |
+| L:Dart | {dart_manifest}, {dart_ext} | `dart.md` |
 | **Project Types** |||
 | T:CLI | {entry_points}, {cli_deps}, {bin_dir} | `cli.md` |
-| T:Library | {exports}, {lib_markers} | `library.md` |
-| T:Service | {container} + {ports}, {daemon_patterns} | `service.md` |
+| T:Library | {export_markers}, {lib_markers} | `library.md` |
+| T:Service | {container}, {ports}, {daemon_patterns} | `service.md` |
 | **API Styles** |||
-| API:REST | {routes_dir}, {rest_framework_patterns} | `api.md` |
-| API:GraphQL | {schema_ext}, {graphql_deps} | `api.md` |
-| API:gRPC | {proto_ext}, {grpc_deps} | `api.md` |
+| API:REST | {routes_dir}, {rest_decorators} | `api.md` |
+| API:GraphQL | {schema_files}, {graphql_deps} | `api.md` |
+| API:gRPC | {proto_files}, {grpc_deps} | `api.md` |
 | **Database** |||
 | DB:SQL | {sql_drivers}, {migrations_dir} | `database.md` |
 | DB:ORM | {orm_deps} | `database.md` |
 | DB:NoSQL | {nosql_deps} | `database.md` |
 | DB:Vector | {vector_deps} | `database.md` |
 | **Frontend** |||
-| Frontend:React | {framework_deps}, {component_ext} | `frontend.md` |
-| Frontend:Vue | {framework_deps}, {component_ext} | `frontend.md` |
-| Frontend:Svelte | {framework_deps}, {component_ext} | `frontend.md` |
-| Frontend:Angular | {framework_deps}, {component_ext} | `frontend.md` |
-| Frontend:Solid | {framework_deps} | `frontend.md` |
-| Frontend:Astro | {framework_deps}, {component_ext} | `frontend.md` |
-| Frontend:HTMX | {framework_deps}, {html_attrs} | `frontend.md` |
+| Frontend:React | {react_deps}, {react_ext} | `frontend.md` |
+| Frontend:Vue | {vue_deps}, {vue_ext} | `frontend.md` |
+| Frontend:Svelte | {svelte_deps}, {svelte_ext} | `frontend.md` |
+| Frontend:Angular | {angular_deps}, {angular_ext} | `frontend.md` |
+| Frontend:Solid | {solid_deps} | `frontend.md` |
+| Frontend:Astro | {astro_deps}, {astro_ext} | `frontend.md` |
+| Frontend:HTMX | {htmx_deps}, {htmx_attrs} | `frontend.md` |
 | **Mobile** |||
-| Mobile:Flutter | {manifest}, {code_ext} | `mobile.md` |
-| Mobile:ReactNative | {mobile_deps} | `mobile.md` |
-| Mobile:iOS | {project_file}, {code_ext} | `mobile.md` |
-| Mobile:Android | {build_config}, {manifest} | `mobile.md` |
-| Mobile:KMP | {multiplatform_config}, {shared_dir} | `mobile.md` |
+| Mobile:Flutter | {flutter_manifest}, {dart_ext} | `mobile.md` |
+| Mobile:ReactNative | {rn_deps}, {rn_config} | `mobile.md` |
+| Mobile:iOS | {ios_project}, {swift_ext} | `mobile.md` |
+| Mobile:Android | {android_build}, {android_manifest} | `mobile.md` |
+| Mobile:KMP | {kmp_config}, {kmp_dirs} | `mobile.md` |
 | **Infrastructure** |||
 | Infra:Docker | {container_files} | `container.md` |
 | Infra:K8s | {k8s_dirs}, {k8s_configs} | `k8s.md` |
-| Infra:Terraform | {tf_ext} | `terraform.md` |
+| Infra:Terraform | {tf_files} | `terraform.md` |
 | Infra:Pulumi | {pulumi_config} | `pulumi.md` |
-| Infra:CDK | {cdk_config}, {stack_files} | `cdk.md` |
+| Infra:CDK | {cdk_config}, {cdk_stack_files} | `cdk.md` |
 | Infra:Edge | {edge_configs} | `edge.md` |
-| Infra:WASM | {wasm_ext}, {wasm_tools} | `wasm.md` |
+| Infra:WASM | {wasm_ext}, {wasm_config} | `wasm.md` |
 | Infra:Serverless | {serverless_configs} | `serverless.md` |
 | **ML/AI** |||
 | ML:Training | {ml_training_deps} | `ml.md` |
@@ -92,15 +97,19 @@ Detection organized by category. See cco-agent-analyze.md for detailed trigger p
 | CI:CircleCI | {circleci_config} | `ci-cd.md` |
 | CI:Azure | {azure_config} | `ci-cd.md` |
 | CI:ArgoCD | {argocd_dir}, {argocd_config} | `ci-cd.md` |
+| **Meta-Frameworks** |||
+| Framework:Next | {nextjs_deps}, {nextjs_config} | `nextjs.md` |
+| Framework:Nuxt | {nuxt_deps}, {nuxt_config} | `nuxt.md` |
+| Framework:SvelteKit | {sveltekit_deps}, {sveltekit_config} | `sveltekit.md` |
+| Framework:Remix | {remix_deps}, {remix_patterns} | `remix.md` |
 | **Specialized** |||
 | Game:Unity | {unity_markers} | `game.md` |
 | Game:Unreal | {unreal_markers} | `game.md` |
 | Game:Godot | {godot_markers} | `game.md` |
 | i18n | {i18n_dirs}, {i18n_deps} | `i18n.md` |
-| RT:Basic | {websocket_deps} | `realtime.md` |
-| RT:LowLatency | {binary_protocol_deps} | `realtime.md` |
-| API:WebSocket | {websocket_deps} | `api.md` |
-| **DEP:* (36 categories)** | See Dependency-Based Rules section below ||
+| RT:Basic | {websocket_deps}, {sse_patterns} | `realtime.md` |
+| RT:LowLatency | {binary_protocol_deps}, {realtime_patterns} | `realtime.md` |
+| **DEP:* (42 categories)** | See Dependency-Based Rules section below ||
 | DEP:CLI | {cli_framework_deps} | `dep-cli.md` |
 | DEP:TUI | {tui_deps} | `dep-tui.md` |
 | DEP:Validation | {validation_deps} | `dep-validation.md` |
@@ -137,6 +146,12 @@ Detection organized by category. See cco-agent-analyze.md for detailed trigger p
 | DEP:GameEngine | {game_engine_markers} | `dep-gameengine.md` |
 | DEP:ARVR | {arvr_deps} | `dep-arvr.md` |
 | DEP:IoT | {iot_deps} | `dep-iot.md` |
+| DEP:APITest | {api_test_deps} | `dep-apitest.md` |
+| DEP:TypeSafeAPI | {typesafe_api_deps} | `dep-typesafe-api.md` |
+| DEP:DataQuery | {data_query_deps} | `dep-data-query.md` |
+| DEP:CSS | {css_deps} | `dep-css.md` |
+| DEP:WebSocket | {websocket_deps} | `dep-websocket.md` |
+| DEP:StateManagement | {state_mgmt_deps} | `dep-state.md` |
 
 ### User-Input (AskUserQuestion) [MANDATORY]
 
@@ -816,6 +831,55 @@ When generating tests, always include:
 
 ---
 
+## Meta-Frameworks
+
+### Next.js (Framework:Next)
+**Trigger:** {nextjs_deps}, {nextjs_config}
+
+- **App-Router**: Use App Router for new projects (Next.js 13+)
+- **Server-Actions**: Server Actions for mutations, not API routes (Next.js 14+)
+- **Streaming-SSR**: Use streaming with Suspense for faster TTFB
+- **Route-Handlers**: Use Route Handlers (route.ts) instead of API routes for App Router
+- **Metadata-API**: Use Metadata API for SEO, not manual head tags
+- **Image-Component**: Use next/image for automatic optimization
+- **Font-Optimization**: Use next/font for zero-layout-shift fonts
+- **Turbopack**: Enable Turbopack for faster dev builds (Next.js 15+)
+- **Parallel-Routes**: Use parallel routes for complex layouts
+- **Intercepting-Routes**: Use intercepting routes for modals/sheets
+
+### Nuxt (Framework:Nuxt)
+**Trigger:** {nuxt_deps}, {nuxt_config}
+
+- **Nitro-Server**: Use Nitro for server API routes
+- **Auto-Imports**: Leverage auto-imports, don't manual import
+- **Composables**: Use composables/ for shared logic
+- **Server-Directory**: Use server/ for API endpoints
+- **TypeScript-Native**: Full TypeScript support out of box
+- **Layers**: Use Nuxt Layers for shared config
+- **State-useState**: Use useState for SSR-safe state
+
+### SvelteKit (Framework:SvelteKit)
+**Trigger:** {sveltekit_deps}, {sveltekit_config}
+
+- **Load-Functions**: Use +page.ts/+page.server.ts for data loading
+- **Form-Actions**: Use form actions for mutations
+- **Hooks**: Use hooks.server.ts for middleware
+- **Adapter-Select**: Choose adapter based on deployment target
+- **Prerender**: Prerender static pages where possible
+- **SSR-First**: SSR by default, disable only when necessary
+
+### Remix (Framework:Remix)
+**Trigger:** {remix_deps}, {remix_patterns}
+
+- **Loader-Action**: Use loader for GET, action for mutations
+- **Nested-Routes**: Leverage nested routing for UI composition
+- **ErrorBoundary**: Define error boundaries per route
+- **Defer-Streaming**: Use defer for streaming large data
+- **Form-Component**: Use Remix Form for progressive enhancement
+- **Meta-Function**: Use meta function for route-specific SEO
+
+---
+
 ## Desktop
 **Trigger:** Electron/Tauri detected
 
@@ -1215,10 +1279,55 @@ When generating tests, always include:
 ## Specialized > Game
 **Trigger:** Unity/Unreal/Godot detected
 
+### Base Game Rules (All Engines)
 - **Frame-Budget**: 16ms (60fps) or 8ms (120fps) target
 - **Asset-LOD**: Level of detail + streaming
 - **Save-Versioned**: Migration support for old saves
 - **Determinism**: Fixed timestep for multiplayer/replay
+- **Input-System**: Input actions, rebindable keys
+- **Object-Pool**: Reuse frequently spawned objects
+
+### Unity (Game:Unity)
+**Trigger:** {unity_markers}
+
+- **Prefab-Usage**: Use prefabs for reusable objects, avoid scene-only objects
+- **ScriptableObjects**: Use ScriptableObjects for data containers and configuration
+- **Assembly-Definition**: Split code into assemblies for faster compilation
+- **Addressables**: Use Addressables for asset management (not Resources.Load)
+- **ECS-Performance**: Use ECS/DOTS for performance-critical systems (Unity 6+)
+- **IL2CPP**: Use IL2CPP for production builds (better performance, obfuscation)
+- **UI-Toolkit**: Use UI Toolkit for runtime UI (Unity 2023+), UGUI for legacy
+- **Input-System**: Use new Input System, not legacy Input.GetKey
+- **Async-Await**: Use UniTask for async/await (faster than coroutines)
+- **Serialization**: [SerializeField] for private fields, avoid public fields
+
+### Unreal (Game:Unreal)
+**Trigger:** {unreal_markers}
+
+- **Blueprint-Cpp-Balance**: Gameplay logic in Blueprint, performance in C++
+- **UPROPERTY-Always**: All reflected properties use UPROPERTY macro
+- **GC-Aware**: Use TWeakObjectPtr for non-owning references to avoid GC issues
+- **Asset-Soft-Refs**: Use soft references for large assets to avoid memory bloat
+- **Data-Assets**: Use Data Assets for configuration, not hardcoded values
+- **Enhanced-Input**: Use Enhanced Input System (UE5+), not legacy input
+- **Niagara**: Use Niagara for particles (not Cascade)
+- **Common-UI**: Use Common UI for cross-platform UI
+- **Live-Coding**: Enable Live Coding for faster iteration
+- **Gameplay-Abilities**: Use Gameplay Ability System for complex abilities
+
+### Godot (Game:Godot)
+**Trigger:** {godot_markers}
+
+- **Scene-Composition**: Composition over inheritance via scene instancing
+- **Signal-Decoupling**: Use signals for loose coupling between nodes
+- **Autoload-Minimal**: Minimal autoloads, prefer dependency injection
+- **Resource-Custom**: Custom resources for data (not dictionaries)
+- **Export-Vars**: Use @export for inspector-editable variables
+- **Typed-GDScript**: Use static typing for performance and IDE support
+- **Node-Groups**: Use groups for batch operations
+- **Scene-Unique**: Use %NodeName for scene-unique node access (Godot 4+)
+- **Tween-Animation**: Use Tweens for procedural animation
+- **Physics-Layers**: Configure collision layers/masks properly
 
 ---
 
@@ -1605,6 +1714,63 @@ When generating tests, always include:
 - **Timing-Safe**: Constant-time compare
 - **Key-Derivation**: Argon2/scrypt, not MD5/SHA1
 
+### DEP:APITest
+**Trigger:** {api_test_deps}
+
+- **Collections-Organized**: Organize requests by feature/endpoint
+- **Environment-Variables**: Use environment variables for base URLs, tokens
+- **Pre-Request-Scripts**: Setup authentication, dynamic data
+- **Assertions-Comprehensive**: Status code, response time, schema validation
+- **CI-Integration**: Run API tests in CI pipeline
+
+### DEP:TypeSafeAPI
+**Trigger:** {typesafe_api_deps}
+
+- **Schema-Share**: Single source of truth for client/server types
+- **Type-Inference**: Leverage type inference, minimize explicit types
+- **Error-Typed**: Type-safe error handling
+- **Validation-Runtime**: Zod/Valibot at boundaries
+- **Procedure-Naming**: Consistent naming (create/get/update/delete)
+
+### DEP:DataQuery
+**Trigger:** {data_query_deps}
+
+- **Query-Keys**: Structured query keys for cache management
+- **Stale-Time**: Configure staleTime based on data volatility
+- **Prefetch**: Prefetch on hover/route transition
+- **Optimistic-Updates**: Optimistic mutations with rollback
+- **Infinite-Queries**: Use infinite queries for pagination
+- **Suspense-Mode**: Use Suspense mode for cleaner loading states
+
+### DEP:CSS
+**Trigger:** {css_deps}
+
+- **Utility-First**: Utility classes for common patterns
+- **Component-Extraction**: Extract component classes for repeated patterns
+- **Design-Tokens**: Use CSS variables/tokens for consistency
+- **Dark-Mode**: Support dark mode with theme variables
+- **Responsive-Mobile-First**: Mobile-first responsive design
+- **Build-Purge**: Purge unused styles in production
+
+### DEP:WebSocket
+**Trigger:** {websocket_deps}
+
+- **Reconnect-Auto**: Automatic reconnection with exponential backoff
+- **Heartbeat-Ping**: Ping/pong for connection health
+- **Message-Queue**: Queue messages during disconnect
+- **Binary-Efficient**: Binary for large payloads
+- **Auth-Token**: Authenticate via token in connection
+
+### DEP:StateManagement
+**Trigger:** {state_mgmt_deps}
+
+- **Atomic-Updates**: Atomic state updates, avoid nested mutations
+- **Selector-Memoize**: Memoized selectors for derived state
+- **Actions-Named**: Named actions for debugging
+- **DevTools-Enable**: Enable devtools in development
+- **Persistence**: Persist critical state to storage
+- **Hydration-SSR**: Handle SSR hydration correctly
+
 ---
 
 ## Trigger Reference
@@ -1617,6 +1783,7 @@ When generating tests, always include:
 | API: | API Style | Routes, decorators, proto | `api.md` |
 | DB: | Database | ORM deps, migrations | `database.md` |
 | Frontend: | Frontend | Framework deps, components | `frontend.md` |
+| Framework: | Meta-Framework | Next/Nuxt/SvelteKit/Remix | `nextjs.md`, `nuxt.md`, `sveltekit.md`, `remix.md` |
 | Mobile: | Mobile | SDK deps, native configs | `mobile.md` |
 | Desktop: | Desktop | Electron/Tauri deps | `desktop.md` |
 | Infra: | Infrastructure | Dockerfile, *.tf, k8s/ | `container.md`, `k8s.md`, `edge.md` |
@@ -1625,3 +1792,5 @@ When generating tests, always include:
 | Test: | Testing | Test framework, tests/ | `testing.md` |
 | CI: | CI/CD | Workflow files | `ci-cd.md` |
 | DEP: | Dependency | Specific package deps | `dep-{category}.md` |
+| Game: | Game Engines | Unity/Unreal/Godot markers | `game.md` |
+| RT: | Real-time | WebSocket/SSE patterns | `realtime.md` |
