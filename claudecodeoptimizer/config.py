@@ -5,8 +5,20 @@ import os
 import re
 import sys
 from collections.abc import Callable
-from enum import StrEnum
+from enum import Enum
 from pathlib import Path
+
+# Python 3.10 compatibility: StrEnum added in 3.11
+if sys.version_info >= (3, 11):
+    from enum import StrEnum
+else:
+
+    class StrEnum(str, Enum):
+        """String enum for Python 3.10 compatibility."""
+
+        pass
+
+
 from typing import Any
 
 from . import __version__
