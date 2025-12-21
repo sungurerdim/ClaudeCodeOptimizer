@@ -219,7 +219,7 @@ function formatStatusline(input, git) {
   const modelStr = c(modelDisplay, 'magenta');
   const contextStr = contextUsage ? c(contextUsage, 'cyan') : null;
 
-  const repoDisplay = git ? `${git.repoName || projectName}:${git.branch}` : 'Not a git repo';
+  const repoDisplay = git ? `${git.repoName || projectName}:${git.branch}` : projectName;
   const repoStr = c(repoDisplay, 'green');
   const tagStr = git?.releaseTag ? c(git.releaseTag, 'cyan') : null;
 
