@@ -5,24 +5,25 @@
 
 - **SSOT**: Single source of truth for every piece of data/logic
 - **DRY**: Don't repeat yourself, extract common patterns
-- **YAGNI**: Only build what's needed now, not hypotheticals
-- **KISS**: Simplest solution that works
+- **YAGNI**: Don't add features beyond request. DO add robustness (validation, edge cases, error handling) - robustness is NOT a feature
+- **KISS**: Simplest solution that works correctly for all valid inputs
 - **Separation-of-Concerns**: Distinct responsibilities per module
 - **Composition**: Prefer composition over inheritance
 - **Idempotent**: Same operation, same result, safe to retry
 - **Least-Astonishment**: Behavior matches user expectations
+- **Defensive-Default**: Assume bad input, validate anyway. Cost of validation << cost of bug
 
 ## Code Quality
 
 - **Fail-Fast**: Immediate visible failure, no silent fallbacks
 - **No-Orphans**: Every function called, every import used
-- **Type-Safe**: Annotations where supported
+- **Type-Safe**: Full type annotations on all public APIs. Prefer stricter types (Literal, enums over strings)
 - **Immutable**: Prefer immutable, mutate only when necessary
 - **Complexity**: Cyclomatic <10 per function
 - **Clean**: Meaningful names, single responsibility
 - **Explicit**: No magic values, clear intent
 - **Scope**: Only requested changes, general solutions
-- **Defensive**: Validate assumptions, handle edge cases
+- **Robust**: Handle all valid input variations (whitespace, case, empty, None, boundary values)
 
 ## File & Resource
 
@@ -53,7 +54,10 @@
 - **Coverage**: 60-90% context-adjusted
 - **Isolation**: No inter-test deps, reproducible
 - **Integrity**: Never edit tests to pass code
-- **Critical-Paths**: E2E for critical workflows
+- **Critical-Paths**: E2E for critical user workflows
+- **Edge-Cases-Mandatory**: Always test: empty/None, whitespace-only, boundary values (0, 1, max, max+1), state combinations, invalid type coercion
+- **Input-Variations**: Test normalized vs raw input (leading/trailing whitespace, case variations, unicode)
+- **State-Matrix**: Test all valid state combinations where multiple states interact
 
 ## Error Handling
 
