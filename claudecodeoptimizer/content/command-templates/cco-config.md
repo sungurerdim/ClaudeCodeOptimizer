@@ -483,7 +483,7 @@ Task("cco-agent-apply", `
 #### Languages (L:*)
 | Detection | Rule File | Triggers |
 |-----------|-----------|----------|
-| L:Python | `{lang}.md` | pyproject.toml, requirements*.txt, *.py |
+| L:Python | `{lang}.md` | pyproject.toml, setup.py, requirements*.txt, *.py |
 | L:TypeScript | `{lang}.md` | tsconfig.json, *.ts/*.tsx |
 | L:JavaScript | `{lang}.md` | package.json (no TS), *.js |
 | L:Go | `{lang}.md` | go.mod, *.go |
@@ -491,8 +491,8 @@ Task("cco-agent-apply", `
 | L:Java | `{lang}.md` | pom.xml, build.gradle, *.java |
 | L:Kotlin | `{lang}.md` | *.kt, kotlin in gradle |
 | L:Swift | `{lang}.md` | Package.swift, *.swift |
-| L:CSharp | `{lang}.md` | *.csproj, *.sln |
-| L:Ruby | `{lang}.md` | Gemfile, *.rb |
+| L:CSharp | `{lang}.md` | *.csproj, *.sln, *.cs |
+| L:Ruby | `{lang}.md` | Gemfile, *.gemspec, *.rb |
 | L:PHP | `{lang}.md` | composer.json, *.php |
 | L:Elixir | `{lang}.md` | mix.exs, *.ex |
 | L:Gleam | `{lang}.md` | gleam.toml, *.gleam |
@@ -503,6 +503,7 @@ Task("cco-agent-apply", `
 #### Runtimes (R:*)
 | Detection | Rule File | Triggers |
 |-----------|-----------|----------|
+| R:Node | `node.md` | package.json, node_modules/ |
 | R:Bun | `bun.md` | bun.lockb, bunfig.toml |
 | R:Deno | `deno.md` | deno.json, deno.lock |
 
@@ -535,14 +536,18 @@ Task("cco-agent-apply", `
 | Frontend:Vue | `frontend.md` | vue deps, *.vue |
 | Frontend:Svelte | `frontend.md` | svelte deps, *.svelte |
 | Frontend:Angular | `frontend.md` | @angular deps |
+| Frontend:Solid | `frontend.md` | solid-js deps |
+| Frontend:Astro | `frontend.md` | astro deps, *.astro |
+| Frontend:HTMX | `frontend.md` | htmx deps, hx-* in HTML |
 
 #### Mobile
 | Detection | Rule File | Triggers |
 |-----------|-----------|----------|
 | Mobile:Flutter | `mobile.md` | pubspec.yaml, *.dart |
 | Mobile:ReactNative | `mobile.md` | react-native/expo deps |
-| Mobile:iOS | `mobile.md` | *.xcodeproj, Podfile |
-| Mobile:Android | `mobile.md` | AndroidManifest.xml |
+| Mobile:iOS | `mobile.md` | *.xcodeproj, Podfile, *.swift |
+| Mobile:Android | `mobile.md` | build.gradle, AndroidManifest.xml |
+| Mobile:KMP | `mobile.md` | kotlin-multiplatform, shared/ |
 
 #### Desktop
 | Detection | Rule File | Triggers |
@@ -566,20 +571,25 @@ Task("cco-agent-apply", `
 | Detection | Rule File | Triggers |
 |-----------|-----------|----------|
 | ML:Training | `ml.md` | torch/tensorflow/sklearn |
-| ML:LLM | `ml.md` | langchain/llamaindex |
-| ML:SDK | `ml.md` | openai/anthropic deps |
+| ML:LLM | `ml.md` | langchain/llamaindex/haystack |
+| ML:Inference | `ml.md` | transformers/onnxruntime/vllm |
+| ML:SDK | `ml.md` | openai/anthropic/cohere deps |
 
 #### Build Tools
 | Detection | Rule File | Triggers |
 |-----------|-----------|----------|
-| Build:Monorepo | `monorepo.md` | nx.json, turbo.json |
-| Build:Bundler | `bundler.md` | vite/webpack/esbuild |
+| Build:Monorepo | `monorepo.md` | nx.json, turbo.json, pnpm-workspace.yaml |
+| Build:Bundler | `bundler.md` | vite.config.*, webpack.config.*, esbuild |
+| Build:Linter | `linter.md` | .eslintrc*, biome.json, ruff.toml |
+| Build:Formatter | `formatter.md` | .prettierrc*, biome.json |
+| Build:TypeChecker | `typechecker.md` | tsconfig.json, mypy.ini, pyproject.toml[mypy] |
 
 #### Testing (Test:*)
 | Detection | Rule File | Triggers |
 |-----------|-----------|----------|
 | Test:Unit | `testing.md` | pytest/jest/vitest, tests/ |
 | Test:E2E | `testing.md` | playwright/cypress, e2e/ |
+| Test:Coverage | `testing.md` | [tool.coverage], .nycrc, jest --coverage |
 
 #### CI/CD
 | Detection | Rule File | Triggers |
@@ -588,6 +598,21 @@ Task("cco-agent-apply", `
 | CI:GitLab | `ci-cd.md` | .gitlab-ci.yml |
 | CI:Jenkins | `ci-cd.md` | Jenkinsfile |
 | CI:CircleCI | `ci-cd.md` | .circleci/config.yml |
+| CI:Azure | `ci-cd.md` | azure-pipelines.yml |
+| CI:ArgoCD | `ci-cd.md` | argocd/, Application.yaml |
+
+#### Specialized
+| Detection | Rule File | Triggers |
+|-----------|-----------|----------|
+| Game:Unity | `game.md` | *.csproj + Unity, Assets/, ProjectSettings/ |
+| Game:Unreal | `game.md` | *.uproject, Source/ |
+| Game:Godot | `game.md` | project.godot, *.gd |
+| Game:Python | `game.md` | pygame/arcade/panda3d deps |
+| Game:JS | `game.md` | phaser/three.js/pixi.js deps |
+| i18n | `i18n.md` | locales/, i18n/, react-i18next, i18next |
+| RT:Basic | `realtime.md` | ws, socket.io, websockets deps |
+| RT:LowLatency | `realtime.md` | protobuf + ws, msgpack |
+| API:WebSocket | `api.md` | ws, socket.io, websockets deps |
 
 #### User Input (from Step-4)
 | Input | Rule File | Source |
@@ -602,9 +627,44 @@ Task("cco-agent-apply", `
 #### Dependency-Specific (DEP:*)
 | Detection | Rule File | Example Triggers |
 |-----------|-----------|------------------|
-| DEP:{category} | `dep-{category}.md` | Specific package detection |
+| DEP:CLI | `dep-cli.md` | typer, click, argparse, cobra |
+| DEP:TUI | `dep-tui.md` | rich, textual, urwid, blessed |
+| DEP:Validation | `dep-validation.md` | pydantic, zod, joi, yup |
+| DEP:Config | `dep-config.md` | pydantic-settings, dotenv, dynaconf |
+| DEP:Testing | `dep-testing.md` | pytest, jest, playwright, hypothesis |
+| DEP:HTTP | `dep-http.md` | requests, httpx, axios, got |
+| DEP:ORM | `dep-orm.md` | sqlalchemy, prisma, drizzle, typeorm |
+| DEP:Auth | `dep-auth.md` | passlib, passport, lucia, next-auth |
+| DEP:Cache | `dep-cache.md` | redis, memcached, keyv, ioredis |
+| DEP:Queue | `dep-queue.md` | celery, bull, dramatiq, bullmq |
+| DEP:Search | `dep-search.md` | elasticsearch, meilisearch, algolia |
+| DEP:GPU | `dep-gpu.md` | cuda, torch+cuda, jax, triton |
+| DEP:HeavyModel | `dep-heavymodel.md` | transformers, langchain, vllm |
+| DEP:DataHeavy | `dep-data.md` | pandas, polars, dask, pyspark |
+| DEP:Image | `dep-image.md` | pillow, opencv, scikit-image |
+| DEP:Audio | `dep-audio.md` | pydub, librosa, whisper, soundfile |
+| DEP:Video | `dep-video.md` | ffmpeg-python, moviepy, decord |
+| DEP:Logging | `dep-logging.md` | loguru, structlog, pino, winston |
+| DEP:ObjectStore | `dep-storage.md` | boto3/s3, minio, cloudinary |
+| DEP:Payment | `dep-payment.md` | stripe, paypal, paddle |
+| DEP:Email | `dep-email.md` | sendgrid, resend, nodemailer |
+| DEP:SMS | `dep-sms.md` | twilio, vonage, messagebird |
+| DEP:Notification | `dep-notification.md` | firebase-admin, onesignal, pusher |
+| DEP:PDF | `dep-pdf.md` | reportlab, weasyprint, pdfkit |
+| DEP:Excel | `dep-excel.md` | openpyxl, xlsxwriter, sheetjs |
+| DEP:Scraping | `dep-scraping.md` | scrapy, beautifulsoup4, crawlee |
+| DEP:Blockchain | `dep-blockchain.md` | web3, ethers, hardhat |
+| DEP:Crypto | `dep-crypto.md` | cryptography, nacl, argon2 |
+| DEP:Edge | `dep-edge.md` | @cloudflare/workers, wrangler, vercel/edge |
+| DEP:EdgeFramework | `dep-edgeframework.md` | hono, elysia, h3, nitro |
+| DEP:WASM | `dep-wasm.md` | wasm-pack, wasm-bindgen, wasmtime |
+| DEP:GamePython | `dep-game-python.md` | pygame, arcade, panda3d |
+| DEP:GameJS | `dep-game-js.md` | phaser, three.js, pixi.js |
+| DEP:GameEngine | `dep-gameengine.md` | Unity, Unreal, Godot project files |
+| DEP:ARVR | `dep-arvr.md` | openxr, webxr, ar-foundation |
+| DEP:IoT | `dep-iot.md` | micropython, paho-mqtt, esphome |
 
-**Pattern:** `dep-{category}.md` where `{category}` matches detected dependency categories (e.g., cli, validation, orm, auth, http)
+**Pattern:** `dep-{category}.md` where `{category}` matches detected dependency categories
 
 **Rule content source:** cco-adaptive.md sections (read by cco-agent-analyze in Step-1)
 

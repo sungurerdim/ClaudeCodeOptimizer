@@ -19,11 +19,14 @@ Detection organized by category. See cco-agent-analyze.md for detailed trigger p
 | L:Java | pom.xml, build.gradle, *.java | `java.md` |
 | L:Kotlin | *.kt, kotlin in gradle | `kotlin.md` |
 | L:Swift | Package.swift, *.swift | `swift.md` |
+| L:CSharp | *.csproj, *.sln, *.cs | `csharp.md` |
+| L:Ruby | Gemfile, *.gemspec, *.rb | `ruby.md` |
+| L:PHP | composer.json, *.php | `php.md` |
+| L:Elixir | mix.exs, *.ex | `elixir.md` |
 | L:Gleam | gleam.toml, *.gleam | `gleam.md` |
+| L:Scala | build.sbt, *.scala | `scala.md` |
 | L:Zig | build.zig, *.zig | `zig.md` |
-| **Runtimes** |||
-| R:Bun | bun.lockb, bunfig.toml | context |
-| R:Deno | deno.json, deno.lock | context |
+| L:Dart | pubspec.yaml, *.dart | `dart.md` |
 | **Project Types** |||
 | T:CLI | [project.scripts], typer/click/cobra, bin/ | `cli.md` |
 | T:Library | exports, __all__, [lib] | `library.md` |
@@ -41,10 +44,16 @@ Detection organized by category. See cco-agent-analyze.md for detailed trigger p
 | Frontend:React | react deps, *.jsx/*.tsx | `frontend.md` |
 | Frontend:Vue | vue deps, *.vue | `frontend.md` |
 | Frontend:Svelte | svelte deps, *.svelte | `frontend.md` |
+| Frontend:Angular | @angular deps, *.component.ts | `frontend.md` |
+| Frontend:Solid | solid-js deps | `frontend.md` |
+| Frontend:Astro | astro deps, *.astro | `frontend.md` |
+| Frontend:HTMX | htmx deps, hx-* in HTML | `frontend.md` |
 | **Mobile** |||
 | Mobile:Flutter | pubspec.yaml, *.dart | `mobile.md` |
 | Mobile:ReactNative | react-native/expo deps | `mobile.md` |
-| Mobile:Native | *.xcodeproj, AndroidManifest | `mobile.md` |
+| Mobile:iOS | *.xcodeproj, Podfile, *.swift | `mobile.md` |
+| Mobile:Android | build.gradle, AndroidManifest.xml | `mobile.md` |
+| Mobile:KMP | kotlin-multiplatform, shared/ | `mobile.md` |
 | **Infrastructure** |||
 | Infra:Docker | Dockerfile, docker-compose.yml | `container.md` |
 | Infra:K8s | k8s/, helm/, kustomization.yaml | `k8s.md` |
@@ -57,33 +66,48 @@ Detection organized by category. See cco-agent-analyze.md for detailed trigger p
 | **ML/AI** |||
 | ML:Training | torch/tensorflow/sklearn | `ml.md` |
 | ML:LLM | langchain/llamaindex/haystack | `ml.md` |
+| ML:Inference | transformers/onnxruntime/vllm | `ml.md` |
 | ML:SDK | openai/anthropic/cohere | `ml.md` |
 | **Build** |||
 | Build:Monorepo | nx.json, turbo.json, workspaces | `monorepo.md` |
 | Build:Bundler | vite/webpack/esbuild/tsup | `bundler.md` |
+| Build:Linter | .eslintrc*, biome.json, ruff.toml | `linter.md` |
+| Build:Formatter | .prettierrc*, biome.json | `formatter.md` |
+| Build:TypeChecker | tsconfig.json, mypy.ini | `typechecker.md` |
 | **Desktop** |||
 | Desktop:Electron | electron deps, electron-builder | `desktop.md` |
 | Desktop:Tauri | tauri deps, tauri.conf.json | `desktop.md` |
 | **Runtimes** |||
+| R:Node | package.json, node_modules/ | `node.md` |
 | R:Bun | bun.lockb, bunfig.toml | `bun.md` |
 | R:Deno | deno.json, deno.lock | `deno.md` |
 | **Testing** |||
 | Test:Unit | pytest/jest/vitest, tests/ | `testing.md` |
 | Test:E2E | playwright/cypress, e2e/ | `testing.md` |
+| Test:Coverage | [tool.coverage], .nycrc | `testing.md` |
 | **CI/CD** |||
 | CI:GitHub | .github/workflows/ | `ci-cd.md` |
 | CI:GitLab | .gitlab-ci.yml | `ci-cd.md` |
-| CI:* (others) | Jenkins/CircleCI/Azure | `ci-cd.md` |
-| **Other** |||
+| CI:Jenkins | Jenkinsfile | `ci-cd.md` |
+| CI:CircleCI | .circleci/config.yml | `ci-cd.md` |
+| CI:Azure | azure-pipelines.yml | `ci-cd.md` |
+| CI:ArgoCD | argocd/, Application.yaml | `ci-cd.md` |
+| **Specialized** |||
+| Game:Unity | *.csproj + Unity, Assets/ | `game.md` |
+| Game:Unreal | *.uproject, Source/ | `game.md` |
+| Game:Godot | project.godot, *.gd | `game.md` |
 | i18n | locales/, react-i18next | `i18n.md` |
-| Game:* | Unity/Godot/pygame | `game.md` |
-| **DEP:* (33 categories)** |||
+| RT:Basic | ws/socket.io/websockets | `realtime.md` |
+| RT:LowLatency | protobuf + ws, msgpack | `realtime.md` |
+| API:WebSocket | ws/socket.io/websockets | `api.md` |
+| **DEP:* (37 categories)** |||
 | DEP:CLI | typer/click/argparse/cobra | `dep-cli.md` |
 | DEP:TUI | rich/textual/urwid | `dep-tui.md` |
 | DEP:Validation | pydantic/zod/joi | `dep-validation.md` |
 | DEP:Config | pydantic-settings/dotenv | `dep-config.md` |
 | DEP:Testing | pytest/jest/playwright | `dep-testing.md` |
-| DEP:Edge | hono/elysia/workers | `dep-edge.md` |
+| DEP:Edge | @cloudflare/workers/wrangler | `dep-edge.md` |
+| DEP:EdgeFramework | hono/elysia/h3/nitro | `dep-edgeframework.md` |
 | DEP:WASM | wasm-pack/wasm-bindgen | `dep-wasm.md` |
 | DEP:HTTP | requests/axios/httpx | `dep-http.md` |
 | DEP:ORM | sqlalchemy/prisma/drizzle | `dep-orm.md` |
@@ -101,6 +125,7 @@ Detection organized by category. See cco-agent-analyze.md for detailed trigger p
 | DEP:ObjectStore | boto3/minio/cloudinary | `dep-storage.md` |
 | DEP:Payment | stripe/paypal/braintree | `dep-payment.md` |
 | DEP:Email | sendgrid/resend/nodemailer | `dep-email.md` |
+| DEP:SMS | twilio/vonage/messagebird | `dep-sms.md` |
 | DEP:Notification | firebase/onesignal/pusher | `dep-notification.md` |
 | DEP:PDF | reportlab/weasyprint/pdfkit | `dep-pdf.md` |
 | DEP:Excel | openpyxl/xlsxwriter/sheetjs | `dep-excel.md` |
@@ -109,6 +134,9 @@ Detection organized by category. See cco-agent-analyze.md for detailed trigger p
 | DEP:Crypto | cryptography/nacl/argon2 | `dep-crypto.md` |
 | DEP:GamePython | pygame/arcade/panda3d | `dep-game-python.md` |
 | DEP:GameJS | phaser/three.js/pixi.js | `dep-game-js.md` |
+| DEP:GameEngine | Unity/Unreal/Godot | `dep-gameengine.md` |
+| DEP:ARVR | openxr/webxr/ar-foundation | `dep-arvr.md` |
+| DEP:IoT | micropython/paho-mqtt/esphome | `dep-iot.md` |
 
 ### User-Input (AskUserQuestion) [MANDATORY]
 
@@ -220,14 +248,20 @@ paths: **/*.py
 ### Python (L:Python)
 **Trigger:** pyproject.toml | setup.py | requirements.txt | *.py
 
-- **Type-Hints**: Type annotations for public APIs (functions, methods, classes)
+- **Modern-Types**: Use `str | None` (3.10+), `list[str]` (3.9+). Avoid `Optional`, `List`, `Dict` from typing
 - **Async-Await**: async/await for I/O operations, avoid blocking in async context
 - **Context-Managers**: Use `with` statement for resource management (files, connections)
 - **Import-Order**: stdlib > third-party > local (isort compatible)
 - **Exception-Chain**: Use `raise X from Y` for exception chaining
 - **F-Strings**: Prefer f-strings over .format() or % formatting
-- **Dataclasses**: Use dataclasses or attrs for data containers
+- **Dataclasses**: Use dataclasses, attrs, or Pydantic for data containers. Use slots=True for memory efficiency
 - **Comprehensions**: Prefer list/dict comprehensions for simple transformations
+- **Pydantic-Validators**: Use `@field_validator` for custom validation, `BeforeValidator` for normalization
+- **Pydantic-Bounds**: Always set Field(min_length=1, max_length=N) for strings
+- **Pydantic-Strict**: Use strict=True on models for no implicit coercion where appropriate
+- **Enum-StrEnum**: Use StrEnum for string enums with auto case handling
+- **Match-Case**: Use match-case for complex conditionals (3.10+)
+- **Walrus-Operator**: Use := for assignment expressions where it improves readability
 
 ### TypeScript (L:TypeScript)
 **Trigger:** tsconfig.json | *.ts/*.tsx
@@ -239,6 +273,10 @@ paths: **/*.py
 - **Index-Access**: Enable noUncheckedIndexedAccess for array/object safety
 - **Utility-Types**: Use Partial, Pick, Omit, Required for type transformations
 - **Discriminated-Unions**: Use discriminated unions for type-safe state management
+- **Satisfies-Operator**: Use satisfies for type validation without widening (TS 4.9+)
+- **Const-Type-Params**: Use const type parameters for literal inference (TS 5.0+)
+- **Using-Keyword**: Use using for explicit resource management (TS 5.2+)
+- **Branded-Types**: Use branded types for validated primitives (UserId, Email)
 
 ### JavaScript (L:JavaScript)
 **Trigger:** package.json without TS | *.js/*.jsx only
@@ -250,6 +288,9 @@ paths: **/*.py
 - **Array-Methods**: Prefer map/filter/reduce over manual loops
 - **Optional-Chain**: Use ?. and ?? for safe property access
 - **Destructuring**: Destructure objects/arrays for clarity
+- **Top-Level-Await**: Use top-level await in modules
+- **Private-Fields**: Use # for private class fields
+- **Modern-Array**: Use Array.at(), Object.hasOwn(), Array.findLast()
 
 ### Go (L:Go)
 **Trigger:** go.mod | *.go
@@ -260,6 +301,9 @@ paths: **/*.py
 - **Goroutine-Safe**: Channel or sync primitives for concurrency
 - **Defer-Cleanup**: defer for cleanup operations
 - **Table-Tests**: Table-driven tests for comprehensive coverage
+- **Generics**: Use generics for type-safe collections and utilities (Go 1.18+)
+- **Slog-Logging**: Use slog for structured logging (Go 1.21+)
+- **Range-Int**: Use range over integers for simple loops (Go 1.22+)
 
 ### Rust (L:Rust)
 **Trigger:** Cargo.toml | *.rs
@@ -268,6 +312,9 @@ paths: **/*.py
 - **Ownership-Clear**: Clear ownership patterns, minimize clones
 - **Clippy-Clean**: No clippy warnings in CI
 - **Unsafe-Minimize**: Minimize unsafe blocks, document when necessary
+- **Async-Traits**: Use async fn in traits (Rust 1.75+)
+- **Let-Chains**: Use let chains for complex conditionals
+- **Error-Thiserror**: Use thiserror for library errors, anyhow for applications
 
 ### Java (L:Java)
 **Trigger:** pom.xml | build.gradle | *.java
@@ -276,6 +323,10 @@ paths: **/*.py
 - **Resource-Try**: try-with-resources for AutoCloseable
 - **Immutable-Prefer**: Prefer immutable objects, final fields
 - **Stream-API**: Use Stream API for collection transformations
+- **Records**: Use records for immutable data carriers (Java 14+)
+- **Pattern-Switch**: Use pattern matching in switch (Java 21+)
+- **Virtual-Threads**: Use virtual threads for high-concurrency I/O (Java 21+)
+- **Sealed-Classes**: Use sealed classes for controlled inheritance
 
 ### Kotlin (L:Kotlin)
 **Trigger:** build.gradle.kts + kotlin | *.kt
@@ -292,6 +343,9 @@ paths: **/*.py
 - **Protocol-Oriented**: Protocol-oriented design over inheritance
 - **Value-Type**: Prefer structs over classes when possible
 - **Actor-Concurrency**: Use actors for shared mutable state
+- **Async-Await**: Use async/await for asynchronous code
+- **Observation**: Use @Observable macro for reactive state (iOS 17+)
+- **Result-Builder**: Use result builders for DSLs
 
 ### C# (L:CSharp)
 **Trigger:** *.csproj | *.sln | *.cs
@@ -300,6 +354,9 @@ paths: **/*.py
 - **Async-Await**: async/await for I/O operations
 - **Dispose-Pattern**: IDisposable with using statements
 - **Record-Type**: Records for immutable data transfer
+- **Primary-Constructors**: Use primary constructors for DI (C# 12+)
+- **Collection-Expressions**: Use collection expressions [...] (C# 12+)
+- **Pattern-Matching**: Use pattern matching for type checks and deconstruction
 
 ### Ruby (L:Ruby)
 **Trigger:** Gemfile | *.gemspec | *.rb
@@ -308,6 +365,9 @@ paths: **/*.py
 - **Block-Yield**: Prefer yield over block.call
 - **Method-Visibility**: Explicit private/protected declarations
 - **Type-Check**: Static type checking (Sorbet or RBS) for public APIs
+- **Pattern-Match**: Use pattern matching for complex conditionals (Ruby 3.0+)
+- **Ractor-Thread-Safe**: Use Ractor for thread-safe parallelism (Ruby 3.0+)
+- **Data-Class**: Use Data.define for immutable value objects (Ruby 3.2+)
 
 ### PHP (L:PHP)
 **Trigger:** composer.json | *.php
@@ -316,6 +376,9 @@ paths: **/*.py
 - **PSR-Standards**: Follow PSR-4 autoloading, PSR-12 style
 - **Null-Safe**: Use null coalescing (??) and null-safe operator (?->)
 - **Constructor-Promotion**: Property promotion in constructors (8.0+)
+- **Enums**: Use native enums for fixed value sets (8.1+)
+- **Readonly-Properties**: Use readonly for immutable properties (8.1+)
+- **Attributes**: Use attributes instead of docblock annotations (8.0+)
 
 ### Elixir (L:Elixir)
 **Trigger:** mix.exs | *.ex | *.exs
@@ -362,7 +425,9 @@ paths: **/*.py
 ## Security Rules
 **Trigger:** D:PII | D:Regulated | Scale:Large | Compliance:*
 
-- **Input-Validation**: Validate at system entry points (Pydantic/Zod/JSON Schema)
+- **Input-Validation**: Validate ALL user input at system boundaries. Use schema validation. Reject invalid, don't sanitize-and-continue
+- **Input-Bounds**: Set max lengths, max sizes, max items on ALL user inputs. Prevent resource exhaustion
+- **Input-Whitespace**: Normalize whitespace (strip, reject whitespace-only). Common injection vector
 - **SQL-Safe**: Parameterized queries only, no string concatenation
 - **XSS-Prevent**: Sanitize output + CSP headers
 - **CSRF-Protect**: CSRF tokens for state-changing operations
@@ -374,6 +439,12 @@ paths: **/*.py
 - **Deps-Scan**: Automated dependency vulnerability scanning in CI
 - **Audit-Log**: Immutable logging for security-critical actions
 - **CORS-Strict**: Explicit origins, no wildcard in production
+- **Path-Validate**: Validate file paths, prevent traversal (../, symlinks)
+- **Enum-Validate**: Validate enum values server-side, don't trust client
+- **SSRF-Prevent**: Validate URLs, block internal IPs, use allowlists for external calls
+- **Deserialize-Safe**: Never deserialize untrusted data. Use safe alternatives (JSON over pickle/yaml)
+- **JWT-Validate**: Validate signature, issuer, audience, expiry. Use asymmetric keys for public APIs
+- **Upload-Validate**: Validate file type, size, content. Store outside webroot, generate new filenames
 
 ---
 
@@ -482,12 +553,24 @@ paths: **/*.py
 - **Fixtures**: Reusable, maintainable test data
 - **Coverage-80**: Minimum 80% line coverage
 - **CI-on-PR**: Tests run on every PR
+- **Edge-Cases-Standard**: Test empty, None, single item, typical, boundary values
 
 ### Full (Testing:90%)
 - **E2E**: End-to-end tests for critical user flows
 - **Contract**: Consumer-driven contract testing (if Architecture:Microservices)
 - **Mutation**: Mutation testing for test effectiveness (if Priority:Quality)
 - **Coverage-90**: Minimum 90% line coverage
+- **Edge-Cases-Full**: Test whitespace-only, unicode, max+1, state combinations, concurrent access
+
+### Edge Case Checklist [MANDATORY - ALL TIERS]
+When generating tests, always include:
+- **Empty/None**: empty string, None, empty list/dict
+- **Whitespace**: spaces, tabs, newlines, whitespace-only strings
+- **Boundaries**: 0, 1, max, max+1, negative (if applicable)
+- **Type Variations**: string vs int representations, case variations for strings
+- **State Combinations**: all valid state pairs where multiple states can interact
+- **Unicode**: emojis, RTL text, special characters (if string handling)
+- **Timing**: expired dates, future dates, boundary timestamps
 
 ---
 
@@ -585,6 +668,20 @@ paths: **/*.py
 
 ---
 
+## Apps > Service
+**Trigger:** T:Service (Dockerfile + ports, long-running process)
+
+- **Health-Endpoints**: /health + /ready endpoints for orchestrators
+- **Graceful-Shutdown**: Handle SIGTERM, drain connections before exit
+- **Config-External**: Configuration via env vars or config files, not hardcoded
+- **Logging-Structured**: JSON logging with correlation IDs
+- **Metrics-Export**: Prometheus-compatible metrics endpoint
+- **Connection-Pool**: Reuse database/HTTP connections
+- **Timeout-Set**: Explicit timeouts on all external calls
+- **Retry-Backoff**: Exponential backoff for transient failures
+
+---
+
 ## Apps > Mobile
 **Trigger:** iOS/Android/RN/Flutter detected
 
@@ -661,6 +758,10 @@ paths: **/*.py
 - **Memo-Strategic**: useMemo/useCallback for expensive ops only
 - **Key-Stable**: Stable keys for lists (not index)
 - **Effect-Cleanup**: Cleanup in useEffect return
+- **Server-Components**: Use Server Components for data fetching, Client for interactivity (Next.js/RSC)
+- **Use-Hook**: Use use() hook for promises and context (React 19+)
+- **Suspense-Boundary**: Wrap async components in Suspense with fallback
+- **Actions**: Use Server Actions for mutations (Next.js 14+)
 
 ### Vue (Frontend:Vue)
 **Trigger:** vue deps, *.vue
@@ -669,6 +770,9 @@ paths: **/*.py
 - **Reactive-Unwrap**: .value access for refs in script
 - **Provide-Inject**: Provide/inject for deep prop drilling
 - **SFC-Style**: Scoped styles in single-file components
+- **Script-Setup**: Use <script setup> for cleaner syntax
+- **Definemodel**: Use defineModel for v-model with props (Vue 3.4+)
+- **Vapor-Mode**: Consider Vapor mode for performance-critical components (Vue 3.5+)
 
 ### Angular (Frontend:Angular)
 **Trigger:** @angular deps, *.component.ts
@@ -810,6 +914,9 @@ paths: **/*.py
 - **Non-Root**: Run as non-root user
 - **Health-Check**: HEALTHCHECK instruction for orchestrators
 - **Env-Inject**: Environment variables for configuration
+- **Buildkit-Secrets**: Use --mount=type=secret for sensitive build args
+- **Cache-Mounts**: Use --mount=type=cache for package managers
+- **Distroless**: Use distroless or alpine for production images
 
 ### Kubernetes (Infra:K8s)
 **Trigger:** k8s/, helm/, kustomization.yaml
@@ -819,6 +926,9 @@ paths: **/*.py
 - **Config-Secrets**: ConfigMaps and Secrets, not hardcoded
 - **RBAC-Minimal**: Least privilege service accounts
 - **HPA-Defined**: Horizontal Pod Autoscaler for scaling
+- **Gateway-API**: Use Gateway API over Ingress for advanced routing (K8s 1.27+)
+- **Pod-Disruption**: PodDisruptionBudget for availability during updates
+- **Security-Context**: runAsNonRoot, readOnlyRootFilesystem, drop capabilities
 
 ### Terraform (Infra:Terraform)
 **Trigger:** *.tf files
@@ -828,6 +938,9 @@ paths: **/*.py
 - **Variables-Type**: Typed variables with descriptions
 - **Output-Document**: Outputs for cross-module references
 - **Plan-Before-Apply**: Always plan before apply
+- **Moved-Blocks**: Use moved blocks for refactoring without recreation
+- **Import-Blocks**: Use import blocks for existing resources (TF 1.5+)
+- **Check-Blocks**: Use check blocks for post-apply validation (TF 1.5+)
 
 ### Pulumi (Infra:Pulumi)
 **Trigger:** Pulumi.yaml
@@ -1008,6 +1121,10 @@ paths: **/*.py
 - **Token-Limit**: Respect context limits
 - **Retry-Backoff**: Retry with exponential backoff
 - **Cost-Track**: Track API costs
+- **RAG-Chunk**: Chunk documents appropriately for retrieval (512-1024 tokens typical)
+- **Structured-Output**: Use structured outputs/JSON mode for reliable parsing
+- **Function-Calling**: Use tool/function calling for actions, not string parsing
+- **Prompt-Cache**: Cache identical prompts for cost savings
 
 ### Inference (ML:Inference)
 **Trigger:** transformers, onnxruntime, vllm
@@ -1158,11 +1275,17 @@ paths: **/*.py
 **Trigger:** pydantic, attrs, marshmallow, cerberus, voluptuous, schema, typeguard, beartype, zod, valibot, yup, joi
 
 - **Error-Collect**: Collect all errors, not just first
-- **Error-Messages**: Human-readable validation errors
-- **Coercion-Explicit**: Document type coercion behavior
+- **Error-Messages**: Human-readable, field-specific, actionable validation errors
+- **Coercion-Explicit**: Document type coercion behavior. Prefer explicit over magic
 - **Optional-Defaults**: Sensible defaults for optional fields
-- **Custom-Validators**: Reusable validator functions
+- **Custom-Validators**: Reusable validator functions with `@field_validator` or equivalent
 - **Schema-Export**: Export schema for documentation/API
+- **Whitespace-Handle**: Strip leading/trailing whitespace. Reject whitespace-only as empty
+- **Bounds-Define**: Always set min_length/max_length for strings, ge/le for numbers, max_items for lists
+- **State-Validate**: Validate field combinations (related fields must be consistent, mutually exclusive states handled)
+- **Enum-String-Parse**: Support case-insensitive string-to-enum conversion with clear error on invalid
+- **None-vs-Empty**: Distinguish None (field absent) vs empty string/list (field present but empty)
+- **Immutable-Prefer**: Use frozen=True for data classes when mutability not needed
 
 ### DEP:Edge
 **Trigger:** @cloudflare/workers-types, wrangler, vercel/edge, @deno/deploy, hono, elysia, itty-router
@@ -1210,9 +1333,13 @@ paths: **/*.py
 - **Fixtures-Scoped**: Appropriate fixture scope (function/class/module/session)
 - **Mocks-Minimal**: Mock at boundaries, not internals
 - **Assertions-Clear**: One assertion concept per test
-- **Names-Descriptive**: Test names describe behavior
+- **Names-Descriptive**: Test names describe behavior (test_X_when_Y_should_Z)
 - **Parametrize-Similar**: Parametrize similar test cases
 - **Cleanup-Always**: Cleanup in fixtures, not tests
+- **Edge-Parametrize**: Always include edge cases in parametrized tests: empty, None, whitespace, boundaries
+- **State-Coverage**: Test all valid state transitions and combinations
+- **Property-Based**: Use hypothesis/fast-check for input fuzzing on validators
+- **Regression-Pattern**: Every bug fix gets a regression test
 
 ### DEP:GPU
 **Trigger:** cuda-python, cupy, torch+cuda, tensorflow-gpu, numba, pycuda, triton, jax
@@ -1254,6 +1381,9 @@ paths: **/*.py
 - **Timeout-Guard**: Max time limits on inference
 - **Model-Memory-Cleanup**: Explicit GC after heavy ops
 - **Download-Cache**: Cache models locally
+- **Streaming-Response**: Use streaming for long generations
+- **Context-Window**: Track and respect model context limits
+- **Fallback-Chain**: Multiple model fallbacks for reliability
 
 ### DEP:Image
 **Trigger:** opencv-python, pillow, scikit-image, imageio, albumentations, kornia

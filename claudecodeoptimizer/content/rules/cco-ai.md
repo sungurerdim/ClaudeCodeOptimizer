@@ -32,6 +32,18 @@
 - **Positive**: What to do, not what to avoid
 - **Motivate**: Explain why behaviors matter
 
+## Code Generation [CRITICAL]
+
+- **Validation-First**: Add input validation for all public APIs. Validate at boundaries, trust internals
+- **Bounds-Always**: Set min/max limits on strings (max_length), numbers (ge/le), collections (max_items)
+- **Whitespace-Normalize**: Strip/normalize string inputs in validators. Whitespace-only is usually invalid
+- **State-Complete**: Handle all valid state combinations, not just happy path
+- **Enum-Prefer**: Use enums/Literal types over raw strings for fixed values
+- **Optional-Explicit**: Distinguish None (absent) vs empty string/list (present but empty)
+- **Coercion-Document**: If auto-coercing types, document behavior. Prefer explicit over magic
+- **Error-Rich**: Validation errors should be specific, actionable, field-level
+- **Test-Edge**: Generate tests for: empty, None, whitespace, boundaries, state combinations
+
 ## Status Updates
 
 - **Announce-Before**: State action before starting

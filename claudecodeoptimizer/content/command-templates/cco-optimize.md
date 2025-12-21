@@ -209,10 +209,16 @@ Task("cco-agent-analyze", `
   scopes: ${JSON.stringify(scopes.map(s => s.toLowerCase().replace(" ", "-")))}
 
   For each scope, find issues with:
-  - security: Hardcoded secrets, OWASP vulnerabilities (SQL/command injection, XSS, path traversal), CVE patterns, input validation gaps, unsafe deserialization
-  - quality: Type errors, missing type hints, tech debt markers, missing tests, test isolation issues, complexity >10, bare excepts, silent failures, missing exception chaining (raise from), dead code, unused imports, missing docstrings on public APIs, magic values/literals, poor naming
+  - security: Hardcoded secrets, OWASP vulnerabilities (SQL/command injection, XSS, path traversal), CVE patterns, input validation gaps, unsafe deserialization, missing input bounds (no max_length on strings), whitespace injection vectors
+  - quality: Type errors, missing type hints, tech debt markers, missing tests, test isolation issues, complexity >10, bare excepts, silent failures, missing exception chaining (raise from), dead code, unused imports, missing docstrings on public APIs, magic values/literals, poor naming, missing edge case tests, incomplete state handling, missing whitespace normalization, missing bounds validation
   - architecture: SOLID violations, god classes (>300 LOC), circular imports, tight coupling, orphan files, poor separation of concerns, missing abstractions, over-engineering, deep nesting
-  - best-practices: Anti-patterns, inefficient algorithms, inconsistent styles, missing context managers, resource leaks, connection cleanup, memory leaks, missing error handling, duplicates, stale refs, hardcoded paths/config, missing logging, N+1 queries, missing caching opportunities
+  - best-practices: Anti-patterns, inefficient algorithms, inconsistent styles, missing context managers, resource leaks, connection cleanup, memory leaks, missing error handling, duplicates, stale refs, hardcoded paths/config, missing logging, N+1 queries, missing caching opportunities, missing input normalization
+
+  MANDATORY quality checks:
+  - Every string field should have max_length defined
+  - String inputs should strip whitespace and reject whitespace-only
+  - All valid state combinations should be handled
+  - Tests should cover edge cases (empty, None, whitespace, boundaries)
 
   Return: {
     findings: [{ id: "{SCOPE}-{NNN}", severity: "{P0-P3}", title, location: "{file}:{line}", fixable, approvalRequired, fix }],
@@ -432,10 +438,25 @@ When called via `/cco-optimize --fix` (e.g., from cco-checkup, cco-preflight):
 
 | Scope | Checks |
 |-------|--------|
-| `security` | Secrets, OWASP (SQL/command injection, XSS, path traversal), CVEs, input validation, unsafe deserialization |
-| `quality` | Type errors/hints, tech debt, test gaps/isolation, complexity, bare excepts, silent failures, exception chaining, dead code, unused imports, docstrings, magic values, naming |
+| `security` | Secrets, OWASP (SQL/command injection, XSS, path traversal), CVEs, input validation gaps, unsafe deserialization, missing bounds on inputs, whitespace injection vectors |
+| `quality` | Type errors/hints, tech debt, test gaps/isolation, complexity, bare excepts, silent failures, exception chaining, dead code, unused imports, docstrings, magic values, naming, missing edge case tests, incomplete state handling |
 | `architecture` | SOLID violations, god classes, circular imports, coupling, orphan files, separation of concerns, abstractions, over-engineering, nesting depth |
-| `best-practices` | Anti-patterns, inefficient algorithms, inconsistent styles, context managers, resource/connection leaks, memory leaks, error handling, duplicates, stale refs, hardcoded config, logging, N+1 queries, caching |
+| `best-practices` | Anti-patterns, inefficient algorithms, inconsistent styles, context managers, resource/connection leaks, memory leaks, error handling, duplicates, stale refs, hardcoded config, logging, N+1 queries, caching, missing input normalization |
+
+### Validation Checks (quality scope) [MANDATORY]
+When analyzing for quality, always check:
+- **Bounds**: All string fields have max_length, all numbers have ge/le where applicable
+- **Whitespace**: String validators strip whitespace, reject whitespace-only
+- **State**: All state combinations handled where multiple states can interact
+- **Enum**: String-to-enum conversion has clear error handling
+- **None-vs-Empty**: Clear distinction between None and empty string/list
+
+### Test Coverage Checks (quality scope) [MANDATORY]
+When analyzing tests, always verify:
+- **Edge-Cases**: Tests for empty, None, whitespace-only, boundaries exist
+- **State-Matrix**: Tests for all valid state combinations
+- **Validation-Errors**: Tests verify correct error messages on invalid input
+- **Happy-Path-Plus**: Not just happy path, also error paths tested
 
 ### Context Application
 
