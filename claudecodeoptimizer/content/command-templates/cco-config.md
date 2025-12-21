@@ -343,9 +343,9 @@ if (selectedSettings.includes("AI Performance")) {
 | Budget: 16K | `env.MAX_THINKING_TOKENS: "16000"` |
 | Budget: 32K | `env.MAX_THINKING_TOKENS: "32000"` |
 | Budget: 4K | `env.MAX_THINKING_TOKENS: "4000"` |
-| Output: Default | (no env override) |
+| Output: Default | `env.MAX_MCP_OUTPUT_TOKENS: "25000"`, `env.BASH_MAX_OUTPUT_LENGTH: "30000"` |
 | Output: Extended | `env.MAX_MCP_OUTPUT_TOKENS: "35000"`, `env.BASH_MAX_OUTPUT_LENGTH: "100000"` |
-| Output: Minimal | `env.MAX_MCP_OUTPUT_TOKENS: "10000"` |
+| Output: Minimal | `env.MAX_MCP_OUTPUT_TOKENS: "10000"`, `env.BASH_MAX_OUTPUT_LENGTH: "15000"` |
 
 ### Validation
 ```
@@ -647,7 +647,7 @@ Task("cco-agent-apply", `
 |------|---------|-------------|
 | Full | `node .claude/cco-full.js` | User, CC version, model, context %, git branch, ahead/behind, file changes |
 | Minimal | `node .claude/cco-minimal.js` | User, CC version, model, context % |
-| No | (omit statusLine key) | Use Claude Code default statusline |
+| No | (don't write statusLine key) | Preserves global statusline if exists, otherwise uses Claude Code default |
 
 **Copy statusline script to project:**
 
@@ -730,14 +730,14 @@ Task("cco-agent-apply", `
 | `[detected]` | Option matches agent detection | 2 |
 | `(Recommended)` | Option is best practice | 3 |
 
-### Permissions Levels
+### Permissions Levels (explicit settings.json values)
 
-| Level | Auto-approved |
-|-------|---------------|
-| Safe | Read, Glob, Grep |
-| Balanced | Read, Glob, Grep, LSP, lint/test commands |
-| Permissive | Most operations except destructive |
-| Full | All (Solo + Public only) |
+| Level | `permissions.allow` | `permissions.deny` |
+|-------|---------------------|-------------------|
+| Safe | `["Read", "Glob", "Grep"]` | `[]` |
+| Balanced | `["Read", "Glob", "Grep", "LSP", "Bash(ruff:*)", "Bash(mypy:*)", "Bash(pytest:*)"]` | `[]` |
+| Permissive | `["Read", "Glob", "Grep", "LSP", "Edit", "Write", "Bash"]` | `["Bash(rm -rf:*)", "Bash(git push -f:*)"]` |
+| Full | `["Read", "Glob", "Grep", "LSP", "Edit", "Write", "Bash", "Task"]` | `[]` |
 
 ### LSP Features (v2.0.74+)
 
@@ -775,3 +775,4 @@ If something goes wrong during configuration:
 3. **Batch LOW confidence** - Ask remaining questions in single batch
 4. **Use cco-agent-apply** - Agent handles file writing with verification
 5. **Background apply** - Write files while user sees report
+6. **Explicit defaults** - Always write ALL settings to files, even when default values are selected. Never omit a setting just because it's the default. Exception: statusLine "No" = don't write (preserves global config).
