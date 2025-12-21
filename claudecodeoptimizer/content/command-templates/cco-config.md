@@ -92,7 +92,7 @@ detectResult = Task("cco-agent-analyze", `
 
 ### Validation
 ```
-[x] All 4 detection agents completed
+[x] Detection completed
 [x] Confidence levels assigned
 → Proceed to Step-2
 ```
@@ -604,7 +604,7 @@ Task("cco-agent-apply", `
 |-----------|-----------|------------------|
 | DEP:{category} | `dep-{category}.md` | Specific package detection |
 
-**Examples:** dep-cli.md, dep-validation.md, dep-orm.md, dep-auth.md, dep-http.md, etc.
+**Pattern:** `dep-{category}.md` where `{category}` matches detected dependency categories (e.g., cli, validation, orm, auth, http)
 
 **Rule content source:** cco-adaptive.md sections (read by cco-agent-analyze in Step-1)
 
@@ -620,8 +620,8 @@ Task("cco-agent-apply", `
     "padding": 1
   },
   "permissions": {
-    "allow": ["Read", "Glob", "Grep", "LSP"],
-    "deny": []
+    "allow": ${permissions_allow},
+    "deny": ${permissions_deny}
   },
   "alwaysThinkingEnabled": ${thinking_enabled},
   "env": {
@@ -632,6 +632,8 @@ Task("cco-agent-apply", `
   }
 }
 ```
+
+**Note:** `${permissions_allow}` and `${permissions_deny}` are populated from the "Permissions Levels" table based on user selection + detected language tools.
 
 **LSP Configuration:**
 
@@ -648,6 +650,8 @@ Task("cco-agent-apply", `
 | Full | `node .claude/cco-full.js` | User, CC version, model, context %, git branch, ahead/behind, file changes |
 | Minimal | `node .claude/cco-minimal.js` | User, CC version, model, context % |
 | No | (don't write statusLine key) | Preserves global statusline if exists, otherwise uses Claude Code default |
+
+**Note:** Statusline scripts require Node.js. If not available, select "No" to use default statusline.
 
 **Copy statusline script to project:**
 
@@ -735,9 +739,29 @@ Task("cco-agent-apply", `
 | Level | `permissions.allow` | `permissions.deny` |
 |-------|---------------------|-------------------|
 | Safe | `["Read", "Glob", "Grep"]` | `[]` |
-| Balanced | `["Read", "Glob", "Grep", "LSP", "Bash(ruff:*)", "Bash(mypy:*)", "Bash(pytest:*)"]` | `[]` |
+| Balanced | `["Read", "Glob", "Grep", "LSP", {detected_lint_tools}, {detected_test_tools}]` | `[]` |
 | Permissive | `["Read", "Glob", "Grep", "LSP", "Edit", "Write", "Bash"]` | `["Bash(rm -rf:*)", "Bash(git push -f:*)"]` |
 | Full | `["Read", "Glob", "Grep", "LSP", "Edit", "Write", "Bash", "Task"]` | `[]` |
+
+### Balanced Tools by Language (from detection)
+
+| Language | Lint Tools | Test Tools |
+|----------|------------|------------|
+| Python | `Bash(ruff:*)`, `Bash(mypy:*)` | `Bash(pytest:*)` |
+| TypeScript | `Bash(eslint:*)`, `Bash(tsc:*)` | `Bash(vitest:*)`, `Bash(jest:*)` |
+| JavaScript | `Bash(eslint:*)` | `Bash(vitest:*)`, `Bash(jest:*)` |
+| Go | `Bash(golangci-lint:*)`, `Bash(go vet:*)` | `Bash(go test:*)` |
+| Rust | `Bash(cargo clippy:*)`, `Bash(cargo check:*)` | `Bash(cargo test:*)` |
+| Java | `Bash(checkstyle:*)`, `Bash(spotbugs:*)` | `Bash(mvn test:*)`, `Bash(gradle test:*)` |
+| Ruby | `Bash(rubocop:*)` | `Bash(rspec:*)`, `Bash(minitest:*)` |
+| PHP | `Bash(phpstan:*)`, `Bash(phpcs:*)` | `Bash(phpunit:*)` |
+| C# | `Bash(dotnet build:*)` | `Bash(dotnet test:*)` |
+| Swift | `Bash(swiftlint:*)` | `Bash(swift test:*)` |
+| Kotlin | `Bash(ktlint:*)`, `Bash(detekt:*)` | `Bash(gradle test:*)` |
+| Elixir | `Bash(mix credo:*)`, `Bash(mix dialyzer:*)` | `Bash(mix test:*)` |
+| Dart | `Bash(dart analyze:*)` | `Bash(dart test:*)`, `Bash(flutter test:*)` |
+
+**Note:** Detection merges tools from all detected languages. If project has both Python and TypeScript, include tools for both.
 
 ### LSP Features (v2.0.74+)
 
