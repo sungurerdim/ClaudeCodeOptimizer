@@ -429,6 +429,12 @@ AskUserQuestion([{
 
 **CRITICAL:** Call cco-agent-analyze with config scope (generate phase) to create rules.
 
+**[IMPORTANT] Rule Source Architecture:**
+- All rules are defined as **sections within `cco-adaptive.md`** (single file)
+- Separate `{category}.md` rule files do **NOT exist** in CCO package
+- The agent must **read cco-adaptive.md** and **extract relevant sections** based on detections
+- **NEVER try to read separate `{category}.md` files** - they will error with "file not found"
+
 ```javascript
 // Phase 2: Generate rules using detections from Step-1 + user input from Steps 3-4
 generateResult = Task("cco-agent-analyze", `
@@ -439,10 +445,11 @@ generateResult = Task("cco-agent-analyze", `
   - detections: ${JSON.stringify(detectResult.detections)}
   - userInput: ${JSON.stringify(collectedUserInput)}
 
-  Generate:
-  1. context.md with project context
-  2. Rule files for each detected category
-  3. Rule content from cco-adaptive.md sections
+  Generate (from cco-adaptive.md sections, NOT separate files):
+  1. Read cco-adaptive.md via: Bash(cco-install --cat rules/cco-adaptive.md)
+  2. Extract sections matching detections (e.g., "{Lang} (L:{Lang})" section → {lang}.md)
+  3. Generate context.md with project context
+  4. Generate rule files with extracted section content
 `, { model: "haiku" })
 
 // Agent returns (config scope, generate phase):
