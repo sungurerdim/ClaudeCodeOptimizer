@@ -6,7 +6,7 @@ allowed-tools: Read(*), Write(*), Edit(*), Bash(cco-install:*), Task(*), TodoWri
 
 # /cco-config
 
-**Project tuning** - Pre-detection reduces questions, parallel apply.
+**Project Setup** - Background detection + combined questions for fast configuration.
 
 ## Context
 
@@ -18,45 +18,35 @@ allowed-tools: Read(*), Write(*), Edit(*), Bash(cco-install:*), Task(*), TodoWri
 
 | Step | Name | Action | Optimization |
 |------|------|--------|--------------|
-| 1 | Pre-detect | cco-agent-analyze (config scope) | Skip questions |
-| 2 | Status | Show detected + existing | Instant |
-| 3 | Action | Ask what to do | Skip if --configure |
-| 4 | Scope | Ask what to configure | Skip detected |
-| 5 | Context | Only LOW confidence items | Fewer questions |
-| 6 | Review | Show + ask approval | Instant |
-| 7 | Apply | Write files | Background |
-| 8 | Report | Summary | Instant |
+| 1 | Pre-detect | cco-agent-analyze (background) | Parallel with Q1 |
+| 2 | Setup | Q1: Combined setup tabs | Single question |
+| 3 | Context | Q2: Context details (conditional) | Only if Setup/Update |
+| 4 | Apply | Write files | Background |
+| 5 | Report | Summary | Instant |
 
 ---
 
 ## Progress Tracking [CRITICAL]
 
-**Initialize at start. Update status after each step completes.**
-
 ```javascript
 TodoWrite([
-  { content: "Step-1: Pre-detect (parallel)", status: "in_progress", activeForm: "Running pre-detection" },
-  { content: "Step-2: Show status", status: "pending", activeForm: "Showing status" },
-  { content: "Step-3: Ask action", status: "pending", activeForm: "Asking action type" },
-  { content: "Step-4: Ask scope + context", status: "pending", activeForm: "Asking scope and context" },
-  { content: "Step-5: Review results", status: "pending", activeForm: "Reviewing results" },
-  { content: "Step-6: Apply configuration", status: "pending", activeForm: "Applying configuration" },
-  { content: "Step-7: Show report", status: "pending", activeForm: "Showing final report" }
+  { content: "Step-1: Pre-detect (background)", status: "in_progress", activeForm: "Running pre-detection" },
+  { content: "Step-2: Setup configuration", status: "pending", activeForm: "Getting setup options" },
+  { content: "Step-3: Context details", status: "pending", activeForm: "Getting context details" },
+  { content: "Step-4: Apply configuration", status: "pending", activeForm: "Applying configuration" },
+  { content: "Step-5: Show report", status: "pending", activeForm: "Showing final report" }
 ])
 ```
 
 ---
 
-## Step-1: Pre-detect [PARALLEL]
+## Step-1: Pre-detect [BACKGROUND]
 
-**Launch cco-agent-analyze with config scope (detection phase):**
+**Launch detection in background while Q1 is asked:**
 
 ```javascript
-// CRITICAL: Config scope has TWO phases
-// Phase 1 (Step-1): Detection only - returns detections + sources
-// Phase 2 (Step-6): Rule generation - receives userInput, returns rules
-
-detectResult = Task("cco-agent-analyze", `
+// Start detection immediately - runs while user answers Q1
+detectTask = Task("cco-agent-analyze", `
   scopes: ["config"]
   phase: "detect"
 
@@ -65,367 +55,238 @@ detectResult = Task("cco-agent-analyze", `
   - Infrastructure: containerized, ci, cloud, deployment
   - Testing: testFramework, coverage, linters, typeChecker
   - Metadata: license, teamSize, maturity, lastActivity
-`, { model: "haiku" })
+  - Project complexity (for AI Performance recommendations)
+`, { model: "haiku", run_in_background: true })
 
-// Agent returns (config scope, detect phase):
-// detectResult = {
-//   detections: {
-//     language: ["{lang}"],
-//     type: ["{type}"],
-//     api: "{api|null}",
-//     database: "{db|null}",
-//     frontend: "{frontend|null}",
-//     infra: ["{infra}"],
-//     dependencies: ["{deps}"]
-//   },
-//   sources: [{ file: "{file}", confidence: "HIGH|MEDIUM|LOW" }]
-// }
+// Don't wait - proceed to Q1 immediately
 ```
-
-**Result: Pre-fill answers based on detection confidence**
-
-| Confidence | Action |
-|------------|--------|
-| HIGH (90%+) | Auto-apply, don't ask |
-| MEDIUM (70-89%) | Pre-fill with `[detected]` label |
-| LOW (<70%) | Ask user |
 
 ### Validation
 ```
-[x] Detection completed
-[x] Confidence levels assigned
-→ Proceed to Step-2
+[x] Detection launched in background
+→ Proceed to Step-2 immediately (don't wait)
 ```
 
 ---
 
-## Step-2: Status
+## Step-2: Setup [Q1 - ALWAYS ASK]
 
-Display detected + existing configuration:
+**Combined setup in single question with 4 tabs:**
 
-```
-## Project Status
+```javascript
+// Load existing config for [current] labels
+existingConfig = loadExistingConfig()  // From .claude/settings.json
 
-### Auto-Detected (HIGH confidence - won't ask)
-| Element | Value | Source |
-|---------|-------|--------|
-| Language | {language} | {source_file} |
-| Framework | {framework} | {source_file} |
-| Test Framework | {test_framework} | {source_file} |
-| CI | {ci} | {source_file} |
-
-### Needs Confirmation (MEDIUM confidence)
-| Element | Value | Source |
-|---------|-------|--------|
-| Coverage | {coverage}% | {source_file} [detected] |
-| Team Size | {team_size} | git contributors |
-
-### Will Ask (LOW confidence)
-- Data sensitivity
-- Compliance requirements
-- SLA commitment
-
-### Existing Configuration
-| File | Status |
-|------|--------|
-| .claude/rules/cco/context.md | {exists/missing} |
-| .claude/settings.json | {exists/missing} |
+AskUserQuestion([
+  {
+    question: "Project context action?",
+    header: "Context",
+    options: [
+      {
+        label: existingConfig.context ? "Setup/Update [current]" : "Setup/Update (Recommended)",
+        description: "Configure or update project context and rules"
+      },
+      { label: "Remove", description: "Remove all CCO configuration" },
+      { label: "Export", description: "Export rules to AGENTS.md or CLAUDE.md" }
+    ],
+    multiSelect: false
+  },
+  {
+    question: "Statusline display?",
+    header: "Statusline",
+    options: [
+      {
+        label: existingConfig.statusline === "full" ? "Full [current]" : "Full (Recommended)",
+        description: "User, model, context %, git status, file changes"
+      },
+      {
+        label: existingConfig.statusline === "minimal" ? "Minimal [current]" : "Minimal",
+        description: "User, model, context % only"
+      },
+      {
+        label: existingConfig.statusline === "none" ? "Remove [current]" : "Remove",
+        description: "Use Claude Code default statusline"
+      }
+    ],
+    multiSelect: false
+  },
+  {
+    question: "Permission approval level?",
+    header: "Permissions",
+    options: [
+      {
+        label: existingConfig.permissions === "permissive" ? "Permissive [current]" : "Permissive",
+        description: "Auto-approve most operations (except force push)"
+      },
+      {
+        label: existingConfig.permissions === "balanced" ? "Balanced [current]" : "Balanced (Recommended)",
+        description: "Auto-approve read + lint/test, ask for writes"
+      },
+      {
+        label: "Remove",
+        description: "Remove permissions, use Claude Code defaults"
+      }
+    ],
+    multiSelect: false
+  },
+  {
+    question: "Enable extended thinking?",
+    header: "Thinking",
+    options: [
+      {
+        label: existingConfig.thinking === true ? "Enabled [current]" : "Enabled (Recommended)",
+        description: "Better for complex code, architecture decisions"
+      },
+      {
+        label: existingConfig.thinking === false ? "Disabled [current]" : "Disabled",
+        description: "Faster responses, better prompt caching"
+      }
+    ],
+    multiSelect: false
+  }
+])
 ```
 
 ### Validation
 ```
-[x] Detection results displayed
-[x] Existing config shown
+[x] User completed Q1
+→ Store as: setupConfig = { context, statusline, permissions, thinking }
+→ If context = "Remove": Skip to Step-4 (removal)
+→ If context = "Export": Skip to Step-4 (export)
+→ If thinking = "Disabled": Skip Budget tab in Q2
 → Proceed to Step-3
 ```
 
 ---
 
-## Step-3: Action
+## Step-3: Context Details [Q2 - CONDITIONAL]
 
-**Ask what user wants to do.**
+**Only ask if "Setup/Update" selected in Q1.**
+
+**First: Wait for detection results:**
 
 ```javascript
-AskUserQuestion([{
-  question: "What would you like to do?",
-  header: "Action",
-  options: [
-    { label: "Configure (Recommended)", description: "Apply detected settings + ask remaining" },
-    { label: "Remove", description: "Remove existing CCO configuration" },
-    { label: "Export", description: "Export rules to AGENTS.md or CLAUDE.md" }
-  ],
-  multiSelect: false
-}])
+// Now collect detection results
+detectResult = await TaskOutput(detectTask.id)
+
+// Determine AI recommendations based on project complexity
+aiRecommendations = calculateRecommendations(detectResult.complexity)
+// complexity: simple → 8000, medium → 16000, complex → 32000
 ```
 
-**Flags override:** `--configure`, `--remove`, `--export` skip this question.
+**Build Q2 dynamically (max 4 tabs):**
+
+```javascript
+questions = []
+
+// Tab 1: Thinking Budget (only if Thinking Enabled)
+if (setupConfig.thinking === "Enabled") {
+  questions.push({
+    question: "Thinking token budget?",
+    header: "Budget",
+    options: [
+      {
+        label: existingConfig.budget === 4000 ? "4000 [current]" : "4000",
+        description: "Simple tasks, faster responses"
+      },
+      {
+        label: existingConfig.budget === 8000 ? "8000 [current]" :
+               aiRecommendations.budget === 8000 ? "8000 (Recommended)" : "8000",
+        description: "Good balance for most tasks"
+      },
+      {
+        label: existingConfig.budget === 16000 ? "16000 [current]" :
+               aiRecommendations.budget === 16000 ? "16000 (Recommended)" : "16000",
+        description: "Complex multi-file refactoring"
+      },
+      {
+        label: existingConfig.budget === 32000 ? "32000 [current]" :
+               aiRecommendations.budget === 32000 ? "32000 (Recommended)" : "32000",
+        description: "Architecture design, large codebases"
+      }
+    ],
+    multiSelect: false
+  })
+}
+
+// Tab 2: Output Limits (always)
+questions.push({
+  question: "Tool output limits?",
+  header: "Output",
+  options: [
+    {
+      label: existingConfig.output === 10000 ? "10000 [current]" : "10000",
+      description: "Save context, reduced output"
+    },
+    {
+      label: existingConfig.output === 25000 ? "25000 [current]" :
+             aiRecommendations.output === 25000 ? "25000 (Recommended)" : "25000",
+      description: "Standard output limits"
+    },
+    {
+      label: existingConfig.output === 35000 ? "35000 [current]" :
+             aiRecommendations.output === 35000 ? "35000 (Recommended)" : "35000",
+      description: "Large outputs, big codebases"
+    }
+  ],
+  multiSelect: false
+})
+
+// Tab 3: Data Sensitivity (always)
+questions.push({
+  question: "Most sensitive data handled?",
+  header: "Data",
+  options: [
+    { label: "Public (Recommended)", description: "Open data, no sensitivity" },
+    { label: "PII", description: "Personal identifiable information" },
+    { label: "Regulated", description: "Healthcare, finance, regulated data" }
+  ],
+  multiSelect: false
+})
+
+// Tab 4: Compliance (always, multiselect)
+questions.push({
+  question: "Compliance requirements?",
+  header: "Compliance",
+  options: [
+    { label: "SOC2", description: "B2B SaaS, enterprise customers" },
+    { label: "GDPR/CCPA", description: "Privacy regulations" },
+    { label: "HIPAA/PCI", description: "Healthcare or payments" }
+  ],
+  multiSelect: true  // None selected = No compliance
+})
+
+AskUserQuestion(questions)
+```
+
+**AI Recommendation Logic:**
+
+```javascript
+function calculateRecommendations(complexity) {
+  if (complexity.loc > 50000 || complexity.files > 500) {
+    return { budget: 32000, output: 35000 }
+  } else if (complexity.loc > 10000 || complexity.files > 100) {
+    return { budget: 16000, output: 35000 }
+  } else {
+    return { budget: 8000, output: 25000 }
+  }
+}
+```
 
 ### Validation
 ```
-[x] User selected: Configure | Remove | Export
-→ Store as: action = {selection}
-→ If Remove or Export: Skip to Step-6
+[x] User completed Q2
+→ Store as: contextConfig = { budget?, output, data, compliance }
 → Proceed to Step-4
 ```
 
 ---
 
-## Step-4: Scope + Context [ONLY LOW CONFIDENCE ITEMS]
+## Step-4: Apply [BACKGROUND]
 
-**Only ask questions for items NOT auto-detected or LOW confidence:**
+**Write all files from detection + user input:**
 
-### 4.1: Statusline Setup [ALWAYS ASK - MANDATORY QUESTION]
-
-**CRITICAL: This question MUST always be asked. Statusline is optional but the question is mandatory.**
-
-```javascript
-// Statusline question is MANDATORY - never skip
-AskUserQuestion([{
-  question: "Install CCO statusline?",
-  header: "Statusline",
-  options: [
-    { label: "Full (Recommended)", description: "User, model, context %, git status, file changes" },
-    { label: "Minimal", description: "User, model, context % only" },
-    { label: "No", description: "Use Claude Code default statusline" }
-  ],
-  multiSelect: false
-}])
-```
-
-### 4.2: Other Settings [OPTIONAL]
-
-```javascript
-// Additional settings - optional
-AskUserQuestion([{
-  question: "Configure additional settings?",
-  header: "Settings",
-  options: [
-    { label: "Permissions", description: "Tool approval levels: safe, balanced, permissive, full" },
-    { label: "AI Performance", description: "Extended thinking, tool output limits" },
-    { label: "Skip", description: "Only apply detected context rules" }
-  ],
-  multiSelect: true
-}])
-```
-
-### 4.3: Context Questions (LOW confidence only)
-
-**Only ask what wasn't detected:**
-
-```javascript
-// Build question list dynamically based on detection confidence
-lowConfidenceQuestions = []
-
-if (detected.data.confidence < 70) {
-  lowConfidenceQuestions.push({
-    question: "Most sensitive data handled?",
-    header: "Data",
-    options: [
-      { label: "Public", description: "Open data, no sensitivity" },
-      { label: "PII", description: "Personal identifiable information" },
-      { label: "Regulated", description: "Healthcare, finance, regulated data" }
-    ],
-    multiSelect: false
-  })
-}
-
-if (detected.compliance.confidence < 70) {
-  lowConfidenceQuestions.push({
-    question: "Compliance requirements?",
-    header: "Compliance",
-    options: [
-      { label: "None", description: "No compliance requirements" },
-      { label: "SOC2", description: "B2B SaaS, enterprise customers" },
-      { label: "GDPR/CCPA", description: "Privacy regulations" },
-      { label: "HIPAA/PCI", description: "Healthcare or payments" }
-    ],
-    multiSelect: true
-  })
-}
-
-if (detected.sla.confidence < 70) {
-  lowConfidenceQuestions.push({
-    question: "Uptime commitment (SLA)?",
-    header: "SLA",
-    options: [
-      { label: "None", description: "Best effort" },
-      { label: "99%+", description: "Production SLA" }
-    ],
-    multiSelect: false
-  })
-}
-
-// Ask all low-confidence questions in one batch (max 4)
-if (lowConfidenceQuestions.length > 0) {
-  AskUserQuestion(lowConfidenceQuestions.slice(0, 4))
-}
-```
-
-**Result: Typically 0-2 questions instead of 8+**
-
-### 4.4: Permission Details [IF SELECTED IN 4.2]
-
-```javascript
-// If user selected Permissions in 4.2
-if (selectedSettings.includes("Permissions")) {
-  AskUserQuestion([
-    {
-      question: "Permission approval level?",
-      header: "Permissions",
-      options: [
-        { label: "Balanced (Recommended)", description: "Auto-approve read + lint/test, ask for writes" },
-        { label: "Safe", description: "Auto-approve read-only operations" },
-        { label: "Permissive", description: "Auto-approve most operations" },
-        { label: "Full", description: "Auto-approve all (Solo + Public projects only)" }
-      ],
-      multiSelect: false
-    },
-    {
-      question: "Enable LSP (code intelligence)?",
-      header: "LSP",
-      options: [
-        { label: "Yes (Recommended)", description: "go-to-definition, find-references, hover docs (+500 tokens)" },
-        { label: "No", description: "Use text-based search only" }
-      ],
-      multiSelect: false
-    }
-  ])
-}
-```
-
-### 4.5: AI Performance Details [IF SELECTED IN 4.2]
-
-```javascript
-// If user selected AI Performance in 4.2
-if (selectedSettings.includes("AI Performance")) {
-  AskUserQuestion([
-    {
-      question: "Enable extended thinking for complex reasoning?",
-      header: "Thinking",
-      options: [
-        { label: "Enabled (Recommended)", description: "Better for complex code, architecture decisions" },
-        { label: "Disabled", description: "Faster responses, better prompt caching" }
-      ],
-      multiSelect: false
-    },
-    {
-      question: "Thinking token budget?",
-      header: "Budget",
-      options: [
-        { label: "8K (Recommended)", description: "Good balance for most tasks" },
-        { label: "16K", description: "Complex multi-file refactoring" },
-        { label: "32K", description: "Architecture design, large codebases" },
-        { label: "4K", description: "Simple tasks, faster responses" }
-      ],
-      multiSelect: false
-    },
-    {
-      question: "Tool output limits?",
-      header: "Output",
-      options: [
-        { label: "Default", description: "25K MCP tokens, standard bash output" },
-        { label: "Extended", description: "35K MCP tokens, 100K bash chars for large outputs" },
-        { label: "Minimal", description: "10K MCP tokens, reduced context usage" }
-      ],
-      multiSelect: false
-    }
-  ])
-}
-```
-
-**AI Performance settings map:**
-
-| Selection | Setting |
-|-----------|---------|
-| Thinking: Enabled | `alwaysThinkingEnabled: true` |
-| Thinking: Disabled | `alwaysThinkingEnabled: false` |
-| Budget: 8K | `env.MAX_THINKING_TOKENS: "8000"` |
-| Budget: 16K | `env.MAX_THINKING_TOKENS: "16000"` |
-| Budget: 32K | `env.MAX_THINKING_TOKENS: "32000"` |
-| Budget: 4K | `env.MAX_THINKING_TOKENS: "4000"` |
-| Output: Default | `env.MAX_MCP_OUTPUT_TOKENS: "25000"`, `env.BASH_MAX_OUTPUT_LENGTH: "30000"` |
-| Output: Extended | `env.MAX_MCP_OUTPUT_TOKENS: "35000"`, `env.BASH_MAX_OUTPUT_LENGTH: "100000"` |
-| Output: Minimal | `env.MAX_MCP_OUTPUT_TOKENS: "10000"`, `env.BASH_MAX_OUTPUT_LENGTH: "15000"` |
-
-### Validation
-```
-[x] Statusline question asked (mandatory)
-[x] Other settings offered
-[x] Low confidence context items asked
-[x] Permission details collected (if selected)
-→ Proceed to Step-5
-```
-
----
-
-## Step-5: Review
-
-**Show merged detection + user input results:**
-
-```
-## Configuration Preview
-
-### Auto-Detected (applied automatically)
-| Element | Value | Confidence |
-|---------|-------|------------|
-| Language | {language} | {confidence} |
-| Framework | {framework} | {confidence} |
-| Test Framework | {test_framework} | {confidence} |
-| Coverage | {coverage}% | {confidence} |
-| Team Size | {team_size} | {confidence} |
-
-### User Confirmed
-| Element | Value |
-|---------|-------|
-| Data | {data} |
-| Compliance | {compliance} |
-
-### Rules Selected
-- core.md (always)
-- {language}.md (detected)
-- {scale}.md (based on context)
-- {additional}.md (based on context)
-
-### Settings
-| Setting | Value |
-|---------|-------|
-| Statusline | {statusline_mode} |
-| Permissions | {permissions} |
-| LSP | {lsp_enabled} |
-| Extended Thinking | {thinking_enabled} |
-| Thinking Budget | {thinking_budget} |
-| Tool Output Limits | {output_limits} |
-```
-
-```javascript
-AskUserQuestion([{
-  question: "Apply this configuration?",
-  header: "Apply",
-  options: [
-    { label: "Accept (Recommended)", description: "Apply all settings" },
-    { label: "Edit", description: "Modify before applying" },
-    { label: "Cancel", description: "Discard and exit" }
-  ],
-  multiSelect: false
-}])
-```
-
-### Validation
-```
-[x] Preview displayed
-[x] User approved
-→ If Cancel: Exit
-→ If Edit: Return to Step-4
-→ Proceed to Step-6
-```
-
----
-
-## Step-6: Apply [BACKGROUND]
-
-**Write all files from detection results:**
-
-### 6.1: Generate Rules from Detection + User Input
+### 4.1: Generate Rules
 
 **CRITICAL:** Call cco-agent-analyze with config scope (generate phase) to create rules.
 
@@ -443,7 +304,8 @@ generateResult = Task("cco-agent-analyze", `
 
   Input:
   - detections: ${JSON.stringify(detectResult.detections)}
-  - userInput: ${JSON.stringify(collectedUserInput)}
+  - setupConfig: ${JSON.stringify(setupConfig)}
+  - contextConfig: ${JSON.stringify(contextConfig)}
 
   Generate (from cco-adaptive.md sections, NOT separate files):
   1. Read cco-adaptive.md via: Bash(cco-install --cat rules/cco-adaptive.md)
@@ -463,7 +325,7 @@ generateResult = Task("cco-agent-analyze", `
 // }
 ```
 
-### 6.2: Write Files
+### 4.2: Write Files
 
 ```javascript
 Task("cco-agent-apply", `
@@ -799,7 +661,7 @@ Task("cco-agent-apply", `
 
 ---
 
-## Step-7: Report
+## Step-5: Report
 
 ```
 ## Configuration Applied
@@ -832,22 +694,32 @@ Task("cco-agent-apply", `
 
 ## Reference
 
-### Dynamic Label Rules
+### Question Flow Summary
 
-| Label | When to Apply | Priority |
-|-------|---------------|----------|
-| `[current]` | Option matches existing config | 1 (highest) |
-| `[detected]` | Option matches agent detection | 2 |
-| `(Recommended)` | Option is best practice | 3 |
+| Scenario | Q1 | Q2 | Total |
+|----------|----|----|-------|
+| Setup/Update + Thinking Enabled | 4 tabs | 4 tabs | 2 questions |
+| Setup/Update + Thinking Disabled | 4 tabs | 3 tabs | 2 questions |
+| Remove | 4 tabs | - | 1 question |
+| Export | 4 tabs | 1 tab (format) | 2 questions |
 
-### Permissions Levels (explicit settings.json values)
+### Label Priority
+
+| Label | When | Priority |
+|-------|------|----------|
+| `[current]` | Matches existing config | 1 (highest) |
+| `(Recommended)` | AI recommendation or best practice | 2 |
+| (none) | Other options | 3 |
+
+**Rule:** Each tab has exactly ONE recommended option (either [current] or (Recommended), not both on same option unless current IS recommended).
+
+### Permissions Levels
 
 | Level | `permissions.allow` | `permissions.deny` |
 |-------|---------------------|-------------------|
-| Safe | `["Read", "Glob", "Grep"]` | `[]` |
+| Permissive | `["Read", "Glob", "Grep", "LSP", "Edit", "Write", "Bash", "Task"]` | `["Bash(git push -f:*)"]` |
 | Balanced | `["Read", "Glob", "Grep", "LSP", {detected_lint_tools}, {detected_test_tools}]` | `[]` |
-| Permissive | `["Read", "Glob", "Grep", "LSP", "Edit", "Write", "Bash"]` | `["Bash(rm -rf:*)", "Bash(git push -f:*)"]` |
-| Full | `["Read", "Glob", "Grep", "LSP", "Edit", "Write", "Bash", "Task"]` | `[]` |
+| Remove | Remove permissions key from settings.json | - |
 
 ### Balanced Tools by Language (from detection)
 
@@ -887,12 +759,12 @@ If something goes wrong during configuration:
 
 | Situation | Recovery |
 |-----------|----------|
-| Wrong rules generated | Re-run `/cco-config`, select "Detection & Rules", adjust answers |
-| Want to start fresh | Run `/cco-config` → Remove → Rules, then Configure again |
+| Wrong rules generated | Re-run `/cco-config`, select "Setup/Update", adjust answers |
+| Want to start fresh | Run `/cco-config` → Remove, then Setup again |
 | Settings.json corrupted | Delete `.claude/settings.json`, re-run `/cco-config` |
 | Detection crashed | Re-run `/cco-config` - detection is stateless |
-| Wrong AI Performance | `/cco-config` → Configure → AI Performance, select new values |
-| Applied wrong permissions | `cco-install --local . --permissions {correct-level}` |
+| Wrong AI Performance | `/cco-config` → Setup/Update, change Thinking/Budget/Output |
+| Applied wrong permissions | Re-run `/cco-config`, select different Permissions level |
 
 **Safe pattern:** CCO config files are additive. Removing and re-creating is always safe.
 
@@ -900,9 +772,9 @@ If something goes wrong during configuration:
 
 ## Rules
 
-1. **Use cco-agent-analyze** - Agent handles detection with config scope
-2. **Skip HIGH confidence** - Don't ask what's already detected
-3. **Batch LOW confidence** - Ask remaining questions in single batch
-4. **Use cco-agent-apply** - Agent handles file writing with verification
-5. **Background apply** - Write files while user sees report
-6. **Explicit defaults** - Always write ALL settings to files, even when default values are selected. Never omit a setting just because it's the default. Exception: statusLine "No" = don't write (preserves global config).
+1. **Background detection** - Start detection while asking Q1
+2. **Max 2 questions** - Q1 always, Q2 only if Setup/Update
+3. **Dynamic tabs** - Show only relevant tabs based on previous answers
+4. **Single Recommended** - Each tab has exactly one recommended option
+5. **AI-driven defaults** - Budget/Output based on project complexity
+6. **Explicit defaults** - Always write ALL settings to files, even when default values are selected. Never omit a setting just because it's the default. Exception: statusLine "Remove" = don't write (preserves global config).

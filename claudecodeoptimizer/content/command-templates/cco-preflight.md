@@ -6,7 +6,7 @@ allowed-tools: Read(*), Grep(*), Glob(*), Edit(*), Bash(git:*), Bash(pytest:*), 
 
 # /cco-preflight
 
-**Release Workflow** - Parallel pre-flight checks with background verification.
+**Release Workflow** - Parallel pre-flight checks with single decision question.
 
 Meta command orchestrating CCO commands with maximum parallelism.
 
@@ -35,12 +35,11 @@ Run /cco-config first to configure project context, then restart CLI.
 
 | Step | Name | Action | Optimization |
 |------|------|--------|--------------|
-| 1 | Phase Select | Ask which phases | Skip with flags |
-| 2 | Pre-flight | Release-specific checks | Parallel checks |
-| 3 | Quality + Review | Parallel: optimize + review | 2x faster |
-| 4 | Verification | Background: test/build/lint | Non-blocking |
-| 5 | Changelog | Generate + suggest version | While tests run |
-| 6 | Decision | Go/No-go with all results | Instant |
+| 1 | Pre-flight | Release checks (parallel) | Background |
+| 2 | Quality + Review | Parallel: optimize + review | Background |
+| 3 | Verification | Background: test/build/lint | Background |
+| 4 | Changelog | Generate + suggest version | While tests run |
+| 5 | Decision | Q1: Docs + Release decision | Single question |
 
 ---
 
@@ -48,226 +47,198 @@ Run /cco-config first to configure project context, then restart CLI.
 
 ```javascript
 TodoWrite([
-  { content: "Step-1: Select phases", status: "in_progress", activeForm: "Selecting phases" },
-  { content: "Step-2: Run pre-flight checks", status: "pending", activeForm: "Running pre-flight checks" },
-  { content: "Step-3: Quality + review (parallel)", status: "pending", activeForm: "Running quality and review" },
-  { content: "Step-4: Verification (background)", status: "pending", activeForm: "Running verification" },
-  { content: "Step-5: Changelog & docs", status: "pending", activeForm: "Updating changelog" },
-  { content: "Step-6: Go/no-go decision", status: "pending", activeForm: "Showing go/no-go decision" }
+  { content: "Step-1: Run pre-flight checks", status: "in_progress", activeForm: "Running pre-flight" },
+  { content: "Step-2: Run quality + review", status: "pending", activeForm: "Running quality and review" },
+  { content: "Step-3: Run verification", status: "pending", activeForm: "Running verification" },
+  { content: "Step-4: Generate changelog", status: "pending", activeForm: "Generating changelog" },
+  { content: "Step-5: Get release decision", status: "pending", activeForm: "Getting decision" }
 ])
 ```
 
 ---
 
-## Step-1: Phase Selection
+## Step-1: Pre-flight Checks [PARALLEL]
 
-**Smart Default:** Run all phases without asking. Pre-release should be thorough.
+**All checks run in parallel, no questions:**
+
+### 1.1: Git State [BLOCKER]
 
 ```javascript
-// Default: All phases - no question needed
-phases = ["Verification", "Quality", "Architecture", "Changelog & Docs"]
+// Check from context
+if (gitStatus.trim().length > 0) {
+  blockers.push({
+    type: "GIT_DIRTY",
+    message: "Working directory has uncommitted changes"
+  })
+}
 
-// Flags override:
-// --verification-only → phases = ["Verification"]
-// --quality-only → phases = ["Quality"]
-// --architecture-only → phases = ["Architecture"]
-// --changelog-only → phases = ["Changelog & Docs"]
-// --skip-docs → exclude "Changelog & Docs"
+if (!branch.match(/^(main|master|release\/.*)$/)) {
+  warnings.push({
+    type: "BRANCH",
+    message: `On branch '${branch}' - expected main/master or release/*`
+  })
+}
+```
+
+### 1.2: Version Sync [BLOCKER]
+
+```javascript
+// Extract versions from context
+manifestVersion = extractVersion(versionContext)
+changelogVersion = extractChangelogVersion(changelog)
+
+if (manifestVersion !== changelogVersion) {
+  blockers.push({
+    type: "VERSION_MISMATCH",
+    message: `Manifest: ${manifestVersion}, Changelog: ${changelogVersion}`
+  })
+}
+```
+
+### 1.3: Leftover Markers [WARN]
+
+```javascript
+// Check for TODO, FIXME, etc.
+markersTask = Bash("grep -rn 'TODO\\|FIXME\\|XXX\\|HACK' --include='*.py' --include='*.ts' --include='*.js' || true")
+```
+
+### 1.4: SemVer Review [WARN]
+
+```javascript
+// Analyze commits since last tag
+commitsTask = Bash(`git log ${lastTag}..HEAD --oneline`)
+
+// Determine expected bump
+// BREAKING: in commits → MAJOR
+// feat: in commits → MINOR
+// fix: only → PATCH
 ```
 
 ### Validation
 ```
-[x] Phases determined (default: All)
-→ Store as: phases = {selections[]}
+[x] All pre-flight checks completed
+→ Store as: preflight = { blockers, warnings }
 → Proceed to Step-2
 ```
 
 ---
 
-## Step-2: Pre-flight Checks [SKIP if "Verification" not selected]
+## Step-2: Quality + Review [PARALLEL BACKGROUND]
 
-### Step-2.1: Git State [BLOCKER]
+**Launch both sub-commands in parallel:**
 
-| Check | Action |
-|-------|--------|
-| Clean working directory | BLOCK if dirty |
-| On `{main_branch}` or release branch | WARN if not |
+```javascript
+// CRITICAL: Both Task calls in ONE message for true parallelism
 
-### Step-2.2: Version Sync [BLOCKER]
+qualityTask = Task("general-purpose", `
+  Execute /cco-optimize --pre-release --fix
+  Return: {
+    accounting: { done, declined, fail, total },
+    blockers: [{ severity, title, location }]
+  }
+`, { model: "sonnet", run_in_background: true })
 
-```bash
-grep "{version_pattern}" {version_file}     # e.g., __version__, version
-grep "version" {manifest_file}              # e.g., pyproject.toml, package.json
-grep "^\[" {changelog_file} | head -1       # e.g., CHANGELOG.md
+reviewTask = Task("general-purpose", `
+  Execute /cco-review --quick --no-apply
+  Return: {
+    foundation: "SOUND|HAS ISSUES",
+    metrics: { coupling, cohesion, complexity },
+    doNow: [{ title, location }],
+    issues: [{ severity, title, location }]
+  }
+`, { model: "haiku", run_in_background: true })
 ```
-
-All must match. BLOCK if mismatch.
-
-### Step-2.3: Leftover Markers [WARN]
-
-```bash
-grep -rn "{marker_patterns}" {src_dir}/ --include="*.{extensions}"
-grep -rn "{doc_markers}" {docs_dir}/
-```
-
-WARN if found.
-
-### Step-2.4: SemVer Review [WARN]
-
-| Bump | Allowed Changes |
-|------|-----------------|
-| PATCH (x.x.1) | Fixes only |
-| MINOR (x.1.0) | New features |
-| MAJOR (1.0.0) | Breaking changes |
-
-WARN if changes don't match version bump.
 
 ### Validation
 ```
-[x] Git state clean (or user acknowledged)
-[x] Version synced
-[x] Markers checked
-[x] SemVer reviewed
-→ Store as: preflight = { blockers: [], warnings: [] }
+[x] Both tasks launched in parallel
+→ Results collected in Step-5
 → Proceed to Step-3
 ```
 
 ---
 
-## Step-3: Quality + Review [PARALLEL]
+## Step-3: Verification [BACKGROUND]
 
-**Launch optimize and review in a SINGLE message:**
-
-```javascript
-// CRITICAL: Both Task calls in ONE message for true parallelism
-
-if (phases.includes("Quality")) {
-  qualityTask = Task("general-purpose", `
-    Execute /cco-optimize --pre-release --fix
-    Return: {
-      accounting: { done, declined, fail, total },
-      blockers: [{ severity, title, location }]
-    }
-  `, { model: "sonnet", run_in_background: true })
-}
-
-if (phases.includes("Architecture")) {
-  reviewTask = Task("general-purpose", `
-    Execute /cco-review --quick --no-apply
-    Return: {
-      foundation: "SOUND|HAS ISSUES",
-      metrics: { coupling, cohesion, complexity },
-      doNow: [{ title, location }],
-      plan: [{ title, location }],
-      issues: [{ severity, title, location }]
-    }
-  `, { model: "haiku", run_in_background: true })
-}
-```
-
-**Parallel Execution:**
-- Quality uses Sonnet (code modifications)
-- Review uses Haiku (read-only analysis)
-- Both complete while verification starts
-
-### Validation
-```
-[x] Both tasks launched in parallel
-[x] Results collected before Step-6
-→ Start Step-4 immediately (don't wait)
-```
-
----
-
-## Step-4: Verification [BACKGROUND]
-
-**Start all verification in background while changelog work proceeds:**
+**Start all verification in background:**
 
 ```javascript
-// Launch all verifications in parallel background
 // Commands from context.md Operational section
 testTask = Bash("{test_command} 2>&1", { run_in_background: true })
 buildTask = Bash("{build_command} 2>&1", { run_in_background: true })
 lintTask = Bash("{lint_command} 2>&1", { run_in_background: true })
 
-// Store task IDs for Step-6
-verificationTasks = { test: testTask.id, build: buildTask.id, lint: lintTask.id }
+// Store task IDs
+verificationTasks = {
+  test: testTask.id,
+  build: buildTask.id,
+  lint: lintTask.id
+}
 ```
-
-**Background Pattern:**
-- All verification runs while user reviews changelog
-- Results collected before go/no-go decision
-- Failed verification = blocker
 
 ### Validation
 ```
 [x] Background tasks launched
-[x] Task IDs stored for Step-6
-→ Proceed to Step-5 immediately (don't wait)
+→ Results collected in Step-5
+→ Proceed to Step-4
 ```
 
 ---
 
-## Step-5: Changelog & Docs [WHILE VERIFICATION RUNS]
+## Step-4: Changelog [WHILE BACKGROUND RUNS]
 
-**Generate changelog while tests run in background:**
+**Generate changelog while tests run:**
 
-### 5.1: Generate Changelog
-
-```bash
-git log {last_tag}..HEAD --oneline
-```
-
-Classify commits:
-| Type | Detection | Section |
-|------|-----------|---------|
-| Breaking | `BREAKING:`, API removal | Breaking |
-| Added | `feat:`, new files | Added |
-| Changed | `refactor:`, `perf:` | Changed |
-| Fixed | `fix:` | Fixed |
-| Security | `security:`, CVE | Security |
-
-### 5.2: Version Suggestion
-
-```
-Scan commits since last tag:
-- BREAKING: → MAJOR bump
-- feat: → MINOR bump
-- fix: only → PATCH bump
-Suggest: {current} → {suggested} ({reason})
-```
-
-### 5.3: Apply Updates
+### 4.1: Classify Commits
 
 ```javascript
-AskUserQuestion([{
-  question: "Apply documentation updates?",
-  header: "Docs",
-  options: [
-    { label: "Apply all (Recommended)", description: "Update CHANGELOG and docs" },
-    { label: "Review each", description: "Show each change for approval" },
-    { label: "Skip", description: "Don't update documentation" }
-  ],
-  multiSelect: false
-}])
+commits = await TaskOutput(commitsTask.id)
+
+classified = {
+  breaking: commits.filter(c => c.match(/BREAKING/i)),
+  added: commits.filter(c => c.match(/^feat:/)),
+  changed: commits.filter(c => c.match(/^(refactor|perf):/)),
+  fixed: commits.filter(c => c.match(/^fix:/)),
+  security: commits.filter(c => c.match(/^security:/i))
+}
+```
+
+### 4.2: Suggest Version
+
+```javascript
+if (classified.breaking.length > 0) {
+  suggestedBump = "MAJOR"
+} else if (classified.added.length > 0) {
+  suggestedBump = "MINOR"
+} else {
+  suggestedBump = "PATCH"
+}
+
+suggestedVersion = calculateNextVersion(manifestVersion, suggestedBump)
+```
+
+### 4.3: Generate Changelog Entry
+
+```javascript
+changelogEntry = generateChangelogEntry(classified, suggestedVersion)
 ```
 
 ### Validation
 ```
-[x] Changelog generated
+[x] Commits classified
 [x] Version suggested
-[x] Updates applied (or skipped)
-→ Proceed to Step-6
+[x] Changelog entry generated
+→ Proceed to Step-5
 ```
 
 ---
 
-## Step-6: Go/No-Go Decision
+## Step-5: Decision [Q1 - ALL RESULTS]
 
-**First: Collect all background results**
+**Wait for all background tasks, then ask single decision question:**
 
 ```javascript
-// Wait for all background tasks
+// Collect all background results
 qualityResults = await TaskOutput(qualityTask.id)
 reviewResults = await TaskOutput(reviewTask.id)
 testResults = await TaskOutput(verificationTasks.test)
@@ -275,16 +246,20 @@ buildResults = await TaskOutput(verificationTasks.build)
 lintResults = await TaskOutput(verificationTasks.lint)
 
 // Aggregate blockers and warnings
-blockers = [
+allBlockers = [
+  ...preflight.blockers,
   ...(qualityResults.blockers || []),
-  ...(testResults.failed ? [{ severity: "CRITICAL", title: "Tests failed", location: "-" }] : []),
-  ...(buildResults.failed ? [{ severity: "CRITICAL", title: "Build failed", location: "-" }] : []),
-  ...(lintResults.failed ? [{ severity: "HIGH", title: "Lint failed", location: "-" }] : [])
+  ...(testResults.exitCode !== 0 ? [{ type: "TESTS", message: "Tests failed" }] : []),
+  ...(buildResults.exitCode !== 0 ? [{ type: "BUILD", message: "Build failed" }] : [])
 ]
-warnings = [
-  ...(preflight.warnings || []),
+
+allWarnings = [
+  ...preflight.warnings,
+  ...(lintResults.exitCode !== 0 ? [{ type: "LINT", message: "Lint warnings" }] : []),
   ...(reviewResults.issues || [])
 ]
+
+hasBlockers = allBlockers.length > 0
 ```
 
 **Display summary:**
@@ -292,37 +267,77 @@ warnings = [
 ```
 ## Release Readiness
 
-Version: {current_version} → {suggested_version}
+Version: {manifestVersion} → {suggestedVersion} ({suggestedBump})
 Branch: {branch}
-Previous: {last_tag}
+Previous: {lastTag}
 
 ### Results
 | Check | Status |
 |-------|--------|
-| Pre-flight | {preflight.status} |
+| Pre-flight | {preflight.blockers.length === 0 ? "✓" : "✗"} |
 | Quality | Done {qualityResults.accounting.done}, Declined {qualityResults.accounting.declined} |
 | Architecture | {reviewResults.foundation} |
-| Tests | {testResults.failed ? "FAIL" : "PASS"} |
-| Build | {buildResults.failed ? "FAIL" : "PASS"} |
-| Lint | {lintResults.failed ? "FAIL" : "PASS"} |
+| Tests | {testResults.exitCode === 0 ? "✓ PASS" : "✗ FAIL"} |
+| Build | {buildResults.exitCode === 0 ? "✓ PASS" : "✗ FAIL"} |
+| Lint | {lintResults.exitCode === 0 ? "✓ PASS" : "⚠️ WARN"} |
 
-Blockers: {blockers.length} (must fix)
-Warnings: {warnings.length} (can override)
+Blockers: {allBlockers.length} (must fix)
+Warnings: {allWarnings.length} (can override)
 
-Ready: {YES|NO}
+Ready: {hasBlockers ? "NO" : "YES"}
 ```
 
+**Ask combined decision question:**
+
 ```javascript
-AskUserQuestion([{
-  question: "Release decision?",
-  header: "Decision",
-  options: [
-    { label: "Proceed", description: "Create tag and continue release" },
-    { label: "Fix issues", description: "Address blockers/warnings first" },
-    { label: "Abort", description: "Cancel release process" }
-  ],
-  multiSelect: false
-}])
+AskUserQuestion([
+  {
+    question: "Documentation updates to apply?",
+    header: "Docs",
+    options: [
+      { label: "CHANGELOG (Recommended)", description: "Update CHANGELOG.md with new entry" },
+      { label: "README", description: "Update README if needed" },
+      { label: "API docs", description: "Regenerate API documentation" }
+    ],
+    multiSelect: true
+  },
+  {
+    question: hasBlockers
+      ? `Release has ${allBlockers.length} blocker(s). Decision?`
+      : "All checks passed. Proceed with release?",
+    header: "Decision",
+    options: hasBlockers
+      ? [
+          { label: "Fix issues first (Recommended)", description: "Address blockers before release" },
+          { label: "Abort release", description: "Cancel release process" }
+        ]
+      : [
+          { label: "Proceed (Recommended)", description: "Create tag and continue release" },
+          { label: "Fix issues first", description: "Address warnings before release" },
+          { label: "Abort release", description: "Cancel release process" }
+        ],
+    multiSelect: false
+  }
+])
+```
+
+### If Proceed
+
+```javascript
+// Apply selected documentation updates
+if (docsSelection.includes("CHANGELOG")) {
+  Edit(changelogFile, changelogEntry)
+}
+
+// Show next steps
+console.log(`
+## Next Steps
+
+1. Review changes: git diff
+2. Commit: git commit -am "chore: prepare release ${suggestedVersion}"
+3. Tag: git tag v${suggestedVersion}
+4. Push: git push && git push --tags
+`)
 ```
 
 ### Validation
@@ -330,13 +345,20 @@ AskUserQuestion([{
 [x] All background results collected
 [x] Summary displayed
 [x] User made decision
-→ If Proceed: Show next steps (git tag, git push --tags)
 → Done
 ```
 
 ---
 
 ## Reference
+
+### Question Flow Summary
+
+| Scenario | Questions |
+|----------|-----------|
+| Any preflight run | 1 (Docs + Decision combined) |
+
+**Key optimization:** All pre-flight, quality, review, and verification run in parallel background. Single question at the end with all results.
 
 ### Flags
 
@@ -345,26 +367,44 @@ AskUserQuestion([{
 | `--dry-run` | Check without fixing |
 | `--strict` | Treat warnings as blockers |
 | `--skip-tests` | Skip test suite |
-| `--tag` | Create git tag |
-| `--push` | Push to remote |
-| `--changelog` | CHANGELOG only |
-| `--docs` | Documentation only |
-| `--skip-docs` | Skip changelog & docs |
+| `--tag` | Create git tag after success |
+| `--push` | Push to remote after success |
+| `--changelog-only` | Only generate changelog |
+| `--skip-docs` | Skip documentation updates |
 
 ### Go/No-Go Status
 
-| Status | Action |
-|--------|--------|
-| Blocker (red) | Cannot release |
-| Warning (yellow) | Can override |
-| Pass (green) | Ready |
+| Status | Meaning | Action |
+|--------|---------|--------|
+| Blocker (red) | Must fix | Cannot release |
+| Warning (yellow) | Can override | User decides |
+| Pass (green) | All clear | Ready to release |
+
+### Model Strategy
+
+| Task | Model | Reason |
+|------|-------|--------|
+| Quality (/cco-optimize) | Sonnet | Code modifications |
+| Review (/cco-review) | Haiku | Read-only analysis |
+| Verification | Bash | Direct execution |
+
+---
+
+## Recovery
+
+| Situation | Recovery |
+|-----------|----------|
+| Wrong version suggested | Edit version manually before tagging |
+| Changelog wrong | Edit CHANGELOG.md before commit |
+| Tests failed | Fix tests, re-run preflight |
+| Build failed | Fix build issues, re-run |
 
 ---
 
 ## Rules
 
-1. **Parallel sub-commands** - Launch quality + review in single message
-2. **Background verification** - Tests/build/lint run while user works
-3. **Collect before decision** - Wait for all results at Step-6
-4. **Git safety** - Clean state, version sync, no force push
+1. **All parallel background** - Pre-flight, quality, review, verification all background
+2. **Single question at end** - Docs + Decision combined after all results
+3. **Collect before decision** - Wait for all background tasks before Q1
+4. **Git safety** - Clean state required, version sync verified
 5. **User decision required** - No release without explicit approval

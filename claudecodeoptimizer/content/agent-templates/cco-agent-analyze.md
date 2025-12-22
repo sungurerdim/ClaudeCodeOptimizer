@@ -44,7 +44,7 @@ Grep("{complexity_patterns}")     // message
 
 | Scopes | Strategy |
 |--------|----------|
-| security, quality, hygiene, best-practices | All patterns in single grep batch |
+| security, quality, hygiene, testing, best-practices | All patterns in single grep batch |
 | architecture + any | Add dependency analysis |
 | scan + trends | Dashboard mode - metrics + history |
 | config | Detection mode only |
@@ -112,6 +112,14 @@ type_coverage: "# type: ignore" patterns
 unused_imports: Grep imports → verify usage
 dead_code: Grep function defs → verify call sites
 orphan_files: Glob patterns → verify imports
+```
+
+### testing
+```
+coverage: Check test coverage reports, pytest-cov output
+missing_tests: Grep public functions → verify test existence
+test_quality: Test file patterns, assertions per test
+ci_cd: Check workflow files for test steps
 ```
 
 ### best-practices
