@@ -91,10 +91,10 @@ if (phases === "Both" || phases === "Health Dashboard") {
 
 if (phases === "Both" || phases === "Quality Audit") {
   auditTask = Task("general-purpose", `
-    Execute /cco-optimize --fix --hygiene --quality
+    Execute /cco-optimize --fix --security --quality
     Return: {
       accounting: { done, declined, fail, total },
-      by_scope: { security: {n}, quality: {n}, hygiene: {n} }
+      by_scope: { security: {n}, quality: {n} }
     }
   `, { model: "sonnet", run_in_background: phases === "Both" })
 }
@@ -139,7 +139,6 @@ if (phases === "Both") {
 |-------|------|----------|--------|
 | Security | {by_scope.security} | - | - |
 | Quality | {by_scope.quality} | - | - |
-| Hygiene | {by_scope.hygiene} | - | - |
 | **Total** | **{accounting.done}** | **{accounting.declined}** | **{accounting.fail}** |
 
 Duration: {n}s

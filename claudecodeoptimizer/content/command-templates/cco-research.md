@@ -6,7 +6,7 @@ allowed-tools: WebSearch(*), WebFetch(*), Read(*), Grep(*), Glob(*), Task(*), To
 
 # /cco-research
 
-**Smart Research** - Parallel search → tier → synthesize → recommend.
+**Smart Research** - Parallel search → tier → synthesize → recommend with minimal questions.
 
 Hybrid research: Local (Glob/Grep) + Web (cco-agent-research) with tiered model strategy.
 
@@ -31,10 +31,10 @@ Run /cco-config first to configure project context, then restart CLI.
 
 | Step | Name | Action | Optimization |
 |------|------|--------|--------------|
-| 1 | Depth | Ask research depth | Skip with flags |
+| 1 | Setup | Q1: Depth selection (skip with flags) | Optional question |
 | 2 | Query | Parse and understand | Instant |
-| 3 | Research | Parallel: Local (Glob/Grep) + cco-agent-research | Fast |
-| 4 | Synthesize | Opus 4.5 for T1-T2 sources | Higher accuracy |
+| 3 | Research | Parallel: Local + Web sources | Fast |
+| 4 | Synthesize | Tiered model strategy | Accurate |
 | 5 | Output | Progressive display | Real-time |
 
 ---
@@ -45,30 +45,36 @@ Run /cco-config first to configure project context, then restart CLI.
 TodoWrite([
   { content: "Step-1: Select depth", status: "in_progress", activeForm: "Selecting depth" },
   { content: "Step-2: Parse query", status: "pending", activeForm: "Parsing query" },
-  { content: "Step-3: Run parallel research", status: "pending", activeForm: "Running parallel research" },
-  { content: "Step-4: Synthesize findings", status: "pending", activeForm: "Synthesizing findings" },
+  { content: "Step-3: Run parallel research", status: "pending", activeForm: "Running research" },
+  { content: "Step-4: Synthesize findings", status: "pending", activeForm: "Synthesizing" },
   { content: "Step-5: Show output", status: "pending", activeForm: "Showing output" }
 ])
 ```
 
 ---
 
-## Step-1: Depth Selection
+## Step-1: Depth Selection [Q1 - SKIP WITH FLAGS]
+
+**Default: Standard depth. Only ask if no flag provided.**
 
 ```javascript
-AskUserQuestion([{
-  question: "Research depth?",
-  header: "Depth",
-  options: [
-    { label: "Quick", description: "T1-T2 sources, 3 parallel searches" },
-    { label: "Standard (Recommended)", description: "T1-T4 sources, 5 parallel searches" },
-    { label: "Deep", description: "All tiers, 7+ parallel searches, resumable" }
-  ],
-  multiSelect: false
-}])
+// Check for flags
+if (flags.quick || flags.standard || flags.deep) {
+  depth = flags.quick ? "Quick" : flags.deep ? "Deep" : "Standard"
+  // Skip question, proceed to Step-2
+} else {
+  AskUserQuestion([{
+    question: "Research depth?",
+    header: "Depth",
+    options: [
+      { label: "Quick", description: "T1-T2 sources, 3 parallel searches" },
+      { label: "Standard (Recommended)", description: "T1-T4 sources, 5 parallel searches" },
+      { label: "Deep", description: "All tiers, 7+ parallel searches, resumable" }
+    ],
+    multiSelect: false
+  }])
+}
 ```
-
-**Flags override:** `--quick`, `--standard`, `--deep` skip this question.
 
 | Depth | Parallel Agents | Model Strategy |
 |-------|-----------------|----------------|
@@ -78,7 +84,7 @@ AskUserQuestion([{
 
 ### Validation
 ```
-[x] User selected depth
+[x] Depth determined (from flag or user)
 → Store as: depth = {selection}
 → Proceed to Step-2
 ```
@@ -87,7 +93,7 @@ AskUserQuestion([{
 
 ## Step-2: Parse Query
 
-Parse query for search strategy:
+**Parse query for search strategy:**
 
 | Element | Detection | Effect |
 |---------|-----------|--------|
@@ -97,10 +103,14 @@ Parse query for search strategy:
 | Comparison | "vs", "or", "compared" | Multi-track search |
 | Mode | Troubleshoot, changelog, security | Specialized sources |
 
+```javascript
+parsedQuery = parseQuery(userQuery)
+// Returns: { concepts, date, tech, comparison, mode }
+```
+
 ### Validation
 ```
 [x] Query parsed
-→ Store as: parsedQuery = { concepts, date, tech, comparison, mode }
 → Proceed to Step-3
 ```
 
@@ -113,14 +123,10 @@ Parse query for search strategy:
 ### 3.1 Local Codebase Search (Always)
 
 ```javascript
-// Use Glob + Grep for local codebase search
 // Parallel pattern searches in ONE message
-
-Glob("**/*.{py,ts,js,md}")  // Find relevant files
-Grep("{query_keywords}", { output_mode: "content", "-C": 3 })  // Find context
-Read("{relevant_files}")  // Read matched files
-
-// Return: { files: [], snippets: [], relevance: 0-100 }
+Glob("**/*.{py,ts,js,md}")
+Grep("{query_keywords}", { output_mode: "content", "-C": 3 })
+Read("{relevant_files}")
 ```
 
 ### 3.2 Web Search (Parallel by Source Type)
@@ -165,11 +171,6 @@ if (parsedQuery.mode === "security") {
     allowed_domains: [nvd.nist.gov, cve.mitre.org, snyk.io]
   `, { model: "haiku" })
 }
-
-// Agent returns per scope:
-// search: { query, sources: [{ url, title, tier, finalScore, date }], tierSummary, topSources }
-// analyze: { sources: [{ url, claims, codeExamples, caveats }], contradictions, consensus }
-// synthesize: { recommendation, keyFindings, caveats, alternatives, sources }
 ```
 
 ### 3.3 Comparison Mode (if detected)
@@ -189,21 +190,19 @@ if (parsedQuery.comparison) {
 }
 ```
 
-### Deep Mode: Resumable Research
-
-For `--deep` research that may take time:
+### 3.4 Deep Mode: Resumable Research
 
 ```javascript
-// Save agent IDs for potential resume
-researchSession = {
-  id: generateSessionId(),
-  agents: [agent1.id, agent2.id, ...],
-  completedSources: [],
-  pendingSources: []
+if (depth === "Deep") {
+  // Save agent IDs for potential resume
+  researchSession = {
+    id: generateSessionId(),
+    agents: [agent1.id, agent2.id, ...],
+    completedSources: [],
+    pendingSources: []
+  }
+  // Can resume with: Task(..., { resume: researchSession.agents[0] })
 }
-
-// On interrupt: Can resume with
-// Task("cco-agent-research", prompt, { resume: researchSession.agents[0] })
 ```
 
 ### Validation
@@ -221,8 +220,7 @@ researchSession = {
 **Model selection by source tier:**
 
 ```javascript
-// Collect all search results from agents
-// Each agent returns: { query, sources: [{ url, title, tier, finalScore, date }], tierSummary, topSources }
+// Collect all search results
 allSources = searchResults.flatMap(r => r.sources)
 
 // Filter by tier
@@ -235,10 +233,7 @@ synthesis = Task("cco-agent-research", `
   sources: ${JSON.stringify(t1t2Sources)}
 `, { model: depth === "deep" ? "opus" : "sonnet" })
 
-// Agent returns (synthesize scope):
-// { recommendation: { summary, confidence, confidenceScore }, keyFindings, caveats, alternatives, sources }
-
-// Supporting evidence (T3+) → aggregate locally (no agent needed)
+// Supporting evidence (T3+) → aggregate locally
 supportingEvidence = aggregateByTier(t3PlusSources)
 ```
 
@@ -272,9 +267,9 @@ if (t1Sources.filter(s => s.agrees).length >= 3) {
 
 ---
 
-## Step-5: Output
+## Step-5: Output [PROGRESSIVE]
 
-**Progressive display** - Show sections as they complete:
+**Show sections as they complete:**
 
 ```
 ## Executive Summary
@@ -287,13 +282,11 @@ Confidence: {confidence} ({n} T1 sources agree) | Saturation: {saturation}%
 | # | Source | Tier | Score | Key Finding |
 |---|--------|------|-------|-------------|
 | {n} | {source} | {tier} | {score} | {finding} |
-...
 
 ### Supporting (T3-T4, Score 70-84)
 | # | Source | Tier | Score | Key Finding |
 |---|--------|------|-------|-------------|
 | {n} | {source} | {tier} | {score} | {finding} |
-...
 
 ## Contradictions Resolved
 - **{claim_a}** ({source_a}): {approach_a}
@@ -311,7 +304,6 @@ Confidence: {confidence} ({n} T1 sources agree) | Saturation: {saturation}%
 
 ## Sources
 [{n}] {title} | {url} | {tier} | {score} | {date}
-...
 
 ## Metadata
 - Parallel searches: {n}
@@ -333,6 +325,15 @@ Confidence: {confidence} ({n} T1 sources agree) | Saturation: {saturation}%
 ---
 
 ## Reference
+
+### Question Flow Summary
+
+| Scenario | Questions |
+|----------|-----------|
+| With `--quick`, `--standard`, or `--deep` flag | 0 |
+| Without flag | 1 (Depth) |
+
+**Key optimization:** Default to Standard, flags skip the only question.
 
 ### Context Application
 
@@ -357,9 +358,9 @@ Confidence: {confidence} ({n} T1 sources agree) | Saturation: {saturation}%
 
 | Flag | Effect |
 |------|--------|
-| `--quick` | 3 parallel, T1-T2, Haiku only |
-| `--standard` | 5 parallel, T1-T4, Sonnet synthesis |
-| `--deep` | 7+ parallel, all tiers, Opus synthesis, resumable |
+| `--quick` | 3 parallel, T1-T2, Haiku only, no question |
+| `--standard` | 5 parallel, T1-T4, Sonnet synthesis, no question |
+| `--deep` | 7+ parallel, all tiers, Opus synthesis, resumable, no question |
 | `--local` | Local Glob/Grep only, no web |
 | `--changelog` | Focus on releases |
 | `--security` | Include CVE databases |
@@ -393,9 +394,10 @@ Confidence: {confidence} ({n} T1 sources agree) | Saturation: {saturation}%
 
 ## Rules
 
-1. **Parallel-first** - Launch all search agents in single message
-2. **Tiered synthesis** - Better model for higher-tier sources
-3. **Early saturation** - Stop when 3+ T1/T2 sources agree
-4. **Progressive display** - Show results as agents complete
-5. **Resumable** - Deep research saves state for continuation
-6. **Stack-aware** - Prioritize context-relevant sources
+1. **Flag-driven** - Depth flags skip the only question
+2. **Parallel-first** - Launch all search agents in single message
+3. **Tiered synthesis** - Better model for higher-tier sources
+4. **Early saturation** - Stop when 3+ T1/T2 sources agree
+5. **Progressive display** - Show results as agents complete
+6. **Resumable** - Deep research saves state for continuation
+7. **Stack-aware** - Prioritize context-relevant sources

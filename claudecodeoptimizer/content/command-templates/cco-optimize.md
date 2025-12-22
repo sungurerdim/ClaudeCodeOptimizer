@@ -6,7 +6,7 @@ allowed-tools: Read(*), Grep(*), Glob(*), Edit(*), Bash(git:*), Bash(ruff:*), Ba
 
 # /cco-optimize
 
-**Full-Stack Optimization** - Parallel analysis + background fixes.
+**Full-Stack Optimization** - Parallel analysis + background fixes with minimal questions.
 
 ## Core Principle [CRITICAL]
 
@@ -35,15 +35,12 @@ Run /cco-config first to configure project context, then restart CLI.
 
 | Step | Name | Action | Optimization |
 |------|------|--------|--------------|
-| 1 | Safety | Check git state | Instant |
-| 2 | Scope | Ask what to optimize | Skip with flags |
-| 3 | Action | Ask report/auto-fix | Skip with flags |
-| 4 | Analyze | cco-agent-analyze (parallel internally) | Fast |
-| 5 | Show | Progressive display | Real-time |
-| 6 | Auto-fix | cco-agent-apply (background) | Non-blocking |
-| 7 | Approval | Ask while fixes run | Parallel UX |
-| 8 | Apply | cco-agent-apply | Batched |
-| 9 | Summary | Show counts | Instant |
+| 1 | Setup | Q1: Combined settings (background analysis starts) | Single question |
+| 2 | Analyze | Wait for analysis, show findings | Progressive |
+| 3 | Auto-fix | Apply safe fixes (background) | Non-blocking |
+| 4 | Approval | Q2: Approve remaining (conditional) | Only if needed |
+| 5 | Apply | Apply approved fixes | Batched |
+| 6 | Summary | Show counts | Instant |
 
 ---
 
@@ -51,48 +48,88 @@ Run /cco-config first to configure project context, then restart CLI.
 
 ```javascript
 TodoWrite([
-  { content: "Step-1: Check safety", status: "in_progress", activeForm: "Checking git safety" },
-  { content: "Step-2: Ask scope", status: "pending", activeForm: "Asking scope" },
-  { content: "Step-3: Ask action", status: "pending", activeForm: "Asking action type" },
-  { content: "Step-4: Run parallel analysis", status: "pending", activeForm: "Running parallel analysis" },
-  { content: "Step-5: Show findings", status: "pending", activeForm: "Showing findings" },
-  { content: "Step-6: Apply auto-fixes (background)", status: "pending", activeForm: "Applying auto-fixes" },
-  { content: "Step-7: Get approval", status: "pending", activeForm: "Getting approval" },
-  { content: "Step-8: Apply approved", status: "pending", activeForm: "Applying approved fixes" },
-  { content: "Step-9: Show summary", status: "pending", activeForm: "Showing summary" }
+  { content: "Step-1: Get optimization settings", status: "in_progress", activeForm: "Getting settings" },
+  { content: "Step-2: Run analysis", status: "pending", activeForm: "Running analysis" },
+  { content: "Step-3: Apply auto-fixes", status: "pending", activeForm: "Applying auto-fixes" },
+  { content: "Step-4: Get approval", status: "pending", activeForm: "Getting approval" },
+  { content: "Step-5: Apply approved", status: "pending", activeForm: "Applying approved fixes" },
+  { content: "Step-6: Show summary", status: "pending", activeForm: "Showing summary" }
 ])
 ```
 
 ---
 
-## Step-1: Safety
+## Step-1: Setup [Q1 + BACKGROUND ANALYSIS]
 
-Check git working tree state.
-
-| Condition | Action |
-|-----------|--------|
-| Clean | Proceed |
-| Dirty | AskUserQuestion below |
+**Start analysis in background while asking Q1:**
 
 ```javascript
-AskUserQuestion([{
-  question: "Working tree has uncommitted changes. How to proceed?",
-  header: "Git State",
-  options: [
-    { label: "Continue anyway (Recommended)", description: "Proceed, changes will be visible in git diff" },
-    { label: "Stash first", description: "Stash changes, continue, remind to pop" },
-    { label: "Cancel", description: "Abort optimization" }
-  ],
-  multiSelect: false
-}])
+// Determine if git is dirty from context
+gitDirty = gitStatus.trim().length > 0
+
+// Start analysis with all scopes - will filter after Q1
+analysisTask = Task("cco-agent-analyze", `
+  scopes: ["security", "quality", "architecture", "best-practices"]
+
+  Find all issues with severity and fix information.
+  Return: {
+    findings: [{ id, scope, severity, title, location, fixable, approvalRequired, fix }],
+    summary: { scope: { count, p0, p1, p2, p3 } }
+  }
+`, { model: "haiku", run_in_background: true })
+```
+
+**Build Q1 dynamically based on git state:**
+
+```javascript
+questions = [
+  {
+    question: "What to optimize?",
+    header: "Scope",
+    options: [
+      { label: "Security (Recommended)", description: "OWASP, secrets, CVEs, input validation" },
+      { label: "Quality", description: "Tech debt, type errors, test gaps" },
+      { label: "Architecture", description: "SOLID violations, coupling, patterns" },
+      { label: "Best Practices", description: "Resource management, consistency" }
+    ],
+    multiSelect: true
+  },
+  {
+    question: "Action mode?",
+    header: "Action",
+    options: [
+      { label: "Auto-fix safe (Recommended)", description: "Fix LOW risk, ask for others" },
+      { label: "Report only", description: "Show findings without fixing" },
+      { label: "Fix all", description: "Fix everything, no approval needed" }
+    ],
+    multiSelect: false
+  }
+]
+
+// Add git state tab only if dirty
+if (gitDirty) {
+  questions.push({
+    question: "Working tree has uncommitted changes. How to proceed?",
+    header: "Git State",
+    options: [
+      { label: "Continue anyway (Recommended)", description: "Proceed, changes visible in git diff" },
+      { label: "Stash first", description: "Stash changes, continue, remind to pop" },
+      { label: "Cancel", description: "Abort optimization" }
+    ],
+    multiSelect: false
+  })
+}
+
+AskUserQuestion(questions)
 ```
 
 ### Validation
 ```
-[x] Git state checked
-[x] If dirty: user decision collected
-→ If Cancel: Exit
-→ If --score flag: Jump to Step-Score
+[x] User completed Q1
+→ Store as: config = { scopes, action, gitState? }
+→ If gitState = "Cancel": Exit
+→ If gitState = "Stash first": Run git stash
+→ If action = "Report only": Skip Steps 3-5
 → Proceed to Step-2
 ```
 
@@ -100,151 +137,40 @@ AskUserQuestion([{
 
 ## Step-Score: Quality Score [OPTIONAL]
 
-**When `--score` flag is used, skip Steps 2-8 and show quality score only:**
+**When `--score` flag is used, skip all steps and show score only:**
 
 ```javascript
 agentResponse = Task("cco-agent-analyze", `
   scopes: ["scan"]
-
   Calculate overall quality score (0-100).
-  Scoring: Start at 100, deduct for issues (critical: -10, high: -5, medium: -2, low: -1)
 `, { model: "haiku" })
 
-// Agent returns (matches cco-agent-analyze scan output schema):
-// agentResponse = {
-//   scores: { security, quality, architecture, bestPractices, overall },
-//   status: "OK|WARN|FAIL|CRITICAL",
-//   topIssues: [{ category, title, location }],
-//   summary: "{assessment}"
-// }
-```
-
-**Output:**
-```
-## Quality Score: {agentResponse.scores.overall}/100
-
-| Category | Score |
-|----------|-------|
-| Security | {agentResponse.scores.security}/100 |
-| Quality | {agentResponse.scores.quality}/100 |
-| Architecture | {agentResponse.scores.architecture}/100 |
-| Best Practices | {agentResponse.scores.bestPractices}/100 |
-
-{agentResponse.summary}
-
-Top Issues:
-{agentResponse.topIssues.map(i => `- ${i.title} (${i.location})`)}
+// Output score and exit
+console.log(`## Quality Score: ${agentResponse.scores.overall}/100`)
 ```
 
 → Exit after showing score
 
 ---
 
-## Step-2: Scope
+## Step-2: Analyze [WAIT FOR BACKGROUND]
+
+**Collect results and filter by selected scopes:**
 
 ```javascript
-AskUserQuestion([{
-  question: "What to optimize?",
-  header: "Scope",
-  options: [
-    { label: "Security", description: "OWASP, secrets, CVEs, input validation" },
-    { label: "Quality", description: "Tech debt, type errors, test gaps, error handling" },
-    { label: "Architecture", description: "SOLID violations, god classes, circular deps" },
-    { label: "Best Practices", description: "Resource management, patterns, consistency" }
-  ],
-  multiSelect: true
-}])
+// Wait for background analysis
+allFindings = await TaskOutput(analysisTask.id)
+
+// Filter by user-selected scopes
+selectedScopes = config.scopes.map(s => s.toLowerCase().replace(" ", "-"))
+findings = allFindings.findings.filter(f => selectedScopes.includes(f.scope))
+
+// Categorize
+autoFixable = findings.filter(f => f.fixable && !f.approvalRequired)
+approvalRequired = findings.filter(f => f.approvalRequired || !f.fixable)
 ```
 
-**Flags override:** `--security`, `--quality`, `--architecture`, `--best-practices` skip this question.
-
-**Dynamic labels:** Add `(Recommended)` based on Data/Priority context:
-- PII/Regulated data → Security recommended
-- Legacy maturity → Quality recommended
-- Speed priority → Security + Quality recommended
-
-### Validation
-```
-[x] User selected scope(s)
-→ Store as: scopes = {selections[]}
-→ Proceed to Step-3
-```
-
----
-
-## Step-3: Action
-
-**Smart Default:** Auto-fix safe issues, ask for risky ones. No question needed.
-
-```javascript
-// Default: Auto-fix - no question needed
-action = "Auto-fix"
-
-// Flags override:
-// --report → action = "Report Only" (skip Steps 6-8)
-// --fix → action = "Auto-fix" (default)
-// --fix-all → action = "Fix All" (no approval needed)
-// --interactive → action = "Interactive" (ask before each)
-```
-
-### Validation
-```
-[x] Action determined (default: Auto-fix)
-→ Store as: action = {selection}
-→ If Report Only: Skip Step-6, Step-7, Step-8
-→ Proceed to Step-4
-```
-
----
-
-## Step-4: Analyze [PARALLEL]
-
-**Launch cco-agent-analyze in a SINGLE message with selected scopes:**
-
-```javascript
-// CRITICAL: All selected scopes in ONE cco-agent-analyze call
-// Agent handles parallelization internally
-
-Task("cco-agent-analyze", `
-  scopes: ${JSON.stringify(scopes.map(s => s.toLowerCase().replace(" ", "-")))}
-
-  For each scope, find issues with:
-  - security: Hardcoded secrets, OWASP vulnerabilities (SQL/command injection, XSS, path traversal), CVE patterns, input validation gaps, unsafe deserialization, missing input bounds (no max_length on strings), whitespace injection vectors
-  - quality: Type errors, missing type hints, tech debt markers, missing tests, test isolation issues, complexity >10, bare excepts, silent failures, missing exception chaining (raise from), dead code, unused imports, missing docstrings on public APIs, magic values/literals, poor naming, missing edge case tests, incomplete state handling, missing whitespace normalization, missing bounds validation
-  - architecture: SOLID violations, god classes (>300 LOC), circular imports, tight coupling, orphan files, poor separation of concerns, missing abstractions, over-engineering, deep nesting
-  - best-practices: Anti-patterns, inefficient algorithms, inconsistent styles, missing context managers, resource leaks, connection cleanup, memory leaks, missing error handling, duplicates, stale refs, hardcoded paths/config, missing logging, N+1 queries, missing caching opportunities, missing input normalization
-
-  MANDATORY quality checks:
-  - Every string field should have max_length defined
-  - String inputs should strip whitespace and reject whitespace-only
-  - All valid state combinations should be handled
-  - Tests should cover edge cases (empty, None, whitespace, boundaries)
-
-  Return: {
-    findings: [{ id: "{SCOPE}-{NNN}", severity: "{P0-P3}", title, location: "{file}:{line}", fixable, approvalRequired, fix }],
-    summary: { "{scope}": { count, p0, p1, p2, p3 } }
-  }
-`, { model: "haiku" })
-```
-
-**Parallel Execution:**
-- cco-agent-analyze handles parallelization internally
-- Returns combined findings for all scopes
-- Deduplication handled by agent
-
-### Validation
-```
-[x] All scope agents launched in parallel
-[x] Results merged and deduplicated
-[x] Findings sorted by severity
-→ Proceed to Step-5
-```
-
----
-
-## Step-5: Show Findings [PROGRESSIVE]
-
-Display findings as analysis completes:
+**Display findings progressively:**
 
 ```
 ## Analysis Results
@@ -258,106 +184,108 @@ Display findings as analysis completes:
 | **Total** | **{n}** | **{n}** | **{n}** | **{n}** | **{n}** |
 
 Summary:
-- Auto-fixable (LOW risk): {n} items
-- Approval required (MEDIUM/HIGH risk): {n} items
+- Auto-fixable (LOW risk): {autoFixable.length} items
+- Approval required: {approvalRequired.length} items
 ```
 
 ### Validation
 ```
-[x] Summary displayed to user
-→ If action = "Report Only": Skip to Step-9
-→ Proceed to Step-6
+[x] Analysis results collected
+[x] Findings categorized
+→ If action = "Report only": Skip to Step-6
+→ Proceed to Step-3
 ```
 
 ---
 
-## Step-6: Apply Auto-fixes [BACKGROUND]
+## Step-3: Auto-fix [BACKGROUND]
 
-**Start auto-fix in background while preparing approval questions:**
+**Start auto-fixes in background while preparing approval:**
 
 ```javascript
-autoFixable = allFindings.filter(f => f.auto_fixable && f.risk === "LOW")
+if (config.action !== "Report only" && autoFixable.length > 0) {
+  autoFixTask = Task("cco-agent-apply", `
+    fixes: ${JSON.stringify(autoFixable)}
+    Apply all auto-fixable items. Verify each fix.
+    Group by file for efficiency.
+  `, { model: "sonnet", run_in_background: true })
+}
 
-// Launch in background - non-blocking
-autoFixTask = Task("cco-agent-apply", `
-  fixes: ${JSON.stringify(autoFixable)}
-  Apply all auto-fixable items. Verify each fix.
-  Group by file for efficiency.
-`, { model: "sonnet", run_in_background: true })
-
-// Don't wait - proceed to Step-7 immediately
-// Will check autoFixTask.id later for results
+// Don't wait - proceed to Step-4 immediately
 ```
-
-**Background Pattern:**
-- Auto-fixes run while user reviews approval items
-- Better UX - no waiting
-- Check results before summary
 
 ### Validation
 ```
-[x] Background task launched
-[x] Task ID saved for later
-→ Proceed to Step-7 immediately (don't wait)
+[x] Background auto-fix launched
+→ Proceed to Step-4 immediately
 ```
 
 ---
 
-## Step-7: Approval [PARALLEL with Step-6]
+## Step-4: Approval [Q2 - CONDITIONAL]
 
-**Ask approval while auto-fixes run in background:**
-
-```javascript
-approvalRequired = allFindings.filter(f => !f.auto_fixable || f.risk !== "LOW")
-
-// Sort by severity: CRITICAL → HIGH → MEDIUM → LOW
-approvalRequired.sort((a, b) => severityOrder[a.severity] - severityOrder[b.severity])
-```
-
-**Option Batching (max 4 per page):**
-
-| Total Items | Strategy |
-|-------------|----------|
-| 1-4 | Single page, no "All" option |
-| 5-8 | "All" + 3 items, then remaining |
-| 9+ | "All" + 3 items per page |
+**Only ask if there are approval-required items AND action is not "Fix all":**
 
 ```javascript
-// Page 1 (with All option if many items)
-AskUserQuestion([{
-  question: `Approve fixes? (${approvalRequired.length} items need review)`,
-  header: "Approve",
-  options: [
-    ...(approvalRequired.length > 4 ? [{
+if (config.action === "Fix all") {
+  // No approval needed - apply all
+  approved = approvalRequired
+} else if (approvalRequired.length === 0) {
+  // Nothing to approve
+  approved = []
+} else {
+  // Sort by severity: P0 → P1 → P2 → P3
+  approvalRequired.sort((a, b) => a.severity.localeCompare(b.severity))
+
+  // Build approval question with batching
+  options = []
+
+  if (approvalRequired.length > 3) {
+    options.push({
       label: `All (${approvalRequired.length})`,
       description: "Apply all - review git diff after"
-    }] : []),
-    ...approvalRequired.slice(0, approvalRequired.length > 4 ? 3 : 4).map(f => ({
-      label: `[${f.severity}] ${f.title}`,
-      description: `${f.file}:${f.line} - ${f.fix_description}`
-    }))
-  ],
-  multiSelect: true
-}])
+    })
+  }
 
-// Continue for additional pages if needed
+  // Add individual items (max 3 if "All" shown, max 4 otherwise)
+  const maxItems = approvalRequired.length > 3 ? 3 : 4
+  approvalRequired.slice(0, maxItems).forEach(f => {
+    options.push({
+      label: `[${f.severity}] ${f.title}`,
+      description: `${f.location} - ${f.fix?.substring(0, 50)}...`
+    })
+  })
+
+  AskUserQuestion([{
+    question: `Approve fixes? (${approvalRequired.length} items need review)`,
+    header: "Approve",
+    options: options,
+    multiSelect: true
+  }])
+
+  // If more than 4 items and not "All" selected, continue with more pages
+  // (handled by batching logic in execution)
+}
 ```
 
 ### Validation
 ```
-[x] All pages presented
-[x] User selections collected
+[x] Approval collected (or skipped)
 → Store as: approved = {selections[]}, declined = {unselected[]}
-→ Proceed to Step-8
+→ Proceed to Step-5
 ```
 
 ---
 
-## Step-8: Apply Approved
+## Step-5: Apply Approved
+
+**Wait for auto-fix and apply approved items:**
 
 ```javascript
 // First, check background auto-fix status
-autoFixResults = await TaskOutput(autoFixTask.id)
+if (autoFixTask) {
+  autoFixResults = await TaskOutput(autoFixTask.id)
+}
 
 // Then apply user-approved items
 if (approved.length > 0) {
@@ -373,23 +301,22 @@ if (approved.length > 0) {
 ```
 [x] Background auto-fixes completed
 [x] Approved fixes applied
-[x] Cascading errors handled
-→ Proceed to Step-9
+→ Proceed to Step-6
 ```
 
 ---
 
-## Step-9: Summary
+## Step-6: Summary
 
 ```
 ## Optimization Complete
 
 | Category | Count |
 |----------|-------|
-| Auto-fixed | {n} |
-| User-approved | {n} |
-| Declined | {n} |
-| **Total fixed** | **{n}** |
+| Auto-fixed | {autoFixResults?.accounting?.done || 0} |
+| User-approved | {approved.length} |
+| Declined | {declined.length} |
+| **Total fixed** | **{totalFixed}** |
 
 Files modified: {n}
 Run `git diff` to review changes.
@@ -407,9 +334,17 @@ Run `git checkout .` to revert all.
 
 ## Reference
 
-### Output Schema (when called as sub-command)
+### Question Flow Summary
 
-When called via `/cco-optimize --fix` (e.g., from cco-checkup, cco-preflight):
+| Scenario | Q1 | Q2 | Total |
+|----------|----|----|-------|
+| Clean git, has approval items | 2 tabs | 1 tab | 2 questions |
+| Dirty git, has approval items | 3 tabs | 1 tab | 2 questions |
+| Clean git, no approval items | 2 tabs | - | 1 question |
+| Report only mode | 2-3 tabs | - | 1 question |
+| Fix all mode | 2-3 tabs | - | 1 question |
+
+### Output Schema (when called as sub-command)
 
 ```json
 {
@@ -429,88 +364,54 @@ When called via `/cco-optimize --fix` (e.g., from cco-checkup, cco-preflight):
 }
 ```
 
-**Mapping from agent responses:**
-- `accounting` ← `cco-agent-apply.accounting`
-- `by_scope` ← grouped count from `cco-agent-analyze.findings`
-- `blockers` ← `findings.filter(f => f.severity === "P0" || f.severity === "P1")`
-
 ### Scope Coverage
 
 | Scope | Checks |
 |-------|--------|
-| `security` | Secrets, OWASP (SQL/command injection, XSS, path traversal), CVEs, input validation gaps, unsafe deserialization, missing bounds on inputs, whitespace injection vectors |
-| `quality` | Type errors/hints, tech debt, test gaps/isolation, complexity, bare excepts, silent failures, exception chaining, dead code, unused imports, docstrings, magic values, naming, missing edge case tests, incomplete state handling |
-| `architecture` | SOLID violations, god classes, circular imports, coupling, orphan files, separation of concerns, abstractions, over-engineering, nesting depth |
-| `best-practices` | Anti-patterns, inefficient algorithms, inconsistent styles, context managers, resource/connection leaks, memory leaks, error handling, duplicates, stale refs, hardcoded config, logging, N+1 queries, caching, missing input normalization |
-
-### Validation Checks (quality scope) [MANDATORY]
-When analyzing for quality, always check:
-- **Bounds**: All string fields have max_length, all numbers have ge/le where applicable
-- **Whitespace**: String validators strip whitespace, reject whitespace-only
-- **State**: All state combinations handled where multiple states can interact
-- **Enum**: String-to-enum conversion has clear error handling
-- **None-vs-Empty**: Clear distinction between None and empty string/list
-
-### Test Coverage Checks (quality scope) [MANDATORY]
-When analyzing tests, always verify:
-- **Edge-Cases**: Tests for empty, None, whitespace-only, boundaries exist
-- **State-Matrix**: Tests for all valid state combinations
-- **Validation-Errors**: Tests verify correct error messages on invalid input
-- **Happy-Path-Plus**: Not just happy path, also error paths tested
+| `security` | Secrets, OWASP, CVEs, input validation, unsafe deserialization |
+| `quality` | Type errors, tech debt, test gaps, complexity, dead code |
+| `architecture` | SOLID violations, god classes, circular imports, coupling |
+| `best-practices` | Anti-patterns, resource leaks, inconsistent styles |
 
 ### Context Application
 
 | Field | Effect |
 |-------|--------|
-| Data | PII/Regulated → security scope auto-selected |
+| Data | PII/Regulated → security scope recommended |
 | Scale | 10K+ → stricter thresholds |
 | Maturity | Legacy → auto-fix only LOW risk |
 | Priority | Speed → critical only; Quality → all |
-
-### Model Strategy
-
-| Agent | Model | Reason |
-|-------|-------|--------|
-| cco-agent-analyze | Haiku | Fast, read-only scanning |
-| cco-agent-apply | Sonnet | Accurate code modifications |
 
 ### Flags
 
 | Flag | Effect |
 |------|--------|
-| `--security` | Security scope only |
-| `--quality` | Quality scope only |
-| `--architecture` | Architecture scope only |
-| `--best-practices` | Best practices scope only |
-| `--report` | Report only (no fixes) |
+| `--security` | Security scope only, skip Q1 scope tab |
+| `--quality` | Quality scope only, skip Q1 scope tab |
+| `--report` | Report only, skip Q1 action tab |
 | `--fix` | Auto-fix safe (default) |
-| `--fix-all` | Fix all with approval |
-| `--score` | Quality score only (0-100), no fixes |
-| `--critical` | Security + critical severity only |
+| `--fix-all` | Fix all without approval |
+| `--score` | Quality score only (0-100), skip all questions |
 | `--pre-release` | All scopes, strict thresholds |
-| `--sequential` | Disable parallel (debug mode) |
 
 ---
 
 ## Recovery
 
-If something goes wrong during optimization:
-
 | Situation | Recovery |
 |-----------|----------|
-| Fix broke something | `git checkout -- {file}` to restore |
-| Multiple files affected | `git checkout .` to restore all |
-| Want to review | `git diff` to see all changes |
-| Stashed at start | `git stash pop` to restore |
-| Analysis hung | Re-run - analysis is stateless |
-| Partial apply | `git diff` to see progress |
+| Fix broke something | `git checkout -- {file}` |
+| Multiple files affected | `git checkout .` |
+| Want to review | `git diff` |
+| Stashed at start | `git stash pop` |
 
 ---
 
 ## Rules
 
-1. **Use cco-agent-analyze** - Agent handles scope parallelization internally
-2. **Use cco-agent-apply** - Agent handles verification and cascading
-3. **Background apply** - Auto-fix runs while user reviews
-4. **Progressive display** - Show results as analysis completes
-5. **Paginated approval** - Max 4 items per AskUserQuestion
+1. **Background analysis** - Start analysis while asking Q1
+2. **Max 2 questions** - Q1 settings, Q2 approval (if needed)
+3. **Dynamic tabs** - Git State tab only if dirty
+4. **Background auto-fix** - Run while user reviews approval
+5. **Single Recommended** - Each tab has one recommended option
+6. **Paginated approval** - Max 4 items per question
