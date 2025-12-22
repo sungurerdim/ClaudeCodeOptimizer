@@ -199,11 +199,16 @@ temp/                # Benchmark test projects
 *.lock
 requirements.txt.lock
 
-# User-specific scripts
-*.bat
+# User-specific scripts in root (benchmark launcher is allowed)
+/*.bat
 
 # VS Code
 .vscode/content/principles_backup/
 
 .claude/
-benchmarks/
+
+# Benchmark runtime data (not source)
+benchmark/output/*
+benchmark/results/*
+!benchmark/output/.gitkeep
+!benchmark/results/.gitkeep
