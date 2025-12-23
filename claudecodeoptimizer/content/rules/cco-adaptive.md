@@ -39,6 +39,15 @@ Detection organized by category. Trigger values in `{placeholders}` are defined 
 | L:Scala | {scala_manifest}, {scala_ext} | `scala.md` |
 | L:Zig | {zig_manifest}, {zig_ext} | `zig.md` |
 | L:Dart | {dart_manifest}, {dart_ext} | `dart.md` |
+| L:C | {c_manifest}, {c_ext} | `c.md` |
+| L:Cpp | {cpp_manifest}, {cpp_ext} | `cpp.md` |
+| L:Lua | {lua_manifest}, {lua_ext} | `lua.md` |
+| L:Haskell | {haskell_manifest}, {haskell_lock} | `haskell.md` |
+| L:FSharp | {fsharp_project}, {fsharp_ext} | `fsharp.md` |
+| L:OCaml | {ocaml_manifest}, {ocaml_lock} | `ocaml.md` |
+| L:R | {r_manifest}, {r_ext} | `r.md` |
+| L:Julia | {julia_manifest}, {julia_lock} | `julia.md` |
+| L:Perl | {perl_manifest}, {perl_ext} | `perl.md` |
 | **Project Types** |||
 | T:CLI | {entry_points}, {cli_deps}, {bin_dir} | `cli.md` |
 | T:Library | {export_markers}, {lib_markers} | `library.md` |
@@ -55,6 +64,10 @@ Detection organized by category. Trigger values in `{placeholders}` are defined 
 | DB:ORM | {orm_deps} | `database.md` |
 | DB:NoSQL | {nosql_deps} | `database.md` |
 | DB:Vector | {vector_deps} | `database.md` |
+| DB:Operations | DB:* (auto) | `backend-data.md` |
+| **Backend Operations** |||
+| Ops:Full | T:Service + CI:* | `backend-ops.md` |
+| Ops:Basic | T:CLI + CI:* | `backend-ops.md` |
 | **Frontend** |||
 | Frontend:React | {react_deps}, {react_ext} | `frontend.md` |
 | Frontend:Vue | {vue_deps}, {vue_ext} | `frontend.md` |
@@ -105,6 +118,27 @@ Detection organized by category. Trigger values in `{placeholders}` are defined 
 | Backend:Rails | {rails_markers} | `backend.md` |
 | Backend:Laravel | {laravel_markers} | `backend.md` |
 | Backend:Phoenix | {phoenix_deps} | `backend.md` |
+| Backend:Hapi | {hapi_deps} | `backend.md` |
+| Backend:Koa | {koa_deps} | `backend.md` |
+| Backend:Sinatra | {sinatra_deps} | `backend.md` |
+| Backend:Symfony | {symfony_deps} | `backend.md` |
+| Backend:Quarkus | {quarkus_deps} | `backend.md` |
+| Backend:Micronaut | {micronaut_deps} | `backend.md` |
+| Backend:Gin | {gin_deps} | `backend.md` |
+| Backend:Echo | {echo_deps} | `backend.md` |
+| Backend:Fiber | {fiber_deps} | `backend.md` |
+| Backend:Actix | {actix_deps} | `backend.md` |
+| Backend:Axum | {axum_deps} | `backend.md` |
+| Backend:Rocket | {rocket_deps} | `backend.md` |
+| Backend:AspNetCore | {aspnet_markers} | `backend.md` |
+| Backend:Ktor | {ktor_deps} | `backend.md` |
+| Backend:Vapor | {vapor_deps} | `backend.md` |
+| **Message Queues** |||
+| MQ:Kafka | {kafka_deps}, {kafka_config} | `messagequeue.md` |
+| MQ:RabbitMQ | {rabbitmq_deps}, {rabbitmq_config} | `messagequeue.md` |
+| MQ:NATS | {nats_deps} | `messagequeue.md` |
+| MQ:SQS | {sqs_deps} | `messagequeue.md` |
+| MQ:PubSub | {pubsub_deps} | `messagequeue.md` |
 | **Observability** |||
 | Observability:Prometheus | {prometheus_config} | `observability.md` |
 | Observability:Grafana | {grafana_config} | `observability.md` |
@@ -113,6 +147,9 @@ Detection organized by category. Trigger values in `{placeholders}` are defined 
 | Observability:Jaeger | {jaeger_config} | `observability.md` |
 | Observability:OpenTelemetry | {otel_deps} | `observability.md` |
 | Observability:Sentry | {sentry_deps} | `observability.md` |
+| Observability:NewRelic | {newrelic_config}, {newrelic_deps} | `observability.md` |
+| Observability:Splunk | {splunk_config}, {splunk_deps} | `observability.md` |
+| Observability:Dynatrace | {dynatrace_config}, {dynatrace_deps} | `observability.md` |
 | **Documentation** |||
 | Docs:Docusaurus | {docusaurus_config} | `documentation.md` |
 | Docs:VitePress | {vitepress_config} | `documentation.md` |
@@ -123,6 +160,15 @@ Detection organized by category. Trigger values in `{placeholders}` are defined 
 | Deploy:Railway | {railway_config} | `deployment.md` |
 | Deploy:Render | {render_config} | `deployment.md` |
 | Deploy:Heroku | {heroku_config} | `deployment.md` |
+| Deploy:Vercel | {vercel_config} | `deployment.md` |
+| Deploy:Netlify | {netlify_config} | `deployment.md` |
+| Deploy:CloudRun | {gcp_cloudrun} | `deployment.md` |
+| Deploy:AzureWebApp | {azure_webapp} | `deployment.md` |
+| Deploy:AppRunner | {aws_apprunner} | `deployment.md` |
+| **Infrastructure Tools** |||
+| Infra:Ansible | {ansible_config}, {ansible_patterns} | `infra-tools.md` |
+| Infra:Consul | {consul_config}, {consul_patterns} | `infra-tools.md` |
+| Infra:Vault | {vault_config}, {vault_patterns} | `infra-tools.md` |
 | **Desktop** |||
 | Desktop:Electron | {electron_deps}, {electron_config} | `desktop.md` |
 | Desktop:Tauri | {tauri_deps}, {tauri_config} | `desktop.md` |
@@ -479,6 +525,99 @@ paths: **/*.py
 - **Named-Params**: Named parameters for readability
 - **Immutable-Widget**: StatelessWidget when state not needed
 
+### C (L:C)
+**Trigger:** CMakeLists.txt | Makefile | *.c
+
+- **Memory-Manual**: Explicit malloc/free, check null returns
+- **Buffer-Safe**: Use safe string functions (strncpy, snprintf)
+- **Const-Correct**: const for read-only parameters and returns
+- **Header-Guards**: Include guards or #pragma once
+- **Static-Analysis**: Use clang-tidy, cppcheck in CI
+- **Valgrind-Test**: Memory leak detection in tests
+- **Compiler-Warnings**: Enable -Wall -Wextra -Werror
+
+### C++ (L:Cpp)
+**Trigger:** CMakeLists.txt | *.cpp | *.hpp
+
+- **RAII-Pattern**: Resource acquisition is initialization
+- **Smart-Pointers**: unique_ptr/shared_ptr over raw pointers
+- **Move-Semantics**: std::move for efficient transfers
+- **Const-Ref**: const& for read-only parameters
+- **Modern-Features**: Use modern standards features (concepts, ranges, modules)
+- **STL-Algorithms**: Prefer STL algorithms over manual loops
+- **Exception-Safe**: Strong exception safety guarantee
+- **Static-Analysis**: Use clang-tidy, cppcheck in CI
+
+### Lua (L:Lua)
+**Trigger:** *.rockspec | *.lua
+
+- **Local-Variables**: local by default, minimize globals
+- **Module-Pattern**: Use module pattern for encapsulation
+- **Table-Pool**: Reuse tables to reduce GC pressure
+- **Metatables**: Use metatables for OOP patterns
+- **Error-Handling**: pcall/xpcall for error handling
+- **LuaJIT-Compat**: Write LuaJIT-compatible code when targeting it
+
+### Haskell (L:Haskell)
+**Trigger:** *.cabal | stack.yaml | *.hs
+
+- **Pure-Functions**: Prefer pure functions, isolate IO
+- **Type-Signatures**: Explicit type signatures for top-level
+- **Monad-Transform**: Monad transformers for effect stacking
+- **Lazy-Strict**: Use strict where appropriate (BangPatterns, seq)
+- **Lens-Optics**: Use lens/optics for nested data
+- **Property-Tests**: QuickCheck for property-based testing
+
+### F# (L:FSharp)
+**Trigger:** *.fsproj | *.fs
+
+- **Immutable-Default**: Prefer immutable data
+- **Pipeline-Style**: Use |> for function composition
+- **Pattern-Match**: Pattern matching over conditionals
+- **Async-Workflows**: Use async workflows for I/O
+- **Type-Inference**: Leverage type inference, explicit when needed
+- **Interop-Safe**: Safe C# interop patterns
+
+### OCaml (L:OCaml)
+**Trigger:** dune-project | *.ml
+
+- **Module-System**: Leverage module system for encapsulation
+- **Functors**: Use functors for parameterized modules
+- **Pattern-Complete**: Complete pattern matching
+- **Result-Type**: Use Result for error handling
+- **Dune-Build**: Use dune for build system
+- **PPX-Derive**: Use ppx_deriving for boilerplate
+
+### R (L:R)
+**Trigger:** DESCRIPTION | *.R | *.Rmd
+
+- **Tidyverse-Style**: Follow tidyverse style guide
+- **Vector-Ops**: Vectorized operations over loops
+- **Package-Namespace**: Explicit namespace (pkg::func)
+- **Renv-Manage**: Use renv for reproducible environments
+- **Roxygen-Docs**: roxygen2 for documentation
+- **Testthat-Tests**: Use testthat for testing
+
+### Julia (L:Julia)
+**Trigger:** Project.toml | *.jl
+
+- **Type-Stability**: Write type-stable functions for performance
+- **Multiple-Dispatch**: Leverage multiple dispatch
+- **Broadcasting**: Use dot syntax for broadcasting
+- **Pkg-Environment**: Project-specific environments
+- **Docstrings**: Triple-quoted docstrings
+- **Precompile**: Use precompilation for packages
+
+### Perl (L:Perl)
+**Trigger:** Makefile.PL | cpanfile | *.pl | *.pm
+
+- **Strict-Warnings**: Always use strict; use warnings;
+- **Modern-Perl**: Use modern Perl features (say, given/when)
+- **CPAN-Modules**: Prefer CPAN modules over reinventing
+- **POD-Docs**: POD for documentation
+- **Taint-Mode**: Taint mode for untrusted input
+- **Test-More**: Test::More for testing
+
 ---
 
 ## Security Rules
@@ -633,7 +772,8 @@ When generating tests, always include:
 
 ---
 
-## Observability Rules
+## SLA-Based Observability (Observability:SLA)
+**Trigger:** SLA level selected in user input
 **Inheritance:** Higher SLA includes lower.
 
 ### Basics (SLA:Any)
@@ -657,6 +797,307 @@ When generating tests, always include:
 
 ---
 
+## Backend Frameworks
+**Trigger:** Backend framework detected
+
+### Express (Backend:Express)
+**Trigger:** {express_deps}
+
+- **Middleware-Order**: Middleware order matters, error handlers last
+- **Router-Modular**: Use express.Router for modular routes
+- **Request-Validation**: Validate request body with middleware
+- **Error-Handler**: Centralized error handling middleware
+- **Security-Headers**: Use helmet for security headers
+- **CORS-Config**: Explicit CORS configuration
+
+### Fastify (Backend:Fastify)
+**Trigger:** {fastify_deps}
+
+- **Plugin-System**: Leverage plugin system for modularity
+- **Schema-Validation**: JSON schema for request/response validation
+- **Hooks-Lifecycle**: Use lifecycle hooks for cross-cutting concerns
+- **Reply-Type**: Set reply type for automatic serialization
+- **Decorator-Register**: Register reusable decorators
+
+### Hapi (Backend:Hapi)
+**Trigger:** {hapi_deps}
+
+- **Plugin-Structure**: Plugins for feature organization
+- **Validation-Joi**: Joi schemas for request validation
+- **Auth-Strategies**: Multiple auth strategies support
+- **Lifecycle-Ext**: Lifecycle extensions for middleware-like behavior
+- **Pre-Handlers**: Pre-handlers for request preprocessing
+
+### Koa (Backend:Koa)
+**Trigger:** {koa_deps}
+
+- **Middleware-Cascade**: Composition over configuration via middleware
+- **Context-Object**: Pass context through middleware chain
+- **Async-Await**: Native async/await support
+- **Error-Handling**: Centralized error handling middleware
+- **Body-Parsing**: Body parsing middleware configuration
+
+### NestJS (Backend:NestJS)
+**Trigger:** {nestjs_deps}
+
+- **Module-Dependency**: Dependency injection via modules
+- **Controller-Service**: Clear separation of controllers and services
+- **Guard-Interceptor**: Guards for authorization, interceptors for transformation
+- **Exception-Filter**: Custom exception filters
+- **Decorator-Custom**: Custom decorators for validation/transformation
+
+### Django (Backend:Django)
+**Trigger:** {django_markers}
+
+- **MTV-Pattern**: Model-Template-View pattern
+- **ORM-Queries**: Optimize QuerySets, avoid N+1
+- **Middleware-Order**: Middleware order matters
+- **Settings-Split**: Split settings by environment
+- **Management-Commands**: Custom management commands
+- **Signals-Sparingly**: Use signals sparingly, prefer explicit
+
+### Flask (Backend:Flask)
+**Trigger:** {flask_markers}
+
+- **Blueprint-Modular**: Blueprints for modular routes
+- **Factory-Pattern**: Application factory pattern
+- **Extension-Config**: Configure extensions properly
+- **Context-Locals**: Understand application and request context
+- **Error-Handler**: Centralized error handlers
+
+### FastAPI (Backend:FastAPI)
+**Trigger:** {fastapi_markers}
+
+- **Pydantic-Models**: Pydantic for request/response validation
+- **Dependency-Injection**: Use Depends for DI
+- **Async-Endpoints**: async def for I/O-bound endpoints
+- **OpenAPI-Auto**: Automatic OpenAPI documentation
+- **Background-Tasks**: Background tasks for non-blocking ops
+
+### Spring Boot (Backend:Spring)
+**Trigger:** {spring_boot_deps}
+
+- **Starter-Deps**: Use spring-boot-starter-* for curated dependencies
+- **Properties-Config**: application.properties or application.yml
+- **Component-Scan**: Component scanning for automatic bean discovery
+- **AOP-Aspects**: Aspect-oriented programming for cross-cutting concerns
+- **Actuator-Monitoring**: Spring Boot Actuator for monitoring endpoints
+
+### Quarkus (Backend:Quarkus)
+**Trigger:** {quarkus_deps}
+
+- **Native-First**: Build native image for fast startup
+- **Config-Externalize**: Externalized configuration via properties
+- **Extension-Model**: Leverage Quarkus extensions for integration
+- **GraalVM-Compatible**: Ensure GraalVM compatibility
+- **Dev-Mode**: Fast iterative development mode
+
+### Micronaut (Backend:Micronaut)
+**Trigger:** {micronaut_deps}
+
+- **Compile-Time-DI**: Compile-time dependency injection (no reflection)
+- **Http-Client**: Declarative HTTP client
+- **Config-Management**: Configuration management and environment properties
+- **Bean-Introspection**: Compile-time bean introspection
+- **Build-Time-Optimization**: Optimized for serverless/microservices
+
+### Rails (Backend:Rails)
+**Trigger:** {rails_markers}
+
+- **Convention-Config**: Convention over configuration
+- **Active-Record**: Active Record patterns and queries
+- **Concerns-Extract**: Extract shared behavior to concerns
+- **Strong-Params**: Strong parameters for mass assignment protection
+- **Background-Jobs**: Active Job for background processing
+- **Turbo-Hotwire**: Modern frontend with Turbo/Hotwire
+
+### Laravel (Backend:Laravel)
+**Trigger:** {laravel_markers}
+
+- **Eloquent-ORM**: Eloquent patterns and relationships
+- **Service-Container**: Leverage service container for DI
+- **Middleware-Auth**: Middleware for authentication/authorization
+- **Queue-Jobs**: Queued jobs for background processing
+- **Artisan-Commands**: Custom artisan commands
+- **Blade-Templates**: Blade templating best practices
+
+### Phoenix (Backend:Phoenix)
+**Trigger:** {phoenix_deps}
+
+- **Context-Module**: Contexts for business logic organization
+- **LiveView-First**: LiveView for real-time UI
+- **Channels-Realtime**: Channels for WebSocket communication
+- **Ecto-Queries**: Ecto for database operations
+- **Pub-Sub**: PubSub for event broadcasting
+
+### Sinatra (Backend:Sinatra)
+**Trigger:** {sinatra_deps}
+
+- **Route-Definition**: Simple route DSL
+- **Middleware-Stack**: Middleware stack for request handling
+- **Template-Engine**: Template engine selection and configuration
+- **Error-Handling**: Error handlers and error templates
+- **Helper-Methods**: Helper methods for view/route logic
+
+### Symfony (Backend:Symfony)
+**Trigger:** {symfony_deps}
+
+- **Bundle-Organization**: Bundles for code organization
+- **Console-Commands**: Symfony Console for CLI commands
+- **Service-Container**: Service container for dependency injection
+- **Event-System**: Event system for loose coupling
+- **Doctrine-ORM**: Doctrine ORM integration
+
+### Gin (Backend:Gin)
+**Trigger:** {gin_deps}
+
+- **Middleware-Chain**: Middleware for logging, auth, recovery
+- **Group-Routes**: Route groups for API versioning
+- **Binding-Validation**: ShouldBind for request validation
+- **Context-Values**: Use c.Set/c.Get for request-scoped values
+- **Graceful-Shutdown**: os.Signal for graceful shutdown
+- **Recovery-Middleware**: Use gin.Recovery for panic handling
+
+### Echo (Backend:Echo)
+**Trigger:** {echo_deps}
+
+- **Middleware-Stack**: Built-in middleware for common needs
+- **Validator-Integration**: Use echo.Validator for validation
+- **Binder-Custom**: Custom binders for complex requests
+- **Context-Extension**: Extend context for custom data
+- **Static-Files**: Static file serving with cache headers
+
+### Fiber (Backend:Fiber)
+**Trigger:** {fiber_deps}
+
+- **Fasthttp-Based**: Leverage fasthttp performance
+- **Middleware-Use**: Use built-in middleware stack
+- **Prefork-Mode**: Prefork for multi-core utilization
+- **Storage-Drivers**: Session storage with multiple drivers
+- **Rate-Limiter**: Built-in rate limiting middleware
+
+### Actix-web (Backend:Actix)
+**Trigger:** {actix_deps}
+
+- **Actor-System**: Use actors for concurrent state
+- **Extractors-Type**: Type-safe extractors for requests
+- **Middleware-Wrap**: Wrap services with middleware
+- **State-Shared**: Web::Data for shared application state
+- **Error-Handling**: Implement ResponseError for custom errors
+- **Async-Handlers**: async fn for all request handlers
+
+### Axum (Backend:Axum)
+**Trigger:** {axum_deps}
+
+- **Tower-Based**: Leverage tower middleware ecosystem
+- **Extractors-Order**: Extractor order matters (body last)
+- **State-Extension**: Extension for request-local state
+- **Router-Nest**: Nest routers for modularity
+- **Error-Into-Response**: Implement IntoResponse for errors
+- **Layer-Stack**: Layer stack for cross-cutting concerns
+
+### Rocket (Backend:Rocket)
+**Trigger:** {rocket_deps}
+
+- **Fairings-Lifecycle**: Fairings for lifecycle hooks
+- **Guards-Request**: Request guards for validation
+- **Responders-Custom**: Custom responders for responses
+- **Managed-State**: Managed state for application data
+- **Config-Environment**: Environment-based configuration
+- **Catchers-Error**: Error catchers for custom error pages
+
+### ASP.NET Core (Backend:AspNetCore)
+**Trigger:** {aspnet_markers}
+
+- **Dependency-Injection**: Built-in DI container
+- **Middleware-Pipeline**: Request pipeline configuration
+- **Minimal-API**: Minimal APIs for simple endpoints
+- **Options-Pattern**: IOptions for configuration
+- **Health-Checks**: Built-in health check endpoints
+- **Logging-Structured**: Structured logging with ILogger
+- **EF-Core**: Entity Framework Core for data access
+- **Identity-Auth**: ASP.NET Identity for authentication
+
+### Ktor (Backend:Ktor)
+**Trigger:** {ktor_deps}
+
+- **Plugins-System**: Install plugins for features
+- **Routing-DSL**: Type-safe routing DSL
+- **Serialization-Content**: Content negotiation for serialization
+- **Authentication-Plugins**: Authentication via plugins
+- **Client-Same-API**: Same API for client and server
+- **Coroutines-Native**: Native coroutines support
+
+### Vapor (Backend:Vapor)
+**Trigger:** {vapor_deps}
+
+- **Fluent-ORM**: Fluent ORM for database operations
+- **Middleware-Chain**: Middleware for request processing
+- **Leaf-Templates**: Leaf templating engine
+- **Async-Await**: Swift async/await for handlers
+- **Validation-Request**: Request validation with Validatable
+- **Environment-Config**: Environment-based configuration
+
+---
+
+## Message Queues
+**Trigger:** Message queue detected
+
+### Kafka (MQ:Kafka)
+**Trigger:** {kafka_deps}
+
+- **Consumer-Groups**: Use consumer groups for scaling
+- **Offset-Management**: Commit offsets explicitly for reliability
+- **Exactly-Once**: Enable idempotent producer for exactly-once
+- **Partition-Strategy**: Partition key strategy for ordering
+- **Schema-Registry**: Use schema registry for message schemas
+- **Dead-Letter**: Dead letter topics for failed messages
+- **Replication-Factor**: Set replication factor for durability
+- **Retention-Policy**: Configure retention based on use case
+
+### RabbitMQ (MQ:RabbitMQ)
+**Trigger:** {rabbitmq_deps}
+
+- **Exchange-Types**: Use appropriate exchange types (direct, topic, fanout)
+- **Queue-Durability**: Durable queues for persistence
+- **Prefetch-Count**: Set prefetch for fair dispatch
+- **Dead-Letter-Exchange**: DLX for failed messages
+- **Acknowledgements**: Manual acks for reliability
+- **Connection-Pool**: Pool connections, not channels
+- **TTL-Messages**: Message TTL for expiration
+
+### NATS (MQ:NATS)
+**Trigger:** {nats_deps}
+
+- **Subject-Hierarchy**: Use hierarchical subjects
+- **JetStream-Persistence**: JetStream for persistence
+- **Queue-Groups**: Queue groups for load balancing
+- **Request-Reply**: Request-reply for RPC pattern
+- **Stream-Retention**: Configure stream retention
+- **Consumer-Durable**: Durable consumers for reliability
+
+### AWS SQS (MQ:SQS)
+**Trigger:** {sqs_deps}
+
+- **Visibility-Timeout**: Set appropriate visibility timeout
+- **Dead-Letter-Queue**: Configure DLQ for failed messages
+- **Batch-Operations**: Use batch send/receive for efficiency
+- **Long-Polling**: Enable long polling to reduce costs
+- **FIFO-Ordering**: FIFO queues for ordering requirements
+- **Message-Dedup**: Deduplication for exactly-once
+
+### Google Pub/Sub (MQ:PubSub)
+**Trigger:** {pubsub_deps}
+
+- **Subscription-Types**: Push vs pull subscriptions
+- **Acknowledgement-Deadline**: Set appropriate ack deadline
+- **Dead-Letter-Topic**: Configure dead letter topic
+- **Ordering-Keys**: Ordering keys for message ordering
+- **Filter-Messages**: Use subscription filters
+- **Snapshot-Seek**: Snapshots for replay capability
+
+---
+
 ## Backend > API
 **Trigger:** API:REST | API:GraphQL | API:gRPC
 
@@ -676,10 +1117,28 @@ When generating tests, always include:
 
 - **Proto-Version**: Backward compatible proto changes
 
+### OpenAPI Extension (API:OpenAPI)
+**Trigger:** {openapi_files}, {openapi_dir}
+
+- **Schema-Sync**: Keep OpenAPI spec in sync with actual implementation
+- **Version-Path**: Support multiple API versions in spec (v1, v2)
+- **Examples-Complete**: Include request/response examples for all endpoints
+- **Validation-Tooling**: Use schema validation in CI pipeline
+- **Docs-Generation**: Auto-generate docs from spec (Swagger UI, ReDoc)
+
+### AsyncAPI Extension (API:AsyncAPI)
+**Trigger:** {asyncapi_files}
+
+- **Event-Schema**: Keep AsyncAPI spec in sync with actual events
+- **Version-Evolution**: Track schema evolution across message versions
+- **Payload-Examples**: Include message payload examples
+- **Bindings-Defined**: Define protocol bindings (Kafka, AMQP, WebSocket)
+- **Docs-Generation**: Generate documentation from spec
+
 ---
 
-## Backend > Data
-**Trigger:** DB:*
+## Database Operations (DB:Operations)
+**Trigger:** DB:* (auto-applied when any DB:* detected)
 
 - **Backup-Strategy**: Automated backups with tested restore
 - **Schema-Versioned**: Migration files with rollback plan
@@ -688,10 +1147,11 @@ When generating tests, always include:
 
 ---
 
-## Backend > Operations
-**Trigger:** CI/CD detected
+## Backend Operations (Ops:*)
+**Trigger:** T:Service + CI:* | T:CLI + CI:*
 
-### Full Operations (T:API | T:Frontend | Architecture:Microservices)
+### Full Operations (Ops:Full)
+**Trigger:** T:Service + CI:*
 - **Config-as-Code**: Versioned, environment-aware config
 - **Health-Endpoints**: /health + /ready endpoints
 - **Graceful-Shutdown**: Drain connections on SIGTERM
@@ -700,7 +1160,8 @@ When generating tests, always include:
 - **Zero-Downtime**: Blue-green or canary deployments
 - **Feature-Flags**: Decouple deploy from release
 
-### CI-Only Operations (T:CLI | T:Library)
+### Basic Operations (Ops:Basic)
+**Trigger:** T:CLI + CI:*
 - **Config-as-Code**: Versioned configuration
 - **CI-Gates**: lint + test + coverage gates
 
@@ -1395,9 +1856,309 @@ When generating tests, always include:
 - **Heartbeat**: Connection health monitoring
 - **Stale-Data**: Handle disconnection gracefully
 
-### Low-Latency (RT:Low-latency)
+### Low-Latency (RT:LowLatency)
 - **Binary-Protocol**: Protobuf/msgpack for performance
 - **Edge-Compute**: Edge deployment for global users
+
+---
+
+## Documentation Generators
+**Trigger:** Documentation generator detected
+
+### Docusaurus (Docs:Docusaurus)
+**Trigger:** {docusaurus_config}
+
+- **Versioning**: Enable docs versioning for multiple versions
+- **Search-Integration**: Algolia or local search configuration
+- **Nav-Sidebar**: Navigation and sidebar configuration
+- **Blog-Setup**: Blog functionality with categories/tags
+- **Plugin-System**: Leverage plugin system for extensions
+- **Deploy-Ready**: Pre-configured for static hosting deployment
+
+### VitePress (Docs:VitePress)
+**Trigger:** {vitepress_config}
+
+- **Theme-Config**: Built-in light/dark theme configuration
+- **Navigation**: Sidebar and navbar navigation setup
+- **Search-Local**: Local search with multiple strategies
+- **Component-Markdown**: Vue component integration in markdown
+- **Build-Optimization**: Optimized Vite build configuration
+- **Deployment-Static**: Static site hosting ready
+
+### Sphinx (Docs:Sphinx)
+**Trigger:** {sphinx_config}
+
+- **ReStructuredText**: RST markup conventions
+- **Theme-Selection**: Sphinx theme configuration (PyData, Furo)
+- **Extension-Management**: Extension configuration for features
+- **API-Documentation**: Autodoc for automatic code documentation
+- **Build-Multiple-Formats**: HTML, PDF, ePub output support
+- **Deploy-ReadTheDocs**: ReadTheDocs deployment preparation
+
+### MkDocs (Docs:MkDocs)
+**Trigger:** {mkdocs_config}
+
+- **Markdown-Structure**: Directory structure reflecting navigation
+- **Theme-Customization**: Material for MkDocs theme configuration
+- **Plugin-System**: Plugin ecosystem for extended functionality
+- **Search-Configuration**: Built-in search optimization
+- **Build-Performance**: Incremental builds for fast iteration
+- **Deploy-GhPages**: GitHub Pages deployment setup
+
+---
+
+## Deployment Platforms
+**Trigger:** Deployment platform detected
+
+### Fly.io (Deploy:Fly)
+**Trigger:** {fly_config}
+
+- **App-Configuration**: fly.toml configuration and secrets
+- **Regions-Selection**: Multi-region deployment strategy
+- **Volumes-Storage**: Persistent volume management
+- **Health-Checks**: Health check configuration
+- **Auto-Scaling**: Autoscaling rules per region
+- **Custom-Domain**: Custom domain and SSL setup
+
+### Railway (Deploy:Railway)
+**Trigger:** {railway_config}
+
+- **Services-Connect**: Multi-service deployments and connections
+- **Environment-Variables**: Environment variable management across environments
+- **Database-Integration**: Built-in database provisioning
+- **Custom-Domain**: Custom domain and auto-SSL configuration
+- **Deployment-Triggers**: Git-based auto-deployment
+- **Plugin-Ecosystem**: Railway plugins for third-party services
+
+### Render (Deploy:Render)
+**Trigger:** {render_config}
+
+- **Service-Discovery**: Service-to-service communication
+- **Environment-Specific**: Different configurations per environment
+- **Build-Command**: Custom build and start commands
+- **Cron-Jobs**: Scheduled background jobs
+- **Static-Site**: Static site deployment with redirects
+- **Custom-Domain**: Custom domains with auto-renewal SSL
+
+### Heroku (Deploy:Heroku)
+**Trigger:** {heroku_config}
+
+- **Procfile-Types**: Process types and scaling
+- **Buildpack-Selection**: Buildpack for language runtime
+- **Add-on-Management**: Add-ons for databases and services
+- **Config-Vars**: Config variables for secrets and configuration
+- **Dyno-Types**: Dyno type selection and cost optimization
+- **Release-Phase**: Release phase scripts for migrations
+
+### Vercel (Deploy:Vercel)
+**Trigger:** {vercel_config}
+
+- **Framework-Detection**: Automatic framework detection and optimization
+- **Serverless-Functions**: Serverless functions in api/ directory
+- **Edge-Functions**: Edge functions for global low-latency
+- **Environment-Variables**: Environment variables per deployment
+- **Preview-Deployments**: Preview deployments for PRs
+- **Build-Cache**: Build caching for faster deploys
+- **Rewrites-Redirects**: Rewrites and redirects configuration
+- **Analytics-Integration**: Web analytics integration
+
+### Netlify (Deploy:Netlify)
+**Trigger:** {netlify_config}
+
+- **Build-Configuration**: Build command and publish directory
+- **Serverless-Functions**: Functions in netlify/functions
+- **Edge-Functions**: Deno-based edge functions
+- **Deploy-Contexts**: Deploy contexts (production, deploy-preview, branch-deploy)
+- **Redirects-Headers**: _redirects and _headers files
+- **Forms-Handling**: Built-in form handling
+- **Identity-Auth**: Netlify Identity for authentication
+- **Split-Testing**: A/B testing with branch deploys
+
+### Google Cloud Run (Deploy:CloudRun)
+**Trigger:** {gcp_cloudrun}
+
+- **Container-Based**: Container-based deployment
+- **Concurrency-Settings**: Concurrency and scaling settings
+- **CPU-Allocation**: CPU allocation (always-on vs request-based)
+- **Secrets-Manager**: Secret Manager integration
+- **VPC-Connector**: VPC connector for private resources
+- **Traffic-Splitting**: Traffic splitting for gradual rollouts
+- **Min-Instances**: Minimum instances for cold start mitigation
+- **Domain-Mapping**: Custom domain mapping
+
+### Azure Web Apps (Deploy:AzureWebApp)
+**Trigger:** {azure_webapp}
+
+- **App-Service-Plan**: App Service plan selection
+- **Deployment-Slots**: Deployment slots for staging
+- **Configuration-Settings**: Application settings and connection strings
+- **Managed-Identity**: Managed identity for Azure resources
+- **Continuous-Deployment**: GitHub/Azure DevOps integration
+- **Health-Probes**: Health check probes configuration
+- **Auto-Scale**: Autoscale rules configuration
+- **VNet-Integration**: VNet integration for private access
+
+### AWS App Runner (Deploy:AppRunner)
+**Trigger:** {aws_apprunner}
+
+- **Source-Connection**: Source connection (ECR or code repo)
+- **Auto-Deployment**: Automatic deployments on push
+- **Instance-Configuration**: CPU and memory configuration
+- **Auto-Scaling**: Auto scaling configuration
+- **VPC-Connector**: VPC connector for private resources
+- **Secrets-Environment**: Secrets Manager integration
+- **Custom-Domain**: Custom domain configuration
+- **Observability-Config**: X-Ray tracing and CloudWatch logs
+
+---
+
+## Observability Tools
+**Trigger:** Observability tool detected
+
+*Note: These rules are specific to each observability tool. For SLA-based observability practices, see Observability Rules section.*
+
+### Prometheus (Observability:Prometheus)
+**Trigger:** {prometheus_config}
+
+- **Scrape-Config**: Target scrape configuration
+- **Alert-Rules**: Alert rule definition and evaluation
+- **Service-Discovery**: Dynamic service discovery
+- **Remote-Storage**: Long-term data retention configuration
+- **Metric-Relabeling**: Metric relabeling for normalization
+- **High-Availability**: HA deployment with replication
+
+### Grafana (Observability:Grafana)
+**Trigger:** {grafana_config}
+
+- **Dashboard-Provisioning**: Dashboard as code
+- **DataSource-Config**: Prometheus, Loki, and other datasource setup
+- **Alert-Manager**: Alert routing and notification
+- **Plugin-Management**: Community plugins installation
+- **RBAC-Setup**: Role-based access control
+- **Authentication**: LDAP, SAML, OAuth integration
+
+### Datadog (Observability:Datadog)
+**Trigger:** {datadog_config}
+
+- **Agent-Configuration**: Datadog agent configuration
+- **Custom-Metrics**: Custom metric reporting
+- **Log-Collection**: Log collection and parsing
+- **APM-Instrumentation**: APM instrumentation for tracing
+- **Monitor-Creation**: Monitor definition for alerting
+- **Synthetic-Tests**: Synthetic monitoring for uptime checks
+
+### ELK Stack (Observability:ELK)
+**Trigger:** {elk_config}
+
+- **Elasticsearch-Config**: Elasticsearch cluster setup
+- **Logstash-Pipelines**: Pipeline configuration for log parsing
+- **Kibana-Dashboards**: Dashboard creation and visualization
+- **Index-Lifecycle**: Index lifecycle management
+- **Security-TLS**: TLS and authentication setup
+- **Performance-Tuning**: Performance optimization for scale
+
+### Jaeger (Observability:Jaeger)
+**Trigger:** {jaeger_config}
+
+- **Sampler-Config**: Sampling strategy configuration
+- **Collector-Setup**: Collector deployment and configuration
+- **Backend-Storage**: Storage backend selection (Elasticsearch)
+- **Query-Service**: Query service for trace retrieval
+- **Instrumentation**: OpenTelemetry instrumentation
+- **Retention-Policy**: Trace retention and cleanup
+
+### OpenTelemetry (Observability:OpenTelemetry)
+**Trigger:** {otel_deps}
+
+- **Instrumentation-Libraries**: Use standardized instrumentation
+- **Exporter-Selection**: Exporter for backend (Prometheus, Jaeger)
+- **Context-Propagation**: Trace context propagation across services
+- **Resource-Attributes**: Resource attributes for identification
+- **Sampling-Strategy**: Sampling configuration for cost management
+- **Collector-Deployment**: OTel Collector for collection and processing
+
+### Sentry (Observability:Sentry)
+**Trigger:** {sentry_deps}
+
+- **Project-Configuration**: Project setup and DSN management
+- **Source-Maps**: Source map upload for JavaScript
+- **Release-Tracking**: Release tracking for error grouping
+- **Custom-Context**: Custom context for debugging
+- **Integration-Setup**: Platform integrations (GitHub, Slack)
+- **Performance-Monitoring**: Performance monitoring configuration
+
+### New Relic (Observability:NewRelic)
+**Trigger:** {newrelic_config}, {newrelic_deps}
+
+- **Agent-Configuration**: Language-specific agent configuration
+- **Custom-Instrumentation**: Custom instrumentation for business transactions
+- **Distributed-Tracing**: Distributed tracing across services
+- **Custom-Metrics**: Custom metrics for business KPIs
+- **Alert-Policies**: Alert policies and notification channels
+- **Workloads**: Workload grouping for related services
+- **Synthetics**: Synthetic monitoring for availability
+
+### Splunk (Observability:Splunk)
+**Trigger:** {splunk_config}, {splunk_deps}
+
+- **Log-Forwarding**: Configure log forwarding (Universal Forwarder, HEC)
+- **Index-Strategy**: Index strategy for data organization
+- **Search-Optimization**: Optimize searches with field extraction
+- **Dashboard-Creation**: Create operational dashboards
+- **Alert-Configuration**: Real-time alerting configuration
+- **OTEL-Integration**: OpenTelemetry integration for traces/metrics
+- **RBAC-Setup**: Role-based access control setup
+
+### Dynatrace (Observability:Dynatrace)
+**Trigger:** {dynatrace_config}, {dynatrace_deps}
+
+- **OneAgent-Deployment**: OneAgent deployment and configuration
+- **Auto-Discovery**: Automatic topology discovery
+- **Custom-Services**: Custom service detection rules
+- **Synthetic-Monitors**: Synthetic browser and HTTP monitors
+- **Davis-AI**: Leverage Davis AI for root cause analysis
+- **Metric-Ingestion**: Custom metric ingestion via API
+- **Session-Replay**: Session replay for user experience analysis
+
+---
+
+## Infrastructure Tools
+**Trigger:** Infrastructure tool detected
+
+### Ansible (Infra:Ansible)
+**Trigger:** {ansible_config}, {ansible_patterns}
+
+- **Inventory-Dynamic**: Use dynamic inventory for cloud resources
+- **Role-Organization**: Organize playbooks into roles
+- **Vault-Secrets**: Ansible Vault for sensitive data
+- **Idempotency**: Ensure tasks are idempotent
+- **Handler-Notify**: Use handlers for service restarts
+- **Tags-Selective**: Tags for selective execution
+- **Molecule-Testing**: Test roles with Molecule
+- **Collections-Reuse**: Use Ansible Galaxy collections
+
+### Consul (Infra:Consul)
+**Trigger:** {consul_config}, {consul_patterns}
+
+- **Service-Registration**: Auto-register services with health checks
+- **KV-Store**: Use KV store for dynamic configuration
+- **Service-Mesh**: Connect for service mesh
+- **ACL-Policies**: ACL policies for security
+- **Prepared-Queries**: Prepared queries for failover
+- **Watch-Handlers**: Watches for configuration updates
+- **Datacenter-Federation**: Multi-datacenter federation
+
+### Vault (Infra:Vault)
+**Trigger:** {vault_config}, {vault_patterns}
+
+- **Secrets-Engines**: Use appropriate secrets engines
+- **Authentication-Methods**: Configure auth methods per use case
+- **Policies-Minimal**: Minimal policies (least privilege)
+- **Dynamic-Secrets**: Dynamic secrets for databases
+- **Token-TTL**: Short-lived tokens with renewal
+- **Audit-Logging**: Enable audit logging
+- **Seal-Unseal**: Secure seal/unseal procedures
+- **Agent-Injection**: Vault Agent for Kubernetes injection
 
 ---
 
@@ -1443,6 +2204,8 @@ When generating tests, always include:
 ### DEP:Edge
 **Trigger:** @cloudflare/workers-types, wrangler, vercel/edge, @deno/deploy, hono, elysia, itty-router
 
+*These rules EXTEND Infra:Edge rules. Apply both sets when edge infrastructure is detected.*
+
 - **Cold-Start**: Minimize cold start (avoid heavy imports at top)
 - **Bundle-Size**: Keep bundle <1MB, prefer tree-shakeable deps
 - **Stateless-Default**: No in-memory state between requests
@@ -1463,6 +2226,8 @@ When generating tests, always include:
 
 ### DEP:EdgeFramework
 **Trigger:** hono, elysia, h3, nitro, itty-router
+
+*These rules are specific to edge framework choices. Apply with Infra:Edge and DEP:Edge rules.*
 
 - **Middleware-Light**: Minimal middleware chain
 - **Context-Pass**: Pass context through handlers, not globals
@@ -1596,6 +2361,8 @@ When generating tests, always include:
 
 ### DEP:ORM
 **Trigger:** sqlalchemy, prisma, drizzle, typeorm, sequelize, tortoise-orm, peewee, gorm, diesel
+
+*These rules EXTEND DB:ORM rules. Apply both sets when ORM is detected.*
 
 - **N+1-Prevent**: Eager load or batch queries
 - **Query-Optimize**: EXPLAIN analysis
@@ -1798,6 +2565,8 @@ When generating tests, always include:
 
 ### DEP:WebSocket
 **Trigger:** {websocket_deps}
+
+*These rules EXTEND API:WebSocket rules. Apply both sets when WebSocket is detected.*
 
 - **Reconnect-Auto**: Automatic reconnection with exponential backoff
 - **Heartbeat-Ping**: Ping/pong for connection health

@@ -145,6 +145,73 @@ These generic placeholders are used across multiple categories. Each category se
 | `{dart_lock}` | `pubspec.lock` |
 | `{dart_ext}` | `*.dart` |
 
+### C (L:C)
+| Trigger | Values |
+|---------|--------|
+| `{c_manifest}` | `CMakeLists.txt`, `Makefile`, `configure.ac`, `meson.build` |
+| `{c_lock}` | `conan.lock`, `vcpkg.json` |
+| `{c_ext}` | `*.c`, `*.h` |
+| `{c_config}` | `CMakePresets.json`, `.clang-format`, `compile_commands.json` |
+
+### C++ (L:Cpp)
+| Trigger | Values |
+|---------|--------|
+| `{cpp_manifest}` | `CMakeLists.txt`, `Makefile`, `meson.build`, `xmake.lua` |
+| `{cpp_lock}` | `conan.lock`, `vcpkg.json` |
+| `{cpp_ext}` | `*.cpp`, `*.cc`, `*.cxx`, `*.h`, `*.hpp`, `*.hxx` |
+| `{cpp_config}` | `CMakePresets.json`, `.clang-format`, `.clang-tidy`, `compile_commands.json` |
+
+### Lua (L:Lua)
+| Trigger | Values |
+|---------|--------|
+| `{lua_manifest}` | `*.rockspec`, `.luarocks/config.lua` |
+| `{lua_ext}` | `*.lua` |
+| `{lua_config}` | `.luacheckrc`, `stylua.toml`, `.stylua.toml` |
+
+### Haskell (L:Haskell)
+| Trigger | Values |
+|---------|--------|
+| `{haskell_manifest}` | `*.cabal`, `package.yaml`, `stack.yaml` |
+| `{haskell_lock}` | `cabal.project.freeze`, `stack.yaml.lock` |
+| `{haskell_ext}` | `*.hs`, `*.lhs` |
+
+### F# (L:FSharp)
+| Trigger | Values |
+|---------|--------|
+| `{fsharp_project}` | `*.fsproj`, `*.sln` |
+| `{fsharp_ext}` | `*.fs`, `*.fsi`, `*.fsx` |
+
+### OCaml (L:OCaml)
+| Trigger | Values |
+|---------|--------|
+| `{ocaml_manifest}` | `dune-project`, `*.opam` |
+| `{ocaml_lock}` | `*.opam.locked`, `dune.lock` |
+| `{ocaml_ext}` | `*.ml`, `*.mli` |
+| `{ocaml_config}` | `dune`, `.ocamlformat` |
+
+### R (L:R)
+| Trigger | Values |
+|---------|--------|
+| `{r_manifest}` | `DESCRIPTION`, `NAMESPACE` |
+| `{r_lock}` | `renv.lock` |
+| `{r_ext}` | `*.R`, `*.r`, `*.Rmd`, `*.qmd` |
+| `{r_config}` | `.Rprofile`, `renv/settings.json` |
+
+### Julia (L:Julia)
+| Trigger | Values |
+|---------|--------|
+| `{julia_manifest}` | `Project.toml` |
+| `{julia_lock}` | `Manifest.toml` |
+| `{julia_ext}` | `*.jl` |
+
+### Perl (L:Perl)
+| Trigger | Values |
+|---------|--------|
+| `{perl_manifest}` | `Makefile.PL`, `Build.PL`, `cpanfile`, `META.json` |
+| `{perl_lock}` | `cpanfile.snapshot` |
+| `{perl_ext}` | `*.pl`, `*.pm`, `*.t` |
+| `{perl_config}` | `.perlcriticrc`, `.perltidyrc` |
+
 ---
 
 ## Runtime Detection
@@ -259,7 +326,7 @@ These generic placeholders are used across multiple categories. Each category se
 | `{react_deps}` | `react`, `react-dom`, `@types/react` |
 | `{react_ext}` | `*.jsx`, `*.tsx` |
 | `{react_patterns}` | `import React`, `from 'react'`, `useState`, `useEffect` |
-| `{react_19}` | `use()` hook, Server Components, `useFormStatus`, `useOptimistic` |
+| `{react_modern}` | Modern React features: `use()` hook, Server Components, `useFormStatus`, `useOptimistic` |
 
 ### Vue (Frontend:Vue)
 | Trigger | Values |
@@ -267,7 +334,7 @@ These generic placeholders are used across multiple categories. Each category se
 | `{vue_deps}` | `vue`, `@vue/core`, `nuxt` |
 | `{vue_ext}` | `*.vue` |
 | `{vue_patterns}` | `<template>`, `<script setup>`, `defineComponent` |
-| `{vue_35}` | `defineModel`, Vapor mode, `useTemplateRef` |
+| `{vue_modern}` | Modern Vue features: `defineModel`, Vapor mode, `useTemplateRef` |
 
 ### Angular (Frontend:Angular)
 | Trigger | Values |
@@ -275,14 +342,14 @@ These generic placeholders are used across multiple categories. Each category se
 | `{angular_deps}` | `@angular/core`, `@angular/common`, `@angular/cli` |
 | `{angular_ext}` | `*.component.ts`, `*.module.ts`, `*.service.ts` |
 | `{angular_patterns}` | `@Component`, `@Injectable`, `@NgModule` |
-| `{angular_18}` | `signal()`, `inject()`, standalone components |
+| `{angular_modern}` | Modern Angular features: `signal()`, `inject()`, standalone components |
 
 ### Svelte (Frontend:Svelte)
 | Trigger | Values |
 |---------|--------|
 | `{svelte_deps}` | `svelte`, `@sveltejs/kit` |
 | `{svelte_ext}` | `*.svelte` |
-| `{svelte_5}` | `$state`, `$derived`, `$effect` (Svelte 5 runes) |
+| `{svelte_modern}` | Modern Svelte features: `$state`, `$derived`, `$effect` runes |
 
 ### Solid (Frontend:Solid)
 | Trigger | Values |
@@ -313,14 +380,14 @@ These generic placeholders are used across multiple categories. Each category se
 | `{nextjs_deps}` | `next` |
 | `{nextjs_config}` | `next.config.js`, `next.config.mjs`, `next.config.ts` |
 | `{nextjs_dirs}` | `app/`, `pages/`, `src/app/` |
-| `{nextjs_15}` | Server Actions, `use server`, App Router, Turbopack |
+| `{nextjs_modern}` | Modern Next.js features: Server Actions, `use server`, App Router, Turbopack |
 
 ### Nuxt (Framework:Nuxt)
 | Trigger | Values |
 |---------|--------|
 | `{nuxt_deps}` | `nuxt`, `@nuxt/` |
 | `{nuxt_config}` | `nuxt.config.ts`, `nuxt.config.js` |
-| `{nuxt_4}` | `defineNuxtConfig`, Nitro, auto-imports |
+| `{nuxt_modern}` | Modern Nuxt features: `defineNuxtConfig`, Nitro, auto-imports |
 
 ### SvelteKit (Framework:SvelteKit)
 | Trigger | Values |
@@ -854,6 +921,57 @@ These generic placeholders are used across multiple categories. Each category se
 |---------|--------|
 | `{phoenix_deps}` | `phoenix`, `phoenix_html`, `phoenix_live_view` |
 
+### Go Frameworks (Backend:Go)
+| Trigger | Values |
+|---------|--------|
+| `{gin_deps}` | `github.com/gin-gonic/gin` |
+| `{echo_deps}` | `github.com/labstack/echo` |
+| `{fiber_deps}` | `github.com/gofiber/fiber` |
+| `{chi_deps}` | `github.com/go-chi/chi` |
+| `{gorilla_deps}` | `github.com/gorilla/mux` |
+
+### Rust Frameworks (Backend:Rust)
+| Trigger | Values |
+|---------|--------|
+| `{actix_deps}` | `actix-web`, `actix-rt` |
+| `{axum_deps}` | `axum`, `axum-core` |
+| `{rocket_deps}` | `rocket` |
+| `{warp_deps}` | `warp` |
+
+### .NET Frameworks (Backend:DotNet)
+| Trigger | Values |
+|---------|--------|
+| `{aspnet_markers}` | `Microsoft.AspNetCore.*`, `Program.cs` + `WebApplication`, `appsettings.json`, `Startup.cs` |
+| `{minimal_api}` | `app.MapGet`, `app.MapPost`, `WebApplication.CreateBuilder` |
+| `{blazor_deps}` | `Microsoft.AspNetCore.Components`, `*.razor` |
+
+### Kotlin Frameworks (Backend:Kotlin)
+| Trigger | Values |
+|---------|--------|
+| `{ktor_deps}` | `io.ktor`, `ktor-server-*`, `application.conf` |
+| `{exposed_deps}` | `org.jetbrains.exposed` |
+
+### Swift Frameworks (Backend:Swift)
+| Trigger | Values |
+|---------|--------|
+| `{vapor_deps}` | `vapor`, `Vapor`, `configure.swift`, `routes.swift` |
+
+---
+
+## Message Queue Detection
+
+### Message Brokers (MQ:*)
+| Trigger | Values |
+|---------|--------|
+| `{kafka_deps}` | `kafka-python`, `confluent-kafka`, `kafkajs`, `spring-kafka`, `sarama` |
+| `{kafka_config}` | `kafka/`, `kafka.properties`, `server.properties` |
+| `{rabbitmq_deps}` | `pika`, `amqplib`, `spring-amqp`, `bunny` |
+| `{rabbitmq_config}` | `rabbitmq.conf`, `rabbitmq/` |
+| `{nats_deps}` | `nats-py`, `nats.js`, `nats.go`, `nats-server` |
+| `{sqs_deps}` | `boto3` + `sqs`, `@aws-sdk/client-sqs` |
+| `{pubsub_deps}` | `google-cloud-pubsub`, `@google-cloud/pubsub` |
+| `{redis_queue_deps}` | `bull`, `bullmq`, `rq`, `celery` + `redis` |
+
 ---
 
 ## Observability Detection
@@ -880,8 +998,14 @@ These generic placeholders are used across multiple categories. Each category se
 ### APM (Observability:APM)
 | Trigger | Values |
 |---------|--------|
-| `{newrelic_config}` | `newrelic.ini`, `newrelic.yml`, `newrelic-agent` |
+| `{newrelic_config}` | `newrelic.ini`, `newrelic.yml`, `newrelic.js`, `newrelic-agent` |
+| `{newrelic_deps}` | `newrelic`, `@newrelic/*` |
 | `{sentry_deps}` | `sentry-sdk`, `@sentry/*`, `sentry` |
+| `{splunk_config}` | `splunk-otel-*`, `splunk.yml`, `splunk-config/` |
+| `{splunk_deps}` | `splunk-sdk`, `@splunk/*`, `splunk-otel-js` |
+| `{dynatrace_config}` | `dynatrace.conf`, `oneagent.ini`, `dt-config/` |
+| `{dynatrace_deps}` | `@dynatrace/*`, `dynatrace-oneagent` |
+| `{elastic_apm_deps}` | `elastic-apm-*`, `apm-agent-*` |
 
 ---
 
@@ -946,6 +1070,37 @@ These generic placeholders are used across multiple categories. Each category se
 | `{railway_config}` | `railway.json`, `railway.toml` |
 | `{render_config}` | `render.yaml`, `render.yml` |
 | `{heroku_config}` | `Procfile`, `heroku.yml`, `app.json` |
+| `{vercel_config}` | `vercel.json`, `.vercel/`, `now.json` |
+| `{netlify_config}` | `netlify.toml`, `_redirects`, `_headers` |
+
+### Cloud Platforms (Deploy:Cloud)
+| Trigger | Values |
+|---------|--------|
+| `{gcp_cloudrun}` | `service.yaml` + `apiVersion: serving.knative.dev`, `cloudbuild.yaml`, `app.yaml` (GAE) |
+| `{aws_apprunner}` | `apprunner.yaml`, `copilot/` |
+| `{azure_webapp}` | `.azure/`, `azure-pipelines.yml` + `AzureWebApp`, `web.config` |
+
+---
+
+## Infrastructure Tools Detection
+
+### Configuration Management (Infra:ConfigMgmt)
+| Trigger | Values |
+|---------|--------|
+| `{ansible_config}` | `ansible.cfg`, `playbooks/`, `inventory/`, `*.yml` + `hosts:`, `roles/` |
+| `{ansible_patterns}` | `- name:`, `ansible_`, `become:`, `tasks:` |
+
+### Service Discovery (Infra:ServiceDiscovery)
+| Trigger | Values |
+|---------|--------|
+| `{consul_config}` | `consul.hcl`, `consul.json`, `consul.d/` |
+| `{consul_patterns}` | `consul_`, `service_name`, `health_check` |
+
+### Secrets Management (Infra:Secrets)
+| Trigger | Values |
+|---------|--------|
+| `{vault_config}` | `vault.hcl`, `vault-config/`, `.vault-token` |
+| `{vault_patterns}` | `vault_`, `secret/`, `VAULT_ADDR`, `VAULT_TOKEN` |
 
 ---
 
@@ -960,7 +1115,7 @@ These generic placeholders are used across multiple categories. Each category se
 
 ## Conflict Resolution Triggers
 
-*Specific triggers for conflict resolution logic in detection.*
+*Specific triggers for conflict resolution logic in detection agent.*
 
 | Trigger | Values | Used For |
 |---------|--------|----------|
@@ -974,10 +1129,26 @@ These generic placeholders are used across multiple categories. Each category se
 
 ---
 
+## Agent Internal Triggers
+
+*These triggers are used by detection agent for confidence scoring and pattern matching, not in detection table.*
+
+### Lock Files (Confidence Scoring)
+Used to boost confidence when lock file matches manifest (e.g., go.mod + go.sum → HIGH confidence)
+
+### Code Patterns (Pattern Detection)
+Used for code analysis when manifest detection is ambiguous (e.g., `{react_patterns}` to confirm React usage)
+
+### Modern Features (Version Detection)
+Reserved for future version-specific rule selection (e.g., `{react_modern}` for React 18+ specific rules)
+
+---
+
 ## Notes
 
 - Trigger values are case-insensitive for package names
 - File patterns use glob syntax
 - Multiple values are checked in order (first match wins for conflict resolution)
+- Triggers not in detection table are used by agent internal logic
 - Presence of lock file increases confidence by 0.2
 - Files in test/example/vendor directories decrease confidence by 0.3
