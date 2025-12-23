@@ -367,6 +367,7 @@ paths: **/*.py
 - **Enum-StrEnum**: Use StrEnum for string enums with auto case handling
 - **Match-Case**: Use match-case for complex conditionals (3.10+)
 - **Walrus-Operator**: Use := for assignment expressions where it improves readability
+- **Subprocess-Encoding**: Always use `encoding='utf-8', errors='replace'` in subprocess.run() for cross-platform output handling
 
 ### TypeScript (L:TypeScript)
 **Trigger:** tsconfig.json | *.ts/*.tsx
@@ -976,6 +977,26 @@ When generating tests, always include:
 - **Storage-Drivers**: Session storage with multiple drivers
 - **Rate-Limiter**: Built-in rate limiting middleware
 
+### Chi (Backend:Chi)
+**Trigger:** {chi_deps}
+
+- **Context-Native**: Use chi.URLParam with stdlib context
+- **Middleware-Chain**: Compose middleware with Use/With
+- **Route-Groups**: Group routes with common middleware
+- **Pattern-Routing**: URL parameters with {param} syntax
+- **Graceful-Shutdown**: Built-in graceful shutdown support
+- **Lightweight**: Minimal dependencies, stdlib compatible
+
+### Gorilla Mux (Backend:Gorilla)
+**Trigger:** {gorilla_deps}
+
+- **Route-Matching**: Path variables with {name} or {name:pattern}
+- **Method-Matching**: Methods().Handler() for HTTP method routing
+- **Subrouters**: PathPrefix() for route grouping
+- **Middleware-Wrapper**: Use() for middleware registration
+- **Host-Matching**: Host() for virtual host routing
+- **Query-Matching**: Queries() for query parameter matching
+
 ### Actix-web (Backend:Actix)
 **Trigger:** {actix_deps}
 
@@ -1006,6 +1027,16 @@ When generating tests, always include:
 - **Config-Environment**: Environment-based configuration
 - **Catchers-Error**: Error catchers for custom error pages
 
+### Warp (Backend:Warp)
+**Trigger:** {warp_deps}
+
+- **Filter-Composition**: Compose filters with and/or/map
+- **Rejection-Handling**: Custom rejection handlers for errors
+- **Path-Extraction**: Type-safe path parameter extraction
+- **Body-Parsing**: JSON/form body parsing with filters
+- **TLS-Support**: Built-in TLS with rustls
+- **Streaming**: Stream responses with hyper integration
+
 ### ASP.NET Core (Backend:AspNetCore)
 **Trigger:** {aspnet_markers}
 
@@ -1018,6 +1049,19 @@ When generating tests, always include:
 - **EF-Core**: Entity Framework Core for data access
 - **Identity-Auth**: ASP.NET Identity for authentication
 
+### Blazor (Frontend:Blazor)
+**Trigger:** {blazor_deps}
+
+- **Render-Mode**: Choose Server vs WebAssembly vs Auto based on use case
+- **Component-Parameters**: Use [Parameter] for component inputs
+- **Cascading-Values**: Use CascadingParameter for deep prop passing
+- **JS-Interop**: IJSRuntime for JavaScript calls, minimize usage
+- **State-Container**: Scoped services for state management
+- **Virtualize**: Use Virtualize component for large lists
+- **EditForm-Validation**: EditForm with DataAnnotations validation
+- **Auth-State**: AuthenticationStateProvider for auth handling
+- **Streaming-Rendering**: Use streaming rendering for slow data
+
 ### Ktor (Backend:Ktor)
 **Trigger:** {ktor_deps}
 
@@ -1027,6 +1071,16 @@ When generating tests, always include:
 - **Authentication-Plugins**: Authentication via plugins
 - **Client-Same-API**: Same API for client and server
 - **Coroutines-Native**: Native coroutines support
+
+### Exposed (ORM:Exposed)
+**Trigger:** {exposed_deps}
+
+- **DSL-vs-DAO**: Use DSL for complex queries, DAO for simple CRUD
+- **Transaction-Block**: Wrap operations in transaction {} block
+- **Lazy-Loading**: Configure lazy loading for relationships
+- **Batch-Insert**: Use batchInsert for bulk operations
+- **Schema-Generation**: Use SchemaUtils for DDL generation
+- **Coroutines-Support**: Use newSuspendedTransaction for coroutines
 
 ### Vapor (Backend:Vapor)
 **Trigger:** {vapor_deps}
@@ -1175,6 +1229,9 @@ When generating tests, always include:
 - **Signal-Handle**: Graceful SIGINT/SIGTERM handling
 - **Output-Modes**: Human-readable + --json option
 - **Config-Precedence**: env > file > args > defaults
+- **NO_COLOR-Respect**: Check NO_COLOR env var before ANSI output, use isatty() to detect terminal
+- **Unicode-Fallback**: Use ASCII alternatives for box-drawing chars (╔═╗ → +--+) when terminal encoding uncertain
+- **Batch-UTF8**: In .bat/.cmd files, use `chcp 65001` for UTF-8 and avoid Unicode box characters
 
 ---
 
@@ -1333,6 +1390,18 @@ When generating tests, always include:
 - **Target-Precise**: Precise hx-target selectors
 - **Swap-Strategy**: Appropriate hx-swap (innerHTML, outerHTML, etc)
 - **Indicator-Feedback**: Loading indicators with hx-indicator
+
+### Qwik (Frontend:Qwik)
+**Trigger:** {qwik_deps}
+
+- **Resumability-First**: Leverage resumability, avoid eager hydration
+- **Dollar-Sign**: Use $() for lazy-loaded code boundaries
+- **Task-Types**: useTask$ for server, useVisibleTask$ for client-only
+- **Signal-State**: Signals for fine-grained reactivity
+- **Component-Lazy**: component$() for automatic code splitting
+- **Serialization-Aware**: Keep state serializable for resumability
+- **Event-QRL**: QRL-based event handlers for optimal loading
+- **City-Routing**: Use Qwik City for routing and data loading
 
 ---
 
@@ -1766,6 +1835,17 @@ When generating tests, always include:
 - **Dimension-Match**: Dimension consistency
 - **Index-Type**: Appropriate index type (HNSW, IVF)
 - **Similarity-Metric**: Correct similarity metric
+
+### Edge/Embedded DB (DB:Edge)
+**Trigger:** {edge_db_deps}
+
+- **Sync-Strategy**: Configure sync strategy (local-first, server-authoritative)
+- **Offline-Capable**: Handle offline reads and writes gracefully
+- **Conflict-Resolution**: Define conflict resolution for concurrent writes
+- **Connection-Mode**: Choose embedded vs remote connection mode
+- **Migration-Portable**: Portable migration scripts across environments
+- **Query-Local**: Optimize for local query latency
+- **Replica-Sync**: Configure replica synchronization interval
 
 ---
 
@@ -2434,6 +2514,18 @@ When generating tests, always include:
 - **Dead-Letter**: DLQ for inspection
 - **Priority-Queues**: Separate by priority
 
+### DEP:Workflow
+**Trigger:** {workflow_deps}
+
+- **Durability-First**: Use durable execution for long-running workflows
+- **Activity-Retry**: Configure retry policies per activity type
+- **Timeout-Hierarchy**: Set workflow, activity, and schedule-to-close timeouts
+- **Signal-Events**: Use signals/events for external communication
+- **Versioning-Strategy**: Version workflows for backward compatibility
+- **Observability**: Enable tracing and metrics for workflow debugging
+- **Compensation-Logic**: Define compensating actions for failures
+- **Cron-Schedules**: Use cron expressions for recurring workflows
+
 ### DEP:Cache
 **Trigger:** redis, memcached, aiocache, diskcache, keyv, ioredis
 
@@ -2591,19 +2683,25 @@ When generating tests, always include:
 | Symbol | Meaning | Detection Source | Output |
 |--------|---------|------------------|--------|
 | L: | Language | Manifest, lock files, code | `{lang}.md` |
-| R: | Runtime | Lock file type, config | `bun.md`, `deno.md` |
-| T: | App Type | Entry points, exports | `cli.md`, `library.md`, `service.md` |
+| R: | Runtime | Lock file type, config | `{runtime}.md` |
+| T: | App Type | Entry points, exports | `{type}.md` |
 | API: | API Style | Routes, decorators, proto | `api.md` |
 | DB: | Database | ORM deps, migrations | `database.md` |
+| Backend: | Backend Framework | Framework deps, patterns | `backend.md` |
 | Frontend: | Frontend | Framework deps, components | `frontend.md` |
-| Framework: | Meta-Framework | Next/Nuxt/SvelteKit/Remix | `nextjs.md`, `nuxt.md`, `sveltekit.md`, `remix.md` |
+| Framework: | Meta-Framework | Next/Nuxt/SvelteKit/Remix | `{framework}.md` |
 | Mobile: | Mobile | SDK deps, native configs | `mobile.md` |
 | Desktop: | Desktop | Electron/Tauri deps | `desktop.md` |
-| Infra: | Infrastructure | Dockerfile, *.tf, k8s/ | `container.md`, `k8s.md`, `edge.md` |
+| Infra: | Infrastructure | Dockerfile, *.tf, k8s/ | `{infra}.md` |
 | ML: | Machine Learning | ML framework deps | `ml.md` |
-| Build: | Build Tools | Bundler, monorepo configs | `monorepo.md`, `bundler.md` |
+| Build: | Build Tools | Bundler, monorepo configs | `{build}.md` |
 | Test: | Testing | Test framework, tests/ | `testing.md` |
 | CI: | CI/CD | Workflow files | `ci-cd.md` |
+| MQ: | Message Queues | Queue deps, configs | `mq.md` |
+| ORM: | ORM Specific | ORM deps (Exposed, etc.) | `orm.md` |
 | DEP: | Dependency | Specific package deps | `dep-{category}.md` |
 | Game: | Game Engines | Unity/Unreal/Godot markers | `game.md` |
 | RT: | Real-time | WebSocket/SSE patterns | `realtime.md` |
+| Observability: | Monitoring | APM/Logging/Tracing deps | `observability-tools.md` |
+| Deploy: | Deployment | Platform configs | `deploy.md` |
+| Docs: | Documentation | SSG configs | `docs.md` |
