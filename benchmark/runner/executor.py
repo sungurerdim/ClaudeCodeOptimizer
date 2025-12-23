@@ -53,10 +53,8 @@ class ExecutionResult:
     @classmethod
     def from_dict(cls, data: dict[str, Any]) -> "ExecutionResult":
         metrics_data = data.pop("metrics", None)
-        result = cls(**data)
-        if metrics_data:
-            result.metrics = Metrics.from_dict(metrics_data)
-        return result
+        metrics = Metrics.from_dict(metrics_data) if metrics_data else None
+        return cls(metrics=metrics, **data)
 
 
 @dataclass
@@ -119,7 +117,7 @@ class ProjectConfig:
         self.complexity = "Medium"
 
         if self.spec_file.exists():
-            content = self.spec_file.read_text()
+            content = self.spec_file.read_text(encoding="utf-8")
             # Parse categories
             for line in content.splitlines():
                 if line.startswith("- ") and ":" in line:
@@ -130,7 +128,7 @@ class ProjectConfig:
                     self.complexity = line.split(":")[-1].strip()
 
         if self.prompt_file.exists():
-            self.prompt = self.prompt_file.read_text()
+            self.prompt = self.prompt_file.read_text(encoding="utf-8")
         else:
             self.prompt = ""
 
@@ -163,7 +161,7 @@ class TestExecutor:
 
         # Save prompt for reference
         prompt_file = project_dir / "_benchmark_prompt.md"
-        prompt_file.write_text(config.prompt)
+        prompt_file.write_text(config.prompt, encoding="utf-8")
 
         # Build ccbox command
         cmd = [self.ccbox_cmd]
@@ -179,11 +177,11 @@ class TestExecutor:
         # Common flags
         cmd.extend(
             [
-                "--yes",  # Auto-accept prompts
-                f"--model={model}",
-                "--print",  # Print output for logging
-                "-p",
-                config.prompt,  # Pass prompt directly
+                "--yes",  # Non-interactive mode
+                "--model",
+                model,  # Model selection
+                "--prompt",
+                config.prompt,  # Pass prompt
             ]
         )
 
@@ -197,14 +195,16 @@ class TestExecutor:
                 text=True,
                 timeout=self.timeout,
                 env={**os.environ, "CLAUDE_MODEL": model},
+                encoding="utf-8",
+                errors="replace",
             )
 
             generation_time = time.time() - start_time
             success = result.returncode == 0
 
             # Save ccbox output for debugging
-            (project_dir / "_ccbox_stdout.log").write_text(result.stdout)
-            (project_dir / "_ccbox_stderr.log").write_text(result.stderr)
+            (project_dir / "_ccbox_stdout.log").write_text(result.stdout, encoding="utf-8")
+            (project_dir / "_ccbox_stderr.log").write_text(result.stderr, encoding="utf-8")
 
             # Analyze generated code (ccbox creates files in project_dir)
             # Exclude our benchmark metadata files
@@ -327,12 +327,12 @@ class ResultsManager:
         filename = f"{result.project_id}_{result.timestamp.replace(':', '-')}.json"
         filepath = self.results_dir / filename
 
-        filepath.write_text(json.dumps(result.to_dict(), indent=2))
+        filepath.write_text(json.dumps(result.to_dict(), indent=2), encoding="utf-8")
         return filepath
 
     def load_result(self, filepath: Path) -> BenchmarkResult:
         """Load a benchmark result from JSON."""
-        data = json.loads(filepath.read_text())
+        data = json.loads(filepath.read_text(encoding="utf-8"))
         return BenchmarkResult.from_dict(data)
 
     def list_results(self) -> list[Path]:

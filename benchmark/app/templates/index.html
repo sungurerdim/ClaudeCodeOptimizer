@@ -375,22 +375,157 @@
         }
 
         .empty-state h3 { margin-bottom: 10px; color: var(--text); }
+
+        /* System Status Banner */
+        .system-banner {
+            background: var(--bg-secondary);
+            border: 1px solid var(--border);
+            border-radius: 8px;
+            padding: 15px 20px;
+            margin-bottom: 20px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+        }
+
+        .system-banner.not-ready {
+            border-color: var(--warning);
+            background: #d2992210;
+        }
+
+        .system-banner.ready {
+            border-color: var(--success);
+        }
+
+        .system-status {
+            display: flex;
+            align-items: center;
+            gap: 20px;
+        }
+
+        .status-item {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .status-emoji {
+            font-size: 20px;
+            line-height: 1;
+        }
+
+        .status-icon {
+            font-size: 16px;
+            margin-left: 4px;
+        }
+
+        .status-icon.ok::after { content: '✅'; }
+        .status-icon.missing::after { content: '❌'; }
+        .status-icon.installing::after { content: '🔄'; animation: spin 1s linear infinite; }
+
+        @keyframes spin {
+            from { transform: rotate(0deg); }
+            to { transform: rotate(360deg); }
+        }
+
+        .install-btn {
+            background: var(--warning);
+            color: #000;
+            border: none;
+            padding: 6px 12px;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 13px;
+        }
+
+        .install-btn:hover { background: #e6a823; }
+        .install-btn:disabled { opacity: 0.5; cursor: not-allowed; }
+
+        /* Activity Log */
+        .activity-panel {
+            position: fixed;
+            bottom: 0;
+            left: 0;
+            right: 0;
+            background: var(--bg-secondary);
+            border-top: 1px solid var(--border);
+            max-height: 200px;
+            overflow: hidden;
+            transition: max-height 0.3s;
+        }
+
+        .activity-panel.collapsed { max-height: 40px; }
+
+        .activity-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 10px 20px;
+            cursor: pointer;
+            background: var(--bg-tertiary);
+        }
+
+        .activity-header h4 { font-size: 13px; font-weight: 600; }
+
+        .activity-list {
+            padding: 10px 20px;
+            max-height: 150px;
+            overflow-y: auto;
+            font-size: 12px;
+            font-family: monospace;
+        }
+
+        .activity-entry {
+            padding: 4px 0;
+            display: flex;
+            gap: 10px;
+        }
+
+        .activity-entry .time { color: var(--text-muted); }
+        .activity-entry.info .msg { color: var(--text); }
+        .activity-entry.success .msg { color: var(--success); }
+        .activity-entry.warning .msg { color: var(--warning); }
+        .activity-entry.error .msg { color: var(--error); }
+
+        /* Adjust container for activity panel */
+        .container { padding-bottom: 220px; }
     </style>
 </head>
 <body>
     <div class="container">
         <header>
-            <h1><span>CCO</span> Benchmark Suite</h1>
+            <h1>🎯 <span>CCO</span> Benchmark Suite</h1>
             <div class="header-actions">
-                <button onclick="loadSummary()">Refresh</button>
-                <button onclick="exportResults()">Export JSON</button>
+                <button onclick="loadSummary()">🔄 Refresh</button>
+                <button onclick="exportResults()">📥 Export JSON</button>
             </div>
         </header>
 
+        <!-- System Status Banner -->
+        <div id="system-banner" class="system-banner" style="display: none;">
+            <div class="system-status">
+                <div class="status-item" id="python-status">
+                    <span class="status-emoji">🐍</span>
+                    <span>Python <span id="python-version"></span></span>
+                    <span class="status-icon ok"></span>
+                </div>
+                <div class="status-item" id="ccbox-status">
+                    <span class="status-emoji">📦</span>
+                    <span>ccbox <span id="ccbox-version"></span></span>
+                    <span class="status-icon missing"></span>
+                </div>
+            </div>
+            <div id="install-section">
+                <button class="install-btn" onclick="installCcbox()" id="install-btn">
+                    ⬇️ Install ccbox
+                </button>
+            </div>
+        </div>
+
         <div class="tabs">
-            <button class="tab active" data-tab="projects">Projects</button>
-            <button class="tab" data-tab="results">Results</button>
-            <button class="tab" data-tab="summary">Summary</button>
+            <button class="tab active" data-tab="projects">📁 Projects</button>
+            <button class="tab" data-tab="results">📊 Results</button>
+            <button class="tab" data-tab="summary">📈 Summary</button>
         </div>
 
         <!-- Projects Panel -->
@@ -403,7 +538,7 @@
                     </label>
                 </div>
                 <button class="primary" onclick="runSelectedTests()" id="run-btn">
-                    Run Selected Tests
+                    ▶️ Run Selected Tests
                 </button>
             </div>
             <div id="projects-grid" class="projects-grid">
@@ -469,10 +604,25 @@
         </div>
     </div>
 
+    <!-- Activity Panel -->
+    <div id="activity-panel" class="activity-panel collapsed">
+        <div class="activity-header" onclick="toggleActivityPanel()">
+            <h4>Activity Log</h4>
+            <span id="activity-toggle">▲</span>
+        </div>
+        <div class="activity-list" id="activity-list">
+            <div class="activity-entry info">
+                <span class="time">--:--:--</span>
+                <span class="msg">Loading activity log...</span>
+            </div>
+        </div>
+    </div>
+
     <script>
         let projects = [];
         let selectedProjects = new Set();
         let currentPrompt = '';
+        let systemReady = false;
 
         // Tab switching
         document.querySelectorAll('.tab').forEach(tab => {
@@ -548,7 +698,12 @@
         function updateRunButton() {
             const btn = document.getElementById('run-btn');
             btn.textContent = `Run ${selectedProjects.size} Test${selectedProjects.size !== 1 ? 's' : ''}`;
-            btn.disabled = selectedProjects.size === 0;
+            btn.disabled = selectedProjects.size === 0 || !systemReady;
+            if (!systemReady && selectedProjects.size > 0) {
+                btn.title = 'Install ccbox first';
+            } else {
+                btn.title = '';
+            }
         }
 
         async function showPrompt(projectId) {
@@ -958,11 +1113,148 @@
             }
         });
 
-        // Initialize
-        loadProjects();
-        loadResults();
-        loadSummary();
-        updateRunButton();
+        // ============== System Status ==============
+
+        async function checkSystemStatus() {
+            try {
+                const resp = await fetch('/api/system');
+                const data = await resp.json();
+                updateSystemBanner(data);
+                return data.ready;
+            } catch (e) {
+                console.error('Failed to check system status:', e);
+                return false;
+            }
+        }
+
+        function updateSystemBanner(data) {
+            const banner = document.getElementById('system-banner');
+            const pythonStatus = document.getElementById('python-status');
+            const ccboxStatus = document.getElementById('ccbox-status');
+            const installSection = document.getElementById('install-section');
+            const installBtn = document.getElementById('install-btn');
+            const runBtn = document.getElementById('run-btn');
+
+            banner.style.display = 'flex';
+
+            // Python status
+            if (data.dependencies.python.installed) {
+                pythonStatus.querySelector('.status-icon').className = 'status-icon ok';
+                document.getElementById('python-version').textContent = data.dependencies.python.version;
+            }
+
+            // ccbox status
+            if (data.dependencies.ccbox.installed) {
+                ccboxStatus.querySelector('.status-icon').className = 'status-icon ok';
+                document.getElementById('ccbox-version').textContent = data.dependencies.ccbox.version || '';
+                installSection.style.display = 'none';
+                banner.className = 'system-banner ready';
+            } else if (data.installing) {
+                ccboxStatus.querySelector('.status-icon').className = 'status-icon installing';
+                installBtn.disabled = true;
+                installBtn.textContent = '⏳ Installing...';
+                banner.className = 'system-banner not-ready';
+            } else {
+                ccboxStatus.querySelector('.status-icon').className = 'status-icon missing';
+                installSection.style.display = 'block';
+                installBtn.disabled = false;
+                installBtn.innerHTML = '⬇️ Install ccbox';
+                banner.className = 'system-banner not-ready';
+            }
+
+            systemReady = data.ready;
+
+            // Disable run button if not ready
+            if (!systemReady) {
+                runBtn.disabled = true;
+                runBtn.title = 'Install ccbox first';
+            }
+        }
+
+        async function installCcbox() {
+            const btn = document.getElementById('install-btn');
+            btn.disabled = true;
+            btn.textContent = 'Installing...';
+
+            try {
+                await fetch('/api/install/ccbox', { method: 'POST' });
+                // Poll for completion
+                pollInstallStatus();
+            } catch (e) {
+                alert('Failed to start installation');
+                btn.disabled = false;
+                btn.textContent = 'Install ccbox';
+            }
+        }
+
+        async function pollInstallStatus() {
+            const checkStatus = async () => {
+                const data = await checkSystemStatus();
+                if (!data) {
+                    // Still installing, check again
+                    setTimeout(checkStatus, 2000);
+                }
+            };
+            setTimeout(checkStatus, 2000);
+        }
+
+        // ============== Activity Log ==============
+
+        function toggleActivityPanel() {
+            const panel = document.getElementById('activity-panel');
+            const toggle = document.getElementById('activity-toggle');
+            panel.classList.toggle('collapsed');
+            toggle.textContent = panel.classList.contains('collapsed') ? '▲' : '▼';
+        }
+
+        async function loadActivity() {
+            try {
+                const resp = await fetch('/api/activity?limit=20');
+                const entries = await resp.json();
+                renderActivity(entries);
+            } catch (e) {
+                console.error('Failed to load activity:', e);
+            }
+        }
+
+        function renderActivity(entries) {
+            const list = document.getElementById('activity-list');
+            const levelEmoji = {
+                'info': 'ℹ️',
+                'success': '✅',
+                'warning': '⚠️',
+                'error': '❌'
+            };
+            if (entries.length === 0) {
+                list.innerHTML = '<div class="activity-entry info"><span class="time">--:--:--</span><span class="msg">ℹ️ No activity yet</span></div>';
+                return;
+            }
+            list.innerHTML = entries.map(e => `
+                <div class="activity-entry ${e.level}">
+                    <span class="time">${e.timestamp}</span>
+                    <span class="msg">${levelEmoji[e.level] || 'ℹ️'} ${e.message}</span>
+                </div>
+            `).join('');
+        }
+
+        // Poll activity log
+        setInterval(loadActivity, 3000);
+
+        // ============== Initialize ==============
+
+        async function init() {
+            await checkSystemStatus();
+            loadProjects();
+            loadResults();
+            loadSummary();
+            loadActivity();
+            updateRunButton();
+
+            // Poll system status periodically
+            setInterval(checkSystemStatus, 10000);
+        }
+
+        init();
     </script>
 </body>
 </html>

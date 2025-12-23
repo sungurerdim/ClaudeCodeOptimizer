@@ -18,7 +18,7 @@ RESULTS_DIR = SUITE_DIR / "results"
 
 def cli_list_projects():
     """List available projects."""
-    from runner import discover_projects
+    from .runner import discover_projects
 
     projects = discover_projects(PROJECTS_DIR)
     print("\nAvailable Benchmark Projects:")
@@ -35,7 +35,7 @@ def cli_list_projects():
 
 def cli_run(project_id: str, variant: str, model: str):
     """Run a single benchmark."""
-    from runner import ProjectConfig, TestExecutor
+    from .runner import ProjectConfig, TestExecutor
 
     project_dir = PROJECTS_DIR / project_id
     if not project_dir.exists():
@@ -65,7 +65,7 @@ def cli_run(project_id: str, variant: str, model: str):
 
 def cli_compare(project_id: str, model: str):
     """Run full comparison benchmark."""
-    from runner import ProjectConfig, ResultsManager, TestExecutor
+    from .runner import ProjectConfig, ResultsManager, TestExecutor
 
     project_dir = PROJECTS_DIR / project_id
     if not project_dir.exists():
@@ -102,7 +102,7 @@ def cli_compare(project_id: str, model: str):
 
 def cli_summary():
     """Show summary statistics."""
-    from runner import ResultsManager
+    from .runner import ResultsManager
 
     results_manager = ResultsManager(RESULTS_DIR)
     summary = results_manager.get_summary()
@@ -128,7 +128,7 @@ def cli_summary():
 
 def start_server():
     """Start the web UI server."""
-    from app.server import main
+    from .app.server import main
 
     main()
 
