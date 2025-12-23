@@ -7,10 +7,16 @@ ccbox behavior:
 - Mounts current working directory as project root
 - --bare flag runs without CCO rules (vanilla)
 - Default (no flag) runs with CCO rules (ccbox:base image)
+
+Requirements:
+- Docker must be installed and running (ccbox uses Docker containers)
+- ccbox must be installed (pip install ccbox)
 """
 
 import json
+import logging
 import os
+import shutil
 import subprocess
 import time
 from dataclasses import dataclass, field
@@ -19,6 +25,196 @@ from pathlib import Path
 from typing import Any
 
 from .metrics import CodeAnalyzer, Metrics, calculate_overall_score, compare_metrics
+
+# Configure logger for detailed debugging
+logger = logging.getLogger("cco-benchmark.executor")
+
+
+def _truncate(text: str, max_len: int = 1000) -> str:
+    """Truncate text with ellipsis indicator."""
+    if len(text) <= max_len:
+        return text
+    return text[:max_len] + f"\n... [truncated, {len(text) - max_len} more chars]"
+
+
+def _parse_ccbox_error(stdout: str, stderr: str, exit_code: int) -> str:
+    """Parse ccbox output to extract meaningful error message."""
+    error_parts = []
+
+    # Check for common ccbox errors
+    combined = (stdout + stderr).lower()
+
+    if "docker" in combined and ("not found" in combined or "not running" in combined):
+        error_parts.append("Docker issue detected")
+    if "permission denied" in combined:
+        error_parts.append("Permission denied (check Docker permissions)")
+    if "no such file" in combined or "not found" in combined:
+        error_parts.append("File/command not found")
+    if "timeout" in combined:
+        error_parts.append("Operation timed out")
+    if "authentication" in combined or "api key" in combined or "unauthorized" in combined:
+        error_parts.append("Authentication/API key issue")
+    if "rate limit" in combined:
+        error_parts.append("Rate limit exceeded")
+    if "network" in combined or "connection" in combined:
+        error_parts.append("Network/connection issue")
+
+    # Extract actual error lines from stderr
+    error_lines = []
+    for line in stderr.splitlines():
+        line_lower = line.lower()
+        if any(kw in line_lower for kw in ["error", "failed", "exception", "traceback", "fatal"]):
+            error_lines.append(line.strip())
+
+    if error_lines:
+        error_parts.append("Errors: " + "; ".join(error_lines[:5]))
+
+    # If no specific error found, include raw output
+    if not error_parts:
+        if stderr.strip():
+            error_parts.append(f"stderr: {_truncate(stderr.strip(), 500)}")
+        elif stdout.strip():
+            error_parts.append(f"stdout: {_truncate(stdout.strip(), 500)}")
+        else:
+            error_parts.append("No output captured")
+
+    return f"Exit code {exit_code}: " + " | ".join(error_parts)
+
+
+def get_platform_info() -> dict[str, str]:
+    """Get platform-specific Docker installation/startup info."""
+    import platform
+
+    system = platform.system().lower()
+
+    if system == "windows":
+        return {
+            "os": "windows",
+            "os_name": "Windows",
+            "docker_install_url": "https://docs.docker.com/desktop/install/windows-install/",
+            "docker_start_cmd": "Start Docker Desktop from the Start menu",
+        }
+    elif system == "darwin":
+        return {
+            "os": "macos",
+            "os_name": "macOS",
+            "docker_install_url": "https://docs.docker.com/desktop/install/mac-install/",
+            "docker_start_cmd": "open -a Docker",
+        }
+    else:  # Linux
+        return {
+            "os": "linux",
+            "os_name": "Linux",
+            "docker_install_url": "https://docs.docker.com/engine/install/",
+            "docker_start_cmd": "sudo systemctl start docker",
+        }
+
+
+PLATFORM_INFO = get_platform_info()
+DOCKER_INSTALL_URL = PLATFORM_INFO["docker_install_url"]
+
+
+@dataclass
+class DependencyStatus:
+    """Status of system dependencies."""
+
+    platform: str = ""
+    docker_installed: bool = False
+    docker_running: bool = False
+    docker_version: str | None = None
+    docker_install_url: str = ""
+    docker_start_cmd: str = ""
+    ccbox_installed: bool = False
+    ccbox_version: str | None = None
+    ready: bool = False
+    error_message: str = ""
+
+    def to_dict(self) -> dict[str, Any]:
+        return {
+            "platform": self.platform,
+            "docker_installed": self.docker_installed,
+            "docker_running": self.docker_running,
+            "docker_version": self.docker_version,
+            "docker_install_url": self.docker_install_url,
+            "docker_start_cmd": self.docker_start_cmd,
+            "ccbox_installed": self.ccbox_installed,
+            "ccbox_version": self.ccbox_version,
+            "ready": self.ready,
+            "error_message": self.error_message,
+        }
+
+
+def check_dependencies() -> DependencyStatus:
+    """Check if Docker and ccbox are available."""
+    status = DependencyStatus(
+        platform=PLATFORM_INFO["os_name"],
+        docker_install_url=PLATFORM_INFO["docker_install_url"],
+        docker_start_cmd=PLATFORM_INFO["docker_start_cmd"],
+    )
+
+    # Check Docker
+    docker_path = shutil.which("docker")
+    if docker_path:
+        status.docker_installed = True
+        try:
+            version_result = subprocess.run(
+                ["docker", "--version"],
+                capture_output=True,
+                text=True,
+                timeout=5,
+                encoding="utf-8",
+                errors="replace",
+            )
+            if version_result.returncode == 0:
+                # Parse "Docker version 24.0.7, build afdd53b"
+                version_str = version_result.stdout.strip()
+                parts = version_str.split()
+                for i, p in enumerate(parts):
+                    if p.lower() == "version" and i + 1 < len(parts):
+                        status.docker_version = parts[i + 1].rstrip(",")
+                        break
+
+            # Check if daemon is running
+            daemon_result = subprocess.run(
+                ["docker", "info"],
+                capture_output=True,
+                text=True,
+                timeout=10,
+                encoding="utf-8",
+                errors="replace",
+            )
+            status.docker_running = daemon_result.returncode == 0
+            if not status.docker_running:
+                status.error_message = f"Docker daemon is not running. {status.docker_start_cmd}"
+        except subprocess.TimeoutExpired:
+            status.error_message = "Docker daemon check timed out"
+        except Exception as e:
+            status.error_message = f"Docker check failed: {e}"
+    else:
+        status.error_message = f"Docker is not installed. Install from: {status.docker_install_url}"
+
+    # Check ccbox
+    ccbox_path = shutil.which("ccbox")
+    if ccbox_path:
+        status.ccbox_installed = True
+        try:
+            version_result = subprocess.run(
+                ["ccbox", "--version"],
+                capture_output=True,
+                text=True,
+                timeout=5,
+                encoding="utf-8",
+                errors="replace",
+            )
+            if version_result.returncode == 0:
+                status.ccbox_version = version_result.stdout.strip().split()[-1]
+        except Exception:
+            pass
+    elif status.docker_running and not status.error_message:
+        status.error_message = "ccbox is not installed. Run: pip install ccbox"
+
+    status.ready = status.docker_installed and status.docker_running and status.ccbox_installed
+    return status
 
 
 @dataclass
@@ -165,18 +361,25 @@ class TestExecutor:
         Returns:
             Dict with success, time, command, exit_code, stdout, stderr, error
         """
+        # ccbox parameters (as of latest version):
+        # -C: change directory
+        # -m/--model: model selection
+        # -p/--prompt: initial prompt (enables --print mode)
+        # Note: --yes was removed from ccbox
         cmd = [
             self.ccbox_cmd,
             "-C",
             str(project_dir),
-            "--yes",
-            "--model",
+            "-m",
             model,
-            "--prompt",
+            "-p",
             "/cco-config --auto",
         ]
         cmd_str = " ".join(cmd)
         start_time = time.time()
+
+        logger.info(f"[CCO Setup] Starting: {cmd_str}")
+        logger.info(f"[CCO Setup] Project dir: {project_dir}")
 
         try:
             result = subprocess.run(
@@ -191,11 +394,32 @@ class TestExecutor:
 
             elapsed = time.time() - start_time
 
-            # Save setup logs
+            # Save setup logs with detailed info
+            log_content = f"""CCO Setup Log
+{"=" * 60}
+Command: {cmd_str}
+Exit Code: {result.returncode}
+Duration: {elapsed:.2f}s
+Project Dir: {project_dir}
+{"=" * 60}
+
+STDOUT:
+{result.stdout or "(empty)"}
+
+{"=" * 60}
+STDERR:
+{result.stderr or "(empty)"}
+"""
+            (project_dir / "_cco_setup.log").write_text(log_content, encoding="utf-8")
             (project_dir / "_cco_setup_stdout.log").write_text(result.stdout, encoding="utf-8")
             (project_dir / "_cco_setup_stderr.log").write_text(result.stderr, encoding="utf-8")
 
             if result.returncode != 0:
+                error_msg = _parse_ccbox_error(result.stdout, result.stderr, result.returncode)
+                logger.error(f"[CCO Setup] FAILED: {error_msg}")
+                logger.error(f"[CCO Setup] Full stdout:\n{_truncate(result.stdout, 2000)}")
+                logger.error(f"[CCO Setup] Full stderr:\n{_truncate(result.stderr, 2000)}")
+
                 return {
                     "success": False,
                     "time": elapsed,
@@ -203,9 +427,10 @@ class TestExecutor:
                     "exit_code": result.returncode,
                     "stdout": result.stdout,
                     "stderr": result.stderr,
-                    "error": f"Exit code {result.returncode}: {result.stderr[:300]}",
+                    "error": error_msg,
                 }
 
+            logger.info(f"[CCO Setup] SUCCESS in {elapsed:.2f}s")
             return {
                 "success": True,
                 "time": elapsed,
@@ -216,17 +441,28 @@ class TestExecutor:
                 "error": "",
             }
 
-        except subprocess.TimeoutExpired:
+        except subprocess.TimeoutExpired as e:
+            elapsed = time.time() - start_time
+            error_msg = f"Setup timeout after {self.setup_timeout}s"
+            logger.error(f"[CCO Setup] TIMEOUT: {error_msg}")
+            # Try to get partial output
+            stdout = e.stdout.decode("utf-8", errors="replace") if e.stdout else ""
+            stderr = e.stderr.decode("utf-8", errors="replace") if e.stderr else ""
+            if stdout or stderr:
+                logger.error(f"[CCO Setup] Partial stdout:\n{_truncate(stdout, 1000)}")
+                logger.error(f"[CCO Setup] Partial stderr:\n{_truncate(stderr, 1000)}")
             return {
                 "success": False,
-                "time": time.time() - start_time,
+                "time": elapsed,
                 "command": cmd_str,
                 "exit_code": None,
-                "stdout": "",
-                "stderr": "",
-                "error": f"Setup timeout after {self.setup_timeout} seconds",
+                "stdout": stdout,
+                "stderr": stderr,
+                "error": error_msg,
             }
         except FileNotFoundError:
+            error_msg = f"ccbox command not found: {self.ccbox_cmd}"
+            logger.error(f"[CCO Setup] {error_msg}")
             return {
                 "success": False,
                 "time": 0,
@@ -234,17 +470,23 @@ class TestExecutor:
                 "exit_code": None,
                 "stdout": "",
                 "stderr": "",
-                "error": f"ccbox command not found: {self.ccbox_cmd}",
+                "error": error_msg,
             }
         except Exception as e:
+            elapsed = time.time() - start_time
+            import traceback
+
+            error_msg = f"{type(e).__name__}: {e}"
+            logger.error(f"[CCO Setup] EXCEPTION: {error_msg}")
+            logger.error(f"[CCO Setup] Traceback:\n{traceback.format_exc()}")
             return {
                 "success": False,
-                "time": time.time() - start_time,
+                "time": elapsed,
                 "command": cmd_str,
                 "exit_code": None,
                 "stdout": "",
                 "stderr": "",
-                "error": f"{type(e).__name__}: {e}",
+                "error": error_msg,
             }
 
     def run_project(
@@ -259,10 +501,13 @@ class TestExecutor:
         1. Setup phase: Run /cco-config --auto to configure CCO rules
         2. Test phase: Run the actual benchmark prompt
         """
+        logger.info(f"[{variant.upper()}] Starting project: {config.id}")
+
         # Create isolated project directory
         timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
         project_dir = self.output_base / f"{config.id}_{variant}_{timestamp}"
         project_dir.mkdir(parents=True, exist_ok=True)
+        logger.info(f"[{variant.upper()}] Output dir: {project_dir}")
 
         # Save prompt for reference
         prompt_file = project_dir / "_benchmark_prompt.md"
@@ -270,8 +515,10 @@ class TestExecutor:
 
         # CCO variant: First run cco-config --auto to setup rules
         if variant == "cco":
+            logger.info("[CCO] Running setup phase...")
             setup_result = self._run_cco_setup(project_dir, model)
             if not setup_result["success"]:
+                logger.error(f"[CCO] Setup phase FAILED: {setup_result['error']}")
                 return ExecutionResult(
                     project_id=config.id,
                     variant=variant,
@@ -283,12 +530,19 @@ class TestExecutor:
                     output_dir=str(project_dir),
                     command=setup_result["command"],
                     exit_code=setup_result["exit_code"],
-                    stdout_excerpt=setup_result["stdout"][-500:] if setup_result["stdout"] else "",
-                    stderr_excerpt=setup_result["stderr"][-500:] if setup_result["stderr"] else "",
+                    stdout_excerpt=setup_result["stdout"][-1000:] if setup_result["stdout"] else "",
+                    stderr_excerpt=setup_result["stderr"][-1000:] if setup_result["stderr"] else "",
                     error_message=f"CCO setup failed: {setup_result['error']}",
                 )
+            logger.info("[CCO] Setup phase completed successfully")
 
         # Build ccbox command for the actual test
+        # ccbox parameters (as of latest version):
+        # -C: change directory
+        # --bare: vanilla mode (no CCO rules)
+        # -m/--model: model selection
+        # -p/--prompt: initial prompt (enables --print mode)
+        # Note: --yes was removed from ccbox
         cmd = [self.ccbox_cmd]
 
         # Project directory (ccbox -C flag)
@@ -302,16 +556,17 @@ class TestExecutor:
         # Common flags
         cmd.extend(
             [
-                "--yes",  # Non-interactive mode
-                "--model",
+                "-m",
                 model,  # Model selection
-                "--prompt",
-                config.prompt,  # Pass prompt
+                "-p",
+                config.prompt,  # Pass prompt (enables --print mode)
             ]
         )
 
         start_time = time.time()
         cmd_str = " ".join(cmd)
+
+        logger.info(f"[{variant.upper()}] Executing: {cmd_str[:200]}...")
 
         try:
             # Run ccbox with -C pointing to project directory
@@ -328,9 +583,33 @@ class TestExecutor:
             generation_time = time.time() - start_time
             success = result.returncode == 0
 
-            # Save ccbox output for debugging
+            # Save ccbox output with detailed info
+            log_content = f"""ccbox Execution Log ({variant})
+{"=" * 60}
+Command: {cmd_str}
+Exit Code: {result.returncode}
+Duration: {generation_time:.2f}s
+Success: {success}
+Project Dir: {project_dir}
+{"=" * 60}
+
+STDOUT:
+{result.stdout or "(empty)"}
+
+{"=" * 60}
+STDERR:
+{result.stderr or "(empty)"}
+"""
+            (project_dir / "_ccbox_run.log").write_text(log_content, encoding="utf-8")
             (project_dir / "_ccbox_stdout.log").write_text(result.stdout, encoding="utf-8")
             (project_dir / "_ccbox_stderr.log").write_text(result.stderr, encoding="utf-8")
+
+            if success:
+                logger.info(f"[{variant.upper()}] SUCCESS in {generation_time:.2f}s")
+            else:
+                logger.error(f"[{variant.upper()}] FAILED with exit code {result.returncode}")
+                logger.error(f"[{variant.upper()}] stdout:\n{_truncate(result.stdout, 1500)}")
+                logger.error(f"[{variant.upper()}] stderr:\n{_truncate(result.stderr, 1500)}")
 
             # Analyze generated code (ccbox creates files in project_dir)
             # Exclude our benchmark metadata files
@@ -344,11 +623,7 @@ class TestExecutor:
             # Build detailed error message if failed
             error_msg = ""
             if not success:
-                error_msg = f"Exit code {result.returncode}"
-                if result.stderr.strip():
-                    error_msg += f": {result.stderr.strip()[:300]}"
-                elif result.stdout.strip():
-                    error_msg += f" (stdout: {result.stdout.strip()[:300]})"
+                error_msg = _parse_ccbox_error(result.stdout, result.stderr, result.returncode)
 
             return ExecutionResult(
                 project_id=config.id,
@@ -361,8 +636,8 @@ class TestExecutor:
                 output_dir=str(project_dir),
                 command=cmd_str,
                 exit_code=result.returncode,
-                stdout_excerpt=result.stdout[-500:] if result.stdout else "",
-                stderr_excerpt=result.stderr[-500:] if result.stderr else "",
+                stdout_excerpt=result.stdout[-1000:] if result.stdout else "",
+                stderr_excerpt=result.stderr[-1000:] if result.stderr else "",
                 error_message=error_msg,
             )
 

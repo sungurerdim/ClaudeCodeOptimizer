@@ -5,6 +5,10 @@ Usage:
     python -m benchmark              # Start web UI
     python -m benchmark --cli        # CLI mode
     python -m benchmark --analyze    # Analyze existing results
+
+Requirements:
+    - Docker must be installed and running
+    - ccbox must be installed (pip install ccbox)
 """
 
 import argparse
@@ -14,6 +18,47 @@ from pathlib import Path
 SUITE_DIR = Path(__file__).parent
 PROJECTS_DIR = SUITE_DIR / "projects"
 RESULTS_DIR = SUITE_DIR / "results"
+
+
+def check_system_ready() -> bool:
+    """Check if system dependencies are ready for benchmarks."""
+    from .runner import check_dependencies
+
+    status = check_dependencies()
+
+    if not status.docker_installed:
+        print(f"\n{'=' * 60}")
+        print("  ERROR: Docker is not installed")
+        print(f"{'=' * 60}")
+        print(f"\n  Platform: {status.platform}")
+        print("  ccbox requires Docker to run benchmarks.")
+        print("\n  Install Docker from:")
+        print(f"    {status.docker_install_url}")
+        print(f"{'=' * 60}\n")
+        return False
+
+    if not status.docker_running:
+        print(f"\n{'=' * 60}")
+        print("  ERROR: Docker daemon is not running")
+        print(f"{'=' * 60}")
+        print(f"\n  Platform: {status.platform}")
+        print(f"  Docker version {status.docker_version or 'unknown'} is installed,")
+        print("  but the Docker daemon is not running.")
+        print("\n  Start Docker:")
+        print(f"    {status.docker_start_cmd}")
+        print(f"{'=' * 60}\n")
+        return False
+
+    if not status.ccbox_installed:
+        print(f"\n{'=' * 60}")
+        print("  ERROR: ccbox is not installed")
+        print(f"{'=' * 60}")
+        print("\n  Install ccbox:")
+        print("    pip install ccbox")
+        print(f"{'=' * 60}\n")
+        return False
+
+    return True
 
 
 def cli_list_projects():
@@ -36,6 +81,10 @@ def cli_list_projects():
 def cli_run(project_id: str, variant: str, model: str):
     """Run a single benchmark."""
     from .runner import ProjectConfig, TestExecutor
+
+    # Check system dependencies first
+    if not check_system_ready():
+        sys.exit(1)
 
     project_dir = PROJECTS_DIR / project_id
     if not project_dir.exists():
@@ -66,6 +115,10 @@ def cli_run(project_id: str, variant: str, model: str):
 def cli_compare(project_id: str, model: str):
     """Run full comparison benchmark."""
     from .runner import ProjectConfig, ResultsManager, TestExecutor
+
+    # Check system dependencies first
+    if not check_system_ready():
+        sys.exit(1)
 
     project_dir = PROJECTS_DIR / project_id
     if not project_dir.exists():
