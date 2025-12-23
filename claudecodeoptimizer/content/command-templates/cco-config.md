@@ -104,6 +104,10 @@ AskUserQuestion([
         description: "User, model, context % only"
       },
       {
+        label: "Skip",
+        description: "Keep current statusline unchanged"
+      },
+      {
         label: existingConfig.statusline === "none" ? "Remove [current]" : "Remove",
         description: "Use Claude Code default statusline"
       }
@@ -123,6 +127,10 @@ AskUserQuestion([
         description: "Auto-approve read + lint/test, ask for writes"
       },
       {
+        label: "Skip",
+        description: "Keep current permissions unchanged"
+      },
+      {
         label: "Remove",
         description: "Remove permissions, use Claude Code defaults"
       }
@@ -138,7 +146,7 @@ AskUserQuestion([
         description: "Better for complex code, architecture decisions"
       },
       {
-        label: existingConfig.thinking === false ? "Disabled [current]" : "Disabled",
+        label: existingConfig.thinking === false ? "Disabled [current]" : "Disabled (CC default)",
         description: "Faster responses, better prompt caching"
       }
     ],
@@ -180,6 +188,7 @@ aiRecommendations = calculateRecommendations(detectResult.complexity)
 questions = []
 
 // Tab 1: Thinking Budget (only if Thinking Enabled)
+// Claude Code: No default (disabled), minimum 1024 when enabled
 if (setupConfig.thinking === "Enabled") {
   questions.push({
     question: "Thinking token budget?",
@@ -210,6 +219,7 @@ if (setupConfig.thinking === "Enabled") {
 }
 
 // Tab 2: Output Limits (always)
+// Claude Code defaults: MCP=25000, Bash=30000
 questions.push({
   question: "Tool output limits?",
   header: "Output",
@@ -220,7 +230,7 @@ questions.push({
     },
     {
       label: existingConfig.output === 25000 ? "25000 [current]" :
-             aiRecommendations.output === 25000 ? "25000 (Recommended)" : "25000",
+             aiRecommendations.output === 25000 ? "25000 (Recommended)" : "25000 (CC default)",
       description: "Standard output limits"
     },
     {
@@ -672,6 +682,7 @@ Task("cco-agent-apply", `
 | .claude/rules/cco/context.md | {action} |
 | .claude/rules/cco/{language}.md | {action} |
 | .claude/settings.json | {action} |
+| .claude/cco-{mode}.js | Copied from CCO template |
 
 ### Detection Summary
 - Auto-detected: {n} elements

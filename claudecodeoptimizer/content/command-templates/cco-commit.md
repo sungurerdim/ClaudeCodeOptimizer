@@ -10,7 +10,6 @@ allowed-tools: Bash(git:*), Bash(ruff:*), Bash(npm:*), Bash(pytest:*), Read(*), 
 
 ## Context
 
-- Context check: !`test -f ./.claude/rules/cco/context.md && echo "1" || echo "0"`
 - Git status: !`git status --short`
 - Branch: !`git branch --show-current`
 - Recent commits: !`git log --oneline -5`
@@ -19,16 +18,6 @@ allowed-tools: Bash(git:*), Bash(ruff:*), Bash(npm:*), Bash(pytest:*), Read(*), 
 - Staged lines: !`git diff --cached --shortstat`
 
 **DO NOT re-run these commands. Use the pre-collected values above.**
-
-## Context Requirement [CRITICAL]
-
-If context check returns "0":
-```
-CCO context not found.
-
-Run /cco-config first to configure project context, then restart CLI.
-```
-**Stop immediately.**
 
 ## Architecture
 
