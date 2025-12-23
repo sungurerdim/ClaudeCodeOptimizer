@@ -337,6 +337,93 @@ async def get_install_status() -> dict[str, Any]:
     }
 
 
+@app.post("/api/docker/start")
+async def start_docker() -> dict[str, Any]:
+    """Attempt to start Docker Desktop."""
+    import platform
+
+    system = platform.system().lower()
+    log_activity("Attempting to start Docker...", "info")
+
+    try:
+        if system == "windows":
+            # Try to start Docker Desktop on Windows
+            result = subprocess.run(
+                ["powershell", "-Command", "Start-Process", "Docker Desktop"],
+                capture_output=True,
+                text=True,
+                timeout=10,
+                encoding="utf-8",
+                errors="replace",
+            )
+            if result.returncode == 0:
+                log_activity("Docker Desktop start command sent", "success")
+                return {"success": True, "message": "Docker Desktop starting..."}
+            else:
+                # Try alternative method - use full path to Docker Desktop
+                import os
+                docker_path = os.path.expandvars(r"%ProgramFiles%\Docker\Docker\Docker Desktop.exe")
+                result = subprocess.run(
+                    ["cmd", "/c", "start", "", docker_path],
+                    capture_output=True,
+                    text=True,
+                    timeout=10,
+                    encoding="utf-8",
+                    errors="replace",
+                )
+                if result.returncode == 0:
+                    log_activity("Docker Desktop start command sent (alt)", "success")
+                    return {"success": True, "message": "Docker Desktop starting..."}
+                log_activity(f"Failed to start Docker: {result.stderr}", "error")
+                return {"success": False, "message": "Could not start Docker Desktop"}
+
+        elif system == "darwin":
+            # macOS
+            result = subprocess.run(
+                ["open", "-a", "Docker"],
+                capture_output=True,
+                text=True,
+                timeout=10,
+                encoding="utf-8",
+                errors="replace",
+            )
+            if result.returncode == 0:
+                log_activity("Docker Desktop starting on macOS", "success")
+                return {"success": True, "message": "Docker Desktop starting..."}
+            log_activity(f"Failed to start Docker: {result.stderr}", "error")
+            return {"success": False, "message": "Could not start Docker Desktop"}
+
+        else:
+            # Linux - try systemctl
+            result = subprocess.run(
+                ["systemctl", "start", "docker"],
+                capture_output=True,
+                text=True,
+                timeout=30,
+                encoding="utf-8",
+                errors="replace",
+            )
+            if result.returncode == 0:
+                log_activity("Docker daemon started", "success")
+                return {"success": True, "message": "Docker daemon starting..."}
+            # May need sudo - inform user
+            log_activity("Docker start requires sudo", "warning")
+            return {
+                "success": False,
+                "message": "Run 'sudo systemctl start docker' in terminal",
+            }
+
+    except subprocess.TimeoutExpired:
+        log_activity("Docker start command timed out", "warning")
+        return {"success": False, "message": "Start command timed out"}
+    except FileNotFoundError as e:
+        log_activity(f"Docker Desktop not found: {e}", "error")
+        return {"success": False, "message": "Docker Desktop not found"}
+    except Exception as e:
+        log_activity(f"Failed to start Docker: {e}", "error")
+        return {"success": False, "message": str(e)}
+
+
 @app.get("/api/activity")
 async def get_activity(limit: int = 50) -> list[dict[str, str]]:
     """Get recent activity log entries."""

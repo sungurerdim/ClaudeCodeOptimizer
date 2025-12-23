@@ -496,7 +496,7 @@
         <header>
             <h1>🎯 <span>CCO</span> Benchmark Suite</h1>
             <div class="header-actions">
-                <button onclick="loadSummary()">🔄 Refresh</button>
+                <button onclick="refreshAll()">🔄 Refresh</button>
                 <button onclick="exportResults()">📥 Export JSON</button>
             </div>
         </header>
@@ -1068,6 +1068,25 @@
             document.getElementById('detail-modal').classList.remove('active');
         }
 
+        // Refresh all data
+        async function refreshAll() {
+            const btn = document.querySelector('button[onclick="refreshAll()"]');
+            if (btn) {
+                btn.disabled = true;
+                btn.textContent = '⏳ Loading...';
+            }
+            try {
+                await checkSystemStatus();
+                await Promise.all([loadProjects(), loadResults(), loadSummary(), loadActivity()]);
+                updateRunButton();
+            } finally {
+                if (btn) {
+                    btn.disabled = false;
+                    btn.textContent = '🔄 Refresh';
+                }
+            }
+        }
+
         // Load summary
         async function loadSummary() {
             try {
@@ -1223,8 +1242,7 @@
                 dockerInstallLink.style.display = 'inline-block';
                 dockerInstallLink.textContent = '▶️ Start Docker';
                 dockerInstallLink.href = '#';
-                const startHint = docker.start_hint || platform.docker_start_hint || 'Start Docker Desktop';
-                dockerInstallLink.onclick = () => { alert(startHint); return false; };
+                dockerInstallLink.onclick = async () => { await startDocker(); return false; };
             } else {
                 dockerStatus.querySelector('.status-icon').className = 'status-icon missing';
                 document.getElementById('docker-version').textContent = '(not installed)';
@@ -1296,6 +1314,43 @@
                 alert('Failed to start installation');
                 btn.disabled = false;
                 btn.textContent = 'Install ccbox';
+            }
+        }
+
+        async function startDocker() {
+            const btn = document.getElementById('docker-install-link');
+            const originalText = btn.textContent;
+            btn.textContent = '⏳ Starting...';
+            btn.style.pointerEvents = 'none';
+
+            try {
+                const resp = await fetch('/api/docker/start', { method: 'POST' });
+                const data = await resp.json();
+                if (data.success) {
+                    btn.textContent = '⏳ Waiting...';
+                    // Poll for Docker to be ready
+                    let attempts = 0;
+                    const pollDocker = setInterval(async () => {
+                        attempts++;
+                        const status = await checkSystemStatus();
+                        if (status || attempts > 30) {
+                            clearInterval(pollDocker);
+                            btn.style.pointerEvents = '';
+                            if (!status) {
+                                btn.textContent = originalText;
+                                alert('Docker did not start in time. Please start it manually.');
+                            }
+                        }
+                    }, 2000);
+                } else {
+                    alert(data.message || 'Failed to start Docker');
+                    btn.textContent = originalText;
+                    btn.style.pointerEvents = '';
+                }
+            } catch (e) {
+                alert('Failed to start Docker: ' + e.message);
+                btn.textContent = originalText;
+                btn.style.pointerEvents = '';
             }
         }
 
