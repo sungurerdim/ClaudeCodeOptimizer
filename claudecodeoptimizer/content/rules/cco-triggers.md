@@ -309,12 +309,17 @@ These generic placeholders are used across multiple categories. Each category se
 ### NoSQL (DB:NoSQL)
 | Trigger | Values |
 |---------|--------|
-| `{nosql_deps}` | `pymongo`, `motor`, `redis`, `ioredis`, `dynamodb`, `@aws-sdk/client-dynamodb`, `firebase-admin`, `mongoose`, `cassandra-driver` |
+| `{nosql_deps}` | `pymongo`, `motor`, `redis`, `ioredis`, `dynamodb`, `@aws-sdk/client-dynamodb`, `firebase-admin`, `mongoose`, `cassandra-driver`, `surrealdb`, `edgedb` |
 
 ### Vector (DB:Vector)
 | Trigger | Values |
 |---------|--------|
 | `{vector_deps}` | `pgvector`, `pinecone-client`, `chromadb`, `qdrant-client`, `weaviate-client`, `milvus`, `faiss`, `lancedb` |
+
+### Edge/Embedded (DB:Edge)
+| Trigger | Values |
+|---------|--------|
+| `{edge_db_deps}` | `@libsql/client`, `turso`, `libsql`, `duckdb`, `sqlite-wasm`, `@electric-sql/pglite`, `powersync` |
 
 ---
 
@@ -369,6 +374,12 @@ These generic placeholders are used across multiple categories. Each category se
 |---------|--------|
 | `{htmx_deps}` | `htmx.org` |
 | `{htmx_attrs}` | `hx-get`, `hx-post`, `hx-swap`, `hx-target`, `hx-trigger` |
+
+### Qwik (Frontend:Qwik)
+| Trigger | Values |
+|---------|--------|
+| `{qwik_deps}` | `@builder.io/qwik`, `@builder.io/qwik-city` |
+| `{qwik_patterns}` | `component$`, `useSignal`, `$()`, `useVisibleTask$` |
 
 ---
 
@@ -604,8 +615,8 @@ These generic placeholders are used across multiple categories. Each category se
 ### LLM Orchestration (ML:LLM)
 | Trigger | Values |
 |---------|--------|
-| `{llm_orchestration_deps}` | `langchain`, `llamaindex`, `llama-index`, `haystack`, `autogen`, `dspy`, `guidance`, `outlines`, `instructor` |
-| `{llm_dirs}` | `prompts/`, `chains/`, `agents/` |
+| `{llm_orchestration_deps}` | `langchain`, `langgraph`, `llamaindex`, `llama-index`, `haystack`, `autogen`, `crewai`, `dspy`, `guidance`, `outlines`, `instructor`, `marvin`, `pydantic-ai` |
+| `{llm_dirs}` | `prompts/`, `chains/`, `agents/`, `workflows/` |
 
 ### Inference (ML:Inference)
 | Trigger | Values |
@@ -726,6 +737,11 @@ These generic placeholders are used across multiple categories. Each category se
 | Trigger | Values |
 |---------|--------|
 | `{queue_deps}` | `celery`, `rq`, `dramatiq`, `huey`, `bull`, `bullmq`, `bee-queue`, `agenda`, `temporal` |
+
+### Workflow (DEP:Workflow)
+| Trigger | Values |
+|---------|--------|
+| `{workflow_deps}` | `temporal`, `temporalio`, `inngest`, `trigger.dev`, `windmill`, `prefect`, `dagster`, `airflow`, `step-functions` |
 
 ### Search (DEP:Search)
 | Trigger | Values |
@@ -1072,6 +1088,11 @@ These generic placeholders are used across multiple categories. Each category se
 | `{heroku_config}` | `Procfile`, `heroku.yml`, `app.json` |
 | `{vercel_config}` | `vercel.json`, `.vercel/`, `now.json` |
 | `{netlify_config}` | `netlify.toml`, `_redirects`, `_headers` |
+| `{coolify_config}` | `coolify.json`, `.coolify/` |
+| `{kamal_config}` | `config/deploy.yml`, `.kamal/` |
+| `{sst_config}` | `sst.config.ts`, `sst.config.js`, `.sst/` |
+| `{koyeb_config}` | `koyeb.yaml`, `.koyeb/` |
+| `{zeabur_config}` | `zbpack.json`, `zeabur.yaml` |
 
 ### Cloud Platforms (Deploy:Cloud)
 | Trigger | Values |

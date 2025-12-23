@@ -362,6 +362,7 @@ Mark as `[from docs]` with `confidence: LOW`.
 | App Type | T:{type} | `{type}.md` | Apps > {Type} section |
 | API | API:{style} | `api.md` | Backend > API section |
 | Database | DB:{type} | `database.md` | Backend > Data section |
+| Backend | Backend:{fw} | `backend.md` | Backend Frameworks section |
 | Frontend | Frontend:{fw} | `frontend.md` | Frontend section |
 | Framework | Framework:{name} | `{name}.md` | Meta-Frameworks section |
 | Mobile | Mobile:{platform} | `mobile.md` | Apps > Mobile section |
@@ -371,9 +372,14 @@ Mark as `[from docs]` with `confidence: LOW`.
 | Build | Build:{type} | `{type}.md` | Build Tools section |
 | Testing | Test:{type} | `testing.md` | Testing Rules section |
 | CI/CD | CI:{provider} | `ci-cd.md` | CI/CD section |
-| Game | Game:{engine} | `game.md` | Specialized > Game section (Base + Engine-specific: Unity/Unreal/Godot) |
+| MQ | MQ:{provider} | `mq.md` | Message Queues section |
+| ORM | ORM:{orm} | `orm.md` | ORM-specific rules (Exposed, etc.) |
+| Game | Game:{engine} | `game.md` | Specialized > Game section |
 | RT | RT:{level} | `realtime.md` | Real-time section |
 | i18n | i18n | `i18n.md` | i18n section |
+| Observability | Observability:{tool} | `observability-tools.md` | Observability Tools section |
+| Deploy | Deploy:{platform} | `deploy.md` | Deployment Platforms section |
+| Docs | Docs:{ssg} | `docs.md` | Documentation Generators section |
 | User:Scale | Scale:{tier} | `scale.md` | Scale Rules section |
 | User:Team | Team:{size} | `team.md` | Team Rules section |
 | User:Security | Data:PII/Regulated | `security.md` | Security Rules section |
