@@ -5,19 +5,7 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
-## [Unreleased]
-
-### Added
-- Comprehensive test suite for install, local, operations, and ui modules (TEST-001, TEST-002, TEST-003, TEST-004)
-- Integration tests for local setup functionality (TEST-005)
-- Debug logging for Windows UTF-8 encoding fix (BEST-001)
-- --dry-run flag to cco-install for previewing installation changes (DX-003)
-
-### Changed
-- Improved timeout constant naming: SUBPROCESS_TIMEOUT_DEFAULT and SUBPROCESS_TIMEOUT_PACKAGE_OPS for clarity (QUALITY-002)
-- Standardized parameter ordering in operations.py functions (QUALITY-001)
-
-## [2.0.0] - 2025-12-16
+## [2.0.0] - Unreleased
 
 ### Breaking Changes
 - **Command renames** - All commands renamed for consistency:
@@ -33,6 +21,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - **Path traversal fix** - Resolve paths before validation in `_is_safe_path` to prevent symlink/traversal bypasses
 
 ### Added
+- **Comprehensive benchmark suite** - CCO evaluation with Docker support, date tracking, and refresh functionality
+- **Comprehensive test suite** - Unit and integration tests for install, local, operations, and ui modules
+- **Opus + Haiku model architecture** - Dual-model implementation for optimized performance
+- **Orphan framework detection** - Modern 2025 technology triggers and game engine support
+- **--dry-run flag for cco-install** - Preview installation changes before applying
+- **Debug logging** - Windows UTF-8 encoding fix diagnostics
 - **Meta command `/cco-preflight`** - Pre-release workflow with quality gate, architecture review, changelog & docs sync, and go/no-go summary
 - **Meta command `/cco-checkup`** - Regular maintenance routine with health dashboard and full quality audit
 - **New command `/cco-research`** - Multi-source research with reliability scoring, contradiction detection, consensus mapping, bias detection, and AI-synthesized recommendations
@@ -67,6 +61,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - **best-practices scope** - Added to all relevant commands (optimize, review) for pattern adherence checks
 
 ### Changed
+- **Improved UX** - Skip options and verified defaults in commands
+- **Optimized question flow** - Scope compatibility improvements in commands
+- **Timeout constant naming** - SUBPROCESS_TIMEOUT_DEFAULT and SUBPROCESS_TIMEOUT_PACKAGE_OPS for clarity
+- **Parameter ordering** - Standardized in operations.py functions
 - **Standards → Rules restructure** - Renamed "standards" to "rules" throughout the project
 - **Directory renamed** - `content/slash-commands/` → `content/command-templates/` for consistency with `agent-templates/`
 - **4-category rules system** - `cco-core.md`, `cco-ai.md`, `cco-tools.md`, `cco-adaptive.md` in `~/.claude/rules/`
@@ -96,6 +94,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - **Module restructure** - Split `cco_uninstall.py` (503 lines) into `uninstall/` package (detection.py, removal.py, __init__.py)
 
 ### Fixed
+- **Benchmark server security** - Now binds to localhost only
+- **Python 3.10 compatibility** - StrEnum string conversion for path operations
+- **cco-commit title limit** - 50-character enforcement
+- **Benchmark timeout handling** - Output decode fix
+- **Statusline non-git display** - Shows project name when not in git repo
 - Rule counts consistent across all documentation (70 base + 110 tools + 120 adaptive pool)
 - Detection exclusions for test/example directories prevent false Container triggers
 - Statusline emoji width calculation for proper alignment
