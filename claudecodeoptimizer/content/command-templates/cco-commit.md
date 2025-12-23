@@ -266,9 +266,32 @@ for (const commit of commitPlan.commits) {
 Co-Authored-By: Claude <noreply@anthropic.com>
 ```
 
+### Title Rules [CRITICAL]
+
+**MUST be ≤50 characters total** (including `type(scope): ` prefix)
+
+```javascript
+// VALIDATE before commit - this is BLOCKING
+const fullTitle = `${type}(${scope}): ${title}`
+if (fullTitle.length > 50) {
+  // SHORTEN the title, not optional
+  // Remove adjectives, use shorter words, abbreviate
+}
+```
+
+| Component | Max Length | Example |
+|-----------|------------|---------|
+| type | 8 | `feat`, `fix`, `refactor` |
+| scope | 10 | `{module}`, `{feature}`, `{area}` |
+| title | ~30 | `{concise action description}` |
+| **TOTAL** | **≤50** | `{type}({scope}): {short title}` (≤50 chars ✓) |
+
+**Good:** `{type}({scope}): {short title}` (≤50 chars)
+**Bad:** `{type}({scope}): {title}, {extra detail}, and {more info}` (>50 chars ❌)
+
 | Rule | Requirement |
 |------|-------------|
-| Title | ≤50 chars, action verb, no period |
+| Title | **≤50 chars total**, action verb, no period |
 | Description | What changed and why (1-3 lines) |
 | Scope | From affected module/feature |
 | Types | feat, fix, refactor, perf, test, docs, build, ci, chore |
@@ -366,9 +389,10 @@ When `--quick` flag:
 
 ## Rules
 
-1. **Parallel quality gates** - Format+lint+types in background
-2. **Background tests** - Start tests early, check before commit
-3. **Single question** - All conditional tabs in one Q1
-4. **Dynamic tabs** - Only show relevant tabs
-5. **No vague messages** - Reject "fix bug", "update code"
-6. **Git safety** - Never force push, always verify
+1. **Title ≤50 chars** - BLOCKING: `type(scope): title` must be ≤50 total
+2. **Parallel quality gates** - Format+lint+types in background
+3. **Background tests** - Start tests early, check before commit
+4. **Single question** - All conditional tabs in one Q1
+5. **Dynamic tabs** - Only show relevant tabs
+6. **No vague messages** - Reject "fix bug", "update code"
+7. **Git safety** - Never force push, always verify
