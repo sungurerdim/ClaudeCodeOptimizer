@@ -3,11 +3,14 @@ Benchmark runner module.
 """
 
 from .executor import (
+    DOCKER_INSTALL_URL,
     BenchmarkResult,
+    DependencyStatus,
     ExecutionResult,
     ProjectConfig,
     ResultsManager,
     TestExecutor,
+    check_dependencies,
     discover_projects,
 )
 from .metrics import (
@@ -21,6 +24,8 @@ from .metrics import (
 __all__ = [
     "BenchmarkResult",
     "CodeAnalyzer",
+    "DependencyStatus",
+    "DOCKER_INSTALL_URL",
     "ExecutionResult",
     "FunctionInfo",
     "Metrics",
@@ -28,6 +33,7 @@ __all__ = [
     "ResultsManager",
     "TestExecutor",
     "calculate_overall_score",
+    "check_dependencies",
     "compare_metrics",
     "discover_projects",
 ]

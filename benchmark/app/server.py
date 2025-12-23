@@ -49,7 +49,7 @@ STATIC_DIR = Path(__file__).parent / "static"
 class ActivityLog:
     """Activity log for tracking operations (shown in UI)."""
 
-    def __init__(self, max_entries: int = 100) -> None:
+    def __init__(self, max_entries: int = 500) -> None:
         self._entries: deque[dict[str, str]] = deque(maxlen=max_entries)
 
     def add(self, message: str, level: str = "info") -> None:
@@ -83,23 +83,107 @@ def log_activity(message: str, level: str = "info") -> None:
 # ============== System Check ==============
 
 
+def get_platform_info() -> dict[str, Any]:
+    """Get platform-specific information for Docker setup."""
+    import platform
+
+    system = platform.system().lower()
+
+    if system == "windows":
+        return {
+            "os": "windows",
+            "os_name": "Windows",
+            "docker_install_url": "https://docs.docker.com/desktop/install/windows-install/",
+            "docker_start_cmd": "Start Docker Desktop from the Start menu",
+            "docker_start_hint": "Open Docker Desktop application",
+        }
+    elif system == "darwin":
+        return {
+            "os": "macos",
+            "os_name": "macOS",
+            "docker_install_url": "https://docs.docker.com/desktop/install/mac-install/",
+            "docker_start_cmd": "open -a Docker",
+            "docker_start_hint": "Open Docker Desktop from Applications or run: open -a Docker",
+        }
+    else:  # Linux and others
+        return {
+            "os": "linux",
+            "os_name": "Linux",
+            "docker_install_url": "https://docs.docker.com/engine/install/",
+            "docker_start_cmd": "sudo systemctl start docker",
+            "docker_start_hint": "Run: sudo systemctl start docker",
+        }
+
+
 def check_system_dependencies() -> dict[str, Any]:
     """Check if required dependencies are installed."""
+    platform_info = get_platform_info()
+
     result = {
+        "platform": platform_info,
         "python": {
             "installed": True,
             "version": sys.version.split()[0],
             "path": sys.executable,
         },
+        "docker": {
+            "installed": False,
+            "running": False,
+            "version": None,
+            "path": None,
+            "install_url": platform_info["docker_install_url"],
+            "start_hint": platform_info["docker_start_hint"],
+        },
         "ccbox": {
             "installed": False,
             "version": None,
             "path": None,
+            "install_cmd": "pip install ccbox",
         },
         "ready": False,
     }
 
-    # Check ccbox
+    # Check Docker first (ccbox requires Docker)
+    docker_path = shutil.which("docker")
+    if docker_path:
+        result["docker"]["installed"] = True
+        result["docker"]["path"] = docker_path
+        try:
+            # Get Docker version
+            version_output = subprocess.run(
+                ["docker", "--version"],
+                capture_output=True,
+                text=True,
+                timeout=5,
+                encoding="utf-8",
+                errors="replace",
+            )
+            if version_output.returncode == 0:
+                # "Docker version 24.0.7, build afdd53b"
+                version_str = version_output.stdout.strip()
+                if "version" in version_str.lower():
+                    parts = version_str.split()
+                    for i, p in enumerate(parts):
+                        if p.lower() == "version" and i + 1 < len(parts):
+                            result["docker"]["version"] = parts[i + 1].rstrip(",")
+                            break
+
+            # Check if Docker daemon is running
+            daemon_check = subprocess.run(
+                ["docker", "info"],
+                capture_output=True,
+                text=True,
+                timeout=10,
+                encoding="utf-8",
+                errors="replace",
+            )
+            result["docker"]["running"] = daemon_check.returncode == 0
+        except subprocess.TimeoutExpired:
+            result["docker"]["running"] = False
+        except Exception:
+            pass
+
+    # Check ccbox (only useful if Docker is running)
     ccbox_path = shutil.which("ccbox")
     if ccbox_path:
         result["ccbox"]["installed"] = True
@@ -118,7 +202,13 @@ def check_system_dependencies() -> dict[str, Any]:
         except Exception:
             pass
 
-    result["ready"] = result["python"]["installed"] and result["ccbox"]["installed"]
+    # System is ready only if Docker is running AND ccbox is installed
+    result["ready"] = (
+        result["python"]["installed"]
+        and result["docker"]["installed"]
+        and result["docker"]["running"]
+        and result["ccbox"]["installed"]
+    )
     return result
 
 
@@ -248,7 +338,7 @@ async def get_install_status() -> dict[str, Any]:
 
 
 @app.get("/api/activity")
-async def get_activity(limit: int = 20) -> list[dict[str, str]]:
+async def get_activity(limit: int = 50) -> list[dict[str, str]]:
     """Get recent activity log entries."""
     return activity_log.get_entries(limit)
 
@@ -346,19 +436,32 @@ async def execute_tests_background(run_id: str, project_ids: list[str], model: s
             running_tests[key]["status"] = "running_vanilla"
             running_tests[key]["current_variant"] = "vanilla"
             running_tests[key]["progress"] = 25
-            log_activity(f"Running vanilla variant for {config.name}...", "info")
+            log_activity(f"[VANILLA] Starting: {config.name}", "info")
 
             vanilla_result = await asyncio.to_thread(executor.run_project, config, "vanilla", model)
 
-            if not vanilla_result.success:
+            if vanilla_result.success:
                 log_activity(
-                    f"Vanilla failed (exit={vanilla_result.exit_code}): {vanilla_result.error_message}",
-                    "warning",
+                    f"[VANILLA] Completed: score={vanilla_result.score}, time={vanilla_result.generation_time_seconds:.1f}s",
+                    "success",
                 )
+            else:
+                log_activity(f"[VANILLA] FAILED: {vanilla_result.error_message}", "error")
+                log_activity(f"[VANILLA] Exit code: {vanilla_result.exit_code}", "error")
                 if vanilla_result.command:
-                    log_activity(f"  Command: {vanilla_result.command}", "warning")
+                    log_activity(f"[VANILLA] Command: {vanilla_result.command[:150]}...", "warning")
                 if vanilla_result.stderr_excerpt:
-                    log_activity(f"  Stderr: {vanilla_result.stderr_excerpt[:200]}", "warning")
+                    # Show more stderr for debugging
+                    stderr_lines = vanilla_result.stderr_excerpt.strip().split("\n")[:5]
+                    for line in stderr_lines:
+                        if line.strip():
+                            log_activity(f"[VANILLA] stderr: {line[:150]}", "warning")
+                if vanilla_result.stdout_excerpt and not vanilla_result.stderr_excerpt:
+                    stdout_lines = vanilla_result.stdout_excerpt.strip().split("\n")[:3]
+                    for line in stdout_lines:
+                        if line.strip():
+                            log_activity(f"[VANILLA] stdout: {line[:150]}", "warning")
+                log_activity(f"[VANILLA] Output dir: {vanilla_result.output_dir}", "info")
 
             running_tests[key]["progress"] = 50
 
@@ -366,21 +469,34 @@ async def execute_tests_background(run_id: str, project_ids: list[str], model: s
             running_tests[key]["status"] = "running_cco"
             running_tests[key]["current_variant"] = "cco"
             running_tests[key]["progress"] = 60
-            log_activity(f"Running CCO variant for {config.name} (setup + test)...", "info")
+            log_activity(f"[CCO] Starting: {config.name} (setup + test phases)", "info")
 
             cco_result = await asyncio.to_thread(executor.run_project, config, "cco", model)
 
             running_tests[key]["progress"] = 90
 
-            if not cco_result.success:
+            if cco_result.success:
                 log_activity(
-                    f"CCO failed (exit={cco_result.exit_code}): {cco_result.error_message}",
-                    "warning",
+                    f"[CCO] Completed: score={cco_result.score}, time={cco_result.generation_time_seconds:.1f}s",
+                    "success",
                 )
+            else:
+                log_activity(f"[CCO] FAILED: {cco_result.error_message}", "error")
+                log_activity(f"[CCO] Exit code: {cco_result.exit_code}", "error")
                 if cco_result.command:
-                    log_activity(f"  Command: {cco_result.command}", "warning")
+                    log_activity(f"[CCO] Command: {cco_result.command[:150]}...", "warning")
                 if cco_result.stderr_excerpt:
-                    log_activity(f"  Stderr: {cco_result.stderr_excerpt[:200]}", "warning")
+                    # Show more stderr for debugging
+                    stderr_lines = cco_result.stderr_excerpt.strip().split("\n")[:5]
+                    for line in stderr_lines:
+                        if line.strip():
+                            log_activity(f"[CCO] stderr: {line[:150]}", "warning")
+                if cco_result.stdout_excerpt and not cco_result.stderr_excerpt:
+                    stdout_lines = cco_result.stdout_excerpt.strip().split("\n")[:3]
+                    for line in stdout_lines:
+                        if line.strip():
+                            log_activity(f"[CCO] stdout: {line[:150]}", "warning")
+                log_activity(f"[CCO] Output dir: {cco_result.output_dir}", "info")
 
             # Build full benchmark result
             from ..runner import compare_metrics

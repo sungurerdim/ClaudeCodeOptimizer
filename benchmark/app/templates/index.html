@@ -449,7 +449,7 @@
             right: 0;
             background: var(--bg-secondary);
             border-top: 1px solid var(--border);
-            max-height: 200px;
+            max-height: 300px;
             overflow: hidden;
             transition: max-height 0.3s;
         }
@@ -469,7 +469,7 @@
 
         .activity-list {
             padding: 10px 20px;
-            max-height: 150px;
+            max-height: 250px;
             overflow-y: auto;
             font-size: 12px;
             font-family: monospace;
@@ -488,7 +488,7 @@
         .activity-entry.error .msg { color: var(--error); }
 
         /* Adjust container for activity panel */
-        .container { padding-bottom: 220px; }
+        .container { padding-bottom: 320px; }
     </style>
 </head>
 <body>
@@ -509,6 +509,11 @@
                     <span>Python <span id="python-version"></span></span>
                     <span class="status-icon ok"></span>
                 </div>
+                <div class="status-item" id="docker-status">
+                    <span class="status-emoji">🐳</span>
+                    <span>Docker <span id="docker-version"></span></span>
+                    <span class="status-icon missing"></span>
+                </div>
                 <div class="status-item" id="ccbox-status">
                     <span class="status-emoji">📦</span>
                     <span>ccbox <span id="ccbox-version"></span></span>
@@ -516,7 +521,10 @@
                 </div>
             </div>
             <div id="install-section">
-                <button class="install-btn" onclick="installCcbox()" id="install-btn">
+                <a href="https://docs.docker.com/get-docker/" target="_blank" rel="noopener" id="docker-install-link" class="install-btn" style="display: none; text-decoration: none;">
+                    🐳 Install Docker
+                </a>
+                <button class="install-btn" onclick="installCcbox()" id="install-btn" style="display: none;">
                     ⬇️ Install ccbox
                 </button>
             </div>
@@ -978,6 +986,63 @@
                 html += '</tbody></table>';
             }
 
+            // Error details section (if any failures)
+            if (!cco.success || !vanilla.success) {
+                html += `<h4 style="margin: 20px 0 15px; color: var(--error);">Error Details</h4>`;
+
+                if (!cco.success) {
+                    html += `
+                        <div style="background: var(--bg-tertiary); border-left: 3px solid var(--error); padding: 15px; margin-bottom: 15px; border-radius: 4px;">
+                            <strong style="color: var(--cco);">CCO Variant Failed</strong>
+                            <div style="margin-top: 10px; font-family: monospace; font-size: 12px;">
+                                <div><strong>Error:</strong> ${escapeHtml(cco.error_message || 'Unknown error')}</div>
+                                <div><strong>Exit Code:</strong> ${cco.exit_code ?? 'N/A'}</div>
+                                <div><strong>Command:</strong> <span style="word-break: break-all;">${escapeHtml(cco.command || 'N/A')}</span></div>
+                                <div><strong>Output Dir:</strong> ${escapeHtml(cco.output_dir || 'N/A')}</div>
+                            </div>
+                            ${cco.stderr_excerpt ? `
+                                <details style="margin-top: 10px;">
+                                    <summary style="cursor: pointer; color: var(--warning);">Show stderr output</summary>
+                                    <pre style="background: var(--bg); padding: 10px; margin-top: 5px; overflow-x: auto; font-size: 11px; max-height: 200px; overflow-y: auto;">${escapeHtml(cco.stderr_excerpt)}</pre>
+                                </details>
+                            ` : ''}
+                            ${cco.stdout_excerpt ? `
+                                <details style="margin-top: 10px;">
+                                    <summary style="cursor: pointer; color: var(--accent);">Show stdout output</summary>
+                                    <pre style="background: var(--bg); padding: 10px; margin-top: 5px; overflow-x: auto; font-size: 11px; max-height: 200px; overflow-y: auto;">${escapeHtml(cco.stdout_excerpt)}</pre>
+                                </details>
+                            ` : ''}
+                        </div>
+                    `;
+                }
+
+                if (!vanilla.success) {
+                    html += `
+                        <div style="background: var(--bg-tertiary); border-left: 3px solid var(--error); padding: 15px; margin-bottom: 15px; border-radius: 4px;">
+                            <strong style="color: var(--vanilla);">Vanilla Variant Failed</strong>
+                            <div style="margin-top: 10px; font-family: monospace; font-size: 12px;">
+                                <div><strong>Error:</strong> ${escapeHtml(vanilla.error_message || 'Unknown error')}</div>
+                                <div><strong>Exit Code:</strong> ${vanilla.exit_code ?? 'N/A'}</div>
+                                <div><strong>Command:</strong> <span style="word-break: break-all;">${escapeHtml(vanilla.command || 'N/A')}</span></div>
+                                <div><strong>Output Dir:</strong> ${escapeHtml(vanilla.output_dir || 'N/A')}</div>
+                            </div>
+                            ${vanilla.stderr_excerpt ? `
+                                <details style="margin-top: 10px;">
+                                    <summary style="cursor: pointer; color: var(--warning);">Show stderr output</summary>
+                                    <pre style="background: var(--bg); padding: 10px; margin-top: 5px; overflow-x: auto; font-size: 11px; max-height: 200px; overflow-y: auto;">${escapeHtml(vanilla.stderr_excerpt)}</pre>
+                                </details>
+                            ` : ''}
+                            ${vanilla.stdout_excerpt ? `
+                                <details style="margin-top: 10px;">
+                                    <summary style="cursor: pointer; color: var(--accent);">Show stdout output</summary>
+                                    <pre style="background: var(--bg); padding: 10px; margin-top: 5px; overflow-x: auto; font-size: 11px; max-height: 200px; overflow-y: auto;">${escapeHtml(vanilla.stdout_excerpt)}</pre>
+                                </details>
+                            ` : ''}
+                        </div>
+                    `;
+                }
+            }
+
             // Prompt section
             html += `
                 <h4 style="margin: 20px 0 15px;">Prompt Used</h4>
@@ -1130,8 +1195,10 @@
         function updateSystemBanner(data) {
             const banner = document.getElementById('system-banner');
             const pythonStatus = document.getElementById('python-status');
+            const dockerStatus = document.getElementById('docker-status');
             const ccboxStatus = document.getElementById('ccbox-status');
             const installSection = document.getElementById('install-section');
+            const dockerInstallLink = document.getElementById('docker-install-link');
             const installBtn = document.getElementById('install-btn');
             const runBtn = document.getElementById('run-btn');
 
@@ -1143,22 +1210,56 @@
                 document.getElementById('python-version').textContent = data.dependencies.python.version;
             }
 
-            // ccbox status
+            // Docker status (with platform-specific hints)
+            const docker = data.dependencies.docker;
+            const platform = data.platform || {};
+            if (docker.installed && docker.running) {
+                dockerStatus.querySelector('.status-icon').className = 'status-icon ok';
+                document.getElementById('docker-version').textContent = docker.version || '';
+                dockerInstallLink.style.display = 'none';
+            } else if (docker.installed && !docker.running) {
+                dockerStatus.querySelector('.status-icon').className = 'status-icon missing';
+                document.getElementById('docker-version').textContent = '(not running)';
+                dockerInstallLink.style.display = 'inline-block';
+                dockerInstallLink.textContent = '▶️ Start Docker';
+                dockerInstallLink.href = '#';
+                const startHint = docker.start_hint || platform.docker_start_hint || 'Start Docker Desktop';
+                dockerInstallLink.onclick = () => { alert(startHint); return false; };
+            } else {
+                dockerStatus.querySelector('.status-icon').className = 'status-icon missing';
+                document.getElementById('docker-version').textContent = '(not installed)';
+                dockerInstallLink.style.display = 'inline-block';
+                dockerInstallLink.textContent = '🐳 Install Docker';
+                dockerInstallLink.href = docker.install_url || platform.docker_install_url || 'https://docs.docker.com/get-docker/';
+                dockerInstallLink.onclick = null;
+            }
+
+            // ccbox status (only show install button if Docker is ready)
             if (data.dependencies.ccbox.installed) {
                 ccboxStatus.querySelector('.status-icon').className = 'status-icon ok';
                 document.getElementById('ccbox-version').textContent = data.dependencies.ccbox.version || '';
-                installSection.style.display = 'none';
-                banner.className = 'system-banner ready';
+                installBtn.style.display = 'none';
             } else if (data.installing) {
                 ccboxStatus.querySelector('.status-icon').className = 'status-icon installing';
+                installBtn.style.display = 'inline-block';
                 installBtn.disabled = true;
                 installBtn.textContent = '⏳ Installing...';
-                banner.className = 'system-banner not-ready';
             } else {
                 ccboxStatus.querySelector('.status-icon').className = 'status-icon missing';
-                installSection.style.display = 'block';
-                installBtn.disabled = false;
-                installBtn.innerHTML = '⬇️ Install ccbox';
+                // Only show ccbox install if Docker is ready
+                if (docker.installed && docker.running) {
+                    installBtn.style.display = 'inline-block';
+                    installBtn.disabled = false;
+                    installBtn.innerHTML = '⬇️ Install ccbox';
+                } else {
+                    installBtn.style.display = 'none';
+                }
+            }
+
+            // Update banner class based on overall status
+            if (data.ready) {
+                banner.className = 'system-banner ready';
+            } else {
                 banner.className = 'system-banner not-ready';
             }
 
@@ -1167,7 +1268,18 @@
             // Disable run button if not ready
             if (!systemReady) {
                 runBtn.disabled = true;
-                runBtn.title = 'Install ccbox first';
+                const osName = platform.os_name || 'your system';
+                if (!docker.installed) {
+                    runBtn.title = `Docker is required for ${osName} - Install Docker first`;
+                } else if (!docker.running) {
+                    runBtn.title = `Docker is not running - ${docker.start_hint || 'Start Docker first'}`;
+                } else if (!data.dependencies.ccbox.installed) {
+                    runBtn.title = 'Install ccbox first (pip install ccbox)';
+                } else {
+                    runBtn.title = 'System not ready';
+                }
+            } else {
+                runBtn.title = '';
             }
         }
 
@@ -1209,7 +1321,7 @@
 
         async function loadActivity() {
             try {
-                const resp = await fetch('/api/activity?limit=20');
+                const resp = await fetch('/api/activity?limit=50');
                 const entries = await resp.json();
                 renderActivity(entries);
             } catch (e) {
