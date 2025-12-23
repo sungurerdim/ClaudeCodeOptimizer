@@ -60,19 +60,25 @@ Cannot commit: {n} conflict(s) detected. Resolve first.
 
 **Smart Default:** Stage all unstaged changes automatically. Use `--staged-only` to commit only staged.
 
+**CRITICAL:** Run ALL quality commands from **project root** for the **entire project**, not just changed files/directories.
+
 ```javascript
 // Phase 1: Blocking checks (instant, parallel)
 Bash("grep -rn '{secret_patterns}' --include='*.{extensions}' || true")  // Secrets
 Bash("find . -size +{max_size} -not -path './.git/*' 2>/dev/null || true")  // Large files
 
-// Phase 2: Code quality (parallel) - Commands from context.md
-formatTask = Bash("{format_command} 2>&1", { run_in_background: true })
-lintTask = Bash("{lint_command} 2>&1", { run_in_background: true })
-typeTask = Bash("{type_command} 2>&1", { run_in_background: true })
+// Phase 2: Code quality (parallel) - Commands from context.md Operational.Tools
+// IMPORTANT: Use exact commands from context.md, run from project root
+// Example for Python: ruff format . && ruff check . && mypy src/
+formatTask = Bash("{format_command} 2>&1", { run_in_background: true })  // e.g., "ruff format ."
+lintTask = Bash("{lint_command} 2>&1", { run_in_background: true })      // e.g., "ruff check ."
+typeTask = Bash("{type_command} 2>&1", { run_in_background: true })      // e.g., "mypy src/"
 
 // Phase 3: Tests (background - check before commit)
-testTask = Bash("{test_command} 2>&1", { run_in_background: true })
+testTask = Bash("{test_command} 2>&1", { run_in_background: true })      // e.g., "pytest tests/"
 ```
+
+**Why entire project?** A change in one file can break imports, types, or tests in other files. Running checks only on changed files misses these cross-file issues.
 
 | Gate | Execution | Action |
 |------|-----------|--------|
@@ -396,3 +402,4 @@ When `--quick` flag:
 5. **Dynamic tabs** - Only show relevant tabs
 6. **No vague messages** - Reject "fix bug", "update code"
 7. **Git safety** - Never force push, always verify
+8. **Full project checks** - Run format/lint/test on entire project from root, not just changed files
