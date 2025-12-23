@@ -34,6 +34,10 @@ class ExecutionResult:
     prompt_used: str
     error_message: str = ""
     output_dir: str = ""
+    command: str = ""  # Full command executed
+    exit_code: int | None = None
+    stdout_excerpt: str = ""  # Last 500 chars of stdout
+    stderr_excerpt: str = ""  # Last 500 chars of stderr
     timestamp: str = field(default_factory=lambda: datetime.now().isoformat())
 
     def to_dict(self) -> dict[str, Any]:
@@ -47,6 +51,10 @@ class ExecutionResult:
             "prompt_used": self.prompt_used,
             "error_message": self.error_message,
             "output_dir": self.output_dir,
+            "command": self.command,
+            "exit_code": self.exit_code,
+            "stdout_excerpt": self.stdout_excerpt,
+            "stderr_excerpt": self.stderr_excerpt,
             "timestamp": self.timestamp,
         }
 
@@ -144,7 +152,100 @@ class TestExecutor:
         self.output_base = output_base
         self.ccbox_cmd = ccbox_cmd
         self.timeout = timeout_seconds
+        self.setup_timeout = 120  # 2 minutes for CCO setup
         self.output_base.mkdir(parents=True, exist_ok=True)
+
+    def _run_cco_setup(self, project_dir: Path, model: str) -> dict[str, Any]:
+        """Run cco-config --auto to setup CCO rules before the actual test.
+
+        This runs in a separate ccbox invocation so that:
+        1. CCO rules are configured and persisted
+        2. Container restarts with rules in context
+
+        Returns:
+            Dict with success, time, command, exit_code, stdout, stderr, error
+        """
+        cmd = [
+            self.ccbox_cmd,
+            "-C",
+            str(project_dir),
+            "--yes",
+            "--model",
+            model,
+            "--prompt",
+            "/cco-config --auto",
+        ]
+        cmd_str = " ".join(cmd)
+        start_time = time.time()
+
+        try:
+            result = subprocess.run(
+                cmd,
+                capture_output=True,
+                text=True,
+                timeout=self.setup_timeout,
+                env={**os.environ, "CLAUDE_MODEL": model},
+                encoding="utf-8",
+                errors="replace",
+            )
+
+            elapsed = time.time() - start_time
+
+            # Save setup logs
+            (project_dir / "_cco_setup_stdout.log").write_text(result.stdout, encoding="utf-8")
+            (project_dir / "_cco_setup_stderr.log").write_text(result.stderr, encoding="utf-8")
+
+            if result.returncode != 0:
+                return {
+                    "success": False,
+                    "time": elapsed,
+                    "command": cmd_str,
+                    "exit_code": result.returncode,
+                    "stdout": result.stdout,
+                    "stderr": result.stderr,
+                    "error": f"Exit code {result.returncode}: {result.stderr[:300]}",
+                }
+
+            return {
+                "success": True,
+                "time": elapsed,
+                "command": cmd_str,
+                "exit_code": 0,
+                "stdout": result.stdout,
+                "stderr": result.stderr,
+                "error": "",
+            }
+
+        except subprocess.TimeoutExpired:
+            return {
+                "success": False,
+                "time": time.time() - start_time,
+                "command": cmd_str,
+                "exit_code": None,
+                "stdout": "",
+                "stderr": "",
+                "error": f"Setup timeout after {self.setup_timeout} seconds",
+            }
+        except FileNotFoundError:
+            return {
+                "success": False,
+                "time": 0,
+                "command": cmd_str,
+                "exit_code": None,
+                "stdout": "",
+                "stderr": "",
+                "error": f"ccbox command not found: {self.ccbox_cmd}",
+            }
+        except Exception as e:
+            return {
+                "success": False,
+                "time": time.time() - start_time,
+                "command": cmd_str,
+                "exit_code": None,
+                "stdout": "",
+                "stderr": "",
+                "error": f"{type(e).__name__}: {e}",
+            }
 
     def run_project(
         self, config: ProjectConfig, variant: str, model: str = "opus"
@@ -153,6 +254,10 @@ class TestExecutor:
 
         Creates an isolated directory, cd's into it, and runs ccbox.
         ccbox will mount this directory and generate code there.
+
+        For CCO variant, runs two phases:
+        1. Setup phase: Run /cco-config --auto to configure CCO rules
+        2. Test phase: Run the actual benchmark prompt
         """
         # Create isolated project directory
         timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
@@ -163,7 +268,27 @@ class TestExecutor:
         prompt_file = project_dir / "_benchmark_prompt.md"
         prompt_file.write_text(config.prompt, encoding="utf-8")
 
-        # Build ccbox command
+        # CCO variant: First run cco-config --auto to setup rules
+        if variant == "cco":
+            setup_result = self._run_cco_setup(project_dir, model)
+            if not setup_result["success"]:
+                return ExecutionResult(
+                    project_id=config.id,
+                    variant=variant,
+                    success=False,
+                    metrics=None,
+                    score=0.0,
+                    generation_time_seconds=setup_result["time"],
+                    prompt_used=config.prompt,
+                    output_dir=str(project_dir),
+                    command=setup_result["command"],
+                    exit_code=setup_result["exit_code"],
+                    stdout_excerpt=setup_result["stdout"][-500:] if setup_result["stdout"] else "",
+                    stderr_excerpt=setup_result["stderr"][-500:] if setup_result["stderr"] else "",
+                    error_message=f"CCO setup failed: {setup_result['error']}",
+                )
+
+        # Build ccbox command for the actual test
         cmd = [self.ccbox_cmd]
 
         # Project directory (ccbox -C flag)
@@ -172,7 +297,7 @@ class TestExecutor:
         # Variant-specific flags
         if variant == "vanilla":
             cmd.append("--bare")  # No CCO rules
-        # else: default ccbox:base with CCO rules
+        # else: CCO variant - rules already configured in setup phase
 
         # Common flags
         cmd.extend(
@@ -186,6 +311,7 @@ class TestExecutor:
         )
 
         start_time = time.time()
+        cmd_str = " ".join(cmd)
 
         try:
             # Run ccbox with -C pointing to project directory
@@ -215,6 +341,15 @@ class TestExecutor:
             metrics.generation_time_seconds = generation_time
             score = calculate_overall_score(metrics)
 
+            # Build detailed error message if failed
+            error_msg = ""
+            if not success:
+                error_msg = f"Exit code {result.returncode}"
+                if result.stderr.strip():
+                    error_msg += f": {result.stderr.strip()[:300]}"
+                elif result.stdout.strip():
+                    error_msg += f" (stdout: {result.stdout.strip()[:300]})"
+
             return ExecutionResult(
                 project_id=config.id,
                 variant=variant,
@@ -224,7 +359,11 @@ class TestExecutor:
                 generation_time_seconds=round(generation_time, 2),
                 prompt_used=config.prompt,
                 output_dir=str(project_dir),
-                error_message="" if success else result.stderr[:500],
+                command=cmd_str,
+                exit_code=result.returncode,
+                stdout_excerpt=result.stdout[-500:] if result.stdout else "",
+                stderr_excerpt=result.stderr[-500:] if result.stderr else "",
+                error_message=error_msg,
             )
 
         except subprocess.TimeoutExpired:
@@ -238,6 +377,8 @@ class TestExecutor:
                 generation_time_seconds=round(generation_time, 2),
                 prompt_used=config.prompt,
                 output_dir=str(project_dir),
+                command=cmd_str,
+                exit_code=None,
                 error_message=f"Timeout after {self.timeout} seconds",
             )
         except FileNotFoundError:
@@ -250,10 +391,14 @@ class TestExecutor:
                 generation_time_seconds=0.0,
                 prompt_used=config.prompt,
                 output_dir=str(project_dir),
+                command=cmd_str,
+                exit_code=None,
                 error_message=f"ccbox command not found: {self.ccbox_cmd}",
             )
         except Exception as e:
             generation_time = time.time() - start_time
+            import traceback
+
             return ExecutionResult(
                 project_id=config.id,
                 variant=variant,
@@ -263,7 +408,9 @@ class TestExecutor:
                 generation_time_seconds=round(generation_time, 2),
                 prompt_used=config.prompt,
                 output_dir=str(project_dir),
-                error_message=str(e),
+                command=cmd_str,
+                exit_code=None,
+                error_message=f"{type(e).__name__}: {e}\n{traceback.format_exc()[:500]}",
             )
 
     def run_benchmark(self, config: ProjectConfig, model: str = "opus") -> BenchmarkResult:

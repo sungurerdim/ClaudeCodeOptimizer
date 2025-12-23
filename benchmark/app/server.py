@@ -351,20 +351,36 @@ async def execute_tests_background(run_id: str, project_ids: list[str], model: s
             vanilla_result = await asyncio.to_thread(executor.run_project, config, "vanilla", model)
 
             if not vanilla_result.success:
-                log_activity(f"Vanilla failed: {vanilla_result.error_message}", "warning")
+                log_activity(
+                    f"Vanilla failed (exit={vanilla_result.exit_code}): {vanilla_result.error_message}",
+                    "warning",
+                )
+                if vanilla_result.command:
+                    log_activity(f"  Command: {vanilla_result.command}", "warning")
+                if vanilla_result.stderr_excerpt:
+                    log_activity(f"  Stderr: {vanilla_result.stderr_excerpt[:200]}", "warning")
 
             running_tests[key]["progress"] = 50
 
-            # Run CCO
+            # Run CCO (two phases: setup + test)
             running_tests[key]["status"] = "running_cco"
             running_tests[key]["current_variant"] = "cco"
-            running_tests[key]["progress"] = 75
-            log_activity(f"Running CCO variant for {config.name}...", "info")
+            running_tests[key]["progress"] = 60
+            log_activity(f"Running CCO variant for {config.name} (setup + test)...", "info")
 
             cco_result = await asyncio.to_thread(executor.run_project, config, "cco", model)
 
+            running_tests[key]["progress"] = 90
+
             if not cco_result.success:
-                log_activity(f"CCO failed: {cco_result.error_message}", "warning")
+                log_activity(
+                    f"CCO failed (exit={cco_result.exit_code}): {cco_result.error_message}",
+                    "warning",
+                )
+                if cco_result.command:
+                    log_activity(f"  Command: {cco_result.command}", "warning")
+                if cco_result.stderr_excerpt:
+                    log_activity(f"  Stderr: {cco_result.stderr_excerpt[:200]}", "warning")
 
             # Build full benchmark result
             from ..runner import compare_metrics
