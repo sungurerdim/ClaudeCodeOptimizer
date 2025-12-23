@@ -560,6 +560,7 @@
                 <thead>
                     <tr>
                         <th>Project</th>
+                        <th>Date</th>
                         <th>CCO Score</th>
                         <th>Vanilla Score</th>
                         <th>Difference</th>
@@ -570,7 +571,7 @@
                     </tr>
                 </thead>
                 <tbody id="results-body">
-                    <tr><td colspan="8" class="empty-state">Loading results...</td></tr>
+                    <tr><td colspan="9" class="empty-state">Loading results...</td></tr>
                 </tbody>
             </table>
         </div>
@@ -796,14 +797,14 @@
                 renderResults(results);
             } catch (e) {
                 document.getElementById('results-body').innerHTML =
-                    '<tr><td colspan="8" class="empty-state">Error loading results</td></tr>';
+                    '<tr><td colspan="9" class="empty-state">Error loading results</td></tr>';
             }
         }
 
         function renderResults(results) {
             const tbody = document.getElementById('results-body');
             if (results.length === 0) {
-                tbody.innerHTML = '<tr><td colspan="8" class="empty-state"><h3>No Results Yet</h3><p>Run some benchmarks to see results</p></td></tr>';
+                tbody.innerHTML = '<tr><td colspan="9" class="empty-state"><h3>No Results Yet</h3><p>Run some benchmarks to see results</p></td></tr>';
                 return;
             }
 
@@ -812,6 +813,7 @@
                 return `
                 <tr>
                     <td><strong>${r.project_name}</strong></td>
+                    <td class="time">${formatDate(r.timestamp)}</td>
                     <td><span class="score cco">${r.cco_score}</span></td>
                     <td><span class="score vanilla">${r.vanilla_score}</span></td>
                     <td><span class="score" style="color: ${r.score_difference > 0 ? 'var(--cco)' : r.score_difference < 0 ? 'var(--vanilla)' : 'var(--text-muted)'}">
@@ -841,6 +843,18 @@
             const mins = Math.floor(seconds / 60);
             const secs = Math.round(seconds % 60);
             return `${mins}m ${secs}s`;
+        }
+
+        function formatDate(isoString) {
+            if (!isoString) return '-';
+            const d = new Date(isoString);
+            const day = String(d.getDate()).padStart(2, '0');
+            const month = String(d.getMonth() + 1).padStart(2, '0');
+            const year = d.getFullYear();
+            const hours = String(d.getHours()).padStart(2, '0');
+            const mins = String(d.getMinutes()).padStart(2, '0');
+            const secs = String(d.getSeconds()).padStart(2, '0');
+            return `${day}.${month}.${year} ${hours}:${mins}:${secs}`;
         }
 
         // Show detail modal
