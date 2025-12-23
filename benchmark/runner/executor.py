@@ -445,9 +445,21 @@ STDERR:
             elapsed = time.time() - start_time
             error_msg = f"Setup timeout after {self.setup_timeout}s"
             logger.error(f"[CCO Setup] TIMEOUT: {error_msg}")
-            # Try to get partial output
-            stdout = e.stdout.decode("utf-8", errors="replace") if e.stdout else ""
-            stderr = e.stderr.decode("utf-8", errors="replace") if e.stderr else ""
+            # Try to get partial output (may be str or bytes depending on subprocess config)
+            stdout = ""
+            stderr = ""
+            if e.stdout:
+                stdout = (
+                    e.stdout
+                    if isinstance(e.stdout, str)
+                    else e.stdout.decode("utf-8", errors="replace")
+                )
+            if e.stderr:
+                stderr = (
+                    e.stderr
+                    if isinstance(e.stderr, str)
+                    else e.stderr.decode("utf-8", errors="replace")
+                )
             if stdout or stderr:
                 logger.error(f"[CCO Setup] Partial stdout:\n{_truncate(stdout, 1000)}")
                 logger.error(f"[CCO Setup] Partial stderr:\n{_truncate(stderr, 1000)}")
