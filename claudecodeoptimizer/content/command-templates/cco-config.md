@@ -111,6 +111,13 @@ detectTask = Task("cco-agent-analyze", `
 // Load existing config for [current] labels
 existingConfig = loadExistingConfig()  // From .claude/settings.json
 
+// Helper: Generate label with [current] or (Recommended) suffix
+function configLabel(value, field, recommended = false, defaultSuffix = "") {
+  if (existingConfig[field] === value) return `${value} [current]`
+  if (recommended) return `${value} (Recommended)`
+  return defaultSuffix ? `${value} ${defaultSuffix}` : value
+}
+
 // UNATTENDED MODE: Skip Q1, use defaults
 if (isUnattended) {
   setupConfig = {
@@ -126,10 +133,7 @@ if (isUnattended) {
     question: "Project context action?",
     header: "Context",
     options: [
-      {
-        label: existingConfig.context ? "Setup/Update [current]" : "Setup/Update (Recommended)",
-        description: "Configure or update project context and rules"
-      },
+      { label: existingConfig.context ? "Setup/Update [current]" : "Setup/Update (Recommended)", description: "Configure or update project context and rules" },
       { label: "Remove", description: "Remove all CCO configuration" },
       { label: "Export", description: "Export rules to AGENTS.md or CLAUDE.md" }
     ],
@@ -139,22 +143,10 @@ if (isUnattended) {
     question: "Statusline display?",
     header: "Statusline",
     options: [
-      {
-        label: existingConfig.statusline === "full" ? "Full [current]" : "Full (Recommended)",
-        description: "User, model, context %, git status, file changes"
-      },
-      {
-        label: existingConfig.statusline === "minimal" ? "Minimal [current]" : "Minimal",
-        description: "User, model, context % only"
-      },
-      {
-        label: "Skip",
-        description: "Keep current statusline unchanged"
-      },
-      {
-        label: existingConfig.statusline === "none" ? "Remove [current]" : "Remove",
-        description: "Use Claude Code default statusline"
-      }
+      { label: configLabel("Full", "statusline", true), description: "User, model, context %, git status, file changes" },
+      { label: configLabel("Minimal", "statusline"), description: "User, model, context % only" },
+      { label: "Skip", description: "Keep current statusline unchanged" },
+      { label: configLabel("Remove", "statusline"), description: "Use Claude Code default statusline" }
     ],
     multiSelect: false
   },
@@ -162,22 +154,10 @@ if (isUnattended) {
     question: "Permission approval level?",
     header: "Permissions",
     options: [
-      {
-        label: existingConfig.permissions === "permissive" ? "Permissive [current]" : "Permissive",
-        description: "Auto-approve most operations (except force push)"
-      },
-      {
-        label: existingConfig.permissions === "balanced" ? "Balanced [current]" : "Balanced (Recommended)",
-        description: "Auto-approve read + lint/test, ask for writes"
-      },
-      {
-        label: "Skip",
-        description: "Keep current permissions unchanged"
-      },
-      {
-        label: "Remove",
-        description: "Remove permissions, use Claude Code defaults"
-      }
+      { label: configLabel("Permissive", "permissions"), description: "Auto-approve most operations (except force push)" },
+      { label: configLabel("Balanced", "permissions", true), description: "Auto-approve read + lint/test, ask for writes" },
+      { label: "Skip", description: "Keep current permissions unchanged" },
+      { label: "Remove", description: "Remove permissions, use Claude Code defaults" }
     ],
     multiSelect: false
   },
@@ -185,14 +165,8 @@ if (isUnattended) {
     question: "Enable extended thinking?",
     header: "Thinking",
     options: [
-      {
-        label: existingConfig.thinking === true ? "Enabled [current]" : "Enabled (Recommended)",
-        description: "Better for complex code, architecture decisions"
-      },
-      {
-        label: existingConfig.thinking === false ? "Disabled [current]" : "Disabled (CC default)",
-        description: "Faster responses, better prompt caching"
-      }
+      { label: configLabel("Enabled", "thinking", true), description: "Better for complex code, architecture decisions" },
+      { label: configLabel("Disabled", "thinking", false, "(CC default)"), description: "Faster responses, better prompt caching" }
     ],
     multiSelect: false
   }

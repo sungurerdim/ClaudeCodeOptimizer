@@ -79,30 +79,23 @@ analysisTask = Task("cco-agent-analyze", `
 
 ```javascript
 // Determine recommendations based on context
-contextRecommendation = getContextBasedRecommendation()
 // Greenfield → Architecture; Legacy → Quality; Speed → Best Practices
+contextRecommendation = getContextBasedRecommendation()
+
+// Helper: Add (Recommended) suffix if matches context recommendation
+function focusLabel(key, displayName) {
+  return contextRecommendation === key ? `${displayName} (Recommended)` : displayName
+}
 
 AskUserQuestion([
   {
     question: "Focus areas for review?",
     header: "Focus",
     options: [
-      {
-        label: contextRecommendation === "architecture" ? "Architecture (Recommended)" : "Architecture",
-        description: "Dependency graph, coupling, patterns, layers"
-      },
-      {
-        label: contextRecommendation === "quality" ? "Code Quality (Recommended)" : "Code Quality",
-        description: "Complexity, code smells, type coverage"
-      },
-      {
-        label: contextRecommendation === "testing" ? "Testing & DX (Recommended)" : "Testing & DX",
-        description: "Test coverage, developer experience"
-      },
-      {
-        label: contextRecommendation === "best-practices" ? "Best Practices (Recommended)" : "Best Practices",
-        description: "Execution patterns, tool usage, efficiency"
-      }
+      { label: focusLabel("architecture", "Architecture"), description: "Dependency graph, coupling, patterns, layers" },
+      { label: focusLabel("quality", "Code Quality"), description: "Complexity, code smells, type coverage" },
+      { label: focusLabel("testing", "Testing & DX"), description: "Test coverage, developer experience" },
+      { label: focusLabel("best-practices", "Best Practices"), description: "Execution patterns, tool usage, efficiency" }
     ],
     multiSelect: true
   },
