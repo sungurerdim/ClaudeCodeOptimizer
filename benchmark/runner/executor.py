@@ -18,7 +18,10 @@ import logging
 import os
 import shutil
 import subprocess
+import sys
+import threading
 import time
+from collections.abc import Callable
 from dataclasses import dataclass, field
 from datetime import datetime
 from pathlib import Path
@@ -28,6 +31,51 @@ from .metrics import CodeAnalyzer, Metrics, calculate_overall_score, compare_met
 
 # Configure logger for detailed debugging
 logger = logging.getLogger("cco-benchmark.executor")
+
+# Platform detection for select compatibility
+IS_WINDOWS = sys.platform == "win32"
+
+
+@dataclass
+class ActivityState:
+    """Tracks process activity for stall detection."""
+
+    last_output_time: float = 0.0
+    last_file_count: int = 0
+    last_file_check_time: float = 0.0
+    total_output_lines: int = 0
+    stdout_buffer: list[str] = field(default_factory=list)
+    stderr_buffer: list[str] = field(default_factory=list)
+    stall_warnings: int = 0
+    is_stalled: bool = False
+
+    def update_output(self) -> None:
+        """Mark that output was received."""
+        self.last_output_time = time.time()
+        self.total_output_lines += 1
+        self.is_stalled = False
+
+    def check_stall(self, stall_threshold: float = 60.0) -> bool:
+        """Check if process appears stalled (no output for threshold seconds)."""
+        if self.last_output_time == 0:
+            return False
+        elapsed = time.time() - self.last_output_time
+        if elapsed > stall_threshold:
+            self.is_stalled = True
+            return True
+        return False
+
+
+def _count_project_files(project_dir: Path) -> int:
+    """Count non-metadata files in project directory."""
+    count = 0
+    try:
+        for f in project_dir.rglob("*"):
+            if f.is_file() and not f.name.startswith("_"):
+                count += 1
+    except Exception:
+        pass
+    return count
 
 
 def _truncate(text: str, max_len: int = 1000) -> str:
@@ -344,12 +392,170 @@ class TestExecutor:
     We create isolated directories for each test run and cd into them.
     """
 
-    def __init__(self, output_base: Path, ccbox_cmd: str = "ccbox", timeout_seconds: int = 600):
+    def __init__(
+        self,
+        output_base: Path,
+        ccbox_cmd: str = "ccbox",
+        timeout_seconds: int = 600,
+        stall_threshold: float = 120.0,
+        progress_callback: Callable[[str, ActivityState], None] | None = None,
+        streaming: bool = True,
+    ):
         self.output_base = output_base
         self.ccbox_cmd = ccbox_cmd
         self.timeout = timeout_seconds
         self.setup_timeout = 120  # 2 minutes for CCO setup
+        self.stall_threshold = stall_threshold  # Seconds without output = stall warning
+        self.progress_callback = progress_callback
+        self.streaming = streaming
         self.output_base.mkdir(parents=True, exist_ok=True)
+
+    def _run_with_streaming(
+        self,
+        cmd: list[str],
+        project_dir: Path,
+        variant: str,
+        timeout: float,
+        env: dict[str, str] | None = None,
+    ) -> tuple[int | None, str, str, ActivityState]:
+        """Run command with real-time output streaming and activity tracking.
+
+        Returns:
+            Tuple of (exit_code, stdout, stderr, activity_state)
+        """
+        activity = ActivityState()
+        activity.last_output_time = time.time()
+        activity.last_file_check_time = time.time()
+        activity.last_file_count = _count_project_files(project_dir)
+
+        process_env = {**os.environ, **(env or {})}
+        start_time = time.time()
+
+        try:
+            process = subprocess.Popen(
+                cmd,
+                stdout=subprocess.PIPE,
+                stderr=subprocess.PIPE,
+                text=True,
+                env=process_env,
+                encoding="utf-8",
+                errors="replace",
+                bufsize=1,  # Line buffered
+            )
+        except FileNotFoundError:
+            return None, "", "", activity
+
+        # Thread-safe buffers
+        stdout_lines: list[str] = []
+        stderr_lines: list[str] = []
+        lock = threading.Lock()
+
+        def read_stream(stream: Any, buffer: list[str], stream_name: str) -> None:
+            """Read from stream and update activity."""
+            try:
+                for line in iter(stream.readline, ""):
+                    if not line:
+                        break
+                    with lock:
+                        buffer.append(line)
+                        activity.update_output()
+
+                    # Log real-time output
+                    line_stripped = line.rstrip()
+                    if line_stripped:
+                        logger.info(f"[{variant.upper()}] [{stream_name}] {line_stripped[:200]}")
+
+                    # Call progress callback
+                    if self.progress_callback:
+                        try:
+                            self.progress_callback(line_stripped, activity)
+                        except Exception:
+                            pass
+            except Exception as e:
+                logger.debug(f"Stream read error ({stream_name}): {e}")
+            finally:
+                try:
+                    stream.close()
+                except Exception:
+                    pass
+
+        # Start reader threads
+        stdout_thread = threading.Thread(
+            target=read_stream, args=(process.stdout, stdout_lines, "stdout"), daemon=True
+        )
+        stderr_thread = threading.Thread(
+            target=read_stream, args=(process.stderr, stderr_lines, "stderr"), daemon=True
+        )
+        stdout_thread.start()
+        stderr_thread.start()
+
+        # Monitor loop with stall detection
+        last_stall_check = time.time()
+        stall_check_interval = 30.0  # Check every 30 seconds
+        file_check_interval = 60.0  # Check files every 60 seconds
+
+        while process.poll() is None:
+            elapsed = time.time() - start_time
+
+            # Timeout check
+            if elapsed > timeout:
+                logger.warning(f"[{variant.upper()}] TIMEOUT after {elapsed:.0f}s - terminating...")
+                process.terminate()
+                try:
+                    process.wait(timeout=5)
+                except subprocess.TimeoutExpired:
+                    process.kill()
+                    process.wait()
+                break
+
+            # Stall detection
+            now = time.time()
+            if now - last_stall_check > stall_check_interval:
+                last_stall_check = now
+
+                if activity.check_stall(self.stall_threshold):
+                    activity.stall_warnings += 1
+                    stall_time = now - activity.last_output_time
+
+                    # Check file activity as secondary indicator
+                    if now - activity.last_file_check_time > file_check_interval:
+                        current_files = _count_project_files(project_dir)
+                        file_change = current_files - activity.last_file_count
+                        activity.last_file_count = current_files
+                        activity.last_file_check_time = now
+
+                        if file_change > 0:
+                            logger.info(
+                                f"[{variant.upper()}] [ACTIVITY] No output for {stall_time:.0f}s "
+                                f"but {file_change} new files created - still working"
+                            )
+                            activity.is_stalled = False
+                        else:
+                            logger.warning(
+                                f"[{variant.upper()}] [STALL] No output for {stall_time:.0f}s, "
+                                f"no new files - may be stuck (warning #{activity.stall_warnings})"
+                            )
+                    else:
+                        logger.warning(
+                            f"[{variant.upper()}] [STALL] No output for {stall_time:.0f}s "
+                            f"(warning #{activity.stall_warnings})"
+                        )
+
+            time.sleep(0.5)
+
+        # Wait for reader threads to finish
+        stdout_thread.join(timeout=5)
+        stderr_thread.join(timeout=5)
+
+        # Collect output
+        with lock:
+            stdout = "".join(stdout_lines)
+            stderr = "".join(stderr_lines)
+            activity.stdout_buffer = stdout_lines
+            activity.stderr_buffer = stderr_lines
+
+        exit_code = process.returncode
+        return exit_code, stdout, stderr, activity
 
     def _run_cco_setup(self, project_dir: Path, model: str) -> dict[str, Any]:
         """Run cco-config --auto to setup CCO rules before the actual test.
@@ -580,8 +786,118 @@ STDERR:
 
         logger.info(f"[{variant.upper()}] Executing: {cmd_str[:200]}...")
 
+        # Use streaming mode for real-time output and activity tracking
+        if self.streaming:
+            exit_code, stdout, stderr, activity = self._run_with_streaming(
+                cmd=cmd,
+                project_dir=project_dir,
+                variant=variant,
+                timeout=self.timeout,
+                env={"CLAUDE_MODEL": model},
+            )
+
+            generation_time = time.time() - start_time
+
+            # Handle FileNotFoundError (exit_code is None and no output)
+            if exit_code is None and not stdout and not stderr:
+                return ExecutionResult(
+                    project_id=config.id,
+                    variant=variant,
+                    success=False,
+                    metrics=None,
+                    score=0.0,
+                    generation_time_seconds=0.0,
+                    prompt_used=config.prompt,
+                    output_dir=str(project_dir),
+                    command=cmd_str,
+                    exit_code=None,
+                    error_message=f"ccbox command not found: {self.ccbox_cmd}",
+                )
+
+            success = exit_code == 0
+
+            # Build stall info for error message
+            stall_info = ""
+            if activity.stall_warnings > 0:
+                stall_info = f" ({activity.stall_warnings} stall warnings)"
+            if activity.is_stalled:
+                stall_info += " [STALLED]"
+
+            # Save ccbox output with detailed info including activity
+            log_content = f"""ccbox Execution Log ({variant}) - STREAMING MODE
+{"=" * 60}
+Command: {cmd_str}
+Exit Code: {exit_code}
+Duration: {generation_time:.2f}s
+Success: {success}
+Project Dir: {project_dir}
+{"=" * 60}
+
+ACTIVITY TRACKING:
+- Total output lines: {activity.total_output_lines}
+- Stall warnings: {activity.stall_warnings}
+- Final stall state: {activity.is_stalled}
+{"=" * 60}
+
+STDOUT:
+{stdout or "(empty)"}
+
+{"=" * 60}
+STDERR:
+{stderr or "(empty)"}
+"""
+            (project_dir / "_ccbox_run.log").write_text(log_content, encoding="utf-8")
+            (project_dir / "_ccbox_stdout.log").write_text(stdout, encoding="utf-8")
+            (project_dir / "_ccbox_stderr.log").write_text(stderr, encoding="utf-8")
+
+            if success:
+                logger.info(f"[{variant.upper()}] SUCCESS in {generation_time:.2f}s{stall_info}")
+            else:
+                if exit_code is None:
+                    logger.error(
+                        f"[{variant.upper()}] TIMEOUT after {generation_time:.2f}s{stall_info}"
+                    )
+                else:
+                    logger.error(
+                        f"[{variant.upper()}] FAILED with exit code {exit_code}{stall_info}"
+                    )
+                logger.error(f"[{variant.upper()}] stdout:\n{_truncate(stdout, 1500)}")
+                logger.error(f"[{variant.upper()}] stderr:\n{_truncate(stderr, 1500)}")
+
+            # Analyze generated code
+            analyzer = CodeAnalyzer(project_dir)
+            metrics = analyzer.analyze()
+            metrics.name = config.name
+            metrics.variant = variant
+            metrics.generation_time_seconds = generation_time
+            score = calculate_overall_score(metrics)
+
+            # Build detailed error message if failed
+            error_msg = ""
+            if not success:
+                if exit_code is None:
+                    error_msg = f"Timeout after {self.timeout} seconds{stall_info}"
+                else:
+                    error_msg = _parse_ccbox_error(stdout, stderr, exit_code) + stall_info
+
+            return ExecutionResult(
+                project_id=config.id,
+                variant=variant,
+                success=success,
+                metrics=metrics,
+                score=round(score, 1),
+                generation_time_seconds=round(generation_time, 2),
+                prompt_used=config.prompt,
+                output_dir=str(project_dir),
+                command=cmd_str,
+                exit_code=exit_code,
+                stdout_excerpt=stdout[-1000:] if stdout else "",
+                stderr_excerpt=stderr[-1000:] if stderr else "",
+                error_message=error_msg,
+            )
+
+        # Legacy non-streaming mode (fallback)
         try:
-            # Run ccbox with -C pointing to project directory
             result = subprocess.run(
                 cmd,
                 capture_output=True,
@@ -595,7 +911,6 @@ STDERR:
             generation_time = time.time() - start_time
             success = result.returncode == 0
 
-            # Save ccbox output with detailed info
             log_content = f"""ccbox Execution Log ({variant})
 {"=" * 60}
 Command: {cmd_str}
@@ -623,8 +938,6 @@ STDERR:
                 logger.error(f"[{variant.upper()}] stdout:\n{_truncate(result.stdout, 1500)}")
                 logger.error(f"[{variant.upper()}] stderr:\n{_truncate(result.stderr, 1500)}")
 
-            # Analyze generated code (ccbox creates files in project_dir)
-            # Exclude our benchmark metadata files
             analyzer = CodeAnalyzer(project_dir)
             metrics = analyzer.analyze()
             metrics.name = config.name
@@ -632,7 +945,6 @@ STDERR:
             metrics.generation_time_seconds = generation_time
             score = calculate_overall_score(metrics)
 
-            # Build detailed error message if failed
             error_msg = ""
             if not success:
                 error_msg = _parse_ccbox_error(result.stdout, result.stderr, result.returncode)

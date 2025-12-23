@@ -4,6 +4,7 @@ Benchmark runner module.
 
 from .executor import (
     DOCKER_INSTALL_URL,
+    ActivityState,
     BenchmarkResult,
     DependencyStatus,
     ExecutionResult,
@@ -22,6 +23,7 @@ from .metrics import (
 )
 
 __all__ = [
+    "ActivityState",
     "BenchmarkResult",
     "CodeAnalyzer",
     "DependencyStatus",

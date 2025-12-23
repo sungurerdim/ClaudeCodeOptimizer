@@ -362,6 +362,7 @@ async def start_docker() -> dict[str, Any]:
             else:
                 # Try alternative method - use full path to Docker Desktop
                 import os
+
                 docker_path = os.path.expandvars(r"%ProgramFiles%\Docker\Docker\Docker Desktop.exe")
                 result = subprocess.run(
                     ["cmd", "/c", "start", "", docker_path],
