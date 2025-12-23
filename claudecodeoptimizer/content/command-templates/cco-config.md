@@ -12,8 +12,8 @@ allowed-tools: Read(*), Write(*), Edit(*), Bash(cco-install:*), Task(*), TodoWri
 
 - `--auto` or `--unattended`: Skip all questions, use recommended defaults
   - Context: Setup/Update
-  - Statusline: Full
-  - Permissions: Balanced
+  - Statusline: Skip (keep unchanged)
+  - Permissions: Skip (keep unchanged)
   - Thinking: Enabled
   - Budget: AI-recommended based on project complexity
   - Output: AI-recommended based on project complexity
@@ -37,10 +37,11 @@ const isUnattended = "$ARGS".includes("--auto") || "$ARGS".includes("--unattende
 
 if (isUnattended) {
   // Skip to Step-1 with defaults, no questions
+  // Statusline/Permissions = "Skip" to keep unchanged (non-invasive)
   setupConfig = {
     context: "Setup/Update",
-    statusline: "Full",
-    permissions: "Balanced",
+    statusline: "Skip",
+    permissions: "Skip",
     thinking: "Enabled"
   }
   // Skip Q1, Q2 - proceed directly to detection and apply
@@ -114,8 +115,8 @@ existingConfig = loadExistingConfig()  // From .claude/settings.json
 if (isUnattended) {
   setupConfig = {
     context: "Setup/Update",
-    statusline: "Full",
-    permissions: "Balanced",
+    statusline: "Skip",      // Non-invasive: keep unchanged
+    permissions: "Skip",     // Non-invasive: keep unchanged
     thinking: "Enabled"
   }
   // Proceed directly to Step-3
@@ -245,64 +246,43 @@ if (isUnattended) {
 **Build Q2 dynamically (max 4 tabs):**
 
 ```javascript
+  // Helper: Generate label with [current] or (Recommended) suffix
+  function optionLabel(value, field, defaultSuffix = "") {
+    if (existingConfig[field] === value) return `${value} [current]`
+    if (aiRecommendations[field] === value) return `${value} (Recommended)`
+    return defaultSuffix ? `${value} ${defaultSuffix}` : `${value}`
+  }
+
   questions = []
 
   // Tab 1: Thinking Budget (only if Thinking Enabled)
-  // Claude Code: No default (disabled), minimum 1024 when enabled
   if (setupConfig.thinking === "Enabled") {
     questions.push({
       question: "Thinking token budget?",
       header: "Budget",
       options: [
-        {
-          label: existingConfig.budget === 4000 ? "4000 [current]" : "4000",
-          description: "Simple tasks, faster responses"
-        },
-        {
-          label: existingConfig.budget === 8000 ? "8000 [current]" :
-                 aiRecommendations.budget === 8000 ? "8000 (Recommended)" : "8000",
-          description: "Good balance for most tasks"
-        },
-        {
-          label: existingConfig.budget === 16000 ? "16000 [current]" :
-                 aiRecommendations.budget === 16000 ? "16000 (Recommended)" : "16000",
-          description: "Complex multi-file refactoring"
-        },
-        {
-          label: existingConfig.budget === 32000 ? "32000 [current]" :
-                 aiRecommendations.budget === 32000 ? "32000 (Recommended)" : "32000",
-          description: "Architecture design, large codebases"
-        }
+        { label: optionLabel(4000, "budget"), description: "Simple tasks, faster responses" },
+        { label: optionLabel(8000, "budget"), description: "Good balance for most tasks" },
+        { label: optionLabel(16000, "budget"), description: "Complex multi-file refactoring" },
+        { label: optionLabel(32000, "budget"), description: "Architecture design, large codebases" }
       ],
       multiSelect: false
     })
   }
 
-  // Tab 2: Output Limits (always)
-  // Claude Code defaults: MCP=25000, Bash=30000
+  // Tab 2: Output Limits
   questions.push({
     question: "Tool output limits?",
     header: "Output",
     options: [
-      {
-        label: existingConfig.output === 10000 ? "10000 [current]" : "10000",
-        description: "Save context, reduced output"
-      },
-      {
-        label: existingConfig.output === 25000 ? "25000 [current]" :
-               aiRecommendations.output === 25000 ? "25000 (Recommended)" : "25000 (CC default)",
-        description: "Standard output limits"
-      },
-      {
-        label: existingConfig.output === 35000 ? "35000 [current]" :
-               aiRecommendations.output === 35000 ? "35000 (Recommended)" : "35000",
-        description: "Large outputs, big codebases"
-      }
+      { label: optionLabel(10000, "output"), description: "Save context, reduced output" },
+      { label: optionLabel(25000, "output", "(CC default)"), description: "Standard output limits" },
+      { label: optionLabel(35000, "output"), description: "Large outputs, big codebases" }
     ],
     multiSelect: false
   })
 
-  // Tab 3: Data Sensitivity (always)
+  // Tab 3: Data Sensitivity
   questions.push({
     question: "Most sensitive data handled?",
     header: "Data",
@@ -314,7 +294,7 @@ if (isUnattended) {
     multiSelect: false
   })
 
-  // Tab 4: Compliance (always, multiselect)
+  // Tab 4: Compliance (multiselect, none = no requirements)
   questions.push({
     question: "Compliance requirements?",
     header: "Compliance",
@@ -323,7 +303,7 @@ if (isUnattended) {
       { label: "GDPR/CCPA", description: "Privacy regulations" },
       { label: "HIPAA/PCI", description: "Healthcare or payments" }
     ],
-    multiSelect: true  // None selected = No compliance
+    multiSelect: true
   })
 
   AskUserQuestion(questions)
