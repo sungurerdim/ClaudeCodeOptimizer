@@ -1,5 +1,6 @@
 """CCO Install - Setup functions for commands, agents, and rules."""
 
+import re
 import shutil
 from pathlib import Path
 
@@ -16,6 +17,7 @@ from .config import (
 from .operations import (
     clean_claude_md_markers,
     remove_agent_files,
+    remove_all_cco_markers,
     remove_command_files,
     remove_new_rules,
     remove_old_rules,
@@ -204,8 +206,6 @@ def clean_claude_md(verbose: bool = True) -> int:
     Returns:
         Number of markers removed
     """
-    from .operations import remove_all_cco_markers
-
     claude_md = CLAUDE_DIR / "CLAUDE.md"
 
     if not claude_md.exists():
@@ -215,8 +215,6 @@ def clean_claude_md(verbose: bool = True) -> int:
     content, removed_count = remove_all_cco_markers(content)
 
     if removed_count > 0:
-        import re
-
         content = re.sub(r"\n{3,}", "\n\n", content)
         content = content.strip()
         if content:
