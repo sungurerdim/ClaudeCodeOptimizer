@@ -191,9 +191,6 @@ def _run_global_install(dry_run: bool = False) -> int:
     breakdown = get_rules_breakdown()
     print(SEPARATOR)
     if not dry_run:
-        cmds = setup_commands(verbose=False)
-        agents = setup_agents(verbose=False)
-        rules_installed = setup_rules(verbose=False)
         print(f"Installed: {len(cmds)} commands, {len(agents)} agents")
         print(f"  Global rules (in cco/): {rules_installed.get('total', 0)}")
     else:
