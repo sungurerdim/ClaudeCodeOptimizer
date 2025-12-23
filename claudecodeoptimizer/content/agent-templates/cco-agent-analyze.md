@@ -2,15 +2,12 @@
 name: cco-agent-analyze
 description: Read-only project analysis and issue detection
 tools: Glob, Read, Grep, Bash
-safe: true
 model: haiku
 ---
 
-# Agent: Analyze
+# cco-agent-analyze
 
 Read-only analysis. Multiple scopes in single run. Returns structured JSON.
-
-**Model:** Haiku (fast, read-only operations)
 
 ## Execution [CRITICAL]
 

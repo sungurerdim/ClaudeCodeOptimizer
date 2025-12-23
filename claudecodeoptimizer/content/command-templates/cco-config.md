@@ -357,7 +357,7 @@ Task("cco-agent-apply", `
      - Do NOT generate statusline code - ALWAYS copy from CCO package
 
   Total files: generateResult.rules.length + 2 + (statusline ? 1 : 0)
-`, { model: "sonnet", run_in_background: true })
+`, { run_in_background: true })
 ```
 
 ### Detection → Rule Mapping (Complete Reference)
@@ -659,7 +659,7 @@ Task("cco-agent-apply", `
   - Read all .claude/rules/cco/*.md
   - Filter for target format
   - Write to ./${format}
-`, { model: "sonnet" })
+`)
 ```
 
 ### Validation

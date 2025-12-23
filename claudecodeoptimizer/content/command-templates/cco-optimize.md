@@ -2,6 +2,7 @@
 name: cco-optimize
 description: Security and code quality analysis with auto-fix
 allowed-tools: Read(*), Grep(*), Glob(*), Edit(*), Bash(git:*), Bash(ruff:*), Bash(mypy:*), Bash(pip:*), Task(*), TodoWrite, AskUserQuestion
+model: opus
 ---
 
 # /cco-optimize
@@ -208,7 +209,7 @@ if (config.action !== "Report only" && autoFixable.length > 0) {
     fixes: ${JSON.stringify(autoFixable)}
     Apply all auto-fixable items. Verify each fix.
     Group by file for efficiency.
-  `, { model: "sonnet", run_in_background: true })
+  `, { run_in_background: true })
 }
 
 // Don't wait - proceed to Step-4 immediately
@@ -293,7 +294,7 @@ if (approved.length > 0) {
     fixes: ${JSON.stringify(approved)}
     Apply user-approved items. Verify each fix.
     Handle cascading errors.
-  `, { model: "sonnet" })
+  `)
 }
 ```
 

@@ -136,7 +136,7 @@ qualityTask = Task("general-purpose", `
     accounting: { done, declined, fail, total },
     blockers: [{ severity, title, location }]
   }
-`, { model: "sonnet", run_in_background: true })
+`, { run_in_background: true })
 
 reviewTask = Task("general-purpose", `
   Execute /cco-review --quick --no-apply

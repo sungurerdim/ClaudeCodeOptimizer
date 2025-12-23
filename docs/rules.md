@@ -8,9 +8,9 @@
 |----------|-------|----------|---------|
 | Core | 62 | `~/.claude/rules/cco/core.md` | Always active |
 | AI | 39 | `~/.claude/rules/cco/ai.md` | Always active |
-| Tools | 104 | pip package | Built into commands/agents |
-| Adaptive | 812 | pip package → `.claude/rules/cco/` | Per-project |
-| **Total** | **1017** | | |
+| Tools | 106 | pip package | Built into commands/agents |
+| Adaptive | 1284 | pip package → `.claude/rules/cco/` | Per-project |
+| **Total** | **1491** | | |
 
 **Counting:** `grep -c "^- \*\*" <file>` for all rule files
 
@@ -477,7 +477,7 @@
 
 | Category | Trigger |
 |----------|---------|
-| Language | Manifest files detected (16 languages: Python, TS, JS, Go, Rust, Java, Kotlin, Swift, C#, Ruby, PHP, Elixir, Gleam, Scala, Zig, Dart) |
+| Language | Manifest files detected (26 languages: Python, TS, JS, Go, Rust, Java, Kotlin, Swift, C#, Ruby, PHP, Elixir, Gleam, Scala, Zig, Dart, C, C++, Lua, Haskell, F#, OCaml, R, Julia, Perl) |
 | Security | D:PII, D:Regulated, Scale:Large, Compliance:* |
 | Compliance | User-selected (SOC2, HIPAA, PCI, GDPR, CCPA, ISO27001, FedRAMP, DORA, HITRUST) |
 | Scale | 100+ users (cumulative tiers) |
@@ -501,7 +501,7 @@
 | Real-time | WebSocket/SSE detected (cumulative tiers) |
 | Testing | User-selected (cumulative tiers) |
 | Observability | SLA-based (cumulative tiers) |
-| DEP:* | 42 dependency categories (GPU, Audio, Video, HTTP, ORM, Auth, Cache, etc.) |
+| DEP:* | 43 dependency categories (GPU, Audio, Video, HTTP, ORM, Auth, Cache, etc.) |
 
 ### Full Adaptive Rules List
 

@@ -2,16 +2,12 @@
 name: cco-agent-research
 description: External source research with reliability scoring and synthesis
 tools: WebSearch, WebFetch, Read, Grep, Glob
-safe: true
 model: haiku
-model_synthesis: sonnet
 ---
 
-# Agent: Research
+# cco-agent-research
 
 External source research with reliability scoring. Returns structured JSON.
-
-**Model:** Haiku for search/fetch, Sonnet for synthesis (tiered strategy)
 
 ## Execution [CRITICAL]
 
