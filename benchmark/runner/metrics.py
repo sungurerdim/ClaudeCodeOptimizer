@@ -581,6 +581,8 @@ class CodeAnalyzer:
                 capture_output=True,
                 text=True,
                 timeout=300,
+                encoding="utf-8",
+                errors="replace",
             )
 
             self.metrics.tests_passed = result.returncode == 0
@@ -611,6 +613,8 @@ class CodeAnalyzer:
                 capture_output=True,
                 text=True,
                 timeout=300,
+                encoding="utf-8",
+                errors="replace",
             )
             self.metrics.tests_passed = result.returncode == 0
         except Exception:
@@ -625,6 +629,8 @@ class CodeAnalyzer:
                 capture_output=True,
                 text=True,
                 timeout=300,
+                encoding="utf-8",
+                errors="replace",
             )
             self.metrics.tests_passed = result.returncode == 0
 
