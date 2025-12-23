@@ -17,34 +17,34 @@ This document details how CCO implements official Claude 4 best practices and Op
 
 | Practice | CCO Implementation |
 |----------|-------------------|
-| **Parallel Tool Execution** | Independent operations run simultaneously |
+| **Parallel Tool Execution** | `[PARALLEL]` markers, background tasks, multi-agent launches |
 | **Explicit Instructions** | Commands specify exact behaviors, not vague guidance |
 | **Context Motivation** | Rules explain "why" not just "what" |
 | **Conservative Judgment** | Evidence-based severity, never guesses |
-| **Long-horizon State Tracking** | TodoWrite for progress, git for state |
-| **Structured Output** | Consistent formats (`Applied: N | Skipped: N | Failed: N`) |
+| **Long-horizon State Tracking** | TodoWrite + git state + structured findings JSON |
+| **Structured Output** | Consistent formats (`Applied: N | Declined: N | Failed: N`) |
 | **Model Self-Knowledge** | Agent descriptions match capabilities |
 | **Subagent Orchestration** | Automatic delegation based on task type |
+| **Over-engineering Prevention** | YAGNI + KISS + Scope rules in Core |
 
 ## Implemented Patterns
 
 ### Parallel Tool Execution
 
-Commands that spawn multiple agents use explicit XML blocks for context-specific parallelization:
+Official Claude 4 documentation recommends the `<use_parallel_tool_calls>` XML block pattern. CCO achieves the same goal through alternative patterns:
 
-```markdown
-<use_parallel_tool_calls>
-When calling multiple tools with no dependencies between them, make all independent
-calls in a single message. For example:
-- Multiple cco-agent-analyze scopes → launch simultaneously
-- Multiple file reads → batch in parallel
-- Multiple grep searches → parallel calls
+**CCO Patterns (Alternative Implementation):**
+- `[PARALLEL]` step markers for simultaneous operations
+- `run_in_background: true` for non-blocking analysis
+- Multiple Task launches in single message for agent parallelism
 
-Never use placeholders or guess missing parameters.
-</use_parallel_tool_calls>
-```
+**Applied in:**
+- `cco-checkup.md`: Parallel health + audit execution
+- `cco-commit.md`: Parallel quality gates (secrets, format, lint, types)
+- `cco-optimize.md`: Background analysis during user questions
+- `cco-preflight.md`: Parallel phase execution
 
-**Applied in:** `cco-optimize.md`, `cco-status.md`, `cco-review.md`, `cco-preflight.md`, `cco-optimize.md`, `cco-research.md`
+> **Note:** CCO does not use the official `<use_parallel_tool_calls>` XML block. Instead, it relies on step markers and background execution patterns that achieve equivalent parallel behavior.
 
 ### Efficiency (Global AI Rules)
 
@@ -61,25 +61,71 @@ Efficiency patterns are **global AI rules** in `~/.claude/rules/cco/ai.md`:
 - **Complete-Fully**: Never stop early due to context concerns - auto-compaction handles limits
 ```
 
-These rules apply to ALL CCO commands automatically. Command-specific `<use_parallel_tool_calls>` blocks provide context-specific examples only (no duplication of global rules).
+These rules apply to ALL CCO commands automatically.
 
-CCO commands also leverage context awareness through:
-- Checking git state before operations
-- Saving progress with TodoWrite for long tasks
-- State tracking via structured files (context.md, settings.json)
+### Long-horizon State Tracking
 
-### Agent Model Selection
+Official Claude 4 documentation emphasizes state tracking for extended tasks. CCO implements this through:
 
-Claude Code 2.0.17+ handles model selection automatically:
-- Plan mode → Sonnet (deep reasoning)
-- Execution → Haiku (batch implementation)
-- `CLAUDE_CODE_SUBAGENT_MODEL` env var overrides all agent models
+**Structured State (JSON):**
+- `context.md`: Project configuration and detection results
+- Findings arrays with `{ id, scope, severity, location, fix }` schema
 
-| Agent | Purpose | Tools |
-|-------|---------|-------|
-| `cco-agent-analyze` | Read-only analysis | Glob, Read, Grep, Bash |
-| `cco-agent-apply` | Write operations with verification | Grep, Read, Glob, Bash, Edit, Write |
-| `cco-agent-research` | External research | WebSearch, WebFetch, Read, Grep, Glob |
+**Progress Tracking:**
+- TodoWrite for step-by-step progress visibility
+- Git status checks before/after operations
+- `Applied: N | Declined: N | Failed: N` accounting
+
+**State Persistence (from official docs):**
+```text
+Use git for state tracking: Git provides a log of what's been done and
+checkpoints that can be restored. Claude 4.5 models perform especially
+well in using git to track state across multiple sessions.
+```
+
+**Applied in:** All CCO commands use TodoWrite + git state checks
+
+### Model Selection Architecture
+
+CCO uses a tiered model strategy based on Opus 4.5 performance data:
+
+**Commands:**
+| Command | Model | Rationale |
+|---------|-------|-----------|
+| `cco-optimize` | opus | Deep security/quality analysis |
+| `cco-research` | opus | Complex synthesis and reasoning |
+| `cco-review` | opus | Architecture analysis |
+| `cco-commit` | opus | Quality gates, 50-75% fewer lint errors |
+| Others | inherit | Orchestration only |
+
+**Sub-agents:**
+| Agent | Model | Rationale |
+|-------|-------|-----------|
+| `cco-agent-analyze` | haiku | Read-only, fast scanning |
+| `cco-agent-apply` | opus | Coding SOTA, 50-75% fewer tool errors |
+| `cco-agent-research` | haiku | Fast web fetches |
+
+**Architecture:**
+```
+Opus Commands (analysis + coding)
+    └── cco-optimize, cco-research, cco-review, cco-commit
+
+Inherit Commands (orchestration)
+    └── cco-config, cco-status, cco-checkup, cco-preflight
+
+Sub-agents
+    └── analyze: haiku (read-only)
+    └── apply: opus (writes)
+    └── research: haiku (web)
+```
+
+**Opus 4.5 Performance Advantages (from announcement):**
+- SWE-bench Verified: State-of-the-art
+- Aider Polyglot: +10.6% improvement
+- Tool calling errors: 50-75% reduction
+- Vending-Bench (autonomous): +29% improvement
+
+**Model Strategy:** Opus + Haiku only (no Sonnet). Opus for intelligence, Haiku for speed.
 
 ### Conservative Judgment
 
@@ -153,6 +199,27 @@ Additional optimizations:
 - Reduced verbosity with XML format indicators
 - Parallel tool calling for maximum efficiency
 - Context-aware token budget management
+
+### Over-engineering Prevention
+
+Official Claude 4 documentation warns about overeagerness. CCO addresses this through YAGNI rule:
+
+**Official Pattern (from Claude 4 Best Practices):**
+```text
+Avoid over-engineering. Only make changes that are directly requested or
+clearly necessary. Keep solutions simple and focused.
+
+Don't add features, refactor code, or make "improvements" beyond what was
+asked. Don't create helpers, utilities, or abstractions for one-time
+operations. Don't design for hypothetical future requirements.
+```
+
+**CCO Implementation (Core Rules):**
+- **YAGNI**: Don't add features beyond request. DO add robustness (validation, edge cases, error handling) - robustness is NOT a feature
+- **KISS**: Simplest solution that works correctly for all valid inputs
+- **Scope**: Only requested changes, general solutions
+
+---
 
 ## Not Implemented (Claude Code Handles)
 

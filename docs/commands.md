@@ -8,21 +8,23 @@ Detailed documentation for all CCO slash commands.
 
 ### Base Commands
 
-| Command | Purpose | Steps |
-|---------|---------|-------|
-| `/cco-config` | Project configuration and settings | 9 steps |
-| `/cco-status` | Metrics dashboard with trends | 3 steps |
-| `/cco-optimize` | Security + Quality + Hygiene | 9 steps |
-| `/cco-review` | Architecture analysis | 7 steps |
-| `/cco-research` | Multi-source research with AI synthesis | 5 steps |
-| `/cco-commit` | Quality-gated commits | 7 steps |
+| Command | Purpose | Model | Steps |
+|---------|---------|-------|-------|
+| `/cco-config` | Project configuration and settings | inherit | 9 |
+| `/cco-status` | Metrics dashboard with trends | inherit | 3 |
+| `/cco-optimize` | Security + Quality + Hygiene | **opus** | 9 |
+| `/cco-review` | Architecture analysis | **opus** | 7 |
+| `/cco-research` | Multi-source research with AI synthesis | **opus** | 5 |
+| `/cco-commit` | Quality-gated commits | **opus** | 7 |
 
 ### Meta Commands
 
-| Command | Purpose | Orchestrates |
-|---------|---------|--------------|
-| `/cco-preflight` | Pre-release workflow | optimize + review + verify (7 steps) |
-| `/cco-checkup` | Regular maintenance | status + optimize (4 steps) |
+| Command | Purpose | Model | Orchestrates |
+|---------|---------|-------|--------------|
+| `/cco-preflight` | Pre-release workflow | inherit | optimize + review + verify (7 steps) |
+| `/cco-checkup` | Regular maintenance | inherit | status + optimize (4 steps) |
+
+**Model Rationale:** Opus for analysis and coding commands (50-75% fewer errors), inherit for orchestration.
 
 ---
 

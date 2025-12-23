@@ -2,6 +2,7 @@
 name: cco-research
 description: Multi-source research with reliability scoring
 allowed-tools: WebSearch(*), WebFetch(*), Read(*), Grep(*), Glob(*), Task(*), TodoWrite, AskUserQuestion
+model: opus
 ---
 
 # /cco-research
@@ -220,7 +221,7 @@ t3PlusSources = allSources.filter(s => ["T3", "T4", "T5"].includes(s.tier))
 synthesis = Task("cco-agent-research", `
   scope: synthesize
   sources: ${JSON.stringify(t1t2Sources)}
-`, { model: depth === "deep" ? "opus" : "sonnet" })
+`)
 
 // Supporting evidence (T3+) → aggregate locally
 supportingEvidence = aggregateByTier(t3PlusSources)

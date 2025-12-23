@@ -2,15 +2,12 @@
 name: cco-agent-apply
 description: Write operations with verification
 tools: Grep, Read, Glob, Bash, Edit, Write, NotebookEdit
-safe: false
-model: sonnet
+model: opus
 ---
 
-# Agent: Apply
+# cco-agent-apply
 
 Execute approved changes with verification. **Fix everything, leave nothing behind.**
-
-**Model:** Sonnet (accurate code modifications)
 
 ## Core Principle [CRITICAL]
 

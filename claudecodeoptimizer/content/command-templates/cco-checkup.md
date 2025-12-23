@@ -96,7 +96,7 @@ if (phases === "Both" || phases === "Quality Audit") {
       accounting: { done, declined, fail, total },
       by_scope: { security: {n}, quality: {n} }
     }
-  `, { model: "sonnet", run_in_background: phases === "Both" })
+  `, { run_in_background: phases === "Both" })
 }
 
 // If both running, collect results

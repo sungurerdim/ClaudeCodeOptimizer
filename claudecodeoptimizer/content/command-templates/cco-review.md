@@ -2,6 +2,7 @@
 name: cco-review
 description: Architecture review with pragmatic optimization
 allowed-tools: Read(*), Grep(*), Glob(*), Bash(git:*), Edit(*), Task(*), TodoWrite, AskUserQuestion
+model: opus
 ---
 
 # /cco-review
@@ -242,7 +243,7 @@ if (toApply.length > 0) {
     Apply recommendations.
     Verify each change.
     Handle dependencies between fixes.
-  `, { model: "sonnet" })
+  `)
 }
 ```
 

@@ -8,11 +8,15 @@ Specialized subagents for CCO commands.
 
 CCO uses three specialized agents with clear separation of concerns:
 
-| Agent | Purpose | Tools | Safe |
-|-------|---------|-------|------|
-| **cco-agent-analyze** | Read-only project analysis | Glob, Read, Grep, Bash, AskUserQuestion | Yes |
-| **cco-agent-apply** | Write operations with verification | All tools | No |
-| **cco-agent-research** | External source research | WebSearch, WebFetch, Read, Grep, Glob | Yes |
+| Agent | Purpose | Model | Tools |
+|-------|---------|-------|-------|
+| **cco-agent-analyze** | Read-only project analysis | haiku | Glob, Read, Grep, Bash |
+| **cco-agent-apply** | Write operations with verification | opus | Grep, Read, Glob, Bash, Edit, Write, NotebookEdit |
+| **cco-agent-research** | External source research | haiku | WebSearch, WebFetch, Read, Grep, Glob |
+
+**Model Rationale:**
+- Haiku for read-only sub-agents (fast, cost-effective)
+- Opus for apply agent (50-75% fewer tool errors, coding state-of-the-art)
 
 ---
 
