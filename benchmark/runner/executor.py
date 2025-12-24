@@ -608,7 +608,7 @@ class TestExecutor:
             "-m",
             model,
             "-p",
-            "/cco-config --auto",
+            "/cco-config --auto --target-dir .claude",  # Persist config in project dir
         ]
         cmd_str = " ".join(cmd)
         start_time = time.time()

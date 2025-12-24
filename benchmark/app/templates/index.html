@@ -640,6 +640,13 @@
                 document.querySelectorAll('.panel').forEach(p => p.classList.remove('active'));
                 tab.classList.add('active');
                 document.getElementById(`${tab.dataset.tab}-panel`).classList.add('active');
+
+                // Refresh data when switching to results or summary tabs
+                if (tab.dataset.tab === 'results') {
+                    loadResults();
+                } else if (tab.dataset.tab === 'summary') {
+                    loadSummary();
+                }
             });
         });
 
@@ -767,10 +774,18 @@
         }
 
         async function pollStatus(runId) {
+            let pollCount = 0;
             const interval = setInterval(async () => {
+                pollCount++;
                 try {
                     const resp = await fetch(`/api/status/${runId}`);
                     const statuses = await resp.json();
+
+                    // Update results/summary every 30 seconds during test run
+                    if (pollCount % 15 === 0) {
+                        loadResults();
+                        loadSummary();
+                    }
 
                     const allComplete = statuses.every(s =>
                         s.status === 'completed' || s.status === 'failed'
@@ -780,6 +795,7 @@
                         clearInterval(interval);
                         updateRunButton();
                         loadResults();
+                        loadSummary();
                         alert('Tests completed!');
                     }
                 } catch (e) {
@@ -1421,10 +1437,31 @@
         // Poll activity log
         setInterval(loadActivity, 3000);
 
+        // ============== Check Running Tests ==============
+
+        async function checkRunningTests() {
+            try {
+                const resp = await fetch('/api/running');
+                const data = await resp.json();
+                if (data.has_running) {
+                    // Resume polling for each active run
+                    for (const runId of Object.keys(data.active_runs)) {
+                        const btn = document.getElementById('run-btn');
+                        btn.disabled = true;
+                        btn.textContent = '⏳ Running...';
+                        pollStatus(runId);
+                    }
+                }
+            } catch (e) {
+                console.error('Failed to check running tests:', e);
+            }
+        }
+
         // ============== Initialize ==============
 
         async function init() {
             await checkSystemStatus();
+            await checkRunningTests();
             loadProjects();
             loadResults();
             loadSummary();
