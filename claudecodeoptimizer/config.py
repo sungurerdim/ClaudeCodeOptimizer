@@ -24,6 +24,37 @@ from typing import Any
 
 from . import __version__
 
+# Module-level target directory override (set by CLI for custom install location)
+_TARGET_DIR_OVERRIDE: Path | None = None
+
+
+def get_claude_dir() -> Path:
+    """Get the Claude configuration directory.
+
+    Resolution order:
+    1. Module-level override (set via set_target_dir())
+    2. CLAUDE_CONFIG_DIR environment variable
+    3. Default: ~/.claude
+
+    Returns:
+        Path to Claude configuration directory.
+    """
+    if _TARGET_DIR_OVERRIDE is not None:
+        return _TARGET_DIR_OVERRIDE
+    if env_dir := os.environ.get("CLAUDE_CONFIG_DIR"):
+        return Path(env_dir)
+    return Path.home() / ".claude"
+
+
+def set_target_dir(path: Path | None) -> None:
+    """Set the target directory override for installation.
+
+    Args:
+        path: Target directory path, or None to clear override.
+    """
+    global _TARGET_DIR_OVERRIDE
+    _TARGET_DIR_OVERRIDE = path
+
 
 class ContentSubdir(StrEnum):
     """Valid subdirectories under content/."""
@@ -37,6 +68,8 @@ class ContentSubdir(StrEnum):
 
 __all__ = [
     "VERSION",
+    "get_claude_dir",
+    "set_target_dir",
     "CLAUDE_DIR",
     "COMMANDS_DIR",
     "AGENTS_DIR",
