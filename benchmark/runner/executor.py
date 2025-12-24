@@ -574,6 +574,7 @@ class TestExecutor:
         # Note: --yes was removed from ccbox
         cmd = [
             self.ccbox_cmd,
+            "-dd",  # Debug logging
             "-C",
             str(project_dir),
             "-m",
@@ -727,9 +728,13 @@ STDERR:
         project_dir.mkdir(parents=True, exist_ok=True)
         logger.info(f"[{variant.upper()}] Output dir: {project_dir}")
 
-        # Save prompt for reference
+        # Save prompt to file - ccbox will read from here instead of command line
+        # This avoids Windows command line length limits (~8192 chars) and shell escaping issues
         prompt_file = project_dir / "_benchmark_prompt.md"
         prompt_file.write_text(config.prompt, encoding="utf-8")
+
+        # Short instruction for ccbox - actual task is in the file
+        short_prompt = "Read _benchmark_prompt.md and complete all tasks described in it. Follow the requirements exactly."
 
         # CCO variant: First run cco-config --auto to setup rules
         if variant == "cco":
@@ -756,12 +761,13 @@ STDERR:
 
         # Build ccbox command for the actual test
         # ccbox parameters (as of latest version):
+        # -dd: debug logging
         # -C: change directory
         # --bare: vanilla mode (no CCO rules)
         # -m/--model: model selection
         # -p/--prompt: initial prompt (enables --print mode)
         # Note: --yes was removed from ccbox
-        cmd = [self.ccbox_cmd]
+        cmd = [self.ccbox_cmd, "-dd"]
 
         # Project directory (ccbox -C flag)
         cmd.extend(["-C", str(project_dir)])
@@ -777,7 +783,7 @@ STDERR:
                 "-m",
                 model,  # Model selection
                 "-p",
-                config.prompt,  # Pass prompt (enables --print mode)
+                short_prompt,  # Short instruction, actual task is in _benchmark_prompt.md
             ]
         )
 
