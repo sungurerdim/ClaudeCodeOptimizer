@@ -2,12 +2,13 @@
 
 import argparse
 import sys
+from pathlib import Path
 
 from .config import (
-    CLAUDE_DIR,
     SEPARATOR,
     ContentSubdir,
     cli_entrypoint,
+    get_claude_dir,
     get_content_path,
     get_rules_breakdown,
 )
@@ -80,6 +81,13 @@ Permission levels: safe, balanced, permissive, full
         action="store_true",
         help="Show what would be installed without making changes",
     )
+    parser.add_argument(
+        "--dir",
+        "-d",
+        type=Path,
+        metavar="PATH",
+        help="Target config directory (default: $CLAUDE_CONFIG_DIR or ~/.claude)",
+    )
 
     return parser
 
@@ -98,30 +106,38 @@ def _validate_global_mode_args(parser: argparse.ArgumentParser, args: argparse.N
         parser.error("--statusline and --permissions require --local")
 
 
-def _run_global_install(dry_run: bool = False) -> int:
-    """Execute global installation to ~/.claude/.
+def _run_global_install(dry_run: bool = False, target_dir: Path | None = None) -> int:
+    """Execute global installation to target directory.
 
     Args:
         dry_run: If True, show what would be installed without making changes.
+        target_dir: Target directory. If None, uses get_claude_dir().
 
     Returns:
         Exit code: 0 on success, 1 on failure.
     """
+    claude_dir = target_dir or get_claude_dir()
+
+    # Create target directory if --dir is specified
+    if target_dir and not target_dir.exists():
+        if not dry_run:
+            target_dir.mkdir(parents=True, exist_ok=True)
+
     if dry_run:
         print("\n" + SEPARATOR)
         print("CCO Setup (DRY RUN)")
         print(SEPARATOR)
-        print(f"\nLocation: {CLAUDE_DIR}\n")
+        print(f"\nLocation: {claude_dir}\n")
         print("The following would be installed:\n")
     else:
         print("\n" + SEPARATOR)
         print("CCO Setup")
         print(SEPARATOR)
-        print(f"\nLocation: {CLAUDE_DIR}\n")
+        print(f"\nLocation: {claude_dir}\n")
 
     # Step 1: Clean previous installation (ensures fresh state)
     if not dry_run:
-        clean_previous_installation()
+        clean_previous_installation(target_dir=target_dir)
     else:
         print("Would clean previous installation:")
         print("  - Remove old command files")
@@ -132,7 +148,7 @@ def _run_global_install(dry_run: bool = False) -> int:
     # Step 2: Install commands
     print("Commands:")
     if not dry_run:
-        cmds = setup_commands()
+        cmds = setup_commands(target_dir=target_dir)
         if not cmds:
             print("  (none)")
     else:
@@ -149,7 +165,7 @@ def _run_global_install(dry_run: bool = False) -> int:
     # Step 3: Install agents
     print("Agents:")
     if not dry_run:
-        agents = setup_agents()
+        agents = setup_agents(target_dir=target_dir)
         if not agents:
             print("  (none)")
     else:
@@ -163,10 +179,10 @@ def _run_global_install(dry_run: bool = False) -> int:
             print("  (none)")
     print()
 
-    # Step 4: Install rules to ~/.claude/rules/cco/
+    # Step 4: Install rules to rules/cco/
     print("Rules (to cco/ subdirectory):")
     if not dry_run:
-        rules_installed = setup_rules()
+        rules_installed = setup_rules(target_dir=target_dir)
     else:
         # Show what would be installed
         rules_src = get_content_path(ContentSubdir.RULES)
@@ -179,7 +195,7 @@ def _run_global_install(dry_run: bool = False) -> int:
 
     # Step 5: Clean old CCO markers from CLAUDE.md
     if not dry_run:
-        markers_cleaned = clean_claude_md(verbose=True)
+        markers_cleaned = clean_claude_md(verbose=True, target_dir=target_dir)
         if markers_cleaned == 0:
             print("  CLAUDE.md: no old markers to clean")
         print()
@@ -265,7 +281,7 @@ def post_install() -> int:
     _validate_global_mode_args(parser, args)
 
     # Global mode - default behavior
-    return _run_global_install(dry_run=args.dry_run)
+    return _run_global_install(dry_run=args.dry_run, target_dir=args.dir)
 
 
 if __name__ == "__main__":

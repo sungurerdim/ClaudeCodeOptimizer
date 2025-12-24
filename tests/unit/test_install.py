@@ -21,17 +21,22 @@ class TestCheckClaudeDir:
 
     def test_returns_none_when_dir_exists(self, tmp_path: Path) -> None:
         """Test _check_claude_dir returns None when directory exists."""
-        with patch("claudecodeoptimizer.install.CLAUDE_DIR", tmp_path):
-            result = _check_claude_dir()
-            assert result is None
+        result = _check_claude_dir(target_dir=tmp_path)
+        assert result is None
 
     def test_returns_error_when_dir_missing(self, tmp_path: Path) -> None:
         """Test _check_claude_dir returns error when directory doesn't exist."""
         nonexistent = tmp_path / "nonexistent"
-        with patch("claudecodeoptimizer.install.CLAUDE_DIR", nonexistent):
-            result = _check_claude_dir()
-            assert result is not None
-            assert "~/.claude/ not found" in result
+        result = _check_claude_dir(target_dir=nonexistent)
+        assert result is not None
+        assert "not found" in result
+
+    def test_creates_dir_when_create_true(self, tmp_path: Path) -> None:
+        """Test _check_claude_dir creates directory when create=True."""
+        nonexistent = tmp_path / "newdir"
+        result = _check_claude_dir(target_dir=nonexistent, create=True)
+        assert result is None
+        assert nonexistent.exists()
 
 
 class TestSetupContent:
@@ -108,84 +113,65 @@ class TestSetupCommands:
     """Test setup_commands function."""
 
     def test_copies_commands_to_commands_dir(self, tmp_path: Path) -> None:
-        """Test setup_commands copies commands to ~/.claude/commands/."""
-        claude_dir = tmp_path / ".claude"
-        commands_dir = claude_dir / "commands"
-        claude_dir.mkdir()
-
+        """Test setup_commands copies commands to target/commands/."""
         # Create source directory
         src_dir = tmp_path / "source"
         src_dir.mkdir()
         (src_dir / "cco-config.md").write_text("config command")
 
-        with patch("claudecodeoptimizer.install.CLAUDE_DIR", claude_dir):
-            with patch("claudecodeoptimizer.install.COMMANDS_DIR", commands_dir):
-                with patch("claudecodeoptimizer.install.get_content_path", return_value=src_dir):
-                    result = setup_commands(verbose=False)
+        with patch("claudecodeoptimizer.install.get_content_path", return_value=src_dir):
+            result = setup_commands(verbose=False, target_dir=tmp_path)
 
         assert "cco-config.md" in result
-        assert (commands_dir / "cco-config.md").exists()
+        assert (tmp_path / "commands" / "cco-config.md").exists()
 
     def test_raises_error_when_claude_dir_missing(self, tmp_path: Path) -> None:
-        """Test setup_commands raises error when ~/.claude/ doesn't exist."""
+        """Test setup_commands raises error when target directory doesn't exist."""
         nonexistent = tmp_path / "nonexistent"
 
-        with patch("claudecodeoptimizer.install.CLAUDE_DIR", nonexistent):
-            with pytest.raises(RuntimeError, match="~/.claude/ not found"):
-                setup_commands(verbose=False)
+        with pytest.raises(RuntimeError, match="not found"):
+            setup_commands(verbose=False, target_dir=nonexistent)
 
 
 class TestSetupAgents:
     """Test setup_agents function."""
 
     def test_copies_agents_to_agents_dir(self, tmp_path: Path) -> None:
-        """Test setup_agents copies agents to ~/.claude/agents/."""
-        claude_dir = tmp_path / ".claude"
-        agents_dir = claude_dir / "agents"
-        claude_dir.mkdir()
-
+        """Test setup_agents copies agents to target/agents/."""
         # Create source directory
         src_dir = tmp_path / "source"
         src_dir.mkdir()
         (src_dir / "cco-apply.md").write_text("apply agent")
 
-        with patch("claudecodeoptimizer.install.CLAUDE_DIR", claude_dir):
-            with patch("claudecodeoptimizer.install.AGENTS_DIR", agents_dir):
-                with patch("claudecodeoptimizer.install.get_content_path", return_value=src_dir):
-                    result = setup_agents(verbose=False)
+        with patch("claudecodeoptimizer.install.get_content_path", return_value=src_dir):
+            result = setup_agents(verbose=False, target_dir=tmp_path)
 
         assert "cco-apply.md" in result
-        assert (agents_dir / "cco-apply.md").exists()
+        assert (tmp_path / "agents" / "cco-apply.md").exists()
 
     def test_raises_error_when_claude_dir_missing(self, tmp_path: Path) -> None:
-        """Test setup_agents raises error when ~/.claude/ doesn't exist."""
+        """Test setup_agents raises error when target directory doesn't exist."""
         nonexistent = tmp_path / "nonexistent"
 
-        with patch("claudecodeoptimizer.install.CLAUDE_DIR", nonexistent):
-            with pytest.raises(RuntimeError, match="~/.claude/ not found"):
-                setup_agents(verbose=False)
+        with pytest.raises(RuntimeError, match="not found"):
+            setup_agents(verbose=False, target_dir=nonexistent)
 
 
 class TestSetupRules:
     """Test setup_rules function."""
 
     def test_copies_rules_to_cco_subdirectory(self, tmp_path: Path) -> None:
-        """Test setup_rules copies rules to ~/.claude/rules/cco/."""
-        claude_dir = tmp_path / ".claude"
-        rules_dir = claude_dir / "rules" / "cco"
-        claude_dir.mkdir()
-
+        """Test setup_rules copies rules to target/rules/cco/."""
         # Create source directory with rule files
         src_dir = tmp_path / "source"
         src_dir.mkdir()
         (src_dir / "cco-core.md").write_text("core rules")
         (src_dir / "cco-ai.md").write_text("ai rules")
 
-        with patch("claudecodeoptimizer.install.CLAUDE_DIR", claude_dir):
-            with patch("claudecodeoptimizer.install.RULES_DIR", rules_dir):
-                with patch("claudecodeoptimizer.install.get_content_path", return_value=src_dir):
-                    result = setup_rules(verbose=False)
+        with patch("claudecodeoptimizer.install.get_content_path", return_value=src_dir):
+            result = setup_rules(verbose=False, target_dir=tmp_path)
 
+        rules_dir = tmp_path / "rules" / "cco"
         # Files should be renamed without cco- prefix
         assert (rules_dir / "core.md").exists()
         assert (rules_dir / "ai.md").exists()
@@ -195,8 +181,7 @@ class TestSetupRules:
 
     def test_removes_existing_rules_before_copy(self, tmp_path: Path) -> None:
         """Test setup_rules removes existing rules before copying new ones."""
-        claude_dir = tmp_path / ".claude"
-        rules_dir = claude_dir / "rules" / "cco"
+        rules_dir = tmp_path / "rules" / "cco"
         rules_dir.mkdir(parents=True)
 
         # Create old rule files
@@ -209,32 +194,26 @@ class TestSetupRules:
         (src_dir / "cco-core.md").write_text("new core")
         (src_dir / "cco-ai.md").write_text("new ai")
 
-        with patch("claudecodeoptimizer.install.CLAUDE_DIR", claude_dir):
-            with patch("claudecodeoptimizer.install.RULES_DIR", rules_dir):
-                with patch("claudecodeoptimizer.install.get_content_path", return_value=src_dir):
-                    setup_rules(verbose=False)
+        with patch("claudecodeoptimizer.install.get_content_path", return_value=src_dir):
+            setup_rules(verbose=False, target_dir=tmp_path)
 
         # New content should be in place
         assert (rules_dir / "core.md").read_text() == "new core"
         assert (rules_dir / "ai.md").read_text() == "new ai"
 
     def test_raises_error_when_claude_dir_missing(self, tmp_path: Path) -> None:
-        """Test setup_rules raises error when ~/.claude/ doesn't exist."""
+        """Test setup_rules raises error when target directory doesn't exist."""
         nonexistent = tmp_path / "nonexistent"
 
-        with patch("claudecodeoptimizer.install.CLAUDE_DIR", nonexistent):
-            with pytest.raises(RuntimeError, match="~/.claude/ not found"):
-                setup_rules(verbose=False)
+        with pytest.raises(RuntimeError, match="not found"):
+            setup_rules(verbose=False, target_dir=nonexistent)
 
     def test_returns_zero_counts_when_source_missing(self, tmp_path: Path) -> None:
         """Test setup_rules returns zero counts when source doesn't exist."""
-        claude_dir = tmp_path / ".claude"
-        claude_dir.mkdir()
         nonexistent = tmp_path / "nonexistent"
 
-        with patch("claudecodeoptimizer.install.CLAUDE_DIR", claude_dir):
-            with patch("claudecodeoptimizer.install.get_content_path", return_value=nonexistent):
-                result = setup_rules(verbose=False)
+        with patch("claudecodeoptimizer.install.get_content_path", return_value=nonexistent):
+            result = setup_rules(verbose=False, target_dir=tmp_path)
 
         assert result == {"core": 0, "ai": 0, "tools": 0, "total": 0}
 
@@ -244,10 +223,9 @@ class TestCleanPreviousInstallation:
 
     def test_removes_all_previous_cco_files(self, tmp_path: Path) -> None:
         """Test clean_previous_installation removes all CCO files."""
-        claude_dir = tmp_path / ".claude"
-        commands_dir = claude_dir / "commands"
-        agents_dir = claude_dir / "agents"
-        rules_dir = claude_dir / "rules"
+        commands_dir = tmp_path / "commands"
+        agents_dir = tmp_path / "agents"
+        rules_dir = tmp_path / "rules"
         cco_rules_dir = rules_dir / "cco"
 
         # Create directories
@@ -261,14 +239,9 @@ class TestCleanPreviousInstallation:
         (agents_dir / "cco-apply.md").write_text("old agent")
         (rules_dir / "cco-core.md").write_text("old root rule")
         (cco_rules_dir / "core.md").write_text("old cco rule")
-        (claude_dir / "CLAUDE.md").write_text("<!-- CCO_TEST_START -->content<!-- CCO_TEST_END -->")
+        (tmp_path / "CLAUDE.md").write_text("<!-- CCO_TEST_START -->content<!-- CCO_TEST_END -->")
 
-        with patch("claudecodeoptimizer.install.CLAUDE_DIR", claude_dir):
-            with patch("claudecodeoptimizer.install.COMMANDS_DIR", commands_dir):
-                with patch("claudecodeoptimizer.install.AGENTS_DIR", agents_dir):
-                    with patch("claudecodeoptimizer.install.RULES_DIR", cco_rules_dir):
-                        with patch("claudecodeoptimizer.operations.OLD_RULES_ROOT", rules_dir):
-                            result = clean_previous_installation(verbose=False)
+        result = clean_previous_installation(verbose=False, target_dir=tmp_path)
 
         # All old files should be removed
         assert not (commands_dir / "cco-config.md").exists()
@@ -283,23 +256,16 @@ class TestCleanPreviousInstallation:
 
     def test_returns_zero_when_nothing_to_remove(self, tmp_path: Path) -> None:
         """Test clean_previous_installation returns zero when nothing to remove."""
-        claude_dir = tmp_path / ".claude"
-        commands_dir = claude_dir / "commands"
-        agents_dir = claude_dir / "agents"
-        rules_dir = claude_dir / "rules"
-        cco_rules_dir = rules_dir / "cco"
+        commands_dir = tmp_path / "commands"
+        agents_dir = tmp_path / "agents"
+        rules_dir = tmp_path / "rules"
 
         # Create empty directories
         commands_dir.mkdir(parents=True)
         agents_dir.mkdir(parents=True)
         rules_dir.mkdir(parents=True)
 
-        with patch("claudecodeoptimizer.install.CLAUDE_DIR", claude_dir):
-            with patch("claudecodeoptimizer.install.COMMANDS_DIR", commands_dir):
-                with patch("claudecodeoptimizer.install.AGENTS_DIR", agents_dir):
-                    with patch("claudecodeoptimizer.install.RULES_DIR", cco_rules_dir):
-                        with patch("claudecodeoptimizer.operations.OLD_RULES_ROOT", rules_dir):
-                            result = clean_previous_installation(verbose=False)
+        result = clean_previous_installation(verbose=False, target_dir=tmp_path)
 
         assert result["commands"] == 0
         assert result["agents"] == 0
@@ -311,9 +277,7 @@ class TestCleanClaudeMd:
 
     def test_removes_cco_markers_from_claude_md(self, tmp_path: Path) -> None:
         """Test clean_claude_md removes CCO markers from CLAUDE.md."""
-        claude_dir = tmp_path / ".claude"
-        claude_dir.mkdir()
-        claude_md = claude_dir / "CLAUDE.md"
+        claude_md = tmp_path / "CLAUDE.md"
 
         content = """# My Project
 
@@ -325,8 +289,7 @@ User content here"""
 
         claude_md.write_text(content)
 
-        with patch("claudecodeoptimizer.install.CLAUDE_DIR", claude_dir):
-            result = clean_claude_md(verbose=False)
+        result = clean_claude_md(verbose=False, target_dir=tmp_path)
 
         # Marker should be removed
         assert result == 1
@@ -336,49 +299,37 @@ User content here"""
 
     def test_returns_zero_when_no_markers(self, tmp_path: Path) -> None:
         """Test clean_claude_md returns zero when no markers to remove."""
-        claude_dir = tmp_path / ".claude"
-        claude_dir.mkdir()
-        claude_md = claude_dir / "CLAUDE.md"
+        claude_md = tmp_path / "CLAUDE.md"
 
         content = "# My Project\n\nNo CCO markers here"
         claude_md.write_text(content)
 
-        with patch("claudecodeoptimizer.install.CLAUDE_DIR", claude_dir):
-            result = clean_claude_md(verbose=False)
+        result = clean_claude_md(verbose=False, target_dir=tmp_path)
 
         assert result == 0
 
     def test_returns_zero_when_file_missing(self, tmp_path: Path) -> None:
         """Test clean_claude_md returns zero when CLAUDE.md doesn't exist."""
-        claude_dir = tmp_path / ".claude"
-        claude_dir.mkdir()
-
-        with patch("claudecodeoptimizer.install.CLAUDE_DIR", claude_dir):
-            result = clean_claude_md(verbose=False)
+        result = clean_claude_md(verbose=False, target_dir=tmp_path)
 
         assert result == 0
 
     def test_deletes_file_when_empty_after_cleanup(self, tmp_path: Path) -> None:
         """Test clean_claude_md deletes file when empty after removing markers."""
-        claude_dir = tmp_path / ".claude"
-        claude_dir.mkdir()
-        claude_md = claude_dir / "CLAUDE.md"
+        claude_md = tmp_path / "CLAUDE.md"
 
         # File with only CCO markers
         content = "<!-- CCO_TEST_START -->content<!-- CCO_TEST_END -->"
         claude_md.write_text(content)
 
-        with patch("claudecodeoptimizer.install.CLAUDE_DIR", claude_dir):
-            clean_claude_md(verbose=False)
+        clean_claude_md(verbose=False, target_dir=tmp_path)
 
         # File should be deleted
         assert not claude_md.exists()
 
     def test_normalizes_multiple_newlines(self, tmp_path: Path) -> None:
         """Test clean_claude_md normalizes multiple consecutive newlines."""
-        claude_dir = tmp_path / ".claude"
-        claude_dir.mkdir()
-        claude_md = claude_dir / "CLAUDE.md"
+        claude_md = tmp_path / "CLAUDE.md"
 
         content = """# Project
 
@@ -389,8 +340,7 @@ More content"""
 
         claude_md.write_text(content)
 
-        with patch("claudecodeoptimizer.install.CLAUDE_DIR", claude_dir):
-            clean_claude_md(verbose=False)
+        clean_claude_md(verbose=False, target_dir=tmp_path)
 
         new_content = claude_md.read_text()
         # Should not have more than 2 consecutive newlines
