@@ -803,4 +803,4 @@ If something goes wrong during configuration:
 3. **Dynamic tabs** - Show only relevant tabs based on previous answers
 4. **Single Recommended** - Each tab has exactly one recommended option
 5. **AI-driven defaults** - Budget/Output based on project complexity
-6. **Explicit defaults** - Always write ALL settings to files, even when default values are selected. Never omit a setting just because it's the default. Exception: statusLine "Remove" = don't write (preserves global config).
+6. **Explicit defaults** - Write ALL settings to files, including default values. Exception: statusLine "Remove" preserves global config.

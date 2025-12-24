@@ -15,20 +15,20 @@
 
 ## Code Quality
 
-- **Fail-Fast**: Immediate visible failure, no silent fallbacks
-- **No-Orphans**: Every function called, every import used
+- **Fail-Fast**: Immediate visible failure, propagate errors explicitly
+- **Used-Only**: Keep only called functions and used imports
 - **Type-Safe**: Full type annotations on all public APIs. Prefer stricter types (Literal, enums over strings)
 - **Immutable**: Prefer immutable, mutate only when necessary
 - **Complexity**: Cyclomatic <10 per function
 - **Clean**: Meaningful names, single responsibility
-- **Explicit**: No magic values, clear intent
+- **Explicit**: Use named constants, clear intent
 - **Scope**: Only requested changes, general solutions
 - **Robust**: Handle all valid input variations (whitespace, case, empty, None, boundary values)
 
 ## File & Resource
 
 - **Minimal-Touch**: Only files required for task
-- **No-Unsolicited**: Never create files unless requested
+- **Request-First**: Create files only when explicitly requested
 - **Paths**: Forward slash, relative, quote spaces
 - **Cleanup**: Temp files, handles, connections
 - **Skip**: VCS (.git, .svn), deps (node_modules, vendor, venv), build (dist, out, target), IDE (.idea, .vscode), generated (*.min.*, @generated)
@@ -52,8 +52,8 @@
 ## Testing
 
 - **Coverage**: 60-90% context-adjusted
-- **Isolation**: No inter-test deps, reproducible
-- **Integrity**: Never edit tests to pass code
+- **Isolation**: Independent tests, reproducible results
+- **Integrity**: Fix code to pass tests, tests define expected behavior
 - **Critical-Paths**: E2E for critical user workflows
 - **Edge-Cases-Mandatory**: Always test: empty/None, whitespace-only, boundary values (0, 1, max, max+1), state combinations, invalid type coercion
 - **Input-Variations**: Test normalized vs raw input (leading/trailing whitespace, case variations, unicode)
@@ -62,7 +62,7 @@
 ## Error Handling
 
 - **Catch-Context**: Log context, recover or propagate
-- **No-Swallow**: Never swallow exceptions silently
+- **Log-All**: Log all exceptions with context before handling
 - **User-Actionable**: Clarity + next steps for users
 - **Logs-Technical**: Technical details only in logs
 - **Rollback-State**: Consistent state on failure

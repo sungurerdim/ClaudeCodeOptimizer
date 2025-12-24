@@ -156,7 +156,7 @@ Run `/cco-optimize` to fix issues.
 | Status | OK (80+) / WARN (60-79) / FAIL (40-59) / CRITICAL (<40) |
 | Issues | Max 5 shown, most critical first |
 
-**Prohibited:** No emojis, No ASCII art, No trend indicators
+**Output style:** Plain text tables, numerical scores, text status values only
 
 ### Validation
 ```
@@ -212,7 +212,7 @@ When called via `/cco-status --brief` (e.g., from cco-checkup):
 ## Rules
 
 1. **Use cco-agent-analyze** - Agent handles parallelization internally
-2. **Snapshot only** - No historical tracking, no trend indicators
-3. **Read-only** - Never modify files, never create files
+2. **Snapshot only** - Current state only, fresh metrics each run
+3. **Read-only** - Analysis and reporting only, preserve file state
 4. **Conservative scores** - When uncertain, score lower
 5. **Evidence-based** - Every score needs file:line reference

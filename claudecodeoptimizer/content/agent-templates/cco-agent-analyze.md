@@ -62,7 +62,7 @@ Grep("{complexity_patterns}")     // message
 |-------------|------|
 | Evidence | Every finding cites `{file}:{line}` |
 | Pattern Discovery | 3+ examples before concluding pattern |
-| No Speculation | Never report issues in unread code |
+| Read-First | Report only issues from code that was read |
 | Conservative | Uncertain → choose lower severity |
 
 | Keyword | Severity | Confidence |
@@ -72,7 +72,7 @@ Grep("{complexity_patterns}")     // message
 | error, fail, incorrect | MEDIUM | MEDIUM |
 | style, minor, cosmetic | LOW | LOW |
 
-**Prohibited:** Style → never CRITICAL/HIGH │ Unverified → never above MEDIUM │ Single occurrence → never CRITICAL unless security
+**Severity Limits:** Style → max LOW │ Unverified → max MEDIUM │ Single occurrence → max MEDIUM (except security)
 
 ## Score Categories & Thresholds
 

@@ -400,6 +400,6 @@ When `--quick` flag:
 3. **Background tests** - Start tests early, check before commit
 4. **Single question** - All conditional tabs in one Q1
 5. **Dynamic tabs** - Only show relevant tabs
-6. **No vague messages** - Reject "fix bug", "update code"
-7. **Git safety** - Never force push, always verify
-8. **Full project checks** - Run format/lint/test on entire project from root, not just changed files
+6. **Specific messages** - Use descriptive action verbs: "add", "fix", "refactor", "update"
+7. **Git safety** - Verify before push, prefer safe operations
+8. **Full project checks** - Run format/lint/test on entire project from root

@@ -181,5 +181,5 @@ Duration: {n}s
 
 1. **Parallel-first** - Launch health + audit in single message
 2. **Model strategy** - Haiku for health, Sonnet for audit
-3. **Delegate to sub-commands** - Don't duplicate logic
+3. **Delegate to sub-commands** - Reuse sub-command logic
 4. **Aggregate results** - Merge outputs for summary

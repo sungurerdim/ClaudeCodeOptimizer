@@ -29,22 +29,22 @@
 | Clarifications | "Which module do you mean?" | false |
 | Error recovery | "How to proceed?" | false |
 
-### Prohibited Patterns [VIOLATION = STOP]
+### Required Patterns [USE TOOL INSTEAD]
 
-| Pattern | Why Prohibited | Action |
-|---------|----------------|--------|
-| "Would you like me to...?" | Plain text question | STOP |
-| "Do you want to...?" | Plain text question | STOP |
-| "Should I...?" | Plain text question | STOP |
-| "Let me know if..." | Implicit question | STOP |
-| "Feel free to..." | Passive request | STOP |
-| Any `?` without AskUserQuestion | Bypassing tool | STOP |
-| Statements expecting response | Disguised question | STOP |
+| Instead of... | Use This Pattern |
+|---------------|------------------|
+| "Would you like me to...?" | AskUserQuestion with options |
+| "Do you want to...?" | AskUserQuestion with Yes/No options |
+| "Should I...?" | AskUserQuestion with action options |
+| "Let me know if..." | AskUserQuestion with specific choices |
+| "Feel free to..." | AskUserQuestion with explicit options |
+| Any question mark `?` | AskUserQuestion tool call |
+| Statements expecting response | AskUserQuestion with clear options |
 
 ### Option Separator [STRICT]
 
 - **Separator**: Use semicolon (`;`) to separate options
-- **No-Comma**: Never use comma - ambiguous with multi-word options
+- **Semicolon-Only**: Semicolon separates options, comma allowed within option text
 - **Consistent**: Same format across all commands
 
 **Examples:**
@@ -66,6 +66,26 @@ All command templates MUST define interactions as tables:
 ```
 
 **Execution:** When command reaches this table → call `AskUserQuestion` with exact parameters.
+
+### Few-Shot Examples
+
+**Pattern - Single selection:**
+```
+User: "{action_request}"
+→ AskUserQuestion:
+  question: "{clarifying_question}?"
+  options: ["{option_1}"; "{option_2}"; "{option_3}"]
+  multiSelect: false
+```
+
+**Pattern - Multi selection:**
+```
+User: "{scope_request}"
+→ AskUserQuestion:
+  question: "{scope_question}?"
+  options: ["{all_option} (Recommended)"; "{scope_1}"; "{scope_2}"]
+  multiSelect: true
+```
 
 ### Self-Check Before Response
 
@@ -107,7 +127,7 @@ Minimize token usage at every step:
 | **Targeted-Reads** | Read only matched files, use offset/limit |
 | **Early-Exit** | Stop when saturation reached (3× repeated themes) |
 
-**Anti-patterns:** Per-file agents │ Per-scope agents │ Full file reads │ Redundant searches
+**Prefer:** Single consolidated agent │ Targeted file reads with offset/limit │ Deduplicated searches
 
 ## Safety
 
@@ -225,6 +245,35 @@ Present different categories in SEPARATE batches:
 
 **Follow output formats precisely. Exact formatting ensures consistency and parseability.**
 
+### JSON Schema Standard (Structured Output)
+
+When outputting structured data, follow this schema pattern:
+
+```json
+{
+  "status": "{OK|WARN|FAIL}",
+  "accounting": {
+    "done": "{n}",
+    "declined": "{n}",
+    "failed": "{n}",
+    "total": "{n}"
+  },
+  "items": [
+    {
+      "severity": "{CRITICAL|HIGH|MEDIUM|LOW}",
+      "title": "{issue_description}",
+      "location": "{file}:{line}",
+      "action": "{Applied|Declined|Failed}"
+    }
+  ]
+}
+```
+
+**Rules:**
+- Use consistent field names across all commands
+- Include `accounting` for operations with counts
+- Use `location` format: `{file}:{line}` for code references
+
 ### Table Characters [STRICT]
 
 - **Borders**: `─│┌┐└┘├┤┬┴┼`
@@ -244,11 +293,30 @@ Present different categories in SEPARATE batches:
 
 - **Formula**: `filled = round(percentage / 100 * 8)` -> `████░░░░`
 
-### Prohibited
+### Formatting Standards
 
-- **No-Emojis**: No emojis in tables
-- **No-Unicode**: No unicode decorations beyond specified
-- **No-ASCII-Art**: No ASCII art headers
+- **Plain-Tables**: Use only specified table characters in tables
+- **Minimal-Unicode**: Use only box-drawing characters defined above
+- **Clean-Headers**: Use markdown headers (##, ###) for section titles
+
+## Variable Templates
+
+### Standard Format [REQUIRED]
+
+Use consistent `{variable_name}` format for all placeholders:
+
+| Type | Format | Example |
+|------|--------|---------|
+| Simple value | `{name}` | `{file}`, `{line}`, `{status}` |
+| Enumerated | `{option1\|option2}` | `{OK\|WARN\|FAIL}` |
+| Counted | `{n}` | Used for numbers |
+| Path | `{file}:{line}` | Location references |
+| Descriptive | `{noun_description}` | `{issue_description}`, `{file_path}` |
+
+**Rules:**
+- Always use snake_case for multi-word variables
+- Use `{n}` for generic numeric placeholders
+- Use `|` to separate enumerated options within braces
 
 ## Dynamic Context
 
@@ -317,11 +385,11 @@ Note: Make a todo list first, then process systematically
 
 ### Single-Message Enforcement [STRICT]
 
-- **No-Questions**: Do not ask questions
+- **Use-Defaults**: Apply smart defaults for all options
 - **Defaults**: Use smart defaults for all options
-- **No-Intermediate**: Do not output intermediate text
+- **Direct-Output**: Output tool calls and final summary only
 - **Summary**: Only tool calls, then final summary
-- **MUST-Single**: You MUST do all steps in a single message
+- **MUST-Single**: Complete all steps in a single message
 
 ### Applicable Commands
 
@@ -335,8 +403,8 @@ Note: Make a todo list first, then process systematically
 ### Output Restriction
 
 - **Single-Message**: Complete ALL steps in a single message
-- **No-Extra-Tools**: Do not use any other tools beyond allowed
-- **No-Extra-Text**: Do not send any text besides tool calls and final summary
+- **Allowed-Only**: Use only tools listed in command frontmatter
+- **Summary-Only**: Output tool calls and final summary text only
 
 ## Conservative Judgment
 
@@ -356,11 +424,11 @@ Note: Make a todo list first, then process systematically
 - **Genuine**: Only flag issues that genuinely block users
 - **Evidence**: Require explicit evidence, not inference
 
-### Prohibited Escalations
+### Severity Limits
 
-- **Style**: Style issues -> never CRITICAL or HIGH
-- **Unverified**: Unverified claims -> never above MEDIUM
-- **Single**: Single occurrence -> never CRITICAL unless security
+- **Style**: Style issues → maximum severity: LOW
+- **Unverified**: Unverified claims → maximum severity: MEDIUM
+- **Single**: Single occurrence → maximum severity: MEDIUM (except security)
 
 ## Skip Criteria
 
@@ -403,7 +471,7 @@ TodoWrite([
 | Rule | Description |
 |------|-------------|
 | **Immediate** | Update status immediately, not batched |
-| **No-Skip** | Never skip items - update status instead |
+| **Track-All** | Update every item status (completed, declined, or failed) |
 | **activeForm** | Use present continuous (-ing form) |
 | **content** | Use imperative form |
 
