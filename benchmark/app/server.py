@@ -486,6 +486,7 @@ async def run_tests(request: RunTestRequest, background_tasks: BackgroundTasks) 
     # Initialize status for all projects
     for project_id in request.project_ids:
         running_tests[f"{run_id}_{project_id}"] = {
+            "run_id": run_id,
             "project_id": project_id,
             "status": "pending",
             "progress": 0,
@@ -641,6 +642,19 @@ async def execute_tests_background(run_id: str, project_ids: list[str], model: s
             log_activity(f"Failed: {project_id} - {e}", "error")
 
     log_activity("Benchmark run completed", "success")
+
+
+@app.get("/api/running")
+async def get_running_tests() -> dict[str, Any]:
+    """Get all currently running tests."""
+    active_runs: dict[str, list[dict[str, Any]]] = {}
+    for status in running_tests.values():
+        if status["status"] not in ("completed", "failed"):
+            run_id = status["run_id"]
+            if run_id not in active_runs:
+                active_runs[run_id] = []
+            active_runs[run_id].append(status)
+    return {"active_runs": active_runs, "has_running": len(active_runs) > 0}
 
 
 @app.get("/api/status/{run_id}")
