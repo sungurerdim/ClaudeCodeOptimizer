@@ -575,6 +575,7 @@ class TestExecutor:
         cmd = [
             self.ccbox_cmd,
             "-dd",  # Debug logging
+            "--deps",  # Install dependencies (dev included)
             "-C",
             str(project_dir),
             "-m",
@@ -762,12 +763,13 @@ STDERR:
         # Build ccbox command for the actual test
         # ccbox parameters (as of latest version):
         # -dd: debug logging
+        # --deps: install dependencies (dev included)
         # -C: change directory
         # --bare: vanilla mode (no CCO rules)
         # -m/--model: model selection
         # -p/--prompt: initial prompt (enables --print mode)
         # Note: --yes was removed from ccbox
-        cmd = [self.ccbox_cmd, "-dd"]
+        cmd = [self.ccbox_cmd, "-dd", "--deps"]
 
         # Project directory (ccbox -C flag)
         cmd.extend(["-C", str(project_dir)])
