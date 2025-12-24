@@ -594,11 +594,15 @@ class TestExecutor:
         # -C: change directory
         # -m/--model: model selection
         # -p/--prompt: initial prompt (enables --print mode)
+        # -s/--stack: language stack (auto = auto-detect)
+        # --deps: install dependencies
         # Note: --yes was removed from ccbox
         cmd = [
             self.ccbox_cmd,
             "-dd",  # Debug logging
             "--deps",  # Install dependencies (dev included)
+            "-s",
+            "auto",  # Auto-detect stack
             "-C",
             str(project_dir),
             "-m",
@@ -787,12 +791,13 @@ STDERR:
         # ccbox parameters (as of latest version):
         # -dd: debug logging
         # --deps: install dependencies (dev included)
+        # -s/--stack: language stack (auto = auto-detect)
         # -C: change directory
         # --bare: vanilla mode (no CCO rules)
         # -m/--model: model selection
         # -p/--prompt: initial prompt (enables --print mode)
         # Note: --yes was removed from ccbox
-        cmd = [self.ccbox_cmd, "-dd", "--deps"]
+        cmd = [self.ccbox_cmd, "-dd", "--deps", "-s", "auto"]
 
         # Project directory (ccbox -C flag)
         cmd.extend(["-C", str(project_dir)])
