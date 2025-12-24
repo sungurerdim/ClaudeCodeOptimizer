@@ -53,6 +53,80 @@ Pre-Check → Analyze → Report → Approve → Apply → Verify
 
 ---
 
+## Prompt Engineering Principles
+
+CCO applies proven prompt engineering techniques from the [Google Prompt Engineering Whitepaper](https://www.kaggle.com/whitepaper-prompt-engineering), adapted for Claude Code + Opus 4.5:
+
+### Instruction-First Approach
+
+**Write positive instructions, not negative constraints.**
+
+| Instead of | Write |
+|------------|-------|
+| "Never guess file contents" | "Read files before referencing them" |
+| "Don't hallucinate APIs" | "Use only documented, existing APIs" |
+| "No vague messages" | "Use descriptive action verbs" |
+
+**Why:** Positive instructions are clearer and more actionable. The model performs better when told what TO do rather than what NOT to do.
+
+### Placeholder Standards
+
+All examples and templates use consistent `{placeholder}` format:
+
+| Type | Format | Example |
+|------|--------|---------|
+| Simple value | `{name}` | `{file}`, `{line}` |
+| Enumerated | `{opt1\|opt2}` | `{OK\|WARN\|FAIL}` |
+| Counted | `{n}` | Numeric values |
+| Path | `{file}:{line}` | Location references |
+
+**Why:** Prevents confusion between examples and actual commands. Placeholders are clearly identifiable.
+
+### Reasoning Strategies
+
+For complex decisions, CCO uses structured reasoning patterns:
+
+| Strategy | When to Use | How |
+|----------|-------------|-----|
+| **Step-Back** | Complex tasks | Ask broader question before specifics |
+| **Chain of Thought** | P0-P1 decisions | Explicit reasoning steps |
+| **Self-Consistency** | Critical findings | Multiple reasoning paths + consensus |
+
+**Example (Chain of Thought):**
+```
+1. Identify: What exactly is the issue?
+2. Impact: Who/what is affected?
+3. Evidence: What confirms this assessment?
+4. Severity: Based on evidence, what's the appropriate level?
+```
+
+### Few-Shot Patterns
+
+Examples use generic placeholder patterns, not hardcoded values:
+
+```
+User: "{action_request}"
+→ AskUserQuestion:
+  question: "{clarifying_question}?"
+  options: ["{option_1}"; "{option_2}"]
+```
+
+**Why:** Hardcoded examples can be misinterpreted as commands. Placeholder patterns show structure without prescribing content.
+
+### Structured Output Schema
+
+All structured output follows consistent JSON schema:
+
+```json
+{
+  "status": "{OK|WARN|FAIL}",
+  "accounting": { "done": "{n}", "declined": "{n}", "failed": "{n}" },
+  "items": [{ "severity": "{level}", "location": "{file}:{line}" }]
+}
+```
+
+---
+
 ## Rule Categories
 
 | Category | Scope | Loading |

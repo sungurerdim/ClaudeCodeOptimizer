@@ -356,6 +356,6 @@ When `--quick` flag:
 1. **Background analysis** - Start analysis while asking Q1
 2. **Single question** - Focus + Apply mode combined in Q1
 3. **80/20 filter** - Prioritize high-impact, low-effort items
-4. **No follow-up questions** - Apply mode determined upfront
+4. **Upfront decisions** - Apply mode determined in Q1
 5. **Evidence required** - Every recommendation needs file:line reference
 6. **Progressive display** - Show foundation assessment as it completes

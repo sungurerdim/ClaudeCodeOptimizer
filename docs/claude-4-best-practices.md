@@ -12,6 +12,7 @@ This document details how CCO implements official Claude 4 best practices and Op
 | [Memory & Rules](https://code.claude.com/docs/en/memory) | Rules directory structure |
 | [Claude Code CHANGELOG](https://github.com/anthropics/claude-code/blob/main/CHANGELOG.md) | Feature history |
 | [Claude Opus 4.5](https://www.anthropic.com/news/claude-opus-4-5) | Model capabilities |
+| [Google Prompt Engineering Whitepaper](https://www.kaggle.com/whitepaper-prompt-engineering) | Instruction-First, Few-Shot, CoT, Self-Consistency patterns |
 
 ## Implementation Summary
 
@@ -126,6 +127,54 @@ Sub-agents
 - Vending-Bench (autonomous): +29% improvement
 
 **Model Strategy:** Opus + Haiku only (no Sonnet). Opus for intelligence, Haiku for speed.
+
+### Instruction-First Approach
+
+CCO rules use positive instructions instead of negative constraints:
+
+| Negative (Avoided) | Positive (Used) |
+|--------------------|-----------------|
+| "Never guess file contents" | "Read files before referencing them" |
+| "No hallucination" | "Use only documented, existing APIs" |
+| "Don't swallow exceptions" | "Log all exceptions with context" |
+
+**Why:** Positive instructions are clearer. The model performs better when told what TO do.
+
+**Applied in:** `cco-core.md`, `cco-ai.md`, `cco-tools.md`
+
+### Reasoning Strategies
+
+For critical decisions, CCO implements structured reasoning:
+
+| Strategy | When | Pattern |
+|----------|------|---------|
+| **Step-Back** | Complex tasks | Ask broader question first |
+| **Chain of Thought** | P0-P1 severity | Explicit 4-step reasoning |
+| **Self-Consistency** | CRITICAL only | Multiple paths + consensus |
+
+**Example (Self-Consistency for P0):**
+```
+Path A: Analyze from attacker perspective
+Path B: Analyze from system design perspective
+Consensus: Both agree → confirm P0. Disagree → downgrade to P1
+```
+
+**Applied in:** `cco-ai.md` Reasoning Strategies section
+
+### Placeholder Standards
+
+All examples use `{placeholder}` format, never hardcoded values:
+
+| Type | Format |
+|------|--------|
+| Simple | `{name}` |
+| Enumerated | `{opt1\|opt2}` |
+| Numeric | `{n}` |
+| Location | `{file}:{line}` |
+
+**Why:** Hardcoded examples can be misinterpreted as commands.
+
+**Applied in:** All command templates, agent templates
 
 ### Conservative Judgment
 

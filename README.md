@@ -245,6 +245,7 @@ Built on official Anthropic documentation and Claude Code best practices:
 | [Claude 4 Best Practices][claude4-bp] | Prompt patterns, parallel execution |
 | [Claude Code Docs][slash-commands] | Commands, sub-agents, rules |
 | [Opus 4.5 Announcement][opus-4-5] | Model capabilities |
+| [Google Prompt Engineering][google-pe] | Instruction-First, Few-Shot, CoT, Self-Consistency |
 
 [slash-commands]: https://code.claude.com/docs/en/slash-commands
 [sub-agents]: https://code.claude.com/docs/en/sub-agents
@@ -252,6 +253,7 @@ Built on official Anthropic documentation and Claude Code best practices:
 [cc-changelog]: https://github.com/anthropics/claude-code/blob/main/CHANGELOG.md
 [claude4-bp]: https://platform.claude.com/docs/en/build-with-claude/prompt-engineering/claude-4-best-practices
 [opus-4-5]: https://www.anthropic.com/news/claude-opus-4-5
+[google-pe]: https://www.kaggle.com/whitepaper-prompt-engineering
 
 ---
 
