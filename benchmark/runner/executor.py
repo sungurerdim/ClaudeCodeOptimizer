@@ -396,7 +396,7 @@ class TestExecutor:
         self,
         output_base: Path,
         ccbox_cmd: str = "ccbox",
-        timeout_seconds: int = 600,
+        timeout_seconds: int = 300,  # Inactivity timeout (5 min no output = stuck)
         stall_threshold: float = 120.0,
         progress_callback: Callable[[str, ActivityState], None] | None = None,
         streaming: bool = True,
@@ -463,7 +463,7 @@ class TestExecutor:
                     # Log real-time output
                     line_stripped = line.rstrip()
                     if line_stripped:
-                        logger.info(f"[{variant.upper()}] [{stream_name}] {line_stripped[:200]}")
+                        logger.info(f"[{variant.upper()}] [{stream_name}] {line_stripped}")
 
                     # Call progress callback
                     if self.progress_callback:
@@ -491,25 +491,32 @@ class TestExecutor:
 
         # Monitor loop with stall detection
         last_stall_check = time.time()
+        last_log_flush = time.time()
         stall_check_interval = 30.0  # Check every 30 seconds
         file_check_interval = 60.0  # Check files every 60 seconds
+        log_flush_interval = 30.0  # Flush logs every 30 seconds
 
         while process.poll() is None:
             elapsed = time.time() - start_time
-
-            # Timeout check
-            if elapsed > timeout:
-                logger.warning(f"[{variant.upper()}] TIMEOUT after {elapsed:.0f}s - terminating...")
-                process.terminate()
-                try:
-                    process.wait(timeout=5)
-                except subprocess.TimeoutExpired:
-                    process.kill()
-                    process.wait()
-                break
-
-            # Stall detection
             now = time.time()
+
+            # Inactivity timeout - terminate if no output for too long
+            if activity.last_output_time > 0:
+                inactivity = now - activity.last_output_time
+                if inactivity > timeout:
+                    logger.warning(
+                        f"[{variant.upper()}] TIMEOUT - no output for {inactivity:.0f}s "
+                        f"(total runtime: {elapsed:.0f}s) - terminating..."
+                    )
+                    process.terminate()
+                    try:
+                        process.wait(timeout=5)
+                    except subprocess.TimeoutExpired:
+                        process.kill()
+                        process.wait()
+                    break
+
+            # Stall detection (warning only, timeout handles termination)
             if now - last_stall_check > stall_check_interval:
                 last_stall_check = now
 
@@ -540,6 +547,22 @@ class TestExecutor:
                             f"[{variant.upper()}] [STALL] No output for {stall_time:.0f}s "
                             f"(warning #{activity.stall_warnings})"
                         )
+
+            # Periodic log flush
+            if now - last_log_flush > log_flush_interval:
+                last_log_flush = now
+                try:
+                    with lock:
+                        if stdout_lines:
+                            (project_dir / "_ccbox_stdout.log").write_text(
+                                "".join(stdout_lines), encoding="utf-8"
+                            )
+                        if stderr_lines:
+                            (project_dir / "_ccbox_stderr.log").write_text(
+                                "".join(stderr_lines), encoding="utf-8"
+                            )
+                except OSError:
+                    pass  # Ignore flush errors, final write will catch issues
 
             time.sleep(0.5)
 
@@ -884,7 +907,7 @@ STDERR:
             error_msg = ""
             if not success:
                 if exit_code is None:
-                    error_msg = f"Timeout after {self.timeout} seconds{stall_info}"
+                    error_msg = f"Inactivity timeout ({self.timeout}s without output){stall_info}"
                 else:
                     error_msg = _parse_ccbox_error(stdout, stderr, exit_code) + stall_info
 
