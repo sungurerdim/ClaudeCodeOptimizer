@@ -19,8 +19,15 @@ allowed-tools: Read(*), Write(*), Edit(*), Bash(cco-install:*), Task(*), TodoWri
   - Output: AI-recommended based on project complexity
   - Data: Public
   - Compliance: None
+- `--target-dir <path>`: Write config files to specified directory instead of `.claude`
+  - Example: `--target-dir .claude` (explicit default)
+  - Example: `--target-dir /tmp/project/.claude` (absolute path)
+  - Useful for: benchmarks, testing, custom project layouts
 
-**Usage:** `/cco-config --auto` or `Skill("cco-config", args: "--auto")`
+**Usage:**
+- `/cco-config --auto`
+- `/cco-config --target-dir .claude`
+- `/cco-config --auto --target-dir /custom/path/.claude`
 
 ## Context
 
@@ -32,8 +39,16 @@ allowed-tools: Read(*), Write(*), Edit(*), Bash(cco-install:*), Task(*), TodoWri
 ## Mode Detection
 
 ```javascript
-// Check if running in unattended mode
-const isUnattended = "$ARGS".includes("--auto") || "$ARGS".includes("--unattended")
+// Parse arguments
+const args = "$ARGS"
+const isUnattended = args.includes("--auto") || args.includes("--unattended")
+
+// Parse --target-dir argument
+let targetDir = ".claude"  // Default
+const targetDirMatch = args.match(/--target-dir\s+(\S+)/)
+if (targetDirMatch) {
+  targetDir = targetDirMatch[1]
+}
 
 if (isUnattended) {
   // Skip to Step-1 with defaults, no questions
@@ -355,20 +370,21 @@ generateResult = Task("cco-agent-analyze", `
 ```javascript
 Task("cco-agent-apply", `
   Write ALL files from generateResult:
+  Target directory: ${targetDir}
 
   1. Context file:
-     - .claude/rules/cco/context.md ← generateResult.context
+     - ${targetDir}/rules/cco/context.md ← generateResult.context
 
   2. ALL rule files (from generateResult.rules array):
      Loop: for each rule in generateResult.rules:
-       - .claude/rules/cco/{rule.file} ← {rule.content}
+       - ${targetDir}/rules/cco/{rule.file} ← {rule.content}
 
   3. Settings:
-     - .claude/settings.json ← merge with existing
+     - ${targetDir}/settings.json ← merge with existing
 
   4. Statusline (if user selected Full or Minimal):
      - Get CCO package path: python3 -c "from claudecodeoptimizer.config import get_content_path; print(get_content_path('statusline'))"
-     - Copy template: cp $CCO_PATH/cco-{mode}.js .claude/cco-{mode}.js
+     - Copy template: cp $CCO_PATH/cco-{mode}.js ${targetDir}/cco-{mode}.js
      - Do NOT generate statusline code - ALWAYS copy from CCO package
 
   Total files: generateResult.rules.length + 2 + (statusline ? 1 : 0)
@@ -386,7 +402,7 @@ The cco-agent-analyze agent handles all detection-to-rule mapping internally usi
 
 ### Settings.json Structure
 
-**Merge these settings into `.claude/settings.json`:**
+**Merge these settings into `${targetDir}/settings.json`:**
 
 ```json
 {
@@ -425,8 +441,8 @@ The cco-agent-analyze agent handles all detection-to-rule mapping internally usi
 
 | Mode | Script | Action |
 |------|--------|--------|
-| Full | `cco-full.js` | Copy from CCO package → `.claude/cco-full.js` |
-| Minimal | `cco-minimal.js` | Copy from CCO package → `.claude/cco-minimal.js` |
+| Full | `cco-full.js` | Copy from CCO package → `${targetDir}/cco-full.js` |
+| Minimal | `cco-minimal.js` | Copy from CCO package → `${targetDir}/cco-minimal.js` |
 | No | (none) | Do not write statusLine key to settings.json |
 
 **Command format:** All statusline modes use dynamic path resolution:
@@ -445,7 +461,7 @@ CCO_STATUSLINE_DIR=$(python3 -c "from claudecodeoptimizer.config import get_cont
 
 # Copy the selected template (Full → cco-full.js, Minimal → cco-minimal.js)
 if [ "{statusline_mode}" != "No" ]; then
-  cp "$CCO_STATUSLINE_DIR/cco-{statusline_mode_lower}.js" .claude/cco-{statusline_mode_lower}.js
+  cp "$CCO_STATUSLINE_DIR/cco-{statusline_mode_lower}.js" "${targetDir}/cco-{statusline_mode_lower}.js"
 fi
 ```
 
@@ -457,8 +473,8 @@ Bash: CCO_PATH=$(python3 -c "from claudecodeoptimizer.config import get_content_
 # 2. Read the template from package
 Read: $CCO_PATH/cco-{full|minimal}.js
 
-# 3. Write to project
-Write: .claude/cco-{full|minimal}.js (exact copy, no modifications)
+# 3. Write to project (use targetDir)
+Write: ${targetDir}/cco-{full|minimal}.js (exact copy, no modifications)
 ```
 
 **CRITICAL:** Do NOT generate statusline code from scratch. ALWAYS copy from CCO package templates.
@@ -466,9 +482,9 @@ Write: .claude/cco-{full|minimal}.js (exact copy, no modifications)
 ### If action = Remove
 
 ```javascript
-// Parallel removal
-Bash("rm -rf .claude/rules/cco/")
-// Edit settings.json to remove CCO entries
+// Parallel removal (use targetDir)
+Bash(`rm -rf ${targetDir}/rules/cco/`)
+// Edit ${targetDir}/settings.json to remove CCO entries
 ```
 
 ### If action = Export
@@ -476,7 +492,7 @@ Bash("rm -rf .claude/rules/cco/")
 ```javascript
 Task("cco-agent-apply", `
   Export rules to ${format}:
-  - Read all .claude/rules/cco/*.md
+  - Read all ${targetDir}/rules/cco/*.md
   - Filter for target format
   - Write to ./${format}
 `)
@@ -499,10 +515,10 @@ Task("cco-agent-apply", `
 ### Files Written
 | File | Action |
 |------|--------|
-| .claude/rules/cco/context.md | {action} |
-| .claude/rules/cco/{language}.md | {action} |
-| .claude/settings.json | {action} |
-| .claude/cco-{mode}.js | Copied from CCO template |
+| ${targetDir}/rules/cco/context.md | {action} |
+| ${targetDir}/rules/cco/{language}.md | {action} |
+| ${targetDir}/settings.json | {action} |
+| ${targetDir}/cco-{mode}.js | Copied from CCO template |
 
 ### Detection Summary
 - Auto-detected: {n} elements
@@ -592,7 +608,7 @@ If something goes wrong during configuration:
 |-----------|----------|
 | Wrong rules generated | Re-run `/cco-config`, select "Setup/Update", adjust answers |
 | Want to start fresh | Run `/cco-config` → Remove, then Setup again |
-| Settings.json corrupted | Delete `.claude/settings.json`, re-run `/cco-config` |
+| Settings.json corrupted | Delete `${targetDir}/settings.json`, re-run `/cco-config` |
 | Detection crashed | Re-run `/cco-config` - detection is stateless |
 | Wrong AI Performance | `/cco-config` → Setup/Update, change Thinking/Budget/Output |
 | Applied wrong permissions | Re-run `/cco-config`, select different Permissions level |
