@@ -323,19 +323,36 @@ function calculateRecommendations(complexity) {
 
 ---
 
-## Step-4: Apply [BACKGROUND]
+## Step-4: Apply [MANDATORY - NO SKIP]
 
-**Write all files from detection + user input. Always overwrite existing files.**
+**CRITICAL: You MUST call cco-agent-apply. Never skip based on "files already match" or similar reasoning.**
+
+### 4.0: Orchestrator Rules [CRITICAL]
+
+```
+DO NOT:
+- Compare existing files with expected content
+- Skip writes because "settings already match"
+- Optimize by avoiding "unnecessary" writes
+
+ALWAYS:
+- Call cco-agent-analyze (generate phase)
+- Call cco-agent-apply with explicit file operations
+- Let the agent handle all file operations
+```
 
 ### 4.1: Generate Rules
 
 **CRITICAL:** Call cco-agent-analyze with config scope (generate phase) to create rules.
 
-**[IMPORTANT] File Write Behavior:**
-- **ALWAYS overwrite** existing settings/files - never skip because file exists
-- Treat every run as fresh setup for rule files (context.md, {language}.md)
-- For settings.json: **MERGE** new settings into existing (don't delete unrelated settings)
-- This ensures config is always in sync with detections while preserving user customizations
+**Write Modes (see cco-agent-apply.md for implementation):**
+
+| Mode | Target | When |
+|------|--------|------|
+| `overwrite` | Rule files (`*.md`) | Setup/Update |
+| `merge` | `settings.json` | Setup/Update |
+| `delete` | `rules/cco/` directory | Remove |
+| `unmerge` | `settings.json` | Remove |
 
 **[IMPORTANT] Rule Source Architecture:**
 - All rules are defined as **sections within `cco-adaptive.md`** (single file)
@@ -372,29 +389,33 @@ generateResult = Task("cco-agent-analyze", `
 // }
 ```
 
-### 4.2: Write Files
+### 4.2: Write Files [MANDATORY]
+
+**CRITICAL: Always call this step. Never skip.**
 
 ```javascript
 Task("cco-agent-apply", `
-  Write ALL files from generateResult:
-  Target directory: ${targetDir}
+  action: "${setupConfig.context}"  // "Setup/Update" or "Remove"
+  targetDir: "${targetDir}"
 
-  1. Context file:
-     - ${targetDir}/rules/cco/context.md ← generateResult.context
+  // For Setup/Update:
+  files: [
+    { path: "rules/cco/context.md", mode: "overwrite", content: generateResult.context },
+    // For each rule in generateResult.rules:
+    { path: "rules/cco/{rule.file}", mode: "overwrite", content: "{rule.content}" },
+    { path: "settings.json", mode: "merge", content: {settings_object} }
+  ]
 
-  2. ALL rule files (from generateResult.rules array):
-     Loop: for each rule in generateResult.rules:
-       - ${targetDir}/rules/cco/{rule.file} ← {rule.content}
+  // For Remove:
+  files: [
+    { path: "rules/cco/", mode: "delete" },
+    { path: "settings.json", mode: "unmerge" }
+  ]
 
-  3. Settings:
-     - ${targetDir}/settings.json ← merge with existing
-
-  4. Statusline (if user selected Full or Minimal):
-     - Get CCO package path: python3 -c "from claudecodeoptimizer.config import get_content_path; print(get_content_path('statusline'))"
-     - Copy template: cp $CCO_PATH/cco-{mode}.js ${targetDir}/cco-{mode}.js
-     - Do NOT generate statusline code - ALWAYS copy from CCO package
-
-  Total files: generateResult.rules.length + 2 + (statusline ? 1 : 0)
+  // Statusline (if user selected Full or Minimal):
+  // Get CCO package path: python3 -c "from claudecodeoptimizer.config import get_content_path; print(get_content_path('statusline'))"
+  // Copy template: cp $CCO_PATH/cco-{mode}.js ${targetDir}/cco-{mode}.js
+  // Do NOT generate statusline code - ALWAYS copy from CCO package
 `, { run_in_background: true })
 ```
 
@@ -489,9 +510,16 @@ Write: ${targetDir}/cco-{full|minimal}.js (exact copy, no modifications)
 ### If action = Remove
 
 ```javascript
-// Parallel removal (use targetDir)
-Bash(`rm -rf ${targetDir}/rules/cco/`)
-// Edit ${targetDir}/settings.json to remove CCO entries
+Task("cco-agent-apply", `
+  action: "Remove"
+  targetDir: "${targetDir}"
+
+  files: [
+    { path: "rules/cco/", mode: "delete" },
+    { path: "settings.json", mode: "unmerge" }
+  ]
+`)
+// Uses unmerge mode: removes only CCO keys, preserves user settings
 ```
 
 ### If action = Export
