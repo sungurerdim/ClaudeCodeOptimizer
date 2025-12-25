@@ -98,10 +98,14 @@ Bash("{test_command} 2>&1")
 
 | Mode | Target | Behavior |
 |------|--------|----------|
-| `overwrite` | Rule files (`*.md`) | Delete existing → Write new |
+| `overwrite` | `context.md` | Delete existing → Write new (always) |
+| `overwrite` | Rule files (`*.md`) | Delete existing → Write new (always) |
+| `overwrite` | Statusline (`cco-*.js`) | Delete existing → Copy from package (always) |
 | `merge` | `settings.json` (Setup) | Read existing → Deep merge → Write |
 | `delete` | Rule files, directories | Remove entirely |
 | `unmerge` | `settings.json` (Remove) | Read → Remove CCO keys only → Write |
+
+**CRITICAL:** All `overwrite` targets are ALWAYS written. Never skip based on "file exists" or "content matches".
 
 ### Mode: overwrite
 ```python
@@ -156,8 +160,12 @@ def unmerge(path):
 **Setup/Update:**
 ```javascript
 files: [
+  // All overwrite - ALWAYS write, never skip
   { path: "rules/cco/context.md", mode: "overwrite", content: "{context_content}" },
   { path: "rules/cco/{language}.md", mode: "overwrite", content: "{rule_content}" },
+  { path: "cco-{mode}.js", mode: "overwrite", source: "$CCO_PATH/cco-{mode}.js" },
+
+  // Only settings.json is merged (preserves user settings)
   { path: "settings.json", mode: "merge", content: {
     alwaysThinkingEnabled: {thinking_enabled},
     env: {
