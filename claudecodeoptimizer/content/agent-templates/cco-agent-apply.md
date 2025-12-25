@@ -53,7 +53,7 @@ Bash("{test_command} 2>&1")
 | Safety | Pre-op git status │ Dirty → Commit/Stash/Continue │ Rollback via clean state |
 | Tracking | TODO list with ALL items │ One in_progress at a time │ `done + declined + fail = total` |
 | Skip | `.git/`, `node_modules/`, `vendor/`, `.venv/`, `dist/`, `build/`, `fixtures/`, `testdata/`, `__snapshots__/`, `examples/` |
-| Write | **Force-write always** │ Even if file exists with identical content │ Overwrite to ensure state consistency │ **NEVER skip based on content comparison** |
+| Write | **Force-write always** │ Even if file exists with identical content │ Overwrite to ensure state consistency │ **Execute all writes unconditionally** |
 
 ## Fix Categories
 

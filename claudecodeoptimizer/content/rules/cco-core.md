@@ -4,8 +4,8 @@
 ## Design Principles
 
 - **SSOT**: Single source of truth for every piece of data/logic
-- **DRY**: Don't repeat yourself, extract common patterns
-- **YAGNI**: Don't add features beyond request. DO add robustness (validation, edge cases, error handling) - robustness is NOT a feature
+- **DRY**: Extract common patterns, avoid repetition
+- **YAGNI**: Add only requested features + robustness (validation, edge cases, error handling) - robustness is required, features are not
 - **KISS**: Simplest solution that works correctly for all valid inputs
 - **Separation-of-Concerns**: Distinct responsibilities per module
 - **Composition**: Prefer composition over inheritance
@@ -38,7 +38,7 @@
 - **Parallel-Independent**: Run unrelated operations simultaneously
 - **Sequential-Dependent**: Chain dependent operations
 - **Lazy-Evaluation**: Defer work until needed
-- **Cache-Reuse**: Don't recompute, cache results
+- **Cache-Reuse**: Cache results, reuse computations
 - **Batch-Operations**: Group similar operations
 
 ## Security
@@ -47,7 +47,7 @@
 - **Input-Boundary**: Validate at system entry points
 - **Least-Privilege**: Minimum necessary access
 - **Deps-Audit**: Review before adding, keep updated
-- **Defense-in-Depth**: Multiple layers, don't trust single control
+- **Defense-in-Depth**: Multiple layers, verify each control independently
 
 ## Testing
 

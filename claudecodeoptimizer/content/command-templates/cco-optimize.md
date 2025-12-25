@@ -212,7 +212,7 @@ if (config.action !== "Report only" && autoFixable.length > 0) {
   `, { run_in_background: true })
 }
 
-// Don't wait - proceed to Step-4 immediately
+// Proceed to Step-4 immediately (auto-fix runs in background)
 ```
 
 ### Validation
