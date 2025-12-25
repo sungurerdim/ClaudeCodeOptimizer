@@ -1,4 +1,12 @@
-"""CCO Configuration - Single source of truth."""
+"""CCO Configuration - Single source of truth.
+
+Module Organization:
+    - Path Constants (lines 31-130): Directory paths, file patterns, markers
+    - Content Discovery (lines 133-191): Functions for finding CCO content files
+    - JSON Utilities (lines 193-224): Load/save JSON with error handling
+    - Rules Breakdown (lines 226-281): Rule counting and categorization
+    - CLI Decorator (lines 283-309): Entry point exception handling
+"""
 
 import json
 import os

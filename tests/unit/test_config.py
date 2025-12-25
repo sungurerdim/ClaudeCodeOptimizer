@@ -16,6 +16,8 @@ from claudecodeoptimizer.config import (
     get_cco_commands,
     get_content_path,
     get_rules_breakdown,
+    load_json_file,
+    save_json_file,
 )
 
 
@@ -192,3 +194,101 @@ class TestFunctions:
             config_module.__file__ = original_file
 
         assert result == (0, 0)
+
+
+class TestJSONUtilities:
+    """Test JSON utility functions with edge cases."""
+
+    def test_load_json_missing_file(self, tmp_path: Path):
+        """Test load_json_file returns empty dict for missing file."""
+        missing = tmp_path / "nonexistent.json"
+        result = load_json_file(missing)
+        assert result == {}
+
+    def test_load_json_invalid_json(self, tmp_path: Path):
+        """Test load_json_file returns empty dict for invalid JSON."""
+        invalid = tmp_path / "invalid.json"
+        invalid.write_text("{ not valid json }", encoding="utf-8")
+        result = load_json_file(invalid)
+        assert result == {}
+
+    def test_load_json_empty_file(self, tmp_path: Path):
+        """Test load_json_file returns empty dict for empty file."""
+        empty = tmp_path / "empty.json"
+        empty.write_text("", encoding="utf-8")
+        result = load_json_file(empty)
+        assert result == {}
+
+    def test_load_json_unicode_content(self, tmp_path: Path):
+        """Test load_json_file handles unicode characters correctly."""
+        import json
+
+        unicode_data = {"message": "Hello 世界 🌍", "author": "Привет"}
+        unicode_file = tmp_path / "unicode.json"
+        unicode_file.write_text(json.dumps(unicode_data), encoding="utf-8")
+
+        result = load_json_file(unicode_file)
+        assert result["message"] == "Hello 世界 🌍"
+        assert result["author"] == "Привет"
+
+    def test_load_json_valid_file(self, tmp_path: Path):
+        """Test load_json_file loads valid JSON correctly."""
+        import json
+
+        data = {"key": "value", "number": 42, "nested": {"a": 1}}
+        valid = tmp_path / "valid.json"
+        valid.write_text(json.dumps(data), encoding="utf-8")
+
+        result = load_json_file(valid)
+        assert result == data
+
+    def test_save_json_creates_file(self, tmp_path: Path):
+        """Test save_json_file creates new file correctly."""
+        import json
+
+        data = {"test": "data", "number": 123}
+        output = tmp_path / "output.json"
+
+        save_json_file(output, data)
+
+        assert output.exists()
+        content = json.loads(output.read_text(encoding="utf-8"))
+        assert content == data
+
+    def test_save_json_overwrites_existing(self, tmp_path: Path):
+        """Test save_json_file overwrites existing file."""
+        import json
+
+        output = tmp_path / "existing.json"
+        output.write_text('{"old": "data"}', encoding="utf-8")
+
+        new_data = {"new": "data"}
+        save_json_file(output, new_data)
+
+        content = json.loads(output.read_text(encoding="utf-8"))
+        assert content == new_data
+        assert "old" not in content
+
+    def test_save_json_write_error(self, tmp_path: Path):
+        """Test save_json_file raises RuntimeError on write failure."""
+        import pytest
+
+        # Create a directory with the same name to cause write failure
+        bad_path = tmp_path / "directory"
+        bad_path.mkdir()
+
+        with pytest.raises(RuntimeError, match="Failed to write JSON"):
+            save_json_file(bad_path, {"data": "test"})
+
+    def test_save_json_unicode_content(self, tmp_path: Path):
+        """Test save_json_file handles unicode correctly."""
+        import json
+
+        data = {"emoji": "🎉", "chinese": "中文", "russian": "Русский"}
+        output = tmp_path / "unicode_out.json"
+
+        save_json_file(output, data)
+
+        content = json.loads(output.read_text(encoding="utf-8"))
+        assert content["emoji"] == "🎉"
+        assert content["chinese"] == "中文"

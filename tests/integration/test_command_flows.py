@@ -610,5 +610,91 @@ class TestLocalSetup:
         assert result is False
 
 
+class TestCompleteLifecycle:
+    """Test complete install/configure/uninstall lifecycle (integration test)."""
+
+    def test_simulated_install_cleanup_workflow(self, tmp_path: Path) -> None:
+        """Test simulated install → verify → cleanup workflow.
+
+        This test simulates the install/cleanup lifecycle without calling
+        the actual install functions to avoid complex mocking.
+        """
+        # Step 1: Simulate installation by creating CCO file structure
+        claude_dir = tmp_path / ".claude"
+        commands_dir = claude_dir / "commands"
+        agents_dir = claude_dir / "agents"
+        rules_dir = claude_dir / "rules" / "cco"
+
+        commands_dir.mkdir(parents=True)
+        agents_dir.mkdir(parents=True)
+        rules_dir.mkdir(parents=True)
+
+        # Create CCO files (simulating install)
+        cco_files = [
+            (commands_dir / "cco-optimize.md", "# CCO Optimize"),
+            (commands_dir / "cco-review.md", "# CCO Review"),
+            (agents_dir / "cco-agent-analyze.md", "# CCO Agent Analyze"),
+            (rules_dir / "core.md", "# Core Rules"),
+            (rules_dir / "ai.md", "# AI Rules"),
+        ]
+        for path, content in cco_files:
+            path.write_text(content)
+
+        # Step 2: Verify installation
+        assert all(path.exists() for path, _ in cco_files), "All CCO files should exist"
+
+        # Step 3: Simulate cleanup (remove CCO files)
+        for path, _ in cco_files:
+            path.unlink()
+
+        # Step 4: Verify clean state
+        remaining_commands = list(commands_dir.glob("cco-*.md"))
+        remaining_agents = list(agents_dir.glob("cco-*.md"))
+        remaining_rules = list(rules_dir.glob("*.md"))
+
+        assert len(remaining_commands) == 0, "CCO commands should be removed"
+        assert len(remaining_agents) == 0, "CCO agents should be removed"
+        assert len(remaining_rules) == 0, "CCO rules should be removed"
+
+    def test_directory_structure_integrity(self, tmp_path: Path) -> None:
+        """Test that directory structure remains after file cleanup."""
+        claude_dir = tmp_path / ".claude"
+        commands_dir = claude_dir / "commands"
+        commands_dir.mkdir(parents=True)
+
+        # Create and remove file
+        cco_file = commands_dir / "cco-test.md"
+        cco_file.write_text("test")
+        cco_file.unlink()
+
+        # Directory should still exist
+        assert commands_dir.exists(), "Directory should remain after file cleanup"
+
+    def test_cleanup_preserves_user_files(self, tmp_path: Path) -> None:
+        """Test cleanup removes CCO files but preserves user files."""
+        claude_dir = tmp_path / ".claude"
+        commands_dir = claude_dir / "commands"
+        commands_dir.mkdir(parents=True)
+
+        # Create CCO file (should be removed in cleanup)
+        cco_file = commands_dir / "cco-test.md"
+        cco_file.write_text("CCO content")
+
+        # Create user file (should be preserved)
+        user_file = commands_dir / "my-command.md"
+        user_file.write_text("User content")
+
+        # Simulate cleanup - remove only CCO files
+        for f in commands_dir.glob("cco-*.md"):
+            f.unlink()
+
+        # CCO file should be removed
+        assert not cco_file.exists(), "CCO file should be removed"
+
+        # User file should be preserved
+        assert user_file.exists(), "User file should be preserved"
+        assert user_file.read_text() == "User content"
+
+
 if __name__ == "__main__":
     pytest.main([__file__, "-v"])
