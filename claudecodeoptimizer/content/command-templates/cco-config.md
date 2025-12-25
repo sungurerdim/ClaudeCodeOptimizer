@@ -217,7 +217,9 @@ detectResult = await TaskOutput(detectTask.id)
 aiRecommendations = calculateRecommendations(detectResult.complexity)
 ```
 
-**AI Recommendation Logic [CRITICAL]:**
+**AI Recommendation Logic [CRITICAL - MUST ALWAYS EXECUTE]:**
+
+Calculate `aiRecommendations` using complexity data from detection. Every Q2 question for Budget and Output includes exactly ONE option labeled "(Recommended)" based on these calculations. This step runs before Q2 is displayed.
 
 ```javascript
 function calculateRecommendations(complexity) {
@@ -264,12 +266,18 @@ if (isUnattended) {
 
 **Build Q2 dynamically (max 4 tabs):**
 
+**[CRITICAL] Q2 Label Requirements:**
+- Budget tab: Exactly ONE option has "(Recommended)" based on `aiRecommendations.budget`
+- Output tab: Exactly ONE option has "(Recommended)" based on `aiRecommendations.output`
+- When current equals recommended, show both: `[current] (Recommended)`
+- Every tab includes exactly one "(Recommended)" option
+
 ```javascript
   // Helper: Generate label with appropriate suffix
   // Priority: [current] > (Recommended) > (CC default) > (none)
   function optionLabel(value, field, defaultSuffix = "") {
     const current = existingConfig[field]
-    const recommended = aiRecommendations[field]
+    const recommended = aiRecommendations[field]  // MUST be set from calculateRecommendations()
 
     // If this value matches existing config
     if (current === value) {
@@ -278,7 +286,7 @@ if (isUnattended) {
       return `${value} [current]`
     }
 
-    // If this value is AI-recommended
+    // If this value is AI-recommended (MUST show for exactly one option)
     if (recommended === value) return `${value} (Recommended)`
 
     // Otherwise show default suffix or nothing
@@ -288,6 +296,7 @@ if (isUnattended) {
   questions = []
 
   // Tab 1: Thinking Budget (only if Thinking Enabled)
+  // MUST have exactly one option with (Recommended) based on aiRecommendations.budget
   if (setupConfig.thinking === "Enabled") {
     questions.push({
       question: "Thinking token budget?",
@@ -303,6 +312,7 @@ if (isUnattended) {
   }
 
   // Tab 2: Output Limits
+  // MUST have exactly one option with (Recommended) based on aiRecommendations.output
   questions.push({
     question: "Tool output limits?",
     header: "Output",
@@ -342,7 +352,38 @@ if (isUnattended) {
 }
 ```
 
-### Validation
+### Pre-Q2 Validation [CRITICAL]
+
+Before calling AskUserQuestion for Q2, verify:
+```
+[x] aiRecommendations calculated from detectResult.complexity
+[x] aiRecommendations.budget is one of: 4000, 8000, 16000, 32000
+[x] aiRecommendations.output is one of: 10000, 25000, 35000
+[x] Budget options contain exactly ONE "(Recommended)" label
+[x] Output options contain exactly ONE "(Recommended)" label
+```
+
+**Example for ~10K LOC project (like ClaudeCodeOptimizer):**
+```javascript
+// Complexity: { loc: 9621, files: 32, frameworks: 3 }
+// → aiRecommendations = { budget: 8000, output: 25000 }
+
+// Budget options should be:
+{ label: "4000", ... }
+{ label: "8000 (Recommended)", ... }  // ← AI recommendation
+{ label: "16000", ... }
+{ label: "32000", ... }
+
+// Output options should be:
+{ label: "10000", ... }
+{ label: "25000 (Recommended) (CC default)", ... }  // ← AI recommendation
+{ label: "35000", ... }
+
+// If current config has 35000:
+{ label: "35000 [current]", ... }  // Just [current], not recommended
+```
+
+### Post-Q2 Validation
 ```
 [x] User completed Q2 (or unattended defaults applied)
 → Store as: contextConfig = { budget?, output, data, compliance }

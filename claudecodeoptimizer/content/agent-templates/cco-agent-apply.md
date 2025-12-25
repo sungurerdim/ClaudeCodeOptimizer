@@ -53,7 +53,7 @@ Bash("{test_command} 2>&1")
 | Safety | Pre-op git status │ Dirty → Commit/Stash/Continue │ Rollback via clean state |
 | Tracking | TODO list with ALL items │ One in_progress at a time │ `done + declined + fail = total` |
 | Skip | `.git/`, `node_modules/`, `vendor/`, `.venv/`, `dist/`, `build/`, `fixtures/`, `testdata/`, `__snapshots__/`, `examples/` |
-| Write | **Force-write always** │ Even if file exists with identical content │ Overwrite to ensure state consistency |
+| Write | **Force-write always** │ Even if file exists with identical content │ Overwrite to ensure state consistency │ **NEVER skip based on content comparison** |
 
 ## Fix Categories
 
@@ -93,6 +93,13 @@ Bash("{test_command} 2>&1")
 ## Write Operations [CRITICAL]
 
 **Config file operations for cco-config. Always execute - never skip based on content comparison.**
+
+**[ABSOLUTE RULE] Execute All Writes:**
+- Execute the write operation for EVERY file in the files list
+- Write files regardless of whether content appears identical
+- Treat every file as needing a fresh write
+- Report "done" only after the Write tool confirms the file was written
+- Log bytes written for verification (confirms actual write occurred)
 
 ### Execution Order for Setup/Update [CRITICAL]
 
@@ -134,13 +141,23 @@ def overwrite(path, content):
     write(path, content)
 ```
 
-### Mode: merge
+### Mode: merge [CRITICAL - ALWAYS WRITE]
+
+**Execute the full read → merge → write cycle every time.** The write step runs regardless of whether merged content differs from existing content.
+
 ```python
 def merge(path, new_settings):
+    """Execute full cycle: read, merge, write."""
     existing = read_json(path) or {}
     result = deep_merge(existing, new_settings)  # new overrides, preserves unspecified
-    write_json(path, result)
+    write_json(path, result)  # Write executes unconditionally
 ```
+
+**Why unconditional write:**
+- Ensures state consistency (file timestamp updated)
+- Prevents drift between expected and actual state
+- Confirms operation was attempted (for logging/tracking)
+- Provides verification output (bytes written)
 
 ### Mode: delete_contents
 ```python
@@ -224,6 +241,17 @@ files: [
 | `env.BASH_MAX_OUTPUT_LENGTH` | Set | Delete |
 
 **Never touch:** User-added keys, `permissions` (unless explicitly selected)
+
+### Write Operation Validation [CRITICAL]
+
+For each file in the files list, verify:
+```
+[x] Write tool was called
+[x] Tool returned success with bytes written
+[x] Status reported as "done" with verification (file size)
+```
+
+**Verification confirms execution:** Report includes bytes written (e.g., "1557 bytes") to prove write occurred.
 
 ## Verification & Cascade
 
