@@ -206,40 +206,82 @@ if (isUnattended) {
 
 **Only ask if "Setup/Update" selected in Q1.**
 
-**First: Wait for detection results:**
+**First: Wait for detection results and calculate recommendations:**
 
 ```javascript
 // Now collect detection results
 detectResult = await TaskOutput(detectTask.id)
 
-// Determine AI recommendations based on project complexity
+// Calculate AI recommendations based on project complexity
+// Detection returns: { complexity: { loc, files, frameworks, hasTests, hasCi } }
 aiRecommendations = calculateRecommendations(detectResult.complexity)
-// complexity: simple → 8000, medium → 16000, complex → 32000
+```
+
+**AI Recommendation Logic [CRITICAL]:**
+
+```javascript
+function calculateRecommendations(complexity) {
+  // Default for small/unknown projects
+  let budget = 8000
+  let output = 25000
+
+  // Medium complexity: 10K+ LOC or 100+ files or multiple frameworks
+  if (complexity.loc > 10000 || complexity.files > 100 || complexity.frameworks > 2) {
+    budget = 16000
+    output = 35000
+  }
+
+  // Large complexity: 50K+ LOC or 500+ files or monorepo
+  if (complexity.loc > 50000 || complexity.files > 500 || complexity.isMonorepo) {
+    budget = 32000
+    output = 35000
+  }
+
+  // Simple projects: <1000 LOC and <20 files
+  if (complexity.loc < 1000 && complexity.files < 20) {
+    budget = 4000
+    output = 10000
+  }
+
+  return { budget, output }
+}
 ```
 
 **UNATTENDED MODE: Use AI recommendations directly:**
 
 ```javascript
 if (isUnattended) {
-  // Use AI-recommended values based on project complexity
   contextConfig = {
     budget: aiRecommendations.budget,
     output: aiRecommendations.output,
     data: "Public",
-    compliance: []  // No compliance requirements
+    compliance: []
   }
   // Skip Q2, proceed directly to Step-4
 } else {
-  // Interactive mode: Build Q2 dynamically (max 4 tabs)
+  // Interactive mode: Build Q2 with AI-recommended options marked
 ```
 
 **Build Q2 dynamically (max 4 tabs):**
 
 ```javascript
-  // Helper: Generate label with [current] or (Recommended) suffix
+  // Helper: Generate label with appropriate suffix
+  // Priority: [current] > (Recommended) > (CC default) > (none)
   function optionLabel(value, field, defaultSuffix = "") {
-    if (existingConfig[field] === value) return `${value} [current]`
-    if (aiRecommendations[field] === value) return `${value} (Recommended)`
+    const current = existingConfig[field]
+    const recommended = aiRecommendations[field]
+
+    // If this value matches existing config
+    if (current === value) {
+      // If also recommended, show both
+      if (recommended === value) return `${value} [current] (Recommended)`
+      return `${value} [current]`
+    }
+
+    // If this value is AI-recommended
+    if (recommended === value) return `${value} (Recommended)`
+
+    // Otherwise show default suffix or nothing
     return defaultSuffix ? `${value} ${defaultSuffix}` : `${value}`
   }
 
@@ -300,20 +342,6 @@ if (isUnattended) {
 }
 ```
 
-**AI Recommendation Logic:**
-
-```javascript
-function calculateRecommendations(complexity) {
-  if (complexity.loc > 50000 || complexity.files > 500) {
-    return { budget: 32000, output: 35000 }
-  } else if (complexity.loc > 10000 || complexity.files > 100) {
-    return { budget: 16000, output: 35000 }
-  } else {
-    return { budget: 8000, output: 25000 }
-  }
-}
-```
-
 ### Validation
 ```
 [x] User completed Q2 (or unattended defaults applied)
@@ -327,19 +355,24 @@ function calculateRecommendations(complexity) {
 
 **CRITICAL: You MUST call cco-agent-apply. Never skip based on "files already match" or similar reasoning.**
 
-### 4.0: Orchestrator Rules [CRITICAL]
+### 4.0: Orchestrator Checklist [CRITICAL]
 
-```
-DO NOT:
+**Before calling cco-agent-apply, verify:**
+- [ ] Clean `rules/cco/*.md` before writing new ones
+- [ ] Use `overwrite` mode for context.md and rule files
+- [ ] Use `merge` mode for settings.json only
+- [ ] Copy statusline scripts from package (never generate)
+- [ ] Never compare files - always write
+
+**DO NOT:**
 - Compare existing files with expected content
 - Skip writes because "settings already match"
 - Optimize by avoiding "unnecessary" writes
 
-ALWAYS:
+**ALWAYS:**
 - Call cco-agent-analyze (generate phase)
 - Call cco-agent-apply with explicit file operations
 - Let the agent handle all file operations
-```
 
 ### 4.1: Generate Rules
 
@@ -353,7 +386,7 @@ ALWAYS:
 | `overwrite` | Rule files (`*.md`) | Setup/Update | Always replace, never skip |
 | `overwrite` | Statusline (`cco-*.js`) | Setup/Update | Always copy from package |
 | `merge` | `settings.json` | Setup/Update | Add/update CCO keys, preserve others |
-| `delete` | `rules/cco/` directory | Remove | Delete entire directory |
+| `delete_contents` | `rules/cco/*.md` | Remove | Delete all files, keep directory |
 | `unmerge` | `settings.json` | Remove | Remove only CCO keys |
 
 **CRITICAL:** All files except settings.json are OVERWRITTEN every run. Never skip writes because "file already exists" or "content matches".
@@ -397,12 +430,30 @@ generateResult = Task("cco-agent-analyze", `
 
 **CRITICAL: Always call this step. Never skip.**
 
+**[CRITICAL] Clean Before Write:**
+For Setup/Update, ALWAYS clean existing rule files first to ensure stale rules are removed:
+1. Delete ALL existing `*.md` files in `rules/cco/` directory
+2. Then write the new context.md and rule files
+
+This ensures:
+- Old rules from previous detections are removed (e.g., go.md if no longer detected)
+- Fresh rules are always written based on current detections
+- No stale configuration remains
+
 ```javascript
 Task("cco-agent-apply", `
   action: "${setupConfig.context}"  // "Setup/Update" or "Remove"
   targetDir: "${targetDir}"
 
-  // For Setup/Update - ALL files are overwritten (except settings.json which is merged):
+  // For Setup/Update:
+  // Step 1: CLEAN - Delete all existing rule files first
+  cleanRules: {
+    path: "rules/cco/",
+    pattern: "*.md",
+    action: "delete_all"  // Delete ALL .md files before writing new ones
+  }
+
+  // Step 2: WRITE - Write fresh files (all files are overwritten):
   files: [
     // Context - ALWAYS overwrite
     { path: "rules/cco/context.md", mode: "overwrite", content: generateResult.context },
@@ -421,7 +472,7 @@ Task("cco-agent-apply", `
 
   // For Remove:
   files: [
-    { path: "rules/cco/", mode: "delete" },
+    { path: "rules/cco/", mode: "delete_contents", pattern: "*.md" },
     { path: "settings.json", mode: "unmerge" }
   ]
 `, { run_in_background: true })
@@ -523,7 +574,7 @@ Task("cco-agent-apply", `
   targetDir: "${targetDir}"
 
   files: [
-    { path: "rules/cco/", mode: "delete" },
+    { path: "rules/cco/", mode: "delete_contents", pattern: "*.md" },
     { path: "settings.json", mode: "unmerge" }
   ]
 `)

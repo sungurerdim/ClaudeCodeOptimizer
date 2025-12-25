@@ -48,6 +48,8 @@ Detection organized by category. Trigger values in `{placeholders}` are defined 
 | L:R | {r_manifest}, {r_ext} | `r.md` |
 | L:Julia | {julia_manifest}, {julia_lock} | `julia.md` |
 | L:Perl | {perl_manifest}, {perl_ext} | `perl.md` |
+| L:Clojure | {clojure_manifest}, {clojure_ext} | `clojure.md` |
+| L:Erlang | {erlang_manifest}, {erlang_ext} | `erlang.md` |
 | **Project Types** |||
 | T:CLI | {entry_points}, {cli_deps}, {bin_dir} | `cli.md` |
 | T:Library | {export_markers}, {lib_markers} | `library.md` |
@@ -64,6 +66,8 @@ Detection organized by category. Trigger values in `{placeholders}` are defined 
 | DB:ORM | {orm_deps} | `database.md` |
 | DB:NoSQL | {nosql_deps} | `database.md` |
 | DB:Vector | {vector_deps} | `database.md` |
+| DB:Edge | {edge_db_deps} | `database.md` |
+| ORM:Exposed | {exposed_deps} | `orm.md` |
 | DB:Operations | DB:* (auto) | `backend-data.md` |
 | **Backend Operations** |||
 | Ops:Full | T:Service + CI:* | `backend-ops.md` |
@@ -76,6 +80,8 @@ Detection organized by category. Trigger values in `{placeholders}` are defined 
 | Frontend:Solid | {solid_deps} | `frontend.md` |
 | Frontend:Astro | {astro_deps}, {astro_ext} | `frontend.md` |
 | Frontend:HTMX | {htmx_deps}, {htmx_attrs} | `frontend.md` |
+| Frontend:Qwik | {qwik_deps} | `frontend.md` |
+| Frontend:Blazor | {blazor_deps} | `frontend.md` |
 | **Mobile** |||
 | Mobile:Flutter | {flutter_manifest}, {dart_ext} | `mobile.md` |
 | Mobile:ReactNative | {rn_deps}, {rn_config} | `mobile.md` |
@@ -130,6 +136,9 @@ Detection organized by category. Trigger values in `{placeholders}` are defined 
 | Backend:Actix | {actix_deps} | `backend.md` |
 | Backend:Axum | {axum_deps} | `backend.md` |
 | Backend:Rocket | {rocket_deps} | `backend.md` |
+| Backend:Warp | {warp_deps} | `backend.md` |
+| Backend:Chi | {chi_deps} | `backend.md` |
+| Backend:Gorilla | {gorilla_deps} | `backend.md` |
 | Backend:AspNetCore | {aspnet_markers} | `backend.md` |
 | Backend:Ktor | {ktor_deps} | `backend.md` |
 | Backend:Vapor | {vapor_deps} | `backend.md` |
@@ -199,7 +208,7 @@ Detection organized by category. Trigger values in `{placeholders}` are defined 
 | i18n | {i18n_dirs}, {i18n_deps} | `i18n.md` |
 | RT:Basic | {websocket_deps}, {sse_patterns} | `realtime.md` |
 | RT:LowLatency | {binary_protocol_deps}, {realtime_patterns} | `realtime.md` |
-| **DEP:* (42 categories)** | See Dependency-Based Rules section below ||
+| **DEP:* (55 categories)** | See Dependency-Based Rules section below ||
 | DEP:CLI | {cli_framework_deps} | `dep-cli.md` |
 | DEP:TUI | {tui_deps} | `dep-tui.md` |
 | DEP:Validation | {validation_deps} | `dep-validation.md` |
@@ -213,6 +222,7 @@ Detection organized by category. Trigger values in `{placeholders}` are defined 
 | DEP:Auth | {auth_deps} | `dep-auth.md` |
 | DEP:Cache | {cache_deps} | `dep-cache.md` |
 | DEP:Queue | {queue_deps} | `dep-queue.md` |
+| DEP:Workflow | {workflow_deps} | `dep-workflow.md` |
 | DEP:Search | {search_deps} | `dep-search.md` |
 | DEP:GPU | {gpu_deps} | `dep-gpu.md` |
 | DEP:HeavyModel | {heavy_model_deps} | `dep-heavymodel.md` |
@@ -242,6 +252,24 @@ Detection organized by category. Trigger values in `{placeholders}` are defined 
 | DEP:CSS | {css_deps} | `dep-css.md` |
 | DEP:WebSocket | {websocket_deps} | `dep-websocket.md` |
 | DEP:StateManagement | {state_mgmt_deps} | `dep-state.md` |
+| DEP:AIAgent | {ai_agent_deps} | `dep-ai-agent.md` |
+| DEP:CDC | {cdc_deps} | `dep-cdc.md` |
+| DEP:DBMigrations | {db_migration_deps} | `dep-dbmigrations.md` |
+| DEP:ErrorTracking | {error_tracking_deps} | `dep-errortracking.md` |
+| DEP:FeatureFlags | {feature_flag_deps} | `dep-featureflags.md` |
+| DEP:GraphQLTools | {graphql_tools_deps} | `dep-graphql.md` |
+| DEP:HeadlessCMS | {headless_cms_deps} | `dep-headlesscms.md` |
+| DEP:IncidentMgmt | {incident_deps} | `dep-incident.md` |
+| DEP:LocalFirst | {local_first_deps} | `dep-localfirst.md` |
+| DEP:SchemaRegistry | {schema_registry_deps} | `dep-schemaregistry.md` |
+| DEP:Effect | {effect_deps} | `dep-effect.md` |
+| DEP:AISDK | {ai_sdk_deps} | `dep-aisdk.md` |
+| DEP:FormValidation | {form_validation_deps} | `dep-formvalidation.md` |
+| DEP:TanStack | {tanstack_deps} | `dep-tanstack.md` |
+| **Infra:* (3 categories)** |||
+| Infra:APIGateway | {api_gateway_config}, {api_gateway_deps} | `infra-apigateway.md` |
+| Infra:ServiceMesh | {service_mesh_config}, {service_mesh_deps} | `infra-servicemesh.md` |
+| Infra:BuildCache | {build_cache_config} | `infra-buildcache.md` |
 
 ### User-Input (AskUserQuestion) [MANDATORY]
 
@@ -618,6 +646,34 @@ paths: **/*.py
 - **POD-Docs**: POD for documentation
 - **Taint-Mode**: Taint mode for untrusted input
 - **Test-More**: Test::More for testing
+
+### Clojure (L:Clojure)
+**Trigger:** project.clj | deps.edn | *.clj | *.cljs
+
+- **Immutable-First**: Leverage immutable data structures by default
+- **Pure-Functions**: Pure functions over side effects, isolate I/O
+- **REPL-Driven**: REPL-driven development workflow
+- **Spec-Validate**: Use clojure.spec for data validation and documentation
+- **Namespaces**: Namespace per file, clear require/import
+- **Threading-Macros**: Use -> and ->> for readability
+- **Protocols-Multimethods**: Protocols for polymorphism, multimethods for open dispatch
+- **Atoms-Refs**: Atoms for uncoordinated state, refs for coordinated transactions
+- **Core-Async**: core.async for async programming patterns
+- **Deps-Edn**: Prefer deps.edn over Leiningen for new projects
+
+### Erlang (L:Erlang)
+**Trigger:** rebar.config | *.erl | *.hrl
+
+- **OTP-Patterns**: Use OTP behaviors (gen_server, gen_statem, supervisor)
+- **Let-It-Crash**: Fail fast, let supervisors handle recovery
+- **Message-Passing**: Message passing for process communication
+- **Pattern-Match**: Pattern matching in function heads
+- **Tail-Recursion**: Tail-recursive functions for loops
+- **Hot-Code**: Design for hot code reloading
+- **ETS-Mnesia**: ETS for fast lookups, Mnesia for distributed state
+- **Dialyzer-Types**: Type specs for Dialyzer analysis
+- **Rebar3-Build**: Use rebar3 for build management
+- **PropEr-Test**: Property-based testing with PropEr or EQC
 
 ---
 
@@ -2676,6 +2732,197 @@ When generating tests, always include:
 - **Persistence**: Persist critical state to storage
 - **Hydration-SSR**: Handle SSR hydration correctly
 
+### DEP:AIAgent
+**Trigger:** {ai_agent_deps}
+
+- **Agent-Orchestration**: Multi-agent coordination with clear ownership boundaries
+- **Memory-Management**: Conversation history limits, context window awareness
+- **Tool-Definition**: Structured tool schemas with input/output validation
+- **Retry-Strategy**: Agent failure recovery with exponential backoff
+- **Cost-Control**: Token usage monitoring, budget limits per operation
+- **Observability-Trace**: Trace agent decisions, tool calls, and reasoning steps
+- **Timeout-Guard**: Set max execution time per agent task
+- **Human-Loop**: Escalation path for uncertain decisions
+
+### DEP:CDC
+**Trigger:** {cdc_deps}
+
+- **Idempotent-Apply**: Idempotent change application (handle replays)
+- **Schema-Evolution**: Support schema changes without downtime
+- **Ordering-Guarantee**: Preserve event ordering within partition
+- **Offset-Commit**: Commit offsets after successful processing
+- **Backpressure-Handle**: Handle consumer lag gracefully
+- **Dead-Letter**: Route failed events to dead-letter queue
+
+### DEP:DBMigrations
+**Trigger:** {db_migration_deps}
+
+- **Version-Order**: Sequential version numbering
+- **Reversible-Prefer**: Prefer reversible migrations (up/down)
+- **Atomic-Migration**: Single atomic transaction per migration
+- **No-Lock-Long**: Avoid long-running locks on large tables
+- **Data-Separate**: Data migrations separate from schema changes
+- **Test-Migration**: Test migrations on production-like data
+
+### DEP:ErrorTracking
+**Trigger:** {error_tracking_deps}
+
+- **Context-Rich**: Include user, request, environment context
+- **Grouping-Smart**: Configure error grouping rules
+- **Source-Maps**: Upload source maps for readable stack traces
+- **PII-Scrub**: Scrub PII before sending
+- **Rate-Limit**: Rate limit error reporting
+- **Release-Track**: Tag errors with release version
+
+### DEP:FeatureFlags
+**Trigger:** {feature_flag_deps}
+
+- **Flag-Naming**: Consistent naming convention (feature_name_enabled)
+- **Targeting-Rules**: User/segment targeting with clear precedence
+- **Gradual-Rollout**: Percentage-based rollout with monitoring
+- **Kill-Switch**: Emergency disable without deployment
+- **Stale-Cleanup**: Remove old flags regularly (30-90 days)
+- **Default-Safe**: Safe defaults when flag service unavailable
+
+### DEP:GraphQLTools
+**Trigger:** {graphql_tool_deps}
+
+- **Schema-First**: Schema-first design with code generation
+- **Resolver-Efficient**: Avoid N+1 with DataLoader pattern
+- **Depth-Limit**: Limit query depth to prevent abuse
+- **Cost-Analysis**: Query cost analysis before execution
+- **Persisted-Queries**: Use persisted queries in production
+- **Federation-Ready**: Design for future federation
+
+### DEP:HeadlessCMS
+**Trigger:** {headless_cms_deps}
+
+- **Preview-Mode**: Draft content preview before publish
+- **Webhook-Subscribe**: Subscribe to content change webhooks
+- **Cache-Invalidate**: Invalidate cache on content change
+- **Asset-Optimize**: Optimize media assets at edge
+- **Locale-Support**: Multi-locale content structure
+- **Fallback-Content**: Fallback for missing translations
+
+### DEP:IncidentMgmt
+**Trigger:** {incident_mgmt_deps}
+
+- **Alert-Severity**: Clear severity levels (P0-P3)
+- **Escalation-Path**: Defined escalation paths
+- **Runbook-Link**: Link alerts to runbooks
+- **Ack-Timeout**: Auto-escalate unacknowledged alerts
+- **Dedup-Rules**: Deduplicate related alerts
+- **Postmortem-Template**: Standardized postmortem template
+
+### DEP:LocalFirst
+**Trigger:** {local_first_deps}
+
+- **Offline-First**: Full functionality without network
+- **Conflict-Resolution**: Clear conflict resolution strategy (LWW, CRDT)
+- **Sync-Incremental**: Incremental sync, not full refresh
+- **Storage-Quota**: Handle storage quota exceeded
+- **Migration-Local**: Local schema migration strategy
+- **Encryption-At-Rest**: Encrypt local data at rest
+
+### DEP:SchemaRegistry
+**Trigger:** {schema_registry_deps}
+
+- **Compatibility-Check**: Check schema compatibility before deploy
+- **Version-Immutable**: Schema versions are immutable
+- **Evolution-Rules**: Define allowed evolution (backward/forward/full)
+- **Schema-ID-Header**: Include schema ID in message headers
+- **Cache-Schemas**: Cache schemas locally for performance
+- **Dead-Letter-Invalid**: Route schema-invalid messages to DLQ
+
+### DEP:Effect
+**Trigger:** {effect_deps}
+
+- **Effect-Composition**: Compose effects with pipe/flow for flat, readable chains
+- **Schema-Validation**: Use Effect.Schema for runtime validation with type inference
+- **Error-Typed**: Define explicit typed error channels for each failure mode
+- **Generator-Style**: Prefer Effect.gen for async-like syntax
+- **Context-Layers**: Use Layers for dependency injection
+- **Resource-Scoped**: Use Scope for resource lifecycle management
+- **Fiber-Concurrency**: Use fibers for structured concurrency
+- **Retry-Schedule**: Use Schedule for retry and repeat policies
+- **Stream-Processing**: Use Stream for incremental data processing
+- **Config-Provider**: Use Config for type-safe configuration
+
+### DEP:AISDK
+**Trigger:** {ai_sdk_deps}
+
+- **Provider-Abstract**: Use provider abstraction for model switching
+- **Stream-Default**: Prefer streaming responses for better UX
+- **Tool-Calling**: Use structured tool calling with typed schemas
+- **Message-History**: Manage conversation history with proper context limits
+- **Error-Boundary**: Wrap AI calls in error boundaries for graceful fallback
+- **Rate-Limit-Handle**: Handle rate limits with exponential backoff
+- **Token-Count**: Track token usage for cost management
+- **Abort-Controller**: Support request cancellation with AbortController
+- **Cache-Responses**: Cache identical requests where appropriate
+- **Type-Safe-Output**: Use generateObject for structured outputs
+
+### DEP:FormValidation
+**Trigger:** {form_validation_deps}
+
+- **Schema-First**: Define schema once, derive types and validation
+- **Progressive-Enhance**: Work without JavaScript, enhance with client validation
+- **Error-Display**: Field-level errors with clear messages
+- **Server-Validate**: Always validate on server, client is convenience
+- **Type-Inference**: Leverage type inference from schema
+- **Constraint-Validation**: Use HTML5 constraints where applicable
+- **Accessibility**: Associate errors with fields using aria-describedby
+- **Nested-Forms**: Support nested objects and arrays
+- **Custom-Validators**: Reusable validation functions
+- **Transform-Coerce**: Handle type coercion explicitly
+
+### DEP:TanStack
+**Trigger:** {tanstack_deps}
+
+- **File-Routes**: Use file-based routing with type-safe paths
+- **Loader-Data**: Use loaders for data fetching with automatic caching
+- **Search-Params**: Type-safe search params with validation
+- **Pending-UI**: Show pending UI during navigation
+- **Error-Boundary**: Route-level error boundaries
+- **Prefetch-Links**: Prefetch on intent for faster navigation
+- **SSR-Ready**: Configure for SSR with streaming support
+- **Router-Context**: Use router context for shared data
+- **Code-Split**: Automatic code splitting per route
+- **Devtools**: Enable devtools in development
+
+## Infrastructure Rules
+
+### Infra:APIGateway
+**Trigger:** {api_gateway_config}, {api_gateway_deps}
+
+- **Rate-Limit-Config**: Per-route rate limiting with burst allowance
+- **Auth-Plugin**: Centralized authentication at gateway
+- **Route-Versioning**: API version routing (header or path)
+- **Circuit-Breaker-Route**: Per-upstream circuit breaker
+- **Logging-Structured**: Structured request/response logging
+- **CORS-Config**: Centralized CORS configuration
+- **Timeout-Upstream**: Upstream timeout configuration
+
+### Infra:ServiceMesh
+**Trigger:** {service_mesh_config}, {service_mesh_deps}
+
+- **mTLS-Enable**: Enable mutual TLS between services
+- **Retry-Policy**: Service-level retry policies
+- **Timeout-Budget**: Request timeout budgets
+- **Traffic-Split**: Traffic splitting for canary deployments
+- **Observability-Auto**: Auto-inject observability sidecars
+- **Auth-Policy**: Service-to-service authorization policies
+
+### Infra:BuildCache
+**Trigger:** {build_cache_config}
+
+- **Cache-Key**: Deterministic cache key generation
+- **Remote-Cache**: Enable remote cache for CI
+- **Artifact-Share**: Share build artifacts across pipelines
+- **Invalidation-Explicit**: Explicit cache invalidation rules
+- **Size-Limit**: Cache size limits per project
+- **TTL-Set**: Set cache TTL based on artifact type
+
 ---
 
 ## Trigger Reference
@@ -2692,7 +2939,7 @@ When generating tests, always include:
 | Framework: | Meta-Framework | Next/Nuxt/SvelteKit/Remix | `{framework}.md` |
 | Mobile: | Mobile | SDK deps, native configs | `mobile.md` |
 | Desktop: | Desktop | Electron/Tauri deps | `desktop.md` |
-| Infra: | Infrastructure | Dockerfile, *.tf, k8s/ | `{infra}.md` |
+| Infra: | Infrastructure | Dockerfile, *.tf, k8s/, gateway/mesh configs | `infra-{category}.md` |
 | ML: | Machine Learning | ML framework deps | `ml.md` |
 | Build: | Build Tools | Bundler, monorepo configs | `{build}.md` |
 | Test: | Testing | Test framework, tests/ | `testing.md` |

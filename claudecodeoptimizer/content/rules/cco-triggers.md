@@ -212,6 +212,22 @@ These generic placeholders are used across multiple categories. Each category se
 | `{perl_ext}` | `*.pl`, `*.pm`, `*.t` |
 | `{perl_config}` | `.perlcriticrc`, `.perltidyrc` |
 
+### Clojure (L:Clojure)
+| Trigger | Values |
+|---------|--------|
+| `{clojure_manifest}` | `project.clj`, `deps.edn`, `build.clj`, `bb.edn` |
+| `{clojure_lock}` | `deps.lock`, `.cpcache/` |
+| `{clojure_ext}` | `*.clj`, `*.cljs`, `*.cljc`, `*.edn` |
+| `{clojure_config}` | `shadow-cljs.edn`, `figwheel-main.edn` |
+
+### Erlang (L:Erlang)
+| Trigger | Values |
+|---------|--------|
+| `{erlang_manifest}` | `rebar.config`, `erlang.mk`, `mix.exs` |
+| `{erlang_lock}` | `rebar.lock` |
+| `{erlang_ext}` | `*.erl`, `*.hrl`, `*.app.src` |
+| `{erlang_config}` | `relx.config`, `sys.config`, `vm.args` |
+
 ---
 
 ## Runtime Detection
@@ -708,6 +724,29 @@ These generic placeholders are used across multiple categories. Each category se
 |---------|--------|
 | `{edge_framework_deps}` | `hono`, `elysia`, `h3`, `nitro`, `itty-router` |
 
+### Effect System (DEP:Effect)
+| Trigger | Values |
+|---------|--------|
+| `{effect_deps}` | `effect`, `@effect/*`, `effect-ts` |
+| `{effect_patterns}` | `Effect.`, `pipe(`, `Effect.gen`, `Schema.` |
+
+### AI SDK (DEP:AISDK)
+| Trigger | Values |
+|---------|--------|
+| `{ai_sdk_deps}` | `ai`, `@ai-sdk/*`, `@vercel/ai` |
+| `{ai_sdk_patterns}` | `useChat`, `useCompletion`, `streamText`, `generateText` |
+
+### Form Validation (DEP:FormValidation)
+| Trigger | Values |
+|---------|--------|
+| `{form_validation_deps}` | `conform-to`, `@conform-to/*`, `valibot`, `arktype`, `typebox`, `@sinclair/typebox` |
+
+### TanStack (DEP:TanStack)
+| Trigger | Values |
+|---------|--------|
+| `{tanstack_deps}` | `@tanstack/react-router`, `@tanstack/start`, `@tanstack/react-form`, `@tanstack/react-table`, `@tanstack/virtual` |
+| `{tanstack_config}` | `tsr.config.json`, `tanstack.config.ts` |
+
 ### WASM Toolchain (DEP:WASM)
 | Trigger | Values |
 |---------|--------|
@@ -1162,6 +1201,141 @@ Used for code analysis when manifest detection is ambiguous (e.g., `{react_patte
 
 ### Modern Features (Version Detection)
 Reserved for future version-specific rule selection (e.g., `{react_modern}` for React 18+ specific rules)
+
+---
+
+## API Gateway Detection
+
+### API Gateway (Infra:APIGateway)
+| Trigger | Values |
+|---------|--------|
+| `{api_gateway_config}` | `kong.yml`, `kong.conf`, `traefik.yml`, `traefik.toml`, `apisix.yaml`, `tyk.conf` |
+| `{api_gateway_deps}` | `@kong/*`, `traefik`, `apisix`, `tyk`, `express-gateway` |
+| `{api_gateway_markers}` | `upstream`, `routes`, `services` in kong.yml; `routers`, `middlewares` in traefik.yml |
+
+---
+
+## Service Mesh Detection
+
+### Service Mesh (Infra:ServiceMesh)
+| Trigger | Values |
+|---------|--------|
+| `{service_mesh_config}` | `istio/`, `istioctl`, `linkerd.yaml`, `consul-connect/` |
+| `{service_mesh_deps}` | `@istio/*`, `linkerd`, `consul-connect` |
+| `{service_mesh_patterns}` | `VirtualService`, `DestinationRule`, `ServiceEntry`, `linkerd.io/inject` |
+
+---
+
+## Feature Flags Detection
+
+### Feature Flags (DEP:FeatureFlags)
+| Trigger | Values |
+|---------|--------|
+| `{feature_flag_deps}` | `launchdarkly-*`, `@launchdarkly/*`, `unleash-client`, `@unleash/*`, `flagsmith`, `@openfeature/*`, `growthbook`, `@growthbook/*`, `statsig`, `@statsig/*`, `split.io`, `@splitsoftware/*`, `flagd` |
+| `{feature_flag_config}` | `launchdarkly.json`, `unleash.json`, `features.json`, `flagsmith.json`, `.growthbook/` |
+
+---
+
+## AI Agent Detection
+
+### AI Agents (DEP:AIAgent)
+| Trigger | Values |
+|---------|--------|
+| `{ai_agent_deps}` | `crewai`, `autogen`, `autogen-agentchat`, `dspy`, `dspy-ai`, `semantic-kernel`, `agency-swarm`, `phidata`, `mirascope`, `instructor`, `marvin`, `pydantic-ai`, `llama-agents`, `swarm`, `langroid` |
+| `{ai_agent_patterns}` | `@agent`, `Agent(`, `crew.kickoff`, `autogen.AssistantAgent`, `dspy.Module` |
+
+---
+
+## Schema Registry Detection
+
+### Schema Registry (DEP:SchemaRegistry)
+| Trigger | Values |
+|---------|--------|
+| `{schema_registry_deps}` | `confluent-kafka`, `@kafkajs/confluent-schema-registry`, `schema-registry`, `avro`, `@apicurio/registry`, `glue-schema-registry` |
+| `{schema_registry_config}` | `schema-registry/`, `schemas/avro/`, `schemas/protobuf/`, `*.avsc`, `*.avro` |
+
+---
+
+## Change Data Capture Detection
+
+### CDC (DEP:CDC)
+| Trigger | Values |
+|---------|--------|
+| `{cdc_deps}` | `debezium`, `maxwell`, `wal2json`, `pgoutput`, `@debezium/*`, `@eventstore/*` |
+| `{cdc_config}` | `debezium/`, `connector-config/`, `cdc-config.json` |
+| `{cdc_patterns}` | `debezium.source`, `maxwell.`, `wal_level = logical` |
+
+---
+
+## Incident Management Detection
+
+### Incident Management (DEP:IncidentMgmt)
+| Trigger | Values |
+|---------|--------|
+| `{incident_deps}` | `pagerduty`, `@pagerduty/*`, `opsgenie`, `@opsgenie/*`, `incident.io`, `rootly`, `firehydrant`, `squadcast`, `victorops` |
+| `{incident_config}` | `pagerduty.json`, `opsgenie.yaml`, `.incident.io/` |
+
+---
+
+## Headless CMS Detection
+
+### Headless CMS (DEP:HeadlessCMS)
+| Trigger | Values |
+|---------|--------|
+| `{headless_cms_deps}` | `contentful`, `@contentful/*`, `strapi`, `@strapi/*`, `sanity`, `@sanity/*`, `keystatic`, `@keystatic/*`, `directus`, `@directus/*`, `payload`, `ghost-content-api`, `prismic`, `@prismicio/*`, `storyblok`, `@storyblok/*`, `hygraph`, `datocms` |
+| `{headless_cms_config}` | `sanity.config.*`, `keystatic.config.*`, `strapi.config.*`, `contentful.json` |
+
+---
+
+## Database Migration Tool Detection
+
+### DB Migrations (DEP:DBMigrations)
+| Trigger | Values |
+|---------|--------|
+| `{db_migration_deps}` | `alembic`, `flyway`, `liquibase`, `dbmate`, `goose`, `golang-migrate`, `db-migrate`, `knex` (with migrations), `umzug`, `prisma` (with migrate), `drizzle-kit`, `atlas` |
+| `{db_migration_config}` | `alembic.ini`, `flyway.conf`, `liquibase.properties`, `dbmate.yaml`, `atlas.hcl` |
+| `{db_migration_dirs}` | `migrations/`, `db/migrations/`, `alembic/versions/`, `flyway/sql/` |
+
+---
+
+## Build Cache Detection
+
+### Build Cache (Infra:BuildCache)
+| Trigger | Values |
+|---------|--------|
+| `{build_cache_config}` | `turbo.json` with `remoteCache`, `nx.json` with `cacheDirectory`, `.gradle/` with `build-cache`, `sccache.conf` |
+| `{build_cache_deps}` | `@vercel/remote-cache`, `nx-cloud`, `gradle-enterprise`, `sccache`, `ccache`, `buildcache` |
+| `{build_cache_patterns}` | `TURBO_REMOTE_CACHE`, `NX_CLOUD_ACCESS_TOKEN`, `GRADLE_BUILD_CACHE` |
+
+---
+
+## Local-First / Offline Detection
+
+### Local-First (DEP:LocalFirst)
+| Trigger | Values |
+|---------|--------|
+| `{local_first_deps}` | `powersync`, `@powersync/*`, `electric-sql`, `@electric-sql/*`, `cr-sqlite`, `y-indexeddb`, `automerge`, `yjs`, `liveblocks`, `@liveblocks/*`, `replicache`, `triplit`, `evolu`, `lo-fi` |
+| `{local_first_patterns}` | `enableOffline`, `offlineFirst`, `syncEngine`, `CRDT` |
+
+---
+
+## GraphQL Advanced Detection
+
+### GraphQL Tools (DEP:GraphQLTools)
+| Trigger | Values |
+|---------|--------|
+| `{graphql_tools_deps}` | `@apollo/server`, `apollo-server`, `@apollo/client`, `graphql-yoga`, `@graphql-yoga/*`, `pothos`, `@pothos/*`, `nexus`, `grats`, `mercurius`, `@envelop/*`, `graphql-codegen`, `@graphql-codegen/*`, `hasura`, `postgraphile` |
+| `{graphql_tools_config}` | `apollo.config.*`, `codegen.yml`, `codegen.ts`, `.graphqlrc.*` |
+
+---
+
+## Error Tracking Detection
+
+### Error Tracking (DEP:ErrorTracking)
+| Trigger | Values |
+|---------|--------|
+| `{error_tracking_deps}` | `@sentry/*`, `sentry-sdk`, `@rollbar/*`, `rollbar`, `bugsnag`, `@bugsnag/*`, `raygun`, `airbrake`, `trackjs`, `logrocket`, `@logrocket/*` |
+| `{error_tracking_config}` | `sentry.properties`, `rollbar.json`, `bugsnag.json`, `.sentryclirc` |
 
 ---
 
