@@ -347,12 +347,16 @@ ALWAYS:
 
 **Write Modes (see cco-agent-apply.md for implementation):**
 
-| Mode | Target | When |
-|------|--------|------|
-| `overwrite` | Rule files (`*.md`) | Setup/Update |
-| `merge` | `settings.json` | Setup/Update |
-| `delete` | `rules/cco/` directory | Remove |
-| `unmerge` | `settings.json` | Remove |
+| Mode | Target | When | Behavior |
+|------|--------|------|----------|
+| `overwrite` | `context.md` | Setup/Update | Always replace, never skip |
+| `overwrite` | Rule files (`*.md`) | Setup/Update | Always replace, never skip |
+| `overwrite` | Statusline (`cco-*.js`) | Setup/Update | Always copy from package |
+| `merge` | `settings.json` | Setup/Update | Add/update CCO keys, preserve others |
+| `delete` | `rules/cco/` directory | Remove | Delete entire directory |
+| `unmerge` | `settings.json` | Remove | Remove only CCO keys |
+
+**CRITICAL:** All files except settings.json are OVERWRITTEN every run. Never skip writes because "file already exists" or "content matches".
 
 **[IMPORTANT] Rule Source Architecture:**
 - All rules are defined as **sections within `cco-adaptive.md`** (single file)
@@ -398,11 +402,20 @@ Task("cco-agent-apply", `
   action: "${setupConfig.context}"  // "Setup/Update" or "Remove"
   targetDir: "${targetDir}"
 
-  // For Setup/Update:
+  // For Setup/Update - ALL files are overwritten (except settings.json which is merged):
   files: [
+    // Context - ALWAYS overwrite
     { path: "rules/cco/context.md", mode: "overwrite", content: generateResult.context },
+
+    // Rules - ALWAYS overwrite each rule file
     // For each rule in generateResult.rules:
     { path: "rules/cco/{rule.file}", mode: "overwrite", content: "{rule.content}" },
+
+    // Statusline - ALWAYS overwrite (copy from CCO package)
+    // If user selected Full or Minimal:
+    { path: "cco-{mode}.js", mode: "overwrite", source: "$CCO_PATH/cco-{mode}.js" },
+
+    // Settings - MERGE (only file that preserves existing content)
     { path: "settings.json", mode: "merge", content: {settings_object} }
   ]
 
@@ -411,11 +424,6 @@ Task("cco-agent-apply", `
     { path: "rules/cco/", mode: "delete" },
     { path: "settings.json", mode: "unmerge" }
   ]
-
-  // Statusline (if user selected Full or Minimal):
-  // Get CCO package path: python3 -c "from claudecodeoptimizer.config import get_content_path; print(get_content_path('statusline'))"
-  // Copy template: cp $CCO_PATH/cco-{mode}.js ${targetDir}/cco-{mode}.js
-  // Do NOT generate statusline code - ALWAYS copy from CCO package
 `, { run_in_background: true })
 ```
 
