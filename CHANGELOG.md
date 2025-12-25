@@ -107,7 +107,6 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Kubernetes separated from Container rules
 - Connection Pool duplication removed
 - AI performance settings cleaned from permission files
-- Quick-install Python version and timeouts corrected
 - **Migration cleanup** - Added `cco-tools.md` to old rule file cleanup list
 - **Complete rule cleanup** - `remove_rules_dir()` now removes `tools.md` and `adaptive.md` from cco/ subdirectory
 - **Detection completeness** - `has_rules_dir()` checks for all possible CCO rule files
