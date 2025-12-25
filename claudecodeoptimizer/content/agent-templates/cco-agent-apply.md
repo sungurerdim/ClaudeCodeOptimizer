@@ -90,6 +90,106 @@ Bash("{test_command} 2>&1")
 | Duplication | Create shared function |
 | Magic numbers | Extract to constants |
 
+## Write Operations [CRITICAL]
+
+**Config file operations for cco-config. Always execute - never skip based on content comparison.**
+
+### Modes
+
+| Mode | Target | Behavior |
+|------|--------|----------|
+| `overwrite` | Rule files (`*.md`) | Delete existing → Write new |
+| `merge` | `settings.json` (Setup) | Read existing → Deep merge → Write |
+| `delete` | Rule files, directories | Remove entirely |
+| `unmerge` | `settings.json` (Remove) | Read → Remove CCO keys only → Write |
+
+### Mode: overwrite
+```python
+def overwrite(path, content):
+    if exists(path):
+        delete(path)
+    write(path, content)
+```
+
+### Mode: merge
+```python
+def merge(path, new_settings):
+    existing = read_json(path) or {}
+    result = deep_merge(existing, new_settings)  # new overrides, preserves unspecified
+    write_json(path, result)
+```
+
+### Mode: delete
+```python
+def delete(path):
+    if is_dir(path):
+        rm_rf(path)
+    else:
+        rm(path)
+```
+
+### Mode: unmerge
+```python
+CCO_KEYS = ["alwaysThinkingEnabled", "statusLine"]
+CCO_ENV_KEYS = ["ENABLE_LSP_TOOL", "MAX_THINKING_TOKENS",
+                "MAX_MCP_OUTPUT_TOKENS", "BASH_MAX_OUTPUT_LENGTH"]
+
+def unmerge(path):
+    settings = read_json(path)
+
+    # Remove top-level CCO keys
+    for key in CCO_KEYS:
+        settings.pop(key, None)
+
+    # Remove CCO env keys (preserve others)
+    if "env" in settings:
+        for key in CCO_ENV_KEYS:
+            settings["env"].pop(key, None)
+        if not settings["env"]:  # Empty dict
+            del settings["env"]
+
+    write_json(path, settings)
+```
+
+### Operation Examples
+
+**Setup/Update:**
+```javascript
+files: [
+  { path: "rules/cco/context.md", mode: "overwrite", content: "{context_content}" },
+  { path: "rules/cco/{language}.md", mode: "overwrite", content: "{rule_content}" },
+  { path: "settings.json", mode: "merge", content: {
+    alwaysThinkingEnabled: {thinking_enabled},
+    env: {
+      MAX_THINKING_TOKENS: "{budget}",
+      MAX_MCP_OUTPUT_TOKENS: "{output_limit}",
+      BASH_MAX_OUTPUT_LENGTH: "{output_limit}"
+    }
+  }}
+]
+```
+
+**Remove:**
+```javascript
+files: [
+  { path: "rules/cco/", mode: "delete" },
+  { path: "settings.json", mode: "unmerge" }
+]
+```
+
+### CCO-Managed Keys [SSOT]
+
+| Key | Setup | Remove |
+|-----|-------|--------|
+| `alwaysThinkingEnabled` | Set | Delete |
+| `statusLine` | Set (if not Skip) | Delete (if Remove selected) |
+| `env.ENABLE_LSP_TOOL` | Set | Delete |
+| `env.MAX_THINKING_TOKENS` | Set | Delete |
+| `env.MAX_MCP_OUTPUT_TOKENS` | Set | Delete |
+| `env.BASH_MAX_OUTPUT_LENGTH` | Set | Delete |
+
+**Never touch:** User-added keys, `permissions` (unless explicitly selected)
+
 ## Verification & Cascade
 
 **All verification runs in parallel.** If any fails → cascade fix → re-verify until clean.
