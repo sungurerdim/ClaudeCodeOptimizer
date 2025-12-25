@@ -262,27 +262,40 @@ allWarnings = [
 hasBlockers = allBlockers.length > 0
 ```
 
-**Display summary:**
+**Display summary with blockers/warnings detail BEFORE decision:**
+
+### Pre-Decision Display [MANDATORY]
 
 ```
 ## Release Readiness
 
-Version: {manifestVersion} → {suggestedVersion} ({suggestedBump})
-Branch: {branch}
-Previous: {lastTag}
+| Metric | Value |
+|--------|-------|
+| Version | {manifestVersion} → {suggestedVersion} ({suggestedBump}) |
+| Branch | {branch} |
+| Previous | {lastTag} |
 
-### Results
-| Check | Status |
-|-------|--------|
-| Pre-flight | {preflight.blockers.length === 0 ? "✓" : "✗"} |
-| Quality | Done {qualityResults.accounting.done}, Declined {qualityResults.accounting.declined} |
-| Architecture | {reviewResults.foundation} |
-| Tests | {testResults.exitCode === 0 ? "✓ PASS" : "✗ FAIL"} |
-| Build | {buildResults.exitCode === 0 ? "✓ PASS" : "✗ FAIL"} |
-| Lint | {lintResults.exitCode === 0 ? "✓ PASS" : "⚠️ WARN"} |
+### Check Results
+| Check | Status | Detail |
+|-------|--------|--------|
+| Pre-flight | {✓\|✗} | {detail or "OK"} |
+| Quality | {✓\|✗} | Done {n}, Declined {n} |
+| Architecture | {✓\|⚠️} | {foundation} |
+| Tests | {✓\|✗} | {PASS\|FAIL: reason} |
+| Build | {✓\|✗} | {PASS\|FAIL: reason} |
+| Lint | {✓\|⚠️} | {PASS\|WARN: count} |
 
-Blockers: {allBlockers.length} (must fix)
-Warnings: {allWarnings.length} (can override)
+### Blockers (must fix)
+| # | Type | Issue |
+|---|------|-------|
+| 1 | {type} | {message} |
+...
+
+### Warnings (can override)
+| # | Type | Issue |
+|---|------|-------|
+| 1 | {type} | {message} |
+...
 
 Ready: {hasBlockers ? "NO" : "YES"}
 ```

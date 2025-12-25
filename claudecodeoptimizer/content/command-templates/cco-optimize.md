@@ -227,6 +227,22 @@ if (config.action !== "Report only" && autoFixable.length > 0) {
 
 **Only ask if there are approval-required items AND action is not "Fix all":**
 
+### Pre-Confirmation Display [MANDATORY]
+
+**Display issues table BEFORE asking approval question:**
+
+```markdown
+## Issues Requiring Approval
+
+| # | Severity | Issue | Location | Fix |
+|---|----------|-------|----------|-----|
+| 1 | [P0] | {title} | {file}:{line} | {fix_action} |
+| 2 | [P1] | {title} | {file}:{line} | {fix_action} |
+...
+
+Total: {n} issues requiring approval
+```
+
 ```javascript
 if (config.action === "Fix all") {
   // No approval needed - apply all
@@ -237,6 +253,9 @@ if (config.action === "Fix all") {
 } else {
   // Sort by severity: P0 → P1 → P2 → P3
   approvalRequired.sort((a, b) => a.severity.localeCompare(b.severity))
+
+  // Display issues table BEFORE question
+  console.log(formatIssuesTable(approvalRequired))
 
   // Build approval question with batching
   options = []
@@ -258,7 +277,7 @@ if (config.action === "Fix all") {
   })
 
   AskUserQuestion([{
-    question: `Approve fixes? (${approvalRequired.length} items need review)`,
+    question: `Approve ${approvalRequired.length} fixes listed above?`,
     header: "Approve",
     options: options,
     multiSelect: true
@@ -312,16 +331,16 @@ if (approved.length > 0) {
 ```
 ## Optimization Complete
 
-| Category | Count |
-|----------|-------|
+| Metric | Value |
+|--------|-------|
 | Auto-fixed | {autoFixResults?.accounting?.done || 0} |
 | User-approved | {approved.length} |
 | Declined | {declined.length} |
-| **Total fixed** | **{totalFixed}** |
+| Files modified | {n} |
 
-Files modified: {n}
+Status: OK | Applied: {totalFixed} | Declined: {declined.length} | Failed: 0
+
 Run `git diff` to review changes.
-Run `git checkout .` to revert all.
 ```
 
 ### Validation

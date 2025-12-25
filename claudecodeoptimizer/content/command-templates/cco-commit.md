@@ -142,6 +142,22 @@ commitPlan = analyzeChanges(gitDiff, gitStatus)
 
 ## Step-3: Approval [Q1 - DYNAMIC TABS]
 
+**Display commit table BEFORE asking approval question:**
+
+### Pre-Confirmation Display [MANDATORY]
+
+```markdown
+## Pending Commits
+
+| # | Type | Title | Files |
+|---|------|-------|-------|
+| 1 | {type} | {title} | {n} files |
+| 2 | {type} | {title} | {n} files |
+...
+
+Total: {n} commit(s), {n} file(s), +{added} -{removed} lines
+```
+
 **Build Q1 with only relevant tabs based on context:**
 
 ```javascript
@@ -153,6 +169,9 @@ hasBreakingChanges = breakingChanges.length > 0
 // Wait for test results now
 testResult = await TaskOutput(testTask.id)
 hasTestFailures = testResult.exitCode !== 0
+
+// Display commit table BEFORE question
+console.log(formatCommitTable(commitPlan.commits))
 
 // Build questions dynamically
 questions = []
@@ -315,13 +334,21 @@ if (fullTitle.length > 50) {
 ```
 ## Commit Complete
 
-Commits created: {n}
-Files changed: {n}
-Lines: +{added} -{removed}
-Branch: {branch}
+| Metric | Value |
+|--------|-------|
+| Commits created | {n} |
+| Files changed | {n} |
+| Lines | +{added} -{removed} |
+| Branch | {branch} |
 
-Commits:
-{commitPlan.commits.map(c => `- ${c.message.type}(${c.message.scope}): ${c.message.title}`)}
+Status: OK | Applied: {n} | Declined: 0 | Failed: 0
+
+### Commits Created
+| # | Type | Title |
+|---|------|-------|
+| 1 | {type}({scope}) | {title} |
+| 2 | {type}({scope}) | {title} |
+...
 
 Next: git push origin {branch}
 ```

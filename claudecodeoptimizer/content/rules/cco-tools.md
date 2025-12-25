@@ -1,6 +1,53 @@
 # Tools Rules
 *On-demand loading for CCO commands and agents*
 
+## Confirmation Clarity [CRITICAL - ALL COMMANDS]
+
+**RULE:** User must know exactly what they're approving before confirmation. No ambiguity.
+
+### Pre-Confirmation Display [MANDATORY]
+
+Before ANY approval question, display a clear table/list of exactly what will be done:
+
+| Command | Pre-Confirmation Display |
+|---------|-------------------------|
+| `/cco-commit` | Table: `No \| Type \| Title` for each commit |
+| `/cco-optimize` | Table: `[Severity] Issue \| Location \| Fix Action` for each item |
+| `/cco-review` | Table: `Priority \| Issue \| Location \| Recommendation` for items to apply |
+| `/cco-preflight` | Table: `Check \| Status \| Issue` for blockers/warnings |
+
+### Format Rules
+
+```markdown
+## Pending Changes
+
+| # | Type | Description | Location |
+|---|------|-------------|----------|
+| 1 | {type} | {title} | {file:line} |
+| 2 | {type} | {title} | {file:line} |
+...
+
+> Approve above changes?
+```
+
+**Requirements:**
+- Table appears IMMEDIATELY before the approval question
+- No other content between table and question
+- Each row is specific and actionable
+- Location is always `{file}:{line}` format
+- For batch approvals, show count: "Approve {n} items above?"
+
+### Anti-Patterns (NEVER DO)
+
+| Bad | Good |
+|-----|------|
+| "Apply fixes?" (vague) | "Apply 3 fixes above?" (after showing table) |
+| "Proceed with changes?" | "Create 2 commits listed above?" |
+| Description in question text | Description in table, question is short |
+| Hidden changes | All changes visible before approval |
+
+---
+
 ## User Input [MANDATORY - NO ALTERNATIVES]
 
 ### AskUserQuestion Tool Requirement [ABSOLUTE]
@@ -244,6 +291,34 @@ Present different categories in SEPARATE batches:
 ## Output Formatting
 
 **Follow output formats precisely. Exact formatting ensures consistency and parseability.**
+
+### Command Summary Format [STANDARD]
+
+All CCO commands MUST end with a consistent summary format:
+
+```markdown
+## {Command} Complete
+
+| Metric | Value |
+|--------|-------|
+| {metric_1} | {value_1} |
+| {metric_2} | {value_2} |
+| ... | ... |
+
+Status: {OK|WARN|FAIL} | Applied: {n} | Declined: {n} | Failed: {n}
+
+{next_step_instruction}
+```
+
+**Command-Specific Summaries:**
+
+| Command | Key Metrics | Status Calculation |
+|---------|-------------|-------------------|
+| `/cco-commit` | Commits created, Files changed, Lines +/- | OK if all commits succeed |
+| `/cco-optimize` | Auto-fixed, User-approved, Declined | OK if no failures |
+| `/cco-review` | Foundation status, Do Now/Plan/Consider counts | Based on foundation |
+| `/cco-preflight` | Blockers, Warnings, Checks passed | FAIL if blockers, WARN if warnings |
+| `/cco-config` | Files written, Detections, Questions asked | OK if all writes succeed |
 
 ### JSON Schema Standard (Structured Output)
 
