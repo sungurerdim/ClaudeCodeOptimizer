@@ -10,7 +10,7 @@ allowed-tools: Read(*), Write(*), Edit(*), Bash(cco-install:*), Task(*), TodoWri
 
 ## Args
 
-- `--auto` or `--unattended`: Skip all questions, use recommended defaults
+- `--auto` or `--unattended`: Skip all questions and visual steps, use recommended defaults
   - Context: Setup/Update
   - Statusline: Skip (keep unchanged)
   - Permissions: Skip (keep unchanged)
@@ -19,6 +19,7 @@ allowed-tools: Read(*), Write(*), Edit(*), Bash(cco-install:*), Task(*), TodoWri
   - Output: AI-recommended based on project complexity
   - Data: Public
   - Compliance: None
+  - **Skip visual steps:** No summary display, no detection report, direct file writes only
 - `--target-dir <path>`: Write config files to specified directory instead of `.claude`
   - Example: `--target-dir .claude` (explicit default)
   - Example: `--target-dir /tmp/project/.claude` (absolute path)
@@ -324,11 +325,17 @@ function calculateRecommendations(complexity) {
 
 ## Step-4: Apply [BACKGROUND]
 
-**Write all files from detection + user input:**
+**Write all files from detection + user input. Always overwrite existing files.**
 
 ### 4.1: Generate Rules
 
 **CRITICAL:** Call cco-agent-analyze with config scope (generate phase) to create rules.
+
+**[IMPORTANT] File Write Behavior:**
+- **ALWAYS overwrite** existing settings/files - never skip because file exists
+- Treat every run as fresh setup for rule files (context.md, {language}.md)
+- For settings.json: **MERGE** new settings into existing (don't delete unrelated settings)
+- This ensures config is always in sync with detections while preserving user customizations
 
 **[IMPORTANT] Rule Source Architecture:**
 - All rules are defined as **sections within `cco-adaptive.md`** (single file)
@@ -507,32 +514,35 @@ Task("cco-agent-apply", `
 
 ---
 
-## Step-5: Report
+## Step-5: Report [SKIP IF --auto]
+
+**If `--auto` flag: Skip this step entirely. No visual output.**
 
 ```
-## Configuration Applied
+## Configuration Complete
 
-### Files Written
+| Metric | Value |
+|--------|-------|
+| Files written | {n} |
+| Auto-detected | {n} elements |
+| Questions asked | {n} |
+
+Status: OK | Applied: {files_written} | Declined: 0 | Failed: 0
+
+Restart Claude Code to apply new rules.
+```
+
+### Files Written Detail
 | File | Action |
 |------|--------|
-| ${targetDir}/rules/cco/context.md | {action} |
-| ${targetDir}/rules/cco/{language}.md | {action} |
-| ${targetDir}/settings.json | {action} |
-| ${targetDir}/cco-{mode}.js | Copied from CCO template |
-
-### Detection Summary
-- Auto-detected: {n} elements
-- User confirmed: {n} elements
-- Questions asked: {n} (vs {n}+ traditional)
-
-### Next Steps
-- Restart Claude Code to apply new rules
-- Run /cco-status to verify configuration
-```
+| ${targetDir}/rules/cco/context.md | {Created\|Updated} |
+| ${targetDir}/rules/cco/{language}.md | {Created\|Updated} |
+| ${targetDir}/settings.json | {Merged} |
+| ${targetDir}/cco-{mode}.js | {Copied} |
 
 ### Validation
 ```
-[x] Report displayed
+[x] Report displayed (or skipped if --auto)
 [x] All todos marked completed
 → Done
 ```

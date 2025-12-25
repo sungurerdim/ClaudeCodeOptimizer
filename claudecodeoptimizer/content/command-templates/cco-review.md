@@ -103,8 +103,8 @@ AskUserQuestion([
     question: "Apply recommendations?",
     header: "Apply",
     options: [
-      { label: "Do Now only (Recommended)", description: "Apply high-impact, low-effort items" },
-      { label: "All recommendations", description: "Apply all - review git diff after" },
+      { label: "80/20 - Do Now only (Recommended)", description: "High-impact, low-effort items only" },
+      { label: "Full - All recommendations", description: "Apply all including high-effort items" },
       { label: "Report only", description: "Show findings without applying" }
     ],
     multiSelect: false
@@ -219,15 +219,36 @@ backlog = findings.filter(f => f.impact === "LOW" || f.effort === "HIGH")
 
 ## Step-4: Apply [BASED ON APPLY MODE]
 
-**Apply changes based on user selection in Q1:**
+**Apply changes based on user selection in Q1.**
+
+### Pre-Apply Display [MANDATORY]
+
+**Display items to apply BEFORE execution:**
+
+```markdown
+## Applying Recommendations
+
+| # | Priority | Issue | Location | Action |
+|---|----------|-------|----------|--------|
+| 1 | Do Now | {title} | {file}:{line} | {recommendation} |
+| 2 | Do Now | {title} | {file}:{line} | {recommendation} |
+...
+
+Applying {n} recommendations...
+```
 
 ```javascript
 let toApply = []
 
-if (config.applyMode === "Do Now only") {
+if (config.applyMode.includes("80/20") || config.applyMode.includes("Do Now")) {
   toApply = doNow
-} else if (config.applyMode === "All recommendations") {
+} else if (config.applyMode.includes("Full") || config.applyMode.includes("All")) {
   toApply = [...doNow, ...plan, ...consider]
+}
+
+// Display what will be applied
+if (toApply.length > 0) {
+  console.log(formatApplyTable(toApply))
 }
 
 if (toApply.length > 0) {
@@ -254,7 +275,13 @@ if (toApply.length > 0) {
 ```
 ## Review Complete
 
-Foundation: {foundation}
+| Metric | Value |
+|--------|-------|
+| Foundation | {foundation} |
+| Mode | {80/20 \| Full} |
+| Files modified | {n} |
+
+Status: {OK\|WARN} | Applied: {applied} | Declined: {skipped} | Failed: 0
 
 | Priority | Found | Applied | Skipped |
 |----------|-------|---------|---------|
@@ -262,9 +289,7 @@ Foundation: {foundation}
 | Plan | {plan.length} | {appliedPlan} | {skippedPlan} |
 | Consider | {consider.length} | {appliedConsider} | {skippedConsider} |
 | Backlog | {backlog.length} | 0 | {backlog.length} |
-| **Total** | **{total}** | **{applied}** | **{skipped}** |
 
-Files modified: {n}
 Run `git diff` to review changes.
 ```
 
