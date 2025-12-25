@@ -1050,11 +1050,11 @@ STDERR:
 
     def run_benchmark(self, config: ProjectConfig, model: str = "opus") -> BenchmarkResult:
         """Run full benchmark (both variants) for a project."""
-        # Run vanilla first
-        vanilla_result = self.run_project(config, "vanilla", model)
-
-        # Run CCO version
+        # Run CCO first (primary test subject)
         cco_result = self.run_project(config, "cco", model)
+
+        # Run vanilla version (baseline)
+        vanilla_result = self.run_project(config, "vanilla", model)
 
         # Compare results
         if cco_result.metrics and vanilla_result.metrics:
