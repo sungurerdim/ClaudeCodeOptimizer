@@ -217,7 +217,8 @@ Config scope handles project detection and rule selection. **Two-phase execution
 | Step | Action | Tool |
 |------|--------|------|
 | 1 | Auto-detect from manifest/code | `Glob`, `Read`, `Grep` |
-| 2 | Return detections with confidence | JSON |
+| 2 | Extract project critical info from docs | `Read(README.md, CONTRIBUTING.md, CLAUDE.md)` |
+| 3 | Return detections with confidence | JSON |
 
 **Output Schema (detect phase):**
 ```json
@@ -238,6 +239,12 @@ Config scope handles project detection and rule selection. **Two-phase execution
     "hasTests": "{boolean}",
     "hasCi": "{boolean}",
     "isMonorepo": "{boolean}"
+  },
+  "projectCritical": {
+    "purpose": "{1-2 sentence project purpose}",
+    "constraints": ["{hard constraints that must never be violated}"],
+    "invariants": ["{properties that must always hold}"],
+    "nonNegotiables": ["{rules that cannot be overridden}"]
   },
   "sources": [{ "file": "{file}", "confidence": "HIGH|MEDIUM|LOW" }]
 }
@@ -265,17 +272,68 @@ hasCi = Glob(".github/workflows/*") || Glob(".gitlab-ci.yml") || Glob("Jenkinsfi
 isMonorepo = Glob("packages/*/package.json") || Glob("apps/*/package.json") || Glob("pnpm-workspace.yaml") || Glob("nx.json") || Glob("turbo.json")
 ```
 
+**Project Critical Extraction [PARALLEL with complexity]:**
+
+Read documentation files to extract project-critical information that should always be in context:
+
+```javascript
+// Read all docs in PARALLEL
+docs = await Promise.all([
+  Read("README.md"),
+  Read("CONTRIBUTING.md"),
+  Read("CLAUDE.md"),
+  Read("AGENTS.md"),
+  Read("docs/ARCHITECTURE.md")
+])
+
+// Extract projectCritical from docs content
+projectCritical = {
+  purpose: extractPurpose(docs),      // First paragraph of README or package description
+  constraints: extractConstraints(docs),    // "must", "required", "never", "always" statements
+  invariants: extractInvariants(docs),      // Properties that must hold (e.g., "zero dependencies")
+  nonNegotiables: extractNonNegotiables(docs) // Rules that cannot be overridden
+}
+```
+
+**Extraction Patterns:**
+
+| Field | Sources | Patterns to Look For |
+|-------|---------|---------------------|
+| purpose | README.md first paragraph, package.json description | Project description, "X is a..." statements |
+| constraints | CONTRIBUTING.md, CLAUDE.md | "MUST", "REQUIRED", "always", "never" (case-insensitive) |
+| invariants | README.md, ARCHITECTURE.md | "zero dependencies", "backwards compatible", "100% test coverage" |
+| nonNegotiables | CLAUDE.md, AGENTS.md | Rules in ## Rules or ## Guidelines sections |
+
+**Constraint Keywords:**
+```
+MUST, REQUIRED, SHALL, ALWAYS → Hard constraint
+MUST NOT, SHALL NOT, NEVER → Hard prohibition
+SHOULD, RECOMMENDED → Soft constraint (include if critical)
+```
+
+**Example Output:**
+```json
+{
+  "projectCritical": {
+    "purpose": "Process and rules layer for Claude Code in the Opus 4.5 era",
+    "constraints": ["Zero runtime dependencies (stdlib only)", "Python 3.10+ compatibility"],
+    "invariants": ["80% test coverage", "Type-safe public APIs"],
+    "nonNegotiables": ["Breaking changes allowed in v0.x", "Speed over perfection"]
+  }
+}
+```
+
 #### Phase 2: generate
 
 **Input:** `detections` (from phase 1) + `userInput` (from cco-config questions)
 
-**[CRITICAL] Rule files do NOT exist as separate files in the CCO package.**
-All rules are defined as sections within `cco-adaptive.md`. You must:
+**[CRITICAL] All rules are defined within the single `cco-adaptive.md` file.**
+To generate rule files:
 1. Read the single `cco-adaptive.md` file
 2. Extract relevant sections based on detections
 3. Generate rule file content from those sections
 
-**NEVER try to read separate `{category}.md` files from CCO package - they don't exist.**
+**Source:** Read only `cco-adaptive.md` (single file contains all rule sections).
 
 | Step | Action | Tool |
 |------|--------|------|
@@ -320,7 +378,7 @@ All rules are defined as sections within `cco-adaptive.md`. You must:
 - **Detection → Rule Mapping:** See `cco-adaptive.md` Detection System section (lines 23-198)
 - **Trigger Values:** See `cco-triggers.md` for all `{placeholder}` definitions
 
-Do NOT duplicate these tables here. Read from source files to ensure accuracy.
+Reference source files directly to ensure accuracy (SSOT principle).
 
 **Detection Priority Order:**
 1. **Manifest files** (HIGH confidence) - Package definition files
@@ -347,7 +405,7 @@ Mark as `[from docs]` with `confidence: LOW`.
 | **HIGH (0.9-1.0)** | Manifest + lock file match | Auto-apply rules |
 | **MEDIUM (0.6-0.8)** | Manifest OR multiple code patterns | Apply with note |
 | **LOW (0.3-0.5)** | Only code patterns or docs | Ask for confirmation |
-| **SKIP (<0.3)** | Single file, test/example only | Don't apply |
+| **SKIP (<0.3)** | Single file, test/example only | Exclude rule |
 
 **Confidence Modifiers:**
 - Lock file present: +0.2
@@ -429,7 +487,47 @@ Mark as `[from docs]` with `confidence: LOW`.
 2. Trigger comment: `*Trigger: {detection_code}*`
 3. Rule content: Extracted from cco-adaptive.md section
 
-**Guidelines (Maturity/Breaking/Priority):** Store in context.md only, don't generate rule files.
+**Guidelines (Maturity/Breaking/Priority):** Store in context.md only (context.md is the single location for guidelines).
+
+#### context.md Template [CRITICAL]
+
+Generate context.md with this structure. Include **Project Critical** section from detect phase:
+
+```markdown
+# Project Context
+
+## Project Critical
+Purpose: {projectCritical.purpose}
+Constraints: {projectCritical.constraints | join(", ")}
+Invariants: {projectCritical.invariants | join(", ")}
+Non-negotiables: {projectCritical.nonNegotiables | join(", ")}
+
+## Strategic Context
+Purpose: {project_description}
+Team: {team_size} | Scale: {scale} | Data: {data_sensitivity} | Compliance: {compliance | join(", ") | default("None")}
+Stack: {languages | join(", ")}, {frameworks | join(", ")} | Type: {app_types | join(", ")} | DB: {database | default("None")} | Rollback: Git
+Architecture: {architecture_style} | API: {api_style | default("None")} | Deployment: {deployment_style}
+Maturity: {maturity} | Breaking: {breaking_changes} | Priority: {priority}
+Testing: {testing_level} | SLA: {sla | default("None")} | Real-time: {realtime | default("None")}
+
+## Guidelines
+{maturity_guidelines}
+{breaking_guidelines}
+{priority_guidelines}
+
+## Operational
+Tools: {format_cmd} (format), {lint_cmd} (lint), {test_cmd} (test)
+Conventions: {conventions}
+Release: {release_process}
+
+## Auto-Detected
+Structure: {repo_structure} | Hooks: {git_hooks | default("none")} | Coverage: {coverage}%
+- [x/] {detected_features_checklist}
+License: {license}
+Secrets detected: {secrets_detected}
+```
+
+**CRITICAL:** Project Critical section is always included at the top. Values from `projectCritical` in detect phase output.
 
 #### Output Schema
 

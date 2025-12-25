@@ -7,7 +7,7 @@ This file is the **ONLY source** for all rule content. Separate rule files do **
 1. Read THIS file (`cco-adaptive.md`)
 2. Extract relevant sections based on detections (e.g., `{Lang} (L:{Lang})` section → `{lang}.md`)
 3. Generate rule files with extracted content + YAML frontmatter
-**NEVER try to read separate `{category}.md` files from CCO package - they don't exist.**
+**Source:** Read only this file (`cco-adaptive.md`) for all rule content.
 
 ## Detection System
 
@@ -273,7 +273,7 @@ Detection organized by category. Trigger values in `{placeholders}` are defined 
 
 ### User-Input (AskUserQuestion) [MANDATORY]
 
-**CRITICAL:** These questions MUST be asked. Cannot be skipped or auto-inferred.
+**CRITICAL:** Ask these questions explicitly. User input is required for accurate configuration.
 
 | Element | Options (hint = AskUserQuestion description) | Default | Affects | Ask |
 |---------|-----------------------------------------------|---------|---------|-----|
@@ -1429,7 +1429,7 @@ When generating tests, always include:
 - **Signal-Fine-Grained**: Fine-grained reactivity with signals
 - **Memo-Derived**: createMemo for derived computations
 - **Effect-Track**: Track dependencies explicitly
-- **No-Destructure**: Don't destructure props (breaks reactivity)
+- **Props-Direct**: Access props directly via `props.name` (preserves reactivity)
 
 ### Astro (Frontend:Astro)
 **Trigger:** astro deps, *.astro

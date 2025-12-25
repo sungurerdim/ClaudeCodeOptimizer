@@ -1,9 +1,38 @@
 # Tools Rules
 *On-demand loading for CCO commands and agents*
 
+## Rule Usage Matrix
+
+| Rule | Commands | Agents |
+|------|----------|--------|
+| Confirmation Clarity | commit, optimize, review, preflight | - |
+| User Input | commit, optimize, review, preflight, checkup, research | - |
+| Command Flow | ALL commands | - |
+| Context Requirement | ALL except config, research | - |
+| Token Efficiency | ALL commands | analyze, apply |
+| Safety | commit | apply |
+| Fix Workflow | optimize, commit | apply |
+| Impact Preview | review | analyze |
+| Priority | optimize, review | analyze |
+| Question Patterns | ALL with AskUserQuestion | - |
+| Output Formatting | ALL commands | ALL agents |
+| Variable Templates | ALL | ALL |
+| Dynamic Context | ALL commands | - |
+| Parallel Execution | ALL commands | analyze |
+| Quick Mode | commit, research, review | - |
+| Conservative Judgment | optimize, review | analyze |
+| Skip Criteria | ALL analysis | analyze, apply |
+| Progress Tracking | ALL commands | - |
+| Artifact Handling | - | analyze, apply |
+| Strategy Evolution | optimize, review | analyze |
+
+**SSOT Principle:** Rules defined here, referenced by commands/agents. Changes propagate automatically.
+
+---
+
 ## Confirmation Clarity [CRITICAL - ALL COMMANDS]
 
-**RULE:** User must know exactly what they're approving before confirmation. No ambiguity.
+**RULE:** User must know exactly what they're approving before confirmation. Every item clear and specific.
 
 ### Pre-Confirmation Display [MANDATORY]
 
@@ -37,10 +66,10 @@ Before ANY approval question, display a clear table/list of exactly what will be
 - Location is always `{file}:{line}` format
 - For batch approvals, show count: "Approve {n} items above?"
 
-### Anti-Patterns (NEVER DO)
+### Pattern Comparison
 
-| Bad | Good |
-|-----|------|
+| Incorrect | Correct |
+|-----------|---------|
 | "Apply fixes?" (vague) | "Apply 3 fixes above?" (after showing table) |
 | "Proceed with changes?" | "Create 2 commits listed above?" |
 | Description in question text | Description in table, question is short |
@@ -48,17 +77,17 @@ Before ANY approval question, display a clear table/list of exactly what will be
 
 ---
 
-## User Input [MANDATORY - NO ALTERNATIVES]
+## User Input [REQUIRED]
 
 ### AskUserQuestion Tool Requirement [ABSOLUTE]
 
-**RULE:** Every user interaction MUST use `AskUserQuestion` native tool. No exceptions. No alternatives.
+**RULE:** Every user interaction uses `AskUserQuestion` native tool exclusively.
 
 | Requirement | Enforcement |
 |-------------|-------------|
 | **Mandatory** | ALL questions, confirmations, selections → AskUserQuestion |
-| **No Alternatives** | Plain text questions = VIOLATION, stop command |
-| **No Workarounds** | Cannot skip by rephrasing as statement |
+| **Exclusive** | AskUserQuestion is the only method for user input |
+| **Direct** | Use tool directly, questions go through tool |
 | **All Stages** | Start, middle, end, follow-up → all use tool |
 | **MultiSelect** | Use `multiSelect: true` when multiple selections valid |
 

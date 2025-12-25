@@ -108,7 +108,7 @@ detectTask = Task("cco-agent-analyze", `
   - Project complexity (for AI Performance recommendations)
 `, { model: "haiku", run_in_background: true })
 
-// Don't wait - proceed to Q1 immediately
+// Proceed to Q1 immediately (detection runs in background)
 ```
 
 ### Validation
@@ -430,13 +430,13 @@ Before calling AskUserQuestion for Q2, verify:
 | `delete_contents` | `rules/cco/*.md` | Remove | Delete all files, keep directory |
 | `unmerge` | `settings.json` | Remove | Remove only CCO keys |
 
-**CRITICAL:** All files except settings.json are OVERWRITTEN every run. Never skip writes because "file already exists" or "content matches".
+**CRITICAL:** All files except settings.json are OVERWRITTEN every run. Execute writes regardless of existing file state or content.
 
 **[IMPORTANT] Rule Source Architecture:**
 - All rules are defined as **sections within `cco-adaptive.md`** (single file)
-- Separate `{category}.md` rule files do **NOT exist** in CCO package
-- The agent must **read cco-adaptive.md** and **extract relevant sections** based on detections
-- **NEVER try to read separate `{category}.md` files** - they will error with "file not found"
+- Rule content is extracted from cco-adaptive.md sections, not from separate files
+- The agent reads cco-adaptive.md and extracts relevant sections based on detections
+- Source file: `cco-adaptive.md` only (separate `{category}.md` files do not exist in CCO package)
 
 ```javascript
 // Phase 2: Generate rules using detections from Step-1 + user input from Steps 3-4
@@ -565,7 +565,7 @@ The cco-agent-analyze agent handles all detection-to-rule mapping internally usi
 
 **Statusline mode mapping:**
 
-**[CRITICAL - NO CODE GENERATION]** Statusline scripts are pre-built in CCO package. NEVER generate JavaScript code for statusline. ALWAYS copy from package templates.
+**[CRITICAL - COPY FROM PACKAGE]** Statusline scripts are pre-built in CCO package. Copy scripts directly from package templates (cco-full.js or cco-minimal.js).
 
 | Mode | Script | Action |
 |------|--------|--------|
