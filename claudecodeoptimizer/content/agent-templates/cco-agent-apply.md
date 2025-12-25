@@ -242,6 +242,46 @@ files: [
 
 **Never touch:** User-added keys, `permissions` (unless explicitly selected)
 
+### context.md Validation [CRITICAL - BEFORE WRITE]
+
+Before writing context.md, validate for duplication:
+
+```python
+def validate_context_md(content: str) -> None:
+    """Validate context.md has no duplication."""
+    lines = content.split('\n')
+    seen_values = {}
+
+    for line in lines:
+        # Check for key: value patterns
+        if ':' in line and not line.startswith('#'):
+            key = line.split(':')[0].strip()
+            value = ':'.join(line.split(':')[1:]).strip()
+
+            # Purpose must appear exactly once
+            if key == "Purpose":
+                if "Purpose" in seen_values:
+                    raise ValueError(f"DUPLICATE: Purpose appears multiple times")
+                seen_values["Purpose"] = value
+
+    # Verify Strategic Context has no Purpose
+    in_strategic = False
+    for line in lines:
+        if "## Strategic Context" in line:
+            in_strategic = True
+        elif line.startswith("## "):
+            in_strategic = False
+        if in_strategic and line.startswith("Purpose:"):
+            raise ValueError("Purpose must NOT appear in Strategic Context")
+```
+
+**Validation Checklist:**
+- [ ] Purpose appears in Project Critical ONLY
+- [ ] Strategic Context starts with Team: (not Purpose:)
+- [ ] No identical values repeated across sections
+
+**If validation fails:** Do NOT write. Return error to orchestrator.
+
 ### Write Operation Validation [CRITICAL]
 
 For each file in the files list, verify:

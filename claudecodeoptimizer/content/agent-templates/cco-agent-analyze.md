@@ -491,7 +491,7 @@ Mark as `[from docs]` with `confidence: LOW`.
 
 #### context.md Template [CRITICAL]
 
-Generate context.md with this structure. Include **Project Critical** section from detect phase:
+Generate context.md with this structure. **No duplication allowed.**
 
 ```markdown
 # Project Context
@@ -503,7 +503,6 @@ Invariants: {projectCritical.invariants | join(", ")}
 Non-negotiables: {projectCritical.nonNegotiables | join(", ")}
 
 ## Strategic Context
-Purpose: {project_description}
 Team: {team_size} | Scale: {scale} | Data: {data_sensitivity} | Compliance: {compliance | join(", ") | default("None")}
 Stack: {languages | join(", ")}, {frameworks | join(", ")} | Type: {app_types | join(", ")} | DB: {database | default("None")} | Rollback: Git
 Architecture: {architecture_style} | API: {api_style | default("None")} | Deployment: {deployment_style}
@@ -527,7 +526,63 @@ License: {license}
 Secrets detected: {secrets_detected}
 ```
 
-**CRITICAL:** Project Critical section is always included at the top. Values from `projectCritical` in detect phase output.
+**CRITICAL - NO DUPLICATION:**
+- Purpose is in Project Critical section ONLY (not repeated in Strategic Context)
+- Project Critical values come from `projectCritical` in detect phase output
+- If projectCritical.purpose is empty, extract from README.md first paragraph
+
+#### Duplication Prevention [CRITICAL - VALIDATION]
+
+**Before returning context.md content, validate:**
+
+```javascript
+function validateNoDuplication(contextMd) {
+  const lines = contextMd.split('\n')
+  const values = {}
+  const duplicates = []
+
+  for (const line of lines) {
+    // Extract key-value pairs (e.g., "Purpose: ...", "Team: ...")
+    const match = line.match(/^(\w+):\s*(.+)$/)
+    if (match) {
+      const [, key, value] = match
+      if (values[key] && values[key] === value) {
+        duplicates.push({ key, value, error: "DUPLICATE_VALUE" })
+      }
+      values[key] = value
+    }
+  }
+
+  if (duplicates.length > 0) {
+    throw new Error(`Duplication detected: ${JSON.stringify(duplicates)}`)
+  }
+}
+```
+
+**Duplication Rules:**
+
+| Field | Allowed In | FORBIDDEN In |
+|-------|------------|--------------|
+| Purpose | Project Critical | Strategic Context, Guidelines |
+| Constraints | Project Critical | Guidelines |
+| Invariants | Project Critical | Guidelines |
+| Team/Scale/Data | Strategic Context | Project Critical |
+
+**Common Duplication Errors to Avoid:**
+
+| Error | Cause | Fix |
+|-------|-------|-----|
+| Purpose appears twice | Copied from both projectCritical and project_description | Use projectCritical.purpose ONLY |
+| Same constraint in both sections | Not distinguishing critical vs strategic | Critical = hard rules, Strategic = metadata |
+| Guidelines repeat constraints | Copy-paste without filtering | Guidelines = how to work, not what must hold |
+
+**Self-Check Before Output:**
+```
+[ ] Purpose appears exactly ONCE (in Project Critical)
+[ ] No field has identical value in multiple sections
+[ ] Guidelines contain action items, not constraints
+[ ] Strategic Context has NO Purpose line
+```
 
 #### Output Schema
 
