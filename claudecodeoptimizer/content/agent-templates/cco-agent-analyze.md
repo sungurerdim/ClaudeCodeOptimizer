@@ -132,13 +132,35 @@ naming: inconsistent patterns
 
 ```json
 {
-  "findings": [{ "id": "{SCOPE}-{NNN}", "scope": "...", "severity": "{P0-P3}", "title": "...", "location": "{file}:{line}", "fixable": true, "approvalRequired": true, "fix": "..." }],
+  "findings": [{
+    "id": "{SCOPE}-{NNN}",
+    "scope": "{scope}",
+    "severity": "{P0-P3}",
+    "title": "{title}",
+    "location": "{file}:{line}",
+    "description": "{detailed_description}",
+    "recommendation": "{actionable_fix}",
+    "effort": "{LOW|MEDIUM|HIGH}",
+    "impact": "{LOW|MEDIUM|HIGH}",
+    "fixable": "{boolean}",
+    "approvalRequired": "{boolean}",
+    "fix": "{code_or_action}"
+  }],
   "summary": { "{scope}": { "count": "{n}", "p0": "{n}", "p1": "{n}", "p2": "{n}", "p3": "{n}" } },
   "scores": { "security": "{0-100}", "tests": "{0-100}", "techDebt": "{0-100}", "cleanliness": "{0-100}", "overall": "{0-100}" },
-  "metrics": { "coupling": "{0-100}", "cohesion": "{0-100}", "complexity": "{0-100}" },
-  "learnings": [{ "type": "systemic|avoid|prefer", "pattern": "...", "reason": "..." }]
+  "metrics": { "coupling": "{0-100}", "cohesion": "{0-100}", "complexity": "{0-100}", "testCoverage": "{0-100}" },
+  "learnings": [{ "type": "systemic|avoid|prefer", "pattern": "{pattern}", "reason": "{reason}" }]
 }
 ```
+
+**Field Requirements by Consumer:**
+
+| Field | cco-optimize | cco-review | cco-status |
+|-------|--------------|------------|------------|
+| id, scope, severity, title, location | ✓ | ✓ | ✓ |
+| description, recommendation | - | ✓ | - |
+| effort, impact | - | ✓ | - |
+| fixable, approvalRequired, fix | ✓ | - | - |
 
 **approvalRequired:** true for security, deletions, API changes, behavior changes
 
@@ -155,24 +177,10 @@ complexity: Cyclomatic complexity (0-100, lower is better)
 layers: UI → Logic → Data separation
 patterns: Architectural patterns in use
 ```
-**Output Schema:**
-```json
-{
-  "findings": [{ "id": "{SCOPE}-{NNN}", "scope": "architecture", "severity": "{P0-P3}", "title": "...", "location": "{file}:{line}", "description": "...", "recommendation": "...", "effort": "{LOW|MEDIUM|HIGH}", "impact": "{LOW|MEDIUM|HIGH}" }],
-  "metrics": {
-    "coupling": "{0-100}",
-    "cohesion": "{0-100}",
-    "complexity": "{0-100}"
-  },
-  "scores": {
-    "security": "{0-100}",
-    "tests": "{0-100}",
-    "techDebt": "{0-100}",
-    "cleanliness": "{0-100}",
-    "overall": "{0-100}"
-  }
-}
-```
+**Output Schema:** Uses general Output Schema above. Architecture scope always includes:
+- `findings` with `effort` and `impact` fields populated
+- `metrics` with `coupling`, `cohesion`, `complexity`, `testCoverage`
+- `scores` with all category scores
 
 ### scan
 Combines all analysis for dashboard: Security (OWASP, secrets, CVE) │ Tests (coverage, quality) │ Tech debt (complexity, dead code) │ Cleanliness (orphans, duplicates)
@@ -223,8 +231,38 @@ Config scope handles project detection and rule selection. **Two-phase execution
     "infra": ["{infra}"],
     "dependencies": ["{deps}"]
   },
+  "complexity": {
+    "loc": "{number}",
+    "files": "{number}",
+    "frameworks": "{number}",
+    "hasTests": "{boolean}",
+    "hasCi": "{boolean}",
+    "isMonorepo": "{boolean}"
+  },
   "sources": [{ "file": "{file}", "confidence": "HIGH|MEDIUM|LOW" }]
 }
+```
+
+**Complexity Calculation [CRITICAL for AI recommendations]:**
+
+```javascript
+// Count lines of code (approximate)
+loc = Bash("find . -name '*.{py,ts,js,go,rs,java}' -not -path './node_modules/*' -not -path './.git/*' | xargs wc -l 2>/dev/null | tail -1 | awk '{print $1}'")
+
+// Count source files
+files = Bash("find . -name '*.{py,ts,js,go,rs,java}' -not -path './node_modules/*' -not -path './.git/*' | wc -l")
+
+// Count detected frameworks
+frameworks = detections.frontend.length + (detections.api ? 1 : 0) + detections.infra.length
+
+// Check for tests
+hasTests = Glob("**/test*/**") || Glob("**/*test*.{py,ts,js}") || Glob("**/*spec*.{ts,js}")
+
+// Check for CI
+hasCi = Glob(".github/workflows/*") || Glob(".gitlab-ci.yml") || Glob("Jenkinsfile")
+
+// Check for monorepo
+isMonorepo = Glob("packages/*/package.json") || Glob("apps/*/package.json") || Glob("pnpm-workspace.yaml") || Glob("nx.json") || Glob("turbo.json")
 ```
 
 #### Phase 2: generate
@@ -352,37 +390,39 @@ Mark as `[from docs]` with `confidence: LOW`.
 
 #### Detection → Rule Mapping
 
-| Category | Detection Pattern | Rule File | Content Source in cco-adaptive.md |
-|----------|-------------------|-----------|-----------------------------------|
-| Language | L:{lang} | `{lang}.md` | Language Rules → {Lang} section |
-| Runtime | R:{runtime} | `{runtime}.md` | Runtimes section |
-| App Type | T:{type} | `{type}.md` | Apps > {Type} section |
-| API | API:{style} | `api.md` | Backend > API section |
-| Database | DB:{type} | `database.md` | Backend > Data section |
-| Backend | Backend:{fw} | `backend.md` | Backend Frameworks section |
-| Frontend | Frontend:{fw} | `frontend.md` | Frontend section |
-| Framework | Framework:{name} | `{name}.md` | Meta-Frameworks section |
-| Mobile | Mobile:{platform} | `mobile.md` | Apps > Mobile section |
-| Desktop | Desktop:{fw} | `desktop.md` | Apps > Desktop section |
-| Infra | Infra:{type} | `{type}.md` | Infrastructure section |
-| ML/AI | ML:{type} | `ml.md` | ML/AI section |
-| Build | Build:{type} | `{type}.md` | Build Tools section |
-| Testing | Test:{type} | `testing.md` | Testing Rules section |
-| CI/CD | CI:{provider} | `ci-cd.md` | CI/CD section |
-| MQ | MQ:{provider} | `mq.md` | Message Queues section |
-| ORM | ORM:{orm} | `orm.md` | ORM-specific rules (Exposed, etc.) |
-| Game | Game:{engine} | `game.md` | Specialized > Game section |
-| RT | RT:{level} | `realtime.md` | Real-time section |
-| i18n | i18n | `i18n.md` | i18n section |
-| Observability | Observability:{tool} | `observability-tools.md` | Observability Tools section |
-| Deploy | Deploy:{platform} | `deploy.md` | Deployment Platforms section |
-| Docs | Docs:{ssg} | `docs.md` | Documentation Generators section |
-| User:Scale | Scale:{tier} | `scale.md` | Scale Rules section |
-| User:Team | Team:{size} | `team.md` | Team Rules section |
-| User:Security | Data:PII/Regulated | `security.md` | Security Rules section |
-| User:Compliance | Compliance:{std} | `compliance.md` | Compliance Rules section |
-| User:SLA | SLA:{level} | `observability.md` | Observability Rules section |
-| Dependency | DEP:{category} | `dep-{category}.md` | Dependency-Based Rules section |
+**[SSOT References]:**
+- **Complete detection table:** `cco-adaptive.md` → Detection System section (lines 23-268)
+- **Trigger values:** `cco-triggers.md` → All placeholder definitions
+- **Rule content:** `cco-adaptive.md` → Respective section based on detection
+
+**Pattern Summary** (actual mappings defined in cco-adaptive.md SSOT):
+
+| Category Prefix | Output Pattern | Content Location |
+|-----------------|----------------|------------------|
+| L:{lang} | `{lang}.md` | Language Rules section |
+| R:{runtime} | `{runtime}.md` | Runtimes section |
+| T:{type} | `{type}.md` | Apps section |
+| API:{style} | `api.md` | Backend > API section |
+| DB:{type} | `database.md` | Database section |
+| Backend:{fw} | `backend.md` | Backend Frameworks section |
+| Frontend:{fw} | `frontend.md` | Frontend section |
+| Framework:{name} | `{name}.md` | Meta-Frameworks section |
+| Mobile:{platform} | `mobile.md` | Mobile section |
+| Desktop:{fw} | `desktop.md` | Desktop section |
+| Infra:{type} | `infra-{type}.md` | Infrastructure section |
+| ML:{type} | `ml.md` | ML/AI section |
+| Build:{type} | `{type}.md` | Build Tools section |
+| Test:{type} | `testing.md` | Testing section |
+| CI:{provider} | `ci-cd.md` | CI/CD section |
+| MQ:{provider} | `mq.md` | Message Queues section |
+| Game:{engine} | `game.md` | Specialized > Game section |
+| Observability:{tool} | `observability-tools.md` | Observability section |
+| Deploy:{platform} | `deploy.md` | Deployment section |
+| Docs:{ssg} | `docs.md` | Documentation section |
+| DEP:{category} | `dep-{category}.md` | Dependency-Based Rules section |
+| Scale/Team/SLA/Compliance | `{category}.md` | User-Input sections |
+
+**CRITICAL:** Always read `cco-adaptive.md` for complete, up-to-date detection list. This table shows patterns only.
 
 **Each rule file MUST include:**
 1. YAML frontmatter: `paths:` matching relevant files

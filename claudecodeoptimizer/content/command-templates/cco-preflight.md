@@ -123,12 +123,12 @@ commitsTask = Bash(`git log ${lastTag}..HEAD --oneline`)
 
 ---
 
-## Step-2: Quality + Review [PARALLEL BACKGROUND]
+## Step-2: Quality + Review [PARALLEL - BOTH IN ONE MESSAGE]
 
-**Launch both sub-commands in parallel:**
+**CRITICAL:** Launch both Task calls in a SINGLE message for true parallelism:
 
 ```javascript
-// CRITICAL: Both Task calls in ONE message for true parallelism
+// Both calls MUST be in same message block
 
 qualityTask = Task("general-purpose", `
   Execute /cco-optimize --pre-release --fix

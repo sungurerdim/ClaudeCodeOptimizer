@@ -94,18 +94,37 @@ Bash("{test_command} 2>&1")
 
 **Config file operations for cco-config. Always execute - never skip based on content comparison.**
 
-### Modes
+### Execution Order for Setup/Update [CRITICAL]
+
+1. **CLEAN FIRST**: Delete ALL existing `*.md` files in `rules/cco/` directory
+2. **THEN WRITE**: Write new context.md, rule files, statusline, settings
+
+This ensures stale rules from previous detections are removed before new ones are written.
+
+### Pre-Step: Clean Rules (Setup/Update only)
+
+Before any write operations, delete ALL existing `*.md` files in `rules/cco/`:
+
+```python
+def clean_rules(target_dir):
+    """Delete all existing rule files before writing new ones."""
+    rules_dir = os.path.join(target_dir, "rules", "cco")
+    if os.path.exists(rules_dir):
+        for file in glob.glob(os.path.join(rules_dir, "*.md")):
+            os.remove(file)
+    # Directory is now empty, ready for fresh rules
+```
+
+### Write Modes
 
 | Mode | Target | Behavior |
 |------|--------|----------|
-| `overwrite` | `context.md` | Delete existing → Write new (always) |
-| `overwrite` | Rule files (`*.md`) | Delete existing → Write new (always) |
-| `overwrite` | Statusline (`cco-*.js`) | Delete existing → Copy from package (always) |
+| `overwrite` | `context.md`, Rule files, Statusline | Write new content (always) |
 | `merge` | `settings.json` (Setup) | Read existing → Deep merge → Write |
-| `delete` | Rule files, directories | Remove entirely |
+| `delete_contents` | `rules/cco/*.md` | Delete all files in directory (keep directory) |
 | `unmerge` | `settings.json` (Remove) | Read → Remove CCO keys only → Write |
 
-**CRITICAL:** All `overwrite` targets are ALWAYS written. Never skip based on "file exists" or "content matches".
+**CRITICAL:** Never delete directories. Only delete file contents. All `overwrite` targets are ALWAYS written.
 
 ### Mode: overwrite
 ```python
@@ -123,13 +142,13 @@ def merge(path, new_settings):
     write_json(path, result)
 ```
 
-### Mode: delete
+### Mode: delete_contents
 ```python
-def delete(path):
-    if is_dir(path):
-        rm_rf(path)
-    else:
-        rm(path)
+def delete_contents(dir_path, pattern="*.md"):
+    """Delete all matching files in directory, keep directory intact."""
+    for file in glob.glob(os.path.join(dir_path, pattern)):
+        os.remove(file)
+    # Directory remains, only contents deleted
 ```
 
 ### Mode: unmerge
@@ -159,6 +178,14 @@ def unmerge(path):
 
 **Setup/Update:**
 ```javascript
+// Step 1: CLEAN - Remove all existing rule files first
+cleanRules: {
+  path: "rules/cco/",
+  pattern: "*.md",
+  action: "delete_all"
+}
+
+// Step 2: WRITE - Write fresh files
 files: [
   // All overwrite - ALWAYS write, never skip
   { path: "rules/cco/context.md", mode: "overwrite", content: "{context_content}" },
@@ -180,7 +207,7 @@ files: [
 **Remove:**
 ```javascript
 files: [
-  { path: "rules/cco/", mode: "delete" },
+  { path: "rules/cco/", mode: "delete_contents", pattern: "*.md" },
   { path: "settings.json", mode: "unmerge" }
 ]
 ```

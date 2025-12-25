@@ -9,8 +9,8 @@
 | Core | 62 | `~/.claude/rules/cco/core.md` | Always active |
 | AI | 39 | `~/.claude/rules/cco/ai.md` | Always active |
 | Tools | 106 | pip package | Built into commands/agents |
-| Adaptive | 1284 | pip package → `.claude/rules/cco/` | Per-project |
-| **Total** | **1491** | | |
+| Adaptive | 1365 | pip package → `.claude/rules/cco/` | Per-project |
+| **Total** | **1572** | | |
 
 **Counting:** `grep -c "^- \*\*" <file>` for all rule files
 
@@ -501,7 +501,8 @@
 | Real-time | WebSocket/SSE detected (cumulative tiers) |
 | Testing | User-selected (cumulative tiers) |
 | Observability | SLA-based (cumulative tiers) |
-| DEP:* | 43 dependency categories (GPU, Audio, Video, HTTP, ORM, Auth, Cache, etc.) |
+| DEP:* | 55 dependency categories (GPU, Audio, Video, HTTP, ORM, Auth, Cache, AI Agents, CDC, etc.) |
+| Infra:* | 3 infrastructure categories (API Gateway, Service Mesh, Build Cache) |
 
 ### Full Adaptive Rules List
 

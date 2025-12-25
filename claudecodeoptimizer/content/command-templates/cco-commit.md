@@ -15,10 +15,17 @@ model: opus
 - Branch: !`git branch --show-current`
 - Recent commits: !`git log --oneline -5`
 - Stash list: !`git stash list --oneline | head -3`
-- Line counts: !`git diff --shortstat`
-- Staged lines: !`git diff --cached --shortstat`
+- All changes (staged+unstaged): !`git diff HEAD --shortstat`
+- Staged only: !`git diff --cached --shortstat`
+- Untracked files: !`git ls-files --others --exclude-standard | wc -l`
 
 **DO NOT re-run these commands. Use the pre-collected values above.**
+
+**[CRITICAL] Scope: ALL uncommitted changes are included by default:**
+- Staged files (already in index)
+- Unstaged modifications (tracked files with changes)
+- Untracked files (new files not yet added)
+- Use `--staged-only` flag to commit only staged changes
 
 ## Architecture
 
@@ -119,7 +126,35 @@ breakingChanges = detectBreakingChanges(gitDiff)
 
 ## Step-2: Analyze Changes [WHILE TESTS RUN]
 
-**Analyze and group while tests run in background:**
+**Analyze and group while tests run in background.**
+
+### 2.1: Collect ALL Uncommitted Changes [CRITICAL]
+
+```javascript
+// CRITICAL: Include ALL uncommitted changes, not just session changes
+// This means: modified, added, deleted, renamed, untracked - EVERYTHING
+
+// Get complete list of all uncommitted files
+allChanges = {
+  staged: Bash("git diff --cached --name-only").split('\n'),      // Already staged
+  unstaged: Bash("git diff --name-only").split('\n'),             // Modified but not staged
+  untracked: Bash("git ls-files --others --exclude-standard").split('\n')  // New files
+}
+
+// Combine all - these are the files to commit
+filesToCommit = [...new Set([
+  ...allChanges.staged,
+  ...allChanges.unstaged,
+  ...allChanges.untracked
+])].filter(f => f.trim())
+
+// If --staged-only flag, only use staged files
+if (args.includes('--staged-only')) {
+  filesToCommit = allChanges.staged.filter(f => f.trim())
+}
+```
+
+### 2.2: Group Changes Atomically
 
 ```javascript
 // Group changes atomically
@@ -127,12 +162,19 @@ breakingChanges = detectBreakingChanges(gitDiff)
 // - Split apart: Different features, unrelated files, config vs code
 // - Order: Types → Core → Dependent → Tests → Docs
 
-commitPlan = analyzeChanges(gitDiff, gitStatus)
+// Get full diff content for analysis
+gitDiff = Bash("git diff HEAD")  // All changes vs HEAD
+gitDiffUntracked = filesToCommit
+  .filter(f => allChanges.untracked.includes(f))
+  .map(f => Bash(`cat "${f}"`))  // Content of new files
+
+commitPlan = analyzeChanges(filesToCommit, gitDiff, gitDiffUntracked)
 // Returns: { commits: [{ files: [], message: { type, scope, title, body }, breaking: boolean }] }
 ```
 
 ### Validation
 ```
+[x] All uncommitted changes collected (staged + unstaged + untracked)
 [x] Changes grouped atomically
 [x] Commit messages generated
 → Proceed to Step-3
@@ -147,7 +189,9 @@ commitPlan = analyzeChanges(gitDiff, gitStatus)
 ### Pre-Confirmation Display [MANDATORY]
 
 ```markdown
-## Pending Commits
+## Changes to Commit
+
+**Source:** All uncommitted changes (staged: {n}, unstaged: {n}, untracked: {n})
 
 | # | Type | Title | Files |
 |---|------|-------|-------|
