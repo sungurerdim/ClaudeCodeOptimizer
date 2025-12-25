@@ -106,6 +106,19 @@ detectTask = Task("cco-agent-analyze", `
   - Testing: testFramework, coverage, linters, typeChecker
   - Metadata: license, teamSize, maturity, lastActivity
   - Project complexity (for AI Performance recommendations)
+
+  [CRITICAL] Extract projectCritical from documentation:
+  - Read README.md, CONTRIBUTING.md, CLAUDE.md, AGENTS.md in PARALLEL
+  - Extract purpose (first paragraph or package description)
+  - Extract constraints (MUST, REQUIRED, NEVER, ALWAYS statements)
+  - Extract invariants (properties that must always hold)
+  - Extract nonNegotiables (rules that cannot be overridden)
+
+  Return in output:
+  - detections: { language, type, api, database, frontend, infra, dependencies }
+  - complexity: { loc, files, frameworks, hasTests, hasCi, isMonorepo }
+  - projectCritical: { purpose, constraints[], invariants[], nonNegotiables[] }
+  - sources: [{ file, confidence }]
 `, { model: "haiku", run_in_background: true })
 
 // Proceed to Q1 immediately (detection runs in background)
@@ -409,11 +422,34 @@ Before calling AskUserQuestion for Q2, verify:
 - Compare existing files with expected content
 - Skip writes because "settings already match"
 - Optimize by avoiding "unnecessary" writes
+- **Use manual grep/sed/awk to extract rules from cco-adaptive.md**
+- **Parse cco-adaptive.md content yourself**
+- **Generate rule content without using cco-agent-analyze**
 
 **ALWAYS:**
-- Call cco-agent-analyze (generate phase)
+- Call cco-agent-analyze (generate phase) for rule extraction
 - Call cco-agent-apply with explicit file operations
-- Let the agent handle all file operations
+- Let the agents handle all file operations
+- Pass projectCritical from detect phase to generate phase
+
+### 4.0.1: Agent Enforcement [CRITICAL - READ THIS]
+
+**You MUST use agents for all rule generation. Manual extraction is FORBIDDEN.**
+
+| Task | Correct | FORBIDDEN |
+|------|---------|-----------|
+| Read cco-adaptive.md | cco-agent-analyze (generate phase) | `Bash(grep ...)`, `Bash(sed ...)` |
+| Extract rule sections | cco-agent-analyze (generate phase) | Manual parsing with grep/awk |
+| Generate context.md | cco-agent-analyze (generate phase) | Writing content directly |
+| Write files | cco-agent-apply | Direct Write/Edit without agent |
+
+**Why this matters:**
+- Agents have context about detection patterns and rule formats
+- Manual extraction is error-prone (grep patterns may not match)
+- Agents ensure projectCritical is included in context.md
+- Agents verify rule content is complete and properly formatted
+
+**If you find yourself using grep/sed on cco-adaptive.md, STOP and use cco-agent-analyze instead.**
 
 ### 4.1: Generate Rules
 
@@ -439,21 +475,32 @@ Before calling AskUserQuestion for Q2, verify:
 - Source file: `cco-adaptive.md` only (separate `{category}.md` files do not exist in CCO package)
 
 ```javascript
-// Phase 2: Generate rules using detections from Step-1 + user input from Steps 3-4
+// Phase 2: Generate rules using detections from Step-1 + user input from Steps 2-3
 generateResult = Task("cco-agent-analyze", `
   scopes: ["config"]
   phase: "generate"
 
   Input:
   - detections: ${JSON.stringify(detectResult.detections)}
+  - projectCritical: ${JSON.stringify(detectResult.projectCritical)}
+  - complexity: ${JSON.stringify(detectResult.complexity)}
   - setupConfig: ${JSON.stringify(setupConfig)}
   - contextConfig: ${JSON.stringify(contextConfig)}
 
-  Generate (from cco-adaptive.md sections, NOT separate files):
-  1. Read cco-adaptive.md via: Bash(cco-install --cat rules/cco-adaptive.md)
-  2. Extract sections matching detections (e.g., "{Lang} (L:{Lang})" section → {lang}.md)
-  3. Generate context.md with project context
-  4. Generate rule files with extracted section content
+  [CRITICAL] Generate Phase Execution:
+  1. Read cco-adaptive.md: Bash(cco-install --cat rules/cco-adaptive.md)
+  2. Extract rule sections matching detections
+  3. Generate context.md with Project Critical section (from projectCritical input)
+  4. Generate rule files with extracted content
+
+  [MANDATORY] context.md MUST include Project Critical at top:
+  ## Project Critical
+  Purpose: {projectCritical.purpose}
+  Constraints: {projectCritical.constraints | join(", ")}
+  Invariants: {projectCritical.invariants | join(", ")}
+  Non-negotiables: {projectCritical.nonNegotiables | join(", ")}
+
+  Return: { context, rules[], triggeredCategories[] }
 `, { model: "haiku" })
 
 // Agent returns (config scope, generate phase):
@@ -763,3 +810,6 @@ If something goes wrong during configuration:
 4. **Single Recommended** - Each tab has exactly one recommended option
 5. **AI-driven defaults** - Budget/Output based on project complexity
 6. **Explicit defaults** - Write ALL settings to files, including default values. Exception: statusLine "Remove" preserves global config.
+7. **[CRITICAL] Agent-only extraction** - NEVER use grep/sed/awk on cco-adaptive.md. ALWAYS use cco-agent-analyze (generate phase)
+8. **[CRITICAL] projectCritical flow** - detect phase extracts → generate phase receives → context.md includes at top
+9. **[CRITICAL] No duplication** - Purpose appears in Project Critical section ONLY, not in Strategic Context
