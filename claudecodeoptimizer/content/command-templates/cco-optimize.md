@@ -70,7 +70,7 @@ gitDirty = gitStatus.trim().length > 0
 
 // Start analysis with all scopes - will filter after Q1
 analysisTask = Task("cco-agent-analyze", `
-  scopes: ["security", "quality", "architecture", "best-practices"]
+  scopes: ["security", "quality", "hygiene", "best-practices"]
 
   Find all issues with severity and fix information.
   Return: {
@@ -257,34 +257,69 @@ if (config.action === "Fix all") {
   // Display issues table BEFORE question
   console.log(formatIssuesTable(approvalRequired))
 
-  // Build approval question with batching
-  options = []
+  // Build approval question with pagination
+  const PAGE_SIZE = 4
+  let currentPage = 0
+  let allApproved = []
+  let allDeclined = []
 
-  if (approvalRequired.length > 3) {
-    options.push({
-      label: `All (${approvalRequired.length})`,
-      description: "Apply all - review git diff after"
+  while (currentPage * PAGE_SIZE < approvalRequired.length) {
+    const startIdx = currentPage * PAGE_SIZE
+    const pageItems = approvalRequired.slice(startIdx, startIdx + PAGE_SIZE)
+    const remaining = approvalRequired.length - startIdx - pageItems.length
+
+    options = []
+
+    // "All" option only on first page if more than PAGE_SIZE items
+    if (currentPage === 0 && approvalRequired.length > PAGE_SIZE) {
+      options.push({
+        label: `All (${approvalRequired.length})`,
+        description: "Apply all - review git diff after"
+      })
+    }
+
+    // Add page items
+    pageItems.forEach(f => {
+      options.push({
+        label: `[${f.severity}] ${f.title}`,
+        description: `${f.location} - ${f.fix?.substring(0, 50)}...`
+      })
     })
+
+    const pageInfo = approvalRequired.length > PAGE_SIZE
+      ? ` (page ${currentPage + 1}/${Math.ceil(approvalRequired.length / PAGE_SIZE)})`
+      : ""
+
+    const response = AskUserQuestion([{
+      question: `Approve fixes${pageInfo}?`,
+      header: "Approve",
+      options: options,
+      multiSelect: true
+    }])
+
+    // Handle response
+    if (response.includes("All")) {
+      allApproved = approvalRequired
+      allDeclined = []
+      break  // Exit pagination loop
+    }
+
+    // Add selected to approved, rest to declined
+    pageItems.forEach(item => {
+      if (response.includes(item.title)) {
+        allApproved.push(item)
+      } else {
+        allDeclined.push(item)
+      }
+    })
+
+    // If no more pages or user selected nothing (implicit "done"), exit
+    if (remaining === 0) break
+    currentPage++
   }
 
-  // Add individual items (max 3 if "All" shown, max 4 otherwise)
-  const maxItems = approvalRequired.length > 3 ? 3 : 4
-  approvalRequired.slice(0, maxItems).forEach(f => {
-    options.push({
-      label: `[${f.severity}] ${f.title}`,
-      description: `${f.location} - ${f.fix?.substring(0, 50)}...`
-    })
-  })
-
-  AskUserQuestion([{
-    question: `Approve ${approvalRequired.length} fixes listed above?`,
-    header: "Approve",
-    options: options,
-    multiSelect: true
-  }])
-
-  // If more than 4 items and not "All" selected, continue with more pages
-  // (handled by batching logic in execution)
+  approved = allApproved
+  declined = allDeclined
 }
 ```
 
@@ -328,19 +363,30 @@ if (approved.length > 0) {
 
 ## Step-6: Summary
 
-```
+```javascript
+// Build summary with conditional stash reminder
+let summary = `
 ## Optimization Complete
 
 | Metric | Value |
 |--------|-------|
-| Auto-fixed | {autoFixResults?.accounting?.done || 0} |
-| User-approved | {approved.length} |
-| Declined | {declined.length} |
-| Files modified | {n} |
+| Auto-fixed | ${autoFixResults?.accounting?.done || 0} |
+| User-approved | ${approved.length} |
+| Declined | ${declined.length} |
+| Files modified | ${n} |
 
-Status: OK | Applied: {totalFixed} | Declined: {declined.length} | Failed: 0
+Status: OK | Applied: ${totalFixed} | Declined: ${declined.length} | Failed: 0
 
-Run `git diff` to review changes.
+Run \`git diff\` to review changes.`
+
+// Stash reminder if user chose "Stash first"
+if (config.gitState === "Stash first") {
+  summary += `
+
+**Reminder:** Changes were stashed before optimization. Run \`git stash pop\` to restore them.`
+}
+
+console.log(summary)
 ```
 
 ### Validation
@@ -377,7 +423,7 @@ Run `git diff` to review changes.
   "by_scope": {
     "security": "{n}",
     "quality": "{n}",
-    "architecture": "{n}",
+    "hygiene": "{n}",
     "bestPractices": "{n}"
   },
   "blockers": [{ "severity": "{P0-P1}", "title": "{title}", "location": "{file}:{line}" }]
@@ -390,7 +436,7 @@ Run `git diff` to review changes.
 |-------|--------|
 | `security` | Secrets, OWASP, CVEs, input validation, unsafe deserialization |
 | `quality` | Type errors, tech debt, test gaps, complexity, dead code |
-| `architecture` | SOLID violations, god classes, circular imports, coupling |
+| `hygiene` | Orphans, stale refs, duplicates, unused imports, dead code |
 | `best-practices` | Anti-patterns, resource leaks, inconsistent styles |
 
 ### Context Application

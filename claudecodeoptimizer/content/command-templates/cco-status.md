@@ -112,11 +112,15 @@ overall = (metrics.security + metrics.quality + metrics.architecture + metrics.b
 status = getStatus(overall)  // OK/WARN/FAIL/CRITICAL
 ```
 
-| Context | Effect |
-|---------|--------|
-| Scale 10K+ | Architecture score stricter |
-| PII/Regulated | Security score stricter |
-| Speed priority | Show critical issues only |
+| Context | Effect | Multiplier |
+|---------|--------|------------|
+| Scale 10K+ | Architecture score stricter | ×0.9 (10% stricter) |
+| PII/Regulated | Security score stricter | ×0.8 (20% stricter) |
+| Speed priority | Show critical issues only | Filter: CRITICAL only |
+
+**Multiplier Rationale:**
+- PII/Regulated data requires higher security bar (×0.8) - regulatory compliance risk
+- Large scale (10K+) requires better architecture (×0.9) - change ripple effects amplified
 
 ### Validation
 ```
@@ -200,12 +204,14 @@ When called via `/cco-status --brief` (e.g., from cco-checkup):
 
 ### Score Thresholds
 
-| Score | Status |
-|-------|--------|
-| 80-100 | OK |
-| 60-79 | WARN |
-| 40-59 | FAIL |
-| 0-39 | CRITICAL |
+| Score | Status | Meaning |
+|-------|--------|---------|
+| 80-100 | OK | Production-ready, minor improvements optional |
+| 60-79 | WARN | Functional but degraded, address before next release |
+| 40-59 | FAIL | Significant issues, requires attention |
+| 0-39 | CRITICAL | Blocking issues, fix immediately |
+
+**Scoring Method:** Start at 100, deduct per issue (CRITICAL: -10, HIGH: -5, MEDIUM: -2, LOW: -1)
 
 ---
 
