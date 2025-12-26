@@ -11,7 +11,7 @@
 
 ## Execution Order [CRITICAL]
 
-- **Read-First**: Read files completely before proposing any edits
+- **Read-First**: Read and comprehend files completely before proposing any edits
 - **Plan-Before-Act**: Understand full scope before any action
 - **Incremental**: Complete one step fully before starting next
 - **Verify**: Confirm changes match stated intent
@@ -58,7 +58,6 @@ For CRITICAL severity findings, validate with multiple reasoning paths:
 
 ## Quality Control
 
-- **Understand-First**: Comprehend code logic before modifying
 - **Adapt**: Adjust examples to context, verify before applying
 - **Verify-APIs**: Use only documented, existing APIs and features
 - **Positive**: State what to do, not what to avoid
@@ -74,7 +73,6 @@ For CRITICAL severity findings, validate with multiple reasoning paths:
 - **Optional-Explicit**: Distinguish None (absent) vs empty string/list (present but empty)
 - **Coercion-Document**: If auto-coercing types, document behavior. Prefer explicit over magic
 - **Error-Rich**: Validation errors should be specific, actionable, field-level
-- **Test-Edge**: Generate tests for: empty, None, whitespace, boundaries, state combinations
 
 ## Status Updates
 

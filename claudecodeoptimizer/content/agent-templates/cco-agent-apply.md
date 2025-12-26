@@ -293,6 +293,44 @@ For each file in the files list, verify:
 
 **Verification confirms execution:** Report includes bytes written (e.g., "1557 bytes") to prove write occurred.
 
+## Export Operations
+
+**Export rules to external formats for use outside Claude Code.**
+
+### Export Mode
+
+| Format | Output | Description |
+|--------|--------|-------------|
+| `AGENTS.md` | `./.github/AGENTS.md` | GitHub Copilot compatible |
+| `CLAUDE.md` | `./CLAUDE.md` | Claude Code root instructions |
+| `cursor` | `./.cursor/rules/*.mdc` | Cursor IDE compatible |
+| `raw` | `./cco-rules/` | Plain markdown copies |
+
+### Export Flow
+
+```javascript
+// Step 1: Read all rules
+rules = Glob("${targetDir}/rules/cco/*.md")
+content = rules.map(file => Read(file))
+
+// Step 2: Transform for target format
+transformed = transform(content, format)
+
+// Step 3: Write to output location
+Write(outputPath, transformed)
+```
+
+### Format Transformations
+
+| Format | Transformation |
+|--------|---------------|
+| `AGENTS.md` | Concatenate with H1 headers, add frontmatter |
+| `CLAUDE.md` | Concatenate with H1 headers |
+| `cursor` | Split by H2, create separate `.mdc` files |
+| `raw` | Copy as-is |
+
+**Export does NOT modify source rules.** Read-only operation on `rules/cco/`.
+
 ## Verification & Cascade
 
 **All verification runs in parallel.** If any fails → cascade fix → re-verify until clean.
