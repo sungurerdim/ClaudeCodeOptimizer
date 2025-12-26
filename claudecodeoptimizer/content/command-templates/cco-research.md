@@ -113,10 +113,10 @@ parsedQuery = parseQuery(userQuery)
 ### 3.1 Local Codebase Search (Always)
 
 ```javascript
-// Parallel pattern searches in ONE message
-Glob("**/*.{py,ts,js,md}")
-Grep("{query_keywords}", { output_mode: "content", "-C": 3 })
-Read("{relevant_files}")
+// Parallel pattern searches in ONE message (use project-specific extensions from context)
+Glob("**/*.{py,ts,js,go,rs,md}")
+Grep(queryKeywords, { output_mode: "content", "-C": 3 })
+Read(relevantFiles)
 ```
 
 ### 3.2 Web Search (Parallel by Source Type)
@@ -126,14 +126,14 @@ Read("{relevant_files}")
 Task("cco-agent-research", `
   scope: search
   query: "${parsedQuery.concepts} official documentation ${parsedQuery.date}"
-  allowed_domains: [docs.*, official.*, *.io/docs]
+  allowed_domains: [docs.*, official.*, *.io/docs, *.dev/docs]
 `, { model: "haiku", run_in_background: depth === "deep" })
 
 // T2: GitHub & Changelogs
 Task("cco-agent-research", `
   scope: search
   query: "${parsedQuery.concepts} github changelog release notes"
-  allowed_domains: [github.com, gitlab.com]
+  allowed_domains: [github.com, gitlab.com, bitbucket.org]
 `, { model: "haiku", run_in_background: depth === "deep" })
 
 // T3: Technical Blogs (Standard+)
@@ -149,7 +149,7 @@ if (depth !== "quick") {
   Task("cco-agent-research", `
     scope: search
     query: "${parsedQuery.concepts} stackoverflow discussion"
-    allowed_domains: [stackoverflow.com, reddit.com, dev.to]
+    allowed_domains: [stackoverflow.com, reddit.com, dev.to, hashnode.com]
   `, { model: "haiku", run_in_background: true })
 }
 
@@ -158,7 +158,7 @@ if (parsedQuery.mode === "security") {
   Task("cco-agent-research", `
     scope: search
     query: "${parsedQuery.concepts} CVE vulnerability advisory"
-    allowed_domains: [nvd.nist.gov, cve.mitre.org, snyk.io]
+    allowed_domains: [nvd.nist.gov, cve.mitre.org, snyk.io, github.com/advisories]
   `, { model: "haiku" })
 }
 ```

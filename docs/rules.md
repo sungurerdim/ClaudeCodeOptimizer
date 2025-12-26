@@ -9,8 +9,8 @@
 | Core | 62 | `~/.claude/rules/cco/core.md` | Always active |
 | AI | 39 | `~/.claude/rules/cco/ai.md` | Always active |
 | Tools | 106 | pip package | Built into commands/agents |
-| Adaptive | 1365 | pip package → `.claude/rules/cco/` | Per-project |
-| **Total** | **1572** | | |
+| Adaptive | 1439 | pip package → `.claude/rules/cco/` | Per-project |
+| **Total** | **1646** | | |
 
 **Counting:** `grep -c "^- \*\*" <file>` for all rule files
 
@@ -29,7 +29,7 @@
 │  ON-DEMAND (Tool + Adaptive Rules)                              │
 ├─────────────────────────────────────────────────────────────────┤
 │  Tools        - CCO command/agent workflow mechanisms           │
-│  Adaptive     - Project-specific rules template (812 rules)     │
+│  Adaptive     - Project-specific rules template (1439 rules)    │
 │  Location:    pip package (NOT in rules/ to avoid context bloat)│
 │  Access via:  cco-install --cat rules/cco-{tools,adaptive}.md   │
 ├─────────────────────────────────────────────────────────────────┤
@@ -477,7 +477,7 @@
 
 | Category | Trigger |
 |----------|---------|
-| Language | Manifest files detected (26 languages: Python, TS, JS, Go, Rust, Java, Kotlin, Swift, C#, Ruby, PHP, Elixir, Gleam, Scala, Zig, Dart, C, C++, Lua, Haskell, F#, OCaml, R, Julia, Perl) |
+| Language | Manifest files detected (27 languages: Python, TS, JS, Go, Rust, Java, Kotlin, Swift, C#, Ruby, PHP, Elixir, Gleam, Scala, Zig, Dart, C, C++, Lua, Haskell, F#, OCaml, R, Julia, Perl, Clojure, Erlang) |
 | Security | D:PII, D:Regulated, Scale:Large, Compliance:* |
 | Compliance | User-selected (SOC2, HIPAA, PCI, GDPR, CCPA, ISO27001, FedRAMP, DORA, HITRUST) |
 | Scale | 100+ users (cumulative tiers) |
@@ -501,8 +501,8 @@
 | Real-time | WebSocket/SSE detected (cumulative tiers) |
 | Testing | User-selected (cumulative tiers) |
 | Observability | SLA-based (cumulative tiers) |
-| DEP:* | 55 dependency categories (GPU, Audio, Video, HTTP, ORM, Auth, Cache, AI Agents, CDC, etc.) |
-| Infra:* | 3 infrastructure categories (API Gateway, Service Mesh, Build Cache) |
+| DEP:* | 57 dependency categories (GPU, Audio, Video, HTTP, ORM, Auth, Cache, AI Agents, CDC, etc.) |
+| Infra:* | 11 infrastructure categories (API Gateway, Service Mesh, Build Cache, Container, K8s, Serverless, Edge, WASM, etc.) |
 
 ### Full Adaptive Rules List
 
@@ -585,7 +585,7 @@
 **PCI-DSS**
 
 - **PCI-Card-Mask**: Mask PAN (show only last 4 digits)
-- **PCI-No-Storage**: Never store CVV/CVC
+- **PCI-No-Storage**: Store only masked payment data, exclude CVV/CVC
 - **PCI-Network-Seg**: Network segmentation for cardholder data
 - **PCI-Key-Mgmt**: Cryptographic key management procedures
 
@@ -1099,7 +1099,7 @@
 - **Nonce-Manage**: Track nonce locally
 - **Event-Listen**: Indexed event handling
 - **Testnet-First**: Test before mainnet
-- **Key-Security**: Never in code/logs
+- **Key-Security**: Store keys in vault or env vars only
 
 **DEP:ARVR**
 *Trigger: aframe, three-xr, babylonxr, unity-xr, unreal-vr, webxr*
@@ -1124,7 +1124,7 @@
 
 - **Algorithm-Modern**: AES-256-GCM, ChaCha20
 - **Key-Rotation**: Scheduled rotation
-- **IV-Unique**: Never reuse IV/nonce
+- **IV-Unique**: Generate unique IV/nonce for each operation
 - **Timing-Safe**: Constant-time compare
 - **Key-Derivation**: Argon2/scrypt, not MD5/SHA1
 

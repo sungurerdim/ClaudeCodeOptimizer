@@ -98,8 +98,8 @@ if (manifestVersion !== changelogVersion) {
 ### 1.3: Leftover Markers [WARN]
 
 ```javascript
-// Check for TODO, FIXME, etc.
-markersTask = Bash("grep -rn 'TODO\\|FIXME\\|XXX\\|HACK' --include='*.py' --include='*.ts' --include='*.js' || true")
+// Check for leftover code markers (TODO, FIXME, XXX, HACK)
+markersTask = Bash("grep -rn 'TODO\\|FIXME\\|XXX\\|HACK' --include='*.py' --include='*.ts' --include='*.js' --include='*.go' || true")
 ```
 
 ### 1.4: SemVer Review [WARN]

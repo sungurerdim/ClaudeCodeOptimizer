@@ -1,6 +1,6 @@
 # CCO Trigger Registry
 *SSOT for all detection patterns. Referenced by cco-adaptive.md and cco-agent-analyze.md.*
-*Updated: 2025-12-21*
+*Updated: 2025-12-26*
 
 ## Purpose
 
@@ -12,6 +12,20 @@ This file defines ALL trigger patterns for project detection. Other files refere
 ## Usage
 
 In other CCO files, reference triggers as `{trigger_name}` where `trigger_name` matches definitions below.
+
+## Trigger Categories
+
+Triggers serve different purposes:
+
+| Category | Purpose | Example | Referenced in Rules |
+|----------|---------|---------|---------------------|
+| **Primary** | Directly triggers rule sections | `{react_deps}`, `{nextjs_config}` | Yes |
+| **Detection** | Used by agent for language/framework identification | `{py_manifest}`, `{ts_config}` | No (agent-only) |
+| **Confidence** | Boosts detection confidence, not primary triggers | `{py_lock}`, `{js_lock}` | No (agent-only) |
+| **Modern** | Version-specific feature detection | `{react_modern}`, `{svelte_modern}` | No (agent-internal) |
+| **Patterns** | Code pattern matching for deeper analysis | `{rest_patterns}`, `{graphql_decorators}` | No (agent-internal) |
+
+**Note:** Only "Primary" triggers appear in cco-adaptive.md rule sections. Other categories are used by cco-agent-analyze for detection logic.
 
 ---
 
@@ -866,6 +880,20 @@ These generic placeholders are used across multiple categories. Each category se
 | Trigger | Values |
 |---------|--------|
 | `{blockchain_deps}` | `web3`, `ethers`, `hardhat`, `brownie`, `ape`, `solana-py`, `anchor`, `foundry`, `wagmi`, `viem` |
+
+### Smart Contract EVM (DEP:SmartContractEVM)
+| Trigger | Values |
+|---------|--------|
+| `{solidity_deps}` | `@openzeppelin/contracts`, `solmate`, `solady`, `forge-std`, `ds-test` |
+| `{solidity_config}` | `foundry.toml`, `hardhat.config.js`, `hardhat.config.ts`, `remappings.txt` |
+| `{solidity_ext}` | `*.sol` |
+
+### Smart Contract Solana (DEP:SmartContractSolana)
+| Trigger | Values |
+|---------|--------|
+| `{anchor_deps}` | `anchor-lang`, `anchor-spl`, `solana-program`, `solana-sdk`, `spl-token` |
+| `{anchor_config}` | `Anchor.toml`, `Xargo.toml` |
+| `{anchor_ext}` | `programs/**/*.rs` (with `use anchor_lang::prelude::*`) |
 
 ### Crypto (DEP:Crypto)
 | Trigger | Values |
