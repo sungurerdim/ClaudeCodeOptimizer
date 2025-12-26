@@ -532,25 +532,41 @@
 
         <div class="tabs">
             <button class="tab active" data-tab="projects">📁 Projects</button>
+            <button class="tab" data-tab="output">📂 Output</button>
             <button class="tab" data-tab="results">📊 Results</button>
             <button class="tab" data-tab="summary">📈 Summary</button>
         </div>
 
         <!-- Projects Panel -->
         <div id="projects-panel" class="panel active">
-            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px;">
-                <div>
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; flex-wrap: wrap; gap: 10px;">
+                <div style="display: flex; gap: 20px; align-items: center;">
                     <label class="checkbox-label">
-                        <input type="checkbox" id="select-all" onchange="toggleSelectAll()">
-                        Select All
+                        <input type="checkbox" id="select-all-vanilla" onchange="toggleSelectAllVariant('vanilla')">
+                        All Vanilla
+                    </label>
+                    <label class="checkbox-label">
+                        <input type="checkbox" id="select-all-cco" onchange="toggleSelectAllVariant('cco')">
+                        All CCO
                     </label>
                 </div>
                 <button class="primary" onclick="runSelectedTests()" id="run-btn">
-                    ▶️ Run Selected Tests
+                    ▶️ Run Selected
                 </button>
             </div>
             <div id="projects-grid" class="projects-grid">
                 <div class="empty-state">Loading projects...</div>
+            </div>
+        </div>
+
+        <!-- Output Panel -->
+        <div id="output-panel" class="panel">
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px;">
+                <h3>Output Folders</h3>
+                <button onclick="loadOutput()">🔄 Refresh</button>
+            </div>
+            <div id="output-grid" class="projects-grid">
+                <div class="empty-state">Loading output folders...</div>
             </div>
         </div>
 
@@ -629,7 +645,8 @@
 
     <script>
         let projects = [];
-        let selectedProjects = new Set();
+        // Track variant selection per project: { project_id: { vanilla: bool, cco: bool } }
+        let projectVariants = {};
         let currentPrompt = '';
         let systemReady = false;
 
@@ -641,8 +658,10 @@
                 tab.classList.add('active');
                 document.getElementById(`${tab.dataset.tab}-panel`).classList.add('active');
 
-                // Refresh data when switching to results or summary tabs
-                if (tab.dataset.tab === 'results') {
+                // Refresh data when switching tabs
+                if (tab.dataset.tab === 'output') {
+                    loadOutput();
+                } else if (tab.dataset.tab === 'results') {
                     loadResults();
                 } else if (tab.dataset.tab === 'summary') {
                     loadSummary();
@@ -655,6 +674,12 @@
             try {
                 const resp = await fetch('/api/projects');
                 projects = await resp.json();
+                // Initialize variants for new projects
+                projects.forEach(p => {
+                    if (!projectVariants[p.id]) {
+                        projectVariants[p.id] = { vanilla: false, cco: false };
+                    }
+                });
                 renderProjects();
             } catch (e) {
                 document.getElementById('projects-grid').innerHTML =
@@ -669,53 +694,82 @@
                 return;
             }
 
-            grid.innerHTML = projects.map(p => `
-                <div class="project-card ${selectedProjects.has(p.id) ? 'selected' : ''}" id="card-${p.id}">
+            grid.innerHTML = projects.map(p => {
+                const v = projectVariants[p.id] || { vanilla: false, cco: false };
+                const hasSelection = v.vanilla || v.cco;
+                return `
+                <div class="project-card ${hasSelection ? 'selected' : ''}" id="card-${p.id}">
                     <div class="project-header">
                         <div class="project-title">${p.name}</div>
                         <span class="complexity-badge ${p.complexity.toLowerCase()}">${p.complexity}</span>
                     </div>
                     <div class="categories">
-                        ${p.categories.map(c => `<span class="category">${c}</span>`).join('')}
+                        ${p.categories.slice(0, 3).map(c => `<span class="category">${c}</span>`).join('')}
                     </div>
-                    <div class="project-actions">
-                        <label class="checkbox-label">
-                            <input type="checkbox" ${selectedProjects.has(p.id) ? 'checked' : ''}
-                                   onchange="toggleProject('${p.id}')">
-                            Select
+                    <div class="project-actions" style="flex-wrap: wrap;">
+                        <label class="checkbox-label" style="color: var(--vanilla);">
+                            <input type="checkbox" ${v.vanilla ? 'checked' : ''}
+                                   onchange="toggleVariant('${p.id}', 'vanilla')">
+                            Vanilla
                         </label>
-                        <button onclick="showPrompt('${p.id}')">View Prompt</button>
+                        <label class="checkbox-label" style="color: var(--cco);">
+                            <input type="checkbox" ${v.cco ? 'checked' : ''}
+                                   onchange="toggleVariant('${p.id}', 'cco')">
+                            CCO
+                        </label>
+                        <button onclick="showPrompt('${p.id}')" style="margin-left: auto;">📄 Prompt</button>
                     </div>
                 </div>
-            `).join('');
+            `}).join('');
         }
 
-        function toggleProject(id) {
-            if (selectedProjects.has(id)) {
-                selectedProjects.delete(id);
-            } else {
-                selectedProjects.add(id);
+        function toggleVariant(projectId, variant) {
+            if (!projectVariants[projectId]) {
+                projectVariants[projectId] = { vanilla: false, cco: false };
             }
+            projectVariants[projectId][variant] = !projectVariants[projectId][variant];
             renderProjects();
             updateRunButton();
         }
 
-        function toggleSelectAll() {
-            const checked = document.getElementById('select-all').checked;
-            if (checked) {
-                projects.forEach(p => selectedProjects.add(p.id));
-            } else {
-                selectedProjects.clear();
-            }
+        function toggleSelectAllVariant(variant) {
+            const checkbox = document.getElementById(`select-all-${variant}`);
+            const checked = checkbox.checked;
+            projects.forEach(p => {
+                if (!projectVariants[p.id]) {
+                    projectVariants[p.id] = { vanilla: false, cco: false };
+                }
+                projectVariants[p.id][variant] = checked;
+            });
             renderProjects();
             updateRunButton();
+        }
+
+        function getSelectedCount() {
+            let count = 0;
+            for (const id in projectVariants) {
+                if (projectVariants[id].vanilla || projectVariants[id].cco) {
+                    count++;
+                }
+            }
+            return count;
         }
 
         function updateRunButton() {
             const btn = document.getElementById('run-btn');
-            btn.textContent = `Run ${selectedProjects.size} Test${selectedProjects.size !== 1 ? 's' : ''}`;
-            btn.disabled = selectedProjects.size === 0 || !systemReady;
-            if (!systemReady && selectedProjects.size > 0) {
+            const count = getSelectedCount();
+            const variants = [];
+            let vanillaCount = 0, ccoCount = 0;
+            for (const id in projectVariants) {
+                if (projectVariants[id].vanilla) vanillaCount++;
+                if (projectVariants[id].cco) ccoCount++;
+            }
+            if (vanillaCount > 0) variants.push(`${vanillaCount} vanilla`);
+            if (ccoCount > 0) variants.push(`${ccoCount} cco`);
+
+            btn.textContent = count > 0 ? `▶️ Run ${variants.join(' + ')}` : '▶️ Run Selected';
+            btn.disabled = count === 0 || !systemReady;
+            if (!systemReady && count > 0) {
                 btn.title = 'Install ccbox first';
             } else {
                 btn.title = '';
@@ -748,23 +802,41 @@
 
         // Run tests
         async function runSelectedTests() {
-            if (selectedProjects.size === 0) return;
+            if (getSelectedCount() === 0) return;
 
             const btn = document.getElementById('run-btn');
             btn.disabled = true;
-            btn.textContent = 'Starting...';
+            btn.textContent = '⏳ Starting...';
+
+            // Build request with per-project variant selection
+            const projectsToRun = [];
+            for (const id in projectVariants) {
+                const v = projectVariants[id];
+                if (v.vanilla || v.cco) {
+                    projectsToRun.push({
+                        project_id: id,
+                        run_vanilla: v.vanilla,
+                        run_cco: v.cco
+                    });
+                }
+            }
 
             try {
                 const resp = await fetch('/api/run', {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify({
-                        project_ids: Array.from(selectedProjects),
+                        projects: projectsToRun,
                         model: 'opus'
                     })
                 });
 
                 const data = await resp.json();
+                if (data.count === 0) {
+                    alert('No variants selected');
+                    updateRunButton();
+                    return;
+                }
                 pollStatus(data.run_id);
             } catch (e) {
                 alert('Error starting tests: ' + e.message);
@@ -1457,12 +1529,169 @@
             }
         }
 
+        // ============== Output Folders ==============
+
+        async function loadOutput() {
+            try {
+                const resp = await fetch('/api/output');
+                const folders = await resp.json();
+                renderOutput(folders);
+            } catch (e) {
+                document.getElementById('output-grid').innerHTML =
+                    '<div class="empty-state">Error loading output folders</div>';
+            }
+        }
+
+        function renderOutput(folders) {
+            const grid = document.getElementById('output-grid');
+            if (folders.length === 0) {
+                grid.innerHTML = '<div class="empty-state"><h3>No Output Yet</h3><p>Run some benchmarks to generate output</p></div>';
+                return;
+            }
+
+            // Group folders by project
+            const byProject = {};
+            folders.forEach(f => {
+                if (!byProject[f.project_id]) {
+                    byProject[f.project_id] = { vanilla: null, cco: null };
+                }
+                byProject[f.project_id][f.variant] = f;
+            });
+
+            let html = '';
+            for (const projectId in byProject) {
+                const p = byProject[projectId];
+                const hasVanilla = p.vanilla !== null;
+                const hasCco = p.cco !== null;
+                const canCompare = hasVanilla && hasCco;
+
+                html += `
+                <div class="project-card">
+                    <div class="project-header">
+                        <div class="project-title">${projectId}</div>
+                        ${canCompare ? '<button class="primary" onclick="compareProject(\'' + projectId + '\')">⚖️ Compare</button>' : ''}
+                    </div>
+                    <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-top: 10px;">
+                        <div style="background: var(--bg-tertiary); padding: 10px; border-radius: 6px; ${hasVanilla ? 'border-left: 3px solid var(--vanilla);' : 'opacity: 0.5;'}">
+                            <div style="font-weight: bold; color: var(--vanilla); margin-bottom: 5px;">Vanilla</div>
+                            ${hasVanilla ? `
+                                <div style="font-size: 12px; color: var(--text-muted);">
+                                    Score: <strong>${p.vanilla.score ?? '-'}</strong><br>
+                                    Files: ${p.vanilla.file_count}<br>
+                                    ${p.vanilla.modified ? formatDate(p.vanilla.modified) : ''}
+                                </div>
+                                <button onclick="deleteOutput('${p.vanilla.folder}')" style="margin-top: 5px; font-size: 11px;">🗑️ Delete</button>
+                            ` : '<div style="font-size: 12px;">Not run yet</div>'}
+                        </div>
+                        <div style="background: var(--bg-tertiary); padding: 10px; border-radius: 6px; ${hasCco ? 'border-left: 3px solid var(--cco);' : 'opacity: 0.5;'}">
+                            <div style="font-weight: bold; color: var(--cco); margin-bottom: 5px;">CCO</div>
+                            ${hasCco ? `
+                                <div style="font-size: 12px; color: var(--text-muted);">
+                                    Score: <strong>${p.cco.score ?? '-'}</strong><br>
+                                    Files: ${p.cco.file_count}<br>
+                                    ${p.cco.modified ? formatDate(p.cco.modified) : ''}
+                                </div>
+                                <button onclick="deleteOutput('${p.cco.folder}')" style="margin-top: 5px; font-size: 11px;">🗑️ Delete</button>
+                            ` : '<div style="font-size: 12px;">Not run yet</div>'}
+                        </div>
+                    </div>
+                </div>
+                `;
+            }
+
+            grid.innerHTML = html;
+        }
+
+        async function deleteOutput(folderName) {
+            if (!confirm(`Delete output folder: ${folderName}?`)) return;
+
+            try {
+                await fetch(`/api/output/${folderName}`, { method: 'DELETE' });
+                loadOutput();
+            } catch (e) {
+                alert('Failed to delete: ' + e.message);
+            }
+        }
+
+        async function compareProject(projectId) {
+            try {
+                const resp = await fetch(`/api/compare/${projectId}`, { method: 'POST' });
+                const result = await resp.json();
+
+                if (result.error) {
+                    alert(result.error);
+                    return;
+                }
+
+                // Show comparison in modal
+                renderComparisonModal(projectId, result);
+                document.getElementById('detail-modal').classList.add('active');
+            } catch (e) {
+                alert('Comparison failed: ' + e.message);
+            }
+        }
+
+        function renderComparisonModal(projectId, result) {
+            document.getElementById('modal-title').textContent = `${projectId} - Comparison`;
+
+            const comp = result.comparison;
+            let html = `
+                <div style="margin-bottom: 20px; text-align: center;">
+                    <span class="verdict ${getVerdictClass(result.verdict)}" style="font-size: 16px; padding: 8px 16px;">${result.verdict}</span>
+                    <div style="margin-top: 10px; font-size: 18px;">
+                        <span style="color: var(--cco);">CCO: ${result.cco_score}</span>
+                        <span style="margin: 0 10px;">vs</span>
+                        <span style="color: var(--vanilla);">Vanilla: ${result.vanilla_score}</span>
+                        <span style="margin-left: 20px; color: ${result.score_difference > 0 ? 'var(--success)' : result.score_difference < 0 ? 'var(--error)' : 'var(--text-muted)'}">
+                            (${result.score_difference > 0 ? '+' : ''}${result.score_difference})
+                        </span>
+                    </div>
+                </div>
+            `;
+
+            // Detailed comparisons
+            if (comp && comp.comparisons && comp.comparisons.length > 0) {
+                html += `
+                    <h4 style="margin: 20px 0 15px;">Detailed Metrics</h4>
+                    <table class="results-table">
+                        <thead>
+                            <tr><th>Metric</th><th>CCO</th><th>Vanilla</th><th>Winner</th></tr>
+                        </thead>
+                        <tbody>
+                `;
+
+                let currentCat = '';
+                for (const c of comp.comparisons) {
+                    if (c.category !== currentCat) {
+                        currentCat = c.category;
+                        html += `<tr><td colspan="4" style="background: var(--bg); font-weight: bold;">${currentCat}</td></tr>`;
+                    }
+
+                    const ccoClass = c.winner === 'cco' ? 'winner' : c.winner === 'vanilla' ? 'loser' : '';
+                    const vanClass = c.winner === 'vanilla' ? 'winner' : c.winner === 'cco' ? 'loser' : '';
+
+                    html += `
+                        <tr>
+                            <td>${c.name}</td>
+                            <td class="metric-value ${ccoClass}">${c.cco}</td>
+                            <td class="metric-value ${vanClass}">${c.vanilla}</td>
+                            <td>${c.winner === 'tie' ? '-' : c.winner.toUpperCase()}</td>
+                        </tr>
+                    `;
+                }
+                html += '</tbody></table>';
+            }
+
+            document.getElementById('modal-body').innerHTML = html;
+        }
+
         // ============== Initialize ==============
 
         async function init() {
             await checkSystemStatus();
             await checkRunningTests();
             loadProjects();
+            loadOutput();
             loadResults();
             loadSummary();
             loadActivity();

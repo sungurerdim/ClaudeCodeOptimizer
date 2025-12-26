@@ -817,6 +817,7 @@ def compare_metrics(cco: Metrics, vanilla: Metrics) -> dict[str, Any]:
 
     cco_score = calculate_overall_score(cco)
     vanilla_score = calculate_overall_score(vanilla)
+    diff = cco_score - vanilla_score
 
     return {
         "comparisons": comparisons,
@@ -825,5 +826,27 @@ def compare_metrics(cco: Metrics, vanilla: Metrics) -> dict[str, Any]:
         "ties": ties,
         "cco_score": round(cco_score, 1),
         "vanilla_score": round(vanilla_score, 1),
-        "score_diff": round(cco_score - vanilla_score, 1),
+        "score_diff": round(diff, 1),
+        "verdict": calculate_verdict(diff),
     }
+
+
+def calculate_verdict(score_diff: float) -> str:
+    """Calculate verdict based on score difference (SSOT for verdict logic).
+
+    Args:
+        score_diff: CCO score - Vanilla score (positive = CCO better)
+
+    Returns:
+        Human-readable verdict string
+    """
+    if score_diff >= 15:
+        return "Strong CCO Advantage"
+    elif score_diff >= 5:
+        return "Moderate CCO Advantage"
+    elif score_diff >= -5:
+        return "Mixed Results"
+    elif score_diff >= -15:
+        return "Moderate Vanilla Advantage"
+    else:
+        return "Strong Vanilla Advantage"

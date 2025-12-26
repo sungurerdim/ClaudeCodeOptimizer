@@ -27,7 +27,13 @@ from datetime import datetime
 from pathlib import Path
 from typing import Any
 
-from .metrics import CodeAnalyzer, Metrics, calculate_overall_score, compare_metrics
+from .metrics import (
+    CodeAnalyzer,
+    Metrics,
+    calculate_overall_score,
+    calculate_verdict,
+    compare_metrics,
+)
 
 # Configure logger for detailed debugging
 logger = logging.getLogger("cco-benchmark.executor")
@@ -460,10 +466,15 @@ class TestExecutor:
                         buffer.append(line)
                         activity.update_output()
 
-                    # Log real-time output
+                    # Log real-time output (truncation handled by ColoredFormatter)
                     line_stripped = line.rstrip()
                     if line_stripped:
-                        logger.info(f"[{variant.upper()}] [{stream_name}] {line_stripped}")
+                        msg = f"[{variant.upper()}] [{stream_name}] {line_stripped}"
+                        # stderr = error, stdout = info (ccbox should not write info to stderr)
+                        if stream_name == "stderr":
+                            logger.error(msg)
+                        else:
+                            logger.info(msg)
 
                     # Call progress callback
                     if self.progress_callback:
@@ -587,6 +598,9 @@ class TestExecutor:
         1. CCO rules are configured and persisted
         2. Container restarts with rules in context
 
+        Uses streaming mode with inactivity-based timeout - the process continues
+        as long as output is being produced.
+
         Returns:
             Dict with success, time, command, exit_code, stdout, stderr, error
         """
@@ -615,53 +629,89 @@ class TestExecutor:
 
         logger.info(f"[CCO Setup] Starting: {cmd_str}")
         logger.info(f"[CCO Setup] Project dir: {project_dir}")
+        logger.info(f"[CCO Setup] Using inactivity timeout: {self.setup_timeout}s")
 
         try:
-            result = subprocess.run(
-                cmd,
-                capture_output=True,
-                text=True,
-                timeout=self.setup_timeout,
-                env={**os.environ, "CLAUDE_MODEL": model},
-                encoding="utf-8",
-                errors="replace",
+            # Use streaming mode with inactivity-based timeout
+            exit_code, stdout, stderr, activity = self._run_with_streaming(
+                cmd=cmd,
+                project_dir=project_dir,
+                variant="cco-setup",
+                timeout=float(self.setup_timeout),
+                env={"CLAUDE_MODEL": model},
             )
 
             elapsed = time.time() - start_time
 
             # Save setup logs with detailed info
-            log_content = f"""CCO Setup Log
+            log_content = f"""CCO Setup Log (Streaming Mode)
 {"=" * 60}
 Command: {cmd_str}
-Exit Code: {result.returncode}
+Exit Code: {exit_code}
 Duration: {elapsed:.2f}s
 Project Dir: {project_dir}
 {"=" * 60}
 
+ACTIVITY TRACKING:
+- Total output lines: {activity.total_output_lines}
+- Stall warnings: {activity.stall_warnings}
+- Final stall state: {activity.is_stalled}
+{"=" * 60}
+
 STDOUT:
-{result.stdout or "(empty)"}
+{stdout or "(empty)"}
 
 {"=" * 60}
 STDERR:
-{result.stderr or "(empty)"}
+{stderr or "(empty)"}
 """
             (project_dir / "_cco_setup.log").write_text(log_content, encoding="utf-8")
-            (project_dir / "_cco_setup_stdout.log").write_text(result.stdout, encoding="utf-8")
-            (project_dir / "_cco_setup_stderr.log").write_text(result.stderr, encoding="utf-8")
+            (project_dir / "_cco_setup_stdout.log").write_text(stdout, encoding="utf-8")
+            (project_dir / "_cco_setup_stderr.log").write_text(stderr, encoding="utf-8")
 
-            if result.returncode != 0:
-                error_msg = _parse_ccbox_error(result.stdout, result.stderr, result.returncode)
+            # Handle FileNotFoundError (exit_code is None and no output)
+            if exit_code is None and not stdout and not stderr:
+                error_msg = f"ccbox command not found: {self.ccbox_cmd}"
+                logger.error(f"[CCO Setup] {error_msg}")
+                return {
+                    "success": False,
+                    "time": elapsed,
+                    "command": cmd_str,
+                    "exit_code": None,
+                    "stdout": "",
+                    "stderr": "",
+                    "error": error_msg,
+                }
+
+            # Handle timeout (exit_code is None but we have output)
+            if exit_code is None:
+                error_msg = f"Setup inactivity timeout after {self.setup_timeout}s without output"
+                logger.error(f"[CCO Setup] TIMEOUT: {error_msg}")
+                logger.error(f"[CCO Setup] Partial stdout:\n{_truncate(stdout, 1000)}")
+                logger.error(f"[CCO Setup] Partial stderr:\n{_truncate(stderr, 1000)}")
+                return {
+                    "success": False,
+                    "time": elapsed,
+                    "command": cmd_str,
+                    "exit_code": None,
+                    "stdout": stdout,
+                    "stderr": stderr,
+                    "error": error_msg,
+                }
+
+            if exit_code != 0:
+                error_msg = _parse_ccbox_error(stdout, stderr, exit_code)
                 logger.error(f"[CCO Setup] FAILED: {error_msg}")
-                logger.error(f"[CCO Setup] Full stdout:\n{_truncate(result.stdout, 2000)}")
-                logger.error(f"[CCO Setup] Full stderr:\n{_truncate(result.stderr, 2000)}")
+                logger.error(f"[CCO Setup] Full stdout:\n{_truncate(stdout, 2000)}")
+                logger.error(f"[CCO Setup] Full stderr:\n{_truncate(stderr, 2000)}")
 
                 return {
                     "success": False,
                     "time": elapsed,
                     "command": cmd_str,
-                    "exit_code": result.returncode,
-                    "stdout": result.stdout,
-                    "stderr": result.stderr,
+                    "exit_code": exit_code,
+                    "stdout": stdout,
+                    "stderr": stderr,
                     "error": error_msg,
                 }
 
@@ -671,54 +721,11 @@ STDERR:
                 "time": elapsed,
                 "command": cmd_str,
                 "exit_code": 0,
-                "stdout": result.stdout,
-                "stderr": result.stderr,
+                "stdout": stdout,
+                "stderr": stderr,
                 "error": "",
             }
 
-        except subprocess.TimeoutExpired as e:
-            elapsed = time.time() - start_time
-            error_msg = f"Setup timeout after {self.setup_timeout}s"
-            logger.error(f"[CCO Setup] TIMEOUT: {error_msg}")
-            # Try to get partial output (may be str or bytes depending on subprocess config)
-            stdout = ""
-            stderr = ""
-            if e.stdout:
-                stdout = (
-                    e.stdout
-                    if isinstance(e.stdout, str)
-                    else e.stdout.decode("utf-8", errors="replace")
-                )
-            if e.stderr:
-                stderr = (
-                    e.stderr
-                    if isinstance(e.stderr, str)
-                    else e.stderr.decode("utf-8", errors="replace")
-                )
-            if stdout or stderr:
-                logger.error(f"[CCO Setup] Partial stdout:\n{_truncate(stdout, 1000)}")
-                logger.error(f"[CCO Setup] Partial stderr:\n{_truncate(stderr, 1000)}")
-            return {
-                "success": False,
-                "time": elapsed,
-                "command": cmd_str,
-                "exit_code": None,
-                "stdout": stdout,
-                "stderr": stderr,
-                "error": error_msg,
-            }
-        except FileNotFoundError:
-            error_msg = f"ccbox command not found: {self.ccbox_cmd}"
-            logger.error(f"[CCO Setup] {error_msg}")
-            return {
-                "success": False,
-                "time": 0,
-                "command": cmd_str,
-                "exit_code": None,
-                "stdout": "",
-                "stderr": "",
-                "error": error_msg,
-            }
         except Exception as e:
             elapsed = time.time() - start_time
             import traceback
@@ -742,6 +749,9 @@ STDERR:
         This runs in a separate ccbox invocation to apply security, quality,
         and best-practice fixes to the generated code.
 
+        Uses streaming mode with inactivity-based timeout - the process continues
+        as long as output is being produced.
+
         Returns:
             Dict with success, time, command, exit_code, stdout, stderr, error
         """
@@ -762,48 +772,84 @@ STDERR:
 
         logger.info(f"[CCO Optimize] Starting: {cmd_str}")
         logger.info(f"[CCO Optimize] Project dir: {project_dir}")
+        logger.info(f"[CCO Optimize] Using inactivity timeout: {self.setup_timeout}s")
 
         try:
-            result = subprocess.run(
-                cmd,
-                capture_output=True,
-                text=True,
-                timeout=self.setup_timeout,  # Use same timeout as setup
-                env={**os.environ, "CLAUDE_MODEL": model},
-                encoding="utf-8",
-                errors="replace",
+            # Use streaming mode with inactivity-based timeout
+            exit_code, stdout, stderr, activity = self._run_with_streaming(
+                cmd=cmd,
+                project_dir=project_dir,
+                variant="cco-optimize",
+                timeout=float(self.setup_timeout),
+                env={"CLAUDE_MODEL": model},
             )
 
             elapsed = time.time() - start_time
 
             # Save optimize logs
-            log_content = f"""CCO Optimize Log
+            log_content = f"""CCO Optimize Log (Streaming Mode)
 {"=" * 60}
 Command: {cmd_str}
-Exit Code: {result.returncode}
+Exit Code: {exit_code}
 Duration: {elapsed:.2f}s
 Project Dir: {project_dir}
 {"=" * 60}
 
+ACTIVITY TRACKING:
+- Total output lines: {activity.total_output_lines}
+- Stall warnings: {activity.stall_warnings}
+- Final stall state: {activity.is_stalled}
+{"=" * 60}
+
 STDOUT:
-{result.stdout or "(empty)"}
+{stdout or "(empty)"}
 
 {"=" * 60}
 STDERR:
-{result.stderr or "(empty)"}
+{stderr or "(empty)"}
 """
             (project_dir / "_cco_optimize.log").write_text(log_content, encoding="utf-8")
 
-            if result.returncode != 0:
-                error_msg = _parse_ccbox_error(result.stdout, result.stderr, result.returncode)
+            # Handle FileNotFoundError (exit_code is None and no output)
+            if exit_code is None and not stdout and not stderr:
+                error_msg = f"ccbox command not found: {self.ccbox_cmd}"
+                logger.warning(f"[CCO Optimize] {error_msg} (non-blocking)")
+                return {
+                    "success": False,
+                    "time": elapsed,
+                    "command": cmd_str,
+                    "exit_code": None,
+                    "stdout": "",
+                    "stderr": "",
+                    "error": error_msg,
+                }
+
+            # Handle timeout (exit_code is None but we have output)
+            if exit_code is None:
+                error_msg = (
+                    f"Optimize inactivity timeout after {self.setup_timeout}s without output"
+                )
+                logger.warning(f"[CCO Optimize] TIMEOUT (non-blocking): {error_msg}")
+                return {
+                    "success": False,
+                    "time": elapsed,
+                    "command": cmd_str,
+                    "exit_code": None,
+                    "stdout": stdout,
+                    "stderr": stderr,
+                    "error": error_msg,
+                }
+
+            if exit_code != 0:
+                error_msg = _parse_ccbox_error(stdout, stderr, exit_code)
                 logger.warning(f"[CCO Optimize] FAILED (non-blocking): {error_msg}")
                 return {
                     "success": False,
                     "time": elapsed,
                     "command": cmd_str,
-                    "exit_code": result.returncode,
-                    "stdout": result.stdout,
-                    "stderr": result.stderr,
+                    "exit_code": exit_code,
+                    "stdout": stdout,
+                    "stderr": stderr,
                     "error": error_msg,
                 }
 
@@ -813,38 +859,11 @@ STDERR:
                 "time": elapsed,
                 "command": cmd_str,
                 "exit_code": 0,
-                "stdout": result.stdout,
-                "stderr": result.stderr,
+                "stdout": stdout,
+                "stderr": stderr,
                 "error": "",
             }
 
-        except subprocess.TimeoutExpired as e:
-            elapsed = time.time() - start_time
-            error_msg = f"Optimize timeout after {self.setup_timeout}s"
-            logger.warning(f"[CCO Optimize] TIMEOUT (non-blocking): {error_msg}")
-            stdout = ""
-            stderr = ""
-            if e.stdout:
-                stdout = (
-                    e.stdout
-                    if isinstance(e.stdout, str)
-                    else e.stdout.decode("utf-8", errors="replace")
-                )
-            if e.stderr:
-                stderr = (
-                    e.stderr
-                    if isinstance(e.stderr, str)
-                    else e.stderr.decode("utf-8", errors="replace")
-                )
-            return {
-                "success": False,
-                "time": elapsed,
-                "command": cmd_str,
-                "exit_code": None,
-                "stdout": stdout,
-                "stderr": stderr,
-                "error": error_msg,
-            }
         except Exception as e:
             elapsed = time.time() - start_time
             error_msg = f"{type(e).__name__}: {e}"
@@ -867,6 +886,8 @@ STDERR:
         Creates an isolated directory, cd's into it, and runs ccbox.
         ccbox will mount this directory and generate code there.
 
+        Uses fixed folder names (no timestamps) and cleans before each run.
+
         For CCO variant, runs three phases:
         1. Setup phase: Run /cco-config --auto to configure CCO rules
         2. Test phase: Run the actual benchmark prompt
@@ -874,9 +895,14 @@ STDERR:
         """
         logger.info(f"[{variant.upper()}] Starting project: {config.id}")
 
-        # Create isolated project directory
-        timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
-        project_dir = self.output_base / f"{config.id}_{variant}_{timestamp}"
+        # Fixed folder name (no timestamp) - same test always uses same folder
+        project_dir = self.output_base / f"{config.id}_{variant}"
+
+        # Clean existing folder before run
+        if project_dir.exists():
+            logger.info(f"[{variant.upper()}] Cleaning existing folder: {project_dir}")
+            shutil.rmtree(project_dir)
+
         project_dir.mkdir(parents=True, exist_ok=True)
         logger.info(f"[{variant.upper()}] Output dir: {project_dir}")
 
@@ -1208,18 +1234,9 @@ STDERR:
                 "score_diff": cco_result.score - vanilla_result.score,
             }
 
-        # Determine verdict
+        # Determine verdict using SSOT function
         diff = comparison["score_diff"]
-        if diff >= 15:
-            verdict = "Strong CCO Advantage"
-        elif diff >= 5:
-            verdict = "Moderate CCO Advantage"
-        elif diff >= -5:
-            verdict = "Mixed Results"
-        elif diff >= -15:
-            verdict = "Moderate Vanilla Advantage"
-        else:
-            verdict = "Strong Vanilla Advantage"
+        verdict = calculate_verdict(diff)
 
         return BenchmarkResult(
             project_id=config.id,

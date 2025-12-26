@@ -19,6 +19,7 @@ from .metrics import (
     FunctionInfo,
     Metrics,
     calculate_overall_score,
+    calculate_verdict,
     compare_metrics,
 )
 
@@ -35,6 +36,7 @@ __all__ = [
     "ResultsManager",
     "TestExecutor",
     "calculate_overall_score",
+    "calculate_verdict",
     "check_dependencies",
     "compare_metrics",
     "discover_projects",
