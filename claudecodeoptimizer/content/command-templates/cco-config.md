@@ -10,25 +10,28 @@ allowed-tools: Read(*), Write(*), Edit(*), Bash(cco-install:*), Task(*), TodoWri
 
 ## Args
 
-- `--auto` or `--unattended`: Skip all questions and visual steps, use recommended defaults
-  - Context: Setup/Update
-  - Statusline: Skip (keep unchanged)
-  - Permissions: Skip (keep unchanged)
-  - Thinking: Enabled
-  - Budget: AI-recommended based on project complexity
-  - Output: AI-recommended based on project complexity
-  - Data: Public
-  - Compliance: None
-  - **Skip visual steps:** No summary display, no detection report, direct file writes only
+- `--auto` or `--unattended`: Fully unattended mode for CI/CD and benchmarks
+  - **No questions asked** - uses optimal defaults
+  - **No progress output** - silent execution
+  - **Only final summary** - single status line at end
+  - Defaults:
+    - Context: Setup/Update
+    - Statusline: Skip (keep unchanged)
+    - Permissions: Balanced (auto-approve read + lint/test)
+    - Thinking: Enabled
+    - Budget: AI-recommended based on project complexity
+    - Output: AI-recommended based on project complexity
+    - Data: Public
+    - Compliance: None
 - `--target-dir <path>`: Write config files to specified directory instead of `.claude`
   - Example: `--target-dir .claude` (explicit default)
   - Example: `--target-dir /tmp/project/.claude` (absolute path)
   - Useful for: benchmarks, testing, custom project layouts
 
 **Usage:**
-- `/cco-config --auto`
-- `/cco-config --target-dir .claude`
-- `/cco-config --auto --target-dir /custom/path/.claude`
+- `/cco-config --auto` - Silent setup with optimal defaults
+- `/cco-config --auto --target-dir .claude` - Silent setup to specific directory
+- `/cco-config --target-dir /custom/path/.claude` - Interactive with custom target
 
 ## Context
 
@@ -52,15 +55,23 @@ if (targetDirMatch) {
 }
 
 if (isUnattended) {
-  // Skip to Step-1 with defaults, no questions
-  // Statusline/Permissions = "Skip" to keep unchanged (non-invasive)
+  // SILENT MODE: No TodoWrite, no progress output, no intermediate messages
+  // Skip Q1, Q2 - proceed directly with defaults
+
   setupConfig = {
     context: "Setup/Update",
-    statusline: "Skip",
-    permissions: "Skip",
+    statusline: "Skip",           // Non-invasive: keep unchanged
+    permissions: "Balanced",       // Full capability: auto-approve read + lint/test
     thinking: "Enabled"
   }
-  // Skip Q1, Q2 - proceed directly to detection and apply
+
+  // Execute silently:
+  // 1. Run detection (no output)
+  // 2. Generate rules (no output)
+  // 3. Write files (no output)
+  // 4. Show ONLY final summary line
+
+  // → Jump directly to Step-1 detection, skip all UX output
 }
 ```
 
@@ -76,16 +87,20 @@ if (isUnattended) {
 
 ---
 
-## Progress Tracking [CRITICAL]
+## Progress Tracking [SKIP IF --auto]
+
+**If `--auto` flag: Skip TodoWrite entirely. Silent execution.**
 
 ```javascript
-TodoWrite([
-  { content: "Step-1: Pre-detect (background)", status: "in_progress", activeForm: "Running pre-detection" },
-  { content: "Step-2: Setup configuration", status: "pending", activeForm: "Getting setup options" },
-  { content: "Step-3: Context details", status: "pending", activeForm: "Getting context details" },
-  { content: "Step-4: Apply configuration", status: "pending", activeForm: "Applying configuration" },
-  { content: "Step-5: Show report", status: "pending", activeForm: "Showing final report" }
-])
+if (!isUnattended) {
+  TodoWrite([
+    { content: "Step-1: Pre-detect (background)", status: "in_progress", activeForm: "Running pre-detection" },
+    { content: "Step-2: Setup configuration", status: "pending", activeForm: "Getting setup options" },
+    { content: "Step-3: Context details", status: "pending", activeForm: "Getting context details" },
+    { content: "Step-4: Apply configuration", status: "pending", activeForm: "Applying configuration" },
+    { content: "Step-5: Show report", status: "pending", activeForm: "Showing final report" }
+  ])
+}
 ```
 
 ---
@@ -628,9 +643,22 @@ Task("cco-agent-apply", `
 
 ---
 
-## Step-5: Report [SKIP IF --auto]
+## Step-5: Report
 
-**If `--auto` flag: Skip this step entirely. No visual output.**
+### Unattended Mode Output [--auto]
+
+**Single line summary only:**
+
+```javascript
+if (isUnattended) {
+  // ONLY output - single status line
+  console.log(`cco-config: OK | Files: ${filesWritten} | Rules: ${rulesGenerated}`)
+  // No tables, no details, no "restart" message
+  return
+}
+```
+
+### Interactive Mode Output
 
 ```
 ## Configuration Complete
@@ -646,7 +674,7 @@ Status: OK | Applied: {files_written} | Declined: 0 | Failed: 0
 Restart Claude Code to apply new rules.
 ```
 
-### Files Written Detail
+### Files Written Detail (Interactive only)
 | File | Action |
 |------|--------|
 | ${targetDir}/rules/cco/context.md | {Created\|Updated} |
@@ -656,8 +684,8 @@ Restart Claude Code to apply new rules.
 
 ### Validation
 ```
-[x] Report displayed (or skipped if --auto)
-[x] All todos marked completed
+[x] Report displayed (single line if --auto, full if interactive)
+[x] All todos marked completed (skipped if --auto)
 → Done
 ```
 
