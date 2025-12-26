@@ -558,7 +558,7 @@ async def execute_tests_background(run_id: str, project_ids: list[str], model: s
             running_tests[key]["status"] = "running_cco"
             running_tests[key]["current_variant"] = "cco"
             running_tests[key]["progress"] = 60
-            log_activity(f"[CCO] Starting: {config.name} (setup + test phases)", "info")
+            log_activity(f"[CCO] Starting: {config.name} (setup + test + optimize)", "info")
 
             cco_result = await asyncio.to_thread(executor.run_project, config, "cco", model)
 
