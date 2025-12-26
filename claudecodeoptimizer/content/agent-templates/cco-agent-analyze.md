@@ -253,20 +253,20 @@ Config scope handles project detection and rule selection. **Two-phase execution
 **Complexity Calculation [CRITICAL for AI recommendations]:**
 
 ```javascript
-// Count lines of code (approximate)
-loc = Bash("find . -name '*.{py,ts,js,go,rs,java}' -not -path './node_modules/*' -not -path './.git/*' | xargs wc -l 2>/dev/null | tail -1 | awk '{print $1}'")
+// Count lines of code (approximate) - adjust extensions per detected language
+loc = Bash("find . \\( -name '*.py' -o -name '*.ts' -o -name '*.js' -o -name '*.go' -o -name '*.rs' -o -name '*.java' \\) -not -path './node_modules/*' -not -path './.git/*' | xargs wc -l 2>/dev/null | tail -1 | awk '{print $1}'")
 
 // Count source files
-files = Bash("find . -name '*.{py,ts,js,go,rs,java}' -not -path './node_modules/*' -not -path './.git/*' | wc -l")
+files = Bash("find . \\( -name '*.py' -o -name '*.ts' -o -name '*.js' -o -name '*.go' -o -name '*.rs' -o -name '*.java' \\) -not -path './node_modules/*' -not -path './.git/*' | wc -l")
 
 // Count detected frameworks
 frameworks = detections.frontend.length + (detections.api ? 1 : 0) + detections.infra.length
 
 // Check for tests
-hasTests = Glob("**/test*/**") || Glob("**/*test*.{py,ts,js}") || Glob("**/*spec*.{ts,js}")
+hasTests = Glob("**/test*/**") || Glob("**/test_*.py") || Glob("**/*_test.py") || Glob("**/*.test.ts") || Glob("**/*.spec.ts")
 
 // Check for CI
-hasCi = Glob(".github/workflows/*") || Glob(".gitlab-ci.yml") || Glob("Jenkinsfile")
+hasCi = Glob(".github/workflows/*") || Glob(".gitlab-ci.yml") || Glob("Jenkinsfile") || Glob(".circleci/config.yml")
 
 // Check for monorepo
 isMonorepo = Glob("packages/*/package.json") || Glob("apps/*/package.json") || Glob("pnpm-workspace.yaml") || Glob("nx.json") || Glob("turbo.json")

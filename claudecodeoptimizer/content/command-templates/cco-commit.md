@@ -71,7 +71,7 @@ Cannot commit: {n} conflict(s) detected. Resolve first.
 
 ```javascript
 // Phase 1: Blocking checks (instant, parallel)
-Bash("grep -rn '{secret_patterns}' --include='*.{extensions}' || true")  // Secrets
+Bash("grep -rn 'api_key\\|password\\|secret\\|token\\|credential' --include='*.py' --include='*.ts' --include='*.js' --include='*.env' || true")  // Secrets
 Bash("find . -size +{max_size} -not -path './.git/*' 2>/dev/null || true")  // Large files
 
 // Phase 2: Code quality (parallel) - Commands from context.md Operational.Tools
@@ -317,7 +317,8 @@ for (const commit of commitPlan.commits) {
     message += `\n\nBREAKING CHANGE: ${commit.breakingDescription}`
   }
 
-  message += `\n\n🤖 Generated with [Claude Code](https://claude.com/claude-code)\n\nCo-Authored-By: Claude <noreply@anthropic.com>`
+  // Append Claude Code signature with current model name
+  message += `\n\n🤖 Generated with [Claude Code](https://claude.com/claude-code)\n\nCo-Authored-By: ${currentModelName} <noreply@anthropic.com>`
 
   // Create commit using HEREDOC
   Bash(`git commit -m "$(cat <<'EOF'\n${message}\nEOF\n)"`)
@@ -332,8 +333,10 @@ for (const commit of commitPlan.commits) {
 
 🤖 Generated with [Claude Code](https://claude.com/claude-code)
 
-Co-Authored-By: Claude <noreply@anthropic.com>
+Co-Authored-By: Claude Opus 4.5 <noreply@anthropic.com>
 ```
+
+**Note:** Use the current active model name (e.g., Claude Opus 4.5, Claude Sonnet 4, Claude Haiku 3.5).
 
 ### Title Rules [CRITICAL]
 

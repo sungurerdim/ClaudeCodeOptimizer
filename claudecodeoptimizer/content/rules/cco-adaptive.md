@@ -697,7 +697,7 @@ paths: **/*.py
 - **Path-Validate**: Validate file paths, prevent traversal (../, symlinks)
 - **Enum-Validate**: Validate enum values server-side, don't trust client
 - **SSRF-Prevent**: Validate URLs, block internal IPs, use allowlists for external calls
-- **Deserialize-Safe**: Never deserialize untrusted data. Use safe alternatives (JSON over pickle/yaml)
+- **Deserialize-Safe**: Deserialize only trusted data using safe formats (JSON, not pickle/yaml)
 - **JWT-Validate**: Validate signature, issuer, audience, expiry. Use asymmetric keys for public APIs
 - **Upload-Validate**: Validate file type, size, content. Store outside webroot, generate new filenames
 
@@ -724,7 +724,7 @@ paths: **/*.py
 
 ### PCI-DSS
 - **PCI-Card-Mask**: Mask PAN (show only last 4 digits)
-- **PCI-No-Storage**: Never store CVV/CVC
+- **PCI-No-Storage**: Store only masked payment data, exclude CVV/CVC
 - **PCI-Network-Seg**: Network segmentation for cardholder data
 - **PCI-Key-Mgmt**: Cryptographic key management procedures
 
@@ -1395,6 +1395,10 @@ When generating tests, always include:
 - **Use-Hook**: Use use() hook for promises and context (React 19+)
 - **Suspense-Boundary**: Wrap async components in Suspense with fallback
 - **Actions**: Use Server Actions for mutations (Next.js 14+)
+- **React-Compiler**: Let React Compiler handle memoization automatically (React 19+)
+- **Ref-As-Prop**: Pass ref as regular prop, no forwardRef needed (React 19+)
+- **Form-Actions**: Use form action prop with useActionState for form handling (React 19+)
+- **Optimistic-UI**: Use useOptimistic for instant UI feedback during mutations
 
 ### Vue (Frontend:Vue)
 **Trigger:** vue deps, *.vue
@@ -1410,10 +1414,15 @@ When generating tests, always include:
 ### Angular (Frontend:Angular)
 **Trigger:** @angular deps, *.component.ts
 
-- **Standalone-Components**: Standalone components (Angular 14+)
+- **Standalone-Components**: Standalone components as default (Angular 17+)
 - **Signals-Reactive**: Signals for reactive state (Angular 16+)
 - **OnPush-Strategy**: OnPush change detection for performance
 - **Lazy-Modules**: Lazy load feature modules
+- **Zoneless-Detection**: Use zoneless change detection for performance (Angular 18+)
+- **Input-Signal**: Use input() and model() signal functions (Angular 17.1+)
+- **Output-Function**: Use output() function instead of @Output (Angular 17.1+)
+- **Deferrable-Views**: Use @defer for lazy loading components (Angular 17+)
+- **Control-Flow**: Use @if/@for/@switch over *ngIf/*ngFor (Angular 17+)
 
 ### Svelte (Frontend:Svelte)
 **Trigger:** svelte deps, *.svelte
@@ -1422,6 +1431,11 @@ When generating tests, always include:
 - **Store-Subscribe**: Auto-subscribe with $ prefix (stores) or $state (runes)
 - **Transitions-Native**: Use built-in transitions
 - **Actions-Reusable**: Reusable actions for DOM behavior
+- **Runes-State**: Use $state for reactive state, $derived for computed (Svelte 5+)
+- **Runes-Effect**: Use $effect for side effects instead of reactive statements (Svelte 5+)
+- **Props-Rune**: Use $props() instead of export let for props (Svelte 5+)
+- **Snippets**: Use {#snippet} for reusable markup within components (Svelte 5+)
+- **Event-Handlers**: Use onclick instead of on:click syntax (Svelte 5+)
 
 ### Solid (Frontend:Solid)
 **Trigger:** solid-js deps
@@ -1846,7 +1860,7 @@ When generating tests, always include:
 - **LTS-Version**: Use LTS versions
 - **Engine-Lock**: Lock engine version in package.json
 - **ESM-Prefer**: ESM over CommonJS
-- **Event-Loop**: Avoid blocking event loop
+- **Event-Loop**: Use async I/O for event loop operations
 
 ### Bun (R:Bun)
 **Trigger:** bun.lockb, bunfig.toml
@@ -2638,13 +2652,60 @@ When generating tests, always include:
 - **Anti-Block**: Rotate IPs/proxies if needed
 
 ### DEP:Blockchain
-**Trigger:** web3, ethers, hardhat, brownie, ape, solana-py
+**Trigger:** web3, ethers, hardhat, brownie, ape, solana-py, foundry, anchor
 
-- **Gas-Estimate**: Pre-estimate gas
-- **Nonce-Manage**: Track nonce locally
-- **Event-Listen**: Indexed event handling
-- **Testnet-First**: Test before mainnet
-- **Key-Security**: Never in code/logs
+- **Gas-Estimate**: Pre-estimate gas before transactions
+- **Nonce-Manage**: Track nonce locally, handle race conditions
+- **Event-Listen**: Indexed event handling with proper filtering
+- **Testnet-First**: Test on testnet before mainnet deployment
+- **Key-Security**: Store keys in vault or env vars only
+- **Fork-Test**: Test against mainnet forks for realistic conditions
+- **Multi-Sig**: Use multi-sig for admin operations
+- **Tx-Simulation**: Simulate transactions before broadcasting
+
+### DEP:SmartContractEVM
+**Trigger:** {solidity_deps}, foundry, hardhat, forge, anvil
+
+*Smart contract development for EVM chains (Ethereum, Polygon, Arbitrum, etc.)*
+
+- **CEI-Pattern**: Checks-Effects-Interactions pattern for all external calls
+- **Reentrancy-Guard**: Use ReentrancyGuard for state-changing functions with external calls
+- **Overflow-Safe**: Use Solidity 0.8+ for built-in overflow checks
+- **Access-Control**: Use OpenZeppelin AccessControl or Ownable patterns
+- **Pausable**: Implement emergency pause mechanism for critical functions
+- **Upgradeable-Proxy**: Use transparent or UUPS proxy for upgradeability when needed
+- **Gas-Optimize**: Optimize storage layout, use calldata over memory for read-only
+- **Events-Complete**: Emit events for all state changes
+- **NatSpec-Docs**: Document all public functions with NatSpec comments
+- **Slither-Check**: Run Slither static analysis before deployment
+- **Fuzz-Test**: Use Foundry fuzzing for edge case testing
+- **Invariant-Test**: Define and test protocol invariants
+- **Formal-Verify**: Use Certora or Halmos for critical functions
+- **Oracle-Validate**: Validate oracle data freshness and bounds
+- **Flash-Loan-Safe**: Protect against flash loan attacks in DeFi
+- **Front-Run-Mitigate**: Use commit-reveal or other anti-frontrunning patterns
+- **Audit-Ready**: Follow audit checklist before external audit
+
+### DEP:SmartContractSolana
+**Trigger:** {anchor_deps}, solana-sdk, solana-program, anchor-lang
+
+*Smart contract development for Solana (Anchor framework)*
+
+- **Account-Validate**: Validate all accounts with Anchor constraints
+- **Signer-Check**: Verify signer authority for privileged operations
+- **PDA-Derive**: Validate PDA derivation with correct seeds and bump
+- **Type-Discriminator**: Use Anchor discriminators for account type safety
+- **CPI-Reload**: Call reload() after CPI to refresh account state
+- **CPI-Depth**: Respect CPI depth limit (max 4 levels)
+- **Compute-Budget**: Stay within 200K compute units per instruction
+- **Checked-Math**: Use checked_* operations for all arithmetic
+- **Overflow-Release**: Set overflow-checks = true in Cargo.toml release profile
+- **Account-Close**: Properly close accounts to reclaim rent
+- **Rent-Exempt**: Ensure accounts are rent-exempt
+- **Zero-Copy**: Use zero_copy for large accounts (>10KB)
+- **Seeds-Unique**: Use unique, deterministic seeds for PDAs
+- **Authority-Pattern**: Single authority account for admin operations
+- **Upgrade-Authority**: Secure program upgrade authority
 
 ### DEP:ARVR
 **Trigger:** openxr, webxr, ar-foundation, arvr-toolkit
@@ -2669,7 +2730,7 @@ When generating tests, always include:
 
 - **Algorithm-Modern**: AES-256-GCM, ChaCha20
 - **Key-Rotation**: Scheduled rotation
-- **IV-Unique**: Never reuse IV/nonce
+- **IV-Unique**: Generate unique IV/nonce for each operation
 - **Timing-Safe**: Constant-time compare
 - **Key-Derivation**: Argon2/scrypt, not MD5/SHA1
 
@@ -2760,7 +2821,7 @@ When generating tests, always include:
 - **Version-Order**: Sequential version numbering
 - **Reversible-Prefer**: Prefer reversible migrations (up/down)
 - **Atomic-Migration**: Single atomic transaction per migration
-- **No-Lock-Long**: Avoid long-running locks on large tables
+- **Lock-Short**: Use short-duration locks, batch large table operations
 - **Data-Separate**: Data migrations separate from schema changes
 - **Test-Migration**: Test migrations on production-like data
 
@@ -2785,10 +2846,10 @@ When generating tests, always include:
 - **Default-Safe**: Safe defaults when flag service unavailable
 
 ### DEP:GraphQLTools
-**Trigger:** {graphql_tool_deps}
+**Trigger:** {graphql_tools_deps}
 
 - **Schema-First**: Schema-first design with code generation
-- **Resolver-Efficient**: Avoid N+1 with DataLoader pattern
+- **Resolver-Efficient**: Use DataLoader pattern to batch database queries
 - **Depth-Limit**: Limit query depth to prevent abuse
 - **Cost-Analysis**: Query cost analysis before execution
 - **Persisted-Queries**: Use persisted queries in production
@@ -2805,7 +2866,7 @@ When generating tests, always include:
 - **Fallback-Content**: Fallback for missing translations
 
 ### DEP:IncidentMgmt
-**Trigger:** {incident_mgmt_deps}
+**Trigger:** {incident_deps}
 
 - **Alert-Severity**: Clear severity levels (P0-P3)
 - **Escalation-Path**: Defined escalation paths
