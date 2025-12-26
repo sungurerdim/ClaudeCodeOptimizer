@@ -16,6 +16,39 @@
 - **Incremental**: Complete one step fully before starting next
 - **Verify**: Confirm changes match stated intent
 
+## Agent Delegation
+
+Specialized agents for complex tasks. **Choose based on complexity, not task type.**
+
+| Complexity | Tool | Example |
+|------------|------|---------|
+| **Simple** | WebSearch/WebFetch direct | Single URL, quick fact, known source |
+| **Complex** | `cco-agent-research` | Multiple sources, synthesis, reliability critical |
+
+### When to Delegate
+
+| Pattern | Agent | Trigger |
+|---------|-------|---------|
+| Multi-source research | `cco-agent-research` | 3+ sources needed |
+| Dependency/CVE audit | `cco-agent-research` | Security implications |
+| Conflicting information | `cco-agent-research` | Need resolution |
+
+### vs Default Tools
+
+| Aspect | WebSearch/WebFetch | cco-agent-research |
+|--------|-------------------|-------------------|
+| Source scoring | None | CRAAP+ (T1-T6 tiers) |
+| Reliability | No verification | Cross-verification required |
+| Contradictions | Not tracked | Explicit resolution |
+| Confidence | Implicit | Scored (HIGH/MEDIUM/LOW) |
+| Freshness | Not weighted | Currency scoring (+10/-15) |
+| Bias detection | None | Vendor/promo penalties |
+| Parallel search | Manual | Auto (4 strategies) |
+| Saturation | Manual stop | Auto (3× theme repeat) |
+
+**When to use default:** Single quick lookup, known-good URL, simple fact check.
+**When to delegate:** Research requiring synthesis, multiple sources, reliability matters.
+
 ## Decision Making
 
 - **Challenge**: Question solutions that seem too perfect
