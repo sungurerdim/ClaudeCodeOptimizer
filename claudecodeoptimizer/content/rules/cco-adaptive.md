@@ -684,6 +684,7 @@ paths: **/*.py
 - **Input-Bounds**: Set max lengths, max sizes, max items on ALL user inputs. Prevent resource exhaustion
 - **Input-Whitespace**: Normalize whitespace (strip, reject whitespace-only). Common injection vector
 - **SQL-Safe**: Parameterized queries only, no string concatenation
+- **Command-Safe**: Never shell=True with user input. Use subprocess with list args, escape with shlex.quote
 - **XSS-Prevent**: Sanitize output + CSP headers
 - **CSRF-Protect**: CSRF tokens for state-changing operations
 - **Auth-Verify**: Verify authentication on every request
@@ -1215,6 +1216,7 @@ When generating tests, always include:
 - **Pagination**: Cursor-based pagination for lists
 - **OpenAPI-Spec**: Synced spec with examples
 - **Error-Format**: Consistent format, no stack traces in prod
+- **Contract-Minimal**: Expose only what consumers need. Small, focused endpoints over catch-all APIs
 
 ### GraphQL Extension
 **Trigger:** API:GraphQL

@@ -12,6 +12,7 @@
 - **Idempotent**: Same operation, same result, safe to retry
 - **Least-Astonishment**: Behavior matches user expectations
 - **Defensive-Default**: Assume bad input, validate anyway. Cost of validation << cost of bug
+- **Depend-Abstract**: High-level modules depend on abstractions, not implementations. Enables testing and flexibility
 
 ## Code Quality
 
