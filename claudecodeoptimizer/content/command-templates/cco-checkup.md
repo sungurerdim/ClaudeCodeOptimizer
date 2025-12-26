@@ -111,6 +111,8 @@ if (phases === "Both") {
 - Audit (writes) uses Opus for accuracy (50-75% fewer tool errors)
 - Both complete in ~same time as single command
 
+**Model Rationale:** Opus for audit ensures reliable code modifications with minimal retries.
+
 ### Validation
 ```
 [x] Selected tasks launched in parallel
@@ -182,6 +184,6 @@ Duration: {n}s
 ## Rules
 
 1. **Parallel-first** - Launch health + audit in single message
-2. **Model strategy** - Haiku for health, Sonnet for audit
+2. **Model strategy** - Haiku for health (read-only), Opus for audit (writes)
 3. **Delegate to sub-commands** - Reuse sub-command logic
 4. **Aggregate results** - Merge outputs for summary

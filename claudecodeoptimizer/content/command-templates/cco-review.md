@@ -54,7 +54,7 @@ TodoWrite([
 
 ## Step-1: Setup [Q1 + BACKGROUND ANALYSIS]
 
-**Start analysis in background while asking Q1:**
+**Start analysis and dependency check in background while asking Q1:**
 
 ```javascript
 // Dynamic model selection based on flags and context
@@ -79,6 +79,22 @@ analysisTask = Task("cco-agent-analyze", `
     scores: { security, tests, techDebt, cleanliness, overall }
   }
 `, { model: analyzeModel, run_in_background: true })
+
+// Dependency version check (parallel with analysis)
+depTask = Task("cco-agent-research", `
+  scope: dependency
+
+  Check for outdated dependencies:
+  1. Read pyproject.toml, package.json, Cargo.toml, go.mod (whichever exist)
+  2. For each dependency, fetch latest stable version from registry
+  3. Compare current vs latest, classify update risk
+
+  Return: {
+    outdated: [{ package, current, latest, updateType, risk, breaking }],
+    security: [{ package, advisory, severity }],
+    summary: { total, outdated, security, upToDate }
+  }
+`, { model: "haiku", run_in_background: true })
 ```
 
 **Ask Q1 with combined settings:**
@@ -101,7 +117,8 @@ AskUserQuestion([
       { label: focusLabel("architecture", "Architecture"), description: "Dependency graph, coupling, patterns, layers" },
       { label: focusLabel("quality", "Code Quality"), description: "Complexity, code smells, type coverage" },
       { label: focusLabel("testing", "Testing & DX"), description: "Test coverage, developer experience" },
-      { label: focusLabel("best-practices", "Best Practices"), description: "Execution patterns, tool usage, efficiency" }
+      { label: focusLabel("best-practices", "Best Practices"), description: "Execution patterns, tool usage, efficiency" },
+      { label: focusLabel("dependencies", "Dependencies"), description: "Outdated packages, security advisories, version risks" }
     ],
     multiSelect: true
   },
@@ -132,12 +149,29 @@ AskUserQuestion([
 **Collect results and filter by selected focus:**
 
 ```javascript
-// Wait for background analysis
+// Wait for background analysis (parallel)
 agentResponse = await TaskOutput(analysisTask.id)
+depResponse = await TaskOutput(depTask.id)
 
 // Filter by user-selected focus areas
 selectedScopes = config.focusAreas.map(f => f.toLowerCase().replace(" & ", "-").replace(" ", "-"))
 findings = agentResponse.findings.filter(f => selectedScopes.includes(f.scope))
+
+// Add dependency findings if selected
+if (selectedScopes.includes("dependencies")) {
+  depFindings = depResponse.outdated.map(d => ({
+    id: `DEP-${d.package}`,
+    scope: "dependencies",
+    severity: d.security ? "P0" : d.breaking ? "P1" : d.updateType === "major" ? "P2" : "P3",
+    title: `${d.package}: ${d.current} → ${d.latest}`,
+    location: "pyproject.toml|package.json",
+    description: d.breaking ? "Breaking changes in update" : "Update available",
+    recommendation: `Update to ${d.latest}`,
+    effort: d.breaking ? "HIGH" : "LOW",
+    impact: d.security ? "HIGH" : "MEDIUM"
+  }))
+  findings = [...findings, ...depFindings]
+}
 ```
 
 **Display foundation assessment:**
@@ -167,6 +201,7 @@ Status: {foundation}
 | Complexity (avg) | {metrics.complexity} | {complexity > 60 ? "⚠️" : "✓"} |
 | Test Coverage | {metrics.testCoverage}% | {coverage < 60 ? "⚠️" : "✓"} |
 | Circular Deps | {circularCount} | {circularCount > 0 ? "⚠️" : "✓"} |
+| Dependencies | {depResponse.summary.outdated}/{depResponse.summary.total} outdated | {depResponse.summary.security > 0 ? "⚠️" : "✓"} |
 
 Verdict: Foundation is {foundation} - {foundation === "SOUND" ? "incremental improvements" : "targeted fixes needed"}.
 ```
@@ -400,9 +435,10 @@ When `--quick` flag:
 
 ## Rules
 
-1. **Background analysis** - Start analysis while asking Q1
+1. **Background analysis** - Start analysis + dependency check while asking Q1
 2. **Single question** - Focus + Apply mode combined in Q1
 3. **80/20 filter** - Prioritize high-impact, low-effort items
 4. **Upfront decisions** - Apply mode determined in Q1
 5. **Evidence required** - Every recommendation needs file:line reference
 6. **Progressive display** - Show foundation assessment as it completes
+7. **Dependency audit** - Always check for outdated packages and security advisories
