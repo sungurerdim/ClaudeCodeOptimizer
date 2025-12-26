@@ -2,6 +2,7 @@
 
 // CCO Statusline - Minimal Mode
 // Single line: user · CC version · model · context
+// CLAUDE_VERSION env var → skip claude --version process
 
 const fs = require('fs');
 const { execSync } = require('child_process');
@@ -20,6 +21,7 @@ function c(text, color) {
 }
 
 function getClaudeCodeVersion() {
+  if (process.env.CLAUDE_VERSION) return process.env.CLAUDE_VERSION;
   try {
     const version = execSync('claude --version', { encoding: 'utf-8', stdio: ['pipe', 'pipe', 'ignore'], timeout: 3000 });
     const match = version.match(/(\d+\.\d+\.\d+)/);
