@@ -210,11 +210,11 @@ Complete list of all scopes with their purpose and coverage:
 | `/cco-config` | `config` | No | No |
 | `/cco-status` | `scan`, `trends` | No | No |
 | `/cco-optimize` | `security`, `quality`, `hygiene`, `best-practices` | Yes | `dependency` |
-| `/cco-review` | `architecture`, `best-practices` | Yes | No |
+| `/cco-review` | `architecture`, `quality`, `testing`, `best-practices` | Yes | `dependency` |
 | `/cco-commit` | `detect` (fallback) | No | No |
 | `/cco-research` | - | No | `full` |
-| `/cco-preflight` | (orchestrates optimize + review) | (orchestrates) | No |
-| `/cco-checkup` | (orchestrates status + optimize) | (orchestrates) | No |
+| `/cco-preflight` | (orchestrates optimize + review) | (orchestrates) | `dependency` |
+| `/cco-checkup` | (orchestrates status + optimize) | (orchestrates) | `dependency` |
 
 ---
 

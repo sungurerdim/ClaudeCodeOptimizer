@@ -7,6 +7,23 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [2.0.0] - Unreleased
 
+### Added
+- **Dependency audit in pre-flight** - Security advisories are blockers, outdated packages are warnings
+- **Dependency check in review** - Default focus option with version comparison and risk assessment
+- **Agent delegation rules** - Complexity-based delegation to cco-agent-research in cco-ai.md
+- **Targeted quality gates** - cco-commit runs format/lint/type on changed files only (~85% token reduction)
+- **Language-agnostic gates** - No hardcoded file extensions in quality checks
+- **DEP:SmartContractEVM rules** - Solidity/Foundry/Hardhat best practices (CEI, reentrancy, gas optimization)
+- **DEP:SmartContractSolana rules** - Anchor framework best practices (PDA, CPI, compute budget)
+- **DEP:Effect rules** - Effect-TS patterns (composition, Schema, Layers, Fibers)
+- **DEP:AISDK rules** - Vercel AI SDK patterns (streaming, tool calling, provider abstraction)
+- **DEP:FormValidation rules** - Conform, Valibot, Arktype integration patterns
+- **DEP:TanStack rules** - TanStack Router/Start patterns (file routes, loaders, search params)
+- **Infra:APIGateway rules** - Kong/Traefik/APISIX patterns
+- **Infra:ServiceMesh rules** - Istio/Linkerd patterns (mTLS, traffic split)
+- **Infra:BuildCache rules** - Turbo/Nx remote cache patterns
+- **398 trigger patterns** - Comprehensive detection coverage in cco-triggers.md
+
 ### Breaking Changes
 - **Command renames** - All commands renamed for consistency:
   - `/cco-tune` → `/cco-config`
