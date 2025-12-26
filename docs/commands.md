@@ -269,6 +269,7 @@ Commands learn from execution patterns:
 | Code Quality | Issues with file:line, complexity |
 | Testing & DX | Test coverage, developer experience |
 | Best Practices | Tool usage, execution patterns, efficiency |
+| Dependencies | Outdated packages, security advisories, version risks |
 
 ### Prioritization (80/20)
 
