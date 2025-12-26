@@ -1,8 +1,11 @@
 #!/usr/bin/env node
 
-// CCO Statusline - Full Mode (Optimized)
-// Minimal I/O: Uses git status --porcelain=v2 for most data in single call
-// Removed: project size (N file stats), line counts (file reads)
+// CCO Statusline - Full Mode
+// Strategy: Let git handle disk I/O (internal caching), minimize direct fs reads
+// - CLAUDE_VERSION env var → skip claude --version process
+// - git status: branch + changes + ahead/behind
+// - git describe: tag
+// - fs.statSync: only for .git dir detection
 
 const fs = require('fs');
 const path = require('path');
@@ -75,9 +78,16 @@ function execCmd(cmd) {
 }
 
 // ============================================================================
-// CLAUDE CODE VERSION (1 process, no disk I/O)
+// CLAUDE CODE VERSION (0-1 process)
+// Set CLAUDE_VERSION env var to skip process spawn:
+//   export CLAUDE_VERSION=$(claude --version 2>/dev/null | grep -oE '[0-9]+\.[0-9]+\.[0-9]+')
 // ============================================================================
 function getClaudeCodeVersion() {
+  // Check env var first (0 processes)
+  if (process.env.CLAUDE_VERSION) {
+    return process.env.CLAUDE_VERSION;
+  }
+  // Fallback to command (1 process)
   const version = execCmd('claude --version');
   if (version) {
     const match = version.match(/(\d+\.\d+\.\d+)/);
@@ -124,16 +134,42 @@ function formatContextUsage(contextWindow) {
 }
 
 // ============================================================================
-// GIT INFO - OPTIMIZED (2-3 processes instead of 13)
-// Uses git status --porcelain=v2 -b --show-stash for most data
+// GIT INFO
 // ============================================================================
+
+// Find git root by walking up directories (fs.statSync only, no file reads)
+function findGitRoot(startDir) {
+  let dir = startDir;
+  for (let i = 0; i < 20; i++) {
+    try {
+      const gitPath = path.join(dir, '.git');
+      const stat = fs.statSync(gitPath);
+      // .git can be file (worktree) or directory - both mean we found it
+      if (stat.isDirectory() || stat.isFile()) return { root: dir };
+    } catch { /* not found */ }
+    const parent = path.dirname(dir);
+    if (parent === dir) break;
+    dir = parent;
+  }
+  return null;
+}
+
+
 function getGitInfo() {
-  // Single command for: branch, upstream, ahead/behind, stash, all file changes
-  // Note: execCmd already uses stdio: 'ignore' for stderr (cross-platform)
-  const statusV2 = execCmd('git status --porcelain=v2 -b --show-stash');
+  // Find git root via fs stat (no file content reads)
+  const gitInfo = findGitRoot(process.cwd());
+  if (!gitInfo) return null;
+
+  const repoName = path.basename(gitInfo.root);
+
+  // Tag via git describe (1 process) - git handles disk caching
+  const releaseTag = execCmd('git describe --tags --abbrev=0') || null;
+
+  // Branch + changes + ahead/behind via git status (1 process)
+  const statusV2 = execCmd('git status --porcelain=v2 -b');
   if (!statusV2) return null;
 
-  let branch = null, upstream = null, ahead = 0, behind = 0;
+  let branch = null, ahead = 0, behind = 0;
   let mod = 0, add = 0, del = 0, ren = 0;
   let sMod = 0, sAdd = 0, sDel = 0, sRen = 0;
   let conflict = 0;
@@ -141,53 +177,44 @@ function getGitInfo() {
   for (const line of statusV2.split('\n')) {
     if (!line) continue;
 
-    // Header lines
+    // Branch from status header
     if (line.startsWith('# branch.head ')) {
       branch = line.substring(14);
-    } else if (line.startsWith('# branch.upstream ')) {
-      upstream = line.substring(18);
-    } else if (line.startsWith('# branch.ab ')) {
+    }
+    // Ahead/behind from status header
+    else if (line.startsWith('# branch.ab ')) {
       const match = line.match(/\+(\d+) -(\d+)/);
       if (match) {
         ahead = parseInt(match[1], 10);
         behind = parseInt(match[2], 10);
       }
     }
-    // Unmerged entries (conflicts)
+    // Unmerged (conflicts)
     else if (line.startsWith('u ')) {
       conflict++;
     }
-    // Changed entries: "1 XY ..."
+    // Changed entries
     else if (line.startsWith('1 ') || line.startsWith('2 ')) {
       const xy = line.substring(2, 4);
-      const idx = xy.charAt(0);  // Staged
-      const wt = xy.charAt(1);   // Working tree
+      const idx = xy.charAt(0);
+      const wt = xy.charAt(1);
 
-      // Working tree (unstaged)
       if (wt === 'M') mod++;
       if (wt === 'D') del++;
 
-      // Index (staged)
       if (idx === 'M') sMod++;
       if (idx === 'A') sAdd++;
       if (idx === 'D') sDel++;
       if (idx === 'R') sRen++;
       if (idx === 'C') sAdd++;
     }
-    // Untracked: "? path"
+    // Untracked
     else if (line.startsWith('? ')) {
       add++;
     }
   }
 
   if (!branch) return null;
-
-  // Repo name (1 additional call)
-  const gitRoot = execCmd('git rev-parse --show-toplevel');
-  const repoName = gitRoot ? path.basename(gitRoot) : null;
-
-  // Release tag (1 additional call)
-  const releaseTag = execCmd('git describe --tags --abbrev=0') || null;
 
   const hasStaged = sMod > 0 || sAdd > 0 || sDel > 0 || sRen > 0;
 
