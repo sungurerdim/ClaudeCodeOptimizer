@@ -57,6 +57,12 @@ TodoWrite([
 **Start analysis in background while asking Q1:**
 
 ```javascript
+// Dynamic model selection based on flags and context
+// --quick → haiku (speed), standard → haiku, large codebase (10K+) → sonnet (accuracy)
+const analyzeModel = args.includes("--quick") ? "haiku"
+  : (context.scale === "10K+" || context.scale === "Large") ? "sonnet"
+  : "haiku"
+
 // Start comprehensive analysis - will filter by focus after Q1
 analysisTask = Task("cco-agent-analyze", `
   scopes: ["architecture", "quality", "testing", "best-practices"]
@@ -72,7 +78,7 @@ analysisTask = Task("cco-agent-analyze", `
     metrics: { coupling, cohesion, complexity, testCoverage },
     scores: { security, tests, techDebt, cleanliness, overall }
   }
-`, { model: "haiku", run_in_background: true })
+`, { model: analyzeModel, run_in_background: true })
 ```
 
 **Ask Q1 with combined settings:**
@@ -137,12 +143,13 @@ findings = agentResponse.findings.filter(f => selectedScopes.includes(f.scope))
 **Display foundation assessment:**
 
 ```javascript
-// Calculate foundation status
+// Calculate foundation status using industry-standard thresholds
+// See "Threshold Rationale" in Reference section for justification
 function getFoundationStatus(metrics) {
   const issues = []
-  if (metrics.coupling > 70) issues.push("high coupling")
-  if (metrics.cohesion < 50) issues.push("low cohesion")
-  if (metrics.complexity > 60) issues.push("high complexity")
+  if (metrics.coupling > 70) issues.push("high coupling")    // >70% = tight deps, hard to change
+  if (metrics.cohesion < 50) issues.push("low cohesion")     // <50% = scattered responsibilities
+  if (metrics.complexity > 60) issues.push("high complexity") // >60 avg = maintenance burden
   return issues.length === 0 ? "SOUND" : "HAS ISSUES"
 }
 
@@ -257,7 +264,7 @@ if (toApply.length > 0) {
     Apply recommendations.
     Verify each change.
     Handle dependencies between fixes.
-  `)
+  `, { model: "opus" })  // Opus: 50-75% fewer tool errors
 }
 ```
 
@@ -360,8 +367,23 @@ When `--quick` flag:
 
 | Agent | Model | Reason |
 |-------|-------|--------|
-| cco-agent-analyze | Haiku | Fast, read-only analysis |
-| cco-agent-apply | Sonnet | Accurate code modifications |
+| cco-agent-analyze | Dynamic | --quick/standard → Haiku (fast); 10K+ scale → Sonnet (accuracy) |
+| cco-agent-apply | Opus | 50-75% fewer tool errors, coding SOTA |
+
+### Threshold Rationale
+
+| Metric | Threshold | Rationale |
+|--------|-----------|-----------|
+| Coupling | >70% | Dependencies exceed 70% → changes ripple across codebase, refactoring blocked |
+| Cohesion | <50% | Module handles too many unrelated concerns → split into focused units |
+| Complexity | >60 avg | Average cyclomatic complexity >60 → high bug density, hard to test |
+| Test Coverage | <60% | Below 60% → insufficient safety net for refactoring |
+| Circular Deps | >0 | Any circular dependency blocks independent deployability |
+
+**Context Adjustments:**
+- Legacy projects: thresholds relaxed by 10%
+- Greenfield: thresholds tightened by 10%
+- Speed priority: only flag CRITICAL threshold violations
 
 ---
 

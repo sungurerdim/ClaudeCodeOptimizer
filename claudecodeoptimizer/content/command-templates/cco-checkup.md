@@ -96,7 +96,7 @@ if (phases === "Both" || phases === "Quality Audit") {
       accounting: { done, declined, fail, total },
       by_scope: { security: {n}, quality: {n} }
     }
-  `, { run_in_background: phases === "Both" })
+  `, { model: "opus", run_in_background: phases === "Both" })  // Opus: 50-75% fewer tool errors
 }
 
 // If both running, collect results
@@ -108,7 +108,7 @@ if (phases === "Both") {
 
 **Parallel Execution:**
 - Health (read-only) uses Haiku for speed
-- Audit (writes) uses Sonnet for accuracy
+- Audit (writes) uses Opus for accuracy (50-75% fewer tool errors)
 - Both complete in ~same time as single command
 
 ### Validation
@@ -140,6 +140,8 @@ if (phases === "Both") {
 | Security | {by_scope.security} | - | - |
 | Quality | {by_scope.quality} | - | - |
 | **Total** | **{accounting.done}** | **{accounting.declined}** | **{accounting.fail}** |
+
+Status: {status} | Applied: {accounting.done} | Declined: {accounting.declined} | Failed: {accounting.fail} | Total: {accounting.total}
 
 Duration: {n}s
 ```

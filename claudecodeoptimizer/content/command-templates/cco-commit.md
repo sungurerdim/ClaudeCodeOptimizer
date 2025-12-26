@@ -378,7 +378,9 @@ if (fullTitle.length > 50) {
 
 ## Step-5: Summary
 
-```
+```javascript
+// Build summary with conditional stash reminder
+let summary = `
 ## Commit Complete
 
 | Metric | Value |
@@ -397,7 +399,16 @@ Status: OK | Applied: {n} | Declined: 0 | Failed: 0
 | 2 | {type}({scope}) | {title} |
 ...
 
-Next: git push origin {branch}
+Next: git push origin {branch}`
+
+// Stash reminder if user chose "Keep stashed"
+if (hasStash && stashChoice === "Keep stashed") {
+  summary += `
+
+**Reminder:** You have stashed changes. Run \`git stash pop\` to restore them.`
+}
+
+console.log(summary)
 ```
 
 ### Validation

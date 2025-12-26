@@ -10,19 +10,19 @@ Detailed documentation for all CCO slash commands.
 
 | Command | Purpose | Model | Steps |
 |---------|---------|-------|-------|
-| `/cco-config` | Project configuration and settings | inherit | 9 |
-| `/cco-status` | Metrics dashboard with trends | inherit | 3 |
-| `/cco-optimize` | Security + Quality + Hygiene | **opus** | 9 |
-| `/cco-review` | Architecture analysis | **opus** | 7 |
+| `/cco-config` | Project configuration and settings | inherit | 5 |
+| `/cco-status` | Metrics dashboard | inherit | 3 |
+| `/cco-optimize` | Security + Quality + Hygiene | **opus** | 6 |
+| `/cco-review` | Architecture analysis | **opus** | 5 |
 | `/cco-research` | Multi-source research with AI synthesis | **opus** | 5 |
-| `/cco-commit` | Quality-gated commits | **opus** | 7 |
+| `/cco-commit` | Quality-gated commits | **opus** | 5 |
 
 ### Meta Commands
 
 | Command | Purpose | Model | Orchestrates |
 |---------|---------|-------|--------------|
-| `/cco-preflight` | Pre-release workflow | inherit | optimize + review + verify (7 steps) |
-| `/cco-checkup` | Regular maintenance | inherit | status + optimize (4 steps) |
+| `/cco-preflight` | Pre-release workflow | inherit | optimize + review + verify (5 steps) |
+| `/cco-checkup` | Regular maintenance | inherit | status + optimize (3 steps) |
 
 **Model Rationale:** Opus for analysis and coding commands (50-75% fewer errors), inherit for orchestration.
 
@@ -113,25 +113,21 @@ Commands learn from execution patterns:
 
 | Step | Name | Action |
 |------|------|--------|
-| 1 | Status | Read existing files |
-| 2 | Action | Ask what to do |
-| 3 | Scope | Ask what to configure/remove/export |
-| 4 | Details | Ask specific options (if applicable) |
-| 5 | Context | Ask project context (if Detection selected) [MANDATORY] |
-| 6 | Detection | Run agent with userInput |
-| 7 | Review | Show results, ask approval |
-| 8 | Apply | Write files via agent/CLI |
-| 9 | Report | Summary of changes |
+| 1 | Pre-detect | cco-agent-analyze (background) |
+| 2 | Setup | Q1: Combined setup tabs |
+| 3 | Context | Q2: Context details (conditional) |
+| 4 | Apply | Write files |
+| 5 | Report | Summary |
 
-### Step-5: Project Context Questions
+### Context Questions (Step-3)
 
-**Step-5.1: Team & Data**
+**Team & Data:**
 - How many active contributors? (Solo / Small 2-5 / Large 6+)
 - Expected scale? (Prototype / Small / Medium / Large)
 - Most sensitive data? (Public / PII / Regulated)
 - Compliance frameworks? (None / SOC2 / HIPAA / GDPR)
 
-**Step-5.2: Operations & Policy**
+**Operations & Policy:**
 - Uptime commitment (SLA)? (None / 99% / 99.9% / 99.99%)
 - Development stage? (Prototype / Active / Stable / Legacy)
 - Breaking change policy? (Allowed / Minimize / Never)
@@ -213,15 +209,12 @@ Commands learn from execution patterns:
 
 | Step | Name | Action |
 |------|------|--------|
-| 1 | Safety | Check git state, warn if dirty |
-| 2 | Scope | Ask what to optimize |
-| 3 | Action | Ask report/auto-fix/interactive |
-| 4 | Analyze | Run agent, get findings JSON |
-| 5 | Show | Display findings summary |
-| 6 | Auto-fix | Apply safe fixes [SKIP if report] |
-| 7 | Approval | Ask for approval-required items |
-| 8 | Apply | Apply user-approved fixes |
-| 9 | Summary | Show applied/declined counts |
+| 1 | Setup | Q1: Combined settings (background analysis starts) |
+| 2 | Analyze | Wait for background, show findings |
+| 3 | Auto-fix | Apply safe fixes (background) |
+| 4 | Approval | Q2: Approve remaining (conditional) |
+| 5 | Apply | Apply approved fixes |
+| 6 | Summary | Show counts |
 
 ### Scope Categories
 
@@ -262,13 +255,11 @@ Commands learn from execution patterns:
 
 | Step | Name | Action |
 |------|------|--------|
-| 1 | Focus | Ask focus areas |
-| 2 | Analyze | Run agent with scopes |
-| 3 | Assessment | Show foundation assessment |
-| 4 | Recommendations | Show prioritized 80/20 list |
-| 5 | Approval | Ask which to apply [SKIP if --no-apply] |
-| 6 | Apply | Execute approved changes |
-| 7 | Summary | Show results |
+| 1 | Setup | Q1: Focus + Apply mode (background analysis starts) |
+| 2 | Analysis | Wait for results, show assessment |
+| 3 | Recommendations | 80/20 prioritized list |
+| 4 | Apply | Apply selected changes |
+| 5 | Summary | Show results |
 
 ### Focus Areas
 
@@ -357,15 +348,13 @@ Commands learn from execution patterns:
 
 | Step | Name | Action |
 |------|------|--------|
-| 1 | Pre-checks | Conflicts, stash, large changes |
-| 2 | Unstaged | Ask about unstaged changes |
-| 3 | Quality | Run format → lint → types → tests |
-| 4 | Analyze | Group changes atomically |
-| 5 | Plan | Show commit plan, ask approval |
-| 6 | Execute | Create commits |
-| 7 | Summary | Show results |
+| 1 | Pre-checks | Conflicts check + parallel quality gates (background) |
+| 2 | Analyze | Group changes atomically (while gates run) |
+| 3 | Approval | Q1: Combined commit settings |
+| 4 | Execute | Create commits |
+| 5 | Summary | Show results |
 
-### Quality Gates (Sequential)
+### Quality Gates (Parallel)
 
 | Gate | Command | Action |
 |------|---------|--------|
@@ -409,13 +398,11 @@ Co-Authored-By: Claude <noreply@anthropic.com>
 
 | Step | Name | Action |
 |------|------|--------|
-| 1 | Phase Select | Ask which phases to run |
-| 2 | Pre-flight | Release-specific checks [SKIP if not selected] |
-| 3 | Quality | Run /cco-optimize --pre-release [SKIP if not selected] |
-| 4 | Architecture | Run /cco-review --quick [SKIP if not selected] |
-| 5 | Verification | Full test/build/lint [SKIP if not selected] |
-| 6 | Changelog | Update changelog & docs [SKIP if not selected] |
-| 7 | Decision | Go/No-go summary |
+| 1 | Pre-flight | Release checks (parallel) |
+| 2 | Quality + Review | Parallel: optimize + review (background) |
+| 3 | Verification | Background: test/build/lint |
+| 4 | Changelog | Generate + suggest version (while tests run) |
+| 5 | Decision | Q1: Docs + Release decision |
 
 ### Pre-flight Checks
 
@@ -456,10 +443,9 @@ Co-Authored-By: Claude <noreply@anthropic.com>
 
 | Step | Name | Action |
 |------|------|--------|
-| 1 | Phase Select | Ask which phases to run |
-| 2 | Health | Run /cco-status --brief [SKIP if not selected] |
-| 3 | Audit | Run /cco-optimize --fix [SKIP if not selected] |
-| 4 | Summary | Show results and next checkup |
+| 1 | Phase Select | Determine phases (flags or default: Both) |
+| 2 | Execute | Parallel: health + audit |
+| 3 | Summary | Merge and display |
 
 ### Scheduling
 

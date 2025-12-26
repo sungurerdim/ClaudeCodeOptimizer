@@ -411,45 +411,14 @@ Before calling AskUserQuestion for Q2, verify:
 
 ### 4.0: Orchestrator Checklist [CRITICAL]
 
-**Before calling cco-agent-apply, verify:**
-- [ ] Clean `rules/cco/*.md` before writing new ones
-- [ ] Use `overwrite` mode for context.md and rule files
-- [ ] Use `merge` mode for settings.json only
-- [ ] Copy statusline scripts from package (never generate)
-- [ ] Never compare files - always write
+| Operation | Method | Mode |
+|-----------|--------|------|
+| Rule extraction | cco-agent-analyze (generate phase) | - |
+| File writes | cco-agent-apply | overwrite (rules), merge (settings.json) |
+| Statusline scripts | Copy from package | overwrite |
+| Pre-write cleanup | Delete `rules/cco/*.md` | delete_contents |
 
-**DO NOT:**
-- Compare existing files with expected content
-- Skip writes because "settings already match"
-- Optimize by avoiding "unnecessary" writes
-- **Use manual grep/sed/awk to extract rules from cco-adaptive.md**
-- **Parse cco-adaptive.md content yourself**
-- **Generate rule content without using cco-agent-analyze**
-
-**ALWAYS:**
-- Call cco-agent-analyze (generate phase) for rule extraction
-- Call cco-agent-apply with explicit file operations
-- Let the agents handle all file operations
-- Pass projectCritical from detect phase to generate phase
-
-### 4.0.1: Agent Enforcement [CRITICAL - READ THIS]
-
-**You MUST use agents for all rule generation. Manual extraction is FORBIDDEN.**
-
-| Task | Correct | FORBIDDEN |
-|------|---------|-----------|
-| Read cco-adaptive.md | cco-agent-analyze (generate phase) | `Bash(grep ...)`, `Bash(sed ...)` |
-| Extract rule sections | cco-agent-analyze (generate phase) | Manual parsing with grep/awk |
-| Generate context.md | cco-agent-analyze (generate phase) | Writing content directly |
-| Write files | cco-agent-apply | Direct Write/Edit without agent |
-
-**Why this matters:**
-- Agents have context about detection patterns and rule formats
-- Manual extraction is error-prone (grep patterns may not match)
-- Agents ensure projectCritical is included in context.md
-- Agents verify rule content is complete and properly formatted
-
-**If you find yourself using grep/sed on cco-adaptive.md, STOP and use cco-agent-analyze instead.**
+**Single Rule:** All rule generation goes through cco-agent-analyze. All file writes go through cco-agent-apply. Execute unconditionally - agents handle idempotency.
 
 ### 4.1: Generate Rules
 
@@ -610,49 +579,19 @@ The cco-agent-analyze agent handles all detection-to-rule mapping internally usi
 | `ENABLE_LSP_TOOL=0` | Disabled | Text-based search only |
 | `permissions.allow: ["LSP"]` | Permission | Auto-approve LSP tool calls |
 
-**Statusline mode mapping:**
+**Statusline Mapping:**
 
-**[CRITICAL - COPY FROM PACKAGE]** Statusline scripts are pre-built in CCO package. Copy scripts directly from package templates (cco-full.js or cco-minimal.js).
-
-| Mode | Script | Action |
-|------|--------|--------|
-| Full | `cco-full.js` | Copy from CCO package → `${targetDir}/cco-full.js` |
-| Minimal | `cco-minimal.js` | Copy from CCO package → `${targetDir}/cco-minimal.js` |
-| No | (none) | Do not write statusLine key to settings.json |
-
-**Command format:** All statusline modes use dynamic path resolution:
-```
-node -e "require('child_process').spawnSync('node',[require('path').join(process.cwd(),'.claude','cco-{mode}.js')],{stdio:'inherit'})"
-```
-This ensures the script runs from the correct project directory regardless of where Claude Code is launched.
-
-**Note:** Statusline scripts require Node.js. If not available, select "No" to use default statusline.
-
-**Copy statusline script to project:**
+| Mode | Action |
+|------|--------|
+| Full | Copy `cco-full.js` from CCO package → `${targetDir}/cco-full.js` |
+| Minimal | Copy `cco-minimal.js` from CCO package → `${targetDir}/cco-minimal.js` |
+| No | Skip statusLine key in settings.json |
 
 ```bash
-# Get CCO package path and copy statusline template
-CCO_STATUSLINE_DIR=$(python3 -c "from claudecodeoptimizer.config import get_content_path; print(get_content_path('statusline'))")
-
-# Copy the selected template (Full → cco-full.js, Minimal → cco-minimal.js)
-if [ "{statusline_mode}" != "No" ]; then
-  cp "$CCO_STATUSLINE_DIR/cco-{statusline_mode_lower}.js" "${targetDir}/cco-{statusline_mode_lower}.js"
-fi
+# Copy from package (never generate)
+CCO_PATH=$(python3 -c "from claudecodeoptimizer.config import get_content_path; print(get_content_path('statusline'))")
+cp "$CCO_PATH/cco-{mode}.js" "${targetDir}/cco-{mode}.js"
 ```
-
-**Alternative using Read/Write tools:**
-```
-# 1. First get the package path
-Bash: CCO_PATH=$(python3 -c "from claudecodeoptimizer.config import get_content_path; print(get_content_path('statusline'))")
-
-# 2. Read the template from package
-Read: $CCO_PATH/cco-{full|minimal}.js
-
-# 3. Write to project (use targetDir)
-Write: ${targetDir}/cco-{full|minimal}.js (exact copy, no modifications)
-```
-
-**CRITICAL:** Do NOT generate statusline code from scratch. ALWAYS copy from CCO package templates.
 
 ### If action = Remove
 

@@ -240,10 +240,19 @@ supportingEvidence = aggregateByTier(t3PlusSources)
 ### Early Saturation
 
 ```javascript
-// Stop searching when confident
-if (t1Sources.filter(s => s.agrees).length >= 3) {
-  saturation = "HIGH"
-  // Can skip remaining background agents
+// Stop searching when confident enough
+// Saturation criteria: 3+ T1/T2 sources independently confirm same conclusion
+const agreeing = sources.filter(s =>
+  s.tier <= 2 &&
+  s.conclusion === majorityConclusion
+).length
+
+if (agreeing >= 3) {
+  saturation = "HIGH"  // Can skip remaining background agents
+} else if (agreeing >= 2 && noContradictions) {
+  saturation = "MEDIUM"  // Continue but deprioritize
+} else {
+  saturation = "LOW"  // Keep searching
 }
 ```
 
@@ -391,3 +400,4 @@ Confidence: {confidence} ({n} T1 sources agree) | Saturation: {saturation}%
 5. **Progressive display** - Show results as agents complete
 6. **Resumable** - Deep research saves state for continuation
 7. **Stack-aware** - Prioritize context-relevant sources
+8. **Conservative confidence** - When sources conflict → LOW confidence; uncertain → choose lower tier
