@@ -960,7 +960,7 @@ class TestMain:
 
     @patch("claudecodeoptimizer.uninstall.detect_install_method")
     def test_exception(self, mock_detect, capsys):
-        mock_detect.side_effect = Exception("Test error")
+        mock_detect.side_effect = RuntimeError("Test error")
         with patch.object(sys, "argv", ["cco-uninstall"]):
             result = main()
         assert result == 1

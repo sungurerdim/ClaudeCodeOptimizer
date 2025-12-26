@@ -830,7 +830,7 @@ class TestPostInstall:
         with patch.object(sys, "argv", ["cco-install", "--dir", str(tmp_path)]):
             with patch(
                 "claudecodeoptimizer.install_hook.setup_commands",
-                side_effect=Exception("Test error"),
+                side_effect=RuntimeError("Test error"),
             ):
                 result = post_install()
 
