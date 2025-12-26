@@ -99,7 +99,8 @@ if (manifestVersion !== changelogVersion) {
 
 ```javascript
 // Check for leftover code markers (TODO, FIXME, XXX, HACK)
-markersTask = Bash("grep -rn 'TODO\\|FIXME\\|XXX\\|HACK' --include='*.py' --include='*.ts' --include='*.js' --include='*.go' || true")
+// Language-agnostic: search all text files, exclude binaries and generated
+markersTask = Bash("grep -rn 'TODO\\|FIXME\\|XXX\\|HACK' --exclude-dir=node_modules --exclude-dir=.venv --exclude-dir=vendor --exclude-dir=dist --exclude-dir=build --exclude='*.min.*' . 2>/dev/null || true")
 ```
 
 ### 1.4: SemVer Review [WARN]
@@ -113,6 +114,28 @@ commitsTask = Bash(`git log ${lastTag}..HEAD --oneline`)
 // feat: in commits → MINOR
 // fix: only → PATCH
 ```
+
+### 1.5: Dependency Audit [BLOCKER if security]
+
+```javascript
+// Check for outdated dependencies and security advisories
+depTask = Task("cco-agent-research", `
+  scope: dependency
+
+  Pre-release dependency audit:
+  1. Read manifest files (pyproject.toml, package.json, Cargo.toml, go.mod)
+  2. Check each dependency for latest stable version
+  3. Check for known security advisories (CVEs)
+
+  Return: {
+    outdated: [{ package, current, latest, updateType, breaking }],
+    security: [{ package, advisory, severity, cve }],
+    summary: { total, outdated, security }
+  }
+`, { model: "haiku", run_in_background: true })
+```
+
+**Security advisories are BLOCKERS.** Outdated packages are warnings (can release but noted).
 
 ### Validation
 ```
@@ -244,19 +267,24 @@ reviewResults = await TaskOutput(reviewTask.id)
 testResults = await TaskOutput(verificationTasks.test)
 buildResults = await TaskOutput(verificationTasks.build)
 lintResults = await TaskOutput(verificationTasks.lint)
+depResults = await TaskOutput(depTask.id)
 
 // Aggregate blockers and warnings
 allBlockers = [
   ...preflight.blockers,
   ...(qualityResults.blockers || []),
   ...(testResults.exitCode !== 0 ? [{ type: "TESTS", message: "Tests failed" }] : []),
-  ...(buildResults.exitCode !== 0 ? [{ type: "BUILD", message: "Build failed" }] : [])
+  ...(buildResults.exitCode !== 0 ? [{ type: "BUILD", message: "Build failed" }] : []),
+  // Security advisories are blockers
+  ...(depResults.security || []).map(s => ({ type: "SECURITY", message: `${s.package}: ${s.advisory} (${s.cve})` }))
 ]
 
 allWarnings = [
   ...preflight.warnings,
   ...(lintResults.exitCode !== 0 ? [{ type: "LINT", message: "Lint warnings" }] : []),
-  ...(reviewResults.issues || [])
+  ...(reviewResults.issues || []),
+  // Outdated packages are warnings
+  ...(depResults.outdated || []).map(d => ({ type: "OUTDATED", message: `${d.package}: ${d.current} → ${d.latest}` }))
 ]
 
 hasBlockers = allBlockers.length > 0
@@ -284,6 +312,7 @@ hasBlockers = allBlockers.length > 0
 | Tests | {✓\|✗} | {PASS\|FAIL: reason} |
 | Build | {✓\|✗} | {PASS\|FAIL: reason} |
 | Lint | {✓\|⚠️} | {PASS\|WARN: count} |
+| Dependencies | {✓\|⚠️\|✗} | {depResults.summary.security > 0 ? "SECURITY" : depResults.summary.outdated > 0 ? `${depResults.summary.outdated} outdated` : "Up to date"} |
 
 ### Blockers (must fix)
 | # | Type | Issue |
@@ -416,8 +445,9 @@ console.log(`
 
 ## Rules
 
-1. **All parallel background** - Pre-flight, quality, review, verification all background
+1. **All parallel background** - Pre-flight, quality, review, verification, dependency audit all background
 2. **Single question at end** - Docs + Decision combined after all results
 3. **Collect before decision** - Wait for all background tasks before Q1
 4. **Git safety** - Clean state required, version sync verified
 5. **User decision required** - No release without explicit approval
+6. **Security blocks release** - Dependency security advisories are blockers, not warnings
