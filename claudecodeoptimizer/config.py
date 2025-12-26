@@ -180,7 +180,8 @@ SUBPROCESS_TIMEOUT = SUBPROCESS_TIMEOUT_DEFAULT
 SUBPROCESS_TIMEOUT_PACKAGE = SUBPROCESS_TIMEOUT_PACKAGE_OPS
 
 # File size limits for safety
-MAX_CLAUDE_MD_SIZE = 1_000_000  # 1MB - prevent ReDoS on large files
+# Security: File size limit prevents ReDoS attacks on regex-heavy operations
+MAX_CLAUDE_MD_SIZE = 1_000_000  # 1MB
 
 # Pre-compiled regex patterns for performance
 # Rules use list format: - **Name**: Description (single format for simplicity)
@@ -309,8 +310,11 @@ def cli_entrypoint(func: Callable[..., int]) -> Callable[..., int]:
         except KeyboardInterrupt:
             print("\nCancelled.")
             return 130
-        except Exception as e:
+        except (OSError, RuntimeError, ValueError, TimeoutError) as e:
             print(f"Error: {e}", file=sys.stderr)
+            return 1
+        except Exception as e:
+            print(f"Unexpected error: {type(e).__name__}: {e}", file=sys.stderr)
             return 1
 
     return wrapper
