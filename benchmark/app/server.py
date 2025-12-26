@@ -21,18 +21,84 @@ from fastapi.staticfiles import StaticFiles
 from pydantic import BaseModel
 
 from ..runner import (
-    BenchmarkResult,
     ProjectConfig,
     ResultsManager,
     TestExecutor,
     discover_projects,
 )
 
-# Configure logging
-logging.basicConfig(
-    level=logging.INFO,
-    format="%(asctime)s - %(levelname)s - %(message)s",
+
+# ANSI color codes
+class LogColors:
+    """ANSI color codes for terminal output."""
+
+    RESET = "\033[0m"
+    RED = "\033[91m"
+    YELLOW = "\033[93m"
+    CYAN = "\033[96m"
+    GREEN = "\033[92m"
+    GRAY = "\033[90m"
+    BOLD = "\033[1m"
+
+
+class ColoredFormatter(logging.Formatter):
+    """Formatter with colors and truncation for non-error messages.
+
+    Format: DATE | LEVEL | SERVICE | MESSAGE
+    Colors:
+    - ERROR: Red
+    - WARNING: Yellow
+    - Container/executor logs: Cyan
+    - Success: Green
+    - Other INFO: Default
+    """
+
+    LEVEL_COLORS = {
+        logging.ERROR: LogColors.RED,
+        logging.WARNING: LogColors.YELLOW,
+        logging.DEBUG: LogColors.GRAY,
+    }
+
+    def format(self, record: logging.LogRecord) -> str:
+        # Truncate message for non-error levels
+        original_msg = record.msg
+        if record.levelno < logging.ERROR and len(str(record.msg)) > 100:
+            record.msg = str(record.msg)[:100] + "..."
+
+        # Format the base message
+        formatted = super().format(record)
+
+        # Restore original message
+        record.msg = original_msg
+
+        # Apply colors
+        color = self.LEVEL_COLORS.get(record.levelno, "")
+
+        # Special coloring for container/executor logs (cyan)
+        msg_str = str(original_msg)
+        if "[VANILLA]" in msg_str or "[CCO]" in msg_str or "[stdout]" in msg_str:
+            color = LogColors.CYAN
+        # Success messages (green)
+        elif "SUCCESS" in msg_str or "Completed" in msg_str:
+            color = LogColors.GREEN
+
+        if color:
+            # Color the entire line
+            formatted = f"{color}{formatted}{LogColors.RESET}"
+
+        return formatted
+
+
+# Configure logging with professional format
+# Format: DATE | LEVEL | SERVICE | MESSAGE
+handler = logging.StreamHandler()
+handler.setFormatter(
+    ColoredFormatter(
+        fmt="%(asctime)s | %(levelname)-8s | %(name)-15s | %(message)s",
+        datefmt="%d.%m.%Y %H:%M:%S",
+    )
 )
+logging.basicConfig(level=logging.INFO, handlers=[handler])
 logger = logging.getLogger("cco-benchmark")
 
 # Configuration
@@ -54,13 +120,22 @@ class ActivityLog:
 
     def add(self, message: str, level: str = "info") -> None:
         """Add an entry to the activity log."""
+        # Truncation handled by TruncatingFormatter at logging level
         entry = {
             "timestamp": datetime.now().strftime("%H:%M:%S"),
-            "message": message,
+            "message": message[:100] + "..."
+            if level != "error" and len(message) > 100
+            else message,
             "level": level,
         }
         self._entries.append(entry)
-        logger.info(f"[{level.upper()}] {message}")
+        # Use appropriate log level so formatter can decide truncation
+        if level == "error":
+            logger.error(message)
+        elif level == "warning":
+            logger.warning(message)
+        else:
+            logger.info(message)
 
     def get_entries(self, limit: int = 50) -> list[dict[str, str]]:
         """Get recent log entries (newest first)."""
@@ -246,9 +321,25 @@ async def global_exception_handler(request: Request, exc: Exception) -> JSONResp
 # ============== Models ==============
 
 
+class ProjectVariants(BaseModel):
+    """Variant selection for a single project."""
+
+    project_id: str
+    run_vanilla: bool = False
+    run_cco: bool = False
+
+
 class RunTestRequest(BaseModel):
-    project_ids: list[str]
+    """Request to run tests with per-project variant selection."""
+
+    projects: list[ProjectVariants]
     model: str = "opus"
+
+
+class CompareRequest(BaseModel):
+    """Request to compare vanilla vs cco for a project."""
+
+    project_id: str
 
 
 class TestStatus(BaseModel):
@@ -479,35 +570,51 @@ async def get_project_prompt(project_id: str) -> dict[str, str]:
 
 
 @app.post("/api/run")
-async def run_tests(request: RunTestRequest, background_tasks: BackgroundTasks) -> dict[str, str]:
-    """Start benchmark tests for selected projects."""
+async def run_tests(request: RunTestRequest, background_tasks: BackgroundTasks) -> dict[str, Any]:
+    """Start benchmark tests for selected projects with per-project variant selection."""
     run_id = datetime.now().strftime("%Y%m%d_%H%M%S")
 
+    # Filter projects that have at least one variant selected
+    valid_projects = [p for p in request.projects if p.run_vanilla or p.run_cco]
+
+    if not valid_projects:
+        return {"run_id": run_id, "message": "No variants selected", "count": 0}
+
     # Initialize status for all projects
-    for project_id in request.project_ids:
-        running_tests[f"{run_id}_{project_id}"] = {
+    for project in valid_projects:
+        running_tests[f"{run_id}_{project.project_id}"] = {
             "run_id": run_id,
-            "project_id": project_id,
+            "project_id": project.project_id,
+            "run_vanilla": project.run_vanilla,
+            "run_cco": project.run_cco,
             "status": "pending",
             "progress": 0,
             "current_variant": None,
             "error": None,
-            "result": None,
+            "vanilla_result": None,
+            "cco_result": None,
             "started_at": datetime.now().isoformat(),
         }
 
     # Start background execution
-    background_tasks.add_task(execute_tests_background, run_id, request.project_ids, request.model)
+    background_tasks.add_task(execute_tests_background, run_id, valid_projects, request.model)
 
-    return {"run_id": run_id, "message": f"Started {len(request.project_ids)} tests"}
+    return {
+        "run_id": run_id,
+        "message": f"Started {len(valid_projects)} project(s)",
+        "count": len(valid_projects),
+    }
 
 
-async def execute_tests_background(run_id: str, project_ids: list[str], model: str) -> None:
-    """Execute tests in background."""
+async def execute_tests_background(
+    run_id: str, projects: list[ProjectVariants], model: str
+) -> None:
+    """Execute tests in background with per-project variant selection."""
     executor = TestExecutor(OUTPUT_DIR)
-    log_activity(f"Starting benchmark run: {len(project_ids)} project(s)", "info")
+    log_activity(f"Starting benchmark run: {len(projects)} project(s)", "info")
 
-    for project_id in project_ids:
+    for project in projects:
+        project_id = project.project_id
         key = f"{run_id}_{project_id}"
         project_dir = PROJECTS_DIR / project_id
 
@@ -518,123 +625,69 @@ async def execute_tests_background(run_id: str, project_ids: list[str], model: s
             continue
 
         config = ProjectConfig(project_dir)
-        log_activity(f"Testing project: {config.name}", "info")
+        variants_to_run = []
+        if project.run_vanilla:
+            variants_to_run.append("vanilla")
+        if project.run_cco:
+            variants_to_run.append("cco")
+
+        log_activity(f"Testing project: {config.name} ({', '.join(variants_to_run)})", "info")
 
         try:
-            # Run vanilla
-            running_tests[key]["status"] = "running_vanilla"
-            running_tests[key]["current_variant"] = "vanilla"
-            running_tests[key]["progress"] = 25
-            log_activity(f"[VANILLA] Starting: {config.name}", "info")
+            progress_per_variant = 100 // len(variants_to_run) if variants_to_run else 100
+            current_progress = 0
 
-            vanilla_result = await asyncio.to_thread(executor.run_project, config, "vanilla", model)
+            # Run vanilla if selected
+            if project.run_vanilla:
+                running_tests[key]["status"] = "running_vanilla"
+                running_tests[key]["current_variant"] = "vanilla"
+                running_tests[key]["progress"] = current_progress + 10
+                log_activity(f"[VANILLA] Starting: {config.name}", "info")
 
-            if vanilla_result.success:
-                log_activity(
-                    f"[VANILLA] Completed: score={vanilla_result.score}, time={vanilla_result.generation_time_seconds:.1f}s",
-                    "success",
+                vanilla_result = await asyncio.to_thread(
+                    executor.run_project, config, "vanilla", model
                 )
-            else:
-                log_activity(f"[VANILLA] FAILED: {vanilla_result.error_message}", "error")
-                log_activity(f"[VANILLA] Exit code: {vanilla_result.exit_code}", "error")
-                if vanilla_result.command:
-                    log_activity(f"[VANILLA] Command: {vanilla_result.command[:150]}...", "warning")
-                if vanilla_result.stderr_excerpt:
-                    # Show more stderr for debugging
-                    stderr_lines = vanilla_result.stderr_excerpt.strip().split("\n")[:5]
-                    for line in stderr_lines:
-                        if line.strip():
-                            log_activity(f"[VANILLA] stderr: {line[:150]}", "warning")
-                if vanilla_result.stdout_excerpt and not vanilla_result.stderr_excerpt:
-                    stdout_lines = vanilla_result.stdout_excerpt.strip().split("\n")[:3]
-                    for line in stdout_lines:
-                        if line.strip():
-                            log_activity(f"[VANILLA] stdout: {line[:150]}", "warning")
-                log_activity(f"[VANILLA] Output dir: {vanilla_result.output_dir}", "info")
+                running_tests[key]["vanilla_result"] = vanilla_result.to_dict()
 
-            running_tests[key]["progress"] = 50
+                if vanilla_result.success:
+                    log_activity(
+                        f"[VANILLA] Completed: score={vanilla_result.score}, "
+                        f"time={vanilla_result.generation_time_seconds:.1f}s",
+                        "success",
+                    )
+                else:
+                    log_activity(f"[VANILLA] FAILED: {vanilla_result.error_message}", "error")
+                    if vanilla_result.output_dir:
+                        log_activity(f"[VANILLA] Output dir: {vanilla_result.output_dir}", "info")
 
-            # Run CCO (two phases: setup + test)
-            running_tests[key]["status"] = "running_cco"
-            running_tests[key]["current_variant"] = "cco"
-            running_tests[key]["progress"] = 60
-            log_activity(f"[CCO] Starting: {config.name} (setup + test + optimize)", "info")
+                current_progress += progress_per_variant
 
-            cco_result = await asyncio.to_thread(executor.run_project, config, "cco", model)
+            # Run CCO if selected
+            if project.run_cco:
+                running_tests[key]["status"] = "running_cco"
+                running_tests[key]["current_variant"] = "cco"
+                running_tests[key]["progress"] = current_progress + 10
+                log_activity(f"[CCO] Starting: {config.name} (setup + test + optimize)", "info")
 
-            running_tests[key]["progress"] = 90
+                cco_result = await asyncio.to_thread(executor.run_project, config, "cco", model)
+                running_tests[key]["cco_result"] = cco_result.to_dict()
 
-            if cco_result.success:
-                log_activity(
-                    f"[CCO] Completed: score={cco_result.score}, time={cco_result.generation_time_seconds:.1f}s",
-                    "success",
-                )
-            else:
-                log_activity(f"[CCO] FAILED: {cco_result.error_message}", "error")
-                log_activity(f"[CCO] Exit code: {cco_result.exit_code}", "error")
-                if cco_result.command:
-                    log_activity(f"[CCO] Command: {cco_result.command[:150]}...", "warning")
-                if cco_result.stderr_excerpt:
-                    # Show more stderr for debugging
-                    stderr_lines = cco_result.stderr_excerpt.strip().split("\n")[:5]
-                    for line in stderr_lines:
-                        if line.strip():
-                            log_activity(f"[CCO] stderr: {line[:150]}", "warning")
-                if cco_result.stdout_excerpt and not cco_result.stderr_excerpt:
-                    stdout_lines = cco_result.stdout_excerpt.strip().split("\n")[:3]
-                    for line in stdout_lines:
-                        if line.strip():
-                            log_activity(f"[CCO] stdout: {line[:150]}", "warning")
-                log_activity(f"[CCO] Output dir: {cco_result.output_dir}", "info")
+                if cco_result.success:
+                    log_activity(
+                        f"[CCO] Completed: score={cco_result.score}, "
+                        f"time={cco_result.generation_time_seconds:.1f}s",
+                        "success",
+                    )
+                else:
+                    log_activity(f"[CCO] FAILED: {cco_result.error_message}", "error")
+                    if cco_result.output_dir:
+                        log_activity(f"[CCO] Output dir: {cco_result.output_dir}", "info")
 
-            # Build full benchmark result
-            from ..runner import compare_metrics
-
-            if cco_result.metrics and vanilla_result.metrics:
-                comparison = compare_metrics(cco_result.metrics, vanilla_result.metrics)
-            else:
-                comparison = {
-                    "comparisons": [],
-                    "cco_wins": 0,
-                    "vanilla_wins": 0,
-                    "ties": 0,
-                    "cco_score": cco_result.score,
-                    "vanilla_score": vanilla_result.score,
-                    "score_diff": cco_result.score - vanilla_result.score,
-                }
-
-            diff = comparison["score_diff"]
-            if diff >= 15:
-                verdict = "Strong CCO Advantage"
-            elif diff >= 5:
-                verdict = "Moderate CCO Advantage"
-            elif diff >= -5:
-                verdict = "Mixed Results"
-            elif diff >= -15:
-                verdict = "Moderate Vanilla Advantage"
-            else:
-                verdict = "Strong Vanilla Advantage"
-
-            benchmark_result = BenchmarkResult(
-                project_id=config.id,
-                project_name=config.name,
-                categories=config.categories,
-                complexity=config.complexity,
-                cco_result=cco_result,
-                vanilla_result=vanilla_result,
-                comparison=comparison,
-                verdict=verdict,
-                score_difference=round(diff, 1),
-                prompt_used=config.prompt,
-            )
-
-            # Save result
-            results_manager.save_result(benchmark_result)
+                current_progress += progress_per_variant
 
             running_tests[key]["status"] = "completed"
             running_tests[key]["progress"] = 100
-            running_tests[key]["result"] = benchmark_result.to_dict()
-            log_activity(f"Completed: {config.name} - {verdict} (diff: {diff:+.1f})", "success")
+            log_activity(f"Completed: {config.name}", "success")
 
         except Exception as e:
             running_tests[key]["status"] = "failed"
@@ -731,6 +784,146 @@ async def delete_result(filename: str) -> dict[str, str]:
     return {"message": f"Deleted {filename}"}
 
 
+# ============== Output & Comparison ==============
+
+
+@app.get("/api/output")
+async def list_output_folders() -> list[dict[str, Any]]:
+    """List all output folders with their status."""
+    from ..runner import CodeAnalyzer, calculate_overall_score
+
+    if not OUTPUT_DIR.exists():
+        return []
+
+    folders = []
+    for folder in sorted(OUTPUT_DIR.iterdir()):
+        if not folder.is_dir():
+            continue
+
+        # Parse folder name: {project_id}_{variant}
+        name = folder.name
+        parts = name.rsplit("_", 1)
+        if len(parts) != 2:
+            continue
+
+        project_id, variant = parts
+        if variant not in ("vanilla", "cco"):
+            continue
+
+        # Check if folder has content
+        files = list(folder.glob("*.py")) + list(folder.glob("*.ts")) + list(folder.glob("*.js"))
+        has_code = len(files) > 0
+
+        # Try to get metrics if available
+        metrics = None
+        score = 0.0
+        if has_code:
+            try:
+                analyzer = CodeAnalyzer(folder)
+                metrics = analyzer.analyze()
+                score = calculate_overall_score(metrics)
+            except Exception:
+                pass
+
+        # Get modification time
+        try:
+            mtime = folder.stat().st_mtime
+            modified = datetime.fromtimestamp(mtime).isoformat()
+        except Exception:
+            modified = None
+
+        folders.append(
+            {
+                "folder": name,
+                "project_id": project_id,
+                "variant": variant,
+                "has_code": has_code,
+                "file_count": len(files),
+                "score": round(score, 1) if metrics else None,
+                "modified": modified,
+            }
+        )
+
+    return folders
+
+
+@app.post("/api/compare/{project_id}")
+async def compare_project(project_id: str) -> dict[str, Any]:
+    """Compare vanilla vs cco output for a project."""
+    from ..runner import CodeAnalyzer, calculate_overall_score, compare_metrics
+
+    vanilla_dir = OUTPUT_DIR / f"{project_id}_vanilla"
+    cco_dir = OUTPUT_DIR / f"{project_id}_cco"
+
+    result: dict[str, Any] = {
+        "project_id": project_id,
+        "vanilla_exists": vanilla_dir.exists(),
+        "cco_exists": cco_dir.exists(),
+        "can_compare": vanilla_dir.exists() and cco_dir.exists(),
+    }
+
+    if not result["can_compare"]:
+        missing = []
+        if not vanilla_dir.exists():
+            missing.append("vanilla")
+        if not cco_dir.exists():
+            missing.append("cco")
+        result["error"] = f"Missing output folders: {', '.join(missing)}"
+        return result
+
+    # Analyze both
+    try:
+        vanilla_analyzer = CodeAnalyzer(vanilla_dir)
+        vanilla_metrics = vanilla_analyzer.analyze()
+        vanilla_metrics.variant = "vanilla"
+        vanilla_score = calculate_overall_score(vanilla_metrics)
+
+        cco_analyzer = CodeAnalyzer(cco_dir)
+        cco_metrics = cco_analyzer.analyze()
+        cco_metrics.variant = "cco"
+        cco_score = calculate_overall_score(cco_metrics)
+
+        comparison = compare_metrics(cco_metrics, vanilla_metrics)
+        diff = cco_score - vanilla_score
+
+        # Verdict is included in comparison (SSOT)
+        result.update(
+            {
+                "vanilla_score": round(vanilla_score, 1),
+                "cco_score": round(cco_score, 1),
+                "score_difference": round(diff, 1),
+                "verdict": comparison["verdict"],
+                "comparison": comparison,
+                "vanilla_metrics": vanilla_metrics.to_dict(),
+                "cco_metrics": cco_metrics.to_dict(),
+            }
+        )
+
+    except Exception as e:
+        result["error"] = f"Comparison failed: {e}"
+
+    return result
+
+
+@app.delete("/api/output/{folder_name}")
+async def delete_output_folder(folder_name: str) -> dict[str, str]:
+    """Delete an output folder."""
+    import shutil
+
+    folder_path = OUTPUT_DIR / folder_name
+    if not folder_path.exists():
+        raise HTTPException(404, "Folder not found")
+
+    # Safety check - only allow deleting our format folders
+    parts = folder_name.rsplit("_", 1)
+    if len(parts) != 2 or parts[1] not in ("vanilla", "cco"):
+        raise HTTPException(400, "Invalid folder name format")
+
+    shutil.rmtree(folder_path)
+    log_activity(f"Deleted output folder: {folder_name}", "info")
+    return {"message": f"Deleted {folder_name}"}
+
+
 # ============== Static Files & HTML ==============
 
 # Serve static files
@@ -754,10 +947,17 @@ def main():
     """Run the server."""
     import uvicorn
 
-    # Disable ANSI colors for Windows CMD compatibility
+    # Configure uvicorn logging with professional format
+    # Format: DATE | LEVEL | SERVICE | MESSAGE
     log_config = uvicorn.config.LOGGING_CONFIG
-    log_config["formatters"]["access"]["fmt"] = "%(asctime)s - %(message)s"
-    log_config["formatters"]["default"]["fmt"] = "%(asctime)s - %(levelname)s - %(message)s"
+    log_config["formatters"]["access"]["fmt"] = (
+        "%(asctime)s | %(levelname)-8s | uvicorn.access  | %(message)s"
+    )
+    log_config["formatters"]["default"]["fmt"] = (
+        "%(asctime)s | %(levelname)-8s | uvicorn         | %(message)s"
+    )
+    log_config["formatters"]["access"]["datefmt"] = "%d.%m.%Y %H:%M:%S"
+    log_config["formatters"]["default"]["datefmt"] = "%d.%m.%Y %H:%M:%S"
     log_config["formatters"]["access"]["use_colors"] = False
     log_config["formatters"]["default"]["use_colors"] = False
 
