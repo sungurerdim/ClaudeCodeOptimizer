@@ -736,6 +736,129 @@ STDERR:
                 "error": error_msg,
             }
 
+    def _run_cco_optimize(self, project_dir: Path, model: str) -> dict[str, Any]:
+        """Run cco-optimize --auto to optimize generated code after test completion.
+
+        This runs in a separate ccbox invocation to apply security, quality,
+        and best-practice fixes to the generated code.
+
+        Returns:
+            Dict with success, time, command, exit_code, stdout, stderr, error
+        """
+        cmd = [
+            self.ccbox_cmd,
+            "-dd",  # Debug logging
+            "-s",
+            "auto",  # Auto-detect stack
+            "-C",
+            str(project_dir),
+            "-m",
+            model,
+            "-p",
+            "/cco-optimize --auto",  # Full scope, fix all, silent execution
+        ]
+        cmd_str = " ".join(cmd)
+        start_time = time.time()
+
+        logger.info(f"[CCO Optimize] Starting: {cmd_str}")
+        logger.info(f"[CCO Optimize] Project dir: {project_dir}")
+
+        try:
+            result = subprocess.run(
+                cmd,
+                capture_output=True,
+                text=True,
+                timeout=self.setup_timeout,  # Use same timeout as setup
+                env={**os.environ, "CLAUDE_MODEL": model},
+                encoding="utf-8",
+                errors="replace",
+            )
+
+            elapsed = time.time() - start_time
+
+            # Save optimize logs
+            log_content = f"""CCO Optimize Log
+{"=" * 60}
+Command: {cmd_str}
+Exit Code: {result.returncode}
+Duration: {elapsed:.2f}s
+Project Dir: {project_dir}
+{"=" * 60}
+
+STDOUT:
+{result.stdout or "(empty)"}
+
+{"=" * 60}
+STDERR:
+{result.stderr or "(empty)"}
+"""
+            (project_dir / "_cco_optimize.log").write_text(log_content, encoding="utf-8")
+
+            if result.returncode != 0:
+                error_msg = _parse_ccbox_error(result.stdout, result.stderr, result.returncode)
+                logger.warning(f"[CCO Optimize] FAILED (non-blocking): {error_msg}")
+                return {
+                    "success": False,
+                    "time": elapsed,
+                    "command": cmd_str,
+                    "exit_code": result.returncode,
+                    "stdout": result.stdout,
+                    "stderr": result.stderr,
+                    "error": error_msg,
+                }
+
+            logger.info(f"[CCO Optimize] SUCCESS in {elapsed:.2f}s")
+            return {
+                "success": True,
+                "time": elapsed,
+                "command": cmd_str,
+                "exit_code": 0,
+                "stdout": result.stdout,
+                "stderr": result.stderr,
+                "error": "",
+            }
+
+        except subprocess.TimeoutExpired as e:
+            elapsed = time.time() - start_time
+            error_msg = f"Optimize timeout after {self.setup_timeout}s"
+            logger.warning(f"[CCO Optimize] TIMEOUT (non-blocking): {error_msg}")
+            stdout = ""
+            stderr = ""
+            if e.stdout:
+                stdout = (
+                    e.stdout
+                    if isinstance(e.stdout, str)
+                    else e.stdout.decode("utf-8", errors="replace")
+                )
+            if e.stderr:
+                stderr = (
+                    e.stderr
+                    if isinstance(e.stderr, str)
+                    else e.stderr.decode("utf-8", errors="replace")
+                )
+            return {
+                "success": False,
+                "time": elapsed,
+                "command": cmd_str,
+                "exit_code": None,
+                "stdout": stdout,
+                "stderr": stderr,
+                "error": error_msg,
+            }
+        except Exception as e:
+            elapsed = time.time() - start_time
+            error_msg = f"{type(e).__name__}: {e}"
+            logger.warning(f"[CCO Optimize] EXCEPTION (non-blocking): {error_msg}")
+            return {
+                "success": False,
+                "time": elapsed,
+                "command": cmd_str,
+                "exit_code": None,
+                "stdout": "",
+                "stderr": "",
+                "error": error_msg,
+            }
+
     def run_project(
         self, config: ProjectConfig, variant: str, model: str = "opus"
     ) -> ExecutionResult:
@@ -744,9 +867,10 @@ STDERR:
         Creates an isolated directory, cd's into it, and runs ccbox.
         ccbox will mount this directory and generate code there.
 
-        For CCO variant, runs two phases:
+        For CCO variant, runs three phases:
         1. Setup phase: Run /cco-config --auto to configure CCO rules
         2. Test phase: Run the actual benchmark prompt
+        3. Optimize phase: Run /cco-optimize --auto to apply fixes (non-blocking)
         """
         logger.info(f"[{variant.upper()}] Starting project: {config.id}")
 
@@ -888,6 +1012,20 @@ STDERR:
 
             if success:
                 logger.info(f"[{variant.upper()}] SUCCESS in {generation_time:.2f}s{stall_info}")
+
+                # CCO variant: Run cco-optimize --auto after successful test
+                if variant == "cco":
+                    logger.info("[CCO] Running optimize phase...")
+                    optimize_result = self._run_cco_optimize(project_dir, model)
+                    if optimize_result["success"]:
+                        logger.info(
+                            f"[CCO] Optimize phase completed in {optimize_result['time']:.2f}s"
+                        )
+                    else:
+                        # Non-blocking: log warning but continue with analysis
+                        logger.warning(
+                            f"[CCO] Optimize phase failed (non-blocking): {optimize_result['error']}"
+                        )
             else:
                 if exit_code is None:
                     logger.error(

@@ -9,6 +9,29 @@ model: opus
 
 **Full-Stack Optimization** - Parallel analysis + background fixes with minimal questions.
 
+## Args
+
+- `--auto` or `--unattended`: Fully unattended mode for CI/CD and benchmarks
+  - **No questions asked** - full scope, fix all
+  - **No progress output** - silent execution
+  - **Only final summary** - single status line at end
+  - Defaults:
+    - Scopes: ALL (security, quality, architecture, best-practices)
+    - Action: Fix all (no approval needed)
+    - Git state: Continue anyway
+- `--security`: Security scope only
+- `--quality`: Quality scope only
+- `--report`: Report only, no fixes
+- `--fix`: Auto-fix safe items (default)
+- `--fix-all`: Fix all without approval
+- `--score`: Quality score only (0-100), skip all questions
+- `--pre-release`: All scopes, strict thresholds
+
+**Usage:**
+- `/cco-optimize --auto` - Silent full optimization, fix everything
+- `/cco-optimize --security --fix-all` - Security only, fix all
+- `/cco-optimize --score` - Quick quality score
+
 ## Core Principle [CRITICAL]
 
 **Fix everything that can be fixed.** All issues fall into:
@@ -19,6 +42,7 @@ model: opus
 
 - Context check: !`test -f ./.claude/rules/cco/context.md && echo "1" || echo "0"`
 - Git status: !`git status --short`
+- Args: $ARGS
 
 **DO NOT re-run these commands. Use the pre-collected values above.**
 
@@ -31,6 +55,32 @@ CCO context not found.
 Run /cco-config first to configure project context, then restart CLI.
 ```
 **Stop immediately.**
+
+## Mode Detection
+
+```javascript
+// Parse arguments
+const args = "$ARGS"
+const isUnattended = args.includes("--auto") || args.includes("--unattended")
+
+if (isUnattended) {
+  // SILENT MODE: No TodoWrite, no progress output, no intermediate messages
+  // Skip Q1, Q2 - proceed directly with full scope and fix all
+
+  config = {
+    scopes: ["security", "quality", "architecture", "best-practices"],  // ALL scopes
+    action: "Fix all",                                                   // No approval needed
+    gitState: "Continue anyway"                                          // Don't stash
+  }
+
+  // Execute silently:
+  // 1. Run analysis (no output)
+  // 2. Apply ALL fixes (no output)
+  // 3. Show ONLY final summary line
+
+  // → Jump directly to Step-2 analysis, skip Q1
+}
+```
 
 ## Architecture
 
@@ -45,30 +95,34 @@ Run /cco-config first to configure project context, then restart CLI.
 
 ---
 
-## Progress Tracking [CRITICAL]
+## Progress Tracking [SKIP IF --auto]
+
+**If `--auto` flag: Skip TodoWrite entirely. Silent execution.**
 
 ```javascript
-TodoWrite([
-  { content: "Step-1: Get optimization settings", status: "in_progress", activeForm: "Getting settings" },
-  { content: "Step-2: Run analysis", status: "pending", activeForm: "Running analysis" },
-  { content: "Step-3: Apply auto-fixes", status: "pending", activeForm: "Applying auto-fixes" },
-  { content: "Step-4: Get approval", status: "pending", activeForm: "Getting approval" },
-  { content: "Step-5: Apply approved", status: "pending", activeForm: "Applying approved fixes" },
-  { content: "Step-6: Show summary", status: "pending", activeForm: "Showing summary" }
-])
+if (!isUnattended) {
+  TodoWrite([
+    { content: "Step-1: Get optimization settings", status: "in_progress", activeForm: "Getting settings" },
+    { content: "Step-2: Run analysis", status: "pending", activeForm: "Running analysis" },
+    { content: "Step-3: Apply auto-fixes", status: "pending", activeForm: "Applying auto-fixes" },
+    { content: "Step-4: Get approval", status: "pending", activeForm: "Getting approval" },
+    { content: "Step-5: Apply approved", status: "pending", activeForm: "Applying approved fixes" },
+    { content: "Step-6: Show summary", status: "pending", activeForm: "Showing summary" }
+  ])
+}
 ```
 
 ---
 
-## Step-1: Setup [Q1 + BACKGROUND ANALYSIS]
+## Step-1: Setup [Q1 + BACKGROUND ANALYSIS] [SKIP Q1 IF --auto]
 
-**Start analysis in background while asking Q1:**
+**Start analysis in background while asking Q1 (or immediately if --auto):**
 
 ```javascript
 // Determine if git is dirty from context
 gitDirty = gitStatus.trim().length > 0
 
-// Start analysis with all scopes - will filter after Q1
+// Start analysis with all scopes - will filter after Q1 (or use all if --auto)
 analysisTask = Task("cco-agent-analyze", `
   scopes: ["security", "quality", "hygiene", "best-practices"]
 
@@ -80,53 +134,64 @@ analysisTask = Task("cco-agent-analyze", `
 `, { model: "haiku", run_in_background: true })
 ```
 
-**Build Q1 dynamically based on git state:**
+**UNATTENDED MODE: Skip Q1, use defaults from Mode Detection**
 
 ```javascript
-questions = [
-  {
-    question: "What to optimize?",
-    header: "Scope",
-    options: [
-      { label: "Security (Recommended)", description: "OWASP, secrets, CVEs, input validation" },
-      { label: "Quality", description: "Tech debt, type errors, test gaps" },
-      { label: "Architecture", description: "SOLID violations, coupling, patterns" },
-      { label: "Best Practices", description: "Resource management, consistency" }
-    ],
-    multiSelect: true
-  },
-  {
-    question: "Action mode?",
-    header: "Action",
-    options: [
-      { label: "Auto-fix safe (Recommended)", description: "Fix LOW risk, ask for others" },
-      { label: "Report only", description: "Show findings without fixing" },
-      { label: "Fix all", description: "Fix everything, no approval needed" }
-    ],
-    multiSelect: false
+if (isUnattended) {
+  // config already set in Mode Detection
+  // → Proceed directly to Step-2 (no Q1)
+} else {
+  // Interactive mode - ask Q1
+```
+
+**Build Q1 dynamically based on git state (Interactive only):**
+
+```javascript
+  questions = [
+    {
+      question: "What to optimize?",
+      header: "Scope",
+      options: [
+        { label: "Security (Recommended)", description: "OWASP, secrets, CVEs, input validation" },
+        { label: "Quality", description: "Tech debt, type errors, test gaps" },
+        { label: "Architecture", description: "SOLID violations, coupling, patterns" },
+        { label: "Best Practices", description: "Resource management, consistency" }
+      ],
+      multiSelect: true
+    },
+    {
+      question: "Action mode?",
+      header: "Action",
+      options: [
+        { label: "Auto-fix safe (Recommended)", description: "Fix LOW risk, ask for others" },
+        { label: "Report only", description: "Show findings without fixing" },
+        { label: "Fix all", description: "Fix everything, no approval needed" }
+      ],
+      multiSelect: false
+    }
+  ]
+
+  // Add git state tab only if dirty
+  if (gitDirty) {
+    questions.push({
+      question: "Working tree has uncommitted changes. How to proceed?",
+      header: "Git State",
+      options: [
+        { label: "Continue anyway (Recommended)", description: "Proceed, changes visible in git diff" },
+        { label: "Stash first", description: "Stash changes, continue, remind to pop" },
+        { label: "Cancel", description: "Abort optimization" }
+      ],
+      multiSelect: false
+    })
   }
-]
 
-// Add git state tab only if dirty
-if (gitDirty) {
-  questions.push({
-    question: "Working tree has uncommitted changes. How to proceed?",
-    header: "Git State",
-    options: [
-      { label: "Continue anyway (Recommended)", description: "Proceed, changes visible in git diff" },
-      { label: "Stash first", description: "Stash changes, continue, remind to pop" },
-      { label: "Cancel", description: "Abort optimization" }
-    ],
-    multiSelect: false
-  })
+  AskUserQuestion(questions)
 }
-
-AskUserQuestion(questions)
 ```
 
 ### Validation
 ```
-[x] User completed Q1
+[x] User completed Q1 (or skipped if --auto)
 → Store as: config = { scopes, action, gitState? }
 → If gitState = "Cancel": Exit
 → If gitState = "Stash first": Run git stash
@@ -162,16 +227,27 @@ console.log(`## Quality Score: ${agentResponse.scores.overall}/100`)
 // Wait for background analysis
 allFindings = await TaskOutput(analysisTask.id)
 
-// Filter by user-selected scopes
+// Filter by user-selected scopes (all scopes if --auto)
 selectedScopes = config.scopes.map(s => s.toLowerCase().replace(" ", "-"))
 findings = allFindings.findings.filter(f => selectedScopes.includes(f.scope))
 
 // Categorize
 autoFixable = findings.filter(f => f.fixable && !f.approvalRequired)
 approvalRequired = findings.filter(f => f.approvalRequired || !f.fixable)
+
+// In --auto mode: ALL findings are auto-fixable (no approval needed)
+if (isUnattended) {
+  autoFixable = findings.filter(f => f.fixable)
+  approvalRequired = []  // No approval in unattended mode
+}
 ```
 
-**Display findings progressively:**
+**Display findings progressively (Interactive only):**
+
+```javascript
+if (!isUnattended) {
+  // Show analysis table only in interactive mode
+```
 
 ```
 ## Analysis Results
@@ -189,11 +265,17 @@ Summary:
 - Approval required: {approvalRequired.length} items
 ```
 
+```javascript
+}
+// In --auto mode: No output, proceed silently
+```
+
 ### Validation
 ```
 [x] Analysis results collected
 [x] Findings categorized
 → If action = "Report only": Skip to Step-6
+→ If --auto: Skip Q2 (Step-4), apply all fixable
 → Proceed to Step-3
 ```
 
@@ -223,11 +305,13 @@ if (config.action !== "Report only" && autoFixable.length > 0) {
 
 ---
 
-## Step-4: Approval [Q2 - CONDITIONAL]
+## Step-4: Approval [Q2 - CONDITIONAL] [SKIP IF --auto]
+
+**Skip entirely if `--auto` flag - all fixable items already being applied.**
 
 **Only ask if there are approval-required items AND action is not "Fix all":**
 
-### Pre-Confirmation Display [MANDATORY]
+### Pre-Confirmation Display [MANDATORY - Interactive only]
 
 **Display issues table BEFORE asking approval question:**
 
@@ -244,7 +328,12 @@ Total: {n} issues requiring approval
 ```
 
 ```javascript
-if (config.action === "Fix all") {
+// UNATTENDED MODE: Skip approval entirely
+if (isUnattended) {
+  approved = []  // All fixable items handled in Step-3
+  declined = []
+  // → Proceed directly to Step-5
+} else if (config.action === "Fix all") {
   // No approval needed - apply all
   approved = approvalRequired
 } else if (approvalRequired.length === 0) {
@@ -363,6 +452,24 @@ if (approved.length > 0) {
 
 ## Step-6: Summary
 
+### Unattended Mode Output [--auto]
+
+**Single line summary only:**
+
+```javascript
+if (isUnattended) {
+  // ONLY output - single status line
+  const totalFixed = (autoFixResults?.accounting?.done || 0)
+  const totalFailed = (autoFixResults?.accounting?.fail || 0)
+  const status = totalFailed > 0 ? "WARN" : "OK"
+  console.log(`cco-optimize: ${status} | Fixed: ${totalFixed} | Failed: ${totalFailed} | Scopes: all`)
+  // No tables, no details, no stash reminder
+  return
+}
+```
+
+### Interactive Mode Output
+
 ```javascript
 // Build summary with conditional stash reminder
 let summary = `
@@ -391,8 +498,8 @@ console.log(summary)
 
 ### Validation
 ```
-[x] Summary displayed
-[x] All todos marked completed
+[x] Summary displayed (single line if --auto, full if interactive)
+[x] All todos marked completed (skipped if --auto)
 → Done
 ```
 
@@ -404,6 +511,7 @@ console.log(summary)
 
 | Scenario | Q1 | Q2 | Total |
 |----------|----|----|-------|
+| **--auto mode** | - | - | **0 questions** |
 | Clean git, has approval items | 2 tabs | 1 tab | 2 questions |
 | Dirty git, has approval items | 3 tabs | 1 tab | 2 questions |
 | Clean git, no approval items | 2 tabs | - | 1 question |
@@ -452,6 +560,7 @@ console.log(summary)
 
 | Flag | Effect |
 |------|--------|
+| `--auto` | **Unattended mode:** all scopes, fix all, no questions, silent execution, single-line summary |
 | `--security` | Security scope only, skip Q1 scope tab |
 | `--quality` | Quality scope only, skip Q1 scope tab |
 | `--report` | Report only, skip Q1 action tab |
