@@ -1615,7 +1615,7 @@
 
         async function compareProject(projectId) {
             try {
-                const resp = await fetch(`/api/compare/${projectId}`, { method: 'POST' });
+                const resp = await fetch(`/api/compare-comprehensive/${projectId}`, { method: 'POST' });
                 const result = await resp.json();
 
                 if (result.error) {
@@ -1631,55 +1631,116 @@
             }
         }
 
+        function getGradeColor(grade) {
+            const colors = {
+                'A+': '#3fb950', 'A': '#3fb950', 'A-': '#56d364',
+                'B+': '#79c0ff', 'B': '#79c0ff', 'B-': '#a5d6ff',
+                'C+': '#d29922', 'C': '#d29922', 'C-': '#e3b341',
+                'D': '#f85149', 'F': '#da3633'
+            };
+            return colors[grade] || 'var(--text-muted)';
+        }
+
         function renderComparisonModal(projectId, result) {
-            document.getElementById('modal-title').textContent = `${projectId} - Comparison`;
+            document.getElementById('modal-title').textContent = `${projectId} - Comprehensive Analysis`;
 
             const comp = result.comparison;
+            const ccoGrade = result.cco_grade || comp?.cco_grade || '-';
+            const vanillaGrade = result.vanilla_grade || comp?.vanilla_grade || '-';
+            const ccoScore = comp?.cco_overall ?? '-';
+            const vanillaScore = comp?.vanilla_overall ?? '-';
+            const diff = comp?.overall_diff ?? 0;
+
             let html = `
                 <div style="margin-bottom: 20px; text-align: center;">
                     <span class="verdict ${getVerdictClass(result.verdict)}" style="font-size: 16px; padding: 8px 16px;">${result.verdict}</span>
-                    <div style="margin-top: 10px; font-size: 18px;">
-                        <span style="color: var(--cco);">CCO: ${result.cco_score}</span>
-                        <span style="margin: 0 10px;">vs</span>
-                        <span style="color: var(--vanilla);">Vanilla: ${result.vanilla_score}</span>
-                        <span style="margin-left: 20px; color: ${result.score_difference > 0 ? 'var(--success)' : result.score_difference < 0 ? 'var(--error)' : 'var(--text-muted)'}">
-                            (${result.score_difference > 0 ? '+' : ''}${result.score_difference})
-                        </span>
+                    <div style="margin-top: 15px; display: flex; justify-content: center; gap: 40px;">
+                        <div style="text-align: center;">
+                            <div style="font-size: 32px; font-weight: bold; color: ${getGradeColor(ccoGrade)};">${ccoGrade}</div>
+                            <div style="color: var(--cco); font-size: 14px;">CCO (${ccoScore})</div>
+                        </div>
+                        <div style="font-size: 24px; color: var(--text-muted); align-self: center;">vs</div>
+                        <div style="text-align: center;">
+                            <div style="font-size: 32px; font-weight: bold; color: ${getGradeColor(vanillaGrade)};">${vanillaGrade}</div>
+                            <div style="color: var(--vanilla); font-size: 14px;">Vanilla (${vanillaScore})</div>
+                        </div>
+                    </div>
+                    <div style="margin-top: 10px; color: ${diff > 0 ? 'var(--success)' : diff < 0 ? 'var(--error)' : 'var(--text-muted)'}">
+                        Difference: ${diff > 0 ? '+' : ''}${diff} points
                     </div>
                 </div>
             `;
 
-            // Detailed comparisons
+            // 6-Dimension comparison
             if (comp && comp.comparisons && comp.comparisons.length > 0) {
                 html += `
-                    <h4 style="margin: 20px 0 15px;">Detailed Metrics</h4>
-                    <table class="results-table">
-                        <thead>
-                            <tr><th>Metric</th><th>CCO</th><th>Vanilla</th><th>Winner</th></tr>
-                        </thead>
-                        <tbody>
+                    <h4 style="margin: 20px 0 15px;">6-Dimension Analysis</h4>
+                    <div style="display: grid; gap: 15px;">
                 `;
 
-                let currentCat = '';
-                for (const c of comp.comparisons) {
-                    if (c.category !== currentCat) {
-                        currentCat = c.category;
-                        html += `<tr><td colspan="4" style="background: var(--bg); font-weight: bold;">${currentCat}</td></tr>`;
-                    }
-
-                    const ccoClass = c.winner === 'cco' ? 'winner' : c.winner === 'vanilla' ? 'loser' : '';
-                    const vanClass = c.winner === 'vanilla' ? 'winner' : c.winner === 'cco' ? 'loser' : '';
+                for (const dim of comp.comparisons) {
+                    const ccoBarWidth = Math.max(5, dim.cco_score);
+                    const vanillaBarWidth = Math.max(5, dim.vanilla_score);
+                    const winnerStyle = dim.winner === 'cco' ? 'border-left: 3px solid var(--cco);' :
+                                       dim.winner === 'vanilla' ? 'border-left: 3px solid var(--vanilla);' :
+                                       'border-left: 3px solid var(--text-muted);';
 
                     html += `
-                        <tr>
-                            <td>${c.name}</td>
-                            <td class="metric-value ${ccoClass}">${c.cco}</td>
-                            <td class="metric-value ${vanClass}">${c.vanilla}</td>
-                            <td>${c.winner === 'tie' ? '-' : c.winner.toUpperCase()}</td>
-                        </tr>
+                        <div style="background: var(--bg-tertiary); padding: 15px; border-radius: 8px; ${winnerStyle}">
+                            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px;">
+                                <strong>${dim.dimension}</strong>
+                                <span style="font-size: 12px; color: var(--text-muted);">
+                                    ${dim.winner !== 'tie' ? `${dim.winner.toUpperCase()} +${Math.abs(dim.difference)}` : 'TIE'}
+                                </span>
+                            </div>
+                            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px;">
+                                <div>
+                                    <div style="display: flex; justify-content: space-between; font-size: 12px; margin-bottom: 4px;">
+                                        <span style="color: var(--cco);">CCO</span>
+                                        <span class="${dim.winner === 'cco' ? 'winner' : ''}">${dim.cco_score}</span>
+                                    </div>
+                                    <div style="height: 6px; background: var(--bg); border-radius: 3px; overflow: hidden;">
+                                        <div style="width: ${ccoBarWidth}%; height: 100%; background: var(--cco);"></div>
+                                    </div>
+                                </div>
+                                <div>
+                                    <div style="display: flex; justify-content: space-between; font-size: 12px; margin-bottom: 4px;">
+                                        <span style="color: var(--vanilla);">Vanilla</span>
+                                        <span class="${dim.winner === 'vanilla' ? 'winner' : ''}">${dim.vanilla_score}</span>
+                                    </div>
+                                    <div style="height: 6px; background: var(--bg); border-radius: 3px; overflow: hidden;">
+                                        <div style="width: ${vanillaBarWidth}%; height: 100%; background: var(--vanilla);"></div>
+                                    </div>
+                                </div>
+                            </div>
+                            ${(dim.cco_issues?.length || dim.vanilla_issues?.length || dim.cco_positives?.length || dim.vanilla_positives?.length) ? `
+                                <details style="margin-top: 10px;">
+                                    <summary style="cursor: pointer; font-size: 12px; color: var(--text-muted);">Show details</summary>
+                                    <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-top: 10px; font-size: 11px;">
+                                        <div>
+                                            ${dim.cco_positives?.length ? `<div style="color: var(--success);">✓ ${dim.cco_positives.join('<br>✓ ')}</div>` : ''}
+                                            ${dim.cco_issues?.length ? `<div style="color: var(--warning); margin-top: 5px;">⚠ ${dim.cco_issues.join('<br>⚠ ')}</div>` : ''}
+                                        </div>
+                                        <div>
+                                            ${dim.vanilla_positives?.length ? `<div style="color: var(--success);">✓ ${dim.vanilla_positives.join('<br>✓ ')}</div>` : ''}
+                                            ${dim.vanilla_issues?.length ? `<div style="color: var(--warning); margin-top: 5px;">⚠ ${dim.vanilla_issues.join('<br>⚠ ')}</div>` : ''}
+                                        </div>
+                                    </div>
+                                </details>
+                            ` : ''}
+                        </div>
                     `;
                 }
-                html += '</tbody></table>';
+                html += '</div>';
+
+                // Summary stats
+                html += `
+                    <div style="margin-top: 20px; display: flex; justify-content: center; gap: 30px; font-size: 14px;">
+                        <div><span style="color: var(--cco);">CCO wins:</span> <strong>${comp.cco_wins}</strong></div>
+                        <div><span style="color: var(--vanilla);">Vanilla wins:</span> <strong>${comp.vanilla_wins}</strong></div>
+                        <div><span style="color: var(--text-muted);">Ties:</span> <strong>${comp.ties}</strong></div>
+                    </div>
+                `;
             }
 
             document.getElementById('modal-body').innerHTML = html;
