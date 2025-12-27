@@ -610,6 +610,8 @@ async def execute_tests_background(
     run_id: str, projects: list[ProjectVariants], model: str
 ) -> None:
     """Execute tests in background with per-project variant selection."""
+    from ..runner import BenchmarkResult, compare_metrics
+
     executor = TestExecutor(OUTPUT_DIR)
     log_activity(f"Starting benchmark run: {len(projects)} project(s)", "info")
 
@@ -688,6 +690,55 @@ async def execute_tests_background(
             running_tests[key]["status"] = "completed"
             running_tests[key]["progress"] = 100
             log_activity(f"Completed: {config.name}", "success")
+
+            # Save result if both variants were run
+            if project.run_vanilla and project.run_cco:
+                try:
+                    vanilla_exec = running_tests[key].get("vanilla_result")
+                    cco_exec = running_tests[key].get("cco_result")
+
+                    if vanilla_exec and cco_exec:
+                        from ..runner import ExecutionResult
+
+                        vanilla_result = ExecutionResult.from_dict(vanilla_exec)
+                        cco_result = ExecutionResult.from_dict(cco_exec)
+
+                        # Compare metrics if both have them
+                        if cco_result.metrics and vanilla_result.metrics:
+                            comparison = compare_metrics(cco_result.metrics, vanilla_result.metrics)
+                        else:
+                            comparison = {
+                                "comparisons": [],
+                                "cco_wins": 0,
+                                "vanilla_wins": 0,
+                                "ties": 0,
+                                "cco_score": cco_result.score,
+                                "vanilla_score": vanilla_result.score,
+                                "score_diff": cco_result.score - vanilla_result.score,
+                            }
+
+                        diff = comparison.get("score_diff", cco_result.score - vanilla_result.score)
+                        from ..runner import calculate_verdict
+
+                        verdict = calculate_verdict(diff)
+
+                        benchmark_result = BenchmarkResult(
+                            project_id=config.id,
+                            project_name=config.name,
+                            categories=config.categories,
+                            complexity=config.complexity,
+                            cco_result=cco_result,
+                            vanilla_result=vanilla_result,
+                            comparison=comparison,
+                            verdict=verdict,
+                            score_difference=round(diff, 1),
+                            prompt_used=config.prompt,
+                        )
+
+                        filepath = results_manager.save_result(benchmark_result)
+                        log_activity(f"Result saved: {filepath.name}", "info")
+                except Exception as save_err:
+                    log_activity(f"Failed to save result: {save_err}", "warning")
 
         except Exception as e:
             running_tests[key]["status"] = "failed"
@@ -922,6 +973,71 @@ async def delete_output_folder(folder_name: str) -> dict[str, str]:
     shutil.rmtree(folder_path)
     log_activity(f"Deleted output folder: {folder_name}", "info")
     return {"message": f"Deleted {folder_name}"}
+
+
+@app.post("/api/compare-comprehensive/{project_id}")
+async def compare_project_comprehensive(project_id: str) -> dict[str, Any]:
+    """Comprehensive multi-dimensional comparison of vanilla vs cco."""
+    from ..runner import ComprehensiveAnalyzer, compare_comprehensive
+
+    vanilla_dir = OUTPUT_DIR / f"{project_id}_vanilla"
+    cco_dir = OUTPUT_DIR / f"{project_id}_cco"
+
+    result: dict[str, Any] = {
+        "project_id": project_id,
+        "vanilla_exists": vanilla_dir.exists(),
+        "cco_exists": cco_dir.exists(),
+        "can_compare": vanilla_dir.exists() and cco_dir.exists(),
+    }
+
+    if not result["can_compare"]:
+        missing = []
+        if not vanilla_dir.exists():
+            missing.append("vanilla")
+        if not cco_dir.exists():
+            missing.append("cco")
+        result["error"] = f"Missing output folders: {', '.join(missing)}"
+        return result
+
+    try:
+        # Comprehensive analysis of both variants
+        log_activity(f"Starting comprehensive analysis: {project_id}", "info")
+
+        vanilla_analyzer = ComprehensiveAnalyzer(vanilla_dir)
+        vanilla_metrics = vanilla_analyzer.analyze()
+        vanilla_metrics.variant = "vanilla"
+
+        cco_analyzer = ComprehensiveAnalyzer(cco_dir)
+        cco_metrics = cco_analyzer.analyze()
+        cco_metrics.variant = "cco"
+
+        comparison = compare_comprehensive(cco_metrics, vanilla_metrics)
+
+        result.update(
+            {
+                "vanilla_metrics": vanilla_metrics.to_dict(),
+                "cco_metrics": cco_metrics.to_dict(),
+                "comparison": comparison,
+                "verdict": comparison["verdict"],
+                "cco_grade": cco_metrics.grade,
+                "vanilla_grade": vanilla_metrics.grade,
+            }
+        )
+
+        log_activity(
+            f"Comprehensive analysis complete: CCO={cco_metrics.grade} "
+            f"({cco_metrics.overall_score:.1f}) vs Vanilla={vanilla_metrics.grade} "
+            f"({vanilla_metrics.overall_score:.1f})",
+            "success",
+        )
+
+    except Exception as e:
+        import traceback
+
+        logger.error(f"Comprehensive comparison failed: {traceback.format_exc()}")
+        result["error"] = f"Comprehensive comparison failed: {e}"
+
+    return result
 
 
 # ============== Static Files & HTML ==============
