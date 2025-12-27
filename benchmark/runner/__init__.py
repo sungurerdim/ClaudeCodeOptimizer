@@ -2,6 +2,12 @@
 Benchmark runner module.
 """
 
+from .analyzer import (
+    ComprehensiveAnalyzer,
+    ComprehensiveMetrics,
+    DimensionScore,
+    compare_comprehensive,
+)
 from .executor import (
     DOCKER_INSTALL_URL,
     ActivityState,
@@ -27,7 +33,10 @@ __all__ = [
     "ActivityState",
     "BenchmarkResult",
     "CodeAnalyzer",
+    "ComprehensiveAnalyzer",
+    "ComprehensiveMetrics",
     "DependencyStatus",
+    "DimensionScore",
     "DOCKER_INSTALL_URL",
     "ExecutionResult",
     "FunctionInfo",
@@ -38,6 +47,7 @@ __all__ = [
     "calculate_overall_score",
     "calculate_verdict",
     "check_dependencies",
+    "compare_comprehensive",
     "compare_metrics",
     "discover_projects",
 ]
