@@ -106,6 +106,7 @@ BENCHMARK_DIR = Path(__file__).parent.parent
 PROJECTS_DIR = BENCHMARK_DIR / "projects"
 RESULTS_DIR = BENCHMARK_DIR / "results"
 OUTPUT_DIR = BENCHMARK_DIR / "output"
+SUITE_DIR = BENCHMARK_DIR / "suite"
 STATIC_DIR = Path(__file__).parent / "static"
 
 
@@ -1036,6 +1037,70 @@ async def compare_project_comprehensive(project_id: str) -> dict[str, Any]:
 
         logger.error(f"Comprehensive comparison failed: {traceback.format_exc()}")
         result["error"] = f"Comprehensive comparison failed: {e}"
+
+    return result
+
+
+@app.post("/api/compare-ai/{project_id}")
+async def compare_project_ai(project_id: str) -> dict[str, Any]:
+    """AI-powered comparison using Claude via ccbox."""
+    from ..runner.ai_evaluator import run_ai_comparison
+
+    result: dict[str, Any] = {
+        "project_id": project_id,
+        "method": "ai",
+    }
+
+    # Check if both variants exist
+    cco_dir = OUTPUT_DIR / f"{project_id}_cco"
+    vanilla_dir = OUTPUT_DIR / f"{project_id}_vanilla"
+
+    if not cco_dir.exists() or not vanilla_dir.exists():
+        missing = []
+        if not cco_dir.exists():
+            missing.append("cco")
+        if not vanilla_dir.exists():
+            missing.append("vanilla")
+        result["error"] = f"Missing output folders: {', '.join(missing)}"
+        return result
+
+    # Get original prompt from project config
+    project_dir = PROJECTS_DIR / project_id
+    if not project_dir.exists():
+        result["error"] = f"Project not found: {project_id}"
+        return result
+
+    config = ProjectConfig(project_dir)
+    original_prompt = config.prompt
+
+    log_activity(f"Starting AI comparison for {project_id}...", "info")
+
+    try:
+        ai_result = run_ai_comparison(
+            project_id=project_id,
+            output_dir=OUTPUT_DIR,
+            suite_dir=SUITE_DIR,
+            original_prompt=original_prompt,
+            timeout=600,
+        )
+
+        if ai_result.error:
+            result["error"] = ai_result.error
+            log_activity(f"AI comparison failed: {ai_result.error}", "error")
+        else:
+            result.update(ai_result.to_dict())
+            log_activity(
+                f"AI comparison complete: {ai_result.verdict} "
+                f"(CCO: {ai_result.cco.grade}, Vanilla: {ai_result.vanilla.grade})",
+                "success",
+            )
+
+    except Exception as e:
+        import traceback
+
+        logger.error(f"AI comparison failed: {traceback.format_exc()}")
+        result["error"] = f"AI comparison failed: {e}"
+        log_activity(f"AI comparison error: {e}", "error")
 
     return result
 
