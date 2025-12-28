@@ -786,6 +786,191 @@ class TestPostInstallValidation:
         assert "require --local" in captured.err
 
 
+class TestDryRunMode:
+    """Test --dry-run mode for install_hook."""
+
+    def test_dry_run_shows_preview(self, tmp_path, capsys):
+        """Test --dry-run shows what would be installed without making changes."""
+        with patch("claudecodeoptimizer.install.get_content_path") as mock_content:
+            # Setup mock content paths
+            pkg_path = tmp_path / "pkg"
+            (pkg_path / "command-templates").mkdir(parents=True)
+            (pkg_path / "command-templates" / "cco-test.md").write_text("# Test")
+            (pkg_path / "agent-templates").mkdir(parents=True)
+            (pkg_path / "agent-templates" / "cco-agent-test.md").write_text("# Agent")
+            (pkg_path / "rules").mkdir(parents=True)
+            (pkg_path / "rules" / "cco-core.md").write_text("# Core")
+
+            mock_content.side_effect = lambda subdir="": pkg_path / subdir if subdir else pkg_path
+            with patch.object(sys, "argv", ["cco-install", "--dry-run", "--dir", str(tmp_path)]):
+                result = post_install()
+
+        assert result == 0
+        captured = capsys.readouterr()
+        assert "DRY RUN" in captured.out
+        assert "Would clean previous installation" in captured.out
+        assert "Would install" in captured.out
+        assert "This was a dry run" in captured.out
+
+    def test_dry_run_no_changes(self, tmp_path, capsys):
+        """Test --dry-run does not create any files."""
+        target = tmp_path / "target"
+        # Don't create target - dry run shouldn't create it
+
+        with patch("claudecodeoptimizer.install.get_content_path") as mock_content:
+            pkg_path = tmp_path / "pkg"
+            (pkg_path / "command-templates").mkdir(parents=True)
+            mock_content.side_effect = lambda subdir="": pkg_path / subdir if subdir else pkg_path
+            with patch.object(sys, "argv", ["cco-install", "--dry-run", "--dir", str(target)]):
+                result = post_install()
+
+        assert result == 0
+        # Target directory should NOT be created in dry-run mode
+        assert not target.exists()
+
+    def test_dry_run_previews_files(self, tmp_path, capsys):
+        """Test --dry-run lists files that would be installed."""
+        with patch("claudecodeoptimizer.install.get_content_path") as mock_content:
+            pkg_path = tmp_path / "pkg"
+            (pkg_path / "command-templates").mkdir(parents=True)
+            (pkg_path / "command-templates" / "cco-config.md").write_text("# Config")
+            (pkg_path / "command-templates" / "cco-status.md").write_text("# Status")
+            (pkg_path / "agent-templates").mkdir(parents=True)
+            (pkg_path / "rules").mkdir(parents=True)
+            (pkg_path / "rules" / "cco-core.md").write_text("# Core")
+            (pkg_path / "rules" / "cco-ai.md").write_text("# AI")
+
+            mock_content.side_effect = lambda subdir="": pkg_path / subdir if subdir else pkg_path
+            with patch.object(sys, "argv", ["cco-install", "--dry-run", "--dir", str(tmp_path)]):
+                result = post_install()
+
+        assert result == 0
+        captured = capsys.readouterr()
+        # Check that files are listed
+        assert "+ cco-config.md" in captured.out
+        assert "+ cco-status.md" in captured.out
+        # Rules preview shows cco/core.md format
+        assert "+ cco/core.md" in captured.out
+        assert "+ cco/ai.md" in captured.out
+
+    def test_dry_run_footer_message(self, tmp_path, capsys):
+        """Test --dry-run shows footer with instructions."""
+        with patch("claudecodeoptimizer.install.get_content_path") as mock_content:
+            pkg_path = tmp_path / "pkg"
+            pkg_path.mkdir(parents=True)
+            mock_content.side_effect = lambda subdir="": pkg_path / subdir if subdir else pkg_path
+            with patch.object(sys, "argv", ["cco-install", "--dry-run", "--dir", str(tmp_path)]):
+                result = post_install()
+
+        assert result == 0
+        captured = capsys.readouterr()
+        assert "No changes were made" in captured.out
+        assert "Run without --dry-run" in captured.out
+
+
+class TestPathAndCatUtilities:
+    """Test --path and --cat utility options."""
+
+    def test_path_existing_file(self, tmp_path, capsys):
+        """Test --path returns path of existing file."""
+        with patch("claudecodeoptimizer.install_hook.get_content_path") as mock_content:
+            content_path = tmp_path / "content"
+            content_path.mkdir(parents=True)
+            (content_path / "rules" / "cco-adaptive.md").mkdir(parents=True)
+            (content_path / "rules" / "cco-adaptive.md").rmdir()
+            rules_dir = content_path / "rules"
+            rules_dir.mkdir(exist_ok=True)
+            (rules_dir / "cco-adaptive.md").write_text("# Adaptive")
+
+            mock_content.return_value = content_path
+            with patch.object(sys, "argv", ["cco-install", "--path", "rules/cco-adaptive.md"]):
+                result = post_install()
+
+        assert result == 0
+        captured = capsys.readouterr()
+        assert "cco-adaptive.md" in captured.out
+
+    def test_path_nonexistent_file(self, tmp_path, capsys):
+        """Test --path returns error for nonexistent file."""
+        with patch("claudecodeoptimizer.install_hook.get_content_path") as mock_content:
+            content_path = tmp_path / "content"
+            content_path.mkdir(parents=True)
+            mock_content.return_value = content_path
+
+            with patch.object(sys, "argv", ["cco-install", "--path", "nonexistent.md"]):
+                result = post_install()
+
+        assert result == 1
+        captured = capsys.readouterr()
+        assert "Path not found" in captured.err
+
+    def test_cat_existing_file(self, tmp_path, capsys):
+        """Test --cat outputs file content."""
+        with patch("claudecodeoptimizer.install_hook.get_content_path") as mock_content:
+            content_path = tmp_path / "content"
+            rules_dir = content_path / "rules"
+            rules_dir.mkdir(parents=True)
+            (rules_dir / "cco-adaptive.md").write_text("# Adaptive Rules\n\nContent here")
+
+            mock_content.return_value = content_path
+            with patch.object(sys, "argv", ["cco-install", "--cat", "rules/cco-adaptive.md"]):
+                result = post_install()
+
+        assert result == 0
+        captured = capsys.readouterr()
+        assert "# Adaptive Rules" in captured.out
+        assert "Content here" in captured.out
+
+    def test_cat_nonexistent_file(self, tmp_path, capsys):
+        """Test --cat returns error for nonexistent file."""
+        with patch("claudecodeoptimizer.install_hook.get_content_path") as mock_content:
+            content_path = tmp_path / "content"
+            content_path.mkdir(parents=True)
+            mock_content.return_value = content_path
+
+            with patch.object(sys, "argv", ["cco-install", "--cat", "nonexistent.md"]):
+                result = post_install()
+
+        assert result == 1
+        captured = capsys.readouterr()
+        assert "File not found" in captured.err
+
+    def test_cat_directory_returns_error(self, tmp_path, capsys):
+        """Test --cat returns error when path is a directory."""
+        with patch("claudecodeoptimizer.install_hook.get_content_path") as mock_content:
+            content_path = tmp_path / "content"
+            (content_path / "rules").mkdir(parents=True)
+
+            mock_content.return_value = content_path
+            with patch.object(sys, "argv", ["cco-install", "--cat", "rules"]):
+                result = post_install()
+
+        assert result == 1
+        captured = capsys.readouterr()
+        assert "File not found" in captured.err
+
+
+class TestDirWithNonexistentTarget:
+    """Test --dir with non-existent target directory."""
+
+    def test_dir_creates_nonexistent_target(self, tmp_path, capsys):
+        """Test --dir creates target directory if it doesn't exist."""
+        target = tmp_path / "new_claude_dir"
+        assert not target.exists()
+
+        with patch("claudecodeoptimizer.install.get_content_path") as mock_content:
+            pkg_path = tmp_path / "pkg"
+            (pkg_path / "command-templates").mkdir(parents=True)
+            (pkg_path / "command-templates" / "cco-test.md").write_text("# Test")
+            mock_content.side_effect = lambda subdir="": pkg_path / subdir if subdir else pkg_path
+            with patch.object(sys, "argv", ["cco-install", "--dir", str(target)]):
+                result = post_install()
+
+        assert result == 0
+        assert target.exists()
+        assert (target / "commands").exists()
+
+
 class TestPostInstall:
     """Test post_install function."""
 
