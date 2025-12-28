@@ -162,7 +162,7 @@ qualityTask = Task("general-purpose", `
 `, { model: "opus", run_in_background: true })  // Opus: code fixes require accuracy
 
 reviewTask = Task("general-purpose", `
-  Execute /cco-review --quick --no-apply
+  Execute /cco-review --quick
   Return: {
     foundation: "SOUND|HAS ISSUES",
     metrics: { coupling, cohesion, complexity },
@@ -426,7 +426,7 @@ console.log(`
 
 | Task | Model | Reason |
 |------|-------|--------|
-| Quality (/cco-optimize) | Sonnet | Code modifications |
+| Quality (/cco-optimize) | Opus | Code modifications, 50-75% fewer tool errors |
 | Review (/cco-review) | Haiku | Read-only analysis |
 | Verification | Bash | Direct execution |
 
