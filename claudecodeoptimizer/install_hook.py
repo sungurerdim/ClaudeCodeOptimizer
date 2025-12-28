@@ -165,7 +165,8 @@ def _run_install_step(
         print()
         return {} if subdir == ContentSubdir.RULES else []
 
-    result = install_fn(target_dir=target_dir)  # type: ignore[operator]
+    # install_fn is typed as object to accept both setup_commands (returns list) and setup_rules (returns dict)
+    result = install_fn(target_dir=target_dir)  # type: ignore[operator]  # Callable union cannot be narrowed by mypy
     if not result:
         print("  (none)")
     print()
@@ -252,7 +253,7 @@ def _run_global_install(dry_run: bool = False, target_dir: Path | None = None) -
     )
 
     _run_claude_md_cleanup(dry_run, target_dir)
-    _print_summary(dry_run, cmds, agents, rules)  # type: ignore[arg-type]
+    _print_summary(dry_run, cmds, agents, rules)  # type: ignore[arg-type]  # _run_install_step returns union, narrowed by runtime logic
     _print_footer(dry_run)
 
     return 0
