@@ -225,7 +225,58 @@ if (isUnattended) {
 → If context = "Remove": Skip to Step-4 (removal)
 → If context = "Export": Skip to Step-4 (export)
 → If thinking = "Disabled": Skip Budget tab in Q2
+→ If statusline = "Full" or "Minimal": Ask scope question (Step-2.5)
 → Proceed to Step-3
+```
+
+---
+
+## Step-2.5: Statusline Scope [CONDITIONAL]
+
+**Only ask if "Full" or "Minimal" selected in Q1:**
+
+```javascript
+if (setupConfig.statusline === "Full" || setupConfig.statusline === "Minimal") {
+  if (!isUnattended) {
+    AskUserQuestion([{
+      question: "Where to install statusline?",
+      header: "Scope",
+      options: [
+        { label: "Global (Recommended)", description: "~/.claude - applies to all projects on this machine" },
+        { label: "Local", description: "./.claude - this project only" }
+      ],
+      multiSelect: false
+    }])
+    // Store result: setupConfig.statuslineScope = "Global" | "Local"
+  } else {
+    // Unattended: default to Local (non-invasive)
+    setupConfig.statuslineScope = "Local"
+  }
+}
+```
+
+### Statusline Scope Behavior
+
+| Scope | Target Directory | Settings File | Effect |
+|-------|------------------|---------------|--------|
+| Global | `~/.claude/` | `~/.claude/settings.json` | All projects use this statusline |
+| Local | `./.claude/` | `./.claude/settings.json` | Only this project uses statusline |
+
+**Global Installation:**
+```bash
+# Copy statusline script to global config
+CCO_PATH=$(python3 -c "from claudecodeoptimizer.config import get_content_path; print(get_content_path('statusline'))")
+cp "$CCO_PATH/cco-{mode}.js" ~/.claude/cco-{mode}.js
+
+# Update global settings.json (merge statusLine key only)
+# Other global settings preserved
+```
+
+**Local Installation:**
+```bash
+# Copy to project .claude (existing behavior)
+cp "$CCO_PATH/cco-{mode}.js" ./.claude/cco-{mode}.js
+# Update ./.claude/settings.json
 ```
 
 ---
@@ -596,17 +647,43 @@ The cco-agent-analyze agent handles all detection-to-rule mapping internally usi
 
 **Statusline Mapping:**
 
-| Mode | Action |
-|------|--------|
-| Full | Copy `cco-full.js` from CCO package → `${targetDir}/cco-full.js` |
-| Minimal | Copy `cco-minimal.js` from CCO package → `${targetDir}/cco-minimal.js` |
-| No | Skip statusLine key in settings.json |
+| Mode | Scope | Target | Settings File |
+|------|-------|--------|---------------|
+| Full | Global | `~/.claude/cco-full.js` | `~/.claude/settings.json` |
+| Full | Local | `${targetDir}/cco-full.js` | `${targetDir}/settings.json` |
+| Minimal | Global | `~/.claude/cco-minimal.js` | `~/.claude/settings.json` |
+| Minimal | Local | `${targetDir}/cco-minimal.js` | `${targetDir}/settings.json` |
+| Skip | - | No action | No change |
+| Remove | - | Delete statusline file | Remove statusLine key |
 
 ```bash
+# Determine target based on scope
+if [ "${statuslineScope}" = "Global" ]; then
+  STATUSLINE_DIR=~/.claude
+else
+  STATUSLINE_DIR="${targetDir}"
+fi
+
 # Copy from package (never generate)
 CCO_PATH=$(python3 -c "from claudecodeoptimizer.config import get_content_path; print(get_content_path('statusline'))")
-cp "$CCO_PATH/cco-{mode}.js" "${targetDir}/cco-{mode}.js"
+cp "$CCO_PATH/cco-{mode}.js" "$STATUSLINE_DIR/cco-{mode}.js"
+
+# Update settings.json in the same directory
+# Merge statusLine key into $STATUSLINE_DIR/settings.json
 ```
+
+**Settings.json statusLine path:**
+```json
+{
+  "statusLine": {
+    "type": "command",
+    "command": "node -e \"require('child_process').spawnSync('node',[require('path').join('${STATUSLINE_DIR}','cco-${mode}.js')],{stdio:'inherit'})\"",
+    "padding": 1
+  }
+}
+```
+
+**Note:** When scope is Global, the statusLine command uses absolute path `~/.claude/cco-{mode}.js`. When Local, it uses relative path `.claude/cco-{mode}.js`.
 
 ### If action = Remove
 

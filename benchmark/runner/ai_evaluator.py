@@ -283,6 +283,36 @@ def calculate_verdict(cco_score: int, vanilla_score: int) -> tuple[str, str, str
     return winner, margin, verdict
 
 
+def extract_ai_content(response: str) -> str:
+    """
+    Extract the actual AI content from various output formats.
+
+    Handles:
+    - stream-json format: multiple JSON objects per line, extract from type="result"
+    - Plain text with markdown code blocks
+    - Plain JSON
+    """
+    lines = response.strip().split("\n")
+
+    # Try stream-json format first: look for type="result" line
+    for line in reversed(lines):  # Start from end for efficiency
+        line = line.strip()
+        if not line or not line.startswith("{"):
+            continue
+        try:
+            obj = json.loads(line)
+            if obj.get("type") == "result":
+                # Found the result object, extract the actual content
+                content = obj.get("result", "")
+                if content:
+                    return content
+        except json.JSONDecodeError:
+            continue
+
+    # Not stream-json, return original
+    return response
+
+
 def parse_ai_response(response: str, cco_is_a: bool) -> AIComparisonResult:
     """
     Parse the AI response JSON into structured result.
@@ -295,8 +325,8 @@ def parse_ai_response(response: str, cco_is_a: bool) -> AIComparisonResult:
     result.blind_assignment = "cco=a" if cco_is_a else "cco=b"
 
     try:
-        # Extract JSON from response
-        cleaned = response.strip()
+        # Extract actual content from stream-json or other formats
+        cleaned = extract_ai_content(response)
 
         # Remove markdown code blocks if present
         if cleaned.startswith("```"):
@@ -448,7 +478,7 @@ def run_ai_comparison(
         return AIComparisonResult(error=f"Failed to read comparison prompt: {e}")
 
     # BLIND ASSIGNMENT: Randomly assign which is A and which is B
-    cco_is_a = random.choice([True, False])
+    cco_is_a = random.choice([True, False])  # noqa: S311 - not for crypto
 
     if cco_is_a:
         dir_a = cco_dir.name
