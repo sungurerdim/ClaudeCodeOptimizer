@@ -2,9 +2,33 @@
 
 Build a composable data validation library for TypeScript.
 
+---
+
+## Autonomous Operation
+
+**Execute this task completely without user interaction:**
+
+1. **Proceed autonomously** - Make reasonable decisions without asking
+2. **Implement all requirements** - Complete every validator type listed below
+3. **Write working code** - All validators must function correctly
+4. **Include tests** - 90%+ test coverage required
+5. **Handle errors gracefully** - Clear, actionable error messages
+
+**Prioritized execution order:**
+1. Project structure and base validator class
+2. Primitive validators (string, number, boolean)
+3. Complex validators (object, array, record)
+4. Type inference system
+5. Custom validators and transforms
+6. Union, enum, literal types
+7. Tests for all validators
+
+---
+
 ## Requirements
 
 ### Core Features
+
 1. **Schema Definition**
    ```typescript
    const userSchema = v.object({
@@ -67,6 +91,7 @@ Build a composable data validation library for TypeScript.
    ```
 
 ### Technical Requirements
+
 - Zero runtime dependencies
 - Tree-shakeable exports
 - Full TypeScript type inference
@@ -77,6 +102,7 @@ Build a composable data validation library for TypeScript.
 - Size < 5KB gzipped
 
 ### Project Structure
+
 ```
 validatr/
 ├── src/
@@ -105,11 +131,18 @@ validatr/
 └── tsconfig.json
 ```
 
+---
+
 ## Success Criteria
-- All validator types implemented
-- Full type inference working
-- Custom validators work
-- Transforms work and types flow through
-- All tests pass
-- Bundle size under target
-- No any types in implementation
+
+| Priority | Requirement | Validation |
+|----------|-------------|------------|
+| P0 | All validator types implemented | Each type works correctly |
+| P0 | Full type inference working | v.infer returns correct type |
+| P1 | Custom validators work | .refine() functions correctly |
+| P1 | Transforms work and types flow | .transform().pipe() works |
+| P2 | All tests pass | npm test succeeds |
+| P2 | Bundle size under 5KB gzipped | Check with bundlephobia |
+| P2 | No 'any' types in implementation | TypeScript strict mode |
+
+**Deliverables:** Working validation library, full TypeScript types, test suite, ESM/CJS builds.

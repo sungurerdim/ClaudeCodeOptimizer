@@ -2,9 +2,33 @@
 
 Build a monorepo containing a UI component library with documentation site.
 
+---
+
+## Autonomous Operation
+
+**Execute this task completely without user interaction:**
+
+1. **Proceed autonomously** - Make reasonable decisions without asking
+2. **Implement all requirements** - Complete every package listed below
+3. **Write working code** - All components must render and function
+4. **Include tests** - Test coverage for each package
+5. **Handle errors gracefully** - Proper TypeScript types throughout
+
+**Prioritized execution order:**
+1. Monorepo setup (pnpm, Turborepo)
+2. @mylib/core package (Button, Input, Modal)
+3. @mylib/hooks package (useLocalStorage, useDebounce)
+4. @mylib/forms package (depends on core)
+5. Storybook configuration
+6. @mylib/docs site
+7. Tests for each package
+
+---
+
 ## Requirements
 
 ### Packages
+
 1. **@mylib/core** - Base components
    - Button (variant: primary/secondary/outline, size: sm/md/lg, loading state)
    - Input (type: text/email/password, error state, helper text)
@@ -32,6 +56,7 @@ Build a monorepo containing a UI component library with documentation site.
    - Search functionality
 
 ### Technical Requirements
+
 - pnpm workspaces
 - TypeScript strict mode
 - Turborepo for build orchestration
@@ -41,6 +66,7 @@ Build a monorepo containing a UI component library with documentation site.
 - Changesets for versioning
 
 ### Project Structure
+
 ```
 monorepo/
 ├── packages/
@@ -64,6 +90,7 @@ monorepo/
 ```
 
 ### Build Configuration
+
 ```json
 // turbo.json
 {
@@ -84,6 +111,7 @@ monorepo/
 ```
 
 ### Component API Example
+
 ```typescript
 // Button
 interface ButtonProps {
@@ -116,10 +144,18 @@ function useForm<T>(options: UseFormOptions<T>): {
 }
 ```
 
+---
+
 ## Success Criteria
-- All packages build independently
-- Cross-package imports work
-- Turborepo caching works
-- Storybook shows all components
-- Tests pass across all packages
-- Types are properly exported
+
+| Priority | Requirement | Validation |
+|----------|-------------|------------|
+| P0 | All packages build independently | pnpm build succeeds |
+| P0 | Cross-package imports work | forms uses core components |
+| P1 | Turborepo caching works | Second build is cached |
+| P1 | Storybook shows all components | Stories render correctly |
+| P1 | Types are properly exported | No TypeScript errors |
+| P2 | Tests pass across all packages | pnpm test succeeds |
+| P2 | Docs site renders | Local dev server works |
+
+**Deliverables:** Working monorepo, all packages, Storybook, documentation site.

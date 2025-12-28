@@ -2,9 +2,34 @@
 
 Build a responsive analytics dashboard using React and TypeScript.
 
+---
+
+## Autonomous Operation
+
+**Execute this task completely without user interaction:**
+
+1. **Proceed autonomously** - Make reasonable decisions without asking
+2. **Implement all requirements** - Complete every feature listed below
+3. **Write working code** - All components must render and function
+4. **Include tests** - Test coverage for main user flows
+5. **Handle errors gracefully** - Error boundaries and fallback UI
+
+**Prioritized execution order:**
+1. Project setup (Vite, TypeScript, Tailwind)
+2. Layout and navigation structure
+3. Metric cards with mock data
+4. Charts section (line, bar, pie, area)
+5. Data table with sorting/pagination
+6. Filters (date range, category, status)
+7. WebSocket integration for real-time
+8. Tests
+
+---
+
 ## Requirements
 
 ### Core Features
+
 1. **Dashboard Overview**
    - Key metrics cards (total users, revenue, conversion rate, active sessions)
    - Cards show current value + % change from previous period
@@ -38,6 +63,7 @@ Build a responsive analytics dashboard using React and TypeScript.
    - Auto-reconnect on disconnect
 
 ### Technical Requirements
+
 - React 18+ with TypeScript
 - Vite for build
 - Recharts for visualizations
@@ -48,6 +74,7 @@ Build a responsive analytics dashboard using React and TypeScript.
 - MSW for API mocking
 
 ### Project Structure
+
 ```
 dashboard/
 ├── src/
@@ -95,11 +122,18 @@ interface DataTableProps<T> {
 }
 ```
 
+---
+
 ## Success Criteria
-- All components render correctly
-- Charts update on filter changes
-- Table sorting and pagination work
-- WebSocket reconnects automatically
-- Mobile responsive (breakpoints: sm, md, lg)
-- No console errors/warnings
-- Tests cover main user flows
+
+| Priority | Requirement | Validation |
+|----------|-------------|------------|
+| P0 | All components render correctly | No console errors |
+| P0 | Charts display data | Visual verification |
+| P1 | Charts update on filter changes | Filter triggers re-render |
+| P1 | Table sorting and pagination work | Click column to sort |
+| P1 | Mobile responsive | Works at sm, md, lg breakpoints |
+| P2 | WebSocket reconnects automatically | Disconnect/reconnect test |
+| P2 | Tests cover main user flows | Vitest passes |
+
+**Deliverables:** Working React dashboard, responsive design, test suite.

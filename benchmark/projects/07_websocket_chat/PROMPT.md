@@ -2,9 +2,34 @@
 
 Build a real-time chat server using Go with WebSocket support.
 
+---
+
+## Autonomous Operation
+
+**Execute this task completely without user interaction:**
+
+1. **Proceed autonomously** - Make reasonable decisions without asking
+2. **Implement all requirements** - Complete every feature listed below
+3. **Write working code** - WebSocket connections must work
+4. **Include tests** - Test coverage for core functionality
+5. **Handle errors gracefully** - Proper error codes and messages
+
+**Prioritized execution order:**
+1. Project structure and basic HTTP server
+2. WebSocket upgrade and connection handling
+3. Room creation and management
+4. Message routing within rooms
+5. User presence tracking
+6. REST endpoints for room listing
+7. Rate limiting and moderation
+8. Tests
+
+---
+
 ## Requirements
 
 ### Core Features
+
 1. **Room Management**
    - Create room (name, max_users, is_private)
    - Join room (with optional password for private rooms)
@@ -14,7 +39,7 @@ Build a real-time chat server using Go with WebSocket support.
 
 2. **Messaging**
    - Send message to room
-   - Message format: { sender, content, timestamp, room_id, type }
+   - Message format: `{ sender, content, timestamp, room_id, type }`
    - Message types: text, system (join/leave), typing
    - Message history (last 100 per room, in-memory)
    - Typing indicators
@@ -49,6 +74,7 @@ Build a real-time chat server using Go with WebSocket support.
    - GET /health - Health check
 
 ### Technical Requirements
+
 - Go 1.21+
 - gorilla/websocket or nhooyr/websocket
 - Chi or Gin for REST routes
@@ -59,6 +85,7 @@ Build a real-time chat server using Go with WebSocket support.
 - Tests with go test
 
 ### Project Structure
+
 ```
 chatserver/
 ├── cmd/
@@ -85,6 +112,7 @@ chatserver/
 ```
 
 ### Error Codes
+
 ```
 room_not_found   - Room doesn't exist
 room_full        - Room at capacity
@@ -94,10 +122,18 @@ rate_limited     - Too many messages
 invalid_message  - Malformed message
 ```
 
+---
+
 ## Success Criteria
-- Multiple rooms work simultaneously
-- Messages delivered to all room members
-- User presence updates correctly
-- Rate limiting enforced
-- Graceful disconnect handling
-- Tests cover main scenarios
+
+| Priority | Requirement | Validation |
+|----------|-------------|------------|
+| P0 | WebSocket connections work | Client connects successfully |
+| P0 | Messages delivered to room members | All users receive message |
+| P1 | Multiple rooms work simultaneously | Create and use 2+ rooms |
+| P1 | User presence updates correctly | Join/leave broadcasted |
+| P2 | Rate limiting enforced | Rapid messages blocked |
+| P2 | Graceful disconnect handling | No crashes on disconnect |
+| P2 | Tests cover main scenarios | go test passes |
+
+**Deliverables:** Working WebSocket server, REST API, test suite.
