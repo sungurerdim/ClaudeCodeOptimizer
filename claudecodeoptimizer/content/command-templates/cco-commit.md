@@ -324,7 +324,7 @@ for (const commit of commitPlan.commits) {
   }
 
   // Append Claude Code signature with current model name
-  message += `\n\n🤖 Generated with [Claude Code](https://claude.com/claude-code)\n\nCo-Authored-By: ${currentModelName} <noreply@anthropic.com>`
+  message += `\n\nGenerated with [Claude Code](https://claude.com/claude-code)\n\nCo-Authored-By: ${currentModelName} <noreply@anthropic.com>`
 
   // Create commit using HEREDOC
   Bash(`git commit -m "$(cat <<'EOF'\n${message}\nEOF\n)"`)
@@ -337,7 +337,7 @@ for (const commit of commitPlan.commits) {
 
 {description}
 
-🤖 Generated with [Claude Code](https://claude.com/claude-code)
+Generated with [Claude Code](https://claude.com/claude-code)
 
 Co-Authored-By: Claude Opus 4.5 <noreply@anthropic.com>
 ```

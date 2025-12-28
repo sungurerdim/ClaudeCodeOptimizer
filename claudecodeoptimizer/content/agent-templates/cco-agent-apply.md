@@ -52,7 +52,7 @@ Bash("{test_command} 2>&1")
 |----------|-------|
 | Safety | Pre-op git status │ Dirty → Commit/Stash/Continue │ Rollback via clean state |
 | Tracking | TODO list with ALL items │ One in_progress at a time │ `done + declined + fail = total` |
-| Skip | `.git/`, `node_modules/`, `vendor/`, `.venv/`, `dist/`, `build/`, `fixtures/`, `testdata/`, `__snapshots__/`, `examples/` |
+| Skip | `.git/`, `node_modules/`, `vendor/`, `.venv/`, `dist/`, `build/`, `out/`, `target/`, `__pycache__/`, `*.min.*`, `@generated`, `.idea/`, `.vscode/`, `.svn/`, `fixtures/`, `testdata/`, `__snapshots__/`, `examples/`, `samples/`, `demo/`, `benchmarks/` |
 | Write | **Force-write always** │ Even if file exists with identical content │ Overwrite to ensure state consistency │ **Execute all writes unconditionally** |
 
 ## Fix Categories

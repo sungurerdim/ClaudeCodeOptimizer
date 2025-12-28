@@ -35,7 +35,7 @@ Grep("{complexity_patterns}")     // message
 
 **Rules:** Cross-scope batch greps │ Parallel linters │ Deduplicate reads │ Skip linter domain
 
-**Skip:** `.git/`, `node_modules/`, `vendor/`, `.venv/`, `dist/`, `build/`, `__pycache__/`, `*.min.*`
+**Skip:** `.git/`, `node_modules/`, `vendor/`, `.venv/`, `dist/`, `build/`, `out/`, `target/`, `__pycache__/`, `*.min.*`, `@generated`, `.idea/`, `.vscode/`, `.svn/`, `fixtures/`, `testdata/`, `__snapshots__/`, `examples/`, `samples/`, `demo/`, `benchmarks/`
 
 ## Scope Combinations
 
@@ -73,6 +73,8 @@ Grep("{complexity_patterns}")     // message
 | style, minor, cosmetic | LOW | LOW |
 
 **Severity Limits:** Style → max LOW │ Unverified → max MEDIUM │ Single occurrence → max MEDIUM (except security)
+
+**Severity Notation Mapping:** CRITICAL = P0, HIGH = P1, MEDIUM = P2, LOW = P3. Output uses CRITICAL/HIGH/MEDIUM/LOW format.
 
 ## Score Categories & Thresholds
 
@@ -135,7 +137,7 @@ naming: inconsistent patterns
   "findings": [{
     "id": "{SCOPE}-{NNN}",
     "scope": "{scope}",
-    "severity": "{P0-P3}",
+    "severity": "{CRITICAL|HIGH|MEDIUM|LOW}",
     "title": "{title}",
     "location": "{file}:{line}",
     "description": "{detailed_description}",
@@ -483,9 +485,23 @@ Mark as `[from docs]` with `confidence: LOW`.
 **CRITICAL:** Always read `cco-adaptive.md` for complete, up-to-date detection list. This table shows patterns only.
 
 **Each rule file MUST include:**
-1. YAML frontmatter: `paths:` matching relevant files
+1. YAML frontmatter: `paths:` per "Path Pattern Templates" in cco-adaptive.md (Tier 1, 3, 5 = no frontmatter)
 2. Trigger comment: `*Trigger: {detection_code}*`
 3. Rule content: Extracted from cco-adaptive.md section
+
+**Frontmatter Decision:**
+- **No frontmatter (cross-cutting):**
+  - Core: context.md, core.md, ai.md
+  - Project types: api.md, database.md, mobile.md, cli.md, library.md, service.md
+  - Frontend frameworks: react.md, vue.md, svelte.md, angular.md, solid.md, astro.md, qwik.md, htmx.md
+  - Meta-frameworks: next.md, nuxt.md, sveltekit.md, remix.md
+  - Backend frameworks: backend.md (Django, FastAPI, Express, etc.)
+  - Integration: ml.md, messagequeue.md, observability.md
+- **With paths (file-specific):**
+  - Language rules (Tier 2): python.md → `"**/*.py"`, etc.
+  - Infrastructure (Tier 4): container.md, k8s.md, terraform.md
+  - Testing & CI (Tier 6): testing.md, ci-cd.md
+  - Config-specific (Tier 7): monorepo.md, bundler.md, deployment.md, documentation.md
 
 **Guidelines (Maturity/Breaking/Priority):** Store in context.md only (context.md is the single location for guidelines).
 

@@ -90,9 +90,22 @@
 - **Decompose**: Break complex tasks into steps
 - **SemVer**: MAJOR.MINOR.PATCH
 
+## Refactoring Safety
+
+- **Delete-Impact**: Before deleting function/class/file, identify ALL callers and dependents
+- **Rename-Cascade**: Rename operation = find refs + update ALL + verify builds
+- **Move-Imports**: When moving code between files, update all import statements
+- **Signature-Propagate**: Changing function signature requires updating all call sites
+- **Type-Cascade**: Type changes must propagate to all consumers
+
 ## UX/DX
 
 - **Minimum-Friction**: Fewest steps to goal
 - **Maximum-Clarity**: Unambiguous output
 - **Predictable**: Consistent behavior
 - **Fast-Feedback**: Progress indicators, incremental results
+- **Step-Progress**: Multi-step operations show "Step 2/5: Building..."
+- **Summary-Final**: End with summary: "Changed 3 files, added 2 tests"
+- **Impact-Explain**: Show why: "This reduces bundle size by 15%"
+- **Diff-Before-Destruct**: Show diff before delete/overwrite operations
+- **Error-Actionable**: Errors include file:line AND suggested fix

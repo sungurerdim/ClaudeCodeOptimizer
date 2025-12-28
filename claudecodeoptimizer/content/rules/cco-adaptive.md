@@ -363,15 +363,129 @@ Detection organized by category. Trigger values in `{placeholders}` are defined 
 
 ## Path Pattern Templates
 
-When generating rule files, use YAML frontmatter:
+When generating rule files, use YAML frontmatter with `paths:` for conditional loading.
+
+### Tier 1: Always Apply (No Frontmatter)
+
+These rules apply universally - no `paths:` needed:
+
+| File | Reason |
+|------|--------|
+| `context.md` | Project context, tools, conventions |
+| `core.md` | SSOT, DRY, YAGNI, KISS - universal principles |
+| `ai.md` | Read-First, Parallel - AI behavior rules |
+
+### Tier 2: Language Rules
+
+| Output | Paths |
+|--------|-------|
+| `python.md` | `"**/*.py"` |
+| `typescript.md` | `"**/*.{ts,tsx,mts,cts}"` |
+| `javascript.md` | `"**/*.{js,jsx,mjs,cjs}"` |
+| `go.md` | `"**/*.go"` |
+| `rust.md` | `"**/*.rs"` |
+| `java.md` | `"**/*.java"` |
+| `kotlin.md` | `"**/*.{kt,kts}"` |
+| `swift.md` | `"**/*.swift"` |
+| `csharp.md` | `"**/*.{cs,csx}"` |
+| `ruby.md` | `"**/*.rb"` |
+| `php.md` | `"**/*.php"` |
+| `elixir.md` | `"**/*.{ex,exs}"` |
+| `gleam.md` | `"**/*.gleam"` |
+| `scala.md` | `"**/*.{scala,sc}"` |
+| `zig.md` | `"**/*.zig"` |
+| `dart.md` | `"**/*.dart"` |
+| `c.md` | `"**/*.{c,h}"` |
+| `cpp.md` | `"**/*.{cpp,hpp,cc,hh,cxx,hxx}"` |
+| `lua.md` | `"**/*.lua"` |
+| `haskell.md` | `"**/*.{hs,lhs}"` |
+| `fsharp.md` | `"**/*.{fs,fsi,fsx}"` |
+| `ocaml.md` | `"**/*.{ml,mli}"` |
+| `r.md` | `"**/*.{r,R}"` |
+| `julia.md` | `"**/*.jl"` |
+| `perl.md` | `"**/*.{pl,pm}"` |
+| `clojure.md` | `"**/*.{clj,cljs,cljc,edn}"` |
+| `erlang.md` | `"**/*.{erl,hrl}"` |
+
+### Tier 3: Frontend Frameworks (No Frontmatter)
+
+Framework patterns apply beyond component files (hooks, composables, stores, context):
+
+| File | Reason |
+|------|--------|
+| `react.md` | Hooks, Context, state patterns in *.ts files |
+| `vue.md` | Composables, Pinia stores, Provide/Inject in *.ts files |
+| `svelte.md` | Stores, runes, actions in *.ts files |
+| `angular.md` | Services, DI, RxJS patterns in *.ts files |
+| `solid.md` | Signals, createEffect, stores in *.ts files |
+| `astro.md` | Island architecture, data fetching patterns |
+| `qwik.md` | Resumability, QRL patterns, useTask in *.ts files |
+| `htmx.md` | Server response patterns, hypermedia API design |
+
+### Tier 4: Infrastructure
+
+| Output | Paths |
+|--------|-------|
+| `container.md` | `"**/Dockerfile*, **/docker-compose*.{yml,yaml}, **/compose*.{yml,yaml}"` |
+| `k8s.md` | `"**/k8s/**/*.{yml,yaml}, **/*.k8s.{yml,yaml}, **/kubernetes/**/*"` |
+| `terraform.md` | `"**/*.tf, **/*.tfvars"` |
+| `pulumi.md` | `"**/Pulumi.{yml,yaml}, **/Pulumi*.ts"` |
+| `serverless.md` | `"**/serverless.{yml,yaml}, **/serverless/**/*"` |
+| `cdk.md` | `"**/cdk.json, **/lib/*-stack.ts"` |
+
+### Tier 5: Cross-Cutting (No Frontmatter)
+
+These apply across file types - no `paths:` restriction:
+
+| File | Reason |
+|------|--------|
+| `api.md` | Applies to route handlers in any language |
+| `database.md` | Applies to data layer in any language |
+| `mobile.md` | Platform-specific, complex file patterns |
+| `cli.md` | Entry points vary by language |
+| `library.md` | Export patterns vary by language |
+| `service.md` | Service patterns are cross-cutting |
+| `backend.md` | Django/FastAPI/Express patterns span views, models, services, middleware |
+| `ml.md` | Training, inference, data patterns span multiple file types |
+| `messagequeue.md` | Producer/consumer patterns in any service file |
+| `observability.md` | Tracing, logging, metrics patterns affect all code |
+| `next.md` | App Router, Server Actions patterns beyond components |
+| `nuxt.md` | Nitro, auto-imports, composables patterns everywhere |
+| `sveltekit.md` | Load functions, hooks patterns beyond .svelte |
+| `remix.md` | Loader/action patterns beyond components |
+
+### Tier 6: Testing & CI
+
+| Output | Paths |
+|--------|-------|
+| `testing.md` | `"**/*.{test,spec}.*, **/test_*.*, **/*_test.*, **/tests/**/*"` |
+| `ci-cd.md` | `"**/.github/**/*.{yml,yaml}, **/.gitlab-ci.yml, **/azure-pipelines.yml, **/.circleci/**/*"` |
+
+### Tier 7: Config-Specific (With Paths)
+
+These are truly file-specific - config or content files only:
+
+| Output | Paths |
+|--------|-------|
+| `monorepo.md` | `"**/turbo.json, **/pnpm-workspace.yaml, **/lerna.json, **/nx.json"` |
+| `bundler.md` | `"**/vite.config.*, **/webpack.config.*, **/rollup.config.*"` |
+| `game.md` | No paths (engine-specific, complex detection) |
+| `wasm.md` | `"**/*.{wat,wasm}, **/wasm/**/*"` |
+| `documentation.md` | `"**/docs/**/*.{md,mdx}, **/docusaurus.config.*, **/mkdocs.yml"` |
+| `deployment.md` | `"**/fly.toml, **/render.yaml, **/vercel.json, **/netlify.toml"` |
+
+### Example Generated File
 
 ```markdown
 ---
-paths: **/*.py
+paths: "**/*.py"
 ---
 # Python Rules
+*Trigger: L:Python*
 
-- **Type-Hints**: Type annotations for public APIs
+- **Modern-Types**: Use `str | None` (3.10+), `list[str]` (3.9+)
+- **Async-Await**: async/await for I/O operations
+...
 ```
 
 ---
@@ -1247,6 +1361,15 @@ When generating tests, always include:
 - **Bindings-Defined**: Define protocol bindings (Kafka, AMQP, WebSocket)
 - **Docs-Generation**: Generate documentation from spec
 
+### API Evolution
+**Trigger:** API:REST | API:GraphQL | API:gRPC | T:Library
+
+- **Deprecate-Before-Remove**: Mark deprecated for 1+ versions before removal
+- **Migration-Guide**: Breaking changes include migration instructions in changelog
+- **Version-Boundary**: Breaking changes only in major versions (unless v0.x)
+- **Alias-Bridge**: Provide aliases/redirects during transition period
+- **Sunset-Header**: Include Sunset header for deprecated endpoints
+
 ---
 
 ## Database Operations (DB:Operations)
@@ -1397,7 +1520,7 @@ When generating tests, always include:
 - **Use-Hook**: Use use() hook for promises and context (React 19+)
 - **Suspense-Boundary**: Wrap async components in Suspense with fallback
 - **Actions**: Use Server Actions for mutations (Next.js 14+)
-- **React-Compiler**: Let React Compiler handle memoization automatically (React 19+)
+- **React-Compiler** [EXPERIMENTAL]: Let React Compiler handle memoization automatically (React 19+)
 - **Ref-As-Prop**: Pass ref as regular prop, no forwardRef needed (React 19+)
 - **Form-Actions**: Use form action prop with useActionState for form handling (React 19+)
 - **Optimistic-UI**: Use useOptimistic for instant UI feedback during mutations
@@ -1411,7 +1534,7 @@ When generating tests, always include:
 - **SFC-Style**: Scoped styles in single-file components
 - **Script-Setup**: Use <script setup> for cleaner syntax
 - **Definemodel**: Use defineModel for v-model with props (Vue 3.4+)
-- **Vapor-Mode**: Consider Vapor mode for performance-critical components (Vue 3.5+)
+- **Vapor-Mode** [EXPERIMENTAL]: Consider Vapor mode for performance-critical components (Vue 3.5+)
 
 ### Angular (Frontend:Angular)
 **Trigger:** @angular deps, *.component.ts
@@ -1489,7 +1612,7 @@ When generating tests, always include:
 - **Metadata-API**: Use Metadata API for SEO, not manual head tags
 - **Image-Component**: Use next/image for automatic optimization
 - **Font-Optimization**: Use next/font for zero-layout-shift fonts
-- **Turbopack**: Enable Turbopack for faster dev builds (Next.js 15+)
+- **Turbopack** [EXPERIMENTAL]: Enable Turbopack for faster dev builds (Next.js 15+)
 - **Parallel-Routes**: Use parallel routes for complex layouts
 - **Intercepting-Routes**: Use intercepting routes for modals/sheets
 
