@@ -240,6 +240,8 @@ Detection organized by category. Trigger values in `{placeholders}` are defined 
 | DEP:Excel | {excel_deps} | `dep-excel.md` |
 | DEP:Scraping | {scraping_deps} | `dep-scraping.md` |
 | DEP:Blockchain | {blockchain_deps} | `dep-blockchain.md` |
+| DEP:SmartContractEVM | {solidity_deps}, {solidity_config} | `dep-smartcontract-evm.md` |
+| DEP:SmartContractSolana | {anchor_deps}, {anchor_config} | `dep-smartcontract-solana.md` |
 | DEP:Crypto | {crypto_deps} | `dep-crypto.md` |
 | DEP:GamePython | {python_game_deps} | `dep-game-python.md` |
 | DEP:GameJS | {js_game_deps} | `dep-game-js.md` |
@@ -493,7 +495,7 @@ paths: "**/*.py"
 ## Language Rules
 
 ### Python (L:Python)
-**Trigger:** pyproject.toml | setup.py | requirements.txt | *.py
+**Trigger:** {py_manifest}, {py_ext}
 
 - **Modern-Types**: Use `str | None` (3.10+), `list[str]` (3.9+). Avoid `Optional`, `List`, `Dict` from typing
 - **Async-Await**: async/await for I/O operations, avoid blocking in async context
@@ -512,7 +514,7 @@ paths: "**/*.py"
 - **Subprocess-Encoding**: Always use `encoding='utf-8', errors='replace'` in subprocess.run() for cross-platform output handling
 
 ### TypeScript (L:TypeScript)
-**Trigger:** tsconfig.json | *.ts/*.tsx
+**Trigger:** {ts_config}, {ts_ext}
 
 - **Strict-Mode**: Enable strict in tsconfig.json
 - **Explicit-Return**: Return types on public functions
@@ -527,7 +529,7 @@ paths: "**/*.py"
 - **Branded-Types**: Use branded types for validated primitives (UserId, Email)
 
 ### JavaScript (L:JavaScript)
-**Trigger:** package.json without TS | *.js/*.jsx only
+**Trigger:** {js_manifest}, {js_ext}
 
 - **JSDoc-Types**: Type hints via JSDoc for public APIs
 - **ES-Modules**: ESM over CommonJS (import/export)
@@ -541,7 +543,7 @@ paths: "**/*.py"
 - **Modern-Array**: Use Array.at(), Object.hasOwn(), Array.findLast()
 
 ### Go (L:Go)
-**Trigger:** go.mod | *.go
+**Trigger:** {go_manifest}, {go_ext}
 
 - **Error-Wrap**: Wrap errors with context (fmt.Errorf %w)
 - **Interface-Small**: Small, focused interfaces (1-3 methods)
@@ -554,7 +556,7 @@ paths: "**/*.py"
 - **Range-Int**: Use range over integers for simple loops (Go 1.22+)
 
 ### Rust (L:Rust)
-**Trigger:** Cargo.toml | *.rs
+**Trigger:** {rust_manifest}, {rust_ext}
 
 - **Result-Propagate**: Use ? operator for error propagation
 - **Ownership-Clear**: Clear ownership patterns, minimize clones
@@ -565,7 +567,7 @@ paths: "**/*.py"
 - **Error-Thiserror**: Use thiserror for library errors, anyhow for applications
 
 ### Java (L:Java)
-**Trigger:** pom.xml | build.gradle | *.java
+**Trigger:** {java_manifest}, {java_ext}
 
 - **Null-Safety**: Use Optional<T> for nullable returns
 - **Resource-Try**: try-with-resources for AutoCloseable
@@ -577,7 +579,7 @@ paths: "**/*.py"
 - **Sealed-Classes**: Use sealed classes for controlled inheritance
 
 ### Kotlin (L:Kotlin)
-**Trigger:** build.gradle.kts + kotlin | *.kt
+**Trigger:** {kotlin_config}, {kotlin_ext}
 
 - **Null-Safe**: Use nullable types (?), avoid !! operator
 - **Data-Class**: Data classes for DTOs and value objects
@@ -585,7 +587,7 @@ paths: "**/*.py"
 - **Extension-Limit**: Extension functions for utility, not core logic
 
 ### Swift (L:Swift)
-**Trigger:** Package.swift | *.xcodeproj | *.swift
+**Trigger:** {swift_manifest}, {ios_project}, {swift_ext}
 
 - **Optional-Guard**: Use guard let for early exits
 - **Protocol-Oriented**: Protocol-oriented design over inheritance
@@ -596,7 +598,7 @@ paths: "**/*.py"
 - **Result-Builder**: Use result builders for DSLs
 
 ### C# (L:CSharp)
-**Trigger:** *.csproj | *.sln | *.cs
+**Trigger:** {csharp_project}, {csharp_ext}
 
 - **Nullable-Enable**: Enable nullable reference types
 - **Async-Await**: async/await for I/O operations
@@ -607,7 +609,7 @@ paths: "**/*.py"
 - **Pattern-Matching**: Use pattern matching for type checks and deconstruction
 
 ### Ruby (L:Ruby)
-**Trigger:** Gemfile | *.gemspec | *.rb
+**Trigger:** {ruby_manifest}, {ruby_ext}
 
 - **Freeze-Strings**: Use frozen_string_literal pragma
 - **Block-Yield**: Prefer yield over block.call
@@ -618,7 +620,7 @@ paths: "**/*.py"
 - **Data-Class**: Use Data.define for immutable value objects (Ruby 3.2+)
 
 ### PHP (L:PHP)
-**Trigger:** composer.json | *.php
+**Trigger:** {php_manifest}, {php_ext}
 
 - **Type-Declare**: Strict type declarations (declare(strict_types=1))
 - **PSR-Standards**: Follow PSR-4 autoloading, PSR-12 style
@@ -629,7 +631,7 @@ paths: "**/*.py"
 - **Attributes**: Use attributes instead of docblock annotations (8.0+)
 
 ### Elixir (L:Elixir)
-**Trigger:** mix.exs | *.ex | *.exs
+**Trigger:** {elixir_manifest}, {elixir_ext}
 
 - **Pattern-Match**: Pattern matching over conditionals
 - **Pipe-Operator**: Use |> for data transformations
@@ -637,7 +639,7 @@ paths: "**/*.py"
 - **Dialyzer-Types**: Typespecs for public functions
 
 ### Gleam (L:Gleam)
-**Trigger:** gleam.toml | *.gleam
+**Trigger:** {gleam_manifest}, {gleam_ext}
 
 - **Result-Type**: Use Result(a, e) for fallible operations
 - **Pattern-Exhaustive**: Exhaustive pattern matching
@@ -645,7 +647,7 @@ paths: "**/*.py"
 - **Label-Args**: Use labelled arguments for clarity
 
 ### Scala (L:Scala)
-**Trigger:** build.sbt | *.scala
+**Trigger:** {scala_manifest}, {scala_ext}
 
 - **Option-Not-Null**: Option[T] instead of null
 - **Case-Class**: Case classes for immutable data
@@ -653,7 +655,7 @@ paths: "**/*.py"
 - **Implicit-Minimal**: Minimize implicit conversions
 
 ### Zig (L:Zig)
-**Trigger:** build.zig | *.zig
+**Trigger:** {zig_manifest}, {zig_ext}
 
 - **Error-Union**: Use error unions for fallible functions
 - **Comptime**: Leverage comptime for zero-cost abstractions
@@ -661,7 +663,7 @@ paths: "**/*.py"
 - **Defer-Cleanup**: defer/errdefer for cleanup
 
 ### Dart (L:Dart)
-**Trigger:** pubspec.yaml | *.dart
+**Trigger:** {dart_manifest}, {dart_ext}
 
 - **Null-Safety**: Sound null safety with ? and !
 - **Async-Await**: async/await for Future operations
@@ -669,7 +671,7 @@ paths: "**/*.py"
 - **Immutable-Widget**: StatelessWidget when state not needed
 
 ### C (L:C)
-**Trigger:** CMakeLists.txt | Makefile | *.c
+**Trigger:** {c_manifest}, {c_ext}
 
 - **Memory-Manual**: Explicit malloc/free, check null returns
 - **Buffer-Safe**: Use safe string functions (strncpy, snprintf)
@@ -680,7 +682,7 @@ paths: "**/*.py"
 - **Compiler-Warnings**: Enable -Wall -Wextra -Werror
 
 ### C++ (L:Cpp)
-**Trigger:** CMakeLists.txt | *.cpp | *.hpp
+**Trigger:** {cpp_manifest}, {cpp_ext}
 
 - **RAII-Pattern**: Resource acquisition is initialization
 - **Smart-Pointers**: unique_ptr/shared_ptr over raw pointers
@@ -692,7 +694,7 @@ paths: "**/*.py"
 - **Static-Analysis**: Use clang-tidy, cppcheck in CI
 
 ### Lua (L:Lua)
-**Trigger:** *.rockspec | *.lua
+**Trigger:** {lua_manifest}, {lua_ext}
 
 - **Local-Variables**: local by default, minimize globals
 - **Module-Pattern**: Use module pattern for encapsulation
@@ -702,7 +704,7 @@ paths: "**/*.py"
 - **LuaJIT-Compat**: Write LuaJIT-compatible code when targeting it
 
 ### Haskell (L:Haskell)
-**Trigger:** *.cabal | stack.yaml | *.hs
+**Trigger:** {haskell_manifest}, {haskell_ext}
 
 - **Pure-Functions**: Prefer pure functions, isolate IO
 - **Type-Signatures**: Explicit type signatures for top-level
@@ -712,7 +714,7 @@ paths: "**/*.py"
 - **Property-Tests**: QuickCheck for property-based testing
 
 ### F# (L:FSharp)
-**Trigger:** *.fsproj | *.fs
+**Trigger:** {fsharp_project}, {fsharp_ext}
 
 - **Immutable-Default**: Prefer immutable data
 - **Pipeline-Style**: Use |> for function composition
@@ -722,7 +724,7 @@ paths: "**/*.py"
 - **Interop-Safe**: Safe C# interop patterns
 
 ### OCaml (L:OCaml)
-**Trigger:** dune-project | *.ml
+**Trigger:** {ocaml_manifest}, {ocaml_ext}
 
 - **Module-System**: Leverage module system for encapsulation
 - **Functors**: Use functors for parameterized modules
@@ -732,7 +734,7 @@ paths: "**/*.py"
 - **PPX-Derive**: Use ppx_deriving for boilerplate
 
 ### R (L:R)
-**Trigger:** DESCRIPTION | *.R | *.Rmd
+**Trigger:** {r_manifest}, {r_ext}
 
 - **Tidyverse-Style**: Follow tidyverse style guide
 - **Vector-Ops**: Vectorized operations over loops
@@ -742,7 +744,7 @@ paths: "**/*.py"
 - **Testthat-Tests**: Use testthat for testing
 
 ### Julia (L:Julia)
-**Trigger:** Project.toml | *.jl
+**Trigger:** {julia_manifest}, {julia_ext}
 
 - **Type-Stability**: Write type-stable functions for performance
 - **Multiple-Dispatch**: Leverage multiple dispatch
@@ -752,7 +754,7 @@ paths: "**/*.py"
 - **Precompile**: Use precompilation for packages
 
 ### Perl (L:Perl)
-**Trigger:** Makefile.PL | cpanfile | *.pl | *.pm
+**Trigger:** {perl_manifest}, {perl_ext}
 
 - **Strict-Warnings**: Always use strict; use warnings;
 - **Modern-Perl**: Use modern Perl features (say, given/when)
@@ -762,7 +764,7 @@ paths: "**/*.py"
 - **Test-More**: Test::More for testing
 
 ### Clojure (L:Clojure)
-**Trigger:** project.clj | deps.edn | *.clj | *.cljs
+**Trigger:** {clojure_manifest}, {clojure_ext}
 
 - **Immutable-First**: Leverage immutable data structures by default
 - **Pure-Functions**: Pure functions over side effects, isolate I/O
@@ -776,7 +778,7 @@ paths: "**/*.py"
 - **Deps-Edn**: Prefer deps.edn over Leiningen for new projects
 
 ### Erlang (L:Erlang)
-**Trigger:** rebar.config | *.erl | *.hrl
+**Trigger:** {erlang_manifest}, {erlang_ext}
 
 - **OTP-Patterns**: Use OTP behaviors (gen_server, gen_statem, supervisor)
 - **Let-It-Crash**: Fail fast, let supervisors handle recovery
@@ -1510,7 +1512,7 @@ When generating tests, always include:
 - **Code-Split**: Lazy load routes and heavy components
 
 ### React (Frontend:React)
-**Trigger:** react/react-dom deps, *.jsx/*.tsx
+**Trigger:** {react_deps}, {react_ext}
 
 - **Hooks-Rules**: Rules of Hooks (top-level, same order)
 - **Memo-Strategic**: useMemo/useCallback for expensive ops only
@@ -1526,7 +1528,7 @@ When generating tests, always include:
 - **Optimistic-UI**: Use useOptimistic for instant UI feedback during mutations
 
 ### Vue (Frontend:Vue)
-**Trigger:** vue deps, *.vue
+**Trigger:** {vue_deps}, {vue_ext}
 
 - **Composition-API**: Composition API over Options API (Vue 3+)
 - **Reactive-Unwrap**: .value access for refs in script
@@ -1537,7 +1539,7 @@ When generating tests, always include:
 - **Vapor-Mode** [EXPERIMENTAL]: Consider Vapor mode for performance-critical components (Vue 3.5+)
 
 ### Angular (Frontend:Angular)
-**Trigger:** @angular deps, *.component.ts
+**Trigger:** {angular_deps}, {angular_ext}
 
 - **Standalone-Components**: Standalone components as default (Angular 17+)
 - **Signals-Reactive**: Signals for reactive state (Angular 16+)
@@ -1550,7 +1552,7 @@ When generating tests, always include:
 - **Control-Flow**: Use @if/@for/@switch over *ngIf/*ngFor (Angular 17+)
 
 ### Svelte (Frontend:Svelte)
-**Trigger:** svelte deps, *.svelte
+**Trigger:** {svelte_deps}, {svelte_ext}
 
 - **Reactivity-Native**: Use framework reactivity (Svelte 5: runes, Svelte 4: stores)
 - **Store-Subscribe**: Auto-subscribe with $ prefix (stores) or $state (runes)
@@ -1563,7 +1565,7 @@ When generating tests, always include:
 - **Event-Handlers**: Use onclick instead of on:click syntax (Svelte 5+)
 
 ### Solid (Frontend:Solid)
-**Trigger:** solid-js deps
+**Trigger:** {solid_deps}
 
 - **Signal-Fine-Grained**: Fine-grained reactivity with signals
 - **Memo-Derived**: createMemo for derived computations
@@ -1571,7 +1573,7 @@ When generating tests, always include:
 - **Props-Direct**: Access props directly via `props.name` (preserves reactivity)
 
 ### Astro (Frontend:Astro)
-**Trigger:** astro deps, *.astro
+**Trigger:** {astro_deps}, {astro_ext}
 
 - **Islands-Minimal**: client:* directives only when needed
 - **Content-Collections**: Content collections for markdown/MDX
@@ -1579,7 +1581,7 @@ When generating tests, always include:
 - **Partial-Hydration**: Selective hydration strategies
 
 ### HTMX (Frontend:HTMX)
-**Trigger:** htmx deps, hx-* attributes in HTML
+**Trigger:** {htmx_deps}, {htmx_attrs}
 
 - **Hypermedia-API**: Return HTML fragments, not JSON
 - **Target-Precise**: Precise hx-target selectors
@@ -1659,7 +1661,7 @@ When generating tests, always include:
 - **Offline-First**: Graceful offline handling
 
 ### Electron (Desktop:Electron)
-**Trigger:** electron deps, electron-builder.yml
+**Trigger:** {electron_deps}, {electron_config}
 
 - **Context-Isolation**: contextIsolation: true always
 - **Sandbox-Enable**: sandbox: true for renderers
@@ -1667,7 +1669,7 @@ When generating tests, always include:
 - **CSP-Strict**: Content Security Policy in HTML
 
 ### Tauri (Desktop:Tauri)
-**Trigger:** tauri deps, tauri.conf.json
+**Trigger:** {tauri_deps}, {tauri_config}
 
 - **Allowlist-Minimal**: Minimal API allowlist
 - **Command-Validate**: Validate all command inputs in Rust
@@ -1686,7 +1688,7 @@ When generating tests, always include:
 - **Battery-Aware**: Minimize battery drain
 
 ### Flutter (Mobile:Flutter)
-**Trigger:** pubspec.yaml, *.dart
+**Trigger:** {flutter_manifest}, {dart_ext}
 
 - **Widget-Const**: Use const constructors
 - **State-Provider**: Provider/Riverpod for state
@@ -1694,7 +1696,7 @@ When generating tests, always include:
 - **Build-Modes**: Different configs for debug/release
 
 ### React Native (Mobile:ReactNative)
-**Trigger:** react-native/expo deps
+**Trigger:** {rn_deps}
 
 - **Native-Modules**: TurboModules/New Architecture for performance
 - **Metro-Optimize**: Optimize Metro bundler config
@@ -1702,7 +1704,7 @@ When generating tests, always include:
 - **Workflow-Match**: Choose managed (Expo) or bare based on native module needs
 
 ### iOS Native (Mobile:iOS)
-**Trigger:** *.xcodeproj, Podfile, *.swift
+**Trigger:** {ios_project}, {ios_deps}, {swift_ext}
 
 - **SwiftUI-Modern**: SwiftUI over UIKit when possible
 - **Combine-Reactive**: Combine for reactive patterns
@@ -1710,7 +1712,7 @@ When generating tests, always include:
 - **TestFlight-Beta**: TestFlight for beta testing
 
 ### Android Native (Mobile:Android)
-**Trigger:** build.gradle, AndroidManifest.xml
+**Trigger:** {android_build}, {android_manifest}
 
 - **Compose-Modern**: Jetpack Compose over XML layouts
 - **ViewModel-State**: ViewModel + StateFlow for state
@@ -1718,7 +1720,7 @@ When generating tests, always include:
 - **R8-Shrink**: Enable R8 code shrinking
 
 ### Kotlin Multiplatform (Mobile:KMP)
-**Trigger:** kotlin-multiplatform, shared/
+**Trigger:** {kmp_config}, {kmp_dirs}
 
 - **Expect-Actual**: Shared expect/actual declarations
 - **Ktor-Networking**: Ktor for shared networking
@@ -1740,7 +1742,7 @@ When generating tests, always include:
 ## Infrastructure
 
 ### Docker (Infra:Docker)
-**Trigger:** Dockerfile, docker-compose.yml
+**Trigger:** {container_files}
 
 - **Multi-Stage**: Multi-stage builds for smaller images
 - **Layer-Cache**: Order commands for optimal layer caching
@@ -1752,7 +1754,7 @@ When generating tests, always include:
 - **Distroless**: Use distroless or alpine for production images
 
 ### Kubernetes (Infra:K8s)
-**Trigger:** k8s/, helm/, kustomization.yaml
+**Trigger:** {k8s_dirs}, {k8s_configs}
 
 - **Resource-Limits**: CPU/memory requests and limits
 - **Liveness-Readiness**: Health probes configured
@@ -1764,7 +1766,7 @@ When generating tests, always include:
 - **Security-Context**: runAsNonRoot, readOnlyRootFilesystem, drop capabilities
 
 ### Terraform (Infra:Terraform)
-**Trigger:** *.tf files
+**Trigger:** {tf_files}
 
 - **State-Remote**: Remote state backend (S3, GCS, etc.)
 - **Modules-Reuse**: Reusable modules for common patterns
@@ -1776,7 +1778,7 @@ When generating tests, always include:
 - **Check-Blocks**: Use check blocks for post-apply validation (TF 1.5+)
 
 ### Pulumi (Infra:Pulumi)
-**Trigger:** Pulumi.yaml
+**Trigger:** {pulumi_config}
 
 - **Stack-Per-Env**: Separate stacks per environment
 - **Config-Secrets**: Encrypted secrets in config
@@ -1784,7 +1786,7 @@ When generating tests, always include:
 - **Preview-Always**: Preview before up
 
 ### CDK (Infra:CDK)
-**Trigger:** cdk.json, lib/*-stack.ts
+**Trigger:** {cdk_config}, {cdk_stack_files}
 
 - **Construct-Library**: Reusable L3 constructs
 - **Stack-Separation**: Logical stack boundaries
@@ -1793,7 +1795,7 @@ When generating tests, always include:
 - **Aspects-Cross-Cut**: Use Aspects for cross-cutting concerns
 
 ### Serverless (Infra:Serverless)
-**Trigger:** serverless.yml, sam.yaml
+**Trigger:** {serverless_configs}
 
 - **Cold-Start**: Minimize cold start time
 - **Timeout-Set**: Explicit function timeouts
@@ -1801,7 +1803,7 @@ When generating tests, always include:
 - **Event-Validate**: Validate event payloads
 
 ### Edge (Infra:Edge)
-**Trigger:** wrangler.toml, vercel.json edge
+**Trigger:** {edge_configs}
 
 - **Size-Minimal**: Bundle size under limits
 - **Stateless**: No persistent in-memory state
@@ -1809,7 +1811,7 @@ When generating tests, always include:
 - **Geo-Route**: Geographic routing when needed
 
 ### WASM (Infra:WASM)
-**Trigger:** *.wasm, wasm-pack.toml
+**Trigger:** {wasm_ext}, {wasm_config}
 
 - **Size-Optimize**: Optimize for size (-Os, wasm-opt)
 - **Memory-Linear**: Manage linear memory explicitly
@@ -1821,7 +1823,7 @@ When generating tests, always include:
 ## Build Tools
 
 ### Monorepo (Build:Monorepo)
-**Trigger:** nx.json, turbo.json, pnpm-workspace.yaml
+**Trigger:** {monorepo_configs}
 
 - **Affected-Only**: Build only affected packages
 - **Cache-Remote**: Remote build cache enabled
@@ -1829,7 +1831,7 @@ When generating tests, always include:
 - **Consistent-Versions**: Shared dependency versions
 
 ### Bundler (Build:Bundler)
-**Trigger:** vite.config.*, webpack.config.*, esbuild
+**Trigger:** {bundler_configs}
 
 - **Tree-Shake**: Enable tree shaking
 - **Code-Split**: Split by route/feature
@@ -1837,7 +1839,7 @@ When generating tests, always include:
 - **Minify-Prod**: Minify in production only
 
 ### Linter (Build:Linter)
-**Trigger:** .eslintrc*, biome.json, ruff.toml
+**Trigger:** {linter_configs}
 
 - **CI-Enforce**: Lint in CI pipeline
 - **Auto-Fix**: Auto-fix where safe
@@ -1845,14 +1847,14 @@ When generating tests, always include:
 - **Severity-Config**: Error vs warning levels
 
 ### Formatter (Build:Formatter)
-**Trigger:** .prettierrc*, biome.json
+**Trigger:** {formatter_configs}
 
 - **Pre-Commit**: Format on commit
 - **Config-Share**: Shared config across team
 - **Editor-Integrate**: Editor integration
 
 ### TypeChecker (Build:TypeChecker)
-**Trigger:** tsconfig.json, mypy.ini
+**Trigger:** {typechecker_configs}
 
 - **Strict-Enable**: Enable strict mode
 - **Incremental**: Incremental compilation
@@ -1863,7 +1865,7 @@ When generating tests, always include:
 ## Testing
 
 ### Unit Testing (Test:Unit)
-**Trigger:** pytest, jest, vitest, mocha
+**Trigger:** {unit_test_deps}
 
 - **Isolation**: No shared state between tests
 - **Fast-Feedback**: Tests complete in seconds
@@ -1871,7 +1873,7 @@ When generating tests, always include:
 - **Assertions-Clear**: One concept per test
 
 ### E2E Testing (Test:E2E)
-**Trigger:** playwright, cypress, selenium
+**Trigger:** {e2e_deps}
 
 - **Critical-Paths**: Cover critical user journeys
 - **Stable-Selectors**: data-testid attributes
@@ -1879,7 +1881,7 @@ When generating tests, always include:
 - **Parallel-Run**: Parallel execution where possible
 
 ### Coverage (Test:Coverage)
-**Trigger:** [tool.coverage], .nycrc
+**Trigger:** {coverage_configs}
 
 - **Threshold-Set**: Minimum coverage threshold
 - **Branch-Cover**: Branch coverage, not just line
@@ -1891,7 +1893,7 @@ When generating tests, always include:
 ## CI/CD
 
 ### GitHub Actions (CI:GitHub)
-**Trigger:** .github/workflows/
+**Trigger:** {github_workflow_dir}
 
 - **Matrix-Test**: Matrix for multiple versions
 - **Cache-Deps**: Cache dependencies
@@ -1899,7 +1901,7 @@ When generating tests, always include:
 - **Concurrency-Limit**: Cancel redundant runs
 
 ### GitLab CI (CI:GitLab)
-**Trigger:** .gitlab-ci.yml
+**Trigger:** {gitlab_config}
 
 - **Stage-Order**: Logical stage ordering
 - **Cache-Key**: Proper cache key strategy
@@ -1907,7 +1909,7 @@ When generating tests, always include:
 - **Rules-Conditional**: Conditional job execution
 
 ### Jenkins (CI:Jenkins)
-**Trigger:** Jenkinsfile
+**Trigger:** {jenkins_config}
 
 - **Pipeline-Declarative**: Declarative over scripted
 - **Agent-Label**: Specific agent labels
@@ -1915,21 +1917,21 @@ When generating tests, always include:
 - **Parallel-Stages**: Parallel where independent
 
 ### CircleCI (CI:CircleCI)
-**Trigger:** .circleci/config.yml
+**Trigger:** {circleci_config}
 
 - **Orbs-Reuse**: Use orbs for common tasks
 - **Workspace-Persist**: Persist between jobs
 - **Resource-Class**: Appropriate resource class
 
 ### Azure DevOps (CI:Azure)
-**Trigger:** azure-pipelines.yml
+**Trigger:** {azure_config}
 
 - **Templates-Share**: Shared YAML templates
 - **Variable-Groups**: Variable groups for secrets
 - **Environments-Deploy**: Environment approvals
 
 ### ArgoCD (CI:ArgoCD)
-**Trigger:** argocd/, Application.yaml
+**Trigger:** {argocd_dir}, {argocd_config}
 
 - **Sync-Policy**: Auto-sync vs manual
 - **Health-Check**: Custom health checks
@@ -1940,7 +1942,7 @@ When generating tests, always include:
 ## ML/AI Specialized
 
 ### Training (ML:Training)
-**Trigger:** torch, tensorflow, sklearn, keras
+**Trigger:** {ml_training_deps}
 
 - **Seed-All**: Reproducible random seeds
 - **Checkpoint-Save**: Regular checkpoints
@@ -1948,7 +1950,7 @@ When generating tests, always include:
 - **GPU-Utilize**: Efficient GPU utilization
 
 ### LLM Orchestration (ML:LLM)
-**Trigger:** langchain, llamaindex, haystack
+**Trigger:** {llm_orchestration_deps}
 
 - **Prompt-Template**: Versioned prompt templates
 - **Token-Limit**: Respect context limits
@@ -1960,7 +1962,7 @@ When generating tests, always include:
 - **Prompt-Cache**: Cache identical prompts for cost savings
 
 ### Inference (ML:Inference)
-**Trigger:** transformers, onnxruntime, vllm
+**Trigger:** {inference_deps}
 
 - **Batch-Infer**: Batch for throughput
 - **Quantize-Prod**: Quantization for production
@@ -1968,7 +1970,7 @@ When generating tests, always include:
 - **Memory-Manage**: Clear model memory
 
 ### ML SDK (ML:SDK)
-**Trigger:** openai, anthropic, cohere
+**Trigger:** {ai_sdk_deps}
 
 - **Key-Rotate**: API key rotation
 - **Rate-Limit**: Handle rate limits gracefully
@@ -1980,7 +1982,7 @@ When generating tests, always include:
 ## Runtimes
 
 ### Node.js (R:Node)
-**Trigger:** package.json, node_modules/
+**Trigger:** {node_markers}
 
 - **LTS-Version**: Use LTS versions
 - **Engine-Lock**: Lock engine version in package.json
@@ -1988,7 +1990,7 @@ When generating tests, always include:
 - **Event-Loop**: Use async I/O for event loop operations
 
 ### Bun (R:Bun)
-**Trigger:** bun.lockb, bunfig.toml
+**Trigger:** {bun_markers}
 
 - **Bun-Native**: Use Bun native APIs when faster
 - **Node-Compat**: Test Node.js compatibility
@@ -1996,7 +1998,7 @@ When generating tests, always include:
 - **Hot-Reload**: Leverage fast hot reload
 
 ### Deno (R:Deno)
-**Trigger:** deno.json, deno.lock
+**Trigger:** {deno_markers}
 
 - **Permissions-Minimal**: Minimal --allow flags
 - **Import-Map**: Import maps for dependencies
@@ -2008,7 +2010,7 @@ When generating tests, always include:
 ## Database Specialized
 
 ### SQL (DB:SQL)
-**Trigger:** sqlite3, psycopg2, mysql-connector
+**Trigger:** {sql_drivers}
 
 - **Parameterized**: Parameterized queries always
 - **Connection-Pool**: Connection pooling
@@ -2016,7 +2018,7 @@ When generating tests, always include:
 - **Index-Query**: Index for common queries
 
 ### NoSQL (DB:NoSQL)
-**Trigger:** pymongo, redis, dynamodb
+**Trigger:** {nosql_deps}
 
 - **Schema-Validate**: Application-level schema validation
 - **TTL-Set**: TTL for expiring data
@@ -2024,7 +2026,7 @@ When generating tests, always include:
 - **Batch-Ops**: Batch operations when possible
 
 ### Vector DB (DB:Vector)
-**Trigger:** pgvector, pinecone, chroma
+**Trigger:** {vector_deps}
 
 - **Embed-Model**: Consistent embedding model
 - **Dimension-Match**: Dimension consistency
@@ -2047,7 +2049,7 @@ When generating tests, always include:
 ## API Specialized
 
 ### WebSocket (API:WebSocket)
-**Trigger:** ws, socket.io, websockets
+**Trigger:** {websocket_deps}
 
 - **Reconnect-Auto**: Automatic reconnection
 - **Heartbeat-Ping**: Ping/pong for health
@@ -2440,7 +2442,7 @@ When generating tests, always include:
 ## Dependency-Based Rules
 
 ### DEP:CLI
-**Trigger:** typer, click, argparse, fire, argh, docopt, cement, cliff, plac, cobra, urfave/cli
+**Trigger:** {cli_framework_deps}
 
 - **Help-Comprehensive**: --help with examples, subcommand help
 - **Exit-Codes**: Documented exit codes (0=success, 1=error, 2=usage)
@@ -2451,7 +2453,7 @@ When generating tests, always include:
 - **Color-Support**: Respect NO_COLOR, --no-color flag
 
 ### DEP:TUI
-**Trigger:** rich, textual, urwid, blessed, npyscreen, prompt-toolkit, questionary, inquirer
+**Trigger:** {tui_deps}
 
 - **Terminal-Compat**: Graceful fallback for dumb terminals
 - **Color-Detect**: Auto-detect color support, respect NO_COLOR
@@ -2461,7 +2463,7 @@ When generating tests, always include:
 - **Screen-Clear**: Clean exit, restore terminal state
 
 ### DEP:Validation
-**Trigger:** pydantic, attrs, marshmallow, cerberus, voluptuous, schema, typeguard, beartype, zod, valibot, yup, joi
+**Trigger:** {validation_deps}
 
 - **Error-Collect**: Collect all errors, not just first
 - **Error-Messages**: Human-readable, field-specific, actionable validation errors
@@ -2477,7 +2479,7 @@ When generating tests, always include:
 - **Immutable-Prefer**: Use frozen=True for data classes when mutability not needed
 
 ### DEP:Edge
-**Trigger:** @cloudflare/workers-types, wrangler, vercel/edge, @deno/deploy, hono, elysia, itty-router
+**Trigger:** {edge_runtime_deps}, {edge_framework_deps}
 
 *These rules EXTEND Infra:Edge rules. Apply both sets when edge infrastructure is detected.*
 
@@ -2490,7 +2492,7 @@ When generating tests, always include:
 - **Streaming**: Use streaming responses for large payloads
 
 ### DEP:WASM
-**Trigger:** wasm-pack, wasm-bindgen, wit-bindgen, wasmtime, wasmer, wazero
+**Trigger:** {wasm_toolchain_deps}
 
 - **Init-Once**: Initialize WASM module once, reuse instance
 - **Memory-Manage**: Explicit memory allocation/deallocation
@@ -2500,7 +2502,7 @@ When generating tests, always include:
 - **Async-Bridge**: Use async for long operations to avoid blocking
 
 ### DEP:EdgeFramework
-**Trigger:** hono, elysia, h3, nitro, itty-router
+**Trigger:** {edge_framework_deps}
 
 *These rules are specific to edge framework choices. Apply with Infra:Edge and DEP:Edge rules.*
 
@@ -2511,7 +2513,7 @@ When generating tests, always include:
 - **Multi-Runtime**: Test on target runtime (Bun, Deno, CF Workers)
 
 ### DEP:Config
-**Trigger:** pydantic-settings, python-dotenv, dynaconf, configparser, toml, omegaconf, hydra
+**Trigger:** {config_deps}
 
 - **Env-Override**: Environment variables override config files
 - **Secrets-Separate**: Secrets in env vars or vault, not config
@@ -2521,7 +2523,7 @@ When generating tests, always include:
 - **Reload-Support**: Hot reload for long-running apps
 
 ### DEP:Testing
-**Trigger:** pytest, unittest, nose2, hypothesis, ward, robot, behave, lettuce, jest, vitest, mocha, playwright, cypress
+**Trigger:** {testing_framework_deps}
 
 - **Fixtures-Scoped**: Appropriate fixture scope (function/class/module/session)
 - **Mocks-Minimal**: Mock at boundaries, not internals
@@ -2535,7 +2537,7 @@ When generating tests, always include:
 - **Regression-Pattern**: Every bug fix gets a regression test
 
 ### DEP:GPU
-**Trigger:** cuda-python, cupy, torch+cuda, tensorflow-gpu, numba, pycuda, triton, jax
+**Trigger:** {gpu_deps}
 
 - **Device-Selection**: Explicit CUDA_VISIBLE_DEVICES
 - **Memory-Management**: Clear cache, use context managers
@@ -2545,7 +2547,7 @@ When generating tests, always include:
 - **Stream-Async**: CUDA streams for parallelism
 
 ### DEP:Audio
-**Trigger:** faster-whisper, whisper, pydub, librosa, soundfile, pyaudio, speechrecognition, pedalboard
+**Trigger:** {audio_processing_deps}
 
 - **Chunk-Processing**: Stream in chunks, don't load all
 - **Sample-Rate**: Normalize sample rates
@@ -2555,7 +2557,7 @@ When generating tests, always include:
 - **Progress-Callback**: Report progress for long operations
 
 ### DEP:Video
-**Trigger:** ffmpeg-python, moviepy, opencv-video, decord, av, imageio-ffmpeg
+**Trigger:** {video_processing_deps}
 
 - **Frame-Iterator**: Yield frames, don't load all
 - **Codec-Fallback**: Multiple codec support
@@ -2565,7 +2567,7 @@ When generating tests, always include:
 - **Hardware-Accel**: NVENC/VAAPI when available
 
 ### DEP:HeavyModel
-**Trigger:** transformers, sentence-transformers, langchain, llama-cpp-python, vllm, ollama, openai, anthropic
+**Trigger:** {heavy_model_deps}
 
 - **Lazy-Model-Load**: Load on first use, not import
 - **Model-Singleton**: Single instance, reuse
@@ -2579,7 +2581,7 @@ When generating tests, always include:
 - **Fallback-Chain**: Multiple model fallbacks for reliability
 
 ### DEP:Image
-**Trigger:** opencv-python, pillow, scikit-image, imageio, albumentations, kornia
+**Trigger:** {image_processing_deps}
 
 - **Lazy-Decode**: Decode on access
 - **Size-Validate**: Max dimensions check
@@ -2588,7 +2590,7 @@ When generating tests, always include:
 - **Memory-Map**: mmap for huge files
 
 ### DEP:DataHeavy
-**Trigger:** pandas, polars, dask, pyspark, ray, vaex, modin, arrow
+**Trigger:** {data_processing_deps}
 
 - **Chunk-Read**: chunksize parameter for large files
 - **Lazy-Eval**: Defer until needed (polars/dask)
@@ -2598,7 +2600,7 @@ When generating tests, always include:
 - **Spill-Disk**: Allow disk spillover
 
 ### DEP:GamePython
-**Trigger:** pygame, arcade, ursina, panda3d, pyglet, raylib
+**Trigger:** {python_game_deps}
 
 - **Game-Loop**: Fixed timestep, variable render
 - **Asset-Preload**: Load screens, progress bars
@@ -2607,7 +2609,7 @@ When generating tests, always include:
 - **Delta-Time**: Frame-independent movement
 
 ### DEP:GameJS
-**Trigger:** phaser, three.js, pixi.js, babylon.js, kaboom, excalibur
+**Trigger:** {js_game_deps}
 
 - **Sprite-Atlas**: Texture packing
 - **Object-Pool**: Reuse frequently created objects
@@ -2616,7 +2618,7 @@ When generating tests, always include:
 - **Audio-Context**: Single AudioContext
 
 ### DEP:GameEngine
-**Trigger:** Unity (.csproj), Unreal (*.uproject), Godot (project.godot)
+**Trigger:** {game_engine_markers}
 
 - **Scene-Organization**: Clear hierarchy, naming convention
 - **Prefab-Reuse**: Prefabs/scenes over copies
@@ -2626,7 +2628,7 @@ When generating tests, always include:
 - **Platform-Optimize**: Quality presets per platform
 
 ### DEP:HTTP
-**Trigger:** requests, httpx, aiohttp, axios, got, ky, node-fetch, fetch
+**Trigger:** {http_client_deps}
 
 - **Timeout-Always**: Explicit timeouts
 - **Retry-Transient**: Exponential backoff
@@ -2635,7 +2637,7 @@ When generating tests, always include:
 - **Response-Validate**: Schema validation
 
 ### DEP:ORM
-**Trigger:** sqlalchemy, prisma, drizzle, typeorm, sequelize, tortoise-orm, peewee, gorm, diesel
+**Trigger:** {orm_deps}
 
 *These rules EXTEND DB:ORM rules. Apply both sets when ORM is detected.*
 
@@ -2647,7 +2649,7 @@ When generating tests, always include:
 - **Bulk-Operations**: Use bulk insert/update APIs
 
 ### DEP:Auth
-**Trigger:** authlib, python-jose, passlib, bcrypt, passport, lucia, next-auth, clerk, auth0, supabase-auth, better-auth
+**Trigger:** {auth_deps}
 
 - **Token-Secure**: HttpOnly, Secure flags
 - **Refresh-Flow**: Refresh token rotation
@@ -2656,7 +2658,7 @@ When generating tests, always include:
 - **MFA-Support**: Optional 2FA for sensitive ops
 
 ### DEP:Payment
-**Trigger:** stripe, paypal, square, braintree, paddle, lemon-squeezy, adyen
+**Trigger:** {payment_deps}
 
 - **Webhook-Verify**: Signature validation
 - **Idempotency-Key**: Prevent duplicate charges
@@ -2665,7 +2667,7 @@ When generating tests, always include:
 - **Audit-Trail**: Complete payment logs
 
 ### DEP:Email
-**Trigger:** sendgrid, mailgun, resend, nodemailer, postmark, ses
+**Trigger:** {email_deps}
 
 - **Template-System**: Reusable templates
 - **Queue-Async**: Background sending
@@ -2674,7 +2676,7 @@ When generating tests, always include:
 - **Unsubscribe**: One-click unsubscribe
 
 ### DEP:SMS
-**Trigger:** twilio, vonage, messagebird, plivo
+**Trigger:** {sms_deps}
 
 - **Delivery-Status**: Track delivery callbacks
 - **Rate-Throttle**: Respect carrier limits
@@ -2683,7 +2685,7 @@ When generating tests, always include:
 - **Message-Template**: Pre-approved templates
 
 ### DEP:Notification
-**Trigger:** firebase-admin, onesignal, pusher, novu, ably
+**Trigger:** {notification_deps}
 
 - **Channel-Preference**: User-configurable channels
 - **Batch-Send**: Batch API calls
@@ -2692,7 +2694,7 @@ When generating tests, always include:
 - **Fallback-Channel**: Email if push fails
 
 ### DEP:Search
-**Trigger:** elasticsearch, meilisearch, algolia, typesense, opensearch
+**Trigger:** {search_deps}
 
 - **Index-Strategy**: Separate vs combined indexes
 - **Sync-Mechanism**: Real-time vs batch sync
@@ -2701,7 +2703,7 @@ When generating tests, always include:
 - **Facet-Design**: Efficient faceting
 
 ### DEP:Queue
-**Trigger:** celery, rq, dramatiq, huey, bull, bee-queue, bullmq
+**Trigger:** {queue_deps}
 
 - **Idempotent-Tasks**: Same input = same result
 - **Result-Backend**: Configure result storage
@@ -2722,7 +2724,7 @@ When generating tests, always include:
 - **Cron-Schedules**: Use cron expressions for recurring workflows
 
 ### DEP:Cache
-**Trigger:** redis, memcached, aiocache, diskcache, keyv, ioredis
+**Trigger:** {cache_deps}
 
 - **TTL-Strategy**: Explicit expiration
 - **Key-Namespace**: Prefixed keys
@@ -2731,7 +2733,7 @@ When generating tests, always include:
 - **Invalidation**: Clear related keys
 
 ### DEP:Logging
-**Trigger:** loguru, structlog, winston, pino, bunyan
+**Trigger:** {logging_deps}
 
 - **Structured-Format**: JSON logging in production
 - **Level-Config**: Configurable log level
@@ -2740,7 +2742,7 @@ When generating tests, always include:
 - **Rotation-Strategy**: Size/time rotation
 
 ### DEP:ObjectStore
-**Trigger:** boto3/s3, minio, cloudinary, uploadthing, google-cloud-storage
+**Trigger:** {object_storage_deps}
 
 - **Presigned-URLs**: Time-limited URLs
 - **Content-Type**: Validate MIME type
@@ -2749,7 +2751,7 @@ When generating tests, always include:
 - **Lifecycle-Rules**: Auto-expiry for temp files
 
 ### DEP:PDF
-**Trigger:** reportlab, weasyprint, pdfkit, puppeteer, playwright, fpdf2
+**Trigger:** {pdf_deps}
 
 - **Template-Based**: HTML/template generation
 - **Async-Generate**: Background processing
@@ -2758,7 +2760,7 @@ When generating tests, always include:
 - **Accessibility**: Tagged PDF when possible
 
 ### DEP:Excel
-**Trigger:** openpyxl, xlsxwriter, pandas-excel, exceljs, sheetjs
+**Trigger:** {excel_deps}
 
 - **Stream-Write**: Write in chunks
 - **Formula-Safe**: Escape formula injection
@@ -2767,7 +2769,7 @@ When generating tests, always include:
 - **Sheet-Naming**: Valid sheet names
 
 ### DEP:Scraping
-**Trigger:** scrapy, beautifulsoup4, selenium, playwright, puppeteer, crawlee
+**Trigger:** {scraping_deps}
 
 - **Politeness-Delay**: Respectful delays
 - **Robots-Respect**: Honor robots.txt
@@ -2777,7 +2779,7 @@ When generating tests, always include:
 - **Anti-Block**: Rotate IPs/proxies if needed
 
 ### DEP:Blockchain
-**Trigger:** web3, ethers, hardhat, brownie, ape, solana-py, foundry, anchor
+**Trigger:** {blockchain_deps}
 
 - **Gas-Estimate**: Pre-estimate gas before transactions
 - **Nonce-Manage**: Track nonce locally, handle race conditions
@@ -2833,7 +2835,7 @@ When generating tests, always include:
 - **Upgrade-Authority**: Secure program upgrade authority
 
 ### DEP:ARVR
-**Trigger:** openxr, webxr, ar-foundation, arvr-toolkit
+**Trigger:** {arvr_deps}
 
 - **XR-Frame-Budget**: 90fps minimum
 - **Comfort-Settings**: Teleport/snap turn options
@@ -2842,7 +2844,7 @@ When generating tests, always include:
 - **Performance-Tier**: Quality presets per device
 
 ### DEP:IoT
-**Trigger:** micropython, paho-mqtt, esphome, homeassistant, aiocoap
+**Trigger:** {iot_deps}
 
 - **IoT-Reconnect**: Auto-reconnect
 - **Power-Aware**: Sleep modes for battery
@@ -2851,7 +2853,7 @@ When generating tests, always include:
 - **Watchdog**: Hardware watchdog
 
 ### DEP:Crypto
-**Trigger:** cryptography, pycryptodome, nacl, jose, argon2
+**Trigger:** {crypto_deps}
 
 - **Algorithm-Modern**: AES-256-GCM, ChaCha20
 - **Key-Rotation**: Scheduled rotation
