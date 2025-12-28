@@ -6,7 +6,10 @@ import json
 import logging
 import random
 import subprocess
+import threading
+import time
 from dataclasses import dataclass, field
+from datetime import datetime, timezone
 from pathlib import Path
 from typing import Any
 
@@ -136,10 +139,47 @@ class AIComparisonResult:
     blind_assignment: str = ""  # "cco=a" or "cco=b" for transparency
     raw_response: str = ""
     error: str | None = None
+    # Metadata
+    duration_seconds: float = 0.0
+    timestamp: str = ""
+    report_file: str = ""
 
     def to_dict(self) -> dict[str, Any]:
         """Convert to dictionary for JSON response."""
+        # Calculate dimension wins
+        cco_wins = sum(1 for d in self.dimension_breakdown if d.winner == "cco")
+        vanilla_wins = sum(1 for d in self.dimension_breakdown if d.winner == "vanilla")
+        ties = sum(1 for d in self.dimension_breakdown if d.winner == "tie")
+
+        # Build executive summary
+        diff = abs(self.score_difference)
+        if self.winner == "cco":
+            impact = f"CCO improved code quality by {diff} points ({self.cco.grade} vs {self.vanilla.grade})."
+        elif self.winner == "vanilla":
+            impact = f"Vanilla performed better by {diff} points ({self.vanilla.grade} vs {self.cco.grade})."
+        else:
+            impact = f"Both implementations are essentially equal ({self.cco.grade})."
+
+        exec_summary = (
+            f"{self.verdict}. {impact} "
+            f"CCO won {cco_wins}/10 dimensions, Vanilla won {vanilla_wins}/10, {ties} tied. "
+            f"{self.recommendation}"
+        )
+
         return {
+            # Executive summary - one paragraph overview
+            "executive_summary": exec_summary,
+            # Quick stats
+            "summary": {
+                "cco_score": self.cco.overall_score,
+                "vanilla_score": self.vanilla.overall_score,
+                "difference": self.score_difference,
+                "cco_grade": self.cco.grade,
+                "vanilla_grade": self.vanilla.grade,
+                "winner": self.winner,
+                "verdict": self.verdict,
+                "dimension_wins": f"CCO {cco_wins} - Vanilla {vanilla_wins} - Tie {ties}",
+            },
             "cco": self.cco.to_dict(),
             "vanilla": self.vanilla.to_dict(),
             "comparison": {
@@ -163,6 +203,10 @@ class AIComparisonResult:
             },
             "raw_response": self.raw_response if self.error else None,
             "error": self.error,
+            # Metadata
+            "duration_seconds": self.duration_seconds,
+            "timestamp": self.timestamp,
+            "report_file": self.report_file,
         }
 
 
@@ -415,71 +459,147 @@ def run_ai_comparison(
 
     logger.info(f"Blind assignment for {project_id}: A={dir_a}, B={dir_b} (cco_is_a={cco_is_a})")
 
-    # Build the ccbox prompt with blind labels
-    ccbox_prompt = f"""You are performing a BLIND code comparison. You do not know which implementation
-used any specific tools or processes. Evaluate purely on code quality.
+    # Write comparison instructions to output_dir (once)
+    comparison_prompt_dest = output_dir / "comparison-prompt.md"
+    if not comparison_prompt_dest.exists():
+        try:
+            comparison_prompt_dest.write_text(comparison_criteria, encoding="utf-8")
+        except Exception as e:
+            return AIComparisonResult(error=f"Failed to copy comparison prompt: {e}")
 
-## The Implementations
+    # Original prompt is already in each project folder as _benchmark_prompt.md
+    # Reference the one in dir_a (both should have the same prompt)
+    original_prompt_ref = f"{dir_a}/_benchmark_prompt.md"
 
-- **Implementation A**: {dir_a}/
-- **Implementation B**: {dir_b}/
-
-## Original Prompt Given to Generate Both
-
----
-{original_prompt}
----
-
-## Evaluation Instructions
-
-{comparison_criteria}
-"""
+    # Minimal -p prompt referencing files
+    short_prompt = (
+        f"Compare {dir_a}/ vs {dir_b}/ using comparison-prompt.md. "
+        f"Original task: {original_prompt_ref}"
+    )
 
     try:
         # Run ccbox from the output directory in vanilla/bare mode
+        # Using same parameters as executor for consistency:
+        # -dd: debug logging
+        # -s auto: stack auto-detection
+        # -C: working directory
+        # --bare: no CCO rules (vanilla mode for unbiased evaluation)
+        # -m: model selection
+        # -p: prompt (also enables --print mode for non-interactive)
         cmd = [
             "ccbox",
+            "-dd",
+            "-s",
+            "auto",
+            "-C",
+            str(output_dir),
+            "--bare",
             "-m",
             "opus",
-            "--bare",
             "-p",
-            ccbox_prompt,
-            "--dangerously-skip-permissions",
+            short_prompt,
         ]
 
         logger.info(f"Running blind AI comparison for {project_id}")
+        logger.debug(f"Command: {' '.join(cmd)}")
+        start_time = time.time()
 
-        proc = subprocess.run(
+        # Use Popen for streaming output
+        # stdin=DEVNULL prevents ccbox from waiting for user input
+        process = subprocess.Popen(
             cmd,
             cwd=str(output_dir),
-            capture_output=True,
+            stdin=subprocess.DEVNULL,
+            stdout=subprocess.PIPE,
+            stderr=subprocess.PIPE,
             text=True,
-            timeout=timeout,
             encoding="utf-8",
             errors="replace",
         )
 
-        if proc.returncode != 0:
-            error_msg = proc.stderr[:500] if proc.stderr else "Unknown error"
+        # Collect output with streaming
+        stdout_lines: list[str] = []
+        stderr_lines: list[str] = []
+        lock = threading.Lock()
+
+        def read_stream(stream: Any, buffer: list[str], prefix: str) -> None:
+            """Read stream and log lines."""
+            try:
+                for line in iter(stream.readline, ""):
+                    if not line:
+                        break
+                    line = line.rstrip()
+                    with lock:
+                        buffer.append(line)
+                    # Log each line with AI prefix
+                    if line.strip():
+                        logger.info(f"[AI] {line[:200]}")
+            except Exception:
+                pass
+
+        # Start reader threads
+        stdout_thread = threading.Thread(
+            target=read_stream, args=(process.stdout, stdout_lines, "stdout"), daemon=True
+        )
+        stderr_thread = threading.Thread(
+            target=read_stream, args=(process.stderr, stderr_lines, "stderr"), daemon=True
+        )
+        stdout_thread.start()
+        stderr_thread.start()
+
+        # Wait for completion with timeout
+        try:
+            process.wait(timeout=timeout)
+        except subprocess.TimeoutExpired:
+            process.kill()
             return AIComparisonResult(
-                error=f"ccbox exited with code {proc.returncode}: {error_msg}",
-                raw_response=proc.stdout[:2000] if proc.stdout else "",
+                error=f"AI evaluation timed out after {timeout}s. Try again or reduce code size."
+            )
+
+        # Wait for threads to finish
+        stdout_thread.join(timeout=5)
+        stderr_thread.join(timeout=5)
+
+        duration = time.time() - start_time
+        stdout = "\n".join(stdout_lines)
+        stderr = "\n".join(stderr_lines)
+
+        if process.returncode != 0:
+            error_parts = []
+            if stderr:
+                error_parts.append(f"stderr: {stderr[:500]}")
+            if stdout:
+                error_parts.append(f"stdout: {stdout[:500]}")
+            error_msg = " | ".join(error_parts) if error_parts else "No output captured"
+
+            logger.error(f"ccbox failed for {project_id}: code={process.returncode}, {error_msg}")
+            return AIComparisonResult(
+                error=f"ccbox exited with code {process.returncode}: {error_msg}",
+                raw_response=stdout[:2000] if stdout else "",
             )
 
         # Parse the response with blind assignment mapping
-        result = parse_ai_response(proc.stdout, cco_is_a)
+        result = parse_ai_response(stdout, cco_is_a)
+
+        # Add metadata
+        result_file = output_dir / f"ai_comparison_{project_id}.json"
+        result.duration_seconds = duration
+        result.timestamp = datetime.now(timezone.utc).isoformat()
+        result.report_file = str(result_file)
+
+        # Save result to file
+        try:
+            result_file.write_text(json.dumps(result.to_dict(), indent=2), encoding="utf-8")
+        except Exception as e:
+            logger.warning(f"Failed to save comparison result: {e}")
 
         logger.info(
             f"AI comparison complete for {project_id}: {result.verdict} "
             f"(CCO: {result.cco.overall_score}, Vanilla: {result.vanilla.overall_score}, "
-            f"blind={result.blind_assignment})"
+            f"duration: {duration:.1f}s, report: {result_file.name})"
         )
         return result
 
-    except subprocess.TimeoutExpired:
-        return AIComparisonResult(
-            error=f"AI evaluation timed out after {timeout}s. Try again or reduce code size."
-        )
     except FileNotFoundError:
         return AIComparisonResult(error="ccbox command not found. Install with: pip install ccbox")
     except Exception as e:

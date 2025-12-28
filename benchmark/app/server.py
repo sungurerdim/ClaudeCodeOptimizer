@@ -38,6 +38,7 @@ class LogColors:
     CYAN = "\033[96m"
     GREEN = "\033[92m"
     GRAY = "\033[90m"
+    MAGENTA = "\033[95m"  # For AI evaluator
     BOLD = "\033[1m"
 
 
@@ -64,8 +65,8 @@ class ColoredFormatter(logging.Formatter):
     def format(self, record: logging.LogRecord) -> str:
         # Truncate message for non-error levels
         original_msg = record.msg
-        if record.levelno < logging.ERROR and len(str(record.msg)) > 100:
-            record.msg = str(record.msg)[:100] + "..."
+        if record.levelno < logging.ERROR and len(str(record.msg)) > 200:
+            record.msg = str(record.msg)[:200] + "..."
 
         # Format the base message
         formatted = super().format(record)
@@ -76,7 +77,7 @@ class ColoredFormatter(logging.Formatter):
         # Apply colors
         color = self.LEVEL_COLORS.get(record.levelno, "")
 
-        # Apply semantic colors (priority order: success/fail > variant > default)
+        # Apply semantic colors (priority order: success/fail > AI > variant > default)
         msg_str = str(original_msg)
         if "SUCCESS" in msg_str:
             color = LogColors.GREEN
@@ -84,6 +85,14 @@ class ColoredFormatter(logging.Formatter):
             color = LogColors.RED
         elif "Completed" in msg_str:
             color = LogColors.GREEN
+        # AI evaluator logs (magenta)
+        elif (
+            "ai_evaluator" in record.name
+            or "AI comparison" in msg_str
+            or "Blind assignment" in msg_str
+            or "[AI]" in msg_str
+        ):
+            color = LogColors.MAGENTA
         # Container/executor variant logs (cyan) - lower priority than success/fail
         elif "[VANILLA]" in msg_str or "[CCO]" in msg_str or "[stdout]" in msg_str:
             color = LogColors.CYAN
@@ -130,8 +139,8 @@ class ActivityLog:
         # Truncation handled by TruncatingFormatter at logging level
         entry = {
             "timestamp": datetime.now().strftime("%H:%M:%S"),
-            "message": message[:100] + "..."
-            if level != "error" and len(message) > 100
+            "message": message[:200] + "..."
+            if level != "error" and len(message) > 200
             else message,
             "level": level,
         }
