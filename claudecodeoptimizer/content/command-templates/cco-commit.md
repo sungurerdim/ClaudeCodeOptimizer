@@ -174,6 +174,13 @@ gitDiffUntracked = filesToCommit
   .filter(f => allChanges.untracked.includes(f))
   .map(f => Bash(`cat "${f}"`))  // Content of new files
 
+// [CRITICAL] Commit message generation rules:
+// 1. ONLY analyze gitDiff content - what lines were added/removed
+// 2. NEVER use session memory or conversation context
+// 3. Describe WHAT changed in the diff, not WHY you changed it
+// 4. If diff shows "A" replaced with "B", message is about "B", not "fixing A"
+// 5. Previous commit state is unknown - only diff content matters
+
 commitPlan = analyzeChanges(filesToCommit, gitDiff, gitDiffUntracked)
 // Returns: { commits: [{ files: [], message: { type, scope, title, body }, breaking: boolean }] }
 ```
@@ -488,10 +495,11 @@ When `--quick` flag:
 ## Rules
 
 1. **Title ≤50 chars** - BLOCKING: `type(scope): title` must be ≤50 total
-2. **Parallel quality gates** - Format+lint+types in background
-3. **Background tests** - Start tests early, check before commit
-4. **Single question** - All conditional tabs in one Q1
-5. **Dynamic tabs** - Only show relevant tabs
-6. **Specific messages** - Use descriptive action verbs: "add", "fix", "refactor", "update"
-7. **Git safety** - Verify before push, prefer safe operations
-8. **Targeted checks** - Run format/lint/type on changed files only (~85% faster). Use `--full-project` for cross-file refactoring
+2. **Diff-only messages** - [CRITICAL] Generate commit messages ONLY from `git diff HEAD` content. NEVER use session memory or conversation context. Describe what the diff shows, not what you remember doing.
+3. **Parallel quality gates** - Format+lint+types in background
+4. **Background tests** - Start tests early, check before commit
+5. **Single question** - All conditional tabs in one Q1
+6. **Dynamic tabs** - Only show relevant tabs
+7. **Specific messages** - Use descriptive action verbs: "add", "fix", "refactor", "update"
+8. **Git safety** - Verify before push, prefer safe operations
+9. **Targeted checks** - Run format/lint/type on changed files only (~85% faster). Use `--full-project` for cross-file refactoring

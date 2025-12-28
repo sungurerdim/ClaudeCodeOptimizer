@@ -217,11 +217,11 @@ allSources = searchResults.flatMap(r => r.sources)
 t1t2Sources = allSources.filter(s => s.tier === "T1" || s.tier === "T2")
 t3PlusSources = allSources.filter(s => ["T3", "T4", "T5"].includes(s.tier))
 
-// High-value synthesis (T1-T2) → Better model
+// High-value synthesis (T1-T2) → Better model for conflict resolution
 synthesis = Task("cco-agent-research", `
   scope: synthesize
   sources: ${JSON.stringify(t1t2Sources)}
-`)
+`, { model: "opus" })
 
 // Supporting evidence (T3+) → aggregate locally
 supportingEvidence = aggregateByTier(t3PlusSources)

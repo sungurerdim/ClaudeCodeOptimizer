@@ -177,6 +177,7 @@ Before ANY response that expects user input:
 - **Read-Context**: Load `.claude/rules/cco/context.md`
 - **Execute**: Command-specific logic
 - **Report**: Results with accounting
+- **Diff-only messages**: [CRITICAL] Generate commit messages ONLY from `git diff HEAD` content. NEVER use session memory or conversation context. Describe what the diff shows, not what you remember doing.
 
 ## Context Requirement [CRITICAL]
 
