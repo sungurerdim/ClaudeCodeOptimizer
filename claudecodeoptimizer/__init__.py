@@ -14,8 +14,7 @@ if sys.platform == "win32":
     for stream in (sys.stdout, sys.stderr):
         if hasattr(stream, "reconfigure"):
             try:
-                # hasattr guards reconfigure existence, but mypy can't narrow TextIO | None union
-                stream.reconfigure(encoding="utf-8")  # type: ignore[union-attr]
+                stream.reconfigure(encoding="utf-8")  # type: ignore[union-attr]  # hasattr guards reconfigure, mypy can't narrow TextIO union
                 logging.debug(f"Successfully reconfigured {stream.name} to UTF-8 encoding")
             except (OSError, AttributeError) as e:
                 logging.debug(f"Failed to reconfigure {stream.name} to UTF-8: {e}")

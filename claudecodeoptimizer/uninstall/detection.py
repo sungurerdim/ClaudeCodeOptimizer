@@ -39,7 +39,7 @@ def detect_install_method() -> str | None:
             if "claudecodeoptimizer" in result.stdout:
                 return cmd
         except (subprocess.TimeoutExpired, FileNotFoundError):
-            pass
+            pass  # Tool not installed or unresponsive, try next detection method
     return None
 
 

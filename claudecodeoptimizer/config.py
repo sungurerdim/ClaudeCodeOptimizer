@@ -33,6 +33,8 @@ from typing import Any
 from . import __version__
 
 # Module-level target directory override (set by CLI for custom install location)
+# WARNING: This global is for test mocking and CLI --dir option ONLY.
+# NOT thread-safe - assumes single-threaded CLI usage. Do not use in concurrent contexts.
 _TARGET_DIR_OVERRIDE: Path | None = None
 
 
@@ -56,6 +58,10 @@ def get_claude_dir() -> Path:
 
 def set_target_dir(path: Path | None) -> None:
     """Set the target directory override for installation.
+
+    WARNING: NOT thread-safe. This function modifies module-level global state
+    and is intended for test mocking and CLI --dir option only.
+    Do not call from concurrent code paths.
 
     Args:
         path: Target directory path, or None to clear override.
