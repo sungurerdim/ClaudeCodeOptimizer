@@ -111,29 +111,30 @@ if (!isUnattended) {
 
 ```javascript
 // Start detection immediately - runs while user answers Q1
+// NOTE: This only does DETECTION. Rule generation happens in Step-4 after user input.
 detectTask = Task("cco-agent-analyze", `
   scopes: ["config"]
-  phase: "detect"
 
-  Auto-detect from manifest files and code:
-  - Language, framework, runtime, packageManager
-  - Infrastructure: containerized, ci, cloud, deployment
-  - Testing: testFramework, coverage, linters, typeChecker
-  - Metadata: license, teamSize, maturity, lastActivity
-  - Project complexity (for AI Performance recommendations)
+  [DETECTION ONLY - No rule generation yet]
+  Auto-detect from manifest files and code using PARALLEL tool calls:
 
-  [CRITICAL] Extract projectCritical from documentation:
-  - Read README.md, CONTRIBUTING.md, CLAUDE.md, AGENTS.md in PARALLEL
-  - Extract purpose (first paragraph or package description)
-  - Extract constraints (MUST, REQUIRED, NEVER, ALWAYS statements)
-  - Extract invariants (properties that must always hold)
-  - Extract nonNegotiables (rules that cannot be overridden)
+  Step 1 (PARALLEL):
+  - Glob("{manifest}")              // Language manifests (pyproject.toml, package.json, etc.)
+  - Glob("Dockerfile*", ".github/workflows/*")
+  - Read("README.md"), Read("CLAUDE.md"), Read("{manifest}")
+  - Bash(find . -name '{ext}' | wc -l)
 
-  Return in output:
+  Extract:
   - detections: { language, type, api, database, frontend, infra, dependencies }
   - complexity: { loc, files, frameworks, hasTests, hasCi, isMonorepo }
   - projectCritical: { purpose, constraints[], invariants[], nonNegotiables[] }
   - sources: [{ file, confidence }]
+
+  [CRITICAL] projectCritical extraction:
+  - purpose: README.md first paragraph or {manifest} description
+  - constraints: "MUST", "REQUIRED", "NEVER", "ALWAYS" from CLAUDE.md
+  - invariants: "zero dependencies", "100% coverage" patterns
+  - nonNegotiables: Rules in ## Rules sections
 `, { model: "haiku", run_in_background: true })
 
 // Proceed to Q1 immediately (detection runs in background)
@@ -551,16 +552,16 @@ Before calling AskUserQuestion for Q2, verify:
 
 | Operation | Method | Mode |
 |-----------|--------|------|
-| Rule extraction | cco-agent-analyze (generate phase) | - |
+| Rule extraction | cco-agent-analyze (targeted extraction) | sed patterns |
 | File writes | cco-agent-apply | overwrite (rules), merge (settings.json) |
 | Statusline scripts | Copy from package | overwrite |
 | Pre-write cleanup | Delete `rules/cco/*.md` | delete_contents |
 
-**Single Rule:** All rule generation goes through cco-agent-analyze. All file writes go through cco-agent-apply. Execute unconditionally - agents handle idempotency.
+**Single Rule:** All rule generation goes through cco-agent-analyze with targeted extraction. All file writes go through cco-agent-apply. Execute unconditionally - agents handle idempotency.
 
 ### 4.1: Generate Rules
 
-**CRITICAL:** Call cco-agent-analyze with config scope (generate phase) to create rules.
+**CRITICAL:** Generate rules using targeted section extraction (NOT full file read).
 
 **Write Modes (see cco-agent-apply.md for implementation):**
 
@@ -575,17 +576,15 @@ Before calling AskUserQuestion for Q2, verify:
 
 **CRITICAL:** All files except settings.json are OVERWRITTEN every run. Execute writes regardless of existing file state or content.
 
-**[IMPORTANT] Rule Source Architecture:**
-- All rules are defined as **sections within `cco-adaptive.md`** (single file)
-- Rule content is extracted from cco-adaptive.md sections, not from separate files
-- The agent reads cco-adaptive.md and extracts relevant sections based on detections
-- Source file: `cco-adaptive.md` only (separate `{category}.md` files do not exist in CCO package)
+**[IMPORTANT] Targeted Extraction Architecture:**
+- All rules defined in single `cco-adaptive.md` file (3142 lines)
+- Extract ONLY needed sections using sed patterns (saves ~90% tokens)
+- Each section ~20-50 lines instead of reading entire file
 
 ```javascript
-// Phase 2: Generate rules using detections from Step-1 + user input from Steps 2-3
+// Generate rules using TARGETED extraction (not full file read)
 generateResult = Task("cco-agent-analyze", `
   scopes: ["config"]
-  phase: "generate"
 
   Input:
   - detections: ${JSON.stringify(detectResult.detections)}
@@ -594,11 +593,15 @@ generateResult = Task("cco-agent-analyze", `
   - setupConfig: ${JSON.stringify(setupConfig)}
   - contextConfig: ${JSON.stringify(contextConfig)}
 
-  [CRITICAL] Generate Phase Execution:
-  1. Read cco-adaptive.md: Bash(cco-install --cat rules/cco-adaptive.md)
-  2. Extract rule sections matching detections
-  3. Generate context.md with Project Critical section (from projectCritical input)
-  4. Generate rule files with extracted content
+  [CRITICAL] Targeted Section Extraction:
+  1. Get CCO path: CCO_PATH=$(python3 -c "from claudecodeoptimizer.config import get_content_path; print(get_content_path('rules'))")
+  2. For each detection, extract matching section using sed patterns:
+     - L:{lang} → sed -n '/^### {lang} (L:{lang})/,/^###\\|^---\\|^## /p' "$CCO_PATH/cco-adaptive.md"
+     - Backend:{framework} → sed -n '/^### {framework}/,/^###\\|^---\\|^## /p' "$CCO_PATH/cco-adaptive.md"
+     - {section_name} → sed -n '/^## {section_name}/,/^## \\|^---/p' "$CCO_PATH/cco-adaptive.md"
+  3. Run ALL extractions in PARALLEL using: command1 & command2 & wait
+  4. Generate context.md from projectCritical + userInput
+  5. Generate rule files from extracted sections
 
   [MANDATORY] context.md MUST include Project Critical at top:
   ## Project Critical
@@ -610,16 +613,24 @@ generateResult = Task("cco-agent-analyze", `
   Return: { context, rules[], triggeredCategories[] }
 `, { model: "haiku" })
 
-// Agent returns (config scope, generate phase):
+// Agent returns:
 // generateResult = {
 //   context: "{generated_context_md_content}",
 //   rules: [
-//     { file: "{category}.md", content: "{content_from_adaptive}" },
+//     { file: "{category}.md", content: "{extracted_via_sed}" },
 //     ...
 //   ],
 //   triggeredCategories: [{ category, trigger, rule, source }]
 // }
 ```
+
+**Token Savings Comparison:**
+
+| Approach | Lines Read | Tokens |
+|----------|------------|--------|
+| Full file read | 3142 | ~12,000 |
+| Targeted extraction (5 sections) | ~200 | ~800 |
+| **Savings** | **~94%** | **~94%** |
 
 ### 4.2: Write Files [MANDATORY]
 
@@ -972,6 +983,6 @@ If something goes wrong during configuration:
 4. **Single Recommended** - Each tab has exactly one recommended option
 5. **AI-driven defaults** - Budget/Output based on project complexity
 6. **Explicit defaults** - Write ALL settings to files, including default values. Exception: statusLine "Remove" preserves global config.
-7. **[CRITICAL] Agent-only extraction** - NEVER use grep/sed/awk on cco-adaptive.md. ALWAYS use cco-agent-analyze (generate phase)
-8. **[CRITICAL] projectCritical flow** - detect phase extracts → generate phase receives → context.md includes at top
+7. **[CRITICAL] Targeted extraction** - Use sed patterns to extract ONLY needed sections from cco-adaptive.md (~94% token savings)
+8. **[CRITICAL] projectCritical flow** - detection extracts → generation receives → context.md includes at top
 9. **[CRITICAL] No duplication** - Purpose appears in Project Critical section ONLY, not in Strategic Context
