@@ -93,7 +93,7 @@ if (phases === "Both" || phases === "Quality Audit") {
   auditTask = Task("general-purpose", `
     Execute /cco-optimize --fix --security --quality
     Return: {
-      accounting: { done, declined, fail, total },
+      accounting: { applied, declined, failed, total },
       by_scope: { security: {n}, quality: {n} }
     }
   `, { model: "opus", run_in_background: phases === "Both" })  // Opus: 50-75% fewer tool errors
@@ -137,13 +137,13 @@ if (phases === "Both") {
 | **Overall** | **{scores.overall}** | **{status}** |
 
 ### Quality Audit
-| Scope | Done | Declined | Failed |
-|-------|------|----------|--------|
+| Scope | Applied | Declined | Failed |
+|-------|---------|----------|--------|
 | Security | {by_scope.security} | - | - |
 | Quality | {by_scope.quality} | - | - |
-| **Total** | **{accounting.done}** | **{accounting.declined}** | **{accounting.fail}** |
+| **Total** | **{accounting.applied}** | **{accounting.declined}** | **{accounting.failed}** |
 
-Status: {status} | Applied: {accounting.done} | Declined: {accounting.declined} | Failed: {accounting.fail} | Total: {accounting.total}
+Status: {status} | Applied: {accounting.applied} | Declined: {accounting.declined} | Failed: {accounting.failed} | Total: {accounting.total}
 
 Duration: {n}s
 ```

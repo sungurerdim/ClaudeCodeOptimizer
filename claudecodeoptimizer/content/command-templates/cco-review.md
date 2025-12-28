@@ -229,6 +229,9 @@ doNow = findings.filter(f => f.impact === "HIGH" && f.effort === "LOW")
 plan = findings.filter(f => f.impact === "HIGH" && f.effort === "MEDIUM")
 consider = findings.filter(f => f.impact === "MEDIUM")
 backlog = findings.filter(f => f.impact === "LOW" || f.effort === "HIGH")
+
+// Track total findings for consistent accounting
+totalFindings = doNow.length + plan.length + consider.length + backlog.length
 ```
 
 **Display prioritized recommendations:**
@@ -294,11 +297,19 @@ if (toApply.length > 0) {
 }
 
 if (toApply.length > 0) {
-  Task("cco-agent-apply", `
+  applyResults = Task("cco-agent-apply", `
     fixes: ${JSON.stringify(toApply)}
+
     Apply recommendations.
     Verify each change.
     Handle dependencies between fixes.
+
+    CRITICAL - Counting:
+    - Count FINDINGS, not locations
+    - Each recommendation = 1 finding
+
+    Return accounting at FINDING level:
+    { applied: <findings_fixed>, failed: <findings_failed>, total: <findings_attempted> }
   `, { model: "opus" })  // Opus: 50-75% fewer tool errors
 }
 ```
@@ -314,6 +325,24 @@ if (toApply.length > 0) {
 
 ## Step-5: Summary
 
+### Calculate Final Counts [CRITICAL]
+
+```javascript
+// Calculate counts at FINDING level
+applied = applyResults?.accounting?.applied || 0
+failed = applyResults?.accounting?.failed || 0
+declined = totalFindings - toApply.length  // Findings not selected for apply
+
+// By priority breakdown
+appliedDoNow = doNow.filter(f => wasApplied(f)).length
+declinedDoNow = doNow.length - appliedDoNow
+// ... same for plan, consider
+
+// Consistency check
+assert(applied + declined + failed === totalFindings,
+  "Count mismatch: applied + declined + failed must equal totalFindings")
+```
+
 ```
 ## Review Complete
 
@@ -322,15 +351,18 @@ if (toApply.length > 0) {
 | Foundation | {foundation} |
 | Mode | {80/20 \| Full} |
 | Files modified | {n} |
+| **Total findings** | **{totalFindings}** |
 
-Status: {OK\|WARN} | Applied: {applied} | Declined: {skipped} | Failed: 0
+Status: {OK\|WARN} | Applied: {applied} | Declined: {declined} | Failed: 0 | Total: {totalFindings}
 
-| Priority | Found | Applied | Skipped |
-|----------|-------|---------|---------|
-| Do Now | {doNow.length} | {appliedDoNow} | {skippedDoNow} |
-| Plan | {plan.length} | {appliedPlan} | {skippedPlan} |
-| Consider | {consider.length} | {appliedConsider} | {skippedConsider} |
+| Priority | Found | Applied | Declined |
+|----------|-------|---------|----------|
+| Do Now | {doNow.length} | {appliedDoNow} | {declinedDoNow} |
+| Plan | {plan.length} | {appliedPlan} | {declinedPlan} |
+| Consider | {consider.length} | {appliedConsider} | {declinedConsider} |
 | Backlog | {backlog.length} | 0 | {backlog.length} |
+
+**Accounting invariant:** applied + declined + failed = total
 
 Run `git diff` to review changes.
 ```
