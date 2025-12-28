@@ -209,154 +209,172 @@ Combines all analysis for dashboard: Security (OWASP, secrets, CVE) │ Tests (c
 
 ### config
 
-Config scope handles project detection and rule selection. **Two-phase execution.**
+Config scope handles project detection and rule generation. **Single-phase execution with targeted extraction.**
 
-**Phase 1: detect** - Auto-detect project characteristics
-**Phase 2: generate** - Generate rules from detections + user input
+**[CRITICAL] Single-Phase Architecture**
 
-#### Phase 1: detect
+No separate detect/generate phases. All work done in one agent call to avoid context duplication.
 
-| Step | Action | Tool |
-|------|--------|------|
-| 1 | Auto-detect from manifest/code | `Glob`, `Read`, `Grep` |
-| 2 | Extract project critical info from docs | `Read(README.md, CONTRIBUTING.md, CLAUDE.md)` |
-| 3 | Return detections with confidence | JSON |
+| Step | Action | Tool | Execution |
+|------|--------|------|-----------|
+| 1 | Detect from manifests | `Glob`, `Read` | **PARALLEL** |
+| 2 | Extract project critical | `Read(docs)` | **PARALLEL** with 1 |
+| 3 | Calculate complexity | `Bash(find, wc)` | **PARALLEL** with 1,2 |
+| 4 | Extract rule sections | `Bash(sed)` | **SEQUENTIAL** after 1-3 |
+| 5 | Generate output | Internal | **SEQUENTIAL** after 4 |
 
-**Output Schema (detect phase):**
-```json
-{
-  "detections": {
-    "language": ["{lang}"],
-    "type": ["{type}"],
-    "api": "{api|null}",
-    "database": "{db|null}",
-    "frontend": "{frontend|null}",
-    "infra": ["{infra}"],
-    "dependencies": ["{deps}"]
-  },
-  "complexity": {
-    "loc": "{number}",
-    "files": "{number}",
-    "frameworks": "{number}",
-    "hasTests": "{boolean}",
-    "hasCi": "{boolean}",
-    "isMonorepo": "{boolean}"
-  },
-  "projectCritical": {
-    "purpose": "{1-2 sentence project purpose}",
-    "constraints": ["{hard constraints that must never be violated}"],
-    "invariants": ["{properties that must always hold}"],
-    "nonNegotiables": ["{rules that cannot be overridden}"]
-  },
-  "sources": [{ "file": "{file}", "confidence": "HIGH|MEDIUM|LOW" }]
-}
+**[CRITICAL] Targeted Section Extraction**
+
+Instead of reading entire cco-adaptive.md (~3000 lines), extract ONLY needed sections using sed.
+This reduces token usage by ~80%.
+
+**Placeholder Convention:**
+
+| Placeholder | Description | Example |
+|-------------|-------------|---------|
+| `{lang}` | Language name | Python, TypeScript, Go |
+| `{lang_lower}` | Lowercase language | python, typescript, go |
+| `{lang_code}` | Detection code | L:Python, L:TypeScript |
+| `{framework}` | Framework name | FastAPI, Django, Express |
+| `{framework_code}` | Detection code | Backend:FastAPI |
+| `{section_pattern}` | Sed regex pattern | `^### {lang} ({lang_code})` |
+| `{output_file}` | Generated file | {lang_lower}.md, backend.md |
+| `{manifest}` | Manifest file | pyproject.toml, package.json |
+| `{ext}` | File extension pattern | *.py, *.ts |
+
+```bash
+# Get CCO content path
+CCO_PATH=$(python3 -c "from claudecodeoptimizer.config import get_content_path; print(get_content_path('rules'))")
+ADAPTIVE="$CCO_PATH/cco-adaptive.md"
+
+# Extract language subsection (### header)
+# Pattern: ^### {lang} ({lang_code})
+sed -n '/^### {lang} ({lang_code})/,/^###\|^---\|^## /{/^###\|^---\|^## /!p;/^### {lang}/p}' "$ADAPTIVE"
+
+# Extract main section (## header)
+# Pattern: ^## {section_name}
+sed -n '/^## {section_name}/,/^## \|^---/{/^## \|^---/!p;/^## {section_name}/p}' "$ADAPTIVE"
 ```
 
-**Complexity Calculation [CRITICAL for AI recommendations]:**
+**Section Pattern Mapping**
+
+| Detection Code | Section Pattern | Output File |
+|----------------|-----------------|-------------|
+| L:{lang} | `^### {lang} (L:{lang})` | {lang_lower}.md |
+| Backend:{framework} | `^### {framework}` | backend.md |
+| Frontend:{framework} | `^### {framework}` | frontend.md |
+| Infra:Docker | `^## Infrastructure > Container` | container.md |
+| Test:* | `^## Testing$` | testing.md |
+| Security | `^## Security Rules` | security.md |
+| Compliance:* | `^## Compliance Rules` | compliance.md |
+| Scale:* | `^## Scale Rules` | scale.md |
+| ML:* | `^## Specialized > ML/AI` | ml.md |
+
+**Extraction Helper Function**
+
+```bash
+# extract_section - Extract section from cco-adaptive.md
+# Usage: extract_section "{section_pattern}" "$ADAPTIVE"
+
+extract_section() {
+  local pattern="$1"
+  local file="$2"
+
+  # For ### subsections (language rules, backend frameworks)
+  if [[ "$pattern" == *"###"* ]]; then
+    sed -n "/${pattern}/,/^###\|^---\|^## /{/${pattern}/p;/^###\|^---\|^## /!p}" "$file"
+  else
+    # For ## main sections
+    sed -n "/${pattern}/,/^## \|^---/{/${pattern}/p;/^## \|^---/!p}" "$file"
+  fi
+}
+
+# Example: Extract multiple sections in PARALLEL
+# Replace placeholders with actual detected values
+extract_section "^### {lang} ({lang_code})" "$ADAPTIVE" &
+extract_section "^### {framework}" "$ADAPTIVE" &
+extract_section "^## {section_name}" "$ADAPTIVE" &
+wait
+```
+
+**Detection Steps [PARALLEL]**
 
 ```javascript
-// Count lines of code (approximate) - adjust extensions per detected language
-loc = Bash("find . \\( -name '*.py' -o -name '*.ts' -o -name '*.js' -o -name '*.go' -o -name '*.rs' -o -name '*.java' \\) -not -path './node_modules/*' -not -path './.git/*' | xargs wc -l 2>/dev/null | tail -1 | awk '{print $1}'")
+// Step 1-3: Run in PARALLEL
+// All Glob, Read, and Bash calls in SINGLE message
 
-// Count source files
-files = Bash("find . \\( -name '*.py' -o -name '*.ts' -o -name '*.js' -o -name '*.go' -o -name '*.rs' -o -name '*.java' \\) -not -path './node_modules/*' -not -path './.git/*' | wc -l")
+// Detection - check for {manifest} files
+Glob("{manifest}")               // Language manifest
+Glob("Dockerfile*")              // Container
+Glob(".github/workflows/*")      // CI
 
-// Count detected frameworks
-frameworks = detections.frontend.length + (detections.api ? 1 : 0) + detections.infra.length
+// Project Critical
+Read("README.md")
+Read("CLAUDE.md")
+Read("{manifest}")               // For description
 
-// Check for tests
-hasTests = Glob("**/test*/**") || Glob("**/test_*.py") || Glob("**/*_test.py") || Glob("**/*.test.ts") || Glob("**/*.spec.ts")
-
-// Check for CI
-hasCi = Glob(".github/workflows/*") || Glob(".gitlab-ci.yml") || Glob("Jenkinsfile") || Glob(".circleci/config.yml")
-
-// Check for monorepo
-isMonorepo = Glob("packages/*/package.json") || Glob("apps/*/package.json") || Glob("pnpm-workspace.yaml") || Glob("nx.json") || Glob("turbo.json")
+// Complexity
+Bash("find . -name '{ext}' -not -path './.*' | wc -l")
+Bash("find . -name '{ext}' -not -path './.*' | xargs wc -l 2>/dev/null | tail -1")
 ```
 
-**Project Critical Extraction [PARALLEL with complexity]:**
-
-Read documentation files to extract project-critical information that should always be in context:
+**Complexity Calculation**
 
 ```javascript
-// Read all docs in PARALLEL
-docs = await Promise.all([
-  Read("README.md"),
-  Read("CONTRIBUTING.md"),
-  Read("CLAUDE.md"),
-  Read("AGENTS.md"),
-  Read("docs/ARCHITECTURE.md")
-])
-
-// Extract projectCritical from docs content
-projectCritical = {
-  purpose: extractPurpose(docs),      // First paragraph of README or package description
-  constraints: extractConstraints(docs),    // "must", "required", "never", "always" statements
-  invariants: extractInvariants(docs),      // Properties that must hold (e.g., "zero dependencies")
-  nonNegotiables: extractNonNegotiables(docs) // Rules that cannot be overridden
+complexity = {
+  loc: Bash("find . -name '{ext}' -not -path './node_modules/*' -not -path './.git/*' | xargs wc -l 2>/dev/null | tail -1 | awk '{print $1}'"),
+  files: Bash("find . -name '{ext}' -not -path './node_modules/*' | wc -l"),
+  frameworks: count(detections.frontend) + (detections.api ? 1 : 0) + count(detections.infra),
+  hasTests: Glob("**/test_*{ext}") || Glob("**/*_test{ext}"),
+  hasCi: Glob(".github/workflows/*") || Glob(".gitlab-ci.yml"),
+  isMonorepo: Glob("packages/*/{manifest}") || Glob("pnpm-workspace.yaml")
 }
 ```
 
-**Extraction Patterns:**
+**Project Critical Extraction**
 
-| Field | Sources | Patterns to Look For |
-|-------|---------|---------------------|
-| purpose | README.md first paragraph, package.json description | Project description, "X is a..." statements |
-| constraints | CONTRIBUTING.md, CLAUDE.md | "MUST", "REQUIRED", "always", "never" (case-insensitive) |
-| invariants | README.md, ARCHITECTURE.md | "zero dependencies", "backwards compatible", "100% test coverage" |
-| nonNegotiables | CLAUDE.md, AGENTS.md | Rules in ## Rules or ## Guidelines sections |
+| Field | Sources | Patterns |
+|-------|---------|----------|
+| purpose | README.md first paragraph, {manifest} description | "X is a..." |
+| constraints | CLAUDE.md | "MUST", "REQUIRED", "always", "never" |
+| invariants | README.md | "zero dependencies", "100% coverage" |
+| nonNegotiables | CLAUDE.md ## Rules section | Critical rules |
 
-**Constraint Keywords:**
-```
-MUST, REQUIRED, SHALL, ALWAYS → Hard constraint
-MUST NOT, SHALL NOT, NEVER → Hard prohibition
-SHOULD, RECOMMENDED → Soft constraint (include if critical)
-```
+**Step 4: Section Extraction [SEQUENTIAL]**
 
-**Example Output:**
-```json
-{
-  "projectCritical": {
-    "purpose": "Process and rules layer for Claude Code in the Opus 4.5 era",
-    "constraints": ["Zero runtime dependencies (stdlib only)", "Python 3.10+ compatibility"],
-    "invariants": ["80% test coverage", "Type-safe public APIs"],
-    "nonNegotiables": ["Breaking changes allowed in v0.x", "Speed over perfection"]
-  }
+After detection, extract only needed sections:
+
+```javascript
+// Build extraction commands based on detections
+extractCommands = []
+
+// For each detected language
+for (const lang of detections.language) {
+  extractCommands.push(`extract_section "^### ${lang} (L:${lang})" "$ADAPTIVE"`)
 }
-```
 
-#### Phase 2: generate
-
-**Input:** `detections` (from phase 1) + `userInput` (from cco-config questions)
-
-**[CRITICAL] All rules are defined within the single `cco-adaptive.md` file.**
-To generate rule files:
-1. Read the single `cco-adaptive.md` file
-2. Extract relevant sections based on detections
-3. Generate rule file content from those sections
-
-**Source:** Read only `cco-adaptive.md` (single file contains all rule sections).
-
-| Step | Action | Tool |
-|------|--------|------|
-| 1 | Read adaptive.md (single file, all rules) | `Bash(cco-install --cat rules/cco-adaptive.md)` |
-| 2 | Match detections + userInput → rule sections | Internal (parse sections from adaptive.md) |
-| 3 | Extract rule content from matched sections | Internal (copy section content) |
-| 4 | Generate context.md content | Internal |
-| 5 | Return structured output with generated content | JSON |
-
-**Output Schema (generate phase):**
-```json
-{
-  "context": "{generated_context_md_content}",
-  "rules": [
-    { "file": "{category}.md", "content": "{content_from_adaptive}" }
-  ],
-  "triggeredCategories": [
-    { "category": "{cat}", "trigger": "{code}", "rule": "{file}", "source": "auto|user" }
-  ]
+// For detected backend framework
+if (detections.backend) {
+  extractCommands.push(`extract_section "^### ${detections.backend}" "$ADAPTIVE"`)
 }
+
+// For security-sensitive projects
+if (userInput.data === "PII" || userInput.compliance.length > 0) {
+  extractCommands.push(`extract_section "^## Security Rules" "$ADAPTIVE"`)
+}
+// ... for each detection category
+
+// Run ALL extractions in PARALLEL
+Bash(extractCommands.join(" & ") + " & wait")
 ```
+
+**Token Comparison**
+
+| Approach | Lines Read | Estimated Tokens |
+|----------|------------|------------------|
+| Full file read | ~3000 | ~12,000 |
+| Targeted extraction (avg 5 sections) | ~200 | ~800 |
+| **Savings** | **~94%** | **~94%** |
 
 #### Step 1: Auto-Detection
 
@@ -436,15 +454,17 @@ Mark as `[from docs]` with `confidence: LOW`.
 - Each gets its own rule file
 - Monorepo detection enables multi-language mode
 
-#### Step 2: Rule Selection (Using Provided userInput)
+#### Step 2: Rule Extraction (Targeted)
 
-1. Read adaptive rules template: `Bash(cco-install --cat rules/cco-adaptive.md)`
-2. Match ALL detections → rule categories
+**[CRITICAL] Use targeted sed extraction, NOT full file read.**
+
+1. Map detections → section patterns (see Section Pattern Mapping above)
+2. Extract ONLY matched sections using sed (parallel bash)
 3. Apply cumulative tiers (Scale/Testing/SLA/Team higher includes lower)
 4. Generate context.md with Strategic Context section
 5. Generate rule files with YAML frontmatter paths
 
-**Rules Source:** Pip package via `cco-install --cat rules/cco-adaptive.md` (NOT from ~/.claude/rules/ to avoid context bloat)
+**Rules Source:** Targeted extraction from `cco-adaptive.md` via sed patterns.
 
 **CRITICAL: Generate rules for ALL detected categories. No orphan detections.**
 
@@ -544,7 +564,7 @@ Secrets detected: {secrets_detected}
 
 **CRITICAL - NO DUPLICATION:**
 - Purpose is in Project Critical section ONLY (not repeated in Strategic Context)
-- Project Critical values come from `projectCritical` in detect phase output
+- Project Critical values come from `projectCritical` in detection output
 - If projectCritical.purpose is empty, extract from README.md first paragraph
 
 #### Duplication Prevention [CRITICAL - VALIDATION]
@@ -600,7 +620,9 @@ function validateNoDuplication(contextMd) {
 [ ] Strategic Context has NO Purpose line
 ```
 
-#### Output Schema
+#### Output Schema (Single-Phase)
+
+**[CRITICAL] All data in one response - no resume needed.**
 
 ```json
 {
@@ -613,45 +635,43 @@ function validateNoDuplication(contextMd) {
     "infra": ["{detected_infra}"],
     "dependencies": ["{detected_deps}"]
   },
+  "complexity": {
+    "loc": "{number}",
+    "files": "{number}",
+    "frameworks": "{number}",
+    "hasTests": "{boolean}",
+    "hasCi": "{boolean}",
+    "isMonorepo": "{boolean}"
+  },
+  "projectCritical": {
+    "purpose": "{1-2 sentence project purpose}",
+    "constraints": ["{hard constraints}"],
+    "invariants": ["{properties that must hold}"],
+    "nonNegotiables": ["{rules that cannot be overridden}"]
+  },
   "userInput": {
     "team": "{user_team}",
     "scale": "{user_scale}",
     "data": "{user_data}",
     "compliance": ["{user_compliance}"],
-    "testing": "{user_testing}",
-    "sla": "{user_sla}",
     "maturity": "{user_maturity}",
     "breaking": "{user_breaking}",
     "priority": "{user_priority}"
   },
   "context": "{generated_context_md}",
   "rules": [
-    // Array contains ALL detected rules - examples below show structure only
-    // Actual entries depend on what was detected in Step-1
-    { "file": "{detection_category}.md", "content": "{content_from_cco_adaptive}" }
-    // Common patterns:
-    // - Language detected → { file: "{lang}.md", content: "..." }
-    // - Type detected → { file: "{type}.md", content: "..." }
-    // - DB detected → { file: "database.md", content: "..." }
-    // - Test detected → { file: "testing.md", content: "..." }
-    // - User input → { file: "scale.md", content: "..." }
-    // ... one entry per detected category
+    { "file": "{category}.md", "content": "{extracted_from_sed}" }
   ],
-  "guidelines": {
-    "maturity": "{user_maturity}",
-    "breaking": "{user_breaking}",
-    "priority": "{user_priority}"
-  },
   "triggeredCategories": [
-    { "category": "{category}", "trigger": "{trigger_code}", "rule": "{rule_file|null}", "source": "auto|user" }
+    { "category": "{category}", "trigger": "{code}", "rule": "{file}", "source": "auto|user" }
   ],
   "sources": [
-    { "file": "{source_file}", "confidence": "{HIGH|MEDIUM|LOW}" }
+    { "file": "{file}", "confidence": "{HIGH|MEDIUM|LOW}" }
   ]
 }
 ```
 
-**Note:** `userInput` is passed TO the agent from the command (cco-config). Agent copies it to output for traceability.
+**Note:** `userInput` is passed TO the agent from cco-config. Agent includes it in output for traceability.
 
 ## Artifact Handling
 
