@@ -5,13 +5,17 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
-## [2.0.0] - Unreleased
+## [2.0.0] - 2025-01-15
 
 ### Added
+- **Explicit model parameters** - All agent calls now have explicit model specification for clarity and maintainability
+- **Scope-aware remove** - Statusline and permissions remove now ask for Global/Local scope
+- **Unattended mode** - `--auto` flag for cco-config and cco-optimize enables CI/CD and benchmark integration
 - **Dependency audit in pre-flight** - Security advisories are blockers, outdated packages are warnings
 - **Dependency check in review** - Default focus option with version comparison and risk assessment
 - **Agent delegation rules** - Complexity-based delegation to cco-agent-research in cco-ai.md
 - **Targeted quality gates** - cco-commit runs format/lint/type on changed files only (~85% token reduction)
+- **Diff-only commit messages** - cco-commit generates messages only from git diff content, not session memory
 - **Language-agnostic gates** - No hardcoded file extensions in quality checks
 - **DEP:SmartContractEVM rules** - Solidity/Foundry/Hardhat best practices (CEI, reentrancy, gas optimization)
 - **DEP:SmartContractSolana rules** - Anchor framework best practices (PDA, CPI, compute budget)
@@ -78,6 +82,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - **best-practices scope** - Added to all relevant commands (optimize, review) for pattern adherence checks
 
 ### Changed
+- **Model optimization** - cco-config uses haiku for file operations (cost reduction), opus reserved for code fixes
 - **Improved UX** - Skip options and verified defaults in commands
 - **Optimized question flow** - Scope compatibility improvements in commands
 - **Timeout constant naming** - SUBPROCESS_TIMEOUT_DEFAULT and SUBPROCESS_TIMEOUT_PACKAGE_OPS for clarity

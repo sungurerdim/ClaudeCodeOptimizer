@@ -107,6 +107,7 @@ Commands learn from execution patterns:
 **Usage:**
 ```bash
 /cco-config              # Interactive: Configure / Remove / Export
+/cco-config --auto       # Unattended mode with smart defaults
 ```
 
 ### Steps
@@ -203,6 +204,7 @@ Commands learn from execution patterns:
 /cco-optimize --hygiene            # Hygiene focus
 /cco-optimize --report             # Report only, no fixes
 /cco-optimize --pre-release        # All scopes, strict
+/cco-optimize --auto               # Unattended mode: fix all, no questions
 ```
 
 ### Steps

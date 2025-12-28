@@ -18,6 +18,12 @@ CCO uses three specialized agents with clear separation of concerns:
 - Haiku for read-only sub-agents (fast, cost-effective)
 - Opus for apply agent (50-75% fewer tool errors, coding state-of-the-art)
 
+**Model Override:**
+Commands can override agent defaults via Task parameter: `Task("agent", prompt, { model: "haiku" })`
+- cco-config uses haiku for cco-agent-apply (file writes only, no code fixes)
+- cco-optimize/cco-review use opus for cco-agent-apply (code refactoring)
+- cco-research uses opus for synthesis (conflict resolution requires reasoning)
+
 ---
 
 ## cco-agent-analyze

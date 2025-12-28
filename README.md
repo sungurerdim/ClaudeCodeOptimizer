@@ -1,174 +1,84 @@
 # ClaudeCodeOptimizer
 
-A process and rules layer for Claude Code in the Opus 4.5 era.
-
+[![PyPI](https://img.shields.io/pypi/v/claudecodeoptimizer.svg)](https://pypi.org/project/claudecodeoptimizer/)
 [![Python 3.10+](https://img.shields.io/badge/python-3.10+-blue.svg)](https://www.python.org/downloads/)
 [![License: MIT](https://img.shields.io/badge/license-MIT-green.svg)](LICENSE)
-[![PyPI version](https://img.shields.io/pypi/v/claudecodeoptimizer.svg)](https://pypi.org/project/claudecodeoptimizer/)
-[![Claude 4 Best Practices](https://img.shields.io/badge/Claude_4-Best_Practices-blueviolet.svg)](https://platform.claude.com/docs/en/build-with-claude/prompt-engineering/claude-4-best-practices)
-[![Opus 4.5 Ready](https://img.shields.io/badge/Opus_4.5-Ready-8A2BE2.svg)](https://www.anthropic.com/news/claude-opus-4-5)
 [![Claude Code 2.0+](https://img.shields.io/badge/Claude_Code-2.0+-00A67E.svg)](https://github.com/anthropics/claude-code)
 
-> Claude already knows how to code. **CCO adds safety, approval, and consistency.**
+**A process and rules layer for Claude Code** — adds safety, approval workflows, and stack-specific best practices.
 
 ![CCO Environment](docs/screenshots/environment.png)
-*CCO lives directly inside Claude Code, no extra UI.*
-
----
 
 ## Quick Start
 
-### Step 1: Install
 ```bash
 pip install claudecodeoptimizer && cco-install
 ```
 
-### Step 2: Configure (First Run)
-Inside Claude Code:
+Then in Claude Code:
 ```
-/cco-config    # Auto-detect your project, confirm settings
-```
-This creates your project context in `.claude/rules/cco/context.md`. Restart Claude Code after.
-
-### Step 3: Verify
-```
-/cco-status    # See your project scores and metrics
+/cco-config    # Detect your project, configure settings
 ```
 
-**Done.** Start coding with safety nets in place.
+**Done.** Your project now has safety nets and domain-specific rules active.
 
-### Common Workflows
+## Why CCO?
 
-| I want to... | Use |
-|--------------|-----|
-| Set up a new project | `/cco-config` |
-| See project health | `/cco-status` |
-| Fix security/quality issues | `/cco-optimize` |
-| Review architecture | `/cco-review` |
-| Make a commit | `/cco-commit` |
-| Prepare a release | `/cco-preflight` |
-| Regular maintenance | `/cco-checkup` |
-| Research a topic | `/cco-research` |
+| Without CCO | With CCO |
+|-------------|----------|
+| Claude applies generic patterns | Claude applies **domain-specific best practices** |
+| No pre-action safety checks | Git status check, approval flow, clean state for rollback |
+| Silent changes | `Applied: 5 | Skipped: 2 | Failed: 0` accounting |
+| "Add caching somewhere" | "Use TTL + invalidation for this data fetch" |
 
----
-
-## What CCO Does
-
-| Layer | What It Adds | Example |
-|-------|--------------|---------|
-| **Pre-** | Safety checks before action | Git status, dirty state handling |
-| **Process** | Standardized workflows | Approval flow, priority classification |
-| **Post-** | Verification and reporting | `Applied: N | Skipped: N | Failed: N` |
-| **Context** | Project-aware behavior | Scale-adjusted thresholds, stack-specific checks |
-
-## What CCO Does NOT Do
-
-- **Teach Claude to code** - Opus 4.5 already knows
-- **Replace your judgment** - Every change requires approval
-- **Add overhead** - Rules are guidance, not blockers
-- **Lock you in** - Export to AGENTS.md anytime
-
----
+**CCO doesn't teach Claude to code** — Opus 4.5 already knows. CCO adds the safety layer between intent and action.
 
 ## Commands
 
 | Command | Purpose |
 |---------|---------|
-| `/cco-config` | Project configuration: detection + settings + export |
-| `/cco-status` | Metrics dashboard with trends |
-| `/cco-optimize` | Security + Quality + Hygiene scans with fix mode |
+| `/cco-config` | Project setup: detection + settings + export |
+| `/cco-status` | Health dashboard with scores |
+| `/cco-optimize` | Security + Quality + Hygiene fixes |
 | `/cco-review` | Architecture analysis |
-| `/cco-research` | Multi-source research with reliability scoring |
 | `/cco-commit` | Quality-gated atomic commits |
-| `/cco-preflight` | Pre-release workflow (optimize + review + verify) |
-| `/cco-checkup` | Regular maintenance (status + optimize --fix) |
+| `/cco-research` | Multi-source research with reliability scoring |
+| `/cco-preflight` | Pre-release workflow |
+| `/cco-checkup` | Regular maintenance |
 
-**Agents:** `cco-agent-analyze` (read-only), `cco-agent-apply` (write), `cco-agent-research` (read-only)
+## Rules System
 
-*[Full commands documentation](docs/commands.md)* | *[Full agents documentation](docs/agents.md)*
+**1699 rules** organized in 4 categories:
 
----
-
-## Rules
-
-CCO uses a 4-category rules system with **1682 rules total**:
-
-| Category | Rules | Loading |
-|----------|-------|---------|
-| **Core** | 63 | Always active (`~/.claude/rules/cco/`) |
-| **AI** | 37 | Always active (`~/.claude/rules/cco/`) |
-| **Tools** | 106 | Built into commands/agents |
-| **Adaptive** | 1476 | Selected per project → `.claude/rules/cco/` |
-
-**Categories:**
-- **Core** - Fundamental principles: DRY, Fail-Fast, Clean Code, Security, Testing
-- **AI** - Behavior patterns: Read First, No Hallucination, Semantic Density
-- **Tools** - CCO workflow: Approval Flow, Fix Workflow, Safety Classification
-- **Adaptive** - Stack-based: 27 languages, 189+ frameworks/tools/infra, 398 trigger patterns
-
-### Supported Stacks
+| Category | Count | When Loaded |
+|----------|-------|-------------|
+| Core | 73 | Always (fundamental principles) |
+| AI | 37 | Always (behavior patterns) |
+| Tools | 107 | On-demand (CCO workflows) |
+| Adaptive | 1482 | Per-project (stack-specific) |
 
 <details>
-<summary><b>Click to expand full list</b></summary>
+<summary><b>Supported Stacks</b></summary>
 
-| Category | Supported | Example Rules |
-|----------|-----------|---------------|
-| **Languages** | Python, TypeScript, JavaScript, Go, Rust, Java, Kotlin, Swift, C#, Ruby, PHP, Elixir, Gleam, Scala, Zig, Dart | Type hints, import order, error handling |
-| **App Types** | CLI, Library, API, Frontend, Mobile, Desktop | Exit codes, tree-shaking, REST methods, a11y |
-| **Game Dev** | Pygame, Phaser, Three.js, Unity, Unreal, Godot | Frame budget, asset loading, input mapping |
-| **AI/ML** | Transformers, LangChain, Whisper, OpenAI, Anthropic | Lazy model load, quantization, batch inference |
-| **Data** | Pandas, Polars, Dask, Spark | Chunked reading, lazy eval, memory optimization |
-| **Media** | FFmpeg, MoviePy, OpenCV, Pillow, Librosa | Streaming, format handling, GPU acceleration |
-| **Infrastructure** | Docker, K8s, Serverless, Monorepo | Multi-stage builds, probes, selective testing |
-| **Backend** | REST, GraphQL, gRPC, WebSocket | Pagination, rate limiting, reconnect logic |
-| **Database** | SQLAlchemy, Prisma, TypeORM, Redis | N+1 prevention, migrations, cache invalidation |
-| **Auth & Payment** | NextAuth, Clerk, Stripe, PayPal | Token security, webhook verification, audit trails |
-| **Communication** | SendGrid, Twilio, Firebase, Elasticsearch | Bounce handling, delivery status, search indexing |
-| **Blockchain** | Web3, Ethers, Hardhat, Foundry | Gas estimation, nonce management, testnet-first |
-| **XR** | WebXR, OpenXR, AR Foundation | 90fps budget, comfort settings, device fallbacks |
-| **IoT** | MQTT, MicroPython, ESPHome | Reconnect logic, OTA updates, power management |
+**Languages:** Python, TypeScript, JavaScript, Go, Rust, Java, Kotlin, Swift, C#, Ruby, PHP, Elixir + 15 more
+
+**Frameworks:** React, Vue, Angular, Svelte, Next.js, Django, FastAPI, Express, NestJS, Rails + 100 more
+
+**Infrastructure:** Docker, Kubernetes, Serverless, Monorepo (nx/turbo), CI/CD
+
+**Specialized:** ML/AI, Game Dev (Unity/Unreal/Godot), Blockchain, IoT, XR
 
 </details>
 
-### Why Adaptive Rules Matter
-
-| Without CCO | With CCO |
-|-------------|----------|
-| Claude applies generic patterns | Claude applies **domain-specific best practices** |
-| "Add caching somewhere" | "Use TTL + invalidation for this data fetch" |
-| Generic error handling | Language-specific: `raise from` (Python), `?` operator (Rust) |
-
-*[Full rules documentation](docs/rules.md)*
-
----
-
-## Safety Features
-
-| Feature | What It Does |
-|---------|--------------|
-| **Git Safety** | Checks status before changes, enables rollback |
-| **Approval Flow** | Priority-based (CRITICAL→LOW), safe vs risky classification |
-| **Verification** | `Applied: N | Skipped: N | Failed: N` accounting |
-
-**Fix Workflow:** Analyze → Report → Approve → Apply → Verify
-
-| Safe (auto-apply) | Risky (require approval) |
-|-------------------|--------------------------|
-| Remove unused imports | Auth/CSRF changes |
-| Parameterize SQL | DB schema changes |
-| Move secrets to env | API contract changes |
-
----
-
 ## Installation
 
-**Requirements:** Python 3.10+ | Claude Code CLI or IDE extension | Zero runtime dependencies
+**Requirements:** Python 3.10+ • Claude Code CLI or IDE • Zero runtime dependencies
 
 ```bash
-# pip (recommended)
+# Standard
 pip install claudecodeoptimizer && cco-install
 
-# pipx (isolated)
+# Isolated (pipx)
 pipx install claudecodeoptimizer && cco-install
 
 # Upgrade
@@ -178,89 +88,47 @@ pip install -U claudecodeoptimizer && cco-install
 cco-uninstall
 ```
 
-### Local Mode (Project-Specific)
+### Local Mode
 
 ```bash
 cco-install --local . --statusline cco-full --permissions balanced
 ```
 
-| Statusline | Description |
-|------------|-------------|
-| `cco-full` | Project, Branch, Changes, Git status |
-| `cco-minimal` | Project, Branch only |
+| Option | Values |
+|--------|--------|
+| `--statusline` | `cco-full` (all info) / `cco-minimal` (project + branch) |
+| `--permissions` | `safe` / `balanced` / `permissive` / `full` |
 
-| Permissions | Description |
-|-------------|-------------|
-| `safe` | Read-only auto-approved |
-| `balanced` | Read + lint/test auto-approved |
-| `permissive` | Most operations auto-approved |
-| `full` | Maximum auto-approval |
+## Documentation
 
----
+| Doc | Content |
+|-----|---------|
+| [Commands](docs/commands.md) | All 8 commands with flags and examples |
+| [Agents](docs/agents.md) | 3 specialized agents and their scopes |
+| [Rules](docs/rules.md) | Full rule reference |
 
-## Advanced
+## Safety Features
 
-<details>
-<summary><b>Dynamic Context Injection</b></summary>
+**Fix Workflow:** Analyze → Report → Approve → Apply → Verify
 
-CCO commands use Claude Code's `!` backtick syntax for **real-time context at load time**:
+| Safe (auto-apply) | Risky (require approval) |
+|-------------------|--------------------------|
+| Remove unused imports | Auth/CSRF changes |
+| Parameterize SQL | DB schema changes |
+| Move secrets to env | API contract changes |
 
-```markdown
-## Context
-- Git status: !`git status --short`
-- Current branch: !`git branch --show-current`
-- Project type: !`grep "^Type:" .claude/rules/cco/context.md`
-```
+**Accounting:** Every action reports `Applied: N | Skipped: N | Failed: N`
 
-| Traditional | With Dynamic Context |
-|-------------|---------------------|
-| 1. Load command | 1. Load command |
-| 2. AI calls `git status` tool | 2. Context **already injected** |
-| 3. Wait for response | 3. AI starts immediately |
-| 4. AI processes result | |
+## Standards
 
-**Benefits:** No tool call round-trip | Real data, no guessing | Reduced hallucination
+Built on [Claude 4 Best Practices](https://platform.claude.com/docs/en/build-with-claude/prompt-engineering/claude-4-best-practices) and official Claude Code documentation.
 
-</details>
-
----
-
-## Standards & Compliance
-
-Built on official Anthropic documentation and Claude Code best practices:
-
-| Feature | CCO Implementation |
-|---------|-------------------|
-| [Slash Commands][slash-commands] | 8 commands with YAML frontmatter |
-| [Sub-agents][sub-agents] | 3 single-responsibility agents |
-| [Rules Directory][memory] | 4-category rule system (1682 rules) |
-| [Permissions][cc-changelog] | 4 levels (safe→full) |
-
-**Rules Based On:** SSOT, DRY, YAGNI, KISS (Core) | Read-First, No-Hallucination (AI) | OWASP, Least-Privilege (Security)
-
-### References
-
-| Resource | Topics |
-|----------|--------|
-| [Claude 4 Best Practices][claude4-bp] | Prompt patterns, parallel execution |
-| [Claude Code Docs][slash-commands] | Commands, sub-agents, rules |
-| [Opus 4.5 Announcement][opus-4-5] | Model capabilities |
-| [Google Prompt Engineering][google-pe] | Instruction-First, Few-Shot, CoT, Self-Consistency |
-
-[slash-commands]: https://code.claude.com/docs/en/slash-commands
-[sub-agents]: https://code.claude.com/docs/en/sub-agents
-[memory]: https://code.claude.com/docs/en/memory
-[cc-changelog]: https://github.com/anthropics/claude-code/blob/main/CHANGELOG.md
-[claude4-bp]: https://platform.claude.com/docs/en/build-with-claude/prompt-engineering/claude-4-best-practices
-[opus-4-5]: https://www.anthropic.com/news/claude-opus-4-5
-[google-pe]: https://www.kaggle.com/whitepaper-prompt-engineering
-
----
+**Core Principles:** SSOT, DRY, YAGNI, KISS • **AI Rules:** Read-First, No-Hallucination • **Security:** OWASP, Least-Privilege
 
 ## License
 
-MIT License - see [LICENSE](LICENSE)
+MIT — see [LICENSE](LICENSE)
 
 ---
 
-**Created by Sungur Zahid Erdim** | [Issues](https://github.com/sungurerdim/ClaudeCodeOptimizer/issues)
+**[Issues](https://github.com/sungurerdim/ClaudeCodeOptimizer/issues)** • Created by Sungur Zahid Erdim
