@@ -45,12 +45,14 @@ class ColoredFormatter(logging.Formatter):
     """Formatter with colors and truncation for non-error messages.
 
     Format: DATE | LEVEL | SERVICE | MESSAGE
-    Colors:
-    - ERROR: Red
-    - WARNING: Yellow
-    - Container/executor logs: Cyan
-    - Success: Green
-    - Other INFO: Default
+    Colors (priority order):
+    - SUCCESS in message: Green
+    - FAILED in message: Red
+    - Completed in message: Green
+    - [VANILLA]/[CCO]/[stdout]: Cyan
+    - ERROR level: Red
+    - WARNING level: Yellow
+    - Other: Default
     """
 
     LEVEL_COLORS = {
@@ -74,13 +76,17 @@ class ColoredFormatter(logging.Formatter):
         # Apply colors
         color = self.LEVEL_COLORS.get(record.levelno, "")
 
-        # Special coloring for container/executor logs (cyan)
+        # Apply semantic colors (priority order: success/fail > variant > default)
         msg_str = str(original_msg)
-        if "[VANILLA]" in msg_str or "[CCO]" in msg_str or "[stdout]" in msg_str:
-            color = LogColors.CYAN
-        # Success messages (green)
-        elif "SUCCESS" in msg_str or "Completed" in msg_str:
+        if "SUCCESS" in msg_str:
             color = LogColors.GREEN
+        elif "FAILED" in msg_str:
+            color = LogColors.RED
+        elif "Completed" in msg_str:
+            color = LogColors.GREEN
+        # Container/executor variant logs (cyan) - lower priority than success/fail
+        elif "[VANILLA]" in msg_str or "[CCO]" in msg_str or "[stdout]" in msg_str:
+            color = LogColors.CYAN
 
         if color:
             # Color the entire line
