@@ -457,31 +457,42 @@ class ComprehensiveAnalyzer:
         positives = []
 
         vulnerabilities = []
+        quality_notes = []
 
         # Check for common security issues across all files
         for lang in ["python", "typescript", "javascript", "go"]:
             for f in self._files.get(lang, []):
                 content = self._read_file(f)
-                file_vulns = self._check_security_patterns(content, f, lang)
+                file_vulns, file_notes = self._check_security_patterns(content, f, lang)
                 vulnerabilities.extend(file_vulns)
+                quality_notes.extend(file_notes)
 
-        # Categorize and score
+        # Categorize vulnerabilities by severity
         critical = [v for v in vulnerabilities if v["severity"] == "critical"]
         high = [v for v in vulnerabilities if v["severity"] == "high"]
         medium = [v for v in vulnerabilities if v["severity"] == "medium"]
         low = [v for v in vulnerabilities if v["severity"] == "low"]
 
+        # Apply penalties based on severity
         score -= len(critical) * 25
         score -= len(high) * 15
         score -= len(medium) * 5
         score -= len(low) * 2
 
-        for v in critical[:3]:
+        # Report ALL issues found (not just top N)
+        for v in critical:
             issues.append(f"CRITICAL: {v['issue']} ({v['file']})")
-        for v in high[:3]:
+        for v in high:
             issues.append(f"HIGH: {v['issue']} ({v['file']})")
-        for v in medium[:5]:
-            issues.append(f"MEDIUM: {v['issue']}")
+        for v in medium:
+            issues.append(f"MEDIUM: {v['issue']} ({v['file']})")
+        for v in low:
+            issues.append(f"LOW: {v['issue']} ({v['file']})")
+
+        # Report code quality notes (informational, don't affect score)
+        for n in quality_notes:
+            count_str = f" (×{n['count']})" if n.get("count", 1) > 1 else ""
+            issues.append(f"NOTE: {n['issue']}{count_str} ({n['file']})")
 
         # Check for security positives
         has_auth = self._check_auth_patterns()
@@ -499,13 +510,24 @@ class ComprehensiveAnalyzer:
             score += 5
             positives.append("Rate limiting found")
 
+        # Only add "no issues" if no actual security vulnerabilities found
+        # (quality notes like console.log don't count as security issues)
         if not vulnerabilities:
             score += 10
-            positives.append("No obvious security issues detected")
+            positives.append("No security vulnerabilities detected")
 
-        details.append(
-            f"Vulnerabilities: {len(critical)} critical, {len(high)} high, {len(medium)} medium"
-        )
+        # Build summary details
+        if vulnerabilities:
+            details.append(
+                f"Security issues: {len(critical)} critical, {len(high)} high, "
+                f"{len(medium)} medium, {len(low)} low"
+            )
+        else:
+            details.append("No security vulnerabilities found")
+
+        if quality_notes:
+            total_notes = sum(n.get("count", 1) for n in quality_notes)
+            details.append(f"Code quality notes: {total_notes} items")
 
         return DimensionScore(
             name="Security",
@@ -517,33 +539,42 @@ class ComprehensiveAnalyzer:
         )
 
     def _analyze_test_quality(self) -> DimensionScore:
-        """Analyze test coverage and quality."""
+        """Analyze test coverage and quality with meaningful metrics."""
         score = 30.0  # Start low, tests must prove themselves
         details = []
         issues = []
         positives = []
 
-        # Count test files
+        # Count source files and test files
+        source_files = []
         test_files = []
         for lang in ["python", "typescript", "javascript", "go"]:
             for f in self._files.get(lang, []):
                 if self._is_test_file(f):
                     test_files.append(f)
+                else:
+                    source_files.append(f)
 
         if not test_files:
+            # Calculate how many tests should exist
+            expected_tests = len(source_files) * 2  # ~2 tests per source file minimum
             return DimensionScore(
                 name="Test Quality",
                 score=0,
                 weight=self.WEIGHTS["test_quality"],
-                details=["No test files found"],
-                issues=["No tests written"],
+                details=[f"0/{expected_tests} expected tests (0% coverage)"],
+                issues=[
+                    f"No tests written (expected ~{expected_tests} for {len(source_files)} source files)"
+                ],
             )
 
-        details.append(f"{len(test_files)} test files found")
-        score += min(20, len(test_files) * 3)
-        positives.append(f"{len(test_files)} test files")
+        # Count testable units (functions/classes) in source files
+        total_functions = 0
+        for sf in source_files:
+            content = self._read_file(sf)
+            total_functions += self._count_testable_units(content, self.metrics.language)
 
-        # Count test cases
+        # Count actual test cases
         test_count = 0
         assertion_count = 0
         edge_case_tests = 0
@@ -555,48 +586,77 @@ class ComprehensiveAnalyzer:
             assertion_count += ac
             edge_case_tests += ec
 
-        if test_count > 0:
-            score += min(20, test_count)
-            positives.append(f"{test_count} test cases")
+        # Calculate coverage ratios
+        expected_tests = max(total_functions, len(source_files) * 2)
+        test_coverage_ratio = test_count / max(1, expected_tests)
 
-        if assertion_count > 0:
-            avg_assertions = assertion_count / max(1, test_count)
-            if avg_assertions >= 2:
+        # Main detail: actual vs expected
+        details.append(f"Tests: {test_count}/{expected_tests} ({test_coverage_ratio:.0%} coverage)")
+
+        if test_coverage_ratio >= 1.0:
+            score += 30
+            positives.append(f"Full test coverage ({test_count}/{expected_tests} tests)")
+        elif test_coverage_ratio >= 0.7:
+            score += 20
+            positives.append(
+                f"Good coverage ({test_count}/{expected_tests} = {test_coverage_ratio:.0%})"
+            )
+        elif test_coverage_ratio >= 0.4:
+            score += 10
+            issues.append(
+                f"Moderate coverage ({test_count}/{expected_tests} = {test_coverage_ratio:.0%})"
+            )
+        else:
+            score -= 10
+            issues.append(
+                f"Low coverage ({test_count}/{expected_tests} = {test_coverage_ratio:.0%})"
+            )
+
+        # Assertion quality
+        if test_count > 0:
+            avg_assertions = assertion_count / test_count
+            if avg_assertions >= 3:
                 score += 10
-                positives.append(f"Good assertion density ({avg_assertions:.1f}/test)")
+                positives.append(f"Strong assertions ({avg_assertions:.1f}/test)")
+            elif avg_assertions >= 1.5:
+                score += 5
             elif avg_assertions < 1:
                 score -= 5
-                issues.append("Low assertion count per test")
+                issues.append(f"Weak assertions ({avg_assertions:.1f}/test)")
 
-        if edge_case_tests > 0:
-            score += min(15, edge_case_tests * 2)
-            positives.append(f"{edge_case_tests} edge case tests")
+        # Edge case coverage
+        edge_case_ratio = edge_case_tests / max(1, test_count)
+        if edge_case_ratio >= 0.2:
+            score += 15
+            positives.append(f"Edge cases covered ({edge_case_ratio:.0%} of tests)")
+        elif edge_case_ratio >= 0.1:
+            score += 5
         else:
-            issues.append("No obvious edge case testing")
+            issues.append(f"Missing edge case tests ({edge_case_ratio:.0%})")
 
-        # Check test/source ratio
+        # Test/source LOC ratio (secondary metric)
         if self.metrics.source_loc > 0:
-            test_ratio = self.metrics.test_loc / self.metrics.source_loc
-            if test_ratio >= 0.5:
-                score += 10
-                positives.append(f"Good test/source ratio ({test_ratio:.1%})")
-            elif test_ratio < 0.1:
-                score -= 10
-                issues.append(f"Low test coverage ({test_ratio:.1%} test/source ratio)")
+            loc_ratio = self.metrics.test_loc / self.metrics.source_loc
+            details.append(f"Test/Source ratio: {loc_ratio:.0%}")
 
-        # Try to run tests and get coverage
+            if loc_ratio >= 0.5:
+                score += 10
+            elif loc_ratio < 0.1:
+                score -= 5
+                issues.append(f"Test code too sparse ({loc_ratio:.0%} of source)")
+
+        # Try to run actual coverage
         coverage = self._run_tests_with_coverage()
         if coverage is not None:
-            details.append(f"Coverage: {coverage}%")
+            details.append(f"Actual coverage: {coverage}%")
             if coverage >= 80:
                 score += 15
-                positives.append(f"Excellent coverage: {coverage}%")
+                positives.append(f"Excellent actual coverage: {coverage}%")
             elif coverage >= 60:
                 score += 10
-                positives.append(f"Good coverage: {coverage}%")
+                positives.append(f"Good actual coverage: {coverage}%")
             elif coverage < 40:
-                score -= 10
-                issues.append(f"Low coverage: {coverage}%")
+                issues.append(f"Low actual coverage: {coverage}%")
 
         return DimensionScore(
             name="Test Quality",
@@ -606,6 +666,24 @@ class ComprehensiveAnalyzer:
             issues=issues,
             positives=positives,
         )
+
+    def _count_testable_units(self, content: str, lang: str) -> int:
+        """Count functions/methods/classes that should have tests."""
+        count = 0
+        if lang == "python":
+            # Count def and class (excluding private _methods as optional)
+            count += len(re.findall(r"^\s*def\s+[a-zA-Z][a-zA-Z0-9_]*\s*\(", content, re.MULTILINE))
+            count += len(re.findall(r"^\s*class\s+[a-zA-Z]", content, re.MULTILINE))
+        elif lang in ("typescript", "javascript"):
+            # Count function declarations and class methods
+            count += len(re.findall(r"\bfunction\s+\w+\s*\(", content))
+            count += len(
+                re.findall(r"^\s*(async\s+)?\w+\s*\([^)]*\)\s*[:{]", content, re.MULTILINE)
+            )
+            count += len(re.findall(r"\bclass\s+\w+", content))
+        elif lang == "go":
+            count += len(re.findall(r"^func\s+\w+", content, re.MULTILINE))
+        return max(1, count)
 
     def _analyze_documentation(self) -> DimensionScore:
         """Analyze documentation quality."""
@@ -990,41 +1068,83 @@ class ComprehensiveAnalyzer:
 
         return int(duplicated_lines / len(all_lines) * 100)
 
-    def _check_security_patterns(self, content: str, path: Path, lang: str) -> list[dict[str, Any]]:
-        """Check for security vulnerabilities."""
-        vulnerabilities = []
-        filename = path.name
+    def _check_security_patterns(
+        self, content: str, path: Path, lang: str
+    ) -> tuple[list[dict[str, Any]], list[dict[str, Any]]]:
+        """
+        Check for security vulnerabilities and code quality notes.
 
-        patterns = [
-            # Critical
-            (r"eval\s*\(", "critical", "Use of eval()"),
-            (r"exec\s*\(", "critical", "Use of exec()"),
+        Returns:
+            Tuple of (security_vulnerabilities, code_quality_notes)
+            Security vulnerabilities are actual security risks.
+            Code quality notes are best practice violations (console.log, debugger, etc.)
+        """
+        vulnerabilities = []
+        notes = []
+        filename = path.name
+        is_test_file = self._is_test_file(path)
+
+        # True security vulnerabilities (affect security score)
+        # Note: Patterns require code context (=, return, etc.) to avoid matching pattern defs
+        security_patterns = [
+            # Critical - Remote code execution risks
+            # Require assignment, return, or call context
+            (r"(?:=|return|if|while|\()\s*\beval\s*\(", "critical", "Dynamic code via eval"),
+            (r"(?:=|return|if|while|\()\s*\bexec\s*\(", "critical", "Dynamic code via exec"),
             (r"subprocess\.call\([^)]*shell\s*=\s*True", "critical", "Shell injection risk"),
+            (r"subprocess\.run\([^)]*shell\s*=\s*True", "critical", "Shell injection risk"),
             (r"os\.system\s*\(", "critical", "OS command execution"),
+            (r"new\s+Function\s*\(", "critical", "Dynamic function creation"),
+            # High - XSS and injection risks (require = or { to avoid pattern self-match)
             (r"innerHTML\s*=", "high", "Potential XSS via innerHTML"),
-            (r"dangerouslySetInnerHTML", "high", "React XSS risk"),
-            # High
-            (r"password\s*=\s*['\"][^'\"]+['\"]", "high", "Hardcoded password"),
-            (r"api_key\s*=\s*['\"][^'\"]+['\"]", "high", "Hardcoded API key"),
-            (r"secret\s*=\s*['\"][^'\"]+['\"]", "high", "Hardcoded secret"),
+            (r"dangerouslySetInnerHTML\s*=", "high", "React XSS risk"),
+            (r"document\.write\s*\(", "high", "DOM-based XSS risk"),
             (r"SELECT\s+.*\s+FROM\s+.*\s+WHERE.*\+", "high", "SQL injection risk"),
             (r"f['\"].*\{.*\}.*SELECT", "high", "SQL injection in f-string"),
-            # Medium
-            (r"pickle\.load", "medium", "Insecure deserialization"),
-            (r"yaml\.load\s*\([^)]*\)", "medium", "Unsafe YAML loading"),
+            (r"\.query\s*\([^)]*\+", "high", "SQL injection via concatenation"),
+            # High - Secrets exposure
+            (r"password\s*=\s*['\"][^'\"]{4,}['\"]", "high", "Hardcoded password"),
+            (r"api_key\s*=\s*['\"][^'\"]{8,}['\"]", "high", "Hardcoded API key"),
+            (r"secret\s*=\s*['\"][^'\"]{8,}['\"]", "high", "Hardcoded secret"),
+            (r"private_key\s*=\s*['\"]", "high", "Hardcoded private key"),
+            # Medium - Deserialization and crypto
+            (r"pickle\.load", "medium", "Insecure deserialization (pickle)"),
+            (r"yaml\.load\s*\([^)]*\)", "medium", "Unsafe YAML loading (use safe_load)"),
+            (r"yaml\.unsafe_load", "medium", "Explicitly unsafe YAML loading"),
+            (r"marshal\.load", "medium", "Insecure deserialization (marshal)"),
+            # Medium - SSL/TLS (use word boundaries to avoid pattern self-match)
             (r"verify\s*=\s*False", "medium", "SSL verification disabled"),
-            (r"disable_ssl", "medium", "SSL disabled"),
-            (r"md5\s*\(", "medium", "Weak hash algorithm (MD5)"),
-            (r"sha1\s*\(", "medium", "Weak hash algorithm (SHA1)"),
-            # Low
-            (r"console\.log\(", "low", "Console logging in production"),
-            (r"debugger;", "low", "Debugger statement"),
-            (r"TODO.*password", "low", "TODO mentioning password"),
-            (r"FIXME.*security", "low", "FIXME mentioning security"),
+            (r"\bdisable_ssl\b\s*[=:(]", "medium", "SSL disabled"),
+            (r"\bCERT_NONE\b", "medium", "Certificate verification disabled"),
+            # Medium - Weak crypto (only flag if used for security, not checksums)
+            (r"hashlib\.md5\s*\(", "medium", "MD5 is weak for security (OK for checksums)"),
+            (r"hashlib\.sha1\s*\(", "medium", "SHA1 is weak for security (OK for checksums)"),
+            # Low - Information disclosure (anchored to line start to avoid self-match)
+            (r"^\s*(?:#|//)\s*TODO.*password", "low", "TODO mentioning password"),
+            (r"^\s*(?:#|//)\s*FIXME.*security", "low", "FIXME mentioning security"),
+            (r"^\s*(?:#|//).*\bhack\b.*\bpassword\b", "low", "Comment about password hack"),
         ]
 
-        for pattern, severity, issue in patterns:
-            if re.search(pattern, content, re.IGNORECASE):
+        # Code quality notes (don't affect security score, just reported)
+        quality_patterns = [
+            (r"console\.log\s*\(", "note", "Console logging (remove for production)"),
+            (r"console\.debug\s*\(", "note", "Debug logging (remove for production)"),
+            (r"debugger\s*;", "note", "Debugger statement (remove for production)"),
+            (r"print\s*\([^)]*\)\s*#\s*debug", "note", "Debug print statement"),
+            (r"# ?TODO", "note", "TODO comment found"),
+            (r"// ?TODO", "note", "TODO comment found"),
+            (r"# ?FIXME", "note", "FIXME comment found"),
+            (r"// ?FIXME", "note", "FIXME comment found"),
+        ]
+
+        # Check security patterns (use MULTILINE for ^ anchors)
+        for pattern, severity, issue in security_patterns:
+            if re.search(pattern, content, re.IGNORECASE | re.MULTILINE):
+                # Downgrade severity for test files
+                if is_test_file and severity in ("critical", "high"):
+                    severity = "low"
+                    issue = f"[TEST] {issue}"
+
                 vulnerabilities.append(
                     {
                         "file": filename,
@@ -1033,7 +1153,20 @@ class ComprehensiveAnalyzer:
                     }
                 )
 
-        return vulnerabilities
+        # Check quality patterns (not counted as security issues)
+        for pattern, severity, issue in quality_patterns:
+            matches = re.findall(pattern, content, re.IGNORECASE)
+            if matches:
+                notes.append(
+                    {
+                        "file": filename,
+                        "severity": severity,
+                        "issue": issue,
+                        "count": len(matches),
+                    }
+                )
+
+        return vulnerabilities, notes
 
     def _check_auth_patterns(self) -> bool:
         """Check for authentication patterns."""
@@ -1624,10 +1757,14 @@ def compare_comprehensive(
                 "vanilla_score": round(vanilla_score, 1),
                 "difference": round(diff, 1),
                 "winner": winner,
-                "cco_issues": cco_dim.issues[:3],
-                "vanilla_issues": vanilla_dim.issues[:3],
-                "cco_positives": cco_dim.positives[:3],
-                "vanilla_positives": vanilla_dim.positives[:3],
+                # Include all issues and positives for full transparency
+                "cco_issues": cco_dim.issues,
+                "vanilla_issues": vanilla_dim.issues,
+                "cco_positives": cco_dim.positives,
+                "vanilla_positives": vanilla_dim.positives,
+                # Add details for additional context
+                "cco_details": cco_dim.details,
+                "vanilla_details": vanilla_dim.details,
             }
         )
 

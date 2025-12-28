@@ -1454,6 +1454,31 @@
             return colors[grade] || 'var(--text-muted)';
         }
 
+        function formatIssues(issues) {
+            // Format issues with severity-based coloring
+            return issues.map(issue => {
+                let color = 'var(--text-muted)';
+                let icon = '○';
+                if (issue.startsWith('CRITICAL:')) {
+                    color = '#da3633';  // Red
+                    icon = '✖';
+                } else if (issue.startsWith('HIGH:')) {
+                    color = '#f85149';  // Light red
+                    icon = '⚠';
+                } else if (issue.startsWith('MEDIUM:')) {
+                    color = '#d29922';  // Orange/yellow
+                    icon = '⚠';
+                } else if (issue.startsWith('LOW:')) {
+                    color = '#a5d6ff';  // Light blue
+                    icon = '○';
+                } else if (issue.startsWith('NOTE:')) {
+                    color = 'var(--text-muted)';  // Gray
+                    icon = '○';
+                }
+                return `<div style="color: ${color};">${icon} ${issue}</div>`;
+            }).join('');
+        }
+
         function renderComparisonModal(projectId, result) {
             document.getElementById('modal-title').textContent = `${projectId} - Comprehensive Analysis`;
 
@@ -1526,17 +1551,19 @@
                                     </div>
                                 </div>
                             </div>
-                            ${(dim.cco_issues?.length || dim.vanilla_issues?.length || dim.cco_positives?.length || dim.vanilla_positives?.length) ? `
+                            ${(dim.cco_issues?.length || dim.vanilla_issues?.length || dim.cco_positives?.length || dim.vanilla_positives?.length || dim.cco_details?.length || dim.vanilla_details?.length) ? `
                                 <details style="margin-top: 10px;">
                                     <summary style="cursor: pointer; font-size: 12px; color: var(--text-muted);">Show details</summary>
                                     <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-top: 10px; font-size: 11px;">
                                         <div>
-                                            ${dim.cco_positives?.length ? `<div style="color: var(--success);">✓ ${dim.cco_positives.join('<br>✓ ')}</div>` : ''}
-                                            ${dim.cco_issues?.length ? `<div style="color: var(--warning); margin-top: 5px;">⚠ ${dim.cco_issues.join('<br>⚠ ')}</div>` : ''}
+                                            ${dim.cco_details?.length ? `<div style="color: var(--text-muted); margin-bottom: 5px;">${dim.cco_details.join('<br>')}</div>` : ''}
+                                            ${dim.cco_positives?.length ? `<div style="color: var(--success);">${dim.cco_positives.map(p => '✓ ' + p).join('<br>')}</div>` : ''}
+                                            ${dim.cco_issues?.length ? `<div style="margin-top: 5px;">${formatIssues(dim.cco_issues)}</div>` : ''}
                                         </div>
                                         <div>
-                                            ${dim.vanilla_positives?.length ? `<div style="color: var(--success);">✓ ${dim.vanilla_positives.join('<br>✓ ')}</div>` : ''}
-                                            ${dim.vanilla_issues?.length ? `<div style="color: var(--warning); margin-top: 5px;">⚠ ${dim.vanilla_issues.join('<br>⚠ ')}</div>` : ''}
+                                            ${dim.vanilla_details?.length ? `<div style="color: var(--text-muted); margin-bottom: 5px;">${dim.vanilla_details.join('<br>')}</div>` : ''}
+                                            ${dim.vanilla_positives?.length ? `<div style="color: var(--success);">${dim.vanilla_positives.map(p => '✓ ' + p).join('<br>')}</div>` : ''}
+                                            ${dim.vanilla_issues?.length ? `<div style="margin-top: 5px;">${formatIssues(dim.vanilla_issues)}</div>` : ''}
                                         </div>
                                     </div>
                                 </details>
@@ -1597,6 +1624,20 @@
             const comp = result.comparison;
             const scoreDiff = comp?.score_difference || (cco?.overall_score - vanilla?.overall_score) || 0;
 
+            // Calculate dimension wins
+            const dimensionKeys = ['functional_completeness', 'architecture_design', 'code_quality',
+                                   'robustness', 'security', 'maintainability', 'type_safety',
+                                   'testing', 'performance', 'best_practices'];
+            let ccoWins = 0, vanillaWins = 0, ties = 0;
+            for (const key of dimensionKeys) {
+                const ccoScore = cco?.[key]?.score || 0;
+                const vanillaScore = vanilla?.[key]?.score || 0;
+                const diff = ccoScore - vanillaScore;
+                if (diff > 3) ccoWins++;
+                else if (diff < -3) vanillaWins++;
+                else ties++;
+            }
+
             let html = `
                 <div style="margin-bottom: 20px; text-align: center;">
                     <div style="display: flex; justify-content: center; gap: 10px; margin-bottom: 10px;">
@@ -1630,6 +1671,59 @@
                             <div style="color: var(--vanilla); font-size: 14px;">Vanilla (${vanilla?.overall_score || 0})</div>
                         </div>
                     </div>
+                </div>
+            `;
+
+            // Executive Summary - quick visual overview
+            const summaryBg = scoreDiff > 5 ? 'rgba(63,185,80,0.15)' : scoreDiff < -5 ? 'rgba(248,81,73,0.15)' : 'rgba(88,166,255,0.15)';
+            const summaryBorder = scoreDiff > 5 ? 'var(--success)' : scoreDiff < -5 ? 'var(--danger)' : 'var(--accent)';
+            const impactText = Math.abs(scoreDiff) >= 15 ? 'Significant' : Math.abs(scoreDiff) >= 8 ? 'Moderate' : Math.abs(scoreDiff) >= 3 ? 'Slight' : 'Negligible';
+
+            html += `
+                <div style="background: ${summaryBg}; border: 1px solid ${summaryBorder}; border-radius: 12px; padding: 16px; margin-bottom: 20px;">
+                    <div style="font-size: 14px; font-weight: bold; margin-bottom: 12px; color: var(--text-primary);">
+                        📊 Executive Summary
+                    </div>
+
+                    <!-- Quick Stats Bar -->
+                    <div style="display: flex; justify-content: space-around; margin-bottom: 15px; padding: 12px; background: var(--bg); border-radius: 8px;">
+                        <div style="text-align: center;">
+                            <div style="font-size: 24px; font-weight: bold; color: var(--cco);">${ccoWins}</div>
+                            <div style="font-size: 10px; color: var(--text-muted);">CCO Wins</div>
+                        </div>
+                        <div style="text-align: center;">
+                            <div style="font-size: 24px; font-weight: bold; color: var(--text-muted);">${ties}</div>
+                            <div style="font-size: 10px; color: var(--text-muted);">Ties</div>
+                        </div>
+                        <div style="text-align: center;">
+                            <div style="font-size: 24px; font-weight: bold; color: var(--vanilla);">${vanillaWins}</div>
+                            <div style="font-size: 10px; color: var(--text-muted);">Vanilla Wins</div>
+                        </div>
+                        <div style="text-align: center; border-left: 1px solid var(--border); padding-left: 15px;">
+                            <div style="font-size: 24px; font-weight: bold; color: ${summaryBorder};">${impactText}</div>
+                            <div style="font-size: 10px; color: var(--text-muted);">Impact</div>
+                        </div>
+                    </div>
+
+                    <!-- Visual wins bar -->
+                    <div style="display: flex; height: 8px; border-radius: 4px; overflow: hidden; margin-bottom: 12px;">
+                        <div style="width: ${(ccoWins/10)*100}%; background: var(--cco);"></div>
+                        <div style="width: ${(ties/10)*100}%; background: var(--text-muted);"></div>
+                        <div style="width: ${(vanillaWins/10)*100}%; background: var(--vanilla);"></div>
+                    </div>
+
+                    <!-- Executive text -->
+                    ${result.executive_summary ? `
+                        <p style="margin: 0; font-size: 13px; line-height: 1.5; color: var(--text-secondary);">
+                            ${escapeHtml(result.executive_summary)}
+                        </p>
+                    ` : `
+                        <p style="margin: 0; font-size: 13px; line-height: 1.5; color: var(--text-secondary);">
+                            ${scoreDiff > 0 ? 'CCO improves code quality' : scoreDiff < 0 ? 'Vanilla performed better' : 'Results are similar'}
+                            with a ${impactText.toLowerCase()} ${Math.abs(scoreDiff)}-point difference.
+                            CCO won ${ccoWins}/10 dimensions, Vanilla won ${vanillaWins}/10, ${ties} tied.
+                        </p>
+                    `}
                 </div>
             `;
 
@@ -1779,6 +1873,19 @@
                     </div>
                 </div>
             `;
+
+            // Report metadata (duration, timestamp)
+            if (result.duration_seconds || result.timestamp || result.report_file) {
+                html += `
+                    <div style="margin-top: 20px; padding-top: 15px; border-top: 1px solid var(--border); display: flex; justify-content: space-between; align-items: center; font-size: 11px; color: var(--text-muted);">
+                        <div style="display: flex; gap: 15px;">
+                            ${result.duration_seconds ? `<span>⏱️ ${Math.round(result.duration_seconds)}s</span>` : ''}
+                            ${result.timestamp ? `<span>📅 ${new Date(result.timestamp).toLocaleString()}</span>` : ''}
+                        </div>
+                        ${result.report_file ? `<span title="${escapeHtml(result.report_file)}">📄 Report saved</span>` : ''}
+                    </div>
+                `;
+            }
 
             document.getElementById('modal-body').innerHTML = html;
         }
