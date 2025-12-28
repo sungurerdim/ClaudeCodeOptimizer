@@ -336,6 +336,20 @@ These generic placeholders are used across multiple categories. Each category se
 |---------|--------|
 | `{orm_deps}` | `sqlalchemy`, `prisma`, `drizzle-orm`, `typeorm`, `sequelize`, `tortoise-orm`, `peewee`, `gorm`, `diesel`, `mikro-orm`, `kysely` |
 
+### ORM Frameworks (Specific)
+
+| Trigger | Values |
+|---------|--------|
+| `{prisma_deps}` | `@prisma/client`, `prisma` |
+| `{prisma_config}` | `prisma/schema.prisma` |
+| `{drizzle_deps}` | `drizzle-orm`, `drizzle-kit` |
+| `{drizzle_config}` | `drizzle.config.ts`, `drizzle.config.js` |
+| `{typeorm_deps}` | `typeorm`, `@typeorm/core` |
+| `{sequelize_deps}` | `sequelize`, `sequelize-typescript` |
+| `{sqlalchemy_deps}` | `sqlalchemy`, `SQLAlchemy` |
+| `{diesel_deps}` | `diesel`, `diesel_cli` |
+| `{diesel_config}` | `diesel.toml` |
+
 ### NoSQL (DB:NoSQL)
 | Trigger | Values |
 |---------|--------|
@@ -595,6 +609,21 @@ These generic placeholders are used across multiple categories. Each category se
 |---------|--------|
 | `{coverage_configs}` | `[tool.coverage]`, `.nycrc*`, `jest.config.*[coverage]`, `vitest.config.*[coverage]`, `.coveragerc` |
 
+### Testing Frameworks (Specific)
+
+| Trigger | Values |
+|---------|--------|
+| `{jest_deps}` | `jest`, `@jest/core`, `@types/jest` |
+| `{jest_config}` | `jest.config.js`, `jest.config.ts`, `jest.config.json` |
+| `{vitest_deps}` | `vitest`, `@vitest/ui`, `@vitest/coverage-v8` |
+| `{vitest_config}` | `vitest.config.ts`, `vitest.config.js` |
+| `{pytest_deps}` | `pytest`, `pytest-cov`, `pytest-asyncio` |
+| `{pytest_config}` | `pytest.ini`, `pyproject.toml[tool.pytest]`, `conftest.py` |
+| `{playwright_deps}` | `@playwright/test`, `playwright` |
+| `{playwright_config}` | `playwright.config.ts`, `playwright.config.js` |
+| `{cypress_deps}` | `cypress` |
+| `{cypress_config}` | `cypress.config.ts`, `cypress.config.js`, `cypress.json` |
+
 ---
 
 ## CI/CD Detection
@@ -657,6 +686,18 @@ These generic placeholders are used across multiple categories. Each category se
 | Trigger | Values |
 |---------|--------|
 | `{ai_sdk_deps}` | `openai`, `anthropic`, `cohere`, `google-generativeai`, `mistralai`, `together`, `replicate`, `groq` |
+
+### AI/ML Frameworks (Specific)
+
+| Trigger | Values |
+|---------|--------|
+| `{langchain_deps}` | `langchain`, `langchain-core`, `langchain-community`, `langgraph` |
+| `{llamaindex_deps}` | `llama-index`, `llama-index-core`, `llamaindex` |
+| `{huggingface_deps}` | `transformers`, `datasets`, `tokenizers`, `accelerate`, `huggingface-hub` |
+| `{pytorch_deps}` | `torch`, `pytorch-lightning`, `torchvision` |
+| `{tensorflow_deps}` | `tensorflow`, `keras`, `tf-keras` |
+| `{anthropic_deps}` | `anthropic`, `claude-sdk` |
+| `{openai_deps}` | `openai`, `tiktoken` |
 
 ---
 
@@ -1364,6 +1405,31 @@ Reserved for future version-specific rule selection (e.g., `{react_modern}` for 
 |---------|--------|
 | `{error_tracking_deps}` | `@sentry/*`, `sentry-sdk`, `@rollbar/*`, `rollbar`, `bugsnag`, `@bugsnag/*`, `raygun`, `airbrake`, `trackjs`, `logrocket`, `@logrocket/*` |
 | `{error_tracking_config}` | `sentry.properties`, `rollbar.json`, `bugsnag.json`, `.sentryclirc` |
+
+---
+
+## Internal Placeholders (Agent-Only)
+
+These placeholders are NOT file detection triggers. They are used internally by agents for code transformation and output generation.
+
+| Placeholder | Scope | Description | Example Transformation |
+|-------------|-------|-------------|----------------------|
+| `{lang}` | transformation | Raw language name from detection | `Python`, `TypeScript` |
+| `{lang_lower}` | transformation | Lowercase language for file naming | `python`, `typescript` |
+| `{lang_code}` | transformation | Detection code format | `L:Python`, `L:TypeScript` |
+| `{section_pattern}` | internal | sed regex for rule extraction | `### Python \(L:Python\)` |
+| `{output_file}` | internal | Generated output file name | `python.md`, `backend.md` |
+| `{file}` | reference | File path in output | `src/main.py` |
+| `{line}` | reference | Line number | `42` |
+| `{n}` | counter | Numeric placeholder | `3`, `15` |
+| `{status}` | enum | Status value | `OK`, `WARN`, `FAIL` |
+
+**Transformation Rules:**
+- `{lang}` → `{lang_lower}`: Convert to lowercase
+- Detection code → `{output_file}`: `L:Python` → `python.md`, `Backend:Django` → `backend.md`
+- Location format: `{file}:{line}` (always this order)
+
+**Note:** These are NOT triggers for detection. They are output/transformation placeholders used by cco-agent-analyze.md during rule generation.
 
 ---
 

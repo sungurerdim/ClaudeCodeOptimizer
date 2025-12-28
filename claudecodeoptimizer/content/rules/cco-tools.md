@@ -10,21 +10,25 @@
 | Command Flow | ALL commands | - |
 | Context Requirement | ALL except config, research | - |
 | Token Efficiency | ALL commands | analyze, apply |
-| Safety | commit | apply |
+| Safety | commit, optimize, review, config | apply |
 | Fix Workflow | optimize, commit | apply |
+| Counting Principle | optimize, review, preflight | apply |
 | Impact Preview | review | analyze |
 | Priority | optimize, review | analyze |
 | Question Patterns | ALL with AskUserQuestion | - |
 | Output Formatting | ALL commands | ALL agents |
 | Variable Templates | ALL | ALL |
-| Dynamic Context | ALL commands | - |
+| Dynamic Context | commit, preflight, status | - |
 | Parallel Execution | ALL commands | analyze |
 | Quick Mode | commit, research, review | - |
+| Unattended Mode | optimize, config | apply |
+| Model Strategy | optimize, review, research, commit | analyze, apply, research |
 | Conservative Judgment | optimize, review | analyze |
 | Skip Criteria | ALL analysis | analyze, apply |
 | Progress Tracking | ALL commands | - |
 | Artifact Handling | - | analyze, apply |
 | Strategy Evolution | optimize, review | analyze |
+| Source Tiering | research | research |
 
 **SSOT Principle:** Rules defined here, referenced by commands/agents. Changes propagate automatically.
 
@@ -234,6 +238,56 @@ Minimize token usage at every step:
 
 - **Flow**: Analyze > Report > Approve > Apply > Verify
 - **Output-Accounting**: `Applied: N | Declined: N | Failed: N | Total: N`
+
+## Counting Principle [CRITICAL]
+
+**All counts MUST be at the "finding" level throughout the entire flow.**
+
+### Definitions
+
+| Term | Definition | Example |
+|------|------------|---------|
+| **Finding** | A distinct issue identified by analysis | "Type ignore comments without documentation" |
+| **Location** | A specific file:line within a finding | `src/core.py:168`, `src/core.py:255` |
+
+### Accounting Terms
+
+| Term | Meaning | Context |
+|------|---------|---------|
+| `applied` | Findings successfully fixed | Both optimize and review |
+| `declined` | User explicitly declined | Optimize (auto-fix context) |
+| `notSelected` | User didn't select to apply | Review (selection context) |
+| `failed` | Selected but couldn't fix | Both |
+| `total` | All findings from analysis | Both |
+
+### Invariants
+
+```javascript
+// Core invariant (applies to all commands):
+applied + (declined OR notSelected) + failed === total
+
+// Optimize: applied + declined + failed = total
+// Review: applied + notSelected + failed = total
+
+// Selection invariant (when user selects items):
+applied + failed === selected
+```
+
+### Rules
+
+1. **Analysis counts findings** - "4 issues found" means 4 distinct findings
+2. **Summary counts findings** - "Applied: 4" means 4 findings were addressed
+3. **Locations are internal detail** - Not shown in user-facing counts
+4. **Invariants are mandatory** - Validate accounting at every stage
+
+### Anti-patterns
+
+| Wrong | Right |
+|-------|-------|
+| "Applied: 8" (when 4 findings with 8 locations) | "Applied: 4" |
+| Counting locations in summary | Count findings only |
+| Agent returns `applied: 8` for 4 findings | Agent returns `applied: 4` |
+| Summary shows only applied | Summary shows all: applied, declined/notSelected, failed |
 
 ## Impact Preview
 
@@ -623,3 +677,94 @@ TodoWrite([
 - **Max Items**: 5 per category (remove oldest when full)
 - **Duplicates**: Update existing instead of adding new
 - **Format**: Single line per learning, concise
+
+## Unattended Mode
+
+**Applies to:** Commands with `--auto` or `--unattended` flags.
+
+### Behavior
+
+| Flag | Effect |
+|------|--------|
+| `--auto` | Skip all questions, use safe defaults, apply auto-fixable only |
+| `--unattended` | Same as --auto (alias) |
+
+### Requirements
+
+1. **No AskUserQuestion** - Must complete without user interaction
+2. **Safe defaults only** - Conservative choices, no risky operations
+3. **Auto-fixable only** - Skip items requiring approval
+4. **Report at end** - Summary of what was done/skipped
+
+### Defaults by Command
+
+| Command | Unattended Behavior |
+|---------|---------------------|
+| optimize | Auto-fix safe items only, skip risky |
+| config | Use detected values, skip optional questions |
+
+**Difference from Quick Mode:** Quick Mode reduces questions but may still ask critical ones. Unattended Mode is fully non-interactive.
+
+## Model Strategy
+
+**Model selection based on task requirements. Opus + Haiku only (no Sonnet).**
+
+### Selection Criteria
+
+| Criteria | Model | Rationale |
+|----------|-------|-----------|
+| Code modifications | Opus | 50-75% fewer tool errors |
+| Deep analysis | Opus | Complex reasoning needed |
+| Synthesis/recommendations | Opus | Quality over speed |
+| Read-only scanning | Haiku | Fast, low cost |
+| Web search/fetch | Haiku | Speed matters |
+| Large codebase (10K+) | Opus | Accuracy for scale |
+
+### Agent Model Assignment
+
+| Agent | Model | Reason |
+|-------|-------|--------|
+| cco-agent-analyze | Haiku | Read-only operations |
+| cco-agent-apply | Opus | Code modifications |
+| cco-agent-research | Haiku | Web fetches (synthesis uses Opus) |
+
+### Command Model Assignment
+
+| Command | Model | Reason |
+|---------|-------|--------|
+| optimize | Opus | Security/quality analysis |
+| review | Opus | Architecture analysis |
+| research | Opus | Complex synthesis |
+| commit | Opus | Quality gates |
+| Others | inherit | Orchestration only |
+
+## Source Tiering
+
+**Reliability scoring for research sources. Used by cco-research and cco-agent-research.**
+
+### Tier Definitions
+
+| Tier | Sources | Score Range | Reliability |
+|------|---------|-------------|-------------|
+| T1 | Official docs, specs, RFCs | 90-100 | Authoritative |
+| T2 | GitHub repos, changelogs, release notes | 80-89 | Primary |
+| T3 | Major tech blogs (official), tutorials | 70-79 | Trusted |
+| T4 | Stack Overflow, forums, community | 60-69 | Verified |
+| T5 | Personal blogs, Medium posts | 50-59 | Unverified |
+| T6 | Unknown sources | 40-49 | Skip |
+
+### Scoring Modifiers
+
+| Modifier | Effect |
+|----------|--------|
+| Domain authority | +10 for official domains |
+| Currency (< 6 months) | +10 |
+| Stale (> 2 years) | -15 |
+| Multiple sources agree | +10 per confirmation |
+| Vendor/promo content | -20 |
+
+### Usage Rules
+
+1. **Minimum T1/T2** - At least 1 T1 or T2 source required for recommendations
+2. **Contradiction Resolution** - Higher tier wins, document conflicts
+3. **Saturation** - Stop when 3+ T1/T2 sources independently confirm

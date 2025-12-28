@@ -64,6 +64,12 @@ Detection organized by category. Trigger values in `{placeholders}` are defined 
 | **Database** |||
 | DB:SQL | {sql_drivers}, {migrations_dir} | `database.md` |
 | DB:ORM | {orm_deps} | `database.md` |
+| ORM:Prisma | {prisma_deps}, {prisma_config} | `orm.md` |
+| ORM:Drizzle | {drizzle_deps}, {drizzle_config} | `orm.md` |
+| ORM:TypeORM | {typeorm_deps} | `orm.md` |
+| ORM:Sequelize | {sequelize_deps} | `orm.md` |
+| ORM:SQLAlchemy | {sqlalchemy_deps} | `orm.md` |
+| ORM:Diesel | {diesel_deps}, {diesel_config} | `orm.md` |
 | DB:NoSQL | {nosql_deps} | `database.md` |
 | DB:Vector | {vector_deps} | `database.md` |
 | DB:Edge | {edge_db_deps} | `database.md` |
@@ -103,6 +109,11 @@ Detection organized by category. Trigger values in `{placeholders}` are defined 
 | ML:LLM | {llm_orchestration_deps} | `ml.md` |
 | ML:Inference | {inference_deps} | `ml.md` |
 | ML:SDK | {ai_sdk_deps} | `ml.md` |
+| ML:LangChain | {langchain_deps} | `ml.md` |
+| ML:LlamaIndex | {llamaindex_deps} | `ml.md` |
+| ML:HuggingFace | {huggingface_deps} | `ml.md` |
+| ML:PyTorch | {pytorch_deps} | `ml.md` |
+| ML:TensorFlow | {tensorflow_deps} | `ml.md` |
 | **Build** |||
 | Build:Monorepo | {monorepo_configs} | `monorepo.md` |
 | Build:Bundler | {bundler_configs} | `bundler.md` |
@@ -189,6 +200,11 @@ Detection organized by category. Trigger values in `{placeholders}` are defined 
 | Test:Unit | {unit_test_deps}, {test_dirs} | `testing.md` |
 | Test:E2E | {e2e_deps}, {e2e_dirs} | `testing.md` |
 | Test:Coverage | {coverage_configs} | `testing.md` |
+| Test:Jest | {jest_deps}, {jest_config} | `testing.md` |
+| Test:Vitest | {vitest_deps}, {vitest_config} | `testing.md` |
+| Test:pytest | {pytest_deps}, {pytest_config} | `testing.md` |
+| Test:Playwright | {playwright_deps}, {playwright_config} | `testing.md` |
+| Test:Cypress | {cypress_deps}, {cypress_config} | `testing.md` |
 | **CI/CD** |||
 | CI:GitHub | {github_workflow_dir} | `ci-cd.md` |
 | CI:GitLab | {gitlab_config} | `ci-cd.md` |
@@ -1860,6 +1876,38 @@ When generating tests, always include:
 - **Incremental**: Incremental compilation
 - **CI-Check**: Type check in CI
 
+### Make (Build:Make)
+**Trigger:** {makefile}
+
+- **Phony-Targets**: Declare .PHONY for non-file targets
+- **Deps-Explicit**: Explicit dependency declarations
+- **Vars-Override**: Use ?= for overridable variables
+- **Silent-Prefix**: Use @ prefix for clean output
+
+### Just (Build:Just)
+**Trigger:** {justfile}
+
+- **Recipe-Doc**: Document recipes with comments
+- **Default-Recipe**: Set sensible default recipe
+- **Deps-Chain**: Chain dependent recipes
+- **Vars-Export**: Export variables to environment
+
+### Task (Build:Task)
+**Trigger:** {taskfile}
+
+- **Task-Deps**: Declare task dependencies
+- **Vars-Define**: Define reusable variables
+- **Desc-Required**: Description for all tasks
+- **Sources-Fingerprint**: Use sources for incremental builds
+
+### Mise (Build:Mise)
+**Trigger:** {mise_config}
+
+- **Tool-Versions**: Pin tool versions explicitly
+- **Env-Manage**: Manage environment variables
+- **Tasks-Define**: Define project tasks
+- **Plugins-Minimal**: Use minimal plugin set
+
 ---
 
 ## Testing
@@ -1887,6 +1935,46 @@ When generating tests, always include:
 - **Branch-Cover**: Branch coverage, not just line
 - **Exclude-Generated**: Exclude generated code
 - **Trend-Track**: Track coverage trends
+
+### Jest (Test:Jest)
+**Trigger:** {jest_deps}
+
+- **Config-Preset**: Use preset for framework (ts-jest, babel-jest)
+- **Mock-Clear**: clearMocks: true in config
+- **Coverage-Collect**: collectCoverageFrom patterns
+- **Snapshot-Update**: Review snapshot changes carefully
+
+### Vitest (Test:Vitest)
+**Trigger:** {vitest_deps}
+
+- **Inline-Config**: Prefer vitest.config.ts over package.json
+- **Globals-False**: Avoid globals: true, use explicit imports
+- **Pool-Threads**: Use threads pool for performance
+- **Coverage-V8**: Prefer v8 coverage provider
+
+### pytest (Test:pytest)
+**Trigger:** {pytest_deps}
+
+- **Fixtures-Scope**: Appropriate fixture scope (function/module/session)
+- **Markers-Define**: Define custom markers in pytest.ini
+- **Conftest-Organize**: Organize fixtures in conftest.py hierarchy
+- **Parametrize-Use**: Use @pytest.mark.parametrize for variations
+
+### Playwright (Test:Playwright)
+**Trigger:** {playwright_deps}
+
+- **Locators-Prefer**: Use locators over selectors
+- **Auto-Wait**: Rely on auto-waiting, avoid sleep
+- **Trace-Enable**: Enable trace on CI for debugging
+- **Projects-Multi**: Configure multiple browser projects
+
+### Cypress (Test:Cypress)
+**Trigger:** {cypress_deps}
+
+- **Commands-Custom**: Create custom commands for reuse
+- **Intercept-API**: Use cy.intercept for API mocking
+- **Retry-Ability**: Leverage built-in retry-ability
+- **Component-Test**: Use component testing for isolation
 
 ---
 
@@ -1977,6 +2065,51 @@ When generating tests, always include:
 - **Response-Validate**: Validate API responses
 - **Fallback-Model**: Fallback to alternative models
 
+### LangChain (ML:LangChain)
+**Trigger:** {langchain_deps}
+
+- **Chain-Compose**: Compose chains with LCEL
+- **Memory-Manage**: Configure appropriate memory type
+- **Callbacks-Use**: Use callbacks for observability
+- **Vector-Store**: Choose appropriate vector store
+- **Agent-Tools**: Define clear tool descriptions
+
+### LlamaIndex (ML:LlamaIndex)
+**Trigger:** {llamaindex_deps}
+
+- **Index-Choose**: Choose index type (VectorStore, List, Tree)
+- **Node-Parser**: Configure appropriate node parser
+- **Retriever-Tune**: Tune retriever parameters (top_k, similarity)
+- **Response-Synthesizer**: Choose response synthesis strategy
+- **Storage-Persist**: Persist indices for reuse
+
+### HuggingFace (ML:HuggingFace)
+**Trigger:** {huggingface_deps}
+
+- **Model-Cache**: Configure model cache directory
+- **Pipeline-Use**: Use pipelines for common tasks
+- **Tokenizer-Fast**: Use fast tokenizers
+- **Device-Map**: Use device_map for large models
+- **Hub-Private**: Use private repos for proprietary models
+
+### PyTorch (ML:PyTorch)
+**Trigger:** {pytorch_deps}
+
+- **Device-Agnostic**: Write device-agnostic code
+- **Grad-Context**: Use no_grad for inference
+- **DataLoader-Workers**: Configure num_workers for loading
+- **Model-Save**: Save state_dict, not full model
+- **Mixed-Precision**: Use torch.amp for mixed precision
+
+### TensorFlow (ML:TensorFlow)
+**Trigger:** {tensorflow_deps}
+
+- **Eager-Disable**: Use tf.function for performance
+- **Dataset-Pipeline**: Use tf.data for input pipelines
+- **Distributed-Strategy**: Use distribution strategies for scale
+- **SavedModel-Export**: Export as SavedModel for serving
+- **Memory-Growth**: Enable memory growth for GPU
+
 ---
 
 ## Runtimes
@@ -2043,6 +2176,65 @@ When generating tests, always include:
 - **Migration-Portable**: Portable migration scripts across environments
 - **Query-Local**: Optimize for local query latency
 - **Replica-Sync**: Configure replica synchronization interval
+
+---
+
+## ORM Frameworks
+
+### Prisma (ORM:Prisma)
+**Trigger:** {prisma_deps}
+
+- **Schema-Single**: Single schema.prisma file as source of truth
+- **Generate-CI**: Run prisma generate in CI
+- **Migrate-Dev**: Use prisma migrate dev for development
+- **Client-Singleton**: Single PrismaClient instance
+- **Select-Fields**: Use select/include to limit fields
+- **Batch-Transactions**: Use $transaction for batching
+
+### Drizzle (ORM:Drizzle)
+**Trigger:** {drizzle_deps}
+
+- **Schema-TypeSafe**: Define schema with full TypeScript
+- **Query-Builder**: Prefer query builder over raw SQL
+- **Migrations-Generate**: Use drizzle-kit for migrations
+- **Relations-Explicit**: Define relations explicitly
+- **Prepared-Statements**: Use prepared statements for performance
+
+### TypeORM (ORM:TypeORM)
+**Trigger:** {typeorm_deps}
+
+- **Entities-Decorators**: Use decorator-based entities
+- **Repository-Pattern**: Use repository pattern
+- **Migrations-Generate**: Generate migrations, don't sync in prod
+- **Relations-Lazy**: Consider lazy relations for performance
+- **Query-Builder**: Use QueryBuilder for complex queries
+
+### Sequelize (ORM:Sequelize)
+**Trigger:** {sequelize_deps}
+
+- **Models-Define**: Define models with sequelize.define or class
+- **Associations-Setup**: Setup associations in associate method
+- **Migrations-Umzug**: Use umzug for production migrations
+- **Scopes-Use**: Use scopes for reusable queries
+- **Hooks-Lifecycle**: Use hooks for lifecycle events
+
+### SQLAlchemy (ORM:SQLAlchemy)
+**Trigger:** {sqlalchemy_deps}
+
+- **Session-Scoped**: Use scoped_session for web apps
+- **Engine-Pool**: Configure connection pool size
+- **Declarative-Base**: Use declarative_base for models
+- **Alembic-Migrate**: Use Alembic for migrations
+- **Lazy-Load-Aware**: Be aware of N+1 with lazy loading
+
+### Diesel (ORM:Diesel)
+**Trigger:** {diesel_deps}
+
+- **Schema-Infer**: Use diesel print-schema for schema.rs
+- **Migrations-Embed**: Embed migrations with embed_migrations!
+- **Derive-Queryable**: Use #[derive(Queryable)] for structs
+- **Connection-Pool**: Use r2d2 for connection pooling
+- **Type-Safe**: Leverage Rust's type system for query safety
 
 ---
 
