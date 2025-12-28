@@ -231,36 +231,78 @@ if (isUnattended) {
 
 ---
 
-## Step-2.5: Statusline Scope [CONDITIONAL]
+## Step-2.5: Scope Questions [CONDITIONAL]
 
-**Only ask if "Full" or "Minimal" selected in Q1:**
+**Ask scope when install or remove is selected for statusline/permissions:**
 
 ```javascript
+// Build scope questions dynamically based on Q1 selections
+scopeQuestions = []
+
+// Statusline: Install scope (Full or Minimal)
 if (setupConfig.statusline === "Full" || setupConfig.statusline === "Minimal") {
+  scopeQuestions.push({
+    question: "Where to install statusline?",
+    header: "Statusline",
+    options: [
+      { label: "Global (Recommended)", description: "~/.claude - applies to all projects on this machine" },
+      { label: "Local", description: "./.claude - this project only" }
+    ],
+    multiSelect: false
+  })
+}
+
+// Statusline: Remove scope
+if (setupConfig.statusline === "Remove") {
+  scopeQuestions.push({
+    question: "Where to remove statusline from?",
+    header: "Statusline",
+    options: [
+      { label: "Local (Recommended)", description: "./.claude - remove from this project only" },
+      { label: "Global", description: "~/.claude - remove from all projects" }
+    ],
+    multiSelect: false
+  })
+}
+
+// Permissions: Remove scope
+if (setupConfig.permissions === "Remove") {
+  scopeQuestions.push({
+    question: "Where to remove permissions from?",
+    header: "Permissions",
+    options: [
+      { label: "Local (Recommended)", description: "./.claude - remove from this project only" },
+      { label: "Global", description: "~/.claude - remove from all projects" }
+    ],
+    multiSelect: false
+  })
+}
+
+// Ask scope questions if any
+if (scopeQuestions.length > 0) {
   if (!isUnattended) {
-    AskUserQuestion([{
-      question: "Where to install statusline?",
-      header: "Scope",
-      options: [
-        { label: "Global (Recommended)", description: "~/.claude - applies to all projects on this machine" },
-        { label: "Local", description: "./.claude - this project only" }
-      ],
-      multiSelect: false
-    }])
-    // Store result: setupConfig.statuslineScope = "Global" | "Local"
+    AskUserQuestion(scopeQuestions)
+    // Store results:
+    // setupConfig.statuslineScope = "Global" | "Local"
+    // setupConfig.permissionsScope = "Global" | "Local"
   } else {
     // Unattended: default to Local (non-invasive)
     setupConfig.statuslineScope = "Local"
+    setupConfig.permissionsScope = "Local"
   }
 }
 ```
 
-### Statusline Scope Behavior
+### Scope Behavior
 
-| Scope | Target Directory | Settings File | Effect |
-|-------|------------------|---------------|--------|
-| Global | `~/.claude/` | `~/.claude/settings.json` | All projects use this statusline |
-| Local | `./.claude/` | `./.claude/settings.json` | Only this project uses statusline |
+| Action | Scope | Target Directory | Settings File |
+|--------|-------|------------------|---------------|
+| Install statusline | Global | `~/.claude/` | `~/.claude/settings.json` |
+| Install statusline | Local | `./.claude/` | `./.claude/settings.json` |
+| Remove statusline | Global | `~/.claude/` | `~/.claude/settings.json` |
+| Remove statusline | Local | `./.claude/` | `./.claude/settings.json` |
+| Remove permissions | Global | - | `~/.claude/settings.json` |
+| Remove permissions | Local | - | `./.claude/settings.json` |
 
 **Global Installation:**
 ```bash
@@ -277,6 +319,26 @@ cp "$CCO_PATH/cco-{mode}.js" ~/.claude/cco-{mode}.js
 # Copy to project .claude (existing behavior)
 cp "$CCO_PATH/cco-{mode}.js" ./.claude/cco-{mode}.js
 # Update ./.claude/settings.json
+```
+
+**Global Removal:**
+```bash
+# Remove statusline from global config
+rm -f ~/.claude/cco-*.js
+# Remove statusLine key from ~/.claude/settings.json
+
+# Remove permissions from global config
+# Remove permissions key from ~/.claude/settings.json
+```
+
+**Local Removal:**
+```bash
+# Remove statusline from project
+rm -f ./.claude/cco-*.js
+# Remove statusLine key from ./.claude/settings.json
+
+# Remove permissions from project
+# Remove permissions key from ./.claude/settings.json
 ```
 
 ---
@@ -608,7 +670,7 @@ Task("cco-agent-apply", `
     { path: "rules/cco/", mode: "delete_contents", pattern: "*.md" },
     { path: "settings.json", mode: "unmerge" }
   ]
-`, { run_in_background: true })
+`, { model: "haiku", run_in_background: true })
 ```
 
 ### Detection → Rule Mapping
@@ -664,7 +726,18 @@ The cco-agent-analyze agent handles all detection-to-rule mapping internally usi
 | Minimal | Global | `~/.claude/cco-minimal.js` | `~/.claude/settings.json` |
 | Minimal | Local | `${targetDir}/cco-minimal.js` | `${targetDir}/settings.json` |
 | Skip | - | No action | No change |
-| Remove | - | Delete statusline file | Remove statusLine key |
+| Remove | Global | Delete `~/.claude/cco-*.js` | Remove statusLine from `~/.claude/settings.json` |
+| Remove | Local | Delete `${targetDir}/cco-*.js` | Remove statusLine from `${targetDir}/settings.json` |
+
+**Permissions Mapping:**
+
+| Action | Scope | Settings File |
+|--------|-------|---------------|
+| Permissive | Local | `${targetDir}/settings.json` |
+| Balanced | Local | `${targetDir}/settings.json` |
+| Skip | - | No change |
+| Remove | Global | Remove permissions from `~/.claude/settings.json` |
+| Remove | Local | Remove permissions from `${targetDir}/settings.json` |
 
 ```bash
 # Determine target based on scope
@@ -695,7 +768,7 @@ cp "$CCO_PATH/cco-{mode}.js" "$STATUSLINE_DIR/cco-{mode}.js"
 
 **Note:** When scope is Global, the statusLine command uses absolute path `~/.claude/cco-{mode}.js`. When Local, it uses relative path `.claude/cco-{mode}.js`.
 
-### If action = Remove
+### If action = Remove (Context)
 
 ```javascript
 Task("cco-agent-apply", `
@@ -706,8 +779,43 @@ Task("cco-agent-apply", `
     { path: "rules/cco/", mode: "delete_contents", pattern: "*.md" },
     { path: "settings.json", mode: "unmerge" }
   ]
-`)
+`, { model: "haiku" })
 // Uses unmerge mode: removes only CCO keys, preserves user settings
+```
+
+### Statusline Remove (scope-aware)
+
+```javascript
+if (setupConfig.statusline === "Remove") {
+  const statuslineDir = setupConfig.statuslineScope === "Global" ? "~/.claude" : "${targetDir}"
+
+  Task("cco-agent-apply", `
+    action: "RemoveStatusline"
+    targetDir: "${statuslineDir}"
+
+    files: [
+      { path: "cco-*.js", mode: "delete" },
+      { path: "settings.json", mode: "unmerge", keys: ["statusLine"] }
+    ]
+  `, { model: "haiku" })
+}
+```
+
+### Permissions Remove (scope-aware)
+
+```javascript
+if (setupConfig.permissions === "Remove") {
+  const permissionsDir = setupConfig.permissionsScope === "Global" ? "~/.claude" : "${targetDir}"
+
+  Task("cco-agent-apply", `
+    action: "RemovePermissions"
+    targetDir: "${permissionsDir}"
+
+    files: [
+      { path: "settings.json", mode: "unmerge", keys: ["permissions"] }
+    ]
+  `, { model: "haiku" })
+}
 ```
 
 ### If action = Export
@@ -718,7 +826,7 @@ Task("cco-agent-apply", `
   - Read all ${targetDir}/rules/cco/*.md
   - Filter for target format
   - Write to ./${format}
-`)
+`, { model: "haiku" })
 ```
 
 ### Validation

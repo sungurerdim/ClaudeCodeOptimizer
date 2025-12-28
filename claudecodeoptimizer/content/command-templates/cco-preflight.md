@@ -159,7 +159,7 @@ qualityTask = Task("general-purpose", `
     accounting: { applied, declined, failed, total },
     blockers: [{ severity, title, location }]
   }
-`, { run_in_background: true })
+`, { model: "opus", run_in_background: true })  // Opus: code fixes require accuracy
 
 reviewTask = Task("general-purpose", `
   Execute /cco-review --quick --no-apply

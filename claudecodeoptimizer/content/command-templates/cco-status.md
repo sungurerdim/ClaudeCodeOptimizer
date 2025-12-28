@@ -63,7 +63,7 @@ agentResponse = Task("cco-agent-analyze", `
   - Best Practices: Resource management, patterns, consistency
 
   Scoring: Start at 100, deduct for issues (critical: -10, high: -5, medium: -2, low: -1)
-`)
+`, { model: "haiku" })
 
 // Agent returns (matches cco-agent-analyze scan output schema):
 // agentResponse = {

@@ -308,7 +308,7 @@ if (config.action !== "Report only" && autoFixable.length > 0) {
 
     Return accounting at FINDING level:
     { applied: <findings_fixed>, failed: <findings_failed>, total: <findings_attempted> }
-  `, { run_in_background: true })
+  `, { model: "opus", run_in_background: true })
 }
 
 // Proceed to Step-4 immediately (auto-fix runs in background)
@@ -462,7 +462,7 @@ if (approved.length > 0) {
 
     Return accounting at FINDING level:
     { applied: <findings_fixed>, failed: <findings_failed>, total: <findings_attempted> }
-  `)
+  `, { model: "opus" })
 }
 ```
 
