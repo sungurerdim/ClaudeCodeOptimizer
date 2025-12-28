@@ -2,9 +2,35 @@
 
 Build a terminal-based system monitoring dashboard using Python and Textual.
 
+---
+
+## Autonomous Operation
+
+**Execute this task completely without user interaction:**
+
+1. **Proceed autonomously** - Make reasonable decisions without asking
+2. **Implement all requirements** - Complete every feature listed below
+3. **Write working code** - Dashboard must render and update
+4. **Include tests** - Test coverage for core functionality
+5. **Handle errors gracefully** - Graceful degradation on metric failures
+
+**Prioritized execution order:**
+1. Project structure and Textual app setup
+2. CPU and memory collectors
+3. CPU/memory widgets with real-time updates
+4. Process list table
+5. Disk and network collectors
+6. Alerts panel
+7. Keyboard shortcuts and navigation
+8. Configuration hot-reload
+9. Tests
+
+---
+
 ## Requirements
 
 ### Core Features
+
 1. **Real-time System Stats**
    - CPU usage per core (bar charts)
    - Memory usage (used/available/cached)
@@ -34,6 +60,7 @@ Build a terminal-based system monitoring dashboard using Python and Textual.
    - Custom refresh intervals per widget
 
 ### Technical Requirements
+
 - Textual for TUI framework
 - psutil for system metrics
 - YAML for configuration
@@ -43,6 +70,7 @@ Build a terminal-based system monitoring dashboard using Python and Textual.
 - Tests with pytest
 
 ### Project Structure
+
 ```
 sysmon/
 ├── src/
@@ -66,6 +94,7 @@ sysmon/
 ```
 
 ### Keyboard Shortcuts
+
 ```
 q       - Quit
 r       - Force refresh
@@ -76,10 +105,18 @@ Tab     - Switch focus between panels
 ?       - Help
 ```
 
+---
+
 ## Success Criteria
-- Smooth 60fps rendering
-- CPU usage of monitor itself < 5%
-- All metrics update correctly
-- Process kill works with confirmation
-- Alerts fire and display properly
-- Config changes apply without restart
+
+| Priority | Requirement | Validation |
+|----------|-------------|------------|
+| P0 | Dashboard renders without errors | Textual app starts |
+| P0 | All metrics update correctly | Values change over time |
+| P1 | Process list shows running processes | PID, name, CPU visible |
+| P1 | Keyboard navigation works | Tab switches panels |
+| P2 | Process kill works with confirmation | k key triggers kill |
+| P2 | Alerts fire and display properly | CPU spike triggers alert |
+| P2 | Config changes apply without restart | Edit YAML, see change |
+
+**Deliverables:** Working TUI dashboard, configuration file, test suite.
