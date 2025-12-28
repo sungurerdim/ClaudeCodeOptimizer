@@ -1,9 +1,10 @@
-"""AI-powered code evaluation using Claude via ccbox (vanilla mode)."""
+"""AI-powered blind code evaluation using Claude via ccbox."""
 
 from __future__ import annotations
 
 import json
 import logging
+import random
 import subprocess
 from dataclasses import dataclass, field
 from pathlib import Path
@@ -11,27 +12,47 @@ from typing import Any
 
 logger = logging.getLogger(__name__)
 
-# Path to comparison prompt template (relative to benchmark/suite/)
+# Path to comparison prompt template
 COMPARISON_PROMPT_FILE = "comparison-prompt.md"
+
+# 10 evaluation dimensions with weights
+DIMENSIONS = [
+    ("functional_completeness", 15),
+    ("architecture_design", 12),
+    ("code_quality", 12),
+    ("robustness", 12),
+    ("security", 12),
+    ("maintainability", 10),
+    ("type_safety", 8),
+    ("testing", 7),
+    ("performance", 6),
+    ("best_practices", 6),
+]
 
 
 @dataclass
-class DimensionResult:
-    """Result for a single evaluation dimension."""
+class DimensionScore:
+    """Score for a single evaluation dimension."""
 
     score: int = 0
-    notes: str = ""
+    evidence: str = ""
 
 
 @dataclass
 class VariantResult:
     """Complete evaluation result for one variant."""
 
-    prompt_compliance: DimensionResult = field(default_factory=DimensionResult)
-    code_quality: DimensionResult = field(default_factory=DimensionResult)
-    robustness: DimensionResult = field(default_factory=DimensionResult)
-    security: DimensionResult = field(default_factory=DimensionResult)
-    best_practices: DimensionResult = field(default_factory=DimensionResult)
+    functional_completeness: DimensionScore = field(default_factory=DimensionScore)
+    architecture_design: DimensionScore = field(default_factory=DimensionScore)
+    code_quality: DimensionScore = field(default_factory=DimensionScore)
+    robustness: DimensionScore = field(default_factory=DimensionScore)
+    security: DimensionScore = field(default_factory=DimensionScore)
+    maintainability: DimensionScore = field(default_factory=DimensionScore)
+    type_safety: DimensionScore = field(default_factory=DimensionScore)
+    testing: DimensionScore = field(default_factory=DimensionScore)
+    performance: DimensionScore = field(default_factory=DimensionScore)
+    best_practices: DimensionScore = field(default_factory=DimensionScore)
+    anti_patterns_found: list[str] = field(default_factory=list)
     overall_score: int = 0
     grade: str = "?"
     strengths: list[str] = field(default_factory=list)
@@ -40,31 +61,63 @@ class VariantResult:
     def to_dict(self) -> dict[str, Any]:
         """Convert to dictionary."""
         return {
-            "prompt_compliance": {
-                "score": self.prompt_compliance.score,
-                "notes": self.prompt_compliance.notes,
+            "functional_completeness": {
+                "score": self.functional_completeness.score,
+                "evidence": self.functional_completeness.evidence,
+            },
+            "architecture_design": {
+                "score": self.architecture_design.score,
+                "evidence": self.architecture_design.evidence,
             },
             "code_quality": {
                 "score": self.code_quality.score,
-                "notes": self.code_quality.notes,
+                "evidence": self.code_quality.evidence,
             },
             "robustness": {
                 "score": self.robustness.score,
-                "notes": self.robustness.notes,
+                "evidence": self.robustness.evidence,
             },
             "security": {
                 "score": self.security.score,
-                "notes": self.security.notes,
+                "evidence": self.security.evidence,
+            },
+            "maintainability": {
+                "score": self.maintainability.score,
+                "evidence": self.maintainability.evidence,
+            },
+            "type_safety": {
+                "score": self.type_safety.score,
+                "evidence": self.type_safety.evidence,
+            },
+            "testing": {
+                "score": self.testing.score,
+                "evidence": self.testing.evidence,
+            },
+            "performance": {
+                "score": self.performance.score,
+                "evidence": self.performance.evidence,
             },
             "best_practices": {
                 "score": self.best_practices.score,
-                "notes": self.best_practices.notes,
+                "evidence": self.best_practices.evidence,
             },
+            "anti_patterns_found": self.anti_patterns_found,
             "overall_score": self.overall_score,
             "grade": self.grade,
             "strengths": self.strengths,
             "weaknesses": self.weaknesses,
         }
+
+
+@dataclass
+class DimensionComparison:
+    """Comparison result for a single dimension."""
+
+    dimension: str = ""
+    winner: str = "tie"
+    diff: int = 0
+    cco_score: int = 0
+    vanilla_score: int = 0
 
 
 @dataclass
@@ -75,9 +128,12 @@ class AIComparisonResult:
     vanilla: VariantResult = field(default_factory=VariantResult)
     winner: str = "tie"
     margin: str = "negligible"
+    score_difference: int = 0
     verdict: str = "Mixed Results"
+    dimension_breakdown: list[DimensionComparison] = field(default_factory=list)
     key_differences: list[str] = field(default_factory=list)
     recommendation: str = ""
+    blind_assignment: str = ""  # "cco=a" or "cco=b" for transparency
     raw_response: str = ""
     error: str | None = None
 
@@ -89,31 +145,49 @@ class AIComparisonResult:
             "comparison": {
                 "winner": self.winner,
                 "margin": self.margin,
+                "score_difference": self.score_difference,
                 "verdict": self.verdict,
+                "dimension_breakdown": [
+                    {
+                        "dimension": d.dimension,
+                        "winner": d.winner,
+                        "diff": d.diff,
+                        "cco_score": d.cco_score,
+                        "vanilla_score": d.vanilla_score,
+                    }
+                    for d in self.dimension_breakdown
+                ],
                 "key_differences": self.key_differences,
                 "recommendation": self.recommendation,
+                "blind_assignment": self.blind_assignment,
             },
             "raw_response": self.raw_response if self.error else None,
             "error": self.error,
         }
 
 
-def parse_dimension(data: dict[str, Any]) -> DimensionResult:
-    """Parse a dimension result from JSON."""
-    return DimensionResult(
+def parse_dimension_score(data: dict[str, Any]) -> DimensionScore:
+    """Parse a dimension score from JSON."""
+    return DimensionScore(
         score=int(data.get("score", 0)),
-        notes=str(data.get("notes", "")),
+        evidence=str(data.get("evidence", data.get("notes", ""))),
     )
 
 
 def parse_variant(data: dict[str, Any]) -> VariantResult:
     """Parse a variant result from JSON."""
     return VariantResult(
-        prompt_compliance=parse_dimension(data.get("prompt_compliance", {})),
-        code_quality=parse_dimension(data.get("code_quality", {})),
-        robustness=parse_dimension(data.get("robustness", {})),
-        security=parse_dimension(data.get("security", {})),
-        best_practices=parse_dimension(data.get("best_practices", {})),
+        functional_completeness=parse_dimension_score(data.get("functional_completeness", {})),
+        architecture_design=parse_dimension_score(data.get("architecture_design", {})),
+        code_quality=parse_dimension_score(data.get("code_quality", {})),
+        robustness=parse_dimension_score(data.get("robustness", {})),
+        security=parse_dimension_score(data.get("security", {})),
+        maintainability=parse_dimension_score(data.get("maintainability", {})),
+        type_safety=parse_dimension_score(data.get("type_safety", {})),
+        testing=parse_dimension_score(data.get("testing", {})),
+        performance=parse_dimension_score(data.get("performance", {})),
+        best_practices=parse_dimension_score(data.get("best_practices", {})),
+        anti_patterns_found=list(data.get("anti_patterns_found", []))[:10],
         overall_score=int(data.get("overall_score", 0)),
         grade=str(data.get("grade", "?")),
         strengths=list(data.get("strengths", []))[:5],
@@ -121,12 +195,63 @@ def parse_variant(data: dict[str, Any]) -> VariantResult:
     )
 
 
-def parse_ai_response(response: str) -> AIComparisonResult:
-    """Parse the AI response JSON into structured result."""
+def calculate_verdict(cco_score: int, vanilla_score: int) -> tuple[str, str, str]:
+    """
+    Calculate winner, margin, and verdict from scores.
+
+    Returns:
+        (winner, margin, verdict) tuple
+    """
+    diff = cco_score - vanilla_score
+
+    if abs(diff) < 3:
+        return "tie", "negligible", "Essentially Equal"
+    elif abs(diff) < 8:
+        margin = "slight"
+    elif abs(diff) < 15:
+        margin = "moderate"
+    elif abs(diff) < 25:
+        margin = "significant"
+    else:
+        margin = "decisive"
+
+    if diff > 0:
+        winner = "cco"
+        if margin == "slight":
+            verdict = "Slight CCO Advantage"
+        elif margin == "moderate":
+            verdict = "Moderate CCO Advantage"
+        elif margin == "significant":
+            verdict = "Significant CCO Advantage"
+        else:
+            verdict = "Strong CCO Advantage"
+    else:
+        winner = "vanilla"
+        if margin == "slight":
+            verdict = "Slight Vanilla Advantage"
+        elif margin == "moderate":
+            verdict = "Moderate Vanilla Advantage"
+        elif margin == "significant":
+            verdict = "Significant Vanilla Advantage"
+        else:
+            verdict = "Strong Vanilla Advantage"
+
+    return winner, margin, verdict
+
+
+def parse_ai_response(response: str, cco_is_a: bool) -> AIComparisonResult:
+    """
+    Parse the AI response JSON into structured result.
+
+    Args:
+        response: Raw AI response text
+        cco_is_a: If True, implementation_a is CCO; otherwise implementation_b is CCO
+    """
     result = AIComparisonResult(raw_response=response)
+    result.blind_assignment = "cco=a" if cco_is_a else "cco=b"
 
     try:
-        # Try to extract JSON from response
+        # Extract JSON from response
         cleaned = response.strip()
 
         # Remove markdown code blocks if present
@@ -144,21 +269,86 @@ def parse_ai_response(response: str) -> AIComparisonResult:
 
         data = json.loads(cleaned)
 
-        # Parse variants
-        if "cco" in data:
-            result.cco = parse_variant(data["cco"])
-        if "vanilla" in data:
-            result.vanilla = parse_variant(data["vanilla"])
+        # Parse variants based on blind assignment
+        impl_a = data.get("implementation_a", {})
+        impl_b = data.get("implementation_b", {})
 
-        # Parse comparison
+        if cco_is_a:
+            result.cco = parse_variant(impl_a)
+            result.vanilla = parse_variant(impl_b)
+        else:
+            result.cco = parse_variant(impl_b)
+            result.vanilla = parse_variant(impl_a)
+
+        # Build dimension breakdown
+        for dim_name, _ in DIMENSIONS:
+            cco_dim = getattr(result.cco, dim_name, DimensionScore())
+            vanilla_dim = getattr(result.vanilla, dim_name, DimensionScore())
+            cco_score = cco_dim.score
+            vanilla_score = vanilla_dim.score
+            diff = cco_score - vanilla_score
+
+            if abs(diff) < 3:
+                dim_winner = "tie"
+            elif diff > 0:
+                dim_winner = "cco"
+            else:
+                dim_winner = "vanilla"
+
+            result.dimension_breakdown.append(
+                DimensionComparison(
+                    dimension=dim_name,
+                    winner=dim_winner,
+                    diff=diff,
+                    cco_score=cco_score,
+                    vanilla_score=vanilla_score,
+                )
+            )
+
+        # Calculate overall verdict
+        result.score_difference = result.cco.overall_score - result.vanilla.overall_score
+        result.winner, result.margin, result.verdict = calculate_verdict(
+            result.cco.overall_score, result.vanilla.overall_score
+        )
+
+        # Parse comparison section
         comp = data.get("comparison", {})
-        result.winner = comp.get("winner", "tie")
-        result.margin = comp.get("margin", "negligible")
-        result.verdict = comp.get("verdict", "Mixed Results")
+
+        # Map A/B winner to cco/vanilla
+        raw_winner = comp.get("winner", "tie")
+        if raw_winner == "a":
+            result.winner = "cco" if cco_is_a else "vanilla"
+        elif raw_winner == "b":
+            result.winner = "vanilla" if cco_is_a else "cco"
+        # else keep calculated winner
+
+        result.margin = comp.get("margin", result.margin)
         result.key_differences = comp.get("key_differences", [])[:5]
         result.recommendation = comp.get("recommendation", "")
 
-        # Clear raw_response on success to save space
+        # Recalculate verdict based on final winner
+        if result.winner == "tie":
+            result.verdict = "Essentially Equal"
+        elif result.winner == "cco":
+            if result.margin == "slight":
+                result.verdict = "Slight CCO Advantage"
+            elif result.margin == "moderate":
+                result.verdict = "Moderate CCO Advantage"
+            elif result.margin == "significant":
+                result.verdict = "Significant CCO Advantage"
+            else:
+                result.verdict = "Strong CCO Advantage"
+        else:
+            if result.margin == "slight":
+                result.verdict = "Slight Vanilla Advantage"
+            elif result.margin == "moderate":
+                result.verdict = "Moderate Vanilla Advantage"
+            elif result.margin == "significant":
+                result.verdict = "Significant Vanilla Advantage"
+            else:
+                result.verdict = "Strong Vanilla Advantage"
+
+        # Clear raw_response on success
         result.raw_response = ""
 
     except json.JSONDecodeError as e:
@@ -179,12 +369,15 @@ def run_ai_comparison(
     timeout: int = 600,
 ) -> AIComparisonResult:
     """
-    Run AI comparison using ccbox vanilla mode.
+    Run blind AI comparison using ccbox vanilla mode.
+
+    The implementations are randomly assigned to A/B to ensure
+    unbiased evaluation. The evaluator doesn't know which is CCO.
 
     Args:
         project_id: The project identifier
-        output_dir: Path to benchmark/suite/output
-        suite_dir: Path to benchmark/suite
+        output_dir: Path to benchmark output directory
+        suite_dir: Path to benchmark suite directory
         original_prompt: The original prompt used to generate both variants
         timeout: Timeout in seconds for ccbox execution
 
@@ -200,32 +393,61 @@ def run_ai_comparison(
     if not vanilla_dir.exists():
         return AIComparisonResult(error=f"Vanilla output not found: {vanilla_dir}")
 
-    # Verify comparison prompt exists
+    # Load comparison prompt content
     comparison_prompt_path = suite_dir / COMPARISON_PROMPT_FILE
     if not comparison_prompt_path.exists():
         return AIComparisonResult(error=f"Comparison prompt not found: {comparison_prompt_path}")
 
-    # Build the ccbox prompt
-    # ccbox will be run from the output directory so it can access both variant folders
-    ccbox_prompt = f"""Compare the two code implementations in these directories:
-- CCO variant: {cco_dir.name}/
-- Vanilla variant: {vanilla_dir.name}/
+    try:
+        comparison_criteria = comparison_prompt_path.read_text(encoding="utf-8")
+    except Exception as e:
+        return AIComparisonResult(error=f"Failed to read comparison prompt: {e}")
 
-Original prompt that was given to generate both:
+    # BLIND ASSIGNMENT: Randomly assign which is A and which is B
+    cco_is_a = random.choice([True, False])
+
+    if cco_is_a:
+        dir_a = cco_dir.name
+        dir_b = vanilla_dir.name
+    else:
+        dir_a = vanilla_dir.name
+        dir_b = cco_dir.name
+
+    logger.info(f"Blind assignment for {project_id}: A={dir_a}, B={dir_b} (cco_is_a={cco_is_a})")
+
+    # Build the ccbox prompt with blind labels
+    ccbox_prompt = f"""You are performing a BLIND code comparison. You do not know which implementation
+used any specific tools or processes. Evaluate purely on code quality.
+
+## The Implementations
+
+- **Implementation A**: {dir_a}/
+- **Implementation B**: {dir_b}/
+
+## Original Prompt Given to Generate Both
+
 ---
 {original_prompt}
 ---
 
-Evaluate according to the criteria in {comparison_prompt_path.name} and return the JSON response format specified there.
+## Evaluation Instructions
+
+{comparison_criteria}
 """
 
     try:
-        # Run ccbox from the output directory
-        # Using -p flag to pass the prompt directly
-        cmd = ["ccbox", "-p", ccbox_prompt, "--dangerously-skip-permissions"]
+        # Run ccbox from the output directory in vanilla/bare mode
+        cmd = [
+            "ccbox",
+            "-m",
+            "opus",
+            "--bare",
+            "-p",
+            ccbox_prompt,
+            "--dangerously-skip-permissions",
+        ]
 
-        logger.info(f"Running AI comparison for {project_id}")
-        logger.debug(f"Command: {' '.join(cmd[:3])}...")
+        logger.info(f"Running blind AI comparison for {project_id}")
 
         proc = subprocess.run(
             cmd,
@@ -241,14 +463,16 @@ Evaluate according to the criteria in {comparison_prompt_path.name} and return t
             error_msg = proc.stderr[:500] if proc.stderr else "Unknown error"
             return AIComparisonResult(
                 error=f"ccbox exited with code {proc.returncode}: {error_msg}",
-                raw_response=proc.stdout[:1000] if proc.stdout else "",
+                raw_response=proc.stdout[:2000] if proc.stdout else "",
             )
 
-        # Parse the response
-        result = parse_ai_response(proc.stdout)
+        # Parse the response with blind assignment mapping
+        result = parse_ai_response(proc.stdout, cco_is_a)
+
         logger.info(
-            f"AI comparison complete: {result.winner} "
-            f"(CCO: {result.cco.overall_score}, Vanilla: {result.vanilla.overall_score})"
+            f"AI comparison complete for {project_id}: {result.verdict} "
+            f"(CCO: {result.cco.overall_score}, Vanilla: {result.vanilla.overall_score}, "
+            f"blind={result.blind_assignment})"
         )
         return result
 
