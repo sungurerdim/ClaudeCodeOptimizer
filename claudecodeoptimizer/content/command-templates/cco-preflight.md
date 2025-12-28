@@ -156,7 +156,7 @@ depTask = Task("cco-agent-research", `
 qualityTask = Task("general-purpose", `
   Execute /cco-optimize --pre-release --fix
   Return: {
-    accounting: { done, declined, fail, total },
+    accounting: { applied, declined, failed, total },
     blockers: [{ severity, title, location }]
   }
 `, { run_in_background: true })
@@ -307,7 +307,7 @@ hasBlockers = allBlockers.length > 0
 | Check | Status | Detail |
 |-------|--------|--------|
 | Pre-flight | {✓\|✗} | {detail or "OK"} |
-| Quality | {✓\|✗} | Done {n}, Declined {n} |
+| Quality | {✓\|✗} | Applied {n}, Declined {n} |
 | Architecture | {✓\|⚠️} | {foundation} |
 | Tests | {✓\|✗} | {PASS\|FAIL: reason} |
 | Build | {✓\|✗} | {PASS\|FAIL: reason} |

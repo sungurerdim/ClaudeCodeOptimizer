@@ -345,11 +345,20 @@ if (isUnattended) {
 
 **Build Q2 dynamically (max 4 tabs):**
 
+**Tab Philosophy:**
+| Tab | Source | Recommendation |
+|-----|--------|----------------|
+| Budget | AI (complexity detection) | AI-calculated from LOC/files/frameworks |
+| Output | AI (complexity detection) | AI-calculated from project size |
+| Data | User knowledge | No AI recommendation - user must choose |
+| Compliance | User knowledge | No AI recommendation - multiselect |
+
 **[CRITICAL] Q2 Label Requirements:**
 - Budget tab: Exactly ONE option has "(Recommended)" based on `aiRecommendations.budget`
 - Output tab: Exactly ONE option has "(Recommended)" based on `aiRecommendations.output`
+- Data tab: No (Recommended) - user must explicitly choose
+- Compliance tab: No (Recommended) - optional multiselect
 - When current equals recommended, show both: `[current] (Recommended)`
-- Every tab includes exactly one "(Recommended)" option
 
 ```javascript
   // Helper: Generate label with appropriate suffix
@@ -404,13 +413,14 @@ if (isUnattended) {
   })
 
   // Tab 3: Data Sensitivity
+  // No AI recommendation - user must explicitly choose based on their data
   questions.push({
     question: "Most sensitive data handled?",
     header: "Data",
     options: [
-      { label: "Public (Recommended)", description: "Open data, no sensitivity" },
-      { label: "PII", description: "Personal identifiable information" },
-      { label: "Regulated", description: "Healthcare, finance, regulated data" }
+      { label: "Public", description: "Open data, no sensitivity constraints" },
+      { label: "PII", description: "Personal identifiable information - stricter validation" },
+      { label: "Regulated", description: "Healthcare, finance - compliance-level security" }
     ],
     multiSelect: false
   })
@@ -442,24 +452,24 @@ Before calling AskUserQuestion for Q2, verify:
 [x] Output options contain exactly ONE "(Recommended)" label
 ```
 
-**Example for ~10K LOC project (like ClaudeCodeOptimizer):**
+**Example for ~10K LOC project:**
 ```javascript
-// Complexity: { loc: 9621, files: 32, frameworks: 3 }
-// → aiRecommendations = { budget: 8000, output: 25000 }
+// Complexity: { loc: {n}, files: {n}, frameworks: {n} }
+// → aiRecommendations = { budget: {budget_value}, output: {output_value} }
 
 // Budget options should be:
 { label: "4000", ... }
-{ label: "8000 (Recommended)", ... }  // ← AI recommendation
+{ label: "{budget_value} (Recommended)", ... }  // ← AI recommendation
 { label: "16000", ... }
 { label: "32000", ... }
 
 // Output options should be:
 { label: "10000", ... }
-{ label: "25000 (Recommended) (CC default)", ... }  // ← AI recommendation
+{ label: "{output_value} (Recommended) (CC default)", ... }  // ← AI recommendation
 { label: "35000", ... }
 
-// If current config has 35000:
-{ label: "35000 [current]", ... }  // Just [current], not recommended
+// If current config has different value:
+{ label: "{current_value} [current]", ... }  // Just [current], not recommended
 ```
 
 ### Post-Q2 Validation

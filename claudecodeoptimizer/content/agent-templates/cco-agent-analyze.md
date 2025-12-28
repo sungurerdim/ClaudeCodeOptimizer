@@ -643,7 +643,7 @@ function validateNoDuplication(contextMd) {
     "priority": "{user_priority}"
   },
   "triggeredCategories": [
-    { "category": "{category}", "trigger": "{trigger_code}", "rule": "{rule_file|null}", "source": "{auto|user|detected}" }
+    { "category": "{category}", "trigger": "{trigger_code}", "rule": "{rule_file|null}", "source": "auto|user" }
   ],
   "sources": [
     { "file": "{source_file}", "confidence": "{HIGH|MEDIUM|LOW}" }

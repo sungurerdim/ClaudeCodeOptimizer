@@ -164,8 +164,8 @@ if (isUnattended) {
       header: "Action",
       options: [
         { label: "Auto-fix safe (Recommended)", description: "Fix LOW risk, ask for others" },
-        { label: "Report only", description: "Show findings without fixing" },
-        { label: "Fix all", description: "Fix everything, no approval needed" }
+        { label: "Fix all", description: "Fix everything, no approval needed" },
+        { label: "Report only", description: "Show findings without fixing" }
       ],
       multiSelect: false
     }
@@ -240,6 +240,14 @@ if (isUnattended) {
   autoFixable = findings.filter(f => f.fixable)
   approvalRequired = []  // No approval in unattended mode
 }
+
+// Track counts at FINDING level (not location level)
+// These counts MUST be used consistently through summary
+counts = {
+  total: findings.length,
+  autoFixable: autoFixable.length,
+  approvalRequired: approvalRequired.length
+}
 ```
 
 **Display findings progressively (Interactive only):**
@@ -289,8 +297,17 @@ Summary:
 if (config.action !== "Report only" && autoFixable.length > 0) {
   autoFixTask = Task("cco-agent-apply", `
     fixes: ${JSON.stringify(autoFixable)}
+
     Apply all auto-fixable items. Verify each fix.
     Group by file for efficiency.
+
+    CRITICAL - Counting:
+    - Count FINDINGS, not locations
+    - Each finding = 1 item, regardless of how many locations it has
+    - Example: "Type ignore comments" with 3 locations = 1 finding
+
+    Return accounting at FINDING level:
+    { applied: <findings_fixed>, failed: <findings_failed>, total: <findings_attempted> }
   `, { run_in_background: true })
 }
 
@@ -433,10 +450,18 @@ if (autoFixTask) {
 
 // Then apply user-approved items
 if (approved.length > 0) {
-  Task("cco-agent-apply", `
+  approvedResults = Task("cco-agent-apply", `
     fixes: ${JSON.stringify(approved)}
+
     Apply user-approved items. Verify each fix.
     Handle cascading errors.
+
+    CRITICAL - Counting:
+    - Count FINDINGS, not locations
+    - Each finding = 1 item, regardless of how many locations it has
+
+    Return accounting at FINDING level:
+    { applied: <findings_fixed>, failed: <findings_failed>, total: <findings_attempted> }
   `)
 }
 ```
@@ -452,6 +477,33 @@ if (approved.length > 0) {
 
 ## Step-6: Summary
 
+### Calculate Final Counts [CRITICAL]
+
+```javascript
+// Calculate counts at FINDING level using tracked counts from Step-2
+// These MUST match the totals shown in Analysis Results
+
+// Auto-fixed findings (from Step-3)
+autoFixedCount = autoFixResults?.accounting?.applied || 0
+autoFixFailedCount = autoFixResults?.accounting?.failed || 0
+
+// User-approved findings (from Step-5)
+approvedFixedCount = approvedResults?.accounting?.applied || 0
+approvedFailedCount = approvedResults?.accounting?.failed || 0
+
+// Final accounting
+finalCounts = {
+  applied: autoFixedCount + approvedFixedCount,
+  declined: declined.length,
+  failed: autoFixFailedCount + approvedFailedCount,
+  total: counts.total  // From Step-2, MUST match Analysis Results total
+}
+
+// Consistency check - these MUST balance
+assert(finalCounts.applied + finalCounts.declined + finalCounts.failed === finalCounts.total,
+  "Count mismatch: applied + declined + failed must equal total from analysis")
+```
+
 ### Unattended Mode Output [--auto]
 
 **Single line summary only:**
@@ -459,10 +511,8 @@ if (approved.length > 0) {
 ```javascript
 if (isUnattended) {
   // ONLY output - single status line
-  const totalFixed = (autoFixResults?.accounting?.done || 0)
-  const totalFailed = (autoFixResults?.accounting?.fail || 0)
-  const status = totalFailed > 0 ? "WARN" : "OK"
-  console.log(`cco-optimize: ${status} | Fixed: ${totalFixed} | Failed: ${totalFailed} | Scopes: all`)
+  const status = finalCounts.failed > 0 ? "WARN" : "OK"
+  console.log(`cco-optimize: ${status} | Fixed: ${finalCounts.applied} | Failed: ${finalCounts.failed} | Scopes: all`)
   // No tables, no details, no stash reminder
   return
 }
@@ -477,12 +527,13 @@ let summary = `
 
 | Metric | Value |
 |--------|-------|
-| Auto-fixed | ${autoFixResults?.accounting?.done || 0} |
-| User-approved | ${approved.length} |
-| Declined | ${declined.length} |
-| Files modified | ${n} |
+| Auto-fixed | ${autoFixedCount} |
+| User-approved | ${approvedFixedCount} |
+| Declined | ${finalCounts.declined} |
+| Failed | ${finalCounts.failed} |
+| **Total findings** | **${finalCounts.total}** |
 
-Status: OK | Applied: ${totalFixed} | Declined: ${declined.length} | Failed: 0
+Status: ${finalCounts.failed > 0 ? "WARN" : "OK"} | Applied: ${finalCounts.applied} | Declined: ${finalCounts.declined} | Failed: ${finalCounts.failed} | Total: ${finalCounts.total}
 
 Run \`git diff\` to review changes.`
 
@@ -520,23 +571,27 @@ console.log(summary)
 
 ### Output Schema (when called as sub-command)
 
+**All counts are at FINDING level (not location level).**
+
 ```json
 {
   "accounting": {
-    "done": "{n}",
+    "applied": "{n}",
     "declined": "{n}",
-    "fail": "{n}",
+    "failed": "{n}",
     "total": "{n}"
   },
   "by_scope": {
     "security": "{n}",
     "quality": "{n}",
-    "hygiene": "{n}",
+    "architecture": "{n}",
     "bestPractices": "{n}"
   },
   "blockers": [{ "severity": "{P0-P1}", "title": "{title}", "location": "{file}:{line}" }]
 }
 ```
+
+**Accounting invariant:** `applied + declined + failed = total`
 
 ### Scope Coverage
 
@@ -590,3 +645,45 @@ console.log(summary)
 4. **Background auto-fix** - Run while user reviews approval
 5. **Single Recommended** - Each tab has one recommended option
 6. **Paginated approval** - Max 4 items per question
+7. **Counting consistency** - See Counting Principle below
+
+---
+
+## Counting Principle [CRITICAL]
+
+**All counts MUST be at the "finding" level throughout the entire flow.**
+
+### Definitions
+
+| Term | Definition | Example |
+|------|------------|---------|
+| **Finding** | A distinct issue identified by analysis | "Type ignore comments without documentation" |
+| **Location** | A specific file:line within a finding | `install_hook.py:168`, `install_hook.py:255` |
+
+### Rules
+
+1. **Analysis counts findings** - "4 issues found" means 4 distinct findings
+2. **Summary counts findings** - "Applied: 4" means 4 findings were addressed
+3. **Locations are internal detail** - Not shown in user-facing counts
+4. **Accounting formula** - `findings.applied + findings.declined + findings.failed = findings.total`
+
+### Consistency Check
+
+```javascript
+// At every step, these must be consistent:
+findingsTotal = findings.length                    // From Step-2
+findingsApplied = autoFixable.length + approved.length  // Fixed findings
+findingsDeclined = declined.length                 // User declined
+findingsFailed = failedFindings.length             // Could not fix
+
+// Invariant: applied + declined + failed = total
+assert(findingsApplied + findingsDeclined + findingsFailed === findingsTotal)
+```
+
+### Anti-patterns
+
+| Wrong | Right |
+|-------|-------|
+| "Applied: 8" (when 4 findings with 8 locations) | "Applied: 4" |
+| Counting locations in summary | Count findings only |
+| Agent returns `applied: 8` for 4 findings | Agent returns `applied: 4` |
