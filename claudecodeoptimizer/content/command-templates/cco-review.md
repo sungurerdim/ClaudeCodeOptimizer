@@ -58,9 +58,9 @@ TodoWrite([
 
 ```javascript
 // Dynamic model selection based on flags and context
-// --quick → haiku (speed), standard → haiku, large codebase (10K+) → sonnet (accuracy)
+// --quick → haiku (speed), standard → haiku, large codebase (10K+) → opus (accuracy)
 const analyzeModel = args.includes("--quick") ? "haiku"
-  : (context.scale === "10K+" || context.scale === "Large") ? "sonnet"
+  : (context.scale === "10K+" || context.scale === "Large") ? "opus"
   : "haiku"
 
 // Start comprehensive analysis - will filter by focus after Q1
@@ -268,33 +268,39 @@ totalFindings = doNow.length + plan.length + consider.length + backlog.length
 
 ### Pre-Apply Display [MANDATORY]
 
-**Display items to apply BEFORE execution:**
+**Display ALL items in toApply BEFORE execution:**
+
+```javascript
+let toApply = []
+let notSelected = []
+
+if (config.applyMode.includes("80/20") || config.applyMode.includes("Do Now")) {
+  toApply = doNow
+  notSelected = [...plan, ...consider, ...backlog]
+} else if (config.applyMode.includes("Full") || config.applyMode.includes("All")) {
+  toApply = [...doNow, ...plan, ...consider]
+  notSelected = backlog
+}
+
+// CRITICAL: Display ALL items in toApply, not just some priorities
+if (toApply.length > 0) {
+  console.log(formatApplyTable(toApply))  // Must show ALL toApply items
+}
+```
 
 ```markdown
 ## Applying Recommendations
 
+Mode: {applyMode}
+
 | # | Priority | Issue | Location | Action |
 |---|----------|-------|----------|--------|
-| 1 | Do Now | {title} | {file}:{line} | {recommendation} |
-| 2 | Do Now | {title} | {file}:{line} | {recommendation} |
-...
+{toApply.map((item, i) => `| ${i+1} | ${item.priority} | ${item.title} | ${item.location} | ${item.recommendation} |`)}
 
-Applying {n} recommendations...
+Selected: {toApply.length} | Not selected: {notSelected.length} | Total: {totalFindings}
+
+Applying {toApply.length} recommendations...
 ```
-
-```javascript
-let toApply = []
-
-if (config.applyMode.includes("80/20") || config.applyMode.includes("Do Now")) {
-  toApply = doNow
-} else if (config.applyMode.includes("Full") || config.applyMode.includes("All")) {
-  toApply = [...doNow, ...plan, ...consider]
-}
-
-// Display what will be applied
-if (toApply.length > 0) {
-  console.log(formatApplyTable(toApply))
-}
 
 if (toApply.length > 0) {
   applyResults = Task("cco-agent-apply", `
@@ -328,19 +334,29 @@ if (toApply.length > 0) {
 ### Calculate Final Counts [CRITICAL]
 
 ```javascript
-// Calculate counts at FINDING level
+// COUNTING STANDARD (same as cco-optimize)
+// - selected: items user chose to apply (toApply.length)
+// - notSelected: items user didn't choose (backlog, or lower priorities in 80/20 mode)
+// - applied: agent successfully fixed
+// - failed: agent couldn't fix (was selected but failed)
+//
+// Invariant: applied + notSelected + failed = total
+
 applied = applyResults?.accounting?.applied || 0
 failed = applyResults?.accounting?.failed || 0
-declined = totalFindings - toApply.length  // Findings not selected for apply
+notSelected = notSelected.length  // From Step-4: items not in toApply
 
-// By priority breakdown
-appliedDoNow = doNow.filter(f => wasApplied(f)).length
-declinedDoNow = doNow.length - appliedDoNow
-// ... same for plan, consider
+// Verify: selected items = applied + failed
+selectedCount = toApply.length
+assert(applied + failed === selectedCount,
+  `Selected ${selectedCount} but applied ${applied} + failed ${failed}`)
 
-// Consistency check
-assert(applied + declined + failed === totalFindings,
-  "Count mismatch: applied + declined + failed must equal totalFindings")
+// Verify: total accounting
+assert(applied + notSelected + failed === totalFindings,
+  "Count mismatch: applied + notSelected + failed must equal totalFindings")
+
+// By priority breakdown (for detailed table)
+// Each priority: how many were in toApply vs notSelected, and of those in toApply, how many applied/failed
 ```
 
 ```
@@ -353,16 +369,16 @@ assert(applied + declined + failed === totalFindings,
 | Files modified | {n} |
 | **Total findings** | **{totalFindings}** |
 
-Status: {OK\|WARN} | Applied: {applied} | Declined: {declined} | Failed: 0 | Total: {totalFindings}
+Status: {OK\|WARN} | Applied: {applied} | Not Selected: {notSelected} | Failed: {failed} | Total: {totalFindings}
 
-| Priority | Found | Applied | Declined |
-|----------|-------|---------|----------|
-| Do Now | {doNow.length} | {appliedDoNow} | {declinedDoNow} |
-| Plan | {plan.length} | {appliedPlan} | {declinedPlan} |
-| Consider | {consider.length} | {appliedConsider} | {declinedConsider} |
-| Backlog | {backlog.length} | 0 | {backlog.length} |
+| Priority | Found | Selected | Applied | Failed |
+|----------|-------|----------|---------|--------|
+| Do Now | {doNow.length} | {selectedDoNow} | {appliedDoNow} | {failedDoNow} |
+| Plan | {plan.length} | {selectedPlan} | {appliedPlan} | {failedPlan} |
+| Consider | {consider.length} | {selectedConsider} | {appliedConsider} | {failedConsider} |
+| Backlog | {backlog.length} | 0 | 0 | 0 |
 
-**Accounting invariant:** applied + declined + failed = total
+**Accounting:** selected = applied + failed | applied + notSelected + failed = total
 
 Run `git diff` to review changes.
 ```
@@ -398,7 +414,7 @@ Run `git diff` to review changes.
   },
   "doNow": [{ "title": "{title}", "location": "{file}:{line}" }],
   "plan": [{ "title": "{title}", "location": "{file}:{line}" }],
-  "issues": [{ "severity": "{P0-P3}", "title": "{title}", "location": "{file}:{line}" }]
+  "issues": [{ "severity": "{CRITICAL|HIGH|MEDIUM|LOW}", "title": "{title}", "location": "{file}:{line}" }]
 }
 ```
 
@@ -434,7 +450,7 @@ When `--quick` flag:
 
 | Agent | Model | Reason |
 |-------|-------|--------|
-| cco-agent-analyze | Dynamic | --quick/standard → Haiku (fast); 10K+ scale → Sonnet (accuracy) |
+| cco-agent-analyze | Dynamic | --quick/standard → Haiku (fast); 10K+ scale → Opus (accuracy) |
 | cco-agent-apply | Opus | 50-75% fewer tool errors, coding SOTA |
 
 ### Threshold Rationale
@@ -474,3 +490,33 @@ When `--quick` flag:
 5. **Evidence required** - Every recommendation needs file:line reference
 6. **Progressive display** - Show foundation assessment as it completes
 7. **Dependency audit** - Always check for outdated packages and security advisories
+8. **Counting consistency** - See Counting Principle in cco-tools.md
+
+---
+
+## Counting Principle
+
+**Reference:** See `cco-tools.md` → Counting Principle for full rules.
+
+**This command uses:** `applied + notSelected + failed = total`
+
+```javascript
+// Review-specific accounting:
+selected = toApply.length           // Items user chose to apply
+notSelected = total - selected      // Items user didn't choose
+applied = applyResults.applied      // Agent successfully fixed
+failed = selected - applied         // Agent couldn't fix
+
+// Invariant 1: selected + notSelected = total
+// Invariant 2: applied + failed = selected
+// Invariant 3: applied + notSelected + failed = total
+```
+
+### Display Requirements
+
+| Stage | What to Show | Count Source |
+|-------|--------------|--------------|
+| Pre-Apply table | ALL items in toApply | `toApply.length` |
+| "Applying N..." | Exact toApply count | `toApply.length` |
+| Summary status | applied, notSelected, failed | From calculations above |
+| Priority breakdown | Per-priority: selected, applied, failed | Filter by priority |

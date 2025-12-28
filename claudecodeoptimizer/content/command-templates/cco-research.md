@@ -69,7 +69,7 @@ if (flags.quick || flags.standard || flags.deep) {
 | Depth | Parallel Agents | Model Strategy |
 |-------|-----------------|----------------|
 | Quick | 3 | All Haiku |
-| Standard | 5 | Haiku search, Sonnet synthesis |
+| Standard | 5 | Haiku search, Opus synthesis |
 | Deep | 7+ | Haiku search, Opus synthesis |
 
 ### Validation
@@ -233,9 +233,9 @@ supportingEvidence = aggregateByTier(t3PlusSources)
 |------|--------|-------|
 | Dedupe | Remove duplicate sources | None (logic) |
 | Tier | Assign confidence by source | None (rules) |
-| Conflict | Resolve contradictions | Opus/Sonnet |
-| Gaps | Identify missing info | Sonnet |
-| Recommend | Generate actionable advice | Opus/Sonnet |
+| Conflict | Resolve contradictions | Opus |
+| Gaps | Identify missing info | Haiku |
+| Recommend | Generate actionable advice | Opus |
 
 ### Early Saturation
 
@@ -358,7 +358,7 @@ Confidence: {confidence} ({n} T1 sources agree) | Saturation: {saturation}%
 | Flag | Effect |
 |------|--------|
 | `--quick` | 3 parallel, T1-T2, Haiku only, no question |
-| `--standard` | 5 parallel, T1-T4, Sonnet synthesis, no question |
+| `--standard` | 5 parallel, T1-T4, Opus synthesis, no question |
 | `--deep` | 7+ parallel, all tiers, Opus synthesis, resumable, no question |
 | `--local` | Local Glob/Grep only, no web |
 | `--changelog` | Focus on releases |
@@ -373,9 +373,9 @@ Confidence: {confidence} ({n} T1 sources agree) | Saturation: {saturation}%
 
 | Tier | Sources | Score | Model |
 |------|---------|-------|-------|
-| T1 | Official docs, specs | 90-100 | Opus (deep) |
-| T2 | GitHub, changelogs | 80-90 | Opus (deep) |
-| T3 | Major blogs, tutorials | 70-80 | Sonnet |
+| T1 | Official docs, specs | 90-100 | Opus |
+| T2 | GitHub, changelogs | 80-90 | Opus |
+| T3 | Major blogs, tutorials | 70-80 | Haiku |
 | T4 | Stack Overflow, forums | 60-70 | Haiku |
 | T5 | Personal blogs | 50-60 | Haiku |
 | T6 | Unknown | 40-50 | Skip |
@@ -386,8 +386,8 @@ Confidence: {confidence} ({n} T1 sources agree) | Saturation: {saturation}%
 |------|--------------|-----------------|-------------|
 | Search | Haiku | Haiku | Haiku |
 | Fetch | Haiku | Haiku | Haiku |
-| T1-T2 Synthesis | Haiku | Sonnet | Opus |
-| Recommendation | Haiku | Sonnet | Opus |
+| T1-T2 Synthesis | Haiku | Opus | Opus |
+| Recommendation | Haiku | Opus | Opus |
 
 ---
 

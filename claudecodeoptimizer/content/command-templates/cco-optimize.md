@@ -16,7 +16,7 @@ model: opus
   - **No progress output** - silent execution
   - **Only final summary** - single status line at end
   - Defaults:
-    - Scopes: ALL (security, quality, architecture, best-practices)
+    - Scopes: ALL (security, quality, hygiene, best-practices)
     - Action: Fix all (no approval needed)
     - Git state: Continue anyway
 - `--security`: Security scope only
@@ -68,9 +68,9 @@ if (isUnattended) {
   // Skip Q1, Q2 - proceed directly with full scope and fix all
 
   config = {
-    scopes: ["security", "quality", "architecture", "best-practices"],  // ALL scopes
-    action: "Fix all",                                                   // No approval needed
-    gitState: "Continue anyway"                                          // Don't stash
+    scopes: ["security", "quality", "hygiene", "best-practices"],  // ALL scopes
+    action: "Fix all",                                              // No approval needed
+    gitState: "Continue anyway"                                     // Don't stash
   }
 
   // Execute silently:
@@ -123,6 +123,7 @@ if (!isUnattended) {
 gitDirty = gitStatus.trim().length > 0
 
 // Start analysis with all scopes - will filter after Q1 (or use all if --auto)
+// Scopes: security (OWASP, secrets), quality (complexity, types), hygiene (dead code, orphans), best-practices (patterns)
 analysisTask = Task("cco-agent-analyze", `
   scopes: ["security", "quality", "hygiene", "best-practices"]
 
@@ -153,9 +154,9 @@ if (isUnattended) {
       header: "Scope",
       options: [
         { label: "Security (Recommended)", description: "OWASP, secrets, CVEs, input validation" },
-        { label: "Quality", description: "Tech debt, type errors, test gaps" },
-        { label: "Architecture", description: "SOLID violations, coupling, patterns" },
-        { label: "Best Practices", description: "Resource management, consistency" }
+        { label: "Quality", description: "Complexity, type errors, code smells" },
+        { label: "Hygiene", description: "Dead code, unused imports, orphan files" },
+        { label: "Best Practices", description: "Error handling, naming, patterns" }
       ],
       multiSelect: true
     },
@@ -264,7 +265,7 @@ if (!isUnattended) {
 |-------|----------|------|--------|-----|----------|
 | Security | {n} | {n} | {n} | {n} | {n} |
 | Quality | {n} | {n} | {n} | {n} | {n} |
-| Architecture | {n} | {n} | {n} | {n} | {n} |
+| Hygiene | {n} | {n} | {n} | {n} | {n} |
 | Best Practices | {n} | {n} | {n} | {n} | {n} |
 | **Total** | **{n}** | **{n}** | **{n}** | **{n}** | **{n}** |
 
@@ -330,18 +331,21 @@ if (config.action !== "Report only" && autoFixable.length > 0) {
 
 ### Pre-Confirmation Display [MANDATORY - Interactive only]
 
-**Display issues table BEFORE asking approval question:**
+**Display ALL items in approvalRequired BEFORE asking approval question:**
+
+```javascript
+// CRITICAL: Display ALL items, not just some severities
+console.log(formatApprovalTable(approvalRequired))  // Must show ALL items
+```
 
 ```markdown
 ## Issues Requiring Approval
 
 | # | Severity | Issue | Location | Fix |
 |---|----------|-------|----------|-----|
-| 1 | [P0] | {title} | {file}:{line} | {fix_action} |
-| 2 | [P1] | {title} | {file}:{line} | {fix_action} |
-...
+{approvalRequired.map((item, i) => `| ${i+1} | [${item.severity}] | ${item.title} | ${item.location} | ${item.fix} |`)}
 
-Total: {n} issues requiring approval
+Total: {approvalRequired.length} issues requiring approval
 ```
 
 ```javascript
@@ -480,16 +484,35 @@ if (approved.length > 0) {
 ### Calculate Final Counts [CRITICAL]
 
 ```javascript
-// Calculate counts at FINDING level using tracked counts from Step-2
-// These MUST match the totals shown in Analysis Results
+// COUNTING STANDARD
+// - total: all findings from analysis (autoFixable + approvalRequired)
+// - applied: successfully fixed (autoFixed + approvedFixed)
+// - declined: user explicitly declined in Q2 approval
+// - failed: couldn't fix (autoFailed + approvedFailed)
+//
+// Invariants:
+// 1. autoFixable.length = autoFixedCount + autoFixFailedCount
+// 2. approved.length = approvedFixedCount + approvedFailedCount
+// 3. approvalRequired.length = approved.length + declined.length
+// 4. applied + declined + failed = total
 
 // Auto-fixed findings (from Step-3)
 autoFixedCount = autoFixResults?.accounting?.applied || 0
 autoFixFailedCount = autoFixResults?.accounting?.failed || 0
 
+// Verify: auto-fix accounting
+assert(autoFixedCount + autoFixFailedCount === autoFixable.length,
+  `Auto-fix mismatch: ${autoFixedCount} + ${autoFixFailedCount} != ${autoFixable.length}`)
+
 // User-approved findings (from Step-5)
 approvedFixedCount = approvedResults?.accounting?.applied || 0
 approvedFailedCount = approvedResults?.accounting?.failed || 0
+
+// Verify: approved accounting (if approval was requested)
+if (approved.length > 0) {
+  assert(approvedFixedCount + approvedFailedCount === approved.length,
+    `Approved mismatch: ${approvedFixedCount} + ${approvedFailedCount} != ${approved.length}`)
+}
 
 // Final accounting
 finalCounts = {
@@ -499,7 +522,7 @@ finalCounts = {
   total: counts.total  // From Step-2, MUST match Analysis Results total
 }
 
-// Consistency check - these MUST balance
+// Final verification - these MUST balance
 assert(finalCounts.applied + finalCounts.declined + finalCounts.failed === finalCounts.total,
   "Count mismatch: applied + declined + failed must equal total from analysis")
 ```
@@ -584,10 +607,10 @@ console.log(summary)
   "by_scope": {
     "security": "{n}",
     "quality": "{n}",
-    "architecture": "{n}",
+    "hygiene": "{n}",
     "bestPractices": "{n}"
   },
-  "blockers": [{ "severity": "{P0-P1}", "title": "{title}", "location": "{file}:{line}" }]
+  "blockers": [{ "severity": "{CRITICAL|HIGH}", "title": "{title}", "location": "{file}:{line}" }]
 }
 ```
 
@@ -645,45 +668,22 @@ console.log(summary)
 4. **Background auto-fix** - Run while user reviews approval
 5. **Single Recommended** - Each tab has one recommended option
 6. **Paginated approval** - Max 4 items per question
-7. **Counting consistency** - See Counting Principle below
+7. **Counting consistency** - See Counting Principle in cco-tools.md
 
 ---
 
-## Counting Principle [CRITICAL]
+## Counting Principle
 
-**All counts MUST be at the "finding" level throughout the entire flow.**
+**Reference:** See `cco-tools.md` → Counting Principle for full rules.
 
-### Definitions
-
-| Term | Definition | Example |
-|------|------------|---------|
-| **Finding** | A distinct issue identified by analysis | "Type ignore comments without documentation" |
-| **Location** | A specific file:line within a finding | `install_hook.py:168`, `install_hook.py:255` |
-
-### Rules
-
-1. **Analysis counts findings** - "4 issues found" means 4 distinct findings
-2. **Summary counts findings** - "Applied: 4" means 4 findings were addressed
-3. **Locations are internal detail** - Not shown in user-facing counts
-4. **Accounting formula** - `findings.applied + findings.declined + findings.failed = findings.total`
-
-### Consistency Check
+**This command uses:** `applied + declined + failed = total`
 
 ```javascript
-// At every step, these must be consistent:
-findingsTotal = findings.length                    // From Step-2
+// Optimize-specific accounting:
 findingsApplied = autoFixable.length + approved.length  // Fixed findings
-findingsDeclined = declined.length                 // User declined
-findingsFailed = failedFindings.length             // Could not fix
+findingsDeclined = declined.length                      // User declined
+findingsFailed = failedFindings.length                  // Could not fix
 
 // Invariant: applied + declined + failed = total
 assert(findingsApplied + findingsDeclined + findingsFailed === findingsTotal)
 ```
-
-### Anti-patterns
-
-| Wrong | Right |
-|-------|-------|
-| "Applied: 8" (when 4 findings with 8 locations) | "Applied: 4" |
-| Counting locations in summary | Count findings only |
-| Agent returns `applied: 8` for 4 findings | Agent returns `applied: 4` |

@@ -85,7 +85,7 @@ Grep("{complexity_patterns}")     // message
 | Tech Debt | Complexity, dead code, TODO count |
 | Cleanliness | Orphans, duplicates, stale refs |
 
-**Status:** 90-100: OK │ 70-89: WARN │ 50-69: FAIL │ 0-49: CRITICAL
+**Status:** 80-100: OK │ 60-79: WARN │ 40-59: FAIL │ 0-39: CRITICAL
 
 **Note:** No historical tracking - each run is independent snapshot.
 
@@ -409,14 +409,14 @@ Reference source files directly to ensure accuracy (SSOT principle).
 
 **Documentation Fallback (when code sparse):**
 
-| Source | What to Extract |
-|--------|-----------------|
-| {readme} | {tech_badges}, {tech_stack_section} |
-| {contributing} | {dev_tools}, {test_commands} |
-| {docs_dir} | {architecture_docs} |
-| {manifest_desc} | {project_description} |
+| Source File | What to Extract |
+|-------------|-----------------|
+| `README.md` | Tech stack badges, framework mentions |
+| `CONTRIBUTING.md` | Dev tools, test commands |
+| `docs/` | Architecture patterns, API references |
+| `pyproject.toml`/`package.json` (description) | Project type hints |
 
-Mark as `[from docs]` with `confidence: LOW`.
+Mark findings as `[from docs]` with `confidence: LOW`.
 
 ##### Confidence Scoring
 
