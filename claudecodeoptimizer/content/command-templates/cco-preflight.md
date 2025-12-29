@@ -1,7 +1,7 @@
 ---
 name: cco-preflight
 description: Pre-release checks and workflow
-allowed-tools: Read(*), Grep(*), Glob(*), Edit(*), Bash(git:*), Bash(pytest:*), Bash(npm:*), Task(*), TodoWrite, AskUserQuestion
+allowed-tools: Read(*), Grep(*), Glob(*), Edit(*), Bash(*), Task(*), TodoWrite, AskUserQuestion
 ---
 
 # /cco-preflight
@@ -213,19 +213,23 @@ reviewTask = Task("general-purpose", `
 
 ## Step-3: Verification [BACKGROUND]
 
-**Start all verification in background:**
+**Start all verification in background (full project):**
 
 ```javascript
-// Commands from context.md Operational section
+// Commands from context.md Operational section - FULL PROJECT
+formatTask = Bash("{format_command} 2>&1", { run_in_background: true })
+lintTask = Bash("{lint_command} 2>&1", { run_in_background: true })
+typeTask = Bash("{type_command} 2>&1", { run_in_background: true })
 testTask = Bash("{test_command} 2>&1", { run_in_background: true })
 buildTask = Bash("{build_command} 2>&1", { run_in_background: true })
-lintTask = Bash("{lint_command} 2>&1", { run_in_background: true })
 
 // Store task IDs
 verificationTasks = {
+  format: formatTask.id,
+  lint: lintTask.id,
+  type: typeTask.id,
   test: testTask.id,
-  build: buildTask.id,
-  lint: lintTask.id
+  build: buildTask.id
 }
 ```
 
@@ -294,10 +298,15 @@ changelogEntry = generateChangelogEntry(classified, suggestedVersion)
 // Collect all background results
 qualityResults = await TaskOutput(qualityTask.id)
 reviewResults = await TaskOutput(reviewTask.id)
+formatResults = await TaskOutput(verificationTasks.format)
+lintResults = await TaskOutput(verificationTasks.lint)
+typeResults = await TaskOutput(verificationTasks.type)
 testResults = await TaskOutput(verificationTasks.test)
 buildResults = await TaskOutput(verificationTasks.build)
-lintResults = await TaskOutput(verificationTasks.lint)
 depResults = await TaskOutput(depTask.id)
+
+// Check if format made changes (needs re-stage)
+formatChanged = formatResults.stdout?.includes("reformatted") || formatResults.stdout?.includes("fixed")
 
 // Aggregate blockers and warnings
 allBlockers = [
@@ -305,6 +314,7 @@ allBlockers = [
   ...(qualityResults.blockers || []),
   ...(testResults.exitCode !== 0 ? [{ type: "TESTS", message: "Tests failed" }] : []),
   ...(buildResults.exitCode !== 0 ? [{ type: "BUILD", message: "Build failed" }] : []),
+  ...(typeResults.exitCode !== 0 ? [{ type: "TYPES", message: "Type errors found" }] : []),
   // Security advisories are blockers
   ...(depResults.security || []).map(s => ({ type: "SECURITY", message: `${s.package}: ${s.advisory} (${s.cve})` }))
 ]
@@ -312,6 +322,7 @@ allBlockers = [
 allWarnings = [
   ...preflight.warnings,
   ...(lintResults.exitCode !== 0 ? [{ type: "LINT", message: "Lint warnings" }] : []),
+  ...(formatChanged ? [{ type: "FORMAT", message: "Files reformatted - review changes" }] : []),
   ...(reviewResults.issues || []),
   // Outdated packages are warnings
   ...(depResults.outdated || []).map(d => ({ type: "OUTDATED", message: `${d.package}: ${d.current} → ${d.latest}` }))

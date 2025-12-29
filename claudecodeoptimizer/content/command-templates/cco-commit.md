@@ -1,7 +1,7 @@
 ---
 name: cco-commit
 description: Atomic commits with quality gates
-allowed-tools: Bash(git:*), Bash(ruff:*), Bash(npm:*), Bash(pytest:*), Read(*), Grep(*), Edit(*), TodoWrite, AskUserQuestion
+allowed-tools: Read(*), Grep(*), Edit(*), Bash(*), TodoWrite, AskUserQuestion
 model: opus
 ---
 

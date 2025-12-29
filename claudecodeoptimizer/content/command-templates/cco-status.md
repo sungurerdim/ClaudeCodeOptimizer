@@ -1,7 +1,7 @@
 ---
 name: cco-status
 description: Project health dashboard
-allowed-tools: Read(*), Grep(*), Glob(*), Bash(git:*), Task(*), TodoWrite
+allowed-tools: Read(*), Grep(*), Glob(*), Bash(*), Task(*), TodoWrite
 ---
 
 # /cco-status

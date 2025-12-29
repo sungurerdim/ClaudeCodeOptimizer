@@ -1,7 +1,7 @@
 ---
 name: cco-review
 description: Architecture review with pragmatic optimization
-allowed-tools: Read(*), Grep(*), Glob(*), Bash(git:*), Edit(*), Task(*), TodoWrite, AskUserQuestion
+allowed-tools: Read(*), Grep(*), Glob(*), Edit(*), Bash(*), Task(*), TodoWrite, AskUserQuestion
 model: opus
 ---
 
