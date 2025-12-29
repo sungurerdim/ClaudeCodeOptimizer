@@ -34,40 +34,11 @@ model: opus
 
 ## Core Principle [CRITICAL]
 
-**Fix everything that can be fixed.** All issues fall into:
-1. **Auto-fix**: Safe to apply without asking (background)
-2. **Approval Required**: Ask user, then fix if approved
+**Fix everything that can be fixed.** Auto-fix safe items, ask approval for risky ones.
 
-## Fix-All Behavior [CRITICAL]
+## Fix-All Mode
 
-When `--fix-all` flag OR "Fix all" action is selected:
-
-**MANDATORY:**
-1. **Zero Skipping**: Agent MUST NOT skip, decline, or defer ANY finding
-2. **No Self-Declining**: Agent cannot decide a fix is "too complex" - that's user's decision
-3. **Ask for Complex**: If fix requires significant refactoring (>50 lines changed), ASK user:
-   ```javascript
-   AskUserQuestion([{
-     question: `Fix "${finding.title}" requires significant changes (~${estimatedLines} lines). Proceed?`,
-     header: "Complex Fix",
-     options: [
-       { label: "Yes, apply fix (Recommended)", description: "Agent will implement the fix" },
-       { label: "Skip this one", description: "Move to next finding" }
-     ],
-     multiSelect: false
-   }])
-   ```
-4. **Only Technical Impossibility**: Only skip if technically impossible (e.g., missing dependency, file locked)
-5. **Report All Skips**: Any skipped item MUST appear in failed count with clear reason
-
-**Accounting in Fix-All Mode:**
-```javascript
-// In fix-all mode: declined should always be 0
-// User explicitly chose "fix all" - no agent-initiated declines
-if (config.action === "Fix all") {
-  assert(declined.length === 0, "Fix-all mode: agent should not decline items")
-}
-```
+When `--fix-all` flag: Zero skip, zero decline. Complex fix (>50 lines) → ask user. Only technical impossibility = fail. Accounting: `declined = 0` always.
 
 ## Context
 
@@ -792,22 +763,10 @@ console.log(summary)
 4. **Background auto-fix** - Run while user reviews approval
 5. **Single Recommended** - Each tab has one recommended option
 6. **Paginated approval** - Max 4 items per question
-7. **Counting consistency** - See Counting Principle in cco-tools.md
+7. **Counting consistency** - Count findings, not locations
 
 ---
 
-## Counting Principle
+## Accounting
 
-**Reference:** See `cco-tools.md` → Counting Principle for full rules.
-
-**This command uses:** `applied + declined + failed = total`
-
-```javascript
-// Optimize-specific accounting:
-findingsApplied = autoFixable.length + approved.length  // Fixed findings
-findingsDeclined = declined.length                      // User declined
-findingsFailed = failedFindings.length                  // Could not fix
-
-// Invariant: applied + declined + failed = total
-assert(findingsApplied + findingsDeclined + findingsFailed === findingsTotal)
-```
+**Invariant:** `applied + declined + failed = total` (count findings, not locations)
