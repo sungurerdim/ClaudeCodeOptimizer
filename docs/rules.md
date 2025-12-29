@@ -4,12 +4,12 @@
 
 ## Summary
 
-| Category | Rules | Location | Loading |
-|----------|-------|----------|---------|
-| Core | 73 | `~/.claude/rules/cco/core.md` | Always active |
-| AI | 37 | `~/.claude/rules/cco/ai.md` | Always active |
-| Adaptive | 1554 | pip package → `.claude/rules/cco/` | Per-project |
-| **Total** | **1664** | | |
+| Category     | Rules    | Location                           | Loading       |
+|--------------|----------|------------------------------------|---------------|
+| Core         | 73       | `~/.claude/rules/cco/core.md`      | Always active |
+| AI           | 37       | `~/.claude/rules/cco/ai.md`        | Always active |
+| Adaptive     | 1554     | pip package → `.claude/rules/cco/` | Per-project   |
+| **Total**    | **1664** |                                    |               |
 
 *Note: Tool rules (workflow mechanisms) are embedded directly in command/agent templates.*
 
@@ -379,22 +379,22 @@
 
 ### Detection Types
 
-| Type | Method | Example |
-|------|--------|---------|
-| **Auto-Detect** | Manifest/code scan | Language, API, Database, Dependencies |
-| **User-Input** | AskUserQuestion | Team, Scale, Data, Compliance, Testing, SLA |
-| **Guidelines** | context.md only | Maturity, Breaking, Priority |
+| Type            | Method            | Example                                      |
+|-----------------|-------------------|----------------------------------------------|
+| **Auto-Detect** | Manifest/code scan | Language, API, Database, Dependencies        |
+| **User-Input**  | AskUserQuestion   | Team, Scale, Data, Compliance, Testing, SLA  |
+| **Guidelines**  | context.md only   | Maturity, Breaking, Priority                 |
 
 ### User-Input Elements
 
-| Element | Options | Default | Affects |
-|---------|---------|---------|---------|
-| Team | Solo; 2-5; 6+ | Solo | Team rules |
-| Scale | Prototype; Small (100+); Medium (1K+); Large (10K+) | Small | Scale rules |
-| Data | Public; PII; Regulated | Public | Security rules |
-| Compliance | None; SOC2; HIPAA; PCI; GDPR; CCPA; ISO27001; FedRAMP; DORA; HITRUST | None | Compliance rules |
-| Testing | Basics (60%); Standard (80%); Full (90%) | Standard | Testing rules |
-| SLA | None; 99%; 99.9%; 99.99% | None | Observability rules |
+| Element    | Options                                                              | Default  | Affects            |
+|------------|----------------------------------------------------------------------|----------|--------------------|
+| Team       | Solo; 2-5; 6+                                                        | Solo     | Team rules         |
+| Scale      | Prototype; Small (100+); Medium (1K+); Large (10K+)                  | Small    | Scale rules        |
+| Data       | Public; PII; Regulated                                               | Public   | Security rules     |
+| Compliance | None; SOC2; HIPAA; PCI; GDPR; CCPA; ISO27001; FedRAMP; DORA; HITRUST | None     | Compliance rules   |
+| Testing    | Basics (60%); Standard (80%); Full (90%)                             | Standard | Testing rules      |
+| SLA        | None; 99%; 99.9%; 99.99%                                             | None     | Observability rules |
 
 #### User-Input Descriptions
 
@@ -438,11 +438,11 @@
 
 ### Guidelines (context.md only)
 
-| Element | Options | Purpose |
-|---------|---------|---------|
-| Maturity | Prototype; Active; Stable; Legacy | Refactoring aggressiveness |
-| Breaking | Allowed; Minimize; Never | API versioning approach |
-| Priority | Speed; Balanced; Quality; Security | Development focus |
+| Element  | Options                            | Purpose                    |
+|----------|------------------------------------|----------------------------|
+| Maturity | Prototype; Active; Stable; Legacy  | Refactoring aggressiveness |
+| Breaking | Allowed; Minimize; Never           | API versioning approach    |
+| Priority | Speed; Balanced; Quality; Security | Development focus          |
 
 **Maturity:** Project development stage? (guideline only)
 - **Prototype**: Proof of concept, may be discarded
@@ -467,13 +467,13 @@
 
 **Cumulative tiers:** Higher tiers include all rules from lower tiers.
 
-| Category | Tiers | Behavior |
-|----------|-------|----------|
-| Scale | Small → Medium → Large | Large includes Medium + Small |
-| Testing | Basics → Standard → Full | Full includes Standard + Basics |
-| Observability | Basics → Standard → HA → Critical | Each includes lower tiers |
-| Team | Small → Large | Large includes Small |
-| Real-time | Basic → Low-latency | Higher includes lower |
+| Category      | Tiers                              | Behavior                         |
+|---------------|------------------------------------|----------------------------------|
+| Scale         | Small → Medium → Large             | Large includes Medium + Small    |
+| Testing       | Basics → Standard → Full           | Full includes Standard + Basics  |
+| Observability | Basics → Standard → HA → Critical  | Each includes lower tiers        |
+| Team          | Small → Large                      | Large includes Small             |
+| Real-time     | Basic → Low-latency                | Higher includes lower            |
 
 ### Categories & Triggers
 
@@ -1136,10 +1136,10 @@
 
 ### Format Comparison
 
-| Format | Target | Core | AI | Tool | Adaptive |
-|--------|--------|------|-----|------|----------|
-| **AGENTS.md** | Universal (Codex, Cursor, Copilot, Cline, etc.) | Yes | Yes | No | Yes (triggered) |
-| **CLAUDE.md** | Claude Code only | Yes | Yes | Yes | Yes (triggered) |
+| Format        | Target                                          | Core | AI  | Tool | Adaptive        |
+|---------------|-------------------------------------------------|------|-----|------|-----------------|
+| **AGENTS.md** | Universal (Codex, Cursor, Copilot, Cline, etc.) | Yes  | Yes | No   | Yes (triggered) |
+| **CLAUDE.md** | Claude Code only                                | Yes  | Yes | Yes  | Yes (triggered) |
 
 ### Why AGENTS.md Excludes Tool Rules
 
@@ -1152,12 +1152,12 @@ Tool rules depend on Claude Code specific features:
 
 AGENTS.md export filters Claude-specific content for cross-tool compatibility:
 
-| Category | Filtered | Reason |
-|----------|----------|--------|
-| Tool names | `Read`, `Write`, `Edit`, `Bash`, `Task`, etc. | Claude Code specific |
-| Paths | `~/.claude/`, `.claude/` | Claude directory structure |
-| Product refs | "Claude Code", "Claude" | Vendor-specific |
-| CCO refs | `cco-*`, `/cco-*` | CCO-specific features |
+| Category     | Filtered                                     | Reason                       |
+|--------------|----------------------------------------------|------------------------------|
+| Tool names   | `Read`, `Write`, `Edit`, `Bash`, `Task`, etc. | Claude Code specific         |
+| Paths        | `~/.claude/`, `.claude/`                     | Claude directory structure   |
+| Product refs | "Claude Code", "Claude"                      | Vendor-specific              |
+| CCO refs     | `cco-*`, `/cco-*`                            | CCO-specific features        |
 
 Model-agnostic principles (DRY, Fail-Fast, Read-First) are preserved.
 

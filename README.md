@@ -17,12 +17,12 @@ Same prompts, better outcomes. Fewer errors. Fewer surprises.
 
 ## Why CCO?
 
-| Without CCO | With CCO |
-|-------------|----------|
-| Claude applies generic patterns | Claude applies **domain-specific best practices** |
-| No pre-action safety checks | Git status check, approval flow, clean state for rollback |
-| Silent changes | `Applied: 5 | Skipped: 2 | Failed: 0` accounting |
-| "Add caching somewhere" | "Use TTL + invalidation for this data fetch" |
+| Without CCO                     | With CCO                                                  |
+|---------------------------------|-----------------------------------------------------------|
+| Claude applies generic patterns | Claude applies **domain-specific best practices**         |
+| No pre-action safety checks     | Git status check, approval flow, clean state for rollback |
+| Silent changes                  | `Applied: 5 | Skipped: 2 | Failed: 0` accounting          |
+| "Add caching somewhere"         | "Use TTL + invalidation for this data fetch"              |
 
 **CCO doesn't teach Claude to code** — Opus 4.5 already knows how. CCO adds the safety layer between intent and action.
 
@@ -53,36 +53,36 @@ Then in Claude Code:
 
 ## Who Is It For?
 
-| Role | Benefit |
-|------|---------|
-| **Solo developer** | Safety net when moving fast |
-| **Senior engineer** | Consistent patterns across AI sessions |
-| **Tech lead** | Team-wide standards enforcement |
-| **AI-assisted teams** | Predictable, auditable AI behavior |
+| Role                  | Benefit                                 |
+|-----------------------|-----------------------------------------|
+| **Solo developer**    | Safety net when moving fast             |
+| **Senior engineer**   | Consistent patterns across AI sessions  |
+| **Tech lead**         | Team-wide standards enforcement         |
+| **AI-assisted teams** | Predictable, auditable AI behavior      |
 
 ## Safety Features
 
-| Safe (auto-apply) | Risky (require approval) |
-|-------------------|--------------------------|
-| Remove unused imports | Auth/CSRF changes |
-| Parameterize SQL | DB schema changes |
-| Move secrets to env | API contract changes |
+| Safe (auto-apply)       | Risky (require approval) |
+|-------------------------|--------------------------|
+| Remove unused imports   | Auth/CSRF changes        |
+| Parameterize SQL        | DB schema changes        |
+| Move secrets to env     | API contract changes     |
 
 **Accounting:** Every action reports `Applied: N | Skipped: N | Failed: N`
 
 <details>
 <summary><b>Commands (8 available)</b></summary>
 
-| Command | Purpose |
-|---------|---------|
-| `/cco-config` | Project setup: detection + settings + export |
-| `/cco-status` | Health dashboard with scores |
-| `/cco-optimize` | Security + Quality + Hygiene fixes |
-| `/cco-review` | Architecture analysis |
-| `/cco-commit` | Quality-gated atomic commits |
-| `/cco-research` | Multi-source research with reliability scoring |
-| `/cco-preflight` | Pre-release workflow |
-| `/cco-checkup` | Regular maintenance |
+| Command          | Purpose                                        |
+|------------------|------------------------------------------------|
+| `/cco-config`    | Project setup: detection + settings + export   |
+| `/cco-status`    | Health dashboard with scores                   |
+| `/cco-optimize`  | Security + Quality + Hygiene fixes             |
+| `/cco-review`    | Architecture analysis                          |
+| `/cco-commit`    | Quality-gated atomic commits                   |
+| `/cco-research`  | Multi-source research with reliability scoring |
+| `/cco-preflight` | Pre-release workflow                           |
+| `/cco-checkup`   | Regular maintenance                            |
 
 See [Commands documentation](docs/commands.md) for flags and examples.
 
@@ -91,11 +91,11 @@ See [Commands documentation](docs/commands.md) for flags and examples.
 <details>
 <summary><b>Rules System (1664 rules)</b></summary>
 
-| Category | Count | When Loaded |
-|----------|-------|-------------|
-| Core | 73 | Always (fundamental principles) |
-| AI | 37 | Always (behavior patterns) |
-| Adaptive | 1554 | Per-project (stack-specific) |
+| Category | Count | When Loaded                     |
+|----------|-------|---------------------------------|
+| Core     | 73    | Always (fundamental principles) |
+| AI       | 37    | Always (behavior patterns)      |
+| Adaptive | 1554  | Per-project (stack-specific)    |
 
 **Supported:** Python, TypeScript, Go, Rust, Java + 22 more languages • React, Vue, Django, FastAPI + 100 frameworks • Docker, K8s, Serverless • ML/AI, Game Dev, Blockchain
 
@@ -128,10 +128,10 @@ cco-uninstall
 cco-install --local . --statusline cco-full --permissions balanced
 ```
 
-| Option | Values |
-|--------|--------|
-| `--statusline` | `cco-full` (all info) / `cco-minimal` (project + branch) |
-| `--permissions` | `safe` / `balanced` / `permissive` / `full` |
+| Option          | Values                                                    |
+|-----------------|-----------------------------------------------------------|
+| `--statusline`  | `cco-full` (all info) / `cco-minimal` (project + branch)  |
+| `--permissions` | `safe` / `balanced` / `permissive` / `full`               |
 
 </details>
 
@@ -143,11 +143,11 @@ Built on [Claude 4 Best Practices](https://platform.claude.com/docs/en/build-wit
 
 ## Documentation
 
-| Doc | Content |
-|-----|---------|
-| [Commands](docs/commands.md) | All 8 commands with flags and examples |
-| [Agents](docs/agents.md) | 3 specialized agents and their scopes |
-| [Rules](docs/rules.md) | Full rule reference |
+| Doc                          | Content                                  |
+|------------------------------|------------------------------------------|
+| [Commands](docs/commands.md) | All 8 commands with flags and examples   |
+| [Agents](docs/agents.md)     | 3 specialized agents and their scopes    |
+| [Rules](docs/rules.md)       | Full rule reference                      |
 
 ## License
 
