@@ -8,9 +8,10 @@
 |----------|-------|----------|---------|
 | Core | 73 | `~/.claude/rules/cco/core.md` | Always active |
 | AI | 37 | `~/.claude/rules/cco/ai.md` | Always active |
-| Tools | 107 | pip package | Built into commands/agents |
-| Adaptive | 1574 | pip package → `.claude/rules/cco/` | Per-project |
-| **Total** | **1791** | | |
+| Adaptive | 1554 | pip package → `.claude/rules/cco/` | Per-project |
+| **Total** | **1664** | | |
+
+*Note: Tool rules (workflow mechanisms) are embedded directly in command/agent templates.*
 
 **Counting:** `grep -c "^- \*\*" <file>` for all rule files
 
@@ -26,12 +27,11 @@
 │  AI           - All AI assistants, model agnostic               │
 │  Installed to: ~/.claude/rules/cco/ (auto-loaded to context)    │
 ├─────────────────────────────────────────────────────────────────┤
-│  ON-DEMAND (Tool + Adaptive Rules)                              │
+│  ON-DEMAND (Adaptive Rules)                                     │
 ├─────────────────────────────────────────────────────────────────┤
-│  Tools        - CCO command/agent workflow mechanisms           │
-│  Adaptive     - Project-specific rules template (1574 rules)    │
+│  Adaptive     - Project-specific rules template (1554 rules)    │
 │  Location:    pip package (NOT in rules/ to avoid context bloat)│
-│  Access via:  cco-install --cat rules/cco-{tools,adaptive}.md   │
+│  Access via:  cco-install --cat rules/cco-adaptive.md           │
 ├─────────────────────────────────────────────────────────────────┤
 │  DYNAMICALLY GENERATED (Per-Project Rules)                      │
 ├─────────────────────────────────────────────────────────────────┤
@@ -196,9 +196,11 @@
 
 ---
 
-## Tool Rules
+## Tool Rules (Reference)
 
-*CCO workflow mechanisms - excluded from AGENTS.md export. Loaded on-demand by commands/agents.*
+*CCO workflow mechanisms - embedded in command/agent templates. Excluded from AGENTS.md export.*
+
+> **Note:** These rules are not installed as a separate file. They are built into each command and agent template for context efficiency. Listed here for documentation purposes.
 
 ### User Input [MANDATORY]
 

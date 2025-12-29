@@ -242,22 +242,22 @@ def get_rules_breakdown() -> dict[str, int]:
     """Get detailed breakdown of rules by category.
 
     Returns:
-        Dictionary with core, ai, tools, adaptive, total counts
+        Dictionary with core, ai, adaptive, total counts
+        Note: Tool rules are embedded in command/agent templates (not counted here)
     """
     rules_dir = Path(__file__).parent / "content" / "rules"
     result = {
         "core": 0,
         "ai": 0,
-        "tools": 0,
         "adaptive": 0,
         "total": 0,
     }
 
     # Count from each rule file
+    # Note: cco-tools.md was removed - tool rules are now embedded in templates
     file_mapping = {
         "core": "cco-core.md",
         "ai": "cco-ai.md",
-        "tools": "cco-tools.md",
         "adaptive": "cco-adaptive.md",
     }
 
@@ -267,7 +267,7 @@ def get_rules_breakdown() -> dict[str, int]:
             content = file_path.read_text(encoding="utf-8")
             result[key] = len(_RULE_PATTERN.findall(content))
 
-    result["total"] = result["core"] + result["ai"] + result["tools"] + result["adaptive"]
+    result["total"] = result["core"] + result["ai"] + result["adaptive"]
     return result
 
 

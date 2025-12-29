@@ -361,12 +361,15 @@ sed -n '/^## {section_name}/,/^## \|^---/{/^## \|^---/!p;/^## {section_name}/p}'
 | L:{lang} | `^### {lang} (L:{lang})` | {lang_lower}.md |
 | Backend:{framework} | `^### {framework}` | backend.md |
 | Frontend:{framework} | `^### {framework}` | frontend.md |
-| Infra:Docker | `^## Infrastructure > Container` | container.md |
+| Infra:{type} | `^### {type} (Infra:{type})` | infra-{type}.md |
+| T:{type} | `^### {type} (T:{type})` | {type_lower}.md |
+| API:{type} | `^### {type} (API:{type})` | api.md |
+| Game:{engine} | `^### {engine} (Game:{engine})` | game.md |
+| ML:{type} | `^### {type} (ML:{type})` | ml.md |
 | Test:* | `^## Testing$` | testing.md |
 | Security | `^## Security Rules` | security.md |
 | Compliance:* | `^## Compliance Rules` | compliance.md |
 | Scale:* | `^## Scale Rules` | scale.md |
-| ML:* | `^## Specialized > ML/AI` | ml.md |
 
 **Extraction Helper Function**
 
