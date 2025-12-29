@@ -877,8 +877,23 @@ async def list_output_folders() -> list[dict[str, Any]]:
         if variant not in ("vanilla", "cco"):
             continue
 
-        # Check if folder has content
-        files = list(folder.glob("*.py")) + list(folder.glob("*.ts")) + list(folder.glob("*.js"))
+        # Check if folder has content (recursive search, excluding cache dirs)
+        skip_dirs = {
+            "__pycache__",
+            ".mypy_cache",
+            ".pytest_cache",
+            ".ruff_cache",
+            "node_modules",
+            ".venv",
+            "venv",
+        }
+        files = [
+            f
+            for f in (
+                list(folder.rglob("*.py")) + list(folder.rglob("*.ts")) + list(folder.rglob("*.js"))
+            )
+            if not any(d in f.parts for d in skip_dirs)
+        ]
         has_code = len(files) > 0
 
         # Try to get metrics if available
@@ -899,13 +914,19 @@ async def list_output_folders() -> list[dict[str, Any]]:
         except Exception:
             modified = None
 
+        # Use metrics file count if available (more accurate), otherwise use glob count
+        if metrics:
+            file_count = metrics.python_files + metrics.typescript_files + metrics.go_files
+        else:
+            file_count = len(files)
+
         folders.append(
             {
                 "folder": name,
                 "project_id": project_id,
                 "variant": variant,
                 "has_code": has_code,
-                "file_count": len(files),
+                "file_count": file_count,
                 "score": round(score, 1) if metrics else None,
                 "modified": modified,
             }

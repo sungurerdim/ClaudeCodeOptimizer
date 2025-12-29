@@ -135,7 +135,63 @@ class CodeAnalyzer:
 
     # Magic number patterns (excluding common ones like 0, 1, -1)
     MAGIC_PATTERN = re.compile(r"\b(?<!\.)\d+(?!\.\d)(?![a-zA-Z_])\b")
-    ALLOWED_NUMBERS = {0, 1, -1, 2, 10, 100, 1000, 60, 24, 365}
+    # Common acceptable numbers: 0-10, powers of 2/10, time constants, HTTP codes, common ports
+    ALLOWED_NUMBERS = {
+        0,
+        1,
+        2,
+        3,
+        4,
+        5,
+        6,
+        7,
+        8,
+        9,
+        10,
+        -1,  # Small numbers
+        16,
+        32,
+        64,
+        128,
+        256,
+        512,
+        1024,
+        2048,
+        4096,
+        8192,  # Powers of 2
+        100,
+        1000,
+        10000,
+        100000,
+        1000000,  # Powers of 10
+        60,
+        24,
+        365,
+        12,
+        30,
+        31,
+        52,  # Time constants
+        80,
+        443,
+        8080,
+        3000,
+        5000,
+        8000,
+        8888,  # Common ports
+        200,
+        201,
+        204,
+        301,
+        302,
+        400,
+        401,
+        403,
+        404,
+        500,
+        502,
+        503,  # HTTP codes
+        255,  # Byte values
+    }
 
     def __init__(self, project_dir: Path):
         self.project_dir = project_dir
@@ -649,15 +705,15 @@ def calculate_overall_score(m: Metrics) -> float:
     """Calculate overall quality score (0-100)."""
     score = 50.0  # Start neutral
 
-    # Anti-patterns (penalties)
-    score -= m.bare_excepts * 5
-    score -= m.silent_passes * 10
-    score -= m.broad_excepts * 2
-    score -= m.giant_funcs * 8
-    score -= m.magic_numbers * 0.5
-    score -= m.mutable_defaults * 3
-    score -= m.star_imports * 2
-    score -= m.global_vars * 2
+    # Anti-patterns (penalties, capped to prevent single category dominance)
+    score -= min(m.bare_excepts * 5, 15)  # Max -15
+    score -= min(m.silent_passes * 5, 15)  # Max -15 (reduced from 10 per)
+    score -= min(m.broad_excepts * 2, 10)  # Max -10
+    score -= min(m.giant_funcs * 5, 15)  # Max -15 (reduced from 8 per)
+    score -= min(m.magic_numbers * 0.3, 10)  # Max -10 (reduced penalty)
+    score -= min(m.mutable_defaults * 3, 10)  # Max -10
+    score -= min(m.star_imports * 2, 10)  # Max -10
+    score -= min(m.global_vars * 2, 10)  # Max -10
 
     # Best practices (bonuses)
     score += min(m.exception_chains, 10) * 2
