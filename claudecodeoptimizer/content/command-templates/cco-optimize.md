@@ -1,13 +1,13 @@
 ---
 name: cco-optimize
 description: Security and code quality analysis with auto-fix
-allowed-tools: Read(*), Grep(*), Glob(*), Edit(*), Bash(git:*), Bash(ruff:*), Bash(mypy:*), Bash(pip:*), Task(*), TodoWrite, AskUserQuestion
+allowed-tools: Read(*), Grep(*), Glob(*), Edit(*), Bash(*), Task(*), TodoWrite, AskUserQuestion
 model: opus
 ---
 
 # /cco-optimize
 
-**Full-Stack Optimization** - Parallel analysis + background fixes with minimal questions.
+**Full-Stack Optimization** - Quality gates + parallel analysis + background fixes with minimal questions.
 
 ## Args
 
@@ -117,6 +117,7 @@ if (isUnattended) {
 
 | Step | Name | Action | Optimization |
 |------|------|--------|--------------|
+| 0 | Quality Gates | Format + Lint + Type + Test (full project) | Parallel background |
 | 1 | Setup | Q1: Combined settings (background analysis starts) | Single question |
 | 2 | Analyze | Wait for analysis, show findings | Progressive |
 | 3 | Auto-fix | Apply safe fixes (background) | Non-blocking |
@@ -133,7 +134,8 @@ if (isUnattended) {
 ```javascript
 if (!isUnattended) {
   TodoWrite([
-    { content: "Step-1: Get optimization settings", status: "in_progress", activeForm: "Getting settings" },
+    { content: "Step-0: Run quality gates", status: "in_progress", activeForm: "Running quality gates" },
+    { content: "Step-1: Get optimization settings", status: "pending", activeForm: "Getting settings" },
     { content: "Step-2: Run analysis", status: "pending", activeForm: "Running analysis" },
     { content: "Step-3: Apply auto-fixes", status: "pending", activeForm: "Applying auto-fixes" },
     { content: "Step-4: Get approval", status: "pending", activeForm: "Getting approval" },
@@ -141,6 +143,44 @@ if (!isUnattended) {
     { content: "Step-6: Show summary", status: "pending", activeForm: "Showing summary" }
   ])
 }
+```
+
+---
+
+## Step-0: Quality Gates [PARALLEL BACKGROUND]
+
+**Run format, lint, type check, and tests on FULL PROJECT in parallel:**
+
+```javascript
+// Commands from context.md Operational section - FULL PROJECT
+formatTask = Bash("{format_command} 2>&1", { run_in_background: true })
+lintTask = Bash("{lint_command} 2>&1", { run_in_background: true })
+typeTask = Bash("{type_command} 2>&1", { run_in_background: true })
+testTask = Bash("{test_command} 2>&1", { run_in_background: true })
+
+// Store task IDs for collection in Step-6
+qualityGateTasks = {
+  format: formatTask.id,
+  lint: lintTask.id,
+  type: typeTask.id,
+  test: testTask.id
+}
+
+// Continue immediately - results collected in Step-6
+```
+
+**Key points:**
+- Format auto-fixes code style issues
+- Lint catches code quality issues
+- Type check catches type errors
+- Tests verify functionality
+- All run in parallel for speed
+- Results shown in final summary
+
+### Validation
+```
+[x] Background tasks launched
+→ Proceed to Step-1 immediately
 ```
 
 ---
@@ -534,6 +574,23 @@ if (approved.length > 0) {
 
 ## Step-6: Summary
 
+### Collect Quality Gate Results
+
+```javascript
+// Collect quality gate results from Step-0
+formatResults = await TaskOutput(qualityGateTasks.format)
+lintResults = await TaskOutput(qualityGateTasks.lint)
+typeResults = await TaskOutput(qualityGateTasks.type)
+testResults = await TaskOutput(qualityGateTasks.test)
+
+qualityGateStatus = {
+  format: formatResults.exitCode === 0 ? "OK" : "FIXED",
+  lint: lintResults.exitCode === 0 ? "OK" : "WARN",
+  type: typeResults.exitCode === 0 ? "OK" : "FAIL",
+  test: testResults.exitCode === 0 ? "OK" : "FAIL"
+}
+```
+
 ### Calculate Final Counts [CRITICAL]
 
 ```javascript
@@ -586,9 +643,12 @@ assert(finalCounts.applied + finalCounts.declined + finalCounts.failed === final
 
 ```javascript
 if (isUnattended) {
+  // Quality gates status
+  const gateStatus = Object.values(qualityGateStatus).includes("FAIL") ? "FAIL" : "OK"
+
   // ONLY output - single status line
-  const status = finalCounts.failed > 0 ? "WARN" : "OK"
-  console.log(`cco-optimize: ${status} | Fixed: ${finalCounts.applied} | Failed: ${finalCounts.failed} | Scopes: all`)
+  const status = (finalCounts.failed > 0 || gateStatus === "FAIL") ? "WARN" : "OK"
+  console.log(`cco-optimize: ${status} | Fixed: ${finalCounts.applied} | Failed: ${finalCounts.failed} | Gates: ${gateStatus} | Scopes: all`)
   // No tables, no details, no stash reminder
   return
 }
@@ -597,9 +657,20 @@ if (isUnattended) {
 ### Interactive Mode Output
 
 ```javascript
-// Build summary with conditional stash reminder
+// Build summary with quality gates and conditional stash reminder
 let summary = `
 ## Optimization Complete
+
+### Quality Gates (Full Project)
+
+| Gate | Status |
+|------|--------|
+| Format | ${qualityGateStatus.format} |
+| Lint | ${qualityGateStatus.lint} |
+| Type Check | ${qualityGateStatus.type} |
+| Tests | ${qualityGateStatus.test} |
+
+### Code Analysis
 
 | Metric | Value |
 |--------|-------|
