@@ -510,17 +510,16 @@ def run_ai_comparison(
     try:
         # Run ccbox from the output directory in vanilla/bare mode
         # Using same parameters as executor for consistency:
-        # -dd: debug logging
-        # -s auto: stack auto-detection
+        # -y: unattended mode (deps=ALL, stack=auto-detect, no prompts)
+        # -dd: debug logging (stream output)
         # -C: working directory
         # --bare: no CCO rules (vanilla mode for unbiased evaluation)
         # -m: model selection
         # -p: prompt (also enables --print mode for non-interactive)
         cmd = [
             "ccbox",
+            "-y",
             "-dd",
-            "-s",
-            "auto",
             "-C",
             str(output_dir),
             "--bare",

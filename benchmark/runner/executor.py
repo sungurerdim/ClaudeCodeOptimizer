@@ -605,18 +605,15 @@ class TestExecutor:
             Dict with success, time, command, exit_code, stdout, stderr, error
         """
         # ccbox parameters (as of latest version):
+        # -y: unattended mode (deps=ALL, stack=auto-detect, no prompts)
+        # -dd: debug logging (stream output)
         # -C: change directory
         # -m/--model: model selection
         # -p/--prompt: initial prompt (enables --print mode)
-        # -s/--stack: language stack (auto = auto-detect)
-        # --deps: install dependencies
-        # Note: --yes was removed from ccbox
         cmd = [
             self.ccbox_cmd,
+            "-y",  # Unattended mode (deps=ALL, stack=auto)
             "-dd",  # Debug logging
-            "--deps",  # Install dependencies (dev included)
-            "-s",
-            "auto",  # Auto-detect stack
             "-C",
             str(project_dir),
             "-m",
@@ -757,9 +754,8 @@ STDERR:
         """
         cmd = [
             self.ccbox_cmd,
+            "-y",  # Unattended mode (deps=ALL, stack=auto)
             "-dd",  # Debug logging
-            "-s",
-            "auto",  # Auto-detect stack
             "-C",
             str(project_dir),
             "-m",
@@ -939,15 +935,13 @@ STDERR:
 
         # Build ccbox command for the actual test
         # ccbox parameters (as of latest version):
-        # -dd: debug logging
-        # --deps: install dependencies (dev included)
-        # -s/--stack: language stack (auto = auto-detect)
+        # -y: unattended mode (deps=ALL, stack=auto-detect, no prompts)
+        # -dd: debug logging (stream output)
         # -C: change directory
         # --bare: vanilla mode (no CCO rules)
         # -m/--model: model selection
         # -p/--prompt: initial prompt (enables --print mode)
-        # Note: --yes was removed from ccbox
-        cmd = [self.ccbox_cmd, "-dd", "--deps", "-s", "auto"]
+        cmd = [self.ccbox_cmd, "-y", "-dd"]
 
         # Project directory (ccbox -C flag)
         cmd.extend(["-C", str(project_dir)])
