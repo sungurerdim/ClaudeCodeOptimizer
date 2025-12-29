@@ -38,6 +38,37 @@ model: opus
 1. **Auto-fix**: Safe to apply without asking (background)
 2. **Approval Required**: Ask user, then fix if approved
 
+## Fix-All Behavior [CRITICAL]
+
+When `--fix-all` flag OR "Fix all" action is selected:
+
+**MANDATORY:**
+1. **Zero Skipping**: Agent MUST NOT skip, decline, or defer ANY finding
+2. **No Self-Declining**: Agent cannot decide a fix is "too complex" - that's user's decision
+3. **Ask for Complex**: If fix requires significant refactoring (>50 lines changed), ASK user:
+   ```javascript
+   AskUserQuestion([{
+     question: `Fix "${finding.title}" requires significant changes (~${estimatedLines} lines). Proceed?`,
+     header: "Complex Fix",
+     options: [
+       { label: "Yes, apply fix (Recommended)", description: "Agent will implement the fix" },
+       { label: "Skip this one", description: "Move to next finding" }
+     ],
+     multiSelect: false
+   }])
+   ```
+4. **Only Technical Impossibility**: Only skip if technically impossible (e.g., missing dependency, file locked)
+5. **Report All Skips**: Any skipped item MUST appear in failed count with clear reason
+
+**Accounting in Fix-All Mode:**
+```javascript
+// In fix-all mode: declined should always be 0
+// User explicitly chose "fix all" - no agent-initiated declines
+if (config.action === "Fix all") {
+  assert(declined.length === 0, "Fix-all mode: agent should not decline items")
+}
+```
+
 ## Context
 
 - Context check: !`test -f ./.claude/rules/cco/context.md && echo "1" || echo "0"`
@@ -296,11 +327,22 @@ Summary:
 
 ```javascript
 if (config.action !== "Report only" && autoFixable.length > 0) {
+  // Determine if fix-all mode
+  const isFixAll = config.action === "Fix all" || isUnattended
+
   autoFixTask = Task("cco-agent-apply", `
     fixes: ${JSON.stringify(autoFixable)}
+    fixAll: ${isFixAll}
 
     Apply all auto-fixable items. Verify each fix.
     Group by file for efficiency.
+
+    ${isFixAll ? `
+    CRITICAL - FIX-ALL MODE:
+    - Zero agent-initiated skips/declines allowed
+    - Only technical impossibilities can be marked as "fail"
+    - Every fail must have reason starting with "Technical:"
+    ` : ""}
 
     CRITICAL - Counting:
     - Count FINDINGS, not locations
@@ -454,11 +496,22 @@ if (autoFixTask) {
 
 // Then apply user-approved items
 if (approved.length > 0) {
+  // In fix-all mode, all approval-required items are also auto-approved
+  const isFixAll = config.action === "Fix all" || isUnattended
+
   approvedResults = Task("cco-agent-apply", `
     fixes: ${JSON.stringify(approved)}
+    fixAll: ${isFixAll}
 
     Apply user-approved items. Verify each fix.
     Handle cascading errors.
+
+    ${isFixAll ? `
+    CRITICAL - FIX-ALL MODE:
+    - Zero agent-initiated skips/declines allowed
+    - Only technical impossibilities can be marked as "fail"
+    - Every fail must have reason starting with "Technical:"
+    ` : ""}
 
     CRITICAL - Counting:
     - Count FINDINGS, not locations

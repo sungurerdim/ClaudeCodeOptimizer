@@ -43,6 +43,25 @@ Run /cco-config first to configure project context, then restart CLI.
 
 ---
 
+## Fix-All Behavior [CRITICAL]
+
+When `--fix-all` flag is passed:
+
+**MANDATORY:**
+1. Pass `--fix-all` to both `/cco-optimize` and `/cco-review`
+2. All findings from both commands MUST be fixed (no skipping)
+3. If sub-command encounters complex fix, user will be prompted
+4. Final accounting: declined/notSelected should be 0
+
+```javascript
+// When --fix-all flag:
+const fixAllFlag = args.includes("--fix-all")
+const optimizeArgs = fixAllFlag ? "--pre-release --fix-all" : "--pre-release --fix"
+const reviewArgs = fixAllFlag ? "--fix-all" : "--quick"
+```
+
+---
+
 ## Progress Tracking [CRITICAL]
 
 ```javascript
@@ -153,8 +172,16 @@ depTask = Task("cco-agent-research", `
 ```javascript
 // Both calls MUST be in same message block
 
+// Dynamic args based on --fix-all flag
+const fixAllFlag = args.includes("--fix-all")
+const optimizeArgs = fixAllFlag ? "--pre-release --fix-all" : "--pre-release --fix"
+const reviewArgs = fixAllFlag ? "--fix-all" : "--quick"
+
 qualityTask = Task("general-purpose", `
-  Execute /cco-optimize --pre-release --fix
+  Execute /cco-optimize ${optimizeArgs}
+
+  ${fixAllFlag ? "CRITICAL: --fix-all mode - fix ALL findings, no skipping allowed" : ""}
+
   Return: {
     accounting: { applied, declined, failed, total },
     blockers: [{ severity, title, location }]
@@ -162,14 +189,17 @@ qualityTask = Task("general-purpose", `
 `, { model: "opus", run_in_background: true })  // Opus: code fixes require accuracy
 
 reviewTask = Task("general-purpose", `
-  Execute /cco-review --quick
+  Execute /cco-review ${reviewArgs}
+
+  ${fixAllFlag ? "CRITICAL: --fix-all mode - fix ALL findings including backlog, no skipping allowed" : ""}
+
   Return: {
     foundation: "SOUND|HAS ISSUES",
     metrics: { coupling, cohesion, complexity },
     doNow: [{ title, location }],
     issues: [{ severity, title, location }]
   }
-`, { model: "haiku", run_in_background: true })
+`, { model: fixAllFlag ? "opus" : "haiku", run_in_background: true })  // Opus for fix-all (accuracy), Haiku for quick (speed)
 ```
 
 ### Validation
@@ -413,6 +443,7 @@ console.log(`
 | `--push` | Push to remote after success |
 | `--changelog-only` | Only generate changelog |
 | `--skip-docs` | Skip documentation updates |
+| `--fix-all` | Fix ALL findings in optimize and review - no skipping |
 
 ### Go/No-Go Status
 

@@ -56,6 +56,80 @@ Grep("{complexity_patterns}")     // message
 | Evidence | Explicit proof, not inference |
 | Actionable | Every finding has `file:line` |
 
+## Platform-Aware Filtering [CRITICAL]
+
+**Cross-platform codebases have platform-specific code that should NOT be reported as issues.**
+
+### Detection Patterns
+
+| Pattern | Platform | Action |
+|---------|----------|--------|
+| `# type: ignore` with `# Windows only` comment | Windows | `notApplicable: true, reason: "Windows-only code"` |
+| `if sys.platform == "win32":` block | Windows | Skip block contents from analysis |
+| `if sys.platform == "darwin":` block | macOS | Skip block contents from analysis |
+| `if sys.platform.startswith("linux"):` block | Linux | Skip block contents from analysis |
+| `# pragma: no cover` with platform comment | Any | Skip from coverage analysis |
+| `typing.TYPE_CHECKING` imports | Type-only | Skip from unused import analysis |
+
+### Conditional Type Ignores
+
+**These are NOT issues - they're intentional cross-platform compatibility:**
+
+```python
+# Examples of VALID type ignores (do NOT report):
+import msvcrt  # type: ignore[import-not-found]  # Windows only
+import fcntl   # type: ignore[import-not-found]  # Unix only
+from winreg import *  # type: ignore  # Windows registry
+```
+
+### Filtering Logic
+
+```javascript
+function shouldExcludeFinding(finding) {
+  // 1. Check for platform-specific comments in context
+  if (finding.context?.includes("# Windows only") ||
+      finding.context?.includes("# Unix only") ||
+      finding.context?.includes("# macOS only") ||
+      finding.context?.includes("# Linux only")) {
+    return { exclude: true, reason: "Platform-specific code" }
+  }
+
+  // 2. Check if inside platform-guarded block
+  if (finding.inPlatformBlock) {
+    return { exclude: true, reason: `Inside ${finding.platformBlock} block` }
+  }
+
+  // 3. Check for known cross-platform imports
+  const crossPlatformModules = ["msvcrt", "winreg", "fcntl", "termios", "pwd", "grp", "resource"]
+  if (finding.scope === "quality" &&
+      finding.title?.includes("type: ignore") &&
+      crossPlatformModules.some(m => finding.context?.includes(m))) {
+    return { exclude: true, reason: "Cross-platform module import" }
+  }
+
+  return { exclude: false }
+}
+```
+
+### Output for Excluded Items
+
+**Do NOT include excluded items in `findings` array.** Instead, track in summary:
+
+```json
+{
+  "findings": [...],  // Only actionable findings
+  "excluded": {
+    "platformSpecific": 3,
+    "typeCheckingOnly": 1,
+    "details": [
+      { "location": "utils/compat.py:12", "reason": "Windows-only type ignore" }
+    ]
+  }
+}
+```
+
+This prevents downstream agents from seeing "issues" that aren't actually issues.
+
 ## Review Rigor & Severity
 
 | Requirement | Rule |
@@ -148,12 +222,25 @@ naming: inconsistent patterns
     "approvalRequired": "{boolean}",
     "fix": "{code_or_action}"
   }],
+  "excluded": {
+    "platformSpecific": "{n}",
+    "typeCheckingOnly": "{n}",
+    "total": "{n}",
+    "details": [{ "location": "{file}:{line}", "reason": "{exclusion_reason}" }]
+  },
   "summary": { "{scope}": { "count": "{n}", "p0": "{n}", "p1": "{n}", "p2": "{n}", "p3": "{n}" } },
   "scores": { "security": "{0-100}", "tests": "{0-100}", "techDebt": "{0-100}", "cleanliness": "{0-100}", "overall": "{0-100}" },
   "metrics": { "coupling": "{0-100}", "cohesion": "{0-100}", "complexity": "{0-100}", "testCoverage": "{0-100}" },
   "learnings": [{ "type": "systemic|avoid|prefer", "pattern": "{pattern}", "reason": "{reason}" }]
 }
 ```
+
+**Excluded Field:**
+- `platformSpecific`: Items filtered due to platform-specific code (Windows/Linux/macOS guards)
+- `typeCheckingOnly`: Items in `TYPE_CHECKING` blocks (not runtime code)
+- `details`: Optional array with specific exclusion reasons for transparency
+
+**Note:** Excluded items are NOT issues - they're intentionally filtered to prevent false positives.
 
 **Field Requirements by Consumer:**
 

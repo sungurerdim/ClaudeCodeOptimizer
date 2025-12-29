@@ -38,6 +38,39 @@ Run /cco-config first to configure project context, then restart CLI.
 
 ---
 
+## Fix-All Behavior [CRITICAL]
+
+When `--fix-all` flag OR "Fix all" action is selected:
+
+**MANDATORY:**
+1. **Zero Skipping**: Agent MUST NOT skip, decline, or defer ANY finding (including backlog)
+2. **No Self-Declining**: Agent cannot decide a fix is "too complex" - that's user's decision
+3. **Ask for Complex**: If fix requires significant refactoring (>50 lines changed), ASK user:
+   ```javascript
+   AskUserQuestion([{
+     question: `Fix "${finding.title}" requires significant changes (~${estimatedLines} lines). Proceed?`,
+     header: "Complex Fix",
+     options: [
+       { label: "Yes, apply fix (Recommended)", description: "Agent will implement the fix" },
+       { label: "Skip this one", description: "Move to next finding" }
+     ],
+     multiSelect: false
+   }])
+   ```
+4. **Only Technical Impossibility**: Only skip if technically impossible (e.g., missing dependency, file locked)
+5. **Report All Skips**: Any skipped item MUST appear in failed count with clear reason
+6. **Include Backlog**: In fix-all mode, backlog items ARE included (unlike 80/20 mode)
+
+**Accounting in Fix-All Mode:**
+```javascript
+// In fix-all mode: notSelected should be 0 (everything is selected)
+if (config.applyMode === "Fix all") {
+  assert(notSelected.length === 0, "Fix-all mode: all items must be selected")
+}
+```
+
+---
+
 ## Progress Tracking [CRITICAL]
 
 ```javascript
@@ -128,6 +161,7 @@ AskUserQuestion([
     options: [
       { label: "80/20 - Do Now only (Recommended)", description: "High-impact, low-effort items only" },
       { label: "Full - All recommendations", description: "Apply all including high-effort items" },
+      { label: "Fix all", description: "Fix EVERYTHING including backlog - no skipping" },
       { label: "Report only", description: "Show findings without applying" }
     ],
     multiSelect: false
@@ -277,6 +311,10 @@ let notSelected = []
 if (config.applyMode.includes("80/20") || config.applyMode.includes("Do Now")) {
   toApply = doNow
   notSelected = [...plan, ...consider, ...backlog]
+} else if (config.applyMode === "Fix all") {
+  // Fix-all: EVERYTHING including backlog
+  toApply = [...doNow, ...plan, ...consider, ...backlog]
+  notSelected = []  // Nothing excluded in fix-all mode
 } else if (config.applyMode.includes("Full") || config.applyMode.includes("All")) {
   toApply = [...doNow, ...plan, ...consider]
   notSelected = backlog
@@ -303,12 +341,25 @@ Applying {toApply.length} recommendations...
 ```
 
 if (toApply.length > 0) {
+  // Determine if fix-all mode
+  const isFixAll = config.applyMode === "Fix all"
+
   applyResults = Task("cco-agent-apply", `
     fixes: ${JSON.stringify(toApply)}
+    fixAll: ${isFixAll}
 
     Apply recommendations.
     Verify each change.
     Handle dependencies between fixes.
+
+    ${isFixAll ? `
+    CRITICAL - FIX-ALL MODE:
+    - Zero agent-initiated skips/declines allowed
+    - ALL items including backlog MUST be fixed
+    - Only technical impossibilities can be marked as "fail"
+    - Every fail must have reason starting with "Technical:"
+    - If fix is complex (>50 lines), return needs_confirmation status
+    ` : ""}
 
     CRITICAL - Counting:
     - Count FINDINGS, not locations
@@ -445,6 +496,7 @@ When `--quick` flag:
 | `--no-apply` | Report only |
 | `--matrix` | Show effort/impact matrix visualization |
 | `--do-now-only` | Apply only high-impact, low-effort items |
+| `--fix-all` | Fix EVERYTHING including backlog - no skipping allowed |
 
 ### Model Strategy
 
