@@ -8,21 +8,21 @@ Detailed documentation for all CCO slash commands.
 
 ### Base Commands
 
-| Command | Purpose | Model | Steps |
-|---------|---------|-------|-------|
-| `/cco-config` | Project configuration and settings | inherit | 5 |
-| `/cco-status` | Metrics dashboard | inherit | 3 |
-| `/cco-optimize` | Security + Quality + Hygiene | **opus** | 6 |
-| `/cco-review` | Architecture analysis | **opus** | 5 |
-| `/cco-research` | Multi-source research with AI synthesis | **opus** | 5 |
-| `/cco-commit` | Quality-gated commits | **opus** | 5 |
+| Command         | Purpose                                  | Model     | Steps |
+|-----------------|------------------------------------------|-----------|-------|
+| `/cco-config`   | Project configuration and settings       | inherit   | 5     |
+| `/cco-status`   | Metrics dashboard                        | inherit   | 3     |
+| `/cco-optimize` | Security + Quality + Hygiene             | **opus**  | 6     |
+| `/cco-review`   | Architecture analysis                    | **opus**  | 5     |
+| `/cco-research` | Multi-source research with AI synthesis  | **opus**  | 5     |
+| `/cco-commit`   | Quality-gated commits                    | **opus**  | 5     |
 
 ### Meta Commands
 
-| Command | Purpose | Model | Orchestrates |
-|---------|---------|-------|--------------|
+| Command          | Purpose              | Model   | Orchestrates                         |
+|------------------|----------------------|---------|--------------------------------------|
 | `/cco-preflight` | Pre-release workflow | inherit | optimize + review + verify (5 steps) |
-| `/cco-checkup` | Regular maintenance | inherit | status + optimize (3 steps) |
+| `/cco-checkup`   | Regular maintenance  | inherit | status + optimize (3 steps)          |
 
 **Model Rationale:** Opus for analysis and coding commands (50-75% fewer errors), inherit for orchestration.
 
@@ -47,14 +47,14 @@ All commands follow a standardized structure for consistency and reliability.
 
 ### Key Principles
 
-| Principle | Description |
-|-----------|-------------|
-| **TodoWrite ↔ Architecture alignment** | Same step count in both |
-| **Questions in flow** | Each question clearly placed in its step |
-| **Validation gates** | Every step ends with validation block |
-| **Conditional steps** | Marked with `[SKIP if X]` or `[MANDATORY if X]` |
-| **Sub-steps** | Complex steps use Step-N.1, Step-N.2 format |
-| **Rules enforcement** | "Sequential execution" and "Validation gates" in every command |
+| Principle                              | Description                                                    |
+|----------------------------------------|----------------------------------------------------------------|
+| **TodoWrite ↔ Architecture alignment** | Same step count in both                                        |
+| **Questions in flow**                  | Each question clearly placed in its step                       |
+| **Validation gates**                   | Every step ends with validation block                          |
+| **Conditional steps**                  | Marked with `[SKIP if X]` or `[MANDATORY if X]`                |
+| **Sub-steps**                          | Complex steps use Step-N.1, Step-N.2 format                    |
+| **Rules enforcement**                  | "Sequential execution" and "Validation gates" in every command |
 
 ### Validation Block Format
 
@@ -92,11 +92,12 @@ Commands pre-collect context at execution start:
 ### Strategy Evolution
 
 Commands learn from execution patterns:
-| Pattern | Action |
-|---------|--------|
-| Same issue 3+ files | Add to `Systemic` |
-| Fix caused cascade | Add to `Avoid` |
-| Effective pattern | Add to `Prefer` |
+
+| Pattern              | Action            |
+|----------------------|-------------------|
+| Same issue 3+ files  | Add to `Systemic` |
+| Fix caused cascade   | Add to `Avoid`    |
+| Effective pattern    | Add to `Prefer`   |
 
 ---
 
@@ -112,13 +113,13 @@ Commands learn from execution patterns:
 
 ### Steps
 
-| Step | Name | Action |
-|------|------|--------|
-| 1 | Pre-detect | cco-agent-analyze (background) |
-| 2 | Setup | Q1: Combined setup tabs |
-| 3 | Context | Q2: Context details (conditional) |
-| 4 | Apply | Write files |
-| 5 | Report | Summary |
+| Step | Name       | Action                            |
+|------|------------|-----------------------------------|
+| 1    | Pre-detect | cco-agent-analyze (background)    |
+| 2    | Setup      | Q1: Combined setup tabs           |
+| 3    | Context    | Q2: Context details (conditional) |
+| 4    | Apply      | Write files                       |
+| 5    | Report     | Summary                           |
 
 ### Context Questions (Step-3)
 
@@ -136,10 +137,10 @@ Commands learn from execution patterns:
 
 ### Export Formats
 
-| Format | Target | Content | Output |
-|--------|--------|---------|--------|
-| AGENTS.md | Universal (Codex, Cursor, Copilot, Cline) | Core + AI, model-agnostic | `./AGENTS.md` |
-| CLAUDE.md | Claude Code only | Core + AI + Tools, full | `./CLAUDE.export.md` |
+| Format    | Target                                    | Content                    | Output               |
+|-----------|-------------------------------------------|----------------------------|----------------------|
+| AGENTS.md | Universal (Codex, Cursor, Copilot, Cline) | Core + AI, model-agnostic  | `./AGENTS.md`        |
+| CLAUDE.md | Claude Code only                          | Core + AI + Tools, full    | `./CLAUDE.export.md` |
 
 ---
 
@@ -160,29 +161,29 @@ Commands learn from execution patterns:
 
 ### Steps
 
-| Step | Name | Action |
-|------|------|--------|
-| 1 | Collect | Run agent for metrics |
-| 2 | Process | Calculate scores and trends |
-| 3 | Display | Show dashboard |
+| Step | Name    | Action                      |
+|------|---------|-----------------------------|
+| 1    | Collect | Run agent for metrics       |
+| 2    | Process | Calculate scores and trends |
+| 3    | Display | Show dashboard              |
 
 ### Scores
 
-| Category | Measures |
-|----------|----------|
-| Security | Vulnerabilities, secrets, dependencies |
-| Tests | Coverage + quality |
-| Tech Debt | Complexity, dead code, duplication |
-| Cleanliness | Orphans, duplicates, stale refs |
+| Category    | Measures                              |
+|-------------|---------------------------------------|
+| Security    | Vulnerabilities, secrets, dependencies |
+| Tests       | Coverage + quality                    |
+| Tech Debt   | Complexity, dead code, duplication    |
+| Cleanliness | Orphans, duplicates, stale refs       |
 
 ### Score Thresholds
 
-| Score | Status |
-|-------|--------|
-| 80-100 | OK |
-| 60-79 | WARN |
-| 40-59 | FAIL |
-| 0-39 | CRITICAL |
+| Score  | Status   |
+|--------|----------|
+| 80-100 | OK       |
+| 60-79  | WARN     |
+| 40-59  | FAIL     |
+| 0-39   | CRITICAL |
 
 **Trend Indicators:** ↑ Improved │ → Stable │ ↓ Degraded │ ⚠ Rapid decline
 
@@ -209,32 +210,32 @@ Commands learn from execution patterns:
 
 ### Steps
 
-| Step | Name | Action |
-|------|------|--------|
-| 1 | Setup | Q1: Combined settings (background analysis starts) |
-| 2 | Analyze | Wait for background, show findings |
-| 3 | Auto-fix | Apply safe fixes (background) |
-| 4 | Approval | Q2: Approve remaining (conditional) |
-| 5 | Apply | Apply approved fixes |
-| 6 | Summary | Show counts |
+| Step | Name     | Action                                             |
+|------|----------|----------------------------------------------------|
+| 1    | Setup    | Q1: Combined settings (background analysis starts) |
+| 2    | Analyze  | Wait for background, show findings                 |
+| 3    | Auto-fix | Apply safe fixes (background)                      |
+| 4    | Approval | Q2: Approve remaining (conditional)                |
+| 5    | Apply    | Apply approved fixes                               |
+| 6    | Summary  | Show counts                                        |
 
 ### Scope Categories
 
-| Scope | Checks |
-|-------|--------|
-| Security | OWASP, secrets, CVEs, input validation |
-| Quality | Tech debt, type errors, test gaps |
-| Hygiene | Orphans, stale refs, duplicates |
-| Best Practices | Patterns, efficiency, consistency |
+| Scope          | Checks                                 |
+|----------------|----------------------------------------|
+| Security       | OWASP, secrets, CVEs, input validation |
+| Quality        | Tech debt, type errors, test gaps      |
+| Hygiene        | Orphans, stale refs, duplicates        |
+| Best Practices | Patterns, efficiency, consistency      |
 
 ### Context Application
 
-| Field | Effect |
-|-------|--------|
-| Data | PII/Regulated → security ×2 |
-| Scale | 10K+ → stricter thresholds |
-| Maturity | Legacy → safe fixes only |
-| Priority | Speed → critical only; Quality → all |
+| Field    | Effect                                 |
+|----------|----------------------------------------|
+| Data     | PII/Regulated → security ×2            |
+| Scale    | 10K+ → stricter thresholds             |
+| Maturity | Legacy → safe fixes only               |
+| Priority | Speed → critical only; Quality → all   |
 
 ---
 
@@ -255,32 +256,32 @@ Commands learn from execution patterns:
 
 ### Steps
 
-| Step | Name | Action |
-|------|------|--------|
-| 1 | Setup | Q1: Focus + Apply mode (background analysis starts) |
-| 2 | Analysis | Wait for results, show assessment |
-| 3 | Recommendations | 80/20 prioritized list |
-| 4 | Apply | Apply selected changes |
-| 5 | Summary | Show results |
+| Step | Name            | Action                                              |
+|------|-----------------|-----------------------------------------------------|
+| 1    | Setup           | Q1: Focus + Apply mode (background analysis starts) |
+| 2    | Analysis        | Wait for results, show assessment                   |
+| 3    | Recommendations | 80/20 prioritized list                              |
+| 4    | Apply           | Apply selected changes                              |
+| 5    | Summary         | Show results                                        |
 
 ### Focus Areas
 
-| Selection | Agent Scope |
-|-----------|-------------|
-| Architecture | Dependency graph, coupling, patterns, layers |
-| Code Quality | Issues with file:line, complexity |
-| Testing & DX | Test coverage, developer experience |
-| Best Practices | Tool usage, execution patterns, efficiency |
-| Dependencies | Outdated packages, security advisories, version risks |
+| Selection      | Agent Scope                                           |
+|----------------|-------------------------------------------------------|
+| Architecture   | Dependency graph, coupling, patterns, layers          |
+| Code Quality   | Issues with file:line, complexity                     |
+| Testing & DX   | Test coverage, developer experience                   |
+| Best Practices | Tool usage, execution patterns, efficiency            |
+| Dependencies   | Outdated packages, security advisories, version risks |
 
 ### Prioritization (80/20)
 
-| Priority | Criteria |
-|----------|----------|
-| Do Now | High impact, low effort |
-| Plan | High impact, medium effort |
-| Consider | Medium impact |
-| Backlog | Low impact or high effort |
+| Priority | Criteria                  |
+|----------|---------------------------|
+| Do Now   | High impact, low effort   |
+| Plan     | High impact, medium effort |
+| Consider | Medium impact             |
+| Backlog  | Low impact or high effort |
 
 ---
 
@@ -302,24 +303,24 @@ Commands learn from execution patterns:
 
 ### Steps
 
-| Step | Name | Action |
-|------|------|--------|
-| 1 | Depth | Ask research depth |
-| 2 | Query | Parse and understand query |
-| 3 | Research | Run agent with query |
-| 4 | Synthesize | Process agent results |
-| 5 | Output | Show structured findings |
+| Step | Name       | Action                       |
+|------|------------|------------------------------|
+| 1    | Depth      | Ask research depth           |
+| 2    | Query      | Parse and understand query   |
+| 3    | Research   | Run agent with query         |
+| 4    | Synthesize | Process agent results        |
+| 5    | Output     | Show structured findings     |
 
 ### Source Tiers
 
-| Tier | Sources | Score Range |
-|------|---------|-------------|
-| T1 | Official docs, specs | 90-100 |
-| T2 | GitHub, changelogs | 80-90 |
-| T3 | Major blogs, tutorials | 70-80 |
-| T4 | Stack Overflow, forums | 60-70 |
-| T5 | Personal blogs | 50-60 |
-| T6 | Unknown | 40-50 |
+| Tier | Sources                  | Score Range |
+|------|--------------------------|-------------|
+| T1   | Official docs, specs     | 90-100      |
+| T2   | GitHub, changelogs       | 80-90       |
+| T3   | Major blogs, tutorials   | 70-80       |
+| T4   | Stack Overflow, forums   | 60-70       |
+| T5   | Personal blogs           | 50-60       |
+| T6   | Unknown                  | 40-50       |
 
 ### Output Structure
 
@@ -349,24 +350,24 @@ Commands learn from execution patterns:
 
 ### Steps
 
-| Step | Name | Action |
-|------|------|--------|
-| 1 | Pre-checks | Conflicts check + parallel quality gates (background) |
-| 2 | Analyze | Group changes atomically (while gates run) |
-| 3 | Approval | Q1: Combined commit settings |
-| 4 | Execute | Create commits |
-| 5 | Summary | Show results |
+| Step | Name       | Action                                                |
+|------|------------|-------------------------------------------------------|
+| 1    | Pre-checks | Conflicts check + parallel quality gates (background) |
+| 2    | Analyze    | Group changes atomically (while gates run)            |
+| 3    | Approval   | Q1: Combined commit settings                          |
+| 4    | Execute    | Create commits                                        |
+| 5    | Summary    | Show results                                          |
 
 ### Quality Gates (Parallel)
 
-| Gate | Command | Action |
-|------|---------|--------|
-| 1. Secrets | Pattern detection | BLOCK if found |
-| 2. Large Files | Size check | WARN >1MB, BLOCK >10MB |
-| 3. Format | `{format_cmd}` | Auto-fix, re-stage |
-| 4. Lint | `{lint_cmd}` | STOP on unfixable |
-| 5. Types | `{type_cmd}` | STOP on failure |
-| 6. Tests | `{test_cmd}` | STOP on failure |
+| Gate           | Command             | Action                 |
+|----------------|---------------------|------------------------|
+| 1. Secrets     | Pattern detection   | BLOCK if found         |
+| 2. Large Files | Size check          | WARN >1MB, BLOCK >10MB |
+| 3. Format      | `{format_cmd}`      | Auto-fix, re-stage     |
+| 4. Lint        | `{lint_cmd}`        | STOP on unfixable      |
+| 5. Types       | `{type_cmd}`        | STOP on failure        |
+| 6. Tests       | `{test_cmd}`        | STOP on failure        |
 
 ### Commit Message Format
 
@@ -399,31 +400,31 @@ Co-Authored-By: Claude <noreply@anthropic.com>
 
 ### Steps
 
-| Step | Name | Action |
-|------|------|--------|
-| 1 | Pre-flight | Release checks (parallel) |
-| 2 | Quality + Review | Parallel: optimize + review (background) |
-| 3 | Verification | Background: test/build/lint |
-| 4 | Changelog | Generate + suggest version (while tests run) |
-| 5 | Decision | Q1: Docs + Release decision |
+| Step | Name             | Action                                          |
+|------|------------------|-------------------------------------------------|
+| 1    | Pre-flight       | Release checks (parallel)                       |
+| 2    | Quality + Review | Parallel: optimize + review (background)        |
+| 3    | Verification     | Background: test/build/lint                     |
+| 4    | Changelog        | Generate + suggest version (while tests run)    |
+| 5    | Decision         | Q1: Docs + Release decision                     |
 
 ### Pre-flight Checks
 
-| Check | Type |
-|-------|------|
-| Clean working directory | BLOCKER |
-| On `{main_branch}` or release branch | WARN |
-| Version synced across files | BLOCKER |
-| Leftover markers (TODO, FIXME, WIP) | WARN |
-| SemVer matches changes | WARN |
+| Check                                | Type    |
+|--------------------------------------|---------|
+| Clean working directory              | BLOCKER |
+| On `{main_branch}` or release branch | WARN    |
+| Version synced across files          | BLOCKER |
+| Leftover markers (TODO, FIXME, WIP)  | WARN    |
+| SemVer matches changes               | WARN    |
 
 ### Go/No-Go Status
 
-| Status | Action |
-|--------|--------|
-| Blocker (red) | Cannot release |
-| Warning (yellow) | Can override |
-| Pass (green) | Ready |
+| Status           | Action         |
+|------------------|----------------|
+| Blocker (red)    | Cannot release |
+| Warning (yellow) | Can override   |
+| Pass (green)     | Ready          |
 
 ---
 
@@ -444,20 +445,20 @@ Co-Authored-By: Claude <noreply@anthropic.com>
 
 ### Steps
 
-| Step | Name | Action |
-|------|------|--------|
-| 1 | Phase Select | Determine phases (flags or default: Both) |
-| 2 | Execute | Parallel: health + audit |
-| 3 | Summary | Merge and display |
+| Step | Name         | Action                                    |
+|------|--------------|-------------------------------------------|
+| 1    | Phase Select | Determine phases (flags or default: Both) |
+| 2    | Execute      | Parallel: health + audit                  |
+| 3    | Summary      | Merge and display                         |
 
 ### Scheduling
 
-| Frequency | Use Case |
-|-----------|----------|
-| Weekly | Active development |
-| Bi-weekly | Stable projects |
-| Before PR | Quality gate |
-| Monthly | Maintenance mode |
+| Frequency | Use Case           |
+|-----------|--------------------|
+| Weekly    | Active development |
+| Bi-weekly | Stable projects    |
+| Before PR | Quality gate       |
+| Monthly   | Maintenance mode   |
 
 ---
 

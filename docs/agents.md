@@ -8,11 +8,11 @@ Specialized subagents for CCO commands.
 
 CCO uses three specialized agents with clear separation of concerns:
 
-| Agent | Purpose | Model | Tools |
-|-------|---------|-------|-------|
-| **cco-agent-analyze** | Read-only project analysis | haiku | Glob, Read, Grep, Bash |
-| **cco-agent-apply** | Write operations with verification | opus | Grep, Read, Glob, Bash, Edit, Write, NotebookEdit |
-| **cco-agent-research** | External source research | haiku | WebSearch, WebFetch, Read, Grep, Glob |
+| Agent                  | Purpose                            | Model | Tools                                             |
+|------------------------|------------------------------------|-------|---------------------------------------------------|
+| **cco-agent-analyze**  | Read-only project analysis         | haiku | Glob, Read, Grep, Bash                            |
+| **cco-agent-apply**    | Write operations with verification | opus  | Grep, Read, Glob, Bash, Edit, Write, NotebookEdit |
+| **cco-agent-research** | External source research           | haiku | WebSearch, WebFetch, Read, Grep, Glob             |
 
 **Model Rationale:**
 - Haiku for read-only sub-agents (fast, cost-effective)
@@ -32,18 +32,18 @@ Commands can override agent defaults via Task parameter: `Task("agent", prompt, 
 
 ### Scopes
 
-| Scope | Returns | Use Case |
-|-------|---------|----------|
-| `detect` | Project structure, stack, tools | cco-config, cco-commit fallback |
-| `scan` | Issues with file:line, metrics | cco-status |
-| `full` | Both combined | cco-config first run |
-| `security` | Security vulnerabilities, secrets | cco-optimize --security |
-| `quality` | Tech debt, consistency, tests | cco-optimize --quality |
-| `hygiene` | Orphans, duplicates, stale refs | cco-optimize --hygiene |
-| `best-practices` | Pattern adherence, efficiency | cco-optimize --best-practices |
-| `architecture` | Dependency graph, coupling metrics | cco-review |
-| `trends` | Historical metrics with deltas | cco-status --trends |
-| `config` | Project detection and rule selection | cco-config |
+| Scope            | Returns                              | Use Case                      |
+|------------------|--------------------------------------|-------------------------------|
+| `detect`         | Project structure, stack, tools      | cco-config, cco-commit fallback |
+| `scan`           | Issues with file:line, metrics       | cco-status                    |
+| `full`           | Both combined                        | cco-config first run          |
+| `security`       | Security vulnerabilities, secrets    | cco-optimize --security       |
+| `quality`        | Tech debt, consistency, tests        | cco-optimize --quality        |
+| `hygiene`        | Orphans, duplicates, stale refs      | cco-optimize --hygiene        |
+| `best-practices` | Pattern adherence, efficiency        | cco-optimize --best-practices |
+| `architecture`   | Dependency graph, coupling metrics   | cco-review                    |
+| `trends`         | Historical metrics with deltas       | cco-status --trends           |
+| `config`         | Project detection and rule selection | cco-config                    |
 
 ### Detection Capabilities
 
@@ -93,20 +93,20 @@ Handles project detection and rule selection for `/cco-config`:
 
 ### Artifact Handling
 
-| Rule | Implementation |
-|------|----------------|
-| Reference-Large | By path/ID, not inline |
-| Summarize-First | Return summary.count before full array |
-| Chunk-Processing | >100 findings → batches |
-| Cache-Artifacts | Reuse file reads within session |
+| Rule             | Implementation                         |
+|------------------|----------------------------------------|
+| Reference-Large  | By path/ID, not inline                 |
+| Summarize-First  | Return summary.count before full array |
+| Chunk-Processing | >100 findings → batches                |
+| Cache-Artifacts  | Reuse file reads within session        |
 
 ### Strategy Evolution
 
-| Pattern | Action |
-|---------|--------|
-| Same error 3+ files | Add to `Systemic` |
-| Recurring false positive | Add to `Avoid` |
-| Effective pattern found | Add to `Prefer` |
+| Pattern                  | Action            |
+|--------------------------|-------------------|
+| Same error 3+ files      | Add to `Systemic` |
+| Recurring false positive | Add to `Avoid`    |
+| Effective pattern found  | Add to `Prefer`   |
 
 ### Output
 
@@ -126,11 +126,11 @@ Returns structured JSON with:
 
 ### Operations
 
-| Operation | Input | Output |
-|-----------|-------|--------|
-| Fix | Finding from analyze | Fixed file + verification |
-| Generate | Convention + target | New file(s) |
-| Optimize | Analysis result | Reduced code |
+| Operation | Input               | Output                    |
+|-----------|---------------------|---------------------------|
+| Fix       | Finding from analyze | Fixed file + verification |
+| Generate  | Convention + target | New file(s)               |
+| Optimize  | Analysis result     | Reduced code              |
 
 ### Verification Protocol
 
@@ -142,11 +142,11 @@ After each change:
 
 ### Status Definitions
 
-| Status | Meaning |
-|--------|---------|
-| `done` | Applied and verified |
+| Status     | Meaning                  |
+|------------|--------------------------|
+| `done`     | Applied and verified     |
 | `declined` | User explicitly declined |
-| `fail` | Attempted but failed |
+| `fail`     | Attempted but failed     |
 
 ### Accounting
 
@@ -160,24 +160,24 @@ Always reports: `done + declined + fail = total`
 
 ### Scopes
 
-| Scope | Returns | Use Case |
-|-------|---------|----------|
-| `search` | Ranked sources with T1-T6 scores | Initial discovery |
-| `analyze` | Deep analysis, contradictions | Follow-up on top sources |
-| `synthesize` | Consolidated recommendation | Final answer |
-| `full` | All three combined | Standard research flow |
-| `dependency` | Package version, CVE, breaking changes | cco-optimize --deps |
+| Scope        | Returns                               | Use Case                |
+|--------------|---------------------------------------|-------------------------|
+| `search`     | Ranked sources with T1-T6 scores      | Initial discovery       |
+| `analyze`    | Deep analysis, contradictions         | Follow-up on top sources |
+| `synthesize` | Consolidated recommendation           | Final answer            |
+| `full`       | All three combined                    | Standard research flow  |
+| `dependency` | Package version, CVE, breaking changes | cco-optimize --deps     |
 
 ### Source Tiers
 
-| Tier | Score | Source Type |
-|------|-------|-------------|
-| T1 | 95-100 | Official docs (MDN, react.dev) |
-| T2 | 85-94 | Official repos, changelogs |
-| T3 | 70-84 | Core contributors |
-| T4 | 55-69 | Stack Overflow (high votes) |
-| T5 | 40-54 | Dev.to, blogs |
-| T6 | 0-39 | Unverified, outdated |
+| Tier | Score  | Source Type                       |
+|------|--------|-----------------------------------|
+| T1   | 95-100 | Official docs (MDN, react.dev)    |
+| T2   | 85-94  | Official repos, changelogs        |
+| T3   | 70-84  | Core contributors                 |
+| T4   | 55-69  | Stack Overflow (high votes)       |
+| T5   | 40-54  | Dev.to, blogs                     |
+| T6   | 0-39   | Unverified, outdated              |
 
 ### Features
 
@@ -194,33 +194,33 @@ Always reports: `done + declined + fail = total`
 
 Complete list of all scopes with their purpose and coverage:
 
-| Scope | Purpose | Coverage |
-|-------|---------|----------|
-| `detect` | Project discovery | Stack, tools, conventions, structure |
-| `scan` | Dashboard metrics | Security, tests, debt, cleanliness scores |
-| `full` | Combined detect+scan | All detection + all metrics |
-| `security` | Vulnerability detection | OWASP, secrets, CVEs, input validation |
-| `quality` | Code quality issues | Complexity, types, consistency, tech debt |
-| `hygiene` | Codebase cleanliness | Orphans, stale refs, duplicates, dead code |
-| `best-practices` | Pattern adherence | Efficiency, naming, error handling, magic numbers |
-| `architecture` | Structural analysis | Dependencies, coupling, layers, patterns |
-| `trends` | Historical tracking | Metric deltas with ↑↓→⚠ indicators |
-| `config` | Project configuration | Detection + user questions + rule selection |
+| Scope            | Purpose                 | Coverage                                         |
+|------------------|-------------------------|--------------------------------------------------|
+| `detect`         | Project discovery       | Stack, tools, conventions, structure             |
+| `scan`           | Dashboard metrics       | Security, tests, debt, cleanliness scores        |
+| `full`           | Combined detect+scan    | All detection + all metrics                      |
+| `security`       | Vulnerability detection | OWASP, secrets, CVEs, input validation           |
+| `quality`        | Code quality issues     | Complexity, types, consistency, tech debt        |
+| `hygiene`        | Codebase cleanliness    | Orphans, stale refs, duplicates, dead code       |
+| `best-practices` | Pattern adherence       | Efficiency, naming, error handling, magic numbers |
+| `architecture`   | Structural analysis     | Dependencies, coupling, layers, patterns         |
+| `trends`         | Historical tracking     | Metric deltas with ↑↓→⚠ indicators               |
+| `config`         | Project configuration   | Detection + user questions + rule selection      |
 
 ---
 
 ## Agent Selection by Command
 
-| Command | Analyze Scope | Apply | Research |
-|---------|---------------|-------|----------|
-| `/cco-config` | `config` | No | No |
-| `/cco-status` | `scan`, `trends` | No | No |
-| `/cco-optimize` | `security`, `quality`, `hygiene`, `best-practices` | Yes | `dependency` |
-| `/cco-review` | `architecture`, `quality`, `testing`, `best-practices` | Yes | `dependency` |
-| `/cco-commit` | `detect` (fallback) | No | No |
-| `/cco-research` | - | No | `full` |
-| `/cco-preflight` | (orchestrates optimize + review) | (orchestrates) | `dependency` |
-| `/cco-checkup` | (orchestrates status + optimize) | (orchestrates) | `dependency` |
+| Command          | Analyze Scope                                          | Apply          | Research     |
+|------------------|--------------------------------------------------------|----------------|--------------|
+| `/cco-config`    | `config`                                               | No             | No           |
+| `/cco-status`    | `scan`, `trends`                                       | No             | No           |
+| `/cco-optimize`  | `security`, `quality`, `hygiene`, `best-practices`     | Yes            | `dependency` |
+| `/cco-review`    | `architecture`, `quality`, `testing`, `best-practices` | Yes            | `dependency` |
+| `/cco-commit`    | `detect` (fallback)                                    | No             | No           |
+| `/cco-research`  | -                                                      | No             | `full`       |
+| `/cco-preflight` | (orchestrates optimize + review)                       | (orchestrates) | `dependency` |
+| `/cco-checkup`   | (orchestrates status + optimize)                       | (orchestrates) | `dependency` |
 
 ---
 
