@@ -38,36 +38,9 @@ Run /cco-config first to configure project context, then restart CLI.
 
 ---
 
-## Fix-All Behavior [CRITICAL]
+## Fix-All Mode
 
-When `--fix-all` flag OR "Fix all" action is selected:
-
-**MANDATORY:**
-1. **Zero Skipping**: Agent MUST NOT skip, decline, or defer ANY finding (including backlog)
-2. **No Self-Declining**: Agent cannot decide a fix is "too complex" - that's user's decision
-3. **Ask for Complex**: If fix requires significant refactoring (>50 lines changed), ASK user:
-   ```javascript
-   AskUserQuestion([{
-     question: `Fix "${finding.title}" requires significant changes (~${estimatedLines} lines). Proceed?`,
-     header: "Complex Fix",
-     options: [
-       { label: "Yes, apply fix (Recommended)", description: "Agent will implement the fix" },
-       { label: "Skip this one", description: "Move to next finding" }
-     ],
-     multiSelect: false
-   }])
-   ```
-4. **Only Technical Impossibility**: Only skip if technically impossible (e.g., missing dependency, file locked)
-5. **Report All Skips**: Any skipped item MUST appear in failed count with clear reason
-6. **Include Backlog**: In fix-all mode, backlog items ARE included (unlike 80/20 mode)
-
-**Accounting in Fix-All Mode:**
-```javascript
-// In fix-all mode: notSelected should be 0 (everything is selected)
-if (config.applyMode === "Fix all") {
-  assert(notSelected.length === 0, "Fix-all mode: all items must be selected")
-}
-```
+When `--fix-all`: Zero skip, zero decline, backlog included. Complex fix (>50 lines) → ask user. Only technical impossibility = fail. Accounting: `notSelected = 0` always.
 
 ---
 
@@ -542,33 +515,10 @@ When `--quick` flag:
 5. **Evidence required** - Every recommendation needs file:line reference
 6. **Progressive display** - Show foundation assessment as it completes
 7. **Dependency audit** - Always check for outdated packages and security advisories
-8. **Counting consistency** - See Counting Principle in cco-tools.md
+8. **Counting consistency** - Count findings, not locations
 
 ---
 
-## Counting Principle
+## Accounting
 
-**Reference:** See `cco-tools.md` → Counting Principle for full rules.
-
-**This command uses:** `applied + notSelected + failed = total`
-
-```javascript
-// Review-specific accounting:
-selected = toApply.length           // Items user chose to apply
-notSelected = total - selected      // Items user didn't choose
-applied = applyResults.applied      // Agent successfully fixed
-failed = selected - applied         // Agent couldn't fix
-
-// Invariant 1: selected + notSelected = total
-// Invariant 2: applied + failed = selected
-// Invariant 3: applied + notSelected + failed = total
-```
-
-### Display Requirements
-
-| Stage | What to Show | Count Source |
-|-------|--------------|--------------|
-| Pre-Apply table | ALL items in toApply | `toApply.length` |
-| "Applying N..." | Exact toApply count | `toApply.length` |
-| Summary status | applied, notSelected, failed | From calculations above |
-| Priority breakdown | Per-priority: selected, applied, failed | Filter by priority |
+**Invariant:** `applied + notSelected + failed = total` (count findings, not locations)

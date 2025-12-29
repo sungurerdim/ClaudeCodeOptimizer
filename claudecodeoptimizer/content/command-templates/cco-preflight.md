@@ -43,22 +43,9 @@ Run /cco-config first to configure project context, then restart CLI.
 
 ---
 
-## Fix-All Behavior [CRITICAL]
+## Fix-All Mode
 
-When `--fix-all` flag is passed:
-
-**MANDATORY:**
-1. Pass `--fix-all` to both `/cco-optimize` and `/cco-review`
-2. All findings from both commands MUST be fixed (no skipping)
-3. If sub-command encounters complex fix, user will be prompted
-4. Final accounting: declined/notSelected should be 0
-
-```javascript
-// When --fix-all flag:
-const fixAllFlag = args.includes("--fix-all")
-const optimizeArgs = fixAllFlag ? "--pre-release --fix-all" : "--pre-release --fix"
-const reviewArgs = fixAllFlag ? "--fix-all" : "--quick"
-```
+When `--fix-all`: Pass to both `/cco-optimize --fix-all` and `/cco-review --fix-all`. All findings fixed, no skipping. Final accounting: `declined = 0`.
 
 ---
 
