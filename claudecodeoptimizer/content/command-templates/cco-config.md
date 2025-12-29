@@ -17,7 +17,7 @@ allowed-tools: Read(*), Write(*), Edit(*), Bash(cco-install:*), Task(*), TodoWri
   - Defaults:
     - Context: Setup/Update
     - Statusline: Skip (keep unchanged)
-    - Permissions: Balanced (auto-approve read + lint/test)
+    - Permissions: Skip (keep unchanged)
     - Thinking: Enabled
     - Budget: AI-recommended based on project complexity
     - Output: AI-recommended based on project complexity
@@ -61,7 +61,7 @@ if (isUnattended) {
   setupConfig = {
     context: "Setup/Update",
     statusline: "Skip",           // Non-invasive: keep unchanged
-    permissions: "Balanced",       // Full capability: auto-approve read + lint/test
+    permissions: "Skip",          // Non-invasive: keep unchanged
     thinking: "Enabled"
   }
 
@@ -309,7 +309,7 @@ if (scopeQuestions.length > 0) {
 ```bash
 # Copy statusline script to global config
 CCO_PATH=$(python3 -c "from claudecodeoptimizer.config import get_content_path; print(get_content_path('statusline'))")
-cp "$CCO_PATH/cco-{mode}.js" ~/.claude/cco-{mode}.js
+cp "$CCO_PATH/cco-{mode}.js" ~/.claude/cco-statusline.js
 
 # Update global settings.json (merge statusLine key only)
 # Other global settings preserved
@@ -318,14 +318,14 @@ cp "$CCO_PATH/cco-{mode}.js" ~/.claude/cco-{mode}.js
 **Local Installation:**
 ```bash
 # Copy to project .claude (existing behavior)
-cp "$CCO_PATH/cco-{mode}.js" ./.claude/cco-{mode}.js
+cp "$CCO_PATH/cco-{mode}.js" ./.claude/cco-statusline.js
 # Update ./.claude/settings.json
 ```
 
 **Global Removal:**
 ```bash
 # Remove statusline from global config
-rm -f ~/.claude/cco-*.js
+rm -f ~/.claude/cco-statusline.js
 # Remove statusLine key from ~/.claude/settings.json
 
 # Remove permissions from global config
@@ -335,7 +335,7 @@ rm -f ~/.claude/cco-*.js
 **Local Removal:**
 ```bash
 # Remove statusline from project
-rm -f ./.claude/cco-*.js
+rm -f ./.claude/cco-statusline.js
 # Remove statusLine key from ./.claude/settings.json
 
 # Remove permissions from project
@@ -670,7 +670,7 @@ Task("cco-agent-apply", `
 
     // Statusline - ALWAYS overwrite (copy from CCO package)
     // If user selected Full or Minimal:
-    { path: "cco-{mode}.js", mode: "overwrite", source: "$CCO_PATH/cco-{mode}.js" },
+    { path: "cco-statusline.js", mode: "overwrite", source: "$CCO_PATH/cco-{mode}.js" },
 
     // Settings - MERGE (only file that preserves existing content)
     { path: "settings.json", mode: "merge", content: {settings_object} }
@@ -732,13 +732,13 @@ The cco-agent-analyze agent handles all detection-to-rule mapping internally usi
 
 | Mode | Scope | Target | Settings File |
 |------|-------|--------|---------------|
-| Full | Global | `~/.claude/cco-full.js` | `~/.claude/settings.json` |
-| Full | Local | `${targetDir}/cco-full.js` | `${targetDir}/settings.json` |
-| Minimal | Global | `~/.claude/cco-minimal.js` | `~/.claude/settings.json` |
-| Minimal | Local | `${targetDir}/cco-minimal.js` | `${targetDir}/settings.json` |
+| Full | Global | `~/.claude/cco-statusline.js` | `~/.claude/settings.json` |
+| Full | Local | `${targetDir}/cco-statusline.js` | `${targetDir}/settings.json` |
+| Minimal | Global | `~/.claude/cco-statusline.js` | `~/.claude/settings.json` |
+| Minimal | Local | `${targetDir}/cco-statusline.js` | `${targetDir}/settings.json` |
 | Skip | - | No action | No change |
-| Remove | Global | Delete `~/.claude/cco-*.js` | Remove statusLine from `~/.claude/settings.json` |
-| Remove | Local | Delete `${targetDir}/cco-*.js` | Remove statusLine from `${targetDir}/settings.json` |
+| Remove | Global | Delete `~/.claude/cco-statusline.js` | Remove statusLine from `~/.claude/settings.json` |
+| Remove | Local | Delete `${targetDir}/cco-statusline.js` | Remove statusLine from `${targetDir}/settings.json` |
 
 **Permissions Mapping:**
 
@@ -760,7 +760,7 @@ fi
 
 # Copy from package (never generate)
 CCO_PATH=$(python3 -c "from claudecodeoptimizer.config import get_content_path; print(get_content_path('statusline'))")
-cp "$CCO_PATH/cco-{mode}.js" "$STATUSLINE_DIR/cco-{mode}.js"
+cp "$CCO_PATH/cco-${mode}.js" "$STATUSLINE_DIR/cco-statusline.js"
 
 # Update settings.json in the same directory
 # Merge statusLine key into $STATUSLINE_DIR/settings.json
@@ -771,13 +771,13 @@ cp "$CCO_PATH/cco-{mode}.js" "$STATUSLINE_DIR/cco-{mode}.js"
 {
   "statusLine": {
     "type": "command",
-    "command": "node -e \"require('child_process').spawnSync('node',[require('path').join('${STATUSLINE_DIR}','cco-${mode}.js')],{stdio:'inherit'})\"",
+    "command": "node -e \"require('child_process').spawnSync('node',[require('path').join('${STATUSLINE_DIR}','cco-statusline.js')],{stdio:'inherit'})\"",
     "padding": 1
   }
 }
 ```
 
-**Note:** When scope is Global, the statusLine command uses absolute path `~/.claude/cco-{mode}.js`. When Local, it uses relative path `.claude/cco-{mode}.js`.
+**Note:** When scope is Global, the statusLine command uses absolute path `~/.claude/cco-statusline.js`. When Local, it uses relative path `.claude/cco-statusline.js`.
 
 ### If action = Remove (Context)
 
@@ -844,7 +844,7 @@ Task("cco-agent-apply", `
 ```
 [x] Files written/removed
 [x] No errors
-→ Proceed to Step-7
+→ Proceed to Step-5
 ```
 
 ---

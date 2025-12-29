@@ -41,12 +41,12 @@ def _create_install_parser() -> argparse.ArgumentParser:
         formatter_class=argparse.RawDescriptionHelpFormatter,
         epilog="""
 Local mode (for cco-config):
-  cco-install --local . --statusline full --permissions balanced
+  cco-install --local . --statusline cco-full --permissions balanced
 
 Dry run mode:
   cco-install --dry-run
 
-Statusline modes: full, minimal
+Statusline modes: cco-full, cco-minimal
 Permission levels: safe, balanced, permissive, full
 """,
     )

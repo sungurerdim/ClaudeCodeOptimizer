@@ -48,14 +48,14 @@ Then in Claude Code:
 
 ## Rules System
 
-**1699 rules** organized in 4 categories:
+**1791 rules** organized in 4 categories:
 
 | Category | Count | When Loaded |
 |----------|-------|-------------|
 | Core | 73 | Always (fundamental principles) |
 | AI | 37 | Always (behavior patterns) |
 | Tools | 107 | On-demand (CCO workflows) |
-| Adaptive | 1482 | Per-project (stack-specific) |
+| Adaptive | 1574 | Per-project (stack-specific) |
 
 <details>
 <summary><b>Supported Stacks</b></summary>

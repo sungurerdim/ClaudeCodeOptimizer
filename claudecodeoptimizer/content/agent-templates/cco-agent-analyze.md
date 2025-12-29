@@ -296,11 +296,22 @@ Combines all analysis for dashboard: Security (OWASP, secrets, CVE) │ Tests (c
 
 ### config
 
-Config scope handles project detection and rule generation. **Single-phase execution with targeted extraction.**
+Config scope handles project detection and rule generation. **Supports both single-phase and two-phase execution.**
 
-**[CRITICAL] Single-Phase Architecture**
+**Execution Modes**
 
-No separate detect/generate phases. All work done in one agent call to avoid context duplication.
+| Mode | When Used | Phases |
+|------|-----------|--------|
+| Single-phase | Direct call with all inputs | Detection + Generation in one call |
+| Two-phase | cco-config (UX optimization) | Phase 1: Detection (background), Phase 2: Generation (after user input) |
+
+**Two-phase mode** (used by cco-config):
+1. Phase 1 runs detection in background while user answers setup questions
+2. Phase 2 generates rules after user provides Data/Compliance inputs
+3. Each phase is a separate agent call - context is passed between phases
+
+**Single-phase mode** (direct call):
+All work done in one agent call when `userInput` is already available.
 
 | Step | Action | Tool | Execution |
 |------|--------|------|-----------|
