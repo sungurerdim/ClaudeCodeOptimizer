@@ -1,7 +1,7 @@
 ---
 name: cco-config
 description: Configure project context and AI behavior
-allowed-tools: Read(*), Write(*), Edit(*), Bash(cco-install:*), Task(*), TodoWrite, AskUserQuestion
+allowed-tools: Read(*), Write(*), Edit(*), Bash(*), Task(*), AskUserQuestion
 ---
 
 # /cco-config
@@ -84,24 +84,6 @@ if (isUnattended) {
 | 3 | Context | Q2: Context details (conditional) | Only if Setup/Update |
 | 4 | Apply | Write files | Background |
 | 5 | Report | Summary | Instant |
-
----
-
-## Progress Tracking [SKIP IF --auto]
-
-**If `--auto` flag: Skip TodoWrite entirely. Silent execution.**
-
-```javascript
-if (!isUnattended) {
-  TodoWrite([
-    { content: "Step-1: Pre-detect (background)", status: "in_progress", activeForm: "Running pre-detection" },
-    { content: "Step-2: Setup configuration", status: "pending", activeForm: "Getting setup options" },
-    { content: "Step-3: Context details", status: "pending", activeForm: "Getting context details" },
-    { content: "Step-4: Apply configuration", status: "pending", activeForm: "Applying configuration" },
-    { content: "Step-5: Show report", status: "pending", activeForm: "Showing final report" }
-  ])
-}
-```
 
 ---
 

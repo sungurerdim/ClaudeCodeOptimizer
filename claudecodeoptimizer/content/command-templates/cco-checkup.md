@@ -1,20 +1,19 @@
 ---
 name: cco-checkup
 description: Regular maintenance routine
-allowed-tools: Read(*), Grep(*), Glob(*), Edit(*), Bash(*), Task(*), TodoWrite, AskUserQuestion
+allowed-tools: Read(*), Grep(*), Glob(*), Edit(*), Bash(*), Task(*)
 ---
 
 # /cco-checkup
 
 **Maintenance Routine** - Parallel health + audit for fast weekly checkups.
 
-Meta command running /cco-status and /cco-optimize in parallel.
+Meta command: runs /cco-status and /cco-optimize in parallel. No TodoWrite - delegates to sub-commands.
 
 ## Context
 
 - Context check: !`test -f ./.claude/rules/cco/context.md && echo "1" || echo "0"`
 - Git status: !`git status --short`
-- Recent activity: !`git log --oneline -5`
 
 **DO NOT re-run these commands. Use the pre-collected values above.**
 
@@ -28,162 +27,77 @@ Run /cco-config first to configure project context, then restart CLI.
 ```
 **Stop immediately.**
 
-## Architecture
-
-| Step | Name | Action | Optimization |
-|------|------|--------|--------------|
-| 1 | Phase Select | Ask which phases | Skip with flags |
-| 2 | Execute | Parallel: health + audit | 2x faster |
-| 3 | Summary | Merge and display | Instant |
-
 ---
 
-## Progress Tracking [CRITICAL]
+## Execution
+
+### 1. Launch Parallel Tasks
 
 ```javascript
-TodoWrite([
-  { content: "Step-1: Select phases", status: "in_progress", activeForm: "Selecting phases" },
-  { content: "Step-2: Run health + audit (parallel)", status: "pending", activeForm: "Running health and audit" },
-  { content: "Step-3: Show summary", status: "pending", activeForm: "Showing summary" }
-])
-```
+// Determine phases from flags
+phases = args.includes('--health-only') ? 'health'
+       : args.includes('--audit-only') ? 'audit'
+       : 'both'
 
----
-
-## Step-1: Phase Selection
-
-**Smart Default:** Run both phases (health + audit) without asking.
-
-```javascript
-// Default: Both phases - no question needed
-phases = "Both"
-
-// Flags override:
-// --health-only → phases = "Health Dashboard"
-// --audit-only → phases = "Quality Audit"
-```
-
-### Validation
-```
-[x] Phases determined (default: Both)
-→ Store as: phases = {selection}
-→ Proceed to Step-2
-```
-
----
-
-## Step-2: Execute [PARALLEL]
-
-**Launch both sub-commands in a SINGLE message if both selected:**
-
-```javascript
-// CRITICAL: Both Task calls in ONE message for true parallelism
-
-if (phases === "Both" || phases === "Health Dashboard") {
+// Launch in parallel (SINGLE message with multiple Task calls)
+if (phases === 'both' || phases === 'health') {
   healthTask = Task("general-purpose", `
     Execute /cco-status --brief
-    Return: {
-      scores: { security, quality, architecture, bestPractices, overall },
-      status: "OK|WARN|FAIL|CRITICAL"
-    }
-  `, { model: "haiku", run_in_background: phases === "Both" })
+    Return: { scores: {...}, status: "OK|WARN|FAIL|CRITICAL" }
+  `, { model: "haiku", run_in_background: phases === 'both' })
 }
 
-if (phases === "Both" || phases === "Quality Audit") {
+if (phases === 'both' || phases === 'audit') {
   auditTask = Task("general-purpose", `
     Execute /cco-optimize --fix --security --quality
-    Return: {
-      accounting: { applied, declined, failed, total },
-      by_scope: { security: {n}, quality: {n} }
-    }
-  `, { model: "opus", run_in_background: phases === "Both" })  // Opus: 50-75% fewer tool errors
+    Return: { accounting: { applied, declined, failed, total } }
+  `, { model: "opus", run_in_background: phases === 'both' })
 }
+```
 
-// If both running, collect results
-if (phases === "Both") {
+### 2. Collect Results
+
+```javascript
+if (phases === 'both') {
   healthResults = await TaskOutput(healthTask.id)
   auditResults = await TaskOutput(auditTask.id)
 }
 ```
 
-**Parallel Execution:**
-- Health (read-only) uses Haiku for speed
-- Audit (writes) uses Opus for accuracy (50-75% fewer tool errors)
-- Both complete in ~same time as single command
-
-**Model Rationale:** Opus for audit ensures reliable code modifications with minimal retries.
-
-### Validation
-```
-[x] Selected tasks launched in parallel
-[x] Results collected
-→ Proceed to Step-3
-```
-
----
-
-## Step-3: Summary
+### 3. Display Summary
 
 ```
 ## Checkup Complete
 
 ### Health Dashboard
-| Category | Score | Status |
-|----------|-------|--------|
-| Security | {scores.security} | {getStatus(scores.security)} |
-| Quality | {scores.quality} | {getStatus(scores.quality)} |
-| Architecture | {scores.architecture} | {getStatus(scores.architecture)} |
-| Best Practices | {scores.bestPractices} | {getStatus(scores.bestPractices)} |
-| **Overall** | **{scores.overall}** | **{status}** |
+| Category       | Score | Status |
+|----------------|-------|--------|
+| Security       | {n}   | {status} |
+| Quality        | {n}   | {status} |
+| Architecture   | {n}   | {status} |
+| Best Practices | {n}   | {status} |
+| **Overall**    | **{n}** | **{status}** |
 
 ### Quality Audit
-| Scope | Applied | Declined | Failed |
-|-------|---------|----------|--------|
-| Security | {by_scope.security} | - | - |
-| Quality | {by_scope.quality} | - | - |
-| **Total** | **{accounting.applied}** | **{accounting.declined}** | **{accounting.failed}** |
+Applied: {n} | Declined: {n} | Failed: {n}
 
-Status: {status} | Applied: {accounting.applied} | Declined: {accounting.declined} | Failed: {accounting.failed} | Total: {accounting.total}
-
-Duration: {n}s
-```
-
-### Validation
-```
-[x] Summary displayed
-[x] All todos marked completed
-→ Done
+Status: {status}
 ```
 
 ---
 
-## Reference
-
-### Comparison
-
-| Need | Command |
-|------|---------|
-| Weekly maintenance | `/cco-checkup` |
-| Pre-release | `/cco-preflight` |
-| Deep audit | `/cco-optimize` |
-| Strategic review | `/cco-review` |
-
-### Flags
+## Flags
 
 | Flag | Effect |
 |------|--------|
-| `--dry-run` | Preview only |
-| `--no-fix` | Report only (health + audit report) |
-| `--deep` | Full deep audit |
 | `--health-only` | Skip audit |
 | `--audit-only` | Skip health |
-| `--sequential` | Disable parallel (debug) |
-
----
+| `--dry-run` | Preview only |
+| `--no-fix` | Report only |
 
 ## Rules
 
-1. **Parallel-first** - Launch health + audit in single message
-2. **Model strategy** - Haiku for health (read-only), Opus for audit (writes)
-3. **Delegate to sub-commands** - Reuse sub-command logic
-4. **Aggregate results** - Merge outputs for summary
+1. **Parallel-first** - Launch both in single message
+2. **Model strategy** - Haiku for health, Opus for audit
+3. **Delegate** - Sub-commands handle their own logic
+4. **Fast** - No TodoWrite, sub-commands show progress

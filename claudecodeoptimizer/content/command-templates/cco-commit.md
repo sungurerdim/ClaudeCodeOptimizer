@@ -1,13 +1,13 @@
 ---
 name: cco-commit
 description: Atomic commits with quality gates
-allowed-tools: Read(*), Grep(*), Edit(*), Bash(*), TodoWrite, AskUserQuestion
+allowed-tools: Read(*), Grep(*), Edit(*), Bash(*), AskUserQuestion
 model: opus
 ---
 
 # /cco-commit
 
-**Smart Commits** - Parallel quality gates + atomic grouping with minimal questions.
+**Smart Commits** - Fast quality gates + atomic grouping, no unnecessary questions.
 
 ## Context
 
@@ -31,25 +31,12 @@ model: opus
 
 | Step | Name | Action | Optimization |
 |------|------|--------|--------------|
-| 1 | Pre-checks | Conflicts check + parallel quality gates | Background |
-| 2 | Analyze | Group changes atomically | While gates run |
-| 3 | Approval | Q1: Combined commit settings | Single question |
-| 4 | Execute | Create commits | Sequential |
-| 5 | Summary | Show results | Instant |
+| 1 | Pre-checks | Conflicts + quality gates | Parallel, conditional tests |
+| 2 | Analyze | Group changes, show table | Smart grouping |
+| 3 | Execute | Create commits | Direct (no question) |
+| 4 | Summary | Show results | Instant |
 
----
-
-## Progress Tracking [CRITICAL]
-
-```javascript
-TodoWrite([
-  { content: "Step-1: Run pre-checks and quality gates", status: "in_progress", activeForm: "Running checks" },
-  { content: "Step-2: Analyze and group changes", status: "pending", activeForm: "Analyzing changes" },
-  { content: "Step-3: Get commit approval", status: "pending", activeForm: "Getting approval" },
-  { content: "Step-4: Execute commits", status: "pending", activeForm: "Executing commits" },
-  { content: "Step-5: Show summary", status: "pending", activeForm: "Showing summary" }
-])
-```
+**No TodoWrite** - Fast operation, output is self-explanatory.
 
 ---
 
@@ -63,418 +50,244 @@ Cannot commit: {n} conflict(s) detected. Resolve first.
 ```
 **Stop immediately.**
 
-### 1.2: Quality Gates [PARALLEL + BACKGROUND]
-
-**Smart Default:** Stage all unstaged changes automatically. Use `--staged-only` to commit only staged.
-
-**Targeted Execution:** Run quality checks on **changed files only** for speed. Use `--full-project` flag to check entire project when cross-file issues are suspected.
+### 1.2: Detect File Types
 
 ```javascript
-// Get changed files (language-agnostic)
+// Get changed files
 changedFiles = Bash("git diff --name-only HEAD").split('\n').filter(f => f.trim())
 
-// Phase 1: Blocking checks (instant, parallel) - on changed files only
-Bash(`grep -n 'api_key\\|password\\|secret\\|token\\|credential' ${changedFiles.join(' ')} 2>/dev/null || true`)
-Bash(`find ${changedFiles.join(' ')} -size +10M 2>/dev/null || true`)
+// Categorize files
+codeFiles = changedFiles.filter(f => f.match(/\.(py|js|ts|go|rs|java|rb|php|c|cpp|h)$/))
+testFiles = changedFiles.filter(f => f.match(/test[_.]|_test\.|\.test\.|spec\./i))
+docFiles = changedFiles.filter(f => f.match(/\.(md|txt|rst|adoc)$/))
+configFiles = changedFiles.filter(f => f.match(/\.(json|yaml|yml|toml|ini|cfg)$/))
 
-// Phase 2: Code quality (parallel) - Commands from context.md Operational.Tools
-// TARGETED: Replace "." with changed files list for ~85% token reduction
-// Example: "ruff format ." → "ruff format file1.py file2.py"
-targetFiles = args.includes('--full-project') ? '.' : changedFiles.join(' ')
-
-formatTask = Bash(`{format_command} ${targetFiles} 2>&1`, { run_in_background: true })
-lintTask = Bash(`{lint_command} ${targetFiles} 2>&1`, { run_in_background: true })
-typeTask = Bash(`{type_command} ${targetFiles} 2>&1`, { run_in_background: true })
-
-// Phase 3: Tests - smart selection based on changed files
-// Use test framework's built-in file targeting when available
-testTask = Bash("{test_command} 2>&1", { run_in_background: true })
+hasCodeChanges = codeFiles.length > 0
+hasTestChanges = testFiles.length > 0
 ```
 
-**Why targeted?** Commits typically touch 2-5 files. Checking only those files reduces output by ~85% while catching relevant issues. Use `--full-project` when refactoring imports or types.
-
-| Gate | Execution | Action |
-|------|-----------|--------|
-| Secrets | Parallel Phase 1 | BLOCK if found |
-| Large Files | Parallel Phase 1 | BLOCK if >10MB |
-| Format | Parallel Phase 2 | Auto-fix, re-stage |
-| Lint | Parallel Phase 2 | Collect errors |
-| Types | Parallel Phase 2 | Collect errors |
-| Tests | Background Phase 3 | Check before commit |
-
-### 1.3: Collect Gate Results
+### 1.3: Quality Gates [PARALLEL + CONDITIONAL]
 
 ```javascript
-// Wait for Phase 2 results
-formatResult = await TaskOutput(formatTask.id)
-lintResult = await TaskOutput(lintTask.id)
-typeResult = await TaskOutput(typeTask.id)
+// Phase 1: Blocking checks (always, instant)
+Bash(`grep -rn 'api_key\\|password\\|secret\\|token\\|credential' ${changedFiles.join(' ')} 2>/dev/null | grep -v '.md:' || true`)
+Bash(`find ${changedFiles.join(' ')} -size +10M 2>/dev/null || true`)
 
-// Determine gate status
+// Phase 2: Code quality (only if code files changed)
+if (hasCodeChanges) {
+  targetFiles = changedFiles.filter(f => codeFiles.includes(f)).join(' ')
+
+  formatTask = Bash(`{format_command} ${targetFiles} 2>&1`, { run_in_background: true })
+  lintTask = Bash(`{lint_command} ${targetFiles} 2>&1`, { run_in_background: true })
+  typeTask = Bash(`{type_command} ${targetFiles} 2>&1`, { run_in_background: true })
+}
+
+// Phase 3: Tests (CONDITIONAL - skip if only docs/config changed)
+if (hasCodeChanges || hasTestChanges) {
+  testTask = Bash("{test_command} 2>&1", { run_in_background: true })
+} else {
+  // Skip tests for doc-only or config-only changes
+  testTask = null
+}
+```
+
+**Conditional Test Logic:**
+| Changed Files | Run Tests? |
+|---------------|------------|
+| Code (.py, .js, etc.) | Yes |
+| Tests (test_*, *_test.*) | Yes |
+| Docs only (.md) | No |
+| Config only (.json, .yaml) | No |
+| Mixed | Yes |
+
+### 1.4: Collect Gate Results
+
+```javascript
 gateFailures = []
-if (lintResult.exitCode !== 0) gateFailures.push({ gate: "Lint", error: lintResult.stderr })
-if (typeResult.exitCode !== 0) gateFailures.push({ gate: "Types", error: typeResult.stderr })
 
-// Detect breaking changes
-breakingChanges = detectBreakingChanges(gitDiff)
+if (hasCodeChanges) {
+  formatResult = await TaskOutput(formatTask.id)
+  lintResult = await TaskOutput(lintTask.id)
+  typeResult = await TaskOutput(typeTask.id)
+
+  if (lintResult.exitCode !== 0) gateFailures.push({ gate: "Lint", error: lintResult.stderr })
+  if (typeResult.exitCode !== 0) gateFailures.push({ gate: "Types", error: typeResult.stderr })
+}
+
+if (testTask) {
+  testResult = await TaskOutput(testTask.id)
+  if (testResult.exitCode !== 0) gateFailures.push({ gate: "Tests", error: testResult.stderr })
+}
 ```
 
-### Validation
-```
-[x] No conflicts
-[x] Phase 1 passed (no secrets, no large files)
-[x] Phase 2 results collected
-[x] Tests running in background
-→ Proceed to Step-2
+### Gate Failure Handling
+
+```javascript
+if (gateFailures.length > 0) {
+  // Ask only if there are failures
+  AskUserQuestion([{
+    question: `${gateFailures[0].gate} failed. How to proceed?`,
+    header: "Failure",
+    options: [
+      { label: "Fix first (Recommended)", description: "Cancel and fix the issue" },
+      { label: "Commit anyway", description: "Proceed despite failure" }
+    ],
+    multiSelect: false
+  }])
+
+  if (response === "Fix first") {
+    // Show error details and exit
+    console.log(`\n**${gateFailures[0].gate} Error:**\n${gateFailures[0].error}`)
+    return
+  }
+}
 ```
 
 ---
 
-## Step-2: Analyze Changes [WHILE TESTS RUN]
+## Step-2: Analyze Changes
 
-**Analyze and group while tests run in background.**
-
-### 2.1: Collect ALL Uncommitted Changes [CRITICAL]
+### 2.1: Collect ALL Uncommitted Changes
 
 ```javascript
-// CRITICAL: Include ALL uncommitted changes, not just session changes
-// This means: modified, added, deleted, renamed, untracked - EVERYTHING
-
-// Get complete list of all uncommitted files
 allChanges = {
-  staged: Bash("git diff --cached --name-only").split('\n'),      // Already staged
-  unstaged: Bash("git diff --name-only").split('\n'),             // Modified but not staged
-  untracked: Bash("git ls-files --others --exclude-standard").split('\n')  // New files
+  staged: Bash("git diff --cached --name-only").split('\n').filter(f => f.trim()),
+  unstaged: Bash("git diff --name-only").split('\n').filter(f => f.trim()),
+  untracked: Bash("git ls-files --others --exclude-standard").split('\n').filter(f => f.trim())
 }
 
-// Combine all - these are the files to commit
 filesToCommit = [...new Set([
   ...allChanges.staged,
   ...allChanges.unstaged,
   ...allChanges.untracked
-])].filter(f => f.trim())
+])]
 
-// If --staged-only flag, only use staged files
 if (args.includes('--staged-only')) {
-  filesToCommit = allChanges.staged.filter(f => f.trim())
+  filesToCommit = allChanges.staged
 }
 ```
 
-### 2.2: Group Changes Atomically
+### 2.2: Smart Grouping
 
 ```javascript
-// Group changes atomically
-// - Keep together: Implementation + tests, renames, single logical change
-// - Split apart: Different features, unrelated files, config vs code
-// - Order: Types → Core → Dependent → Tests → Docs
+// Get diff for analysis
+gitDiff = Bash("git diff HEAD")
 
-// Get full diff content for analysis
-gitDiff = Bash("git diff HEAD")  // All changes vs HEAD
-gitDiffUntracked = filesToCommit
-  .filter(f => allChanges.untracked.includes(f))
-  .map(f => Bash(`cat "${f}"`))  // Content of new files
+// Smart grouping rules:
+// - ≤5 files OR single logical change → single commit
+// - Different features/scopes → split commits
+// - Default: single commit (simpler, user can always split manually)
 
-// [CRITICAL] Commit message generation rules:
-// 1. ONLY analyze gitDiff content - what lines were added/removed
-// 2. NEVER use session memory or conversation context
-// 3. Describe WHAT changed in the diff, not WHY you changed it
-// 4. If diff shows "A" replaced with "B", message is about "B", not "fixing A"
-// 5. Previous commit state is unknown - only diff content matters
+if (args.includes('--split')) {
+  commitPlan = splitByScope(filesToCommit, gitDiff)
+} else {
+  // Default: single commit
+  commitPlan = { commits: [{ files: filesToCommit, message: generateMessage(gitDiff) }] }
+}
 
-commitPlan = analyzeChanges(filesToCommit, gitDiff, gitDiffUntracked)
-// Returns: { commits: [{ files: [], message: { type, scope, title, body }, breaking: boolean }] }
+// [CRITICAL] Message generation rules:
+// 1. ONLY analyze gitDiff content
+// 2. NEVER use session memory
+// 3. Describe WHAT changed, not WHY
 ```
 
-### Validation
-```
-[x] All uncommitted changes collected (staged + unstaged + untracked)
-[x] Changes grouped atomically
-[x] Commit messages generated
-→ Proceed to Step-3
-```
+### 2.3: Display Commit Plan
 
----
-
-## Step-3: Approval [Q1 - DYNAMIC TABS]
-
-**Display commit table BEFORE asking approval question:**
-
-### Pre-Confirmation Display [MANDATORY]
-
-```markdown
+```javascript
+console.log(`
 ## Changes to Commit
-
-**Source:** All uncommitted changes (staged: {n}, unstaged: {n}, untracked: {n})
 
 | # | Type | Title | Files |
 |---|------|-------|-------|
-| 1 | {type} | {title} | {n} files |
-| 2 | {type} | {title} | {n} files |
-...
+${commitPlan.commits.map((c, i) =>
+  `| ${i+1} | ${c.message.type} | ${c.message.title} | ${c.files.length} |`
+).join('\n')}
 
-Total: {n} commit(s), {n} file(s), +{added} -{removed} lines
-```
-
-**Build Q1 with only relevant tabs based on context:**
-
-```javascript
-// Check conditions
-hasStash = stashList.trim().length > 0
-hasGateFailures = gateFailures.length > 0
-hasBreakingChanges = breakingChanges.length > 0
-
-// Wait for test results now
-testResult = await TaskOutput(testTask.id)
-hasTestFailures = testResult.exitCode !== 0
-
-// Display commit table BEFORE question
-console.log(formatCommitTable(commitPlan.commits))
-
-// Build questions dynamically
-questions = []
-
-// Tab 1: Stash handling (only if stash exists)
-if (hasStash) {
-  questions.push({
-    question: "You have stashed changes. What to do?",
-    header: "Stash",
-    options: [
-      { label: "Keep stashed (Recommended)", description: "Continue without stash" },
-      { label: "Apply and include", description: "Apply to working tree, include in commit" },
-      { label: "Pop and include", description: "Pop to working tree, include in commit" }
-    ],
-    multiSelect: false
-  })
-}
-
-// Tab 2: Commit plan (always)
-questions.push({
-  question: `Commit plan: ${commitPlan.commits.length} commit(s). How to proceed?`,
-  header: "Plan",
-  options: [
-    { label: "Accept (Recommended)", description: "Execute commits as planned" },
-    { label: "Single commit", description: "Combine all into one commit" },
-    { label: "Edit messages", description: "Modify commit messages first" },
-    { label: "Cancel", description: "Abort without committing" }
-  ],
-  multiSelect: false
-})
-
-// Tab 3: Breaking changes (only if detected)
-if (hasBreakingChanges) {
-  questions.push({
-    question: `Breaking change detected: ${breakingChanges[0].description}. Add footer?`,
-    header: "Breaking",
-    options: [
-      { label: "Add BREAKING CHANGE (Recommended)", description: "Add footer to commit message" },
-      { label: "Not breaking", description: "This is not a breaking change" }
-    ],
-    multiSelect: false
-  })
-}
-
-// Tab 4: Gate/Test failures (only if failures exist)
-if (hasGateFailures || hasTestFailures) {
-  const failureType = hasTestFailures ? "Tests" : gateFailures[0].gate
-  const failureMsg = hasTestFailures ? testResult.stderr : gateFailures[0].error
-
-  questions.push({
-    question: `${failureType} failed. How to proceed?`,
-    header: "Failure",
-    options: [
-      { label: "Fix first (Recommended)", description: "Cancel and fix the issue" },
-      { label: "Skip check", description: "Continue without this check" },
-      { label: "Commit anyway", description: "Proceed despite failure" }
-    ],
-    multiSelect: false
-  })
-}
-
-AskUserQuestion(questions)
-```
-
-### Question Flow Summary
-
-| Condition | Tabs Shown |
-|-----------|------------|
-| Clean, no stash, no breaking | Plan only (1 tab) |
-| Has stash | Stash + Plan (2 tabs) |
-| Breaking change detected | Plan + Breaking (2 tabs) |
-| Test/gate failure | Plan + Failure (2 tabs) |
-| All conditions | Stash + Plan + Breaking + Failure (4 tabs) |
-
-### Validation
-```
-[x] User completed Q1
-→ If Plan = "Cancel" or Failure = "Fix first": Exit
-→ If Plan = "Edit messages": Show message editor, return to Q1
-→ If Plan = "Single commit": Merge commitPlan into single
-→ Proceed to Step-4
+Total: ${commitPlan.commits.length} commit(s), ${filesToCommit.length} file(s)
+${testTask === null ? '\n*Tests skipped (no code changes)*' : ''}
+`)
 ```
 
 ---
 
-## Step-4: Execute Commits
+## Step-3: Execute Commits [DIRECT]
 
-**Create commits sequentially:**
+**No approval question** - table was shown, user sees what will happen.
 
 ```javascript
 for (const commit of commitPlan.commits) {
   // Stage files
-  Bash(`git add ${commit.files.join(' ')}`)
+  Bash(`git add ${commit.files.map(f => `"${f}"`).join(' ')}`)
 
-  // Build message with footer if breaking
-  let message = `${commit.message.type}(${commit.message.scope}): ${commit.message.title}\n\n${commit.message.body}`
+  // Build message
+  let message = `${commit.message.type}(${commit.message.scope}): ${commit.message.title}`
 
-  if (commit.breaking && userApprovedBreaking) {
-    message += `\n\nBREAKING CHANGE: ${commit.breakingDescription}`
+  if (commit.message.body) {
+    message += `\n\n${commit.message.body}`
   }
 
-  // Append Claude Code signature with current model name
-  message += `\n\nGenerated with [Claude Code](https://claude.com/claude-code)\n\nCo-Authored-By: ${currentModelName} <noreply@anthropic.com>`
+  // Append signature
+  message += `\n\n🤖 Generated with [Claude Code](https://claude.com/claude-code)\n\nCo-Authored-By: ${currentModelName} <noreply@anthropic.com>`
 
-  // Create commit using HEREDOC
-  Bash(`git commit -m "$(cat <<'EOF'\n${message}\nEOF\n)"`)
+  // Create commit
+  Bash(`git commit -m "$(cat <<'EOF'
+${message}
+EOF
+)"`)
 }
 ```
-
-**Message Format:**
-```
-{type}({scope}): {title}
-
-{description}
-
-Generated with [Claude Code](https://claude.com/claude-code)
-
-Co-Authored-By: Claude Opus 4.5 <noreply@anthropic.com>
-```
-
-**Note:** Use the current active model name (e.g., Claude Opus 4.5, Claude Sonnet 4, Claude Haiku 3.5).
 
 ### Title Rules [CRITICAL]
 
 **MUST be ≤50 characters total** (including `type(scope): ` prefix)
 
-```javascript
-// VALIDATE before commit - this is BLOCKING
-const fullTitle = `${type}(${scope}): ${title}`
-if (fullTitle.length > 50) {
-  // SHORTEN the title, not optional
-  // Remove adjectives, use shorter words, abbreviate
-}
-```
-
-| Component | Max Length | Example |
-|-----------|------------|---------|
+| Component | Max | Example |
+|-----------|-----|---------|
 | type | 8 | `feat`, `fix`, `refactor` |
-| scope | 10 | `{module}`, `{feature}`, `{area}` |
-| title | ~30 | `{concise action description}` |
-| **TOTAL** | **≤50** | `{type}({scope}): {short title}` (≤50 chars ✓) |
-
-**Good:** `{type}({scope}): {short title}` (≤50 chars)
-**Bad:** `{type}({scope}): {title}, {extra detail}, and {more info}` (>50 chars ❌)
-
-| Rule | Requirement |
-|------|-------------|
-| Title | **≤50 chars total**, action verb, no period |
-| Description | What changed and why (1-3 lines) |
-| Scope | From affected module/feature |
-| Types | feat, fix, refactor, perf, test, docs, build, ci, chore |
-
-### Validation
-```
-[x] All commits created successfully
-→ Proceed to Step-5
-```
+| scope | 10 | `benchmark`, `templates` |
+| title | ~30 | concise action |
+| **TOTAL** | **≤50** | `fix(api): handle null response` |
 
 ---
 
-## Step-5: Summary
+## Step-4: Summary
 
 ```javascript
-// Build summary with conditional stash reminder
-let summary = `
+console.log(`
 ## Commit Complete
 
 | Metric | Value |
 |--------|-------|
-| Commits created | {n} |
-| Files changed | {n} |
-| Lines | +{added} -{removed} |
-| Branch | {branch} |
+| Commits | ${commitPlan.commits.length} |
+| Files | ${filesToCommit.length} |
+| Branch | ${branch} |
 
-Status: OK | Applied: {n} | Declined: 0 | Failed: 0
+${commitPlan.commits.map((c, i) =>
+  `- ${c.message.type}(${c.message.scope}): ${c.message.title}`
+).join('\n')}
 
-### Commits Created
-| # | Type | Title |
-|---|------|-------|
-| 1 | {type}({scope}) | {title} |
-| 2 | {type}({scope}) | {title} |
-...
+Next: \`git push origin ${branch}\`
+`)
 
-Next: git push origin {branch}`
-
-// Stash reminder if user chose "Keep stashed"
-if (hasStash && stashChoice === "Keep stashed") {
-  summary += `
-
-**Reminder:** You have stashed changes. Run \`git stash pop\` to restore them.`
+if (stashList.trim()) {
+  console.log(`\n**Note:** You have stashed changes. Run \`git stash pop\` if needed.`)
 }
-
-console.log(summary)
-```
-
-### Validation
-```
-[x] Summary displayed
-[x] All todos marked completed
-→ Done
 ```
 
 ---
 
-## Reference
-
-### Question Flow Summary
-
-| Scenario | Tabs | Total Questions |
-|----------|------|-----------------|
-| Clean state, simple commit | 1 (Plan) | 1 |
-| Has stash | 2 (Stash + Plan) | 1 |
-| Breaking change | 2 (Plan + Breaking) | 1 |
-| Test failure | 2 (Plan + Failure) | 1 |
-| Maximum complexity | 4 (all tabs) | 1 |
-
-**Key optimization:** All conditional situations handled in single Q1 with dynamic tabs.
-
-### Quick Mode (`--quick`)
-
-When `--quick` flag:
-- No questions - use smart defaults
-- Stage all changes
-- Single commit with auto-generated message
-- Complete in single message
-
-### Flags
+## Flags
 
 | Flag | Effect |
 |------|--------|
-| `--dry-run` | Show plan only |
-| `--single` | Force one commit |
-| `--quick` | Single-message, smart defaults |
-| `--skip-checks` | Skip quality gates |
-| `--amend` | Amend last (with safety) |
+| `--dry-run` | Show plan only, don't commit |
+| `--single` | Force single commit |
+| `--split` | Auto-split by scope |
+| `--skip-tests` | Skip test gate |
+| `--amend` | Amend last commit (safety checks apply) |
 | `--staged-only` | Commit only staged changes |
-| `--split` | Auto-split large changesets |
-| `--full-project` | Run quality gates on entire project (not just changed files) |
-
-### Context Application
-
-| Field | Effect |
-|-------|--------|
-| Tools | format/lint/test from Operational |
-| Maturity | Legacy → smaller commits; Greenfield → batch |
-| Type | Library → careful with API; API → note contracts |
+| `--full-project` | Run gates on entire project |
+| `--confirm` | Ask approval before commit (old behavior) |
 
 ---
 
@@ -482,24 +295,18 @@ When `--quick` flag:
 
 | Situation | Recovery |
 |-----------|----------|
-| Commit failed mid-way | `git status` to see state |
-| Wrong files committed | `git reset --soft HEAD~1` |
-| Bad commit message | `git commit --amend` (if not pushed) |
-| Quality gate broke something | `git checkout -- {file}` |
-| Need to abort | `git reset HEAD` |
-
-**Safe rule:** Local commits can always be amended/reset. Once pushed, create new commit.
+| Wrong files | `git reset --soft HEAD~1` |
+| Bad message | `git commit --amend` (if not pushed) |
+| Gate broke something | `git checkout -- {file}` |
 
 ---
 
 ## Rules
 
-1. **Title ≤50 chars** - BLOCKING: `type(scope): title` must be ≤50 total
-2. **Diff-only messages** - [CRITICAL] Generate commit messages ONLY from `git diff HEAD` content. NEVER use session memory or conversation context. Describe what the diff shows, not what you remember doing.
-3. **Parallel quality gates** - Format+lint+types in background
-4. **Background tests** - Start tests early, check before commit
-5. **Single question** - All conditional tabs in one Q1
-6. **Dynamic tabs** - Only show relevant tabs
-7. **Specific messages** - Use descriptive action verbs: "add", "fix", "refactor", "update"
-8. **Git safety** - Verify before push, prefer safe operations
-9. **Targeted checks** - Run format/lint/type on changed files only (~85% faster). Use `--full-project` for cross-file refactoring
+1. **Title ≤50 chars** - BLOCKING requirement
+2. **Diff-only messages** - Generate from `git diff HEAD` only, never session memory
+3. **Conditional tests** - Skip tests if only docs/config changed
+4. **No approval by default** - Table shown, commit direct, use `--confirm` if needed
+5. **Smart defaults** - Single commit unless `--split`
+6. **Parallel gates** - Format+lint+types run together
+7. **Fast path** - No TodoWrite, minimal questions

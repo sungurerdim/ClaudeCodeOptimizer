@@ -1,14 +1,14 @@
 ---
 name: cco-status
 description: Project health dashboard
-allowed-tools: Read(*), Grep(*), Glob(*), Bash(*), Task(*), TodoWrite
+allowed-tools: Read(*), Grep(*), Glob(*), Bash(*), Task(*)
 ---
 
 # /cco-status
 
-**Health Dashboard** - Snapshot metrics via cco-agent-analyze.
+**Health Dashboard** - Quick snapshot via cco-agent-analyze.
 
-Read-only metrics. No historical tracking, no file generation.
+Read-only. No TodoWrite - single agent call + display.
 
 ## Context
 
@@ -26,34 +26,14 @@ Run /cco-config first to configure project context, then restart CLI.
 ```
 **Stop immediately.**
 
-## Architecture
-
-| Step | Name | Action |
-|------|------|--------|
-| 1 | Collect | cco-agent-analyze with scan scope |
-| 2 | Process | Apply context multipliers |
-| 3 | Display | Show dashboard |
-
 ---
 
-## Progress Tracking [CRITICAL]
+## Execution
+
+### 1. Collect Metrics
 
 ```javascript
-TodoWrite([
-  { content: "Step-1: Collect metrics", status: "in_progress", activeForm: "Collecting metrics" },
-  { content: "Step-2: Process scores", status: "pending", activeForm: "Processing scores" },
-  { content: "Step-3: Display dashboard", status: "pending", activeForm: "Displaying dashboard" }
-])
-```
-
----
-
-## Step-1: Collect Metrics
-
-**Use cco-agent-analyze with scan scope:**
-
-```javascript
-agentResponse = Task("cco-agent-analyze", `
+response = Task("cco-agent-analyze", `
   scopes: ["scan"]
 
   Collect metrics for all categories:
@@ -62,77 +42,30 @@ agentResponse = Task("cco-agent-analyze", `
   - Architecture: SOLID violations, coupling, circular deps
   - Best Practices: Resource management, patterns, consistency
 
-  Scoring: Start at 100, deduct for issues (critical: -10, high: -5, medium: -2, low: -1)
+  Scoring: Start at 100, deduct per issue (critical: -10, high: -5, medium: -2, low: -1)
 `, { model: "haiku" })
-
-// Agent returns (matches cco-agent-analyze scan output schema):
-// agentResponse = {
-//   scores: { security, quality, architecture, bestPractices, overall },
-//   status: "OK|WARN|FAIL|CRITICAL",
-//   topIssues: [{ category, title, location }],
-//   summary: "{assessment}"
-// }
 ```
 
-**Agent handles parallelization internally** (parallel grep patterns, parallel linters).
-
-### Validation
-```
-[x] Agent returned valid response
-[x] response.scores exists
-[x] response.status exists
-→ Proceed to Step-2
-```
-
----
-
-## Step-2: Process Scores
-
-Apply context multipliers:
+### 2. Apply Context Multipliers
 
 ```javascript
-metrics = {
-  security: response.scores.security,
-  quality: response.scores.quality,
-  architecture: response.scores.architecture,
-  bestPractices: response.scores.bestPractices
-}
+metrics = response.scores
 
-// Apply context multipliers from context.md
+// Stricter for sensitive data
 if (context.data === "PII" || context.data === "Regulated") {
-  metrics.security = Math.max(0, metrics.security * 0.8)  // Stricter for sensitive data
+  metrics.security *= 0.8
 }
 
+// Stricter for large scale
 if (context.scale === "10K+") {
-  metrics.architecture = Math.max(0, metrics.architecture * 0.9)  // Stricter for large scale
+  metrics.architecture *= 0.9
 }
 
-// Calculate overall (equal weights)
 overall = (metrics.security + metrics.quality + metrics.architecture + metrics.bestPractices) / 4
-status = getStatus(overall)  // OK/WARN/FAIL/CRITICAL
+status = overall >= 80 ? "OK" : overall >= 60 ? "WARN" : overall >= 40 ? "FAIL" : "CRITICAL"
 ```
 
-| Context | Effect | Multiplier |
-|---------|--------|------------|
-| Scale 10K+ | Architecture score stricter | ×0.9 (10% stricter) |
-| PII/Regulated | Security score stricter | ×0.8 (20% stricter) |
-| Speed priority | Show critical issues only | Filter: CRITICAL only |
-
-**Multiplier Rationale:**
-- PII/Regulated data requires higher security bar (×0.8) - regulatory compliance risk
-- Large scale (10K+) requires better architecture (×0.9) - change ripple effects amplified
-
-### Validation
-```
-[x] All metrics merged
-[x] Multipliers applied
-[x] Status determined
-→ Proceed to Step-3
-```
-
----
-
-## Step-3: Display Dashboard
+### 3. Display Dashboard
 
 ```
 ## Quality Score: {overall}/100  [{status}]
@@ -146,55 +79,13 @@ status = getStatus(overall)  // OK/WARN/FAIL/CRITICAL
 
 Top Issues ({n}):
 - [{CATEGORY}] {title} ({file}:{line})
-- [{CATEGORY}] {title} ({file}:{line})
-- [{CATEGORY}] {title} ({file}:{line})
 
 Run `/cco-optimize` to fix issues.
 ```
 
-### Output Formatting
-
-| Element | Format |
-|---------|--------|
-| Scores | 0-100 integers |
-| Status | OK (80+) / WARN (60-79) / FAIL (40-59) / CRITICAL (<40) |
-| Issues | Max 5 shown, most critical first |
-
-**Output style:** Plain text tables, numerical scores, text status values only
-
-### Validation
-```
-[x] Dashboard displayed
-[x] All todos marked completed
-→ Done
-```
-
 ---
 
-## Reference
-
-### Output Schema (when called as sub-command)
-
-When called via `/cco-status --brief` (e.g., from cco-checkup):
-
-```json
-{
-  "scores": {
-    "security": "{0-100}",
-    "quality": "{0-100}",
-    "architecture": "{0-100}",
-    "bestPractices": "{0-100}",
-    "overall": "{0-100}"
-  },
-  "status": "OK|WARN|FAIL|CRITICAL"
-}
-```
-
-**Mapping from agent response:**
-- `scores` ← `cco-agent-analyze.scores` (with context multipliers applied)
-- `status` ← calculated from `overall` score
-
-### Flags
+## Flags
 
 | Flag | Effect |
 |------|--------|
@@ -202,23 +93,19 @@ When called via `/cco-status --brief` (e.g., from cco-checkup):
 | `--json` | JSON output |
 | `--brief` | Overall score + status only |
 
-### Score Thresholds
+## Score Thresholds
 
 | Score | Status | Meaning |
 |-------|--------|---------|
-| 80-100 | OK | Production-ready, minor improvements optional |
-| 60-79 | WARN | Functional but degraded, address before next release |
-| 40-59 | FAIL | Significant issues, requires attention |
-| 0-39 | CRITICAL | Blocking issues, fix immediately |
-
-**Scoring Method:** Start at 100, deduct per issue (CRITICAL: -10, HIGH: -5, MEDIUM: -2, LOW: -1)
+| 80-100 | OK | Production-ready |
+| 60-79 | WARN | Address before release |
+| 40-59 | FAIL | Requires attention |
+| 0-39 | CRITICAL | Fix immediately |
 
 ---
 
 ## Rules
 
-1. **Use cco-agent-analyze** - Agent handles parallelization internally
-2. **Snapshot only** - Current state only, fresh metrics each run
-3. **Read-only** - Analysis and reporting only, preserve file state
-4. **Conservative scores** - When uncertain, score lower
-5. **Evidence-based** - Every score needs file:line reference
+1. **Single agent call** - cco-agent-analyze handles all collection
+2. **Read-only** - No file modifications
+3. **Fast** - No TodoWrite, minimal overhead
