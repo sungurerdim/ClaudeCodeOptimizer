@@ -15,6 +15,68 @@ Every finding MUST be fixed. No "manual" or "skip" unless:
 1. User explicitly declined in AskUserQuestion
 2. Fix would break working code (verified by tests)
 
+## Fix-All Mode [CRITICAL]
+
+When `fixAll: true` is passed in the task context:
+
+**MANDATORY RULES:**
+
+1. **Zero Agent-Initiated Skips**: Agent MUST NOT skip, decline, or defer ANY finding
+2. **No "Too Complex" Excuses**: Agent cannot decide a fix is "too complex" - that's user's decision
+3. **Ask, Don't Skip**: If fix requires significant changes (>50 lines), ask user via parent agent:
+   ```javascript
+   // Return to parent with question needed
+   return {
+     status: "needs_confirmation",
+     finding: finding,
+     estimatedLines: 75,
+     question: "Fix requires ~75 lines change. Proceed?"
+   }
+   ```
+4. **Only Technical Impossibility = Failed**: Only mark as `fail` if:
+   - File is locked/read-only
+   - Required dependency is missing and cannot be installed
+   - Fix would create circular dependency
+   - Syntax error would be introduced (verified by linter)
+5. **Report Everything**: Every item appears in results with clear status
+
+**Accounting in Fix-All Mode:**
+
+```javascript
+// In fix-all mode: declined should ALWAYS be 0
+// User explicitly chose "fix all" - no agent-initiated declines
+if (config.fixAll === true) {
+  // Agent cannot decline - only done or fail
+  assert(accounting.declined === 0, "Fix-all mode: agent must not decline items")
+
+  // Every fail MUST have a technical reason
+  for (const item of failedItems) {
+    assert(item.reason.startsWith("Technical:"),
+      "Fix-all failures must be technical impossibilities")
+  }
+}
+```
+
+**Valid Fail Reasons (Technical Impossibilities):**
+
+| Reason | Example |
+|--------|---------|
+| `Technical: File locked` | OS file lock, git lock |
+| `Technical: Missing dependency` | Module not installed, cannot pip install |
+| `Technical: Would break tests` | Verified by running tests after fix |
+| `Technical: Circular dependency` | Fix would create import cycle |
+| `Technical: Syntax error` | Linter rejects the fix |
+
+**Invalid Fail Reasons (FORBIDDEN in fix-all mode):**
+
+| Reason | Why Invalid |
+|--------|-------------|
+| "Too complex" | User's decision, not agent's |
+| "Needs manual review" | Agent must attempt fix |
+| "Low priority" | User chose fix-all, priority irrelevant |
+| "Would take too long" | Not a technical impossibility |
+| "Unsure about approach" | Ask user via parent agent |
+
 ## Execution [CRITICAL]
 
 **Maximize parallelization at every step. ALL independent tool calls in SINGLE message.**
@@ -343,15 +405,48 @@ Fix {SCOPE}-{NNN} → mypy error → Add import → mypy clean → Done
 
 ```json
 {
-  "results": [{ "item": "{id}: {desc} in {file}:{line}", "status": "done|declined|fail", "verification": "..." }],
+  "results": [{
+    "item": "{id}: {desc} in {file}:{line}",
+    "status": "done|declined|fail",
+    "reason": "{only for declined/fail}",
+    "verification": "..."
+  }],
   "accounting": { "done": "{n}", "declined": "{n}", "fail": "{n}", "total": "{n}" },
-  "verification": { "{linter}": "PASS|FAIL", "{type_checker}": "PASS|FAIL", "tests": "PASS|FAIL|N/A" }
+  "verification": { "{linter}": "PASS|FAIL", "{type_checker}": "PASS|FAIL", "tests": "PASS|FAIL|N/A" },
+  "fixAllMode": "{boolean}"
 }
 ```
 
-**Status:** `done` (fixed) │ `declined` (user declined) │ `fail` (broke something)
+**Status:**
+- `done` - Fixed successfully
+- `declined` - User explicitly declined (ONLY via AskUserQuestion, never agent decision)
+- `fail` - Technical impossibility (must include `reason` starting with "Technical:")
 
 **Invariant:** `done + declined + fail = total`
+
+**Fix-All Mode Invariant:** When `fixAllMode: true`, `declined` MUST be `0`
+
+### Reason Field Format
+
+| Status | Reason Required | Format |
+|--------|-----------------|--------|
+| `done` | No | - |
+| `declined` | Yes | `"User declined: {user's response}"` |
+| `fail` | Yes | `"Technical: {specific impossibility}"` |
+
+**Example Results:**
+
+```json
+{
+  "results": [
+    { "item": "QUALITY-001: Unused import in utils.py:5", "status": "done", "verification": "ruff PASS" },
+    { "item": "SECURITY-002: Hardcoded secret in config.py:12", "status": "declined", "reason": "User declined: Will handle separately" },
+    { "item": "QUALITY-003: Complex refactor in parser.py:45", "status": "fail", "reason": "Technical: Would break 5 tests (verified)" }
+  ],
+  "accounting": { "done": 1, "declined": 1, "fail": 1, "total": 3 },
+  "fixAllMode": false
+}
+```
 
 ## Principles
 
