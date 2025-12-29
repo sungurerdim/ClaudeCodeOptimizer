@@ -606,33 +606,36 @@ Note: Make a todo list first, then process systematically
 
 ## Progress Tracking (TodoWrite)
 
-**All CCO commands use TodoWrite for progress visibility.** No custom step announcements.
+**Use TodoWrite only for long operations (>30s).** Short commands should NOT use TodoWrite.
 
-### Requirement [CRITICAL]
+### When to Use
 
-1. **Start**: Create todo list with ALL steps/phases at command start
-2. **Track**: Mark `in_progress` before starting each step
-3. **Update**: Mark `completed` immediately after each step finishes
-4. **Single**: Exactly ONE item `in_progress` at a time
+| Command | Duration | TodoWrite? |
+|---------|----------|------------|
+| cco-commit | ~5s | No |
+| cco-status | ~5s | No |
+| cco-checkup | ~15s | No (delegates to sub-commands) |
+| cco-config | ~10s | No (questions provide feedback) |
+| cco-optimize | ~60s+ | Yes |
+| cco-preflight | ~60s+ | Yes |
+| cco-review | ~60s+ | Yes |
+| cco-research | ~30s+ | Yes |
 
-### Format
+### When NOT to Use
 
-```
+- Output is self-explanatory (tables, results visible)
+- Command delegates to sub-commands
+- Questions provide natural progress feedback
+- Total duration <30 seconds
+
+### Format (when used)
+
+```javascript
 TodoWrite([
-  { content: "{step_name}", status: "in_progress", activeForm: "{step_name_ing}" },
-  { content: "{step_name}", status: "pending", activeForm: "{step_name_ing}" },
-  ...
+  { content: "{step}", status: "in_progress", activeForm: "{step_ing}" },
+  { content: "{step}", status: "pending", activeForm: "{step_ing}" }
 ])
 ```
-
-### Rules
-
-| Rule | Description |
-|------|-------------|
-| **Immediate** | Update status immediately, not batched |
-| **Track-All** | Update every item status (completed, declined, or failed) |
-| **activeForm** | Use present continuous (-ing form) |
-| **content** | Use imperative form |
 
 ## Artifact Handling
 
