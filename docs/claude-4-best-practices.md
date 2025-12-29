@@ -140,7 +140,7 @@ CCO rules use positive instructions instead of negative constraints:
 
 **Why:** Positive instructions are clearer. The model performs better when told what TO do.
 
-**Applied in:** `cco-core.md`, `cco-ai.md`, `cco-tools.md`
+**Applied in:** `cco-core.md`, `cco-ai.md`
 
 ### Reasoning Strategies
 

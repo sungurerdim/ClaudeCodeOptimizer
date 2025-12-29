@@ -206,8 +206,8 @@ def _print_summary(
     print(f"    - core.md: {breakdown['core']} rules (always loaded)")
     print(f"    - ai.md: {breakdown['ai']} rules (always loaded)")
     print("  Embedded in commands/agents:")
-    print(f"    - tools rules: {breakdown['tools']} (workflow rules)")
     print(f"    - adaptive rules: {breakdown['adaptive']} (project-specific)")
+    print("    - tool rules: embedded in templates (workflow mechanisms)")
     print(SEPARATOR)
     print()
 

@@ -186,7 +186,7 @@ ClaudeCodeOptimizer/
 │   ├── content/             # Knowledge base (deployed to ~/.claude/)
 │   │   ├── command-templates/  # Slash commands (cco-*.md)
 │   │   ├── agent-templates/    # Autonomous agents (cco-agent-*.md)
-│   │   ├── rules/              # Rules files (cco-core.md, cco-ai.md, cco-tools.md, cco-adaptive.md)
+│   │   ├── rules/              # Rules files (cco-core.md, cco-ai.md, cco-adaptive.md, cco-triggers.md)
 │   │   ├── permissions/        # Permission presets (safe.json, balanced.json, etc.)
 │   │   └── statusline/         # Statusline configs (full.js, minimal.js)
 │   ├── __init__.py          # Package init, version
@@ -215,11 +215,13 @@ Rules are installed as separate files in the `cco/` subdirectory:
 
 ### On-Demand Rules (embedded in commands/agents)
 
-Tools and adaptive rules are NOT installed globally. They stay in the pip package
+Adaptive rules and trigger definitions stay in the pip package
 and are loaded on-demand when commands/agents run:
 
-- `cco-tools.md` - Workflow rules (embedded in commands)
 - `cco-adaptive.md` - Project-specific rules (used by /cco-config)
+- `cco-triggers.md` - Detection patterns (SSOT for all triggers)
+
+*Note: Tool rules (workflow mechanisms) are embedded directly in command/agent templates.*
 
 ### Project Context (`./.claude/rules/cco/context.md`)
 

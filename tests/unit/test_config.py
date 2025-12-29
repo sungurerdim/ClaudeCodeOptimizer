@@ -159,13 +159,11 @@ class TestFunctions:
         assert isinstance(result, dict)
         assert "core" in result
         assert "ai" in result
-        assert "tools" in result
         assert "adaptive" in result
         assert "total" in result
         # Total should be sum of all categories
-        assert result["total"] == (
-            result["core"] + result["ai"] + result["tools"] + result["adaptive"]
-        )
+        # Note: tools key removed - tool rules are embedded in templates
+        assert result["total"] == (result["core"] + result["ai"] + result["adaptive"])
 
     def test_rules_dir_constant(self):
         """Test RULES_DIR constant is defined correctly (cco/ subdirectory)."""

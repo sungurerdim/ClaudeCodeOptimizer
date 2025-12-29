@@ -1341,36 +1341,41 @@ When generating tests, always include:
 
 ---
 
-## Backend > API
-**Trigger:** API:REST | API:GraphQL | API:gRPC
+## API Rules
+
+### REST (API:REST)
+**Trigger:** {routes_dir}, {rest_decorators}
 
 - **REST-Methods**: Proper HTTP verbs and status codes
 - **Pagination**: Cursor-based pagination for lists
 - **OpenAPI-Spec**: Synced spec with examples
 - **Error-Format**: Consistent format, no stack traces in prod
-- **Contract-Minimal**: Expose only what consumers need. Small, focused endpoints over catch-all APIs
+- **Contract-Minimal**: Expose only what consumers need
 
-### GraphQL Extension
-**Trigger:** API:GraphQL
+### GraphQL (API:GraphQL)
+**Trigger:** {schema_files}, {graphql_deps}
 
 - **GQL-Limits**: Query depth and complexity limits
 - **GQL-Persisted**: Persisted queries in production
+- **Pagination**: Cursor-based pagination for lists
+- **Error-Format**: Consistent format, no stack traces in prod
 
-### gRPC Extension
-**Trigger:** API:gRPC
+### gRPC (API:gRPC)
+**Trigger:** {proto_files}, {grpc_deps}
 
 - **Proto-Version**: Backward compatible proto changes
+- **Error-Format**: Consistent format, no stack traces in prod
 
-### OpenAPI Extension (API:OpenAPI)
+### OpenAPI (API:OpenAPI)
 **Trigger:** {openapi_files}, {openapi_dir}
 
-- **Schema-Sync**: Keep OpenAPI spec in sync with actual implementation
+- **Schema-Sync**: Keep OpenAPI spec in sync with implementation
 - **Version-Path**: Support multiple API versions in spec (v1, v2)
 - **Examples-Complete**: Include request/response examples for all endpoints
 - **Validation-Tooling**: Use schema validation in CI pipeline
 - **Docs-Generation**: Auto-generate docs from spec (Swagger UI, ReDoc)
 
-### AsyncAPI Extension (API:AsyncAPI)
+### AsyncAPI (API:AsyncAPI)
 **Trigger:** {asyncapi_files}
 
 - **Event-Schema**: Keep AsyncAPI spec in sync with actual events
@@ -1379,11 +1384,11 @@ When generating tests, always include:
 - **Bindings-Defined**: Define protocol bindings (Kafka, AMQP, WebSocket)
 - **Docs-Generation**: Generate documentation from spec
 
-### API Evolution
-**Trigger:** API:REST | API:GraphQL | API:gRPC | T:Library
+### API Evolution (API:Evolution)
+**Trigger:** API:* + T:Library
 
 - **Deprecate-Before-Remove**: Mark deprecated for 1+ versions before removal
-- **Migration-Guide**: Breaking changes include migration instructions in changelog
+- **Migration-Guide**: Breaking changes include migration instructions
 - **Version-Boundary**: Breaking changes only in major versions (unless v0.x)
 - **Alias-Bridge**: Provide aliases/redirects during transition period
 - **Sunset-Header**: Include Sunset header for deprecated endpoints
@@ -1416,12 +1421,13 @@ When generating tests, always include:
 ### Basic Operations (Ops:Basic)
 **Trigger:** T:CLI + CI:*
 - **Config-as-Code**: Versioned configuration
-- **CI-Gates**: lint + test + coverage gates
 
 ---
 
-## Apps > CLI
-**Trigger:** T:CLI
+## Project Types
+
+### CLI (T:CLI)
+**Trigger:** {entry_points}, {cli_deps}, {bin_dir}
 
 - **Help-Examples**: --help with usage examples
 - **Exit-Codes**: 0=success, N=specific error codes
@@ -1429,23 +1435,19 @@ When generating tests, always include:
 - **Output-Modes**: Human-readable + --json option
 - **Config-Precedence**: env > file > args > defaults
 - **NO_COLOR-Respect**: Check NO_COLOR env var before ANSI output, use isatty() to detect terminal
-- **Unicode-Fallback**: Use ASCII alternatives for box-drawing chars (╔═╗ → +--+) when terminal encoding uncertain
+- **Unicode-Fallback**: Use ASCII alternatives for box-drawing chars when terminal encoding uncertain
 - **Batch-UTF8**: In .bat/.cmd files, use `chcp 65001` for UTF-8 and avoid Unicode box characters
 
----
-
-## Apps > Library
-**Trigger:** T:Library
+### Library (T:Library)
+**Trigger:** {export_markers}, {lib_markers}
 
 - **Minimal-Deps**: Minimize transitive dependencies
 - **Tree-Shakeable**: ESM with no side effects (JS/TS)
 - **Types-Included**: TypeScript types or JSDoc
 - **Deprecation-Path**: Warn before removing APIs
 
----
-
-## Apps > Service
-**Trigger:** T:Service (Dockerfile + ports, long-running process)
+### Service (T:Service)
+**Trigger:** {container}, {ports}, {daemon_patterns}
 
 - **Health-Endpoints**: /health + /ready endpoints for orchestrators
 - **Graceful-Shutdown**: Handle SIGTERM, drain connections before exit
@@ -1456,65 +1458,20 @@ When generating tests, always include:
 - **Timeout-Set**: Explicit timeouts on all external calls
 - **Retry-Backoff**: Exponential backoff for transient failures
 
----
-
-## Apps > Mobile
-**Trigger:** iOS/Android/RN/Flutter detected
+### Mobile (T:Mobile)
+**Trigger:** {ios_project}, {android_build}, {rn_deps}, {flutter_manifest}
 
 - **Offline-First**: Local-first with sync capability
 - **Battery-Optimize**: Minimize background work and wake locks
 - **Deep-Links**: Universal links / app links
 - **Platform-Guidelines**: iOS HIG / Material Design compliance
 
----
-
-## Apps > Desktop
-**Trigger:** Electron/Tauri detected
+### Desktop (T:Desktop)
+**Trigger:** {electron_deps}, {tauri_deps}
 
 - **Auto-Update**: Silent updates with manual option
 - **Native-Integration**: System tray, notifications
 - **Memory-Cleanup**: Prevent memory leaks in long-running apps
-
----
-
-## Infrastructure > Container
-**Trigger:** Dockerfile detected (not in examples/test/)
-
-- **Multi-Stage**: Separate build and runtime stages
-- **Non-Root**: Run as non-root user
-- **CVE-Scan**: Automated scanning in CI
-- **Resource-Limits**: CPU/memory bounds
-- **Distroless**: Minimal attack surface for production
-
----
-
-## Infrastructure > K8s
-**Trigger:** Kubernetes/Helm detected
-
-- **Security-Context**: Non-root, read-only filesystem
-- **Network-Policy**: Explicit allow rules
-- **Probes**: liveness + readiness probes
-- **Resource-Quotas**: Namespace resource limits
-
----
-
-## Infrastructure > Serverless
-**Trigger:** Lambda/Functions/Vercel/Netlify detected
-
-- **Minimize-Bundle**: Reduce cold start time
-- **Graceful-Timeout**: Clean shutdown before timeout
-- **Stateless**: No local state between invocations
-- **Right-Size**: Memory optimization
-
----
-
-## Infrastructure > Monorepo
-**Trigger:** nx/turbo/lerna/pnpm-workspace detected
-
-- **Package-Boundaries**: Clear ownership per package
-- **Selective-Test**: Test only affected packages
-- **Shared-Deps**: Hoisted and versioned dependencies
-- **Build-Cache**: Remote build cache
 
 ---
 
@@ -1745,16 +1702,6 @@ When generating tests, always include:
 
 ---
 
-## Specialized > ML/AI
-**Trigger:** torch/tensorflow/sklearn/transformers/langchain detected
-
-- **Reproducibility**: Seed everything, pin versions
-- **Experiment-Track**: Track experiments with logging (MLflow/W&B for Scale:Medium+)
-- **Model-Version**: Version model artifacts and checkpoints
-- **Bias-Detection**: Fairness metrics for user-facing AI
-
----
-
 ## Infrastructure
 
 ### Docker (Infra:Docker)
@@ -1768,6 +1715,8 @@ When generating tests, always include:
 - **Buildkit-Secrets**: Use --mount=type=secret for sensitive build args
 - **Cache-Mounts**: Use --mount=type=cache for package managers
 - **Distroless**: Use distroless or alpine for production images
+- **CVE-Scan**: Automated container scanning in CI
+- **Resource-Bounds**: CPU/memory limits in compose/k8s
 
 ### Kubernetes (Infra:K8s)
 **Trigger:** {k8s_dirs}, {k8s_configs}
@@ -1780,6 +1729,8 @@ When generating tests, always include:
 - **Gateway-API**: Use Gateway API over Ingress for advanced routing (K8s 1.27+)
 - **Pod-Disruption**: PodDisruptionBudget for availability during updates
 - **Security-Context**: runAsNonRoot, readOnlyRootFilesystem, drop capabilities
+- **Network-Policy**: Explicit allow rules for pod communication
+- **Resource-Quotas**: Namespace-level resource limits
 
 ### Terraform (Infra:Terraform)
 **Trigger:** {tf_files}
@@ -1817,6 +1768,8 @@ When generating tests, always include:
 - **Timeout-Set**: Explicit function timeouts
 - **Memory-Tune**: Right-size memory allocation
 - **Event-Validate**: Validate event payloads
+- **Graceful-Shutdown**: Clean shutdown before timeout
+- **Stateless-Design**: No local state between invocations
 
 ### Edge (Infra:Edge)
 **Trigger:** {edge_configs}
@@ -1845,6 +1798,7 @@ When generating tests, always include:
 - **Cache-Remote**: Remote build cache enabled
 - **Deps-Graph**: Explicit dependency graph
 - **Consistent-Versions**: Shared dependency versions
+- **Package-Boundaries**: Clear ownership per package
 
 ### Bundler (Build:Bundler)
 **Trigger:** {bundler_configs}
@@ -2032,10 +1986,12 @@ When generating tests, always include:
 ### Training (ML:Training)
 **Trigger:** {ml_training_deps}
 
-- **Seed-All**: Reproducible random seeds
-- **Checkpoint-Save**: Regular checkpoints
+- **Seed-All**: Reproducible random seeds, pin versions
+- **Checkpoint-Save**: Regular checkpoints, version artifacts
 - **Metrics-Log**: Log training metrics
 - **GPU-Utilize**: Efficient GPU utilization
+- **Experiment-Track**: Track experiments (MLflow/W&B for Scale:Medium+)
+- **Bias-Detection**: Fairness metrics for user-facing AI
 
 ### LLM Orchestration (ML:LLM)
 **Trigger:** {llm_orchestration_deps}
@@ -2250,10 +2206,11 @@ When generating tests, always include:
 
 ---
 
-## Specialized > Game
-**Trigger:** Unity/Unreal/Godot detected
+## Game Development
 
-### Base Game Rules (All Engines)
+### Base Rules (Game:Base)
+**Trigger:** {game_engine_markers}
+
 - **Frame-Budget**: 16ms (60fps) or 8ms (120fps) target
 - **Asset-LOD**: Level of detail + streaming
 - **Save-Versioned**: Migration support for old saves
