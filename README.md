@@ -5,9 +5,26 @@
 [![License: MIT](https://img.shields.io/badge/license-MIT-green.svg)](LICENSE)
 [![Claude Code 2.0+](https://img.shields.io/badge/Claude_Code-2.0+-00A67E.svg)](https://github.com/anthropics/claude-code)
 
-**A process and rules layer for Claude Code** — adds safety, approval workflows, and stack-specific best practices.
+**Safety, quality, and decision layer for Claude Code.**
+
+Same prompts, better outcomes. Fewer errors. Fewer surprises.
+
+- Fewer incorrect changes
+- Fewer rollbacks needed
+- More consistent architectural decisions
 
 ![CCO Environment](docs/screenshots/environment.png)
+
+## Why CCO?
+
+| Without CCO | With CCO |
+|-------------|----------|
+| Claude applies generic patterns | Claude applies **domain-specific best practices** |
+| No pre-action safety checks | Git status check, approval flow, clean state for rollback |
+| Silent changes | `Applied: 5 | Skipped: 2 | Failed: 0` accounting |
+| "Add caching somewhere" | "Use TTL + invalidation for this data fetch" |
+
+**CCO doesn't teach Claude to code** — Opus 4.5 already knows how. CCO adds the safety layer between intent and action.
 
 ## Quick Start
 
@@ -22,18 +39,39 @@ Then in Claude Code:
 
 **Done.** Your project now has safety nets and domain-specific rules active.
 
-## Why CCO?
+## How It Works
 
-| Without CCO | With CCO |
-|-------------|----------|
-| Claude applies generic patterns | Claude applies **domain-specific best practices** |
-| No pre-action safety checks | Git status check, approval flow, clean state for rollback |
-| Silent changes | `Applied: 5 | Skipped: 2 | Failed: 0` accounting |
-| "Add caching somewhere" | "Use TTL + invalidation for this data fetch" |
+```
+1. Detect    →  Auto-detect language, framework, infrastructure
+2. Analyze   →  Identify issues, calculate impact
+3. Approve   →  Safe changes auto-apply, risky ones require approval
+4. Apply     →  Execute with full accounting
+5. Verify    →  Confirm changes match intent
+```
 
-**CCO doesn't teach Claude to code** — Opus 4.5 already knows. CCO adds the safety layer between intent and action.
+**Workflow:** Analyze → Report → Approve → Apply → Verify
 
-## Commands
+## Who Is It For?
+
+| Role | Benefit |
+|------|---------|
+| **Solo developer** | Safety net when moving fast |
+| **Senior engineer** | Consistent patterns across AI sessions |
+| **Tech lead** | Team-wide standards enforcement |
+| **AI-assisted teams** | Predictable, auditable AI behavior |
+
+## Safety Features
+
+| Safe (auto-apply) | Risky (require approval) |
+|-------------------|--------------------------|
+| Remove unused imports | Auth/CSRF changes |
+| Parameterize SQL | DB schema changes |
+| Move secrets to env | API contract changes |
+
+**Accounting:** Every action reports `Applied: N | Skipped: N | Failed: N`
+
+<details>
+<summary><b>Commands (8 available)</b></summary>
 
 | Command | Purpose |
 |---------|---------|
@@ -46,9 +84,12 @@ Then in Claude Code:
 | `/cco-preflight` | Pre-release workflow |
 | `/cco-checkup` | Regular maintenance |
 
-## Rules System
+See [Commands documentation](docs/commands.md) for flags and examples.
 
-**1791 rules** organized in 4 categories:
+</details>
+
+<details>
+<summary><b>Rules System (1791 rules)</b></summary>
 
 | Category | Count | When Loaded |
 |----------|-------|-------------|
@@ -57,20 +98,14 @@ Then in Claude Code:
 | Tools | 107 | On-demand (CCO workflows) |
 | Adaptive | 1574 | Per-project (stack-specific) |
 
-<details>
-<summary><b>Supported Stacks</b></summary>
+**Supported:** Python, TypeScript, Go, Rust, Java + 22 more languages • React, Vue, Django, FastAPI + 100 frameworks • Docker, K8s, Serverless • ML/AI, Game Dev, Blockchain
 
-**Languages:** Python, TypeScript, JavaScript, Go, Rust, Java, Kotlin, Swift, C#, Ruby, PHP, Elixir + 15 more
-
-**Frameworks:** React, Vue, Angular, Svelte, Next.js, Django, FastAPI, Express, NestJS, Rails + 100 more
-
-**Infrastructure:** Docker, Kubernetes, Serverless, Monorepo (nx/turbo), CI/CD
-
-**Specialized:** ML/AI, Game Dev (Unity/Unreal/Godot), Blockchain, IoT, XR
+See [Rules documentation](docs/rules.md) for full reference.
 
 </details>
 
-## Installation
+<details>
+<summary><b>Installation Options</b></summary>
 
 **Requirements:** Python 3.10+ • Claude Code CLI or IDE • Zero runtime dependencies
 
@@ -99,6 +134,14 @@ cco-install --local . --statusline cco-full --permissions balanced
 | `--statusline` | `cco-full` (all info) / `cco-minimal` (project + branch) |
 | `--permissions` | `safe` / `balanced` / `permissive` / `full` |
 
+</details>
+
+## Standards
+
+Built on [Claude 4 Best Practices](https://platform.claude.com/docs/en/build-with-claude/prompt-engineering/claude-4-best-practices) and official Claude Code documentation.
+
+**Core:** SSOT, DRY, YAGNI, KISS • **AI:** Read-First, No-Hallucination • **Security:** OWASP, Least-Privilege
+
 ## Documentation
 
 | Doc | Content |
@@ -107,28 +150,10 @@ cco-install --local . --statusline cco-full --permissions balanced
 | [Agents](docs/agents.md) | 3 specialized agents and their scopes |
 | [Rules](docs/rules.md) | Full rule reference |
 
-## Safety Features
-
-**Fix Workflow:** Analyze → Report → Approve → Apply → Verify
-
-| Safe (auto-apply) | Risky (require approval) |
-|-------------------|--------------------------|
-| Remove unused imports | Auth/CSRF changes |
-| Parameterize SQL | DB schema changes |
-| Move secrets to env | API contract changes |
-
-**Accounting:** Every action reports `Applied: N | Skipped: N | Failed: N`
-
-## Standards
-
-Built on [Claude 4 Best Practices](https://platform.claude.com/docs/en/build-with-claude/prompt-engineering/claude-4-best-practices) and official Claude Code documentation.
-
-**Core Principles:** SSOT, DRY, YAGNI, KISS • **AI Rules:** Read-First, No-Hallucination • **Security:** OWASP, Least-Privilege
-
 ## License
 
 MIT — see [LICENSE](LICENSE)
 
 ---
 
-**[Issues](https://github.com/sungurerdim/ClaudeCodeOptimizer/issues)** • Created by Sungur Zahid Erdim
+**[Issues](https://github.com/sungurerdim/ClaudeCodeOptimizer/issues)** • **[Changelog](CHANGELOG.md)** • Created by Sungur Zahid Erdim
