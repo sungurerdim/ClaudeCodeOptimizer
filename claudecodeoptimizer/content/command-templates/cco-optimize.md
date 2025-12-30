@@ -12,12 +12,12 @@ model: opus
 ## Args
 
 - `--auto` or `--unattended`: Fully unattended mode for CI/CD and benchmarks
-  - **No questions asked** - full scope, fix all
+  - **No questions asked** - full scope, fix everything
   - **No progress output** - silent execution
   - **Only final summary** - single status line at end
   - Defaults:
     - Scopes: ALL (security, quality, hygiene, best-practices)
-    - Action: Fix all (no approval needed)
+    - Action: Everything (no approval needed)
     - Git state: Continue anyway
 - `--security`: Security scope only
 - `--quality`: Quality scope only
@@ -36,9 +36,14 @@ model: opus
 
 **Fix everything that can be fixed.** Auto-fix safe items, ask approval for risky ones.
 
-## Fix-All Mode
+## Everything Mode [CRITICAL]
 
-When `--fix-all` flag: Zero skip, zero decline. Complex fix (>50 lines) → ask user. Only technical impossibility = fail. Accounting: `declined = 0` always.
+When `--fix-all` or user selects "Everything":
+- **Zero deferrals** - no "future iteration", no "later pass", no "lower priority"
+- **Zero skips** - every finding must be addressed NOW
+- **Complex fixes** - implement them, don't defer them
+- **Only exit** - FIXED or TECHNICAL FAILURE (with specific blocker)
+- Accounting: `declined = 0` always
 
 ## Context
 
@@ -67,11 +72,11 @@ const isUnattended = args.includes("--auto") || args.includes("--unattended")
 
 if (isUnattended) {
   // SILENT MODE: No TodoWrite, no progress output, no intermediate messages
-  // Skip Q1, Q2 - proceed directly with full scope and fix all
+  // Skip Q1, Q2 - proceed directly with full scope and fix everything
 
   config = {
     scopes: ["security", "quality", "hygiene", "best-practices"],  // ALL scopes
-    action: "Fix all",                                              // No approval needed
+    action: "Everything",                                             // No approval needed
     gitState: "Continue anyway"                                     // Don't stash
   }
 
@@ -206,8 +211,8 @@ if (isUnattended) {
       question: "Action mode?",
       header: "Action",
       options: [
-        { label: "Auto-fix safe (Recommended)", description: "Fix LOW risk, ask for others" },
-        { label: "Fix all", description: "Fix everything, no approval needed" },
+        { label: "Safe (Recommended)", description: "Auto-fix low risk, ask for high risk" },
+        { label: "Everything", description: "Fix all findings, no approval" },
         { label: "Report only", description: "Show findings without fixing" }
       ],
       multiSelect: false
@@ -339,7 +344,7 @@ Summary:
 ```javascript
 if (config.action !== "Report only" && autoFixable.length > 0) {
   // Determine if fix-all mode
-  const isFixAll = config.action === "Fix all" || isUnattended
+  const isFixAll = config.action.includes("Everything") || isUnattended
 
   autoFixTask = Task("cco-agent-apply", `
     fixes: ${JSON.stringify(autoFixable)}
@@ -349,10 +354,19 @@ if (config.action !== "Report only" && autoFixable.length > 0) {
     Group by file for efficiency.
 
     ${isFixAll ? `
-    CRITICAL - FIX-ALL MODE:
-    - Zero agent-initiated skips/declines allowed
-    - Only technical impossibilities can be marked as "fail"
-    - Every fail must have reason starting with "Technical:"
+    CRITICAL - EVERYTHING MODE [MANDATORY]:
+    You MUST fix every single item. No exceptions. No deferrals.
+
+    FORBIDDEN:
+    - "future iteration", "lower priority", "dedicated pass" - fix NOW
+    - Any suggestion to skip or defer
+
+    Rules:
+    - Every item = either FIXED or TECHNICAL FAILURE
+    - Technical failure requires: "Technical: [exact blocker]"
+    - If unsure → ask user, don't skip
+
+    User chose "Everything". Respect that choice.
     ` : ""}
 
     CRITICAL - Counting:
@@ -380,7 +394,7 @@ if (config.action !== "Report only" && autoFixable.length > 0) {
 
 **Skip entirely if `--auto` flag - all fixable items already being applied.**
 
-**Only ask if there are approval-required items AND action is not "Fix all":**
+**Only ask if there are approval-required items AND action is not "Everything":**
 
 ### Pre-Confirmation Display [MANDATORY - Interactive only]
 
@@ -407,7 +421,7 @@ if (isUnattended) {
   approved = []  // All fixable items handled in Step-3
   declined = []
   // → Proceed directly to Step-5
-} else if (config.action === "Fix all") {
+} else if (config.action.includes("Everything")) {
   // No approval needed - apply all
   approved = approvalRequired
 } else if (approvalRequired.length === 0) {
@@ -508,7 +522,7 @@ if (autoFixTask) {
 // Then apply user-approved items
 if (approved.length > 0) {
   // In fix-all mode, all approval-required items are also auto-approved
-  const isFixAll = config.action === "Fix all" || isUnattended
+  const isFixAll = config.action.includes("Everything") || isUnattended
 
   approvedResults = Task("cco-agent-apply", `
     fixes: ${JSON.stringify(approved)}
@@ -518,10 +532,19 @@ if (approved.length > 0) {
     Handle cascading errors.
 
     ${isFixAll ? `
-    CRITICAL - FIX-ALL MODE:
-    - Zero agent-initiated skips/declines allowed
-    - Only technical impossibilities can be marked as "fail"
-    - Every fail must have reason starting with "Technical:"
+    CRITICAL - EVERYTHING MODE [MANDATORY]:
+    You MUST fix every single item. No exceptions. No deferrals.
+
+    FORBIDDEN:
+    - "future iteration", "lower priority", "dedicated pass" - fix NOW
+    - Any suggestion to skip or defer
+
+    Rules:
+    - Every item = either FIXED or TECHNICAL FAILURE
+    - Technical failure requires: "Technical: [exact blocker]"
+    - If unsure → ask user, don't skip
+
+    User chose "Everything". Respect that choice.
     ` : ""}
 
     CRITICAL - Counting:
@@ -685,7 +708,7 @@ console.log(summary)
 | Dirty git, has approval items | 3 tabs | 1 tab | 2 questions |
 | Clean git, no approval items | 2 tabs | - | 1 question |
 | Report only mode | 2-3 tabs | - | 1 question |
-| Fix all mode | 2-3 tabs | - | 1 question |
+| Everything mode | 2-3 tabs | - | 1 question |
 
 ### Output Schema (when called as sub-command)
 
@@ -733,12 +756,12 @@ console.log(summary)
 
 | Flag | Effect |
 |------|--------|
-| `--auto` | **Unattended mode:** all scopes, fix all, no questions, silent execution, single-line summary |
+| `--auto` | **Unattended mode:** all scopes, fix everything, no questions, silent execution, single-line summary |
 | `--security` | Security scope only, skip Q1 scope tab |
 | `--quality` | Quality scope only, skip Q1 scope tab |
 | `--report` | Report only, skip Q1 action tab |
-| `--fix` | Auto-fix safe (default) |
-| `--fix-all` | Fix all without approval |
+| `--fix` | Safe mode (default) |
+| `--fix-all` | Everything mode - fix all without approval |
 | `--score` | Quality score only (0-100), skip all questions |
 | `--pre-release` | All scopes, strict thresholds |
 

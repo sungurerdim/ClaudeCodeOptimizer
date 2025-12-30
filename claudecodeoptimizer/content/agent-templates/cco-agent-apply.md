@@ -439,9 +439,9 @@ Fix {SCOPE}-{NNN} → mypy error → Add import → mypy clean → Done
 ```json
 {
   "results": [
-    { "item": "QUALITY-001: Unused import in utils.py:5", "status": "done", "verification": "ruff PASS" },
-    { "item": "SECURITY-002: Hardcoded secret in config.py:12", "status": "declined", "reason": "User declined: Will handle separately" },
-    { "item": "QUALITY-003: Complex refactor in parser.py:45", "status": "fail", "reason": "Technical: Would break 5 tests (verified)" }
+    { "item": "{SCOPE}-{n}: {description} in {file}:{line}", "status": "done", "verification": "{lint_tool} PASS" },
+    { "item": "{SCOPE}-{n}: {description} in {file}:{line}", "status": "declined", "reason": "User declined: {user_response}" },
+    { "item": "{SCOPE}-{n}: {description} in {file}:{line}", "status": "fail", "reason": "Technical: {impossibility_reason}" }
   ],
   "accounting": { "done": 1, "declined": 1, "fail": 1, "total": 3 },
   "fixAllMode": false

@@ -23,7 +23,7 @@ This document details how CCO implements official Claude 4 best practices and Op
 | **Context Motivation** | Rules explain "why" not just "what" |
 | **Conservative Judgment** | Evidence-based severity, never guesses |
 | **Long-horizon State Tracking** | TodoWrite + git state + structured findings JSON |
-| **Structured Output** | Consistent formats (`Applied: N | Declined: N | Failed: N`) |
+| **Structured Output** | Consistent formats (`Status: X | Applied: N | Skipped: N | Failed: N | Total: N`) |
 | **Model Self-Knowledge** | Agent descriptions match capabilities |
 | **Subagent Orchestration** | Automatic delegation based on task type |
 | **Over-engineering Prevention** | YAGNI + KISS + Scope rules in Core |
@@ -75,7 +75,9 @@ Official Claude 4 documentation emphasizes state tracking for extended tasks. CC
 **Progress Tracking:**
 - TodoWrite for step-by-step progress visibility
 - Git status checks before/after operations
-- `Applied: N | Declined: N | Failed: N` accounting
+- Accounting format: `Status: {OK|WARN} | Applied: N | {Declined|Not Selected}: N | Failed: N | Total: N`
+  - Use "Declined" when user actively rejects items (approval flow)
+  - Use "Not Selected" when items excluded by mode choice (Essential/Thorough)
 
 **State Persistence (from official docs):**
 ```text
@@ -192,7 +194,7 @@ Commands that report findings embed severity rules:
 - Require explicit evidence, not inference
 - Style issues never escalate to CRITICAL or HIGH
 
-**Applied in:** `cco-optimize.md`, `cco-optimize.md`, `cco-review.md`
+**Applied in:** `cco-optimize.md`, `cco-review.md`
 
 ### Batch Approval Pattern
 
@@ -203,7 +205,7 @@ Commands with multi-item fixes use consistent approval UX:
 - Priority order: CRITICAL → HIGH → MEDIUM → LOW
 - Item format: `{description} [{file:line}] [{safe|risky}]`
 
-**Applied in:** `cco-optimize.md`, `cco-optimize.md`, `cco-optimize.md`
+**Applied in:** `cco-optimize.md`, `cco-review.md`, `cco-preflight.md`
 
 ### Output Formatting
 
