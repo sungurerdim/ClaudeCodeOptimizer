@@ -6,10 +6,10 @@
 
 | Category     | Rules    | Location                           | Loading       |
 |--------------|----------|------------------------------------|---------------|
-| Core         | 73       | `~/.claude/rules/cco/core.md`      | Always active |
-| AI           | 37       | `~/.claude/rules/cco/ai.md`        | Always active |
-| Adaptive     | 1554     | pip package → `.claude/rules/cco/` | Per-project   |
-| **Total**    | **1664** |                                    |               |
+| Core         | 77       | `~/.claude/rules/cco/core.md`      | Always active |
+| AI           | 42       | `~/.claude/rules/cco/ai.md`        | Always active |
+| Adaptive     | 1555     | pip package → `.claude/rules/cco/` | Per-project   |
+| **Total**    | **1674** |                                    |               |
 
 *Note: Tool rules (workflow mechanisms) are embedded directly in command/agent templates.*
 
@@ -29,7 +29,7 @@
 ├─────────────────────────────────────────────────────────────────┤
 │  ON-DEMAND (Adaptive Rules)                                     │
 ├─────────────────────────────────────────────────────────────────┤
-│  Adaptive     - Project-specific rules template (1554 rules)    │
+│  Adaptive     - Project-specific rules template (1555 rules)    │
 │  Location:    pip package (NOT in rules/ to avoid context bloat)│
 │  Access via:  cco-install --cat rules/cco-adaptive.md           │
 ├─────────────────────────────────────────────────────────────────┤
@@ -56,6 +56,7 @@
 - **Composition**: Prefer composition over inheritance
 - **Idempotent**: Same operation, same result, safe to retry
 - **Least-Astonishment**: Behavior matches user expectations
+- **Single-Instance**: For shared state (config, pools, caches), use single instance per process
 
 ### Code Quality
 
@@ -92,6 +93,7 @@
 - **Least-Privilege**: Minimum necessary access
 - **Deps-Audit**: Review before adding, keep updated
 - **Defense-in-Depth**: Multiple layers, don't trust single control
+- **OWASP-Top10**: Prevent injection (SQL, XSS, Command), broken auth, sensitive data exposure
 
 ### Testing
 
@@ -143,6 +145,13 @@
 
 *Portable across Claude/Codex/Gemini - AGENTS.md compatible.*
 
+### Rule Enforcement [CRITICAL]
+
+- **Apply-All-Rules**: Every change MUST comply with ALL rules currently in context (global + project-specific)
+- **Verify-After-Change**: After EVERY code change, verify compliance before proceeding
+- **Fix-Immediately**: Violation detected → stop, fix, re-verify. Never defer
+- **No-Partial-Compliance**: 100% compliance required, not "mostly compliant"
+
 ### Context Optimization
 
 - **Semantic-Density**: Concise over verbose
@@ -165,12 +174,12 @@
 - **Confidence**: State uncertainty level for non-obvious conclusions
 - **No-Guessing**: Never guess file contents without reading
 - **No-Assume**: Never assume user intent without confirmation
+- **No-Hallucination**: Never invent APIs, methods, parameters, or file contents. Verify existence before use
 
 ### Quality Control
 
 - **Understand-First**: No vibe coding
 - **Adapt**: Examples to context, don't copy blind
-- **No-Hallucination**: Only existing APIs/features
 - **Positive**: What to do, not what to avoid
 - **Motivate**: Explain why behaviors matter
 

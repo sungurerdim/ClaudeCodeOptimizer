@@ -1,6 +1,13 @@
 # AI Rules
 *Portable across Claude/Codex/Gemini - AGENTS.md compatible*
 
+## Rule Enforcement [CRITICAL]
+
+- **Apply-All-Rules**: Every change MUST comply with ALL rules currently in context (global + project-specific)
+- **Verify-After-Change**: After EVERY code change, verify compliance before proceeding
+- **Fix-Immediately**: Violation detected → stop, fix, re-verify. Never defer ("cleanup later" is not acceptable)
+- **No-Partial-Compliance**: Do not proceed with known violations. 100% compliance required, not "mostly compliant"
+
 ## Context Optimization
 
 - **Semantic-Density**: Concise over verbose
@@ -56,6 +63,7 @@ Specialized agents for complex tasks. **Choose based on complexity, not task typ
 - **Confidence**: State uncertainty level for non-obvious conclusions
 - **Read-To-Know**: Read file contents before referencing them
 - **Confirm-Intent**: Confirm user intent before making assumptions
+- **No-Hallucination**: Never invent APIs, methods, parameters, or file contents. Verify existence before use (alias: Verify-APIs + Read-To-Know)
 
 ## Reasoning Strategies
 

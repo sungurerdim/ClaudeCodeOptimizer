@@ -498,15 +498,6 @@ These are truly file-specific - config or content files only:
 ---
 paths: "**/*.py"
 ---
-# Python Rules
-*Trigger: L:Python*
-
-- **Modern-Types**: Use `str | None` (3.10+), `list[str]` (3.9+)
-- **Async-Await**: async/await for I/O operations
-...
-```
-
----
 
 ## Language Rules
 
@@ -514,7 +505,6 @@ paths: "**/*.py"
 **Trigger:** {py_manifest}, {py_ext}
 
 - **Modern-Types**: Use `str | None` (3.10+), `list[str]` (3.9+). Avoid `Optional`, `List`, `Dict` from typing
-- **Async-Await**: async/await for I/O operations, avoid blocking in async context
 - **Context-Managers**: Use `with` statement for resource management (files, connections)
 - **Import-Order**: stdlib > third-party > local (isort compatible)
 - **Exception-Chain**: Use `raise X from Y` for exception chaining
@@ -609,7 +599,6 @@ paths: "**/*.py"
 - **Protocol-Oriented**: Protocol-oriented design over inheritance
 - **Value-Type**: Prefer structs over classes when possible
 - **Actor-Concurrency**: Use actors for shared mutable state
-- **Async-Await**: Use async/await for asynchronous code
 - **Observation**: Use @Observable macro for reactive state (iOS 17+)
 - **Result-Builder**: Use result builders for DSLs
 
@@ -617,7 +606,6 @@ paths: "**/*.py"
 **Trigger:** {csharp_project}, {csharp_ext}
 
 - **Nullable-Enable**: Enable nullable reference types
-- **Async-Await**: async/await for I/O operations
 - **Dispose-Pattern**: IDisposable with using statements
 - **Record-Type**: Records for immutable data transfer
 - **Primary-Constructors**: Use primary constructors for DI (C# 12+)
@@ -682,7 +670,7 @@ paths: "**/*.py"
 **Trigger:** {dart_manifest}, {dart_ext}
 
 - **Null-Safety**: Sound null safety with ? and !
-- **Async-Await**: async/await for Future operations
+- **Async-Future**: async/await for Future operations
 - **Named-Params**: Named parameters for readability
 - **Immutable-Widget**: StatelessWidget when state not needed
 
@@ -716,7 +704,7 @@ paths: "**/*.py"
 - **Module-Pattern**: Use module pattern for encapsulation
 - **Table-Pool**: Reuse tables to reduce GC pressure
 - **Metatables**: Use metatables for OOP patterns
-- **Error-Handling**: pcall/xpcall for error handling
+- **Error-Handling-Lua**: pcall/xpcall for error handling
 - **LuaJIT-Compat**: Write LuaJIT-compatible code when targeting it
 
 ### Haskell (L:Haskell)
@@ -952,11 +940,11 @@ paths: "**/*.py"
 
 ### Edge Case Checklist [MANDATORY - ALL TIERS]
 When generating tests, always include:
-- **Empty/None**: empty string, None, empty list/dict
+- **Empty-None**: empty string, None, empty list/dict
 - **Whitespace**: spaces, tabs, newlines, whitespace-only strings
 - **Boundaries**: 0, 1, max, max+1, negative (if applicable)
-- **Type Variations**: string vs int representations, case variations for strings
-- **State Combinations**: all valid state pairs where multiple states can interact
+- **Type-Variations**: string vs int representations, case variations for strings
+- **State-Combinations**: all valid state pairs where multiple states can interact
 - **Unicode**: emojis, RTL text, special characters (if string handling)
 - **Timing**: expired dates, future dates, boundary timestamps
 
@@ -1023,8 +1011,7 @@ When generating tests, always include:
 
 - **Middleware-Cascade**: Composition over configuration via middleware
 - **Context-Object**: Pass context through middleware chain
-- **Async-Await**: Native async/await support
-- **Error-Handling**: Centralized error handling middleware
+- **Error-Handling-Koa**: Centralized error handling middleware
 - **Body-Parsing**: Body parsing middleware configuration
 
 ### NestJS (Backend:NestJS)
@@ -1126,7 +1113,7 @@ When generating tests, always include:
 - **Route-Definition**: Simple route DSL
 - **Middleware-Stack**: Middleware stack for request handling
 - **Template-Engine**: Template engine selection and configuration
-- **Error-Handling**: Error handlers and error templates
+- **Error-Handling-Sinatra**: Error handlers and error templates
 - **Helper-Methods**: Helper methods for view/route logic
 
 ### Symfony (Backend:Symfony)
@@ -1145,7 +1132,7 @@ When generating tests, always include:
 - **Group-Routes**: Route groups for API versioning
 - **Binding-Validation**: ShouldBind for request validation
 - **Context-Values**: Use c.Set/c.Get for request-scoped values
-- **Graceful-Shutdown**: os.Signal for graceful shutdown
+- **Graceful-Shutdown-Gin**: os.Signal for graceful shutdown
 - **Recovery-Middleware**: Use gin.Recovery for panic handling
 
 ### Echo (Backend:Echo)
@@ -1173,7 +1160,7 @@ When generating tests, always include:
 - **Middleware-Chain**: Compose middleware with Use/With
 - **Route-Groups**: Group routes with common middleware
 - **Pattern-Routing**: URL parameters with {param} syntax
-- **Graceful-Shutdown**: Built-in graceful shutdown support
+- **Graceful-Shutdown-Chi**: Built-in graceful shutdown support
 - **Lightweight**: Minimal dependencies, stdlib compatible
 
 ### Gorilla Mux (Backend:Gorilla)
@@ -1193,7 +1180,7 @@ When generating tests, always include:
 - **Extractors-Type**: Type-safe extractors for requests
 - **Middleware-Wrap**: Wrap services with middleware
 - **State-Shared**: Web::Data for shared application state
-- **Error-Handling**: Implement ResponseError for custom errors
+- **Error-Handling-Actix**: Implement ResponseError for custom errors
 - **Async-Handlers**: async fn for all request handlers
 
 ### Axum (Backend:Axum)
@@ -1277,7 +1264,7 @@ When generating tests, always include:
 - **Fluent-ORM**: Fluent ORM for database operations
 - **Middleware-Chain**: Middleware for request processing
 - **Leaf-Templates**: Leaf templating engine
-- **Async-Await**: Swift async/await for handlers
+- **Async-Handlers-Vapor**: Swift async/await for handlers
 - **Validation-Request**: Request validation with Validatable
 - **Environment-Config**: Environment-based configuration
 
@@ -1412,7 +1399,7 @@ When generating tests, always include:
 **Trigger:** T:Service + CI:*
 - **Config-as-Code**: Versioned, environment-aware config
 - **Health-Endpoints**: /health + /ready endpoints
-- **Graceful-Shutdown**: Drain connections on SIGTERM
+- **Graceful-Shutdown-Ops**: Drain connections on SIGTERM
 - **Observability**: Metrics + logs + traces
 - **CI-Gates**: lint + test + coverage gates
 - **Zero-Downtime**: Blue-green or canary deployments
@@ -1450,7 +1437,7 @@ When generating tests, always include:
 **Trigger:** {container}, {ports}, {daemon_patterns}
 
 - **Health-Endpoints**: /health + /ready endpoints for orchestrators
-- **Graceful-Shutdown**: Handle SIGTERM, drain connections before exit
+- **Graceful-Shutdown-Service**: Handle SIGTERM, drain connections before exit
 - **Config-External**: Configuration via env vars or config files, not hardcoded
 - **Logging-Structured**: JSON logging with correlation IDs
 - **Metrics-Export**: Prometheus-compatible metrics endpoint
@@ -1495,7 +1482,6 @@ When generating tests, always include:
 - **Use-Hook**: Use use() hook for promises and context (React 19+)
 - **Suspense-Boundary**: Wrap async components in Suspense with fallback
 - **Actions**: Use Server Actions for mutations (Next.js 14+)
-- **React-Compiler** [EXPERIMENTAL]: Let React Compiler handle memoization automatically (React 19+)
 - **Ref-As-Prop**: Pass ref as regular prop, no forwardRef needed (React 19+)
 - **Form-Actions**: Use form action prop with useActionState for form handling (React 19+)
 - **Optimistic-UI**: Use useOptimistic for instant UI feedback during mutations
@@ -1509,7 +1495,6 @@ When generating tests, always include:
 - **SFC-Style**: Scoped styles in single-file components
 - **Script-Setup**: Use <script setup> for cleaner syntax
 - **Definemodel**: Use defineModel for v-model with props (Vue 3.4+)
-- **Vapor-Mode** [EXPERIMENTAL]: Consider Vapor mode for performance-critical components (Vue 3.5+)
 
 ### Angular (Frontend:Angular)
 **Trigger:** {angular_deps}, {angular_ext}
@@ -1587,7 +1572,6 @@ When generating tests, always include:
 - **Metadata-API**: Use Metadata API for SEO, not manual head tags
 - **Image-Component**: Use next/image for automatic optimization
 - **Font-Optimization**: Use next/font for zero-layout-shift fonts
-- **Turbopack** [EXPERIMENTAL]: Enable Turbopack for faster dev builds (Next.js 15+)
 - **Parallel-Routes**: Use parallel routes for complex layouts
 - **Intercepting-Routes**: Use intercepting routes for modals/sheets
 
@@ -1710,7 +1694,7 @@ When generating tests, always include:
 - **Multi-Stage**: Multi-stage builds for smaller images
 - **Layer-Cache**: Order commands for optimal layer caching
 - **Non-Root**: Run as non-root user
-- **Health-Check**: HEALTHCHECK instruction for orchestrators
+- **Health-Check-Docker**: HEALTHCHECK instruction for orchestrators
 - **Env-Inject**: Environment variables for configuration
 - **Buildkit-Secrets**: Use --mount=type=secret for sensitive build args
 - **Cache-Mounts**: Use --mount=type=cache for package managers
@@ -1768,7 +1752,7 @@ When generating tests, always include:
 - **Timeout-Set**: Explicit function timeouts
 - **Memory-Tune**: Right-size memory allocation
 - **Event-Validate**: Validate event payloads
-- **Graceful-Shutdown**: Clean shutdown before timeout
+- **Graceful-Shutdown-Serverless**: Clean shutdown before timeout
 - **Stateless-Design**: No local state between invocations
 
 ### Edge (Infra:Edge)
@@ -1976,7 +1960,7 @@ When generating tests, always include:
 **Trigger:** {argocd_dir}, {argocd_config}
 
 - **Sync-Policy**: Auto-sync vs manual
-- **Health-Check**: Custom health checks
+- **Health-Check-ArgoCD**: Custom health checks
 - **Diff-Strategy**: Appropriate diff strategy
 
 ---
@@ -2229,7 +2213,7 @@ When generating tests, always include:
 - **IL2CPP**: Use IL2CPP for production builds (better performance, obfuscation)
 - **UI-Toolkit**: Use UI Toolkit for runtime UI (Unity 2023+), UGUI for legacy
 - **Input-System**: Use new Input System, not legacy Input.GetKey
-- **Async-Await**: Use UniTask for async/await (faster than coroutines)
+- **Async-UniTask**: Use UniTask for async/await (faster than coroutines)
 - **Serialization**: [SerializeField] for private fields, avoid public fields
 
 ### Unreal (Game:Unreal)

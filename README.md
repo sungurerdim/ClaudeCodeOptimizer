@@ -89,13 +89,13 @@ See [Commands documentation](docs/commands.md) for flags and examples.
 </details>
 
 <details>
-<summary><b>Rules System (1664 rules)</b></summary>
+<summary><b>Rules System (1674 rules)</b></summary>
 
 | Category | Count | When Loaded                     |
 |----------|-------|---------------------------------|
-| Core     | 73    | Always (fundamental principles) |
-| AI       | 37    | Always (behavior patterns)      |
-| Adaptive | 1554  | Per-project (stack-specific)    |
+| Core     | 77    | Always (fundamental principles) |
+| AI       | 42    | Always (behavior patterns)      |
+| Adaptive | 1555  | Per-project (stack-specific)    |
 
 **Supported:** Python, TypeScript, Go, Rust, Java + 22 more languages • React, Vue, Django, FastAPI + 100 frameworks • Docker, K8s, Serverless • ML/AI, Game Dev, Blockchain
 

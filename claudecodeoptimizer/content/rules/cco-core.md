@@ -13,6 +13,7 @@
 - **Least-Astonishment**: Behavior matches user expectations
 - **Defensive-Default**: Assume bad input, validate anyway. Cost of validation << cost of bug
 - **Depend-Abstract**: High-level modules depend on abstractions, not implementations. Enables testing and flexibility
+- **Single-Instance**: For shared state (config, connection pools, caches), use single instance per process. Not universal—apply only when state must be globally shared
 
 ## Code Quality
 
@@ -25,6 +26,8 @@
 - **Explicit**: Use named constants, clear intent
 - **Scope**: Only requested changes, general solutions
 - **Robust**: Handle all valid input variations (whitespace, case, empty, None, boundary values)
+- **Async-Await**: Use async/await for I/O operations, avoid blocking in async context
+- **Graceful-Shutdown**: Handle termination signals, drain connections before exit
 
 ## File & Resource
 
@@ -49,6 +52,7 @@
 - **Least-Privilege**: Minimum necessary access
 - **Deps-Audit**: Review before adding, keep updated
 - **Defense-in-Depth**: Multiple layers, verify each control independently
+- **OWASP-Top10**: Prevent injection (SQL, XSS, Command), broken auth, sensitive data exposure, security misconfiguration. Input-Boundary + Defense-in-Depth cover most vectors
 
 ## Testing
 
