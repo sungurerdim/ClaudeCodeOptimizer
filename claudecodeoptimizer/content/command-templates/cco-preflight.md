@@ -43,9 +43,13 @@ Run /cco-config first to configure project context, then restart CLI.
 
 ---
 
-## Fix-All Mode
+## Everything Mode [CRITICAL]
 
-When `--fix-all`: Pass to both `/cco-optimize --fix-all` and `/cco-review --fix-all`. All findings fixed, no skipping. Final accounting: `declined = 0`.
+When `--fix-all` or user selects "Everything":
+- Pass to both `/cco-optimize --fix-all` and `/cco-review --fix-all`
+- **Zero deferrals** - no "future iteration", no "lower priority"
+- **Zero skips** - every finding fixed NOW
+- Final accounting: `declined = 0`
 
 ---
 
@@ -167,7 +171,7 @@ const reviewArgs = fixAllFlag ? "--fix-all" : "--quick"
 qualityTask = Task("general-purpose", `
   Execute /cco-optimize ${optimizeArgs}
 
-  ${fixAllFlag ? "CRITICAL: --fix-all mode - fix ALL findings, no skipping allowed" : ""}
+  ${fixAllFlag ? "CRITICAL: Everything mode - fix all findings, no skipping allowed" : ""}
 
   Return: {
     accounting: { applied, declined, failed, total },
@@ -178,7 +182,7 @@ qualityTask = Task("general-purpose", `
 reviewTask = Task("general-purpose", `
   Execute /cco-review ${reviewArgs}
 
-  ${fixAllFlag ? "CRITICAL: --fix-all mode - fix ALL findings including backlog, no skipping allowed" : ""}
+  ${fixAllFlag ? "CRITICAL: Everything mode - fix all findings including backlog, no skipping allowed" : ""}
 
   Return: {
     foundation: "SOUND|HAS ISSUES",
@@ -441,7 +445,7 @@ console.log(`
 | `--push` | Push to remote after success |
 | `--changelog-only` | Only generate changelog |
 | `--skip-docs` | Skip documentation updates |
-| `--fix-all` | Fix ALL findings in optimize and review - no skipping |
+| `--fix-all` | Everything mode - fix all findings in optimize and review |
 
 ### Go/No-Go Status
 

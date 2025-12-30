@@ -38,9 +38,15 @@ Run /cco-config first to configure project context, then restart CLI.
 
 ---
 
-## Fix-All Mode
+## Everything Mode [CRITICAL]
 
-When `--fix-all`: Zero skip, zero decline, backlog included. Complex fix (>50 lines) → ask user. Only technical impossibility = fail. Accounting: `notSelected = 0` always.
+When `--fix-all` or user selects "Everything":
+- **Zero deferrals** - no "future iteration", no "later pass", no "lower priority"
+- **Zero skips** - every finding must be addressed NOW
+- **Backlog included** - architectural refactoring happens in this pass
+- **Complex fixes** - implement them, don't defer them
+- **Only exit** - FIXED or TECHNICAL FAILURE (with specific blocker)
+- Accounting: `notSelected = 0` always
 
 ---
 
@@ -132,9 +138,9 @@ AskUserQuestion([
     question: "Apply recommendations?",
     header: "Apply",
     options: [
-      { label: "80/20 - Do Now only (Recommended)", description: "High-impact, low-effort items only" },
-      { label: "Full - All recommendations", description: "Apply all including high-effort items" },
-      { label: "Fix all", description: "Fix EVERYTHING including backlog - no skipping" },
+      { label: "Essential (Recommended)", description: "High-impact, low-effort only (Do Now)" },
+      { label: "Thorough", description: "Do Now + Plan + Consider (skip backlog)" },
+      { label: "Everything", description: "All findings including backlog" },
       { label: "Report only", description: "Show findings without applying" }
     ],
     multiSelect: false
@@ -281,16 +287,16 @@ totalFindings = doNow.length + plan.length + consider.length + backlog.length
 let toApply = []
 let notSelected = []
 
-if (config.applyMode.includes("80/20") || config.applyMode.includes("Do Now")) {
+if (config.applyMode.includes("Essential")) {
   toApply = doNow
   notSelected = [...plan, ...consider, ...backlog]
-} else if (config.applyMode === "Fix all") {
-  // Fix-all: EVERYTHING including backlog
-  toApply = [...doNow, ...plan, ...consider, ...backlog]
-  notSelected = []  // Nothing excluded in fix-all mode
-} else if (config.applyMode.includes("Full") || config.applyMode.includes("All")) {
+} else if (config.applyMode.includes("Thorough")) {
   toApply = [...doNow, ...plan, ...consider]
   notSelected = backlog
+} else if (config.applyMode.includes("Everything")) {
+  // Everything: ALL findings including backlog
+  toApply = [...doNow, ...plan, ...consider, ...backlog]
+  notSelected = []  // Nothing excluded
 }
 
 // CRITICAL: Display ALL items in toApply, not just some priorities
@@ -315,7 +321,7 @@ Applying {toApply.length} recommendations...
 
 if (toApply.length > 0) {
   // Determine if fix-all mode
-  const isFixAll = config.applyMode === "Fix all"
+  const isFixAll = config.applyMode.includes("Everything")
 
   applyResults = Task("cco-agent-apply", `
     fixes: ${JSON.stringify(toApply)}
@@ -326,12 +332,24 @@ if (toApply.length > 0) {
     Handle dependencies between fixes.
 
     ${isFixAll ? `
-    CRITICAL - FIX-ALL MODE:
-    - Zero agent-initiated skips/declines allowed
-    - ALL items including backlog MUST be fixed
-    - Only technical impossibilities can be marked as "fail"
-    - Every fail must have reason starting with "Technical:"
-    - If fix is complex (>50 lines), return needs_confirmation status
+    CRITICAL - EVERYTHING MODE [MANDATORY]:
+    You MUST fix every single item. No exceptions. No deferrals.
+
+    FORBIDDEN responses:
+    - "recommended for future iteration" - NO, fix it NOW
+    - "lower priority" - NO, user chose Everything, priority is NOW
+    - "would benefit from dedicated pass" - NO, this IS that pass
+    - "architectural refactoring" - YES, do the refactoring NOW
+    - Any suggestion to skip or defer - FORBIDDEN
+
+    Rules:
+    - Zero agent-initiated skips/declines
+    - Every item = either FIXED or TECHNICAL FAILURE
+    - Technical failure requires specific reason: "Technical: [exact blocker]"
+    - Complex fix (>50 lines) → implement it, don't defer it
+    - If unsure how to fix → ask user, don't skip
+
+    User explicitly chose "Everything". Respect that choice.
     ` : ""}
 
     CRITICAL - Counting:
@@ -389,7 +407,7 @@ assert(applied + notSelected + failed === totalFindings,
 | Metric | Value |
 |--------|-------|
 | Foundation | {foundation} |
-| Mode | {80/20 \| Full} |
+| Mode | {Essential \| Thorough \| Everything} |
 | Files modified | {n} |
 | **Total findings** | **{totalFindings}** |
 
@@ -468,8 +486,8 @@ When `--quick` flag:
 | `--best-practices` | Best practices only |
 | `--no-apply` | Report only |
 | `--matrix` | Show effort/impact matrix visualization |
-| `--do-now-only` | Apply only high-impact, low-effort items |
-| `--fix-all` | Fix EVERYTHING including backlog - no skipping allowed |
+| `--do-now-only` | Essential mode - apply only high-impact, low-effort items |
+| `--fix-all` | Everything mode - apply all findings including backlog |
 
 ### Model Strategy
 
