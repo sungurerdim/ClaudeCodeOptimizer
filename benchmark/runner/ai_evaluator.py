@@ -324,9 +324,10 @@ def parse_ai_response(response: str, cco_is_a: bool) -> AIComparisonResult:
     result = AIComparisonResult(raw_response=response)
     result.blind_assignment = "cco=a" if cco_is_a else "cco=b"
 
+    # Extract actual content from stream-json or other formats
+    cleaned = extract_ai_content(response)
+
     try:
-        # Extract actual content from stream-json or other formats
-        cleaned = extract_ai_content(response)
 
         # Remove markdown code blocks if present
         if cleaned.startswith("```"):
@@ -426,11 +427,26 @@ def parse_ai_response(response: str, cco_is_a: bool) -> AIComparisonResult:
         result.raw_response = ""
 
     except json.JSONDecodeError as e:
-        result.error = f"Failed to parse AI response as JSON: {e}"
-        logger.error(f"JSON parse error: {e}\nResponse: {response[:1000]}")
+        # Check if AI returned plain text instead of JSON
+        has_json_markers = "{" in cleaned and "}" in cleaned
+        if not has_json_markers:
+            result.error = (
+                "AI returned plain text instead of required JSON format. "
+                "The evaluator may have ignored the JSON output instruction."
+            )
+            logger.error("AI returned plain text instead of JSON")
+            logger.error(f"AI response (first 500 chars): {cleaned[:500]}")
+        else:
+            result.error = f"Failed to parse AI response as JSON: {e}"
+            # Log the cleaned/extracted content, not raw response (which may have non-JSON prefix)
+            logger.error(f"JSON parse error: {e}")
+            logger.error(f"Extracted content (first 1500 chars): {cleaned[:1500]}")
+        # Store extracted content (cleaner than raw response with debug prefixes)
+        result.raw_response = cleaned[:5000] if cleaned else response[:5000]
     except Exception as e:
         result.error = f"Error processing response: {e}"
         logger.error(f"Processing error: {e}")
+        result.raw_response = cleaned[:5000] if cleaned else response[:5000]
 
     return result
 
