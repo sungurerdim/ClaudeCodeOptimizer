@@ -1807,45 +1807,110 @@
                 `;
             }
 
-            // 10 Dimension comparison
+            // 10 Dimension comparison with weighted contributions
+            // Use dimension_breakdown from API if available (has weighted values)
+            const dimensionBreakdown = comp?.dimension_breakdown || [];
             const dimensions = [
-                { key: 'functional_completeness', label: 'Functional Completeness', weight: '15%' },
-                { key: 'architecture_design', label: 'Architecture & Design', weight: '12%' },
-                { key: 'code_quality', label: 'Code Quality', weight: '12%' },
-                { key: 'robustness', label: 'Robustness', weight: '12%' },
-                { key: 'security', label: 'Security', weight: '12%' },
-                { key: 'maintainability', label: 'Maintainability', weight: '10%' },
-                { key: 'type_safety', label: 'Type Safety', weight: '8%' },
-                { key: 'testing', label: 'Testing', weight: '7%' },
-                { key: 'performance', label: 'Performance', weight: '6%' },
-                { key: 'best_practices', label: 'Best Practices', weight: '6%' }
+                { key: 'functional_completeness', label: 'Functional Completeness', weight: 15 },
+                { key: 'architecture_design', label: 'Architecture & Design', weight: 12 },
+                { key: 'code_quality', label: 'Code Quality', weight: 12 },
+                { key: 'robustness', label: 'Robustness', weight: 12 },
+                { key: 'security', label: 'Security', weight: 12 },
+                { key: 'maintainability', label: 'Maintainability', weight: 10 },
+                { key: 'type_safety', label: 'Type Safety', weight: 8 },
+                { key: 'testing', label: 'Testing', weight: 7 },
+                { key: 'performance', label: 'Performance', weight: 6 },
+                { key: 'best_practices', label: 'Best Practices', weight: 6 }
             ];
 
-            html += `<h4 style="margin: 20px 0 15px;">10-Dimension Analysis</h4><div style="display: grid; gap: 10px;">`;
+            // Calculate weighted totals for display
+            let ccoWeightedTotal = 0, vanillaWeightedTotal = 0;
+
+            html += `
+                <h4 style="margin: 20px 0 15px;">10-Dimension Analysis (Weighted)</h4>
+                <div style="background: var(--bg-tertiary); padding: 10px; border-radius: 8px; margin-bottom: 15px;">
+                    <div style="display: grid; grid-template-columns: 2fr 1fr 1fr 1fr 1fr; gap: 8px; font-size: 11px; font-weight: bold; color: var(--text-muted); padding-bottom: 8px; border-bottom: 1px solid var(--border);">
+                        <span>Dimension</span>
+                        <span style="text-align: center;">Weight</span>
+                        <span style="text-align: center; color: var(--cco);">CCO</span>
+                        <span style="text-align: center; color: var(--vanilla);">Vanilla</span>
+                        <span style="text-align: center;">Δ</span>
+                    </div>
+            `;
 
             for (const dim of dimensions) {
+                // Try to get from dimension_breakdown first (has weighted values)
+                const breakdown = dimensionBreakdown.find(d => d.dimension === dim.key);
                 const ccoDim = cco?.[dim.key] || {};
                 const vanillaDim = vanilla?.[dim.key] || {};
-                const ccoScore = ccoDim.score || 0;
-                const vanillaScore = vanillaDim.score || 0;
+
+                const ccoScore = breakdown?.cco_score ?? ccoDim.score ?? 0;
+                const vanillaScore = breakdown?.vanilla_score ?? vanillaDim.score ?? 0;
+                const weight = breakdown?.weight ?? dim.weight;
+                const ccoWeighted = breakdown?.cco_weighted ?? (ccoScore * weight / 100);
+                const vanillaWeighted = breakdown?.vanilla_weighted ?? (vanillaScore * weight / 100);
                 const diff = ccoScore - vanillaScore;
-                const winner = diff > 3 ? 'cco' : diff < -3 ? 'vanilla' : 'tie';
+                const winner = breakdown?.winner ?? (diff > 3 ? 'cco' : diff < -3 ? 'vanilla' : 'tie');
+
+                ccoWeightedTotal += ccoWeighted;
+                vanillaWeightedTotal += vanillaWeighted;
+
+                const rowColor = winner === 'cco' ? 'rgba(163,113,247,0.1)' :
+                                winner === 'vanilla' ? 'rgba(121,192,255,0.1)' : 'transparent';
+
+                html += `
+                    <div style="display: grid; grid-template-columns: 2fr 1fr 1fr 1fr 1fr; gap: 8px; font-size: 12px; padding: 8px 0; border-bottom: 1px solid var(--border); background: ${rowColor};">
+                        <span style="font-weight: 500;">${dim.label}</span>
+                        <span style="text-align: center; color: var(--text-muted);">${weight}%</span>
+                        <span style="text-align: center;">
+                            <span style="color: var(--cco); ${winner === 'cco' ? 'font-weight: bold;' : ''}">${ccoScore}</span>
+                            <span style="color: var(--text-muted); font-size: 10px;"> (${ccoWeighted.toFixed(1)})</span>
+                        </span>
+                        <span style="text-align: center;">
+                            <span style="color: var(--vanilla); ${winner === 'vanilla' ? 'font-weight: bold;' : ''}">${vanillaScore}</span>
+                            <span style="color: var(--text-muted); font-size: 10px;"> (${vanillaWeighted.toFixed(1)})</span>
+                        </span>
+                        <span style="text-align: center; color: ${diff > 0 ? 'var(--cco)' : diff < 0 ? 'var(--vanilla)' : 'var(--text-muted)'}; font-weight: ${Math.abs(diff) > 3 ? 'bold' : 'normal'};">
+                            ${diff > 0 ? '+' : ''}${diff}
+                        </span>
+                    </div>
+                `;
+            }
+
+            // Add totals row
+            const totalDiff = ccoWeightedTotal - vanillaWeightedTotal;
+            html += `
+                    <div style="display: grid; grid-template-columns: 2fr 1fr 1fr 1fr 1fr; gap: 8px; font-size: 13px; padding: 10px 0; font-weight: bold; background: var(--bg);">
+                        <span>TOTAL (Weighted)</span>
+                        <span style="text-align: center; color: var(--text-muted);">100%</span>
+                        <span style="text-align: center; color: var(--cco);">${ccoWeightedTotal.toFixed(1)}</span>
+                        <span style="text-align: center; color: var(--vanilla);">${vanillaWeightedTotal.toFixed(1)}</span>
+                        <span style="text-align: center; color: ${totalDiff > 0 ? 'var(--cco)' : totalDiff < 0 ? 'var(--vanilla)' : 'var(--text-muted)'};">
+                            ${totalDiff > 0 ? '+' : ''}${totalDiff.toFixed(1)}
+                        </span>
+                    </div>
+                </div>
+            `;
+
+            // Visual bar comparison for each dimension
+            html += `<div style="display: grid; gap: 8px;">`;
+            for (const dim of dimensions) {
+                const breakdown = dimensionBreakdown.find(d => d.dimension === dim.key);
+                const ccoDim = cco?.[dim.key] || {};
+                const vanillaDim = vanilla?.[dim.key] || {};
+                const ccoScore = breakdown?.cco_score ?? ccoDim.score ?? 0;
+                const vanillaScore = breakdown?.vanilla_score ?? vanillaDim.score ?? 0;
+                const diff = ccoScore - vanillaScore;
+                const winner = breakdown?.winner ?? (diff > 3 ? 'cco' : diff < -3 ? 'vanilla' : 'tie');
                 const winnerStyle = winner === 'cco' ? 'border-left: 3px solid var(--cco);' :
                                    winner === 'vanilla' ? 'border-left: 3px solid var(--vanilla);' :
                                    'border-left: 3px solid var(--text-muted);';
 
                 html += `
-                    <div style="background: var(--bg-tertiary); padding: 10px 12px; border-radius: 8px; ${winnerStyle}">
-                        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 6px;">
-                            <strong style="font-size: 13px;">${dim.label}</strong>
-                            <div style="display: flex; align-items: center; gap: 12px;">
-                                <span style="font-size: 12px; color: var(--cco);">${ccoScore}</span>
-                                <span style="font-size: 11px; color: ${diff > 0 ? 'var(--cco)' : diff < 0 ? 'var(--vanilla)' : 'var(--text-muted)'};">
-                                    ${diff > 0 ? '+' : ''}${diff}
-                                </span>
-                                <span style="font-size: 12px; color: var(--vanilla);">${vanillaScore}</span>
-                                <span style="font-size: 10px; color: var(--text-muted);">${dim.weight}</span>
-                            </div>
+                    <div style="background: var(--bg-tertiary); padding: 6px 10px; border-radius: 6px; ${winnerStyle}">
+                        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 4px;">
+                            <span style="font-size: 11px; color: var(--text-muted);">${dim.label}</span>
+                            <span style="font-size: 10px; color: var(--text-muted);">${dim.weight}%</span>
                         </div>
                         <div style="display: flex; gap: 4px; height: 4px;">
                             <div style="flex: 1; background: var(--bg); border-radius: 2px; overflow: hidden;">

@@ -18,19 +18,68 @@ logger = logging.getLogger(__name__)
 # Path to comparison prompt template
 COMPARISON_PROMPT_FILE = "comparison-prompt.md"
 
-# 10 evaluation dimensions with weights
-DIMENSIONS = [
-    ("functional_completeness", 15),
-    ("architecture_design", 12),
-    ("code_quality", 12),
-    ("robustness", 12),
-    ("security", 12),
-    ("maintainability", 10),
-    ("type_safety", 8),
-    ("testing", 7),
-    ("performance", 6),
-    ("best_practices", 6),
+# 10 evaluation dimensions with weights (total: 100%)
+# Higher weight = more critical for code quality
+DIMENSIONS: list[tuple[str, int]] = [
+    ("functional_completeness", 15),  # Core: Does it work as specified?
+    ("architecture_design", 12),  # Structure: Clean dependencies, patterns
+    ("code_quality", 12),  # Readability: Naming, functions, DRY
+    ("robustness", 12),  # Reliability: Error handling, edge cases
+    ("security", 12),  # Safety: Input validation, secrets
+    ("maintainability", 10),  # Longevity: Config, documentation
+    ("type_safety", 8),  # Correctness: Types, null handling
+    ("testing", 7),  # Verification: Test coverage, quality
+    ("performance", 6),  # Efficiency: Algorithms, resources
+    ("best_practices", 6),  # Conventions: Modern patterns, style
 ]
+
+# Grade thresholds for weighted overall score (0-100)
+GRADE_THRESHOLDS: list[tuple[int, str]] = [
+    (97, "A+"),
+    (93, "A"),
+    (90, "A-"),
+    (87, "B+"),
+    (83, "B"),
+    (80, "B-"),
+    (77, "C+"),
+    (73, "C"),
+    (70, "C-"),
+    (60, "D"),
+    (0, "F"),
+]
+
+
+def calculate_weighted_score(variant: VariantResult) -> float:
+    """
+    Calculate weighted overall score from dimension scores.
+
+    Each dimension is scored 0-100 and contributes based on its weight.
+    Formula: sum(dimension_score * weight) / 100
+
+    Returns:
+        Weighted overall score (0-100)
+    """
+    total = 0.0
+    for dim_name, weight in DIMENSIONS:
+        dim_score = getattr(variant, dim_name, DimensionScore())
+        total += dim_score.score * weight
+    return round(total / 100, 1)
+
+
+def calculate_grade(score: float) -> str:
+    """
+    Calculate letter grade from weighted score.
+
+    Args:
+        score: Weighted overall score (0-100)
+
+    Returns:
+        Letter grade (A+ through F)
+    """
+    for threshold, grade in GRADE_THRESHOLDS:
+        if score >= threshold:
+            return grade
+    return "F"
 
 
 @dataclass
@@ -117,10 +166,13 @@ class DimensionComparison:
     """Comparison result for a single dimension."""
 
     dimension: str = ""
+    weight: int = 0  # Weight percentage (0-100)
     winner: str = "tie"
     diff: int = 0
     cco_score: int = 0
     vanilla_score: int = 0
+    cco_weighted: float = 0.0  # Weighted contribution to total
+    vanilla_weighted: float = 0.0  # Weighted contribution to total
 
 
 @dataclass
@@ -146,12 +198,18 @@ class AIComparisonResult:
 
     def to_dict(self) -> dict[str, Any]:
         """Convert to dictionary for JSON response."""
-        # Calculate dimension wins
+        # Calculate dimension wins (weighted and unweighted)
         cco_wins = sum(1 for d in self.dimension_breakdown if d.winner == "cco")
         vanilla_wins = sum(1 for d in self.dimension_breakdown if d.winner == "vanilla")
         ties = sum(1 for d in self.dimension_breakdown if d.winner == "tie")
 
-        # Build executive summary
+        # Calculate weighted wins (dimensions where one side won, weighted by importance)
+        cco_weighted_wins = sum(d.weight for d in self.dimension_breakdown if d.winner == "cco")
+        vanilla_weighted_wins = sum(
+            d.weight for d in self.dimension_breakdown if d.winner == "vanilla"
+        )
+
+        # Build executive summary with weighted info
         diff = abs(self.score_difference)
         if self.winner == "cco":
             impact = f"CCO improved code quality by {diff} points ({self.cco.grade} vs {self.vanilla.grade})."
@@ -162,7 +220,8 @@ class AIComparisonResult:
 
         exec_summary = (
             f"{self.verdict}. {impact} "
-            f"CCO won {cco_wins}/10 dimensions, Vanilla won {vanilla_wins}/10, {ties} tied. "
+            f"CCO won {cco_wins}/10 dimensions ({cco_weighted_wins}% weight), "
+            f"Vanilla won {vanilla_wins}/10 ({vanilla_weighted_wins}% weight), {ties} tied. "
             f"{self.recommendation}"
         )
 
@@ -179,6 +238,7 @@ class AIComparisonResult:
                 "winner": self.winner,
                 "verdict": self.verdict,
                 "dimension_wins": f"CCO {cco_wins} - Vanilla {vanilla_wins} - Tie {ties}",
+                "weighted_dimension_wins": f"CCO {cco_weighted_wins}% - Vanilla {vanilla_weighted_wins}%",
             },
             "cco": self.cco.to_dict(),
             "vanilla": self.vanilla.to_dict(),
@@ -190,10 +250,13 @@ class AIComparisonResult:
                 "dimension_breakdown": [
                     {
                         "dimension": d.dimension,
+                        "weight": d.weight,
                         "winner": d.winner,
                         "diff": d.diff,
                         "cco_score": d.cco_score,
                         "vanilla_score": d.vanilla_score,
+                        "cco_weighted": d.cco_weighted,
+                        "vanilla_weighted": d.vanilla_weighted,
                     }
                     for d in self.dimension_breakdown
                 ],
@@ -328,7 +391,6 @@ def parse_ai_response(response: str, cco_is_a: bool) -> AIComparisonResult:
     cleaned = extract_ai_content(response)
 
     try:
-
         # Remove markdown code blocks if present
         if cleaned.startswith("```"):
             lines = cleaned.split("\n")
@@ -355,13 +417,29 @@ def parse_ai_response(response: str, cco_is_a: bool) -> AIComparisonResult:
             result.cco = parse_variant(impl_b)
             result.vanilla = parse_variant(impl_a)
 
-        # Build dimension breakdown
-        for dim_name, _ in DIMENSIONS:
+        # Calculate weighted overall scores (don't trust AI's math)
+        cco_weighted_total = calculate_weighted_score(result.cco)
+        vanilla_weighted_total = calculate_weighted_score(result.vanilla)
+
+        # Override AI's overall_score with our weighted calculation
+        result.cco.overall_score = int(cco_weighted_total)
+        result.vanilla.overall_score = int(vanilla_weighted_total)
+
+        # Calculate grades from weighted scores
+        result.cco.grade = calculate_grade(cco_weighted_total)
+        result.vanilla.grade = calculate_grade(vanilla_weighted_total)
+
+        # Build dimension breakdown with weights
+        for dim_name, weight in DIMENSIONS:
             cco_dim = getattr(result.cco, dim_name, DimensionScore())
             vanilla_dim = getattr(result.vanilla, dim_name, DimensionScore())
             cco_score = cco_dim.score
             vanilla_score = vanilla_dim.score
             diff = cco_score - vanilla_score
+
+            # Calculate weighted contributions
+            cco_weighted = round(cco_score * weight / 100, 2)
+            vanilla_weighted = round(vanilla_score * weight / 100, 2)
 
             if abs(diff) < 3:
                 dim_winner = "tie"
@@ -373,17 +451,20 @@ def parse_ai_response(response: str, cco_is_a: bool) -> AIComparisonResult:
             result.dimension_breakdown.append(
                 DimensionComparison(
                     dimension=dim_name,
+                    weight=weight,
                     winner=dim_winner,
                     diff=diff,
                     cco_score=cco_score,
                     vanilla_score=vanilla_score,
+                    cco_weighted=cco_weighted,
+                    vanilla_weighted=vanilla_weighted,
                 )
             )
 
-        # Calculate overall verdict
-        result.score_difference = result.cco.overall_score - result.vanilla.overall_score
+        # Calculate overall verdict from weighted scores
+        result.score_difference = int(cco_weighted_total - vanilla_weighted_total)
         result.winner, result.margin, result.verdict = calculate_verdict(
-            result.cco.overall_score, result.vanilla.overall_score
+            int(cco_weighted_total), int(vanilla_weighted_total)
         )
 
         # Parse comparison section
