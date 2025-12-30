@@ -99,7 +99,14 @@ def cli_run(project_id: str, variant: str, model: str):
 
     print(f"\nResult: {'Success' if result.success else 'Failed'}")
     print(f"Score: {result.score}")
-    print(f"Time: {result.generation_time_seconds:.1f}s")
+    print(f"Time: {result.generation_time_seconds:.1f}s total")
+    if result.config_time_seconds is not None:
+        phases = f"  (config: {result.config_time_seconds:.1f}s, coding: {result.coding_time_seconds:.1f}s"
+        if result.optimize_time_seconds is not None:
+            phases += f", optimize: {result.optimize_time_seconds:.1f}s)"
+        else:
+            phases += ")"
+        print(phases)
 
     if result.metrics:
         print("\nMetrics:")
@@ -145,7 +152,17 @@ def cli_compare(project_id: str, model: str):
     print(f"\n  VERDICT: {result.verdict}")
 
     print("\n  Timing:")
-    print(f"    CCO:     {result.cco_result.generation_time_seconds:.1f}s")
+    cco = result.cco_result
+    print(f"    CCO:     {cco.generation_time_seconds:.1f}s total")
+    if cco.config_time_seconds is not None:
+        print(
+            f"             (config: {cco.config_time_seconds:.1f}s, "
+            f"coding: {cco.coding_time_seconds:.1f}s, "
+            f"optimize: {cco.optimize_time_seconds:.1f}s)"
+            if cco.optimize_time_seconds is not None
+            else f"             (config: {cco.config_time_seconds:.1f}s, "
+            f"coding: {cco.coding_time_seconds:.1f}s)"
+        )
     print(f"    Vanilla: {result.vanilla_result.generation_time_seconds:.1f}s")
 
     # Save result

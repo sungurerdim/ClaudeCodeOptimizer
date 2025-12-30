@@ -280,7 +280,7 @@ class ExecutionResult:
     success: bool
     metrics: Metrics | None
     score: float
-    generation_time_seconds: float
+    generation_time_seconds: float  # Total time (all phases)
     prompt_used: str
     error_message: str = ""
     output_dir: str = ""
@@ -289,9 +289,13 @@ class ExecutionResult:
     stdout_excerpt: str = ""  # Last 500 chars of stdout
     stderr_excerpt: str = ""  # Last 500 chars of stderr
     timestamp: str = field(default_factory=lambda: datetime.now().isoformat())
+    # CCO phase timings (None for vanilla)
+    config_time_seconds: float | None = None  # cco-config phase
+    coding_time_seconds: float | None = None  # Main coding phase
+    optimize_time_seconds: float | None = None  # cco-optimize phase
 
     def to_dict(self) -> dict[str, Any]:
-        return {
+        result = {
             "project_id": self.project_id,
             "variant": self.variant,
             "success": self.success,
@@ -307,6 +311,12 @@ class ExecutionResult:
             "stderr_excerpt": self.stderr_excerpt,
             "timestamp": self.timestamp,
         }
+        # Include phase timings for CCO variant
+        if self.variant == "cco":
+            result["config_time_seconds"] = self.config_time_seconds
+            result["coding_time_seconds"] = self.coding_time_seconds
+            result["optimize_time_seconds"] = self.optimize_time_seconds
+        return result
 
     @classmethod
     def from_dict(cls, data: dict[str, Any]) -> "ExecutionResult":
@@ -410,7 +420,7 @@ class TestExecutor:
         self.output_base = output_base
         self.ccbox_cmd = ccbox_cmd
         self.timeout = timeout_seconds
-        self.setup_timeout = 120  # 2 minutes for CCO setup
+        self.phase_timeout = 120  # 2 minutes for CCO config/optimize phases
         self.stall_threshold = stall_threshold  # Seconds without output = stall warning
         self.progress_callback = progress_callback
         self.streaming = streaming
@@ -591,8 +601,8 @@ class TestExecutor:
         exit_code = process.returncode
         return exit_code, stdout, stderr, activity
 
-    def _run_cco_setup(self, project_dir: Path, model: str) -> dict[str, Any]:
-        """Run cco-config --auto to setup CCO rules before the actual test.
+    def _run_cco_config(self, project_dir: Path, model: str) -> dict[str, Any]:
+        """Run cco-config --auto to configure CCO rules before the actual test.
 
         This runs in a separate ccbox invocation so that:
         1. CCO rules are configured and persisted
@@ -624,24 +634,24 @@ class TestExecutor:
         cmd_str = " ".join(cmd)
         start_time = time.time()
 
-        logger.info(f"[CCO Setup] Starting: {cmd_str}")
-        logger.info(f"[CCO Setup] Project dir: {project_dir}")
-        logger.info(f"[CCO Setup] Using inactivity timeout: {self.setup_timeout}s")
+        logger.info(f"[CCO Config] Starting: {cmd_str}")
+        logger.info(f"[CCO Config] Project dir: {project_dir}")
+        logger.info(f"[CCO Config] Using inactivity timeout: {self.phase_timeout}s")
 
         try:
             # Use streaming mode with inactivity-based timeout
             exit_code, stdout, stderr, activity = self._run_with_streaming(
                 cmd=cmd,
                 project_dir=project_dir,
-                variant="cco-setup",
-                timeout=float(self.setup_timeout),
+                variant="cco-config",
+                timeout=float(self.phase_timeout),
                 env={"CLAUDE_MODEL": model},
             )
 
             elapsed = time.time() - start_time
 
-            # Save setup logs with detailed info
-            log_content = f"""CCO Setup Log (Streaming Mode)
+            # Save config logs with detailed info
+            log_content = f"""CCO Config Log (Streaming Mode)
 {"=" * 60}
 Command: {cmd_str}
 Exit Code: {exit_code}
@@ -662,14 +672,14 @@ STDOUT:
 STDERR:
 {stderr or "(empty)"}
 """
-            (project_dir / "_cco_setup.log").write_text(log_content, encoding="utf-8")
-            (project_dir / "_cco_setup_stdout.log").write_text(stdout, encoding="utf-8")
-            (project_dir / "_cco_setup_stderr.log").write_text(stderr, encoding="utf-8")
+            (project_dir / "_cco_config.log").write_text(log_content, encoding="utf-8")
+            (project_dir / "_cco_config_stdout.log").write_text(stdout, encoding="utf-8")
+            (project_dir / "_cco_config_stderr.log").write_text(stderr, encoding="utf-8")
 
             # Handle FileNotFoundError (exit_code is None and no output)
             if exit_code is None and not stdout and not stderr:
                 error_msg = f"ccbox command not found: {self.ccbox_cmd}"
-                logger.error(f"[CCO Setup] {error_msg}")
+                logger.error(f"[CCO Config] {error_msg}")
                 return {
                     "success": False,
                     "time": elapsed,
@@ -682,10 +692,10 @@ STDERR:
 
             # Handle timeout (exit_code is None but we have output)
             if exit_code is None:
-                error_msg = f"Setup inactivity timeout after {self.setup_timeout}s without output"
-                logger.error(f"[CCO Setup] TIMEOUT: {error_msg}")
-                logger.error(f"[CCO Setup] Partial stdout:\n{_truncate(stdout, 1000)}")
-                logger.error(f"[CCO Setup] Partial stderr:\n{_truncate(stderr, 1000)}")
+                error_msg = f"Config inactivity timeout after {self.phase_timeout}s without output"
+                logger.error(f"[CCO Config] TIMEOUT: {error_msg}")
+                logger.error(f"[CCO Config] Partial stdout:\n{_truncate(stdout, 1000)}")
+                logger.error(f"[CCO Config] Partial stderr:\n{_truncate(stderr, 1000)}")
                 return {
                     "success": False,
                     "time": elapsed,
@@ -698,9 +708,9 @@ STDERR:
 
             if exit_code != 0:
                 error_msg = _parse_ccbox_error(stdout, stderr, exit_code)
-                logger.error(f"[CCO Setup] FAILED: {error_msg}")
-                logger.error(f"[CCO Setup] Full stdout:\n{_truncate(stdout, 2000)}")
-                logger.error(f"[CCO Setup] Full stderr:\n{_truncate(stderr, 2000)}")
+                logger.error(f"[CCO Config] FAILED: {error_msg}")
+                logger.error(f"[CCO Config] Full stdout:\n{_truncate(stdout, 2000)}")
+                logger.error(f"[CCO Config] Full stderr:\n{_truncate(stderr, 2000)}")
 
                 return {
                     "success": False,
@@ -712,7 +722,7 @@ STDERR:
                     "error": error_msg,
                 }
 
-            logger.info(f"[CCO Setup] SUCCESS in {elapsed:.2f}s")
+            logger.info(f"[CCO Config] SUCCESS in {elapsed:.2f}s")
             return {
                 "success": True,
                 "time": elapsed,
@@ -728,8 +738,8 @@ STDERR:
             import traceback
 
             error_msg = f"{type(e).__name__}: {e}"
-            logger.error(f"[CCO Setup] EXCEPTION: {error_msg}")
-            logger.error(f"[CCO Setup] Traceback:\n{traceback.format_exc()}")
+            logger.error(f"[CCO Config] EXCEPTION: {error_msg}")
+            logger.error(f"[CCO Config] Traceback:\n{traceback.format_exc()}")
             return {
                 "success": False,
                 "time": elapsed,
@@ -768,7 +778,7 @@ STDERR:
 
         logger.info(f"[CCO Optimize] Starting: {cmd_str}")
         logger.info(f"[CCO Optimize] Project dir: {project_dir}")
-        logger.info(f"[CCO Optimize] Using inactivity timeout: {self.setup_timeout}s")
+        logger.info(f"[CCO Optimize] Using inactivity timeout: {self.phase_timeout}s")
 
         try:
             # Use streaming mode with inactivity-based timeout
@@ -776,7 +786,7 @@ STDERR:
                 cmd=cmd,
                 project_dir=project_dir,
                 variant="cco-optimize",
-                timeout=float(self.setup_timeout),
+                timeout=float(self.phase_timeout),
                 env={"CLAUDE_MODEL": model},
             )
 
@@ -823,7 +833,7 @@ STDERR:
             # Handle timeout (exit_code is None but we have output)
             if exit_code is None:
                 error_msg = (
-                    f"Optimize inactivity timeout after {self.setup_timeout}s without output"
+                    f"Optimize inactivity timeout after {self.phase_timeout}s without output"
                 )
                 logger.warning(f"[CCO Optimize] TIMEOUT (non-blocking): {error_msg}")
                 return {
@@ -889,7 +899,13 @@ STDERR:
         2. Test phase: Run the actual benchmark prompt
         3. Optimize phase: Run /cco-optimize --auto to apply fixes (non-blocking)
         """
-        logger.info(f"[{variant.upper()}] Starting project: {config.id}")
+        # Visual separator for variant start
+        separator_heavy = "═" * 60
+        separator_light = "─" * 40
+
+        logger.info(f"\n{separator_heavy}")
+        logger.info(f"[{variant.upper()}] STARTING: {config.id}")
+        logger.info(separator_heavy)
 
         # Fixed folder name (no timestamp) - same test always uses same folder
         project_dir = self.output_base / f"{config.id}_{variant}"
@@ -910,28 +926,40 @@ STDERR:
         # Short instruction for ccbox - actual task is in the file
         short_prompt = "Read _benchmark_prompt.md and complete all tasks described in it. Follow the requirements exactly."
 
-        # CCO variant: First run cco-config --auto to setup rules
+        # CCO phase timings
+        config_time: float | None = None
+        optimize_time: float | None = None
+
+        # CCO variant: First run cco-config --auto to configure rules
         if variant == "cco":
-            logger.info("[CCO] Running setup phase...")
-            setup_result = self._run_cco_setup(project_dir, model)
-            if not setup_result["success"]:
-                logger.error(f"[CCO] Setup phase FAILED: {setup_result['error']}")
+            logger.info(f"\n{separator_light}")
+            logger.info("[CCO] Phase 1/3: config")
+            logger.info(separator_light)
+            config_result = self._run_cco_config(project_dir, model)
+            config_time = config_result["time"]
+            if not config_result["success"]:
+                logger.error(f"[CCO] Config phase FAILED: {config_result['error']}")
                 return ExecutionResult(
                     project_id=config.id,
                     variant=variant,
                     success=False,
                     metrics=None,
                     score=0.0,
-                    generation_time_seconds=setup_result["time"],
+                    generation_time_seconds=round(config_time, 2),
                     prompt_used=config.prompt,
                     output_dir=str(project_dir),
-                    command=setup_result["command"],
-                    exit_code=setup_result["exit_code"],
-                    stdout_excerpt=setup_result["stdout"][-1000:] if setup_result["stdout"] else "",
-                    stderr_excerpt=setup_result["stderr"][-1000:] if setup_result["stderr"] else "",
-                    error_message=f"CCO setup failed: {setup_result['error']}",
+                    command=config_result["command"],
+                    exit_code=config_result["exit_code"],
+                    stdout_excerpt=config_result["stdout"][-1000:]
+                    if config_result["stdout"]
+                    else "",
+                    stderr_excerpt=config_result["stderr"][-1000:]
+                    if config_result["stderr"]
+                    else "",
+                    error_message=f"CCO config failed: {config_result['error']}",
+                    config_time_seconds=round(config_time, 2),
                 )
-            logger.info("[CCO] Setup phase completed successfully")
+            logger.info(f"[CCO] Config phase completed in {config_time:.2f}s")
 
         # Build ccbox command for the actual test
         # ccbox parameters (as of latest version):
@@ -949,7 +977,7 @@ STDERR:
         # Variant-specific flags
         if variant == "vanilla":
             cmd.append("--bare")  # No CCO rules
-        # else: CCO variant - rules already configured in setup phase
+        # else: CCO variant - rules already configured in config phase
 
         # Common flags
         cmd.extend(
@@ -963,6 +991,16 @@ STDERR:
 
         start_time = time.time()
         cmd_str = " ".join(cmd)
+
+        # Coding phase separator
+        if variant == "cco":
+            logger.info(f"\n{separator_light}")
+            logger.info("[CCO] Phase 2/3: coding")
+            logger.info(separator_light)
+        else:
+            logger.info(f"\n{separator_light}")
+            logger.info("[VANILLA] coding")
+            logger.info(separator_light)
 
         logger.info(f"[{variant.upper()}] Executing: {cmd_str[:200]}...")
 
@@ -1035,12 +1073,13 @@ STDERR:
 
                 # CCO variant: Run cco-optimize --auto after successful test
                 if variant == "cco":
-                    logger.info("[CCO] Running optimize phase...")
+                    logger.info(f"\n{separator_light}")
+                    logger.info("[CCO] Phase 3/3: optimize")
+                    logger.info(separator_light)
                     optimize_result = self._run_cco_optimize(project_dir, model)
+                    optimize_time = optimize_result["time"]
                     if optimize_result["success"]:
-                        logger.info(
-                            f"[CCO] Optimize phase completed in {optimize_result['time']:.2f}s"
-                        )
+                        logger.info(f"[CCO] Optimize phase completed in {optimize_time:.2f}s")
                     else:
                         # Non-blocking: log warning but continue with analysis
                         logger.warning(
@@ -1058,12 +1097,31 @@ STDERR:
                 logger.error(f"[{variant.upper()}] stdout:\n{_truncate(stdout, 1500)}")
                 logger.error(f"[{variant.upper()}] stderr:\n{_truncate(stderr, 1500)}")
 
+            # Calculate total time (all phases)
+            total_time = generation_time
+            if config_time is not None:
+                total_time += config_time
+            if optimize_time is not None:
+                total_time += optimize_time
+
+            # Log CCO phase summary
+            if variant == "cco":
+                logger.info(
+                    f"[CCO] Phase timings: config={config_time:.2f}s, "
+                    f"coding={generation_time:.2f}s, "
+                    f"optimize={optimize_time:.2f}s, "
+                    f"total={total_time:.2f}s"
+                    if optimize_time is not None
+                    else f"[CCO] Phase timings: config={config_time:.2f}s, "
+                    f"coding={generation_time:.2f}s, total={total_time:.2f}s"
+                )
+
             # Analyze generated code
             analyzer = CodeAnalyzer(project_dir)
             metrics = analyzer.analyze()
             metrics.name = config.name
             metrics.variant = variant
-            metrics.generation_time_seconds = generation_time
+            metrics.generation_time_seconds = total_time
             score = calculate_overall_score(metrics)
 
             # Build detailed error message if failed
@@ -1074,13 +1132,21 @@ STDERR:
                 else:
                     error_msg = _parse_ccbox_error(stdout, stderr, exit_code) + stall_info
 
+            # Variant completion separator
+            status = "SUCCESS" if success else "FAILED"
+            logger.info(f"\n{separator_heavy}")
+            logger.info(
+                f"[{variant.upper()}] {status}: {config.id} (score={round(score, 1)}, time={total_time:.1f}s)"
+            )
+            logger.info(f"{separator_heavy}\n")
+
             return ExecutionResult(
                 project_id=config.id,
                 variant=variant,
                 success=success,
                 metrics=metrics,
                 score=round(score, 1),
-                generation_time_seconds=round(generation_time, 2),
+                generation_time_seconds=round(total_time, 2),
                 prompt_used=config.prompt,
                 output_dir=str(project_dir),
                 command=cmd_str,
@@ -1088,6 +1154,11 @@ STDERR:
                 stdout_excerpt=stdout[-1000:] if stdout else "",
                 stderr_excerpt=stderr[-1000:] if stderr else "",
                 error_message=error_msg,
+                config_time_seconds=round(config_time, 2) if config_time is not None else None,
+                coding_time_seconds=round(generation_time, 2),
+                optimize_time_seconds=round(optimize_time, 2)
+                if optimize_time is not None
+                else None,
             )
 
         # Legacy non-streaming mode (fallback)
