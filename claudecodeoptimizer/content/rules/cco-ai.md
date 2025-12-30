@@ -7,6 +7,9 @@
 - **Verify-After-Change**: After EVERY code change, verify compliance before proceeding
 - **Fix-Immediately**: Violation detected → stop, fix, re-verify. Never defer ("cleanup later" is not acceptable)
 - **No-Partial-Compliance**: Do not proceed with known violations. 100% compliance required, not "mostly compliant"
+- **Security-Priority**: Security rules are non-negotiable. Never trade security for convenience or speed
+- **Block-On-Violation**: Security violation = STOP. Do not continue until fixed. Warn user explicitly
+- **Defense-Assume**: When uncertain about security impact, assume the worst and protect accordingly
 
 ## Context Optimization
 
@@ -64,6 +67,7 @@ Specialized agents for complex tasks. **Choose based on complexity, not task typ
 - **Read-To-Know**: Read file contents before referencing them
 - **Confirm-Intent**: Confirm user intent before making assumptions
 - **No-Hallucination**: Never invent APIs, methods, parameters, or file contents. Verify existence before use (alias: Verify-APIs + Read-To-Know)
+- **Security-Evidence**: Security claims require code/config evidence. No evidence → state "unverified" and list checks needed
 
 ## Reasoning Strategies
 
@@ -114,6 +118,8 @@ For CRITICAL severity findings, validate with multiple reasoning paths:
 - **Optional-Explicit**: Distinguish None (absent) vs empty string/list (present but empty)
 - **Coercion-Document**: If auto-coercing types, document behavior. Prefer explicit over magic
 - **Error-Rich**: Validation errors should be specific, actionable, field-level
+- **Security-By-Default**: New code must include: input validation, output encoding, error handling, timeout configuration
+- **No-Hardcoded-Secrets**: Never write secrets, API keys, passwords in code. Use environment variables or config
 
 ## Status Updates
 

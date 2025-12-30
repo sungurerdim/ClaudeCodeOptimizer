@@ -6,10 +6,10 @@
 
 | Category     | Rules    | Location                           | Loading       |
 |--------------|----------|------------------------------------|---------------|
-| Core         | 77       | `~/.claude/rules/cco/core.md`      | Always active |
-| AI           | 42       | `~/.claude/rules/cco/ai.md`        | Always active |
-| Adaptive     | 1555     | pip package → `.claude/rules/cco/` | Per-project   |
-| **Total**    | **1674** |                                    |               |
+| Core         | 85       | `~/.claude/rules/cco/core.md`      | Always active |
+| AI           | 48       | `~/.claude/rules/cco/ai.md`        | Always active |
+| Adaptive     | 1563     | pip package → `.claude/rules/cco/` | Per-project   |
+| **Total**    | **1696** |                                    |               |
 
 *Note: Tool rules (workflow mechanisms) are embedded directly in command/agent templates.*
 
@@ -29,7 +29,7 @@
 ├─────────────────────────────────────────────────────────────────┤
 │  ON-DEMAND (Adaptive Rules)                                     │
 ├─────────────────────────────────────────────────────────────────┤
-│  Adaptive     - Project-specific rules template (1555 rules)    │
+│  Adaptive     - Project-specific rules template (1563 rules)    │
 │  Location:    pip package (NOT in rules/ to avoid context bloat)│
 │  Access via:  cco-install --cat rules/cco-adaptive.md           │
 ├─────────────────────────────────────────────────────────────────┤
@@ -49,31 +49,35 @@
 ### Design Principles
 
 - **SSOT**: Single source of truth for every piece of data/logic
-- **DRY**: Don't repeat yourself, extract common patterns
-- **YAGNI**: Only build what's needed now, not hypotheticals
-- **KISS**: Simplest solution that works
+- **DRY**: Extract common patterns, avoid repetition
+- **YAGNI**: Add only requested features + robustness (validation, edge cases, error handling) - robustness is required, features are not
+- **KISS**: Simplest solution that works correctly for all valid inputs
 - **Separation-of-Concerns**: Distinct responsibilities per module
 - **Composition**: Prefer composition over inheritance
 - **Idempotent**: Same operation, same result, safe to retry
 - **Least-Astonishment**: Behavior matches user expectations
-- **Single-Instance**: For shared state (config, pools, caches), use single instance per process
+- **Defensive-Default**: Assume bad input, validate anyway. Cost of validation << cost of bug
+- **Depend-Abstract**: High-level modules depend on abstractions, not implementations. Enables testing and flexibility
+- **Single-Instance**: For shared state (config, connection pools, caches), use single instance per process. Not universal—apply only when state must be globally shared
 
 ### Code Quality
 
-- **Fail-Fast**: Immediate visible failure, no silent fallbacks
-- **No-Orphans**: Every function called, every import used
-- **Type-Safe**: Annotations where supported
+- **Fail-Fast**: Immediate visible failure, propagate errors explicitly
+- **Used-Only**: Keep only called functions and used imports
+- **Type-Safe**: Full type annotations on all public APIs. Prefer stricter types (Literal, enums over strings)
 - **Immutable**: Prefer immutable, mutate only when necessary
 - **Complexity**: Cyclomatic <10 per function
 - **Clean**: Meaningful names, single responsibility
-- **Explicit**: No magic values, clear intent
+- **Explicit**: Use named constants, clear intent
 - **Scope**: Only requested changes, general solutions
-- **Defensive**: Validate assumptions, handle edge cases
+- **Robust**: Handle all valid input variations (whitespace, case, empty, None, boundary values)
+- **Async-Await**: Use async/await for I/O operations, avoid blocking in async context
+- **Graceful-Shutdown**: Handle termination signals, drain connections before exit
 
 ### File & Resource
 
 - **Minimal-Touch**: Only files required for task
-- **No-Unsolicited**: Never create files unless requested
+- **Request-First**: Create files only when explicitly requested
 - **Paths**: Forward slash, relative, quote spaces
 - **Cleanup**: Temp files, handles, connections
 - **Skip**: VCS (.git, .svn), deps (node_modules, vendor, venv), build (dist, out, target), IDE (.idea, .vscode), generated (*.min.*, @generated)
@@ -83,7 +87,7 @@
 - **Parallel-Independent**: Run unrelated operations simultaneously
 - **Sequential-Dependent**: Chain dependent operations
 - **Lazy-Evaluation**: Defer work until needed
-- **Cache-Reuse**: Don't recompute, cache results
+- **Cache-Reuse**: Cache results, reuse computations
 - **Batch-Operations**: Group similar operations
 
 ### Security
@@ -92,20 +96,31 @@
 - **Input-Boundary**: Validate at system entry points
 - **Least-Privilege**: Minimum necessary access
 - **Deps-Audit**: Review before adding, keep updated
-- **Defense-in-Depth**: Multiple layers, don't trust single control
-- **OWASP-Top10**: Prevent injection (SQL, XSS, Command), broken auth, sensitive data exposure
+- **Defense-in-Depth**: Multiple layers, verify each control independently
+- **OWASP-Top10**: Prevent injection (SQL, XSS, Command), broken auth, sensitive data exposure, security misconfiguration. Input-Boundary + Defense-in-Depth cover most vectors
+- **Lockfile-Required**: Dependency lockfile mandatory in repo. Pin versions, no floating ranges for production
+- **Safe-Defaults**: Production defaults must be secure: debug off, verbose errors off, restrictive CORS, no wildcard origins
+- **No-Secrets-Logged**: Never log secrets, tokens, credentials, PII. Redact/mask sensitive fields in all output
+- **Data-Minimization**: Collect and store only necessary data. Each field requires justification
+- **Session-Security**: Secure + HttpOnly + SameSite=Lax/Strict cookies, token TTL with refresh strategy, logout invalidates server-side. Use __Host- prefix for sensitive cookies
+- **Password-Security**: Never store plaintext. Use bcrypt/argon2/scrypt with appropriate cost factor. Salt per-password, pepper application-wide
+- **Error-Disclosure**: Never expose stack traces, internal paths, or system details to users. Generic messages for auth failures (prevent user enumeration)
+- **Timeout-Required**: All external calls must have explicit timeout. Connection timeout + read timeout. Prevent resource exhaustion
 
 ### Testing
 
 - **Coverage**: 60-90% context-adjusted
-- **Isolation**: No inter-test deps, reproducible
-- **Integrity**: Never edit tests to pass code
-- **Critical-Paths**: E2E for critical workflows
+- **Isolation**: Independent tests, reproducible results
+- **Integrity**: Fix code to pass tests, tests define expected behavior
+- **Critical-Paths**: E2E for critical user workflows
+- **Edge-Cases-Mandatory**: Always test: empty/None, whitespace-only, boundary values (0, 1, max, max+1), state combinations, invalid type coercion
+- **Input-Variations**: Test normalized vs raw input (leading/trailing whitespace, case variations, unicode)
+- **State-Matrix**: Test all valid state combinations where multiple states interact
 
 ### Error Handling
 
 - **Catch-Context**: Log context, recover or propagate
-- **No-Swallow**: Never swallow exceptions silently
+- **Log-All**: Log all exceptions with context before handling
 - **User-Actionable**: Clarity + next steps for users
 - **Logs-Technical**: Technical details only in logs
 - **Rollback-State**: Consistent state on failure
@@ -132,12 +147,25 @@
 - **Decompose**: Break complex tasks into steps
 - **SemVer**: MAJOR.MINOR.PATCH
 
+### Refactoring Safety
+
+- **Delete-Impact**: Before deleting function/class/file, identify ALL callers and dependents
+- **Rename-Cascade**: Rename operation = find refs + update ALL + verify builds
+- **Move-Imports**: When moving code between files, update all import statements
+- **Signature-Propagate**: Changing function signature requires updating all call sites
+- **Type-Cascade**: Type changes must propagate to all consumers
+
 ### UX/DX
 
 - **Minimum-Friction**: Fewest steps to goal
 - **Maximum-Clarity**: Unambiguous output
 - **Predictable**: Consistent behavior
 - **Fast-Feedback**: Progress indicators, incremental results
+- **Step-Progress**: Multi-step operations show "Step 2/5: Building..."
+- **Summary-Final**: End with summary: "Changed 3 files, added 2 tests"
+- **Impact-Explain**: Show why: "This reduces bundle size by 15%"
+- **Diff-Before-Destruct**: Show diff before delete/overwrite operations
+- **Error-Actionable**: Errors include file:line AND suggested fix
 
 ---
 
@@ -149,8 +177,11 @@
 
 - **Apply-All-Rules**: Every change MUST comply with ALL rules currently in context (global + project-specific)
 - **Verify-After-Change**: After EVERY code change, verify compliance before proceeding
-- **Fix-Immediately**: Violation detected → stop, fix, re-verify. Never defer
-- **No-Partial-Compliance**: 100% compliance required, not "mostly compliant"
+- **Fix-Immediately**: Violation detected → stop, fix, re-verify. Never defer ("cleanup later" is not acceptable)
+- **No-Partial-Compliance**: Do not proceed with known violations. 100% compliance required, not "mostly compliant"
+- **Security-Priority**: Security rules are non-negotiable. Never trade security for convenience or speed
+- **Block-On-Violation**: Security violation = STOP. Do not continue until fixed. Warn user explicitly
+- **Defense-Assume**: When uncertain about security impact, assume the worst and protect accordingly
 
 ### Context Optimization
 
@@ -162,26 +193,105 @@
 
 ### Execution Order [CRITICAL]
 
-- **Read-First**: NEVER propose edits to unread files
+- **Read-First**: Read and comprehend files completely before proposing any edits
 - **Plan-Before-Act**: Understand full scope before any action
 - **Incremental**: Complete one step fully before starting next
 - **Verify**: Confirm changes match stated intent
+
+### Agent Delegation
+
+Specialized agents for complex tasks. **Choose based on complexity, not task type.**
+
+| Complexity | Tool | Example |
+|------------|------|---------|
+| **Simple** | WebSearch/WebFetch direct | Single URL, quick fact, known source |
+| **Complex** | `cco-agent-research` | Multiple sources, synthesis, reliability critical |
+
+#### When to Delegate
+
+| Pattern | Agent | Trigger |
+|---------|-------|---------|
+| Multi-source research | `cco-agent-research` | 3+ sources needed |
+| Dependency/CVE audit | `cco-agent-research` | Security implications |
+| Conflicting information | `cco-agent-research` | Need resolution |
+
+#### vs Default Tools
+
+| Aspect | WebSearch/WebFetch | cco-agent-research |
+|--------|-------------------|-------------------|
+| Source scoring | None | CRAAP+ (T1-T6 tiers) |
+| Reliability | No verification | Cross-verification required |
+| Contradictions | Not tracked | Explicit resolution |
+| Confidence | Implicit | Scored (HIGH/MEDIUM/LOW) |
+| Freshness | Not weighted | Currency scoring (+10/-15) |
+| Bias detection | None | Vendor/promo penalties |
+| Parallel search | Manual | Auto (4 strategies) |
+| Saturation | Manual stop | Auto (3× theme repeat) |
+
+**When to use default:** Single quick lookup, known-good URL, simple fact check.
+**When to delegate:** Research requiring synthesis, multiple sources, reliability matters.
 
 ### Decision Making
 
 - **Challenge**: Question solutions that seem too perfect
 - **Ask**: When uncertain, clarify before proceeding
 - **Confidence**: State uncertainty level for non-obvious conclusions
-- **No-Guessing**: Never guess file contents without reading
-- **No-Assume**: Never assume user intent without confirmation
-- **No-Hallucination**: Never invent APIs, methods, parameters, or file contents. Verify existence before use
+- **Read-To-Know**: Read file contents before referencing them
+- **Confirm-Intent**: Confirm user intent before making assumptions
+- **No-Hallucination**: Never invent APIs, methods, parameters, or file contents. Verify existence before use (alias: Verify-APIs + Read-To-Know)
+- **Security-Evidence**: Security claims require code/config evidence. No evidence → state "unverified" and list checks needed
+
+### Reasoning Strategies
+
+#### Step-Back Prompting (Complex Tasks)
+
+Before diving into specifics, ask the broader question first:
+
+| Task Type | Step-Back Question |
+|-----------|-------------------|
+| Refactoring | "What is the architectural pattern here?" |
+| Bug fix | "What is the expected behavior of this system?" |
+| Security audit | "What are the trust boundaries in this codebase?" |
+| Performance | "What are the critical paths in this flow?" |
+
+#### Chain of Thought (Critical Decisions)
+
+For P0-P1 severity decisions, explicitly reason through steps:
+
+```
+1. Identify: What exactly is the issue?
+2. Impact: Who/what is affected?
+3. Evidence: What confirms this assessment?
+4. Severity: Based on evidence, what's the appropriate level?
+```
+
+#### Self-Consistency (P0 Decisions Only)
+
+For CRITICAL severity findings, validate with multiple reasoning paths:
+
+1. **Path A**: Analyze from attacker perspective
+2. **Path B**: Analyze from system design perspective
+3. **Consensus**: If both paths agree → confirm P0. If disagree → downgrade to P1
 
 ### Quality Control
 
-- **Understand-First**: No vibe coding
-- **Adapt**: Examples to context, don't copy blind
-- **Positive**: What to do, not what to avoid
+- **Adapt**: Adjust examples to context, verify before applying
+- **Verify-APIs**: Use only documented, existing APIs and features
+- **Positive**: State what to do, not what to avoid
 - **Motivate**: Explain why behaviors matter
+
+### Code Generation [CRITICAL]
+
+- **Validation-First**: Add input validation for all public APIs. Validate at boundaries, trust internals
+- **Bounds-Always**: Set min/max limits on strings (max_length), numbers (ge/le), collections (max_items)
+- **Whitespace-Normalize**: Strip/normalize string inputs in validators. Whitespace-only is usually invalid
+- **State-Complete**: Handle all valid state combinations, not just happy path
+- **Enum-Prefer**: Use enums/Literal types over raw strings for fixed values
+- **Optional-Explicit**: Distinguish None (absent) vs empty string/list (present but empty)
+- **Coercion-Document**: If auto-coercing types, document behavior. Prefer explicit over magic
+- **Error-Rich**: Validation errors should be specific, actionable, field-level
+- **Security-By-Default**: New code must include: input validation, output encoding, error handling, timeout configuration
+- **No-Hardcoded-Secrets**: Never write secrets, API keys, passwords in code. Use environment variables or config
 
 ### Status Updates
 
@@ -202,6 +312,18 @@
 - **Status-Values**: OK / WARN / FAIL
 - **Accounting**: done + declined + fail = total
 - **Structured**: JSON/table when needed
+
+#### Output Examples
+
+**Error reporting:**
+```
+[{severity}] {issue_description} in {file_path}:{line_number}
+```
+
+**Status summary:**
+```
+Status: {status} | Applied: {n} | Declined: {n} | Failed: {n} | Total: {n}
+```
 
 ---
 

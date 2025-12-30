@@ -809,18 +809,26 @@ paths: "**/*.py"
 - **CSRF-Protect**: CSRF tokens for state-changing operations
 - **Auth-Verify**: Verify authentication on every request
 - **Rate-Limit**: Per-user/IP limits on public endpoints
-- **Secure-Headers**: X-Frame-Options, X-Content-Type-Options, HSTS
-- **Encrypt-Rest**: AES-256 for PII/sensitive data at rest
-- **Encrypt-Transit**: TLS 1.2+ for all network communication
-- **Deps-Scan**: Automated dependency vulnerability scanning in CI
-- **Audit-Log**: Immutable logging for security-critical actions
-- **CORS-Strict**: Explicit origins, no wildcard in production
-- **Path-Validate**: Validate file paths, prevent traversal (../, symlinks)
-- **Enum-Validate**: Validate enum values server-side, don't trust client
-- **SSRF-Prevent**: Validate URLs, block internal IPs, use allowlists for external calls
-- **Deserialize-Safe**: Deserialize only trusted data using safe formats (JSON, not pickle/yaml)
-- **JWT-Validate**: Validate signature, issuer, audience, expiry. Use asymmetric keys for public APIs
-- **Upload-Validate**: Validate file type, size, content. Store outside webroot, generate new filenames
+- **Secure-Headers**: X-Frame-Options (DENY), X-Content-Type-Options (nosniff), HSTS (max-age≥31536000), Referrer-Policy (strict-origin-when-cross-origin), Permissions-Policy (restrict camera/mic/geolocation)
+- **Encrypt-Rest**: AES-256-GCM for PII/sensitive data at rest. Key rotation policy required
+- **Encrypt-Transit**: TLS 1.2+ for all network communication. Certificate validation mandatory
+- **Deps-Scan**: Automated dependency vulnerability scanning in CI. Block merge on critical CVE
+- **Audit-Log**: Immutable logging for security-critical actions. Include who, what, when, from-where
+- **CORS-Strict**: Explicit origins only, no wildcard. With credentials: specific origin required. Cache preflight with Access-Control-Max-Age. Limit exposed headers
+- **Path-Validate**: Validate file paths, prevent traversal (../, symlinks). Resolve to canonical path
+- **Enum-Validate**: Validate enum values server-side, don't trust client. Fail closed on unknown values
+- **SSRF-Prevent**: Validate URLs, block internal IPs (10.x, 172.16.x, 192.168.x, 127.x), use allowlists for external calls. Prevent DNS rebinding, block redirects to internal
+- **Deserialize-Safe**: Deserialize only trusted data using safe formats (JSON). Never pickle/yaml.load/eval
+- **JWT-Validate**: Validate signature, issuer, audience, expiry. Use asymmetric keys (RS256/ES256) for public APIs
+- **Upload-Validate**: Validate file type by content (magic bytes), not extension. Size limits. Store outside webroot
+- **Auth-Lockout**: Lock account after N failed attempts (5-10). Exponential backoff or CAPTCHA. Notify user of lockout
+- **Timing-Safe**: Use constant-time comparison for secrets/tokens/passwords. Prevent timing attacks (crypto.timingSafeEqual, secrets.compare_digest)
+- **Password-Reset**: Time-limited tokens (15-60 min), single-use, invalidate on password change. No security questions
+- **MFA-Support**: Support TOTP/WebAuthn for sensitive accounts. Backup codes for recovery. Don't rely on SMS alone
+- **Idempotency-Keys**: Require idempotency keys for payment/financial operations. Prevent duplicate charges on retry
+- **CSP-Policy**: Content-Security-Policy header required. Production: strict-dynamic or nonces, no unsafe-inline/unsafe-eval
+- **Crypto-Standards**: Use approved algorithms (AES-256-GCM, RSA-2048+, Ed25519). Never custom crypto. Secure key storage (env/vault), unique IV/nonce per operation
+- **Cache-Control**: no-store for authenticated pages. Clear-Site-Data header on logout
 
 ---
 
