@@ -18,19 +18,19 @@ logger = logging.getLogger(__name__)
 # Path to comparison prompt template
 COMPARISON_PROMPT_FILE = "comparison-prompt.md"
 
-# 10 evaluation dimensions with weights (total: 100%)
-# Higher weight = more critical for code quality
+# 10 production-grade evaluation dimensions with weights (total: 100%)
+# Weights reflect real-world production priorities
 DIMENSIONS: list[tuple[str, int]] = [
-    ("functional_completeness", 15),  # Core: Does it work as specified?
-    ("architecture_design", 12),  # Structure: Clean dependencies, patterns
-    ("code_quality", 12),  # Readability: Naming, functions, DRY
-    ("robustness", 12),  # Reliability: Error handling, edge cases
-    ("security", 12),  # Safety: Input validation, secrets
-    ("maintainability", 10),  # Longevity: Config, documentation
-    ("type_safety", 8),  # Correctness: Types, null handling
-    ("testing", 7),  # Verification: Test coverage, quality
-    ("performance", 6),  # Efficiency: Algorithms, resources
-    ("best_practices", 6),  # Conventions: Modern patterns, style
+    ("functional_completeness", 15),  # Core: All requirements met, features working
+    ("security", 14),  # Critical: OWASP Top 10, input validation, auth, secrets
+    ("error_handling", 12),  # Resilience: Graceful failures, recovery, edge cases
+    ("architecture", 10),  # Structure: Modularity, dependencies, patterns
+    ("code_quality", 10),  # Craft: Readability, complexity, DRY, naming
+    ("type_safety", 8),  # Correctness: Types, null handling, contracts
+    ("testing", 8),  # Verification: Coverage, quality, edge cases
+    ("observability", 8),  # Operations: Logging, debugging, error reporting
+    ("production_readiness", 8),  # Deployment: Config, health checks, graceful shutdown
+    ("performance", 7),  # Efficiency: Algorithms, resources, scalability
 ]
 
 # Grade thresholds for weighted overall score (0-100)
@@ -95,15 +95,15 @@ class VariantResult:
     """Complete evaluation result for one variant."""
 
     functional_completeness: DimensionScore = field(default_factory=DimensionScore)
-    architecture_design: DimensionScore = field(default_factory=DimensionScore)
-    code_quality: DimensionScore = field(default_factory=DimensionScore)
-    robustness: DimensionScore = field(default_factory=DimensionScore)
     security: DimensionScore = field(default_factory=DimensionScore)
-    maintainability: DimensionScore = field(default_factory=DimensionScore)
+    error_handling: DimensionScore = field(default_factory=DimensionScore)
+    architecture: DimensionScore = field(default_factory=DimensionScore)
+    code_quality: DimensionScore = field(default_factory=DimensionScore)
     type_safety: DimensionScore = field(default_factory=DimensionScore)
     testing: DimensionScore = field(default_factory=DimensionScore)
+    observability: DimensionScore = field(default_factory=DimensionScore)
+    production_readiness: DimensionScore = field(default_factory=DimensionScore)
     performance: DimensionScore = field(default_factory=DimensionScore)
-    best_practices: DimensionScore = field(default_factory=DimensionScore)
     anti_patterns_found: list[str] = field(default_factory=list)
     overall_score: int = 0
     grade: str = "?"
@@ -117,25 +117,21 @@ class VariantResult:
                 "score": self.functional_completeness.score,
                 "evidence": self.functional_completeness.evidence,
             },
-            "architecture_design": {
-                "score": self.architecture_design.score,
-                "evidence": self.architecture_design.evidence,
-            },
-            "code_quality": {
-                "score": self.code_quality.score,
-                "evidence": self.code_quality.evidence,
-            },
-            "robustness": {
-                "score": self.robustness.score,
-                "evidence": self.robustness.evidence,
-            },
             "security": {
                 "score": self.security.score,
                 "evidence": self.security.evidence,
             },
-            "maintainability": {
-                "score": self.maintainability.score,
-                "evidence": self.maintainability.evidence,
+            "error_handling": {
+                "score": self.error_handling.score,
+                "evidence": self.error_handling.evidence,
+            },
+            "architecture": {
+                "score": self.architecture.score,
+                "evidence": self.architecture.evidence,
+            },
+            "code_quality": {
+                "score": self.code_quality.score,
+                "evidence": self.code_quality.evidence,
             },
             "type_safety": {
                 "score": self.type_safety.score,
@@ -145,13 +141,17 @@ class VariantResult:
                 "score": self.testing.score,
                 "evidence": self.testing.evidence,
             },
+            "observability": {
+                "score": self.observability.score,
+                "evidence": self.observability.evidence,
+            },
+            "production_readiness": {
+                "score": self.production_readiness.score,
+                "evidence": self.production_readiness.evidence,
+            },
             "performance": {
                 "score": self.performance.score,
                 "evidence": self.performance.evidence,
-            },
-            "best_practices": {
-                "score": self.best_practices.score,
-                "evidence": self.best_practices.evidence,
             },
             "anti_patterns_found": self.anti_patterns_found,
             "overall_score": self.overall_score,
@@ -285,15 +285,15 @@ def parse_variant(data: dict[str, Any]) -> VariantResult:
     """Parse a variant result from JSON."""
     return VariantResult(
         functional_completeness=parse_dimension_score(data.get("functional_completeness", {})),
-        architecture_design=parse_dimension_score(data.get("architecture_design", {})),
-        code_quality=parse_dimension_score(data.get("code_quality", {})),
-        robustness=parse_dimension_score(data.get("robustness", {})),
         security=parse_dimension_score(data.get("security", {})),
-        maintainability=parse_dimension_score(data.get("maintainability", {})),
+        error_handling=parse_dimension_score(data.get("error_handling", {})),
+        architecture=parse_dimension_score(data.get("architecture", {})),
+        code_quality=parse_dimension_score(data.get("code_quality", {})),
         type_safety=parse_dimension_score(data.get("type_safety", {})),
         testing=parse_dimension_score(data.get("testing", {})),
+        observability=parse_dimension_score(data.get("observability", {})),
+        production_readiness=parse_dimension_score(data.get("production_readiness", {})),
         performance=parse_dimension_score(data.get("performance", {})),
-        best_practices=parse_dimension_score(data.get("best_practices", {})),
         anti_patterns_found=list(data.get("anti_patterns_found", []))[:10],
         overall_score=int(data.get("overall_score", 0)),
         grade=str(data.get("grade", "?")),
