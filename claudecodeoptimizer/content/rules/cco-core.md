@@ -53,6 +53,14 @@
 - **Deps-Audit**: Review before adding, keep updated
 - **Defense-in-Depth**: Multiple layers, verify each control independently
 - **OWASP-Top10**: Prevent injection (SQL, XSS, Command), broken auth, sensitive data exposure, security misconfiguration. Input-Boundary + Defense-in-Depth cover most vectors
+- **Lockfile-Required**: Dependency lockfile mandatory in repo. Pin versions, no floating ranges for production
+- **Safe-Defaults**: Production defaults must be secure: debug off, verbose errors off, restrictive CORS, no wildcard origins
+- **No-Secrets-Logged**: Never log secrets, tokens, credentials, PII. Redact/mask sensitive fields in all output
+- **Data-Minimization**: Collect and store only necessary data. Each field requires justification
+- **Session-Security**: Secure + HttpOnly + SameSite=Lax/Strict cookies, token TTL with refresh strategy, logout invalidates server-side. Use __Host- prefix for sensitive cookies
+- **Password-Security**: Never store plaintext. Use bcrypt/argon2/scrypt with appropriate cost factor. Salt per-password, pepper application-wide
+- **Error-Disclosure**: Never expose stack traces, internal paths, or system details to users. Generic messages for auth failures (prevent user enumeration)
+- **Timeout-Required**: All external calls must have explicit timeout. Connection timeout + read timeout. Prevent resource exhaustion
 
 ## Testing
 
