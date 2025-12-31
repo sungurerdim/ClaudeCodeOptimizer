@@ -1682,18 +1682,24 @@
             const comp = result.comparison;
             const scoreDiff = comp?.score_difference || (cco?.overall_score - vanilla?.overall_score) || 0;
 
-            // Calculate dimension wins
-            const dimensionKeys = ['functional_completeness', 'correctness_robustness', 'architecture',
-                                   'code_quality', 'security', 'type_safety',
-                                   'testing', 'maintainability', 'performance', 'best_practices'];
+            // Calculate dimension wins - use AI evaluator values if available, else calculate
             let ccoWins = 0, vanillaWins = 0, ties = 0;
-            for (const key of dimensionKeys) {
-                const ccoScore = cco?.[key]?.score || 0;
-                const vanillaScore = vanilla?.[key]?.score || 0;
-                const diff = ccoScore - vanillaScore;
-                if (diff > 3) ccoWins++;
-                else if (diff < -3) vanillaWins++;
-                else ties++;
+            if (comp?.cco_wins !== undefined) {
+                ccoWins = comp.cco_wins;
+                vanillaWins = comp.vanilla_wins;
+                ties = comp.ties;
+            } else {
+                const dimensionKeys = ['functional_completeness', 'correctness_robustness', 'architecture',
+                                       'code_quality', 'security', 'type_safety',
+                                       'testing', 'maintainability', 'performance', 'best_practices'];
+                for (const key of dimensionKeys) {
+                    const ccoScore = cco?.[key]?.score || 0;
+                    const vanillaScore = vanilla?.[key]?.score || 0;
+                    const diff = ccoScore - vanillaScore;
+                    if (diff > 0) ccoWins++;
+                    else if (diff < 0) vanillaWins++;
+                    else ties++;
+                }
             }
 
             let html = `
