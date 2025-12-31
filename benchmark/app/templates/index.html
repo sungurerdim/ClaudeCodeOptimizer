@@ -1683,9 +1683,9 @@
             const scoreDiff = comp?.score_difference || (cco?.overall_score - vanilla?.overall_score) || 0;
 
             // Calculate dimension wins
-            const dimensionKeys = ['functional_completeness', 'security', 'error_handling',
-                                   'architecture', 'code_quality', 'type_safety',
-                                   'testing', 'observability', 'production_readiness', 'performance'];
+            const dimensionKeys = ['functional_completeness', 'correctness_robustness', 'architecture',
+                                   'code_quality', 'security', 'type_safety',
+                                   'testing', 'maintainability', 'performance', 'best_practices'];
             let ccoWins = 0, vanillaWins = 0, ties = 0;
             for (const key of dimensionKeys) {
                 const ccoScore = cco?.[key]?.score || 0;
@@ -1812,22 +1812,22 @@
             const dimensionBreakdown = comp?.dimension_breakdown || [];
             const dimensions = [
                 { key: 'functional_completeness', label: 'Functional Completeness', weight: 15 },
-                { key: 'security', label: 'Security (OWASP)', weight: 14 },
-                { key: 'error_handling', label: 'Error Handling', weight: 12 },
-                { key: 'architecture', label: 'Architecture', weight: 10 },
-                { key: 'code_quality', label: 'Code Quality', weight: 10 },
-                { key: 'type_safety', label: 'Type Safety', weight: 8 },
-                { key: 'testing', label: 'Testing', weight: 8 },
-                { key: 'observability', label: 'Observability', weight: 8 },
-                { key: 'production_readiness', label: 'Production Readiness', weight: 8 },
-                { key: 'performance', label: 'Performance', weight: 7 }
+                { key: 'correctness_robustness', label: 'Correctness & Robustness', weight: 14 },
+                { key: 'architecture', label: 'Architecture & Design', weight: 12 },
+                { key: 'code_quality', label: 'Code Quality', weight: 12 },
+                { key: 'security', label: 'Security', weight: 10 },
+                { key: 'type_safety', label: 'Type Safety', weight: 10 },
+                { key: 'testing', label: 'Testing & Testability', weight: 10 },
+                { key: 'maintainability', label: 'Maintainability', weight: 9 },
+                { key: 'performance', label: 'Performance', weight: 4 },
+                { key: 'best_practices', label: 'Best Practices', weight: 4 }
             ];
 
             // Calculate weighted totals for display
             let ccoWeightedTotal = 0, vanillaWeightedTotal = 0;
 
             html += `
-                <h4 style="margin: 20px 0 15px;">Production-Grade Analysis (10 Dimensions)</h4>
+                <h4 style="margin: 20px 0 15px;">Universal Analysis (10 Dimensions)</h4>
                 <div style="background: var(--bg-tertiary); padding: 10px; border-radius: 8px; margin-bottom: 15px;">
                     <div style="display: grid; grid-template-columns: 2fr 1fr 1fr 1fr 1fr; gap: 8px; font-size: 11px; font-weight: bold; color: var(--text-muted); padding-bottom: 8px; border-bottom: 1px solid var(--border);">
                         <span>Dimension</span>

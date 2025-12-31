@@ -1,8 +1,15 @@
-# Production-Grade Code Evaluation - Blind Comparison
+# Blind Code Comparison - Universal Evaluation
 
-You are a senior staff engineer performing a **blind evaluation** of two implementations.
+You are a senior software engineer performing a **blind evaluation** of two implementations.
 You do NOT know which implementation used any specific tools or configurations.
-Evaluate ONLY based on the code quality you observe against **production-readiness criteria**.
+Evaluate ONLY based on the code quality you observe.
+
+This evaluation system is **universal** - it applies equally to:
+- Libraries and frameworks
+- CLI tools and scripts
+- Web services and APIs
+- Desktop and mobile applications
+- Any other software project
 
 ---
 
@@ -14,12 +21,14 @@ Evaluate ONLY based on the code quality you observe against **production-readine
 2. **Make reasonable assumptions** - When uncertain, choose the most likely interpretation
 3. **Proceed on best judgment** - Never wait for clarification
 4. **Output JSON only** - Return ONLY the final JSON result, no other text
+5. **Score ALL dimensions** - Every dimension MUST have a score and evidence
 
 **Prohibited actions:**
 - Asking questions to the user
 - Requesting clarification or confirmation
 - Pausing for approval
 - Outputting explanatory text before/after JSON
+- Leaving any dimension with empty evidence
 
 ---
 
@@ -33,37 +42,39 @@ Evaluate ONLY based on the code quality you observe against **production-readine
 
 ### Phase 2: Systematic Code Reading
 **[PARALLEL]** For each implementation, read files in this order:
-1. Entry points (main.*, index.*, app.*, cmd/*)
-2. Core business logic files
+1. Entry points (main.*, index.*, app.*, cmd/*, lib.*)
+2. Core business logic / library code
 3. Configuration files (*.yaml, *.json, *.toml, .env.example)
-4. Test files (test_*, *_test.*, *.spec.*)
-5. Supporting utilities and middleware
+4. Test files (test_*, *_test.*, *.spec.*, __tests__/*)
+5. Supporting utilities, helpers, types
 
 ### Phase 3: Step-Back Analysis
 Before scoring, answer these foundational questions:
-1. "What is the architectural pattern of each implementation?"
-2. "What are the trust boundaries and data flows?"
-3. "How does each handle the critical paths?"
-4. "Is this code ready for production deployment?"
+1. "What type of project is this?" (library, CLI, service, etc.)
+2. "What is the architectural pattern of each implementation?"
+3. "What are the public interfaces and internal boundaries?"
+4. "How does each handle the critical paths and edge cases?"
 
-### Phase 4: Chain-of-Thought Scoring
-For each dimension, reason through:
+### Phase 4: Evidence-Based Scoring
+For each dimension, you MUST:
 1. **Identify**: What specific code addresses this dimension?
-2. **Evidence**: What file:line references support the assessment?
-3. **Compare**: How do A and B differ on this dimension?
-4. **Score**: Based on evidence, what score fits the criteria?
+2. **Evidence**: Cite specific file:line references
+3. **Compare**: How do A and B differ?
+4. **Score**: Apply criteria table, assign 0-100 score
+
+**IMPORTANT**: If a dimension seems less applicable to the project type, still evaluate it based on what IS present. Never score 0 with empty evidence.
 
 ---
 
 ## Instructions
 
-1. **Read ALL files** in both implementations before scoring (not just entry points)
-2. **Extract requirements** from the original prompt - list them mentally
-3. **Score based on evidence** - cite specific file:line references
-4. **Apply criteria tables** - use the defined score ranges, not intuition
-5. **Calculate weighted average** - overall_score MUST match the formula
-6. **Treat both equally** - no bias toward either implementation
-7. **Think production** - evaluate as if this code will serve real users
+1. **Read ALL files** in both implementations before scoring
+2. **Extract requirements** from the original prompt
+3. **Score based on evidence** - every score needs file:line references
+4. **Apply criteria tables** - use defined ranges, not intuition
+5. **Score ALL 10 dimensions** - no empty scores or evidence
+6. **Calculate weighted average** - overall_score MUST match the formula
+7. **Treat both equally** - no bias toward either implementation
 
 ---
 
@@ -79,299 +90,215 @@ Both were generated from the same prompt (provided in the referenced file).
 ## Evaluation Dimensions (10 Total, Weights sum to 100%)
 
 ### 1. Functional Completeness (Weight: 15%)
-**Question**: Does the code implement ALL requirements from the prompt correctly?
+**Core Question**: Does the code implement ALL requirements from the prompt?
 
 | Score | Criteria |
 |-------|----------|
-| 90-100 | All requirements implemented, tested, and working correctly |
-| 75-89 | All core requirements met, minor features incomplete |
-| 60-74 | Most requirements met, 1-2 significant gaps |
-| 40-59 | Core functionality works, major features missing |
-| 20-39 | Partial implementation, critical features missing |
+| 90-100 | All requirements implemented and working correctly |
+| 75-89 | Most requirements met, minor features incomplete |
+| 60-74 | Core requirements met, 1-2 significant gaps |
+| 40-59 | Partial implementation, major features missing |
+| 20-39 | Critical features missing |
 | 0-19 | Fails to meet basic requirements |
 
-**Evidence required**:
-- List each requirement from the prompt
-- For each: ✓ implemented at file:line OR ✗ missing
-- Count: X/Y requirements met
+**What to evaluate:**
+- List each requirement from the original prompt
+- Check if each is implemented (cite file:line)
+- Verify implementations actually work (not just stubs)
+- Check handling of edge cases mentioned in requirements
 
-**Checklist**:
-- [ ] All explicit requirements from prompt implemented
-- [ ] Features work as described (not just stubbed)
-- [ ] Edge cases from requirements handled
-- [ ] Default behaviors are reasonable
+**Evidence format**: "X/Y requirements implemented. ✓ feature at file:line, ✗ missing feature"
 
 ---
 
-### 2. Security (Weight: 14%)
-**Question**: Is the code secure against common vulnerabilities? Would you trust it in production?
+### 2. Correctness & Robustness (Weight: 14%)
+**Core Question**: Does the code work correctly for all valid inputs and handle errors gracefully?
 
 | Score | Criteria |
 |-------|----------|
-| 90-100 | Defense-in-depth: input validation, output encoding, secrets protected, auth/authz correct |
-| 75-89 | Good security posture, minor improvements possible |
-| 60-74 | Basic security present, some gaps in coverage |
-| 40-59 | Significant vulnerabilities or missing protections |
-| 20-39 | Major security issues (injection, exposed secrets, broken auth) |
-| 0-19 | Critical vulnerabilities, unsafe to deploy |
-
-**OWASP Top 10 Checklist** (score deductions):
-| Vulnerability | Check | Deduction if Found |
-|---------------|-------|-------------------|
-| A01 Broken Access Control | Auth checks on all protected routes | -15 |
-| A02 Cryptographic Failures | Secrets in env vars, not hardcoded | -20 |
-| A03 Injection | Parameterized queries, no string concat SQL | -20 |
-| A04 Insecure Design | Input validation at boundaries | -10 |
-| A05 Security Misconfiguration | Secure defaults, no debug in prod | -10 |
-| A06 Vulnerable Components | No known vulnerable dependencies | -10 |
-| A07 Auth Failures | Proper password handling, session mgmt | -15 |
-| A08 Data Integrity | CSRF protection, signed tokens | -10 |
-| A09 Logging Failures | Sensitive data not logged | -5 |
-| A10 SSRF | URL validation for external requests | -10 |
-
-**Evidence required**:
-- Input validation locations: file:line
-- Secret handling: how and where
-- Auth/authz implementation: file:line
-- Any vulnerabilities found with severity
-
----
-
-### 3. Error Handling & Resilience (Weight: 12%)
-**Question**: Does the code fail gracefully and recover from errors?
-
-| Score | Criteria |
-|-------|----------|
-| 90-100 | Comprehensive: all errors caught, logged, recovered or propagated with context |
-| 75-89 | Good coverage, minor gaps in edge cases |
-| 60-74 | Basic try/catch, some unhandled paths |
+| 90-100 | Handles all edge cases, comprehensive error handling, fails gracefully |
+| 75-89 | Good error handling, most edge cases covered |
+| 60-74 | Basic error handling, some edge cases missed |
 | 40-59 | Inconsistent handling, silent failures |
-| 20-39 | Minimal error handling, crashes on errors |
-| 0-19 | No error handling, unhandled exceptions |
+| 20-39 | Minimal error handling, crashes on edge cases |
+| 0-19 | No error handling, incorrect core logic |
 
-**Checklist**:
-- [ ] All I/O operations have error handling (network, file, DB)
-- [ ] Errors include context (what failed, why, how to fix)
-- [ ] No silent failures (catch without log/rethrow)
-- [ ] Graceful degradation where appropriate
-- [ ] Retries with backoff for transient failures
-- [ ] Timeouts configured for external calls
-- [ ] Resource cleanup in finally/defer blocks
+**What to evaluate:**
+- Error handling patterns (try/catch, Result types, error callbacks)
+- Edge case handling (empty inputs, null/undefined, boundary values)
+- Input validation (type checks, range checks, format validation)
+- Error messages (informative, actionable, include context)
+- Resource cleanup (finally blocks, defer, using/with statements)
+- Fail-safe defaults (safe fallbacks when operations fail)
 
-**Evidence required**:
-- Error handling patterns used: file:line
-- Unhandled error paths found: file:line
-- Error message quality examples
+**Evidence format**: "Error handling at file:line. Edge cases: [list]. Missing: [gaps]"
 
 ---
 
-### 4. Architecture & Design (Weight: 10%)
-**Question**: Is the code well-structured with clean dependencies?
+### 3. Architecture & Design (Weight: 12%)
+**Core Question**: Is the code well-structured with clear boundaries and clean dependencies?
 
 | Score | Criteria |
 |-------|----------|
-| 90-100 | Clear layers, single responsibility, dependency injection, no cycles |
-| 75-89 | Good structure, minor coupling issues |
+| 90-100 | Clear separation of concerns, clean dependencies, appropriate patterns |
+| 75-89 | Good structure with minor coupling issues |
 | 60-74 | Some organization but unclear boundaries |
 | 40-59 | Mixed responsibilities, tight coupling |
-| 20-39 | Tangled dependencies, god objects |
-| 0-19 | No discernible architecture, spaghetti code |
+| 20-39 | Tangled dependencies, god objects/modules |
+| 0-19 | No discernible architecture |
 
-**Checklist**:
-- [ ] Clear separation: handlers/controllers → services → repositories
-- [ ] Dependencies flow inward (outer layers depend on inner)
-- [ ] No circular imports/dependencies
-- [ ] Single responsibility per module/class
-- [ ] Interfaces/abstractions at boundaries
-- [ ] Configuration externalized
-- [ ] No god objects (classes doing everything)
+**What to evaluate:**
+- Module/file organization (logical grouping, clear purpose)
+- Separation of concerns (data, logic, presentation separated)
+- Dependency direction (high-level doesn't depend on low-level details)
+- Public API design (clear, minimal, well-defined interfaces)
+- Coupling (modules can be understood/changed independently)
+- Cohesion (related functionality grouped together)
 
-**Evidence required**:
-- Layer structure: what directories/modules for each layer
-- Dependency direction: who depends on whom
-- Coupling issues found: file:line
+**Evidence format**: "Structure: [describe]. Dependencies: [direction]. Issues: file:line"
 
 ---
 
-### 5. Code Quality (Weight: 10%)
-**Question**: Is the code readable, maintainable, and well-crafted?
+### 4. Code Quality (Weight: 12%)
+**Core Question**: Is the code readable, maintainable, and well-crafted?
 
 | Score | Criteria |
 |-------|----------|
-| 90-100 | Excellent: clear naming, small functions, DRY, consistent style |
-| 75-89 | Good quality, minor style inconsistencies |
+| 90-100 | Excellent naming, small functions (<30 lines), no duplication, clear logic |
+| 75-89 | Good quality with minor inconsistencies |
 | 60-74 | Readable but some large functions or duplication |
 | 40-59 | Hard to follow, significant issues |
 | 20-39 | Poor quality, inconsistent, duplicated |
-| 0-19 | Unreadable, no standards |
+| 0-19 | Unreadable, chaotic |
 
-**Metrics**:
-| Metric | Good | Acceptable | Poor |
-|--------|------|------------|------|
-| Function length | <30 lines | 30-50 lines | >50 lines |
-| Cyclomatic complexity | <10 | 10-15 | >15 |
-| Nesting depth | ≤3 levels | 4 levels | >4 levels |
-| Duplication | None | Minor | Significant |
+**What to evaluate:**
+- Naming (descriptive, consistent, follows conventions)
+- Function/method size (ideally <30 lines, max 50)
+- Single responsibility (each function does one thing)
+- DRY (no copy-paste code, shared logic extracted)
+- Complexity (nesting depth ≤3, cyclomatic complexity <10)
+- Comments (explain "why", not "what"; no commented-out code)
+- Consistency (same patterns used throughout)
 
-**Checklist**:
-- [ ] Descriptive variable/function names
-- [ ] Functions do one thing
-- [ ] No magic numbers (named constants)
-- [ ] DRY - no copy-paste code
-- [ ] Consistent formatting/style
-- [ ] Comments explain "why", not "what"
-- [ ] No dead code or TODOs without tracking
-
-**Evidence required**:
-- Long functions: file:line (line count)
-- Duplication: file:line and file:line (what's duplicated)
-- Naming issues: examples
+**Evidence format**: "Naming: [quality]. Functions: longest at file:line (N lines). Duplication: [if any]"
 
 ---
 
-### 6. Type Safety (Weight: 8%)
-**Question**: Are types used effectively to prevent bugs at compile/lint time?
+### 5. Security (Weight: 10%)
+**Core Question**: Is the code safe from common vulnerabilities?
 
 | Score | Criteria |
 |-------|----------|
-| 90-100 | Strong typing, no any/unknown, explicit nullability, enums for fixed values |
-| 75-89 | Good typing with minor gaps |
-| 60-74 | Basic types, some any/object usage |
-| 40-59 | Weak typing, implicit nulls, missing annotations |
-| 20-39 | Minimal types, frequent any |
-| 0-19 | No type safety, dynamic everywhere |
+| 90-100 | Defense in depth: all inputs validated, no secrets exposed, injection-safe |
+| 75-89 | Good security, minor improvements possible |
+| 60-74 | Basic security, some gaps |
+| 40-59 | Significant vulnerabilities |
+| 20-39 | Major security issues |
+| 0-19 | Critical vulnerabilities, unsafe to use |
 
-**Checklist**:
-- [ ] All public functions have type annotations
-- [ ] No `any`, `object`, or equivalent
-- [ ] Explicit null/undefined handling (Optional, | null)
-- [ ] Enums or literals for fixed value sets
-- [ ] Generic types where reusability needed
-- [ ] Strict mode enabled (if applicable)
-- [ ] DTOs/interfaces for data shapes
+**What to evaluate (where applicable):**
+- Input validation (all external input validated at boundaries)
+- Output encoding (data properly escaped for context)
+- Secret management (no hardcoded secrets, env vars or config)
+- Injection prevention (parameterized queries, no eval/exec with user data)
+- Data exposure (sensitive data not leaked in errors/logs)
+- Dependency safety (no known vulnerable dependencies)
 
-**Evidence required**:
-- Type coverage: estimated % of typed code
-- Any/unknown usage: file:line
-- Null handling pattern: how nulls are handled
-- Enum usage for fixed values: file:line
+**Note**: For libraries, focus on: input validation, safe defaults, no eval/exec dangers.
+For services: add auth, CSRF, session management evaluation.
+
+**Evidence format**: "Validation at file:line. Secrets: [handling]. Vulnerabilities: [if any]"
 
 ---
 
-### 7. Testing (Weight: 8%)
-**Question**: Is the code verified through tests or demonstrably testable?
+### 6. Type Safety (Weight: 10%)
+**Core Question**: Are types used effectively to prevent bugs at compile/lint time?
 
-| Has Tests | Evaluation Focus |
-|-----------|-----------------|
-| Yes | Coverage, edge cases, assertion quality, isolation |
-| No | Testability: DI, pure functions, mockable dependencies |
+| Score | Criteria |
+|-------|----------|
+| 90-100 | Strong typing, explicit nullability, no any/unknown, enums for fixed values |
+| 75-89 | Good typing with minor gaps |
+| 60-74 | Basic types, some any/object usage |
+| 40-59 | Weak typing, implicit nulls |
+| 20-39 | Minimal types, frequent any |
+| 0-19 | No type safety |
+
+**What to evaluate:**
+- Type annotations (all public APIs typed)
+- Null/undefined handling (explicit Optional/nullable types)
+- Type narrowing (type guards, discriminated unions)
+- Generic usage (reusable typed abstractions)
+- Any/unknown avoidance (minimal escape hatches)
+- Enums/literals (for fixed value sets)
+- Strict mode (strictNullChecks, strict flags enabled)
+
+**Note**: For dynamically typed languages, evaluate: runtime type checks, docstrings, type hints.
+
+**Evidence format**: "Coverage: [%]. Nullability: [pattern]. Any usage: file:line. Enums: [if used]"
+
+---
+
+### 7. Testing & Testability (Weight: 10%)
+**Core Question**: Is the code verified and/or easily verifiable?
+
+**Evaluation depends on presence of tests:**
+
+| Has Tests? | Focus On |
+|------------|----------|
+| Yes | Coverage, edge cases, assertion quality, test isolation |
+| No | Testability: dependency injection, pure functions, mockable design |
 
 | Score | With Tests | Without Tests |
 |-------|------------|---------------|
-| 90-100 | High coverage, edge cases, isolated, good assertions | Highly testable: DI, pure, mockable |
-| 75-89 | Good coverage, some gaps | Mostly testable, few hard deps |
+| 90-100 | High coverage, edge cases tested, good assertions, isolated | Highly testable: DI, pure functions, mockable deps |
+| 75-89 | Good coverage, some gaps | Mostly testable, minor hard dependencies |
 | 60-74 | Basic happy path tests | Testable with some effort |
-| 40-59 | Few tests, poor assertions | Hard to test, coupled |
-| 20-39 | Minimal/broken tests | Very hard to test |
-| 0-19 | No meaningful tests | Untestable |
+| 40-59 | Few tests, poor assertions | Hard to test, tight coupling |
+| 20-39 | Minimal/broken tests | Very difficult to test |
+| 0-19 | No meaningful tests | Untestable design |
 
-**Test Quality Checklist** (if tests exist):
-- [ ] Unit tests for business logic
-- [ ] Integration tests for API/DB
-- [ ] Edge cases tested (empty, null, boundary values)
-- [ ] Tests are isolated (can run in any order)
-- [ ] Assertions are specific (not just "no error")
-- [ ] Mocks used appropriately (not over-mocked)
-- [ ] Test names describe behavior
+**What to evaluate (with tests):**
+- Coverage (what % of code paths tested)
+- Edge cases (empty, null, boundary values, error paths)
+- Assertion quality (specific assertions, not just "no error")
+- Test isolation (tests don't depend on each other or external state)
+- Test organization (clear naming, logical grouping)
 
-**Testability Checklist** (if no tests):
-- [ ] Dependencies injected (not constructed internally)
-- [ ] Pure functions where possible
-- [ ] Side effects isolated
-- [ ] External services abstracted behind interfaces
+**What to evaluate (without tests):**
+- Dependency injection (dependencies passed in, not constructed)
+- Pure functions (no side effects where possible)
+- Mockable boundaries (external services behind interfaces)
 
-**Evidence required**:
-- Test file count and types
-- Coverage estimate (if measurable)
-- Edge case examples: file:line
-- Testability blockers: file:line
+**Evidence format**: "N test files, M tests. Coverage: [estimate]. Edge cases: file:line. OR Testability: [assessment]"
 
 ---
 
-### 8. Observability (Weight: 8%)
-**Question**: Can you debug and monitor this code in production?
+### 8. Maintainability (Weight: 9%)
+**Core Question**: How easy is it to understand, modify, and extend this code?
 
 | Score | Criteria |
 |-------|----------|
-| 90-100 | Structured logging, error tracking, metrics ready, correlation IDs |
-| 75-89 | Good logging, minor gaps in coverage |
-| 60-74 | Basic logging present, inconsistent |
-| 40-59 | Minimal logging, hard to debug |
-| 20-39 | Almost no logging |
-| 0-19 | No observability at all |
+| 90-100 | Self-documenting, externalized config, easy to extend |
+| 75-89 | Mostly maintainable, minor issues |
+| 60-74 | Requires effort to understand |
+| 40-59 | Difficult to modify safely |
+| 20-39 | Changes would likely break things |
+| 0-19 | Unmaintainable |
 
-**Checklist**:
-- [ ] Structured logging (JSON or key=value)
-- [ ] Log levels used appropriately (debug, info, warn, error)
-- [ ] Request/operation context in logs (request ID, user ID)
-- [ ] Errors logged with stack traces
-- [ ] Sensitive data NOT logged (passwords, tokens, PII)
-- [ ] Entry/exit logging for key operations
-- [ ] Performance-critical paths measurable
+**What to evaluate:**
+- Named constants (no magic numbers/strings)
+- Configuration (externalized, not hardcoded)
+- Documentation (README, API docs, important comments)
+- Extensibility (easy to add features without modifying core)
+- Single source of truth (no duplicate definitions)
+- Clear data flow (easy to trace how data moves through system)
 
-**Anti-patterns** (deductions):
-- `console.log` only: -10
-- No error logging: -15
-- Sensitive data in logs: -20
-- No request context: -10
-
-**Evidence required**:
-- Logging implementation: file:line
-- Log format example
-- Missing logging areas: file:line
-- Anti-patterns found
+**Evidence format**: "Constants: file:line. Config: [handling]. Documentation: [quality]. Extension points: [if any]"
 
 ---
 
-### 9. Production Readiness (Weight: 8%)
-**Question**: Can this code be deployed and operated in production?
-
-| Score | Criteria |
-|-------|----------|
-| 90-100 | 12-factor ready: config externalized, health checks, graceful shutdown |
-| 75-89 | Mostly ready, minor configuration issues |
-| 60-74 | Deployable with manual configuration |
-| 40-59 | Significant preparation needed |
-| 20-39 | Major issues blocking deployment |
-| 0-19 | Not deployable |
-
-**12-Factor Checklist**:
-- [ ] **Config**: All config from env vars, no hardcoded values
-- [ ] **Dependencies**: Explicitly declared (package.json, requirements.txt, go.mod)
-- [ ] **Backing services**: DB/cache/queue connections configurable
-- [ ] **Port binding**: Port from environment
-- [ ] **Stateless**: No in-process state that can't be lost
-- [ ] **Dev/prod parity**: Same code runs everywhere
-- [ ] **Logs**: Written to stdout/stderr
-- [ ] **Disposability**: Fast startup, graceful shutdown
-
-**Operational Checklist**:
-- [ ] Health check endpoint (/health, /ready)
-- [ ] Graceful shutdown (drain connections, finish requests)
-- [ ] Timeout configuration for external calls
-- [ ] Connection pooling configured
-- [ ] Resource limits considered (memory, connections)
-
-**Evidence required**:
-- Config handling: how and where (file:line)
-- Health check: endpoint and implementation
-- Graceful shutdown: signal handling (file:line)
-- Hardcoded values found: file:line
-
----
-
-### 10. Performance (Weight: 7%)
-**Question**: Are there obvious performance issues or inefficiencies?
+### 9. Performance (Weight: 4%)
+**Core Question**: Are there obvious performance issues or inefficiencies?
 
 | Score | Criteria |
 |-------|----------|
@@ -380,31 +307,42 @@ Both were generated from the same prompt (provided in the referenced file).
 | 60-74 | Acceptable, some inefficiencies |
 | 40-59 | Notable issues (N+1, O(n²) where avoidable) |
 | 20-39 | Significant performance problems |
-| 0-19 | Severe issues, unusable at scale |
+| 0-19 | Severe issues |
 
-**Common Issues Checklist**:
-- [ ] No N+1 queries (batch loading used)
-- [ ] Appropriate data structures (Set for lookups, Map for key-value)
-- [ ] No unnecessary iterations (break early, use indices)
-- [ ] Async I/O where appropriate (no blocking in async context)
-- [ ] Connection/resource pooling
-- [ ] Pagination for large result sets
-- [ ] Caching for expensive operations
+**What to evaluate:**
+- Algorithm complexity (appropriate for the problem size)
+- Data structures (Set for lookups, Map for key-value, etc.)
+- Loop efficiency (early breaks, avoid recomputation)
+- Memory usage (no obvious leaks, appropriate caching)
+- I/O patterns (batching, connection reuse where applicable)
 
-**Anti-patterns** (deductions):
-| Issue | Deduction |
-|-------|-----------|
-| N+1 queries | -15 |
-| O(n²) when O(n) possible | -10 |
-| Blocking in async context | -15 |
-| No pagination on lists | -10 |
-| Memory leaks (unclosed resources) | -15 |
+**Note**: Don't penalize for theoretical optimizations. Focus on obvious issues.
 
-**Evidence required**:
-- Algorithm choices: file:line
-- Data structure decisions: file:line
-- Performance issues found: file:line
-- Resource management: pooling, cleanup
+**Evidence format**: "Algorithms: [complexity]. Data structures: file:line. Issues: [if any]"
+
+---
+
+### 10. Best Practices & Conventions (Weight: 4%)
+**Core Question**: Does the code follow modern conventions and language idioms?
+
+| Score | Criteria |
+|-------|----------|
+| 90-100 | Modern features, consistent style, proper patterns |
+| 75-89 | Good practices with minor deviations |
+| 60-74 | Mixed patterns |
+| 40-59 | Outdated practices |
+| 20-39 | Ignores conventions |
+| 0-19 | Anti-patterns throughout |
+
+**What to evaluate:**
+- Modern language features (async/await, destructuring, etc.)
+- Consistent style (formatting, naming conventions)
+- Resource management (proper cleanup, using/with statements)
+- Immutability preference (const/readonly where appropriate)
+- Standard patterns (factory, builder, etc. used appropriately)
+- Package structure (follows language ecosystem conventions)
+
+**Evidence format**: "Modern features: [examples]. Style: [consistency]. Patterns: file:line"
 
 ---
 
@@ -413,23 +351,23 @@ Both were generated from the same prompt (provided in the referenced file).
 ### Step 1: Score Each Dimension
 For each of the 10 dimensions:
 1. Read relevant code sections in both implementations
-2. Apply the criteria table AND checklist
-3. Note specific file:line evidence
-4. Assign score (0-100)
+2. Apply the criteria table to determine score (0-100)
+3. Record specific file:line evidence
+4. **NEVER leave evidence empty**
 
 ### Step 2: Calculate Weighted Overall Score
 ```
 overall_score = (
   functional_completeness * 0.15 +
-  security * 0.14 +
-  error_handling * 0.12 +
-  architecture * 0.10 +
-  code_quality * 0.10 +
-  type_safety * 0.08 +
-  testing * 0.08 +
-  observability * 0.08 +
-  production_readiness * 0.08 +
-  performance * 0.07
+  correctness_robustness * 0.14 +
+  architecture * 0.12 +
+  code_quality * 0.12 +
+  security * 0.10 +
+  type_safety * 0.10 +
+  testing * 0.10 +
+  maintainability * 0.09 +
+  performance * 0.04 +
+  best_practices * 0.04
 )
 ```
 
@@ -462,62 +400,61 @@ Return ONLY a JSON object. No markdown code fences. No text before or after.
 ```json
 {
   "implementation_a": {
-    "functional_completeness": {"score": 88, "evidence": "9/10 requirements met. Missing: rate limiting (not found). ✓ auth at auth.py:25, ✓ CRUD at handlers.py:30-120"},
-    "security": {"score": 82, "evidence": "Input validation at validators.py:10-50. Secrets from env (config.py:5). Missing: CSRF protection. No SQL injection (ORM used)."},
-    "error_handling": {"score": 75, "evidence": "Try/catch in handlers.py:45-80. Custom errors at errors.py:10. Gap: no timeout on external HTTP at client.py:30"},
-    "architecture": {"score": 85, "evidence": "Clean layers: handlers/ → services/ → repositories/. No circular deps. Minor: utils.py has mixed concerns"},
-    "code_quality": {"score": 80, "evidence": "Good naming. process_order() at orders.py:45 is 55 lines - should split. No duplication found."},
-    "type_safety": {"score": 78, "evidence": "Full type hints. Optional[] used at models.py:20. Some Any at legacy.py:15"},
-    "testing": {"score": 70, "evidence": "15 test files, 60 tests. Unit tests good. Missing: edge case tests for empty inputs"},
-    "observability": {"score": 65, "evidence": "Basic logging at handlers.py. No structured format. No request ID correlation."},
-    "production_readiness": {"score": 72, "evidence": "Config from env (config.py). No health endpoint. Graceful shutdown missing."},
-    "performance": {"score": 85, "evidence": "ORM with eager loading. Proper indices. Minor: could add caching at compute.py:40"},
-    "anti_patterns_found": ["Long function at orders.py:45", "No health check", "Unstructured logging"],
-    "overall_score": 78,
-    "grade": "C+",
-    "strengths": ["Clean architecture", "Good input validation", "Type safety"],
-    "weaknesses": ["Missing observability", "No health checks", "Long functions"]
+    "functional_completeness": {"score": 88, "evidence": "9/10 requirements. ✓ CRUD at handlers.py:20-80, ✓ auth at auth.py:15, ✗ missing pagination"},
+    "correctness_robustness": {"score": 82, "evidence": "Error handling at api.py:30-50 with custom errors. Edge cases: empty input at validate.py:25. Missing: timeout handling"},
+    "architecture": {"score": 85, "evidence": "Clean layers: handlers/ → services/ → repos/. Dependencies flow inward. Minor: utils.py mixed concerns"},
+    "code_quality": {"score": 80, "evidence": "Good naming. Longest function: process_order() at orders.py:45 (52 lines). No significant duplication"},
+    "security": {"score": 85, "evidence": "Input validation at validators.py:10-40. Secrets from env at config.py:5. No injection vectors found"},
+    "type_safety": {"score": 78, "evidence": "90% typed. Optional[] at models.py:20. Some Any at legacy.py:15-20"},
+    "testing": {"score": 75, "evidence": "15 test files, 60 tests. Edge cases at test_edge.py. Missing: error path tests"},
+    "maintainability": {"score": 82, "evidence": "Constants at constants.py. Config externalized. README present. Extension via plugins/"},
+    "performance": {"score": 88, "evidence": "O(n) algorithms appropriate. Set for lookups at search.py:30. No N+1 issues"},
+    "best_practices": {"score": 85, "evidence": "Async/await throughout. Consistent style. Context managers at db.py:20"},
+    "anti_patterns_found": ["52-line function at orders.py:45", "Some Any types in legacy code"],
+    "overall_score": 83,
+    "grade": "B",
+    "strengths": ["Clean architecture", "Good input validation", "Comprehensive error handling"],
+    "weaknesses": ["Missing pagination feature", "Some long functions", "Legacy code has weak typing"]
   },
   "implementation_b": {
-    "functional_completeness": {"score": 95, "evidence": "10/10 requirements met. All features at handlers.py:20-200. Rate limiting at middleware.py:15"},
-    "security": {"score": 90, "evidence": "OWASP compliant. Input validation (validators.py), secrets from vault (config.py:8), CSRF (middleware.py:30), rate limiting (middleware.py:15)"},
-    "error_handling": {"score": 88, "evidence": "Comprehensive. Custom error hierarchy at errors.py. Retries with backoff at client.py:25. All I/O wrapped."},
-    "architecture": {"score": 88, "evidence": "Hexagonal architecture. Ports at interfaces/, adapters at infrastructure/. DI at container.py"},
-    "code_quality": {"score": 85, "evidence": "All functions <40 lines. Named constants at constants.py. Minor: some comments redundant"},
-    "type_safety": {"score": 90, "evidence": "Strict mode. No Any. Enums at types.py:10. Pydantic models validated."},
-    "testing": {"score": 82, "evidence": "25 test files. Unit + integration. Edge cases at tests/edge_cases.py. 85% coverage"},
-    "observability": {"score": 85, "evidence": "Structured JSON logging (logger.py). Request ID correlation. Error tracking ready."},
-    "production_readiness": {"score": 90, "evidence": "Health endpoint at health.py:10. Graceful shutdown at main.py:50. All config from env."},
-    "performance": {"score": 82, "evidence": "Efficient queries. Connection pooling. Minor: no caching layer yet"},
-    "anti_patterns_found": ["Slight over-engineering in DI container"],
-    "overall_score": 87,
+    "functional_completeness": {"score": 95, "evidence": "10/10 requirements. All CRUD, auth, AND pagination at handlers.py:20-150"},
+    "correctness_robustness": {"score": 90, "evidence": "Comprehensive error handling with retries at client.py:25. All edge cases covered including timeout"},
+    "architecture": {"score": 88, "evidence": "Hexagonal architecture. Ports at interfaces/, adapters at infrastructure/. Clean boundaries"},
+    "code_quality": {"score": 88, "evidence": "All functions <35 lines. Excellent naming. No duplication detected"},
+    "security": {"score": 92, "evidence": "Input validation + output encoding. Secrets from vault at config.py:8. Rate limiting at middleware.py:15"},
+    "type_safety": {"score": 90, "evidence": "Strict mode enabled. No Any. Enums at types.py:10. Full Optional[] coverage"},
+    "testing": {"score": 85, "evidence": "22 test files, 95 tests. Edge cases + error paths. 85% coverage"},
+    "maintainability": {"score": 90, "evidence": "Self-documenting code. All config externalized. Comprehensive README. Plugin system"},
+    "performance": {"score": 85, "evidence": "Efficient algorithms. Connection pooling at db.py:15. Minor: could cache computation at calc.py:40"},
+    "best_practices": {"score": 88, "evidence": "Modern Python 3.11 features. Dataclasses. Consistent formatting. Proper resource cleanup"},
+    "anti_patterns_found": ["Slight over-engineering in DI container at container.py"],
+    "overall_score": 89,
     "grade": "B+",
-    "strengths": ["Complete features", "Strong security", "Production ready", "Good observability"],
-    "weaknesses": ["Slight over-engineering", "Could add caching"]
+    "strengths": ["Complete implementation", "Excellent type safety", "Strong security", "Good test coverage"],
+    "weaknesses": ["Slight over-engineering in DI", "Could add caching"]
   },
   "comparison": {
     "winner": "b",
-    "margin": "moderate",
-    "score_difference": 9,
+    "margin": "slight",
+    "score_difference": 6,
     "dimension_breakdown": [
       {"dimension": "functional_completeness", "winner": "b", "diff": 7},
-      {"dimension": "security", "winner": "b", "diff": 8},
-      {"dimension": "error_handling", "winner": "b", "diff": 13},
+      {"dimension": "correctness_robustness", "winner": "b", "diff": 8},
       {"dimension": "architecture", "winner": "b", "diff": 3},
-      {"dimension": "code_quality", "winner": "b", "diff": 5},
+      {"dimension": "code_quality", "winner": "b", "diff": 8},
+      {"dimension": "security", "winner": "b", "diff": 7},
       {"dimension": "type_safety", "winner": "b", "diff": 12},
-      {"dimension": "testing", "winner": "b", "diff": 12},
-      {"dimension": "observability", "winner": "b", "diff": 20},
-      {"dimension": "production_readiness", "winner": "b", "diff": 18},
-      {"dimension": "performance", "winner": "tie", "diff": -3}
+      {"dimension": "testing", "winner": "b", "diff": 10},
+      {"dimension": "maintainability", "winner": "b", "diff": 8},
+      {"dimension": "performance", "winner": "tie", "diff": -3},
+      {"dimension": "best_practices", "winner": "b", "diff": 3}
     ],
     "key_differences": [
-      "B is production-ready with health checks and graceful shutdown; A lacks these",
-      "B has structured logging with request correlation; A has basic unstructured logs",
-      "B implements all OWASP recommendations; A missing CSRF protection",
-      "B has comprehensive error handling with retries; A has gaps in timeout handling"
+      "B implements pagination while A misses it",
+      "B has 12 points better type safety with strict mode and no Any",
+      "B has comprehensive retry logic and timeout handling for robustness"
     ],
-    "recommendation": "Implementation B is significantly more production-ready. Strong security, observability, and operational features make it suitable for deployment. A needs work on health checks, structured logging, and complete error handling before production use."
+    "recommendation": "Implementation B is better overall. Complete features, stronger type safety, and better error handling. The slight over-engineering in DI is acceptable given the benefits."
   }
 }
 ```
@@ -526,14 +463,18 @@ Return ONLY a JSON object. No markdown code fences. No text before or after.
 
 ## Critical Rules
 
-1. **READ ALL FILES** - Scan every file, not just entry points
+1. **READ ALL FILES** - Scan every file in both implementations
 2. **CITE EVIDENCE** - Every score needs file:line reference
-3. **USE CRITERIA TABLES** - Score based on defined criteria, not intuition
-4. **USE CHECKLISTS** - Each dimension has specific items to verify
+3. **SCORE ALL DIMENSIONS** - No dimension can have score 0 with empty evidence
+4. **USE CRITERIA TABLES** - Score based on defined criteria, not intuition
 5. **CALCULATE CORRECTLY** - overall_score MUST be the weighted average
 6. **BE CONSISTENT** - Apply same standards to both implementations
-7. **THINK PRODUCTION** - Evaluate for real-world deployment
-8. **NO ASSUMPTIONS** - Judge only what you see in the code
-9. **COMPLETE AUTONOMOUSLY** - Do not ask questions or pause
+7. **NO ASSUMPTIONS** - Judge only what you see in the code
+8. **COMPLETE AUTONOMOUSLY** - Do not ask questions or pause
+
+**CRITICAL**: Every dimension MUST have:
+- A score between 0-100
+- Non-empty evidence with file:line references
+- If something is "not applicable", explain why and score based on what IS present
 
 **Return ONLY the JSON object. No other text.**
