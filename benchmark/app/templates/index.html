@@ -1738,56 +1738,105 @@
                 </div>
             `;
 
-            // Executive Summary - quick visual overview
+            // Executive Summary - quick visual overview with percentage improvements
             const summaryBg = scoreDiff > 5 ? 'rgba(63,185,80,0.15)' : scoreDiff < -5 ? 'rgba(248,81,73,0.15)' : 'rgba(88,166,255,0.15)';
             const summaryBorder = scoreDiff > 5 ? 'var(--success)' : scoreDiff < -5 ? 'var(--danger)' : 'var(--accent)';
             const impactText = Math.abs(scoreDiff) >= 15 ? 'Significant' : Math.abs(scoreDiff) >= 8 ? 'Moderate' : Math.abs(scoreDiff) >= 3 ? 'Slight' : 'Negligible';
 
+            // Calculate percentage improvements for each dimension
+            const dimensionLabels = {
+                'functional_completeness': 'Completeness',
+                'correctness_robustness': 'Robustness',
+                'architecture': 'Architecture',
+                'code_quality': 'Code Quality',
+                'security': 'Security',
+                'type_safety': 'Type Safety',
+                'testing': 'Testing',
+                'maintainability': 'Maintainability',
+                'performance': 'Performance',
+                'best_practices': 'Best Practices'
+            };
+            const dimensionKeys = Object.keys(dimensionLabels);
+            const improvements = [];
+            for (const key of dimensionKeys) {
+                const ccoScore = cco?.[key]?.score || 0;
+                const vanillaScore = vanilla?.[key]?.score || 0;
+                if (vanillaScore > 0) {
+                    const pctDiff = ((ccoScore - vanillaScore) / vanillaScore * 100);
+                    const absDiff = ccoScore - vanillaScore;
+                    improvements.push({ key, label: dimensionLabels[key], pctDiff, absDiff, ccoScore, vanillaScore });
+                }
+            }
+            improvements.sort((a, b) => b.pctDiff - a.pctDiff);
+            const betterAreas = improvements.filter(i => i.absDiff > 0);
+            const worseAreas = improvements.filter(i => i.absDiff < 0);
+            const sameAreas = improvements.filter(i => i.absDiff === 0);
+
             html += `
                 <div style="background: ${summaryBg}; border: 1px solid ${summaryBorder}; border-radius: 12px; padding: 16px; margin-bottom: 20px;">
                     <div style="font-size: 14px; font-weight: bold; margin-bottom: 12px; color: var(--text-primary);">
-                        📊 Executive Summary
+                        📊 CCO Impact Analysis
                     </div>
 
-                    <!-- Quick Stats Bar -->
-                    <div style="display: flex; justify-content: space-around; margin-bottom: 15px; padding: 12px; background: var(--bg); border-radius: 8px;">
+                    <!-- Overall Score Comparison -->
+                    <div style="display: flex; justify-content: center; gap: 30px; margin-bottom: 16px; padding: 12px; background: var(--bg); border-radius: 8px;">
                         <div style="text-align: center;">
-                            <div style="font-size: 24px; font-weight: bold; color: var(--cco);">${ccoWins}</div>
-                            <div style="font-size: 10px; color: var(--text-muted);">CCO Wins</div>
+                            <div style="font-size: 28px; font-weight: bold; color: var(--cco);">${cco?.overall_score || 0}</div>
+                            <div style="font-size: 11px; color: var(--text-muted);">CCO Score</div>
+                        </div>
+                        <div style="text-align: center; align-self: center;">
+                            <div style="font-size: 20px; font-weight: bold; color: ${scoreDiff > 0 ? 'var(--success)' : scoreDiff < 0 ? 'var(--danger)' : 'var(--text-muted)'};">
+                                ${scoreDiff > 0 ? '+' : ''}${scoreDiff} pts
+                            </div>
+                            <div style="font-size: 10px; color: var(--text-muted);">${impactText}</div>
                         </div>
                         <div style="text-align: center;">
-                            <div style="font-size: 24px; font-weight: bold; color: var(--text-muted);">${ties}</div>
-                            <div style="font-size: 10px; color: var(--text-muted);">Ties</div>
-                        </div>
-                        <div style="text-align: center;">
-                            <div style="font-size: 24px; font-weight: bold; color: var(--vanilla);">${vanillaWins}</div>
-                            <div style="font-size: 10px; color: var(--text-muted);">Vanilla Wins</div>
-                        </div>
-                        <div style="text-align: center; border-left: 1px solid var(--border); padding-left: 15px;">
-                            <div style="font-size: 24px; font-weight: bold; color: ${summaryBorder};">${impactText}</div>
-                            <div style="font-size: 10px; color: var(--text-muted);">Impact</div>
+                            <div style="font-size: 28px; font-weight: bold; color: var(--vanilla);">${vanilla?.overall_score || 0}</div>
+                            <div style="font-size: 11px; color: var(--text-muted);">Vanilla Score</div>
                         </div>
                     </div>
 
-                    <!-- Visual wins bar -->
-                    <div style="display: flex; height: 8px; border-radius: 4px; overflow: hidden; margin-bottom: 12px;">
-                        <div style="width: ${(ccoWins/10)*100}%; background: var(--cco);"></div>
-                        <div style="width: ${(ties/10)*100}%; background: var(--text-muted);"></div>
-                        <div style="width: ${(vanillaWins/10)*100}%; background: var(--vanilla);"></div>
+                    <!-- Improvement Breakdown -->
+                    <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-bottom: 12px;">
+                        <!-- Better Areas -->
+                        <div style="background: rgba(63,185,80,0.1); padding: 10px; border-radius: 8px; border-left: 3px solid var(--success);">
+                            <div style="font-size: 11px; font-weight: bold; color: var(--success); margin-bottom: 8px;">
+                                ✓ CCO Better (${betterAreas.length})
+                            </div>
+                            ${betterAreas.length > 0 ? betterAreas.slice(0, 4).map(i => `
+                                <div style="display: flex; justify-content: space-between; font-size: 12px; margin-bottom: 4px;">
+                                    <span style="color: var(--text-secondary);">${i.label}</span>
+                                    <span style="color: var(--success); font-weight: 500;">+${i.pctDiff.toFixed(0)}%</span>
+                                </div>
+                            `).join('') : '<div style="font-size: 11px; color: var(--text-muted);">None</div>'}
+                        </div>
+
+                        <!-- Worse Areas -->
+                        <div style="background: rgba(248,81,73,0.1); padding: 10px; border-radius: 8px; border-left: 3px solid var(--danger);">
+                            <div style="font-size: 11px; font-weight: bold; color: var(--danger); margin-bottom: 8px;">
+                                ✗ CCO Worse (${worseAreas.length})
+                            </div>
+                            ${worseAreas.length > 0 ? worseAreas.slice(0, 4).map(i => `
+                                <div style="display: flex; justify-content: space-between; font-size: 12px; margin-bottom: 4px;">
+                                    <span style="color: var(--text-secondary);">${i.label}</span>
+                                    <span style="color: var(--danger); font-weight: 500;">${i.pctDiff.toFixed(0)}%</span>
+                                </div>
+                            `).join('') : '<div style="font-size: 11px; color: var(--text-muted);">None</div>'}
+                        </div>
                     </div>
+
+                    ${sameAreas.length > 0 ? `
+                        <div style="font-size: 11px; color: var(--text-muted); text-align: center;">
+                            Equal: ${sameAreas.map(i => i.label).join(', ')}
+                        </div>
+                    ` : ''}
 
                     <!-- Executive text -->
                     ${result.executive_summary ? `
-                        <p style="margin: 0; font-size: 13px; line-height: 1.5; color: var(--text-secondary);">
+                        <p style="margin: 12px 0 0 0; font-size: 13px; line-height: 1.5; color: var(--text-secondary); border-top: 1px solid var(--border); padding-top: 12px;">
                             ${escapeHtml(result.executive_summary)}
                         </p>
-                    ` : `
-                        <p style="margin: 0; font-size: 13px; line-height: 1.5; color: var(--text-secondary);">
-                            ${scoreDiff > 0 ? 'CCO improves code quality' : scoreDiff < 0 ? 'Vanilla performed better' : 'Results are similar'}
-                            with a ${impactText.toLowerCase()} ${Math.abs(scoreDiff)}-point difference.
-                            CCO won ${ccoWins}/10 dimensions, Vanilla won ${vanillaWins}/10, ${ties} tied.
-                        </p>
-                    `}
+                    ` : ''}
                 </div>
             `;
 
