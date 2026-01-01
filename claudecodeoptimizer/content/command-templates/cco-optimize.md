@@ -795,6 +795,65 @@ console.log(summary)
 
 ---
 
+## Reasoning Strategies
+
+### Step-Back (Before Analysis)
+Ask broader question before diving into code:
+
+| Scope | Step-Back Question |
+|-------|-------------------|
+| Security | "What are the trust boundaries in this codebase?" |
+| Quality | "What are the quality standards for this project?" |
+| Hygiene | "What is considered 'dead' in this context?" |
+| Best Practices | "What patterns does this project follow?" |
+
+### Chain of Thought (Each Finding)
+```
+1. Identify: What exactly is the issue?
+2. Impact: Who/what is affected?
+3. Evidence: What confirms this assessment?
+4. Severity: Based on evidence, what level?
+```
+
+### Self-Consistency (CRITICAL Only)
+For CRITICAL severity findings, validate with multiple reasoning paths:
+```
+Path A: Analyze as if this is a real security/quality issue
+Path B: Analyze as if this might be intentional or acceptable
+Consensus: Both agree → confirm CRITICAL. Disagree → downgrade to HIGH
+```
+
+---
+
+## Anti-Overengineering Guard
+
+Before flagging ANY finding:
+1. Does this actually break something or pose a risk?
+2. Does this cause real problems for developers/users?
+3. Is fixing it worth the effort and potential side effects?
+
+**All NO → not a finding.**
+
+NON-findings:
+- Unused import in a file being actively developed
+- Missing type hint on internal helper
+- Code style preference that doesn't affect functionality
+
+---
+
+## Severity Definitions
+
+| Severity | Criteria |
+|----------|----------|
+| CRITICAL | Security vulnerability, data loss risk, broken functionality |
+| HIGH | Significant bug, type error, missing validation |
+| MEDIUM | Code smell, minor type issue, suboptimal pattern |
+| LOW | Style, naming, nice-to-have improvement |
+
+**When uncertain → choose lower severity.**
+
+---
+
 ## Accounting
 
 **Invariant:** `applied + declined + failed = total` (count findings, not locations)

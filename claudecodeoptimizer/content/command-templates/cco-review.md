@@ -542,6 +542,65 @@ When `--quick` flag:
 
 ---
 
+## Reasoning Strategies
+
+### Step-Back (Before Analysis)
+Ask broader questions before diving into specifics:
+
+| Focus Area | Step-Back Question |
+|------------|-------------------|
+| Architecture | "What is the intended system design here?" |
+| Quality | "What are the quality standards for this codebase?" |
+| Testing | "What is the testing strategy?" |
+| Best Practices | "What patterns does this project follow?" |
+
+### Chain of Thought (Each Finding)
+```
+1. Identify: What exactly is the issue?
+2. Impact: Who/what is affected?
+3. Evidence: What confirms this assessment?
+4. Severity: Based on evidence, what level?
+```
+
+### Self-Consistency (CRITICAL Only)
+For CRITICAL severity findings, validate with multiple reasoning paths:
+```
+Path A: Analyze from "this is a real problem" perspective
+Path B: Analyze from "this might be intentional" perspective
+Consensus: Both agree → confirm CRITICAL. Disagree → downgrade to HIGH
+```
+
+---
+
+## Anti-Overengineering Guard
+
+Before flagging ANY finding:
+1. Does this actually break something?
+2. Does this confuse users or developers?
+3. Is fixing it worth the complexity cost?
+
+**All NO → not a finding.**
+
+NON-findings:
+- Small module without full test coverage (if not critical path)
+- Missing type hints in internal helpers
+- Unconventional but working patterns
+
+---
+
+## Severity Definitions
+
+| Severity | Criteria |
+|----------|----------|
+| CRITICAL | Security risk, data loss, broken core functionality |
+| HIGH | Significant bug, architectural violation, doc mismatch |
+| MEDIUM | Suboptimal but functional, minor DX issue |
+| LOW | Style, minor improvement, nice-to-have |
+
+**When uncertain → choose lower severity.**
+
+---
+
 ## Accounting
 
 **Invariant:** `applied + notSelected + failed = total` (count findings, not locations)

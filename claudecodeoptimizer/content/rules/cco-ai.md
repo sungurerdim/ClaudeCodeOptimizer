@@ -136,6 +136,16 @@ Need changes?
 - **Confirm-Intent**: Confirm user intent before making assumptions
 - **No-Hallucination**: Never invent APIs, methods, parameters, or file contents. Verify existence before use (alias: Verify-APIs + Read-To-Know)
 - **Security-Evidence**: Security claims require code/config evidence. No evidence → state "unverified" and list checks needed
+- **Severity-Conservative**: When uncertain between severity levels, choose lower
+
+### Severity Criteria
+
+| Severity | Criteria | Examples |
+|----------|----------|----------|
+| CRITICAL | Security breach, data loss, system crash | SQL injection, unencrypted secrets, infinite loop |
+| HIGH | Broken functionality, blocking issue, principle violation | Missing validation, type error, API mismatch |
+| MEDIUM | Suboptimal but functional, minor bug | Code smell, missing edge case, unclear naming |
+| LOW | Style, cosmetic, nice-to-have | Formatting, minor refactor opportunity |
 
 ## Reasoning Strategies
 
@@ -152,7 +162,7 @@ Before diving into specifics, ask the broader question first:
 
 ### Chain of Thought (Critical Decisions)
 
-For P0-P1 severity decisions, explicitly reason through steps:
+For CRITICAL-HIGH severity decisions, explicitly reason through steps:
 
 ```
 1. Identify: What exactly is the issue?
@@ -161,13 +171,13 @@ For P0-P1 severity decisions, explicitly reason through steps:
 4. Severity: Based on evidence, what's the appropriate level?
 ```
 
-### Self-Consistency (P0 Decisions Only)
+### Self-Consistency (CRITICAL Decisions Only)
 
 For CRITICAL severity findings, validate with multiple reasoning paths:
 
 1. **Path A**: Analyze from attacker perspective
 2. **Path B**: Analyze from system design perspective
-3. **Consensus**: If both paths agree → confirm P0. If disagree → downgrade to P1
+3. **Consensus**: If both paths agree → confirm CRITICAL. If disagree → downgrade to HIGH
 
 ## Quality Control
 

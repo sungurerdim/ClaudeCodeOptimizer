@@ -7,6 +7,7 @@
 - **DRY**: Extract common patterns, avoid repetition
 - **YAGNI**: Add only requested features + robustness (validation, edge cases, error handling) - robustness is required, features are not
 - **KISS**: Simplest solution that works correctly for all valid inputs
+- **3-Question-Guard**: Before adding code/feature, ask: (1) Does absence break something? (2) Does absence confuse users? (3) Is adding worth complexity cost? All NO → don't add
 - **Separation-of-Concerns**: Distinct responsibilities per module
 - **Composition**: Prefer composition over inheritance
 - **Idempotent**: Same operation, same result, safe to retry
@@ -87,6 +88,7 @@
 - **Root-Cause-Hunt**: Ask "why does this pattern exist?" not just "what's wrong?"
 - **Cross-Cutting-Concerns**: Check for issues that span multiple modules
 - **Systemic-Patterns**: Identify recurring problems indicating design flaws
+- **80/20-Priority**: Prioritize by impact × effort: Do Now (high impact, low effort) → Plan (high impact, medium effort) → Consider (medium impact) → Backlog (low impact or high effort)
 
 ## Documentation
 
