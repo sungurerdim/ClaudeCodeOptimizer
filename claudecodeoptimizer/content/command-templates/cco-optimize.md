@@ -1,6 +1,10 @@
 ---
 name: cco-optimize
-description: Security and code quality analysis with auto-fix
+description: |
+  Security and code quality analysis with auto-fix.
+  TRIGGERS: "optimize", "fix issues", "security scan", "quality check", "clean up code", "fix all"
+  USE WHEN: Want to find AND fix issues in one pass
+  FLAGS: --auto (unattended), --security, --quality, --fix-all, --score
 allowed-tools: Read(*), Grep(*), Glob(*), Edit(*), Bash(*), Task(*), TodoWrite, AskUserQuestion
 model: opus
 ---
@@ -428,8 +432,9 @@ if (isUnattended) {
   // Nothing to approve
   approved = []
 } else {
-  // Sort by severity: P0 → P1 → P2 → P3
-  approvalRequired.sort((a, b) => a.severity.localeCompare(b.severity))
+  // Sort by severity: CRITICAL → HIGH → MEDIUM → LOW
+  const severityOrder = { "CRITICAL": 0, "HIGH": 1, "MEDIUM": 2, "LOW": 3 }
+  approvalRequired.sort((a, b) => severityOrder[a.severity] - severityOrder[b.severity])
 
   // Display issues table BEFORE question
   console.log(formatIssuesTable(approvalRequired))

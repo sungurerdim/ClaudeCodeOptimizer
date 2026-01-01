@@ -23,7 +23,7 @@ This document details how CCO implements official Claude 4 best practices and Op
 | **Context Motivation** | Rules explain "why" not just "what" |
 | **Conservative Judgment** | Evidence-based severity, never guesses |
 | **Long-horizon State Tracking** | TodoWrite + git state + structured findings JSON |
-| **Structured Output** | Consistent formats (`Status: X | Applied: N | Skipped: N | Failed: N | Total: N`) |
+| **Structured Output** | Consistent formats (`Status: X | Applied: N | Declined: N | Failed: N | Total: N`) |
 | **Model Self-Knowledge** | Agent descriptions match capabilities |
 | **Subagent Orchestration** | Automatic delegation based on task type |
 | **Over-engineering Prevention** | YAGNI + KISS + Scope rules in Core |
@@ -182,17 +182,22 @@ All examples use `{placeholder}` format, never hardcoded values:
 
 Commands that report findings embed severity rules:
 
-| Keyword | Severity | Confidence Required |
-|---------|----------|---------------------|
-| crash, data loss, security breach | CRITICAL | HIGH |
-| broken, blocked, cannot use | HIGH | HIGH |
-| error, fail, incorrect | MEDIUM | MEDIUM |
-| style, minor, cosmetic | LOW | LOW |
+| Priority | Display | Keyword | Confidence Required |
+|----------|---------|---------|---------------------|
+| P0 | CRITICAL | crash, data loss, security breach | HIGH |
+| P1 | HIGH | broken, blocked, cannot use | HIGH |
+| P2 | MEDIUM | error, fail, incorrect | MEDIUM |
+| P3 | LOW | style, minor, cosmetic | LOW |
+
+**Severity Mapping (SSOT):**
+- Internal processing uses `P0/P1/P2/P3`
+- User-facing display uses `CRITICAL/HIGH/MEDIUM/LOW`
+- Agent output schema uses display names: `"severity": "CRITICAL|HIGH|MEDIUM|LOW"`
 
 **Rules:**
 - When uncertain between severities, choose lower
 - Require explicit evidence, not inference
-- Style issues never escalate to CRITICAL or HIGH
+- Style issues never escalate to P0 or P1
 
 **Applied in:** `cco-optimize.md`, `cco-review.md`
 
@@ -269,6 +274,65 @@ operations. Don't design for hypothetical future requirements.
 - **YAGNI**: Don't add features beyond request. DO add robustness (validation, edge cases, error handling) - robustness is NOT a feature
 - **KISS**: Simplest solution that works correctly for all valid inputs
 - **Scope**: Only requested changes, general solutions
+
+---
+
+## Terminology Reference (SSOT)
+
+Canonical terminology used across all CCO components.
+
+### Severity
+
+| Internal | Display | Agent Schema | Description |
+|----------|---------|--------------|-------------|
+| P0 | CRITICAL | `"severity": "CRITICAL"` | Data loss, security breach, crash |
+| P1 | HIGH | `"severity": "HIGH"` | Broken functionality, blocking issue |
+| P2 | MEDIUM | `"severity": "MEDIUM"` | Errors, incorrect behavior |
+| P3 | LOW | `"severity": "LOW"` | Style, cosmetic, minor issues |
+
+### Accounting
+
+| Level | Terms | Format |
+|-------|-------|--------|
+| Agent output | `done`, `declined`, `fail` | `{ "done": n, "declined": n, "fail": n, "total": n }` |
+| Command display | `Applied`, `Declined`, `Failed` | `Applied: N \| Declined: N \| Failed: N \| Total: N` |
+| Review mode | `Applied`, `Not Selected`, `Failed` | When user selects subset via mode choice |
+
+**Invariant:** `applied + declined + failed = total` (always)
+
+### Status
+
+| Value | Meaning | Threshold |
+|-------|---------|-----------|
+| `OK` | All passed | Score ≥ 80 or no failures |
+| `WARN` | Issues found | Score 60-79 or some declined |
+| `FAIL` | Critical issues | Score 40-59 or failures present |
+| `CRITICAL` | Immediate action | Score < 40 |
+
+### Scopes
+
+| Scope | Agent | Description |
+|-------|-------|-------------|
+| `security` | analyze | OWASP, secrets, CVE, injection |
+| `quality` | analyze | Complexity, types, code smells |
+| `hygiene` | analyze | Dead code, orphan files, unused imports |
+| `testing` | analyze | Coverage, test quality, CI/CD |
+| `best-practices` | analyze | Patterns, naming, consistency |
+| `architecture` | analyze | Coupling, cohesion, layers |
+| `scan` | analyze | Dashboard mode (all metrics) |
+| `config` | analyze | Project detection only |
+| `search` | research | Source discovery |
+| `analyze` | research | Deep source analysis |
+| `synthesize` | research | Recommendation generation |
+| `dependency` | research | Package version/security |
+
+### Confidence (Research)
+
+| Level | Score | Condition |
+|-------|-------|-----------|
+| HIGH | 90-100% | T1 sources agree, no contradictions |
+| MEDIUM | 60-89% | T1-T2 majority, minor contradictions |
+| LOW | 0-59% | Mixed sources, unresolved conflicts |
 
 ---
 

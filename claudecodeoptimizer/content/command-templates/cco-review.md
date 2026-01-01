@@ -1,6 +1,11 @@
 ---
 name: cco-review
-description: Architecture review with pragmatic optimization
+description: |
+  Architecture review with 80/20 prioritization.
+  TRIGGERS: "review", "architecture", "coupling", "dependencies", "refactor plan"
+  USE WHEN: Need strategic view of codebase health
+  FLAGS: --quick, --focus=X, --fix-all, --matrix
+  OUTPUTS: Foundation assessment, Do Now/Plan/Consider/Backlog prioritization
 allowed-tools: Read(*), Grep(*), Glob(*), Edit(*), Bash(*), Task(*), TodoWrite, AskUserQuestion
 model: opus
 ---
@@ -175,7 +180,7 @@ if (selectedScopes.includes("dependencies")) {
   depFindings = depResponse.outdated.map(d => ({
     id: `DEP-${d.package}`,
     scope: "dependencies",
-    severity: d.security ? "P0" : d.breaking ? "P1" : d.updateType === "major" ? "P2" : "P3",
+    severity: d.security ? "CRITICAL" : d.breaking ? "HIGH" : d.updateType === "major" ? "MEDIUM" : "LOW",
     title: `${d.package}: ${d.current} → ${d.latest}`,
     location: "pyproject.toml|package.json",
     description: d.breaking ? "Breaking changes in update" : "Update available",

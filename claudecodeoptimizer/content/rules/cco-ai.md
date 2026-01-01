@@ -26,38 +26,106 @@
 - **Incremental**: Complete one step fully before starting next
 - **Verify**: Confirm changes match stated intent
 
-## Agent Delegation
+## Agent Delegation [CRITICAL]
 
-Specialized agents for complex tasks. **Choose based on complexity, not task type.**
+CCO agents OUTPERFORM default Claude Code tools for specific tasks. Use them.
 
-| Complexity | Tool | Example |
-|------------|------|---------|
-| **Simple** | WebSearch/WebFetch direct | Single URL, quick fact, known source |
-| **Complex** | `cco-agent-research` | Multiple sources, synthesis, reliability critical |
+### Quick Decision Tree
 
-### When to Delegate
+```
+Need information?
+├── Single URL/fact → WebSearch/WebFetch
+└── 3+ sources, CVE, comparison → cco-agent-research
 
-| Pattern | Agent | Trigger |
-|---------|-------|---------|
-| Multi-source research | `cco-agent-research` | 3+ sources needed |
-| Dependency/CVE audit | `cco-agent-research` | Security implications |
-| Conflicting information | `cco-agent-research` | Need resolution |
+Need analysis?
+├── Find file/pattern → Glob/Grep/Read
+└── Structured scan, metrics, audit → cco-agent-analyze
 
-### vs Default Tools
+Need changes?
+├── Single file edit → Edit/Write
+└── 3+ files, verification needed → cco-agent-apply
+```
 
-| Aspect | WebSearch/WebFetch | cco-agent-research |
-|--------|-------------------|-------------------|
-| Source scoring | None | CRAAP+ (T1-T6 tiers) |
-| Reliability | No verification | Cross-verification required |
-| Contradictions | Not tracked | Explicit resolution |
-| Confidence | Implicit | Scored (HIGH/MEDIUM/LOW) |
-| Freshness | Not weighted | Currency scoring (+10/-15) |
-| Bias detection | None | Vendor/promo penalties |
-| Parallel search | Manual | Auto (4 strategies) |
-| Saturation | Manual stop | Auto (3× theme repeat) |
+### cco-agent-research
 
-**When to use default:** Single quick lookup, known-good URL, simple fact check.
-**When to delegate:** Research requiring synthesis, multiple sources, reliability matters.
+**TRIGGERS:** "research", "compare", "which library", "best practices", "CVE", "vulnerability", "breaking changes", "migration"
+
+| Use CCO Agent | Use Default Instead |
+|---------------|---------------------|
+| Need 3+ sources | Single known URL |
+| CVE/security research | Quick fact check |
+| Library comparison | Official docs lookup |
+| Conflicting info online | Simple API reference |
+
+**Why better than WebSearch/WebFetch:**
+
+| Capability | WebSearch/WebFetch | cco-agent-research |
+|------------|-------------------|-------------------|
+| Source scoring | None | CRAAP+ T1-T6 (official→unverified) |
+| Freshness weight | None | +10 for <3mo, -15 for >12mo |
+| Cross-verification | Manual | Auto (T1 agree = HIGH) |
+| Contradictions | None | Detects, logs, resolves |
+| Confidence | None | HIGH/MEDIUM/LOW with reasoning |
+| Bias detection | None | Vendor -5, Sponsored -15 |
+| Search strategies | 1 query | 4 parallel: docs/github/tutorial/SO |
+| Saturation | Manual stop | Auto-stop at 3× theme repeat |
+
+### cco-agent-analyze
+
+**TRIGGERS:** "analyze", "scan", "audit", "find issues", "code review", "quality check", "security scan", "metrics"
+
+| Use CCO Agent | Use Default Instead |
+|---------------|---------------------|
+| Security/quality audit | Find file → Glob |
+| Metrics (coupling, complexity) | Search pattern → Grep |
+| Multi-scope scan | Read file → Read |
+| Platform-aware analysis | Simple explore → Explore |
+
+**Why better than Explore agent:**
+
+| Capability | Explore Agent | cco-agent-analyze |
+|------------|---------------|-------------------|
+| Severity scoring | None | CRITICAL/HIGH/MEDIUM/LOW with evidence |
+| Platform filtering | None | Skips `sys.platform` blocks |
+| Metrics | None | coupling, cohesion, complexity |
+| Output format | Text | JSON: `{findings[], scores}` |
+| Multi-scope | One at a time | Parallel: security+quality+hygiene |
+| Skip patterns | Manual | Auto: node_modules, dist, .git |
+| False positives | Mixed in | `excluded[]` with reasons |
+
+### cco-agent-apply
+
+**TRIGGERS:** "apply fixes", "fix all", "batch edit", "generate config", "export rules"
+
+| Use CCO Agent | Use Default Instead |
+|---------------|---------------------|
+| Apply 3+ fixes | Single edit → Edit |
+| Post-change verification | Simple write → Write |
+| Cascade error handling | One-off change → Edit |
+| Track applied/failed | Quick fix → Edit |
+
+**Why better than Edit/Write:**
+
+| Capability | Edit/Write | cco-agent-apply |
+|------------|------------|-----------------|
+| Dirty state check | None | Pre-op `git status` |
+| Post-change verification | None | Runs lint/type/test |
+| Cascade handling | None | Fixes errors caused by fixes |
+| Accounting | None | done + declined + fail = total |
+| Fix-all mode | None | Zero agent-initiated skips |
+| Batch efficiency | Sequential | Groups by file |
+
+**Note:** Rollback via git (`git checkout`). Agent warns about dirty state, doesn't checkpoint.
+
+### Anti-Patterns (DO NOT)
+
+| Anti-Pattern | Correct Approach |
+|--------------|------------------|
+| cco-agent-research for single URL | WebFetch directly |
+| cco-agent-analyze to find one file | Glob directly |
+| cco-agent-apply for one-line fix | Edit directly |
+| Default Explore for security audit | cco-agent-analyze |
+| WebSearch for "which library" | cco-agent-research |
 
 ## Decision Making
 
