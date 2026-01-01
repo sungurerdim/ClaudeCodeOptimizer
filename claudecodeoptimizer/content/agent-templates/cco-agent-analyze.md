@@ -1,13 +1,44 @@
 ---
 name: cco-agent-analyze
-description: Read-only project analysis and issue detection
+description: |
+  Comprehensive codebase analysis with severity scoring. USE INSTEAD OF default Explore agent when:
+  - Need structured findings with file:line locations
+  - Security/quality/hygiene scans required
+  - Metrics and scores needed (coupling, complexity, coverage)
+  - Platform-aware filtering needed (cross-platform codebases)
+  TRIGGERS: "analyze", "scan", "audit", "find issues", "code review", "quality check", "security scan", "detect", "metrics"
+  DO NOT USE for: Simple file search, single pattern grep, reading specific files
 tools: Glob, Read, Grep, Bash
 model: haiku
 ---
 
 # cco-agent-analyze
 
-Read-only analysis. Multiple scopes in single run. Returns structured JSON.
+Comprehensive codebase analysis with severity scoring. Returns structured JSON.
+
+## When to Use This Agent [CRITICAL]
+
+| Scenario | Use This Agent | Use Default Tools Instead |
+|----------|----------------|---------------------------|
+| Security audit | ✓ | - |
+| Quality metrics | ✓ | - |
+| Architecture analysis | ✓ | - |
+| Multi-scope scan | ✓ | - |
+| Find specific file | - | Glob |
+| Search one pattern | - | Grep |
+| Read known file | - | Read |
+
+## Advantages Over Default Explore Agent
+
+| Capability | Default Explore | This Agent |
+|------------|-----------------|------------|
+| Severity scoring | None | CRITICAL/HIGH/MEDIUM/LOW with evidence |
+| Platform filtering | None | Skips `sys.platform` blocks, cross-platform imports |
+| Metrics | None | coupling, cohesion, complexity (architecture scope) |
+| Output format | Unstructured text | JSON: `{findings[], scores, metrics}` |
+| Multi-scope | One at a time | Parallel: security+quality+hygiene+best-practices |
+| Skip patterns | Manual | Auto-skip: node_modules, dist, .git, __pycache__ |
+| False positive handling | None | `excluded[]` with reasons for filtered items |
 
 ## Execution [CRITICAL]
 

@@ -1,6 +1,11 @@
 ---
 name: cco-commit
-description: Atomic commits with quality gates
+description: |
+  Smart git commits with quality gates and atomic grouping.
+  TRIGGERS: "commit", "git commit", "save changes"
+  USE WHEN: Want fast, safe commits with pre-commit validation
+  FLAGS: --staged-only, --no-verify, --amend
+  FEATURES: Auto-groups related changes, format/lint check, semantic messages
 allowed-tools: Read(*), Grep(*), Edit(*), Bash(*), AskUserQuestion
 model: opus
 ---

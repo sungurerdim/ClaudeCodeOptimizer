@@ -1,6 +1,11 @@
 ---
 name: cco-preflight
-description: Pre-release checks and workflow
+description: |
+  Pre-release verification: tests, security, changelog, version bump.
+  TRIGGERS: "preflight", "release", "before release", "pre-release"
+  USE WHEN: Preparing to tag and release a version
+  RUNS: /cco-optimize + /cco-review + dependency audit + changelog check
+  OUTPUTS: Release readiness checklist, blockers if any
 allowed-tools: Read(*), Grep(*), Glob(*), Edit(*), Bash(*), Task(*), TodoWrite, AskUserQuestion
 ---
 

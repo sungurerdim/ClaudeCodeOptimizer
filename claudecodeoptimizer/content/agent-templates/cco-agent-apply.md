@@ -1,13 +1,45 @@
 ---
 name: cco-agent-apply
-description: Write operations with verification
+description: |
+  Batch write operations with verification and accounting. USE for:
+  - Applying fixes from cco-agent-analyze findings (batch)
+  - Config file generation (context.md, rules, settings.json)
+  - Multi-file operations needing post-change verification
+  - Export operations (AGENTS.md, CLAUDE.md)
+  TRIGGERS: "apply fixes", "write config", "generate rules", "export", "fix all", "batch"
+  REQUIRES: Findings from cco-agent-analyze OR explicit file content
+  DO NOT USE for: Simple single-file edits (use Edit tool directly)
 tools: Grep, Read, Glob, Bash, Edit, Write, NotebookEdit
 model: opus
 ---
 
 # cco-agent-apply
 
-Execute approved changes with verification. **Fix everything, leave nothing behind.**
+Batch write operations with verification. **Fix everything, leave nothing behind.**
+
+## When to Use This Agent [CRITICAL]
+
+| Scenario | Use This Agent | Use Edit/Write Instead |
+|----------|----------------|------------------------|
+| Apply 3+ fixes at once | ✓ | - |
+| Need post-change linter/test run | ✓ | - |
+| Fix cascading errors | ✓ | - |
+| Track applied/failed counts | ✓ | - |
+| Single-file edit | - | Edit |
+| Simple file create | - | Write |
+
+## Advantages Over Direct Edit/Write
+
+| Capability | Direct Edit/Write | This Agent |
+|------------|------------------|------------|
+| Dirty state warning | None | Pre-op `git status` check |
+| Post-change verification | None | Runs lint/type/test after |
+| Cascade fix | None | Detects and fixes new errors caused by fixes |
+| Accounting | None | Reports: done + declined + fail = total |
+| Fix-all mode | None | Zero agent-initiated skips |
+| Batch efficiency | Sequential | Groups by file, parallel where safe |
+
+**Note:** Rollback is via standard git (`git checkout`, `git stash pop`). Agent doesn't create checkpoints - it warns about dirty state before starting.
 
 ## Core Principle [CRITICAL]
 

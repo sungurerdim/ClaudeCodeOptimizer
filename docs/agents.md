@@ -1,18 +1,42 @@
 # CCO Agents
 
-Specialized subagents for CCO commands.
+Specialized subagents that OUTPERFORM default Claude Code tools for specific tasks.
+
+---
+
+## When to Use CCO Agents vs Default Tools
+
+| Task | CCO Agent | Default Alternative | When to Use CCO |
+|------|-----------|---------------------|-----------------|
+| Research | `cco-agent-research` | WebSearch/WebFetch | 3+ sources, CVE audit, contradictions |
+| Analysis | `cco-agent-analyze` | Explore agent | Structured findings, metrics, scans |
+| Fixes | `cco-agent-apply` | Edit/Write | Batch fixes, verification needed |
+
+### Quick Decision
+
+```
+Need information?
+├── Single URL/fact → WebSearch/WebFetch
+└── Multiple sources/verification → cco-agent-research
+
+Need analysis?
+├── Find file/pattern → Glob/Grep/Read
+└── Structured findings/metrics → cco-agent-analyze
+
+Need changes?
+├── Single file edit → Edit/Write
+└── Multiple files/verification → cco-agent-apply
+```
 
 ---
 
 ## Overview
 
-CCO uses three specialized agents with clear separation of concerns:
-
 | Agent                  | Purpose                            | Model | Tools                                             |
 |------------------------|------------------------------------|-------|---------------------------------------------------|
-| **cco-agent-analyze**  | Read-only project analysis         | haiku | Glob, Read, Grep, Bash                            |
-| **cco-agent-apply**    | Write operations with verification | opus  | Grep, Read, Glob, Bash, Edit, Write, NotebookEdit |
-| **cco-agent-research** | External source research           | haiku | WebSearch, WebFetch, Read, Grep, Glob             |
+| **cco-agent-analyze**  | Comprehensive codebase analysis    | haiku | Glob, Read, Grep, Bash                            |
+| **cco-agent-apply**    | Verified write operations          | opus  | Grep, Read, Glob, Bash, Edit, Write, NotebookEdit |
+| **cco-agent-research** | Multi-source research with scoring | haiku | WebSearch, WebFetch, Read, Grep, Glob             |
 
 **Model Rationale:**
 - Haiku for read-only sub-agents (fast, cost-effective)
@@ -28,7 +52,27 @@ Commands can override agent defaults via Task parameter: `Task("agent", prompt, 
 
 ## cco-agent-analyze
 
-**Purpose:** Read-only project analysis and issue detection.
+**Purpose:** Comprehensive codebase analysis with severity scoring.
+
+**TRIGGERS:** `analyze`, `scan`, `audit`, `find issues`, `code review`, `quality check`, `security scan`, `detect`, `metrics`
+
+### When to Use
+
+| Use This Agent | Use Default Tools Instead |
+|----------------|---------------------------|
+| Security/quality audit | Find specific file → Glob |
+| Metrics (coupling, complexity) | Search one pattern → Grep |
+| Multi-scope scan | Read known file → Read |
+| Platform-aware analysis | Simple exploration → Explore |
+
+**Advantages over Explore agent:**
+- Severity scoring: CRITICAL/HIGH/MEDIUM/LOW with evidence
+- Platform filtering: Skips `sys.platform` blocks, cross-platform imports
+- Metrics: coupling, cohesion, complexity (architecture scope)
+- Output: JSON `{findings[], scores, metrics}` not unstructured text
+- Multi-scope: Parallel security+quality+hygiene in single run
+- Auto-skip: node_modules, dist, .git, __pycache__
+- False positive handling: `excluded[]` with reasons
 
 ### Scopes
 
@@ -122,7 +166,28 @@ Returns structured JSON with:
 
 ## cco-agent-apply
 
-**Purpose:** Execute approved changes with verification.
+**Purpose:** Batch write operations with verification and accounting.
+
+**TRIGGERS:** `apply fixes`, `fix all`, `batch edit`, `generate config`, `export rules`
+
+### When to Use
+
+| Use This Agent | Use Default Tools Instead |
+|----------------|---------------------------|
+| Apply 3+ fixes at once | Single-file edit → Edit |
+| Need post-change verification | Simple file create → Write |
+| Fix cascading errors | Quick one-off edit → Edit |
+| Track applied/failed counts | - |
+
+**Advantages over Edit/Write:**
+- Dirty state check (pre-op `git status`)
+- Post-change verification (runs lint/type/test)
+- Cascade handling (fixes errors caused by fixes)
+- Accounting (done + declined + fail = total)
+- Fix-all mode (zero agent-initiated skips)
+- Batch efficiency (groups by file)
+
+**Note:** Rollback via git (`git checkout`). Agent warns about dirty state, doesn't create checkpoints.
 
 ### Operations
 
@@ -156,7 +221,27 @@ Always reports: `done + declined + fail = total`
 
 ## cco-agent-research
 
-**Purpose:** External source research with reliability scoring and AI synthesis.
+**Purpose:** Multi-source research with CRAAP+ reliability scoring.
+
+**TRIGGERS:** `research`, `compare options`, `best practices`, `which library`, `CVE`, `vulnerability`, `breaking changes`, `migration`
+
+### When to Use
+
+| Use This Agent | Use Default Tools Instead |
+|----------------|---------------------------|
+| Need 3+ sources for verification | Single known URL → WebFetch |
+| CVE/security research | Quick fact check → WebSearch |
+| "Which library should I use?" | Official docs lookup → WebFetch |
+| Contradicting info online | Simple API lookup → WebSearch |
+
+**Advantages over WebSearch/WebFetch:**
+- CRAAP+ scoring: T1-T6 tiers (official docs → unverified)
+- Freshness weighting: +10 for <3mo, -15 for >12mo
+- Cross-verification: T1 agree = HIGH confidence
+- Contradiction handling: Detects, logs, resolves by hierarchy
+- Bias detection: Vendor self-promo -5, Sponsored -15
+- Saturation: Auto-stop when 3 sources repeat themes
+- 4 parallel search strategies: docs, github, tutorial, stackoverflow
 
 ### Scopes
 

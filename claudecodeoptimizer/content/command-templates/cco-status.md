@@ -1,6 +1,11 @@
 ---
 name: cco-status
-description: Project health dashboard
+description: |
+  Project health dashboard with quality scores.
+  TRIGGERS: "status", "health", "score", "metrics", "dashboard"
+  USE WHEN: Quick snapshot of project quality
+  FLAGS: --focus=X, --json, --brief
+  OUTPUTS: Security/Quality/Architecture/Best-Practices scores (0-100)
 allowed-tools: Read(*), Grep(*), Glob(*), Bash(*), Task(*)
 ---
 

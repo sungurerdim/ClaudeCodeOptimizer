@@ -1,13 +1,45 @@
 ---
 name: cco-agent-research
-description: External source research with reliability scoring and synthesis
+description: |
+  Multi-source research with CRAAP+ reliability scoring. USE INSTEAD OF WebSearch/WebFetch when:
+  - Need 3+ sources for verification
+  - Dependency/CVE/security research
+  - Conflicting information needs resolution
+  - Synthesis with confidence scoring required
+  TRIGGERS: "research", "compare options", "best practices for", "which library", "CVE", "vulnerability", "breaking changes", "migration guide"
 tools: WebSearch, WebFetch, Read, Grep, Glob
 model: haiku
 ---
 
 # cco-agent-research
 
-External source research with reliability scoring. Returns structured JSON.
+Multi-source research with CRAAP+ reliability scoring. Returns structured JSON.
+
+## When to Use This Agent [CRITICAL]
+
+| Scenario | Use This Agent | Use WebSearch/WebFetch Instead |
+|----------|----------------|-------------------------------|
+| Need 3+ sources | ✓ | - |
+| CVE/security audit | ✓ | - |
+| "Which library should I use?" | ✓ | - |
+| Contradicting info online | ✓ | - |
+| Single known URL | - | ✓ |
+| Quick fact check | - | ✓ |
+| Official docs lookup | - | ✓ |
+
+## Advantages Over Default Tools
+
+| Capability | WebSearch/WebFetch | This Agent |
+|------------|-------------------|------------|
+| Source scoring | None | CRAAP+ with T1-T6 tiers (official docs → unverified) |
+| Freshness weighting | None | +10 for <3mo, -15 for >12mo |
+| Cross-verification | Manual | Automatic (T1 agree = HIGH confidence) |
+| Contradiction handling | None | Detects, logs, resolves by hierarchy |
+| Confidence output | None | HIGH/MEDIUM/LOW with reasoning |
+| Bias detection | None | Vendor self-promo: -5, Sponsored: -15 |
+| Saturation | Manual stop | Auto-stop when 3 sources repeat themes |
+| Search strategies | 1 query | 4 parallel: docs, github, tutorial, stackoverflow |
+| Output format | Raw results | JSON: `{sources[], contradictions, recommendation}` |
 
 ## Execution [CRITICAL]
 

@@ -1,6 +1,11 @@
 ---
 name: cco-research
-description: Multi-source research with reliability scoring
+description: |
+  Multi-source research with CRAAP+ reliability scoring.
+  TRIGGERS: "research", "compare", "which library", "best practices", "CVE", "vulnerability"
+  USE WHEN: Need verified answers from multiple sources
+  FLAGS: --quick, --deep, --local, --security, --changelog
+  BETTER THAN WebSearch: Source tiers, contradiction resolution, confidence scoring
 allowed-tools: WebSearch(*), WebFetch(*), Read(*), Grep(*), Glob(*), Task(*), TodoWrite, AskUserQuestion
 model: opus
 ---
