@@ -489,3 +489,23 @@ console.log(`
 4. **Git safety** - Clean state required, version sync verified
 5. **User decision required** - No release without explicit approval
 6. **Security blocks release** - Dependency security advisories are blockers, not warnings
+
+---
+
+## Blocker Classification
+
+| Status | Criteria | Action |
+|--------|----------|--------|
+| **BLOCKER** | Tests fail, build fail, type errors, security CVE, version mismatch | Cannot release - must fix |
+| **WARNING** | Lint issues, outdated deps (non-security), TODO markers, branch name | Can release - user decides |
+| **PASS** | All checks green | Ready to release |
+
+### Self-Consistency (BLOCKER Decisions)
+For blocker classification, validate with multiple perspectives:
+```
+Path A: "Does this pose risk to users/production?"
+Path B: "Is this a development-time concern only?"
+Consensus: Both agree risk → BLOCKER. Only dev concern → WARNING
+```
+
+**When uncertain → WARNING** (let user decide)

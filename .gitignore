@@ -205,7 +205,6 @@ requirements.txt.lock
 # VS Code
 .vscode/content/principles_backup/
 
-.claude/
 
 # Benchmark runtime data (not source)
 benchmark/output/*
