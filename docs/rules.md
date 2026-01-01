@@ -6,10 +6,10 @@
 
 | Category     | Rules    | Location                           | Loading       |
 |--------------|----------|------------------------------------|---------------|
-| Core         | 85       | `~/.claude/rules/cco/core.md`      | Always active |
-| AI           | 48       | `~/.claude/rules/cco/ai.md`        | Always active |
+| Core         | 87       | `~/.claude/rules/cco/core.md`      | Always active |
+| AI           | 49       | `~/.claude/rules/cco/ai.md`        | Always active |
 | Adaptive     | 1563     | pip package → `.claude/rules/cco/` | Per-project   |
-| **Total**    | **1696** |                                    |               |
+| **Total**    | **1699** |                                    |               |
 
 *Note: Tool rules (workflow mechanisms) are embedded directly in command/agent templates.*
 
@@ -256,7 +256,7 @@ Before diving into specifics, ask the broader question first:
 
 #### Chain of Thought (Critical Decisions)
 
-For P0-P1 severity decisions, explicitly reason through steps:
+For CRITICAL-HIGH severity decisions, explicitly reason through steps:
 
 ```
 1. Identify: What exactly is the issue?
@@ -265,13 +265,13 @@ For P0-P1 severity decisions, explicitly reason through steps:
 4. Severity: Based on evidence, what's the appropriate level?
 ```
 
-#### Self-Consistency (P0 Decisions Only)
+#### Self-Consistency (CRITICAL Decisions Only)
 
 For CRITICAL severity findings, validate with multiple reasoning paths:
 
 1. **Path A**: Analyze from attacker perspective
 2. **Path B**: Analyze from system design perspective
-3. **Consensus**: If both paths agree → confirm P0. If disagree → downgrade to P1
+3. **Consensus**: If both paths agree → confirm CRITICAL. If disagree → downgrade to HIGH
 
 ### Quality Control
 
