@@ -1,4 +1,4 @@
-# ClaudeCodeOptimizer
+# ClaudeCodeOptimizer (CCO) v2.0
 
 [![PyPI](https://img.shields.io/pypi/v/claudecodeoptimizer.svg)](https://pypi.org/project/claudecodeoptimizer/)
 [![Python 3.10+](https://img.shields.io/badge/python-3.10+-blue.svg)](https://www.python.org/downloads/)
@@ -21,7 +21,7 @@ Same prompts, better outcomes. Fewer errors. Fewer surprises.
 |---------------------------------|-----------------------------------------------------------|
 | Claude applies generic patterns | Claude applies **domain-specific best practices**         |
 | No pre-action safety checks     | Git status check, approval flow, clean state for rollback |
-| Silent changes                  | `Applied: 5 | Skipped: 2 | Failed: 0` accounting          |
+| Silent changes                  | `Applied: 5 | Failed: 0 | Total: 5` accounting            |
 | "Add caching somewhere"         | "Use TTL + invalidation for this data fetch"              |
 
 **CCO doesn't teach Claude to code** — Opus 4.5 already knows how. CCO adds the safety layer between intent and action.
@@ -95,7 +95,7 @@ Then in Claude Code:
 | Parameterize SQL        | DB schema changes        |
 | Move secrets to env     | API contract changes     |
 
-**Accounting:** Every action reports `Applied: N | Skipped: N | Failed: N`
+**Accounting:** Every action reports `Applied: N | Failed: N | Total: N`
 
 <details>
 <summary><b>Commands (8 available)</b></summary>

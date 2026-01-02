@@ -27,7 +27,7 @@
 - **Explicit**: Use named constants, clear intent
 - **Scope**: Only requested changes, general solutions
 - **Robust**: Handle all valid input variations (whitespace, case, empty, None, boundary values)
-- **Async-Await**: Use async/await for I/O operations, avoid blocking in async context
+- **Async-Await**: Use async/await for I/O operations, keep async context non-blocking
 - **Graceful-Shutdown**: Handle termination signals, drain connections before exit
 
 ## File & Resource
@@ -56,11 +56,11 @@
 - **OWASP-Top10**: Prevent injection (SQL, XSS, Command), broken auth, sensitive data exposure, security misconfiguration. Input-Boundary + Defense-in-Depth cover most vectors
 - **Lockfile-Required**: Dependency lockfile mandatory in repo. Pin versions, no floating ranges for production
 - **Safe-Defaults**: Production defaults must be secure: debug off, verbose errors off, restrictive CORS, no wildcard origins
-- **No-Secrets-Logged**: Never log secrets, tokens, credentials, PII. Redact/mask sensitive fields in all output
+- **Redact-Sensitive**: Redact/mask secrets, tokens, credentials, PII in all output. Keep sensitive data out of logs
 - **Data-Minimization**: Collect and store only necessary data. Each field requires justification
 - **Session-Security**: Secure + HttpOnly + SameSite=Lax/Strict cookies, token TTL with refresh strategy, logout invalidates server-side. Use __Host- prefix for sensitive cookies
-- **Password-Security**: Never store plaintext. Use bcrypt/argon2/scrypt with appropriate cost factor. Salt per-password, pepper application-wide
-- **Error-Disclosure**: Never expose stack traces, internal paths, or system details to users. Generic messages for auth failures (prevent user enumeration)
+- **Password-Security**: Store passwords with bcrypt/argon2/scrypt using appropriate cost factor. Salt per-password, pepper application-wide
+- **Error-Disclosure**: Show generic error messages to users. Keep stack traces, internal paths, system details server-side. Use identical auth failure messages (prevents user enumeration)
 - **Timeout-Required**: All external calls must have explicit timeout. Connection timeout + read timeout. Prevent resource exhaustion
 
 ## Testing
