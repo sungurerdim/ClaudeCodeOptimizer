@@ -68,33 +68,43 @@ def clean_previous_installation(
     rules_root = claude_dir / "rules"
     rules_cco_dir = rules_root / CCO_RULES_SUBDIR
 
-    removed = {"commands": 0, "agents": 0, "rules": 0}
+    # Collect removed items with details
+    removed_commands = remove_command_files(commands_dir)
+    removed_agents = remove_agent_files(agents_dir)
+    removed_old_rules = remove_old_rules(rules_root)
+    removed_new_rules = remove_new_rules(rules_cco_dir)
 
-    # 1. Remove all cco-*.md files from commands/
-    removed["commands"] = remove_command_files(commands_dir)
-
-    # 2. Remove all cco-*.md files from agents/
-    removed["agents"] = remove_agent_files(agents_dir)
-
-    # 3a. Remove old CCO rule files from root
-    removed["rules"] += remove_old_rules(rules_root)
-
-    # 3b. Remove CCO rules from cco/ subdirectory (current)
-    removed["rules"] += remove_new_rules(rules_cco_dir)
-
-    # 4. Remove CCO markers from CLAUDE.md
+    # Remove CCO markers from CLAUDE.md
     claude_md = claude_dir / "CLAUDE.md"
-    removed["rules"] += clean_claude_md_markers(claude_md)
+    claude_md_count = clean_claude_md_markers(claude_md)
+
+    # Build result dict (counts for backward compatibility)
+    removed = {
+        "commands": len(removed_commands),
+        "agents": len(removed_agents),
+        "rules": len(removed_old_rules) + len(removed_new_rules) + claude_md_count,
+    }
 
     total = sum(removed.values())
     if verbose and total > 0:
         print("Cleaning previous installation...")
-        if removed["commands"]:
-            print(f"  - Removed {removed['commands']} command(s)")
-        if removed["agents"]:
-            print(f"  - Removed {removed['agents']} agent(s)")
-        if removed["rules"]:
-            print(f"  - Removed {removed['rules']} rule file(s)/section(s)")
+        if removed_commands:
+            print(f"  Commands ({len(removed_commands)}):")
+            for name in removed_commands:
+                print(f"    - {name}")
+        if removed_agents:
+            print(f"  Agents ({len(removed_agents)}):")
+            for name in removed_agents:
+                print(f"    - {name}")
+        if removed_old_rules or removed_new_rules:
+            rule_count = len(removed_old_rules) + len(removed_new_rules)
+            print(f"  Rules ({rule_count}):")
+            for name in removed_old_rules:
+                print(f"    - rules/{name}")
+            for name in removed_new_rules:
+                print(f"    - rules/{name}")
+        if claude_md_count:
+            print(f"  CLAUDE.md: {claude_md_count} marker(s) removed")
         print()
 
     return removed

@@ -127,7 +127,8 @@ class TestCleanPreviousInstallation:
 
         captured = capsys.readouterr()
         assert "Cleaning previous installation" in captured.out
-        assert "Removed 1 command" in captured.out
+        assert "Commands (1):" in captured.out
+        assert "cco-old.md" in captured.out
 
     def test_full_cleanup_scenario(self, tmp_path, capsys):
         """Test complete cleanup with all components present."""
