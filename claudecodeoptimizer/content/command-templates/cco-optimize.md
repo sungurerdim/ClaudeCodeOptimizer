@@ -1,39 +1,47 @@
 ---
 name: cco-optimize
 description: |
-  Security and code quality analysis with auto-fix.
-  TRIGGERS: "optimize", "fix issues", "security scan", "quality check", "clean up code", "fix all"
-  USE WHEN: Want to find AND fix issues in one pass
-  FLAGS: --auto (unattended), --security, --quality, --fix-all, --score
+  Incremental code improvement - tactical fixes for security, hygiene, types, lint, performance, and AI-generated code issues.
+  QUESTION: "This code works. How can it work better?"
+  TRIGGERS: "optimize", "fix issues", "security scan", "clean up", "fix all", "improve code"
+  USE WHEN: Want to find AND fix code-level issues in one pass
+  FLAGS: --auto (unattended), --security, --hygiene, --types, --lint, --performance, --ai-hygiene, --fix-all, --score
+  SCOPES: 6 scopes, 63 checks total (SEC-01 to AIH-08)
 allowed-tools: Read(*), Grep(*), Glob(*), Edit(*), Bash(*), Task(*), TodoWrite, AskUserQuestion
 model: opus
 ---
 
 # /cco-optimize
 
-**Full-Stack Optimization** - Quality gates + parallel analysis + background fixes with minimal questions.
+**Incremental Code Improvement** - Quality gates + parallel analysis + background fixes with Fix Intensity selection.
+
+**Philosophy:** "This code works. How can it work better?"
+
+**Purpose:** Tactical, file-level fixes. For strategic architecture assessment, use `/cco-review`.
 
 ## Args
 
-- `--auto` or `--unattended`: Fully unattended mode for CI/CD and benchmarks
-  - **No questions asked** - full scope, fix everything
+- `--auto` or `--unattended`: Fully unattended mode for CI/CD, pre-commit, cron jobs
+  - **No questions asked** - all 6 scopes, Full Fix intensity
   - **No progress output** - silent execution
-  - **Only final summary** - single status line at end
-  - Defaults:
-    - Scopes: ALL (security, quality, hygiene, best-practices)
-    - Action: Everything (no approval needed)
-    - Git state: Continue anyway
-- `--security`: Security scope only
-- `--quality`: Quality scope only
+  - **Only final summary** - single status line (machine-readable)
+  - Exit codes: 0 (success), 1 (warnings), 2 (failures)
+- `--security`: Security scope only (SEC-01 to SEC-12)
+- `--hygiene`: Hygiene scope only (HYG-01 to HYG-15)
+- `--types`: Types scope only (TYP-01 to TYP-10)
+- `--lint`: Lint scope only (LNT-01 to LNT-08)
+- `--performance`: Performance scope only (PRF-01 to PRF-10)
+- `--ai-hygiene`: AI hygiene scope only (AIH-01 to AIH-08)
 - `--report`: Report only, no fixes
 - `--fix`: Auto-fix safe items (default)
-- `--fix-all`: Fix all without approval
+- `--fix-all`: Full Fix intensity without approval
 - `--score`: Quality score only (0-100), skip all questions
-- `--pre-release`: All scopes, strict thresholds
+- `--intensity=<level>`: Set fix intensity (quick-wins, standard, full-fix, report-only)
 
 **Usage:**
-- `/cco-optimize --auto` - Silent full optimization, fix everything
+- `/cco-optimize --auto` - Silent full optimization (all scopes, full fix)
 - `/cco-optimize --security --fix-all` - Security only, fix all
+- `/cco-optimize --ai-hygiene` - Find AI-generated code issues
 - `/cco-optimize --score` - Quick quality score
 
 ## Core Principle [CRITICAL]
@@ -47,7 +55,7 @@ When `--fix-all` or user selects "Everything":
 - **Zero skips** - every finding must be addressed NOW
 - **Complex fixes** - implement them, don't defer them
 - **Only exit** - FIXED or TECHNICAL FAILURE (with specific blocker)
-- Accounting: `declined = 0` always
+- Accounting: `applied + failed = total` (no AI declines allowed)
 
 ## Context
 
@@ -74,24 +82,38 @@ Run /cco-config first to configure project context, then restart CLI.
 const args = "$ARGS"
 const isUnattended = args.includes("--auto") || args.includes("--unattended")
 
+// Parse intensity from args
+const intensityArg = args.match(/--intensity=(\w+)/)?.[1]
+
 if (isUnattended) {
-  // SILENT MODE: No TodoWrite, no progress output, no intermediate messages
-  // Skip Q1, Q2 - proceed directly with full scope and fix everything
+  // UNATTENDED MODE: CI/CD, pre-commit hooks, cron jobs
+  // No TodoWrite, no progress output, no intermediate messages
+  // Skip Q1, Q2, Q3 - proceed directly with full scope and full fix
 
   config = {
-    scopes: ["security", "quality", "hygiene", "best-practices"],  // ALL scopes
-    action: "Everything",                                             // No approval needed
-    gitState: "Continue anyway"                                     // Don't stash
+    intensity: "full-fix",  // All severities
+    scopes: ["security", "hygiene", "types", "lint", "performance", "ai-hygiene"],  // ALL 6 scopes
+    action: "Everything",   // No approval needed
+    gitState: "Continue anyway"  // Don't stash
   }
 
   // Execute silently:
   // 1. Run analysis (no output)
   // 2. Apply ALL fixes (no output)
-  // 3. Show ONLY final summary line
+  // 3. Show ONLY final summary line (machine-readable)
 
   // → Jump directly to Step-2 analysis, skip Q1
 }
 ```
+
+**Severity Thresholds by Intensity:**
+
+| Intensity | Severities Included | Use Case |
+|-----------|---------------------|----------|
+| quick-wins | "Do Now" bucket (high impact, low effort) | 80/20 fast improvement |
+| standard | CRITICAL + HIGH + MEDIUM | Normal operation (default) |
+| full-fix | ALL (including LOW) | Comprehensive cleanup |
+| report-only | ALL (analysis only) | Review without changes |
 
 ## Architecture
 
@@ -165,65 +187,78 @@ qualityGateTasks = {
 
 ---
 
-## Step-1: Setup [Q1 + BACKGROUND ANALYSIS] [SKIP Q1 IF --auto]
+## Step-1: Setup [Q1: Intensity + Q2: Scopes + BACKGROUND ANALYSIS] [SKIP IF --auto]
 
-**Start analysis in background while asking Q1 (or immediately if --auto):**
+**Start analysis in background while asking questions (or immediately if --auto):**
 
 ```javascript
 // Determine if git is dirty from context
 gitDirty = gitStatus.trim().length > 0
 
-// Start analysis with all scopes - will filter after Q1 (or use all if --auto)
-// Scopes: security (OWASP, secrets), quality (complexity, types), hygiene (dead code, orphans), best-practices (patterns)
+// Start analysis with ALL 6 scopes - will filter after Q1/Q2 (or use all if --auto)
+// Scopes: security (SEC-01-12), hygiene (HYG-01-15), types (TYP-01-10),
+//         lint (LNT-01-08), performance (PRF-01-10), ai-hygiene (AIH-01-08)
 analysisTask = Task("cco-agent-analyze", `
-  scopes: ["security", "quality", "hygiene", "best-practices"]
+  scopes: ["security", "hygiene", "types", "lint", "performance", "ai-hygiene"]
 
-  Find all issues with severity and fix information.
+  Find all issues with severity, fix info, and effort/impact scores.
   Return: {
-    findings: [{ id, scope, severity, title, location, fixable, approvalRequired, fix }],
-    summary: { scope: { count, p0, p1, p2, p3 } }
+    findings: [{ id, scope, severity, title, location, fixable, approvalRequired, fix, effort, impact }],
+    summary: { scope: { count, critical, high, medium, low } }
   }
 `, { model: "haiku", run_in_background: true })
 ```
 
-**UNATTENDED MODE: Skip Q1, use defaults from Mode Detection**
+**UNATTENDED MODE: Skip all questions, use defaults from Mode Detection**
 
 ```javascript
 if (isUnattended) {
   // config already set in Mode Detection
-  // → Proceed directly to Step-2 (no Q1)
+  // → Proceed directly to Step-2 (no questions)
 } else {
-  // Interactive mode - ask Q1
+  // Interactive mode - ask Q1 (Intensity) + Q2 (Scopes)
 ```
 
-**Build Q1 dynamically based on git state (Interactive only):**
+**Q1: Fix Intensity (first question):**
 
 ```javascript
-  questions = [
-    {
-      question: "What to optimize?",
-      header: "Scope",
-      options: [
-        { label: "Security (Recommended)", description: "OWASP, secrets, CVEs, input validation" },
-        { label: "Quality", description: "Complexity, type errors, code smells" },
-        { label: "Hygiene", description: "Dead code, unused imports, orphan files" },
-        { label: "Best Practices", description: "Error handling, naming, patterns" }
-      ],
-      multiSelect: true
-    },
-    {
-      question: "Action mode?",
-      header: "Action",
-      options: [
-        { label: "Safe (Recommended)", description: "Auto-fix low risk, ask for high risk" },
-        { label: "Everything", description: "Fix all findings, no approval" },
-        { label: "Report only", description: "Show findings without fixing" }
-      ],
-      multiSelect: false
-    }
-  ]
+  intensityQuestion = {
+    question: "How much to fix?",
+    header: "Intensity",
+    options: [
+      { label: "Quick Wins (80/20)", description: "High impact, low effort only (Do Now bucket)" },
+      { label: "Standard (Recommended)", description: "CRITICAL + HIGH + MEDIUM severity" },
+      { label: "Full Fix", description: "All severities including LOW (complete cleanup)" },
+      { label: "Report Only", description: "Analyze without making any changes" }
+    ],
+    multiSelect: false
+  }
+```
 
-  // Add git state tab only if dirty
+**Q2: Scope Selection (second question):**
+
+```javascript
+  scopeQuestion = {
+    question: "Which scopes to analyze?",
+    header: "Scopes",
+    options: [
+      { label: "Security (12 checks)", description: "SEC-01 to SEC-12: secrets, injection, path traversal" },
+      { label: "Hygiene (15 checks)", description: "HYG-01 to HYG-15: unused code, dead imports, orphans" },
+      { label: "Types (10 checks)", description: "TYP-01 to TYP-10: type errors, annotations, Any usage" },
+      { label: "Lint (8 checks)", description: "LNT-01 to LNT-08: formatting, naming, style" },
+      { label: "Performance (10 checks)", description: "PRF-01 to PRF-10: N+1, blocking I/O, caching" },
+      { label: "AI Hygiene (8 checks)", description: "AIH-01 to AIH-08: hallucinations, orphan abstractions" }
+    ],
+    multiSelect: true
+  }
+```
+
+**Q3: Git State (conditional, only if dirty):**
+
+```javascript
+  questions = [intensityQuestion, scopeQuestion]
+
+  // Add git state question only if dirty
   if (gitDirty) {
     questions.push({
       question: "Working tree has uncommitted changes. How to proceed?",
@@ -273,17 +308,34 @@ console.log(`## Quality Score: ${agentResponse.scores.overall}/100`)
 
 ## Step-2: Analyze [WAIT FOR BACKGROUND]
 
-**Collect results and filter by selected scopes:**
+**Collect results, filter by intensity and scopes:**
 
 ```javascript
 // Wait for background analysis
 allFindings = await TaskOutput(analysisTask.id)
 
-// Filter by user-selected scopes (all scopes if --auto)
-selectedScopes = config.scopes.map(s => s.toLowerCase().replace(" ", "-"))
-findings = allFindings.findings.filter(f => selectedScopes.includes(f.scope))
+// Map intensity to severity thresholds
+const intensityThresholds = {
+  "quick-wins": null,  // Special: filter by effort/impact, not severity
+  "standard": ["CRITICAL", "HIGH", "MEDIUM"],
+  "full-fix": ["CRITICAL", "HIGH", "MEDIUM", "LOW"],
+  "report-only": ["CRITICAL", "HIGH", "MEDIUM", "LOW"]  // Show all, apply none
+}
 
-// Categorize
+// Filter by user-selected scopes
+selectedScopes = config.scopes.map(s => s.toLowerCase().replace(" ", "-"))
+let findings = allFindings.findings.filter(f => selectedScopes.includes(f.scope))
+
+// Filter by intensity
+const allowedSeverities = intensityThresholds[config.intensity]
+if (config.intensity === "quick-wins") {
+  // 80/20 mode: high impact, low effort only
+  findings = findings.filter(f => f.impact === "HIGH" && f.effort === "LOW")
+} else if (allowedSeverities) {
+  findings = findings.filter(f => allowedSeverities.includes(f.severity))
+}
+
+// Categorize for fix flow
 autoFixable = findings.filter(f => f.fixable && !f.approvalRequired)
 approvalRequired = findings.filter(f => f.approvalRequired || !f.fixable)
 
@@ -293,12 +345,26 @@ if (isUnattended) {
   approvalRequired = []  // No approval in unattended mode
 }
 
+// Report-only mode: nothing to fix
+if (config.intensity === "report-only") {
+  autoFixable = []
+  approvalRequired = []
+}
+
 // Track counts at FINDING level (not location level)
-// These counts MUST be used consistently through summary
 counts = {
   total: findings.length,
   autoFixable: autoFixable.length,
-  approvalRequired: approvalRequired.length
+  approvalRequired: approvalRequired.length,
+  byScope: Object.fromEntries(
+    selectedScopes.map(s => [s, findings.filter(f => f.scope === s).length])
+  ),
+  bySeverity: {
+    critical: findings.filter(f => f.severity === "CRITICAL").length,
+    high: findings.filter(f => f.severity === "HIGH").length,
+    medium: findings.filter(f => f.severity === "MEDIUM").length,
+    low: findings.filter(f => f.severity === "LOW").length
+  }
 }
 ```
 
@@ -306,23 +372,34 @@ counts = {
 
 ```javascript
 if (!isUnattended) {
-  // Show analysis table only in interactive mode
+  // Show comprehensive analysis table
 ```
 
 ```
 ## Analysis Results
 
-| Scope | Critical | High | Medium | Low | Auto-fix |
-|-------|----------|------|--------|-----|----------|
-| Security | {n} | {n} | {n} | {n} | {n} |
-| Quality | {n} | {n} | {n} | {n} | {n} |
-| Hygiene | {n} | {n} | {n} | {n} | {n} |
-| Best Practices | {n} | {n} | {n} | {n} | {n} |
-| **Total** | **{n}** | **{n}** | **{n}** | **{n}** | **{n}** |
+**Intensity:** {config.intensity} | **Scopes:** {selectedScopes.length}/6
 
-Summary:
-- Auto-fixable (LOW risk): {autoFixable.length} items
-- Approval required: {approvalRequired.length} items
+| Scope | ID Range | Critical | High | Medium | Low | Auto-fix |
+|-------|----------|----------|------|--------|-----|----------|
+| Security | SEC-01-12 | {n} | {n} | {n} | {n} | {n} |
+| Hygiene | HYG-01-15 | {n} | {n} | {n} | {n} | {n} |
+| Types | TYP-01-10 | {n} | {n} | {n} | {n} | {n} |
+| Lint | LNT-01-08 | {n} | {n} | {n} | {n} | {n} |
+| Performance | PRF-01-10 | {n} | {n} | {n} | {n} | {n} |
+| AI Hygiene | AIH-01-08 | {n} | {n} | {n} | {n} | {n} |
+| **Total** | **63 checks** | **{n}** | **{n}** | **{n}** | **{n}** | **{n}** |
+
+**Severity Distribution:**
+- CRITICAL: {counts.bySeverity.critical}
+- HIGH: {counts.bySeverity.high}
+- MEDIUM: {counts.bySeverity.medium}
+- LOW: {counts.bySeverity.low}
+
+**Fix Plan:**
+- Auto-fixable (safe): {autoFixable.length} items
+- Approval required (risky): {approvalRequired.length} items
+- Excluded by intensity: {allFindings.findings.length - findings.length} items
 ```
 
 ```javascript
@@ -594,16 +671,12 @@ qualityGateStatus = {
 
 ```javascript
 // COUNTING STANDARD
-// - total: all findings from analysis (autoFixable + approvalRequired)
-// - applied: successfully fixed (autoFixed + approvedFixed)
-// - declined: user explicitly declined in Q2 approval
-// - failed: couldn't fix (autoFailed + approvedFailed)
+// - total: all findings in selected intensity scope
+// - applied: successfully fixed
+// - failed: couldn't fix (technical reason required)
 //
-// Invariants:
-// 1. autoFixable.length = autoFixedCount + autoFixFailedCount
-// 2. approved.length = approvedFixedCount + approvedFailedCount
-// 3. approvalRequired.length = approved.length + declined.length
-// 4. applied + declined + failed = total
+// Invariant: applied + failed = total
+// NOTE: No "declined" category - AI has no option to decline. Fix or fail with reason.
 
 // Auto-fixed findings (from Step-3)
 autoFixedCount = autoFixResults?.accounting?.applied || 0
@@ -626,14 +699,13 @@ if (approved.length > 0) {
 // Final accounting
 finalCounts = {
   applied: autoFixedCount + approvedFixedCount,
-  declined: declined.length,
   failed: autoFixFailedCount + approvedFailedCount,
-  total: counts.total  // From Step-2, MUST match Analysis Results total
+  total: autoFixable.length + approved.length  // Only items attempted
 }
 
 // Final verification - these MUST balance
-assert(finalCounts.applied + finalCounts.declined + finalCounts.failed === finalCounts.total,
-  "Count mismatch: applied + declined + failed must equal total from analysis")
+assert(finalCounts.applied + finalCounts.failed === finalCounts.total,
+  "Count mismatch: applied + failed must equal total")
 ```
 
 ### Unattended Mode Output [--auto]
@@ -675,11 +747,10 @@ let summary = `
 |--------|-------|
 | Auto-fixed | ${autoFixedCount} |
 | User-approved | ${approvedFixedCount} |
-| Declined | ${finalCounts.declined} |
 | Failed | ${finalCounts.failed} |
-| **Total findings** | **${finalCounts.total}** |
+| **Total** | **${finalCounts.total}** |
 
-Status: ${finalCounts.failed > 0 ? "WARN" : "OK"} | Applied: ${finalCounts.applied} | Declined: ${finalCounts.declined} | Failed: ${finalCounts.failed} | Total: ${finalCounts.total}
+Status: ${finalCounts.failed > 0 ? "WARN" : "OK"} | Applied: ${finalCounts.applied} | Failed: ${finalCounts.failed} | Total: ${finalCounts.total}
 
 Run \`git diff\` to review changes.`
 
@@ -723,30 +794,40 @@ console.log(summary)
 {
   "accounting": {
     "applied": "{n}",
-    "declined": "{n}",
     "failed": "{n}",
     "total": "{n}"
   },
+  "intensity": "{quick-wins|standard|full-fix|report-only}",
   "by_scope": {
     "security": "{n}",
-    "quality": "{n}",
     "hygiene": "{n}",
-    "bestPractices": "{n}"
+    "types": "{n}",
+    "lint": "{n}",
+    "performance": "{n}",
+    "ai-hygiene": "{n}"
   },
-  "blockers": [{ "severity": "{CRITICAL|HIGH}", "title": "{title}", "location": "{file}:{line}" }]
+  "by_severity": {
+    "critical": "{n}",
+    "high": "{n}",
+    "medium": "{n}",
+    "low": "{n}"
+  },
+  "blockers": [{ "id": "{SEC-01|...}", "severity": "{CRITICAL|HIGH}", "title": "{title}", "location": "{file}:{line}" }]
 }
 ```
 
-**Accounting invariant:** `applied + declined + failed = total`
+**Accounting invariant:** `applied + failed = total`
 
-### Scope Coverage
+### Scope Coverage (6 Scopes, 63 Checks)
 
-| Scope | Checks |
-|-------|--------|
-| `security` | Secrets, OWASP, CVEs, input validation, unsafe deserialization |
-| `quality` | Type errors, tech debt, test gaps, complexity, dead code |
-| `hygiene` | Orphans, stale refs, duplicates, unused imports, dead code |
-| `best-practices` | Anti-patterns, resource leaks, inconsistent styles |
+| Scope | ID Range | Checks |
+|-------|----------|--------|
+| `security` | SEC-01-12 | Hardcoded secrets, SQL/command injection, path traversal, unsafe deserialization, input validation, cleartext logging, insecure temp files, missing HTTPS, eval/exec, debug endpoints, weak crypto |
+| `hygiene` | HYG-01-15 | Unused imports/vars/functions, dead code, orphan files, duplicate blocks, stale TODOs, empty files, commented code, line endings, whitespace, indentation, missing __init__.py, circular imports, bare except |
+| `types` | TYP-01-10 | Type errors (mypy/pyright), missing return types, untyped args, type:ignore without reason, Any in APIs, missing generics, union vs literal, optional handling, narrowing opportunities, override signatures |
+| `lint` | LNT-01-08 | Format violations, import order, line length, naming conventions, docstring format, magic numbers, string literals, quote style |
+| `performance` | PRF-01-10 | N+1 patterns, list on iterator, missing cache, blocking in async, large file reads, missing pagination, string concat loops, unnecessary copies, missing pooling, sync in hot paths |
+| `ai-hygiene` | AIH-01-08 | Hallucinated APIs, orphan abstractions, phantom imports, dead feature flags, stale mocks, incomplete implementations, copy-paste artifacts, dangling references |
 
 ### Context Application
 
@@ -761,14 +842,19 @@ console.log(summary)
 
 | Flag | Effect |
 |------|--------|
-| `--auto` | **Unattended mode:** all scopes, fix everything, no questions, silent execution, single-line summary |
-| `--security` | Security scope only, skip Q1 scope tab |
-| `--quality` | Quality scope only, skip Q1 scope tab |
-| `--report` | Report only, skip Q1 action tab |
-| `--fix` | Safe mode (default) |
-| `--fix-all` | Everything mode - fix all without approval |
+| `--auto` | **Unattended mode:** all 6 scopes, full-fix intensity, no questions, silent execution, single-line summary |
+| `--security` | Security scope only (SEC-01-12) |
+| `--hygiene` | Hygiene scope only (HYG-01-15) |
+| `--types` | Types scope only (TYP-01-10) |
+| `--lint` | Lint scope only (LNT-01-08) |
+| `--performance` | Performance scope only (PRF-01-10) |
+| `--ai-hygiene` | AI hygiene scope only (AIH-01-08) |
+| `--report` | Report only, analyze without fixing |
+| `--fix` | Standard intensity (default) |
+| `--fix-all` | Full-fix intensity, no approval needed |
 | `--score` | Quality score only (0-100), skip all questions |
-| `--pre-release` | All scopes, strict thresholds |
+| `--intensity=<level>` | Set fix intensity: quick-wins, standard, full-fix, report-only |
+| `--pre-release` | All scopes, standard intensity, strict thresholds |
 
 ---
 
@@ -856,4 +942,6 @@ NON-findings:
 
 ## Accounting
 
-**Invariant:** `applied + declined + failed = total` (count findings, not locations)
+**Invariant:** `applied + failed = total` (count findings, not locations)
+
+**No "declined" category:** AI has no option to decline fixes. If it's technically possible and user asked for it, it MUST be done. Only "failed" with specific technical reason is acceptable.

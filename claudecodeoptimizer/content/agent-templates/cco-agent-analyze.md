@@ -70,12 +70,35 @@ Grep("{complexity_patterns}")     // message
 
 ## Scope Combinations
 
-| Scopes | Strategy |
-|--------|----------|
-| security, quality, hygiene, testing, best-practices | All patterns in single grep batch |
-| architecture + any | Add dependency analysis |
-| scan + trends | Dashboard mode - metrics + history |
-| config | Detection mode only |
+**OPTIMIZE Scope Sets:**
+
+| Scopes | Strategy | Use Case |
+|--------|----------|----------|
+| security | SEC-01 to SEC-12 patterns | Security audit |
+| hygiene | HYG-01 to HYG-15 patterns | Code cleanup |
+| types | TYP-01 to TYP-10 + mypy output | Type safety |
+| lint | LNT-01 to LNT-08 + ruff output | Style fixes |
+| performance | PRF-01 to PRF-10 patterns | Performance tuning |
+| ai-hygiene | AIH-01 to AIH-08 patterns | AI-generated code cleanup |
+| ALL OPTIMIZE | All 63 checks in single grep batch | Full optimization |
+
+**REVIEW Scope Sets:**
+
+| Scopes | Strategy | Use Case |
+|--------|----------|----------|
+| architecture | ARC-01 to ARC-15 + import graph | Architecture assessment |
+| patterns | PAT-01 to PAT-12 patterns | Pattern consistency |
+| testing | TST-01 to TST-10 + coverage data | Testing strategy |
+| maintainability | MNT-01 to MNT-12 patterns | Code health |
+| ai-architecture | AIA-01 to AIA-10 patterns | AI drift detection |
+| ALL REVIEW | All 59 checks + metrics | Full strategic review |
+
+**Cross-Command Scopes:**
+
+| Scope | Strategy | Use Case |
+|--------|----------|----------|
+| scan | Dashboard metrics from all scopes | Quick health check |
+| config | Detection + rule generation | Project setup |
 
 **CRITICAL:** All scopes fully analyzed. Speed from parallelization, not skipping.
 
@@ -194,44 +217,189 @@ This prevents downstream agents from seeing "issues" that aren't actually issues
 
 **Note:** No historical tracking - each run is independent snapshot.
 
-## Scope Patterns
+## Scope Definitions
 
-### security
-```
-secrets: (api_key|password|secret)\s*=\s*["'][^"']+["']
-injection: subprocess\.call|os\.system|eval\(|exec\(
-path_traversal: open\(.*\+|Path\(.*\+
-hardcoded_urls: http://|ftp://
-```
+**OPTIMIZE Scopes** (tactical, file-level fixes):
 
-### quality
+### security (SEC-01 to SEC-12)
 ```
-complexity: "def " with high nesting (skip if ruff configured)
-duplication: repeated code blocks
-type_coverage: "# type: ignore" patterns
-```
-
-### hygiene
-```
-unused_imports: Grep imports → verify usage
-dead_code: Grep function defs → verify call sites
-orphan_files: Glob patterns → verify imports
+SEC-01: secrets: (api_key|password|secret|token)\s*=\s*["'][^"']+["']
+SEC-02: sql_injection: cursor\.execute\(.*\+|f".*SELECT.*{|\.format\(.*SELECT
+SEC-03: command_injection: subprocess\..*shell=True|os\.system\(|os\.popen\(
+SEC-04: path_traversal: open\(.*\+|Path\(.*\+(?!.*\.resolve)
+SEC-05: unsafe_deserialize: pickle\.load|yaml\.load\((?!.*Loader)
+SEC-06: missing_validation: @app\.(route|get|post)(?!.*@validate)
+SEC-07: cleartext_sensitive: logging\..*(password|secret|token|key)
+SEC-08: insecure_temp: tempfile\.mk(?!stemp)|/tmp/
+SEC-09: missing_https: http://(?!localhost|127\.0\.0\.1)
+SEC-10: unsafe_eval: eval\(|exec\((?!.*# safe:)
+SEC-11: debug_endpoints: @app\.route.*/debug|DEBUG\s*=\s*True
+SEC-12: weak_crypto: hashlib\.(md5|sha1)\((?!.*# non-security)
 ```
 
-### testing
+### hygiene (HYG-01 to HYG-15)
 ```
-coverage: Check test coverage reports, pytest-cov output
-missing_tests: Grep public functions → verify test existence
-test_quality: Test file patterns, assertions per test
-ci_cd: Check workflow files for test steps
+HYG-01: unused_imports: Grep imports → verify usage (skip TYPE_CHECKING)
+HYG-02: unused_variables: Grep assignments → verify usage (skip _prefixed)
+HYG-03: unused_functions: Grep function defs → verify call sites
+HYG-04: dead_code: Unreachable after return/raise
+HYG-05: orphan_files: Glob *.py → verify imports anywhere
+HYG-06: duplicate_blocks: >10 lines identical (use diff)
+HYG-07: stale_todos: TODO|FIXME with date >30 days old
+HYG-08: empty_files: wc -l < 5 (excluding __init__.py)
+HYG-09: commented_code: #.*def |#.*class |#.*import
+HYG-10: line_endings: file -b (CRLF vs LF inconsistency)
+HYG-11: trailing_whitespace: \s+$
+HYG-12: mixed_indent: ^\t.*\n^ |\n^\t.*\n^
+HYG-13: missing_init: directories with *.py but no __init__.py
+HYG-14: circular_imports: import graph cycles
+HYG-15: bare_except: except:|except Exception:(?!.*# intentional)
 ```
 
-### best-practices
+### types (TYP-01 to TYP-10)
 ```
-magic_numbers: numeric literals outside constants
-error_handling: bare except or pass in except
-naming: inconsistent patterns
+TYP-01: type_errors: mypy/pyright output (run linter)
+TYP-02: missing_return_type: def \w+\([^)]*\):(?!.*->)
+TYP-03: untyped_args: def \w+\(\s*\w+(?!\s*:|\s*=)
+TYP-04: ignore_no_reason: # type: ignore(?!\[|\s*#)
+TYP-05: any_in_api: (-> Any|: Any)(?!.*# internal)
+TYP-06: missing_generic: list\[|dict\[|set\[(?!.*\w)
+TYP-07: union_vs_literal: Union\[str, str\]|str \| str
+TYP-08: optional_no_none: Optional\[(?!.*= None)
+TYP-09: narrowing_opportunity: isinstance\(.*if|assert isinstance
+TYP-10: incompatible_override: @override.*\n.*def (?!.*# covariant)
 ```
+
+### lint (LNT-01 to LNT-08)
+```
+LNT-01: format_violations: ruff format --check output
+LNT-02: import_order: isort --check output
+LNT-03: line_length: lines > 88|120 chars
+LNT-04: naming_violations: [a-z][A-Z]|[A-Z]{3,}[a-z]
+LNT-05: docstring_format: """(?!.*\n.*Args:|Returns:|Raises:)
+LNT-06: magic_numbers: (?<!\w)\d{2,}(?!\w|\.|\d)(?!.*# constant)
+LNT-07: string_literals: ["'](?!.*# i18n)[^"']{20,}["']
+LNT-08: quote_style: mixed ' and " in same file
+```
+
+### performance (PRF-01 to PRF-10)
+```
+PRF-01: n_plus_one: for.*:\s*\n.*\.(get|filter|query)\(
+PRF-02: list_on_iterator: list\((range|map|filter|zip)\(
+PRF-03: missing_cache: repeated expensive (same args, no @cache)
+PRF-04: blocking_in_async: async def.*\n.*(?:time\.sleep|requests\.)
+PRF-05: large_file_read: \.read\(\)(?!.*chunk|limit|stream)
+PRF-06: missing_pagination: \.all\(\)|SELECT \*(?!.*LIMIT)
+PRF-07: string_concat_loop: for.*:\s*\n.*\+= ["']|str \+
+PRF-08: unnecessary_copy: copy\.deepcopy\((?!.*# mutable)
+PRF-09: missing_pool: \.(connect|open)\((?!.*pool)
+PRF-10: sync_in_hot_path: @app\.(route|get).*\n(?!.*async).*def
+```
+
+### ai-hygiene (AIH-01 to AIH-08)
+```
+AIH-01: hallucinated_api: method calls that don't exist in imports
+AIH-02: orphan_abstractions: class.*ABC|Protocol.*\n(?!.*\(\w+\))
+AIH-03: phantom_imports: import \w+ (not used in file)
+AIH-04: dead_feature_flags: FEATURE_|FLAG_.*=(?!.*if.*FLAG)
+AIH-05: stale_mocks: @mock\.patch\(["'][^"']+["']\) (target doesn't exist)
+AIH-06: incomplete_impl: def.*:\s*\n\s*(TODO|pass|\.\.\.|\.\.\.)
+AIH-07: copy_paste_artifacts: (console\.log|print\(["']debug|# DEBUG)
+AIH-08: dangling_refs: from \w+ import|import \w+ (module doesn't exist)
+```
+
+---
+
+**REVIEW Scopes** (strategic, architecture-level assessment):
+
+### architecture (ARC-01 to ARC-15)
+```
+ARC-01: coupling_score: Inter-module dependency ratio (target: <50%)
+ARC-02: cohesion_score: Module responsibility unity (target: >70%)
+ARC-03: circular_deps: Import graph cycles
+ARC-04: layer_violations: views.*import.*models\.(?!types)|ui.*db\.
+ARC-05: god_classes: class with >500 lines or >20 methods
+ARC-06: feature_envy: method accesses other.* more than self.*
+ARC-07: shotgun_surgery: single change requires >5 file edits
+ARC-08: divergent_change: single file changed for unrelated reasons
+ARC-09: missing_abstraction: repeated similar code without interface
+ARC-10: over_abstraction: interface with single implementation
+ARC-11: package_organization: flat vs nested, consistent naming
+ARC-12: dependency_direction: concrete depends on concrete (no interface)
+ARC-13: missing_di: direct instantiation in __init__ (no injection)
+ARC-14: hardcoded_deps: from \w+ import \w+ (no interface abstraction)
+ARC-15: monolith_hotspots: single module with >40% of imports
+```
+
+### patterns (PAT-01 to PAT-12)
+```
+PAT-01: error_handling_inconsistent: mixed try/except styles
+PAT-02: logging_inconsistent: mixed logger.* and print()
+PAT-03: async_inconsistent: mixed sync and async in same module
+PAT-04: solid_violations: single class multiple responsibilities
+PAT-05: dry_violations: >3 similar code blocks (codebase-wide)
+PAT-06: framework_violations: pattern doesn't match framework idioms
+PAT-07: missing_factory: direct new/instantiation for variants
+PAT-08: missing_strategy: switch/if-else for variant behavior
+PAT-09: primitive_obsession: passing many primitives vs object
+PAT-10: data_clumps: same 3+ params in multiple functions
+PAT-11: switch_smell: >5 cases in switch/match
+PAT-12: parallel_inheritance: two hierarchies change together
+```
+
+### testing (TST-01 to TST-10)
+```
+TST-01: coverage_by_module: pytest-cov output per module
+TST-02: critical_path_coverage: business-critical paths tested
+TST-03: test_to_code_ratio: test files / source files
+TST-04: missing_edge_cases: no tests for None, empty, boundary
+TST-05: flaky_tests: tests with random/time dependencies
+TST-06: isolation_issues: tests share state or order-dependent
+TST-07: mock_overuse: >5 mocks per test (integration candidate)
+TST-08: integration_gaps: no tests for external service calls
+TST-09: e2e_coverage: no end-to-end workflow tests
+TST-10: naming_violations: test_* or *_test pattern inconsistent
+```
+
+### maintainability (MNT-01 to MNT-12)
+```
+MNT-01: complexity_hotspots: cyclomatic complexity >15
+MNT-02: cognitive_complexity: deep nesting + many conditions
+MNT-03: long_methods: >50 lines per method/function
+MNT-04: long_params: >5 parameters in function
+MNT-05: deep_nesting: >4 levels of indentation
+MNT-06: magic_in_logic: numeric literals in business logic
+MNT-07: missing_docs: complex logic without inline comment
+MNT-08: naming_inconsistent: camelCase vs snake_case mix
+MNT-09: missing_error_context: raise \w+\((?!.*context|cause)
+MNT-10: missing_cleanup: with statement not used for resources
+MNT-11: hardcoded_config: HOST|PORT|URL.*=.*["']
+MNT-12: missing_boundary_validation: public function no validation
+```
+
+### ai-architecture (AIA-01 to AIA-10)
+```
+AIA-01: over_engineering: interface with 1 impl, factory for 1 type
+AIA-02: local_solution: pattern differs from rest of codebase
+AIA-03: architectural_drift: current structure vs original design
+AIA-04: pattern_inconsistency: same problem, different solutions
+AIA-05: premature_abstraction: Generic<T> used once
+AIA-06: framework_antipattern: violates framework conventions
+AIA-07: coupling_hotspot: one module imported by >60% of others
+AIA-08: interface_bloat: interface with >10 methods
+AIA-09: god_module: module with >10 public exports
+AIA-10: missing_abstraction: 3+ similar patterns without interface
+```
+
+---
+
+**Shared Scopes** (used by multiple commands):
+
+### scan
+Combines all analysis for dashboard: Security (OWASP, secrets, CVE) │ Tests (coverage, quality) │ Tech debt (complexity, dead code) │ Cleanliness (orphans, duplicates)
+
+### config
+Project detection and rule generation (see detailed section below).
 
 **All scopes:** Batch 1 (parallel greps) → Batch 2 (Read context) → Output findings JSON
 
@@ -275,14 +443,24 @@ naming: inconsistent patterns
 
 **Field Requirements by Consumer:**
 
-| Field | cco-optimize | cco-review | cco-status |
-|-------|--------------|------------|------------|
-| id, scope, severity, title, location | ✓ | ✓ | ✓ |
-| description, recommendation | - | ✓ | - |
-| effort, impact | - | ✓ | - |
-| fixable, approvalRequired, fix | ✓ | - | - |
+| Field | cco-optimize | cco-review | cco-preflight | cco-status |
+|-------|--------------|------------|---------------|------------|
+| id, scope, severity, title, location | ✓ | ✓ | ✓ | ✓ |
+| description, recommendation | - | ✓ | - | - |
+| effort, impact | - | ✓ | - | - |
+| fixable, approvalRequired, fix | ✓ | - | ✓ | - |
+| current, ideal, gap | - | ✓ | - | - |
 
 **approvalRequired:** true for security, deletions, API changes, behavior changes
+
+**Scope → Consumer Mapping:**
+
+| Scope | Primary Consumer | Secondary |
+|-------|------------------|-----------|
+| security, hygiene, types, lint, performance, ai-hygiene | cco-optimize | cco-preflight |
+| architecture, patterns, testing, maintainability, ai-architecture | cco-review | cco-preflight |
+| scan | cco-status | - |
+| config | cco-config | - |
 
 **Note:** Findings-based scopes return `findings` + `summary`. Dashboard scopes (`scan`) return `scores`. Architecture adds `metrics`. No historical data stored.
 
