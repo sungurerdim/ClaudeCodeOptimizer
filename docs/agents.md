@@ -278,18 +278,36 @@ Always reports: `done + fail = total`
 
 Complete list of all scopes with their purpose and coverage:
 
+### General Scopes
+
 | Scope            | Purpose                 | Coverage                                         |
 |------------------|-------------------------|--------------------------------------------------|
 | `detect`         | Project discovery       | Stack, tools, conventions, structure             |
 | `scan`           | Dashboard metrics       | Security, tests, debt, cleanliness scores        |
 | `full`           | Combined detect+scan    | All detection + all metrics                      |
-| `security`       | Vulnerability detection | OWASP, secrets, CVEs, input validation           |
-| `quality`        | Code quality issues     | Complexity, types, consistency, tech debt        |
-| `hygiene`        | Codebase cleanliness    | Orphans, stale refs, duplicates, dead code       |
-| `best-practices` | Pattern adherence       | Efficiency, naming, error handling, magic numbers |
-| `architecture`   | Structural analysis     | Dependencies, coupling, layers, patterns         |
-| `trends`         | Historical tracking     | Metric deltas with ↑↓→⚠ indicators               |
 | `config`         | Project configuration   | Detection + user questions + rule selection      |
+| `trends`         | Historical tracking     | Metric deltas with ↑↓→⚠ indicators               |
+
+### Optimize Scopes (cco-optimize)
+
+| Scope          | ID Range       | Checks | Focus                                    |
+|----------------|----------------|--------|------------------------------------------|
+| `security`     | SEC-01 to SEC-12 | 12   | OWASP, secrets, injection, unsafe patterns |
+| `hygiene`      | HYG-01 to HYG-15 | 15   | Unused code, orphan files, dead code     |
+| `types`        | TYP-01 to TYP-10 | 10   | Type annotations, mypy/pyright errors    |
+| `lint`         | LNT-01 to LNT-08 | 8    | Format, import order, naming, style      |
+| `performance`  | PRF-01 to PRF-10 | 10   | N+1, blocking I/O, missing caching       |
+| `ai-hygiene`   | AIH-01 to AIH-08 | 8    | Hallucinated APIs, orphan abstractions   |
+
+### Review Scopes (cco-review)
+
+| Scope            | ID Range       | Checks | Focus                                    |
+|------------------|----------------|--------|------------------------------------------|
+| `architecture`   | ARC-01 to ARC-15 | 15   | Coupling, cohesion, layers, dependencies |
+| `patterns`       | PAT-01 to PAT-12 | 12   | SOLID, DRY, consistency, design patterns |
+| `testing`        | TST-01 to TST-10 | 10   | Coverage strategy, test quality, gaps    |
+| `maintainability`| MNT-01 to MNT-12 | 12   | Complexity, readability, naming          |
+| `ai-architecture`| AIA-01 to AIA-10 | 10   | Over-engineering, drift, premature abstraction |
 
 ---
 

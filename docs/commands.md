@@ -15,7 +15,7 @@ Detailed documentation for all CCO slash commands.
 | `/cco-optimize` | Security + Quality + Hygiene             | **opus**  | 6     |
 | `/cco-review`   | Architecture analysis                    | **opus**  | 5     |
 | `/cco-research` | Multi-source research with AI synthesis  | **opus**  | 5     |
-| `/cco-commit`   | Quality-gated commits                    | **opus**  | 5     |
+| `/cco-commit`   | Quality-gated commits                    | **opus**  | 4     |
 
 ### Meta Commands
 
@@ -178,12 +178,14 @@ Commands learn from execution patterns:
 
 ### Score Thresholds
 
-| Score  | Status   |
-|--------|----------|
-| 80-100 | OK       |
-| 60-79  | WARN     |
-| 40-59  | FAIL     |
-| 0-39   | CRITICAL |
+| Score  | Health Status |
+|--------|---------------|
+| 80-100 | OK            |
+| 60-79  | WARN          |
+| 40-59  | FAIL          |
+| 0-39   | CRITICAL      |
+
+> **Note:** Health status (OK/WARN/FAIL/CRITICAL) indicates overall project health. Finding severity (CRITICAL/HIGH/MEDIUM/LOW) indicates individual issue priority. Same terms, different contexts.
 
 **Trend Indicators:** ↑ Improved │ → Stable │ ↓ Degraded │ ⚠ Rapid decline
 
@@ -354,9 +356,8 @@ Commands learn from execution patterns:
 |------|------------|-------------------------------------------------------|
 | 1    | Pre-checks | Conflicts check + parallel quality gates (background) |
 | 2    | Analyze    | Group changes atomically (while gates run)            |
-| 3    | Approval   | Q1: Combined commit settings                          |
-| 4    | Execute    | Create commits                                        |
-| 5    | Summary    | Show results                                          |
+| 3    | Execute    | Create commits (direct, no approval)                  |
+| 4    | Summary    | Show results                                          |
 
 ### Quality Gates (Parallel)
 
@@ -459,6 +460,50 @@ Co-Authored-By: Claude <noreply@anthropic.com>
 | Bi-weekly | Stable projects    |
 | Before PR | Quality gate       |
 | Monthly   | Maintenance mode   |
+
+---
+
+## /cco-full-review
+
+**Purpose:** CCO system self-review. Comprehensive analysis of CCO against its documented design principles.
+
+**Requires:** CCO installation (for self-analysis)
+
+**Usage:**
+```bash
+/cco-full-review                   # Interactive mode with fix selection
+/cco-full-review --auto            # Silent full review and fix
+/cco-full-review --report          # Report only, no fixes
+/cco-full-review --quick --fix     # Fast check, auto-fix
+/cco-full-review --focus=safety    # Single category focus
+```
+
+### Categories (129 checks across 10 categories)
+
+| Category             | Checks | Focus                                    |
+|----------------------|--------|------------------------------------------|
+| Inventory & Sync     | 15     | Count accuracy, SSOT compliance          |
+| Command Quality      | 18     | Template compliance, AskUserQuestion     |
+| Agent Quality        | 11     | Scope accuracy, parallel execution       |
+| Rules System         | 15     | Detection accuracy, rule quality         |
+| Token Efficiency     | 11     | Content density, rule format             |
+| UX/DX Standards      | 13     | Progress visibility, error reporting     |
+| Documentation        | 12     | README accuracy, completeness            |
+| Safety               | 11     | Security practices, rollback capability  |
+| Release Readiness    | 10     | Version consistency, cross-platform      |
+| Best Practices       | 13     | Claude 4 alignment, anti-overengineering |
+
+### Steps
+
+| Step | Name      | Action                              |
+|------|-----------|-------------------------------------|
+| 1    | Setup     | Review mode selection               |
+| 2    | Inventory | Detect counts, compare docs         |
+| 3    | Analyze   | Run 10-category checks (parallel)   |
+| 4    | Prioritize| 80/20 findings                      |
+| 5    | Approval  | Select fixes (if interactive)       |
+| 6    | Apply     | Apply selected fixes                |
+| 7    | Summary   | Show report                         |
 
 ---
 
