@@ -220,7 +220,14 @@ def _print_footer(dry_run: bool) -> None:
     else:
         print("Restart Claude Code for changes to take effect.")
         print()
-        print("Next: /cco-config to configure statusline, permissions, and project context")
+        print("Your First 5 Minutes with CCO:")
+        print("  1. /cco-config     Configure project (statusline, permissions, context)")
+        print("  2. /cco-status     See project health dashboard")
+        print("  3. /cco-optimize   Quick wins (auto-fix safe issues)")
+        print()
+        breakdown = get_rules_breakdown()
+        print(f"What changed: {breakdown['core']} core + {breakdown['ai']} AI rules now active in every session.")
+        print("Project-specific rules are added when you run /cco-config.")
     print()
 
 

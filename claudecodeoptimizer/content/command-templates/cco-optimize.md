@@ -500,7 +500,6 @@ Total: {approvalRequired.length} issues requiring approval
 // UNATTENDED MODE: Skip approval entirely
 if (isUnattended) {
   approved = []  // All fixable items handled in Step-3
-  declined = []
   // → Proceed directly to Step-5
 } else if (config.action.includes("Everything")) {
   // No approval needed - apply all
@@ -520,7 +519,6 @@ if (isUnattended) {
   const PAGE_SIZE = 4
   let currentPage = 0
   let allApproved = []
-  let allDeclined = []
 
   while (currentPage * PAGE_SIZE < approvalRequired.length) {
     const startIdx = currentPage * PAGE_SIZE
@@ -559,17 +557,15 @@ if (isUnattended) {
     // Handle response
     if (response.includes("All")) {
       allApproved = approvalRequired
-      allDeclined = []
       break  // Exit pagination loop
     }
 
-    // Add selected to approved, rest to declined
+    // Add selected to approved (unselected are simply not processed)
     pageItems.forEach(item => {
       if (response.includes(item.title)) {
         allApproved.push(item)
-      } else {
-        allDeclined.push(item)
       }
+      // Unselected items are not tracked - they're simply not processed
     })
 
     // If no more pages or user selected nothing (implicit "done"), exit
@@ -578,14 +574,14 @@ if (isUnattended) {
   }
 
   approved = allApproved
-  declined = allDeclined
 }
 ```
 
 ### Validation
 ```
 [x] Approval collected (or skipped)
-→ Store as: approved = {selections[]}, declined = {unselected[]}
+→ Store as: approved = {selections[]}
+→ Unselected items are not processed (no "declined" category)
 → Proceed to Step-5
 ```
 

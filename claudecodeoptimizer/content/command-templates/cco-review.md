@@ -444,32 +444,32 @@ Important improvements requiring some planning.
 
 ```javascript
 let toApply = []
-let declined = []
+let skipped = []  // Items excluded by intensity filter (not AI declining)
 
 switch(config.intensity) {
   case "critical-only":
     toApply = doNow.filter(f => f.severity === "CRITICAL")
-    declined = [...doNow.filter(f => f.severity !== "CRITICAL"), ...plan, ...consider, ...backlog]
+    skipped = [...doNow.filter(f => f.severity !== "CRITICAL"), ...plan, ...consider, ...backlog]
     break
   case "high-priority":
     toApply = [...doNow, ...plan].filter(f => ["CRITICAL", "HIGH"].includes(f.severity))
-    declined = [...consider, ...backlog]
+    skipped = [...consider, ...backlog]
     break
   case "quick-wins":
     toApply = doNow
-    declined = [...plan, ...consider, ...backlog]
+    skipped = [...plan, ...consider, ...backlog]
     break
   case "standard":
     toApply = [...doNow, ...plan, ...consider]
-    declined = backlog
+    skipped = backlog
     break
   case "full-fix":
     toApply = [...doNow, ...plan, ...consider, ...backlog]
-    declined = []  // Nothing excluded
+    skipped = []  // Nothing excluded
     break
   case "report-only":
     toApply = []
-    declined = [...doNow, ...plan, ...consider, ...backlog]
+    skipped = [...doNow, ...plan, ...consider, ...backlog]
     break
 }
 ```
@@ -485,7 +485,7 @@ Intensity: {config.intensity}
 |---|-----|--------|-------|----------|--------|
 {toApply.map((item, i) => `| ${i+1} | ${item.id} | ${item.bucket} | ${item.title} | ${item.location} | ${item.recommendation} |`)}
 
-Selected: {toApply.length} | Declined: {declined.length} | Total: {totalFindings}
+Selected: {toApply.length} | Skipped: {skipped.length} | Total: {totalFindings}
 
 Applying {toApply.length} recommendations...
 ```
@@ -640,9 +640,9 @@ cco-review: {OK|WARN|FAIL} | Gaps: {gapCount} | Applied: {applied} | Failed: {fa
     "backlog": []
   },
   "accounting": {
-    "applied": 12,
-    "failed": 0,
-    "total": 12
+    "applied": "{applied_count}",
+    "failed": "{failed_count}",
+    "total": "{total_count}"
   }
 }
 ```

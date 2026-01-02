@@ -23,7 +23,7 @@ This document details how CCO implements official Claude 4 best practices and Op
 | **Context Motivation** | Rules explain "why" not just "what" |
 | **Conservative Judgment** | Evidence-based severity, never guesses |
 | **Long-horizon State Tracking** | TodoWrite + git state + structured findings JSON |
-| **Structured Output** | Consistent formats (`Status: X | Applied: N | Declined: N | Failed: N | Total: N`) |
+| **Structured Output** | Consistent formats (`Status: X | Applied: N | Failed: N | Total: N`) |
 | **Model Self-Knowledge** | Agent descriptions match capabilities |
 | **Subagent Orchestration** | Automatic delegation based on task type |
 | **Over-engineering Prevention** | YAGNI + KISS + Scope rules in Core |
@@ -75,9 +75,9 @@ Official Claude 4 documentation emphasizes state tracking for extended tasks. CC
 **Progress Tracking:**
 - TodoWrite for step-by-step progress visibility
 - Git status checks before/after operations
-- Accounting format: `Status: {OK|WARN} | Applied: N | {Declined|Not Selected}: N | Failed: N | Total: N`
-  - Use "Declined" when user actively rejects items (approval flow)
-  - Use "Not Selected" when items excluded by mode choice (Essential/Thorough)
+- Accounting format: `Status: {OK|WARN} | Applied: N | Failed: N | Total: N`
+  - "Skipped" items (excluded by mode/intensity) noted separately, not in accounting
+  - AI has no option to decline - only applied or failed with technical reason
 
 **State Persistence (from official docs):**
 ```text
@@ -294,18 +294,18 @@ Canonical terminology used across all CCO components.
 
 | Level | Terms | Format |
 |-------|-------|--------|
-| Agent output | `done`, `declined`, `fail` | `{ "done": n, "declined": n, "fail": n, "total": n }` |
-| Command display | `Applied`, `Declined`, `Failed` | `Applied: N \| Declined: N \| Failed: N \| Total: N` |
-| Review mode | `Applied`, `Not Selected`, `Failed` | When user selects subset via mode choice |
+| Agent output | `done`, `fail` | `{ "done": n, "fail": n, "total": n }` |
+| Command display | `Applied`, `Failed` | `Applied: N \| Failed: N \| Total: N` |
+| Skipped items | `Skipped` | Noted separately (excluded by mode/intensity) |
 
-**Invariant:** `applied + declined + failed = total` (always)
+**Invariant:** `applied + failed = total` (AI has no option to decline)
 
 ### Status
 
 | Value | Meaning | Threshold |
 |-------|---------|-----------|
 | `OK` | All passed | Score ≥ 80 or no failures |
-| `WARN` | Issues found | Score 60-79 or some declined |
+| `WARN` | Issues found | Score 60-79 or some failed |
 | `FAIL` | Critical issues | Score 40-59 or failures present |
 | `CRITICAL` | Immediate action | Score < 40 |
 

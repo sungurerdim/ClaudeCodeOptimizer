@@ -35,7 +35,7 @@ Batch write operations with verification. **Fix everything, leave nothing behind
 | Dirty state warning | None | Pre-op `git status` check |
 | Post-change verification | None | Runs lint/type/test after |
 | Cascade fix | None | Detects and fixes new errors caused by fixes |
-| Accounting | None | Reports: done + declined + fail = total |
+| Accounting | None | Reports: done + fail = total |
 | Fix-all mode | None | Zero agent-initiated skips |
 | Batch efficiency | Sequential | Groups by file, parallel where safe |
 
@@ -44,8 +44,8 @@ Batch write operations with verification. **Fix everything, leave nothing behind
 ## Core Principle [CRITICAL]
 
 Every finding MUST be fixed. No "manual" or "skip" unless:
-1. User explicitly declined in AskUserQuestion
-2. Fix would break working code (verified by tests)
+1. Fix would break working code (verified by tests)
+2. Technical impossibility (file locked, missing dependency, etc.)
 
 ## Fix-All Mode [CRITICAL]
 
@@ -72,20 +72,14 @@ When `fixAll: true` is passed in the task context:
    - Syntax error would be introduced (verified by linter)
 5. **Report Everything**: Every item appears in results with clear status
 
-**Accounting in Fix-All Mode:**
+**Accounting:**
 
 ```javascript
-// In fix-all mode: declined should ALWAYS be 0
-// User explicitly chose "fix all" - no agent-initiated declines
-if (config.fixAll === true) {
-  // Agent cannot decline - only done or fail
-  assert(accounting.declined === 0, "Fix-all mode: agent must not decline items")
-
-  // Every fail MUST have a technical reason
-  for (const item of failedItems) {
-    assert(item.reason.startsWith("Technical:"),
-      "Fix-all failures must be technical impossibilities")
-  }
+// AI has no option to decline - only done or fail
+// Every fail MUST have a technical reason
+for (const item of failedItems) {
+  assert(item.reason.startsWith("Technical:"),
+    "Failures must be technical impossibilities")
 }
 ```
 
@@ -145,7 +139,7 @@ Bash("{test_command} 2>&1")
 | Category | Rules |
 |----------|-------|
 | Safety | Pre-op git status │ Dirty → Commit/Stash/Continue │ Rollback via clean state |
-| Tracking | TODO list with ALL items │ One in_progress at a time │ `done + declined + fail = total` |
+| Tracking | TODO list with ALL items │ One in_progress at a time │ `done + fail = total` |
 | Skip | `.git/`, `node_modules/`, `vendor/`, `.venv/`, `dist/`, `build/`, `out/`, `target/`, `__pycache__/`, `*.min.*`, `@generated`, `.idea/`, `.vscode/`, `.svn/`, `fixtures/`, `testdata/`, `__snapshots__/`, `examples/`, `samples/`, `demo/`, `benchmarks/` |
 | Write | **Force-write always** │ Even if file exists with identical content │ Overwrite to ensure state consistency │ **Execute all writes unconditionally** |
 
@@ -439,31 +433,51 @@ Fix {SCOPE}-{NNN} → mypy error → Add import → mypy clean → Done
 {
   "results": [{
     "item": "{id}: {desc} in {file}:{line}",
-    "status": "done|declined|fail",
-    "reason": "{only for declined/fail}",
-    "verification": "..."
+    "status": "done|fail",
+    "reason": "{only for fail}",
+    "verification": "...",
+    "education": {
+      "why": "{brief impact explanation}",
+      "avoid": "{anti-pattern}",
+      "prefer": "{correct pattern}"
+    }
   }],
-  "accounting": { "done": "{n}", "declined": "{n}", "fail": "{n}", "total": "{n}" },
-  "verification": { "{linter}": "PASS|FAIL", "{type_checker}": "PASS|FAIL", "tests": "PASS|FAIL|N/A" },
-  "fixAllMode": "{boolean}"
+  "accounting": { "done": "{n}", "fail": "{n}", "total": "{n}" },
+  "verification": { "{linter}": "PASS|FAIL", "{type_checker}": "PASS|FAIL", "tests": "PASS|FAIL|N/A" }
 }
+```
+
+### Educational Output [MANDATORY for done status]
+
+Every fixed item MUST include brief educational context to prevent recurrence:
+
+| Field | Content | Example |
+|-------|---------|---------|
+| `why` | Impact if unfixed (1 line) | "Allows SQL injection via user input" |
+| `avoid` | Anti-pattern (code snippet) | `f"SELECT * FROM users WHERE id = {user_id}"` |
+| `prefer` | Correct pattern (code snippet) | `cursor.execute("SELECT ... WHERE id = ?", (user_id,))` |
+
+**Format in user-facing output:**
+```
+[FIXED] {description} in {file}:{line}
+  Why: {why}
+  Avoid: {avoid}
+  Prefer: {prefer}
 ```
 
 **Status:**
 - `done` - Fixed successfully
-- `declined` - User explicitly declined (ONLY via AskUserQuestion, never agent decision)
 - `fail` - Technical impossibility (must include `reason` starting with "Technical:")
 
-**Invariant:** `done + declined + fail = total`
+**No "declined" status:** AI has no option to decline. Fix or fail with technical reason.
 
-**Fix-All Mode Invariant:** When `fixAllMode: true`, `declined` MUST be `0`
+**Invariant:** `done + fail = total`
 
 ### Reason Field Format
 
 | Status | Reason Required | Format |
 |--------|-----------------|--------|
 | `done` | No | - |
-| `declined` | Yes | `"User declined: {user's response}"` |
 | `fail` | Yes | `"Technical: {specific impossibility}"` |
 
 **Example Results:**
@@ -472,11 +486,9 @@ Fix {SCOPE}-{NNN} → mypy error → Add import → mypy clean → Done
 {
   "results": [
     { "item": "{SCOPE}-{n}: {description} in {file}:{line}", "status": "done", "verification": "{lint_tool} PASS" },
-    { "item": "{SCOPE}-{n}: {description} in {file}:{line}", "status": "declined", "reason": "User declined: {user_response}" },
     { "item": "{SCOPE}-{n}: {description} in {file}:{line}", "status": "fail", "reason": "Technical: {impossibility_reason}" }
   ],
-  "accounting": { "done": 1, "declined": 1, "fail": 1, "total": 3 },
-  "fixAllMode": false
+  "accounting": { "done": "{done_count}", "fail": "{fail_count}", "total": "{total_count}" }
 }
 ```
 

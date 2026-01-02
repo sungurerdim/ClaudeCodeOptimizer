@@ -183,7 +183,7 @@ Returns structured JSON with:
 - Dirty state check (pre-op `git status`)
 - Post-change verification (runs lint/type/test)
 - Cascade handling (fixes errors caused by fixes)
-- Accounting (done + declined + fail = total)
+- Accounting (done + fail = total)
 - Fix-all mode (zero agent-initiated skips)
 - Batch efficiency (groups by file)
 
@@ -210,12 +210,11 @@ After each change:
 | Status     | Meaning                  |
 |------------|--------------------------|
 | `done`     | Applied and verified     |
-| `declined` | User explicitly declined |
-| `fail`     | Attempted but failed     |
+| `fail`     | Attempted but failed (technical reason required) |
 
 ### Accounting
 
-Always reports: `done + declined + fail = total`
+Always reports: `done + fail = total`
 
 ---
 

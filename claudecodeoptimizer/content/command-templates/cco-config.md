@@ -862,7 +862,7 @@ if (isUnattended) {
 | Auto-detected | {n} elements |
 | Questions asked | {n} |
 
-Status: OK | Applied: {files_written} | Declined: 0 | Failed: 0
+Status: OK | Applied: {files_written} | Failed: 0
 
 Restart Claude Code to apply new rules.
 ```
@@ -874,6 +874,71 @@ Restart Claude Code to apply new rules.
 | ${targetDir}/rules/cco/{language}.md | {Created\|Updated} |
 | ${targetDir}/settings.json | {Merged} |
 | ${targetDir}/cco-{mode}.js | {Copied} |
+
+### Recommended Next Steps (Interactive only)
+
+Based on detected stack and configuration, show relevant next steps:
+
+```javascript
+// Build recommendations from detection + config
+nextSteps = []
+
+// Security-first if PII/Regulated data
+if (contextConfig.data === "PII" || contextConfig.data === "Regulated") {
+  nextSteps.push("1. `/cco-optimize --security` - Run security audit first")
+}
+
+// Quick wins for any project
+nextSteps.push(`${nextSteps.length + 1}. \`/cco-status\` - See project health dashboard`)
+nextSteps.push(`${nextSteps.length + 1}. \`/cco-optimize --quick\` - Auto-fix safe issues`)
+
+// Show formatted
+console.log("\n### Recommended Next Steps\n")
+nextSteps.forEach(step => console.log(step))
+```
+
+### Common Pitfalls for Your Stack (Interactive only)
+
+Show 2-3 stack-specific pitfalls based on detected language/framework:
+
+```javascript
+// Select pitfalls based on detection
+pitfalls = detectResult.detections.map(d => PITFALL_DB[d]).flat().slice(0, 3)
+
+// PITFALL_DB examples (not exhaustive):
+PITFALL_DB = {
+  "L:Python": [
+    "N+1 queries with SQLAlchemy - use `selectinload()` for relationships",
+    "Missing `encoding='utf-8'` in file operations"
+  ],
+  "L:TypeScript": [
+    "Using `any` instead of `unknown` for truly unknown types",
+    "Missing `strict: true` in tsconfig.json"
+  ],
+  "Backend:FastAPI": [
+    "Missing rate limiting on public endpoints",
+    "Sync I/O in async route handlers"
+  ],
+  "Backend:Django": [
+    "DEBUG=True in production settings",
+    "Missing CSRF protection on forms"
+  ],
+  "D:PII": [
+    "Logging PII without redaction",
+    "Missing encryption at rest for sensitive fields"
+  ],
+  "Infra:Docker": [
+    "Running as root in container",
+    "Missing multi-stage build for smaller images"
+  ]
+}
+
+// Show formatted (only if pitfalls found)
+if (pitfalls.length > 0) {
+  console.log("\n### Common Pitfalls for Your Stack\n")
+  pitfalls.forEach((p, i) => console.log(`${i + 1}. ${p}`))
+}
+```
 
 ### Validation
 ```

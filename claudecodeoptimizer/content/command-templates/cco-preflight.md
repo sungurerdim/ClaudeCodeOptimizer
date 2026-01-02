@@ -271,7 +271,7 @@ optimizeTask = Task("general-purpose", `
   ` : ""}
 
   Return: {
-    accounting: { applied, declined, failed, total },
+    accounting: { applied, failed, total },
     scopes: { security, hygiene, types, lint, performance, "ai-hygiene" }
   }
 `, { model: "opus", run_in_background: true })
@@ -291,7 +291,7 @@ reviewTask = Task("general-purpose", `
 
   Return: {
     gaps: { coupling, cohesion, complexity, coverage },
-    accounting: { applied, declined, failed, total },
+    accounting: { applied, failed, total },
     buckets: { doNow, plan, consider, backlog }
   }
 `, { model: "opus", run_in_background: true })

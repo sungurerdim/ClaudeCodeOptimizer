@@ -225,7 +225,7 @@ Cross-file terminology must match exactly:
 | TodoWrite | IF used: in_progress → completed flow | MEDIUM |
 | Validation blocks | Clear pass/fail criteria | MEDIUM |
 | Context check | Commands needing context verify it exists | HIGH |
-| Accounting | Fix commands report done/declined/fail | HIGH |
+| Accounting | Fix commands report done/fail | HIGH |
 
 **NOT findings:** Simple commands without TodoWrite, short commands without architecture tables.
 
@@ -251,7 +251,7 @@ Required flow: `Analyze → Report → Approve → Apply → Verify`
 | Severity order | CRITICAL → HIGH → MEDIUM → LOW | MEDIUM |
 | Granular selection | User can select individual fixes | HIGH |
 | Before/after | Changes shown post-apply | MEDIUM |
-| Accounting invariant | done + declined + fail = total | HIGH |
+| Accounting invariant | done + fail = total | HIGH |
 
 ### 2.4 Mode Consistency
 | Mode | Behavior | Severity |
@@ -673,18 +673,17 @@ if (toApply.length > 0) {
     }
   }
 
-  // Update counters
+  // Update counters (skipped items are those not selected, not reported in accounting)
   results = {
     applied: applied,
-    declined: findings.length - toApply.length,
     failed: failed,
-    total: findings.length
+    total: toApply.length  // Only count items that were attempted
   }
 }
 ```
 
 ### Accounting Invariant
-`applied + declined + failed = total`
+`applied + failed = total`
 
 ---
 
@@ -693,7 +692,7 @@ if (toApply.length > 0) {
 Show final report with:
 1. Category summary table
 2. Prioritized findings (if any remain)
-3. Applied/Declined/Failed counts
+3. Applied/Failed counts (skipped items noted separately if applicable)
 4. Verification status
 
 ---

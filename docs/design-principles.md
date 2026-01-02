@@ -120,7 +120,7 @@ All structured output follows consistent JSON schema:
 ```json
 {
   "status": "{OK|WARN|FAIL}",
-  "accounting": { "done": "{n}", "declined": "{n}", "failed": "{n}" },
+  "accounting": { "done": "{n}", "failed": "{n}" },
   "items": [{ "severity": "{level}", "location": "{file}:{line}" }]
 }
 ```

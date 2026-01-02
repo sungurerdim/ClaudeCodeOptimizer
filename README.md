@@ -26,6 +26,33 @@ Same prompts, better outcomes. Fewer errors. Fewer surprises.
 
 **CCO doesn't teach Claude to code** — Opus 4.5 already knows how. CCO adds the safety layer between intent and action.
 
+## Design Philosophy
+
+| Principle | What It Means |
+|-----------|---------------|
+| **Perfect UX/DX** | Fewest steps to goal, maximum clarity, predictable behavior |
+| **Token Efficiency** | Haiku for reads, Opus for writes, lazy rule loading |
+| **Minimum Footprint** | Zero runtime deps, no logs/configs in your project |
+| **Real Solutions** | Fix root causes, not symptoms. No snake-oil |
+| **Honest Guidance** | Challenge assumptions, don't just validate |
+
+**CCO is a process layer, not a teaching layer.** It provides pre-operation safety, standardized workflows, and post-operation verification.
+
+## How Decisions Are Made
+
+CCO follows a principled decision framework:
+
+| Principle | Description |
+|-----------|-------------|
+| **Read-First** | Always read files before proposing changes |
+| **Confirm-Intent** | Verify understanding before acting |
+| **No-Hallucination** | Never invent APIs, methods, or file contents |
+| **Challenge** | Question solutions that seem too perfect |
+| **Evidence-Required** | Security claims require code/config proof |
+| **Severity-Conservative** | When uncertain, choose lower severity |
+
+See [Design Principles](docs/design-principles.md) for full details.
+
 ## Quick Start
 
 ```bash
@@ -143,11 +170,14 @@ Built on [Claude 4 Best Practices](https://platform.claude.com/docs/en/build-wit
 
 ## Documentation
 
-| Doc                          | Content                                  |
-|------------------------------|------------------------------------------|
-| [Commands](docs/commands.md) | All 8 commands with flags and examples   |
-| [Agents](docs/agents.md)     | 3 specialized agents and their scopes    |
-| [Rules](docs/rules.md)       | Full rule reference                      |
+| Doc                                      | Content                                  |
+|------------------------------------------|------------------------------------------|
+| [Getting Started](docs/getting-started.md) | First 5 minutes, setup, common questions |
+| [Commands](docs/commands.md)             | All 8 commands with flags and examples   |
+| [Agents](docs/agents.md)                 | 3 specialized agents and their scopes    |
+| [Rules](docs/rules.md)                   | Full rule reference                      |
+| [Workflow](docs/workflow.md)             | Daily, pre-PR, pre-release workflows     |
+| [Philosophy](docs/philosophy.md)         | Design principles and decision framework |
 
 ## License
 
