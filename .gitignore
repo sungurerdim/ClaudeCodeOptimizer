@@ -211,3 +211,6 @@ benchmark/output/*
 benchmark/results/*
 !benchmark/output/.gitkeep
 !benchmark/results/.gitkeep
+
+# Node modules in any benchmark output
+benchmark/output/**/node_modules/

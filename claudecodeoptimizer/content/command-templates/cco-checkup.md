@@ -55,7 +55,7 @@ if (phases === 'both' || phases === 'health') {
 if (phases === 'both' || phases === 'audit') {
   auditTask = Task("general-purpose", `
     Execute /cco-optimize --fix --security --quality
-    Return: { accounting: { applied, declined, failed, total } }
+    Return: { accounting: { applied, failed, total } }
   `, { model: "opus", run_in_background: phases === 'both' })
 }
 ```
@@ -84,7 +84,7 @@ if (phases === 'both') {
 | **Overall**    | **{n}** | **{status}** |
 
 ### Quality Audit
-Applied: {n} | Declined: {n} | Failed: {n}
+Applied: {n} | Failed: {n}
 
 Status: {status}
 ```

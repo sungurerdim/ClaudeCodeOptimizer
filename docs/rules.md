@@ -310,7 +310,7 @@ For CRITICAL severity findings, validate with multiple reasoning paths:
 
 - **Error-Format**: `[SEVERITY] {What} in {file:line}`
 - **Status-Values**: OK / WARN / FAIL
-- **Accounting**: done + declined + fail = total
+- **Accounting**: done + fail = total
 - **Structured**: JSON/table when needed
 
 #### Output Examples
@@ -322,7 +322,7 @@ For CRITICAL severity findings, validate with multiple reasoning paths:
 
 **Status summary:**
 ```
-Status: {status} | Applied: {n} | Declined: {n} | Failed: {n} | Total: {n}
+Status: {status} | Applied: {n} | Failed: {n} | Total: {n}
 ```
 
 ---
@@ -361,7 +361,7 @@ Status: {status} | Applied: {n} | Declined: {n} | Failed: {n} | Total: {n}
 ### Fix Workflow
 
 - **Flow**: Analyze > Report > Approve > Apply > Verify
-- **Output-Accounting**: `Applied: N | Declined: N | Failed: N | Total: N`
+- **Output-Accounting**: `Applied: N | Failed: N | Total: N`
 
 ### Impact Preview
 

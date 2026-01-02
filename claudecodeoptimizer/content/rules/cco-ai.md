@@ -111,7 +111,7 @@ Need changes?
 | Dirty state check | None | Pre-op `git status` |
 | Post-change verification | None | Runs lint/type/test |
 | Cascade handling | None | Fixes errors caused by fixes |
-| Accounting | None | done + declined + fail = total |
+| Accounting | None | done + fail = total |
 | Fix-all mode | None | Zero agent-initiated skips |
 | Batch efficiency | Sequential | Groups by file |
 
@@ -216,7 +216,7 @@ For CRITICAL severity findings, validate with multiple reasoning paths:
 
 - **Error-Format**: `[SEVERITY] {What} in {file:line}`
 - **Status-Values**: OK / WARN / FAIL
-- **Accounting**: done + declined + fail = total
+- **Accounting**: done + fail = total
 - **Structured**: JSON/table when needed
 
 ### Output Examples
@@ -228,5 +228,5 @@ For CRITICAL severity findings, validate with multiple reasoning paths:
 
 **Status summary:**
 ```
-Status: {status} | Applied: {n} | Declined: {n} | Failed: {n} | Total: {n}
+Status: {status} | Applied: {n} | Failed: {n} | Total: {n}
 ```
