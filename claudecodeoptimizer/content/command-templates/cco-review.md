@@ -511,21 +511,13 @@ if (toApply.length > 0) {
     Handle dependencies between fixes.
 
     ${isFixAll ? `
-    CRITICAL - FULL FIX MODE [MANDATORY]:
-    You MUST fix every single item. No exceptions. No deferrals.
-
-    FORBIDDEN responses:
-    - "recommended for future iteration" - NO, fix it NOW
-    - "architectural refactoring" - YES, do the refactoring NOW
-    - Any suggestion to skip or defer - FORBIDDEN
+    FULL FIX MODE [MANDATORY]:
+    Fix ALL items. Planning metadata (effort/impact/bucket) is for reporting only - ignored here.
 
     Rules:
-    - Zero agent-initiated skips/declines
-    - Every item = either FIXED or TECHNICAL FAILURE
-    - Technical failure requires specific reason: "Technical: [exact blocker]"
-    - If unsure how to fix → ask user, don't skip
-
-    User explicitly chose "Full Fix". Respect that choice.
+    - Zero agent-initiated skips
+    - Every item = FIXED or TECHNICAL FAILURE (with "Technical: [reason]")
+    - If unsure → ask user, don't skip
     ` : ""}
 
     CRITICAL - Counting:

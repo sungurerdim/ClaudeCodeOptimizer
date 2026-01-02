@@ -264,10 +264,7 @@ optimizeTask = Task("general-purpose", `
   Apply fixes based on intensity selection.
 
   ${config.intensity === "full-fix" ? `
-  EVERYTHING MODE - MANDATORY:
-  - Fix all findings, no skipping
-  - Zero agent-initiated declines
-  - Every finding = FIXED or TECHNICAL FAILURE
+  EVERYTHING MODE: Fix ALL items. Planning metadata is for reporting only.
   ` : ""}
 
   Return: {
@@ -283,10 +280,7 @@ reviewTask = Task("general-purpose", `
   Apply recommendations based on intensity selection.
 
   ${config.intensity === "full-fix" ? `
-  EVERYTHING MODE - MANDATORY:
-  - Fix all findings including backlog
-  - Zero agent-initiated declines
-  - Every finding = FIXED or TECHNICAL FAILURE
+  EVERYTHING MODE: Fix ALL items including backlog. Planning metadata is for reporting only.
   ` : ""}
 
   Return: {
