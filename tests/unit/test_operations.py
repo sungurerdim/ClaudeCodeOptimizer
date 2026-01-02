@@ -27,36 +27,38 @@ class TestRemoveCommandFiles:
         # Create non-CCO file (should not be removed)
         (commands_dir / "custom-command.md").write_text("custom")
 
-        count = remove_command_files(commands_dir)
+        removed = remove_command_files(commands_dir)
 
-        assert count == 2
+        assert len(removed) == 2
+        assert "cco-config.md" in removed
+        assert "cco-optimize.md" in removed
         assert not (commands_dir / "cco-config.md").exists()
         assert not (commands_dir / "cco-optimize.md").exists()
         assert (commands_dir / "custom-command.md").exists()
 
-    def test_returns_zero_when_no_files(self, tmp_path: Path) -> None:
-        """Test remove_command_files returns zero when no files to remove."""
+    def test_returns_empty_list_when_no_files(self, tmp_path: Path) -> None:
+        """Test remove_command_files returns empty list when no files to remove."""
         commands_dir = tmp_path / "commands"
         commands_dir.mkdir()
 
-        count = remove_command_files(commands_dir)
+        removed = remove_command_files(commands_dir)
 
-        assert count == 0
+        assert removed == []
 
-    def test_returns_zero_when_directory_missing(self, tmp_path: Path) -> None:
-        """Test remove_command_files returns zero when directory doesn't exist."""
+    def test_returns_empty_list_when_directory_missing(self, tmp_path: Path) -> None:
+        """Test remove_command_files returns empty list when directory doesn't exist."""
         nonexistent = tmp_path / "nonexistent"
 
-        count = remove_command_files(nonexistent)
+        removed = remove_command_files(nonexistent)
 
-        assert count == 0
+        assert removed == []
 
     def test_uses_global_commands_dir_when_none(self) -> None:
         """Test remove_command_files uses global COMMANDS_DIR when path is None."""
         with patch("claudecodeoptimizer.operations.COMMANDS_DIR") as mock_dir:
             mock_dir.exists.return_value = False
-            count = remove_command_files(path=None)
-            assert count == 0
+            removed = remove_command_files(path=None)
+            assert removed == []
 
 
 class TestRemoveAgentFiles:
@@ -73,36 +75,38 @@ class TestRemoveAgentFiles:
         # Create non-CCO file
         (agents_dir / "custom-agent.md").write_text("custom")
 
-        count = remove_agent_files(agents_dir)
+        removed = remove_agent_files(agents_dir)
 
-        assert count == 2
+        assert len(removed) == 2
+        assert "cco-apply.md" in removed
+        assert "cco-audit.md" in removed
         assert not (agents_dir / "cco-apply.md").exists()
         assert not (agents_dir / "cco-audit.md").exists()
         assert (agents_dir / "custom-agent.md").exists()
 
-    def test_returns_zero_when_no_files(self, tmp_path: Path) -> None:
-        """Test remove_agent_files returns zero when no files to remove."""
+    def test_returns_empty_list_when_no_files(self, tmp_path: Path) -> None:
+        """Test remove_agent_files returns empty list when no files to remove."""
         agents_dir = tmp_path / "agents"
         agents_dir.mkdir()
 
-        count = remove_agent_files(agents_dir)
+        removed = remove_agent_files(agents_dir)
 
-        assert count == 0
+        assert removed == []
 
-    def test_returns_zero_when_directory_missing(self, tmp_path: Path) -> None:
-        """Test remove_agent_files returns zero when directory doesn't exist."""
+    def test_returns_empty_list_when_directory_missing(self, tmp_path: Path) -> None:
+        """Test remove_agent_files returns empty list when directory doesn't exist."""
         nonexistent = tmp_path / "nonexistent"
 
-        count = remove_agent_files(nonexistent)
+        removed = remove_agent_files(nonexistent)
 
-        assert count == 0
+        assert removed == []
 
     def test_uses_global_agents_dir_when_none(self) -> None:
         """Test remove_agent_files uses global AGENTS_DIR when path is None."""
         with patch("claudecodeoptimizer.operations.AGENTS_DIR") as mock_dir:
             mock_dir.exists.return_value = False
-            count = remove_agent_files(path=None)
-            assert count == 0
+            removed = remove_agent_files(path=None)
+            assert removed == []
 
 
 class TestRemoveOldRules:
@@ -121,45 +125,49 @@ class TestRemoveOldRules:
         # Create non-CCO file
         (rules_dir / "custom-rule.md").write_text("custom")
 
-        count = remove_old_rules(rules_dir)
+        removed = remove_old_rules(rules_dir)
 
-        assert count == 4
+        assert len(removed) == 4
+        assert "cco-core.md" in removed
+        assert "cco-ai.md" in removed
+        assert "cco-adaptive.md" in removed
+        assert "cco-tools.md" in removed
         assert not (rules_dir / "cco-core.md").exists()
         assert not (rules_dir / "cco-ai.md").exists()
         assert not (rules_dir / "cco-adaptive.md").exists()
         assert not (rules_dir / "cco-tools.md").exists()
         assert (rules_dir / "custom-rule.md").exists()
 
-    def test_returns_zero_when_no_files(self, tmp_path: Path) -> None:
-        """Test remove_old_rules returns zero when no files to remove."""
+    def test_returns_empty_list_when_no_files(self, tmp_path: Path) -> None:
+        """Test remove_old_rules returns empty list when no files to remove."""
         rules_dir = tmp_path / "rules"
         rules_dir.mkdir()
 
-        count = remove_old_rules(rules_dir)
+        removed = remove_old_rules(rules_dir)
 
-        assert count == 0
+        assert removed == []
 
-    def test_returns_zero_when_directory_missing(self, tmp_path: Path) -> None:
-        """Test remove_old_rules returns zero when directory doesn't exist."""
+    def test_returns_empty_list_when_directory_missing(self, tmp_path: Path) -> None:
+        """Test remove_old_rules returns empty list when directory doesn't exist."""
         nonexistent = tmp_path / "nonexistent"
 
-        count = remove_old_rules(nonexistent)
+        removed = remove_old_rules(nonexistent)
 
-        assert count == 0
+        assert removed == []
 
     def test_uses_global_old_rules_root_when_none(self) -> None:
         """Test remove_old_rules uses global OLD_RULES_ROOT when path is None."""
         with patch("claudecodeoptimizer.operations.OLD_RULES_ROOT") as mock_dir:
             mock_dir.exists.return_value = False
-            count = remove_old_rules(path=None)
-            assert count == 0
+            removed = remove_old_rules(path=None)
+            assert removed == []
 
 
 class TestRemoveNewRules:
     """Test remove_new_rules function."""
 
     def test_removes_cco_rules_from_cco_subdirectory(self, tmp_path: Path) -> None:
-        """Test remove_new_rules removes CCO rules from cco/ subdirectory."""
+        """Test remove_new_rules removes ALL .md files from cco/ subdirectory."""
         cco_dir = tmp_path / "rules" / "cco"
         cco_dir.mkdir(parents=True)
 
@@ -168,17 +176,18 @@ class TestRemoveNewRules:
         (cco_dir / "ai.md").write_text("ai")
         (cco_dir / "tools.md").write_text("tools")
         (cco_dir / "adaptive.md").write_text("adaptive")
-        # Create non-CCO file
-        (cco_dir / "custom.md").write_text("custom")
 
-        count = remove_new_rules(cco_dir)
+        removed = remove_new_rules(cco_dir)
 
-        assert count == 4
+        assert len(removed) == 4
+        assert "cco/core.md" in removed
+        assert "cco/ai.md" in removed
+        assert "cco/tools.md" in removed
+        assert "cco/adaptive.md" in removed
         assert not (cco_dir / "core.md").exists()
         assert not (cco_dir / "ai.md").exists()
         assert not (cco_dir / "tools.md").exists()
         assert not (cco_dir / "adaptive.md").exists()
-        assert (cco_dir / "custom.md").exists()
 
     def test_removes_empty_cco_directory(self, tmp_path: Path) -> None:
         """Test remove_new_rules removes empty cco/ directory."""
@@ -195,43 +204,44 @@ class TestRemoveNewRules:
         assert not cco_dir.exists()
 
     def test_does_not_remove_nonempty_cco_directory(self, tmp_path: Path) -> None:
-        """Test remove_new_rules doesn't remove cco/ directory if it has other files."""
+        """Test remove_new_rules doesn't remove cco/ directory if it has non-.md files."""
         cco_dir = tmp_path / "rules" / "cco"
         cco_dir.mkdir(parents=True)
 
-        # Create CCO and custom files
+        # Create CCO .md files and a non-.md file
         (cco_dir / "core.md").write_text("core")
-        (cco_dir / "custom.md").write_text("custom")
+        (cco_dir / "config.json").write_text("{}")  # Non-.md file
 
         remove_new_rules(cco_dir)
 
-        # Directory should still exist
+        # Directory should still exist (has non-.md file)
         assert cco_dir.exists()
-        assert (cco_dir / "custom.md").exists()
+        assert (cco_dir / "config.json").exists()
+        assert not (cco_dir / "core.md").exists()
 
-    def test_returns_zero_when_no_files(self, tmp_path: Path) -> None:
-        """Test remove_new_rules returns zero when no files to remove."""
+    def test_returns_empty_list_when_no_files(self, tmp_path: Path) -> None:
+        """Test remove_new_rules returns empty list when no files to remove."""
         cco_dir = tmp_path / "rules" / "cco"
         cco_dir.mkdir(parents=True)
 
-        count = remove_new_rules(cco_dir)
+        removed = remove_new_rules(cco_dir)
 
-        assert count == 0
+        assert removed == []
 
-    def test_returns_zero_when_directory_missing(self, tmp_path: Path) -> None:
-        """Test remove_new_rules returns zero when directory doesn't exist."""
+    def test_returns_empty_list_when_directory_missing(self, tmp_path: Path) -> None:
+        """Test remove_new_rules returns empty list when directory doesn't exist."""
         nonexistent = tmp_path / "nonexistent"
 
-        count = remove_new_rules(nonexistent)
+        removed = remove_new_rules(nonexistent)
 
-        assert count == 0
+        assert removed == []
 
     def test_uses_global_rules_dir_when_none(self) -> None:
         """Test remove_new_rules uses global RULES_DIR when path is None."""
         with patch("claudecodeoptimizer.operations.RULES_DIR") as mock_dir:
             mock_dir.exists.return_value = False
-            count = remove_new_rules(path=None)
-            assert count == 0
+            removed = remove_new_rules(path=None)
+            assert removed == []
 
 
 class TestRemoveAllCcoMarkers:
