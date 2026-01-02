@@ -226,7 +226,9 @@ def _print_footer(dry_run: bool) -> None:
         print("  3. /cco-optimize   Quick wins (auto-fix safe issues)")
         print()
         breakdown = get_rules_breakdown()
-        print(f"What changed: {breakdown['core']} core + {breakdown['ai']} AI rules now active in every session.")
+        print(
+            f"What changed: {breakdown['core']} core + {breakdown['ai']} AI rules now active in every session."
+        )
         print("Project-specific rules are added when you run /cco-config.")
     print()
 

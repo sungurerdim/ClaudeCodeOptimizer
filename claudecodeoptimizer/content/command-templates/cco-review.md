@@ -134,14 +134,22 @@ AskUserQuestion([
     multiSelect: false
   },
   {
-    question: "Which architectural areas to review?",
-    header: "Scopes",
+    question: "Structure scopes to review?",
+    header: "Scopes 1/2",
     options: [
-      { label: "Architecture", description: "Coupling, cohesion, layers, dependencies (ARC-01 to ARC-15)" },
-      { label: "Patterns", description: "Design patterns, SOLID, consistency (PAT-01 to PAT-12)" },
-      { label: "Testing", description: "Coverage, test quality, gaps (TST-01 to TST-10)" },
-      { label: "Maintainability", description: "Complexity, readability, docs (MNT-01 to MNT-12)" },
-      { label: "AI-Architecture", description: "Over-engineering, drift, local fixes (AIA-01 to AIA-10)" }
+      { label: "Architecture (15)", description: "ARC-01-15: coupling, cohesion, layers, dependencies" },
+      { label: "Patterns (12)", description: "PAT-01-12: design patterns, SOLID, consistency" },
+      { label: "Testing (10)", description: "TST-01-10: coverage, test quality, gaps" },
+      { label: "Maintainability (12)", description: "MNT-01-12: complexity, readability, docs" }
+    ],
+    multiSelect: true
+  },
+  {
+    question: "Advanced scopes to review?",
+    header: "Scopes 2/2",
+    options: [
+      { label: "AI-Architecture (10)", description: "AIA-01-10: over-engineering, drift, premature abstraction" },
+      { label: "Skip advanced", description: "Only run structure scopes selected above" }
     ],
     multiSelect: true
   }

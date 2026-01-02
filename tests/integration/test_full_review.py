@@ -157,8 +157,16 @@ class TestFullReviewInventory:
         commands_dir.mkdir()
 
         # Create command files
-        commands = ["cco-config", "cco-status", "cco-optimize", "cco-review",
-                    "cco-commit", "cco-research", "cco-preflight", "cco-checkup"]
+        commands = [
+            "cco-config",
+            "cco-status",
+            "cco-optimize",
+            "cco-review",
+            "cco-commit",
+            "cco-research",
+            "cco-preflight",
+            "cco-checkup",
+        ]
 
         for cmd in commands:
             (commands_dir / f"{cmd}.md").write_text(f"# {cmd}")
@@ -207,7 +215,6 @@ class TestFullReviewFindings:
 
     def test_finding_format(self, tmp_path: Path) -> None:
         """Test that findings follow correct format"""
-        import json
 
         finding: dict[str, Any] = {
             "id": "DOC-001",
@@ -230,7 +237,6 @@ class TestFullReviewFindings:
 
     def test_findings_grouped_by_category(self, tmp_path: Path) -> None:
         """Test that findings can be grouped by category"""
-        import json
 
         findings = [
             {"id": "DOC-001", "category": "doc_count", "severity": "MEDIUM"},
@@ -351,7 +357,6 @@ class TestFullReviewReport:
 
     def test_report_grouped_by_category(self, tmp_path: Path) -> None:
         """Test that report groups findings by category"""
-        import json
 
         report: dict[str, Any] = {
             "by_category": {
@@ -384,8 +389,7 @@ class TestFullReviewIntegration:
 
         # Step 4: Prioritize
         prioritized = sorted(
-            findings,
-            key=lambda f: {"CRITICAL": 0, "HIGH": 1, "MEDIUM": 2, "LOW": 3}[f["severity"]]
+            findings, key=lambda f: {"CRITICAL": 0, "HIGH": 1, "MEDIUM": 2, "LOW": 3}[f["severity"]]
         )
 
         # Step 5: Apply (simulated)

@@ -235,30 +235,43 @@ if (isUnattended) {
   }
 ```
 
-**Q2: Scope Selection (second question):**
+**Q2: Scope Selection - Code Quality (4 scopes):**
 
 ```javascript
-  scopeQuestion = {
-    question: "Which scopes to analyze?",
-    header: "Scopes",
+  scopeQuestion1 = {
+    question: "Code quality scopes to analyze?",
+    header: "Scopes 1/2",
     options: [
-      { label: "Security (12 checks)", description: "SEC-01 to SEC-12: secrets, injection, path traversal" },
-      { label: "Hygiene (15 checks)", description: "HYG-01 to HYG-15: unused code, dead imports, orphans" },
-      { label: "Types (10 checks)", description: "TYP-01 to TYP-10: type errors, annotations, Any usage" },
-      { label: "Lint (8 checks)", description: "LNT-01 to LNT-08: formatting, naming, style" },
-      { label: "Performance (10 checks)", description: "PRF-01 to PRF-10: N+1, blocking I/O, caching" },
-      { label: "AI Hygiene (8 checks)", description: "AIH-01 to AIH-08: hallucinations, orphan abstractions" }
+      { label: "Security (12)", description: "SEC-01-12: secrets, injection, path traversal" },
+      { label: "Hygiene (15)", description: "HYG-01-15: unused code, dead imports, orphans" },
+      { label: "Types (10)", description: "TYP-01-10: type errors, annotations, Any usage" },
+      { label: "Lint (8)", description: "LNT-01-08: formatting, naming, style" }
     ],
     multiSelect: true
   }
 ```
 
-**Q3: Git State (conditional, only if dirty):**
+**Q3: Scope Selection - Advanced (2 scopes):**
 
 ```javascript
-  questions = [intensityQuestion, scopeQuestion]
+  scopeQuestion2 = {
+    question: "Advanced scopes to analyze?",
+    header: "Scopes 2/2",
+    options: [
+      { label: "Performance (10)", description: "PRF-01-10: N+1, blocking I/O, caching" },
+      { label: "AI Hygiene (8)", description: "AIH-01-08: hallucinations, orphan abstractions" },
+      { label: "Skip advanced", description: "Only run code quality scopes selected above" }
+    ],
+    multiSelect: true
+  }
+```
 
-  // Add git state question only if dirty
+**Q4: Git State (conditional, only if dirty):**
+
+```javascript
+  questions = [intensityQuestion, scopeQuestion1, scopeQuestion2]
+
+  // Add git state question only if dirty (max 4 questions per AskUserQuestion)
   if (gitDirty) {
     questions.push({
       question: "Working tree has uncommitted changes. How to proceed?",
@@ -272,7 +285,7 @@ if (isUnattended) {
     })
   }
 
-  AskUserQuestion(questions)
+  AskUserQuestion(questions)  // Max 4 questions: Intensity + Scopes1 + Scopes2 + GitState
 }
 ```
 
