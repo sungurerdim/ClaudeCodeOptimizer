@@ -448,19 +448,13 @@ if (config.action !== "Report only" && autoFixable.length > 0) {
     Group by file for efficiency.
 
     ${isFixAll ? `
-    CRITICAL - EVERYTHING MODE [MANDATORY]:
-    You MUST fix every single item. No exceptions. No deferrals.
-
-    FORBIDDEN:
-    - "future iteration", "lower priority", "dedicated pass" - fix NOW
-    - Any suggestion to skip or defer
+    EVERYTHING MODE [MANDATORY]:
+    Fix ALL items. Planning metadata (effort/impact/bucket) is for reporting only - ignored here.
 
     Rules:
-    - Every item = either FIXED or TECHNICAL FAILURE
-    - Technical failure requires: "Technical: [exact blocker]"
+    - Zero agent-initiated skips
+    - Every item = FIXED or TECHNICAL FAILURE (with "Technical: [reason]")
     - If unsure → ask user, don't skip
-
-    User chose "Everything". Respect that choice.
     ` : ""}
 
     CRITICAL - Counting:
@@ -623,19 +617,13 @@ if (approved.length > 0) {
     Handle cascading errors.
 
     ${isFixAll ? `
-    CRITICAL - EVERYTHING MODE [MANDATORY]:
-    You MUST fix every single item. No exceptions. No deferrals.
-
-    FORBIDDEN:
-    - "future iteration", "lower priority", "dedicated pass" - fix NOW
-    - Any suggestion to skip or defer
+    EVERYTHING MODE [MANDATORY]:
+    Fix ALL items. Planning metadata (effort/impact/bucket) is for reporting only - ignored here.
 
     Rules:
-    - Every item = either FIXED or TECHNICAL FAILURE
-    - Technical failure requires: "Technical: [exact blocker]"
+    - Zero agent-initiated skips
+    - Every item = FIXED or TECHNICAL FAILURE (with "Technical: [reason]")
     - If unsure → ask user, don't skip
-
-    User chose "Everything". Respect that choice.
     ` : ""}
 
     CRITICAL - Counting:

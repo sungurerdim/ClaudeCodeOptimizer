@@ -51,11 +51,17 @@ Every finding MUST be fixed. No "manual" or "skip" unless:
 
 When `fixAll: true` is passed in the task context:
 
+**PLANNING METADATA ≠ EXECUTION CRITERIA:**
+
+Fields like `effort`, `impact`, `bucket`, `priority` are for **reporting/categorization only**.
+When `fixAll: true`, these fields have NO influence on what gets fixed. Everything gets fixed.
+
 **MANDATORY RULES:**
 
 1. **Zero Agent-Initiated Skips**: Agent MUST NOT skip, decline, or defer ANY finding
-2. **No "Too Complex" Excuses**: Agent cannot decide a fix is "too complex" - that's user's decision
-3. **Ask, Don't Skip**: If fix requires significant changes (>50 lines), ask user via parent agent:
+2. **All Metadata Ignored**: Effort/impact/bucket/priority don't determine execution
+3. **No "Too Complex" Excuses**: Agent cannot decide a fix is "too complex" - that's user's decision
+4. **Ask, Don't Skip**: If fix requires significant changes (>50 lines), ask user via parent agent:
    ```javascript
    // Return to parent with question needed
    return {
@@ -97,10 +103,9 @@ for (const item of failedItems) {
 
 | Reason | Why Invalid |
 |--------|-------------|
-| "Too complex" | User's decision, not agent's |
+| Planning metadata (effort/impact/bucket/priority) | For reporting only, not execution criteria |
+| "Too complex" / "Would take too long" | User's decision, not agent's |
 | "Needs manual review" | Agent must attempt fix |
-| "Low priority" | User chose fix-all, priority irrelevant |
-| "Would take too long" | Not a technical impossibility |
 | "Unsure about approach" | Ask user via parent agent |
 
 ## Execution [CRITICAL]
