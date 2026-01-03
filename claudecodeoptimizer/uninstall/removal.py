@@ -183,7 +183,8 @@ def uninstall_package(method: str) -> bool:
         result = subprocess.run(
             cmds[method],
             capture_output=True,
-            text=True,
+            encoding="utf-8",
+            errors="replace",
             timeout=SUBPROCESS_TIMEOUT_PACKAGE,
             shell=False,
         )
