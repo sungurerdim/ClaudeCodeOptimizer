@@ -32,7 +32,8 @@ def detect_install_method() -> str | None:
             result = subprocess.run(
                 [cmd] + args,
                 capture_output=True,
-                text=True,
+                encoding="utf-8",
+                errors="replace",
                 timeout=SUBPROCESS_TIMEOUT,
                 shell=False,
             )

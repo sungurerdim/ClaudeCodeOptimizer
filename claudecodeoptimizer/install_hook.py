@@ -2,6 +2,7 @@
 
 import argparse
 import sys
+from collections.abc import Callable
 from pathlib import Path
 
 from .config import (
@@ -143,7 +144,7 @@ def _run_install_step(
     label: str,
     dry_run: bool,
     subdir: ContentSubdir,
-    install_fn: object,  # Callable, but typed as object to accept both setup_commands and setup_rules
+    install_fn: Callable[..., list[str]] | Callable[..., dict[str, int]],
     target_dir: Path | None,
 ) -> list[str] | dict[str, int]:
     """Run a single installation step (commands, agents, or rules).
