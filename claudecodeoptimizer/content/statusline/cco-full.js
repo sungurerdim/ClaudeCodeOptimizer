@@ -1,16 +1,18 @@
 #!/usr/bin/env node
 
 // CCO Statusline - Full Mode
-// Strategy: Let git handle disk I/O (internal caching), minimize direct fs reads
+// Features:
+// - Progressive context warning (early thresholds: 50%/70%/85%)
+// - Todo progress indicator (from transcript)
+// - Conditional rendering (hide irrelevant lines)
+// - Git status: branch + changes + ahead/behind
 // - CLAUDE_VERSION env var → skip claude --version process
-// - git status: branch + changes + ahead/behind
-// - git describe: tag
-// - fs.statSync: only for .git dir detection
 
 const fs = require('fs');
 const path = require('path');
 const { execSync } = require('child_process');
 const os = require('os');
+const crypto = require('crypto');
 
 // ============================================================================
 // ANSI COLORS
@@ -105,32 +107,136 @@ function formatModelName(modelData) {
 }
 
 // ============================================================================
-// CONTEXT USAGE
+// CONTEXT USAGE - Progressive Warning System
+// Thresholds: 0-50% green, 50-70% yellow, 70-85% yellow+breakdown, 85%+ red+warning
 // ============================================================================
 function formatContextUsage(contextWindow) {
-  if (!contextWindow) return null;
+  if (!contextWindow) return { text: c('ctx ?', 'gray'), percent: 0, breakdown: null };
   const contextSize = contextWindow.context_window_size || 0;
-  if (contextSize === 0) return null;
+  if (contextSize === 0) return { text: c('ctx ?', 'gray'), percent: 0, breakdown: null };
 
-  // Use current_usage if available (more accurate), otherwise fallback to total_input_tokens
-  // NOTE: Output tokens are NOT counted - they don't consume context window
   const currentUsage = contextWindow.current_usage;
-  let currentTokens;
+  let inputTokens = 0, cacheTokens = 0, currentTokens = 0;
 
   if (currentUsage) {
-    // Accurate: input + cache tokens = actual context usage
-    currentTokens = (currentUsage.input_tokens || 0) +
-                    (currentUsage.cache_creation_input_tokens || 0) +
-                    (currentUsage.cache_read_input_tokens || 0);
+    inputTokens = currentUsage.input_tokens || 0;
+    cacheTokens = (currentUsage.cache_creation_input_tokens || 0) +
+                  (currentUsage.cache_read_input_tokens || 0);
+    currentTokens = inputTokens + cacheTokens;
   } else {
-    // Fallback: only input tokens (not output!)
     currentTokens = contextWindow.total_input_tokens || 0;
+    inputTokens = currentTokens;
   }
 
   const percent = Math.round(currentTokens * 100 / contextSize);
   const formatK = n => n >= 1000 ? Math.round(n / 1000) + 'K' : n.toString();
 
-  return `${formatK(currentTokens)} ${percent}%`;
+  // Progressive color thresholds (earlier warnings)
+  let color, warning = null, breakdown = null;
+  if (percent >= 85) {
+    color = 'red';
+    warning = '⚠ COMPACT';
+    breakdown = `in:${formatK(inputTokens)} cache:${formatK(cacheTokens)}`;
+  } else if (percent >= 70) {
+    color = 'yellow';
+    breakdown = `in:${formatK(inputTokens)} cache:${formatK(cacheTokens)}`;
+  } else if (percent >= 50) {
+    color = 'yellow';
+  } else {
+    color = 'green';
+  }
+
+  const baseText = `${formatK(currentTokens)} ${percent}%`;
+  let text = c(baseText, color);
+  if (warning) {
+    text += ' ' + c(warning, 'redBold');
+  }
+
+  return { text, percent, breakdown };
+}
+
+// ============================================================================
+// TODO PROGRESS - Read from Claude transcript
+// ============================================================================
+function getTranscriptPath(cwd) {
+  // Claude stores transcripts in ~/.claude/projects/{hash}/
+  const claudeDir = path.join(os.homedir(), '.claude', 'projects');
+  if (!fs.existsSync(claudeDir)) return null;
+
+  // Hash is based on project path
+  const hash = crypto.createHash('sha256').update(cwd).digest('hex').slice(0, 16);
+  const transcriptPath = path.join(claudeDir, hash, 'transcript.jsonl');
+
+  return fs.existsSync(transcriptPath) ? transcriptPath : null;
+}
+
+function getTodoProgress(cwd) {
+  const transcriptPath = getTranscriptPath(cwd);
+  if (!transcriptPath) return null;
+
+  try {
+    // Read last 50KB of transcript (recent activity)
+    const stat = fs.statSync(transcriptPath);
+    const readSize = Math.min(stat.size, 50000);
+    const fd = fs.openSync(transcriptPath, 'r');
+    const buffer = Buffer.alloc(readSize);
+    fs.readSync(fd, buffer, 0, readSize, Math.max(0, stat.size - readSize));
+    fs.closeSync(fd);
+
+    const content = buffer.toString('utf-8');
+    const lines = content.split('\n').filter(Boolean);
+
+    // Find last TodoWrite call (reverse search)
+    let todos = null;
+    for (let i = lines.length - 1; i >= 0; i--) {
+      try {
+        const entry = JSON.parse(lines[i]);
+        if (entry.type === 'tool_use' && entry.tool === 'TodoWrite') {
+          todos = entry.input?.todos || null;
+          break;
+        }
+        // Also check nested message format
+        if (entry.message?.content) {
+          const content = Array.isArray(entry.message.content)
+            ? entry.message.content
+            : [entry.message.content];
+          for (const block of content) {
+            if (block.type === 'tool_use' && block.name === 'TodoWrite') {
+              todos = block.input?.todos || null;
+              break;
+            }
+          }
+          if (todos) break;
+        }
+      } catch { /* skip invalid JSON */ }
+    }
+
+    if (!todos || !Array.isArray(todos) || todos.length === 0) return null;
+
+    const completed = todos.filter(t => t.status === 'completed').length;
+    const inProgress = todos.find(t => t.status === 'in_progress');
+    const total = todos.length;
+
+    return { completed, total, inProgress };
+  } catch {
+    return null;
+  }
+}
+
+function formatTodoProgress(todoInfo) {
+  if (!todoInfo) return null;
+
+  const { completed, total, inProgress } = todoInfo;
+
+  if (completed === total) {
+    return c(`✓ Done (${total}/${total})`, 'green');
+  }
+
+  // Truncate task content to 30 chars
+  const taskName = inProgress?.content || 'Working...';
+  const truncated = taskName.length > 30 ? taskName.slice(0, 27) + '...' : taskName;
+
+  return c('▸ ', 'yellow') + c(truncated, 'white') + ' ' + c(`(${completed}/${total})`, 'gray');
 }
 
 // ============================================================================
@@ -228,45 +334,35 @@ function getGitInfo() {
 }
 
 // ============================================================================
-// BUILD STATUSLINE
+// BUILD STATUSLINE - Conditional Rendering
+// Layout:
+//   Row 1: ▸ task (n/m) (only if todos exist) - TOP for visibility
+//   Row 2: repo:branch · tag (only if git exists)
+//   Row 3: △/▽ · mod/add/del/mv (only if git exists)
+//   Row 4: user · CC version · model · context [in:X cache:Y] (always)
 // ============================================================================
-function formatStatusline(input, git) {
+function formatStatusline(input, git, todoInfo) {
   const username = os.userInfo().username || 'user';
   const fullPath = input.cwd || process.cwd();
   const projectName = path.basename(fullPath);
   const modelDisplay = formatModelName(input.model);
   const ccVersion = getClaudeCodeVersion();
-  const contextUsage = formatContextUsage(input.context_window);
+  const contextData = formatContextUsage(input.context_window);
 
   const emptyLine = '\u200B';
 
-  // Prepare row parts (without formatting yet)
+  // Prepare base parts
   const usernameStr = c(username, 'cyan');
   const versionStr = ccVersion ? c(`CC ${ccVersion}`, 'yellow') : c('CC ?', 'gray');
   const modelStr = c(modelDisplay, 'magenta');
-  const contextStr = contextUsage ? c(contextUsage, 'cyan') : null;
 
-  const repoDisplay = git ? `${git.repoName || projectName}:${git.branch}` : projectName;
-  const repoStr = c(repoDisplay, 'green');
-  const tagStr = git?.releaseTag ? c(git.releaseTag, 'cyan') : null;
-
-  // Alerts
-  let alertStr;
-  if (!git) {
-    alertStr = c('No git', 'gray');
-  } else {
-    const aheadStr = git.unpushed > 0
-      ? c('△ ', 'green') + c(git.unpushed, 'white')
-      : c('△ 0', 'gray');
-    const behindStr = git.behind > 0
-      ? c('▽ ', 'yellow') + c(git.behind, 'white')
-      : c('▽ 0', 'gray');
-    const alerts = [aheadStr, behindStr];
-    if (git.conflict > 0) alerts.push(c(`${git.conflict} conflict${git.conflict > 1 ? 's' : ''}`, 'redBold'));
-    alertStr = alerts.join(' ');
+  // Context with inline breakdown
+  let contextStr = contextData.text;
+  if (contextData.breakdown) {
+    contextStr += ' ' + c(`[${contextData.breakdown}]`, 'gray');
   }
 
-  // File changes
+  // File changes helper
   function buildChangesParts(m, a, d, r) {
     return [
       m > 0 ? c(`mod ${m}`, 'yellow') : c('mod 0', 'gray'),
@@ -276,33 +372,59 @@ function formatStatusline(input, git) {
     ];
   }
 
-  const totalMod = git ? git.mod + git.sMod : 0;
-  const totalAdd = git ? git.add + git.sAdd : 0;
-  const totalDel = git ? git.del + git.sDel : 0;
-  const totalRen = git ? git.ren + git.sRen : 0;
-
-  // Define rows as arrays of parts
-  // Row 1: Git info (repo:branch, tag) - Location (stable)
-  // Row 2: Alerts and file changes - Status (dynamic, easy to scan)
-  // Row 3: User info (username, version, model, context) - Session (reference)
-  const row1Parts = tagStr ? [repoStr, tagStr] : [repoStr];
-  const row2Parts = git ? [alertStr, ...buildChangesParts(totalMod, totalAdd, totalDel, totalRen)] : [alertStr];
-  const row3Parts = contextStr ? [usernameStr, versionStr, modelStr, contextStr] : [usernameStr, versionStr, modelStr];
-
-  // Calculate max width from minimum representation (parts joined with single space + separator)
+  // Calculate min row width
   function minRowWidth(parts) {
-    return parts.reduce((sum, p) => sum + getVisibleLength(p), 0) + (parts.length - 1) * 3; // " · " = 3
+    return parts.reduce((sum, p) => sum + getVisibleLength(p), 0) + (parts.length - 1) * 3;
   }
 
-  const maxWidth = Math.max(minRowWidth(row1Parts), minRowWidth(row2Parts), minRowWidth(row3Parts));
+  // Collect all rows (conditional)
+  const rows = [];
+
+  // Row 1: Todo progress (TOP - most actionable info first)
+  const todoStr = formatTodoProgress(todoInfo);
+  if (todoStr) {
+    rows.push([todoStr]);
+  }
+
+  // Row 2 & 3: Git info (only if git exists)
+  if (git) {
+    const repoDisplay = `${git.repoName || projectName}:${git.branch}`;
+    const repoStr = c(repoDisplay, 'green');
+    const tagStr = git.releaseTag ? c(git.releaseTag, 'cyan') : null;
+    const row1Parts = tagStr ? [repoStr, tagStr] : [repoStr];
+    rows.push(row1Parts);
+
+    const aheadStr = git.unpushed > 0
+      ? c('△ ', 'green') + c(git.unpushed, 'white')
+      : c('△ 0', 'gray');
+    const behindStr = git.behind > 0
+      ? c('▽ ', 'yellow') + c(git.behind, 'white')
+      : c('▽ 0', 'gray');
+    const alerts = [aheadStr, behindStr];
+    if (git.conflict > 0) {
+      alerts.push(c(`${git.conflict} conflict${git.conflict > 1 ? 's' : ''}`, 'redBold'));
+    }
+
+    const totalMod = git.mod + git.sMod;
+    const totalAdd = git.add + git.sAdd;
+    const totalDel = git.del + git.sDel;
+    const totalRen = git.ren + git.sRen;
+
+    const row2Parts = [alerts.join(' '), ...buildChangesParts(totalMod, totalAdd, totalDel, totalRen)];
+    rows.push(row2Parts);
+  }
+
+  // Row 4: Session info (always - context with inline breakdown)
+  const sessionParts = [usernameStr, versionStr, modelStr, contextStr];
+  rows.push(sessionParts);
+
+  // Calculate max width across all rows
+  const maxWidth = Math.max(...rows.map(minRowWidth));
 
   // Build justified output
-  const lines = [];
-  lines.push(justifyRow(row1Parts, maxWidth, '·'));
-  lines.push(justifyRow(row2Parts, maxWidth, '·'));
-  lines.push(justifyRow(row3Parts, maxWidth, '·'));
-
+  const lines = rows.map(parts => justifyRow(parts, maxWidth, '·'));
   lines.push(emptyLine);
+
   return lines.join('\n');
 }
 
@@ -311,8 +433,10 @@ function formatStatusline(input, git) {
 // ============================================================================
 try {
   const input = JSON.parse(fs.readFileSync(0, 'utf-8'));
+  const cwd = input.cwd || process.cwd();
   const git = getGitInfo();
-  console.log(formatStatusline(input, git));
+  const todoInfo = getTodoProgress(cwd);
+  console.log(formatStatusline(input, git, todoInfo));
 } catch (error) {
   console.log(`[Statusline Error: ${error.message}]`);
 }

@@ -2,6 +2,7 @@
 
 // CCO Statusline - Minimal Mode
 // Single line: user · CC version · model · context
+// Progressive context warning (50%/70%/85% thresholds)
 // CLAUDE_VERSION env var → skip claude --version process
 
 const fs = require('fs');
@@ -11,9 +12,12 @@ const os = require('os');
 const C = {
   reset: '\x1b[0m',
   gray: '\x1b[90m',
+  green: '\x1b[92m',
   yellow: '\x1b[93m',
   magenta: '\x1b[95m',
   cyan: '\x1b[96m',
+  red: '\x1b[91m',
+  redBold: '\x1b[1;91m',
 };
 
 function c(text, color) {
@@ -30,29 +34,36 @@ function getClaudeCodeVersion() {
 }
 
 function formatContextUsage(contextWindow) {
-  if (!contextWindow) return null;
+  if (!contextWindow) return c('ctx ?', 'gray');
   const contextSize = contextWindow.context_window_size || 0;
-  if (contextSize === 0) return null;
+  if (contextSize === 0) return c('ctx ?', 'gray');
 
-  // Use current_usage if available (more accurate), otherwise fallback to total_input_tokens
-  // NOTE: Output tokens are NOT counted - they don't consume context window
   const currentUsage = contextWindow.current_usage;
-  let currentTokens;
+  let currentTokens = 0;
 
   if (currentUsage) {
-    // Accurate: input + cache tokens = actual context usage
     currentTokens = (currentUsage.input_tokens || 0) +
                     (currentUsage.cache_creation_input_tokens || 0) +
                     (currentUsage.cache_read_input_tokens || 0);
   } else {
-    // Fallback: only input tokens (not output!)
     currentTokens = contextWindow.total_input_tokens || 0;
   }
 
   const percent = Math.round(currentTokens * 100 / contextSize);
   const formatK = n => n >= 1000 ? Math.round(n / 1000) + 'K' : n.toString();
 
-  return `${formatK(currentTokens)} ${percent}%`;
+  // Progressive color thresholds (earlier warnings)
+  let color, warning = '';
+  if (percent >= 85) {
+    color = 'red';
+    warning = ' ' + c('⚠ COMPACT', 'redBold');
+  } else if (percent >= 50) {
+    color = 'yellow';
+  } else {
+    color = 'green';
+  }
+
+  return c(`${formatK(currentTokens)} ${percent}%`, color) + warning;
 }
 
 try {
@@ -66,9 +77,9 @@ try {
   const parts = [
     c(username, 'cyan'),
     ccVersion ? c(`CC ${ccVersion}`, 'yellow') : c('CC ?', 'gray'),
-    c(modelName, 'magenta')
+    c(modelName, 'magenta'),
+    contextUsage  // Always show context
   ];
-  if (contextUsage) parts.push(c(contextUsage, 'cyan'));
 
   console.log('\n' + parts.join(sep) + '\n');
 } catch (error) {
