@@ -1,14 +1,27 @@
 ---
 name: cco-agent-apply
 description: |
-  Batch write operations with verification and accounting. USE for:
-  - Applying fixes from cco-agent-analyze findings (batch)
-  - Config file generation (context.md, rules, settings.json)
-  - Multi-file operations needing post-change verification
-  - Export operations (AGENTS.md, CLAUDE.md)
-  TRIGGERS: "apply fixes", "write config", "generate rules", "export", "fix all", "batch"
-  REQUIRES: Findings from cco-agent-analyze OR explicit file content
-  DO NOT USE for: Simple single-file edits (use Edit tool directly)
+  Batch write operations with verification, cascade fixing, and complete accounting.
+
+  OUTPUT: JSON with results[{item, status: done|fail, reason?, verification, education{why, avoid, prefer}}], accounting{done, fail, total}, verification{linter, type_checker, tests}.
+
+  USE INSTEAD OF Edit/Write when:
+  - Applying 3+ fixes from cco-agent-analyze (pass findings directly)
+  - Need post-change verification (auto-runs lint/type/test after changes)
+  - Cascade error handling (fix causes new error → auto-fix that too)
+  - Complete accounting required (done + fail = total, no items lost)
+  - Config generation (context.md, rule files, settings.json)
+  - Export operations (AGENTS.md, CLAUDE.md, cursor rules)
+
+  FIX-ALL MODE: When fixAll=true, agent MUST fix everything. No "too complex" or "needs manual" excuses. Only technical impossibilities (file locked, would break tests) are valid fail reasons.
+
+  SAFETY: Pre-op git status check | Warns about dirty state | Rollback via git checkout
+
+  TRIGGERS: "apply fixes", "fix all", "batch edit", "generate config", "export rules", "write config", "fix these", "apply all"
+
+  DO NOT USE for: Single-file edit (use Edit), simple file create (use Write), quick one-liner fix (use Edit)
+
+  REQUIRES INPUT: Either findings[] from cco-agent-analyze OR explicit {path, content} list
 tools: Grep, Read, Glob, Bash, Edit, Write, NotebookEdit
 model: opus
 ---

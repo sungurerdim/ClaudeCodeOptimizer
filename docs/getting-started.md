@@ -19,7 +19,7 @@ The `cco-install` command:
 
 1. Creates `~/.claude/commands/` with 8 slash commands
 2. Creates `~/.claude/agents/` with 3 specialized agents
-3. Creates `~/.claude/rules/cco/` with core (87) + AI (49) rules
+3. Creates `~/.claude/rules/cco/` with core (87) + AI (60) rules
 4. Optionally configures statusline in `~/.claude/settings.json`
 
 **Files created:**
@@ -40,7 +40,7 @@ The `cco-install` command:
 │   └── cco-agent-research.md
 └── rules/cco/
     ├── core.md (87 rules)
-    └── ai.md (49 rules)
+    └── ai.md (60 rules)
 ```
 
 </details>
@@ -145,7 +145,7 @@ Located in `~/.claude/rules/cco/`:
 | File | Rules | Purpose |
 |------|-------|---------|
 | `core.md` | 87 | Fundamental principles (SSOT, DRY, YAGNI, Fail-Fast) |
-| `ai.md` | 49 | AI behavior patterns (Read-First, No-Hallucination) |
+| `ai.md` | 60 | AI behavior patterns (Read-First, No-Hallucination) |
 
 These apply to **all projects** automatically.
 

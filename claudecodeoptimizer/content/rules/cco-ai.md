@@ -19,6 +19,14 @@
 - **Hierarchy**: H2 > H3 > bullets
 - **Reference**: Cite by name, don't duplicate
 
+## Context Awareness [CRITICAL]
+
+- **Complete-Tasks**: Never stop a task early due to perceived context limits. Context windows auto-compact via summarization - continue until task is fully complete
+- **No-Self-Limiting**: Do not artificially truncate responses or skip steps. If the task requires 50 files, process all 50 files
+- **Checkpoint-Long-Tasks**: For tasks >20 steps, provide periodic progress summaries but continue execution
+- **Request-Continuation**: If you genuinely reach a limit, explicitly state "Task incomplete, {n} items remaining" so user can request continuation
+- **Avoid-Premature-Optimization**: Don't skip analysis "to save tokens" - thoroughness > brevity for correctness-critical tasks
+
 ## Execution Order [CRITICAL]
 
 - **Read-First**: Read and comprehend files completely before proposing any edits
@@ -211,6 +219,15 @@ For CRITICAL severity findings, validate with multiple reasoning paths:
 - **Agnostic**: No model-specific syntax
 - **Graceful**: Account for different capabilities
 - **Portable**: Patterns work across models
+
+## Claude 4.5 Optimization
+
+- **Explicit-Instructions**: Claude 4.5 follows instructions precisely - be specific about desired behavior, not vague
+- **Consider-Over-Think**: Use "consider", "evaluate", "assess" instead of "think" or "reason through" to avoid conflicts with thinking mode
+- **Parallel-Tool-Batching**: Combine ALL independent tool calls in single message. Claude 4.5 excels at parallel execution
+- **State-Persistence**: For multi-step tasks, use JSON for structured state and markdown for progress notes
+- **Direct-Execution**: Claude 4.5 assumes direct task execution - give clear actions, not suggestions
+- **Subagent-Delegation**: Well-defined tool/agent descriptions enable natural delegation without explicit orchestration instructions
 
 ## Output Standards
 
