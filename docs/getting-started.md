@@ -1,6 +1,6 @@
-# Getting Started with CCO
+# Getting Started
 
-Step-by-step guide for new users.
+Your first 10 minutes with CCO.
 
 ---
 
@@ -10,63 +10,129 @@ Step-by-step guide for new users.
 pip install claudecodeoptimizer && cco-install
 ```
 
-**What happens:**
-- 8 slash commands installed to `~/.claude/commands/`
-- 3 specialized agents installed to `~/.claude/agents/`
-- 87 core + 49 AI rules installed to `~/.claude/rules/cco/`
+**Restart Claude Code** after installation.
 
-**Restart Claude Code** for changes to take effect.
+<details>
+<summary>What happens during installation</summary>
+
+The `cco-install` command:
+
+1. Creates `~/.claude/commands/` with 8 slash commands
+2. Creates `~/.claude/agents/` with 3 specialized agents
+3. Creates `~/.claude/rules/cco/` with core (87) + AI (49) rules
+4. Optionally configures statusline in `~/.claude/settings.json`
+
+**Files created:**
+```
+~/.claude/
+├── commands/
+│   ├── cco-checkup.md
+│   ├── cco-commit.md
+│   ├── cco-config.md
+│   ├── cco-optimize.md
+│   ├── cco-preflight.md
+│   ├── cco-research.md
+│   ├── cco-review.md
+│   └── cco-status.md
+├── agents/
+│   ├── cco-agent-analyze.md
+│   ├── cco-agent-apply.md
+│   └── cco-agent-research.md
+└── rules/cco/
+    ├── core.md (87 rules)
+    └── ai.md (49 rules)
+```
+
+</details>
 
 ---
 
-## Your First 5 Minutes
+## First 10 Minutes
 
-### Step 1: Configure Your Project (30 sec)
+### Step 1: Configure Your Project (2 min)
 
-In Claude Code, run:
+Open Claude Code in your project directory and run:
+
 ```
 /cco-config
 ```
 
 This will:
-1. **Auto-detect** your stack (language, framework, database, etc.)
-2. **Ask questions** about team size, data sensitivity, compliance needs
-3. **Generate** project-specific rules in `.claude/rules/cco/`
 
-### Step 2: Check Project Health (10 sec)
+1. **Auto-detect** your stack (language, framework, database, tools)
+2. **Ask questions** about your context (team size, data sensitivity, compliance)
+3. **Generate rules** specific to your project in `.claude/rules/cco/`
+
+<details>
+<summary>Example detection output</summary>
+
+```
+Detected:
+├── Language: Python 3.12
+├── Framework: FastAPI
+├── Database: PostgreSQL (SQLAlchemy)
+├── Testing: pytest (82% coverage)
+├── CI/CD: GitHub Actions
+└── Type: API Service
+
+Generated rules:
+├── python.md (Python best practices)
+├── api.md (REST API patterns)
+├── security.md (PII data rules)
+└── context.md (project metadata)
+```
+
+</details>
+
+### Step 2: Check Project Health (1 min)
 
 ```
 /cco-status
 ```
 
 Shows:
-- Security score
-- Quality score
-- Hygiene score
-- Recommended next actions
 
-### Step 3: Quick Wins (2 min)
+| Score | Meaning |
+|-------|---------|
+| Security | Vulnerabilities, secrets, CVE exposure |
+| Quality | Tech debt, type coverage, complexity |
+| Hygiene | Dead code, orphan files, unused imports |
+| Tests | Coverage percentage, test quality |
+
+**Thresholds:** 80+ = OK | 60-79 = WARN | 40-59 = FAIL | <40 = CRITICAL
+
+### Step 3: Quick Wins (5 min)
 
 ```
 /cco-optimize --quick
 ```
 
 Auto-fixes safe issues:
+
 - Unused imports
-- Simple type hints
-- Basic security fixes
-- Code formatting
+- Missing type hints
+- Simple security fixes
+- Formatting issues
+
+**Risky changes** (auth, schema, API) will ask for approval.
 
 ---
 
-## What Changed After Installation?
+## What Changed?
 
-| Before | After |
-|--------|-------|
-| Claude uses generic patterns | Claude uses domain-specific best practices |
-| No pre-action checks | Git status check before changes |
-| Silent operations | Full accounting: `Applied: N | Skipped: N | Failed: N` |
-| No approval flow | Risky changes require confirmation |
+### Before CCO
+
+- Claude uses generic patterns
+- No pre-action safety checks
+- Silent changes, no tracking
+- No approval flow for risky operations
+
+### After CCO
+
+- Domain-specific best practices for your stack
+- Git status verified before every operation
+- Full accounting: `Applied: N | Failed: N | Total: N`
+- Risky changes require explicit approval
 
 ---
 
@@ -76,10 +142,12 @@ Auto-fixes safe issues:
 
 Located in `~/.claude/rules/cco/`:
 
-| File | Purpose |
-|------|---------|
-| `core.md` | 87 fundamental principles (SSOT, DRY, YAGNI, etc.) |
-| `ai.md` | 49 AI behavior patterns (Read-First, No-Hallucination, etc.) |
+| File | Rules | Purpose |
+|------|-------|---------|
+| `core.md` | 87 | Fundamental principles (SSOT, DRY, YAGNI, Fail-Fast) |
+| `ai.md` | 49 | AI behavior patterns (Read-First, No-Hallucination) |
+
+These apply to **all projects** automatically.
 
 ### Project Rules (After /cco-config)
 
@@ -87,33 +155,70 @@ Located in `.claude/rules/cco/`:
 
 | File | Purpose |
 |------|---------|
-| `context.md` | Project metadata (stack, team, scale, etc.) |
-| `{language}.md` | Language-specific rules (Python, TypeScript, etc.) |
-| `{category}.md` | Category-specific rules (security, compliance, etc.) |
+| `context.md` | Project metadata (stack, team, scale, priority) |
+| `{language}.md` | Language-specific rules |
+| `{category}.md` | Category-specific rules (security, compliance) |
+
+These are **generated per-project** based on detection.
 
 ---
 
-## Common First-Time Questions
-
-### "What does /cco-config actually do?"
-
-1. Runs `cco-agent-analyze` to detect your stack
-2. Asks clarifying questions (team size, data sensitivity, etc.)
-3. Selects relevant rules from 1563 adaptive rules
-4. Writes rules to `.claude/rules/cco/`
-5. Optionally configures statusline and permissions
+## Common Questions
 
 ### "Do I need to run /cco-config for every project?"
 
-Yes. Each project gets its own rules based on its specific stack and requirements.
+Yes. Each project gets its own rules based on its specific stack and context.
 
 ### "Can I customize the generated rules?"
 
-Yes. Edit files in `.claude/rules/cco/` directly. Your changes persist until next `/cco-config` run.
+Yes. Edit files in `.claude/rules/cco/` directly. Your changes persist until the next `/cco-config` run.
 
 ### "How do I see what rules are active?"
 
-Check `~/.claude/rules/cco/` (global) and `.claude/rules/cco/` (project).
+Check:
+- `~/.claude/rules/cco/` (global rules, always active)
+- `.claude/rules/cco/` (project rules, if configured)
+
+### "What if /cco-config detects something wrong?"
+
+The detection is a starting point. You can:
+1. Answer the clarifying questions differently
+2. Edit the generated rules directly
+3. Run `/cco-config` again to reconfigure
+
+---
+
+## Troubleshooting
+
+### Commands not appearing
+
+1. **Restart Claude Code** after installation
+2. Check if files exist: `ls ~/.claude/commands/`
+3. Verify installation: `cco-install --dry-run`
+
+### "CCO context not found"
+
+Most commands require project configuration first:
+
+```
+/cco-config
+```
+
+### Permission errors during installation
+
+Try installing with pipx for isolation:
+
+```bash
+pipx install claudecodeoptimizer && cco-install
+```
+
+### Statusline not showing
+
+Run installation with explicit statusline option:
+
+```bash
+cco-install --statusline cco-full
+```
 
 ---
 
@@ -125,8 +230,26 @@ Check `~/.claude/rules/cco/` (global) and `.claude/rules/cco/` (project).
 | Architecture review | `/cco-review` |
 | Quality-gated commit | `/cco-commit` |
 | Pre-release check | `/cco-preflight` |
+| Research a topic | `/cco-research "your question"` |
 
-See [Commands](commands.md) for full reference.
+See [Commands](commands.md) for full documentation.
+
+---
+
+## Local Mode
+
+For project-specific settings without affecting global installation:
+
+```bash
+cco-install --local . --statusline cco-full --permissions balanced
+```
+
+| Option | Values |
+|--------|--------|
+| `--statusline` | `cco-full` (all info) / `cco-minimal` (project + branch) |
+| `--permissions` | `safe` / `balanced` / `permissive` / `full` |
+
+This creates `.claude/` in your project directory instead of `~/.claude/`.
 
 ---
 

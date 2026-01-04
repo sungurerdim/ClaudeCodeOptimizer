@@ -1,6 +1,21 @@
-# CCO Workflow Guide
+# Workflow Guide
 
-How to integrate CCO commands into your development workflow.
+How to integrate CCO into your development workflow.
+
+---
+
+## Quick Reference
+
+| I want to... | Command |
+|--------------|---------|
+| See project health | `/cco-status` |
+| Fix issues | `/cco-optimize` |
+| Review architecture | `/cco-review` |
+| Commit with quality gates | `/cco-commit` |
+| Prepare for release | `/cco-preflight` |
+| Regular maintenance | `/cco-checkup` |
+| Research a topic | `/cco-research` |
+| Configure project | `/cco-config` |
 
 ---
 
@@ -11,7 +26,7 @@ Start session
      │
      ▼
 ┌────────────────┐
-│  /cco-status   │  Quick health check (10 sec)
+│  /cco-status   │  Quick health check
 └───────┬────────┘
         │
    [Write code]
@@ -29,13 +44,11 @@ Start session
       Done
 ```
 
-### When to Use Each Command
-
-| Situation | Command | Why |
-|-----------|---------|-----|
-| Starting work | `/cco-status` | See current health, know what needs attention |
-| Ready to commit | `/cco-commit` | Quality gates catch issues before they're committed |
-| Cleaning up | `/cco-checkup` | Batch maintenance (status + optimize) |
+| Situation | Command |
+|-----------|---------|
+| Starting work | `/cco-status` |
+| Ready to commit | `/cco-commit` |
+| Cleaning up | `/cco-checkup` |
 
 ---
 
@@ -49,7 +62,7 @@ Feature complete
 │  /cco-review   │  Architecture check
 └───────┬────────┘
         │
-   [Issues found?] ──yes──► Fix issues
+   [Issues?] ──yes──► Fix issues
         │
        no
         │
@@ -67,14 +80,12 @@ Feature complete
    Create PR
 ```
 
-### Command Selection
-
-| Goal | Command | Flags |
-|------|---------|-------|
-| Quick review | `/cco-review --quick` | Report only, smart defaults |
-| Full review | `/cco-review` | Interactive, with apply option |
-| Security focus | `/cco-optimize --security` | Security scope only |
-| Everything | `/cco-optimize` | All scopes |
+| Goal | Command |
+|------|---------|
+| Quick review | `/cco-review --quick` |
+| Full review | `/cco-review` |
+| Security focus | `/cco-optimize --security` |
+| Everything | `/cco-optimize` |
 
 ---
 
@@ -85,25 +96,20 @@ Release candidate
         │
         ▼
 ┌────────────────┐
-│ /cco-preflight │  Orchestrates: optimize + review + verify
+│ /cco-preflight │  Full release check
 └───────┬────────┘
         │
    [Blockers?] ──yes──► Fix blockers
         │
        no
         │
-        ▼
-   [Warnings?] ──yes──► Decide: fix or override
+   [Warnings?] ──yes──► Fix or override
         │
        no
         │
         ▼
-┌────────────────┐
-│    Release     │  Tag + push
-└────────────────┘
+   Tag + Release
 ```
-
-### Preflight Checks
 
 | Check | Type | Action if Failed |
 |-------|------|------------------|
@@ -115,56 +121,42 @@ Release candidate
 
 ---
 
-## Maintenance Routine
+## Maintenance Schedule
 
-### Weekly (Active Development)
-
-```
-/cco-checkup
-```
-
-Runs:
-1. `/cco-status` — Health dashboard
-2. `/cco-optimize --quick` — Safe auto-fixes
-
-### Monthly (Stable Projects)
-
-```
-/cco-review --focus=dependencies
-/cco-optimize --security
-```
-
-Checks:
-- Outdated dependencies
-- Security advisories
-- Accumulated tech debt
+| Frequency | Use Case | Command |
+|-----------|----------|---------|
+| Daily | Start of session | `/cco-status` |
+| Weekly | Active development | `/cco-checkup` |
+| Before PR | Quality gate | `/cco-checkup` |
+| Monthly | Stable projects | `/cco-review --focus=dependencies` |
+| Before release | Full validation | `/cco-preflight` |
 
 ---
 
 ## Command Relationships
 
 ```
-┌─────────────────────────────────────────────────────┐
-│                    /cco-preflight                   │
-│  (Orchestrates optimize + review for releases)      │
-└───────────────────────┬─────────────────────────────┘
-                        │
-          ┌─────────────┴─────────────┐
-          │                           │
-          ▼                           ▼
-┌─────────────────┐         ┌─────────────────┐
-│  /cco-optimize  │         │   /cco-review   │
-│ (Fix issues)    │         │ (Analyze arch)  │
-└─────────────────┘         └─────────────────┘
-          │                           │
-          └─────────────┬─────────────┘
-                        │
-                        ▼
-              ┌─────────────────┐
-              │  /cco-checkup   │
-              │ (status + opt)  │
-              └─────────────────┘
+                    /cco-preflight
+                   (release workflow)
+                          │
+          ┌───────────────┴───────────────┐
+          ▼                               ▼
+    /cco-optimize                   /cco-review
+    (fix issues)                    (architecture)
+          │                               │
+          └───────────────┬───────────────┘
+                          ▼
+                    /cco-checkup
+                   (maintenance)
+                          │
+                          ▼
+                    /cco-status
+                   (health check)
 ```
+
+**Orchestration:**
+- `/cco-preflight` runs optimize + review + verification
+- `/cco-checkup` runs status + optimize
 
 ---
 
@@ -173,42 +165,15 @@ Checks:
 When you need to make a decision:
 
 ```
-"Which library should I use?"
-         │
-         ▼
-┌────────────────┐
-│ /cco-research  │  Multi-source research
-└───────┬────────┘
-         │
-         ▼
-   [T1-T6 scored sources]
-   [Contradictions resolved]
-   [Recommendation]
+/cco-research "Which ORM should I use?"
 ```
 
-### Research Modes
-
-| Mode | Use When |
+| Mode | Use Case |
 |------|----------|
-| `/cco-research "query"` | Standard research |
-| `/cco-research "A vs B" --compare` | Comparing options |
-| `/cco-research "query" --security` | Security/CVE focus |
-| `/cco-research "query" --local` | Codebase-only search |
-
----
-
-## Quick Reference
-
-| I want to... | Use |
-|--------------|-----|
-| See project health | `/cco-status` |
-| Fix issues | `/cco-optimize` |
-| Review architecture | `/cco-review` |
-| Commit with quality gates | `/cco-commit` |
-| Prepare for release | `/cco-preflight` |
-| Regular maintenance | `/cco-checkup` |
-| Research a topic | `/cco-research` |
-| Configure project | `/cco-config` |
+| Standard | `/cco-research "query"` |
+| Compare | `/cco-research "A vs B" --compare` |
+| Security | `/cco-research "query" --security` |
+| Local only | `/cco-research "query" --local` |
 
 ---
 

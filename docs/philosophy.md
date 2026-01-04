@@ -1,27 +1,25 @@
-# CCO Philosophy
+# Philosophy
 
-The principles and decision framework that guide CCO.
+The principles and decisions that guide CCO.
 
 ---
 
-## Core Beliefs
+## Core Belief
 
-### Claude Already Knows How to Code
+**Claude already knows how to code.** Opus 4.5 is state-of-the-art for software engineering. CCO doesn't teach coding—it adds the safety layer between intent and action.
 
-Opus 4.5 is state-of-the-art. CCO doesn't teach coding—it adds the safety layer between intent and action.
+---
 
-### Process Layer, Not Teaching Layer
+## What CCO Is
 
-CCO provides:
-- **Pre-operation safety** — Check before act
-- **Standardized workflows** — Consistent patterns
-- **Post-operation verification** — Confirm results
+A **process layer**, not a teaching layer.
 
-### Minimum Footprint
-
-- Zero runtime dependencies
-- No logs, configs, or tracking in your project
-- Only `~/.claude/` (global) and `.claude/rules/cco/` (project) touched
+| CCO Provides | CCO Does Not |
+|--------------|--------------|
+| Pre-operation safety checks | Teach Claude new skills |
+| Standardized workflows | Replace Claude's reasoning |
+| Post-operation verification | Add magic or snake-oil |
+| Context-aware rules | Track or phone home |
 
 ---
 
@@ -34,6 +32,25 @@ CCO provides:
 | **Minimum Footprint** | Zero deps, no tracking, minimal files |
 | **Real Solutions** | Fix root causes, not symptoms |
 | **Honest Guidance** | Challenge assumptions, don't just validate |
+
+---
+
+## Safety-First Workflow
+
+Every operation follows the same pattern:
+
+```
+Pre-Check → Analyze → Report → Approve → Apply → Verify
+```
+
+| Step | What Happens |
+|------|--------------|
+| **Pre-Check** | Verify git status, check for dirty state |
+| **Analyze** | Identify issues and opportunities |
+| **Report** | Present findings with evidence |
+| **Approve** | Safe = auto-apply, Risky = ask user |
+| **Apply** | Execute changes with tracking |
+| **Verify** | Confirm success, report accounting |
 
 ---
 
@@ -60,7 +77,9 @@ How CCO (and Claude with CCO rules) makes decisions:
 | **Evidence-Required** | Security claims require code/config proof |
 | **Severity-Conservative** | When uncertain, choose lower severity |
 
-### Severity Levels
+---
+
+## Severity Levels
 
 | Level | Criteria | Examples |
 |-------|----------|----------|
@@ -73,21 +92,37 @@ How CCO (and Claude with CCO rules) makes decisions:
 
 ## What CCO Doesn't Do
 
-- **Doesn't track usage** — No analytics, no counters
-- **Doesn't phone home** — Fully offline capable
-- **Doesn't create unnecessary files** — Only what's needed
-- **Doesn't over-engineer** — Simple solutions preferred
-- **Doesn't validate blindly** — Will challenge when appropriate
+- **No tracking** — No analytics, no counters, no metrics collection
+- **No network calls** — Fully offline capable, no phone home
+- **No unnecessary files** — Only creates what's needed
+- **No over-engineering** — Simple solutions preferred
+- **No blind validation** — Will challenge when appropriate
+
+---
+
+## Model Strategy
+
+CCO uses Opus + Haiku, no Sonnet.
+
+| Model | Used For | Why |
+|-------|----------|-----|
+| **Opus** | Code changes, analysis, research synthesis | State-of-the-art accuracy |
+| **Haiku** | File reads, quick scans, web fetches | Fast and cost-effective |
+
+**Opus 4.5 advantages:**
+- 50-75% fewer tool calling errors
+- State-of-the-art on SWE-bench
+- Best for multi-step reasoning
 
 ---
 
 ## Educational Approach
 
-When CCO fixes something, it explains:
+When CCO fixes something, it explains why:
 
 ```
 [FIXED] SQL injection in api/users.py:42
-  Why: Allows database manipulation via user input
+  Why: User input passed directly to query allows database manipulation
   Avoid: f"SELECT * FROM users WHERE id = {user_id}"
   Prefer: cursor.execute("SELECT ... WHERE id = ?", (user_id,))
 ```
@@ -96,18 +131,34 @@ The goal: prevent recurrence by teaching the pattern.
 
 ---
 
-## Workflow Integration
+## Minimum Footprint
 
-CCO fits into your existing workflow:
+CCO only touches:
 
-| When | Command | Purpose |
-|------|---------|---------|
-| Start session | `/cco-status` | Quick health check |
-| After changes | `/cco-commit` | Quality-gated commit |
-| Before PR | `/cco-checkup` | Maintenance routine |
-| Before release | `/cco-preflight` | Release validation |
+| Location | Content |
+|----------|---------|
+| `~/.claude/commands/` | 8 slash commands |
+| `~/.claude/agents/` | 3 specialized agents |
+| `~/.claude/rules/cco/` | Global rules (core + AI) |
+| `.claude/rules/cco/` | Project-specific rules (after /cco-config) |
 
-See [Workflow Guide](workflow.md) for detailed integration.
+**Your project files are never modified** by installation. Only `/cco-config` creates files in your project's `.claude/` directory.
+
+---
+
+## Standards
+
+Built on:
+
+- [Claude 4 Best Practices](https://platform.claude.com/docs/en/build-with-claude/prompt-engineering/claude-4-best-practices)
+- [Claude Code Documentation](https://code.claude.com/docs)
+- [Google Prompt Engineering Whitepaper](https://www.kaggle.com/whitepaper-prompt-engineering)
+
+**Core:** SSOT, DRY, YAGNI, KISS, Fail-Fast
+**AI:** Read-First, No-Hallucination, Evidence-Required
+**Security:** OWASP Top 10, Least-Privilege, Defense-in-Depth
+
+See [Principles Reference](principles-reference.md) for detailed definitions.
 
 ---
 
