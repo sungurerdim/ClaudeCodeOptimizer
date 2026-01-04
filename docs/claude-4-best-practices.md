@@ -343,3 +343,7 @@ These patterns are handled automatically by Claude Code and don't require explic
 - **Multi-Context Window State Management** - Claude Code has automatic context compaction
 - **Subagent Context Isolation** - Each subagent gets isolated context window
 - **State Persistence** - TodoWrite and git state are naturally available
+
+---
+
+*Back to [README](../README.md)*
