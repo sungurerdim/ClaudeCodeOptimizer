@@ -7,7 +7,8 @@ name = "claudecodeoptimizer"
 description = "A process and rules layer for Claude Code in the Opus 4.5 era"
 dynamic = ["version"]
 readme = "README.md"
-license = {text = "MIT"}
+license = "MIT"
+license-files = ["LICENSE"]
 authors = [
     {name = "Sungur Zahid Erdim", email = "sungurerdim@users.noreply.github.com"}
 ]
@@ -24,7 +25,6 @@ keywords = [
 classifiers = [
     "Development Status :: 5 - Production/Stable",
     "Intended Audience :: Developers",
-    "License :: OSI Approved :: MIT License",
     "Operating System :: OS Independent",
     "Programming Language :: Python :: 3",
     "Programming Language :: Python :: 3.10",
@@ -55,8 +55,8 @@ Issues = "https://github.com/sungurerdim/ClaudeCodeOptimizer/issues"
 cco-install = "claudecodeoptimizer.install_hook:post_install"
 cco-uninstall = "claudecodeoptimizer.uninstall:main"
 
-[tool.setuptools]
-packages = {find = {}}
+[tool.setuptools.packages.find]
+exclude = ["benchmark*", "tests*"]
 
 [tool.setuptools.package-data]
 claudecodeoptimizer = ["content/**/*"]
