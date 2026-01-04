@@ -5,6 +5,7 @@ Runs projects through ccbox (vanilla and cco modes) and collects results.
 
 ccbox behavior:
 - Mounts current working directory as project root
+- -U flag removes CPU/I/O soft limits (required for accurate benchmarking)
 - --bare flag runs without CCO rules (vanilla)
 - Default (no flag) runs with CCO rules (ccbox:base image)
 
@@ -615,6 +616,7 @@ class TestExecutor:
             Dict with success, time, command, exit_code, stdout, stderr, error
         """
         # ccbox parameters (as of latest version):
+        # -U: unrestricted mode (no CPU/I/O soft limits - required for benchmarking)
         # -y: unattended mode (deps=ALL, stack=auto-detect, no prompts)
         # -dd: debug logging (stream output)
         # -C: change directory
@@ -622,6 +624,7 @@ class TestExecutor:
         # -p/--prompt: initial prompt (enables --print mode)
         cmd = [
             self.ccbox_cmd,
+            "-U",  # Unrestricted mode (no CPU/I/O limits for benchmarking)
             "-y",  # Unattended mode (deps=ALL, stack=auto)
             "-dd",  # Debug logging
             "-C",
@@ -764,6 +767,7 @@ STDERR:
         """
         cmd = [
             self.ccbox_cmd,
+            "-U",  # Unrestricted mode (no CPU/I/O limits for benchmarking)
             "-y",  # Unattended mode (deps=ALL, stack=auto)
             "-dd",  # Debug logging
             "-C",
@@ -963,13 +967,14 @@ STDERR:
 
         # Build ccbox command for the actual test
         # ccbox parameters (as of latest version):
+        # -U: unrestricted mode (no CPU/I/O soft limits - required for benchmarking)
         # -y: unattended mode (deps=ALL, stack=auto-detect, no prompts)
         # -dd: debug logging (stream output)
         # -C: change directory
         # --bare: vanilla mode (no CCO rules)
         # -m/--model: model selection
         # -p/--prompt: initial prompt (enables --print mode)
-        cmd = [self.ccbox_cmd, "-y", "-dd"]
+        cmd = [self.ccbox_cmd, "-U", "-y", "-dd"]
 
         # Project directory (ccbox -C flag)
         cmd.extend(["-C", str(project_dir)])
