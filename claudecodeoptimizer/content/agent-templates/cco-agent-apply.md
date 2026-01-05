@@ -116,7 +116,7 @@ for (const item of failedItems) {
 
 | Reason | Why Invalid |
 |--------|-------------|
-| Planning metadata (effort/impact/bucket/priority) | For reporting only, not execution criteria |
+| Effort categories (quickWin/moderate/complex/major) | For reporting only, not execution criteria |
 | "Too complex" / "Would take too long" | User's decision, not agent's |
 | "Needs manual review" | Agent must attempt fix |
 | "Unsure about approach" | Ask user via parent agent |
@@ -490,6 +490,41 @@ Every fixed item MUST include brief educational context to prevent recurrence:
 **No "declined" status:** AI has no option to decline. Fix or fail with technical reason.
 
 **Invariant:** `done + fail = total`
+
+## Bounded Retry [CRITICAL]
+
+**Max 3 attempts per fix item.** Prevents infinite fix-fail loops.
+
+| Attempt | Action |
+|---------|--------|
+| 1 | Apply primary fix approach |
+| 2 | Try alternative approach (different strategy) |
+| 3 | Try minimal viable fix (smallest change that could work) |
+| >3 | **STOP** - Report `"fail"` with reason: `"Technical: Unable to fix after 3 attempts - {last_error}"` |
+
+**What counts as a retry (same item):**
+- Lint/type check fails after fix attempt
+- Tests fail after fix attempt
+- Same file, same line, same issue
+
+**What is NOT a retry (new item):**
+- Cascade fix for a different file
+- Different finding in same file
+- New error introduced by fix (this is a new finding)
+
+**Retry State Tracking:**
+```javascript
+// Track per finding ID
+retryState = {
+  "{SCOPE}-{NNN}": { attempts: 0, lastError: null }
+}
+
+// Before each fix attempt
+if (retryState[findingId].attempts >= 3) {
+  return { status: "fail", reason: "Technical: Unable to fix after 3 attempts" }
+}
+retryState[findingId].attempts++
+```
 
 ### Reason Field Format
 

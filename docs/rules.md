@@ -7,9 +7,9 @@
 | Category     | Rules    | Location                           | Loading       |
 |--------------|----------|------------------------------------|---------------|
 | Core         | 87       | `~/.claude/rules/cco/core.md`      | Always active |
-| AI           | 60       | `~/.claude/rules/cco/ai.md`        | Always active |
+| AI           | 61       | `~/.claude/rules/cco/ai.md`        | Always active |
 | Adaptive     | 1563     | pip package → `.claude/rules/cco/` | Per-project   |
-| **Total**    | **1710** |                                    |               |
+| **Total**    | **1711** |                                    |               |
 
 *Note: Tool rules (workflow mechanisms) are embedded directly in command/agent templates.*
 
@@ -194,6 +194,7 @@
 ### Execution Order [CRITICAL]
 
 - **Read-First**: Read and comprehend files completely before proposing any edits
+- **Investigation-Block**: BLOCK any edit operation until target file has been read in current session. No read = no edit. Violation = stop, read file first, then proceed
 - **Plan-Before-Act**: Understand full scope before any action
 - **Incremental**: Complete one step fully before starting next
 - **Verify**: Confirm changes match stated intent

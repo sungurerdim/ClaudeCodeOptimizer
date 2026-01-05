@@ -88,7 +88,7 @@
 - **Root-Cause-Hunt**: Ask "why does this pattern exist?" not just "what's wrong?"
 - **Cross-Cutting-Concerns**: Check for issues that span multiple modules
 - **Systemic-Patterns**: Identify recurring problems indicating design flaws
-- **80/20-Priority**: Prioritize by impact × effort: Do Now (high impact, low effort) → Plan (high impact, medium effort) → Consider (medium impact) → Backlog (low impact or high effort)
+- **80/20-Priority**: Prioritize by impact × effort: Quick Win (high impact, low effort) → Moderate (high impact, medium effort) → Complex (medium impact) → Major (low impact or high effort)
 
 ## Documentation
 

@@ -30,6 +30,7 @@
 ## Execution Order [CRITICAL]
 
 - **Read-First**: Read and comprehend files completely before proposing any edits
+- **Investigation-Block**: BLOCK any edit operation until target file has been read in current session. No read = no edit. Violation = stop, read file first, then proceed
 - **Plan-Before-Act**: Understand full scope before any action
 - **Incremental**: Complete one step fully before starting next
 - **Verify**: Confirm changes match stated intent
