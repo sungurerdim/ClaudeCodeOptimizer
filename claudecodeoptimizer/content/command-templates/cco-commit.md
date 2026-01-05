@@ -39,7 +39,8 @@ model: opus
 | 1 | Pre-checks | Conflicts + quality gates | Parallel, conditional tests |
 | 2 | Analyze | Group changes, show table | Smart grouping |
 | 3 | Execute | Create commits | Direct (no question) |
-| 4 | Summary | Show results | Instant |
+| 4 | Verify | Confirm commits created | git log check |
+| 5 | Summary | Show results | Instant |
 
 **No TodoWrite** - Fast operation, output is self-explanatory.
 
@@ -255,7 +256,28 @@ EOF
 
 ---
 
-## Step-4: Summary
+## Step-4: Verify
+
+```javascript
+// Verify commits were created successfully
+verifyResult = Bash("git log --oneline -" + commitPlan.commits.length)
+gitStatus = Bash("git status --short")
+
+// Check working tree is clean (all changes committed)
+if (gitStatus.trim() && !args.includes('--staged-only')) {
+  console.log("⚠️ Warning: Working tree not clean after commit")
+}
+
+// Verify commit count matches plan
+actualCommits = verifyResult.split('\n').filter(l => l.trim()).length
+if (actualCommits < commitPlan.commits.length) {
+  console.log(`⚠️ Warning: Expected ${commitPlan.commits.length} commits, found ${actualCommits}`)
+}
+```
+
+---
+
+## Step-5: Summary
 
 ```javascript
 console.log(`
@@ -266,6 +288,7 @@ console.log(`
 | Commits | ${commitPlan.commits.length} |
 | Files | ${filesToCommit.length} |
 | Branch | ${branch} |
+| Status | ${gitStatus.trim() ? 'WARN' : 'OK'} |
 
 ${commitPlan.commits.map((c, i) =>
   `- ${c.message.type}(${c.message.scope}): ${c.message.title}`
