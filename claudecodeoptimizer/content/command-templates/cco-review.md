@@ -5,7 +5,7 @@ description: |
   QUESTION: "No prior choices exist. Given only the requirements, what would be ideal?"
   TRIGGERS: "review", "architecture", "ideal", "refactor plan", "strategic", "gap analysis"
   USE WHEN: Need strategic assessment of how current compares to ideal state
-  FLAGS: --auto, --intensity=X, --focus=X, --report, --quick
+  FLAGS: --auto, --intensity=X, --focus=X, --report, --dry-run, --quick
   OUTPUTS: Current vs Ideal comparison, Gap analysis, 80/20 prioritized roadmap
   SCOPES: 5 scopes, 59 checks total (ARC-01 to AIA-10)
 allowed-tools: Read(*), Grep(*), Glob(*), Edit(*), Bash(*), Task(*), TodoWrite, AskUserQuestion
@@ -664,6 +664,7 @@ cco-review: {OK|WARN|FAIL} | Gaps: {gapCount} | Applied: {applied} | Failed: {fa
 | `--focus=X` | architecture, patterns, testing, maintainability, ai-architecture |
 | `--quick` | Haiku model, report-only, no questions |
 | `--report` | Alias for --intensity=report-only |
+| `--dry-run` | Same as --report (show plan, no changes) |
 
 ### Model Strategy
 

@@ -583,9 +583,12 @@ generateResult = Task("cco-agent-analyze", `
   [CRITICAL] Targeted Section Extraction:
   1. Get CCO path: CCO_PATH=$(python3 -c "from claudecodeoptimizer.config import get_content_path; print(get_content_path('rules'))")
   2. For each detection, extract matching section using sed patterns:
-     - L:{lang} → sed -n '/^### {lang} (L:{lang})/,/^###\\|^---\\|^## /p' "$CCO_PATH/cco-adaptive.md"
-     - Backend:{framework} → sed -n '/^### {framework}/,/^###\\|^---\\|^## /p' "$CCO_PATH/cco-adaptive.md"
-     - {section_name} → sed -n '/^## {section_name}/,/^## \\|^---/p' "$CCO_PATH/cco-adaptive.md"
+     Examples (concrete):
+     - L:Python → sed -n '/^### Python (L:Python)/,/^###\|^---\|^## /p' "$CCO_PATH/cco-adaptive.md"
+     - L:TypeScript → sed -n '/^### TypeScript (L:TypeScript)/,/^###\|^---\|^## /p' "$CCO_PATH/cco-adaptive.md"
+     - Backend:FastAPI → sed -n '/^### FastAPI/,/^###\|^---\|^## /p' "$CCO_PATH/cco-adaptive.md"
+     - Frontend:React → sed -n '/^### React/,/^###\|^---\|^## /p' "$CCO_PATH/cco-adaptive.md"
+     Pattern (generic): sed -n '/^### {SectionHeader}/,/^###\|^---\|^## /p' "$CCO_PATH/cco-adaptive.md"
   3. Run ALL extractions in PARALLEL using: command1 & command2 & wait
   4. Generate context.md from projectCritical + userInput
   5. Generate rule files from extracted sections
@@ -673,12 +676,24 @@ Task("cco-agent-apply", `
 
 ### Detection → Rule Mapping
 
-**SSOT References (no duplication here):**
-- **Trigger patterns & values:** `cco-triggers.md` (1176 lines, complete reference)
-- **Detection → Rule File mapping:** `cco-agent-analyze.md` config scope (lines 353-386)
-- **Rule content:** Extracted from `cco-adaptive.md` sections by agent
+**Quick Reference (common patterns):**
 
-The cco-agent-analyze agent handles all detection-to-rule mapping internally using these SSOT sources. Pattern: `{Category}:{type}` → `{type}.md` or `{category}.md`
+| Detection | Rule File | Example Trigger |
+|-----------|-----------|-----------------|
+| L:Python | python.md | pyproject.toml, *.py |
+| L:TypeScript | typescript.md | tsconfig.json, *.ts |
+| Backend:FastAPI | backend.md | fastapi in deps |
+| Frontend:React | frontend.md | react in deps |
+| Infra:Docker | container.md | Dockerfile |
+| CI:GitHub | ci-cd.md | .github/workflows/ |
+| Test:pytest | testing.md | pytest in deps |
+
+**Full SSOT Sources:**
+- **Trigger patterns:** `cco-triggers.md` (1176 lines, all file/pattern mappings)
+- **All detections:** `cco-adaptive.md` Detection System section (lines 19-291)
+- **Rule content:** Extracted from `cco-adaptive.md` by cco-agent-analyze
+
+**Mapping Pattern:** `{Category}:{Type}` → `{type}.md` or `{category}.md`
 
 ### Settings.json Structure
 

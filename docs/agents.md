@@ -74,19 +74,21 @@ Commands can override agent defaults via Task parameter: `Task("agent", prompt, 
 - Auto-skip: node_modules, dist, .git, __pycache__
 - False positive handling: `excluded[]` with reasons
 
-### Scopes
+### Scopes (12 total)
 
 | Scope            | Returns                              | Use Case                      |
 |------------------|--------------------------------------|-------------------------------|
-| `detect`         | Project structure, stack, tools      | cco-config, cco-commit fallback |
-| `scan`           | Issues with file:line, metrics       | cco-status                    |
-| `full`           | Both combined                        | cco-config first run          |
 | `security`       | Security vulnerabilities, secrets    | cco-optimize --security       |
-| `quality`        | Tech debt, consistency, tests        | cco-optimize --quality        |
 | `hygiene`        | Orphans, duplicates, stale refs      | cco-optimize --hygiene        |
-| `best-practices` | Pattern adherence, efficiency        | cco-optimize --best-practices |
+| `types`          | Type coverage, annotation issues     | cco-optimize --types          |
+| `lint`           | Format, style, naming issues         | cco-optimize --lint           |
+| `performance`    | N+1, blocking I/O, missing caching   | cco-optimize --performance    |
+| `ai-hygiene`     | Hallucinated APIs, orphan abstractions | cco-optimize --ai-hygiene   |
 | `architecture`   | Dependency graph, coupling metrics   | cco-review                    |
-| `trends`         | Historical metrics with deltas       | cco-status --trends           |
+| `patterns`       | SOLID, DRY, design patterns          | cco-review --patterns         |
+| `testing`        | Coverage gaps, test quality          | cco-review --testing          |
+| `maintainability`| Complexity, readability, naming      | cco-review --maintainability  |
+| `scan`           | Dashboard metrics (all categories)   | cco-status                    |
 | `config`         | Project detection and rule selection | cco-config                    |
 
 ### Detection Capabilities

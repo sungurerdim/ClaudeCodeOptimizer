@@ -84,12 +84,13 @@ WebFetch({url}, "extract key claims")
 
 ## Scope Parameter
 
-| Scope | Returns | Strategy |
-|-------|---------|----------|
-| `search` | Ranked sources | WebSearch batch → WebFetch top results |
-| `analyze` | Deep analysis | Parallel WebFetch all sources |
-| `synthesize` | Recommendation | Process only (no fetches) |
-| `full` | All combined | Search → Analyze → Synthesize |
+| Scope | Returns | Strategy | Depth |
+|-------|---------|----------|-------|
+| `search` | Ranked sources | WebSearch batch → WebFetch top results | Quick |
+| `analyze` | Deep analysis | Parallel WebFetch all sources | Standard |
+| `synthesize` | Recommendation | Process only (no fetches) | - |
+| `full` | All combined | Search → Analyze → Synthesize | Deep |
+| `dependency` | Package CVE, versions | WebSearch security DB + changelog | Standard |
 
 ## Source Tiers & Modifiers
 
