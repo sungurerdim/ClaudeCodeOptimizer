@@ -160,6 +160,58 @@ GET  /api/results/{filename}    # Get full result
 GET  /api/summary               # Aggregate stats
 ```
 
+## Troubleshooting
+
+### "failed switching to node: operation not permitted" (gosu error)
+
+This error occurs when the ccbox Docker container cannot switch from root to the node user. Common on Windows with Docker Desktop/WSL2.
+
+**Symptoms:**
+```
+[ccbox] Running as root, switching to node user...
+[ccbox] Switching to node user via gosu...
+error: failed switching to "node": operation not permitted
+Container exited with code 1
+```
+
+**Solutions (try in order):**
+
+1. **Run Docker Desktop as Administrator**
+   - Right-click Docker Desktop → Run as administrator
+   - Restart Docker Desktop
+
+2. **Reset WSL2 integration**
+   - Docker Desktop → Settings → Resources → WSL Integration
+   - Toggle off, Apply, toggle on, Apply
+   - Restart Docker Desktop
+
+3. **Update Docker Desktop**
+   - Ensure you have the latest version
+   - Settings → Software Updates → Check for updates
+
+4. **Reset Docker to factory defaults**
+   - Docker Desktop → Troubleshoot → Reset to factory defaults
+   - Warning: This removes all containers, images, and volumes
+
+5. **Check WSL2 version**
+   ```powershell
+   wsl --update
+   wsl --shutdown
+   # Restart Docker Desktop
+   ```
+
+### Docker daemon not running
+
+**Windows:** Start Docker Desktop from the Start menu
+
+**macOS:** `open -a Docker`
+
+**Linux:** `sudo systemctl start docker`
+
+### ccbox not found
+
+Install ccbox: `pip install ccbox`
+
 ## Important Notes
 
 1. **Run outside CCO directory**: Benchmarks should run in isolated directories to avoid CCO rules affecting vanilla tests

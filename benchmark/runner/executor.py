@@ -99,12 +99,25 @@ def _parse_ccbox_error(stdout: str, stderr: str, exit_code: int) -> str:
     # Check for common ccbox errors
     combined = (stdout + stderr).lower()
 
+    # Gosu user switching error (common on Windows/WSL2)
+    if "gosu" in combined and "operation not permitted" in combined:
+        error_parts.append(
+            "Docker user switching failed (gosu). "
+            "Fix: Run Docker Desktop as Administrator, or check WSL2 integration settings"
+        )
+    elif "failed switching to" in combined and "operation not permitted" in combined:
+        error_parts.append(
+            "Container user switching failed. "
+            "Fix: Ensure Docker Desktop has proper permissions on Windows/WSL2"
+        )
     if "docker" in combined and ("not found" in combined or "not running" in combined):
         error_parts.append("Docker issue detected")
     if "permission denied" in combined:
         error_parts.append("Permission denied (check Docker permissions)")
     if "no such file" in combined or "not found" in combined:
-        error_parts.append("File/command not found")
+        # Skip if already reported gosu error
+        if "gosu" not in combined:
+            error_parts.append("File/command not found")
     if "timeout" in combined:
         error_parts.append("Operation timed out")
     if "authentication" in combined or "api key" in combined or "unauthorized" in combined:
@@ -183,6 +196,7 @@ class DependencyStatus:
     ccbox_version: str | None = None
     ready: bool = False
     error_message: str = ""
+    warning_message: str = ""  # Non-blocking warnings
 
     def to_dict(self) -> dict[str, Any]:
         return {
@@ -196,6 +210,7 @@ class DependencyStatus:
             "ccbox_version": self.ccbox_version,
             "ready": self.ready,
             "error_message": self.error_message,
+            "warning_message": self.warning_message,
         }
 
 
@@ -267,6 +282,13 @@ def check_dependencies() -> DependencyStatus:
             pass
     elif status.docker_running and not status.error_message:
         status.error_message = "ccbox is not installed. Run: pip install ccbox"
+
+    # Add Windows/WSL2 warning about potential gosu issues
+    if status.ready and PLATFORM_INFO["os"] == "windows":
+        status.warning_message = (
+            "Windows/WSL2 detected. If you see 'gosu: operation not permitted' errors, "
+            "try running Docker Desktop as Administrator. See README for more solutions."
+        )
 
     status.ready = status.docker_installed and status.docker_running and status.ccbox_installed
     return status
