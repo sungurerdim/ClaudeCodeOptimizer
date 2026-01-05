@@ -582,22 +582,22 @@ Detected:
 {if findings}
 ## 80/20 Prioritized Findings
 
-### Do Now (CRITICAL + HIGH, auto-fixable)
+### Quick Win (CRITICAL + HIGH, auto-fixable)
   [{SEVERITY}] {category}.{check}: {issue}
     Location: {file}:{line}
     Fix: {action}
 
-### Plan (HIGH, manual intervention needed)
+### Moderate (HIGH, manual intervention needed)
   ...
 
-### Consider (MEDIUM)
+### Complex (MEDIUM)
   ...
 
-### Backlog (LOW)
+### Major (LOW)
   ...
 
 Summary: C:{n} H:{n} M:{n} L:{n}
-Accounting: doNow:{n} + plan:{n} + consider:{n} + backlog:{n} = total:{n}
+Accounting: quickWin:{n} + moderate:{n} + complex:{n} + major:{n} = total:{n}
 {/if}
 ═══════════════════════════════════════════════════════════
 ```
@@ -608,18 +608,18 @@ Accounting: doNow:{n} + plan:{n} + consider:{n} + backlog:{n} = total:{n}
 
 ```javascript
 if (config.action !== "Report only" && findings.length > 0) {
-  // Group by priority
-  const doNow = findings.filter(f => f.autoFixable && (f.severity === "CRITICAL" || f.severity === "HIGH"))
-  const plan = findings.filter(f => !f.autoFixable && f.severity === "HIGH")
-  const consider = findings.filter(f => f.severity === "MEDIUM")
-  const backlog = findings.filter(f => f.severity === "LOW")
+  // Group by effort category (for reporting only, not filtering in Fix all mode)
+  const quickWin = findings.filter(f => f.autoFixable && (f.severity === "CRITICAL" || f.severity === "HIGH"))
+  const moderate = findings.filter(f => !f.autoFixable && f.severity === "HIGH")
+  const complex = findings.filter(f => f.severity === "MEDIUM")
+  const major = findings.filter(f => f.severity === "LOW")
 
   if (config.action === "Fix safe") {
     // Auto-apply safe fixes, skip risky ones
-    toApply = doNow
+    toApply = quickWin
   } else if (config.action === "Fix all") {
-    // Apply everything
-    toApply = [...doNow, ...plan, ...consider, ...backlog]
+    // Apply ALL findings - effort categories are for reporting only
+    toApply = [...quickWin, ...moderate, ...complex, ...major]
   } else {
     // Interactive: ask user
     AskUserQuestion([{
@@ -627,17 +627,17 @@ if (config.action !== "Report only" && findings.length > 0) {
       header: "Fix scope",
       options: [
         { label: `All (${findings.length})`, description: "Fix everything now" },
-        { label: `Do Now (${doNow.length})`, description: "CRITICAL + HIGH, auto-fixable" },
-        { label: `Safe only (${doNow.length})`, description: "Auto-fixable items only" },
+        { label: `Quick Win (${quickWin.length})`, description: "CRITICAL + HIGH, auto-fixable" },
+        { label: `Safe only (${quickWin.length})`, description: "Auto-fixable items only" },
         { label: "None", description: "Report only, no fixes" }
       ],
       multiSelect: false
     }])
 
     // Process selection
-    toApply = selectedOption === "All" ? [...doNow, ...plan, ...consider, ...backlog]
-            : selectedOption.startsWith("Do Now") ? doNow
-            : selectedOption.startsWith("Safe") ? doNow.filter(f => f.autoFixable)
+    toApply = selectedOption === "All" ? [...quickWin, ...moderate, ...complex, ...major]
+            : selectedOption.startsWith("Quick Win") ? quickWin
+            : selectedOption.startsWith("Safe") ? quickWin.filter(f => f.autoFixable)
             : []
   }
 }
@@ -742,7 +742,7 @@ NON-findings:
 1. **Context first** - Verify CCO repo accessible before analysis
 2. **Parallel batches** - Categories 1-5 and 6-10 run in parallel
 3. **Dynamic counts** - Detect actual counts, never hardcode
-4. **80/20 prioritization** - Do Now before Plan before Consider
+4. **80/20 prioritization** - Quick Win before Moderate before Complex
 5. **Evidence required** - Every finding needs file:line reference
 6. **Anti-overengineering** - Apply 3-question test before flagging
 7. **Self-consistency** - CRITICAL findings need dual-path validation

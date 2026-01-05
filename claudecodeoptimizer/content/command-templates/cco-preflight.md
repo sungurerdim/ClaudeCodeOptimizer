@@ -264,7 +264,7 @@ optimizeTask = Task("general-purpose", `
   Apply fixes based on intensity selection.
 
   ${config.intensity === "full-fix" ? `
-  EVERYTHING MODE: Fix ALL items. Planning metadata is for reporting only.
+  FULL FIX MODE: Fix ALL items. Effort categories are for reporting only, not filtering.
   ` : ""}
 
   Return: {
@@ -280,13 +280,13 @@ reviewTask = Task("general-purpose", `
   Apply recommendations based on intensity selection.
 
   ${config.intensity === "full-fix" ? `
-  EVERYTHING MODE: Fix ALL items including backlog. Planning metadata is for reporting only.
+  FULL FIX MODE: Fix ALL items. Effort categories are for reporting only, not filtering.
   ` : ""}
 
   Return: {
     gaps: { coupling, cohesion, complexity, coverage },
     accounting: { applied, failed, total },
-    buckets: { doNow, plan, consider, backlog }
+    effortCategories: { quickWin, moderate, complex, major }
   }
 `, { model: "opus", run_in_background: true })
 ```

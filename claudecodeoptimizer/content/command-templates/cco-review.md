@@ -93,10 +93,9 @@ if (args.includes("--auto")) {
 ## Everything Mode [CRITICAL]
 
 When `--intensity=full-fix` or user selects "Full Fix":
-- **Zero deferrals** - no "future iteration", no "later pass", no "lower priority"
+- **ALL findings fixed** - effort categories are for reporting only, not filtering
 - **Zero skips** - every finding must be addressed NOW
-- **Backlog included** - architectural refactoring happens in this pass
-- **Complex fixes** - implement them, don't defer them
+- **No deferrals** - no "future iteration", no "later pass", no "lower priority"
 - **Only exit** - FIXED or TECHNICAL FAILURE (with specific blocker)
 - Accounting: `applied + failed = total` (no AI declines allowed)
 
@@ -126,7 +125,7 @@ AskUserQuestion([
     question: "What level of changes should be made?",
     header: "Intensity",
     options: [
-      { label: "Quick Wins (80/20)", description: "High impact, low effort only (Do Now bucket)" },
+      { label: "Quick Wins (80/20)", description: "High impact, low effort only" },
       { label: "Standard (Recommended)", description: "CRITICAL + HIGH + MEDIUM severity" },
       { label: "Full Fix", description: "All severities including LOW (complete overhaul)" },
       { label: "Report Only", description: "Analysis only, no changes applied" }
@@ -139,17 +138,16 @@ AskUserQuestion([
     options: [
       { label: "Architecture (15)", description: "ARC-01-15: coupling, cohesion, layers, dependencies" },
       { label: "Patterns (12)", description: "PAT-01-12: design patterns, SOLID, consistency" },
-      { label: "Testing (10)", description: "TST-01-10: coverage, test quality, gaps" },
-      { label: "Maintainability (12)", description: "MNT-01-12: complexity, readability, docs" }
+      { label: "Testing (10)", description: "TST-01-10: coverage, test quality, gaps" }
     ],
     multiSelect: true
   },
   {
-    question: "Advanced scopes to review?",
+    question: "Additional scopes to review?",
     header: "Scopes 2/2",
     options: [
-      { label: "AI-Architecture (10)", description: "AIA-01-10: over-engineering, drift, premature abstraction" },
-      { label: "Skip advanced", description: "Only run structure scopes selected above" }
+      { label: "Maintainability (12)", description: "MNT-01-12: complexity, readability, docs" },
+      { label: "AI-Architecture (10)", description: "AIA-01-10: over-engineering, drift, premature abstraction" }
     ],
     multiSelect: true
   }
@@ -160,9 +158,9 @@ AskUserQuestion([
 
 | Selection | Severity Filter | Apply Mode |
 |-----------|-----------------|------------|
-| Quick Wins (80/20) | Do Now bucket only (high impact, low effort) | Apply Do Now |
+| Quick Wins (80/20) | High impact + low effort only | Apply quick wins |
 | Standard | CRITICAL + HIGH + MEDIUM | Apply filtered |
-| Full Fix | ALL (LOW included) | Apply all |
+| Full Fix | ALL severities, ALL effort levels | Apply ALL |
 | Report Only | ALL (for analysis) | No apply |
 
 ### Validation
@@ -317,11 +315,11 @@ const gaps = {
   coverage:   { current: metrics.testCoverage, ideal: ideal.coverage, gap: ideal.coverage - metrics.testCoverage }
 }
 
-// Determine gap priority
-function getGapPriority(gap, threshold) {
-  if (gap > threshold * 2) return "Do Now"
-  if (gap > threshold) return "Plan"
-  if (gap > 0) return "Consider"
+// Determine gap severity (for reporting, not filtering)
+function getGapSeverity(gap, threshold) {
+  if (gap > threshold * 2) return "HIGH"
+  if (gap > threshold) return "MEDIUM"
+  if (gap > 0) return "LOW"
   return "OK"
 }
 ```
@@ -333,12 +331,12 @@ function getGapPriority(gap, threshold) {
 
 Project Type: {projectType} | Scale: {scale} | Maturity: {maturity}
 
-| Dimension | Current | Ideal | Gap | Priority |
+| Dimension | Current | Ideal | Gap | Severity |
 |-----------|---------|-------|-----|----------|
-| Coupling | {metrics.coupling}% | <{ideal.coupling}% | {gaps.coupling.gap > 0 ? "HIGH" : "OK"} | {getGapPriority(gaps.coupling.gap, 10)} |
-| Cohesion | {metrics.cohesion}% | >{ideal.cohesion}% | {gaps.cohesion.gap > 0 ? "HIGH" : "OK"} | {getGapPriority(gaps.cohesion.gap, 10)} |
-| Complexity | {metrics.complexity} | <{ideal.complexity} | {gaps.complexity.gap > 0 ? "MEDIUM" : "OK"} | {getGapPriority(gaps.complexity.gap, 5)} |
-| Coverage | {metrics.testCoverage}% | {ideal.coverage}%+ | {gaps.coverage.gap > 0 ? "MEDIUM" : "OK"} | {getGapPriority(gaps.coverage.gap, 10)} |
+| Coupling | {metrics.coupling}% | <{ideal.coupling}% | {gaps.coupling.gap > 0 ? "HIGH" : "OK"} | {getGapSeverity(gaps.coupling.gap, 10)} |
+| Cohesion | {metrics.cohesion}% | >{ideal.cohesion}% | {gaps.cohesion.gap > 0 ? "HIGH" : "OK"} | {getGapSeverity(gaps.cohesion.gap, 10)} |
+| Complexity | {metrics.complexity} | <{ideal.complexity} | {gaps.complexity.gap > 0 ? "MEDIUM" : "OK"} | {getGapSeverity(gaps.complexity.gap, 5)} |
+| Coverage | {metrics.testCoverage}% | {ideal.coverage}%+ | {gaps.coverage.gap > 0 ? "MEDIUM" : "OK"} | {getGapSeverity(gaps.coverage.gap, 10)} |
 ```
 
 ### Technology Assessment (Ideal vs Chosen)
@@ -381,59 +379,58 @@ function matchesIntensity(finding) {
   switch(config.intensity) {
     case "critical-only": return finding.severity === "CRITICAL"
     case "high-priority": return ["CRITICAL", "HIGH"].includes(finding.severity)
-    case "quick-wins": return finding.priority === "Do Now"  // Handled in bucket logic
+    case "quick-wins": return finding.effort === "LOW" && finding.impact === "HIGH"
     case "standard": return ["CRITICAL", "HIGH", "MEDIUM"].includes(finding.severity)
-    case "full-fix": return true  // All severities
+    case "full-fix": return true  // ALL findings, no filtering
     case "report-only": return true  // Show all but don't apply
   }
 }
 
 filteredFindings = findings.filter(matchesIntensity)
 
-// Calculate effort/impact scores and sort into buckets
+// Categorize by effort level (for REPORTING only, not for filtering what to fix)
+// In Full Fix mode, ALL categories are applied
 filteredFindings.forEach(f => {
-  f.bucket = calculateBucket(f.effort, f.impact)
+  f.effortCategory = calculateEffortCategory(f.effort, f.impact)
 })
 
-doNow = filteredFindings.filter(f => f.impact === "HIGH" && f.effort === "LOW")
-plan = filteredFindings.filter(f => f.impact === "HIGH" && f.effort === "MEDIUM")
-consider = filteredFindings.filter(f => f.impact === "MEDIUM")
-backlog = filteredFindings.filter(f => f.impact === "LOW" || f.effort === "HIGH")
+quickWin = filteredFindings.filter(f => f.impact === "HIGH" && f.effort === "LOW")
+moderate = filteredFindings.filter(f => f.impact === "HIGH" && f.effort === "MEDIUM")
+complex = filteredFindings.filter(f => f.impact === "MEDIUM")
+major = filteredFindings.filter(f => f.impact === "LOW" || f.effort === "HIGH")
 
-// For 80/20 Quick Wins mode, only keep doNow
+// For Quick Wins mode, only keep quickWin
 if (config.intensity === "quick-wins") {
-  plan = []
-  consider = []
-  backlog = []
+  moderate = []
+  complex = []
+  major = []
 }
 
-totalFindings = doNow.length + plan.length + consider.length + backlog.length
+totalFindings = quickWin.length + moderate.length + complex.length + major.length
 ```
 
-**Display prioritized roadmap:**
+**Display findings by effort category (for reporting):**
 
 ```markdown
-## Improvement Roadmap (80/20 Prioritized)
+## Findings by Effort Category
 
 Intensity: {config.intensity} | Scopes: {config.scopes.join(", ")}
 
-### Do Now (High Impact, Low Effort) - {doNow.length} items
-Quick wins that significantly improve architecture with minimal effort.
+### Quick Win (High Impact, Low Effort) - {quickWin.length} items
 
 | # | ID | Issue | Location | Recommendation |
 |---|-----|-------|----------|----------------|
-{doNow.map((f, i) => `| ${i+1} | ${f.id} | ${f.title} | ${f.location} | ${f.recommendation} |`)}
+{quickWin.map((f, i) => `| ${i+1} | ${f.id} | ${f.title} | ${f.location} | ${f.recommendation} |`)}
 
-### Plan (High Impact, Medium Effort) - {plan.length} items
-Important improvements requiring some planning.
+### Moderate Effort (High Impact, Medium Effort) - {moderate.length} items
 
-{plan.map((f, i) => `${i+1}. [${f.id}] ${f.title} in ${f.location}`)}
+{moderate.map((f, i) => `${i+1}. [${f.id}] ${f.title} in ${f.location}`)}
 
-### Consider (Medium Impact) - {consider.length} items
-{consider.length} items for future consideration...
+### Complex (Medium Impact) - {complex.length} items
+{complex.map((f, i) => `${i+1}. [${f.id}] ${f.title} in ${f.location}`)}
 
-### Backlog (Low Impact or High Effort) - {backlog.length} items
-{backlog.length} items deferred...
+### Major (Low Impact or High Effort) - {major.length} items
+{major.map((f, i) => `${i+1}. [${f.id}] ${f.title} in ${f.location}`)}
 ```
 
 ### Validation
@@ -454,30 +451,33 @@ Important improvements requiring some planning.
 let toApply = []
 let skipped = []  // Items excluded by intensity filter (not AI declining)
 
+// NOTE: Effort categories (quickWin/moderate/complex/major) are for REPORTING only
+// In full-fix mode, ALL items are applied regardless of effort category
 switch(config.intensity) {
   case "critical-only":
-    toApply = doNow.filter(f => f.severity === "CRITICAL")
-    skipped = [...doNow.filter(f => f.severity !== "CRITICAL"), ...plan, ...consider, ...backlog]
+    toApply = quickWin.filter(f => f.severity === "CRITICAL")
+    skipped = [...quickWin.filter(f => f.severity !== "CRITICAL"), ...moderate, ...complex, ...major]
     break
   case "high-priority":
-    toApply = [...doNow, ...plan].filter(f => ["CRITICAL", "HIGH"].includes(f.severity))
-    skipped = [...consider, ...backlog]
+    toApply = [...quickWin, ...moderate].filter(f => ["CRITICAL", "HIGH"].includes(f.severity))
+    skipped = [...complex, ...major]
     break
   case "quick-wins":
-    toApply = doNow
-    skipped = [...plan, ...consider, ...backlog]
+    toApply = quickWin
+    skipped = [...moderate, ...complex, ...major]
     break
   case "standard":
-    toApply = [...doNow, ...plan, ...consider]
-    skipped = backlog
+    toApply = [...quickWin, ...moderate, ...complex]
+    skipped = major
     break
   case "full-fix":
-    toApply = [...doNow, ...plan, ...consider, ...backlog]
+    // ALL findings applied - effort category is irrelevant
+    toApply = [...quickWin, ...moderate, ...complex, ...major]
     skipped = []  // Nothing excluded
     break
   case "report-only":
     toApply = []
-    skipped = [...doNow, ...plan, ...consider, ...backlog]
+    skipped = [...quickWin, ...moderate, ...complex, ...major]
     break
 }
 ```
@@ -489,13 +489,11 @@ switch(config.intensity) {
 
 Intensity: {config.intensity}
 
-| # | ID | Bucket | Issue | Location | Action |
+| # | ID | Effort | Issue | Location | Action |
 |---|-----|--------|-------|----------|--------|
-{toApply.map((item, i) => `| ${i+1} | ${item.id} | ${item.bucket} | ${item.title} | ${item.location} | ${item.recommendation} |`)}
+{toApply.map((item, i) => `| ${i+1} | ${item.id} | ${item.effortCategory} | ${item.title} | ${item.location} | ${item.recommendation} |`)}
 
-Selected: {toApply.length} | Skipped: {skipped.length} | Total: {totalFindings}
-
-Applying {toApply.length} recommendations...
+Applying: {toApply.length} | Total: {totalFindings}
 ```
 
 ```javascript
@@ -583,14 +581,14 @@ assert(applied + failed === toApply.length,
 
 Status: {OK|WARN} | Applied: {applied} | Failed: {failed} | Total: {toApply.length}
 
-| Bucket | In Scope | Applied | Failed |
-|--------|----------|---------|--------|
-| Do Now | {doNow.length} | {appliedDoNow} | {failedDoNow} |
-| Plan | {plan.length} | {appliedPlan} | {failedPlan} |
-| Consider | {consider.length} | {appliedConsider} | {failedConsider} |
-| Backlog | {backlog.length} | {appliedBacklog} | {failedBacklog} |
+| Effort Category | Count | Applied | Failed |
+|-----------------|-------|---------|--------|
+| Quick Win | {quickWin.length} | {appliedQuickWin} | {failedQuickWin} |
+| Moderate | {moderate.length} | {appliedModerate} | {failedModerate} |
+| Complex | {complex.length} | {appliedComplex} | {failedComplex} |
+| Major | {major.length} | {appliedMajor} | {failedMajor} |
 
-**Invariant:** applied + failed = total
+**Invariant:** applied + failed = total (effort categories are for reporting only)
 
 Run \`git diff\` to review changes.
 ```
@@ -633,11 +631,11 @@ cco-review: {OK|WARN|FAIL} | Gaps: {gapCount} | Applied: {applied} | Failed: {fa
   "techAssessment": {
     "alternatives": [{ "current": "Flask", "alternative": "FastAPI", "reason": "async support" }]
   },
-  "buckets": {
-    "doNow": [{ "id": "ARC-01", "title": "...", "location": "file:line" }],
-    "plan": [],
-    "consider": [],
-    "backlog": []
+  "effortCategories": {
+    "quickWin": [{ "id": "ARC-01", "title": "...", "location": "file:line" }],
+    "moderate": [],
+    "complex": [],
+    "major": []
   },
   "accounting": {
     "applied": "{applied_count}",
@@ -654,7 +652,7 @@ cco-review: {OK|WARN|FAIL} | Gaps: {gapCount} | Applied: {applied} | Failed: {fa
 | Type | CLI → stricter coupling; API → relax coupling |
 | Maturity | Legacy → conservative; Greenfield → restructure OK |
 | Breaking | Never → flag structural changes as blockers |
-| Priority | Speed → Do Now only; Quality → all priorities |
+| Priority | Speed → Quick wins only; Quality → all findings |
 | Scale | 10K+ → performance focus; <100 → simplicity |
 
 ### Flags

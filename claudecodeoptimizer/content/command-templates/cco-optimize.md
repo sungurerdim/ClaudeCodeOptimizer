@@ -110,9 +110,9 @@ if (isUnattended) {
 
 | Intensity | Severities Included | Use Case |
 |-----------|---------------------|----------|
-| quick-wins | "Do Now" bucket (high impact, low effort) | 80/20 fast improvement |
+| quick-wins | High impact + low effort only | 80/20 fast improvement |
 | standard | CRITICAL + HIGH + MEDIUM | Normal operation (default) |
-| full-fix | ALL (including LOW) | Comprehensive cleanup |
+| full-fix | ALL severities, ALL effort levels | Comprehensive cleanup |
 | report-only | ALL (analysis only) | Review without changes |
 
 ## Architecture
@@ -226,7 +226,7 @@ if (isUnattended) {
     question: "How much to fix?",
     header: "Intensity",
     options: [
-      { label: "Quick Wins (80/20)", description: "High impact, low effort only (Do Now bucket)" },
+      { label: "Quick Wins (80/20)", description: "High impact, low effort only" },
       { label: "Standard (Recommended)", description: "CRITICAL + HIGH + MEDIUM severity" },
       { label: "Full Fix", description: "All severities including LOW (complete cleanup)" },
       { label: "Report Only", description: "Analyze without making any changes" }
@@ -259,8 +259,7 @@ if (isUnattended) {
     header: "Scopes 2/2",
     options: [
       { label: "Performance (10)", description: "PRF-01-10: N+1, blocking I/O, caching" },
-      { label: "AI Hygiene (8)", description: "AIH-01-08: hallucinations, orphan abstractions" },
-      { label: "Skip advanced", description: "Only run code quality scopes selected above" }
+      { label: "AI Hygiene (8)", description: "AIH-01-08: hallucinations, orphan abstractions" }
     ],
     multiSelect: true
   }
@@ -448,10 +447,11 @@ if (config.action !== "Report only" && autoFixable.length > 0) {
     Group by file for efficiency.
 
     ${isFixAll ? `
-    EVERYTHING MODE [MANDATORY]:
-    Fix ALL items. Planning metadata (effort/impact/bucket) is for reporting only - ignored here.
+    FULL FIX MODE [MANDATORY]:
+    Fix ALL items. Effort categories are for reporting only, not filtering.
 
     Rules:
+    - ALL findings must be fixed regardless of effort level
     - Zero agent-initiated skips
     - Every item = FIXED or TECHNICAL FAILURE (with "Technical: [reason]")
     - If unsure → ask user, don't skip
@@ -617,10 +617,11 @@ if (approved.length > 0) {
     Handle cascading errors.
 
     ${isFixAll ? `
-    EVERYTHING MODE [MANDATORY]:
-    Fix ALL items. Planning metadata (effort/impact/bucket) is for reporting only - ignored here.
+    FULL FIX MODE [MANDATORY]:
+    Fix ALL items. Effort categories are for reporting only, not filtering.
 
     Rules:
+    - ALL findings must be fixed regardless of effort level
     - Zero agent-initiated skips
     - Every item = FIXED or TECHNICAL FAILURE (with "Technical: [reason]")
     - If unsure → ask user, don't skip
