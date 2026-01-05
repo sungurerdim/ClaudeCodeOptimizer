@@ -58,6 +58,14 @@ def check_system_ready() -> bool:
         print(f"{'=' * 60}\n")
         return False
 
+    # Show warnings if present (non-blocking)
+    if status.warning_message:
+        print(f"\n{'=' * 60}")
+        print("  WARNING")
+        print(f"{'=' * 60}")
+        print(f"\n  {status.warning_message}")
+        print(f"{'=' * 60}\n")
+
     return True
 
 
