@@ -7,9 +7,9 @@
 | Category     | Rules    | Location                           | Loading       |
 |--------------|----------|------------------------------------|---------------|
 | Core         | 87       | `~/.claude/rules/cco/core.md`      | Always active |
-| AI           | 61       | `~/.claude/rules/cco/ai.md`        | Always active |
+| AI           | 60       | `~/.claude/rules/cco/ai.md`        | Always active |
 | Adaptive     | 1563     | pip package → `.claude/rules/cco/` | Per-project   |
-| **Total**    | **1711** |                                    |               |
+| **Total**    | **1710** |                                    |               |
 
 *Note: Tool rules (workflow mechanisms) are embedded directly in command/agent templates.*
 
