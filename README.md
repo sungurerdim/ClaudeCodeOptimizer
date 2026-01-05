@@ -59,7 +59,7 @@ cco-install --dry-run
 |-----------|----------|---------|
 | 8 commands | `~/.claude/commands/` | `/cco-config`, `/cco-status`, etc. |
 | 3 agents | `~/.claude/agents/` | Analyze, Apply, Research |
-| 148 rules | `~/.claude/rules/cco/` | Core (87) + AI (61) patterns |
+| 147 rules | `~/.claude/rules/cco/` | Core (87) + AI (60) patterns |
 | Statusline | `~/.claude/settings.json` | Project info in Claude Code |
 
 **Your project files are not modified.** CCO only touches `~/.claude/` (global) and `.claude/rules/cco/` (per-project, after `/cco-config`).
@@ -163,7 +163,7 @@ See [Commands documentation](docs/commands.md) for flags and examples.
 | Category | Count | Location | Loaded |
 |----------|-------|----------|--------|
 | Core | 87 | `~/.claude/rules/cco/core.md` | Always |
-| AI | 61 | `~/.claude/rules/cco/ai.md` | Always |
+| AI | 60 | `~/.claude/rules/cco/ai.md` | Always |
 | Adaptive | 1563 | `.claude/rules/cco/` | Per-project |
 
 **Core rules:** SSOT, DRY, YAGNI, KISS, Fail-Fast, Type-Safe

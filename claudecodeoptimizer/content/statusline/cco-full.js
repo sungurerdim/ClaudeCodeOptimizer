@@ -156,7 +156,7 @@ function formatContextUsage(contextWindow) {
 }
 
 // ============================================================================
-// TODO PROGRESS - Read from Claude transcript
+// PROGRESS - Read from Claude transcript
 // ============================================================================
 function getTranscriptPath(cwd) {
   // Claude stores transcripts in ~/.claude/projects/{hash}/
