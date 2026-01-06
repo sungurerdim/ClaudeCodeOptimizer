@@ -266,6 +266,196 @@
             font-size: 14px;
         }
 
+        /* Reports List */
+        .reports-list {
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+        }
+
+        .report-card {
+            background: var(--bg-secondary);
+            border: 1px solid var(--border);
+            border-radius: 8px;
+            padding: 16px 20px;
+            cursor: pointer;
+            transition: all 0.2s;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .report-card:hover {
+            border-color: var(--accent);
+            background: var(--bg-tertiary);
+        }
+
+        .report-info {
+            flex: 1;
+        }
+
+        .report-title {
+            font-weight: 600;
+            font-size: 1rem;
+            margin-bottom: 4px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .report-meta {
+            color: var(--text-muted);
+            font-size: 13px;
+            display: flex;
+            gap: 16px;
+            flex-wrap: wrap;
+        }
+
+        .report-scores {
+            display: flex;
+            gap: 20px;
+            align-items: center;
+        }
+
+        .report-score {
+            text-align: center;
+        }
+
+        .report-score-value {
+            font-size: 1.5rem;
+            font-weight: 700;
+        }
+
+        .report-score-label {
+            font-size: 11px;
+            color: var(--text-muted);
+            text-transform: uppercase;
+        }
+
+        .report-actions {
+            display: flex;
+            gap: 8px;
+            margin-left: 16px;
+        }
+
+        .report-badge {
+            padding: 2px 8px;
+            border-radius: 4px;
+            font-size: 11px;
+            font-weight: 500;
+        }
+
+        .report-badge.static { background: var(--bg-tertiary); color: var(--text-muted); }
+        .report-badge.ai { background: #a371f726; color: var(--cco); }
+
+        .btn-icon {
+            background: transparent;
+            border: none;
+            padding: 6px;
+            cursor: pointer;
+            color: var(--text-muted);
+            border-radius: 4px;
+            transition: all 0.2s;
+        }
+
+        .btn-icon:hover { background: var(--bg-tertiary); color: var(--text); }
+        .btn-icon.danger:hover { background: #f8514926; color: var(--error); }
+
+        /* Report Detail Modal */
+        .report-detail {
+            padding: 20px;
+        }
+
+        .report-header-info {
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-start;
+            margin-bottom: 24px;
+            padding-bottom: 16px;
+            border-bottom: 1px solid var(--border);
+        }
+
+        .report-summary-scores {
+            display: flex;
+            gap: 40px;
+        }
+
+        .summary-score {
+            text-align: center;
+        }
+
+        .summary-score-value {
+            font-size: 2.5rem;
+            font-weight: 700;
+        }
+
+        .summary-score-grade {
+            font-size: 1rem;
+            color: var(--text-muted);
+        }
+
+        .summary-score-label {
+            font-size: 12px;
+            color: var(--text-muted);
+            text-transform: uppercase;
+            margin-top: 4px;
+        }
+
+        .dimensions-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+            gap: 16px;
+            margin-top: 20px;
+        }
+
+        .dimension-card {
+            background: var(--bg-tertiary);
+            border-radius: 8px;
+            padding: 16px;
+        }
+
+        .dimension-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 12px;
+        }
+
+        .dimension-name {
+            font-weight: 600;
+        }
+
+        .dimension-scores {
+            display: flex;
+            gap: 12px;
+            font-size: 14px;
+        }
+
+        .dim-score-bar {
+            height: 6px;
+            background: var(--bg);
+            border-radius: 3px;
+            overflow: hidden;
+            margin-bottom: 8px;
+        }
+
+        .dim-score-fill {
+            height: 100%;
+            border-radius: 3px;
+            transition: width 0.3s;
+        }
+
+        .dim-score-fill.cco { background: var(--cco); }
+        .dim-score-fill.vanilla { background: var(--vanilla); }
+
+        .dimension-issues, .dimension-positives {
+            font-size: 12px;
+            margin-top: 8px;
+        }
+
+        .dimension-issues { color: var(--error); }
+        .dimension-positives { color: var(--success); }
+
         /* Modal */
         .modal-overlay {
             display: none;
@@ -804,6 +994,7 @@
         <div class="tabs">
             <button class="tab active" data-tab="projects">📁 Projects</button>
             <button class="tab" data-tab="output">📂 Output</button>
+            <button class="tab" data-tab="reports">📊 Reports</button>
         </div>
 
         <!-- Projects Panel -->
@@ -836,6 +1027,17 @@
             </div>
             <div id="output-grid" class="projects-grid">
                 <div class="empty-state">Loading output folders...</div>
+            </div>
+        </div>
+
+        <!-- Reports Panel -->
+        <div id="reports-panel" class="panel">
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px;">
+                <h3>Benchmark Reports</h3>
+                <button onclick="loadReports()">🔄 Refresh</button>
+            </div>
+            <div id="reports-list" class="reports-list">
+                <div class="empty-state">Loading reports...</div>
             </div>
         </div>
 
@@ -903,6 +1105,8 @@
                 // Refresh data when switching tabs
                 if (tab.dataset.tab === 'output') {
                     loadOutput();
+                } else if (tab.dataset.tab === 'reports') {
+                    loadReports();
                 }
             });
         });
@@ -1168,7 +1372,9 @@
         }
 
         function closeModal() {
-            document.getElementById('detail-modal').classList.remove('active');
+            const modal = document.getElementById('detail-modal');
+            modal.classList.remove('active');
+            modal.style.display = 'none';
         }
 
         // Placeholder for modal content rendering (used by comparison modals)
@@ -2516,6 +2722,373 @@
             }
 
             document.getElementById('modal-body').innerHTML = html;
+        }
+
+        // ============== Reports Functions ==============
+
+        let reportsData = [];
+
+        async function loadReports() {
+            const container = document.getElementById('reports-list');
+            container.innerHTML = '<div class="empty-state">Loading reports...</div>';
+
+            try {
+                const resp = await fetch('/api/reports');
+                if (!resp.ok) throw new Error('Failed to load reports');
+                reportsData = await resp.json();
+                renderReports(reportsData);
+            } catch (e) {
+                container.innerHTML = '<div class="empty-state">Error loading reports: ' + escapeHtml(e.message) + '</div>';
+            }
+        }
+
+        function renderReports(reports) {
+            const container = document.getElementById('reports-list');
+
+            if (!reports || reports.length === 0) {
+                container.innerHTML = '<div class="empty-state">No benchmark reports found. Run a benchmark to generate reports.</div>';
+                return;
+            }
+
+            container.innerHTML = reports.map(project => {
+                // Get scores from static or AI result
+                const staticResult = project.static_result;
+                const aiResult = project.ai_result;
+                const ccoScore = staticResult?.cco_score ?? aiResult?.cco_score;
+                const vanillaScore = staticResult?.vanilla_score ?? aiResult?.vanilla_score;
+
+                return `
+                    <div class="report-card" onclick="viewReport('${escapeHtml(project.project_id)}')">
+                        <div class="report-info">
+                            <div class="report-title">
+                                ${escapeHtml(project.project_name)}
+                                ${project.has_static ? '<span class="report-badge static">Static</span>' : ''}
+                                ${project.has_ai ? '<span class="report-badge ai">AI</span>' : ''}
+                            </div>
+                            <div class="report-meta">
+                                ${project.latest_timestamp ? `<span>📅 ${new Date(project.latest_timestamp).toLocaleDateString()}</span>` : ''}
+                                ${staticResult?.verdict ? `<span>${escapeHtml(staticResult.verdict)}</span>` : ''}
+                            </div>
+                        </div>
+                        <div class="report-scores">
+                            ${ccoScore !== undefined && ccoScore !== null ? `
+                                <div class="report-score">
+                                    <div class="report-score-value" style="color: var(--cco)">${ccoScore.toFixed(1)}</div>
+                                    <div class="report-score-label">CCO</div>
+                                </div>
+                            ` : ''}
+                            ${vanillaScore !== undefined && vanillaScore !== null ? `
+                                <div class="report-score">
+                                    <div class="report-score-value" style="color: var(--vanilla)">${vanillaScore.toFixed(1)}</div>
+                                    <div class="report-score-label">Vanilla</div>
+                                </div>
+                            ` : ''}
+                        </div>
+                        <div class="report-actions">
+                            <button class="btn-icon danger" onclick="event.stopPropagation(); deleteReport('${escapeHtml(project.project_id)}', '${escapeHtml(project.project_name)}')" title="Delete reports">🗑️</button>
+                        </div>
+                    </div>
+                `;
+            }).join('');
+        }
+
+        async function viewReport(projectId) {
+            document.getElementById('modal-title').textContent = 'Loading...';
+            document.getElementById('modal-body').innerHTML = '<div class="empty-state">Loading report details...</div>';
+            document.getElementById('detail-modal').style.display = 'flex';
+
+            try {
+                const resp = await fetch(`/api/reports/${encodeURIComponent(projectId)}`);
+                if (!resp.ok) throw new Error('Failed to load report');
+                const data = await resp.json();
+                renderReportDetail(data);
+            } catch (e) {
+                document.getElementById('modal-body').innerHTML = '<div class="empty-state">Error loading report: ' + escapeHtml(e.message) + '</div>';
+            }
+        }
+
+        function renderReportDetail(data) {
+            document.getElementById('modal-title').textContent = data.project_name || data.project_id;
+
+            let html = '<div class="report-detail">';
+
+            // Get static and AI data
+            const staticData = data.static;
+            const aiData = data.ai;
+
+            // Extract metrics from static result
+            const ccoMetrics = staticData?.cco_result?.metrics;
+            const vanillaMetrics = staticData?.vanilla_result?.metrics;
+
+            html += '<div class="report-header-info">';
+            html += '<div class="report-summary-scores">';
+
+            // Static scores
+            if (ccoMetrics?.overall_score !== undefined) {
+                html += `
+                    <div class="summary-score">
+                        <div class="summary-score-value" style="color: var(--cco)">${ccoMetrics.overall_score.toFixed(1)}</div>
+                        ${ccoMetrics.grade ? `<div class="summary-score-grade">${ccoMetrics.grade}</div>` : ''}
+                        <div class="summary-score-label">CCO Static</div>
+                    </div>
+                `;
+            }
+
+            if (vanillaMetrics?.overall_score !== undefined) {
+                html += `
+                    <div class="summary-score">
+                        <div class="summary-score-value" style="color: var(--vanilla)">${vanillaMetrics.overall_score.toFixed(1)}</div>
+                        ${vanillaMetrics.grade ? `<div class="summary-score-grade">${vanillaMetrics.grade}</div>` : ''}
+                        <div class="summary-score-label">Vanilla Static</div>
+                    </div>
+                `;
+            }
+
+            // Show verdict
+            if (staticData?.verdict) {
+                const verdictColor = staticData.verdict.includes('CCO') ? 'var(--cco)' :
+                                    staticData.verdict.includes('Vanilla') ? 'var(--vanilla)' : 'var(--text)';
+                html += `
+                    <div class="summary-score" style="margin-left: 30px;">
+                        <div class="summary-score-value" style="color: ${verdictColor}; font-size: 1.2rem;">${escapeHtml(staticData.verdict)}</div>
+                        <div class="summary-score-label">Verdict</div>
+                    </div>
+                `;
+            }
+
+            html += '</div></div>';
+
+            // Static Analysis Section - 6 Dimensions
+            if (ccoMetrics?.dimensions || vanillaMetrics?.dimensions) {
+                html += '<h4 style="margin: 20px 0 12px; color: var(--text-muted);">📊 Static Analysis (6-Dimension)</h4>';
+                html += '<div class="dimensions-grid">';
+
+                const dimensions = ['functional_completeness', 'security', 'test_quality', 'code_quality', 'best_practices', 'documentation'];
+                const dimensionNames = {
+                    functional_completeness: 'Functional',
+                    security: 'Security',
+                    test_quality: 'Test Quality',
+                    code_quality: 'Code Quality',
+                    best_practices: 'Best Practices',
+                    documentation: 'Documentation'
+                };
+
+                dimensions.forEach(dim => {
+                    const ccoDim = ccoMetrics?.dimensions?.[dim];
+                    const vanillaDim = vanillaMetrics?.dimensions?.[dim];
+                    const ccoScore = ccoDim?.score ?? 0;
+                    const vanillaScore = vanillaDim?.score ?? 0;
+                    const diff = ccoScore - vanillaScore;
+                    const diffColor = diff > 0 ? 'var(--success)' : diff < 0 ? 'var(--error)' : 'var(--text-muted)';
+                    const diffSign = diff > 0 ? '+' : '';
+
+                    html += `
+                        <div class="dimension-card">
+                            <div class="dimension-header">
+                                <span class="dimension-name">${dimensionNames[dim] || dim}</span>
+                                <div class="dimension-scores">
+                                    <span style="color: var(--cco)">${ccoScore.toFixed(0)}</span>
+                                    <span style="color: var(--text-muted)">vs</span>
+                                    <span style="color: var(--vanilla)">${vanillaScore.toFixed(0)}</span>
+                                    <span style="color: ${diffColor}">(${diffSign}${diff.toFixed(0)})</span>
+                                </div>
+                            </div>
+                            <div class="dim-score-bar" style="display: flex; gap: 4px;">
+                                <div style="flex: 1; background: var(--bg); border-radius: 3px; overflow: hidden;">
+                                    <div class="dim-score-fill cco" style="width: ${ccoScore}%"></div>
+                                </div>
+                                <div style="flex: 1; background: var(--bg); border-radius: 3px; overflow: hidden;">
+                                    <div class="dim-score-fill vanilla" style="width: ${vanillaScore}%"></div>
+                                </div>
+                            </div>
+                        </div>
+                    `;
+                });
+
+                html += '</div>';
+            }
+
+            // AI Analysis Section
+            if (aiData) {
+                html += '<h4 style="margin: 30px 0 12px; color: var(--text-muted);">🤖 AI Analysis (10-Dimension)</h4>';
+
+                // AI Summary Scores
+                const aiSummary = aiData.summary;
+                const aiCco = aiData.cco;
+                const aiVanilla = aiData.vanilla;
+                if (aiSummary || aiCco?.overall_score !== undefined) {
+                    const ccoScore = aiSummary?.cco_score ?? aiCco?.overall_score ?? 0;
+                    const vanillaScore = aiSummary?.vanilla_score ?? aiVanilla?.overall_score ?? 0;
+                    const ccoGrade = aiSummary?.cco_grade ?? aiCco?.grade ?? '';
+                    const vanillaGrade = aiSummary?.vanilla_grade ?? aiVanilla?.grade ?? '';
+                    const diff = ccoScore - vanillaScore;
+                    const diffColor = diff > 0 ? 'var(--success)' : diff < 0 ? 'var(--error)' : 'var(--text-muted)';
+                    const diffSign = diff > 0 ? '+' : '';
+
+                    html += `
+                        <div style="display: flex; gap: 30px; align-items: center; margin-bottom: 20px; padding: 16px; background: var(--bg-tertiary); border-radius: 8px;">
+                            <div style="text-align: center;">
+                                <div style="font-size: 2rem; font-weight: 700; color: var(--cco);">${ccoScore}</div>
+                                <div style="font-size: 0.9rem; color: var(--cco);">${ccoGrade}</div>
+                                <div style="font-size: 11px; color: var(--text-muted); text-transform: uppercase;">CCO</div>
+                            </div>
+                            <div style="text-align: center;">
+                                <div style="font-size: 1.2rem; font-weight: 600; color: ${diffColor};">${diffSign}${diff}</div>
+                                <div style="font-size: 11px; color: var(--text-muted);">diff</div>
+                            </div>
+                            <div style="text-align: center;">
+                                <div style="font-size: 2rem; font-weight: 700; color: var(--vanilla);">${vanillaScore}</div>
+                                <div style="font-size: 0.9rem; color: var(--vanilla);">${vanillaGrade}</div>
+                                <div style="font-size: 11px; color: var(--text-muted); text-transform: uppercase;">Vanilla</div>
+                            </div>
+                        </div>
+                    `;
+                }
+
+                const comparison = aiData.comparison;
+                if (comparison?.verdict) {
+                    const verdictColor = comparison.verdict.includes('CCO') ? 'var(--cco)' :
+                                        comparison.verdict.includes('Vanilla') ? 'var(--vanilla)' : 'var(--text)';
+                    html += `<div style="font-size: 1.1rem; font-weight: 600; color: ${verdictColor}; margin-bottom: 16px;">${escapeHtml(comparison.verdict)}</div>`;
+                }
+
+                // Executive Summary - Top 5 Key Insights
+                const execSummaryRaw = aiData.executive_summary || comparison?.executive_summary;
+                const execSummary = Array.isArray(execSummaryRaw) ? execSummaryRaw : [];
+                if (execSummary.length > 0) {
+                    html += '<div style="margin-bottom: 20px;">';
+                    html += '<div style="font-weight: 600; margin-bottom: 12px; color: var(--text-muted);">📋 Key Insights</div>';
+                    html += '<div style="display: flex; flex-direction: column; gap: 10px;">';
+                    execSummary.forEach(item => {
+                        const winnerColor = item.winner === 'cco' ? 'var(--cco)' :
+                                           item.winner === 'vanilla' ? 'var(--vanilla)' : 'var(--text-muted)';
+                        const winnerBadge = item.winner === 'cco' ? 'CCO' :
+                                           item.winner === 'vanilla' ? 'Vanilla' : 'Tie';
+                        html += `
+                            <div style="background: var(--bg-tertiary); padding: 12px 16px; border-radius: 8px; border-left: 3px solid ${winnerColor};">
+                                <div style="display: flex; align-items: center; gap: 10px; margin-bottom: 6px;">
+                                    <span style="font-weight: 600; color: var(--text);">${escapeHtml(item.topic)}</span>
+                                    <span style="font-size: 11px; padding: 2px 8px; border-radius: 4px; background: ${winnerColor}20; color: ${winnerColor};">${winnerBadge}</span>
+                                </div>
+                                <div style="font-size: 13px; color: var(--text-muted); line-height: 1.5;">${escapeHtml(item.insight)}</div>
+                            </div>
+                        `;
+                    });
+                    html += '</div></div>';
+                }
+
+                // Show blind assignment mapping (A/B = CCO/Vanilla)
+                const blindAssignment = comparison?.blind_assignment || '';
+                if (blindAssignment) {
+                    const ccoIsA = blindAssignment === 'cco=a';
+                    html += `
+                        <div style="display: flex; gap: 12px; margin-bottom: 16px; font-size: 12px;">
+                            <span style="padding: 4px 10px; border-radius: 4px; background: var(--cco)20; color: var(--cco);">
+                                ${ccoIsA ? 'A' : 'B'} = CCO
+                            </span>
+                            <span style="padding: 4px 10px; border-radius: 4px; background: var(--vanilla)20; color: var(--vanilla);">
+                                ${ccoIsA ? 'B' : 'A'} = Vanilla
+                            </span>
+                            <span style="color: var(--text-muted);">🎭 Blind evaluation</span>
+                        </div>
+                    `;
+                }
+
+                // Show recommendation (or analysis for backwards compatibility)
+                const analysisText = comparison?.recommendation || comparison?.analysis || aiData.executive_summary_text;
+                if (analysisText && typeof analysisText === 'string') {
+                    html += `<div style="background: var(--bg-tertiary); padding: 16px; border-radius: 8px; font-size: 14px; line-height: 1.6; white-space: pre-wrap;">${escapeHtml(analysisText)}</div>`;
+                }
+
+                // AI Dimension Breakdown
+                const dimBreakdown = comparison?.dimension_breakdown;
+                if (dimBreakdown && dimBreakdown.length > 0) {
+                    html += '<div style="margin-top: 20px;">';
+                    html += '<div style="font-weight: 600; margin-bottom: 12px; color: var(--text-muted);">📊 Dimension Breakdown</div>';
+                    html += '<div class="dimensions-grid">';
+
+                    const dimensionNames = {
+                        functional_completeness: 'Functional',
+                        correctness_robustness: 'Correctness',
+                        architecture: 'Architecture',
+                        code_quality: 'Code Quality',
+                        security: 'Security',
+                        type_safety: 'Type Safety',
+                        testing: 'Testing',
+                        maintainability: 'Maintainability',
+                        performance: 'Performance',
+                        best_practices: 'Best Practices'
+                    };
+
+                    dimBreakdown.forEach(dim => {
+                        const ccoScore = dim.cco_score ?? 0;
+                        const vanillaScore = dim.vanilla_score ?? 0;
+                        const diff = dim.diff ?? (ccoScore - vanillaScore);
+                        const diffColor = diff > 0 ? 'var(--success)' : diff < 0 ? 'var(--error)' : 'var(--text-muted)';
+                        const diffSign = diff > 0 ? '+' : '';
+                        const winnerColor = dim.winner === 'cco' ? 'var(--cco)' : dim.winner === 'vanilla' ? 'var(--vanilla)' : 'var(--text-muted)';
+
+                        html += `
+                            <div class="dimension-card" style="border-left: 3px solid ${winnerColor};">
+                                <div class="dimension-header">
+                                    <span class="dimension-name">${dimensionNames[dim.dimension] || dim.dimension}</span>
+                                    <div class="dimension-scores">
+                                        <span style="color: var(--cco)">${ccoScore}</span>
+                                        <span style="color: var(--text-muted)">vs</span>
+                                        <span style="color: var(--vanilla)">${vanillaScore}</span>
+                                        <span style="color: ${diffColor}">(${diffSign}${diff})</span>
+                                    </div>
+                                </div>
+                                <div class="dim-score-bar" style="display: flex; gap: 4px;">
+                                    <div style="flex: 1; background: var(--bg); border-radius: 3px; overflow: hidden;">
+                                        <div class="dim-score-fill cco" style="width: ${ccoScore}%"></div>
+                                    </div>
+                                    <div style="flex: 1; background: var(--bg); border-radius: 3px; overflow: hidden;">
+                                        <div class="dim-score-fill vanilla" style="width: ${vanillaScore}%"></div>
+                                    </div>
+                                </div>
+                                <div style="font-size: 11px; color: var(--text-muted); margin-top: 4px;">Weight: ${dim.weight}%</div>
+                            </div>
+                        `;
+                    });
+
+                    html += '</div></div>';
+                }
+            }
+
+            // Report metadata
+            const timestamp = staticData?.timestamp || aiData?.timestamp;
+            if (timestamp) {
+                html += `<div style="margin-top: 20px; padding-top: 16px; border-top: 1px solid var(--border); font-size: 12px; color: var(--text-muted);">
+                    📅 ${new Date(timestamp).toLocaleString()}
+                </div>`;
+            }
+
+            html += '</div>';
+            document.getElementById('modal-body').innerHTML = html;
+        }
+
+        async function deleteReport(projectId, projectName) {
+            if (!confirm(`Delete all reports for "${projectName}"?\n\nThis action cannot be undone.`)) {
+                return;
+            }
+
+            try {
+                const resp = await fetch(`/api/reports/${encodeURIComponent(projectId)}`, {
+                    method: 'DELETE'
+                });
+
+                if (!resp.ok) {
+                    const error = await resp.json();
+                    throw new Error(error.detail || 'Failed to delete reports');
+                }
+
+                const result = await resp.json();
+                // Refresh reports list
+                loadReports();
+            } catch (e) {
+                alert('Failed to delete reports: ' + e.message);
+            }
         }
 
         // ============== Initialize ==============
