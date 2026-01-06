@@ -197,7 +197,7 @@ class Metrics:
 
     def to_dict(self) -> dict[str, Any]:
         """Convert to dictionary for JSON serialization."""
-        d = {}
+        d: dict[str, Any] = {}
         # Dimension names for special handling
         dimension_names = {
             "functional_completeness",
@@ -1285,19 +1285,16 @@ class CodeAnalyzer:
     def _check_lang_specific(self, content: str, filepath: str, lang: str, is_test: bool) -> None:
         """Check language-specific patterns and anti-patterns."""
         # Unsafe/dangerous patterns
-        unsafe_patterns = {
-            "rust": [(r"\bunsafe\s*\{", "unsafe_block")],
+        unsafe_patterns: dict[str, list[tuple[str, str, int]]] = {
+            "rust": [(r"\bunsafe\s*\{", "unsafe_block", 0)],
             "java": [(r"\bsuppresswarnings\b", "suppress_warnings", re.IGNORECASE)],
-            "csharp": [(r"\bunsafe\s*\{", "unsafe_block")],
-            "php": [(r"\beval\s*\(", "eval_usage"), (r"\$\$\w+", "variable_variable")],
-            "swift": [(r"force\s*!", "force_unwrap")],
-            "kotlin": [(r"!!", "force_unwrap")],
+            "csharp": [(r"\bunsafe\s*\{", "unsafe_block", 0)],
+            "php": [(r"\beval\s*\(", "eval_usage", 0), (r"\$\$\w+", "variable_variable", 0)],
+            "swift": [(r"force\s*!", "force_unwrap", 0)],
+            "kotlin": [(r"!!", "force_unwrap", 0)],
         }
 
-        for pattern_tuple in unsafe_patterns.get(lang, []):
-            pattern = pattern_tuple[0]
-            name = pattern_tuple[1]
-            flags = pattern_tuple[2] if len(pattern_tuple) > 2 else 0
+        for pattern, name, flags in unsafe_patterns.get(lang, []):
             count = len(re.findall(pattern, content, flags))
             if count > 0 and not is_test:
                 self._add_anti_pattern(name, f"{filepath}: {count} occurrences")
@@ -2272,9 +2269,15 @@ class CodeAnalyzer:
 
         # Linting configuration - +7
         lint_configs = [
-            ".eslintrc", ".eslintrc.js", ".eslintrc.json", ".eslintrc.yaml",
-            "ruff.toml", ".golangci.yml", ".golangci.yaml",
-            "biome.json", "deno.json",
+            ".eslintrc",
+            ".eslintrc.js",
+            ".eslintrc.json",
+            ".eslintrc.yaml",
+            "ruff.toml",
+            ".golangci.yml",
+            ".golangci.yaml",
+            "biome.json",
+            "deno.json",
         ]
         # Also check pyproject.toml for ruff config
         has_lint = any((self.project_dir / lc).exists() for lc in lint_configs)
@@ -2300,7 +2303,14 @@ class CodeAnalyzer:
             positives.append("CI/CD configured")
 
         # Dependencies lockfile - +3
-        lockfiles = ["poetry.lock", "package-lock.json", "yarn.lock", "pnpm-lock.yaml", "go.sum", "Cargo.lock"]
+        lockfiles = [
+            "poetry.lock",
+            "package-lock.json",
+            "yarn.lock",
+            "pnpm-lock.yaml",
+            "go.sum",
+            "Cargo.lock",
+        ]
         if any((self.project_dir / lf).exists() for lf in lockfiles):
             score += 3
             positives.append("Dependencies locked")
