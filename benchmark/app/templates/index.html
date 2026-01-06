@@ -135,6 +135,17 @@
             50% { border-color: var(--bg-tertiary); }
         }
         .project-card { position: relative; }
+        .project-card.has-ai-result {
+            border-color: var(--accent);
+            background: linear-gradient(135deg, var(--bg-secondary) 0%, rgba(88, 166, 255, 0.05) 100%);
+        }
+        .project-card.has-ai-result::after {
+            content: '🤖';
+            position: absolute;
+            top: 8px;
+            right: 8px;
+            font-size: 14px;
+        }
 
         .project-header {
             display: flex;
@@ -518,6 +529,238 @@
 
         /* Adjust container for activity panel */
         .container { padding-bottom: 320px; }
+
+        /* AI Comparison Modal Sections */
+        .ai-section { margin: 20px 0; }
+        .ai-section h4 {
+            margin-bottom: 15px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            font-size: 14px;
+        }
+
+        /* Production Readiness Cards */
+        .prod-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 15px;
+        }
+
+        @media (max-width: 600px) {
+            .prod-grid { grid-template-columns: 1fr; }
+        }
+
+        .prod-card {
+            background: var(--bg-tertiary);
+            padding: 12px;
+            border-radius: 8px;
+            border-top: 3px solid var(--warning);
+        }
+
+        .prod-card.ready { border-top-color: var(--success); }
+        .prod-card.cco .prod-label { color: var(--cco); }
+        .prod-card.vanilla .prod-label { color: var(--vanilla); }
+
+        .prod-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 10px;
+        }
+
+        .prod-label {
+            font-size: 13px;
+            font-weight: bold;
+        }
+
+        .prod-badge {
+            padding: 2px 8px;
+            border-radius: 4px;
+            font-size: 10px;
+            color: #fff;
+            font-weight: 600;
+        }
+
+        .prod-badge.ready { background: var(--success); }
+        .prod-badge.not-ready { background: var(--warning); }
+
+        /* Score Grid */
+        .score-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 8px;
+            font-size: 11px;
+        }
+
+        .score-item {
+            display: flex;
+            flex-direction: column;
+            gap: 4px;
+        }
+
+        .score-label { color: var(--text-muted); }
+        .score-value { font-weight: 600; }
+
+        /* Score Bars */
+        .score-bar-container {
+            background: var(--bg-secondary);
+            border-radius: 2px;
+            height: 4px;
+            margin-top: 2px;
+            overflow: hidden;
+        }
+
+        .score-bar {
+            height: 100%;
+            border-radius: 2px;
+            transition: width 0.3s ease;
+        }
+
+        .score-bar.high { background: var(--success); }
+        .score-bar.medium { background: var(--warning); }
+        .score-bar.low { background: var(--error); }
+
+        /* Principle Compliance */
+        .princ-card {
+            background: var(--bg-tertiary);
+            padding: 12px;
+            border-radius: 8px;
+            border-left: 3px solid var(--text-muted);
+        }
+
+        .princ-card.cco { border-left-color: var(--cco); }
+        .princ-card.vanilla { border-left-color: var(--vanilla); }
+
+        .princ-label {
+            font-size: 13px;
+            font-weight: bold;
+            margin-bottom: 10px;
+        }
+
+        .princ-card.cco .princ-label { color: var(--cco); }
+        .princ-card.vanilla .princ-label { color: var(--vanilla); }
+
+        .violation-item {
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            font-size: 11px;
+        }
+
+        .violation-count {
+            font-weight: bold;
+            padding: 1px 6px;
+            border-radius: 3px;
+            font-size: 10px;
+        }
+
+        .violation-count.zero {
+            background: rgba(63, 185, 80, 0.2);
+            color: var(--success);
+        }
+
+        .violation-count.nonzero {
+            background: rgba(210, 153, 34, 0.2);
+            color: var(--warning);
+        }
+
+        /* Issues List */
+        .issues-list {
+            margin: 5px 0 0;
+            padding-left: 16px;
+            font-size: 10px;
+            color: var(--warning);
+        }
+
+        .issues-list li { margin: 2px 0; }
+
+        .issues-toggle {
+            cursor: pointer;
+            font-size: 10px;
+            color: var(--text-muted);
+            margin-top: 8px;
+        }
+
+        .solid-status {
+            margin-top: 8px;
+            font-size: 10px;
+        }
+
+        .solid-status.ok { color: var(--success); }
+        .solid-status.violations { color: var(--warning); }
+
+        /* Winner Highlight */
+        .winner-indicator {
+            position: absolute;
+            top: -8px;
+            right: 10px;
+            background: var(--success);
+            color: #fff;
+            font-size: 9px;
+            padding: 2px 8px;
+            border-radius: 3px;
+            font-weight: bold;
+        }
+
+        /* Strengths & Weaknesses */
+        .sw-card {
+            background: var(--bg-tertiary);
+            padding: 12px;
+            border-radius: 8px;
+            border-top: 3px solid var(--text-muted);
+        }
+
+        .sw-card.cco { border-top-color: var(--cco); }
+        .sw-card.vanilla { border-top-color: var(--vanilla); }
+
+        .sw-label {
+            font-size: 13px;
+            font-weight: bold;
+            margin-bottom: 10px;
+        }
+
+        .sw-card.cco .sw-label { color: var(--cco); }
+        .sw-card.vanilla .sw-label { color: var(--vanilla); }
+
+        .sw-section {
+            margin-bottom: 10px;
+        }
+
+        .sw-section:last-child { margin-bottom: 0; }
+
+        .sw-header {
+            font-size: 11px;
+            margin-bottom: 4px;
+        }
+
+        .sw-header.strengths { color: var(--success); }
+        .sw-header.weaknesses { color: var(--warning); }
+
+        .sw-list {
+            margin: 0;
+            padding-left: 16px;
+            font-size: 11px;
+        }
+
+        .sw-list li { margin: 2px 0; }
+
+        /* Report Metadata */
+        .report-meta {
+            margin-top: 20px;
+            padding-top: 15px;
+            border-top: 1px solid var(--border);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            font-size: 11px;
+            color: var(--text-muted);
+        }
+
+        .report-meta-items {
+            display: flex;
+            gap: 15px;
+        }
     </style>
 </head>
 <body>
@@ -1421,9 +1664,13 @@
             const byProject = {};
             folders.forEach(f => {
                 if (!byProject[f.project_id]) {
-                    byProject[f.project_id] = { vanilla: null, cco: null };
+                    byProject[f.project_id] = { vanilla: null, cco: null, ai_comparison: null };
                 }
                 byProject[f.project_id][f.variant] = f;
+                // Capture AI comparison from either variant (they share it)
+                if (f.ai_comparison) {
+                    byProject[f.project_id].ai_comparison = f.ai_comparison;
+                }
             });
 
             let html = '';
@@ -1432,14 +1679,51 @@
                 const hasVanilla = p.vanilla !== null;
                 const hasCco = p.cco !== null;
                 const canCompare = hasVanilla && hasCco;
+                const hasAI = p.ai_comparison !== null;
+                const ai = p.ai_comparison;
+
+                // AI comparison badge
+                let aiBadge = '';
+                if (hasAI) {
+                    const verdictClass = getVerdictClass(ai.verdict || 'Mixed');
+                    const prodBadge = ai.production_ready_cco ?
+                        '<span style="background: var(--success); color: #fff; padding: 2px 6px; border-radius: 4px; font-size: 10px; margin-left: 4px;">PROD READY</span>' : '';
+                    aiBadge = `
+                        <div style="background: var(--bg-tertiary); padding: 12px; border-radius: 8px; margin-top: 10px; border: 1px solid var(--border);">
+                            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px;">
+                                <span style="font-size: 12px; color: var(--text-muted);">🤖 AI Analysis</span>
+                                <span class="verdict ${verdictClass}" style="font-size: 11px; padding: 2px 8px;">${ai.verdict || 'Mixed'}</span>
+                            </div>
+                            <div style="display: flex; justify-content: space-around; text-align: center;">
+                                <div>
+                                    <div style="font-size: 24px; font-weight: bold; color: ${getGradeColor(ai.cco_grade || '?')};">${ai.cco_grade || '?'}</div>
+                                    <div style="font-size: 11px; color: var(--cco);">CCO (${ai.cco_score || 0})</div>
+                                    ${prodBadge}
+                                </div>
+                                <div style="align-self: center; color: ${(ai.score_difference || 0) > 0 ? 'var(--cco)' : (ai.score_difference || 0) < 0 ? 'var(--vanilla)' : 'var(--text-muted)'}; font-size: 16px; font-weight: bold;">
+                                    ${(ai.score_difference || 0) > 0 ? '+' : ''}${ai.score_difference || 0}
+                                </div>
+                                <div>
+                                    <div style="font-size: 24px; font-weight: bold; color: ${getGradeColor(ai.vanilla_grade || '?')};">${ai.vanilla_grade || '?'}</div>
+                                    <div style="font-size: 11px; color: var(--vanilla);">Vanilla (${ai.vanilla_score || 0})</div>
+                                </div>
+                            </div>
+                            <div style="margin-top: 10px; display: flex; gap: 8px; justify-content: center;">
+                                <button onclick="viewAIReport('${projectId}')" style="font-size: 11px;">📊 View Report</button>
+                                <button onclick="aiCompareProject('${projectId}')" id="ai-btn-${projectId}" style="font-size: 11px;">🔄 Re-analyze</button>
+                            </div>
+                            ${ai.timestamp ? `<div style="font-size: 10px; color: var(--text-muted); text-align: center; margin-top: 6px;">${formatDate(ai.timestamp)}</div>` : ''}
+                        </div>
+                    `;
+                }
 
                 html += `
-                <div class="project-card">
+                <div class="project-card ${hasAI ? 'has-ai-result' : ''}">
                     <div class="project-header">
                         <div class="project-title">${projectId}</div>
                         <div style="display: flex; gap: 8px;">
-                            ${canCompare ? '<button onclick="compareProject(\'' + projectId + '\')">⚖️ Static</button>' : ''}
-                            ${canCompare ? '<button class="primary" onclick="aiCompareProject(\'' + projectId + '\')" id="ai-btn-' + projectId + '">🤖 AI Compare</button>' : ''}
+                            ${canCompare ? '<button onclick="compareProject(\'' + projectId + '\')" style="font-size: 12px;">⚖️ Static</button>' : ''}
+                            ${canCompare && !hasAI ? '<button class="primary" onclick="aiCompareProject(\'' + projectId + '\')" id="ai-btn-' + projectId + '" style="font-size: 12px;">🤖 AI Compare</button>' : ''}
                         </div>
                     </div>
                     <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-top: 10px;">
@@ -1447,7 +1731,6 @@
                             <div style="font-weight: bold; color: var(--vanilla); margin-bottom: 5px;">Vanilla</div>
                             ${hasVanilla ? `
                                 <div style="font-size: 12px; color: var(--text-muted);">
-                                    Score: <strong>${p.vanilla.score ?? '-'}</strong><br>
                                     Files: ${p.vanilla.file_count}<br>
                                     ${p.vanilla.modified ? formatDate(p.vanilla.modified) : ''}
                                 </div>
@@ -1458,7 +1741,6 @@
                             <div style="font-weight: bold; color: var(--cco); margin-bottom: 5px;">CCO</div>
                             ${hasCco ? `
                                 <div style="font-size: 12px; color: var(--text-muted);">
-                                    Score: <strong>${p.cco.score ?? '-'}</strong><br>
                                     Files: ${p.cco.file_count}<br>
                                     ${p.cco.modified ? formatDate(p.cco.modified) : ''}
                                 </div>
@@ -1466,11 +1748,27 @@
                             ` : '<div style="font-size: 12px;">Not run yet</div>'}
                         </div>
                     </div>
+                    ${aiBadge}
                 </div>
                 `;
             }
 
             grid.innerHTML = html;
+        }
+
+        // View saved AI report
+        async function viewAIReport(projectId) {
+            try {
+                const resp = await fetch(`/api/ai-comparisons/${projectId}`);
+                if (!resp.ok) {
+                    throw new Error('Report not found');
+                }
+                const result = await resp.json();
+                renderAIComparisonModal(projectId, result);
+                document.getElementById('detail-modal').classList.add('active');
+            } catch (e) {
+                alert('Failed to load AI report: ' + e.message);
+            }
         }
 
         async function deleteOutput(folderName) {
@@ -2007,47 +2305,199 @@
                 `;
             }
 
+            // Production Readiness (if available)
+            const prodReady = comp?.production_readiness;
+            if (prodReady) {
+                const ccoProd = prodReady.b || prodReady.cco || {};
+                const vanillaProd = prodReady.a || prodReady.vanilla || {};
+                const ccoReady = prodReady.production_ready?.b || prodReady.production_ready?.cco || false;
+                const vanillaReady = prodReady.production_ready?.a || prodReady.production_ready?.vanilla || false;
+
+                // Helper to get score bar class
+                const getScoreBarClass = (score) => {
+                    const num = parseInt(score) || 0;
+                    if (num >= 70) return 'high';
+                    if (num >= 40) return 'medium';
+                    return 'low';
+                };
+
+                // Helper to render score with bar
+                const renderScoreItem = (label, score) => {
+                    const numScore = parseInt(score) || 0;
+                    return `
+                        <div class="score-item">
+                            <div><span class="score-label">${label}:</span> <span class="score-value">${score || '-'}</span></div>
+                            <div class="score-bar-container">
+                                <div class="score-bar ${getScoreBarClass(score)}" style="width: ${numScore}%"></div>
+                            </div>
+                        </div>
+                    `;
+                };
+
+                html += `
+                    <div class="ai-section">
+                        <h4>🏭 Production Readiness</h4>
+                        <div class="prod-grid">
+                            <div class="prod-card cco ${ccoReady ? 'ready' : ''}">
+                                <div class="prod-header">
+                                    <span class="prod-label">CCO</span>
+                                    <span class="prod-badge ${ccoReady ? 'ready' : 'not-ready'}">
+                                        ${ccoReady ? '✓ READY' : '⚠ NOT READY'}
+                                    </span>
+                                </div>
+                                <div class="score-grid">
+                                    ${renderScoreItem('Security', ccoProd.security_score)}
+                                    ${renderScoreItem('Testing', ccoProd.testing_score)}
+                                    ${renderScoreItem('Performance', ccoProd.performance_score)}
+                                    ${renderScoreItem('Operations', ccoProd.operations_score)}
+                                </div>
+                                ${ccoProd.security_issues?.length || ccoProd.operations_issues?.length ? `
+                                    <details class="issues-toggle">
+                                        <summary>Show issues (${(ccoProd.security_issues?.length || 0) + (ccoProd.operations_issues?.length || 0)})</summary>
+                                        <ul class="issues-list">
+                                            ${(ccoProd.security_issues || []).map(i => `<li>🔒 ${escapeHtml(i)}</li>`).join('')}
+                                            ${(ccoProd.operations_issues || []).map(i => `<li>⚙️ ${escapeHtml(i)}</li>`).join('')}
+                                        </ul>
+                                    </details>
+                                ` : ''}
+                            </div>
+                            <div class="prod-card vanilla ${vanillaReady ? 'ready' : ''}">
+                                <div class="prod-header">
+                                    <span class="prod-label">Vanilla</span>
+                                    <span class="prod-badge ${vanillaReady ? 'ready' : 'not-ready'}">
+                                        ${vanillaReady ? '✓ READY' : '⚠ NOT READY'}
+                                    </span>
+                                </div>
+                                <div class="score-grid">
+                                    ${renderScoreItem('Security', vanillaProd.security_score)}
+                                    ${renderScoreItem('Testing', vanillaProd.testing_score)}
+                                    ${renderScoreItem('Performance', vanillaProd.performance_score)}
+                                    ${renderScoreItem('Operations', vanillaProd.operations_score)}
+                                </div>
+                                ${vanillaProd.security_issues?.length || vanillaProd.operations_issues?.length ? `
+                                    <details class="issues-toggle">
+                                        <summary>Show issues (${(vanillaProd.security_issues?.length || 0) + (vanillaProd.operations_issues?.length || 0)})</summary>
+                                        <ul class="issues-list">
+                                            ${(vanillaProd.security_issues || []).map(i => `<li>🔒 ${escapeHtml(i)}</li>`).join('')}
+                                            ${(vanillaProd.operations_issues || []).map(i => `<li>⚙️ ${escapeHtml(i)}</li>`).join('')}
+                                        </ul>
+                                    </details>
+                                ` : ''}
+                            </div>
+                        </div>
+                    </div>
+                `;
+            }
+
+            // Principle Compliance (if available)
+            const principles = comp?.principle_compliance;
+            if (principles) {
+                const ccoPrinc = principles.b || principles.cco || {};
+                const vanillaPrinc = principles.a || principles.vanilla || {};
+
+                // Helper to render violation count
+                const renderViolation = (label, count) => {
+                    const num = count || 0;
+                    return `
+                        <div class="violation-item">
+                            <span class="score-label">${label}:</span>
+                            <span class="violation-count ${num > 0 ? 'nonzero' : 'zero'}">${num}</span>
+                        </div>
+                    `;
+                };
+
+                html += `
+                    <div class="ai-section">
+                        <h4>📐 Principle Compliance (DRY/YAGNI/SOLID/KISS)</h4>
+                        <div class="prod-grid">
+                            <div class="princ-card cco">
+                                <div class="princ-label">CCO</div>
+                                <div class="score-grid">
+                                    ${renderViolation('DRY violations', ccoPrinc.dry_violations)}
+                                    ${renderViolation('YAGNI violations', ccoPrinc.yagni_violations)}
+                                    <div class="violation-item">
+                                        <span class="score-label">KISS score:</span>
+                                        <span class="score-value">${ccoPrinc.kiss_score || '-'}</span>
+                                    </div>
+                                </div>
+                                ${ccoPrinc.solid_violations?.length ? `
+                                    <div class="solid-status violations">
+                                        <span class="score-label">SOLID issues:</span>
+                                        <ul class="issues-list">
+                                            ${ccoPrinc.solid_violations.map(v => `<li>${escapeHtml(v)}</li>`).join('')}
+                                        </ul>
+                                    </div>
+                                ` : '<div class="solid-status ok">✓ No SOLID violations</div>'}
+                            </div>
+                            <div class="princ-card vanilla">
+                                <div class="princ-label">Vanilla</div>
+                                <div class="score-grid">
+                                    ${renderViolation('DRY violations', vanillaPrinc.dry_violations)}
+                                    ${renderViolation('YAGNI violations', vanillaPrinc.yagni_violations)}
+                                    <div class="violation-item">
+                                        <span class="score-label">KISS score:</span>
+                                        <span class="score-value">${vanillaPrinc.kiss_score || '-'}</span>
+                                    </div>
+                                </div>
+                                ${vanillaPrinc.solid_violations?.length ? `
+                                    <div class="solid-status violations">
+                                        <span class="score-label">SOLID issues:</span>
+                                        <ul class="issues-list">
+                                            ${vanillaPrinc.solid_violations.map(v => `<li>${escapeHtml(v)}</li>`).join('')}
+                                        </ul>
+                                    </div>
+                                ` : '<div class="solid-status ok">✓ No SOLID violations</div>'}
+                            </div>
+                        </div>
+                    </div>
+                `;
+            }
+
             // Strengths & Weaknesses
             html += `
-                <h4 style="margin: 20px 0 15px;">Strengths & Weaknesses</h4>
-                <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 15px;">
-                    <div style="background: var(--bg-tertiary); padding: 12px; border-radius: 8px; border-top: 3px solid var(--cco);">
-                        <div style="font-size: 13px; color: var(--cco); font-weight: bold; margin-bottom: 10px;">CCO</div>
-                        ${cco?.strengths?.length ? `
-                            <div style="margin-bottom: 10px;">
-                                <div style="font-size: 11px; color: var(--success); margin-bottom: 4px;">✓ Strengths</div>
-                                <ul style="margin: 0; padding-left: 16px; font-size: 11px;">
-                                    ${cco.strengths.map(s => `<li>${escapeHtml(s)}</li>`).join('')}
-                                </ul>
-                            </div>
-                        ` : ''}
-                        ${cco?.weaknesses?.length ? `
-                            <div>
-                                <div style="font-size: 11px; color: var(--warning); margin-bottom: 4px;">⚠ Weaknesses</div>
-                                <ul style="margin: 0; padding-left: 16px; font-size: 11px;">
-                                    ${cco.weaknesses.map(w => `<li>${escapeHtml(w)}</li>`).join('')}
-                                </ul>
-                            </div>
-                        ` : ''}
-                    </div>
-                    <div style="background: var(--bg-tertiary); padding: 12px; border-radius: 8px; border-top: 3px solid var(--vanilla);">
-                        <div style="font-size: 13px; color: var(--vanilla); font-weight: bold; margin-bottom: 10px;">Vanilla</div>
-                        ${vanilla?.strengths?.length ? `
-                            <div style="margin-bottom: 10px;">
-                                <div style="font-size: 11px; color: var(--success); margin-bottom: 4px;">✓ Strengths</div>
-                                <ul style="margin: 0; padding-left: 16px; font-size: 11px;">
-                                    ${vanilla.strengths.map(s => `<li>${escapeHtml(s)}</li>`).join('')}
-                                </ul>
-                            </div>
-                        ` : ''}
-                        ${vanilla?.weaknesses?.length ? `
-                            <div>
-                                <div style="font-size: 11px; color: var(--warning); margin-bottom: 4px;">⚠ Weaknesses</div>
-                                <ul style="margin: 0; padding-left: 16px; font-size: 11px;">
-                                    ${vanilla.weaknesses.map(w => `<li>${escapeHtml(w)}</li>`).join('')}
-                                </ul>
-                            </div>
-                        ` : ''}
+                <div class="ai-section">
+                    <h4>💪 Strengths & Weaknesses</h4>
+                    <div class="prod-grid">
+                        <div class="sw-card cco">
+                            <div class="sw-label">CCO</div>
+                            ${cco?.strengths?.length ? `
+                                <div class="sw-section">
+                                    <div class="sw-header strengths">✓ Strengths</div>
+                                    <ul class="sw-list">
+                                        ${cco.strengths.map(s => `<li>${escapeHtml(s)}</li>`).join('')}
+                                    </ul>
+                                </div>
+                            ` : ''}
+                            ${cco?.weaknesses?.length ? `
+                                <div class="sw-section">
+                                    <div class="sw-header weaknesses">⚠ Weaknesses</div>
+                                    <ul class="sw-list">
+                                        ${cco.weaknesses.map(w => `<li>${escapeHtml(w)}</li>`).join('')}
+                                    </ul>
+                                </div>
+                            ` : ''}
+                            ${!cco?.strengths?.length && !cco?.weaknesses?.length ? '<div class="sw-section" style="color: var(--text-muted); font-size: 11px;">No data available</div>' : ''}
+                        </div>
+                        <div class="sw-card vanilla">
+                            <div class="sw-label">Vanilla</div>
+                            ${vanilla?.strengths?.length ? `
+                                <div class="sw-section">
+                                    <div class="sw-header strengths">✓ Strengths</div>
+                                    <ul class="sw-list">
+                                        ${vanilla.strengths.map(s => `<li>${escapeHtml(s)}</li>`).join('')}
+                                    </ul>
+                                </div>
+                            ` : ''}
+                            ${vanilla?.weaknesses?.length ? `
+                                <div class="sw-section">
+                                    <div class="sw-header weaknesses">⚠ Weaknesses</div>
+                                    <ul class="sw-list">
+                                        ${vanilla.weaknesses.map(w => `<li>${escapeHtml(w)}</li>`).join('')}
+                                    </ul>
+                                </div>
+                            ` : ''}
+                            ${!vanilla?.strengths?.length && !vanilla?.weaknesses?.length ? '<div class="sw-section" style="color: var(--text-muted); font-size: 11px;">No data available</div>' : ''}
+                        </div>
                     </div>
                 </div>
             `;
@@ -2055,8 +2505,8 @@
             // Report metadata (duration, timestamp)
             if (result.duration_seconds || result.timestamp || result.report_file) {
                 html += `
-                    <div style="margin-top: 20px; padding-top: 15px; border-top: 1px solid var(--border); display: flex; justify-content: space-between; align-items: center; font-size: 11px; color: var(--text-muted);">
-                        <div style="display: flex; gap: 15px;">
+                    <div class="report-meta">
+                        <div class="report-meta-items">
                             ${result.duration_seconds ? `<span>⏱️ ${Math.round(result.duration_seconds)}s</span>` : ''}
                             ${result.timestamp ? `<span>📅 ${new Date(result.timestamp).toLocaleString()}</span>` : ''}
                         </div>
