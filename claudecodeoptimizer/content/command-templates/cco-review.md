@@ -1,13 +1,6 @@
 ---
-name: cco-review
-description: |
-  Ideal-driven strategic assessment - "If I were designing from scratch, what would be ideal?"
-  QUESTION: "No prior choices exist. Given only the requirements, what would be ideal?"
-  TRIGGERS: "review", "architecture", "ideal", "refactor plan", "strategic", "gap analysis"
-  USE WHEN: Need strategic assessment of how current compares to ideal state
-  FLAGS: --auto, --intensity=X, --focus=X, --report, --dry-run, --quick
-  OUTPUTS: Current vs Ideal comparison, Gap analysis, 80/20 prioritized roadmap
-  SCOPES: 5 scopes, 59 checks total (ARC-01 to AIA-10)
+description: Strategic architecture assessment - current vs ideal state gap analysis
+argument-hint: [--auto] [--intensity=X] [--focus=X] [--report] [--dry-run] [--quick]
 allowed-tools: Read(*), Grep(*), Glob(*), Edit(*), Bash(*), Task(*), TodoWrite, AskUserQuestion
 model: opus
 ---

@@ -1,11 +1,5 @@
 ---
-name: cco-checkup
-description: |
-  Weekly maintenance: health check + optimization in one pass.
-  TRIGGERS: "checkup", "maintenance", "weekly check"
-  USE WHEN: Regular project maintenance cycle
-  RUNS: /cco-status + /cco-optimize in parallel
-  OUTPUTS: Health dashboard + fixed issues
+description: Weekly maintenance - health check + optimization in one pass
 allowed-tools: Read(*), Grep(*), Glob(*), Edit(*), Bash(*), Task(*)
 ---
 

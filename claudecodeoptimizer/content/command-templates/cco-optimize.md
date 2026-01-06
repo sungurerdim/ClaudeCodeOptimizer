@@ -1,12 +1,6 @@
 ---
-name: cco-optimize
-description: |
-  Incremental code improvement - tactical fixes for security, hygiene, types, lint, performance, and AI-generated code issues.
-  QUESTION: "This code works. How can it work better?"
-  TRIGGERS: "optimize", "fix issues", "security scan", "clean up", "fix all", "improve code"
-  USE WHEN: Want to find AND fix code-level issues in one pass
-  FLAGS: --auto (unattended), --security, --hygiene, --types, --lint, --performance, --ai-hygiene, --fix-all, --score
-  SCOPES: 6 scopes, 63 checks total (SEC-01 to AIH-08)
+description: Incremental code improvement - fix security, hygiene, types, lint, performance issues
+argument-hint: [--auto] [--security] [--hygiene] [--types] [--lint] [--performance] [--ai-hygiene] [--fix-all] [--score]
 allowed-tools: Read(*), Grep(*), Glob(*), Edit(*), Bash(*), Task(*), TodoWrite, AskUserQuestion
 model: opus
 ---

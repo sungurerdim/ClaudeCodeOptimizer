@@ -1,12 +1,6 @@
 ---
-name: cco-preflight
-description: |
-  Release verification gate: parallel full-scope /cco-optimize + /cco-review + verification.
-  TRIGGERS: "preflight", "release", "before release", "pre-release"
-  USE WHEN: Preparing to tag and release a version
-  RUNS: /cco-optimize (6 scopes) + /cco-review (5 scopes) + tests + build + changelog
-  OUTPUTS: Release readiness checklist, blockers/warnings, go/no-go decision
-  FLAGS: --auto, --intensity=X, --dry-run, --strict, --tag, --push
+description: Release verification gate - full optimization + review + tests + build
+argument-hint: [--auto] [--intensity=X] [--dry-run] [--strict] [--tag] [--push]
 allowed-tools: Read(*), Grep(*), Glob(*), Edit(*), Bash(*), Task(*), TodoWrite, AskUserQuestion
 model: opus
 ---
