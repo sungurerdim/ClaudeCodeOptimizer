@@ -1,26 +1,6 @@
 ---
 name: cco-agent-research
-description: |
-  Multi-source research with CRAAP+ reliability scoring and structured synthesis.
-
-  OUTPUT: JSON with sources[] (scored T1-T6), contradictions[], recommendation{summary, confidence: HIGH/MEDIUM/LOW}, keyFindings[].
-
-  USE INSTEAD OF WebSearch/WebFetch when:
-  - Need 3+ sources with cross-verification (auto-detects contradictions)
-  - CVE/security vulnerability research (checks official advisories + community reports)
-  - Library/framework comparison ("which one should I use")
-  - Migration/upgrade research (breaking changes, compatibility)
-  - Conflicting information online (resolves by source authority tier)
-
-  SOURCE TIERS: T1 (95-100): Official docs, RFCs | T2 (85-94): Official repos | T3 (70-84): Core contributors | T4 (55-69): High-vote SO | T5 (40-54): Blogs | T6 (<40): Unverified
-
-  SCOPE OPTIONS: search | analyze | synthesize | full | dependency (version/CVE check)
-
-  TRIGGERS: "research", "compare", "which library", "best practices", "CVE", "vulnerability", "breaking changes", "migration", "should I use", "pros and cons"
-
-  DO NOT USE for: Single known URL (use WebFetch), quick fact lookup (use WebSearch), official docs only (use WebFetch directly)
-
-  CONFIDENCE RULES: T1 sources agree = HIGH | Mixed sources = MEDIUM | Unresolved conflicts = LOW
+description: Multi-source research with CRAAP+ reliability scoring and synthesis
 tools: WebSearch, WebFetch, Read, Grep, Glob
 model: haiku
 ---

@@ -1,24 +1,6 @@
 ---
 name: cco-agent-analyze
-description: |
-  Comprehensive codebase analysis with severity scoring and structured JSON output.
-
-  OUTPUT: JSON with findings[], scores{}, metrics{}, excluded{}. Every finding has severity (CRITICAL/HIGH/MEDIUM/LOW), file:line location, and fix recommendation.
-
-  USE INSTEAD OF Explore agent when:
-  - Need structured findings with CRITICAL/HIGH/MEDIUM/LOW severity scoring
-  - Security audit (secrets, injection, path traversal, unsafe deserialize)
-  - Quality/hygiene scan (unused imports, dead code, complexity hotspots)
-  - Metrics needed (coupling 0-100, cohesion 0-100, complexity scores)
-  - Cross-platform codebase (auto-filters sys.platform blocks, TYPE_CHECKING imports)
-
-  SCOPE OPTIONS: security | hygiene | types | lint | performance | ai-hygiene | architecture | patterns | testing | maintainability | scan (dashboard) | config (project setup)
-
-  TRIGGERS: "analyze", "scan", "audit", "find issues", "code review", "quality check", "security scan", "detect", "metrics", "what's wrong with"
-
-  DO NOT USE for: Finding a specific file (use Glob), searching one pattern (use Grep), reading known file (use Read)
-
-  PAIRS WITH: cco-agent-apply (pass findings for batch fixing)
+description: Codebase analysis with severity scoring - security, hygiene, types, lint, performance audits
 tools: Glob, Read, Grep, Bash
 model: haiku
 ---

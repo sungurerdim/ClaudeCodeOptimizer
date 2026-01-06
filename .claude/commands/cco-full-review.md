@@ -1,6 +1,6 @@
 ---
-name: cco-full-review
 description: CCO system health check (129 checks across 10 categories)
+argument-hint: [--auto] [--quick] [--focus=X] [--report] [--fix] [--fix-all]
 allowed-tools: Read(*), Grep(*), Glob(*), Bash(*), Task(*), TodoWrite, AskUserQuestion, Edit(*)
 model: opus
 ---

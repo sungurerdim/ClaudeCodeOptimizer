@@ -1,11 +1,6 @@
 ---
-name: cco-config
-description: |
-  Configure project context, rules, and AI settings.
-  TRIGGERS: "config", "setup", "configure", "rules", "settings"
-  USE WHEN: First setup OR changing project context/rules
-  FLAGS: --auto (unattended), --target-dir
-  CREATES: context.md, language rules, settings.json, statusline
+description: Configure project context, rules, and AI settings
+argument-hint: [--auto] [--target-dir <path>]
 allowed-tools: Read(*), Write(*), Edit(*), Bash(*), Task(*), AskUserQuestion
 ---
 
