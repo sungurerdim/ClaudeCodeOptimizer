@@ -856,15 +856,47 @@ async def delete_result(filename: str) -> dict[str, str]:
 
 @app.get("/api/output")
 async def list_output_folders() -> list[dict[str, Any]]:
-    """List all output folders with their status."""
-    from ..runner import CodeAnalyzer, calculate_overall_score
+    """List all output folders with their status and AI comparison info."""
+    import json
 
     if not OUTPUT_DIR.exists():
         return []
 
+    # Load saved AI comparisons
+    ai_comparisons: dict[str, dict[str, Any]] = {}
+    ai_results_dir = OUTPUT_DIR / "_ai_comparisons"
+    if ai_results_dir.exists():
+        for result_file in ai_results_dir.glob("*.json"):
+            try:
+                data = json.loads(result_file.read_text(encoding="utf-8"))
+                project_id = data.get("project_id")
+                if project_id:
+                    ai_comparisons[project_id] = {
+                        "timestamp": data.get("timestamp"),
+                        "verdict": data.get("comparison", {}).get("verdict"),
+                        "cco_score": data.get("cco", {}).get("overall_score"),
+                        "cco_grade": data.get("cco", {}).get("grade"),
+                        "vanilla_score": data.get("vanilla", {}).get("overall_score"),
+                        "vanilla_grade": data.get("vanilla", {}).get("grade"),
+                        "score_difference": data.get("comparison", {}).get("score_difference"),
+                        "production_ready_cco": data.get("comparison", {})
+                        .get("production_readiness", {})
+                        .get("production_ready", {})
+                        .get("b"),
+                        "production_ready_vanilla": data.get("comparison", {})
+                        .get("production_readiness", {})
+                        .get("production_ready", {})
+                        .get("a"),
+                    }
+            except Exception:
+                pass
+
     folders = []
     for folder in sorted(OUTPUT_DIR.iterdir()):
         if not folder.is_dir():
+            continue
+        # Skip AI comparisons folder
+        if folder.name.startswith("_"):
             continue
 
         # Parse folder name: {project_id}_{variant}
@@ -896,17 +928,6 @@ async def list_output_folders() -> list[dict[str, Any]]:
         ]
         has_code = len(files) > 0
 
-        # Try to get metrics if available
-        metrics = None
-        score = 0.0
-        if has_code:
-            try:
-                analyzer = CodeAnalyzer(folder)
-                metrics = analyzer.analyze()
-                score = calculate_overall_score(metrics)
-            except Exception:
-                pass
-
         # Get modification time
         try:
             mtime = folder.stat().st_mtime
@@ -914,23 +935,20 @@ async def list_output_folders() -> list[dict[str, Any]]:
         except Exception:
             modified = None
 
-        # Use metrics file count if available (more accurate), otherwise use glob count
-        if metrics:
-            file_count = metrics.python_files + metrics.typescript_files + metrics.go_files
-        else:
-            file_count = len(files)
+        folder_info: dict[str, Any] = {
+            "folder": name,
+            "project_id": project_id,
+            "variant": variant,
+            "has_code": has_code,
+            "file_count": len(files),
+            "modified": modified,
+        }
 
-        folders.append(
-            {
-                "folder": name,
-                "project_id": project_id,
-                "variant": variant,
-                "has_code": has_code,
-                "file_count": file_count,
-                "score": round(score, 1) if metrics else None,
-                "modified": modified,
-            }
-        )
+        # Add AI comparison info if available
+        if project_id in ai_comparisons:
+            folder_info["ai_comparison"] = ai_comparisons[project_id]
+
+        folders.append(folder_info)
 
     return folders
 
@@ -1014,8 +1032,11 @@ async def delete_output_folder(folder_name: str) -> dict[str, str]:
 
 @app.post("/api/compare-comprehensive/{project_id}")
 async def compare_project_comprehensive(project_id: str) -> dict[str, Any]:
-    """Comprehensive multi-dimensional comparison of vanilla vs cco."""
-    from ..runner import ComprehensiveAnalyzer, compare_comprehensive
+    """Comprehensive multi-dimensional comparison of vanilla vs cco.
+
+    Uses the unified CodeAnalyzer with 6-dimension scoring.
+    """
+    from ..runner import CodeAnalyzer, compare_comprehensive
 
     vanilla_dir = OUTPUT_DIR / f"{project_id}_vanilla"
     cco_dir = OUTPUT_DIR / f"{project_id}_cco"
@@ -1037,15 +1058,15 @@ async def compare_project_comprehensive(project_id: str) -> dict[str, Any]:
         return result
 
     try:
-        # Comprehensive analysis of both variants
+        # Comprehensive analysis of both variants using unified CodeAnalyzer
         log_activity(f"Starting comprehensive analysis: {project_id}", "info")
 
-        vanilla_analyzer = ComprehensiveAnalyzer(vanilla_dir)
-        vanilla_metrics = vanilla_analyzer.analyze()
+        vanilla_analyzer = CodeAnalyzer(vanilla_dir)
+        vanilla_metrics = vanilla_analyzer.analyze(comprehensive=True)
         vanilla_metrics.variant = "vanilla"
 
-        cco_analyzer = ComprehensiveAnalyzer(cco_dir)
-        cco_metrics = cco_analyzer.analyze()
+        cco_analyzer = CodeAnalyzer(cco_dir)
+        cco_metrics = cco_analyzer.analyze(comprehensive=True)
         cco_metrics.variant = "cco"
 
         comparison = compare_comprehensive(cco_metrics, vanilla_metrics)
@@ -1080,6 +1101,8 @@ async def compare_project_comprehensive(project_id: str) -> dict[str, Any]:
 @app.post("/api/compare-ai/{project_id}")
 async def compare_project_ai(project_id: str) -> dict[str, Any]:
     """AI-powered comparison using Claude via ccbox."""
+    import json
+
     from ..runner.ai_evaluator import run_ai_comparison
 
     result: dict[str, Any] = {
@@ -1131,6 +1154,20 @@ async def compare_project_ai(project_id: str) -> dict[str, Any]:
                 "success",
             )
 
+            # Save AI comparison result to file
+            ai_results_dir = OUTPUT_DIR / "_ai_comparisons"
+            ai_results_dir.mkdir(exist_ok=True)
+            result_file = ai_results_dir / f"{project_id}.json"
+            result_with_timestamp = {
+                **result,
+                "timestamp": datetime.now().isoformat(),
+            }
+            result_file.write_text(
+                json.dumps(result_with_timestamp, indent=2, default=str),
+                encoding="utf-8",
+            )
+            log_activity(f"AI comparison saved to {result_file.name}", "info")
+
     except Exception as e:
         import traceback
 
@@ -1139,6 +1176,57 @@ async def compare_project_ai(project_id: str) -> dict[str, Any]:
         log_activity(f"AI comparison error: {e}", "error")
 
     return result
+
+
+@app.get("/api/ai-comparisons")
+async def list_ai_comparisons() -> list[dict[str, Any]]:
+    """List all saved AI comparison results."""
+    import json
+
+    ai_results_dir = OUTPUT_DIR / "_ai_comparisons"
+    if not ai_results_dir.exists():
+        return []
+
+    results = []
+    for result_file in sorted(ai_results_dir.glob("*.json"), reverse=True):
+        try:
+            data = json.loads(result_file.read_text(encoding="utf-8"))
+            results.append(
+                {
+                    "project_id": data.get("project_id"),
+                    "timestamp": data.get("timestamp"),
+                    "verdict": data.get("comparison", {}).get("verdict"),
+                    "cco_score": data.get("cco", {}).get("overall_score"),
+                    "cco_grade": data.get("cco", {}).get("grade"),
+                    "vanilla_score": data.get("vanilla", {}).get("overall_score"),
+                    "vanilla_grade": data.get("vanilla", {}).get("grade"),
+                    "score_difference": data.get("comparison", {}).get("score_difference"),
+                    "has_production_readiness": "production_readiness"
+                    in data.get("comparison", {}),
+                    "filename": result_file.name,
+                }
+            )
+        except Exception:
+            pass
+
+    return results
+
+
+@app.get("/api/ai-comparisons/{project_id}")
+async def get_ai_comparison(project_id: str) -> dict[str, Any]:
+    """Get saved AI comparison result for a project."""
+    import json
+
+    ai_results_dir = OUTPUT_DIR / "_ai_comparisons"
+    result_file = ai_results_dir / f"{project_id}.json"
+
+    if not result_file.exists():
+        raise HTTPException(status_code=404, detail="AI comparison not found")
+
+    try:
+        return json.loads(result_file.read_text(encoding="utf-8"))
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Failed to read result: {e}") from e
 
 
 # ============== Static Files & HTML ==============

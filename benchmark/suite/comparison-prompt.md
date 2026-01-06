@@ -87,6 +87,139 @@ Both were generated from the same prompt (provided in the referenced file).
 
 ---
 
+## Universal Code Quality Principles (Language-Agnostic)
+
+These principles apply to ALL programming languages and frameworks. Use them as your evaluation foundation:
+
+### Core Design Principles
+| Principle | What to Look For |
+|-----------|------------------|
+| **SSOT** (Single Source of Truth) | No duplicate definitions, constants defined once |
+| **DRY** (Don't Repeat Yourself) | Shared logic extracted, no copy-paste code |
+| **KISS** (Keep It Simple) | Simplest solution that works, no over-engineering |
+| **YAGNI** (You Ain't Gonna Need It) | No speculative features, only what's required |
+| **Separation of Concerns** | Clear module boundaries, single responsibility |
+| **Fail-Fast** | Immediate visible failure, no silent errors |
+| **Defensive Programming** | Validate inputs, assume bad data |
+| **Least Privilege** | Minimal permissions, restricted access |
+| **Defense in Depth** | Multiple security layers, not single point |
+
+### SOLID Principles (Object-Oriented)
+| Principle | What to Look For | Violation Signs |
+|-----------|------------------|-----------------|
+| **S** - Single Responsibility | Each class/module has one reason to change | God classes, mixed concerns |
+| **O** - Open/Closed | Open for extension, closed for modification | Frequent core file changes |
+| **L** - Liskov Substitution | Subtypes substitutable for base types | Override breaks contract |
+| **I** - Interface Segregation | Small, focused interfaces | Fat interfaces, unused methods |
+| **D** - Dependency Inversion | Depend on abstractions, not concretions | Direct instantiation, no DI |
+
+### Universal Anti-Patterns (Penalize These)
+| Anti-Pattern | Signs | Severity |
+|--------------|-------|----------|
+| **God Object/Module** | Single file/class doing everything, 500+ lines | HIGH |
+| **Magic Values** | Hardcoded numbers/strings without named constants | MEDIUM |
+| **Silent Failures** | Empty catch blocks, swallowed errors | HIGH |
+| **Tight Coupling** | Direct dependencies, no interfaces/abstractions | MEDIUM |
+| **Duplicated Logic** | Same code in multiple places | MEDIUM |
+| **Deep Nesting** | 4+ levels of indentation | MEDIUM |
+| **Long Functions** | Functions >50 lines | MEDIUM |
+| **Implicit State** | Hidden globals, unclear data flow | HIGH |
+| **Missing Validation** | External input used without checks | HIGH |
+| **Hardcoded Secrets** | Passwords, API keys in code | CRITICAL |
+
+### Universal Best Practices (Reward These)
+| Practice | Signs | Impact |
+|----------|-------|--------|
+| **Named Constants** | `MAX_RETRIES = 3` not `3` | +Maintainability |
+| **Explicit Error Handling** | Errors caught, logged, propagated with context | +Robustness |
+| **Input Validation** | All external inputs validated at boundaries | +Security |
+| **Small Functions** | Functions <30 lines, single responsibility | +Readability |
+| **Descriptive Naming** | `calculateTotalPrice` not `calc` or `doIt` | +Readability |
+| **Immutability** | Prefer const/readonly, avoid mutation | +Safety |
+| **Resource Cleanup** | Files closed, connections released, cleanup guaranteed | +Reliability |
+| **Defensive Defaults** | Safe fallbacks, fail-safe behavior | +Robustness |
+| **Configuration Externalized** | Settings in config files/env vars, not code | +Flexibility |
+| **Pure Functions** | No side effects where possible | +Testability |
+
+### Type Safety Across Languages
+| Language Type | What to Evaluate |
+|---------------|------------------|
+| **Statically Typed** (TS, Go, Rust, Java, C#, C++) | Strict mode, no `any`/`Object`/`interface{}`/`void*`, proper nullability |
+| **Gradually Typed** (Python, PHP) | Type hints on public APIs, runtime checks, docstrings |
+| **Dynamically Typed** (JS, Ruby, Lua) | Runtime validation, JSDoc/YARD comments, defensive checks |
+
+### Error Handling Across Languages
+| Language | Good Pattern | Bad Pattern |
+|----------|-------------|-------------|
+| **Result Types** (Rust, Go, Haskell) | `Result<T, E>`, `Option<T>`, explicit error handling | `.unwrap()` everywhere, ignored errors |
+| **Exceptions** (Python, Java, C#) | Specific catches, context added, proper propagation | Bare `except:`, `catch (Exception e)` |
+| **Error Callbacks** (JS, Node) | Error-first callbacks handled, Promise rejections caught | Unhandled rejections, ignored error params |
+
+### Resource Management Across Languages
+| Language | Good Pattern | Bad Pattern |
+|----------|-------------|-------------|
+| **RAII** (Rust, C++) | Ownership, lifetimes, automatic cleanup | Manual memory management, leaks |
+| **GC + Cleanup** (Python, Go, Java) | `with`/`defer`/try-with-resources, explicit close | Unclosed handles, missing cleanup |
+| **Manual** (C) | Paired alloc/free, clear ownership | Memory leaks, use-after-free |
+
+---
+
+## Production-Grade Requirements Checklist
+
+### Security Requirements (OWASP Top 10 + Beyond)
+| Category | What to Check | CRITICAL if Missing |
+|----------|---------------|---------------------|
+| **Injection Prevention** | Parameterized queries, no string concat for SQL/commands, no eval() with user input | Yes |
+| **Authentication** | Secure password hashing (bcrypt/argon2), session management, token expiry | Yes (if applicable) |
+| **Authorization** | Role-based access, permission checks on every endpoint, no privilege escalation | Yes (if applicable) |
+| **Input Validation** | All external inputs validated (type, length, format, range), whitelist approach | Yes |
+| **Output Encoding** | Context-aware escaping (HTML, URL, JS, SQL), no raw user data in output | Yes |
+| **Secrets Management** | No hardcoded secrets, env vars or vault, .env in .gitignore | Yes |
+| **Data Protection** | Sensitive data encrypted at rest and in transit, PII handling | Yes (if applicable) |
+| **Error Disclosure** | Generic errors to users, detailed logs server-side, no stack traces exposed | Yes |
+| **Rate Limiting** | Request throttling, brute-force protection, DoS mitigation | Medium |
+| **Security Headers** | CSP, HSTS, X-Frame-Options, X-Content-Type-Options | Medium (web) |
+| **Dependency Security** | No known vulnerabilities, lockfile present, minimal dependencies | Yes |
+
+### Testing Requirements
+| Test Type | What to Look For | Minimum Standard |
+|-----------|------------------|------------------|
+| **Unit Tests** | Core logic tested, edge cases covered, fast execution | Present |
+| **Integration Tests** | Components work together, API contracts verified | Present (if applicable) |
+| **Edge Case Tests** | Empty input, null/undefined, boundary values, invalid types | Comprehensive |
+| **Error Path Tests** | Exception handling verified, error messages correct | Present |
+| **Test Organization** | Clear naming, logical grouping, no test interdependence | Clean |
+| **Assertions** | Specific assertions, not just "no error", expected vs actual | Quality |
+| **Mocking** | External dependencies mocked, deterministic tests | Proper isolation |
+| **Coverage** | Critical paths covered, not just line count | Meaningful |
+
+### Performance & Efficiency Requirements
+| Category | What to Check | Anti-Pattern |
+|----------|---------------|--------------|
+| **Algorithm Complexity** | Appropriate for data size, no O(n²) where O(n) possible | Nested loops on large data |
+| **Data Structures** | Set for lookups, Map for key-value, appropriate collections | Array.includes() for search |
+| **Caching** | Expensive computations cached, cache invalidation strategy | Repeated expensive calls |
+| **Connection Pooling** | Database/HTTP connections reused, not created per request | New connection per request |
+| **Lazy Loading** | Large data loaded on demand, not eagerly | Load everything upfront |
+| **Batching** | Multiple operations batched, not individual calls | N+1 query pattern |
+| **Memory Management** | No obvious leaks, bounded buffers, stream large data | Unbounded collections |
+| **Async/Concurrent** | I/O operations non-blocking, appropriate parallelism | Blocking in async context |
+| **Resource Limits** | Timeouts configured, max sizes defined, circuit breakers | Unbounded operations |
+
+### Operational Readiness
+| Category | What to Check | Production Impact |
+|----------|---------------|-------------------|
+| **Logging** | Structured logs, appropriate levels, context included | Debugging impossible without |
+| **Error Tracking** | Errors logged with stack trace and context | Issues undetectable |
+| **Configuration** | Externalized, environment-specific, validated on startup | Deployment failures |
+| **Graceful Shutdown** | Signal handling, drain connections, cleanup resources | Data loss, zombie processes |
+| **Health Checks** | Liveness and readiness endpoints, dependency checks | Orchestration failures |
+| **Timeouts** | All external calls have explicit timeout | Resource exhaustion |
+| **Retry Logic** | Transient failures retried with backoff, max attempts | Cascading failures |
+| **Idempotency** | Operations safe to retry, no duplicate side effects | Data corruption |
+
+---
+
 ## Evaluation Dimensions (10 Total, Weights sum to 100%)
 
 ### 1. Functional Completeness (Weight: 15%)
@@ -400,6 +533,7 @@ Return ONLY a JSON object. No markdown code fences. No text before or after.
 ```json
 {
   "implementation_a": {
+    "language_detected": "Python",
     "functional_completeness": {"score": 88, "evidence": "9/10 requirements. ✓ CRUD at handlers.py:20-80, ✓ auth at auth.py:15, ✗ missing pagination"},
     "correctness_robustness": {"score": 82, "evidence": "Error handling at api.py:30-50 with custom errors. Edge cases: empty input at validate.py:25. Missing: timeout handling"},
     "architecture": {"score": 85, "evidence": "Clean layers: handlers/ → services/ → repos/. Dependencies flow inward. Minor: utils.py mixed concerns"},
@@ -410,13 +544,22 @@ Return ONLY a JSON object. No markdown code fences. No text before or after.
     "maintainability": {"score": 82, "evidence": "Constants at constants.py. Config externalized. README present. Extension via plugins/"},
     "performance": {"score": 88, "evidence": "O(n) algorithms appropriate. Set for lookups at search.py:30. No N+1 issues"},
     "best_practices": {"score": 85, "evidence": "Async/await throughout. Consistent style. Context managers at db.py:20"},
-    "anti_patterns_found": ["52-line function at orders.py:45", "Some Any types in legacy code"],
+    "anti_patterns_found": [
+      {"pattern": "Long Function", "severity": "MEDIUM", "location": "orders.py:45", "details": "52 lines, should be <30"},
+      {"pattern": "Type Escape", "severity": "MEDIUM", "location": "legacy.py:15-20", "details": "Any types used"}
+    ],
+    "best_practices_found": [
+      {"practice": "Named Constants", "location": "constants.py", "details": "All magic values extracted"},
+      {"practice": "Input Validation", "location": "validators.py:10-40", "details": "Comprehensive boundary validation"},
+      {"practice": "Resource Cleanup", "location": "db.py:20", "details": "Context managers for connections"}
+    ],
     "overall_score": 83,
     "grade": "B",
     "strengths": ["Clean architecture", "Good input validation", "Comprehensive error handling"],
     "weaknesses": ["Missing pagination feature", "Some long functions", "Legacy code has weak typing"]
   },
   "implementation_b": {
+    "language_detected": "Python",
     "functional_completeness": {"score": 95, "evidence": "10/10 requirements. All CRUD, auth, AND pagination at handlers.py:20-150"},
     "correctness_robustness": {"score": 90, "evidence": "Comprehensive error handling with retries at client.py:25. All edge cases covered including timeout"},
     "architecture": {"score": 88, "evidence": "Hexagonal architecture. Ports at interfaces/, adapters at infrastructure/. Clean boundaries"},
@@ -427,7 +570,15 @@ Return ONLY a JSON object. No markdown code fences. No text before or after.
     "maintainability": {"score": 90, "evidence": "Self-documenting code. All config externalized. Comprehensive README. Plugin system"},
     "performance": {"score": 85, "evidence": "Efficient algorithms. Connection pooling at db.py:15. Minor: could cache computation at calc.py:40"},
     "best_practices": {"score": 88, "evidence": "Modern Python 3.11 features. Dataclasses. Consistent formatting. Proper resource cleanup"},
-    "anti_patterns_found": ["Slight over-engineering in DI container at container.py"],
+    "anti_patterns_found": [
+      {"pattern": "Over-Engineering", "severity": "LOW", "location": "container.py", "details": "DI container complexity exceeds project needs"}
+    ],
+    "best_practices_found": [
+      {"practice": "Strict Typing", "location": "tsconfig.json / pyproject.toml", "details": "All strict flags enabled"},
+      {"practice": "Enums for Constants", "location": "types.py:10", "details": "Fixed values use enums"},
+      {"practice": "Error Context", "location": "client.py:25", "details": "Errors include retry info and context"},
+      {"practice": "Immutability", "location": "models.py", "details": "Frozen dataclasses used"}
+    ],
     "overall_score": 89,
     "grade": "B+",
     "strengths": ["Complete implementation", "Excellent type safety", "Strong security", "Good test coverage"],
@@ -438,23 +589,75 @@ Return ONLY a JSON object. No markdown code fences. No text before or after.
     "margin": "slight",
     "score_difference": 6,
     "dimension_breakdown": [
-      {"dimension": "functional_completeness", "winner": "b", "diff": 7},
-      {"dimension": "correctness_robustness", "winner": "b", "diff": 8},
-      {"dimension": "architecture", "winner": "b", "diff": 3},
-      {"dimension": "code_quality", "winner": "b", "diff": 8},
-      {"dimension": "security", "winner": "b", "diff": 7},
-      {"dimension": "type_safety", "winner": "b", "diff": 12},
-      {"dimension": "testing", "winner": "b", "diff": 10},
-      {"dimension": "maintainability", "winner": "b", "diff": 8},
-      {"dimension": "performance", "winner": "tie", "diff": -3},
-      {"dimension": "best_practices", "winner": "b", "diff": 3}
+      {"dimension": "functional_completeness", "winner": "b", "diff": 7, "weight": 15},
+      {"dimension": "correctness_robustness", "winner": "b", "diff": 8, "weight": 14},
+      {"dimension": "architecture", "winner": "b", "diff": 3, "weight": 12},
+      {"dimension": "code_quality", "winner": "b", "diff": 8, "weight": 12},
+      {"dimension": "security", "winner": "b", "diff": 7, "weight": 10},
+      {"dimension": "type_safety", "winner": "b", "diff": 12, "weight": 10},
+      {"dimension": "testing", "winner": "b", "diff": 10, "weight": 10},
+      {"dimension": "maintainability", "winner": "b", "diff": 8, "weight": 9},
+      {"dimension": "performance", "winner": "tie", "diff": -3, "weight": 4},
+      {"dimension": "best_practices", "winner": "b", "diff": 3, "weight": 4}
     ],
+    "anti_pattern_comparison": {
+      "a_count": 2,
+      "b_count": 1,
+      "a_critical": 0,
+      "b_critical": 0,
+      "winner": "b"
+    },
+    "best_practice_comparison": {
+      "a_count": 3,
+      "b_count": 4,
+      "winner": "b"
+    },
+    "production_readiness": {
+      "a": {
+        "security_score": 75,
+        "security_issues": ["No rate limiting", "Missing CSRF protection"],
+        "testing_score": 70,
+        "testing_issues": ["No integration tests", "Missing error path tests"],
+        "performance_score": 80,
+        "performance_issues": ["N+1 query at users.py:45"],
+        "operations_score": 60,
+        "operations_issues": ["No graceful shutdown", "Missing health check", "No structured logging"]
+      },
+      "b": {
+        "security_score": 90,
+        "security_issues": ["Rate limiting could be stricter"],
+        "testing_score": 85,
+        "testing_issues": ["Could add more edge cases for date handling"],
+        "performance_score": 85,
+        "performance_issues": ["Cache could have TTL"],
+        "operations_score": 85,
+        "operations_issues": ["Could add readiness probe"]
+      },
+      "winner": "b",
+      "production_ready": {"a": false, "b": true}
+    },
+    "principle_compliance": {
+      "a": {
+        "dry_violations": 2,
+        "yagni_violations": 0,
+        "solid_violations": ["SRP: UserService handles auth and profile", "DIP: Direct DB instantiation"],
+        "kiss_score": 80
+      },
+      "b": {
+        "dry_violations": 0,
+        "yagni_violations": 1,
+        "solid_violations": ["Minor: Over-abstracted DI"],
+        "kiss_score": 75
+      }
+    },
     "key_differences": [
       "B implements pagination while A misses it",
       "B has 12 points better type safety with strict mode and no Any",
-      "B has comprehensive retry logic and timeout handling for robustness"
+      "B has comprehensive retry logic and timeout handling for robustness",
+      "B has fewer anti-patterns (1 vs 2) and more best practices (4 vs 3)",
+      "B is production-ready while A has critical gaps in operations"
     ],
-    "recommendation": "Implementation B is better overall. Complete features, stronger type safety, and better error handling. The slight over-engineering in DI is acceptable given the benefits."
+    "recommendation": "Implementation B is better overall. Complete features, stronger type safety, and better error handling. The slight over-engineering in DI is acceptable given the benefits. B is production-ready while A requires significant work on logging, health checks, and security."
   }
 }
 ```
@@ -471,6 +674,15 @@ Return ONLY a JSON object. No markdown code fences. No text before or after.
 6. **BE CONSISTENT** - Apply same standards to both implementations
 7. **NO ASSUMPTIONS** - Judge only what you see in the code
 8. **COMPLETE AUTONOMOUSLY** - Do not ask questions or pause
+9. **EVALUATE PRODUCTION-READINESS** - Check security, testing, performance, operations
+10. **CHECK PRINCIPLES** - Evaluate DRY, YAGNI, SOLID, KISS compliance
+
+**Production-Grade Evaluation (MANDATORY):**
+- Security: Check OWASP Top 10, secrets management, input validation
+- Testing: Unit tests, edge cases, error paths, meaningful coverage
+- Performance: Algorithm complexity, caching, connection pooling, N+1 queries
+- Operations: Logging, graceful shutdown, health checks, timeouts, retry logic
+- Principles: DRY violations, YAGNI violations, SOLID compliance
 
 **CRITICAL**: Every dimension MUST have:
 - A score between 0-100
