@@ -210,7 +210,7 @@ def check_system_dependencies() -> dict[str, Any]:
     """Check if required dependencies are installed."""
     platform_info = get_platform_info()
 
-    result = {
+    result: dict[str, Any] = {
         "platform": platform_info,
         "python": {
             "installed": True,
@@ -628,7 +628,9 @@ async def execute_tests_background(
     """Execute tests in background with per-project variant selection."""
     from ..runner import BenchmarkResult, compare_metrics
 
-    executor = TestExecutor(OUTPUT_DIR)
+    # Extended timeout for complex projects - Opus 4.5 extended thinking can take
+    # several minutes without producing output. Use 30 min for safety.
+    executor = TestExecutor(OUTPUT_DIR)  # Uses default 30 min timeout
     log_activity(f"Starting benchmark run: {len(projects)} project(s)", "info")
 
     for project in projects:
@@ -1267,7 +1269,9 @@ async def list_reports() -> list[dict[str, Any]]:
                 "cco_score": result.cco_result.score,
                 "cco_grade": result.cco_result.metrics.grade if result.cco_result.metrics else None,
                 "vanilla_score": result.vanilla_result.score,
-                "vanilla_grade": result.vanilla_result.metrics.grade if result.vanilla_result.metrics else None,
+                "vanilla_grade": result.vanilla_result.metrics.grade
+                if result.vanilla_result.metrics
+                else None,
                 "timestamp": result.timestamp,
             }
 
@@ -1380,7 +1384,7 @@ async def get_report(project_id: str) -> dict[str, Any]:
 async def delete_report(project_id: str) -> dict[str, Any]:
     """Delete all reports for a project (static + AI)."""
 
-    deleted = {"static": [], "ai": []}
+    deleted: dict[str, list[str]] = {"static": [], "ai": []}
 
     # Delete static results
     for f in results_manager.list_results():

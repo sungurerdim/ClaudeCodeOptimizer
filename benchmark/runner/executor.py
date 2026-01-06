@@ -569,33 +569,68 @@ class TestExecutor:
 
     ccbox mounts the current working directory as project root.
     We create isolated directories for each test run and cd into them.
+
+    Log files are organized in benchmark/logs/{project_id}/{variant}/:
+        benchmark/logs/
+        └── {project_id}/
+            ├── cco/
+            │   ├── summary.json          # Machine-readable results
+            │   ├── 01_config.log         # CCO config phase summary
+            │   ├── 01_config.jsonl       # CCO config output stream
+            │   ├── 02_coding.log         # Main coding phase summary
+            │   ├── 02_coding.jsonl       # Claude output (JSON Lines)
+            │   ├── 02_coding_errors.log  # stderr output
+            │   └── 03_optimize.log       # CCO optimize phase summary
+            └── vanilla/
+                ├── summary.json
+                ├── 02_coding.log
+                ├── 02_coding.jsonl
+                └── 02_coding_errors.log
     """
 
     def __init__(
         self,
         output_base: Path,
         ccbox_cmd: str = "ccbox",
-        timeout_seconds: int = 300,  # Inactivity timeout (5 min no output = stuck)
+        timeout_seconds: int = 1800,  # Inactivity timeout (30 min - Opus 4.5 extended thinking)
         stall_threshold: float = 120.0,
         progress_callback: Callable[[str, ActivityState], None] | None = None,
     ):
         self.output_base = output_base
+        self.logs_base = output_base.parent / "logs"  # benchmark/logs/
         self.ccbox_cmd = ccbox_cmd
         self.timeout = timeout_seconds
-        self.phase_timeout = 120  # 2 minutes for CCO config/optimize phases
+        # Opus 4.5 extended thinking can take several minutes without output
+        self.phase_timeout = 1800  # 30 minutes for CCO config/optimize phases
         self.stall_threshold = stall_threshold  # Seconds without output = stall warning
         self.progress_callback = progress_callback
         self.output_base.mkdir(parents=True, exist_ok=True)
+        self.logs_base.mkdir(parents=True, exist_ok=True)
+
+    def _get_log_dir(self, project_id: str, variant: str) -> Path:
+        """Get or create the log directory for a project variant.
+
+        Structure: benchmark/logs/{project_id}/{variant}/
+        """
+        log_dir = self.logs_base / project_id / variant
+        log_dir.mkdir(parents=True, exist_ok=True)
+        return log_dir
 
     def _run_with_streaming(
         self,
         cmd: list[str],
         project_dir: Path,
+        project_id: str,
         variant: str,
         timeout: float,
         env: dict[str, str] | None = None,
+        log_phase: str = "02_coding",  # Log file prefix: 01_config, 02_coding, 03_optimize
     ) -> tuple[int | None, str, str, ActivityState]:
         """Run command with real-time output streaming and activity tracking.
+
+        Args:
+            project_id: Project identifier for log directory
+            log_phase: Phase prefix for log files (01_config, 02_coding, 03_optimize)
 
         Returns:
             Tuple of (exit_code, stdout, stderr, activity_state)
@@ -730,17 +765,18 @@ class TestExecutor:
                             f"(warning #{activity.stall_warnings})"
                         )
 
-            # Periodic log flush
+            # Periodic log flush to benchmark/logs/
             if now - last_log_flush > log_flush_interval:
                 last_log_flush = now
                 try:
+                    log_dir = self._get_log_dir(project_id, variant)
                     with lock:
                         if stdout_lines:
-                            (project_dir / "_ccbox_stdout.log").write_text(
+                            (log_dir / f"{log_phase}.jsonl").write_text(
                                 "".join(stdout_lines), encoding="utf-8"
                             )
                         if stderr_lines:
-                            (project_dir / "_ccbox_stderr.log").write_text(
+                            (log_dir / f"{log_phase}_errors.log").write_text(
                                 "".join(stderr_lines), encoding="utf-8"
                             )
                 except OSError:
@@ -762,7 +798,7 @@ class TestExecutor:
         exit_code = process.returncode
         return exit_code, stdout, stderr, activity
 
-    def _run_cco_config(self, project_dir: Path, model: str) -> dict[str, Any]:
+    def _run_cco_config(self, project_dir: Path, project_id: str, model: str) -> dict[str, Any]:
         """Run cco-config --auto to configure CCO rules before the actual test.
 
         This runs in a separate ccbox invocation so that:
@@ -806,9 +842,11 @@ class TestExecutor:
             exit_code, stdout, stderr, activity = self._run_with_streaming(
                 cmd=cmd,
                 project_dir=project_dir,
-                variant="cco-config",
+                project_id=project_id,
+                variant="cco",  # Config is part of CCO variant
                 timeout=float(self.phase_timeout),
                 env={"CLAUDE_MODEL": model},
+                log_phase="01_config",
             )
 
             elapsed = time.time() - start_time
@@ -835,9 +873,10 @@ STDOUT:
 STDERR:
 {stderr or "(empty)"}
 """
-            (project_dir / "_cco_config.log").write_text(log_content, encoding="utf-8")
-            (project_dir / "_cco_config_stdout.log").write_text(stdout, encoding="utf-8")
-            (project_dir / "_cco_config_stderr.log").write_text(stderr, encoding="utf-8")
+            log_dir = self._get_log_dir(project_id, "cco")
+            (log_dir / "01_config.log").write_text(log_content, encoding="utf-8")
+            (log_dir / "01_config.jsonl").write_text(stdout, encoding="utf-8")
+            (log_dir / "01_config_errors.log").write_text(stderr, encoding="utf-8")
 
             # Handle FileNotFoundError (exit_code is None and no output)
             if exit_code is None and not stdout and not stderr:
@@ -913,7 +952,7 @@ STDERR:
                 "error": error_msg,
             }
 
-    def _run_cco_optimize(self, project_dir: Path, model: str) -> dict[str, Any]:
+    def _run_cco_optimize(self, project_dir: Path, project_id: str, model: str) -> dict[str, Any]:
         """Run cco-optimize --auto to optimize generated code after test completion.
 
         This runs in a separate ccbox invocation to apply security, quality,
@@ -949,14 +988,16 @@ STDERR:
             exit_code, stdout, stderr, activity = self._run_with_streaming(
                 cmd=cmd,
                 project_dir=project_dir,
-                variant="cco-optimize",
+                project_id=project_id,
+                variant="cco",  # Optimize is part of CCO variant
                 timeout=float(self.phase_timeout),
                 env={"CLAUDE_MODEL": model},
+                log_phase="03_optimize",
             )
 
             elapsed = time.time() - start_time
 
-            # Save optimize logs
+            # Save optimize logs to benchmark/logs/
             log_content = f"""CCO Optimize Log (Streaming Mode)
 {"=" * 60}
 Command: {cmd_str}
@@ -978,7 +1019,10 @@ STDOUT:
 STDERR:
 {stderr or "(empty)"}
 """
-            (project_dir / "_cco_optimize.log").write_text(log_content, encoding="utf-8")
+            log_dir = self._get_log_dir(project_id, "cco")
+            (log_dir / "03_optimize.log").write_text(log_content, encoding="utf-8")
+            (log_dir / "03_optimize.jsonl").write_text(stdout, encoding="utf-8")
+            (log_dir / "03_optimize_errors.log").write_text(stderr, encoding="utf-8")
 
             # Handle FileNotFoundError (exit_code is None and no output)
             if exit_code is None and not stdout and not stderr:
@@ -1090,23 +1134,23 @@ STDERR:
         # Short instruction for ccbox - actual task is in the file
         short_prompt = "Read _benchmark_prompt.md and complete all tasks described in it. Follow the requirements exactly."
 
-        # CCO phase timings
+        # CCO phase timings and results
         config_time: float | None = None
         optimize_time: float | None = None
+        config_result: dict[str, Any] | None = None
+        optimize_result: dict[str, Any] | None = None
 
         # CCO variant: First run cco-config --auto to configure rules
         if variant == "cco":
             logger.info(f"\n{separator_light}")
             logger.info("[CCO] Phase 1/3: config")
             logger.info(separator_light)
-            config_result = self._run_cco_config(project_dir, model)
+            config_result = self._run_cco_config(project_dir, config.id, model)
             config_time = config_result["time"]
             if not config_result["success"]:
                 logger.error(f"[CCO] Config phase FAILED: {config_result['error']}")
                 # Capture context snapshot even on failure
-                snapshot = _capture_context_snapshot(
-                    project_dir, variant, model, self.ccbox_cmd
-                )
+                snapshot = _capture_context_snapshot(project_dir, variant, model, self.ccbox_cmd)
                 _save_context_snapshot(project_dir, snapshot)
                 return ExecutionResult(
                     project_id=config.id,
@@ -1178,9 +1222,11 @@ STDERR:
         exit_code, stdout, stderr, activity = self._run_with_streaming(
             cmd=cmd,
             project_dir=project_dir,
+            project_id=config.id,
             variant=variant,
             timeout=self.timeout,
             env={"CLAUDE_MODEL": model},
+            log_phase="02_coding",
         )
 
         generation_time = time.time() - start_time
@@ -1188,9 +1234,7 @@ STDERR:
         # Handle FileNotFoundError (exit_code is None and no output)
         if exit_code is None and not stdout and not stderr:
             # Still capture snapshot for debugging
-            snapshot = _capture_context_snapshot(
-                project_dir, variant, model, self.ccbox_cmd
-            )
+            snapshot = _capture_context_snapshot(project_dir, variant, model, self.ccbox_cmd)
             _save_context_snapshot(project_dir, snapshot)
             return ExecutionResult(
                 project_id=config.id,
@@ -1238,9 +1282,10 @@ STDOUT:
 STDERR:
 {stderr or "(empty)"}
 """
-        (project_dir / "_ccbox_run.log").write_text(log_content, encoding="utf-8")
-        (project_dir / "_ccbox_stdout.log").write_text(stdout, encoding="utf-8")
-        (project_dir / "_ccbox_stderr.log").write_text(stderr, encoding="utf-8")
+        log_dir = self._get_log_dir(config.id, variant)
+        (log_dir / "02_coding.log").write_text(log_content, encoding="utf-8")
+        (log_dir / "02_coding.jsonl").write_text(stdout, encoding="utf-8")
+        (log_dir / "02_coding_errors.log").write_text(stderr, encoding="utf-8")
 
         if success:
             logger.info(f"[{variant.upper()}] SUCCESS in {generation_time:.2f}s{stall_info}")
@@ -1250,7 +1295,7 @@ STDERR:
                 logger.info(f"\n{separator_light}")
                 logger.info("[CCO] Phase 3/3: optimize")
                 logger.info(separator_light)
-                optimize_result = self._run_cco_optimize(project_dir, model)
+                optimize_result = self._run_cco_optimize(project_dir, config.id, model)
                 optimize_time = optimize_result["time"]
                 if optimize_result["success"]:
                     logger.info(f"[CCO] Optimize phase completed in {optimize_time:.2f}s")
@@ -1265,9 +1310,7 @@ STDERR:
                     f"[{variant.upper()}] TIMEOUT after {generation_time:.2f}s{stall_info}"
                 )
             else:
-                logger.error(
-                    f"[{variant.upper()}] FAILED with exit code {exit_code}{stall_info}"
-                )
+                logger.error(f"[{variant.upper()}] FAILED with exit code {exit_code}{stall_info}")
             logger.error(f"[{variant.upper()}] stdout:\n{_truncate(stdout, 1500)}")
             logger.error(f"[{variant.upper()}] stderr:\n{_truncate(stderr, 1500)}")
 
@@ -1308,9 +1351,7 @@ STDERR:
                 error_msg = _parse_ccbox_error(stdout, stderr, exit_code) + stall_info
 
         # Capture context snapshot for verification
-        snapshot = _capture_context_snapshot(
-            project_dir, variant, model, self.ccbox_cmd
-        )
+        snapshot = _capture_context_snapshot(project_dir, variant, model, self.ccbox_cmd)
         _save_context_snapshot(project_dir, snapshot)
 
         # Variant completion separator
@@ -1320,6 +1361,39 @@ STDERR:
             f"[{variant.upper()}] {status}: {config.id} (score={round(score, 1)}, time={total_time:.1f}s)"
         )
         logger.info(f"{separator_heavy}\n")
+
+        # Generate summary.json for machine-readable results
+        summary = {
+            "project_id": config.id,
+            "variant": variant,
+            "success": success,
+            "score": round(score, 1),
+            "phases": {
+                "config": {
+                    "enabled": variant == "cco",
+                    "time_seconds": round(config_time, 2) if config_time is not None else None,
+                    "success": config_result.get("success")
+                    if variant == "cco" and config_result
+                    else None,
+                },
+                "coding": {
+                    "time_seconds": round(generation_time, 2),
+                    "exit_code": exit_code,
+                    "success": success,
+                    "stall_warnings": activity.stall_warnings,
+                },
+                "optimize": {
+                    "enabled": variant == "cco" and success,
+                    "time_seconds": round(optimize_time, 2) if optimize_time is not None else None,
+                    "success": optimize_result.get("success")
+                    if variant == "cco" and success and optimize_result
+                    else None,
+                },
+            },
+            "total_time_seconds": round(total_time, 2),
+            "error_message": error_msg if error_msg else None,
+        }
+        (log_dir / "summary.json").write_text(json.dumps(summary, indent=2), encoding="utf-8")
 
         return ExecutionResult(
             project_id=config.id,
@@ -1337,9 +1411,7 @@ STDERR:
             error_message=error_msg,
             config_time_seconds=round(config_time, 2) if config_time is not None else None,
             coding_time_seconds=round(generation_time, 2),
-            optimize_time_seconds=round(optimize_time, 2)
-            if optimize_time is not None
-            else None,
+            optimize_time_seconds=round(optimize_time, 2) if optimize_time is not None else None,
         )
 
     def run_benchmark(self, config: ProjectConfig, model: str = "opus") -> BenchmarkResult:
