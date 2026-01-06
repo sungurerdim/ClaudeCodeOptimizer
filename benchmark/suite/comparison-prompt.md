@@ -657,6 +657,33 @@ Return ONLY a JSON object. No markdown code fences. No text before or after.
       "B has fewer anti-patterns (1 vs 2) and more best practices (4 vs 3)",
       "B is production-ready while A has critical gaps in operations"
     ],
+    "executive_summary": [
+      {
+        "topic": "Security",
+        "winner": "b",
+        "insight": "B has rate limiting and comprehensive input validation, reducing attack surface by ~40%. A lacks CSRF protection, making it vulnerable to cross-site attacks."
+      },
+      {
+        "topic": "Reliability",
+        "winner": "b",
+        "insight": "B implements retry logic with exponential backoff and circuit breakers. Under high load, A would cascade failures while B recovers gracefully."
+      },
+      {
+        "topic": "Maintainability",
+        "winner": "b",
+        "insight": "B's strict typing catches ~30% more bugs at compile time. A's Any types allow runtime errors that B prevents statically."
+      },
+      {
+        "topic": "Completeness",
+        "winner": "b",
+        "insight": "B implements all 10 requirements including pagination. A missing pagination means users can't browse large datasets efficiently."
+      },
+      {
+        "topic": "Production Readiness",
+        "winner": "b",
+        "insight": "B has health checks, structured logging, and graceful shutdown. A would need 2-3 weeks of work before safe production deployment."
+      }
+    ],
     "recommendation": "Implementation B is better overall. Complete features, stronger type safety, and better error handling. The slight over-engineering in DI is acceptable given the benefits. B is production-ready while A requires significant work on logging, health checks, and security."
   }
 }
@@ -676,6 +703,7 @@ Return ONLY a JSON object. No markdown code fences. No text before or after.
 8. **COMPLETE AUTONOMOUSLY** - Do not ask questions or pause
 9. **EVALUATE PRODUCTION-READINESS** - Check security, testing, performance, operations
 10. **CHECK PRINCIPLES** - Evaluate DRY, YAGNI, SOLID, KISS compliance
+11. **EXECUTIVE SUMMARY** - Provide exactly 5 practical insights explaining what each difference means in real-world terms (security risks, performance impact, reliability under load, maintenance burden, etc.)
 
 **Production-Grade Evaluation (MANDATORY):**
 - Security: Check OWASP Top 10, secrets management, input validation

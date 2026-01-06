@@ -49,13 +49,14 @@ class DimensionScore:
 
 
 # Dimension weights (must sum to 1.0)
+# Production-grade priorities: functionality > security > testing > quality > practices > docs
 DIMENSION_WEIGHTS = {
-    "functional_completeness": 0.25,  # Does it work?
-    "code_quality": 0.20,  # Is it well-written?
-    "security": 0.15,  # Is it secure?
-    "test_quality": 0.20,  # Is it tested?
-    "documentation": 0.10,  # Is it documented?
-    "best_practices": 0.10,  # Does it follow standards?
+    "functional_completeness": 0.25,  # Does it work? (Most critical)
+    "security": 0.20,  # Is it secure? (Critical for production)
+    "test_quality": 0.20,  # Is it tested? (Reliability)
+    "code_quality": 0.15,  # Is it well-written? (Maintainability)
+    "best_practices": 0.15,  # Standards + UX/DX scores (Design quality)
+    "documentation": 0.05,  # Is it documented? (Nice to have)
 }
 
 
@@ -2206,13 +2207,52 @@ class CodeAnalyzer:
         )
 
     def _analyze_best_practices(self) -> DimensionScore:
-        """Analyze adherence to best practices."""
-        score = 50.0
+        """Analyze adherence to best practices and code design quality."""
+        score = 30.0  # Start lower to account for UX/DX bonuses
         details = []
         issues = []
         positives = []
 
-        # Configuration files
+        # === UX/DX Quality Scores (from code analysis) ===
+        # These measure code design quality beyond just anti-patterns
+
+        # Modularity score (function size distribution) - max +15
+        if self.metrics.modularity_score >= 70:
+            score += 15
+            positives.append(f"Good modularity ({self.metrics.modularity_score:.0f}/100)")
+        elif self.metrics.modularity_score >= 50:
+            score += 10
+            positives.append(f"Moderate modularity ({self.metrics.modularity_score:.0f}/100)")
+        elif self.metrics.modularity_score >= 30:
+            score += 5
+        else:
+            issues.append(f"Poor modularity ({self.metrics.modularity_score:.0f}/100)")
+
+        # SRP score (Single Responsibility Principle) - max +15
+        if self.metrics.srp_score >= 70:
+            score += 15
+            positives.append(f"Good SRP adherence ({self.metrics.srp_score:.0f}/100)")
+        elif self.metrics.srp_score >= 50:
+            score += 10
+        elif self.metrics.srp_score >= 30:
+            score += 5
+        else:
+            issues.append(f"SRP violations detected ({self.metrics.srp_score:.0f}/100)")
+
+        # Error handling quality - max +15
+        if self.metrics.error_handling_score >= 70:
+            score += 15
+            positives.append(f"Good error handling ({self.metrics.error_handling_score:.0f}/100)")
+        elif self.metrics.error_handling_score >= 50:
+            score += 10
+        elif self.metrics.error_handling_score >= 30:
+            score += 5
+        else:
+            issues.append(f"Poor error handling ({self.metrics.error_handling_score:.0f}/100)")
+
+        # === Configuration & Tooling === max +25
+
+        # Configuration files - max +8
         config_checks = [
             ("pyproject.toml", "Modern Python packaging"),
             ("package.json", "Node.js config"),
@@ -2221,37 +2261,59 @@ class CodeAnalyzer:
             (".gitignore", "Git ignore"),
         ]
 
+        config_count = 0
         for filename, desc in config_checks:
             if (self.project_dir / filename).exists():
-                score += 3
+                config_count += 1
                 positives.append(desc)
 
-        # Linting configuration
-        lint_configs = [".eslintrc", ".eslintrc.js", ".eslintrc.json", "ruff.toml", ".golangci.yml"]
-        if any((self.project_dir / lc).exists() for lc in lint_configs):
-            score += 10
+        if config_count > 0:
+            score += min(config_count * 2, 8)
+
+        # Linting configuration - +7
+        lint_configs = [
+            ".eslintrc", ".eslintrc.js", ".eslintrc.json", ".eslintrc.yaml",
+            "ruff.toml", ".golangci.yml", ".golangci.yaml",
+            "biome.json", "deno.json",
+        ]
+        # Also check pyproject.toml for ruff config
+        has_lint = any((self.project_dir / lc).exists() for lc in lint_configs)
+        if not has_lint:
+            pyproject = self.project_dir / "pyproject.toml"
+            if pyproject.exists():
+                try:
+                    content = pyproject.read_text(encoding="utf-8")
+                    has_lint = "[tool.ruff]" in content or "[tool.pylint]" in content
+                except Exception:
+                    pass
+
+        if has_lint:
+            score += 7
             positives.append("Linting configured")
         else:
             issues.append("No linting configuration")
 
-        # CI/CD
-        ci_paths = [".github/workflows", ".gitlab-ci.yml", ".circleci"]
+        # CI/CD - +5
+        ci_paths = [".github/workflows", ".gitlab-ci.yml", ".circleci", "Jenkinsfile"]
         if any((self.project_dir / ci).exists() for ci in ci_paths):
-            score += 10
+            score += 5
             positives.append("CI/CD configured")
 
-        # Dependencies lockfile
-        lockfiles = ["poetry.lock", "package-lock.json", "yarn.lock", "go.sum", "Cargo.lock"]
+        # Dependencies lockfile - +3
+        lockfiles = ["poetry.lock", "package-lock.json", "yarn.lock", "pnpm-lock.yaml", "go.sum", "Cargo.lock"]
         if any((self.project_dir / lf).exists() for lf in lockfiles):
-            score += 5
+            score += 3
             positives.append("Dependencies locked")
 
-        # Check for proper project structure
+        # Project structure - +2
         if (self.project_dir / "src").exists() or (self.project_dir / "lib").exists():
-            score += 5
+            score += 2
             positives.append("Organized project structure")
 
         details.append(f"Language: {self.metrics.language}")
+        details.append(f"Modularity: {self.metrics.modularity_score:.0f}")
+        details.append(f"SRP: {self.metrics.srp_score:.0f}")
+        details.append(f"Error handling: {self.metrics.error_handling_score:.0f}")
 
         return DimensionScore(
             name="Best Practices",
@@ -2261,45 +2323,6 @@ class CodeAnalyzer:
             issues=issues,
             positives=positives,
         )
-
-
-def calculate_overall_score(m: Metrics) -> float:
-    """Calculate overall quality score (0-100)."""
-    score = 50.0  # Start neutral
-
-    # Anti-patterns (penalties, capped to prevent single category dominance)
-    score -= min(m.bare_excepts * 5, 15)  # Max -15
-    score -= min(m.silent_passes * 5, 15)  # Max -15 (reduced from 10 per)
-    score -= min(m.broad_excepts * 2, 10)  # Max -10
-    score -= min(m.giant_funcs * 5, 15)  # Max -15 (reduced from 8 per)
-    score -= min(m.magic_numbers * 0.3, 10)  # Max -10 (reduced penalty)
-    score -= min(m.mutable_defaults * 3, 10)  # Max -10
-    score -= min(m.star_imports * 2, 10)  # Max -10
-    score -= min(m.global_vars * 2, 10)  # Max -10
-
-    # Best practices (bonuses)
-    score += min(m.exception_chains, 10) * 2
-    score += min(m.context_managers, 20) * 0.5
-    score += min(m.dataclasses_used, 5) * 2
-    score += min(m.enums_used, 5) * 2
-    if m.pathlib_used:
-        score += 3
-
-    # Type coverage bonus
-    score += m.type_coverage_pct * 0.15
-
-    # Test coverage bonus
-    if m.coverage_pct:
-        score += m.coverage_pct * 0.1
-    if m.tests_passed is True:
-        score += 10
-
-    # UX/DX scores
-    score += m.modularity_score * 0.05
-    score += m.srp_score * 0.05
-    score += m.error_handling_score * 0.05
-
-    return max(0, min(100, score))
 
 
 def compare_metrics(cco: Metrics, vanilla: Metrics) -> dict[str, Any]:
@@ -2433,17 +2456,16 @@ def compare_metrics(cco: Metrics, vanilla: Metrics) -> dict[str, Any]:
         "Size",
     )
 
-    cco_score = calculate_overall_score(cco)
-    vanilla_score = calculate_overall_score(vanilla)
-    diff = cco_score - vanilla_score
+    # Use dimension-based overall_score (calculated by CodeAnalyzer)
+    diff = cco.overall_score - vanilla.overall_score
 
     return {
         "comparisons": comparisons,
         "cco_wins": cco_wins,
         "vanilla_wins": vanilla_wins,
         "ties": ties,
-        "cco_score": round(cco_score, 1),
-        "vanilla_score": round(vanilla_score, 1),
+        "cco_score": round(cco.overall_score, 1),
+        "vanilla_score": round(vanilla.overall_score, 1),
         "score_diff": round(diff, 1),
         "verdict": calculate_verdict(diff),
     }

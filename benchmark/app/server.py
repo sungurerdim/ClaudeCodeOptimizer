@@ -956,7 +956,7 @@ async def list_output_folders() -> list[dict[str, Any]]:
 @app.post("/api/compare/{project_id}")
 async def compare_project(project_id: str) -> dict[str, Any]:
     """Compare vanilla vs cco output for a project."""
-    from ..runner import CodeAnalyzer, calculate_overall_score, compare_metrics
+    from ..runner import CodeAnalyzer, compare_metrics
 
     vanilla_dir = OUTPUT_DIR / f"{project_id}_vanilla"
     cco_dir = OUTPUT_DIR / f"{project_id}_cco"
@@ -982,12 +982,14 @@ async def compare_project(project_id: str) -> dict[str, Any]:
         vanilla_analyzer = CodeAnalyzer(vanilla_dir)
         vanilla_metrics = vanilla_analyzer.analyze()
         vanilla_metrics.variant = "vanilla"
-        vanilla_score = calculate_overall_score(vanilla_metrics)
+        # Use dimension-based overall_score (calculated by CodeAnalyzer)
+        vanilla_score = vanilla_metrics.overall_score
 
         cco_analyzer = CodeAnalyzer(cco_dir)
         cco_metrics = cco_analyzer.analyze()
         cco_metrics.variant = "cco"
-        cco_score = calculate_overall_score(cco_metrics)
+        # Use dimension-based overall_score (calculated by CodeAnalyzer)
+        cco_score = cco_metrics.overall_score
 
         comparison = compare_metrics(cco_metrics, vanilla_metrics)
         diff = cco_score - vanilla_score
@@ -1227,6 +1229,186 @@ async def get_ai_comparison(project_id: str) -> dict[str, Any]:
         return json.loads(result_file.read_text(encoding="utf-8"))
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"Failed to read result: {e}") from e
+
+
+# ============== Reports (Unified View) ==============
+
+
+@app.get("/api/reports")
+async def list_reports() -> list[dict[str, Any]]:
+    """List all reports grouped by project, combining static and AI results."""
+    import json
+
+    # Collect all unique projects
+    projects: dict[str, dict[str, Any]] = {}
+
+    # From benchmark results
+    for f in results_manager.list_results():
+        try:
+            result = results_manager.load_result(f)
+            project_id = result.project_id
+            if project_id not in projects:
+                projects[project_id] = {
+                    "project_id": project_id,
+                    "project_name": result.project_name,
+                    "has_static": False,
+                    "has_ai": False,
+                    "static_result": None,
+                    "ai_result": None,
+                    "latest_timestamp": None,
+                }
+
+            # Update with static result
+            projects[project_id]["has_static"] = True
+            projects[project_id]["static_result"] = {
+                "filename": f.name,
+                "verdict": result.verdict,
+                "score_difference": result.score_difference,
+                "cco_score": result.cco_result.score,
+                "cco_grade": result.cco_result.metrics.grade if result.cco_result.metrics else None,
+                "vanilla_score": result.vanilla_result.score,
+                "vanilla_grade": result.vanilla_result.metrics.grade if result.vanilla_result.metrics else None,
+                "timestamp": result.timestamp,
+            }
+
+            # Track latest timestamp
+            if projects[project_id]["latest_timestamp"] is None:
+                projects[project_id]["latest_timestamp"] = result.timestamp
+            elif result.timestamp > projects[project_id]["latest_timestamp"]:
+                projects[project_id]["latest_timestamp"] = result.timestamp
+
+        except Exception:
+            pass
+
+    # From AI comparisons
+    ai_results_dir = OUTPUT_DIR / "_ai_comparisons"
+    if ai_results_dir.exists():
+        for result_file in ai_results_dir.glob("*.json"):
+            try:
+                data = json.loads(result_file.read_text(encoding="utf-8"))
+                project_id = data.get("project_id")
+                if not project_id:
+                    continue
+
+                if project_id not in projects:
+                    projects[project_id] = {
+                        "project_id": project_id,
+                        "project_name": project_id.replace("_", " ").title(),
+                        "has_static": False,
+                        "has_ai": False,
+                        "static_result": None,
+                        "ai_result": None,
+                        "latest_timestamp": None,
+                    }
+
+                projects[project_id]["has_ai"] = True
+                projects[project_id]["ai_result"] = {
+                    "filename": result_file.name,
+                    "verdict": data.get("comparison", {}).get("verdict"),
+                    "score_difference": data.get("comparison", {}).get("score_difference"),
+                    "cco_score": data.get("cco", {}).get("overall_score"),
+                    "cco_grade": data.get("comparison", {}).get("cco_grade"),
+                    "vanilla_score": data.get("vanilla", {}).get("overall_score"),
+                    "vanilla_grade": data.get("comparison", {}).get("vanilla_grade"),
+                    "timestamp": data.get("timestamp"),
+                }
+
+                # Update latest timestamp
+                ai_ts = data.get("timestamp")
+                if ai_ts:
+                    if projects[project_id]["latest_timestamp"] is None:
+                        projects[project_id]["latest_timestamp"] = ai_ts
+                    elif ai_ts > projects[project_id]["latest_timestamp"]:
+                        projects[project_id]["latest_timestamp"] = ai_ts
+
+            except Exception:
+                pass
+
+    # Sort by latest timestamp (newest first)
+    sorted_projects = sorted(
+        projects.values(),
+        key=lambda x: x["latest_timestamp"] or "",
+        reverse=True,
+    )
+
+    return sorted_projects
+
+
+@app.get("/api/reports/{project_id}")
+async def get_report(project_id: str) -> dict[str, Any]:
+    """Get full report for a project with static and AI data."""
+    import json
+
+    report: dict[str, Any] = {
+        "project_id": project_id,
+        "has_static": False,
+        "has_ai": False,
+        "static": None,
+        "ai": None,
+    }
+
+    # Load static result
+    for f in results_manager.list_results():
+        if project_id in f.name:
+            try:
+                result = results_manager.load_result(f)
+                if result.project_id == project_id:
+                    report["has_static"] = True
+                    report["static"] = result.to_dict()
+                    report["project_name"] = result.project_name
+                    break
+            except Exception:
+                pass
+
+    # Load AI result
+    ai_results_dir = OUTPUT_DIR / "_ai_comparisons"
+    ai_file = ai_results_dir / f"{project_id}.json"
+    if ai_file.exists():
+        try:
+            report["has_ai"] = True
+            report["ai"] = json.loads(ai_file.read_text(encoding="utf-8"))
+        except Exception:
+            pass
+
+    if not report["has_static"] and not report["has_ai"]:
+        raise HTTPException(status_code=404, detail="Report not found")
+
+    return report
+
+
+@app.delete("/api/reports/{project_id}")
+async def delete_report(project_id: str) -> dict[str, Any]:
+    """Delete all reports for a project (static + AI)."""
+
+    deleted = {"static": [], "ai": []}
+
+    # Delete static results
+    for f in results_manager.list_results():
+        if project_id in f.name:
+            try:
+                result = results_manager.load_result(f)
+                if result.project_id == project_id:
+                    f.unlink()
+                    deleted["static"].append(f.name)
+            except Exception:
+                pass
+
+    # Delete AI result
+    ai_results_dir = OUTPUT_DIR / "_ai_comparisons"
+    ai_file = ai_results_dir / f"{project_id}.json"
+    if ai_file.exists():
+        ai_file.unlink()
+        deleted["ai"].append(ai_file.name)
+
+    if not deleted["static"] and not deleted["ai"]:
+        raise HTTPException(status_code=404, detail="No reports found to delete")
+
+    deleted_count = len(deleted["static"]) + len(deleted["ai"])
+    return {
+        "message": f"Deleted reports for {project_id}",
+        "deleted": deleted,
+        "deleted_count": deleted_count,
+    }
 
 
 # ============== Static Files & HTML ==============

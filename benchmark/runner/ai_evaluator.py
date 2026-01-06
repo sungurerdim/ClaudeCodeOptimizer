@@ -176,6 +176,15 @@ class DimensionComparison:
 
 
 @dataclass
+class ExecutiveSummaryItem:
+    """A single executive summary insight."""
+
+    topic: str = ""
+    winner: str = ""  # "cco", "vanilla", or "tie"
+    insight: str = ""
+
+
+@dataclass
 class AIComparisonResult:
     """Complete AI comparison result."""
 
@@ -187,6 +196,7 @@ class AIComparisonResult:
     verdict: str = "Mixed Results"
     dimension_breakdown: list[DimensionComparison] = field(default_factory=list)
     key_differences: list[str] = field(default_factory=list)
+    executive_summary: list[ExecutiveSummaryItem] = field(default_factory=list)
     recommendation: str = ""
     blind_assignment: str = ""  # "cco=a" or "cco=b" for transparency
     raw_response: str = ""
@@ -226,8 +236,13 @@ class AIComparisonResult:
         )
 
         return {
-            # Executive summary - one paragraph overview
-            "executive_summary": exec_summary,
+            # Executive summary - brief text overview
+            "executive_summary_text": exec_summary,
+            # Executive summary - top 5 practical insights (NEW)
+            "executive_summary": [
+                {"topic": item.topic, "winner": item.winner, "insight": item.insight}
+                for item in self.executive_summary
+            ],
             # Quick stats
             "summary": {
                 "cco_score": self.cco.overall_score,
@@ -261,6 +276,10 @@ class AIComparisonResult:
                     for d in self.dimension_breakdown
                 ],
                 "key_differences": self.key_differences,
+                "executive_summary": [
+                    {"topic": item.topic, "winner": item.winner, "insight": item.insight}
+                    for item in self.executive_summary
+                ],
                 "recommendation": self.recommendation,
                 "blind_assignment": self.blind_assignment,
             },
@@ -481,6 +500,27 @@ def parse_ai_response(response: str, cco_is_a: bool) -> AIComparisonResult:
         result.margin = comp.get("margin", result.margin)
         result.key_differences = comp.get("key_differences", [])[:5]
         result.recommendation = comp.get("recommendation", "")
+
+        # Parse executive summary with practical insights
+        exec_summary_raw = comp.get("executive_summary", [])
+        for item in exec_summary_raw[:5]:  # Limit to 5 items
+            if isinstance(item, dict):
+                # Map A/B winner to cco/vanilla
+                raw_winner = item.get("winner", "tie")
+                if raw_winner == "a":
+                    mapped_winner = "cco" if cco_is_a else "vanilla"
+                elif raw_winner == "b":
+                    mapped_winner = "vanilla" if cco_is_a else "cco"
+                else:
+                    mapped_winner = raw_winner
+
+                result.executive_summary.append(
+                    ExecutiveSummaryItem(
+                        topic=item.get("topic", ""),
+                        winner=mapped_winner,
+                        insight=item.get("insight", ""),
+                    )
+                )
 
         # Recalculate verdict based on final winner
         if result.winner == "tie":
@@ -707,8 +747,10 @@ def run_ai_comparison(
         # Parse the response with blind assignment mapping
         result = parse_ai_response(stdout, cco_is_a)
 
-        # Add metadata
-        result_file = output_dir / f"ai_comparison_{project_id}.json"
+        # Add metadata - save to _ai_comparisons/ subfolder (consistent with server.py)
+        ai_results_dir = output_dir / "_ai_comparisons"
+        ai_results_dir.mkdir(exist_ok=True)
+        result_file = ai_results_dir / f"{project_id}.json"
         result.duration_seconds = duration
         result.timestamp = datetime.now(timezone.utc).isoformat()
         result.report_file = str(result_file)

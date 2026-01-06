@@ -31,7 +31,6 @@ from typing import Any
 from .metrics import (
     CodeAnalyzer,
     Metrics,
-    calculate_overall_score,
     calculate_verdict,
     compare_metrics,
 )
@@ -83,6 +82,147 @@ def _count_project_files(project_dir: Path) -> int:
     except Exception:
         pass
     return count
+
+
+def _capture_context_snapshot(
+    project_dir: Path,
+    variant: str,
+    model: str,
+    ccbox_cmd: str = "ccbox",
+) -> dict[str, Any]:
+    """Capture context snapshot to verify CCO vs vanilla state.
+
+    This helps verify that:
+    - CCO variant actually has rules loaded
+    - Vanilla variant is truly bare (no rules)
+
+    Returns:
+        Dict with context state for verification
+    """
+    snapshot: dict[str, Any] = {
+        "variant": variant,
+        "model": model,
+        "timestamp": datetime.now().isoformat(),
+        "project_dir": str(project_dir),
+        "ccbox_version": None,
+        "claude_md": None,
+        "claude_dir_exists": False,
+        "rules_files": {},
+        "settings_json": None,
+        "rules_count": 0,
+        "rules_total_size": 0,
+        "verification": {
+            "expected_rules": variant == "cco",
+            "has_rules": False,
+            "status": "UNKNOWN",
+        },
+    }
+
+    # Get ccbox version
+    try:
+        result = subprocess.run(
+            [ccbox_cmd, "--version"],
+            capture_output=True,
+            text=True,
+            timeout=5,
+            encoding="utf-8",
+            errors="replace",
+        )
+        if result.returncode == 0:
+            snapshot["ccbox_version"] = result.stdout.strip()
+    except Exception:
+        pass
+
+    # Check CLAUDE.md
+    claude_md = project_dir / "CLAUDE.md"
+    if claude_md.exists():
+        try:
+            content = claude_md.read_text(encoding="utf-8")
+            snapshot["claude_md"] = {
+                "exists": True,
+                "size": len(content),
+                "lines": content.count("\n") + 1,
+                "preview": content[:500] + "..." if len(content) > 500 else content,
+            }
+        except Exception as e:
+            snapshot["claude_md"] = {"exists": True, "error": str(e)}
+
+    # Check .claude directory
+    claude_dir = project_dir / ".claude"
+    if claude_dir.exists() and claude_dir.is_dir():
+        snapshot["claude_dir_exists"] = True
+
+        # Read settings.json
+        settings_file = claude_dir / "settings.json"
+        if settings_file.exists():
+            try:
+                content = settings_file.read_text(encoding="utf-8")
+                snapshot["settings_json"] = json.loads(content)
+            except Exception as e:
+                snapshot["settings_json"] = {"error": str(e)}
+
+        # Read all rules files
+        rules_dir = claude_dir / "rules"
+        if rules_dir.exists() and rules_dir.is_dir():
+            for rule_file in rules_dir.rglob("*"):
+                if rule_file.is_file() and rule_file.suffix in (".md", ".txt", ".json"):
+                    rel_path = str(rule_file.relative_to(rules_dir))
+                    try:
+                        content = rule_file.read_text(encoding="utf-8")
+                        snapshot["rules_files"][rel_path] = {
+                            "size": len(content),
+                            "lines": content.count("\n") + 1,
+                            "preview": content[:300] + "..." if len(content) > 300 else content,
+                        }
+                        snapshot["rules_count"] += 1
+                        snapshot["rules_total_size"] += len(content)
+                    except Exception as e:
+                        snapshot["rules_files"][rel_path] = {"error": str(e)}
+
+    # Verification logic
+    has_rules = snapshot["rules_count"] > 0 or snapshot["claude_md"] is not None
+    snapshot["verification"]["has_rules"] = has_rules
+
+    if variant == "cco":
+        if has_rules:
+            snapshot["verification"]["status"] = "OK"
+            snapshot["verification"]["message"] = (
+                f"CCO variant has {snapshot['rules_count']} rule files "
+                f"({snapshot['rules_total_size']} bytes)"
+            )
+        else:
+            snapshot["verification"]["status"] = "WARNING"
+            snapshot["verification"]["message"] = (
+                "CCO variant but no rules found - cco-config may have failed"
+            )
+    else:  # vanilla
+        if has_rules:
+            snapshot["verification"]["status"] = "WARNING"
+            snapshot["verification"]["message"] = (
+                f"Vanilla variant but found {snapshot['rules_count']} rule files - "
+                "may not be truly bare"
+            )
+        else:
+            snapshot["verification"]["status"] = "OK"
+            snapshot["verification"]["message"] = "Vanilla variant confirmed bare (no rules)"
+
+    return snapshot
+
+
+def _save_context_snapshot(project_dir: Path, snapshot: dict[str, Any]) -> Path | None:
+    """Save context snapshot to file (only if not already exists)."""
+    snapshot_file = project_dir / "_context_snapshot.json"
+    if snapshot_file.exists():
+        return None  # Already captured, skip
+    snapshot_file.write_text(
+        json.dumps(snapshot, indent=2, default=str),
+        encoding="utf-8",
+    )
+    logger.info(
+        f"[{snapshot['variant'].upper()}] Context snapshot: "
+        f"{snapshot['verification']['status']} - {snapshot['verification']['message']}"
+    )
+    return snapshot_file
 
 
 def _truncate(text: str, max_len: int = 1000) -> str:
@@ -438,7 +578,6 @@ class TestExecutor:
         timeout_seconds: int = 300,  # Inactivity timeout (5 min no output = stuck)
         stall_threshold: float = 120.0,
         progress_callback: Callable[[str, ActivityState], None] | None = None,
-        streaming: bool = True,
     ):
         self.output_base = output_base
         self.ccbox_cmd = ccbox_cmd
@@ -446,7 +585,6 @@ class TestExecutor:
         self.phase_timeout = 120  # 2 minutes for CCO config/optimize phases
         self.stall_threshold = stall_threshold  # Seconds without output = stall warning
         self.progress_callback = progress_callback
-        self.streaming = streaming
         self.output_base.mkdir(parents=True, exist_ok=True)
 
     def _run_with_streaming(
@@ -965,6 +1103,11 @@ STDERR:
             config_time = config_result["time"]
             if not config_result["success"]:
                 logger.error(f"[CCO] Config phase FAILED: {config_result['error']}")
+                # Capture context snapshot even on failure
+                snapshot = _capture_context_snapshot(
+                    project_dir, variant, model, self.ccbox_cmd
+                )
+                _save_context_snapshot(project_dir, snapshot)
                 return ExecutionResult(
                     project_id=config.id,
                     variant=variant,
@@ -1031,45 +1174,49 @@ STDERR:
 
         logger.info(f"[{variant.upper()}] Executing: {cmd_str[:200]}...")
 
-        # Use streaming mode for real-time output and activity tracking
-        if self.streaming:
-            exit_code, stdout, stderr, activity = self._run_with_streaming(
-                cmd=cmd,
-                project_dir=project_dir,
+        # Run with streaming for real-time output and activity tracking
+        exit_code, stdout, stderr, activity = self._run_with_streaming(
+            cmd=cmd,
+            project_dir=project_dir,
+            variant=variant,
+            timeout=self.timeout,
+            env={"CLAUDE_MODEL": model},
+        )
+
+        generation_time = time.time() - start_time
+
+        # Handle FileNotFoundError (exit_code is None and no output)
+        if exit_code is None and not stdout and not stderr:
+            # Still capture snapshot for debugging
+            snapshot = _capture_context_snapshot(
+                project_dir, variant, model, self.ccbox_cmd
+            )
+            _save_context_snapshot(project_dir, snapshot)
+            return ExecutionResult(
+                project_id=config.id,
                 variant=variant,
-                timeout=self.timeout,
-                env={"CLAUDE_MODEL": model},
+                success=False,
+                metrics=None,
+                score=0.0,
+                generation_time_seconds=0.0,
+                prompt_used=config.prompt,
+                output_dir=str(project_dir),
+                command=cmd_str,
+                exit_code=None,
+                error_message=f"ccbox command not found: {self.ccbox_cmd}",
             )
 
-            generation_time = time.time() - start_time
+        success = exit_code == 0
 
-            # Handle FileNotFoundError (exit_code is None and no output)
-            if exit_code is None and not stdout and not stderr:
-                return ExecutionResult(
-                    project_id=config.id,
-                    variant=variant,
-                    success=False,
-                    metrics=None,
-                    score=0.0,
-                    generation_time_seconds=0.0,
-                    prompt_used=config.prompt,
-                    output_dir=str(project_dir),
-                    command=cmd_str,
-                    exit_code=None,
-                    error_message=f"ccbox command not found: {self.ccbox_cmd}",
-                )
+        # Build stall info for error message
+        stall_info = ""
+        if activity.stall_warnings > 0:
+            stall_info = f" ({activity.stall_warnings} stall warnings)"
+        if activity.is_stalled:
+            stall_info += " [STALLED]"
 
-            success = exit_code == 0
-
-            # Build stall info for error message
-            stall_info = ""
-            if activity.stall_warnings > 0:
-                stall_info = f" ({activity.stall_warnings} stall warnings)"
-            if activity.is_stalled:
-                stall_info += " [STALLED]"
-
-            # Save ccbox output with detailed info including activity
-            log_content = f"""ccbox Execution Log ({variant}) - STREAMING MODE
+        # Save ccbox output with detailed info including activity
+        log_content = f"""ccbox Execution Log ({variant})
 {"=" * 60}
 Command: {cmd_str}
 Exit Code: {exit_code}
@@ -1091,218 +1238,109 @@ STDOUT:
 STDERR:
 {stderr or "(empty)"}
 """
-            (project_dir / "_ccbox_run.log").write_text(log_content, encoding="utf-8")
-            (project_dir / "_ccbox_stdout.log").write_text(stdout, encoding="utf-8")
-            (project_dir / "_ccbox_stderr.log").write_text(stderr, encoding="utf-8")
+        (project_dir / "_ccbox_run.log").write_text(log_content, encoding="utf-8")
+        (project_dir / "_ccbox_stdout.log").write_text(stdout, encoding="utf-8")
+        (project_dir / "_ccbox_stderr.log").write_text(stderr, encoding="utf-8")
 
-            if success:
-                logger.info(f"[{variant.upper()}] SUCCESS in {generation_time:.2f}s{stall_info}")
+        if success:
+            logger.info(f"[{variant.upper()}] SUCCESS in {generation_time:.2f}s{stall_info}")
 
-                # CCO variant: Run cco-optimize --auto after successful test
-                if variant == "cco":
-                    logger.info(f"\n{separator_light}")
-                    logger.info("[CCO] Phase 3/3: optimize")
-                    logger.info(separator_light)
-                    optimize_result = self._run_cco_optimize(project_dir, model)
-                    optimize_time = optimize_result["time"]
-                    if optimize_result["success"]:
-                        logger.info(f"[CCO] Optimize phase completed in {optimize_time:.2f}s")
-                    else:
-                        # Non-blocking: log warning but continue with analysis
-                        logger.warning(
-                            f"[CCO] Optimize phase failed (non-blocking): {optimize_result['error']}"
-                        )
-            else:
-                if exit_code is None:
-                    logger.error(
-                        f"[{variant.upper()}] TIMEOUT after {generation_time:.2f}s{stall_info}"
-                    )
-                else:
-                    logger.error(
-                        f"[{variant.upper()}] FAILED with exit code {exit_code}{stall_info}"
-                    )
-                logger.error(f"[{variant.upper()}] stdout:\n{_truncate(stdout, 1500)}")
-                logger.error(f"[{variant.upper()}] stderr:\n{_truncate(stderr, 1500)}")
-
-            # Calculate total time (all phases)
-            total_time = generation_time
-            if config_time is not None:
-                total_time += config_time
-            if optimize_time is not None:
-                total_time += optimize_time
-
-            # Log CCO phase summary
+            # CCO variant: Run cco-optimize --auto after successful test
             if variant == "cco":
-                logger.info(
-                    f"[CCO] Phase timings: config={config_time:.2f}s, "
-                    f"coding={generation_time:.2f}s, "
-                    f"optimize={optimize_time:.2f}s, "
-                    f"total={total_time:.2f}s"
-                    if optimize_time is not None
-                    else f"[CCO] Phase timings: config={config_time:.2f}s, "
-                    f"coding={generation_time:.2f}s, total={total_time:.2f}s"
-                )
-
-            # Analyze generated code
-            analyzer = CodeAnalyzer(project_dir)
-            metrics = analyzer.analyze()
-            metrics.name = config.name
-            metrics.variant = variant
-            metrics.generation_time_seconds = total_time
-            score = calculate_overall_score(metrics)
-
-            # Build detailed error message if failed
-            error_msg = ""
-            if not success:
-                if exit_code is None:
-                    error_msg = f"Inactivity timeout ({self.timeout}s without output){stall_info}"
+                logger.info(f"\n{separator_light}")
+                logger.info("[CCO] Phase 3/3: optimize")
+                logger.info(separator_light)
+                optimize_result = self._run_cco_optimize(project_dir, model)
+                optimize_time = optimize_result["time"]
+                if optimize_result["success"]:
+                    logger.info(f"[CCO] Optimize phase completed in {optimize_time:.2f}s")
                 else:
-                    error_msg = _parse_ccbox_error(stdout, stderr, exit_code) + stall_info
-
-            # Variant completion separator
-            status = "SUCCESS" if success else "FAILED"
-            logger.info(f"\n{separator_heavy}")
-            logger.info(
-                f"[{variant.upper()}] {status}: {config.id} (score={round(score, 1)}, time={total_time:.1f}s)"
-            )
-            logger.info(f"{separator_heavy}\n")
-
-            return ExecutionResult(
-                project_id=config.id,
-                variant=variant,
-                success=success,
-                metrics=metrics,
-                score=round(score, 1),
-                generation_time_seconds=round(total_time, 2),
-                prompt_used=config.prompt,
-                output_dir=str(project_dir),
-                command=cmd_str,
-                exit_code=exit_code,
-                stdout_excerpt=stdout[-1000:] if stdout else "",
-                stderr_excerpt=stderr[-1000:] if stderr else "",
-                error_message=error_msg,
-                config_time_seconds=round(config_time, 2) if config_time is not None else None,
-                coding_time_seconds=round(generation_time, 2),
-                optimize_time_seconds=round(optimize_time, 2)
-                if optimize_time is not None
-                else None,
-            )
-
-        # Legacy non-streaming mode (fallback)
-        try:
-            result = subprocess.run(
-                cmd,
-                capture_output=True,
-                text=True,
-                timeout=self.timeout,
-                env={**os.environ, "CLAUDE_MODEL": model},
-                encoding="utf-8",
-                errors="replace",
-            )
-
-            generation_time = time.time() - start_time
-            success = result.returncode == 0
-
-            log_content = f"""ccbox Execution Log ({variant})
-{"=" * 60}
-Command: {cmd_str}
-Exit Code: {result.returncode}
-Duration: {generation_time:.2f}s
-Success: {success}
-Project Dir: {project_dir}
-{"=" * 60}
-
-STDOUT:
-{result.stdout or "(empty)"}
-
-{"=" * 60}
-STDERR:
-{result.stderr or "(empty)"}
-"""
-            (project_dir / "_ccbox_run.log").write_text(log_content, encoding="utf-8")
-            (project_dir / "_ccbox_stdout.log").write_text(result.stdout, encoding="utf-8")
-            (project_dir / "_ccbox_stderr.log").write_text(result.stderr, encoding="utf-8")
-
-            if success:
-                logger.info(f"[{variant.upper()}] SUCCESS in {generation_time:.2f}s")
+                    # Non-blocking: log warning but continue with analysis
+                    logger.warning(
+                        f"[CCO] Optimize phase failed (non-blocking): {optimize_result['error']}"
+                    )
+        else:
+            if exit_code is None:
+                logger.error(
+                    f"[{variant.upper()}] TIMEOUT after {generation_time:.2f}s{stall_info}"
+                )
             else:
-                logger.error(f"[{variant.upper()}] FAILED with exit code {result.returncode}")
-                logger.error(f"[{variant.upper()}] stdout:\n{_truncate(result.stdout, 1500)}")
-                logger.error(f"[{variant.upper()}] stderr:\n{_truncate(result.stderr, 1500)}")
+                logger.error(
+                    f"[{variant.upper()}] FAILED with exit code {exit_code}{stall_info}"
+                )
+            logger.error(f"[{variant.upper()}] stdout:\n{_truncate(stdout, 1500)}")
+            logger.error(f"[{variant.upper()}] stderr:\n{_truncate(stderr, 1500)}")
 
-            analyzer = CodeAnalyzer(project_dir)
-            metrics = analyzer.analyze()
-            metrics.name = config.name
-            metrics.variant = variant
-            metrics.generation_time_seconds = generation_time
-            score = calculate_overall_score(metrics)
+        # Calculate total time (all phases)
+        total_time = generation_time
+        if config_time is not None:
+            total_time += config_time
+        if optimize_time is not None:
+            total_time += optimize_time
 
-            error_msg = ""
-            if not success:
-                error_msg = _parse_ccbox_error(result.stdout, result.stderr, result.returncode)
-
-            return ExecutionResult(
-                project_id=config.id,
-                variant=variant,
-                success=success,
-                metrics=metrics,
-                score=round(score, 1),
-                generation_time_seconds=round(generation_time, 2),
-                prompt_used=config.prompt,
-                output_dir=str(project_dir),
-                command=cmd_str,
-                exit_code=result.returncode,
-                stdout_excerpt=result.stdout[-1000:] if result.stdout else "",
-                stderr_excerpt=result.stderr[-1000:] if result.stderr else "",
-                error_message=error_msg,
+        # Log CCO phase summary
+        if variant == "cco":
+            logger.info(
+                f"[CCO] Phase timings: config={config_time:.2f}s, "
+                f"coding={generation_time:.2f}s, "
+                f"optimize={optimize_time:.2f}s, "
+                f"total={total_time:.2f}s"
+                if optimize_time is not None
+                else f"[CCO] Phase timings: config={config_time:.2f}s, "
+                f"coding={generation_time:.2f}s, total={total_time:.2f}s"
             )
 
-        except subprocess.TimeoutExpired:
-            generation_time = time.time() - start_time
-            return ExecutionResult(
-                project_id=config.id,
-                variant=variant,
-                success=False,
-                metrics=None,
-                score=0.0,
-                generation_time_seconds=round(generation_time, 2),
-                prompt_used=config.prompt,
-                output_dir=str(project_dir),
-                command=cmd_str,
-                exit_code=None,
-                error_message=f"Timeout after {self.timeout} seconds",
-            )
-        except FileNotFoundError:
-            return ExecutionResult(
-                project_id=config.id,
-                variant=variant,
-                success=False,
-                metrics=None,
-                score=0.0,
-                generation_time_seconds=0.0,
-                prompt_used=config.prompt,
-                output_dir=str(project_dir),
-                command=cmd_str,
-                exit_code=None,
-                error_message=f"ccbox command not found: {self.ccbox_cmd}",
-            )
-        except Exception as e:
-            generation_time = time.time() - start_time
-            import traceback
+        # Analyze generated code
+        analyzer = CodeAnalyzer(project_dir)
+        metrics = analyzer.analyze()
+        metrics.name = config.name
+        metrics.variant = variant
+        metrics.generation_time_seconds = total_time
+        # Use dimension-based overall_score (calculated by CodeAnalyzer)
+        score = metrics.overall_score
 
-            return ExecutionResult(
-                project_id=config.id,
-                variant=variant,
-                success=False,
-                metrics=None,
-                score=0.0,
-                generation_time_seconds=round(generation_time, 2),
-                prompt_used=config.prompt,
-                output_dir=str(project_dir),
-                command=cmd_str,
-                exit_code=None,
-                error_message=f"{type(e).__name__}: {e}\n{traceback.format_exc()[:500]}",
-            )
+        # Build detailed error message if failed
+        error_msg = ""
+        if not success:
+            if exit_code is None:
+                error_msg = f"Inactivity timeout ({self.timeout}s without output){stall_info}"
+            else:
+                error_msg = _parse_ccbox_error(stdout, stderr, exit_code) + stall_info
+
+        # Capture context snapshot for verification
+        snapshot = _capture_context_snapshot(
+            project_dir, variant, model, self.ccbox_cmd
+        )
+        _save_context_snapshot(project_dir, snapshot)
+
+        # Variant completion separator
+        status = "SUCCESS" if success else "FAILED"
+        logger.info(f"\n{separator_heavy}")
+        logger.info(
+            f"[{variant.upper()}] {status}: {config.id} (score={round(score, 1)}, time={total_time:.1f}s)"
+        )
+        logger.info(f"{separator_heavy}\n")
+
+        return ExecutionResult(
+            project_id=config.id,
+            variant=variant,
+            success=success,
+            metrics=metrics,
+            score=round(score, 1),
+            generation_time_seconds=round(total_time, 2),
+            prompt_used=config.prompt,
+            output_dir=str(project_dir),
+            command=cmd_str,
+            exit_code=exit_code,
+            stdout_excerpt=stdout[-1000:] if stdout else "",
+            stderr_excerpt=stderr[-1000:] if stderr else "",
+            error_message=error_msg,
+            config_time_seconds=round(config_time, 2) if config_time is not None else None,
+            coding_time_seconds=round(generation_time, 2),
+            optimize_time_seconds=round(optimize_time, 2)
+            if optimize_time is not None
+            else None,
+        )
 
     def run_benchmark(self, config: ProjectConfig, model: str = "opus") -> BenchmarkResult:
         """Run full benchmark (both variants) for a project."""
