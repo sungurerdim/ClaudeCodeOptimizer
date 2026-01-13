@@ -49,7 +49,11 @@ function formatContextUsage(contextWindow) {
     currentTokens = contextWindow.total_input_tokens || 0;
   }
 
-  const percent = Math.round(currentTokens * 100 / contextSize);
+  // Use CC's built-in percentage (v2.1.6+) or calculate manually
+  const percent = contextWindow.used_percentage !== undefined
+    ? Math.round(contextWindow.used_percentage)
+    : Math.round(currentTokens * 100 / contextSize);
+
   const formatK = n => n >= 1000 ? Math.round(n / 1000) + 'K' : n.toString();
 
   // Progressive color thresholds (earlier warnings)
