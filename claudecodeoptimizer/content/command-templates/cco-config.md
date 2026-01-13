@@ -984,27 +984,29 @@ if (pitfalls.length > 0) {
 
 | Level | `permissions.allow` | `permissions.deny` |
 |-------|---------------------|-------------------|
-| Permissive | `["Read", "Glob", "Grep", "LSP", "Edit", "Write", "Bash", "Task"]` | `["Bash(git push -f:*)"]` |
+| Permissive | `["Read", "Glob", "Grep", "LSP", "Edit", "Write", "Bash", "Task"]` | `["Bash(git push -f *)", "Bash(git push --force *)", "Bash(git * --force-with-lease *)"]` |
 | Balanced | `["Read", "Glob", "Grep", "LSP", {detected_lint_tools}, {detected_test_tools}]` | `[]` |
 | Remove | Remove permissions key from settings.json | - |
 
 ### Balanced Tools by Language (from detection)
 
+Uses Claude Code 2.1.0+ wildcard syntax: `Bash(command *)` matches command with any arguments.
+
 | Language | Lint Tools | Test Tools |
 |----------|------------|------------|
-| Python | `Bash(ruff:*)`, `Bash(mypy:*)` | `Bash(pytest:*)` |
-| TypeScript | `Bash(eslint:*)`, `Bash(tsc:*)` | `Bash(vitest:*)`, `Bash(jest:*)` |
-| JavaScript | `Bash(eslint:*)` | `Bash(vitest:*)`, `Bash(jest:*)` |
-| Go | `Bash(golangci-lint:*)`, `Bash(go vet:*)` | `Bash(go test:*)` |
-| Rust | `Bash(cargo clippy:*)`, `Bash(cargo check:*)` | `Bash(cargo test:*)` |
-| Java | `Bash(checkstyle:*)`, `Bash(spotbugs:*)` | `Bash(mvn test:*)`, `Bash(gradle test:*)` |
-| Ruby | `Bash(rubocop:*)` | `Bash(rspec:*)`, `Bash(minitest:*)` |
-| PHP | `Bash(phpstan:*)`, `Bash(phpcs:*)` | `Bash(phpunit:*)` |
-| C# | `Bash(dotnet build:*)` | `Bash(dotnet test:*)` |
-| Swift | `Bash(swiftlint:*)` | `Bash(swift test:*)` |
-| Kotlin | `Bash(ktlint:*)`, `Bash(detekt:*)` | `Bash(gradle test:*)` |
-| Elixir | `Bash(mix credo:*)`, `Bash(mix dialyzer:*)` | `Bash(mix test:*)` |
-| Dart | `Bash(dart analyze:*)` | `Bash(dart test:*)`, `Bash(flutter test:*)` |
+| Python | `Bash(ruff *)`, `Bash(mypy *)` | `Bash(pytest *)` |
+| TypeScript | `Bash(eslint *)`, `Bash(tsc *)` | `Bash(vitest *)`, `Bash(jest *)` |
+| JavaScript | `Bash(eslint *)` | `Bash(vitest *)`, `Bash(jest *)` |
+| Go | `Bash(golangci-lint *)`, `Bash(go vet *)` | `Bash(go test *)` |
+| Rust | `Bash(cargo clippy *)`, `Bash(cargo check *)` | `Bash(cargo test *)` |
+| Java | `Bash(checkstyle *)`, `Bash(spotbugs *)` | `Bash(mvn test *)`, `Bash(gradle test *)` |
+| Ruby | `Bash(rubocop *)` | `Bash(rspec *)`, `Bash(minitest *)` |
+| PHP | `Bash(phpstan *)`, `Bash(phpcs *)` | `Bash(phpunit *)` |
+| C# | `Bash(dotnet build *)` | `Bash(dotnet test *)` |
+| Swift | `Bash(swiftlint *)` | `Bash(swift test *)` |
+| Kotlin | `Bash(ktlint *)`, `Bash(detekt *)` | `Bash(gradle test *)` |
+| Elixir | `Bash(mix credo *)`, `Bash(mix dialyzer *)` | `Bash(mix test *)` |
+| Dart | `Bash(dart analyze *)` | `Bash(dart test *)`, `Bash(flutter test *)` |
 
 **Note:** Detection merges tools from all detected languages. If project has both Python and TypeScript, include tools for both.
 

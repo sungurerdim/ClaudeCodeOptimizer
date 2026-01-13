@@ -67,11 +67,9 @@ def has_cco_permissions(settings_file: Path = SETTINGS_FILE) -> bool:
     settings = load_json_file(settings_file)
     permissions = settings.get("permissions", {})
     # Check for CCO marker or _meta field (from permissions JSON)
-    if CCO_PERMISSIONS_MARKER in settings:
-        return True
-    if isinstance(permissions, dict) and "_meta" in permissions:
-        return True
-    return False
+    return CCO_PERMISSIONS_MARKER in settings or (
+        isinstance(permissions, dict) and "_meta" in permissions
+    )
 
 
 def has_rules_dir() -> bool:

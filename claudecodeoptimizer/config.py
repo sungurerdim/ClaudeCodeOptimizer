@@ -14,6 +14,7 @@ import re
 import sys
 from collections.abc import Callable
 from enum import Enum
+from functools import lru_cache
 from pathlib import Path
 
 # Python 3.10 compatibility: StrEnum added in 3.11
@@ -99,6 +100,7 @@ __all__ = [
     "get_cco_commands",
     "get_cco_agents",
     "get_rules_breakdown",
+    "clear_rules_cache",
     "get_content_path",
     "load_json_file",
     "save_json_file",
@@ -195,6 +197,34 @@ _RULE_PATTERN = re.compile(r"^- \*\*\w+(?:-\w+)*\*\*:", re.MULTILINE)
 _CATEGORY_PATTERN = re.compile(r"^## ", re.MULTILINE)
 
 
+@lru_cache(maxsize=8)
+def _load_rule_content_cached(filename: str) -> str:
+    """Load rule file content with caching.
+
+    Caches file content to avoid repeated disk I/O for rule counting operations.
+    Cache is bounded to 8 entries (more than enough for our 4 rule files).
+
+    Args:
+        filename: Rule filename (e.g., 'cco-core.md')
+
+    Returns:
+        File content as string, or empty string if file doesn't exist.
+    """
+    rules_dir = Path(__file__).parent / "content" / "rules"
+    file_path = rules_dir / filename
+    if file_path.exists():
+        return file_path.read_text(encoding="utf-8")
+    return ""
+
+
+def clear_rules_cache() -> None:
+    """Clear the rules content cache.
+
+    Call this when rule files may have changed (e.g., after installation).
+    """
+    _load_rule_content_cached.cache_clear()
+
+
 def get_cco_commands() -> list[Path]:
     """Get all CCO command files."""
     return sorted(COMMANDS_DIR.glob("cco-*.md")) if COMMANDS_DIR.exists() else []
@@ -241,11 +271,12 @@ def save_json_file(path: Path, data: dict[str, Any]) -> None:
 def get_rules_breakdown() -> dict[str, int]:
     """Get detailed breakdown of rules by category.
 
+    Uses cached file content to avoid repeated disk I/O.
+
     Returns:
         Dictionary with core, ai, adaptive, total counts
         Note: Tool rules are embedded in command/agent templates (not counted here)
     """
-    rules_dir = Path(__file__).parent / "content" / "rules"
     result = {
         "core": 0,
         "ai": 0,
@@ -253,7 +284,7 @@ def get_rules_breakdown() -> dict[str, int]:
         "total": 0,
     }
 
-    # Count from each rule file
+    # Count from each rule file (using cached content)
     # Note: cco-tools.md was removed - tool rules are now embedded in templates
     file_mapping = {
         "core": "cco-core.md",
@@ -262,9 +293,8 @@ def get_rules_breakdown() -> dict[str, int]:
     }
 
     for key, filename in file_mapping.items():
-        file_path = rules_dir / filename
-        if file_path.exists():
-            content = file_path.read_text(encoding="utf-8")
+        content = _load_rule_content_cached(filename)
+        if content:
             result[key] = len(_RULE_PATTERN.findall(content))
 
     result["total"] = result["core"] + result["ai"] + result["adaptive"]
@@ -275,20 +305,17 @@ def get_rules_breakdown() -> dict[str, int]:
 def _get_rules_count() -> tuple[int, int]:
     """Count rules and categories from source files.
 
+    Uses cached file content to avoid repeated disk I/O.
+
     Returns:
         Tuple of (rules_count, categories_count)
     """
-    rules_dir = Path(__file__).parent / "content" / "rules"
-    if not rules_dir.exists():
-        return (0, 0)
-
     total_rules = 0
     total_categories = 0
 
     for rule_file in CCO_RULE_FILES:
-        file_path = rules_dir / rule_file
-        if file_path.exists():
-            content = file_path.read_text(encoding="utf-8")
+        content = _load_rule_content_cached(rule_file)
+        if content:
             total_rules += len(_RULE_PATTERN.findall(content))
             total_categories += len(_CATEGORY_PATTERN.findall(content))
 

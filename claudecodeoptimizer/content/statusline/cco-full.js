@@ -108,6 +108,7 @@ function formatModelName(modelData) {
 
 // ============================================================================
 // CONTEXT USAGE - Progressive Warning System
+// Uses CC's built-in used_percentage (v2.1.6+) with manual fallback
 // Thresholds: 0-50% green, 50-70% yellow, 70-85% yellow+breakdown, 85%+ red+warning
 // ============================================================================
 function formatContextUsage(contextWindow) {
@@ -128,7 +129,11 @@ function formatContextUsage(contextWindow) {
     inputTokens = currentTokens;
   }
 
-  const percent = Math.round(currentTokens * 100 / contextSize);
+  // Use CC's built-in percentage (v2.1.6+) or calculate manually
+  const percent = contextWindow.used_percentage !== undefined
+    ? Math.round(contextWindow.used_percentage)
+    : Math.round(currentTokens * 100 / contextSize);
+
   const formatK = n => n >= 1000 ? Math.round(n / 1000) + 'K' : n.toString();
 
   // Progressive color thresholds (earlier warnings)

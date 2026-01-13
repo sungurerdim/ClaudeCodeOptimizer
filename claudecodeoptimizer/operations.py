@@ -12,11 +12,16 @@ from .config import (
 )
 
 
-def remove_command_files(path: Path | None = None) -> list[str]:
-    """Remove all cco-*.md files from commands directory.
+def _remove_files_by_glob(
+    path: Path, pattern: str, prefix: str = "", remove_empty_dir: bool = False
+) -> list[str]:
+    """Remove files matching a glob pattern from a directory.
 
     Args:
-        path: Path to commands directory. If None, uses global COMMANDS_DIR.
+        path: Directory to remove files from.
+        pattern: Glob pattern to match files.
+        prefix: Optional prefix for returned filenames.
+        remove_empty_dir: If True, remove the directory if empty after removal.
 
     Returns:
         List of removed filenames.
@@ -24,104 +29,46 @@ def remove_command_files(path: Path | None = None) -> list[str]:
     Raises:
         RuntimeError: If any file fails to be removed.
     """
-    if path is None:
-        path = COMMANDS_DIR
     removed: list[str] = []
-    if path.exists():
-        for f in sorted(path.glob("cco-*.md")):
-            f.unlink(missing_ok=True)
-            # Verify deletion succeeded
-            if f.exists():
-                raise RuntimeError(f"Failed to remove {f}: file still exists")
-            removed.append(f.name)
-    return removed
+    if not path.exists():
+        return removed
 
+    for f in sorted(path.glob(pattern)):
+        f.unlink(missing_ok=True)
+        if f.exists():
+            raise RuntimeError(f"Failed to remove {f}: file still exists")
+        removed.append(f"{prefix}{f.name}" if prefix else f.name)
 
-def remove_agent_files(path: Path | None = None) -> list[str]:
-    """Remove all cco-*.md files from agents directory.
-
-    Args:
-        path: Path to agents directory. If None, uses global AGENTS_DIR.
-
-    Returns:
-        List of removed filenames.
-
-    Raises:
-        RuntimeError: If any file fails to be removed.
-    """
-    if path is None:
-        path = AGENTS_DIR
-    removed: list[str] = []
-    if path.exists():
-        for f in sorted(path.glob("cco-*.md")):
-            f.unlink(missing_ok=True)
-            # Verify deletion succeeded
-            if f.exists():
-                raise RuntimeError(f"Failed to remove {f}: file still exists")
-            removed.append(f.name)
-    return removed
-
-
-def remove_old_rules(path: Path | None = None) -> list[str]:
-    """Remove old CCO rule files from rules root directory.
-
-    Removes ALL cco-*.md files from rules/ root (old installation format).
-
-    Args:
-        path: Path to old rules root directory. If None, uses global OLD_RULES_ROOT.
-
-    Returns:
-        List of removed filenames.
-
-    Raises:
-        RuntimeError: If any file fails to be removed.
-    """
-    if path is None:
-        path = OLD_RULES_ROOT
-    removed: list[str] = []
-    if path.exists():
-        # Use glob to catch ALL cco-*.md files, not just known ones
-        for f in sorted(path.glob("cco-*.md")):
-            f.unlink(missing_ok=True)
-            # Verify deletion succeeded
-            if f.exists():
-                raise RuntimeError(f"Failed to remove {f}: file still exists")
-            removed.append(f.name)
-    return removed
-
-
-def remove_new_rules(path: Path | None = None) -> list[str]:
-    """Remove CCO rules from cco/ subdirectory.
-
-    Removes ALL .md files from rules/cco/ directory (CCO-owned directory).
-
-    Args:
-        path: Path to rules cco/ subdirectory. If None, uses global RULES_DIR.
-
-    Returns:
-        List of removed filenames (with cco/ prefix).
-
-    Raises:
-        RuntimeError: If any file fails to be removed.
-    """
-    if path is None:
-        path = RULES_DIR
-    removed: list[str] = []
-    if path.exists():
-        # Remove ALL .md files from cco/ subdirectory (CCO owns this directory)
-        for f in sorted(path.glob("*.md")):
-            f.unlink(missing_ok=True)
-            # Verify deletion succeeded
-            if f.exists():
-                raise RuntimeError(f"Failed to remove {f}: file still exists")
-            removed.append(f"cco/{f.name}")
-        # Remove empty cco/ directory
+    if remove_empty_dir:
         try:
             if path.exists() and not any(path.iterdir()):
                 path.rmdir()
         except OSError:
             pass  # Directory not empty or already removed
+
     return removed
+
+
+def remove_command_files(path: Path | None = None) -> list[str]:
+    """Remove all cco-*.md files from commands directory."""
+    return _remove_files_by_glob(path or COMMANDS_DIR, "cco-*.md")
+
+
+def remove_agent_files(path: Path | None = None) -> list[str]:
+    """Remove all cco-*.md files from agents directory."""
+    return _remove_files_by_glob(path or AGENTS_DIR, "cco-*.md")
+
+
+def remove_old_rules(path: Path | None = None) -> list[str]:
+    """Remove old CCO rule files (cco-*.md) from rules root directory."""
+    return _remove_files_by_glob(path or OLD_RULES_ROOT, "cco-*.md")
+
+
+def remove_new_rules(path: Path | None = None) -> list[str]:
+    """Remove CCO rules (*.md) from rules/cco/ subdirectory."""
+    return _remove_files_by_glob(
+        path or RULES_DIR, "*.md", prefix="cco/", remove_empty_dir=True
+    )
 
 
 def remove_all_cco_markers(content: str) -> tuple[str, int]:
