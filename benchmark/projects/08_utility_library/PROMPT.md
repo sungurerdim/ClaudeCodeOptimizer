@@ -13,6 +13,7 @@ Build a composable data validation library for TypeScript.
 3. **Write working code** - All validators must function correctly
 4. **Include tests** - 90%+ test coverage required
 5. **Handle errors gracefully** - Clear, actionable error messages
+6. **No slash commands** - Do NOT use `/help`, `/commit`, or any `/` commands (not available in this execution mode)
 
 **Prioritized execution order:**
 1. Project structure and base validator class

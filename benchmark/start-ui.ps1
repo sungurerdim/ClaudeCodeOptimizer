@@ -1,6 +1,10 @@
 # CCO Benchmark - PowerShell Launcher
 # Handles conda/pip environments properly
 
+param(
+    [int]$Port = 5000
+)
+
 $ErrorActionPreference = "Stop"
 
 Write-Host ""
@@ -58,16 +62,17 @@ if (-not $fastapi) {
 # Start server
 Write-Host "[2/2] Starting server..."
 Write-Host ""
-Write-Host "  Dashboard: http://localhost:8765"
+Write-Host "  Dashboard: http://localhost:$Port"
 Write-Host "  Press Ctrl+C to stop"
 Write-Host ""
 
 # Open browser after delay (background job)
 Start-Job -ScriptBlock {
+    param($p)
     Start-Sleep -Seconds 2
-    Start-Process "http://localhost:8765"
-} | Out-Null
+    Start-Process "http://localhost:$p"
+} -ArgumentList $Port | Out-Null
 
 # Run from parent directory
 Set-Location "$PSScriptRoot\.."
-& $pythonCmd -m benchmark
+& $pythonCmd -m benchmark --port $Port

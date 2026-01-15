@@ -13,6 +13,7 @@ Build a complete inventory management REST API using Python and FastAPI.
 3. **Write working code** - All endpoints must return valid responses
 4. **Include tests** - Aim for 80%+ coverage
 5. **Handle errors gracefully** - Proper HTTP status codes and messages
+6. **No slash commands** - Do NOT use `/help`, `/commit`, or any `/` commands (not available in this execution mode)
 
 **Prioritized execution order:**
 1. Project structure and database setup

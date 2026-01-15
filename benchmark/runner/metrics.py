@@ -524,7 +524,7 @@ class CodeAnalyzer:
         return False
 
     def _should_skip(self, path: Path) -> bool:
-        """Check if path should be skipped."""
+        """Check if path should be skipped (deps/cache/build dirs)."""
         skip_dirs = {
             "__pycache__",
             ".venv",
@@ -533,21 +533,26 @@ class CodeAnalyzer:
             ".git",
             "dist",
             "build",
-            ".egg-info",
             ".mypy_cache",
             ".pytest_cache",
             ".ruff_cache",
             "coverage",
+            ".deps",  # ccbox dependency cache
+            "site-packages",
         }
         # Skip benchmark metadata files
-        skip_prefixes = ("_benchmark_", "_ccbox_")
-        skip_suffixes = (".log",)
+        skip_prefixes = ("_benchmark_", "_ccbox_", "_context_")
+        # Skip suffixes (e.g., mlserve.egg-info)
+        skip_suffixes = (".log", ".egg-info")
 
         if path.name.startswith(skip_prefixes):
             return True
-        if path.name.endswith(skip_suffixes):
-            return True
-        return any(d in path.parts for d in skip_dirs)
+        for part in path.parts:
+            if part in skip_dirs:
+                return True
+            if any(part.endswith(suffix) for suffix in skip_suffixes):
+                return True
+        return False
 
     def _analyze_python(self) -> None:
         """Analyze Python files."""
@@ -1623,10 +1628,11 @@ class CodeAnalyzer:
             complexities = [f.complexity for f in self.metrics.function_details]
             self.metrics.avg_complexity = sum(complexities) / len(complexities)
 
-        # Modularity score (penalize giant functions)
+        # Modularity score (penalize giant functions with cap)
         if total_funcs > 0:
             small_ratio = self.metrics.small_funcs / total_funcs
-            giant_penalty = self.metrics.giant_funcs * 10
+            # Cap giant penalty at 40 - even many giants shouldn't zero the score
+            giant_penalty = min(self.metrics.giant_funcs * 6, 40)
             self.metrics.modularity_score = max(
                 0,
                 min(
@@ -1645,10 +1651,11 @@ class CodeAnalyzer:
                 if self.metrics.function_details
                 else 0
             )
-            complexity_penalty = self.metrics.high_complexity_funcs * 5
-            self.metrics.srp_score = max(
-                0, min(100, 100 - (max(0, avg_loc - 20) * 2) - complexity_penalty)
-            )
+            # Cap complexity penalty at 30
+            complexity_penalty = min(self.metrics.high_complexity_funcs * 4, 30)
+            # Cap avg_loc penalty at 40 (reached at avg 40 LOC)
+            avg_loc_penalty = min(max(0, avg_loc - 20) * 2, 40)
+            self.metrics.srp_score = max(0, min(100, 100 - avg_loc_penalty - complexity_penalty))
 
         # Naming score (basic heuristic based on function name length)
         if self.metrics.function_details:
@@ -1666,8 +1673,10 @@ class CodeAnalyzer:
         if total_handlers > 0:
             good_handling = self.metrics.exception_chains
             bad_handling = self.metrics.bare_excepts + self.metrics.silent_passes
+            # Cap bad handling penalty at 40
+            bad_penalty = min(bad_handling * 8, 40)
             self.metrics.error_handling_score = max(
-                0, min(100, (good_handling / total_handlers) * 100 - bad_handling * 10)
+                0, min(100, (good_handling / total_handlers) * 100 - bad_penalty)
             )
         else:
             self.metrics.error_handling_score = 50  # Neutral if no exception handling
@@ -1782,8 +1791,15 @@ class CodeAnalyzer:
     # =========================================================================
 
     def _analyze_functional_completeness(self) -> DimensionScore:
-        """Analyze if code meets functional requirements."""
-        score = 50.0
+        """Analyze if code meets functional requirements.
+
+        Production-grade scoring philosophy:
+        - Measure whether the code appears complete and functional
+        - Entry points, error handling, and structure matter
+        - Code quantity indicates implementation depth
+        - Range: 0 (empty) to 100 (fully featured)
+        """
+        score = 45.0
         details = []
         issues = []
         positives = []
@@ -1804,37 +1820,45 @@ class CodeAnalyzer:
 
         details.append(f"{total_code_files} source files")
 
-        # Check for entry points
+        # Check for entry points - essential for runnable code
         has_entry = self._check_entry_points()
         if has_entry:
             score += 15
             positives.append("Entry point found")
         else:
-            score -= 10
+            score -= 5
             issues.append("No clear entry point")
 
-        # Check function count (more functions = more functionality)
+        # Function/method count indicates implementation depth
         func_count = self.metrics.functions + self.metrics.methods
-        if func_count >= 20:
-            score += 15
+        if func_count >= 30:
+            score += 18
+            positives.append(f"{func_count} functions/methods (comprehensive)")
+        elif func_count >= 15:
+            score += 12
             positives.append(f"{func_count} functions/methods")
-        elif func_count >= 10:
-            score += 10
+        elif func_count >= 8:
+            score += 6
         elif func_count < 5:
-            score -= 5
-            issues.append(f"Only {func_count} functions")
+            issues.append(f"Only {func_count} functions (minimal)")
 
-        # Check for error handling
-        if self.metrics.context_managers > 0 or self.metrics.exception_chains > 0:
-            score += 10
+        # Error handling shows production readiness
+        error_handling_count = self.metrics.context_managers + self.metrics.exception_chains
+        if error_handling_count >= 5:
+            score += 12
+            positives.append(f"Robust error handling ({error_handling_count} patterns)")
+        elif error_handling_count > 0:
+            score += 6
             positives.append("Error handling present")
         else:
-            score -= 5
             issues.append("No error handling patterns")
 
-        # Check for classes (indicates structured design)
-        if self.metrics.classes >= 3:
+        # Classes indicate structured/OOP design (not always needed)
+        if self.metrics.classes >= 5:
             score += 10
+            positives.append(f"{self.metrics.classes} classes (well-structured)")
+        elif self.metrics.classes >= 2:
+            score += 5
             positives.append(f"{self.metrics.classes} classes")
 
         return DimensionScore(
@@ -1874,72 +1898,120 @@ class CodeAnalyzer:
         return False
 
     def _analyze_code_quality(self) -> DimensionScore:
-        """Analyze code quality (complexity, patterns, style)."""
-        score = 60.0
+        """Analyze code quality (complexity, patterns, style).
+
+        Production-grade scoring philosophy:
+        - Start neutral (50), let evidence move the score
+        - All penalties have reasonable caps (real code has anti-patterns)
+        - Penalize things that cause production issues, not style preferences
+        - Giant functions are concerning but sometimes necessary (handlers, state machines)
+        - Module-level constants (globals) are acceptable in moderation
+        - Balance: max penalty ~35, max bonus ~50 → range 15-100
+        """
+        score = 50.0
         details = []
         issues = []
         positives = []
 
-        # Anti-pattern penalties
+        # === Anti-pattern penalties (all capped for realism) ===
+
+        # Bare excepts hide bugs and make debugging hard - HIGH severity
         if self.metrics.bare_excepts > 0:
-            score -= min(self.metrics.bare_excepts * 5, 15)
+            penalty = min(self.metrics.bare_excepts * 4, 12)
+            score -= penalty
             issues.append(f"HIGH: {self.metrics.bare_excepts} bare except clauses")
 
+        # Silent passes can hide errors but sometimes intentional - MEDIUM severity
         if self.metrics.silent_passes > 0:
-            score -= min(self.metrics.silent_passes * 5, 10)
+            penalty = min(self.metrics.silent_passes * 2, 8)
+            score -= penalty
             issues.append(f"MEDIUM: {self.metrics.silent_passes} silent passes")
 
+        # Giant functions (>50 LOC) hurt maintainability but sometimes unavoidable
+        # Cap at 18 points - even 6+ giant funcs shouldn't tank the score
         if self.metrics.giant_funcs > 0:
-            score -= self.metrics.giant_funcs * 5
-            issues.append(f"HIGH: {self.metrics.giant_funcs} giant functions (>50 LOC)")
+            penalty = min(self.metrics.giant_funcs * 3, 18)
+            score -= penalty
+            severity = "HIGH" if self.metrics.giant_funcs >= 5 else "MEDIUM"
+            issues.append(f"{severity}: {self.metrics.giant_funcs} giant functions (>50 LOC)")
 
-        if self.metrics.magic_numbers > 10:
-            score -= min(self.metrics.magic_numbers // 3, 10)
-            issues.append(f"MEDIUM: {self.metrics.magic_numbers} magic numbers")
+        # Magic numbers - only penalize excessive use (>20), cap at 8
+        # Config values and test data often have legitimate magic numbers
+        if self.metrics.magic_numbers > 20:
+            penalty = min((self.metrics.magic_numbers - 20) // 5, 8)
+            score -= penalty
+            issues.append(f"LOW: {self.metrics.magic_numbers} magic numbers")
 
+        # Mutable defaults are genuine bugs - but cap at 9
         if self.metrics.mutable_defaults > 0:
-            score -= self.metrics.mutable_defaults * 3
+            penalty = min(self.metrics.mutable_defaults * 3, 9)
+            score -= penalty
             issues.append(f"MEDIUM: {self.metrics.mutable_defaults} mutable defaults")
 
+        # Star imports pollute namespace - LOW severity, cap at 6
         if self.metrics.star_imports > 0:
-            score -= self.metrics.star_imports * 2
+            penalty = min(self.metrics.star_imports * 2, 6)
+            score -= penalty
             issues.append(f"LOW: {self.metrics.star_imports} star imports")
 
-        if self.metrics.global_vars > 0:
-            score -= self.metrics.global_vars * 2
+        # Global variables - module-level constants are OK, mutable globals are not
+        # Only penalize after 5 (allow config constants), cap at 10
+        if self.metrics.global_vars > 5:
+            penalty = min((self.metrics.global_vars - 5) * 2, 10)
+            score -= penalty
             issues.append(f"MEDIUM: {self.metrics.global_vars} global variables")
 
-        # Best practice bonuses
+        # High complexity functions (cyclomatic >10) - cap at 12
+        if self.metrics.high_complexity_funcs > 0:
+            penalty = min(self.metrics.high_complexity_funcs * 2, 12)
+            score -= penalty
+            severity = "HIGH" if self.metrics.high_complexity_funcs >= 4 else "MEDIUM"
+            issues.append(
+                f"{severity}: {self.metrics.high_complexity_funcs} high-complexity functions"
+            )
+
+        # === Best practice bonuses (reward good patterns generously) ===
+
+        # Exception chaining shows proper error handling
         if self.metrics.exception_chains > 0:
-            score += min(self.metrics.exception_chains * 2, 10)
+            bonus = min(self.metrics.exception_chains * 2, 12)
+            score += bonus
             positives.append(f"Exception chaining ({self.metrics.exception_chains})")
 
+        # Context managers ensure resource cleanup
         if self.metrics.context_managers > 0:
-            score += min(self.metrics.context_managers, 10)
+            bonus = min(self.metrics.context_managers, 12)
+            score += bonus
             positives.append(f"Context managers ({self.metrics.context_managers})")
 
+        # Dataclasses reduce boilerplate and add type safety
         if self.metrics.dataclasses_used > 0:
-            score += min(self.metrics.dataclasses_used * 2, 10)
+            bonus = min(self.metrics.dataclasses_used * 2, 10)
+            score += bonus
             positives.append(f"Dataclasses used ({self.metrics.dataclasses_used})")
 
+        # Enums improve type safety and readability
         if self.metrics.enums_used > 0:
-            score += min(self.metrics.enums_used * 2, 10)
+            bonus = min(self.metrics.enums_used * 2, 8)
+            score += bonus
             positives.append(f"Enums used ({self.metrics.enums_used})")
 
+        # Pathlib is modern Python best practice
         if self.metrics.pathlib_used:
-            score += 3
+            score += 4
             positives.append("Pathlib used")
 
-        # Function size distribution
-        small_ratio = self.metrics.small_funcs / max(1, self.metrics.functions)
-        if small_ratio > 0.7:
-            score += 5
-            positives.append("Good function sizes")
-
-        # Complexity check
-        if self.metrics.high_complexity_funcs > 0:
-            score -= self.metrics.high_complexity_funcs * 3
-            issues.append(f"HIGH: {self.metrics.high_complexity_funcs} high-complexity functions")
+        # Function size distribution - use total callable count for accurate ratio
+        total_callables = self.metrics.functions + self.metrics.methods
+        if total_callables > 0:
+            # small_funcs already counts both functions and methods
+            small_ratio = self.metrics.small_funcs / total_callables
+            if small_ratio >= 0.6:
+                score += 8
+                positives.append(f"Good function sizes ({small_ratio:.0%} small)")
+            elif small_ratio >= 0.4:
+                score += 4
+                positives.append(f"Moderate function sizes ({small_ratio:.0%} small)")
 
         details.append(f"Language: {self.metrics.language}")
         details.append(f"LOC: {self.metrics.code_loc}")

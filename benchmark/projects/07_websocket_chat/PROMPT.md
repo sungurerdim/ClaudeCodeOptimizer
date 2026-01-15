@@ -13,6 +13,7 @@ Build a real-time chat server using Go with WebSocket support.
 3. **Write working code** - WebSocket connections must work
 4. **Include tests** - Test coverage for core functionality
 5. **Handle errors gracefully** - Proper error codes and messages
+6. **No slash commands** - Do NOT use `/help`, `/commit`, or any `/` commands (not available in this execution mode)
 
 **Prioritized execution order:**
 1. Project structure and basic HTTP server

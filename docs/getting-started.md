@@ -6,25 +6,25 @@ Your first 10 minutes with CCO.
 
 ## Installation
 
-```bash
-pip install claudecodeoptimizer && cco-install
+```
+/plugin marketplace add sungurerdim/ClaudeCodeOptimizer
+/plugin install cco
 ```
 
 **Restart Claude Code** after installation.
 
 <details>
-<summary>What happens during installation</summary>
+<summary>What gets installed</summary>
 
-The `cco-install` command:
+The plugin installs:
 
-1. Creates `~/.claude/commands/` with 8 slash commands
-2. Creates `~/.claude/agents/` with 3 specialized agents
-3. Creates `~/.claude/rules/cco/` with core (87) + AI (61) rules
-4. Optionally configures statusline in `~/.claude/settings.json`
+1. `commands/` — 8 slash commands
+2. `agents/` — 3 specialized agents
+3. `rules/` — 62 rule files (1364 rules total)
 
-**Files created:**
+**Structure:**
 ```
-~/.claude/
+.claude-plugin/cco/
 ├── commands/
 │   ├── cco-checkup.md
 │   ├── cco-commit.md
@@ -38,12 +38,25 @@ The `cco-install` command:
 │   ├── cco-agent-analyze.md
 │   ├── cco-agent-apply.md
 │   └── cco-agent-research.md
-└── rules/cco/
-    ├── core.md (87 rules)
-    └── ai.md (61 rules)
+└── rules/
+    ├── core.md (141 rules)
+    ├── ai.md (68 rules)
+    └── ... (60 adaptive rule files)
 ```
 
 </details>
+
+### Update
+
+```
+/plugin marketplace update
+```
+
+### Uninstall
+
+```
+/plugin uninstall cco
+```
 
 ---
 
@@ -61,7 +74,7 @@ This will:
 
 1. **Auto-detect** your stack (language, framework, database, tools)
 2. **Ask questions** about your context (team size, data sensitivity, compliance)
-3. **Generate rules** specific to your project in `.claude/rules/cco/`
+3. **Generate rules** specific to your project in `.claude/cco.md`
 
 <details>
 <summary>Example detection output</summary>
@@ -71,7 +84,7 @@ Detected:
 ├── Language: Python 3.12
 ├── Framework: FastAPI
 ├── Database: PostgreSQL (SQLAlchemy)
-├── Testing: pytest (82% coverage)
+├── Testing: 82% coverage
 ├── CI/CD: GitHub Actions
 └── Type: API Service
 
@@ -140,26 +153,21 @@ Auto-fixes safe issues:
 
 ### Global Rules (Always Active)
 
-Located in `~/.claude/rules/cco/`:
-
 | File | Rules | Purpose |
 |------|-------|---------|
-| `core.md` | 87 | Fundamental principles (SSOT, DRY, YAGNI, Fail-Fast) |
-| `ai.md` | 61 | AI behavior patterns (Read-First, No-Hallucination) |
+| `core.md` | 141 | Fundamental principles (SSOT, DRY, YAGNI, Fail-Fast) |
+| `ai.md` | 68 | AI behavior patterns (Read-First, Verify-APIs) |
 
 These apply to **all projects** automatically.
 
-### Project Rules (After /cco-config)
+### Adaptive Rules (Per-Project)
 
-Located in `.claude/rules/cco/`:
+| Category | Files | Examples |
+|----------|-------|----------|
+| Languages | 27 | python.md, typescript.md, go.md |
+| Domains | 35 | api.md, security.md, testing.md |
 
-| File | Purpose |
-|------|---------|
-| `context.md` | Project metadata (stack, team, scale, priority) |
-| `{language}.md` | Language-specific rules |
-| `{category}.md` | Category-specific rules (security, compliance) |
-
-These are **generated per-project** based on detection.
+Selected by `/cco-config` based on your stack detection.
 
 ---
 
@@ -171,13 +179,11 @@ Yes. Each project gets its own rules based on its specific stack and context.
 
 ### "Can I customize the generated rules?"
 
-Yes. Edit files in `.claude/rules/cco/` directly. Your changes persist until the next `/cco-config` run.
+Yes. Edit `.claude/cco.md` directly. Your changes persist until the next `/cco-config` run.
 
 ### "How do I see what rules are active?"
 
-Check:
-- `~/.claude/rules/cco/` (global rules, always active)
-- `.claude/rules/cco/` (project rules, if configured)
+Run `/cco-status` or check `.claude/cco.md` in your project.
 
 ### "What if /cco-config detects something wrong?"
 
@@ -193,8 +199,8 @@ The detection is a starting point. You can:
 ### Commands not appearing
 
 1. **Restart Claude Code** after installation
-2. Check if files exist: `ls ~/.claude/commands/`
-3. Verify installation: `cco-install --dry-run`
+2. Verify plugin is installed: `/plugin list`
+3. Try reinstalling: `/plugin uninstall cco && /plugin install cco`
 
 ### "CCO context not found"
 
@@ -202,22 +208,6 @@ Most commands require project configuration first:
 
 ```
 /cco-config
-```
-
-### Permission errors during installation
-
-Try installing with pipx for isolation:
-
-```bash
-pipx install claudecodeoptimizer && cco-install
-```
-
-### Statusline not showing
-
-Run installation with explicit statusline option:
-
-```bash
-cco-install --statusline cco-full
 ```
 
 ---
@@ -233,23 +223,6 @@ cco-install --statusline cco-full
 | Research a topic | `/cco-research "your question"` |
 
 See [Commands](commands.md) for full documentation.
-
----
-
-## Local Mode
-
-For project-specific settings without affecting global installation:
-
-```bash
-cco-install --local . --statusline cco-full --permissions balanced
-```
-
-| Option | Values |
-|--------|--------|
-| `--statusline` | `cco-full` (all info) / `cco-minimal` (project + branch) |
-| `--permissions` | `safe` / `balanced` / `permissive` / `full` |
-
-This creates `.claude/` in your project directory instead of `~/.claude/`.
 
 ---
 
