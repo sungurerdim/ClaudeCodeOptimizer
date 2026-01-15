@@ -29,15 +29,16 @@ model: opus
 
 ## Context
 
-- CCO repo: !`test -d /home/node/ClaudeCodeOptimizer && echo "1" || echo "0"`
+- CCO repo root: !`git rev-parse --show-toplevel 2>/dev/null || echo ""`
+- Is CCO repo: !`test -f .claude-plugin/plugin.json && grep -q '"name": "cco"' .claude-plugin/plugin.json && echo "1" || echo "0"`
 - Args: $ARGS
 
 ## Context Check [CRITICAL]
 
-If CCO repo returns "0":
+If "Is CCO repo" returns "0":
 ```
-CCO repository not found at expected location.
-Cannot perform self-review without access to CCO source.
+Not in CCO repository root.
+Run this command from the ClaudeCodeOptimizer directory.
 ```
 **Stop immediately.**
 
@@ -127,12 +128,12 @@ if (!isUnattended && !isReportOnly) {
 ## Step-2: Inventory Detection
 
 ```javascript
-// Parallel detection
-COMMANDS = Bash("ls ~/.claude/commands/cco-*.md 2>/dev/null | wc -l")
-CORE_RULES = Bash("grep -c '^- \\*\\*' ~/.claude/rules/cco/core.md")
-AI_RULES = Bash("grep -c '^- \\*\\*' ~/.claude/rules/cco/ai.md")
-ADAPTIVE_RULES = Bash("grep -c '^- \\*\\*' /home/node/ClaudeCodeOptimizer/claudecodeoptimizer/content/rules/cco-adaptive.md")
-VERSION = Bash("grep '__version__' /home/node/ClaudeCodeOptimizer/claudecodeoptimizer/__init__.py | grep -oP '\\d+\\.\\d+\\.\\d+'")
+// Parallel detection (relative paths - run from CCO repo root)
+COMMANDS = Bash("ls ./commands/*.md 2>/dev/null | wc -l")
+CORE_RULES = Bash("grep -c '^- \\*\\*' ./rules/core.md")
+AI_RULES = Bash("grep -c '^- \\*\\*' ./rules/ai.md")
+ADAPTIVE_RULES = Bash("grep -rh '^- \\*\\*' ./rules/*.md --exclude=core.md --exclude=ai.md 2>/dev/null | wc -l")
+VERSION = Bash("grep '\"version\"' ./.claude-plugin/plugin.json | grep -oP '\\d+\\.\\d+\\.\\d+'")
 
 // Store detected counts
 inventory = {
