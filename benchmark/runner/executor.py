@@ -41,6 +41,11 @@ logger = logging.getLogger("cco-benchmark.executor")
 # Platform detection for select compatibility
 IS_WINDOWS = sys.platform == "win32"
 
+# Windows Ctrl+C exit code (STATUS_CONTROL_C_EXIT = 0xC000013A)
+# Can appear as unsigned (3221225786) or signed (-1073741510)
+WINDOWS_CTRL_C_EXIT = 3221225786
+WINDOWS_CTRL_C_EXIT_SIGNED = -1073741510
+
 
 @dataclass
 class ActivityState:
@@ -180,7 +185,14 @@ def _capture_context_snapshot(
                         snapshot["rules_files"][rel_path] = {"error": str(e)}
 
     # Verification logic
-    has_rules = snapshot["rules_count"] > 0 or snapshot["claude_md"] is not None
+    # Check for valid CLAUDE.md (exists without error)
+    claude_md_valid = (
+        snapshot["claude_md"] is not None
+        and isinstance(snapshot["claude_md"], dict)
+        and snapshot["claude_md"].get("exists", False)
+        and "error" not in snapshot["claude_md"]
+    )
+    has_rules = snapshot["rules_count"] > 0 or claude_md_valid
     snapshot["verification"]["has_rules"] = has_rules
 
     if variant == "cco":
@@ -232,9 +244,55 @@ def _truncate(text: str, max_len: int = 1000) -> str:
     return text[:max_len] + f"\n... [truncated, {len(text) - max_len} more chars]"
 
 
+def _check_jsonl_for_success(stdout: str) -> tuple[bool, str | None]:
+    """Check if jsonl output contains a successful result.
+
+    ccbox/Claude Code CLI can return exit_code=1 even when the task completed
+    successfully, if there's a post-completion streaming mode error. This function
+    parses the jsonl to detect actual task success.
+
+    Returns:
+        Tuple of (has_success, error_if_no_success)
+    """
+    if not stdout:
+        return False, "No output captured"
+
+    has_success_result = False
+    last_error = None
+
+    for line in stdout.splitlines():
+        if not line.strip():
+            continue
+        try:
+            entry = json.loads(line)
+            if entry.get("type") == "result":
+                subtype = entry.get("subtype", "")
+                if subtype == "success":
+                    has_success_result = True
+                elif subtype == "error_during_execution":
+                    errors = entry.get("errors", [])
+                    # Ignore post-completion streaming mode errors
+                    if errors and "only prompt commands are supported in streaming mode" in errors:
+                        logger.debug("Ignoring post-completion streaming mode error")
+                        continue
+                    last_error = ", ".join(errors) if errors else "Unknown error"
+        except json.JSONDecodeError:
+            continue
+
+    if has_success_result:
+        return True, None
+    return False, last_error
+
+
 def _parse_ccbox_error(stdout: str, stderr: str, exit_code: int) -> str:
     """Parse ccbox output to extract meaningful error message."""
     error_parts = []
+
+    # Check for user interruption first (highest priority)
+    if exit_code in (WINDOWS_CTRL_C_EXIT, WINDOWS_CTRL_C_EXIT_SIGNED, 130):
+        return f"Exit code {exit_code}: Process interrupted by user (Ctrl+C)"
+    if "keyboardinterrupt" in (stdout + stderr).lower():
+        return f"Exit code {exit_code}: Process interrupted by user (KeyboardInterrupt)"
 
     # Check for common ccbox errors
     combined = (stdout + stderr).lower()
@@ -435,6 +493,152 @@ def check_dependencies() -> DependencyStatus:
 
 
 @dataclass
+class BenchmarkPhase:
+    """Single benchmark phase result for new flow."""
+
+    name: str  # vanilla_generation, vanilla_analysis, cco_derive, cco_config, cco_optimize, cco_review, cco_analysis
+    success: bool
+    duration_seconds: float
+    error: str | None = None
+    output: dict[str, Any] | None = None
+    skipped: bool = False  # True if phase was skipped during resume
+
+    def to_dict(self) -> dict[str, Any]:
+        return {
+            "name": self.name,
+            "success": self.success,
+            "duration_seconds": round(self.duration_seconds, 2),
+            "error": self.error,
+            "skipped": self.skipped,
+        }
+
+
+@dataclass
+class ResumeState:
+    """Tracks what phases can be skipped when resuming a benchmark.
+
+    Checks for:
+    - Phase 1: vanilla_dir exists with source files
+    - Phase 2: vanilla analysis JSON files exist
+    - Phase 3: cco_dir exists with source files
+    - Phase 4: .claude folder exists in cco_dir (config done)
+    - Phase 5-6: Always re-run (optimize/review are the main CCO value)
+    - Phase 7: cco analysis JSON files exist
+    """
+
+    vanilla_generated: bool = False
+    vanilla_analyzed: bool = False
+    cco_derived: bool = False
+    cco_configured: bool = False
+    # Loaded data from previous run
+    vanilla_metrics: Metrics | None = None
+    vanilla_ai_result: dict[str, Any] | None = None
+
+    @property
+    def can_skip_vanilla_generation(self) -> bool:
+        return self.vanilla_generated
+
+    @property
+    def can_skip_vanilla_analysis(self) -> bool:
+        return self.vanilla_analyzed and self.vanilla_metrics is not None
+
+    @property
+    def can_skip_cco_derive(self) -> bool:
+        return self.cco_derived
+
+    @property
+    def can_skip_cco_config(self) -> bool:
+        return self.cco_configured
+
+    @property
+    def resume_from_phase(self) -> int:
+        """Return the phase number to resume from (1-7)."""
+        if not self.vanilla_generated:
+            return 1
+        if not self.vanilla_analyzed:
+            return 2
+        if not self.cco_derived:
+            return 3
+        if not self.cco_configured:
+            return 4
+        # Always re-run optimize/review (5-6) - that's the CCO value
+        return 5
+
+
+@dataclass
+class NewBenchmarkResult:
+    """Complete benchmark result for new flow.
+
+    New flow: vanilla → derive CCO → optimize → review → analyze both.
+    CCO no longer generates code from scratch - it optimizes vanilla code.
+    """
+
+    project_id: str
+    project_name: str
+    phases: list[BenchmarkPhase]
+    vanilla_metrics: Metrics | None
+    vanilla_ai_result: dict[str, Any] | None
+    cco_metrics: Metrics | None
+    cco_ai_result: dict[str, Any] | None
+    comparison: dict[str, Any]
+    timestamp: str = field(default_factory=lambda: datetime.now().isoformat())
+    # Legacy fields for compatibility
+    categories: list[str] = field(default_factory=list)
+    complexity: str = "Medium"
+
+    def to_dict(self) -> dict[str, Any]:
+        return {
+            "project_id": self.project_id,
+            "project_name": self.project_name,
+            "phases": [p.to_dict() for p in self.phases],
+            "vanilla": {
+                "metrics": self.vanilla_metrics.to_dict() if self.vanilla_metrics else None,
+                "ai_analysis": self.vanilla_ai_result,
+            },
+            "cco": {
+                "metrics": self.cco_metrics.to_dict() if self.cco_metrics else None,
+                "ai_analysis": self.cco_ai_result,
+            },
+            "comparison": self.comparison,
+            "timestamp": self.timestamp,
+            "categories": self.categories,
+            "complexity": self.complexity,
+        }
+
+    @classmethod
+    def from_dict(cls, data: dict[str, Any]) -> "NewBenchmarkResult":
+        phases = [
+            BenchmarkPhase(
+                name=p["name"],
+                success=p["success"],
+                duration_seconds=p["duration_seconds"],
+                error=p.get("error"),
+                skipped=p.get("skipped", False),
+            )
+            for p in data.get("phases", [])
+        ]
+        vanilla_data = data.get("vanilla", {})
+        cco_data = data.get("cco", {})
+        return cls(
+            project_id=data["project_id"],
+            project_name=data["project_name"],
+            phases=phases,
+            vanilla_metrics=Metrics.from_dict(vanilla_data.get("metrics"))
+            if vanilla_data.get("metrics")
+            else None,
+            vanilla_ai_result=vanilla_data.get("ai_analysis"),
+            cco_metrics=Metrics.from_dict(cco_data.get("metrics"))
+            if cco_data.get("metrics")
+            else None,
+            cco_ai_result=cco_data.get("ai_analysis"),
+            comparison=data.get("comparison", {}),
+            timestamp=data.get("timestamp", ""),
+            categories=data.get("categories", []),
+            complexity=data.get("complexity", "Medium"),
+        )
+
+
+@dataclass
 class ExecutionResult:
     """Result of a single test execution."""
 
@@ -456,6 +660,8 @@ class ExecutionResult:
     config_time_seconds: float | None = None  # cco-config phase
     coding_time_seconds: float | None = None  # Main coding phase
     optimize_time_seconds: float | None = None  # cco-optimize phase
+    optimize_success: bool | None = None  # Track optimize phase result (None for vanilla)
+    optimize_error: str | None = None  # Optimize phase error message if failed
 
     def to_dict(self) -> dict[str, Any]:
         result = {
@@ -479,6 +685,8 @@ class ExecutionResult:
             result["config_time_seconds"] = self.config_time_seconds
             result["coding_time_seconds"] = self.coding_time_seconds
             result["optimize_time_seconds"] = self.optimize_time_seconds
+            result["optimize_success"] = self.optimize_success
+            result["optimize_error"] = self.optimize_error
         return result
 
     @classmethod
@@ -616,6 +824,92 @@ class TestExecutor:
         log_dir.mkdir(parents=True, exist_ok=True)
         return log_dir
 
+    def _check_resume_state(self, config: ProjectConfig) -> ResumeState:
+        """Check what phases have already completed for resume functionality.
+
+        Returns ResumeState with flags for each completed phase and loaded data.
+        """
+        state = ResumeState()
+        vanilla_dir = self.output_base / f"{config.id}_vanilla"
+        cco_dir = self.output_base / f"{config.id}_cco"
+        logs_dir = self.logs_base / config.id
+
+        # Check Phase 1: Vanilla generation
+        if vanilla_dir.exists():
+            # Check for source files (not just prompt file)
+            source_files = list(vanilla_dir.glob("**/*.py")) + list(vanilla_dir.glob("**/*.js"))
+            source_files = [f for f in source_files if not f.name.startswith("_")]
+            if source_files:
+                state.vanilla_generated = True
+                logger.info(f"[RESUME] Vanilla dir exists with {len(source_files)} source files")
+
+        # Check Phase 2: Vanilla analysis
+        vanilla_log_dir = logs_dir / "vanilla"
+        static_file = vanilla_log_dir / "analysis_static.json"
+        ai_file = vanilla_log_dir / "analysis_ai.json"
+
+        if static_file.exists():
+            try:
+                static_data = json.loads(static_file.read_text(encoding="utf-8"))
+                state.vanilla_metrics = Metrics.from_dict(static_data)
+                logger.info("[RESUME] Loaded vanilla static analysis")
+            except Exception as e:
+                logger.warning(f"[RESUME] Failed to load vanilla static analysis: {e}")
+
+        if ai_file.exists():
+            try:
+                state.vanilla_ai_result = json.loads(ai_file.read_text(encoding="utf-8"))
+                logger.info("[RESUME] Loaded vanilla AI analysis")
+            except Exception as e:
+                logger.warning(f"[RESUME] Failed to load vanilla AI analysis: {e}")
+
+        state.vanilla_analyzed = state.vanilla_metrics is not None
+
+        # Check Phase 3: CCO derivation
+        if cco_dir.exists():
+            source_files = list(cco_dir.glob("**/*.py")) + list(cco_dir.glob("**/*.js"))
+            source_files = [f for f in source_files if not f.name.startswith("_")]
+            if source_files:
+                state.cco_derived = True
+                logger.info(f"[RESUME] CCO dir exists with {len(source_files)} source files")
+
+        # Check Phase 4: CCO config
+        claude_dir = cco_dir / ".claude"
+        if claude_dir.exists() and claude_dir.is_dir():
+            state.cco_configured = True
+            logger.info("[RESUME] CCO .claude folder exists (config done)")
+
+        # Log resume state
+        logger.info(f"[RESUME] State: vanilla_gen={state.vanilla_generated}, "
+                    f"vanilla_analysis={state.vanilla_analyzed}, "
+                    f"cco_derived={state.cco_derived}, "
+                    f"cco_configured={state.cco_configured}")
+        logger.info(f"[RESUME] Will resume from phase {state.resume_from_phase}")
+
+        return state
+
+    def _save_analysis_results(
+        self, project_id: str, variant: str, metrics: Metrics | None, ai_result: dict[str, Any] | None
+    ) -> None:
+        """Save analysis results to log directory for resume functionality."""
+        log_dir = self._get_log_dir(project_id, variant)
+
+        if metrics:
+            static_file = log_dir / "analysis_static.json"
+            static_file.write_text(
+                json.dumps(metrics.to_dict(), indent=2, default=str),
+                encoding="utf-8",
+            )
+            logger.info(f"[SAVE] Static analysis saved to {static_file}")
+
+        if ai_result:
+            ai_file = log_dir / "analysis_ai.json"
+            ai_file.write_text(
+                json.dumps(ai_result, indent=2, default=str),
+                encoding="utf-8",
+            )
+            logger.info(f"[SAVE] AI analysis saved to {ai_file}")
+
     def _run_with_streaming(
         self,
         cmd: list[str],
@@ -675,7 +969,7 @@ class TestExecutor:
                     # Log real-time output (truncation handled by ColoredFormatter)
                     line_stripped = line.rstrip()
                     if line_stripped:
-                        msg = f"[{variant.upper()}] [{stream_name}] {line_stripped}"
+                        msg = f"[{variant.upper()}:{project_id}] [{stream_name}] {line_stripped}"
                         # stderr = error, stdout = info (ccbox should not write info to stderr)
                         if stream_name == "stderr":
                             logger.error(msg)
@@ -722,7 +1016,7 @@ class TestExecutor:
                 inactivity = now - activity.last_output_time
                 if inactivity > timeout:
                     logger.warning(
-                        f"[{variant.upper()}] TIMEOUT - no output for {inactivity:.0f}s "
+                        f"[{variant.upper()}:{project_id}] TIMEOUT - no output for {inactivity:.0f}s "
                         f"(total runtime: {elapsed:.0f}s) - terminating..."
                     )
                     process.terminate()
@@ -738,7 +1032,6 @@ class TestExecutor:
                 last_stall_check = now
 
                 if activity.check_stall(self.stall_threshold):
-                    activity.stall_warnings += 1
                     stall_time = now - activity.last_output_time
 
                     # Check file activity as secondary indicator
@@ -750,18 +1043,22 @@ class TestExecutor:
 
                         if file_change > 0:
                             logger.info(
-                                f"[{variant.upper()}] [ACTIVITY] No output for {stall_time:.0f}s "
+                                f"[{variant.upper()}:{project_id}] [ACTIVITY] No output for {stall_time:.0f}s "
                                 f"but {file_change} new files created - still working"
                             )
+                            # Reset stall state - file activity proves process is working
                             activity.is_stalled = False
+                            activity.last_output_time = now  # Reset timer
                         else:
+                            activity.stall_warnings += 1
                             logger.warning(
-                                f"[{variant.upper()}] [STALL] No output for {stall_time:.0f}s, "
+                                f"[{variant.upper()}:{project_id}] [STALL] No output for {stall_time:.0f}s, "
                                 f"no new files - may be stuck (warning #{activity.stall_warnings})"
                             )
                     else:
+                        activity.stall_warnings += 1
                         logger.warning(
-                            f"[{variant.upper()}] [STALL] No output for {stall_time:.0f}s "
+                            f"[{variant.upper()}:{project_id}] [STALL] No output for {stall_time:.0f}s "
                             f"(warning #{activity.stall_warnings})"
                         )
 
@@ -1112,7 +1409,7 @@ STDERR:
         separator_light = "─" * 40
 
         logger.info(f"\n{separator_heavy}")
-        logger.info(f"[{variant.upper()}] STARTING: {config.id}")
+        logger.info(f"[{variant.upper()}:{config.id}] STARTING")
         logger.info(separator_heavy)
 
         # Fixed folder name (no timestamp) - same test always uses same folder
@@ -1120,11 +1417,11 @@ STDERR:
 
         # Clean existing folder before run
         if project_dir.exists():
-            logger.info(f"[{variant.upper()}] Cleaning existing folder: {project_dir}")
+            logger.info(f"[{variant.upper()}:{config.id}] Cleaning existing folder")
             shutil.rmtree(project_dir)
 
         project_dir.mkdir(parents=True, exist_ok=True)
-        logger.info(f"[{variant.upper()}] Output dir: {project_dir}")
+        logger.info(f"[{variant.upper()}:{config.id}] Output dir: {project_dir}")
 
         # Save prompt to file - ccbox will read from here instead of command line
         # This avoids Windows command line length limits (~8192 chars) and shell escaping issues
@@ -1132,23 +1429,37 @@ STDERR:
         prompt_file.write_text(config.prompt, encoding="utf-8")
 
         # Short instruction for ccbox - actual task is in the file
-        short_prompt = "Read _benchmark_prompt.md and complete all tasks described in it. Follow the requirements exactly."
+        # CRITICAL: Explicit constraints to prevent streaming mode errors:
+        # - No slash commands (not supported in streaming/print mode)
+        # - No interactive commands or follow-up questions
+        # - Clear completion signal without attempting unsupported actions
+        short_prompt = """Read _benchmark_prompt.md and complete all tasks described in it.
+
+CRITICAL CONSTRAINTS:
+- Do NOT use slash commands (/, /help, /commit, etc.) - they are not available in this mode
+- Do NOT ask follow-up questions or request user input
+- When finished, simply summarize what was built - do not attempt any post-completion commands
+- Focus only on writing code, tests, and configuration files
+
+Execute the task autonomously and completely."""
 
         # CCO phase timings and results
         config_time: float | None = None
         optimize_time: float | None = None
+        optimize_success: bool | None = None
+        optimize_error: str | None = None
         config_result: dict[str, Any] | None = None
         optimize_result: dict[str, Any] | None = None
 
         # CCO variant: First run cco-config --auto to configure rules
         if variant == "cco":
             logger.info(f"\n{separator_light}")
-            logger.info("[CCO] Phase 1/3: config")
+            logger.info(f"[CCO:{config.id}] Phase 1/3: config")
             logger.info(separator_light)
             config_result = self._run_cco_config(project_dir, config.id, model)
             config_time = config_result["time"]
             if not config_result["success"]:
-                logger.error(f"[CCO] Config phase FAILED: {config_result['error']}")
+                logger.error(f"[CCO:{config.id}] Config phase FAILED: {config_result['error']}")
                 # Capture context snapshot even on failure
                 snapshot = _capture_context_snapshot(project_dir, variant, model, self.ccbox_cmd)
                 _save_context_snapshot(project_dir, snapshot)
@@ -1172,7 +1483,7 @@ STDERR:
                     error_message=f"CCO config failed: {config_result['error']}",
                     config_time_seconds=round(config_time, 2),
                 )
-            logger.info(f"[CCO] Config phase completed in {config_time:.2f}s")
+            logger.info(f"[CCO:{config.id}] Config phase completed in {config_time:.2f}s")
 
         # Build ccbox command for the actual test
         # ccbox parameters (as of latest version):
@@ -1209,14 +1520,14 @@ STDERR:
         # Coding phase separator
         if variant == "cco":
             logger.info(f"\n{separator_light}")
-            logger.info("[CCO] Phase 2/3: coding")
+            logger.info(f"[CCO:{config.id}] Phase 2/3: coding")
             logger.info(separator_light)
         else:
             logger.info(f"\n{separator_light}")
-            logger.info("[VANILLA] coding")
+            logger.info(f"[VANILLA:{config.id}] coding")
             logger.info(separator_light)
 
-        logger.info(f"[{variant.upper()}] Executing: {cmd_str[:200]}...")
+        logger.info(f"[{variant.upper()}:{config.id}] Executing: {cmd_str[:200]}...")
 
         # Run with streaming for real-time output and activity tracking
         exit_code, stdout, stderr, activity = self._run_with_streaming(
@@ -1250,7 +1561,20 @@ STDERR:
                 error_message=f"ccbox command not found: {self.ccbox_cmd}",
             )
 
-        success = exit_code == 0
+        # Determine success: exit_code == 0 OR jsonl contains successful result
+        # ccbox can return exit_code=1 even when task succeeded if there's a
+        # post-completion streaming mode error
+        if exit_code == 0:
+            success = True
+            jsonl_error = None
+        else:
+            # Check jsonl output for actual success despite non-zero exit code
+            success, jsonl_error = _check_jsonl_for_success(stdout)
+            if success:
+                logger.info(
+                    f"[{variant.upper()}:{config.id}] Task completed successfully despite exit_code={exit_code} "
+                    "(post-completion CLI error ignored)"
+                )
 
         # Build stall info for error message
         stall_info = ""
@@ -1288,31 +1612,32 @@ STDERR:
         (log_dir / "02_coding_errors.log").write_text(stderr, encoding="utf-8")
 
         if success:
-            logger.info(f"[{variant.upper()}] SUCCESS in {generation_time:.2f}s{stall_info}")
+            logger.info(f"[{variant.upper()}:{config.id}] SUCCESS in {generation_time:.2f}s{stall_info}")
 
             # CCO variant: Run cco-optimize --auto after successful test
             if variant == "cco":
                 logger.info(f"\n{separator_light}")
-                logger.info("[CCO] Phase 3/3: optimize")
+                logger.info(f"[CCO:{config.id}] Phase 3/3: optimize")
                 logger.info(separator_light)
                 optimize_result = self._run_cco_optimize(project_dir, config.id, model)
                 optimize_time = optimize_result["time"]
-                if optimize_result["success"]:
-                    logger.info(f"[CCO] Optimize phase completed in {optimize_time:.2f}s")
+                optimize_success = optimize_result["success"]
+                if optimize_success:
+                    logger.info(f"[CCO:{config.id}] Optimize phase completed in {optimize_time:.2f}s")
                 else:
                     # Non-blocking: log warning but continue with analysis
-                    logger.warning(
-                        f"[CCO] Optimize phase failed (non-blocking): {optimize_result['error']}"
-                    )
+                    # Track error for visibility in results
+                    optimize_error = optimize_result.get("error", "Unknown error")
+                    logger.warning(f"[CCO:{config.id}] Optimize phase failed (non-blocking): {optimize_error}")
         else:
             if exit_code is None:
                 logger.error(
-                    f"[{variant.upper()}] TIMEOUT after {generation_time:.2f}s{stall_info}"
+                    f"[{variant.upper()}:{config.id}] TIMEOUT after {generation_time:.2f}s{stall_info}"
                 )
             else:
-                logger.error(f"[{variant.upper()}] FAILED with exit code {exit_code}{stall_info}")
-            logger.error(f"[{variant.upper()}] stdout:\n{_truncate(stdout, 1500)}")
-            logger.error(f"[{variant.upper()}] stderr:\n{_truncate(stderr, 1500)}")
+                logger.error(f"[{variant.upper()}:{config.id}] FAILED with exit code {exit_code}{stall_info}")
+            logger.error(f"[{variant.upper()}:{config.id}] stdout:\n{_truncate(stdout, 1500)}")
+            logger.error(f"[{variant.upper()}:{config.id}] stderr:\n{_truncate(stderr, 1500)}")
 
         # Calculate total time (all phases)
         total_time = generation_time
@@ -1324,12 +1649,12 @@ STDERR:
         # Log CCO phase summary
         if variant == "cco":
             logger.info(
-                f"[CCO] Phase timings: config={config_time:.2f}s, "
+                f"[CCO:{config.id}] Phase timings: config={config_time:.2f}s, "
                 f"coding={generation_time:.2f}s, "
                 f"optimize={optimize_time:.2f}s, "
                 f"total={total_time:.2f}s"
                 if optimize_time is not None
-                else f"[CCO] Phase timings: config={config_time:.2f}s, "
+                else f"[CCO:{config.id}] Phase timings: config={config_time:.2f}s, "
                 f"coding={generation_time:.2f}s, total={total_time:.2f}s"
             )
 
@@ -1358,7 +1683,7 @@ STDERR:
         status = "SUCCESS" if success else "FAILED"
         logger.info(f"\n{separator_heavy}")
         logger.info(
-            f"[{variant.upper()}] {status}: {config.id} (score={round(score, 1)}, time={total_time:.1f}s)"
+            f"[{variant.upper()}:{config.id}] {status} (score={round(score, 1)}, time={total_time:.1f}s)"
         )
         logger.info(f"{separator_heavy}\n")
 
@@ -1412,45 +1737,665 @@ STDERR:
             config_time_seconds=round(config_time, 2) if config_time is not None else None,
             coding_time_seconds=round(generation_time, 2),
             optimize_time_seconds=round(optimize_time, 2) if optimize_time is not None else None,
+            optimize_success=optimize_success,
+            optimize_error=optimize_error,
         )
 
-    def run_benchmark(self, config: ProjectConfig, model: str = "opus") -> BenchmarkResult:
-        """Run full benchmark (both variants) for a project."""
-        # Run CCO first (primary test subject)
-        cco_result = self.run_project(config, "cco", model)
+    # =========================================================================
+    # Benchmark Flow: Vanilla → Derive CCO → Optimize → Review → Analyze
+    # =========================================================================
 
-        # Run vanilla version (baseline)
-        vanilla_result = self.run_project(config, "vanilla", model)
+    def run_benchmark(
+        self,
+        config: ProjectConfig,
+        model: str = "opus",
+        progress_callback: Callable[[str, BenchmarkPhase], None] | None = None,
+        resume: bool = False,
+    ) -> NewBenchmarkResult:
+        """Run new benchmark flow: vanilla → derive CCO → optimize → review → analyze both.
 
-        # Compare results
-        if cco_result.metrics and vanilla_result.metrics:
-            comparison = compare_metrics(cco_result.metrics, vanilla_result.metrics)
+        New flow where CCO optimizes vanilla code instead of generating from scratch.
+        This measures CCO's actual optimization capability, not code generation.
+
+        Args:
+            config: Project configuration
+            model: AI model to use (opus, sonnet, haiku)
+            progress_callback: Called after each phase completion
+            resume: If True, skip completed phases and continue from where it left off
+
+        Phases:
+        1. vanilla_generation: Generate vanilla project from scratch
+        2. vanilla_analysis: Static + AI analysis of vanilla code
+        3. cco_derive: Copy vanilla to create CCO base (identical starting point)
+        4. cco_config: Run /cco-config --auto
+        5. cco_optimize: Run /cco-optimize --auto (all 6 scopes, full fix)
+        6. cco_review: Run /cco-review --auto (all 5 scopes, full fix)
+        7. cco_analysis: Static + AI analysis of CCO-optimized code
+
+        Returns:
+            NewBenchmarkResult with all phase results and pre-computed comparison
+        """
+        from .ai_evaluator import run_single_variant_ai_analysis
+
+        phases: list[BenchmarkPhase] = []
+        separator = "═" * 60
+        vanilla_dir = self.output_base / f"{config.id}_vanilla"
+        cco_dir = self.output_base / f"{config.id}_cco"
+
+        # Check resume state if resuming
+        resume_state: ResumeState | None = None
+        if resume:
+            resume_state = self._check_resume_state(config)
+
+        def _report_phase(phase: BenchmarkPhase) -> None:
+            """Report phase completion to callback and logger."""
+            phases.append(phase)
+            status = "✓" if phase.success else "✗"
+            logger.info(f"[BENCHMARK:{config.id}] {status} {phase.name} ({phase.duration_seconds:.1f}s)")
+            if progress_callback:
+                try:
+                    progress_callback(f"Phase completed: {phase.name}", phase)
+                except Exception:
+                    pass
+
+        def _report_skipped(phase_name: str) -> None:
+            """Report skipped phase (resume mode)."""
+            phase = BenchmarkPhase(name=phase_name, success=True, duration_seconds=0.0, skipped=True)
+            phases.append(phase)
+            logger.info(f"[BENCHMARK:{config.id}] ⏭ {phase_name} (skipped - resume)")
+            if progress_callback:
+                try:
+                    progress_callback(f"Phase skipped: {phase_name}", phase)
+                except Exception:
+                    pass
+
+        logger.info(f"\n{separator}")
+        if resume and resume_state:
+            logger.info(f"[BENCHMARK:{config.id}] RESUMING FROM PHASE {resume_state.resume_from_phase}")
         else:
-            comparison = {
-                "comparisons": [],
-                "cco_wins": 0,
-                "vanilla_wins": 0,
-                "ties": 0,
-                "cco_score": cco_result.score,
-                "vanilla_score": vanilla_result.score,
-                "score_diff": cco_result.score - vanilla_result.score,
-            }
+            logger.info(f"[BENCHMARK:{config.id}] STARTING NEW BENCHMARK FLOW")
+        logger.info(separator)
 
-        # Determine verdict using SSOT function
-        diff = comparison["score_diff"]
-        verdict = calculate_verdict(diff)
+        # ─────────────────────────────────────────────────────────────────────
+        # Phase 1: Vanilla Generation
+        # ─────────────────────────────────────────────────────────────────────
+        if resume_state and resume_state.can_skip_vanilla_generation:
+            logger.info(f"\n[BENCHMARK:{config.id}] Phase 1/7: vanilla_generation (SKIPPING)")
+            _report_skipped("vanilla_generation")
+        else:
+            logger.info(f"\n[BENCHMARK:{config.id}] Phase 1/7: vanilla_generation")
+            phase1 = self._run_vanilla_generation(config, vanilla_dir, model)
+            _report_phase(phase1)
 
-        return BenchmarkResult(
+            if not phase1.success:
+                return self._build_failed_result(
+                    config, phases, f"Vanilla generation failed: {phase1.error}"
+                )
+
+        # ─────────────────────────────────────────────────────────────────────
+        # Phase 2: Vanilla Analysis (Static + AI)
+        # ─────────────────────────────────────────────────────────────────────
+        vanilla_metrics: Metrics | None = None
+        vanilla_ai_result: dict[str, Any] | None = None
+
+        if resume_state and resume_state.can_skip_vanilla_analysis:
+            logger.info(f"\n[BENCHMARK:{config.id}] Phase 2/7: vanilla_analysis (SKIPPING)")
+            _report_skipped("vanilla_analysis")
+            vanilla_metrics = resume_state.vanilla_metrics
+            vanilla_ai_result = resume_state.vanilla_ai_result
+        else:
+            logger.info(f"\n[BENCHMARK:{config.id}] Phase 2/7: vanilla_analysis")
+            phase2 = self._run_variant_analysis(
+                config.id, vanilla_dir, "vanilla", config.prompt, run_single_variant_ai_analysis
+            )
+            _report_phase(phase2)
+
+            vanilla_metrics = phase2.output.get("metrics") if phase2.output else None
+            vanilla_ai_result = phase2.output.get("ai_result") if phase2.output else None
+
+            # Save for future resume
+            self._save_analysis_results(config.id, "vanilla", vanilla_metrics, vanilla_ai_result)
+
+        # ─────────────────────────────────────────────────────────────────────
+        # Phase 3: CCO Derivation (Copy from Vanilla - identical starting point)
+        # ─────────────────────────────────────────────────────────────────────
+        if resume_state and resume_state.can_skip_cco_derive:
+            logger.info(f"\n[BENCHMARK:{config.id}] Phase 3/7: cco_derive (SKIPPING)")
+            _report_skipped("cco_derive")
+        else:
+            logger.info(f"\n[BENCHMARK:{config.id}] Phase 3/7: cco_derive")
+            phase3 = self._derive_cco_from_vanilla(vanilla_dir, cco_dir)
+            _report_phase(phase3)
+
+            if not phase3.success:
+                return self._build_failed_result(
+                    config, phases, f"CCO derivation failed: {phase3.error}",
+                    vanilla_metrics=vanilla_metrics, vanilla_ai_result=vanilla_ai_result
+                )
+
+        # ─────────────────────────────────────────────────────────────────────
+        # Phase 4: CCO Config
+        # ─────────────────────────────────────────────────────────────────────
+        if resume_state and resume_state.can_skip_cco_config:
+            logger.info(f"\n[BENCHMARK:{config.id}] Phase 4/7: cco_config (SKIPPING)")
+            _report_skipped("cco_config")
+        else:
+            logger.info(f"\n[BENCHMARK:{config.id}] Phase 4/7: cco_config")
+            phase4 = self._run_cco_config(cco_dir, config.id, model)
+            _report_phase(phase4)
+
+            if not phase4.success:
+                return self._build_failed_result(
+                    config, phases, f"CCO config failed: {phase4.error}",
+                    vanilla_metrics=vanilla_metrics, vanilla_ai_result=vanilla_ai_result
+                )
+
+        # ─────────────────────────────────────────────────────────────────────
+        # Phase 5: CCO Optimize (--auto = all 6 scopes, full fix)
+        # ─────────────────────────────────────────────────────────────────────
+        logger.info(f"\n[BENCHMARK:{config.id}] Phase 5/7: cco_optimize")
+        phase5 = self._run_cco_optimize(cco_dir, config.id, model)
+        _report_phase(phase5)
+        # Optimize failure is non-blocking but logged
+
+        # ─────────────────────────────────────────────────────────────────────
+        # Phase 6: CCO Review (--auto = all 5 scopes, full fix)
+        # ─────────────────────────────────────────────────────────────────────
+        logger.info(f"\n[BENCHMARK:{config.id}] Phase 6/7: cco_review")
+        phase6 = self._run_cco_review(cco_dir, config.id, model)
+        _report_phase(phase6)
+        # Review failure is non-blocking but logged
+
+        # ─────────────────────────────────────────────────────────────────────
+        # Phase 7: CCO Analysis (Static + AI)
+        # ─────────────────────────────────────────────────────────────────────
+        logger.info(f"\n[BENCHMARK:{config.id}] Phase 7/7: cco_analysis")
+        phase7 = self._run_variant_analysis(
+            config.id, cco_dir, "cco", config.prompt, run_single_variant_ai_analysis
+        )
+        _report_phase(phase7)
+
+        cco_metrics = phase7.output.get("metrics") if phase7.output else None
+        cco_ai_result = phase7.output.get("ai_result") if phase7.output else None
+
+        # Save for potential debugging (CCO analysis is always re-run, but good to have)
+        self._save_analysis_results(config.id, "cco", cco_metrics, cco_ai_result)
+
+        # ─────────────────────────────────────────────────────────────────────
+        # Build comparison from pre-computed analyses
+        # ─────────────────────────────────────────────────────────────────────
+        comparison = self._build_comparison(
+            vanilla_metrics, vanilla_ai_result, cco_metrics, cco_ai_result
+        )
+
+        # Final summary
+        total_time = sum(p.duration_seconds for p in phases)
+        successful_phases = sum(1 for p in phases if p.success)
+        logger.info(f"\n{separator}")
+        logger.info(f"[BENCHMARK:{config.id}] COMPLETED: {successful_phases}/7 phases successful")
+        logger.info(f"[BENCHMARK:{config.id}] Total time: {total_time:.1f}s")
+        logger.info(f"[BENCHMARK:{config.id}] Verdict: {comparison.get('verdict', 'N/A')}")
+        logger.info(separator)
+
+        return NewBenchmarkResult(
             project_id=config.id,
             project_name=config.name,
+            phases=phases,
+            vanilla_metrics=vanilla_metrics,
+            vanilla_ai_result=vanilla_ai_result,
+            cco_metrics=cco_metrics,
+            cco_ai_result=cco_ai_result,
+            comparison=comparison,
             categories=config.categories,
             complexity=config.complexity,
-            cco_result=cco_result,
-            vanilla_result=vanilla_result,
-            comparison=comparison,
-            verdict=verdict,
-            score_difference=round(diff, 1),
-            prompt_used=config.prompt,
+        )
+
+    def _run_vanilla_generation(
+        self, config: ProjectConfig, vanilla_dir: Path, model: str
+    ) -> BenchmarkPhase:
+        """Phase 1: Generate vanilla project from scratch using ccbox --bare."""
+        start = time.time()
+
+        # Clean existing folder
+        if vanilla_dir.exists():
+            shutil.rmtree(vanilla_dir)
+        vanilla_dir.mkdir(parents=True, exist_ok=True)
+
+        # Save prompt to file
+        prompt_file = vanilla_dir / "_benchmark_prompt.md"
+        prompt_file.write_text(config.prompt, encoding="utf-8")
+
+        short_prompt = """Read _benchmark_prompt.md and complete all tasks described in it.
+
+CRITICAL CONSTRAINTS:
+- Do NOT use slash commands (/, /help, /commit, etc.) - they are not available in this mode
+- Do NOT ask follow-up questions or request user input
+- When finished, simply summarize what was built - do not attempt any post-completion commands
+- Focus only on writing code, tests, and configuration files
+
+Execute the task autonomously and completely."""
+
+        cmd = [
+            self.ccbox_cmd, "-U", "-y", "-dd",
+            "-C", str(vanilla_dir),
+            "--bare",  # No CCO rules
+            "-m", model,
+            "-p", short_prompt,
+        ]
+
+        try:
+            exit_code, stdout, stderr, activity = self._run_with_streaming(
+                cmd=cmd,
+                project_dir=vanilla_dir,
+                project_id=config.id,
+                variant="vanilla",
+                timeout=self.timeout,
+                env={"CLAUDE_MODEL": model},
+                log_phase="01_generation",
+            )
+
+            elapsed = time.time() - start
+
+            # Save logs
+            log_dir = self._get_log_dir(config.id, "vanilla")
+            (log_dir / "01_generation.log").write_text(
+                f"Vanilla Generation\nCommand: {' '.join(cmd)}\n"
+                f"Exit: {exit_code}\nDuration: {elapsed:.1f}s\n\n{stdout}",
+                encoding="utf-8"
+            )
+            (log_dir / "01_generation.jsonl").write_text(stdout, encoding="utf-8")
+
+            # Check success
+            if exit_code == 0:
+                success = True
+            else:
+                success, _ = _check_jsonl_for_success(stdout)
+
+            if success:
+                return BenchmarkPhase(
+                    name="vanilla_generation",
+                    success=True,
+                    duration_seconds=elapsed,
+                )
+            else:
+                error = _parse_ccbox_error(stdout, stderr, exit_code or -1)
+                return BenchmarkPhase(
+                    name="vanilla_generation",
+                    success=False,
+                    duration_seconds=elapsed,
+                    error=error,
+                )
+
+        except Exception as e:
+            return BenchmarkPhase(
+                name="vanilla_generation",
+                success=False,
+                duration_seconds=time.time() - start,
+                error=str(e),
+            )
+
+    def _derive_cco_from_vanilla(self, vanilla_dir: Path, cco_dir: Path) -> BenchmarkPhase:
+        """Phase 3: Copy vanilla to create CCO base (identical starting point)."""
+        start = time.time()
+        try:
+            logger.info(f"[CCO Derive] Copying {vanilla_dir} to {cco_dir}")
+
+            if cco_dir.exists():
+                logger.info(f"[CCO Derive] Removing existing cco_dir: {cco_dir}")
+                shutil.rmtree(cco_dir)
+
+            # Use copytree to create exact copy (ignore symlinks to avoid issues)
+            shutil.copytree(vanilla_dir, cco_dir, symlinks=False, ignore_dangling_symlinks=True)
+            logger.info("[CCO Derive] Copy completed")
+
+            # Count files (skip verification to avoid issues with symlinks/.venv)
+            try:
+                file_count = sum(1 for f in cco_dir.rglob("*") if f.is_file())
+                logger.info(f"[CCO Derive] Files copied: {file_count}")
+            except Exception as count_err:
+                logger.warning(f"[CCO Derive] Could not count files: {count_err}")
+                file_count = -1
+
+            return BenchmarkPhase(
+                name="cco_derive",
+                success=True,
+                duration_seconds=time.time() - start,
+                output={"files_copied": file_count},
+            )
+        except Exception as e:
+            error_msg = f"{type(e).__name__}: {e}"
+            logger.error(f"[CCO Derive] FAILED: {error_msg}")
+            return BenchmarkPhase(
+                name="cco_derive",
+                success=False,
+                duration_seconds=time.time() - start,
+                error=error_msg,
+            )
+
+    def _run_cco_config(self, cco_dir: Path, project_id: str, model: str) -> BenchmarkPhase:
+        """Phase 4: Run /cco-config --auto to configure CCO rules."""
+        start = time.time()
+
+        cmd = [
+            self.ccbox_cmd, "-U", "-y", "-dd",
+            "-C", str(cco_dir),
+            "-m", model,
+            "-p", "/cco-config --auto --target-dir .claude",
+        ]
+
+        try:
+            exit_code, stdout, stderr, _ = self._run_with_streaming(
+                cmd=cmd,
+                project_dir=cco_dir,
+                project_id=project_id,
+                variant="cco",
+                timeout=float(self.phase_timeout),
+                env={"CLAUDE_MODEL": model},
+                log_phase="02_config",
+            )
+
+            elapsed = time.time() - start
+
+            # Save logs
+            log_dir = self._get_log_dir(project_id, "cco")
+            (log_dir / "02_config.log").write_text(
+                f"CCO Config\nCommand: {' '.join(cmd)}\n"
+                f"Exit: {exit_code}\nDuration: {elapsed:.1f}s\n\n{stdout}",
+                encoding="utf-8"
+            )
+            (log_dir / "02_config.jsonl").write_text(stdout, encoding="utf-8")
+
+            if exit_code == 0:
+                return BenchmarkPhase(
+                    name="cco_config",
+                    success=True,
+                    duration_seconds=elapsed,
+                )
+            else:
+                error = _parse_ccbox_error(stdout, stderr, exit_code or -1)
+                return BenchmarkPhase(
+                    name="cco_config",
+                    success=False,
+                    duration_seconds=elapsed,
+                    error=error,
+                )
+
+        except Exception as e:
+            return BenchmarkPhase(
+                name="cco_config",
+                success=False,
+                duration_seconds=time.time() - start,
+                error=str(e),
+            )
+
+    def _run_cco_optimize(self, cco_dir: Path, project_id: str, model: str) -> BenchmarkPhase:
+        """Phase 5: Run /cco-optimize --auto (all 6 scopes, full fix, silent)."""
+        start = time.time()
+
+        cmd = [
+            self.ccbox_cmd, "-U", "-y", "-dd",
+            "-C", str(cco_dir),
+            "-m", model,
+            "-p", "/cco-optimize --auto",  # All 6 scopes, full fix, silent
+        ]
+
+        try:
+            exit_code, stdout, stderr, _ = self._run_with_streaming(
+                cmd=cmd,
+                project_dir=cco_dir,
+                project_id=project_id,
+                variant="cco",
+                timeout=float(self.phase_timeout),
+                env={"CLAUDE_MODEL": model},
+                log_phase="03_optimize",
+            )
+
+            elapsed = time.time() - start
+
+            # Save logs
+            log_dir = self._get_log_dir(project_id, "cco")
+            (log_dir / "03_optimize.log").write_text(
+                f"CCO Optimize\nCommand: {' '.join(cmd)}\n"
+                f"Exit: {exit_code}\nDuration: {elapsed:.1f}s\n\n{stdout}",
+                encoding="utf-8"
+            )
+            (log_dir / "03_optimize.jsonl").write_text(stdout, encoding="utf-8")
+
+            if exit_code == 0:
+                return BenchmarkPhase(
+                    name="cco_optimize",
+                    success=True,
+                    duration_seconds=elapsed,
+                )
+            else:
+                error = _parse_ccbox_error(stdout, stderr, exit_code or -1)
+                return BenchmarkPhase(
+                    name="cco_optimize",
+                    success=False,
+                    duration_seconds=elapsed,
+                    error=error,
+                )
+
+        except Exception as e:
+            return BenchmarkPhase(
+                name="cco_optimize",
+                success=False,
+                duration_seconds=time.time() - start,
+                error=str(e),
+            )
+
+    def _run_cco_review(self, cco_dir: Path, project_id: str, model: str) -> BenchmarkPhase:
+        """Phase 6: Run /cco-review --auto (all 5 scopes, full fix, silent)."""
+        start = time.time()
+
+        cmd = [
+            self.ccbox_cmd, "-U", "-y", "-dd",
+            "-C", str(cco_dir),
+            "-m", model,
+            "-p", "/cco-review --auto",  # All 5 scopes, full fix, silent
+        ]
+
+        try:
+            exit_code, stdout, stderr, _ = self._run_with_streaming(
+                cmd=cmd,
+                project_dir=cco_dir,
+                project_id=project_id,
+                variant="cco",
+                timeout=float(self.phase_timeout),
+                env={"CLAUDE_MODEL": model},
+                log_phase="04_review",
+            )
+
+            elapsed = time.time() - start
+
+            # Save logs
+            log_dir = self._get_log_dir(project_id, "cco")
+            (log_dir / "04_review.log").write_text(
+                f"CCO Review\nCommand: {' '.join(cmd)}\n"
+                f"Exit: {exit_code}\nDuration: {elapsed:.1f}s\n\n{stdout}",
+                encoding="utf-8"
+            )
+            (log_dir / "04_review.jsonl").write_text(stdout, encoding="utf-8")
+
+            if exit_code == 0:
+                return BenchmarkPhase(
+                    name="cco_review",
+                    success=True,
+                    duration_seconds=elapsed,
+                )
+            else:
+                error = _parse_ccbox_error(stdout, stderr, exit_code or -1)
+                return BenchmarkPhase(
+                    name="cco_review",
+                    success=False,
+                    duration_seconds=elapsed,
+                    error=error,
+                )
+
+        except Exception as e:
+            return BenchmarkPhase(
+                name="cco_review",
+                success=False,
+                duration_seconds=time.time() - start,
+                error=str(e),
+            )
+
+    def _run_variant_analysis(
+        self,
+        project_id: str,
+        variant_dir: Path,
+        variant: str,
+        original_prompt: str,
+        ai_analysis_func: Callable[..., dict[str, Any]],
+    ) -> BenchmarkPhase:
+        """Phase 2/7: Run both static and AI analysis on a single variant."""
+        start = time.time()
+        output: dict[str, Any] = {}
+
+        try:
+            # Static analysis using CodeAnalyzer
+            analyzer = CodeAnalyzer(variant_dir)
+            metrics = analyzer.analyze()
+            metrics.name = project_id
+            metrics.variant = variant
+            output["metrics"] = metrics
+
+            # AI analysis (single variant evaluation)
+            ai_result = ai_analysis_func(
+                project_id=project_id,
+                variant_dir=variant_dir,
+                variant=variant,
+                original_prompt=original_prompt,
+                suite_dir=self.output_base.parent / "suite",
+            )
+            output["ai_result"] = ai_result
+
+            # Save analysis results
+            log_dir = self._get_log_dir(project_id, variant)
+            phase_num = "02" if variant == "vanilla" else "05"
+            (log_dir / f"{phase_num}_analysis_static.json").write_text(
+                json.dumps(metrics.to_dict(), indent=2), encoding="utf-8"
+            )
+            (log_dir / f"{phase_num}_analysis_ai.json").write_text(
+                json.dumps(ai_result, indent=2, default=str), encoding="utf-8"
+            )
+
+            return BenchmarkPhase(
+                name=f"{variant}_analysis",
+                success=True,
+                duration_seconds=time.time() - start,
+                output=output,
+            )
+
+        except Exception as e:
+            logger.error(f"[BENCHMARK:{project_id}] Analysis failed for {variant}: {e}")
+            return BenchmarkPhase(
+                name=f"{variant}_analysis",
+                success=False,
+                duration_seconds=time.time() - start,
+                error=str(e),
+                output=output,  # Include partial results
+            )
+
+    def _build_comparison(
+        self,
+        vanilla_metrics: Metrics | None,
+        vanilla_ai: dict[str, Any] | None,
+        cco_metrics: Metrics | None,
+        cco_ai: dict[str, Any] | None,
+    ) -> dict[str, Any]:
+        """Build comparison from pre-computed analyses."""
+        comparison: dict[str, Any] = {
+            "score_improvement": 0.0,
+            "dimension_improvements": [],
+            "verdict": "Analysis Incomplete",
+        }
+
+        # Static metrics comparison
+        if vanilla_metrics and cco_metrics:
+            vanilla_score = vanilla_metrics.overall_score
+            cco_score = cco_metrics.overall_score
+            diff = cco_score - vanilla_score
+            comparison["score_improvement"] = round(diff, 1)
+            comparison["vanilla_score"] = round(vanilla_score, 1)
+            comparison["cco_score"] = round(cco_score, 1)
+
+            # Use existing compare_metrics for detailed comparison
+            detailed = compare_metrics(cco_metrics, vanilla_metrics)
+            comparison["detailed_comparison"] = detailed
+            comparison["verdict"] = calculate_verdict(diff)
+
+        # AI analysis comparison (if both available)
+        if vanilla_ai and cco_ai:
+            ai_comparison = self._compare_ai_analyses(vanilla_ai, cco_ai)
+            comparison["ai_comparison"] = ai_comparison
+
+            # Calculate AI-based improvement
+            vanilla_ai_score = vanilla_ai.get("overall_score", 0)
+            cco_ai_score = cco_ai.get("overall_score", 0)
+            comparison["ai_score_improvement"] = round(cco_ai_score - vanilla_ai_score, 1)
+
+        return comparison
+
+    def _compare_ai_analyses(
+        self, vanilla_ai: dict[str, Any], cco_ai: dict[str, Any]
+    ) -> dict[str, Any]:
+        """Compare two AI analysis results dimension by dimension."""
+        dimensions = [
+            "functional_completeness", "correctness_robustness", "architecture",
+            "code_quality", "security", "type_safety", "testing",
+            "maintainability", "performance", "best_practices"
+        ]
+
+        dimension_diffs = []
+        for dim in dimensions:
+            vanilla_dim = vanilla_ai.get(dim, {})
+            cco_dim = cco_ai.get(dim, {})
+
+            vanilla_score = vanilla_dim.get("score", 0) if isinstance(vanilla_dim, dict) else 0
+            cco_score = cco_dim.get("score", 0) if isinstance(cco_dim, dict) else 0
+
+            diff = cco_score - vanilla_score
+            # Winner: any positive diff = CCO, any negative = Vanilla, zero = tie
+            winner = "cco" if diff > 0 else ("vanilla" if diff < 0 else "tie")
+            dimension_diffs.append({
+                "dimension": dim,
+                "vanilla_score": vanilla_score,
+                "cco_score": cco_score,
+                "improvement": round(diff, 1),
+                "winner": winner,
+            })
+
+        cco_wins = sum(1 for d in dimension_diffs if d["winner"] == "cco")
+        vanilla_wins = sum(1 for d in dimension_diffs if d["winner"] == "vanilla")
+
+        return {
+            "dimension_breakdown": dimension_diffs,
+            "cco_wins": cco_wins,
+            "vanilla_wins": vanilla_wins,
+            "ties": len(dimensions) - cco_wins - vanilla_wins,
+        }
+
+    def _build_failed_result(
+        self,
+        config: ProjectConfig,
+        phases: list[BenchmarkPhase],
+        error: str,
+        vanilla_metrics: Metrics | None = None,
+        vanilla_ai_result: dict[str, Any] | None = None,
+    ) -> NewBenchmarkResult:
+        """Build a failed result when benchmark cannot complete."""
+        return NewBenchmarkResult(
+            project_id=config.id,
+            project_name=config.name,
+            phases=phases,
+            vanilla_metrics=vanilla_metrics,
+            vanilla_ai_result=vanilla_ai_result,
+            cco_metrics=None,
+            cco_ai_result=None,
+            comparison={"error": error, "verdict": "Failed"},
+            categories=config.categories,
+            complexity=config.complexity,
         )
 
 

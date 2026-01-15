@@ -13,6 +13,7 @@ Build a terminal-based system monitoring dashboard using Python and Textual.
 3. **Write working code** - Dashboard must render and update
 4. **Include tests** - Test coverage for core functionality
 5. **Handle errors gracefully** - Graceful degradation on metric failures
+6. **No slash commands** - Do NOT use `/help`, `/commit`, or any `/` commands (not available in this execution mode)
 
 **Prioritized execution order:**
 1. Project structure and Textual app setup

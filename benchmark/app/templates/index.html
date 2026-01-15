@@ -266,88 +266,6 @@
             font-size: 14px;
         }
 
-        /* Reports List */
-        .reports-list {
-            display: flex;
-            flex-direction: column;
-            gap: 12px;
-        }
-
-        .report-card {
-            background: var(--bg-secondary);
-            border: 1px solid var(--border);
-            border-radius: 8px;
-            padding: 16px 20px;
-            cursor: pointer;
-            transition: all 0.2s;
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-        }
-
-        .report-card:hover {
-            border-color: var(--accent);
-            background: var(--bg-tertiary);
-        }
-
-        .report-info {
-            flex: 1;
-        }
-
-        .report-title {
-            font-weight: 600;
-            font-size: 1rem;
-            margin-bottom: 4px;
-            display: flex;
-            align-items: center;
-            gap: 8px;
-        }
-
-        .report-meta {
-            color: var(--text-muted);
-            font-size: 13px;
-            display: flex;
-            gap: 16px;
-            flex-wrap: wrap;
-        }
-
-        .report-scores {
-            display: flex;
-            gap: 20px;
-            align-items: center;
-        }
-
-        .report-score {
-            text-align: center;
-        }
-
-        .report-score-value {
-            font-size: 1.5rem;
-            font-weight: 700;
-        }
-
-        .report-score-label {
-            font-size: 11px;
-            color: var(--text-muted);
-            text-transform: uppercase;
-        }
-
-        .report-actions {
-            display: flex;
-            gap: 8px;
-            margin-left: 16px;
-        }
-
-        .report-badge {
-            padding: 2px 8px;
-            border-radius: 4px;
-            font-size: 11px;
-            font-weight: 500;
-        }
-
-        .report-badge.static { background: var(--bg-tertiary); color: var(--text-muted); }
-        .report-badge.ai { background: #a371f726; color: var(--cco); }
-
         .btn-icon {
             background: transparent;
             border: none;
@@ -584,6 +502,7 @@
         .status-dot.completed { background: var(--success); }
         .status-dot.failed { background: var(--error); }
         .status-dot.pending { background: var(--text-muted); }
+        .status-dot.cancelled { background: #ff9800; }
 
         @keyframes pulse {
             0%, 100% { opacity: 1; }
@@ -992,30 +911,76 @@
         </div>
 
         <div class="tabs">
-            <button class="tab active" data-tab="projects">📁 Projects</button>
+            <button class="tab active" data-tab="benchmark">🚀 Benchmark</button>
+            <button class="tab" data-tab="results">📈 Results</button>
             <button class="tab" data-tab="output">📂 Output</button>
-            <button class="tab" data-tab="reports">📊 Reports</button>
         </div>
 
-        <!-- Projects Panel -->
-        <div id="projects-panel" class="panel active">
+        <!-- Benchmark Panel (New Flow) -->
+        <div id="benchmark-panel" class="panel active">
+            <div style="background: var(--bg-secondary); border: 1px solid var(--border); border-radius: 8px; padding: 20px; margin-bottom: 20px;">
+                <h3 style="margin-bottom: 10px;">📊 Benchmark Flow</h3>
+                <p style="color: var(--text-muted); font-size: 14px; margin-bottom: 15px;">
+                    Measures CCO's optimization capability on existing code. Fair comparison - same starting point.
+                </p>
+                <div style="display: flex; gap: 10px; flex-wrap: wrap; font-size: 12px; color: var(--text-muted);">
+                    <span>1️⃣ Vanilla Generation</span>
+                    <span>→</span>
+                    <span>2️⃣ Vanilla Analysis</span>
+                    <span>→</span>
+                    <span>3️⃣ CCO Derive</span>
+                    <span>→</span>
+                    <span>4️⃣ cco-config</span>
+                    <span>→</span>
+                    <span>5️⃣ cco-optimize</span>
+                    <span>→</span>
+                    <span>6️⃣ cco-review</span>
+                    <span>→</span>
+                    <span>7️⃣ CCO Analysis</span>
+                </div>
+            </div>
+
             <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; flex-wrap: wrap; gap: 10px;">
                 <div style="display: flex; gap: 20px; align-items: center;">
                     <label class="checkbox-label">
-                        <input type="checkbox" id="select-all-vanilla" onchange="toggleSelectAllVariant('vanilla')">
-                        All Vanilla
+                        <input type="checkbox" id="select-all-benchmark" onchange="toggleSelectAllBenchmark()">
+                        Select All Projects
                     </label>
-                    <label class="checkbox-label">
-                        <input type="checkbox" id="select-all-cco" onchange="toggleSelectAllVariant('cco')">
-                        All CCO
+                    <label class="checkbox-label" title="Resume from last completed phase (skip vanilla if exists)">
+                        <input type="checkbox" id="resume-benchmark">
+                        ⏩ Resume
                     </label>
                 </div>
-                <button class="primary" onclick="runSelectedTests()" id="run-btn">
-                    ▶️ Run Selected
+                <button class="primary" onclick="runBenchmark()" id="run-benchmark-btn">
+                    🚀 Run Benchmark
                 </button>
             </div>
-            <div id="projects-grid" class="projects-grid">
+
+            <div id="benchmark-projects-grid" class="projects-grid">
                 <div class="empty-state">Loading projects...</div>
+            </div>
+
+            <!-- Running Status -->
+            <div id="benchmark-running-status" style="display: none; margin-top: 20px;">
+                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px;">
+                    <h4 style="margin: 0;">Running Benchmark</h4>
+                    <button id="cancel-benchmark-btn" onclick="cancelBenchmark()" style="background: var(--error); color: white;">
+                        ⏹️ Cancel
+                    </button>
+                </div>
+                <div id="benchmark-status-list"></div>
+            </div>
+
+        </div>
+
+        <!-- Results Panel -->
+        <div id="results-panel" class="panel">
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px;">
+                <h3>📈 Benchmark Results</h3>
+                <button onclick="loadBenchmarkResults()">🔄 Refresh</button>
+            </div>
+            <div id="benchmark-results-list">
+                <div class="empty-state">No results yet. Run a benchmark to see results here.</div>
             </div>
         </div>
 
@@ -1025,19 +990,12 @@
                 <h3>Output Folders</h3>
                 <button onclick="loadOutput()">🔄 Refresh</button>
             </div>
+            <div style="background: var(--bg-secondary); border: 1px solid var(--border); border-radius: 8px; padding: 12px; margin-bottom: 20px;">
+                <span style="color: var(--text-muted);">💡 </span>
+                <span style="font-size: 13px;">Benchmark sonuçları için <strong>"📈 Results"</strong> sekmesine bakın.</span>
+            </div>
             <div id="output-grid" class="projects-grid">
                 <div class="empty-state">Loading output folders...</div>
-            </div>
-        </div>
-
-        <!-- Reports Panel -->
-        <div id="reports-panel" class="panel">
-            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px;">
-                <h3>Benchmark Reports</h3>
-                <button onclick="loadReports()">🔄 Refresh</button>
-            </div>
-            <div id="reports-list" class="reports-list">
-                <div class="empty-state">Loading reports...</div>
             </div>
         </div>
 
@@ -1105,120 +1063,23 @@
                 // Refresh data when switching tabs
                 if (tab.dataset.tab === 'output') {
                     loadOutput();
-                } else if (tab.dataset.tab === 'reports') {
-                    loadReports();
+                } else if (tab.dataset.tab === 'results') {
+                    loadBenchmarkResults();
                 }
             });
         });
 
-        // Load projects
+        // Load projects from API
         async function loadProjects() {
             try {
                 const resp = await fetch('/api/projects');
                 projects = await resp.json();
-                // Initialize variants for new projects
-                projects.forEach(p => {
-                    if (!projectVariants[p.id]) {
-                        projectVariants[p.id] = { vanilla: false, cco: false };
-                    }
-                });
-                renderProjects();
+                // Render benchmark projects grid
+                renderBenchmarkProjects();
             } catch (e) {
-                document.getElementById('projects-grid').innerHTML =
+                console.error('Failed to load projects:', e);
+                document.getElementById('benchmark-projects-grid').innerHTML =
                     '<div class="empty-state">Error loading projects</div>';
-            }
-        }
-
-        function renderProjects() {
-            const grid = document.getElementById('projects-grid');
-            if (projects.length === 0) {
-                grid.innerHTML = '<div class="empty-state"><h3>No Projects</h3><p>Add projects to benchmarks/suite/projects/</p></div>';
-                return;
-            }
-
-            grid.innerHTML = projects.map(p => {
-                const v = projectVariants[p.id] || { vanilla: false, cco: false };
-                const hasSelection = v.vanilla || v.cco;
-                const runStatus = projectRunStatus[p.id] || '';
-                const statusClass = runStatus === 'completed' ? 'completed' :
-                                   runStatus === 'running' ? 'running' :
-                                   hasSelection ? 'selected' : '';
-                return `
-                <div class="project-card ${statusClass}" id="card-${p.id}">
-                    <div class="project-header">
-                        <div class="project-title">${p.name}</div>
-                        <span class="complexity-badge ${p.complexity.toLowerCase()}">${p.complexity}</span>
-                    </div>
-                    <div class="categories">
-                        ${p.categories.slice(0, 3).map(c => `<span class="category">${c}</span>`).join('')}
-                    </div>
-                    <div class="project-actions" style="flex-wrap: wrap;">
-                        <label class="checkbox-label" style="color: var(--vanilla);">
-                            <input type="checkbox" ${v.vanilla ? 'checked' : ''}
-                                   onchange="toggleVariant('${p.id}', 'vanilla')">
-                            Vanilla
-                        </label>
-                        <label class="checkbox-label" style="color: var(--cco);">
-                            <input type="checkbox" ${v.cco ? 'checked' : ''}
-                                   onchange="toggleVariant('${p.id}', 'cco')">
-                            CCO
-                        </label>
-                        <button onclick="showPrompt('${p.id}')" style="margin-left: auto;">📄 Prompt</button>
-                    </div>
-                </div>
-            `}).join('');
-        }
-
-        function toggleVariant(projectId, variant) {
-            if (!projectVariants[projectId]) {
-                projectVariants[projectId] = { vanilla: false, cco: false };
-            }
-            projectVariants[projectId][variant] = !projectVariants[projectId][variant];
-            renderProjects();
-            updateRunButton();
-        }
-
-        function toggleSelectAllVariant(variant) {
-            const checkbox = document.getElementById(`select-all-${variant}`);
-            const checked = checkbox.checked;
-            projects.forEach(p => {
-                if (!projectVariants[p.id]) {
-                    projectVariants[p.id] = { vanilla: false, cco: false };
-                }
-                projectVariants[p.id][variant] = checked;
-            });
-            renderProjects();
-            updateRunButton();
-        }
-
-        function getSelectedCount() {
-            let count = 0;
-            for (const id in projectVariants) {
-                if (projectVariants[id].vanilla || projectVariants[id].cco) {
-                    count++;
-                }
-            }
-            return count;
-        }
-
-        function updateRunButton() {
-            const btn = document.getElementById('run-btn');
-            const count = getSelectedCount();
-            const variants = [];
-            let vanillaCount = 0, ccoCount = 0;
-            for (const id in projectVariants) {
-                if (projectVariants[id].vanilla) vanillaCount++;
-                if (projectVariants[id].cco) ccoCount++;
-            }
-            if (vanillaCount > 0) variants.push(`${vanillaCount} vanilla`);
-            if (ccoCount > 0) variants.push(`${ccoCount} cco`);
-
-            btn.textContent = count > 0 ? `▶️ Run ${variants.join(' + ')}` : '▶️ Run Selected';
-            btn.disabled = count === 0 || !systemReady;
-            if (!systemReady && count > 0) {
-                btn.title = 'Install ccbox first';
-            } else {
-                btn.title = '';
             }
         }
 
@@ -1244,97 +1105,6 @@
 
         function closePromptModal() {
             document.getElementById('prompt-modal').classList.remove('active');
-        }
-
-        // Run tests
-        async function runSelectedTests() {
-            if (getSelectedCount() === 0) return;
-
-            const btn = document.getElementById('run-btn');
-            btn.disabled = true;
-            btn.textContent = '⏳ Starting...';
-
-            // Build request with per-project variant selection
-            const projectsToRun = [];
-            for (const id in projectVariants) {
-                const v = projectVariants[id];
-                if (v.vanilla || v.cco) {
-                    projectsToRun.push({
-                        project_id: id,
-                        run_vanilla: v.vanilla,
-                        run_cco: v.cco
-                    });
-                }
-            }
-
-            // Reset and initialize project run status
-            projectRunStatus = {};
-            projectsToRun.forEach(p => {
-                projectRunStatus[p.project_id] = 'pending';
-            });
-            renderProjects();
-
-            try {
-                const resp = await fetch('/api/run', {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({
-                        projects: projectsToRun,
-                        model: 'opus'
-                    })
-                });
-
-                const data = await resp.json();
-                if (data.count === 0) {
-                    alert('No variants selected');
-                    updateRunButton();
-                    return;
-                }
-                pollStatus(data.run_id);
-            } catch (e) {
-                alert('Error starting tests: ' + e.message);
-                btn.disabled = false;
-                updateRunButton();
-            }
-        }
-
-        async function pollStatus(runId) {
-            const interval = setInterval(async () => {
-                try {
-                    const resp = await fetch(`/api/status/${runId}`);
-                    const statuses = await resp.json();
-
-                    // Update per-project status
-                    let hasChanges = false;
-                    statuses.forEach(s => {
-                        const projectId = s.project_id;
-                        const newStatus = s.status === 'completed' ? 'completed' :
-                                         s.status === 'failed' ? 'completed' :
-                                         s.status === 'running' ? 'running' : 'pending';
-                        if (projectRunStatus[projectId] !== newStatus) {
-                            projectRunStatus[projectId] = newStatus;
-                            hasChanges = true;
-                        }
-                    });
-                    if (hasChanges) {
-                        renderProjects();
-                    }
-
-                    const allComplete = statuses.every(s =>
-                        s.status === 'completed' || s.status === 'failed'
-                    );
-
-                    if (allComplete) {
-                        clearInterval(interval);
-                        updateRunButton();
-                        loadOutput();
-                        alert('Tests completed! Check the Output tab.');
-                    }
-                } catch (e) {
-                    clearInterval(interval);
-                    updateRunButton();
-                }
-            }, 2000);
         }
 
         function getVerdictClass(verdict) {
@@ -1591,7 +1361,8 @@
             try {
                 await checkSystemStatus();
                 await Promise.all([loadProjects(), loadOutput(), loadActivity()]);
-                updateRunButton();
+                loadBenchmarkResults();
+                updateBenchmarkButton();
             } finally {
                 if (btn) {
                     btn.disabled = false;
@@ -1638,7 +1409,7 @@
             const installSection = document.getElementById('install-section');
             const dockerInstallLink = document.getElementById('docker-install-link');
             const installBtn = document.getElementById('install-btn');
-            const runBtn = document.getElementById('run-btn');
+            const runBtn = document.getElementById('run-benchmark-btn');
 
             banner.style.display = 'flex';
 
@@ -1870,12 +1641,15 @@
             const byProject = {};
             folders.forEach(f => {
                 if (!byProject[f.project_id]) {
-                    byProject[f.project_id] = { vanilla: null, cco: null, ai_comparison: null };
+                    byProject[f.project_id] = { vanilla: null, cco: null, ai_comparison: null, static_comparison: null };
                 }
                 byProject[f.project_id][f.variant] = f;
-                // Capture AI comparison from either variant (they share it)
+                // Capture comparisons from either variant (they share it)
                 if (f.ai_comparison) {
                     byProject[f.project_id].ai_comparison = f.ai_comparison;
+                }
+                if (f.static_comparison) {
+                    byProject[f.project_id].static_comparison = f.static_comparison;
                 }
             });
 
@@ -1886,7 +1660,41 @@
                 const hasCco = p.cco !== null;
                 const canCompare = hasVanilla && hasCco;
                 const hasAI = p.ai_comparison !== null;
+                const hasStatic = p.static_comparison !== null;
                 const ai = p.ai_comparison;
+                const st = p.static_comparison;
+
+                // Static comparison badge
+                let staticBadge = '';
+                if (hasStatic) {
+                    const verdictClass = getVerdictClass(st.verdict || 'Mixed');
+                    staticBadge = `
+                        <div style="background: var(--bg-tertiary); padding: 12px; border-radius: 8px; margin-top: 10px; border: 1px solid var(--border);">
+                            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px;">
+                                <span style="font-size: 12px; color: var(--text-muted);">📊 Static Analysis</span>
+                                <span class="verdict ${verdictClass}" style="font-size: 11px; padding: 2px 8px;">${st.verdict || 'Mixed'}</span>
+                            </div>
+                            <div style="display: flex; justify-content: space-around; text-align: center;">
+                                <div>
+                                    <div style="font-size: 24px; font-weight: bold; color: ${getGradeColor(st.cco_grade || '?')};">${st.cco_grade || '?'}</div>
+                                    <div style="font-size: 11px; color: var(--cco);">CCO (${st.cco_score?.toFixed(1) || 0})</div>
+                                </div>
+                                <div style="align-self: center; color: ${(st.score_difference || 0) > 0 ? 'var(--cco)' : (st.score_difference || 0) < 0 ? 'var(--vanilla)' : 'var(--text-muted)'}; font-size: 16px; font-weight: bold;">
+                                    ${(st.score_difference || 0) > 0 ? '+' : ''}${st.score_difference || 0}
+                                </div>
+                                <div>
+                                    <div style="font-size: 24px; font-weight: bold; color: ${getGradeColor(st.vanilla_grade || '?')};">${st.vanilla_grade || '?'}</div>
+                                    <div style="font-size: 11px; color: var(--vanilla);">Vanilla (${st.vanilla_score?.toFixed(1) || 0})</div>
+                                </div>
+                            </div>
+                            <div style="margin-top: 10px; display: flex; gap: 8px; justify-content: center;">
+                                <button onclick="viewStaticReport('${projectId}')" style="font-size: 11px;">📊 View Report</button>
+                                <button onclick="deleteStaticReport('${projectId}')" style="font-size: 11px; color: var(--error);">🗑️</button>
+                            </div>
+                            ${st.timestamp ? `<div style="font-size: 10px; color: var(--text-muted); text-align: center; margin-top: 6px;">${formatDate(st.timestamp)}</div>` : ''}
+                        </div>
+                    `;
+                }
 
                 // AI comparison badge
                 let aiBadge = '';
@@ -1916,7 +1724,7 @@
                             </div>
                             <div style="margin-top: 10px; display: flex; gap: 8px; justify-content: center;">
                                 <button onclick="viewAIReport('${projectId}')" style="font-size: 11px;">📊 View Report</button>
-                                <button onclick="aiCompareProject('${projectId}')" id="ai-btn-${projectId}" style="font-size: 11px;">🔄 Re-analyze</button>
+                                <button onclick="deleteAIReport('${projectId}')" style="font-size: 11px; color: var(--error);">🗑️</button>
                             </div>
                             ${ai.timestamp ? `<div style="font-size: 10px; color: var(--text-muted); text-align: center; margin-top: 6px;">${formatDate(ai.timestamp)}</div>` : ''}
                         </div>
@@ -1924,12 +1732,11 @@
                 }
 
                 html += `
-                <div class="project-card ${hasAI ? 'has-ai-result' : ''}">
+                <div class="project-card ${hasAI || hasStatic ? 'has-result' : ''}">
                     <div class="project-header">
                         <div class="project-title">${projectId}</div>
                         <div style="display: flex; gap: 8px;">
-                            ${canCompare ? '<button onclick="compareProject(\'' + projectId + '\')" style="font-size: 12px;">⚖️ Static</button>' : ''}
-                            ${canCompare && !hasAI ? '<button class="primary" onclick="aiCompareProject(\'' + projectId + '\')" id="ai-btn-' + projectId + '" style="font-size: 12px;">🤖 AI Compare</button>' : ''}
+                            ${canCompare ? '<span style="font-size: 11px; color: var(--text-muted);">📁 Output ready</span>' : ''}
                         </div>
                     </div>
                     <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-top: 10px;">
@@ -1954,6 +1761,7 @@
                             ` : '<div style="font-size: 12px;">Not run yet</div>'}
                         </div>
                     </div>
+                    ${staticBadge}
                     ${aiBadge}
                 </div>
                 `;
@@ -1977,6 +1785,51 @@
             }
         }
 
+        // View saved static report
+        async function viewStaticReport(projectId) {
+            try {
+                const resp = await fetch(`/api/static-comparisons/${projectId}`);
+                if (!resp.ok) {
+                    throw new Error('Report not found');
+                }
+                const result = await resp.json();
+                renderComparisonModal(projectId, result);
+                document.getElementById('detail-modal').classList.add('active');
+            } catch (e) {
+                alert('Failed to load static report: ' + e.message);
+            }
+        }
+
+        // Delete static report
+        async function deleteStaticReport(projectId) {
+            if (!confirm(`Delete static analysis for "${projectId}"?`)) return;
+
+            try {
+                const resp = await fetch(`/api/static-comparisons/${projectId}`, { method: 'DELETE' });
+                if (!resp.ok) {
+                    throw new Error('Failed to delete');
+                }
+                loadOutput();
+            } catch (e) {
+                alert('Failed to delete: ' + e.message);
+            }
+        }
+
+        // Delete AI report
+        async function deleteAIReport(projectId) {
+            if (!confirm(`Delete AI analysis for "${projectId}"?`)) return;
+
+            try {
+                const resp = await fetch(`/api/ai-comparisons/${projectId}`, { method: 'DELETE' });
+                if (!resp.ok) {
+                    throw new Error('Failed to delete');
+                }
+                loadOutput();
+            } catch (e) {
+                alert('Failed to delete: ' + e.message);
+            }
+        }
+
         async function deleteOutput(folderName) {
             if (!confirm(`Delete output folder: ${folderName}?`)) return;
 
@@ -1997,6 +1850,9 @@
                     alert(result.error);
                     return;
                 }
+
+                // Refresh output list to show new static comparison
+                loadOutput();
 
                 // Show comparison in modal
                 renderComparisonModal(projectId, result);
@@ -2335,12 +2191,42 @@
                         </div>
                     ` : ''}
 
-                    <!-- Executive text -->
-                    ${result.executive_summary ? `
+                    <!-- Executive text (from executive_summary_text or first insight) -->
+                    ${result.executive_summary_text ? `
                         <p style="margin: 12px 0 0 0; font-size: 13px; line-height: 1.5; color: var(--text-secondary); border-top: 1px solid var(--border); padding-top: 12px;">
-                            ${escapeHtml(result.executive_summary)}
+                            ${escapeHtml(result.executive_summary_text)}
                         </p>
-                    ` : ''}
+                    ` : (Array.isArray(result.executive_summary) && result.executive_summary.length > 0 ? `
+                        <div style="margin: 12px 0 0 0; border-top: 1px solid var(--border); padding-top: 12px;">
+                            ${result.executive_summary.slice(0, 3).map(item => `
+                                <div style="font-size: 12px; margin-bottom: 6px; color: var(--text-secondary);">
+                                    <strong style="color: ${item.winner === 'cco' ? 'var(--cco)' : item.winner === 'vanilla' ? 'var(--vanilla)' : 'var(--text-muted)'};">${escapeHtml(item.topic)}:</strong>
+                                    ${escapeHtml(item.insight)}
+                                </div>
+                            `).join('')}
+                        </div>
+                    ` : '')}
+
+                    <!-- Blind Assignment Badges -->
+                    ${comp?.blind_assignment ? (() => {
+                        const ccoIsA = comp.blind_assignment === 'cco=a';
+                        return `
+                            <div style="display: flex; justify-content: center; gap: 16px; margin-top: 16px; padding-top: 12px; border-top: 1px solid var(--border);">
+                                <div style="display: flex; align-items: center; gap: 8px; padding: 8px 16px; background: var(--cco)15; border: 1px solid var(--cco)40; border-radius: 8px;">
+                                    <span style="font-size: 18px; font-weight: bold; color: var(--cco);">${ccoIsA ? 'A' : 'B'}</span>
+                                    <span style="font-size: 13px; color: var(--cco);">= CCO</span>
+                                </div>
+                                <div style="display: flex; align-items: center; gap: 8px; padding: 8px 16px; background: var(--vanilla)15; border: 1px solid var(--vanilla)40; border-radius: 8px;">
+                                    <span style="font-size: 18px; font-weight: bold; color: var(--vanilla);">${ccoIsA ? 'B' : 'A'}</span>
+                                    <span style="font-size: 13px; color: var(--vanilla);">= Vanilla</span>
+                                </div>
+                                <div style="display: flex; align-items: center; gap: 6px; padding: 8px 12px; background: var(--bg); border-radius: 8px;">
+                                    <span style="font-size: 14px;">🎭</span>
+                                    <span style="font-size: 11px; color: var(--text-muted);">Blind eval</span>
+                                </div>
+                            </div>
+                        `;
+                    })() : ''}
                 </div>
             `;
 
@@ -2724,370 +2610,432 @@
             document.getElementById('modal-body').innerHTML = html;
         }
 
-        // ============== Reports Functions ==============
+        // ============== Benchmark Functions ==============
 
-        let reportsData = [];
+        // Track selected projects for benchmark
+        let selectedBenchmarkProjects = {};
 
-        async function loadReports() {
-            const container = document.getElementById('reports-list');
-            container.innerHTML = '<div class="empty-state">Loading reports...</div>';
-
-            try {
-                const resp = await fetch('/api/reports');
-                if (!resp.ok) throw new Error('Failed to load reports');
-                reportsData = await resp.json();
-                renderReports(reportsData);
-            } catch (e) {
-                container.innerHTML = '<div class="empty-state">Error loading reports: ' + escapeHtml(e.message) + '</div>';
-            }
-        }
-
-        function renderReports(reports) {
-            const container = document.getElementById('reports-list');
-
-            if (!reports || reports.length === 0) {
-                container.innerHTML = '<div class="empty-state">No benchmark reports found. Run a benchmark to generate reports.</div>';
+        function renderBenchmarkProjects() {
+            const grid = document.getElementById('benchmark-projects-grid');
+            if (projects.length === 0) {
+                grid.innerHTML = '<div class="empty-state"><h3>No Projects</h3><p>Add projects to benchmarks/suite/projects/</p></div>';
                 return;
             }
 
-            container.innerHTML = reports.map(project => {
-                // Get scores from static or AI result
-                const staticResult = project.static_result;
-                const aiResult = project.ai_result;
-                const ccoScore = staticResult?.cco_score ?? aiResult?.cco_score;
-                const vanillaScore = staticResult?.vanilla_score ?? aiResult?.vanilla_score;
-
+            grid.innerHTML = projects.map(p => {
+                const isSelected = selectedBenchmarkProjects[p.id] || false;
+                const runStatus = projectRunStatus[p.id] || '';
+                const statusClass = runStatus === 'completed' ? 'completed' :
+                                   runStatus === 'running' ? 'running' :
+                                   isSelected ? 'selected' : '';
                 return `
-                    <div class="report-card" onclick="viewReport('${escapeHtml(project.project_id)}')">
-                        <div class="report-info">
-                            <div class="report-title">
-                                ${escapeHtml(project.project_name)}
-                                ${project.has_static ? '<span class="report-badge static">Static</span>' : ''}
-                                ${project.has_ai ? '<span class="report-badge ai">AI</span>' : ''}
-                            </div>
-                            <div class="report-meta">
-                                ${project.latest_timestamp ? `<span>📅 ${new Date(project.latest_timestamp).toLocaleDateString()}</span>` : ''}
-                                ${staticResult?.verdict ? `<span>${escapeHtml(staticResult.verdict)}</span>` : ''}
-                            </div>
-                        </div>
-                        <div class="report-scores">
-                            ${ccoScore !== undefined && ccoScore !== null ? `
-                                <div class="report-score">
-                                    <div class="report-score-value" style="color: var(--cco)">${ccoScore.toFixed(1)}</div>
-                                    <div class="report-score-label">CCO</div>
-                                </div>
-                            ` : ''}
-                            ${vanillaScore !== undefined && vanillaScore !== null ? `
-                                <div class="report-score">
-                                    <div class="report-score-value" style="color: var(--vanilla)">${vanillaScore.toFixed(1)}</div>
-                                    <div class="report-score-label">Vanilla</div>
-                                </div>
-                            ` : ''}
-                        </div>
-                        <div class="report-actions">
-                            <button class="btn-icon danger" onclick="event.stopPropagation(); deleteReport('${escapeHtml(project.project_id)}', '${escapeHtml(project.project_name)}')" title="Delete reports">🗑️</button>
+                <div class="project-card ${statusClass}" id="bench-card-${p.id}">
+                    <div class="project-header">
+                        <div class="project-title">${p.name}</div>
+                        <span class="complexity-badge ${p.complexity.toLowerCase()}">${p.complexity}</span>
+                    </div>
+                    <div class="categories">
+                        ${p.categories.slice(0, 3).map(c => `<span class="category">${c}</span>`).join('')}
+                    </div>
+                    <div class="project-actions" style="flex-wrap: wrap;">
+                        <label class="checkbox-label">
+                            <input type="checkbox" ${isSelected ? 'checked' : ''}
+                                   onchange="toggleBenchmarkProject('${p.id}')">
+                            Select
+                        </label>
+                        <button onclick="showPrompt('${p.id}')" style="margin-left: auto;">📄 Prompt</button>
+                    </div>
+                    ${runStatus ? `
+                    <div style="margin-top: 10px; padding-top: 10px; border-top: 1px solid var(--border);">
+                        <div class="status-indicator">
+                            <span class="status-dot ${runStatus}"></span>
+                            <span style="font-size: 12px;">${runStatus === 'running' ? 'Running...' : runStatus}</span>
                         </div>
                     </div>
-                `;
-            }).join('');
+                    ` : ''}
+                </div>
+            `}).join('');
         }
 
-        async function viewReport(projectId) {
-            document.getElementById('modal-title').textContent = 'Loading...';
-            document.getElementById('modal-body').innerHTML = '<div class="empty-state">Loading report details...</div>';
-            document.getElementById('detail-modal').style.display = 'flex';
+        function toggleBenchmarkProject(projectId) {
+            selectedBenchmarkProjects[projectId] = !selectedBenchmarkProjects[projectId];
+            renderBenchmarkProjects();
+            updateBenchmarkButton();
+        }
+
+        function toggleSelectAllBenchmark() {
+            const checkbox = document.getElementById('select-all-benchmark');
+            const checked = checkbox.checked;
+            projects.forEach(p => {
+                selectedBenchmarkProjects[p.id] = checked;
+            });
+            renderBenchmarkProjects();
+            updateBenchmarkButton();
+        }
+
+        function getSelectedBenchmarkCount() {
+            return Object.values(selectedBenchmarkProjects).filter(v => v).length;
+        }
+
+        function updateBenchmarkButton() {
+            const btn = document.getElementById('run-benchmark-btn');
+            const count = getSelectedBenchmarkCount();
+            btn.textContent = count > 0 ? `🚀 Run Benchmark (${count})` : '🚀 Run Benchmark';
+            btn.disabled = count === 0 || !systemReady;
+            if (!systemReady && count > 0) {
+                btn.title = 'Install ccbox first';
+            } else {
+                btn.title = '';
+            }
+        }
+
+        async function runBenchmark() {
+            const count = getSelectedBenchmarkCount();
+            if (count === 0) return;
+
+            const btn = document.getElementById('run-benchmark-btn');
+            btn.disabled = true;
+
+            // Check resume checkbox
+            const resumeCheckbox = document.getElementById('resume-benchmark');
+            const resume = resumeCheckbox ? resumeCheckbox.checked : false;
+
+            btn.textContent = resume ? '⏩ Resuming...' : '⏳ Starting...';
+
+            // Get selected project IDs
+            const projectIds = Object.entries(selectedBenchmarkProjects)
+                .filter(([_, selected]) => selected)
+                .map(([id, _]) => id);
+
+            // Reset and initialize project run status
+            projectRunStatus = {};
+            projectIds.forEach(id => {
+                projectRunStatus[id] = 'pending';
+            });
+            renderBenchmarkProjects();
 
             try {
-                const resp = await fetch(`/api/reports/${encodeURIComponent(projectId)}`);
-                if (!resp.ok) throw new Error('Failed to load report');
+                const resp = await fetch('/api/run', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        project_ids: projectIds,
+                        model: 'opus',
+                        resume: resume
+                    })
+                });
+
                 const data = await resp.json();
-                renderReportDetail(data);
+                if (data.count === 0) {
+                    alert('No projects selected');
+                    updateBenchmarkButton();
+                    return;
+                }
+
+                // Show running status
+                document.getElementById('benchmark-running-status').style.display = 'block';
+                currentBenchmarkRunId = data.run_id;
+                pollBenchmarkStatus(data.run_id);
             } catch (e) {
-                document.getElementById('modal-body').innerHTML = '<div class="empty-state">Error loading report: ' + escapeHtml(e.message) + '</div>';
+                alert('Error starting benchmark: ' + e.message);
+                btn.disabled = false;
+                updateBenchmarkButton();
             }
         }
 
-        function renderReportDetail(data) {
-            document.getElementById('modal-title').textContent = data.project_name || data.project_id;
+        // Track current benchmark run for cancellation
+        let currentBenchmarkRunId = null;
 
-            let html = '<div class="report-detail">';
-
-            // Get static and AI data
-            const staticData = data.static;
-            const aiData = data.ai;
-
-            // Extract metrics from static result
-            const ccoMetrics = staticData?.cco_result?.metrics;
-            const vanillaMetrics = staticData?.vanilla_result?.metrics;
-
-            html += '<div class="report-header-info">';
-            html += '<div class="report-summary-scores">';
-
-            // Static scores
-            if (ccoMetrics?.overall_score !== undefined) {
-                html += `
-                    <div class="summary-score">
-                        <div class="summary-score-value" style="color: var(--cco)">${ccoMetrics.overall_score.toFixed(1)}</div>
-                        ${ccoMetrics.grade ? `<div class="summary-score-grade">${ccoMetrics.grade}</div>` : ''}
-                        <div class="summary-score-label">CCO Static</div>
-                    </div>
-                `;
+        async function cancelBenchmark() {
+            if (!currentBenchmarkRunId) {
+                alert('No benchmark running');
+                return;
             }
 
-            if (vanillaMetrics?.overall_score !== undefined) {
-                html += `
-                    <div class="summary-score">
-                        <div class="summary-score-value" style="color: var(--vanilla)">${vanillaMetrics.overall_score.toFixed(1)}</div>
-                        ${vanillaMetrics.grade ? `<div class="summary-score-grade">${vanillaMetrics.grade}</div>` : ''}
-                        <div class="summary-score-label">Vanilla Static</div>
-                    </div>
-                `;
+            const btn = document.getElementById('cancel-benchmark-btn');
+            btn.disabled = true;
+            btn.textContent = '⏳ Cancelling...';
+
+            try {
+                const resp = await fetch(`/api/cancel/${currentBenchmarkRunId}`, { method: 'POST' });
+                const data = await resp.json();
+                log_activity && console.log('Cancelled:', data);
+            } catch (e) {
+                alert('Failed to cancel: ' + e.message);
+            } finally {
+                btn.disabled = false;
+                btn.textContent = '⏹️ Cancel';
             }
+        }
 
-            // Show verdict
-            if (staticData?.verdict) {
-                const verdictColor = staticData.verdict.includes('CCO') ? 'var(--cco)' :
-                                    staticData.verdict.includes('Vanilla') ? 'var(--vanilla)' : 'var(--text)';
-                html += `
-                    <div class="summary-score" style="margin-left: 30px;">
-                        <div class="summary-score-value" style="color: ${verdictColor}; font-size: 1.2rem;">${escapeHtml(staticData.verdict)}</div>
-                        <div class="summary-score-label">Verdict</div>
-                    </div>
-                `;
-            }
+        async function pollBenchmarkStatus(runId) {
+            const interval = setInterval(async () => {
+                try {
+                    const resp = await fetch(`/api/status/${runId}`);
+                    const statuses = await resp.json();
 
-            html += '</div></div>';
+                    // Update per-project status
+                    let hasChanges = false;
+                    statuses.forEach(s => {
+                        const projectId = s.project_id;
+                        const newStatus = s.status === 'completed' ? 'completed' :
+                                         s.status === 'failed' ? 'failed' :
+                                         s.status === 'cancelled' ? 'cancelled' :
+                                         s.status === 'running' ? 'running' : 'pending';
+                        if (projectRunStatus[projectId] !== newStatus) {
+                            projectRunStatus[projectId] = newStatus;
+                            hasChanges = true;
+                        }
+                    });
 
-            // Static Analysis Section - 6 Dimensions
-            if (ccoMetrics?.dimensions || vanillaMetrics?.dimensions) {
-                html += '<h4 style="margin: 20px 0 12px; color: var(--text-muted);">📊 Static Analysis (6-Dimension)</h4>';
-                html += '<div class="dimensions-grid">';
-
-                const dimensions = ['functional_completeness', 'security', 'test_quality', 'code_quality', 'best_practices', 'documentation'];
-                const dimensionNames = {
-                    functional_completeness: 'Functional',
-                    security: 'Security',
-                    test_quality: 'Test Quality',
-                    code_quality: 'Code Quality',
-                    best_practices: 'Best Practices',
-                    documentation: 'Documentation'
-                };
-
-                dimensions.forEach(dim => {
-                    const ccoDim = ccoMetrics?.dimensions?.[dim];
-                    const vanillaDim = vanillaMetrics?.dimensions?.[dim];
-                    const ccoScore = ccoDim?.score ?? 0;
-                    const vanillaScore = vanillaDim?.score ?? 0;
-                    const diff = ccoScore - vanillaScore;
-                    const diffColor = diff > 0 ? 'var(--success)' : diff < 0 ? 'var(--error)' : 'var(--text-muted)';
-                    const diffSign = diff > 0 ? '+' : '';
-
-                    html += `
-                        <div class="dimension-card">
-                            <div class="dimension-header">
-                                <span class="dimension-name">${dimensionNames[dim] || dim}</span>
-                                <div class="dimension-scores">
-                                    <span style="color: var(--cco)">${ccoScore.toFixed(0)}</span>
-                                    <span style="color: var(--text-muted)">vs</span>
-                                    <span style="color: var(--vanilla)">${vanillaScore.toFixed(0)}</span>
-                                    <span style="color: ${diffColor}">(${diffSign}${diff.toFixed(0)})</span>
+                    // Update status list with cancelled support
+                    const statusList = document.getElementById('benchmark-status-list');
+                    statusList.innerHTML = statuses.map(s => {
+                        const statusText = s.status === 'cancelled' ? 'Cancelled' :
+                                          s.status === 'failed' ? 'Failed' :
+                                          s.status === 'completed' ? 'Completed' :
+                                          s.status === 'running' ? `Phase ${s.phases_completed || 0}/7: ${s.current_phase || 'starting'}` :
+                                          'Pending';
+                        const statusColor = s.status === 'cancelled' ? 'var(--warning)' :
+                                           s.status === 'failed' ? 'var(--error)' :
+                                           s.status === 'completed' ? 'var(--success)' :
+                                           'var(--text-muted)';
+                        return `
+                            <div style="display: flex; align-items: center; gap: 10px; padding: 8px; background: var(--bg-tertiary); border-radius: 6px; margin-bottom: 8px;">
+                                <span class="status-dot ${s.status}"></span>
+                                <span style="flex: 1;">${s.project_id}</span>
+                                <span style="color: ${statusColor}; font-size: 12px;">
+                                    ${statusText}
+                                </span>
+                                <div class="progress-bar" style="width: 100px;">
+                                    <div class="progress-fill" style="width: ${s.progress || 0}%; ${s.status === 'cancelled' ? 'background: var(--warning);' : ''}"></div>
                                 </div>
                             </div>
-                            <div class="dim-score-bar" style="display: flex; gap: 4px;">
-                                <div style="flex: 1; background: var(--bg); border-radius: 3px; overflow: hidden;">
-                                    <div class="dim-score-fill cco" style="width: ${ccoScore}%"></div>
-                                </div>
-                                <div style="flex: 1; background: var(--bg); border-radius: 3px; overflow: hidden;">
-                                    <div class="dim-score-fill vanilla" style="width: ${vanillaScore}%"></div>
-                                </div>
-                            </div>
-                        </div>
-                    `;
-                });
+                        `;
+                    }).join('');
 
-                html += '</div>';
-            }
+                    if (hasChanges) {
+                        renderBenchmarkProjects();
+                    }
 
-            // AI Analysis Section
-            if (aiData) {
-                html += '<h4 style="margin: 30px 0 12px; color: var(--text-muted);">🤖 AI Analysis (10-Dimension)</h4>';
+                    const allComplete = statuses.every(s =>
+                        s.status === 'completed' || s.status === 'failed' || s.status === 'cancelled'
+                    );
 
-                // AI Summary Scores
-                const aiSummary = aiData.summary;
-                const aiCco = aiData.cco;
-                const aiVanilla = aiData.vanilla;
-                if (aiSummary || aiCco?.overall_score !== undefined) {
-                    const ccoScore = aiSummary?.cco_score ?? aiCco?.overall_score ?? 0;
-                    const vanillaScore = aiSummary?.vanilla_score ?? aiVanilla?.overall_score ?? 0;
-                    const ccoGrade = aiSummary?.cco_grade ?? aiCco?.grade ?? '';
-                    const vanillaGrade = aiSummary?.vanilla_grade ?? aiVanilla?.grade ?? '';
-                    const diff = ccoScore - vanillaScore;
-                    const diffColor = diff > 0 ? 'var(--success)' : diff < 0 ? 'var(--error)' : 'var(--text-muted)';
-                    const diffSign = diff > 0 ? '+' : '';
+                    if (allComplete) {
+                        clearInterval(interval);
+                        currentBenchmarkRunId = null;
+                        updateBenchmarkButton();
+                        loadBenchmarkResults();
+                        loadOutput();
+                        document.getElementById('benchmark-running-status').style.display = 'none';
 
-                    html += `
-                        <div style="display: flex; gap: 30px; align-items: center; margin-bottom: 20px; padding: 16px; background: var(--bg-tertiary); border-radius: 8px;">
-                            <div style="text-align: center;">
-                                <div style="font-size: 2rem; font-weight: 700; color: var(--cco);">${ccoScore}</div>
-                                <div style="font-size: 0.9rem; color: var(--cco);">${ccoGrade}</div>
-                                <div style="font-size: 11px; color: var(--text-muted); text-transform: uppercase;">CCO</div>
-                            </div>
-                            <div style="text-align: center;">
-                                <div style="font-size: 1.2rem; font-weight: 600; color: ${diffColor};">${diffSign}${diff}</div>
-                                <div style="font-size: 11px; color: var(--text-muted);">diff</div>
-                            </div>
-                            <div style="text-align: center;">
-                                <div style="font-size: 2rem; font-weight: 700; color: var(--vanilla);">${vanillaScore}</div>
-                                <div style="font-size: 0.9rem; color: var(--vanilla);">${vanillaGrade}</div>
-                                <div style="font-size: 11px; color: var(--text-muted); text-transform: uppercase;">Vanilla</div>
-                            </div>
-                        </div>
-                    `;
+                        // Show appropriate message
+                        const cancelled = statuses.filter(s => s.status === 'cancelled').length;
+                        const completed = statuses.filter(s => s.status === 'completed').length;
+                        const failed = statuses.filter(s => s.status === 'failed').length;
+
+                        if (cancelled > 0) {
+                            alert(`Benchmark ended: ${completed} completed, ${cancelled} cancelled, ${failed} failed`);
+                        } else if (failed > 0) {
+                            alert(`Benchmark completed with errors: ${completed} succeeded, ${failed} failed`);
+                        } else {
+                            alert('Benchmark completed! Check the "📈 Results" tab.');
+                        }
+                    }
+                } catch (e) {
+                    clearInterval(interval);
+                    currentBenchmarkRunId = null;
+                    updateBenchmarkButton();
                 }
+            }, 2000);
+        }
 
-                const comparison = aiData.comparison;
-                if (comparison?.verdict) {
-                    const verdictColor = comparison.verdict.includes('CCO') ? 'var(--cco)' :
-                                        comparison.verdict.includes('Vanilla') ? 'var(--vanilla)' : 'var(--text)';
-                    html += `<div style="font-size: 1.1rem; font-weight: 600; color: ${verdictColor}; margin-bottom: 16px;">${escapeHtml(comparison.verdict)}</div>`;
-                }
+        async function loadBenchmarkResults() {
+            try {
+                const resp = await fetch('/api/results');
+                const results = await resp.json();
+                renderBenchmarkResults(results);
+            } catch (e) {
+                console.error('Failed to load benchmark results:', e);
+            }
+        }
 
-                // Executive Summary - Top 5 Key Insights
-                const execSummaryRaw = aiData.executive_summary || comparison?.executive_summary;
-                const execSummary = Array.isArray(execSummaryRaw) ? execSummaryRaw : [];
-                if (execSummary.length > 0) {
-                    html += '<div style="margin-bottom: 20px;">';
-                    html += '<div style="font-weight: 600; margin-bottom: 12px; color: var(--text-muted);">📋 Key Insights</div>';
-                    html += '<div style="display: flex; flex-direction: column; gap: 10px;">';
-                    execSummary.forEach(item => {
-                        const winnerColor = item.winner === 'cco' ? 'var(--cco)' :
-                                           item.winner === 'vanilla' ? 'var(--vanilla)' : 'var(--text-muted)';
-                        const winnerBadge = item.winner === 'cco' ? 'CCO' :
-                                           item.winner === 'vanilla' ? 'Vanilla' : 'Tie';
+        function renderBenchmarkResults(results) {
+            const container = document.getElementById('benchmark-results-list');
+            if (results.length === 0) {
+                container.innerHTML = '<div class="empty-state">No results yet. Run a benchmark to see results here.</div>';
+                return;
+            }
+
+            container.innerHTML = results.map(r => {
+                const improvement = r.score_improvement || 0;
+                const improvementClass = improvement > 5 ? 'cco-strong' :
+                                        improvement > 0 ? 'cco-moderate' :
+                                        improvement < -5 ? 'vanilla-strong' :
+                                        improvement < 0 ? 'vanilla-moderate' : 'mixed';
+                return `
+                <div class="project-card" style="margin-bottom: 15px;">
+                    <div class="project-header">
+                        <div class="project-title">${r.project_name || r.project_id}</div>
+                        <span class="verdict ${improvementClass}">${r.verdict || 'N/A'}</span>
+                    </div>
+                    <div style="display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 15px; margin-top: 15px;">
+                        <div style="text-align: center;">
+                            <div style="font-size: 24px; font-weight: bold; color: var(--vanilla);">${r.vanilla_score || '?'}</div>
+                            <div style="font-size: 12px; color: var(--text-muted);">Vanilla</div>
+                        </div>
+                        <div style="text-align: center;">
+                            <div style="font-size: 24px; font-weight: bold; color: ${improvement > 0 ? 'var(--success)' : improvement < 0 ? 'var(--error)' : 'var(--text-muted)'};">
+                                ${improvement > 0 ? '+' : ''}${improvement}
+                            </div>
+                            <div style="font-size: 12px; color: var(--text-muted);">Improvement</div>
+                        </div>
+                        <div style="text-align: center;">
+                            <div style="font-size: 24px; font-weight: bold; color: var(--cco);">${r.cco_score || '?'}</div>
+                            <div style="font-size: 12px; color: var(--text-muted);">CCO</div>
+                        </div>
+                    </div>
+                    <div style="margin-top: 15px; display: flex; gap: 10px; justify-content: space-between; align-items: center;">
+                        <span style="font-size: 11px; color: var(--text-muted);">${formatDate(r.timestamp)}</span>
+                        <div style="display: flex; gap: 8px;">
+                            <button onclick="viewBenchmarkResult('${r.filename}')" style="font-size: 12px;">📊 View</button>
+                            <button onclick="deleteBenchmarkResult('${r.filename}')" style="font-size: 12px; color: var(--error);">🗑️</button>
+                        </div>
+                    </div>
+                </div>
+            `}).join('');
+        }
+
+        async function viewBenchmarkResult(filename) {
+            try {
+                const resp = await fetch(`/api/results/${filename}`);
+                if (!resp.ok) throw new Error('Result not found');
+                const result = await resp.json();
+                renderBenchmarkResultModal(result);
+                document.getElementById('detail-modal').classList.add('active');
+            } catch (e) {
+                alert('Failed to load result: ' + e.message);
+            }
+        }
+
+        function renderBenchmarkResultModal(result) {
+            document.getElementById('modal-title').textContent = result.project_name || result.project_id;
+
+            const vanilla = result.vanilla || {};
+            const cco = result.cco || {};
+            const comparison = result.comparison || {};
+            const phases = result.phases || [];
+
+            let html = `
+                <div style="margin-bottom: 20px;">
+                    <strong>Verdict:</strong>
+                    <span class="verdict ${getVerdictClass(comparison.verdict || 'N/A')}">${comparison.verdict || 'N/A'}</span>
+                    <span style="margin-left: 20px;">Score Improvement: <strong style="color: ${(comparison.score_improvement || 0) > 0 ? 'var(--success)' : 'var(--error)'};">${comparison.score_improvement > 0 ? '+' : ''}${comparison.score_improvement || 0}</strong></span>
+                </div>
+
+                <h4 style="margin-bottom: 15px;">Phase Timeline</h4>
+                <div style="display: flex; flex-wrap: wrap; gap: 8px; margin-bottom: 20px;">
+                    ${phases.map(p => {
+                        const borderColor = p.skipped ? 'var(--text-muted)' : (p.success ? 'var(--success)' : 'var(--error)');
+                        const timeText = p.skipped ? '⏭ skipped' : `${p.duration_seconds?.toFixed(1) || 0}s`;
+                        return `
+                        <div style="background: var(--bg-tertiary); padding: 8px 12px; border-radius: 6px; border-left: 3px solid ${borderColor}; ${p.skipped ? 'opacity: 0.6;' : ''}">
+                            <div style="font-size: 11px; font-weight: bold;">${p.name}</div>
+                            <div style="font-size: 10px; color: var(--text-muted);">${timeText}</div>
+                        </div>
+                    `}).join('')}
+                </div>
+
+                <h4 style="margin-bottom: 15px;">Score Comparison</h4>
+                <div class="comparison-grid">
+                    <div class="comparison-col vanilla">
+                        <h4>Vanilla (Before)</h4>
+                        <div class="metric-row">
+                            <span class="metric-name">Overall Score</span>
+                            <span class="metric-value">${vanilla.metrics?.overall_score || vanilla.ai_analysis?.overall_score || '?'}</span>
+                        </div>
+                        <div class="metric-row">
+                            <span class="metric-name">Grade</span>
+                            <span class="metric-value">${vanilla.metrics?.grade || vanilla.ai_analysis?.grade || '?'}</span>
+                        </div>
+                        <div class="metric-row">
+                            <span class="metric-name">Total LOC</span>
+                            <span class="metric-value">${vanilla.metrics?.total_loc || '?'}</span>
+                        </div>
+                    </div>
+                    <div class="comparison-col cco">
+                        <h4>CCO (After)</h4>
+                        <div class="metric-row">
+                            <span class="metric-name">Overall Score</span>
+                            <span class="metric-value">${cco.metrics?.overall_score || cco.ai_analysis?.overall_score || '?'}</span>
+                        </div>
+                        <div class="metric-row">
+                            <span class="metric-name">Grade</span>
+                            <span class="metric-value">${cco.metrics?.grade || cco.ai_analysis?.grade || '?'}</span>
+                        </div>
+                        <div class="metric-row">
+                            <span class="metric-name">Total LOC</span>
+                            <span class="metric-value">${cco.metrics?.total_loc || '?'}</span>
+                        </div>
+                    </div>
+                </div>
+            `;
+
+            // AI Analysis comparison if available
+            if (comparison.ai_comparison) {
+                const aiComp = comparison.ai_comparison;
+                html += `
+                    <h4 style="margin: 20px 0 15px;">AI Analysis Dimensions</h4>
+                    <div style="font-size: 12px; color: var(--text-muted); margin-bottom: 10px;">
+                        CCO wins: ${aiComp.cco_wins || 0} | Vanilla wins: ${aiComp.vanilla_wins || 0} | Ties: ${aiComp.ties || 0}
+                    </div>
+                `;
+                if (aiComp.dimension_breakdown) {
+                    html += '<div style="display: grid; gap: 8px;">';
+                    aiComp.dimension_breakdown.forEach(d => {
+                        const winner = d.winner;
+                        const borderColor = winner === 'cco' ? 'var(--cco)' :
+                                           winner === 'vanilla' ? 'var(--vanilla)' : 'var(--text-muted)';
                         html += `
-                            <div style="background: var(--bg-tertiary); padding: 12px 16px; border-radius: 8px; border-left: 3px solid ${winnerColor};">
-                                <div style="display: flex; align-items: center; gap: 10px; margin-bottom: 6px;">
-                                    <span style="font-weight: 600; color: var(--text);">${escapeHtml(item.topic)}</span>
-                                    <span style="font-size: 11px; padding: 2px 8px; border-radius: 4px; background: ${winnerColor}20; color: ${winnerColor};">${winnerBadge}</span>
+                            <div style="background: var(--bg-tertiary); padding: 8px 12px; border-radius: 6px; border-left: 3px solid ${borderColor};">
+                                <div style="display: flex; justify-content: space-between; align-items: center;">
+                                    <span style="font-size: 12px;">${d.dimension.replace(/_/g, ' ')}</span>
+                                    <div style="display: flex; gap: 15px; font-size: 12px;">
+                                        <span style="color: var(--vanilla);">V: ${d.vanilla_score}</span>
+                                        <span style="color: var(--cco);">C: ${d.cco_score}</span>
+                                        <span style="color: ${d.improvement > 0 ? 'var(--success)' : d.improvement < 0 ? 'var(--error)' : 'var(--text-muted)'};">
+                                            ${d.improvement > 0 ? '+' : ''}${d.improvement}
+                                        </span>
+                                    </div>
                                 </div>
-                                <div style="font-size: 13px; color: var(--text-muted); line-height: 1.5;">${escapeHtml(item.insight)}</div>
                             </div>
                         `;
                     });
-                    html += '</div></div>';
-                }
-
-                // Show blind assignment mapping (A/B = CCO/Vanilla)
-                const blindAssignment = comparison?.blind_assignment || '';
-                if (blindAssignment) {
-                    const ccoIsA = blindAssignment === 'cco=a';
-                    html += `
-                        <div style="display: flex; gap: 12px; margin-bottom: 16px; font-size: 12px;">
-                            <span style="padding: 4px 10px; border-radius: 4px; background: var(--cco)20; color: var(--cco);">
-                                ${ccoIsA ? 'A' : 'B'} = CCO
-                            </span>
-                            <span style="padding: 4px 10px; border-radius: 4px; background: var(--vanilla)20; color: var(--vanilla);">
-                                ${ccoIsA ? 'B' : 'A'} = Vanilla
-                            </span>
-                            <span style="color: var(--text-muted);">🎭 Blind evaluation</span>
-                        </div>
-                    `;
-                }
-
-                // Show recommendation (or analysis for backwards compatibility)
-                const analysisText = comparison?.recommendation || comparison?.analysis || aiData.executive_summary_text;
-                if (analysisText && typeof analysisText === 'string') {
-                    html += `<div style="background: var(--bg-tertiary); padding: 16px; border-radius: 8px; font-size: 14px; line-height: 1.6; white-space: pre-wrap;">${escapeHtml(analysisText)}</div>`;
-                }
-
-                // AI Dimension Breakdown
-                const dimBreakdown = comparison?.dimension_breakdown;
-                if (dimBreakdown && dimBreakdown.length > 0) {
-                    html += '<div style="margin-top: 20px;">';
-                    html += '<div style="font-weight: 600; margin-bottom: 12px; color: var(--text-muted);">📊 Dimension Breakdown</div>';
-                    html += '<div class="dimensions-grid">';
-
-                    const dimensionNames = {
-                        functional_completeness: 'Functional',
-                        correctness_robustness: 'Correctness',
-                        architecture: 'Architecture',
-                        code_quality: 'Code Quality',
-                        security: 'Security',
-                        type_safety: 'Type Safety',
-                        testing: 'Testing',
-                        maintainability: 'Maintainability',
-                        performance: 'Performance',
-                        best_practices: 'Best Practices'
-                    };
-
-                    dimBreakdown.forEach(dim => {
-                        const ccoScore = dim.cco_score ?? 0;
-                        const vanillaScore = dim.vanilla_score ?? 0;
-                        const diff = dim.diff ?? (ccoScore - vanillaScore);
-                        const diffColor = diff > 0 ? 'var(--success)' : diff < 0 ? 'var(--error)' : 'var(--text-muted)';
-                        const diffSign = diff > 0 ? '+' : '';
-                        const winnerColor = dim.winner === 'cco' ? 'var(--cco)' : dim.winner === 'vanilla' ? 'var(--vanilla)' : 'var(--text-muted)';
-
-                        html += `
-                            <div class="dimension-card" style="border-left: 3px solid ${winnerColor};">
-                                <div class="dimension-header">
-                                    <span class="dimension-name">${dimensionNames[dim.dimension] || dim.dimension}</span>
-                                    <div class="dimension-scores">
-                                        <span style="color: var(--cco)">${ccoScore}</span>
-                                        <span style="color: var(--text-muted)">vs</span>
-                                        <span style="color: var(--vanilla)">${vanillaScore}</span>
-                                        <span style="color: ${diffColor}">(${diffSign}${diff})</span>
-                                    </div>
-                                </div>
-                                <div class="dim-score-bar" style="display: flex; gap: 4px;">
-                                    <div style="flex: 1; background: var(--bg); border-radius: 3px; overflow: hidden;">
-                                        <div class="dim-score-fill cco" style="width: ${ccoScore}%"></div>
-                                    </div>
-                                    <div style="flex: 1; background: var(--bg); border-radius: 3px; overflow: hidden;">
-                                        <div class="dim-score-fill vanilla" style="width: ${vanillaScore}%"></div>
-                                    </div>
-                                </div>
-                                <div style="font-size: 11px; color: var(--text-muted); margin-top: 4px;">Weight: ${dim.weight}%</div>
-                            </div>
-                        `;
-                    });
-
-                    html += '</div></div>';
+                    html += '</div>';
                 }
             }
 
-            // Report metadata
-            const timestamp = staticData?.timestamp || aiData?.timestamp;
-            if (timestamp) {
-                html += `<div style="margin-top: 20px; padding-top: 16px; border-top: 1px solid var(--border); font-size: 12px; color: var(--text-muted);">
-                    📅 ${new Date(timestamp).toLocaleString()}
-                </div>`;
+            // Timestamp
+            if (result.timestamp) {
+                html += `
+                    <div class="report-meta">
+                        <span>📅 ${new Date(result.timestamp).toLocaleString()}</span>
+                    </div>
+                `;
             }
 
-            html += '</div>';
             document.getElementById('modal-body').innerHTML = html;
         }
 
-        async function deleteReport(projectId, projectName) {
-            if (!confirm(`Delete all reports for "${projectName}"?\n\nThis action cannot be undone.`)) {
-                return;
-            }
+        async function deleteBenchmarkResult(filename) {
+            if (!confirm(`Delete result "${filename}"?`)) return;
 
             try {
-                const resp = await fetch(`/api/reports/${encodeURIComponent(projectId)}`, {
-                    method: 'DELETE'
-                });
-
-                if (!resp.ok) {
-                    const error = await resp.json();
-                    throw new Error(error.detail || 'Failed to delete reports');
-                }
-
-                const result = await resp.json();
-                // Refresh reports list
-                loadReports();
+                await fetch(`/api/results/${filename}`, { method: 'DELETE' });
+                loadBenchmarkResults();
             } catch (e) {
-                alert('Failed to delete reports: ' + e.message);
+                alert('Failed to delete result: ' + e.message);
             }
         }
 
@@ -3096,10 +3044,11 @@
         async function init() {
             await checkSystemStatus();
             await checkRunningTests();
-            loadProjects();
+            await loadProjects();
             loadOutput();
             loadActivity();
-            updateRunButton();
+            loadBenchmarkResults();
+            updateBenchmarkButton();
 
             // Poll system status periodically
             setInterval(checkSystemStatus, 10000);

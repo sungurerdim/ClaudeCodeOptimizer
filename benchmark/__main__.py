@@ -204,11 +204,11 @@ def cli_summary():
     )
 
 
-def start_server():
+def start_server(port: int = 8765):
     """Start the web UI server."""
     from .app.server import main
 
-    main()
+    main(port=port)
 
 
 def main():
@@ -249,7 +249,7 @@ Examples:
     elif args.summary:
         cli_summary()
     else:
-        start_server()
+        start_server(port=args.port)
 
 
 if __name__ == "__main__":

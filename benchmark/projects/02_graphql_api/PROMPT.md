@@ -13,6 +13,7 @@ Build a GraphQL API for task management using Python and Strawberry.
 3. **Write working code** - All queries and mutations must be functional
 4. **Include tests** - Test coverage for core functionality
 5. **Handle errors gracefully** - Proper GraphQL error responses
+6. **No slash commands** - Do NOT use `/help`, `/commit`, or any `/` commands (not available in this execution mode)
 
 **Prioritized execution order:**
 1. Project structure and database setup

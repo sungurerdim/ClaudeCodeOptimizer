@@ -13,6 +13,7 @@ Build a responsive analytics dashboard using React and TypeScript.
 3. **Write working code** - All components must render and function
 4. **Include tests** - Test coverage for main user flows
 5. **Handle errors gracefully** - Error boundaries and fallback UI
+6. **No slash commands** - Do NOT use `/help`, `/commit`, or any `/` commands (not available in this execution mode)
 
 **Prioritized execution order:**
 1. Project setup (Vite, TypeScript, Tailwind)

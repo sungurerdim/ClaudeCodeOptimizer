@@ -13,6 +13,7 @@ Build a machine learning model serving pipeline for text classification.
 3. **Write working code** - All endpoints must be functional
 4. **Include tests** - Test coverage for core functionality
 5. **Handle errors gracefully** - Proper error responses and logging
+6. **No slash commands** - Do NOT use `/help`, `/commit`, or any `/` commands (not available in this execution mode)
 
 **Prioritized execution order:**
 1. Project structure and configuration

@@ -6,10 +6,10 @@
 
 | Category     | Rules    | Location                           | Loading       |
 |--------------|----------|------------------------------------|---------------|
-| Core         | 87       | `~/.claude/rules/cco/core.md`      | Always active |
-| AI           | 61       | `~/.claude/rules/cco/ai.md`        | Always active |
-| Adaptive     | 1563     | pip package → `.claude/rules/cco/` | Per-project   |
-| **Total**    | **1711** |                                    |               |
+| Core         | 141      | `rules/core.md`                    | Always active |
+| AI           | 68       | `rules/ai.md`                      | Always active |
+| Adaptive     | 1155     | `rules/*.md` (60 files)            | Per-project   |
+| **Total**    | **1364** |                                    |               |
 
 *Note: Tool rules (workflow mechanisms) are embedded directly in command/agent templates.*
 
@@ -23,20 +23,20 @@
 ┌─────────────────────────────────────────────────────────────────┐
 │  ALWAYS ACTIVE (Core + AI Rules)                                │
 ├─────────────────────────────────────────────────────────────────┤
-│  Core         - All projects, AI/human agnostic                 │
-│  AI           - All AI assistants, model agnostic               │
-│  Installed to: ~/.claude/rules/cco/ (auto-loaded to context)    │
+│  Core         - All projects, AI/human agnostic (141 rules)     │
+│  AI           - All AI assistants, model agnostic (68 rules)    │
+│  Location:    rules/core.md, rules/ai.md                        │
 ├─────────────────────────────────────────────────────────────────┤
-│  ON-DEMAND (Adaptive Rules)                                     │
+│  ADAPTIVE (Per-Project Rules)                                   │
 ├─────────────────────────────────────────────────────────────────┤
-│  Adaptive     - Project-specific rules template (1563 rules)    │
-│  Location:    pip package (NOT in rules/ to avoid context bloat)│
-│  Access via:  cco-install --cat rules/cco-adaptive.md           │
+│  Languages    - 27 language-specific rule files                 │
+│  Domains      - 35 domain-specific rule files                   │
+│  Location:    rules/*.md (60 files, 1155 rules)                 │
 ├─────────────────────────────────────────────────────────────────┤
-│  DYNAMICALLY GENERATED (Per-Project Rules)                      │
+│  DYNAMICALLY GENERATED (Project Context)                        │
 ├─────────────────────────────────────────────────────────────────┤
-│  Selected by: /cco-config → cco-agent-analyze                   │
-│  Written to:  .claude/rules/cco/{category}.md                   │
+│  Selected by: /cco-config based on stack detection              │
+│  Written to:  .claude/cco.md (@imports relevant rules)          │
 └─────────────────────────────────────────────────────────────────┘
 ```
 

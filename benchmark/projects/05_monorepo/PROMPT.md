@@ -13,6 +13,7 @@ Build a monorepo containing a UI component library with documentation site.
 3. **Write working code** - All components must render and function
 4. **Include tests** - Test coverage for each package
 5. **Handle errors gracefully** - Proper TypeScript types throughout
+6. **No slash commands** - Do NOT use `/help`, `/commit`, or any `/` commands (not available in this execution mode)
 
 **Prioritized execution order:**
 1. Monorepo setup (pnpm, Turborepo)

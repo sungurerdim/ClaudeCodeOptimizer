@@ -5,6 +5,7 @@ from __future__ import annotations
 import json
 import logging
 import random
+import re
 import subprocess
 import threading
 import time
@@ -321,46 +322,43 @@ def parse_variant(data: dict[str, Any]) -> VariantResult:
     )
 
 
-def calculate_verdict(cco_score: int, vanilla_score: int) -> tuple[str, str, str]:
+def calculate_ai_verdict(cco_score: int, vanilla_score: int) -> tuple[str, str, str]:
     """
-    Calculate winner, margin, and verdict from scores.
+    Calculate winner, margin, and verdict from scores for AI comparison.
+
+    Note: This is separate from metrics.calculate_verdict() which takes a single
+    score_diff and returns only a verdict string. This function is specific to
+    AI evaluation and returns a tuple with winner, margin, and verdict.
 
     Returns:
         (winner, margin, verdict) tuple
     """
     diff = cco_score - vanilla_score
+    abs_diff = abs(diff)
 
-    if abs(diff) < 3:
+    if abs_diff < 3:
         return "tie", "negligible", "Essentially Equal"
-    elif abs(diff) < 8:
+
+    # Determine margin based on score difference thresholds
+    if abs_diff < 8:
         margin = "slight"
-    elif abs(diff) < 15:
+    elif abs_diff < 15:
         margin = "moderate"
-    elif abs(diff) < 25:
+    elif abs_diff < 25:
         margin = "significant"
     else:
         margin = "decisive"
 
-    if diff > 0:
-        winner = "cco"
-        if margin == "slight":
-            verdict = "Slight CCO Advantage"
-        elif margin == "moderate":
-            verdict = "Moderate CCO Advantage"
-        elif margin == "significant":
-            verdict = "Significant CCO Advantage"
-        else:
-            verdict = "Strong CCO Advantage"
-    else:
-        winner = "vanilla"
-        if margin == "slight":
-            verdict = "Slight Vanilla Advantage"
-        elif margin == "moderate":
-            verdict = "Moderate Vanilla Advantage"
-        elif margin == "significant":
-            verdict = "Significant Vanilla Advantage"
-        else:
-            verdict = "Strong Vanilla Advantage"
+    # Build verdict from margin and winner
+    winner = "cco" if diff > 0 else "vanilla"
+    winner_label = "CCO" if diff > 0 else "Vanilla"
+    verdict_prefix = {
+        "slight": "Slight",
+        "moderate": "Moderate",
+        "significant": "Significant",
+        "decisive": "Strong",
+    }
+    verdict = f"{verdict_prefix[margin]} {winner_label} Advantage"
 
     return winner, margin, verdict
 
@@ -410,18 +408,27 @@ def parse_ai_response(response: str, cco_is_a: bool) -> AIComparisonResult:
     cleaned = extract_ai_content(response)
 
     try:
-        # Remove markdown code blocks if present
-        if cleaned.startswith("```"):
+        # Remove markdown code blocks if present (handles ```json or ``` anywhere)
+        # Pattern to match ```json ... ``` or ``` ... ``` blocks
+        code_block_pattern = r"```(?:json)?\s*\n?([\s\S]*?)\n?```"
+        code_block_match = re.search(code_block_pattern, cleaned)
+        if code_block_match:
+            cleaned = code_block_match.group(1).strip()
+        elif cleaned.startswith("```"):
+            # Fallback: simple line-based extraction
             lines = cleaned.split("\n")
             start = 1 if lines[0].startswith("```") else 0
             end = -1 if lines[-1].strip() == "```" else len(lines)
             cleaned = "\n".join(lines[start:end])
 
-        # Find JSON object boundaries
+        # Find JSON object boundaries (handles text before/after JSON)
         start_idx = cleaned.find("{")
         end_idx = cleaned.rfind("}") + 1
         if start_idx >= 0 and end_idx > start_idx:
             cleaned = cleaned[start_idx:end_idx]
+        else:
+            # No JSON found at all
+            raise json.JSONDecodeError("No JSON object found in response", cleaned, 0)
 
         data = json.loads(cleaned)
 
@@ -480,9 +487,9 @@ def parse_ai_response(response: str, cco_is_a: bool) -> AIComparisonResult:
                 )
             )
 
-        # Calculate overall verdict from weighted scores
-        result.score_difference = int(cco_weighted_total - vanilla_weighted_total)
-        result.winner, result.margin, result.verdict = calculate_verdict(
+        # Calculate overall verdict from already-rounded scores for UI consistency
+        result.score_difference = result.cco.overall_score - result.vanilla.overall_score
+        result.winner, result.margin, result.verdict = calculate_ai_verdict(
             int(cco_weighted_total), int(vanilla_weighted_total)
         )
 
@@ -647,6 +654,7 @@ def run_ai_comparison(
     try:
         # Run ccbox from the output directory in vanilla/bare mode
         # Using same parameters as executor for consistency:
+        # -U: unrestricted mode (no CPU/I/O soft limits for benchmarking)
         # -y: unattended mode (deps=ALL, stack=auto-detect, no prompts)
         # -dd: debug logging (stream output)
         # -C: working directory
@@ -655,6 +663,7 @@ def run_ai_comparison(
         # -p: prompt (also enables --print mode for non-interactive)
         cmd = [
             "ccbox",
+            "-U",  # Unrestricted mode for consistent benchmarking
             "-y",
             "-dd",
             "-C",
@@ -688,20 +697,27 @@ def run_ai_comparison(
         stderr_lines: list[str] = []
         lock = threading.Lock()
 
-        def read_stream(stream: Any, buffer: list[str], prefix: str) -> None:
-            """Read stream and log lines."""
+        def read_stream(stream: Any, buffer: list[str], stream_name: str) -> None:
+            """Read stream and log lines.
+
+            Preserves original line endings for accurate output reconstruction.
+            """
             try:
                 for line in iter(stream.readline, ""):
                     if not line:
                         break
-                    line = line.rstrip()
                     with lock:
-                        buffer.append(line)
-                    # Log each line with AI prefix
-                    if line.strip():
-                        logger.info(f"[AI] {line[:200]}")
-            except Exception:
-                pass
+                        buffer.append(line)  # Preserve original newlines
+                    # Log each line with AI prefix (stripped for display)
+                    line_stripped = line.rstrip()
+                    if line_stripped:
+                        # stderr logged as error, stdout as info
+                        if stream_name == "stderr":
+                            logger.error(f"[AI] {line_stripped[:200]}")
+                        else:
+                            logger.info(f"[AI] {line_stripped[:200]}")
+            except Exception as e:
+                logger.debug(f"Stream read error ({stream_name}): {e}")
 
         # Start reader threads
         stdout_thread = threading.Thread(
@@ -727,8 +743,9 @@ def run_ai_comparison(
         stderr_thread.join(timeout=5)
 
         duration = time.time() - start_time
-        stdout = "\n".join(stdout_lines)
-        stderr = "\n".join(stderr_lines)
+        # Join without adding extra newlines (lines already have them)
+        stdout = "".join(stdout_lines)
+        stderr = "".join(stderr_lines)
 
         if process.returncode != 0:
             error_parts = []
@@ -773,3 +790,283 @@ def run_ai_comparison(
     except Exception as e:
         logger.exception("AI comparison failed")
         return AIComparisonResult(error=f"AI evaluation failed: {e}")
+
+
+# =============================================================================
+# V2 Single Variant Analysis (for new benchmark flow)
+# =============================================================================
+
+SINGLE_VARIANT_PROMPT_FILE = "single-variant-prompt.md"
+
+
+def run_single_variant_ai_analysis(
+    project_id: str,
+    variant_dir: Path,
+    variant: str,
+    original_prompt: str,
+    suite_dir: Path,
+    timeout: int = 600,
+) -> dict[str, Any]:
+    """
+    Run AI-powered analysis of a SINGLE variant (not comparison).
+
+    This is used in the new V2 benchmark flow where vanilla and CCO are
+    analyzed independently, then compared using pre-computed results.
+
+    Uses the same 10-dimension evaluation framework but for one implementation.
+    Returns scores, evidence, anti-patterns, best practices for that variant.
+
+    Args:
+        project_id: The project identifier
+        variant_dir: Path to the variant output directory
+        variant: "vanilla" or "cco"
+        original_prompt: The original prompt used to generate the code
+        suite_dir: Path to benchmark suite directory
+        timeout: Timeout in seconds for ccbox execution
+
+    Returns:
+        Dict with dimension scores, overall_score, grade, strengths, weaknesses
+    """
+    if not variant_dir.exists():
+        return {"error": f"Variant directory not found: {variant_dir}", "overall_score": 0}
+
+    # Load single variant prompt content
+    prompt_path = suite_dir / SINGLE_VARIANT_PROMPT_FILE
+    if not prompt_path.exists():
+        # Fall back to generating inline prompt if file doesn't exist
+        logger.warning(f"Single variant prompt not found: {prompt_path}, using inline prompt")
+        analysis_prompt = _generate_inline_single_variant_prompt()
+    else:
+        try:
+            analysis_prompt = prompt_path.read_text(encoding="utf-8")
+        except Exception as e:
+            return {"error": f"Failed to read single variant prompt: {e}", "overall_score": 0}
+
+    # Write the prompt to the variant directory for reference
+    prompt_dest = variant_dir / "_analysis_prompt.md"
+    try:
+        prompt_dest.write_text(analysis_prompt, encoding="utf-8")
+    except Exception as e:
+        logger.warning(f"Failed to write analysis prompt: {e}")
+
+    # Short prompt for ccbox
+    short_prompt = (
+        "Analyze the code in this directory using _analysis_prompt.md. "
+        "Original task: _benchmark_prompt.md"
+    )
+
+    try:
+        # Run ccbox in vanilla/bare mode for unbiased analysis
+        cmd = [
+            "ccbox",
+            "-U",  # Unrestricted mode
+            "-y",  # Unattended mode
+            "-dd",  # Debug logging
+            "-C", str(variant_dir),
+            "--bare",  # No CCO rules (unbiased)
+            "-m", "opus",
+            "-p", short_prompt,
+        ]
+
+        logger.info(f"Running AI analysis for {project_id}/{variant}")
+        start_time = time.time()
+
+        # Use Popen for streaming
+        process = subprocess.Popen(
+            cmd,
+            cwd=str(variant_dir),
+            stdin=subprocess.DEVNULL,
+            stdout=subprocess.PIPE,
+            stderr=subprocess.PIPE,
+            text=True,
+            encoding="utf-8",
+            errors="replace",
+        )
+
+        # Collect output with streaming
+        stdout_lines: list[str] = []
+        stderr_lines: list[str] = []
+        lock = threading.Lock()
+
+        def read_stream(stream: Any, buffer: list[str], stream_name: str) -> None:
+            try:
+                for line in iter(stream.readline, ""):
+                    if not line:
+                        break
+                    with lock:
+                        buffer.append(line)
+                    line_stripped = line.rstrip()
+                    if line_stripped:
+                        if stream_name == "stderr":
+                            logger.error(f"[AI:{variant}] {line_stripped[:200]}")
+                        else:
+                            logger.info(f"[AI:{variant}] {line_stripped[:200]}")
+            except Exception as e:
+                logger.debug(f"Stream read error ({stream_name}): {e}")
+
+        stdout_thread = threading.Thread(
+            target=read_stream, args=(process.stdout, stdout_lines, "stdout"), daemon=True
+        )
+        stderr_thread = threading.Thread(
+            target=read_stream, args=(process.stderr, stderr_lines, "stderr"), daemon=True
+        )
+        stdout_thread.start()
+        stderr_thread.start()
+
+        try:
+            process.wait(timeout=timeout)
+        except subprocess.TimeoutExpired:
+            process.kill()
+            return {"error": f"AI analysis timed out after {timeout}s", "overall_score": 0}
+
+        stdout_thread.join(timeout=5)
+        stderr_thread.join(timeout=5)
+
+        duration = time.time() - start_time
+        stdout = "".join(stdout_lines)
+
+        if process.returncode != 0:
+            stderr = "".join(stderr_lines)
+            return {
+                "error": f"ccbox exited with code {process.returncode}",
+                "stderr": stderr[:500],
+                "overall_score": 0,
+            }
+
+        # Parse the response
+        result = _parse_single_variant_response(stdout)
+        result["duration_seconds"] = round(duration, 1)
+        result["variant"] = variant
+        result["project_id"] = project_id
+
+        logger.info(
+            f"AI analysis complete for {project_id}/{variant}: "
+            f"score={result.get('overall_score', 0)}, grade={result.get('grade', '?')}, "
+            f"duration={duration:.1f}s"
+        )
+        return result
+
+    except FileNotFoundError:
+        return {"error": "ccbox command not found", "overall_score": 0}
+    except Exception as e:
+        logger.exception(f"AI analysis failed for {project_id}/{variant}")
+        return {"error": f"AI analysis failed: {e}", "overall_score": 0}
+
+
+def _parse_single_variant_response(response: str) -> dict[str, Any]:
+    """Parse the AI response for single variant analysis."""
+    result: dict[str, Any] = {
+        "overall_score": 0,
+        "grade": "?",
+        "strengths": [],
+        "weaknesses": [],
+        "anti_patterns_found": [],
+    }
+
+    # Extract actual content from stream-json or other formats
+    cleaned = extract_ai_content(response)
+
+    try:
+        # Remove markdown code blocks if present
+        code_block_pattern = r"```(?:json)?\s*\n?([\s\S]*?)\n?```"
+        code_block_match = re.search(code_block_pattern, cleaned)
+        if code_block_match:
+            cleaned = code_block_match.group(1).strip()
+
+        # Find JSON object boundaries
+        start_idx = cleaned.find("{")
+        end_idx = cleaned.rfind("}") + 1
+        if start_idx >= 0 and end_idx > start_idx:
+            cleaned = cleaned[start_idx:end_idx]
+        else:
+            result["error"] = "No JSON object found in response"
+            result["raw_response"] = response[:2000]
+            return result
+
+        data = json.loads(cleaned)
+
+        # Parse dimension scores
+        for dim_name, _weight in DIMENSIONS:
+            dim_data = data.get(dim_name, {})
+            if isinstance(dim_data, dict):
+                result[dim_name] = {
+                    "score": int(dim_data.get("score", 0)),
+                    "evidence": str(dim_data.get("evidence", dim_data.get("notes", ""))),
+                }
+            else:
+                result[dim_name] = {"score": 0, "evidence": ""}
+
+        # Calculate weighted overall score
+        total = 0.0
+        for dim_name, weight in DIMENSIONS:
+            dim_score = result.get(dim_name, {}).get("score", 0)
+            total += dim_score * weight
+        result["overall_score"] = int(round(total / 100))
+
+        # Calculate grade
+        result["grade"] = calculate_grade(result["overall_score"])
+
+        # Parse additional fields
+        result["strengths"] = list(data.get("strengths", []))[:5]
+        result["weaknesses"] = list(data.get("weaknesses", []))[:5]
+        result["anti_patterns_found"] = list(data.get("anti_patterns_found", []))[:10]
+        result["language_detected"] = data.get("language_detected", "Unknown")
+
+    except json.JSONDecodeError as e:
+        result["error"] = f"Failed to parse AI response: {e}"
+        result["raw_response"] = cleaned[:2000]
+    except Exception as e:
+        result["error"] = f"Error processing response: {e}"
+        result["raw_response"] = cleaned[:2000] if cleaned else response[:2000]
+
+    return result
+
+
+def _generate_inline_single_variant_prompt() -> str:
+    """Generate an inline prompt for single variant analysis when file is missing."""
+    dimensions_text = "\n".join(
+        f"- {dim} (weight: {weight}%)" for dim, weight in DIMENSIONS
+    )
+    return f"""# Single Implementation Code Analysis
+
+Analyze the code in this directory and evaluate it across 10 dimensions.
+
+## Instructions
+
+1. Read ALL code files in this directory
+2. Evaluate each dimension on a 0-100 scale
+3. Provide evidence for each score (file:line references)
+4. Identify strengths and weaknesses
+5. List any anti-patterns found
+
+## Evaluation Dimensions (with weights)
+
+{dimensions_text}
+
+## Output Format
+
+Return a single JSON object (no markdown code blocks):
+
+{{
+  "language_detected": "Python/TypeScript/Go/etc",
+  "functional_completeness": {{"score": 85, "evidence": "Implements 8/10 requirements. Missing X at file:line"}},
+  "correctness_robustness": {{"score": 80, "evidence": "Good error handling at file:line"}},
+  "architecture": {{"score": 75, "evidence": "Clean separation at file:line"}},
+  "code_quality": {{"score": 80, "evidence": "Readable code, good naming"}},
+  "security": {{"score": 70, "evidence": "Input validation at file:line"}},
+  "type_safety": {{"score": 85, "evidence": "Strong typing at file:line"}},
+  "testing": {{"score": 60, "evidence": "Basic tests at file:line"}},
+  "maintainability": {{"score": 75, "evidence": "Modular structure"}},
+  "performance": {{"score": 80, "evidence": "Efficient algorithms"}},
+  "best_practices": {{"score": 75, "evidence": "Modern patterns used"}},
+  "strengths": ["Clean architecture", "Good test coverage"],
+  "weaknesses": ["Missing input validation", "No error handling in X"],
+  "anti_patterns_found": ["Bare except at file:line", "God class at file:line"]
+}}
+
+CRITICAL:
+- Output ONLY the JSON object, no other text
+- Do NOT wrap in markdown code blocks
+- Score each dimension 0-100 based on evidence
+- Reference specific files and line numbers
+"""

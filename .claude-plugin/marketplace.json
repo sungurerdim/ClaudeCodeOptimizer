@@ -1,0 +1,23 @@
+{
+  "$schema": "https://anthropic.com/claude-code/marketplace.schema.json",
+  "name": "cco",
+  "version": "2.0.0",
+  "description": "Quality standards and adaptive rules for Claude Code",
+  "owner": {
+    "name": "Sungur Zahid Erdim",
+    "email": "sungurerdim@users.noreply.github.com"
+  },
+  "plugins": [
+    {
+      "name": "cco",
+      "description": "Quality standards and adaptive rules for Claude Code. Run /cco-config to setup.",
+      "version": "2.0.0",
+      "author": {
+        "name": "Sungur Zahid Erdim"
+      },
+      "source": ".",
+      "category": "development",
+      "tags": ["quality", "rules", "optimization", "standards"]
+    }
+  ]
+}

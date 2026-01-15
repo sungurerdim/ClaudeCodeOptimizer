@@ -1,5 +1,7 @@
 # Blind Code Comparison - Universal Evaluation
 
+**⚠️ OUTPUT FORMAT: Return ONLY a valid JSON object. No markdown, no explanation, no commentary. Start with `{` and end with `}`.**
+
 You are a senior software engineer performing a **blind evaluation** of two implementations.
 You do NOT know which implementation used any specific tools or configurations.
 Evaluate ONLY based on the code quality you observe.
@@ -27,7 +29,7 @@ This evaluation system is **universal** - it applies equally to:
 - Asking questions to the user
 - Requesting clarification or confirmation
 - Pausing for approval
-- Outputting explanatory text before/after JSON
+- Outputting explanatory text before/after JSON (NO markdown code blocks!)
 - Leaving any dimension with empty evidence
 
 ---
@@ -661,27 +663,27 @@ Return ONLY a JSON object. No markdown code fences. No text before or after.
       {
         "topic": "Security",
         "winner": "b",
-        "insight": "B has rate limiting and comprehensive input validation, reducing attack surface by ~40%. A lacks CSRF protection, making it vulnerable to cross-site attacks."
+        "insight": "B: rate limiting + input validation → ~40% smaller attack surface. A: missing CSRF protection."
       },
       {
         "topic": "Reliability",
         "winner": "b",
-        "insight": "B implements retry logic with exponential backoff and circuit breakers. Under high load, A would cascade failures while B recovers gracefully."
+        "insight": "B: retry + exponential backoff + circuit breakers. A: cascade failures under load."
       },
       {
         "topic": "Maintainability",
         "winner": "b",
-        "insight": "B's strict typing catches ~30% more bugs at compile time. A's Any types allow runtime errors that B prevents statically."
+        "insight": "B: strict typing catches ~30% more bugs at compile time. A: Any types → runtime errors."
       },
       {
         "topic": "Completeness",
         "winner": "b",
-        "insight": "B implements all 10 requirements including pagination. A missing pagination means users can't browse large datasets efficiently."
+        "insight": "B: all 10 requirements met. A: missing pagination → large datasets unusable."
       },
       {
         "topic": "Production Readiness",
         "winner": "b",
-        "insight": "B has health checks, structured logging, and graceful shutdown. A would need 2-3 weeks of work before safe production deployment."
+        "insight": "B: health checks + logging + graceful shutdown. A: needs significant work before deployment."
       }
     ],
     "recommendation": "Implementation B is better overall. Complete features, stronger type safety, and better error handling. The slight over-engineering in DI is acceptable given the benefits. B is production-ready while A requires significant work on logging, health checks, and security."
@@ -703,7 +705,7 @@ Return ONLY a JSON object. No markdown code fences. No text before or after.
 8. **COMPLETE AUTONOMOUSLY** - Do not ask questions or pause
 9. **EVALUATE PRODUCTION-READINESS** - Check security, testing, performance, operations
 10. **CHECK PRINCIPLES** - Evaluate DRY, YAGNI, SOLID, KISS compliance
-11. **EXECUTIVE SUMMARY** - Provide exactly 5 practical insights explaining what each difference means in real-world terms (security risks, performance impact, reliability under load, maintenance burden, etc.)
+11. **EXECUTIVE SUMMARY** - Provide exactly 5 bullet-point style insights. Format: "Winner: key feature → impact. Loser: gap/issue." Keep each insight under 100 characters, direct and scannable.
 
 **Production-Grade Evaluation (MANDATORY):**
 - Security: Check OWASP Top 10, secrets management, input validation
@@ -717,4 +719,9 @@ Return ONLY a JSON object. No markdown code fences. No text before or after.
 - Non-empty evidence with file:line references
 - If something is "not applicable", explain why and score based on what IS present
 
-**Return ONLY the JSON object. No other text.**
+**⚠️ FINAL OUTPUT INSTRUCTION:**
+- Return ONLY the JSON object
+- Do NOT wrap in markdown code blocks (no \`\`\`json)
+- Do NOT add any text before or after the JSON
+- Start your response with `{` and end with `}`
+- This is a strict requirement for automated parsing

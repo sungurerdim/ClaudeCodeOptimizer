@@ -1,9 +1,7 @@
-# ClaudeCodeOptimizer (CCO)
+# Claude Code Optimizer (CCO)
 
-[![PyPI](https://img.shields.io/pypi/v/claudecodeoptimizer.svg)](https://pypi.org/project/claudecodeoptimizer/)
-[![Python 3.10+](https://img.shields.io/badge/python-3.10+-blue.svg)](https://www.python.org/downloads/)
 [![License: MIT](https://img.shields.io/badge/license-MIT-green.svg)](LICENSE)
-[![Claude Code 2.0+](https://img.shields.io/badge/Claude_Code-2.0+-00A67E.svg)](https://github.com/anthropics/claude-code)
+[![Claude Code Plugin](https://img.shields.io/badge/Claude_Code-Plugin-00A67E.svg)](https://github.com/anthropics/claude-code)
 
 **Safety, quality, and decision layer for Claude Code.**
 
@@ -27,42 +25,23 @@ Same prompts, better outcomes. Fewer errors, fewer rollbacks, more consistent re
 ## Install
 
 ```bash
-pip install claudecodeoptimizer && cco-install
+/plugin marketplace add sungurerdim/ClaudeCodeOptimizer
+/plugin install cco
 ```
 
 **Restart Claude Code** to load the new commands.
 
-<details>
-<summary>Alternative installation methods</summary>
+### Update
 
 ```bash
-# Isolated (pipx)
-pipx install claudecodeoptimizer && cco-install
-
-# Upgrade
-pip install -U claudecodeoptimizer && cco-install
-
-# Uninstall
-cco-uninstall
-
-# Preview changes before installing
-cco-install --dry-run
+/plugin marketplace update
 ```
 
-</details>
+### Uninstall
 
----
-
-## What Gets Installed
-
-| Component | Location | Purpose |
-|-----------|----------|---------|
-| 8 commands | `~/.claude/commands/` | `/cco-config`, `/cco-status`, etc. |
-| 3 agents | `~/.claude/agents/` | Analyze, Apply, Research |
-| 148 rules | `~/.claude/rules/cco/` | Core (87) + AI (61) patterns |
-| Statusline | `~/.claude/settings.json` | Project info in Claude Code |
-
-**Your project files are not modified.** CCO only touches `~/.claude/` (global) and `.claude/rules/cco/` (per-project, after `/cco-config`).
+```bash
+/plugin uninstall cco
+```
 
 ---
 
@@ -74,7 +53,7 @@ cco-install --dry-run
 /cco-config
 ```
 
-Auto-detects your stack and generates project-specific rules.
+Auto-detects your stack (language, framework, database, tools) and generates project-specific rules.
 
 ### 2. Check Health
 
@@ -82,7 +61,7 @@ Auto-detects your stack and generates project-specific rules.
 /cco-status
 ```
 
-See security, quality, and hygiene scores.
+See security, quality, and hygiene scores for your codebase.
 
 ### 3. Fix Issues
 
@@ -90,7 +69,25 @@ See security, quality, and hygiene scores.
 /cco-optimize
 ```
 
-Security + quality + hygiene fixes with approval flow.
+Security + quality + hygiene fixes with approval flow for risky changes.
+
+---
+
+## What Gets Installed
+
+| Component | Count | Purpose |
+|-----------|-------|---------|
+| Commands | 8 | `/cco-config`, `/cco-status`, `/cco-optimize`, etc. |
+| Agents | 3 | Analyze, Apply, Research |
+| Rules | **1364** | Core (141) + AI (68) + Adaptive (1155) |
+
+### Rules Coverage
+
+**62 rule files** covering:
+- **27 languages** — Python, TypeScript, Go, Rust, Java, C#, Ruby, PHP, Swift, Kotlin, and more
+- **35 domains** — API, Database, Testing, Security, CI/CD, Observability, Compliance, and more
+
+Only relevant rules are loaded per project — zero unnecessary context.
 
 ---
 
@@ -108,6 +105,18 @@ Security + quality + hygiene fixes with approval flow.
 | `/cco-checkup` | Regular maintenance | Weekly or before PR |
 
 See [Commands documentation](docs/commands.md) for flags and examples.
+
+---
+
+## Agents
+
+| Agent | Purpose |
+|-------|---------|
+| `cco-agent-analyze` | Fast read-only analysis with severity scoring |
+| `cco-agent-apply` | Code changes with verification and cascade fixing |
+| `cco-agent-research` | Multi-source research with CRAAP+ reliability scoring |
+
+See [Agents documentation](docs/agents.md) for detailed capabilities.
 
 ---
 
@@ -139,15 +148,13 @@ See [Commands documentation](docs/commands.md) for flags and examples.
 ## Safety Model
 
 ### Auto-Apply (Safe)
-
 - Remove unused imports
 - Parameterize SQL queries
 - Move hardcoded secrets to env vars
 - Fix lint/format issues
-- Add missing type hints
+- Add missing type annotations
 
 ### Require Approval (Risky)
-
 - Auth/CSRF changes
 - Database schema changes
 - API contract changes
@@ -158,54 +165,25 @@ See [Commands documentation](docs/commands.md) for flags and examples.
 
 ---
 
-## Rules System
-
-| Category | Count | Location | Loaded |
-|----------|-------|----------|--------|
-| Core | 87 | `~/.claude/rules/cco/core.md` | Always |
-| AI | 61 | `~/.claude/rules/cco/ai.md` | Always |
-| Adaptive | 1563 | `.claude/rules/cco/` | Per-project |
-
-**Core rules:** SSOT, DRY, YAGNI, KISS, Fail-Fast, Type-Safe
-**AI rules:** Read-First, No-Hallucination, Evidence-Required
-**Adaptive:** Stack-specific (Python, TypeScript, React, Docker, etc.)
-
-See [Rules documentation](docs/rules.md) for full reference.
-
----
-
-## Agents
-
-| Agent | Model | Purpose |
-|-------|-------|---------|
-| `cco-agent-analyze` | Haiku | Fast read-only analysis |
-| `cco-agent-apply` | Opus | Code changes with verification |
-| `cco-agent-research` | Haiku | Multi-source research with reliability scoring |
-
-**Why dual models?** Haiku for speed (reads), Opus for accuracy (writes).
-
-See [Agents documentation](docs/agents.md) for details.
-
----
-
 ## Requirements
 
-- Python 3.10+
 - Claude Code CLI or IDE extension
-- Zero runtime dependencies
+- No additional dependencies
 
 ---
 
 ## Documentation
 
-| Document | Content |
-|----------|---------|
-| [Getting Started](docs/getting-started.md) | Installation, first 10 minutes, troubleshooting |
-| [Commands](docs/commands.md) | All 8 commands with flags and examples |
-| [Agents](docs/agents.md) | 3 agents, scopes, when to use |
-| [Rules](docs/rules.md) | Full 1711-rule reference |
-| [Workflow](docs/workflow.md) | Daily, pre-PR, pre-release workflows |
-| [Philosophy](docs/philosophy.md) | Design principles and decisions |
+- [Getting Started](docs/getting-started.md) — First 10 minutes with CCO
+- [Commands](docs/commands.md) — All commands with flags and examples
+- [Agents](docs/agents.md) — Specialized agents and scopes
+- [Rules](docs/rules.md) — Complete rules reference (1364 rules)
+
+---
+
+## Contributing
+
+Issues and pull requests are welcome. Please read the existing code style and follow the patterns.
 
 ---
 

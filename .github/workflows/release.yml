@@ -1,4 +1,4 @@
-# PyPI Release workflow for ClaudeCodeOptimizer
+# Release workflow for Claude Code Plugin
 
 name: Release
 
@@ -7,54 +7,35 @@ on:
     types: [published]
 
 permissions:
-  contents: read
+  contents: write
 
 jobs:
-  build:
-    name: Build package
+  validate-release:
+    name: Validate Release
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
 
-      - uses: actions/setup-python@v5
-        with:
-          python-version: '3.13'
-          cache: 'pip'
-
       - name: Validate version matches tag
         run: |
           TAG_VERSION="${GITHUB_REF#refs/tags/v}"
-          PKG_VERSION=$(python -c "from claudecodeoptimizer import __version__; print(__version__)")
+          PKG_VERSION=$(python3 -c "import json; print(json.load(open('.claude-plugin/plugin.json'))['version'])")
           if [ "$TAG_VERSION" != "$PKG_VERSION" ]; then
-            echo "Error: Tag version ($TAG_VERSION) does not match package version ($PKG_VERSION)"
+            echo "Error: Tag version ($TAG_VERSION) does not match plugin.json version ($PKG_VERSION)"
             exit 1
           fi
-          echo "Version validated: $PKG_VERSION"
+          echo "✓ Version validated: $PKG_VERSION"
 
-      - name: Install build tools
-        run: pip install build
-
-      - name: Build package
-        run: python -m build
-
-      - name: Upload artifacts
-        uses: actions/upload-artifact@v4
-        with:
-          name: dist
-          path: dist/
-
-  publish-pypi:
-    name: Publish to PyPI
-    needs: build
-    runs-on: ubuntu-latest
-    environment: pypi
-    permissions:
-      id-token: write
-    steps:
-      - uses: actions/download-artifact@v4
-        with:
-          name: dist
-          path: dist/
-
-      - name: Publish to PyPI
-        uses: pypa/gh-action-pypi-publish@release/v1
+      - name: Generate release summary
+        run: |
+          echo "## Claude Code Optimizer v${GITHUB_REF#refs/tags/v}" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "### Installation" >> $GITHUB_STEP_SUMMARY
+          echo '```' >> $GITHUB_STEP_SUMMARY
+          echo "/plugin install github:sungurerdim/ClaudeCodeOptimizer" >> $GITHUB_STEP_SUMMARY
+          echo '```' >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "### Contents" >> $GITHUB_STEP_SUMMARY
+          echo "- **Commands:** $(ls -1 commands/*.md | wc -l) slash commands" >> $GITHUB_STEP_SUMMARY
+          echo "- **Agents:** $(ls -1 agents/*.md | wc -l) subagents" >> $GITHUB_STEP_SUMMARY
+          echo "- **Rules:** $(ls -1 rules/*.md | wc -l) rule files" >> $GITHUB_STEP_SUMMARY

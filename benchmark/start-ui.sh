@@ -1,6 +1,9 @@
 #!/bin/bash
 cd "$(dirname "$0")"
 
+# Default port (8765 often blocked by Windows Hyper-V)
+PORT=${1:-5000}
+
 echo ""
 echo "╔═══════════════════════════════════════╗"
 echo "║        CCO Benchmark v1.0             ║"
@@ -23,8 +26,8 @@ fi
 # Start server
 echo "[2/2] Starting server..."
 echo ""
-echo "  Dashboard: http://localhost:8765"
+echo "  Dashboard: http://localhost:$PORT"
 echo "  Press Ctrl+C to stop"
 echo ""
 
-python3 -m benchmark
+python3 -m benchmark --port $PORT

@@ -137,10 +137,10 @@ CCO only touches:
 
 | Location | Content |
 |----------|---------|
-| `~/.claude/commands/` | 8 slash commands |
-| `~/.claude/agents/` | 3 specialized agents |
-| `~/.claude/rules/cco/` | Global rules (core + AI) |
-| `.claude/rules/cco/` | Project-specific rules (after /cco-config) |
+| `commands/` | 8 slash commands |
+| `agents/` | 3 specialized agents |
+| `rules/` | 62 rule files (1364 rules) |
+| `.claude/cco.md` | Project-specific rules (after /cco-config) |
 
 **Your project files are never modified** by installation. Only `/cco-config` creates files in your project's `.claude/` directory.
 
@@ -155,10 +155,10 @@ Built on:
 - [Google Prompt Engineering Whitepaper](https://www.kaggle.com/whitepaper-prompt-engineering)
 
 **Core:** SSOT, DRY, YAGNI, KISS, Fail-Fast
-**AI:** Read-First, No-Hallucination, Evidence-Required
+**AI:** Read-First, Verify-APIs, Evidence-Required
 **Security:** OWASP Top 10, Least-Privilege, Defense-in-Depth
 
-See [Principles Reference](principles-reference.md) for detailed definitions.
+See [Rules](rules.md) for complete rule definitions.
 
 ---
 

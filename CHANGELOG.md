@@ -34,21 +34,6 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - **Infra:ServiceMesh rules** - Istio/Linkerd patterns (mTLS, traffic split)
 - **Infra:BuildCache rules** - Turbo/Nx remote cache patterns
 - **398 trigger patterns** - Comprehensive detection coverage in cco-triggers.md
-
-### Breaking Changes
-- **Command renames** - All commands renamed for consistency:
-  - `/cco-tune` → `/cco-config`
-  - `/cco-health` → `/cco-status`
-  - `/cco-audit` → `/cco-optimize`
-  - `/cco-refactor` → `/cco-review`
-  - `/cco-generate` → `/cco-research`
-- **Agent consolidation** - `cco-agent-detect` + `cco-agent-scan` → `cco-agent-analyze`; `cco-agent-action` → `cco-agent-apply`
-- **Deprecated `setup_claude_md` function** - Use `clean_claude_md` instead
-
-### Security
-- **Path traversal fix** - Resolve paths before validation in `_is_safe_path` to prevent symlink/traversal bypasses
-
-### Added
 - **Comprehensive benchmark suite** - CCO evaluation with Docker support, date tracking, and refresh functionality
 - **Comprehensive test suite** - Unit and integration tests for install, local, operations, and ui modules
 - **Opus + Haiku model architecture** - Dual-model implementation for optimized performance
@@ -87,6 +72,19 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - **Verification checkpoints** - Pre-output verification rules for consistent behavior
 - **Scope Reference table** - Complete scope documentation in `docs/agents.md` with purpose and coverage
 - **best-practices scope** - Added to all relevant commands (optimize, review) for pattern adherence checks
+
+### Breaking Changes
+- **Command renames** - All commands renamed for consistency:
+  - `/cco-tune` → `/cco-config`
+  - `/cco-health` → `/cco-status`
+  - `/cco-audit` → `/cco-optimize`
+  - `/cco-refactor` → `/cco-review`
+  - `/cco-generate` → `/cco-research`
+- **Agent consolidation** - `cco-agent-detect` + `cco-agent-scan` → `cco-agent-analyze`; `cco-agent-action` → `cco-agent-apply`
+- **Deprecated `setup_claude_md` function** - Use `clean_claude_md` instead
+
+### Security
+- **Path traversal fix** - Resolve paths before validation in `_is_safe_path` to prevent symlink/traversal bypasses
 
 ### Changed
 - **Model optimization** - cco-config uses haiku for file operations (cost reduction), opus reserved for code fixes
@@ -128,7 +126,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - **cco-commit title limit** - 50-character enforcement
 - **Benchmark timeout handling** - Output decode fix
 - **Statusline non-git display** - Shows project name when not in git repo
-- Rule counts consistent across all documentation (70 base + 110 tools + 120 adaptive pool)
+- Rule counts consistent across all documentation (141 core + 68 AI + 1155 adaptive = 1364 total)
 - Detection exclusions for test/example directories prevent false Container triggers
 - Statusline emoji width calculation for proper alignment
 - CLI/Library projects excluded from Operations rules (use CI Only instead)

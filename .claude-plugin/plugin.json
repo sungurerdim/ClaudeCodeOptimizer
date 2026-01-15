@@ -1,0 +1,14 @@
+{
+  "name": "cco",
+  "displayName": "Claude Code Optimizer",
+  "version": "2.0.0",
+  "description": "Quality standards and adaptive rules for Claude Code. Run /cco-config to setup.",
+  "author": {
+    "name": "Sungur Zahid Erdim"
+  },
+  "repository": "https://github.com/sungurerdim/ClaudeCodeOptimizer",
+  "license": "MIT",
+  "keywords": ["quality", "rules", "optimization", "standards", "claude-code"],
+  "commands": "./commands",
+  "agents": "./agents"
+}
