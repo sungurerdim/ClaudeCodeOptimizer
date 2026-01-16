@@ -13,11 +13,11 @@
       "description": "Quality standards and adaptive rules for Claude Code. Run /cco-config to setup.",
       "version": "2.0.0",
       "author": {
-        "name": "Sungur Zahid Erdim"
+        "name": "Sungur Zahid Erdim",
+        "email": "sungurerdim@users.noreply.github.com"
       },
-      "source": ".",
-      "category": "development",
-      "tags": ["quality", "rules", "optimization", "standards"]
+      "source": "./",
+      "category": "development"
     }
   ]
 }
