@@ -16,7 +16,10 @@
         "name": "Sungur Zahid Erdim",
         "email": "sungurerdim@users.noreply.github.com"
       },
-      "source": "../",
+      "source": {
+        "source": "url",
+        "url": "https://github.com/sungurerdim/ClaudeCodeOptimizer.git"
+      },
       "category": "development"
     }
   ]
