@@ -5,11 +5,11 @@ allowed-tools: Read(*), Grep(*), Glob(*), Edit(*), Bash(*), Task(*), TodoWrite, 
 model: opus
 ---
 
-# /cco-preflight
+# /preflight
 
 **Release Verification Gate** - Comprehensive pre-release checks with parallel orchestration.
 
-Meta command orchestrating /cco-optimize and /cco-review with maximum parallelism.
+Meta command orchestrating /optimize and /review with maximum parallelism.
 
 **Orchestration:**
 ```
@@ -23,10 +23,10 @@ PREFLIGHT
     |                                        │
     +-- [Sub-commands] PARALLEL ─────────────┤
     |       |                                │
-    |       +-- /cco-optimize --intensity=X  │
+    |       +-- /optimize --intensity=X  │
     |       |   (all 6 scopes)               │
     |       |                                │
-    |       +-- /cco-review --intensity=X    │
+    |       +-- /review --intensity=X    │
     |           (all 5 scopes)               │
     |                                        │
     +-- [Verification] PARALLEL ─────────────┤
@@ -58,7 +58,7 @@ If context check returns "0":
 ```
 CCO context not found.
 
-Run /cco-config first to configure project context, then restart CLI.
+Run /config first to configure project context, then restart CLI.
 ```
 **Stop immediately.**
 
@@ -88,7 +88,7 @@ if (args.includes("--auto")) {
 | 0 | Mode | Detect --auto or interactive | Instant |
 | 1a | Q1 | Fix Intensity selection | Single question |
 | 1b | Pre-flight | Release checks (parallel background) | Background |
-| 2 | Sub-commands | /cco-optimize + /cco-review (parallel) | Background |
+| 2 | Sub-commands | /optimize + /review (parallel) | Background |
 | 3 | Verification | test/build/lint (parallel background) | Background |
 | 4 | Changelog | Generate + suggest version | While tests run |
 | 5 | Decision | Q2: Docs + Release decision | Single question |
@@ -98,7 +98,7 @@ if (args.includes("--auto")) {
 ## Everything Mode [CRITICAL]
 
 When `--intensity=full-fix` or user selects "Full Fix":
-- Pass to both `/cco-optimize --intensity=full-fix` and `/cco-review --intensity=full-fix`
+- Pass to both `/optimize --intensity=full-fix` and `/review --intensity=full-fix`
 - **Zero deferrals** - no "future iteration", no "lower priority"
 - **Zero skips** - every finding fixed NOW
 - Final accounting: `applied + failed = total` (no AI declines allowed)
@@ -252,7 +252,7 @@ const intensityFlag = `--intensity=${config.intensity}`
 
 // BOTH calls MUST be in same message block for parallelism
 optimizeTask = Task("general-purpose", `
-  Execute /cco-optimize ${intensityFlag}
+  Execute /optimize ${intensityFlag}
 
   CRITICAL: Run ALL 6 scopes (security, hygiene, types, lint, performance, ai-hygiene)
   Apply fixes based on intensity selection.
@@ -268,7 +268,7 @@ optimizeTask = Task("general-purpose", `
 `, { model: "opus", run_in_background: true })
 
 reviewTask = Task("general-purpose", `
-  Execute /cco-review ${intensityFlag}
+  Execute /review ${intensityFlag}
 
   CRITICAL: Run ALL 5 scopes (architecture, patterns, testing, maintainability, ai-architecture)
   Apply recommendations based on intensity selection.
@@ -437,11 +437,11 @@ totalFindings = totalApplied + totalFailed
 ### Sub-command Results
 | Command | Applied | Failed | Total |
 |---------|---------|--------|-------|
-| /cco-optimize | {optimizeResults.accounting.applied} | {optimizeResults.accounting.failed} | {optimizeResults.accounting.total} |
-| /cco-review | {reviewResults.accounting.applied} | {reviewResults.accounting.failed} | {reviewResults.accounting.total} |
+| /optimize | {optimizeResults.accounting.applied} | {optimizeResults.accounting.failed} | {optimizeResults.accounting.total} |
+| /review | {reviewResults.accounting.applied} | {reviewResults.accounting.failed} | {reviewResults.accounting.total} |
 | **Combined** | **{totalApplied}** | **{totalFailed}** | **{totalFindings}** |
 
-### Gap Analysis (from /cco-review)
+### Gap Analysis (from /review)
 | Dimension | Current | Ideal | Status |
 |-----------|---------|-------|--------|
 | Coupling | {reviewResults.gaps.coupling.current}% | <{reviewResults.gaps.coupling.ideal}% | {status} |
@@ -590,8 +590,8 @@ Decision: {userDecision}
 | VER-02 | Build fail | Build command exits non-zero |
 | VER-03 | Type errors | Type checker finds errors |
 | DEP-SEC | Security CVE | Known vulnerability in dependency |
-| OPT-CRIT | Optimize critical | Unfixed CRITICAL from /cco-optimize |
-| REV-CRIT | Review critical | Unfixed CRITICAL gap from /cco-review |
+| OPT-CRIT | Optimize critical | Unfixed CRITICAL from /optimize |
+| REV-CRIT | Review critical | Unfixed CRITICAL gap from /review |
 
 **WARNINGS (can override):**
 | ID | Check | Criteria |
@@ -615,8 +615,8 @@ Decision: {userDecision}
 
 | Task | Model | Reason |
 |------|-------|--------|
-| /cco-optimize | Opus | Code modifications require accuracy |
-| /cco-review | Opus | Architectural changes require accuracy |
+| /optimize | Opus | Code modifications require accuracy |
+| /review | Opus | Architectural changes require accuracy |
 | Dependency audit | Haiku | Read-only research |
 | Verification | Bash | Direct execution |
 

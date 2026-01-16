@@ -5,13 +5,13 @@ allowed-tools: Read(*), Grep(*), Glob(*), Edit(*), Bash(*), Task(*), TodoWrite, 
 model: opus
 ---
 
-# /cco-review
+# /review
 
 **Ideal-Driven Strategic Assessment** - "If I designed from scratch, what would be best?"
 
 **Philosophy:** Evaluate as if no technology choices exist yet. Given only the requirements, what's ideal? Then compare current state to that ideal.
 
-**Purpose:** Strategic, architecture-level assessment. For tactical file-level fixes, use `/cco-optimize`.
+**Purpose:** Strategic, architecture-level assessment. For tactical file-level fixes, use `/optimize`.
 
 **Unique Value:**
 - "Would FastAPI be better than Flask here?"
@@ -77,7 +77,7 @@ If context check returns "0":
 ```
 CCO context not found.
 
-Run /cco-config first to configure project context, then restart CLI.
+Run /config first to configure project context, then restart CLI.
 ```
 **Stop immediately.**
 

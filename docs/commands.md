@@ -10,19 +10,19 @@ Detailed documentation for all CCO slash commands.
 
 | Command         | Purpose                                  | Model     | Steps |
 |-----------------|------------------------------------------|-----------|-------|
-| `/cco-config`   | Project configuration and settings       | inherit   | 5     |
-| `/cco-status`   | Metrics dashboard                        | inherit   | 3     |
-| `/cco-optimize` | Security + Quality + Hygiene             | **opus**  | 6     |
-| `/cco-review`   | Architecture analysis                    | **opus**  | 5     |
-| `/cco-research` | Multi-source research with AI synthesis  | **opus**  | 5     |
-| `/cco-commit`   | Quality-gated commits                    | **opus**  | 4     |
+| `/cco:config`   | Project configuration and settings       | inherit   | 5     |
+| `/cco:status`   | Metrics dashboard                        | inherit   | 3     |
+| `/cco:optimize` | Security + Quality + Hygiene             | **opus**  | 6     |
+| `/cco:review`   | Architecture analysis                    | **opus**  | 5     |
+| `/cco:research` | Multi-source research with AI synthesis  | **opus**  | 5     |
+| `/cco:commit`   | Quality-gated commits                    | **opus**  | 4     |
 
 ### Meta Commands
 
 | Command          | Purpose              | Model   | Orchestrates                         |
 |------------------|----------------------|---------|--------------------------------------|
-| `/cco-preflight` | Pre-release workflow | inherit | optimize + review + verify (5 steps) |
-| `/cco-checkup`   | Regular maintenance  | inherit | status + optimize (3 steps)          |
+| `/cco:preflight` | Pre-release workflow | inherit | optimize + review + verify (5 steps) |
+| `/cco:checkup`   | Regular maintenance  | inherit | status + optimize (3 steps)          |
 
 **Model Rationale:** Opus for analysis and coding commands (50-75% fewer errors), inherit for orchestration.
 
@@ -73,10 +73,10 @@ All commands follow a standardized structure for consistency and reliability.
 
 ### Context Requirement
 
-All commands except `/cco-config` require CCO context. If context is missing:
+All commands except `/cco:config` require CCO context. If context is missing:
 ```
 CCO context not found.
-Run /cco-config first to configure project context, then restart CLI.
+Run /cco:config first to configure project context, then restart CLI.
 ```
 
 ### Dynamic Context
@@ -101,14 +101,14 @@ Commands learn from execution patterns:
 
 ---
 
-## /cco-config
+## /cco:config
 
 **Purpose:** Central configuration command for project detection, settings, removal, and export.
 
 **Usage:**
 ```bash
-/cco-config              # Interactive: Configure / Remove / Export
-/cco-config --auto       # Unattended mode with smart defaults
+/cco:config              # Interactive: Configure / Remove / Export
+/cco:config --auto       # Unattended mode with smart defaults
 ```
 
 ### Steps
@@ -144,19 +144,19 @@ Commands learn from execution patterns:
 
 ---
 
-## /cco-status
+## /cco:status
 
 **Purpose:** Single view of project health with actionable next steps.
 
-**Requires:** CCO context (run `/cco-config` first)
+**Requires:** CCO context (run `/cco:config` first)
 
 **Usage:**
 ```bash
-/cco-status                     # Full dashboard
-/cco-status --focus=security    # Focus on security
-/cco-status --brief             # Summary only
-/cco-status --trends            # With historical trends
-/cco-status --json              # JSON output
+/cco:status                     # Full dashboard
+/cco:status --focus=security    # Focus on security
+/cco:status --brief             # Summary only
+/cco:status --trends            # With historical trends
+/cco:status --json              # JSON output
 ```
 
 ### Steps
@@ -191,23 +191,23 @@ Commands learn from execution patterns:
 
 ---
 
-## /cco-optimize
+## /cco:optimize
 
 **Purpose:** Full-stack optimization combining security, code quality, and hygiene checks.
 
-**Requires:** CCO context (run `/cco-config` first)
+**Requires:** CCO context (run `/cco:config` first)
 
 **Core Principle:** Fix everything that can be fixed. No "manual review" - all issues either auto-fixed or user-approved.
 
 **Usage:**
 ```bash
-/cco-optimize                      # Interactive selection
-/cco-optimize --security           # Security focus only
-/cco-optimize --quality            # Quality focus only
-/cco-optimize --hygiene            # Hygiene focus
-/cco-optimize --report             # Report only, no fixes
-/cco-optimize --pre-release        # All scopes, strict
-/cco-optimize --auto               # Unattended mode: fix all, no questions
+/cco:optimize                      # Interactive selection
+/cco:optimize --security           # Security focus only
+/cco:optimize --quality            # Quality focus only
+/cco:optimize --hygiene            # Hygiene focus
+/cco:optimize --report             # Report only, no fixes
+/cco:optimize --pre-release        # All scopes, strict
+/cco:optimize --auto               # Unattended mode: fix all, no questions
 ```
 
 ### Steps
@@ -241,19 +241,19 @@ Commands learn from execution patterns:
 
 ---
 
-## /cco-review
+## /cco:review
 
 **Purpose:** Strategic architecture analysis with recommendations.
 
-**Requires:** CCO context (run `/cco-config` first)
+**Requires:** CCO context (run `/cco:config` first)
 
 **Usage:**
 ```bash
-/cco-review                    # Full review
-/cco-review --quick            # Smart defaults, report only
-/cco-review --focus=architecture
-/cco-review --focus=quality
-/cco-review --no-apply         # Report only
+/cco:review                    # Full review
+/cco:review --quick            # Smart defaults, report only
+/cco:review --focus=architecture
+/cco:review --focus=quality
+/cco:review --no-apply         # Report only
 ```
 
 ### Steps
@@ -287,20 +287,20 @@ Commands learn from execution patterns:
 
 ---
 
-## /cco-research
+## /cco:research
 
 **Purpose:** Multi-source research with reliability scoring and AI-synthesized recommendations.
 
-**Requires:** CCO context (run `/cco-config` first)
+**Requires:** CCO context (run `/cco:config` first)
 
 **Usage:**
 ```bash
-/cco-research "query"                    # Standard research
-/cco-research "query" --quick            # T1-T2 only, 5 sources
-/cco-research "query" --deep             # All tiers, 20+ sources
-/cco-research "A vs B" --compare         # Comparison mode
-/cco-research "query" --local            # Codebase-only search
-/cco-research "query" --security         # Security advisories
+/cco:research "query"                    # Standard research
+/cco:research "query" --quick            # T1-T2 only, 5 sources
+/cco:research "query" --deep             # All tiers, 20+ sources
+/cco:research "A vs B" --compare         # Comparison mode
+/cco:research "query" --local            # Codebase-only search
+/cco:research "query" --security         # Security advisories
 ```
 
 ### Steps
@@ -335,19 +335,19 @@ Commands learn from execution patterns:
 
 ---
 
-## /cco-commit
+## /cco:commit
 
 **Purpose:** Quality-gated atomic commits.
 
-**Requires:** CCO context (run `/cco-config` first)
+**Requires:** CCO context (run `/cco:config` first)
 
 **Usage:**
 ```bash
-/cco-commit                 # Full flow
-/cco-commit --dry-run       # Preview only
-/cco-commit --single        # One commit for all
-/cco-commit --quick         # Smart defaults
-/cco-commit --skip-checks   # Skip quality gates
+/cco:commit                 # Full flow
+/cco:commit --dry-run       # Preview only
+/cco:commit --single        # One commit for all
+/cco:commit --quick         # Smart defaults
+/cco:commit --skip-checks   # Skip quality gates
 ```
 
 ### Steps
@@ -384,19 +384,19 @@ Co-Authored-By: Claude <noreply@anthropic.com>
 
 ---
 
-## /cco-preflight
+## /cco:preflight
 
 **Purpose:** Pre-release workflow orchestration.
 
-**Requires:** CCO context (run `/cco-config` first)
+**Requires:** CCO context (run `/cco:config` first)
 
 **Usage:**
 ```bash
-/cco-preflight                   # Full release workflow
-/cco-preflight --dry-run         # Check without fixing
-/cco-preflight --strict          # Fail on any warning
-/cco-preflight --tag             # Auto-create git tag
-/cco-preflight --tag --push      # Tag and push
+/cco:preflight                   # Full release workflow
+/cco:preflight --dry-run         # Check without fixing
+/cco:preflight --strict          # Fail on any warning
+/cco:preflight --tag             # Auto-create git tag
+/cco:preflight --tag --push      # Tag and push
 ```
 
 ### Steps
@@ -429,19 +429,19 @@ Co-Authored-By: Claude <noreply@anthropic.com>
 
 ---
 
-## /cco-checkup
+## /cco:checkup
 
 **Purpose:** Regular maintenance routine.
 
-**Requires:** CCO context (run `/cco-config` first)
+**Requires:** CCO context (run `/cco:config` first)
 
 **Usage:**
 ```bash
-/cco-checkup                   # Standard maintenance
-/cco-checkup --dry-run         # Preview without changes
-/cco-checkup --no-fix          # Report only
-/cco-checkup --health-only     # Skip audit
-/cco-checkup --audit-only      # Skip health
+/cco:checkup                   # Standard maintenance
+/cco:checkup --dry-run         # Preview without changes
+/cco:checkup --no-fix          # Report only
+/cco:checkup --health-only     # Skip audit
+/cco:checkup --audit-only      # Skip health
 ```
 
 ### Steps

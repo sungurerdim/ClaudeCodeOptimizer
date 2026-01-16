@@ -35,7 +35,7 @@
 ├─────────────────────────────────────────────────────────────────┤
 │  DYNAMICALLY GENERATED (Project Context)                        │
 ├─────────────────────────────────────────────────────────────────┤
-│  Selected by: /cco-config based on stack detection              │
+│  Selected by: /cco:config based on stack detection              │
 │  Written to:  .claude/cco.md (@imports relevant rules)          │
 └─────────────────────────────────────────────────────────────────┘
 ```
@@ -346,7 +346,7 @@ Status: {status} | Applied: {n} | Failed: {n} | Total: {n}
 
 ### Command Flow
 
-- **Context-Check**: Verify context.md exists, suggest /cco-config if missing
+- **Context-Check**: Verify context.md exists, suggest /cco:config if missing
 - **Read-Context**: Load `.claude/rules/cco/context.md`
 - **Execute**: Command-specific logic
 - **Report**: Results with accounting
@@ -507,7 +507,7 @@ Status: {status} | Applied: {n} | Failed: {n} | Total: {n}
 
 ## Adaptive Rules
 
-*Dynamically selected by /cco-config based on project detection.*
+*Dynamically selected by /cco:config based on project detection.*
 
 ### Detection Types
 

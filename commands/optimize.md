@@ -5,13 +5,13 @@ allowed-tools: Read(*), Grep(*), Glob(*), Edit(*), Bash(*), Task(*), TodoWrite, 
 model: opus
 ---
 
-# /cco-optimize
+# /optimize
 
 **Incremental Code Improvement** - Quality gates + parallel analysis + background fixes with Fix Intensity selection.
 
 **Philosophy:** "This code works. How can it work better?"
 
-**Purpose:** Tactical, file-level fixes. For strategic architecture assessment, use `/cco-review`.
+**Purpose:** Tactical, file-level fixes. For strategic architecture assessment, use `/review`.
 
 ## Args
 
@@ -34,10 +34,10 @@ model: opus
 - `--intensity=<level>`: Set fix intensity (quick-wins, standard, full-fix, report-only)
 
 **Usage:**
-- `/cco-optimize --auto` - Silent full optimization (all scopes, full fix)
-- `/cco-optimize --security --fix-all` - Security only, fix all
-- `/cco-optimize --ai-hygiene` - Find AI-generated code issues
-- `/cco-optimize --score` - Quick quality score
+- `/optimize --auto` - Silent full optimization (all scopes, full fix)
+- `/optimize --security --fix-all` - Security only, fix all
+- `/optimize --ai-hygiene` - Find AI-generated code issues
+- `/optimize --score` - Quick quality score
 
 ## Core Principle [CRITICAL]
 
@@ -99,7 +99,7 @@ If context check returns "0":
 ```
 CCO context not found.
 
-Run /cco-config first to configure project context, then restart CLI.
+Run /config first to configure project context, then restart CLI.
 ```
 **Stop immediately.**
 

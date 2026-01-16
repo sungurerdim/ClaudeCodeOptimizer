@@ -45,7 +45,7 @@ Need changes?
 **Model Override:**
 Commands can override agent defaults via Task parameter: `Task("agent", prompt, { model: "haiku" })`
 - cco-config uses haiku for cco-agent-apply (file writes only, no code fixes)
-- cco-optimize/cco-review use opus for cco-agent-apply (code refactoring)
+- cco-optimize/cco:review use opus for cco-agent-apply (code refactoring)
 - cco-research uses opus for synthesis (conflict resolution requires reasoning)
 
 ---
@@ -125,7 +125,7 @@ Commands can override agent defaults via Task parameter: `Task("agent", prompt, 
 
 ### Config Scope
 
-Handles project detection and rule selection for `/cco-config`:
+Handles project detection and rule selection for `/cco:config`:
 
 **Execution Flow:**
 1. Auto-detect from manifest/code/config/docs (priority order)
@@ -317,14 +317,14 @@ Complete list of all scopes with their purpose and coverage:
 
 | Command          | Analyze Scope                                          | Apply          | Research     |
 |------------------|--------------------------------------------------------|----------------|--------------|
-| `/cco-config`    | `config`                                               | No             | No           |
-| `/cco-status`    | `scan`, `trends`                                       | No             | No           |
-| `/cco-optimize`  | `security`, `quality`, `hygiene`, `best-practices`     | Yes            | `dependency` |
-| `/cco-review`    | `architecture`, `quality`, `testing`, `best-practices` | Yes            | `dependency` |
-| `/cco-commit`    | `detect` (fallback)                                    | No             | No           |
-| `/cco-research`  | -                                                      | No             | `full`       |
-| `/cco-preflight` | (orchestrates optimize + review)                       | (orchestrates) | `dependency` |
-| `/cco-checkup`   | (orchestrates status + optimize)                       | (orchestrates) | `dependency` |
+| `/cco:config`    | `config`                                               | No             | No           |
+| `/cco:status`    | `scan`, `trends`                                       | No             | No           |
+| `/cco:optimize`  | `security`, `quality`, `hygiene`, `best-practices`     | Yes            | `dependency` |
+| `/cco:review`    | `architecture`, `quality`, `testing`, `best-practices` | Yes            | `dependency` |
+| `/cco:commit`    | `detect` (fallback)                                    | No             | No           |
+| `/cco:research`  | -                                                      | No             | `full`       |
+| `/cco:preflight` | (orchestrates optimize + review)                       | (orchestrates) | `dependency` |
+| `/cco:checkup`   | (orchestrates status + optimize)                       | (orchestrates) | `dependency` |
 
 ---
 
