@@ -25,8 +25,9 @@ Same prompts, better outcomes. Fewer errors, fewer rollbacks, more consistent re
 ## Install
 
 ```bash
-/plugin marketplace add sungurerdim/ClaudeCodeOptimizer
-/plugin install cco
+claude plugin marketplace remove ClaudeCodeOptimizer
+claude plugin marketplace add https://github.com/sungurerdim/ClaudeCodeOptimizer
+claude plugin install cco@ClaudeCodeOptimizer
 ```
 
 **Restart Claude Code** to load the new commands.
@@ -40,7 +41,8 @@ Same prompts, better outcomes. Fewer errors, fewer rollbacks, more consistent re
 ### Uninstall
 
 ```bash
-/plugin uninstall cco
+claude plugin uninstall cco@ClaudeCodeOptimizer
+claude plugin marketplace remove ClaudeCodeOptimizer
 ```
 
 ---

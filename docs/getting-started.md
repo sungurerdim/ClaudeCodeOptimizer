@@ -6,9 +6,10 @@ Your first 10 minutes with CCO.
 
 ## Installation
 
-```
-/plugin marketplace add sungurerdim/ClaudeCodeOptimizer
-/plugin install cco
+```bash
+claude plugin marketplace remove ClaudeCodeOptimizer
+claude plugin marketplace add https://github.com/sungurerdim/ClaudeCodeOptimizer
+claude plugin install cco@ClaudeCodeOptimizer
 ```
 
 **Restart Claude Code** after installation.
@@ -54,8 +55,9 @@ The plugin installs:
 
 ### Uninstall
 
-```
-/plugin uninstall cco
+```bash
+claude plugin uninstall cco@ClaudeCodeOptimizer
+claude plugin marketplace remove ClaudeCodeOptimizer
 ```
 
 ---
@@ -200,7 +202,12 @@ The detection is a starting point. You can:
 
 1. **Restart Claude Code** after installation
 2. Verify plugin is installed: `/plugin list`
-3. Try reinstalling: `/plugin uninstall cco && /plugin install cco`
+3. Try reinstalling:
+   ```bash
+   claude plugin marketplace remove ClaudeCodeOptimizer
+   claude plugin marketplace add https://github.com/sungurerdim/ClaudeCodeOptimizer
+   claude plugin install cco@ClaudeCodeOptimizer
+   ```
 
 ### "CCO context not found"
 

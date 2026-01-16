@@ -1,6 +1,6 @@
 {
   "$schema": "https://anthropic.com/claude-code/marketplace.schema.json",
-  "name": "cco",
+  "name": "ClaudeCodeOptimizer",
   "version": "2.0.0",
   "description": "Quality standards and adaptive rules for Claude Code",
   "owner": {
