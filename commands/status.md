@@ -4,7 +4,7 @@ argument-hint: [--focus=X] [--json] [--brief]
 allowed-tools: Read(*), Grep(*), Glob(*), Bash(*), Task(*)
 ---
 
-# /cco-status
+# /status
 
 **Health Dashboard** - Quick snapshot via cco-agent-analyze.
 
@@ -22,7 +22,7 @@ If context check returns "0":
 ```
 CCO context not found.
 
-Run /cco-config first to configure project context, then restart CLI.
+Run /config first to configure project context, then restart CLI.
 ```
 **Stop immediately.**
 
@@ -80,7 +80,7 @@ status = overall >= 80 ? "OK" : overall >= 60 ? "WARN" : overall >= 40 ? "FAIL" 
 Top Issues ({n}):
 - [{CATEGORY}] {title} ({file}:{line})
 
-Run `/cco-optimize` to fix issues.
+Run `/optimize` to fix issues.
 ```
 
 ---

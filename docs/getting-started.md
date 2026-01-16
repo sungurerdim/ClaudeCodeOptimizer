@@ -69,7 +69,7 @@ claude plugin marketplace remove ClaudeCodeOptimizer
 Open Claude Code in your project directory and run:
 
 ```
-/cco-config
+/cco:config
 ```
 
 This will:
@@ -102,7 +102,7 @@ Generated rules:
 ### Step 2: Check Project Health (1 min)
 
 ```
-/cco-status
+/cco:status
 ```
 
 Shows:
@@ -119,7 +119,7 @@ Shows:
 ### Step 3: Quick Wins (5 min)
 
 ```
-/cco-optimize --quick
+/cco:optimize --quick
 ```
 
 Auto-fixes safe issues:
@@ -169,30 +169,30 @@ These apply to **all projects** automatically.
 | Languages | 27 | python.md, typescript.md, go.md |
 | Domains | 35 | api.md, security.md, testing.md |
 
-Selected by `/cco-config` based on your stack detection.
+Selected by `/cco:config` based on your stack detection.
 
 ---
 
 ## Common Questions
 
-### "Do I need to run /cco-config for every project?"
+### "Do I need to run /cco:config for every project?"
 
 Yes. Each project gets its own rules based on its specific stack and context.
 
 ### "Can I customize the generated rules?"
 
-Yes. Edit `.claude/cco.md` directly. Your changes persist until the next `/cco-config` run.
+Yes. Edit `.claude/cco.md` directly. Your changes persist until the next `/cco:config` run.
 
 ### "How do I see what rules are active?"
 
-Run `/cco-status` or check `.claude/cco.md` in your project.
+Run `/cco:status` or check `.claude/cco.md` in your project.
 
-### "What if /cco-config detects something wrong?"
+### "What if /cco:config detects something wrong?"
 
 The detection is a starting point. You can:
 1. Answer the clarifying questions differently
 2. Edit the generated rules directly
-3. Run `/cco-config` again to reconfigure
+3. Run `/cco:config` again to reconfigure
 
 ---
 
@@ -214,7 +214,7 @@ The detection is a starting point. You can:
 Most commands require project configuration first:
 
 ```
-/cco-config
+/cco:config
 ```
 
 ---
@@ -223,11 +223,11 @@ Most commands require project configuration first:
 
 | Goal | Command |
 |------|---------|
-| Full security audit | `/cco-optimize --security` |
-| Architecture review | `/cco-review` |
-| Quality-gated commit | `/cco-commit` |
-| Pre-release check | `/cco-preflight` |
-| Research a topic | `/cco-research "your question"` |
+| Full security audit | `/cco:optimize --security` |
+| Architecture review | `/cco:review` |
+| Quality-gated commit | `/cco:commit` |
+| Pre-release check | `/cco:preflight` |
+| Research a topic | `/cco:research "your question"` |
 
 See [Commands](commands.md) for full documentation.
 

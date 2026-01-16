@@ -4,7 +4,7 @@ argument-hint: [--auto]
 allowed-tools: Read, Write, Edit, Bash, Glob, Grep, Task, AskUserQuestion
 ---
 
-# /cco-config
+# /config
 
 **Project Setup** - Detects stack, creates `.claude/cco.md` with adaptive rules.
 

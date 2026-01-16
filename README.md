@@ -25,7 +25,7 @@ Same prompts, better outcomes. Fewer errors, fewer rollbacks, more consistent re
 ## Install
 
 ```bash
-claude plugin marketplace remove ClaudeCodeOptimizer
+claude plugin marketplace remove ClaudeCodeOptimizer 2>/dev/null || true
 claude plugin marketplace add https://github.com/sungurerdim/ClaudeCodeOptimizer
 claude plugin install cco@ClaudeCodeOptimizer
 ```
@@ -41,7 +41,7 @@ claude plugin install cco@ClaudeCodeOptimizer
 ### Uninstall
 
 ```bash
-claude plugin uninstall cco@ClaudeCodeOptimizer
+claude plugin uninstall cco@ClaudeCodeOptimizer 2>/dev/null || true
 claude plugin marketplace remove ClaudeCodeOptimizer
 ```
 
@@ -52,7 +52,7 @@ claude plugin marketplace remove ClaudeCodeOptimizer
 ### 1. Configure Your Project
 
 ```
-/cco-config
+/cco:config
 ```
 
 Auto-detects your stack (language, framework, database, tools) and generates project-specific rules.
@@ -60,7 +60,7 @@ Auto-detects your stack (language, framework, database, tools) and generates pro
 ### 2. Check Health
 
 ```
-/cco-status
+/cco:status
 ```
 
 See security, quality, and hygiene scores for your codebase.
@@ -68,7 +68,7 @@ See security, quality, and hygiene scores for your codebase.
 ### 3. Fix Issues
 
 ```
-/cco-optimize
+/cco:optimize
 ```
 
 Security + quality + hygiene fixes with approval flow for risky changes.
@@ -79,7 +79,7 @@ Security + quality + hygiene fixes with approval flow for risky changes.
 
 | Component | Count | Purpose |
 |-----------|-------|---------|
-| Commands | 8 | `/cco-config`, `/cco-status`, `/cco-optimize`, etc. |
+| Commands | 8 | `/cco:config`, `/cco:status`, `/cco:optimize`, etc. |
 | Agents | 3 | Analyze, Apply, Research |
 | Rules | **1364** | Core (141) + AI (68) + Adaptive (1155) |
 
@@ -97,14 +97,14 @@ Only relevant rules are loaded per project — zero unnecessary context.
 
 | Command | Purpose | When to Use |
 |---------|---------|-------------|
-| `/cco-config` | Project configuration | First time, or when stack changes |
-| `/cco-status` | Health dashboard | Start of session |
-| `/cco-optimize` | Fix issues | Before PR, after major changes |
-| `/cco-review` | Architecture analysis | Before refactoring |
-| `/cco-commit` | Quality-gated commit | Every commit |
-| `/cco-research` | Multi-source research | "Which library?", "Best practice?" |
-| `/cco-preflight` | Pre-release workflow | Before release |
-| `/cco-checkup` | Regular maintenance | Weekly or before PR |
+| `/cco:config` | Project configuration | First time, or when stack changes |
+| `/cco:status` | Health dashboard | Start of session |
+| `/cco:optimize` | Fix issues | Before PR, after major changes |
+| `/cco:review` | Architecture analysis | Before refactoring |
+| `/cco:commit` | Quality-gated commit | Every commit |
+| `/cco:research` | Multi-source research | "Which library?", "Best practice?" |
+| `/cco:preflight` | Pre-release workflow | Before release |
+| `/cco:checkup` | Regular maintenance | Weekly or before PR |
 
 See [Commands documentation](docs/commands.md) for flags and examples.
 

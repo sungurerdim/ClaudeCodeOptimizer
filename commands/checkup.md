@@ -3,11 +3,11 @@ description: Weekly maintenance - health check + optimization in one pass
 allowed-tools: Read(*), Grep(*), Glob(*), Edit(*), Bash(*), Task(*)
 ---
 
-# /cco-checkup
+# /checkup
 
 **Maintenance Routine** - Parallel health + audit for fast weekly checkups.
 
-Meta command: runs /cco-status and /cco-optimize in parallel. No TodoWrite - delegates to sub-commands.
+Meta command: runs /status and /optimize in parallel. No TodoWrite - delegates to sub-commands.
 
 ## Context
 
@@ -22,7 +22,7 @@ If context check returns "0":
 ```
 CCO context not found.
 
-Run /cco-config first to configure project context, then restart CLI.
+Run /config first to configure project context, then restart CLI.
 ```
 **Stop immediately.**
 
@@ -41,14 +41,14 @@ phases = args.includes('--health-only') ? 'health'
 // Launch in parallel (SINGLE message with multiple Task calls)
 if (phases === 'both' || phases === 'health') {
   healthTask = Task("general-purpose", `
-    Execute /cco-status --brief
+    Execute /status --brief
     Return: { scores: {...}, status: "OK|WARN|FAIL|CRITICAL" }
   `, { model: "haiku", run_in_background: phases === 'both' })
 }
 
 if (phases === 'both' || phases === 'audit') {
   auditTask = Task("general-purpose", `
-    Execute /cco-optimize --fix --security --quality
+    Execute /optimize --fix --security --quality
     Return: { accounting: { applied, failed, total } }
   `, { model: "opus", run_in_background: phases === 'both' })
 }

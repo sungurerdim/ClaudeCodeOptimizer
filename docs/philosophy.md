@@ -140,9 +140,9 @@ CCO only touches:
 | `commands/` | 8 slash commands |
 | `agents/` | 3 specialized agents |
 | `rules/` | 62 rule files (1364 rules) |
-| `.claude/cco.md` | Project-specific rules (after /cco-config) |
+| `.claude/cco.md` | Project-specific rules (after /cco:config) |
 
-**Your project files are never modified** by installation. Only `/cco-config` creates files in your project's `.claude/` directory.
+**Your project files are never modified** by installation. Only `/cco:config` creates files in your project's `.claude/` directory.
 
 ---
 

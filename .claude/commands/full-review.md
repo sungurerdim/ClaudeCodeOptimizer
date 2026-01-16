@@ -5,7 +5,7 @@ allowed-tools: Read(*), Grep(*), Glob(*), Bash(*), Task(*), TodoWrite, AskUserQu
 model: opus
 ---
 
-# /cco-full-review
+# /full-review
 
 **CCO Self-Review** - Comprehensive analysis of CCO system against its documented design principles.
 
@@ -22,10 +22,10 @@ model: opus
 - `--fix-all`: Apply all fixes including manual ones
 
 **Usage:**
-- `/cco-full-review` - Interactive mode with fix selection
-- `/cco-full-review --auto` - Silent full review and fix
-- `/cco-full-review --report` - Report only
-- `/cco-full-review --quick --fix` - Fast check, auto-fix
+- `/full-review` - Interactive mode with fix selection
+- `/full-review --auto` - Silent full review and fix
+- `/full-review --report` - Report only
+- `/full-review --quick --fix` - Fast check, auto-fix
 
 ## Context
 
@@ -331,11 +331,11 @@ Checks:
 | Verifiable | Rule compliance can be checked | MEDIUM |
 
 ### 4.3 Context Generation
-`/cco-config` must produce:
+`/config` must produce:
 
 | Check | Requirement | Severity |
 |-------|-------------|----------|
-| Context created | File exists after /cco-config | CRITICAL |
+| Context created | File exists after /config | CRITICAL |
 | Detections | All auto-detected values recorded | HIGH |
 | User choices | All AskUserQuestion responses recorded | HIGH |
 | Learnings | `## Learnings` header present | MEDIUM |

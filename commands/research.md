@@ -5,7 +5,7 @@ allowed-tools: WebSearch(*), WebFetch(*), Read(*), Grep(*), Glob(*), Task(*), To
 model: opus
 ---
 
-# /cco-research
+# /research
 
 **Smart Research** - Parallel search → tier → synthesize → recommend with minimal questions.
 

@@ -10,7 +10,7 @@
   "plugins": [
     {
       "name": "cco",
-      "description": "Quality standards and adaptive rules for Claude Code. Run /cco-config to setup.",
+      "description": "Quality standards and adaptive rules for Claude Code. Run /cco:config to setup.",
       "version": "2.0.0",
       "author": {
         "name": "Sungur Zahid Erdim",

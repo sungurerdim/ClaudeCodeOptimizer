@@ -40,24 +40,24 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - **Orphan framework detection** - Modern 2025 technology triggers and game engine support
 - **--dry-run flag for cco-install** - Preview installation changes before applying
 - **Debug logging** - Windows UTF-8 encoding fix diagnostics
-- **Meta command `/cco-preflight`** - Pre-release workflow with quality gate, architecture review, changelog & docs sync, and go/no-go summary
-- **Meta command `/cco-checkup`** - Regular maintenance routine with health dashboard and full quality audit
-- **New command `/cco-research`** - Multi-source research with reliability scoring, contradiction detection, consensus mapping, bias detection, and AI-synthesized recommendations
-- **New command `/cco-commit`** - Secrets detection, large file warnings, breaking change detection, and staged/unstaged handling with Modify/Merge/Split/Edit options
+- **Meta command `/cco:preflight`** - Pre-release workflow with quality gate, architecture review, changelog & docs sync, and go/no-go summary
+- **Meta command `/cco:checkup`** - Regular maintenance routine with health dashboard and full quality audit
+- **New command `/cco:research`** - Multi-source research with reliability scoring, contradiction detection, consensus mapping, bias detection, and AI-synthesized recommendations
+- **New command `/cco:commit`** - Secrets detection, large file warnings, breaking change detection, and staged/unstaged handling with Modify/Merge/Split/Edit options
 - **New agent `cco-agent-research`** - External source research with tiered reliability scoring (T1-T6), contradiction detection, and AI synthesis
 - **4 new scopes for `cco-agent-analyze`** - `references` (cross-file mapping), `architecture` (dependency graphs), `conventions` (pattern discovery), `trends` (historical metrics)
 - **Agent Integration sections** - All commands now document which agents and scopes they use
-- **`--hygiene` flag for `/cco-optimize`** - Quick cleanup combining orphans + stale-refs + duplicates
-- **Enhanced `/cco-preflight` pre-flight** - Version sync, leftover markers, feature trace, install self-test, semver review
-- **Cleanliness category in `/cco-optimize`** - Orphans, stale references, and duplicates moved from audit
+- **`--hygiene` flag for `/cco:optimize`** - Quick cleanup combining orphans + stale-refs + duplicates
+- **Enhanced `/cco:preflight` pre-flight** - Version sync, leftover markers, feature trace, install self-test, semver review
+- **Cleanliness category in `/cco:optimize`** - Orphans, stale references, and duplicates moved from audit
 - **Dynamic Context Injection** - Commands use `!` backtick syntax for real-time context at load time (git status, branch, project info available instantly)
 - **Tool Restrictions** - `allowed-tools` frontmatter limits each command to declared tools only, preventing accidental destructive operations
 - **7 new CCO-Specific rules** - Parallel Execution, Quick Mode, Conservative Judgment, Skip Criteria, Task Tracking, Dynamic Context, Tool Restrictions
 - **Unified table format** - All rules now use `| * Rule | Description |` format for consistent counting
-- **Local mode for `/cco-config`** - Project-specific statusline and permissions via `cco-install --local`
+- **Local mode for `/cco:config`** - Project-specific statusline and permissions via `cco-install --local`
 - **Statusline enhancements** - Git release tag display, improved layout with dot separators, Full/Minimal modes
 - **Permissions system** - Four levels (safe/balanced/permissive/full) derived from full.json template
-- **AI Performance config** - Auto-detection based on project complexity in `/cco-config`
+- **AI Performance config** - Auto-detection based on project complexity in `/cco:config`
 - **Impact Preview** - Direct files, dependents, test coverage, and risk assessment in Fix Workflow
 - **Detection exclusions** - Prevent false positives from benchmarks/, examples/, test fixtures
 - **Pre-check validation** - Setup functions fail fast with helpful message if `~/.claude/` doesn't exist
@@ -65,7 +65,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - **Configurable subprocess timeouts** - `CCO_SUBPROCESS_TIMEOUT` and `CCO_SUBPROCESS_TIMEOUT_PACKAGE` environment variables
 - **`@cli_entrypoint` decorator** - Standardized exception handling for CLI entry points (KeyboardInterrupt → 130, Exception → 1)
 - **Option Batching** - Questions with >4 options now paginated with "All (N)" bulk selection on first page
-- **Unified /cco-config flow** - Configure, Remove, and Export in single multiSelect question
+- **Unified /cco:config flow** - Configure, Remove, and Export in single multiSelect question
 - **Remove Configuration** - Remove any setting (AI Performance, Statusline, Permissions, Rules)
 - **Export content selection** - User chooses which sections to include in export
 - **Rule exemplars** - Correct/incorrect examples for Question Formatting to improve AI consistency
@@ -75,11 +75,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Breaking Changes
 - **Command renames** - All commands renamed for consistency:
-  - `/cco-tune` → `/cco-config`
-  - `/cco-health` → `/cco-status`
-  - `/cco-audit` → `/cco-optimize`
-  - `/cco-refactor` → `/cco-review`
-  - `/cco-generate` → `/cco-research`
+  - `/cco-tune` → `/cco:config`
+  - `/cco-health` → `/cco:status`
+  - `/cco-audit` → `/cco:optimize`
+  - `/cco-refactor` → `/cco:review`
+  - `/cco-generate` → `/cco:research`
 - **Agent consolidation** - `cco-agent-detect` + `cco-agent-scan` → `cco-agent-analyze`; `cco-agent-action` → `cco-agent-apply`
 - **Deprecated `setup_claude_md` function** - Use `clean_claude_md` instead
 
@@ -110,8 +110,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - **Documentation expanded** - Added `docs/commands.md`, `docs/agents.md`, `docs/rules.md`
 - **CCO-Specific rules** - Comprehensive workflow mechanisms (Command Flow, Fix Workflow, Approval Flow, Question Formatting, Output Formatting, Safety Classification, Impact Preview, Priority Levels)
 - **CCO marker pattern** - Universal backward-compatible pattern for clean upgrades from any version
-- **Command consolidation** - `/cco-checkup` Phase 2 now runs all scopes (security, quality, hygiene, best-practices) in single pass, Phase 3 removed
-- **Command consolidation** - `/cco-preflight` Phase 2 now runs all scopes in single pass, Phase 3 (Cleanliness) merged, phases renumbered (7→6)
+- **Command consolidation** - `/cco:checkup` Phase 2 now runs all scopes (security, quality, hygiene, best-practices) in single pass, Phase 3 removed
+- **Command consolidation** - `/cco:preflight` Phase 2 now runs all scopes in single pass, Phase 3 (Cleanliness) merged, phases renumbered (7→6)
 - **Flag consistency** - Standardized on `--fix` flag across all commands (replaced `--auto-fix`)
 - **Help text expanded** - `__main__.py` now lists all 8 commands with descriptions
 - **Agent Selection table** - Updated with correct scope assignments and orchestration notes
@@ -137,7 +137,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - **Migration cleanup** - Added `cco-tools.md` to old rule file cleanup list
 - **Complete rule cleanup** - `remove_rules_dir()` now removes `tools.md` and `adaptive.md` from cco/ subdirectory
 - **Detection completeness** - `has_rules_dir()` checks for all possible CCO rule files
-- **Local CLAUDE.md cleanup** - `/cco-config` now removes ALL CCO markers for v1.0.0 compatibility
+- **Local CLAUDE.md cleanup** - `/cco:config` now removes ALL CCO markers for v1.0.0 compatibility
 - **Related Commands duplicates** - Removed duplicate entries in cco-checkup.md and cco-preflight.md
 - **v1.0.0 CHANGELOG** - Corrected command list to match actual release
 - **README expanded** - Added comprehensive Claude Code Integration section with feature sources
@@ -145,8 +145,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - **README statusline params** - Aligned documentation with CLI (`cco-full`/`cco-minimal` instead of `full`/`minimal`)
 
 ### Removed
-- AI-Patterns Detection category from `/cco-optimize` (Claude already handles this)
-- Production Readiness Mode from `/cco-review` (use `/cco-optimize --pre-release`)
+- AI-Patterns Detection category from `/cco:optimize` (Claude already handles this)
+- Production Readiness Mode from `/cco:review` (use `/cco:optimize --pre-release`)
 - Redundant rule references from commands (use CCO-Specific rules)
 - Hardcoded rule counts (now dynamic)
 - Duplicate rules across categories
@@ -154,7 +154,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## [1.0.0] - 2025-12-02
 
 ### Added
-- 8 slash commands: `/cco-tune`, `/cco-health`, `/cco-audit`, `/cco-review`, `/cco-optimize`, `/cco-refactor`, `/cco-generate`, `/cco-commit`
+- 8 slash commands: `/cco-tune`, `/cco-health`, `/cco-audit`, `/cco:review`, `/cco:optimize`, `/cco-refactor`, `/cco-generate`, `/cco:commit`
 - 3 specialized agents: Detect, Scan, Action
 - Standards system with Universal, AI-Specific, and Conditional categories
 - Risk-based approval flow with AskUserQuestion

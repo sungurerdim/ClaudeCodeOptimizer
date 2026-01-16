@@ -5,7 +5,7 @@ allowed-tools: Read(*), Grep(*), Edit(*), Bash(*), AskUserQuestion
 model: opus
 ---
 
-# /cco-commit
+# /commit
 
 **Smart Commits** - Fast quality gates + atomic grouping, no unnecessary questions.
 
