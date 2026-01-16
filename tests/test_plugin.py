@@ -75,14 +75,14 @@ class TestCommands:
     """Test command files."""
 
     EXPECTED_COMMANDS = [
-        "cco-checkup.md",
-        "cco-commit.md",
-        "cco-config.md",
-        "cco-optimize.md",
-        "cco-preflight.md",
-        "cco-research.md",
-        "cco-review.md",
-        "cco-status.md",
+        "checkup.md",
+        "commit.md",
+        "config.md",
+        "optimize.md",
+        "preflight.md",
+        "research.md",
+        "review.md",
+        "status.md",
     ]
 
     def test_all_commands_exist(self):
