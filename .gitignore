@@ -1,7 +1,17 @@
 # Claude Code Plugin - .gitignore
 
+# Python
+__pycache__/
+*.py[cod]
+*.pyo
+.pytest_cache/
+.ruff_cache/
+
 # Benchmark (separate dev tool - not part of plugin)
 benchmark/
+benchmarks/
+*_benchmark*
+_benchmark*
 
 # OS generated files
 .DS_Store
