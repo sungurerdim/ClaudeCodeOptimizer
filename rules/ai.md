@@ -259,7 +259,7 @@ For CRITICAL severity findings, validate with multiple reasoning paths:
 ### State Management
 - **State-Persistence**: Use JSON for structured state (findings, test results), markdown for progress notes
 - **Git-State-Tracking**: Use git for checkpoints and state tracking across sessions
-- **TodoWrite-Progress**: TodoWrite for step-by-step visibility and task tracking
+- **Task-Progress**: Use task management for step-by-step visibility and tracking
 
 ## Output Standards
 

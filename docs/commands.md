@@ -36,25 +36,23 @@ All commands follow a standardized structure for consistency and reliability.
 
 ```
 1. Architecture table     → All steps visible at a glance
-2. Progress Tracking      → TodoWrite with all Step-N items
-3. Step-N sections        → Each step contains:
+2. Step-N sections        → Each step contains:
    - What to do
    - AskUserQuestion (if applicable)
    - ### Validation block
-4. Reference section      → Flags, tables, context application
-5. Rules section          → Sequential execution, validation gates
+3. Reference section      → Flags, tables, context application
+4. Rules section          → Sequential execution, validation gates
 ```
 
 ### Key Principles
 
-| Principle                              | Description                                                    |
-|----------------------------------------|----------------------------------------------------------------|
-| **TodoWrite ↔ Architecture alignment** | Same step count in both                                        |
-| **Questions in flow**                  | Each question clearly placed in its step                       |
-| **Validation gates**                   | Every step ends with validation block                          |
-| **Conditional steps**                  | Marked with `[SKIP if X]` or `[MANDATORY if X]`                |
-| **Sub-steps**                          | Complex steps use Step-N.1, Step-N.2 format                    |
-| **Rules enforcement**                  | "Sequential execution" and "Validation gates" in every command |
+| Principle                | Description                                                    |
+|--------------------------|----------------------------------------------------------------|
+| **Questions in flow**    | Each question clearly placed in its step                       |
+| **Validation gates**     | Every step ends with validation block                          |
+| **Conditional steps**    | Marked with `[SKIP if X]` or `[MANDATORY if X]`                |
+| **Sub-steps**            | Complex steps use Step-N.1, Step-N.2 format                    |
+| **Rules enforcement**    | "Sequential execution" and "Validation gates" in every command |
 
 ### Validation Block Format
 

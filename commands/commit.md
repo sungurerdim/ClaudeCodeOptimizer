@@ -37,7 +37,7 @@ model: opus
 | 4 | Verify | Confirm commits created | git log check |
 | 5 | Summary | Show results | Instant |
 
-**No TodoWrite** - Fast operation, output is self-explanatory.
+**Fast operation** - Output is self-explanatory.
 
 ---
 
@@ -332,4 +332,4 @@ if (stashList.trim()) {
 4. **No approval by default** - Table shown, commit direct, use `--confirm` if needed
 5. **Smart defaults** - Single commit unless `--split`
 6. **Parallel gates** - Format+lint+types run together
-7. **Fast path** - No TodoWrite, minimal questions
+7. **Fast path** - Minimal questions

@@ -8,7 +8,7 @@ allowed-tools: Read(*), Grep(*), Glob(*), Bash(*), Task(*)
 
 **Health Dashboard** - Quick snapshot via cco-agent-analyze.
 
-Read-only. No TodoWrite - single agent call + display.
+Read-only. Single agent call + display.
 
 ## Context
 
@@ -108,4 +108,4 @@ Run `/optimize` to fix issues.
 
 1. **Single agent call** - cco-agent-analyze handles all collection
 2. **Read-only** - No file modifications
-3. **Fast** - No TodoWrite, minimal overhead
+3. **Fast** - Minimal overhead

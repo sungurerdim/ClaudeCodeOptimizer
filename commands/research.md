@@ -1,7 +1,7 @@
 ---
 description: Multi-source research with CRAAP+ reliability scoring
 argument-hint: [--quick] [--deep] [--local] [--security] [--changelog]
-allowed-tools: WebSearch(*), WebFetch(*), Read(*), Grep(*), Glob(*), Task(*), TodoWrite, AskUserQuestion
+allowed-tools: WebSearch(*), WebFetch(*), Read(*), Grep(*), Glob(*), Task(*), AskUserQuestion
 model: opus
 ---
 
@@ -26,20 +26,6 @@ Hybrid research: Local (Glob/Grep) + Web (cco-agent-research) with tiered model 
 | 3 | Research | Parallel: Local + Web sources | Fast |
 | 4 | Synthesize | Tiered model strategy | Accurate |
 | 5 | Output | Progressive display | Real-time |
-
----
-
-## Progress Tracking [CRITICAL]
-
-```javascript
-TodoWrite([
-  { content: "Step-1: Select depth", status: "in_progress", activeForm: "Selecting depth" },
-  { content: "Step-2: Parse query", status: "pending", activeForm: "Parsing query" },
-  { content: "Step-3: Run parallel research", status: "pending", activeForm: "Running research" },
-  { content: "Step-4: Synthesize findings", status: "pending", activeForm: "Synthesizing" },
-  { content: "Step-5: Show output", status: "pending", activeForm: "Showing output" }
-])
-```
 
 ---
 

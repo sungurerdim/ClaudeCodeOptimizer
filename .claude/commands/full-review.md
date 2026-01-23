@@ -1,7 +1,7 @@
 ---
 description: CCO system health check (129 checks across 10 categories)
 argument-hint: [--auto] [--quick] [--focus=X] [--report] [--fix] [--fix-all]
-allowed-tools: Read(*), Grep(*), Glob(*), Bash(*), Task(*), TodoWrite, AskUserQuestion, Edit(*)
+allowed-tools: Read(*), Grep(*), Glob(*), Bash(*), Task(*), AskUserQuestion, Edit(*)
 model: opus
 ---
 
@@ -50,7 +50,7 @@ const isUnattended = args.includes("--auto") || args.includes("--unattended")
 const isReportOnly = args.includes("--report")
 
 if (isUnattended) {
-  // SILENT MODE: No TodoWrite, no questions, fix everything
+  // SILENT MODE: No questions, fix everything
   config = {
     action: "Fix all",
     focus: args.match(/--focus=(\w+)/)?.[1] || "all"
@@ -75,26 +75,6 @@ if (isReportOnly) {
 | 5 | Approval | Q2: Select fixes (conditional) | Only if needed |
 | 6 | Apply | Apply selected fixes | Batched |
 | 7 | Summary | Show report | Instant |
-
----
-
-## Progress Tracking [SKIP IF --auto]
-
-**If `--auto` flag: Skip TodoWrite entirely. Silent execution.**
-
-```javascript
-if (!isUnattended) {
-  TodoWrite([
-    { content: "Step-1: Get review settings", status: "in_progress", activeForm: "Getting settings" },
-    { content: "Step-2: Detect inventory", status: "pending", activeForm: "Detecting inventory" },
-    { content: "Step-3: Run 10-category analysis", status: "pending", activeForm: "Analyzing categories" },
-    { content: "Step-4: Prioritize findings", status: "pending", activeForm: "Prioritizing findings" },
-    { content: "Step-5: Get fix approval", status: "pending", activeForm: "Getting approval" },
-    { content: "Step-6: Apply fixes", status: "pending", activeForm: "Applying fixes" },
-    { content: "Step-7: Generate report", status: "pending", activeForm: "Generating report" }
-  ])
-}
-```
 
 ---
 
@@ -223,12 +203,11 @@ Cross-file terminology must match exactly:
 | Element | Check | Severity |
 |---------|-------|----------|
 | Architecture table | Correct `\| Step \| Name \| Action \|` format | HIGH |
-| TodoWrite | IF used: in_progress → completed flow | MEDIUM |
 | Validation blocks | Clear pass/fail criteria | MEDIUM |
 | Context check | Commands needing context verify it exists | HIGH |
 | Accounting | Fix commands report done/fail | HIGH |
 
-**NOT findings:** Simple commands without TodoWrite, short commands without architecture tables.
+**NOT findings:** Simple commands, short commands without architecture tables.
 
 ### 2.2 AskUserQuestion Standards
 | Check | Requirement | Severity |
@@ -375,7 +354,6 @@ Checks:
 ### 6.1 Progress Visibility
 | Check | When Required | Severity |
 |-------|---------------|----------|
-| TodoWrite | IF 5+ steps | MEDIUM |
 | Step format | IF multi-step | LOW |
 | Long ops % | IF >30s operation | MEDIUM |
 | Phase separation | IF complex command | LOW |
@@ -708,7 +686,7 @@ Before flagging ANY missing element:
 **All NO → not a finding.**
 
 NON-findings:
-- Simple command without TodoWrite
+- Simple command without explicit progress tracking
 - Fast command without progress bar
 - 2-step command without architecture table
 

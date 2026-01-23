@@ -1,7 +1,7 @@
 ---
 description: Release verification gate - full optimization + review + tests + build
 argument-hint: [--auto] [--intensity=X] [--dry-run] [--strict] [--tag] [--push]
-allowed-tools: Read(*), Grep(*), Glob(*), Edit(*), Bash(*), Task(*), TodoWrite, AskUserQuestion
+allowed-tools: Read(*), Grep(*), Glob(*), Edit(*), Bash(*), Task(*), AskUserQuestion
 model: opus
 ---
 
@@ -102,20 +102,6 @@ When `--intensity=full-fix` or user selects "Full Fix":
 - **Zero deferrals** - no "future iteration", no "lower priority"
 - **Zero skips** - every finding fixed NOW
 - Final accounting: `applied + failed = total` (no AI declines allowed)
-
----
-
-## Progress Tracking [CRITICAL]
-
-```javascript
-TodoWrite([
-  { content: "Step-1: Get intensity + run pre-flight", status: "in_progress", activeForm: "Getting intensity" },
-  { content: "Step-2: Run optimize + review", status: "pending", activeForm: "Running optimize and review" },
-  { content: "Step-3: Run verification", status: "pending", activeForm: "Running verification" },
-  { content: "Step-4: Generate changelog", status: "pending", activeForm: "Generating changelog" },
-  { content: "Step-5: Get release decision", status: "pending", activeForm: "Getting decision" }
-])
-```
 
 ---
 
