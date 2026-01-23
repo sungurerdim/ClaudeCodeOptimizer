@@ -7,7 +7,7 @@ allowed-tools: Read(*), Grep(*), Glob(*), Edit(*), Bash(*), Task(*)
 
 **Maintenance Routine** - Parallel health + audit for fast weekly checkups.
 
-Meta command: runs /status and /optimize in parallel. No TodoWrite - delegates to sub-commands.
+Meta command: runs /status and /optimize in parallel. Delegates progress tracking to sub-commands.
 
 ## Context
 
@@ -99,4 +99,4 @@ Status: {status}
 1. **Parallel-first** - Launch both in single message
 2. **Model strategy** - Haiku for health, Opus for audit
 3. **Delegate** - Sub-commands handle their own logic
-4. **Fast** - No TodoWrite, sub-commands show progress
+4. **Fast** - Sub-commands show progress

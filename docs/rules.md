@@ -473,16 +473,9 @@ Status: {status} | Applied: {n} | Failed: {n} | Total: {n}
 - **Test-Fixtures**: Skip `fixtures/`, `testdata/`, `__snapshots__/`
 - **Examples**: Skip `examples/`, `samples/`, `demo/`, `benchmarks/`
 
-### Progress Tracking (TodoWrite)
+### Progress Tracking
 
-- **Start-With-Todo**: Create todo list with ALL steps at command start
-- **Track-In-Progress**: Mark `in_progress` before starting each step
-- **Update-Completed**: Mark `completed` immediately after each step
-- **Single-Active**: Exactly ONE item `in_progress` at a time
-- **Immediate-Update**: Update status immediately, not batched
-- **No-Skip-Items**: Never skip items - update status instead
-- **ActiveForm-Continuous**: Use present continuous (-ing form)
-- **Content-Imperative**: Use imperative form
+Progress tracking is handled automatically by Claude Code's task management system. Multi-step commands benefit from automatic status updates and dependency tracking.
 
 ### Artifact Handling
 
@@ -1276,7 +1269,7 @@ Status: {status} | Applied: {n} | Failed: {n} | Total: {n}
 ### Why AGENTS.md Excludes Tool Rules
 
 Tool rules depend on Claude Code specific features:
-- `AskUserQuestion`, `TodoWrite`, `Task` tool references
+- `AskUserQuestion`, `Task`, task management tool references
 - `.claude/` directory structure
 - CCO command integration (`/cco-*`)
 

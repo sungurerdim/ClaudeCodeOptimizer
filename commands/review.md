@@ -1,7 +1,7 @@
 ---
 description: Strategic architecture assessment - current vs ideal state gap analysis
 argument-hint: [--auto] [--intensity=X] [--focus=X] [--report] [--dry-run] [--quick]
-allowed-tools: Read(*), Grep(*), Glob(*), Edit(*), Bash(*), Task(*), TodoWrite, AskUserQuestion
+allowed-tools: Read(*), Grep(*), Glob(*), Edit(*), Bash(*), Task(*), AskUserQuestion
 model: opus
 ---
 
@@ -124,20 +124,6 @@ When `--intensity=full-fix` or user selects "Full Fix":
 - **No deferrals** - no "future iteration", no "later pass", no "lower priority"
 - **Only exit** - FIXED or TECHNICAL FAILURE (with specific blocker)
 - Accounting: `applied + failed = total` (no AI declines allowed)
-
----
-
-## Progress Tracking [CRITICAL]
-
-```javascript
-TodoWrite([
-  { content: "Step-1: Get review settings", status: "in_progress", activeForm: "Getting settings" },
-  { content: "Step-2: Analyze current vs ideal", status: "pending", activeForm: "Analyzing gaps" },
-  { content: "Step-3: Show recommendations", status: "pending", activeForm: "Showing recommendations" },
-  { content: "Step-4: Apply changes", status: "pending", activeForm: "Applying changes" },
-  { content: "Step-5: Show summary", status: "pending", activeForm: "Showing summary" }
-])
-```
 
 ---
 

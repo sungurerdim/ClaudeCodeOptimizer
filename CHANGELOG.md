@@ -5,7 +5,7 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
-## [2.0.0] - 2026-01-13
+## [Unreleased]
 
 ### Added
 - **CC v2.1.6+ compatibility** - Statusline now uses `used_percentage` field when available (with fallback for older versions)
@@ -13,7 +13,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - **Claude 4.5 optimization rules** - New rules for explicit instructions, parallel tool batching, and subagent delegation
 - **Context awareness rules** - Complete tasks fully, no self-limiting, checkpoint long tasks
 - **Progressive context warning** - Statusline shows early warnings at 50%/70%/85% thresholds with token breakdown
-- **Todo progress indicator** - Statusline displays current task from TodoWrite tool
+- **Todo progress indicator** - Statusline displays current task from task management system
 - **Benchmark Reports tab** - Executive summary with AI-powered comparison and 6-dimension scoring
 - **Explicit model parameters** - All agent calls now have explicit model specification for clarity and maintainability
 - **Scope-aware remove** - Statusline and permissions remove now ask for Global/Local scope
@@ -87,6 +87,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - **Path traversal fix** - Resolve paths before validation in `_is_safe_path` to prevent symlink/traversal bypasses
 
 ### Changed
+- **Claude Code 2.1.16+ compatibility** - Migrated from TodoWrite to new task management system (TaskCreate, TaskUpdate, TaskList, TaskGet)
+- **Simplified progress tracking** - Removed explicit TodoWrite calls; progress now handled automatically by Claude Code
 - **Model optimization** - cco-config uses haiku for file operations (cost reduction), opus reserved for code fixes
 - **Improved UX** - Skip options and verified defaults in commands
 - **Optimized question flow** - Scope compatibility improvements in commands

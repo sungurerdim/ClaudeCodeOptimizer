@@ -1,7 +1,7 @@
 ---
 description: Incremental code improvement - fix security, hygiene, types, lint, performance issues
 argument-hint: [--auto] [--security] [--hygiene] [--types] [--lint] [--performance] [--ai-hygiene] [--fix-all] [--score]
-allowed-tools: Read(*), Grep(*), Glob(*), Edit(*), Bash(*), Task(*), TodoWrite, AskUserQuestion
+allowed-tools: Read(*), Grep(*), Glob(*), Edit(*), Bash(*), Task(*), AskUserQuestion
 model: opus
 ---
 
@@ -115,7 +115,7 @@ const intensityArg = args.match(/--intensity=(\w+)/)?.[1]
 
 if (isUnattended) {
   // UNATTENDED MODE: CI/CD, pre-commit hooks, cron jobs
-  // No TodoWrite, no progress output, no intermediate messages
+  // No progress output, no intermediate messages
   // Skip Q1, Q2, Q3 - proceed directly with full scope and full fix
 
   config = {
@@ -154,26 +154,6 @@ if (isUnattended) {
 | 4 | Approval | Q2: Approve remaining (conditional) | Only if needed |
 | 5 | Apply | Apply approved fixes | Batched |
 | 6 | Summary | Show counts | Instant |
-
----
-
-## Progress Tracking [SKIP IF --auto]
-
-**If `--auto` flag: Skip TodoWrite entirely. Silent execution.**
-
-```javascript
-if (!isUnattended) {
-  TodoWrite([
-    { content: "Step-0: Run quality gates", status: "in_progress", activeForm: "Running quality gates" },
-    { content: "Step-1: Get optimization settings", status: "pending", activeForm: "Getting settings" },
-    { content: "Step-2: Run analysis", status: "pending", activeForm: "Running analysis" },
-    { content: "Step-3: Apply auto-fixes", status: "pending", activeForm: "Applying auto-fixes" },
-    { content: "Step-4: Get approval", status: "pending", activeForm: "Getting approval" },
-    { content: "Step-5: Apply approved", status: "pending", activeForm: "Applying approved fixes" },
-    { content: "Step-6: Show summary", status: "pending", activeForm: "Showing summary" }
-  ])
-}
-```
 
 ---
 
