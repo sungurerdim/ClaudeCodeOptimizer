@@ -25,7 +25,6 @@ Same prompts, better outcomes. Fewer errors, fewer rollbacks, more consistent re
 ## Install
 
 ```bash
-claude plugin marketplace remove ClaudeCodeOptimizer 2>/dev/null || true
 claude plugin marketplace add https://github.com/sungurerdim/ClaudeCodeOptimizer
 claude plugin install cco@ClaudeCodeOptimizer
 ```
@@ -38,10 +37,19 @@ claude plugin install cco@ClaudeCodeOptimizer
 /plugin marketplace update
 ```
 
+### Reinstall (if needed)
+
+```bash
+claude plugin uninstall cco@ClaudeCodeOptimizer
+claude plugin marketplace remove ClaudeCodeOptimizer
+claude plugin marketplace add https://github.com/sungurerdim/ClaudeCodeOptimizer
+claude plugin install cco@ClaudeCodeOptimizer
+```
+
 ### Uninstall
 
 ```bash
-claude plugin uninstall cco@ClaudeCodeOptimizer 2>/dev/null || true
+claude plugin uninstall cco@ClaudeCodeOptimizer
 claude plugin marketplace remove ClaudeCodeOptimizer
 ```
 
