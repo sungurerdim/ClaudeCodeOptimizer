@@ -46,3 +46,13 @@
 - **Migration-Portable**: Portable migration scripts across environments
 - **Query-Local**: Optimize for local query latency
 - **Replica-Sync**: Configure replica synchronization interval
+
+---
+
+## Database Operations
+**Trigger:** DB:* (auto-applied when any DB:* detected)
+
+- **Backup-Strategy**: Automated backups with tested restore
+- **Schema-Versioned**: Migration files with rollback plan
+- **Connection-Secure**: SSL/TLS, credentials in env vars
+- **Query-Timeout**: Prevent runaway queries

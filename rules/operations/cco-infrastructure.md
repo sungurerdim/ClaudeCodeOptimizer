@@ -211,3 +211,72 @@ slsa-verifier verify-artifact myapp.tar.gz \
 - **Stateless**: No local state between invocations - use external storage
 - **Cold-Start**: Minimize dependencies, use provisioned concurrency for latency-critical
 - **VPC-Minimize**: Avoid VPC unless necessary (adds cold start latency)
+
+---
+
+## API Gateway (Infra:APIGateway)
+**Trigger:** {api_gateway_config}, {api_gateway_deps}
+
+- **Rate-Limit-Config**: Per-route rate limiting with burst allowance
+- **Auth-Plugin**: Centralized authentication at gateway
+- **Route-Versioning**: API version routing (header or path)
+- **Circuit-Breaker-Route**: Per-upstream circuit breaker
+- **Logging-Structured**: Structured request/response logging
+- **CORS-Config**: Centralized CORS configuration
+- **Timeout-Upstream**: Upstream timeout configuration
+
+## Service Mesh (Infra:ServiceMesh)
+**Trigger:** {service_mesh_config}, {service_mesh_deps}
+
+- **mTLS-Enable**: Enable mutual TLS between services
+- **Retry-Policy**: Service-level retry policies
+- **Timeout-Budget**: Request timeout budgets
+- **Traffic-Split**: Traffic splitting for canary deployments
+- **Observability-Auto**: Auto-inject observability sidecars
+- **Auth-Policy**: Service-to-service authorization policies
+
+## Build Cache (Infra:BuildCache)
+**Trigger:** {build_cache_config}
+
+- **Cache-Key**: Deterministic cache key generation
+- **Remote-Cache**: Enable remote cache for CI
+- **Artifact-Share**: Share build artifacts across pipelines
+- **Invalidation-Explicit**: Explicit cache invalidation rules
+- **Size-Limit**: Cache size limits per project
+- **TTL-Set**: Set cache TTL based on artifact type
+
+---
+
+## Ansible (Infra:Ansible)
+**Trigger:** {ansible_config}, {ansible_patterns}
+
+- **Inventory-Dynamic**: Use dynamic inventory for cloud resources
+- **Role-Organization**: Organize playbooks into roles
+- **Vault-Secrets**: Ansible Vault for sensitive data
+- **Idempotency**: Ensure tasks are idempotent
+- **Handler-Notify**: Use handlers for service restarts
+- **Tags-Selective**: Tags for selective execution
+- **Molecule-Testing**: Test roles with Molecule
+
+## Consul (Infra:Consul)
+**Trigger:** {consul_config}, {consul_patterns}
+
+- **Service-Registration**: Auto-register services with health checks
+- **KV-Store**: Use KV store for dynamic configuration
+- **Service-Mesh**: Connect for service mesh
+- **ACL-Policies**: ACL policies for security
+- **Prepared-Queries**: Prepared queries for failover
+- **Watch-Handlers**: Watches for configuration updates
+- **Datacenter-Federation**: Multi-datacenter federation
+
+## Vault (Infra:Vault)
+**Trigger:** {vault_config}, {vault_patterns}
+
+- **Secrets-Engines**: Use appropriate secrets engines
+- **Authentication-Methods**: Configure auth methods per use case
+- **Policies-Minimal**: Minimal policies (least privilege)
+- **Dynamic-Secrets**: Dynamic secrets for databases
+- **Token-TTL**: Short-lived tokens with renewal
+- **Audit-Logging**: Enable audit logging
+- **Seal-Unseal**: Secure seal/unseal procedures
+- **Agent-Injection**: Vault Agent for Kubernetes injection

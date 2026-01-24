@@ -249,6 +249,88 @@ EOF
 | title | ~30 | concise action |
 | **TOTAL** | **≤50** | `fix(api): handle null response` |
 
+### Scope Detection Rules [CRITICAL]
+
+**NEVER invent details not in the diff. Only use what you can see.**
+
+```javascript
+// Scope = directory name where majority of changes occur
+function detectScope(files) {
+  // Group files by first directory
+  const dirs = files.map(f => f.split('/')[0] || f.split('/')[1])
+  const counts = dirs.reduce((acc, d) => { acc[d] = (acc[d] || 0) + 1; return acc }, {})
+
+  // Find majority directory
+  const sorted = Object.entries(counts).sort((a,b) => b[1] - a[1])
+  const [topDir, topCount] = sorted[0]
+  const total = files.length
+
+  // Rules:
+  // - If >50% files in one dir → use that dir as scope
+  // - If no majority → omit scope
+  if (topCount / total > 0.5) {
+    return topDir
+  }
+  return null  // No scope if mixed
+}
+```
+
+**Examples:**
+
+| Changed Files | Scope | Reason |
+|---------------|-------|--------|
+| `src/auth/login.py`, `src/auth/logout.py` | `auth` | 100% in auth |
+| `src/api/users.py`, `src/api/posts.py` | `api` | 100% in api |
+| `src/api/users.py`, `src/models/user.py` | (none) | 50/50 split |
+| `README.md`, `docs/setup.md` | `docs` | Majority in docs-related |
+
+### Type Detection Rules [CRITICAL]
+
+```javascript
+function detectType(files, diff) {
+  // Rule 1: New files created → feat
+  const newFiles = files.filter(f => isNewFile(f))
+  if (newFiles.length > 0 && newFiles.length === files.length) {
+    return 'feat'
+  }
+
+  // Rule 2: Test files only → test
+  const testFiles = files.filter(f => f.match(/test[_.]|_test\.|\.test\.|spec\./i))
+  if (testFiles.length === files.length) {
+    return 'test'
+  }
+
+  // Rule 3: Docs only → docs
+  const docFiles = files.filter(f => f.match(/\.(md|txt|rst)$|^docs\//))
+  if (docFiles.length === files.length) {
+    return 'docs'
+  }
+
+  // Rule 4: Bug fix indicators in diff → fix
+  if (diff.includes('fix') || diff.includes('bug') || diff.includes('issue')) {
+    return 'fix'
+  }
+
+  // Rule 5: Refactoring indicators → refactor
+  if (diff.includes('refactor') || diff.includes('rename') || diff.includes('move')) {
+    return 'refactor'
+  }
+
+  // Default: modification without clear type → chore
+  return 'chore'
+}
+```
+
+### Message Generation Rules [CRITICAL]
+
+1. **Title = First line of summary** - Max 50 chars including prefix
+2. **If title >50 chars → STOP and ask user** - Never truncate silently
+3. **NEVER use session memory** - Only analyze git diff content
+4. **Describe WHAT changed** - Not WHY (that's for body/ticket)
+
+**Bad:** `feat(api): implement the user authentication system with JWT tokens`
+**Good:** `feat(api): add JWT authentication`
+
 ---
 
 ## Step-4: Verify

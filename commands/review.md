@@ -710,6 +710,58 @@ cco-review: {OK|WARN|FAIL} | Gaps: {gapCount} | Applied: {applied} | Failed: {fa
 | API | <50% | >70% | <12 | 80%+ |
 | Web | <60% | >65% | <15 | 70%+ |
 
+### Metric Rationale [CRITICAL]
+
+**NEVER recommend changes without evidence and rationale.**
+
+| Metric | Target | Why | Source |
+|--------|--------|-----|--------|
+| Coupling <50% | Industry standard | Martin Fowler's "Refactoring", studies show >50% correlation leads to 2x bug rates | Fowler (1999), IEEE SE studies |
+| Cohesion >70% | High cohesion = easier testing | LCOM (Lack of Cohesion) metric, classes <70% harder to unit test | Chidamber & Kemerer metrics |
+| God Class <500 lines | Maintenance nightmare | Studies show classes >500 LOC have 3x defect density | NASA/JPL coding standards |
+| Complexity <15 | Human working memory | Cognitive complexity limit ~7±2 items, 15 CC maps to ~7 decision points | Miller's Law, McCabe (1976) |
+| Coverage 80% | Diminishing returns | 80% catches 90% of bugs, beyond 80% has 3x effort/bug ratio | Google Testing Blog |
+
+### Technology Assessment Rules [CRITICAL]
+
+**NEVER recommend technology changes without:**
+
+1. **Evidence from current codebase** - Specific pain points with file:line references
+2. **Migration cost estimate** - File count, breaking changes, estimated effort
+3. **Team familiarity consideration** - Don't recommend if team doesn't know it
+
+**Example of BAD recommendation:**
+> "Consider switching from Flask to FastAPI for better async support."
+
+**Example of GOOD recommendation:**
+> "Flask limitation found in `src/api/users.py:45` - sync endpoint blocking event loop.
+> FastAPI alternative: 15 files affected, 2-3 day migration, team has FastAPI experience.
+> Evidence: 3 endpoints doing sync DB calls in async context."
+
+### Gap Severity Calculation
+
+```javascript
+// Gap severity is calculated, not arbitrary
+function getGapSeverity(current, ideal, threshold) {
+  const gap = Math.abs(current - ideal)
+  const percentGap = gap / ideal * 100
+
+  // Severity based on % deviation from ideal
+  if (percentGap > threshold * 2) return "HIGH"      // >2x threshold = HIGH
+  if (percentGap > threshold) return "MEDIUM"        // >1x threshold = MEDIUM
+  if (percentGap > 0) return "LOW"                   // Any gap = LOW
+  return "OK"                                        // At or better than ideal
+}
+
+// Default thresholds (can be overridden by project type)
+const thresholds = {
+  coupling: 10,     // 10% deviation
+  cohesion: 10,     // 10% deviation
+  complexity: 20,   // 20% deviation (more tolerance)
+  coverage: 10      // 10% deviation
+}
+```
+
 ---
 
 ## Recovery

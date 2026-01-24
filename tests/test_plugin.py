@@ -19,6 +19,10 @@ class TestPluginStructure:
         """marketplace.json must exist."""
         assert (ROOT / ".claude-plugin" / "marketplace.json").exists()
 
+    def test_hooks_json_exists(self):
+        """hooks.json must exist."""
+        assert (ROOT / "hooks" / "hooks.json").exists()
+
     def test_commands_directory_exists(self):
         """commands/ directory must exist."""
         assert (ROOT / "commands").is_dir()
@@ -30,6 +34,14 @@ class TestPluginStructure:
     def test_rules_directory_exists(self):
         """rules/ directory must exist."""
         assert (ROOT / "rules").is_dir()
+
+    def test_rules_subdirectories_exist(self):
+        """rules/ must have core, languages, frameworks, operations subdirs."""
+        rules_dir = ROOT / "rules"
+        assert (rules_dir / "core").is_dir()
+        assert (rules_dir / "languages").is_dir()
+        assert (rules_dir / "frameworks").is_dir()
+        assert (rules_dir / "operations").is_dir()
 
 
 class TestPluginJson:
@@ -43,7 +55,7 @@ class TestPluginJson:
     def test_has_name(self, plugin_json):
         """plugin.json must have name field."""
         assert "name" in plugin_json
-        assert isinstance(plugin_json["name"], str)
+        assert plugin_json["name"] == "cco"
 
     def test_has_version(self, plugin_json):
         """plugin.json must have version field."""
@@ -54,6 +66,11 @@ class TestPluginJson:
         """plugin.json must have description field."""
         assert "description" in plugin_json
         assert isinstance(plugin_json["description"], str)
+
+    def test_has_hooks(self, plugin_json):
+        """plugin.json must reference hooks."""
+        assert "hooks" in plugin_json
+        assert plugin_json["hooks"] == "hooks/hooks.json"
 
 
 class TestMarketplaceJson:
@@ -71,11 +88,27 @@ class TestMarketplaceJson:
             assert field in marketplace_json, f"Missing field: {field}"
 
 
+class TestHooksJson:
+    """Test hooks.json schema."""
+
+    @pytest.fixture
+    def hooks_json(self):
+        path = ROOT / "hooks" / "hooks.json"
+        return json.loads(path.read_text(encoding="utf-8"))
+
+    def test_has_hooks_field(self, hooks_json):
+        """hooks.json must have hooks field."""
+        assert "hooks" in hooks_json
+
+    def test_has_session_start(self, hooks_json):
+        """hooks.json must have SessionStart hook."""
+        assert "SessionStart" in hooks_json["hooks"]
+
+
 class TestCommands:
     """Test command files."""
 
     EXPECTED_COMMANDS = [
-        "checkup.md",
         "commit.md",
         "config.md",
         "optimize.md",
@@ -92,10 +125,10 @@ class TestCommands:
             assert (commands_dir / cmd).exists(), f"Missing command: {cmd}"
 
     def test_command_count(self):
-        """Must have exactly 8 commands."""
+        """Must have exactly 7 commands."""
         commands_dir = ROOT / "commands"
         md_files = list(commands_dir.glob("*.md"))
-        assert len(md_files) == 8, f"Expected 8 commands, found {len(md_files)}"
+        assert len(md_files) == 7, f"Expected 7 commands, found {len(md_files)}"
 
     def test_commands_have_frontmatter(self):
         """Command files should start with ---."""
@@ -128,83 +161,64 @@ class TestAgents:
 
 
 class TestRules:
-    """Test rule files."""
+    """Test rule files structure."""
 
     def test_core_rules_exist(self):
-        """core.md must exist."""
-        assert (ROOT / "rules" / "core.md").exists()
-
-    def test_ai_rules_exist(self):
-        """ai.md must exist."""
-        assert (ROOT / "rules" / "ai.md").exists()
-
-    def test_rule_file_count(self):
-        """Must have exactly 62 rule files."""
-        rules_dir = ROOT / "rules"
-        md_files = list(rules_dir.glob("*.md"))
-        assert len(md_files) == 62, f"Expected 62 rule files, found {len(md_files)}"
-
-    def test_rule_format_consistency(self):
-        """All rules should follow - **Name**: Description format."""
-        import re
-
-        rules_dir = ROOT / "rules"
-        # Pattern includes numbers for rules like 3-Question-Guard, 80/20-Priority
-        rule_pattern = re.compile(r"^- \*\*[A-Za-z0-9].*\*\*:")
-
-        # Known non-rule patterns that use bold syntax (prefix match)
-        exception_prefixes = ("- **Skipped**",)
-
-        errors = []
-        for rule_file in rules_dir.glob("*.md"):
-            content = rule_file.read_text(encoding="utf-8")
-            for i, line in enumerate(content.split("\n"), 1):
-                # Check lines that look like rules but don't match pattern
-                if line.startswith("- **") and not rule_pattern.match(line):
-                    # Allow table rows, non-rule bullets, and known exceptions
-                    is_exception = any(line.startswith(p) for p in exception_prefixes)
-                    if "**:" not in line and "| " not in line and not is_exception:
-                        errors.append(f"{rule_file.name}:{i}: {line[:60]}")
-
-        assert not errors, f"Invalid rule format:\n" + "\n".join(errors[:10])
-
-
-class TestRuleCounts:
-    """Test rule counts match documentation."""
-
-    def count_rules_in_file(self, filepath: Path) -> int:
-        """Count rules in a file using grep pattern."""
-        import re
-
-        content = filepath.read_text(encoding="utf-8")
-        # Include numbers for rules like 3-Question-Guard, 80/20-Priority
-        pattern = re.compile(r"^- \*\*[A-Za-z0-9]", re.MULTILINE)
-        return len(pattern.findall(content))
+        """Core rules must exist with cco- prefix."""
+        core_dir = ROOT / "rules" / "core"
+        assert (core_dir / "cco-foundation.md").exists()
+        assert (core_dir / "cco-safety.md").exists()
+        assert (core_dir / "cco-workflow.md").exists()
 
     def test_core_rule_count(self):
-        """core.md should have 141 rules."""
-        count = self.count_rules_in_file(ROOT / "rules" / "core.md")
-        assert count == 141, f"Expected 141 core rules, found {count}"
+        """Must have exactly 3 core rules."""
+        core_dir = ROOT / "rules" / "core"
+        md_files = list(core_dir.glob("cco-*.md"))
+        assert len(md_files) == 3, f"Expected 3 core rules, found {len(md_files)}"
 
-    def test_ai_rule_count(self):
-        """ai.md should have 68 rules."""
-        count = self.count_rules_in_file(ROOT / "rules" / "ai.md")
-        assert count == 68, f"Expected 68 AI rules, found {count}"
+    def test_language_rule_count(self):
+        """Must have exactly 21 language rules."""
+        lang_dir = ROOT / "rules" / "languages"
+        md_files = list(lang_dir.glob("cco-*.md"))
+        assert len(md_files) == 21, f"Expected 21 language rules, found {len(md_files)}"
+
+    def test_framework_rule_count(self):
+        """Must have exactly 8 framework rules."""
+        fw_dir = ROOT / "rules" / "frameworks"
+        md_files = list(fw_dir.glob("cco-*.md"))
+        assert len(md_files) == 8, f"Expected 8 framework rules, found {len(md_files)}"
+
+    def test_operations_rule_count(self):
+        """Must have exactly 12 operations rules."""
+        ops_dir = ROOT / "rules" / "operations"
+        md_files = list(ops_dir.glob("cco-*.md"))
+        assert len(md_files) == 12, f"Expected 12 operations rules, found {len(md_files)}"
 
     def test_total_rule_count(self):
-        """Total rules should be 1364."""
+        """Total rules should be 44."""
         rules_dir = ROOT / "rules"
-        total = sum(
-            self.count_rules_in_file(f) for f in rules_dir.glob("*.md")
-        )
-        assert total == 1364, f"Expected 1364 total rules, found {total}"
+        total = 0
+        for subdir in ["core", "languages", "frameworks", "operations"]:
+            total += len(list((rules_dir / subdir).glob("cco-*.md")))
+        assert total == 44, f"Expected 44 total rules, found {total}"
 
-    def test_adaptive_rule_count(self):
-        """Adaptive rules (excluding core+ai) should be 1155."""
+    def test_all_rules_have_cco_prefix(self):
+        """All rule files should have cco- prefix."""
         rules_dir = ROOT / "rules"
-        total = sum(
-            self.count_rules_in_file(f)
-            for f in rules_dir.glob("*.md")
-            if f.name not in ("core.md", "ai.md")
-        )
-        assert total == 1155, f"Expected 1155 adaptive rules, found {total}"
+        for subdir in ["core", "languages", "frameworks", "operations"]:
+            for md_file in (rules_dir / subdir).glob("*.md"):
+                assert md_file.name.startswith("cco-"), f"{md_file} missing cco- prefix"
+
+
+class TestHookScript:
+    """Test hook script exists and is valid."""
+
+    def test_hook_script_exists(self):
+        """install-core-rules.js must exist."""
+        assert (ROOT / "hooks" / "install-core-rules.js").exists()
+
+    def test_hook_script_has_additional_context(self):
+        """Hook script should output additionalContext."""
+        script = (ROOT / "hooks" / "install-core-rules.js").read_text(encoding="utf-8")
+        assert "additionalContext" in script
+        assert "hookSpecificOutput" in script

@@ -137,3 +137,26 @@ fc.string()
 - **Fixtures-Scope**: Use appropriate fixture scope (function/module/session)
 - **Conftest-Organize**: Organize fixtures in conftest.py hierarchy
 - **Parametrize-Use**: Use @pytest.mark.parametrize for test variations
+
+---
+
+## Coverage Tiers
+
+### Basics (Testing:60%)
+- **Unit-Isolated**: Fast, deterministic unit tests
+- **Mocking**: Isolate tests from external dependencies
+- **Coverage-60**: Minimum 60% line coverage
+
+### Standard (Testing:80%)
+- **Integration**: Test component interactions
+- **Fixtures**: Reusable, maintainable test data
+- **Coverage-80**: Minimum 80% line coverage
+- **CI-on-PR**: Tests run on every PR
+- **Edge-Cases-Standard**: Test empty, None, single item, typical, boundary values
+
+### Full (Testing:90%)
+- **E2E**: End-to-end tests for critical user flows
+- **Contract**: Consumer-driven contract testing (if Architecture:Microservices)
+- **Mutation**: Mutation testing for test effectiveness (if Priority:Quality)
+- **Coverage-90**: Minimum 90% line coverage
+- **Edge-Cases-Full**: Test whitespace-only, unicode, max+1, state combinations, concurrent access

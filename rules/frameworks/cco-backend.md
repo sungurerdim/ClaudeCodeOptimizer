@@ -292,3 +292,21 @@
 - **Async-Handlers-Vapor**: Swift async/await for handlers
 - **Validation-Request**: Request validation with Validatable
 - **Environment-Config**: Environment-based configuration
+
+---
+
+## Backend Operations
+**Trigger:** T:Service + CI:*
+
+### Full Operations (Ops:Full)
+- **Config-as-Code**: Versioned, environment-aware config
+- **Health-Endpoints**: /health + /ready endpoints
+- **Graceful-Shutdown-Ops**: Drain connections on SIGTERM
+- **Observability**: Metrics + logs + traces
+- **CI-Gates**: lint + test + coverage gates
+- **Zero-Downtime**: Blue-green or canary deployments
+- **Feature-Flags**: Decouple deploy from release
+
+### Basic Operations (Ops:Basic)
+**Trigger:** T:CLI + CI:*
+- **Config-as-Code**: Versioned configuration

@@ -9,7 +9,7 @@ Same prompts, better outcomes. Fewer errors, fewer rollbacks, more consistent re
 
 ---
 
-## What CCO Does
+## Why CCO?
 
 | Without CCO | With CCO |
 |-------------|----------|
@@ -18,7 +18,53 @@ Same prompts, better outcomes. Fewer errors, fewer rollbacks, more consistent re
 | Silent operations | Full accounting: `Applied: 5 | Failed: 0 | Total: 5` |
 | "Add caching somewhere" | "Use TTL + invalidation for this data fetch" |
 
-**CCO is a process layer, not a teaching layer.** Opus 4.5 already knows how to code. CCO adds safety between intent and action.
+**CCO is a process layer, not a teaching layer.** Claude already knows how to code. CCO adds safety between intent and action.
+
+---
+
+## Key Features
+
+### Zero Global Pollution
+
+CCO never writes to `~/.claude/` or any global directory. Your global config stays untouched.
+
+```
+~/.claude/           ← Never modified
+~/.claude/rules/     ← Never modified
+./.claude/rules/     ← Only modified when you run /config
+```
+
+### Context Injection (Not File Copying)
+
+Core rules are injected directly into context via SessionStart hook — no files created, no cleanup needed.
+
+```
+SessionStart
+    │
+    ▼
+Hook reads rules/core/cco-*.md from plugin
+    │
+    ▼
+Returns JSON with additionalContext
+    │
+    ▼
+Claude Code injects into session context
+    │
+    ▼
+Rules active immediately (even on first session)
+```
+
+### Safe Updates with `cco-` Prefix
+
+All CCO rules use `cco-` prefix. Your own rules (without prefix) are never touched during updates.
+
+```
+.claude/rules/
+├── cco-python.md      ← Managed by CCO
+├── cco-backend.md     ← Managed by CCO
+├── my-custom-rule.md  ← YOUR file, never touched
+└── team-standards.md  ← YOUR file, never touched
+```
 
 ---
 
@@ -29,21 +75,14 @@ claude plugin marketplace add https://github.com/sungurerdim/ClaudeCodeOptimizer
 claude plugin install cco@ClaudeCodeOptimizer
 ```
 
-**Restart Claude Code** to load the new commands.
+**Restart Claude Code** to activate.
+
+That's it. Core rules are automatically injected on every session start.
 
 ### Update
 
 ```bash
 /plugin marketplace update
-```
-
-### Reinstall (if needed)
-
-```bash
-claude plugin uninstall cco@ClaudeCodeOptimizer
-claude plugin marketplace remove ClaudeCodeOptimizer
-claude plugin marketplace add https://github.com/sungurerdim/ClaudeCodeOptimizer
-claude plugin install cco@ClaudeCodeOptimizer
 ```
 
 ### Uninstall
@@ -57,13 +96,13 @@ claude plugin marketplace remove ClaudeCodeOptimizer
 
 ## Quick Start
 
-### 1. Configure Your Project
+### 1. Configure Your Project (Optional)
 
 ```
 /cco:config
 ```
 
-Auto-detects your stack (language, framework, database, tools) and generates project-specific rules.
+Auto-detects your stack and copies relevant project rules to `.claude/rules/`.
 
 ### 2. Check Health
 
@@ -71,7 +110,7 @@ Auto-detects your stack (language, framework, database, tools) and generates pro
 /cco:status
 ```
 
-See security, quality, and hygiene scores for your codebase.
+See security, quality, and hygiene scores.
 
 ### 3. Fix Issues
 
@@ -83,21 +122,36 @@ Security + quality + hygiene fixes with approval flow for risky changes.
 
 ---
 
-## What Gets Installed
+## What's Included
 
 | Component | Count | Purpose |
 |-----------|-------|---------|
-| Commands | 8 | `/cco:config`, `/cco:status`, `/cco:optimize`, etc. |
+| Commands | 7 | `/cco:config`, `/cco:status`, `/cco:optimize`, etc. |
 | Agents | 3 | Analyze, Apply, Research |
-| Rules | **1364** | Core (141) + AI (68) + Adaptive (1155) |
+| Rules | 44 | Core (3) + Languages (21) + Frameworks (8) + Operations (12) |
 
 ### Rules Coverage
 
-**62 rule files** covering:
-- **27 languages** — Python, TypeScript, Go, Rust, Java, C#, Ruby, PHP, Swift, Kotlin, and more
-- **35 domains** — API, Database, Testing, Security, CI/CD, Observability, Compliance, and more
+**44 rule files** covering:
+- **21 languages** — Python, TypeScript, Go, Rust, Java, C#, Ruby, PHP, Swift, Kotlin, and 11 niche languages
+- **20 domains** — API, Database, Testing, Security, CI/CD, Observability, Compliance, Infrastructure, and more
 
-Only relevant rules are loaded per project — zero unnecessary context.
+### Rules Architecture
+
+```
+┌─────────────────────────────────────────────────────────────┐
+│  CORE (injected via SessionStart hook)                      │
+│  → cco-foundation.md   Design principles, code quality      │
+│  → cco-safety.md       Non-negotiable security standards    │
+│  → cco-workflow.md     AI execution patterns                │
+├─────────────────────────────────────────────────────────────┤
+│  PROJECT (copied via /cco:config)                           │
+│  .claude/rules/                                             │
+│    ├── languages/      cco-python.md, cco-typescript.md...  │
+│    ├── frameworks/     cco-backend.md, cco-api.md...        │
+│    └── operations/     cco-database.md, cco-cicd.md...      │
+└─────────────────────────────────────────────────────────────┘
+```
 
 ---
 
@@ -112,7 +166,6 @@ Only relevant rules are loaded per project — zero unnecessary context.
 | `/cco:commit` | Quality-gated commit | Every commit |
 | `/cco:research` | Multi-source research | "Which library?", "Best practice?" |
 | `/cco:preflight` | Pre-release workflow | Before release |
-| `/cco:checkup` | Regular maintenance | Weekly or before PR |
 
 See [Commands documentation](docs/commands.md) for flags and examples.
 
@@ -131,6 +184,27 @@ See [Agents documentation](docs/agents.md) for detailed capabilities.
 ---
 
 ## How It Works
+
+```
+Plugin installed
+       │
+       ▼
+SessionStart hook fires
+       │
+       ▼
+Core rules injected into context (no files)
+       │
+       ▼
+/config copies project rules to .claude/rules/ (optional)
+       │
+       ▼
+Claude Code auto-loads .claude/rules/*.md
+       │
+       ▼
+Your prompts get stack-specific guidance
+```
+
+### CCO Flow
 
 ```
 ┌─────────────────────────────────────────────────────────────┐
@@ -187,7 +261,7 @@ See [Agents documentation](docs/agents.md) for detailed capabilities.
 - [Getting Started](docs/getting-started.md) — First 10 minutes with CCO
 - [Commands](docs/commands.md) — All commands with flags and examples
 - [Agents](docs/agents.md) — Specialized agents and scopes
-- [Rules](docs/rules.md) — Complete rules reference (1364 rules)
+- [Rules](docs/rules.md) — Complete rules reference
 
 ---
 
