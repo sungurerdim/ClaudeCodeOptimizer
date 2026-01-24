@@ -19,30 +19,33 @@ claude plugin install cco@ClaudeCodeOptimizer
 
 The plugin installs:
 
-1. `commands/` — 8 slash commands
+1. `commands/` — 7 slash commands
 2. `agents/` — 3 specialized agents
-3. `rules/` — 62 rule files (1364 rules total)
+3. `rules/` — 44 rule files across 4 categories
+4. `hooks/` — SessionStart hook for core rules injection
 
 **Structure:**
 ```
 .claude-plugin/cco/
 ├── commands/
-│   ├── cco-checkup.md
-│   ├── cco-commit.md
-│   ├── cco-config.md
-│   ├── cco-optimize.md
-│   ├── cco-preflight.md
-│   ├── cco-research.md
-│   ├── cco-review.md
-│   └── cco-status.md
+│   ├── commit.md
+│   ├── config.md
+│   ├── optimize.md
+│   ├── preflight.md
+│   ├── research.md
+│   ├── review.md
+│   └── status.md
 ├── agents/
 │   ├── cco-agent-analyze.md
 │   ├── cco-agent-apply.md
 │   └── cco-agent-research.md
+├── hooks/
+│   └── core-rules.json (injected at session start)
 └── rules/
-    ├── core.md (141 rules)
-    ├── ai.md (68 rules)
-    └── ... (60 adaptive rule files)
+    ├── core/ (3 files: foundation, safety, workflow)
+    ├── languages/ (21 files)
+    ├── frameworks/ (8 files)
+    └── operations/ (12 files)
 ```
 
 </details>
@@ -153,12 +156,15 @@ Auto-fixes safe issues:
 
 ## Understanding the Rules
 
-### Global Rules (Always Active)
+### Core Rules (Always Active)
 
-| File | Rules | Purpose |
-|------|-------|---------|
-| `core.md` | 141 | Fundamental principles (SSOT, DRY, YAGNI, Fail-Fast) |
-| `ai.md` | 68 | AI behavior patterns (Read-First, Verify-APIs) |
+Injected automatically at session start via hook:
+
+| File | Purpose |
+|------|---------|
+| `cco-foundation.md` | Design principles (SSOT, DRY, YAGNI, KISS) |
+| `cco-safety.md` | Security standards (OWASP, input validation) |
+| `cco-workflow.md` | AI behavior patterns (Read-First, Verify-APIs) |
 
 These apply to **all projects** automatically.
 
@@ -166,8 +172,9 @@ These apply to **all projects** automatically.
 
 | Category | Files | Examples |
 |----------|-------|----------|
-| Languages | 27 | python.md, typescript.md, go.md |
-| Domains | 35 | api.md, security.md, testing.md |
+| Languages | 21 | cco-python.md, cco-typescript.md, cco-go.md |
+| Frameworks | 8 | cco-fastapi.md, cco-react.md, cco-django.md |
+| Operations | 12 | cco-docker.md, cco-ci-cd.md, cco-testing.md |
 
 Selected by `/cco:config` based on your stack detection.
 
