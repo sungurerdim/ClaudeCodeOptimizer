@@ -718,9 +718,10 @@ PLUGIN_ROOT="${CLAUDE_PLUGIN_ROOT}"
 RULES_DIR="$PLUGIN_ROOT/content/rules"
 
 # Rules are now in granular files:
-# - $RULES_DIR/languages/{lang}.md   (27 files)
-# - $RULES_DIR/domains/{domain}.md   (33 files)
-# - $RULES_DIR/global/core.md, ai.md (2 files)
+# - $RULES_DIR/core/*.md             (3 files: foundation, safety, workflow)
+# - $RULES_DIR/languages/*.md        (21 files)
+# - $RULES_DIR/frameworks/*.md       (8 files)
+# - $RULES_DIR/operations/*.md       (12 files)
 
 # Example: Copy Python rules
 # cp "$RULES_DIR/languages/python.md" ".claude/cco/python.md"
@@ -991,7 +992,7 @@ Mark findings as `[from docs]` with `confidence: LOW`.
 
 **Frontmatter Decision:**
 - **No frontmatter (cross-cutting):**
-  - Core: context.md, core.md, ai.md
+  - Core: context.md (core rules injected via SessionStart hook)
   - Project types: api.md, database.md, mobile.md, cli.md, library.md, service.md
   - Frontend frameworks: react.md, vue.md, svelte.md, angular.md, solid.md, astro.md, qwik.md, htmx.md
   - Meta-frameworks: next.md, nuxt.md, sveltekit.md, remix.md
