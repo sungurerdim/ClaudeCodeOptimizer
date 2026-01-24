@@ -103,3 +103,13 @@
 - **Serialization-Aware**: Keep state serializable for resumability
 - **Event-QRL**: QRL-based event handlers for optimal loading
 - **City-Routing**: Use Qwik City for routing and data loading
+
+---
+
+## Internationalization (i18n)
+**Trigger:** locales/i18n/translations detected
+
+- **Strings-External**: No hardcoded user-facing text
+- **UTF8-Encoding**: Consistent UTF-8 encoding
+- **RTL-Support**: Bidirectional layout for RTL languages
+- **Locale-Format**: Culture-aware date/time/number formatting

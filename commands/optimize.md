@@ -43,6 +43,38 @@ model: opus
 
 **Fix everything that can be fixed.** Auto-fix safe items, ask approval for risky ones.
 
+## Fixable Definition [CRITICAL]
+
+A finding is **FIXABLE** if ALL conditions are met:
+1. **Single file change** - No cross-file refactoring required
+2. **No API contract change** - No breaking changes to public interfaces
+3. **No new dependencies** - No npm install/pip install required
+4. **Deterministic fix** - Not subjective (clear right answer exists)
+
+### Examples
+
+| Finding | Fixable? | Reason |
+|---------|----------|--------|
+| Remove unused import | YES | Single file, deterministic |
+| Add missing type annotation | YES | Single file, deterministic |
+| Replace print() with logger | YES | Single file, deterministic |
+| Fix SQL injection | YES | Single file, deterministic pattern |
+| Refactor god class | NO | Multiple files, subjective structure |
+| Change API response format | NO | Breaking change |
+| Add input validation | YES | Single file, deterministic (schema exists) |
+| Switch from sync to async | NO | Cross-file changes, architecture decision |
+
+### Auto-fix vs Approval Required
+
+| Category | Auto-fix? | Why |
+|----------|-----------|-----|
+| Unused imports/vars | Yes | Zero risk, deterministic |
+| Type annotations | Yes | Zero risk, tooling validates |
+| Formatting | Yes | Zero risk, deterministic |
+| Missing validation | Approval | Logic change, needs review |
+| Security fixes | Approval | High impact, needs review |
+| Refactoring | Approval | Subjective, needs context |
+
 ## Good Targets vs Bad Targets
 
 **Good optimization targets (fix these):**

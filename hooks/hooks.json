@@ -1,0 +1,5 @@
+{
+  "hooks": {
+    "SessionStart": ["node hooks/install-core-rules.js"]
+  }
+}
