@@ -47,24 +47,26 @@ jobs:
           count=$(ls -1 agents/*.md 2>/dev/null | wc -l)
           echo "✓ Found $count agent files"
 
-      - name: Validate rules directory
+      - name: Validate rules directory structure
         run: |
-          if [ ! -d "rules" ]; then
-            echo "Error: rules/ directory not found"
-            exit 1
-          fi
-          count=$(ls -1 rules/*.md 2>/dev/null | wc -l)
-          echo "✓ Found $count rule files"
-
-      - name: Validate required rules exist
-        run: |
-          for rule in core.md ai.md; do
-            if [ ! -f "rules/$rule" ]; then
-              echo "Error: Required rule rules/$rule not found"
+          for subdir in core languages frameworks operations; do
+            if [ ! -d "rules/$subdir" ]; then
+              echo "Error: rules/$subdir directory not found"
               exit 1
             fi
           done
-          echo "✓ Required rules (core.md, ai.md) exist"
+          count=$(find rules -name "cco-*.md" | wc -l)
+          echo "✓ Found $count rule files"
+
+      - name: Validate core rules exist
+        run: |
+          for rule in cco-foundation.md cco-safety.md cco-workflow.md; do
+            if [ ! -f "rules/core/$rule" ]; then
+              echo "Error: Required rule rules/core/$rule not found"
+              exit 1
+            fi
+          done
+          echo "✓ Core rules exist"
 
   test:
     name: Run Tests

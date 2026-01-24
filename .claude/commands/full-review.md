@@ -110,9 +110,10 @@ if (!isUnattended && !isReportOnly) {
 ```javascript
 // Parallel detection (relative paths - run from CCO repo root)
 COMMANDS = Bash("ls ./commands/*.md 2>/dev/null | wc -l")
-CORE_RULES = Bash("grep -c '^- \\*\\*' ./rules/core.md")
-AI_RULES = Bash("grep -c '^- \\*\\*' ./rules/ai.md")
-ADAPTIVE_RULES = Bash("grep -rh '^- \\*\\*' ./rules/*.md --exclude=core.md --exclude=ai.md 2>/dev/null | wc -l")
+CORE_RULES = Bash("find ./rules/core -name 'cco-*.md' | wc -l")
+LANG_RULES = Bash("find ./rules/languages -name 'cco-*.md' | wc -l")
+FW_RULES = Bash("find ./rules/frameworks -name 'cco-*.md' | wc -l")
+OPS_RULES = Bash("find ./rules/operations -name 'cco-*.md' | wc -l")
 VERSION = Bash("grep '\"version\"' ./.claude-plugin/plugin.json | grep -oP '\\d+\\.\\d+\\.\\d+'")
 
 // Store detected counts
@@ -120,9 +121,10 @@ inventory = {
   commands: parseInt(COMMANDS),
   agents: 3,  // Fixed: cco-agent-analyze, cco-agent-apply, cco-agent-research
   coreRules: parseInt(CORE_RULES),
-  aiRules: parseInt(AI_RULES),
-  adaptiveRules: parseInt(ADAPTIVE_RULES),
-  totalRules: parseInt(CORE_RULES) + parseInt(AI_RULES) + parseInt(ADAPTIVE_RULES),
+  langRules: parseInt(LANG_RULES),
+  fwRules: parseInt(FW_RULES),
+  opsRules: parseInt(OPS_RULES),
+  totalRules: parseInt(CORE_RULES) + parseInt(LANG_RULES) + parseInt(FW_RULES) + parseInt(OPS_RULES),
   version: VERSION
 }
 ```
@@ -158,9 +160,11 @@ allFindings = [...await batch1, ...await batch2].flat()
 
 ### 1.1 Dynamic Count Detection
 ```bash
-COMMANDS=$(ls ~/.claude/commands/cco-*.md 2>/dev/null | wc -l)
-CORE_RULES=$(grep -c "^- \*\*" ~/.claude/rules/cco/core.md)
-AI_RULES=$(grep -c "^- \*\*" ~/.claude/rules/cco/ai.md)
+COMMANDS=$(ls ./commands/*.md 2>/dev/null | wc -l)
+CORE_RULES=$(find ./rules/core -name 'cco-*.md' | wc -l)
+LANG_RULES=$(find ./rules/languages -name 'cco-*.md' | wc -l)
+FW_RULES=$(find ./rules/frameworks -name 'cco-*.md' | wc -l)
+OPS_RULES=$(find ./rules/operations -name 'cco-*.md' | wc -l)
 # Store as session variables for later phases
 ```
 
