@@ -240,9 +240,10 @@ This ensures stale rules from previous detections are removed before new ones ar
 PLUGIN_ROOT="${CLAUDE_PLUGIN_ROOT}"
 
 # Available content:
-# - $PLUGIN_ROOT/content/rules/languages/*.md   (27 language files)
-# - $PLUGIN_ROOT/content/rules/domains/*.md     (33 domain files)
-# - $PLUGIN_ROOT/content/rules/global/*.md      (core.md, ai.md)
+# - $PLUGIN_ROOT/rules/core/*.md                (3 core rule files)
+# - $PLUGIN_ROOT/rules/languages/*.md           (21 language files)
+# - $PLUGIN_ROOT/rules/frameworks/*.md          (8 framework files)
+# - $PLUGIN_ROOT/rules/operations/*.md          (12 operations files)
 # - $PLUGIN_ROOT/content/statusline/cco-*.js    (full, minimal)
 # - $PLUGIN_ROOT/content/permissions/*.json     (safe, balanced, permissive, full)
 ```
