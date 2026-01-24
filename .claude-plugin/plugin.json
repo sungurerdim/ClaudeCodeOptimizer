@@ -7,6 +7,15 @@
     "email": "sungurerdim@users.noreply.github.com"
   },
   "hooks": {
-    "SessionStart": ["sh -c \"cat ${CLAUDE_PLUGIN_ROOT}/hooks/core-rules.json\""]
+    "SessionStart": [
+      {
+        "hooks": [
+          {
+            "type": "command",
+            "command": "cat ${CLAUDE_PLUGIN_ROOT}/hooks/core-rules.json"
+          }
+        ]
+      }
+    ]
   }
 }

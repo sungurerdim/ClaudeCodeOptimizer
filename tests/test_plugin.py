@@ -221,13 +221,16 @@ class TestRules:
 class TestHookIntegration:
     """Test hook integration is properly configured."""
 
-    def test_plugin_hook_command_is_cross_platform(self):
-        """Hook command should use sh for cross-platform compatibility."""
+    def test_plugin_hook_command_format(self):
+        """Hook should use correct Claude Code hook schema."""
         path = ROOT / ".claude-plugin" / "plugin.json"
         plugin_json = json.loads(path.read_text(encoding="utf-8"))
-        hook_cmd = plugin_json["hooks"]["SessionStart"][0]
-        assert hook_cmd.startswith("sh -c")
-        assert "core-rules.json" in hook_cmd
+        session_start = plugin_json["hooks"]["SessionStart"]
+        assert isinstance(session_start, list)
+        assert "hooks" in session_start[0]
+        hook_def = session_start[0]["hooks"][0]
+        assert hook_def["type"] == "command"
+        assert "core-rules.json" in hook_def["command"]
 
     def test_core_rules_contains_all_core_files(self):
         """core-rules.json should contain content from all core rule files."""
