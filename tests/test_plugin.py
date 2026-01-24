@@ -19,9 +19,9 @@ class TestPluginStructure:
         """marketplace.json must exist."""
         assert (ROOT / ".claude-plugin" / "marketplace.json").exists()
 
-    def test_hooks_json_exists(self):
-        """hooks.json must exist."""
-        assert (ROOT / "hooks" / "hooks.json").exists()
+    def test_core_rules_json_exists(self):
+        """core-rules.json must exist."""
+        assert (ROOT / "hooks" / "core-rules.json").exists()
 
     def test_commands_directory_exists(self):
         """commands/ directory must exist."""
@@ -68,9 +68,10 @@ class TestPluginJson:
         assert isinstance(plugin_json["description"], str)
 
     def test_has_hooks(self, plugin_json):
-        """plugin.json must reference hooks."""
+        """plugin.json must have inline hooks definition."""
         assert "hooks" in plugin_json
-        assert plugin_json["hooks"] == "hooks/hooks.json"
+        assert isinstance(plugin_json["hooks"], dict)
+        assert "SessionStart" in plugin_json["hooks"]
 
 
 class TestMarketplaceJson:
@@ -88,21 +89,28 @@ class TestMarketplaceJson:
             assert field in marketplace_json, f"Missing field: {field}"
 
 
-class TestHooksJson:
-    """Test hooks.json schema."""
+class TestCoreRulesJson:
+    """Test core-rules.json schema."""
 
     @pytest.fixture
-    def hooks_json(self):
-        path = ROOT / "hooks" / "hooks.json"
+    def core_rules_json(self):
+        path = ROOT / "hooks" / "core-rules.json"
         return json.loads(path.read_text(encoding="utf-8"))
 
-    def test_has_hooks_field(self, hooks_json):
-        """hooks.json must have hooks field."""
-        assert "hooks" in hooks_json
+    def test_has_hook_specific_output(self, core_rules_json):
+        """core-rules.json must have hookSpecificOutput field."""
+        assert "hookSpecificOutput" in core_rules_json
 
-    def test_has_session_start(self, hooks_json):
-        """hooks.json must have SessionStart hook."""
-        assert "SessionStart" in hooks_json["hooks"]
+    def test_has_session_start_event(self, core_rules_json):
+        """core-rules.json must specify SessionStart event."""
+        output = core_rules_json["hookSpecificOutput"]
+        assert output["hookEventName"] == "SessionStart"
+
+    def test_has_additional_context(self, core_rules_json):
+        """core-rules.json must have additionalContext with rules."""
+        output = core_rules_json["hookSpecificOutput"]
+        assert "additionalContext" in output
+        assert len(output["additionalContext"]) > 1000  # Should have substantial content
 
 
 class TestCommands:
@@ -210,15 +218,22 @@ class TestRules:
                 assert md_file.name.startswith("cco-"), f"{md_file} missing cco- prefix"
 
 
-class TestHookScript:
-    """Test hook script exists and is valid."""
+class TestHookIntegration:
+    """Test hook integration is properly configured."""
 
-    def test_hook_script_exists(self):
-        """install-core-rules.js must exist."""
-        assert (ROOT / "hooks" / "install-core-rules.js").exists()
+    def test_plugin_hook_command_is_cross_platform(self):
+        """Hook command should use sh for cross-platform compatibility."""
+        path = ROOT / ".claude-plugin" / "plugin.json"
+        plugin_json = json.loads(path.read_text(encoding="utf-8"))
+        hook_cmd = plugin_json["hooks"]["SessionStart"][0]
+        assert hook_cmd.startswith("sh -c")
+        assert "core-rules.json" in hook_cmd
 
-    def test_hook_script_has_additional_context(self):
-        """Hook script should output additionalContext."""
-        script = (ROOT / "hooks" / "install-core-rules.js").read_text(encoding="utf-8")
-        assert "additionalContext" in script
-        assert "hookSpecificOutput" in script
+    def test_core_rules_contains_all_core_files(self):
+        """core-rules.json should contain content from all core rule files."""
+        core_rules_path = ROOT / "hooks" / "core-rules.json"
+        core_rules = json.loads(core_rules_path.read_text(encoding="utf-8"))
+        content = core_rules["hookSpecificOutput"]["additionalContext"]
+        assert "Foundation Rules" in content
+        assert "Safety Rules" in content
+        assert "Workflow Rules" in content
