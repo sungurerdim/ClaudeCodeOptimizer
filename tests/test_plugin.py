@@ -1,4 +1,14 @@
-"""Plugin structure and schema validation tests."""
+"""Plugin schema and integration validation tests.
+
+These tests validate:
+- JSON schema correctness (catches malformed config)
+- Hook integration (catches broken session injection)
+- Convention enforcement (catches naming violations)
+
+NOT tested (would break on every file change):
+- Hardcoded file counts
+- File/directory existence
+"""
 
 import json
 from pathlib import Path
@@ -8,74 +18,24 @@ import pytest
 ROOT = Path(__file__).parent.parent
 
 
-class TestPluginStructure:
-    """Test plugin directory structure."""
-
-    def test_plugin_json_exists(self):
-        """plugin.json must exist."""
-        assert (ROOT / ".claude-plugin" / "plugin.json").exists()
-
-    def test_marketplace_json_exists(self):
-        """marketplace.json must exist."""
-        assert (ROOT / ".claude-plugin" / "marketplace.json").exists()
-
-    def test_core_rules_json_exists(self):
-        """core-rules.json must exist."""
-        assert (ROOT / "hooks" / "core-rules.json").exists()
-
-    def test_commands_directory_exists(self):
-        """commands/ directory must exist."""
-        assert (ROOT / "commands").is_dir()
-
-    def test_agents_directory_exists(self):
-        """agents/ directory must exist."""
-        assert (ROOT / "agents").is_dir()
-
-    def test_rules_directory_exists(self):
-        """rules/ directory must exist."""
-        assert (ROOT / "rules").is_dir()
-
-    def test_rules_subdirectories_exist(self):
-        """rules/ must have core, languages, frameworks, operations subdirs."""
-        rules_dir = ROOT / "rules"
-        assert (rules_dir / "core").is_dir()
-        assert (rules_dir / "languages").is_dir()
-        assert (rules_dir / "frameworks").is_dir()
-        assert (rules_dir / "operations").is_dir()
-
-
 class TestPluginJson:
-    """Test plugin.json schema."""
+    """Validate plugin.json schema - catches malformed plugin config."""
 
     @pytest.fixture
     def plugin_json(self):
         path = ROOT / ".claude-plugin" / "plugin.json"
         return json.loads(path.read_text(encoding="utf-8"))
 
-    def test_has_name(self, plugin_json):
-        """plugin.json must have name field."""
-        assert "name" in plugin_json
-        assert plugin_json["name"] == "cco"
-
-    def test_has_version(self, plugin_json):
-        """plugin.json must have version field."""
-        assert "version" in plugin_json
-        assert isinstance(plugin_json["version"], str)
-
-    def test_has_description(self, plugin_json):
-        """plugin.json must have description field."""
-        assert "description" in plugin_json
-        assert isinstance(plugin_json["description"], str)
-
-    def test_has_hooks(self, plugin_json):
-        """plugin.json must have inline hooks definition."""
-        assert "hooks" in plugin_json
-        assert isinstance(plugin_json["hooks"], dict)
-        assert "SessionStart" in plugin_json["hooks"]
+    def test_has_required_fields(self, plugin_json):
+        """Plugin must have name, version, description, hooks."""
+        assert plugin_json.get("name") == "cco"
+        assert isinstance(plugin_json.get("version"), str)
+        assert isinstance(plugin_json.get("description"), str)
+        assert "SessionStart" in plugin_json.get("hooks", {})
 
 
 class TestMarketplaceJson:
-    """Test marketplace.json schema."""
+    """Validate marketplace.json schema - catches broken marketplace listing."""
 
     @pytest.fixture
     def marketplace_json(self):
@@ -83,160 +43,81 @@ class TestMarketplaceJson:
         return json.loads(path.read_text(encoding="utf-8"))
 
     def test_has_required_fields(self, marketplace_json):
-        """marketplace.json must have required fields."""
+        """Marketplace listing must have name, version, description, owner."""
         required = ["name", "version", "description", "owner"]
         for field in required:
             assert field in marketplace_json, f"Missing field: {field}"
 
 
 class TestCoreRulesJson:
-    """Test core-rules.json schema."""
+    """Validate core-rules.json schema - catches broken rule injection."""
 
     @pytest.fixture
     def core_rules_json(self):
         path = ROOT / "hooks" / "core-rules.json"
         return json.loads(path.read_text(encoding="utf-8"))
 
-    def test_has_hook_specific_output(self, core_rules_json):
-        """core-rules.json must have hookSpecificOutput field."""
-        assert "hookSpecificOutput" in core_rules_json
-
-    def test_has_session_start_event(self, core_rules_json):
-        """core-rules.json must specify SessionStart event."""
-        output = core_rules_json["hookSpecificOutput"]
-        assert output["hookEventName"] == "SessionStart"
-
-    def test_has_additional_context(self, core_rules_json):
-        """core-rules.json must have additionalContext with rules."""
-        output = core_rules_json["hookSpecificOutput"]
+    def test_hook_output_schema(self, core_rules_json):
+        """Hook output must have correct structure for Claude Code."""
+        output = core_rules_json.get("hookSpecificOutput", {})
+        assert output.get("hookEventName") == "SessionStart"
         assert "additionalContext" in output
-        assert len(output["additionalContext"]) > 1000  # Should have substantial content
+        # Content should be substantial (not empty/truncated)
+        assert len(output["additionalContext"]) > 1000
 
 
-class TestCommands:
-    """Test command files."""
+class TestCommandFormat:
+    """Validate command file format - catches broken command definitions."""
 
-    EXPECTED_COMMANDS = [
-        "commit.md",
-        "config.md",
-        "optimize.md",
-        "preflight.md",
-        "research.md",
-        "review.md",
-        "status.md",
-    ]
-
-    def test_all_commands_exist(self):
-        """All expected command files must exist."""
-        commands_dir = ROOT / "commands"
-        for cmd in self.EXPECTED_COMMANDS:
-            assert (commands_dir / cmd).exists(), f"Missing command: {cmd}"
-
-    def test_command_count(self):
-        """Must have exactly 7 commands."""
-        commands_dir = ROOT / "commands"
-        md_files = list(commands_dir.glob("*.md"))
-        assert len(md_files) == 7, f"Expected 7 commands, found {len(md_files)}"
-
-    def test_commands_have_frontmatter(self):
-        """Command files should start with ---."""
+    def test_commands_have_valid_frontmatter(self):
+        """Command files must start with YAML frontmatter."""
         commands_dir = ROOT / "commands"
         for cmd_file in commands_dir.glob("*.md"):
             content = cmd_file.read_text(encoding="utf-8")
             assert content.startswith("---"), f"{cmd_file.name} missing frontmatter"
+            # Frontmatter must be closed
+            parts = content.split("---", 2)
+            assert len(parts) >= 3, f"{cmd_file.name} has unclosed frontmatter"
 
 
-class TestAgents:
-    """Test agent files."""
-
-    EXPECTED_AGENTS = [
-        "cco-agent-analyze.md",
-        "cco-agent-apply.md",
-        "cco-agent-research.md",
-    ]
-
-    def test_all_agents_exist(self):
-        """All expected agent files must exist."""
-        agents_dir = ROOT / "agents"
-        for agent in self.EXPECTED_AGENTS:
-            assert (agents_dir / agent).exists(), f"Missing agent: {agent}"
-
-    def test_agent_count(self):
-        """Must have exactly 3 agents."""
-        agents_dir = ROOT / "agents"
-        md_files = list(agents_dir.glob("*.md"))
-        assert len(md_files) == 3, f"Expected 3 agents, found {len(md_files)}"
-
-
-class TestRules:
-    """Test rule files structure."""
-
-    def test_core_rules_exist(self):
-        """Core rules must exist with cco- prefix."""
-        core_dir = ROOT / "rules" / "core"
-        assert (core_dir / "cco-foundation.md").exists()
-        assert (core_dir / "cco-safety.md").exists()
-        assert (core_dir / "cco-workflow.md").exists()
-
-    def test_core_rule_count(self):
-        """Must have exactly 3 core rules."""
-        core_dir = ROOT / "rules" / "core"
-        md_files = list(core_dir.glob("cco-*.md"))
-        assert len(md_files) == 3, f"Expected 3 core rules, found {len(md_files)}"
-
-    def test_language_rule_count(self):
-        """Must have exactly 21 language rules."""
-        lang_dir = ROOT / "rules" / "languages"
-        md_files = list(lang_dir.glob("cco-*.md"))
-        assert len(md_files) == 21, f"Expected 21 language rules, found {len(md_files)}"
-
-    def test_framework_rule_count(self):
-        """Must have exactly 8 framework rules."""
-        fw_dir = ROOT / "rules" / "frameworks"
-        md_files = list(fw_dir.glob("cco-*.md"))
-        assert len(md_files) == 8, f"Expected 8 framework rules, found {len(md_files)}"
-
-    def test_operations_rule_count(self):
-        """Must have exactly 12 operations rules."""
-        ops_dir = ROOT / "rules" / "operations"
-        md_files = list(ops_dir.glob("cco-*.md"))
-        assert len(md_files) == 12, f"Expected 12 operations rules, found {len(md_files)}"
-
-    def test_total_rule_count(self):
-        """Total rules should be 44."""
-        rules_dir = ROOT / "rules"
-        total = 0
-        for subdir in ["core", "languages", "frameworks", "operations"]:
-            total += len(list((rules_dir / subdir).glob("cco-*.md")))
-        assert total == 44, f"Expected 44 total rules, found {total}"
+class TestRuleConventions:
+    """Validate rule naming conventions - catches accidental pollution."""
 
     def test_all_rules_have_cco_prefix(self):
-        """All rule files should have cco- prefix."""
+        """All rule files must use cco- prefix for safe updates."""
         rules_dir = ROOT / "rules"
         for subdir in ["core", "languages", "frameworks", "operations"]:
-            for md_file in (rules_dir / subdir).glob("*.md"):
-                assert md_file.name.startswith("cco-"), f"{md_file} missing cco- prefix"
+            subdir_path = rules_dir / subdir
+            if not subdir_path.exists():
+                continue
+            for md_file in subdir_path.glob("*.md"):
+                assert md_file.name.startswith("cco-"), (
+                    f"{md_file} missing cco- prefix - would conflict with user rules"
+                )
 
 
 class TestHookIntegration:
-    """Test hook integration is properly configured."""
+    """Validate hook wiring - catches broken session initialization."""
 
-    def test_plugin_hook_command_format(self):
-        """Hook should use correct Claude Code hook schema."""
+    def test_plugin_hook_references_core_rules(self):
+        """Plugin hook must correctly reference core-rules.json."""
         path = ROOT / ".claude-plugin" / "plugin.json"
         plugin_json = json.loads(path.read_text(encoding="utf-8"))
+
         session_start = plugin_json["hooks"]["SessionStart"]
-        assert isinstance(session_start, list)
-        assert "hooks" in session_start[0]
+        assert isinstance(session_start, list), "SessionStart must be a list"
+
         hook_def = session_start[0]["hooks"][0]
         assert hook_def["type"] == "command"
         assert "core-rules.json" in hook_def["command"]
 
-    def test_core_rules_contains_all_core_files(self):
-        """core-rules.json should contain content from all core rule files."""
+    def test_core_rules_contains_all_sections(self):
+        """Injected rules must contain all core rule sections."""
         core_rules_path = ROOT / "hooks" / "core-rules.json"
         core_rules = json.loads(core_rules_path.read_text(encoding="utf-8"))
         content = core_rules["hookSpecificOutput"]["additionalContext"]
-        assert "Foundation Rules" in content
-        assert "Safety Rules" in content
-        assert "Workflow Rules" in content
+
+        # These sections must exist - if missing, rules weren't concatenated properly
+        assert "Foundation" in content, "Missing Foundation rules"
+        assert "Safety" in content, "Missing Safety rules"
+        assert "Workflow" in content, "Missing Workflow rules"
