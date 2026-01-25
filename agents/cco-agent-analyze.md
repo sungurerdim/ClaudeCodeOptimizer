@@ -723,11 +723,9 @@ RULES_DIR="$PLUGIN_ROOT/content/rules"
 # - $RULES_DIR/frameworks/*.md       (8 files)
 # - $RULES_DIR/operations/*.md       (12 files)
 
-# Example: Copy Python rules
-# cp "$RULES_DIR/languages/python.md" ".claude/cco/python.md"
-
-# Example: Copy API rules
-# cp "$RULES_DIR/domains/api.md" ".claude/cco/api.md"
+# Example: Copy rules (flat structure with cco- prefix)
+# cp "$RULES_DIR/languages/cco-{language}.md" ".claude/rules/cco-{language}.md"
+# cp "$RULES_DIR/frameworks/cco-{framework}.md" ".claude/rules/cco-{framework}.md"
 ```
 
 **Section Pattern Mapping**
@@ -757,9 +755,10 @@ copy_rule() {
   local rule_path="$1"
   local target_dir="$2"
 
-  local source="$PLUGIN_ROOT/content/rules/$rule_path"
+  local source="$PLUGIN_ROOT/rules/$rule_path"
   local basename=$(basename "$rule_path")
-  local dest="$target_dir/cco/$basename"
+  # Flat structure: all rules go to .claude/rules/ with cco- prefix
+  local dest="$target_dir/rules/$basename"
 
   if [ -f "$source" ]; then
     mkdir -p "$(dirname "$dest")"
@@ -942,7 +941,7 @@ Mark findings as `[from docs]` with `confidence: LOW`.
 1. Map detections → section patterns (see Section Pattern Mapping above)
 2. Extract ONLY matched sections using sed (parallel bash)
 3. Apply cumulative tiers (Scale/Testing/SLA/Team higher includes lower)
-4. Generate context.md with Strategic Context section
+4. Generate cco-context.md with YAML frontmatter
 5. Generate rule files with YAML frontmatter paths
 
 **Rules Source:** Targeted extraction from `cco-adaptive.md` via sed patterns.
@@ -992,113 +991,145 @@ Mark findings as `[from docs]` with `confidence: LOW`.
 
 **Frontmatter Decision:**
 - **No frontmatter (cross-cutting):**
-  - Core: context.md (core rules injected via SessionStart hook)
-  - Project types: api.md, database.md, mobile.md, cli.md, library.md, service.md
-  - Frontend frameworks: react.md, vue.md, svelte.md, angular.md, solid.md, astro.md, qwik.md, htmx.md
-  - Meta-frameworks: next.md, nuxt.md, sveltekit.md, remix.md
-  - Backend frameworks: backend.md (Django, FastAPI, Express, etc.)
-  - Integration: ml.md, messagequeue.md, observability.md
+  - Core: cco-context.md (YAML frontmatter with project metadata)
+  - Project types: cco-{type}.md (api, database, mobile, cli, library)
+  - Frontend frameworks: cco-frontend.md
+  - Backend frameworks: cco-backend.md
+  - Integration: cco-{integration}.md (ml, realtime, orm)
 - **With paths (file-specific):**
-  - Language rules (Tier 2): python.md → `"**/*.py"`, etc.
-  - Infrastructure (Tier 4): container.md, k8s.md, terraform.md
-  - Testing & CI (Tier 6): testing.md, ci-cd.md
-  - Config-specific (Tier 7): monorepo.md, bundler.md, deployment.md, documentation.md
+  - Language rules: cco-{language}.md → `"**/*.{ext}"`
+  - Infrastructure: cco-infrastructure.md, cco-deployment.md
+  - Testing & CI: cco-testing.md, cco-cicd.md
 
-**Guidelines (Maturity/Breaking/Priority):** Store in context.md only (context.md is the single location for guidelines).
+**Guidelines:** Stored in cco-context.md YAML under `guidelines:` array.
 
-#### context.md Template [CRITICAL]
+#### cco-context.md Template [CRITICAL]
 
-Generate context.md with this structure. **No duplication allowed.**
+Generate cco-context.md with YAML frontmatter. **All CCO files use flat structure in `.claude/rules/`.**
 
-```markdown
-# Project Context
+```yaml
+---
+cco: true
 
-## Project Critical
-Purpose: {projectCritical.purpose}
-Constraints: {projectCritical.constraints | join(", ")}
-Invariants: {projectCritical.invariants | join(", ")}
-Non-negotiables: {projectCritical.nonNegotiables | join(", ")}
+# ═══════════════════════════════════════════════════════════════
+# PROJECT
+# ═══════════════════════════════════════════════════════════════
+project:
+  purpose: "{purpose}"
+  type: [{types}]
 
-## Strategic Context
-Team: {team_size} | Scale: {scale} | Data: {data_sensitivity} | Compliance: {compliance | join(", ") | default("None")}
-Stack: {languages | join(", ")}, {frameworks | join(", ")} | Type: {app_types | join(", ")} | DB: {database | default("None")} | Rollback: Git
-Architecture: {architecture_style} | API: {api_style | default("None")} | Deployment: {deployment_style}
-Maturity: {maturity} | Breaking: {breaking_changes} | Priority: {priority}
-Testing: {testing_level} | SLA: {sla | default("None")} | Real-time: {realtime | default("None")}
+# ═══════════════════════════════════════════════════════════════
+# CONTEXT
+# ═══════════════════════════════════════════════════════════════
+context:
+  team: {team}
+  data: {data}
+  compliance: [{compliance}]
 
-## Guidelines
-{maturity_guidelines}
-{breaking_guidelines}
-{priority_guidelines}
+# ═══════════════════════════════════════════════════════════════
+# STACK
+# ═══════════════════════════════════════════════════════════════
+stack:
+  languages: [{languages}]
+  frameworks: [{frameworks}]
+  database: {database}
 
-## Operational
-Tools: {format_cmd} (format), {lint_cmd} (lint), {test_cmd} (test)
-Conventions: {conventions}
-Release: {release_process}
+# ═══════════════════════════════════════════════════════════════
+# ARCHITECTURE
+# ═══════════════════════════════════════════════════════════════
+architecture:
+  style: {architecture}
+  deployment: {deployment}
 
-## Auto-Detected
-Structure: {repo_structure} | Hooks: {git_hooks | default("none")} | Coverage: {coverage}%
-- [x/] {detected_features_checklist}
-License: {license}
-Secrets detected: {secrets_detected}
+# ═══════════════════════════════════════════════════════════════
+# MATURITY
+# ═══════════════════════════════════════════════════════════════
+maturity:
+  level: {maturity}
+  breaking: {breaking}
+  priority: {priority}
+
+# ═══════════════════════════════════════════════════════════════
+# GUIDELINES (auto-generated from maturity settings)
+# ═══════════════════════════════════════════════════════════════
+guidelines:
+{guidelines}
+
+# ═══════════════════════════════════════════════════════════════
+# COMMANDS
+# ═══════════════════════════════════════════════════════════════
+commands:
+  format: {format_cmd}
+  lint: {lint_cmd}
+  typecheck: {typecheck_cmd}
+  test: {test_cmd}
+  build: {build_cmd}
+  dev: {dev_cmd}
+
+conventions: {conventions}
+release: {release}
+
+# ═══════════════════════════════════════════════════════════════
+# DETECTED (read-only, for reference)
+# ═══════════════════════════════════════════════════════════════
+detected:
+  structure: {structure}
+  hooks: [{hooks}]
+  license: {license}
+  ci: {ci}
+
+# ═══════════════════════════════════════════════════════════════
+# ACTIVE RULES (auto-managed by CCO)
+# ═══════════════════════════════════════════════════════════════
+rules:
+{rules}
+---
 ```
 
-**CRITICAL - NO DUPLICATION:**
-- Purpose is in Project Critical section ONLY (not repeated in Strategic Context)
-- Project Critical values come from `projectCritical` in detection output
-- If projectCritical.purpose is empty, extract from README.md first paragraph
+**CRITICAL - YAML Validation:**
+- `cco: true` marker MUST be present
+- `project.purpose` MUST be set
+- All arrays use bracket notation: `[item1, item2]`
+- Null values use `null` keyword
 
-#### Duplication Prevention [CRITICAL - VALIDATION]
+#### YAML Validation [CRITICAL]
 
-**Before returning context.md content, validate:**
+**Before returning cco-context.md content, validate:**
 
 ```javascript
-function validateNoDuplication(contextMd) {
-  const lines = contextMd.split('\n')
-  const values = {}
-  const duplicates = []
+function validateContextYaml(yamlContent) {
+  // Parse YAML
+  const data = YAML.parse(yamlContent)
 
-  for (const line of lines) {
-    // Extract key-value pairs (e.g., "Purpose: ...", "Team: ...")
-    const match = line.match(/^(\w+):\s*(.+)$/)
-    if (match) {
-      const [, key, value] = match
-      if (values[key] && values[key] === value) {
-        duplicates.push({ key, value, error: "DUPLICATE_VALUE" })
-      }
-      values[key] = value
+  // Required fields
+  const required = ['cco', 'project', 'context', 'stack', 'maturity', 'commands']
+  for (const field of required) {
+    if (!(field in data)) {
+      throw new Error(`Missing required field: ${field}`)
     }
   }
 
-  if (duplicates.length > 0) {
-    throw new Error(`Duplication detected: ${JSON.stringify(duplicates)}`)
+  // cco marker must be true
+  if (data.cco !== true) {
+    throw new Error('cco marker must be true')
   }
+
+  // project.purpose must exist
+  if (!data.project?.purpose) {
+    throw new Error('project.purpose is required')
+  }
+
+  return true
 }
 ```
 
-**Duplication Rules:**
-
-| Field | Allowed In | FORBIDDEN In |
-|-------|------------|--------------|
-| Purpose | Project Critical | Strategic Context, Guidelines |
-| Constraints | Project Critical | Guidelines |
-| Invariants | Project Critical | Guidelines |
-| Team/Scale/Data | Strategic Context | Project Critical |
-
-**Common Duplication Errors to Avoid:**
-
-| Error | Cause | Fix |
-|-------|-------|-----|
-| Purpose appears twice | Copied from both projectCritical and project_description | Use projectCritical.purpose ONLY |
-| Same constraint in both sections | Not distinguishing critical vs strategic | Critical = hard rules, Strategic = metadata |
-| Guidelines repeat constraints | Copy-paste without filtering | Guidelines = how to work, not what must hold |
-
 **Self-Check Before Output:**
 ```
-[ ] Purpose appears exactly ONCE (in Project Critical)
-[ ] No field has identical value in multiple sections
-[ ] Guidelines contain action items, not constraints
-[ ] Strategic Context has NO Purpose line
+[ ] YAML is valid (no syntax errors)
+[ ] cco: true marker present
+[ ] project.purpose is set
+[ ] All required sections exist
+[ ] Arrays use proper YAML syntax
 ```
 
 #### Output Schema (Single-Phase)

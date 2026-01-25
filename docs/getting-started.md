@@ -79,7 +79,7 @@ This will:
 
 1. **Auto-detect** your stack (language, framework, database, tools)
 2. **Ask questions** about your context (team size, data sensitivity, compliance)
-3. **Generate rules** specific to your project in `.claude/cco.md`
+3. **Generate rules** specific to your project in `.claude/rules/cco-context.md`
 
 <details>
 <summary>Example detection output</summary>
@@ -93,11 +93,11 @@ Detected:
 ├── CI/CD: GitHub Actions
 └── Type: API Service
 
-Generated rules:
-├── python.md (Python best practices)
-├── api.md (REST API patterns)
-├── security.md (PII data rules)
-└── context.md (project metadata)
+Generated rules in .claude/rules/:
+├── cco-context.md (YAML project metadata)
+├── cco-{language}.md (language best practices)
+├── cco-{framework}.md (framework patterns)
+└── cco-security.md (if PII/regulated data)
 ```
 
 </details>
@@ -172,9 +172,9 @@ These apply to **all projects** automatically.
 
 | Category | Files | Examples |
 |----------|-------|----------|
-| Languages | 21 | cco-python.md, cco-typescript.md, cco-go.md |
-| Frameworks | 8 | cco-fastapi.md, cco-react.md, cco-django.md |
-| Operations | 12 | cco-docker.md, cco-ci-cd.md, cco-testing.md |
+| Languages | 21 | cco-{language}.md (python, typescript, go, etc.) |
+| Frameworks | 8 | cco-{framework}.md (backend, frontend, api, etc.) |
+| Operations | 12 | cco-{operation}.md (cicd, testing, infrastructure, etc.) |
 
 Selected by `/cco:config` based on your stack detection.
 
@@ -188,11 +188,11 @@ Yes. Each project gets its own rules based on its specific stack and context.
 
 ### "Can I customize the generated rules?"
 
-Yes. Edit `.claude/cco.md` directly. Your changes persist until the next `/cco:config` run.
+Yes. Edit `.claude/rules/cco-context.md` directly. Your changes persist until the next `/cco:config` run.
 
 ### "How do I see what rules are active?"
 
-Run `/cco:status` or check `.claude/cco.md` in your project.
+Run `/cco:status` or check `.claude/rules/cco-context.md` in your project.
 
 ### "What if /cco:config detects something wrong?"
 

@@ -179,17 +179,11 @@
 ### After /cco:config
 
 ```
-project/.claude/
-├── context.md           ← Project metadata
-└── rules/
-    ├── languages/
-    │   └── cco-python.md    ← Based on detection
-    ├── frameworks/
-    │   ├── cco-backend.md
-    │   └── cco-api.md
-    └── operations/
-        ├── cco-database.md
-        └── cco-cicd.md
+project/.claude/rules/
+├── cco-context.md        ← YAML project metadata
+├── cco-{language}.md     ← Based on detection
+├── cco-{framework}.md    ← Based on detection
+└── cco-{operation}.md    ← Based on detection
 ```
 
 ---

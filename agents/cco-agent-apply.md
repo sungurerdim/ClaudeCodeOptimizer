@@ -228,8 +228,8 @@ Bash("{test_command} 2>&1")
 
 ### Execution Order for Setup/Update [CRITICAL]
 
-1. **CLEAN FIRST**: Delete ALL existing `*.md` files in `cco/` directory
-2. **THEN WRITE**: Write new context.md, rule files, statusline, settings
+1. **CLEAN FIRST**: Delete ALL existing `cco-*.md` files in `.claude/rules/` directory
+2. **THEN WRITE**: Write new cco-context.md, rule files, statusline, settings
 
 This ensures stale rules from previous detections are removed before new ones are written.
 
@@ -250,25 +250,26 @@ PLUGIN_ROOT="${CLAUDE_PLUGIN_ROOT}"
 
 ### Pre-Step: Clean Rules (Setup/Update only)
 
-Before any write operations, delete ALL existing `*.md` files in `cco/`:
+Before any write operations, delete ALL existing `cco-*.md` files in `.claude/rules/`:
 
 ```python
 def clean_rules(target_dir):
-    """Delete all existing rule files before writing new ones."""
-    rules_dir = os.path.join(target_dir, "rules", "cco")
+    """Delete all existing CCO rule files before writing new ones."""
+    rules_dir = os.path.join(target_dir, ".claude", "rules")
     if os.path.exists(rules_dir):
-        for file in glob.glob(os.path.join(rules_dir, "*.md")):
+        # Only delete cco-*.md files, preserve user's own rules
+        for file in glob.glob(os.path.join(rules_dir, "cco-*.md")):
             os.remove(file)
-    # Directory is now empty, ready for fresh rules
+    # CCO files removed, user files preserved
 ```
 
 ### Write Modes
 
 | Mode | Target | Behavior |
 |------|--------|----------|
-| `overwrite` | `context.md`, Rule files, Statusline | Write new content (always) |
+| `overwrite` | `cco-context.md`, Rule files, Statusline | Write new content (always) |
 | `merge` | `settings.json` (Setup) | Read existing → Deep merge → Write |
-| `delete_contents` | `cco/*.md` | Delete all files in directory (keep directory) |
+| `delete_contents` | `.claude/rules/cco-*.md` | Delete CCO files only (preserve user rules) |
 | `unmerge` | `settings.json` (Remove) | Read → Remove CCO keys only → Write |
 
 **CRITICAL:** Never delete directories. Only delete file contents. All `overwrite` targets are ALWAYS written.
@@ -301,11 +302,11 @@ def merge(path, new_settings):
 
 ### Mode: delete_contents
 ```python
-def delete_contents(dir_path, pattern="*.md"):
-    """Delete all matching files in directory, keep directory intact."""
+def delete_contents(dir_path, pattern="cco-*.md"):
+    """Delete CCO files only, preserve user rules."""
     for file in glob.glob(os.path.join(dir_path, pattern)):
         os.remove(file)
-    # Directory remains, only contents deleted
+    # CCO files deleted, user files and directory preserved
 ```
 
 ### Mode: unmerge
@@ -335,22 +336,22 @@ def unmerge(path):
 
 **Setup/Update:**
 ```javascript
-// Step 1: CLEAN - Remove all existing rule files first
+// Step 1: CLEAN - Remove all existing CCO rule files first
 cleanRules: {
-  path: "cco/",
-  pattern: "*.md",
+  path: ".claude/rules/",
+  pattern: "cco-*.md",
   action: "delete_all"
 }
 
-// Step 2: WRITE - Write fresh files
+// Step 2: WRITE - Write fresh files (flat structure)
 files: [
   // All overwrite - ALWAYS write, never skip
-  { path: "cco/context.md", mode: "overwrite", content: "{context_content}" },
-  { path: "cco/{language}.md", mode: "overwrite", content: "{rule_content}" },
-  { path: "cco-statusline.js", mode: "overwrite", source: "$PLUGIN_ROOT/content/statusline/cco-{mode}.js" },
+  { path: ".claude/rules/cco-context.md", mode: "overwrite", content: "{context_yaml}" },
+  { path: ".claude/rules/cco-{language}.md", mode: "overwrite", content: "{rule_content}" },
+  { path: ".claude/cco-statusline.js", mode: "overwrite", source: "$PLUGIN_ROOT/content/statusline/cco-{mode}.js" },
 
   // Only settings.json is merged (preserves user settings)
-  { path: "settings.json", mode: "merge", content: {
+  { path: ".claude/settings.json", mode: "merge", content: {
     alwaysThinkingEnabled: {thinking_enabled},
     env: {
       MAX_THINKING_TOKENS: "{budget}",
@@ -364,8 +365,8 @@ files: [
 **Remove:**
 ```javascript
 files: [
-  { path: "cco/", mode: "delete_contents", pattern: "*.md" },
-  { path: "settings.json", mode: "unmerge" }
+  { path: ".claude/rules/", mode: "delete_contents", pattern: "cco-*.md" },
+  { path: ".claude/settings.json", mode: "unmerge" }
 ]
 ```
 
@@ -382,43 +383,50 @@ files: [
 
 **Never touch:** User-added keys, `permissions` (unless explicitly selected)
 
-### context.md Validation [CRITICAL - BEFORE WRITE]
+### cco-context.md Validation [CRITICAL - BEFORE WRITE]
 
-Before writing context.md, validate for duplication:
+Before writing cco-context.md, validate YAML structure:
 
 ```python
-def validate_context_md(content: str) -> None:
-    """Validate context.md has no duplication."""
-    lines = content.split('\n')
-    seen_values = {}
+import yaml
 
-    for line in lines:
-        # Check for key: value patterns
-        if ':' in line and not line.startswith('#'):
-            key = line.split(':')[0].strip()
-            value = ':'.join(line.split(':')[1:]).strip()
+def validate_context_yaml(content: str) -> None:
+    """Validate cco-context.md YAML frontmatter."""
+    # Extract YAML between --- markers
+    if not content.startswith('---'):
+        raise ValueError("Missing YAML frontmatter start marker")
 
-            # Purpose must appear exactly once
-            if key == "Purpose":
-                if "Purpose" in seen_values:
-                    raise ValueError(f"DUPLICATE: Purpose appears multiple times")
-                seen_values["Purpose"] = value
+    parts = content.split('---', 2)
+    if len(parts) < 3:
+        raise ValueError("Missing YAML frontmatter end marker")
 
-    # Verify Strategic Context has no Purpose
-    in_strategic = False
-    for line in lines:
-        if "## Strategic Context" in line:
-            in_strategic = True
-        elif line.startswith("## "):
-            in_strategic = False
-        if in_strategic and line.startswith("Purpose:"):
-            raise ValueError("Purpose must NOT appear in Strategic Context")
+    yaml_content = parts[1]
+
+    try:
+        data = yaml.safe_load(yaml_content)
+    except yaml.YAMLError as e:
+        raise ValueError(f"Invalid YAML: {e}")
+
+    # Required fields
+    required = ['cco', 'project', 'context', 'stack', 'maturity', 'commands']
+    for field in required:
+        if field not in data:
+            raise ValueError(f"Missing required field: {field}")
+
+    # cco marker must be true
+    if data.get('cco') != True:
+        raise ValueError("cco marker must be true")
+
+    # project.purpose must exist
+    if not data.get('project', {}).get('purpose'):
+        raise ValueError("project.purpose is required")
 ```
 
 **Validation Checklist:**
-- [ ] Purpose appears in Project Critical ONLY
-- [ ] Strategic Context starts with Team: (not Purpose:)
-- [ ] No identical values repeated across sections
+- [ ] YAML is valid and parseable
+- [ ] `cco: true` marker present
+- [ ] `project.purpose` is set
+- [ ] All required sections exist
 
 **If validation fails:** Do NOT write. Return error to orchestrator.
 
@@ -449,8 +457,8 @@ For each file in the files list, verify:
 ### Export Flow
 
 ```javascript
-// Step 1: Read all rules
-rules = Glob("${targetDir}/cco/*.md")
+// Step 1: Read all CCO rules (flat structure)
+rules = Glob("${targetDir}/.claude/rules/cco-*.md")
 content = rules.map(file => Read(file))
 
 // Step 2: Transform for target format
@@ -469,7 +477,7 @@ Write(outputPath, transformed)
 | `cursor` | Split by H2, create separate `.mdc` files |
 | `raw` | Copy as-is |
 
-**Export does NOT modify source rules.** Read-only operation on `cco/`.
+**Export does NOT modify source rules.** Read-only operation on `.claude/rules/`.
 
 ## Verification & Cascade
 
