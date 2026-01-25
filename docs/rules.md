@@ -7,9 +7,9 @@
 | Category | Files | Location | Loading |
 |----------|-------|----------|---------|
 | Core | 3 | Context (injected) | Always (SessionStart hook) |
-| Languages | 21 | `./.claude/rules/languages/` | Per-project |
-| Frameworks | 8 | `./.claude/rules/frameworks/` | Per-project |
-| Operations | 12 | `./.claude/rules/operations/` | Per-project |
+| Languages | 21 | `./.claude/rules/` | Per-project |
+| Frameworks | 8 | `./.claude/rules/` | Per-project |
+| Operations | 12 | `./.claude/rules/` | Per-project |
 | **Total** | **44** | | |
 
 **All CCO rules use `cco-` prefix** for safe identification and updates.
@@ -31,15 +31,16 @@
 │  PROJECT-SPECIFIC (installed via /cco:config)                   │
 ├─────────────────────────────────────────────────────────────────┤
 │  ./.claude/rules/                                               │
-│    ├── languages/       21 language-specific rule files         │
-│    ├── frameworks/       8 domain-specific rule files           │
-│    └── operations/      12 infrastructure rule files            │
+│    ├── cco-context.md       Project metadata (YAML)             │
+│    ├── cco-{language}.md    Language-specific rules             │
+│    ├── cco-{framework}.md   Framework-specific rules            │
+│    └── cco-{operation}.md   Operations rules                    │
 └─────────────────────────────────────────────────────────────────┘
 ```
 
 **Context Loading:**
 - Core rules: Injected via SessionStart hook (`additionalContext`)
-- Project rules: Auto-loaded from `./.claude/rules/**/*.md`
+- Project rules: Auto-loaded from `./.claude/rules/*.md`
 
 **Safe Updates:** Only `cco-*.md` files are managed. User's own rules (without prefix) are never touched.
 
@@ -73,7 +74,7 @@
 
 ## Language Rules (21 files)
 
-*Copied to project `.claude/rules/languages/` based on detection.*
+*Copied to project `.claude/rules/` based on detection.*
 
 ### Mainstream Languages (10)
 
@@ -110,7 +111,7 @@
 
 ## Framework Rules (8 files)
 
-*Copied to project `.claude/rules/frameworks/` based on detection.*
+*Copied to project `.claude/rules/` based on detection.*
 
 | File | Trigger | Coverage |
 |------|---------|----------|
@@ -127,7 +128,7 @@
 
 ## Operations Rules (12 files)
 
-*Copied to project `.claude/rules/operations/` based on detection.*
+*Copied to project `.claude/rules/` based on detection.*
 
 | File | Trigger | Coverage |
 |------|---------|----------|
@@ -152,16 +153,16 @@
 
 | Detection Type | Method | Example |
 |----------------|--------|---------|
-| Language | Manifest files | pyproject.toml → cco-python.md |
-| Framework | Dependencies | react in package.json → cco-frontend.md |
-| Infrastructure | Config files | Dockerfile → cco-infrastructure.md |
-| Domain | Code patterns | @app.get → cco-api.md |
+| Language | Manifest files | pyproject.toml → `cco-python.md` |
+| Framework | Dependencies | react in package.json → `cco-frontend.md` |
+| Infrastructure | Config files | Dockerfile → `cco-infrastructure.md` |
+| Domain | Code patterns | @app.get → `cco-api.md` |
 
 ### User-Input (via /cco:config)
 
 | Question | Options | Effect |
 |----------|---------|--------|
-| Data Sensitivity | Public, PII, Regulated | Adds cco-security.md, cco-compliance.md |
+| Data Sensitivity | Public, PII, Regulated | Adds `cco-security.md`, `cco-compliance.md` |
 
 ---
 
@@ -185,6 +186,8 @@ project/.claude/rules/
 ├── cco-{framework}.md    ← Based on detection
 └── cco-{operation}.md    ← Based on detection
 ```
+
+**Note:** All project rules are stored in flat structure directly under `.claude/rules/` (not in subdirectories).
 
 ---
 
