@@ -192,47 +192,47 @@ if (!args.includes('--auto')) {
   const profile = await AskUserQuestion({
     questions: [
       {
-        question: "Bu proje ne tür bir uygulama?",
+        question: "What type of application is this project?",
         header: "Type",
         multiSelect: true,
         options: [
-          { label: "CLI", description: "Komut satırı aracı" },
-          { label: "API", description: "Backend servis" },
-          { label: "Web", description: "Frontend uygulama" },
-          { label: "Library", description: "Yeniden kullanılabilir paket" }
+          { label: "CLI", description: "Command-line tool" },
+          { label: "API", description: "Backend service" },
+          { label: "Web", description: "Frontend application" },
+          { label: "Library", description: "Reusable package" }
         ]
       },
       {
-        question: "Ekip büyüklüğü?",
+        question: "Team size?",
         header: "Team",
         multiSelect: false,
         options: [
-          { label: "Solo", description: "Tek geliştirici" },
-          { label: "Small", description: "2-5 kişi" },
-          { label: "Medium", description: "6-15 kişi" },
-          { label: "Large", description: "15+ kişi" }
+          { label: "Solo", description: "Single developer" },
+          { label: "Small", description: "2-5 people" },
+          { label: "Medium", description: "6-15 people" },
+          { label: "Large", description: "15+ people" }
         ]
       },
       {
-        question: "En hassas veri türü?",
+        question: "Most sensitive data type?",
         header: "Data",
         multiSelect: false,
         options: [
-          { label: "Public", description: "Hassas veri yok" },
-          { label: "Internal", description: "Şirket içi veriler" },
-          { label: "PII", description: "Kişisel veriler" },
-          { label: "Regulated", description: "Finans/Sağlık" }
+          { label: "Public", description: "No sensitive data" },
+          { label: "Internal", description: "Internal company data" },
+          { label: "PII", description: "Personal data" },
+          { label: "Regulated", description: "Finance/Healthcare" }
         ]
       },
       {
-        question: "Mimari yaklaşım?",
+        question: "Architecture approach?",
         header: "Arch",
         multiSelect: false,
         options: [
-          { label: "Monolith", description: "Tek uygulama" },
-          { label: "Modular", description: "Modüler monolith" },
+          { label: "Monolith", description: "Single application" },
+          { label: "Modular", description: "Modular monolith" },
           { label: "Micro", description: "Microservices" },
-          { label: "Serverless", description: "FaaS tabanlı" }
+          { label: "Serverless", description: "FaaS-based" }
         ]
       }
     ]
@@ -245,47 +245,47 @@ if (!args.includes('--auto')) {
   const policies = await AskUserQuestion({
     questions: [
       {
-        question: "Proje olgunluğu?",
+        question: "Project maturity?",
         header: "Maturity",
         multiSelect: false,
         options: [
-          { label: "Prototype", description: "Deneysel, hızlı değişim" },
-          { label: "MVP", description: "İlk kullanıcılar var" },
-          { label: "Stable", description: "Production, aktif geliştirme" },
-          { label: "Mature", description: "Kararlı, az değişim" }
+          { label: "Prototype", description: "Experimental, rapid changes" },
+          { label: "MVP", description: "Early users exist" },
+          { label: "Stable", description: "Production, active development" },
+          { label: "Mature", description: "Stable, minimal changes" }
         ]
       },
       {
-        question: "Breaking change politikası?",
+        question: "Breaking change policy?",
         header: "Breaking",
         multiSelect: false,
         options: [
-          { label: "Allowed", description: "Serbest, hızlı iterasyon" },
-          { label: "Warn", description: "Deprecation süreci uygula" },
-          { label: "Forbidden", description: "Kesinlikle yasak" },
-          { label: "N/A", description: "Public API yok" }
+          { label: "Allowed", description: "Free, fast iteration" },
+          { label: "Warn", description: "Apply deprecation process" },
+          { label: "Forbidden", description: "Strictly prohibited" },
+          { label: "N/A", description: "No public API" }
         ]
       },
       {
-        question: "Geliştirme önceliği?",
+        question: "Development priority?",
         header: "Priority",
         multiSelect: false,
         options: [
-          { label: "Speed", description: "Hızlı ship öncelikli" },
-          { label: "Balance", description: "Hız-kalite dengesi" },
-          { label: "Quality", description: "Kalite her şeyden önce" },
-          { label: "Context", description: "Scope'a göre değişir" }
+          { label: "Speed", description: "Ship fast first" },
+          { label: "Balance", description: "Speed-quality balance" },
+          { label: "Quality", description: "Quality above all" },
+          { label: "Context", description: "Depends on scope" }
         ]
       },
       {
-        question: "Uyumluluk gereksinimleri?",
+        question: "Compliance requirements?",
         header: "Compliance",
         multiSelect: true,
         options: [
-          { label: "None", description: "Özel gereksinim yok" },
-          { label: "GDPR", description: "AB veri koruma" },
-          { label: "HIPAA", description: "Sağlık verileri" },
-          { label: "SOC2", description: "Güvenlik sertifikası" }
+          { label: "None", description: "No special requirements" },
+          { label: "GDPR", description: "EU data protection" },
+          { label: "HIPAA", description: "Healthcare data" },
+          { label: "SOC2", description: "Security certification" }
         ]
       }
     ]
@@ -457,46 +457,46 @@ function generateGuidelines(maturity, breaking, priority) {
   // Maturity-based guidelines
   switch (maturity) {
     case 'prototype':
-      guidelines.push('Hız öncelikli, teknik borç kabul edilebilir')
-      guidelines.push('Kapsamlı test gereksiz, happy path yeterli')
+      guidelines.push('Speed first, technical debt acceptable')
+      guidelines.push('Comprehensive testing unnecessary, happy path sufficient')
       break
     case 'mvp':
-      guidelines.push('Temel hata yönetimi gerekli')
-      guidelines.push('Kritik yollar test edilmeli')
+      guidelines.push('Basic error handling required')
+      guidelines.push('Critical paths should be tested')
       break
     case 'stable':
-      guidelines.push('Kod kalitesi ve test coverage önemli')
-      guidelines.push('Refactoring için zaman ayrılmalı')
+      guidelines.push('Code quality and test coverage important')
+      guidelines.push('Time should be allocated for refactoring')
       break
     case 'mature':
-      guidelines.push('Değişiklikler dikkatli planlanmalı')
-      guidelines.push('Backward compatibility kritik')
+      guidelines.push('Changes should be carefully planned')
+      guidelines.push('Backward compatibility is critical')
       break
   }
 
   // Breaking change guidelines
   switch (breaking) {
     case 'allowed':
-      guidelines.push('Breaking change serbestçe yapılabilir')
+      guidelines.push('Breaking changes can be made freely')
       break
     case 'warn':
-      guidelines.push('Breaking change için deprecation süreci uygulanmalı')
+      guidelines.push('Deprecation process should be applied for breaking changes')
       break
     case 'forbidden':
-      guidelines.push('Breaking change kesinlikle yasak')
+      guidelines.push('Breaking changes strictly prohibited')
       break
   }
 
   // Priority guidelines
   switch (priority) {
     case 'speed':
-      guidelines.push('Hızlı teslimat öncelikli')
+      guidelines.push('Fast delivery prioritized')
       break
     case 'balance':
-      guidelines.push('Hız ve kalite dengeli tutulmalı')
+      guidelines.push('Speed and quality should be balanced')
       break
     case 'quality':
-      guidelines.push('Kalite her şeyden önce gelir')
+      guidelines.push('Quality above all else')
       break
   }
 
