@@ -6,61 +6,45 @@ Your first 10 minutes with CCO.
 
 ## Installation
 
-```bash
-claude plugin marketplace remove ClaudeCodeOptimizer
-claude plugin marketplace add https://github.com/sungurerdim/ClaudeCodeOptimizer
-claude plugin install cco@ClaudeCodeOptimizer
+**In Claude Code:**
+```
+/plugin marketplace add sungurerdim/ClaudeCodeOptimizer
 ```
 
-**Restart Claude Code** after installation.
+Then run `/plugin`, go to **Discover** tab, select **cco**, and click **Install**.
 
 <details>
-<summary>What gets installed</summary>
+<summary>Alternative: Direct command</summary>
 
-The plugin installs:
-
-1. `commands/` — 7 slash commands
-2. `agents/` — 3 specialized agents
-3. `rules/` — 44 rule files across 4 categories
-4. `hooks/` — SessionStart hook for core rules injection
-
-**Structure:**
 ```
-.claude-plugin/cco/
-├── commands/
-│   ├── commit.md
-│   ├── config.md
-│   ├── optimize.md
-│   ├── preflight.md
-│   ├── research.md
-│   ├── review.md
-│   └── status.md
-├── agents/
-│   ├── cco-agent-analyze.md
-│   ├── cco-agent-apply.md
-│   └── cco-agent-research.md
-├── hooks/
-│   └── core-rules.json (injected at session start)
-└── rules/
-    ├── core/ (3 files: foundation, safety, workflow)
-    ├── languages/ (21 files)
-    ├── frameworks/ (8 files)
-    └── operations/ (12 files)
+/plugin install cco@ClaudeCodeOptimizer
 ```
 
 </details>
 
+<details>
+<summary>Alternative: From terminal</summary>
+
+```bash
+claude plugin marketplace add sungurerdim/ClaudeCodeOptimizer
+claude plugin install cco@ClaudeCodeOptimizer
+```
+
+</details>
+
+**Restart Claude Code** after installation.
+
 ### Update
 
 ```
-/plugin marketplace update
+/plugin marketplace update ClaudeCodeOptimizer
 ```
 
 ### Uninstall
 
-```bash
-claude plugin uninstall cco@ClaudeCodeOptimizer
-claude plugin marketplace remove ClaudeCodeOptimizer
+```
+/plugin uninstall cco@ClaudeCodeOptimizer
+/plugin marketplace remove ClaudeCodeOptimizer
 ```
 
 ---
@@ -79,7 +63,7 @@ This will:
 
 1. **Auto-detect** your stack (language, framework, database, tools)
 2. **Ask questions** about your context (team size, data sensitivity, compliance)
-3. **Generate rules** specific to your project in `.claude/rules/cco-context.md`
+3. **Generate rules** specific to your project in `.claude/rules/`
 
 <details>
 <summary>Example detection output</summary>
@@ -97,7 +81,7 @@ Generated rules in .claude/rules/:
 ├── cco-context.md (YAML project metadata)
 ├── cco-{language}.md (language best practices)
 ├── cco-{framework}.md (framework patterns)
-└── cco-security.md (if PII/regulated data)
+└── cco-{operation}.md (if PII/regulated data)
 ```
 
 </details>
@@ -136,24 +120,6 @@ Auto-fixes safe issues:
 
 ---
 
-## What Changed?
-
-### Before CCO
-
-- Claude uses generic patterns
-- No pre-action safety checks
-- Silent changes, no tracking
-- No approval flow for risky operations
-
-### After CCO
-
-- Domain-specific best practices for your stack
-- Git status verified before every operation
-- Full accounting: `Applied: N | Failed: N | Total: N`
-- Risky changes require explicit approval
-
----
-
 ## Understanding the Rules
 
 ### Core Rules (Always Active)
@@ -172,9 +138,9 @@ These apply to **all projects** automatically.
 
 | Category | Files | Examples |
 |----------|-------|----------|
-| Languages | 21 | cco-{language}.md (python, typescript, go, etc.) |
-| Frameworks | 8 | cco-{framework}.md (backend, frontend, api, etc.) |
-| Operations | 12 | cco-{operation}.md (cicd, testing, infrastructure, etc.) |
+| Languages | 21 | `cco-{language}.md` (python, typescript, go, etc.) |
+| Frameworks | 8 | `cco-{framework}.md` (backend, frontend, api, etc.) |
+| Operations | 12 | `cco-{operation}.md` (cicd, testing, infrastructure, etc.) |
 
 Selected by `/cco:config` based on your stack detection.
 
@@ -192,7 +158,7 @@ Yes. Edit `.claude/rules/cco-context.md` directly. Your changes persist until th
 
 ### "How do I see what rules are active?"
 
-Run `/cco:status` or check `.claude/rules/cco-context.md` in your project.
+Run `/cco:status` or check `.claude/rules/` in your project.
 
 ### "What if /cco:config detects something wrong?"
 
@@ -208,12 +174,11 @@ The detection is a starting point. You can:
 ### Commands not appearing
 
 1. **Restart Claude Code** after installation
-2. Verify plugin is installed: `/plugin list`
+2. Verify plugin is installed: `/plugin` → **Installed** tab
 3. Try reinstalling:
-   ```bash
-   claude plugin marketplace remove ClaudeCodeOptimizer
-   claude plugin marketplace add https://github.com/sungurerdim/ClaudeCodeOptimizer
-   claude plugin install cco@ClaudeCodeOptimizer
+   ```
+   /plugin uninstall cco@ClaudeCodeOptimizer
+   /plugin install cco@ClaudeCodeOptimizer
    ```
 
 ### "CCO context not found"

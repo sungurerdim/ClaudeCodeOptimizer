@@ -9,6 +9,48 @@ Same prompts, better outcomes. Fewer errors, fewer rollbacks, more consistent re
 
 ---
 
+## Quick Install
+
+**In Claude Code:**
+```
+/plugin marketplace add sungurerdim/ClaudeCodeOptimizer
+```
+
+Then run `/plugin`, go to **Discover** tab, select **cco**, and click **Install**.
+
+<details>
+<summary><strong>Alternative: Direct command</strong></summary>
+
+```
+/plugin install cco@ClaudeCodeOptimizer
+```
+
+</details>
+
+<details>
+<summary><strong>Alternative: From terminal</strong></summary>
+
+```bash
+claude plugin marketplace add sungurerdim/ClaudeCodeOptimizer
+claude plugin install cco@ClaudeCodeOptimizer
+```
+
+</details>
+
+**Restart Claude Code** to activate.
+
+---
+
+## Quick Start
+
+```
+/cco:config     # Configure project (auto-detects stack)
+/cco:status     # Check health scores (0-100)
+/cco:optimize   # Fix issues with approval flow
+```
+
+---
+
 ## Why CCO?
 
 | Without CCO | With CCO |
@@ -26,155 +68,24 @@ Same prompts, better outcomes. Fewer errors, fewer rollbacks, more consistent re
 
 ### Zero Global Pollution
 
-CCO never writes to `~/.claude/` or any global directory. Your global config stays untouched.
+CCO never writes to `~/.claude/` or any global directory. Only `./.claude/rules/` is modified when you run `/cco:config`.
 
-```
-~/.claude/           ← Never modified
-~/.claude/rules/     ← Never modified
-./.claude/rules/     ← Only modified when you run /config
-```
+### Context Injection
 
-### Context Injection (Not File Copying)
-
-Core rules are injected directly into context via SessionStart hook — no files created, no cleanup needed.
-
-```
-SessionStart
-    │
-    ▼
-Hook reads rules/core/cco-*.md from plugin
-    │
-    ▼
-Returns JSON with additionalContext
-    │
-    ▼
-Claude Code injects into session context
-    │
-    ▼
-Rules active immediately (even on first session)
-```
+Core rules are injected directly into session context via SessionStart hook — no files created, no cleanup needed. Rules are active immediately on every session.
 
 ### Safe Updates with `cco-` Prefix
 
-All CCO rules use `cco-` prefix. Your own rules (without prefix) are never touched during updates.
+All CCO rules use `cco-` prefix. Your own rules (without prefix) are never touched.
 
 ```
 .claude/rules/
-├── cco-{language}.md   ← Managed by CCO
-├── cco-{framework}.md  ← Managed by CCO
-├── my-custom-rule.md   ← YOUR file, never touched
-└── team-standards.md   ← YOUR file, never touched
+├── cco-context.md       ← Managed by CCO
+├── cco-{language}.md    ← Managed by CCO
+├── cco-{framework}.md   ← Managed by CCO
+├── my-custom-rule.md    ← YOUR file, never touched
+└── team-standards.md    ← YOUR file, never touched
 ```
-
----
-
-## Install
-
-<details>
-<summary><strong>Option A: From Claude Code (Recommended)</strong></summary>
-
-1. Open Claude Code
-2. Type `/plugins` to open plugin manager
-3. Search for "Claude Code Optimizer" or "CCO"
-4. Click **Install**
-5. Restart Claude Code
-
-</details>
-
-<details>
-<summary><strong>Option B: From Terminal</strong></summary>
-
-```bash
-# Add marketplace source
-claude plugin marketplace add https://github.com/sungurerdim/ClaudeCodeOptimizer
-
-# Install plugin
-claude plugin install cco@ClaudeCodeOptimizer
-```
-
-Restart Claude Code to activate.
-
-</details>
-
-Core rules are automatically injected on every session start. No configuration required.
-
-### Update
-
-<details>
-<summary>Update instructions</summary>
-
-**From Claude Code:**
-```
-/plugins update CCO
-```
-
-**From Terminal:**
-```bash
-claude plugin marketplace update ClaudeCodeOptimizer
-```
-
-</details>
-
-### Uninstall
-
-<details>
-<summary>Uninstall instructions</summary>
-
-**From Claude Code:**
-```
-/plugins uninstall CCO
-```
-
-**From Terminal:**
-```bash
-claude plugin uninstall cco@ClaudeCodeOptimizer
-claude plugin marketplace remove ClaudeCodeOptimizer
-```
-
-</details>
-
----
-
-## Quick Start
-
-### 1. Configure Your Project (Optional)
-
-```
-/cco:config
-```
-
-- Auto-detects languages, frameworks, and tools
-- Asks 2 question groups (project profile + policies)
-- Creates `cco-context.md` (YAML) + relevant rule files in `.claude/rules/`
-
-<details>
-<summary>What gets created</summary>
-
-```
-.claude/rules/
-├── cco-context.md        ← YAML project metadata
-├── cco-{language}.md     ← Detected language rules
-├── cco-{framework}.md    ← Detected framework rules
-└── cco-{operation}.md    ← Detected operation rules
-```
-
-</details>
-
-### 2. Check Health
-
-```
-/cco:status
-```
-
-See security, quality, and hygiene scores (0-100).
-
-### 3. Fix Issues
-
-```
-/cco:optimize
-```
-
-Security + quality + hygiene fixes with approval flow for risky changes.
 
 ---
 
@@ -185,12 +96,6 @@ Security + quality + hygiene fixes with approval flow for risky changes.
 | Commands | 7 | `/cco:config`, `/cco:status`, `/cco:optimize`, etc. |
 | Agents | 3 | Analyze, Apply, Research |
 | Rules | 44 | Core (3) + Languages (21) + Frameworks (8) + Operations (12) |
-
-### Rules Coverage
-
-**44 rule files** covering:
-- **21 languages** — Python, TypeScript, Go, Rust, Java, C#, Ruby, PHP, Swift, Kotlin, and 11 niche languages
-- **20 domains** — API, Database, Testing, Security, CI/CD, Observability, Compliance, Infrastructure, and more
 
 ### Rules Architecture
 
@@ -209,19 +114,21 @@ Security + quality + hygiene fixes with approval flow for risky changes.
 └─────────────────────────────────────────────────────────────┘
 ```
 
+**Coverage:** 21 languages (Python, TypeScript, Go, Rust, Java, C#, Ruby, PHP, Swift, Kotlin, +11 niche) and 20 domains (API, Database, Testing, Security, CI/CD, Observability, Compliance, Infrastructure, and more).
+
 ---
 
 ## Commands
 
-| Command | Purpose | When to Use |
-|---------|---------|-------------|
-| `/cco:config` | Project configuration | First time, or when stack changes |
-| `/cco:status` | Health dashboard | Start of session |
-| `/cco:optimize` | Fix issues | Before PR, after major changes |
-| `/cco:review` | Architecture analysis | Before refactoring |
-| `/cco:commit` | Quality-gated commit | Every commit |
-| `/cco:research` | Multi-source research | "Which library?", "Best practice?" |
-| `/cco:preflight` | Pre-release workflow | Before release |
+| Command | Purpose |
+|---------|---------|
+| `/cco:config` | Project configuration (auto-detects stack) |
+| `/cco:status` | Health dashboard (security, quality, hygiene scores) |
+| `/cco:optimize` | Fix issues with approval flow for risky changes |
+| `/cco:review` | Architecture analysis with 80/20 recommendations |
+| `/cco:commit` | Quality-gated atomic commits |
+| `/cco:research` | Multi-source research with reliability scoring |
+| `/cco:preflight` | Pre-release workflow orchestration |
 
 See [Commands documentation](docs/commands.md) for flags and examples.
 
@@ -239,76 +146,37 @@ See [Agents documentation](docs/agents.md) for detailed capabilities.
 
 ---
 
-## How It Works
-
-```
-Plugin installed
-       │
-       ▼
-SessionStart hook fires
-       │
-       ▼
-Core rules injected into context (no files)
-       │
-       ▼
-/config copies project rules to .claude/rules/ (optional)
-       │
-       ▼
-Claude Code auto-loads .claude/rules/*.md
-       │
-       ▼
-Your prompts get stack-specific guidance
-```
-
-### CCO Flow
-
-```
-┌─────────────────────────────────────────────────────────────┐
-│  Your Prompt                                                │
-└─────────────────┬───────────────────────────────────────────┘
-                  ▼
-┌─────────────────────────────────────────────────────────────┐
-│  CCO Layer                                                  │
-│  ┌─────────────┐  ┌─────────────┐  ┌─────────────────────┐  │
-│  │ Pre-check   │→ │ Analyze     │→ │ Approve (if risky)  │  │
-│  │ Git status  │  │ Find issues │  │ Safe = auto-apply   │  │
-│  └─────────────┘  └─────────────┘  └─────────────────────┘  │
-│                           ▼                                 │
-│  ┌─────────────┐  ┌─────────────────────────────────────┐   │
-│  │ Verify      │← │ Apply                               │   │
-│  │ Accounting  │  │ Execute with full tracking          │   │
-│  └─────────────┘  └─────────────────────────────────────┘   │
-└─────────────────────────────────────────────────────────────┘
-```
-
-**Every operation:** Pre-check → Analyze → Approve → Apply → Verify
-
----
-
 ## Safety Model
 
-### Auto-Apply (Safe)
-- Remove unused imports
-- Parameterize SQL queries
-- Move hardcoded secrets to env vars
-- Fix lint/format issues
-- Add missing type annotations
+| Category | Examples |
+|----------|----------|
+| **Auto-Apply (Safe)** | Unused imports, SQL parameterization, lint/format fixes, type annotations |
+| **Require Approval (Risky)** | Auth/CSRF changes, DB schema, API contracts, file deletions |
 
-### Require Approval (Risky)
-- Auth/CSRF changes
-- Database schema changes
-- API contract changes
-- Delete files
-- Rename public APIs
-
-**Rollback:** All changes are made with clean git state. Use `git checkout` to revert.
+**Rollback:** All changes require clean git state. Use `git checkout` to revert.
 
 ---
 
-## Requirements
+## Update & Uninstall
 
-- Claude Code CLI or IDE extension
-- No additional dependencies
+<details>
+<summary><strong>Update</strong></summary>
+
+```
+/plugin marketplace update ClaudeCodeOptimizer
+```
+
+</details>
+
+<details>
+<summary><strong>Uninstall</strong></summary>
+
+```
+/plugin uninstall cco@ClaudeCodeOptimizer
+/plugin marketplace remove ClaudeCodeOptimizer
+```
+
+</details>
 
 ---
 
@@ -321,9 +189,16 @@ Your prompts get stack-specific guidance
 
 ---
 
+## Requirements
+
+- Claude Code CLI or IDE extension
+- No additional dependencies
+
+---
+
 ## Contributing
 
-Issues and pull requests are welcome. Please read the existing code style and follow the patterns.
+Issues and pull requests are welcome.
 
 ---
 
