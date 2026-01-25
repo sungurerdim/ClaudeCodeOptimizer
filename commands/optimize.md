@@ -119,7 +119,6 @@ When `--fix-all` or user selects "Everything":
 
 ## Context
 
-- Context check: !`test -f ./.claude/rules/cco/context.md && echo "1" || echo "0"`
 - Git status: !`git status --short`
 - Args: $ARGS
 
@@ -127,11 +126,13 @@ When `--fix-all` or user selects "Everything":
 
 ## Context Requirement [CRITICAL]
 
-If context check returns "0":
-```
-CCO context not found.
+CCO context is auto-loaded from `.claude/rules/cco-context.md` via Claude Code's auto-context mechanism.
 
-Run /config first to configure project context, then restart CLI.
+**Check:** If auto-context does NOT contain `cco: true` marker:
+```
+CCO not configured.
+
+Run /config first to set up project context, then restart CLI.
 ```
 **Stop immediately.**
 

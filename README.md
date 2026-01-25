@@ -60,37 +60,78 @@ All CCO rules use `cco-` prefix. Your own rules (without prefix) are never touch
 
 ```
 .claude/rules/
-├── cco-python.md      ← Managed by CCO
-├── cco-backend.md     ← Managed by CCO
-├── my-custom-rule.md  ← YOUR file, never touched
-└── team-standards.md  ← YOUR file, never touched
+├── cco-{language}.md   ← Managed by CCO
+├── cco-{framework}.md  ← Managed by CCO
+├── my-custom-rule.md   ← YOUR file, never touched
+└── team-standards.md   ← YOUR file, never touched
 ```
 
 ---
 
 ## Install
 
+<details>
+<summary><strong>Option A: From Claude Code (Recommended)</strong></summary>
+
+1. Open Claude Code
+2. Type `/plugins` to open plugin manager
+3. Search for "Claude Code Optimizer" or "CCO"
+4. Click **Install**
+5. Restart Claude Code
+
+</details>
+
+<details>
+<summary><strong>Option B: From Terminal</strong></summary>
+
 ```bash
+# Add marketplace source
 claude plugin marketplace add https://github.com/sungurerdim/ClaudeCodeOptimizer
+
+# Install plugin
 claude plugin install cco@ClaudeCodeOptimizer
 ```
 
-**Restart Claude Code** to activate.
+Restart Claude Code to activate.
 
-That's it. Core rules are automatically injected on every session start.
+</details>
+
+Core rules are automatically injected on every session start. No configuration required.
 
 ### Update
 
-```bash
-/plugin marketplace update
+<details>
+<summary>Update instructions</summary>
+
+**From Claude Code:**
 ```
+/plugins update CCO
+```
+
+**From Terminal:**
+```bash
+claude plugin marketplace update ClaudeCodeOptimizer
+```
+
+</details>
 
 ### Uninstall
 
+<details>
+<summary>Uninstall instructions</summary>
+
+**From Claude Code:**
+```
+/plugins uninstall CCO
+```
+
+**From Terminal:**
 ```bash
 claude plugin uninstall cco@ClaudeCodeOptimizer
 claude plugin marketplace remove ClaudeCodeOptimizer
 ```
+
+</details>
 
 ---
 
@@ -102,7 +143,22 @@ claude plugin marketplace remove ClaudeCodeOptimizer
 /cco:config
 ```
 
-Auto-detects your stack and copies relevant project rules to `.claude/rules/`.
+- Auto-detects languages, frameworks, and tools
+- Asks 2 question groups (project profile + policies)
+- Creates `cco-context.md` (YAML) + relevant rule files in `.claude/rules/`
+
+<details>
+<summary>What gets created</summary>
+
+```
+.claude/rules/
+├── cco-context.md        ← YAML project metadata
+├── cco-{language}.md     ← Detected language rules
+├── cco-{framework}.md    ← Detected framework rules
+└── cco-{operation}.md    ← Detected operation rules
+```
+
+</details>
 
 ### 2. Check Health
 
@@ -110,7 +166,7 @@ Auto-detects your stack and copies relevant project rules to `.claude/rules/`.
 /cco:status
 ```
 
-See security, quality, and hygiene scores.
+See security, quality, and hygiene scores (0-100).
 
 ### 3. Fix Issues
 
@@ -145,11 +201,11 @@ Security + quality + hygiene fixes with approval flow for risky changes.
 │  → cco-safety.md       Non-negotiable security standards    │
 │  → cco-workflow.md     AI execution patterns                │
 ├─────────────────────────────────────────────────────────────┤
-│  PROJECT (copied via /cco:config)                           │
-│  .claude/rules/                                             │
-│    ├── languages/      cco-python.md, cco-typescript.md...  │
-│    ├── frameworks/     cco-backend.md, cco-api.md...        │
-│    └── operations/     cco-database.md, cco-cicd.md...      │
+│  PROJECT (copied via /cco:config to .claude/rules/)         │
+│    ├── cco-context.md      Project metadata (YAML)          │
+│    ├── cco-{language}.md   Language-specific rules          │
+│    ├── cco-{framework}.md  Framework-specific rules         │
+│    └── cco-{operation}.md  Operations rules                 │
 └─────────────────────────────────────────────────────────────┘
 ```
 
