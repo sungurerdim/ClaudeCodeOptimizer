@@ -51,19 +51,27 @@ claude plugin install cco@ClaudeCodeOptimizer
 
 ## First 10 Minutes
 
-### Step 1: Configure Your Project (2 min)
+### Step 1: Auto-Setup (Automatic)
 
-Open Claude Code in your project directory and run:
+When you start a new session in a project without CCO configured, CCO automatically offers setup:
 
 ```
-/cco:config
+🔧 CCO is not configured for this project.
+
+[Auto-setup] Detect stack and create rules automatically
+[Interactive] Ask me questions to customize setup
+[Skip] Don't configure CCO for this project
 ```
 
-This will:
-
+**Auto-setup** will:
 1. **Auto-detect** your stack (language, framework, database, tools)
-2. **Ask questions** about your context (team size, data sensitivity, compliance)
-3. **Generate rules** specific to your project in `.claude/rules/`
+2. **Generate rules** specific to your project in `.claude/rules/`
+
+**Interactive** will also ask questions about:
+- Team size
+- Data sensitivity
+- Compliance requirements
+- Development priorities
 
 <details>
 <summary>Example detection output</summary>
@@ -73,50 +81,40 @@ Detected:
 ├── Language: Python 3.12
 ├── Framework: FastAPI
 ├── Database: PostgreSQL (SQLAlchemy)
-├── Testing: 82% coverage
+├── Testing: pytest with 82% coverage
 ├── CI/CD: GitHub Actions
 └── Type: API Service
 
 Generated rules in .claude/rules/:
 ├── cco-context.md (YAML project metadata)
-├── cco-{language}.md (language best practices)
-├── cco-{framework}.md (framework patterns)
-└── cco-{operation}.md (if PII/regulated data)
+├── cco-python.md (language best practices)
+├── cco-backend.md (API patterns)
+└── cco-testing.md (test standards)
 ```
 
 </details>
 
-### Step 2: Check Project Health (1 min)
-
-```
-/cco:status
-```
-
-Shows:
-
-| Score | Meaning |
-|-------|---------|
-| Security | Vulnerabilities, secrets, CVE exposure |
-| Quality | Tech debt, type coverage, complexity |
-| Hygiene | Dead code, orphan files, unused imports |
-| Tests | Coverage percentage, test quality |
-
-**Thresholds:** 80+ = OK | 60-79 = WARN | 40-59 = FAIL | <40 = CRITICAL
-
-### Step 3: Quick Wins (5 min)
+### Step 2: Quick Wins (5 min)
 
 ```
 /cco:optimize --quick
 ```
 
 Auto-fixes safe issues:
-
 - Unused imports
 - Missing type hints
 - Simple security fixes
 - Formatting issues
 
 **Risky changes** (auth, schema, API) will ask for approval.
+
+### Step 3: Architecture Check (Optional)
+
+```
+/cco:align --quick
+```
+
+Shows gap analysis between current state and ideal architecture.
 
 ---
 
@@ -138,34 +136,31 @@ These apply to **all projects** automatically.
 
 | Category | Files | Examples |
 |----------|-------|----------|
-| Languages | 21 | `cco-{language}.md` (python, typescript, go, etc.) |
-| Frameworks | 8 | `cco-{framework}.md` (backend, frontend, api, etc.) |
-| Operations | 12 | `cco-{operation}.md` (cicd, testing, infrastructure, etc.) |
+| Languages | 21 | `cco-python.md`, `cco-typescript.md`, `cco-go.md` |
+| Frameworks | 8 | `cco-backend.md`, `cco-frontend.md`, `cco-api.md` |
+| Operations | 12 | `cco-cicd.md`, `cco-testing.md`, `cco-infrastructure.md` |
 
-Selected by `/cco:config` based on your stack detection.
+Selected automatically based on your stack detection.
 
 ---
 
 ## Common Questions
 
-### "Do I need to run /cco:config for every project?"
+### "How does CCO know about my project?"
 
-Yes. Each project gets its own rules based on its specific stack and context.
+CCO auto-detects at session start by checking if `cco: true` marker exists in your context. If not, it offers setup options.
 
 ### "Can I customize the generated rules?"
 
-Yes. Edit `.claude/rules/cco-context.md` directly. Your changes persist until the next `/cco:config` run.
+Yes. Edit `.claude/rules/cco-context.md` directly. Your changes persist. Re-run setup anytime to reconfigure.
 
 ### "How do I see what rules are active?"
 
-Run `/cco:status` or check `.claude/rules/` in your project.
+Check `.claude/rules/` in your project. All `cco-*.md` files are managed by CCO.
 
-### "What if /cco:config detects something wrong?"
+### "What if detection is wrong?"
 
-The detection is a starting point. You can:
-1. Answer the clarifying questions differently
-2. Edit the generated rules directly
-3. Run `/cco:config` again to reconfigure
+Choose "Interactive" during setup to answer questions manually. You can also edit generated rules directly.
 
 ---
 
@@ -183,11 +178,9 @@ The detection is a starting point. You can:
 
 ### "CCO context not found"
 
-Most commands require project configuration first:
-
-```
-/cco:config
-```
+CCO should auto-detect and offer setup. If this doesn't happen:
+- Check if `.claude/rules/cco-context.md` exists
+- If not, any CCO command will trigger setup
 
 ---
 
@@ -196,7 +189,7 @@ Most commands require project configuration first:
 | Goal | Command |
 |------|---------|
 | Full security audit | `/cco:optimize --security` |
-| Architecture review | `/cco:review` |
+| Architecture review | `/cco:align` |
 | Quality-gated commit | `/cco:commit` |
 | Pre-release check | `/cco:preflight` |
 | Research a topic | `/cco:research "your question"` |

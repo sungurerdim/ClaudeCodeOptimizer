@@ -44,10 +44,12 @@ claude plugin install cco@ClaudeCodeOptimizer
 ## Quick Start
 
 ```
-/cco:config     # Configure project (auto-detects stack)
-/cco:status     # Check health scores (0-100)
 /cco:optimize   # Fix issues with approval flow
+/cco:align      # Architecture gap analysis
+/cco:commit     # Quality-gated atomic commits
 ```
+
+**Auto-setup:** CCO automatically detects unconfigured projects and offers setup options.
 
 ---
 
@@ -68,7 +70,7 @@ claude plugin install cco@ClaudeCodeOptimizer
 
 ### Zero Global Pollution
 
-CCO never writes to `~/.claude/` or any global directory. Only `./.claude/rules/` is modified when you run `/cco:config`.
+CCO never writes to `~/.claude/` or any global directory. Only `./.claude/rules/` is modified during project setup.
 
 ### Context Injection
 
@@ -93,7 +95,7 @@ All CCO rules use `cco-` prefix. Your own rules (without prefix) are never touch
 
 | Component | Count | Purpose |
 |-----------|-------|---------|
-| Commands | 7 | `/cco:config`, `/cco:status`, `/cco:optimize`, etc. |
+| Commands | 5 | `/cco:optimize`, `/cco:align`, `/cco:commit`, `/cco:research`, `/cco:preflight` |
 | Agents | 3 | Analyze, Apply, Research |
 | Rules | 44 | Core (3) + Languages (21) + Frameworks (8) + Operations (12) |
 
@@ -106,7 +108,7 @@ All CCO rules use `cco-` prefix. Your own rules (without prefix) are never touch
 │  → cco-safety.md       Non-negotiable security standards    │
 │  → cco-workflow.md     AI execution patterns                │
 ├─────────────────────────────────────────────────────────────┤
-│  PROJECT (copied via /cco:config to .claude/rules/)         │
+│  PROJECT (copied during setup to .claude/rules/)            │
 │    ├── cco-context.md      Project metadata (YAML)          │
 │    ├── cco-{language}.md   Language-specific rules          │
 │    ├── cco-{framework}.md  Framework-specific rules         │
@@ -122,13 +124,13 @@ All CCO rules use `cco-` prefix. Your own rules (without prefix) are never touch
 
 | Command | Purpose |
 |---------|---------|
-| `/cco:config` | Project configuration (auto-detects stack) |
-| `/cco:status` | Health dashboard (security, quality, hygiene scores) |
 | `/cco:optimize` | Fix issues with approval flow for risky changes |
-| `/cco:review` | Architecture analysis with 80/20 recommendations |
+| `/cco:align` | Architecture gap analysis - current vs ideal state |
 | `/cco:commit` | Quality-gated atomic commits |
 | `/cco:research` | Multi-source research with reliability scoring |
 | `/cco:preflight` | Pre-release workflow orchestration |
+
+**Note:** Project configuration is handled automatically via SessionStart hook when CCO detects an unconfigured project.
 
 See [Commands documentation](docs/commands.md) for flags and examples.
 
@@ -139,7 +141,7 @@ See [Commands documentation](docs/commands.md) for flags and examples.
 | Agent | Purpose |
 |-------|---------|
 | `cco-agent-analyze` | Fast read-only analysis with severity scoring |
-| `cco-agent-apply` | Code changes with verification and cascade fixing |
+| `cco-agent-apply` | Code changes with verification and cascade fixing. Also handles project config via `scope=config` |
 | `cco-agent-research` | Multi-source research with CRAAP+ reliability scoring |
 
 See [Agents documentation](docs/agents.md) for detailed capabilities.

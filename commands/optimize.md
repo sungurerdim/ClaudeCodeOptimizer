@@ -9,9 +9,11 @@ model: opus
 
 **Incremental Code Improvement** - Quality gates + parallel analysis + background fixes with Fix Intensity selection.
 
+> **Implementation Note:** Code blocks use JavaScript-like pseudocode for clarity. Actual execution uses Claude Code tools with appropriate parameters.
+
 **Philosophy:** "This code works. How can it work better?"
 
-**Purpose:** Tactical, file-level fixes. For strategic architecture assessment, use `/review`.
+**Purpose:** Tactical, file-level fixes. For strategic architecture assessment, use `/align`.
 
 ## Args
 
@@ -108,14 +110,30 @@ A finding is **FIXABLE** if ALL conditions are met:
 - Platform-specific guards and conditionals
 - Test infrastructure patterns
 
-## Everything Mode [CRITICAL]
+## No Deferrals Policy [CRITICAL]
 
-When `--fix-all` or user selects "Everything":
+**AI never decides to skip or defer. User decides.**
+
+### Interactive Mode (default)
+When a finding requires complex/architectural changes:
+1. **Show the finding** with effort estimate
+2. **Ask user**: "This requires significant changes (~{n} files). Fix now? [Yes] [Skip]"
+3. **User decides** - AI implements user's choice
+
+### Unattended Mode (--auto)
+- **ALL findings fixed** - no questions, no deferrals
+- **Complex fixes included** - implement them regardless of effort
+- **Only exit states**: FIXED or TECHNICAL FAILURE (with specific blocker)
+
+### Everything Mode (--fix-all)
+When `--fix-all` or user selects "Full Fix":
 - **Zero deferrals** - no "future iteration", no "later pass", no "lower priority"
 - **Zero skips** - every finding must be addressed NOW
 - **Complex fixes** - implement them, don't defer them
 - **Only exit** - FIXED or TECHNICAL FAILURE (with specific blocker)
 - Accounting: `applied + failed = total` (no AI declines allowed)
+
+**Rule:** Exclusion decision belongs to USER, not AI. AI must attempt or ask.
 
 ## Context
 
@@ -129,12 +147,40 @@ When `--fix-all` or user selects "Everything":
 CCO context is auto-loaded from `.claude/rules/cco-context.md` via Claude Code's auto-context mechanism.
 
 **Check:** If auto-context does NOT contain `cco: true` marker:
-```
-CCO not configured.
 
-Run /config first to set up project context, then restart CLI.
+```javascript
+// Fallback: Trigger auto-setup inline (same as SessionStart hook)
+// Step 1: Analyze + Questions (parallel)
+const configData = await Task("cco-agent-analyze", `
+  scope: config
+
+  CCO is not configured for this project.
+
+  Offer setup options first:
+  - [Auto-setup] Detect stack and create rules automatically
+  - [Interactive] Ask questions to customize setup
+  - [Skip] Don't configure CCO for this project
+
+  If Skip → return { skip: true }
+  If Auto-setup → detect without questions, return { detected, answers: defaults }
+  If Interactive → ask questions while detecting, return { detected, answers }
+`, { model: "haiku" })
+
+if (configData.skip) {
+  // Exit command gracefully
+  return
+}
+
+// Step 2: Write files (uses analyze output)
+await Task("cco-agent-apply", `
+  scope: config
+  input: ${JSON.stringify(configData)}
+
+  Write config files and output context for immediate use.
+`, { model: "opus" })
 ```
-**Stop immediately.**
+
+**After config complete → continue to Mode Detection**
 
 ## Mode Detection
 
@@ -178,15 +224,21 @@ if (isUnattended) {
 
 ## Architecture
 
-| Step | Name | Action | Optimization |
-|------|------|--------|--------------|
-| 0 | Quality Gates | Format + Lint + Type + Test (full project) | Parallel background |
-| 1 | Setup | Q1: Combined settings (background analysis starts) | Single question |
-| 2 | Analyze | Wait for analysis, show findings | Progressive |
-| 3 | Auto-fix | Apply safe fixes (background) | Non-blocking |
-| 4 | Approval | Q2: Approve remaining (conditional) | Only if needed |
-| 5 | Apply | Apply approved fixes | Batched |
-| 6 | Summary | Show counts | Instant |
+| Step | Name | Action | Optimization | Dependency |
+|------|------|--------|--------------|------------|
+| 0 | Quality Gates | Format + Lint + Type + Test (full project) | Parallel background | - |
+| 1 | Setup | Q1: Combined settings (background analysis starts) | Single question | [PARALLEL] with 0 |
+| 2 | Analyze | Wait for analysis, show findings | Progressive | [SEQUENTIAL] after 1 |
+| 3 | Apply | Apply fixes based on intensity | Batched | [SEQUENTIAL] after 2 |
+| 4 | Summary | Show counts + gate results | Instant | [SEQUENTIAL] after 3, collects 0 |
+
+**Execution Flow:** (0 ‖ 1) → 2 → 3 → 4 (4 collects results from 0)
+
+**No approval questions** - Intensity selection determines what gets fixed:
+- Quick Wins → High impact, low effort only
+- Standard → CRITICAL + HIGH + MEDIUM
+- Full Fix → Everything
+- Report Only → No changes
 
 ---
 
@@ -515,181 +567,13 @@ if (config.action !== "Report only" && autoFixable.length > 0) {
 
 ### Validation
 ```
-[x] Background auto-fix launched
-→ Proceed to Step-4 immediately
+[x] All fixes applied based on intensity
+→ Proceed to Step-4 (Summary)
 ```
 
 ---
 
-## Step-4: Approval [Q2 - CONDITIONAL] [SKIP IF --auto]
-
-**Skip entirely if `--auto` flag - all fixable items already being applied.**
-
-**Only ask if there are approval-required items AND action is not "Everything":**
-
-### Pre-Confirmation Display [MANDATORY - Interactive only]
-
-**Display ALL items in approvalRequired BEFORE asking approval question:**
-
-```javascript
-// CRITICAL: Display ALL items, not just some severities
-console.log(formatApprovalTable(approvalRequired))  // Must show ALL items
-```
-
-```markdown
-## Issues Requiring Approval
-
-| # | Severity | Issue | Location | Fix |
-|---|----------|-------|----------|-----|
-{approvalRequired.map((item, i) => `| ${i+1} | [${item.severity}] | ${item.title} | ${item.location} | ${item.fix} |`)}
-
-Total: {approvalRequired.length} issues requiring approval
-```
-
-```javascript
-// UNATTENDED MODE: Skip approval entirely
-if (isUnattended) {
-  approved = []  // All fixable items handled in Step-3
-  // → Proceed directly to Step-5
-} else if (config.action.includes("Everything")) {
-  // No approval needed - apply all
-  approved = approvalRequired
-} else if (approvalRequired.length === 0) {
-  // Nothing to approve
-  approved = []
-} else {
-  // Sort by severity: CRITICAL → HIGH → MEDIUM → LOW
-  const severityOrder = { "CRITICAL": 0, "HIGH": 1, "MEDIUM": 2, "LOW": 3 }
-  approvalRequired.sort((a, b) => severityOrder[a.severity] - severityOrder[b.severity])
-
-  // Display issues table BEFORE question
-  console.log(formatIssuesTable(approvalRequired))
-
-  // Build approval question with pagination
-  const PAGE_SIZE = 4
-  let currentPage = 0
-  let allApproved = []
-
-  while (currentPage * PAGE_SIZE < approvalRequired.length) {
-    const startIdx = currentPage * PAGE_SIZE
-    const pageItems = approvalRequired.slice(startIdx, startIdx + PAGE_SIZE)
-    const remaining = approvalRequired.length - startIdx - pageItems.length
-
-    options = []
-
-    // "All" option only on first page if more than PAGE_SIZE items
-    if (currentPage === 0 && approvalRequired.length > PAGE_SIZE) {
-      options.push({
-        label: `All (${approvalRequired.length})`,
-        description: "Apply all - review git diff after"
-      })
-    }
-
-    // Add page items
-    pageItems.forEach(f => {
-      options.push({
-        label: `[${f.severity}] ${f.title}`,
-        description: `${f.location} - ${f.fix?.substring(0, 50)}...`
-      })
-    })
-
-    const pageInfo = approvalRequired.length > PAGE_SIZE
-      ? ` (page ${currentPage + 1}/${Math.ceil(approvalRequired.length / PAGE_SIZE)})`
-      : ""
-
-    const response = AskUserQuestion([{
-      question: `Approve fixes${pageInfo}?`,
-      header: "Approve",
-      options: options,
-      multiSelect: true
-    }])
-
-    // Handle response
-    if (response.includes("All")) {
-      allApproved = approvalRequired
-      break  // Exit pagination loop
-    }
-
-    // Add selected to approved (unselected are simply not processed)
-    pageItems.forEach(item => {
-      if (response.includes(item.title)) {
-        allApproved.push(item)
-      }
-      // Unselected items are not tracked - they're simply not processed
-    })
-
-    // If no more pages or user selected nothing (implicit "done"), exit
-    if (remaining === 0) break
-    currentPage++
-  }
-
-  approved = allApproved
-}
-```
-
-### Validation
-```
-[x] Approval collected (or skipped)
-→ Store as: approved = {selections[]}
-→ Unselected items are not processed (no "declined" category)
-→ Proceed to Step-5
-```
-
----
-
-## Step-5: Apply Approved
-
-**Wait for auto-fix and apply approved items:**
-
-```javascript
-// First, check background auto-fix status
-if (autoFixTask) {
-  autoFixResults = await TaskOutput(autoFixTask.id)
-}
-
-// Then apply user-approved items
-if (approved.length > 0) {
-  // In fix-all mode, all approval-required items are also auto-approved
-  const isFixAll = config.action.includes("Everything") || isUnattended
-
-  approvedResults = Task("cco-agent-apply", `
-    fixes: ${JSON.stringify(approved)}
-    fixAll: ${isFixAll}
-
-    Apply user-approved items. Verify each fix.
-    Handle cascading errors.
-
-    ${isFixAll ? `
-    FULL FIX MODE [MANDATORY]:
-    Fix ALL items. Effort categories are for reporting only, not filtering.
-
-    Rules:
-    - ALL findings must be fixed regardless of effort level
-    - Zero agent-initiated skips
-    - Every item = FIXED or TECHNICAL FAILURE (with "Technical: [reason]")
-    - If unsure → ask user, don't skip
-    ` : ""}
-
-    CRITICAL - Counting:
-    - Count FINDINGS, not locations
-    - Each finding = 1 item, regardless of how many locations it has
-
-    Return accounting at FINDING level:
-    { applied: <findings_fixed>, failed: <findings_failed>, total: <findings_attempted> }
-  `, { model: "opus" })
-}
-```
-
-### Validation
-```
-[x] Background auto-fixes completed
-[x] Approved fixes applied
-→ Proceed to Step-6
-```
-
----
-
-## Step-6: Summary
+## Step-4: Summary
 
 ### Collect Quality Gate Results
 
@@ -719,29 +603,14 @@ qualityGateStatus = {
 // Invariant: applied + failed = total
 // NOTE: No "declined" category - AI has no option to decline. Fix or fail with reason.
 
-// Auto-fixed findings (from Step-3)
-autoFixedCount = autoFixResults?.accounting?.applied || 0
-autoFixFailedCount = autoFixResults?.accounting?.failed || 0
-
-// Verify: auto-fix accounting
-assert(autoFixedCount + autoFixFailedCount === autoFixable.length,
-  `Auto-fix mismatch: ${autoFixedCount} + ${autoFixFailedCount} != ${autoFixable.length}`)
-
-// User-approved findings (from Step-5)
-approvedFixedCount = approvedResults?.accounting?.applied || 0
-approvedFailedCount = approvedResults?.accounting?.failed || 0
-
-// Verify: approved accounting (if approval was requested)
-if (approved.length > 0) {
-  assert(approvedFixedCount + approvedFailedCount === approved.length,
-    `Approved mismatch: ${approvedFixedCount} + ${approvedFailedCount} != ${approved.length}`)
-}
+// Get results from Step-3
+fixResults = autoFixResults?.accounting || { applied: 0, failed: 0, total: 0 }
 
 // Final accounting
 finalCounts = {
-  applied: autoFixedCount + approvedFixedCount,
-  failed: autoFixFailedCount + approvedFailedCount,
-  total: autoFixable.length + approved.length  // Only items attempted
+  applied: fixResults.applied,
+  failed: fixResults.failed,
+  total: fixResults.total
 }
 
 // Final verification - these MUST balance
@@ -786,8 +655,7 @@ let summary = `
 
 | Metric | Value |
 |--------|-------|
-| Auto-fixed | ${autoFixedCount} |
-| User-approved | ${approvedFixedCount} |
+| Applied | ${finalCounts.applied} |
 | Failed | ${finalCounts.failed} |
 | **Total** | **${finalCounts.total}** |
 
@@ -818,14 +686,13 @@ console.log(summary)
 
 ### Question Flow Summary
 
-| Scenario | Q1 | Q2 | Total |
-|----------|----|----|-------|
-| **--auto mode** | - | - | **0 questions** |
-| Clean git, has approval items | 2 tabs | 1 tab | 2 questions |
-| Dirty git, has approval items | 3 tabs | 1 tab | 2 questions |
-| Clean git, no approval items | 2 tabs | - | 1 question |
-| Report only mode | 2-3 tabs | - | 1 question |
-| Everything mode | 2-3 tabs | - | 1 question |
+| Scenario | Questions | Total |
+|----------|-----------|-------|
+| **--auto mode** | - | **0** |
+| Clean git | Intensity + Scopes (2-3 tabs) | **1** |
+| Dirty git | Intensity + Scopes + Git State (3-4 tabs) | **1** |
+
+**No approval questions** - Intensity selection determines what gets fixed automatically.
 
 ### Output Schema (when called as sub-command)
 
@@ -915,13 +782,12 @@ console.log(summary)
 
 ## Rules
 
-1. **Background analysis** - Start analysis while asking Q1
-2. **Max 2 questions** - Q1 settings, Q2 approval (if needed)
+1. **Single question** - All settings in Q1, no approval questions
+2. **Background analysis** - Start analysis while asking Q1
 3. **Dynamic tabs** - Git State tab only if dirty
-4. **Background auto-fix** - Run while user reviews approval
+4. **Intensity-driven** - Selected intensity determines what gets fixed automatically
 5. **Single Recommended** - Each tab has one recommended option
-6. **Paginated approval** - Max 4 items per question
-7. **Counting consistency** - Count findings, not locations
+6. **Counting consistency** - Count findings, not locations
 
 ---
 

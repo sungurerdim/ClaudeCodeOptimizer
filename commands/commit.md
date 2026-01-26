@@ -9,6 +9,8 @@ model: opus
 
 **Smart Commits** - Fast quality gates + atomic grouping, no unnecessary questions.
 
+> **Implementation Note:** Code blocks use JavaScript-like pseudocode for clarity. Actual execution uses Claude Code tools with appropriate parameters.
+
 ## Context
 
 - Git status: !`git status --short`
@@ -29,13 +31,15 @@ model: opus
 
 ## Architecture
 
-| Step | Name | Action | Optimization |
-|------|------|--------|--------------|
-| 1 | Pre-checks | Conflicts + quality gates | Parallel, conditional tests |
-| 2 | Analyze | Group changes, show table | Smart grouping |
-| 3 | Execute | Create commits | Direct (no question) |
-| 4 | Verify | Confirm commits created | git log check |
-| 5 | Summary | Show results | Instant |
+| Step | Name | Action | Optimization | Dependency |
+|------|------|--------|--------------|------------|
+| 1 | Pre-checks | Conflicts + quality gates | Parallel, conditional tests | - |
+| 2 | Analyze | Group changes, show table | Smart grouping | [SEQUENTIAL] after 1 |
+| 3 | Execute | Create commits | Direct (no question) | [SEQUENTIAL] after 2 |
+| 4 | Verify | Confirm commits created | git log check | [SEQUENTIAL] after 3 |
+| 5 | Summary | Show results | Instant | [SEQUENTIAL] after 4 |
+
+**Execution Flow:** 1 (internal parallelism) → 2 → 3 → 4 → 5
 
 **Fast operation** - Output is self-explanatory.
 

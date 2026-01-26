@@ -8,14 +8,13 @@ How to integrate CCO into your development workflow.
 
 | I want to... | Command |
 |--------------|---------|
-| See project health | `/cco:status` |
 | Fix issues | `/cco:optimize` |
-| Review architecture | `/cco:review` |
+| Review architecture | `/cco:align` |
 | Commit with quality gates | `/cco:commit` |
 | Prepare for release | `/cco:preflight` |
-| Regular maintenance | `/cco:checkup` |
 | Research a topic | `/cco:research` |
-| Configure project | `/cco:config` |
+
+**Note:** Project configuration happens automatically via auto-setup when CCO detects an unconfigured project.
 
 ---
 
@@ -25,30 +24,29 @@ How to integrate CCO into your development workflow.
 Start session
      │
      ▼
-┌────────────────┐
-│  /cco:status   │  Quick health check
-└───────┬────────┘
-        │
-   [Write code]
-        │
-        ▼
+[Auto-setup offered if needed]
+     │
+     ▼
+  [Write code]
+     │
+     ▼
 ┌────────────────┐
 │  /cco:commit   │  Quality-gated commit
 └───────┬────────┘
-        │
-   [More changes?] ──yes──► [Write code]
-        │
-       no
-        │
-        ▼
-      Done
+     │
+[More changes?] ──yes──► [Write code]
+     │
+    no
+     │
+     ▼
+   Done
 ```
 
 | Situation | Command |
 |-----------|---------|
-| Starting work | `/cco:status` |
 | Ready to commit | `/cco:commit` |
-| Cleaning up | `/cco:checkup` |
+| Quick cleanup | `/cco:optimize --quick` |
+| Full optimization | `/cco:optimize` |
 
 ---
 
@@ -56,36 +54,36 @@ Start session
 
 ```
 Feature complete
-        │
-        ▼
+     │
+     ▼
 ┌────────────────┐
-│  /cco:review   │  Architecture check
+│  /cco:align    │  Architecture check
 └───────┬────────┘
-        │
-   [Issues?] ──yes──► Fix issues
-        │
-       no
-        │
-        ▼
+     │
+[Issues?] ──yes──► Fix issues
+     │
+    no
+     │
+     ▼
 ┌────────────────┐
 │ /cco:optimize  │  Full quality pass
 └───────┬────────┘
-        │
-        ▼
+     │
+     ▼
 ┌────────────────┐
 │  /cco:commit   │  Final commit
 └───────┬────────┘
-        │
-        ▼
-   Create PR
+     │
+     ▼
+  Create PR
 ```
 
 | Goal | Command |
 |------|---------|
-| Quick review | `/cco:review --quick` |
-| Full review | `/cco:review` |
+| Quick architecture check | `/cco:align --quick` |
+| Full architecture review | `/cco:align` |
 | Security focus | `/cco:optimize --security` |
-| Everything | `/cco:optimize` |
+| Full optimization | `/cco:optimize` |
 
 ---
 
@@ -93,22 +91,22 @@ Feature complete
 
 ```
 Release candidate
-        │
-        ▼
+     │
+     ▼
 ┌────────────────┐
 │ /cco:preflight │  Full release check
 └───────┬────────┘
-        │
-   [Blockers?] ──yes──► Fix blockers
-        │
-       no
-        │
-   [Warnings?] ──yes──► Fix or override
-        │
-       no
-        │
-        ▼
-   Tag + Release
+     │
+[Blockers?] ──yes──► Fix blockers
+     │
+    no
+     │
+[Warnings?] ──yes──► Fix or override
+     │
+    no
+     │
+     ▼
+  Tag + Release
 ```
 
 | Check | Type | Action if Failed |
@@ -125,10 +123,10 @@ Release candidate
 
 | Frequency | Use Case | Command |
 |-----------|----------|---------|
-| Daily | Start of session | `/cco:status` |
-| Weekly | Active development | `/cco:checkup` |
-| Before PR | Quality gate | `/cco:checkup` |
-| Monthly | Stable projects | `/cco:review --focus=dependencies` |
+| Daily | Before important commits | `/cco:commit` |
+| Weekly | Active development | `/cco:optimize` |
+| Before PR | Quality gate | `/cco:align` + `/cco:optimize` |
+| Monthly | Stable projects | `/cco:align --focus=dependencies` |
 | Before release | Full validation | `/cco:preflight` |
 
 ---
@@ -136,27 +134,22 @@ Release candidate
 ## Command Relationships
 
 ```
-                    /cco:preflight
-                   (release workflow)
-                          │
-          ┌───────────────┴───────────────┐
-          ▼                               ▼
-    /cco:optimize                   /cco:review
-    (fix issues)                    (architecture)
-          │                               │
-          └───────────────┬───────────────┘
-                          ▼
-                    /cco:checkup
-                   (maintenance)
-                          │
-                          ▼
-                    /cco:status
-                   (health check)
+                   /cco:preflight
+                  (release workflow)
+                         │
+         ┌───────────────┴───────────────┐
+         ▼                               ▼
+   /cco:optimize                   /cco:align
+   (fix issues)                    (architecture)
+         │                               │
+         └───────────────┬───────────────┘
+                         ▼
+                   /cco:commit
+                  (quality gates)
 ```
 
 **Orchestration:**
-- `/cco:preflight` runs optimize + review + verification
-- `/cco:checkup` runs status + optimize
+- `/cco:preflight` runs optimize + align + verification in parallel
 
 ---
 
