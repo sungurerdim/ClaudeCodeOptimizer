@@ -314,11 +314,11 @@ Checks:
 | Verifiable | Rule compliance can be checked | MEDIUM |
 
 ### 4.3 Context Generation
-`/config` must produce:
+Auto-setup must produce:
 
 | Check | Requirement | Severity |
 |-------|-------------|----------|
-| Context created | File exists after /config | CRITICAL |
+| Context created | File exists after auto-setup | CRITICAL |
 | Detections | All auto-detected values recorded | HIGH |
 | User choices | All AskUserQuestion responses recorded | HIGH |
 | Learnings | `## Learnings` header present | MEDIUM |

@@ -1,13 +1,15 @@
 ---
-description: Strategic architecture assessment - current vs ideal state gap analysis
+description: Align codebase with ideal architecture - current vs ideal state gap analysis
 argument-hint: [--auto] [--intensity=X] [--focus=X] [--report] [--dry-run] [--quick]
 allowed-tools: Read(*), Grep(*), Glob(*), Edit(*), Bash(*), Task(*), AskUserQuestion
 model: opus
 ---
 
-# /review
+# /align
 
-**Ideal-Driven Strategic Assessment** - "If I designed from scratch, what would be best?"
+**Align with Ideal Architecture** - "If I designed from scratch, what would be best?"
+
+> **Implementation Note:** Code blocks use JavaScript-like pseudocode for clarity. Actual execution uses Claude Code tools with appropriate parameters.
 
 **Philosophy:** Evaluate as if no technology choices exist yet. Given only the requirements, what's ideal? Then compare current state to that ideal.
 
@@ -21,7 +23,7 @@ model: opus
 
 ## Good Targets vs Bad Targets
 
-**Good review targets (flag these):**
+**Good align targets (flag these):**
 - God classes with >500 lines or >20 methods
 - Circular dependencies between modules
 - Missing abstraction layers (UI calling DB directly)
@@ -29,16 +31,16 @@ model: opus
 - Test files with >5 mocks per test (integration candidate)
 - Over-engineered AI code (factory for single type)
 
-**Bad review targets (skip these):**
+**Bad align targets (skip these):**
 - Simple CRUD with minimal abstraction (appropriate for scale)
 - Single-implementation interfaces during prototyping
 - Framework-mandated patterns (even if not "ideal")
 - Legacy code in maintenance mode (flag but don't prioritize)
 - Deliberate trade-offs documented in ADRs
 
-## Review Balance [CRITICAL]
+## Align Balance [CRITICAL]
 
-**Avoid over-critical assessment that:**
+**Avoid over-critical alignment that:**
 - Recommends rewrites for working, stable code
 - Ignores team context (solo dev vs large team)
 - Proposes ideal patterns that add complexity without benefit
@@ -75,12 +77,40 @@ model: opus
 CCO context is auto-loaded from `.claude/rules/cco-context.md` via Claude Code's auto-context mechanism.
 
 **Check:** If auto-context does NOT contain `cco: true` marker:
-```
-CCO not configured.
 
-Run /config first to set up project context, then restart CLI.
+```javascript
+// Fallback: Trigger auto-setup inline (same as SessionStart hook)
+// Step 1: Analyze + Questions (parallel)
+const configData = await Task("cco-agent-analyze", `
+  scope: config
+
+  CCO is not configured for this project.
+
+  Offer setup options first:
+  - [Auto-setup] Detect stack and create rules automatically
+  - [Interactive] Ask questions to customize setup
+  - [Skip] Don't configure CCO for this project
+
+  If Skip → return { skip: true }
+  If Auto-setup → detect without questions, return { detected, answers: defaults }
+  If Interactive → ask questions while detecting, return { detected, answers }
+`, { model: "haiku" })
+
+if (configData.skip) {
+  // Exit command gracefully
+  return
+}
+
+// Step 2: Write files (uses analyze output)
+await Task("cco-agent-apply", `
+  scope: config
+  input: ${JSON.stringify(configData)}
+
+  Write config files and output context for immediate use.
+`, { model: "opus" })
 ```
-**Stop immediately.**
+
+**After config complete → continue to Step-0 (Mode Detection)**
 
 ---
 
@@ -105,26 +135,44 @@ if (args.includes("--auto")) {
 
 ## Architecture
 
-| Step | Name | Action | Optimization |
-|------|------|--------|--------------|
-| 0 | Mode | Detect --auto or interactive | Instant |
-| 1a | Q1 | Fix Intensity + Scope selection | Single question |
-| 1b | Analysis | Start background analysis | Parallel |
-| 2 | Gap Analysis | Current vs Ideal comparison | Progressive |
-| 3 | Recommendations | 80/20 prioritized roadmap | Instant |
-| 4 | Apply | Apply based on intensity | Verified |
-| 5 | Summary | Show results | Instant |
+| Step | Name | Action | Optimization | Dependency |
+|------|------|--------|--------------|------------|
+| 0 | Mode | Detect --auto or interactive | Instant | - |
+| 1a | Q1 | Fix Intensity + Scope selection | Single question | [PARALLEL] with 1b |
+| 1b | Analysis | Start background analysis | Parallel | [PARALLEL] with 1a |
+| 2 | Gap Analysis | Current vs Ideal comparison | Progressive | [SEQUENTIAL] after 1b |
+| 3 | Recommendations | 80/20 prioritized roadmap | Instant | [SEQUENTIAL] after 2 |
+| 4 | Apply | Apply based on intensity | Verified | [SEQUENTIAL] after 3 |
+| 5 | Summary | Show results | Instant | [SEQUENTIAL] after 4 |
+
+**Execution Flow:** Step-0 → (1a ‖ 1b) → 2 → 3 → 4 → 5
 
 ---
 
-## Everything Mode [CRITICAL]
+## No Deferrals Policy [CRITICAL]
 
+**AI never decides to skip or defer. User decides.**
+
+### Interactive Mode (default)
+When a finding requires complex/architectural changes:
+1. **Show the finding** with effort estimate and impact
+2. **Ask user**: "This requires architectural changes (~{n} files, {effort}). Fix now? [Yes] [Skip]"
+3. **User decides** - AI implements user's choice
+
+### Unattended Mode (--auto)
+- **ALL findings fixed** - no questions, no deferrals
+- **Architectural changes included** - implement them regardless of complexity
+- **Only exit states**: FIXED or TECHNICAL FAILURE (with specific blocker)
+
+### Everything Mode (--intensity=full-fix)
 When `--intensity=full-fix` or user selects "Full Fix":
 - **ALL findings fixed** - effort categories are for reporting only, not filtering
 - **Zero skips** - every finding must be addressed NOW
 - **No deferrals** - no "future iteration", no "later pass", no "lower priority"
 - **Only exit** - FIXED or TECHNICAL FAILURE (with specific blocker)
 - Accounting: `applied + failed = total` (no AI declines allowed)
+
+**Rule:** Exclusion decision belongs to USER, not AI. AI must attempt or ask.
 
 ---
 
@@ -590,7 +638,7 @@ assert(applied + failed === toApply.length,
 ### Interactive Mode Output
 
 ```markdown
-## Review Complete
+## Align Complete
 
 ### Gap Summary
 | Dimension | Before | After | Change |
@@ -625,7 +673,7 @@ Run \`git diff\` to review changes.
 ### Unattended Mode Output (--auto)
 
 ```
-cco-review: {OK|WARN|FAIL} | Gaps: {gapCount} | Applied: {applied} | Failed: {failed} | Total: {totalFindings}
+cco-align: {OK|WARN|FAIL} | Gaps: {gapCount} | Applied: {applied} | Failed: {failed} | Total: {totalFindings}
 ```
 
 ### Validation

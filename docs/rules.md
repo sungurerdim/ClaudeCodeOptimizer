@@ -28,7 +28,7 @@
 │    → cco-workflow.md      AI execution patterns                 │
 │  (No files copied - direct context injection via hook output)   │
 ├─────────────────────────────────────────────────────────────────┤
-│  PROJECT-SPECIFIC (installed via /cco:config)                   │
+│  PROJECT-SPECIFIC (installed via auto-setup)                    │
 ├─────────────────────────────────────────────────────────────────┤
 │  ./.claude/rules/                                               │
 │    ├── cco-context.md       Project metadata (YAML)             │
@@ -149,7 +149,7 @@
 
 ## Detection & Installation
 
-### Auto-Detection (via /cco:config)
+### Auto-Detection (via auto-setup)
 
 | Detection Type | Method | Example |
 |----------------|--------|---------|
@@ -158,7 +158,7 @@
 | Infrastructure | Config files | Dockerfile → `cco-infrastructure.md` |
 | Domain | Code patterns | @app.get → `cco-api.md` |
 
-### User-Input (via /cco:config)
+### User-Input (via interactive setup)
 
 | Question | Options | Effect |
 |----------|---------|--------|
@@ -177,7 +177,7 @@
 → cco-workflow.md content
 ```
 
-### After /cco:config
+### After Auto-Setup
 
 ```
 project/.claude/rules/

@@ -32,27 +32,21 @@ Need changes?
 
 ## Overview
 
-| Agent                  | Purpose                            | Model | Tools                                             |
-|------------------------|------------------------------------|-------|---------------------------------------------------|
-| **cco-agent-analyze**  | Comprehensive codebase analysis    | haiku | Glob, Read, Grep, Bash                            |
-| **cco-agent-apply**    | Verified write operations          | opus  | Grep, Read, Glob, Bash, Edit, Write, NotebookEdit |
-| **cco-agent-research** | Multi-source research with scoring | haiku | WebSearch, WebFetch, Read, Grep, Glob             |
+| Agent                  | Purpose                            | Model | Tools                                                        |
+|------------------------|------------------------------------|-------|--------------------------------------------------------------|
+| **cco-agent-analyze**  | Comprehensive codebase analysis    | haiku | Glob, Read, Grep, Bash                                       |
+| **cco-agent-apply**    | Verified write operations + config | opus  | Grep, Read, Glob, Bash, Edit, Write, NotebookEdit, AskUserQuestion |
+| **cco-agent-research** | Multi-source research with scoring | haiku | WebSearch, WebFetch, Read, Grep, Glob                        |
 
 **Model Rationale:**
 - Haiku for read-only sub-agents (fast, cost-effective)
 - Opus for apply agent (50-75% fewer tool errors, coding state-of-the-art)
 
-**Model Override:**
-Commands can override agent defaults via Task parameter: `Task("agent", prompt, { model: "haiku" })`
-- cco-config uses haiku for cco-agent-apply (file writes only, no code fixes)
-- cco-optimize/cco:review use opus for cco-agent-apply (code refactoring)
-- cco-research uses opus for synthesis (conflict resolution requires reasoning)
-
 ---
 
 ## cco-agent-analyze
 
-**Purpose:** Comprehensive codebase analysis with severity scoring.
+**Purpose:** Comprehensive codebase analysis with severity scoring. **Read-only agent.**
 
 **TRIGGERS:** `analyze`, `scan`, `audit`, `find issues`, `code review`, `quality check`, `security scan`, `detect`, `metrics`
 
@@ -74,101 +68,50 @@ Commands can override agent defaults via Task parameter: `Task("agent", prompt, 
 - Auto-skip: node_modules, dist, .git, __pycache__
 - False positive handling: `excluded[]` with reasons
 
-### Scopes (12 total)
+### Scopes
 
-| Scope            | Returns                              | Use Case                      |
-|------------------|--------------------------------------|-------------------------------|
-| `security`       | Security vulnerabilities, secrets    | cco-optimize --security       |
-| `hygiene`        | Orphans, duplicates, stale refs      | cco-optimize --hygiene        |
-| `types`          | Type coverage, annotation issues     | cco-optimize --types          |
-| `lint`           | Format, style, naming issues         | cco-optimize --lint           |
-| `performance`    | N+1, blocking I/O, missing caching   | cco-optimize --performance    |
-| `ai-hygiene`     | Hallucinated APIs, orphan abstractions | cco-optimize --ai-hygiene   |
-| `architecture`   | Dependency graph, coupling metrics   | cco-review                    |
-| `patterns`       | SOLID, DRY, design patterns          | cco-review --patterns         |
-| `testing`        | Coverage gaps, test quality          | cco-review --testing          |
-| `maintainability`| Complexity, readability, naming      | cco-review --maintainability  |
-| `scan`           | Dashboard metrics (all categories)   | cco-status                    |
-| `config`         | Project detection and rule selection | cco-config                    |
+**OPTIMIZE Scopes** (tactical, file-level fixes):
 
-### Detection Capabilities
+| Scope          | ID Range         | Checks | Focus                                    |
+|----------------|------------------|--------|------------------------------------------|
+| `security`     | SEC-01 to SEC-12 | 12     | OWASP, secrets, injection, unsafe patterns |
+| `hygiene`      | HYG-01 to HYG-20 | 20     | Unused code, orphan files, dead code     |
+| `types`        | TYP-01 to TYP-10 | 10     | Type annotations, mypy/pyright errors    |
+| `lint`         | LNT-01 to LNT-08 | 8      | Format, import order, naming, style      |
+| `performance`  | PRF-01 to PRF-10 | 10     | N+1, blocking I/O, missing caching       |
+| `ai-hygiene`   | AIH-01 to AIH-08 | 8      | Hallucinated APIs, orphan abstractions   |
+| `robustness`   | ROB-01 to ROB-10 | 10     | Timeouts, retries, validation            |
 
-**Technical:**
-- Languages (from file extensions)
-- Frameworks (from dependencies)
-- Databases (from connection strings, ORMs)
-- Infrastructure (Dockerfile, k8s/)
-- CI/CD (workflow directories)
-- Testing (test directories, frameworks)
-- Tools (format, lint, test commands)
+**ALIGN Scopes** (strategic, architecture-level):
 
-**Strategic:**
-- Purpose (from README)
-- Team size (from git contributors)
-- Scale (from README, analytics)
-- Data sensitivity (from model fields)
-- Project type (from entry points)
+| Scope              | ID Range         | Checks | Focus                                    |
+|--------------------|------------------|--------|------------------------------------------|
+| `architecture`     | ARC-01 to ARC-15 | 15     | Coupling, cohesion, layers, dependencies |
+| `patterns`         | PAT-01 to PAT-12 | 12     | SOLID, DRY, consistency, design patterns |
+| `testing`          | TST-01 to TST-10 | 10     | Coverage strategy, test quality, gaps    |
+| `maintainability`  | MNT-01 to MNT-12 | 12     | Complexity, readability, naming          |
+| `ai-architecture`  | AIA-01 to AIA-10 | 10     | Over-engineering, drift, premature abstraction |
+| `functional-completeness` | FUN-01 to FUN-12 | 12 | CRUD completeness, edge cases            |
 
-**Auto-detected flags:**
-- monorepo, preCommitHooks, coverage
-- lintingConfigured, apiEndpoints
-- containerSetup, i18nSetup
-- licenseType, secretsDetected
+**Other Scopes:**
 
-### Scan Categories
-
-- Security - OWASP Top 10, secrets, CVEs, input validation
-- Quality - Complexity >10, type coverage, consistency
-- Hygiene - Orphans, stale-refs, duplicates, dead code
-- Tests - Coverage gaps, flaky tests, test quality
-- Self-Compliance - Violations of stated rules
-
-### Config Scope
-
-Handles project detection and rule selection for `/cco:config`:
-
-**Execution Flow:**
-1. Auto-detect from manifest/code/config/docs (priority order)
-2. Ask user-input questions via AskUserQuestion
-3. Read adaptive rules template
-4. Select rules based on detections + user input
-5. Generate context.md + rule files
-6. Return structured output
-
-**User Questions:** Team, Scale, Data, Compliance, Testing, SLA, Maturity, Breaking, Priority
-
-### Artifact Handling
-
-| Rule             | Implementation                         |
-|------------------|----------------------------------------|
-| Reference-Large  | By path/ID, not inline                 |
-| Summarize-First  | Return summary.count before full array |
-| Chunk-Processing | >100 findings → batches                |
-| Cache-Artifacts  | Reuse file reads within session        |
-
-### Strategy Evolution
-
-| Pattern                  | Action            |
-|--------------------------|-------------------|
-| Same error 3+ files      | Add to `Systemic` |
-| Recurring false positive | Add to `Avoid`    |
-| Effective pattern found  | Add to `Prefer`   |
+| Scope  | Purpose                              |
+|--------|--------------------------------------|
+| `scan` | Dashboard metrics (all categories)   |
 
 ### Output
 
 Returns structured JSON with:
-- `technical` - Stack, tools, conventions
-- `strategic` - Purpose, team, scale, data, type
-- `autoDetected` - All detected flags
-- `findings` - Issues with priority, location, details
-- `metrics` - Security, quality, hygiene scores
-- `learnings` - Strategy evolution patterns (systemic/avoid/prefer)
+- `findings` - Issues with severity, location, details
+- `scores` - Security, quality, hygiene scores (0-100)
+- `metrics` - Coupling, cohesion, complexity
+- `excluded` - Filtered items with reasons (platform-specific, etc.)
 
 ---
 
 ## cco-agent-apply
 
-**Purpose:** Batch write operations with verification and accounting.
+**Purpose:** Batch write operations with verification and accounting. **Also handles project configuration.**
 
 **TRIGGERS:** `apply fixes`, `fix all`, `batch edit`, `generate config`, `export rules`
 
@@ -179,6 +122,7 @@ Returns structured JSON with:
 | Apply 3+ fixes at once | Single-file edit → Edit |
 | Need post-change verification | Simple file create → Write |
 | Fix cascading errors | Quick one-off edit → Edit |
+| Project configuration (scope=config) | - |
 | Track applied/failed counts | - |
 
 **Advantages over Edit/Write:**
@@ -186,12 +130,35 @@ Returns structured JSON with:
 - Post-change verification (runs lint/type/test)
 - Cascade handling (fixes errors caused by fixes)
 - Accounting (done + fail = total)
-- Fix-all mode (zero agent-initiated skips)
+- No deferrals mode (zero agent-initiated skips)
 - Batch efficiency (groups by file)
 
 **Note:** Rollback via git (`git checkout`). Agent warns about dirty state, doesn't create checkpoints.
 
-### Operations
+### Config Scope
+
+Handles project detection and rule generation:
+
+**Execution Modes:**
+
+| Mode | When Used | Behavior |
+|------|-----------|----------|
+| Interactive | Default | Detects + asks questions + generates |
+| Auto | --auto flag or hook trigger | Detects + uses defaults + generates |
+
+**Interactive Mode Flow:**
+1. Auto-detect from manifest/code/config/docs (priority order)
+2. Ask user questions via AskUserQuestion (type, team, data, maturity)
+3. Generate cco-context.md with YAML frontmatter
+4. Copy rule files from plugin to `.claude/rules/`
+
+**Output Files:**
+- `cco-context.md` - Project metadata (YAML with `cco: true` marker)
+- `cco-{language}.md` - Language-specific rules
+- `cco-{framework}.md` - Framework-specific rules
+- `cco-{operation}.md` - Operations rules
+
+### Fix Operations
 
 | Operation | Input               | Output                    |
 |-----------|---------------------|---------------------------|
@@ -207,16 +174,20 @@ After each change:
 3. **Grep** - New pattern count = expected
 4. **Test** - Run relevant tests
 
+### No Deferrals Policy
+
+**AI never decides to skip or defer. User decides.**
+
+- Interactive Mode: Complex changes prompt user for approval
+- Unattended Mode (fixAll: true): ALL findings fixed, no questions
+- Accounting: `applied + failed = total` (no AI declines allowed)
+
 ### Status Definitions
 
 | Status     | Meaning                  |
 |------------|--------------------------|
 | `done`     | Applied and verified     |
-| `fail`     | Attempted but failed (technical reason required) |
-
-### Accounting
-
-Always reports: `done + fail = total`
+| `fail`     | Technical impossibility (reason required) |
 
 ---
 
@@ -252,7 +223,7 @@ Always reports: `done + fail = total`
 | `analyze`    | Deep analysis, contradictions         | Follow-up on top sources |
 | `synthesize` | Consolidated recommendation           | Final answer            |
 | `full`       | All three combined                    | Standard research flow  |
-| `dependency` | Package version, CVE, breaking changes | cco-optimize --deps     |
+| `dependency` | Package version, CVE, breaking changes | Dependency audit        |
 
 ### Source Tiers
 
@@ -268,7 +239,6 @@ Always reports: `done + fail = total`
 ### Features
 
 - **CRAAP+ Scoring** - Currency, Relevance, Authority, Accuracy, Purpose
-- **Adaptive Replacement** - Discard low-quality sources, find better
 - **Contradiction Detection** - Identifies conflicting claims
 - **Saturation Detection** - Stop when no new information
 - **Bias Detection** - Flags vendor self-promotion
@@ -276,55 +246,17 @@ Always reports: `done + fail = total`
 
 ---
 
-## Scope Reference
-
-Complete list of all scopes with their purpose and coverage:
-
-### General Scopes
-
-| Scope            | Purpose                 | Coverage                                         |
-|------------------|-------------------------|--------------------------------------------------|
-| `detect`         | Project discovery       | Stack, tools, conventions, structure             |
-| `scan`           | Dashboard metrics       | Security, tests, debt, cleanliness scores        |
-| `full`           | Combined detect+scan    | All detection + all metrics                      |
-| `config`         | Project configuration   | Detection + user questions + rule selection      |
-| `trends`         | Historical tracking     | Metric deltas with ↑↓→⚠ indicators               |
-
-### Optimize Scopes (cco-optimize)
-
-| Scope          | ID Range       | Checks | Focus                                    |
-|----------------|----------------|--------|------------------------------------------|
-| `security`     | SEC-01 to SEC-12 | 12   | OWASP, secrets, injection, unsafe patterns |
-| `hygiene`      | HYG-01 to HYG-15 | 15   | Unused code, orphan files, dead code     |
-| `types`        | TYP-01 to TYP-10 | 10   | Type annotations, mypy/pyright errors    |
-| `lint`         | LNT-01 to LNT-08 | 8    | Format, import order, naming, style      |
-| `performance`  | PRF-01 to PRF-10 | 10   | N+1, blocking I/O, missing caching       |
-| `ai-hygiene`   | AIH-01 to AIH-08 | 8    | Hallucinated APIs, orphan abstractions   |
-
-### Review Scopes (cco-review)
-
-| Scope            | ID Range       | Checks | Focus                                    |
-|------------------|----------------|--------|------------------------------------------|
-| `architecture`   | ARC-01 to ARC-15 | 15   | Coupling, cohesion, layers, dependencies |
-| `patterns`       | PAT-01 to PAT-12 | 12   | SOLID, DRY, consistency, design patterns |
-| `testing`        | TST-01 to TST-10 | 10   | Coverage strategy, test quality, gaps    |
-| `maintainability`| MNT-01 to MNT-12 | 12   | Complexity, readability, naming          |
-| `ai-architecture`| AIA-01 to AIA-10 | 10   | Over-engineering, drift, premature abstraction |
-
----
-
 ## Agent Selection by Command
 
-| Command          | Analyze Scope                                          | Apply          | Research     |
-|------------------|--------------------------------------------------------|----------------|--------------|
-| `/cco:config`    | `config`                                               | No             | No           |
-| `/cco:status`    | `scan`, `trends`                                       | No             | No           |
-| `/cco:optimize`  | `security`, `quality`, `hygiene`, `best-practices`     | Yes            | `dependency` |
-| `/cco:review`    | `architecture`, `quality`, `testing`, `best-practices` | Yes            | `dependency` |
-| `/cco:commit`    | `detect` (fallback)                                    | No             | No           |
-| `/cco:research`  | -                                                      | No             | `full`       |
-| `/cco:preflight` | (orchestrates optimize + review)                       | (orchestrates) | `dependency` |
-| `/cco:checkup`   | (orchestrates status + optimize)                       | (orchestrates) | `dependency` |
+| Command          | Analyze Scope                                      | Apply          | Research     |
+|------------------|----------------------------------------------------|----------------|--------------|
+| `/cco:optimize`  | security, hygiene, types, lint, performance, etc.  | Yes            | dependency   |
+| `/cco:align`     | architecture, patterns, testing, maintainability   | Yes            | dependency   |
+| `/cco:commit`    | (quality gates only)                               | No             | No           |
+| `/cco:research`  | -                                                  | No             | full         |
+| `/cco:preflight` | (orchestrates optimize + align)                    | (orchestrates) | dependency   |
+
+**Auto-Setup:** Uses cco-agent-apply with `scope=config` when CCO detects unconfigured project.
 
 ---
 

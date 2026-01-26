@@ -6,25 +6,17 @@ Detailed documentation for all CCO slash commands.
 
 ## Command Overview
 
-### Base Commands
-
 | Command         | Purpose                                  | Model     | Steps |
 |-----------------|------------------------------------------|-----------|-------|
-| `/cco:config`   | Project configuration and settings       | inherit   | 5     |
-| `/cco:status`   | Metrics dashboard                        | inherit   | 3     |
-| `/cco:optimize` | Security + Quality + Hygiene             | **opus**  | 6     |
-| `/cco:review`   | Architecture analysis                    | **opus**  | 5     |
+| `/cco:optimize` | Security + Quality + Hygiene fixes       | **opus**  | 6     |
+| `/cco:align`    | Architecture gap analysis                | **opus**  | 5     |
 | `/cco:research` | Multi-source research with AI synthesis  | **opus**  | 5     |
-| `/cco:commit`   | Quality-gated commits                    | **opus**  | 4     |
+| `/cco:commit`   | Quality-gated atomic commits             | **opus**  | 4     |
+| `/cco:preflight`| Pre-release workflow orchestration       | **opus**  | 5     |
 
-### Meta Commands
+**Model Rationale:** Opus for analysis and coding commands (50-75% fewer errors).
 
-| Command          | Purpose              | Model   | Orchestrates                         |
-|------------------|----------------------|---------|--------------------------------------|
-| `/cco:preflight` | Pre-release workflow | inherit | optimize + review + verify (5 steps) |
-| `/cco:checkup`   | Regular maintenance  | inherit | status + optimize (3 steps)          |
-
-**Model Rationale:** Opus for analysis and coding commands (50-75% fewer errors), inherit for orchestration.
+**Project Configuration:** Handled automatically via auto-setup (SessionStart hook or command fallback) when CCO detects an unconfigured project.
 
 ---
 
@@ -52,30 +44,21 @@ All commands follow a standardized structure for consistency and reliability.
 | **Validation gates**     | Every step ends with validation block                          |
 | **Conditional steps**    | Marked with `[SKIP if X]` or `[MANDATORY if X]`                |
 | **Sub-steps**            | Complex steps use Step-N.1, Step-N.2 format                    |
-| **Rules enforcement**    | "Sequential execution" and "Validation gates" in every command |
-
-### Validation Block Format
-
-```
-### Validation
-[x] Condition checked
-[x] Another condition
-→ Store as: variable = {value}
-→ If condition: Skip to Step-N
-→ Proceed to Step-N
-```
+| **No Deferrals**         | AI never decides to skip - user decides via approval flow      |
 
 ---
 
 ## Common Features
 
-### Context Requirement
+### Auto-Setup (No Manual Config Required)
 
-All commands except `/cco:config` require CCO context. If context is missing:
-```
-CCO context not found.
-Run /cco:config first to configure project context, then restart CLI.
-```
+CCO automatically detects unconfigured projects at session start:
+
+1. **Check**: Does auto-loaded context contain `cco: true` marker?
+2. **If NO**: Offers setup options:
+   - `[Auto-setup]` - Detect stack and create rules automatically
+   - `[Interactive]` - Ask questions to customize setup
+   - `[Skip]` - Don't configure CCO for this project
 
 ### Dynamic Context
 
@@ -87,105 +70,13 @@ Commands pre-collect context at execution start:
 
 **Important:** Pre-collected values are used throughout execution - commands don't re-run these checks.
 
-### Strategy Evolution
+### No Deferrals Policy
 
-Commands learn from execution patterns:
+**AI never decides to skip or defer. User decides.**
 
-| Pattern              | Action            |
-|----------------------|-------------------|
-| Same issue 3+ files  | Add to `Systemic` |
-| Fix caused cascade   | Add to `Avoid`    |
-| Effective pattern    | Add to `Prefer`   |
-
----
-
-## /cco:config
-
-**Purpose:** Central configuration command for project detection, settings, removal, and export.
-
-**Usage:**
-```bash
-/cco:config              # Interactive: Configure / Remove / Export
-/cco:config --auto       # Unattended mode with smart defaults
-```
-
-### Steps
-
-| Step | Name       | Action                            |
-|------|------------|-----------------------------------|
-| 1    | Pre-detect | cco-agent-analyze (background)    |
-| 2    | Setup      | Q1: Combined setup tabs           |
-| 3    | Context    | Q2: Context details (conditional) |
-| 4    | Apply      | Write files                       |
-| 5    | Report     | Summary                           |
-
-### Context Questions (Step-3)
-
-**Team & Data:**
-- How many active contributors? (Solo / Small 2-5 / Large 6+)
-- Expected scale? (Prototype / Small / Medium / Large)
-- Most sensitive data? (Public / PII / Regulated)
-- Compliance frameworks? (None / SOC2 / HIPAA / GDPR)
-
-**Operations & Policy:**
-- Uptime commitment (SLA)? (None / 99% / 99.9% / 99.99%)
-- Development stage? (Prototype / Active / Stable / Legacy)
-- Breaking change policy? (Allowed / Minimize / Never)
-- Primary focus? (Speed / Balanced / Quality / Security)
-
-### Export Formats
-
-| Format    | Target                                    | Content                    | Output               |
-|-----------|-------------------------------------------|----------------------------|----------------------|
-| AGENTS.md | Universal (Codex, Cursor, Copilot, Cline) | Core + AI, model-agnostic  | `./AGENTS.md`        |
-| CLAUDE.md | Claude Code only                          | Core + AI + Tools, full    | `./CLAUDE.export.md` |
-
----
-
-## /cco:status
-
-**Purpose:** Single view of project health with actionable next steps.
-
-**Requires:** CCO context (run `/cco:config` first)
-
-**Usage:**
-```bash
-/cco:status                     # Full dashboard
-/cco:status --focus=security    # Focus on security
-/cco:status --brief             # Summary only
-/cco:status --trends            # With historical trends
-/cco:status --json              # JSON output
-```
-
-### Steps
-
-| Step | Name    | Action                      |
-|------|---------|-----------------------------|
-| 1    | Collect | Run agent for metrics       |
-| 2    | Process | Calculate scores and trends |
-| 3    | Display | Show dashboard              |
-
-### Scores
-
-| Category    | Measures                              |
-|-------------|---------------------------------------|
-| Security    | Vulnerabilities, secrets, dependencies |
-| Tests       | Coverage + quality                    |
-| Tech Debt   | Complexity, dead code, duplication    |
-| Cleanliness | Orphans, duplicates, stale refs       |
-
-### Score Thresholds
-
-| Score  | Health Status |
-|--------|---------------|
-| 80-100 | OK            |
-| 60-79  | WARN          |
-| 40-59  | FAIL          |
-| 0-39   | CRITICAL      |
-
-> **Note:** Health status (OK/WARN/FAIL/CRITICAL) indicates overall project health. Finding severity (CRITICAL/HIGH/MEDIUM/LOW) indicates individual issue priority. Same terms, different contexts.
-
-**Trend Indicators:** ↑ Improved │ → Stable │ ↓ Degraded │ ⚠ Rapid decline
+- **Interactive Mode**: Complex changes prompt user for approval
+- **Unattended Mode (--auto)**: ALL findings fixed, no questions
+- **Accounting**: `applied + failed = total` (no AI declines allowed)
 
 ---
 
@@ -193,19 +84,19 @@ Commands learn from execution patterns:
 
 **Purpose:** Full-stack optimization combining security, code quality, and hygiene checks.
 
-**Requires:** CCO context (run `/cco:config` first)
-
 **Core Principle:** Fix everything that can be fixed. No "manual review" - all issues either auto-fixed or user-approved.
 
 **Usage:**
 ```bash
 /cco:optimize                      # Interactive selection
 /cco:optimize --security           # Security focus only
-/cco:optimize --quality            # Quality focus only
 /cco:optimize --hygiene            # Hygiene focus
+/cco:optimize --types              # Type annotations
+/cco:optimize --lint               # Lint/format fixes
+/cco:optimize --performance        # Performance issues
 /cco:optimize --report             # Report only, no fixes
-/cco:optimize --pre-release        # All scopes, strict
 /cco:optimize --auto               # Unattended mode: fix all, no questions
+/cco:optimize --fix-all            # Everything mode: zero deferrals
 ```
 
 ### Steps
@@ -224,72 +115,67 @@ Commands learn from execution patterns:
 | Scope          | Checks                                 |
 |----------------|----------------------------------------|
 | Security       | OWASP, secrets, CVEs, input validation |
-| Quality        | Tech debt, type errors, test gaps      |
 | Hygiene        | Orphans, stale refs, duplicates        |
-| Best Practices | Patterns, efficiency, consistency      |
-
-### Context Application
-
-| Field    | Effect                                 |
-|----------|----------------------------------------|
-| Data     | PII/Regulated → security ×2            |
-| Scale    | 10K+ → stricter thresholds             |
-| Maturity | Legacy → safe fixes only               |
-| Priority | Speed → critical only; Quality → all   |
+| Types          | Type annotations, mypy/pyright errors  |
+| Lint           | Format, import order, naming, style    |
+| Performance    | N+1, blocking I/O, missing caching     |
+| AI-Hygiene     | Hallucinated APIs, orphan abstractions |
+| Robustness     | Timeouts, retries, validation          |
 
 ---
 
-## /cco:review
+## /cco:align
 
-**Purpose:** Strategic architecture analysis with recommendations.
+**Purpose:** Strategic architecture analysis - "If I designed from scratch, what would be best?"
 
-**Requires:** CCO context (run `/cco:config` first)
+**Philosophy:** Evaluate as if no technology choices exist yet. Given only the requirements, what's ideal? Then compare current state to that ideal.
 
 **Usage:**
 ```bash
-/cco:review                    # Full review
-/cco:review --quick            # Smart defaults, report only
-/cco:review --focus=architecture
-/cco:review --focus=quality
-/cco:review --no-apply         # Report only
+/cco:align                         # Full review
+/cco:align --quick                 # Smart defaults, report only
+/cco:align --focus=architecture
+/cco:align --focus=patterns
+/cco:align --intensity=full-fix    # Fix all findings
+/cco:align --auto                  # Unattended mode
 ```
 
 ### Steps
 
 | Step | Name            | Action                                              |
 |------|-----------------|-----------------------------------------------------|
-| 1    | Setup           | Q1: Focus + Apply mode (background analysis starts) |
+| 1    | Setup           | Q1: Focus + Intensity (background analysis starts)  |
 | 2    | Analysis        | Wait for results, show assessment                   |
-| 3    | Recommendations | 80/20 prioritized list                              |
+| 3    | Recommendations | Gap analysis with ideal metrics                     |
 | 4    | Apply           | Apply selected changes                              |
 | 5    | Summary         | Show results                                        |
 
 ### Focus Areas
 
-| Selection      | Agent Scope                                           |
-|----------------|-------------------------------------------------------|
-| Architecture   | Dependency graph, coupling, patterns, layers          |
-| Code Quality   | Issues with file:line, complexity                     |
-| Testing & DX   | Test coverage, developer experience                   |
-| Best Practices | Tool usage, execution patterns, efficiency            |
-| Dependencies   | Outdated packages, security advisories, version risks |
+| Selection        | Agent Scope                                           |
+|------------------|-------------------------------------------------------|
+| Architecture     | Dependency graph, coupling, patterns, layers          |
+| Patterns         | SOLID, DRY, design patterns, consistency              |
+| Testing          | Test coverage, developer experience                   |
+| Maintainability  | Complexity, readability, naming                       |
+| AI-Architecture  | Over-engineering, drift, premature abstraction        |
 
-### Prioritization (80/20)
+### Gap Analysis
 
-| Priority | Criteria                  |
-|----------|---------------------------|
-| Do Now   | High impact, low effort   |
-| Plan     | High impact, medium effort |
-| Consider | Medium impact             |
-| Backlog  | Low impact or high effort |
+Compares current metrics to ideal targets:
+
+| Metric           | Ideal (API) | Ideal (Library) |
+|------------------|-------------|-----------------|
+| Coupling         | <30%        | <20%            |
+| Cohesion         | >80%        | >85%            |
+| Test Coverage    | >80%        | >90%            |
+| Cyclomatic Complexity | <10    | <8              |
 
 ---
 
 ## /cco:research
 
 **Purpose:** Multi-source research with reliability scoring and AI-synthesized recommendations.
-
-**Requires:** CCO context (run `/cco:config` first)
 
 **Usage:**
 ```bash
@@ -337,15 +223,13 @@ Commands learn from execution patterns:
 
 **Purpose:** Quality-gated atomic commits.
 
-**Requires:** CCO context (run `/cco:config` first)
-
 **Usage:**
 ```bash
 /cco:commit                 # Full flow
 /cco:commit --dry-run       # Preview only
 /cco:commit --single        # One commit for all
-/cco:commit --quick         # Smart defaults
-/cco:commit --skip-checks   # Skip quality gates
+/cco:commit --staged-only   # Only staged changes
+/cco:commit --no-verify     # Skip quality gates
 ```
 
 ### Steps
@@ -386,8 +270,6 @@ Co-Authored-By: Claude <noreply@anthropic.com>
 
 **Purpose:** Pre-release workflow orchestration.
 
-**Requires:** CCO context (run `/cco:config` first)
-
 **Usage:**
 ```bash
 /cco:preflight                   # Full release workflow
@@ -402,7 +284,7 @@ Co-Authored-By: Claude <noreply@anthropic.com>
 | Step | Name             | Action                                          |
 |------|------------------|-------------------------------------------------|
 | 1    | Pre-flight       | Release checks (parallel)                       |
-| 2    | Quality + Review | Parallel: optimize + review (background)        |
+| 2    | Quality + Align  | Parallel: /optimize + /align (background)       |
 | 3    | Verification     | Background: test/build/lint                     |
 | 4    | Changelog        | Generate + suggest version (while tests run)    |
 | 5    | Decision         | Q1: Docs + Release decision                     |
@@ -424,40 +306,6 @@ Co-Authored-By: Claude <noreply@anthropic.com>
 | Blocker (red)    | Cannot release |
 | Warning (yellow) | Can override   |
 | Pass (green)     | Ready          |
-
----
-
-## /cco:checkup
-
-**Purpose:** Regular maintenance routine.
-
-**Requires:** CCO context (run `/cco:config` first)
-
-**Usage:**
-```bash
-/cco:checkup                   # Standard maintenance
-/cco:checkup --dry-run         # Preview without changes
-/cco:checkup --no-fix          # Report only
-/cco:checkup --health-only     # Skip audit
-/cco:checkup --audit-only      # Skip health
-```
-
-### Steps
-
-| Step | Name         | Action                                    |
-|------|--------------|-------------------------------------------|
-| 1    | Phase Select | Determine phases (flags or default: Both) |
-| 2    | Execute      | Parallel: health + audit                  |
-| 3    | Summary      | Merge and display                         |
-
-### Scheduling
-
-| Frequency | Use Case           |
-|-----------|--------------------|
-| Weekly    | Active development |
-| Bi-weekly | Stable projects    |
-| Before PR | Quality gate       |
-| Monthly   | Maintenance mode   |
 
 ---
 

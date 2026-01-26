@@ -1,13 +1,15 @@
 ---
 name: cco-agent-analyze
-description: Codebase analysis with severity scoring - security, hygiene, types, lint, performance, robustness, functional-completeness audits
-tools: Glob, Read, Grep, Bash
+description: Codebase analysis with severity scoring - security, hygiene, types, lint, performance, robustness, functional-completeness audits. Also handles project detection for auto-setup (scope=config).
+tools: Glob, Read, Grep, Bash, AskUserQuestion
 model: haiku
 ---
 
 # cco-agent-analyze
 
 Comprehensive codebase analysis with severity scoring. Returns structured JSON.
+
+> **Implementation Note:** Code blocks use JavaScript-like pseudocode. Actual tool calls use Claude Code SDK with appropriate parameters.
 
 ## When to Use This Agent [CRITICAL]
 
@@ -93,9 +95,10 @@ Grep("{complexity_patterns}")     // message
 | Scope | Strategy | Use Case |
 |--------|----------|----------|
 | scan | Dashboard metrics from all scopes | Quick health check |
-| config | Detection + rule generation | Project setup |
 
 **CRITICAL:** All scopes fully analyzed. Speed from parallelization, not skipping.
+
+**Note:** Config scope is handled by `cco-agent-apply` (requires write operations).
 
 ## Embedded Rules
 
@@ -559,632 +562,6 @@ FUN-12: incomplete_api_surface: Missing common endpoints (search, bulk, export)
 ### scan
 Combines all analysis for dashboard: Security (OWASP, secrets, CVE) │ Tests (coverage, quality) │ Tech debt (complexity, dead code) │ Cleanliness (orphans, duplicates)
 
-### config
-Project detection and rule generation (see detailed section below).
-
-**All scopes:** Batch 1 (parallel greps) → Batch 2 (Read context) → Output findings JSON
-
-## Output Schema
-
-```json
-{
-  "findings": [{
-    "id": "{SCOPE}-{NNN}",
-    "scope": "{scope}",
-    "severity": "{CRITICAL|HIGH|MEDIUM|LOW}",
-    "confidence": "{80-100}",
-    "criticality": "{1-10}",
-    "title": "{title}",
-    "location": "{file}:{line}",
-    "description": "{detailed_description}",
-    "recommendation": "{actionable_fix}",
-    "effort": "{LOW|MEDIUM|HIGH}",
-    "impact": "{LOW|MEDIUM|HIGH}",
-    "fixable": "{boolean}",
-    "approvalRequired": "{boolean}",
-    "fix": "{code_or_action}"
-  }],
-  "excluded": {
-    "platformSpecific": "{n}",
-    "typeCheckingOnly": "{n}",
-    "total": "{n}",
-    "details": [{ "location": "{file}:{line}", "reason": "{exclusion_reason}" }]
-  },
-  "summary": { "{scope}": { "count": "{n}", "p0": "{n}", "p1": "{n}", "p2": "{n}", "p3": "{n}" } },
-  "scores": { "security": "{0-100}", "tests": "{0-100}", "techDebt": "{0-100}", "cleanliness": "{0-100}", "overall": "{0-100}" },
-  "metrics": { "coupling": "{0-100}", "cohesion": "{0-100}", "complexity": "{0-100}", "testCoverage": "{0-100}" },
-  "learnings": [{ "type": "systemic|avoid|prefer", "pattern": "{pattern}", "reason": "{reason}" }]
-}
-```
-
-**Excluded Field:**
-- `platformSpecific`: Items filtered due to platform-specific code (Windows/Linux/macOS guards)
-- `typeCheckingOnly`: Items in `TYPE_CHECKING` blocks (not runtime code)
-- `details`: Optional array with specific exclusion reasons for transparency
-
-**Note:** Excluded items are NOT issues - they're intentionally filtered to prevent false positives.
-
-**Field Requirements by Consumer:**
-
-| Field | cco-optimize | cco-review | cco-preflight | cco-status |
-|-------|--------------|------------|---------------|------------|
-| id, scope, severity, title, location | ✓ | ✓ | ✓ | ✓ |
-| description, recommendation | - | ✓ | - | - |
-| effort, impact | - | ✓ | - | - |
-| fixable, approvalRequired, fix | ✓ | - | ✓ | - |
-| current, ideal, gap | - | ✓ | - | - |
-
-**approvalRequired:** true for security, deletions, API changes, behavior changes
-
-**Scope → Consumer Mapping:**
-
-| Scope | Primary Consumer | Secondary |
-|-------|------------------|-----------|
-| security, hygiene, types, lint, performance, ai-hygiene | cco-optimize | cco-preflight |
-| architecture, patterns, testing, maintainability, ai-architecture | cco-review | cco-preflight |
-| scan | cco-status | - |
-| config | cco-config | - |
-
-**Note:** Findings-based scopes return `findings` + `summary`. Dashboard scopes (`scan`) return `scores`. Architecture adds `metrics`. No historical data stored.
-
-## Additional Scopes
-
-### architecture
-```
-dependencies: Import graph, circular deps
-coupling: Inter-module dependencies (0-100, lower is better)
-cohesion: Module cohesion (0-100, higher is better)
-complexity: Cyclomatic complexity (0-100, lower is better)
-layers: UI → Logic → Data separation
-patterns: Architectural patterns in use
-```
-**Output Schema:** Uses general Output Schema above. Architecture scope always includes:
-- `findings` with `effort` and `impact` fields populated
-- `metrics` with `coupling`, `cohesion`, `complexity`, `testCoverage`
-- `scores` with all category scores
-
-### scan
-Combines all analysis for dashboard: Security (OWASP, secrets, CVE) │ Tests (coverage, quality) │ Tech debt (complexity, dead code) │ Cleanliness (orphans, duplicates)
-
-**Output Schema:**
-```json
-{
-  "scores": {
-    "security": "{0-100}",
-    "quality": "{0-100}",
-    "architecture": "{0-100}",
-    "bestPractices": "{0-100}",
-    "overall": "{0-100}"
-  },
-  "status": "OK|WARN|FAIL|CRITICAL",
-  "topIssues": [
-    { "category": "{category}", "title": "{issue_title}", "location": "{file}:{line}" }
-  ],
-  "summary": "{2-3_sentence_assessment}"
-}
-```
-
-**Note:** Snapshot only - no historical comparison, no trend tracking.
-
-### config
-
-Config scope handles project detection and rule generation. **Supports both single-phase and two-phase execution.**
-
-**Execution Modes**
-
-| Mode | When Used | Phases |
-|------|-----------|--------|
-| Single-phase | Direct call with all inputs | Detection + Generation in one call |
-| Two-phase | cco-config (UX optimization) | Phase 1: Detection (background), Phase 2: Generation (after user input) |
-
-**Two-phase mode** (used by cco-config):
-1. Phase 1 runs detection in background while user answers setup questions
-2. Phase 2 generates rules after user provides Data/Compliance inputs
-3. Each phase is a separate agent call - context is passed between phases
-
-**Single-phase mode** (direct call):
-All work done in one agent call when `userInput` is already available.
-
-| Step | Action | Tool | Execution |
-|------|--------|------|-----------|
-| 1 | Detect from manifests | `Glob`, `Read` | **PARALLEL** |
-| 2 | Extract project critical | `Read(docs)` | **PARALLEL** with 1 |
-| 3 | Calculate complexity | `Bash(find, wc)` | **PARALLEL** with 1,2 |
-| 4 | Extract rule sections | `Bash(sed)` | **SEQUENTIAL** after 1-3 |
-| 5 | Generate output | Internal | **SEQUENTIAL** after 4 |
-
-**[CRITICAL] Targeted Section Extraction**
-
-Instead of reading entire cco-adaptive.md (~3000 lines), extract ONLY needed sections using sed.
-This reduces token usage by ~80%.
-
-**Placeholder Convention:**
-
-| Placeholder | Description | Example |
-|-------------|-------------|---------|
-| `{lang}` | Language name | Python, TypeScript, Go |
-| `{lang_lower}` | Lowercase language | python, typescript, go |
-| `{lang_code}` | Detection code | L:Python, L:TypeScript |
-| `{framework}` | Framework name | FastAPI, Django, Express |
-| `{framework_code}` | Detection code | Backend:FastAPI |
-| `{section_pattern}` | Sed regex pattern | `^### {lang} ({lang_code})` |
-| `{output_file}` | Generated file | {lang_lower}.md, backend.md |
-| `{manifest}` | Manifest file | pyproject.toml, package.json |
-| `{ext}` | File extension pattern | *.py, *.ts |
-
-```bash
-# Plugin rule paths (granular files, no extraction needed)
-PLUGIN_ROOT="${CLAUDE_PLUGIN_ROOT}"
-RULES_DIR="$PLUGIN_ROOT/content/rules"
-
-# Rules are now in granular files:
-# - $RULES_DIR/core/*.md             (3 files: foundation, safety, workflow)
-# - $RULES_DIR/languages/*.md        (21 files)
-# - $RULES_DIR/frameworks/*.md       (8 files)
-# - $RULES_DIR/operations/*.md       (12 files)
-
-# Example: Copy rules (flat structure with cco- prefix)
-# cp "$RULES_DIR/languages/cco-{language}.md" ".claude/rules/cco-{language}.md"
-# cp "$RULES_DIR/frameworks/cco-{framework}.md" ".claude/rules/cco-{framework}.md"
-```
-
-**Section Pattern Mapping**
-
-| Detection Code | Section Pattern | Output File |
-|----------------|-----------------|-------------|
-| L:{lang} | `^### {lang} (L:{lang})` | {lang_lower}.md |
-| Backend:{framework} | `^### {framework}` | backend.md |
-| Frontend:{framework} | `^### {framework}` | frontend.md |
-| Infra:{type} | `^### {type} (Infra:{type})` | infra-{type}.md |
-| T:{type} | `^### {type} (T:{type})` | {type_lower}.md |
-| API:{type} | `^### {type} (API:{type})` | api.md |
-| Game:{engine} | `^### {engine} (Game:{engine})` | game.md |
-| ML:{type} | `^### {type} (ML:{type})` | ml.md |
-| Test:* | `^## Testing$` | testing.md |
-| Security | `^## Security Rules` | security.md |
-| Compliance:* | `^## Compliance Rules` | compliance.md |
-| Scale:* | `^## Scale Rules` | scale.md |
-
-**Extraction Helper Function**
-
-```bash
-# copy_rule - Copy rule file from plugin to project
-# Usage: copy_rule "{rule_path}" "{target_dir}"
-
-copy_rule() {
-  local rule_path="$1"
-  local target_dir="$2"
-
-  local source="$PLUGIN_ROOT/rules/$rule_path"
-  local basename=$(basename "$rule_path")
-  # Flat structure: all rules go to .claude/rules/ with cco- prefix
-  local dest="$target_dir/rules/$basename"
-
-  if [ -f "$source" ]; then
-    mkdir -p "$(dirname "$dest")"
-    cp "$source" "$dest"
-    echo "Copied: $basename"
-  else
-    echo "Warning: $source not found" >&2
-  fi
-}
-
-# Example: Copy multiple rules in PARALLEL
-# Replace placeholders with actual detected values
-copy_rule "languages/{lang}.md" "{target_dir}" &
-copy_rule "domains/{domain}.md" "{target_dir}" &
-copy_rule "domains/api.md" "{target_dir}" &
-wait
-```
-
-**Detection Steps [PARALLEL]**
-
-```javascript
-// Step 1-3: Run in PARALLEL
-// All Glob, Read, and Bash calls in SINGLE message
-
-// Detection - check for {manifest} files
-Glob("{manifest}")               // Language manifest
-Glob("Dockerfile*")              // Container
-Glob(".github/workflows/*")      // CI
-
-// Project Critical
-Read("README.md")
-Read("CLAUDE.md")
-Read("{manifest}")               // For description
-
-// Complexity
-Bash("find . -name '{ext}' -not -path './.*' | wc -l")
-Bash("find . -name '{ext}' -not -path './.*' | xargs wc -l 2>/dev/null | tail -1")
-```
-
-**Complexity Calculation**
-
-```javascript
-complexity = {
-  loc: Bash("find . -name '{ext}' -not -path './node_modules/*' -not -path './.git/*' | xargs wc -l 2>/dev/null | tail -1 | awk '{print $1}'"),
-  files: Bash("find . -name '{ext}' -not -path './node_modules/*' | wc -l"),
-  frameworks: count(detections.frontend) + (detections.api ? 1 : 0) + count(detections.infra),
-  hasTests: Glob("**/test_*{ext}") || Glob("**/*_test{ext}"),
-  hasCi: Glob(".github/workflows/*") || Glob(".gitlab-ci.yml"),
-  isMonorepo: Glob("packages/*/{manifest}") || Glob("pnpm-workspace.yaml")
-}
-```
-
-**Project Critical Extraction**
-
-| Field | Sources | Patterns |
-|-------|---------|----------|
-| purpose | README.md first paragraph, {manifest} description | "X is a..." |
-| constraints | CLAUDE.md | "MUST", "REQUIRED", "always", "never" |
-| invariants | README.md | "zero dependencies", "100% coverage" |
-| nonNegotiables | CLAUDE.md ## Rules section | Critical rules |
-
-**Step 4: Section Extraction [SEQUENTIAL]**
-
-After detection, extract only needed sections:
-
-```javascript
-// Build extraction commands based on detections
-extractCommands = []
-
-// For each detected language
-for (const lang of detections.language) {
-  extractCommands.push(`extract_section "^### ${lang} (L:${lang})" "$ADAPTIVE"`)
-}
-
-// For detected backend framework
-if (detections.backend) {
-  extractCommands.push(`extract_section "^### ${detections.backend}" "$ADAPTIVE"`)
-}
-
-// For security-sensitive projects
-if (userInput.data === "PII" || userInput.compliance.length > 0) {
-  extractCommands.push(`extract_section "^## Security Rules" "$ADAPTIVE"`)
-}
-// ... for each detection category
-
-// Run ALL extractions in PARALLEL
-Bash(extractCommands.join(" & ") + " & wait")
-```
-
-**Token Comparison**
-
-| Approach | Lines Read | Estimated Tokens |
-|----------|------------|------------------|
-| Full file read | ~3000 | ~12,000 |
-| Targeted extraction (avg 5 sections) | ~200 | ~800 |
-| **Savings** | **~94%** | **~94%** |
-
-#### Step 1: Auto-Detection
-
-**Trigger Reference (SSOT):** All placeholder values defined in `cco-triggers.md`
-
-**Priority Order [CRITICAL]:**
-
-| Priority | Source | Confidence | File Patterns |
-|----------|--------|------------|---------------|
-| 1 | Manifest files | HIGH | {lang_manifest} |
-| 2 | Lock files | HIGH | {lang_lock} |
-| 3 | Config files | HIGH | {tool_config} |
-| 4 | Code files | MEDIUM | {code_ext} (sample 5-10 files for imports) |
-| 5 | Documentation | LOW | {doc_files} |
-
-*Trigger values in `{placeholders}` are defined in cco-triggers.md (SSOT).*
-
-**Detection Categories:**
-
-**[SSOT - Single Source of Truth]:**
-- **Detection → Rule Mapping:** See `cco-adaptive.md` Detection System section (lines 23-198)
-- **Trigger Values:** See `cco-triggers.md` for all `{placeholder}` definitions
-
-Reference source files directly to ensure accuracy (SSOT principle).
-
-**Detection Priority Order:**
-1. **Manifest files** (HIGH confidence) - Package definition files
-2. **Lock files** (HIGH confidence) - Dependency lock files
-3. **Config files** (HIGH confidence) - Tool configuration
-4. **Code files** (MEDIUM confidence) - Import patterns, file extensions
-5. **Documentation** (LOW confidence) - README, badges, tech stack mentions
-
-**Documentation Fallback (when code sparse):**
-
-| Source File | What to Extract |
-|-------------|-----------------|
-| `README.md` | Tech stack badges, framework mentions |
-| `CONTRIBUTING.md` | Dev tools, test commands |
-| `docs/` | Architecture patterns, API references |
-| `pyproject.toml`/`package.json` (description) | Project type hints |
-
-Mark findings as `[from docs]` with `confidence: LOW`.
-
-##### Confidence Scoring
-
-| Score | Criteria | Action |
-|-------|----------|--------|
-| **HIGH (0.9-1.0)** | Manifest + lock file match | Auto-apply rules |
-| **MEDIUM (0.6-0.8)** | Manifest OR multiple code patterns | Apply with note |
-| **LOW (0.3-0.5)** | Only code patterns or docs | Ask for confirmation |
-| **SKIP (<0.3)** | Single file, test/example only | Exclude rule |
-
-**Confidence Modifiers:**
-- Lock file present: +0.2
-- Multiple matching files (>3): +0.1
-- In test/example/vendor dir: -0.3
-- Conflicting signals: -0.2
-
-##### Conflict Resolution
-
-| Conflict | Resolution |
-|----------|------------|
-| TS vs JS | {ts_config} present → TypeScript wins |
-| Bun vs Node vs Deno | Lock file determines: {bun_markers}→Bun, {deno_markers}→Deno, else→Node |
-| React vs Vue vs Svelte | Only one framework per project, highest confidence wins |
-| Prisma vs Drizzle vs TypeORM | Can coexist (migration period), detect both |
-| FastAPI vs Flask vs Django | Only one per project, route patterns determine |
-| Jest vs Vitest | {vitest_config} → Vitest, else → Jest |
-| ESLint vs Oxlint | {oxlint_config} present → Oxlint wins (faster, Rust-based) |
-| ESLint vs Biome | {biome_config} present → Biome wins (unified linter+formatter) |
-| Prettier vs Biome | {biome_config} present → Biome wins |
-| Prettier vs ruff | {ruff_format_config} present → ruff wins (Python only) |
-| npm vs yarn vs pnpm vs bun | Lock file determines: {yarn_lock}→yarn, {pnpm_lock}→pnpm, {bun_lock}→bun, else→npm |
-
-**Polyglot Projects:**
-- Multiple languages allowed (e.g., Python backend + TypeScript frontend)
-- Each gets its own rule file
-- Monorepo detection enables multi-language mode
-
-#### Step 2: Rule Extraction (Targeted)
-
-**[CRITICAL] Use targeted sed extraction, NOT full file read.**
-
-1. Map detections → section patterns (see Section Pattern Mapping above)
-2. Extract ONLY matched sections using sed (parallel bash)
-3. Apply cumulative tiers (Scale/Testing/SLA/Team higher includes lower)
-4. Generate cco-context.md with YAML frontmatter
-5. Generate rule files with YAML frontmatter paths
-
-**Rules Source:** Targeted extraction from `cco-adaptive.md` via sed patterns.
-
-**CRITICAL: Generate rules for ALL detected categories. No orphan detections.**
-
-#### Detection → Rule Mapping
-
-**[SSOT References]:**
-- **Complete detection table:** `cco-adaptive.md` → Detection System section (lines 23-268)
-- **Trigger values:** `cco-triggers.md` → All placeholder definitions
-- **Rule content:** `cco-adaptive.md` → Respective section based on detection
-
-**Pattern Summary** (actual mappings defined in cco-adaptive.md SSOT):
-
-| Category Prefix | Output Pattern | Content Location |
-|-----------------|----------------|------------------|
-| L:{lang} | `{lang}.md` | Language Rules section |
-| R:{runtime} | `{runtime}.md` | Runtimes section |
-| T:{type} | `{type}.md` | Apps section |
-| API:{style} | `api.md` | Backend > API section |
-| DB:{type} | `database.md` | Database section |
-| Backend:{fw} | `backend.md` | Backend Frameworks section |
-| Frontend:{fw} | `frontend.md` | Frontend section |
-| Framework:{name} | `{name}.md` | Meta-Frameworks section |
-| Mobile:{platform} | `mobile.md` | Mobile section |
-| Desktop:{fw} | `desktop.md` | Desktop section |
-| Infra:{type} | `infra-{type}.md` | Infrastructure section |
-| ML:{type} | `ml.md` | ML/AI section |
-| Build:{type} | `{type}.md` | Build Tools section |
-| Test:{type} | `testing.md` | Testing section |
-| CI:{provider} | `ci-cd.md` | CI/CD section |
-| MQ:{provider} | `mq.md` | Message Queues section |
-| Game:{engine} | `game.md` | Specialized > Game section |
-| Observability:{tool} | `observability-tools.md` | Observability section |
-| Deploy:{platform} | `deploy.md` | Deployment section |
-| Docs:{ssg} | `docs.md` | Documentation section |
-| DEP:{category} | `dep-{category}.md` | Dependency-Based Rules section |
-| Scale/Team/SLA/Compliance | `{category}.md` | User-Input sections |
-
-**CRITICAL:** Always read `cco-adaptive.md` for complete, up-to-date detection list. This table shows patterns only.
-
-**Each rule file MUST include:**
-1. YAML frontmatter: `paths:` per "Path Pattern Templates" in cco-adaptive.md (Tier 1, 3, 5 = no frontmatter)
-2. Trigger comment: `*Trigger: {detection_code}*`
-3. Rule content: Extracted from cco-adaptive.md section
-
-**Frontmatter Decision:**
-- **No frontmatter (cross-cutting):**
-  - Core: cco-context.md (YAML frontmatter with project metadata)
-  - Project types: cco-{type}.md (api, database, mobile, cli, library)
-  - Frontend frameworks: cco-frontend.md
-  - Backend frameworks: cco-backend.md
-  - Integration: cco-{integration}.md (ml, realtime, orm)
-- **With paths (file-specific):**
-  - Language rules: cco-{language}.md → `"**/*.{ext}"`
-  - Infrastructure: cco-infrastructure.md, cco-deployment.md
-  - Testing & CI: cco-testing.md, cco-cicd.md
-
-**Guidelines:** Stored in cco-context.md YAML under `guidelines:` array.
-
-#### cco-context.md Template [CRITICAL]
-
-Generate cco-context.md with YAML frontmatter. **All CCO files use flat structure in `.claude/rules/`.**
-
-```yaml
----
-cco: true
-
-# ═══════════════════════════════════════════════════════════════
-# PROJECT
-# ═══════════════════════════════════════════════════════════════
-project:
-  purpose: "{purpose}"
-  type: [{types}]
-
-# ═══════════════════════════════════════════════════════════════
-# CONTEXT
-# ═══════════════════════════════════════════════════════════════
-context:
-  team: {team}
-  data: {data}
-  compliance: [{compliance}]
-
-# ═══════════════════════════════════════════════════════════════
-# STACK
-# ═══════════════════════════════════════════════════════════════
-stack:
-  languages: [{languages}]
-  frameworks: [{frameworks}]
-  database: {database}
-
-# ═══════════════════════════════════════════════════════════════
-# ARCHITECTURE
-# ═══════════════════════════════════════════════════════════════
-architecture:
-  style: {architecture}
-  deployment: {deployment}
-
-# ═══════════════════════════════════════════════════════════════
-# MATURITY
-# ═══════════════════════════════════════════════════════════════
-maturity:
-  level: {maturity}
-  breaking: {breaking}
-  priority: {priority}
-
-# ═══════════════════════════════════════════════════════════════
-# GUIDELINES (auto-generated from maturity settings)
-# ═══════════════════════════════════════════════════════════════
-guidelines:
-{guidelines}
-
-# ═══════════════════════════════════════════════════════════════
-# COMMANDS
-# ═══════════════════════════════════════════════════════════════
-commands:
-  format: {format_cmd}
-  lint: {lint_cmd}
-  typecheck: {typecheck_cmd}
-  test: {test_cmd}
-  build: {build_cmd}
-  dev: {dev_cmd}
-
-conventions: {conventions}
-release: {release}
-
-# ═══════════════════════════════════════════════════════════════
-# DETECTED (read-only, for reference)
-# ═══════════════════════════════════════════════════════════════
-detected:
-  structure: {structure}
-  hooks: [{hooks}]
-  license: {license}
-  ci: {ci}
-
-# ═══════════════════════════════════════════════════════════════
-# ACTIVE RULES (auto-managed by CCO)
-# ═══════════════════════════════════════════════════════════════
-rules:
-{rules}
----
-```
-
-**CRITICAL - YAML Validation:**
-- `cco: true` marker MUST be present
-- `project.purpose` MUST be set
-- All arrays use bracket notation: `[item1, item2]`
-- Null values use `null` keyword
-
-#### YAML Validation [CRITICAL]
-
-**Before returning cco-context.md content, validate:**
-
-```javascript
-function validateContextYaml(yamlContent) {
-  // Parse YAML
-  const data = YAML.parse(yamlContent)
-
-  // Required fields
-  const required = ['cco', 'project', 'context', 'stack', 'maturity', 'commands']
-  for (const field of required) {
-    if (!(field in data)) {
-      throw new Error(`Missing required field: ${field}`)
-    }
-  }
-
-  // cco marker must be true
-  if (data.cco !== true) {
-    throw new Error('cco marker must be true')
-  }
-
-  // project.purpose must exist
-  if (!data.project?.purpose) {
-    throw new Error('project.purpose is required')
-  }
-
-  return true
-}
-```
-
-**Self-Check Before Output:**
-```
-[ ] YAML is valid (no syntax errors)
-[ ] cco: true marker present
-[ ] project.purpose is set
-[ ] All required sections exist
-[ ] Arrays use proper YAML syntax
-```
-
-#### Output Schema (Single-Phase)
-
-**[CRITICAL] All data in one response - no resume needed.**
-
-```json
-{
-  "detections": {
-    "language": ["{detected_language}"],
-    "type": ["{detected_type}"],
-    "api": "{detected_api|null}",
-    "database": "{detected_db|null}",
-    "frontend": "{detected_frontend|null}",
-    "infra": ["{detected_infra}"],
-    "dependencies": ["{detected_deps}"]
-  },
-  "complexity": {
-    "loc": "{number}",
-    "files": "{number}",
-    "frameworks": "{number}",
-    "hasTests": "{boolean}",
-    "hasCi": "{boolean}",
-    "isMonorepo": "{boolean}"
-  },
-  "projectCritical": {
-    "purpose": "{1-2 sentence project purpose}",
-    "constraints": ["{hard constraints}"],
-    "invariants": ["{properties that must hold}"],
-    "nonNegotiables": ["{rules that cannot be overridden}"]
-  },
-  "userInput": {
-    "team": "{user_team}",
-    "scale": "{user_scale}",
-    "data": "{user_data}",
-    "compliance": ["{user_compliance}"],
-    "maturity": "{user_maturity}",
-    "breaking": "{user_breaking}",
-    "priority": "{user_priority}"
-  },
-  "context": "{generated_context_md}",
-  "rules": [
-    { "file": "{category}.md", "content": "{extracted_from_sed}" }
-  ],
-  "triggeredCategories": [
-    { "category": "{category}", "trigger": "{code}", "rule": "{file}", "source": "auto|user" }
-  ],
-  "sources": [
-    { "file": "{file}", "confidence": "{HIGH|MEDIUM|LOW}" }
-  ]
-}
-```
-
-**Note:** `userInput` is passed TO the agent from cco-config. Agent includes it in output for traceability.
-
 ## Artifact Handling
 
 | Rule | Implementation |
@@ -1205,3 +582,135 @@ function validateContextYaml(yamlContent) {
 ## Principles
 
 Token-first │ Complete coverage │ Targeted patterns │ Actionable findings
+
+---
+
+## Config Scope (scope=config)
+
+Project detection with parallel user questions. **Questions asked while detection runs in background.**
+
+### Architecture
+
+```
+[PARALLEL - Single AskUserQuestion call]
+├── Foreground: User questions (Type, Team, Data)
+└── Background: Project detection (manifest, lock, config, code patterns)
+
+When both complete → Return { detected, answers }
+```
+
+### Execution Flow
+
+```javascript
+// Step 1: Start detection in background while asking questions
+const detectionTask = Task("detect-project", `
+  Read manifest files (package.json, pyproject.toml, go.mod, Cargo.toml, etc.)
+  Read lock files (package-lock.json, poetry.lock, go.sum, etc.)
+  Read config files (tsconfig.json, .eslintrc, etc.)
+  Identify: languages, frameworks, operations
+
+  Return: { languages: [], frameworks: [], operations: [], confidence: {} }
+`, { run_in_background: true })
+
+// Step 2: Ask questions (runs in parallel with detection)
+const answers = await AskUserQuestion([
+  {
+    question: "What type of application is this?",
+    header: "Type",
+    multiSelect: true,
+    options: [
+      { label: "CLI", description: "Command-line tool" },
+      { label: "API", description: "Backend service" },
+      { label: "Web", description: "Frontend application" },
+      { label: "Library", description: "Reusable package" }
+    ]
+  },
+  {
+    question: "Team size?",
+    header: "Team",
+    multiSelect: false,
+    options: [
+      { label: "Solo (Recommended)", description: "Single developer" },
+      { label: "Small", description: "2-5 people" },
+      { label: "Medium", description: "6-15 people" },
+      { label: "Large", description: "15+ people" }
+    ]
+  },
+  {
+    question: "Most sensitive data type?",
+    header: "Data",
+    multiSelect: false,
+    options: [
+      { label: "Internal (Recommended)", description: "Internal company data" },
+      { label: "Public", description: "No sensitive data" },
+      { label: "PII", description: "Personal data" },
+      { label: "Regulated", description: "Finance/Healthcare" }
+    ]
+  }
+])
+
+// Step 3: Wait for detection to complete
+const detected = await TaskOutput(detectionTask.id)
+
+// Step 4: Return combined result for apply agent
+return {
+  detected: detected,
+  answers: answers,
+  rulesNeeded: matchRules(detected)
+}
+```
+
+### Auto Mode (--auto or hook trigger)
+
+```javascript
+// Skip questions, use detected values with safe defaults
+const detected = await detectProject()
+
+return {
+  detected: detected,
+  answers: {
+    type: detected.types || ['api'],
+    team: 'solo',
+    data: 'internal'
+  },
+  rulesNeeded: matchRules(detected)
+}
+```
+
+### Detection Sources
+
+| Priority | Source | Example | Confidence |
+|----------|--------|---------|------------|
+| 1 | Manifest files | package.json, pyproject.toml | HIGH |
+| 2 | Lock files | package-lock.json, poetry.lock | HIGH |
+| 3 | Config files | tsconfig.json, .eslintrc | HIGH |
+| 4 | Code patterns | import statements, decorators | MEDIUM |
+| 5 | Documentation | README.md | LOW |
+
+### Output Schema
+
+```json
+{
+  "detected": {
+    "languages": ["typescript", "python"],
+    "frameworks": ["react", "fastapi"],
+    "operations": ["docker", "github-actions"],
+    "confidence": { "typescript": "HIGH", "react": "HIGH" }
+  },
+  "answers": {
+    "type": ["API", "Web"],
+    "team": "Small",
+    "data": "Internal"
+  },
+  "rulesNeeded": [
+    "cco-typescript.md",
+    "cco-python.md",
+    "cco-frontend.md",
+    "cco-backend.md",
+    "cco-infrastructure.md",
+    "cco-cicd.md"
+  ]
+}
+```
+
+**This output is passed to cco-agent-apply for file writing.**

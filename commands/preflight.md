@@ -9,7 +9,9 @@ model: opus
 
 **Release Verification Gate** - Comprehensive pre-release checks with parallel orchestration.
 
-Meta command orchestrating /optimize and /review with maximum parallelism.
+> **Implementation Note:** Code blocks use JavaScript-like pseudocode for clarity. Actual execution uses Claude Code tools with appropriate parameters.
+
+Meta command orchestrating /optimize and /align with maximum parallelism.
 
 **Orchestration:**
 ```
@@ -26,7 +28,7 @@ PREFLIGHT
     |       +-- /optimize --intensity=X  │
     |       |   (all 6 scopes)               │
     |       |                                │
-    |       +-- /review --intensity=X    │
+    |       +-- /align --intensity=X    │
     |           (all 5 scopes)               │
     |                                        │
     +-- [Verification] PARALLEL ─────────────┤
@@ -56,12 +58,40 @@ PREFLIGHT
 CCO context is auto-loaded from `.claude/rules/cco-context.md` via Claude Code's auto-context mechanism.
 
 **Check:** If auto-context does NOT contain `cco: true` marker:
-```
-CCO not configured.
 
-Run /config first to set up project context, then restart CLI.
+```javascript
+// Fallback: Trigger auto-setup inline (same as SessionStart hook)
+// Step 1: Analyze + Questions (parallel)
+const configData = await Task("cco-agent-analyze", `
+  scope: config
+
+  CCO is not configured for this project.
+
+  Offer setup options first:
+  - [Auto-setup] Detect stack and create rules automatically
+  - [Interactive] Ask questions to customize setup
+  - [Skip] Don't configure CCO for this project
+
+  If Skip → return { skip: true }
+  If Auto-setup → detect without questions, return { detected, answers: defaults }
+  If Interactive → ask questions while detecting, return { detected, answers }
+`, { model: "haiku" })
+
+if (configData.skip) {
+  // Exit command gracefully
+  return
+}
+
+// Step 2: Write files (uses analyze output)
+await Task("cco-agent-apply", `
+  scope: config
+  input: ${JSON.stringify(configData)}
+
+  Write config files and output context for immediate use.
+`, { model: "opus" })
 ```
-**Stop immediately.**
+
+**After config complete → continue to Step-0 (Mode Detection)**
 
 ---
 
@@ -84,29 +114,33 @@ if (args.includes("--auto")) {
 
 ## Architecture
 
-| Step | Name | Action | Optimization |
-|------|------|--------|--------------|
-| 0 | Mode | Detect --auto or interactive | Instant |
-| 1a | Q1 | Fix Intensity selection | Single question |
-| 1b | Pre-flight | Release checks (parallel background) | Background |
-| 2 | Sub-commands | /optimize + /review (parallel) | Background |
-| 3 | Verification | test/build/lint (parallel background) | Background |
-| 4 | Changelog | Generate + suggest version | While tests run |
-| 5 | Decision | Q2: Docs + Release decision | Single question |
+| Step | Name | Action | Optimization | Dependency |
+|------|------|--------|--------------|------------|
+| 0 | Mode | Detect --auto or interactive | Instant | - |
+| 1a | Q1 | Intensity + Release Mode (single question) | All settings upfront | [PARALLEL] with 1b |
+| 1b | Pre-flight | Release checks (parallel background) | Background | [PARALLEL] with 1a |
+| 2 | Sub-commands | /optimize + /align (parallel) | Background | [SEQUENTIAL] after 1a |
+| 3 | Verification | test/build/lint (parallel background) | Background | [PARALLEL] with 2 |
+| 4 | Changelog | Generate + suggest version | While tests run | [SEQUENTIAL] after 1b commits |
+| 5 | Results | Show results + execute release mode | No questions | [SEQUENTIAL] after 2,3,4 |
+
+**Execution Flow:** Step-0 → (1a ‖ 1b) → (2 ‖ 3 ‖ 4) → 5 (waits for all)
+
+**Single question at start** - All settings collected upfront, then uninterrupted flow.
 
 ---
 
 ## Everything Mode [CRITICAL]
 
 When `--intensity=full-fix` or user selects "Full Fix":
-- Pass to both `/optimize --intensity=full-fix` and `/review --intensity=full-fix`
+- Pass to both `/optimize --intensity=full-fix` and `/align --intensity=full-fix`
 - **Zero deferrals** - no "future iteration", no "lower priority"
 - **Zero skips** - every finding fixed NOW
 - Final accounting: `applied + failed = total` (no AI declines allowed)
 
 ---
 
-## Step-1a: Fix Intensity Selection [Q1]
+## Step-1a: Settings Selection [Q1]
 
 **Skip if --auto mode (config already set)**
 
@@ -122,23 +156,45 @@ AskUserQuestion([
       { label: "Dry Run", description: "Check only, no fixes applied" }
     ],
     multiSelect: false
+  },
+  {
+    question: "What to do after checks pass?",
+    header: "Release Mode",
+    options: [
+      { label: "Prepare Only (Recommended)", description: "Run checks, show results, stop before release" },
+      { label: "Tag + Push", description: "Create git tag and push to remote" },
+      { label: "Tag Only", description: "Create git tag without pushing" }
+    ],
+    multiSelect: false
+  },
+  {
+    question: "Update documentation?",
+    header: "Docs",
+    options: [
+      { label: "CHANGELOG (Recommended)", description: "Generate changelog entry" },
+      { label: "CHANGELOG + README", description: "Update both files" },
+      { label: "Skip docs", description: "No documentation updates" }
+    ],
+    multiSelect: false
   }
 ])
 ```
 
-### Intensity Mapping for Sub-commands
+### Settings Mapping
 
-| Selection | Optimize Args | Review Args |
-|-----------|---------------|-------------|
-| Quick Wins (80/20) | `--intensity=quick-wins` | `--intensity=quick-wins` |
-| Standard | `--intensity=standard` | `--intensity=standard` |
-| Full Fix | `--intensity=full-fix` | `--intensity=full-fix` |
-| Dry Run | `--intensity=report-only` | `--intensity=report-only` |
+| Selection | Effect |
+|-----------|--------|
+| **Intensity** | Passed to /optimize and /align |
+| **Prepare Only** | Show results, print next steps, stop |
+| **Tag + Push** | Create tag, push to remote |
+| **Tag Only** | Create tag, don't push |
+| **CHANGELOG** | Generate changelog entry |
+| **Skip docs** | No doc updates |
 
 ### Validation
 ```
-[x] User completed Q1
-→ Store as: config = { intensity }
+[x] User completed Q1 (all settings)
+→ Store as: config = { intensity, releaseMode, docs }
 → Proceed to Step-1b
 ```
 
@@ -255,7 +311,7 @@ optimizeTask = Task("general-purpose", `
 `, { model: "opus", run_in_background: true })
 
 reviewTask = Task("general-purpose", `
-  Execute /review ${intensityFlag}
+  Execute /align ${intensityFlag}
 
   CRITICAL: Run ALL 5 scopes (architecture, patterns, testing, maintainability, ai-architecture)
   Apply recommendations based on intensity selection.
@@ -360,9 +416,9 @@ changelogEntry = generateChangelogEntry(classified, suggestedVersion)
 
 ---
 
-## Step-5: Decision [Q2 - ALL RESULTS]
+## Step-5: Results + Execute [NO QUESTIONS]
 
-**Wait for all background tasks, then show summary and ask decision:**
+**Wait for all background tasks, then show summary and execute based on Q1 settings:**
 
 ```javascript
 // Collect all background results
@@ -385,9 +441,7 @@ allBlockers = [
   ...(testResults.exitCode !== 0 ? [{ id: "VER-01", type: "TESTS", message: "Tests failed" }] : []),
   ...(buildResults.exitCode !== 0 ? [{ id: "VER-02", type: "BUILD", message: "Build failed" }] : []),
   ...(typeResults.exitCode !== 0 ? [{ id: "VER-03", type: "TYPES", message: "Type errors found" }] : []),
-  // Security advisories are blockers
   ...(depResults.security || []).map(s => ({ id: "DEP-SEC", type: "SECURITY", message: `${s.package}: ${s.advisory} (${s.cve})` })),
-  // CRITICAL findings from optimize that weren't fixed
   ...(optimizeResults.accounting?.failed > 0 && optimizeResults.blockers?.filter(b => b.severity === "CRITICAL") || [])
 ]
 
@@ -396,20 +450,18 @@ allWarnings = [
   ...(lintResults.exitCode !== 0 ? [{ id: "VER-04", type: "LINT", message: "Lint warnings" }] : []),
   ...(formatChanged ? [{ id: "VER-05", type: "FORMAT", message: "Files reformatted - review changes" }] : []),
   ...(markersResult.stdout?.trim() ? [{ id: "PRE-04", type: "MARKERS", message: "TODO/FIXME markers found" }] : []),
-  // Outdated packages are warnings
   ...(depResults.outdated || []).map(d => ({ id: "DEP-OUT", type: "OUTDATED", message: `${d.package}: ${d.current} → ${d.latest}` }))
 ]
 
 hasBlockers = allBlockers.length > 0
 
 // Calculate combined accounting
-// NOTE: No "declined" - AI has no option to decline. Fix or fail with reason.
 totalApplied = (optimizeResults.accounting?.applied || 0) + (reviewResults.accounting?.applied || 0)
 totalFailed = (optimizeResults.accounting?.failed || 0) + (reviewResults.accounting?.failed || 0)
 totalFindings = totalApplied + totalFailed
 ```
 
-### Pre-Decision Display [MANDATORY]
+### Results Display [MANDATORY]
 
 ```markdown
 ## Release Readiness
@@ -420,38 +472,29 @@ totalFindings = totalApplied + totalFailed
 | Branch | {branch} |
 | Previous | {lastTag} |
 | Intensity | {config.intensity} |
+| Release Mode | {config.releaseMode} |
 
 ### Sub-command Results
 | Command | Applied | Failed | Total |
 |---------|---------|--------|-------|
 | /optimize | {optimizeResults.accounting.applied} | {optimizeResults.accounting.failed} | {optimizeResults.accounting.total} |
-| /review | {reviewResults.accounting.applied} | {reviewResults.accounting.failed} | {reviewResults.accounting.total} |
+| /align | {reviewResults.accounting.applied} | {reviewResults.accounting.failed} | {reviewResults.accounting.total} |
 | **Combined** | **{totalApplied}** | **{totalFailed}** | **{totalFindings}** |
-
-### Gap Analysis (from /review)
-| Dimension | Current | Ideal | Status |
-|-----------|---------|-------|--------|
-| Coupling | {reviewResults.gaps.coupling.current}% | <{reviewResults.gaps.coupling.ideal}% | {status} |
-| Cohesion | {reviewResults.gaps.cohesion.current}% | >{reviewResults.gaps.cohesion.ideal}% | {status} |
-| Complexity | {reviewResults.gaps.complexity.current} | <{reviewResults.gaps.complexity.ideal} | {status} |
-| Coverage | {reviewResults.gaps.coverage.current}% | {reviewResults.gaps.coverage.ideal}%+ | {status} |
 
 ### Verification Results
 | Check | Status | Detail |
 |-------|--------|--------|
 | Pre-flight | {preflight.blockers.length === 0 ? "PASS" : "FAIL"} | {detail} |
-| Optimize | {optimizeResults.accounting.failed === 0 ? "PASS" : "WARN"} | Applied {optimizeResults.accounting.applied}/{optimizeResults.accounting.total} |
-| Review | {reviewResults.accounting.failed === 0 ? "PASS" : "WARN"} | Applied {reviewResults.accounting.applied}/{reviewResults.accounting.total} |
 | Tests | {testResults.exitCode === 0 ? "PASS" : "FAIL"} | {detail} |
 | Build | {buildResults.exitCode === 0 ? "PASS" : "FAIL"} | {detail} |
 | Types | {typeResults.exitCode === 0 ? "PASS" : "FAIL"} | {detail} |
 | Lint | {lintResults.exitCode === 0 ? "PASS" : "WARN"} | {detail} |
 | Dependencies | {depResults.summary.security > 0 ? "FAIL" : "PASS"} | {depResults.summary.security} security, {depResults.summary.outdated} outdated |
 
-### Blockers (must fix before release)
+### Blockers
 {allBlockers.length === 0 ? "None - ready to release!" : allBlockers.map((b, i) => `${i+1}. [${b.type}] ${b.message}`).join('\n')}
 
-### Warnings (can override)
+### Warnings
 {allWarnings.length === 0 ? "None" : allWarnings.map((w, i) => `${i+1}. [${w.type}] ${w.message}`).join('\n')}
 
 **Release Ready:** {hasBlockers ? "NO - blockers must be fixed" : "YES"}
@@ -459,7 +502,7 @@ totalFindings = totalApplied + totalFailed
 
 ### Unattended Mode (--auto)
 
-If --auto, skip Q2 and output single line:
+Single line output:
 
 ```
 cco-preflight: {hasBlockers ? "BLOCKED" : "READY"} | Blockers: {allBlockers.length} | Warnings: {allWarnings.length} | Applied: {totalApplied} | Version: {suggestedVersion}
@@ -467,56 +510,50 @@ cco-preflight: {hasBlockers ? "BLOCKED" : "READY"} | Blockers: {allBlockers.leng
 
 Exit code: 0 (ready), 1 (warnings only), 2 (blockers)
 
-### Interactive Mode - Ask Q2
+### Execute Release Mode (from Q1)
 
 ```javascript
-AskUserQuestion([
-  {
-    question: "Documentation updates?",
-    header: "Docs",
-    options: [
-      { label: "CHANGELOG (Recommended)", description: "Update CHANGELOG.md with new entry" },
-      { label: "README", description: "Update README if needed" },
-      { label: "Skip docs", description: "No documentation updates" }
-    ],
-    multiSelect: true
-  },
-  {
-    question: hasBlockers
-      ? `Release has ${allBlockers.length} blocker(s). Decision?`
-      : "All checks passed. Proceed with release?",
-    header: "Decision",
-    options: hasBlockers
-      ? [
-          { label: "Fix issues first (Recommended)", description: "Address blockers before release" },
-          { label: "Abort release", description: "Cancel release process" }
-        ]
-      : [
-          { label: "Proceed (Recommended)", description: "Create tag and continue release" },
-          { label: "Fix issues first", description: "Address warnings before release" },
-          { label: "Abort release", description: "Cancel release process" }
-        ],
-    multiSelect: false
-  }
-])
-```
-
-### If Proceed
-
-```javascript
-// Apply selected documentation updates
-if (docsSelection.includes("CHANGELOG")) {
+// Apply documentation updates (selected in Q1)
+if (config.docs.includes("CHANGELOG")) {
   Edit(changelogFile, changelogEntry)
 }
 
-console.log(`
-## Next Steps
+// Execute release action based on Q1 selection
+if (hasBlockers) {
+  console.log(`
+## Blocked
 
-1. Review changes: git diff
-2. Commit: git commit -am "chore: prepare release ${suggestedVersion}"
-3. Tag: git tag v${suggestedVersion}
-4. Push: git push && git push --tags
+${allBlockers.length} blocker(s) must be fixed before release.
+Run \`git diff\` to review changes, fix blockers, and re-run preflight.
 `)
+} else if (config.releaseMode === "Prepare Only") {
+  console.log(`
+## Preparation Complete
+
+All checks passed. Release preparation is ready.
+
+**Next Steps (when you're ready to release):**
+1. Review changes: \`git diff\`
+2. Commit: \`git commit -am "chore: prepare release ${suggestedVersion}"\`
+3. Tag: \`git tag v${suggestedVersion}\`
+4. Push: \`git push && git push --tags\`
+`)
+} else if (config.releaseMode === "Tag + Push") {
+  Bash(`git commit -am "chore: release ${suggestedVersion}" && git tag v${suggestedVersion} && git push && git push --tags`)
+  console.log(`
+## Released
+
+Version ${suggestedVersion} has been tagged and pushed.
+`)
+} else if (config.releaseMode === "Tag Only") {
+  Bash(`git commit -am "chore: release ${suggestedVersion}" && git tag v${suggestedVersion}`)
+  console.log(`
+## Tagged
+
+Version ${suggestedVersion} has been tagged (not pushed).
+Push when ready: \`git push && git push --tags\`
+`)
+}
 ```
 
 ### Final Summary
@@ -528,7 +565,7 @@ Status: {hasBlockers ? "BLOCKED" : (allWarnings.length > 0 ? "WARN" : "OK")} | A
 
 **Invariant:** applied + failed = total
 
-Decision: {userDecision}
+Mode: {config.releaseMode}
 ```
 
 ### Validation
@@ -547,10 +584,10 @@ Decision: {userDecision}
 
 | Scenario | Questions | Total |
 |----------|-----------|-------|
-| --auto mode | 0 | 0 |
-| Interactive | Q1 (Intensity) + Q2 (Docs + Decision) | 2 |
+| --auto mode | - | **0** |
+| Interactive | Q1 (Intensity + Release Mode + Docs) | **1** |
 
-**Key optimization:** All pre-flight, optimize, review, and verification run in parallel background. Only intensity upfront, then decision at the end.
+**Single question at start** - All settings collected upfront, then uninterrupted parallel execution.
 
 ### Flags
 
@@ -578,7 +615,7 @@ Decision: {userDecision}
 | VER-03 | Type errors | Type checker finds errors |
 | DEP-SEC | Security CVE | Known vulnerability in dependency |
 | OPT-CRIT | Optimize critical | Unfixed CRITICAL from /optimize |
-| REV-CRIT | Review critical | Unfixed CRITICAL gap from /review |
+| REV-CRIT | Review critical | Unfixed CRITICAL gap from /align |
 
 **WARNINGS (can override):**
 | ID | Check | Criteria |
@@ -603,7 +640,7 @@ Decision: {userDecision}
 | Task | Model | Reason |
 |------|-------|--------|
 | /optimize | Opus | Code modifications require accuracy |
-| /review | Opus | Architectural changes require accuracy |
+| /align | Opus | Architectural changes require accuracy |
 | Dependency audit | Haiku | Read-only research |
 | Verification | Bash | Direct execution |
 
@@ -623,14 +660,13 @@ Decision: {userDecision}
 
 ## Rules
 
-1. **Intensity first** - Select fix level before any work starts
+1. **All settings upfront** - Intensity, release mode, and docs selected in single Q1
 2. **All parallel background** - Pre-flight, optimize, review, verification all background
 3. **Full scope** - Run ALL scopes for both optimize (6) and review (5)
-4. **Single question at end** - Docs + Decision combined after all results
-5. **Collect before decision** - Wait for all background tasks before Q2
-6. **Git safety** - Clean state required, version sync verified
-7. **User decision required** - No release without explicit approval (unless --auto)
-8. **Security blocks release** - Dependency security advisories are always blockers
+4. **No mid-flow questions** - All decisions made at start, uninterrupted execution
+5. **Git safety** - Clean state required, version sync verified
+6. **Blockers stop release** - Cannot proceed with blockers regardless of release mode
+7. **Security blocks release** - Dependency security advisories are always blockers
 
 ---
 

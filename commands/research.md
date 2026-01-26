@@ -9,6 +9,8 @@ model: opus
 
 **Smart Research** - Parallel search → tier → synthesize → recommend with minimal questions.
 
+> **Implementation Note:** Code blocks use JavaScript-like pseudocode for clarity. Actual execution uses Claude Code tools with appropriate parameters.
+
 Hybrid research: Local (Glob/Grep) + Web (cco-agent-research) with tiered model strategy.
 
 ## Context
@@ -19,13 +21,15 @@ Hybrid research: Local (Glob/Grep) + Web (cco-agent-research) with tiered model 
 
 ## Architecture
 
-| Step | Name | Action | Optimization |
-|------|------|--------|--------------|
-| 1 | Setup | Q1: Depth selection (skip with flags) | Optional question |
-| 2 | Query | Parse and understand | Instant |
-| 3 | Research | Parallel: Local + Web sources | Fast |
-| 4 | Synthesize | Tiered model strategy | Accurate |
-| 5 | Output | Progressive display | Real-time |
+| Step | Name | Action | Optimization | Dependency |
+|------|------|--------|--------------|------------|
+| 1 | Setup | Q1: Depth selection (skip with flags) | Optional question | - |
+| 2 | Query | Parse and understand | Instant | [SEQUENTIAL] after 1 |
+| 3 | Research | Parallel: Local + Web sources | Fast | [SEQUENTIAL] after 2 |
+| 4 | Synthesize | Tiered model strategy | Accurate | [SEQUENTIAL] after 3 |
+| 5 | Output | Progressive display | Real-time | [SEQUENTIAL] after 4 |
+
+**Execution Flow:** 1 → 2 → 3 (internal parallelism) → 4 → 5
 
 ---
 

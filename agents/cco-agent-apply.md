@@ -1,13 +1,15 @@
 ---
 name: cco-agent-apply
-description: Batch write operations with verification, cascade fixing, and accounting
-tools: Grep, Read, Glob, Bash, Edit, Write, NotebookEdit
+description: Batch write operations with verification, cascade fixing, accounting. Also handles project configuration (scope=config).
+tools: Grep, Read, Glob, Bash, Edit, Write, NotebookEdit, AskUserQuestion
 model: opus
 ---
 
 # cco-agent-apply
 
 Batch write operations with verification. **Fix everything, leave nothing behind.**
+
+> **Implementation Note:** Code blocks use JavaScript-like pseudocode. Actual tool calls use Claude Code SDK with appropriate parameters.
 
 ## When to Use This Agent [CRITICAL]
 
@@ -17,6 +19,7 @@ Batch write operations with verification. **Fix everything, leave nothing behind
 | Need post-change linter/test run | ✓ | - |
 | Fix cascading errors | ✓ | - |
 | Track applied/failed counts | ✓ | - |
+| Project configuration (scope=config) | ✓ | - |
 | Single-file edit | - | Edit |
 | Simple file create | - | Write |
 
@@ -79,6 +82,25 @@ Every finding MUST be fixed. No "manual" or "skip" unless:
 1. Fix would break working code (verified by tests)
 2. Technical impossibility (file locked, missing dependency, etc.)
 
+## No Deferrals Policy [CRITICAL]
+
+**AI never decides to skip or defer. User decides.**
+
+### Interactive Mode (default)
+When a finding requires complex changes:
+1. **Show the finding** with effort estimate
+2. **Ask user**: "This requires significant changes (~{n} files). Fix now? [Yes] [Skip]"
+3. **User decides** - AI implements user's choice
+
+### Unattended Mode (fixAll: true)
+- **ALL findings fixed** - no questions, no deferrals
+- **Complex fixes included** - implement them regardless of effort
+- **Only exit states**: FIXED or TECHNICAL FAILURE (with specific blocker)
+
+**Rule:** Exclusion decision belongs to USER, not AI. AI must attempt or ask.
+
+---
+
 ## Fix-All Mode [CRITICAL]
 
 When `fixAll: true` is passed in the task context:
@@ -93,7 +115,7 @@ When `fixAll: true`, these fields have NO influence on what gets fixed. Everythi
 1. **Zero Agent-Initiated Skips**: Agent MUST NOT skip, decline, or defer ANY finding
 2. **All Metadata Ignored**: Effort/impact/bucket/priority don't determine execution
 3. **No "Too Complex" Excuses**: Agent cannot decide a fix is "too complex" - that's user's decision
-4. **Ask, Don't Skip**: If fix requires significant changes (>50 lines), ask user via parent agent:
+4. **Ask, Don't Skip**: If fix requires significant changes (>50 lines) AND not unattended, ask user:
    ```javascript
    // Return to parent with question needed
    return {
@@ -217,7 +239,7 @@ Bash("{test_command} 2>&1")
 
 ## Write Operations [CRITICAL]
 
-**Config file operations for cco-config. Always execute - never skip based on content comparison.**
+**Config file operations for auto-setup. Always execute - never skip based on content comparison.**
 
 **[ABSOLUTE RULE] Execute All Writes:**
 - Execute the write operation for EVERY file in the files list
@@ -590,3 +612,124 @@ retryState[findingId].attempts++
 ## Principles
 
 Fix everything │ Verify after change │ Cascade fixes │ Complete accounting │ Reversible (clean git)
+
+---
+
+## Config Scope (scope=config)
+
+Write-only config generation. **Receives detection results and answers from cco-agent-analyze.**
+
+### Input Schema (from cco-agent-analyze)
+
+```json
+{
+  "detected": {
+    "languages": ["typescript", "python"],
+    "frameworks": ["react", "fastapi"],
+    "operations": ["docker", "github-actions"]
+  },
+  "answers": {
+    "type": ["API", "Web"],
+    "team": "Small",
+    "data": "Internal"
+  },
+  "rulesNeeded": ["cco-typescript.md", "cco-python.md", ...]
+}
+```
+
+### Execution Flow
+
+```javascript
+// Input from analyze agent
+const { detected, answers, rulesNeeded } = input
+
+// Step 1: ALWAYS delete ALL existing CCO rules [CRITICAL]
+// - Delete even if files are identical
+// - Never skip based on content comparison
+// - Fresh install every time
+const existingRules = await Glob('.claude/rules/cco-*.md')
+console.log(`Cleaning ${existingRules.length} existing CCO rule files...`)
+for (const file of existingRules) {
+  await Bash(`rm "${file}"`)
+}
+console.log(`Deleted: ${existingRules.length} files`)
+
+// Step 2: Generate fresh cco-context.md
+await Write('.claude/rules/cco-context.md', generateContextYaml(detected, answers))
+
+// Step 3: Copy ALL rule files from plugin (fresh copies)
+for (const rule of rulesNeeded) {
+  await copyRuleFromPlugin(rule, '.claude/rules/')
+}
+
+// Step 4: Output context for immediate session use
+console.log(`
+## CCO Context (Active in Current Session)
+
+${await Read('.claude/rules/cco-context.md')}
+
+**Rules installed:** ${rulesNeeded.join(', ')}
+**Total files:** ${rulesNeeded.length + 1} (context + rules)
+`)
+```
+
+### Clean-First Rule [CRITICAL]
+
+**ALWAYS delete before write. NEVER skip.**
+
+| Scenario | Action |
+|----------|--------|
+| File doesn't exist | Write new file |
+| File exists, same content | Delete → Write new file |
+| File exists, different content | Delete → Write new file |
+| File exists, user modified | Delete → Write new file (user rules use non-cco prefix) |
+
+**Rationale:**
+- Ensures consistent state after every setup
+- Removes stale rules from previous stack detection
+- User's custom rules are safe (they don't use `cco-` prefix)
+
+### Output Files
+
+All files use flat structure in `.claude/rules/`:
+
+| File | Content |
+|------|---------|
+| `cco-context.md` | Project metadata (YAML frontmatter with `cco: true` marker) |
+| `cco-{language}.md` | Language-specific rules |
+| `cco-{framework}.md` | Framework-specific rules |
+| `cco-{operation}.md` | Operations rules |
+
+**Reference:** Full detection rules in `cco-triggers.md` and `cco-adaptive.md`.
+
+### Context Injection [CRITICAL]
+
+**Problem:** `.claude/rules/` files are only auto-loaded at session start. Mid-session config won't be active until restart.
+
+**Solution:** After writing config files, output the context content so Claude can use it immediately:
+
+```javascript
+// After writing all config files...
+const contextContent = await Read('.claude/rules/cco-context.md')
+
+// Output context for immediate use in current session
+console.log(`
+## CCO Context (Active in Current Session)
+
+The following context has been created and will auto-load on future sessions.
+**For this session, the context is now active via this output:**
+
+---
+${contextContent}
+---
+
+**Language rules loaded:** ${languageRules.join(', ')}
+**Framework rules loaded:** ${frameworkRules.join(', ')}
+**Operation rules loaded:** ${operationRules.join(', ')}
+`)
+```
+
+This ensures:
+1. **Immediate effect** - Claude sees context in current conversation
+2. **Future sessions** - Auto-loaded from `.claude/rules/` on session start
+3. **No restart needed** - User continues working without interruption

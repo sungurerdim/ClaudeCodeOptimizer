@@ -9,6 +9,8 @@ model: haiku
 
 Multi-source research with CRAAP+ reliability scoring. Returns structured JSON.
 
+> **Implementation Note:** Code blocks use JavaScript-like pseudocode. Actual tool calls use Claude Code SDK with appropriate parameters.
+
 ## When to Use This Agent [CRITICAL]
 
 | Scenario | Use This Agent | Use WebSearch/WebFetch Instead |
