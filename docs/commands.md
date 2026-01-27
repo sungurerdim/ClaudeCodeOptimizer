@@ -8,6 +8,7 @@ Detailed documentation for all CCO slash commands.
 
 | Command         | Purpose                                  | Model     | Steps |
 |-----------------|------------------------------------------|-----------|-------|
+| `/cco:tune`     | Configure CCO for this project           | **haiku** | 4     |
 | `/cco:optimize` | Security + Quality + Hygiene fixes       | **opus**  | 6     |
 | `/cco:align`    | Architecture gap analysis                | **opus**  | 5     |
 | `/cco:research` | Multi-source research with AI synthesis  | **opus**  | 5     |
@@ -15,7 +16,7 @@ Detailed documentation for all CCO slash commands.
 | `/cco:preflight`| Pre-release workflow orchestration       | **opus**  | 5     |
 | `/cco:docs`     | Documentation gap analysis               | **opus**  | 5     |
 
-**Model Rationale:** Opus for analysis and coding commands (50-75% fewer errors).
+**Model Rationale:** Opus for coding commands (fewer errors), Haiku for configuration (fast).
 
 **Project Configuration:** Handled automatically via auto-setup (SessionStart hook or command fallback) when CCO detects an unconfigured project.
 
@@ -78,6 +79,45 @@ Commands pre-collect context at execution start:
 - **Interactive Mode**: Complex changes prompt user for approval
 - **Unattended Mode (--auto)**: ALL findings fixed, no questions
 - **Accounting**: `applied + failed = total` (no AI declines allowed)
+
+---
+
+## /cco:tune
+
+**Purpose:** Configure CCO for this project - analyze stack, create profile, load rules.
+
+**Usage:**
+```bash
+/cco:tune                # Interactive setup with questions
+/cco:tune --auto         # Unattended mode - auto-detect everything
+/cco:tune --check        # Silent validation only, return status
+/cco:tune --force        # Update even if profile exists
+```
+
+### Steps
+
+| Step | Name      | Action                                      |
+|------|-----------|---------------------------------------------|
+| 1    | Validate  | Check existing profile                      |
+| 2a   | Questions | Ask user preferences (parallel with 2b)     |
+| 2b   | Detect    | Analyze project stack via cco-agent-analyze |
+| 3    | Merge     | Combine answers + detection                 |
+| 4    | Write     | Create files via cco-agent-apply            |
+
+### Generated Files
+
+| File | Content |
+|------|---------|
+| `.claude/rules/cco-profile.md` | Project metadata (YAML frontmatter) |
+| `.claude/rules/cco-{language}.md` | Language-specific rules |
+| `.claude/rules/cco-{framework}.md` | Framework-specific rules |
+
+### Detection Capabilities
+
+- **Languages:** Manifest files (pyproject.toml, package.json, go.mod, Cargo.toml)
+- **Frameworks:** Dependency analysis (Django, FastAPI, React, Next.js, etc.)
+- **Commands:** Auto-detect format, lint, type, test, build commands
+- **Maturity:** File count, test presence, CI configuration
 
 ---
 

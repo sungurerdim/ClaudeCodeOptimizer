@@ -40,7 +40,7 @@ Need changes?
 
 **Model Rationale:**
 - Haiku for read-only sub-agents (fast, cost-effective)
-- Opus for apply agent (50-75% fewer tool errors, coding state-of-the-art)
+- Opus for apply agent (fewer tool errors, coding state-of-the-art)
 
 ---
 
@@ -81,6 +81,7 @@ Need changes?
 | `performance`  | PRF-01 to PRF-10 | 10     | N+1, blocking I/O, missing caching       |
 | `ai-hygiene`   | AIH-01 to AIH-08 | 8      | Hallucinated APIs, orphan abstractions   |
 | `robustness`   | ROB-01 to ROB-10 | 10     | Timeouts, retries, validation            |
+| `doc-sync`     | DOC-01 to DOC-08 | 8      | Doc-code consistency, outdated docs      |
 
 **ALIGN Scopes** (strategic, architecture-level):
 

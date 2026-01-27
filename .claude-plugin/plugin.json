@@ -1,7 +1,7 @@
 {
   "name": "cco",
   "version": "2.0.0",
-  "description": "Quality standards and adaptive rules for Claude Code. Run /cco:config to setup.",
+  "description": "Quality standards and adaptive rules for Claude Code. Run /cco:tune to setup.",
   "author": {
     "name": "Sungur Zahid Erdim",
     "email": "sungurerdim@users.noreply.github.com"
