@@ -1,6 +1,6 @@
 ---
 name: cco-agent-analyze
-description: Codebase analysis with severity scoring - security, hygiene, types, lint, performance, robustness, functional-completeness audits. Also handles project detection for /cco:tune (scope=config).
+description: Codebase analysis with severity scoring - security, hygiene, types, lint, performance, robustness, functional-completeness audits. Also handles project detection for /cco:tune (scope=tune).
 tools: Glob, Read, Grep, Bash
 model: haiku
 ---
@@ -84,7 +84,7 @@ Grep("{complexity_patterns}")     // message
 
 **Definition:** Quality Gates are external tool commands detected by this agent and stored in profile.
 
-**Detection (scope=config):**
+**Detection (scope=tune):**
 ```javascript
 // cco-agent-analyze detects project tooling
 commands: {
@@ -774,7 +774,7 @@ Token-first │ Complete coverage │ Targeted patterns │ Actionable findings
 
 ---
 
-## Config Scope (scope=config)
+## Tune Scope (scope=tune)
 
 Project detection for profile generation. Returns structured data for tune command.
 

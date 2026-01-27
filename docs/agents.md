@@ -123,7 +123,7 @@ Returns structured JSON with:
 | Apply 3+ fixes at once | Single-file edit → Edit |
 | Need post-change verification | Simple file create → Write |
 | Fix cascading errors | Quick one-off edit → Edit |
-| Project configuration (scope=config) | - |
+| Project tuning (scope=tune) | - |
 | Track applied/failed counts | - |
 
 **Advantages over Edit/Write:**
@@ -136,7 +136,7 @@ Returns structured JSON with:
 
 **Note:** Rollback via git (`git checkout`). Agent warns about dirty state, doesn't create checkpoints.
 
-### Config Scope
+### Tune Scope
 
 Handles project detection and rule generation:
 
@@ -257,7 +257,7 @@ After each change:
 | `/cco:research`  | -                                                  | No             | full         |
 | `/cco:preflight` | (orchestrates optimize + align)                    | (orchestrates) | dependency   |
 
-**Configuration:** `/cco:tune` uses cco-agent-apply with `scope=config` to generate project rules.
+**Configuration:** `/cco:tune` uses cco-agent-apply with `scope=tune` to generate project rules.
 
 ---
 

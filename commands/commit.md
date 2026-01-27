@@ -1,6 +1,6 @@
 ---
 description: Smart git commits with quality gates and atomic grouping
-argument-hint: [--staged-only] [--no-verify] [--amend]
+argument-hint: [--preview] [--single] [--split] [--skip-tests] [--amend] [--staged-only]
 allowed-tools: Read(*), Grep(*), Edit(*), Bash(*), AskUserQuestion
 model: opus
 ---
@@ -393,14 +393,12 @@ if (stashList.trim()) {
 
 | Flag | Effect |
 |------|--------|
-| `--dry-run` | Show plan only, don't commit |
+| `--preview` | Show commit plan only, don't execute |
 | `--single` | Force single commit |
 | `--split` | Auto-split by scope |
 | `--skip-tests` | Skip test gate |
 | `--amend` | Amend last commit (safety checks apply) |
 | `--staged-only` | Commit only staged changes |
-| `--full-project` | Run gates on entire project |
-| `--confirm` | Ask approval before commit (old behavior) |
 
 ---
 

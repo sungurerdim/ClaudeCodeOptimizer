@@ -1,6 +1,6 @@
 ---
 description: Multi-source research with CRAAP+ reliability scoring
-argument-hint: [--quick] [--deep] [--local] [--security] [--changelog]
+argument-hint: [--json] [--resume=ID]
 allowed-tools: WebSearch(*), WebFetch(*), Read(*), Grep(*), Glob(*), Task(*), AskUserQuestion
 model: opus
 ---
@@ -33,27 +33,32 @@ Hybrid research: Local (Glob/Grep) + Web (cco-agent-research) with tiered model 
 
 ---
 
-## Step-1: Depth Selection [Q1 - SKIP WITH FLAGS]
-
-**Default: Standard depth. Only ask if no flag provided.**
+## Step-1: Research Settings [Q1]
 
 ```javascript
-// Check for flags
-if (flags.quick || flags.standard || flags.deep) {
-  depth = flags.quick ? "Quick" : flags.deep ? "Deep" : "Standard"
-  // Skip question, proceed to Step-2
-} else {
-  AskUserQuestion([{
-    question: "Research depth?",
+AskUserQuestion([
+  {
+    question: "How thorough?",
     header: "Depth",
     options: [
-      { label: "Quick", description: "T1-T2 sources, 3 parallel searches" },
-      { label: "Standard (Recommended)", description: "T1-T4 sources, 5 parallel searches" },
-      { label: "Deep", description: "All tiers, 7+ parallel searches, resumable" }
+      { label: "Quick", description: "Fast - official docs only (T1-T2)" },
+      { label: "Standard (Recommended)", description: "Comprehensive - blogs, forums (T1-T4)" },
+      { label: "Deep", description: "Exhaustive - all sources, resumable" }
     ],
     multiSelect: false
-  }])
-}
+  },
+  {
+    question: "Special focus areas?",
+    header: "Focus",
+    options: [
+      { label: "Local codebase", description: "Search this project's code too" },
+      { label: "Security/CVE", description: "Include vulnerability databases" },
+      { label: "Changelog/releases", description: "Focus on version changes" },
+      { label: "Dependencies", description: "Package registry search" }
+    ],
+    multiSelect: true
+  }
+])
 ```
 
 | Depth | Parallel Agents | Model Strategy |
@@ -362,17 +367,25 @@ Confidence: {confidence} ({n} T1 sources agree) | Saturation: {saturation}%
 
 | Flag | Effect |
 |------|--------|
-| `--quick` | 3 parallel, T1-T2, Haiku only, no question |
-| `--standard` | 5 parallel, T1-T4, Opus synthesis, no question |
-| `--deep` | 7+ parallel, all tiers, Opus synthesis, resumable, no question |
-| `--local` | Local Glob/Grep only, no web |
-| `--changelog` | Focus on releases |
-| `--security` | Include CVE databases |
-| `--dependency` | Package registry search |
-| `--compare` | A vs B dual track |
-| `--json` | JSON output |
-| `--sources-only` | No synthesis |
-| `--resume=ID` | Resume previous deep research |
+| `--json` | JSON output format |
+| `--resume=ID` | Resume previous deep research session |
+
+### Depth Levels
+
+| Depth | Sources | Parallel | Model |
+|-------|---------|----------|-------|
+| **Quick** | T1-T2 (official docs) | 3 | Haiku |
+| **Standard** | T1-T4 (blogs, forums) | 5 | Haiku + Opus |
+| **Deep** | All tiers | 7+ | Haiku + Opus |
+
+### Focus Areas
+
+| Focus | Effect |
+|-------|--------|
+| **Local codebase** | Include Glob/Grep on project files |
+| **Security/CVE** | Add NVD, CVE, Snyk databases |
+| **Changelog/releases** | Prioritize GitHub releases, changelogs |
+| **Dependencies** | Search npm, PyPI, crates.io |
 
 ### Source Tiers
 

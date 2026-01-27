@@ -137,7 +137,7 @@ See [Commands documentation](docs/commands.md) for flags and examples.
 | Agent | Purpose |
 |-------|---------|
 | `cco-agent-analyze` | Fast read-only analysis with severity scoring |
-| `cco-agent-apply` | Code changes with verification and cascade fixing. Also handles project config via `scope=config` |
+| `cco-agent-apply` | Code changes with verification and cascade fixing. Also handles project tuning via `scope=tune` |
 | `cco-agent-research` | Multi-source research with CRAAP+ reliability scoring |
 
 See [Agents documentation](docs/agents.md) for detailed capabilities.

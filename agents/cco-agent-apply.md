@@ -549,7 +549,7 @@ Fix everything │ Verify after change │ Cascade fixes │ Complete accounting
 
 ---
 
-## Config Scope (scope=config)
+## Tune Scope (scope=tune)
 
 Execute file operations as instructed. **Receives explicit write/delete instructions from caller (tune command).**
 
