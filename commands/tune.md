@@ -1,6 +1,6 @@
 ---
 description: Configure CCO for this project - analyze stack, create profile, load rules
-argument-hint: [--check] [--force]
+argument-hint: [--check] [--force] [--auto]
 allowed-tools: Read(*), Grep(*), Glob(*), Task(*), AskUserQuestion
 model: haiku
 ---
@@ -173,7 +173,7 @@ console.log("Analyzing project...")
 
 // ALWAYS run detection first (for both auto and interactive modes)
 const detected = await Task("cco-agent-analyze", `
-  scope: config
+  scope: tune
   mode: auto
 `, { model: "haiku" })
 
@@ -378,7 +378,7 @@ const operations = [
 
 // Execute via apply agent
 const result = await Task("cco-agent-apply", `
-  scope: config
+  scope: tune
   operations: ${JSON.stringify(operations)}
   outputContext: true
 `, { model: "haiku" })
@@ -541,6 +541,7 @@ The profile has 11 sections:
 
 ```bash
 /cco:tune              # Interactive or auto setup
+/cco:tune --auto       # Fully unattended, auto-detect everything
 /cco:tune --check      # Silent validation
 /cco:tune --force      # Force update
 ```

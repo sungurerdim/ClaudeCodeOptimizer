@@ -1,59 +1,103 @@
 # Foundation Rules
-*Constraints and thresholds for code quality - not principles Opus already knows*
+*Enforceable constraints with measurable thresholds*
 
-## Decision Guard
+## Uncertainty Protocol [BLOCKER]
 
-Before adding code/feature, ask:
-1. Does absence break something?
-2. Does absence confuse users?
-3. Is adding worth complexity cost?
+When uncertain, STOP and surface it. Don't guess silently.
 
-**All NO = don't add.**
+**Required actions:**
+- **Stop-When-Unclear**: If task is ambiguous → ask before proceeding
+- **Signal-Confidence**: State confidence level: "~90% sure", "uncertain about X", "assuming Y"
 
-## Complexity Thresholds [CRITICAL]
+```
+✓ "Before I proceed: [specific thing] is unclear."
+✓ "I'm ~80% confident. Uncertainty: [what]."
+✗ Silently picking one interpretation
+✗ Proceeding despite confusion
+```
 
-| Metric | Good | Review | Refactor |
-|--------|------|--------|----------|
-| Cyclomatic Complexity | 1-10 | 11-15 | 16+ |
-| Cognitive Complexity | < 15 | 15-20 | 21+ |
-| Method Lines | < 50 | 50-100 | 100+ |
-| File Lines | < 500 | 500-1000 | 1000+ |
-| Nesting Depth | ≤ 3 | 4 | 5+ |
-| Parameters | ≤ 4 | 5-7 | 8+ |
+## Complexity Limits [BLOCKER]
 
-## File Handling [CRITICAL]
+Code exceeding these limits = STOP and refactor first.
 
-- **Minimal-Touch**: Only files required for task
-- **Request-First**: Create files only when explicitly requested
-- **Skip**: `.git`, `node_modules`, `vendor`, `venv`, `dist`, `out`, `target`, `.idea`, `.vscode`, `*.min.*`, `@generated`
+| Metric | Limit | Action if exceeded |
+|--------|-------|-------------------|
+| Cyclomatic Complexity | ≤ 15 | Split function |
+| Method Lines | ≤ 50 | Extract methods |
+| File Lines | ≤ 500 | Split file |
+| Nesting Depth | ≤ 3 | Flatten logic |
+| Parameters | ≤ 4 | Use object/config |
 
-## Validation Boundaries [CRITICAL]
+## File Creation [BLOCKER]
 
-All public APIs MUST validate input:
-- **Range-Bounds**: Numeric inputs need min/max limits
-- **String-Length**: String inputs need max length
-- **Collection-Size**: Arrays need max items limit
-- **Timeout-Required**: ALL external calls need explicit timeout
-- **Close-Always**: Resources closed in finally/with/using
+**BLOCK**: Creating new files without explicit user request.
 
-## Refactoring Safety
+```
+User: "Add validation to user.py" → Edit user.py only
+User: "Create a utils module" → OK to create file
+```
 
-Before modifying:
-- **Delete**: Identify ALL callers before removing
-- **Rename**: Find refs → update ALL → verify builds
-- **Move**: Update all import statements
-- **Signature-Change**: Update all call sites
+Directories to skip: `.git`, `node_modules`, `vendor`, `venv`, `dist`, `build`, `__pycache__`
 
-## Output Format [CRITICAL]
+## Change Scope [BLOCKER]
 
-- **Step-Progress**: "Step 2/5: Building..."
-- **Summary-Final**: "Changed 3 files, added 2 tests"
-- **Impact-Explain**: "This reduces bundle size by 15%"
-- **Error-Actionable**: `[SEVERITY] {What} in {file}:{line}`
+**Test**: Can every changed line trace directly to user's request?
 
-## Team Scale
+- NO → Revert that change
+- If you notice unrelated issues → mention, don't fix
 
-| Team Size | Applies |
-|-----------|---------|
-| < 6 | Informal review OK |
-| 6+ | CODEOWNERS, branch protection required |
+```
+✓ User asked for X → only X changed
+✗ User asked for X → X + "improvements" to nearby code
+```
+
+## Code Volume [CHECK]
+
+Before completing, verify:
+
+- [ ] No abstractions for single-use code
+- [ ] No error handling for impossible scenarios
+- [ ] If 100+ lines written → could it be 50? Rewrite if yes
+
+**Ratio check**: If implementation > 4x the minimal solution, simplify.
+
+## Success Criteria [CHECK]
+
+Before starting multi-step tasks:
+
+```
+Goal: [one sentence]
+Steps:
+1. [action] → verify: [how to check]
+2. [action] → verify: [how to check]
+Done when: [measurable outcome]
+```
+
+**Every 5 steps**: "Original goal: [X]. Still on track?"
+
+## Validation Boundaries [CHECK]
+
+Public APIs MUST have:
+
+| Input Type | Required Validation |
+|------------|---------------------|
+| Numbers | min/max bounds |
+| Strings | max length |
+| Arrays | max items |
+| External calls | timeout value |
+| Resources | cleanup in finally/with/using |
+
+## Refactoring Safety [CHECK]
+
+Before modifying shared code:
+
+- [ ] **Delete**: Found ALL callers (grep/find-refs)
+- [ ] **Rename**: Will update ALL references
+- [ ] **Move**: Will update ALL imports
+- [ ] **Signature**: Will update ALL call sites
+
+## Output Format
+
+Progress: `"Step 2/5: [action]..."`
+Summary: `"Changed 3 files, added 2 tests"`
+Errors: `"[SEVERITY] {what} in {file}:{line}"`

@@ -1,6 +1,6 @@
 ---
 description: Align codebase with ideal architecture - current vs ideal state gap analysis
-argument-hint: [--auto] [--intensity=X] [--focus=X] [--report] [--dry-run] [--quick] [--plan]
+argument-hint: [--auto] [--preview]
 allowed-tools: Read(*), Grep(*), Glob(*), Edit(*), Bash(*), Task(*), AskUserQuestion
 model: opus
 ---
@@ -153,42 +153,31 @@ When `--auto` or `--fix-all` is active:
 
 ---
 
-## Step-1a: Fix Intensity + Scope Selection [Q1]
+## Step-1a: Scope + Intensity Selection [Q1]
 
 **Skip if --auto mode (config already set)**
 
 ```javascript
 AskUserQuestion([
   {
-    question: "What level of changes should be made?",
+    question: "Which areas to review?",
+    header: "Areas",
+    options: [
+      { label: "Structure (Recommended)", description: "Architecture, design patterns (ARC + PAT)" },
+      { label: "Quality (Recommended)", description: "Testing, maintainability (TST + MNT)" },
+      { label: "Completeness", description: "API gaps, AI over-engineering (FUN + AIA)" }
+    ],
+    multiSelect: true
+  },
+  {
+    question: "How much to fix?",
     header: "Intensity",
     options: [
-      { label: "Quick Wins (80/20)", description: "High impact, low effort only" },
-      { label: "Standard (Recommended)", description: "CRITICAL + HIGH + MEDIUM severity" },
-      { label: "Full Fix", description: "All severities including LOW (complete overhaul)" },
-      { label: "Report Only", description: "Analysis only, no changes applied" }
+      { label: "Quick Wins", description: "High impact, low effort only" },
+      { label: "Standard (Recommended)", description: "CRITICAL + HIGH + MEDIUM" },
+      { label: "Full", description: "All severities including LOW" }
     ],
     multiSelect: false
-  },
-  {
-    question: "Structure scopes to review?",
-    header: "Scopes 1/2",
-    options: [
-      { label: "Architecture (15)", description: "ARC-01-15: coupling, cohesion, layers, dependencies" },
-      { label: "Patterns (12)", description: "PAT-01-12: design patterns, SOLID, consistency" },
-      { label: "Testing (10)", description: "TST-01-10: coverage, test quality, gaps" }
-    ],
-    multiSelect: true
-  },
-  {
-    question: "Additional scopes to review?",
-    header: "Scopes 2/2",
-    options: [
-      { label: "Maintainability (12)", description: "MNT-01-12: complexity, readability, docs" },
-      { label: "AI-Architecture (10)", description: "AIA-01-10: over-engineering, drift, premature abstraction" },
-      { label: "Functional Completeness (12)", description: "FUN-01-12: CRUD coverage, edge cases, error handling" }
-    ],
-    multiSelect: true
   }
 ])
 ```
@@ -875,12 +864,16 @@ cco-align: {OK|WARN|FAIL} | Gaps: {gapCount} | Applied: {applied} | Failed: {fai
 
 | Flag | Effect |
 |------|--------|
-| `--auto` | Unattended mode, all 6 scopes, full-fix intensity, no questions |
-| `--intensity=X` | quick-wins, standard, full-fix, report-only |
-| `--focus=X` | architecture, patterns, testing, maintainability, ai-architecture, functional-completeness |
-| `--quick` | Haiku model, report-only, no questions |
-| `--report` | Alias for --intensity=report-only |
-| `--dry-run` | Same as --report (show plan, no changes) |
+| `--auto` | Unattended mode: all areas, full intensity, no questions |
+| `--preview` | Analyze only, show gaps, don't apply changes |
+
+### Scope Groups
+
+| Group | Scopes Included | Checks |
+|-------|-----------------|--------|
+| **Structure** | architecture + patterns | ARC-01-15, PAT-01-12 (27 checks) |
+| **Quality** | testing + maintainability | TST-01-10, MNT-01-12 (22 checks) |
+| **Completeness** | functional + ai-architecture | FUN-01-12, AIA-01-10 (22 checks) |
 
 ### Model Strategy
 

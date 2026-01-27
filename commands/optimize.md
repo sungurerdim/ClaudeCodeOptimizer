@@ -1,6 +1,6 @@
 ---
 description: Incremental code improvement - fix security, hygiene, types, lint, performance issues
-argument-hint: [--auto] [--security] [--hygiene] [--types] [--lint] [--performance] [--ai-hygiene] [--fix-all] [--score]
+argument-hint: [--auto] [--preview] [--score]
 allowed-tools: Read(*), Grep(*), Glob(*), Edit(*), Bash(*), Task(*), AskUserQuestion
 model: opus
 ---
@@ -247,74 +247,56 @@ if (isUnattended) {
   // Interactive mode - ask Q1 (Intensity) + Q2 (Scopes)
 ```
 
-**Q1: Fix Intensity (first question):**
+**Q1: Scope Groups (multiselect):**
+
+```javascript
+  scopeQuestion = {
+    question: "Which areas to check?",
+    header: "Areas",
+    options: [
+      { label: "Security (Recommended)", description: "Secrets, injection, defensive patterns (SEC + ROB)" },
+      { label: "Code Quality (Recommended)", description: "Unused code, types, style (HYG + TYP + LNT)" },
+      { label: "Performance", description: "N+1, caching, blocking I/O (PRF)" },
+      { label: "AI Cleanup", description: "Hallucinations, doc drift (AIH + DOC)" }
+    ],
+    multiSelect: true
+  }
+```
+
+**Q2: Fix Intensity:**
 
 ```javascript
   intensityQuestion = {
     question: "How much to fix?",
     header: "Intensity",
     options: [
-      { label: "Quick Wins (80/20)", description: "High impact, low effort only" },
-      { label: "Standard (Recommended)", description: "CRITICAL + HIGH + MEDIUM severity" },
-      { label: "Full Fix", description: "All severities including LOW (complete cleanup)" },
-      { label: "Report Only", description: "Analyze without making any changes" }
+      { label: "Quick Wins", description: "High impact, low effort only" },
+      { label: "Standard (Recommended)", description: "CRITICAL + HIGH + MEDIUM" },
+      { label: "Full", description: "All severities including LOW" }
     ],
     multiSelect: false
   }
 ```
 
-**Q2: Scope Selection - Code Quality (4 scopes):**
+**Q3: Git State (conditional, only if dirty):**
 
 ```javascript
-  scopeQuestion1 = {
-    question: "Code quality scopes to analyze?",
-    header: "Scopes 1/2",
-    options: [
-      { label: "Security (12)", description: "SEC-01-12: secrets, injection, path traversal" },
-      { label: "Hygiene (15)", description: "HYG-01-15: unused code, dead imports, orphans" },
-      { label: "Types (10)", description: "TYP-01-10: type errors, annotations, Any usage" },
-      { label: "Lint (8)", description: "LNT-01-08: formatting, naming, style" }
-    ],
-    multiSelect: true
-  }
-```
+  questions = [scopeQuestion, intensityQuestion]
 
-**Q3: Scope Selection - Advanced (4 scopes):**
-
-```javascript
-  scopeQuestion2 = {
-    question: "Advanced scopes to analyze?",
-    header: "Scopes 2/2",
-    options: [
-      { label: "Performance (10)", description: "PRF-01-10: N+1, blocking I/O, caching" },
-      { label: "AI Hygiene (8)", description: "AIH-01-08: hallucinations, orphan abstractions" },
-      { label: "Robustness (10)", description: "ROB-01-10: timeouts, retries, validation, null safety" },
-      { label: "Doc Sync (8)", description: "DOC-01-08: README outdated, API mismatch, broken links" }
-    ],
-    multiSelect: true
-  }
-```
-
-**Q4: Git State (conditional, only if dirty):**
-
-```javascript
-  questions = [intensityQuestion, scopeQuestion1, scopeQuestion2]
-
-  // Add git state question only if dirty (max 4 questions per AskUserQuestion)
   if (gitDirty) {
     questions.push({
-      question: "Working tree has uncommitted changes. How to proceed?",
-      header: "Git State",
+      question: "Uncommitted changes detected. Proceed?",
+      header: "Git",
       options: [
-        { label: "Continue anyway (Recommended)", description: "Proceed, changes visible in git diff" },
-        { label: "Stash first", description: "Stash changes, continue, remind to pop" },
-        { label: "Cancel", description: "Abort optimization" }
+        { label: "Continue (Recommended)", description: "Changes visible in git diff" },
+        { label: "Stash first", description: "Stash, continue, remind to pop" },
+        { label: "Cancel", description: "Abort" }
       ],
       multiSelect: false
     })
   }
 
-  AskUserQuestion(questions)  // Max 4 questions: Intensity + Scopes1 + Scopes2 + GitState
+  AskUserQuestion(questions)  // Max 3 questions
 }
 ```
 
@@ -818,21 +800,18 @@ console.log(summary)
 
 | Flag | Effect |
 |------|--------|
-| `--auto` | **Unattended mode:** all 8 scopes, full-fix intensity, no questions, silent execution, single-line summary |
-| `--security` | Security scope only (SEC-01-12) |
-| `--hygiene` | Hygiene scope only (HYG-01-15) |
-| `--types` | Types scope only (TYP-01-10) |
-| `--lint` | Lint scope only (LNT-01-08) |
-| `--performance` | Performance scope only (PRF-01-10) |
-| `--ai-hygiene` | AI hygiene scope only (AIH-01-08) |
-| `--robustness` | Robustness scope only (ROB-01-10) |
-| `--doc-sync` | Doc-code sync scope only (DOC-01-08) |
-| `--report` | Report only, analyze without fixing |
-| `--fix` | Standard intensity (default) |
-| `--fix-all` | Full-fix intensity, no approval needed |
-| `--score` | Quality score only (0-100), skip all questions |
-| `--intensity=<level>` | Set fix intensity: quick-wins, standard, full-fix, report-only |
-| `--pre-release` | All scopes, standard intensity, strict thresholds |
+| `--auto` | Unattended mode: all areas, full intensity, no questions |
+| `--preview` | Analyze only, show findings, don't apply fixes |
+| `--score` | Quality score only (0-100), skip questions |
+
+### Scope Groups
+
+| Group | Scopes Included | Checks |
+|-------|-----------------|--------|
+| **Security** | security + robustness | SEC-01-12, ROB-01-10 (22 checks) |
+| **Code Quality** | hygiene + types + lint | HYG-01-15, TYP-01-10, LNT-01-08 (33 checks) |
+| **Performance** | performance | PRF-01-10 (10 checks) |
+| **AI Cleanup** | ai-hygiene + doc-sync | AIH-01-08, DOC-01-08 (16 checks) |
 
 ---
 

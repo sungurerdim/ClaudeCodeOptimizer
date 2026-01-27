@@ -1,6 +1,6 @@
 ---
 description: Release verification gate - full optimization + review + tests + build
-argument-hint: [--auto] [--intensity=X] [--dry-run] [--strict] [--tag] [--push] [--plan]
+argument-hint: [--auto] [--preview] [--strict] [--skip-tests] [--skip-docs]
 allowed-tools: Read(*), Grep(*), Glob(*), Edit(*), Bash(*), Task(*), AskUserQuestion
 model: opus
 ---
@@ -146,33 +146,32 @@ When `--auto` or `--intensity=full-fix` or user selects "Full Fix":
 ```javascript
 AskUserQuestion([
   {
-    question: "What level of fixes for this release?",
+    question: "Which checks to run?",
+    header: "Checks",
+    options: [
+      { label: "Security (Recommended)", description: "Vulnerabilities, secrets, dependencies" },
+      { label: "Code Quality (Recommended)", description: "Types, lint, hygiene" },
+      { label: "Architecture", description: "Patterns, structure, maintainability" },
+      { label: "Tests + Build", description: "Run test suite and build" }
+    ],
+    multiSelect: true
+  },
+  {
+    question: "How thorough?",
     header: "Intensity",
     options: [
-      { label: "Quick Wins (80/20)", description: "High impact, low effort only (fast release)" },
-      { label: "Standard (Recommended)", description: "CRITICAL + HIGH + MEDIUM (comprehensive)" },
-      { label: "Full Fix", description: "All severities including LOW (complete cleanup)" },
-      { label: "Dry Run", description: "Check only, no fixes applied" }
+      { label: "Quick", description: "Fast - high impact only" },
+      { label: "Standard (Recommended)", description: "CRITICAL + HIGH + MEDIUM" },
+      { label: "Full", description: "All severities" }
     ],
     multiSelect: false
   },
   {
-    question: "What to do after checks pass?",
-    header: "Release Mode",
+    question: "After checks pass?",
+    header: "Release",
     options: [
-      { label: "Prepare Only (Recommended)", description: "Run checks, show results, stop before release" },
-      { label: "Tag + Push", description: "Create git tag and push to remote" },
-      { label: "Tag Only", description: "Create git tag without pushing" }
-    ],
-    multiSelect: false
-  },
-  {
-    question: "Update documentation?",
-    header: "Docs",
-    options: [
-      { label: "CHANGELOG (Recommended)", description: "Generate changelog entry" },
-      { label: "CHANGELOG + README", description: "Update both files" },
-      { label: "Skip docs", description: "No documentation updates" }
+      { label: "Fix Only (Recommended)", description: "Apply fixes, no tag, no commit" },
+      { label: "Fix + Commit + Tag", description: "Apply fixes, commit, create git tag" }
     ],
     multiSelect: false
   }
@@ -184,9 +183,8 @@ AskUserQuestion([
 | Selection | Effect |
 |-----------|--------|
 | **Intensity** | Passed to /cco:optimize and /cco:align |
-| **Prepare Only** | Show results, print next steps, stop |
-| **Tag + Push** | Create tag, push to remote |
-| **Tag Only** | Create tag, don't push |
+| **Fix Only** | Apply fixes only, no commit, no tag |
+| **Fix + Commit + Tag** | Apply fixes, create commit, create git tag |
 | **CHANGELOG** | Generate changelog entry |
 | **Skip docs** | No doc updates |
 
@@ -535,10 +533,9 @@ if (hasBlockers) {
     question: "Release plan review complete. Proceed with release?",
     header: "Decision",
     options: [
-      { label: "Proceed (Recommended)", description: `Release ${suggestedVersion} with all changes` },
-      { label: "Proceed (Tag Only)", description: "Create tag but don't push" },
+      { label: "Proceed (Recommended)", description: `Create tag v${suggestedVersion}` },
       { label: "Review Changes", description: "Show git diff before proceeding" },
-      { label: "Abort", description: "Cancel release - no tag created" }
+      { label: "Abort", description: "Cancel - no tag created" }
     ],
     multiSelect: false
   }])
@@ -546,10 +543,7 @@ if (hasBlockers) {
 
 switch (planDecision) {
   case "Proceed":
-    config.releaseMode = "tag-push"
-    break
-  case "Proceed (Tag Only)":
-    config.releaseMode = "tag-only"
+    config.releaseMode = "tag"
     break
   case "Review Changes":
     Bash("git diff --stat")
@@ -686,32 +680,27 @@ if (hasBlockers) {
 ${allBlockers.length} blocker(s) must be fixed before release.
 Run \`git diff\` to review changes, fix blockers, and re-run preflight.
 `)
-} else if (config.releaseMode === "Prepare Only") {
+} else if (config.releaseMode === "Fix Only") {
   console.log(`
-## Preparation Complete
+## Fixes Applied
 
-All checks passed. Release preparation is ready.
+All checks passed. Fixes have been applied.
 
-**Next Steps (when you're ready to release):**
+**Next Steps:**
 1. Review changes: \`git diff\`
-2. Commit: \`git commit -am "chore: prepare release ${suggestedVersion}"\`
-3. Tag: \`git tag v${suggestedVersion}\`
-4. Push: \`git push && git push --tags\`
+2. Commit: \`git commit -am "chore: apply fixes"\`
+3. Push when ready: \`git push\`
 `)
-} else if (config.releaseMode === "Tag + Push") {
-  Bash(`git commit -am "chore: release ${suggestedVersion}" && git tag v${suggestedVersion} && git push && git push --tags`)
-  console.log(`
-## Released
-
-Version ${suggestedVersion} has been tagged and pushed.
-`)
-} else if (config.releaseMode === "Tag Only") {
+} else if (config.releaseMode === "tag" || config.releaseMode === "Create Tag") {
   Bash(`git commit -am "chore: release ${suggestedVersion}" && git tag v${suggestedVersion}`)
   console.log(`
 ## Tagged
 
-Version ${suggestedVersion} has been tagged (not pushed).
-Push when ready: \`git push && git push --tags\`
+Version ${suggestedVersion} has been tagged.
+
+**Next Steps:**
+1. Review: \`git log --oneline -3\`
+2. Push when ready: \`git push && git push --tags\`
 `)
 }
 ```
@@ -753,14 +742,10 @@ Mode: {config.releaseMode}
 
 | Flag | Effect |
 |------|--------|
-| `--auto` | Unattended mode, full-fix intensity, no questions |
-| `--intensity=X` | quick-wins, standard, full-fix, dry-run |
-| `--dry-run` | Alias for --intensity=dry-run |
+| `--auto` | Unattended mode: full intensity, all checks, no questions |
+| `--preview` | Run all checks, show results, don't release |
 | `--strict` | Treat warnings as blockers |
 | `--skip-tests` | Skip test suite |
-| `--tag` | Create git tag after success |
-| `--push` | Push to remote after success |
-| `--changelog-only` | Only generate changelog |
 | `--skip-docs` | Skip documentation updates |
 
 ### Release-Specific Checks (14 total)

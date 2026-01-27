@@ -1,6 +1,6 @@
 ---
 description: Documentation gap analysis - compare ideal vs current docs, generate missing content
-argument-hint: [--auto] [--check] [--report] [--scope=X] [--plan] [--force]
+argument-hint: [--auto] [--check] [--preview] [--force]
 allowed-tools: Read(*), Grep(*), Glob(*), Edit(*), Write(*), Bash(*), Task(*), AskUserQuestion
 model: opus
 ---
@@ -159,32 +159,29 @@ if (isUnattended) {
 if (!isUnattended) {
   AskUserQuestion([
     {
-      question: "Which documentation scopes to analyze?",
-      header: "Scopes",
+      question: "Which documentation to check?",
+      header: "Areas",
       options: [
-        { label: "All Scopes (Recommended)", description: "Complete documentation audit" },
-        { label: "README + Dev", description: "Project overview + contributor guide" },
-        { label: "API + User", description: "Reference docs + usage guides" },
-        { label: "Ops + Changelog", description: "Deployment + version history" }
+        { label: "Core (Recommended)", description: "README, CHANGELOG - every project needs" },
+        { label: "Technical (Recommended)", description: "API reference, developer guide" },
+        { label: "User-facing", description: "User guide, operations/deployment" }
       ],
-      multiSelect: false
+      multiSelect: true
     },
     {
-      question: "What should happen with existing docs?",
+      question: "What to do with gaps?",
       header: "Mode",
       options: [
-        { label: "Fill Gaps Only (Recommended)", description: "Generate only missing docs" },
-        { label: "Update Existing", description: "Refresh outdated docs too" },
-        { label: "Report Only", description: "Show gaps, don't generate" }
+        { label: "Fill Gaps (Recommended)", description: "Generate only missing docs" },
+        { label: "Update All", description: "Refresh outdated docs too" }
       ],
       multiSelect: false
     }
   ])
 
   // Map selections to config
-  config.scopes = mapScopeSelection(answer[0])
-  config.mode = answer[1].includes("Report") ? "report" :
-                answer[1].includes("Update") ? "update" : "generate"
+  config.scopes = mapScopeGroups(answers["Areas"])
+  config.mode = answers["Mode"].includes("Update") ? "update" : "generate"
 }
 ```
 
@@ -632,12 +629,18 @@ cco-docs: {OK|WARN|FAIL} | Generated: {applied} | Failed: {failed} | Scopes: {co
 
 | Flag | Effect |
 |------|--------|
-| `--auto` | Unattended mode, all scopes, generate all missing |
+| `--auto` | Unattended mode: all areas, generate all missing |
 | `--check` | Validation only, return gap status |
-| `--report` | Show gaps only, don't generate (alias: --dry-run) |
-| `--scope=X` | Single scope: readme, api, dev, user, ops, changelog |
-| `--plan` | Show detailed plan before generating |
+| `--preview` | Show gaps only, don't generate |
 | `--force` | Regenerate even if docs exist |
+
+### Scope Groups
+
+| Group | Scopes Included | Files |
+|-------|-----------------|-------|
+| **Core** | readme + changelog | README.md, CHANGELOG.md |
+| **Technical** | api + dev | API.md, CONTRIBUTING.md, docs/api/, docs/dev/ |
+| **User-facing** | user + ops | docs/user/, DEPLOY.md, docs/ops/ |
 
 ### Ideal Documentation by Project Type
 
