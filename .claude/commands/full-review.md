@@ -1,5 +1,5 @@
 ---
-description: CCO system health check (129 checks across 10 categories)
+description: CCO system health check (~130 checks across 10 categories)
 argument-hint: [--auto] [--quick] [--focus=X] [--report] [--fix] [--fix-all]
 allowed-tools: Read(*), Grep(*), Glob(*), Bash(*), Task(*), AskUserQuestion, Edit(*)
 model: opus
@@ -8,6 +8,8 @@ model: opus
 # /full-review
 
 **CCO Self-Review** - Comprehensive analysis of CCO system against its documented design principles.
+
+> **Internal Command:** This is in `.claude/commands/` (not `commands/`), used for CCO development only.
 
 ## Args
 
@@ -118,13 +120,13 @@ VERSION = Bash("grep '\"version\"' ./.claude-plugin/plugin.json | grep -oP '\\d+
 
 // Store detected counts
 inventory = {
-  commands: parseInt(COMMANDS),
+  commands: parseInt(COMMANDS),  // Expected: 7 (optimize, align, preflight, commit, tune, research, docs)
   agents: 3,  // Fixed: cco-agent-analyze, cco-agent-apply, cco-agent-research
   coreRules: parseInt(CORE_RULES),
   langRules: parseInt(LANG_RULES),
   fwRules: parseInt(FW_RULES),
   opsRules: parseInt(OPS_RULES),
-  totalRules: parseInt(CORE_RULES) + parseInt(LANG_RULES) + parseInt(FW_RULES) + parseInt(OPS_RULES),
+  totalRules: parseInt(CORE_RULES) + parseInt(LANG_RULES) + parseInt(FW_RULES) + parseInt(OPS_RULES),  // Expected: ~44
   version: VERSION
 }
 ```
@@ -179,14 +181,15 @@ Compare detected counts against:
 
 ### 1.3 SSOT Compliance
 - Rule uniqueness: grep rule names across files, count > 1 = HIGH
-- Orphan detection: grep for `.cco/`, `principles.md`, `projects.json` = 0
-- Deprecated refs: grep for `cco-tune`, `cco-setup`, `cco-help` = 0
+- Orphan detection: grep for `.cco/`, `principles.md`, `projects.json`, `context.md` = 0
+- Deprecated refs: grep for `cco-tune`, `cco-setup`, `cco-help` (without /cco: prefix) = 0
 - Legacy cleanup: grep for `cco-tools`, `cco-guide`, `cco-principles` = 0
+- Command format: All command refs use `/cco:*` format (not `/optimize`) = HIGH
 
 ### 1.4 Dependency Chain
 - Agent invocations use valid agent types = CRITICAL
 - Scope parameters match agent capabilities = HIGH
-- Commands read context.md where required = HIGH
+- Commands delegate to /cco:tune --check for profile validation = HIGH
 - Input/output compatibility: agent outputs match consumer expectations = HIGH
 
 ### 1.5 Terminology Consistency
@@ -235,7 +238,8 @@ Required flow: `Analyze → Report → Approve → Apply → Verify`
 | Severity order | CRITICAL → HIGH → MEDIUM → LOW | MEDIUM |
 | Granular selection | User can select individual fixes | HIGH |
 | Before/after | Changes shown post-apply | MEDIUM |
-| Accounting invariant | done + fail = total | HIGH |
+| Accounting invariant | applied + failed = total | HIGH |
+| Quality Gates | Only in /cco:commit and /cco:preflight (not /cco:optimize) | HIGH |
 
 ### 2.4 Mode Consistency
 | Mode | Behavior | Severity |
@@ -251,12 +255,17 @@ Required flow: `Analyze → Report → Approve → Apply → Verify`
 ### 3.1 Scope Accuracy
 Dynamically detect scopes from agent definitions, compare to docs/agents.md.
 
+**Current Agent Scopes:**
+- **cco-agent-analyze**: OPTIMIZE (security, hygiene, types, lint, performance, ai-hygiene, robustness) + REVIEW (architecture, patterns, testing, maintainability, ai-architecture, functional-completeness) + config
+- **cco-agent-apply**: fixes, config
+- **cco-agent-research**: local, search, analyze, synthesize, full, dependency
+
 | Check | Requirement | Severity |
 |-------|-------------|----------|
-| Analyze scopes | Documented = implemented | HIGH |
+| Analyze scopes | Documented = implemented (13 OPTIMIZE + 6 REVIEW) | HIGH |
 | Apply scopes | Documented = implemented | HIGH |
-| Research scopes | Documented = implemented | HIGH |
-| No overlap | Scope lists have zero intersection | MEDIUM |
+| Research scopes | Documented = implemented (6 scopes) | HIGH |
+| No overlap | ROB vs FUN clearly differentiated (code-level vs API-level) | MEDIUM |
 | Description | Agent descriptions match behavior | HIGH |
 
 ### 3.2 Parallel Execution
@@ -265,7 +274,7 @@ Dynamically detect scopes from agent definitions, compare to docs/agents.md.
 | Single message | Multiple Task() in one assistant message | HIGH |
 | Model selection | analyze/research = haiku, apply = opus | HIGH |
 | Result merge | Parent combines agent outputs correctly | HIGH |
-| Context prop | Agents receive context.md summary | MEDIUM |
+| Context prop | Agents receive profile from .claude/rules/ | MEDIUM |
 
 ### 3.3 Output Standards
 Required schema:
@@ -313,15 +322,15 @@ Checks:
 | Concrete value | Each rule produces measurable benefit | HIGH |
 | Verifiable | Rule compliance can be checked | MEDIUM |
 
-### 4.3 Context Generation
-Auto-setup must produce:
+### 4.3 Profile Generation
+Auto-setup (via /cco:tune) must produce:
 
 | Check | Requirement | Severity |
 |-------|-------------|----------|
-| Context created | File exists after auto-setup | CRITICAL |
-| Detections | All auto-detected values recorded | HIGH |
-| User choices | All AskUserQuestion responses recorded | HIGH |
-| Learnings | `## Learnings` header present | MEDIUM |
+| Profile created | `.claude/rules/cco-profile.md` exists after setup | CRITICAL |
+| Detections | project, stack, maturity, commands, patterns detected | HIGH |
+| User choices | team, data, priority recorded (if interactive) | HIGH |
+| Commands section | format, lint, type, test, build commands detected | HIGH |
 
 ---
 
@@ -346,10 +355,11 @@ Auto-setup must produce:
 ### 5.3 Command Efficiency
 | Check | Requirement | Severity |
 |-------|-------------|----------|
-| Context pre-collect | Load once in Step 1, reuse | HIGH |
+| Profile auto-loaded | Profile from .claude/rules/ via Claude auto-context | HIGH |
 | Batch reads | Multiple Read() in single message | MEDIUM |
 | Parallel agents | Independent analyses parallel | HIGH |
-| Quick mode | Minimal output | MEDIUM |
+| Background tasks | Long operations use run_in_background: true | HIGH |
+| Quick mode | Minimal output, haiku model | MEDIUM |
 
 ---
 
@@ -406,9 +416,10 @@ Use detected counts from Category 1.
 ### 7.2 docs/commands.md
 | Check | Requirement | Severity |
 |-------|-------------|----------|
-| All commands | {actual_commands} `## /cco-*` headers | HIGH |
+| All commands | {actual_commands} `/cco:*` command entries | HIGH |
 | Step tables | Each has `\| Step \|` table | MEDIUM |
 | Examples | Each has usage code block | MEDIUM |
+| Model info | Each shows model in table | MEDIUM |
 
 ### 7.3 docs/agents.md
 | Check | Requirement | Severity |
@@ -420,10 +431,10 @@ Use detected counts from Category 1.
 ### 7.4 docs/rules.md
 | Check | Requirement | Severity |
 |-------|-------------|----------|
-| Categories | Core, AI, Adaptive sections | HIGH |
-| Triggers | Detection → Rule mapping | HIGH |
-| Adaptive list | All rules listed | MEDIUM |
-| Export | AGENTS.md vs CLAUDE.md explained | MEDIUM |
+| Categories | Core, Languages, Frameworks, Operations sections | HIGH |
+| Triggers | Detection → Rule mapping (stack detection) | HIGH |
+| Rule list | All {totalRules} rules listed | MEDIUM |
+| Hook injection | Core rules via SessionStart hook explained | MEDIUM |
 
 ---
 
@@ -464,13 +475,13 @@ Use detected counts from Category 1.
 | SemVer | `\d+\.\d+\.\d+` format | HIGH |
 | Breaking | MAJOR bumps list breaking changes | MEDIUM |
 
-### 9.2 Install/Uninstall
+### 9.2 Plugin Structure
 | Check | Requirement | Severity |
 |-------|-------------|----------|
-| Install | `cco-install` creates all files | CRITICAL |
-| Uninstall | `cco-uninstall` removes all files | CRITICAL |
-| No orphans | Zero CCO files after uninstall | HIGH |
-| Upgrade | context.md preserved | HIGH |
+| Plugin manifest | `.claude-plugin/plugin.json` valid JSON | CRITICAL |
+| Hooks | `hooks/` contains SessionStart hook | HIGH |
+| Core rules | Core rules injected via hook additionalContext | HIGH |
+| Profile preservation | /cco:tune preserves existing profile unless --force | HIGH |
 
 ### 9.3 Cross-Platform
 | Check | Requirement | Severity |
@@ -483,7 +494,7 @@ Use detected counts from Category 1.
 
 ## Category 10: Best Practices (13 checks)
 
-### 10.1 Claude 4 Alignment
+### 10.1 Claude Best Practices
 | Check | Requirement | Severity |
 |-------|-------------|----------|
 | Positive | "Do X" not "Don't do Y" | HIGH |
@@ -493,23 +504,27 @@ Use detected counts from Category 1.
 | Placeholders | All examples use `{placeholder}` | HIGH |
 | Read-First | Commands read files before editing | CRITICAL |
 | No-Hallucination | Verify APIs/methods exist before use | CRITICAL |
-| Plan-Before-Act | Complex operations have planning phase | HIGH |
+| Plan-Before-Act | Plan Review phase for complex changes (>10 findings) | HIGH |
+| Agent delegation | Use CCO agents over default tools where applicable | HIGH |
 
 ### 10.2 Model Selection
 | Check | Requirement | Severity |
 |-------|-------------|----------|
-| Opus for coding | cco-optimize, cco-commit | HIGH |
-| Haiku for scanning | cco-agent-analyze | MEDIUM |
-| Documented | Each command shows model in docs | MEDIUM |
+| Opus for coding | /cco:optimize, /cco:align, /cco:commit, /cco:preflight use opus | HIGH |
+| Haiku for analysis | cco-agent-analyze, cco-agent-research use haiku | MEDIUM |
+| Opus for apply | cco-agent-apply uses opus (fewer errors in code changes) | HIGH |
+| Documented | Each command shows model in frontmatter | MEDIUM |
 
 ### 10.3 Anti-Overengineering
 | Check | Requirement | Severity |
 |-------|-------------|----------|
 | No BC hacks | Zero `backward`, `compat`, `legacy` | HIGH |
 | No fallbacks | Zero `fallback`, `deprecated` | HIGH |
-| No TODOs | Zero `TODO`, `FIXME`, `XXX` | MEDIUM |
+| No TODOs | Zero `TODO`, `FIXME`, `XXX` in production code | MEDIUM |
 | Purpose | Each component has documented purpose | MEDIUM |
 | Simplicity | Simple commands remain simple | HIGH |
+| No duplicate analysis | optimize LNT/TYP scopes don't duplicate Quality Gates | HIGH |
+| SSOT | Single source of truth for patterns (Quality Gates in agents) | HIGH |
 
 ---
 
@@ -543,7 +558,7 @@ Consensus: Both agree → confirm CRITICAL. Disagree → downgrade to HIGH
 ═══════════════════════════════════════════════════════════
 
 Detected:
-  Commands: {n}  Agents: {n}  Rules: {n} (C:{n} + A:{n} + Ad:{n})
+  Commands: {n}  Agents: {n}  Rules: {n} (core:{n} + lang:{n} + fw:{n} + ops:{n})
 
 ┌─────────────────────────┬────────┬────────┬────────┐
 │ Category                │ Passed │ Failed │ Status │
@@ -559,7 +574,7 @@ Detected:
 │ 9. Release Readiness    │   {n}  │   {n}  │  {st}  │
 │ 10. Best Practices      │   {n}  │   {n}  │  {st}  │
 ├─────────────────────────┼────────┼────────┼────────┤
-│ TOTAL (129 checks)      │   {n}  │   {n}  │  {st}  │
+│ TOTAL (~130 checks)     │   {n}  │   {n}  │  {st}  │
 └─────────────────────────┴────────┴────────┴────────┘
 
 {if findings}
@@ -741,8 +756,9 @@ NON-findings:
 assert(category.passed + category.failed === category.totalChecks,
   `Category ${name}: ${passed} + ${failed} != ${totalChecks}`)
 
-// Verify overall
+// Verify overall (dynamic count based on active checks)
+const totalChecks = allCategories.reduce((sum, c) => sum + c.totalChecks, 0)
 assert(allCategories.reduce((sum, c) => sum + c.passed, 0) +
-       allCategories.reduce((sum, c) => sum + c.failed, 0) === 129,
-  "Total checks must equal 129")
+       allCategories.reduce((sum, c) => sum + c.failed, 0) === totalChecks,
+  `Total checks must equal ${totalChecks}`)
 ```

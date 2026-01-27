@@ -5,63 +5,92 @@ allowed-tools: Read(*), Grep(*), Glob(*), Task(*), AskUserQuestion
 model: haiku
 ---
 
-# /tune
+# /cco:tune
 
-**Configure CCO** - Analyze project, create profile, load appropriate rules.
+**Configure CCO** - Orchestrate project analysis and profile creation.
 
-> **Implementation Note:** This command orchestrates the setup process. Heavy lifting is done by agents.
+> **SoC Principle:** This command handles user interaction and orchestration only.
+> Detection is done by `cco-agent-analyze`, file writes by `cco-agent-apply`.
 
 ## Args
 
 - `--check`: Silent validation only, return status (for other commands)
 - `--force`: Skip confirmation, update even if profile exists
-
-## Context
-
-- Profile path: `.claude/rules/cco-profile.md`
+- `--auto`: Fully unattended mode - no questions, auto-detect everything
 
 ## Architecture
 
-| Step | Action | Tool |
-|------|--------|------|
-| 1 | Validate existing profile | Read + field check |
-| 2 | Ask user (if needed) | AskUserQuestion |
-| 3 | Analyze project | Task(cco-agent-analyze) |
-| 4 | Write profile + rules | Task(cco-agent-apply) |
+```
+┌─────────────────────────────────────────────────────────────────┐
+│                         /cco:tune (orchestrator)                     │
+│                                                                  │
+│  Responsibilities:                                               │
+│  ✓ User interaction (AskUserQuestion)                           │
+│  ✓ Flow control (which mode, what to do)                        │
+│  ✓ Merge data from different sources                            │
+│  ✓ Call agents with specific instructions                       │
+│                                                                  │
+│  Does NOT:                                                       │
+│  ✗ Detection logic (delegated to cco-agent-analyze)             │
+│  ✗ File writes (delegated to cco-agent-apply)                   │
+└─────────────────────────────────────────────────────────────────┘
+         │                                    │
+         ▼                                    ▼
+┌─────────────────────┐          ┌─────────────────────┐
+│ cco-agent-analyze   │          │ cco-agent-apply     │
+│                     │          │                     │
+│ - Read files        │          │ - Delete old files  │
+│ - Detect stack      │          │ - Write new files   │
+│ - Smart inference   │          │ - Copy rules        │
+│ - Return data ONLY  │          │ - Execute ops list  │
+└─────────────────────┘          └─────────────────────┘
+```
 
-**Fast operation** - typically completes in under 30 seconds.
+## Execution Flow
+
+| Step | Action | Responsible |
+|------|--------|-------------|
+| 1 | Validate existing profile | tune (Read) |
+| 2a | Ask user questions | tune (AskUserQuestion) |
+| 2b | Detect project stack | analyze agent |
+| 3 | Merge answers + detection | tune |
+| 4 | Write files | apply agent |
 
 ---
 
-## Step-1: Profile Validation
+## Step-1: Profile Validation + Before State
 
 ```javascript
-// Read existing profile if exists
 const profilePath = ".claude/rules/cco-profile.md"
 let profile = null
-let validationResult = { valid: false, missing: [], outdated: false }
+let validationResult = { valid: false, missing: [] }
+let beforeState = null  // For before/after comparison
 
 try {
   const content = await Read(profilePath)
   profile = parseYamlFrontmatter(content)
 
-  // Required fields check
   const requiredFields = [
-    "project.name",
-    "project.purpose",
-    "stack.languages",
-    "stack.frameworks",
-    "maturity",
-    "commands"
+    "project.name", "project.purpose",
+    "stack.languages", "maturity", "commands"
   ]
 
-  validationResult.missing = requiredFields.filter(field => !getNestedValue(profile, field))
+  validationResult.missing = requiredFields.filter(f => !getNestedValue(profile, f))
   validationResult.valid = validationResult.missing.length === 0
 
+  // Store BEFORE state for comparison (always fresh detect, ignore old values)
+  if (profile) {
+    beforeState = {
+      languages: profile.stack?.languages || [],
+      frameworks: profile.stack?.frameworks || [],
+      maturity: profile.maturity,
+      documentation: profile.documentation?.analysis || null
+    }
+  }
 } catch (e) {
-  // Profile doesn't exist
   validationResult.valid = false
   validationResult.missing = ["entire profile"]
+  beforeState = null  // No previous state
 }
 ```
 
@@ -69,453 +98,326 @@ try {
 
 ```javascript
 if (args.includes("--check")) {
-  // Silent mode for other commands
   if (validationResult.valid) {
     return { status: "ok", profile: profile }
   }
-  // Profile invalid - continue to setup flow (Step-2, Step-3)
-  // After setup completes: return { status: "ok" }
-  // If user selects Skip: return { status: "skipped" }
+  // Continue to setup, return status after
 }
 ```
 
-### Profile Exists - Ask Update
+### Mode Detection
 
 ```javascript
-if (profile && validationResult.valid && !args.includes("--force")) {
+const isUnattended = args.includes("--auto")
+const forceUpdate = args.includes("--force")
+
+// Unattended mode: never ask questions, always use auto detection
+if (isUnattended) {
+  config.mode = "auto"
+  // Proceed directly to detection, skip all questions
+}
+```
+
+### Profile Exists - Ask Update (Interactive Only)
+
+```javascript
+if (!isUnattended && profile && validationResult.valid && !forceUpdate) {
   const answer = await AskUserQuestion([{
-    question: "CCO profile already exists and is valid. Update it?",
+    question: "CCO profile exists. Update it?",
     header: "Profile",
     options: [
       { label: "Keep current", description: "No changes needed" },
-      { label: "Update", description: "Re-analyze project and refresh profile (~30s)" }
+      { label: "Update", description: "Re-analyze and refresh" }
     ],
     multiSelect: false
   }])
 
   if (answer === "Keep current") {
-    console.log("Profile unchanged.")
     return { status: "ok", profile: profile }
   }
 }
 ```
 
-### Profile Missing or Incomplete
+### Profile Missing - Ask Mode (Interactive Only)
 
 ```javascript
-if (!validationResult.valid) {
-  const missingInfo = validationResult.missing.join(", ")
-
+if (!isUnattended && !validationResult.valid) {
   const answer = await AskUserQuestion([{
-    question: `CCO profile ${profile ? "is incomplete" : "not found"}. Configure now?`,
+    question: `CCO profile ${profile ? "incomplete" : "not found"}. Configure?`,
     header: "Setup",
     options: [
-      { label: "Auto-setup (Recommended)", description: "Detect stack automatically (~30s)" },
+      { label: "Auto-setup (Recommended)", description: "Detect stack automatically" },
       { label: "Interactive", description: "Answer questions to customize" },
-      { label: "Skip", description: "Don't configure CCO for this project" }
+      { label: "Skip", description: "Don't configure CCO" }
     ],
     multiSelect: false
   }])
 
-  if (answer === "Skip") {
-    return { status: "skipped" }
-  }
-
+  if (answer === "Skip") return { status: "skipped" }
   config.mode = answer.includes("Auto") ? "auto" : "interactive"
 }
 ```
 
 ---
 
-## Step-2: Analyze Project
+## Step-2: Parallel Execution
 
-**Detection is IDENTICAL for both modes. Only user interaction differs.**
+**Interactive: User answers questions while detection runs in background.**
+**Auto/Unattended: Detection only, no questions.**
 
 ```javascript
 console.log("Analyzing project...")
 
-const configData = await Task("cco-agent-analyze", `
-  scope: config
-  mode: ${config.mode}
+// UNATTENDED MODE: Skip all questions, use auto detection with smart inference
+if (isUnattended || config.mode === "auto") {
+  const detected = await Task("cco-agent-analyze", `
+    scope: config
+    mode: auto
+  `, { model: "haiku" })
 
-  ## Detection Rules [SAME FOR BOTH MODES]
+  configData = { detected: detected, answers: detected.inferred }
+  // Proceed directly to Step-3 (no questions)
 
-  **CRITICAL: Only use REAL DATA from files. No guessing, no assumptions.**
+} else if (config.mode === "interactive") {
+  // Launch detection in background
+  const detectionTask = Task("cco-agent-analyze", `
+    scope: config
+    mode: detect-only
+  `, { model: "haiku", run_in_background: true })
 
-  ### Section 1: Project Identity (Auto-detect)
-
-  | Field | Source | Method | Fallback |
-  |-------|--------|--------|----------|
-  | name | package.json, pyproject.toml, Cargo.toml | "name" field | Directory name |
-  | purpose | README.md, manifest description | First paragraph | "Not specified" |
-  | type | Import patterns + structure | See Type Detection | ["unknown"] |
-
-  ### Section 2: Tech Stack (Auto-detect)
-
-  | Field | Source | Method | Fallback |
-  |-------|--------|--------|----------|
-  | languages | **/*.{py,ts,js,go,rs,...} | Count extensions | [] |
-  | frameworks | Dependencies in manifests | Pattern match | [] |
-  | testing | Dependencies | Match test frameworks | [] |
-  | build | Dependencies + Dockerfile | Match build tools | [] |
-
-  ### Section 3: Maturity (Auto-detect with scoring)
-
-  | Indicator | Check | Points |
-  |-----------|-------|--------|
-  | Has tests/ or test files | Glob("**/test*") | +1 |
-  | Has CI config | .github/workflows/, .gitlab-ci.yml | +1 |
-  | Has documentation | docs/ or README >1000 chars | +1 |
-  | Git history depth | >100 commits | +1 |
-  | Has CHANGELOG | CHANGELOG.md exists | +1 |
-  | Has version tags | git tag | +1 |
-
-  Score → Maturity: 0-1=prototype, 2-3=active, 4-5=stable, 6=legacy
-
-  ### Section 4: Team & Process (MUST ASK - cannot detect)
-
-  | Field | Why Can't Detect | Default (auto mode) |
-  |-------|------------------|---------------------|
-  | team.size | Git contributors ≠ team size | "solo" |
-  | data.sensitivity | Cannot infer from code | "internal" |
-  | priority | Business decision | "maintainability" |
-  | release.cadence | Cannot infer | "continuous" |
-  | breaking_changes | Policy, not code | "major" |
-
-  ### Section 5: Commands (Auto-detect)
-
-  | Command | Sources | Patterns |
-  |---------|---------|----------|
-  | format | package.json, Makefile, pyproject.toml | "format", "fmt", "prettier", "black" |
-  | lint | Same | "lint", "eslint", "ruff", "pylint" |
-  | test | Same | "test", "pytest", "jest", "mocha" |
-  | build | Same | "build", "compile", "webpack", "vite" |
-  | type | Same | "typecheck", "mypy", "tsc" |
-
-  ### Section 6: Patterns (Auto-detect, informational)
-
-  | Pattern | Detection Method |
-  |---------|------------------|
-  | error_handling | try/except vs Result vs match |
-  | logging | print vs logging vs structlog |
-  | api_style | REST routes vs GraphQL schema vs gRPC proto |
-  | db_type | Dependencies (psycopg2→postgres, pymongo→mongo) |
-  | has_ci | .github/workflows/ or .gitlab-ci.yml exists |
-  | has_docker | Dockerfile exists |
-  | has_monorepo | workspaces in package.json or multiple manifests |
-
-  ## Detection Mappings
-
-  ### Language Detection (File Extension)
-
-  | Extension | Language |
-  |-----------|----------|
-  | .py | Python |
-  | .ts, .tsx | TypeScript |
-  | .js, .jsx, .mjs | JavaScript |
-  | .go | Go |
-  | .rs | Rust |
-  | .java | Java |
-  | .rb | Ruby |
-  | .php | PHP |
-  | .c, .h | C |
-  | .cpp, .hpp, .cc | C++ |
-  | .cs | C# |
-  | .swift | Swift |
-  | .kt, .kts | Kotlin |
-  | .scala | Scala |
-  | .ex, .exs | Elixir |
-  | .hs | Haskell |
-  | .lua | Lua |
-  | .r, .R | R |
-  | .jl | Julia |
-  | .pl, .pm | Perl |
-  | .sh, .bash | Shell |
-
-  ### Framework Detection (Dependency Pattern)
-
-  | Pattern | Framework | Type |
-  |---------|-----------|------|
-  | react, react-dom | React | web |
-  | vue | Vue | web |
-  | @angular/core | Angular | web |
-  | svelte | Svelte | web |
-  | next | Next.js | web |
-  | nuxt | Nuxt | web |
-  | fastapi | FastAPI | api |
-  | flask | Flask | api |
-  | django | Django | api |
-  | express | Express | api |
-  | nestjs, @nestjs | NestJS | api |
-  | spring-boot | Spring Boot | api |
-  | rails | Ruby on Rails | api |
-  | gin | Gin | api |
-  | echo | Echo | api |
-  | actix-web | Actix | api |
-  | axum | Axum | api |
-  | click, typer, argparse | CLI framework | cli |
-  | cobra | Cobra | cli |
-  | clap | Clap | cli |
-
-  ### Project Type Detection
-
-  | Indicators | Type |
-  |------------|------|
-  | CLI framework deps OR argparse/click imports OR bin/ entry | cli |
-  | API framework deps OR routes/endpoints structure | api |
-  | Frontend framework deps OR public/index.html | web |
-  | setup.py with packages OR pyproject.toml [project] OR lib/ structure | library |
-  | workspaces in package.json OR multiple root manifests | monorepo |
-
-  ## Maturity Scoring
-
-  | Indicator | Score |
-  |-----------|-------|
-  | Has tests directory or test files | +1 |
-  | Has CI config (.github/workflows, .gitlab-ci) | +1 |
-  | Has docs/ or README >500 chars | +1 |
-  | Git history >100 commits | +1 |
-  | Has CHANGELOG | +1 |
-
-  Score: 0-1 → "prototype", 2-3 → "development", 4-5 → "production"
-
-  ## Mode-Specific Behavior
-
-  **Auto Mode (mode: auto):**
-  - Run ALL detection (Sections 1-6)
-  - NO questions asked
-  - Use safe defaults for Section 4 (Team & Process):
-    - team.size: "solo"
-    - data.sensitivity: "internal"
-    - priority: "maintainability"
-    - release.cadence: "continuous"
-    - breaking_changes: "major"
-  - Return: { detected: {...}, final: {...} }
-
-  **Interactive Mode (mode: interactive):**
-  - Run SAME detection as auto mode FIRST
-  - THEN ask Section 4 questions (cannot be detected):
-
-  ## Interactive Questions [4 questions × 4 options = 16 total]
-
-  ```javascript
-  AskUserQuestion([
+  // Ask questions while detection runs
+  const answers = await AskUserQuestion([
     {
       question: "Team size?",
       header: "Team",
+      multiSelect: false,
       options: [
-        { label: "Solo", description: "Single developer - minimal process" },
+        { label: "Solo", description: "Single developer" },
         { label: "Small (2-5)", description: "Code review helpful" },
         { label: "Medium (6-15)", description: "Code review required" },
         { label: "Large (15+)", description: "Strict review + docs" }
-      ],
-      multiSelect: false
+      ]
     },
     {
       question: "Data sensitivity?",
       header: "Data",
+      multiSelect: false,
       options: [
         { label: "Public", description: "No sensitive data" },
-        { label: "Internal", description: "Company internal only" },
-        { label: "PII", description: "Personal data - GDPR applies" },
-        { label: "Regulated", description: "Finance/Healthcare - SOC2/HIPAA" }
-      ],
-      multiSelect: false
+        { label: "Internal", description: "Company internal" },
+        { label: "PII", description: "Personal data - GDPR" },
+        { label: "Regulated", description: "SOC2/HIPAA" }
+      ]
     },
     {
       question: "Top priority?",
       header: "Priority",
+      multiSelect: false,
       options: [
-        { label: "Security", description: "Security-first decisions" },
-        { label: "Performance", description: "Speed and efficiency focus" },
-        { label: "Maintainability", description: "Clean, documented, testable" },
-        { label: "Velocity", description: "Ship fast, iterate quickly" }
-      ],
-      multiSelect: false
+        { label: "Security", description: "Security-first" },
+        { label: "Performance", description: "Speed focus" },
+        { label: "Maintainability", description: "Clean, testable" },
+        { label: "Velocity", description: "Ship fast" }
+      ]
     },
     {
-      question: "Breaking changes policy?",
+      question: "Breaking changes?",
       header: "Breaking",
+      multiSelect: false,
       options: [
-        { label: "Never", description: "Backwards compatible always" },
-        { label: "Major only", description: "Only in major versions" },
-        { label: "Semver", description: "Follow semantic versioning" },
-        { label: "Allowed", description: "OK with deprecation notice" }
-      ],
-      multiSelect: false
+        { label: "Never", description: "Always compatible" },
+        { label: "Major only", description: "In major versions" },
+        { label: "Semver", description: "Follow semver" },
+        { label: "Allowed", description: "With deprecation" }
+      ]
     }
   ])
-  ```
 
-  ## How Profile Affects Claude Decisions
-
-  | Field | Impact on Claude Behavior |
-  |-------|---------------------------|
-  | team.size=solo | Skip review reminders, minimal docs |
-  | team.size=large | Require docs, suggest PR templates |
-  | data.sensitivity=pii | Flag any logging of user data |
-  | data.sensitivity=regulated | Enforce audit trails, encryption |
-  | priority=security | Prioritize security fixes over features |
-  | priority=velocity | Suggest simpler solutions, skip optimizations |
-  | breaking_changes=never | Warn on any API signature change |
-  | breaking_changes=allowed | Suggest clean breaks over hacks |
-  | maturity=prototype | Allow shortcuts, skip tests |
-  | maturity=stable | Require tests, careful refactoring |
-
-  - Return: { detected: {...}, answers: {...}, final: merged }
-`, { model: "haiku" })
+  // Wait for detection
+  const detected = await TaskOutput(detectionTask.id)
+  configData = { detected: detected, answers: answers }
+}
 ```
 
 ---
 
-## Step-3: Write Profile & Rules
+## Step-3: Merge Results
 
 ```javascript
-console.log("Writing profile and rules...")
+const finalProfile = {
+  project: configData.detected.project,
+  stack: configData.detected.stack,
+  maturity: configData.detected.maturity,
+  team: config.mode === "interactive"
+    ? { size: mapAnswer(answers[0]) }
+    : configData.detected.inferred.team,
+  data: config.mode === "interactive"
+    ? { sensitivity: mapAnswer(answers[1]) }
+    : configData.detected.inferred.data,
+  priority: config.mode === "interactive"
+    ? mapAnswer(answers[2])
+    : configData.detected.inferred.priority,
+  breaking_changes: config.mode === "interactive"
+    ? mapAnswer(answers[3])
+    : configData.detected.inferred.breaking_changes,
+  commands: configData.detected.commands,
+  patterns: configData.detected.patterns,
+  documentation: configData.detected.documentation  // Full documentation status
+}
 
-await Task("cco-agent-apply", `
+// Determine which rules to install based on detected stack
+const rulesNeeded = determineRules(configData.detected)
+```
+
+---
+
+## Step-4: Write Files (via apply agent)
+
+**Delegate all file operations to apply agent.**
+
+```javascript
+// Prepare write operations
+const operations = [
+  // Step 1: Clean existing CCO files
+  { action: "delete_pattern", path: ".claude/rules/", pattern: "cco-*.md" },
+
+  // Step 2: Write profile
+  { action: "write", path: ".claude/rules/cco-profile.md", content: generateProfileYaml(finalProfile) },
+
+  // Step 3: Copy rule files from plugin
+  ...rulesNeeded.map(rule => ({
+    action: "copy",
+    source: `$PLUGIN_ROOT/rules/${rule}`,
+    dest: `.claude/rules/${rule}`
+  }))
+]
+
+// Execute via apply agent
+const result = await Task("cco-agent-apply", `
   scope: config
-  input: ${JSON.stringify(configData)}
+  operations: ${JSON.stringify(operations)}
+  outputContext: true
+`, { model: "haiku" })
 
-  1. Delete existing cco-*.md files in .claude/rules/
-  2. Write cco-profile.md with detected config
-  3. Copy relevant rule files from plugin
-  4. Output profile summary for immediate use
-`, { model: "opus" })
-```
+// Report result with before/after comparison
+const docAnalysis = configData.detected.documentation?.analysis || {}
+const criticalMissing = docAnalysis.criticalMissing || []
 
----
+// Calculate changes
+const changes = calculateChanges(beforeState, {
+  languages: finalProfile.stack.languages,
+  frameworks: finalProfile.stack.frameworks,
+  maturity: finalProfile.maturity,
+  documentation: docAnalysis
+})
 
-## Step-4: Summary
-
-```javascript
 console.log(`
 ## CCO Configured
 
 Profile: .claude/rules/cco-profile.md
-Rules: ${configData.rulesNeeded.length} files loaded
+Rules: ${rulesNeeded.length} files loaded
 
-Stack detected:
-- Languages: ${configData.detected.languages.join(", ")}
-- Frameworks: ${configData.detected.frameworks.join(", ")}
+### Detection Results
 
-Run /cco:optimize or /cco:align to start improving your code.
+| Category | Value |
+|----------|-------|
+| Languages | ${finalProfile.stack.languages.join(", ")} |
+| Frameworks | ${finalProfile.stack.frameworks.join(", ") || "none"} |
+| Maturity | ${finalProfile.maturity} |
+| Team | ${finalProfile.team.size} |
+| Data | ${finalProfile.data.sensitivity} |
+| Priority | ${finalProfile.priority} |
+
+### Documentation Status
+
+| Category | Found |
+|----------|-------|
+| Core (README, LICENSE, etc.) | ${docAnalysis.categories?.core || "0/9"} |
+| API schemas | ${docAnalysis.categories?.api || "0/7"} |
+| Config docs | ${docAnalysis.categories?.config || "0/5"} |
+| Platform (GitHub, etc.) | ${docAnalysis.categories?.platform || "0/7"} |
+| CI/CD | ${docAnalysis.categories?.ci || "0/9"} |
+| Doc infrastructure | ${docAnalysis.categories?.infrastructure || "0/11"} |
+| docs/ directory | ${docAnalysis.docsDirectory?.exists ? `${docAnalysis.docsDirectory.fileCount} files` : "not found"} |
+
+${criticalMissing.length > 0 ? `**Critical missing:** ${criticalMissing.join(", ")}` : "**No critical gaps**"}
+
+${beforeState ? `
+### Changes from Previous Profile
+
+${changes.length > 0 ? changes.map(c => `- ${c}`).join('\n') : "- No changes detected (fresh detection matched previous)"}
+` : ""}
+
+### Next Steps
+
+${criticalMissing.length > 0 ? `- Run \`/cco:docs\` to generate missing documentation` : ""}
+- Run \`/cco:optimize\` to fix code issues
+- Run \`/cco:align\` for architecture review
 `)
+
+// Helper: Calculate what changed
+function calculateChanges(before, after) {
+  if (!before) return ["First-time setup (no previous profile)"]
+
+  const changes = []
+
+  // Language changes
+  const newLangs = after.languages.filter(l => !before.languages.includes(l))
+  const removedLangs = before.languages.filter(l => !after.languages.includes(l))
+  if (newLangs.length) changes.push(`New languages detected: ${newLangs.join(", ")}`)
+  if (removedLangs.length) changes.push(`Languages no longer detected: ${removedLangs.join(", ")}`)
+
+  // Framework changes
+  const newFw = after.frameworks.filter(f => !before.frameworks.includes(f))
+  const removedFw = before.frameworks.filter(f => !after.frameworks.includes(f))
+  if (newFw.length) changes.push(`New frameworks detected: ${newFw.join(", ")}`)
+  if (removedFw.length) changes.push(`Frameworks no longer detected: ${removedFw.join(", ")}`)
+
+  // Maturity change
+  if (before.maturity !== after.maturity) {
+    changes.push(`Maturity: ${before.maturity} → ${after.maturity}`)
+  }
+
+  // Documentation changes
+  if (before.documentation && after.documentation) {
+    const beforeTotal = before.documentation.totalFiles || 0
+    const afterTotal = after.documentation.totalFiles || 0
+    if (afterTotal !== beforeTotal) {
+      changes.push(`Documentation files: ${beforeTotal} → ${afterTotal}`)
+    }
+  }
+
+  return changes
+}
+
+return { status: "ok", profile: finalProfile, rulesLoaded: rulesNeeded }
 ```
 
 ---
 
-## Profile Schema [CRITICAL]
+## Profile Schema
 
-The generated `cco-profile.md` must have this exact structure:
+The profile has 7 sections:
 
-```yaml
----
-# CCO Profile - Generated by /cco:tune
-# This profile informs ALL Claude Code decisions for this project
+| Section | Fields | Source |
+|---------|--------|--------|
+| project | name, purpose, type | Auto-detect |
+| stack | languages, frameworks, testing, build | Auto-detect |
+| maturity | prototype/active/stable/legacy | Auto-detect (scoring) |
+| team/data/priority | size, sensitivity, priority | User answers or inference |
+| commands | format, lint, test, build, type | Auto-detect |
+| patterns | error_handling, logging, api_style, etc. | Auto-detect |
+| documentation | core, technical, developer, operations, analysis | Auto-detect (50+ patterns) |
 
-# ============================================================
-# SECTION 1: PROJECT IDENTITY (Auto-detected)
-# ============================================================
-project:
-  name: "project-name"                    # From manifest or directory
-  purpose: "Brief description"            # From README or manifest description
-  type:                                   # Detected from imports/structure
-    - api                                 # fastapi/flask/express → api
-    - web                                 # react/vue/angular → web
-    # Options: cli, api, web, library, monorepo
+**Documentation detection covers:**
+- Core: README, LICENSE, CHANGELOG, CONTRIBUTING, SECURITY, CODE_OF_CONDUCT
+- Technical: API docs, OpenAPI/Swagger, Architecture, ADRs, Database schemas
+- Developer: Setup guides, Testing docs, CI/CD, Docker, Kubernetes
+- Operations: Deployment, Runbooks, Monitoring, Troubleshooting
+- Specialized: Privacy, Compliance, i18n, Accessibility, Migrations
+- Infrastructure: Doc site generators, Generated docs, Diagrams
 
-# ============================================================
-# SECTION 2: TECH STACK (Auto-detected)
-# ============================================================
-stack:
-  languages:                              # From file extensions
-    - Python
-    - TypeScript
-  frameworks:                             # From dependencies
-    - FastAPI
-    - React
-  testing:                                # From dependencies
-    - pytest
-    - jest
-  build:                                  # From dependencies
-    - webpack
-    - docker
-
-# ============================================================
-# SECTION 3: PROJECT MATURITY (Auto-detected from indicators)
-# ============================================================
-maturity: "active"                        # prototype|active|stable|legacy
-# Detection: tests existence, CI config, docs, git history, changelog
-
-# ============================================================
-# SECTION 4: TEAM & PROCESS (Asked in interactive, defaults in auto)
-# ============================================================
-team:
-  size: "small"                           # solo|small|medium|large
-  # Affects: code review requirements, documentation level
-
-data:
-  sensitivity: "internal"                 # public|internal|pii|regulated
-  # Affects: security checks, compliance requirements, logging rules
-
-priority: "maintainability"               # security|performance|maintainability|velocity
-  # Affects: trade-off decisions, optimization focus
-
-release:
-  cadence: "continuous"                   # continuous|scheduled|versioned
-  # Affects: changelog generation, version bumping
-
-breaking_changes: "major"                 # never|major|allowed
-  # Affects: API design, deprecation strategy
-
-# ============================================================
-# SECTION 5: COMMANDS (Auto-detected from manifests)
-# ============================================================
-commands:
-  format: "black . && prettier --write ."
-  lint: "ruff check . && eslint ."
-  test: "pytest tests/ -v"
-  build: "npm run build"
-  type: "mypy src/ && tsc --noEmit"
-
-# ============================================================
-# SECTION 6: DETECTED PATTERNS (Auto-detected, informational)
-# ============================================================
-patterns:
-  error_handling: "exceptions"            # exceptions|result|either
-  logging: "structured"                   # print|logging|structured
-  api_style: "rest"                       # rest|graphql|grpc
-  db_type: "postgres"                     # postgres|mysql|mongo|sqlite|none
-  has_ci: true
-  has_docker: true
-  has_monorepo: false
----
-
-# Project Context
-
-Additional context that helps Claude understand this project...
-```
-
-## Required vs Optional Fields
-
-| Section | Field | Required | Auto-Detect | Ask User |
-|---------|-------|----------|-------------|----------|
-| project | name | ✓ | ✓ | - |
-| project | purpose | ✓ | ✓ | - |
-| project | type | ✓ | ✓ | confirm |
-| stack | languages | ✓ | ✓ | - |
-| stack | frameworks | ✓ | ✓ | - |
-| maturity | - | ✓ | ✓ | confirm |
-| team | size | ✓ | - | ✓ |
-| data | sensitivity | ✓ | - | ✓ |
-| priority | - | ✓ | - | ✓ |
-| release | cadence | - | partial | ✓ |
-| breaking_changes | - | - | - | ✓ |
-| commands | * | - | ✓ | - |
-| patterns | * | - | ✓ | - |
-
-**Validation:** Sections 1-5 must have all required fields populated.
+**Full schema in `cco-agent-analyze` documentation.**
 
 ---
 
@@ -525,33 +427,27 @@ Additional context that helps Claude understand this project...
 {
   "status": "ok|skipped|error",
   "profile": { ... },
-  "rulesLoaded": ["cco-typescript.md", "cco-react.md", ...]
+  "rulesLoaded": ["cco-typescript.md", ...]
 }
 ```
 
 ---
 
-## Usage Examples
+## Usage
 
 ```bash
-/cco:tune              # Interactive setup or update
-/cco:tune --check      # Silent validation (for other commands)
-/cco:tune --force      # Force update without confirmation
+/cco:tune              # Interactive or auto setup
+/cco:tune --check      # Silent validation
+/cco:tune --force      # Force update
 ```
 
 ---
 
-## Integration with Other Commands
+## Integration
 
-Other commands call `/cco:tune --check` at start:
+Other commands call `--check` at start:
 
 ```javascript
-// In /optimize, /align, /preflight:
 const tuneResult = await Skill("tune", "--check")
-
-if (tuneResult.status === "skipped") {
-  return  // User declined setup
-}
-
-// Continue with command...
+if (tuneResult.status === "skipped") return
 ```

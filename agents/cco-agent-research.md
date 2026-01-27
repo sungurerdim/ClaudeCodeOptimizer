@@ -68,11 +68,46 @@ WebFetch({url}, "extract key claims")
 
 | Scope | Returns | Strategy | Depth |
 |-------|---------|----------|-------|
+| `local` | Codebase findings | Glob → Grep → Read | Quick |
 | `search` | Ranked sources | WebSearch batch → WebFetch top results | Quick |
 | `analyze` | Deep analysis | Parallel WebFetch all sources | Standard |
 | `synthesize` | Recommendation | Process only (no fetches) | - |
 | `full` | All combined | Search → Analyze → Synthesize | Deep |
 | `dependency` | Package CVE, versions | WebSearch security DB + changelog | Standard |
+
+### Local Scope (Codebase Search)
+
+**Use for:** Project-specific context, existing implementations, local patterns.
+
+```javascript
+// Called from /cco:research command
+scope: local
+query: "authentication middleware"
+patterns: ["**/*.{py,ts,js}"]
+context_lines: 3
+
+// Execution
+Glob(patterns)                    // Find matching files
+Grep(query, { "-C": context_lines }) // Search with context
+Read(relevantFiles)               // Get full context for matches
+```
+
+**Returns:**
+```json
+{
+  "scope": "local",
+  "query": "authentication middleware",
+  "findings": [
+    {
+      "file": "src/middleware/auth.py",
+      "line": 42,
+      "context": "...",
+      "relevance": "HIGH"
+    }
+  ],
+  "summary": "Found 3 implementations of authentication middleware"
+}
+```
 
 ## Source Tiers & Modifiers
 

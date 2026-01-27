@@ -1,17 +1,17 @@
 ---
 description: Release verification gate - full optimization + review + tests + build
-argument-hint: [--auto] [--intensity=X] [--dry-run] [--strict] [--tag] [--push]
+argument-hint: [--auto] [--intensity=X] [--dry-run] [--strict] [--tag] [--push] [--plan]
 allowed-tools: Read(*), Grep(*), Glob(*), Edit(*), Bash(*), Task(*), AskUserQuestion
 model: opus
 ---
 
-# /preflight
+# /cco:preflight
 
 **Release Verification Gate** - Comprehensive pre-release checks with parallel orchestration.
 
 > **Implementation Note:** Code blocks use JavaScript-like pseudocode for clarity. Actual execution uses Claude Code tools with appropriate parameters.
 
-Meta command orchestrating /optimize and /align with maximum parallelism.
+Meta command orchestrating /cco:optimize and /cco:align with maximum parallelism.
 
 **Orchestration:**
 ```
@@ -25,11 +25,11 @@ PREFLIGHT
     |                                        │
     +-- [Sub-commands] PARALLEL ─────────────┤
     |       |                                │
-    |       +-- /optimize --intensity=X  │
-    |       |   (all 6 scopes)               │
+    |       +-- /cco:optimize --intensity=X      │
+    |       |   (all 7 scopes)               │
     |       |                                │
-    |       +-- /align --intensity=X    │
-    |           (all 5 scopes)               │
+    |       +-- /cco:align --intensity=X         │
+    |           (all 6 scopes)               │
     |                                        │
     +-- [Verification] PARALLEL ─────────────┤
     |       format, lint, type, test, build  │
@@ -39,9 +39,22 @@ PREFLIGHT
 
     ↓ (Wait for all)
 
+    [Plan Review] (conditional)
+        Combined release plan + reasoning
+
+    ↓
+
     [Q2: Decision]
         Proceed / Fix Issues / Abort
 ```
+
+**Plan Review triggers automatically when:**
+- `--plan` flag is passed
+- Any blockers detected
+- >20 total fixes (optimize + align combined)
+- Breaking changes detected
+
+**Skipped when:** `--auto` mode (unless `--auto --plan`)
 
 ## Context
 
@@ -100,21 +113,22 @@ if (args.includes("--auto")) {
 | 0 | Mode | Detect --auto or interactive | Instant | - |
 | 1a | Q1 | Intensity + Release Mode (single question) | All settings upfront | [PARALLEL] with 1b |
 | 1b | Pre-flight | Release checks (parallel background) | Background | [PARALLEL] with 1a |
-| 2 | Sub-commands | /optimize + /align (parallel) | Background | [SEQUENTIAL] after 1a |
+| 2 | Sub-commands | /cco:optimize + /cco:align (parallel) | Background | [SEQUENTIAL] after 1a |
 | 3 | Verification | test/build/lint (parallel background) | Background | [PARALLEL] with 2 |
 | 4 | Changelog | Generate + suggest version | While tests run | [SEQUENTIAL] after 1b commits |
-| 5 | Results | Show results + execute release mode | No questions | [SEQUENTIAL] after 2,3,4 |
+| 4.5 | Plan Review | Combined release plan (conditional) | User decision | [SEQUENTIAL] after 2,3,4 |
+| 5 | Results | Show results + execute release mode | Execute decision | [SEQUENTIAL] after 4.5 |
 
-**Execution Flow:** Step-0 → (1a ‖ 1b) → (2 ‖ 3 ‖ 4) → 5 (waits for all)
+**Execution Flow:** Step-0 → (1a ‖ 1b) → (2 ‖ 3 ‖ 4) → [4.5 if plan mode] → 5
 
-**Single question at start** - All settings collected upfront, then uninterrupted flow.
+**Single question at start** - All settings collected upfront, then uninterrupted flow (unless plan mode).
 
 ---
 
 ## Everything Mode [CRITICAL]
 
 When `--intensity=full-fix` or user selects "Full Fix":
-- Pass to both `/optimize --intensity=full-fix` and `/align --intensity=full-fix`
+- Pass to both `/cco:optimize --intensity=full-fix` and `/cco:align --intensity=full-fix`
 - **Zero deferrals** - no "future iteration", no "lower priority"
 - **Zero skips** - every finding fixed NOW
 - Final accounting: `applied + failed = total` (no AI declines allowed)
@@ -165,7 +179,7 @@ AskUserQuestion([
 
 | Selection | Effect |
 |-----------|--------|
-| **Intensity** | Passed to /optimize and /align |
+| **Intensity** | Passed to /cco:optimize and /cco:align |
 | **Prepare Only** | Show results, print next steps, stop |
 | **Tag + Push** | Create tag, push to remote |
 | **Tag Only** | Create tag, don't push |
@@ -276,7 +290,7 @@ const intensityFlag = `--intensity=${config.intensity}`
 
 // BOTH calls MUST be in same message block for parallelism
 optimizeTask = Task("general-purpose", `
-  Execute /optimize ${intensityFlag}
+  Execute /cco:optimize ${intensityFlag}
 
   CRITICAL: Run ALL 6 scopes (security, hygiene, types, lint, performance, ai-hygiene)
   Apply fixes based on intensity selection.
@@ -292,7 +306,7 @@ optimizeTask = Task("general-purpose", `
 `, { model: "opus", run_in_background: true })
 
 reviewTask = Task("general-purpose", `
-  Execute /align ${intensityFlag}
+  Execute /cco:align ${intensityFlag}
 
   CRITICAL: Run ALL 5 scopes (architecture, patterns, testing, maintainability, ai-architecture)
   Apply recommendations based on intensity selection.
@@ -319,6 +333,10 @@ reviewTask = Task("general-purpose", `
 ---
 
 ## Step-3: Verification [BACKGROUND]
+
+> **Pattern:** Quality Gates run external tools. Preflight runs full verification including
+> build command (unique to release). Unlike /cco:commit (conditional on changed files),
+> preflight runs comprehensive release verification on full project.
 
 **Start all verification in background (full project):**
 
@@ -392,12 +410,163 @@ changelogEntry = generateChangelogEntry(classified, suggestedVersion)
 [x] Commits classified
 [x] Version suggested
 [x] Changelog entry generated
-→ Proceed to Step-5
+→ Check Plan Review triggers → Step-4.5 or Step-5
 ```
 
 ---
 
-## Step-5: Results + Execute [NO QUESTIONS]
+## Step-4.5: Plan Review [CONDITIONAL]
+
+**"Think before you release"** - Consolidated view of all changes before release.
+
+### Trigger Conditions
+
+```javascript
+// Determine if Plan Review is needed
+const totalFixes = optimizeResults.accounting.total + reviewResults.accounting.total
+const hasBlockers = allBlockers.length > 0
+const hasBreaking = classified.breaking.length > 0
+
+const planMode = args.includes("--plan") ||
+  hasBlockers ||
+  (totalFixes > 20) ||
+  hasBreaking
+
+// Skip in pure --auto mode (unless --auto --plan)
+const skipPlan = isUnattended && !args.includes("--plan")
+
+if (planMode && !skipPlan) {
+  // → Enter Plan Review
+} else {
+  // → Skip to Step-5
+}
+```
+
+### Release Plan Display
+
+```markdown
+## Release Plan Review
+
+**Version:** {manifestVersion} → {suggestedVersion} ({suggestedBump})
+**Branch:** {branch} | **Previous:** {lastTag}
+
+> This is a consolidated view of all changes before release. Review carefully.
+
+### Pre-flight Status
+
+| Check | Status | Detail |
+|-------|--------|--------|
+| Git State | {gitClean ? "✓ Clean" : "✗ Dirty"} | {gitDetail} |
+| Version Sync | {versionMatch ? "✓ Match" : "✗ Mismatch"} | {versionDetail} |
+| Dependencies | {depSecure ? "✓ Secure" : "✗ Vulnerabilities"} | {depDetail} |
+
+### Sub-command Results Summary
+
+| Command | Applied | Failed | Key Changes |
+|---------|---------|--------|-------------|
+| /cco:optimize | {optimizeResults.accounting.applied} | {optimizeResults.accounting.failed} | {optimizeKeyChanges} |
+| /cco:align | {reviewResults.accounting.applied} | {reviewResults.accounting.failed} | {alignKeyChanges} |
+| **Total** | **{totalApplied}** | **{totalFailed}** | |
+
+### Verification Results
+
+| Gate | Status | Must Pass? |
+|------|--------|------------|
+| Tests | {testStatus} | Yes |
+| Build | {buildStatus} | Yes |
+| Types | {typeStatus} | Yes |
+| Lint | {lintStatus} | No (warnings OK) |
+| Format | {formatStatus} | No (auto-fixed) |
+
+### Breaking Changes
+
+{hasBreaking ? `
+**⚠️ Breaking changes detected:**
+${classified.breaking.map(c => `- ${c}`).join('\n')}
+
+This will require a MAJOR version bump.
+` : "No breaking changes detected."}
+
+### Blockers
+
+{hasBlockers ? `
+**🛑 Blockers must be resolved:**
+${allBlockers.map((b, i) => `${i+1}. [${b.type}] ${b.message}`).join('\n')}
+` : "✓ No blockers - ready to proceed."}
+
+### Changelog Preview
+
+\`\`\`markdown
+${changelogEntry}
+\`\`\`
+
+### Release Checklist
+
+- [${!hasBlockers ? 'x' : ' '}] No blockers
+- [${testResults.exitCode === 0 ? 'x' : ' '}] Tests passing
+- [${buildResults.exitCode === 0 ? 'x' : ' '}] Build successful
+- [${versionMatch ? 'x' : ' '}] Version synced
+- [${!hasBreaking || suggestedBump === 'MAJOR' ? 'x' : ' '}] Breaking changes versioned correctly
+```
+
+### User Decision
+
+```javascript
+if (hasBlockers) {
+  AskUserQuestion([{
+    question: "Blockers detected. How to proceed?",
+    header: "Decision",
+    options: [
+      { label: "Fix and Retry", description: "Address blockers, then re-run preflight" },
+      { label: "View Details", description: "Show detailed blocker information" },
+      { label: "Abort", description: "Cancel release" }
+    ],
+    multiSelect: false
+  }])
+} else {
+  AskUserQuestion([{
+    question: "Release plan review complete. Proceed with release?",
+    header: "Decision",
+    options: [
+      { label: "Proceed (Recommended)", description: `Release ${suggestedVersion} with all changes` },
+      { label: "Proceed (Tag Only)", description: "Create tag but don't push" },
+      { label: "Review Changes", description: "Show git diff before proceeding" },
+      { label: "Abort", description: "Cancel release - no tag created" }
+    ],
+    multiSelect: false
+  }])
+}
+
+switch (planDecision) {
+  case "Proceed":
+    config.releaseMode = "tag-push"
+    break
+  case "Proceed (Tag Only)":
+    config.releaseMode = "tag-only"
+    break
+  case "Review Changes":
+    Bash("git diff --stat")
+    // Re-prompt after review
+    break
+  case "Fix and Retry":
+  case "Abort":
+    console.log("Release aborted. Fix issues and re-run /cco:preflight.")
+    return
+}
+```
+
+### Validation
+```
+[x] Release plan displayed
+[x] All results consolidated
+[x] User decision captured
+→ If Abort/Fix: Exit
+→ Proceed to Step-5 with config.releaseMode
+```
+
+---
+
+## Step-5: Results + Execute
 
 **Wait for all background tasks, then show summary and execute based on Q1 settings:**
 
@@ -458,8 +627,8 @@ totalFindings = totalApplied + totalFailed
 ### Sub-command Results
 | Command | Applied | Failed | Total |
 |---------|---------|--------|-------|
-| /optimize | {optimizeResults.accounting.applied} | {optimizeResults.accounting.failed} | {optimizeResults.accounting.total} |
-| /align | {reviewResults.accounting.applied} | {reviewResults.accounting.failed} | {reviewResults.accounting.total} |
+| /cco:optimize | {optimizeResults.accounting.applied} | {optimizeResults.accounting.failed} | {optimizeResults.accounting.total} |
+| /cco:align | {reviewResults.accounting.applied} | {reviewResults.accounting.failed} | {reviewResults.accounting.total} |
 | **Combined** | **{totalApplied}** | **{totalFailed}** | **{totalFindings}** |
 
 ### Verification Results
@@ -595,8 +764,8 @@ Mode: {config.releaseMode}
 | VER-02 | Build fail | Build command exits non-zero |
 | VER-03 | Type errors | Type checker finds errors |
 | DEP-SEC | Security CVE | Known vulnerability in dependency |
-| OPT-CRIT | Optimize critical | Unfixed CRITICAL from /optimize |
-| REV-CRIT | Review critical | Unfixed CRITICAL gap from /align |
+| OPT-CRIT | Optimize critical | Unfixed CRITICAL from /cco:optimize |
+| REV-CRIT | Review critical | Unfixed CRITICAL gap from /cco:align |
 
 **WARNINGS (can override):**
 | ID | Check | Criteria |
@@ -620,8 +789,8 @@ Mode: {config.releaseMode}
 
 | Task | Model | Reason |
 |------|-------|--------|
-| /optimize | Opus | Code modifications require accuracy |
-| /align | Opus | Architectural changes require accuracy |
+| /cco:optimize | Opus | Code modifications require accuracy |
+| /cco:align | Opus | Architectural changes require accuracy |
 | Dependency audit | Haiku | Read-only research |
 | Verification | Bash | Direct execution |
 

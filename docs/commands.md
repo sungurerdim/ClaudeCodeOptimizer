@@ -13,6 +13,7 @@ Detailed documentation for all CCO slash commands.
 | `/cco:research` | Multi-source research with AI synthesis  | **opus**  | 5     |
 | `/cco:commit`   | Quality-gated atomic commits             | **opus**  | 4     |
 | `/cco:preflight`| Pre-release workflow orchestration       | **opus**  | 5     |
+| `/cco:docs`     | Documentation gap analysis               | **opus**  | 5     |
 
 **Model Rationale:** Opus for analysis and coding commands (50-75% fewer errors).
 
@@ -284,7 +285,7 @@ Co-Authored-By: Claude <noreply@anthropic.com>
 | Step | Name             | Action                                          |
 |------|------------------|-------------------------------------------------|
 | 1    | Pre-flight       | Release checks (parallel)                       |
-| 2    | Quality + Align  | Parallel: /optimize + /align (background)       |
+| 2    | Quality + Align  | Parallel: /cco:optimize + /cco:align (background)       |
 | 3    | Verification     | Background: test/build/lint                     |
 | 4    | Changelog        | Generate + suggest version (while tests run)    |
 | 5    | Decision         | Q1: Docs + Release decision                     |
@@ -306,6 +307,66 @@ Co-Authored-By: Claude <noreply@anthropic.com>
 | Blocker (red)    | Cannot release |
 | Warning (yellow) | Can override   |
 | Pass (green)     | Ready          |
+
+---
+
+## /cco:docs
+
+**Purpose:** Documentation gap analysis - compare ideal vs current docs, generate missing content.
+
+**Philosophy:** "What documentation does this project need?" → "What exists?" → "Fill the gap."
+
+**Usage:**
+```bash
+/cco:docs                    # Interactive selection
+/cco:docs --auto             # Generate all missing docs
+/cco:docs --check            # Validation only, return status
+/cco:docs --report           # Show gaps, don't generate
+/cco:docs --scope=readme     # Single scope only
+/cco:docs --scope=api        # API docs only
+/cco:docs --plan             # Show plan before generating
+/cco:docs --force            # Regenerate even if docs exist
+```
+
+### Steps
+
+| Step | Name      | Action                                           |
+|------|-----------|--------------------------------------------------|
+| 1    | Setup     | Q1: Scope + Mode selection (background analysis) |
+| 2    | Analysis  | Scan existing docs, detect project type          |
+| 3    | Gap       | Compare ideal vs current                         |
+| 4    | Generate  | Create missing documentation                     |
+| 5    | Summary   | Show results                                     |
+
+### Documentation Scopes
+
+| Scope     | Target Files                    | Purpose                    |
+|-----------|--------------------------------|----------------------------|
+| readme    | README.md                       | Project overview, quick start |
+| api       | docs/api/*.md, API.md           | Endpoint/function reference |
+| dev       | CONTRIBUTING.md, docs/dev/*.md  | Developer onboarding       |
+| user      | docs/user/*.md, USAGE.md        | End-user guides            |
+| ops       | docs/ops/*.md, DEPLOY.md        | Deployment, operations     |
+| changelog | CHANGELOG.md                    | Version history            |
+
+### Ideal Docs by Project Type
+
+| Type    | Required         | Optional    |
+|---------|------------------|-------------|
+| CLI     | README, usage    | contributing |
+| Library | README, API, dev | guides      |
+| API     | README, API, dev, ops | user   |
+| Web     | README, dev, ops | components  |
+
+### Documentation Principles
+
+All generated docs follow these rules:
+
+- **Brevity > verbosity**: Every sentence must earn its place
+- **Examples > prose**: Show, don't tell
+- **Scannable**: Headers, bullets, tables for quick scanning
+- **Copy-pasteable**: Commands should work when pasted
+- **No filler**: Skip "This document explains..."
 
 ---
 

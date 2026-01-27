@@ -5,7 +5,7 @@ allowed-tools: Read(*), Grep(*), Edit(*), Bash(*), AskUserQuestion
 model: opus
 ---
 
-# /commit
+# /cco:commit
 
 **Smart Commits** - Fast quality gates + atomic grouping, no unnecessary questions.
 
@@ -72,6 +72,10 @@ hasTestChanges = testFiles.length > 0
 ```
 
 ### 1.3: Quality Gates [PARALLEL + CONDITIONAL]
+
+> **Pattern:** Quality Gates run external tools. Commit uses conditional gates based on
+> changed file types - only runs on changed files, skips tests for doc-only changes.
+> Also used in /cco:preflight for release verification.
 
 ```javascript
 // Phase 1: Blocking checks (always, instant)

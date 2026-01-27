@@ -31,7 +31,7 @@ When modifying `rules/core/cco-*.md` files, regenerate hooks:
 ## Doc Sync
 
 Counts in README.md and docs/ must match actual files:
-- Commands: 5 (`ls commands/*.md | wc -l`)
+- Commands: 7 (`ls commands/*.md | wc -l`)
 - Agents: 3 (`ls agents/*.md | wc -l`)
 - Rules: 44 (`find rules -name "cco-*.md" | wc -l`)
 

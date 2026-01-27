@@ -1,7 +1,7 @@
 ---
 name: cco-agent-analyze
 description: Codebase analysis with severity scoring - security, hygiene, types, lint, performance, robustness, functional-completeness audits. Also handles project detection for auto-setup (scope=config).
-tools: Glob, Read, Grep, Bash, AskUserQuestion
+tools: Glob, Read, Grep, Bash
 model: haiku
 ---
 
@@ -63,6 +63,43 @@ Grep("{complexity_patterns}")     // message
 
 **Skip:** `.git/`, `node_modules/`, `vendor/`, `.venv/`, `dist/`, `build/`, `out/`, `target/`, `__pycache__/`, `*.min.*`, `@generated`, `.idea/`, `.vscode/`, `.svn/`, `fixtures/`, `testdata/`, `__snapshots__/`, `examples/`, `samples/`, `demo/`, `benchmarks/`
 
+---
+
+## Quality Gates Pattern [SSOT]
+
+**Definition:** Quality Gates are external tool commands detected by this agent and stored in profile.
+
+**Detection (scope=config):**
+```javascript
+// cco-agent-analyze detects project tooling
+commands: {
+  format: detectFormatter(),    // black, prettier, gofmt, rustfmt
+  lint: detectLinter(),         // ruff, eslint, golangci-lint, clippy
+  type: detectTypeChecker(),    // mypy, tsc, go vet
+  test: detectTestRunner(),     // pytest, jest, go test, cargo test
+  build: detectBuildTool()      // docker, npm run build, go build
+}
+```
+
+**Storage:** Profile `.claude/rules/cco-profile.md` → `commands:` section
+
+**Usage by Commands:**
+| Command | Purpose | Tools Used |
+|---------|---------|------------|
+| `/cco:commit` | Pre-commit gate | format, lint, type, test (changed files only, conditional) |
+| `/cco:preflight` | Release verification | format, lint, type, test, build (full project) |
+
+> **Note:** `/cco:optimize` does NOT use Quality Gates - LNT and TYP scopes already analyze lint/type issues.
+
+**Placeholder Syntax:** `{format_command}`, `{lint_command}`, `{type_command}`, `{test_command}`, `{build_command}`
+
+**Auto-fix Behavior:**
+- `format`: Auto-fixes (formatter modifies files)
+- `lint`: May auto-fix (some linters have --fix flag)
+- `type`, `test`, `build`: Check only (no modifications)
+
+---
+
 ## Scope Combinations
 
 **OPTIMIZE Scope Sets:**
@@ -95,6 +132,7 @@ Grep("{complexity_patterns}")     // message
 | Scope | Strategy | Use Case |
 |--------|----------|----------|
 | scan | Dashboard metrics from all scopes | Quick health check |
+| docs | Documentation gap analysis | Missing/outdated docs |
 
 **CRITICAL:** All scopes fully analyzed. Speed from parallelization, not skipping.
 
@@ -427,17 +465,31 @@ AIH-08: dangling_refs: from \w+ import|import \w+ (module doesn't exist)
 ```
 
 ### robustness (ROB-01 to ROB-10)
+
+**Scope Focus:** Code-level defensive patterns. Complements FUN scope which focuses on API design completeness.
+
 ```
 ROB-01: missing_timeout: (requests\.|httpx\.|aiohttp\.)(?!.*timeout)
+        # Code pattern: HTTP client calls without timeout parameter
 ROB-02: missing_retry: (requests\.|httpx\.|fetch\()(?!.*retry|backoff)
-ROB-03: missing_validation: @(app\.(route|get|post)|router\.)(?!.*validate|@validator)
+        # Code pattern: HTTP calls without retry logic in same function
+ROB-03: missing_endpoint_guard: @(app\.(route|get|post)|router\.)(?!.*@auth|@validate|@require)
+        # Code pattern: Endpoint decorators without security/validation decorators
+        # Note: FUN-06 checks for schema validation, this checks for decorator guards
 ROB-04: unbounded_collection: \.append\(|\.extend\((?!.*max_|limit)
+        # Code pattern: Collection growth without bounds
 ROB-05: implicit_coercion: int\(.*\)|float\(.*\)(?!.*try)
+        # Code pattern: Type coercion without error handling
 ROB-06: missing_null_check: \.\w+\s*=\s*\w+\.get\((?!.*or|if|\?\?)
+        # Code pattern: Dict.get without fallback handling
 ROB-07: no_graceful_degradation: except.*:\s*\n\s*raise
+        # Code pattern: Catch-and-rethrow without recovery attempt
 ROB-08: missing_circuit_breaker: for.*in.*retry(?!.*circuit|breaker)
+        # Code pattern: Retry loops without circuit breaker
 ROB-09: resource_no_cleanup: open\((?!.*with)|connect\((?!.*close|with)
+        # Code pattern: Resource acquisition without context manager
 ROB-10: concurrent_unsafe: threading\.Thread|asyncio\.create_task(?!.*lock|semaphore)
+        # Code pattern: Concurrency primitives without synchronization
 ```
 
 ---
@@ -540,19 +592,38 @@ AIA-10: missing_abstraction: 3+ similar patterns without interface
 ```
 
 ### functional-completeness (FUN-01 to FUN-12)
+
+**Scope Focus:** API design and functional coverage. Complements ROB scope which focuses on code-level patterns.
+
 ```
 FUN-01: missing_crud: Entity without Create|Read|Update|Delete (check models vs routes)
+        # API design: Data model exists but API endpoints incomplete
 FUN-02: missing_pagination: List endpoint without limit|offset|page|cursor
+        # API design: Collection endpoints without pagination support
 FUN-03: missing_filter: List endpoint without query params or filter support
+        # API design: Collection endpoints without filtering capability
 FUN-04: missing_edge_cases: No handling for empty|None|boundary values
+        # Functional: Business logic without edge case handling
 FUN-05: incomplete_error_handling: Generic error messages without specific types
-FUN-06: missing_input_validation: Public API without validation decorator/schema
+        # Functional: Error responses lack actionable detail
+FUN-06: missing_schema_validation: Public API without Pydantic/Zod/JSON Schema
+        # API design: Input validation schemas missing for endpoints
+        # Note: ROB-03 checks for decorator guards, this checks for schema definitions
 FUN-07: state_transition_gaps: State changes without validation or documentation
+        # Functional: State machine transitions undefined/unguarded
 FUN-08: missing_soft_delete: Hard delete without is_deleted|deleted_at pattern
-FUN-09: concurrent_access_issues: Shared state without locking|versioning
-FUN-10: missing_timeout_config: External call without configurable timeout
-FUN-11: missing_retry_logic: Transient error handler without retry|backoff
+        # API design: Destructive operations without audit trail
+FUN-09: concurrent_data_access: Shared data without optimistic locking|versioning
+        # Data design: Database records without version/etag for concurrent updates
+        # Note: ROB-10 checks for code-level threading, this checks for data-level locking
+FUN-10: missing_timeout_config: External service calls without configurable timeout in config
+        # API design: Timeout values hardcoded instead of configurable
+        # Note: ROB-01 checks for missing timeout parameter, this checks for configurability
+FUN-11: missing_retry_strategy: No retry policy defined for transient failures
+        # API design: Service integration without documented retry strategy
+        # Note: ROB-02 checks for retry code presence, this checks for strategy/policy
 FUN-12: incomplete_api_surface: Missing common endpoints (search, bulk, export)
+        # API design: Standard operations missing from API surface
 ```
 
 ---
@@ -561,6 +632,85 @@ FUN-12: incomplete_api_surface: Missing common endpoints (search, bulk, export)
 
 ### scan
 Combines all analysis for dashboard: Security (OWASP, secrets, CVE) │ Tests (coverage, quality) │ Tech debt (complexity, dead code) │ Cleanliness (orphans, duplicates)
+
+### docs (scope=docs)
+
+Documentation gap analysis. Detects missing/incomplete documentation based on project type.
+
+**Detection Steps:**
+
+```javascript
+// Step 1: Scan existing documentation structure
+const existing = {
+  readme: await analyzeReadme(),           // README.md completeness
+  api: await analyzeApiDocs(),             // docs/api/, API.md, OpenAPI specs
+  dev: await analyzeDevDocs(),             // CONTRIBUTING.md, docs/dev/
+  user: await analyzeUserDocs(),           // docs/user/, USAGE.md
+  ops: await analyzeOpsDocs(),             // docs/ops/, DEPLOY.md
+  changelog: await analyzeChangelog()      // CHANGELOG.md format
+}
+
+// Step 2: Detect project type from code (if profile minimal)
+const detected = {
+  projectType: detectFromManifests() || detectFromCode(),
+  publicAPIs: scanPublicAPIs(),           // Undocumented public functions
+  configFiles: scanConfigFiles(),         // Undocumented config
+  scripts: scanScripts()                  // Undocumented npm/make scripts
+}
+
+// Step 3: Infer from existing patterns
+const inferred = {
+  languages: detectLanguages(),
+  frameworks: detectFrameworks(),
+  buildTool: detectBuildTool()
+}
+```
+
+**Completeness Scoring:**
+
+| Scope | 100% Complete | 70%+ Adequate | <70% Incomplete |
+|-------|--------------|---------------|-----------------|
+| README | All sections present | Core sections | Missing key sections |
+| API | All public APIs documented | Major APIs documented | Most undocumented |
+| Dev | Setup, testing, contributing | Setup at minimum | No dev docs |
+| User | User guides, examples | Quick start | No user docs |
+| Ops | Deploy, config, monitor | Deploy steps | No ops docs |
+| Changelog | keepachangelog format | Some entries | None/broken |
+
+**Ideal Docs by Project Type:**
+
+| Type | Required | Optional |
+|------|----------|----------|
+| CLI | README, usage, flags | contributing |
+| Library | README, API, dev | guides |
+| API | README, API, dev, ops | user |
+| Web | README, dev, ops | components |
+
+**Output Schema:**
+
+```json
+{
+  "existing": {
+    "readme": { "exists": true, "completeness": 85, "sections": ["install", "usage"] },
+    "api": { "exists": false, "coverage": 0, "endpoints": [] },
+    "dev": { "exists": true, "completeness": 60 },
+    "user": { "exists": false, "guides": [] },
+    "ops": { "exists": false, "sections": [] },
+    "changelog": { "exists": true, "format": "keepachangelog" }
+  },
+  "detected": {
+    "projectType": "API",
+    "publicAPIs": [{ "name": "createUser", "file": "src/api.ts", "documented": false }],
+    "configFiles": [{ "name": "config.json", "documented": false }],
+    "scripts": [{ "name": "build", "documented": false }]
+  },
+  "inferred": {
+    "languages": ["typescript"],
+    "frameworks": ["fastapi"],
+    "buildTool": "npm"
+  }
+}
+```
 
 ## Artifact Handling
 
@@ -587,23 +737,25 @@ Token-first │ Complete coverage │ Targeted patterns │ Actionable findings
 
 ## Config Scope (scope=config)
 
-Project detection for profile generation. **Detection is 100% file-based.**
+Project detection for profile generation. Returns structured data for tune command.
 
-### Architecture
+### Flow
 
 ```
-[SEQUENTIAL]
-1. Detection (file-based, no questions)
+1. Detection (file-based)
    ├── Read manifests (package.json, pyproject.toml, etc.)
    ├── Scan file extensions
    ├── Match dependencies → frameworks
    ├── Score maturity indicators
    └── Extract commands from scripts
 
-2. Questions (interactive mode only)
-   └── AskUserQuestion for Section 4 fields (team, data, priority, breaking)
+2. Smart Inference (auto mode only)
+   ├── team.size from git contributors
+   ├── data.sensitivity from code patterns
+   ├── priority from existing practices
+   └── breaking_changes from versioning patterns
 
-3. Return { detected, answers, final }
+3. Return { detected, inferred }
 ```
 
 ### Detection Steps (Both Modes)
@@ -650,71 +802,75 @@ const patterns = {
   has_monorepo: detectMonorepo(manifests)
 }
 
-const detected = { project, stack, maturity, commands, patterns }
+// Step 7: Comprehensive documentation detection
+const documentation = await detectAllDocumentation()
+
+const detected = { project, stack, maturity, commands, patterns, documentation }
 ```
 
-### Interactive Mode Questions [4×4=16 options]
+### Smart Inference (Auto Mode)
+
+**Instead of defaults, infer from real project data:**
 
 ```javascript
-if (mode === "interactive") {
-  const answers = await AskUserQuestion([
-    {
-      question: "Team size?",
-      header: "Team",
-      multiSelect: false,
-      options: [
-        { label: "Solo", description: "Single developer - minimal process" },
-        { label: "Small (2-5)", description: "Code review helpful" },
-        { label: "Medium (6-15)", description: "Code review required" },
-        { label: "Large (15+)", description: "Strict review + docs" }
-      ]
-    },
-    {
-      question: "Data sensitivity?",
-      header: "Data",
-      multiSelect: false,
-      options: [
-        { label: "Public", description: "No sensitive data" },
-        { label: "Internal", description: "Company internal only" },
-        { label: "PII", description: "Personal data - GDPR applies" },
-        { label: "Regulated", description: "Finance/Healthcare - SOC2/HIPAA" }
-      ]
-    },
-    {
-      question: "Top priority?",
-      header: "Priority",
-      multiSelect: false,
-      options: [
-        { label: "Security", description: "Security-first decisions" },
-        { label: "Performance", description: "Speed and efficiency focus" },
-        { label: "Maintainability", description: "Clean, documented, testable" },
-        { label: "Velocity", description: "Ship fast, iterate quickly" }
-      ]
-    },
-    {
-      question: "Breaking changes policy?",
-      header: "Breaking",
-      multiSelect: false,
-      options: [
-        { label: "Never", description: "Backwards compatible always" },
-        { label: "Major only", description: "Only in major versions" },
-        { label: "Semver", description: "Follow semantic versioning" },
-        { label: "Allowed", description: "OK with deprecation notice" }
-      ]
-    }
-  ])
+if (mode === "auto" || mode === "detect-only") {
+  // Infer team.size from git contributors (excluding bots/AI)
+  const contributors = Bash(`git shortlog -sn --no-merges 2>/dev/null | grep -v -E "(dependabot|renovate|github-actions|claude|anthropic|copilot|cursor|ai-|bot|\\[bot\\])" | wc -l`)
+  const teamSize = contributors <= 1 ? "solo"
+    : contributors <= 5 ? "small"
+    : contributors <= 15 ? "medium"
+    : "large"
+
+  // Infer data.sensitivity from code patterns
+  const hasPII = Grep("email|phone|address|ssn|credit_card|birth_date", "**/*.{py,ts,js,go}")
+  const hasRegulated = Grep("hipaa|sox|pci|gdpr|audit_log|compliance", "**/*.{py,ts,js,go,md}")
+  const hasEncryption = Grep("cryptography|bcrypt|argon2|hashlib.*password", "**/*.{py,ts,js}")
+  const dataSensitivity = hasRegulated.count > 0 ? "regulated"
+    : hasPII.count > 3 ? "pii"
+    : hasEncryption.count > 0 ? "internal"
+    : "public"
+
+  // Infer priority from existing code patterns
+  const hasSecurityMiddleware = Grep("@auth|@login_required|authenticate|authorize", "**/*.{py,ts,js}")
+  const hasPerformancePatterns = Grep("@cache|async def|@lru_cache|benchmark", "**/*.{py,ts,js}")
+  const testCoverage = Glob("**/test*.{py,ts,js}").length / Glob("**/*.{py,ts,js}").length
+  const priority = hasSecurityMiddleware.count > 5 ? "security"
+    : hasPerformancePatterns.count > 10 ? "performance"
+    : testCoverage > 0.3 ? "maintainability"
+    : "velocity"
+
+  // Infer breaking_changes from versioning discipline
+  const semverTags = Bash("git tag | grep -E '^v?[0-9]+\\.[0-9]+\\.[0-9]+$' | wc -l")
+  const majorBumps = Bash("git tag | grep -E '^v?[2-9]\\.' | wc -l")
+  const hasDeprecations = Grep("@deprecated|DeprecationWarning|deprecated", "**/*.{py,ts,js}")
+  const breakingChanges = hasDeprecations.count > 3 ? "never"
+    : majorBumps > 0 ? "major"
+    : semverTags > 5 ? "semver"
+    : "allowed"
+
+  inferred = {
+    team: { size: teamSize },
+    data: { sensitivity: dataSensitivity },
+    priority: priority,
+    breaking_changes: breakingChanges
+  }
 }
-```
 
-### Auto Mode Defaults
+// If detection fails, use BEST PRACTICES defaults (not arbitrary)
+const bestPracticesDefaults = {
+  team: { size: "solo" },           // Most projects start solo
+  data: { sensitivity: "internal" }, // Assume internal until proven otherwise (safer)
+  priority: "maintainability",       // Best for long-term project health
+  breaking_changes: "semver"         // Industry standard versioning
+}
 
-```javascript
-if (mode === "auto") {
-  answers = {
-    team: { size: "solo" },
-    data: { sensitivity: "internal" },
-    priority: "maintainability",
-    breaking_changes: "major"
+// Apply best practices for any "not_detected" values
+for (const [key, value] of Object.entries(inferred)) {
+  if (value === "not_detected" || value?.size === "not_detected") {
+    inferred[key] = bestPracticesDefaults[key]
+    inferred[key]._source = "best_practices"  // Mark as inferred from best practices
+  } else {
+    inferred[key]._source = "detected"  // Mark as detected from real data
   }
 }
 ```
@@ -751,13 +907,26 @@ if (mode === "auto") {
       "has_ci": true,
       "has_docker": true,
       "has_monorepo": false
+    },
+    "documentation": {
+      "core": { "readme": true, "license": true, "changelog": false, "contributing": true },
+      "technical": { "api": true, "openapi": false, "architecture": false },
+      "developer": { "development": true, "testing": false },
+      "operations": { "deployment": true, "monitoring": false },
+      "analysis": {
+        "totalFiles": 12,
+        "critical_missing": ["CHANGELOG.md"],
+        "recommendations": ["Add CHANGELOG.md", "Add SECURITY.md"]
+      }
     }
   },
-  "answers": {
-    "team": { "size": "small" },
-    "data": { "sensitivity": "internal" },
+  "inferred": {
+    "team": { "size": "small", "_source": "detected" },
+    "data": { "sensitivity": "internal", "_source": "detected" },
     "priority": "maintainability",
-    "breaking_changes": "major"
+    "priority_source": "best_practices",
+    "breaking_changes": "semver",
+    "breaking_changes_source": "detected"
   },
   "rulesNeeded": [
     "cco-python.md",
@@ -768,4 +937,341 @@ if (mode === "auto") {
 }
 ```
 
-**This output is passed to cco-agent-apply for profile file writing.**
+**This output is returned to tune command. tune writes the profile file.**
+
+**Documentation section enables:**
+- `/cco:docs` command to know existing docs without re-scanning
+- Profile to include documentation status
+- Gap analysis with full context
+
+### Documentation Detection [COMPREHENSIVE]
+
+**Detect ALL documentation - recursive scan + known patterns. Store references only (no paths).**
+
+```javascript
+async function detectAllDocumentation() {
+  // ============================================
+  // STEP 1: Recursive docs/ scan (catch everything)
+  // ============================================
+  const docsDir = await scanDocsDirectory()
+
+  // ============================================
+  // STEP 2: Root-level standard files (returns path or null)
+  // ============================================
+  const rootDocs = {
+    readme: await findFirst(["README.md", "README", "README.txt", "README.rst"]),
+    license: await findFirst(["LICENSE", "LICENSE.md", "LICENSE.txt", "COPYING", "LICENCE"]),
+    changelog: await findFirst(["CHANGELOG.md", "HISTORY.md", "CHANGES.md", "NEWS.md", "RELEASES.md"]),
+    contributing: await findFirst(["CONTRIBUTING.md", "CONTRIBUTE.md"]),
+    codeOfConduct: await findFirst(["CODE_OF_CONDUCT.md", ".github/CODE_OF_CONDUCT.md"]),
+    security: await findFirst(["SECURITY.md", ".github/SECURITY.md"]),
+    support: await findFirst(["SUPPORT.md", ".github/SUPPORT.md"]),
+    authors: await findFirst(["AUTHORS", "AUTHORS.md", "CONTRIBUTORS.md", "MAINTAINERS.md"]),
+    acknowledgments: await findFirst(["ACKNOWLEDGMENTS.md", "CREDITS.md", "THANKS.md"])
+  }
+
+  // ============================================
+  // STEP 3: API & Schema files
+  // ============================================
+  const apiDocs = {
+    openapi: await findFirst(["openapi.yaml", "openapi.json", "swagger.yaml", "swagger.json", "api/openapi.*"]),
+    graphql: await findFirst(["schema.graphql", "schema.gql", "**/*.graphql"]),
+    asyncapi: await findFirst(["asyncapi.yaml", "asyncapi.json"]),
+    postman: await findFirst(["*.postman_collection.json", "postman/"]),
+    insomnia: await findFirst(["insomnia*.json", "insomnia*.yaml"]),
+    grpc: await findFirst(["**/*.proto"]),
+    jsonSchema: await findFirst(["schema.json", "schemas/*.json"])
+  }
+
+  // ============================================
+  // STEP 4: Config & Environment docs
+  // ============================================
+  const configDocs = {
+    envExample: await findFirst([".env.example", ".env.sample", ".env.template", "env.example", ".env.local.example"]),
+    envDocs: await findFirst(["ENV.md", "ENVIRONMENT.md", "docs/environment.md"]),
+    editorconfig: await findFirst([".editorconfig"]),
+    dockerCompose: await findFirst(["docker-compose.yml", "docker-compose.yaml", "compose.yml"]),
+    makefile: await findFirst(["Makefile"])
+  }
+
+  // ============================================
+  // STEP 5: GitHub/GitLab specific
+  // ============================================
+  const platformDocs = {
+    funding: await findFirst(["FUNDING.yml", ".github/FUNDING.yml"]),
+    codeowners: await findFirst(["CODEOWNERS", ".github/CODEOWNERS", ".gitlab/CODEOWNERS"]),
+    prTemplate: await findFirst([".github/PULL_REQUEST_TEMPLATE.md", ".github/pull_request_template.md"]),
+    issueTemplates: await findFirst([".github/ISSUE_TEMPLATE/", ".github/ISSUE_TEMPLATE.md"]),
+    workflows: await findFirst([".github/workflows/"]),
+    dependabot: await findFirst([".github/dependabot.yml", ".github/dependabot.yaml"]),
+    renovate: await findFirst(["renovate.json", ".github/renovate.json", "renovate.json5"])
+  }
+
+  // ============================================
+  // STEP 6: Build & CI docs
+  // ============================================
+  const ciDocs = {
+    github: await findFirst([".github/workflows/"]),
+    gitlab: await findFirst([".gitlab-ci.yml"]),
+    circleci: await findFirst([".circleci/"]),
+    jenkins: await findFirst(["Jenkinsfile", "jenkins/"]),
+    travis: await findFirst([".travis.yml"]),
+    azure: await findFirst(["azure-pipelines.yml"]),
+    bitbucket: await findFirst(["bitbucket-pipelines.yml"]),
+    drone: await findFirst([".drone.yml"]),
+    taskfile: await findFirst(["Taskfile.yml", "Taskfile.yaml"])
+  }
+
+  // ============================================
+  // STEP 7: Documentation infrastructure
+  // ============================================
+  const docInfra = {
+    mkdocs: await findFirst(["mkdocs.yml"]),
+    docusaurus: await findFirst(["docusaurus.config.js", "docusaurus.config.ts"]),
+    sphinx: await findFirst(["docs/conf.py", "sphinx/"]),
+    gitbook: await findFirst([".gitbook.yaml", "book.json"]),
+    vuepress: await findFirst(["docs/.vuepress/"]),
+    mdbook: await findFirst(["book.toml"]),
+    hugo: await findFirst(["config.toml"]),  // Simplified
+    jekyll: await findFirst(["_config.yml"]),
+    typedoc: await findFirst(["typedoc.json"]),
+    jsdoc: await findFirst(["jsdoc.json", "jsdoc.config.js"]),
+    storybook: await findFirst([".storybook/"])
+  }
+
+  // ============================================
+  // STEP 8: Database & migration docs
+  // ============================================
+  const dbDocs = {
+    migrations: await findFirst(["migrations/", "alembic/", "db/migrate/", "prisma/migrations/"]),
+    prisma: await findFirst(["prisma/schema.prisma"]),
+    typeorm: await findFirst(["ormconfig.json", "ormconfig.js"]),
+    sequelize: await findFirst([".sequelizerc"]),
+    seeds: await findFirst(["seeds/", "seeders/", "db/seeds/"])
+  }
+
+  // ============================================
+  // STEP 9: Diagrams & visual docs
+  // ============================================
+  const diagrams = {
+    mermaid: (await Glob("**/*.{mmd,mermaid}")).length,
+    plantuml: (await Glob("**/*.{puml,plantuml}")).length,
+    drawio: (await Glob("**/*.drawio")).length,
+    excalidraw: (await Glob("**/*.excalidraw")).length,
+    docImages: (await Glob("docs/**/*.{png,svg,jpg,gif,webp}")).length
+  }
+
+  // ============================================
+  // ANALYSIS: Summarize findings (counts only)
+  // ============================================
+  const analysis = {
+    // docs/ directory summary
+    docsDirectory: {
+      exists: docsDir.exists,
+      fileCount: docsDir.fileCount,
+      subdirs: docsDir.subdirs  // ["api", "guides", "tutorials"] etc.
+    },
+
+    // Category scores as "found/total" strings
+    categories: {
+      core: `${countFound(rootDocs)}/${Object.keys(rootDocs).length}`,
+      api: `${countFound(apiDocs)}/${Object.keys(apiDocs).length}`,
+      config: `${countFound(configDocs)}/${Object.keys(configDocs).length}`,
+      platform: `${countFound(platformDocs)}/${Object.keys(platformDocs).length}`,
+      ci: `${countFound(ciDocs)}/${Object.keys(ciDocs).length}`,
+      infrastructure: `${countFound(docInfra)}/${Object.keys(docInfra).length}`,
+      database: `${countFound(dbDocs)}/${Object.keys(dbDocs).length}`,
+      diagrams: sumValues(diagrams)
+    },
+
+    // Critical missing (based on project type)
+    criticalMissing: detectCriticalMissing(rootDocs, apiDocs, project.type),
+
+    // Total docs found
+    totalFiles: docsDir.fileCount + countFound(rootDocs) + countFound(apiDocs) + countFound(configDocs)
+  }
+
+  // Return REFERENCES ONLY - no paths stored
+  return {
+    root: rootDocs,         // { readme: true, license: true, ... }
+    api: apiDocs,           // { openapi: true, graphql: false, ... }
+    config: configDocs,     // { envExample: true, ... }
+    platform: platformDocs, // { codeowners: true, ... }
+    ci: ciDocs,             // { github: true, gitlab: false, ... }
+    infrastructure: docInfra,
+    database: dbDocs,
+    diagrams: diagrams,     // { mermaid: 3, plantuml: 0, ... }
+    analysis: analysis
+  }
+}
+
+// Recursive docs/ directory scan
+async function scanDocsDirectory() {
+  if (!await exists("docs/")) {
+    return { exists: false, fileCount: 0, subdirs: [] }
+  }
+
+  const allFiles = await Glob("docs/**/*.{md,mdx,rst,txt,adoc,html}")
+  const subdirs = [...new Set(
+    allFiles
+      .map(f => f.replace("docs/", "").split("/")[0])
+      .filter(d => d && !d.includes("."))
+  )]
+
+  return {
+    exists: true,
+    fileCount: allFiles.length,
+    subdirs: subdirs  // e.g., ["api", "guides", "architecture"]
+  }
+}
+
+// Helper: Find first matching pattern, return path or null
+async function findFirst(patterns) {
+  for (const pattern of patterns) {
+    if (pattern.includes("*")) {
+      const matches = await Glob(pattern)
+      if (matches.length > 0) return matches[0]  // Return first match path
+    } else if (await exists(pattern)) {
+      return pattern  // Return the path
+    }
+  }
+  return null  // Not found
+}
+
+// Helper: Count non-null values in object
+function countFound(obj) {
+  return Object.values(obj).filter(v => v !== null && v !== false).length
+}
+
+// Helper: Sum numeric values
+function sumValues(obj) {
+  return Object.values(obj).reduce((a, b) => a + (typeof b === 'number' ? b : 0), 0)
+}
+
+// Helper: Detect critical missing docs based on project type
+function detectCriticalMissing(rootDocs, apiDocs, projectType) {
+  const critical = []
+
+  // Universal requirements
+  if (!rootDocs.readme) critical.push("README")
+  if (!rootDocs.license) critical.push("LICENSE")
+
+  // Type-specific requirements
+  if (projectType.includes("api") || projectType.includes("library")) {
+    if (!apiDocs.openapi && !apiDocs.graphql) {
+      critical.push("API schema")
+    }
+  }
+  if (projectType.includes("library") || projectType.includes("package")) {
+    if (!rootDocs.changelog) critical.push("CHANGELOG")
+  }
+  if (projectType.includes("open-source")) {
+    if (!rootDocs.contributing) critical.push("CONTRIBUTING")
+  }
+
+  return critical
+}
+```
+
+### Documentation Output Schema (in detected.documentation)
+
+**Format: Simple references (path as string if exists, null if not). No dynamic injection.**
+
+```json
+{
+  "documentation": {
+    "root": {
+      "readme": "README.md",
+      "license": "LICENSE",
+      "changelog": null,
+      "contributing": "CONTRIBUTING.md",
+      "codeOfConduct": null,
+      "security": null,
+      "support": null,
+      "authors": "AUTHORS.md",
+      "acknowledgments": null
+    },
+    "api": {
+      "openapi": "openapi.yaml",
+      "graphql": null,
+      "asyncapi": null,
+      "postman": null,
+      "grpc": "api/service.proto",
+      "jsonSchema": null
+    },
+    "config": {
+      "envExample": ".env.example",
+      "editorconfig": ".editorconfig",
+      "dockerCompose": "docker-compose.yml",
+      "makefile": "Makefile"
+    },
+    "platform": {
+      "codeowners": "CODEOWNERS",
+      "prTemplate": ".github/PULL_REQUEST_TEMPLATE.md",
+      "issueTemplates": ".github/ISSUE_TEMPLATE/",
+      "workflows": ".github/workflows/",
+      "dependabot": ".github/dependabot.yml"
+    },
+    "ci": {
+      "github": ".github/workflows/",
+      "gitlab": null,
+      "jenkins": null
+    },
+    "infrastructure": {
+      "mkdocs": null,
+      "docusaurus": "docusaurus.config.js",
+      "typedoc": "typedoc.json",
+      "storybook": ".storybook/"
+    },
+    "database": {
+      "migrations": "prisma/migrations/",
+      "prisma": "prisma/schema.prisma",
+      "seeds": null
+    },
+    "diagrams": {
+      "mermaid": 3,
+      "plantuml": 0,
+      "drawio": 1,
+      "docImages": 12
+    },
+    "analysis": {
+      "docsDirectory": {
+        "exists": true,
+        "fileCount": 24,
+        "subdirs": ["api", "guides", "architecture"]
+      },
+      "categories": {
+        "core": "6/9",
+        "api": "2/7",
+        "config": "4/5",
+        "platform": "5/7",
+        "ci": "1/9",
+        "infrastructure": "2/11",
+        "database": "2/5",
+        "diagrams": 16
+      },
+      "criticalMissing": ["CHANGELOG", "SECURITY"],
+      "totalFiles": 30
+    }
+  }
+}
+```
+
+**Key principle:** Path stored as-is when found, `null` when not found. No template variables, no injection format.
+
+---
+
+### What This Agent Does NOT Do
+
+- ❌ Write files
+- ❌ Create directories
+- ❌ Modify any project files
+- ❌ Ask questions (questions are asked by tune command in parallel)
+
+### What This Agent Does
+
+- ✅ Read manifests, configs, source files
+- ✅ Detect languages, frameworks, patterns
+- ✅ **Detect ALL documentation types (50+ file patterns)**
+- ✅ Infer team/data/priority from code analysis
+- ✅ Return structured JSON data
