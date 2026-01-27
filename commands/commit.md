@@ -1,7 +1,7 @@
 ---
 description: Smart git commits with quality gates and atomic grouping
 argument-hint: [--preview] [--single] [--split] [--skip-tests] [--amend] [--staged-only]
-allowed-tools: Read(*), Grep(*), Edit(*), Bash(*), AskUserQuestion
+allowed-tools: Read, Grep, Edit, Bash, AskUserQuestion
 model: opus
 ---
 

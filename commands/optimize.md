@@ -1,7 +1,7 @@
 ---
 description: Incremental code improvement - fix security, hygiene, types, lint, performance issues
-argument-hint: [--auto] [--preview] [--score]
-allowed-tools: Read(*), Grep(*), Glob(*), Edit(*), Bash(*), Task(*), AskUserQuestion
+argument-hint: [--auto] [--preview] [--score] [--report] [--fix] [--fix-all] [--plan] [--intensity=<level>] [--security] [--hygiene] [--types] [--lint] [--performance] [--ai-hygiene] [--robustness] [--doc-sync]
+allowed-tools: Read, Grep, Glob, Edit, Bash, Task, AskUserQuestion
 model: opus
 ---
 

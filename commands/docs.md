@@ -1,7 +1,7 @@
 ---
 description: Documentation gap analysis - compare ideal vs current docs, generate missing content
-argument-hint: [--auto] [--check] [--preview] [--force]
-allowed-tools: Read(*), Grep(*), Glob(*), Edit(*), Write(*), Bash(*), Task(*), AskUserQuestion
+argument-hint: [--auto] [--check] [--report] [--preview] [--scope=<scope>] [--plan] [--force]
+allowed-tools: Read, Grep, Glob, Edit, Write, Bash, Task, AskUserQuestion
 model: opus
 ---
 
