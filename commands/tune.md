@@ -1,7 +1,7 @@
 ---
 description: Configure CCO for this project - analyze stack, create profile, load rules
 argument-hint: [--check] [--force] [--auto]
-allowed-tools: Read(*), Grep(*), Glob(*), Task(*), AskUserQuestion
+allowed-tools: Read, Grep, Glob, Task, AskUserQuestion
 model: haiku
 ---
 

@@ -1,7 +1,7 @@
 ---
 description: Release verification gate - full optimization + review + tests + build
 argument-hint: [--auto] [--preview] [--strict] [--skip-tests] [--skip-docs]
-allowed-tools: Read(*), Grep(*), Glob(*), Edit(*), Bash(*), Task(*), AskUserQuestion
+allowed-tools: Read, Grep, Glob, Edit, Bash, Task, AskUserQuestion
 model: opus
 ---
 

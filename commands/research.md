@@ -1,7 +1,7 @@
 ---
 description: Multi-source research with CRAAP+ reliability scoring
 argument-hint: [--json] [--resume=ID]
-allowed-tools: WebSearch(*), WebFetch(*), Read(*), Grep(*), Glob(*), Task(*), AskUserQuestion
+allowed-tools: WebSearch, WebFetch, Read, Grep, Glob, Task, AskUserQuestion
 model: opus
 ---
 

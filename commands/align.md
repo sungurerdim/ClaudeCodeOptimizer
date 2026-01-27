@@ -1,7 +1,7 @@
 ---
 description: Align codebase with ideal architecture - current vs ideal state gap analysis
 argument-hint: [--auto] [--preview]
-allowed-tools: Read(*), Grep(*), Glob(*), Edit(*), Bash(*), Task(*), AskUserQuestion
+allowed-tools: Read, Grep, Glob, Edit, Bash, Task, AskUserQuestion
 model: opus
 ---
 
