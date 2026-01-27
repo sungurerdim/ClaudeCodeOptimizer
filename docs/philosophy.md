@@ -6,7 +6,7 @@ The principles and decisions that guide CCO.
 
 ## Core Belief
 
-**Claude already knows how to code.** Opus 4.5 is state-of-the-art for software engineering. CCO doesn't teach coding—it adds the safety layer between intent and action.
+**Claude already knows how to code.** Claude is state-of-the-art for software engineering. CCO doesn't teach coding—it adds the safety layer between intent and action.
 
 ---
 
@@ -109,8 +109,8 @@ CCO uses Opus + Haiku, no Sonnet.
 | **Opus** | Code changes, analysis, research synthesis | State-of-the-art accuracy |
 | **Haiku** | File reads, quick scans, web fetches | Fast and cost-effective |
 
-**Opus 4.5 advantages:**
-- 50-75% fewer tool calling errors
+**Opus advantages:**
+- Fewer tool calling errors
 - State-of-the-art on SWE-bench
 - Best for multi-step reasoning
 

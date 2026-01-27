@@ -113,7 +113,8 @@ commands: {
 | performance | PRF-01 to PRF-10 patterns | Performance tuning |
 | ai-hygiene | AIH-01 to AIH-08 patterns | AI-generated code cleanup |
 | robustness | ROB-01 to ROB-10 patterns | Robustness (timeouts, retries, validation) |
-| ALL OPTIMIZE | All 73 checks in single grep batch | Full optimization |
+| doc-sync | DOC-01 to DOC-08 patterns | Documentation-code consistency |
+| ALL OPTIMIZE | All 81 checks in single grep batch | Full optimization |
 
 **REVIEW Scope Sets:**
 
@@ -490,6 +491,29 @@ ROB-09: resource_no_cleanup: open\((?!.*with)|connect\((?!.*close|with)
         # Code pattern: Resource acquisition without context manager
 ROB-10: concurrent_unsafe: threading\.Thread|asyncio\.create_task(?!.*lock|semaphore)
         # Code pattern: Concurrency primitives without synchronization
+```
+
+### doc-sync (DOC-01 to DOC-08)
+
+**Scope Focus:** Documentation-code consistency. Detect drift between documentation and actual code.
+
+```
+DOC-01: readme_outdated: Compare README.md last_modified with src/ changes
+        # Check: Code files changed but README not updated in 30+ days
+DOC-02: api_signature_mismatch: Compare docstring signatures with actual function signatures
+        # Check: @param/@return in docs don't match actual parameters/return type
+DOC-03: deprecated_in_docs: References to removed functions/classes in markdown files
+        # Check: docs/ references identifiers that no longer exist in codebase
+DOC-04: missing_new_feature_docs: New public APIs without documentation
+        # Check: Public functions added in last 30 days without docstring or docs/ entry
+DOC-05: outdated_examples: Code examples in docs that fail syntax/import check
+        # Check: ```python blocks in *.md that won't execute
+DOC-06: broken_internal_links: [text](./path) links to non-existent files
+        # Check: Relative links in markdown pointing to missing files
+DOC-07: changelog_not_updated: Version bump without CHANGELOG entry
+        # Check: package.json/pyproject.toml version changed, CHANGELOG.md not
+DOC-08: comment_code_drift: Inline comments describing different behavior than code
+        # Check: Comments mention removed variables/functions, or describe old logic
 ```
 
 ---
