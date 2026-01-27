@@ -2,8 +2,12 @@
   "hooks": {
     "SessionStart": [
       {
-        "type": "command",
-        "command": "type \"${CLAUDE_PLUGIN_ROOT}\\hooks\\core-rules.json\" 2>nul || cat \"${CLAUDE_PLUGIN_ROOT}/hooks/core-rules.json\""
+        "hooks": [
+          {
+            "type": "command",
+            "command": "type \"${CLAUDE_PLUGIN_ROOT}\\hooks\\core-rules.json\" 2>nul || cat \"${CLAUDE_PLUGIN_ROOT}/hooks/core-rules.json\""
+          }
+        ]
       }
     ]
   }
