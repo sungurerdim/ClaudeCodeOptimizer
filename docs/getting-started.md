@@ -107,19 +107,47 @@ Shows gap analysis between current state and ideal architecture.
 
 ---
 
+## How Rules Load (Zero Config)
+
+CCO uses Claude Code's native mechanisms — no custom loaders or CLI wrappers:
+
+```
+Session Start
+     │
+     ├─→ SessionStart hook fires
+     │   └─→ Core rules injected into context (automatic)
+     │
+     └─→ Claude Code reads .claude/rules/*.md
+         └─→ Project rules loaded (automatic)
+
+Result: Rules active immediately, zero user action
+```
+
+**Why this matters:**
+- No `cco` CLI wrapper to remember
+- No manual `--with-rules` flags
+- Just open Claude Code → rules are working
+
+---
+
 ## Understanding the Rules
 
-### Core Rules (Always Active)
+### Core Rules (Always Active, BLOCKER)
 
-Injected automatically at session start via hook:
+Injected automatically at session start via hook. These are **enforceable constraints**, not suggestions:
 
-| File | Purpose |
-|------|---------|
-| `cco-foundation.md` | Design principles (SSOT, DRY, YAGNI, KISS) |
-| `cco-safety.md` | Security standards (OWASP, input validation) |
-| `cco-workflow.md` | AI behavior patterns (Read-First, Verify-APIs) |
+| Category | Key Rules |
+|----------|-----------|
+| **Foundation** | Uncertainty Protocol (stop & ask), Complexity Limits (method ≤50 lines), Change Scope (only requested changes) |
+| **Safety** | Security Violations (no secrets in source, no bare except, no eval), Validation Boundaries |
+| **Workflow** | Read-Before-Edit (must read before editing), Accounting (applied + failed = total) |
 
-These apply to **all projects** automatically.
+**Hard Limits (exceeding = STOP):**
+- Cyclomatic complexity ≤ 15
+- Method lines ≤ 50
+- Nesting depth ≤ 3
+
+These apply to **all projects** automatically and cannot be overridden.
 
 ### Adaptive Rules (Per-Project)
 

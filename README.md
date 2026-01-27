@@ -3,114 +3,82 @@
 [![License: MIT](https://img.shields.io/badge/license-MIT-green.svg)](LICENSE)
 [![Claude Code Plugin](https://img.shields.io/badge/Claude_Code-Plugin-00A67E.svg)](https://github.com/anthropics/claude-code)
 
-**Safety, quality, and decision layer for Claude Code.**
-
-Same prompts, better outcomes. Fewer errors, fewer rollbacks, more consistent results.
+**Enforceable constraints for Claude Code.** Stops over-engineering, scope creep, and silent assumptions.
 
 ---
 
-## Quick Install
+## Install
 
-**In Claude Code:**
 ```
 /plugin marketplace add sungurerdim/ClaudeCodeOptimizer
-```
-
-```
 /plugin install cco@ClaudeCodeOptimizer
 ```
 
+Restart Claude Code. Done.
+
 <details>
-<summary><strong>Alternative: From terminal</strong></summary>
+<summary>Alternative: Terminal</summary>
 
 ```bash
 claude plugin marketplace add sungurerdim/ClaudeCodeOptimizer
 claude plugin install cco@ClaudeCodeOptimizer
 ```
-
 </details>
-
-**Restart Claude Code** to activate.
 
 ---
 
 ## Quick Start
 
 ```
-/cco:tune       # Configure CCO for this project (run once)
-/cco:optimize   # Fix issues with approval flow
-/cco:align      # Architecture gap analysis
-/cco:commit     # Quality-gated atomic commits
+/cco:tune       # Configure for this project (once)
+/cco:optimize   # Fix issues
+/cco:align      # Architecture gaps
+/cco:commit     # Quality-gated commits
 ```
-
-**First time?** Run `/cco:tune` to analyze your project and create a profile. Other commands will prompt for setup if needed.
 
 ---
 
 ## Why CCO?
 
-| Without CCO | With CCO |
-|-------------|----------|
-| Claude applies generic patterns | Domain-specific best practices for your stack |
-| Changes happen without pre-checks | Git status verified, clean state for rollback |
-| Silent operations | Full accounting: `Applied: 5 | Failed: 0 | Total: 5` |
-| "Add caching somewhere" | "Use TTL + invalidation for this data fetch" |
+Claude Code is powerful but unconstrained:
 
-**CCO is a process layer, not a teaching layer.** Claude already knows how to code. CCO adds safety between intent and action.
+| Problem | CCO Solution |
+|---------|--------------|
+| Adds AbstractValidatorFactory for simple validation | [**Change Scope**](docs/rules.md#foundation-rules-blocker): Only requested changes |
+| Edits 5 files when asked for 1 fix | [**Read-Before-Edit**](docs/rules.md#workflow-rules-blocker): Must read first |
+| Guesses requirements silently | [**Uncertainty Protocol**](docs/rules.md#foundation-rules-blocker): Stop and ask |
+| Method grows to 200 lines | [**Complexity Limits**](docs/rules.md#foundation-rules-blocker): ≤50 lines, ≤3 nesting |
 
----
-
-## Key Features
-
-### Zero Global Pollution
-
-CCO never writes to `~/.claude/` or any global directory. Only `./.claude/rules/` is modified during project setup.
-
-### Context Injection
-
-Core rules are injected directly into session context via SessionStart hook — no files created, no cleanup needed. Rules are active immediately on every session.
-
-### Safe Updates with `cco-` Prefix
-
-All CCO rules use `cco-` prefix. Your own rules (without prefix) are never touched.
-
-```
-.claude/rules/
-├── cco-profile.md       ← Managed by CCO
-├── cco-{language}.md    ← Managed by CCO
-├── cco-{framework}.md   ← Managed by CCO
-├── my-custom-rule.md    ← YOUR file, never touched
-└── team-standards.md    ← YOUR file, never touched
-```
+These are **BLOCKER** rules — execution stops, not suggestions to ignore.
 
 ---
 
-## What's Included
-
-| Component | Count | Purpose |
-|-----------|-------|---------|
-| Commands | 7 | `/cco:tune`, `/cco:optimize`, `/cco:align`, `/cco:commit`, `/cco:research`, `/cco:preflight`, `/cco:docs` |
-| Agents | 3 | Analyze, Apply, Research |
-| Rules | 44 | Core (3) + Languages (21) + Frameworks (8) + Operations (12) |
-
-### Rules Architecture
+## How It Works
 
 ```
-┌─────────────────────────────────────────────────────────────┐
-│  CORE (injected via SessionStart hook)                      │
-│  → cco-foundation.md   Design principles, code quality      │
-│  → cco-safety.md       Non-negotiable security standards    │
-│  → cco-workflow.md     AI execution patterns                │
-├─────────────────────────────────────────────────────────────┤
-│  PROJECT (copied during setup to .claude/rules/)            │
-│    ├── cco-profile.md      Project metadata (YAML)          │
-│    ├── cco-{language}.md   Language-specific rules          │
-│    ├── cco-{framework}.md  Framework-specific rules         │
-│    └── cco-{operation}.md  Operations rules                 │
-└─────────────────────────────────────────────────────────────┘
+Install CCO → SessionStart hook injects core rules (every session, automatic)
+                                    ↓
+/cco:tune   → Creates .claude/rules/cco-*.md (once per project)
+                                    ↓
+            → Claude Code auto-loads .claude/rules/*.md (native behavior)
+                                    ↓
+            → Rules active. Zero manual activation.
 ```
 
-**Coverage:** 21 languages (Python, TypeScript, Go, Rust, Java, C#, Ruby, PHP, Swift, Kotlin, +11 niche) and 20 domains (API, Database, Testing, Security, CI/CD, Observability, Compliance, Infrastructure, and more).
+### Why This Matters
+
+| Traditional Approach | CCO Approach |
+|---------------------|--------------|
+| Custom CLI wrapper (`mytool --with-rules`) | Native Claude Code |
+| Manual rule activation per session | Automatic on every session start |
+| Separate config files to maintain | Uses Claude Code's native `.claude/rules/` |
+| Breaks when Claude Code updates | Uses official plugin API |
+
+**Result:**
+- **Install once** → Core rules active in ALL projects immediately
+- **`/cco:tune` once per project** → Project rules auto-load every session
+- **No manual activation** → Open Claude Code, rules already working
+- **No performance cost** → Native mechanism, not a wrapper
 
 ---
 
@@ -118,92 +86,74 @@ All CCO rules use `cco-` prefix. Your own rules (without prefix) are never touch
 
 | Command | Purpose |
 |---------|---------|
-| `/cco:tune` | Configure CCO for this project - analyze stack, create profile |
-| `/cco:optimize` | Fix issues with approval flow for risky changes |
-| `/cco:align` | Architecture gap analysis - current vs ideal state |
-| `/cco:commit` | Quality-gated atomic commits |
-| `/cco:research` | Multi-source research with reliability scoring |
-| `/cco:preflight` | Pre-release workflow orchestration |
-| `/cco:docs` | Documentation gap analysis - generate missing docs |
-
-**Note:** Run `/cco:tune` first to configure CCO for your project. Other commands will prompt if profile is missing.
-
-See [Commands documentation](docs/commands.md) for flags and examples.
+| [`/cco:tune`](docs/commands.md#ccotune) | Detect stack, create project profile |
+| [`/cco:optimize`](docs/commands.md#ccooptimize) | Fix security, types, lint, performance |
+| [`/cco:align`](docs/commands.md#ccoalign) | Architecture and pattern analysis |
+| [`/cco:commit`](docs/commands.md#ccocommit) | Atomic commits with quality gates |
+| [`/cco:research`](docs/commands.md#ccoresearch) | Multi-source research with scoring |
+| [`/cco:preflight`](docs/commands.md#ccopreflight) | Pre-release verification |
+| [`/cco:docs`](docs/commands.md#ccodocs) | Documentation gap analysis |
 
 ---
 
-## Agents
+## What's Included
 
-| Agent | Purpose |
-|-------|---------|
-| `cco-agent-analyze` | Fast read-only analysis with severity scoring |
-| `cco-agent-apply` | Code changes with verification and cascade fixing. Also handles project tuning via `scope=tune` |
-| `cco-agent-research` | Multi-source research with CRAAP+ reliability scoring |
+| Component | Count | Details |
+|-----------|-------|---------|
+| Commands | 7 | [Reference](docs/commands.md#command-overview) |
+| Agents | 3 | [analyze, apply, research](docs/agents.md) |
+| Rules | 44 | [3 core](docs/rules.md#core-rules-3-categories) + [21 languages](docs/rules.md#language-rules-21-files) + [8 frameworks](docs/rules.md#framework-rules-8-files) + [12 operations](docs/rules.md#operations-rules-12-files) |
 
-See [Agents documentation](docs/agents.md) for detailed capabilities.
+### Core Rules: Hard Limits
+
+| Metric | Limit | Exceeds → |
+|--------|-------|-----------|
+| Cyclomatic Complexity | ≤ 15 | STOP, refactor |
+| Method Lines | ≤ 50 | STOP, split |
+| File Lines | ≤ 500 | STOP, extract |
+| Nesting Depth | ≤ 3 | STOP, flatten |
+| Parameters | ≤ 4 | STOP, use object |
+
+### Accounting (No Silent Skips)
+
+Every operation ends with: `Applied: 12 | Failed: 1 | Total: 13`
+
+Formula: **`applied + failed = total`** — no "declined" category. AI cannot silently skip.
 
 ---
 
-## Safety Model
+## Safety
 
-| Category | Examples |
-|----------|----------|
-| **Auto-Apply (Safe)** | Unused imports, SQL parameterization, lint/format fixes, type annotations |
-| **Require Approval (Risky)** | Auth/CSRF changes, DB schema, API contracts, file deletions |
+- Your rules (without `cco-` prefix) are never touched
+- CCO only writes to `.claude/rules/`, never global
+- All changes require clean git state for rollback
 
-**Rollback:** All changes require clean git state. Use `git checkout` to revert.
+See [Safety Model](docs/rules.md#safety-rules-blocker) for security patterns.
 
 ---
 
-## Update & Uninstall
+## Docs
 
-<details>
-<summary><strong>Update</strong></summary>
+- [Getting Started](docs/getting-started.md) — First 10 minutes
+- [Commands](docs/commands.md) — Flags and examples
+- [Agents](docs/agents.md) — Specialized agents
+- [Rules](docs/rules.md) — Full rules reference
+
+---
+
+## Update / Uninstall
 
 ```
 /plugin marketplace update ClaudeCodeOptimizer
 ```
-
-</details>
-
-<details>
-<summary><strong>Uninstall</strong></summary>
 
 ```
 /plugin uninstall cco@ClaudeCodeOptimizer
 /plugin marketplace remove ClaudeCodeOptimizer
 ```
 
-</details>
-
----
-
-## Documentation
-
-- [Getting Started](docs/getting-started.md) — First 10 minutes with CCO
-- [Commands](docs/commands.md) — All commands with flags and examples
-- [Agents](docs/agents.md) — Specialized agents and scopes
-- [Rules](docs/rules.md) — Complete rules reference
-
----
-
-## Requirements
-
-- Claude Code CLI or IDE extension
-- No additional dependencies
-
----
-
-## Contributing
-
-Issues and pull requests are welcome.
-
----
-
-## License
-
-MIT — see [LICENSE](LICENSE)
-
 ---
 
 **[GitHub](https://github.com/sungurerdim/ClaudeCodeOptimizer)** · **[Issues](https://github.com/sungurerdim/ClaudeCodeOptimizer/issues)** · **[Changelog](CHANGELOG.md)**
+
+MIT License

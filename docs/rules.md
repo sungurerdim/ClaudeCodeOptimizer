@@ -16,6 +16,39 @@
 
 ---
 
+## Zero-Config Loading Mechanism
+
+CCO leverages Claude Code's native rule loading — no custom loaders, no CLI wrappers:
+
+### How It Works
+
+```
+┌─────────────────────────────────────────────────────────────────┐
+│  EVERY SESSION START (automatic)                                │
+├─────────────────────────────────────────────────────────────────┤
+│  1. SessionStart hook fires (Claude Code native feature)        │
+│     └─→ Core rules injected via additionalContext               │
+│                                                                 │
+│  2. Claude Code reads .claude/rules/*.md (native behavior)      │
+│     └─→ Project rules loaded automatically                      │
+│                                                                 │
+│  Result: All rules active, zero user action required            │
+└─────────────────────────────────────────────────────────────────┘
+```
+
+### Why This Matters
+
+| Traditional Approach | CCO Approach |
+|---------------------|--------------|
+| Custom CLI wrapper (`mytool --with-rules`) | Native Claude Code |
+| Manual rule activation | Automatic on session start |
+| Rules in separate config files | Rules in Claude Code's native `.claude/rules/` |
+| Breaks with Claude Code updates | Uses official plugin API |
+
+**Key Insight:** Claude Code automatically reads all `.md` files from `.claude/rules/`. CCO writes rules there → rules load automatically. No magic, just leveraging native behavior.
+
+---
+
 ## Rules Architecture
 
 ```
@@ -23,9 +56,9 @@
 │  CORE (injected into context on every session start)            │
 ├─────────────────────────────────────────────────────────────────┤
 │  SessionStart hook reads from plugin and injects:               │
-│    → cco-foundation.md    Design principles, code quality       │
-│    → cco-safety.md        Non-negotiable security standards     │
-│    → cco-workflow.md      AI execution patterns                 │
+│    → Foundation rules   Uncertainty, Complexity, Scope          │
+│    → Safety rules       Security violations, Validation         │
+│    → Workflow rules     Read-Before-Edit, Accounting            │
 │  (No files copied - direct context injection via hook output)   │
 ├─────────────────────────────────────────────────────────────────┤
 │  PROJECT-SPECIFIC (installed via /cco:tune)                     │
@@ -46,29 +79,64 @@
 
 ---
 
-## Core Rules (3 files)
+## Core Rules (3 categories)
 
 *Injected into context on every session start via SessionStart hook.*
 
-### cco-foundation.md
-- Design principles (SSOT, DRY, YAGNI, KISS)
-- Code quality standards
-- Complexity thresholds
-- Refactoring safety rules
-- UX/DX guidelines
+### Foundation Rules [BLOCKER]
 
-### cco-safety.md
-- Non-negotiable standards (7 critical rules)
-- Security priority enforcement
-- OWASP A01-A10 base security
-- Data protection requirements
+Enforceable constraints with measurable thresholds:
 
-### cco-workflow.md
-- AI execution order (Read-First, Plan-Before-Act)
-- Agent delegation guidelines
-- Decision making rules
-- Reasoning strategies
-- Output standards
+| Rule | Enforcement |
+|------|-------------|
+| **Uncertainty Protocol** | Ambiguous task → STOP and ask. Signal confidence: "~90% sure", "uncertain about X" |
+| **Complexity Limits** | Method >50 lines, nesting >3, cyclomatic >15 → STOP and refactor |
+| **File Creation** | Creating new files without explicit request → BLOCKED |
+| **Change Scope** | Every changed line must trace to user's request. Unrelated → revert |
+| **Code Volume** | Single-use abstractions, 100+ lines that could be 50 → rewrite |
+| **Validation Boundaries** | Numbers need min/max, strings need max length, external calls need timeout |
+
+**Hard Complexity Limits:**
+
+| Metric | Limit |
+|--------|-------|
+| Cyclomatic Complexity | ≤ 15 |
+| Method Lines | ≤ 50 |
+| File Lines | ≤ 500 |
+| Nesting Depth | ≤ 3 |
+| Parameters | ≤ 4 |
+
+### Safety Rules [BLOCKER]
+
+Security violations = STOP. Fix before continuing:
+
+| Pattern | Fix |
+|---------|-----|
+| Secrets in source | Move to env vars |
+| Bare `except:`/`catch` | Catch specific types |
+| Empty catch blocks | Add handling |
+| Unsanitized external data | Add validation |
+| `eval()`, `pickle.load()`, `yaml.load()` | Use safe alternatives |
+
+**Safe vs Unsafe Patterns:**
+
+| Safe | Unsafe |
+|------|--------|
+| `json.loads()` | `pickle.load()`, `eval()` |
+| bcrypt, argon2 | MD5, SHA1, plaintext |
+| TLS 1.2+ | HTTP, TLS 1.0/1.1 |
+
+### Workflow Rules [BLOCKER]
+
+Execution patterns that enforce discipline:
+
+| Rule | Enforcement |
+|------|-------------|
+| **Read-Before-Edit** | Edit file not yet read → BLOCKED |
+| **Task Completion** | No stopping early due to perceived limits. Every 20 steps: progress check |
+| **Severity Levels** | CRITICAL (security/crash) → HIGH (broken) → MEDIUM (suboptimal) → LOW (style) |
+| **No Deferrals** | In `--auto` mode: no "too complex", "might break", "consider later" — fix NOW |
+| **Accounting** | Every operation ends with: `Applied: N | Failed: M | Total: N+M` |
 
 ---
 
