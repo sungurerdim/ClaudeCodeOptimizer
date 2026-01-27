@@ -5,7 +5,7 @@ allowed-tools: WebSearch(*), WebFetch(*), Read(*), Grep(*), Glob(*), Task(*), As
 model: opus
 ---
 
-# /research
+# /cco:research
 
 **Smart Research** - Parallel search → tier → synthesize → recommend with minimal questions.
 
@@ -100,16 +100,23 @@ parsedQuery = parseQuery(userQuery)
 
 **Launch all search agents in a SINGLE message:**
 
-### 3.1 Local Codebase Search (Always)
+> **Architecture:** Command only orchestrates. All search (local + web) delegated to agents.
+
+### 3.1 Local Codebase Search (via Agent)
 
 ```javascript
-// Parallel pattern searches in ONE message (use project-specific extensions from context)
-Glob("**/*.{py,ts,js,go,rs,md}")
-Grep(queryKeywords, { output_mode: "content", "-C": 3 })
-Read(relevantFiles)
+// Delegate local search to research agent (NOT analyze agent)
+// Purpose: Find examples, understand existing implementations
+// analyze agent is for quality/security scanning, not information research
+Task("cco-agent-research", `
+  scope: local
+  query: "${parsedQuery.concepts}"
+  patterns: ["**/*.{py,ts,js,go,rs,md}"]
+  context_lines: 3
+`, { model: "haiku", run_in_background: true })
 ```
 
-### 3.2 Web Search (Parallel by Source Type)
+### 3.2 Web Search (via Agent)
 
 ```javascript
 // T1: Official Documentation

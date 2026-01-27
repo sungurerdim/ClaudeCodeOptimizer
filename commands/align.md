@@ -1,11 +1,11 @@
 ---
 description: Align codebase with ideal architecture - current vs ideal state gap analysis
-argument-hint: [--auto] [--intensity=X] [--focus=X] [--report] [--dry-run] [--quick]
+argument-hint: [--auto] [--intensity=X] [--focus=X] [--report] [--dry-run] [--quick] [--plan]
 allowed-tools: Read(*), Grep(*), Glob(*), Edit(*), Bash(*), Task(*), AskUserQuestion
 model: opus
 ---
 
-# /align
+# /cco:align
 
 **Align with Ideal Architecture** - "If I designed from scratch, what would be best?"
 
@@ -13,7 +13,7 @@ model: opus
 
 **Philosophy:** Evaluate as if no technology choices exist yet. Given only the requirements, what's ideal? Then compare current state to that ideal.
 
-**Purpose:** Strategic, architecture-level assessment. For tactical file-level fixes, use `/optimize`.
+**Purpose:** Strategic, architecture-level assessment. For tactical file-level fixes, use `/cco:optimize`.
 
 **Unique Value:**
 - "Would FastAPI be better than Flask here?"
@@ -62,7 +62,7 @@ model: opus
 | `testing` | TST-01 to TST-10 | Coverage strategy, test quality, gaps | 10 |
 | `maintainability` | MNT-01 to MNT-12 | Complexity, readability, documentation | 12 |
 | `ai-architecture` | AIA-01 to AIA-10 | Over-engineering, local solutions, drift | 10 |
-| `functional-completeness` | FUN-01 to FUN-12 | CRUD coverage, edge cases, error handling | 12 |
+| `functional-completeness` | FUN-01 to FUN-12 | API design completeness: CRUD coverage, pagination, filtering, edge cases, schema validation, state transitions, soft delete, data locking, timeout/retry config, API surface | 12 |
 
 **Total: 71 checks**
 
@@ -123,10 +123,19 @@ if (args.includes("--auto")) {
 | 1b | Analysis | Start background analysis | Parallel | [PARALLEL] with 1a |
 | 2 | Gap Analysis | Current vs Ideal comparison | Progressive | [SEQUENTIAL] after 1b |
 | 3 | Recommendations | 80/20 prioritized roadmap | Instant | [SEQUENTIAL] after 2 |
-| 4 | Apply | Apply based on intensity | Verified | [SEQUENTIAL] after 3 |
+| 3.5 | Plan Review | Show architectural plan, get approval (conditional) | User decision | [SEQUENTIAL] after 3 |
+| 4 | Apply | Apply based on intensity | Verified | [SEQUENTIAL] after 3.5 |
 | 5 | Summary | Show results | Instant | [SEQUENTIAL] after 4 |
 
-**Execution Flow:** Step-0 → (1a ‖ 1b) → 2 → 3 → 4 → 5
+**Execution Flow:** Step-0 → (1a ‖ 1b) → 2 → 3 → [3.5 if plan mode] → 4 → 5
+
+**Plan Review triggers automatically when:**
+- `--plan` flag is passed
+- >5 architectural recommendations
+- Any CRITICAL gap (coupling >70%, cohesion <50%)
+- `--intensity=full-fix` selected
+
+**Skipped when:** `--auto` mode (unless `--auto --plan`)
 
 ---
 
@@ -316,12 +325,12 @@ analysisTask = Task("cco-agent-analyze", `
   - FUN-03: Missing filter support (list endpoints without query params)
   - FUN-04: Missing edge case handling (empty input, null, boundary values)
   - FUN-05: Incomplete error handling (generic errors, missing specific types)
-  - FUN-06: Missing validation at boundaries (public APIs without input validation)
+  - FUN-06: Missing schema validation (public APIs without Pydantic/Zod/JSON Schema)
   - FUN-07: State transition gaps (undocumented or unvalidated state changes)
   - FUN-08: Missing soft delete (hard delete without audit trail)
-  - FUN-09: Concurrent access issues (race conditions, missing locks)
-  - FUN-10: Missing timeout configuration (external calls without timeout)
-  - FUN-11: Missing retry logic (transient errors without retry)
+  - FUN-09: Concurrent data access (shared data without optimistic locking/versioning)
+  - FUN-10: Missing timeout config (external calls without configurable timeout)
+  - FUN-11: Missing retry strategy (no retry policy for transient failures)
   - FUN-12: Incomplete API surface (missing endpoints for common operations)
 
   Return: {
@@ -496,7 +505,156 @@ Intensity: {config.intensity} | Scopes: {config.scopes.join(", ")}
 [x] Recommendations displayed
 [x] Prioritization applied
 → If intensity = "report-only": Skip to Step-5
-→ Proceed to Step-4
+→ Check Plan Review triggers → Step-3.5 or Step-4
+```
+
+---
+
+## Step-3.5: Plan Review [CONDITIONAL]
+
+**"Think before you act"** - For architectural changes, reasoning matters more.
+
+### Trigger Conditions
+
+```javascript
+// Determine if Plan Review is needed
+const planMode = args.includes("--plan") ||
+  (filteredFindings.length > 5) ||
+  (gaps.coupling.gap > 20 || gaps.cohesion.gap > 20) ||  // CRITICAL gaps
+  (config.intensity === "full-fix")
+
+// Skip in pure --auto mode (unless --auto --plan)
+const skipPlan = isUnattended && !args.includes("--plan")
+
+if (planMode && !skipPlan) {
+  // → Enter Plan Review
+} else {
+  // → Skip to Step-4
+}
+```
+
+### Architectural Plan Generation
+
+**For each recommendation, generate strategic plan:**
+
+```javascript
+const architecturalPlans = filteredFindings.map(finding => ({
+  id: finding.id,
+  title: finding.title,
+  scope: finding.scope,  // architecture, patterns, testing, etc.
+  severity: finding.severity,
+
+  // STRATEGIC PLAN (architectural reasoning)
+  plan: {
+    what: finding.recommendation,
+    why: generateArchitecturalRationale(finding),    // "Reduces coupling from 72% to ~50%"
+    approach: selectArchitecturalApproach(finding),  // "Extract interface + dependency injection"
+    alternatives: [
+      { approach: "Keep as-is", tradeoff: "Technical debt accumulates" },
+      { approach: "Full rewrite", tradeoff: "High effort, risk of regression" },
+      { approach: "Incremental refactor", tradeoff: "Recommended - balanced risk/reward" }
+    ],
+    risks: assessArchitecturalRisks(finding),        // ["May affect 5 dependent modules"]
+    affectedModules: findAffectedModules(finding),   // ["auth", "user", "api"]
+    estimatedFiles: countAffectedFiles(finding),     // ~12 files
+    breakingChanges: detectBreakingChanges(finding)  // true/false
+  }
+}))
+```
+
+### Architectural Plan Display
+
+```markdown
+## Architectural Plan Review
+
+**Intensity:** {config.intensity} | **Gaps:** {gapCount} | **Modules Affected:** {uniqueModules.length}
+
+> Architectural changes have wider impact. Review reasoning before proceeding.
+
+### Current vs Ideal State
+
+| Dimension | Current | Target | Gap | Approach |
+|-----------|---------|--------|-----|----------|
+| Coupling | {metrics.coupling}% | <{ideal.coupling}% | {gaps.coupling.gap}% | {couplingApproach} |
+| Cohesion | {metrics.cohesion}% | >{ideal.cohesion}% | {gaps.cohesion.gap}% | {cohesionApproach} |
+| Complexity | {metrics.complexity} | <{ideal.complexity} | {gaps.complexity.gap} | {complexityApproach} |
+
+### Planned Changes by Module
+
+#### auth/ (3 changes)
+| ID | What | Why | Risk | Breaking? |
+|----|------|-----|------|-----------|
+| ARC-05 | Extract `UserService` from god class | 847 lines → ~200 lines each | Medium - test coverage needed | No |
+| PAT-01 | Standardize error handling | Inconsistent patterns confuse maintainers | Low | No |
+
+#### api/ (2 changes)
+| ID | What | Why | Risk | Breaking? |
+|----|------|-----|------|-----------|
+| ARC-04 | Add repository layer | Direct DB access in handlers | Medium - migration needed | No |
+
+### Alternatives Considered
+
+For each major change, why this approach:
+
+**ARC-05 (God Class):**
+- ❌ Keep as-is: Technical debt grows, 847 lines unmaintainable
+- ❌ Full rewrite: 2-week effort, high regression risk
+- ✅ **Extract services incrementally**: 3-day effort, testable steps, low risk
+
+**ARC-04 (Missing Layer):**
+- ❌ Keep direct access: Coupling increases, testing harder
+- ✅ **Repository pattern**: Industry standard, testable, flexible
+
+### Summary
+
+| Metric | Value |
+|--------|-------|
+| Total recommendations | {filteredFindings.length} |
+| Modules affected | {uniqueModules.length} |
+| Estimated files | ~{totalEstimatedFiles} |
+| Breaking changes | {breakingCount} |
+| High-risk changes | {highRiskCount} |
+```
+
+### User Decision
+
+```javascript
+AskUserQuestion([{
+  question: "Architectural plan review complete. How to proceed?",
+  header: "Plan",
+  options: [
+    { label: "Apply All (Recommended)", description: `Apply all ${filteredFindings.length} architectural changes` },
+    { label: "Apply Non-Breaking Only", description: `Skip ${breakingCount} breaking changes` },
+    { label: "Review Each", description: "Approve each change individually" },
+    { label: "Abort", description: "Cancel - no changes made" }
+  ],
+  multiSelect: false
+}])
+
+switch (planDecision) {
+  case "Apply All":
+    config.reviewMode = "apply-all"
+    break
+  case "Apply Non-Breaking Only":
+    config.reviewMode = "non-breaking"
+    toApply = toApply.filter(f => !f.plan.breakingChanges)
+    break
+  case "Review Each":
+    config.reviewMode = "interactive"
+    break
+  case "Abort":
+    console.log("Aborted. No architectural changes made.")
+    return
+}
+```
+
+### Validation
+```
+[x] Architectural plan generated
+[x] Alternatives documented
+[x] User decision captured
+→ If Abort: Exit
+→ Proceed to Step-4 with config.reviewMode
 ```
 
 ---

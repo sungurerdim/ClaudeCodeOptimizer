@@ -48,7 +48,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - **Permissions system** — Four levels (safe/balanced/permissive/full)
 - **Dynamic context injection** — Commands use real-time context at load time
 - **Tool restrictions** — `allowed-tools` frontmatter limits each command to declared tools
-- **Explicit fixable definition** — Clear criteria in `/optimize` for what can be auto-fixed
+- **Explicit fixable definition** — Clear criteria in `/cco:optimize` for what can be auto-fixed
 - **Scope detection rules** — Deterministic commit scope detection from file paths
 - **Metric rationale** — Evidence-based thresholds in `/review` with academic sources
 

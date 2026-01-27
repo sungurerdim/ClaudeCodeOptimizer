@@ -1,6 +1,6 @@
 ---
 name: cco-agent-apply
-description: Batch write operations with verification, cascade fixing, accounting. Also handles project configuration (scope=config).
+description: Batch write operations with verification, cascade fixing, accounting.
 tools: Grep, Read, Glob, Bash, Edit, Write, NotebookEdit, AskUserQuestion
 model: opus
 ---
@@ -19,9 +19,10 @@ Batch write operations with verification. **Fix everything, leave nothing behind
 | Need post-change linter/test run | ✓ | - |
 | Fix cascading errors | ✓ | - |
 | Track applied/failed counts | ✓ | - |
-| Project configuration (scope=config) | ✓ | - |
 | Single-file edit | - | Edit |
 | Simple file create | - | Write |
+
+**Note:** Project configuration is handled by `/cco:tune` command, not this agent.
 
 ## Advantages Over Direct Edit/Write
 
@@ -613,119 +614,184 @@ Fix everything │ Verify after change │ Cascade fixes │ Complete accounting
 
 ## Config Scope (scope=config)
 
-Write-only config generation. **Receives detection results and answers from cco-agent-analyze.**
+Execute file operations as instructed. **Receives explicit write/delete instructions from caller (tune command).**
 
-### Input Schema (from cco-agent-analyze)
+### Input Schema
 
 ```json
 {
-  "detected": {
-    "languages": ["typescript", "python"],
-    "frameworks": ["react", "fastapi"],
-    "operations": ["docker", "github-actions"]
-  },
-  "answers": {
-    "type": ["API", "Web"],
-    "team": "Small",
-    "data": "Internal"
-  },
-  "rulesNeeded": ["cco-typescript.md", "cco-python.md", ...]
+  "operations": [
+    { "action": "delete_pattern", "path": ".claude/rules/", "pattern": "cco-*.md" },
+    { "action": "write", "path": ".claude/rules/cco-profile.md", "content": "..." },
+    { "action": "copy", "source": "$PLUGIN_ROOT/rules/languages/cco-typescript.md", "dest": ".claude/rules/cco-typescript.md" },
+    { "action": "merge", "path": ".claude/settings.json", "content": { "key": "value" } }
+  ],
+  "outputContext": true
 }
 ```
 
 ### Execution Flow
 
 ```javascript
-// Input from analyze agent
-const { detected, answers, rulesNeeded } = input
+// Execute operations in order
+for (const op of input.operations) {
+  switch (op.action) {
+    case "delete_pattern":
+      // Delete all matching files (ALWAYS - never skip)
+      const files = await Glob(`${op.path}${op.pattern}`)
+      for (const file of files) {
+        await Bash(`rm "${file}"`)
+      }
+      console.log(`Deleted: ${files.length} files matching ${op.pattern}`)
+      break
 
-// Step 1: ALWAYS delete ALL existing CCO rules [CRITICAL]
-// - Delete even if files are identical
-// - Never skip based on content comparison
-// - Fresh install every time
-const existingRules = await Glob('.claude/rules/cco-*.md')
-console.log(`Cleaning ${existingRules.length} existing CCO rule files...`)
-for (const file of existingRules) {
-  await Bash(`rm "${file}"`)
+    case "write":
+      // Write content to file (ALWAYS - never skip based on content)
+      await Write(op.path, op.content)
+      console.log(`Written: ${op.path}`)
+      break
+
+    case "copy":
+      // Copy file from plugin root
+      const source = op.source.replace("$PLUGIN_ROOT", process.env.CLAUDE_PLUGIN_ROOT)
+      const content = await Read(source)
+      await Write(op.dest, content)
+      console.log(`Copied: ${op.source} → ${op.dest}`)
+      break
+
+    case "merge":
+      // Deep merge into existing JSON
+      const existing = JSON.parse(await Read(op.path) || "{}")
+      const merged = deepMerge(existing, op.content)
+      await Write(op.path, JSON.stringify(merged, null, 2))
+      console.log(`Merged: ${op.path}`)
+      break
+  }
 }
-console.log(`Deleted: ${existingRules.length} files`)
 
-// Step 2: Generate fresh cco-profile.md
-await Write('.claude/rules/cco-profile.md', generateContextYaml(detected, answers))
-
-// Step 3: Copy ALL rule files from plugin (fresh copies)
-for (const rule of rulesNeeded) {
-  await copyRuleFromPlugin(rule, '.claude/rules/')
+// Output context if requested
+if (input.outputContext) {
+  const contextContent = await Read('.claude/rules/cco-profile.md')
+  console.log(`\n## CCO Context (Active)\n\n${contextContent}`)
 }
-
-// Step 4: Output context for immediate session use
-console.log(`
-## CCO Context (Active in Current Session)
-
-${await Read('.claude/rules/cco-profile.md')}
-
-**Rules installed:** ${rulesNeeded.join(', ')}
-**Total files:** ${rulesNeeded.length + 1} (context + rules)
-`)
 ```
+
+---
+
+## Docs Scope (scope=docs)
+
+Generate documentation based on gap analysis from analyze agent.
+
+### Input Schema
+
+```json
+{
+  "operations": [
+    {
+      "action": "generate",
+      "scope": "readme",
+      "file": "README.md",
+      "sections": ["description", "installation", "quick-start"],
+      "sources": ["package.json", "src/index.ts"],
+      "projectType": "Library"
+    }
+  ]
+}
+```
+
+### Generation Principles [CRITICAL]
+
+All generated documentation MUST follow these rules:
+
+1. **Extract from code, don't invent**
+   - Read source files listed in `sources`
+   - Extract actual function signatures, endpoints, configs
+   - Use real code examples, not made-up ones
+
+2. **Brevity over verbosity**
+   - Every sentence must earn its place
+   - Skip "This document explains..." - just explain
+   - No filler, no boilerplate
+
+3. **Scannable format**
+   - Use headers, bullets, tables
+   - Progressive disclosure (essential first)
+   - Copy-pasteable commands
+
+4. **Action-oriented**
+   - Focus on what reader needs to DO
+   - Include troubleshooting sections
+   - Show, don't tell
+
+### Section Templates
+
+**README:**
+```markdown
+# {project.name}
+
+{one-line description from package.json/pyproject.toml}
+
+## Install
+{extracted from package manager or inferred}
+
+## Quick Start
+{minimal working example from source}
+
+## Usage
+{common use cases with code examples}
+```
+
+**API Endpoint:**
+```markdown
+## {METHOD} {path}
+
+{one-line description}
+
+**Request:** `{schema from code}`
+**Response:** `{schema from code}`
+**Errors:** {extracted error codes}
+```
+
+### What NOT to Generate
+
+- Academic-style comprehensive documentation
+- Marketing language or promotional content
+- Obvious information (e.g., "This is a README file")
+- Version history in body (use CHANGELOG)
+- Author credits in every file
+- Duplicate information across files
+
+### Output Schema
+
+```json
+{
+  "generated": [
+    { "scope": "readme", "file": "README.md", "linesWritten": 45 }
+  ],
+  "failed": [
+    { "scope": "api", "file": "docs/api.md", "reason": "Technical: No public APIs found" }
+  ],
+  "accounting": { "done": 1, "fail": 1, "total": 2 }
+}
+```
+
+**Note:** Commands translate `done`/`fail` to user-friendly `applied`/`failed` in output.
+
+---
 
 ### Clean-First Rule [CRITICAL]
 
-**ALWAYS delete before write. NEVER skip.**
+**Caller (tune command) determines what to clean.** This agent just executes.
 
-| Scenario | Action |
-|----------|--------|
-| File doesn't exist | Write new file |
-| File exists, same content | Delete → Write new file |
-| File exists, different content | Delete → Write new file |
-| File exists, user modified | Delete → Write new file (user rules use non-cco prefix) |
+Typical operation order from tune:
+1. `delete_pattern` - Remove existing cco-*.md files
+2. `write` - Write fresh cco-profile.md
+3. `copy` - Copy needed rule files from plugin
 
-**Rationale:**
-- Ensures consistent state after every setup
-- Removes stale rules from previous stack detection
-- User's custom rules are safe (they don't use `cco-` prefix)
+### What This Agent Does NOT Do
 
-### Output Files
-
-All files use flat structure in `.claude/rules/`:
-
-| File | Content |
-|------|---------|
-| `cco-profile.md` | Project metadata (YAML frontmatter) |
-| `cco-{language}.md` | Language-specific rules |
-| `cco-{framework}.md` | Framework-specific rules |
-| `cco-{operation}.md` | Operations rules |
-
-**Reference:** Full detection rules in `cco-triggers.md` and `cco-adaptive.md`.
-
-### Context Injection [CRITICAL]
-
-**Problem:** `.claude/rules/` files are only auto-loaded at session start. Mid-session config won't be active until restart.
-
-**Solution:** After writing config files, output the context content so Claude can use it immediately:
-
-```javascript
-// After writing all config files...
-const contextContent = await Read('.claude/rules/cco-profile.md')
-
-// Output context for immediate use in current session
-console.log(`
-## CCO Context (Active in Current Session)
-
-The following context has been created and will auto-load on future sessions.
-**For this session, the context is now active via this output:**
-
----
-${contextContent}
----
-
-**Language rules loaded:** ${languageRules.join(', ')}
-**Framework rules loaded:** ${frameworkRules.join(', ')}
-**Operation rules loaded:** ${operationRules.join(', ')}
-`)
-```
-
-This ensures:
-1. **Immediate effect** - Claude sees context in current conversation
-2. **Future sessions** - Auto-loaded from `.claude/rules/` on session start
-3. **No restart needed** - User continues working without interruption
+- ❌ Decide which files to write (caller decides)
+- ❌ Generate content (caller provides content)
+- ❌ Skip operations based on content comparison (execute all)
+- ✓ Execute operations as instructed
+- ✓ Report success/failure for each operation

@@ -86,7 +86,7 @@ All CCO rules use `cco-` prefix. Your own rules (without prefix) are never touch
 
 | Component | Count | Purpose |
 |-----------|-------|---------|
-| Commands | 6 | `/cco:tune`, `/cco:optimize`, `/cco:align`, `/cco:commit`, `/cco:research`, `/cco:preflight` |
+| Commands | 7 | `/cco:tune`, `/cco:optimize`, `/cco:align`, `/cco:commit`, `/cco:research`, `/cco:preflight`, `/cco:docs` |
 | Agents | 3 | Analyze, Apply, Research |
 | Rules | 44 | Core (3) + Languages (21) + Frameworks (8) + Operations (12) |
 
@@ -121,6 +121,7 @@ All CCO rules use `cco-` prefix. Your own rules (without prefix) are never touch
 | `/cco:commit` | Quality-gated atomic commits |
 | `/cco:research` | Multi-source research with reliability scoring |
 | `/cco:preflight` | Pre-release workflow orchestration |
+| `/cco:docs` | Documentation gap analysis - generate missing docs |
 
 **Note:** Run `/cco:tune` first to configure CCO for your project. Other commands will prompt if profile is missing.
 

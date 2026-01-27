@@ -5,7 +5,7 @@ allowed-tools: Read(*), Grep(*), Glob(*), Edit(*), Bash(*), Task(*), AskUserQues
 model: opus
 ---
 
-# /optimize
+# /cco:optimize
 
 **Incremental Code Improvement** - Quality gates + parallel analysis + background fixes with Fix Intensity selection.
 
@@ -13,7 +13,7 @@ model: opus
 
 **Philosophy:** "This code works. How can it work better?"
 
-**Purpose:** Tactical, file-level fixes. For strategic architecture assessment, use `/align`.
+**Purpose:** Tactical, file-level fixes. For strategic architecture assessment, use `/cco:align`.
 
 ## Args
 
@@ -34,12 +34,17 @@ model: opus
 - `--fix-all`: Full Fix intensity without approval
 - `--score`: Quality score only (0-100), skip all questions
 - `--intensity=<level>`: Set fix intensity (quick-wins, standard, full-fix, report-only)
+- `--plan`: Enable Plan Review phase - show detailed fix plan before applying
+  - Shows: what will change, why this approach, alternatives considered, risks
+  - Requires explicit approval before any changes
+  - Auto-enabled when: >10 findings OR any CRITICAL severity OR --fix-all
+  - Skipped in --auto mode (use --auto --plan to force)
 
 **Usage:**
-- `/optimize --auto` - Silent full optimization (all scopes, full fix)
-- `/optimize --security --fix-all` - Security only, fix all
-- `/optimize --ai-hygiene` - Find AI-generated code issues
-- `/optimize --score` - Quick quality score
+- `/cco:optimize --auto` - Silent full optimization (all scopes, full fix)
+- `/cco:optimize --security --fix-all` - Security only, fix all
+- `/cco:optimize --ai-hygiene` - Find AI-generated code issues
+- `/cco:optimize --score` - Quick quality score
 
 ## Core Principle [CRITICAL]
 
@@ -207,57 +212,30 @@ if (isUnattended) {
 
 | Step | Name | Action | Optimization | Dependency |
 |------|------|--------|--------------|------------|
-| 0 | Quality Gates | Format + Lint + Type + Test (full project) | Parallel background | - |
-| 1 | Setup | Q1: Combined settings (background analysis starts) | Single question | [PARALLEL] with 0 |
+| 1 | Setup | Q1: Combined settings (background analysis starts) | Single question | - |
 | 2 | Analyze | Wait for analysis, show findings | Progressive | [SEQUENTIAL] after 1 |
-| 3 | Apply | Apply fixes based on intensity | Batched | [SEQUENTIAL] after 2 |
-| 4 | Summary | Show counts + gate results | Instant | [SEQUENTIAL] after 3, collects 0 |
+| 2.5 | Plan Review | Show fix plan, get approval (conditional) | User decision | [SEQUENTIAL] after 2 |
+| 3 | Apply | Apply fixes based on intensity | Batched | [SEQUENTIAL] after 2.5 |
+| 4 | Summary | Show counts | Instant | [SEQUENTIAL] after 3 |
 
-**Execution Flow:** (0 ‖ 1) → 2 → 3 → 4 (4 collects results from 0)
+**Execution Flow:** 1 → 2 → [2.5 if plan mode] → 3 → 4
 
-**No approval questions** - Intensity selection determines what gets fixed:
+> **Note:** Quality Gates (format, lint, type, test) removed from optimize.
+> LNT and TYP scopes already analyze lint/type issues. Use `/cco:commit` for pre-commit gates.
+
+**Plan Review triggers automatically when:**
+- `--plan` flag is passed
+- >10 findings detected
+- Any CRITICAL severity finding
+- `--fix-all` intensity selected
+
+**Skipped when:** `--auto` mode (unless `--auto --plan`)
+
+**Intensity determines what gets fixed:**
 - Quick Wins → High impact, low effort only
 - Standard → CRITICAL + HIGH + MEDIUM
 - Full Fix → Everything
 - Report Only → No changes
-
----
-
-## Step-0: Quality Gates [PARALLEL BACKGROUND]
-
-**Run format, lint, type check, and tests on FULL PROJECT in parallel:**
-
-```javascript
-// Commands from context.md Operational section - FULL PROJECT
-formatTask = Bash("{format_command} 2>&1", { run_in_background: true })
-lintTask = Bash("{lint_command} 2>&1", { run_in_background: true })
-typeTask = Bash("{type_command} 2>&1", { run_in_background: true })
-testTask = Bash("{test_command} 2>&1", { run_in_background: true })
-
-// Store task IDs for collection in Step-6
-qualityGateTasks = {
-  format: formatTask.id,
-  lint: lintTask.id,
-  type: typeTask.id,
-  test: testTask.id
-}
-
-// Continue immediately - results collected in Step-6
-```
-
-**Key points:**
-- Format auto-fixes code style issues
-- Lint catches code quality issues
-- Type check catches type errors
-- Tests verify functionality
-- All run in parallel for speed
-- Results shown in final summary
-
-### Validation
-```
-[x] Background tasks launched
-→ Proceed to Step-1 immediately
-```
 
 ---
 
@@ -499,9 +477,149 @@ if (!isUnattended) {
 ```
 [x] Analysis results collected
 [x] Findings categorized
-→ If action = "Report only": Skip to Step-6
-→ If --auto: Skip Q2 (Step-4), apply all fixable
-→ Proceed to Step-3
+→ If action = "Report only": Skip to Step-4
+→ If --auto (without --plan): Skip to Step-3
+→ Check Plan Review triggers → Step-2.5 or Step-3
+```
+
+---
+
+## Step-2.5: Plan Review [CONDITIONAL]
+
+**"Think before you act"** - Reduces errors and low-quality decisions (Karpathy insight).
+
+> **Pattern:** Plan Review is used in /cco:optimize, /cco:align, and /cco:preflight with command-specific
+> triggers and content. Each command has different thresholds (optimize: >10 findings,
+> align: >5 recommendations, preflight: any blockers). The structure is consistent:
+> 1. Trigger Conditions → 2. Plan Generation → 3. Plan Display → 4. User Decision
+
+### Trigger Conditions
+
+```javascript
+// Determine if Plan Review is needed
+const planMode = args.includes("--plan") ||
+  (findings.length > 10) ||
+  (findings.some(f => f.severity === "CRITICAL")) ||
+  (config.intensity === "full-fix")
+
+// Skip in pure --auto mode (unless --auto --plan)
+const skipPlan = isUnattended && !args.includes("--plan")
+
+if (planMode && !skipPlan) {
+  // → Enter Plan Review
+} else {
+  // → Skip to Step-3
+}
+```
+
+### Plan Generation
+
+**For each finding, generate fix plan with rationale:**
+
+```javascript
+const fixPlans = findings.map(finding => ({
+  id: finding.id,
+  title: finding.title,
+  location: finding.location,
+  severity: finding.severity,
+
+  // THE PLAN (what Karpathy wants)
+  plan: {
+    what: generateFixDescription(finding),      // "Remove unused import 'os'"
+    why: generateRationale(finding),            // "Reduces bundle size, cleaner code"
+    approach: selectApproach(finding),          // "Direct deletion" vs "Replace with..."
+    alternatives: listAlternatives(finding),    // ["Keep if used elsewhere", "Move to __all__"]
+    risks: assessRisks(finding),                // ["None - unused code"] or ["May break X"]
+    confidence: calculateConfidence(finding),   // 0-100 based on evidence
+    affectedFiles: [finding.location.file],     // Files that will change
+    estimatedLines: estimateChanges(finding)    // ~5 lines
+  }
+}))
+```
+
+### Plan Display
+
+```markdown
+## Fix Plan Review
+
+**Mode:** {config.intensity} | **Findings:** {findings.length} | **Files:** {uniqueFiles.length}
+
+> This plan shows what will change and why. Review before approving.
+
+### CRITICAL Fixes ({criticalCount})
+
+| # | ID | What | Why | Risk | Confidence |
+|---|-----|------|-----|------|------------|
+| 1 | SEC-01 | Remove hardcoded API key | Security vulnerability, key exposed in repo | None - will use env var | 95% |
+| 2 | SEC-03 | Sanitize SQL input | SQL injection possible via user input | Low - parameterized approach | 90% |
+
+### HIGH Priority ({highCount})
+
+| # | ID | What | Why | Risk | Confidence |
+|---|-----|------|-----|------|------------|
+| 1 | HYG-01 | Remove 12 unused imports | Dead code, slower load times | None | 100% |
+| 2 | TYP-01 | Add return type to `process_data()` | Type safety, IDE support | None | 95% |
+
+### MEDIUM Priority ({mediumCount})
+
+{...similar table...}
+
+### Summary
+
+| Metric | Value |
+|--------|-------|
+| Total changes | {findings.length} findings across {uniqueFiles.length} files |
+| Estimated lines | ~{totalEstimatedLines} lines modified |
+| High confidence (>80%) | {highConfidenceCount} ({highConfidencePercent}%) |
+| Risky changes | {riskyCount} (will ask before each) |
+
+**Alternatives Considered:**
+{findings.filter(f => f.plan.alternatives.length > 1).map(f =>
+  `- ${f.id}: Chose "${f.plan.approach}" over "${f.plan.alternatives[0]}" because ${f.plan.why}`
+)}
+```
+
+### User Decision
+
+```javascript
+AskUserQuestion([{
+  question: "Review complete. How to proceed?",
+  header: "Plan",
+  options: [
+    { label: "Apply All (Recommended)", description: `Apply all ${findings.length} fixes as planned` },
+    { label: "Apply Safe Only", description: `Apply only ${highConfidenceCount} high-confidence fixes (>80%)` },
+    { label: "Review Each", description: "Ask before each fix (slower but more control)" },
+    { label: "Abort", description: "Cancel and make no changes" }
+  ],
+  multiSelect: false
+}])
+
+// Handle response
+switch (planDecision) {
+  case "Apply All":
+    config.reviewMode = "apply-all"
+    break
+  case "Apply Safe Only":
+    config.reviewMode = "safe-only"
+    findings = findings.filter(f => f.plan.confidence >= 80)
+    break
+  case "Review Each":
+    config.reviewMode = "interactive"
+    break
+  case "Abort":
+    console.log("Aborted. No changes made.")
+    return
+}
+```
+
+### Validation
+```
+[x] Plan generated for all findings
+[x] Plan displayed to user
+[x] User decision captured
+→ If Abort: Exit
+→ If Apply Safe Only: Filter to confidence >= 80%
+→ Proceed to Step-3 with config.reviewMode
 ```
 
 ---
@@ -556,23 +674,6 @@ if (config.action !== "Report only" && autoFixable.length > 0) {
 
 ## Step-4: Summary
 
-### Collect Quality Gate Results
-
-```javascript
-// Collect quality gate results from Step-0
-formatResults = await TaskOutput(qualityGateTasks.format)
-lintResults = await TaskOutput(qualityGateTasks.lint)
-typeResults = await TaskOutput(qualityGateTasks.type)
-testResults = await TaskOutput(qualityGateTasks.test)
-
-qualityGateStatus = {
-  format: formatResults.exitCode === 0 ? "OK" : "FIXED",
-  lint: lintResults.exitCode === 0 ? "OK" : "WARN",
-  type: typeResults.exitCode === 0 ? "OK" : "FAIL",
-  test: testResults.exitCode === 0 ? "OK" : "FAIL"
-}
-```
-
 ### Calculate Final Counts [CRITICAL]
 
 ```javascript
@@ -605,13 +706,8 @@ assert(finalCounts.applied + finalCounts.failed === finalCounts.total,
 
 ```javascript
 if (isUnattended) {
-  // Quality gates status
-  const gateStatus = Object.values(qualityGateStatus).includes("FAIL") ? "FAIL" : "OK"
-
-  // ONLY output - single status line
-  const status = (finalCounts.failed > 0 || gateStatus === "FAIL") ? "WARN" : "OK"
-  console.log(`cco-optimize: ${status} | Fixed: ${finalCounts.applied} | Failed: ${finalCounts.failed} | Gates: ${gateStatus} | Scopes: all`)
-  // No tables, no details, no stash reminder
+  const status = finalCounts.failed > 0 ? "WARN" : "OK"
+  console.log(`cco-optimize: ${status} | Fixed: ${finalCounts.applied} | Failed: ${finalCounts.failed} | Scopes: all`)
   return
 }
 ```
@@ -619,20 +715,8 @@ if (isUnattended) {
 ### Interactive Mode Output
 
 ```javascript
-// Build summary with quality gates and conditional stash reminder
 let summary = `
 ## Optimization Complete
-
-### Quality Gates (Full Project)
-
-| Gate | Status |
-|------|--------|
-| Format | ${qualityGateStatus.format} |
-| Lint | ${qualityGateStatus.lint} |
-| Type Check | ${qualityGateStatus.type} |
-| Tests | ${qualityGateStatus.test} |
-
-### Code Analysis
 
 | Metric | Value |
 |--------|-------|
@@ -640,7 +724,7 @@ let summary = `
 | Failed | ${finalCounts.failed} |
 | **Total** | **${finalCounts.total}** |
 
-Status: ${finalCounts.failed > 0 ? "WARN" : "OK"} | Applied: ${finalCounts.applied} | Failed: ${finalCounts.failed} | Total: ${finalCounts.total}
+Status: ${finalCounts.failed > 0 ? "WARN" : "OK"}
 
 Run \`git diff\` to review changes.`
 
@@ -718,7 +802,7 @@ console.log(summary)
 | `lint` | LNT-01-08 | Format violations, import order, line length, naming conventions, docstring format, magic numbers, string literals, quote style |
 | `performance` | PRF-01-10 | N+1 patterns, list on iterator, missing cache, blocking in async, large file reads, missing pagination, string concat loops, unnecessary copies, missing pooling, sync in hot paths |
 | `ai-hygiene` | AIH-01-08 | Hallucinated APIs, orphan abstractions, phantom imports, dead feature flags, stale mocks, incomplete implementations, copy-paste artifacts, dangling references |
-| `robustness` | ROB-01-10 | Missing timeouts, missing retries, missing validation, unbounded collections, implicit coercion, missing null checks, no graceful degradation, missing circuit breaker, resource cleanup, concurrent access issues |
+| `robustness` | ROB-01-10 | Code-level defensive patterns: missing timeouts, retries, endpoint guards, unbounded collections, implicit coercion, null checks, graceful degradation, circuit breakers, resource cleanup, concurrent safety |
 
 ### Context Application
 
