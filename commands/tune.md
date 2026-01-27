@@ -162,7 +162,7 @@ if (!isUnattended && !validationResult.valid) {
 
 ## Step-2: Parallel Execution
 
-**Interactive: User answers questions while detection runs in background.**
+**Interactive: User answers questions, then detection runs.**
 **Auto/Unattended: Detection only, no questions.**
 
 ```javascript
@@ -179,13 +179,7 @@ if (isUnattended || config.mode === "auto") {
   // Proceed directly to Step-3 (no questions)
 
 } else if (config.mode === "interactive") {
-  // Launch detection in background
-  const detectionTask = Task("cco-agent-analyze", `
-    scope: config
-    mode: detect-only
-  `, { model: "haiku", run_in_background: true })
-
-  // Ask questions while detection runs
+  // Ask questions first
   const answers = await AskUserQuestion([
     {
       question: "Team size?",
@@ -233,8 +227,13 @@ if (isUnattended || config.mode === "auto") {
     }
   ])
 
-  // Wait for detection
-  const detected = await TaskOutput(detectionTask.id)
+  // Run detection after questions
+  console.log("Analyzing project...")
+  const detected = await Task("cco-agent-analyze", `
+    scope: config
+    mode: detect-only
+  `, { model: "haiku" })
+
   configData = { detected: detected, answers: answers }
 }
 ```
