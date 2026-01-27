@@ -18,8 +18,5 @@
     "./agents/cco-agent-analyze.md",
     "./agents/cco-agent-apply.md",
     "./agents/cco-agent-research.md"
-  ],
-  "hooks": [
-    "./hooks/hooks.json"
   ]
 }
