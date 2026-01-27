@@ -257,7 +257,7 @@ commitsTask = Bash(`git log ${lastTag}..HEAD --oneline 2>/dev/null || git log --
 ### 1.5: Dependency Audit [BLOCKER if security]
 
 ```javascript
-depTask = Task("cco-agent-research", `
+depResults = Task("cco-agent-research", `
   scope: dependency
 
   Pre-release dependency audit:
@@ -270,7 +270,8 @@ depTask = Task("cco-agent-research", `
     security: [{ package, advisory, severity, cve }],
     summary: { total, outdated, security }
   }
-`, { model: "haiku", run_in_background: true })
+`, { model: "haiku" })  // Synchronous - Task returns results directly
+// NOTE: Do NOT use run_in_background for Task (agent) calls
 ```
 
 **Security advisories are BLOCKERS.** Outdated packages are warnings.
@@ -292,8 +293,10 @@ depTask = Task("cco-agent-research", `
 // Map intensity to command args
 const intensityFlag = `--intensity=${config.intensity}`
 
-// BOTH calls MUST be in same message block for parallelism
-optimizeTask = Task("general-purpose", `
+// BOTH calls in same message for parallel execution
+// Task tool executes multiple calls in parallel when in same message
+// Synchronous - each Task returns results directly
+optimizeResults = Task("general-purpose", `
   Execute /cco:optimize ${intensityFlag}
 
   CRITICAL: Run ALL 6 scopes (security, hygiene, types, lint, performance, ai-hygiene)
@@ -307,9 +310,9 @@ optimizeTask = Task("general-purpose", `
     accounting: { applied, failed, total },
     scopes: { security, hygiene, types, lint, performance, "ai-hygiene" }
   }
-`, { model: "opus", run_in_background: true })
+`, { model: "opus" })  // Synchronous - no run_in_background for Task
 
-reviewTask = Task("general-purpose", `
+reviewResults = Task("general-purpose", `
   Execute /cco:align ${intensityFlag}
 
   CRITICAL: Run ALL 5 scopes (architecture, patterns, testing, maintainability, ai-architecture)
@@ -324,7 +327,7 @@ reviewTask = Task("general-purpose", `
     accounting: { applied, failed, total },
     effortCategories: { quickWin, moderate, complex, major }
   }
-`, { model: "opus", run_in_background: true })
+`, { model: "opus" })  // Synchronous - no run_in_background for Task
 ```
 
 ### Validation
@@ -572,19 +575,22 @@ switch (planDecision) {
 
 ## Step-5: Results + Execute
 
-**Wait for all background tasks, then show summary and execute based on Q1 settings:**
+**Collect Bash background results, then show summary and execute based on Q1 settings:**
 
 ```javascript
-// Collect all background results
-optimizeResults = await TaskOutput(optimizeTask.id)
-reviewResults = await TaskOutput(reviewTask.id)
+// Task (agent) results already collected in previous steps (synchronous)
+// Only Bash background results need TaskOutput
+
+// Bash background results (TaskOutput works correctly for Bash)
 formatResults = await TaskOutput(verificationTasks.format)
 lintResults = await TaskOutput(verificationTasks.lint)
 typeResults = await TaskOutput(verificationTasks.type)
 testResults = await TaskOutput(verificationTasks.test)
 buildResults = await TaskOutput(verificationTasks.build)
-depResults = await TaskOutput(depTask.id)
 markersResult = await TaskOutput(markersTask.id)
+// Note: commitsTask already processed in Step-4
+
+// NOTE: optimizeResults, reviewResults, depResults already set from synchronous Task calls
 
 // Check if format made changes
 formatChanged = formatResults.stdout?.includes("reformatted") || formatResults.stdout?.includes("fixed")

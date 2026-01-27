@@ -228,26 +228,13 @@ if (isUnattended) {
 
 ---
 
-## Step-1: Setup [Q1: Intensity + Q2: Scopes + BACKGROUND ANALYSIS] [SKIP IF --auto]
+## Step-1: Setup [Q1: Intensity + Q2: Scopes] [SKIP IF --auto]
 
-**Start analysis in background while asking questions (or immediately if --auto):**
+**Execution Pattern:** Questions first, then synchronous analysis. This ensures reliable result handling.
 
 ```javascript
 // Determine if git is dirty from context
 gitDirty = gitStatus.trim().length > 0
-
-// Start analysis with ALL 8 scopes - will filter after Q1/Q2 (or use all if --auto)
-// Scopes: security (SEC-01-12), hygiene (HYG-01-15), types (TYP-01-10),
-//         lint (LNT-01-08), performance (PRF-01-10), ai-hygiene (AIH-01-08), robustness (ROB-01-10)
-analysisTask = Task("cco-agent-analyze", `
-  scopes: ["security", "hygiene", "types", "lint", "performance", "ai-hygiene", "robustness"]
-
-  Find all issues with severity, fix info, and effort/impact scores.
-  Return: {
-    findings: [{ id, scope, severity, title, location, fixable, approvalRequired, fix, effort, impact }],
-    summary: { scope: { count, critical, high, medium, low } }
-  }
-`, { model: "haiku", run_in_background: true })
 ```
 
 **UNATTENDED MODE: Skip all questions, use defaults from Mode Detection**
@@ -361,13 +348,24 @@ console.log(`## Quality Score: ${agentResponse.scores.overall}/100`)
 
 ---
 
-## Step-2: Analyze [WAIT FOR BACKGROUND]
+## Step-2: Analyze [SYNCHRONOUS]
 
-**Collect results, filter by intensity and scopes:**
+**Run analysis synchronously - Task tool returns results directly:**
 
 ```javascript
-// Wait for background analysis
-allFindings = await TaskOutput(analysisTask.id)
+// Run analysis (synchronous - results returned directly)
+// NOTE: Do NOT use run_in_background: true - output file stays empty
+// Task tool returns agent's response directly when synchronous
+allFindings = Task("cco-agent-analyze", `
+  scopes: ${JSON.stringify(config.scopes)}
+
+  Find all issues with severity, fix info, and effort/impact scores.
+  Return structured JSON:
+  {
+    findings: [{ id, scope, severity, title, location, fixable, approvalRequired, fix, effort, impact }],
+    summary: { scope: { count, critical, high, medium, low } }
+  }
+`, { model: "haiku" })  // No run_in_background - synchronous execution
 
 // Map intensity to severity thresholds
 const intensityThresholds = {
@@ -614,16 +612,20 @@ switch (planDecision) {
 
 ---
 
-## Step-3: Auto-fix [BACKGROUND]
+## Step-3: Apply Fixes [SYNCHRONOUS]
 
-**Start auto-fixes in background while preparing approval:**
+**Run fixes synchronously - Task tool returns results directly:**
 
 ```javascript
+let fixResults = { applied: 0, failed: 0, total: 0 }
+
 if (config.action !== "Report only" && autoFixable.length > 0) {
   // Determine if fix-all mode
   const isFixAll = config.action.includes("Everything") || isUnattended
 
-  autoFixTask = Task("cco-agent-apply", `
+  // NOTE: Synchronous execution - results returned directly
+  // Do NOT use run_in_background: true - output file stays empty
+  fixResults = Task("cco-agent-apply", `
     fixes: ${JSON.stringify(autoFixable)}
     fixAll: ${isFixAll}
 
@@ -658,10 +660,8 @@ if (config.action !== "Report only" && autoFixable.length > 0) {
 
     Return accounting at FINDING level:
     { applied: <findings_fixed>, failed: <findings_failed>, total: <findings_attempted> }
-  `, { model: "opus", run_in_background: true })
+  `, { model: "opus" })  // No run_in_background - synchronous execution
 }
-
-// Proceed to Step-4 immediately (auto-fix runs in background)
 ```
 
 ### Validation
@@ -685,14 +685,14 @@ if (config.action !== "Report only" && autoFixable.length > 0) {
 // Invariant: applied + failed = total
 // NOTE: No "declined" category - AI has no option to decline. Fix or fail with reason.
 
-// Get results from Step-3
-fixResults = autoFixResults?.accounting || { applied: 0, failed: 0, total: 0 }
+// fixResults already set in Step-3 (synchronous execution)
+// Default: { applied: 0, failed: 0, total: 0 } if no fixes needed
 
-// Final accounting
+// Final accounting - use fixResults directly (set in Step-3)
 finalCounts = {
-  applied: fixResults.applied,
-  failed: fixResults.failed,
-  total: fixResults.total
+  applied: fixResults.applied || 0,
+  failed: fixResults.failed || 0,
+  total: fixResults.total || 0
 }
 
 // Final verification - these MUST balance

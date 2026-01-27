@@ -325,17 +325,20 @@ analysisTask = Task("cco-agent-analyze", `
     metrics: { coupling, cohesion, complexity, testCoverage },
     techAssessment: { stack, alternatives, recommendation }
   }
-`, { model: analyzeModel, run_in_background: true })
+`, { model: analyzeModel })  // Synchronous - results returned directly
+// NOTE: Do NOT use run_in_background: true for Task (agent) calls
+// Background agents return results via task-notification, not TaskOutput
 ```
 
 ---
 
 ## Step-2: Gap Analysis [CURRENT vs IDEAL]
 
-**Wait for analysis and calculate gaps:**
+**Results from synchronous analysis:**
 
 ```javascript
-agentResponse = await TaskOutput(analysisTask.id)
+// agentResponse is already set from Step-1 (synchronous Task call)
+agentResponse = analysisTask  // Task returns results directly when synchronous
 
 // Filter by selected scopes
 findings = agentResponse.findings.filter(f => selectedScopes.includes(f.scope))

@@ -11,6 +11,21 @@ Batch write operations with verification. **Fix everything, leave nothing behind
 
 > **Implementation Note:** Code blocks use JavaScript-like pseudocode. Actual tool calls use Claude Code SDK with appropriate parameters.
 
+## Calling This Agent [CRITICAL]
+
+**Always call synchronously (no `run_in_background`):**
+
+```javascript
+// CORRECT - synchronous, results returned directly
+results = Task("cco-agent-apply", prompt, { model: "opus" })
+
+// WRONG - background mode breaks result retrieval for Task (agent) calls
+// Do NOT use: Task(..., { run_in_background: true })
+// TaskOutput only works for Bash background, not Task (agent) background
+```
+
+**Why:** Task (agent) background results are delivered via `task-notification`, not `TaskOutput`. For reliable result handling, use synchronous calls.
+
 ## When to Use This Agent [CRITICAL]
 
 | Scenario | Use This Agent | Use Edit/Write Instead |
