@@ -18,7 +18,7 @@ model: opus
 ## Args
 
 - `--auto` or `--unattended`: Fully unattended mode for CI/CD, pre-commit, cron jobs
-  - **No questions asked** - all 6 scopes, Full Fix intensity
+  - **No questions asked** - all 8 scopes, Full Fix intensity
   - **No progress output** - silent execution
   - **Only final summary** - single status line (machine-readable)
   - Exit codes: 0 (success), 1 (warnings), 2 (failures)
@@ -29,6 +29,7 @@ model: opus
 - `--performance`: Performance scope only (PRF-01 to PRF-10)
 - `--ai-hygiene`: AI hygiene scope only (AIH-01 to AIH-08)
 - `--robustness`: Robustness scope only (ROB-01 to ROB-10)
+- `--doc-sync`: Doc-code sync scope only (DOC-01 to DOC-08)
 - `--report`: Report only, no fixes
 - `--fix`: Auto-fix safe items (default)
 - `--fix-all`: Full Fix intensity without approval
@@ -44,6 +45,7 @@ model: opus
 - `/cco:optimize --auto` - Silent full optimization (all scopes, full fix)
 - `/cco:optimize --security --fix-all` - Security only, fix all
 - `/cco:optimize --ai-hygiene` - Find AI-generated code issues
+- `/cco:optimize --doc-sync` - Find doc↔code inconsistencies
 - `/cco:optimize --score` - Quick quality score
 
 ## Core Principle [CRITICAL]
@@ -115,30 +117,9 @@ A finding is **FIXABLE** if ALL conditions are met:
 - Platform-specific guards and conditionals
 - Test infrastructure patterns
 
-## No Deferrals Policy [CRITICAL]
+## Policies
 
-**AI never decides to skip or defer. User decides.**
-
-### Interactive Mode (default)
-When a finding requires complex/architectural changes:
-1. **Show the finding** with effort estimate
-2. **Ask user**: "This requires significant changes (~{n} files). Fix now? [Yes] [Skip]"
-3. **User decides** - AI implements user's choice
-
-### Unattended Mode (--auto)
-- **ALL findings fixed** - no questions, no deferrals
-- **Complex fixes included** - implement them regardless of effort
-- **Only exit states**: FIXED or TECHNICAL FAILURE (with specific blocker)
-
-### Everything Mode (--fix-all)
-When `--fix-all` or user selects "Full Fix":
-- **Zero deferrals** - no "future iteration", no "later pass", no "lower priority"
-- **Zero skips** - every finding must be addressed NOW
-- **Complex fixes** - implement them, don't defer them
-- **Only exit** - FIXED or TECHNICAL FAILURE (with specific blocker)
-- Accounting: `applied + failed = total` (no AI declines allowed)
-
-**Rule:** Exclusion decision belongs to USER, not AI. AI must attempt or ask.
+**See Core Rules:** `CCO Operation Standards` for No Deferrals Policy, Intensity Levels, and Quality Thresholds.
 
 ## Context
 
@@ -185,7 +166,7 @@ if (isUnattended) {
 
   config = {
     intensity: "full-fix",  // All severities
-    scopes: ["security", "hygiene", "types", "lint", "performance", "ai-hygiene", "robustness"],  // ALL 7 scopes
+    scopes: ["security", "hygiene", "types", "lint", "performance", "ai-hygiene", "robustness", "doc-sync"],  // ALL 8 scopes
     action: "Everything",   // No approval needed
     gitState: "Continue anyway"  // Don't stash
   }
@@ -247,7 +228,7 @@ if (isUnattended) {
 // Determine if git is dirty from context
 gitDirty = gitStatus.trim().length > 0
 
-// Start analysis with ALL 6 scopes - will filter after Q1/Q2 (or use all if --auto)
+// Start analysis with ALL 8 scopes - will filter after Q1/Q2 (or use all if --auto)
 // Scopes: security (SEC-01-12), hygiene (HYG-01-15), types (TYP-01-10),
 //         lint (LNT-01-08), performance (PRF-01-10), ai-hygiene (AIH-01-08), robustness (ROB-01-10)
 analysisTask = Task("cco-agent-analyze", `
@@ -303,7 +284,7 @@ if (isUnattended) {
   }
 ```
 
-**Q3: Scope Selection - Advanced (3 scopes):**
+**Q3: Scope Selection - Advanced (4 scopes):**
 
 ```javascript
   scopeQuestion2 = {
@@ -312,7 +293,8 @@ if (isUnattended) {
     options: [
       { label: "Performance (10)", description: "PRF-01-10: N+1, blocking I/O, caching" },
       { label: "AI Hygiene (8)", description: "AIH-01-08: hallucinations, orphan abstractions" },
-      { label: "Robustness (10)", description: "ROB-01-10: timeouts, retries, validation, null safety" }
+      { label: "Robustness (10)", description: "ROB-01-10: timeouts, retries, validation, null safety" },
+      { label: "Doc Sync (8)", description: "DOC-01-08: README outdated, API mismatch, broken links" }
     ],
     multiSelect: true
   }
@@ -792,7 +774,7 @@ console.log(summary)
 
 **Accounting invariant:** `applied + failed = total`
 
-### Scope Coverage (7 Scopes, 73 Checks)
+### Scope Coverage (8 Scopes, 81 Checks)
 
 | Scope | ID Range | Checks |
 |-------|----------|--------|
@@ -803,6 +785,7 @@ console.log(summary)
 | `performance` | PRF-01-10 | N+1 patterns, list on iterator, missing cache, blocking in async, large file reads, missing pagination, string concat loops, unnecessary copies, missing pooling, sync in hot paths |
 | `ai-hygiene` | AIH-01-08 | Hallucinated APIs, orphan abstractions, phantom imports, dead feature flags, stale mocks, incomplete implementations, copy-paste artifacts, dangling references |
 | `robustness` | ROB-01-10 | Code-level defensive patterns: missing timeouts, retries, endpoint guards, unbounded collections, implicit coercion, null checks, graceful degradation, circuit breakers, resource cleanup, concurrent safety |
+| `doc-sync` | DOC-01-08 | README outdated, API signature mismatch, deprecated references in docs, missing new feature docs, outdated examples, broken internal links, changelog not updated, comment-code drift |
 
 ### Context Application
 
@@ -817,7 +800,7 @@ console.log(summary)
 
 | Flag | Effect |
 |------|--------|
-| `--auto` | **Unattended mode:** all 7 scopes, full-fix intensity, no questions, silent execution, single-line summary |
+| `--auto` | **Unattended mode:** all 8 scopes, full-fix intensity, no questions, silent execution, single-line summary |
 | `--security` | Security scope only (SEC-01-12) |
 | `--hygiene` | Hygiene scope only (HYG-01-15) |
 | `--types` | Types scope only (TYP-01-10) |
@@ -825,6 +808,7 @@ console.log(summary)
 | `--performance` | Performance scope only (PRF-01-10) |
 | `--ai-hygiene` | AI hygiene scope only (AIH-01-08) |
 | `--robustness` | Robustness scope only (ROB-01-10) |
+| `--doc-sync` | Doc-code sync scope only (DOC-01-08) |
 | `--report` | Report only, analyze without fixing |
 | `--fix` | Standard intensity (default) |
 | `--fix-all` | Full-fix intensity, no approval needed |

@@ -256,13 +256,13 @@ Required flow: `Analyze → Report → Approve → Apply → Verify`
 Dynamically detect scopes from agent definitions, compare to docs/agents.md.
 
 **Current Agent Scopes:**
-- **cco-agent-analyze**: OPTIMIZE (security, hygiene, types, lint, performance, ai-hygiene, robustness) + REVIEW (architecture, patterns, testing, maintainability, ai-architecture, functional-completeness) + config
+- **cco-agent-analyze**: OPTIMIZE (security, hygiene, types, lint, performance, ai-hygiene, robustness, doc-sync) + REVIEW (architecture, patterns, testing, maintainability, ai-architecture, functional-completeness) + config + docs
 - **cco-agent-apply**: fixes, config
 - **cco-agent-research**: local, search, analyze, synthesize, full, dependency
 
 | Check | Requirement | Severity |
 |-------|-------------|----------|
-| Analyze scopes | Documented = implemented (13 OPTIMIZE + 6 REVIEW) | HIGH |
+| Analyze scopes | Documented = implemented (8 OPTIMIZE + 6 REVIEW) | HIGH |
 | Apply scopes | Documented = implemented | HIGH |
 | Research scopes | Documented = implemented (6 scopes) | HIGH |
 | No overlap | ROB vs FUN clearly differentiated (code-level vs API-level) | MEDIUM |
@@ -334,7 +334,7 @@ Auto-setup (via /cco:tune) must produce:
 
 ---
 
-## Category 5: Token Efficiency (11 checks)
+## Category 5: Token Efficiency & Specification Clarity (22 checks)
 
 ### 5.1 Content Density
 | Check | Requirement | Severity |
@@ -360,6 +360,69 @@ Auto-setup (via /cco:tune) must produce:
 | Parallel agents | Independent analyses parallel | HIGH |
 | Background tasks | Long operations use run_in_background: true | HIGH |
 | Quick mode | Minimal output, haiku model | MEDIUM |
+
+### 5.4 Specification Clarity [CRITICAL]
+
+**Philosophy:** Claude knows software engineering. Don't teach HOW - specify WHAT you want and your STANDARDS. Let the model apply its expertise systematically.
+
+**Three Pillars:**
+1. **WHAT over HOW**: Define desired output, not implementation steps
+2. **Standards over Teaching**: State thresholds/constraints, not rationale
+3. **DRY for Policies**: Common patterns in Core Rules, commands reference them
+
+#### 5.4.1 Output Specification
+| Check | Requirement | Severity |
+|-------|-------------|----------|
+| I/O contract | Steps define Input → Output → Constraints | HIGH |
+| Schema provided | JSON/object structure for complex outputs | HIGH |
+| Success criteria | Clear definition of "done" | HIGH |
+| No algorithm walkthrough | Zero if/else pseudocode for obvious logic | HIGH |
+
+#### 5.4.2 Standards Declaration
+| Check | Requirement | Severity |
+|-------|-------------|----------|
+| Thresholds only | Numeric limits without prose justification | MEDIUM |
+| No academic rationale | Zero citations for industry standards | MEDIUM |
+| Quality table | Metrics in table format, not paragraphs | MEDIUM |
+| Severity defined | Clear CRITICAL/HIGH/MEDIUM/LOW criteria | HIGH |
+
+#### 5.4.3 Policy Consolidation
+| Check | Requirement | Severity |
+|-------|-------------|----------|
+| Core Rules reference | Repeated policies point to `CCO Operation Standards` | HIGH |
+| No policy duplication | No Deferrals, Intensity, Accounting appear once | HIGH |
+| Single definition | Each concept has exactly one authoritative source | HIGH |
+
+**Good pattern:**
+```markdown
+## Step-2: Analysis
+**Input:** File list from Step-1
+**Output:** `{ findings: Finding[], metrics: Metrics }`
+**Constraints:** Confidence >= 70, max 20 findings/scope, platform-specific excluded
+**Policies:** See Core Rules > CCO Operation Standards
+```
+
+**Bad patterns:**
+```markdown
+// ❌ Teaching HOW (40 lines of pseudocode)
+for (const file of files) {
+  if (shouldAnalyze(file)) { ... }
+}
+
+// ❌ Academic justification
+"Studies show >50% coupling leads to 2x bug rates (Fowler 1999)"
+
+// ❌ Policy duplication
+"AI never decides to skip..." (repeated in 4 files)
+```
+
+### 5.5 AskUserQuestion Limits
+| Check | Requirement | Severity |
+|-------|-------------|----------|
+| Max 4 questions | Single AskUserQuestion call ≤4 questions | HIGH |
+| Max 4 options | Each question ≤4 options (Other added auto) | HIGH |
+| Scope grouping | 5+ scopes split into logical groups (Code Quality / Advanced) | HIGH |
+| No overflow | Never truncate options - split across questions | CRITICAL |
 
 ---
 
@@ -528,28 +591,6 @@ Use detected counts from Category 1.
 
 ---
 
-## Reasoning Strategies
-
-### Step-Back (Before Each Category)
-Ask: "What is the purpose of this component type?"
-
-### Chain of Thought (Each Finding)
-```
-1. Identify: What exactly is the issue?
-2. Impact: What does this affect?
-3. Evidence: What confirms this?
-4. Severity: Based on evidence, what level?
-```
-
-### Self-Consistency (CRITICAL Only)
-```
-Path A: Analyze as if CCO is broken
-Path B: Analyze as if CCO works correctly
-Consensus: Both agree → confirm CRITICAL. Disagree → downgrade to HIGH
-```
-
----
-
 ## Output Format
 
 ```
@@ -574,7 +615,7 @@ Detected:
 │ 9. Release Readiness    │   {n}  │   {n}  │  {st}  │
 │ 10. Best Practices      │   {n}  │   {n}  │  {st}  │
 ├─────────────────────────┼────────┼────────┼────────┤
-│ TOTAL (~130 checks)     │   {n}  │   {n}  │  {st}  │
+│ TOTAL (~141 checks)     │   {n}  │   {n}  │  {st}  │
 └─────────────────────────┴────────┴────────┴────────┘
 
 {if findings}
@@ -697,14 +738,11 @@ Show final report with:
 
 ## Anti-Overengineering Guard
 
-Before flagging ANY missing element:
-1. Does absence break something?
-2. Does absence confuse users?
-3. Is adding it worth complexity cost?
+Before flagging, ask: (1) Does absence break something? (2) Confuse users? (3) Worth complexity?
 
 **All NO → not a finding.**
 
-NON-findings:
+NON-findings (concrete examples):
 - Simple command without explicit progress tracking
 - Fast command without progress bar
 - 2-step command without architecture table
@@ -737,13 +775,16 @@ NON-findings:
 
 ## Rules
 
-1. **Context first** - Verify CCO repo accessible before analysis
-2. **Parallel batches** - Categories 1-5 and 6-10 run in parallel
-3. **Dynamic counts** - Detect actual counts, never hardcode
-4. **80/20 prioritization** - Quick Win before Moderate before Complex
-5. **Evidence required** - Every finding needs file:line reference
-6. **Anti-overengineering** - Apply 3-question test before flagging
-7. **Self-consistency** - CRITICAL findings need dual-path validation
+1. **Context first** - Verify CCO repo before analysis
+2. **Dynamic counts** - Never hardcode counts
+3. **80/20 prioritization** - Quick Win → Moderate → Complex
+4. **Evidence required** - Every finding needs file:line
+5. **Self-consistency** - CRITICAL needs dual-path validation:
+   - Path A: Analyze as if CCO is broken
+   - Path B: Analyze as if CCO works correctly
+   - Consensus: Both agree → CRITICAL. Disagree → downgrade to HIGH
+
+**See Core Rules:** Reasoning Strategies for Step-Back and Chain of Thought patterns.
 
 ---
 

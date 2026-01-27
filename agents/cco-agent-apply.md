@@ -77,91 +77,13 @@ For each fix:
 5. Confirm result is simpler AND more maintainable
 6. Document only significant changes that affect understanding
 
-## Core Principle [CRITICAL]
+## Policies
 
-Every finding MUST be fixed. No "manual" or "skip" unless:
-1. Fix would break working code (verified by tests)
-2. Technical impossibility (file locked, missing dependency, etc.)
+**See Core Rules:** `CCO Operation Standards` for No Deferrals Policy, Intensity Levels, and Quality Thresholds.
 
-## No Deferrals Policy [CRITICAL]
+**Core Principle:** Every finding MUST be fixed. Only valid failures are technical impossibilities (file locked, missing dependency, would break tests, circular dependency, syntax error).
 
-**AI never decides to skip or defer. User decides.**
-
-### Interactive Mode (default)
-When a finding requires complex changes:
-1. **Show the finding** with effort estimate
-2. **Ask user**: "This requires significant changes (~{n} files). Fix now? [Yes] [Skip]"
-3. **User decides** - AI implements user's choice
-
-### Unattended Mode (fixAll: true)
-- **ALL findings fixed** - no questions, no deferrals
-- **Complex fixes included** - implement them regardless of effort
-- **Only exit states**: FIXED or TECHNICAL FAILURE (with specific blocker)
-
-**Rule:** Exclusion decision belongs to USER, not AI. AI must attempt or ask.
-
----
-
-## Fix-All Mode [CRITICAL]
-
-When `fixAll: true` is passed in the task context:
-
-**PLANNING METADATA ≠ EXECUTION CRITERIA:**
-
-Fields like `effort`, `impact`, `bucket`, `priority` are for **reporting/categorization only**.
-When `fixAll: true`, these fields have NO influence on what gets fixed. Everything gets fixed.
-
-**MANDATORY RULES:**
-
-1. **Zero Agent-Initiated Skips**: Agent MUST NOT skip, decline, or defer ANY finding
-2. **All Metadata Ignored**: Effort/impact/bucket/priority don't determine execution
-3. **No "Too Complex" Excuses**: Agent cannot decide a fix is "too complex" - that's user's decision
-4. **Ask, Don't Skip**: If fix requires significant changes (>50 lines) AND not unattended, ask user:
-   ```javascript
-   // Return to parent with question needed
-   return {
-     status: "needs_confirmation",
-     finding: finding,
-     estimatedLines: 75,
-     question: "Fix requires ~75 lines change. Proceed?"
-   }
-   ```
-4. **Only Technical Impossibility = Failed**: Only mark as `fail` if:
-   - File is locked/read-only
-   - Required dependency is missing and cannot be installed
-   - Fix would create circular dependency
-   - Syntax error would be introduced (verified by linter)
-5. **Report Everything**: Every item appears in results with clear status
-
-**Accounting:**
-
-```javascript
-// AI has no option to decline - only done or fail
-// Every fail MUST have a technical reason
-for (const item of failedItems) {
-  assert(item.reason.startsWith("Technical:"),
-    "Failures must be technical impossibilities")
-}
-```
-
-**Valid Fail Reasons (Technical Impossibilities):**
-
-| Reason | Example |
-|--------|---------|
-| `Technical: File locked` | OS file lock, git lock |
-| `Technical: Missing dependency` | Module not installed, cannot pip install |
-| `Technical: Would break tests` | Verified by running tests after fix |
-| `Technical: Circular dependency` | Fix would create import cycle |
-| `Technical: Syntax error` | Linter rejects the fix |
-
-**Invalid Fail Reasons (FORBIDDEN in fix-all mode):**
-
-| Reason | Why Invalid |
-|--------|-------------|
-| Effort categories (quickWin/moderate/complex/major) | For reporting only, not execution criteria |
-| "Too complex" / "Would take too long" | User's decision, not agent's |
-| "Needs manual review" | Agent must attempt fix |
-| "Unsure about approach" | Ask user via parent agent |
+**Fix-All Mode:** When `fixAll: true`, effort/impact/bucket metadata is for reporting only - everything gets fixed. Ask user for significant changes (>50 lines), never skip.
 
 ## Execution [CRITICAL]
 

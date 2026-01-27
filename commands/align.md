@@ -139,30 +139,9 @@ if (args.includes("--auto")) {
 
 ---
 
-## No Deferrals Policy [CRITICAL]
+## Policies
 
-**AI never decides to skip or defer. User decides.**
-
-### Interactive Mode (default)
-When a finding requires complex/architectural changes:
-1. **Show the finding** with effort estimate and impact
-2. **Ask user**: "This requires architectural changes (~{n} files, {effort}). Fix now? [Yes] [Skip]"
-3. **User decides** - AI implements user's choice
-
-### Unattended Mode (--auto)
-- **ALL findings fixed** - no questions, no deferrals
-- **Architectural changes included** - implement them regardless of complexity
-- **Only exit states**: FIXED or TECHNICAL FAILURE (with specific blocker)
-
-### Everything Mode (--intensity=full-fix)
-When `--intensity=full-fix` or user selects "Full Fix":
-- **ALL findings fixed** - effort categories are for reporting only, not filtering
-- **Zero skips** - every finding must be addressed NOW
-- **No deferrals** - no "future iteration", no "later pass", no "lower priority"
-- **Only exit** - FIXED or TECHNICAL FAILURE (with specific blocker)
-- Accounting: `applied + failed = total` (no AI declines allowed)
-
-**Rule:** Exclusion decision belongs to USER, not AI. AI must attempt or ask.
+**See Core Rules:** `CCO Operation Standards` for No Deferrals Policy, Intensity Levels, and Quality Thresholds.
 
 ---
 
