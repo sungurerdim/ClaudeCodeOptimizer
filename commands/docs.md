@@ -251,7 +251,8 @@ analysisTask = Task("cco-agent-analyze", `
       buildTool: null
     }
   }
-`, { model: "haiku", run_in_background: true })
+`, { model: "haiku" })  // Synchronous - results returned directly
+// NOTE: Do NOT use run_in_background: true for Task (agent) calls
 ```
 
 ---
@@ -259,7 +260,8 @@ analysisTask = Task("cco-agent-analyze", `
 ## Step-2: Gap Analysis [IDEAL vs CURRENT]
 
 ```javascript
-agentResponse = await TaskOutput(analysisTask.id)
+// agentResponse is already set from Step-1 (synchronous Task call)
+agentResponse = analysisTask  // Task returns results directly when synchronous
 existing = agentResponse.existing
 detected = agentResponse.detected
 inferred = agentResponse.inferred

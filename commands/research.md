@@ -108,51 +108,59 @@ parsedQuery = parseQuery(userQuery)
 // Delegate local search to research agent (NOT analyze agent)
 // Purpose: Find examples, understand existing implementations
 // analyze agent is for quality/security scanning, not information research
-Task("cco-agent-research", `
+localResults = Task("cco-agent-research", `
   scope: local
   query: "${parsedQuery.concepts}"
   patterns: ["**/*.{py,ts,js,go,rs,md}"]
   context_lines: 3
-`, { model: "haiku", run_in_background: true })
+`, { model: "haiku" })  // Synchronous - results returned directly
+// NOTE: Do NOT use run_in_background: true for Task (agent) calls
+// Multiple Task calls in same message execute in parallel automatically
 ```
 
 ### 3.2 Web Search (via Agent)
 
 ```javascript
+// PARALLEL EXECUTION: Multiple Task calls in same message run in parallel
+// Each Task returns results directly (synchronous)
+
 // T1: Official Documentation
-Task("cco-agent-research", `
+docsResults = Task("cco-agent-research", `
   scope: search
   query: "${parsedQuery.concepts} official documentation ${parsedQuery.date}"
   allowed_domains: [docs.*, official.*, *.io/docs, *.dev/docs]
-`, { model: "haiku", run_in_background: depth === "deep" })
+`, { model: "haiku" })
 
 // T2: GitHub & Changelogs
-Task("cco-agent-research", `
+githubResults = Task("cco-agent-research", `
   scope: search
   query: "${parsedQuery.concepts} github changelog release notes"
   allowed_domains: [github.com, gitlab.com, bitbucket.org]
-`, { model: "haiku", run_in_background: depth === "deep" })
+`, { model: "haiku" })
 
 // T3: Technical Blogs (Standard+)
+let blogResults = null
 if (depth !== "quick") {
-  Task("cco-agent-research", `
+  blogResults = Task("cco-agent-research", `
     scope: search
     query: "${parsedQuery.concepts} tutorial guide best practices"
-  `, { model: "haiku", run_in_background: true })
+  `, { model: "haiku" })
 }
 
 // T4: Community (Standard+)
+let communityResults = null
 if (depth !== "quick") {
-  Task("cco-agent-research", `
+  communityResults = Task("cco-agent-research", `
     scope: search
     query: "${parsedQuery.concepts} stackoverflow discussion"
     allowed_domains: [stackoverflow.com, reddit.com, dev.to, hashnode.com]
-  `, { model: "haiku", run_in_background: true })
+  `, { model: "haiku" })
 }
 
 // Security Track (if --security or security-related query)
+let securityResults = null
 if (parsedQuery.mode === "security") {
-  Task("cco-agent-research", `
+  securityResults = Task("cco-agent-research", `
     scope: search
     query: "${parsedQuery.concepts} CVE vulnerability advisory"
     allowed_domains: [nvd.nist.gov, cve.mitre.org, snyk.io, github.com/advisories]
@@ -164,16 +172,16 @@ if (parsedQuery.mode === "security") {
 
 ```javascript
 if (parsedQuery.comparison) {
-  // Split into separate tracks for A vs B comparison
-  Task("cco-agent-research", `
+  // PARALLEL: Multiple Task calls in same message
+  optionAResults = Task("cco-agent-research", `
     scope: search
     query: "${parsedQuery.comparison.optionA} features pros cons"
-  `, { model: "haiku", run_in_background: true })
+  `, { model: "haiku" })
 
-  Task("cco-agent-research", `
+  optionBResults = Task("cco-agent-research", `
     scope: search
     query: "${parsedQuery.comparison.optionB} features pros cons"
-  `, { model: "haiku", run_in_background: true })
+  `, { model: "haiku" })
 }
 ```
 
