@@ -127,11 +127,15 @@ if (args.includes("--auto")) {
 
 ## Everything Mode [CRITICAL]
 
-When `--intensity=full-fix` or user selects "Full Fix":
+When `--auto` or `--intensity=full-fix` or user selects "Full Fix":
 - Pass to both `/cco:optimize --intensity=full-fix` and `/cco:align --intensity=full-fix`
-- **Zero deferrals** - no "future iteration", no "lower priority"
-- **Zero skips** - every finding fixed NOW
+- **Zero commentary** - No "this is complex", "needs refactor", "minor detail", "consider later"
+- **Zero deferrals** - No "future iteration", "lower priority", "recommend manual"
+- **Zero skips** - Every finding fixed NOW, no exceptions
+- **Only technical failures** - File not found, parse error, permission denied
 - Final accounting: `applied + failed = total` (no AI declines allowed)
+
+**See Core Rules:** `No Deferrals Policy` for forbidden responses and valid failure reasons.
 
 ---
 

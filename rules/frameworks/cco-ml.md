@@ -1,94 +1,62 @@
-# ML/AI Specialized
-*Machine learning and AI development rules*
+# ML/AI Rules
+*Specific parameters and patterns*
 
-## Training (ML:Training)
-**Trigger:** {ml_training_deps}
+## LLM Best Practices [CRITICAL]
 
-- **Seed-All**: Set reproducible random seeds for reproducibility
-- **Checkpoint-Save**: Save model checkpoints regularly during training
-- **Metrics-Log**: Log training metrics (loss, accuracy, etc.)
-- **GPU-Utilize**: Optimize GPU memory utilization with batch sizing
-
-## LLM Orchestration (ML:LLM)
-**Trigger:** {llm_orchestration_deps}
-
-### Prompt Engineering
-- **Prompt-Template**: Versioned prompt templates with clear structure
-- **Explicit-Instructions**: Specific instructions, not vague guidance
-- **Positive-Framing**: State what to do, not what to avoid
-- **Context-Motivation**: Explain WHY instructions matter for better generalization
-
-### API Best Practices
-- **Token-Limit**: Respect context limits, use context awareness when available
-- **Retry-Backoff**: Retry with exponential backoff for rate limits and transient errors
-- **Cost-Track**: Track API costs per operation and user
-- **Prompt-Cache**: Cache identical prompts for cost savings (use cached_content when available)
-- **Streaming**: Use streaming for long responses to improve perceived latency
+### API Usage
+| Pattern | Implementation |
+|---------|----------------|
+| Retry | Exponential backoff for 429/5xx |
+| Streaming | Use for responses > 100 tokens |
+| Caching | Cache identical prompts |
+| Cost Tracking | Log tokens per request |
 
 ### Structured Output
-- **Structured-Output**: Use structured outputs/JSON mode for reliable parsing
-- **Function-Calling**: Use tool/function calling for actions, not string parsing
-- **Schema-Validation**: Validate LLM output against expected schema
+- Use JSON mode or structured outputs (not string parsing)
+- Use function/tool calling for actions
+- Validate output against schema
 
-### RAG Patterns
-- **RAG-Chunk**: Chunk documents appropriately (512-1024 tokens typical)
-- **Embedding-Model**: Use appropriate embedding model for domain
-- **Reranking**: Use reranking for improved retrieval quality
-- **Source-Attribution**: Include source references in generated responses
+### RAG Configuration
 
-## Inference (ML:Inference)
-**Trigger:** {inference_deps}
+| Parameter | Typical Value |
+|-----------|---------------|
+| Chunk Size | 512-1024 tokens |
+| Chunk Overlap | 10-20% |
+| Top-K Retrieval | 3-10 documents |
 
-- **Batch-Infer**: Batch for throughput
-- **Quantize-Prod**: Quantization for production
-- **Timeout-Guard**: Inference timeout limits
-- **Memory-Manage**: Clear model memory
+**Always**: Rerank results, include source attribution
 
-## ML SDK (ML:SDK)
-**Trigger:** {ai_sdk_deps}
+---
 
-- **Key-Rotate**: API key rotation
-- **Rate-Limit**: Handle rate limits gracefully
-- **Response-Validate**: Validate API responses
-- **Fallback-Model**: Fallback to alternative models
+## Training Essentials
 
-## LangChain (ML:LangChain)
-**Trigger:** {langchain_deps}
+- **Reproducibility**: Set all random seeds (numpy, torch, random)
+- **Checkpoints**: Save every N epochs/steps
+- **Metrics**: Log loss, accuracy, learning rate
 
-- **Chain-Compose**: Compose chains with LCEL
-- **Memory-Manage**: Configure appropriate memory type
-- **Callbacks-Use**: Use callbacks for observability
-- **Vector-Store**: Choose appropriate vector store
-- **Agent-Tools**: Define clear tool descriptions
+---
 
-## LlamaIndex (ML:LlamaIndex)
-**Trigger:** {llamaindex_deps}
+## Framework Gotchas
 
-- **Index-Choose**: Choose index type (VectorStore, List, Tree)
-- **Node-Parser**: Configure appropriate node parser
-- **Retriever-Tune**: Tune retriever parameters (top_k, similarity)
-- **Response-Synthesizer**: Choose response synthesis strategy
-- **Storage-Persist**: Persist indices for reuse
+### PyTorch
+- `model.eval()` + `torch.no_grad()` for inference
+- Save `state_dict()`, not full model
+- `device_map="auto"` for large models
 
-## HuggingFace (ML:HuggingFace)
-**Trigger:** {huggingface_deps}
+### TensorFlow
+- `@tf.function` for graph mode performance
+- `tf.data` pipeline for efficient loading
 
-- **Pipeline-Use**: Use pipelines for common tasks
-- **Tokenizer-Fast**: Use fast tokenizers when available
-- **Device-Map**: Use device_map="auto" for large models
+### HuggingFace
+- Fast tokenizers when available
+- `device_map="auto"` for multi-GPU
 
-## PyTorch (ML:PyTorch)
-**Trigger:** {pytorch_deps}
+---
 
-- **Device-Agnostic**: Write device-agnostic code
-- **Grad-Context**: Use no_grad for inference
-- **DataLoader-Workers**: Configure num_workers for loading
-- **Model-Save**: Save state_dict, not full model
-- **Mixed-Precision**: Use torch.amp for mixed precision
+## Inference Optimization
 
-## TensorFlow (ML:TensorFlow)
-**Trigger:** {tensorflow_deps}
-
-- **Graph-Mode**: Use @tf.function decorator for performance
-- **Dataset-Pipeline**: Use tf.data for efficient input pipelines
-- **Mixed-Precision**: Use mixed precision for training performance
+| Technique | Benefit |
+|-----------|---------|
+| Batching | Higher throughput |
+| Quantization (INT8) | 2-4x speedup, minor quality loss |
+| KV Cache | Faster autoregressive generation |

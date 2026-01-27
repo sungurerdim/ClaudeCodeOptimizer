@@ -121,6 +121,14 @@ A finding is **FIXABLE** if ALL conditions are met:
 
 **See Core Rules:** `CCO Operation Standards` for No Deferrals Policy, Intensity Levels, and Quality Thresholds.
 
+### No Deferrals in Auto/Fix-All [CRITICAL]
+
+When `--auto` or `--fix-all` is active:
+- **Zero commentary** - No "this is complex", "needs refactor", "minor detail"
+- **Zero deferrals** - No "consider later", "recommend manual", "outside scope"
+- **Zero skips** - Every finding = FIXED or TECHNICAL FAILURE
+- **Only technical failures** - File not found, parse error, permission denied
+
 ## Context
 
 - Git status: !`git status --short`
@@ -623,14 +631,24 @@ if (config.action !== "Report only" && autoFixable.length > 0) {
     Group by file for efficiency.
 
     ${isFixAll ? `
-    FULL FIX MODE [MANDATORY]:
+    FIX-ALL MODE [MANDATORY]:
     Fix ALL items. Effort categories are for reporting only, not filtering.
 
     Rules:
     - ALL findings must be fixed regardless of effort level
     - Zero agent-initiated skips
     - Every item = FIXED or TECHNICAL FAILURE (with "Technical: [reason]")
-    - If unsure → ask user, don't skip
+    - If unsure → fix it anyway, user reviews with git diff
+
+    FORBIDDEN RESPONSES (never use these as skip reasons):
+    - "This is too complex" → Fix it
+    - "This requires refactoring" → Do the refactor
+    - "This is a minor detail" → Fix it anyway
+    - "Consider doing this later" → Do it NOW
+    - "This might break something" → Fix it, user reviews
+    - "Recommend manual review" → Apply the fix
+
+    ONLY VALID FAILURES: File not found, parse error, permission denied
     ` : ""}
 
     CRITICAL - Counting:
