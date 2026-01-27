@@ -6,6 +6,10 @@
           {
             "type": "command",
             "command": "type \"${CLAUDE_PLUGIN_ROOT}\\hooks\\core-rules.json\" 2>nul || cat \"${CLAUDE_PLUGIN_ROOT}/hooks/core-rules.json\""
+          },
+          {
+            "type": "command",
+            "command": "echo [CCO-CONTEXT-CHECK] Check if auto-context contains cco: true marker. If NOT present: Call Task(cco-agent-analyze, scope=config, model=haiku) with prompt: CCO is not configured for this project. Offer setup options first via AskUserQuestion: [Auto-setup] Detect stack and create rules automatically, [Interactive] Ask questions to customize setup, [Skip] Dont configure CCO for this project. If Skip return {skip:true}. If Auto-setup detect without questions return {detected,answers:defaults}. If Interactive ask questions while detecting return {detected,answers}. Then if not skipped: Call Task(cco-agent-apply, scope=config, model=opus) with the configData to write files and output context for immediate use."
           }
         ]
       }
