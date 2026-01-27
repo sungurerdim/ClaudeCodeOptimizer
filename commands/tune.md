@@ -174,7 +174,66 @@ const configData = await Task("cco-agent-analyze", `
 
   ${config.mode === "auto" ?
     "Return { detected, answers: defaults } - NO questions asked" :
-    "Ask user to confirm/override each detected value"
+    `## Interactive Mode Questions
+
+    After detection, ask user to confirm/customize with these questions:
+
+    **Q1: Project Identity**
+    AskUserQuestion([{
+      question: "Project: ${detected.name} - ${detected.purpose}. Correct?",
+      header: "Project",
+      options: [
+        { label: "Correct", description: "Keep detected values" },
+        { label: "Edit name", description: "Change project name" },
+        { label: "Edit purpose", description: "Change description" }
+      ]
+    }])
+
+    **Q2: Stack (Languages)**
+    AskUserQuestion([{
+      question: "Languages detected: ${detected.languages.join(', ')}",
+      header: "Languages",
+      options: [
+        { label: "Correct", description: "Keep detected" },
+        { label: "Add more", description: "Include additional languages" },
+        { label: "Remove some", description: "Exclude languages" }
+      ]
+    }])
+
+    **Q3: Stack (Frameworks) + Maturity**
+    AskUserQuestion([
+      {
+        question: "Frameworks: ${detected.frameworks.join(', ') || 'None detected'}",
+        header: "Frameworks",
+        options: [
+          { label: "Correct", description: "Keep detected" },
+          { label: "Edit", description: "Modify framework list" }
+        ]
+      },
+      {
+        question: "Project maturity: ${detected.maturity}",
+        header: "Maturity",
+        options: [
+          { label: "Prototype", description: "Early development, unstable" },
+          { label: "Development", description: "Active development, mostly stable" },
+          { label: "Production", description: "Stable, in production use" }
+        ]
+      }
+    ])
+
+    **Q4: Commands**
+    AskUserQuestion([{
+      question: "Detected commands - edit if needed:",
+      header: "Commands",
+      options: [
+        { label: "Use detected", description: "format: ${detected.commands.format || 'none'}, test: ${detected.commands.test || 'none'}" },
+        { label: "Edit commands", description: "Customize format/lint/test/build commands" },
+        { label: "Skip commands", description: "No commands configured" }
+      ]
+    }])
+
+    If user selects "Edit" options, prompt for specific values.
+    `
   }
 `, { model: "haiku" })
 ```
