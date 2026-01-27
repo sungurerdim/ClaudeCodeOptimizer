@@ -14,18 +14,8 @@ Same prompts, better outcomes. Fewer errors, fewer rollbacks, more consistent re
 **In Claude Code:**
 ```
 /plugin marketplace add sungurerdim/ClaudeCodeOptimizer
-```
-
-Then run `/plugin`, go to **Discover** tab, select **cco**, and click **Install**.
-
-<details>
-<summary><strong>Alternative: Direct command</strong></summary>
-
-```
 /plugin install cco@ClaudeCodeOptimizer
 ```
-
-</details>
 
 <details>
 <summary><strong>Alternative: From terminal</strong></summary>
@@ -44,12 +34,13 @@ claude plugin install cco@ClaudeCodeOptimizer
 ## Quick Start
 
 ```
+/cco:tune       # Configure CCO for this project (run once)
 /cco:optimize   # Fix issues with approval flow
 /cco:align      # Architecture gap analysis
 /cco:commit     # Quality-gated atomic commits
 ```
 
-**Auto-setup:** CCO automatically detects unconfigured projects and offers setup options.
+**First time?** Run `/cco:tune` to analyze your project and create a profile. Other commands will prompt for setup if needed.
 
 ---
 
@@ -82,7 +73,7 @@ All CCO rules use `cco-` prefix. Your own rules (without prefix) are never touch
 
 ```
 .claude/rules/
-├── cco-context.md       ← Managed by CCO
+├── cco-profile.md       ← Managed by CCO
 ├── cco-{language}.md    ← Managed by CCO
 ├── cco-{framework}.md   ← Managed by CCO
 ├── my-custom-rule.md    ← YOUR file, never touched
@@ -95,7 +86,7 @@ All CCO rules use `cco-` prefix. Your own rules (without prefix) are never touch
 
 | Component | Count | Purpose |
 |-----------|-------|---------|
-| Commands | 5 | `/cco:optimize`, `/cco:align`, `/cco:commit`, `/cco:research`, `/cco:preflight` |
+| Commands | 6 | `/cco:tune`, `/cco:optimize`, `/cco:align`, `/cco:commit`, `/cco:research`, `/cco:preflight` |
 | Agents | 3 | Analyze, Apply, Research |
 | Rules | 44 | Core (3) + Languages (21) + Frameworks (8) + Operations (12) |
 
@@ -109,7 +100,7 @@ All CCO rules use `cco-` prefix. Your own rules (without prefix) are never touch
 │  → cco-workflow.md     AI execution patterns                │
 ├─────────────────────────────────────────────────────────────┤
 │  PROJECT (copied during setup to .claude/rules/)            │
-│    ├── cco-context.md      Project metadata (YAML)          │
+│    ├── cco-profile.md      Project metadata (YAML)          │
 │    ├── cco-{language}.md   Language-specific rules          │
 │    ├── cco-{framework}.md  Framework-specific rules         │
 │    └── cco-{operation}.md  Operations rules                 │
@@ -124,13 +115,14 @@ All CCO rules use `cco-` prefix. Your own rules (without prefix) are never touch
 
 | Command | Purpose |
 |---------|---------|
+| `/cco:tune` | Configure CCO for this project - analyze stack, create profile |
 | `/cco:optimize` | Fix issues with approval flow for risky changes |
 | `/cco:align` | Architecture gap analysis - current vs ideal state |
 | `/cco:commit` | Quality-gated atomic commits |
 | `/cco:research` | Multi-source research with reliability scoring |
 | `/cco:preflight` | Pre-release workflow orchestration |
 
-**Note:** Project configuration is handled automatically via SessionStart hook when CCO detects an unconfigured project.
+**Note:** Run `/cco:tune` first to configure CCO for your project. Other commands will prompt if profile is missing.
 
 See [Commands documentation](docs/commands.md) for flags and examples.
 

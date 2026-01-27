@@ -9,18 +9,8 @@ Your first 10 minutes with CCO.
 **In Claude Code:**
 ```
 /plugin marketplace add sungurerdim/ClaudeCodeOptimizer
-```
-
-Then run `/plugin`, go to **Discover** tab, select **cco**, and click **Install**.
-
-<details>
-<summary>Alternative: Direct command</summary>
-
-```
 /plugin install cco@ClaudeCodeOptimizer
 ```
-
-</details>
 
 <details>
 <summary>Alternative: From terminal</summary>
@@ -86,7 +76,7 @@ Detected:
 └── Type: API Service
 
 Generated rules in .claude/rules/:
-├── cco-context.md (YAML project metadata)
+├── cco-profile.md (YAML project metadata)
 ├── cco-python.md (language best practices)
 ├── cco-backend.md (API patterns)
 └── cco-testing.md (test standards)
@@ -148,11 +138,11 @@ Selected automatically based on your stack detection.
 
 ### "How does CCO know about my project?"
 
-CCO auto-detects at session start by checking if `cco: true` marker exists in your context. If not, it offers setup options.
+CCO auto-detects at session start by checking if `.claude/rules/cco-profile.md` exists and has all required fields. If not, CCO commands will offer setup options.
 
 ### "Can I customize the generated rules?"
 
-Yes. Edit `.claude/rules/cco-context.md` directly. Your changes persist. Re-run setup anytime to reconfigure.
+Yes. Edit `.claude/rules/cco-profile.md` directly. Your changes persist. Re-run setup anytime to reconfigure.
 
 ### "How do I see what rules are active?"
 
@@ -176,11 +166,9 @@ Choose "Interactive" during setup to answer questions manually. You can also edi
    /plugin install cco@ClaudeCodeOptimizer
    ```
 
-### "CCO context not found"
+### "CCO profile not found"
 
-CCO should auto-detect and offer setup. If this doesn't happen:
-- Check if `.claude/rules/cco-context.md` exists
-- If not, any CCO command will trigger setup
+Run `/cco:tune` to configure CCO for your project, or any CCO command will offer setup options.
 
 ---
 

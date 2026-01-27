@@ -251,7 +251,7 @@ Bash("{test_command} 2>&1")
 ### Execution Order for Setup/Update [CRITICAL]
 
 1. **CLEAN FIRST**: Delete ALL existing `cco-*.md` files in `.claude/rules/` directory
-2. **THEN WRITE**: Write new cco-context.md, rule files, statusline, settings
+2. **THEN WRITE**: Write new cco-profile.md, rule files, statusline, settings
 
 This ensures stale rules from previous detections are removed before new ones are written.
 
@@ -289,7 +289,7 @@ def clean_rules(target_dir):
 
 | Mode | Target | Behavior |
 |------|--------|----------|
-| `overwrite` | `cco-context.md`, Rule files, Statusline | Write new content (always) |
+| `overwrite` | `cco-profile.md`, Rule files, Statusline | Write new content (always) |
 | `merge` | `settings.json` (Setup) | Read existing → Deep merge → Write |
 | `delete_contents` | `.claude/rules/cco-*.md` | Delete CCO files only (preserve user rules) |
 | `unmerge` | `settings.json` (Remove) | Read → Remove CCO keys only → Write |
@@ -368,7 +368,7 @@ cleanRules: {
 // Step 2: WRITE - Write fresh files (flat structure)
 files: [
   // All overwrite - ALWAYS write, never skip
-  { path: ".claude/rules/cco-context.md", mode: "overwrite", content: "{context_yaml}" },
+  { path: ".claude/rules/cco-profile.md", mode: "overwrite", content: "{context_yaml}" },
   { path: ".claude/rules/cco-{language}.md", mode: "overwrite", content: "{rule_content}" },
   { path: ".claude/cco-statusline.js", mode: "overwrite", source: "$PLUGIN_ROOT/content/statusline/cco-{mode}.js" },
 
@@ -405,15 +405,15 @@ files: [
 
 **Never touch:** User-added keys, `permissions` (unless explicitly selected)
 
-### cco-context.md Validation [CRITICAL - BEFORE WRITE]
+### cco-profile.md Validation [CRITICAL - BEFORE WRITE]
 
-Before writing cco-context.md, validate YAML structure:
+Before writing cco-profile.md, validate YAML structure:
 
 ```python
 import yaml
 
 def validate_context_yaml(content: str) -> None:
-    """Validate cco-context.md YAML frontmatter."""
+    """Validate cco-profile.md YAML frontmatter."""
     # Extract YAML between --- markers
     if not content.startswith('---'):
         raise ValueError("Missing YAML frontmatter start marker")
@@ -430,14 +430,10 @@ def validate_context_yaml(content: str) -> None:
         raise ValueError(f"Invalid YAML: {e}")
 
     # Required fields
-    required = ['cco', 'project', 'context', 'stack', 'maturity', 'commands']
+    required = ['project', 'stack', 'maturity', 'commands']
     for field in required:
         if field not in data:
             raise ValueError(f"Missing required field: {field}")
-
-    # cco marker must be true
-    if data.get('cco') != True:
-        raise ValueError("cco marker must be true")
 
     # project.purpose must exist
     if not data.get('project', {}).get('purpose'):
@@ -446,7 +442,7 @@ def validate_context_yaml(content: str) -> None:
 
 **Validation Checklist:**
 - [ ] YAML is valid and parseable
-- [ ] `cco: true` marker present
+- [ ] All required fields present
 - [ ] `project.purpose` is set
 - [ ] All required sections exist
 
@@ -654,8 +650,8 @@ for (const file of existingRules) {
 }
 console.log(`Deleted: ${existingRules.length} files`)
 
-// Step 2: Generate fresh cco-context.md
-await Write('.claude/rules/cco-context.md', generateContextYaml(detected, answers))
+// Step 2: Generate fresh cco-profile.md
+await Write('.claude/rules/cco-profile.md', generateContextYaml(detected, answers))
 
 // Step 3: Copy ALL rule files from plugin (fresh copies)
 for (const rule of rulesNeeded) {
@@ -666,7 +662,7 @@ for (const rule of rulesNeeded) {
 console.log(`
 ## CCO Context (Active in Current Session)
 
-${await Read('.claude/rules/cco-context.md')}
+${await Read('.claude/rules/cco-profile.md')}
 
 **Rules installed:** ${rulesNeeded.join(', ')}
 **Total files:** ${rulesNeeded.length + 1} (context + rules)
@@ -695,7 +691,7 @@ All files use flat structure in `.claude/rules/`:
 
 | File | Content |
 |------|---------|
-| `cco-context.md` | Project metadata (YAML frontmatter with `cco: true` marker) |
+| `cco-profile.md` | Project metadata (YAML frontmatter) |
 | `cco-{language}.md` | Language-specific rules |
 | `cco-{framework}.md` | Framework-specific rules |
 | `cco-{operation}.md` | Operations rules |
@@ -710,7 +706,7 @@ All files use flat structure in `.claude/rules/`:
 
 ```javascript
 // After writing all config files...
-const contextContent = await Read('.claude/rules/cco-context.md')
+const contextContent = await Read('.claude/rules/cco-profile.md')
 
 // Output context for immediate use in current session
 console.log(`

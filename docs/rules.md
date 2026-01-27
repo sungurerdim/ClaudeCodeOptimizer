@@ -31,7 +31,7 @@
 │  PROJECT-SPECIFIC (installed via auto-setup)                    │
 ├─────────────────────────────────────────────────────────────────┤
 │  ./.claude/rules/                                               │
-│    ├── cco-context.md       Project metadata (YAML)             │
+│    ├── cco-profile.md       Project metadata (YAML)             │
 │    ├── cco-{language}.md    Language-specific rules             │
 │    ├── cco-{framework}.md   Framework-specific rules            │
 │    └── cco-{operation}.md   Operations rules                    │
@@ -181,7 +181,7 @@
 
 ```
 project/.claude/rules/
-├── cco-context.md        ← YAML project metadata
+├── cco-profile.md        ← YAML project metadata
 ├── cco-{language}.md     ← Based on detection
 ├── cco-{framework}.md    ← Based on detection
 └── cco-{operation}.md    ← Based on detection
