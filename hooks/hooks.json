@@ -1,14 +1,9 @@
 {
-  "description": "CCO core rules injection at session start",
   "hooks": {
     "SessionStart": [
       {
-        "hooks": [
-          {
-            "type": "command",
-            "command": "cat \"${CLAUDE_PLUGIN_ROOT}/hooks/core-rules.json\""
-          }
-        ]
+        "type": "command",
+        "command": "type \"${CLAUDE_PLUGIN_ROOT}\\hooks\\core-rules.json\" 2>nul || cat \"${CLAUDE_PLUGIN_ROOT}/hooks/core-rules.json\""
       }
     ]
   }
