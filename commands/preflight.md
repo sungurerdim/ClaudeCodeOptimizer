@@ -341,7 +341,7 @@ reviewTask = Task("general-purpose", `
 **Start all verification in background (full project):**
 
 ```javascript
-// Commands from context.md Operational section - FULL PROJECT
+// Commands from profile (detected by /cco:tune) - FULL PROJECT
 formatTask = Bash("{format_command} 2>&1", { run_in_background: true })
 lintTask = Bash("{lint_command} 2>&1", { run_in_background: true })
 typeTask = Bash("{type_command} 2>&1", { run_in_background: true })
