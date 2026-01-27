@@ -99,10 +99,10 @@ Commands pre-collect context at execution start:
 | Step | Name      | Action                                      |
 |------|-----------|---------------------------------------------|
 | 1    | Validate  | Check existing profile                      |
-| 2a   | Questions | Ask user preferences (parallel with 2b)     |
-| 2b   | Detect    | Analyze project stack via cco-agent-analyze |
-| 3    | Merge     | Combine answers + detection                 |
-| 4    | Write     | Create files via cco-agent-apply            |
+| 2    | Questions | Ask user preferences                        |
+| 3    | Detect    | Analyze project stack via cco-agent-analyze |
+| 4    | Merge     | Combine answers + detection                 |
+| 5    | Write     | Create files via cco-agent-apply            |
 
 ### Generated Files
 
