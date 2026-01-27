@@ -3,7 +3,23 @@
   "version": "2.0.0",
   "description": "Quality standards and adaptive rules for Claude Code. Run /cco:tune to setup.",
   "author": {
-    "name": "Sungur Zahid Erdim",
-    "email": "sungurerdim@users.noreply.github.com"
-  }
+    "name": "Sungur Zahid Erdim"
+  },
+  "commands": [
+    "./commands/tune.md",
+    "./commands/optimize.md",
+    "./commands/align.md",
+    "./commands/commit.md",
+    "./commands/research.md",
+    "./commands/preflight.md",
+    "./commands/docs.md"
+  ],
+  "agents": [
+    "./agents/cco-agent-analyze.md",
+    "./agents/cco-agent-apply.md",
+    "./agents/cco-agent-research.md"
+  ],
+  "hooks": [
+    "./hooks/hooks.json"
+  ]
 }

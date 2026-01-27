@@ -28,7 +28,7 @@
 │    → cco-workflow.md      AI execution patterns                 │
 │  (No files copied - direct context injection via hook output)   │
 ├─────────────────────────────────────────────────────────────────┤
-│  PROJECT-SPECIFIC (installed via auto-setup)                    │
+│  PROJECT-SPECIFIC (installed via /cco:tune)                     │
 ├─────────────────────────────────────────────────────────────────┤
 │  ./.claude/rules/                                               │
 │    ├── cco-profile.md       Project metadata (YAML)             │
@@ -149,7 +149,7 @@
 
 ## Detection & Installation
 
-### Auto-Detection (via auto-setup)
+### Auto-Detection (via /cco:tune)
 
 | Detection Type | Method | Example |
 |----------------|--------|---------|
@@ -177,7 +177,7 @@
 → cco-workflow.md content
 ```
 
-### After Auto-Setup
+### After /cco:tune
 
 ```
 project/.claude/rules/

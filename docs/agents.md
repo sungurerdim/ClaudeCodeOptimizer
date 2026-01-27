@@ -257,7 +257,7 @@ After each change:
 | `/cco:research`  | -                                                  | No             | full         |
 | `/cco:preflight` | (orchestrates optimize + align)                    | (orchestrates) | dependency   |
 
-**Auto-Setup:** Uses cco-agent-apply with `scope=config` when CCO detects unconfigured project.
+**Configuration:** `/cco:tune` uses cco-agent-apply with `scope=config` to generate project rules.
 
 ---
 

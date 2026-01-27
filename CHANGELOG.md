@@ -27,7 +27,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 **Command Changes** (v1 → v2):
 - `/cco-tune` → `/cco:tune`
-- `/cco-health` → removed (replaced by auto-setup + `/cco:tune --check`)
+- `/cco-health` → removed (use `/cco:tune --check` instead)
 - `/cco-generate` → `/cco:research`
 - `/cco-audit` + `/cco-optimize` → `/cco:optimize` (merged)
 - `/cco-review` + `/cco-refactor` → `/cco:align` (merged)

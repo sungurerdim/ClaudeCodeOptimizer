@@ -4,8 +4,7 @@
   "version": "2.0.0",
   "description": "Quality standards and adaptive rules for Claude Code",
   "owner": {
-    "name": "Sungur Zahid Erdim",
-    "email": "sungurerdim@users.noreply.github.com"
+    "name": "Sungur Zahid Erdim"
   },
   "plugins": [
     {
@@ -13,8 +12,7 @@
       "description": "Quality standards and adaptive rules for Claude Code. Run /cco:tune to setup.",
       "version": "2.0.0",
       "author": {
-        "name": "Sungur Zahid Erdim",
-        "email": "sungurerdim@users.noreply.github.com"
+        "name": "Sungur Zahid Erdim"
       },
       "source": {
         "source": "url",

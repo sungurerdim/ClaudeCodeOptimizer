@@ -1,6 +1,6 @@
 ---
 name: cco-agent-analyze
-description: Codebase analysis with severity scoring - security, hygiene, types, lint, performance, robustness, functional-completeness audits. Also handles project detection for auto-setup (scope=config).
+description: Codebase analysis with severity scoring - security, hygiene, types, lint, performance, robustness, functional-completeness audits. Also handles project detection for /cco:tune (scope=config).
 tools: Glob, Read, Grep, Bash
 model: haiku
 ---
