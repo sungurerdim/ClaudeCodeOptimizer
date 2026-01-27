@@ -181,8 +181,8 @@ if (isUnattended || config.mode === "auto") {
   // Proceed directly to Step-3 (no questions)
 
 } else if (config.mode === "interactive") {
-  // Ask questions first
-  const answers = await AskUserQuestion([
+  // Questions Part 1: Team & Policy (4 questions)
+  const answers1 = await AskUserQuestion([
     {
       question: "Team size?",
       header: "Team",
@@ -217,17 +217,68 @@ if (isUnattended || config.mode === "auto") {
       ]
     },
     {
-      question: "Breaking changes?",
+      question: "Breaking changes policy?",
       header: "Breaking",
       multiSelect: false,
       options: [
-        { label: "Never", description: "Always compatible" },
-        { label: "Major only", description: "In major versions" },
-        { label: "Semver", description: "Follow semver" },
-        { label: "Allowed", description: "With deprecation" }
+        { label: "Never", description: "Always backwards compatible" },
+        { label: "Major only", description: "Only in major versions" },
+        { label: "Semver", description: "Follow semantic versioning" },
+        { label: "Flexible", description: "With deprecation notices" }
       ]
     }
   ])
+
+  // Questions Part 2: Development & Deployment (4 questions)
+  const answers2 = await AskUserQuestion([
+    {
+      question: "Who consumes your API?",
+      header: "API",
+      multiSelect: false,
+      options: [
+        { label: "Internal only", description: "Same team/org" },
+        { label: "Partners", description: "Known external consumers" },
+        { label: "Public", description: "Open API, unknown consumers" },
+        { label: "No API", description: "Not an API project" }
+      ]
+    },
+    {
+      question: "Testing approach?",
+      header: "Testing",
+      multiSelect: false,
+      options: [
+        { label: "Minimal", description: "Critical paths only" },
+        { label: "Coverage targets", description: "Meet coverage thresholds" },
+        { label: "TDD", description: "Tests before code" },
+        { label: "Comprehensive", description: "Full coverage + integration" }
+      ]
+    },
+    {
+      question: "Documentation level?",
+      header: "Docs",
+      multiSelect: false,
+      options: [
+        { label: "Code only", description: "Self-documenting code" },
+        { label: "README essential", description: "README + inline comments" },
+        { label: "API docs", description: "OpenAPI/Swagger required" },
+        { label: "Full docs", description: "Guides, examples, tutorials" }
+      ]
+    },
+    {
+      question: "Deployment target?",
+      header: "Deploy",
+      multiSelect: false,
+      options: [
+        { label: "Local/Dev", description: "Development only" },
+        { label: "Cloud managed", description: "AWS/GCP/Azure services" },
+        { label: "Self-hosted", description: "Own infrastructure" },
+        { label: "Serverless", description: "Lambda/Functions/Edge" }
+      ]
+    }
+  ])
+
+  // Merge all answers
+  const answers = { ...answers1, ...answers2 }
 
   // Run detection after questions
   console.log("Analyzing project...")
@@ -249,21 +300,36 @@ const finalProfile = {
   project: configData.detected.project,
   stack: configData.detected.stack,
   maturity: configData.detected.maturity,
+  // Part 1: Team & Policy
   team: config.mode === "interactive"
-    ? { size: mapAnswer(answers[0]) }
+    ? { size: answers.Team }
     : configData.detected.inferred.team,
   data: config.mode === "interactive"
-    ? { sensitivity: mapAnswer(answers[1]) }
+    ? { sensitivity: answers.Data }
     : configData.detected.inferred.data,
   priority: config.mode === "interactive"
-    ? mapAnswer(answers[2])
+    ? answers.Priority
     : configData.detected.inferred.priority,
   breaking_changes: config.mode === "interactive"
-    ? mapAnswer(answers[3])
+    ? answers.Breaking
     : configData.detected.inferred.breaking_changes,
+  // Part 2: Development & Deployment
+  api: config.mode === "interactive"
+    ? { consumers: answers.API }
+    : configData.detected.inferred.api,
+  testing: config.mode === "interactive"
+    ? { approach: answers.Testing }
+    : configData.detected.inferred.testing,
+  docs: config.mode === "interactive"
+    ? { level: answers.Docs }
+    : configData.detected.inferred.docs,
+  deployment: config.mode === "interactive"
+    ? { target: answers.Deploy }
+    : configData.detected.inferred.deployment,
+  // Auto-detected
   commands: configData.detected.commands,
   patterns: configData.detected.patterns,
-  documentation: configData.detected.documentation  // Full documentation status
+  documentation: configData.detected.documentation
 }
 
 // Determine which rules to install based on detected stack
@@ -318,16 +384,24 @@ console.log(`
 Profile: .claude/rules/cco-profile.md
 Rules: ${rulesNeeded.length} files loaded
 
-### Detection Results
+### Configuration Summary
 
 | Category | Value |
 |----------|-------|
 | Languages | ${finalProfile.stack.languages.join(", ")} |
 | Frameworks | ${finalProfile.stack.frameworks.join(", ") || "none"} |
 | Maturity | ${finalProfile.maturity} |
-| Team | ${finalProfile.team.size} |
-| Data | ${finalProfile.data.sensitivity} |
-| Priority | ${finalProfile.priority} |
+
+| Setting | Value | Impact |
+|---------|-------|--------|
+| Team | ${finalProfile.team.size} | Review requirements |
+| Data | ${finalProfile.data.sensitivity} | Security level |
+| Priority | ${finalProfile.priority} | Check ordering |
+| Breaking | ${finalProfile.breaking_changes} | API rules |
+| API | ${finalProfile.api.consumers} | Doc requirements |
+| Testing | ${finalProfile.testing.approach} | Commit gates |
+| Docs | ${finalProfile.docs.level} | Generation scope |
+| Deploy | ${finalProfile.deployment.target} | Ops rules |
 
 ### Documentation Status
 
@@ -398,14 +472,21 @@ return { status: "ok", profile: finalProfile, rulesLoaded: rulesNeeded }
 
 ## Profile Schema
 
-The profile has 7 sections:
+The profile has 11 sections:
 
 | Section | Fields | Source |
 |---------|--------|--------|
 | project | name, purpose, type | Auto-detect |
 | stack | languages, frameworks, testing, build | Auto-detect |
 | maturity | prototype/active/stable/legacy | Auto-detect (scoring) |
-| team/data/priority | size, sensitivity, priority | User answers or inference |
+| team | size | User Q1 or inference |
+| data | sensitivity | User Q2 or inference |
+| priority | security/performance/maintainability/velocity | User Q3 or inference |
+| breaking_changes | never/major/semver/flexible | User Q4 or inference |
+| api | consumers (internal/partners/public/none) | User Q5 or inference |
+| testing | approach (minimal/coverage/tdd/comprehensive) | User Q6 or inference |
+| docs | level (code/readme/api/full) | User Q7 or inference |
+| deployment | target (local/cloud/self-hosted/serverless) | User Q8 or inference |
 | commands | format, lint, test, build, type | Auto-detect |
 | patterns | error_handling, logging, api_style, etc. | Auto-detect |
 | documentation | core, technical, developer, operations, analysis | Auto-detect (50+ patterns) |

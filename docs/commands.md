@@ -99,10 +99,28 @@ Commands pre-collect context at execution start:
 | Step | Name      | Action                                      |
 |------|-----------|---------------------------------------------|
 | 1    | Validate  | Check existing profile                      |
-| 2    | Questions | Ask user preferences                        |
+| 2    | Questions | Ask user preferences (8 questions, 2 rounds)|
 | 3    | Detect    | Analyze project stack via cco-agent-analyze |
 | 4    | Merge     | Combine answers + detection                 |
 | 5    | Write     | Create files via cco-agent-apply            |
+
+### Interactive Questions (8 total)
+
+**Round 1: Team & Policy**
+| Question | Options | Impact |
+|----------|---------|--------|
+| Team size | Solo / Small / Medium / Large | Review requirements |
+| Data sensitivity | Public / Internal / PII / Regulated | Security level |
+| Top priority | Security / Performance / Maintainability / Velocity | Check ordering |
+| Breaking changes | Never / Major only / Semver / Flexible | API rules |
+
+**Round 2: Development & Deployment**
+| Question | Options | Impact |
+|----------|---------|--------|
+| API consumers | Internal / Partners / Public / No API | Doc requirements |
+| Testing approach | Minimal / Coverage / TDD / Comprehensive | Commit gates |
+| Documentation level | Code only / README / API docs / Full docs | Generation scope |
+| Deployment target | Local / Cloud / Self-hosted / Serverless | Ops rules |
 
 ### Generated Files
 
