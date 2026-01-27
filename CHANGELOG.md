@@ -26,11 +26,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Breaking Changes
 
 **Command Changes** (v1 → v2):
-- `/cco-tune` → `/cco:config`
-- `/cco-health` → `/cco:status`
+- `/cco-tune` → `/cco:tune`
+- `/cco-health` → removed (replaced by auto-setup + `/cco:tune --check`)
 - `/cco-generate` → `/cco:research`
 - `/cco-audit` + `/cco-optimize` → `/cco:optimize` (merged)
-- `/cco-review` + `/cco-refactor` → `/cco:review` (merged)
+- `/cco-review` + `/cco-refactor` → `/cco:align` (merged)
 
 **Agent Restructure**:
 - `Explore` + `Plan` → `cco-agent-analyze`
@@ -50,7 +50,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - **Tool restrictions** — `allowed-tools` frontmatter limits each command to declared tools
 - **Explicit fixable definition** — Clear criteria in `/cco:optimize` for what can be auto-fixed
 - **Scope detection rules** — Deterministic commit scope detection from file paths
-- **Metric rationale** — Evidence-based thresholds in `/review` with academic sources
+- **Metric rationale** — Evidence-based thresholds in `/cco:align` with academic sources
 
 ### Changed
 
@@ -75,7 +75,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ```bash
 # If upgrading from v1, reset your project config:
-/cco:config --reset
+/cco:tune --reset
 ```
 
 ---

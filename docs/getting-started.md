@@ -9,6 +9,9 @@ Your first 10 minutes with CCO.
 **In Claude Code:**
 ```
 /plugin marketplace add sungurerdim/ClaudeCodeOptimizer
+```
+
+```
 /plugin install cco@ClaudeCodeOptimizer
 ```
 

@@ -14,6 +14,9 @@ Same prompts, better outcomes. Fewer errors, fewer rollbacks, more consistent re
 **In Claude Code:**
 ```
 /plugin marketplace add sungurerdim/ClaudeCodeOptimizer
+```
+
+```
 /plugin install cco@ClaudeCodeOptimizer
 ```
 
