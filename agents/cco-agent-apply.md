@@ -162,7 +162,7 @@ Bash("{test_command} 2>&1")
 
 ## Write Operations [CRITICAL]
 
-**Config file operations for auto-setup. Always execute - never skip based on content comparison.**
+**Config file operations for /cco:tune. Always execute - never skip based on content comparison.**
 
 **[ABSOLUTE RULE] Execute All Writes:**
 - Execute the write operation for EVERY file in the files list

@@ -18,7 +18,7 @@ Detailed documentation for all CCO slash commands.
 
 **Model Rationale:** Opus for coding commands (fewer errors), Haiku for configuration (fast).
 
-**Project Configuration:** Handled automatically via auto-setup (SessionStart hook or command fallback) when CCO detects an unconfigured project.
+**Project Configuration:** Run `/cco:tune` to configure CCO for your project.
 
 ---
 
@@ -52,15 +52,15 @@ All commands follow a standardized structure for consistency and reliability.
 
 ## Common Features
 
-### Auto-Setup (No Manual Config Required)
+### Project Configuration
 
-CCO automatically detects unconfigured projects at session start:
+Run `/cco:tune` to configure CCO for your project:
 
-1. **Check**: Does `.claude/rules/cco-profile.md` exist with all required fields?
-2. **If NO**: Offers setup options:
-   - `[Auto-setup]` - Detect stack and create rules automatically
-   - `[Interactive]` - Ask questions to customize setup
-   - `[Skip]` - Don't configure CCO for this project
+```
+/cco:tune           # Interactive setup
+/cco:tune --auto    # Auto-detect, skip questions
+/cco:tune --check   # Validate existing profile
+```
 
 ### Dynamic Context
 

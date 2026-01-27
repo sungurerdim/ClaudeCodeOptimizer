@@ -14,7 +14,7 @@ How to integrate CCO into your development workflow.
 | Prepare for release | `/cco:preflight` |
 | Research a topic | `/cco:research` |
 
-**Note:** Project configuration happens automatically via auto-setup when CCO detects an unconfigured project.
+**Note:** Run `/cco:tune` first to configure CCO for your project.
 
 ---
 
@@ -24,7 +24,7 @@ How to integrate CCO into your development workflow.
 Start session
      │
      ▼
-[Auto-setup offered if needed]
+[Run /cco:tune if not configured]
      │
      ▼
   [Write code]

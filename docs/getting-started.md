@@ -44,27 +44,23 @@ claude plugin install cco@ClaudeCodeOptimizer
 
 ## First 10 Minutes
 
-### Step 1: Auto-Setup (Automatic)
+### Step 1: Run /cco:tune
 
-When you start a new session in a project without CCO configured, CCO automatically offers setup:
+Configure CCO for your project:
 
 ```
-🔧 CCO is not configured for this project.
-
-[Auto-setup] Detect stack and create rules automatically
-[Interactive] Ask me questions to customize setup
-[Skip] Don't configure CCO for this project
+/cco:tune
 ```
 
-**Auto-setup** will:
+This will:
 1. **Auto-detect** your stack (language, framework, database, tools)
-2. **Generate rules** specific to your project in `.claude/rules/`
+2. **Ask questions** about team size, data sensitivity, priorities
+3. **Generate rules** specific to your project in `.claude/rules/`
 
-**Interactive** will also ask questions about:
-- Team size
-- Data sensitivity
-- Compliance requirements
-- Development priorities
+**Quick mode** (skip questions):
+```
+/cco:tune --auto
+```
 
 <details>
 <summary>Example detection output</summary>
@@ -141,7 +137,7 @@ Selected automatically based on your stack detection.
 
 ### "How does CCO know about my project?"
 
-CCO auto-detects at session start by checking if `.claude/rules/cco-profile.md` exists and has all required fields. If not, CCO commands will offer setup options.
+CCO stores project config in `.claude/rules/cco-profile.md`. Run `/cco:tune` to create or update it.
 
 ### "Can I customize the generated rules?"
 
