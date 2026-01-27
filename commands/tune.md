@@ -51,10 +51,12 @@ model: haiku
 | Step | Action | Responsible |
 |------|--------|-------------|
 | 1 | Validate existing profile | tune (Read) |
-| 2a | Ask user questions | tune (AskUserQuestion) |
-| 2b | Detect project stack | analyze agent |
-| 3 | Merge answers + detection | tune |
-| 4 | Write files | apply agent |
+| 2 | Detect project stack (FIRST) | analyze agent |
+| 3 | Ask questions with "(Detected)" labels | tune (AskUserQuestion) |
+| 4 | Merge answers + detection | tune |
+| 5 | Write files | apply agent |
+
+**Key principle:** Detection runs BEFORE questions so we can dynamically label detected values.
 
 ---
 
@@ -162,131 +164,146 @@ if (!isUnattended && !validationResult.valid) {
 
 ---
 
-## Step-2: Parallel Execution
+## Step-2: Detection First
 
-**Interactive: User answers questions, then detection runs.**
-**Auto/Unattended: Detection only, no questions.**
+**Detection runs BEFORE questions to enable dynamic labeling.**
 
 ```javascript
 console.log("Analyzing project...")
 
-// UNATTENDED MODE: Skip all questions, use auto detection with smart inference
-if (isUnattended || config.mode === "auto") {
-  const detected = await Task("cco-agent-analyze", `
-    scope: config
-    mode: auto
-  `, { model: "haiku" })
+// ALWAYS run detection first (for both auto and interactive modes)
+const detected = await Task("cco-agent-analyze", `
+  scope: config
+  mode: auto
+`, { model: "haiku" })
 
+// UNATTENDED MODE: Skip questions, use detected.inferred directly
+if (isUnattended || config.mode === "auto") {
   configData = { detected: detected, answers: detected.inferred }
-  // Proceed directly to Step-3 (no questions)
+  // Proceed directly to Step-4 (no questions)
 
 } else if (config.mode === "interactive") {
+  // Helper: Add "(Detected)" or "(Recommended)" suffix to matching option label
+  // - Detected: Value was inferred from actual project signals
+  // - Recommended: No detection possible, using best-practices default
+  function labelOption(options, detectedValue, source) {
+    if (!detectedValue) return options
+
+    // Normalize: "user-data" → "user", "ship-fast" → "ship", "with-warning" → "with"
+    const normalizedDetected = detectedValue.toLowerCase().split('-')[0]
+
+    return options.map(opt => {
+      // Extract first word from label: "Small (2-5)" → "small", "Ship fast" → "ship"
+      const firstWord = opt.label.toLowerCase().split(/[\s(]/)[0]
+      const isMatch = firstWord === normalizedDetected
+
+      if (!isMatch) return opt
+
+      // Label based on source: detected from code, or best-practices recommendation
+      const suffix = source === "detected" ? "(Detected)" : "(Recommended)"
+      return { ...opt, label: `${opt.label} ${suffix}` }
+    })
+  }
+
   // Questions Part 1: Team & Policy (4 questions)
+  // Descriptions explain WHEN to choose each option (best practices guidance)
   const answers1 = await AskUserQuestion([
     {
-      question: "Team size?",
+      question: "How many people work on this project?",
       header: "Team",
       multiSelect: false,
-      options: [
-        { label: "Solo", description: "Single developer" },
-        { label: "Small (2-5)", description: "Code review helpful" },
-        { label: "Medium (6-15)", description: "Code review required" },
-        { label: "Large (15+)", description: "Strict review + docs" }
-      ]
+      options: labelOption([
+        { label: "Solo", description: "Personal projects, learning, prototypes → no formal review needed" },
+        { label: "Small (2-5)", description: "Startups, side projects → code review helpful but informal" },
+        { label: "Medium (6-15)", description: "Growing teams → code review required, PR process" },
+        { label: "Large (15+)", description: "Enterprise → strict review, CODEOWNERS, documentation" }
+      ], detected.inferred?.team, detected.inferred?.team_source)
     },
     {
-      question: "Data sensitivity?",
+      question: "Does the project handle sensitive data?",
       header: "Data",
       multiSelect: false,
-      options: [
-        { label: "Public", description: "No sensitive data" },
-        { label: "Internal", description: "Company internal" },
-        { label: "PII", description: "Personal data - GDPR" },
-        { label: "Regulated", description: "SOC2/HIPAA" }
-      ]
+      options: labelOption([
+        { label: "No", description: "Open source, demos, public tools → standard security sufficient" },
+        { label: "Internal", description: "Company tools, internal APIs → access control, basic encryption" },
+        { label: "User data", description: "User accounts, profiles → GDPR/privacy compliance needed" },
+        { label: "Regulated", description: "Finance, health, legal → SOC2/HIPAA/PCI compliance required" }
+      ], detected.inferred?.data, detected.inferred?.data_source)
     },
     {
-      question: "Top priority?",
+      question: "What matters most when writing code?",
       header: "Priority",
       multiSelect: false,
-      options: [
-        { label: "Security", description: "Security-first" },
-        { label: "Performance", description: "Speed focus" },
-        { label: "Maintainability", description: "Clean, testable" },
-        { label: "Velocity", description: "Ship fast" }
-      ]
+      options: labelOption([
+        { label: "Security", description: "Auth systems, payment, sensitive data → security-first" },
+        { label: "Performance", description: "Real-time, games, high-traffic → optimize hot paths" },
+        { label: "Readability", description: "Long-term projects, team codebases → maintainability focus" },
+        { label: "Ship fast", description: "MVPs, experiments, time-sensitive → speed over perfection" }
+      ], detected.inferred?.priority, detected.inferred?.priority_source)
     },
     {
-      question: "Breaking changes policy?",
-      header: "Breaking",
+      question: "Can you make changes that break older versions?",
+      header: "Compat",
       multiSelect: false,
-      options: [
-        { label: "Never", description: "Always backwards compatible" },
-        { label: "Major only", description: "Only in major versions" },
-        { label: "Semver", description: "Follow semantic versioning" },
-        { label: "Flexible", description: "With deprecation notices" }
-      ]
+      options: labelOption([
+        { label: "Never", description: "Public libraries, many consumers → strict backwards compat" },
+        { label: "Major only", description: "Versioned products → breaking changes in v2, v3 only" },
+        { label: "With warning", description: "Internal tools, few consumers → deprecate then remove" },
+        { label: "When needed", description: "Early stage, experimental → flexibility over stability" }
+      ], detected.inferred?.breaking_changes, detected.inferred?.breaking_changes_source)
     }
   ])
 
   // Questions Part 2: Development & Deployment (4 questions)
   const answers2 = await AskUserQuestion([
     {
-      question: "Who consumes your API?",
-      header: "API",
+      question: "Does this project provide a service that other software connects to?",
+      header: "Service",
       multiSelect: false,
-      options: [
-        { label: "Internal only", description: "Same team/org" },
-        { label: "Partners", description: "Known external consumers" },
-        { label: "Public", description: "Open API, unknown consumers" },
-        { label: "No API", description: "Not an API project" }
-      ]
+      options: labelOption([
+        { label: "No", description: "CLI tools, desktop apps, plugins → no external API consumers" },
+        { label: "Internal", description: "Microservices, internal APIs → same team/company uses it" },
+        { label: "Partners", description: "B2B integrations → documented contracts, versioning needed" },
+        { label: "Public", description: "Public APIs → OpenAPI spec, rate limiting, auth required" }
+      ], detected.inferred?.api, detected.inferred?.api_source)
     },
     {
-      question: "Testing approach?",
+      question: "What is your testing approach?",
       header: "Testing",
       multiSelect: false,
-      options: [
-        { label: "Minimal", description: "Critical paths only" },
-        { label: "Coverage targets", description: "Meet coverage thresholds" },
-        { label: "TDD", description: "Tests before code" },
-        { label: "Comprehensive", description: "Full coverage + integration" }
-      ]
+      options: labelOption([
+        { label: "Minimal", description: "Prototypes, scripts → test critical paths only" },
+        { label: "Target-based", description: "Production apps → meet coverage thresholds (e.g., 80%)" },
+        { label: "Test first", description: "Critical systems, TDD → write tests before code" },
+        { label: "Everything", description: "High-reliability → unit + integration + e2e tests" }
+      ], detected.inferred?.testing, detected.inferred?.testing_source)
     },
     {
-      question: "Documentation level?",
+      question: "How much documentation do you expect?",
       header: "Docs",
       multiSelect: false,
-      options: [
-        { label: "Code only", description: "Self-documenting code" },
-        { label: "README essential", description: "README + inline comments" },
-        { label: "API docs", description: "OpenAPI/Swagger required" },
-        { label: "Full docs", description: "Guides, examples, tutorials" }
-      ]
+      options: labelOption([
+        { label: "Code is enough", description: "Internal tools, simple logic → self-documenting code" },
+        { label: "Basic", description: "Most projects → README + comments where needed" },
+        { label: "Detailed", description: "Libraries, APIs → all public functions documented" },
+        { label: "Comprehensive", description: "Open source, complex → guides, tutorials, examples" }
+      ], detected.inferred?.docs, detected.inferred?.docs_source)
     },
     {
-      question: "Deployment target?",
+      question: "Where will the project run?",
       header: "Deploy",
       multiSelect: false,
-      options: [
-        { label: "Local/Dev", description: "Development only" },
-        { label: "Cloud managed", description: "AWS/GCP/Azure services" },
-        { label: "Self-hosted", description: "Own infrastructure" },
-        { label: "Serverless", description: "Lambda/Functions/Edge" }
-      ]
+      options: labelOption([
+        { label: "Dev only", description: "Early stage → not deployed to production yet" },
+        { label: "Cloud", description: "Most web apps → AWS/GCP/Azure managed services" },
+        { label: "Self-hosted", description: "Enterprise, compliance → own servers, full control" },
+        { label: "Serverless", description: "Event-driven, variable load → auto-scale, pay-per-use" }
+      ], detected.inferred?.deployment, detected.inferred?.deployment_source)
     }
   ])
 
   // Merge all answers
   const answers = { ...answers1, ...answers2 }
-
-  // Run detection after questions
-  console.log("Analyzing project...")
-  const detected = await Task("cco-agent-analyze", `
-    scope: config
-    mode: detect-only
-  `, { model: "haiku" })
-
   configData = { detected: detected, answers: answers }
 }
 ```
@@ -302,29 +319,29 @@ const finalProfile = {
   maturity: configData.detected.maturity,
   // Part 1: Team & Policy
   team: config.mode === "interactive"
-    ? { size: answers.Team }
+    ? { size: answers["Team"] }
     : configData.detected.inferred.team,
   data: config.mode === "interactive"
-    ? { sensitivity: answers.Data }
+    ? { sensitivity: answers["Data"] }
     : configData.detected.inferred.data,
   priority: config.mode === "interactive"
-    ? answers.Priority
+    ? answers["Priority"]
     : configData.detected.inferred.priority,
   breaking_changes: config.mode === "interactive"
-    ? answers.Breaking
+    ? answers["Compat"]
     : configData.detected.inferred.breaking_changes,
   // Part 2: Development & Deployment
   api: config.mode === "interactive"
-    ? { consumers: answers.API }
+    ? { consumers: answers["Service"] }
     : configData.detected.inferred.api,
   testing: config.mode === "interactive"
-    ? { approach: answers.Testing }
+    ? { approach: answers["Testing"] }
     : configData.detected.inferred.testing,
   docs: config.mode === "interactive"
-    ? { level: answers.Docs }
+    ? { level: answers["Docs"] }
     : configData.detected.inferred.docs,
   deployment: config.mode === "interactive"
-    ? { target: answers.Deploy }
+    ? { target: answers["Deploy"] }
     : configData.detected.inferred.deployment,
   // Auto-detected
   commands: configData.detected.commands,
@@ -474,30 +491,35 @@ return { status: "ok", profile: finalProfile, rulesLoaded: rulesNeeded }
 
 The profile has 11 sections:
 
-| Section | Fields | Source |
-|---------|--------|--------|
-| project | name, purpose, type | Auto-detect |
-| stack | languages, frameworks, testing, build | Auto-detect |
-| maturity | prototype/active/stable/legacy | Auto-detect (scoring) |
-| team | size | User Q1 or inference |
-| data | sensitivity | User Q2 or inference |
-| priority | security/performance/maintainability/velocity | User Q3 or inference |
-| breaking_changes | never/major/semver/flexible | User Q4 or inference |
-| api | consumers (internal/partners/public/none) | User Q5 or inference |
-| testing | approach (minimal/coverage/tdd/comprehensive) | User Q6 or inference |
-| docs | level (code/readme/api/full) | User Q7 or inference |
-| deployment | target (local/cloud/self-hosted/serverless) | User Q8 or inference |
-| commands | format, lint, test, build, type | Auto-detect |
-| patterns | error_handling, logging, api_style, etc. | Auto-detect |
-| documentation | core, technical, developer, operations, analysis | Auto-detect (50+ patterns) |
+| Section | Fields | Source | Detection Signals |
+|---------|--------|--------|-------------------|
+| project | name, purpose, type | Auto-detect | Manifests, README |
+| stack | languages, frameworks, testing, build | Auto-detect | File extensions, dependencies |
+| maturity | prototype/active/stable/legacy | Auto-detect | Git history, test coverage |
+| team | size | Q1 or inference | CODEOWNERS, CONTRIBUTING, git contributors |
+| data | sensitivity | Q2 or inference | SECURITY.md, .env.example, PII patterns |
+| priority | security/performance/readability/ship-fast | Q3 or inference | Security middleware, cache patterns, test ratio |
+| breaking_changes | never/major-only/with-warning/when-needed | Q4 or inference | CHANGELOG format, semver tags, deprecations |
+| api | no/internal/partners/public | Q5 or inference | OpenAPI/GraphQL specs, route definitions |
+| testing | minimal/target-based/test-first/everything | Q6 or inference | Coverage config, test thresholds, test ratio |
+| docs | code-only/basic/detailed/comprehensive | Q7 or inference | docs/ structure, doc site config |
+| deployment | dev-only/cloud/self-hosted/serverless | Q8 or inference | Dockerfile, k8s/, serverless.yml, CI/CD |
+| commands | format, lint, test, build, type | Auto-detect | package.json scripts, Makefile |
+| patterns | error_handling, logging, api_style, etc. | Auto-detect | Code patterns |
+| documentation | core, technical, developer, operations, analysis | Auto-detect | 50+ file patterns |
 
-**Documentation detection covers:**
-- Core: README, LICENSE, CHANGELOG, CONTRIBUTING, SECURITY, CODE_OF_CONDUCT
-- Technical: API docs, OpenAPI/Swagger, Architecture, ADRs, Database schemas
-- Developer: Setup guides, Testing docs, CI/CD, Docker, Kubernetes
-- Operations: Deployment, Runbooks, Monitoring, Troubleshooting
-- Specialized: Privacy, Compliance, i18n, Accessibility, Migrations
-- Infrastructure: Doc site generators, Generated docs, Diagrams
+**Detection Signal Details:**
+
+| Question | Primary Signals | Secondary Signals |
+|----------|-----------------|-------------------|
+| Team | git shortlog contributors | CODEOWNERS, AUTHORS.md |
+| Data | SECURITY.md, regulated keywords | .env.example secrets, encryption patterns |
+| Priority | @auth decorators, @cache patterns | Test file ratio, performance benchmarks |
+| Compat | CHANGELOG.md, @deprecated | Semver git tags, major version bumps |
+| Service | openapi.yaml, schema.graphql | @app.route patterns, Router() usage |
+| Testing | .coveragerc thresholds, codecov.yml | Test file count, fixture patterns |
+| Docs | mkdocs.yml, docusaurus.config.js | docs/ file count, README completeness |
+| Deploy | serverless.yml, k8s/ | Dockerfile, terraform/, CI workflows |
 
 **Full schema in `cco-agent-analyze` documentation.**
 

@@ -76,6 +76,13 @@ All generated documentation MUST follow these principles:
 
 CCO profile is auto-loaded from `.claude/rules/cco-profile.md` via Claude Code's auto-context mechanism.
 
+**Sync with /cco:tune:** The profile's `documentation` section is populated by tune's detection phase. This includes:
+- 50+ documentation file patterns (README, API specs, CI/CD, etc.)
+- docs/ directory analysis
+- Critical missing docs based on project type
+
+This data is reused by docs command - no duplicate detection needed.
+
 **Check:** Delegate to `/cco:tune --check` for profile validation:
 
 ```javascript

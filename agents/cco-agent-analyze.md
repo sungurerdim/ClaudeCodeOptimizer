@@ -834,67 +834,157 @@ const detected = { project, stack, maturity, commands, patterns, documentation }
 
 ### Smart Inference (Auto Mode)
 
-**Instead of defaults, infer from real project data:**
+**Instead of defaults, infer from real project data.**
+
+**All 8 tune questions have corresponding detection logic:**
 
 ```javascript
 if (mode === "auto" || mode === "detect-only") {
-  // Infer team.size from git contributors (excluding bots/AI)
+  // ============================================
+  // Q1: Team size - from git contributors + docs
+  // ============================================
   const contributors = Bash(`git shortlog -sn --no-merges 2>/dev/null | grep -v -E "(dependabot|renovate|github-actions|claude|anthropic|copilot|cursor|ai-|bot|\\[bot\\])" | wc -l`)
-  const teamSize = contributors <= 1 ? "solo"
+  const hasCodeowners = documentation.platform.codeowners !== null
+  const hasContributing = documentation.root.contributing !== null
+
+  const teamSize = hasCodeowners ? "large"  // CODEOWNERS implies large org
+    : contributors <= 1 ? "solo"
     : contributors <= 5 ? "small"
     : contributors <= 15 ? "medium"
     : "large"
 
-  // Infer data.sensitivity from code patterns
-  const hasPII = Grep("email|phone|address|ssn|credit_card|birth_date", "**/*.{py,ts,js,go}")
-  const hasRegulated = Grep("hipaa|sox|pci|gdpr|audit_log|compliance", "**/*.{py,ts,js,go,md}")
-  const hasEncryption = Grep("cryptography|bcrypt|argon2|hashlib.*password", "**/*.{py,ts,js}")
-  const dataSensitivity = hasRegulated.count > 0 ? "regulated"
-    : hasPII.count > 3 ? "pii"
-    : hasEncryption.count > 0 ? "internal"
-    : "public"
+  // ============================================
+  // Q2: Data sensitivity - from security docs + code patterns
+  // ============================================
+  const hasSecurity = documentation.root.security !== null
+  const hasEnvExample = documentation.config.envExample !== null
+  const hasPII = Grep("email|phone|address|ssn|credit_card|birth_date|password", "**/*.{py,ts,js,go}")
+  const hasRegulated = Grep("hipaa|sox|pci|gdpr|audit_log|compliance|phi|pci-dss", "**/*.{py,ts,js,go,md}")
+  const hasEncryption = Grep("cryptography|bcrypt|argon2|hashlib.*password|encrypt", "**/*.{py,ts,js}")
 
-  // Infer priority from existing code patterns
-  const hasSecurityMiddleware = Grep("@auth|@login_required|authenticate|authorize", "**/*.{py,ts,js}")
-  const hasPerformancePatterns = Grep("@cache|async def|@lru_cache|benchmark", "**/*.{py,ts,js}")
-  const testCoverage = Glob("**/test*.{py,ts,js}").length / Glob("**/*.{py,ts,js}").length
+  const dataSensitivity = hasRegulated.count > 0 ? "regulated"
+    : hasPII.count > 3 || hasSecurity ? "user-data"
+    : hasEncryption.count > 0 || hasEnvExample ? "internal"
+    : "no"
+
+  // ============================================
+  // Q3: Priority - from code patterns + test coverage
+  // ============================================
+  const hasSecurityMiddleware = Grep("@auth|@login_required|authenticate|authorize|@secure", "**/*.{py,ts,js}")
+  const hasPerformancePatterns = Grep("@cache|async def|@lru_cache|benchmark|@memoize", "**/*.{py,ts,js}")
+  const testFiles = Glob("**/test*.{py,ts,js}").length
+  const sourceFiles = Glob("**/*.{py,ts,js}").length
+  const testRatio = sourceFiles > 0 ? testFiles / sourceFiles : 0
+
   const priority = hasSecurityMiddleware.count > 5 ? "security"
     : hasPerformancePatterns.count > 10 ? "performance"
-    : testCoverage > 0.3 ? "maintainability"
-    : "velocity"
+    : testRatio > 0.3 ? "readability"
+    : "ship-fast"
 
-  // Infer breaking_changes from versioning discipline
+  // ============================================
+  // Q4: Breaking changes - from changelog + versioning
+  // ============================================
+  const hasChangelog = documentation.root.changelog !== null
   const semverTags = Bash("git tag | grep -E '^v?[0-9]+\\.[0-9]+\\.[0-9]+$' | wc -l")
   const majorBumps = Bash("git tag | grep -E '^v?[2-9]\\.' | wc -l")
   const hasDeprecations = Grep("@deprecated|DeprecationWarning|deprecated", "**/*.{py,ts,js}")
-  const breakingChanges = hasDeprecations.count > 3 ? "never"
-    : majorBumps > 0 ? "major"
-    : semverTags > 5 ? "semver"
-    : "allowed"
 
+  const breakingChanges = hasDeprecations.count > 3 ? "never"
+    : hasChangelog && majorBumps > 0 ? "major-only"
+    : semverTags > 5 ? "with-warning"
+    : "when-needed"
+
+  // ============================================
+  // Q5: Service/API - from API specs + routes
+  // ============================================
+  const hasOpenAPI = documentation.api.openapi !== null
+  const hasGraphQL = documentation.api.graphql !== null
+  const hasAsyncAPI = documentation.api.asyncapi !== null
+  const hasRoutes = Grep("@app\\.(route|get|post|put|delete)|@router\\.|Router\\(|express\\(", "**/*.{py,ts,js}")
+  const hasPublicApiDocs = hasOpenAPI || hasGraphQL || hasAsyncAPI
+
+  const serviceType = hasPublicApiDocs ? "public"  // Public API spec = public consumers
+    : hasRoutes.count > 10 ? "internal"            // Many routes but no public docs
+    : hasRoutes.count > 0 ? "internal"             // Some routes
+    : "no"                                          // No routes = standalone app/tool
+
+  // ============================================
+  // Q6: Testing approach - from test config + coverage
+  // ============================================
+  const hasCoverageConfig = await findFirst([".coveragerc", "codecov.yml", "jest.config.*", "pytest.ini"])
+  const coverageThreshold = hasCoverageConfig ? Grep("fail_under|threshold|min.*coverage|coverageThreshold", hasCoverageConfig) : null
+  const hasTestFirst = Grep("@pytest.fixture|beforeEach|describe\\(|it\\(", "**/*.{py,ts,js}")
+
+  const testingApproach = coverageThreshold?.count > 0 ? "target-based"  // Has coverage thresholds
+    : testRatio > 0.5 ? "everything"                                      // High test ratio
+    : hasTestFirst.count > 20 ? "test-first"                              // Many test patterns
+    : testRatio > 0.1 ? "minimal"                                         // Some tests
+    : "minimal"                                                           // Few/no tests
+
+  // ============================================
+  // Q7: Documentation level - from docs structure
+  // ============================================
+  const hasDocSite = documentation.infrastructure.mkdocs !== null
+    || documentation.infrastructure.docusaurus !== null
+    || documentation.infrastructure.sphinx !== null
+  const docsFileCount = documentation.analysis.docsDirectory.fileCount || 0
+  const hasApiDocs = hasOpenAPI || documentation.api.graphql !== null
+  const hasReadme = documentation.root.readme !== null
+
+  const docsLevel = hasDocSite ? "comprehensive"          // Full doc site
+    : docsFileCount > 5 || hasApiDocs ? "detailed"        // docs/ folder or API docs
+    : hasReadme ? "basic"                                  // At least README
+    : "code-only"                                          // No docs
+
+  // ============================================
+  // Q8: Deployment target - from infra configs
+  // ============================================
+  const hasServerless = await findFirst(["serverless.yml", "serverless.yaml", "netlify.toml", "vercel.json", "amplify.yml"])
+  const hasK8s = await findFirst(["k8s/", "kubernetes/", "helm/", "kustomization.yaml"])
+  const hasDocker = patterns.has_docker
+  const hasCICD = patterns.has_ci
+  const hasCloudConfig = await findFirst(["terraform/", "pulumi/", "cdk.json", "cloudformation/"])
+
+  const deployTarget = hasServerless ? "serverless"       // Serverless config
+    : hasK8s ? "self-hosted"                              // K8s = self-managed
+    : hasCloudConfig ? "cloud"                            // IaC = cloud deployment
+    : hasDocker && hasCICD ? "cloud"                      // Docker + CI = likely cloud
+    : "dev-only"                                          // No deploy config
+
+  // ============================================
+  // Build inferred object with all 8 values
+  // ============================================
   inferred = {
-    team: { size: teamSize },
-    data: { sensitivity: dataSensitivity },
+    team: teamSize,
+    data: dataSensitivity,
     priority: priority,
-    breaking_changes: breakingChanges
+    breaking_changes: breakingChanges,
+    api: serviceType,
+    testing: testingApproach,
+    docs: docsLevel,
+    deployment: deployTarget
   }
 }
 
 // If detection fails, use BEST PRACTICES defaults (not arbitrary)
 const bestPracticesDefaults = {
-  team: { size: "solo" },           // Most projects start solo
-  data: { sensitivity: "internal" }, // Assume internal until proven otherwise (safer)
-  priority: "maintainability",       // Best for long-term project health
-  breaking_changes: "semver"         // Industry standard versioning
+  team: "solo",              // Most projects start solo
+  data: "internal",          // Assume internal until proven otherwise (safer)
+  priority: "readability",   // Best for long-term project health
+  breaking_changes: "with-warning",  // Industry standard: warn then remove
+  api: "no",                 // Most projects don't expose APIs
+  testing: "minimal",        // Start minimal, grow as needed
+  docs: "basic",             // README is minimum viable
+  deployment: "dev-only"     // No assumptions about production
 }
 
 // Apply best practices for any "not_detected" values
-for (const [key, value] of Object.entries(inferred)) {
-  if (value === "not_detected" || value?.size === "not_detected") {
-    inferred[key] = bestPracticesDefaults[key]
-    inferred[key]._source = "best_practices"  // Mark as inferred from best practices
+for (const [key, value] of Object.entries(bestPracticesDefaults)) {
+  if (!inferred[key] || inferred[key] === "not_detected") {
+    inferred[key] = value
+    inferred[`${key}_source`] = "best_practices"
   } else {
-    inferred[key]._source = "detected"  // Mark as detected from real data
+    inferred[`${key}_source`] = "detected"
   }
 }
 ```
@@ -945,12 +1035,22 @@ for (const [key, value] of Object.entries(inferred)) {
     }
   },
   "inferred": {
-    "team": { "size": "small", "_source": "detected" },
-    "data": { "sensitivity": "internal", "_source": "detected" },
-    "priority": "maintainability",
-    "priority_source": "best_practices",
-    "breaking_changes": "semver",
-    "breaking_changes_source": "detected"
+    "team": "small",
+    "team_source": "detected",
+    "data": "internal",
+    "data_source": "detected",
+    "priority": "readability",
+    "priority_source": "detected",
+    "breaking_changes": "with-warning",
+    "breaking_changes_source": "detected",
+    "api": "no",
+    "api_source": "detected",
+    "testing": "minimal",
+    "testing_source": "best_practices",
+    "docs": "basic",
+    "docs_source": "detected",
+    "deployment": "dev-only",
+    "deployment_source": "detected"
   },
   "rulesNeeded": [
     "cco-python.md",
