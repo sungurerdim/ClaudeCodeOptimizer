@@ -11,6 +11,9 @@
 
 ```
 /plugin marketplace add sungurerdim/ClaudeCodeOptimizer
+```
+
+```
 /plugin install cco@ClaudeCodeOptimizer
 ```
 
@@ -21,6 +24,9 @@ Restart Claude Code. Done.
 
 ```bash
 claude plugin marketplace add sungurerdim/ClaudeCodeOptimizer
+```
+
+```bash
 claude plugin install cco@ClaudeCodeOptimizer
 ```
 </details>
@@ -149,6 +155,9 @@ See [Safety Model](docs/rules.md#safety-rules-blocker) for security patterns.
 
 ```
 /plugin uninstall cco@ClaudeCodeOptimizer
+```
+
+```
 /plugin marketplace remove ClaudeCodeOptimizer
 ```
 
