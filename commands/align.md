@@ -72,45 +72,26 @@ model: opus
 
 **DO NOT re-run these commands. Use the pre-collected values above.**
 
-## Context Requirement [CRITICAL]
+## Profile Requirement [CRITICAL]
 
-CCO context is auto-loaded from `.claude/rules/cco-context.md` via Claude Code's auto-context mechanism.
+CCO profile is auto-loaded from `.claude/rules/cco-profile.md` via Claude Code's auto-context mechanism.
 
-**Check:** If auto-context does NOT contain `cco: true` marker:
+**Check:** Delegate to `/cco:tune --check` for profile validation:
 
 ```javascript
-// Fallback: Trigger auto-setup inline (same as SessionStart hook)
-// Step 1: Analyze + Questions (parallel)
-const configData = await Task("cco-agent-analyze", `
-  scope: config
+// Delegate profile check to tune command
+const tuneResult = await Skill("tune", "--check")
 
-  CCO is not configured for this project.
-
-  Offer setup options first:
-  - [Auto-setup] Detect stack and create rules automatically
-  - [Interactive] Ask questions to customize setup
-  - [Skip] Don't configure CCO for this project
-
-  If Skip → return { skip: true }
-  If Auto-setup → detect without questions, return { detected, answers: defaults }
-  If Interactive → ask questions while detecting, return { detected, answers }
-`, { model: "haiku" })
-
-if (configData.skip) {
-  // Exit command gracefully
+if (tuneResult.status === "skipped") {
+  // User declined setup - exit gracefully
+  console.log("CCO setup skipped. Run /cco:tune when ready.")
   return
 }
 
-// Step 2: Write files (uses analyze output)
-await Task("cco-agent-apply", `
-  scope: config
-  input: ${JSON.stringify(configData)}
-
-  Write config files and output context for immediate use.
-`, { model: "opus" })
+// Profile is now valid - continue with command
 ```
 
-**After config complete → continue to Step-0 (Mode Detection)**
+**After tune completes → continue to Step-0 (Mode Detection)**
 
 ---
 

@@ -26,12 +26,18 @@ class TestPluginJson:
         path = ROOT / ".claude-plugin" / "plugin.json"
         return json.loads(path.read_text(encoding="utf-8"))
 
-    def test_has_required_fields(self, plugin_json):
-        """Plugin must have name, version, description, hooks."""
+    @pytest.fixture
+    def hooks_json(self):
+        path = ROOT / "hooks" / "hooks.json"
+        return json.loads(path.read_text(encoding="utf-8"))
+
+    def test_has_required_fields(self, plugin_json, hooks_json):
+        """Plugin must have name, version, description. Hooks in separate file."""
         assert plugin_json.get("name") == "cco"
         assert isinstance(plugin_json.get("version"), str)
         assert isinstance(plugin_json.get("description"), str)
-        assert "SessionStart" in plugin_json.get("hooks", {})
+        # Hooks are in hooks/hooks.json for modularity
+        assert "SessionStart" in hooks_json.get("hooks", {})
 
 
 class TestMarketplaceJson:
@@ -101,10 +107,11 @@ class TestHookIntegration:
 
     def test_plugin_hook_references_core_rules(self):
         """Plugin hook must correctly reference core-rules.json."""
-        path = ROOT / ".claude-plugin" / "plugin.json"
-        plugin_json = json.loads(path.read_text(encoding="utf-8"))
+        # Hooks are in separate file for modularity
+        path = ROOT / "hooks" / "hooks.json"
+        hooks_json = json.loads(path.read_text(encoding="utf-8"))
 
-        session_start = plugin_json["hooks"]["SessionStart"]
+        session_start = hooks_json["hooks"]["SessionStart"]
         assert isinstance(session_start, list), "SessionStart must be a list"
 
         hook_def = session_start[0]["hooks"][0]

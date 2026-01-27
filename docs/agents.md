@@ -149,11 +149,11 @@ Handles project detection and rule generation:
 **Interactive Mode Flow:**
 1. Auto-detect from manifest/code/config/docs (priority order)
 2. Ask user questions via AskUserQuestion (type, team, data, maturity)
-3. Generate cco-context.md with YAML frontmatter
+3. Generate cco-profile.md with YAML frontmatter
 4. Copy rule files from plugin to `.claude/rules/`
 
 **Output Files:**
-- `cco-context.md` - Project metadata (YAML with `cco: true` marker)
+- `cco-profile.md` - Project metadata (YAML)
 - `cco-{language}.md` - Language-specific rules
 - `cco-{framework}.md` - Framework-specific rules
 - `cco-{operation}.md` - Operations rules

@@ -54,7 +54,7 @@ All commands follow a standardized structure for consistency and reliability.
 
 CCO automatically detects unconfigured projects at session start:
 
-1. **Check**: Does auto-loaded context contain `cco: true` marker?
+1. **Check**: Does `.claude/rules/cco-profile.md` exist with all required fields?
 2. **If NO**: Offers setup options:
    - `[Auto-setup]` - Detect stack and create rules automatically
    - `[Interactive]` - Ask questions to customize setup
