@@ -129,6 +129,8 @@ if (!validationResult.valid) {
 
 ## Step-2: Analyze Project
 
+**Detection is IDENTICAL for both modes. Only user interaction differs.**
+
 ```javascript
 console.log("Analyzing project...")
 
@@ -136,105 +138,101 @@ const configData = await Task("cco-agent-analyze", `
   scope: config
   mode: ${config.mode}
 
-  Detect and populate ALL required fields:
+  ## Detection Rules [SAME FOR BOTH MODES]
 
-  ## Auto-Detection Rules (mode: auto)
+  **CRITICAL: Only use REAL DATA from files. No guessing, no assumptions.**
 
-  | Field | Source | Fallback |
-  |-------|--------|----------|
-  | project.name | package.json/pyproject.toml/Cargo.toml "name" | Directory name |
-  | project.purpose | README.md first paragraph or description field | "Software project" |
-  | stack.languages | File extensions (.py→Python, .ts→TypeScript, etc.) | [] |
-  | stack.frameworks | Dependencies (react, fastapi, django, etc.) | [] |
-  | maturity | Git history + test coverage + docs presence | "development" |
-  | commands.format | package.json scripts, Makefile, pyproject.toml | null |
-  | commands.lint | Same sources | null |
-  | commands.test | Same sources | null |
-  | commands.build | Same sources | null |
+  All detection is file-based and question-free:
 
-  ## Detection Steps
+  | Field | Source Files | Detection Method | If Not Found |
+  |-------|--------------|------------------|--------------|
+  | project.name | package.json, pyproject.toml, Cargo.toml, go.mod | Read "name" field | Use directory name |
+  | project.purpose | README.md, package.json "description" | First paragraph or description field | "Not specified" |
+  | stack.languages | All source files | Count file extensions | [] empty |
+  | stack.frameworks | package.json deps, requirements.txt, Cargo.toml | Match known framework names | [] empty |
+  | maturity | .github/, tests/, docs/, CHANGELOG, git log | Score-based calculation | "unknown" |
+  | commands.format | package.json scripts, Makefile, pyproject.toml | Match "format", "fmt", "prettier" | null |
+  | commands.lint | Same | Match "lint", "eslint", "ruff" | null |
+  | commands.test | Same | Match "test", "pytest", "jest" | null |
+  | commands.build | Same | Match "build", "compile" | null |
 
-  1. Read manifest files: package.json, pyproject.toml, Cargo.toml, go.mod, pom.xml
-  2. Scan file extensions in src/, lib/, app/ directories
-  3. Parse README.md for project description
-  4. Check for test directories and coverage config
-  5. Extract scripts/commands from manifest
+  ## Detection Steps (All File-Based, No Questions)
 
-  ## Maturity Detection
+  1. **Glob** manifest files: package.json, pyproject.toml, Cargo.toml, go.mod, pom.xml
+  2. **Read** each manifest, extract name/version/dependencies
+  3. **Glob** source files: **/*.{py,ts,js,go,rs,java,rb,php,c,cpp,h}
+  4. **Count** extensions to determine languages
+  5. **Match** dependencies against known framework list
+  6. **Read** README.md for description (first non-header paragraph)
+  7. **Check** indicator files for maturity scoring
+
+  ## Language Detection (File Extension Based)
+
+  | Extension | Language |
+  |-----------|----------|
+  | .py | Python |
+  | .ts, .tsx | TypeScript |
+  | .js, .jsx | JavaScript |
+  | .go | Go |
+  | .rs | Rust |
+  | .java | Java |
+  | .rb | Ruby |
+  | .php | PHP |
+  | .c, .h | C |
+  | .cpp, .hpp | C++ |
+  | .cs | C# |
+  | .swift | Swift |
+  | .kt | Kotlin |
+
+  ## Framework Detection (Dependency Based)
+
+  | Dependency Pattern | Framework |
+  |--------------------|-----------|
+  | react, react-dom | React |
+  | vue | Vue |
+  | @angular/core | Angular |
+  | fastapi | FastAPI |
+  | flask | Flask |
+  | django | Django |
+  | express | Express |
+  | nextjs, next | Next.js |
+  | spring-boot | Spring Boot |
+  | rails | Ruby on Rails |
+
+  ## Maturity Scoring
 
   | Indicator | Score |
   |-----------|-------|
-  | Has tests | +1 |
+  | Has tests directory or test files | +1 |
   | Has CI config (.github/workflows, .gitlab-ci) | +1 |
   | Has docs/ or README >500 chars | +1 |
   | Git history >100 commits | +1 |
-  | Has changelog | +1 |
+  | Has CHANGELOG | +1 |
 
   Score: 0-1 → "prototype", 2-3 → "development", 4-5 → "production"
 
-  ${config.mode === "auto" ?
-    "Return { detected, answers: defaults } - NO questions asked" :
-    `## Interactive Mode Questions
+  ## Mode-Specific Behavior
 
-    After detection, ask user to confirm/customize with these questions:
+  **Auto Mode (mode: auto):**
+  - Run detection using file reads only
+  - NO questions asked by agent
+  - Use detected values directly (with fallbacks for missing)
+  - Return: { detected: {...}, final: detected }
 
-    **Q1: Project Identity**
-    AskUserQuestion([{
-      question: "Project: ${detected.name} - ${detected.purpose}. Correct?",
-      header: "Project",
-      options: [
-        { label: "Correct", description: "Keep detected values" },
-        { label: "Edit name", description: "Change project name" },
-        { label: "Edit purpose", description: "Change description" }
-      ]
-    }])
+  **Interactive Mode (mode: interactive):**
+  - Run SAME detection as auto mode
+  - Agent shows detected values and asks confirmation
+  - Agent handles all questions internally (tune.md does not define questions)
+  - User can accept or modify each field
+  - Return: { detected: {...}, final: userConfirmed }
 
-    **Q2: Stack (Languages)**
-    AskUserQuestion([{
-      question: "Languages detected: ${detected.languages.join(', ')}",
-      header: "Languages",
-      options: [
-        { label: "Correct", description: "Keep detected" },
-        { label: "Add more", description: "Include additional languages" },
-        { label: "Remove some", description: "Exclude languages" }
-      ]
-    }])
+  **Question Flow (handled by agent in interactive mode):**
+  - Q1: Show detected project name + purpose → Confirm/Edit
+  - Q2: Show detected languages + frameworks → Confirm/Edit
+  - Q3: Show detected maturity + commands → Confirm/Edit
 
-    **Q3: Stack (Frameworks) + Maturity**
-    AskUserQuestion([
-      {
-        question: "Frameworks: ${detected.frameworks.join(', ') || 'None detected'}",
-        header: "Frameworks",
-        options: [
-          { label: "Correct", description: "Keep detected" },
-          { label: "Edit", description: "Modify framework list" }
-        ]
-      },
-      {
-        question: "Project maturity: ${detected.maturity}",
-        header: "Maturity",
-        options: [
-          { label: "Prototype", description: "Early development, unstable" },
-          { label: "Development", description: "Active development, mostly stable" },
-          { label: "Production", description: "Stable, in production use" }
-        ]
-      }
-    ])
-
-    **Q4: Commands**
-    AskUserQuestion([{
-      question: "Detected commands - edit if needed:",
-      header: "Commands",
-      options: [
-        { label: "Use detected", description: "format: ${detected.commands.format || 'none'}, test: ${detected.commands.test || 'none'}" },
-        { label: "Edit commands", description: "Customize format/lint/test/build commands" },
-        { label: "Skip commands", description: "No commands configured" }
-      ]
-    }])
-
-    If user selects "Edit" options, prompt for specific values.
-    `
-  }
+  NOTE: All questions are defined and asked BY THE AGENT, not by tune.md.
+  tune.md only passes mode parameter to agent.
 `, { model: "haiku" })
 ```
 
