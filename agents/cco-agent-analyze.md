@@ -587,130 +587,185 @@ Token-first │ Complete coverage │ Targeted patterns │ Actionable findings
 
 ## Config Scope (scope=config)
 
-Project detection with parallel user questions. **Questions asked while detection runs in background.**
+Project detection for profile generation. **Detection is 100% file-based.**
 
 ### Architecture
 
 ```
-[PARALLEL - Single AskUserQuestion call]
-├── Foreground: User questions (Type, Team, Data)
-└── Background: Project detection (manifest, lock, config, code patterns)
+[SEQUENTIAL]
+1. Detection (file-based, no questions)
+   ├── Read manifests (package.json, pyproject.toml, etc.)
+   ├── Scan file extensions
+   ├── Match dependencies → frameworks
+   ├── Score maturity indicators
+   └── Extract commands from scripts
 
-When both complete → Return { detected, answers }
+2. Questions (interactive mode only)
+   └── AskUserQuestion for Section 4 fields (team, data, priority, breaking)
+
+3. Return { detected, answers, final }
 ```
 
-### Execution Flow
+### Detection Steps (Both Modes)
 
 ```javascript
-// Step 1: Start detection in background while asking questions
-const detectionTask = Task("detect-project", `
-  Read manifest files (package.json, pyproject.toml, go.mod, Cargo.toml, etc.)
-  Read lock files (package-lock.json, poetry.lock, go.sum, etc.)
-  Read config files (tsconfig.json, .eslintrc, etc.)
-  Identify: languages, frameworks, operations
-
-  Return: { languages: [], frameworks: [], operations: [], confidence: {} }
-`, { run_in_background: true })
-
-// Step 2: Ask questions (runs in parallel with detection)
-const answers = await AskUserQuestion([
-  {
-    question: "What type of application is this?",
-    header: "Type",
-    multiSelect: true,
-    options: [
-      { label: "CLI", description: "Command-line tool" },
-      { label: "API", description: "Backend service" },
-      { label: "Web", description: "Frontend application" },
-      { label: "Library", description: "Reusable package" }
-    ]
-  },
-  {
-    question: "Team size?",
-    header: "Team",
-    multiSelect: false,
-    options: [
-      { label: "Solo (Recommended)", description: "Single developer" },
-      { label: "Small", description: "2-5 people" },
-      { label: "Medium", description: "6-15 people" },
-      { label: "Large", description: "15+ people" }
-    ]
-  },
-  {
-    question: "Most sensitive data type?",
-    header: "Data",
-    multiSelect: false,
-    options: [
-      { label: "Internal (Recommended)", description: "Internal company data" },
-      { label: "Public", description: "No sensitive data" },
-      { label: "PII", description: "Personal data" },
-      { label: "Regulated", description: "Finance/Healthcare" }
-    ]
-  }
+// Step 1: Read all manifest files
+const manifests = await Promise.all([
+  Read("package.json").catch(() => null),
+  Read("pyproject.toml").catch(() => null),
+  Read("Cargo.toml").catch(() => null),
+  Read("go.mod").catch(() => null),
+  Read("pom.xml").catch(() => null)
 ])
 
-// Step 3: Wait for detection to complete
-const detected = await TaskOutput(detectionTask.id)
-
-// Step 4: Return combined result for apply agent
-return {
-  detected: detected,
-  answers: answers,
-  rulesNeeded: matchRules(detected)
+// Step 2: Extract project identity
+const project = {
+  name: extractName(manifests) || getDirectoryName(),
+  purpose: await extractPurpose() || "Not specified",
+  type: detectProjectTypes(manifests, await scanImports())
 }
+
+// Step 3: Detect stack
+const stack = {
+  languages: await detectLanguages(),  // from file extensions
+  frameworks: detectFrameworks(manifests),  // from dependencies
+  testing: detectTestFrameworks(manifests),
+  build: detectBuildTools(manifests)
+}
+
+// Step 4: Score maturity
+const maturity = await scoreMaturity()  // 0-6 score → prototype/active/stable/legacy
+
+// Step 5: Extract commands
+const commands = extractCommands(manifests)  // format, lint, test, build, type
+
+// Step 6: Detect patterns
+const patterns = {
+  error_handling: detectErrorStyle(),
+  logging: detectLoggingStyle(),
+  api_style: detectApiStyle(),
+  db_type: detectDbType(manifests),
+  has_ci: await exists(".github/workflows") || await exists(".gitlab-ci.yml"),
+  has_docker: await exists("Dockerfile"),
+  has_monorepo: detectMonorepo(manifests)
+}
+
+const detected = { project, stack, maturity, commands, patterns }
 ```
 
-### Auto Mode (--auto or hook trigger)
+### Interactive Mode Questions [4×4=16 options]
 
 ```javascript
-// Skip questions, use detected values with safe defaults
-const detected = await detectProject()
-
-return {
-  detected: detected,
-  answers: {
-    type: detected.types || ['api'],
-    team: 'solo',
-    data: 'internal'
-  },
-  rulesNeeded: matchRules(detected)
+if (mode === "interactive") {
+  const answers = await AskUserQuestion([
+    {
+      question: "Team size?",
+      header: "Team",
+      multiSelect: false,
+      options: [
+        { label: "Solo", description: "Single developer - minimal process" },
+        { label: "Small (2-5)", description: "Code review helpful" },
+        { label: "Medium (6-15)", description: "Code review required" },
+        { label: "Large (15+)", description: "Strict review + docs" }
+      ]
+    },
+    {
+      question: "Data sensitivity?",
+      header: "Data",
+      multiSelect: false,
+      options: [
+        { label: "Public", description: "No sensitive data" },
+        { label: "Internal", description: "Company internal only" },
+        { label: "PII", description: "Personal data - GDPR applies" },
+        { label: "Regulated", description: "Finance/Healthcare - SOC2/HIPAA" }
+      ]
+    },
+    {
+      question: "Top priority?",
+      header: "Priority",
+      multiSelect: false,
+      options: [
+        { label: "Security", description: "Security-first decisions" },
+        { label: "Performance", description: "Speed and efficiency focus" },
+        { label: "Maintainability", description: "Clean, documented, testable" },
+        { label: "Velocity", description: "Ship fast, iterate quickly" }
+      ]
+    },
+    {
+      question: "Breaking changes policy?",
+      header: "Breaking",
+      multiSelect: false,
+      options: [
+        { label: "Never", description: "Backwards compatible always" },
+        { label: "Major only", description: "Only in major versions" },
+        { label: "Semver", description: "Follow semantic versioning" },
+        { label: "Allowed", description: "OK with deprecation notice" }
+      ]
+    }
+  ])
 }
 ```
 
-### Detection Sources
+### Auto Mode Defaults
 
-| Priority | Source | Example | Confidence |
-|----------|--------|---------|------------|
-| 1 | Manifest files | package.json, pyproject.toml | HIGH |
-| 2 | Lock files | package-lock.json, poetry.lock | HIGH |
-| 3 | Config files | tsconfig.json, .eslintrc | HIGH |
-| 4 | Code patterns | import statements, decorators | MEDIUM |
-| 5 | Documentation | README.md | LOW |
+```javascript
+if (mode === "auto") {
+  answers = {
+    team: { size: "solo" },
+    data: { sensitivity: "internal" },
+    priority: "maintainability",
+    breaking_changes: "major"
+  }
+}
+```
 
 ### Output Schema
 
 ```json
 {
   "detected": {
-    "languages": ["typescript", "python"],
-    "frameworks": ["react", "fastapi"],
-    "operations": ["docker", "github-actions"],
-    "confidence": { "typescript": "HIGH", "react": "HIGH" }
+    "project": {
+      "name": "my-project",
+      "purpose": "API for user management",
+      "type": ["api"]
+    },
+    "stack": {
+      "languages": ["python", "typescript"],
+      "frameworks": ["fastapi", "react"],
+      "testing": ["pytest", "jest"],
+      "build": ["docker", "webpack"]
+    },
+    "maturity": "active",
+    "commands": {
+      "format": "black . && prettier --write .",
+      "lint": "ruff check .",
+      "test": "pytest tests/",
+      "build": "docker build .",
+      "type": "mypy src/"
+    },
+    "patterns": {
+      "error_handling": "exceptions",
+      "logging": "structured",
+      "api_style": "rest",
+      "db_type": "postgres",
+      "has_ci": true,
+      "has_docker": true,
+      "has_monorepo": false
+    }
   },
   "answers": {
-    "type": ["API", "Web"],
-    "team": "Small",
-    "data": "Internal"
+    "team": { "size": "small" },
+    "data": { "sensitivity": "internal" },
+    "priority": "maintainability",
+    "breaking_changes": "major"
   },
   "rulesNeeded": [
-    "cco-typescript.md",
     "cco-python.md",
-    "cco-frontend.md",
+    "cco-typescript.md",
     "cco-backend.md",
-    "cco-infrastructure.md",
-    "cco-cicd.md"
+    "cco-frontend.md"
   ]
 }
 ```
 
-**This output is passed to cco-agent-apply for file writing.**
+**This output is passed to cco-agent-apply for profile file writing.**

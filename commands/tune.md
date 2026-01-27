@@ -142,62 +142,130 @@ const configData = await Task("cco-agent-analyze", `
 
   **CRITICAL: Only use REAL DATA from files. No guessing, no assumptions.**
 
-  All detection is file-based and question-free:
+  ### Section 1: Project Identity (Auto-detect)
 
-  | Field | Source Files | Detection Method | If Not Found |
-  |-------|--------------|------------------|--------------|
-  | project.name | package.json, pyproject.toml, Cargo.toml, go.mod | Read "name" field | Use directory name |
-  | project.purpose | README.md, package.json "description" | First paragraph or description field | "Not specified" |
-  | stack.languages | All source files | Count file extensions | [] empty |
-  | stack.frameworks | package.json deps, requirements.txt, Cargo.toml | Match known framework names | [] empty |
-  | maturity | .github/, tests/, docs/, CHANGELOG, git log | Score-based calculation | "unknown" |
-  | commands.format | package.json scripts, Makefile, pyproject.toml | Match "format", "fmt", "prettier" | null |
-  | commands.lint | Same | Match "lint", "eslint", "ruff" | null |
-  | commands.test | Same | Match "test", "pytest", "jest" | null |
-  | commands.build | Same | Match "build", "compile" | null |
+  | Field | Source | Method | Fallback |
+  |-------|--------|--------|----------|
+  | name | package.json, pyproject.toml, Cargo.toml | "name" field | Directory name |
+  | purpose | README.md, manifest description | First paragraph | "Not specified" |
+  | type | Import patterns + structure | See Type Detection | ["unknown"] |
 
-  ## Detection Steps (All File-Based, No Questions)
+  ### Section 2: Tech Stack (Auto-detect)
 
-  1. **Glob** manifest files: package.json, pyproject.toml, Cargo.toml, go.mod, pom.xml
-  2. **Read** each manifest, extract name/version/dependencies
-  3. **Glob** source files: **/*.{py,ts,js,go,rs,java,rb,php,c,cpp,h}
-  4. **Count** extensions to determine languages
-  5. **Match** dependencies against known framework list
-  6. **Read** README.md for description (first non-header paragraph)
-  7. **Check** indicator files for maturity scoring
+  | Field | Source | Method | Fallback |
+  |-------|--------|--------|----------|
+  | languages | **/*.{py,ts,js,go,rs,...} | Count extensions | [] |
+  | frameworks | Dependencies in manifests | Pattern match | [] |
+  | testing | Dependencies | Match test frameworks | [] |
+  | build | Dependencies + Dockerfile | Match build tools | [] |
 
-  ## Language Detection (File Extension Based)
+  ### Section 3: Maturity (Auto-detect with scoring)
+
+  | Indicator | Check | Points |
+  |-----------|-------|--------|
+  | Has tests/ or test files | Glob("**/test*") | +1 |
+  | Has CI config | .github/workflows/, .gitlab-ci.yml | +1 |
+  | Has documentation | docs/ or README >1000 chars | +1 |
+  | Git history depth | >100 commits | +1 |
+  | Has CHANGELOG | CHANGELOG.md exists | +1 |
+  | Has version tags | git tag | +1 |
+
+  Score → Maturity: 0-1=prototype, 2-3=active, 4-5=stable, 6=legacy
+
+  ### Section 4: Team & Process (MUST ASK - cannot detect)
+
+  | Field | Why Can't Detect | Default (auto mode) |
+  |-------|------------------|---------------------|
+  | team.size | Git contributors ≠ team size | "solo" |
+  | data.sensitivity | Cannot infer from code | "internal" |
+  | priority | Business decision | "maintainability" |
+  | release.cadence | Cannot infer | "continuous" |
+  | breaking_changes | Policy, not code | "major" |
+
+  ### Section 5: Commands (Auto-detect)
+
+  | Command | Sources | Patterns |
+  |---------|---------|----------|
+  | format | package.json, Makefile, pyproject.toml | "format", "fmt", "prettier", "black" |
+  | lint | Same | "lint", "eslint", "ruff", "pylint" |
+  | test | Same | "test", "pytest", "jest", "mocha" |
+  | build | Same | "build", "compile", "webpack", "vite" |
+  | type | Same | "typecheck", "mypy", "tsc" |
+
+  ### Section 6: Patterns (Auto-detect, informational)
+
+  | Pattern | Detection Method |
+  |---------|------------------|
+  | error_handling | try/except vs Result vs match |
+  | logging | print vs logging vs structlog |
+  | api_style | REST routes vs GraphQL schema vs gRPC proto |
+  | db_type | Dependencies (psycopg2→postgres, pymongo→mongo) |
+  | has_ci | .github/workflows/ or .gitlab-ci.yml exists |
+  | has_docker | Dockerfile exists |
+  | has_monorepo | workspaces in package.json or multiple manifests |
+
+  ## Detection Mappings
+
+  ### Language Detection (File Extension)
 
   | Extension | Language |
   |-----------|----------|
   | .py | Python |
   | .ts, .tsx | TypeScript |
-  | .js, .jsx | JavaScript |
+  | .js, .jsx, .mjs | JavaScript |
   | .go | Go |
   | .rs | Rust |
   | .java | Java |
   | .rb | Ruby |
   | .php | PHP |
   | .c, .h | C |
-  | .cpp, .hpp | C++ |
+  | .cpp, .hpp, .cc | C++ |
   | .cs | C# |
   | .swift | Swift |
-  | .kt | Kotlin |
+  | .kt, .kts | Kotlin |
+  | .scala | Scala |
+  | .ex, .exs | Elixir |
+  | .hs | Haskell |
+  | .lua | Lua |
+  | .r, .R | R |
+  | .jl | Julia |
+  | .pl, .pm | Perl |
+  | .sh, .bash | Shell |
 
-  ## Framework Detection (Dependency Based)
+  ### Framework Detection (Dependency Pattern)
 
-  | Dependency Pattern | Framework |
-  |--------------------|-----------|
-  | react, react-dom | React |
-  | vue | Vue |
-  | @angular/core | Angular |
-  | fastapi | FastAPI |
-  | flask | Flask |
-  | django | Django |
-  | express | Express |
-  | nextjs, next | Next.js |
-  | spring-boot | Spring Boot |
-  | rails | Ruby on Rails |
+  | Pattern | Framework | Type |
+  |---------|-----------|------|
+  | react, react-dom | React | web |
+  | vue | Vue | web |
+  | @angular/core | Angular | web |
+  | svelte | Svelte | web |
+  | next | Next.js | web |
+  | nuxt | Nuxt | web |
+  | fastapi | FastAPI | api |
+  | flask | Flask | api |
+  | django | Django | api |
+  | express | Express | api |
+  | nestjs, @nestjs | NestJS | api |
+  | spring-boot | Spring Boot | api |
+  | rails | Ruby on Rails | api |
+  | gin | Gin | api |
+  | echo | Echo | api |
+  | actix-web | Actix | api |
+  | axum | Axum | api |
+  | click, typer, argparse | CLI framework | cli |
+  | cobra | Cobra | cli |
+  | clap | Clap | cli |
+
+  ### Project Type Detection
+
+  | Indicators | Type |
+  |------------|------|
+  | CLI framework deps OR argparse/click imports OR bin/ entry | cli |
+  | API framework deps OR routes/endpoints structure | api |
+  | Frontend framework deps OR public/index.html | web |
+  | setup.py with packages OR pyproject.toml [project] OR lib/ structure | library |
+  | workspaces in package.json OR multiple root manifests | monorepo |
 
   ## Maturity Scoring
 
@@ -214,25 +282,87 @@ const configData = await Task("cco-agent-analyze", `
   ## Mode-Specific Behavior
 
   **Auto Mode (mode: auto):**
-  - Run detection using file reads only
-  - NO questions asked by agent
-  - Use detected values directly (with fallbacks for missing)
-  - Return: { detected: {...}, final: detected }
+  - Run ALL detection (Sections 1-6)
+  - NO questions asked
+  - Use safe defaults for Section 4 (Team & Process):
+    - team.size: "solo"
+    - data.sensitivity: "internal"
+    - priority: "maintainability"
+    - release.cadence: "continuous"
+    - breaking_changes: "major"
+  - Return: { detected: {...}, final: {...} }
 
   **Interactive Mode (mode: interactive):**
-  - Run SAME detection as auto mode
-  - Agent shows detected values and asks confirmation
-  - Agent handles all questions internally (tune.md does not define questions)
-  - User can accept or modify each field
-  - Return: { detected: {...}, final: userConfirmed }
+  - Run SAME detection as auto mode FIRST
+  - THEN ask Section 4 questions (cannot be detected):
 
-  **Question Flow (handled by agent in interactive mode):**
-  - Q1: Show detected project name + purpose → Confirm/Edit
-  - Q2: Show detected languages + frameworks → Confirm/Edit
-  - Q3: Show detected maturity + commands → Confirm/Edit
+  ## Interactive Questions [4 questions × 4 options = 16 total]
 
-  NOTE: All questions are defined and asked BY THE AGENT, not by tune.md.
-  tune.md only passes mode parameter to agent.
+  ```javascript
+  AskUserQuestion([
+    {
+      question: "Team size?",
+      header: "Team",
+      options: [
+        { label: "Solo", description: "Single developer - minimal process" },
+        { label: "Small (2-5)", description: "Code review helpful" },
+        { label: "Medium (6-15)", description: "Code review required" },
+        { label: "Large (15+)", description: "Strict review + docs" }
+      ],
+      multiSelect: false
+    },
+    {
+      question: "Data sensitivity?",
+      header: "Data",
+      options: [
+        { label: "Public", description: "No sensitive data" },
+        { label: "Internal", description: "Company internal only" },
+        { label: "PII", description: "Personal data - GDPR applies" },
+        { label: "Regulated", description: "Finance/Healthcare - SOC2/HIPAA" }
+      ],
+      multiSelect: false
+    },
+    {
+      question: "Top priority?",
+      header: "Priority",
+      options: [
+        { label: "Security", description: "Security-first decisions" },
+        { label: "Performance", description: "Speed and efficiency focus" },
+        { label: "Maintainability", description: "Clean, documented, testable" },
+        { label: "Velocity", description: "Ship fast, iterate quickly" }
+      ],
+      multiSelect: false
+    },
+    {
+      question: "Breaking changes policy?",
+      header: "Breaking",
+      options: [
+        { label: "Never", description: "Backwards compatible always" },
+        { label: "Major only", description: "Only in major versions" },
+        { label: "Semver", description: "Follow semantic versioning" },
+        { label: "Allowed", description: "OK with deprecation notice" }
+      ],
+      multiSelect: false
+    }
+  ])
+  ```
+
+  ## How Profile Affects Claude Decisions
+
+  | Field | Impact on Claude Behavior |
+  |-------|---------------------------|
+  | team.size=solo | Skip review reminders, minimal docs |
+  | team.size=large | Require docs, suggest PR templates |
+  | data.sensitivity=pii | Flag any logging of user data |
+  | data.sensitivity=regulated | Enforce audit trails, encryption |
+  | priority=security | Prioritize security fixes over features |
+  | priority=velocity | Suggest simpler solutions, skip optimizations |
+  | breaking_changes=never | Warn on any API signature change |
+  | breaking_changes=allowed | Suggest clean breaks over hacks |
+  | maturity=prototype | Allow shortcuts, skip tests |
+  | maturity=stable | Require tests, careful refactoring |
+
+  - Return: { detected: {...}, answers: {...}, final: merged }
 `, { model: "haiku" })
 ```
 
@@ -281,36 +411,111 @@ The generated `cco-profile.md` must have this exact structure:
 
 ```yaml
 ---
-# CCO Profile - Auto-generated by /cco:tune
-project:
-  name: "project-name"           # REQUIRED
-  purpose: "Brief description"   # REQUIRED
-  type: "api|cli|library|web"    # Optional
+# CCO Profile - Generated by /cco:tune
+# This profile informs ALL Claude Code decisions for this project
 
+# ============================================================
+# SECTION 1: PROJECT IDENTITY (Auto-detected)
+# ============================================================
+project:
+  name: "project-name"                    # From manifest or directory
+  purpose: "Brief description"            # From README or manifest description
+  type:                                   # Detected from imports/structure
+    - api                                 # fastapi/flask/express → api
+    - web                                 # react/vue/angular → web
+    # Options: cli, api, web, library, monorepo
+
+# ============================================================
+# SECTION 2: TECH STACK (Auto-detected)
+# ============================================================
 stack:
-  languages:                     # REQUIRED (at least one)
+  languages:                              # From file extensions
     - Python
     - TypeScript
-  frameworks:                    # REQUIRED (can be empty [])
+  frameworks:                             # From dependencies
     - FastAPI
     - React
+  testing:                                # From dependencies
+    - pytest
+    - jest
+  build:                                  # From dependencies
+    - webpack
+    - docker
 
-maturity: "prototype|development|production"  # REQUIRED
+# ============================================================
+# SECTION 3: PROJECT MATURITY (Auto-detected from indicators)
+# ============================================================
+maturity: "active"                        # prototype|active|stable|legacy
+# Detection: tests existence, CI config, docs, git history, changelog
 
-commands:                        # REQUIRED (section must exist)
-  format: "black . --check"      # Optional
-  lint: "ruff check ."           # Optional
-  test: "pytest tests/ -v"       # Optional
-  build: "npm run build"         # Optional
-  type: "mypy src/"              # Optional
+# ============================================================
+# SECTION 4: TEAM & PROCESS (Asked in interactive, defaults in auto)
+# ============================================================
+team:
+  size: "small"                           # solo|small|medium|large
+  # Affects: code review requirements, documentation level
+
+data:
+  sensitivity: "internal"                 # public|internal|pii|regulated
+  # Affects: security checks, compliance requirements, logging rules
+
+priority: "maintainability"               # security|performance|maintainability|velocity
+  # Affects: trade-off decisions, optimization focus
+
+release:
+  cadence: "continuous"                   # continuous|scheduled|versioned
+  # Affects: changelog generation, version bumping
+
+breaking_changes: "major"                 # never|major|allowed
+  # Affects: API design, deprecation strategy
+
+# ============================================================
+# SECTION 5: COMMANDS (Auto-detected from manifests)
+# ============================================================
+commands:
+  format: "black . && prettier --write ."
+  lint: "ruff check . && eslint ."
+  test: "pytest tests/ -v"
+  build: "npm run build"
+  type: "mypy src/ && tsc --noEmit"
+
+# ============================================================
+# SECTION 6: DETECTED PATTERNS (Auto-detected, informational)
+# ============================================================
+patterns:
+  error_handling: "exceptions"            # exceptions|result|either
+  logging: "structured"                   # print|logging|structured
+  api_style: "rest"                       # rest|graphql|grpc
+  db_type: "postgres"                     # postgres|mysql|mongo|sqlite|none
+  has_ci: true
+  has_docker: true
+  has_monorepo: false
 ---
 
-# Project Profile
+# Project Context
 
-Additional context about the project...
+Additional context that helps Claude understand this project...
 ```
 
-**Validation:** All 6 required fields must be present and non-empty.
+## Required vs Optional Fields
+
+| Section | Field | Required | Auto-Detect | Ask User |
+|---------|-------|----------|-------------|----------|
+| project | name | ✓ | ✓ | - |
+| project | purpose | ✓ | ✓ | - |
+| project | type | ✓ | ✓ | confirm |
+| stack | languages | ✓ | ✓ | - |
+| stack | frameworks | ✓ | ✓ | - |
+| maturity | - | ✓ | ✓ | confirm |
+| team | size | ✓ | - | ✓ |
+| data | sensitivity | ✓ | - | ✓ |
+| priority | - | ✓ | - | ✓ |
+| release | cadence | - | partial | ✓ |
+| breaking_changes | - | - | - | ✓ |
+| commands | * | - | ✓ | - |
+| patterns | * | - | ✓ | - |
+
+**Validation:** Sections 1-5 must have all required fields populated.
 
 ---
 
