@@ -66,17 +66,29 @@ if (isReportOnly) {
 }
 ```
 
+## No Deferrals Policy [CRITICAL]
+
+When `--auto` or "Fix all" is selected:
+- **Zero commentary** - No "this is complex", "needs refactor", "minor detail"
+- **Zero deferrals** - No "consider later", "recommend manual", "outside scope"
+- **Zero skips** - Every finding = FIXED or TECHNICAL FAILURE
+- **Only technical failures** - File not found, parse error, permission denied
+
+**See Core Rules:** `No Deferrals Policy` for forbidden responses and valid failure reasons.
+
 ## Architecture
 
 | Step | Name | Action | Optimization |
 |------|------|--------|--------------|
 | 1 | Setup | Q1: Review mode selection | Single question |
-| 2 | Inventory | Detect counts, compare docs | Parallel reads |
-| 3 | Analyze | Run 10-category checks | Parallel batches |
+| 2 | Inventory | Detect counts via Bash | Parallel Bash |
+| 3 | Analyze | 10 Explore agents (parallel) | 10 agents in single message |
 | 4 | Prioritize | 80/20 findings | Instant |
 | 5 | Approval | Q2: Select fixes (conditional) | Only if needed |
-| 6 | Apply | Apply selected fixes | Batched |
+| 6 | Apply | Delegate to cco-agent-apply | Agent handles batching |
 | 7 | Summary | Show report | Instant |
+
+**Key Optimization:** Step-3 launches ALL 10 category analyses as Explore agents in a single message = true parallel execution. Step-6 delegates to cco-agent-apply for efficient, verified fix application.
 
 ---
 
@@ -133,28 +145,118 @@ inventory = {
 
 ---
 
-## Step-3: 10-Category Analysis
+## Step-3: 10-Category Analysis [PARALLEL AGENTS]
+
+**Use Explore agents for parallel category analysis:**
 
 ```javascript
-// Parallel category analysis in two batches
-const batch1 = Promise.all([
-  analyzeCategory(1, "Inventory & Sync"),
-  analyzeCategory(2, "Command Quality"),
-  analyzeCategory(3, "Agent Quality"),
-  analyzeCategory(4, "Rules System"),
-  analyzeCategory(5, "Token Efficiency")
+// Create tasks for progress tracking
+TaskCreate({ subject: "CCO Full Review", description: "10-category system health check" })
+
+// Launch ALL category analyses in SINGLE message for true parallelism
+// Explore agent: fast codebase search, pattern matching, keyword search
+
+// BATCH 1: Structure & Quality (5 categories)
+const cat1 = Task("Explore", `
+  CCO Inventory & Sync check:
+  1. Count files: commands/*.md, rules/core/cco-*.md, rules/languages/cco-*.md, rules/frameworks/cco-*.md, rules/operations/cco-*.md
+  2. Compare counts to README.md, docs/commands.md, docs/agents.md, docs/rules.md
+  3. Check for orphan refs: .cco/, principles.md, projects.json, context.md
+  4. Verify terminology consistency: CRITICAL/HIGH/MEDIUM/LOW, OK/WARN/FAIL
+  Return: { category: 1, passed: n, failed: n, findings: [...] }
+`, { model: "haiku", run_in_background: true })
+
+const cat2 = Task("Explore", `
+  CCO Command Quality check:
+  1. Verify Architecture tables in commands/*.md
+  2. Check AskUserQuestion usage (no plain text questions)
+  3. Verify fix workflow: Analyze → Report → Approve → Apply
+  4. Check --auto and --dry-run mode consistency
+  Return: { category: 2, passed: n, failed: n, findings: [...] }
+`, { model: "haiku", run_in_background: true })
+
+const cat3 = Task("Explore", `
+  CCO Agent Quality check:
+  1. Verify agent scopes in agents/cco-agent-*.md match docs/agents.md
+  2. Check parallel execution patterns (single message for multiple Task calls)
+  3. Verify output schemas (JSON with findings, metrics, status)
+  Return: { category: 3, passed: n, failed: n, findings: [...] }
+`, { model: "haiku", run_in_background: true })
+
+const cat4 = Task("Explore", `
+  CCO Rules System check:
+  1. Verify detection triggers map to rules
+  2. Check rule quality: actionable, unique names, placeholder format
+  3. Verify /cco:tune produces cco-profile.md with required fields
+  Return: { category: 4, passed: n, failed: n, findings: [...] }
+`, { model: "haiku", run_in_background: true })
+
+const cat5 = Task("Explore", `
+  CCO Token Efficiency check:
+  1. Tables > prose, lists > paragraphs
+  2. No redundancy across files
+  3. Profile auto-loaded from .claude/rules/
+  4. Specification clarity: WHAT over HOW, Standards over Teaching
+  Return: { category: 5, passed: n, failed: n, findings: [...] }
+`, { model: "haiku", run_in_background: true })
+
+// BATCH 2: Standards & Readiness (5 categories)
+const cat6 = Task("Explore", `
+  CCO UX/DX Standards check:
+  1. Progress visibility for multi-step operations
+  2. Error format: [SEVERITY] description in file:line
+  3. Output formatting standards
+  4. Pre-announce actions before execution
+  Return: { category: 6, passed: n, failed: n, findings: [...] }
+`, { model: "haiku", run_in_background: true })
+
+const cat7 = Task("Explore", `
+  CCO Documentation check:
+  1. README accuracy vs detected counts
+  2. docs/commands.md completeness
+  3. docs/agents.md completeness
+  4. docs/rules.md category coverage
+  Return: { category: 7, passed: n, failed: n, findings: [...] }
+`, { model: "haiku", run_in_background: true })
+
+const cat8 = Task("Explore", `
+  CCO Safety check:
+  1. No secrets in code (API keys, passwords)
+  2. OWASP compliance rules present
+  3. Rollback capability (dirty warning, stash options)
+  Return: { category: 8, passed: n, failed: n, findings: [...] }
+`, { model: "haiku", run_in_background: true })
+
+const cat9 = Task("Explore", `
+  CCO Release Readiness check:
+  1. Version consistency (plugin.json, CHANGELOG)
+  2. Plugin structure (.claude-plugin/, hooks/)
+  3. Cross-platform (forward slashes, no hardcoded paths, LF line endings)
+  Return: { category: 9, passed: n, failed: n, findings: [...] }
+`, { model: "haiku", run_in_background: true })
+
+const cat10 = Task("Explore", `
+  CCO Best Practices check:
+  1. Positive rules ("Do X" not "Don't do Y")
+  2. Model selection (opus for coding, haiku for analysis)
+  3. Anti-overengineering (no BC hacks, no TODOs)
+  4. Agent delegation patterns
+  Return: { category: 10, passed: n, failed: n, findings: [...] }
+`, { model: "haiku", run_in_background: true })
+
+// ALL 10 agents launched in parallel - wait for results
+const results = await Promise.all([
+  TaskOutput(cat1.id), TaskOutput(cat2.id), TaskOutput(cat3.id),
+  TaskOutput(cat4.id), TaskOutput(cat5.id), TaskOutput(cat6.id),
+  TaskOutput(cat7.id), TaskOutput(cat8.id), TaskOutput(cat9.id),
+  TaskOutput(cat10.id)
 ])
 
-const batch2 = Promise.all([
-  analyzeCategory(6, "UX/DX Standards"),
-  analyzeCategory(7, "Documentation"),
-  analyzeCategory(8, "Safety"),
-  analyzeCategory(9, "Release Readiness"),
-  analyzeCategory(10, "Best Practices")
-])
-
-allFindings = [...await batch1, ...await batch2].flat()
+allFindings = results.flatMap(r => r.findings)
+categoryResults = results.map(r => ({ category: r.category, passed: r.passed, failed: r.failed }))
 ```
+
+**Key Optimization:** Single message with 10 Task calls = true parallel execution. Explore agents use Haiku model for fast, efficient searches.
 
 ---
 
@@ -424,6 +526,41 @@ for (const file of files) {
 | Scope grouping | 5+ scopes split into logical groups (Code Quality / Advanced) | HIGH |
 | No overflow | Never truncate options - split across questions | CRITICAL |
 
+### 5.6 Rule Optimization [CRITICAL]
+
+**Philosophy:** Opus 4.5 knows software engineering. Rules should constrain/configure, not teach.
+
+#### Rule Value Assessment
+| Keep | Remove | Severity |
+|------|--------|----------|
+| Specific thresholds (complexity <15, timeout 30s) | Generic principles (DRY, SOLID, KISS) | HIGH |
+| CCO-specific formats (`[SEVERITY] desc in file:line`) | Basic patterns (use async/await) | HIGH |
+| Framework gotchas (Express error handler = 4 params) | How-to guides (how to use React hooks) | MEDIUM |
+| Non-obvious constraints (SSRF IP blocklist) | OWASP explanations (what is XSS) | MEDIUM |
+| Concrete values (bcrypt, argon2 for passwords) | General advice (use strong hashing) | HIGH |
+
+#### Rule Optimization Checks
+| Check | Requirement | Severity |
+|-------|-------------|----------|
+| No teaching | Rules don't explain basics Opus knows | HIGH |
+| Threshold focus | Numeric limits > prose descriptions | MEDIUM |
+| CCO-specific value | Each rule provides unique CCO value | HIGH |
+| No duplication | Same concept not repeated across files | HIGH |
+| Actionable | Every rule maps to detectable violation | MEDIUM |
+| Table format | Structured data uses tables, not paragraphs | LOW |
+
+#### Optimization Heuristics
+```
+IF rule explains something in Opus training data → REMOVE
+IF rule is generic best practice → REMOVE or COMPRESS to threshold
+IF rule has CCO-specific threshold/format → KEEP
+IF rule documents non-obvious gotcha → KEEP
+IF rule appears in multiple files → CONSOLIDATE to single source
+```
+
+**Good rule:** `Cyclomatic Complexity: 1-10 good, 11-15 review, 16+ refactor`
+**Bad rule:** `Use meaningful variable names for better code readability`
+
 ---
 
 ## Category 6: UX/DX Standards (13 checks)
@@ -689,35 +826,48 @@ if (config.action !== "Report only" && findings.length > 0) {
 
 ---
 
-## Step-6: Apply Fixes [SKIP IF toApply empty]
+## Step-6: Apply Fixes [DELEGATE TO AGENT]
 
 ```javascript
 if (toApply.length > 0) {
-  // Group fixes by type for efficiency
-  const docFixes = toApply.filter(f => f.type === "doc-sync")
-  const termFixes = toApply.filter(f => f.type === "terminology")
-  const lineEndingFixes = toApply.filter(f => f.type === "line-ending")
+  const isFixAll = config.action === "Fix all"
 
-  applied = 0
-  failed = 0
+  // Delegate fix application to cco-agent-apply
+  applyResults = Task("cco-agent-apply", `
+    fixes: ${JSON.stringify(toApply)}
+    fixAll: ${isFixAll}
 
-  // Apply each category
-  for (const fix of toApply) {
-    try {
-      // Use Edit tool for file changes
-      Edit(fix.file, fix.oldContent, fix.newContent)
-      applied++
-    } catch (e) {
-      failed++
-    }
-  }
+    Apply CCO system fixes. Types include:
+    - doc-sync: Update counts in README, docs files
+    - terminology: Fix inconsistent terms (CRITICAL/HIGH vs P0/P1)
+    - line-ending: Convert CRLF to LF
+    - orphan-ref: Remove deprecated references
 
-  // Update counters (skipped items are those not selected, not reported in accounting)
-  results = {
-    applied: applied,
-    failed: failed,
-    total: toApply.length  // Only count items that were attempted
-  }
+    ${isFixAll ? `
+    FIX-ALL MODE [MANDATORY]:
+    Fix ALL items. Zero skips allowed.
+    Every item = FIXED or TECHNICAL FAILURE (with reason).
+
+    FORBIDDEN RESPONSES (never use these as skip reasons):
+    - "This is too complex" → Fix it
+    - "This is a minor detail" → Fix it anyway
+    - "Consider doing this later" → Do it NOW
+    - "Recommend manual review" → Apply the fix
+
+    ONLY VALID FAILURES: File not found, parse error, permission denied
+    ` : ""}
+
+    CRITICAL - Counting:
+    - Count FINDINGS, not locations
+    - Each fix = 1 item
+
+    Return:
+    { applied: n, failed: n, total: n, details: [...] }
+  `, { model: "opus" })
+
+  // Verify accounting invariant
+  assert(applyResults.applied + applyResults.failed === applyResults.total,
+    "Count mismatch: applied + failed must equal total")
 }
 ```
 

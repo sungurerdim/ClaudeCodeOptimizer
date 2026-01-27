@@ -143,6 +143,14 @@ if (args.includes("--auto")) {
 
 **See Core Rules:** `CCO Operation Standards` for No Deferrals Policy, Intensity Levels, and Quality Thresholds.
 
+### No Deferrals in Auto/Fix-All [CRITICAL]
+
+When `--auto` or `--fix-all` is active:
+- **Zero commentary** - No "this is complex", "needs refactor", "architectural decision"
+- **Zero deferrals** - No "consider later", "recommend manual", "outside scope"
+- **Zero skips** - Every recommendation = APPLIED or TECHNICAL FAILURE
+- **Only technical failures** - File not found, parse error, circular dependency
+
 ---
 
 ## Step-1a: Fix Intensity + Scope Selection [Q1]
@@ -704,13 +712,23 @@ if (toApply.length > 0) {
     Handle dependencies between fixes.
 
     ${isFixAll ? `
-    FULL FIX MODE [MANDATORY]:
+    FIX-ALL MODE [MANDATORY]:
     Fix ALL items. Planning metadata (effort/impact/bucket) is for reporting only - ignored here.
 
     Rules:
     - Zero agent-initiated skips
     - Every item = FIXED or TECHNICAL FAILURE (with "Technical: [reason]")
-    - If unsure → ask user, don't skip
+    - If unsure → fix it anyway, user reviews with git diff
+
+    FORBIDDEN RESPONSES (never use these as skip reasons):
+    - "This is too complex" → Fix it
+    - "This requires refactoring" → Do the refactor
+    - "This is architectural" → Apply the change
+    - "Consider doing this later" → Do it NOW
+    - "This might break something" → Fix it, user reviews
+    - "Recommend manual review" → Apply the fix
+
+    ONLY VALID FAILURES: File not found, parse error, circular dependency
     ` : ""}
 
     CRITICAL - Counting:

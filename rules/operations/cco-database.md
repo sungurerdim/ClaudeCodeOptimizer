@@ -1,58 +1,47 @@
-# Database Specialized
-*Database-specific rules and patterns*
+# Database Rules
+*Security and performance essentials*
 
-## SQL (DB:SQL)
-**Trigger:** {sql_drivers}
+## SQL [CRITICAL]
 
-### Security & Performance
-- **Parameterized**: Parameterized queries always (prevent SQL injection)
-- **Connection-Pool**: Connection pooling with appropriate pool size
-- **Index-Query**: Index for common queries, composite indexes for multi-column filters
+| Requirement | Implementation |
+|-------------|----------------|
+| Queries | Parameterized ALWAYS (no string concat) |
+| Connection Pool | Size = (connections / app instances) |
+| Statement Timeout | Set explicit timeout |
+| Indexes | On WHERE, JOIN, ORDER BY columns |
 
 ### Transactions
-- **Transaction-Explicit**: Explicit transactions for multi-statement operations
-- **Isolation-Level**: Choose appropriate isolation level (READ COMMITTED default)
-- **Deadlock-Prevent**: Consistent lock ordering to prevent deadlocks
-- **Timeout-Set**: Set statement timeout to prevent long-running queries
+- Explicit for multi-statement operations
+- Default: READ COMMITTED isolation
+- Consistent lock ordering (prevent deadlock)
 
 ### Migrations
-- **Migration-Forward**: Forward-only migrations, no rollback in production
-- **Migration-Atomic**: Each migration should be atomic and reversible in development
-- **Schema-Version**: Track schema version in database
-
-## NoSQL (DB:NoSQL)
-**Trigger:** {nosql_deps}
-
-- **Schema-Validate**: Application-level schema validation
-- **TTL-Set**: TTL for expiring data
-- **Consistency-Choose**: Choose consistency level
-- **Batch-Ops**: Batch operations when possible
-
-## Vector DB (DB:Vector)
-**Trigger:** {vector_deps}
-
-- **Embed-Model**: Consistent embedding model
-- **Dimension-Match**: Dimension consistency
-- **Index-Type**: Appropriate index type (HNSW, IVF)
-- **Similarity-Metric**: Correct similarity metric
-
-## Edge/Embedded DB (DB:Edge)
-**Trigger:** {edge_db_deps}
-
-- **Sync-Strategy**: Configure sync strategy (local-first, server-authoritative)
-- **Offline-Capable**: Handle offline reads and writes gracefully
-- **Conflict-Resolution**: Define conflict resolution for concurrent writes
-- **Connection-Mode**: Choose embedded vs remote connection mode
-- **Migration-Portable**: Portable migration scripts across environments
-- **Query-Local**: Optimize for local query latency
-- **Replica-Sync**: Configure replica synchronization interval
+- Forward-only in production
+- Atomic and reversible in development
+- Track schema version in database
 
 ---
 
-## Database Operations
-**Trigger:** DB:* (auto-applied when any DB:* detected)
+## NoSQL
 
-- **Backup-Strategy**: Automated backups with tested restore
-- **Schema-Versioned**: Migration files with rollback plan
-- **Connection-Secure**: SSL/TLS, credentials in env vars
-- **Query-Timeout**: Prevent runaway queries
+- Application-level schema validation
+- TTL for expiring data
+- Batch operations when possible
+
+---
+
+## Vector DB
+
+| Parameter | Consideration |
+|-----------|---------------|
+| Embedding Model | Must match index and query |
+| Index Type | HNSW (fast), IVF (scalable) |
+| Similarity | Cosine (normalized), L2 (raw) |
+
+---
+
+## Edge/Embedded
+
+- Sync strategy: local-first vs server-authoritative
+- Conflict resolution for concurrent writes
+- Offline read/write capability
