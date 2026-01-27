@@ -127,7 +127,8 @@ if (!isUnattended && profile && validationResult.valid && !forceUpdate) {
     header: "Profile",
     options: [
       { label: "Keep current", description: "No changes needed" },
-      { label: "Update", description: "Re-analyze and refresh" }
+      { label: "Quick update (Recommended)", description: "Re-detect stack automatically" },
+      { label: "Full update", description: "Answer questions to customize" }
     ],
     multiSelect: false
   }])
@@ -135,6 +136,7 @@ if (!isUnattended && profile && validationResult.valid && !forceUpdate) {
   if (answer === "Keep current") {
     return { status: "ok", profile: profile }
   }
+  config.mode = answer.includes("Quick") ? "auto" : "interactive"
 }
 ```
 
