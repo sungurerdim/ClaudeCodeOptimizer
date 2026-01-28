@@ -57,13 +57,9 @@ class TestHookJsonStructure:
 
     def test_core_rules_json_structure(self, core_rules_json):
         """core-rules.json must have hookSpecificOutput."""
-        assert (
-            "hookSpecificOutput" in core_rules_json
-        ), "core-rules.json missing hookSpecificOutput"
+        assert "hookSpecificOutput" in core_rules_json, "core-rules.json missing hookSpecificOutput"
         output = core_rules_json["hookSpecificOutput"]
-        assert (
-            output.get("hookEventName") == "SessionStart"
-        ), "hookEventName should be SessionStart"
+        assert output.get("hookEventName") == "SessionStart", "hookEventName should be SessionStart"
         assert "additionalContext" in output, "Missing additionalContext"
 
 
@@ -93,21 +89,16 @@ class TestAdditionalContextSections:
         """additionalContext should have substantial content (not truncated)."""
         # Should be at least 1000 characters with all sections
         assert len(additional_context) > 1000, (
-            f"additionalContext too short ({len(additional_context)} chars), "
-            "may be truncated"
+            f"additionalContext too short ({len(additional_context)} chars), may be truncated"
         )
 
     def test_context_has_blocker_definitions(self, additional_context):
         """additionalContext should define BLOCKER violations."""
-        assert (
-            "[BLOCKER]" in additional_context
-        ), "additionalContext should define BLOCKER rules"
+        assert "[BLOCKER]" in additional_context, "additionalContext should define BLOCKER rules"
 
     def test_context_has_check_definitions(self, additional_context):
         """additionalContext should define CHECK guidelines."""
-        assert (
-            "[CHECK]" in additional_context
-        ), "additionalContext should define CHECK rules"
+        assert "[CHECK]" in additional_context, "additionalContext should define CHECK rules"
 
 
 class TestHookOutputFormat:
@@ -191,9 +182,9 @@ class TestHookWiring:
         command = session_start[0]["hooks"][0]["command"]
 
         # Should reference the correct path
-        assert (
-            "hooks/core-rules.json" in command or "core-rules.json" in command
-        ), "hooks.json should reference core-rules.json"
+        assert "hooks/core-rules.json" in command or "core-rules.json" in command, (
+            "hooks.json should reference core-rules.json"
+        )
 
     def test_core_rules_file_exists(self):
         """core-rules.json must exist for hook to work."""
@@ -260,6 +251,6 @@ class TestContentIntegrity:
         # Count code block markers
         triple_backtick_count = additional_context.count("```")
         # Should be even (open + close pairs)
-        assert (
-            triple_backtick_count % 2 == 0
-        ), f"Unclosed code blocks: {triple_backtick_count} triple backticks"
+        assert triple_backtick_count % 2 == 0, (
+            f"Unclosed code blocks: {triple_backtick_count} triple backticks"
+        )
