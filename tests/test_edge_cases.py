@@ -71,9 +71,9 @@ class TestInvalidArgumentCombinations:
 
         intensity_prop = schema.get("properties", {}).get("intensity", {})
         expected_values = ["quick-wins", "standard", "full-fix", "report-only"]
-        assert intensity_prop.get("enum") == expected_values, (
-            f"Intensity enum should be {expected_values}"
-        )
+        assert (
+            intensity_prop.get("enum") == expected_values
+        ), f"Intensity enum should be {expected_values}"
 
 
 class TestMissingProfileHandling:

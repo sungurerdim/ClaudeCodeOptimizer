@@ -32,7 +32,9 @@ class TestCommandFrontmatter:
         """Every command file must start with YAML frontmatter."""
         for cmd_file in command_files:
             content = cmd_file.read_text(encoding="utf-8")
-            assert content.startswith("---"), f"{cmd_file.name} missing frontmatter start"
+            assert content.startswith(
+                "---"
+            ), f"{cmd_file.name} missing frontmatter start"
             parts = content.split("---", 2)
             assert len(parts) >= 3, f"{cmd_file.name} has unclosed frontmatter"
 
@@ -44,7 +46,9 @@ class TestCommandFrontmatter:
             yaml_content = parts[1]
             try:
                 data = yaml.safe_load(yaml_content)
-                assert isinstance(data, dict), f"{cmd_file.name} frontmatter must be a mapping"
+                assert isinstance(
+                    data, dict
+                ), f"{cmd_file.name} frontmatter must be a mapping"
             except yaml.YAMLError as e:
                 pytest.fail(f"{cmd_file.name} has invalid YAML: {e}")
 
@@ -130,16 +134,20 @@ class TestAgentReferences:
         task_pattern = r'Task\s*\(\s*["\']([^"\']+)["\']'
         matches = re.findall(task_pattern, content)
         for agent_name in matches:
-            assert agent_name in existing_agents, (
-                f"optimize.md references non-existent agent: {agent_name}"
-            )
+            assert (
+                agent_name in existing_agents
+            ), f"optimize.md references non-existent agent: {agent_name}"
 
     def test_all_commands_reference_valid_agents(self, existing_agents):
         """All commands should only reference existing agents."""
         # Claude Code built-in agent types
         builtin_agents = {
-            "general-purpose", "Explore", "Plan", "Bash",
-            "claude-code-guide", "statusline-setup"
+            "general-purpose",
+            "Explore",
+            "Plan",
+            "Bash",
+            "claude-code-guide",
+            "statusline-setup",
         }
         valid_agents = set(existing_agents) | builtin_agents
         for cmd_file in COMMANDS_DIR.glob("*.md"):
@@ -147,21 +155,19 @@ class TestAgentReferences:
             task_pattern = r'Task\s*\(\s*["\']([^"\']+)["\']'
             matches = re.findall(task_pattern, content)
             for agent_name in matches:
-                assert agent_name in valid_agents, (
-                    f"{cmd_file.name} references non-existent agent: {agent_name}"
-                )
+                assert (
+                    agent_name in valid_agents
+                ), f"{cmd_file.name} references non-existent agent: {agent_name}"
 
     def test_agents_declared_in_plugin_json(self, existing_agents):
         """All agents should be declared in plugin.json."""
         plugin_path = ROOT / ".claude-plugin" / "plugin.json"
         plugin_json = yaml.safe_load(plugin_path.read_text(encoding="utf-8"))
-        declared_agents = [
-            Path(a).stem for a in plugin_json.get("agents", [])
-        ]
+        declared_agents = [Path(a).stem for a in plugin_json.get("agents", [])]
         for agent in existing_agents:
-            assert agent in declared_agents, (
-                f"Agent {agent} not declared in plugin.json"
-            )
+            assert (
+                agent in declared_agents
+            ), f"Agent {agent} not declared in plugin.json"
 
 
 class TestCommandFlowDocumentation:
@@ -170,32 +176,32 @@ class TestCommandFlowDocumentation:
     def test_optimize_has_architecture_section(self):
         """optimize.md should document its execution architecture."""
         content = (COMMANDS_DIR / "optimize.md").read_text(encoding="utf-8")
-        assert "## Architecture" in content or "## Execution" in content, (
-            "optimize.md should have Architecture or Execution section"
-        )
+        assert (
+            "## Architecture" in content or "## Execution" in content
+        ), "optimize.md should have Architecture or Execution section"
 
     def test_optimize_documents_steps(self):
         """optimize.md should document execution steps."""
         content = (COMMANDS_DIR / "optimize.md").read_text(encoding="utf-8")
         # Should have step documentation
-        assert "Step-1" in content or "Step 1" in content, (
-            "optimize.md should document steps"
-        )
+        assert (
+            "Step-1" in content or "Step 1" in content
+        ), "optimize.md should document steps"
 
     def test_optimize_has_validation_blocks(self):
         """optimize.md should have validation checkpoints."""
         content = (COMMANDS_DIR / "optimize.md").read_text(encoding="utf-8")
         # Should have validation blocks
-        assert "### Validation" in content or "[x]" in content, (
-            "optimize.md should have validation checkpoints"
-        )
+        assert (
+            "### Validation" in content or "[x]" in content
+        ), "optimize.md should have validation checkpoints"
 
     def test_optimize_documents_output_schema(self):
         """optimize.md should document output schema."""
         content = (COMMANDS_DIR / "optimize.md").read_text(encoding="utf-8")
-        assert "Output Schema" in content or "accounting" in content, (
-            "optimize.md should document output schema"
-        )
+        assert (
+            "Output Schema" in content or "accounting" in content
+        ), "optimize.md should document output schema"
 
 
 class TestCommandConsistency:
@@ -214,30 +220,35 @@ class TestCommandConsistency:
     def test_all_commands_have_description(self, all_commands):
         """Every command must have a description."""
         for name, frontmatter in all_commands.items():
-            assert frontmatter.get("description"), (
-                f"Command {name} missing description"
-            )
+            assert frontmatter.get("description"), f"Command {name} missing description"
 
     def test_all_commands_have_allowed_tools(self, all_commands):
         """Every command must declare allowed-tools."""
         for name, frontmatter in all_commands.items():
-            assert frontmatter.get("allowed-tools"), (
-                f"Command {name} missing allowed-tools"
-            )
+            assert frontmatter.get(
+                "allowed-tools"
+            ), f"Command {name} missing allowed-tools"
 
     def test_commands_use_valid_tools(self, all_commands):
         """Commands should only use valid tool names."""
         valid_tools = {
-            "Read", "Grep", "Glob", "Edit", "Write", "Bash", "Task",
-            "AskUserQuestion", "NotebookEdit", "WebSearch", "WebFetch"
+            "Read",
+            "Grep",
+            "Glob",
+            "Edit",
+            "Write",
+            "Bash",
+            "Task",
+            "AskUserQuestion",
+            "NotebookEdit",
+            "WebSearch",
+            "WebFetch",
         }
         for name, frontmatter in all_commands.items():
             tools_str = frontmatter.get("allowed-tools", "")
             tools = [t.strip() for t in tools_str.split(",")]
             for tool in tools:
-                assert tool in valid_tools, (
-                    f"Command {name} uses unknown tool: {tool}"
-                )
+                assert tool in valid_tools, f"Command {name} uses unknown tool: {tool}"
 
     def test_commands_specify_model_when_needed(self, all_commands):
         """Commands using Task should specify model."""
