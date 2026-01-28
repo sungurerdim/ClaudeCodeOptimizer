@@ -237,13 +237,76 @@ H1: {hypothesis} - Confidence: {%}
 
 ## Output Schemas
 
-**search:** `{ query, sources: [{ url, title, tier, finalScore, date }], tierSummary, topSources }`
+### search
 
-**analyze:** `{ sources: [{ url, claims, codeExamples, caveats }], contradictions, consensus }`
+```json
+{
+  "query": "fastapi authentication best practices",
+  "sources": [
+    {
+      "url": "https://fastapi.tiangolo.com/tutorial/security/",
+      "title": "Security - FastAPI",
+      "tier": "T1",
+      "finalScore": 95,
+      "date": "2024-01-15"
+    }
+  ],
+  "tierSummary": { "T1": 2, "T2": 3, "T3": 5 },
+  "topSources": ["fastapi.tiangolo.com", "auth0.com"]
+}
+```
 
-**synthesize:** `{ recommendation: { summary, confidence, confidenceScore }, keyFindings, caveats, alternatives, unresolvedConflicts, sources }`
+### analyze
 
-**dependency:** `{ package, ecosystem, current, latest, updateType, risk, breakingChanges, securityAdvisories, deprecation }`
+```json
+{
+  "sources": [
+    {
+      "url": "https://example.com/article",
+      "claims": ["OAuth2 is preferred", "JWT for stateless auth"],
+      "codeExamples": 3,
+      "caveats": ["Requires HTTPS in production"]
+    }
+  ],
+  "contradictions": [
+    { "topic": "session vs JWT", "sourceA": "url1", "sourceB": "url2" }
+  ],
+  "consensus": "OAuth2 with JWT is the recommended approach"
+}
+```
+
+### synthesize
+
+```json
+{
+  "recommendation": {
+    "summary": "Use OAuth2 with JWT tokens for stateless authentication",
+    "confidence": "HIGH",
+    "confidenceScore": 92
+  },
+  "keyFindings": ["T1 sources agree on OAuth2", "JWT preferred for APIs"],
+  "caveats": ["Requires proper token refresh strategy"],
+  "alternatives": ["Session-based auth for traditional web apps"],
+  "unresolvedConflicts": [],
+  "sources": [{ "url": "...", "tier": "T1", "relevance": "HIGH" }]
+}
+```
+
+### dependency
+
+```json
+{
+  "package": "fastapi",
+  "ecosystem": "pypi",
+  "current": "0.100.0",
+  "latest": "0.109.0",
+  "updateType": "minor",
+  "risk": "LOW",
+  "breakingChanges": [],
+  "securityAdvisories": [],
+  "deprecation": null
+}
+```
 
 ---
 

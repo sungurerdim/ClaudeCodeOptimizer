@@ -6,11 +6,11 @@
 
 | Category | Files | Location | Loading |
 |----------|-------|----------|---------|
-| Core | 3 | Context (injected) | Always (SessionStart hook) |
+| Core | 4 | Context (injected) | Always (SessionStart hook) |
 | Languages | 21 | `./.claude/rules/` | Per-project |
 | Frameworks | 8 | `./.claude/rules/` | Per-project |
 | Operations | 12 | `./.claude/rules/` | Per-project |
-| **Total** | **44** | | |
+| **Total** | **45** | | |
 
 **All CCO rules use `cco-` prefix** for safe identification and updates.
 
@@ -79,7 +79,7 @@ CCO leverages Claude Code's native rule loading — no custom loaders, no CLI wr
 
 ---
 
-## Core Rules (3 categories)
+## Core Rules (4 files)
 
 *Injected into context on every session start via SessionStart hook.*
 
@@ -137,6 +137,16 @@ Execution patterns that enforce discipline:
 | **Severity Levels** | CRITICAL (security/crash) → HIGH (broken) → MEDIUM (suboptimal) → LOW (style) |
 | **No Deferrals** | In `--auto` mode: no "too complex", "might break", "consider later" — fix NOW |
 | **Accounting** | Every operation ends with: `Applied: N | Failed: M | Total: N+M` |
+
+### Thresholds
+
+**File:** `cco-thresholds.md`
+
+Documents all hardcoded thresholds with rationale and sources:
+- Complexity limits (cyclomatic, lines, nesting, parameters)
+- Test coverage targets
+- Architecture metrics (coupling, cohesion)
+- Confidence scoring thresholds
 
 ---
 

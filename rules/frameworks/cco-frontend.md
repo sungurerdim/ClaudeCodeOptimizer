@@ -11,10 +11,10 @@
 
 ---
 
-## Framework Gotchas
+## Frontend Gotchas
 
 ### React
-- **Keys**: Never use array index as key (breaks reconciliation)
+- **Keys**: Use stable identifiers as React keys (array index breaks reconciliation)
 - **Effect Cleanup**: Always return cleanup function from useEffect
 - **Server Components**: 'use client' only when needed (state, effects, browser APIs)
 

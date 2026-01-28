@@ -1,6 +1,6 @@
 ---
 description: Align codebase with ideal architecture - current vs ideal state gap analysis
-argument-hint: [--auto] [--preview]
+argument-hint: "[--auto] [--preview]"
 allowed-tools: Read, Grep, Glob, Edit, Bash, Task, AskUserQuestion
 model: opus
 ---
@@ -576,13 +576,13 @@ const architecturalPlans = filteredFindings.map(finding => ({
 For each major change, why this approach:
 
 **ARC-05 (God Class):**
-- ❌ Keep as-is: Technical debt grows, 847 lines unmaintainable
-- ❌ Full rewrite: 2-week effort, high regression risk
-- ✅ **Extract services incrementally**: 3-day effort, testable steps, low risk
+- - Keep as-is: Technical debt grows, 847 lines unmaintainable
+- - Full rewrite: 2-week effort, high regression risk
+- > **Extract services incrementally**: 3-day effort, testable steps, low risk
 
 **ARC-04 (Missing Layer):**
-- ❌ Keep direct access: Coupling increases, testing harder
-- ✅ **Repository pattern**: Industry standard, testable, flexible
+- - Keep direct access: Coupling increases, testing harder
+- > **Repository pattern**: Industry standard, testable, flexible
 
 ### Summary
 

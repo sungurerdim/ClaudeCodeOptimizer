@@ -50,6 +50,41 @@ results = Task("cco-agent-analyze", prompt, { model: "haiku" })
 | Skip patterns | Manual | Auto-skip: node_modules, dist, .git, __pycache__ |
 | False positive handling | None | `excluded[]` with reasons for filtered items |
 
+**Output Schema:**
+
+```json
+{
+  "findings": [
+    {
+      "id": "SEC-01",
+      "scope": "security",
+      "severity": "HIGH",
+      "title": "Hardcoded API key detected",
+      "location": { "file": "src/config.py", "line": 42 },
+      "fixable": true,
+      "fix": "Move to environment variable"
+    }
+  ],
+  "scores": {
+    "overall": 85,
+    "security": 90,
+    "hygiene": 80,
+    "types": 75,
+    "lint": 95
+  },
+  "metrics": {
+    "filesScanned": 50,
+    "issuesFound": 12,
+    "criticalCount": 1,
+    "highCount": 3
+  },
+  "excluded": {
+    "count": 5,
+    "reasons": ["test fixtures", "platform-specific", "type-checking only"]
+  }
+}
+```
+
 ## Execution [CRITICAL]
 
 **Maximize parallelization at every step. ALL independent tool calls in SINGLE message.**

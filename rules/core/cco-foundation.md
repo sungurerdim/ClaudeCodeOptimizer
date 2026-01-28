@@ -3,7 +3,7 @@
 
 ## Uncertainty Protocol [BLOCKER]
 
-When uncertain, STOP and surface it. Don't guess silently.
+When uncertain, STOP and surface it. Surface uncertainty explicitly.
 
 **Required actions:**
 - **Stop-When-Unclear**: If task is ambiguous → ask before proceeding

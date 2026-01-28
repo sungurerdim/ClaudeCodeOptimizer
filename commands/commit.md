@@ -1,6 +1,6 @@
 ---
 description: Smart git commits with quality gates and atomic grouping
-argument-hint: [--preview] [--single] [--split] [--skip-tests] [--amend] [--staged-only]
+argument-hint: "[--preview] [--single] [--split] [--skip-tests] [--amend] [--staged-only]"
 allowed-tools: Read, Grep, Edit, Bash, AskUserQuestion
 model: opus
 ---
@@ -224,6 +224,12 @@ ${testTask === null ? '\n*Tests skipped (no code changes)*' : ''}
 **No approval question** - table was shown, user sees what will happen.
 
 ```javascript
+// Skip execution in preview mode
+if (args.includes('--preview')) {
+  console.log("Preview mode: no commits created. Use without --preview to execute.")
+  return
+}
+
 for (const commit of commitPlan.commits) {
   // Stage files
   Bash(`git add ${commit.files.map(f => `"${f}"`).join(' ')}`)

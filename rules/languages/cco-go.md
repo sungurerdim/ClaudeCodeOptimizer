@@ -3,7 +3,7 @@
 
 **Trigger:** {go_manifest}, {go_ext}
 
-## Error Handling
+## Go Error Handling
 
 - Wrap: `fmt.Errorf("context: %w", err)`
 - Check: `errors.Is(err, target)` / `errors.As(err, &target)`

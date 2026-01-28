@@ -108,7 +108,7 @@ Install CCO → SessionStart hook injects core rules (every session, automatic)
 |-----------|-------|---------|
 | Commands | 7 | [Reference](docs/commands.md#command-overview) |
 | Agents | 3 | [analyze, apply, research](docs/agents.md) |
-| Rules | 44 | [3 core](docs/rules.md#core-rules-3-categories) + [21 languages](docs/rules.md#language-rules-21-files) + [8 frameworks](docs/rules.md#framework-rules-8-files) + [12 operations](docs/rules.md#operations-rules-12-files) |
+| Rules | 45 | [4 core](docs/rules.md#core-rules-4-files) + [21 languages](docs/rules.md#language-rules-21-files) + [8 frameworks](docs/rules.md#framework-rules-8-files) + [12 operations](docs/rules.md#operations-rules-12-files) |
 
 ### Core Rules: Hard Limits
 

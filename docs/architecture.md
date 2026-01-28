@@ -58,59 +58,9 @@ ClaudeCodeOptimizer/
 
 ---
 
-## Hook Flow
+## Rule Loading Architecture
 
-### SessionStart Hook
-
-Injects core rules into every Claude Code session automatically.
-
-```
-Session Start
-     |
-     v
-SessionStart hook fires
-     |
-     v
-hooks/core-rules.json loaded
-     |
-     v
-Core rules injected into context:
-  - Foundation (complexity limits, change scope)
-  - Safety (security violations, validation)
-  - Workflow (read-before-edit, accounting)
-     |
-     v
-Rules active immediately
-```
-
-**core-rules.json structure:**
-
-```json
-{
-  "hookSpecificOutput": {
-    "hookEventName": "SessionStart",
-    "additionalContext": "# Foundation Rules\n..."
-  }
-}
-```
-
-### Project Rules Loading
-
-```
-/cco:tune executed
-     |
-     v
-cco-agent-analyze detects stack
-     |
-     v
-cco-agent-apply writes:
-  - .claude/rules/cco-profile.md
-  - .claude/rules/cco-{language}.md
-  - .claude/rules/cco-{framework}.md
-     |
-     v
-Next session: Claude Code auto-loads .claude/rules/*.md
-```
+Rules are loaded automatically at session start via Claude Code's native mechanisms. Core rules are injected through the SessionStart hook, and project-specific rules are auto-loaded from `.claude/rules/*.md`. See [Rules Reference](rules.md#zero-config-loading-mechanism) for the complete mechanism.
 
 ---
 

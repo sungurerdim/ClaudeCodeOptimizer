@@ -3,7 +3,7 @@
 
 **Trigger:** {rust_manifest}, {rust_ext}
 
-## Error Handling
+## Rust Error Handling
 
 - **Result-Propagate**: Use ? operator for error propagation
 - **Error-Thiserror**: Use thiserror for library errors, anyhow for applications
