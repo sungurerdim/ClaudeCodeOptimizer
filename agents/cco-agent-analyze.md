@@ -50,7 +50,9 @@ results = Task("cco-agent-analyze", prompt, { model: "haiku" })
 | Skip patterns | Manual | Auto-skip: node_modules, dist, .git, __pycache__ |
 | False positive handling | None | `excluded[]` with reasons for filtered items |
 
-**Output Schema:**
+**Output Schema [MANDATORY]:**
+
+**ALWAYS return valid JSON with this structure. Never return partial/malformed output.**
 
 ```json
 {
@@ -62,7 +64,8 @@ results = Task("cco-agent-analyze", prompt, { model: "haiku" })
       "title": "Hardcoded API key detected",
       "location": { "file": "src/config.py", "line": 42 },
       "fixable": true,
-      "fix": "Move to environment variable"
+      "fix": "Move to environment variable",
+      "confidence": 95
     }
   ],
   "scores": {
@@ -81,9 +84,26 @@ results = Task("cco-agent-analyze", prompt, { model: "haiku" })
   "excluded": {
     "count": 5,
     "reasons": ["test fixtures", "platform-specific", "type-checking only"]
-  }
+  },
+  "error": null
 }
 ```
+
+**Error handling:** If analysis fails, return:
+```json
+{
+  "findings": [],
+  "scores": {},
+  "metrics": { "filesScanned": 0, "issuesFound": 0 },
+  "excluded": { "count": 0, "reasons": [] },
+  "error": "Specific error message"
+}
+```
+
+**Guarantees:**
+- `findings` is always an array (empty if none)
+- `error` is null on success, string on failure
+- All fields present in every response
 
 ## Execution [CRITICAL]
 
@@ -120,16 +140,17 @@ Grep("{complexity_patterns}")     // message
 **Definition:** Quality Gates are external tool commands detected by this agent and stored in profile.
 
 **Detection (scope=tune):**
-```javascript
-// cco-agent-analyze detects project tooling
-commands: {
-  format: detectFormatter(),    // black, prettier, gofmt, rustfmt
-  lint: detectLinter(),         // ruff, eslint, golangci-lint, clippy
-  type: detectTypeChecker(),    // mypy, tsc, go vet
-  test: detectTestRunner(),     // pytest, jest, go test, cargo test
-  build: detectBuildTool()      // docker, npm run build, go build
-}
+
+Detect via manifest files + Bash checks:
 ```
+format: black|prettier|gofmt|rustfmt (check pyproject.toml, package.json, go.mod)
+lint:   ruff|eslint|golangci-lint|clippy (check manifest devDependencies)
+type:   mypy|tsc|go vet (check manifest scripts or configs)
+test:   pytest|jest|go test|cargo test (check manifest test scripts)
+build:  docker|npm run build|go build (check Dockerfile, package.json scripts)
+```
+
+Return detected commands in profile format.
 
 **Storage:** Profile `.claude/rules/cco-profile.md` → `commands:` section
 

@@ -15,35 +15,20 @@ model: opus
 
 **Purpose:** Strategic documentation management. Not encyclopedic - focused, actionable, human-readable.
 
-## Documentation Principles [CRITICAL]
+## Output Constraints [CRITICAL]
 
-All generated documentation MUST follow these principles:
+| Constraint | Rule |
+|------------|------|
+| Length | Every sentence earns its place |
+| Style | Show > tell, examples > prose |
+| Format | Headers, bullets, tables for scanning |
+| Commands | Copy-pasteable, tested |
 
-### Efficiency First
-- **Brevity > verbosity**: Every sentence must earn its place
-- **No filler**: Skip "This document explains..." - just explain
-- **Action-oriented**: Focus on what reader needs to DO, not history
-- **Examples > prose**: Show, don't tell
-
-### Human-Readable
-- **Scan-friendly**: Headers, bullets, tables for quick scanning
-- **Plain language**: 8th grade reading level, avoid jargon
-- **Context-aware**: Assume reader's time is limited
-- **No boilerplate**: Skip legal disclaimers, version history preambles
-
-### UX/DX Focused
-- **Task-driven**: Organize by "I want to..." not "This system..."
-- **Copy-pasteable**: Commands should work when pasted
-- **Progressive disclosure**: Essential first, details later
-- **Troubleshooting**: Include common issues and solutions
-
-### What NOT to Generate
-- Academic-style comprehensive documentation
-- Marketing language or promotional content
-- Obvious information (e.g., "This is a README file")
-- Version history in body (use CHANGELOG)
-- Author credits in every file
-- Duplicate information across files
+**Do NOT generate:**
+- Filler ("This document explains...")
+- Marketing language
+- Obvious statements
+- Duplicate content across files
 
 ## Args
 
