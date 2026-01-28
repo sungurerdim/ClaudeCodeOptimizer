@@ -108,18 +108,66 @@ if (args.includes("--auto")) {
 
 ## Architecture
 
-| Step | Name | Action | Optimization | Dependency |
-|------|------|--------|--------------|------------|
-| 0 | Mode | Detect --auto or interactive | Instant | - |
-| 1a | Q1 | Intensity + Release Mode (single question) | All settings upfront | [PARALLEL] with 1b |
-| 1b | Pre-flight | Release checks (parallel background) | Background | [PARALLEL] with 1a |
-| 2 | Sub-commands | /cco:optimize + /cco:align (parallel) | Background | [SEQUENTIAL] after 1a |
-| 3 | Verification | test/build/lint (parallel background) | Background | [PARALLEL] with 2 |
-| 4 | Changelog | Generate + suggest version | While tests run | [SEQUENTIAL] after 1b commits |
-| 4.5 | Plan Review | Combined release plan (conditional) | User decision | [SEQUENTIAL] after 2,3,4 |
-| 5 | Results | Show results + execute release mode | Execute decision | [SEQUENTIAL] after 4.5 |
+| Phase | Step | Name | Action | Gate |
+|-------|------|------|--------|------|
+| **SETUP** | 0-1a | Config | Mode + Q1: Settings | Config validated |
+| **PRE-CHECK** | 1b | Verify | Git, version, deps (parallel) | Pre-checks done |
+| **GATE-1** | - | Checkpoint | No blocking pre-checks | → Sub-commands |
+| **OPTIMIZE** | 2a | Fix | /cco:optimize (parallel) | Fixes applied |
+| **ALIGN** | 2b | Arch | /cco:align (parallel) | Changes applied |
+| **VERIFY** | 3 | Test | test/build/lint (parallel) | Tests pass |
+| **GATE-2** | - | Checkpoint | All parallel complete | → Changelog |
+| **CHANGELOG** | 4 | Version | Generate + suggest | Entry ready |
+| **GATE-3** | - | Checkpoint | Blockers evaluated | → Plan or Release |
+| **PLAN** | 4.5 | Review | Combined plan (conditional) | User approval |
+| **GATE-4** | - | Checkpoint | Approval received | → Execute |
+| **RELEASE** | 5 | Execute | Tag/commit based on mode | Done |
 
-**Execution Flow:** Step-0 → (1a ‖ 1b) → (2 ‖ 3 ‖ 4) → [4.5 if plan mode] → 5
+**Execution Flow:** SETUP → PRE-CHECK → GATE-1 → (OPTIMIZE ‖ ALIGN ‖ VERIFY) → GATE-2 → CHANGELOG → GATE-3 → [PLAN if triggered] → GATE-4 → RELEASE
+
+### Phase Gates
+
+```javascript
+// GATE-1: Post Pre-checks
+function gate1_postPrechecks(prechecks) {
+  const blockers = prechecks.filter(p => p.type === "BLOCKER" && !p.resolved)
+  if (blockers.length > 0 && !config.unattended) {
+    return { pass: false, blockers, reason: "Pre-check blockers" }
+  }
+  return { pass: true, warnings: prechecks.filter(p => p.type === "WARN") }
+}
+
+// GATE-2: Post Parallel Execution
+function gate2_postParallel(optimize, align, verify) {
+  const allComplete = optimize.done && align.done && verify.done
+  if (!allComplete) throw new Error("Parallel execution incomplete")
+  return {
+    pass: true,
+    optimizeApplied: optimize.applied,
+    alignApplied: align.applied,
+    testsPass: verify.test.exitCode === 0
+  }
+}
+
+// GATE-3: Blocker Evaluation
+function gate3_blockerEval(allBlockers, allWarnings) {
+  return {
+    pass: allBlockers.length === 0,
+    blockers: allBlockers,
+    warnings: allWarnings,
+    canProceed: allBlockers.length === 0
+  }
+}
+
+// GATE-4: Post-Plan (or skip)
+function gate4_postPlan(planResult, skipPlan) {
+  if (skipPlan) return { pass: true, reason: "Plan skipped" }
+  if (["Abort", "Fix and Retry"].includes(planResult)) {
+    return { pass: false, reason: planResult }
+  }
+  return { pass: true, mode: planResult }
+}
+```
 
 **Single question at start** - All settings collected upfront, then uninterrupted flow (unless plan mode).
 
@@ -656,15 +704,33 @@ totalFindings = totalApplied + totalFailed
 **Release Ready:** {hasBlockers ? "NO - blockers must be fixed" : "YES"}
 ```
 
-### Unattended Mode (--auto)
+### Output Schema [STANDARD ENVELOPE]
 
-Single line output:
+**All CCO commands use same envelope.**
 
+```json
+{
+  "status": "OK|WARN|BLOCKED",
+  "summary": "Applied 8, Blockers 0, Version v1.2.0",
+  "data": {
+    "accounting": { "applied": 8, "failed": 0, "total": 8 },
+    "optimize": { "applied": 5, "failed": 0 },
+    "align": { "applied": 3, "failed": 0 },
+    "blockers": [],
+    "warnings": ["PRE-04: TODO markers found"],
+    "version": { "current": "1.1.0", "suggested": "1.2.0", "bump": "MINOR" }
+  },
+  "error": null
+}
 ```
-cco-preflight: {hasBlockers ? "BLOCKED" : "READY"} | Blockers: {allBlockers.length} | Warnings: {allWarnings.length} | Applied: {totalApplied} | Version: {suggestedVersion}
-```
 
-Exit code: 0 (ready), 1 (warnings only), 2 (blockers)
+**Status rules:**
+- `OK`: blockers = 0, tests pass, build pass
+- `WARN`: blockers = 0 but warnings > 0
+- `BLOCKED`: blockers > 0 OR tests fail OR build fail
+
+**--auto mode:** Prints `summary` field only.
+Exit code: 0 (OK), 1 (WARN), 2 (BLOCKED)
 
 ### Execute Release Mode (from Q1)
 
@@ -783,6 +849,8 @@ Mode: {config.releaseMode}
 | OK (green) | All clear | Ready to release |
 
 ### Model Strategy
+
+**Policy:** Opus + Haiku only (no Sonnet)
 
 | Task | Model | Reason |
 |------|-------|--------|

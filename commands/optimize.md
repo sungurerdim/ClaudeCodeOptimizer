@@ -30,6 +30,7 @@ model: opus
 - `--ai-hygiene`: AI hygiene scope only (AIH-01 to AIH-08)
 - `--robustness`: Robustness scope only (ROB-01 to ROB-10)
 - `--doc-sync`: Doc-code sync scope only (DOC-01 to DOC-08)
+- `--simplify`: Simplify scope only (SIM-01 to SIM-10)
 - `--report`: Report only, no fixes
 - `--fix`: Auto-fix safe items (default)
 - `--fix-all`: Full Fix intensity without approval
@@ -84,38 +85,14 @@ A finding is **FIXABLE** if ALL conditions are met:
 | Security fixes | Approval | High impact, needs review |
 | Refactoring | Approval | Subjective, needs context |
 
-## Good Targets vs Bad Targets
+## Skip Patterns [CONSTRAINT]
 
-**Good optimization targets (fix these):**
-- Hardcoded secrets in config files → move to env vars
-- Unused imports in production code → remove
-- Type errors caught by mypy → fix types
-- Missing input validation at API boundaries → add validation
-- Empty catch blocks → add proper handling
-- Console.log/print debugging statements → remove
-
-**Bad optimization targets (skip these):**
-- Type ignores with explanatory comments → intentional
-- Platform-specific imports (msvcrt, fcntl) → cross-platform code
-- Unused variables prefixed with `_` → intentional unused
-- Code inside `if TYPE_CHECKING:` blocks → type-only
-- Test fixtures and mock data → test infrastructure
-- Code marked with `# noqa`, `# intentional`, `# safe:` → explicitly silenced
-
-## Maintain Balance [CRITICAL]
-
-**Avoid over-optimization that:**
-- Creates more complex code than before (clever > readable)
-- Removes helpful abstractions that improve organization
-- Prioritizes "fewer issues" over correctness
-- Combines too many concerns into single functions
-- Replaces clear if/else with nested ternaries
-
-**Preserve:**
-- Existing code structure unless explicitly broken
-- Developer intent expressed in comments
-- Platform-specific guards and conditionals
-- Test infrastructure patterns
+Do NOT flag or fix:
+- `# noqa`, `# intentional`, `# safe:` marked code
+- `_` prefixed variables (intentional unused)
+- `TYPE_CHECKING` blocks (type-only imports)
+- Platform guards (`sys.platform`, `msvcrt`, `fcntl`)
+- Test fixtures in `fixtures/`, `testdata/`, `__snapshots__/`
 
 ## Policies
 
@@ -174,7 +151,7 @@ if (isUnattended) {
 
   config = {
     intensity: "full-fix",  // All severities
-    scopes: ["security", "hygiene", "types", "lint", "performance", "ai-hygiene", "robustness", "doc-sync"],  // ALL 8 scopes
+    scopes: ["security", "hygiene", "types", "lint", "performance", "ai-hygiene", "robustness", "doc-sync", "simplify"],  // ALL 9 scopes
     action: "Everything",   // No approval needed
     gitState: "Continue anyway"  // Don't stash
   }
@@ -199,15 +176,43 @@ if (isUnattended) {
 
 ## Architecture
 
-| Step | Name | Action | Optimization | Dependency |
-|------|------|--------|--------------|------------|
-| 1 | Setup | Q1: Combined settings (background analysis starts) | Single question | - |
-| 2 | Analyze | Wait for analysis, show findings | Progressive | [SEQUENTIAL] after 1 |
-| 2.5 | Plan Review | Show fix plan, get approval (conditional) | User decision | [SEQUENTIAL] after 2 |
-| 3 | Apply | Apply fixes based on intensity | Batched | [SEQUENTIAL] after 2.5 |
-| 4 | Summary | Show counts | Instant | [SEQUENTIAL] after 3 |
+| Phase | Step | Name | Action | Gate |
+|-------|------|------|--------|------|
+| **SETUP** | 1 | Config | Q1: Combined settings | Config validated |
+| **ANALYZE** | 2 | Scan | Parallel scope analysis | Findings collected |
+| **GATE-1** | - | Checkpoint | Validate findings ≥0, no errors | → Plan or Apply |
+| **PLAN** | 2.5 | Review | Show fix plan (conditional) | User approval |
+| **GATE-2** | - | Checkpoint | Approval received or skipped | → Apply |
+| **APPLY** | 3 | Fix | Apply fixes based on intensity | Fixes verified |
+| **GATE-3** | - | Checkpoint | applied + failed = total | → Summary |
+| **SUMMARY** | 4 | Report | Show counts | Done |
 
-**Execution Flow:** 1 → 2 → [2.5 if plan mode] → 3 → 4
+**Execution Flow:** SETUP → ANALYZE → GATE-1 → [PLAN if triggered] → GATE-2 → APPLY → GATE-3 → SUMMARY
+
+### Phase Gates
+
+```javascript
+// GATE-1: Post-Analysis
+function gate1_postAnalysis(findings) {
+  if (findings.error) throw new Error("Analysis failed: " + findings.error)
+  if (!Array.isArray(findings.findings)) throw new Error("Invalid findings structure")
+  return { pass: true, count: findings.findings.length }
+}
+
+// GATE-2: Post-Plan (or skip)
+function gate2_postPlan(planResult, skipPlan) {
+  if (skipPlan) return { pass: true, reason: "Plan skipped" }
+  if (planResult === "Abort") return { pass: false, reason: "User aborted" }
+  return { pass: true, mode: planResult }
+}
+
+// GATE-3: Post-Apply
+function gate3_postApply(results) {
+  const valid = results.applied + results.failed === results.total
+  if (!valid) throw new Error("Accounting mismatch: applied + failed != total")
+  return { pass: true, applied: results.applied, failed: results.failed }
+}
+```
 
 > **Note:** Quality Gates (format, lint, type, test) removed from optimize.
 > LNT and TYP scopes already analyze lint/type issues. Use `/cco:commit` for pre-commit gates.
@@ -257,7 +262,8 @@ if (isUnattended) {
       { label: "Security (Recommended)", description: "Secrets, injection, defensive patterns (SEC + ROB)" },
       { label: "Code Quality (Recommended)", description: "Unused code, types, style (HYG + TYP + LNT)" },
       { label: "Performance", description: "N+1, caching, blocking I/O (PRF)" },
-      { label: "AI Cleanup", description: "Hallucinations, doc drift (AIH + DOC)" }
+      { label: "AI Cleanup", description: "Hallucinations, doc drift (AIH + DOC)" },
+      { label: "Simplify", description: "Reduce complexity, flatten nesting (SIM)" }
     ],
     multiSelect: true
   }
@@ -330,24 +336,68 @@ console.log(`## Quality Score: ${agentResponse.scores.overall}/100`)
 
 ---
 
-## Step-2: Analyze [SYNCHRONOUS]
+## Step-2: Analyze [PARALLEL SCOPES]
 
-**Run analysis synchronously - Task tool returns results directly:**
+**Run analysis with parallel scope groups - multiple Task calls in same message execute concurrently:**
 
 ```javascript
-// Run analysis (synchronous - results returned directly)
-// NOTE: Do NOT use run_in_background: true - output file stays empty
-// Task tool returns agent's response directly when synchronous
-allFindings = Task("cco-agent-analyze", `
-  scopes: ${JSON.stringify(config.scopes)}
+// PARALLEL EXECUTION: Launch scope groups in single message
+// Each Task returns results directly (synchronous)
+// Multiple Task calls in same message run in parallel automatically
 
-  Find all issues with severity, fix info, and effort/impact scores.
-  Return structured JSON:
-  {
-    findings: [{ id, scope, severity, title, location, fixable, approvalRequired, fix, effort, impact }],
-    summary: { scope: { count, critical, high, medium, low } }
-  }
-`, { model: "haiku" })  // No run_in_background - synchronous execution
+// Security group (SEC + ROB)
+securityResults = Task("cco-agent-analyze", `
+  scopes: ["security", "robustness"]
+  Find all issues with severity, fix info, effort/impact scores, and confidence.
+  Return: { findings: [...], summary: {...} }
+`, { model: "haiku" })
+
+// Code Quality group (HYG + TYP + LNT)
+qualityResults = Task("cco-agent-analyze", `
+  scopes: ["hygiene", "types", "lint"]
+  Find all issues with severity, fix info, effort/impact scores, and confidence.
+  Return: { findings: [...], summary: {...} }
+`, { model: "haiku" })
+
+// Performance group (PRF)
+perfResults = Task("cco-agent-analyze", `
+  scopes: ["performance"]
+  Find all issues with severity, fix info, effort/impact scores, and confidence.
+  Return: { findings: [...], summary: {...} }
+`, { model: "haiku" })
+
+// AI Cleanup group (AIH + DOC)
+aiResults = Task("cco-agent-analyze", `
+  scopes: ["ai-hygiene", "doc-sync"]
+  Find all issues with severity, fix info, effort/impact scores, and confidence.
+  Return: { findings: [...], summary: {...} }
+`, { model: "haiku" })
+
+// Simplify group (SIM)
+simplifyResults = Task("cco-agent-analyze", `
+  scopes: ["simplify"]
+  Find all issues with severity, fix info, effort/impact scores, and confidence.
+  Return: { findings: [...], summary: {...} }
+`, { model: "haiku" })
+
+// Merge all parallel results
+allFindings = {
+  findings: [
+    ...securityResults.findings,
+    ...qualityResults.findings,
+    ...perfResults.findings,
+    ...aiResults.findings,
+    ...simplifyResults.findings
+  ],
+  summary: mergeScoreSummaries([securityResults, qualityResults, perfResults, aiResults, simplifyResults])
+}
+
+// Confidence calculation (0-100) included in each agent call:
+// - Pattern match (40%): How well does issue match known patterns?
+// - Context clarity (30%): Is surrounding code clear?
+// - Fix determinism (20%): Is there one correct fix?
+// - Test coverage (10%): Are there validating tests?
+```
 
 // Map intensity to severity thresholds
 const intensityThresholds = {
@@ -424,7 +474,9 @@ if (!isUnattended) {
 | Performance | PRF-01-10 | {n} | {n} | {n} | {n} | {n} |
 | AI Hygiene | AIH-01-08 | {n} | {n} | {n} | {n} | {n} |
 | Robustness | ROB-01-10 | {n} | {n} | {n} | {n} | {n} |
-| **Total** | **73 checks** | **{n}** | **{n}** | **{n}** | **{n}** | **{n}** |
+| Doc Sync | DOC-01-08 | {n} | {n} | {n} | {n} | {n} |
+| Simplify | SIM-01-10 | {n} | {n} | {n} | {n} | {n} |
+| **Total** | **91 checks** | **{n}** | **{n}** | **{n}** | **{n}** | **{n}** |
 
 **Severity Distribution:**
 - CRITICAL: {counts.bySeverity.critical}
@@ -518,17 +570,17 @@ const fixPlans = findings.map(finding => ({
 
 ### CRITICAL Fixes ({criticalCount})
 
-| # | ID | What | Why | Risk | Confidence |
-|---|-----|------|-----|------|------------|
-| 1 | SEC-01 | Remove hardcoded API key | Security vulnerability, key exposed in repo | None - will use env var | 95% |
-| 2 | SEC-03 | Sanitize SQL input | SQL injection possible via user input | Low - parameterized approach | 90% |
+| # | ID | What | Why | Risk | Conf |
+|---|-----|------|-----|------|------|
+| 1 | SEC-01 | Remove hardcoded API key | Security vulnerability, key exposed in repo | None - will use env var | 95 |
+| 2 | SEC-03 | Sanitize SQL input | SQL injection possible via user input | Low - parameterized approach | 90 |
 
 ### HIGH Priority ({highCount})
 
-| # | ID | What | Why | Risk | Confidence |
-|---|-----|------|-----|------|------------|
-| 1 | HYG-01 | Remove 12 unused imports | Dead code, slower load times | None | 100% |
-| 2 | TYP-01 | Add return type to `process_data()` | Type safety, IDE support | None | 95% |
+| # | ID | What | Why | Risk | Conf |
+|---|-----|------|-----|------|------|
+| 1 | HYG-01 | Remove 12 unused imports | Dead code, slower load times | None | 100 |
+| 2 | TYP-01 | Add return type to `process_data()` | Type safety, IDE support | None | 95 |
 
 ### MEDIUM Priority ({mediumCount})
 
@@ -540,8 +592,9 @@ const fixPlans = findings.map(finding => ({
 |--------|-------|
 | Total changes | {findings.length} findings across {uniqueFiles.length} files |
 | Estimated lines | ~{totalEstimatedLines} lines modified |
-| High confidence (>80%) | {highConfidenceCount} ({highConfidencePercent}%) |
-| Risky changes | {riskyCount} (will ask before each) |
+| High confidence (≥80) | {highConfidenceCount} ({highConfidencePercent}%) |
+| Medium confidence (60-79) | {mediumConfidenceCount} |
+| Low confidence (<60) | {lowConfidenceCount} (report only) |
 
 **Alternatives Considered:**
 {findings.filter(f => f.plan.alternatives.length > 1).map(f =>
@@ -741,40 +794,35 @@ console.log(summary)
 
 **No approval questions** - Intensity selection determines what gets fixed automatically.
 
-### Output Schema (when called as sub-command)
+### Output Schema [STANDARD ENVELOPE]
 
-**All counts are at FINDING level (not location level).**
+**All CCO commands use same envelope. Counts are at FINDING level.**
 
 ```json
 {
-  "accounting": {
-    "applied": "{n}",
-    "failed": "{n}",
-    "total": "{n}"
+  "status": "OK|WARN|FAIL",
+  "summary": "Applied 5, Failed 0, Total 5",
+  "data": {
+    "accounting": { "applied": 5, "failed": 0, "total": 5 },
+    "intensity": "standard",
+    "by_scope": { "security": 2, "hygiene": 3, "types": 0 },
+    "by_severity": { "critical": 0, "high": 2, "medium": 3, "low": 0 },
+    "blockers": []
   },
-  "intensity": "{quick-wins|standard|full-fix|report-only}",
-  "by_scope": {
-    "security": "{n}",
-    "hygiene": "{n}",
-    "types": "{n}",
-    "lint": "{n}",
-    "performance": "{n}",
-    "ai-hygiene": "{n}",
-    "robustness": "{n}"
-  },
-  "by_severity": {
-    "critical": "{n}",
-    "high": "{n}",
-    "medium": "{n}",
-    "low": "{n}"
-  },
-  "blockers": [{ "id": "{SEC-01|...}", "severity": "{CRITICAL|HIGH}", "title": "{title}", "location": "{file}:{line}" }]
+  "error": null
 }
 ```
 
+**Status rules:**
+- `OK`: failed = 0
+- `WARN`: failed > 0 but no CRITICAL
+- `FAIL`: any CRITICAL unfixed OR error != null
+
 **Accounting invariant:** `applied + failed = total`
 
-### Scope Coverage (8 Scopes, 81 Checks)
+**--auto mode:** Prints `summary` field only.
+
+### Scope Coverage (9 Scopes, 91 Checks)
 
 | Scope | ID Range | Checks |
 |-------|----------|--------|
@@ -786,6 +834,7 @@ console.log(summary)
 | `ai-hygiene` | AIH-01-08 | Hallucinated APIs, orphan abstractions, phantom imports, dead feature flags, stale mocks, incomplete implementations, copy-paste artifacts, dangling references |
 | `robustness` | ROB-01-10 | Code-level defensive patterns: missing timeouts, retries, endpoint guards, unbounded collections, implicit coercion, null checks, graceful degradation, circuit breakers, resource cleanup, concurrent safety |
 | `doc-sync` | DOC-01-08 | README outdated, API signature mismatch, deprecated references in docs, missing new feature docs, outdated examples, broken internal links, changelog not updated, comment-code drift |
+| `simplify` | SIM-01-10 | Deeply nested conditionals (>3 levels), duplicate/similar code blocks, unnecessary abstractions, single-use wrappers, over-engineered patterns, complex boolean expressions, long parameter lists, god functions (>50 lines), premature optimization, redundant null checks |
 
 ### Context Application
 
@@ -804,6 +853,16 @@ console.log(summary)
 | `--preview` | Analyze only, show findings, don't apply fixes |
 | `--score` | Quality score only (0-100), skip questions |
 
+### Model Strategy
+
+**Policy:** Opus + Haiku only (no Sonnet)
+
+| Task | Model | Reason |
+|------|-------|--------|
+| Analysis (parallel scopes) | Haiku | Fast, cost-effective scanning |
+| Apply fixes | Opus | 50-75% fewer tool errors |
+| Score calculation | Haiku | Simple aggregation |
+
 ### Scope Groups
 
 | Group | Scopes Included | Checks |
@@ -812,6 +871,7 @@ console.log(summary)
 | **Code Quality** | hygiene + types + lint | HYG-01-15, TYP-01-10, LNT-01-08 (33 checks) |
 | **Performance** | performance | PRF-01-10 (10 checks) |
 | **AI Cleanup** | ai-hygiene + doc-sync | AIH-01-08, DOC-01-08 (16 checks) |
+| **Simplify** | simplify | SIM-01-10 (10 checks) |
 
 ---
 
@@ -893,6 +953,42 @@ NON-findings:
 | LOW | Style, naming, nice-to-have improvement |
 
 **When uncertain → choose lower severity.**
+
+---
+
+## Confidence Scoring
+
+Each finding includes a confidence score (0-100) indicating fix reliability.
+
+### Score Calculation
+
+| Factor | Weight | Criteria |
+|--------|--------|----------|
+| Pattern Match | 40% | How well does the issue match known patterns? |
+| Context Clarity | 30% | Is the surrounding code clear and unambiguous? |
+| Fix Determinism | 20% | Is there exactly one correct fix? |
+| Test Coverage | 10% | Are there tests that validate the fix? |
+
+```javascript
+confidence = (patternMatch * 0.4) + (contextClarity * 0.3) +
+             (fixDeterminism * 0.2) + (testCoverage * 0.1)
+```
+
+### Score Interpretation
+
+| Score | Level | Action |
+|-------|-------|--------|
+| 90-100 | Very High | Auto-fix without review |
+| 80-89 | High | Auto-fix, visible in diff |
+| 70-79 | Medium | Show in plan, recommend fix |
+| 60-69 | Low | Show in plan, ask approval |
+| <60 | Very Low | Report only, no auto-fix |
+
+### Threshold: ≥80
+
+- **"Apply Safe Only"** filters to confidence ≥80
+- Findings below 80 require explicit approval
+- CRITICAL severity bypasses confidence (always shown)
 
 ---
 

@@ -196,8 +196,8 @@ if (parsedQuery.comparison) {
 if (depth === "Deep") {
   // Save agent IDs for potential resume
   researchSession = {
-    id: generateSessionId(),
-    agents: [agent1.id, agent2.id, ...],
+    id: `research-${Date.now()}`,  // Simple timestamp-based ID
+    agents: [agent1.id, agent2.id],
     completedSources: [],
     pendingSources: []
   }

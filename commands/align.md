@@ -21,37 +21,14 @@ model: opus
 - "Is Repository pattern missing?"
 - "Is this over-engineered by AI?"
 
-## Good Targets vs Bad Targets
+## Skip Patterns [CONSTRAINT]
 
-**Good align targets (flag these):**
-- God classes with >500 lines or >20 methods
-- Circular dependencies between modules
-- Missing abstraction layers (UI calling DB directly)
-- Inconsistent error handling patterns across modules
-- Test files with >5 mocks per test (integration candidate)
-- Over-engineered AI code (factory for single type)
-
-**Bad align targets (skip these):**
-- Simple CRUD with minimal abstraction (appropriate for scale)
+Do NOT flag:
+- Simple CRUD appropriate for project scale
 - Single-implementation interfaces during prototyping
-- Framework-mandated patterns (even if not "ideal")
-- Legacy code in maintenance mode (flag but don't prioritize)
-- Deliberate trade-offs documented in ADRs
-
-## Align Balance [CRITICAL]
-
-**Avoid over-critical alignment that:**
-- Recommends rewrites for working, stable code
-- Ignores team context (solo dev vs large team)
-- Proposes ideal patterns that add complexity without benefit
-- Treats all code as if it's greenfield
-- Ignores explicit trade-off decisions in docs/comments
-
-**Consider:**
-- Project maturity (prototype → production)
-- Team size and skill distribution
-- Time-to-market constraints
-- Existing technical debt backlog priority
+- Framework-mandated patterns
+- Trade-offs documented in ADRs or comments
+- Legacy code in maintenance mode (mention, don't prioritize)
 
 ## Scopes
 
@@ -116,18 +93,51 @@ if (args.includes("--auto")) {
 
 ## Architecture
 
-| Step | Name | Action | Optimization | Dependency |
-|------|------|--------|--------------|------------|
-| 0 | Mode | Detect --auto or interactive | Instant | - |
-| 1a | Q1 | Fix Intensity + Scope selection | Single question | [PARALLEL] with 1b |
-| 1b | Analysis | Start background analysis | Parallel | [PARALLEL] with 1a |
-| 2 | Gap Analysis | Current vs Ideal comparison | Progressive | [SEQUENTIAL] after 1b |
-| 3 | Recommendations | 80/20 prioritized roadmap | Instant | [SEQUENTIAL] after 2 |
-| 3.5 | Plan Review | Show architectural plan, get approval (conditional) | User decision | [SEQUENTIAL] after 3 |
-| 4 | Apply | Apply based on intensity | Verified | [SEQUENTIAL] after 3.5 |
-| 5 | Summary | Show results | Instant | [SEQUENTIAL] after 4 |
+| Phase | Step | Name | Action | Gate |
+|-------|------|------|--------|------|
+| **SETUP** | 0-1a | Config | Mode + Q1: Intensity/Scopes | Config validated |
+| **ANALYZE** | 1b | Scan | Parallel scope analysis | Findings collected |
+| **GATE-1** | - | Checkpoint | Validate findings, metrics | → Gap Analysis |
+| **ASSESS** | 2-3 | Gap | Current vs Ideal + Prioritize | Gaps quantified |
+| **GATE-2** | - | Checkpoint | Recommendations ready | → Plan or Apply |
+| **PLAN** | 3.5 | Review | Architectural plan (conditional) | User approval |
+| **GATE-3** | - | Checkpoint | Approval received or skipped | → Apply |
+| **APPLY** | 4 | Fix | Apply recommendations | Changes verified |
+| **GATE-4** | - | Checkpoint | applied + failed = total | → Summary |
+| **SUMMARY** | 5 | Report | Show gap changes | Done |
 
-**Execution Flow:** Step-0 → (1a ‖ 1b) → 2 → 3 → [3.5 if plan mode] → 4 → 5
+**Execution Flow:** SETUP → ANALYZE → GATE-1 → ASSESS → GATE-2 → [PLAN if triggered] → GATE-3 → APPLY → GATE-4 → SUMMARY
+
+### Phase Gates
+
+```javascript
+// GATE-1: Post-Analysis
+function gate1_postAnalysis(results) {
+  if (results.error) throw new Error("Analysis failed: " + results.error)
+  if (!results.metrics) throw new Error("Missing metrics")
+  return { pass: true, findingCount: results.findings.length }
+}
+
+// GATE-2: Post-Assessment
+function gate2_postAssessment(gaps, recommendations) {
+  if (!gaps.coupling || !gaps.cohesion) throw new Error("Incomplete gap analysis")
+  return { pass: true, gapCount: Object.keys(gaps).length, recCount: recommendations.length }
+}
+
+// GATE-3: Post-Plan (or skip)
+function gate3_postPlan(planResult, skipPlan) {
+  if (skipPlan) return { pass: true, reason: "Plan skipped" }
+  if (planResult === "Abort") return { pass: false, reason: "User aborted" }
+  return { pass: true, mode: planResult }
+}
+
+// GATE-4: Post-Apply
+function gate4_postApply(results) {
+  const valid = results.applied + results.failed === results.total
+  if (!valid) throw new Error("Accounting mismatch: applied + failed != total")
+  return { pass: true, applied: results.applied, failed: results.failed }
+}
+```
 
 **Plan Review triggers automatically when:**
 - `--plan` flag is passed
@@ -200,7 +210,9 @@ AskUserQuestion([
 
 ---
 
-## Step-1b: Start Background Analysis
+## Step-1b: Analyze [PARALLEL SCOPES]
+
+**Run analysis with parallel scope groups - multiple Task calls in same message execute concurrently:**
 
 ```javascript
 // Dynamic model selection
@@ -219,8 +231,47 @@ const scopeMapping = {
 }
 const selectedScopes = config.scopes.map(s => scopeMapping[s] || s.toLowerCase())
 
-// Start comprehensive analysis
-analysisTask = Task("cco-agent-analyze", `
+// PARALLEL EXECUTION: Launch scope groups in single message
+// Each Task returns results directly (synchronous)
+// Multiple Task calls in same message run in parallel automatically
+
+// Structure group (ARC + PAT)
+structureResults = Task("cco-agent-analyze", `
+  scopes: ["architecture", "patterns"]
+  mode: review
+  Analyze coupling, cohesion, layers, dependencies, design patterns.
+  Return: { findings: [...], metrics: {...} }
+`, { model: analyzeModel })
+
+// Quality group (TST + MNT)
+qualityResults = Task("cco-agent-analyze", `
+  scopes: ["testing", "maintainability"]
+  mode: review
+  Analyze test coverage, complexity, readability.
+  Return: { findings: [...], metrics: {...} }
+`, { model: analyzeModel })
+
+// Completeness group (FUN + AIA)
+completenessResults = Task("cco-agent-analyze", `
+  scopes: ["functional-completeness", "ai-architecture"]
+  mode: review
+  Analyze API gaps, over-engineering, architectural drift.
+  Return: { findings: [...], metrics: {...} }
+`, { model: analyzeModel })
+
+// Merge parallel results
+analysisTask = {
+  findings: [
+    ...structureResults.findings,
+    ...qualityResults.findings,
+    ...completenessResults.findings
+  ],
+  metrics: mergeMetrics([structureResults, qualityResults, completenessResults]),
+  techAssessment: structureResults.techAssessment
+}
+
+// Legacy single-call format (for reference):
+// analysisTask = Task("cco-agent-analyze", `
   scopes: ${JSON.stringify(selectedScopes)}
   mode: review  // Strategic, architecture-level
 
@@ -310,13 +361,18 @@ analysisTask = Task("cco-agent-analyze", `
   - FUN-12: Incomplete API surface (missing endpoints for common operations)
 
   Return: {
-    findings: [{ id, scope, severity, title, location, description, recommendation, effort, impact }],
+    findings: [{ id, scope, severity, title, location, description, recommendation, effort, impact, confidence }],
     metrics: { coupling, cohesion, complexity, testCoverage },
     techAssessment: { stack, alternatives, recommendation }
   }
-`, { model: analyzeModel })  // Synchronous - results returned directly
-// NOTE: Do NOT use run_in_background: true for Task (agent) calls
-// Background agents return results via task-notification, not TaskOutput
+
+    Confidence calculation (0-100):
+  - Evidence strength (40%): How strong is architectural evidence?
+  - Pattern recognition (30%): Does it match known anti-patterns?
+  - Impact clarity (20%): Is improvement benefit clear?
+  - Migration safety (10%): Can change be made safely?
+// `, { model: analyzeModel })
+// NOTE: Parallel execution above replaces single-call pattern
 ```
 
 ---
@@ -561,15 +617,15 @@ const architecturalPlans = filteredFindings.map(finding => ({
 ### Planned Changes by Module
 
 #### auth/ (3 changes)
-| ID | What | Why | Risk | Breaking? |
-|----|------|-----|------|-----------|
-| ARC-05 | Extract `UserService` from god class | 847 lines → ~200 lines each | Medium - test coverage needed | No |
-| PAT-01 | Standardize error handling | Inconsistent patterns confuse maintainers | Low | No |
+| ID | What | Why | Risk | Conf |
+|----|------|-----|------|------|
+| ARC-05 | Extract `UserService` from god class | 847 lines → ~200 lines each | Medium - test coverage needed | 85 |
+| PAT-01 | Standardize error handling | Inconsistent patterns confuse maintainers | Low | 92 |
 
 #### api/ (2 changes)
-| ID | What | Why | Risk | Breaking? |
-|----|------|-----|------|-----------|
-| ARC-04 | Add repository layer | Direct DB access in handlers | Medium - migration needed | No |
+| ID | What | Why | Risk | Conf |
+|----|------|-----|------|------|
+| ARC-04 | Add repository layer | Direct DB access in handlers | Medium - migration needed | 78 |
 
 ### Alternatives Considered
 
@@ -592,7 +648,8 @@ For each major change, why this approach:
 | Modules affected | {uniqueModules.length} |
 | Estimated files | ~{totalEstimatedFiles} |
 | Breaking changes | {breakingCount} |
-| High-risk changes | {highRiskCount} |
+| High confidence (≥80) | {highConfidenceCount} ({highConfidencePercent}%) |
+| Medium confidence (60-79) | {mediumConfidenceCount} |
 ```
 
 ### User Decision
@@ -822,33 +879,34 @@ cco-align: {OK|WARN|FAIL} | Gaps: {gapCount} | Applied: {applied} | Failed: {fai
 | --auto mode | 0 | 0 |
 | Interactive | Q1 (Intensity + Scopes) | 1 |
 
-### Output Schema (when called as sub-command)
+### Output Schema [STANDARD ENVELOPE]
+
+**All CCO commands use same envelope.**
 
 ```json
 {
   "status": "OK|WARN|FAIL",
-  "gaps": {
-    "coupling": { "current": 72, "ideal": 50, "gap": 22 },
-    "cohesion": { "current": 55, "ideal": 70, "gap": 15 },
-    "complexity": { "current": 12, "ideal": 10, "gap": 2 },
-    "coverage": { "current": 65, "ideal": 80, "gap": 15 }
+  "summary": "Applied 3, Failed 0, Gaps: coupling 22%, cohesion 15%",
+  "data": {
+    "accounting": { "applied": 3, "failed": 0, "total": 3 },
+    "gaps": {
+      "coupling": { "current": 72, "ideal": 50, "gap": 22 },
+      "cohesion": { "current": 55, "ideal": 70, "gap": 15 },
+      "complexity": { "current": 12, "ideal": 10, "gap": 2 },
+      "coverage": { "current": 65, "ideal": 80, "gap": 15 }
+    },
+    "effortCategories": { "quickWin": 2, "moderate": 1, "complex": 0, "major": 0 }
   },
-  "techAssessment": {
-    "alternatives": [{ "current": "Flask", "alternative": "FastAPI", "reason": "async support" }]
-  },
-  "effortCategories": {
-    "quickWin": [{ "id": "ARC-01", "title": "...", "location": "file:line" }],
-    "moderate": [],
-    "complex": [],
-    "major": []
-  },
-  "accounting": {
-    "applied": "{applied_count}",
-    "failed": "{failed_count}",
-    "total": "{total_count}"
-  }
+  "error": null
 }
 ```
+
+**Status rules:**
+- `OK`: failed = 0 AND no gap > 20%
+- `WARN`: failed > 0 OR any gap > 20%
+- `FAIL`: any CRITICAL gap OR error != null
+
+**--auto mode:** Prints `summary` field only.
 
 ### Context Application
 
@@ -877,10 +935,14 @@ cco-align: {OK|WARN|FAIL} | Gaps: {gapCount} | Applied: {applied} | Failed: {fai
 
 ### Model Strategy
 
-| Agent | Model | Reason |
-|-------|-------|--------|
-| cco-agent-analyze | Dynamic | --quick → Haiku; 10K+ scale → Opus |
-| cco-agent-apply | Opus | 50-75% fewer tool errors, architectural changes |
+**Policy:** Opus + Haiku only (no Sonnet)
+
+| Task | Model | Reason |
+|------|-------|--------|
+| Analysis (parallel scopes) | Haiku | Fast, cost-effective scanning |
+| Analysis (10K+ scale) | Opus | Complex codebases need accuracy |
+| Apply fixes | Opus | 50-75% fewer tool errors |
+| Research/read-only | Haiku | Speed over accuracy |
 
 ### Ideal Metrics by Project Type
 
@@ -1026,6 +1088,42 @@ NON-findings:
 | LOW | Style, minor improvement, nice-to-have |
 
 **When uncertain → choose lower severity.**
+
+---
+
+## Confidence Scoring
+
+Each recommendation includes a confidence score (0-100) indicating reliability.
+
+### Score Calculation
+
+| Factor | Weight | Criteria |
+|--------|--------|----------|
+| Evidence Strength | 40% | How strong is the architectural evidence? |
+| Pattern Recognition | 30% | Does it match known anti-patterns? |
+| Impact Clarity | 20% | Is the improvement benefit clear? |
+| Migration Safety | 10% | Can the change be made safely? |
+
+```javascript
+confidence = (evidenceStrength * 0.4) + (patternRecognition * 0.3) +
+             (impactClarity * 0.2) + (migrationSafety * 0.1)
+```
+
+### Score Interpretation
+
+| Score | Level | Action |
+|-------|-------|--------|
+| 90-100 | Very High | Apply without review |
+| 80-89 | High | Apply, visible in diff |
+| 70-79 | Medium | Show in plan, recommend |
+| 60-69 | Low | Show in plan, ask approval |
+| <60 | Very Low | Report only, no auto-apply |
+
+### Threshold: ≥80
+
+- **"Apply Non-Breaking Only"** filters to confidence ≥80
+- Findings below 80 require explicit approval
+- CRITICAL gaps bypass confidence (always shown)
 
 ---
 

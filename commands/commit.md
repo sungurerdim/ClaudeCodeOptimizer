@@ -302,8 +302,8 @@ function detectScope(files) {
 
 ```javascript
 function detectType(files, diff) {
-  // Rule 1: New files created → feat
-  const newFiles = files.filter(f => isNewFile(f))
+  // Rule 1: New files created → feat (check git status: "A " prefix = added)
+  const newFiles = files.filter(f => f.status === 'A')
   if (newFiles.length > 0 && newFiles.length === files.length) {
     return 'feat'
   }
