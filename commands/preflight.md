@@ -1,6 +1,6 @@
 ---
 description: Release verification gate - full optimization + review + tests + build
-argument-hint: [--auto] [--preview] [--strict] [--skip-tests] [--skip-docs]
+argument-hint: "[--auto] [--preview] [--strict] [--skip-tests] [--skip-docs]"
 allowed-tools: Read, Grep, Glob, Edit, Bash, Task, AskUserQuestion
 model: opus
 ---
@@ -144,7 +144,8 @@ When `--auto` or `--intensity=full-fix` or user selects "Full Fix":
 **Skip if --auto mode (config already set)**
 
 ```javascript
-AskUserQuestion([
+if (!isUnattended) {
+  AskUserQuestion([
   {
     question: "Which checks to run?",
     header: "Checks",
@@ -175,7 +176,8 @@ AskUserQuestion([
     ],
     multiSelect: false
   }
-])
+  ])
+}
 ```
 
 ### Settings Mapping
@@ -461,9 +463,9 @@ if (planMode && !skipPlan) {
 
 | Check | Status | Detail |
 |-------|--------|--------|
-| Git State | {gitClean ? "✓ Clean" : "✗ Dirty"} | {gitDetail} |
-| Version Sync | {versionMatch ? "✓ Match" : "✗ Mismatch"} | {versionDetail} |
-| Dependencies | {depSecure ? "✓ Secure" : "✗ Vulnerabilities"} | {depDetail} |
+| Git State | {gitClean ? "Clean" : "Dirty"} | {gitDetail} |
+| Version Sync | {versionMatch ? "Match" : "Mismatch"} | {versionDetail} |
+| Dependencies | {depSecure ? "Secure" : "Vulnerabilities"} | {depDetail} |
 
 ### Sub-command Results Summary
 
@@ -497,7 +499,7 @@ This will require a MAJOR version bump.
 {hasBlockers ? `
 **🛑 Blockers must be resolved:**
 ${allBlockers.map((b, i) => `${i+1}. [${b.type}] ${b.message}`).join('\n')}
-` : "✓ No blockers - ready to proceed."}
+` : "No blockers - ready to proceed."}
 
 ### Changelog Preview
 

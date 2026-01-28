@@ -26,7 +26,7 @@
 ### PaaS (Heroku, Railway, Render)
 - **Procfile/Config**: Explicit process types and commands
 - **Release Phase**: Run migrations before traffic switch
-- **Ephemeral Storage**: Don't rely on filesystem persistence
+- **Ephemeral Storage**: Use externalized state storage
 
 ## Traffic Management
 

@@ -122,5 +122,5 @@ slsa-verifier verify-artifact myapp.tar.gz --provenance-path provenance.json
 |---------|-------------|
 | Timeout | Always explicit (e.g., 30s) |
 | Memory | Right-size (start 256MB) |
-| VPC | Avoid unless required (cold start) |
+| VPC | Use only when explicitly needed (cold start) |
 | State | External only (no local state) |

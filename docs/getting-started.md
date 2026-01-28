@@ -107,26 +107,9 @@ Shows gap analysis between current state and ideal architecture.
 
 ---
 
-## How Rules Load (Zero Config)
+## Rule Loading
 
-CCO uses Claude Code's native mechanisms — no custom loaders or CLI wrappers:
-
-```
-Session Start
-     │
-     ├─→ SessionStart hook fires
-     │   └─→ Core rules injected into context (automatic)
-     │
-     └─→ Claude Code reads .claude/rules/*.md
-         └─→ Project rules loaded (automatic)
-
-Result: Rules active immediately, zero user action
-```
-
-**Why this matters:**
-- No `cco` CLI wrapper to remember
-- No manual `--with-rules` flags
-- Just open Claude Code → rules are working
+CCO automatically loads rules via the SessionStart hook. Core rules are injected into context, and project rules are loaded from `.claude/rules/*.md`. For technical details on the rule loading mechanism, see [Rules Reference](rules.md#zero-config-loading-mechanism).
 
 ---
 

@@ -36,7 +36,7 @@
 
 ---
 
-## Framework Gotchas
+## ML Framework Gotchas
 
 ### PyTorch
 - `model.eval()` + `torch.no_grad()` for inference
