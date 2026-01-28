@@ -38,8 +38,7 @@ class TestInvalidArgumentCombinations:
         # The schema should define this constraint in allOf
         all_of = schema.get("allOf", [])
         has_constraint = any(
-            "report" in str(constraint) and "fix-all" in str(constraint)
-            for constraint in all_of
+            "report" in str(constraint) and "fix-all" in str(constraint) for constraint in all_of
         )
         assert has_constraint, "Schema should define report/fix-all mutual exclusivity"
 
@@ -49,8 +48,7 @@ class TestInvalidArgumentCombinations:
 
         all_of = schema.get("allOf", [])
         has_constraint = any(
-            "score" in str(constraint) and "fix" in str(constraint)
-            for constraint in all_of
+            "score" in str(constraint) and "fix" in str(constraint) for constraint in all_of
         )
         assert has_constraint, "Schema should define score/fix mutual exclusivity"
 
@@ -71,9 +69,9 @@ class TestInvalidArgumentCombinations:
 
         intensity_prop = schema.get("properties", {}).get("intensity", {})
         expected_values = ["quick-wins", "standard", "full-fix", "report-only"]
-        assert (
-            intensity_prop.get("enum") == expected_values
-        ), f"Intensity enum should be {expected_values}"
+        assert intensity_prop.get("enum") == expected_values, (
+            f"Intensity enum should be {expected_values}"
+        )
 
 
 class TestMissingProfileHandling:

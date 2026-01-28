@@ -97,9 +97,9 @@ class TestRuleConventions:
             if not subdir_path.exists():
                 continue
             for md_file in subdir_path.glob("*.md"):
-                assert md_file.name.startswith(
-                    "cco-"
-                ), f"{md_file} missing cco- prefix - would conflict with user rules"
+                assert md_file.name.startswith("cco-"), (
+                    f"{md_file} missing cco- prefix - would conflict with user rules"
+                )
 
 
 class TestHookIntegration:
