@@ -45,6 +45,13 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - **`/cco:preflight`** — NEW command for pre-release workflow with quality gates
 - **`cco-agent-research`** — NEW agent for external source research with reliability scoring (T1-T6)
 - **New analyze scopes** — `references`, `architecture`, `conventions`, `trends`
+- **Simplify scope** — `/cco:optimize` scope (SIM-01 to SIM-10) for code complexity reduction
+- **`/cco:docs`** — NEW command for documentation gap analysis
+- **Confidence scoring** — 0-100 scale for findings with ≥80 threshold for auto-fix
+- **Phase gates** — Explicit checkpoints (GATE-1, GATE-2, etc.) in command workflows
+- **Parallel scope execution** — Multiple scope groups analyzed concurrently
+- **Standard output envelope** — Unified `{status, summary, data, error}` format across commands
+- **Test suite** — 63 tests covering commands, hooks, edge cases, and plugin structure
 - **Permissions system** — Four levels (safe/balanced/permissive/full)
 - **Dynamic context injection** — Commands use real-time context at load time
 - **Tool restrictions** — `allowed-tools` frontmatter limits each command to declared tools
@@ -60,10 +67,18 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - **Folder structure** — `rules/core/`, `rules/languages/`, `rules/frameworks/`, `rules/operations/`
 - **Claude Code 2.1.16+ compatibility** — Migrated from TodoWrite to task management system
 - **Model optimization** — Haiku for file operations, Opus reserved for code fixes
+- **Model strategy** — Opus + Haiku only (no Sonnet)
+- **Commands streamlined** — Removed redundant explanations (~90 lines)
+- **Agent output mandatory** — `cco-agent-analyze` guarantees valid JSON with error field
+- **Rules optimized** — ~40% token reduction for Opus 4.5 compatibility
+- **Tune expanded** — 8 questions with full auto-detection for all config values
 
 ### Fixed
 
 - **Path traversal security** — Resolve paths before validation to prevent symlink bypasses
+- **YAML frontmatter** — Quoted argument-hint values to prevent parsing errors
+- **CI dependencies** — Added pyyaml for test execution
+- **Task execution** — Switched to sync calls for reliable result handling
 
 ### Removed
 
