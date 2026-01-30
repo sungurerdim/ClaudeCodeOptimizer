@@ -1,6 +1,8 @@
 # API Rules
 *Specific formats and limits*
 
+**Trigger:** {api_routes}, {openapi_spec}, {graphql_schema}
+
 ## Error Format (RFC 7807) [CRITICAL]
 
 Content-Type: `application/problem+json`

@@ -13,13 +13,13 @@ model: opus
 
 ## Context
 
-- Git status: !`git status --short`
-- Branch: !`git branch --show-current`
-- Recent commits: !`git log --oneline -5`
-- Stash list: !`git stash list --oneline | head -3`
-- All changes (staged+unstaged): !`git diff HEAD --shortstat`
-- Staged only: !`git diff --cached --shortstat`
-- Untracked files: !`git ls-files --others --exclude-standard | wc -l`
+- Git status: !`git status --short 2>/dev/null || echo ""`
+- Branch: !`git branch --show-current 2>/dev/null || echo ""`
+- Recent commits: !`git log --oneline -5 2>/dev/null || echo ""`
+- Stash list: !`git stash list --oneline 2>/dev/null | head -3`
+- All changes (staged+unstaged): !`git diff HEAD --shortstat 2>/dev/null || echo ""`
+- Staged only: !`git diff --cached --shortstat 2>/dev/null || echo ""`
+- Untracked files: !`git ls-files --others --exclude-standard 2>/dev/null | wc -l`
 
 **DO NOT re-run these commands. Use the pre-collected values above.**
 
@@ -73,22 +73,20 @@ hasTestChanges = testFiles.length > 0
 
 ### 1.3: Quality Gates [PARALLEL + CONDITIONAL]
 
-> **Pattern:** Quality Gates run external tools. Commit uses conditional gates based on
-> changed file types - only runs on changed files, skips tests for doc-only changes.
+> **Pattern:** Quality Gates run external tools on the **full project root**, not just changed files.
+> This ensures no pre-existing issues are committed. Tests are conditional on file types.
 > Also used in /cco:preflight for release verification.
 
 ```javascript
-// Phase 1: Blocking checks (always, instant)
+// Phase 1: Blocking checks (always, instant - scoped to changed files)
 Bash(`grep -rn 'api_key\\|password\\|secret\\|token\\|credential' ${changedFiles.join(' ')} 2>/dev/null | grep -v '.md:' || true`)
 Bash(`find ${changedFiles.join(' ')} -size +10M 2>/dev/null || true`)
 
-// Phase 2: Code quality (only if code files changed)
+// Phase 2: Code quality (full project - not just changed files)
 if (hasCodeChanges) {
-  targetFiles = changedFiles.filter(f => codeFiles.includes(f)).join(' ')
-
-  formatTask = Bash(`{format_command} ${targetFiles} 2>&1`, { run_in_background: true })
-  lintTask = Bash(`{lint_command} ${targetFiles} 2>&1`, { run_in_background: true })
-  typeTask = Bash(`{type_command} ${targetFiles} 2>&1`, { run_in_background: true })
+  formatTask = Bash("{format_command} 2>&1", { run_in_background: true })
+  lintTask = Bash("{lint_command} 2>&1", { run_in_background: true })
+  typeTask = Bash("{type_command} 2>&1", { run_in_background: true })
 }
 
 // Phase 3: Tests (CONDITIONAL - skip if only docs/config changed)
@@ -99,6 +97,8 @@ if (hasCodeChanges || hasTestChanges) {
   testTask = null
 }
 ```
+
+**Gate scope:** Format, lint, type commands run on **entire project**. Secret/size checks run on changed files only.
 
 **Conditional Test Logic:**
 | Changed Files | Run Tests? |
@@ -242,7 +242,7 @@ for (const commit of commitPlan.commits) {
   }
 
   // Append signature
-  message += `\n\n🤖 Generated with [Claude Code](https://claude.com/claude-code)\n\nCo-Authored-By: ${currentModelName} <noreply@anthropic.com>`
+  message += `\n\nGenerated with [Claude Code](https://claude.com/claude-code)\n\nCo-Authored-By: ${currentModelName} <noreply@anthropic.com>`
 
   // Create commit
   Bash(`git commit -m "$(cat <<'EOF'
@@ -352,17 +352,17 @@ function detectType(files, diff) {
 ```javascript
 // Verify commits were created successfully
 verifyResult = Bash("git log --oneline -" + commitPlan.commits.length)
-gitStatus = Bash("git status --short")
+gitStatus = Bash("git status --short 2>/dev/null || echo ''")
 
 // Check working tree is clean (all changes committed)
 if (gitStatus.trim() && !args.includes('--staged-only')) {
-  console.log("⚠️ Warning: Working tree not clean after commit")
+  console.log("[WARN] Working tree not clean after commit")
 }
 
 // Verify commit count matches plan
 actualCommits = verifyResult.split('\n').filter(l => l.trim()).length
 if (actualCommits < commitPlan.commits.length) {
-  console.log(`⚠️ Warning: Expected ${commitPlan.commits.length} commits, found ${actualCommits}`)
+  console.log(`[WARN] Expected ${commitPlan.commits.length} commits, found ${actualCommits}`)
 }
 ```
 

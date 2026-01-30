@@ -5,12 +5,16 @@ These tests validate:
 - additionalContext contains required sections
 - Hook output format matches Claude Code plugin expectations
 - Cross-platform command syntax validation
+- load-core-rules.py functional behavior
 
 Tests ensure hooks work correctly without triggering session start.
 """
 
 import json
+import os
 import re
+import subprocess
+import sys
 from pathlib import Path
 
 import pytest
@@ -21,12 +25,6 @@ HOOKS_DIR = ROOT / "hooks"
 
 class TestHookJsonStructure:
     """Validate hook JSON file structure."""
-
-    @pytest.fixture
-    def hooks_json(self) -> dict:
-        """Load hooks.json configuration."""
-        path = HOOKS_DIR / "hooks.json"
-        return json.loads(path.read_text(encoding="utf-8"))
 
     @pytest.fixture
     def core_rules_json(self) -> dict:
@@ -103,12 +101,6 @@ class TestAdditionalContextSections:
 
 class TestCrossPlatformCommands:
     """Validate command syntax works cross-platform."""
-
-    @pytest.fixture
-    def hooks_json(self) -> dict:
-        """Load hooks.json configuration."""
-        path = HOOKS_DIR / "hooks.json"
-        return json.loads(path.read_text(encoding="utf-8"))
 
     def test_command_uses_cat_for_portability(self, hooks_json: dict) -> None:
         """Hook command should use cat which works on all platforms."""
@@ -201,3 +193,55 @@ class TestContentIntegrity:
         assert triple_backtick_count % 2 == 0, (
             f"Unclosed code blocks: {triple_backtick_count} triple backticks"
         )
+
+
+class TestLoadCoreRulesScript:
+    """Functional tests for hooks/load-core-rules.py."""
+
+    def test_successful_read_outputs_json(self) -> None:
+        """load-core-rules.py should output core-rules.json content to stdout."""
+        script = HOOKS_DIR / "load-core-rules.py"
+        env = {**os.environ, "PYTHONUTF8": "1"}
+        result = subprocess.run(
+            [sys.executable, str(script)],
+            capture_output=True,
+            encoding="utf-8",
+            timeout=10,
+            env=env,
+        )
+        assert result.returncode == 0, f"Script failed: {result.stderr}"
+        # Output should be valid JSON
+        data = json.loads(result.stdout)
+        assert "hookSpecificOutput" in data
+
+    def test_file_not_found_exits_nonzero(self, tmp_path: Path) -> None:
+        """Script should exit 1 when core-rules.json is missing."""
+        # Copy script to tmp dir (no core-rules.json there)
+        script_src = HOOKS_DIR / "load-core-rules.py"
+        script_copy = tmp_path / "load-core-rules.py"
+        script_copy.write_text(script_src.read_text(encoding="utf-8"), encoding="utf-8")
+        result = subprocess.run(
+            [sys.executable, str(script_copy)],
+            capture_output=True,
+            encoding="utf-8",
+            timeout=10,
+        )
+        assert result.returncode == 1
+        assert "not found" in result.stderr
+
+    def test_os_error_exits_nonzero(self, tmp_path: Path) -> None:
+        """Script should exit 1 on OSError (e.g., permission denied)."""
+        # Create a directory named core-rules.json to trigger OSError on open()
+        script_src = HOOKS_DIR / "load-core-rules.py"
+        script_copy = tmp_path / "load-core-rules.py"
+        script_copy.write_text(script_src.read_text(encoding="utf-8"), encoding="utf-8")
+        bad_path = tmp_path / "core-rules.json"
+        bad_path.mkdir()  # directory, not file - causes IsADirectoryError (OSError subclass)
+        result = subprocess.run(
+            [sys.executable, str(script_copy)],
+            capture_output=True,
+            encoding="utf-8",
+            timeout=10,
+        )
+        assert result.returncode == 1
+        assert "Failed to read" in result.stderr or "not found" in result.stderr

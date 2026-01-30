@@ -48,6 +48,25 @@ results = Task("cco-agent-research", prompt, { model: "haiku" })
 | Contradiction handling | None | Detects, logs, resolves by hierarchy |
 | Confidence output | None | HIGH/MEDIUM/LOW with reasoning |
 | Bias detection | None | Vendor self-promo: -5, Sponsored: -15 |
+
+## Input Contract
+
+| Field | Type | Required | Description |
+|-------|------|----------|-------------|
+| `scope` | `string` | Yes | `"local"` (codebase search) or `"search"` (web search) |
+| `query` | `string` | Yes | Search query or concepts |
+| `patterns` | `string[]` | For local | Glob patterns to search |
+| `allowed_domains` | `string[]` | For search | Domain filters for web sources |
+
+## Output Contract
+
+| Field | Type | Description |
+|-------|------|-------------|
+| `sources` | `Source[]` | Found sources with CRAAP+ scores |
+| `synthesis` | `string` | Combined analysis |
+| `confidence` | `string` | `"HIGH"` / `"MEDIUM"` / `"LOW"` |
+| `contradictions` | `Contradiction[]` | Detected conflicting information |
+| `error` | `string?` | Error message if failed |
 | Saturation | Manual stop | Auto-stop when 3 sources repeat themes |
 | Search strategies | 1 query | 4 parallel: docs, github, tutorial, stackoverflow |
 | Output format | Raw results | JSON: `{sources[], contradictions, recommendation}` |
@@ -147,7 +166,7 @@ Read(relevantFiles)               // Get full context for matches
 | Accuracy | 20% | Cross-verified: 100, Single: 60, Unverified: 30 |
 | Purpose | 10% | Educational: 100, Info: 80, Commercial: 40 |
 
-**Quality Bands:** ⭐⭐⭐ Primary (85-100) │ ⭐⭐ Supporting (70-84) │ ⭐ Background (50-69) │ ⚠️ Caution (<50): **REPLACE**
+**Quality Bands:** [A] Primary (85-100) | [B] Supporting (70-84) | [C] Background (50-69) | [WARN] Caution (<50): **REPLACE**
 
 ## Research Quality [CRITICAL]
 

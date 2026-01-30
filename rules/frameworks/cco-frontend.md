@@ -1,6 +1,8 @@
 # Frontend Rules
 *Performance targets and framework gotchas*
 
+**Trigger:** {frontend_framework}, {web_manifest}, {html_entry}
+
 ## Core Web Vitals [CRITICAL]
 
 | Metric | Target | Impact |

@@ -19,20 +19,62 @@ ROOT = Path(__file__).parent.parent
 COMMANDS_DIR = ROOT / "commands"
 AGENTS_DIR = ROOT / "agents"
 
+# Expected flags documented in optimize.md
+OPTIMIZE_EXPECTED_FLAGS = [
+    "--auto",
+    "--preview",
+    "--scope",
+]
+
+# Claude Code built-in agent types (not defined as cco-agent-*.md files)
+BUILTIN_AGENTS = {
+    "general-purpose",
+    "Explore",
+    "Plan",
+    "Bash",
+    "claude-code-guide",
+    "statusline-setup",
+}
+
+# Optimize scope ID to name mapping
+OPTIMIZE_SCOPES = {
+    "SEC": "security",
+    "HYG": "hygiene",
+    "TYP": "types",
+    "LNT": "lint",
+    "PRF": "performance",
+    "AIH": "ai-hygiene",
+    "ROB": "robustness",
+    "PRV": "privacy",
+    "DOC": "doc-sync",
+    "SIM": "simplify",
+}
+
+# Align scope ID to name mapping
+ALIGN_SCOPES = {
+    "ARC": "architecture",
+    "PAT": "patterns",
+    "TST": "testing",
+    "MNT": "maintainability",
+    "AIA": "ai-architecture",
+    "FUN": "functional-completeness",
+}
+
+# Commands that apply fixes and must document accounting
+APPLY_COMMANDS = ["optimize.md", "align.md", "preflight.md", "docs.md"]
+
+# Commands that modify files and must document recovery
+MODIFYING_COMMANDS = ["optimize.md", "align.md", "commit.md", "preflight.md"]
+
 
 class TestCommandFrontmatter:
     """Validate command YAML frontmatter structure."""
-
-    @pytest.fixture
-    def command_files(self) -> list[Path]:
-        """Get all command markdown files."""
-        return list(COMMANDS_DIR.glob("*.md"))
 
     def test_all_commands_have_frontmatter(self, command_files: list[Path]) -> None:
         """Every command file must start with YAML frontmatter."""
         for cmd_file in command_files:
             content = cmd_file.read_text(encoding="utf-8")
-            assert content.startswith("---"), f"{cmd_file.name} missing frontmatter start"
+            assert content.startswith("---"), f"{cmd_file} missing frontmatter start"
             parts = content.split("---", 2)
             assert len(parts) >= 3, f"{cmd_file.name} has unclosed frontmatter"
 
@@ -62,24 +104,13 @@ class TestCommandFrontmatter:
 class TestCommandArgumentParsing:
     """Validate command argument documentation and parsing."""
 
-    @pytest.fixture
-    def optimize_content(self) -> str:
-        """Load optimize command content."""
-        path = COMMANDS_DIR / "optimize.md"
-        return path.read_text(encoding="utf-8")
-
     def test_optimize_has_args_section(self, optimize_content: str) -> None:
         """optimize.md must have ## Args section."""
         assert "## Args" in optimize_content, "optimize.md missing Args section"
 
     def test_args_section_documents_flags(self, optimize_content: str) -> None:
         """Args section should document all flags."""
-        expected_flags = [
-            "--auto",
-            "--preview",
-            "--scope",
-        ]
-        for flag in expected_flags:
+        for flag in OPTIMIZE_EXPECTED_FLAGS:
             assert flag in optimize_content, f"optimize.md should document {flag}"
 
     def test_argument_hint_in_frontmatter(self) -> None:
@@ -114,7 +145,7 @@ class TestAgentReferences:
     def test_optimize_references_valid_agents(self, existing_agents: list[str]) -> None:
         """optimize.md should reference existing agents."""
         content = (COMMANDS_DIR / "optimize.md").read_text(encoding="utf-8")
-        # Find Task() calls with agent names
+        # Match Task("agent-name", ...) calls to extract referenced agent names
         task_pattern = r'Task\s*\(\s*["\']([^"\']+)["\']'
         matches = re.findall(task_pattern, content)
         for agent_name in matches:
@@ -124,16 +155,7 @@ class TestAgentReferences:
 
     def test_all_commands_reference_valid_agents(self, existing_agents: list[str]) -> None:
         """All commands should only reference existing agents."""
-        # Claude Code built-in agent types
-        builtin_agents = {
-            "general-purpose",
-            "Explore",
-            "Plan",
-            "Bash",
-            "claude-code-guide",
-            "statusline-setup",
-        }
-        valid_agents = set(existing_agents) | builtin_agents
+        valid_agents = set(existing_agents) | BUILTIN_AGENTS
         for cmd_file in COMMANDS_DIR.glob("*.md"):
             content = cmd_file.read_text(encoding="utf-8")
             task_pattern = r'Task\s*\(\s*["\']([^"\']+)["\']'
@@ -228,11 +250,6 @@ class TestScopeConsistency:
         return (AGENTS_DIR / "cco-agent-analyze.md").read_text(encoding="utf-8")
 
     @pytest.fixture
-    def optimize_content(self) -> str:
-        """Load optimize command content."""
-        return (COMMANDS_DIR / "optimize.md").read_text(encoding="utf-8")
-
-    @pytest.fixture
     def align_content(self) -> str:
         """Load align command content."""
         return (COMMANDS_DIR / "align.md").read_text(encoding="utf-8")
@@ -241,34 +258,14 @@ class TestScopeConsistency:
         self, agent_content: str, optimize_content: str
     ) -> None:
         """All optimize scope IDs referenced in command must be defined in agent."""
-        optimize_scopes = {
-            "SEC": "security",
-            "HYG": "hygiene",
-            "TYP": "types",
-            "LNT": "lint",
-            "PRF": "performance",
-            "AIH": "ai-hygiene",
-            "ROB": "robustness",
-            "PRV": "privacy",
-            "DOC": "doc-sync",
-            "SIM": "simplify",
-        }
-        for scope_id, scope_name in optimize_scopes.items():
+        for scope_id, scope_name in OPTIMIZE_SCOPES.items():
             assert f"### {scope_name}" in agent_content or f"| {scope_name}" in agent_content, (
                 f"Optimize scope {scope_id} ({scope_name}) not defined in agent-analyze"
             )
 
     def test_align_scopes_defined_in_agent(self, agent_content: str, align_content: str) -> None:
         """All align scope IDs referenced in command must be defined in agent."""
-        align_scopes = {
-            "ARC": "architecture",
-            "PAT": "patterns",
-            "TST": "testing",
-            "MNT": "maintainability",
-            "AIA": "ai-architecture",
-            "FUN": "functional-completeness",
-        }
-        for scope_id, scope_name in align_scopes.items():
+        for scope_id, scope_name in ALIGN_SCOPES.items():
             assert f"### {scope_name}" in agent_content or f"| {scope_name}" in agent_content, (
                 f"Align scope {scope_id} ({scope_name}) not defined in agent-analyze"
             )
@@ -358,11 +355,6 @@ class TestAgentFrontmatter:
 class TestCommandModelPolicy:
     """Validate model policy across commands - opus + haiku only, no sonnet."""
 
-    @pytest.fixture
-    def command_files(self) -> list[Path]:
-        """Get all command markdown files."""
-        return list(COMMANDS_DIR.glob("*.md"))
-
     def test_commands_use_valid_models(self, command_files: list[Path]) -> None:
         """Command frontmatter model must be haiku or opus."""
         valid_models = {"haiku", "opus"}
@@ -380,23 +372,25 @@ class TestCommandModelPolicy:
         """Commands should not reference sonnet model."""
         for cmd_file in command_files:
             content = cmd_file.read_text(encoding="utf-8")
-            # Allow references in comments explaining the policy
             lines = content.split("\n")
             for i, line in enumerate(lines, 1):
-                if "sonnet" in line.lower() and "no sonnet" not in line.lower():
-                    # Allow policy statements
-                    if "policy" in line.lower() or "only" in line.lower():
-                        continue
-                    pytest.fail(f"{cmd_file.name}:{i} references sonnet model: {line.strip()}")
+                lower_line = line.lower()
+                if "sonnet" not in lower_line:
+                    continue
+                # Allow "no sonnet" negations and policy/only statements
+                if "no sonnet" in lower_line:
+                    continue
+                if "policy" in lower_line or "only" in lower_line:
+                    continue
+                pytest.fail(f"{cmd_file.name}:{i} references sonnet model: {line.strip()}")
 
 
 class TestAllCommandsHaveAccountingInvariant:
     """Validate that all commands with apply phases document the accounting invariant."""
 
     def test_commands_with_apply_have_accounting(self) -> None:
-        """Commands that apply fixes must document applied + failed = total."""
-        apply_commands = ["optimize.md", "align.md", "preflight.md", "docs.md"]
-        for cmd_name in apply_commands:
+        """Commands that apply fixes must document applied + failed + deferred = total."""
+        for cmd_name in APPLY_COMMANDS:
             cmd_path = COMMANDS_DIR / cmd_name
             content = cmd_path.read_text(encoding="utf-8")
             assert "applied" in content and "failed" in content, (
@@ -410,8 +404,7 @@ class TestAllCommandsDocumentRecovery:
 
     def test_commands_with_file_changes_have_recovery(self) -> None:
         """Commands that modify files must document recovery."""
-        modifying_commands = ["optimize.md", "align.md", "commit.md", "preflight.md"]
-        for cmd_name in modifying_commands:
+        for cmd_name in MODIFYING_COMMANDS:
             cmd_path = COMMANDS_DIR / cmd_name
             content = cmd_path.read_text(encoding="utf-8")
             assert "## Recovery" in content, f"{cmd_name} should have Recovery section"

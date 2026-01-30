@@ -52,9 +52,9 @@ PREFLIGHT
 ## Context
 
 - Version: !`for f in pyproject.toml package.json setup.py; do test -f "$f" && grep -E "version|__version__|VERSION" "$f"; done | head -1`
-- Branch: !`git branch --show-current`
+- Branch: !`git branch --show-current 2>/dev/null || echo ""`
 - Changelog: !`test -f CHANGELOG.md && head -20 CHANGELOG.md || echo "No CHANGELOG.md"`
-- Git status: !`git status --short`
+- Git status: !`git status --short 2>/dev/null || echo ""`
 - Last tag: !`git describe --tags --abbrev=0 2>/dev/null || echo "No tags"`
 
 **DO NOT re-run these commands. Use the pre-collected values above.**
@@ -63,15 +63,19 @@ PREFLIGHT
 
 CCO profile is auto-loaded from `.claude/rules/cco-profile.md` via Claude Code's auto-context mechanism.
 
+<!-- Standard profile validation pattern (shared across optimize, align, docs, preflight) -->
+
 **Check:** Delegate to `/cco:tune --preview` for profile validation:
 
 ```javascript
-// Delegate profile check to tune command
+// Standard profile validation: delegate to tune, handle skip/error/success
 const tuneResult = await Skill("tune", "--preview")
 
 if (tuneResult.status === "skipped") {
-  // User declined setup - exit gracefully
   console.log("CCO setup skipped. Run /cco:tune when ready.")
+  return
+} else if (tuneResult.status === "error") {
+  console.error("Profile validation failed:", tuneResult.reason)
   return
 }
 
@@ -83,6 +87,8 @@ if (tuneResult.status === "skipped") {
 ---
 
 ## Mode Detection [CRITICAL]
+
+<!-- Config shape: { fixMode: string, unattended: boolean } -->
 
 ```javascript
 // --auto mode: unattended, full fix, no questions, minimal output
@@ -118,45 +124,12 @@ if (args.includes("--auto")) {
 
 ### Phase Gates
 
-```javascript
-// GATE-1: Post Pre-checks
-function gate1_postPrechecks(prechecks) {
-  const blockers = prechecks.filter(p => p.type === "BLOCKER" && !p.resolved)
-  if (blockers.length > 0 && !config.unattended) {
-    return { pass: false, blockers, reason: "Pre-check blockers" }
-  }
-  return { pass: true, warnings: prechecks.filter(p => p.type === "WARN") }
-}
-
-// GATE-2: Post Parallel Execution
-function gate2_postParallel(optimizeResults, alignResults, testResults) {
-  return {
-    pass: true,
-    optimizeApplied: optimizeResults.accounting?.applied || 0,
-    alignApplied: alignResults.accounting?.applied || 0,
-    testsPass: testResults.exitCode === 0
-  }
-}
-
-// GATE-3: Blocker Evaluation
-function gate3_blockerEval(allBlockers, allWarnings) {
-  return {
-    pass: allBlockers.length === 0,
-    blockers: allBlockers,
-    warnings: allWarnings,
-    canProceed: allBlockers.length === 0
-  }
-}
-
-// GATE-4: Post-Plan (or skip)
-function gate4_postPlan(planResult, skipPlan) {
-  if (skipPlan) return { pass: true, reason: "Plan skipped" }
-  if (["Abort", "Fix and Retry"].includes(planResult)) {
-    return { pass: false, reason: planResult }
-  }
-  return { pass: true, mode: planResult }
-}
-```
+| Gate | Pass | Fail |
+|------|------|------|
+| GATE-1 (Post Pre-checks) | No unresolved blockers | BLOCKER pre-checks found |
+| GATE-2 (Post Parallel) | optimize + align + tests completed | Collect accounting + test results |
+| GATE-3 (Blocker Eval) | blockers = 0 | Any blockers remain |
+| GATE-4 (Post-Plan) | Approval received or plan skipped | User aborted or "Fix and Retry" |
 
 **Single question at start** - All settings collected upfront, then uninterrupted flow (unless plan mode).
 
@@ -170,7 +143,7 @@ When `--auto` or user selects "Full Fix":
 - **Zero deferrals** - No "future iteration", "lower priority", "recommend manual"
 - **Zero skips** - Every finding fixed NOW, no exceptions
 - **Only technical failures** - File not found, parse error, permission denied
-- Final accounting: `applied + failed = total` (no AI declines allowed)
+- Final accounting: `applied + failed + deferred = total` (no AI declines allowed)
 
 **See Core Rules:** `No Deferrals Policy` for forbidden responses and valid failure reasons.
 
@@ -462,11 +435,11 @@ if (planMode && !skipPlan) {
 
 ### Sub-command Results Summary
 
-| Command | Applied | Failed | Key Changes |
-|---------|---------|--------|-------------|
-| /cco:optimize | {optimizeResults.accounting.applied} | {optimizeResults.accounting.failed} | {optimizeKeyChanges} |
-| /cco:align | {alignResults.accounting.applied} | {alignResults.accounting.failed} | {alignKeyChanges} |
-| **Total** | **{totalApplied}** | **{totalFailed}** | |
+| Command | Applied | Failed | Deferred | Key Changes |
+|---------|---------|--------|----------|-------------|
+| /cco:optimize | {optimizeResults.accounting.applied} | {optimizeResults.accounting.failed} | {optimizeResults.accounting.deferred} | {optimizeKeyChanges} |
+| /cco:align | {alignResults.accounting.applied} | {alignResults.accounting.failed} | {alignResults.accounting.deferred} | {alignKeyChanges} |
+| **Total** | **{totalApplied}** | **{totalFailed}** | **{totalDeferred}** | |
 
 ### Verification Results
 
@@ -481,7 +454,7 @@ if (planMode && !skipPlan) {
 ### Breaking Changes
 
 {hasBreaking ? `
-**⚠️ Breaking changes detected:**
+**[WARN] Breaking changes detected:**
 ${classified.breaking.map(c => `- ${c}`).join('\n')}
 
 This will require a MAJOR version bump.
@@ -490,7 +463,7 @@ This will require a MAJOR version bump.
 ### Blockers
 
 {hasBlockers ? `
-**🛑 Blockers must be resolved:**
+**[BLOCKED] Blockers must be resolved:**
 ${allBlockers.map((b, i) => `${i+1}. [${b.type}] ${b.message}`).join('\n')}
 ` : "No blockers - ready to proceed."}
 
@@ -606,7 +579,8 @@ hasBlockers = allBlockers.length > 0
 // Calculate combined accounting
 totalApplied = (optimizeResults.accounting?.applied || 0) + (alignResults.accounting?.applied || 0)
 totalFailed = (optimizeResults.accounting?.failed || 0) + (alignResults.accounting?.failed || 0)
-totalFindings = totalApplied + totalFailed
+totalDeferred = (optimizeResults.accounting?.deferred || 0) + (alignResults.accounting?.deferred || 0)
+totalFindings = totalApplied + totalFailed + totalDeferred
 ```
 
 ### Results Display [MANDATORY]
@@ -655,11 +629,11 @@ totalFindings = totalApplied + totalFailed
 ```json
 {
   "status": "OK|WARN|BLOCKED",
-  "summary": "Applied 8, Blockers 0, Version v1.2.0",
+  "summary": "Applied 8, Failed 0, Deferred 0, Blockers 0, Version v1.2.0",
   "data": {
-    "accounting": { "applied": 8, "failed": 0, "total": 8 },
-    "optimize": { "applied": 5, "failed": 0 },
-    "align": { "applied": 3, "failed": 0 },
+    "accounting": { "applied": 8, "failed": 0, "deferred": 0, "total": 8 },
+    "optimize": { "applied": 5, "failed": 0, "deferred": 0 },
+    "align": { "applied": 3, "failed": 0, "deferred": 0 },
     "blockers": [],
     "warnings": ["PRE-04: TODO markers found"],
     "version": { "current": "1.1.0", "suggested": "1.2.0", "bump": "MINOR" }
@@ -722,9 +696,9 @@ Version ${suggestedVersion} has been tagged.
 ```markdown
 ## Preflight Complete
 
-Status: {hasBlockers ? "BLOCKED" : (allWarnings.length > 0 ? "WARN" : "OK")} | Applied: {totalApplied} | Failed: {totalFailed} | Total: {totalFindings}
+Status: {hasBlockers ? "BLOCKED" : (allWarnings.length > 0 ? "WARN" : "OK")} | Applied: {totalApplied} | Failed: {totalFailed} | Deferred: {totalDeferred} | Total: {totalFindings}
 
-**Invariant:** applied + failed = total
+**Invariant:** applied + failed + deferred = total
 
 Mode: {config.releaseMode}
 ```
@@ -842,11 +816,12 @@ Consensus: Both agree risk → BLOCKER. Only dev concern → WARNING
 
 ## Accounting
 
-**Invariant:** `applied + failed = total` (count findings, not locations)
+**Invariant:** `applied + failed + deferred = total` (count findings, not locations)
 
-**No "declined" category:** AI has no option to decline fixes. If it's technically possible and user asked for it, it MUST be done. Only "failed" with specific technical reason is acceptable.
+**No "declined" category:** AI has no option to decline fixes. If it's technically possible and user asked for it, it MUST be done. Only "failed" with specific technical reason, or "deferred" for multi-file architectural changes, is acceptable.
 
 Combined from both sub-commands:
 - totalApplied = optimize.applied + align.applied
 - totalFailed = optimize.failed + align.failed
-- totalFindings = totalApplied + totalFailed
+- totalDeferred = optimize.deferred + align.deferred
+- totalFindings = totalApplied + totalFailed + totalDeferred

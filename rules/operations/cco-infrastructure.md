@@ -1,6 +1,8 @@
 # Infrastructure
 *Specific configurations and security requirements*
 
+**Trigger:** {dockerfile}, {terraform_files}, {cloud_configs}
+
 ## Docker [CRITICAL]
 
 ### Base Image Priority

@@ -121,7 +121,7 @@ CCO uses Opus + Haiku, no Sonnet.
 When CCO fixes something, it explains why:
 
 ```
-[FIXED] SQL injection in api/users.py:42
+[APPLIED] SQL injection in api/users.py:42
   Why: User input passed directly to query allows database manipulation
   Avoid: f"SELECT * FROM users WHERE id = {user_id}"
   Prefer: cursor.execute("SELECT ... WHERE id = ?", (user_id,))

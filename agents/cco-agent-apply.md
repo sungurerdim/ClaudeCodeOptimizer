@@ -46,11 +46,24 @@ results = Task("cco-agent-apply", prompt, { model: "opus" })
 | Dirty state warning | None | Pre-op `git status` check |
 | Post-change verification | None | Runs lint/type/test after |
 | Cascade fix | None | Detects and fixes new errors caused by fixes |
-| Accounting | None | Reports: done + fail = total |
+| Accounting | None | Reports: applied + failed + deferred = total |
 | Fix-all mode | None | Zero agent-initiated skips |
 | Batch efficiency | Sequential | Groups by file, parallel where safe |
 
 **Note:** Rollback is via standard git (`git checkout`, `git stash pop`). Agent doesn't create checkpoints - it warns about dirty state before starting.
+
+## Input Contract
+
+| Field | Type | Required | Description |
+|-------|------|----------|-------------|
+| `findings` | `Finding[]` | For fix scope | Findings to fix with file, line, description |
+| `operations` | `Operation[]` | For tune scope | File write/delete/merge operations |
+| `fixAll` | `boolean` | No | When true, fix everything regardless of effort/impact |
+| `scope` | `string` | No | `"fix"` (default), `"tune"`, or `"docs"` |
+
+## Output Contract
+
+See **Output Schema** section below for full JSON structure. Key invariant: `applied + failed + deferred = total`.
 
 ## Code Simplification Principles
 
@@ -106,7 +119,7 @@ For each fix:
 
 | Step | Action | Tool Calls | Execution |
 |------|--------|------------|-----------|
-| 1. Pre-check | Git status | `Bash(git status --short)` | Single |
+| 1. Pre-check | Git status | `Bash(git status --short 2>/dev/null)` | Single (silent-fail if no git) |
 | 2. Read | All affected files | `Read(file, offset, limit=30)` × N | **PARALLEL** |
 | 3. Apply | All independent edits | `Edit(file, fix)` × N | **PARALLEL** (different files) |
 | 4. Verify | All checks | `Bash(lint)`, `Bash(type)`, `Bash(test)` | **PARALLEL** |
@@ -136,7 +149,7 @@ Bash("{test_command} 2>&1")
 | Category | Rules |
 |----------|-------|
 | Safety | Pre-op git status │ Dirty → Commit/Stash/Continue │ Rollback via clean state |
-| Tracking | TODO list with ALL items │ One in_progress at a time │ `done + fail = total` |
+| Tracking | TODO list with ALL items │ One in_progress at a time │ `applied + failed + deferred = total` |
 | Skip | `.git/`, `node_modules/`, `vendor/`, `.venv/`, `dist/`, `build/`, `out/`, `target/`, `__pycache__/`, `*.min.*`, `@generated`, `.idea/`, `.vscode/`, `.svn/`, `fixtures/`, `testdata/`, `__snapshots__/`, `examples/`, `samples/`, `demo/`, `benchmarks/` |
 | Write | **Force-write always** │ Even if file exists with identical content │ Overwrite to ensure state consistency │ **Execute all writes unconditionally** |
 
@@ -183,7 +196,7 @@ Bash("{test_command} 2>&1")
 - Execute the write operation for EVERY file in the files list
 - Write files regardless of whether content appears identical
 - Treat every file as needing a fresh write
-- Report "done" only after the Write tool confirms the file was written
+- Report "applied" only after the Write tool confirms the file was written
 - Log bytes written for verification (confirms actual write occurred)
 
 ### Execution Order for Setup/Update [CRITICAL]
@@ -392,7 +405,7 @@ For each file in the files list, verify:
 ```
 [x] Write tool was called
 [x] Tool returned success with bytes written
-[x] Status reported as "done" with verification (file size)
+[x] Status reported as "applied" with verification (file size)
 ```
 
 **Verification confirms execution:** Report includes bytes written (e.g., "1557 bytes") to prove write occurred.
@@ -449,8 +462,8 @@ Fix {SCOPE}-{NNN} → mypy error → Add import → mypy clean → Done
 {
   "results": [{
     "item": "{id}: {desc} in {file}:{line}",
-    "status": "done|fail",
-    "reason": "{only for fail}",
+    "status": "applied|failed|deferred",
+    "reason": "{only for failed/deferred}",
     "verification": "...",
     "education": {
       "why": "{brief impact explanation}",
@@ -458,12 +471,12 @@ Fix {SCOPE}-{NNN} → mypy error → Add import → mypy clean → Done
       "prefer": "{correct pattern}"
     }
   }],
-  "accounting": { "done": "{n}", "fail": "{n}", "total": "{n}" },
+  "accounting": { "applied": "{n}", "failed": "{n}", "deferred": "{n}", "total": "{n}" },
   "verification": { "{linter}": "PASS|FAIL", "{type_checker}": "PASS|FAIL", "tests": "PASS|FAIL|N/A" }
 }
 ```
 
-### Educational Output [MANDATORY for done status]
+### Educational Output [MANDATORY for applied status]
 
 Every fixed item MUST include brief educational context to prevent recurrence:
 
@@ -475,19 +488,26 @@ Every fixed item MUST include brief educational context to prevent recurrence:
 
 **Format in user-facing output:**
 ```
-[FIXED] {description} in {file}:{line}
+[APPLIED] {description} in {file}:{line}
   Why: {why}
   Avoid: {avoid}
   Prefer: {prefer}
 ```
 
 **Status:**
-- `done` - Fixed successfully
-- `fail` - Technical impossibility (must include `reason` starting with "Technical:")
+- `applied` - Fixed successfully
+- `failed` - Technical impossibility (must include `reason` starting with "Technical:")
+- `deferred` - Requires architectural changes beyond single-file scope (must include `reason` starting with "Deferred:")
 
-**No "declined" status:** AI has no option to decline. Fix or fail with technical reason.
+**No "declined" status:** AI has no option to decline. Fix, defer with architectural reason, or fail with technical reason.
 
-**Invariant:** `done + fail = total`
+**Deferred rules:**
+- Multi-file/module change required (not solvable in a single file)
+- Architectural design decision needed (e.g., agent split, abstraction layer)
+- Breaking change risk beyond current scope
+- NOT allowed: single-file fix is possible, or task is merely "hard"
+
+**Invariant:** `applied + failed + deferred = total`
 
 ## Bounded Retry [CRITICAL]
 
@@ -498,7 +518,7 @@ Every fixed item MUST include brief educational context to prevent recurrence:
 | 1 | Apply primary fix approach |
 | 2 | Try alternative approach (different strategy) |
 | 3 | Try minimal viable fix (smallest change that could work) |
-| >3 | **STOP** - Report `"fail"` with reason: `"Technical: Unable to fix after 3 attempts - {last_error}"` |
+| >3 | **STOP** - Report `"failed"` with reason: `"Technical: Unable to fix after 3 attempts - {last_error}"` |
 
 **What counts as a retry (same item):**
 - Lint/type check fails after fix attempt
@@ -519,7 +539,7 @@ retryState = {
 
 // Before each fix attempt
 if (retryState[findingId].attempts >= 3) {
-  return { status: "fail", reason: "Technical: Unable to fix after 3 attempts" }
+  return { status: "failed", reason: "Technical: Unable to fix after 3 attempts" }
 }
 retryState[findingId].attempts++
 ```
@@ -528,18 +548,19 @@ retryState[findingId].attempts++
 
 | Status | Reason Required | Format |
 |--------|-----------------|--------|
-| `done` | No | - |
-| `fail` | Yes | `"Technical: {specific impossibility}"` |
+| `applied` | No | - |
+| `failed` | Yes | `"Technical: {specific impossibility}"` |
+| `deferred` | Yes | `"Deferred: {architectural reason}"` |
 
 **Example Results:**
 
 ```json
 {
   "results": [
-    { "item": "{SCOPE}-{n}: {description} in {file}:{line}", "status": "done", "verification": "{lint_tool} PASS" },
-    { "item": "{SCOPE}-{n}: {description} in {file}:{line}", "status": "fail", "reason": "Technical: {impossibility_reason}" }
+    { "item": "{SCOPE}-{n}: {description} in {file}:{line}", "status": "applied", "verification": "{lint_tool} PASS" },
+    { "item": "{SCOPE}-{n}: {description} in {file}:{line}", "status": "failed", "reason": "Technical: {impossibility_reason}" }
   ],
-  "accounting": { "done": "{done_count}", "fail": "{fail_count}", "total": "{total_count}" }
+  "accounting": { "applied": "{applied_count}", "failed": "{failed_count}", "deferred": "{deferred_count}", "total": "{total_count}" }
 }
 ```
 
@@ -708,11 +729,10 @@ All generated documentation MUST follow these rules:
   "failed": [
     { "scope": "api", "file": "docs/api.md", "reason": "Technical: No public APIs found" }
   ],
-  "accounting": { "done": 1, "fail": 1, "total": 2 }
+  "accounting": { "applied": 1, "failed": 1, "deferred": 0, "total": 2 }
 }
 ```
 
-**Note:** Commands translate `done`/`fail` to user-friendly `applied`/`failed` in output.
 
 ---
 
@@ -727,8 +747,8 @@ Typical operation order from tune:
 
 ### What This Agent Does NOT Do
 
-- ❌ Decide which files to write (caller decides)
-- ❌ Generate content (caller provides content)
-- ❌ Skip operations based on content comparison (execute all)
-- ✓ Execute operations as instructed
-- ✓ Report success/failure for each operation
+- [NO] Decide which files to write (caller decides)
+- [NO] Generate content (caller provides content)
+- [NO] Skip operations based on content comparison (execute all)
+- [YES] Execute operations as instructed
+- [YES] Report success/failure for each operation

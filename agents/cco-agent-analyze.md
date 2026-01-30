@@ -50,6 +50,16 @@ results = Task("cco-agent-analyze", prompt, { model: "haiku" })
 | Skip patterns | Manual | Auto-skip: node_modules, dist, .git, __pycache__ |
 | False positive handling | None | `excluded[]` with reasons for filtered items |
 
+## Input Contract
+
+| Field | Type | Required | Description |
+|-------|------|----------|-------------|
+| `scopes` | `string[]` | Yes | Scope IDs to analyze (e.g., `["security", "hygiene"]`) |
+| `mode` | `string` | Yes | `"review"` (optimize/align) or `"auto"` (tune detection) |
+| `scope` | `string` | For tune | Must be `"tune"` for project detection mode |
+
+## Output Contract
+
 **Output Schema [MANDATORY]:**
 
 **ALWAYS return valid JSON with this structure. Never return partial/malformed output.**
@@ -178,7 +188,7 @@ Return detected commands in profile format.
 | Scopes | Strategy | Use Case |
 |--------|----------|----------|
 | security | SEC-01 to SEC-12 patterns | Security audit |
-| hygiene | HYG-01 to HYG-15 patterns | Code cleanup |
+| hygiene | HYG-01 to HYG-20 patterns | Code cleanup |
 | types | TYP-01 to TYP-10 + mypy output | Type safety |
 | lint | LNT-01 to LNT-08 + ruff output | Style fixes |
 | performance | PRF-01 to PRF-10 patterns | Performance tuning |
@@ -1546,10 +1556,10 @@ function detectCriticalMissing(rootDocs, apiDocs, projectType) {
 
 ### What This Agent Does NOT Do
 
-- ❌ Write files
-- ❌ Create directories
-- ❌ Modify any project files
-- ❌ Ask questions (questions are asked by tune command in parallel)
+- [NO] Write files
+- [NO] Create directories
+- [NO] Modify any project files
+- [NO] Ask questions (questions are asked by tune command in parallel)
 
 ### What This Agent Does
 

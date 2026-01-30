@@ -136,7 +136,7 @@ Execution patterns that enforce discipline:
 | **Task Completion** | No stopping early due to perceived limits. Every 20 steps: progress check |
 | **Severity Levels** | CRITICAL (security/crash) → HIGH (broken) → MEDIUM (suboptimal) → LOW (style) |
 | **No Deferrals** | In `--auto` mode: no "too complex", "might break", "consider later" — fix NOW |
-| **Accounting** | Every operation ends with: `Applied: N | Failed: M | Total: N+M` |
+| **Accounting** | Every operation ends with: `Applied: N | Failed: M | Deferred: D | Total: N+M+D` |
 
 ### Thresholds
 

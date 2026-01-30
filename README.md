@@ -122,9 +122,9 @@ Install CCO → SessionStart hook injects core rules (every session, automatic)
 
 ### Accounting (No Silent Skips)
 
-Every operation ends with: `Applied: 12 | Failed: 1 | Total: 13`
+Every operation ends with: `Applied: 12 | Failed: 1 | Deferred: 2 | Total: 15`
 
-Formula: **`applied + failed = total`** — no "declined" category. AI cannot silently skip.
+Formula: **`applied + failed + deferred = total`** — no "declined" category. AI cannot silently skip. "Deferred" = requires multi-file architectural changes.
 
 ---
 

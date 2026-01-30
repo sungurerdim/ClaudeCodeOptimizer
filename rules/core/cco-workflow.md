@@ -67,7 +67,8 @@ Changes needed?
 ## Efficiency
 
 - **Parallel calls**: Independent tool calls in single message
-- **Background**: Long commands → `run_in_background: true`
+- **Background Bash**: Long Bash commands → `run_in_background: true`
+- **Parallel agents**: Multiple Task calls in single message (do NOT use `run_in_background` for Task/agent calls)
 
 ## No Deferrals [BLOCKER - Auto Mode]
 
@@ -89,10 +90,31 @@ When `--auto` active, AI MUST attempt every fix.
 ## Accounting [BLOCKER]
 
 ```
-applied + failed = total
+applied + failed + deferred = total
 ```
 
-No "declined" category. Every finding = FIXED or FAILED (with technical reason).
+No "declined" category. Every finding = `applied`, `failed` (technical reason), or `deferred` (architectural reason).
+
+## Model Strategy
+
+**Policy:** Opus + Haiku only (no Sonnet)
+
+| Task | Model | Reason |
+|------|-------|--------|
+| Analysis (parallel scopes) | Haiku | Fast, cost-effective scanning |
+| Apply fixes | Opus | 50-75% fewer tool errors |
+| Score calculation | Haiku | Simple aggregation |
+| Research (search) | Haiku | Cost-effective |
+| Research (synthesis) | Opus | Conflict resolution |
+
+## Anti-Overengineering Guard
+
+Before flagging ANY finding:
+1. Does this actually break something or pose a risk?
+2. Does this cause real problems for developers/users?
+3. Is fixing it worth the effort and side effects?
+
+**All NO → not a finding.**
 
 ## Output Standards
 

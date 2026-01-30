@@ -95,7 +95,7 @@ Rules are loaded automatically at session start via Claude Code's native mechani
 | Code fixes | Edit files with verification |
 | Config writes | Profile, rules, settings |
 | Cascade fixes | Fix errors caused by fixes |
-| Accounting | done + fail = total |
+| Accounting | applied + failed + deferred = total |
 
 **Execution pattern:**
 
@@ -221,7 +221,7 @@ Injected via SessionStart hook. Cannot be overridden.
 | Change Scope | BLOCKER | Only requested changes |
 | Read-Before-Edit | BLOCKER | Must read before edit |
 | Security Violations | BLOCKER | Fix before continuing |
-| Accounting | BLOCKER | applied + failed = total |
+| Accounting | BLOCKER | applied + failed + deferred = total |
 
 ### Adaptive Rules (Per-Project)
 
@@ -320,7 +320,7 @@ commands:
 }
 ```
 
-Invariant: `applied + failed = total`
+Invariant: `applied + failed + deferred = total`
 
 ---
 

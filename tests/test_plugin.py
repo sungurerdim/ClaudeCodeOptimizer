@@ -26,11 +26,6 @@ class TestPluginJson:
         path = ROOT / ".claude-plugin" / "plugin.json"
         return json.loads(path.read_text(encoding="utf-8"))
 
-    @pytest.fixture
-    def hooks_json(self) -> dict:
-        path = ROOT / "hooks" / "hooks.json"
-        return json.loads(path.read_text(encoding="utf-8"))
-
     def test_has_required_fields(self, plugin_json: dict, hooks_json: dict) -> None:
         """Plugin must have name, version, description. Hooks in separate file."""
         assert plugin_json.get("name") == "cco"

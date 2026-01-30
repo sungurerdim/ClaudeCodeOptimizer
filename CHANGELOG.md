@@ -18,7 +18,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 | Before (v1) | After (v2) |
 |-------------|------------|
-| 2 standards files (85 standards) | 44 modular rule files |
+| 2 standards files (85 standards) | 45 modular rule files |
 | Rules copied to `~/.claude/rules/` | Rules injected into context (no files) |
 | @import syntax in CLAUDE.md | Direct context injection via hook |
 | Global config pollution | Zero global side effects |
@@ -51,7 +51,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - **Phase gates** — Explicit checkpoints (GATE-1, GATE-2, etc.) in command workflows
 - **Parallel scope execution** — Multiple scope groups analyzed concurrently
 - **Standard output envelope** — Unified `{status, summary, data, error}` format across commands
-- **Test suite** — 63 tests covering commands, hooks, edge cases, and plugin structure
+- **Test suite** — 58 tests covering commands, hooks, edge cases, and plugin structure
 - **Permissions system** — Four levels (safe/balanced/permissive/full)
 - **Dynamic context injection** — Commands use real-time context at load time
 - **Tool restrictions** — `allowed-tools` frontmatter limits each command to declared tools

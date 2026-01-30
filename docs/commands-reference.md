@@ -343,9 +343,9 @@ All commands support `--auto` for CI/CD:
 
 ### Accounting Invariant
 
-All operations report: `Applied: N | Failed: M | Total: N+M`
+All operations report: `Applied: N | Failed: M | Deferred: D | Total: N+M+D`
 
-Formula: `applied + failed = total` (no silent skips)
+Formula: `applied + failed + deferred = total` (no silent skips)
 
 ### Recovery
 
